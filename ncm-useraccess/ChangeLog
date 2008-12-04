@@ -1,0 +1,181 @@
+2008-11-15  <unknown>
+
+	* Release: 1.4.4
+	- Fixing tags.
+
+2008-11-15  <unknown>
+
+	* Release: 1.4.3
+	- Fixing bug #43788.
+
+2008-10-21  "Luis Fernando"
+
+	* Release: 1.4.2
+	- Fixed bug #43121.
+	
+	Using CAF::FileWriter to ensure that files are written only when they
+	have contents.
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 1.4.1
+	- Updated to comply with Panc v8 requirements.
+
+2008-09-09  "Luis Fernando"
+
+	* Release: 1.4.0
+	- Added the Unconfigure method to allow to effectively lock user accounts.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.11
+	- Sanitized the ACL initialization code.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.10
+	- Fixing typos on the sanitation of PAM files.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.9
+	- Fixed a typo.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.8
+	- Sanitizing the service names when handling ACLs, to make taint mode happy.
+
+2008-06-13  "Luis Fernando"
+
+	* Release: 1.3.7
+	- Tagged what couldn't be tagged on previous commit.
+
+2008-06-12  "Luis Fernando"
+
+	* Release: 1.3.7
+	- Improved the way read-only home dirs are handled. Now it doesn't crash if the FS
+	is read-only but no settings are specified.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.5
+	- Fixing (fhopefully) non-existing settings with non-writable home dirs.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.4
+	- Reverting 1.3.3, as it didn't work as expected.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.3
+	- Don't cause any errors if the files of a user can't be opened but there are no settings for him.
+	For instance, if home directories are mounted with AFS, root won't be able to reach them, but if
+	the user doesn't have any Kerberos or SSH settings no errors should be thrown.
+
+2008-02-20  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.2
+	- Fixed bug #33683
+
+2008-02-20  Michel Jouvin
+
+	* Release: 1.3.1
+	- Add property configSerial (see documentation)
+
+2008-02-12  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.0
+	- Fixed (and tested) a set of race conditions that might have allowed an
+	attacker to set symlinks to overwrite arbitrary files.
+
+2008-02-12  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.2
+	- Trying to fix a nasty race condition that would allow attackers
+	to symlink and overwrite arbitrary files.
+
+2007-05-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.1
+	- Documentation update.
+
+2007-05-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.0
+	- Simplified the code with Cal's comments on but #26767
+	Added support for nested roles.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.0
+	- Removed old non-namespaced templates.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.11
+	- Adapted to the latest namespaces
+
+2007-03-26  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.10
+	- Adapted to the NEW templates layout.
+
+2007-03-22  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.9
+	- Small correction on user's initialization
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.8
+	- Updated the documentation.
+	Small behaviour changes in ACLs.
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.7
+	- Added support for roles, as required in the workshop.
+	Still no support for default values.
+	Depends on ccm-1.5.11.
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.6
+	- Added support for roles, as required in the workshop.
+	Still no support for default values.
+	Depends on ccm-1.5.11.
+
+2007-03-08  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.5
+	- Documentation cleanup.
+
+2007-03-02  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.4
+	- Improvements to documentation.
+
+2007-03-02  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.2
+	- Removed absolute paths in Makefile
+
+2007-03-01  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.1
+	- Created the ncm-component that replaces ncm-access_control (together with ncm-sudo). Read the documentation. It should be complemented with a future ncm-pam, but since nobody seems to need this one, I may not do it.
+
+2007-03-01  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* useraccess.pod.cin: Written the documentation. At last!
+
+2007-02-26  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* TPL/pro_declaration_functions_useraccess.tpl.cin: Added
+	functions for role management.
+
+	* TPL/pro_declaration_component_useraccess.tpl.cin: Created all
+	data structures.
+
