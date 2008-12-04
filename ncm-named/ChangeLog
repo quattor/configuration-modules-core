@@ -1,0 +1,41 @@
+2008-10-11  root
+
+	* Release: 1.2.2
+	- Define component version
+
+2008-10-10  root
+
+	* Release: 1.2.1
+	- Fix mistake in previous mod
+
+2008-10-10  root
+
+	* Release: 1.2.1
+	- Move start property initialization to schema.tpl
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.1.4
+	- Remove deprecated 'define' keyword
+
+2006-11-14  Matthias SCHROEDER
+
+        * Release: 1.1.3
+        - Allow to configure search line of /etc/resolve.conf
+
+2005-07-20  root
+
+        * Release: 1.1.2
+        - Initial version (based on CERN ncm-named)
+
+2005-07-20  Michel Jouvin  <jouvin@lal.in2p3.fr>
+
+	* named.pm.cin : first implementation, based on CERN ncm-named (numbered 1.1.1 to be greater than CERN version)
+	
+
