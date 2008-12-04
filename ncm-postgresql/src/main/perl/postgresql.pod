@@ -1,0 +1,96 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=begin comment
+
+Be sure to put a blank line before and after every formatting command
+
+=end comment
+
+=head1 NAME
+
+postgresql : NCM component to manage PostgreSQL configuration.
+
+=head1 DESCRIPTION
+
+This component allows to manage configuration of PostgreSQL.
+It's very basic infucntionality (originally devolped for dcache usage). 
+
+=head1 RESOURCES
+
+=item /software/components/postgresql/config/debug_print
+Set the debug logging level (default = 15). The default is very verbose (but best to leave as is). 
+The component can be a bit aggressive when things don't work, this will log everything. 
+
+=item /software/components/postgresql/pg_script_name
+Name of the service to start postgresql (default = postgresql). 
+This should allow you to start multiple postgres instances on the same machine.
+
+=item /software/components/postgresql/pg_dir
+Name of the base diretcory of the postgres install (default = /var/lib/pgsql). 
+This directory will be used for the installation (eg create the PG_VERSION in subdirectory data).
+
+=item /software/components/postgresql/pg_port
+Name of the port used by postgres (default = 5432).
+
+=item /software/components/postgresql/postgresql_conf
+Full text of the postgresql.conf file
+
+=item /software/components/postgresql/pg_hba
+Full text of the pg_hba.conf file
+
+=item /software/components/postgresql/roles
+nlist of roles to create and alter. 
+Key is the name of the role (new roles added with CREATE ROLE)
+Value is a string used with ALTER ROLE.
+
+=item /software/components/postgresql/databases
+A nlist of databases to create/initialise
+Key is the name of the database
+
+=item /software/components/postgresql/databases/[db_name]/user
+OWNER of the database
+
+=item /software/components/postgresql/databases/[db_name]/installfile
+Optional: when a database is freshly created, this file is used to initialise the database (using pgsql -f option) 
+
+=item /software/components/postgresql/databases/[db_name]/lang
+Optional: when a database is freshly created, it set the pg language for the db (useing createlang) (this runs after installfile) 
+
+=item /software/components/postgresql/databases/[db_name]/langfile
+Optional: when a database is freshly created, this file is used to eg add procedures in certain lang (using pgsql -f option) (this runs after succesfull lang) 
+
+
+=item /software/components/postgresql/databases/[db_name]/sql_user
+Optional: when a database is freshly created, and the /software/components/postgresql/databases/[db_name]/installfile is defined, initialise the database with this user. 
+(defaults to the owner of the db as defined in /software/components/postgresql/databases/[db_name]/user)
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Stijn.De.Weirdt@cern.ch
+
+=head1 MAINTAINER
+
+Stijn.De.Weirdt@cern.ch
+
+=head1 VERSION
+
+0.1.3
+
+=head1 SEE ALSO
+
+ncm-ncd(1)
+
+
+=cut
+
