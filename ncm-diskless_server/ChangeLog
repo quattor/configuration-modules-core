@@ -1,0 +1,124 @@
+2007-07-24  Matthias SCHROEDER
+
+	* Release: 0.3.6
+	- fix bug in dealing with snapshot name
+	fix handling of files.custom
+	correct root prompt of clients
+
+2007-07-24  Matthias SCHROEDER
+
+	* Release: 0.3.5
+	- pass snapshot name to pxeboot command
+
+2007-07-13  Matthias SCHROEDER
+
+	* Release: 0.3.4
+	- Add option to set the clients profile parameter in ccm.conf
+
+2007-07-12  Matthias SCHROEDER
+
+	* Release: 0.3.3
+	- fix setting the root-path option
+
+2007-06-11  Matthias SCHROEDER
+
+	* Release: 0.3.2
+	- add forgotten dhcp_clients_type to schema
+
+2007-06-08  Matthias SCHROEDER
+
+	* Release: 0.3.1
+	- Use 'value' in CDB instead of AII at runtime to get client parameters.
+
+2007-04-25  Matthias SCHROEDER
+
+	* Release: 0.2.3
+	- fix formatting of dhcpd.conf header, do a service dhcpd reload
+
+2007-04-18  Matthias SCHROEDER
+
+	* Release: 0.2.2
+	- Make dhcpd.conf header configurable, make aii timeout configurable
+
+2007-04-17  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 0.2.1
+	- clean-up
+
+2007-04-17  Matthias SCHROEDER
+
+	* Release: 0.2.0
+	- tag after the cleanup
+
+2007-04-17  Matthias SCHROEDER
+
+	* Release: 0.1.0
+	- Finally namespace compliant?
+
+2007-03-09  Matthias SCHROEDER
+
+	* Release: 0.0.13
+	- still made namespace-compliant (struggling with f???ing cvs and sticky tag...)
+
+2007-03-09  Matthias SCHROEDER
+
+	* Release: 0.0.12
+	- made namespace-compliant (I believe)
+
+2007-03-09  Matthias SCHROEDER
+
+	* Release: 0.0.11
+	- made namespace-compliant
+
+2007-03-08  Matthias SCHROEDER
+
+        * Release: 0.0.10
+        - make new entries optional, add protection to function, report error if entries missing
+
+2007-03-08  Matthias SCHROEDER
+
+        * Release: 0.0.9
+        - add function append_dl_export_list to modify nfs/exports list as needed for all clie
+
+2007-03-08  Matthias SCHROEDER
+
+        * Release: 0.0.8
+        - Get boot device from clients profiles
+
+2007-02-15  Michel Jouvin
+
+	* Release: 0.0.7
+	- Remove deprecated 'define' keyword
+
+2006-09-06  Matthias SCHROEDER
+
+        * Release: 0.0.6
+        - Fix bug in warning
+
+24-08-2006 Vasilis Christaras (Vasileios.Christaras@cern.ch)
+	* Release 0.0.5
+	- Fixed problem in the parsing of pxeos config file
+	- Fixed bug in files.custom populating code
+	- Fixed bug in pxeboot invoke
+
+2006-08-22  Matthias Schroeder
+	* Release 0.0.4
+	- Add creation of file containing hostname of diskless server
+
+27-06-2006 Vasilis Christaras (Vasileios.Christaras@cern.ch)
+	* Release 0.0.3
+	- Removed the server ip entry and added the netdev.
+	- Fixed not stopping on missing entries problem.
+	- Fixed problem with pxeos delete.
+
+14-06-2006 Vasilis Christaras (Vasileios.Christaras@cern.ch)
+	* Release 0.0.2
+	- Added the aii cdb url and profile prefix options in template
+	- Now creates /etc/aii-shellfe.conf (empty)
+
+10-06-2006 Vasilis Christaras (Vasileios.Christaras@cern.ch)
+	* Changed name from diskless to diskless_server
+
+10-05-2006 Vasilis Christaras (Vasileios.Christaras@cern.ch)
+	* Release 0.0.1
+	- First draft
