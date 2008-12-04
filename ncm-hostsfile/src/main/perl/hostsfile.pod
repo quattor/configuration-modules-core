@@ -1,0 +1,82 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::hostsfile - NCM local hosts file configuration component
+
+=head1 SYNOPSIS
+
+=item Configure()
+
+Updates the /etc/hosts file (or an alternative one if specified).
+
+The CDB entries are added to the file.  A comment '# NCM' is added to each
+line so that any deletions will also be clearer up correctly.
+
+User added entries are preserved.
+
+Returns error in case of a failure.
+
+=item Unconfigure()
+
+not available.
+
+=head1 RESOURCES
+
+Example - configuration defined in CDB like this:
+
+  include pro_declaration_component_hostsfile;
+  "/software/components/hostsfile/active" = true;
+  "/software/components/hostsfile/file" = "/etc/hosts.local";
+  "/software/components/hostsfile/entries" = nlist (
+    "tsmstor601.cern.ch",nlist("ipaddr","192.168.1.101","comment","TSM DB disks"),
+    "tsmstor602.cern.ch",nlist("ipaddr","192.168.1.102","comment","TSM Staging disks"),
+    );
+
+will modify the /etc/hosts.local file from
+
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1               localhost.localdomain localhost
+137.138.45.75           lxfsec1604.cern.ch
+
+to
+
+# NCM Generated automatically by component hostsfile at Sat Dec 23 18:09:57 2006
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1               localhost.localdomain localhost
+137.138.45.75           lxfsec1604.cern.ch
+192.168.1.101   tsmstor601.cern.ch tsmstor601 # NCM TSM DB disks
+192.168.1.101   tsmstor602.cern.ch tsmstor602 # NCM TSM Staging disks
+
+The syntax below is also possible 
+
+  "/software/components/hostsfile/entries/tsmstor603"=nlist("ipaddr","192.168.1.103","comment","TSM more disks");
+
+or 
+
+  "/software/components/hostsfile/entries/tsmstor603/ipaddr" = "192.168.1.103";
+  "/software/components/hostsfile/entries/tsmstor603/comment" = "Testing";
+
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Tim Bell <tim.bell@cern.ch>
+
+=head1 SEE ALSO
+
+hosts(8)
+
+=cut
