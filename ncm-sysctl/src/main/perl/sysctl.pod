@@ -1,0 +1,72 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::sysctl - NCM sysctl configuration component
+
+=head1 SYNOPSIS
+
+Add/modify variables into sysctl configuration file.
+
+=head1 RESOURCES
+
+=head2 /software/components/ncm-sysctl/command : string (required)
+
+Command to use to update sysctl configuration.
+
+Default : /sbin/sysctl
+
+
+=head2 /software/components/ncm-sysctl/compat-v1 : boolean (required)
+
+This property is a boolean making sysctl to accept variable definitions according to v1 of this component. This
+is deprecated. If you rely on this, you are advised to convert your configuration to v2 schema.
+
+Default : false
+
+
+=head2 /software/components/ncm-sysctl/confFile : string (required)
+
+String defining sysctl configuration file.
+
+Default : /etc/sysctl.conf
+
+
+=head2 /software/components/ncm-sysctl/variables : nlist (optional)
+
+A nlist of key/value defining sysctl variables. There is no check that the key matches a valid key, so be cautious
+to use appropriate variable names. Key name should be escaped if it begins by a non-alphabetic character.
+
+Default : none.
+
+
+=head1 EXAMPLES
+
+  "/software/components/sysctl/kernel.shmmni"                  = "4096";
+  "/software/components/sysctl/kernel.shmall"                  = "2097152";
+  "/software/components/sysctl/net.ipv4.ip_local_port_range" = "1024 65000";
+  "/software/components/sysctl/fs.file-max"                 = "65536";
+  "/software/components/sysctl/fs.aio-max-size"          = "1048576";
+  "/software/components/sysctl/net.core.rmem_default"        = "262144";
+  "/software/components/sysctl/net.core.wmem_default"        = "262144";
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Benjamin Chardi <Benjamin.Chardi.Marco@cern.ch>
+
+=head1 SEE ALSO
+
+sysctl.conf(5), sysctl(8), ncm-ncd(1)
+
+=cut
