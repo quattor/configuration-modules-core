@@ -1,0 +1,41 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+ncm-filecopy: NCM component to manage simple configuration files and services.
+
+=head1 DESCRIPTION
+
+The I<filecopy> component manages services which have simple
+configuration files (representated as strings in pan).  A "restart"
+command can be given which will be run whenever the configuration
+changes.  
+
+Note: that this does not do any validation checking on the content of
+the service configuration.  If this is desired, a service-specific
+component should be written.
+
+=head1 RESOURCES
+
+=head2 /software/components/filecopy/conditional
+A boolean that defines if the restart (if any defined) of the file(s) 
+should be made conditional (ie restart if something has changed to 
+either the permissions or the content). Defaults to false.
+
+=head2 /software/components/filecopy/services
+
+An nlist where the key is the encoded string of the configuration
+filename.  The resource "config" contains the contents of the
+configuration file and the resource "restart" contains a command to
+execute on reconfiguration.  The owner, group and permissions can also be
+given in the "owner", "group" and "perms" properties, respectively. "owner"
+can be either a owner or 'owner:group'.
+
+Also a 
+per filename based "conditional" can be given to overwrite 
+the component wide setting. 
+
+=cut
