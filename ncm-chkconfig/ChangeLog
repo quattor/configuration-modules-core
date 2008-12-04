@@ -1,0 +1,56 @@
+2008-03-05  Jan Iven
+
+	* Release: 1.1.1
+	- add 'default' setting for unknown services
+	try not to chkconfig on/off things at every run
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.9
+	- Remove deprecated 'define' keyword
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.8
+        - add software template
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.7
+        - change to structure_component; rearrange
+
+2005-02-02  Vlado Bahyl
+
+        * Release: 1.0.6
+        - man page corrected
+
+2004-08-20  Teemu SIDOROFF
+
+        * Release: 1.0.5
+        - fix es bug #4479
+
+2004-08-18  Charles Loomis
+
+        * Release: 1.0.4
+        - #4443 fixes problems with hyphens in service name
+
+2004-07-01  Vlado Bahyl
+
+        * Release: 1.0.3
+        - documentation modified
+
+2004-06-29  Vlado Bahyl
+
+        * Release: 1.0.2
+        - proper component declaration template added
+
+2004-06-03  Teemu SIDOROFF
+
+        * Release: 1.0.2
+        - initial version
