@@ -1,0 +1,166 @@
+2008-11-18  Jan Iven
+
+	* Release: 2.3.3
+	- use "condrestart" for iptables service, #44129
+
+2008-11-18  Jan Iven
+
+	* Release: 2.3.2
+	- use "condrestart" for iptables service, #44129
+
+2008-11-11  Jan Iven
+
+	* Release: 2.3.1
+	- fixed remaining issues on #33263
+
+2008-09-24  "Luis Fernando"
+
+	* Release: 2.2.3
+	- Fixed bug #41379.
+
+2008-07-30  Jan Iven,<jan.iven@cern.ch>
+
+	* Release: 2.2.2
+	- fix bug with non-resolved DNS names
+	- add comment to top of /etc/sysconfig/iptables
+	- do not restart iptables if no modifications were made
+	- capture output from "service iptables", prevents issue with SELinux targeted context, #36563
+	- added several new options, as requested in #33263
+
+2008-06-13  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 2.2.1
+	- fixed NoActionSupported setting
+
+2007-05-30  Alasdair David Earl
+
+	* Release: 2.1.5
+	- changes to schema.tpl.cin to remove -- values
+
+2007-05-30  Alasdair David Earl
+
+	* Release: 2.1.4
+	- panc compliance
+
+2007-05-29  Alasdair David Earl
+
+        * Release: 2.1.3
+        - removal of options with - and -- at the start
+
+2007-05-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 2.1.2
+	- got rid of MAINTAINER file
+
+2007-04-17  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 2.1.1
+	- removed old templates and duplicated schema entries. Clean-up.
+
+2007-04-17  Alasdair David Earl
+
+	* Release: 2.1.0
+	- template changes for new quattor release
+
+2007-03-06  Alasdair Earl
+	* Release 2.0.4
+	- addition of 'match pkt-type' where pkt-type maps to (unicast|broadcast|multicast)
+	
+2007-02-15  Michel Jouvin
+
+	* Release: 2.0.3
+	- Remove deprecated 'define' keyword
+
+2007-01-15  Alasdair David Earl
+
+        * Release: 2.0.2
+        - dummy release
+
+2007-01-15  Alasdair Earl
+
+	* Release: 2.0
+	- fixed wron BTDIR in Makefile
+
+2006-08-02 Alasdair Earl
+
+	* Release: 1.1.3
+        - Addition of -limit-burst and match limit. 
+	-  match limit allows the user to match against a limit in the same 
+	   way as against state or protocol, e.g. in profile: 
+	   match, limit, limit, 3/s
+	- limit-burst allows a max number of records so that the logs 
+          don't get swamped.
+
+2006-03-27 Alasdair Earl
+	
+        * Release: 1.1.2
+        - removal of -d! and -s! / not_src_addr and not_dest_addr options
+	-d, -s, --in-interface, --out-interface can now take 0 or 1 ! at start
+	N.B. There must be a spance between the ! and ip addr/hostname (iptables req)
+	
+2005-12-03  Charles Loomis
+
+        * Release: 1.1.1
+        - move template into TPL directory; create software template
+
+2005-11-30 Alasdair Earl
+
+        * Release 1.1.0
+	- fixes bug #13669 - cern chain
+	- allows users to define their own additional chains 
+	  - chains which are not already defined will be automatically
+	  - users now have to be able to spell correctly
+	  - this does not work for default chains (input, output, 
+            forward)
+	
+2005-08-19 Alasdair Earl
+
+        * Release: 1.0.9
+
+	- Added the "all" option to -p (protocols)
+	- Added cern chain (hard coded - kludge I know ...) so that ports 
+	  can then jump to a list of ip ranges 
+
+2005-08-10  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.8
+        - Allowed for order preservation in filter rules, resolving bug#10136
+
+2005-07-28 Alasdair Earl
+
+	* Release: 1.0.6
+	- Changed the icmp-types from digits to characters
+
+2005-07-05  German Cancio Melia
+
+        * Release: 1.0.5
+        - added Alasdair's documentation HOWTO ncm-iptables-howto.html
+
+2005-07-05  German Cancio Melia
+
+        * Release: 1.0.4
+        - Joined A. Earls modifications into 'core'
+
+2005-06-15 Alasdair Earl <alasdair.earl@cern.ch>
+
+	* Release 1.0.3
+	- added log-prefix option N.B. user has to add quotes themself
+        - added log-level option  => (debug|info|notice|warning|warn|err|error|crit|alert|emerg|panic)
+        - added log-tcp-options N.B does not need further options  
+        - added log-ip-options  N.B does not need further options
+
+2005-03-22  Joao Martins <martinsj@lip.pt>
+
+	* Release 1.0.2
+	- simplified module, remove unconfigure function and
+	- do not compare or save previous table content.
+
+2005-03-10  Joao Martins <martinsj@lip.pt>
+
+	* Release 1.0.1: Bug solved
+	- Sent error when /etc/sysconfig/iptable doen't exist
+
+2004-06-15  Joao Martins <martinsj@lip.pt>
+
+	* Release 1.0.0: First version
+
