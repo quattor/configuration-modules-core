@@ -1,0 +1,70 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+# Coding style: emulate <TAB> characters with 4 spaces, thanks!
+################################################################################
+
+=head1 NAME
+
+NCM::fmonagent - NCM Lemon Monitoring Agent configuration component
+
+=head1 SYNOPSIS
+
+=item Configure()
+
+Creates configuration file(s) and restarts the lemon-agent service.
+In case of the single file configuration the files
+is defined in the CDB template as file and in case of split file as 
+a directory where the following structure is expected:
+
+	top_dir/general.conf
+	top_dir/transport/
+	top_dir/metrics/
+	top_dir/sensors/
+
+Component will try in this case to modify the top_dir/general.conf,
+top_dir/transport/udp.conf, top_dir/metrics/default.conf and for each 
+sensor top_dir/sensors/sensor_name.conf files.
+
+=item Unconfigure()
+
+Not available.
+
+=head1 RESOURCES
+
+=item /software/components/fmonagent/active     : boolean
+
+activates/deactivates the component.
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head2 Warning
+
+This version of NCM::fmonagent will not work with sensorAlarm!
+
+=head2 Required programs.
+
+Requires lemon-agent rpm to be installed.
+
+=head1 BUGS
+
+none known.
+
+=head1 AUTHOR
+
+Miroslav Siket <miroslav.siket@cern.ch>, Dennis Waldron <dennis.waldron@cern.ch>
+
+=head1 SEE ALSO
+
+ncm-ncd(1)
+
+=cut
