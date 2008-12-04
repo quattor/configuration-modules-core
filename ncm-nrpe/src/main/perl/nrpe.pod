@@ -1,0 +1,72 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+=head1 DESCRIPTION
+
+The I<nrpe> component manages the NRPE daemon, which executes Nagios
+plugins on remote hosts. The NRPE service can be run under xinetd or
+as a stand-alone daemon. This component only supports the stand-alone
+way.
+
+=head1 COMPONENT STRUCTURE
+
+All fields are mandatory, unless it is explicitly stated:
+
+=over 4
+
+=item * /software/components/nrpe/add_rc : boolean
+
+Whether or not to start this script at boot time.
+
+
+=item * /software/components/nrpe/cmds : string {}
+
+Named list with the command lines to be run. It is indexed with the
+command identifiers. Check Nagios' documentation for more information
+on command definitions.
+
+=item * /software/components/nrpe/user : string
+
+User the daemon will run as. For instance, 'nagios'.
+
+=item * /software/components/nrpe/group : string
+
+Group the daemon will run as. For instance, 'nagios'.
+
+=item * /software/components/nrpe/allowed_hosts : type_hostname[]
+
+List of hosts allowed to order the NRPE daemon to run commands.
+
+=item * /software/components/nrpe/allowed_cmdargs : boolean
+
+Whether or not the remote hosts are allowed to pass arguments to the
+commands offered by NRPE. It is false by default, so arguments are not
+allowed for security reasons.
+
+=item * /software/components/nrpe/prefix : string
+
+Optional field.
+
+Optional prefix for every single command to be run. For instance,
+"/usr/bin/sudo"
+
+=item * /software/components/nrpe/weak_random : boolean
+
+Whether or not allow weak random number generation.
+
+=item * /software/components/nrpe/port : boolean
+
+The port the daemon will listen to.
+
+=item * /software/components/nrpe/timeout : long
+
+Timeout for commands, in seconds.
+
+=back
+
+=head1 SEE ALSO
+
+http://nagios.sourceforge.net/docs/3_0/toc.html
+
+=cut
