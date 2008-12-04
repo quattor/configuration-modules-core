@@ -1,0 +1,251 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the EU DataGrid Software License.  You should
+# have received a copy of the license with this program, and the license
+# is published at http://eu-datagrid.web.cern.ch/eu-datagrid/license.html.
+#
+# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
+# CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
+#
+# THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE AND ANY WARRANTY OF NON-INFRINGEMENT, ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THIS
+# SOFTWARE MAY BE REDISTRIBUTED TO OTHERS ONLY BY EFFECTIVELY USING
+# THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
+# TERMS THAT MAY APPLY.
+#
+################################################################################
+# Coding style: emulate <TAB> characters with 4 spaces, thanks!
+################################################################################
+#
+# download - Morgan Stanley ncm-download component
+#
+# Download files during configuration (e.g. via web)
+#
+###############################################################################
+
+package NCM::Component::download;
+
+#
+# a few standard statements, mandatory for all components
+#
+
+use strict;
+use NCM::Component;
+use vars qw(@ISA $EC);
+@ISA = qw(NCM::Component);
+$EC=LC::Exception::Context->new->will_store_all;
+use File::Temp qw(tempdir);
+use LC::Process qw(execute);
+use POSIX;
+use LWP::UserAgent;
+
+# Just in case...
+$ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
+
+sub prefix {
+    my ($self) = @_;
+    return "/software/components/download";
+}
+
+
+##########################################################################
+sub Configure {
+##########################################################################
+    my ($self,$config)=@_;
+
+    my $prefix = $self->prefix;
+
+    if (!$config->elementExists("$prefix")) {
+        return 0;
+    }
+
+    my $inf = $config->getElement("$prefix")->getTree;
+    my $defserver = "";
+    if (exists $inf->{server}) {
+        $defserver = $inf->{server};
+    }
+    my $defproto = "";
+    if (exists $inf->{proto}) {
+        $defproto = $inf->{proto};
+    }
+
+    my @proxyhosts = ();
+    if (exists $inf->{proxyhosts} && ref($inf->{proxyhosts}) eq 'ARRAY') {
+        @proxyhosts = @{$inf->{proxyhosts}};
+    }
+
+    my $cached_gss = undef;
+    foreach my $f (keys %{$inf->{files}}) {
+        my $file = $self->unescape($f);
+        my $source = $inf->{files}->{$f}->{href};
+        my $gss = 0;
+        if (exists $inf->{files}->{$f}->{gssapi} && $inf->{files}->{$f}->{gssapi}) {
+            if (!$cached_gss) {
+                $cached_gss = tempdir("ncm-download-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+                $self->debug(1, "storing kerberos credentials in $cached_gss");
+                $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
+                # Assume "kinit" is in the PATH.
+                my $errs = "";
+                my $ret = LC::Process::execute(["kinit", "-k"], stderr => \$errs);
+                if (!$ret) {
+                    $self->error("could not get GSSPI credentials: $errs");
+                    return 0;
+                }
+            }
+            $gss = $cached_gss;
+        }
+
+        if ($source !~ m{^[a-z]+://.*}) {
+            # an incomplete URL... let's add defaults
+            if ($source !~ m{^/}) {
+                $source = "/$source";
+            }
+            if ($source !~ m{^//}) {
+                my $server = $defserver;
+                if (exists $inf->{files}->{$f}->{server}) {
+                    $server = $inf->{files}->{$f}->{server};
+                }
+                if (!$server) {
+                    $self->error("$file requested but no server, ignoring");
+                    next;
+                }
+                $source = "//$server$source";
+            }
+            if ($source =~ m{^//}) {
+                # server specified, but no proto
+                my $proto = $defproto;
+                if (exists $inf->{files}->{$f}->{proto}) {
+                    $proto = $inf->{files}->{$f}->{proto};
+                }
+                if (!$proto) {
+                    $self->error("$file requested but no proto, ignoring");
+                    next;
+                }
+                $source = "$proto:$source";
+            }
+        }
+
+        my $success = 0;
+        if (@proxyhosts && $inf->{files}->{$f}->{proxy}) {
+            my $attempts = scalar @proxyhosts;
+            while ($attempts--) {
+                # take the head of the list and rotate to the end...
+                # we do this in order to avoid continually trying a dead
+                # proxy - once we've found one that works, we'll keep using it.
+                my $proxy = shift @proxyhosts; 
+                $success += $self->download(file => $file,
+                                            href => $source,
+                                            timeout => $inf->{timeout},
+                                            proxy => $proxy,
+                                            gssneg => $gss);
+                if ($success) {
+                    @proxyhosts = ($proxy, @proxyhosts);
+                    last;
+                } else {
+                    @proxyhosts = (@proxyhosts, $proxy);
+                }
+            }
+            if (!$success) {
+                $self->warn("failed to retrieve $source from any proxies, using original");
+            }
+        }
+        if (!$success) {
+            if (!$self->download(file => $file,
+                                 href => $source,
+                                 timeout => $inf->{timeout},
+                                 gssneg => $gss)) {
+                $self->error("failed to retrieve $source, skipping");
+                next;
+            }
+        }
+        $self->info("successfully downloaded $file");
+        my @opts = ();
+	if (exists $inf->{files}->{$f}->{perm}) {
+            push(@opts, 'mode' => $inf->{files}->{$f}->{perm});
+	}
+	if (exists $inf->{files}->{$f}->{owner}) {
+            push(@opts, 'owner' => $inf->{files}->{$f}->{owner});
+	  }
+	  if (exists $inf->{files}->{$f}->{group}) {
+            push(@opts, 'group' => $inf->{files}->{$f}->{group});
+	  }
+        if (@opts) {
+            my $r = LC::Check::status($file, @opts);
+            if ($r > 0) {
+                $self->log("updated $file");
+            } elsif ($r < 0) {
+                $self->error("failed to update perms/ownershup of $file");
+	  }
+	}
+
+        if (exists $inf->{files}->{$f}->{post}) {
+            my $cmd = "$inf->{files}->{$f}->{post} $file";
+            $self->info("post-processing using '$cmd'");
+            my $out = `$cmd 2>&1`;
+            if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?)) {
+                $self->error("post-process of $file gave errors:");
+                $self->error($out);
+            }
+        }
+    }
+
+    return 0;
+}
+
+sub download {
+    my ($self, %opts) = @_;
+    my ($file, $source, $timeout, $proxy, $gssneg);
+    $file    = delete $opts{file};
+    $source  = delete $opts{href};
+    $timeout = delete $opts{timeout};
+    $proxy   = delete $opts{proxy} || "";
+    $gssneg  = delete $opts{gssneg} || 0;
+
+    if ($proxy) {
+        $source =~ s{^([a-z]+)://([^/]+)/}{$1://$proxy/};
+    }
+
+    my @opts = (
+                "-s", # quiet
+                "-R", # timestamp based on remote URL
+                "-z", $file, # if-modified-since $file
+                "-o", $file, # output-file $file
+                "-f", # fail on server error
+                "--create-dirs",
+                );
+    if ($timeout) {
+        push(@opts, "-m", $timeout);
+    }
+    if ($gssneg) {
+        # If negotiate extension is required, then we'll
+        # enabled and put in a dummy username/password.
+        push(@opts, "--negotiate", "-u", "x:x");
+    }
+    $self->debug(1, "running /usr/bin/curl " . join(" ", @opts) . " $source");
+    my $errs = "";
+    my $rc = LC::Process::execute([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
+
+    if (!$rc || $?>>8 != 0) {
+        $self->debug(1, "curl failed (" . ($?>>8) .")");
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+
+1; #required for Perl modules
