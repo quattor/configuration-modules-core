@@ -1,0 +1,57 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::ssh - NCM SSH configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Update the SSH client and/or daemon configuration files, preserving their
+permissions. Replace changed option values and add new options to the end of the
+configuration file(s).
+
+If any changes were made in the daemon configuration file, tell the SSH daemon to
+reload the new configuration by executing the following command:
+
+    /sbin/service sshd reload
+
+=back
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 FILES
+
+=over
+
+=item F</etc/ssh/sshd_config>
+
+The SSH daemon configuration file.
+
+=item F</etc/ssh/ssh_config>
+
+The SSH client configuration file.
+
+=back
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Teemu Sidoroff <Teemu.Sidoroff@cern.ch>
+
+=head1 SEE ALSO
+
+ncm-ncd(1), sshd(8), sshd_config(5), ssh_config(5)
+
+=cut
