@@ -1,0 +1,81 @@
+2008-10-23  root
+
+	* Release: 1.1.5
+	- panc v8 compliance
+
+2008-10-08  iJan Iven
+
+	* Release: 1.1.4
+	- handle missing ntp config files (instead of silently doing nothing)
+
+2007-10-09  Juan Antonio LOPEZ PEREZ
+
+	* Release: 1.1.3
+	- Corrected bug affecting to the clientnetworks option which prevented it to apply the changes.
+
+2007-06-13  Jan Iven
+
+	* Release: 1.1.2
+	- further restrict what a local client can do,
+	remove the full 'server" line for localhost unless we have clients ourselves.
+
+2007-04-02  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.1
+	- new namespace schema support, clean-up
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.10
+	- Remove deprecated 'define' keyword
+
+2006-06-29  Jan Iven,31-2009,74957,
+
+        * Release: 1.0.9
+        - write a more restrictive configuration; add support for NTP client networks; some more debug/info messages; one pass per config file only
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.8
+        - fix incorrect include in template
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.7
+        - name templates correctly
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.6
+        - really add pro_software template
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.5
+        - add pro_software template
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.4
+        - change to structure_component; rearrange
+
+2004-08-06  Thorsten Kleinwort
+
+        * Release: 1.0.3
+        - This component creates a warning if a time server cannot be resolved in DNS, and an error if there are no valid time servers in the configuration
+
+2004-07-28  Thorsten Kleinwort
+
+        * Release: 1.0.2
+        - Removed the AFS bit and added the new location of the timeservers 
+
+2004-05-25  Thorsten Kleinwort
+
+        * Release: 1.0.1
+
