@@ -1,0 +1,133 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+cron: NCM component to control entries in the /etc/cron.d directory
+
+=head1 DESCRIPTION
+
+The I<cron> component manages files in the /etc/cron.d directory.
+Files managed by this component will have the ncm-cron.cron suffix.
+Other files in the directory are not affected by this component.  The
+name of each file will be taken from the nlist name.
+
+
+=head1 MAIN RESOURCES
+
+=head2 /software/components/cron/entries
+
+A list containing cron structures (described above).  
+
+=head1 ENTRY RESOURCES
+
+Each cron entry in the /software/components/cron/entries list may contain the properties and resources described below.
+
+=head2 command : string (required)
+
+Command line to execute, including all its options.
+
+Default : None
+
+=head2 comment : string (optional)
+
+An optional comment to add at the beginning of the cron file.
+
+Default : None
+
+=head2 env : nlist (optional)
+
+An optional nlist containing environment variable that must be defined before executing the command. Key is
+the variable name, value is variable value.
+
+Default : None
+
+=head2 frequency : string (required)
+
+Execution frequency for the command, using standard cron syntax. Minutes field can be 'AUTO' : in this case,
+a random value between 0 and 59 inclusive is generated. This can be used to avoid too many machines executing the same cron at the same
+time.
+
+Default : None
+
+=head2 group : string (optional)
+
+Group to use to run the command. Defaults to user's primary group.
+
+Default : user's primary group
+
+=head2 log : nlist (optional)
+
+A nlist allowing to define specific attributes for cron log file. Supported attributes are :
+
+=over
+
+=item name : name of the log file. If the name is not an absolute file name, file is created in /var/log.
+Default name is the cron file name with .log extension in /var/log.
+
+=item owner : owner/group of the log file, using owner:group format. group can be ommitted.
+
+=item mode : permissions of log file specified as a string interpreted as an octal number.
+
+=back
+
+=head2 name : string (required)
+
+Name of the cron entry file to create.
+
+Default : None
+
+=head2 user : string (optional)
+
+User to use to run the command.
+
+Default : root
+
+=head1 EXAMPLE
+
+"/software/components/cron/entries" = list(
+  nlist(
+    "name","ls",
+    "user","root",
+    "group","root",
+    "frequency", "*/2 * * * *",
+    "command", "/bin/ls"),
+  nlist(
+    "name","hostname",
+    "comment", "some interesting text",
+    "frequency", "*/2 * * * *",
+    "command", "/bin/hostname"),
+    "env", nlist("MAILTO", "admin@example.org"),
+);
+
+This will create two files in /etc/cron.d: ls.ncm-cron.cron and
+hostname.ncm-cron.cron.  
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Charles Loomis <charles.loomis@cern.ch>
+
+=head1 MAINTAINER
+
+Guillaume Philippon <philippo@lal.in2p3.fr>
+
+=head1 VERSION
+
+1.3.0
+
+=head1 SEE ALSO
+
+ncm-ncd(1)
+
+
+=cut
