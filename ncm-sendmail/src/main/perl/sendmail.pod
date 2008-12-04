@@ -1,0 +1,130 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::sendmail - NCM Sendmail configuration component
+
+=head1 SYNOPSIS
+
+=over 2
+
+=item Configure()
+
+=over 4
+
+=item -
+
+Set From header masquerading in sendmail.
+i.e. change the From field "username@localhost.localdomain" to "username@mail.cern.ch".
+Use the following input C</software/components/sendmail/userdomain>
+
+=item -
+
+Set Return-Path masquerading in sendmail.
+i.e. change the Return-Path header "username@localhost.localdomain" to "username@mail.cern.ch".
+
+=item -
+
+Set the outgoing mail server ("smarthost") in sendmail.
+Use the following input C</software/components/sendmail/smarthost>
+
+=item -
+
+Allow external SMTP connections. By default sendmail will listen only to the loopback interface.
+
+=item -
+
+Sets up "relay" for all unqualified names, except either for the list in
+C</software/components/sendmail/localusers> or, if that list hasn't been configured,
+for a (guessed) list of accounts that
+
+=over 6
+
+=item *
+
+have an existing home directory
+
+=item *
+
+do B<not> have an AFS home directory (C</afs/...>)
+
+=item *
+
+do not already have an alias definition in /etc/mail/aliases.db.
+
+=item *
+
+whose I<uid> indicates that this is not a system account (information from C</etc/login.defs>)
+
+=back
+
+"relay" means that a local I<mail username> command on the machine
+will in reality send mail to username@mail.server.dom, instead of
+being appended to the user's local mailbox
+(e.g. I</var/spool/mail/username>).
+
+To turn off the "guessing" mechanism, you will have to configure at
+least one account in C</software/components/sendmail/localusers>,
+C<root> is a good candidate.
+
+
+=back
+
+=item Unconfigure()
+
+=item - Reset From header masquerading in sendmail.
+
+=item - Reset Return-Path header masquerading in sendmail.
+
+=item - Reset outgoing mail server in sendmail.
+
+=item - Reset relay all unqualified names in sendmail.
+
+=back
+
+=head1 RESOURCES
+
+=over 4
+
+=item /etc/mail/sendmail.mc : sendmail macro configuration file
+
+=item /etc/mail/semdmail.cf : sendmail configuration file
+
+=back
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head1 BUGS
+
+The "local user relay" functionality seems to interfere with user
+.forward files, they may not be honoured on some sendmail versions.
+
+Selectively "unconfiguring" certain elements doesn't work, you should
+run the I<unconfigure()> method and re-I<configure()> with the new
+values afterwards.
+
+=head1 AUTHOR
+
+Jan Iven <jan.iven@cern.ch>
+
+=head1 SEE ALSO
+
+ncm-ncd(1), sendmail(8)
+
+=cut
+
+
+### Local Variables: ///
+### mode: perl ///
+### End: ///
