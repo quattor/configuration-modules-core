@@ -1,0 +1,59 @@
+2008-10-31  Wojciech Lapka
+
+	* Release: 1.0.12
+	- Added missing things to documentation
+
+2008-10-31  Wojciech Lapka
+
+	* Release: 1.0.11
+	- Added parameter /software/components/tomcat/serviceopt/RestartTomcat (true|false), which tells if tomcat should be restarted.
+
+2008-02-27  Judit Novak,28-R-026
+
+	* Release: 1.0.10
+	- changing permissions in order to avoid tomcat restarts removing /usr/share/tomcat/webapps/same-pi files
+
+2007-08-20  Judit Novak
+
+	* Release: 1.0.9
+	- restarting tomcat at the end
+
+2007-07-26  Judit Novak
+
+	* Release: 1.0.8
+	- changing directory /usr/share/tomcat5/webapps/ writeable by tomcat user
+
+2007-07-18  Judit Novak
+
+	* Release: 1.0.7
+	- SSL support
+
+2007-06-18  Judit Novak
+
+	* Release: 1.0.6
+	- fix (XML header)
+
+2007-06-14  Judit Novak
+
+	* Release: 1.0.5
+	- removing needlessly include on XML::Writer
+
+2007-06-14  Judit Novak
+
+	* Release: 1.0.4
+	- bugfix: needless include on XML::Writer removed
+
+2007-06-14  Judit Novak
+
+	* Release: 1.0.3
+	- updating profiles
+
+2007-06-14  Judit Novak
+
+	* Release: 1.0.2
+	- 1st version
+
+2007-06-13  Judit Novak <Judit.Novak@cern.ch>
+
+	* Release: 1.0.0
+	- initial release (soon)
