@@ -1,0 +1,149 @@
+2008-11-19  David Groep, H1.56,+31 20 5922179
+
+	* Release: 1.1.14
+	- Added pam_check_service_attr and pam_check_host_attr configuration capability (LDAP)
+	.
+
+2008-10-03  Jan Van Eldik
+
+	* Release: 1.1.13
+	- additional parameter nss_initgroups_ignoreusers for ldap.conf
+
+2008-09-29  Jan Van Eldik
+
+	* Release: 1.1.12
+	- support nss_override_attribute_value to override
+	unixHomeDirectory, loginShell
+
+2008-09-04  Jan Van Eldik
+
+	* Release: 1.1.11
+	- Minor enhancements
+
+2008-06-24  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.1.10
+	- Fixing syntax error in schema.tpl and tagging as release (most recent changes were not tagged)
+
+2008-05-13  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.9
+	- consolidated changes and additional config from Didi
+
+2008-02-14  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.7
+	- Added more pam_* attributes for restricting login based on LDAP groups
+
+2008-02-13  root
+
+	* Release: 1.1.6
+	- Fix --enablesbmauth option (was --enablesmb)
+
+2008-02-01  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.5
+	- Added possibility to configure pam_filter in ldap.conf, thanks to geerd-dietger.hoffmann@cern.ch
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.4
+	- Adjust to new naming convention
+
+2007-03-28  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.3
+	- added headers
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.2
+	- added missing tags in templates
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.1
+	- ouch, failed to remove templates :(
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.0
+	- New templates based on namespaces added; old one removed
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.15
+	- Remove deprecated 'define' keyword
+
+2007-01-23  Matthias SCHROEDER
+
+        * Release: 1.0.14
+        - prevent authconfig from trying to launch in X11 mode
+
+2006-03-27  Vasilis Christaras
+	* Release: 1.0.13
+	- Fixed problems with authconfig cmd exit codes 
+
+2006-03-10 Vasilis Christaras
+	* Release: 1.0.12
+	- Added [arguments] support at /etc/pam.d/system-auth
+
+2005-08-07  Charles Loomis
+
+        * Release: 1.0.10
+        - NIS domain is not necessarily a FQDN
+
+2005-08-05  Charles Loomis
+
+        * Release: 1.0.9
+        - use standard types for validation (#10007)
+
+2005-08-05  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.8
+        - Removed validation from hostname(lists), solving bug#10007
+
+2005-08-05  Charles Loomis
+
+        * Release: 1.0.7
+        - fix bug #9038
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.6
+        - change to structure_component
+
+2005-03-07  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.5
+        - Added pamadditions functionality to modify pam.d/system-auth file after running authconfig
+
+2005-01-13  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.4
+        - added support for MD5, shadow, and cache (nscd)
+
+2004-12-24  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.3
+        - Refaired bug on LDAP authentication (PAM)
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.2
+        - Fixed prototype error in getValueDefault
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.1
+        - fixed bug in enabling TLS over ldap (now uses --enableldaptls)
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.0
+        - New release for use with Quattor 1.0.0
+
+2004-08-13  David Groep
+
+        * 0.1.0: First Version
+
