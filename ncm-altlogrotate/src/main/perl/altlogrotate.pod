@@ -1,0 +1,22 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+@COMP: NCM component to control the log rotate configuration
+
+=head1 DESCRIPTION
+
+The I<altlogrotate> component manages the log rotate configuration files.
+
+=head1 RESOURCES
+
+=head2 /software/components/altlogrotate/entries
+
+A named list containing logrotate structures.
+
+=head1 ALTLOGROTATE
+
+=cut
