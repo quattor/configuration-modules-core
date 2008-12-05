@@ -1,0 +1,140 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+# Coding style: emulate <TAB> characters with 4 spaces, thanks!
+################################################################################
+
+
+
+=head1 NAME
+
+NCM::afsclt - NCM AFS client configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Sets ThisCell and enables AFS authentication (via authconfig) and a
+few options in /etc/sysconfig/afs. Configures /etc/sysconfig/iptables
+for the AFS client callback port.
+
+=item Unconfigure()
+
+/etc/sysconfig/afs: reset to defaults
+iptables: remove the AFS ports
+authconfig: no action
+CellServDB: no action
+
+=back
+
+=head1 RESOURCES
+
+=over
+
+=item /software/components/afsclt/active : boolean
+
+activates/deactivates the component.
+
+=item /software/components/afsclt/thiscell : string
+
+local AFS cell for this machine
+
+=item /software/components/afsclt/settime : boolean
+
+make AFS client set the system time or not.
+
+=item /software/components/afsclt/options : nlist
+
+various command-line options for the afsd daemon
+
+=item /software/components/afsclt/verbose : boolean
+
+lots of debugging output in the logs.
+
+=item /software/components/afsclt/cachesize : int
+
+desired AFS cache size on disk, in 1K blocks. The running AFS cache
+will get adjusted online, and $afs_cacheinfo will be changed if
+required. Please note that an available (mounted) AFS cache partition
+has precedence over this value, i.e. you cannot force a lower usage of
+the cache partition. For Linux machines, a cache partition will use
+CACHESIZE=AUTOMATIC, for other OSes, a hardcoded fill rate of 85% is
+used.
+
+=item /software/components/afsclt/cellservdb : string
+
+A regularly-updated AFS CellServDB URL or filename (e.g. from AFS)
+that this component will copy to local disk. The local AFS client will
+get notified of any additions or changes within a cell.
+
+=item /software/components/afsclt/libpam : string
+
+Full path to PAM library to use for (Kerberos) authentication. The
+reason this is hooked here instead of in the Kerberos component is
+that a valid Kerberos config may be useful on a standalone
+(non-AFS-account) system, but as soon as AFS user accounts are present
+we absolutely need to properly configure authentication for
+them. Besides, this is historic - on Linux we used authconfig to set
+the Cell and the PAM config at the same time.
+
+Default is to use the pam_krb5 "flavour" of PAM. If you set this,
+please also set the PAM library options below.
+
+=item /software/components/afsclt/libpam_options_auth_auth : string
+
+=item /software/components/afsclt/libpam_options_auth_session : string
+
+=item /software/components/afsclt/libpam_options_auth_passwd : string
+
+=item /software/components/afsclt/libpam_options_auth : string
+
+Options for the PAM library for the "new session starts"
+case. C<.._auth> is the default for PAM blocks where nothing is
+configured explicitly.
+
+=item /software/components/afsclt/libpam_options_refresh: string
+
+Options for the PAM library for "old session should get refreshed" case, all PAM blocks.
+
+=back
+
+=head1 BUGS
+
+The "debug" and "suidcell" parameters are silently ignored for now.
+
+The component configures Kerberos authentication.
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head1 AUTHOR
+
+Jaroslaw Polok <jaroslaw.polok@cern.ch>
+
+=head1 SEE ALSO
+
+authconfig(1), C<fs help>, iptables documentation
+
+-head1 BUGS
+
+Previous versions insisted on configuring a PAM C<account> entry, 
+this didn't really work for local accounts such as I<root>...
+
+=cut
+
+
+1; #required for Perl modules
+
+### Local Variables: ///
+### mode: perl ///
+### End: ///
