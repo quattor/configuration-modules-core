@@ -56,6 +56,8 @@ type xen_domain_options = {
     "nfs_server" ? type_ip  
     "nfs_root"   ? string
     "extra" ? string
+    "vfb" ? string
+
 
 # restart = 'onreboot' means on_poweroff = 'destroy'
 #                            on_reboot   = 'restart'
