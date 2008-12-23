@@ -1,3 +1,23 @@
+2008-12-23  root
+
+	* Release: 1.3.3
+	- Commit into SF repository last pending changes
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- Rename component-specific 'version' conflicting with global component version
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- Add a default no_contact_timeout
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- panc v8 compliance
+
 2008-09-24
 	* Release 1.3.2
 	- Check on boot whether running from NCM run or not and delay start if yes

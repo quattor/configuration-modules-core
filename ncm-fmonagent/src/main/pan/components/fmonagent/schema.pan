@@ -7,12 +7,12 @@
 
 declaration template components/fmonagent/schema;
 
-include quattor/schema;
+include { 'quattor/schema' };
 
 type component_fmonagent = {
     include structure_component
-    "version" ? long
-    "no_contact_timeout" : long
+    "LEMONversion" ? long
+    "no_contact_timeout" : long = 120
 };
 
-type "/software/components/fmonagent" = component_fmonagent;
+bind "/software/components/fmonagent" = component_fmonagent;
