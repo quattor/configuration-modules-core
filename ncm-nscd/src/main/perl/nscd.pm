@@ -160,7 +160,8 @@ sub Configure($$) {
 
     $s=`/sbin/service nscd condrestart 2>&1`;
     chomp($s);
-    if ($?) {
+    if ($? && $s) {
+      # also get bad return code if the service wasn't running, so need to check for actual error msg
       $self->error("can't restart service, changes not activated:\n$s");
     } else {
       $self->info("service nscd has been condrestart-ed");
