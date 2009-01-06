@@ -61,6 +61,7 @@ type component_iptables_rule = {
     "set"               ? boolean
     "rcheck"            ? boolean
     "seconds"           ? number
+    "pkt-type"          ? string   
 
 };
 
