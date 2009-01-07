@@ -3,7 +3,7 @@
 # ${author-info}
 
 #
-# authconfig - authconfig NCM component.
+# authconfig - authconfig NCM component
 #
 ################################################################################
 
