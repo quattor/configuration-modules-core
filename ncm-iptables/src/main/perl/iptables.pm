@@ -223,35 +223,49 @@ my %options_op  = ( '-A'              => \&upercase,
 #   OUTPUT: $ip       - ip address.
 ##########################################################################
 sub dns2ip ( $ ) {
-    my ($name) = @_;
+    my ($self, $name) = @_;
     my ($hostname, $alias, $addrtype, $length, $addr);
     my @addr;
 
-    return ''    if ( ! defined $name || $name eq "" );
-    return $name if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$/ );
+    if ( ! defined $name || $name eq "" ) {
+	$self->debug(2, "dns2ip-BAD: empty name");
+	return '';
+    };
+    if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$/ ) {
+	$self->debug(2, "dns2ip-OK: already numeric");
+	return $name;
+    }
 
     ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
     
-    return '' if ( !$hostname || $hostname ne "$name" || $length != 4 || $addr eq "" );
+    if ( !$hostname || $length != 4 || $addr eq "" ) {
+	# no longer insist that the hostname in the config is canonical,
+        # i.e. perfectly matches the DNS result
+	$self->debug(2, "dns2ip-BAD: failed or weird gethostbyname");
+	return '';
+    }
     
     @addr = unpack ('C4', $addr);
-    return '' if ( scalar(@addr) != 4 );
+    if ( scalar(@addr) != 4 ) {
+	$self->debug(2, "dns2ip-BAD: weird address format/length?");
+	return '';
+    };
     
     $name =  "@addr";
     $name =~ s/\s/\./g;
-
+    $self->debug(2, "dns2ip-OK: resolved $name");
     return $name;
 }
 
 ##########################################################################
 # upercase() Transform all lowercase text to upercase.
 #
-# SYNOPSYS: $text upsercase ( $text )
+# SYNOPSYS: $text uppercase ( $text )
 #    INPUT: $text     - text to transform;
 #   OUTPUT: $text     - text in upercase.
 ##########################################################################
 sub upercase {
-    my ($text) = @_;
+    my ($self, $text) = @_;
 
     return '' if ( ! defined $text );
 
@@ -360,9 +374,9 @@ sub GetResource {
 
 	#define the regular expressions for -N, -A etc based on the specific targets for table
 
-	my $tmp = &upercase(&regExp(@{$iptables_totality{$table}{chains}}));
+	my $tmp = &upercase($self, &regExp(@{$iptables_totality{$table}{chains}}));
 	$options_arg{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
-	$options_arg{'-j'} = &upercase(&regExp(@{$iptables_totality{$table}{targets}}));
+	$options_arg{'-j'} = &upercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
 
 	#
 
@@ -393,8 +407,8 @@ RULE:	foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
 
 	    if ( defined $rule->{-j} ) {
 		#check if exists
-		if ( &upercase($rule->{-j}) !~ /$options_arg{'-j'}/) {
-		    $iptables_totality{$table}{user_targets}{&upercase($rule->{-j})} = 1;
+		if ( &upercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
+		    $iptables_totality{$table}{user_targets}{&upercase($self, $rule->{-j})} = 1;
 		}
 
 	    }
@@ -410,7 +424,7 @@ RULE:	foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
 		
 	        if ( defined $options_op{$key} && $options_op{$key} ne "" ) {
 		  my $opresult;
-		  $opresult = &{$options_op{$key}}($rule->{$key});
+		  $opresult = &{$options_op{$key}}($self, $rule->{$key});
 		  if (!$opresult) {
 		    $self->warn("failed to convert $key : ".$rule->{$key}." - IGNORING THIS RULE");
 		    next RULE;
