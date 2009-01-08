@@ -1,3 +1,8 @@
+2009-01-08  <unknown>
+
+	* Release: 2.3.4
+	- allow DNS aliases; more debugging for DNS resolutions. #45672
+
 2008-11-18  Jan Iven
 
 	* Release: 2.3.3
