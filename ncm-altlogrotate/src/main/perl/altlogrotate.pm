@@ -44,8 +44,14 @@ sub Configure($$@) {
     # Actually delete them.  This should always be done as no entries
     # in the machine profile means that there should be no entries in 
     # the directory either. 
-    foreach (@files) {
-        $self->warn("error ($?) deleting file $_") unless (unlink $_);
+    foreach my $to_unlink (@files) {
+	# Untainted to_unlink to work with tainted perl mode (-T option)
+        if ($to_unlink =~ /^(.*)$/) {
+                $to_unlink = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $to_unlink");
+        }
+        $self->warn("error ($?) deleting file $_") unless (unlink $to_unlink);
 
 	#
 	# restore eventually backed up files (to be implemented)

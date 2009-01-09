@@ -1,3 +1,8 @@
+2009-01-09  root
+
+	* Release: 1.1.5
+	- fix bug #43194 (insecure dependancy)
+
 2007-11-27  Charles Loomis
 
 	* Release: 1.1.4
