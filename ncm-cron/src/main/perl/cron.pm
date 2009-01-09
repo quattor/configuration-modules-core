@@ -56,8 +56,15 @@ sub Configure($$@) {
     # Actually delete them.  This should always be done as no entries
     # in the profile indicates that there should be no entries in the
     # cron.d directory either. 
-    foreach (@files) {
-        unlink $_;
+    foreach my $to_unlink (@files) {
+	# Untainted to_unlink to work with tainted perl mode (-T option)
+        if ($to_unlink =~ /^(.*)$/) {
+                $to_unlink = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $to_unlink"); 
+        }
+
+	unlink $to_unlink;
         $self->log("error ($?) deleting file $_") if $?;
     }
 
