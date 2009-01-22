@@ -312,6 +312,7 @@ type structure_nagios_nagios_cfg = {
 	"debug_level" ? long
 	"debug_verbosity" ? long (0..2)
 	"max_debug_file_size" ? long
+    "ocsp_command" ? string
 };
 	
 type structure_nagios_service_list=structure_nagios_service[];

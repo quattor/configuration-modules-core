@@ -1,3 +1,8 @@
+2009-01-22  RonaldS
+
+	* Release: 1.4.7
+	- Adding optional field ocsp_command to general options
+
 2008-08-28  "Luis Fernando"
 
 	* Release: 1.4.6
