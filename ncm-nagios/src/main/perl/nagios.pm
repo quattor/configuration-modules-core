@@ -5,7 +5,7 @@
 # File: nagios.pm
 # Implementation of ncm-nagios
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.7 : 22/01/09 16:44
+# Version: 1.4.8 : 23/01/09 14:14
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -28,6 +28,7 @@ our $EC = LC::Exception::Context->new->will_store_all;
 our $this_app = $NCM::Component::this_app;
 
 use constant NAGIOS_FILES => { general	=>  '/etc/nagios/nagios.cfg',
+                               cgi      =>  '/etc/nagios/cgi.cfg',
 			       hosts	=>  '/etc/nagios/hosts.cfg',
 			       hostgroups=>'/etc/nagios/hostgroups.cfg',
 			       services	=>  '/etc/nagios/services.cfg',
@@ -73,7 +74,7 @@ sub print_general
     print FH "log_file=$t->{log_file}\n";
 
     while (my ($k, $path) = each (%{NAGIOS_FILES()})) {
-	next if $k eq 'general';
+	next if ($k eq 'general' || $k eq 'cgi');
 	if ($cfg->elementExists (BASEPATH.$k)) {
 	    print FH $k eq 'macros'?"resource_file":"cfg_file",
 		 "=$path\n";
@@ -104,6 +105,56 @@ sub print_general
     close (FH);
     chown (NAGIOSUSR, NAGIOSGRP, NAGIOS_FILES->{general});
     chmod (0770, NAGIOS_SPOOL, $path);
+}
+
+# Prints the NagiosCGI configuration file, cgi.cfg.
+sub print_cgi
+{
+    my $cfg = shift;
+
+    if ( $cfg->elementExists (BASEPATH . 'cgi') ) {
+        unlink (NAGIOS_FILES->{cgi});
+        open (FH, ">".NAGIOS_FILES->{cgi});
+
+        my $t = $cfg->getElement (BASEPATH . 'cgi')->getTree;
+        print FH "main_config_file=".NAGIOS_FILES->{general}."\n";
+
+        print FH "physical_html_path=$t->{physical_html_path}\n";
+        print FH "url_html_path=$t->{url_html_path}\n";
+        print FH "show_context_help=$t->{show_context_help}\n";
+        print FH "use_authentication=$t->{use_authentication}\n";
+        print FH "default_statusmap_layout=$t->{default_statusmap_layout}\n";
+        print FH "default_statuswrl_layout=$t->{default_statuswrl_layout}\n";
+        print FH "ping_syntax=$t->{ping_syntax}\n";
+        print FH "refresh_rate=$t->{refresh_rate}\n";
+
+        # optional fields
+        foreach my $opt ( qw { nagios_check_command
+                               default_user_name 
+                               authorized_for_system_information
+                               authorized_for_system_commands
+                               authorized_for_configuration_information
+                               authorized_for_all_services
+                               authorized_for_all_hosts
+                               authorized_for_all_service_commands
+                               authorized_for_all_host_commands
+                               statusmap_background_image
+                               statuswrl_include
+                               host_unreachable_sound
+                               host_down_sound
+                               service_critical_sound
+                               service_warning_sound
+                               service_unknown_sound
+                               normal_sound 
+                             } ) {
+            if ( $t->{$opt} ) {
+                print FH "$opt=$t->{$opt}\n";   
+            }
+        }
+
+        chown (NAGIOSUSR, NAGIOSGRP, NAGIOS_FILES->{cgi});
+        chmod (0660, NAGIOS_FILES->{cgi});
+    }
 }
 
 # Prints all the host definitions on /etc/nagios/hosts.cfg
@@ -322,6 +373,7 @@ sub Configure
     umask (0117);
 
     print_general ($config);
+    print_cgi ($config);
     print_macros ($config);
     print_hosts ($config);
     print_commands ($config);

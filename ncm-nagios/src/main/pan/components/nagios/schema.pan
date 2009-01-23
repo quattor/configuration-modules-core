@@ -188,6 +188,35 @@ type structure_nagios_serviceextinfo = {
 	"icon_image_alt" ? string
 } with has_host_or_hostgroup (SELF);
 
+# CGI configuration
+type structure_nagios_cgi_cfg = {
+	"physical_html_path"    : string = "/usr/share/nagios"
+	"url_html_path"         : string = "/nagios"
+	"show_context_help"     : boolean = false
+	"nagios_check_command"  ? string
+	"use_authentication"    : boolean = true
+	"default_user_name"     ? string
+	"authorized_for_system_information" ? string
+	"authorized_for_configuration_information"  ? string
+	"authorized_for_system_commands"    ? string
+	"authorized_for_all_services"   ? string
+	"authorized_for_all_hosts"      ? string
+	"authorized_for_all_service_commands"   ? string
+	"authorized_for_all_host_commands"      ? string
+	"statusmap_background_image"    ? string
+	"default_statusmap_layout"  : long = 5
+	"default_statuswrl_layout"  : long = 4
+	"statuswrl_include"         ? string
+	"ping_syntax"               : string = "/bin/ping -n -U -c 5 $HOSTADDRESS$"
+	"refresh_rate"              : long = 90
+	"host_unreachable_sound"    ? string
+	"host_down_sound"           ? string
+	"service_critical_sound"    ? string
+	"service_warning_sound"     ? string
+	"service_unknown_sound"     ? string
+	"normal_sound"              ? string
+};
+
 # General options
 type structure_nagios_nagios_cfg = {
 	"log_file" : string = "/var/log/nagios/nagios.log"
@@ -326,6 +355,7 @@ type structure_component_nagios = {
 	"services"	: structure_nagios_service_list {}
 	"servicegroups"	? structure_nagios_servicegroup {}
 	"general"       : structure_nagios_nagios_cfg
+    "cgi"       ? structure_nagios_cgi_cfg
 	"serviceextinfo" ? structure_nagios_serviceextinfo []
         "servicedependencies" ?  structure_nagios_servicedependency []
 	"timeperiods"	: structure_nagios_timeperiod {}

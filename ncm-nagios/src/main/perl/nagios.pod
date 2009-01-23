@@ -26,6 +26,12 @@ named just like the tags for the appropriate Nagios object.
 Global settings for Nagios. These settings will be written in
 /etc/nagios/nagios.cfg .
 
+=item * /software/components/nagios/cgi
+
+Configuration of the Nagios web interface. 
+This path is optional. If it exists, the settings will be
+written in /etc/nagios/cgi.cfg. 
+
 =item * /software/components/nagios/hosts
 
 Host definitions, indexed by host name. There is no host_name option,
@@ -146,6 +152,8 @@ The following files are written by this component:
 =over 4
 
 =item * /etc/nagios/nagios.cfg
+
+=item * /etc/nagios/cgi.cfg
 
 =item * /etc/nagios/contacts.cfg
 
