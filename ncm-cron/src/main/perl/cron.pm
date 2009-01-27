@@ -69,7 +69,7 @@ sub Configure($$@) {
     }
 
     # Only continue if the entries line is defined. 
-    unless (@{$cron_entries}) {
+    unless ($cron_entries) {
         return 1;
     }
 
