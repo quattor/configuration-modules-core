@@ -197,8 +197,10 @@ type structure_syslogng_filter = {
 	"program" ? string
 	"host" ? string
 	"match" ? string
-	"filter" ? filterstring
+	"filter" ? filterstring[]
 	"netmask" ? type_ip
+	# Filter to be negated
+	"exclude_filters" ? filterstring[]
 };
 
 # All the filters lie in here.

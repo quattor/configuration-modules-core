@@ -37,6 +37,10 @@ Named list of C<filter> structures, indexed by C<filter> name. Rules
 inside a filter are combined by an OR operator. If you want AND
 filters, use several filters inside a log path.
 
+An additional field to the standard syslog-ng's usual filter
+capabilities is added: C<exclude_filters>. This links to an already
+defined filter, but it will be included in current one, NEGATED.
+
 =item * /software/components/syslogng/log_rules : log_rule[]
 
 List of C<log_rule> structures.

@@ -1,3 +1,11 @@
+2009-01-27  Luis Fernando Muñoz Mejías <luis.fernando.munoz.mejias@cern.ch>
+
+	* Release: 1.1.0
+	- Added support for exclude_filters and nesting several filters.
+
+	Now, all possible logical combinations are possible by combining
+	filters.
+
 2008-05-09  Luis Fernando Muñoz Mejías
 
 	* Release: 1.0.3

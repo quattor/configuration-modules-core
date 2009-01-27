@@ -5,7 +5,7 @@
 # File: syslogng.pm
 # Implementation of ncm-syslogng
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.0.3 : 09/05/08 15:52
+# Version: 1.1.0 : 27/01/09 21:39
 # Read carefully http://www.balabit.com/dl/html/syslog-ng-admin-guide_en.html/bk01-toc.html before using this component.
 #
 # Note: all methods in this component are called in a
@@ -120,6 +120,16 @@ sub print_filters
 		    if exists $ft->{host};
 		push (@conds, "\tprogram($ft->{program})\n")
 		    if exists $ft->{program};
+		if (exists ($ft->{filters})) {
+		    foreach my $f (@{$ft->{filters}}) {
+			    push (@conds, "\tfilter ($f)\n");
+		    }
+		}
+		if (exists ($ft->{exclude_filters})) {
+		    foreach my $f (@{$ft->{exclude_filters}}) {
+			    push (@conds, "\tnot filter ($f)\n");
+		    }
+		}
 		print $fh join ("\n\tor\n", @conds), ";\n};\n";
 	}
 }
