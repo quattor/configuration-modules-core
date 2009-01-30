@@ -115,6 +115,30 @@ sub process_path {
         return 0;
     } 
 
+    # Untainted all variable (UID/GID/PATH/PERM) see bug #42704
+    if ($uid =~ /^(.*)$/) {
+                $uid = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $uid");
+        }
+
+    if ($gid =~ /^(.*)$/) {
+                $gid = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $gid");
+        }
+
+    if ($path =~ /^(.*)$/) {
+                $path = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $path");
+        }
+
+    if ($perm =~ /^(.*)$/) {
+                $perm = $1;                     # $to_unlink is now untainted
+        } else {
+                $self->error("Bad data in $perm");
+        }
     # Make the file or directory.
     if ($type eq "f") {
 

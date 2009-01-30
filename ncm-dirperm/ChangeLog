@@ -1,3 +1,8 @@
+2009-01-30  root
+
+	* Release: 1.3.2
+	- Fix bug #42704 (Insecure dependency in taint mode)
+
 2008-04-27  root
 
 	* Release: 1.3.1
