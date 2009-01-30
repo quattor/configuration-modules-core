@@ -23,7 +23,7 @@ use LC::Process qw (execute);
 
 use constant PATH	=> '/software/components/syslogng/';
 use constant SYSLOGFILE	=> '/etc/syslog-ng/syslog-ng.conf';
-use constant SYSLOG_PIDFILE => '/var/run/syslog-ng.pid';
+use constant SYSLOG_PIDFILE => '/var/run/syslogd.pid';
 use constant SYSLOG_RELOAD => qw (/sbin/service syslog-ng reload);
 use constant SYSLOG_START => qw (/sbin/service syslog-ng start);
 
@@ -118,10 +118,8 @@ sub print_filters
 		    if exists $ft->{program};
 		push (@conds, "\thost($ft->{host})\n")
 		    if exists $ft->{host};
-		push (@conds, "\tprogram($ft->{program})\n")
-		    if exists $ft->{program};
-		if (exists ($ft->{filters})) {
-		    foreach my $f (@{$ft->{filters}}) {
+		if (exists ($ft->{filter})) {
+		    foreach my $f (@{$ft->{filter}}) {
 			    push (@conds, "\tfilter ($f)\n");
 		    }
 		}
