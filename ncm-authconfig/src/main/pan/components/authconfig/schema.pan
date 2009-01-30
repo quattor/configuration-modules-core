@@ -63,7 +63,7 @@ type authconfig_nss_override_attribute_value = {
 
 type authconfig_method_ldap_type = {
   include authconfig_method_generic_type
-  "servers"	: type_hostname[]
+  "servers"	: string[]
   "nssonly"	? boolean
   "conffile"	? string
   "basedn"	: string
