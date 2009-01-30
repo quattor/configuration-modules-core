@@ -8,6 +8,11 @@
 	* Release: 1.1.15
 	- Relaxed ldap servers type to allow for URIs, needed for RHEL5 (but illegal for RHEL <=4)
 
+2009-01-30  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.15
+	- Relaxed ldap servers type to allow for URIs, needed for RHEL5 (but illegal for RHEL <=4)
+
 2008-11-19  David Groep, H1.56,+31 20 5922179
 
 	* Release: 1.1.14
