@@ -1,3 +1,8 @@
+2009-02-09  David O'Callaghan
+
+	* Release: 4.0.1
+	- Speed up checks of existing group membership
+
 2008-11-23  root
 
 	* Release: 3.0.15
