@@ -298,7 +298,7 @@ sub fill_user_hash {
         my $grouplist=$prof_hash->{"groups"};
 
         $user_hash->{"pgroup"}=($prof_hash->{"groups"}->[0]);   
-        $user_hash->{"groups"}=join(',',@$grouplist);
+        $user_hash->{"groups"}=join(',',sort @$grouplist);
         
     }
 
@@ -322,6 +322,36 @@ sub fill_user_hash {
     }
 }
 
+# Retrieves existing groups from system and fills a hash.
+# IN: self (for logging) 
+# OUT: hash of lists containing groups (by name) for each user (by name)
+##########################################################################
+sub get_existing_user_groups_hash {
+##########################################################################
+    my ($self) = @_;
+
+    my %user_groups;
+
+    # get groups entries 
+    while (my ($group, $passwd, $gid, $members) = getgrent) {
+        next if $members =~ /^$/;
+        my @members = split ' ', $members;
+        $self->debug(5, "$group has '@members'\n");
+        foreach my $user (@members) {
+            $self->debug(5, "adding $user to $group\n");
+            push @{ $user_groups{$user} }, $group;
+        }
+    }
+    endgrent();
+
+    # sort list for each user
+    foreach my $user (keys %user_groups) {
+        @{ $user_groups{$user} } = sort @{ $user_groups{$user} };
+    }
+
+    return %user_groups;
+}
+
 # Retrieves existing users from system and fills a set of user hashes.
 # If this is done on a system that gets it's users over ldap it will deadlock
 # IN: self (for logging) 
@@ -339,6 +369,9 @@ sub get_existing_users {
     }else{
 	$getUserFunction = \&getpwent;
     }
+
+    my %user_groups = $self->get_existing_user_groups_hash();
+
     my %existing_users;
 
     while(my $pw  = &$getUserFunction($username)){
@@ -356,16 +389,11 @@ sub get_existing_users {
         $user_hash{'shell'}=$pw->shell;
         
         # get full list of groups
-        my $cammdtoExec = $SYSID." -Gn ". $pw->name;
-        my $groups=output($cammdtoExec);
-        chomp($groups);
-
-        if ($? == 0) {
-            $groups =~ s/ /,/g;
-            $user_hash{'groups'}= $groups;
-        } else {
-            $self->warn("Failed to get groups for existing user ". $pw->name.".");
-        }
+        my $groups = "";
+        if (exists $user_groups{$pw->name}) {
+            $groups = join ',', @{ $user_groups{$pw->name} };
+        }    
+        $user_hash{'groups'}= $groups;
 	
         $existing_users{$pw->name}=\%user_hash;
 	last if($username);
