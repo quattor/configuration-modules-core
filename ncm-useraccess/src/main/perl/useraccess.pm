@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.5 : 10/02/09 11:34
+# Version: 1.4.6 : 10/02/09 11:39
 # 
 #
 # Note: all methods in this component are called in a
@@ -114,7 +114,7 @@ sub initialize_acls
 	} else {
 	    next;
 	}
-	remove(ACL_DIR . "/$file");
+	unlink(ACL_DIR . "/$file");
 	# Ugly, ugly, ugly UGLY hack: remove pam_listfile
 	# lines from all services.
 	execute(["sed", "-i", "/.*pam_listfile.*user.*file=.*$file/d",
