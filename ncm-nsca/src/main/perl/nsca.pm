@@ -75,9 +75,12 @@ sub Configure
 
         $fh->print ("# send_nsca.cfg\n",
             "password=$st->{password}\n",
-            "encryption_method=$st->{decryption_method}\n",
+            "encryption_method=$st->{encryption_method}\n",
         );
 
+        my $uid = (getpwnam ($st->{user}))[2];
+        my $gid = (getpwnam ($st->{group}))[3];
+        chown ($uid, $gid, DAEMON_CFG);
         chmod (0640, SEND_CFG);
     }
 
