@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.4 : 15/11/08 01:10
+# Version: 1.4.5 : 10/02/09 11:34
 # 
 #
 # Note: all methods in this component are called in a
@@ -22,7 +22,6 @@ use FileHandle;
 use DirHandle;
 use LC::Process qw (execute);
 use LC::Exception qw (throw_error);
-use LC::File qw(makedir remove);
 # Might handle the requests in parallel, but this is simpler.
 use LWP::UserAgent;
 use CAF::FileWriter;
@@ -134,7 +133,7 @@ sub initialize_user
     # This might not exist yet.
     my $ssh_dir = "$home/" . SSH_DIR;
     if (! -d "$ssh_dir") {
-	makedir("$ssh_dir");
+	mkdir("$ssh_dir");
 	chown($uid, $gid, $ssh_dir);
 	chmod(0700, $ssh_dir);
     }
