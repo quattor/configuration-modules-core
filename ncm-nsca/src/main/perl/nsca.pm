@@ -80,7 +80,7 @@ sub Configure
 
         my $uid = (getpwnam ($st->{user} || 'nagios'))[2];
         my $gid = (getpwnam ($st->{group} || 'nagios'))[3];
-        chown ($uid, $gid, DAEMON_CFG);
+        chown ($uid, $gid, SEND_CFG);
         chmod (0640, SEND_CFG);
     }
 
