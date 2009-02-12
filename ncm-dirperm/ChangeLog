@@ -1,5 +1,10 @@
 2009-02-12  Nick Williams
 
+	* Release: 1.4.1
+	- extra panc8 syntax fix
+
+2009-02-12  Nick Williams
+
 	* Release: 1.4.0
 	- fix for panc 8 syntax
 

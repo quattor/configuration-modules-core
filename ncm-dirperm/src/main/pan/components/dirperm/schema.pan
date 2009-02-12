@@ -8,7 +8,7 @@ declaration template components/dirperm/schema;
 include { "quattor/schema" };
 
 function dirperm_permissions_valid = {
-  if ( argc != 1 ) {
+  if ( ARGC != 1 ) {
     error('dirperm_permissions_valid : missing argument');
   };
 
