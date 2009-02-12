@@ -1,3 +1,8 @@
+2009-02-12  Nick Williams
+
+	* Release: 1.4.0
+	- fix for panc 8 syntax
+
 2009-01-30  root
 
 	* Release: 1.3.2

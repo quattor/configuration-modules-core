@@ -5,7 +5,7 @@
 
 declaration template components/dirperm/schema;
 
-include quattor/schema;
+include { "quattor/schema" };
 
 function dirperm_permissions_valid = {
   if ( argc != 1 ) {
@@ -14,15 +14,15 @@ function dirperm_permissions_valid = {
 
   perm_valid=true;
 
-  if ( self['type'] == 'd' ) {
-     if ( !match(self['perm'],'^[0-7]?[0-7]{3,3}$') ) {
+  if ( SELF['type'] == 'd' ) {
+     if ( !match(SELF['perm'],'^[0-7]?[0-7]{3,3}$') ) {
        perm_valid=false;
-       error('dirperm : invalid permissions ('+self['perm']+') for directory '+self['path']); 
+       error('dirperm : invalid permissions ('+SELF['perm']+') for directory '+SELF['path']); 
      };
   } else {
-     if ( !match(self['perm'],'^[02-6]?[0-7]{3,3}$') ) {
+     if ( !match(SELF['perm'],'^[02-6]?[0-7]{3,3}$') ) {
        perm_valid=false;
-       error('dirperm : invalid permissions ('+self['perm']+') for file '+self['path']); 
+       error('dirperm : invalid permissions ('+SELF['perm']+') for file '+SELF['path']); 
      };
   };
 
@@ -31,15 +31,15 @@ function dirperm_permissions_valid = {
 
 type structure_dirperm_entry = {
     'path'    : string
-    'perm'    : string with match(self,'[0-7]{3,4}') 
-    'owner'   : string with match(self, '\w+(:\w+)?')
-    'type'    : string with match(self, 'd|f')
+    'perm'    : string with match(SELF,'[0-7]{3,4}') 
+    'owner'   : string with match(SELF, '\w+(:\w+)?')
+    'type'    : string with match(SELF, 'd|f')
     'initdir' ? string[] 
-} with dirperm_permissions_valid(self);
+} with dirperm_permissions_valid(SELF);
 
 type component_dirperm = {
     include structure_component
     'paths' ? structure_dirperm_entry[]
 };
 
-type '/software/components/dirperm' = component_dirperm;
+bind '/software/components/dirperm' = component_dirperm;
