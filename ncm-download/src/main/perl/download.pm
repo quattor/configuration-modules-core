@@ -99,6 +99,7 @@ sub Configure {
                 $self->debug(1, "storing kerberos credentials in $cached_gss");
                 $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
                 # Assume "kinit" is in the PATH.
+                my $errs = "";
                 CAF::Process::execute(["kinit", "-k"], stderr => \$errs);
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
                     $self->error("could not get GSSAPI credentials: $errs");
@@ -193,8 +194,9 @@ sub Configure {
 
         my $cmd = $inf->{files}->{$f}->{post};
         if ($cmd) {
+            my $errs = "";
             CAF::Process::execute([ $cmd, $file], stderr => \$errs);
-            if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
+            if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                 $self->error("post-process of $file gave errors: $errs");
             }
         }
