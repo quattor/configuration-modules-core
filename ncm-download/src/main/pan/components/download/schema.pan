@@ -44,10 +44,10 @@ type component_download_file = {
 type component_download_type = extensible {
     include structure_component
     "server" ? string
-    "proto"  ? string with match(self, "https?")
+    "proto"  ? string with match(SELF, "https?")
     "files"  ? component_download_file{}
     "proxyhosts" ? string[]
 };
 
-type "/software/components/download" = component_download_type;
+bind "/software/components/download" = component_download_type;
 
