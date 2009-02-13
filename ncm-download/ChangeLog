@@ -1,5 +1,10 @@
 2009-02-13  Nick Williams
 
+	* Release: 1.1.1
+	- typo
+
+2009-02-13  Nick Williams
+
 	* Release: 1.1.0
 	- Switch to CAF::Process::execute, and better checking for failure
 
