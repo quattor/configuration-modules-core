@@ -12,10 +12,10 @@
 ############################################################
 
 unique template components/symlink/config-rpm;
-include components/symlink/schema;
+include { 'components/symlink/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-symlink","1.2.0-1","noarch");
+"/software/packages"=pkg_repl("ncm-symlink","1.2.1-1","noarch");
  
 "/software/components/symlink/dependencies/pre" ?= list("spma");
 "/software/components/symlink/active" ?= true;

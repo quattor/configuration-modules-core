@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.2.1
+	- upgrade templates to panc v8 syntax
+
 2007-04-04  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
 
 	* Release: 1.2.0
