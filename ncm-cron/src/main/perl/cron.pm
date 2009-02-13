@@ -25,6 +25,7 @@ use Encode qw(encode_utf8);
 
 local(*DTA);
 
+my $crond = "/etc/cron.d";
 
 ##########################################################################
 sub Configure($$@) {
@@ -36,7 +37,6 @@ sub Configure($$@) {
     my $base = "/software/components/cron";
 
     # Define some defaults
-    my $crond = "/etc/cron.d";
     my $date = "date --iso-8601=seconds --utc";
     my $cron_entry_extension_prefix = ".ncm-cron";
     my $cron_entry_extension = $cron_entry_extension_prefix . ".cron";
@@ -148,14 +148,60 @@ sub Configure($$@) {
         # Frequency of the cron entry.
         # May contain AUTO for the minutes field : in this case, substitute AUTO
         # with a random value. This only works in the minutes field of the frequence. 
-        my $frequency = undef;
-        if ( $entry->{frequency}) {
-            $frequency = $entry->{frequency};
+        # We support two formats here: the traditional "frequency" field
+        # and also a more complex "timing" structure (which allows more smear)
+        my $frequency = "";
+        if (exists $entry->{timing}) {
+            my $timing = {};
+            foreach my $field (qw(minute hour day month weekday smear)) {
+                if (exists $entry->{timing}->{$field}) {
+                    $timing->{$field} = $entry->{timing}->{$field};
+                } else {
+                    $timing->{$field} = '*';
+                }
+            }
+            if (exists $entry->{timing}->{smear} && $entry->{timing}->{smear}) {
+                my $smear = $entry->{timing}->{smear};
+                if ($smear > 60*24) {
+                    $self->error("timing for $name is smeared by more than a day; skipping");
+                }
+                if ($timing->{minute} !~ /^\d+$/) {
+                    $self->error("timing for $name is smeared and so the minutes field must be specified exactly (not '$timing->{minute}') in order to determine the possible start time of the smear; skipping");
+                    next;
+                }
+                if ($timing->{hour} !~ /^\d+$/ && $smear > 60) {
+                    $self->error("timing for $name is smeared by more than an hour, and so the hours specification must be specified exactly (not '$timing->{hour}'); skipping");
+                    next;
+                }
+                $smear = int(rand($smear));
+                my ($overflow,$dayoverflow);
+                ($timing->{minute}, $overflow) = 
+                            addtime($timing->{minute}, $smear, 0, 59);
+                ($timing->{hour}, $overflow) = 
+                            addtime($timing->{hour}, $overflow, 0, 23);
+                ($timing->{weekday}, $dayoverflow) = 
+                            addtime($timing->{weekday}, $overflow, 0, 6);
+                ($timing->{day}, $dayoverflow) = 
+                            addtime($timing->{day}, $overflow, 1, 31);
+                ($timing->{month}, $overflow) = 
+                            addtime($timing->{month}, $dayoverflow, 1, 12);
+                $self->info("smeared $name by $smear");
+            }
+           $frequency = "$timing->{minute} $timing->{hour} $timing->{day} $timing->{month} $timing->{weekday}";
         } else {
-            $self->error("Undefined frequency for entry $name; skipping");
-            next;
+            if (!exists $entry->{frequency} || 
+                !$entry->{frequency} || 
+                ref $entry->{frequency}) {
+                $self->error("undefined/invalid frequency for $name " . 
+                              "cron entry; skipping");
+                next;
+            }
+            $frequency = $entry->{frequency};
+
+            # Substitute AUTO with a random value. This only works in
+            # the minutes field of the frequence. 
+            $frequency =~ s/AUTO/int(rand(60))/eg;
         }
-        $frequency =~ s/AUTO/int(rand(60))/eg;
   
         # Extract the mandatory command.  If it isn't provided,
         # then skip to next entry.
@@ -232,5 +278,65 @@ sub Configure($$@) {
     
     return 1;
 }
+
+sub Unconfigure {
+    my ($self, $config) = @_;
+    # Collect the current entries in the cron.d directory.
+    opendir DIR, $crond;
+    my @files = grep /\.ncm-cron\.cron$/, map "$crond/$_", readdir DIR;
+    closedir DIR;
+
+    # Actually delete them.  This should always be done as no entries
+    # in the profile indicates that there should be no entries in the
+    # cron.d directory either. 
+    foreach (@files) {
+        unlink $_;
+        $self->log("error ($?) deleting file $_") if $?;
+    }
+    return;
+}
+
+# doesn't work with "named" elements (e.g. 'mon' instead of 1).
+sub addtime {
+    my ($in, $add, $min, $max) = @_;
+    $add ||= 0;
+    my $ret = 0;
+
+    if ($in eq '*') {
+        return ($in, 0);
+    }
+
+    my $overflow = 0;
+
+    # convert any ranges into explicit lists....
+    my @list = ();
+    foreach my $range (split(/,/, $in)) {
+        # convert range into a list
+        if ($range =~ m{^(\d+)-(\d+)(?:/(\d+))?}) {
+            my ($from, $to, $step) = split(/-/, $range, 2);
+            $step ||= 1;
+            while ($from <= $to) {
+                push(@list, $from);
+                $from += $step;
+            }
+        } else {
+            push(@list, $range % $max);
+        }
+    }
+    # unique the list....
+    my $seen = {};
+    @list = grep { !exists $seen->{$_} } @list;
+
+    foreach my $item (sort { $a <=> $b } @list) {
+        $item += $add;
+        if ($item > $max) {
+            $overflow = int($item / ($max+1));
+            $item = $item % ($max+1) + $min;
+        }
+    }
+
+    return (join(",", @list), $overflow);
+}
+
 
 1;      # Required for PERL modules
