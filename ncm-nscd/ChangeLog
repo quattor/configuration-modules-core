@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.1.1
+	- fix templates for panc v8 syntax
+
 2009-01-06  Jan Iven
 
 	* Release: 1.0.2

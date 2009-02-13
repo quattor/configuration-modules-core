@@ -8,15 +8,15 @@ declaration template components/nscd/schema;
 include {'quattor/schema'};
 
 type componend_nscd_service_type = {
-     "enable-cache"           ? string with match (self, '(yes|no)')
+     "enable-cache"           ? string with match (SELF, '(yes|no)')
      "positive-time-to-live"  ? long
      "negative-time-to-live"  ? long
      "suggested-size"         ? long
-     "check-files"            ? string with match (self, '(yes|no)')
-     "persistent"             ? string with match (self, '(yes|no)')
-     "shared"                 ? string with match (self, '(yes|no)')
+     "check-files"            ? string with match (SELF, '(yes|no)')
+     "persistent"             ? string with match (SELF, '(yes|no)')
+     "shared"                 ? string with match (SELF, '(yes|no)')
      "max-db-size"            ? long
-     "auto-propagate"         ? string with match (self, '(yes|no)')
+     "auto-propagate"         ? string with match (SELF, '(yes|no)')
 };
 
 type component_nscd_type = {
@@ -29,7 +29,7 @@ type component_nscd_type = {
     "server-user"      ? string
     "stat-user"        ? string
     "reload-count"     ? string
-    "paranoia"         ? string with match (self, '(yes|no)')
+    "paranoia"         ? string with match (SELF, '(yes|no)')
     "restart-interval" ? long
 
     "passwd" ? componend_nscd_service_type
@@ -37,5 +37,5 @@ type component_nscd_type = {
     "hosts"  ? componend_nscd_service_type
 };
 
-type "/software/components/nscd" = component_nscd_type;
+bind "/software/components/nscd" = component_nscd_type;
 
