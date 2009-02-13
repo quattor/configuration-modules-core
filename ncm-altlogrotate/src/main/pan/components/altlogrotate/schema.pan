@@ -5,8 +5,8 @@
 
 declaration template components/altlogrotate/schema;
 
-include quattor/schema;
-include pan/types;
+include { 'quattor/schema' };
+include { 'pan/types' };
 
 type structure_altlogrotate_scripts = {
     'prerotate'   ? string
@@ -16,7 +16,7 @@ type structure_altlogrotate_scripts = {
 };
 
 type structure_altlogrotate_create_params = {
-    'mode'  : string with match(self, '0[0-7]{3,3}')
+    'mode'  : string with match(SELF, '0[0-7]{3,3}')
     'owner' : string
     'group' : string
 };
@@ -48,7 +48,7 @@ type structure_altlogrotate_logrot = {
 
     'mail'            ? type_email
     'nomail'          ? boolean
-    'mailselect'      ? string with match(self, 'first|last')
+    'mailselect'      ? string with match(SELF, 'first|last')
 
     'olddir'          ? string
     'noolddir'        ? boolean
@@ -56,12 +56,12 @@ type structure_altlogrotate_logrot = {
     'rotate'          ? long(0..)
     'start'           ? long(0..)
 
-    'size'            ? string with match(self, '\d+[kM]?')
+    'size'            ? string with match(SELF, '\d+[kM]?')
 
     'taboo_replace'   ? boolean
     'tabooext'        ? string[] 
 
-    'frequency'       ? string with match(self, 'daily|weekly|monthly')
+    'frequency'       ? string with match(SELF, 'daily|weekly|monthly')
 
     'scripts'         ? structure_altlogrotate_scripts
 };
@@ -73,4 +73,4 @@ type component_altlogrotate = {
     'entries'    ? structure_altlogrotate_logrot{}
 };
 
-type '/software/components/altlogrotate' = component_altlogrotate;
+bind '/software/components/altlogrotate' = component_altlogrotate;

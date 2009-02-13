@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.1.6
+	- upgrade templates to panc v8 syntax
+
 2009-01-09  root
 
 	* Release: 1.1.5
