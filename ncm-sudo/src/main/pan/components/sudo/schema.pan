@@ -15,7 +15,7 @@ declaration template components/sudo/schema;
 include {'quattor/schema'};
 
 function is_host_sudo = {
-	if (argc != 1 || !is_string (ARGV[0])) {
+	if (ARGC != 1 || !is_string (ARGV[0])) {
 		error ("usage: is_host_sudo(string)");
 	};
 	if (is_network_name (ARGV[0])) {

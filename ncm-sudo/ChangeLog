@@ -1,5 +1,10 @@
 2009-02-13  Nick Williams
 
+	* Release: 1.1.7
+	- fix templates for panc v8 syntax (argc -> ARGC was previously neglected)
+
+2009-02-13  Nick Williams
+
 	* Release: 1.1.6
 	- fix templates for panc v8 syntax (argv -> ARGV was previously neglected)
 
