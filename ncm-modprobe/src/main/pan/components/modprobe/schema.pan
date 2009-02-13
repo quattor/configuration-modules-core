@@ -4,7 +4,7 @@
 
 
 declaration template components/modprobe/schema;
-include quattor/schema;
+include { 'quattor/schema' };
 
 type module_type = {
     "name"      : string # name of the loadable modules"
@@ -19,4 +19,4 @@ type component_modprobe_type = {
     "modules"   : module_type[1..] # modules to load"
 };
 
-type "/software/components/modprobe" = component_modprobe_type;
+bind "/software/components/modprobe" = component_modprobe_type;
