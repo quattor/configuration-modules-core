@@ -37,7 +37,7 @@ include { "pan/functions" };
 # standard component settings
 "/software/components/download/active"   ?= true ;
 "/software/components/download/dispatch" ?= false ;
-"/software/components/download/version"  = "1.0.5";
+"/software/components/download/version"  = "1.1.0";
 "/software/components/download/release"  = "1";
 
-"/software/packages" = pkg_repl("ncm-download", "1.0.5-1", "noarch");
+"/software/packages" = pkg_repl("ncm-download", "1.1.0-1", "noarch");

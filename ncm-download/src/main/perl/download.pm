@@ -49,7 +49,7 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use File::Temp qw(tempdir);
-use LC::Process qw(execute);
+use CAF::Process qw(execute);
 use POSIX;
 use LWP::UserAgent;
 
@@ -99,10 +99,9 @@ sub Configure {
                 $self->debug(1, "storing kerberos credentials in $cached_gss");
                 $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
                 # Assume "kinit" is in the PATH.
-                my $errs = "";
-                my $ret = LC::Process::execute(["kinit", "-k"], stderr => \$errs);
-                if (!$ret) {
-                    $self->error("could not get GSSPI credentials: $errs");
+                CAF::Process::execute(["kinit", "-k"], stderr => \$errs);
+                if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
+                    $self->error("could not get GSSAPI credentials: $errs");
                     return 0;
                 }
             }
@@ -192,13 +191,11 @@ sub Configure {
 	  }
 	}
 
-        if (exists $inf->{files}->{$f}->{post}) {
-            my $cmd = "$inf->{files}->{$f}->{post} $file";
-            $self->info("post-processing using '$cmd'");
-            my $out = `$cmd 2>&1`;
-            if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?)) {
-                $self->error("post-process of $file gave errors:");
-                $self->error($out);
+        my $cmd = $inf->{files}->{$f}->{post};
+        if ($cmd) {
+            CAF::Process::execute([ $cmd, $file], stderr => \$errs);
+            if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
+                $self->error("post-process of $file gave errors: $errs");
             }
         }
     }
@@ -237,9 +234,8 @@ sub download {
     }
     $self->debug(1, "running /usr/bin/curl " . join(" ", @opts) . " $source");
     my $errs = "";
-    my $rc = LC::Process::execute([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
-
-    if (!$rc || $?>>8 != 0) {
+    CAF::Process::execute([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
+    if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
         $self->debug(1, "curl failed (" . ($?>>8) .")");
         return 0;
     } else {
