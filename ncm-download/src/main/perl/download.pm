@@ -100,8 +100,9 @@ sub Configure {
                 $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
                 # Assume "kinit" is in the PATH.
                 my $errs = "";
-                CAF::Process::execute(["kinit", "-k"], stderr => \$errs);
-                if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
+                my $proc = CAF::Process->new(["kinit", "-k"], stderr => \$errs);
+                $proc->execute();
+                if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     $self->error("could not get GSSAPI credentials: $errs");
                     return 0;
                 }
@@ -195,7 +196,8 @@ sub Configure {
         my $cmd = $inf->{files}->{$f}->{post};
         if ($cmd) {
             my $errs = "";
-            CAF::Process::execute([ $cmd, $file], stderr => \$errs);
+            my $proc = CAF::Process->new([ $cmd, $file], stderr => \$errs);
+            $proc->execute();
             if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                 $self->error("post-process of $file gave errors: $errs");
             }
@@ -236,8 +238,9 @@ sub download {
     }
     $self->debug(1, "running /usr/bin/curl " . join(" ", @opts) . " $source");
     my $errs = "";
-    CAF::Process::execute([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
-    if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0)) {
+    my $proc = CAF::Process->new([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
+    $proc->execute();
+    if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
         $self->debug(1, "curl failed (" . ($?>>8) .")");
         return 0;
     } else {
