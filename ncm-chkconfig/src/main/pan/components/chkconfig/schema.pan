@@ -12,7 +12,7 @@
 
 declaration template components/chkconfig/schema;
 
-include quattor/schema;
+include { 'quattor/schema' };
 
 type service_type = {
   "name"      ? string
@@ -27,7 +27,7 @@ type service_type = {
 type component_chkconfig_type = {
   include structure_component
   "service" : service_type{}
-  "default" ? string with match (self, 'ignore|off')
+  "default" ? string with match (SELF, 'ignore|off')
 };
 
-type "/software/components/chkconfig" = component_chkconfig_type;
+bind "/software/components/chkconfig" = component_chkconfig_type;
