@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.1.6
+	- fix templates for panc v8 syntax (argv -> ARGV was previously neglected)
+
 2008-09-16  "Luis Fernando"
 
 	* Release: 1.1.5

@@ -14,10 +14,10 @@ include {'components/sudo/schema'};
 # TO BE CALLED ONLY FROM is_structure_sudo_component!!
 function check_aliases_list = {
 
-	if (!exists(argv[0][argv[1]])) {
+	if (!exists(ARGV[0][ARGV[1]])) {
 		return (true);
 	};
-	ls = argv[0][argv[1]];
+	ls = ARGV[0][ARGV[1]];
 	ok = first (ls, aliasname, aliascnt);
 	while (ok) {
 		if (!match (aliasname, "^[A-Z][A-Z0-9_]*$")) {
@@ -40,10 +40,10 @@ function check_aliases_list = {
 # specified on each entry.
 function check_default_options_list = {
 
-	if (!exists (argv[0][argv[1]])) {
+	if (!exists (ARGV[0][ARGV[1]])) {
 		return (true);
 	};
-	ls = argv[0][argv[1]];
+	ls = ARGV[0][ARGV[1]];
 	ok = first (ls, opt, v);
 	while (ok) {
 		if ((exists (v["user"]) && (exists (v["run_as"]) ||
@@ -62,7 +62,7 @@ function check_default_options_list = {
 
 function is_structure_sudo_component = {
 
-	st=value (argv[0]);
+	st=value (ARGV[0]);
 	check_aliases_list (st, "user_aliases");
 	check_aliases_list (st, "run_as_aliases",);
 	check_aliases_list (st, "cmd_aliases");

@@ -15,14 +15,14 @@ declaration template components/sudo/schema;
 include {'quattor/schema'};
 
 function is_host_sudo = {
-	if (argc != 1 || !is_string (argv[0])) {
+	if (argc != 1 || !is_string (ARGV[0])) {
 		error ("usage: is_host_sudo(string)");
 	};
-	if (is_network_name (argv[0])) {
+	if (is_network_name (ARGV[0])) {
 		return (true);
 	};
-	bg = substr (argv[0], 0, 1);
-	rs = substr (argv[0], 1);
+	bg = substr (ARGV[0], 0, 1);
+	rs = substr (ARGV[0], 1);
 
 	return (bg=="!" && is_network_name(rs));
 };
