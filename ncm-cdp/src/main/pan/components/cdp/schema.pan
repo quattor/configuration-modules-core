@@ -5,7 +5,7 @@
 
 declaration template components/cdp/schema;
 
-include quattor/schema;
+include { 'quattor/schema' };
 
 type component_cdp = {
     include structure_component
@@ -17,4 +17,4 @@ type component_cdp = {
     'fetch_smear' ? long(0..)
 };
 
-type '/software/components/cdp' = component_cdp;
+bind '/software/components/cdp' = component_cdp;

@@ -6,7 +6,7 @@
 =head1 NAME
 
 The I<cdp> component manages the configuration file
-/etc/edg-cdp-listend.conf.
+/etc/cdp-listend.conf.
 
 =head1 DESCRIPTION
 
@@ -15,7 +15,7 @@ cdp-listend daemon.
 
 =head1 RESOURCES
 
-=head2 configfile (/etc/edg-cdp-listend.conf)
+=head2 configfile (/etc/cdp-listend.conf)
 
 The location of the configuration file.  Normally this should not be
 changed. 

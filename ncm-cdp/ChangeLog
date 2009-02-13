@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.0.4
+	- fix templates for panc v8 syntax, and correct documentation of name of cfgfile
+
 2007-03-29  Charles Loomis
 
 	* Release: 1.0.3
