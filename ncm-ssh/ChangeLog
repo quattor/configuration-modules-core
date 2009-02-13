@@ -1,3 +1,8 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.1.4
+	- upgrade templates to panc v8 syntax
+
 2008-10-06  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
 
 	* Release: 1.1.3
