@@ -14,6 +14,7 @@ type structure_filecopy = {
     'owner'       ? string
     'group'       ? string
     'forceRestart' : boolean = false
+    'backup'      ? boolean = true
 };
 
 

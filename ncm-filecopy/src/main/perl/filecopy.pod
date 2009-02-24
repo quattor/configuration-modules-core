@@ -38,4 +38,7 @@ Also a
 per filename based "conditional" can be given to overwrite 
 the component wide setting. 
 
+By default, the component creates a backup of the file using the suffix .old. 
+The backup can be suppressed by setting the optional field "backup" to false.
+
 =cut

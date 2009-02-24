@@ -49,6 +49,7 @@ sub Configure($$@) {
     my $permsPath       = "$base/services/$encfname/perms";
     my $ownerPath       = "$base/services/$encfname/owner";
     my $groupPath       = "$base/services/$encfname/group";
+    my $backupPath      = "$base/services/$encfname/backup";
 
     # The actual file name.
     my $fname = unescape($encfname);
@@ -87,13 +88,22 @@ sub Configure($$@) {
       }
     }
 
+    # by default a backup is made, but this can be suppressed
+    my $backup = undef;
+    if ( $config->elementExists($backupPath) ) {
+      if ( $config->getValue($backupPath) eq 'true' ) {
+        $backup = '.old';
+      }
+    }
+
+
     # LC::Check methods log a message if a change happened
     # LC::Check::status must be called independently because doing
     # the same operation in LC::Check::file, changes are not reported in
     # the return value.
     $changes = LC::Check::file(
                                 $fname,
-                                backup   => ".old",
+                                backup   => $backup,
                                 contents => encode_utf8($contents),
     );
     $changes += LC::Check::status(
