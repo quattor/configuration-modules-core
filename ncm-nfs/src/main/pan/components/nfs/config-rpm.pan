@@ -4,7 +4,7 @@
 
 
 unique template components/nfs/config-rpm;
-include components/nfs/schema;
+include { 'components/nfs/schema' };
  
 # Package to install
 '/software/packages'=pkg_repl('ncm-nfs','1.1.8-1','noarch');

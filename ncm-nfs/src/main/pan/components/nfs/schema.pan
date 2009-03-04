@@ -5,7 +5,7 @@
 
 declaration template components/nfs/schema;
  
-include quattor/schema;
+include { 'quattor/schema' };
 
 type structure_nfs_exports = {
     'path'  : string
@@ -27,5 +27,5 @@ type component_nfs = {
     'mounts'  ? structure_nfs_mounts[]
 };
  
-type '/software/components/nfs' = component_nfs;
+bind '/software/components/nfs' = component_nfs;
 
