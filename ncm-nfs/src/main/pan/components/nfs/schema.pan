@@ -9,13 +9,13 @@ include quattor/schema;
 
 type structure_nfs_exports = {
     'path'  : string
-    'hosts' : string[]
+    'hosts' : string{}
 };
   
 type structure_nfs_mounts = {
     'device'     : string
     'mountpoint' : string
-    'fstype'     : string with match(self, '^nfs')
+    'fstype'     : string with match(SELF, '^nfs|bind$')
     'options'    ? string
     'freq'       ? long(0..)
     'passno'     ? long(0..)

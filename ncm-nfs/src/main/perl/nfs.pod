@@ -17,9 +17,10 @@ and the /etc/fstab files.
 =head2 /software/components/nfs/exports
 
 This is a list of named lists with "path" giving the export path and
-"hosts" being a list of host/option entries in the usual NFS format
-(e.g. "nfsclient.example.org(rw)").  Note that the values in "hosts"
-may NOT contain embedded spaces.  This restriction is not checked in
+"hosts" being a nlist of host/option entries where the key is the escaped host name and 
+the value the export options(e.g. for "nfsclient.example.org(rw)",
+key will be escape("nfsclient.example.org") and value will be 'rw').  Note that the values in "hosts"
+may NOT contain embedded spaces and should not contain the enclosing '()'.  This restriction is not checked in
 the schema!
 
 If a path is listed more than once, then the last entry will be used
