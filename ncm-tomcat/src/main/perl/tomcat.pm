@@ -77,7 +77,7 @@ sub conf_tomcat_xml {
 
     if ($element->isResource()) {
 
-        if ($element->isType(EDG::WP4::CCM::Element::RECORD) ) {
+        if ($element->isType(EDG::WP4::CCM::Element::NLIST) ) {
 
             print OF "$spaces<$printname";
             my %itemhash = $element->getHash();
