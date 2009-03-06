@@ -52,20 +52,20 @@ sub Configure($$@) {
     my $exports = $nfs_config->{'exports'};
     
     # Loop through all of the servers creating a line for each.
-    for my $entry (@{$exports})
+    for my $entry (@{$exports}) {}
       my $path = $entry->{'path'};
       my $hosts = $entry->{'hosts'};
       
-      my $entries = '';
-      for my $host_e (keys(%{$hosts}) {
+      my @entries;
+      for my $host_e (keys(%{$hosts}) ) {
         my $host = unescape($host_e);
-        $entries .= "$host($hosts->{$host_e})";
+        push @entries, "$host($hosts->{$host_e})";
       }
   
       # Only actually write the line if there was at least one 
       # valid host/option entry. 
-      if ($entries ne '') {
-          $contents .= "$path $entries\n";
+      if (@entries) {
+        $contents = "$path ".join(',',@entries)."\n";
       }
     }
   }
@@ -162,7 +162,7 @@ sub Configure($$@) {
   
       # Add the entry. 
       $newnfs{$device} = {"device" => $device,
-                          "mntpt" => $mountpoint,
+                          "mntpt" => $mntpoint,
                           "fstype" => $fstype,
                           "opt" => $options,
                           "freq" => $freq,
