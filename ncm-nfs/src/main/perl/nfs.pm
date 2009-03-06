@@ -59,7 +59,7 @@ sub Configure($$@) {
       my $entries = '';
       for my $host_e (keys(%{$hosts}) {
         my $host = unescape($host_e);
-        $entries .= "$host($hosts{$host_e})";
+        $entries .= "$host($hosts->{$host_e})";
       }
   
       # Only actually write the line if there was at least one 
