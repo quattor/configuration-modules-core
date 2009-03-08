@@ -52,7 +52,7 @@ sub Configure($$@) {
     my $exports = $nfs_config->{'exports'};
     
     # Loop through all of the servers creating a line for each.
-    for my $entry (@{$exports}) {}
+    for my $entry (@{$exports}) {
       my $path = $entry->{'path'};
       my $hosts = $entry->{'hosts'};
       
@@ -65,7 +65,7 @@ sub Configure($$@) {
       # Only actually write the line if there was at least one 
       # valid host/option entry. 
       if (@entries) {
-        $contents = "$path ".join(',',@entries)."\n";
+        $contents = "$path ".join(' ',@entries)."\n";
       }
     }
   }
