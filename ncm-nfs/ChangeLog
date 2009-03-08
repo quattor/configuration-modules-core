@@ -1,6 +1,11 @@
 2009-03-08  root
 
 	* Release: 2.0.0
+	- New attempt to tag version...
+
+2009-03-08  root
+
+	* Release: 2.0.0
 	- Fix typos
 	Ensure export option 'sync' is enforced by default
 
