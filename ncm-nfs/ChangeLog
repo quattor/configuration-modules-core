@@ -1,3 +1,8 @@
+2009-03-09  root
+
+	* Release: 2.0.0
+	- Fix component version published to match schema
+
 2009-03-08  root
 
 	* Release: 2.0.0
