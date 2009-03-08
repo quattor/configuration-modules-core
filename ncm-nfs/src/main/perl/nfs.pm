@@ -62,10 +62,10 @@ sub Configure($$@) {
         my $export_opts = $hosts->{$host_e};
         # add option 'sync if neither 'sync', nor 'async' has been specified
         if ( $export_opts !~ m/sync/ ) {
-          if ( length($export_ops) > 0 ) {
+          if ( length($export_opts) > 0 ) {
             $export_opts .= ',';
           }
-          $export_opts .= sync;
+          $export_opts .= 'sync';
         }
         push @entries, "$host($export_opts)";
       }
