@@ -1,3 +1,8 @@
+2009-03-08  root
+
+	* Release: 2.0.0
+	- Fix fstype for NFS v4 bind
+
 2009-03-06  root
 
 	* Release: 2.0.0
