@@ -59,13 +59,21 @@ sub Configure($$@) {
       my @entries;
       for my $host_e (keys(%{$hosts}) ) {
         my $host = unescape($host_e);
-        push @entries, "$host($hosts->{$host_e})";
+        my $export_opts = $hosts->{$host_e};
+        # add option 'sync if neither 'sync', nor 'async' has been specified
+        if ( $export_opts !~ m/sync/ ) {
+          if ( length($export_ops) > 0 ) {
+            $export_opts .= ',';
+          }
+          $export_opts .= sync;
+        }
+        push @entries, "$host($export_opts)";
       }
   
       # Only actually write the line if there was at least one 
       # valid host/option entry. 
       if (@entries) {
-        $contents = "$path ".join(' ',@entries)."\n";
+        $contents .= "$path ".join(' ',@entries)."\n";
       }
     }
   }
@@ -106,7 +114,7 @@ sub Configure($$@) {
       $freq = 0 unless defined($freq);
       $passno = 0 unless defined($passno);
       
-      if ($fstype =~ /^nfs/) {
+      if ( ($fstype =~ /^nfs/) || (($fstype eq 'none') && ($opt eq 'bind')) ) {
         # It is an nfs entry, save the information.
         $oldnfs{$device} = {"device" => $device,
                             "mntpt" => $mntpt,
