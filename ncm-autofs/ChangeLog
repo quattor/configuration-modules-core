@@ -1,6 +1,11 @@
 2009-03-09  Michel Jouvin
 
 	* Release: 1.1.8
+	- Ensure options are not empty before adding leading '-'
+
+2009-03-09  Michel Jouvin
+
+	* Release: 1.1.8
 	- Ensure options are prefixed by '-'
 
 2008-10-14  Michel Jouvin
