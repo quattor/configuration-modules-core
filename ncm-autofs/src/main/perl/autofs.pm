@@ -74,7 +74,7 @@ sub writeAutoMap($$@) {
 
       my $opt = &getValueDefault($config,"$cfpathname/$entry_e/options","");
       # Ensure options start with a '-'
-      if ( $opt !~ /^-/ ) {
+      if ( (length($opt) > 0) && ($opt !~ /^-/) ) {
         $opt = '-' . $opt;
       }
       my $location = &getValueDefault($config,"$cfpathname/$entry_e/location","");
@@ -188,7 +188,7 @@ sub Configure($$@) {
         if ( $config->elementExists("$base/maps/$map/options") ) {
           $mpopts=$config->getValue("$base/maps/$map/options");
           # Ensure options start with a '-'
-          if ( $mpopts !~ /^-/ ) {
+          if (  (length($mpopts) > 0) && ($mpopts !~ /^-/) ) {
             $mpopts = '-' . $mpopts;
           }
         }
