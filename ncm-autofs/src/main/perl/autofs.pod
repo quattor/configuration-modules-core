@@ -105,7 +105,7 @@ David Groep <davidg@nikhef.nl>
 
 =head1 VERSION
 
-1.1.7
+1.1.8
 
 =head1 SEE ALSO
 
