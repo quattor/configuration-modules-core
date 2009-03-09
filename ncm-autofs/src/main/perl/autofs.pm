@@ -73,6 +73,10 @@ sub writeAutoMap($$@) {
       $entry=~s/__wildcard/\*/;
 
       my $opt = &getValueDefault($config,"$cfpathname/$entry_e/options","");
+      # Ensure options start with a '-'
+      if ( $opt !~ /^-/ ) {
+        $opt = '-' . $opt;
+      }
       my $location = &getValueDefault($config,"$cfpathname/$entry_e/location","");
       if ( $location eq "" ) {
         $self->warn("Location for entry $entry in $mapname is empty,".
@@ -183,6 +187,10 @@ sub Configure($$@) {
 
         if ( $config->elementExists("$base/maps/$map/options") ) {
           $mpopts=$config->getValue("$base/maps/$map/options");
+          # Ensure options start with a '-'
+          if ( $mpopts !~ /^-/ ) {
+            $mpopts = '-' . $mpopts;
+          }
         }
 
         my $etok;
