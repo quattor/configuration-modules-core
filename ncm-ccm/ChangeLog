@@ -1,3 +1,9 @@
+2009-03-14  Nick Williams
+
+	* Release: 1.2.0
+	- Supports dbformat within the ccm.conf. Uses more standard libraries
+	for writing and installing the configuration file.
+
 2008-09-16  "Luis Fernando"
 
 	* Release: 1.1.8

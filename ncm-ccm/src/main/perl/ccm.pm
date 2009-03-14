@@ -11,12 +11,9 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
-use File::Copy;
-
-use EDG::WP4::CCM::Element;
-
-use File::Path;
-use File::Basename;
+use CAF::Process;
+use LC::File;
+use POSIX qw(:wait_h);
 
 local(*DTA);
 
@@ -52,20 +49,27 @@ sub Configure($$@) {
     }
 
     # Create the new configuration file.
-    open ( CONF,">$fname.test" );
-    print CONF $contents;
-    close (CONF);
+    my $rc = LC::Check::file("$fname.test", contents => $contents);
+    if ($rc < 0) {
+        $self->error("cannot construct $fname.test: $!");
+        return 0;
+    }
 
     # Check that ccm-fetch can work with the new file.
-    `/usr/sbin/ccm-fetch --config $fname.test`;
-    if ($?) {
-	$self->error("ccm-fetch with new config. ($fname.test) failed");
-	return 1;
+    my $errs = "";
+    my $test = CAF::Process->new(["/usr/sbin/ccm-fetch", "-config", "$fname.test"], stderr => \$errs);
+    $test->execute();
+    if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
+        $self->error("failed to ccm-fetch with new config: $errs");
+        return 0;
     }
 
     # Result must have been OK.  Move the file into place.
-    rename "$fname.test", $fname;
-    $self->log("$fname updated");
+    if (LC::File::move("$fname.test", $fname)) {
+        $self->log("$fname updated");
+    } else {
+        $self->error("failed to install ccm config");
+    }
 
     return 1;
 }
@@ -143,15 +147,6 @@ sub quote {
     $value =~ s/"/\\"/g;  # escape any embedded quotes
     $value = '"'.$value.'"';
     return $value;
-}
-
-# Change ownership by name.
-sub createAndChownDir {
-
-    my ($user, $dir) = @_;
-
-    mkpath($dir,0,0755);
-    chown((getpwnam($user))[2,3], glob($dir)) if (-d $dir);
 }
 
 1;      # Required for PERL modules
