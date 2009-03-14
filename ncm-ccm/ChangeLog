@@ -1,5 +1,10 @@
 2009-03-14  Nick Williams
 
+	* Release: 1.2.1
+	- Missed out the updated schema.tpl for dbformat
+
+2009-03-14  Nick Williams
+
 	* Release: 1.2.0
 	- Supports dbformat within the ccm.conf. Uses more standard libraries
 	for writing and installing the configuration file.
