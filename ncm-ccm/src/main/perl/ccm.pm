@@ -13,7 +13,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use CAF::Process;
 use LC::File;
-use POSIX qw(:wait_h);
+use POSIX qw(:sys_wait_h);
 
 local(*DTA);
 
