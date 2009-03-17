@@ -1,3 +1,8 @@
+2009-03-17  Jan van Eldik
+
+	* Release: 2.0.2
+	- [bug #45710] unescape function should not be called in compat-v1 mode
+
 2008-08-29  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
 
 	* Release: 2.0.1
