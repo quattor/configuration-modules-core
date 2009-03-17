@@ -84,7 +84,8 @@ sub Configure {
 
   my $changes = 0;
   for my $key_e (sort(keys(%{$variables}))) {
-    my $key = $self->unescape($key_e);
+    my $key = $key_e;
+    $key = unescape($key_e) if $sysctl_config->{'compat-v1'}; # only unescape if v1-compatibility mode
     my $val = $variables->{$key_e};
     my $status = NCM::Check::lines($configFile,
                                    backup => ".old",
