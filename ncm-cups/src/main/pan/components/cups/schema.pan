@@ -2,7 +2,7 @@
 # This is 'TPL/schema.tpl', a ncm-cups's file
 ################################################################################
 #
-# VERSION:    1.1.3, 16/09/08 16:37
+# VERSION:    1.2.0, 19/03/09 15:18
 # AUTHOR:     Michel Jouvin <jouvin@lal.in2p3.fr>
 # MAINTAINER: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -32,21 +32,21 @@ type component_cups_printer = {
 
 
 type component_cups_options = {
-    "autopurgejobs"         ? string with match (SELF, "yes|no")
-    "classification"        ? string
-    "classifyoverride"      ? string with match (SELF, "on|off")
-    "datadir"               ? string
-    "defaultcharset"        ? string
-    "encryption"            ? string with match (SELF,"always|never|required|ifrequested")
-    "errorlog"              ? string
-    "loglevel"              ? string with match (SELF,"debug2|debug|info|warn|error|none")
-    "maxcopies"             ? long
-    "maxlogsize"            ? long
-    "preservejobhistory"    ? string with match (SELF, "yes|no")
-    "preservejobfiles"      ? string with match (SELF, "yes|no")
-    "printcap"              ? string
-    "serveradmin"           ? string
-    "servername"            ? string
+    "AutoPurgeJobs"         ? string with match (SELF, "yes|no")
+    "Classification"        ? string
+    "ClassifyOverride"      ? string with match (SELF, "on|off")
+    "DataDir"               ? string
+    "DefaultCharset"        ? string
+    "Encryption"            ? string with match (SELF,"always|never|required|ifrequested")
+    "ErrorLog"              ? string
+    "LogLevel"              ? string with match (SELF,"debug2|debug|info|warn|error|none")
+    "MaxCopies"             ? long
+    "MaxLogSize"            ? long
+    "PreserveJobHistory"    ? string with match (SELF, "yes|no")
+    "PreserveJobFiles"      ? string with match (SELF, "yes|no")
+    "Printcap"              ? string
+    "ServerAdmin"           ? string
+    "ServerName"            ? string
 };
 
 type component_cups = {
