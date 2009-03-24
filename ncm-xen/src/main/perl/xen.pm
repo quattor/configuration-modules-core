@@ -371,9 +371,15 @@ sub Configure {
         }
         ## no else (yet)
         ## - maybe revert the renaming ?
-        
+        my $actions = '';
         if (exists($network->{'bridges'})) {
-            MakeMultiBridge($self,$network->{'bridges'});
+          $actions.=GetBridges($self,$network->{'bridges'});
+        }
+        if (exists($network->{'vlans'})) {
+          $actions.=GetVlans($self,$network->{'vlans'});
+        }
+        if ($actions ne '') {
+            MakeMultiBridge($self,$actions);
         }
     }
 
@@ -507,6 +513,77 @@ sub RemoveQemuNetworkLibvirtAutostart {
     return 1;
 }
 
+
+##########################################################################
+sub GetBridges{
+##########################################################################
+#
+# Get information for defined bridges
+#
+  my $self = shift;
+  my $func = "GetBridges";
+
+  my $brs = shift;
+  my $action='';
+  my %bridges = %$brs;      
+  
+  ## action
+  ## looks like
+  ## $action_prefix vifnum=0 bridge=xenbr0 netdev=eth0
+  my $action_prefix='                $script "$OP"';
+  foreach my $br (sort(keys(%bridges))) {
+      my $num="0";
+      $num = $1 if ($br =~ m/xenbr(\d+)/);
+
+      my $netdev="eth$num";
+      my $vifnum=$num;
+
+      if (exists($bridges{$br}{netdev})) {
+          $netdev = $bridges{$br}{netdev};  
+      }
+      if (exists($bridges{$br}{vifnum})) {
+          $vifnum = $bridges{$br}{vifnum};  
+      }
+      $action.="$action_prefix vifnum=$vifnum bridge=$br netdev=$netdev\n";
+  }
+  return $action;
+}
+
+##########################################################################
+sub GetVlans{
+##########################################################################
+#
+# Get information for defined bridges
+#
+  my $self = shift;
+  my $func = "GetBridges";
+
+  my $vls = shift;
+  my $action='';
+  my %vlans = %$vls;      
+  
+  ## action
+  ## looks like
+  ## $action_prefix vlan=2 bridge=vlanbr2 netdev=eth0
+  my $action_prefix='                $vlan_script "$OP"';
+  foreach my $vl (sort(keys(%vlans))) {
+      my $num="2";
+      $num = $1 if ($vl =~ m/vlanbr(\d+)/);
+
+      my $netdev="eth0";
+      my $vlan=$num;
+
+      if (exists($vlans{$vl}{netdev})) {
+          $netdev = $vlans{$vl}{netdev};  
+      }
+      if (exists($vlans{$vl}{vlan})) {
+          $vlan = $vlans{$vl}{vlan};  
+      }
+      $action.="$action_prefix vlan=$vlan bridge=$vl netdev=$netdev\n";
+  }
+  return $action;
+}
+
 ##########################################################################
 sub MakeMultiBridge {
 ##########################################################################
@@ -520,19 +597,19 @@ sub MakeMultiBridge {
     my $bs_name = "network-bridge";
     my $bs = "$xen_scripts_base/$bs_name";
     my $bs_copy="$bs.ncm-xen";
+    my $vlan_copy="$bs-vlan.ncm-xen";
     my $mbs_name = "$bs_name.multi-bridge.ncm-xen";
     my $mbs = "$xen_scripts_base/$mbs_name";
     my $xen_config = XENBASE."/xend-config.sxp";
     
-    my $brs = shift;
-    my %bridges = %$brs;
+    my $actions=shift;
     
     if ( ! -f $bs) {
         ## ?
         $self->error("$func: can't find network-bridge-script $bs.");
         return 0;
     }
-    
+
     if ( ! -f $bs_copy) {
         #make a copy
         if (! copy($bs,$bs_copy)) {
@@ -541,28 +618,215 @@ sub MakeMultiBridge {
         }
     }
     chmod 0755, $bs_copy;
+    
+    if ( ! -f $vlan_copy) {
+      my $txt = '#!/bin/sh
+#============================================================================
+# Xen vlan bridge start/stop script.
+# Xend calls a network script when it starts.
+# The script name to use is defined in /etc/xen/xend-config.sxp
+# in the network-script field.
+#
+# This script creates a bridge (default vlanbr${vlan}), creates a device
+# (default eth0.${vlan}), and adds it to the bridge. This scrip assumes
+# the Dom0 does not have an active interface on the selected vlan; if
+# it does the network-bridge script should be used instead.
+#
+# To use this script, vconfig must be installed.
+#
+# Usage:
+#
+# network-bridge-vlan (start|stop|status) {VAR=VAL}*
+#
+# Vars:
+#
+# vlan       The vlan to bridge (default 2)
+# bridge     The bridge to use (default vlanbr${vlan}).
+# netdev     The interface to add to the bridge (default eth0}).
+#
+# Internal Vars:
+# vlandev="${netdev}.${vlan}"
+#
+# start:
+# Creates the bridge
+# Adds vlandev to netdev
+# Enslaves vlandev to bridge
+#
+# stop:
+# Removes vlandev from the bridge
+# Removes vlandev from netdev 
+# Deletes bridge
+#
+# status:
+# Print vlan, bridge
+#
+#============================================================================
 
-    ## action
-    ## looks like
-    ## $action_prefix vifnum=0 bridge=xenbr0 netdev=eth0
-    my $action_prefix='                $script "$OP"';
-    my $action='';
-    foreach my $br (sort(keys(%bridges))) {
-        my $num="0";
-        $num = $1 if ($br =~ m/xenbr(\d+)/);
-        
-        my $netdev="eth$num";
-        my $vifnum=$num;
-        
-        if (exists($bridges{$br}{netdev})) {
-            $netdev = $bridges{$br}{netdev};  
-        }
-        if (exists($bridges{$br}{vifnum})) {
-            $vifnum = $bridges{$br}{vifnum};  
-        }
-        $action.="$action_prefix vifnum=$vifnum bridge=$br netdev=$netdev\n";
+
+dir=$(dirname "$0")
+. "$dir/xen-script-common.sh"
+
+findCommand "$@"
+evalVariables "$@"
+
+vlan=${vlan:-2}
+bridge=${bridge:-vlanbr${vlan}}
+netdev=${netdev:-eth0}
+
+vlandev="${netdev}.${vlan}"
+
+##
+# link_exists interface
+#
+# Returns 0 if the interface named exists (whether up or down), 1 otherwise.
+#
+link_exists()
+{
+    if ip link show "$1" >/dev/null 2>/dev/null
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+# Usage: create_bridge bridge
+create_bridge () {
+    local bridge=$1
+
+    # Don\'t create the bridge if it already exists.
+    if ! brctl show | grep -q ${bridge} ; then
+	brctl addbr ${bridge}
+	brctl stp ${bridge} off
+	brctl setfd ${bridge} 0
+    fi
+    ip link set ${bridge} up
+}
+
+# Usage: add_to_bridge bridge dev
+add_to_bridge () {
+    local bridge=$1
+    local dev=$2
+    # Don\'t add $dev to $bridge if it\'s already on a bridge.
+    if ! brctl show | grep -q ${dev} ; then
+	brctl addif ${bridge} ${dev}
+    fi
+}
+
+# Usage: show_status vlandev bridge
+# Print vlan and bridge
+show_status () {
+    local vlandev=$1
+    local bridge=$2
+
+    echo "============================================================"
+    cat /proc/net/vlan/${vlandev}
+    echo " "
+    brctl show ${bridge}
+    echo "============================================================"
+}
+
+op_start () {
+    if [ "${bridge}" = "null" ] ; then
+	return
+    fi
+
+    if ! link_exists "$netdev"; then
+        return
+    fi
+
+    if link_exists "$vlandev"; then
+        # The device is already up.
+        return
+    fi
+
+    create_bridge ${bridge}
+
+    ip link set ${netdev} up
+
+    vconfig set_name_type DEV_PLUS_VID_NO_PAD
+    vconfig add ${netdev} ${vlan}
+    ip link set ${vlandev} address fe:ff:ff:ff:ff:ff
+    ip link set ${vlandev} up
+    ip link set ${bridge} up
+
+    add_to_bridge2 ${bridge} ${vlandev}
+}
+
+op_stop () {
+    if [ "${bridge}" = "null" ]; then
+	return
+    fi
+    if ! link_exists "$bridge"; then
+	return
+    fi
+
+    if link_exists "$vlandev"; then
+	ip link set ${vlandev} down
+
+	brctl delif ${bridge} ${vlandev}
+	ip link set ${bridge} down
+
+        vconfig rem ${vlandev}
+    fi
+    brctl delbr ${bridge}
+}
+
+# adds $dev to $bridge but waits for $dev to be in running state first
+add_to_bridge2() {
+    local bridge=$1
+    local dev=$2
+    local maxtries=10
+
+    echo -n "Waiting for ${dev} to negotiate link."
+    for i in `seq ${maxtries}` ; do
+	if ifconfig ${dev} | grep -q RUNNING ; then
+	    break
+	else
+	    echo -n '.'
+	    sleep 1
+	fi
+    done
+
+    if [ ${i} -eq ${maxtries} ] ; then echo "(link isnt in running state)" ; fi
+
+    add_to_bridge ${bridge} ${dev}
+}
+
+case "$command" in
+    start)
+	op_start
+	;;
+
+    stop)
+	op_stop
+	;;
+
+    status)
+	show_status ${vlandev} ${bridge}
+	;;
+
+    *)
+	echo "Unknown command: $command" >&2
+	echo "Valid commands are: start, stop, status" >&2
+	exit 1
+esac';
+
+      ## filecopy style
+      my $changes = LC::Check::file(
+                                  $vlan_copy,
+                                  backup   => ".old",
+                                  contents => $txt,
+                                  mode => "0755",
+      );
+      $changes += LC::Check::status(
+                                  $vlan_copy,
+                                  mode => "0755",
+      );
     }
-        
+    chmod 0755, $vlan_copy;
+ 
     my $txt = <<EOF;
 #!/bin/sh
 ##
@@ -577,9 +841,10 @@ set -e
 OP=\$1
 shift
 script=$bs_copy
+vlan_script=$vlan_copy
 case "\${OP}" in
         start|stop|status)
-$action
+$actions
                 ;;
 
         *)

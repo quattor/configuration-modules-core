@@ -89,6 +89,10 @@ type xen_network_bridge = {
     "vifnum" ? long
 };
 
+type xen_network_vlan = {
+    "netdev" : string
+    "vlan" : long
+};
 
 type xen_network = {
     ##
@@ -100,6 +104,7 @@ type xen_network = {
     ## and then it will use netdev=eth$1 and vifnum=$1
     ##
     "bridges" ? xen_network_bridge{}
+    "vlans" ? xen_network_vlan{}
 };
 
 type component_xen_type = {

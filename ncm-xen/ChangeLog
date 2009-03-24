@@ -1,3 +1,8 @@
+2009-03-24  root
+
+	* Release: 0.2.0
+	- Added support for vlan bridges.
+
 2008-12-16  Stephen Childs
 
 	* Release: 0.1.8
