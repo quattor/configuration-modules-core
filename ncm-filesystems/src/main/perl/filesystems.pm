@@ -5,7 +5,7 @@
 # File: filesystems.pm
 # Implementation of ncm-filesystems
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 0.10.3 : 26/03/09 10:14
+# Version: 0.10.4 : 26/03/09 11:17
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -63,10 +63,10 @@ sub free_space
 	my %ph = protected_hash ($cfg);
 	my %fsh = fshash (\@fs);
 
-	$self->info ("Checking file systems marked for removal");
+	$self->info ("Checking for filesystems that should be removed");
 	foreach (@fs) {
-		$self->debug (5, "Processing FS: $_->{mountpoint} which ",
-			     exists $ph{$_->{mountpoint}}? "exists":"doesn't exist",
+		$self->debug (5, "Filesystem $_->{mountpoint} is",
+			     exists $ph{$_->{mountpoint}}? "":" not",
 			     " in the protected hash list");
 		if ((!exists $ph{$_->{mountpoint}}) && ($_->remove_if_needed!=0)) {
 			throw_error ("Couldn't remove filesystem $_->{mountpoint}");
@@ -76,20 +76,22 @@ sub free_space
 
 	my $fl = output ("grep", "^[[:space:]]*#", "/etc/fstab", "-v");
 
-	$self->info ("Checking file systems no longer in the profile");
+	$self->info ("Checking filesystems not defined in the profile");
 	my @fstab = split ("\n+", $fl);
 	foreach my $l (@fstab) {
 		$self->debug (5,"Fstab line: $l");
 		$l =~ m{^\S+\s+(\S+)\s};
-		$self->debug (5, "Checking if $1 should be removed:",
-			     exists $fsh{$1}?" it exists": " it doesn't exist",
+		my $keepfs=(exists $fsh{$1} || exists $ph{$1});
+		$self->debug (5, "Filesystem $1 should ", 
+			     $keepfs? "not " : "", "be removed:",
+			     exists $fsh{$1}?"": " not",
 			     " in the profile",
-			     exists $ph{$1}?" and is listed":" and is not listed",
-			     " as protected.");
-		unless (exists $fsh{$1} || exists $ph{$1}) {
+			     exists $ph{$1}?" and is ":" and is not ",
+			     "protected.");
+		unless ($keepfs) {
 			$self->debug (5, "Actually removing $1");
 			my $f = NCM::Filesystem->new_from_fstab ($l);
-			$self->debug (5, "Filesystem $f->{mountpoint} left the profile. Removing it");
+			$self->debug (5, "Filesystem $f->{mountpoint} left the profile: removing it");
 			$f->remove_if_needed==0 or return -1;
 		}
 	}
