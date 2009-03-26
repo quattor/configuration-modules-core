@@ -1,3 +1,8 @@
+2009-03-26  Unknown
+
+	* Release: 1.0.6
+	- Check metadata and try to create if it doesn't exist.
+
 2008-10-18  root
 
 	* Release: 1.0.5

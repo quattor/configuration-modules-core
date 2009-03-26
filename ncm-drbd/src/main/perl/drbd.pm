@@ -2,6 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
+################################################################################
 #######################################################################
 # NCM component for drbd daemon
 #
@@ -352,15 +353,39 @@ sub Configure {
             $self->log("Wrote new configuration to $fstab_file");
         }        
 
-        # start the daemon
+	# check metadata
+	my $res = $config->getElement("$base/resource");
+	while ($res->hasNextElement()) {
+	    my $res_elt = $res->getNextElement();
+	    my $res_name = $res_elt->getName();
+	    my $out;
+	    $self->debug(5, "Checking $res_name metadata");
+	    $ret = LC::Process::execute(["/sbin/drbdadm","dump-md",$res_name],
+                                    "stdout" => \$out, "stderr" => \$err);
+#	    drbdadm  dump-md drbd-sdb1
+	    unless (defined($ret) and $ret and ($?==0 or $? == 5120)) {
+		$self->warn("problem with metadata code $?:\n$err");
+
+		# try to create metadata
+        $self->debug(5, "Trying to create $res_name metadata");
+		$ret = LC::Process::execute(["/sbin/drbdadm","create-md",$res_name],
+					    "stderr" => \$err);
+		unless (defined($ret) and $ret and $?==0) {
+		    $self->error("problem with creating metadata code $?:\n$err");
+		    return;
+
+		}
+	    }
+	};
+	# start the daemon
         $self->info("Starting DRBD daemon");
         $ret = LC::Process::execute(["service drbd start"],
                                     "stderr" => \$err);
+	
         unless (defined($ret) and $ret) {
             $self->error("service drbd start failed with code $?:\n$err");
             return;
         }
-        
             
         # first a dry run
         $self->info("Doing dry run of drbdadm");
