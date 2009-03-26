@@ -5,7 +5,7 @@
 # File: filesystems.pm
 # Implementation of ncm-filesystems
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 0.10.2 : 16/09/08 16:37
+# Version: 0.10.3 : 26/03/09 10:14
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -54,7 +54,7 @@ sub fshash
 }
 
 # Frees space on the system. It removes filesystems with !preserve &&
-# format and filesystems no longer present on the profile. Returns 0
+# format and filesystems no longer present in the profile. Returns 0
 # on success, -1 on error.
 sub free_space
 {
@@ -63,11 +63,11 @@ sub free_space
 	my %ph = protected_hash ($cfg);
 	my %fsh = fshash (\@fs);
 
-	$self->info ("Removing file systems marked for removal");
+	$self->info ("Checking file systems marked for removal");
 	foreach (@fs) {
 		$self->debug (5, "Processing FS: $_->{mountpoint} which ",
 			     exists $ph{$_->{mountpoint}}? "exists":"doesn't exist",
-			     " on the protected hash list");
+			     " in the protected hash list");
 		if ((!exists $ph{$_->{mountpoint}}) && ($_->remove_if_needed!=0)) {
 			throw_error ("Couldn't remove filesystem $_->{mountpoint}");
 			return -1;
@@ -76,16 +76,16 @@ sub free_space
 
 	my $fl = output ("grep", "^[[:space:]]*#", "/etc/fstab", "-v");
 
-	$self->info ("Removing file systems that are no longer in the profile");
+	$self->info ("Checking file systems no longer in the profile");
 	my @fstab = split ("\n+", $fl);
 	foreach my $l (@fstab) {
 		$self->debug (5,"Fstab line: $l");
 		$l =~ m{^\S+\s+(\S+)\s};
-		$self->debug (5, "Trying to remove $1 from system.",
-			     exists $fsh{$1}?" It exists": " It doesn't exist",
-			     "  on the profile",
-			     exists $ph{$1}?" and it is listed":" and it is not listed",
-			     " as a protected filesystem");
+		$self->debug (5, "Checking if $1 should be removed:",
+			     exists $fsh{$1}?" it exists": " it doesn't exist",
+			     " in the profile",
+			     exists $ph{$1}?" and is listed":" and is not listed",
+			     " as protected.");
 		unless (exists $fsh{$1} || exists $ph{$1}) {
 			$self->debug (5, "Actually removing $1");
 			my $f = NCM::Filesystem->new_from_fstab ($l);
@@ -116,7 +116,7 @@ sub Configure
 	# Partitions must be created first, see bug #26137
 	$el = $config->getElement ("/system/blockdevices/partitions");
 	my @part = ();
-	$self->info ("Creating missing partitions");
+	$self->info ("Checking whether partitions need to be created");
 	
 	while ($el && $el->hasNextElement) {
 		my $el2 = $el->getNextElement;
@@ -137,7 +137,6 @@ sub Configure
 			$self->warn ("Failed to format filesystem: ".
 				      $_->{mountpoint});
 		}
-		$self->info ("Filesystem on $_->{mountpoint} successfully created");
 	}
 	return 1;
 }
