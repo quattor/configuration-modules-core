@@ -5,7 +5,7 @@
 
 declaration template components/xen/schema;
 
-include quattor/schema;
+include { "quattor/schema" };
 
 
 
@@ -118,6 +118,6 @@ type component_xen_type = {
 };
 
 
-type "/software/components/xen" = component_xen_type;
+bind "/software/components/xen" = component_xen_type;
 
 

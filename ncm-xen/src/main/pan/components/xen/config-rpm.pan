@@ -5,7 +5,7 @@
 
 unique template components/xen/config-rpm;
 
-include components/xen/schema;
+include { "components/xen/schema" };
 
 # Package to install.
 "/software/packages"=pkg_repl("ncm-xen","0.2.1-1","noarch");
