@@ -213,7 +213,7 @@ sub SetupVbds {
         else {             # if not, create it using dd (very carefully)
 
             my $filesize=$vbdhash{'size'};
-            $self->verbose("ile $imagefilename of size $filesize");
+            $self->verbose("File $imagefilename of size $filesize");
             # make the directory if it doesn't exist
             my($filename, $directories, $suffix) = fileparse($imagefilename);
             $self->verbose("Creating directory $directories");
@@ -242,7 +242,14 @@ sub VbdParams {
         my $guestdev=$vbdhash{'guestdevice'};
         my $hostdevice=$vbdhash{'hostdevice'};
         my $hostvol=$vbdhash{'hostvol'};
-        $vbdstr.="'phy:/dev/$hostdevice/$hostvol,$guestdev,$rw'";
+        my $access_method="phy";
+
+        # use special access method if defined in the profile
+        if ($vbdhash{'access_method'}) {
+            $access_method=$vbdhash{'access_method'}
+        }
+
+        $vbdstr.="'$access_method:/dev/$hostdevice/$hostvol,$guestdev,$rw'";
 
     }
     elsif ($type eq 'file') {

@@ -18,6 +18,7 @@ type xen_vdisk = {
     "rw" : string
     "size" ? long
     "create" ? boolean
+    "access_method" ? string # e.g. "tap:aio", "phy"
 };
 
 #
