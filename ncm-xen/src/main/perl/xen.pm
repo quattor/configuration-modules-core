@@ -48,40 +48,39 @@ sub createConfigFile {
 	my $v=$domain_params->{$k};
 
 	if ($k eq 'disk') {
-        @vbdlist=@$v;
-
-        my $i =0;
-        my $vbdstring="[";
-        my @vbdstrlist=[];
+            @vbdlist=@$v;
+            
+            my $i =0;
+            my $vbdstring="[";
+            my @vbdstrlist=[];
 	    
-        foreach my $vbd (@vbdlist) {
-        my %vbdhash=%$vbd;
+            foreach my $vbd (@vbdlist) {
+                my %vbdhash=%$vbd;
 		
-        SetupVbds($self,$createfs,%vbdhash);
-        $vbdstrlist[$i]=VbdParams(%vbdhash);                               
-        $i++;
-    }
-    # print end of vbd params list
-#                            print "@vbdstrlist\n";
-	    $vbdstring.=join(',',@vbdstrlist);
+                SetupVbds($self,$createfs,%vbdhash);
+                $vbdstrlist[$i]=VbdParams(%vbdhash);                               
+                $i++;
+            }
 
+	    $vbdstring.=join(',',@vbdstrlist);
+            
 	    $vbdstring.="]";
 	    $self->verbose($vbdstring);
 	    PrintSimpleParams($filename, $vbdstring, 'disk');
-
+            
 	} elsif ($k eq 'vif') {
-
+            
 	    my @viflist = @$v;
 	    my $vifstring="[";
 	    foreach my $vif (@viflist) {
-		  $vif="'".$vif."'";
+                $vif="'".$vif."'";
 	    }
 	    $vifstring.=join(',',@viflist);
 	    $vifstring.="]";
 	    
 	    PrintSimpleParams($filename, $vifstring, 'vif');
 	    
-
+            
 
 	} elsif ($k eq 'download') {
 
@@ -160,8 +159,6 @@ sub SetupVbds {
     if (! $createfs) {
 	$self->verbose("Not creating filesystems as create_filesystems is false");
     }
-
-#    print %vbdhash,"\n";
 
     if ($type eq 'lvm') {
         $self->verbose("Configuring VBD of type ".$type);
