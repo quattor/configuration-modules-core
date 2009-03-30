@@ -1,7 +1,7 @@
 COMP=accounts
 NAME=ncm-$(COMP)
 DESCR=accounts NCM component.
-VERSION=4.0.1
+VERSION=4.0.2
 RELEASE=1
 AUTHOR=Charles Loomis <charles.loomis@cern.ch>, Stephen Childs <childss@cs.tcd.ie>
 MAINTAINER=Stephen Childs <childss@cs.tcd.ie>
@@ -14,4 +14,4 @@ TESTVARS=
 MANSECT=8
 MANDIR=
 
-DATE=09/02/09 14:08
+DATE=30/03/09 11:33
