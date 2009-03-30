@@ -19,6 +19,7 @@ type structure_userinfo = {
     'poolStart'  ? long(0..)
     'poolDigits' ? long(1..)
     'poolSize'   ? long(0..)
+    'info'       ? string{}
 };
 
 type structure_groupinfo = {
