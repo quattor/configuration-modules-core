@@ -12,9 +12,19 @@ Network  Disk  Archiver"
 
 =head1 FILES
 
-This component touches the following files: 
+This component generates the following files: 
 /etc/amanda/backupname/amanda.conf
 /etc/amanda/backupname/disklist 
+
+Furthermore, when using virtual tapes (tpchanger='chg-disk') it creates 
+(only if these files do not exist previously)
+/etc/amanda/backupname/tapelist
+tapedev_dir/slotXX
+and symbolic to the first slot.
+
+It also label the virtual tapes
+(this is very dangerous cause labelling the tapes destroy the content,
+have this into account if you already have data in the tapedev directory)
 
 =head1 STRUCTURE
 
@@ -26,28 +36,33 @@ documentation.
 
 =item * /software/components/amandaserver/backupname/config/general_options
 
-Named list of general configuration options.
+Named list of general configuration options (goes to /etc/amanda/backupname/amanda.conf).
+Depending to the value of option 'tpchanger' it might create the virtual tapes in the path 
+specified by option 'tapedev'.
 
 =item * /software/components/amandaserver/backupname/config/holdingdisks : holdingdisk{}
 
 Named list of C<holdingdisk> structures, indexed by C<holdingdisk>
-name.
+name (goes to /etc/amanda/backupname/amanda.conf).
 
 =item * /software/components/amandaserver/backupname/config/tapetypes : tapetype{}
 
-Named list of C<tapetype> structures, indexed by C<tapetype> name. 
+Named list of C<tapetype> structures, indexed by C<tapetype> name 
+(goes to /etc/amanda/backupname/amanda.conf). 
 
 =item * /software/components/amandaserver/backupname/config/dumptypes : dumptype{}
 
-Named list of C<dumptype> structures, indexed by C<dumptype> name.
+Named list of C<dumptype> structures, indexed by C<dumptype> name 
+(goes to /etc/amanda/backupname/amanda.conf).
 
 =item * /software/components/amandaserver/backupname/config/interfaces : interface{}
 
-Named list of C<interface> structures, indexed by C<interface> name.
+Named list of C<interface> structures, indexed by C<interface> name
+(goes to /etc/amanda/backupname/amanda.conf).
 
 =item * /software/components/amandaserver/backupname/disklists : disk[]
 
-List of C<disk> structures
+List of C<disk> structures ((goes to /etc/amanda/backupname/disklist)
 
 =back
 

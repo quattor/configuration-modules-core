@@ -5,7 +5,7 @@
 # File: amandaserver.pm
 # Implementation of ncm-amandaserver
 # Author: Laura del Caño Novales <laura.delcano@ft.uam.es>
-# Version: 1.0.4 : 21/11/08 09:15
+# Version: 1.0.4 : 02/04/09 09:15
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -23,14 +23,12 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
-#use FileHandle;
-#use File::Path;
 
 use EDG::WP4::CCM::Element;
 
 use CAF::Process;
 use CAF::FileWriter;
-use LC::File qw(makedir change_stat);
+use LC::File qw(makedir);
 
 use constant PATH       => '/software/components/amandaserver/';
 use constant AMANDA_CONFIG_DIR => '/etc/amanda';
@@ -221,7 +219,7 @@ sub print_conf_file
 sub create_virtual_tapes($$$$) {
 
 	my ($self, $backup, $tapecycle, $tapedev, $tapelist) = @_;
-	print "In create_virtual_tapes for $backup with $tapecycle, $tapedev and $tapelist\n";
+	$self->info( "Creating $tapecycle virtual tapes for $backup in $tapedev and $tapelist\n");
     # Extract the tape path from the $tapedev parameter
 
     $tapedev =~ m/^file:(.*)$/;
@@ -229,7 +227,7 @@ sub create_virtual_tapes($$$$) {
     $tapedev = $1;    
     # If tapedev does not exists we create it
     unless (-d $1) {
-    	print "Tapedev does not exist, create tapedev, slots and symbolic link data to first slot\n";
+    	$self->info(print "Tapedev does not exist, create tapedev, slots and symbolic link data to first slot\n");
     	makedir($tapedev);
     	# Change owner
     	chown($uid, $gid, $tapedev);
@@ -248,12 +246,12 @@ sub create_virtual_tapes($$$$) {
 
 	# If a tapelist does not exist create it
 	unless (-e $tapelist) { 
-		print "Tapelist does not exist, create tapelist, label tapes and change slot\n";
+		$self->info(print "Tapelist does not exist, create tapelist, label tapes and change slot\n");
 		# Create an empty tapelist file
 
-		#my $fh = CAF::FileWriter->new ($tapelist, ("owner"=>$uid,"group"=>$gid));
-		my $fh = FileHandle->new ($tapelist, "w");
-		close($fh);
+		my $fh = CAF::FileWriter->new ($tapelist, ("owner"=>$uid,"group"=>$gid));
+		$fh->close();
+		
 		chown($uid, $gid, $tapelist);	
 
 		$i = 1;
@@ -278,7 +276,6 @@ sub create_virtual_tapes($$$$) {
 sub getpwnam
 {
         my ($self,$user) = @_;
-		print $user;
         my @val = getpwnam ($user);
         if (@val) {
                 return @val[UID, GID, HOMEDIR];
