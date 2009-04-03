@@ -9,7 +9,7 @@ include components/sysctl/schema;
 
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-sysctl','2.0.2-1','noarch');
+'/software/packages'=pkg_repl('ncm-sysctl','3.0.0-1','noarch');
  
 "/software/components/sysctl/dependencies/pre" ?= list("spma");
 "/software/components/sysctl/active" ?= true;

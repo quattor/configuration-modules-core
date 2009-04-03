@@ -1,3 +1,13 @@
+2009-04-03  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 3.0.0
+	- Fix bug #48076
+
+	And remove all backwards compatibility with an already broken
+	schema. There was no clean way to have this done with old "smart"
+	escaping, as _backlog would always be considered an escaped
+	string.
+
 2009-03-17  Jan van Eldik
 
 	* Release: 2.0.2
