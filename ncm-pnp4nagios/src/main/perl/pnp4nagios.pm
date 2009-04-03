@@ -5,7 +5,7 @@
 # File: pnp4nagios.pm
 # Implementation of ncm-pnp4nagios
 # Author: Laura del Cano Novales <laura.delcano@uam.es>
-# Version: 1.0.0 : 23/03/09 15:34
+# Version: 2.0.0 : 03/04/09 14:39
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
