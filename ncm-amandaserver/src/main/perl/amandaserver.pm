@@ -5,7 +5,7 @@
 # File: amandaserver.pm
 # Implementation of ncm-amandaserver
 # Author: Laura del Caño Novales <laura.delcano@ft.uam.es>
-# Version: 1.0.4 : 02/04/09 09:15
+# Version: 2.0.0 : 03/04/09 12:38
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
