@@ -219,7 +219,6 @@ sub print_conf_file
 sub create_virtual_tapes($$$$) {
 
 	my ($self, $backup, $tapecycle, $tapedev, $tapelist) = @_;
-	$self->info( "Creating $tapecycle virtual tapes for $backup in $tapedev and $tapelist\n");
     # Extract the tape path from the $tapedev parameter
 
     $tapedev =~ m/^file:(.*)$/;
