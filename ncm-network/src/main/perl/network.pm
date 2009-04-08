@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.0.0, 23/12/08 15:24
+# VERSION:    1.0.1, 08/04/09 10:33
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -249,7 +249,7 @@ sub Configure {
 			if ($net{$iface}{'broadcast'}) {
 				$text .= "BROADCAST=".$net{$iface}{'broadcast'}."\n";
 			} else {
-				$self->error("Using static bootproto and no broadcast configured for ".$iface);
+				$self->warn("Using static bootproto and no broadcast configured for ".$iface);
 			}		
 		} elsif (($bootproto eq "none") && $net{$iface}{'master'}) {
 			## set bonding master
@@ -452,7 +452,7 @@ sub Configure {
 		foreach my $if (sort keys %ifup) {
 			## how do we actually know that the device was up?
 			## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-			$cmd .= "/sbin/ifup $if;";
+			$cmd .= "/sbin/ifup $if boot;";
 			$cmd .= "sleep 10;" if ($if =~ m/bond/);
 		}
 	}
