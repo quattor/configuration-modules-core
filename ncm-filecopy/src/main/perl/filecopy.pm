@@ -76,7 +76,7 @@ sub Configure($$@) {
       $file_opts{'mode'} = $perms;
     }
     if ( $config->elementExists($groupPath) ) {
-      my $group = oct( $config->getValue($groupPath) );
+      my $group = $config->getValue($groupPath);
       $file_opts{'group'} = $group;
     }
     if ( $config->elementExists($ownerPath) ) {
