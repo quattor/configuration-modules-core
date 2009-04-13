@@ -89,10 +89,10 @@ sub Configure($$@) {
     }
 
     # by default a backup is made, but this can be suppressed
-    my $backup = undef;
+    my $backup = '.old';
     if ( $config->elementExists($backupPath) ) {
-      if ( $config->getValue($backupPath) eq 'true' ) {
-        $backup = '.old';
+      if ( $config->getValue($backupPath) eq 'false' ) {
+        $backup = undef;
       }
     }
 
@@ -101,11 +101,18 @@ sub Configure($$@) {
     # LC::Check::status must be called independently because doing
     # the same operation in LC::Check::file, changes are not reported in
     # the return value.
-    $changes = LC::Check::file(
-                                $fname,
-                                backup   => $backup,
-                                contents => encode_utf8($contents),
-    );
+    if ( $backup ) {
+      $changes = LC::Check::file(
+                                  $fname,
+                                  backup   => $backup,
+                                  contents => encode_utf8($contents),
+                                );      
+    } else {
+      $changes = LC::Check::file(
+                                  $fname,
+                                  contents => encode_utf8($contents),
+                                );            
+    }
     $changes += LC::Check::status(
                                 $fname,
                                 %file_opts
