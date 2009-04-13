@@ -1,3 +1,8 @@
+2009-04-13  Michel Jouvin
+
+	* Release: 1.3.4
+	- Fix processing of group property (https://savannah.cern.ch/bugs/?48967)
+
 2009-02-24  Ronald Starink, NIKHEF, x5180
 
 	* Release: 1.3.3
