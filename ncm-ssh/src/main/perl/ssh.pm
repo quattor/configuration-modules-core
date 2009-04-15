@@ -51,10 +51,10 @@ sub Configure {
     my $ssh_config_file;
     if ( $component eq 'daemon' ) {
       $component_name = 'sshd';
-      $ssh_config_file = /etc/ssh/sshd_config;
+      $ssh_config_file = '/etc/ssh/sshd_config';
     } else {
       $component_name = 'ssh client';
-      $ssh_config_file = /etc/ssh/ssh_config;
+      $ssh_config_file = '/etc/ssh/ssh_config';
     }
     if ( $ssh_config->{$component} ) {
       $self->info("Checking $component_name configuration...");
