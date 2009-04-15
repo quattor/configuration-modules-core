@@ -11,8 +11,8 @@ type structure_component_openvpn_server = {
     "server"            ? string
     "server-bridge"	? string
     "port"              : port = 1194
-    "proto"             : string with match (self, 'udp|tcp')
-    "dev"               : string with match (self, 'tun|tap')
+    "proto"             : string with match (SELF, 'udp|tcp')
+    "dev"               : string with match (SELF, 'tun|tap')
     "ca"                : string
     "cert"              : string
     "key"               : string
@@ -53,14 +53,14 @@ type structure_component_openvpn_client = {
     "client"	        : boolean = false
     "port"              : port = 1194
     "remote"            : string[]
-    "proto"      	: string with match (self, 'udp|tcp')
-    "dev"     		: string with match (self, 'tun|tap')
+    "proto"      	: string with match (SELF, 'udp|tcp')
+    "dev"     		: string with match (SELF, 'tun|tap')
     "ca"		: string
     "cert"		: string
     "key"		: string
     "tls-auth"		? string
     "tls-exit"		? boolean = false
-    "ns-cert-type" 	? string with match (self, 'server|client')
+    "ns-cert-type" 	? string with match (SELF, 'server|client')
     "tun-mtu"     	? long = 1500
     "comp-lzo"		? boolean = false
     "comp-noadapt"	? boolean = false
