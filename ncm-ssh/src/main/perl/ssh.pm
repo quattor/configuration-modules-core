@@ -69,10 +69,10 @@ sub Configure {
           if ( $ssh_config->{$component}->{$option_set} ) {
             $self->debug(1,"Processing $component $option_set");
             my $ssh_component_config = $ssh_config->{$component}->{$option_set};
-            for my $option (@{$ssh_config_daemon}) {
+            for my $option (@{$ssh_component_config}) {
               my $val = $ssh_component_config->{$option};
               unless ( defined($val) ) { 
-                $self->error("no value found for option $optname");
+                $self->error("no value found for option $option");
                 next;
               }
     
@@ -80,16 +80,16 @@ sub Configure {
               if ( $option_set eq 'comment_options' ) {
                 $comment = '#';
               }
-              my $result = NCM::Check::lines($shh_config_file,
+              my $result = NCM::Check::lines($ssh_config_file,
                                              backup => '.old',
-                                             linere => '(?i)^\W*'.$optname.'\s+\S+',
-                                             goodre => '\s*'.$comment.'\s*'.$optname.'\s+'.$val,
-                                             good   => $comment."$optname $val",
+                                             linere => '(?i)^\W*'.$option.'\s+\S+',
+                                             goodre => '\s*'.$comment.'\s*'.$option.'\s+'.$val,
+                                             good   => $comment."$option $val",
                                              keep   => 'first',
                                              add    => 'last'
                                             );
               if ( $result < 0 ) {
-                $self->error("Error during update of $shh_config_file (option=$option)");
+                $self->error("Error during update of $ssh_config_file (option=$option)");
               } else {
                 $cnt += $result;
               }
@@ -99,15 +99,15 @@ sub Configure {
 
         #reload if changed the conf-file
         if($cnt) {
-          chmod $perms,$shh_config_file or $self->warn("cannot reset permissions on $shh_config_file ($!)");
+          chmod $perms,$ssh_config_file or $self->warn("cannot reset permissions on $ssh_config_file ($!)");
           if ( $component eq 'daemon' ) {
-            $self->info("Restarting $component...")
+            $self->info("Restarting $component...");
             LC::Process::run('/sbin/service sshd reload') or $self->warn('command "/sbin/service sshd reload" failed');            
           }
         }
   
       } else {
-        $self->error("$component configuration missing ($shh_config_file). Check ssh installation.");
+        $self->error("$component configuration missing ($ssh_config_file). Check ssh installation.");
       }
     }
   }
