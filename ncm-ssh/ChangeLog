@@ -1,3 +1,11 @@
+2009-04-15  Michel Jouvin
+
+	* Release: 2.0.0
+	- Rewrite using getTree() API
+	Add support for comment_options in client options
+	Increase severity of some errors
+	Write documentation
+
 2009-02-13  Nick Williams
 
 	* Release: 1.1.4
