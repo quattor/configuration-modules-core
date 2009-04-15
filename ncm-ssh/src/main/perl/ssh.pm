@@ -69,7 +69,7 @@ sub Configure {
           if ( $ssh_config->{$component}->{$option_set} ) {
             $self->debug(1,"Processing $component $option_set");
             my $ssh_component_config = $ssh_config->{$component}->{$option_set};
-            for my $option (@{$ssh_component_config}) {
+            for my $option (keys(%{$ssh_component_config})) {
               my $val = $ssh_component_config->{$option};
               unless ( defined($val) ) { 
                 $self->error("no value found for option $option");
