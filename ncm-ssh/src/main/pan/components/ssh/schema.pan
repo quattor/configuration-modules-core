@@ -98,6 +98,7 @@ type ssh_daemon_type = {
 
 type ssh_client_type = {
     "options" ? ssh_client_options_type
+    "comment_options" ? ssh_client_options_type
 };
 
 type component_ssh_type = {
