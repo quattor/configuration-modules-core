@@ -1,0 +1,76 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+=head1 DESCRIPTION
+
+The I<gmond> component manages Ganglia's gmond daemon.
+This daemon collects information at a node and uses multicast to distribute it
+over the network.
+
+=head2 GMOND
+
+The organization of the schema is very similar to the layout of the resulting configuration file.
+Please read Ganglia's documentation on the configuration of gmond for details.
+
+=over 4
+
+=item * /software/components/gmond/file : string
+
+The location of the configuration file. The correct value differs between 
+Ganglia 3.0 (/etc/gmond.conf) and Ganglia 3.1 (/etc/ganglia/gmond.conf).
+There is no default value.
+
+=item * /software/components/gmond/cluster
+
+Cluster configuration with attributes name, owner, latlong and url.
+
+=item * /software/components/gmond/host
+
+Host configuration with attribute location.
+
+=item * /software/components/gmond/globals
+
+Configuration of gmond, with attributes daemonize, setuid, user, debug_level,
+mute, deaf, host_dmax, cleanup_threshold, gexec, send_metadata_interval and module_dir.
+
+=item * /software/components/gmond/udp_send_channel
+
+List of UDP channels to send information to. 
+Per channel the attributes mcast_join, mcast_if, host, port and ttl may be configured.
+
+=item * /software/components/gmond/udp_recv_channel
+
+List of UDP channels to receive information from. 
+Per channel the attributes mcast_join, mcast_if, bind, port, family and an acl may be configured.
+
+=item * /software/components/gmond/tcp_accept_channel
+
+List of TCP channels from which information is accepted.
+Per channel the attributes bind, port, family, timeout and an acl may be configured.
+
+=item * /software/components/gmond/collection_group
+
+List of collection groups.
+Per collection group the attributes collect_once, collect_every, time_threshold and a list of
+metric descriptions can be specified.
+For each metric, the attributes name, title and value_threshold can be given.
+
+=item * /software/components/gmond/module
+
+List of modules.
+Per module the attributes name, language, path, params and param can be specified.
+
+=item * /software/components/gmond/include
+
+Optional list of additional files to include.
+
+=back
+
+=head1 SEE ALSO
+
+See 
+http://ganglia.wiki.sourceforge.net/
+for documentation on Ganglia and gmond.
+
+=cut
