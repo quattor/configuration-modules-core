@@ -5,7 +5,7 @@
 
 declaration template components/iptables/schema;
 
-include quattor/schema;
+include { "quattor/schema" };
 
 type component_iptables_rule = {
     "new_chain"          ? string
@@ -49,6 +49,7 @@ type component_iptables_rule = {
     "set-class"          ? string
     "limit-burst"        ? string
     "to-destination"     ? string
+    "to-ports"           ? string
     "uid-owner"          ? string
     "tcp-flags"          ? string
     "tcp-option"         ? string
@@ -75,7 +76,7 @@ type component_iptables_acls = {
     "preamble"          ? component_iptables_preamble
     "rules"             ? component_iptables_rule[]
     "epilogue"          ? string
-    "ordered_rules"     ? string with match (self, 'yes|no')
+    "ordered_rules"     ? string with match (SELF, 'yes|no')
 };
 
 type component_iptables = {
@@ -85,4 +86,4 @@ type component_iptables = {
     "mangle"            ? component_iptables_acls
 };
 
-type "/software/components/iptables" = component_iptables;
+bind "/software/components/iptables" = component_iptables;

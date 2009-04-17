@@ -99,7 +99,8 @@ my %options_ord = ( '-N'                  => 0,
                     '--log-tcp-options'   => 19,
                     '--log-ip-options'    => 20,
                     '--limit-burst'       => 21,
-                    '--to-destination'    => 22
+                    '--to-destination'    => 22,
+                    '--to-ports'          => 22
                   );
 
 # Translate resource names to iptables options.
@@ -144,6 +145,7 @@ my %options_tra = ( 'new_chain'          => '-N',
                     'set-class'                 => '--set-class',
                     'limit-burst'        => '--limit-burst',
                     'to-destination'     => '--to-destination',
+                    'to-ports'           => '--to-ports',
                     'uid-owner'          => '--uid-owner',
                     'tcp-flags'                 => '--tcp-flags',
                     'tcp-option'         => '--tcp-option',
@@ -192,6 +194,7 @@ my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a
                     '--set-class'       => '\d{1,2}:\d{1,2}',
                     '--limit-burst'     => '\S+',
                     '--to-destination'  => '\S+',
+                    '--to-ports'        => '\d+(-\d+)?',
                     '--uid-owner'       => '\d+',
                     '--tcp-flags'       => '\S+',
                     '--tcp-option'      => '\d+',

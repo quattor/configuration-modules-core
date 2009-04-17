@@ -1,3 +1,8 @@
+2009-04-17  David O'Callaghan <david.ocallaghan@cs.tcd.ie>
+
+	* Release: 2.3.5
+	- Add 'to-ports' option for REDIRECT target
+
 2009-01-08  <unknown>
 
 	* Release: 2.3.4
