@@ -16,176 +16,228 @@ package NCM::Component::hostsfile;
 #
 
 use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+use base 'NCM::Component';
 
-use NCM::Check;
-use LC::Process;
+our $EC = LC::Exception::Context->new->will_store_all;
+
+use LC::Check;
 use LC::File;
-use Socket; # for IP gethostbyname() of cluster members - should we use CDB instead? XXX
-use Data::Dumper;
-
-#
-# OO stuff
-#
-$EC->error_handler(\&my_handler);
-sub my_handler {
-	my($ec, $e) = @_;
-	$e->has_been_reported(1);
-}
 
 ##########################################################################
 sub Configure {
 ##########################################################################
-	my ($self,$config)=@_;
+    my ( $self, $config ) = @_;
 
-	my $valPath = '/software/components/hostsfile';
+    my $valPath = '/software/components/hostsfile';
 
-	unless ($config->elementExists($valPath)) {
-		$self->error("cannot get $valPath");
-		return;
-	}
+    unless ( $config->elementExists($valPath) ) {
+        $self->error("cannot get $valPath");
+        return;
+    }
 
-	my $re; # root element (of subtrees in our config)
-	my $val; # value (temporary) retrieved for a given config element
-	my @localhostsent;	# Old host entries
-	my $reload=0; # shall we reload the config file?
-	my $errorflag=0;    # fatal error
-	my $domainname;
+    my $allow_takeover = 0;
+    my $re;             # root element (of subtrees in our config)
+    my $val;            # value (temporary) retrieved for a given config element
+    my $reload    = 0;  # shall we reload the config file?
+    my $errorflag = 0;  # fatal error
+    my $domainname;
 
-	my $domainpath="/system/network/domainname";
-	if ($config->elementExists($domainpath)) {
-	    $re=$config->getElement("$domainpath");
-	    $domainname=$re->getValue();
-	}
+    my $domainpath = "/system/network/domainname";
+    if ( $config->elementExists($domainpath) ) {
+        $re         = $config->getElement("$domainpath");
+        $domainname = $re->getValue();
+    }
 
-# Structure is
-#   hostsfile
-#	file
-#	entries
-#	    <hostname>
-#		ipaddr
-#	    	aliases = list
-#
-	my $hostsfile="/etc/hosts";
-	my $cdbpath=$valPath."/file";
-	my @fields;
-	my %ncmhosts;
-	my %newncmhosts;
-	if ($config->elementExists($cdbpath)) {
-	    $re=$config->getElement("$cdbpath");
-	    $hostsfile=$re->getValue();
-	}
+    if ($config->elementExists("$valPath/takeover")) {
+        $allow_takeover = $config->getElement("$valPath/takeover")->getValue();
+    }
 
-	# Read all non-NCM entries
-	if (open(HOSTS,"$hostsfile")) {
-	    while (<HOSTS>) {
-		chomp;
-		next if (/^# NCM/);	# Prolog
-		if (/# NCM/) {		# Hosts
-		    @fields=split /\s+/,$_;
-		    my $host=$fields[1];
-		    $ncmhosts{$host}=$_;
-		    next;
-		}
-		push @localhostsent,$_;
-	    }
-	    close HOSTS;
-	}
+    # Structure is
+    #   hostsfile
+    #	file
+    #	entries
+    #	    <hostname>
+    #		ipaddr
+    #	    	aliases = list
+    #
+    my $hostsfile = "/etc/hosts";
+    my $cdbpath   = $valPath . "/file";
+    my @fields;
+    my $all_aliases = {};
+    my %non_ncm_hosts;
+    my %ncmhosts;
+    my %newncmhosts;
+    if ( $config->elementExists($cdbpath) ) {
+        $re        = $config->getElement("$cdbpath");
+        $hostsfile = $re->getValue();
+    }
 
-	# Now build the lines for the hosts file
-	$cdbpath=$valPath."/entries";
-	if ($config->elementExists($cdbpath)) {
-	    $re=$config->getElement("$cdbpath");
-	    while ($re->hasNextElement()) {
-		my $he=$re->getNextElement();
-		my $heval=$he->getValue();
-		my $hename=$he->getName();	# Hostname
-		my $helist=$config->getElement("$cdbpath/$hename");
-		my %hesettings;
-		my $line="";
-		my $ipaddr;
-		my $comment;
-		my $aliases;
-		while ($helist->hasNextElement()) {
-		    my $hl=$helist->getNextElement();
-		    my $hlval=$hl->getValue();
-		    my $hlname=$hl->getName();
-		    if ($hlname eq "ipaddr") {
-			$ipaddr=$hlval;
-		    } elsif ($hlname eq "aliases") {
-			$aliases=$hlval;
-		    } elsif ($hlname eq "comment") {
-			$comment=$hlval;
-		    } else {
-			$self->error("List entry $hlname for $hename not understood");
-			$errorflag=1;
-		    }
-		}
-		unless (defined($ipaddr)) {
-		    $self->error("IP address not defined for $hename");
-		    $errorflag=1;
-		}
-		$line="$ipaddr\t$hename";
-		if (!defined($aliases)) {
-		    $aliases="";
-		    if ($hename =~ m/([^.]+)[.].*/) {
-			$aliases=$1;
-		    } elsif (defined($domainname)) {
-			$aliases=$hename.".".$domainname;
-		    }
-		}
-		$line.=" $aliases";
-		$line=sprintf("%-40s # NCM",$line);
-		if (defined($comment)) {
-		    $line.=" $comment";
-		}
-		my $oldline=$ncmhosts{$hename};
-		if (!defined($oldline)) {
-		    $self->info("Adding entry for $hename");
-		    $reload=1;
-		} elsif ($line ne $oldline) {
-		    $self->info("Changed entry for $hename");
-		    $reload=1;
-		}
-		delete $ncmhosts{$hename};
-		if (defined($newncmhosts{$hename})) {
-		    $self->error("Duplicate entry for $hename");
-		    $errorflag=1;
-		}
-		$newncmhosts{$hename}=$line;
-	    }
-	}
+    my @order = (); # how to maintain the same ordering of hosts
+    
+    # Parse the existing file, categorising each entry as NCM-controlled or not.
+    # We keep track of the order of lines to put things back in the same
+    # order, including comments. We also track the aliases, so that if
+    # someone tries to define "foo" within the configuration, and in the
+    # pre-existing /etc/hosts file it has IP HOST.DOMAIN FOO (i.e. FOO is
+    # supposed to be an alias for HOST.DOMAIN), then we will throw away the
+    # HOST.DOMAIN line and replace it with this new definition. This is
+    # "do what I mean", but might potentially cause confusion if your config
+    # is very broken.
+    my $lines = LC::File::file_contents($hostsfile);
+    foreach my $line (split(/\n+/, $lines)) {
+        # We completely skip the prologue, since we'll generate a new one
+        next if ($line =~ /^\# Generated by Quattor/);
+        
+        if ($line =~ /^#/) {
+            push(@order, $line);
+            next;
+        }        
+        
+        my $stash;
+        if ($line =~ /\# NCM/) {
+            $stash = \%ncmhosts;
+        } else {
+            $stash = \%non_ncm_hosts;
+        }
+        my ($nocomment) = ($line =~ m{^([^#]*)});
+        @fields = split( /\s+/, $nocomment);
+        my $host = $fields[1];
+        foreach my $h (@fields[2..$#fields]) {
+            $all_aliases->{$h} = $host;
+        }
+        $stash->{$host} = $line;   
+        push(@order, $host);     
+    }
 
-	my @oldhosts=keys %ncmhosts;
-	if (@oldhosts>0) {
-	    $reload=1;
-	    my $ohosts=join(' ',@oldhosts);
-	    $self->info("Deleting entries for $ohosts");
-	    $reload=1;
-	}
-	if ($reload && !$errorflag) {
-	    my $contents="";
-	    my $prolog="# NCM Generated automatically by component hostsfile at ".localtime()."\n";
-	    $contents.=$prolog;
-	    for my $l (@localhostsent) {
-		$contents.="$l\n";
-	    }
-	    for my $h (sort keys %newncmhosts) {
-		my $le=$newncmhosts{$h};
-		$contents.="$le\n";
-	    }
-	    if (open(HOSTS,">$hostsfile")) {
-		print HOSTS $contents;
-		close HOSTS;
-	    } else {
-		$self->error("Cannot update $hostsfile : $!");
-	    }
-	    chmod 0644,$hostsfile;
-	}
-	return;
+    # Now build the lines for the hosts file
+    $cdbpath = $valPath . "/entries";
+    if ( $config->elementExists($cdbpath) ) {
+        $re = $config->getElement("$cdbpath");
+        while ( $re->hasNextElement() ) {
+            my $he     = $re->getNextElement();
+            my $heval  = $he->getValue();
+            my $hename = $he->getName();                            # Hostname
+            my $helist = $config->getElement("$cdbpath/$hename");
+            my %hesettings;
+            my $line = "";
+            my $ipaddr;
+            my $comment;
+            my $aliases;
+
+            while ( $helist->hasNextElement() ) {
+                my $hl     = $helist->getNextElement();
+                my $hlval  = $hl->getValue();
+                my $hlname = $hl->getName();
+                if ( $hlname eq "ipaddr" ) {
+                    $ipaddr = $hlval;
+                } elsif ( $hlname eq "aliases" ) {
+                    $aliases = $hlval;
+                } elsif ( $hlname eq "comment" ) {
+                    $comment = $hlval;
+                } else {
+                    $self->error(
+                        "List entry $hlname for $hename not understood");
+                    $errorflag = 1;
+                }
+            }
+            unless ( defined($ipaddr) ) {
+                $self->error("IP address not defined for $hename");
+                $errorflag = 1;
+            }
+            $line = "$ipaddr\t$hename";
+            if ( !defined($aliases) ) {
+                $aliases = "";
+                if ( $hename =~ m/([^.]+)[.].*/ ) {
+                    $aliases = $1;
+                } elsif ( defined($domainname) ) {
+                    $aliases = $hename . "." . $domainname;
+                }
+            }
+            $line .= " $aliases";
+            $line = sprintf( "%-40s # NCM", $line );
+            if ( defined($comment) ) {
+                $line .= " $comment";
+            }
+            my $aka = $hename;
+            if (exists $all_aliases->{$hename}) {
+                $aka = $all_aliases->{$hename};
+            }
+            
+            if (exists $ncmhosts{$aka} || exists $non_ncm_hosts{$aka}) {
+                my $stash;
+                if (exists $ncmhosts{$aka}) {
+                    if ($ncmhosts{$aka} ne $line) {
+                        $self->info("changing entry for NCM-controlled $hename");
+                    }
+                    $stash = \%ncmhosts;
+                } elsif ($allow_takeover) {
+                    if ($non_ncm_hosts{$aka} ne $line) {
+                        $self->info("taking over entry for $hename");                        
+                    }                    
+                    $stash = \%non_ncm_hosts;
+                } else {
+                    $self->info("will not takeover entry for $hename");
+                    next;
+                }
+                
+                delete $stash->{$aka};
+            } else {
+                $self->info("new entry for $aka");
+            }
+            
+
+            if ( exists( $newncmhosts{$aka} ) ) {
+                $self->error("Duplicate entry for $aka");
+                $errorflag = 1;
+            }
+            $newncmhosts{$aka} = $line;
+            $reload = 1;
+        }
+    }
+
+    my @oldhosts = keys %ncmhosts;
+    if ( @oldhosts > 0 ) {
+        $reload = 1;
+        my $ohosts = join( ' ', @oldhosts );
+        $self->info("Deleting entries for $ohosts");
+        $reload = 1;
+    }
+    if ( $reload && !$errorflag ) {
+        my $contents = "";
+        $contents .= '# Generated by Quattor component hostsfile 2.0.0';
+        $contents .= "\n";
+        
+        # Run through all the modified hosts (i.e. maintaining previous order)
+        foreach my $h (@order) {
+            if ($h =~ m{^#}) {
+                $contents .= "$h\n";
+                next;
+            }
+            my $le;            
+            if (exists $newncmhosts{$h}) {
+                $le = delete $newncmhosts{$h};
+            } elsif (exists $ncmhosts{$h}) {
+                $le = delete $ncmhosts{$h};
+            } else {
+                $le = delete $non_ncm_hosts{$h};
+            }
+            $contents .= "$le\n"
+        }
+        
+        # After that loop above, we should be left with only new hosts
+        foreach my $h (sort keys %newncmhosts) {
+            $contents .= $newncmhosts{$h} . "\n";
+        }
+        
+        my $update = LC::Check::file($hostsfile, 
+                                     contents => $contents,
+                                     owner => 'root',
+                                     mode => oct(644));
+        if (!defined $update) {
+            $self->error("Cannot update $hostsfile : $!");
+        }
+    }
+    return;
 }
 
 ##########################################################################
@@ -193,5 +245,4 @@ sub Unconfigure {
 ##########################################################################
 }
 
-
-1; #required for Perl modules
+1;    #required for Perl modules
