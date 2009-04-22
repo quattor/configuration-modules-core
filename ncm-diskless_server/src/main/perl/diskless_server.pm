@@ -607,12 +607,23 @@ sub dhcpdWrite{
 		print FH "$value unknown-clients;\n";
 		$value = $config->getValue($base."/dhcp_header/use_host_decl_names");
 		print FH "use-host-decl-names $value;\n";
-		if ( $config->elementExists("/system/network/domainname") ){
+		if ( $config->elementExists($base."/dhcp_header/search") ){
+			print FH "option domain-name \"";
+			my $search = $config->getElement($base."/dhcp_header/search");
+			my @list=$search->getList();
+			my ($entry, $value);
+			#still references,get values.
+			foreach $entry (@list){
+				$value = $entry->getValue();
+				print FH "$value ";
+			}
+			print FH "\";\n";
+		} elsif ( $config->elementExists("/system/network/domainname") ){
 			$value = $config->getValue("/system/network/domainname");
 			print FH "option domain-name \"$value\";\n";
 		}
 		else{
-			$self->error("No domain name found for diskless server.");
+			$self->error("Neither search list nor domain name found for diskless server.");
 		}
 		$value = $config->getValue($base."/dhcp_header/log_facility");
 		print FH "log-facility $value;\n";

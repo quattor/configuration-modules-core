@@ -18,6 +18,7 @@ type dhcp_header_type={
     "unknown_clients" : string with match (self,'allow|deny')
     "use_host_decl_names" : string with match (self,'on|off')
     "log_facility" : string
+    "search" ? string[]
 };
  
 type dhcp_type={

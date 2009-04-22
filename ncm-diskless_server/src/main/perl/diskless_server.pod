@@ -17,6 +17,30 @@ not configured by this component.
 
 =head1 RESOURCES
 
+=head2 /software/components/diskless_server/dhcp_header
+
+Global dhcp options.
+
+=head3 /software/components/diskless_server/dhcp_header/ddns_update_style
+
+Possible values : ad-hoc, interim, none
+
+=head3 /software/components/diskless_server/dhcp_header/unknown_clients
+
+Possible values : allow or deny
+
+=head3 /software/components/diskless_server/dhcp_header/use_host_decl_names
+
+Possible values : on or off
+
+=head3 /software/components/diskless_server/dhcp_header/log_facility
+
+Sets the logging facility used by dhcpd
+
+=head3 /software/components/diskless_server/dhcp_header/search
+
+Sets the domains that will be searched (for resolv.conf)
+
 =head2 /software/components/diskless_server/dhcp/_xxx.xxx.xxx.xxx/
 
 list that contains the options for each dhcp subnet
