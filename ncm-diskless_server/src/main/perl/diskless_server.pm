@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-#
 # NCM::diskless_server - NCM diskless server configuration component
 #
 ################################################################################
@@ -17,7 +16,7 @@ package NCM::Component::diskless_server;
 use strict;
 use NCM::Component;
 use NCM::Check;
-use vars qw(@ISA $EC);
+use vars qw(@ISA $EC $this_app);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use LC::File qw(copy remove move);
@@ -249,6 +248,12 @@ sub pxe_config{
 
 	#it's diskless by default so add -D 1
 	$pxeos_cmd .= " -D 1";
+	
+	# are we debugging ?
+	*this_app = \$main::this_app;
+	if ($this_app->option('debug')) {
+		$pxeos_cmd .= " --debug";
+	}
 
 	#add server
 	unless ($config->elementExists($path."/pxe/netdev")){

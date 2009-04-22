@@ -1,5 +1,10 @@
 2009-04-22  Loic Brarda
 
+	* Release: 0.4.4
+	- Transmit debug flag to pxeos command
+
+2009-04-22  Loic Brarda
+
 	* Release: 0.4.3
 	- Add an optionnal "search" list for the dhcp_header. If none is defined, the Domain name is used.
 	Man page updates.
