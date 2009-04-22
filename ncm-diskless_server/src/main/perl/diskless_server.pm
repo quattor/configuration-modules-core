@@ -112,6 +112,44 @@ sub Configure {
 	&cleanup;
 	return 1;
     }
+       # update shared root filesystem
+       if($config->elementExists($base."/protonode_profile")) {
+               my $f_path=$config->getValue($base."/pxe/image");
+               my $clientUrl = $config->getValue($base."/protonode_profile");
+               my $sillyCheck = "$clientUrl";
+               $sillyCheck =~ s/\$/\\\$/g;
+               $self->debug(2,"$0: sillyCheck $sillyCheck");
+               my $ccmConfFile = "$f_path/root/etc/ccm.conf";
+               if ( -e $ccmConfFile) {
+                       $self->debug(4,"checking $ccmConfFile\n");
+                       my $changes+=NCM::Check::lines($ccmConfFile,
+                               linere=>"profile .*",
+                               goodre=>"profile $sillyCheck",
+                               good  =>"profile $clientUrl"
+                               );
+               }
+               my($stdout,$stderr);
+               $self->debug(2,"$0: chrooting ccm-fetch on $f_path/root");
+               LC::Process::execute(
+               [ "/usr/sbin/chroot $f_path/root /usr/sbin/ccm-fetch" ],
+               timeout => 300,
+               stdout => \$stdout,
+               stderr => \$stderr
+               );
+               $self->debug(5,"$0: stdout :\n$stdout");
+               $self->debug(4,"$0: stderr :\n$stderr");
+
+               $self->debug(2,"$0: chrooting ncm-ncd --co --all on $f_path/root");
+               LC::Process::execute(
+               [ "/usr/sbin/chroot $f_path/root /usr/sbin/ncm-ncd --co --all" ],
+               timeout => 300,
+               stdout => \$stdout,
+               stderr => \$stderr
+               );
+               $self->debug(5,"$0: stdout :\n$stdout");
+               $self->debug(4,"$0: stderr :\n$stderr");
+       }
+
     #now create the pxe files
     $self->debug(2,"$0: going to call pxeboot_config");
     $self->pxeboot_config($config,$base,@nodes);
