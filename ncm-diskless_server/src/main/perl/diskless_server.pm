@@ -164,8 +164,10 @@ sub Configure {
     if($config->elementExists($base."/client_profiles")){
 	$self->setClientProfileUrl($config,$base);
     }
-    # correct promt in /root/.bashrc of clients ("chrooted" -> "root")
+    # correct prompt in /root/.bashrc of clients ("chrooted" -> "root")
     $self->setClientRootPrompt($config,$base,@nodes);
+    # correct hostname in /etc/sysconfig/network of clients
+    $self->setClientHostname($config,$base,@nodes);
     #everything seems to have worked fine,restart the dhcp server
     &cleanup();
 }
@@ -742,6 +744,28 @@ sub setClientRootPrompt(){
         }
     }
     $self->debug(4,"Changed $changes bashrc files");
+}
+
+sub setClientHostname(){
+    my ($self,$config,$base,@nodes) = @_;
+    my $node;
+    my ($clientName, $bashrcFile, $domainName);
+    my $snapshotBaseDir = $config->getValue($base."/pxe/image") . "/snapshot";
+    my $changes = 0;
+    foreach $node (@nodes){
+       ($clientName) = (split(/\./,$node))[0];
+       my $networkFile = "$snapshotBaseDir/$clientName/etc/sysconfig/network";
+       if ( -e $networkFile) {
+               $self->debug(4,"checking $networkFile\n");
+               $changes+=NCM::Check::lines($networkFile,
+                         linere=>"HOSTNAME=.*",
+                         goodre=>"HOSTNAME=$clientName",
+                         good  =>"HOSTNAME=$clientName",
+                         add   =>"first"
+                        );
+       }
+    }
+    $self->debug(4,"Changed $changes sysconfig/network files");
 }
 
 

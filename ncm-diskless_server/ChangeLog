@@ -1,5 +1,10 @@
 2009-04-22  Loic Brarda
 
+	* Release: 0.4.1
+	- Set correct hostname in /etc/sysconfig/network of clients
+
+2009-04-22  Loic Brarda
+
 	* Release: 0.4.0
 	- chroot ccm-fetch and ncm-ncd --co --all on shared root filesystem between pxeos an pxeboot calls
 
