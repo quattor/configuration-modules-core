@@ -9,13 +9,13 @@ include {'quattor/schema'};
 type structure_component_gmetad_data_source_host = {
     "address"           : type_hostname
     "port"              ? type_port
-}
+};
 
 type structure_component_gmetad_data_source = {
     "name"              : string
     "polling_interval"  ? long(1..)
     "host"              ? structure_component_gmetad_data_source_host[]
-}
+};
 
 type structure_component_gmetad = {
     include structure_component
