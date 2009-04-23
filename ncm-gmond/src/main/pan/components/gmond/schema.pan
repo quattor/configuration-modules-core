@@ -45,8 +45,8 @@ type structure_component_gmond_globals = {
 type structure_component_gmond_udp_send_channel = {
     "mcast_join"                ? type_ipv4
     "mcast_if"                  ? string
-    "host"                      ? string    # host or IP
-    "port"                      : long(1..65534)
+    "host"                      ? type_hostname
+    "port"                      : type_port
     "ttl"                       ? long(1..)
 };
 
@@ -54,14 +54,14 @@ type structure_component_gmond_udp_recv_channel = {
     "mcast_join"                ? type_ipv4
     "bind"                      ? type_ip
     "mcast_if"                  ? string
-    "port"                      : long(1..65534)
+    "port"                      : type_port
     "family"                    ? string = "inet4" with match(SELF, "inet[46]")
     "acl"                       ? structure_component_gmond_acl
 };
 
 type structure_component_gmond_tcp_accept_channel = {
     "bind"                      ? type_ip
-    "port"                      : long(1..65534)
+    "port"                      : type_port
     "family"                    ? string = "inet4" with match(SELF, "inet[46]")
     "timeout"                   ? long = 1000000                    # micro seconds
     # "interface"               ? string                            # defined but not implemented
@@ -91,14 +91,14 @@ type structure_component_gmond_module = {
 
 type structure_component_gmond = {
     include structure_component
-    "cluster"           : structure_component_gmond_cluster
-    "host"              : structure_component_gmond_host
+    "cluster"           ? structure_component_gmond_cluster
+    "host"              ? structure_component_gmond_host
     "globals"           : structure_component_gmond_globals
     "udp_send_channel"  : structure_component_gmond_udp_send_channel[]
     "udp_recv_channel"  : structure_component_gmond_udp_recv_channel[]
     "tcp_accept_channel": structure_component_gmond_tcp_accept_channel[]
     "collection_group"  : structure_component_gmond_collection_group[]
-    "module"            : structure_component_gmond_module[]
+    "module"            ? structure_component_gmond_module[]
     "include"           ? string[]
     "file"              : string                    # location of the configuration file
                                                     # differs between Ganglia 3.0 and 3.1
