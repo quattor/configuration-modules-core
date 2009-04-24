@@ -100,7 +100,7 @@ EOFpine
       if($config->elementExists($mypath."/foldercollection")) {
 	$ret+=mySubst($cfgfile,'folder-collections',$config->getValue($mypath."/foldercollection"),1);
       }
-      if($config->elementExists($mypath."/ldapserver")) {
+      if($config->elementExists($mypath."/ldapservers")) {
 	$ret+=mySubst($cfgfile,'ldap-servers',$config->getValue($mypath."/ldapservers"),1);
       }
       if($config->elementExists($mypath."/ldapnameattr")) {
