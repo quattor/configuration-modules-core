@@ -1,5 +1,10 @@
 2009-04-24  Jan Iven
 
+	* Release: 1.2.11
+	- fix #47872 - typo on the "ldapservers" directive
+
+2009-04-24  Jan Iven
+
 	* Release: 1.2.10
 	- fix #47872 - typo on the "ldapservers" directive
 
