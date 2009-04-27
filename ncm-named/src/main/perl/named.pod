@@ -28,6 +28,10 @@ Reference file location for named configuration file. Existing (/etc/named.conf)
 
 Ordered list of named servers to use in (/etc/resolv.conf). If named server is started, localhost (127.0.0.1) will be added first.
 
+=head2 /software/components/named/options : list of options
+
+Ordered list of named options to use in (/etc/resolv.conf).
+
 /etc/resolv.conf is updated : everything except 'nameserver' lines are preserved. All the 'nameserver' lines are replaced by information in this option, if present.
 
 =head1 DEPENDENCIES

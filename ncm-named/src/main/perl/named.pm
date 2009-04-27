@@ -92,6 +92,21 @@ sub Configure {
       }
     }
     
+    # options
+    if ($config->elementExists("$base/options")) {
+      my $search = $config->getElement("$base/options");
+      my @options;
+      while ($search->hasNextElement()) {
+        push @options, $search ->getNextElement()->getValue();
+      }
+      if ( @options ){
+        $changes += NCM::Check::lines("/etc/resolv.conf",
+                                       linere => "^\\s*options\\s*.*",
+                                       goodre => "^\\s*options\\s*@options",
+                                       good   => "options @options");
+      }
+    }
+
     unless (defined($changes)) {
       $self->error('error modifying /etc/resolv.conf');
       return;

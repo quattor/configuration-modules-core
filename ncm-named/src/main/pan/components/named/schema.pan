@@ -20,6 +20,7 @@ type component_named = {
     "configfile"    ? string
     "start"         : boolean = false
     "servers"       ? string[]
+    "options"       ? string[]
     "search"        ? type_fqdn[]
 };
 
