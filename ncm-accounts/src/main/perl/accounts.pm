@@ -312,7 +312,7 @@ sub configure_login_defs($$@) {
 sub fill_user_hash {
 ##########################################################################
 
-    my ($user_hash, $prof_hash, $name, $uid)=@_;
+    my ($self,$user_hash, $prof_hash, $name, $uid, $check_parent)=@_;
 
     $user_hash->{"name"}=$name;
 
@@ -344,7 +344,7 @@ sub fill_user_hash {
     }
     if (exists $prof_hash->{"homeDir"}) {
         $user_hash->{"homedir"}=$prof_hash->{"homeDir"};
-        if ( $user_hash->{"createHome"} ) {
+        if ( $check_parent && $user_hash->{"createHome"} ) {
           my $status = $self->prepare_home($user_hash->{"homeDir"});
           unless ( $status ) {
             $self->error("can't create home parent directory ".$user_hash->{"homeDir"}."; skipping user $name");
@@ -648,8 +648,8 @@ sub generate_pool_users {
         $configured_users->{$uname}={};
         my $myuid=$uid+$j;
 
-        fill_user_hash($configured_users->{$uname}, 
-                       $thisuser, $uname, $myuid);
+        $self->fill_user_hash($configured_users->{$uname}, 
+                       $thisuser, $uname, $myuid, 0);
 
         
         my $poolhomedir=$homedir.$suffix;
@@ -690,7 +690,7 @@ sub get_users_from_profile {
                 generate_pool_users($self,\%configured_users, \%thisuser, $user);
             } else { # non pool accounts
                 $configured_users{$user}={};
-                fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid);
+                fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid, 1);
             }
         }
     }
