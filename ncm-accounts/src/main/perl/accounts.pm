@@ -345,13 +345,13 @@ sub fill_user_hash {
     if (exists $prof_hash->{"homeDir"}) {
         $user_hash->{"homedir"}=$prof_hash->{"homeDir"};
         if ( $check_parent && $user_hash->{"createHome"} ) {
-          my $status = $self->prepare_home($user_hash->{"homeDir"});
+          my $status = $self->prepare_home($prof_hash->{"homeDir"});
           unless ( $status ) {
-            $self->error("can't create home parent directory ".$user_hash->{"homeDir"}."; skipping user $name");
+            $self->error("can't create home parent directory ".$prof_hash->{"homeDir"}."; skipping user $name");
             return 1;            
           }
           if ( $status > 0 ) {
-            $self->log("Created home parent directory ".$user_hash->{"homeDir"}." for user $name");            
+            $self->log("Created home parent directory ".$prof_hash->{"homeDir"}." for user $name");            
           }
         }
     }
@@ -690,7 +690,7 @@ sub get_users_from_profile {
                 generate_pool_users($self,\%configured_users, \%thisuser, $user);
             } else { # non pool accounts
                 $configured_users{$user}={};
-                fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid, 1);
+                $self->fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid, 1);
             }
         }
     }
