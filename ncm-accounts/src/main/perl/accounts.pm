@@ -122,7 +122,7 @@ sub prepare_home {
     my ($self, $homedir) = @_;
 
     if ( length($homedir) == 0 ) {
-      $self->warn('prepare_home(): empty home directory passed. Probably an internal error.')
+      $self->warn('prepare_home(): empty home directory passed. Probably an internal error.');
       return 0;  
     }
     
