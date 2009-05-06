@@ -1,3 +1,9 @@
+2009-05-06  Michel Jouvin
+
+	* Release: 4.0.5
+	- Clean up and optimize home directory parent check/creation
+	Cleanup code formatting (in particular ident) for better readability
+
 2009-05-06  Luis Fernando Muñoz Mejías
 
 	* Release: 4.0.4
