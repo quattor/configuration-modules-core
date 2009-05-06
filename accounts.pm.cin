@@ -189,13 +189,13 @@ sub add_user {
     # directory exists (useradd will not create it).
     if (defined($user->{"homeDir"})) {
         if ( $user->{"createHome"} ) {
-          my $status = $self->prepare_home($user->{"homeDir"};
+          my $status = $self->prepare_home($user->{"homeDir"});
           unless ( $status ) {
-            $self->error("can't create home parent directory $user->{"homeDir"}; skipping user $username");
+            $self->error("can't create home parent directory ".$user->{"homeDir"}."; skipping user $username");
             return 1;            
           }
           if ( $status > 0 ) {
-            $self->log("Created home parent directory $user->{"homeDir"} for user $username");            
+            $self->log("Created home parent directory ".$user->{"homeDir"}." for user $username");            
           }
         }
     }
