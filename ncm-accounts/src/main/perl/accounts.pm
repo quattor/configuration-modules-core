@@ -57,7 +57,7 @@ use constant { PWCONV  => "/usr/sbin/pwconv",
                GRPUNCONV  => "/usr/sbin/grpunconv",
                NEWUSERS => "/usr/sbin/newusers",
                CHPASSWD => "/usr/sbin/chpasswd"
-	       };
+         };
 
 use constant {NEWPASSLIST => "/tmp/newpass.ncm-accounts",
               NEWUSERLIST => "/tmp/newusers.ncm-accounts"
@@ -95,9 +95,9 @@ sub generate_opts {
 
             if ($field eq GCOS) {
                 push(@opts,quote_string($user->{$field}));
-            }elsif ($field eq PASSWORD) {
+            } elsif ($field eq PASSWORD) {
                 push(@opts, ("'" . $user->{$field} . "'"));
-	    } else {
+            } else {
                 push(@opts,$user->{$field});
             }
 
@@ -153,18 +153,18 @@ sub modify_user {
     }
     
     if($useLdap == 1){
-	push(@opts,"-o");
+      push(@opts,"-o");
     }
 
     # call usermod with generated options
     # unless (execute ([$USERMOD,@opts,$user->{"name"}])) {
     unless (execute ([($USERMOD.' '.join(' ', @opts)." ".$user->{"name"})])) {
-	$self->warn("Failed to call ". $USERMOD);
-	return;
+      $self->warn("Failed to call ". $USERMOD);
+      return;
     }
     
     if($?){
-	$self->warn("Failed to modify user " . $user->{"name"});
+      $self->warn("Failed to modify user " . $user->{"name"});
     }
 }
 
@@ -195,24 +195,24 @@ sub add_user {
     my @opts=generate_opts($user);
 
     if (!$createHome) {
-	push(@opts,"-M");
+      push(@opts,"-M");
     }else{
-	if($useLdap != 1){
-	    push(@opts,"-m");
-	}
+      if($useLdap != 1){
+        push(@opts,"-m");
+      }
     }
     if($useLdap == 1){
-	for (my $i =0; $i < @opts; $i++){
-	    #Because we will call with luseradd anf it doesn't know -G 
-	    if($opts[$i] eq '-G'){
-		$opts[$i] ='';
-		$opts[$i+1] ='';
-	    }
-	    #put password in quotes
-	    if($opts[$i] eq '-p'){
-		$opts[$i+1] = '"'. $opts[$i+1]. '"';
-	    }
-	}
+      for (my $i =0; $i < @opts; $i++){
+        #Because we will call with luseradd anf it doesn't know -G 
+        if($opts[$i] eq '-G'){
+          $opts[$i] ='';
+          $opts[$i+1] ='';
+        }
+        #put password in quotes
+        if($opts[$i] eq '-p'){
+          $opts[$i+1] = '"'. $opts[$i+1]. '"';
+        }
+      }
 
     }
 
@@ -220,18 +220,18 @@ sub add_user {
     $self->verbose($USERADD.' '.join(' ', @opts).' '.$user->{"name"});
     # call useradd with generated options
     unless (execute ([($USERADD.' '.join(' ', @opts).' '.$user->{"name"})])){
-	$self->warn("Failed to run " . $USERADD);
-	return;
+      $self->warn("Failed to run " . $USERADD);
+      return;
     }
-    if($?){
-	$self->warn("Failed to add user " . $user->{"name"});
-    }else{
-	if($useLdap == 1){
-	    # This is a horrible hack because luseradd doesn't work properly.
-	    # It doesn't set the password correctly. What is a discrace
-	    # FIXME: This really needs fixing
-	    modify_user ($self, $user, 0);
-	}
+    if ($?) {
+      $self->warn("Failed to add user " . $user->{"name"});
+    } else {
+      if($useLdap == 1){
+        # This is a horrible hack because luseradd doesn't work properly.
+        # It doesn't set the password correctly. What is a discrace
+        # FIXME: This really needs fixing
+        modify_user ($self, $user, 0);
+      }
     }
 }
 
@@ -248,16 +248,16 @@ sub delete_user {
 
 
     if ($firstchar ne '+' && $firstchar ne '-' && $username ne 'root') {
-	$self->log($USERDEL." ".$username);
-	$self->verbose($USERDEL." ".$username);
+      $self->log($USERDEL." ".$username);
+      $self->verbose($USERDEL." ".$username);
 
-	unless (execute ([$USERDEL, $username])) {
-	    $self->warn("Failed to call ". $USERDEL);
-	    return;
-	}
-	if ($?) {
-	    $self->warn("Failed to delete user ".$username)
-	    }
+      unless (execute ([$USERDEL, $username])) {
+        $self->warn("Failed to call ". $USERDEL);
+        return;
+      }
+      if ($?) {
+        $self->warn("Failed to delete user ".$username)
+      }
 
     }
 
@@ -337,7 +337,7 @@ sub fill_user_hash {
     }
     if (exists $prof_hash->{"createHome"}) {
         $user_hash->{"createHome"}=$prof_hash->{"createHome"};
-}
+    }
     if (exists $prof_hash->{"createKeys"}) {
         $user_hash->{"createKeys"}=$prof_hash->{"createKeys"};
     }
@@ -386,9 +386,9 @@ sub get_existing_users {
     my $getUserFunction;
 
     if ($username){
-	$getUserFunction = \&getpwnam;
+      $getUserFunction = \&getpwnam;
     }else{
-	$getUserFunction = \&getpwent;
+      $getUserFunction = \&getpwent;
     }
 
     my %user_groups = $self->get_existing_user_groups_hash();
@@ -415,9 +415,9 @@ sub get_existing_users {
             $groups = join ',', @{ $user_groups{$pw->name} };
         }    
         $user_hash{'groups'}= $groups;
-	
+  
         $existing_users{$pw->name}=\%user_hash;
-	last if($username);
+        last if($username);
     }
     endpwent(  );
 
@@ -439,15 +439,15 @@ sub user_in_passwd {
     }
 
     unless (open PASSWD, "/etc/passwd"){
-	$self->warn("Cannot open /etc/passwd for reading: $!");
-	return;
+      $self->warn("Cannot open /etc/passwd for reading: $!");
+      return;
     }
 
     while (my ($name) = split(/:/,<PASSWD>) ) {
-	if ($user eq $name){
-	    $returnVal = 1;
-	    last;
-	}
+      if ($user eq $name){
+        $returnVal = 1;
+        last;
+      }
     }
     close PASSWD;
     return $returnVal;
@@ -511,44 +511,43 @@ sub delete_groups {
     # special case: ignore groups starting with '+' or '-' to allow use of NIS 
     # special case: do not allow root to be deleted
     while (($groupname, $val) = each(%groups)) {
-	my $firstchar=substr($groupname, 0, 1);
-	if ($val eq 'old' && $firstchar ne '+' && $firstchar ne '-' &&
-	    $groupname ne 'root' && not(defined($kept_groups{$groupname}))) {
-	    
-	    my $primary = 0;
-	    
-	    # opening /etc/passwd shouldn't strictly be necessary as
-	    # we have got a list of existing users already ...
-	    my $gid = getgrnam($groupname);
-	    if (defined($gid) && $gid ne '') {
-		unless(open PASSWD,"/etc/passwd"){
-		    $self->warn("Cannot open /etc/passwd for reading: $!");
-		    return;
-		}
+      my $firstchar=substr($groupname, 0, 1);
+      if ($val eq 'old' && $firstchar ne '+' && $firstchar ne '-' &&
+        $groupname ne 'root' && not(defined($kept_groups{$groupname}))) {
+      
+        my $primary = 0;
+      
+        # opening /etc/passwd shouldn't strictly be necessary as
+        # we have got a list of existing users already ...
+        my $gid = getgrnam($groupname);
+        if (defined($gid) && $gid ne '') {
+          unless(open PASSWD,"/etc/passwd"){
+            $self->warn("Cannot open /etc/passwd for reading: $!");
+            return;
+          }
 
-		while (my ($name, $pwd, $uid, $testgid) = split(/:/,<PASSWD>) ) {
-		    $primary = 1 if ($gid == $testgid);
-		}
-		close PASSWD;
-	    }
+          while (my ($name, $pwd, $uid, $testgid) = split(/:/,<PASSWD>) ) {
+            $primary = 1 if ($gid == $testgid);
+          }
+          close PASSWD;
+        }
 
-	    $self->verbose($GRPDEL . " " . $groupname) if (!$primary);
+        $self->verbose($GRPDEL . " " . $groupname) if (!$primary);
 
-	    if (!$safemode && !$primary) {
-		$self->log($GRPDEL . " " . $groupname);
-		unless (execute ([$GRPDEL, $groupname])) {
-		    $self->warn("Failed to run" . $GRPDEL);
-		    return;
-		}
-		if ($?) {
-		    $self->warn("Failed to delete group ".$groupname);
-		}
-	    } else {
-		$self->warn("group $groupname not deleted because it's a primary group for some user");
-	    }
-	}
+        if (!$safemode && !$primary) {
+          $self->log($GRPDEL . " " . $groupname);
+          unless (execute ([$GRPDEL, $groupname])) {
+            $self->warn("Failed to run" . $GRPDEL);
+            return;
+          }
+          if ($?) {
+            $self->warn("Failed to delete group ".$groupname);
+          }
+        } else {
+          $self->warn("group $groupname not deleted because it's a primary group for some user");
+        }
+      }
     }
-
 }
 
 # Convert password files to/from shadow format as configured in profile.
@@ -640,10 +639,10 @@ sub generate_pool_users {
         $configured_users->{$uname}{"homedir"}=$poolhomedir;
         if (exists $thisuser->{"createHome"}) {
             $configured_users->{$uname}{"createHome"}=$thisuser->{"createHome"};
-    }
+        }
         if (exists $thisuser->{"createKeys"}) {
             $configured_users->{$uname}{"createKeys"}=$thisuser->{"createKeys"} 
-}
+        }
     }
 }
 
@@ -672,8 +671,7 @@ sub get_users_from_profile {
 
             if (my $poolSize=$thisuser{"poolSize"}) {
                 generate_pool_users($self,\%configured_users, \%thisuser, $user);
-            }
-            else { # non pool accounts
+            } else { # non pool accounts
                 $configured_users{$user}={};
                 fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid);
             }
@@ -728,8 +726,8 @@ sub process_groups {
     my ($self, $config, $base, $groups, $safemode) = @_;
 
     unless (open GROUP,"/etc/group"){
-	$self->warn("Cannot open /etc/group for reading: $!");
-	return;
+      $self->warn("Cannot open /etc/group for reading: $!");
+      return;
     }
     my @groupinfo;
     my %existinggroups;
@@ -746,7 +744,7 @@ sub process_groups {
 
    # create root group if it doesn't exist (can happen!)
     if ( !(exists($existinggroups{'root'})) ) {
-	my @group_opt=();
+        my @group_opt=();
         my $cmd=$GRPADD;
         my $groupname='root';
         push(@group_opt,'-g'.'0');
@@ -762,57 +760,53 @@ sub process_groups {
     if ($config->elementExists("$base/groups")) {
         my $groups_resource = $config->getElement("$base/groups");
 
-	while ($groups_resource->hasNextElement()) {
-	    my $element = $groups_resource->getNextElement();
-	    
-	    # Collect options for this group.
-	    my @group_opt=();
-	    
-	    # The key is the name of the group.
-	    $groupname=$element->getName();
-	    
-	    my $prefix = "$base/groups/$groupname";
-	    my $gid="none";
-	    # Add gid if specified.
-	    if ($config->elementExists("$prefix/gid")) {
-		$gid = $config->getElement("$prefix/gid")->getValue();
-		push(@group_opt,'-g'.$gid);
-	    }
-	    
-            # Define value necessary.
-            my $cmd = $GRPADD;
+  while ($groups_resource->hasNextElement()) {
+      my $element = $groups_resource->getNextElement();
+      
+      # Collect options for this group.
+      my @group_opt=();
+      
+      # The key is the name of the group.
+      $groupname=$element->getName();
+      
+      my $prefix = "$base/groups/$groupname";
+      my $gid="none";
+      # Add gid if specified.
+      if ($config->elementExists("$prefix/gid")) {
+        $gid = $config->getElement("$prefix/gid")->getValue();
+        push(@group_opt,'-g'.$gid);
+      }
+      
+      # Define value necessary.
+      my $cmd = $GRPADD;
 
-            my $state = 'new';
-            if (defined($groups->{$groupname}) && $groups->{$groupname} ne "new") {
-                $cmd = $GRPMOD;
-                $state = 'mod';
+      my $state = 'new';
+      if (defined($groups->{$groupname}) && $groups->{$groupname} ne "new") {
+          $cmd = $GRPMOD;
+          $state = 'mod';
+      }
+      
+      # Run the command to modify or create a group.
+      $groups->{$groupname} = $state;
+      
+      if ($safemode) {
+          $self->log("noaction mode: not modifying group $groupname");
+      } else {
+          my $oldgid = $existinggroups{$groupname}|| "NEW";
+          if ($gid ne "none" || ($oldgid && ($gid ne $oldgid))) {        
+            $self->log(join(" ",$cmd,@group_opt)." ".$groupname);
+            $self->verbose(join(" ",$cmd,@group_opt)." ".$groupname);
+        
+            unless (execute ([$cmd, @group_opt, $groupname])) {
+              $self->warn("Failed to call ". $cmd);
+              return;
             }
-            
-            # Run the command to modify or create a group.
-            $groups->{$groupname} = $state;
-            
-            if ($safemode) {
-                $self->log("noaction mode: not modifying group $groupname");
+            if ($?) {
+              $self->warn("Failed to ". $cmd ." group ". $groupname)
             }
-            else {
-                my $oldgid = $existinggroups{$groupname}|| "NEW";
-                if ($gid ne "none" || ($oldgid && ($gid ne $oldgid))) {
-                    
-		    $self->log(join(" ",$cmd,@group_opt)." ".$groupname);
-		    $self->verbose(join(" ",$cmd,@group_opt)." ".$groupname);
-		    
-		    unless (execute ([$cmd, @group_opt, $groupname])) {
-			$self->warn("Failed to call ". $cmd);
-			return;
-		    }
-		    if ($?) {
-			$self->warn("Failed to ". $cmd ." group ". $groupname)
-			}
-
-
-                }
-            }
+          }
         }
+      }
     }
 }
 
@@ -842,18 +836,19 @@ sub Configure($$@) {
     if ($config->elementExists("$base/remove_unknown")) {
         $removeAccounts=($config->getValue("$base/remove_unknown") eq 'true');
     }
+    
     # check if the system is configured to use ldap 
     if ($config->elementExists("$base/ldap") && ($config->getValue("$base/ldap") eq "true")) {
-	$self->verbose("Running in Ldap mode");
-	$useLdap = 1;
-	# Use the libuser programs
-	$USERADD = "/usr/sbin/luseradd";
-	#$USERMOD = "/usr/sbin/usermod";
-	$USERDEL = "/usr/sbin/luserdel";
-	$GRPDEL = "/usr/sbin/lgroupdel";
-	$GRPADD = "/usr/sbin/lgroupadd";
-	#$GRPMOD = "/usr/sbin/groupmod";
-	#$SYSID = "/usr/sbin/id";
+      $self->verbose("Running in Ldap mode");
+      $useLdap = 1;
+      # Use the libuser programs
+      $USERADD = "/usr/sbin/luseradd";
+      #$USERMOD = "/usr/sbin/usermod";
+      $USERDEL = "/usr/sbin/luserdel";
+      $GRPDEL = "/usr/sbin/lgroupdel";
+      $GRPADD = "/usr/sbin/lgroupadd";
+      #$GRPMOD = "/usr/sbin/groupmod";
+      #$SYSID = "/usr/sbin/id";
     }
     
     ## Ensure that passwd and group are ok
@@ -861,13 +856,11 @@ sub Configure($$@) {
     if ($config->elementExists("$base/shadowpwd")) {
         $shadowOk = $config->getValue("$base/shadowpwd");
         if($shadowOk eq 'true'){
-	    shadow_passwords($self, $shadowOk);
-	    $self->debug(5, "Shadow is true so running pwconv and grpconv");
+          shadow_passwords($self, $shadowOk);
+          $self->debug(5, "Shadow is true so running pwconv and grpconv");
         }
     }
     
-
-
     ## configure /etc/login.defs
     configure_login_defs($self, $config, $base);
 
@@ -920,12 +913,12 @@ sub Configure($$@) {
                 $self->log("Not changing root password while in safe mode");
             } else {
                 unless (execute ([$USERMOD . " -p ". "'" . $rootpwd. "'" .  " root"])){
-		              $self->warn("Failed to run" . $USERMOD);
-		              return;
-		            }
-		            if ($?) {
-		              $self->warn("Failed to set root password")
-		            }
+                  $self->warn("Failed to run" . $USERMOD);
+                  return;
+                }
+                if ($?) {
+                  $self->warn("Failed to set root password")
+                }
             }
         }
     }
@@ -946,18 +939,19 @@ sub Configure($$@) {
         $processed_users{$cfguser}='unchanged';
 
         my $pw = getpwnam($cfguser);
+
         #The get user_in_passwd will always be true if not using ldap
-	if ($pw && user_in_passwd($self,$cfguser)) {
-	    #If in ldap mode and user is in /etc/passwd get data for him
-	    if ($useLdap == 1){
-			%existing_users=get_existing_users($self,$cfguser);
-	    }
-	    my $exuserhash=$existing_users{$cfguser};
-	    $self->debug(5,"\$onsys : ". Dumper(\$exuserhash));
-	    $processed_users{$cfguser}=compare_users($self, $cfguserhash, $exuserhash);
-	} else {
-	    $processed_users{$cfguser}='add';
-	}
+        if ($pw && user_in_passwd($self,$cfguser)) {
+            #If in ldap mode and user is in /etc/passwd get data for him
+            if ($useLdap == 1){
+            %existing_users=get_existing_users($self,$cfguser);
+            }
+            my $exuserhash=$existing_users{$cfguser};
+            $self->debug(5,"\$onsys : ". Dumper(\$exuserhash));
+            $processed_users{$cfguser}=compare_users($self, $cfguserhash, $exuserhash);
+        } else {
+            $processed_users{$cfguser}='add';
+        }
 
     }
     $self->debug(5,Dumper(\%processed_users));
@@ -1039,7 +1033,7 @@ sub Configure($$@) {
             }
         } elsif ($state eq "mod" ) {
             $self->info("User $usertoproc needs to be modified");
-            if (!$safemode) {		    
+            if (!$safemode) {        
                 modify_user($self, $configured_users{$usertoproc}, $createHome);
             } else {
                 $self->log("noaction mode: not modifying user $usertoproc");
@@ -1095,8 +1089,7 @@ sub Configure($$@) {
 
     if ($safemode) {
         $self->log("Not activating shadow passwords while in safe mode");
-    }
-    else {
+    } else {
         shadow_passwords($self, $shadow);
     }
 
@@ -1129,9 +1122,11 @@ sub keygen {
     # Set the EUID, and EGID to cope with root_squashes.
     $) = $gid;
     $> = $uid;
+
     ###################################################
     # Create the .ssh directory.
     mkdir("$home/.ssh") unless (-d "$home/.ssh") ;
+
     ###################################################
     # Create the ssh 2 keypair.
     if (! -f "$home/.ssh/id_rsa") {
@@ -1147,6 +1142,7 @@ sub keygen {
             $self->Fail("Failed to generate key for $user.") ;
         }
     }
+
     ###################################################
     # Create the ssh 1 keypair.
     if (! -f "$home/.ssh/identity") {
@@ -1162,23 +1158,24 @@ sub keygen {
             $self->Fail("Failed to generate key for $user.") ;
         }
     }
+
     ##################################################
     # Create the authorised keys file.
     unless(open(AUTH,">$home/.ssh/authorized_keys")){
-	$self->warn("Cannot open $home/.ssh/authorized_keys: $!");
-	return;
+      $self->warn("Cannot open $home/.ssh/authorized_keys: $!");
+      return;
     }
     unless(open(PUB,"<$home/.ssh/identity.pub")){
-	$self->warn("Cannot open $home/.ssh/identity.pub:  $!");
-	return;
+      $self->warn("Cannot open $home/.ssh/identity.pub:  $!");
+      return;
     }
     while (<PUB>) {
         print AUTH $_ ;
     }
     close(PUB);
     unless(open(PUB,"<$home/.ssh/id_rsa.pub")){
-	$self->warn("Cannot open $home/.ssh/id_rsa.pub:  $!");
-	return;
+      $self->warn("Cannot open $home/.ssh/id_rsa.pub:  $!");
+      return;
     }
 
     while (<PUB>) {
