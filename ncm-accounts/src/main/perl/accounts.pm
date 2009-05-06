@@ -80,6 +80,9 @@ our %FLAGS = (
 #If we should use ldap
 my $useLdap = 0;
 
+# For optimization
+my %createdParents = ();
+
 # Generates a list of options for usermod/useradd
 # based on a hash parameter describing a user
 # IN:  hash representing user
@@ -122,7 +125,7 @@ sub prepare_home {
     my $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
 
     my $status;    
-    if ( -d $homeparent ) {
+    if ( $createdParents{$homeparent} || -d $homeparent ) {
       $self->debug(2, "Home directory parent $homeparent already exists");   
       $status = -1;   
     } else {
@@ -132,6 +135,10 @@ sub prepare_home {
       } else {
         $status = 0
       }
+    }
+    
+    if ( $status ) {
+      $createdParents{$homeparent} = 1    # Value is useless      
     }
 
     return ($status);
@@ -179,15 +186,15 @@ sub add_user {
 
     # If the home directory is defined and must be created, then ensure that the parent
     # directory exists (useradd will not create it).
-    if (defined($user->{"homeDir"})) {
+    if (defined($user->{"homedir"})) {
         if ( $user->{"createHome"} ) {
-          my $status = $self->prepare_home($user->{"homeDir"});
+          my $status = $self->prepare_home($user->{"homedir"});
           unless ( $status ) {
-            $self->error("can't create home parent directory ".$user->{"homeDir"}."; skipping user $username");
+            $self->error("can't create home parent directory ".$user->{"homedir"}."; skipping user $username");
             return 1;            
           }
           if ( $status > 0 ) {
-            $self->log("Created home parent directory ".$user->{"homeDir"}." for user $username");            
+            $self->log("Created home parent directory ".$user->{"homedir"}." for user $username");            
           }
         }
     }
@@ -329,14 +336,24 @@ sub fill_user_hash {
         $user_hash->{"gcos"}=$prof_hash->{"comment"};
     }
     
-    if (exists $prof_hash->{"homeDir"}) {
-        $user_hash->{"homedir"}=$prof_hash->{"homeDir"};
-    }
     if (exists $prof_hash->{"shell"}) {
         $user_hash->{"shell"}=$prof_hash->{"shell"};
     }
     if (exists $prof_hash->{"createHome"}) {
         $user_hash->{"createHome"}=$prof_hash->{"createHome"};
+    }
+    if (exists $prof_hash->{"homeDir"}) {
+        $user_hash->{"homedir"}=$prof_hash->{"homeDir"};
+        if ( $user_hash->{"createHome"} ) {
+          my $status = $self->prepare_home($user_hash->{"homeDir"});
+          unless ( $status ) {
+            $self->error("can't create home parent directory ".$user_hash->{"homeDir"}."; skipping user $name");
+            return 1;            
+          }
+          if ( $status > 0 ) {
+            $self->log("Created home parent directory ".$user_hash->{"homeDir"}." for user $name");            
+          }
+        }
     }
     if (exists $prof_hash->{"createKeys"}) {
         $user_hash->{"createKeys"}=$prof_hash->{"createKeys"};
@@ -944,7 +961,7 @@ sub Configure($$@) {
         if ($pw && user_in_passwd($self,$cfguser)) {
             #If in ldap mode and user is in /etc/passwd get data for him
             if ($useLdap == 1){
-            %existing_users=get_existing_users($self,$cfguser);
+              %existing_users=get_existing_users($self,$cfguser);
             }
             my $exuserhash=$existing_users{$cfguser};
             $self->debug(5,"\$onsys : ". Dumper(\$exuserhash));
@@ -994,11 +1011,13 @@ sub Configure($$@) {
             if ($removeAccounts && !($safemode) && !$kept) {
                 delete_user($self, $usertoproc);
             }
-        }
-        elsif ($state eq "add") {
+
+        } elsif ($state eq "add") {
             if (!$safemode) {   
 #               add_user($self, $configured_users{$usertoproc},$createHome);
-                # output to file for newusers
+                # Output to file for newusers.
+                # Do not check home directory parents here, this has already been done
+                # with some optimization for pool accounts.
                 $no_users_added++;
                 my $userclass=$configured_users{$usertoproc};
                 my $ushell="";
@@ -1007,10 +1026,6 @@ sub Configure($$@) {
                 }
                 else {
                     $ushell="/bin/bash";
-                }
-                $self->info("Will prepare the home dir for user $usertoproc");
-                if ($userclass->{createHome} && exists $userclass->{homedir}) {
-                  $self->prepare_home($userclass->{homedir})                   
                 }
                 print(NEWUSERSF $userclass->{"name"}.":x:".$userclass->{"uid"}.":".getgrnam($userclass->{"pgroup"}).":\"".$userclass->{"gcos"}."\":".$userclass->{"homedir"}.":".$ushell."\n");
                 my $upass="";
@@ -1031,6 +1046,7 @@ sub Configure($$@) {
             if ($createKeys && $createHome && !$safemode) {
                 $self->keygen($usertoproc);
             }
+
         } elsif ($state eq "mod" ) {
             $self->info("User $usertoproc needs to be modified");
             if (!$safemode) {        
@@ -1039,9 +1055,11 @@ sub Configure($$@) {
                 $self->log("noaction mode: not modifying user $usertoproc");
             }
         }
+
         elsif ($state eq "unchanged" ) {
 
         }
+
         else {
             $self->error("User $usertoproc in unknown state");
         }
