@@ -174,7 +174,7 @@ sub add_user {
     if (defined($user->{"homeDir"})) {
         my $dname = dirname($user->{"homeDir"});
         if ( $user->{"createHome"} ) {
-          unless ( prepare_home($dname) ) {
+          unless ( $self->prepare_home($dname) ) {
             $self->error("can't create home parent directory $dname; skipping user $username");
             return 1;            
           }
@@ -592,7 +592,7 @@ sub generate_pool_users {
     }
     my $dname = dirname($homedir);
     if ( $user->{"createHome"} ) {
-      unless ( prepare_home($dname) ) {
+      unless ( $self->prepare_home($dname) ) {
         $self->error("can't create home parent directory $dname; skipping pool account $username");
         return 1;            
       }
