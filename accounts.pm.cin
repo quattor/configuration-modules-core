@@ -116,14 +116,25 @@ sub generate_opts {
 
 # Creates any intermediate directories missing for the home directory,
 # fixing bug #50029. The final home directory is left for the
-# useradd/usermod commands
+# useradd/usermod commands.
+# Return true on success, else false. Don't signal error in this function,
+# let's the caller do it.
+
 sub prepare_home {
     my ($self, $homedir) = @_;
 
     my @spl = split("/", $homedir);
-    $homedir = join("/",  @spl[0 .. (scalar(@spl)-2)]);
-    $self->debug(5, "Creating path $homedir");
-    makedir($homedir);
+    $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
+
+    my $status;    
+    if ( -d $homeparent ) {
+      $self->debug(1, "Creating home directory parent $homeparent");   
+      $status = 1;   
+    } else {
+      $status = makedir($homeparent,0755);
+    }
+
+    return ($status);
 }
 
 # Modifies an existing user using usermod, based on user hash. Has to
@@ -137,8 +148,8 @@ sub modify_user {
     my @opts=generate_opts($user);
     $self->verbose("Modifying user $user->{name}");
     if ($createHome) {
-	push(@opts,"-m");
-	$self->prepare_home($user->{homedir});
+      push(@opts,"-m");
+      $self->prepare_home($user->{homedir});
     }
     
     if($useLdap == 1){
@@ -166,20 +177,16 @@ sub add_user {
     my ($self, $user, $createHome) = @_;
     my $username=$user->{"name"};
 
-    # If the home directory is defined, then ensure that the parent
+    # If the home directory is defined and must be created, then ensure that the parent
     # directory exists (useradd will not create it).
     if (defined($user->{"homeDir"})) {
         my $dname = dirname($user->{"homeDir"});
-        eval { mkpath($dname,0,0755); };
-        if ($@) {
-            $self->error("mkpath failed: couldn't create $dname: $@");
-        }
-        if (! -d $dname) {
-            $self->error("can't create $dname; skipping user $username");
-            return 1;
-        }
-        else {
-            $self->log("Creating parent directory $dname for user $username");
+        if ( $user->{"createHome"} ) {
+          unless ( prepare_home($dname) ) {
+            $self->error("can't create home parent directory $dname; skipping user $username");
+            return 1;            
+          }
+          $self->log("Created home parent directory $dname for user $username");
         }
     }
 
@@ -591,19 +598,13 @@ sub generate_pool_users {
         $homedir="/home/".$username;
         $self->info("No base dir set for $username pool accounts, defaulting to $homedir.");
     }
-    if (exists $thisuser->{"createHome"}) {
-        my $dname = dirname($homedir);
-        eval { mkpath($dname,0,0755); };
-        if ($@) {
-            $self->error("mkpath failed: couldn't create $dname: $@");
-        }
-        if (! -d $dname) {
-            $self->error("can't create $dname; skipping pool account $username");
-            return 1;
-        }
-        else {
-            $self->log("Creating parent directory $dname for pool account $username");
-        }
+    my $dname = dirname($homedir);
+    if ( $user->{"createHome"} ) {
+      unless ( prepare_home($dname) ) {
+        $self->error("can't create home parent directory $dname; skipping pool account $username");
+        return 1;            
+      }
+      $self->log("Created home parent directory $dname for pool account $username");
     }
     
 
@@ -894,7 +895,7 @@ sub Configure($$@) {
     # read list of existing users and options from passwd file
     my %existing_users ;
     if ($useLdap != 1){
-	%existing_users=get_existing_users($self);
+        %existing_users=get_existing_users($self);
     }
     if ( ! (exists($existing_users{'root'}) ) ) {
         $self->warn("No root user, creating one now.");
@@ -914,13 +915,13 @@ sub Configure($$@) {
             if ($safemode) {
                 $self->log("Not changing root password while in safe mode");
             } else {
-		unless (execute ([$USERMOD . " -p ". "'" . $rootpwd. "'" .  " root"])){
-		    $self->warn("Failed to run" . $USERMOD);
-		    return;
-		}
-		if ($?) {
-		    $self->warn("Failed to set root password")
-		    }
+                unless (execute ([$USERMOD . " -p ". "'" . $rootpwd. "'" .  " root"])){
+		              $self->warn("Failed to run" . $USERMOD);
+		              return;
+		            }
+		            if ($?) {
+		              $self->warn("Failed to set root password")
+		            }
             }
         }
     }
@@ -1009,9 +1010,10 @@ sub Configure($$@) {
                 else {
                     $ushell="/bin/bash";
                 }
-		$self->info("Will prepare the home dir for user $usertoproc");
-		$self->prepare_home($userclass->{homedir})
-		    if $userclass->{createHome} && exists $userclass->{homedir};
+                $self->info("Will prepare the home dir for user $usertoproc");
+                if ($userclass->{createHome} && exists $userclass->{homedir}) {
+                  $self->prepare_home($userclass->{homedir})                   
+                }
                 print(NEWUSERSF $userclass->{"name"}.":x:".$userclass->{"uid"}.":".getgrnam($userclass->{"pgroup"}).":\"".$userclass->{"gcos"}."\":".$userclass->{"homedir"}.":".$ushell."\n");
                 my $upass="";
                 if (exists $userclass->{"password"}) {
@@ -1032,7 +1034,7 @@ sub Configure($$@) {
                 $self->keygen($usertoproc);
             }
         } elsif ($state eq "mod" ) {
-	    $self->info("User $usertoproc needs to be modified");
+            $self->info("User $usertoproc needs to be modified");
             if (!$safemode) {		    
                 modify_user($self, $configured_users{$usertoproc}, $createHome);
             } else {
