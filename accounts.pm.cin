@@ -117,21 +117,29 @@ sub generate_opts {
 # Creates any intermediate directories missing for the home directory,
 # fixing bug #50029. The final home directory is left for the
 # useradd/usermod commands.
-# Return true on success, else false. Don't signal error in this function,
-# let's the caller do it.
+# Return value is:
+#   - -1 if directory already existed
+#   - 1 if the directory was succesfully created
+#   - 0 if an error occured during directory creation
+# Don't signal error in this function, let's the caller do it.
 
 sub prepare_home {
     my ($self, $homedir) = @_;
 
     my @spl = split("/", $homedir);
-    $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
+    my $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
 
     my $status;    
     if ( -d $homeparent ) {
-      $self->debug(1, "Creating home directory parent $homeparent");   
-      $status = 1;   
+      $self->debug(2, "Home directory parent $homeparent already exists");   
+      $status = -1;   
     } else {
-      $status = makedir($homeparent,0755);
+      $self->debug(1, "Creating home directory parent $homeparent");   
+      if ( makedir($homeparent,0755) ) {
+        $status = 1;
+      } else {
+        $status = 0
+      }
     }
 
     return ($status);
@@ -180,13 +188,15 @@ sub add_user {
     # If the home directory is defined and must be created, then ensure that the parent
     # directory exists (useradd will not create it).
     if (defined($user->{"homeDir"})) {
-        my $dname = dirname($user->{"homeDir"});
         if ( $user->{"createHome"} ) {
-          unless ( $self->prepare_home($dname) ) {
-            $self->error("can't create home parent directory $dname; skipping user $username");
+          my $status = $self->prepare_home($user->{"homeDir"};
+          unless ( $status ) {
+            $self->error("can't create home parent directory $user->{"homeDir"}; skipping user $username");
             return 1;            
           }
-          $self->log("Created home parent directory $dname for user $username");
+          if ( $status > 0 ) {
+            $self->log("Created home parent directory $user->{"homeDir"} for user $username");            
+          }
         }
     }
 
@@ -598,13 +608,15 @@ sub generate_pool_users {
         $homedir="/home/".$username;
         $self->info("No base dir set for $username pool accounts, defaulting to $homedir.");
     }
-    my $dname = dirname($homedir);
-    if ( $user->{"createHome"} ) {
-      unless ( $self->prepare_home($dname) ) {
-        $self->error("can't create home parent directory $dname; skipping pool account $username");
+    if ( $thisuser->{"createHome"} ) {
+      my $status = $self->prepare_home($homedir);
+      unless ( $status ) {
+        $self->error("can't create home parent directory $homedir; skipping pool account $username");
         return 1;            
       }
-      $self->log("Created home parent directory $dname for pool account $username");
+      if ( $status > 0 ) {
+        $self->log("Created home parent directory $homedir for pool account $username");
+      }
     }
     
 
