@@ -20,6 +20,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use LC::Process qw (output execute);
+use LC::File qw (makedir);
 use EDG::WP4::CCM::Element;
 
 use File::Basename;
@@ -113,20 +114,33 @@ sub generate_opts {
     return @opts;
 }
 
-# Modifies an existing user using usermod, based on user hash. Has to be before add_user
-# IN:  self (for logging), user hash.
-# OUT:
+# Creates any intermediate directories missing for the home directory,
+# fixing bug #50029. The final home directory is left for the
+# useradd/usermod commands
+sub prepare_home {
+    my ($self, $homedir) = @_;
+
+    my @spl = split("/", $homedir);
+    $homedir = join("/",  @spl[0 .. (scalar(@spl)-2)]);
+    $self->debug(5, "Creating path $homedir");
+    makedir($homedir);
+}
+
+# Modifies an existing user using usermod, based on user hash. Has to
+# be before add_user
+# IN: self (for logging), user hash.  OUT:
 ##########################################################################
 sub modify_user {
 ##########################################################################
     my ($self, $user, $createHome) = @_;
     
     my @opts=generate_opts($user);
-    
+    $self->verbose("Modifying user $user->{name}");
     if ($createHome) {
 	if($useLdap != 1){
 	    push(@opts,"-m");
 	}
+	$self->prepare_home($user->{homedir});
     }
     
     if($useLdap == 1){
@@ -997,7 +1011,9 @@ sub Configure($$@) {
                 else {
                     $ushell="/bin/bash";
                 }
-
+		$self->info("Will prepare the home dir for user $usertoproc");
+		$self->prepare_home($userclass->{homedir})
+		    if $userclass->{createHome} && exists $userclass->{homedir};
                 print(NEWUSERSF $userclass->{"name"}.":x:".$userclass->{"uid"}.":".getgrnam($userclass->{"pgroup"}).":\"".$userclass->{"gcos"}."\":".$userclass->{"homedir"}.":".$ushell."\n");
                 my $upass="";
                 if (exists $userclass->{"password"}) {
