@@ -564,11 +564,26 @@ sub generate_pool_users {
     my $poolStart=$thisuser->{"poolStart"};
     my $homedir="";
 
+    # Define home directory prefix and ensure parent exists if createHome=true
     if (exists($thisuser->{"homeDir"})) {
         $homedir=$thisuser->{"homeDir"};
     } else {
         $homedir="/home/".$username;
         $self->info("No base dir set for $username pool accounts, defaulting to $homedir.");
+    }
+    if (exists $thisuser->{"createHome"}) {
+        my $dname = dirname($homedir);
+        eval { mkpath($dname,0,0755); };
+        if ($@) {
+            $self->error("mkpath failed: couldn't create $dname: $@");
+        }
+        if (! -d $dname) {
+            $self->error("can't create $dname; skipping pool account $username");
+            return 1;
+        }
+        else {
+            $self->log("Creating parent directory $dname for pool account $username");
+        }
     }
     
 
