@@ -156,8 +156,8 @@ sub add_user {
 
     # If the home directory is defined, then ensure that the parent
     # directory exists (useradd will not create it).
-    if (defined($user->{"homedir"})) {
-        my $dname = dirname($user->{"homedir"});
+    if (defined($user->{"homeDir"})) {
+        my $dname = dirname($user->{"homeDir"});
         eval { mkpath($dname,0,0755); };
         if ($@) {
             $self->error("mkpath failed: couldn't create $dname: $@");
