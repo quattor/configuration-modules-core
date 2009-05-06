@@ -129,9 +129,7 @@ sub modify_user {
     my @opts=generate_opts($user);
     $self->verbose("Modifying user $user->{name}");
     if ($createHome) {
-	if($useLdap != 1){
-	    push(@opts,"-m");
-	}
+	push(@opts,"-m");
 	$self->prepare_home($user->{homedir});
     }
     
@@ -1026,6 +1024,7 @@ sub Configure($$@) {
                 $self->keygen($usertoproc);
             }
         } elsif ($state eq "mod" ) {
+	    $self->info("User $usertoproc needs to be modified");
             if (!$safemode) {		    
                 modify_user($self, $configured_users{$usertoproc}, $createHome);
             } else {
