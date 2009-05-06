@@ -121,6 +121,11 @@ sub generate_opts {
 sub prepare_home {
     my ($self, $homedir) = @_;
 
+    if ( length($homedir) == 0 ) {
+      $self->warn('prepare_home(): empty home directory passed. Probably an internal error.')
+      return 0;  
+    }
+    
     my @spl = split("/", $homedir);
     my $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
 
