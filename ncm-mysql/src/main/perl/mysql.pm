@@ -128,23 +128,27 @@ sub Configure {
         my $i = 0;
         my $blank_lines = 0;
         for ($i=0; $i<@mysql_conf; $i++) {
-          my $line = chomp $mysql_conf[$i];
+          my $line = $mysql_conf[$i];
+          chomp $line;
+          $self->debug(2,"Processing line >>>$line<<<");
           # Section [mysqld] found
           if ( $line =~ /^\s*\[\s*mysqld\s*\]/ ) {
             $self->debug(1,"[mysqld] start line: ".($i+1));
             $server_section_found = 1;
+            $blank_lines = 0;
             next;
           # Process [mysqld] section looking for parameters to modify, until the end of the section
           # (end of configuration or new section)
           } elsif ( $server_section_found ) {
             if ( $line =~ /^\s*\[\s*[\w\-]+\s*\]/ )  {
               $self->debug(2,"New section found at line ".($i+1));
+              $blank_lines = 0;
               last;
-            } else if ( length($line) == 0 ) {
+            } elsif ( length($line) == 0 ) {
               $blank_lines += 1;
             } else {
               if ( $blank_lines > 0 ) {
-                $self->warn('Unexpected blank lines found from line '.($i-$blank_line+1).' to '.$i);
+                $self->warn('Unexpected blank lines found from line '.($i-$blank_lines+1).' to '.$i);
                 $blank_lines = 0;
               } 
               for my $option (keys(%{$server->{options}})) {
