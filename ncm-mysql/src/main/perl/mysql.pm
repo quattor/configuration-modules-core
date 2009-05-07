@@ -106,6 +106,8 @@ sub Configure {
       # Configure server parameters
       # Use double braces to be able to exit this block from anywhere
       # still continuing to execute other sections.
+      # Index for iterating over lines is zero-based, don't forget to add one when printing version
+      # numbers
       if ( $server->{options} ) {{
         $self->debug(1,"Setting MySQL server parameters on ".$server->{host});
         my $mysql_conf_file = '/etc/my.cnf';
@@ -146,7 +148,8 @@ sub Configure {
             }
           }
         }
-        $self->debug(2,"Line number after configuration file parsing ".($i+1));
+        # Go back to find the find blank line
+        $self->debug(2,"Line number after configuration file parsing ".($i+1)." Going back to find first blank line...");
         my $mysqld_conf_next;
         for ($mysqld_conf_next=$i-1; $mysqld_conf_next>=0; $mysqld_conf_next--) {
           if ( $mysql_conf[$mysqld_conf_next] !~ /^\s*$/ ) {
@@ -160,6 +163,7 @@ sub Configure {
           @conf_end = @mysql_conf[$mysqld_conf_next,-1];
         }
         $self->debug(1,"Number of lines remaining after [mysqld] section : ".@conf_end);
+        $self->debug(2,"Remaining lines content: \n".join("\n",@conf_end));
         # Change/add parameters
         for my $option (keys(%{$server->{options}})) {
           if ( exists($indexes{$option}) ) {
@@ -179,7 +183,7 @@ sub Configure {
           }
         }
         if ( @conf_end ) {
-          $self->debug(1,"Merging last part of initial configuration at line ".($mysqld_conf_next+1)." (length=".@conf_end.")");
+          $self->debug(1,"Merging last part of initial configuration at new conf line ".($mysqld_conf_next+1)." (length=".@conf_end.")");
           @mysql_conf[$mysqld_conf_next,-1] = @conf_end;
         }
 
