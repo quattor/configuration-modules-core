@@ -126,21 +126,29 @@ sub Configure {
         my $server_section_found = 0;
         my %indexes;
         my $i = 0;
+        my $blank_lines = 0;
         for ($i=0; $i<@mysql_conf; $i++) {
+          my $line = chomp $mysql_conf[$i];
           # Section [mysqld] found
-          if ( $mysql_conf[$i] =~ /^\s*\[\s*mysqld\s*\]/ ) {
+          if ( $line =~ /^\s*\[\s*mysqld\s*\]/ ) {
             $self->debug(1,"[mysqld] start line: ".($i+1));
             $server_section_found = 1;
             next;
           # Process [mysqld] section looking for parameters to modify, until the end of the section
           # (end of configuration or new section)
           } elsif ( $server_section_found ) {
-            if ( $mysql_conf[$i] =~ /^\s*\[\s*[\w\-]+\s*\]/ )  {
+            if ( $line =~ /^\s*\[\s*[\w\-]+\s*\]/ )  {
               $self->debug(2,"New section found at line ".($i+1));
               last;
+            } else if ( length($line) == 0 ) {
+              $blank_lines += 1;
             } else {
+              if ( $blank_lines > 0 ) {
+                $self->warn('Unexpected blank lines found from line '.($i-$blank_line+1).' to '.$i);
+                $blank_lines = 0;
+              } 
               for my $option (keys(%{$server->{options}})) {
-                if ( $mysql_conf[$i] =~ /^\s*$option\s*=/ ) {
+                if ( $line =~ /^\s*$option\s*=/ ) {
                   $self->debug(2,"Option $option found at line ".($i+1));
                   $indexes{$option} = $i;
                 }
@@ -149,7 +157,7 @@ sub Configure {
           }
         }
         # Go back to find the find blank line
-        $self->debug(2,"Line number after configuration file parsing ".($i+1)." Going back to find first blank line...");
+        $self->debug(2,"Line number after configuration file parsing ".($i+1).". Going back to find first blank line...");
         my $mysqld_conf_next;
         for ($mysqld_conf_next=$i-1; $mysqld_conf_next>=0; $mysqld_conf_next--) {
           if ( $mysql_conf[$mysqld_conf_next] !~ /^\s*$/ ) {
@@ -168,13 +176,13 @@ sub Configure {
         for my $option (keys(%{$server->{options}})) {
           if ( exists($indexes{$option}) ) {
             $self->debug(1,"Replacing configuration line ".($indexes{$option}+1));
-            $mysql_conf[$indexes{$option}] = $option . '=' .  $server->{options}->{$option} . "\n";
+            $mysql_conf[$indexes{$option}] = $option . '=' .  $server->{options}->{$option};
           } else {
             if ( ! $server_section_found ) {
               $self->debug(1,"Adding [mysqld] section at configuration line ".($mysqld_conf_next+1));
-              $mysql_conf[$mysqld_conf_next] = "\n";
+              $mysql_conf[$mysqld_conf_next] = "";
               $mysqld_conf_next++;
-              $mysql_conf[$mysqld_conf_next] = "[mysqld]\n";
+              $mysql_conf[$mysqld_conf_next] = "[mysqld]";
               $mysqld_conf_next++;
             }
             $self->debug(1,"Adding configuration line ".($mysqld_conf_next+1));
@@ -188,7 +196,7 @@ sub Configure {
         }
 
         # Update option file
-        my $mysql_conf_content = join "", @mysql_conf;
+        my $mysql_conf_content = join "\n", @mysql_conf;
         $changes = LC::Check::file ($mysql_conf_file,
                                    'backup' => '.old',
                                    'contents' => encode_utf8($mysql_conf_content),
