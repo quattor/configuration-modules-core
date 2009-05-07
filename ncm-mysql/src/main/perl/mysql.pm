@@ -202,7 +202,9 @@ sub Configure {
         }
         if ( @conf_end ) {
           $self->debug(1,"Merging last part of initial configuration at new conf line ".($mysqld_conf_next+1)." (length=".@conf_end.")");
-          @mysql_conf[$mysqld_conf_next,-1] = @conf_end;
+          for (my $i=0; $i<@conf_end; $i++) {
+            @mysql_conf[$mysqld_conf_next+$i] = $conf_end[$i];            
+          }
         }
 
         # Update option file
