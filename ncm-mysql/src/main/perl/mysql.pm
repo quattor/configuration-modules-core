@@ -174,9 +174,11 @@ sub Configure {
         }
         $mysqld_conf_next++;
         $self->debug(1,"Next line number after [mysqld] section : ".($mysqld_conf_next+1));
+        # Copy the rest of the original configuration in a temporary array
         my @conf_end;
-        if ( $mysqld_conf_next < @mysql_conf ) {
-          @conf_end = @mysql_conf[$mysqld_conf_next,-1];
+        for (my $i=$mysqld_conf_next; $i<@mysql_conf; $i++) {
+          chomp $mysql_conf[$i];
+          push @conf_end, $mysql_conf[$i];
         }
         $self->debug(1,"Number of lines remaining after [mysqld] section : ".@conf_end);
         $self->debug(2,"Remaining lines content: \n".join("\n",@conf_end));
