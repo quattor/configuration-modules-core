@@ -144,7 +144,7 @@ sub Configure {
           # Process [mysqld] section looking for parameters to modify, until the end of the section
           # (end of configuration or new section)
           if ( $server_section_found ) {
-            if ( $mysql_conf[$i] =~ /^\s*\([\s*[\w\-]+\s*\])/ )  {
+            if ( $mysql_conf[$i] =~ /^\s*(\[\s*[\w\-]+\s*\])/ )  {
               $self->debug(2,"New section found at line ".($i+1).": $1");
               $blank_lines = 0;
               last;
