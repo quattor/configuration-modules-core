@@ -109,8 +109,8 @@ sub Configure {
       # Index for iterating over lines is zero-based, don't forget to add one when printing version
       # numbers
       if ( $server->{options} ) {{
-        $self->debug(1,"Setting MySQL server parameters on ".$server->{host});
         my $mysql_conf_file = '/etc/my.cnf';
+        $self->debug(1,"Setting MySQL server parameters on ".$server->{host}." ($mysql_conf_file)");
         my @mysql_conf;
         if ( -f $mysql_conf_file) {
           $status = open (MYCNF,"$mysql_conf_file");
@@ -128,23 +128,27 @@ sub Configure {
         my $i = 0;
         my $blank_lines = 0;
         for ($i=0; $i<@mysql_conf; $i++) {
-          my $line = $mysql_conf[$i];
-          chomp $line;
-          $self->debug(2,"Processing line >>>$line<<<");
+          chomp $mysql_conf[$i];
+          $self->debug(2,"Processing line ".($i+1).": >>>$mysql_conf[$i]<<<");
           # Section [mysqld] found
-          if ( $line =~ /^\s*\[\s*mysqld\s*\]/ ) {
-            $self->debug(1,"[mysqld] start line: ".($i+1));
-            $server_section_found = 1;
-            $blank_lines = 0;
-            next;
+          if ( $mysql_conf[$i] =~ /^\s*\[\s*mysqld\s*\]/ ) {
+            if ( $server_section_found ) {
+              $self->warn('Duplicated [mysqld] section was found at line'.($i+1));
+            } else {
+              $self->debug(1,"[mysqld] start line: ".($i+1));
+              $server_section_found = 1;
+              $blank_lines = 0;
+              next;              
+            }
+          }
           # Process [mysqld] section looking for parameters to modify, until the end of the section
           # (end of configuration or new section)
-          } elsif ( $server_section_found ) {
-            if ( $line =~ /^\s*\[\s*[\w\-]+\s*\]/ )  {
-              $self->debug(2,"New section found at line ".($i+1));
+          if ( $server_section_found ) {
+            if ( $mysql_conf[$i] =~ /^\s*\([\s*[\w\-]+\s*\])/ )  {
+              $self->debug(2,"New section found at line ".($i+1).": $1");
               $blank_lines = 0;
               last;
-            } elsif ( length($line) == 0 ) {
+            } elsif ( length($mysql_conf[$i]) == 0 ) {
               $blank_lines += 1;
             } else {
               if ( $blank_lines > 0 ) {
@@ -152,7 +156,7 @@ sub Configure {
                 $blank_lines = 0;
               } 
               for my $option (keys(%{$server->{options}})) {
-                if ( $line =~ /^\s*$option\s*=/ ) {
+                if ( $mysql_conf[$i] =~ /^\s*$option\s*=/ ) {
                   $self->debug(2,"Option $option found at line ".($i+1));
                   $indexes{$option} = $i;
                 }
