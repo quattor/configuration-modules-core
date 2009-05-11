@@ -1,3 +1,8 @@
+2009-05-11  Jan van Eldik
+
+	* Release: 1.1.16
+	- allow anonymous access to ldap server (ie. allow removal of binddn and bindpw entries in ldap configuration file)
+
 2009-01-30  David Groep, H1.56,+31 20 592 2179
 
 	* Release: 1.1.15

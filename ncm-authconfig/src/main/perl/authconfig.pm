@@ -153,10 +153,10 @@ sub build_ldap_config($$@) {
     LC::File::copy($conf,$conf."$$",preserve => 1 );
 
     # The distinguished name to bind to the server with.
-    $changes +=  change_cfig_val($self, $config, $base, "/binddn", "binddn", "NA", 0);
+    $changes +=  change_cfig_val($self, $config, $base, "/binddn", "binddn", "NA", 1);
 
     # The credentials to bind with.
-    $changes +=  change_cfig_val($self, $config, $base, "/bindpw", "bindpw", "NA", 0);
+    $changes +=  change_cfig_val($self, $config, $base, "/bindpw", "bindpw", "NA", 1);
 
     # The distinguished name to bind to the server with
     # if the effective user ID is root.
