@@ -1,3 +1,8 @@
+2009-05-12  Jan van Eldik
+
+	* Release: 1.1.17
+	- allow removal of binddn and bindpw entries in ldap configuration file
+
 2009-05-11  Jan van Eldik
 
 	* Release: 1.1.16
