@@ -42,7 +42,7 @@ function resolve_pkg_rep = {
     foreach (name;pkg_list_name;SELF) {
       foreach (version;pkg_list_name_version;pkg_list_name) {
         foreach (a_list;pkg_list_name_version_arch;pkg_list_name_version["arch"]) {
-          debug ("name " + name + " version " + version + "arch " + pkg_list_name_version_arch);
+          debug ("Processing package " + unescape(name) + " version " + unescape(version) + "arch " + pkg_list_name_version_arch);
           id = escape(unescape(name) + "-" + unescape(version) + "-" + pkg_list_name_version_arch);
           if (exists(pkg_list_name_version["repository"])) {
             rep_mask = pkg_list_name_version["repository"];
@@ -292,7 +292,7 @@ function pkg_repl = {
           singleversion = false;
         } else {
           old_version = option;
-          debug ("   old version being replaced: "+old_version);
+          debug ("    old version being replaced: "+old_version);
         };
       };
 
@@ -322,12 +322,9 @@ function pkg_repl = {
     e_version = escape(version);
 
     # If 'deleteonly' option is present, version to delete is the 2nd arg (package version)
-    # If 'addonly' option is present, define old version to the version to add (2nd arg)
-    # (used to check if version is already present).
-    if ( deleteonly ||
-         (is_defined(mustexist) && !mustexist) ) {
+    if ( deleteonly ) {
       old_version = version;
-      debug ("   old version being deleted/checked : '"+old_version+"'");
+      debug ("   old version being deleted: '"+old_version+"'");
     };
 
     # Retrieve package architecture
@@ -408,11 +405,11 @@ function pkg_repl = {
             # Do the appropriate action depending on other archs being present:
             # if yes, update the arch list for the package/version entry, else remove
             # the version entry.
-            if ( delete_only || pkg_found_identical ) {
+            if ( deleteonly || !pkg_found_identical ) {
               if ( length(newarchlist) == 0 ) {
                 versions_to_delete[length(versions_to_delete)] = current_version;
               } else {
-                debug('Redefining list of installed arch for version'+unescape(current_version)+' ('+to_string(newarchlist)+')');
+                debug('Redefining list of installed arch for version '+unescape(current_version)+' ('+to_string(newarchlist)+')');
                 SELF[e_name][current_version]["arch"] = newarchlist;
               };              
             }
