@@ -406,6 +406,7 @@ function pkg_repl = {
             if ( length(newarchlist) == 0 ) {
               versions_to_delete[length(versions_to_delete)] = current_version;
             } else {
+              debug('Redefining list of installed arch for version'+unescape(current_version)+' ('+to_string(newarchlist)+')');
               SELF[e_name][current_version]["arch"] = newarchlist;
             };
           # mustexist=false (strict add) : if another version is already present and
@@ -419,14 +420,15 @@ function pkg_repl = {
       };
 
       if ( pkg_found ) {
-        debug("Package "+name+" found");
+        debug("Package "+name+" found in current configuration (version="+current_version+")");
       } else {
-        debug("Package "+name+" not found");
+        debug("Package "+name+" not found in current configuration");
       };
 
       # Delete versions marked for deletion
       if ( length(versions_to_delete) > 0 ) {
         foreach (i;v;versions_to_delete) {
+          debug('Deleting version '+unescape(v));
           SELF[e_name][v] = null;
         };
         # Reset package found flag to allow addition of new one
@@ -449,7 +451,7 @@ function pkg_repl = {
     # Replace package except if 'delete' option as been specified.
     if ( !deleteonly ) {
       if ( pkg_found ) {
-        debug("Package "+name+"version"+version+"arch"+arch+" already present");
+        debug("Package "+name+" version "+version+" arch "+arch+" already present");
       } else {
         debug("Adding package " + name + " new version: "+ version + " arch " + arch);
         if ( multiarch ) {
