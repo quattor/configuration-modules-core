@@ -420,7 +420,7 @@ function pkg_repl = {
       };
 
       if ( pkg_found ) {
-        debug("Package "+name+" found in current configuration (version="+current_version+")");
+        debug("Package "+name+" found in current configuration (version="+unescape(current_version)+")");
       } else {
         debug("Package "+name+" not found in current configuration");
       };
