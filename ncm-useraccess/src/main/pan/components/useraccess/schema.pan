@@ -20,6 +20,11 @@ type structure_kerberos = {
 	"host"		? type_hostname	# "The host from which the user can log in"
 };
 
+# Types of credentials the component will manage. These will be: "ssh"
+# if authorised SSH public keys will be handled, "k4" if Kerberos 4
+# will be handled, "k5" if Kerberos 5 will be managed.
+type credentialfilestring = string with match(SELF, "^(ssh_keys|kerberos4|kerberos5)$");
+
 # Authoritation information for each user.
 type structure_useraccess_auth = {
 	# URLs where the public keys that can access to the user can
@@ -35,6 +40,9 @@ type structure_useraccess_auth = {
 	"roles"		? useraccess_pointer[]
 	# List of public keys that can access to the user
 	"ssh_keys"	? string[]
+	# List of files the component is allowed to modify. Ugly hack
+	# fixing some CERN internal problems.
+	"managed_credentials" : credentialfilestring[0..3] = list("ssh_keys", "kerberos4", "kerberos5")
 };
 
 
@@ -48,4 +56,3 @@ type structure_component_useraccess = {
 };
 
 bind "/software/components/useraccess" = structure_component_useraccess;
-

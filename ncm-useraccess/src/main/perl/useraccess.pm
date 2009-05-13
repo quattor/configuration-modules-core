@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.6 : 10/02/09 11:39
+# Version: 1.5.0 : 13/05/09 18:21
 # 
 #
 # Note: all methods in this component are called in a
@@ -55,6 +55,9 @@ use constant REALM	=> "realm";
 use constant PRINCIPAL=> "principal";
 use constant INSTANCE	=> "instance";
 use constant HOST	=> "host";
+
+# Field containing the credentials the component should manage:
+use constant MANAGED_CREDENTIALS => "managed_credentials";
 
 # getpwnams values.
 use constant NAME	=> 0;
@@ -316,18 +319,32 @@ sub files
     $h{SSH_KEYS()} = CAF::FileWriter->new($path, log => $self,
 					  owner => $uid,
 					  group => $gid);
+
+    foreach my $cred ($uconfig->{MANAGED_CREDENTIALS()}) {
+	$h{MANAGED_CREDENTIALS()}->{$cred} = 1;
+    }
+
     return \%h;
 }
 
-# Closes the opened files.
+# Closes the opened files. If they are expected to be handled by the
+# component this includes saving the contents or removing empty
+# files. Otherwise, the contents are just cancelled.
 sub close_files
 {
     my ($self, $f) = @_;
 
-    foreach my $fh (values (%$f)) {
-	my $cnt = $fh->string_ref();
-	unless ($$cnt) {
-	    unlink(*$fh->{filename});
+    my $mg = $f->{MANAGED_CREDENTIALS()};
+    delete($f->{MANAGED_CREDENTIALS()});
+
+    while (my ($k, $fh) = each(%$f)) {
+	if ($mg->{$k}) {
+	    my $cnt = $fh->string_ref();
+	    unless ($$cnt) {
+		unlink(*$fh->{filename});
+		$fh->cancel();
+	    }
+	} else {
 	    $fh->cancel();
 	}
 	$fh->close();
@@ -357,9 +374,9 @@ sub Configure
 	my $fhash = $self->files($uconfig, $uid, $gid, $home);
 	if ($self->set_kerberos($user, $uconfig, $fhash) ||
 	    $self->set_ssh_fromurls($user, $uconfig,
-				    $fhash->{SSH_KEYS()}) ||
+	    $fhash->{SSH_KEYS()}) ||
 	    $self->set_ssh_fromkeys($user, $uconfig,
-				    $fhash->{SSH_KEYS()}) ||
+	    $fhash->{SSH_KEYS()}) ||
 	    $self->set_acls($user, $uconfig) ||
 	    $self->set_roles($user, $uconfig->{ROLES()},
 			     $rlhash, $fhash)) {
