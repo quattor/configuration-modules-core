@@ -1,3 +1,10 @@
+2009-05-13  Michel Jouvin
+
+	* Release: 1.6.0
+	- Cleanup pkg_repl() code
+	Fix "multi" option (http://savannah.cern.ch/bugs/?50337)
+	Improve debugging messages
+
 2008-11-25  root
 
 	* Release: 1.5.5
