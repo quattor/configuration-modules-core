@@ -268,7 +268,7 @@ function pkg_repl = {
     mustexist = undef;        # 'mustexist' is a 3-state variable (undef, true, false)
     singleversion = true;     # 'mustexist' must be false (strict add) for singleversion=false to be used
     options  = undef;
-          old_version = DEF;
+    old_version = DEF;
     if( ARGC > 3 ) {
       if ( is_list(ARGV[3]) ) {
         options = ARGV[3];
@@ -292,7 +292,6 @@ function pkg_repl = {
           singleversion = false;
         } else {
           old_version = option;
-          e_old_version = escape(old_version);
           debug ("   old version being replaced: "+old_version);
         };
       };
@@ -328,7 +327,6 @@ function pkg_repl = {
     if ( deleteonly ||
          (is_defined(mustexist) && !mustexist) ) {
       old_version = version;
-      e_old_version = e_version;
       debug ("   old version being deleted/checked : '"+old_version+"'");
     };
 
@@ -361,6 +359,7 @@ function pkg_repl = {
 
     # Check if version to be added/replaced/deleted already exists
     debug("Checking if package " + name + " version '"+ old_version + "' arch '" + arch + "' exists");
+    e_old_version = escape(old_version);
     pkg_found = false;
     versions_to_delete = list();
     if ( exists(SELF[e_name]) && is_defined(SELF[e_name]) ) {
@@ -396,7 +395,7 @@ function pkg_repl = {
               # mustexist=true (ronly) but package not found is an expected condition and means
               # nothing must be done
               if ( !pkg_found ) {
-                debug('mustexist=true (ronly) but package not found in profile: nothing done.')
+                debug('mustexist=true (ronly) but package not found in profile: nothing done.');
                 return(SELF);
               };
             };

@@ -135,7 +135,7 @@ German Cancio <German.Cancio@cern.ch>
 
 =head1 SEE ALSO
 
-L<ncm-ncd(1)>, L<http://cern.ch/quattor>.
+ncm-ncd(1)
 
 =cut
 
