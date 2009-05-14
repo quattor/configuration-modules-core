@@ -422,7 +422,8 @@ function pkg_repl = {
                 debug('Package "+name+" already present in the profile with the same version/arch: nothing done.');
                 return(SELF);
               } else {
-                error ("Package "+name+" already present in profile, without multi-version option (version="+unescape(current_version)+")");                
+                error ("Package "+name+" (arch="+arch+") already present in profile, without multi-version option (version requested="+
+                                              version+",present="unescape(current_version)+")");                
               };
             };
           };
