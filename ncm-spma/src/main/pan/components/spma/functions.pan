@@ -427,7 +427,7 @@ function pkg_repl = {
             debug('Package '+name+' ('+version+','+arch+') already present in the profile with the same version/arch: nothing done.');
             return(SELF);
           } else {
-            installed_vers = list()
+            installed_vers = list();
             foreach (k;v;pkg_found) {
               installed_vers[length(installed_vers)] = unescape(k);
             };
@@ -447,15 +447,13 @@ function pkg_repl = {
           SELF[e_name] = null;
         };
       };
-
+    };
 
     # If package is not yet present in the profile, check if strict
     # replace (no implicit add) has been requested.
-    } else {
-      if ( is_defined(mustexist) && mustexist ) {
-        debug('mustexist=true (ronly) but package not found in profile: nothing done.');
-        return (SELF);
-      };
+    if ( is_defined(mustexist) && mustexist && (length(pkg_found) == 0) ) {
+      debug('mustexist=true (ronly) but package not found in profile: nothing done.');
+      return (SELF);
     };
 
     # Replace package except if 'delete' option as been specified.
