@@ -1,6 +1,11 @@
 2009-05-14  Michel Jouvin
 
 	* Release: 1.6.0
+	- Fix several bugs in previous mods breaking in particular pkg_ronly()
+
+2009-05-14  Michel Jouvin
+
+	* Release: 1.6.0
 	- Allow pkg_add() to readd the same package version/arch without 'multi' option
 
 2009-05-13  Michel Jouvin
