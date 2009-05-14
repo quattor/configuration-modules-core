@@ -411,7 +411,7 @@ function pkg_repl = {
           pkg_found[cur_pkg_found] = true;    # Value is meaningless
         };
       };
-
+      
       if ( exists(pkg_found[e_version]) ) {
         pkg_found_identical = true;
       };
@@ -432,7 +432,7 @@ function pkg_repl = {
               installed_vers[length(installed_vers)] = unescape(k);
             };
             error ("Package "+name+" ("+arch+") already present in profile, without multi-version option (version requested="+
-                                          version+",present="+installed_vers+")");                
+                                          version+",present="+to_string(installed_vers)+")");                
           };
         };
       };
@@ -514,7 +514,7 @@ function pkg_ronly = {
     if(ARGC > 1 && ARGV[1] != DEF) {
           version = ARGV[1];
     } else {
-          debug("    Version not specified, replacing all versions");
+          debug("    Version not specified, replacing by default version");
           version = DEF;
     };
 
