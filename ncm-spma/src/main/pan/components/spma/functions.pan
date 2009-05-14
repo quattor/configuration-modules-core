@@ -415,9 +415,15 @@ function pkg_repl = {
             }
           # mustexist=false (strict add) : if another version is already present and
           # 'multi' option has not been specified (singleversion=true), throw an error.
+          # If the same version/arch is already present, just do nothing.
           } else {
             if ( pkg_found && singleversion ) {
-              error ("Package "+name+" already present in profile, without multi-version option");
+              if ( pkg_found_identical ) {
+                debug('Package "+name+" already present in the profile with the same version/arch: nothing done.');
+                return(SELF);
+              } else {
+                error ("Package "+name+" already present in profile, without multi-version option (version="+unescape(current_version)+")");                
+              };
             };
           };
         };
