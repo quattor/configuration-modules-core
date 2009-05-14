@@ -419,7 +419,7 @@ function pkg_repl = {
           } else {
             if ( pkg_found && singleversion ) {
               if ( pkg_found_identical ) {
-                debug('Package '+name+' ('+version+','+arch+')' already present in the profile with the same version/arch: nothing done.');
+                debug('Package '+name+' ('+version+','+arch+') already present in the profile with the same version/arch: nothing done.');
                 return(SELF);
               } else {
                 error ("Package "+name+" ("+arch+") already present in profile, without multi-version option (version requested="+
