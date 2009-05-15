@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.0 : 13/05/09 18:21
+# Version: 1.5.1 : 15/05/09 16:06
 # 
 #
 # Note: all methods in this component are called in a
@@ -320,7 +320,7 @@ sub files
 					  owner => $uid,
 					  group => $gid);
 
-    foreach my $cred ($uconfig->{MANAGED_CREDENTIALS()}) {
+    foreach my $cred (@{$uconfig->{MANAGED_CREDENTIALS()}}) {
 	$h{MANAGED_CREDENTIALS()}->{$cred} = 1;
     }
 
