@@ -88,6 +88,17 @@ to. Roles can be nested.
 
 It is a compile-time error to add an user to a non-existing role.
 
+=item * /software/components/useraccess/users/<id>/managed_credentials
+
+List of authentication methods the component will configure (and thus,
+fully control) for the user. It is a list of strings, with possible
+values "ssh_keys", "kerberos4" and "kerberos5".
+
+It defaults to control all credentials, change it if you want to
+control something by some other means. For instance, CERN uses a
+different tool to controls SSH public key authentication on user
+C<oracle>.
+
 =back
 
 =head1 KERBEROS SETTINGS
@@ -161,7 +172,8 @@ su foo from any user you may want.
 
 =head2 CERN's current ACLs
 
-CERN's current ACLs can be obtained by setting the system-auth service to use ACLs:
+CERN's current ACLs can be obtained by setting the system-auth service
+to use ACLs:
 
  "/software/components/useraccess/users/homer/acls" = list ("system-auth");
  "/software/components/useraccess/users/marge/acls" = list ("system-auth");

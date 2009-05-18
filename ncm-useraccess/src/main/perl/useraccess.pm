@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.1 : 15/05/09 16:06
+# Version: 1.5.2 : 18/05/09 12:20
 # 
 #
 # Note: all methods in this component are called in a
