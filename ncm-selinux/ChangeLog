@@ -1,3 +1,9 @@
+2009-05-20  Jan Iven
+
+	* Release: 1.1.4
+	- fix for #50688
+	beautification for commit (@@variables, README, new schema..)
+
 2007-09-05  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
 
 	* Release: 1.1.2
