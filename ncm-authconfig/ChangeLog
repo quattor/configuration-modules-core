@@ -1,3 +1,8 @@
+2009-05-27  Loic Brarda
+
+	* Release: 1.2.0
+	- Added the following LDAP fields : scope, TLS_REQCERT, nss_map_attribute uidNumber, nss_map_attribute gidNumber, nss_map_attribute cn, nss_map_attribute loginShell, nss_map_attribute gecos, pam_password
+
 2009-05-12  Jan van Eldik
 
 	* Release: 1.1.17
