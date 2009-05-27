@@ -158,6 +158,9 @@ sub build_ldap_config($$@) {
     # The credentials to bind with.
     $changes +=  change_cfig_val($self, $config, $base, "/bindpw", "bindpw", "NA", 1);
 
+    # scope
+    $changes +=  change_cfig_val($self, $config, $base, "/scope", "scope", "sub", 0);
+
     # The distinguished name to bind to the server with
     # if the effective user ID is root.
     $changes +=  change_cfig_val($self, $config, $base, "/rootbinddn", "rootbinddn", "NA", 0);
@@ -192,6 +195,9 @@ sub build_ldap_config($$@) {
     # See man ciphers for syntax
     $changes +=  change_cfig_val($self, $config, $base, "/tls/ciphers", "tls_ciphers", "TLSv1", 1);
 
+    # TLS_REQCERT
+    $changes +=  change_cfig_val($self, $config, $base, "/tls/reqcert", "TLS_REQCERT", "never", 0);
+
     # Where to look for the users
     $changes +=  change_cfig_val($self, $config, $base, "/nss_base_passwd", "nss_base_passwd", "", 1);
 
@@ -210,6 +216,12 @@ sub build_ldap_config($$@) {
     $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uid", "nss_map_attribute uid", "sAMAccountName", 1);
     $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/homeDirectory", "nss_map_attribute homeDirectory", "unixHomeDirectory", 1);
     $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uniqueMember", "nss_map_attribute uniqueMember", "member", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uidNumber", "nss_map_attribute uidNumber", "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/gidNumber", "nss_map_attribute gidNumber", "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/cn", "nss_map_attribute cn", "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/userPassword", "nss_map_attribute userPassword", "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/loginShell", "nss_map_attribute loginShell", "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/gecos", "nss_map_attribute gecos", "", 1);
 
     # nss_override_attribute_value
     $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/unixHomeDirectory", "nss_override_attribute_value unixHomeDirectory", "", 1);
@@ -235,6 +247,9 @@ sub build_ldap_config($$@) {
     # Group member attribute
     $changes +=  change_cfig_val($self, $config, $base, "/pam_member_attribute","pam_member_attribute","uniquemember",1);
 
+    # Password crypting : see README.pam_ldap in nss_ldap doc
+    $changes +=  change_cfig_val($self, $config, $base, "/pam_password","pam_password","md5",1);
+    
     # pam_check_service_attr uses ldapns.schema authorizedServiceObject class
     $changes +=  change_cfig_val($self, $config, $base, "/pam_check_service_attr","pam_check_service_attr","no",1);
 

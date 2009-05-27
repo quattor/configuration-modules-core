@@ -34,6 +34,7 @@ type authconfig_method_ldap_tls_type = {
   "cacertfile"	? string
   "cacertdir"	? string
   "ciphers"	? string
+  "reqcert" ? string
 };
 
 type authconfig_method_ldap_timeouts_type = {
@@ -52,6 +53,12 @@ type authconfig_nss_map_attribute = {
   "uid"	? string
   "homeDirectory"	? string
   "uniqueMember"	? string
+  "uidNumber"   ? string
+  "gidNumber"   ? string
+  "cn"  ? string
+  "userPassword"    ? string
+  "loginShell"          ? string
+  "gecos"               ? string
 };
 
 type authconfig_nss_override_attribute_value = {
@@ -70,11 +77,13 @@ type authconfig_method_ldap_type = {
   "tls"		? authconfig_method_ldap_tls_type
   "binddn"	? string
   "bindpw"	? string
+  "scope"   ? string
   "rootbinddn"	? string
   "port"	? type_port
   "timeouts"	? authconfig_method_ldap_timeouts_type
   "pam_filter"	? string
   "pam_login_attribute"	? string
+  "pam_password"    ? string
   "pam_groupdn"	? string
   "pam_member_attribute"	? string
   "pam_check_service_attr"	? string
