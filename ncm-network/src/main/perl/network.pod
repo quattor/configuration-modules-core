@@ -2,7 +2,7 @@
 # This is 'network.pod', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.0.1, 08/04/09 10:33
+# VERSION:    1.0.2, 08/04/09 10:33
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -81,6 +81,18 @@ These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-eth[i
 
 This value will be used to name the alias instead of [name]
 
+=item /system/network/interfaces/eth[i]/offload/tso
+
+Set the TCP segment offload parameter to "off" or "on"
+
+=item /system/network/interfaces/eth[i]/ring/[rt]x
+
+Set the ethernet transmit or receive buffer ring counts.  See ethtool --show-ring for the values.
+
+=item /system/network/interfaces/eth[i]/ethtool/wol
+
+Set the wake-on-lan parameter.  See ethtool for more details of the choices.  "d" disables the
+wake-on LAN.
 
 =head1 NOZEROCONF
 

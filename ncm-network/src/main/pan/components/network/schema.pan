@@ -2,7 +2,7 @@
 # This is 'TPL/schema.tpl', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.0.1-1, 08/04/09 10:33
+# VERSION:    1.0.2-1, 08/04/09 10:33
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html

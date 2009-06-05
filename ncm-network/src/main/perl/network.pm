@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.0.1, 08/04/09 10:33
+# VERSION:    1.0.2, 08/04/09 10:33
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -40,6 +40,134 @@ use NCM::Check;
 use File::Compare;
 use File::Copy;
 use Net::Ping;
+use Data::Dumper;
+
+# Ethtool formats query information differently from set parameters so
+# we have to convert the queries to see if the value is already set correctly
+my %ethtool_option_map=(
+        "offload" => { "tso" => "tcp segmentation offload" },
+        "ring"    => { "tx"  => "TX",
+		       "rx"  => "RX" },
+	"ethtool" => { "wol" => "Wake-on" },
+);
+my $ethtoolcmd="/usr/sbin/ethtool";
+
+# Get current ethtool options for the given section
+sub ethtoolGetCurrent {
+        my ($self,$ethname,$sectionname)=@_;
+	my %current;
+        my $showoption="--show-$sectionname";
+
+	$showoption="" if ($sectionname eq "ethtool");
+
+        my $cmd="$ethtoolcmd $showoption $ethname 2>&1";
+
+        $self->verbose("Running $cmd");
+        open(C,"$cmd |") || return;
+	my $skiptillnextcolon;		    # For skipping awkward chunks
+        while (<C>) {
+                chomp;
+                next if (/^Cannot get/);        # Normal error message
+                next if (/^.*parameters for/);  # Normal error message
+                next if (/^Settings for/);  # Normal error message
+                next if (/^Pre-set maximums:/);  # Normal error message
+                next if (/^Current hardware settings:/);  # Normal error message
+                next if (/^\s*$/);  # Normal error message
+		next if (defined($skiptillnextcolon) && !/:/);
+		undef $skiptillnextcolon;
+		if (/Supported link modes:/ || /Advertised link modes:/) {
+		    $skiptillnextcolon=1;
+		    next;
+		}
+                my @fields=split /:/,$_;
+                if (@fields!=2) {
+                        $self->error("Cannot parse line $_");
+                        next;
+                }
+                my $k=$fields[0];
+                $k=~s/\s*$//g;
+                $k=~s/^\s*//g;
+                my $v=$fields[1];
+                $v=~s/\s*$//g;
+                $v=~s/^\s*//g;
+                $current{$k}=$v;
+        }
+        close C;
+	return %current;
+}
+
+sub ethtoolSetOptions {
+        my ($self,$ethname,$sectionname,$optionref)=@_;
+        my %options=%$optionref;
+        my %current;
+        my $cmd;
+
+        # get current values into %current
+	%current=ethtoolGetCurrent($self,$ethname,$sectionname);
+
+	# Loop over CDB settings and check that they are known but different
+        for my $k (keys %options) {
+                my $v=$options{$k};
+                my $currentv=$current{$k};
+
+                # Is the ethtool description known
+                if (!defined($currentv)) {
+                        my $tryk=$ethtool_option_map{$sectionname}{$k};
+                        $currentv=$current{$tryk} if defined($tryk);
+                }
+                if (!defined($currentv)) {
+                        $self->info("Skipping CDB setting for $ethname/$sectionname/$k to $v as not in ethtool");
+                        next;
+                }
+
+                # Is the value different between CDB and the machine
+                if ($currentv eq $v) {
+                        $self->verbose("Value for $ethname/$sectionname/$k is already set to $v");
+                        next;
+                }
+                my $setoption="--$sectionname";
+                $setoption="--set-$sectionname" if ($sectionname eq "ring");
+		$setoption="--change" if ($sectionname eq "ethtool");
+                $cmd="$ethtoolcmd $setoption $ethname $k $v";
+                $self->info("Running $cmd");
+                system($cmd);
+        }
+}
+
+sub doEthtool {
+	our ($self,$config)=@_;
+
+        my $interfacespath = "/system/network/interfaces";
+        if ($config->elementExists($interfacespath)){
+                # go over each interface
+                my $ethiterator = $config->getElement($interfacespath);
+                while ($ethiterator->hasNextElement()) {
+                        my $ethelement=$ethiterator->getNextElement();
+                        my $ethname=$ethelement->getName();               # eth*
+                        my $attriterator=$config->getElement($interfacespath."/".$ethname);
+                        while ($attriterator->hasNextElement()) {
+                                my $sectionelement=$attriterator->getNextElement();     #
+                                my $sectionname=$sectionelement->getName();             # offload
+				my $optionpath=$interfacespath."/".$ethname."/".$sectionname;
+				next unless (defined($ethtool_option_map{$sectionname}));	# Skip gateway etc
+				if ($config->elementExists($optionpath)){
+					my %options;
+					my $optioniterator=$config->getElement($optionpath);
+					while ($optioniterator->hasNextElement()) {
+						my $optionelement=$optioniterator->getNextElement();    #
+						my $optionname=$optionelement->getName();               # tso
+						my $optionvalue=$optionelement->getValue();             # yes
+						$options{$optionname}=$optionvalue;
+					}
+					ethtoolSetOptions($self,$ethname,$sectionname,\%options);
+				}
+                        }
+                }
+        }
+
+        return;
+}
+
 
 ##########################################################################
 sub Configure {
@@ -152,7 +280,10 @@ sub Configure {
 	foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
 		$exifiles{"$dir_pref/$file"} = -1;
 		## backup all involved files
-		mk_bu("$dir_pref/$file");
+		if ($file=~m/([A-Za-z0-9.-]*)/) {
+		    my $untaint_file=$1;
+		    mk_bu("$dir_pref/$untaint_file");
+		}
 	}
 	closedir(DIR);
 
@@ -414,6 +545,9 @@ sub Configure {
 		## bonding devices: don't bring the slaves up, only the master
 		delete $ifup{$if} if (exists($net{$if}{'master'}));		
 	}	
+
+	# Do ethtool processing for offload, ring and others
+	doEthtool($self,$config);
 	
 	
 	my $cmd;
@@ -617,10 +751,11 @@ sub get_current_config {
 	close(FILE);
 
 	$cmd="/usr/sbin/brctl show";
-	$output .= "\n$cmd\n";
-	open(FILE,$cmd." 2>&1 |");
-	$output .= $_ while (<FILE>);
-	close(FILE);
+	if (open(FILE,$cmd." 2>&1 |")) {
+		$output .= "\n$cmd\n";
+		$output .= $_ while (<FILE>);
+		close(FILE);
+	}
 
 	return $output;	
 }
