@@ -27,7 +27,8 @@ use LC::File;
 use Sys::Hostname;
 
 #
-# damn exceptions. Damn OO perl, for that matter. Why OO for 200 lines of code?
+# catch all exceptions. This seems to be the way to deal with them
+# in NCM components..
 #
 $EC->error_handler(\&my_handler);
 sub my_handler {
@@ -143,7 +144,6 @@ sub genconffiles {
 				$val=$ce->getValue();
 				$name=$ce->getName();
 
-				# XXX butt ugly. I hate perl.
 				   if($name eq "device_path") {$cdb_device_path=$val; }
 				elsif($name eq "authentication_type") {$auth_type=$val; }
 				elsif($name eq "authentication_resource") {$auth_resource=$val; }
