@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.0.3, 12/06/09 10:54
+# VERSION:    1.1.0, 12/06/09 11:06
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -168,10 +168,24 @@ sub doEthtool {
     return;
 }
 
+# Creates a string defining the bonding options.
+sub bonding_options
+{
+    my ($self, $el) = @_;
+    my $opts = $el->getTree();
+    my $st = "BONDING_OPTIONS=";
+    my @op;
+
+    while (my ($k, $v) = each(%$opts)) {
+	push(@op, "$k=$v");
+    }
+
+    return "$st'" . join(' ', @op) . "'";
+}
 
 ##########################################################################
 sub Configure {
-    ##########################################################################
+##########################################################################
 
     our ($self,$config)=@_;
     my $base_path = '/system/network';
@@ -246,7 +260,9 @@ sub Configure {
 	    } elsif ($elementname !~ m/bonding_opts/) {
 		$net{$ifacename}{$elementname} = $element->getValue();
 	    } else {
-		$net{$ifacename}{$elementname} = bonding_options($element);
+		$net{$ifacename}{$elementname} =
+		    $self->bonding_options($element);
+	    }
 	}
 
 	## collect /hardware info
