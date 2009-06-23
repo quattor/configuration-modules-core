@@ -10,8 +10,8 @@ include {'components/pam/schema'};
 include {'pan/functions'};
 
 # standard component settings
-"/software/components/pam/version"    = "1.1.0";
-"/software/components/pam/release"    = "ms1";
+"/software/components/pam/version"    = "1.3.0";
+"/software/components/pam/release"    = "1";
 "/software/components/pam/active"    ?=  true;
 "/software/components/pam/dispatch"  ?=  true;
 "/software/components/pam/directory" ?= "/etc/pam.d";
