@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.1.0, 12/06/09 11:06
+# VERSION:    1.1.1, 25/06/09 09:52
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -45,9 +45,15 @@ use Data::Dumper;
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
 my %ethtool_option_map=(
-    "offload" => { "tso" => "tcp segmentation offload" },
+    "offload" => { "tso" => "tcp segmentation offload",
+                   "tx"  => "tx-checksumming",
+                   "rx"  => "rx-checksumming",
+                   "ufo" => "udp fragmentation offload",
+                   "gso" => "generic segmentation offload",
+                   "sg"  => "scatter-gather"},
+
     "ring"    => { "tx"  => "TX",
-		   "rx"  => "RX" },
+                   "rx"  => "RX" },
     "ethtool" => { "wol" => "Wake-on" },
    );
 my $ethtoolcmd="/usr/sbin/ethtool";
@@ -424,7 +430,7 @@ sub Configure {
 	    $text="";
 	    foreach my $rt (sort keys %{$net{$iface}{route}}) {
 		if ( $net{$iface}{route}{$rt}{'address'}) {
-		    $text .= "ADDRESS$rt" .
+		    $text .= "ADDRESS$rt=" .
 			$net{$iface}{route}{$rt}{'address'}."\n";
 		}
 		if ( $net{$iface}{route}{$rt}{'gateway'}) {
