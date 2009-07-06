@@ -50,6 +50,7 @@ sub Configure($$@) {
     my $ownerPath       = "$base/services/$encfname/owner";
     my $groupPath       = "$base/services/$encfname/group";
     my $backupPath      = "$base/services/$encfname/backup";
+    my $noutf8Path      = "$base/services/$encfname/no_utf8";
 
     # The actual file name.
     my $fname = unescape($encfname);
@@ -96,6 +97,10 @@ sub Configure($$@) {
       }
     }
 
+    if ( !$config->elementExists($noutf8Path) || !($config->getValue($noutf8Path) eq "true")) {
+        $contents = encode_utf8($contents);
+    }
+    
 
     # LC::Check methods log a message if a change happened
     # LC::Check::status must be called independently because doing
@@ -105,12 +110,12 @@ sub Configure($$@) {
       $changes = LC::Check::file(
                                   $fname,
                                   backup   => $backup,
-                                  contents => encode_utf8($contents),
+                                  contents => $contents,
                                 );      
     } else {
       $changes = LC::Check::file(
                                   $fname,
-                                  contents => encode_utf8($contents),
+                                  contents => $contents,
                                 );            
     }
     $changes += LC::Check::status(

@@ -13,6 +13,7 @@ type structure_filecopy = {
     'perms'       ? string with match(SELF, '^[02-6]?[0-7]{3,3}$')
     'owner'       ? string
     'group'       ? string
+    'no_utf8'     ? boolean
     'forceRestart' : boolean = false
     'backup'      ? boolean = true
 };

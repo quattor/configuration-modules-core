@@ -20,9 +20,9 @@ component should be written.
 
 =head1 RESOURCES
 
-=head2 /software/components/filecopy/conditional
+=head2 /software/components/filecopy/forceRestart
 A boolean that defines if the restart (if any defined) of the file(s) 
-should be made conditional (ie restart if something has changed to 
+should be forced (otherwise it restart only if something has changed to 
 either the permissions or the content). Defaults to false.
 
 =head2 /software/components/filecopy/services
@@ -32,10 +32,11 @@ filename.  The resource "config" contains the contents of the
 configuration file and the resource "restart" contains a command to
 execute on reconfiguration.  The owner, group and permissions can also be
 given in the "owner", "group" and "perms" properties, respectively. "owner"
-can be either a owner or 'owner:group'.
+can be either a owner or 'owner:group'. The resource "config" will be encoded 
+to utf8 except if a no_utf8 resource is set to true.
 
 Also a 
-per filename based "conditional" can be given to overwrite 
+per filename based "forceRestart" can be given to overwrite 
 the component wide setting. 
 
 By default, the component creates a backup of the file using the suffix .old. 

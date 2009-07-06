@@ -1,3 +1,9 @@
+2009-07-06  Loic Brarda
+
+	* Release: 1.3.5
+	- Make conversion to UTF8 optionnal.
+	Fix Documentation.
+
 2009-04-13  Michel Jouvin
 
 	* Release: 1.3.4
