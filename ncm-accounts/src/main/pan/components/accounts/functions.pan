@@ -17,6 +17,7 @@ variable ACCOUNTS_USER_HOME_ROOT ?= '/home';
 variable ACCOUNTS_USER_CREATE_HOME ?= true;
 variable ACCOUNTS_USER_AUTOGROUP ?= true;
 variable ACCOUNTS_USER_CHECK_GROUP ?= true;
+variable ACCOUNTS_IGNORE_MISSING_GROUPS ?= false;
 variable ACCOUNTS_USER_COMMENT ?= 'Created by ncm-accounts';
 variable ACCOUNTS_GROUP_COMMENT ?= 'Created by ncm-accounts';
 
@@ -113,7 +114,11 @@ function create_user = {
                      !exists(user_params['poolStart']) ) {
                     accounts = create_group(groupname,nlist('gid',user_params['uid']));
                 } else {
-                    error(function_name + " : group\"" + groupname + "\" doesn't exist");
+                    if  (ACCOUNTS_IGNORE_MISSING_GROUPS) {
+                        delete(user_params['groups'][i]);
+                    } else {
+                        error(function_name + " : group\"" + groupname + "\" doesn't exist");
+                    };
                 };
             };
             ok = next(user_params['groups'], i, groupname);
