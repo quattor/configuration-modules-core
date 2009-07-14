@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.1.1, 25/06/09 09:52
+# VERSION:    1.1.2, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -186,7 +186,7 @@ sub bonding_options
 	push(@op, "$k=$v");
     }
 
-    return "$st'" . join(' ', @op) . "'";
+    return "$st'" . join(' ', @op) . "'\n";
 }
 
 ##########################################################################
@@ -421,6 +421,10 @@ sub Configure {
 	    $text .= "MASTER=".$net{$iface}{'master'}."\n";
 	    $text .= "SLAVE=yes\n";
 	}
+
+	if (exists($net{$iface}{bonding_opts})) {
+	    $text .= $net{$iface}{bonding_opts};
+	}
 	$exifiles{$file_name}=file_dump($file_name,$text,$fail);
 	## route config, interface based.
 	## hey, where are the static routes?
@@ -466,6 +470,7 @@ sub Configure {
 		$exifiles{$file_name}=file_dump($file_name,$text,$fail);
 	    }
 	}
+
     }
 
     ###
