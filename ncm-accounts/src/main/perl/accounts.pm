@@ -14,6 +14,8 @@ use NCM::Check;
 use LC::Process qw (output execute);
 use LC::File qw (makedir);
 use EDG::WP4::CCM::Element;
+use CAF::FileWriter;
+use CAF::Process;
 
 use File::Basename;
 use File::Path;
@@ -55,8 +57,8 @@ use constant { PWCONV  => "/usr/sbin/pwconv",
                PWUNCONV  => "/usr/sbin/pwunconv",
                GRPCONV  => "/usr/sbin/grpconv",
                GRPUNCONV  => "/usr/sbin/grpunconv",
-               NEWUSERS => "/usr/sbin/newusers",
-               CHPASSWD => "/usr/sbin/chpasswd"
+               NEWUSERS => ["/usr/sbin/newusers"], #"/dev/fd/0"],
+               CHPASSWD => ["/usr/sbin/chpasswd", "-e"]
          };
 
 use constant {NEWPASSLIST => "/tmp/newpass.ncm-accounts",
@@ -994,8 +996,12 @@ sub Configure($$@) {
     }
 
 
-    open(NEWUSERSF,">".NEWUSERLIST);
-    open(NEWPASSF,">".NEWPASSLIST);
+    my $usersf = CAF::FileWriter->open("temporary file", log => $self);
+    $usersf->cancel();
+#     open(NEWUSERSF,">".NEWUSERLIST);
+#     open(NEWPASSF,">".NEWPASSLIST);
+    my $passf = CAF::FileWriter->open("temporary file 2", log => $self);
+    $passf->cancel();
     # Process list of users
     foreach my $usertoproc (sort keys %processed_users) {
         my $prefix = "$base/users/$usertoproc";         
@@ -1032,7 +1038,13 @@ sub Configure($$@) {
                 else {
                     $ushell="/bin/bash";
                 }
-                print(NEWUSERSF $userclass->{"name"}.":x:".$userclass->{"uid"}.":".getgrnam($userclass->{"pgroup"}).":\"".$userclass->{"gcos"}."\":".$userclass->{"homedir"}.":".$ushell."\n");
+                print $usersf join(':', $userclass->{name}, "x",
+				   $userclass->{uid},
+				   exists($userclass->{pgroup}) ?
+				       getgrnam($userclass->{pgroup}) : "",
+				   "\"$userclass->{gcos}\"",
+				   $userclass->{homedir},
+				   $ushell), "\n";
                 my $upass="";
                 if (exists $userclass->{"password"}) {
                     $upass=$userclass->{"password"};
@@ -1040,8 +1052,7 @@ sub Configure($$@) {
                 else {
                     $upass="!NP*";
                 }
-                  
-                print(NEWPASSF $userclass->{"name"}.":".$upass."\n");
+                print $passf "$userclass->{name}:$upass\n";
             }
             else {
                 $self->log("noaction mode: not adding user $usertoproc");
@@ -1071,33 +1082,17 @@ sub Configure($$@) {
 
     }
 
-    close NEWUSERSF;
-    
     # bulk add new users
-    execute([NEWUSERS,NEWUSERLIST]);
+    my $cmd = CAF::Process->new(NEWUSERS, log => $self,
+				stdin => ${$usersf->string_ref()});
+    $cmd->execute();
     if ($no_users_added > 0 ) {
         $self->info("Added ".$no_users_added." users.");
     }
- 
-    my $pipestring="|".CHPASSWD." -e";
-    my $pipe;
-    open $pipe, $pipestring;
 
-    close NEWPASSF;
-    # reopen for reading
-    open NEWPASSF,NEWPASSLIST;
-
-    while (<NEWPASSF>) {
-        my $line = $_;
-        chomp ($line);
-        print $pipe $line, "\n";
-    }
-    close NEWPASSF;
-    close $pipe;
-
-    # delete the temp files we used as input
-    unlink NEWPASSLIST;
-    unlink NEWUSERLIST;
+    $cmd = CAF::Process->new(CHPASSWD, log => $self,
+			     stdin => ${$passf->string_ref()});
+    $cmd->execute();
 
     # delete groups not in the profile
     if ($removeAccounts){
