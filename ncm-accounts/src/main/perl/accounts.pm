@@ -61,10 +61,6 @@ use constant { PWCONV  => "/usr/sbin/pwconv",
                CHPASSWD => ["/usr/sbin/chpasswd", "-e"]
          };
 
-use constant {NEWPASSLIST => "/tmp/newpass.ncm-accounts",
-              NEWUSERLIST => "/tmp/newusers.ncm-accounts"
-              };
-
 
 our %FLAGS = (
               PASSWORD, "-p", 
@@ -998,8 +994,6 @@ sub Configure($$@) {
 
     my $usersf = CAF::FileWriter->open("temporary file", log => $self);
     $usersf->cancel();
-#     open(NEWUSERSF,">".NEWUSERLIST);
-#     open(NEWPASSF,">".NEWPASSLIST);
     my $passf = CAF::FileWriter->open("temporary file 2", log => $self);
     $passf->cancel();
     # Process list of users

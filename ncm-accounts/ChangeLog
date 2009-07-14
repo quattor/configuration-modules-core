@@ -1,5 +1,10 @@
 2009-07-14  Luis Fernando Muñoz Mejías
 
+	* Release: 4.0.8
+	- Remove some unused code.
+
+2009-07-14  Luis Fernando Muñoz Mejías
+
 	* Release: 4.0.7
 	- Fix bug #50054.
 
