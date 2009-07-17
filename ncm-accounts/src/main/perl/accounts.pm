@@ -1077,14 +1077,14 @@ sub Configure($$@) {
     }
 
     # bulk add new users
-    my $cmd = CAF::Process->new(NEWUSERS, log => $self,
+    my $cmd = CAF::Process->new(NEWUSERS,
 				stdin => ${$usersf->string_ref()});
     $cmd->execute();
     if ($no_users_added > 0 ) {
         $self->info("Added ".$no_users_added." users.");
     }
 
-    $cmd = CAF::Process->new(CHPASSWD, log => $self,
+    $cmd = CAF::Process->new(CHPASSWD,
 			     stdin => ${$passf->string_ref()});
     $cmd->execute();
 
