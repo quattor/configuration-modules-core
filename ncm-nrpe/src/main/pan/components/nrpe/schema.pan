@@ -6,8 +6,7 @@ declaration template components/nrpe/schema;
 
 include {'quattor/schema'};
 
-type structure_component_nrpe = {
-    include structure_component
+type component_nrpe_options = {
     'pid_file'                  : string = '/var/run/nrpe.pid'
     'server_port'               : type_port = 5666
     'server_address'            ? string
@@ -22,6 +21,11 @@ type structure_component_nrpe = {
     'allow_weak_random_seed'    : boolean = false
     'cmds'                      : string{}  # Indexed by command name.
     'external_files'            ? string[]
+};
+
+type structure_component_nrpe = {
+    include structure_component
+    'options'                   : component_nrpe_options
 };
 
 bind '/software/components/nrpe' = structure_component_nrpe;
