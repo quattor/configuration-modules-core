@@ -42,13 +42,18 @@ sub Configure {
     $fw->print ("allowed_hosts=" . join (",", @{$st->{allowed_hosts}}) . "\n");
 
     # Output nrpe_commands 
-    while (my ($cmdname, $cmdline) = each (%{$st->{cmds}})) {
+    while (my ($cmdname, $cmdline) = each (%{$st->{command}})) {
         $fw->print ("command[$cmdname]=$cmdline\n");
     }
 
     # Output external files' includes
-    foreach my $fn (@{$st->{external_files}}) {
+    foreach my $fn (@{$st->{include}}) {
         $fw->print ("include=$fn\n");
+    }
+    
+    # Output directory includes
+    foreach my $dn (@{$st->{include_dir}}) {
+        $fw->print ("include_dir=$dn\n");
     } 
 
     # Close the output file

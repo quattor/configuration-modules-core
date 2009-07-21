@@ -7,6 +7,7 @@ declaration template components/nrpe/schema;
 include {'quattor/schema'};
 
 type component_nrpe_options = {
+    'log_facility'              : string = 'daemon'
     'pid_file'                  : string = '/var/run/nrpe.pid'
     'server_port'               : type_port = 5666
     'server_address'            ? string
@@ -18,9 +19,10 @@ type component_nrpe_options = {
     'debug'                     : boolean = false
     'command_timeout'           : long = 60
     'connection_timeout'        : long = 300
-    'allow_weak_random_seed'    : boolean = false
-    'cmds'                      : string{}  # Indexed by command name.
-    'external_files'            ? string[]
+    'allow_weak_random_seed'    ? boolean = false
+    'command'                   : string{}  # Indexed by command name.
+    'include'                   ? string[]
+    'include_dir'               ? string[]
 };
 
 type structure_component_nrpe = {

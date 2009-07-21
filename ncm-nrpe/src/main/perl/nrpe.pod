@@ -15,6 +15,10 @@ All fields are mandatory, unless it is explicitly stated:
 
 =over 4
 
+=item * /software/components/nrpe/log_facility : string
+
+The syslog facility that should be used for logging purposes.
+
 =item * /software/components/nrpe/pid_file : string
 
 File in which the NRPE daemon should write it's process ID number.
@@ -70,15 +74,19 @@ Timeout for connections, in seconds.
 
 Whether or not allow weak random number generation.
 
-=item * /software/components/nrpe/cmds : string {}
+=item * /software/components/nrpe/command : string {}
 
 Named list with the command lines to be run. It is indexed with the
 command identifiers. Check Nagios' documentation for more information
 on command definitions.
 
-=item * /software/components/nrpe/external_files : string {}
+=item * /software/components/nrpe/include : string []
 
 List of external file names that should be included. 
+
+=item * /software/components/nrpe/include_dir : string []
+
+List of directory names that should be included.
 
 =back
 
