@@ -23,11 +23,9 @@ use constant FILE => '/etc/nagios/nrpe.cfg';
 sub Configure {
     my ($self, $config) = @_;
     my $st = $config->getElement (PATH)->getTree;
+    
+    # Open file
     my $fw = CAF::FileWriter->open (FILE, log => $self);
-    unless ($fw) {
-        throw_error ("Couldn't open " . FILE);
-        return;
-    }
 
     # Output caution header
     $fw->print ("# /etc/nagios/nrpe.cfg\n");
@@ -71,7 +69,7 @@ sub Configure {
     }
     
     # Success
-    return;
+    return 1;
 }
 
 1;
