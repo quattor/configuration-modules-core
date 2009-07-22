@@ -1,19 +1,3 @@
-2009-07-21  Victor Mendoza
-
-	* Release: 1.0.6
-	- Updated schema, changes are not compatible with previous versions, upgrade with care
-	- Normalized option names to match configuration file
-	- Removed add_rc and call to chkconfig (should be configured with ncm-chkconfig)
-	- Added some testing
-
-2009-07-21  Victor Mendoza, LPNHE-IN2P3
-
-	* Release: 1.0.5
-	- Updated schema, changes are not compatible with previous versions, upgrade with care
-	- Normalized option names to match configuration file
-	- Removed add_rc and call to chkconfig (should be configured with ncm-chkconfig)
-	- Added some testing
-
 2008-09-16  "Luis Fernando"
 
 	* Release: 1.0.4
