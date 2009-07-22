@@ -229,14 +229,26 @@ sub dns2ip ( $ ) {
     my ($self, $name) = @_;
     my ($hostname, $alias, $addrtype, $length, $addr);
     my @addr;
+    my $isneg = 0;
 
     if ( ! defined $name || $name eq "" ) {
 	$self->debug(2, "dns2ip-BAD: empty name");
 	return '';
     };
+
+    if ($name =~ /^!\s*(.*)/} {
+	$self->debug(3, "dns2ip-INFO: negative specification");
+	$isneg = 1;
+	$name = $1;
+    }
+
     if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$/ ) {
 	$self->debug(2, "dns2ip-OK: already numeric");
-	return $name;
+	if ($isneg) {
+	    return "!".$name;
+	} else {
+	    return $name;
+	}
     }
 
     ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
@@ -257,7 +269,12 @@ sub dns2ip ( $ ) {
     $name =  "@addr";
     $name =~ s/\s/\./g;
     $self->debug(2, "dns2ip-OK: resolved $name");
-    return $name;
+
+    if ($isneg) {
+	return "!".$name;
+    } else {
+	return $name;
+    }
 }
 
 ##########################################################################

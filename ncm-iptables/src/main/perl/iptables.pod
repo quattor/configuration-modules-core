@@ -135,11 +135,13 @@ The B<"chain"> define the chain: "input", "output" or "forward".
 The B<"protocol"> define the packet protocol: "tcp", "udp" or "icmp".
 
 The B<"src_addr"> define the packet source address, it can be an IP
-address, or a network in the form net/mask, or a hostname. To limit
-the ability of hackers/crackers to use your system for DDoS attacks it
-is  worthwhile, for machines which are not being used as routers, to
-block packets which do not come from their IP address in the OUTPUT
-tables.
+address, or a network in the form net/mask (CIDR notation), or a
+hostname (which will be resolved at configuration time, not at
+runtime) - all of which can be optionally prepended with "!" to negate
+the selection. To limit the ability of hackers/crackers to use your
+system for DDoS attacks it is worthwhile, for machines which are not
+being used as routers, to block packets which do not come from their
+IP address in the OUTPUT tables.
 
 The B<"src_port"> define the packet source port, it may be an integer
 or a service name included in the /etc/services file. This parameter
