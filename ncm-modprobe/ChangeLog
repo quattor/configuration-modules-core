@@ -1,3 +1,15 @@
+2009-07-24  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.0
+	- Make it able to modify existing lines, not only to add new ones.
+
+	It was only able to add lines to /etc/modprobe.conf, which meant
+	that if you needed to change something (f.i, different options to
+	a module) you needed to log into the machine, remove the options
+	line and re-run the component. Otherwise, two "option" lines would
+	be added. It's better now. However, it doesn't REMOVE lines. F.i,
+	if you want to remove an alias you still have to do it manually.
+
 2009-02-13  Nick Williams
 
 	* Release: 1.1.4

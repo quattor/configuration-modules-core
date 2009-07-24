@@ -15,280 +15,188 @@ package NCM::Component::modprobe;
 
 use strict;
 use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+our @ISA = qw(NCM::Component);
+our $EC=LC::Exception::Context->new->will_store_all;
 
 use NCM::Check;
 use EDG::WP4::CCM::Configuration;
-use LC::Process qw(run);
-use LC::File qw(copy file_contents);
+use CAF::Process;
+use CAF::FileEditor;
+use LC::File qw(directory_contents);
+use Fcntl qw(:seek);
 
-##########################################################################
+
+# Opens a file
+sub file_open
+{
+    my ($self, $filename) = @_;
+
+    my $fh = CAF::FileEditor->new($filename,
+				  backup => '.old', log => $self,
+				  owner => 0, group => 0, mode => 0600);
+    $fh->cancel() unless ${$fh->string_ref()};
+    return $fh;
+}
+
+# Processes the aliases and prints them on the correct files. All
+# aliases for a module given in the profile are controlled by this
+# component.
+sub process_aliases
+{
+    my ($self, $t, $f1, $f2) = @_;
+
+    my ($i, $name, $as, $str, %aliases, $a);
+    foreach $i (@{$t->{modules}}) {
+	if (exists($i->{alias})) {
+	    $self->debug(4, "Adding alias $i->{alias} for $i->{name}");
+	    if (exists($aliases{$i->{name}})) {
+		push(@{$aliases{$i->{name}}}, $i->{alias});
+	    } else {
+		$aliases{$i->{name}} = [$i->{alias}];
+	    }
+	}
+    }
+
+    foreach $i ($f1, $f2) {
+	$str = ${$i->string_ref()};
+	while (($name, $as) = each(%aliases)) {
+	    $self->debug(4, "Printing aliases for: $name");
+	    $str =~ s{^alias\s+\S+\s+$name$}{}mg;
+	    $i->set_contents($str);
+	    seek($i, 0, SEEK_END);
+	    foreach $a (@$as) {
+		print $i "alias $a $name\n";
+	    }
+	}
+    }
+}
+
+# Processes the options for all modules. Again, all the options for
+# any module listed here are the *only* ones to be applied.
+sub process_options
+{
+    my ($self, $t, $f1, $f2) = @_;
+
+    my ($i, $name, $opt, $str, %options, $o);
+
+    foreach $i (@{$t->{modules}}) {
+	if (exists($i->{options})) {
+	    $self->debug(4, "Module $i->{name}: Adding options $i->{options}");
+	    if (exists($options{$i->{name}})) {
+		push(@{$options{$i->{name}}}, $i->{options});
+	    } else {
+		$options{$i->{name}} = [$i->{options}];
+	    }
+	}
+    }
+
+    foreach $i ($f1, $f2) {
+	$str = ${$i->string_ref()};
+	while (($name, $opt) = each(%options)) {
+	    $self->debug(4, "Adding options ", join(" ", @$opt), " to module $name");
+	    $str =~ s{^options $name\s.*}{}mg;
+	    $i->set_contents($str);
+	    seek($i, 0, SEEK_END);
+	    print $i "options $name ", join(" ", @$opt), "\n";
+	}
+    }
+}
+
+# Processess all the install scriptlets. Only one scriptlet per
+# different module is allowed. Others may be deleted.
+sub process_install
+{
+    my ($self, $t, $f1, $f2) = @_;
+
+    my ($i, $j, $str);
+
+    foreach $i (@{$t->{modules}}) {
+	if (exists($i->{install})) {
+	    foreach $j ($f1, $f2) {
+		$str = ${$j->string_ref()};
+		$str =~ s!^install $i->{name}.*$!install $i->{name} {$i->{install}}!mg;
+	    }
+	}
+    }
+}
+
+# Processes all the remove scriptlets. Only one such scriptlet per
+# different module is allowed. Others may be deleted.
+sub process_remove
+{
+    my ($self, $t, $f1, $f2) = @_;
+
+    my ($i, $j, $str);
+
+    foreach $i (@{$t->{modules}}) {
+	if (exists($i->{remove})) {
+	    foreach $j ($f1, $f2) {
+		$str = ${$j->string_ref()};
+		$str =~ s!^remove $i->{name}.*$!remove $i->{name} {$i->{remove}}!mg;
+	    }
+	}
+    }
+}
+
+# Re-generates the initrds, if needed.
+sub mkinitrd
+{
+    my ($self, $f24, $f26) = @_;
+
+    my ($i, $dir, @releases, @rs, $cmd, $str);
+
+    $dir = directory_contents("/boot");
+
+    foreach $i (@$dir) {
+	if ($i =~ m{^^System\.map\-(2\.[46]\.*)$}) {
+	    push(@releases, $1);
+	}
+    }
+
+    $str = $f24->string_ref();
+    $$str =~ s{^\s*\n}{}mg;
+    $f24->set_contents($str);
+
+    if ($f24->close()) {
+	@rs = grep(m{^2\.4}, @releases);
+	foreach $i (@rs) {
+	    $cmd = CAF::Process->new(
+		["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
+		log => $self)->run();
+	}
+    }
+
+    $str = $f26->string_ref();
+    $$str =~ s{^\s*\n}{}mg;
+    $f26->set_contents($str);
+
+    if ($f26->close()) {
+	@rs = grep(m{^2\.6}, @releases);
+	foreach $i (@rs) {
+	    $cmd = CAF::Process->new(
+		["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
+		log => $self)->run();
+	}
+    }
+}
+
 sub Configure {
-##########################################################################
-  my ($self,$config)=@_;
-  my @file_stat;
-  my %mod_conf_file=();
-  my $conf_file;
-  my $rebuild=0;
-  my @moduleslist;
-  my %alias=();
-  my %options=();
-  my %install=();
-  my %remove=();
-  my @boot_contents;
-  my $boot_ref;
-  my @kernel_release=();
+    my ($self,$config)=@_;
+    my ($t, $f24, $f26, $c, $i);
 
-  unless (($boot_ref = LC::File::directory_contents("/boot"))) {
-        $self->error( "error reading contents of /boot" );
-        return;
-  }
+    $t = $config->getElement("/software/components/modprobe")->getTree();
+    $f24 = $self->file_open("/etc/modules.conf");
+    $f26 = $self->file_open("/etc/modprobe.conf");
 
-  @boot_contents=@{$boot_ref};
+    $self->process_aliases($t, $f24, $f26);
+    $self->process_options($t, $f24, $f26);
+    $self->process_install($t, $f24, $f26);
+    $self->process_remove($t, $f24, $f26);
 
-  foreach my $kernel (0..$#boot_contents) {
-    if ($boot_contents[$kernel]=~/^System\.map\-(2\.4\.\d+.*)$/) {
-      push(@kernel_release, $1);
-      $mod_conf_file{"24"}="/etc/modules.conf";
-    } elsif ($boot_contents[$kernel]=~/^System\.map\-(2\.6\.\d+.*)$/) {
-      push(@kernel_release, $1);
-      $mod_conf_file{"26"}="/etc/modprobe.conf";
-    }
-  }
-
-  foreach my $kernel (keys %mod_conf_file) {
-          $conf_file = $mod_conf_file{$kernel};
-          if ((-f $conf_file) and (my @file_stat=stat($conf_file))) {
-            $file_stat[2] = 0600;              # mode
-            $file_stat[4] = $file_stat[5] = 0; # uid/gid
-            unless (LC::File::change_stat( $conf_file, @file_stat)) {
-                  $self->error('changing mode/uid/gid of $conf_file file');
-                  return;
-            }
-          } elsif (!(-f $conf_file)) {
-                 unless (open(FILE,">$conf_file")) {
-                       $self->error('creating $conf_file file');
-                       return;
-                 }
-                 @file_stat=stat($conf_file);
-                 $file_stat[2] = 0600;              # mode
-                 $file_stat[4] = $file_stat[5] = 0; # uid/gid
-                 unless (LC::File::change_stat( $conf_file, @file_stat)) {
-                       $self->error('changing mode/uid/gid of $conf_file file');
-                       return;
-                 }
-          }
-   }
-
-  # is there any modules configuration information
-  if (!$config->elementExists('/software/components/modprobe/modules')) {
-    $self->error('no modules configuration information defined');
-    return;
-  }
-
-  # how many modules I have
-  @moduleslist = $config->getElement('/software/components/modprobe/modules')->getList();
-
-  foreach my $i (0 .. $#moduleslist) {
-          my $module_name= $config->getElement('/software/components/modprobe/modules/'.$i.'/name') ->getValue();
-
-          if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/alias')) {
-            my $module_alias=$config->getElement('/software/components/modprobe/modules/'.$i.'/alias')->getValue();
-            push @{$alias{$module_name }}, $module_alias;
-            $rebuild=1;
-          }
-
-          if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/options')) {
-            my $module_options=$config->getElement('/software/components/modprobe/modules/'.$i.'/options')->getValue();
-            $options{$module_name}=$module_options;
-            $rebuild=1;
-          }
-
-          if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/install')) {
-            my $module_install=$config->getElement('/software/components/modprobe/modules/'.$i.'/install')->getValue();
-            $install{$module_name}=$module_install;
-            $rebuild=1;
-          }
-
-          if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/remove')) {
-            my $module_remove=$config->getElement('/software/components/modprobe/modules/'.$i.'/remove')->getValue();
-            $remove{$module_name}=$module_remove;
-            $rebuild=1;
-         }
-   }
-
-  my $changes = 0;
-  foreach my $kernel (keys %mod_conf_file) {
-          $conf_file = $mod_conf_file{$kernel};
-          foreach my $name (keys %alias) {
-                  foreach my $i ( 0 .. $#{ $alias{$name} } ) {
-                          $changes += NCM::Check::lines( $conf_file,
-                               linere => '^\s*alias\s+'.$alias{$name}[$i].'\s+.*',
-                               goodre => 'alias '.$alias{$name}[$i].' '.$name,
-                               good   => 'alias '.$alias{$name}[$i].' '.$name,
-# I find the lines above illogical because if one needs to disable a module (e.g. IPv6)
-# one has to specify this: nlist("name", "off", "alias", "net-pf-10"));
-# However, other people say that it should be like that and that my modification
-# from 2006 (release 1.0.3) is actually a bug. So - reverting back.
-# 
-# Vladimir Bahyl - 5/2007
-#                               linere => '^\s*alias\s+'.$name.'\s+.*',
-#                               goodre => 'alias '.$name.' '.$alias{$name}[$i],
-#                               good   => 'alias '.$name.' '.$alias{$name}[$i],
-                               keep   => 'first',
-                               add    => 'last',
-                               backup => '.old'
-                           );
-                  }
-          }
-
-          foreach my $name (keys %options) {
-                  $changes += NCM::Check::lines( $conf_file,
-                       linere => '^\s*options\s+'.$name.'\s+.*',
-                       goodre => 'options '.$name.' '.$options{$name},
-                       good   => 'options '.$name.' '.$options{$name},
-                       keep   => 'first',
-                       add    => 'last',
-                       backup => '.old'
-                  );
-          }
-
-          foreach my $name (keys %install) {
-                  $changes += NCM::Check::lines( $conf_file,
-                       linere => '^\s*install\s+'.$name.'\s+'.$install{$name},
-                       goodre => 'install '.$name.' '.$install{$name},
-                       good   => 'install '.$name.' '.$install{$name},
-                       keep   => 'first',
-                       add    => 'last',
-                       backup => '.old'
-                  );
-          }
-
-          foreach my $name (keys %remove) {
-                  $changes += NCM::Check::lines( $conf_file,
-                       linere => '^\s*remove\s+'.$name.'\s+'.$remove{$name},
-                       goodre => 'remove '.$name.' '.$remove{$name},
-                       good   => 'remove '.$name.' '.$remove{$name},
-                       keep   => 'first',
-                       add    => 'last',
-                       backup => '.old'
-                  );
-          }
-    }
-
-  if (not $changes){
-      $self->info("No changes to \"$conf_file\",so no need to re-run \"mkinitrd\"!");
-  }else{
-    if ($rebuild) {
-      foreach my $kernel (0 .. $#kernel_release) {
-            # Rebuild the initial ram disk image so that the modules are loaded on boot
-            my $command = "/sbin/mkinitrd -f /boot/initrd-$kernel_release[$kernel].img $kernel_release[$kernel]";
-            $self->info("running $command");
-            unless (LC::Process::run($command)) {
-                  $self->warn('problem with "$command" command');
-                  return;
-            }
-      }
-    }
-  }
-
-  return;
+    $self->mkinitrd($f24, $f26);
+    return 1;
 }
 
-##########################################################################
-sub Unconfigure {
-##########################################################################
-  my ($self,$config)=@_;
-  my $rebuild=0;
-  my %mod_conf_file=();
-  my @boot_contents;
-  my $boot_ref;
-  my @kernel_release=();
 
-  unless (($boot_ref = LC::File::directory_contents("/boot"))) {
-        $self->error( "error reading contents of /boot" );
-        return;
-  }
 
-  @boot_contents=@{$boot_ref};
-
-  foreach my $kernel (0..$#boot_contents) {
-    if ($boot_contents[$kernel]=~/^System\.map\-(2\.4\.\d+\-\d+.*)$/) {
-      push(@kernel_release, $1);
-      $mod_conf_file{"24"}="/etc/modules.conf";
-    } elsif ($boot_contents[$kernel]=~/^System\.map\-(2\.6\.\d+\-\d+.*)$/) {
-      push(@kernel_release, $1);
-      $mod_conf_file{"26"}="/etc/modprobe.conf";
-    }
-  }
-
-  foreach my $kernel (keys %mod_conf_file) {
-          my $conf_file = $mod_conf_file{$kernel};
-          my $conf_file_contents;
-
-          unless (LC::File::copy( $conf_file, "$conf_file.old", preserve => 1)) {
-                $self->error("error copying $conf_file to $conf_file.old");
-                return;
-          }
-
-          unless (( $conf_file_contents = LC::File::file_contents( $conf_file ))) {
-                $self->error( "error reading $conf_file contents" );
-                return;
-          }
-
-         # how many modules I have
-         my @moduleslist = $config->getElement('/software/components/modprobe/modules')->getList();
-
-         foreach my $i (0 .. $#moduleslist) {
-                 my $module_name= $config->getElement('/software/components/modprobe/modules/'.$i.'/name') ->getValue();
-                 if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/alias')) {
-                   my $module_alias=$config->getElement('/software/components/modprobe/modules/'.$i.'/alias')->getValue();
-                   if ($conf_file_contents =~ s/\s*alias\s+$module_alias\s+$module_name\s*//){
-                     $rebuild=1;
-                   }
-                 }
-
-                 if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/options')) {
-                   my $module_options=$config->getElement('/software/components/modprobe/modules/'.$i.'/options')->getValue();
-                   $conf_file_contents =~ s/\s*options\s+$module_name\s+$module_options\s*//;
-                   $rebuild=1;
-                 }
-
-                 if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/install')) {
-                   my $module_install=$config->getElement('/software/components/modprobe/modules/'.$i.'/install')->getValue();
-                   $conf_file_contents =~ s/\s*install\s+$module_name\s+$module_install\s*//;
-                   $rebuild=1;
-                 }
-
-                 if ($config->elementExists('/software/components/modprobe/modules/'.$i.'/remove')) {
-                   my $module_remove=$config->getElement('/software/components/modprobe/modules/'.$i.'/remove')->getValue();
-                   $conf_file_contents =~ s/\s*remove\s+$module_name\s+$module_remove\s*//;
-                   $rebuild=1;
-                 }
-         }
-
-         # copying contents back to the config file
-         unless (( $conf_file_contents = LC::File::file_contents( $conf_file, $conf_file_contents ))) {
-                $self->error( "error copying contents to $conf_file" );
-                return;
-         }
-  }
-
-  if ($rebuild) {
-    foreach my $kernel (0 .. $#kernel_release) {
-            # Rebuild the initial ram disk image so that the modules are loaded on boot
-            my $command = "/sbin/mkinitrd -f /boot/initrd-$kernel_release[$kernel].img $kernel_release[$kernel]";
-            $self->info("running $command");
-            unless (LC::Process::run($command)) {
-                  $self->warn('problem with "$command" command');
-                  return;
-            }
-    }
-  }
-
-  return;
-}
-
-1; #required for Perl modules
+1;
