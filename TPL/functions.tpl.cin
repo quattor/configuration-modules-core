@@ -125,7 +125,7 @@ function create_user = {
                     if  (ACCOUNTS_IGNORE_MISSING_GROUPS) {
                         delete(user_params['groups'][i]);
                     } else {
-                        error(function_name + " : group\"" + groupname + "\" doesn't exist");
+                        error(function_name + " : group \"" + groupname + "\" doesn't exist");
                     };
                 };
             };
@@ -187,7 +187,7 @@ function create_accounts_from_db = {
         ok = first(account_list, i, accountname);
         while (ok) {
             if ( !exists(accounts_db[accountname]) ) {
-                error(function_name + ' : ' + accountname + 'not found in ' + accountType + ' list');
+                error(function_name + ': ' + accountname + ' not found in ' + accountType + ' list');
             };
             if ( accountType == 'user' ) {
                 accounts = create_user(accountname,accounts_db[accountname]);
