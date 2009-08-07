@@ -1,3 +1,8 @@
+2009-08-07  Michel Jouvin
+
+	* Release: 4.0.11
+	- Fix typos in functions.tpl error messages
+
 2009-07-17  Luis Fernando Muñoz Mejías
 
 	* Release: 4.0.10
