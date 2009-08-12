@@ -1035,7 +1035,7 @@ sub Configure($$@) {
                 print $usersf join(':', $userclass->{name}, "x",
 				   $userclass->{uid},
 				   exists($userclass->{pgroup}) ?
-				       getgrnam($userclass->{pgroup}) : "",
+				       (getgrnam($userclass->{pgroup}))[2] : "",
 				   "\"$userclass->{gcos}\"",
 				   $userclass->{homedir},
 				   $ushell), "\n";
