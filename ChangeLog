@@ -1,3 +1,8 @@
+2009-08-12  Victor Mendoza
+
+	* Release: 4.0.12
+	- Fixed a small bug that was preventing the creation of new accounts.
+
 2009-08-07  Michel Jouvin
 
 	* Release: 4.0.11
