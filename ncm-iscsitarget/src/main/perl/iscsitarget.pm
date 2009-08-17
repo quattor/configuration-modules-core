@@ -76,6 +76,8 @@ sub cdbpath_to_realpath {
 
 	my @a=split('/',$cdbp);
 	my $devname="UNKNOWN";
+	# base path for ncm-blockdevices, or describing blockdevices in general
+	my $bd_base="/system/blockdevices";
 
 	$self->debug(2,"cdbpath_to_realpath: @a");
 
@@ -84,7 +86,14 @@ sub cdbpath_to_realpath {
 	elsif ($a[0] eq "partitions") { $devname="/dev/$a[1]"; }
 	elsif ($a[0] eq "md") { $devname="/dev/$a[1]"; }
 	elsif ($a[0] eq "hwraid") { $devname="HWRAID:use_physical_devs"; } # FIXME
-	elsif ($a[0] eq "logical_volumes") { $devname="LVM:not_yet_supported"; } # FIXME
+	elsif ($a[0] eq "logical_volumes") { 
+		if ($config->elementExists("$bd_base/$a[0]/$a[1]/volume_group") {
+			my $vg=$config->getElement("$bd_base/$a[0]/$a[1]/volume_group")->getValue();
+			$devname="/dev/mapper/$vg-$a[1]"; 
+		} else {
+			$self->error("LVM volume $a[1] not found!");
+		};
+	};
 	elsif ($a[0] eq "files") { $devname="FILES:not_with_stgt";  }  # FIXME
 	else { $self->error("Unsupported device_path '$cdbp'!"); }
 
