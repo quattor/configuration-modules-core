@@ -93,7 +93,7 @@ sub cdbpath_to_realpath {
 		} else {
 			$self->error("LVM volume $bd_base/$a[0]/$a[1]/volume_group not found in CDB!");
 		}
-	};
+	}
 	elsif ($a[0] eq "files") { $devname="FILES:not_with_stgt";  }  # FIXME
 	else { $self->error("Unsupported device_path '$cdbp'!"); }
 
@@ -173,7 +173,7 @@ sub genconffiles {
 		
 		if ($cdb_device_path ne "") {
 			$self->debug(1,"Found: cdb_device_path:$cdb_device_path, auth: $auth_type/$auth_resource");
-			$targetdevice=$self->cdbpath_to_realpath($cdb_device_path);
+			$targetdevice=$self->cdbpath_to_realpath($config,$cdb_device_path);
 			$targetname=$cdb_device_path;
 			$targetname =~ s/\//./;
 			$tgtdconfig.="<target $host.$targetname>\n";
