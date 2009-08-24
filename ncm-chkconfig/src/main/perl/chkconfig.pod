@@ -9,6 +9,8 @@ NCM::chkconfig - NCM chkconfig component
 
 =head1 SYNOPSIS
 
+=over
+
 =item Configure()
 
 Updates runlevel information for system services by using B<chkconfig> that are
@@ -27,8 +29,11 @@ not mentioned in the profile.
 
 Not available.
 
+=back
 
 =head1 RESOURCES
+
+=over
 
 =item /software/components/chkconfig/active : boolean
 
@@ -36,15 +41,19 @@ activates/deactivates the component.
 
 =item /software/components/chkconfig/default : string ("off", "ignore")
 
-says what happens if no other configuration is found for the service.
+says what happens if no explicit configuration is found for the
+service. Certain services (like C<network, messagebus, haldaemon,
+sshd>) are protected from being turned off via the default setting,
+but please do not rely on this.
 
 =item /software/components/chkconfig/service/<service>/off : string ("[0-7]*")
 
 =item /software/components/chkconfig/service/<service>/on : string ("[0-7]*")
 
-Sets the service <service> on/off on specified run levels. The run levels are
-specified as string of numbers, the same way as with chkconfig-command. If the
-string is empty, system default is taken (see man chkconfig(8) for exact details).
+Sets the service <service> on/off on specified run levels. The run
+levels are specified as string of numbers, the same way as with
+C<chkconfig>-command. If the string is empty, system default is taken
+(see C<man chkconfig(8)> for exact details).
 
 =item /software/components/chkconfig/service/<service>/name : string 
 
@@ -52,15 +61,16 @@ If set, the value is used as the name of the service instead of using the
 <service> path as a name. 
 
 =item /software/components/chkconfig/service/<service>/reset : string ("[0-7]*")
+
 Resets the service on defined run levels. Reset with no run levels specified 
 affects every run level. 
 
-
 =item /software/components/chkconfig/service/<service>/add : boolean
 
-If the value is true, adds service for management by chkconfig, otherwise the
-option is ignored. 
-
+If the value is true, adds service for management by chkconfig (if not
+already the case), otherwise the option is ignored. Please note that
+some services do not turn themselves on, and so in addition need an
+explicit I<on> for the appropriate runlevels.
 
 =item /software/components/chkconfig/service/<service>/del : boolean
 
@@ -70,8 +80,13 @@ the option is ignored.
 
 =item /software/components/chkconfig/service/<service>/startstop : boolean
 
-If true, the service is also started/stopped when the service is added,
-removed or turned off/on.
+If true, the service is also started/stopped when the service is
+added, removed or turned off/on. The component tries to check whether
+a certain service is already running or stopped and will not redo the
+action, but this relies on the service's init script correctly
+reporting current state.
+
+=back
 
 =head1 DEPENDENCIES
 
@@ -79,7 +94,18 @@ None.
 
 =head1 BUGS
 
-None known.
+=over
+
+=item L<https://savannah.cern.ch/bugs/?45924>
+
+The component should better integrate with the standard boot sequence
+(not start services that will get started anyway later).
+
+=item B<reset> behaviour should check against current config?
+
+=item B<startstop> logic depends on init script, will mindlessly start some services despite them running already
+
+=back
 
 =head1 AUTHOR
 
