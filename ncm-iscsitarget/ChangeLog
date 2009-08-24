@@ -1,3 +1,8 @@
+2009-08-24  Andras Horvath <Andras.Horvath@cern.ch> 1.2
+	- syntax fixes
+	- tgtd stop/start ISO restart which does not work
+	- better error messages for lvm
+
 2009-08-17  Andras Horvath <Andras.Horvath@cern.ch> 1.1
 	- LVM support
 

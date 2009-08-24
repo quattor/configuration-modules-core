@@ -72,7 +72,7 @@ sub my_handler {
 # translate a CDB path to a real /dev/* path
 # $1: cdb_path relative to /system/blockdevices
 sub cdbpath_to_realpath {
-	my ($self,$cdbp)=@_;
+	my ($self,$config,$cdbp)=@_;
 
 	my @a=split('/',$cdbp);
 	my $devname="UNKNOWN";
@@ -87,12 +87,12 @@ sub cdbpath_to_realpath {
 	elsif ($a[0] eq "md") { $devname="/dev/$a[1]"; }
 	elsif ($a[0] eq "hwraid") { $devname="HWRAID:use_physical_devs"; } # FIXME
 	elsif ($a[0] eq "logical_volumes") { 
-		if ($config->elementExists("$bd_base/$a[0]/$a[1]/volume_group") {
+		if ($config->elementExists("$bd_base/$a[0]/$a[1]/volume_group")) {
 			my $vg=$config->getElement("$bd_base/$a[0]/$a[1]/volume_group")->getValue();
 			$devname="/dev/mapper/$vg-$a[1]"; 
 		} else {
-			$self->error("LVM volume $a[1] not found!");
-		};
+			$self->error("LVM volume $bd_base/$a[0]/$a[1]/volume_group not found in CDB!");
+		}
 	};
 	elsif ($a[0] eq "files") { $devname="FILES:not_with_stgt";  }  # FIXME
 	else { $self->error("Unsupported device_path '$cdbp'!"); }
@@ -199,7 +199,12 @@ sub genconffiles {
 #		$self->report("--------NEW STUFF:---------\n".$tgtdconfig);
 		print $fh $tgtdconfig;
 		$fh->close();
-		my $proc = CAF::Process->new (["/etc/init.d/tgtd", "restart"]);
+
+		# 'restart' does not quite work.. BUG in tgtd
+		my $proc = CAF::Process->new (["/etc/init.d/tgtd", "stop"]);
+		$proc->run(); # not interested in the results
+		sleep(3);
+		my $proc = CAF::Process->new (["/etc/init.d/tgtd", "start"]);
 		$proc->run(); # not interested in the results
 	}
 
