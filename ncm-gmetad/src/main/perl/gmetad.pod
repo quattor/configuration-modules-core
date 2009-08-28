@@ -41,6 +41,12 @@ Optional level of debug output for the daemon.
 Optional flag to enable or disable scalability mode. 
 Valid values are C<on> and C<off>.
 
+=item * /software/components/gmetad/file : string
+
+Mandatory field specifying the location of the the configuration file.
+For Ganglia 3.0, this should be /etc/gmetad.conf
+and for Ganglia 3.1, it should be /etc/ganglia/gmetad.conf.
+
 =item * /software/components/gmetad/gridname : string
 
 Optional name of the grid.

@@ -18,7 +18,6 @@ our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
 use constant GMETAD_PATH => '/software/components/gmetad';
-use constant GMETAD_FILE => '/etc/gmetad.conf';
 
 
 
@@ -53,13 +52,14 @@ sub Configure
         my $st = $config->getElement(GMETAD_PATH)->getTree;
 
         # Location of the configuration file
-        my $fh = FileHandle->new (GMETAD_FILE, 'w');
+        my $cfgfile = $st->{file};
+        my $fh = FileHandle->new ($cfgfile, 'w');
         unless ($fh) {
-            throw_error ("Couldn't open " . GMETAD_FILE);
+            throw_error ("Couldn't open " . $cfgfile);
             return 0;
         }
 
-        $fh->print ("# ".GMETAD_FILE."\n# written by ncm-gmetad. Do not edit!\n");
+        $fh->print ("# ".$cfgfile."\n# written by ncm-gmetad. Do not edit!\n");
 
         # data sources
         print_data_source($self, $fh,  $st->{data_source});
@@ -86,7 +86,7 @@ sub Configure
         $fh->print("server_threads $st->{server_threads}\n") if ( $st->{server_threads} );
         $fh->print("rrd_rootdir \"$st->{rrd_rootdir}\"\n") if ( $st->{rrd_rootdir} );
 
-        chmod (0644, GMETAD_FILE);
+        chmod (0644, $cfgfile);
 
         execute (["/etc/init.d/gmetad", "restart"]);
     }

@@ -32,6 +32,8 @@ type structure_component_gmetad = {
     "interactive_port"  ? type_port
     "server_threads"    ? long(1..)
     "rrd_rootdir"       ? string
+    "file"              : string                    # location of the configuration file
+                                                    # differs between Ganglia 3.0 and 3.1
 };
 
 bind "/software/components/gmetad" = structure_component_gmetad;
