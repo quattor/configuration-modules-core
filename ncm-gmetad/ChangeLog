@@ -1,5 +1,11 @@
 2009-08-28  RonaldS
 
+	* Release: 1.0.5
+	- Extend schema with required field 'file' to specify the location of the configuration file.
+	This location differs between Ganglia versions 3.0 and 3.1
+
+2009-08-28  RonaldS
+
 	* Release: 1.0.4
 	- Extend schema with required field 'file' to specify the location of the configuration file.
 	This location differs between Ganglia versions 3.0 and 3.1
