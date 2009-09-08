@@ -1,3 +1,9 @@
+2009-09-08  Loic Brarda
+
+	* Release: 1.1.8
+	- Added env_keep and env_delete options
+	Added some comments in the generated sudoers file
+
 2009-02-13  Nick Williams
 
 	* Release: 1.1.7

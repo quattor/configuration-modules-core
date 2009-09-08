@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.7 : 13/02/09 09:41
+# Version: 1.1.8 : 08/09/09 17:40
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -83,7 +83,9 @@ use constant INT_OPTS		=> qw(passwd_tries
 				    umask
 				    );
 use constant STRING_OPTS	=> qw(badpass_message
-				    timestampdir
+                    env_keep
+                    env_delete
+                    timestampdir
 				    timestampowner
 				    passprompt
 				    runas_default
@@ -222,20 +224,26 @@ sub write_sudoers {
 		$self->error ("Couldn't open " . FILE_PATH);
 		return;
 	}
-	$fh->print ("# File created by ncm-sudo v. 1.1.7\n",
+	$fh->print ("# File created by ncm-sudo v. 1.1.8\n",
 		    "# Report bugs to CERN's savannah\n".
 		    "# Read man(5) sudoers for understanding the structure ".
 		    "of this file\n");
 
+    $fh->print ("\n# User alias specification\n");
 	$fh->print ("User_Alias\t", $_, "\n") foreach (@{${$aliases}
 							 {USER_ALIASES()}});
+    $fh->print ("\n# Runas alias specification\n");
 	$fh->print ("Runas_Alias\t", $_, "\n") foreach (@{${$aliases}
 							  {RUNAS_ALIASES()}});
+    $fh->print ("\n# Cmnd alias specification\n");
 	$fh->print ("Cmnd_Alias\t", $_, "\n") foreach (@{${$aliases}
 							 {CMD_ALIASES()}});
+    $fh->print ("\n# Host alias specification\n");
 	$fh->print ("Host_Alias\t", $_, "\n") foreach (@{${$aliases}
 							 {HOST_ALIASES()}});
+    $fh->print ("\n# Defaults specification\n");
 	$fh->print ("Defaults", $_, "\n") foreach (@$opts);
+    $fh->print ("\n# User privilege specification\n");
 	$fh->print ("$_\n") foreach (@$lns);
 	$fh->close;
 	return 0;

@@ -81,7 +81,9 @@ type structure_sudo_default_options = {
 	"timestamp_timeout"	? long
 	"passwd_timeout"	? long
 	"umask"			? long
-	"mailsub"		? string
+    "mailsub"       ? string
+    "env_keep"       ? string
+    "env_delete"       ? string
 	"badpass_message"	? string
 	"timestampdir"		? string
 	"timestampowner"	? string
