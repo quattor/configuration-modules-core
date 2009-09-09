@@ -23,7 +23,7 @@ type structure_userinfo = {
     'groups'     ? string[]
     'password'   ? string
     'shell'      ? string
-    'uid'        ? long(1..)
+    'uid'        ? long(0..)
     'poolStart'  ? long(0..)
     'poolDigits' ? long(1..)
     'poolSize'   ? long(0..)
