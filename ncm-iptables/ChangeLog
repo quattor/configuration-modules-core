@@ -1,3 +1,8 @@
+2009-09-18  <unknown>
+
+	* Release: 2.3.6
+	- Fix bug #55831
+
 2009-04-17  David O'Callaghan <david.ocallaghan@cs.tcd.ie>
 
 	* Release: 2.3.5

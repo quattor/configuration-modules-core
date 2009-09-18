@@ -101,7 +101,7 @@ my %options_ord = ( '-N'                  => 0,
                     '--limit-burst'       => 21,
                     '--to-destination'    => 22,
                     '--to-ports'          => 22
-                  );
+    );
 
 # Translate resource names to iptables options.
 my %options_tra = ( 'new_chain'          => '-N',
@@ -156,7 +156,7 @@ my %options_tra = ( 'new_chain'          => '-N',
 		    'set'                => '--set',
 		    'rcheck'             => '--rcheck',
 		    'seconds'             => '--seconds',
-                  );
+    );
 
 # Preliminary test on the resource and sysconfig file options.
 my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a table by table basis
@@ -190,7 +190,7 @@ my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a
 		    '--log-tcp-sequence' => '',
                     '--log-tcp-options' => '',
                     '--log-ip-options' => '',
-                      '--reject-with' => '(icmp-net-unreachable|icmp-host-unreachable|icmp-port-unreachable|icmp-proto-unreachable|icmp-net-prohibited|icmp-host-prohibited|tcp-reset)',
+		    '--reject-with' => '(icmp-net-unreachable|icmp-host-unreachable|icmp-port-unreachable|icmp-proto-unreachable|icmp-net-prohibited|icmp-host-prohibited|tcp-reset)',
                     '--set-class'       => '\d{1,2}:\d{1,2}',
                     '--limit-burst'     => '\S+',
                     '--to-destination'  => '\S+',
@@ -205,7 +205,7 @@ my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a
 		    '--set'             => '',
 		    '--rcheck'          => '',
 		    '--seconds'         => '\d+',
-                   );
+    );
 
 # Operations to perform on the resource options when read for the first time.
 my %options_op  = ( '-A'              => \&upercase,
@@ -216,7 +216,7 @@ my %options_op  = ( '-A'              => \&upercase,
                     '-j'              => \&upercase,
                     '-s'              => \&dns2ip,
                     '-d'              => \&dns2ip
-                   );
+    );
 
 ##########################################################################
 # dns2ip () Translate host name to ip address.
@@ -236,7 +236,7 @@ sub dns2ip ( $ ) {
 	return '';
     };
 
-    if ($name =~ /^!\s*(.*)/} {
+    if ($name =~ /^!\s*(.*)/) {
 	$self->debug(3, "dns2ip-INFO: negative specification");
 	$isneg = 1;
 	$name = $1;
@@ -414,78 +414,78 @@ sub GetResource {
 	next if $?;
 	
 RULE:	foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
-	    next if ( $name !~ /^\d+$/ );
-	    $rule    = &GetPathEntries( "$path/$table/rules/$name", $config );
-	    return if $?;
-	    &rule_options_translate($rule);
+    next if ( $name !~ /^\d+$/ );
+    $rule    = &GetPathEntries( "$path/$table/rules/$name", $config );
+    return if $?;
+    &rule_options_translate($rule);
 
-	    if ( ! defined $rule->{chain} ) {
-		$? = 7;
-		$@ = "missed chain entry on rule \"$path/$table/rules/$name\"";
-		return {};
-	    }
+    if ( ! defined $rule->{chain} ) {
+	$? = 7;
+	$@ = "missed chain entry on rule \"$path/$table/rules/$name\"";
+	return {};
+    }
 
-	    if ( defined $rule->{-j} ) {
-		#check if exists
-		if ( &upercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
-		    $iptables_totality{$table}{user_targets}{&upercase($self, $rule->{-j})} = 1;
-		}
-
-	    }
-
-	    $rule->{command}=$iptables_totality{$table}{commands}[0] if(! defined $rule->{command} || $rule->{command} eq "");
-	    $rule->{$rule->{command}} = $rule->{chain};
-	    delete $rule->{command};
-	    delete $rule->{chain};
-
-	    my $val = &regExp( @{$iptables_totality{$table}{commands}} );
-
-	    foreach $key (keys %{$rule}) {
-		
-	        if ( defined $options_op{$key} && $options_op{$key} ne "" ) {
-		  my $opresult;
-		  $opresult = &{$options_op{$key}}($self, $rule->{$key});
-		  if (!$opresult) {
-		    $self->warn("failed to convert $key : ".$rule->{$key}." - IGNORING THIS RULE");
-		    next RULE;
-		  } else {
-		    $self->debug(2, "converted $key : ".$rule->{$key}." to $opresult");
-		    $rule->{$key} = $opresult;
-		  }
-		}
-
-		if ( defined $options_arg{$key} && $options_arg{$key} ne "" ) {
-		    $aux = $options_arg{$key};
-		    if ($rule->{$key} !~ /^$aux$/ && $key =~ /^$val$/){
-			my $skip = 0;
-			foreach (@{$iptables_totality{$table}{targets}}) {
-			    $skip = 1 if $_ eq $rule->{$key};
-			}
-			next if $skip;
-			push(@{$iptables_totality{$table}{targets}}, $rule->{$key});
-			$iptables_totality{$table}{user_targets}{$rule->{$key}} = 1;
-		    }
-		}
-	    }
-
-	    if (defined $rule->{'-j'}) {
-		$target = $rule->{'-j'};
-		$target =~ tr/A-Z/a-z/;
-	    }
-
-
-	    if ( defined $entries->{$table}->{ordered_rules} &&
-		 $entries->{$table}->{ordered_rules} eq "yes" ) {
-		$target = "ordered";
-	    }
-
-	    if ( defined $cnt->{$target} ) {
-		next if ( ! &find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}) );
-		$entries->{$table}->{rules}->{$target}->{$cnt->{$target}} = $rule;
-		$cnt->{$target}++;
-	    }
-
+    if ( defined $rule->{-j} ) {
+	#check if exists
+	if ( &upercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
+	    $iptables_totality{$table}{user_targets}{&upercase($self, $rule->{-j})} = 1;
 	}
+
+    }
+
+    $rule->{command}=$iptables_totality{$table}{commands}[0] if(! defined $rule->{command} || $rule->{command} eq "");
+    $rule->{$rule->{command}} = $rule->{chain};
+    delete $rule->{command};
+    delete $rule->{chain};
+
+    my $val = &regExp( @{$iptables_totality{$table}{commands}} );
+
+    foreach $key (keys %{$rule}) {
+	
+	if ( defined $options_op{$key} && $options_op{$key} ne "" ) {
+	    my $opresult;
+	    $opresult = &{$options_op{$key}}($self, $rule->{$key});
+	    if (!$opresult) {
+		$self->warn("failed to convert $key : ".$rule->{$key}." - IGNORING THIS RULE");
+		next RULE;
+	    } else {
+		$self->debug(2, "converted $key : ".$rule->{$key}." to $opresult");
+		$rule->{$key} = $opresult;
+	    }
+	}
+
+	if ( defined $options_arg{$key} && $options_arg{$key} ne "" ) {
+	    $aux = $options_arg{$key};
+	    if ($rule->{$key} !~ /^$aux$/ && $key =~ /^$val$/){
+		my $skip = 0;
+		foreach (@{$iptables_totality{$table}{targets}}) {
+		    $skip = 1 if $_ eq $rule->{$key};
+		}
+		next if $skip;
+		push(@{$iptables_totality{$table}{targets}}, $rule->{$key});
+		$iptables_totality{$table}{user_targets}{$rule->{$key}} = 1;
+	    }
+	}
+    }
+
+    if (defined $rule->{'-j'}) {
+	$target = $rule->{'-j'};
+	$target =~ tr/A-Z/a-z/;
+    }
+
+
+    if ( defined $entries->{$table}->{ordered_rules} &&
+	 $entries->{$table}->{ordered_rules} eq "yes" ) {
+	$target = "ordered";
+    }
+
+    if ( defined $cnt->{$target} ) {
+	next if ( ! &find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}) );
+	$entries->{$table}->{rules}->{$target}->{$cnt->{$target}} = $rule;
+	$cnt->{$target}++;
+    }
+
+}
     }
 
     $? = 0;
@@ -793,7 +793,7 @@ sub find_rule {
 	if ( ! &cmp_rules( $rule, $hash->{$name} ) && ! $? ) {
 	    $@ = "rule found on the list";
 	    return $?
-	    }
+	}
 
     }
 
@@ -829,9 +829,9 @@ sub Configure($$@) {
 
     &WriteFile($self, $iptc_temp, $iptables );
     if ($? > 0 ) {
-      # bad - bail out
-      $self->error($@);
-      return 1;
+	# bad - bail out
+	$self->error($@);
+	return 1;
     }
     $self->debug(1,$@);
 
@@ -841,32 +841,32 @@ sub Configure($$@) {
 			       group => 'root',
 			       mode => '0444',
 			       source => "$iptc_temp",
-			       );
+	);
     if($changes) {
-      ####################################################################
-      # Reload the service - file changed
-      ####################################################################
+	####################################################################
+	# Reload the service - file changed
+	####################################################################
 
-      if ($NoAction) {
-	$self->info("Would run \"/sbin/service iptables condrestart\"");
-      } else {
-	# allow no "dangling" file descriptors, this may be executing in a restricted
-	# targeted SELinux context
-
-	my $ip_stdouterr;
-	if (LC::Process::execute([qw(/sbin/service iptables condrestart)],
-				 "stdout" => \$ip_stdouterr,
-				 "stderr" => "stdout") ) {
-	  $self->info("ran \"/sbin/service iptables condrestart\"");
-	  if($ip_stdouterr) {
-	    $self->info($ip_stdouterr);
-	  }
+	if ($NoAction) {
+	    $self->info("Would run \"/sbin/service iptables condrestart\"");
 	} else {
-	  $self->error("command \"/sbin/service iptables condrestart\" failed:\n$ip_stdouterr");
+	    # allow no "dangling" file descriptors, this may be executing in a restricted
+	    # targeted SELinux context
+
+	    my $ip_stdouterr;
+	    if (LC::Process::execute([qw(/sbin/service iptables condrestart)],
+				     "stdout" => \$ip_stdouterr,
+				     "stderr" => "stdout") ) {
+		$self->info("ran \"/sbin/service iptables condrestart\"");
+		if($ip_stdouterr) {
+		    $self->info($ip_stdouterr);
+		}
+	    } else {
+		$self->error("command \"/sbin/service iptables condrestart\" failed:\n$ip_stdouterr");
+	    }
 	}
-      }
     } else {
-      $self->info("No change for /etc/sysconfig/iptables, not restarting service");
+	$self->info("No change for /etc/sysconfig/iptables, not restarting service");
     }
     unlink($iptc_temp);
     return;
