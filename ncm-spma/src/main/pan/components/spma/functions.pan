@@ -313,7 +313,7 @@ function pkg_repl = {
         version = DEF;
       } else {
         if (exists(package_default[u_name][0])) {
-              version = package_default[u_name][0];
+          version = package_default[u_name][0];
         } else {
           error("no default package version defined for package: "+name);
         };
