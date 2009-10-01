@@ -1,3 +1,8 @@
+2009-10-01  Guillaume Philippon
+
+	* Release: 1.4.1
+	- Add /etc/cron.deny and /etc/cron.allow support
+
 2009-02-13  Nick Williams
 
 	* Release: 1.4.0

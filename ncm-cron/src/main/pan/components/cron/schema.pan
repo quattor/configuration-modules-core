@@ -37,6 +37,8 @@ type structure_cron = {
 type component_cron = {
     include structure_component
     'entries' ? structure_cron[]
+    'deny'    ? string[]
+    'allow'   ? string[]
 };
 
 bind '/software/components/cron' = component_cron;
