@@ -53,6 +53,7 @@ are kept untouched in spma.conf.
 
 =item /software/components/spma/userprio : string ("yes|no")
 
+=item /software/components/spma/protectkernel : string ("yes|no")
 
 =item /software/components/spma/packager : string ("rpm|pkg|..")
 

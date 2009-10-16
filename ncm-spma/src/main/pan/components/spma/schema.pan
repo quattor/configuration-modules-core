@@ -52,6 +52,7 @@ type component_spma_type = {
     "trailprefix"   ? boolean # if no escape function, use underscore prefix
     "userpkgs"      ? string with match (SELF, 'yes|no') # Allow user packages
     "userprio"      ? string with match (SELF, 'yes|no') # Priority to user packages
+    "protectkernel" ? string with match (SELF, 'yes|no') # Prevent currrent kernel from being removed
     "packager"      ? string  with match (SELF, '(rpm|pkg)') # system packager to be used (rpm,pkg)
     "rpmexclusive"  ? string with match (SELF, 'yes|no') # stop other processes using rpm db
     "usespmlist"    ? string with match (SELF, 'yes|no') # Have SPMA controlling any packages

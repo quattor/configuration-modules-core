@@ -302,7 +302,7 @@ sub update_spmaconf_file($$$) {
 
     my @keys=qw(userpkgs userprio packager usespmlist rpmexclusive debug verbose
                 cachedir localcache proxy proxytype proxyhost proxyport headnode
-                checksig);
+                checksig protectkernel);
 
     unless (-e $conffile && -w $conffile) {
         $self->warn('does not exist or cannot write to: '.$conffile);
