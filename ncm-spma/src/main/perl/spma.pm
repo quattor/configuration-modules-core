@@ -254,7 +254,19 @@ sub get_packages ($) {
 sub run_spma($$$) {
     my ($self, $sconf_file, $stcfg_file) = @_;
 
-    my $spma_exec="/usr/bin/spma --quiet";
+    my $spma_exec="/usr/bin/spma";
+
+    # command line options to ncm-ncd override whatever we have in the config file
+    if($main::this_app->option("quiet")) {
+	$spma_exec .= " --quiet";
+    } else {
+	if ($main::this_app->option("verbose")) {
+	    $spma_exec .= " --verbose";
+	}
+	if($main::this_app->option("debug")) {
+	    $spma_exec .= " --debug ".$main::this_app->option("debug");
+	}
+    }
     $self->info("running the SPMA: '$spma_exec'");
 
     if ($NoAction) {
