@@ -200,11 +200,11 @@ sub genconffiles {
 		print $fh $tgtdconfig;
 		$fh->close();
 
-		# 'restart' does not quite work.. BUG in tgtd
-		my $proc = CAF::Process->new (["/etc/init.d/tgtd", "stop"]);
-		$proc->run(); # not interested in the results
-		sleep(3);
+		# just to be sure that it's running
 		my $proc = CAF::Process->new (["/etc/init.d/tgtd", "start"]);
+		$proc->run(); # not interested in the results
+		# this practically reloads the config file into tgtd
+		my $proc = CAF::Process->new (["/usr/sbin/tgt-admin", "-e"]);
 		$proc->run(); # not interested in the results
 	}
 

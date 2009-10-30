@@ -1,3 +1,6 @@
+2009-10-30  Andras HORVATH <andras.horvath@cern.ch> 1.3
+	- proper reload of config file (no stop anymore)
+
 2009-08-24  Andras Horvath <Andras.Horvath@cern.ch> 1.2
 	- syntax fixes
 	- tgtd stop/start ISO restart which does not work
