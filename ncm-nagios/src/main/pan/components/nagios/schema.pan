@@ -37,9 +37,39 @@ type host_notification_string = string with match (SELF, "^(d|u|r|f)$");
 type stalking_string = string with match (SELF, "^(o|w|u|c)$");
 type execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
 type notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+
+type structure_nagios_host_generic = {
+        "name" ? string # Used instead of alias when it s a template declaration
+        "check_command" : commandstrings
+        "max_check_attempts" : long
+        "check_interval" ? long
+        "active_checks_enabled" ? boolean
+        "passive_checks_enabled" ? boolean
+        "check_period" : timeperiodstring
+        "obsess_over_host" ? boolean
+        "check_freshness" ? boolean
+        "freshness_threshold" ? long
+        "event_handler" ? commandstrings
+        "event_handler_enabled" ? boolean
+        "low_flap_threshold" ? long
+        "high_flap_threshold" ? long
+        "flap_detection_enabled" : boolean = true
+        "process_perf_data" ? boolean
+        "retain_status_information" ? boolean
+        "retain_nonstatus_information" ? boolean
+        "contact_groups" : contactgroupstring[]
+        "notification_interval" : long
+        "notification_period" : timeperiodstring
+        "notification_options" : host_notification_string []
+        "notifications_enabled" ? boolean
+        "stalking_options" ? string with match (SELF, "^(o|d|u)$")
+        "register" : boolean = true
+};
+
 # Host definition.
 type structure_nagios_host = {
-	"alias" : string
+	"alias" : string 
+	"use" ? string # Used to insert a template host declaration
 	"address" ? type_ip # If not present, gethostbyname will be used.
 	"parents" ? hoststring[]
 	"hostgroups" ? hostgroupstring[]
@@ -72,7 +102,7 @@ type structure_nagios_host = {
 # Hostgroup definition
 type structure_nagios_hostgroup = {
 	"alias"	: string
-	"members" : hoststring[]
+	"members" ? hoststring[]
 };
 
 # Host dependency definition
@@ -83,6 +113,8 @@ type structure_nagios_hostdependency = {
 
 # Service definition
 type structure_nagios_service = {
+	"name"	? string # Used when it s a template declaration
+	"use" ? string # Used to include template 
 	"host_name" ? hoststring[]
 	"hostgroup_name" ? hostgroupstring[]
 	"servicegroups" ? servicegroupstring []
@@ -350,12 +382,13 @@ type structure_nagios_service_list=structure_nagios_service[];
 type structure_component_nagios = {
 	include structure_component
 	"hosts"		: structure_nagios_host {}
+	"hosts_generic"  ? structure_nagios_host_generic {}
 	"hostgroups"	? structure_nagios_hostgroup {}
 	"hostdependencies" ? structure_nagios_hostdependency {}
 	"services"	: structure_nagios_service_list {}
 	"servicegroups"	? structure_nagios_servicegroup {}
 	"general"       : structure_nagios_nagios_cfg
-    "cgi"       ? structure_nagios_cgi_cfg
+    	"cgi"           ? structure_nagios_cgi_cfg
 	"serviceextinfo" ? structure_nagios_serviceextinfo []
         "servicedependencies" ?  structure_nagios_servicedependency []
 	"timeperiods"	: structure_nagios_timeperiod {}
