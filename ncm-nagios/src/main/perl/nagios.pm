@@ -5,7 +5,7 @@
 # File: nagios.pm
 # Implementation of ncm-nagios
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.9 : 03/11/09 20:13
+# Version: 1.4.10 : 05/11/09 17:15
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -166,23 +166,23 @@ sub print_hosts_generic
     unlink (NAGIOS_FILES->{hosts_generic});
     open (FH, ">".NAGIOS_FILES->{hosts_generic});
 
-    my $t = $cfg->getElement (BASEPATH . 'hosts_generic')->getTree;
-    while (my ($host, $hostdata) = each (%$t)) {
-        print FH "define host {\n";
-        while (my ($k, $v) = each (%$hostdata)) {
-            if (ref ($v)) {
-                if ($k =~ m{command} || $k =~ m{handler}) {
-                    print FH "\t$k\t", join ("!", @$v), "\n";
-                }
-                else {
-                    print FH "\t$k\t", join (",", @$v), "\n";
-                }
-            }
-            else {
-                print FH "\t$k\t$v\n";
-            }
-        }
-        print FH "}\n";
+    if ($cfg->elementExists(BASEPATH . 'hosts_generic' )) {
+    	my $t = $cfg->getElement (BASEPATH . 'hosts_generic')->getTree;
+    	while (my ($host, $hostdata) = each (%$t)) {
+        	print FH "define host {\n";
+        	while (my ($k, $v) = each (%$hostdata)) {
+            		if (ref ($v)) {
+                		if ($k =~ m{command} || $k =~ m{handler}) {
+                    			print FH "\t$k\t", join ("!", @$v), "\n";
+                		} else {
+                    			print FH "\t$k\t", join (",", @$v), "\n";
+                		}
+            		} else {
+                		print FH "\t$k\t$v\n";
+           		}
+        	}
+        	print FH "}\n";
+    	}
     }
     close (FH);
     chown (NAGIOSUSR, NAGIOSGRP, NAGIOS_FILES->{hosts_generic});
