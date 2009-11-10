@@ -45,13 +45,13 @@ Default : none.
 
 =head1 EXAMPLES
 
-  "/software/components/sysctl/kernel.shmmni"                  = "4096";
-  "/software/components/sysctl/kernel.shmall"                  = "2097152";
-  "/software/components/sysctl/net.ipv4.ip_local_port_range" = "1024 65000";
-  "/software/components/sysctl/fs.file-max"                 = "65536";
-  "/software/components/sysctl/fs.aio-max-size"          = "1048576";
-  "/software/components/sysctl/net.core.rmem_default"        = "262144";
-  "/software/components/sysctl/net.core.wmem_default"        = "262144";
+  "/software/components/sysctl/variables/kernel.shmmni"                  = "4096";
+  "/software/components/sysctl/variables/kernel.shmall"                  = "2097152";
+  "/software/components/sysctl/variables/net.ipv4.ip_local_port_range" = "1024 65000";
+  "/software/components/sysctl/variables/fs.file-max"                 = "65536";
+  "/software/components/sysctl/variables/fs.aio-max-size"          = "1048576";
+  "/software/components/sysctl/variables/net.core.rmem_default"        = "262144";
+  "/software/components/sysctl/variables/net.core.wmem_default"        = "262144";
 
 =head1 DEPENDENCIES
 
