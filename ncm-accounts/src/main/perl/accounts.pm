@@ -1033,10 +1033,10 @@ sub Configure($$@) {
                     $ushell="/bin/bash";
                 }
                 print $usersf join(':', $userclass->{name}, "x",
-				   $userclass->{uid},
+				   "$userclass->{uid}",
 				   exists($userclass->{pgroup}) ?
 				       (getgrnam($userclass->{pgroup}))[2] : "",
-				   "\"$userclass->{gcos}\"",
+				   "$userclass->{gcos}",
 				   $userclass->{homedir},
 				   $ushell), "\n";
                 my $upass="";
