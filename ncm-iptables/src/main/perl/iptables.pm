@@ -271,7 +271,7 @@ sub dns2ip ( $ ) {
     $self->debug(2, "dns2ip-OK: resolved $name");
 
     if ($isneg) {
-	return "!".$name;
+	return "! ".$name;
     } else {
 	return $name;
     }
