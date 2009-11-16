@@ -1,3 +1,8 @@
+2009-11-16  Jan IVEN
+
+	* Release: 2.3.7
+	- fix for #58633 (need space between ! and numeric address)
+
 2009-09-18  <unknown>
 
 	* Release: 2.3.6
