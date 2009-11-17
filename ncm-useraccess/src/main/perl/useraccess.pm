@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.2 : 18/05/09 12:20
+# Version: 1.5.3 : 17/11/09 11:36
 # 
 #
 # Note: all methods in this component are called in a
@@ -25,6 +25,7 @@ use LC::Exception qw (throw_error);
 # Might handle the requests in parallel, but this is simpler.
 use LWP::UserAgent;
 use CAF::FileWriter;
+use CAF::FileEditor;
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -39,7 +40,7 @@ use constant SSH_KEYS	=> "ssh_keys";
 use constant SSH_KEYS_URLS	=> "ssh_keys_urls";
 use constant ROLES	=> "roles";
 use constant USERS	=> "users";
-
+use constant ACLSERVICES => "acl_services";
 
 # Files to edit in the users' home directory.
 use constant K4LOGIN	=> '.klogin';
@@ -106,11 +107,13 @@ sub getpwnam
 # erases any existing ACL files.
 sub initialize_acls
 {
+    my $self = shift;
     mkdir (ACL_DIR);
-
+    my ($fh, $cnt);
     my $dir = DirHandle->new (ACL_DIR) or
       throw_error ("Couldn't open " . ACL_DIR);
 
+    $self->verbose("Removing all ACLs from all PAM services");
     while (my $file = $dir->read) {
 	if ($file =~ m{^([^./][^/]+)}) {
 	    $file = $1;
@@ -120,8 +123,12 @@ sub initialize_acls
 	unlink(ACL_DIR . "/$file");
 	# Ugly, ugly, ugly UGLY hack: remove pam_listfile
 	# lines from all services.
-	execute(["sed", "-i", "/.*pam_listfile.*user.*file=.*$file/d",
-		 PAM_DIR . "/$file"]);
+	$fh = CAF::FileEditor->open(PAM_DIR . "/$file",
+				    log => $self,
+				    backup => '.stripe');
+	$cnt = $fh->string_ref();
+	$$cnt =~ s{\n?.*pam_listfile.*user.*file=.*}{}m;
+	$fh->close();
     }
     $dir->close;
 }
@@ -228,48 +235,48 @@ sub set_ssh_fromkeys
 sub set_acls
 {
     my ($self, $user, $cfg) = @_;
-
     my $cnt = $cfg->{ACLS()};
+    my ($fh, $srv);
+
     return unless defined $cnt;
-    foreach (@$cnt) {
-	my $fh = FileHandle->new(ACL_DIR . "/$_", "a");
-	$fh->print("$user\n");
-	$fh->close;
+    foreach $srv (@$cnt) {
+	$fh = CAF::FileEditor->open(ACL_DIR . "/$srv",
+				    log => $self);
+				    #backup => '.print');
+	print $fh "$user\n";
+	$fh->close();
     }
 }
 
-# UGLY hack. But it gives me some more time until I have ncm-pam
-# ready. I'LL REMOVE IT SOON, REALLY!
-# Adds pam_listfile support for each service for which we created ACLs.
+# Adds pam_listfile support for each service for which we created
+# ACLs.
 sub pam_listfile
 {
 
-    my $self = shift;
+    my ($self, $services) = @_;
     my $dir = DirHandle->new(ACL_DIR);
+    my ($cnt, $fh, $acl);
 
-    while (my $serv = $dir->read) {
-	next if $serv =~ m/^\.+/;
-	if ($serv =~ m/^([-\w.]+)$/) {
-	    $serv = $1;
+    foreach my $srv (@$services) {
+	if ($srv =~ m{^([-_\w]+)$}) {
+	    $srv = $1;
 	} else {
-	    $self->error("Invalid service name for setting an ACL: $serv");
-	    next;
+	    $self->error("Invalid PAM service for setting ACL: $srv");
 	}
-	NCM::Check::lines(PAM_DIR . "/$serv",
-			  backup	=> '.old',
-			  linere	=> '.*auth.*pam_listfile.*',
-			  goodre	=> ".*auth.*pam_listfile.*file=" .
-			  ACL_DIR . "/$serv.*",
-			  good		=> "auth\trequired\tpam_listfile.so " .
-			  "onerr=fail item=user ".
-			  "sense=allow file=" .
-			  ACL_DIR . "/$serv",
-			  keep		=> 'first',
-			  add		=> 'first'
-			 );
-	$self->info("Modifying $serv in " . PAM_DIR);
+	$acl = ACL_DIR . "/$srv";
+	$fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
+				    # Better a random backup?
+				    backup => '.old');
+    	print $fh "auth\trequired\tpam_listfile.so\tonerr=fail\t",
+	    "item=user\tsense=allow\tfile=$acl\n";
+	$fh->close();
+	if (! -f ACL_DIR . "/$srv") {
+	    $self->warn("Service $srv needs ACL but no ACL was created for it");
+	}
     }
 }
+
+
 
 # Adds to the procesed user the complete configuration from the roles
 # he belongs to.
@@ -356,14 +363,16 @@ sub Configure
 
     my ($self, $config) = @_;
 
-    my $uhash = $config->getElement(PATH . USERS)->getTree;
-    my $rlhash = $config->getElement(PATH . ROLES)->getTree
-      if $config->elementExists(PATH . ROLES);
+    my $uhash = $config->getElement(PATH . USERS)->getTree();
+    my $rlhash = $config->getElement(PATH . ROLES)->getTree()
+	if $config->elementExists(PATH . ROLES);
+    my $acls = $config->getElement(PATH . ACLSERVICES)->getTree()
+	if $config->elementExists(PATH . ACLSERVICES);
     my $mask = umask;
     my $ok = 1;
     umask(MASK);
 
-    $self->initialize_acls;
+    $self->initialize_acls();
     while (my ($user, $uconfig) = each (%$uhash)) {
 	$self->info("Setting up user $user");
 	my ($uid, $gid, $home) = $self->initialize_user($user);
@@ -385,7 +394,7 @@ sub Configure
 	}
 	$self->close_files($fhash);
     }
-    $self->pam_listfile;
+    $self->pam_listfile($acls);
     umask ($mask);
     return $ok;
 }

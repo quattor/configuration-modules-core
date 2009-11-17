@@ -53,6 +53,8 @@ type structure_component_useraccess = {
 	"configSerial" ? string
 	"users"	: structure_useraccess_auth {}
 	"roles"	? structure_useraccess_auth {}
+	# List of services that will be controlled via ACLs
+	"acl_services" ? string[]
 };
 
 bind "/software/components/useraccess" = structure_component_useraccess;

@@ -1,3 +1,8 @@
+2009-11-17  <unknown>
+
+	* Release: 1.5.3
+	- Merge the fix of bug #52174
+
 2009-05-18  Luis Fernando Muñoz Mejías
 
 	* Release: 1.5.2

@@ -9,7 +9,7 @@ include {'components/useraccess/schema'};
 
 # Package to install:
 # Package to install
-"/software/packages"=pkg_repl("ncm-useraccess","1.5.2-1","noarch");
+"/software/packages"=pkg_repl("ncm-useraccess","1.5.3-1","noarch");
  # This component should be run after ncm-accounts, if present.
 "/software/components/useraccess/dependencies/pre" = {
 	if (exists ("/software/components/accounts")) {

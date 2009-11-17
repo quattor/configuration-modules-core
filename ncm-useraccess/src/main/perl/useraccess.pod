@@ -40,9 +40,15 @@ user:
 
 =item * /software/components/useraccess/configSerial
 
-This property is an arbitrary string representing a configuration serial number. It is not interpreted in any way by
-the component. Its role is only to trig a component run when its value changes. This is necessary when the change is
-in a file external to the configuration, referred by a URL.
+This property is an arbitrary string representing a configuration
+serial number. It is not interpreted in any way by the component. Its
+role is only to trig a component run when its value changes. This is
+necessary when the change is in a file external to the configuration,
+referred by a URL.
+
+=item * /software/components/useraccess/acl_services
+
+List of services that will hav ACLs associated to them.
 
 =item * /software/components/useraccess/{users,roles}/<id>/kerberos4
 
@@ -73,13 +79,13 @@ you are happy filling your templates with garbage, serve yourself. :P
 
 =item * /software/components/useraccess/{users,roles}/<id>/acls
 
-It is a list of the ACL-controlled services the user can use. This
-only applies to PAM controlled services. SSH is not (not neccessaryly)
-controlled by PAM.
+It is a list of the ACL-controlled services the user is allowed to log
+in. This only applies to PAM controlled services. SSH is not (not
+neccessaryly) controlled by PAM.
 
-B<IMPORTANT NOTE> every service listed just once here will be
-converted to use ACLs. The old ncm-access_control behaviour can be
-obtained by setting ACLs on system-auth .
+B<IMPORTANT NOTE> this will add athe user to the given ACL, but will
+B<not> force the service to use ACLs at all. To do so, add the service
+to /software/components/useraccess/acl_services .
 
 =item * /software/components/useraccess/{users,roles}/<id>/roles
 
@@ -166,9 +172,13 @@ This example ilustrates how tricky ACLs can get:
 
  "/software/components/useraccess/users/foo/acls" = list ("su");
 
+will not actually affect the system, but if in addition we add:
+
+ "/software/components/useraccess/acl_services" = list ("su");
+
 su will become controlled by an ACL. And thus, it will be restricted
 to log in as user "foo" only. You can't su root anymore. You only can
-su foo from any user you may want.
+su foo, but from any user in the system.
 
 =head2 CERN's current ACLs
 
@@ -180,6 +190,10 @@ to use ACLs:
  "/software/components/useraccess/users/bart/acls" = list ("system-auth");
  "/software/components/useraccess/users/lisa/acls" = list ("system-auth");
  "/software/components/useraccess/users/maggie/acls" = list ("system-auth");
+
+And, of course, instruct system-auth to have an ACL associated to it:
+
+ "/software/components/useraccess/acl_services" = list ("system-auth");
 
 And now, the only who can log-in on any service that stacks sytem-auth
 are the Simpsons!
