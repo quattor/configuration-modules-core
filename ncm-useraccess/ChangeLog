@@ -1,3 +1,10 @@
+2009-11-18  <unknown>
+
+	* Release: 1.5.4
+	- Enable ACLs right on the top of the PAM files.
+	
+	Otherwise, there are "sufficient" conditions that will prevent ACLs from being checked.
+
 2009-11-17  <unknown>
 
 	* Release: 1.5.3

@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.3 : 17/11/09 11:36
+# Version: 1.5.4 : 18/11/09 19:39
 # 
 #
 # Note: all methods in this component are called in a
@@ -127,7 +127,7 @@ sub initialize_acls
 				    log => $self,
 				    backup => '.stripe');
 	$cnt = $fh->string_ref();
-	$$cnt =~ s{\n?.*pam_listfile.*user.*file=.*}{}m;
+	$$cnt =~ s{\n?.*pam_listfile.*user.*file=.*(?:\n)?}{}m;
 	$fh->close();
     }
     $dir->close;
@@ -267,8 +267,9 @@ sub pam_listfile
 	$fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
 				    # Better a random backup?
 				    backup => '.old');
-    	print $fh "auth\trequired\tpam_listfile.so\tonerr=fail\t",
-	    "item=user\tsense=allow\tfile=$acl\n";
+    	$fh->head_print (join("\t", qw(auth required pam_listfile.so
+				       onerr=fail item=user sense=allow),
+			      "file=$acl\n"));
 	$fh->close();
 	if (! -f ACL_DIR . "/$srv") {
 	    $self->warn("Service $srv needs ACL but no ACL was created for it");
@@ -377,7 +378,7 @@ sub Configure
 	$self->info("Setting up user $user");
 	my ($uid, $gid, $home) = $self->initialize_user($user);
 	unless (defined $uid) {
-	    $self->error ("Couldn't initialize user $user, skipping");
+	    $self->error("Couldn't initialize user $user, skipping");
 	    next;
 	}
 	my $fhash = $self->files($uconfig, $uid, $gid, $home);
