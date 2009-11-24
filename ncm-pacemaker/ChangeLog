@@ -1,5 +1,10 @@
 2009-11-24  SDW
 
+        * Release: 0.6.0-2
+        - Fix erase/force commit + typos in example
+
+2009-11-24  SDW
+
         * Release: 0.6.0
         - First working release
 
