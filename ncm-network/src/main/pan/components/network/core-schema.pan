@@ -43,6 +43,7 @@ type structure_ethtool_offload = {
     "rx"            ? string with match (SELF, '^on|off$')
     "tx"            ? string with match (SELF, '^on|off$')
     "tso"           ? string with match (SELF, '^on|off$')
+    "gro"           ? string with match (SELF, '^on|off$')
 };
 
 type structure_ethtool_ring = {
@@ -94,6 +95,9 @@ type structure_interface = {
   "offload"   ? structure_ethtool_offload
   "ring"      ? structure_ethtool_ring
   "ethtool"   ? structure_ethtool
+
+  "vlan" ? boolean
+  "physdev"    ? string with exists ("/system/network/interfaces/" + SELF)
 }; 
 
 
@@ -107,6 +111,7 @@ type structure_network = {
      "hostname"         : type_shorthostname
      "realhostname"     ? type_fqdn
      "default_gateway"  ? type_ip
+     "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
      "interfaces"       : structure_interface{}
      "nameserver"       : type_ip[]
      "nisdomain"        ? type_fqdn

@@ -2,7 +2,7 @@
 # This is 'network.pod', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.1.2, 14/07/09 12:24
+# VERSION:    1.2.0, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -36,11 +36,13 @@ New/changed settings are first tested by probing the CDB server on the port wher
 
 =item /system/network/guess_default_gateway
 
+=item /system/network/gatewaydev
+
 =item /system/network/nisdomain
 
 =item /system/network/nozeroconf
 
-These values are used to generate the /etc/sysconfig/network file. ("realhostname", "guess_default_gateway", "default_gateway", "nisdomain" and "nozeroconf" are optional).
+These values are used to generate the /etc/sysconfig/network file. ("realhostname", "guess_default_gateway", "default_gateway", "gatewaydev", "nisdomain" and "nozeroconf" are optional).
 By setting guess_default_gateway, when default_gateway is not set, the component will try to guess the default gateway using the first configured gateway set on an interface (old style network config). (The default is true for backward compatible behaviour.)
 
 =item /system/network/interfaces/[dev][i]/ip
@@ -134,5 +136,15 @@ include pro_software_component_modprobe;
 push(nlist("name","bonding","options","mode=6 miimon=100"));
 
 "/software/components/network/dependencies/pre" = push("modprobe");
+
+=head1 VLAN support
+
+Use the vlan[0-9]{0-4} interface devices and set the the explicit device name and physdev. 
+The VLAN ID is the number of the '.' in the device name. Physdev is mandatory for vlan[0-9]{0-4} device. 
+An example: 
+"/system/network/interfaces/vlan0" = VLAN_NETWORK_PARAMS;
+"/system/network/interfaces/vlan0/device" = "eth0.3";
+"/system/network/interfaces/vlan0/physdev" = "eth0";
+
 
 =cut
