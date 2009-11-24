@@ -1,3 +1,11 @@
+2009-11-24  
+
+	* Release: 1.5.5
+	- Add ACLs to PAM 'session' lines as well.
+	
+	Otherwise, AFS users would be allowed to log in, ignoring whatever
+	contents the ACL had.
+
 2009-11-18  <unknown>
 
 	* Release: 1.5.4

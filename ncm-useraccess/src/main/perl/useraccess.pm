@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.4 : 18/11/09 19:39
+# Version: 1.5.5 : 24/11/09 12:10
 # 
 #
 # Note: all methods in this component are called in a
@@ -267,9 +267,11 @@ sub pam_listfile
 	$fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
 				    # Better a random backup?
 				    backup => '.old');
-    	$fh->head_print (join("\t", qw(auth required pam_listfile.so
-				       onerr=fail item=user sense=allow),
-			      "file=$acl\n"));
+	foreach my $i (qw(auth session)) {
+	    $fh->head_print (join("\t", $i, qw(required pam_listfile.so
+					      onerr=fail item=user sense=allow),
+				  "file=$acl\n"));
+	}
 	$fh->close();
 	if (! -f ACL_DIR . "/$srv") {
 	    $self->warn("Service $srv needs ACL but no ACL was created for it");
