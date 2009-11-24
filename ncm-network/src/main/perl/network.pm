@@ -962,7 +962,7 @@ sub Configure {
                                 "stdout" => \$output,
                                 "stderr" => "stdout"
             ) && ($? == 0)) {
-                $self->debug("runrun succesfully ran \"$cmd\"");
+                $self->debug(4,"runrun succesfully ran \"$cmd\"");
         } else {
                 $self->error("runrun failed to run \"$cmd\": output $output");
         }
