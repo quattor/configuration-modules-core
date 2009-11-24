@@ -14,7 +14,7 @@ unique template components/pacemaker/config-rpm;
 include { 'components/pacemaker/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-pacemaker","0.5.0-2","noarch");
+"/software/packages"=pkg_repl("ncm-pacemaker","0.6.0-1","noarch");
  
 "/software/components/pacemaker/dependencies/pre" ?= list("spma");
 "/software/components/pacemaker/active" ?= true;

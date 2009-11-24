@@ -73,8 +73,8 @@ type component_crm_attributes = {
 
 
 type component_crm_type = {
-    "resource" ? component_crm_resource
-    "constraint" ? component_crm_constraint
+    "resources" ? component_crm_resource
+    "constraints" ? component_crm_constraint
     "attributes" ? component_crm_attributes
 };
 
