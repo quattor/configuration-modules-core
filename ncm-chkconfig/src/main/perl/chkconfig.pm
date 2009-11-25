@@ -444,7 +444,7 @@ sub get_current_services_hash($) {
   while(<GET>) {
     # afs       0:off   1:off   2:off   3:off   4:off   5:off   6:off
     # ignore the "xinetd based services"
-    if (/^(\S+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
+    if (/^([\w\-]+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
       $current{$1} = [$2,$3,$4,$5,$6,$7,$8];
     }
   }
