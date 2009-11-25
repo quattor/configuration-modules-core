@@ -245,7 +245,7 @@ sub dns2ip ( $ ) {
     if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$/ ) {
 	$self->debug(2, "dns2ip-OK: already numeric");
 	if ($isneg) {
-	    return "!".$name;
+	    return "! ".$name;
 	} else {
 	    return $name;
 	}
