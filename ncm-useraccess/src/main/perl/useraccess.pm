@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.6 : 25/11/09 19:08
+# Version: 1.5.7 : 27/11/09 14:36
 # 
 #
 # Note: all methods in this component are called in a
@@ -127,7 +127,7 @@ sub initialize_acls
 				    log => $self,
 				    backup => '.stripe');
 	$cnt = $fh->string_ref();
-	$$cnt =~ s{\n?.*pam_listfile.*user.*file=.*(?:\n)?}{}mg;
+	$$cnt =~ s{^\w+\s+\w+\s+pam_listfile.*user.*file=.*(?:\n)?}{}mg;
 	$fh->set_contents($$cnt);
 	$fh->close();
     }
