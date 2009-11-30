@@ -16,7 +16,7 @@ iptables service.
 =head1 SYNOPSIS
 
 Note: a detailed HOWTO for this component, including examples, is
-found in /usr/share/doc/ncm-iptables-2.3.7/ncm-iptables-howto.html and in the FIO twiki pages
+found in /usr/share/doc/ncm-iptables-2.3.8/ncm-iptables-howto.html and in the FIO twiki pages
 at https://twiki.cern.ch/twiki/bin/view/FIOgroup/Iptables.
 
 =over
@@ -214,7 +214,7 @@ may be rejected.
 =head1 SEE ALSO
 
 See in particular the B<ncm-iptables> HOWTO as found in
-/usr/share/doc/ncm-iptables-2.3.7/ncm-iptables-howto.html, which includes usage examples.
+/usr/share/doc/ncm-iptables-2.3.8/ncm-iptables-howto.html, which includes usage examples.
 
 B<iptables> man page
 
