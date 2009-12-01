@@ -334,9 +334,9 @@ sub Configure {
     ## read current config
     my $dir_pref="/etc/sysconfig/network-scripts";
     opendir(DIR, $dir_pref);
-    ## here's the reason why it only verifies eth, bond, bridge and vlan
+    ## here's the reason why it only verifies eth, bond, bridge, usb and vlan
     ## devices. add regexp at will
-    my $dev_regexp='-((eth|bond|br|vlan)\d+(\.\d+)?)';
+    my $dev_regexp='-((eth|bond|br|vlan|usb)\d+(\.\d+)?)';
     ## $1 is the device name
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
         $exifiles{"$dir_pref/$file"} = -1;
