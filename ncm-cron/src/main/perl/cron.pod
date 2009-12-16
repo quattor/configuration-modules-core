@@ -85,6 +85,10 @@ owner/group of the log file, using owner:group format. group can be ommitted.
 
 permissions of log file specified as a string interpreted as an octal number.
 
+=item disabled
+
+A boolean value disabling the redirection of script output/error to a log file
+
 =back
 
 =item B<name> : string (required)
