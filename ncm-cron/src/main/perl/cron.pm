@@ -139,7 +139,7 @@ sub Configure($$@) {
         my $log_mode;
         my $log_params = $entry->{log};
         if ( $log_params->{'disabled'} ) {
-          $self->debug('Log file disabled.');
+          $self->debug(1,'Log file disabled.');
         } else {
           $log_name = "/var/log/$name$cron_log_extension";
           $log_owner = undef;
