@@ -133,15 +133,13 @@ sub Configure($$@) {
         # Default is to create one in /var/log using the cron entry name.
         # If specified log file name is not an absolute path, create it in /var/log.
         # if log file property 'disabled' is true, do not create/configure a log file.
-        my $log_enabled = 1;
         my $log_name;
         my $log_owner;
         my $log_group;
         my $log_mode;
         my $log_params = $entry->{log};
-        if ( defined($log_params->{'disabled'}) && ($log_params->{'disabled'} eq 'true') ) {
+        if ( $log_params->{'disabled'} ) {
           $self->debug('Log file disabled.');
-          $log_enabled = 0;
         } else {
           $log_name = "/var/log/$name$cron_log_extension";
           $log_owner = undef;
@@ -267,7 +265,7 @@ sub Configure($$@) {
         $contents .= $comment;
         $contents .= $cronenv;
         $contents .= "$frequency $user ($date; $command)";
-        if ( $log_enabled ) {
+        if ( $log_params->{'disabled'} ) {
           $contents .= " >> $log_name 2>&1";
         }
         $contents .= "\n";
