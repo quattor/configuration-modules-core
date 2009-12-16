@@ -1,3 +1,8 @@
+2009-12-16  Michel Jouvin
+
+	* Release: 1.4.2
+	- Add an option to disable redirection of stdout/stderr to a log file
+
 2009-10-01  Guillaume Philippon
 
 	* Release: 1.4.1
