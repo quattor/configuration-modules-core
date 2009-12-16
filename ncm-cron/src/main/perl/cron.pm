@@ -279,25 +279,27 @@ sub Configure($$@) {
         }
   
         # Create the log file and change the owner if necessary.
-        if ( -f $log_name ) {
-            $changes = LC::Check::status($log_name,
+        if ( ! $log_params->{'disabled'} ) {
+          if ( -f $log_name ) {
+              $changes = LC::Check::status($log_name,
+                                           owner => $log_owner,
+                                           group => $log_group,
+                                           mode => $log_mode,
+                                          );
+              if ( $changes < 0 ) {
+                  $self->error("Error setting owner/permissions on log file $log_name");
+              }          
+          } else {
+              $changes = LC::Check::file($log_name,
+                                         contents => '',
                                          owner => $log_owner,
                                          group => $log_group,
                                          mode => $log_mode,
                                         );
-            if ( $changes < 0 ) {
-                $self->error("Error setting owner/permissions on log file $log_name");
-            }          
-        } else {
-            $changes = LC::Check::file($log_name,
-                                       contents => '',
-                                       owner => $log_owner,
-                                       group => $log_group,
-                                       mode => $log_mode,
-                                      );
-            if ( $changes < 0 ) {
-                $self->warn("Error creating log file $log_name");
-            }
+              if ( $changes < 0 ) {
+                  $self->warn("Error creating log file $log_name");
+              }
+          }
         }
         
     }
