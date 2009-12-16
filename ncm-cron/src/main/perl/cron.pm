@@ -164,7 +164,7 @@ sub Configure($$@) {
               $log_mode = oct($log_params->{mode});
           }          
         } else {
-          debug('Log file disabled.');
+          $self->debug('Log file disabled.');
         }
   
         # Frequency of the cron entry.
@@ -268,7 +268,7 @@ sub Configure($$@) {
         if ( $log_params{'disabled'} eq 'true' ) {
           $contents .= ">> $log_name 2>&1";
         }
-        $contents .= ""\n";
+        $contents .= "\n";
 
         my $changes = LC::Check::file("$file",
                                       contents => encode_utf8($contents),
