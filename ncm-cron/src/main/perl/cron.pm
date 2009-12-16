@@ -265,7 +265,7 @@ sub Configure($$@) {
         $contents .= $comment;
         $contents .= $cronenv;
         $contents .= "$frequency $user ($date; $command)";
-        if ( $log_params->{'disabled'} ) {
+        if ( ! $log_params->{'disabled'} ) {
           $contents .= " >> $log_name 2>&1";
         }
         $contents .= "\n";
