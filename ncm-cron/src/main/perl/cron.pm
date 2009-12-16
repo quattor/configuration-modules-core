@@ -163,6 +163,8 @@ sub Configure($$@) {
           if ( $log_params->{mode} ) {
               $log_mode = oct($log_params->{mode});
           }          
+        } else {
+          debug('Log file disabled.');
         }
   
         # Frequency of the cron entry.
