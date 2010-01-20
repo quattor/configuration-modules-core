@@ -27,7 +27,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::chkconfig::NoActionSupported = 1;
 
 use NCM::Check;
-use LC::Process qw(run);
+use LC::Process qw(run output);
 
 my $chkconfigcmd = "/sbin/chkconfig";
 my $servicecmd   = "/sbin/service";

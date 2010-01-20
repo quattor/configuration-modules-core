@@ -1,3 +1,8 @@
+2010-01-20  Jan IVEN
+
+	* Release: 1.1.5
+	- trivial fix for #61619 (declare use of LC::Process::output)
+
 2009-11-25  <unknown>
 
 	* Release: 1.1.4
