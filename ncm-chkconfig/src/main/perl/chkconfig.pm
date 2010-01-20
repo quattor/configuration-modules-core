@@ -135,14 +135,15 @@ sub Configure {
 		      }
 		  }
 		  if ($optval ne $currentlevellist) {
-		      $self->info("$service was 'on' for $currentlevellist, new list is $optval");
+		      $self->info("$service was 'on' for \"$currentlevellist\", new list is \"$optval\"");
+		      push @cmdlist, "$chkconfigcmd $service reset";
 		      push @cmdlist, "$chkconfigcmd --level $optval $service on";
 		      if($startstop and $startstop eq 'true'  
 			 and ($optval =~ /$currentrunlevel/)) {
 			  push @servicecmdlist, "$servicecmd $service start";
 		      }
 		  } else {
-		      $self->debug(2, "$service already 'on' for $optval, nothing to do");
+		      $self->debug(2, "$service already 'on' for \"$optval\", nothing to do");
 		  } 
 	      }  
 	  } elsif ($optname eq 'off') { 
