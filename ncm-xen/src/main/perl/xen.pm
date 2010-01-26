@@ -271,7 +271,7 @@ sub Configure {
 ##########################################################################
 
     our ($self,$config)=@_;
-    IsXenHere($self);
+    my $xen_state = IsXenHere($self);
     
     my $base_path = '/software/components/xen/';
 
@@ -342,22 +342,27 @@ sub Configure {
 
             # check if domain is running and if not, create it
             if ($createdoms) {
-                execute(["xm","list"],"stderr" => \$bufferr, "stdout"=>\$buffout);
-                if ($? != 0) {
-                    $self->verbose("Problem running Xen commands, can't create domains. xm output:\n".$buffout.$bufferr);
-                } 
-                else {
-                    execute(["xm","list",$domain_name],"stderr" => \$bufferr, "stdout"=>\$buffout);
+                if ( $xen_state == 0 ) {
+                    execute(["xm","list"],"stderr" => \$bufferr, "stdout"=>\$buffout);
                     if ($? != 0) {
-                        $self->verbose("Domain ".$domain_name." not running, will try to create it.");
-                        execute(["xm","create",$domain_name],"stderr" => \$bufferr, "stdout"=>\$buffout);
+                        $self->verbose("Problem running Xen commands, can't create domains. xm output:\n".$buffout.$bufferr);
+                    } 
+                    else {
+                        execute(["xm","list",$domain_name],"stderr" => \$bufferr, "stdout"=>\$buffout);
                         if ($? != 0) {
-                            $self->verbose("Problem creating ".$domain_name.": xm output:\n".$buffout.$bufferr);
+                            $self->verbose("Domain ".$domain_name." not running, will try to create it.");
+                            execute(["xm","create",$domain_name],"stderr" => \$bufferr, "stdout"=>\$buffout);
+                            if ($? != 0) {
+                                $self->verbose("Problem creating ".$domain_name.": xm output:\n".$buffout.$bufferr);
+                            }
+                        }
+                        else {
+                            $self->verbose("Domain $domain_name already running: xm output".$buffout);
                         }
                     }
-                    else {
-                        $self->verbose("Domain $domain_name already running: xm output".$buffout);
-                    }
+                }
+                else {
+                    $self->info("Skipping start of domain $domain_name because Xen did not appear to be running");
                 }
             }
         }
@@ -909,21 +914,28 @@ sub IsXenHere {
 # - imagine debugging problems while you are working with non-xen kernel
 #   (not that this ever happened in real life)
 # - only print warnings
+# - return value:
+#     0:    xen appears to be present and running
+#     1:    xen is present but not (yet) running
+#     2:    xen is not found
 #
     my $func = "IsXenHere";
     my $self = shift;
     my $bufferr="", my $buffout="";
-    
+    my $retval = 0;    
+
     my $exe='/usr/sbin/xm';
     if (-f $exe) {
         execute([$exe,"list"],"stderr" => \$bufferr, "stdout"=>\$buffout);
         if ($? != 0) {
-            $self->warn("$func: Problem with \"$exe list\": output:\n".$buffout.$bufferr);
+            $self->info("$func: Problem with \"$exe list\": output:\n".$buffout.$bufferr);
+            $retval = 1;
         }
     } else {
         $self->warn("$func: $exe not found.");
+        $retval = 2;
     }
-    
+    return $retval;
 }
 
 
