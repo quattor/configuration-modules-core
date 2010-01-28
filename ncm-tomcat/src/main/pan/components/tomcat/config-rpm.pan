@@ -10,7 +10,7 @@ include { 'components/tomcat/schema' };
 
  
 # Package to install
-"/software/packages"=pkg_repl(tomcat, 1.0.13-1, 'noarch');
+"/software/packages"=pkg_repl('ncm-tomcat', '1.0.13-1', 'noarch');
 
 '/software/components/tomcat/version' ?= '1.0.13';
 
