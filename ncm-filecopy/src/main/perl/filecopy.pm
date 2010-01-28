@@ -155,11 +155,13 @@ sub Configure($$@) {
   # everything to take care of any dependencies between writing
   # multiple files.
   foreach my $command (keys(%commands)) {
-    $self->debug(1,"Executing command: $command");
+    $self->info("Executing command: $command");
     my $cmd = CAF::Process->new([$command], log => $self);
-    my $rc = $cmd->execute();
-    if ( $rc ) {
-      $self->error("Failed to execute restart command: $command\nCommand output: ".$cmd->output()."\n");
+    my $cmd_output = $cmd->output();      # Also execute the command
+    if ( $? ) {
+      $self->error("Command failed. Command output: $cmd_output\n");
+    } else {
+      $self->debug(1,"Command output: $cmd_output\n");
     }
   }
 
