@@ -18,6 +18,8 @@ use File::Basename;
 use File::Path;
 use Encode qw(encode_utf8);
 
+use CAF::FileEditor;
+
 local (*DTA);
 
 ##########################################################################
@@ -28,36 +30,42 @@ sub Configure($$@) {
 
   # Define path for convenience.
   my $base = "/software/components/filecopy";
-  my $globalForceRestartPath = "$base/forceRestart";
+
+  # Retrieve component configuration
+  my $confighash = $config->getElement($base)->getTree();
+  $files = $confighash->{services};
 
   # Determine first if there is anything to do.
-  return 0 unless ( $config->elementExists("$base/services") );
+  return 0 unless ( $files );
 
+  # Some initializations
+  my $globalForceRestart = $confighash->{forceRestart};
   my $changes = 0;
 
-  # Extract the list of files to manage.
-  my %files = $config->getElement("$base/services")->getHash();
-
   # Loop over all of the files and manage the associated services.
-  my @commands;
-  for my $encfname ( sort keys %files ) {
-
-    # Convenience variables.
-    my $configPath      = "$base/services/$encfname/config";
-    my $restartPath     = "$base/services/$encfname/restart";
-    my $forceRestartPath = "$base/services/$encfname/forceRestart";
-    my $permsPath       = "$base/services/$encfname/perms";
-    my $ownerPath       = "$base/services/$encfname/owner";
-    my $groupPath       = "$base/services/$encfname/group";
-    my $backupPath      = "$base/services/$encfname/backup";
-    my $noutf8Path      = "$base/services/$encfname/no_utf8";
-
+  # %commands stores the command to execute for each modified file. This is a hash to avoid
+  # reexecuting several times the same command.
+  my %commands;
+  for my $e_fname ( sort keys %{$files} ) {
+    my $file_config = $files->{$e_fname};
+    
     # The actual file name.
-    my $fname = unescape($encfname);
+    my $fname = unescape($e_fname);
 
-    # Pull in the configuration.
-    my $contents = $config->getValue($configPath);
-
+    # Pull in the file content.
+    # The content can be either embedded in the configuration or specified as a file which MUST exist.
+    my $contents;
+    if ( $files->{config} } {
+      $contents = $files->{config};
+    } else {
+      my $src_file = $files->{source};
+      if ( -e $src_file ) {
+        $content = CAF::FileEditor::open($src_file);
+      } else {
+        $self->error('File $fname: source file not found ($src_file).');
+      };
+    };
+    
     # Now just create the new configuration file.
     # Existing file is backed up, if it exists.
 
@@ -72,16 +80,14 @@ sub Configure($$@) {
     }
 
     my %file_opts;
-    if ( $config->elementExists($permsPath) ) {
-      my $perms = oct( $config->getValue($permsPath) );
-      $file_opts{'mode'} = $perms;
+    if ( $file_config->{perms} ) {
+      $file_opts{'mode'} = $file_config->{perms};
     }
-    if ( $config->elementExists($groupPath) ) {
-      my $group = $config->getValue($groupPath);
-      $file_opts{'group'} = $group;
+    if ( $file_config->{group} ) {
+      $file_opts{'group'} = $file_config->{group};
     }
-    if ( $config->elementExists($ownerPath) ) {
-      my $owner_group = $config->getValue($ownerPath);
+    if ( $file_config->{owner} ) {
+      my $owner_group = $file_config->{owner};
       my ($owner, $group) = split /:/, $owner_group;
       $file_opts{'owner'} = $owner;
       if ( !exists($file_opts{'group'}) && $group ) {
@@ -91,13 +97,11 @@ sub Configure($$@) {
 
     # by default a backup is made, but this can be suppressed
     my $backup = '.old';
-    if ( $config->elementExists($backupPath) ) {
-      if ( $config->getValue($backupPath) eq 'false' ) {
-        $backup = undef;
-      }
+    if ( defined($file_config->{backup}) && !$file_config->{backup} ) {
+      $backup = undef;
     }
 
-    if ( !$config->elementExists($noutf8Path) || !($config->getValue($noutf8Path) eq "true")) {
+    if ( !defined($file_config->{no_utf8}) || $file_config->{no_utf8} ) {
         $contents = encode_utf8($contents);
     }
     
@@ -128,24 +132,23 @@ sub Configure($$@) {
     # Restart can be forced indepedently of changes, defining 'forceRestart'
     # properties globally or at the service level.
     my $service_restart = $changes;
-    if ( ($config->getValue($forceRestartPath) eq 'true') ||
-         ($config->getValue($globalForceRestartPath) eq 'true') ) {
+    if ( ($file_config->{forceRestart} || $globalForceRestart ) ) {
       $service_restart = 1;
     }
 
     # Queue the restart command if given.
-    if ( $config->elementExists($restartPath) && $service_restart ) {
-      my $cmd = $config->getValue($restartPath);
-      push @commands, $cmd;
+    # Use a hash to avoid reexecuting several times the same command.
+    if ( $file_config->{restart} && $service_restart ) {
+      $commands{$file_config->{restart}} = '';
     }
   }
 
   # Loop over all of the commands and execute them.  Do this after
   # everything to take care of any dependencies between writing
   # multiple files.
-  foreach (@commands) {
-    my $rc = system($_);
-    $self->error("Failed restart: $_\n") if ($rc);
+  foreach my $command (keys(%commands)) {
+    my $rc = system($command);
+    $self->error("Failed to execute restart command: $command\n") if ($rc);
   }
 
   return 1;
