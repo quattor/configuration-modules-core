@@ -18,7 +18,7 @@ use File::Basename;
 use File::Path;
 use Encode qw(encode_utf8);
 
-use CAF::FileEditor;
+use LC::File;
 use CAF::Process;
 
 local (*DTA);
@@ -62,7 +62,7 @@ sub Configure($$@) {
     } elsif ( $file_config->{source} ) {
       my $src_file = $file_config->{source};
       if ( -e $src_file ) {
-        $contents = CAF::FileEditor::open($src_file);
+        $contents = LC::File::file_contents($src_file);
       } else {
         $self->error("File $fname: source file not found ($src_file).");
         next;
