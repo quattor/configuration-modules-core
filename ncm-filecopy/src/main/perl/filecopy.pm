@@ -19,6 +19,7 @@ use File::Path;
 use Encode qw(encode_utf8);
 
 use CAF::FileEditor;
+use CAF::Process;
 
 local (*DTA);
 
@@ -155,8 +156,11 @@ sub Configure($$@) {
   # multiple files.
   foreach my $command (keys(%commands)) {
     $self->debug(1,"Executing command: $command");
-    my $rc = system($command);
-    $self->error("Failed to execute restart command: $command\n") if ($rc);
+    my $cmd = CAF::Process->new([$command], log => $self);
+    my $rc = $cmd->execute();
+    if ( $rc ) {
+      $self->error("Failed to execute restart command: $command\nCommand output: ".$cmd->output()."\n");
+    }
   }
 
   return 1;
