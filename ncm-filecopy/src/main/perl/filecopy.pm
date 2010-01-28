@@ -33,7 +33,7 @@ sub Configure($$@) {
 
   # Retrieve component configuration
   my $confighash = $config->getElement($base)->getTree();
-  $files = $confighash->{services};
+  my $files = $confighash->{services};
 
   # Determine first if there is anything to do.
   return 0 unless ( $files );
@@ -51,19 +51,22 @@ sub Configure($$@) {
     
     # The actual file name.
     my $fname = unescape($e_fname);
+    $self->debug(1,"Processing file $fname...");
 
     # Pull in the file content.
     # The content can be either embedded in the configuration or specified as a file which MUST exist.
     my $contents;
-    if ( $files->{config} } {
+    if ( $file_config->{config} ) {
       $contents = $files->{config};
-    } else {
-      my $src_file = $files->{source};
+    } else if ( $file_config->{source} ) {
+      my $src_file = $file_config->{source};
       if ( -e $src_file ) {
-        $content = CAF::FileEditor::open($src_file);
+        $contents = CAF::FileEditor::open($src_file);
       } else {
-        $self->error('File $fname: source file not found ($src_file).');
+        $self->error("File $fname: source file not found ($src_file).");
       };
+    } else {
+      $self->debug("File $fname: internal error (neither 'config' nor 'source' property present)");
     };
     
     # Now just create the new configuration file.
@@ -103,6 +106,8 @@ sub Configure($$@) {
 
     if ( !defined($file_config->{no_utf8}) || $file_config->{no_utf8} ) {
         $contents = encode_utf8($contents);
+    } else {
+      $self->debug("UTF8 encoding disabled.");
     }
     
 
@@ -147,6 +152,7 @@ sub Configure($$@) {
   # everything to take care of any dependencies between writing
   # multiple files.
   foreach my $command (keys(%commands)) {
+    $self->debug(1,"Executing command: $command");
     my $rc = system($command);
     $self->error("Failed to execute restart command: $command\n") if ($rc);
   }
