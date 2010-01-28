@@ -5,7 +5,7 @@
 
 declaration template components/tomcat/schema;
 
-include pan/structures;
+include { 'pan/structures' };
 
 
 
@@ -404,7 +404,7 @@ type structure_tomcat_webapps = {
 ###################################################################################3
 
 
-type structure_tomcatusers_user_attrs = {
+type structure_tomcat_user_attrs = {
 
     "name": string
     "roles": string
@@ -412,19 +412,19 @@ type structure_tomcatusers_user_attrs = {
     
 };
 
-type structure_tomcatusers_user = {
-    "attrs" ?   structure_tomcatusers_user_attrs
+type structure_tomcat_user = {
+    "attrs" ?   structure_tomcat_user_attrs
 };    
     
 
-type structure_tomcatusers_nested = {
+type structure_tomcat_nested = {
     
-    "user"  :   structure_tomcatusers_user[]
+    "user"  :   structure_tomcat_user[]
 
 };   
 
-type structure_tomcatusers = {
-    "nested" ?     structure_tomcatusers_nested 
+type structure_tomcat_users = {
+    "nested" ?     structure_tomcat_nested 
 };
 
 # ####################################################################################
@@ -456,7 +456,7 @@ type structure_tomcat_config = {
 type component_tomcat_conf = {
    "mainconf"    ?   structure_tomcat_config
    "Server" :   structure_tomcat_server
-   "tomcat-users" ?   structure_tomcatusers
+   "tomcat-users" ?   structure_tomcat_users
    "webapps"    ?   structure_tomcat_webapps{}
 };
 
@@ -467,7 +467,7 @@ type component_tomcat = {
    "conf"  :   component_tomcat_conf
 };       
 
-type "/software/components/tomcat" = component_tomcat;
+bind "/software/components/tomcat" = component_tomcat;
 
 
 
