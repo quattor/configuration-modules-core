@@ -51,22 +51,24 @@ sub Configure($$@) {
     
     # The actual file name.
     my $fname = unescape($e_fname);
-    $self->debug(1,"Processing file $fname...");
+    $self->info("Checking file $fname...");
 
     # Pull in the file content.
     # The content can be either embedded in the configuration or specified as a file which MUST exist.
     my $contents;
-    if ( $file_config->{config} ) {
-      $contents = $files->{config};
-    } else if ( $file_config->{source} ) {
+    if ( defined($file_config->{config}) ) {
+      $contents = $file_config->{config};
+    } elsif ( $file_config->{source} ) {
       my $src_file = $file_config->{source};
       if ( -e $src_file ) {
         $contents = CAF::FileEditor::open($src_file);
       } else {
         $self->error("File $fname: source file not found ($src_file).");
+        next;
       };
     } else {
-      $self->debug("File $fname: internal error (neither 'config' nor 'source' property present)");
+      $self->error("File $fname: internal error (neither 'config' nor 'source' property present)");
+      next;
     };
     
     # Now just create the new configuration file.
@@ -77,7 +79,7 @@ sub Configure($$@) {
       my $dir = dirname($fname);
       mkpath( $dir, 0, 0755 ) unless ( -e $dir );
       if ( !-d $dir ) {
-        $self->error("Can't create directory: $dir");
+        $self->error("File $fname: can't create directory: $dir");
         next;
       }
     }
@@ -107,7 +109,7 @@ sub Configure($$@) {
     if ( !defined($file_config->{no_utf8}) || $file_config->{no_utf8} ) {
         $contents = encode_utf8($contents);
     } else {
-      $self->debug("UTF8 encoding disabled.");
+      $self->debug(1,"UTF8 encoding disabled.");
     }
     
 
