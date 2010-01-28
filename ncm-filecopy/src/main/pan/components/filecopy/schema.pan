@@ -13,9 +13,9 @@ function component_filecopy_valid = {
     error(function_name+': this function requires 1 argument');
   };
   
-  if ( !is_defined(SELF['config']) && !is_defined(SELF['source']) ) ) {
+  if ( !is_defined(SELF['config']) && !is_defined(SELF['source']) ) {
     error("ncm-filecopy requires either 'config' or 'source' property to be present.");
-  } else ( is_defined(SELF['config']) && is_defined(SELF['source']) ) ) {
+  } else ( is_defined(SELF['config']) && is_defined(SELF['source']) ) {
     error("ncm-filecopy: 'config' and 'source' properties are mutually exclusive.");
   };
   
