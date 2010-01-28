@@ -9,7 +9,7 @@ include { 'pan/structures' };
 
 
 
-type boolstr = string with match (self, '(false|true)');
+type boolstr = string with match (SELF, '(false|true)');
 type dbgval = long(0..10);
 
 
@@ -32,7 +32,7 @@ type structure_tomcat_valboolstr = {
 # Logger
 type structure_tomcat_logger_attrs = {
 
-    "className" :   string with match(self, '^org.apache.catalina.logger')
+    "className" :   string with match(SELF, '^org.apache.catalina.logger')
     "timestamp" ?   boolstr
     "prefix"    ?   string
     "suffix"    ?   string
@@ -49,7 +49,7 @@ type structure_tomcat_logger = {
 # Realm
 type structure_tomcat_realm_attrs = {
 
-    "className" :   string with match( self, '^org.apache.catalina.realm')
+    "className" :   string with match( SELF, '^org.apache.catalina.realm')
     "connectionName"    ?   string
     "connectionPassword"    ?   string
     "connectionURL" ?   string
@@ -90,7 +90,7 @@ type structure_tomcat_res_attrs = {
     "name"  :   string
     "type"  ?   string
     "description" ? string
-    "scope" ?   string with match (self, '(Shareable|Unshareable)')
+    "scope" ?   string with match (SELF, '(Shareable|Unshareable)')
     "auth"  ?   string  # GET BACK LATER
     
 };
