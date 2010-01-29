@@ -41,37 +41,37 @@ This nlist contains one entry by file to manage. The key is the escaped file nam
 property described below may be specified. Most properties are optional (or have a default value) but either
 'config' or 'source' MUST be specified and they are mutually exclusive.
 
-===head3 config: string (optional but 'config' OR 'source' required)
+=head3 config: string (optional but 'config' OR 'source' required)
 
 The file content specified as a string.
 
 Default: none
 
-===head3 source: string (optional but 'config' OR 'source' required)
+=head3 source: string (optional but 'config' OR 'source' required)
 
 The name of a source file already present on the machine to use as the content for the managed file.
 
 Default: none
 
-===head3 owner: string (optional)
+=head3 owner: string (optional)
 
 The userid of the file owner. It can also be a 'user:group' specification (like with chown).
 
 Default: none
 
-===head3 group: string (optional)
+=head3 group: string (optional)
 
 The group of the file owner. It is ignored is owner is specified as 'user:group'.
 
 Default: none
 
-===head3 perms: string (optional)
+=head3 perms: string (optional)
 
 Permissions of the managed file. If not specified, the default permissions on the system will be used.
 
 Default: none
 
-===head3 restart: string (optional)
+=head3 restart: string (optional)
 
 A command to execute if the file is modified. It is typically used to restart a service but any valid
 command can be specified, including several commands separated by ';'. If not specified, the file is
@@ -80,14 +80,14 @@ have been updated and if several files specify the same restart command, it is e
 
 Default: none
 
-===head3 backup: boolean (required)
+=head3 backup: boolean (required)
 
 This property specifies if an existing version of the file must be backuped before being updated (backup
 extension is '.old').
 
 Default: true
 
-===head3 no_utf8: boolean (optional)
+=head3 no_utf8: boolean (optional)
 
 By default, the file content is converted to UTF8. Define this property to 'true' to prevent this
 conversion.
