@@ -13,11 +13,15 @@
 
 =head1 NAME
 
-@NAME@: NCM component to manage the accounts on the machine.
+@NAME@: NCM component to manage the local accounts on the machine.
 
 =head1 DESCRIPTION
 
-The I<@COMP@> component manages the accounts on a machine.
+The I<@COMP@> component manages the local accounts on a machine. LDAP
+authentication depends on the LDAP configuration, which is handled by
+L<ncm-authconfig>.
+
+Shadowing of passwords is also controlled by L<ncm-authconfig>.
 
 =head1 FUNCTIONS
 
@@ -92,22 +96,17 @@ This function creates a user, applying some defaults defined by variables and ch
 It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
 
 
-
 =head1 RESOURCES
 
 =head2 /software/components/@COMP@/rootpwd
 
 The crypted root password for the machine.
 
-=head2 /software/components/@COMP@/shadowpwd
-
-Boolean indicating whether shadow passwords are being used or not.
-
 =head2 /software/components/@COMP@/users
 
 An nlist of users to configure on the node.  The key is the account
-name (or base name for pool accounts).  At least one field must be
-specified.  The available fields are:
+name (or base name for pool accounts). The numerical UID is
+mandatory. The available fields are:
 
 =over
 
@@ -145,9 +144,8 @@ the shell for the user.  Defaults to /bin/bash.
 
 =item uid
 
-the uid value for this account.  If not given it will
-default to an unused value.  This is interpreted as the base uid value
-for pool accounts (i.e. poolSize > 0).
+the uid value for this account. Mandatory. This is interpreted as the
+base uid value for pool accounts (i.e. poolSize > 0).
 
 =item poolStart
 
@@ -232,9 +230,31 @@ If useradd should create home directories for users by default
 Flag to indicate whether unknown accounts should be deleted.  The
 default is false.  The root account can never be removed.
 
-=head2 /software/components/@COMP@/ldap
+=head1 LIMITATIONS
 
-If set to true the component will assume that the system is set up
-to use LDAP. All changes are made with libuser.
+=head2 Local users belonging to LDAP groups
+
+When a local user has to belong to a group defined only on LDAP, a
+local group with the desired numerical ID is created.
+
+This group has the same name as the user ID. It will be removed on the
+next run of the component if C<remove_unknown> is set to true. This is
+somewhat ugly, but doesn't affect the system behaviour at all, so it
+B<won't> be fixed.
+
+=head2 nsswitch.conf status
+
+The component has been tested with C<files> as the primary source on
+/etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
+produce strange behaviour. These settings are not controlled by
+ncm-@COMP@ but by L<ncm-authconfig>.
+
+=head1 SEE ALSO
+
+L<ncm-authconfig>
+
+=head1 AUTHOR
+
+Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 =cut

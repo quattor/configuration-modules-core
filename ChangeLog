@@ -1,3 +1,10 @@
+2010-01-29  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.0
+	- Full rewriting, to make it understandable and maintainable.
+	
+	In the road, bugs #61777, #55992, #50029 and #55596 have been fixed.
+
 2009-11-12  <unknown>
 
 	* Release: 4.0.14
