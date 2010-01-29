@@ -6,1207 +6,744 @@
 package NCM::Component::accounts;
 
 use strict;
+use warnings;
+
 use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-use LC::Process qw (output execute);
-use LC::File qw (makedir);
+
+use LC::Exception;
 use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
+use CAF::FileEditor;
 use CAF::Process;
-
+use Fcntl qw(SEEK_SET);
 use File::Basename;
 use File::Path;
-
-use File::Copy;
-
-use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
-use User::pwent;
-
-local(*DTA);
-
-use constant { NAME    => "name",
-               PASSWORD  => "password",
-               UID     => "uid",
-               GID     => "gid",
-               QUOTA   => "quota",
-               COMMENT => "comment",
-               GCOS    => "gcos",
-               HOMEDIR => "homedir",
-               SHELL   => "shell",
-               EXPIRE  => "expire",
-               PGROUP  => "pgroup",
-               GROUPS => "groups"
-               };
-
-#The programs that might change according if we use ldap or not
-my $USERADD = "/usr/sbin/useradd";
-my $USERMOD = "/usr/sbin/usermod";
-my $USERDEL = "/usr/sbin/userdel";
-my $GRPDEL = "/usr/sbin/groupdel";
-my $GRPADD = "/usr/sbin/groupadd";
-my $GRPMOD = "/usr/sbin/groupmod";
-my $SYSID = "/usr/bin/id";
+use LC::Find;
+use LC::File qw(copy makedir);
 
 
+our @ISA = qw(NCM::Component);
+our $EC=LC::Exception::Context->new->will_store_all;
 
-use constant { PWCONV  => "/usr/sbin/pwconv",
-               PWUNCONV  => "/usr/sbin/pwunconv",
-               GRPCONV  => "/usr/sbin/grpconv",
-               GRPUNCONV  => "/usr/sbin/grpunconv",
-               NEWUSERS => ["/usr/sbin/newusers"], #"/dev/fd/0"],
-               CHPASSWD => ["/usr/sbin/chpasswd", "-e"]
-         };
+our $NoActionSupported = 1;
+
+# Commands we might run. We'll resort always to libusers' variants.
+
+# Adding users. We don't want their home directories created. The
+# component will take care of it, as we'll have to copy the files from
+# /etc/skel anyways.
+use constant USERADD => qw(lnewusers -M);
+
+# Deleting users. We don't want their home directories removed, just
+# in case.
+use constant USERDEL => qw(luserdel -G);
 
 
-our %FLAGS = (
-              PASSWORD, "-p", 
-              UID, "-u", 
-              PGROUP, "-g", 
-              GROUPS, "-G",
-              QUOTA, "", 
-              COMMENT, "-c", 
-              GCOS, "-c", 
-              HOMEDIR, "-d", 
-              SHELL, "-s", 
-              EXPIRE, "-e"
-              );
+# Adding groups
+use constant GROUPADD => "lgroupadd";
 
-#If we should use ldap
-my $useLdap = 0;
+# Deleting groups
+use constant GROUPDEL => "lgroupdel";
 
-# For optimization
-my %createdParents = ();
+# Changing passwords
+use constant CHPASSWD => qw(chpasswd -e);
 
-# Generates a list of options for usermod/useradd
-# based on a hash parameter describing a user
-# IN:  hash representing user
-# OUT: list containing flags and values 
-##########################################################################
-sub generate_opts {
-##########################################################################
-    my $user = shift;
-    my @opts;
-    foreach my $field (sort keys %$user) {
-        if (defined ($FLAGS{$field}) && (defined ($user->{$field}) &&  $user->{$field} ne "")) {
-            push(@opts,$FLAGS{$field});
+# Changing user properties
+use constant USERMOD => 'usermod';
 
-            if ($field eq GCOS) {
-                push(@opts,quote_string($user->{$field}));
-            } elsif ($field eq PASSWORD) {
-                push(@opts, ("'" . $user->{$field} . "'"));
-            } else {
-                push(@opts,$user->{$field});
-            }
+# Changing group properties
+use constant GROUPMOD => qw(lgroupmod -g);
 
-        }
-    }
-    return @opts;
+# UID for user structures, GID for group structures.
+use constant ID => 2;
+# List of groups for users, list of members for groups.
+use constant IDLIST => 3;
+# Name of the group or user
+use constant NAME => 0;
+# Home directory of the user
+use constant HOME => 5;
+# Shell
+use constant SHELL => 6;
+# GCOS
+use constant GCOS => 4;
+# Home directory, on getpw* output
+use constant PWHOME => 7;
+
+# Pan path for the component configuration.
+use constant PATH => "/software/components/accounts";
+
+use constant PASSWD_FILE => "/etc/passwd";
+use constant GROUP_FILE => "/etc/group";
+use constant LOGINDEFS_FILE => "/etc/login.defs";
+
+use constant GIDPARAM => '-g';
+use constant SKELDIR => "/etc/skel";
+
+# Parameters for usermod
+use constant GROUPSOPT => '-G';
+use constant HOMEOPT => '-d';
+use constant MOVEHOMEOPT => '-m';
+use constant SHELLOPT => '-s';
+use constant GCOSOPT => '-c';
+use constant IDOPT => '-u';
+
+# Stupid replacement for getpwent and getgrent. It expects a file name
+# as its argument, typically either /etc/passwd or /etc/group.
+#
+# It returns a function which will return one entry per call, a la
+# getpwent or getgrent, but without considering all the LDAP accounts.
+sub wrap_getent
+{
+    my ($self, $file) = @_;
+    my $fh = CAF::FileEditor->new($file, log => $self);
+    $fh->cancel();
+    seek($fh, 0, SEEK_SET);
+
+    return sub {
+	my $l = <$fh> or return;
+	chomp($l);
+	$self->debug (4, "Read line: $l");
+	return split(":", $l);
+    };
 }
 
-# Creates any intermediate directories missing for the home directory,
-# fixing bug #50029. The final home directory is left for the
-# useradd/usermod commands.
-# Return value is:
-#   - -1 if directory already existed
-#   - 1 if the directory was succesfully created
-#   - 0 if an error occured during directory creation
-# Don't signal error in this function, let's the caller do it.
+# Returns all the system elements, either groups or users. To do so,
+# it receives a reference to either getpwent or getgrent as its
+# argument.
+sub list_system_members
+{
+    my ($self, $func) = @_;
 
-sub prepare_home {
-    my ($self, $homedir) = @_;
+    my %h;
 
-    if ( length($homedir) == 0 ) {
-      $self->warn('prepare_home(): empty home directory passed. Probably an internal error.');
-      return 0;  
+    while (my @i = $func->()) {
+	$h{$i[NAME]} = { system => \@i,
+			 to_delete => 1};
     }
-    
-    my @spl = split("/", $homedir);
-    my $homeparent = join("/",  @spl[0 .. (scalar(@spl)-2)]);
-
-    my $status;    
-    if ( $createdParents{$homeparent} || -d $homeparent ) {
-      $self->debug(2, "Home directory parent $homeparent already exists");   
-      $status = -1;   
-    } else {
-      $self->debug(1, "Creating home directory parent $homeparent");   
-      if ( makedir($homeparent,0755) ) {
-        $status = 1;
-      } else {
-        $status = 0
-      }
-    }
-    
-    if ( $status ) {
-      $createdParents{$homeparent} = 1    # Value is useless      
-    }
-
-    return ($status);
+    return %h;
 }
 
-# Modifies an existing user using usermod, based on user hash. Has to
-# be before add_user
-# IN: self (for logging), user hash.  OUT:
-##########################################################################
-sub modify_user {
-##########################################################################
-    my ($self, $user, $createHome) = @_;
-    
-    my @opts=generate_opts($user);
-    $self->verbose("Modifying user $user->{name}");
-    if ($createHome) {
-      push(@opts,"-m");
-      $self->prepare_home($user->{homedir});
-    }
-    
-    if($useLdap == 1){
-      push(@opts,"-o");
-    }
+# Returns whether the existing group must be modified. Receives as
+# arguments the group definition in the profile and a reference to the
+# output of getgr() for that group.
+sub must_modify_group
+{
+    my ($self, $profile, $system) = @_;
 
-    # call usermod with generated options
-    # unless (execute ([$USERMOD,@opts,$user->{"name"}])) {
-    unless (execute ([($USERMOD.' '.join(' ', @opts)." ".$user->{"name"})])) {
-      $self->warn("Failed to call ". $USERMOD);
-      return;
-    }
-    
-    if($?){
-      $self->warn("Failed to modify user " . $user->{"name"});
-    }
+    $self->debug(5, "Profile: ", join(" ", %$profile),
+		 " System: ", join(" ", @$system));
+    return exists($profile->{gid}) &&
+	($profile->{gid} != $system->[ID]);
 }
 
-# Adds a user using useradd, generating options from a hash.
-# IN:  self (to use logging), user hash, createHome flag
-# OUT: 
-##########################################################################
-sub add_user {
-##########################################################################
-    my ($self, $user, $createHome) = @_;
-    my $username=$user->{"name"};
+# Returns whether the existing user must be modified. Receives as
+# arguments the user definition in the profile, and a reference to the
+# output of getpw() for that account.
+sub must_modify_user
+{
+    my ($self, $profile, $system) = @_;
 
-    # If the home directory is defined and must be created, then ensure that the parent
-    # directory exists (useradd will not create it).
-    if (defined($user->{"homedir"})) {
-        if ( $user->{"createHome"} ) {
-          my $status = $self->prepare_home($user->{"homedir"});
-          unless ( $status ) {
-            $self->error("can't create home parent directory ".$user->{"homedir"}."; skipping user $username");
-            return 1;            
-          }
-          if ( $status > 0 ) {
-            $self->log("Created home parent directory ".$user->{"homedir"}." for user $username");            
-          }
-        }
-    }
+    $self->debug(5, "Home: ", $system->[HOME],
+		 " comment: ", $system->[GCOS],
+		 " id: ", $system->[ID],
+		 " shell: ", $system->[SHELL]);
 
-    my @opts=generate_opts($user);
-
-    if (!$createHome) {
-      push(@opts,"-M");
-    }else{
-      if($useLdap != 1){
-        push(@opts,"-m");
-      }
-    }
-    if($useLdap == 1){
-      for (my $i =0; $i < @opts; $i++){
-        #Because we will call with luseradd anf it doesn't know -G 
-        if($opts[$i] eq '-G'){
-          $opts[$i] ='';
-          $opts[$i+1] ='';
-        }
-        #put password in quotes
-        if($opts[$i] eq '-p'){
-          $opts[$i+1] = '"'. $opts[$i+1]. '"';
-        }
-      }
-
-    }
-
-    $self->log($USERADD.' '.join(' ', @opts).' '.$user->{"name"});
-    $self->verbose($USERADD.' '.join(' ', @opts).' '.$user->{"name"});
-    # call useradd with generated options
-    unless (execute ([($USERADD.' '.join(' ', @opts).' '.$user->{"name"})])){
-      $self->warn("Failed to run " . $USERADD);
-      return;
-    }
-    if ($?) {
-      $self->warn("Failed to add user " . $user->{"name"});
-    } else {
-      if($useLdap == 1){
-        # This is a horrible hack because luseradd doesn't work properly.
-        # It doesn't set the password correctly. What is a discrace
-        # FIXME: This really needs fixing
-        modify_user ($self, $user, 0);
-      }
-    }
+    return (defined($profile->{uid}) && $profile->{uid} != $system->[ID]) ||
+	(defined($profile->{comment}) &&
+	     $profile->{comment} ne $system->[GCOS]) ||
+		 (defined($profile->{homeDir}) &&
+		      $profile->{homeDir} ne $system->[HOME]) ||
+			  (defined($profile->{shell}) && $profile->{shell} ne $system->[SHELL]);
 }
 
+# Returns the same hash reference as the input, as a sorted list of
+# elements [ $hash_key, $hash_value ]
+sub sort_hash
+{
+    my ($self, $h) = @_;
 
+    my @r;
 
-# Deletes a user using userdel.
-# IN:  username
-# OUT:
-##########################################################################
-sub delete_user {
-##########################################################################
-    my ($self, $username) = @_;
-    my $firstchar=substr($username, 0, 1);
-
-
-    if ($firstchar ne '+' && $firstchar ne '-' && $username ne 'root') {
-      $self->log($USERDEL." ".$username);
-      $self->verbose($USERDEL." ".$username);
-
-      unless (execute ([$USERDEL, $username])) {
-        $self->warn("Failed to call ". $USERDEL);
-        return;
-      }
-      if ($?) {
-        $self->warn("Failed to delete user ".$username)
-      }
-
+    while (my ($k, $v) = each(%$h)) {
+	push(@r, [$k, $v]);
     }
 
+    return sort({$b->[0] cmp $a->[0]} @r);
 }
 
-# Configures login defaults based on profile.
-# IN:  self (for logging), config tree, string indicating base
-# point in config tree.
-# OUT:
-##########################################################################
-sub configure_login_defs($$@) {
-##########################################################################
+# Returns true if the system account $sys belongs to the pool
+# described to the profile account $pf. That is:
+#
+# - $pf belongs to a pool (and has a poolStart field)
+# - $sys is $pf' base name plus a few digits
+# - The number of the account is in an acceptable range.
+sub belong_to_pool
+{
+    my ($self, $pf, $sys) = @_;
 
-    my ($self,$config,$base) = @_;
-
-    if ($config->elementExists("$base/login_defs")) {   
-        ## create backup
-        copy("/etc/login.defs","/etc/login.defs.old")|| $self->error("Can't write to /etc/login.defs.old");
-        
-        my ($defs,$def,$val);
-        $defs = $config->getElement("$base/login_defs");
-        while ($defs->hasNextElement()) {
-            my $element = $defs->getNextElement();
-            
-            $def=$element->getName();
-            $def=~ tr/a-z/A-Z/;
-            $val=$element->getValue();
-            
-            ## use NCM::Check::lines to replace values
-            NCM::Check::lines("/etc/login.defs",
-                              linere => $def.".*",
-                              goodre => "$def $val",
-                              good   => "$def $val");
-            
-        }
-    }
+    return exists($pf->[1]->{poolStart}) &&
+	($sys->[0] =~ m{^$pf->[0](\d{$pf->[1]->{poolDigits}})$}) &&
+	    (($1 >= $pf->[1]->{poolStart}) &&
+		 ($1 <= ($pf->[1]->{poolStart} + $pf->[1]->{poolSize})));
 }
 
-# Sets fields in our internal user hash format based on fields
-# set in the user hash retrieved directly from the profile.
-# IN: ref to user hash to fill, ref to user hash from profile,
-# name of user, uid of user
-# OUT:
-##########################################################################
-sub fill_user_hash {
-##########################################################################
+# 
+sub must_modify_pool
+{
+    my ($self, $pf, $sys) = @_;
 
-    my ($self,$user_hash, $prof_hash, $name, $uid, $check_parent)=@_;
+    $sys->[0] =~ m{(\d+)$};
 
-    $user_hash->{"name"}=$name;
+    return 0 unless exists($pf->[1]->{uid});
 
-    if (exists $prof_hash->{"password"}) {
-        $user_hash->{"password"}=$prof_hash->{"password"};
+    if ($2 - $pf->[1]->{poolStart} + $pf->[1]->{uid} != $sys->[1]->[ID]) {
+	return 1;
     }
-    $user_hash->{"uid"}=$uid;
-
-    
-    if (exists $prof_hash->{"groups"}){
-        my $grouplist=$prof_hash->{"groups"};
-
-        $user_hash->{"pgroup"}=($prof_hash->{"groups"}->[0]);   
-        $user_hash->{"groups"}=join(',',sort @$grouplist);
-        
-    }
-
-    # N.B. the comment field in the profiles appears to 
-    # be used for users' real names
-    if (exists $prof_hash->{"comment"}) {
-        $user_hash->{"gcos"}=$prof_hash->{"comment"};
-    }
-    
-    if (exists $prof_hash->{"shell"}) {
-        $user_hash->{"shell"}=$prof_hash->{"shell"};
-    }
-    if (exists $prof_hash->{"createHome"}) {
-        $user_hash->{"createHome"}=$prof_hash->{"createHome"};
-    }
-    if (exists $prof_hash->{"homeDir"}) {
-        $user_hash->{"homedir"}=$prof_hash->{"homeDir"};
-        if ( $check_parent && $user_hash->{"createHome"} ) {
-          my $status = $self->prepare_home($prof_hash->{"homeDir"});
-          unless ( $status ) {
-            $self->error("can't create home parent directory ".$prof_hash->{"homeDir"}."; skipping user $name");
-            return 1;            
-          }
-          if ( $status > 0 ) {
-            $self->log("Created home parent directory ".$prof_hash->{"homeDir"}." for user $name");            
-          }
-        }
-    }
-    if (exists $prof_hash->{"createKeys"}) {
-        $user_hash->{"createKeys"}=$prof_hash->{"createKeys"};
-    }
+    return 0;
 }
 
-# Retrieves existing groups from system and fills a hash.
-# IN: self (for logging) 
-# OUT: hash of lists containing groups (by name) for each user (by name)
-##########################################################################
-sub get_existing_user_groups_hash {
-##########################################################################
-    my ($self) = @_;
+# Returns three structures with the users that need actions, as it
+# happens with classify_groups It considers pool accounts as well.
+sub classify_accounts
+{
+    my ($self, $accounts, $protected, $profile) = @_;
 
-    my %user_groups;
+    my ($modify, $delete, $create);
 
-    # get groups entries 
-    while (my ($group, $passwd, $gid, $members) = getgrent) {
-        next if $members =~ /^$/;
-        my @members = split ' ', $members;
-        $self->debug(5, "$group has '@members'\n");
-        foreach my $user (@members) {
-            $self->debug(5, "adding $user to $group\n");
-            push @{ $user_groups{$user} }, $group;
-        }
-    }
-    endgrent();
+    my @sys = $self->sort_hash($accounts);
+    my @pf = $self->sort_hash($profile);
 
-    # sort list for each user
-    foreach my $user (keys %user_groups) {
-        @{ $user_groups{$user} } = sort @{ $user_groups{$user} };
-    }
+    my $i = pop(@pf);
+    my $j = pop(@sys);
+    my $was_in_pool = 0;
 
-    return %user_groups;
-}
+    $self->verbose(join(" ", map($_->[0], @pf)));
+    $self->verbose(join(" ", keys(%$protected)));
 
-# Retrieves existing users from system and fills a set of user hashes.
-# If this is done on a system that gets it's users over ldap it will deadlock
-# IN: self (for logging) 
-# OUT: hash of hashes containing existing users (keyed by name)
-##########################################################################
-sub get_existing_users {
-##########################################################################
-
-    my ($self,$username) = @_;
-    
-    my $getUserFunction;
-
-    if ($username){
-      $getUserFunction = \&getpwnam;
-    }else{
-      $getUserFunction = \&getpwent;
-    }
-
-    my %user_groups = $self->get_existing_user_groups_hash();
-
-    my %existing_users;
-
-    while(my $pw  = &$getUserFunction($username)){
-        my %user_hash;
-        $user_hash{'name'}=$pw->name;
-        $user_hash{'password'}=$pw->passwd;
-        $user_hash{'uid'}=$pw->uid;
-        $user_hash{'gid'}=$pw->gid;
-        $user_hash{'pgroup'}=getgrgid($pw->gid);
-        if ($pw->comment) {
-            $user_hash{'comment'}=$pw->comment;
-        }
-        $user_hash{'gcos'}=$pw->gecos;
-        $user_hash{'homedir'}=$pw->dir;
-        $user_hash{'shell'}=$pw->shell;
-        
-        # get full list of groups
-        my $groups = "";
-        if (exists $user_groups{$pw->name}) {
-            $groups = join ',', @{ $user_groups{$pw->name} };
-        }    
-        $user_hash{'groups'}= $groups;
-  
-        $existing_users{$pw->name}=\%user_hash;
-        last if($username);
-    }
-    endpwent(  );
-
-    return %existing_users;
-}
-
-# Find out if a user is in /etc/passwd or from somewhere else (Ldap for example :)
-# IN: self (for logging/warn), username to check against
-# OUT: 1 if user is in /etc/passwd, 0 if not
-##########################################################################
-sub user_in_passwd {
-##########################################################################
-    my ($self, $user)= @_;
-    my $returnVal = 0;
-
-    # Only do it if we use ldap. Otherwise exit to save time
-    if ($useLdap != 1){
-      return 1;
+    while ($i || $j) {
+	if ($i && $j) {
+	    $self->debug(5, "Profile: $i->[0], system: $j->[0]");
+	    if ($i->[0] eq $j->[0]) {
+		if ($self->must_modify_user($i->[1], $j->[1]->{system})) {
+		    $self->verbose("Account $i->[0] must be modified");
+		    push(@$modify, { system => $j->[1]->{system},
+				     profile => $i->[1] });
+		}
+		else {
+		    $self->verbose("Nothing to do account $i->[0]");
+		}
+		$self->debug(5, "Removing the next element out of both arrays");
+		$i = pop(@pf);
+		$j = pop(@sys);
+	    }
+	    elsif ($self->belong_to_pool($i, $j)) {
+		$self->verbose("Account $j->[0] belongs to pool $i->[0], ",
+			       "not modifying yet");
+		# Don't modify pools yet
+		#push(@$modify, $i) if $self->must_modify_pool($i, $j);
+		$j = pop(@sys);
+		$was_in_pool = 1;
+	    }
+	    elsif ($i->[0] lt $j->[0]) {
+		if ($was_in_pool) {
+		    $self->verbose("Finished pool $i->[0]");
+		    $was_in_pool = 0;
+		}
+		else {
+		    $self->verbose("Account $i->[0] must be created");
+		    $create->{$i->[0]} = $i->[1] unless $was_in_pool;
+		}
+		$i = pop(@pf);
+	    }
+	    else {
+		if (!exists($protected->{$j->[0]})) {
+		    $self->verbose("Account $j->[0] may be deleted");
+		    push(@$delete, $j->[0]);
+		}
+		$j = pop(@sys);
+	    }
+	}
+	elsif ($i) {
+	    $self->verbose("Past the end of system accounts, adding $i->[0]");
+	    $create->{$i->[0]} = $i->[1];
+	    $i = pop(@pf);
+	}
+	else {
+	    $self->verbose("Past the end of profile accounts");
+	    if (!exists($protected->{$j->[0]})) {
+		push(@$delete, $j->[0]);
+		$self->verbose("removing $j->[0]");
+	    }
+	    $j = pop(@sys);
+	}
     }
 
-    unless (open PASSWD, "/etc/passwd"){
-      $self->warn("Cannot open /etc/passwd for reading: $!");
-      return;
-    }
-
-    while (my ($name) = split(/:/,<PASSWD>) ) {
-      if ($user eq $name){
-        $returnVal = 1;
-        last;
-      }
-    }
-    close PASSWD;
-    return $returnVal;
-}
-
-# Compares hashes representing a configured user and an existing user.
-# IN:  self (for logging), configured user hash, existing user hash
-# OUT: string containing results of comparison
-
-##########################################################################
-sub compare_users {
-##########################################################################
-    my ($self, $cfguser,$existuser) = @_; 
-    my $retcode = "unchanged";
-    my @ACCOUNTFIELDS=(GCOS, HOMEDIR, NAME, UID, PASSWORD, SHELL, PGROUP,GROUPS);    
-
-    foreach my $field (@ACCOUNTFIELDS) {
-
-        # if profile has field but existing a/c does not,
-        # then state is "mod". Should we remove fields
-        # in existing accounts that aren't in the profile?
-        if (defined $cfguser->{$field}) {
-            if (not defined $existuser->{$field}) {
-                $retcode="mod";
-            }
-            else {
-                my $cfgfield=$cfguser->{$field};
-                my $existfield;
-
-                if (defined($existuser->{$field})) {
-                    $existfield=$existuser->{$field};
-                    $existfield =~ s/^"(.*)"$/$1/; # strip quotes
-
-                    if ($cfgfield ne $existfield) {
-                        $retcode="mod";
-                        $self->log("$field not consistent with profile: (\"$cfgfield\",\"$existfield\")");
-                    }
-                    
-                }
-            }
-        }
-    }
-    return $retcode;
-}
-
-# Delete groups not configured in the profile (excepting root group,
-# and groups marked to be kept.
-# IN:   self (for logging), safemode flag, ref to kept groups, ref to 
-# hash of groups
-# OUT:  
-##########################################################################
-sub delete_groups {
-##########################################################################
-    my ($self, $safemode, $kgroupsref, $groupsref) = @_;
-    my %kept_groups=%$kgroupsref;
-    my %groups=%$groupsref;
-    my ($groupname, $val);
-    my $retval;
-
-    # delete groups 
-    # special case: ignore groups starting with '+' or '-' to allow use of NIS 
-    # special case: do not allow root to be deleted
-    while (($groupname, $val) = each(%groups)) {
-      my $firstchar=substr($groupname, 0, 1);
-      if ($val eq 'old' && $firstchar ne '+' && $firstchar ne '-' &&
-        $groupname ne 'root' && not(defined($kept_groups{$groupname}))) {
-      
-        my $primary = 0;
-      
-        # opening /etc/passwd shouldn't strictly be necessary as
-        # we have got a list of existing users already ...
-        my $gid = getgrnam($groupname);
-        if (defined($gid) && $gid ne '') {
-          unless(open PASSWD,"/etc/passwd"){
-            $self->warn("Cannot open /etc/passwd for reading: $!");
-            return;
-          }
-
-          while (my ($name, $pwd, $uid, $testgid) = split(/:/,<PASSWD>) ) {
-            $primary = 1 if ($gid == $testgid);
-          }
-          close PASSWD;
-        }
-
-        $self->verbose($GRPDEL . " " . $groupname) if (!$primary);
-
-        if (!$safemode && !$primary) {
-          $self->log($GRPDEL . " " . $groupname);
-          unless (execute ([$GRPDEL, $groupname])) {
-            $self->warn("Failed to run" . $GRPDEL);
-            return;
-          }
-          if ($?) {
-            $self->warn("Failed to delete group ".$groupname);
-          }
-        } else {
-          $self->warn("group $groupname not deleted because it's a primary group for some user");
-        }
-      }
-    }
-}
-
-# Convert password files to/from shadow format as configured in profile.
-# IN:  self (for logging), flag indicating shadow or non-shadow mode
-# OUT: 
-##########################################################################
-sub shadow_passwords {
-##########################################################################
-    my ($self, $shadow) = @_;
-    my $retval;
-
-    if ($shadow eq 'true') {
-        $self->log("Shadow passwords enabled: running ".PWCONV.",".GRPCONV);
-        $self->verbose("Shadow passwords enabled: running ".PWCONV.",".GRPCONV);
-        execute([PWCONV]);
-        $retval=$?;
-        execute ([GRPCONV]);
-        $retval+=$?;
-        $self->Warn("Failed to set shadow passwords") if ($retval);
-    } elsif ($shadow eq 'false') {
-        $self->verbose("Shadow passwords disabled: running ".PWUNCONV.",".GRPUNCONV);
-        $self->log("Shadow passwords disabled: running ".PWUNCONV.",".GRPUNCONV);
-        execute ([PWUNCONV]);
-        $retval=$?;
-        execute ([GRPUNCONV]);
-        $retval+=$?;
-        $self->Warn("Failed to unset shadow passwords") if ($retval);
-    }
-}
-
-# Generate a set of user hashes for pool accounts.
-# IN:  ref to hash of configured users, ref to base user hash,
-# user name (unnecessary as in hash?)
-# OUT: 
-##########################################################################
-sub generate_pool_users {
-##########################################################################
-    
-    my ($self,$configured_users,$thisuser,$username)=@_;
-    my $uid=$thisuser->{'uid'};
-    my $poolSize=$thisuser->{"poolSize"};
-    my $poolStart=$thisuser->{"poolStart"};
-    my $homedir="";
-
-    # Define home directory prefix and ensure parent exists if createHome=true
-    if (exists($thisuser->{"homeDir"})) {
-        $homedir=$thisuser->{"homeDir"};
-    } else {
-        $homedir="/home/".$username;
-        $self->info("No base dir set for $username pool accounts, defaulting to $homedir.");
-    }
-    if ( $thisuser->{"createHome"} ) {
-      my $status = $self->prepare_home($homedir);
-      unless ( $status ) {
-        $self->error("can't create home parent directory $homedir; skipping pool account $username");
-        return 1;            
-      }
-      if ( $status > 0 ) {
-        $self->log("Created home parent directory $homedir for pool account $username");
-      }
-    }
-    
-
-    # Get the ending index for pool accounts.  Create the field
-    # specifier for the pool account suffix.
-    my $poolEnd = ($poolSize>0) ? $poolStart+$poolSize-1 : $poolStart;
-
-    my $poolDigits=length("$poolEnd");
-
-    if (exists $thisuser->{"poolDigits"}) {
-        $poolDigits=$thisuser->{"poolDigits"};
-    }
-
-    
-    my $field = "%0" . $poolDigits . "d";
-    
-    # Now add or modify the user. 
-    for my $j ($poolStart .. $poolEnd) {
-        my $suffix = ($poolSize>0) ? sprintf($field, $j) : '';
-        my $uname = $username . $suffix;
-        $configured_users->{$uname}={};
-        my $myuid=$uid+$j;
-
-        $self->fill_user_hash($configured_users->{$uname}, 
-                       $thisuser, $uname, $myuid, 0);
-
-        
-        my $poolhomedir=$homedir.$suffix;
-        $configured_users->{$uname}{"homedir"}=$poolhomedir;
-        if (exists $thisuser->{"createHome"}) {
-            $configured_users->{$uname}{"createHome"}=$thisuser->{"createHome"};
-        }
-        if (exists $thisuser->{"createKeys"}) {
-            $configured_users->{$uname}{"createKeys"}=$thisuser->{"createKeys"} 
-        }
-    }
-}
-
-# Retrieve info about users from profile and use it to fill user hashes.
-# IN:  config (to access profile), base (root point in profile tree)
-# OUT:
-##########################################################################
-sub get_users_from_profile {
-##########################################################################
-    my ($self,$config, $base) = @_;
-    my %configured_users;
-    
-    # get list of users from profile and use info to fill list of 
-    # user hashes in our internal format
-    # N.B. includes generation of pool accounts
-    if ($config->elementExists("$base/users")) {
-        my $users_resource = $config->getElement("$base/users");
-        my $uhashref = $users_resource->getTree;
-        my %uhash = %$uhashref;
-
-        foreach my $user (keys %uhash) {
-            my $thisuserref=$uhash{$user};
-            my %thisuser=%$thisuserref;
-
-            my $uid=$thisuser{'uid'};
-
-            if (my $poolSize=$thisuser{"poolSize"}) {
-                generate_pool_users($self,\%configured_users, \%thisuser, $user);
-            } else { # non pool accounts
-                $configured_users{$user}={};
-                $self->fill_user_hash($configured_users{$user}, \%thisuser, $user, $uid, 1);
-            }
-        }
-    }
-
-    return %configured_users;
-}
-
-# Read list of users and groups to be kept from the profile.
-# IN:  config, base (to access profile), refs to hashes of groups, users
-# OUT:
-##########################################################################
-sub get_kept_groups_and_users {
-##########################################################################
-
-    my ($config, $base,$kept_groups,$kept_users)=@_;
-
-
-    if ($config->elementExists("$base/kept_groups")) {
-        my $resource = $config->getElement("$base/kept_groups");
-        while ($resource->hasNextElement()) {
-            my $element = $resource->getNextElement();
-            my $grp = $element->getName();
-            $kept_groups->{$grp} = 1
-            }
-        # add root group
-        $kept_groups->{"root"} = 1;
-    }
-    if ($config->elementExists("$base/kept_users")) {
-        my $resource = $config->getElement("$base/kept_users");
-        while ($resource->hasNextElement()) {
-            my $element = $resource->getNextElement();
-            my $user = $element->getName();
-            $kept_users->{$user} = 1
-            }
-        # add root user
-        $kept_users->{"root"} = 1;
-    }
-}
-
-# Process groups according to profile: add or modify. (Deleting is done
-# separating after user config to avoid deleting groups that are primary
-# groups for configured users.
-# IN:  self (for logging), config,base (to access profile), 
-# ref to groups hash, safemode flag
-# OUT:
-##########################################################################
-sub process_groups {
-##########################################################################
-
-    my ($self, $config, $base, $groups, $safemode) = @_;
-
-    unless (open GROUP,"/etc/group"){
-      $self->warn("Cannot open /etc/group for reading: $!");
-      return;
-    }
-    my @groupinfo;
-    my %existinggroups;
-    my $groupname;
-    my $retval;
-
-    while ((@groupinfo) = split(/:/,<GROUP>)) {
-        $groupname=$groupinfo[0];
-        my $gid= $groupinfo[2];
-        $existinggroups{$groupname} = $gid;
-        $groups->{$groupname} = 'old';
-    }
-    close GROUP;
-
-   # create root group if it doesn't exist (can happen!)
-    if ( !(exists($existinggroups{'root'})) ) {
-        my @group_opt=();
-        my $cmd=$GRPADD;
-        my $groupname='root';
-        push(@group_opt,'-g'.'0');
-        $self->warn("No root group, trying to create one now.");
-        $self->log(join(" ",$cmd,@group_opt)." ".$groupname);
-        $self->verbose(join(" ",$cmd,@group_opt)." ".$groupname); 
-        execute ([$GRPADD, @group_opt, 'root']);
-    }
-
-    # process groups listed in auth resource "groups"
-    # if already existing call groupmod and change %groups value to "mod"
-    # otherwise call groupadd and set %groups value to "new"
-    if ($config->elementExists("$base/groups")) {
-        my $groups_resource = $config->getElement("$base/groups");
-
-  while ($groups_resource->hasNextElement()) {
-      my $element = $groups_resource->getNextElement();
-      
-      # Collect options for this group.
-      my @group_opt=();
-      
-      # The key is the name of the group.
-      $groupname=$element->getName();
-      
-      my $prefix = "$base/groups/$groupname";
-      my $gid="none";
-      # Add gid if specified.
-      if ($config->elementExists("$prefix/gid")) {
-        $gid = $config->getElement("$prefix/gid")->getValue();
-        push(@group_opt,'-g'.$gid);
-      }
-      
-      # Define value necessary.
-      my $cmd = $GRPADD;
-
-      my $state = 'new';
-      if (defined($groups->{$groupname}) && $groups->{$groupname} ne "new") {
-          $cmd = $GRPMOD;
-          $state = 'mod';
-      }
-      
-      # Run the command to modify or create a group.
-      $groups->{$groupname} = $state;
-      
-      if ($safemode) {
-          $self->log("noaction mode: not modifying group $groupname");
-      } else {
-          my $oldgid = $existinggroups{$groupname}|| "NEW";
-          if ($gid ne "none" || ($oldgid && ($gid ne $oldgid))) {        
-            $self->log(join(" ",$cmd,@group_opt)." ".$groupname);
-            $self->verbose(join(" ",$cmd,@group_opt)." ".$groupname);
-        
-            unless (execute ([$cmd, @group_opt, $groupname])) {
-              $self->warn("Failed to call ". $cmd);
-              return;
-            }
-            if ($?) {
-              $self->warn("Failed to ". $cmd ." group ". $groupname)
-            }
-          }
-        }
-      }
-    }
+    return ($modify, $delete, $create);
 }
 
 
-##########################################################################
-sub Configure($$@) {
-##########################################################################
-    
-    my ($self, $config) = @_;
+# Returns three structures with the groups that need some actions
+# (modification, deletion, creation). It receives as arguments the
+# existing groups, those which must NOT be removed no matter what and
+# the entities present in the profile.
+sub classify_groups
+{
+    my ($self, $groups, $protected, $profile) = @_;
 
-    # Define paths for convenience. 
-    my $base = "/software/components/accounts";
+    my ($modify, $delete, $create);
 
-    # Number of accounts added
-    my $no_users_added=0;
-
-    # Set this to 1 for debugging.  Normally we want to actually 
-    # make the changes. (Also could be used to implement noaction!)
-    my $safemode = 0;
-    if ($NoAction) {
-        $self->verbose("Running in noaction mode, no changes will be made.\n");
-        $safemode=1;
+    while (my ($k, $v) = each(%$profile)) {
+	if (exists($groups->{$k})) {
+	    $groups->{$k}->{to_delete} = 0;
+	    push(@$modify, {system => $groups->{$k}->{system},
+			    profile => $v})
+		if $self->must_modify_group($v, $groups->{$k}->{system});
+	}
+	else {
+	    $create->{$k} = $v;
+	}
     }
 
-    my $removeAccounts=0;
-    # check whether unconfigured accounts should be removed
-    if ($config->elementExists("$base/remove_unknown")) {
-        $removeAccounts=($config->getValue("$base/remove_unknown") eq 'true');
+    while (my ($k, $v) = each(%$groups)) {
+	push(@$delete, $k) if $v->{to_delete} && !exists($protected->{$k})
+	    && $k ne 'root';
     }
-    
-    # check if the system is configured to use ldap 
-    if ($config->elementExists("$base/ldap") && ($config->getValue("$base/ldap") eq "true")) {
-      $self->verbose("Running in Ldap mode");
-      $useLdap = 1;
-      # Use the libuser programs
-      $USERADD = "/usr/sbin/luseradd";
-      #$USERMOD = "/usr/sbin/usermod";
-      $USERDEL = "/usr/sbin/luserdel";
-      $GRPDEL = "/usr/sbin/lgroupdel";
-      $GRPADD = "/usr/sbin/lgroupadd";
-      #$GRPMOD = "/usr/sbin/groupmod";
-      #$SYSID = "/usr/sbin/id";
-    }
-    
-    ## Ensure that passwd and group are ok
-    my $shadowOk = 0;
-    if ($config->elementExists("$base/shadowpwd")) {
-        $shadowOk = $config->getValue("$base/shadowpwd");
-        if($shadowOk eq 'true'){
-          shadow_passwords($self, $shadowOk);
-          $self->debug(5, "Shadow is true so running pwconv and grpconv");
-        }
-    }
-    
-    ## configure /etc/login.defs
-    configure_login_defs($self, $config, $base);
+    return ($modify, $delete, $create);
+}
 
-    # This component's code was originally taken from the edg-lcfg-auth 
-    # component, but has now been refactored.
-    
-    my %groups;  # old groups to delete, new groups to add and groups to modify
+# Checks for conflicts in the resulting status list.
+#
+# It returns 0 if everything is expected to go all right, -1 in case
+# of expected errors.
+#
+# Accepts the hash of entities (users or groups in the system), the
+# scheduled modifications, the scheduled deletions, the scheduled
+# creations and the field in the profile with the numeric ID. This
+# last one must be either "gid" or "uid".
+sub conflicts
+{
+    my ($self, $sys, $modify, $delete, $create, $field) = @_;
 
-    my $retval; # temp variables
+    my (@rs, $rt, $nam, $id, @id);
 
-    # Collect the groups and users which must be kept if they exist.
-    my (%kept_groups, %kept_users);
-    get_kept_groups_and_users($config,$base,\%kept_groups,\%kept_users);
-
-    #########################
-    # Start processing groups
-    #########################
-    process_groups($self, $config, $base, \%groups, $safemode);
-
-    # removal of old groups is done after processing users because we don't
-    # remove groups that are still primary group for a user
-    
-    
-    #########################
-    # Start processing users
-    #########################
-
-  
-    # read list of existing users and options from passwd file
-    my %existing_users ;
-    if ($useLdap != 1){
-        %existing_users=get_existing_users($self);
-    }
-    if ( ! (exists($existing_users{'root'}) ) ) {
-        $self->warn("No root user, creating one now.");
-        my %root_user;
-        $root_user{'name'}='root';
-        $root_user{'gid'}=0;
-        $root_user{'homedir'}='/root';
-        $root_user{'pgroup'}='root';
-        $root_user{'uid'}=0;
-        $self->add_user(\%root_user,0);    
+    $rt = 0;
+    while (my ($k, $v) = each(%$sys)) {
+	$self->debug(5, "Filling $k: ", $v->{system}->[ID]);
+	$rs[$v->{system}->[ID]] = $k;
     }
 
-    # set root password
-    if ($config->elementExists("$base/rootpwd")) {
-        my $rootpwd=$config->getValue("$base/rootpwd");
-        if (defined $rootpwd && $rootpwd ne '') {
-            if ($safemode) {
-                $self->log("Not changing root password while in safe mode");
-            } else {
-                unless (execute ([$USERMOD . " -p ". "'" . $rootpwd. "'" .  " root"])){
-                  $self->warn("Failed to run" . $USERMOD);
-                  return;
-                }
-                if ($?) {
-                  $self->warn("Failed to set root password")
-                }
-            }
-        }
+    foreach my $i (@$delete) {
+	$self->debug(5, "Deleting $i");
+	$rs[$sys->{$i}->{system}->[ID]] = undef;
     }
 
-    # read list of users configured in the profile
-    my %configured_users=get_users_from_profile($self,$config, $base);
-
-
-    # hash to record action to be taken for each account
-    my %processed_users;
-    
-    
-    # compare each user in the profile to existing account
-    foreach my $cfguser (sort keys %configured_users) {
-        my $cfguserhash=$configured_users{$cfguser};
-
-        $self->debug(5,"\$profile : ". Dumper(\$cfguserhash));
-        $processed_users{$cfguser}='unchanged';
-
-        my $pw = getpwnam($cfguser);
-
-        #The get user_in_passwd will always be true if not using ldap
-        if ($pw && user_in_passwd($self,$cfguser)) {
-            #If in ldap mode and user is in /etc/passwd get data for him
-            if ($useLdap == 1){
-              %existing_users=get_existing_users($self,$cfguser);
-            }
-            my $exuserhash=$existing_users{$cfguser};
-            $self->debug(5,"\$onsys : ". Dumper(\$exuserhash));
-            $processed_users{$cfguser}=compare_users($self, $cfguserhash, $exuserhash);
-        } else {
-            $processed_users{$cfguser}='add';
-        }
-
-    }
-    $self->debug(5,Dumper(\%processed_users));
-    
-    $self->info("Finished scanning existing users on system.");
-   
-
-
-    # for existing users not in profile set state to 'del'
-    if ($removeAccounts){
-        # read list of existing users and options from passwd file
-        my %existing_users=get_existing_users($self);
-        foreach my $existuser (sort keys %existing_users) {
-            if (not exists $processed_users{$existuser}) {
-                $processed_users{$existuser}='del';
-            }
-        }
+    foreach my $i (@$modify) {
+	if (exists($i->{profile}->{$field})) {
+	    if (defined($rs[$i->{profile}->{$field}]) &&
+		    $rs[$i->{profile}->{$field}] ne $i->{system}->[NAME]) {
+		$self->error("Trying to assign used $field $i->{profile}->{$field} to ",
+			     $i->{system}->[NAME], " conflicting with ",
+			     $rs[$i->{profile}->{$field}]);
+		$rt = -1;
+	    }
+	    else {
+		$rs[$i->{profile}->{$field}] = $i->{system}->[NAME];
+	    }
+	}
     }
 
-
-    my $usersf = CAF::FileWriter->open("temporary file", log => $self);
-    $usersf->cancel();
-    my $passf = CAF::FileWriter->open("temporary file 2", log => $self);
-    $passf->cancel();
-    # Process list of users
-    foreach my $usertoproc (sort keys %processed_users) {
-        my $prefix = "$base/users/$usertoproc";         
-        my $state=$processed_users{$usertoproc};
-        my $createHome = 1;
-        if (exists $configured_users{$usertoproc}{"createHome"}) {
-            $createHome = $configured_users{$usertoproc}{"createHome"};
-        }
-        my $createKeys = 0;
-        if (exists $configured_users{$usertoproc}{"createKeys"}) {
-            $createKeys = $configured_users{$usertoproc}{"createKeys"};
-        }           
-
-        if ($state eq "del") {
-            # check safe mode, removeAccounts, kept accounts
-            my $kept=defined($kept_users{$usertoproc});
-            
-            if ($removeAccounts && !($safemode) && !$kept) {
-                delete_user($self, $usertoproc);
-            }
-
-        } elsif ($state eq "add") {
-            if (!$safemode) {   
-#               add_user($self, $configured_users{$usertoproc},$createHome);
-                # Output to file for newusers.
-                # Do not check home directory parents here, this has already been done
-                # with some optimization for pool accounts.
-                $no_users_added++;
-                my $userclass=$configured_users{$usertoproc};
-                my $ushell="";
-                if (exists $userclass->{"shell"}) {
-                    $ushell=$userclass->{"shell"};
-                }
-                else {
-                    $ushell="/bin/bash";
-                }
-                print $usersf join(':', $userclass->{name}, "x",
-				   "$userclass->{uid}",
-				   exists($userclass->{pgroup}) ?
-				       (getgrnam($userclass->{pgroup}))[2] : "",
-				   "$userclass->{gcos}",
-				   $userclass->{homedir},
-				   $ushell), "\n";
-                my $upass="";
-                if (exists $userclass->{"password"}) {
-                    $upass=$userclass->{"password"};
-                }
-                else {
-                    $upass="!NP*";
-                }
-                print $passf "$userclass->{name}:$upass\n";
-            }
-            else {
-                $self->log("noaction mode: not adding user $usertoproc");
-            }
-            
-            # Determine if ssh keys should be generated for this user.
-            if ($createKeys && $createHome && !$safemode) {
-                $self->keygen($usertoproc);
-            }
-
-        } elsif ($state eq "mod" ) {
-            $self->info("User $usertoproc needs to be modified");
-            if (!$safemode) {        
-                modify_user($self, $configured_users{$usertoproc}, $createHome);
-            } else {
-                $self->log("noaction mode: not modifying user $usertoproc");
-            }
-        }
-
-        elsif ($state eq "unchanged" ) {
-
-        }
-
-        else {
-            $self->error("User $usertoproc in unknown state");
-        }
-
+    while (my ($k, $v) = each(%$create)) {
+	$self->debug(4, "Analysing $k($field)");
+	if (exists($v->{$field})) {
+	    $self->debug(4, "Checking for clashes with $field");
+	    if (defined($rs[$v->{$field}]) && ($rs[$v->{$field}] ne $k)) {
+		$self->error("Trying to assign used $field $v->{$field} to $k, ",
+			     "conflicting with $rs[$v->{$field}]");
+		$rt = -1;
+	    }
+	    else {
+		$rs[$v->{$field}] = $k;
+	    }
+	}
     }
+    return $rt;
+}
 
-    # bulk add new users
-    my $cmd = CAF::Process->new(NEWUSERS,
-				stdin => ${$usersf->string_ref()});
-    $cmd->execute();
-    if ($no_users_added > 0 ) {
-        $self->info("Added ".$no_users_added." users.");
+
+# Schedules what has to be done. Returns a hash listing:
+#
+# Accounts to be removed. This list will be empty if the
+# remove_unknown flag is false in the profile.
+#
+# Groups to be removed. This list will be empty if the remove_unknown
+# flag is false in the profile.
+#
+# Groups to be modified
+# Groups to be created
+# Accounts to be modified
+# Accounts to be created
+#
+# Returns undef in case of errors, so the component can fail without
+# breaking the system.
+sub schedule
+{
+    my ($self, $tree) = @_;
+
+    my %ret;
+
+    my %u = $self->list_system_members($self->wrap_getent(PASSWD_FILE));
+    my %g = $self->list_system_members($self->wrap_getent(GROUP_FILE));
+
+    @ret{"modify_groups", "delete_groups", "create_groups"} =
+	$self->classify_groups(\%g, $tree->{kept_groups}, $tree->{groups});
+    @ret{"modify_accounts", "delete_accounts", "create_accounts"} =
+	$self->classify_accounts(\%u, $tree->{kept_users}, $tree->{users});
+
+    $tree->{remove_unknown} or @ret{"delete_groups","delete_accounts"} =
+	([], []);
+
+    return if $self->conflicts(\%g, @ret{"modify_groups", "delete_groups",
+					     "create_groups"}, 'gid');
+    return if $self->conflicts(\%u, @ret{"modify_accounts", "delete_accounts",
+					     "create_accounts"}, 'uid');
+    return %ret;
+}
+
+# Deletes the accounts marked for deletion. It removes as many as
+# possible. Returns -1 in case of any single error in the deletion
+# process.
+sub delete_stuff
+{
+    my ($self, $accounts, @command) = @_;
+
+    my $rt = 1;
+
+    foreach my $i (@$accounts) {
+	my $cmd = CAF::Process->new([@command, $i], log => $self);
+	$cmd->run();
+	if ($?) {
+	    $self->error("Error when deleting account $i");
+	    $rt = undef;
+	}
     }
+    return $rt;
+}
 
-    $cmd = CAF::Process->new(CHPASSWD,
-			     stdin => ${$passf->string_ref()});
-    $cmd->execute();
+# Modifies groups.
+sub modify_groups
+{
+    my ($self, $groups) = @_;
 
-    # delete groups not in the profile
-    if ($removeAccounts){
-        delete_groups($self, $safemode, \%kept_groups, \%groups);
+    my $rt = 1;
+
+    foreach my $i (@$groups) {
+	my $cmd = CAF::Process->new([GROUPMOD, $i->{profile}->{guid},
+				     $i->{system}->[NAME]],
+				    log => $self);
+	$cmd->run();
+	if ($?) {
+	    $self->error("Failed to adjust group ", $i->{system}->[NAME]);
+	    $rt = undef;
+	}
     }
+    return $rt;
+}
 
-    # shadow passwords
-    my $shadow = 0;
-    if ($config->elementExists("$base/shadowpwd")) {
-        $shadow = $config->getValue("$base/shadowpwd");
+# Modifies accounts. The accounts given are reset to what the profile
+# specifies for them, excepting for the password, which is handled by
+# the set_passwords method.
+#
+# Please note that if the profile settings clash with some LDAP
+# settings, the account won't be modified.
+sub modify_accounts
+{
+    my ($self, $accounts) = @_;
+
+    my $rt = 1;
+
+    foreach my $i (@$accounts) {
+	my $cmd = CAF::Process->new([USERMOD], log => $self);
+	$cmd->pushargs((exists($i->{profile}->{groups}) ?
+			    (GROUPSOPT,
+			     join(",", map((getgrnam($_))[ID],
+					   @{$i->{profile}->{groups}})))
+				: ()),
+		       (exists($i->{profile}->{homeDir}) ?
+			    (HOMEOPT, $i->{profile}->{homeDir}, MOVEHOMEOPT)
+				: ()),
+		       (exists($i->{profile}->{comment}) ?
+			    (GCOSOPT, $i->{profile}->{comment}) : ()),
+		       (exists($i->{profile}->{shell}) ?
+			    (SHELLOPT, $i->{profile}->{shell}) : ()),
+		       (IDOPT, $i->{profile}->{uid}),
+		       $i->{system}->[NAME]);
+	$cmd->run();
+	if ($?) {
+	    $self->error("Failed to adjust user ", $i->{system}->[NAME]);
+	    $rt = undef;
+	}
     }
+    return $rt;
+}
 
-    if ($safemode) {
-        $self->log("Not activating shadow passwords while in safe mode");
-    } else {
-        shadow_passwords($self, $shadow);
+# Creates groups
+sub create_groups
+{
+    my ($self, $groups) = @_;
+
+    $self->verbose("Creating needed groups");
+    while (my ($g, $desc) = each(%$groups)) {
+	my $cmd = CAF::Process->new([GROUPADD], log => $self);
+	$cmd->pushargs(GIDPARAM, $desc->{gid}) if exists($desc->{gid});
+	$cmd->pushargs($g);
+	$cmd->run();
+	if ($?) {
+	    $self->error("Failed to create group $g");
+	    return;
+	}
     }
-
-    # set file permissions
-    chmod(0644, "/etc/passwd");
-    chmod(0644, "/etc/group");
-    
     return 1;
 }
 
-# Generate ssh keys for a user.  This was lifted from the poolaccounts
-# LCFG object written by Steve Traylen.  
-sub keygen {
+sub sanitize_path
+{
+    my ($self, $path) = @_;
 
-    my ($self,$user) = @_;
-
-    # Get the UID, GID, and home directory of user.  There seems to be
-    # a race condition when getpwnam is called the first time causes
-    # the information not to be returned.  So it is called twice below
-    # to avoid this. 
-    my @dummy = getpwnam($user);
-    my ($uid, $gid, $home) = (getpwnam($user))[2,3,7];
-
-    unless (defined($uid) && defined($gid) && defined($home)) {
-        $self->warn("User doesn't exist: $user");
-        return;
+    if ($path !~ m{^(/[-\w\./]+)$}) {
+	$self->error("Unsafe path: $path");
+	return;
     }
-
-    ####################################################
-    # Set the EUID, and EGID to cope with root_squashes.
-    $) = $gid;
-    $> = $uid;
-
-    ###################################################
-    # Create the .ssh directory.
-    mkdir("$home/.ssh") unless (-d "$home/.ssh") ;
-
-    ###################################################
-    # Create the ssh 2 keypair.
-    if (! -f "$home/.ssh/id_rsa") {
-        $> = 0 ; $) = 0 ;
-        $self->Info("Generating RSA2 key for $user") ;
-        $) = $gid; $> = $uid;
-        my @cmd = ('/usr/bin/ssh-keygen','-t','rsa','-q','-N','',
-                   '-C',$user,'-f',"$home/.ssh/id_rsa") ;
-        execute (\@cmd);
-        my $retval = $?;
-        if ( $retval != 0 ) {
-            $> = 0 ; $) = 0 ;
-            $self->Fail("Failed to generate key for $user.") ;
-        }
-    }
-
-    ###################################################
-    # Create the ssh 1 keypair.
-    if (! -f "$home/.ssh/identity") {
-        $> = 0 ; $) = 0 ;
-        $self->Info("Generating RSA1 key for $user") ;
-        $) = $gid ; $> = $uid ;
-        my @cmd = ('/usr/bin/ssh-keygen','-t','rsa1','-q','-N','',
-                   '-C',$user,'-f',"$home/.ssh/identity") ;
-        execute (\@cmd);
-        my $retval = $?;
-        if ( $retval != 0 ) {
-            $> = 0 ; $) = 0 ;
-            $self->Fail("Failed to generate key for $user.") ;
-        }
-    }
-
-    ##################################################
-    # Create the authorised keys file.
-    unless(open(AUTH,">$home/.ssh/authorized_keys")){
-      $self->warn("Cannot open $home/.ssh/authorized_keys: $!");
-      return;
-    }
-    unless(open(PUB,"<$home/.ssh/identity.pub")){
-      $self->warn("Cannot open $home/.ssh/identity.pub:  $!");
-      return;
-    }
-    while (<PUB>) {
-        print AUTH $_ ;
-    }
-    close(PUB);
-    unless(open(PUB,"<$home/.ssh/id_rsa.pub")){
-      $self->warn("Cannot open $home/.ssh/id_rsa.pub:  $!");
-      return;
-    }
-
-    while (<PUB>) {
-        print AUTH $_ ;
-    }
-    close(PUB);
-    close(AUTH) ;
-    ##################################################
-    # Set the EUID and EGID back to what they should be.
-    $> = 0 ;
-    $) = 0 ;
+    return $1;
 }
 
-# escape the string so it is OK for a command line
-sub quote_string($) {
-    my $s = shift;
-    $s =~ s%\\%\\\\%g;
-    $s =~ s%\"%\\\"%g;
-    return  '"' . $s . '"';
+# Creates the home directory for a given account.  The home directory
+# is created first, and then all the contents on /etc/skel are copied,
+# and permissions are adjusted.
+#
+# Only at the end of the process the user is given access to the
+# already set-up directory.
+#
+# Returns true in case of success, false otherwise.
+# Receives the account name and the path to the home dir.
+sub create_home
+{
+    my ($self, $account) = @_;
+    my ($uid, $gid, $dir) = (getpwnam($account))[ID,IDLIST,PWHOME];
+
+    $self->verbose("Creating home directory for $account at $dir");
+
+    if ($dir !~ m{^(/[-/\w\.]+$)}) {
+	$self->error("Unsafe to create home directory: $dir ",
+		     "for account: $account");
+	return;
+    }
+
+    $dir = $1;
+
+    if (!makedir($dir, 0700)) {
+	$self->error("Failed to create home directory: $dir ",
+		     "for account $account");
+	return;
+    }
+
+    # Close the access while we copy everything from /etc/skel. This
+    # step is needed, as the home directory might already exist.
+    chown(0, 0, $dir);
+    chmod(0700, $dir);
+
+    my $find = LC::Find->new();
+    $find->callback(
+	sub {
+	    my $d = $self->sanitize_path("$dir/$LC::Find::SubDir") or return;
+	    my $f = $self->sanitize_path("$d/$LC::Find::Name") or return;
+	    my $src =  $self->sanitize_path(join("/", $LC::Find::TopDir,
+						 $LC::Find::SubDir,
+						 $LC::Find::Name)) or return;
+	    if (! -e $f) {
+		if (-d $src) {
+		    $self->verbose("Creating directory $f for $src");
+		    if (!makedir($f, 0700)) {
+			$self->error("Couldn't create directory $f");
+			return;
+		    }
+		}
+		else {
+		    copy($src, $f, preserve => 1);
+		}
+	    }
+	    chown($uid, $gid, $f);
+	}
+       );
+
+    $find->find(SKELDIR);
+    chown($uid, $gid, $dir);
+    return 1;
 }
 
-1;      # Required for PERL modules
+# Adds the account to the list of groups given as arguments.
+sub add_to_groups
+{
+    my ($self, $account, $groups) = @_;
+
+    my @gids = map((getgrnam($_))[ID], @$groups);
+
+    my $cmd = CAF::Process->new([USERMOD, GROUPSOPT, join(",", @gids),
+				 $account],
+				log => $self);
+    $cmd->run();
+    if ($?) {
+	$self->error("Failed to add $a to groups", join(", ", @$groups));
+    }
+}
+
+# Creates users, with their homes if needed.
+sub create_accounts
+{
+    my ($self, $accounts, $tree) = @_;
+    my (@users);
+
+    $self->verbose("Creating needed accounts");
+    while (my ($a, $pf) = each(%$accounts)) {
+	$self->verbose("Processing account $a");
+	my @flds;
+	if (exists($pf->{poolStart})) {
+	    $self->verbose("Account $a is a pool with $pf->{poolSize} members");
+	    for my $i (0..$pf->{poolSize}-1) {
+		my $tail = sprintf("%0$pf->{poolDigits}d", $pf->{poolStart}+$i);
+		@flds = ("$a$tail", "x",
+			 $pf->{uid} + $i,
+			 (exists($pf->{groups}) ?
+			      (getgrnam($pf->{groups}->[0]))[ID] : ""),
+			 (exists($pf->{comment}) ? $pf->{comment} : ""),
+			 (exists($pf->{homeDir}) ? "$pf->{homeDir}$tail" : ""),
+			 (exists($pf->{shell}) ? $pf->{shell} : ""));
+		push(@users, join(":", @flds));
+	    }
+	}
+	else {
+	    push(@flds, $a, "x",
+		 $pf->{uid},
+		 (exists($pf->{groups}) ? (getgrnam($pf->{groups}->[0]))[ID] : ""),
+		 (exists($pf->{comment}) ? $pf->{comment} : ""),
+		 (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
+		 (exists($pf->{shell}) ? $pf->{shell} : ""));
+	    push(@users, join(":", @flds));
+	}
+    }
+
+    my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users));
+    $cmd->execute();
+
+
+    if ($?) {
+	$self->error("Failed to execute ", join(" ", USERADD));
+	return;
+    }
+
+    while (my ($a, $pf) = each(%$accounts)) {
+	if (exists($pf->{poolSize})) {
+	    for my $i (0..$pf->{poolSize}-1) {
+		my $tail = sprintf("%0$pf->{poolDigits}d", $i);
+		$self->create_home("$a$tail") if $pf->{createHome} eq 'yes';
+		$self->add_to_groups("$a$tail", $pf->{groups})
+		    if exists($pf->{groups}) &&
+			(scalar(@{$pf->{groups}}) > 1);
+	    }
+	}
+	else {
+	    $self->create_home($a) if $pf->{createHome} eq 'yes';
+	    $self->add_to_groups($a, $pf->{groups})
+		if exists($pf->{groups}) &&
+		    (scalar(@{$pf->{groups}}) > 1);
+	}
+    }
+    return 1;
+}
+
+# Sets up the root password.
+sub root_password
+{
+    my ($self, $rootpwd) = @_;
+
+    $self->verbose("Setting up root password");
+    CAF::Process->new([CHPASSWD], stdin => "root:$rootpwd\n")->execute();
+    if ($?) {
+	$self->error("Failed to set root password");
+    }
+}
+
+# Sets login_defs, if needed
+sub login_defs
+{
+    my ($self, $defs) = @_;
+
+    my $fh = CAF::FileEditor->open(LOGINDEFS_FILE, log => $self,
+				   backup => '.old');
+    my $cnts = ${$fh->string_ref()};
+
+    my @lines = split("\n", $cnts);
+
+    while (my ($k, $v) = each(%$defs)) {
+	my $e = uc($k);
+	$self->debug(5, "Destroying key: $e");
+	@lines = grep($_ !~ m{^[^#]*$e\W}, @lines);
+	push(@lines, "$e $v");
+    }
+    $fh->set_contents(join("\n", @lines, ""));
+    $fh->close();
+}
+
+# Sets all the passwords for the users defined in the profile. This is
+# done inconditionally on every run of the component, as it's
+# relatively cheap to do it and we don't need to look at the shadow
+# file to guess who actually needs to modify it.
+sub set_passwords
+{
+    my ($self, $accounts) = @_;
+
+    my @pass;
+
+    while (my ($a, $v) = each(%$accounts)) {
+	push(@pass, "$a:$v->{password}") if exists($v->{password});
+    }
+
+    if (@pass) {
+	$self->verbose("Changing passwords");
+	push(@pass, "");
+	my $cmd = CAF::Process->new([CHPASSWD], stdin => join("\n", @pass)) if @pass;
+	$cmd->execute();
+	if ($?) {
+	    $self->error("Failed to execute ", join(" ", CHPASSWD));
+	    return;
+	}
+    }
+}
+
+
+
+# Configure method
+sub Configure
+{
+    my ($self, $config) = @_;
+
+    my $t = $config->getElement(PATH)->getTree();
+
+    my %tasks = $self->schedule($t) or return 0;
+
+    if ($NoAction) {
+	$self->info("--noaction specified, doing nothing");
+    } else {
+	$self->delete_stuff($tasks{delete_accounts}, USERDEL);
+	$self->delete_stuff($tasks{delete_groups}, GROUPDEL);
+	$self->root_password($t->{rootpwd}) if exists($t->{rootpwd});
+	$self->login_defs($t->{login_defs}) if exists($t->{login_defs});
+	$self->modify_groups($tasks{modify_groups}, $t) or return 0;
+	$self->create_groups($tasks{create_groups}) or return 0;
+	$self->modify_accounts($tasks{modify_accounts}, $t) or return 0;
+	$self->create_accounts($tasks{create_accounts}) or return 0;
+	$self->set_passwords($t->{users}) or return 0;
+    }
+    return 1;
+}
+
+1;

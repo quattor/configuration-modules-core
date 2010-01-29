@@ -15,7 +15,7 @@ type structure_userinfo = {
     'groups'     ? string[]
     'password'   ? string
     'shell'      ? string
-    'uid'        ? long(0..)
+    'uid'        : long(0..)
     'poolStart'  ? long(0..)
     'poolDigits' ? long(1..)
     'poolSize'   ? long(0..)
@@ -47,9 +47,9 @@ type component_accounts = {
     'users'      ? structure_userinfo{}
     'groups'     ? structure_groupinfo{}
     'login_defs' ? structure_login_defs
-    'remove_unknown' ? boolean
-    'kept_users' ? string{}
-    'kept_groups' ? string{}
+    'remove_unknown' : boolean = false
+    'kept_users' : string{}
+    'kept_groups' : string{}
 };
 
 bind '/software/components/accounts' = component_accounts;
