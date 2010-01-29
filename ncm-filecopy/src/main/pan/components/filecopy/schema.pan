@@ -32,7 +32,7 @@ type structure_filecopy = {
     'group'       ? string
     'no_utf8'     ? boolean
     'forceRestart' : boolean = false
-    'backup'      ? boolean = true
+    'backup'      : boolean = true
 } with component_filecopy_valid(SELF);
 
 
