@@ -16,7 +16,7 @@ use EDG::WP4::CCM::Element qw(unescape);
 
 use LC::File qw(copy);
 use LC::Check;
-use LC::Process qw(run);
+use CAF::Process;
 
 use Encode qw(encode_utf8);
 
@@ -71,32 +71,33 @@ sub Configure {
     if ( $server->{host} eq $this_host_full ) {
       $self->debug(1,"Checking MySQL service name...");
       my $service="mysql";
-      $status = qx%/sbin/chkconfig --list $service >&/dev/null%;
+      my $cmd = CAF::Process->new(["sbin/chkconfig --list $service"], log => $self);
+      $cmd->execute();      # Also execute the command
       if ( $? ) {
-            $service="mysqld";
-            $status = qx%/sbin/chkconfig --list $service >& /dev/null%;
-            if ( $? ) {
-                $self->error("Can't find mysql service: neither mysql nor mysqld.");
-                return(1);
-            }
+        $self->error("Can't find mysql service: neither mysql nor mysqld.");
+        return(1);
       }
       $self->debug(1,"Found MySQL service name $service");
 
 
       $self->debug(1,"Checking MySQL service is enabled and started...");
-      $status = qx%/sbin/chkconfig --level 345 $service on%;
+      $cmd = CAF::Process->new(["sbin/chkconfig --level 345 $service on"], log => $self);
+      $cmd->execute();      # Also execute the command
       if ( $? ) {
         $self->error("Error enabling MySQL server on local node");
         return(1);
       }
 
       # MySQL doesn't support 'service status'
-      $status = qx/ps -e|grep mysqld_safe/;
+      $cmd = CAF::Process->new(["ps -e|grep mysqld_safe"], log => $self);
+      $cmd->execute();      # Also execute the command
       if ( $? ) {
         $self->debug(1,"Starting MySQL server...");
-        $status = qx%/sbin/service $service start%;
+        $cmd = CAF::Process->new(["/sbin/service $service start"], log => $self);
+        my $cmd->output();      # Also execute the command
+        $status = $?;
         if ( $? ) {
-          $self->error("Error starting MySQL server on local node : $status");
+          $self->error("Error starting MySQL server on local node : $status\nCommand output: $cmd_output");
           return(1);
         }
       } else {
@@ -242,6 +243,9 @@ sub Configure {
       }
     }
 
+    # Mark the server as enabled
+    $servers->{$server_name}->{enabled} = 1;
+    
   }
 
 
@@ -253,6 +257,12 @@ sub Configure {
     # Just in case, normally forbidden by PAN schema
     unless ( $server ) {
       $self->error("Error retrieving server name for database $database");
+    }
+    
+    # Do not attempt to configure database if an error occured configuring the server hosting it
+    unless ( $server->{enabled} ) {
+      $self->warn("Database $database configuration skipped due to server ".$database->{server}." configuration error.");
+      next;
     }
 
     # Create database
@@ -338,9 +348,11 @@ sub mysqlExecCmd () {
     $command = "--exec '" . $command . "'";
   };
 
-  $self->debug(2,"$function_name : executing MySQL command <<<mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command > /dev/null 2>&1>>>");
+  $self->debug(2,"$function_name : executing MySQL command <<<mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command>>>");
 
-  my $output = qx/mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command 2>&1/;
+  my $cmd = CAF::Process->new(["mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command"],
+                              log => $self);
+  my $output = $cmd->output();      # Also execute the command
   my $status = $?;
   if ( $status ) {
     $self->debug(2,"MySQL error : $output");
