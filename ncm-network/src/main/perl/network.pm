@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.0, 14/07/09 12:24
+# VERSION:    1.2.1, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -341,7 +341,7 @@ sub Configure {
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
         $exifiles{"$dir_pref/$file"} = -1;
         ## backup all involved files
-        if ($file=~m/([A-Za-z0-9.-]*)/) {
+        if ($file=~m/([:A-Za-z0-9.-]*)/) {
             my $untaint_file=$1;
             mk_bu("$dir_pref/$untaint_file");
         }
