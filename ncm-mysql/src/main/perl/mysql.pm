@@ -70,14 +70,14 @@ sub Configure {
 
     if ( $server->{host} eq $this_host_full ) {
       $self->debug(1,"Checking MySQL service name...");
-      my service_found = 0;
+      my $service_found = 0;
       my $service;
       # SL3=mysql, SL4+=mysqld
       for $service ('mysqld', 'mysql') {
         my $cmd = CAF::Process->new(["sbin/chkconfig --list $service"], log => $self);
         $cmd->execute();      # Also execute the command
         unless ( $? ) {
-          service_found = 1;
+          $service_found = 1;
           last;
         }
       }
