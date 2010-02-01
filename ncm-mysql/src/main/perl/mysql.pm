@@ -226,10 +226,10 @@ sub Configure {
         if ( $changes < 0 ) {
           $self->warn("Error updating MySQL server parameters");
         }
-
-      }} else {
-        $self->debug(1,"Cannot check MySQL server configuration as server is remote (".$server->{host}.")");
       }
+    
+    } else {
+        $self->debug(1,"Cannot check MySQL server configuration as server is remote (".$server->{host}.")");
     }
 
 
