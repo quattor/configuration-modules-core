@@ -70,18 +70,17 @@ sub Configure {
 
     if ( ($server->{host} eq $this_host_full) || ($server->{host} eq 'localhost') ) {
       $self->debug(1,"Checking MySQL service name...");
-      my $service_found = 0;
       my $service;
       # SL3=mysql, SL4+=mysqld
-      for $service ('mysqld', 'mysql') {
-        my $cmd = CAF::Process->new(["sbin/chkconfig --list $service"], log => $self);
-        $cmd->execute();      # Also execute the command
+      for my $name ('mysqld', 'mysql') {
+        my $cmd = CAF::Process->new(["/sbin/chkconfig --list $name"], log => $self);
+        $cmd->output();      # Also execute the command
         unless ( $? ) {
-          $service_found = 1;
+          $service = $name;
           last;
         }
       }
-      if ( $service_found ) {
+      if ( $service ) {
         $self->debug(1,"Found MySQL service name: $service");
       } else {
         $self->error("Can't find mysql service: neither mysql nor mysqld.");
@@ -90,8 +89,8 @@ sub Configure {
 
 
       $self->info("Checking if MySQL service ($service) is enabled and started...");
-      my $cmd = CAF::Process->new(["sbin/chkconfig --level 345 $service on"], log => $self);
-      $cmd->execute();      # Also execute the command
+      my $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service on"], log => $self);
+      $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->error("Error enabling MySQL server on local node");
         return(1);
@@ -99,7 +98,7 @@ sub Configure {
 
       # MySQL doesn't support 'service status'
       $cmd = CAF::Process->new(["ps -e|grep mysqld_safe"], log => $self);
-      $cmd->execute();      # Also execute the command
+      $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->info("Starting MySQL server...");
         $cmd = CAF::Process->new(["/sbin/service $service start"], log => $self);
