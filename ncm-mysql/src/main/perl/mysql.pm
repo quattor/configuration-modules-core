@@ -68,7 +68,7 @@ sub Configure {
     # If MySQL server is local node, check that MySQL is already started and configure server
     # parameters.
 
-    if ( ($server->{host} eq $this_host_full) or ($server->{host} eq 'localhost') ) {
+    if ( ($server->{host} eq $this_host_full) || ($server->{host} eq 'localhost') ) {
       $self->debug(1,"Checking MySQL service name...");
       my $service_found = 0;
       my $service;
