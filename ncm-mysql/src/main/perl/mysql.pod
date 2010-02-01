@@ -68,7 +68,7 @@ Michel Jouvin <jouvin@lal.in2p3.fr>
 
 =head1 VERSION
 
-1.1.4
+1.2.0
 
 =head1 SEE ALSO
 

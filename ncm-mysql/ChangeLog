@@ -1,3 +1,10 @@
+2010-02-01  Michel Jouvin
+
+	* Release: 1.2.0
+	- Do not configure a database if hosting server configuration failed
+	Use CAF::Process instead of qx//
+	Fix logic error in MySQL service check
+
 2009-05-07  Michel Jouvin
 
 	* Release: 1.1.4
