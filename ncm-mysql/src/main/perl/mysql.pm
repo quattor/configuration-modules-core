@@ -68,7 +68,7 @@ sub Configure {
     # If MySQL server is local node, check that MySQL is already started and configure server
     # parameters.
 
-    if ( $server->{host} eq $this_host_full ) {
+    if ( ($server->{host} eq $this_host_full) or ($server->{host} eq 'localhost') ) {
       $self->debug(1,"Checking MySQL service name...");
       my $service_found = 0;
       my $service;
@@ -118,7 +118,7 @@ sub Configure {
       # still continuing to execute other sections.
       # Index for iterating over lines is zero-based, don't forget to add one when printing version
       # numbers
-      if ( $server->{options} ) {{
+      if ( $server->{options} ) {
         my $mysql_conf_file = '/etc/my.cnf';
         $self->debug(1,"Setting MySQL server parameters on ".$server->{host}." ($mysql_conf_file)");
         my @mysql_conf;
