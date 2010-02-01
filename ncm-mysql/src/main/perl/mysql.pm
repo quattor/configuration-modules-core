@@ -70,18 +70,27 @@ sub Configure {
 
     if ( $server->{host} eq $this_host_full ) {
       $self->debug(1,"Checking MySQL service name...");
-      my $service="mysql";
-      my $cmd = CAF::Process->new(["sbin/chkconfig --list $service"], log => $self);
-      $cmd->execute();      # Also execute the command
-      if ( $? ) {
+      my service_found = 0;
+      my $service;
+      # SL3=mysql, SL4+=mysqld
+      for $service ('mysqld', 'mysql') {
+        my $cmd = CAF::Process->new(["sbin/chkconfig --list $service"], log => $self);
+        $cmd->execute();      # Also execute the command
+        unless ( $? ) {
+          service_found = 1;
+          last;
+        }
+      }
+      if ( $service_found ) {
+        $self->debug(1,"Found MySQL service name: $service");
+      } else {
         $self->error("Can't find mysql service: neither mysql nor mysqld.");
         return(1);
       }
-      $self->debug(1,"Found MySQL service name $service");
 
 
-      $self->debug(1,"Checking MySQL service is enabled and started...");
-      $cmd = CAF::Process->new(["sbin/chkconfig --level 345 $service on"], log => $self);
+      $self->info("Checking if MySQL service ($service) is enabled and started...");
+      my $cmd = CAF::Process->new(["sbin/chkconfig --level 345 $service on"], log => $self);
       $cmd->execute();      # Also execute the command
       if ( $? ) {
         $self->error("Error enabling MySQL server on local node");
@@ -92,9 +101,9 @@ sub Configure {
       $cmd = CAF::Process->new(["ps -e|grep mysqld_safe"], log => $self);
       $cmd->execute();      # Also execute the command
       if ( $? ) {
-        $self->debug(1,"Starting MySQL server...");
+        $self->info("Starting MySQL server...");
         $cmd = CAF::Process->new(["/sbin/service $service start"], log => $self);
-        my $cmd->output();      # Also execute the command
+        my $cmd_output = $cmd->output();      # Also execute the command
         $status = $?;
         if ( $? ) {
           $self->error("Error starting MySQL server on local node : $status\nCommand output: $cmd_output");
@@ -261,7 +270,7 @@ sub Configure {
     
     # Do not attempt to configure database if an error occured configuring the server hosting it
     unless ( $server->{enabled} ) {
-      $self->warn("Database $database configuration skipped due to server ".$database->{server}." configuration error.");
+      $self->warn("Database $database configuration skipped due to server ".$databases->{$database}->{server}." configuration error.");
       next;
     }
 
