@@ -43,7 +43,7 @@ sub Configure {
   my ($self,$config)=@_;
 
   # Get config into a perl Hash
-  my $named_config-> = $config->getElement($base)->getTree();
+  my $named_config = $config->getElement($base)->getTree();
   
   # Check if named server must be enabled
 
@@ -70,7 +70,7 @@ sub Configure {
                                                   if ( $server_enabled ) {
                                                     push @newcontents, "nameserver 127.0.0.1\t\t# added by Quattor"
                                                   }
-                                                  for my $named_server (@{$named_config->{servers}] {
+                                                  for my $named_server (@{$named_config->{servers}}) {
                                                     push @newcontents, "nameserver $named_server\t\t# added by Quattor"
                                                   }
                                                   return(join "\n",@newcontents);
@@ -114,7 +114,7 @@ sub Configure {
   my $service = "named";
   my $cmd = CAF::Process->new(["/sbin/chkconfig --list $service"], log => $self);
   $cmd->output();      # Also execute the command
-  unless ( $? ) {
+  if ( $? ) {
     $self->debug(1,"Service $service doesn't exist on current host. Skipping $service configuration.");
     return(1);
   }
@@ -133,20 +133,21 @@ sub Configure {
                                    );
       unless (defined($server_changes)) {
         $self->error('error modifying /etc/named.conf');
-      return;
+        return;
+      }
   }
   
   # Enable named service
   
   my $reboot_state;  
   if ( $server_enabled ) {
-    $self->info("Enabling service $named...");
+    $self->info("Enabling service $service...");
     $reboot_state = "on";
   } else {
-    $self->info("Disabling service $named...");
+    $self->info("Disabling service $service...");
     $reboot_state = "off";
   }
-  my $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service $reboot_state"], log => $self);
+  $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service $reboot_state"], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->error("Error defining service $service state for next reboot.");
@@ -160,7 +161,7 @@ sub Configure {
   my $named_started = 1;
   $cmd = CAF::Process->new(["/sbin/service $service status"], log => $self);
   $cmd->output();      # Also execute the command
-  unless ( $? ) {
+  if ( $? ) {
     $self->debug(1,"Service $service not running.");
     $named_started = 0;
   }
@@ -169,7 +170,7 @@ sub Configure {
   if ( $server_enabled ) {
     if ( ! $named_started ) {
       $action = 'start';
-    } else if ( $changes) {
+    } elsif ( $server_changes ) {
       $action = 'restart';
     }
   } else {
@@ -182,12 +183,12 @@ sub Configure {
     $self->info("Doing a $action of service $service...");
     $cmd = CAF::Process->new(["/sbin/service $service $action"], log => $self);
     my $cmd_output = $cmd->output();      # Also execute the command
-    unless ( $? ) {
+    if ( $? ) {
       $self->debug(1,"Failed to update service $service state.\nError message: $cmd_output");
       $named_started = 0;
     }
   } else {
-    $self->info("No need to start/stop/restart service $named");
+    $self->info("No need to start/stop/restart service $service");
   }
   
 
