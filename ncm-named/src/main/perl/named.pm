@@ -55,6 +55,7 @@ sub Configure {
 
   # Update resolver configuration file with appropriate servers
   if ( $named_config->{servers} || $server_enabled ) {
+    $self->info("Checking /etc/resolv.conf...");
     my $changes += LC::Check::file("/etc/resolv.conf",
                                    source => "/etc/resolv.conf",
                                    backup => '.old',
