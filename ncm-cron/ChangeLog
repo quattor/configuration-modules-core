@@ -1,3 +1,8 @@
+2010-02-02  Michel Jouvin
+
+	* Release: 1.4.3
+	- Suppress execution of 'date' command when there is no log file
+
 2009-12-17  Michel Jouvin
 
 	* Release: 1.4.2
