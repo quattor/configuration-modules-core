@@ -43,18 +43,18 @@ sub Configure {
   my ($self,$config)=@_;
 
   # Get config into a perl Hash
-  my $named_config = $config->getElement($base)->getTree();
+  my $named_config-> = $config->getElement($base)->getTree();
   
   # Check if named server must be enabled
 
   my $server_enabled = 0;
-  if ( $named_config{start} ) {
+  if ( $named_config->{start} ) {
     $server_enabled = 1;
   }
 
 
   # Update resolver configuration file with appropriate servers
-  if ( $named_config{servers} || $server_enabled ) {
+  if ( $named_config->{servers} || $server_enabled ) {
     my $changes += LC::Check::file("/etc/resolv.conf",
                                    source => "/etc/resolv.conf",
                                    backup => '.old',
@@ -70,15 +70,15 @@ sub Configure {
                                                   if ( $server_enabled ) {
                                                     push @newcontents, "nameserver 127.0.0.1\t\t# added by Quattor"
                                                   }
-                                                  for my $named_server (@{$named_config{servers}] {
+                                                  for my $named_server (@{$named_config->{servers}] {
                                                     push @newcontents, "nameserver $named_server\t\t# added by Quattor"
                                                   }
                                                   return(join "\n",@newcontents);
                                                  }
                                   );
-    if ( $named_config{search} ) {
+    if ( $named_config->{search} ) {
       my @domains;
-      for my $domain (@{$named_config{search}}) {
+      for my $domain (@{$named_config->{search}}) {
         push @domains, $domain;
       }
       if ( @domains ){
@@ -90,9 +90,9 @@ sub Configure {
     }
     
     # options
-    if ( $named_config{options} ) {
+    if ( $named_config->{options} ) {
       my @options;
-      for my $option (@{$named_config{options}}) {
+      for my $option (@{$named_config->{options}}) {
         push @options, $option;
       }
       if ( @options ){
@@ -123,10 +123,10 @@ sub Configure {
   # else use current configuration file
 
   my $server_changes;
-  if ( $named_config{configfile} ) {
+  if ( $named_config->{configfile} ) {
       $self->info("Checking $service configuration (/etc/named.conf)...");
       $server_changes = LC::Check::file("/etc/named.conf",
-                                     source      => $named_config{configfile},
+                                     source      => $named_config->{configfile},
                                      destination => "/etc/named.conf",
                                      owner       => 0,
                                      mode        => 0644
@@ -146,7 +146,7 @@ sub Configure {
     $self->info("Disabling service $named...");
     $reboot_state = "off";
   }
-  my $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service $state"], log => $self);
+  my $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service $reboot_state"], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->error("Error defining service $service state for next reboot.");
