@@ -133,7 +133,7 @@ sub Configure {
   if ( $named_config->{serverConfig} ) {
       $self->info("Checking $service configuration (/etc/named.conf)...");
       $server_changes = LC::Check::file("/etc/named.conf",
-                                        contents    => encode_utf8($named_config->{config}),
+                                        contents    => encode_utf8($named_config->{serverConfig}),
                                         backup      => '.ncm-named',
                                         owner       => 0,
                                         mode        => 0644
@@ -212,7 +212,7 @@ sub Configure {
       $named_started = 0;
     }
   } else {
-    $self->info("No need to start/stop/restart service $service");
+    $self->debug(1,"No need to start/stop/restart service $service");
   }
   
 
