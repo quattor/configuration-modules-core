@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.7 : 27/11/09 14:36
+# Version: 1.5.8 : 02/02/10 12:27
 # 
 #
 # Note: all methods in this component are called in a
@@ -320,16 +320,19 @@ sub files
     $path = "$home/" . K4LOGIN;
     $h{KRB4()} = CAF::FileWriter->new($path, log => $self,
 				      owner => $uid,
-				      group => $gid);
+				      group => $gid,
+				      mode => 0400);
 
     $path = "$home/" . K5LOGIN;
     $h{KRB5()} = CAF::FileWriter->new($path, log => $self,
 				      owner => $uid,
-				      group => $gid);
+				      group => $gid,
+				      mode => 0400);
     $path = "$home/" . SSH_AUTH;
     $h{SSH_KEYS()} = CAF::FileWriter->new($path, log => $self,
 					  owner => $uid,
-					  group => $gid);
+					  group => $gid,
+					  mode => 0400);
 
     foreach my $cred (@{$uconfig->{MANAGED_CREDENTIALS()}}) {
 	$h{MANAGED_CREDENTIALS()}->{$cred} = 1;
