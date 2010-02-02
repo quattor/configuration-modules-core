@@ -16,13 +16,19 @@ If named is started on the machine, localhost (127.0.0.1) is added as the first 
 
 =head1 RESOURCES
 
-=head2 /software/components/named/start : boolean
+=head2 /software/components/named/start : boolean (optional)
 
-Enable/Start or Disable/Stop named server.
+Enable/Start or Disable/Stop named server. If undefined, nothing is done.
 
-=head2 /software/components/named/configfile : string
+=head2 /software/components/named/configfile : string (optional)
 
 Reference file location for named configuration file. Existing (/etc/named.conf), if any, will be replaced.
+'configfile' is mutually exclusive with 'serverConfig'.
+
+=head2 /software/components/named/serverConfig : string (optional)
+
+Content of named configuration file (/etc/named.conf). 'serverConfig' is mutually exclusive with 'configfile'.
+
 
 =head2 /software/components/named/servers : list of hosts
 

@@ -25,6 +25,8 @@ use NCM::Check;
 
 use EDG::WP4::CCM::Element;
 
+use Encode qw(encode_utf8);
+
 use LC::File qw(copy);
 use LC::Check;
 use CAF::Process;
@@ -47,9 +49,13 @@ sub Configure {
   
   # Check if named server must be enabled
 
-  my $server_enabled = 0;
-  if ( $named_config->{start} ) {
-    $server_enabled = 1;
+  my $server_enabled;
+  if ( defined($named_config->{start}) ) {
+    if ( $named_config->{start} ) {
+      $server_enabled = 1;
+    } else {
+      $server_enabled = 0;
+    }
   }
 
 
@@ -120,20 +126,32 @@ sub Configure {
     return(1);
   }
 
-  # Copy the correct config file into /etc if specified, 
-  # else use current configuration file
+  # Update named configuration file with configuration embedded in the configuration
+  # or with the reference file, if one of them has been specified
 
   my $server_changes;
-  if ( $named_config->{configfile} ) {
+  if ( $named_config->{serverConfig} ) {
       $self->info("Checking $service configuration (/etc/named.conf)...");
       $server_changes = LC::Check::file("/etc/named.conf",
-                                     source      => $named_config->{configfile},
-                                     destination => "/etc/named.conf",
-                                     owner       => 0,
-                                     mode        => 0644
-                                   );
+                                        contents    => encode_utf8($named_config->{config}),
+                                        backup      => '.ncm-named',
+                                        owner       => 0,
+                                        mode        => 0644
+                                       );
       unless (defined($server_changes)) {
-        $self->error('error modifying /etc/named.conf');
+        $self->error('error updating /etc/named.conf from reference file '.$named_config->{configfile});
+        return;
+      }
+  } elsif ( $named_config->{configfile} ) {
+      $self->info("Checking $service configuration (/etc/named.conf) using ".$named_config->{configfile}."...");
+      $server_changes = LC::Check::file("/etc/named.conf",
+                                        source      => $named_config->{configfile},
+                                        backup      => '.ncm-named',
+                                        owner       => 0,
+                                        mode        => 0644
+                                       );
+      unless (defined($server_changes)) {
+        $self->error('error updating /etc/named.conf from reference file '.$named_config->{configfile});
         return;
       }
   }
@@ -157,6 +175,7 @@ sub Configure {
   # Start named if enabled and not yet started.
   # Stop named if running but disabled.
   # Restart after a configuration change if enabled and started.
+  # Do nothing if the 'start' property is not defined.
 
   $self->debug(1,"Checking if service $service is started...");
   my $named_started = 1;
@@ -165,19 +184,23 @@ sub Configure {
   if ( $? ) {
     $self->debug(1,"Service $service not running.");
     $named_started = 0;
+  } else {
+    $self->debug(1,"Service $service is running.");
   }
   
   my $action;
-  if ( $server_enabled ) {
-    if ( ! $named_started ) {
-      $action = 'start';
-    } elsif ( $server_changes ) {
-      $action = 'restart';
+  if ( defined($server_enabled) ) {
+    if ( $server_enabled ) {
+      if ( ! $named_started ) {
+        $action = 'start';
+      } elsif ( $server_changes ) {
+        $action = 'restart';
+      }
+    } else {
+      if ( $named_started ) {
+        $action = 'stop';
+      };
     }
-  } else {
-    if ( $named_started ) {
-      $action = 'stop';
-    };
   }
   
   if ( $action ) {
