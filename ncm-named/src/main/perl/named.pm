@@ -139,11 +139,11 @@ sub Configure {
                                         mode        => 0644
                                        );
       unless (defined($server_changes)) {
-        $self->error('error updating /etc/named.conf from reference file '.$named_config->{configfile});
+        $self->error('error updating /etc/named.conf');
         return;
       }
   } elsif ( $named_config->{configfile} ) {
-      $self->info("Checking $service configuration (/etc/named.conf)...");
+      $self->info("Checking $service configuration (/etc/named.conf) using ".$named_config->{configfile}."...");
       $server_changes = LC::Check::file("/etc/named.conf",
                                         source      => $named_config->{configfile},
                                         backup      => '.ncm-named',
