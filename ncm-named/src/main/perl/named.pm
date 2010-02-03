@@ -143,7 +143,7 @@ sub Configure {
         return;
       }
   } elsif ( $named_config->{configfile} ) {
-      $self->info("Checking $service configuration (/etc/named.conf) using ".$named_config->{configfile}."...");
+      $self->info("Checking $service configuration (/etc/named.conf)...");
       $server_changes = LC::Check::file("/etc/named.conf",
                                         source      => $named_config->{configfile},
                                         backup      => '.ncm-named',
