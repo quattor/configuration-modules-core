@@ -1,0 +1,25 @@
+###############################################################################
+# This is '@SELF@', a @NAME@'s file
+###############################################################################
+#
+# VERSION:    @VERSION@-@RELEASE@, @DATE@
+# AUTHOR:     @AUTHOR@
+# MAINTAINER: @MAINTAINER@
+# LICENSE:    @LICENSE@
+#
+###############################################################################
+# Coding style: emulate <TAB> characters with 4 spaces, thanks!
+###############################################################################
+
+declaration template components/@COMP@/schema;
+
+include { 'pan/structures' };
+
+type component_@COMP@_type = {
+    include structure_component
+    foo : string = 'example'    # "foo rules"
+    bar ? long                  # "bar loses"
+};
+
+bind "/software/components/@COMP@" = component_@COMP@_type;
+
