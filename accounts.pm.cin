@@ -108,7 +108,8 @@ sub wrap_getent
     seek($fh, 0, SEEK_SET);
 
     return sub {
-	my $l = <$fh> or return;
+	my $l = <$fh>;
+	defined $l or return;
 	chomp($l);
 	$self->debug (4, "Read line: $l");
 	return split(":", $l);

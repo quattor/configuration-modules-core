@@ -28,3 +28,5 @@ include { 'components/@COMP@/functions' };
 include { 'components/@COMP@/sysgroups' };
 include { 'components/@COMP@/sysusers' };
 
+'/software/components/@COMP@/active' ?= true;
+'/software/components/@COMP@/dispatch' ?= true;
