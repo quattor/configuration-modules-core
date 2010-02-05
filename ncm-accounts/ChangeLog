@@ -1,5 +1,13 @@
 2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 5.0.2
+	- Make the creation of home directories work again.
+
+	CERN used to have createHome as "yes/no", but everywhere else
+	is a boolean. A boolean is used now as well.
+
+2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
 	* Release: 5.0.1
 	- Fix a warning when reading the files.
 
