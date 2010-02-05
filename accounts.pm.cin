@@ -653,14 +653,14 @@ sub create_accounts
 	if (exists($pf->{poolSize})) {
 	    for my $i (0..$pf->{poolSize}-1) {
 		my $tail = sprintf("%0$pf->{poolDigits}d", $i);
-		$self->create_home("$a$tail") if $pf->{createHome} eq 'yes';
+		$self->create_home("$a$tail") if $pf->{createHome};
 		$self->add_to_groups("$a$tail", $pf->{groups})
 		    if exists($pf->{groups}) &&
 			(scalar(@{$pf->{groups}}) > 1);
 	    }
 	}
 	else {
-	    $self->create_home($a) if $pf->{createHome} eq 'yes';
+	    $self->create_home($a) if $pf->{createHome};
 	    $self->add_to_groups($a, $pf->{groups})
 		if exists($pf->{groups}) &&
 		    (scalar(@{$pf->{groups}}) > 1);
