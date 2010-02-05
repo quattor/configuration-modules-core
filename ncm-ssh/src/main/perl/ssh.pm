@@ -26,7 +26,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 
 use NCM::Check;
-use LC::Process qw(run);
+use CAF::Process;
 use LC::File qw(copy file_contents);
 
 ##########################################################################
@@ -102,7 +102,9 @@ sub Configure {
           chmod $perms,$ssh_config_file or $self->warn("cannot reset permissions on $ssh_config_file ($!)");
           if ( $component eq 'daemon' ) {
             $self->info("Restarting $component...");
-            LC::Process::run('/sbin/service sshd reload') or $self->warn('command "/sbin/service sshd reload" failed');            
+	    CAF::Process->new([qw(@SSH_STARTUP_SCRIPT sshd reload)],
+			      log => $self)->run();
+	    $self->error("Failed to reload $component") if $?;
           }
         }
   

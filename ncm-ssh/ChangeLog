@@ -1,3 +1,8 @@
+2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.1
+	- Use CAF::Process for restarting the daemon.
+
 2009-04-15  Michel Jouvin
 
 	* Release: 2.0.0
