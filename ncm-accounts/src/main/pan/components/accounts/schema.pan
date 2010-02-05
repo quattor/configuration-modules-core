@@ -50,6 +50,7 @@ type component_accounts = {
     'remove_unknown' : boolean = false
     'kept_users' : string{}
     'kept_groups' : string{}
+    'ldap'       ? boolean
 };
 
 bind '/software/components/accounts' = component_accounts;

@@ -1,3 +1,11 @@
+2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.1
+	- Fix a warning when reading the files.
+
+	Fix also the listings of kept groups and accounts, and make the
+	config template conform to the standard practice.
+
 2010-01-29  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.0

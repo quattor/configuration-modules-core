@@ -57,8 +57,6 @@ unique template components/accounts/sysgroups;
     'apache' ,'',
     'pcap' ,'',
     'mysql' ,'',
-    'ident' ,'',
-    'radvd' ,'',
     'smmsp' ,'',
     'root' ,'',
     'nagios' ,'',
