@@ -113,7 +113,7 @@ sub writeAutoMap($$@) {
     $changes and
           $self->info("Automount map $mapname modified, $changes updates");
 
-    return 1;
+    return $changes;
 }
 
 ##########################################################################
@@ -198,27 +198,30 @@ sub Configure($$@) {
                 ne 'false' ) {
           $etok="";
           if ( ( $maptype eq 'file' || $maptype eq 'direct' ) ) {
-            $self->writeAutoMap($config,$mapname,"$base/maps/$map/entries",$preserve_entries) or
-                                                                              $etok="#ERROR IN: ";
+            my $changes = $self->writeAutoMap($config,$mapname,"$base/maps/$map/entries",$preserve_entries);
+            if ( $changes < 0 ) {
+              $etok="#ERROR IN: ";
+            } else {
+              $cnt += $changes;
+            };
           } elsif ( $maptype eq 'program' ) {
             defined LC::Check::status("$mapname",
                               owner=> "root", group=>"root", mode=>0755) or
             $self->warn("Program map file $mapname cannot be made executable");
           }
         } else {
-          $etok="#";
+          $="#";
         }
 
         foreach my $mountp ( @mountpoints ) {
           if ( $preserveMaster ) {
-            $cnt+=NCM::Check::lines(
-                "/etc/auto.master",
-                linere => "^#?( ERROR IN: )?$mountp\\s+.*",
-                goodre => "^$etok$mountp\\s+".$maptype.":".$mapname.
-                                "\\s+".$mpopts."\\s*\$",
-                good   => "$etok$mountp\t$maptype:$mapname\t$mpopts",
-                keep   => "first",
-                add    => "last");
+            $cnt+=NCM::Check::lines("/etc/auto.master",
+                                    linere => "^#?( ERROR IN: )?$mountp\\s+.*",
+                                    goodre => "^$etok$mountp\\s+".$maptype.":".$mapname.
+                                    "\\s+".$mpopts."\\s*\$",
+                                    good   => "$etok$mountp\t$maptype:$mapname\t$mpopts",
+                                    keep   => "first",
+                                    add    => "last");
           } else {
             $auto_master_contents .= "$etok$mountp\t$maptype:$mapname\t$mpopts\n";
           }
@@ -241,7 +244,7 @@ sub Configure($$@) {
     if($cnt) {
       $self->info("Reloading autofs");
       my $cmd = CAF::Process->new(['/sbin/service autofs reload'], log => $self);
-      my $output = $cmd->output()       # Also executes the command
+      my $output = $cmd->output();       # Also executes the command
       if ( $? ) {
         $self->error('command "/sbin/service autofs reload" failed. Command ouput: '.$output);
         return;
