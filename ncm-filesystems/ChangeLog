@@ -1,3 +1,12 @@
+2010-02-09  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 0.11.0
+	- Fix a bug when a 'protected' filesystem could be formatted.
+
+	The protected list was used for avoiding re-creating the block
+	device, but this is not enough: we need use it to avoid
+	formatting it as well if it already exists.
+
 2009-03-26  Unknown
 
 	* Release: 0.10.4

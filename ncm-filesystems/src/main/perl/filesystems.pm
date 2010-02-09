@@ -5,7 +5,7 @@
 # File: filesystems.pm
 # Implementation of ncm-filesystems
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 0.10.4 : 26/03/09 11:17
+# Version: 0.11.0 : 09/02/10 21:31
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -21,6 +21,7 @@ use NCM::Check;
 use FileHandle;
 use LC::Exception qw (throw_error);
 use LC::Process qw (execute output);
+use Cwd qw(abs_path);
 use NCM::BlockdevFactory qw (build);
 use NCM::Filesystem;
 use NCM::Partition qw (partition_compare);
@@ -29,8 +30,8 @@ use constant PROTECTED_PATH => "/software/components/filesystems/protected_mount
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
-# Returns a hash with the protected mountpoints as its keys. This
-# small overhead may simplify the code and make it faster.
+# Returns a hash with the canonical paths to the protected mountpoints
+# as its keys. I This small overhead may simplify the code later.
 sub protected_hash
 {
 	my $config = shift;
@@ -38,7 +39,10 @@ sub protected_hash
 
 	my $pl = $config->getElement (PROTECTED_PATH)->getTree;
 
-	$ph{$_} = 0 foreach @$pl;
+	foreach my $i (@$pl) {
+		my $path = abs_path("$i/");
+		$ph{$path} = 0 if $path;
+	}
 	return %ph;
 }
 
@@ -58,9 +62,9 @@ sub fshash
 # on success, -1 on error.
 sub free_space
 {
-	my ($self, $cfg, @fs) = @_;
+	my ($self, $cfg, $protected, @fs) = @_;
 
-	my %ph = protected_hash ($cfg);
+	my %ph = $protected;
 	my %fsh = fshash (\@fs);
 
 	$self->info ("Checking for filesystems that should be removed");
@@ -114,7 +118,8 @@ sub Configure
 		my $el2 = $el->getNextElement;
 		push (@fs, NCM::Filesystem->new ($el2->getPath->toString, $config));
 	}
-	$self->free_space ($config, @fs)==0 or return 0;
+	my %protected = protected_hash ($config);
+	$self->free_space ($config, \%protected, @fs)==0 or return 0;
 	# Partitions must be created first, see bug #26137
 	$el = $config->getElement ("/system/blockdevices/partitions");
 	my @part = ();
@@ -135,7 +140,8 @@ sub Configure
 			throw_error ("Failed to create filesystem:  $_->{mountpoint}");
 			return 0;
 		}
-		if ($_->format_if_needed != 0) {
+
+		if ($_->format_if_needed (%protected) != 0) {
 			$self->warn ("Failed to format filesystem: ".
 				      $_->{mountpoint});
 		}
