@@ -15,7 +15,7 @@ package NCM::Component::autofs;
 
 use strict;
 use NCM::Component;
-use LC::Process;
+use CAF::Process;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
@@ -228,7 +228,7 @@ sub Configure($$@) {
 
     # Update auto.master if preserveMaster is false (file managed exclusively by Quattor)
     if ( ! $preserveMaster ) {
-      $cnt = LC::Check::file("/etc/auto.master",
+      $cnt += LC::Check::file("/etc/auto.master",
                            backup => ".ncm-autofs.old",
                            contents => $auto_master_contents,
                            owner => "root",
@@ -239,9 +239,11 @@ sub Configure($$@) {
 
     #reload if changed the conf-file
     if($cnt) {
-      $self->info("auto.master map modified, reloading autofs");
-      unless (LC::Process::run('/sbin/service autofs reload')) {
-        $self->error('command "/sbin/service autofs reload" failed');
+      $self->info("Reloading autofs");
+      my $cmd = CAF::Process->new(['/sbin/service autofs reload'], log => $self);
+      my $output = $cmd->output()       # Also executes the command
+      if ( $? ) {
+        $self->error('command "/sbin/service autofs reload" failed. Command ouput: '.$output);
         return;
       }
     }
