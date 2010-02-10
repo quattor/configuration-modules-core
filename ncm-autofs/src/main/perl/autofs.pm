@@ -152,7 +152,7 @@ sub Configure($$@) {
         my $mapname = $map_config->{mapname};
         # Normally already checked by the schema
         if ( $mapname ) {
-          if ( ($maptype eq 'file') and ($mapname !~ /^\//) {
+          if ( ($maptype eq 'file') and ($mapname !~ /^\//) ) {
             $self->error("Map file name for type file must be an absolute path ($mapname specified)");
           }
         } else {
