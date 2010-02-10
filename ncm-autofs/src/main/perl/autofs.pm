@@ -107,7 +107,11 @@ sub Configure($$@) {
     # Define paths for convenience.
     my $base = "/software/components/autofs";
     my $cnt  = 0;
-    my $auto_master_contents='';
+
+    # Variables to keep track for each map of mountpoints and line prefix to use in
+    # master map (used to comment out some entries).
+    my %mount_points;
+    my %master_entry_prefix;
 
     # Load configuration into a perl hash
     my $autofs_config = $config->getElement($base)->getTree();
@@ -116,13 +120,11 @@ sub Configure($$@) {
     my $preserveMaster = $autofs_config->{preserveMaster} && (-e '/etc/auto.master');
     if ( $preserveMaster ) {
       $self->debug(1,"Flag set to preserve master map existing content");
-    } else {
-      $auto_master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
     };
       
     if ( $autofs_config->{maps} ) {
       foreach my $map (keys(%{$autofs_config->{maps}})) {
-        my @mountpoints;
+        my @map_mpoints;
         my $map_config = $autofs_config->{maps}->{$map};
         $self->info("Checking map $map...");
         
@@ -130,16 +132,18 @@ sub Configure($$@) {
           $self->warn("Using depricated mpaliases (multiple mount) functionality for $map");
           foreach my $mpalias (@{$map_config->{mpaliases}}) {
             $self->debug(1,"Adding mount point alias $mpalias");
-            push @mountpoints, $mpalias;
+            push @map_mpoints, $mpalias;
           }
         }
 
         # Default mount point = /mapname
         if ( $map_config->{mountpoint} ) {
-          push @mountpoints, $map_config->{mountpoint};
-        } elsif ( ! @mountpoints ) {
-          push @mountpoints, "/".$map;
+          push @map_mpoints, $map_config->{mountpoint};
+        } elsif ( ! @map_mpoints ) {
+          push @map_mpoints, "/".$map;
         }
+        
+        $mount_points{$map} = @map_moints;
 
         my $maptype = $map_config->{type};
         my $mapname = $map_config->{mapname};
@@ -172,14 +176,13 @@ sub Configure($$@) {
            $self->debug(1,"Flag set to preserve map $map existing content");
         }
 
-        my $line_prefix;
         if ( $map_config->{enabled} ) {
-          $line_prefix="";
+          $master_entry_prefix{$map} = "";
           if ( ($maptype eq 'file') || ($maptype eq 'direct') ) {
             my $changes = $self->writeAutoMap($mapname,$map_config->{entries},$preserve_entries);
             if ( $changes < 0 ) {
               $self->error("Error updating map $map ($mapname)");
-              $line_prefix="#ERROR IN: ";
+              $master_entry_prefix{$map} = "#ERROR IN: ";
             } else {
               $cnt += $changes;
             }
@@ -193,26 +196,35 @@ sub Configure($$@) {
             }
           }
         } else {
-          $line_prefix="#";
-        }
-
-        foreach my $mountp ( @mountpoints ) {
-          if ( $preserveMaster ) {
-            $cnt+=NCM::Check::lines("/etc/auto.master",
-                                    linere => "^#?( ERROR IN: )?$mountp\\s+.*",
-                                    goodre => "^$line_prefix$mountp\\s+".$maptype.":".$mapname."\\s+".$mpopts."\\s*\$",
-                                    good   => "$line_prefix$mountp\t$maptype:$mapname\t$mpopts",
-                                    keep   => "first",
-                                    add    => "last");
-          } else {
-            $auto_master_contents .= "$line_prefix$mountp\t$maptype:$mapname\t$mpopts\n";
-          }
+          $master_entry_prefix{$map} = "#";
         }
       }
     }
 
-    # Update auto.master if preserveMaster is false (file managed exclusively by Quattor)
-    if ( ! $preserveMaster ) {
+    # Update auto.master if preserveMaster = true
+    $self->info("Checking /etc/auto.master...");
+    if ( $preserveMaster ) {
+      $self->debug(1,"Update will preserve existing entries not managed by ncm-autofs");
+      foreach my $map (keys(%mount_points)) {
+        foreach my $mountp ( $mountpoints{$map} ) {
+          $cnt+=NCM::Check::lines("/etc/auto.master",
+                                  linere => "^#?( ERROR IN: )?$mountp\\s+.*",
+                                  goodre => "^$master_entry_prefix{$map}$mountp\\s+".$maptype.":".$mapname."\\s+".$mpopts."\\s*\$",
+                                  good   => "$master_entry_prefix{$map}$mountp\t$maptype:$mapname\t$mpopts",
+                                  keep   => "first",
+                                  add    => "last");
+          }
+        }
+      }
+
+    # Create/replace auto.master if preserveMaster is false (file managed exclusively by Quattor)
+    } else {
+      $auto_master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
+      foreach my $map (keys(%mount_points)) {
+        foreach my $mountp ( $mountpoints{$map} ) {
+          $auto_master_contents .= "$master_entry_prefix{$map}$mountp\t$maptype:$mapname\t$mpopts\n";
+        }
+      }
       $cnt += LC::Check::file("/etc/auto.master",
                            backup => ".ncm-autofs.old",
                            contents => $auto_master_contents,
