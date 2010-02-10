@@ -113,7 +113,7 @@ sub Configure($$@) {
     my $autofs_config = $config->getElement($base)->getTree();
     
     # Default is to preserve local edits to auto.aster
-    my $preserveMaster = $autofs_config->{preserveMaster};
+    my $preserveMaster = $autofs_config->{preserveMaster} && (-e /etc/auto.master);
     if ( $preserveMaster ) {
       $self->debug(1,"Flag set to preserve master map existing content");
     } else {
@@ -126,13 +126,6 @@ sub Configure($$@) {
         my $map_config = $autofs_config->{maps}->{$map};
         $self->info("Checking map $map...");
         
-        # Check if existing entries not defined in config must be preserved
-        # Default : true for backward compatibility
-        my $preserve_entries = $map_config->{preserve};
-        if ( $preserve_entries ) {
-           $self->debug(1,"Flag set to preserve map $map existing content");
-        }
-
         if ( $map_config->{mpaliases} ) {
           $self->warn("Using depricated mpaliases (multiple mount) functionality for $map");
           foreach my $mpalias (@{$map_config->{mpaliases}}) {
@@ -170,6 +163,13 @@ sub Configure($$@) {
         # Ensure options start with a '-'
         if (  (length($mpopts) > 0) && ($mpopts !~ /^-/) ) {
           $mpopts = '-' . $mpopts;
+        }
+
+        # Check if existing entries not defined in config must be preserved
+        # Default : true for backward compatibility
+        my $preserve_entries = $map_config->{preserve} && (-e $mapname);
+        if ( $preserve_entries ) {
+           $self->debug(1,"Flag set to preserve map $map existing content");
         }
 
         my $line_prefix;
