@@ -108,10 +108,11 @@ sub Configure($$@) {
     my $base = "/software/components/autofs";
     my $cnt  = 0;
 
-    # Variables to keep track for each map of mountpoints and line prefix to use in
-    # master map (used to comment out some entries).
+    # Variables to keep track for each map of mountpoints and the mount attributes to use
+    # with each map.
+    # The key is the same in both hashes (map name)
     my %mount_points;
-    my %master_entry_prefix;
+    my %master_entry_attrs;
 
     # Load configuration into a perl hash
     my $autofs_config = $config->getElement($base)->getTree();
@@ -142,8 +143,6 @@ sub Configure($$@) {
         } elsif ( ! @map_mpoints ) {
           push @map_mpoints, "/".$map;
         }
-        
-        $mount_points{$map} = @map_moints;
 
         my $maptype = $map_config->{type};
         my $mapname = $map_config->{mapname};
@@ -163,10 +162,12 @@ sub Configure($$@) {
           }
         }
 
-        my $mpopts = $map_config->{options};
+        $master_entry_attrs{$mapname} = {};
+        $master_entry_attrs{$mapname}->{type} = $maptype;
+        my $master_entry_attrs{options} = $map_config->{options};
         # Ensure options start with a '-'
-        if (  (length($mpopts) > 0) && ($mpopts !~ /^-/) ) {
-          $mpopts = '-' . $mpopts;
+        if (  (length($master_entry_attrs{options}) > 0) && ($master_entry_attrs{options} !~ /^-/) ) {
+          $master_entry_attrs{options} = '-' . $master_entry_attrs{options};
         }
 
         # Check if existing entries not defined in config must be preserved
@@ -177,12 +178,12 @@ sub Configure($$@) {
         }
 
         if ( $map_config->{enabled} ) {
-          $master_entry_prefix{$map} = "";
+          $master_entry_attrs->{prefix} = "";
           if ( ($maptype eq 'file') || ($maptype eq 'direct') ) {
             my $changes = $self->writeAutoMap($mapname,$map_config->{entries},$preserve_entries);
             if ( $changes < 0 ) {
               $self->error("Error updating map $map ($mapname)");
-              $master_entry_prefix{$map} = "#ERROR IN: ";
+              $master_entry_attrs->{prefix} = "#ERROR IN: ";
             } else {
               $cnt += $changes;
             }
@@ -196,8 +197,11 @@ sub Configure($$@) {
             }
           }
         } else {
-          $master_entry_prefix{$map} = "#";
+          $master_entry_attrs->{prefix} = "#";
         }
+        
+        # Add mount points to the global list
+        $mount_points{$mapname} = @map_mpoints;
       }
     }
 
@@ -206,11 +210,13 @@ sub Configure($$@) {
     if ( $preserveMaster ) {
       $self->debug(1,"Update will preserve existing entries not managed by ncm-autofs");
       foreach my $map (keys(%mount_points)) {
-        foreach my $mountp ( $mountpoints{$map} ) {
+        foreach my $mountp ( $mount_points{$map} ) {
           $cnt+=NCM::Check::lines("/etc/auto.master",
                                   linere => "^#?( ERROR IN: )?$mountp\\s+.*",
-                                  goodre => "^$master_entry_prefix{$map}$mountp\\s+".$maptype.":".$mapname."\\s+".$mpopts."\\s*\$",
-                                  good   => "$master_entry_prefix{$map}$mountp\t$maptype:$mapname\t$mpopts",
+                                  goodre => "^".$master_entry_attrs->{prefix}."$mountp\\s+".
+                                                $master_entry_attrs->{type}.":".$mapname."\\s+".$master_entry_attrs{options}."\\s*\$",
+                                  good   => $master_entry_attrs->{prefix}."$mountp\t".
+                                                $master_entry_attrs->{type}.":$mapname\t$master_entry_attrs{options}",
                                   keep   => "first",
                                   add    => "last");
           }
@@ -222,7 +228,8 @@ sub Configure($$@) {
       $auto_master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
       foreach my $map (keys(%mount_points)) {
         foreach my $mountp ( $mountpoints{$map} ) {
-          $auto_master_contents .= "$master_entry_prefix{$map}$mountp\t$maptype:$mapname\t$mpopts\n";
+          $auto_master_contents .= $master_entry_attrs->{prefix}.
+                                       "$mountp\t".$master_entry_attrs->{type}.":$map\t".$master_entry_attrs{options}."\n";
         }
       }
       $cnt += LC::Check::file("/etc/auto.master",
