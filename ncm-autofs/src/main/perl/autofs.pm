@@ -41,7 +41,7 @@ sub writeAutoMap($$@) {
     my $contents="# File managed by Quattor component ncm-autofs. DO NOT EDIT.\n\n";
 
     if ( $entries ) {
-        for my $entry_e (keys(@{$entries})) {
+        for my $entry_e (keys(%{$entries})) {
           my $entry_config = $entries->{$entry_e};
           my $entry=unescape($entry_e);
           # For backward compatibility, useless with escaped values
@@ -151,7 +151,7 @@ sub Configure($$@) {
         my $maptype = $map_config->{type};
         my $mapname = $map_config->{mapname};
         # Normally already checked by the schema
-        if ( $mapname) ) {
+        if ( $mapname ) {
           if ( ($maptype eq 'file') and ($mapname !~ /^\//) {
             $self->error("Map file name for type file must be an absolute path ($mapname specified)");
           }
@@ -178,7 +178,7 @@ sub Configure($$@) {
           if ( ($maptype eq 'file') || ($maptype eq 'direct') ) {
             my $changes = $self->writeAutoMap($mapname,$map_config->{entries},$preserve_entries);
             if ( $changes < 0 ) {
-              $self->error("Error updating map $map ($mapanme)");
+              $self->error("Error updating map $map ($mapname)");
               $line_prefix="#ERROR IN: ";
             } else {
               $cnt += $changes;
@@ -188,7 +188,7 @@ sub Configure($$@) {
                                            owner=> "root",
                                            group=>"root",
                                            mode=>0755);
-            unless ( $status )
+            unless ( $status ) {
               $self->warn("Program map file $mapname cannot be made executable");
             }
           }
