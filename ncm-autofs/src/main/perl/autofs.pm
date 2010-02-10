@@ -113,7 +113,7 @@ sub Configure($$@) {
     my $autofs_config = $config->getElement($base)->getTree();
     
     # Default is to preserve local edits to auto.aster
-    my $preserveMaster = $autofs_config->{preserveMaster} && (-e /etc/auto.master);
+    my $preserveMaster = $autofs_config->{preserveMaster} && (-e '/etc/auto.master');
     if ( $preserveMaster ) {
       $self->debug(1,"Flag set to preserve master map existing content");
     } else {
