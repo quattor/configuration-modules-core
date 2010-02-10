@@ -15,13 +15,15 @@ package NCM::Component::autofs;
 
 use strict;
 use NCM::Component;
-use CAF::Process;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 
 use File::Path;
+
+use CAF::Process;
+use LC::Check;
 
 use EDG::WP4::CCM::Element qw(unescape);
 
@@ -30,75 +32,54 @@ local(*DTA);
 
 
 ##########################################################################
-sub getValueDefault() {
-##########################################################################
-    my ($config, $pathname, $default) = @_;
-
-    if ($config->elementExists($pathname)) {
-        return $config->getValue($pathname);
-    } else {
-      return $default;
-    }
-}
-
-
-##########################################################################
 sub writeAutoMap($$@) {
 ##########################################################################
-    my ($self,$config,$mapname,$cfpathname,$preserve) = @_;
+    my ($self,$mapname,$entries,$preserve) = @_;
 
-    my ($changes) = (0);
+    my $changes = 0;
 
-    $self->debug(2,"Updating $mapname");
+    my $contents="# File managed by Quattor component ncm-autofs. DO NOT EDIT.\n\n";
 
-    stat $mapname or do {
-      # create empty file only if map does not yet exist
-      local(*TMPH);
-      open TMPH,">$mapname" and close TMPH;
+    if ( $entries ) {
+        for my $entry_e (keys(@{$entries})) {
+          my $entry_config = $entries->{$entry_e};
+          my $entry=unescape($entry_e);
+          # For backward compatibility, useless with escaped values
+          $entry=~s/__wildcard/\*/;
+    
+          my $opt = $entry_config->{options};
+          # Ensure options start with a '-'
+          if ( (length($opt) > 0) && ($opt !~ /^-/) ) {
+            $opt = '-' . $opt;
+          }
+          my $location = $entry_config->{location};
+          # Just in case, mandatory in schema...
+          unless ( $location ) {
+            $self->warn("Location for entry $entry in map $mapname is empty: skipping entry");
+            next;
+          }
+    
+          if ( $preserve ) {
+            my $reentry=$entry; $reentry=~s/\*/\\\*/;
+            $changes += NCM::Check::lines($mapname,
+                                          linere => "^#?$reentry\\s+.*",
+                                          goodre => "^$reentry\\s+$opt\\s+$location\$",
+                                          good   => "$entry\t$opt\t$location",
+                                          keep   => "first",
+                                          add    => "last" );
+          } else {
+            $contents .= "$entry\t$opt\t$location\n";
+          }
+        }
+
+    # No entries : if preserve is true, do not modify existing map, else erase its contents.
+    } else {
+      if ( $preserve ) {
+        return 0;            # No change
+      }
     };
-    LC::Check::status("$mapname", owner=> "root", group=>"root", mode=>0644);
 
-    my $contents="# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
-
-    if ( ! $config->elementExists("$cfpathname") ) {
-      return 1 if ( $preserve == 1 );
-    }
-    else
-    {
-    my $entrylist = $config->getElement("$cfpathname");
-    while ( $entrylist->hasNextElement() ) {
-      my $entry_e=$entrylist->getNextElement()->getName();
-      my $entry=unescape($entry_e);
-      # For backward compatibility, useless with escaped values
-      $entry=~s/__wildcard/\*/;
-
-      my $opt = &getValueDefault($config,"$cfpathname/$entry_e/options","");
-      # Ensure options start with a '-'
-      if ( (length($opt) > 0) && ($opt !~ /^-/) ) {
-        $opt = '-' . $opt;
-      }
-      my $location = &getValueDefault($config,"$cfpathname/$entry_e/location","");
-      if ( $location eq "" ) {
-        $self->warn("Location for entry $entry in $mapname is empty,".
-                  " ignoring map");
-        return 0;
-      }
-
-      if ( $preserve == 1 ) {
-        my $reentry=$entry; $reentry=~s/\*/\\\*/;
-        $changes+=NCM::Check::lines( $mapname,
-              linere => "^#?$reentry\\s+.*",
-              goodre => "^$reentry\\s+$opt\\s+$location\$",
-              good   => "$entry\t$opt\t$location",
-              keep   => "first",
-              add    => "last" );
-
-      } else {
-        $contents .= "$entry\t$opt\t$location\n";
-      }
-    }
-    }
-
+    # When preserve is true, amp has already been updated.
     if ( $preserve == 0 ) {
       $changes = LC::Check::file($mapname,
                                  backup => ".ncm-autofs.old",
@@ -110,9 +91,10 @@ sub writeAutoMap($$@) {
 
     }
 
-    $changes and
-          $self->info("Automount map $mapname modified, $changes updates");
-
+    if ( $changes > 0 ) {
+          $self->debug(1,"Map $mapname modified, $changes updates");
+    }
+    
     return $changes;
 }
 
@@ -127,103 +109,103 @@ sub Configure($$@) {
     my $cnt  = 0;
     my $auto_master_contents='';
 
+    # Load configuration into a perl hash
+    my $autofs_config = $config->getElement($base)->getTree();
+    
     # Default is to preserve local edits to auto.aster
-    my $preserveMaster = 1;
-    if ( $config->elementExists("$base/preserveMaster") &&
-          $config->getElement("$base/preserveMaster")->getValue() eq 'false') {
-      $preserveMaster = 0;
+    my $preserveMaster = $autofs_config->{preserveMaster};
+    if ( $preserveMaster ) {
+      $self->debug(1,"Flag set to preserve master map existing content");
+    } else {
       $auto_master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
-    }
-
-
-    if ( $config->elementExists("$base/maps") ) {
-
-      my $maps = $config->getElement("$base/maps");
-      while ( $maps->hasNextElement() ) {
-        my $map=$maps->getNextElement()->getName();
-
+    };
+      
+    if ( $autofs_config->{maps} ) {
+      foreach my $map (keys(%{$autofs_config->{maps}})) {
         my @mountpoints;
-
+        my $map_config = $autofs_config->{maps}->{$map};
+        $self->info("Checking map $map...");
+        
         # Check if existing entries not defined in config must be preserved
         # Default : true for backward compatibility
-        my $preserve_entries = 1;
-        if ( $config->elementExists("$base/maps/$map/preserve") ) {
-          if ( $config->getElement("$base/maps/$map/preserve")->getValue() eq "false" ) {
-            $preserve_entries = 0;
-          } elsif ( $config->getElement("$base/maps/$map/preserve")->getValue() ne "true" ) {
-            $self->error("Invalid value for preserve flag of map $map");
-          }
+        my $preserve_entries = $map_config->{preserve};
+        if ( $preserve_entries ) {
+           $self->debug(1,"Flag set to preserve map $map existing content");
         }
 
-        if ( $config->elementExists("$base/maps/$map/mpaliases") ) {
+        if ( $map_config->{mpaliases} ) {
           $self->warn("Using depricated mpaliases (multiple mount) functionality for $map");
-          my $mpaliases = $config->getElement("$base/maps/$map/mpaliases");
-          while ( $mpaliases->hasNextElement() ) {
-            push @mountpoints,$mpaliases->getNextElement()->getValue();
+          foreach my $mpalias (@{$map_config->{mpaliases}}) {
+            $self->debug(1,"Adding mount point alias $mpalias");
+            push @mountpoints, $mpalias;
           }
         }
 
-        if ( $config->elementExists("$base/maps/$map/mountpoint") ) {
-          push @mountpoints,$config->getValue("$base/maps/$map/mountpoint");
+        # Default mount point = /mapname
+        if ( $map_config->{mountpoint} ) {
+          push @mountpoints, $map_config->{mountpoint};
         } elsif ( ! @mountpoints ) {
-          push @mountpoints, "/".$map
+          push @mountpoints, "/".$map;
         }
 
-        my $maptype=$config->getValue("$base/maps/$map/type");
-        my $mapname;
-        my $mpopts;
-        if ( $config->elementExists("$base/maps/$map/mapname") ) {
-          $mapname=$config->getValue("$base/maps/$map/mapname");
-        } else { # we need to guess a mapname
-          foreach ( $maptype ) {
-          /program/ and $mapname="/etc/auto.$map";
-          /file/ and $mapname="/etc/auto.$map";
-          /yp/   and $mapname="auto.$map";
-          }
-        }
-        $mapname or $self->error("Cannot figure out mapname for $map, sorry.");
-        ( $maptype eq 'file' ) and ( $mapname !~ /^\// ) and
-           $self->error("File mapname for type file not absolute ($mapname)");
-
-        if ( $config->elementExists("$base/maps/$map/options") ) {
-          $mpopts=$config->getValue("$base/maps/$map/options");
-          # Ensure options start with a '-'
-          if (  (length($mpopts) > 0) && ($mpopts !~ /^-/) ) {
-            $mpopts = '-' . $mpopts;
-          }
-        }
-
-        my $etok;
-        if ( &getValueDefault($config,"$base/maps/$map/enabled",'true')
-                ne 'false' ) {
-          $etok="";
-          if ( ( $maptype eq 'file' || $maptype eq 'direct' ) ) {
-            my $changes = $self->writeAutoMap($config,$mapname,"$base/maps/$map/entries",$preserve_entries);
-            if ( $changes < 0 ) {
-              $etok="#ERROR IN: ";
-            } else {
-              $cnt += $changes;
-            };
-          } elsif ( $maptype eq 'program' ) {
-            defined LC::Check::status("$mapname",
-                              owner=> "root", group=>"root", mode=>0755) or
-            $self->warn("Program map file $mapname cannot be made executable");
+        my $maptype = $map_config->{type};
+        my $mapname = $map_config->{mapname};
+        # Normally already checked by the schema
+        if ( $mapname) ) {
+          if ( ($maptype eq 'file') and ($mapname !~ /^\//) {
+            $self->error("Map file name for type file must be an absolute path ($mapname specified)");
           }
         } else {
-          $="#";
+          foreach ( $maptype ) {
+            /program/ and $mapname="/etc/auto.$map";
+            /file/ and $mapname="/etc/auto.$map";
+            /yp/   and $mapname="auto.$map";
+          }
+          if ( ! $mapname ) {
+            $self->error("Map $map file name undefined.");
+          }
+        }
+
+        my $mpopts = $map_config->{options};
+        # Ensure options start with a '-'
+        if (  (length($mpopts) > 0) && ($mpopts !~ /^-/) ) {
+          $mpopts = '-' . $mpopts;
+        }
+
+        my $line_prefix;
+        if ( $map_config->{enabled} ) {
+          $line_prefix="";
+          if ( ($maptype eq 'file') || ($maptype eq 'direct') ) {
+            my $changes = $self->writeAutoMap($mapname,$map_config->{entries},$preserve_entries);
+            if ( $changes < 0 ) {
+              $self->error("Error updating map $map ($mapanme)");
+              $line_prefix="#ERROR IN: ";
+            } else {
+              $cnt += $changes;
+            }
+          } elsif ( $maptype eq 'program' ) {
+            my $status = LC::Check::status("$mapname",
+                                           owner=> "root",
+                                           group=>"root",
+                                           mode=>0755);
+            unless ( $status )
+              $self->warn("Program map file $mapname cannot be made executable");
+            }
+          }
+        } else {
+          $line_prefix="#";
         }
 
         foreach my $mountp ( @mountpoints ) {
           if ( $preserveMaster ) {
             $cnt+=NCM::Check::lines("/etc/auto.master",
                                     linere => "^#?( ERROR IN: )?$mountp\\s+.*",
-                                    goodre => "^$etok$mountp\\s+".$maptype.":".$mapname.
-                                    "\\s+".$mpopts."\\s*\$",
-                                    good   => "$etok$mountp\t$maptype:$mapname\t$mpopts",
+                                    goodre => "^$line_prefix$mountp\\s+".$maptype.":".$mapname."\\s+".$mpopts."\\s*\$",
+                                    good   => "$line_prefix$mountp\t$maptype:$mapname\t$mpopts",
                                     keep   => "first",
                                     add    => "last");
           } else {
-            $auto_master_contents .= "$etok$mountp\t$maptype:$mapname\t$mpopts\n";
+            $auto_master_contents .= "$line_prefix$mountp\t$maptype:$mapname\t$mpopts\n";
           }
         }
       }

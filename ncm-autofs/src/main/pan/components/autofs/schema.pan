@@ -23,7 +23,7 @@ type autofs_map_type = {
   "enabled"     : boolean = true
   "preserve"    : boolean = true # "Preserve existing entries not overwritten by config"
   "type"        : string with match(SELF,"direct|file|program|yp|nisplus|hesiod|userdir|ldap")
-  "mapname"     ? string
+  "mapname"     : string
   "mountpoint"  ? string
   "mpaliases"   ? string[]
   "options"     ? string
