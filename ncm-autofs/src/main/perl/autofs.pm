@@ -43,15 +43,20 @@ sub updateMap($$$$$) {
 ##########################################################################
     my ($self,$content_ref,$linere,$goodre,$good) = @_;
     
+    my $function_name = "updateMap";
+    
     my $changes = 1;       # Assume change done
     
     if ( ${$content_ref} =~ m/$linere/m ) {
       if ( ${$content_ref} !~ m/goodre/m ) {
+        $self->debug(2,"$function_name: line found but not matching goodre ($goodre), updating with <<<$good>>>");
         ${$content_ref} =~ s/$goodre/$good/;
       } else {
+        $self->debug(2,"$function_name: line and up-to-date (matching <<<$goordre>>>)");
         $changes = 0;
       }
     } else {
+      $self->debug(2,"$function_name: no match found for linere ($linere)");
       ${$content_ref} .= $good."\n";
     }
     
