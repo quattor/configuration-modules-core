@@ -110,8 +110,8 @@ sub writeAutoMap($$@) {
         my $reentry = $entry;
         $reentry = ~s/\*/\\\*/;
         $changes += $self->updateMap($map_contents_ref,
-                                 "^#?$reentry\\s+.*",
-                                 "^$reentry\\s+".$entry_attrs{$entry}->{options}."\\s+".$entry_attrs{$entry}->{location}."\$",
+                                 '^#?'.$reentry.'\s+.*',
+                                 '^'.$reentry.'\s+'.$entry_attrs{$entry}->{options}.'\s+'.$entry_attrs{$entry}->{location}.'$',
                                  "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
                                 );
       }
@@ -260,8 +260,8 @@ sub Configure($$@) {
         foreach my $mountp ( @{$mount_points{$map}} ) {
           $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
           $cnt += $self->updateMap($master_contents_ref,
-                                   "^#?(\s*$error_prefix\s*)?$mountp\\s+.*",
-                                   "^".$map_attrs->{prefix}."$mountp\\s+".$map_attrs->{type}.":".$map."\\s+".$map_attrs->{options}."\\s*\$",
+                                   '^#?(\s*$error_prefix\s*)?'.$mountp.'\s+.*',
+                                   '^'.$map_attrs->{prefix}.$mountp.'\s+'.$map_attrs->{type}.':'.$map.'\s+'.$map_attrs->{options}.'\s*$',
                                    $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options},
                                   );
         }
