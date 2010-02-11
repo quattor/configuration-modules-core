@@ -47,12 +47,12 @@ sub updateMap($$$$$) {
     
     my $changes = 1;       # Assume change done
     
-    if ( ${$content_ref} =~ m/$linere/m ) {
-      if ( ${$content_ref} !~ m/goodre/m ) {
-        $self->debug(2,"$function_name: line found but not matching goodre ($goodre), updating with <<<$good>>>");
-        ${$content_ref} =~ s/$goodre/$good/;
+    if ( ${$content_ref} =~ /$linere/m ) {
+      if ( ${$content_ref} !~ /$goodre/m ) {
+        $self->debug(2,"$function_name: line found but not matching goodre ($goodre), replacing with <<<$good>>>");
+        ${$content_ref} =~ s/$linere/$good/m;
       } else {
-        $self->debug(2,"$function_name: line and up-to-date (matching <<<$goordre>>>)");
+        $self->debug(2,"$function_name: line and up-to-date (matching <<<$goodre>>>)");
         $changes = 0;
       }
     } else {
@@ -149,6 +149,7 @@ sub Configure($$@) {
     # Define paths for convenience.
     my $base = "/software/components/autofs";
     my $cnt  = 0;
+    my $error_prefix = "ERROR IN: ";
 
     # Variables to keep track for each map of mountpoints and the mount attributes to use
     # with each map.
@@ -225,7 +226,7 @@ sub Configure($$@) {
             my $changes = $self->writeAutoMap($mapname,$map_config->{entries},$preserve_entries);
             if ( $changes < 0 ) {
               $self->error("Error updating map $map ($mapname)");
-              $master_entry_attrs{$mapname}->{prefix} = "#ERROR IN: ";
+              $master_entry_attrs{$mapname}->{prefix} = '#'.$error_prefix;
             } else {
               $cnt += $changes;
             }
@@ -259,7 +260,7 @@ sub Configure($$@) {
         foreach my $mountp ( @{$mount_points{$map}} ) {
           $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
           $cnt += $self->updateMap($master_contents_ref,
-                                   "^#?( ERROR IN: )?$mountp\\s+.*",
+                                   "^#?(\s*$error_prefix\s*)?$mountp\\s+.*",
                                    "^".$map_attrs->{prefix}."$mountp\\s+".$map_attrs->{type}.":".$map."\\s+".$map_attrs->{options}."\\s*\$",
                                    $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options},
                                   );
