@@ -260,7 +260,7 @@ sub Configure($$@) {
         foreach my $mountp ( @{$mount_points{$map}} ) {
           $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
           $cnt += $self->updateMap($master_contents_ref,
-                                   '^#?(\s*.'$error_prefix.'\s*)?'.$mountp.'\s+.*',
+                                   '^#?\s*('.$error_prefix.'\s*)?'.$mountp.'\s+.*',
                                    '^'.$map_attrs->{prefix}.$mountp.'\s+'.$map_attrs->{type}.':'.$map.'\s+'.$map_attrs->{options}.'\s*$',
                                    $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options},
                                   );
