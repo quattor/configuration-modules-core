@@ -1,3 +1,10 @@
+2010-02-12  Michel Jouvin
+
+	* Release: 2.0.0
+	- Full rewrite using getTree() API, CAF::FileWriter and CAF::Process, backward-compatible
+	Fix a bug where autofs was not reloaded if a map other than master one was modified
+	Many cleanups
+
 2009-03-09  Michel Jouvin
 
 	* Release: 1.1.8
