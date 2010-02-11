@@ -101,19 +101,19 @@ sub writeAutoMap($$@) {
         return 0;            # No change
       }
 
-      my $map_fh = CAF::FileEditor->new('/etc/auto.master');
+      my $map_fh = CAF::FileEditor->new($mapname);
       my $map_contents_ref = $map_fh->string_ref();
 
       foreach my $entry (keys(%entry_attrs)) {
         $self->debug(2,"Checking entry for mount point $entry...");
         my $entry_attrs = $entry_attrs{$entry};
         my $reentry = $entry;
-        $reentry = ~s/\*/\\\*/;
+        $reentry =~ s/\*/\\*/;
         $changes += $self->updateMap($map_contents_ref,
-                                 '^#?'.$reentry.'\s+.*',
-                                 '^'.$reentry.'\s+'.$entry_attrs{$entry}->{options}.'\s+'.$entry_attrs{$entry}->{location}.'$',
-                                 "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
-                                );
+                                     '^#?'.$reentry.'\s+.*',
+                                     '^'.$reentry.'\s+'.$entry_attrs{$entry}->{options}.'\s+'.$entry_attrs{$entry}->{location}.'$',
+                                     "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
+                                    );
       }
       $map_fh->close();
 
