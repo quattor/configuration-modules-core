@@ -18,10 +18,10 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
 
 use File::Path;
 
+Use CAF::FileEditor;
 use CAF::Process;
 use LC::Check;
 
@@ -30,15 +30,40 @@ use EDG::WP4::CCM::Element qw(unescape);
 
 local(*DTA);
 
-
+##########################################################################
+# This method checks if a line is present using linere.
+# If present, it checks the line content is the expected one (goordre)
+# or it replaces it by 'good'.
+# If not present, the line is added at the end of the current content.
+# content_ref must be a string with the file content (multilines) as returned
+# by File::Editor string_ref() method.
+# Largely based on NCM::Check::lines ideas.
+#
+sub updateMap($$$$$) {
+##########################################################################
+    my ($self,$content_ref,$linere,$goodre,$good) = @_;
+    
+    my $changes = 1;       # Assume change done
+    
+    if ( ${$content_ref} ~ m/$linere/m ) {
+      if ( ${$content_ref} !~ m/goodre/m ) {
+        ${$content_ref} =~ s/$goodre/$good/;
+      } else {
+        $changes = 0;
+    } else {
+      ${$content_ref} .= $good."\n";
+    }
+    
+    return $change; 
+} 
+ 
 ##########################################################################
 sub writeAutoMap($$@) {
 ##########################################################################
     my ($self,$mapname,$entries,$preserve) = @_;
 
     my $changes = 0;
-
-    my $contents="# File managed by Quattor component ncm-autofs. DO NOT EDIT.\n\n";
+    my %entry_attrs;
 
     if ( $entries ) {
         for my $entry_e (keys(%{$entries})) {
@@ -47,40 +72,50 @@ sub writeAutoMap($$@) {
           # For backward compatibility, useless with escaped values
           $entry=~s/__wildcard/\*/;
     
-          my $opt = $entry_config->{options};
+          $entry_attrs{$entry} = ();
+          my $entry_attrs{$entry}->{options} = $entry_config->{options};
           # Ensure options start with a '-'
-          if ( (length($opt) > 0) && ($opt !~ /^-/) ) {
-            $opt = '-' . $opt;
+          if ( (length($entry_attrs{$entry}->{options}) > 0) && ($entry_attrs{$entry}->{options} !~ /^-/) ) {
+            $entry_attrs{$entry}->{options} = '-' . $entry_attrs{$entry}->{options};
           }
-          my $location = $entry_config->{location};
+          my $entry_attrs{$entry}->{location} = $entry_config->{location};
           # Just in case, mandatory in schema...
-          unless ( $location ) {
+          unless ( $entry_attrs{$entry}->{location} ) {
             $self->warn("Location for entry $entry in map $mapname is empty: skipping entry");
             next;
           }
-    
-          if ( $preserve ) {
-            my $reentry=$entry; $reentry=~s/\*/\\\*/;
-            $changes += NCM::Check::lines($mapname,
-                                          linere => "^#?$reentry\\s+.*",
-                                          goodre => "^$reentry\\s+$opt\\s+$location\$",
-                                          good   => "$entry\t$opt\t$location",
-                                          keep   => "first",
-                                          add    => "last" );
-          } else {
-            $contents .= "$entry\t$opt\t$location\n";
-          }
-        }
+       }
+    }
 
-    # No entries : if preserve is true, do not modify existing map, else erase its contents.
-    } else {
-      if ( $preserve ) {
+    # Update the map if preserve=true
+    
+    if ( $preserve ) {
+      # No entries : if preserve is true, do not modify existing map, else erase its contents.
+      unless ( %entry_attrs ) {
         return 0;            # No change
       }
-    };
 
-    # When preserve is true, amp has already been updated.
-    if ( $preserve == 0 ) {
+      my $reentry=$entry; $reentry=~s/\*/\\\*/;
+      my $map_fh = CAF::FileEditor->new('/etc/auto.master');
+      my $map_contents_ref = $fh->string_ref();
+
+      foreach my $entry (keys(%entry_attrs)) {
+        my $entry_attrs = $entry_attrs{$entry};
+        $changes += $self->updateMap(${$map_contents_ref},
+                                 "^#?$reentry\\s+.*",
+                                 "^$reentry\\s+".$entry_attrs{$entry}->{options}."\\s+".$entry_attrs{$entry}->{location}."\$",
+                                 "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
+                                );
+        }
+      }
+      $map_fh->close();
+
+    # Create/replace map
+    } else {
+      my $contents="# File managed by Quattor component ncm-autofs. DO NOT EDIT.\n\n";
+      foreach my $entry (keys(%entry_attrs)) {
+        $contents .= "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location}."\n";
+      }
       $changes = LC::Check::file($mapname,
                                  backup => ".ncm-autofs.old",
                                  contents => $contents,
@@ -209,33 +244,33 @@ sub Configure($$@) {
     $self->info("Checking /etc/auto.master...");
     if ( $preserveMaster ) {
       $self->debug(1,"Update will preserve existing entries not managed by ncm-autofs");
+      my $master_fh = CAF::FileEditor->new('/etc/auto.master');
+      my $master_contents_ref = $fh->string_ref();
+
       foreach my $map (keys(%mount_points)) {
         my $map_attrs = $master_entry_attrs{$map};
         foreach my $mountp ( $mount_points{$map} ) {
-          $cnt+=NCM::Check::lines("/etc/auto.master",
-                                  linere => "^#?( ERROR IN: )?$mountp\\s+.*",
-                                  goodre => "^".$map_attrs->{prefix}."$mountp\\s+".
-                                                $map_attrs->{type}.":".$mapname."\\s+".$map_attrs->{options}."\\s*\$",
-                                  good   => $map_attrs->{prefix}."$mountp\t".
-                                                $map_attrs->{type}.":$mapname\t".$map_attrs->{options}",
-                                  keep   => "first",
-                                  add    => "last");
-          }
+          $cnt += $self->updateMap(${$master_contents_ref},
+                                   "^#?( ERROR IN: )?$mountp\\s+.*",
+                                   "^".$map_attrs->{prefix}."$mountp\\s+".$map_attrs->{type}.":".$mapname."\\s+".$map_attrs->{options}."\\s*\$",
+                                   $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$mapname\t".$map_attrs->{options}",
+                                  );
         }
       }
+      $master_fh->close();
 
     # Create/replace auto.master if preserveMaster is false (file managed exclusively by Quattor)
     } else {
-      $auto_master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
+      my $master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
       foreach my $map (keys(%mount_points)) {
         foreach my $mountp ( $mountpoints{$map} ) {
-          $auto_master_contents .= $map_attrs->{prefix}.
+          $master_contents .= $map_attrs->{prefix}.
                                        "$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options}."\n";
         }
       }
       $cnt += LC::Check::file("/etc/auto.master",
                            backup => ".ncm-autofs.old",
-                           contents => $auto_master_contents,
+                           contents => $master_contents,
                            owner => "root",
                            group => "root",
                            mode => 0644
