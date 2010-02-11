@@ -21,7 +21,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 
 use File::Path;
 
-Use CAF::FileEditor;
+use CAF::FileEditor;
 use CAF::Process;
 use LC::Check;
 
@@ -45,16 +45,17 @@ sub updateMap($$$$$) {
     
     my $changes = 1;       # Assume change done
     
-    if ( ${$content_ref} ~ m/$linere/m ) {
+    if ( ${$content_ref} =~ m/$linere/m ) {
       if ( ${$content_ref} !~ m/goodre/m ) {
         ${$content_ref} =~ s/$goodre/$good/;
       } else {
         $changes = 0;
+      }
     } else {
       ${$content_ref} .= $good."\n";
     }
     
-    return $change; 
+    return $changes; 
 } 
  
 ##########################################################################
@@ -73,12 +74,12 @@ sub writeAutoMap($$@) {
           $entry=~s/__wildcard/\*/;
     
           $entry_attrs{$entry} = ();
-          my $entry_attrs{$entry}->{options} = $entry_config->{options};
+          $entry_attrs{$entry}->{options} = $entry_config->{options};
           # Ensure options start with a '-'
           if ( (length($entry_attrs{$entry}->{options}) > 0) && ($entry_attrs{$entry}->{options} !~ /^-/) ) {
             $entry_attrs{$entry}->{options} = '-' . $entry_attrs{$entry}->{options};
           }
-          my $entry_attrs{$entry}->{location} = $entry_config->{location};
+          $entry_attrs{$entry}->{location} = $entry_config->{location};
           # Just in case, mandatory in schema...
           unless ( $entry_attrs{$entry}->{location} ) {
             $self->warn("Location for entry $entry in map $mapname is empty: skipping entry");
@@ -95,18 +96,19 @@ sub writeAutoMap($$@) {
         return 0;            # No change
       }
 
-      my $reentry=$entry; $reentry=~s/\*/\\\*/;
       my $map_fh = CAF::FileEditor->new('/etc/auto.master');
-      my $map_contents_ref = $fh->string_ref();
+      my $map_contents_ref = $map_fh->string_ref();
 
       foreach my $entry (keys(%entry_attrs)) {
+        $self->debug(2,"Checking entry for mount point $entry...");
         my $entry_attrs = $entry_attrs{$entry};
-        $changes += $self->updateMap(${$map_contents_ref},
+        my $reentry = $entry;
+        $reentry = ~s/\*/\\\*/;
+        $changes += $self->updateMap($map_contents_ref,
                                  "^#?$reentry\\s+.*",
                                  "^$reentry\\s+".$entry_attrs{$entry}->{options}."\\s+".$entry_attrs{$entry}->{location}."\$",
                                  "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
                                 );
-        }
       }
       $map_fh->close();
 
@@ -197,9 +199,9 @@ sub Configure($$@) {
           }
         }
 
-        $master_entry_attrs{$mapname} = {};
+        $master_entry_attrs{$mapname} = ();
         $master_entry_attrs{$mapname}->{type} = $maptype;
-        my $master_entry_attrs{$mapname}->{options} = $map_config->{options};
+        $master_entry_attrs{$mapname}->{options} = $map_config->{options};
         # Ensure options start with a '-'
         if (  (length($master_entry_attrs{$mapname}->{options}) > 0) && ($master_entry_attrs{$mapname}->{options} !~ /^-/) ) {
           $master_entry_attrs{$mapname}->{options} = '-' . $master_entry_attrs{$mapname}->{options};
@@ -236,7 +238,7 @@ sub Configure($$@) {
         }
         
         # Add mount points to the global list
-        $mount_points{$mapname} = @map_mpoints;
+        $mount_points{$mapname} = \@map_mpoints;
       }
     }
 
@@ -245,15 +247,16 @@ sub Configure($$@) {
     if ( $preserveMaster ) {
       $self->debug(1,"Update will preserve existing entries not managed by ncm-autofs");
       my $master_fh = CAF::FileEditor->new('/etc/auto.master');
-      my $master_contents_ref = $fh->string_ref();
+      my $master_contents_ref = $master_fh->string_ref();
 
       foreach my $map (keys(%mount_points)) {
         my $map_attrs = $master_entry_attrs{$map};
-        foreach my $mountp ( $mount_points{$map} ) {
-          $cnt += $self->updateMap(${$master_contents_ref},
+        foreach my $mountp ( @{$mount_points{$map}} ) {
+          $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
+          $cnt += $self->updateMap($master_contents_ref,
                                    "^#?( ERROR IN: )?$mountp\\s+.*",
-                                   "^".$map_attrs->{prefix}."$mountp\\s+".$map_attrs->{type}.":".$mapname."\\s+".$map_attrs->{options}."\\s*\$",
-                                   $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$mapname\t".$map_attrs->{options}",
+                                   "^".$map_attrs->{prefix}."$mountp\\s+".$map_attrs->{type}.":".$map."\\s+".$map_attrs->{options}."\\s*\$",
+                                   $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options},
                                   );
         }
       }
@@ -263,7 +266,8 @@ sub Configure($$@) {
     } else {
       my $master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
       foreach my $map (keys(%mount_points)) {
-        foreach my $mountp ( $mountpoints{$map} ) {
+        my $map_attrs = $master_entry_attrs{$map};
+        foreach my $mountp ( @{$mount_points{$map}} ) {
           $master_contents .= $map_attrs->{prefix}.
                                        "$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options}."\n";
         }
