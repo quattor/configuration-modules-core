@@ -124,7 +124,7 @@ sub writeAutoMap($$@) {
         $contents .= "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location}."\n";
       }
       $changes = LC::Check::file($mapname,
-                                 backup => ".ncm-autofs.old",
+                                 backup => ".ncm-autofs",
                                  contents => $contents,
                                  owner => "root",
                                  group => "root",
@@ -279,7 +279,7 @@ sub Configure($$@) {
         }
       }
       $cnt += LC::Check::file("/etc/auto.master",
-                           backup => ".ncm-autofs.old",
+                           backup => ".ncm-autofs",
                            contents => $master_contents,
                            owner => "root",
                            group => "root",
