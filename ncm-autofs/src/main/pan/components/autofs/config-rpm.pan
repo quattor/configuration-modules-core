@@ -14,7 +14,7 @@ unique template components/autofs/config-rpm;
 include { 'components/autofs/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-autofs","2.0.0-1","noarch");
+"/software/packages"=pkg_repl("ncm-autofs","2.0.0-2","noarch");
 
 '/software/components/autofs/version' = '2.0.0';
 

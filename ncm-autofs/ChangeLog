@@ -1,6 +1,11 @@
 2010-02-12  Michel Jouvin
 
 	* Release: 2.0.0
+	- Fix typo in backup file extension
+
+2010-02-12  Michel Jouvin
+
+	* Release: 2.0.0
 	- Full rewrite using getTree() API, CAF::FileWriter and CAF::Process, backward-compatible
 	Fix a bug where autofs was not reloaded if a map other than master one was modified
 	Many cleanups
