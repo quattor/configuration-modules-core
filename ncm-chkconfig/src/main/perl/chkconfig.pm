@@ -85,6 +85,10 @@ sub Configure {
       # remember about this one for later
       $configuredservices{$service}=1;
 
+      # unfortunately not all combinations make sense. Check for some
+      # of the more obvious ones, but eventually we need a single
+      # entry per service.
+
       while($cs->hasNextElement()) {
 	  
 	  my $opt = $cs->getNextElement();
@@ -94,7 +98,11 @@ sub Configure {
 
 	  #6 kinds of entries: on,off,reset,add,del and startstop.
 	  if($optname eq 'add' and $optval eq 'true') {
-	    if (! $currentservices{$service} ) {
+	    if($config->elementExists("$servpath/del")) {
+		  $self->warn("service $service has both 'add' and 'del' settings defined, 'del' wins");
+	    } elsif($config->elementExists("$servpath/on")) {
+		  $self->info("service $service has both 'add' and 'on' settings defined, 'on' implies 'add'");
+	    } elsif (! $currentservices{$service} ) {
 	      push @cmdlist, "$chkconfigcmd --add $service";
 	      $self->info("$service: adding to chkconfig");
 
@@ -107,6 +115,7 @@ sub Configure {
 	    }
 	  } elsif ($optname eq 'del' and $optval eq 'true') {
 	    if ($currentservices{$service} ) {
+	      push @cmdlist, "$chkconfigcmd $service off";
 	      push @cmdlist, "$chkconfigcmd --del $service";
 	      $self->info("$service: removing from chkconfig");
 
@@ -118,9 +127,13 @@ sub Configure {
 	    }
 		
 	  } elsif ($optname eq 'on') { 
-	      if(!validrunlevels($optval)) {
+	      if($config->elementExists("$servpath/off")) {
+		  $self->warn("service $service has both 'on' and 'off' settings defined, 'off' wins");
+	      } elsif ($config->elementExists("$servpath/del")) {
+		  $self->warn("service $service has both 'on' and 'del' settings defined, 'del' wins");
+	      } elsif(!validrunlevels($optval)) {
 		  $self->warn("invalid runlevel string $optval defined for ".
-			      "option \'$optname\' in service $service");
+			      "option \'$optname\' in service $service, ignoring");
 	      } else {
 		  if(!$optval) {
 		      $optval = '2345'; # default as per doc (man chkconfig)
@@ -133,10 +146,13 @@ sub Configure {
 			      $currentlevellist .= "$i";
 			  }
 		      }
+		  } else {
+		      $self->info("$service was not configured, 'add'ing it");
+		      push @cmdlist, "$chkconfigcmd --add $service";
 		  }
 		  if ($optval ne $currentlevellist) {
 		      $self->info("$service was 'on' for \"$currentlevellist\", new list is \"$optval\"");
-		      push @cmdlist, "$chkconfigcmd $service reset";
+		      push @cmdlist, "$chkconfigcmd $service off";
 		      push @cmdlist, "$chkconfigcmd --level $optval $service on";
 		      if($startstop and $startstop eq 'true'  
 			 and ($optval =~ /$currentrunlevel/)) {
@@ -147,7 +163,9 @@ sub Configure {
 		  } 
 	      }  
 	  } elsif ($optname eq 'off') { 
-	      if(!validrunlevels($optval)) {
+	      if($config->elementExists("$servpath/del")) {
+		  $self->warn("service $service has both 'off' and 'del' settings defined, 'del' wins");
+	      } elsif(!validrunlevels($optval)) {
 		  $self->warn("invalid runlevel string $optval defined for ".
 			      "option \'$optname\' in service $service");
 	      } else {		   
@@ -173,7 +191,13 @@ sub Configure {
 		  }
 	      }
 	  } elsif ($optname eq 'reset') {
-	      if(validrunlevels($optval)) {
+	      if($config->elementExists("$servpath/del")) {
+		  $self->warn("service $service has both 'reset' and 'del' settings defined, 'del' wins");
+	      } elsif($config->elementExists("$servpath/off")) {
+		  $self->warn("service $service has both 'reset' and 'off' settings defined, 'off' wins");
+	      } elsif($config->elementExists("$servpath/on")) {
+		  $self->warn("service $service has both 'reset' and 'on' settings defined, 'on' wins");
+	      } elsif(validrunlevels($optval)) {
 		    # FIXME - check against current?.
 		  if($optval) {
 		      push @cmdlist, "$chkconfigcmd --level $optval $service reset";
@@ -241,9 +265,13 @@ sub Configure {
       $self->info("executing command: $cmd");
       
       unless($NoAction) {
-	  unless(run("$cmd")) {
+	  my $out = output("$cmd");
+	  if(!defined("$cmd")) {
 	      $self->warn("cannot execute $cmd");
-	  } 
+	  } elsif ($? >> 8) {
+	      chomp($out);
+	      $self->warn($out);
+	  }
       }
   }
 
@@ -257,8 +285,12 @@ sub Configure {
 	      $self->info("executing command: $cmd");
 	      
 	      unless($NoAction) {
-		  unless(run("$cmd")) {
+		  my $out = output("$cmd");
+		  if(!defined("$cmd")) {
 		      $self->warn("cannot execute $cmd");
+		  } elsif ($? >> 8) {
+		      chomp($out);
+		      $self->warn($out);
 		  } 
 	      }
 	  }
