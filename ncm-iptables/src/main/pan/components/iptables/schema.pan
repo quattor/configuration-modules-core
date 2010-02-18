@@ -70,6 +70,8 @@ type component_iptables_preamble = {
     "input"             ? string
     "output"            ? string
     "forward"           ? string
+    "prerouting"        ? string
+    "postrouting"       ? string
 };
 
 type component_iptables_acls = {
