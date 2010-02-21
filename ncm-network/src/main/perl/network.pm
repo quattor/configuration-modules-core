@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.2, 14/07/09 12:24
+# VERSION:    1.2.3, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -853,9 +853,16 @@ sub Configure {
         $output .= "\n$cmd\n";
         $output .= runrun($cmd);
 
-        $cmd="/usr/sbin/brctl show";
+        ## when brctl is missing, this would generate an error. 
+        ## but it is harmless to skip the show command.
+        my $brexe = "/usr/sbin/brctl";
+        $cmd="$brexe show";
         $output .= "\n$cmd\n";
-        $output .= runrun($cmd);
+        if (-x $brexe) {
+            $output .= runrun($cmd);
+        } else {
+            $output .= "Missing $brexe executable.\n";
+        };
 
         return $output;
     }
