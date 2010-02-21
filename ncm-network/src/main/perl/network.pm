@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.1, 14/07/09 12:24
+# VERSION:    1.2.2, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -71,7 +71,8 @@ sub ethtoolGetCurrent {
     $showoption="" if ($sectionname eq "ethtool");
 
     my $out;
-    if (LC::Process::execute([$ethtoolcmd, $showoption, $ethname],
+    ## Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
+    if (LC::Process::execute([$ethtoolcmd, $showoption || (), $ethname],
                                 "stdout" => \$out,
                                 "stderr" => "stdout"
         ) ) {
@@ -146,9 +147,9 @@ sub ethtoolSetOptions {
                                 "stdout" => \$out,
                                 "stderr" => "stdout"
             ) ) {
-                $self->info("ethtoolSetOptions: Succesfully ran \"$ethtoolcmd $setoption $ethname $k $v\"");
+                $self->info("ethtoolSetOptions: Succesfully ran \"$cmd\"");
         } else {
-                $self->error("ethtoolSetOptions: Failed to run \"$ethtoolcmd $setoption $ethname $k $v\": output $out.");
+                $self->error("ethtoolSetOptions: Failed to run \"$cmd\": output $out.");
         }
     }
 }
