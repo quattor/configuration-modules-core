@@ -40,11 +40,14 @@ sub Configure($$) {
   my $channel = $ipmi_config->{channel};
   my $net_interface = $ipmi_config->{net_interface};
 
+  system("chkconfig ipmi on");
+  system("service ipmi restart");
+
   for my $user (@{$users}) {
-	$userid = $user->{userid};
-        $login  = $user->{login};
-	$passwd = $user->{password};
-	$priv   = $user->{priv};
+	my $userid = $user->{userid};
+        my $login  = $user->{login};
+	my $passwd = $user->{password};
+	my $priv   = $user->{priv};
 
 	system ($ipmi_exec." user set name ".$userid." ".$login);
 	system ($ipmi_exec." user set password ".$userid." ".$passwd);
