@@ -11,13 +11,13 @@ type structure_users = {
 	"login"    : string
 	"password" : string
 	"priv"     ? string
-	"userid"   ? int
+	"userid"   ? long
 };
 
 type component_ipmi_type = {
     include structure_component
 
-    "channel"       : int = 1
+    "channel"       : long = 1
     "users"         : structure_users[]
     "net_interface" : string
 };
