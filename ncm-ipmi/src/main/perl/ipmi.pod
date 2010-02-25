@@ -1,0 +1,65 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::ipmi - Components used to manage IPMI configuration
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+TBD
+
+=item Unconfigure()
+
+Not implemented.
+
+=back
+
+=head1 RESOURCES
+
+=over
+
+=item /software/components/ipmi/active : boolean
+
+activates/deactivates the component.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+
+=head1 FILES
+
+This component doesn't touch any file.
+
+
+=head1 BUGS
+
+None.
+
+
+=head1 AUTHOR
+
+Guillaume PHILIPPON <philippo@lal.in2p3.fr>
+
+=head1 SEE ALSO
+
+ncd(1)
+
+=cut
+
