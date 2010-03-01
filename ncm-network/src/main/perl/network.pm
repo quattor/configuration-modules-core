@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.3, 14/07/09 12:24
+# VERSION:    1.2.4, 14/07/09 12:24
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -47,6 +47,12 @@ use LC::File;
 
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
+
+## ethtool opts that have to be ordered
+my %ethtool_option_order=(
+    "ethtool" => ["autoneg","speed","duplex"]
+);
+
 my %ethtool_option_map=(
     "offload" => { "tso" => "tcp segmentation offload",
                    "tx"  => "tx-checksumming",
@@ -58,149 +64,16 @@ my %ethtool_option_map=(
 
     "ring"    => { "tx"  => "TX",
                    "rx"  => "RX" },
-    "ethtool" => { "wol" => "Wake-on" },
+    "ethtool" => { "wol" => "Wake-on",
+                   "autoneg" => "Advertised auto-negotiation",
+                   "speed" => "Speed",
+                   "duplex" => "Duplex"
+                 },
    );
 my $ethtoolcmd="/usr/sbin/ethtool";
 
-# Get current ethtool options for the given section
-sub ethtoolGetCurrent {
-    my ($self,$ethname,$sectionname)=@_;
-    my %current;
-    my $showoption="--show-$sectionname";
 
-    $showoption="" if ($sectionname eq "ethtool");
 
-    my $out;
-    ## Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
-    if (LC::Process::execute([$ethtoolcmd, $showoption || (), $ethname],
-                                "stdout" => \$out,
-                                "stderr" => "stdout"
-        ) ) {
-        my $skiptillnextcolon;    # For skipping awkward chunks
-        foreach (split('\n',$out)) {
-            next if (/^Cannot get/);        # Normal error message
-            next if (/^.*parameters for/);        # Normal error message
-            next if (/^Settings for/);        # Normal error message
-            next if (/^Pre-set maximums:/);        # Normal error message
-            next if (/^Current hardware settings:/); # Normal error message
-            next if (/^\s*$/);    # Normal error message
-            next if (defined($skiptillnextcolon) && !/:/);
-            undef $skiptillnextcolon;
-            if (/Supported link modes:/ || /Advertised link modes:/) {
-                $skiptillnextcolon=1;
-                next;
-            }
-            my @fields=split /:/,$_;
-            if (@fields!=2) {
-                $self->error("Cannot parse line $_");
-                next;
-            }
-            my $k=$fields[0];
-            $k=~s/\s*$//g;
-            $k=~s/^\s*//g;
-            my $v=$fields[1];
-            $v=~s/\s*$//g;
-            $v=~s/^\s*//g;
-            $current{$k}=$v;
-        }
-    } else {
-        $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed. (output: $out)");
-    }
-    return %current;
-}
-
-sub ethtoolSetOptions {
-    my ($self,$ethname,$sectionname,$optionref)=@_;
-    my %options=%$optionref;
-    my %current;
-    my $cmd;
-
-    # get current values into %current
-    %current=ethtoolGetCurrent($self,$ethname,$sectionname);
-
-    # Loop over CDB settings and check that they are known but different
-    for my $k (keys %options) {
-        my $v=$options{$k};
-        my $currentv=$current{$k};
-
-        # Is the ethtool description known
-        if (!defined($currentv)) {
-            my $tryk=$ethtool_option_map{$sectionname}{$k};
-            $currentv=$current{$tryk} if defined($tryk);
-        }
-        if (!defined($currentv)) {
-            $self->info("Skipping CDB setting for $ethname/$sectionname/$k to $v as not in ethtool");
-            next;
-        }
-
-        # Is the value different between CDB and the machine
-        if ($currentv eq $v) {
-            $self->verbose("Value for $ethname/$sectionname/$k is already set to $v");
-            next;
-        }
-        my $setoption="--$sectionname";
-        $setoption="--set-$sectionname" if ($sectionname eq "ring");
-        $setoption="--change" if ($sectionname eq "ethtool");
-        $cmd="$ethtoolcmd $setoption $ethname $k $v";
-        my $out;
-        if (LC::Process::execute([$ethtoolcmd, $setoption, $ethname,$k,$v],
-                                "stdout" => \$out,
-                                "stderr" => "stdout"
-            ) ) {
-                $self->info("ethtoolSetOptions: Succesfully ran \"$cmd\"");
-        } else {
-                $self->error("ethtoolSetOptions: Failed to run \"$cmd\": output $out.");
-        }
-    }
-}
-
-sub doEthtool {
-    our ($self,$config)=@_;
-
-    my $interfacespath = "/system/network/interfaces";
-    if ($config->elementExists($interfacespath)) {
-        # go over each interface
-        my $ethiterator = $config->getElement($interfacespath);
-        while ($ethiterator->hasNextElement()) {
-            my $ethelement=$ethiterator->getNextElement();
-            my $ethname=$ethelement->getName(); # eth*
-            my $attriterator=$config->getElement($interfacespath."/".$ethname);
-            while ($attriterator->hasNextElement()) {
-               my $sectionelement=$attriterator->getNextElement(); #
-               my $sectionname=$sectionelement->getName(); # offload
-               my $optionpath=$interfacespath."/".$ethname."/".$sectionname;
-               next unless (defined($ethtool_option_map{$sectionname})); # Skip gateway etc
-               if ($config->elementExists($optionpath)) {
-                   my %options;
-                   my $optioniterator=$config->getElement($optionpath);
-                   while ($optioniterator->hasNextElement()) {
-                      my $optionelement=$optioniterator->getNextElement(); #
-                      my $optionname=$optionelement->getName(); # tso
-                      my $optionvalue=$optionelement->getValue(); # yes
-                      $options{$optionname}=$optionvalue;
-                   }
-                   ethtoolSetOptions($self,$ethname,$sectionname,\%options);
-               }
-            }
-        }
-    }
-
-    return;
-}
-
-# Creates a string defining the bonding options.
-sub bonding_options {
-    my ($self, $el) = @_;
-    my $opts = $el->getTree();
-    my $st = "BONDING_OPTIONS=";
-    my @op;
-
-    while (my ($k, $v) = each(%$opts)) {
-        push(@op, "$k=$v");
-    }
-
-    return "$st'" . join(' ', @op) . "'\n";
-}
 
 ##########################################################################
 sub Configure {
@@ -257,8 +130,7 @@ sub Configure {
     ## read interface config in hash
     ################################
     $path = $base_path.'/interfaces';
-    my ($iface,%net,$element,$elementname,$el,$elnr,$l,$ln, $mtu,
-    $bonding_opts);
+    my ($iface,%net,$element,$elementname,$el,$elnr,$l,$ln, $mtu,%ethtoolconfig);
     my $net = $config->getElement($path);
     while ($net->hasNextElement()) {
         $iface = $net->getNextElement();
@@ -285,11 +157,16 @@ sub Configure {
                     }
                     $net{$ifacename}{$elementname}{$elnr}=\%tmp_el;
                 }
-            } elsif ($elementname !~ m/bonding_opts/) {
-                $net{$ifacename}{$elementname} = $element->getValue();
+            } elsif ($elementname =~ m/^bonding_opts$/) {
+                $net{$ifacename}{$elementname} = bonding_options($element);
+            } elsif (defined($ethtool_option_map{$elementname})) {
+                ## set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
+                $net{$ifacename}{$elementname."_opts"} = ethtool_options($element) if ($elementname eq "ethtool");
+                ## add rest of ethtool opts
+                my $opts = $element->getTree();
+                $net{$ifacename}{$elementname}=$opts;
             } else {
-                $net{$ifacename}{$elementname} =
-                $self->bonding_options($element);
+                $net{$ifacename}{$elementname} = $element->getValue();
             }
         }
 
@@ -456,6 +333,11 @@ sub Configure {
         if (exists($net{$iface}{bonding_opts})) {
             $text .= $net{$iface}{bonding_opts};
         }
+
+        if (exists($net{$iface}{ethtool_opts})) {
+            $text .= $net{$iface}{ethtool_opts};
+        }
+
 
         ## VLAN support
         ## you do not need to set this for the VLAN device
@@ -659,7 +541,11 @@ sub Configure {
     }
 
     # Do ethtool processing for offload, ring and others
-    doEthtool($self,$config);
+    foreach my $iface ( keys %net ) {
+        foreach my $sectionname (keys %ethtool_option_map) {
+            ethtoolSetOptions($iface,$sectionname,$net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
+        };
+    };
 
     my $cmd;
     ## restart network
@@ -975,6 +861,140 @@ sub Configure {
                 $self->error("runrun failed to run \"$cmd\": output $output");
         }
         return $output;
+    }
+
+
+    # Get current ethtool options for the given section
+    sub ethtoolGetCurrent {
+        my ($ethname,$sectionname)=@_;
+        my %current;
+
+        my $showoption="--show-$sectionname";
+        $showoption="" if ($sectionname eq "ethtool");
+
+        my ($out,$err);
+        ## Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
+        if (LC::Process::execute([$ethtoolcmd, $showoption || (), $ethname],
+                                "stdout" => \$out,
+                                "stderr" => \$err
+            ) ) {
+            foreach (split('\n',$out)) {
+                if (m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
+                    my $k=$1; my $v=$2;
+                    ## speed setting
+                    $v=$1 if ($k eq $ethtool_option_map{ethtool}{speed} && $v =~ m/^(\d+)/);
+                    ## Duplex setting
+                    $v=~ tr/A-Z/a-z/ if ($k eq $ethtool_option_map{ethtool}{duplex});
+                    ## auotneg setting
+                    if ($k eq $ethtool_option_map{ethtool}{autoneg}) {
+                        $v = "off";
+                        $v = "on" if ($v =~ m/(Y|y)es/);
+                    }
+                 
+                    $current{$k}=$v;
+                }
+            }
+        } else {
+            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed. (output: $out, stderr: $err)");
+        }
+        return %current;
+    }
+
+    
+    sub ethtoolSetOptions {
+        my ($ethname,$sectionname,$optionref)=@_;
+        my %options=%$optionref;
+        my $cmd;
+
+        # get current values into %current
+        my %current=ethtoolGetCurrent($ethname,$sectionname);
+
+        # Loop over template settings and check that they are known but different
+        
+        ## key ordering (important for autoneg/speed/duplex)
+        my @optkeys;
+        foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
+            push(@optkeys,$tmp) if(grep {$_ eq $tmp} sort(keys(%options)));
+        };
+        foreach my $tmp (sort keys %options) {
+            push(@optkeys,$tmp) if (!(grep {$_ eq $tmp} @optkeys));
+        };
+        
+        my @opts;
+        for my $k (@optkeys) {
+            my $v=$options{$k};
+            my $currentv;
+            if (exists($current{$k})) {
+                $currentv=$current{$k};
+            } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
+                $currentv=$current{$ethtool_option_map{$sectionname}{$k}};
+            } else {
+                $self->info("ethtoolSetOptions: Skipping setting for $ethname/$sectionname/$k to $v as not in ethtool");
+                next;
+            }
+
+            # Is the value different between template and the machine
+            if ($currentv eq $v) {
+                $self->verbose("ethtoolSetOptions: Value for $ethname/$sectionname/$k is already set to $v");
+            } else {
+                push(@opts,$k,$v);
+            }
+        }
+        
+        ## nothing to do?
+        return if (! @opts);
+
+        my $setoption="--$sectionname";
+        $setoption="--set-$sectionname" if ($sectionname eq "ring");
+        $setoption="--change" if ($sectionname eq "ethtool");
+        $cmd="$ethtoolcmd $setoption $ethname ".join(' ',@opts);
+        my $out;
+        if (LC::Process::execute([$cmd],
+                                "stdout" => \$out,
+                                "stderr" => "stdout"
+                ) ) {
+                    $self->info("ethtoolSetOptions: Succesfully ran \"$cmd\"");
+         } else {
+                    $self->error("ethtoolSetOptions: Failed to run \"$cmd\": output $out.");
+         }
+    }
+
+    # Creates a string defining the bonding or ethtool  options.
+    sub bonding_options {
+        my ($el) = @_;
+        my $opts = $el->getTree();
+        my $st = "BONDING_OPTS=";
+        my @op;
+
+        while (my ($k, $v) = each(%$opts)) {
+            push(@op, "$k=$v");
+        }
+
+        return "$st'" . join(' ', @op) . "'\n";
+    }
+
+    sub ethtool_options {
+        my ($el) = @_;
+        my $opts = $el->getTree();
+        my $st = "ETHTOOL_OPTS=";
+
+        ## key ordering (important for autoneg/speed/duplex)
+        my @optkeys;
+        foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
+            push(@optkeys,$tmp) if(grep {$_ eq $tmp} sort(keys(%$opts)));
+        };
+        foreach my $tmp (sort keys %$opts) {
+            push(@optkeys,$tmp) if (!(grep {$_ eq $tmp} @optkeys));
+        };
+
+
+        my @op;
+        foreach my $k (@optkeys) {
+            my $v=${%$opts}{$k};
+            push(@op, "$k $v");
+        }
+
+        return "$st'" . join(' ', @op) . "'\n";
     }
 
 

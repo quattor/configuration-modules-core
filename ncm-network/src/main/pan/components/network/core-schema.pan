@@ -67,6 +67,9 @@ type structure_ethtool = {
 #              s  Enable SecureOn(tm) password for MagicPacket(tm)
 #              d  Disable (wake on nothing).  This option clears all previous option
     "wol"       ? string with match (SELF, '^p|u|m|b|a|g|s|d$')
+    "autoneg"   ? string with match (SELF, '^on|off$')
+    "duplex"    ? string with match (SELF, '^half|full$')
+    "speed"     ? long
 };
 
 ############################################################
