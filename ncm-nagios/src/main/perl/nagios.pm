@@ -5,7 +5,7 @@
 # File: nagios.pm
 # Implementation of ncm-nagios
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.11 : 04/03/10 11:37
+# Version: 1.4.12 : 04/03/10 11:51
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -65,6 +65,7 @@ sub print_general
 
     my $t = $cfg->getElement (BASEPATH . 'general')->getTree;
     my $el;
+    my $ed;
 
     if ($cfg->elementExists (BASEPATH . 'external_files')) { 
 	$el = $cfg->getElement (BASEPATH . 'external_files')->getTree;

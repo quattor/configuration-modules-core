@@ -1,5 +1,10 @@
 2010-03-04  Christos Triantafyllidis,ctria@grid.auth.gr
 
+	* Release: 1.4.12
+	- Fixed typo
+
+2010-03-04  Christos Triantafyllidis,ctria@grid.auth.gr
+
 	* Release: 1.4.11
 	- Added support for external configuration fdirs, via the new external__dirs[] field of the main structure.
 
