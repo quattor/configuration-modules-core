@@ -5,7 +5,7 @@
 # File: nagios.pm
 # Implementation of ncm-nagios
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.10 : 05/11/09 17:15
+# Version: 1.4.11 : 04/03/10 11:37
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -72,6 +72,12 @@ sub print_general
 	$el = [];
     }
 
+    if ($cfg->elementExists (BASEPATH . 'external_dirs')) { 
+	$ed = $cfg->getElement (BASEPATH . 'external_dirs')->getTree;
+    } else {
+	$ed = [];
+    }
+
     print FH "log_file=$t->{log_file}\n";
 
     while (my ($k, $path) = each (%{NAGIOS_FILES()})) {
@@ -92,6 +98,9 @@ sub print_general
     }
     foreach my $f (@$el) {
 	print FH "cfg_file=$f\n";
+    }
+    foreach my $f (@$ed) {
+	print FH "cfg_dir=$f\n";
     }
 
     my $path;

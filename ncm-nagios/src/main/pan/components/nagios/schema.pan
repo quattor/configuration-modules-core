@@ -397,6 +397,7 @@ type structure_component_nagios = {
 	"commands"	: string {}
 	"macros"	? string {}
 	"external_files" ? string[]
+	"external_dirs" ? string[]
 	# Service escalations and dependencies are left for later
 	# versions.
 };

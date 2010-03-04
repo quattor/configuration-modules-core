@@ -13,7 +13,7 @@ include {'components/nagios/functions'};
 include {'components/nagios/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-nagios","1.4.10-1","noarch");
+"/software/packages"=pkg_repl("ncm-nagios","1.4.11-1","noarch");
 "/software/components/nagios/dependencies/pre" ?=  list ("spma");
 
 "/software/components/nagios/active" ?= true;

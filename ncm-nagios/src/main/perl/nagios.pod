@@ -113,6 +113,12 @@ Other already existing files to be included in the configuration of
 Nagios. Please note that the component can't validate these, so if you
 include a broken file, you'll break your Nagios server!
 
+=item * /software/components/nagios/external_dirs
+
+Other already existing dirs to be included in the configuration of
+Nagios. Please note that the component can't validate these, so if you
+include a broken file, you'll break your Nagios server!
+
 =back
 
 =head1 NOTES ON THE USE OF THIS COMPONENT
