@@ -164,25 +164,35 @@ sub Configure {
 	      }  
 	  } elsif ($optname eq 'off') { 
 	      if($config->elementExists("$servpath/del")) {
-		  $self->warn("service $service has both 'off' and 'del' settings defined, 'del' wins");
+		  $self->info("service $service has both 'off' and 'del' settings defined, 'del' wins");
 	      } elsif(!validrunlevels($optval)) {
 		  $self->warn("invalid runlevel string $optval defined for ".
 			      "option \'$optname\' in service $service");
 	      } else {		   
 		  if(!$optval) {
 		      $optval = '2345'; # default as per doc (man chkconfig)
-		      $self->debug(2, "$service: assuming default 'on' runlevels to be $optval");
+		      $self->debug(2, "$service: assuming default 'on' runlevels to be $optval");  # 'on' because this means we have to turn them 'off' here..
 		  }
 		  my $currentlevellist = "";
+		  my $todo = "";
 		  if ($currentservices{$service} ) {
 		      for my $i (0.. 6) {
 			  if ($currentservices{$service}[$i] eq 'off') {
 			      $currentlevellist .= "$i";
 			  }
 		      }
+		      for my $s (split('',$optval)) {
+			  if ($currentlevellist !~ /$s/) {
+			      $todo .="$s";
+			  } else {
+			      $self->debug(3, "$service: already 'off' for runlevel $s");
+			  }
+		      }
 		  }
-		  if ($optval ne $currentlevellist) {
-		      $self->info("$service was 'off' for $currentlevellist, new list is $optval");
+		  if ($currentlevellist &&        # do not attempt to turn off a non-existing service
+		      $todo &&                    # do nothing if service is already off for everything we'd like to turn off..
+		      ($optval ne $currentlevellist)) {
+		      $self->info("$service was 'off' for '$currentlevellist', new list is '$optval', diff is '$todo'");
 		      push @cmdlist, "$chkconfigcmd --level $optval $service off";
 		      if($startstop and $startstop eq 'true'
 			 and ($optval =~ /$currentrunlevel/)) {

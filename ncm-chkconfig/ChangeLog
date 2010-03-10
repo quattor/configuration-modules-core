@@ -1,3 +1,9 @@
+2010-03-10  Jan IVEN
+
+	* Release: 1.1.8
+	- remove WARNings while turning off already-off services (#64129)
+	downgrade WARN to INFO if both 'off' and 'del' are specified
+
 2010-02-16  Jan IVEN
 
 	* Release: 1.1.7
