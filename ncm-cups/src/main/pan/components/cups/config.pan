@@ -17,8 +17,7 @@ include {'components/cups/schema'};
 # Package to install
 "/software/packages"=pkg_repl("ncm-cups","1.2.0-1","noarch");
 
-"/software/components/cups/dependencies/pre" ?=
-  list("spma");
-"/software/components/cups/active" ?= true;
-"/software/components/cups/dispatch" ?= true;
+'/software/components/cups/version' = '1.2.0';
+
+"/software/components/cups/dependencies/pre" ?= list("spma");
 

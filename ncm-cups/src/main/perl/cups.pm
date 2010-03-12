@@ -122,10 +122,16 @@ my $config_prod_ext = "";       # Must be empty except for testing purpose
 
 my @enable_actions = ( "disable", "enable" );    # For debugging messages
 
-my $accept_cmd  = "/usr/sbin/accept";
-my $disable_cmd = "/usr/bin/disable";
-my $enable_cmd  = "/usr/bin/enable";
-my $lpadmin_cmd = "/usr/sbin/lpadmin";
+# List of possible paths for each commands: they will be tried in the order specified.
+# This is used to handle changes in command names and paths across OS versions.
+my @accept_cmd  = ("/usr/sbin/accept");
+my @disable_cmd = ("/usr/sbin/cupsdisable", "/usr/bin/disable");
+my @enable_cmd  = ("/usr/sbin/cupsenable", "/usr/bin/enable");
+my @lpadmin_cmd = ("/usr/sbin/lpadmin");
+my $accept_cmd;
+my $disable_cmd;
+my $enable_cmd;
+my $lpadmin_cmd;
 
 my $true  = "true";
 my $false = "false";
@@ -140,92 +146,126 @@ sub Configure
     my $this_host_domain = hostdomain();
     my $this_host_full   = join ".", $this_host_name, $this_host_domain;
 
-    # Check if named server must be enabled
+    # Retrieve configuration
+    my $cups_config = $config->getElement($base)->getTree();
+    
+    # Check that CUPS commands are available.
+    for my $cmd (@accept_cmd) {
+      if ( -x $cmd ) {
+        $accept_cmd = $cmd;
+      }
+    }
+    unless ( $accept_cmd ) {
+      $self->error("CUPS 'accept' command not found.");
+      return 1;
+    }
 
-    my $server_enabled  = undef;
-    my $nodetype_option = "$base/nodetype";
-    if ( $config->elementExists($nodetype_option) ) {
-        if ( $config->getElement($nodetype_option)->getValue() =~ /server/i ) {
+    for my $cmd (@disable_cmd) {
+      if ( -x $cmd ) {
+        $disable_cmd = $cmd;
+      }
+    }
+    unless ( $disable_cmd ) {
+      $self->error("CUPS 'disable' command not found.");
+      return 1;
+    }
+
+    for my $cmd (@enable_cmd) {
+      if ( -x $cmd ) {
+        $enable_cmd = $cmd;
+      }
+    }
+    unless ( $enable_cmd ) {
+      $self->error("CUPS 'enable' command not found.");
+      return 1;
+    }
+    
+    for my $cmd (@lpadmin_cmd) {
+      if ( -x $cmd ) {
+        $lpadmin_cmd = $cmd;
+      }
+    }
+    unless ( $lpadmin_cmd ) {
+      $self->error("CUPS 'lpadmin' command not found.");
+      return 1;
+    }
+
+    # Check if named server must be enabled
+    my $server_enabled;
+    if ( $cups_config->{nodetype} ) {
+        if ( $cups_config->{nodetype} =~ /server/i ) {
+            $self->debug(1,"Node type = server");
             $server_enabled = 1;
-        }
-        else {
+        } else {
+            $self->debug(1,"Node type = client");
             $server_enabled = 0;
         }
     }
 
     # Retrieve and process CUPS options
-    my $cups_options_path = "$base/options";
-    if ( $config->elementExists( $cups_options_path ) ) {
-        my $cups_options = $config->getElement( $cups_options_path );
-        while ( $cups_options->hasNextElement() ) {
-            my $cups_option = $cups_options->getNextElement();
-            my $option_name = $cups_option->getName();
-            $self->debug( 1, "Processing cups option '$option_name'" );
-            if ( !exists( $supported_options{$option_name} ) ) {
-                $self->warn("Internal error : unsupported option '$option_name'");
-                next;    # Log a warning but continue processing
-            }
-
-            # Get option value and and if option is 'ServerName', do some specific
-            # processing to determine if this machine need to run the server
-            my $option_value = $cups_option->getValue();
-            if ( $option_name eq "ServerName" ) {
-                ( my $host, my $domain ) = split /\./, $option_value, 2;
-                unless ( $domain || ( $host eq "localhost" ) ) {
-                    $self->warn("Server name not fully qualified. Adding domain $domain");
-                    $option_value = $this_host_full;
-                }
-
-                # If server=localhost, better to use real name in configuration file
-                if ( $option_value eq "localhost" ) {
-                    $option_value = $this_host_full;
-                }
-                if ( !defined($server_enabled) ) {
-                    if ( $option_value eq $this_host_full ) {
-                        $server_enabled = 1;
-                    }
-                    else {
-                        $server_enabled = 0;
-                    }
-                }
-                else {
-                    if ( $server_enabled && $option_value ne $this_host_full ) {
-                        $self->warn("Current host defined as a CUPS server but client configured to use $host");
-                    }
-                }
-            }
-
-            # $option_roles is a list of roles separated by ','
-            # If $option_value is empty, treat as a request to comment out the line
-            # if present (to use cups default).
-            # If the $option_value is made only of spaces, it is interpreted as a
-            # null value
-            my $option_roles = $supported_options{$option_name};
-            my @option_roles = split /\s*,\s*/, $option_roles;
-            for my $option_role (@option_roles) {
-                if ($option_value) {
-                    if ( $option_value =~ /^\s+$/ ) {
-                        $option_value = '';
-                    }
-
-                    # If CUPS server is current host, use 127.0.0.1 for the client
-                    if (   ( $option_role eq "client" )
-                        && ( $option_name  eq "ServerName" )
-                        && ( $option_value eq $this_host_full ) )
-                    {
-                        $self->addConfigEntry( $option_role, $option_name, "127.0.0.1" );
-                    }
-                    else {
-                        $self->addConfigEntry( $option_role, $option_name, $option_value );
-                    }
-                }
-                else {
-                    $self->removeConfigEntry( $option_role, $option_name );
-                }
-            }
-        }
-    }
-    else {
+    if ( $cups_config->{options} ) {
+      for my $option_name (keys(%{$cups_config->{options}})) {
+          $self->debug( 1, "Processing cups option '$option_name'" );
+          if ( !exists( $supported_options{$option_name} ) ) {
+              $self->warn("Internal error : unsupported option '$option_name'");
+              next;    # Log a warning but continue processing
+          }
+  
+          # Get option value and and if option is 'ServerName', do some specific
+          # processing to determine if this machine need to run the server
+          my $option_value = $cups_config->{options}->{$option_name};
+          if ( $option_name eq "ServerName" ) {
+              ( my $host, my $domain ) = split /\./, $option_value, 2;
+              unless ( $domain || ( $host eq "localhost" ) ) {
+                  $self->warn("Server name not fully qualified. Adding domain $domain");
+                  $option_value = $this_host_full;
+              }
+  
+              # If server=localhost, better to use real name in configuration file
+              if ( $option_value eq "localhost" ) {
+                  $option_value = $this_host_full;
+              }
+              if ( !defined($server_enabled) ) {
+                  if ( $option_value eq $this_host_full ) {
+                      $server_enabled = 1;
+                  } else {
+                      $server_enabled = 0;
+                  }
+              } else {
+                  if ( $server_enabled && $option_value ne $this_host_full ) {
+                      $self->warn("Current host defined as a CUPS server but client configured to use $host");
+                  }
+              }
+          }
+  
+          # $option_roles is a list of roles separated by ','
+          # If $option_value is empty, treat as a request to comment out the line
+          # if present (to use cups default).
+          # If the $option_value is made only of spaces, it is interpreted as a
+          # null value
+          my $option_roles = $supported_options{$option_name};
+          my @option_roles = split /\s*,\s*/, $option_roles;
+          for my $option_role (@option_roles) {
+              if ($option_value) {
+                  if ( $option_value =~ /^\s+$/ ) {
+                      $option_value = '';
+                  }
+  
+                  # If CUPS server is current host, use 127.0.0.1 for the client
+                  if (   ( $option_role eq "client" )
+                      && ( $option_name  eq "ServerName" )
+                      && ( $option_value eq $this_host_full ) )
+                  {
+                      $self->addConfigEntry( $option_role, $option_name, "127.0.0.1" );
+                  } else {
+                      $self->addConfigEntry( $option_role, $option_name, $option_value );
+                  }
+              } else {
+                  $self->removeConfigEntry( $option_role, $option_name );
+              }
+          }
+      }
+    } else {
         $self->debug( 1, "No option defined" );
     }
 
@@ -265,8 +305,7 @@ sub Configure
         if ($server_enabled) {
             $self->error("$services{server} startup script doesn't exist");
             return 0;
-        }
-        else {
+        } else {
             $self->debug( 1, "$services{server} startup script doesn't exist" );
         }
     }
@@ -277,8 +316,7 @@ sub Configure
         my $action;
         if ( $config_changes{server} > 0 ) {
             $action = "reload";
-        }
-        else {
+        } else {
             $action = "start";
         }
 
@@ -288,136 +326,106 @@ sub Configure
         # definition.
         # Check that the default printer, if defined, exists
 
-        my $default_printer = undef;
-        my $cups_defprinter_path = "$base/defaultprinter";
-        if ( $config->elementExists( $cups_defprinter_path ) ) {
-            $default_printer = $config->getElement( $cups_defprinter_path )->getValue();
+        my $default_printer = $cups_config->{defaultprinter};
+        if ( $default_printer ) {
             $self->debug( 1, "Default printer defined in the configuration : $default_printer" );
         }
 
-        my %printers;
-        my $cups_printers_path = "$base/printers";
-        if ( $config->elementExists( $cups_printers_path ) ) {
-            my $cups_printers = $config->getElement( $cups_printers_path );
-            while ( $cups_printers->hasNextElement() ) {
-                my $printer_path = $cups_printers->getNextElement()->getPath()->toString();
-                my %printer_options;
-                my $printer_name = $config->getElement("$printer_path/name")->getValue();
-
-                my $printer_previous_definition;
-                if ( exists( $printers{$printer_name} ) ) {
-                    $self->debug( 1, "Printer $printer_name already defined. Checking for new options..." );
-                    $printer_previous_definition = $printers{$printer_name};
-                }
-
-                if ( $config->elementExists("$printer_path/delete") && $config->getElement("$printer_path/delete")->getValue() ) {
-                    if (   !defined($printer_previous_definition)
-                        || !$printer_previous_definition->{delete} )
-                    {
-                        $self->debug( 1, "Printer $printer_name marked for deletion" );
-                        if ( !defined($printer_previous_definition) ) {
-                            $printer_options{delete} = 1;
-                            $printers{$printer_name} = \%printer_options;
-                        }
-                        else {
-                            $printer_previous_definition->{delete} = 1;
-                        }
-                    }
-
-                }
-                else {
-                    if ( !$config->elementExists("$printer_path/uri") ) {
-                        unless ( $config->elementExists("$printer_path/protocol") ) {
-                            $self->error("Neither printer URI nor printer protocol defined");
-                        }
-                        unless ( $config->elementExists("$printer_path/server") ) {
-                            $self->error("Neither printer URI nor printer server defined");
-                        }
-                        my $printer_uri = lc( $config->getElement("$printer_path/protocol")->getValue() ) . "://" . $config->getElement("$printer_path/server")->getValue() . "/";
-                        if ( $config->elementExists("$printer_path/printer") ) {
-                            $printer_uri .= $config->getElement("$printer_path/printer")->getValue();
-                        }
-                        else {
-                            $printer_uri .= $printer_name;
-                        }
-                        $printer_options{options} .= "-v\t$printer_uri\t";
-                    }
-
-                    $printer_options{enable} = 1;    # Assume enable by default
-                    if ( $config->elementExists("$printer_path/enable") && !$config->getElement("$printer_path/enable")->getValue() ) {
-                        $printer_options{enable} = 0;
-                    }
-
-                    for my $option ( keys(%printer_options_supported) ) {
-                        if ( $config->elementExists("$printer_path/$option") ) {
-                            $printer_options{options} .= $printer_options_supported{$option} . "\t" . $config->getElement("$printer_path/$option")->getValue() . "\t";
-                        }
-                    }
-
-                    if ( !defined($printer_previous_definition) ) {
-                        $self->debug( 1, "Printer $printer_name added to printers list" );
-                        $printers{$printer_name} = \%printer_options;
-                    }
-                    else {
-                        if ( $printer_previous_definition->{delete} ) {
-                            $self->debug( 1, "Printer $printer_name already marked for deletion. New definition ignored" );
-                        }
-                        else {
-                            if ( $printer_options{options} ne $printer_previous_definition->{options} ) {
-                                $self->warn("Printer $printer_name already defined with different options. Ignoring redefinition");
-                            }
-                            else {
-                                $self->debug( 1, "Printer $printer_name already redefined with same options. Ignoring duplicate" );
-                            }
-                            if ( $printer_options{enable} && !$printer_previous_definition->{enable} ) {
-                                $self->debug( 1, "Enabling already defined printer $printer_name" );
-                                $printer_previous_definition->{enable} = 1;
-                            }
-                        }
-                    }
-                }
+        # To facilitate transition to new schema (allowing to run new component with old schema).
+        # For testing only.
+        # FIXME: To be removed.
+        my $cups_printers_config;
+        if ( ref($cups_config->{printers}) eq 'HASH' ) {
+          $cups_printers_config = $cups_config->{printers};
+        } elsif ( ref($cups_config->{printers}) eq 'ARRAY' ) {
+          $self->debug(1,'Legacy schema used, converting printer list to a hash');
+          $cups_printers_config = {};
+          my $entry_num = 0;
+          for my $printer_config (@{$cups_config->{printers}}) {
+            $entry_num++;
+            my $printer = $printer_config->{name};
+            unless ( $printer ) {
+              $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
+              next;
             }
+            delete $printer_config->{name};
+            $cups_printers_config->{$printer} =  $printer_config;
+          }
+        }
 
-            for my $printer ( keys(%printers) ) {
-                if ( $printers{$printer}->{delete} ) {
-                    if ( $self->printerDelete($printer) ) {
-                        $self->warn("Error deleting printer $printer");
-                    }
-                    else {
-                        $self->OK("Printer $printer deleted");
-                    }
-                }
-                else {
-                    if ( $self->printerAdd( $printer, $printers{$printer}->{options} ) ) {
-                        $self->warn("Error adding printer $printer");
+        $self->debug(1,"Number of printers defined in the configuration: ".scalar(keys(%{$cups_printers_config})));
+
+        for my $printer (keys(%{$cups_printers_config})) {
+            $self->debug(1,"Processing printer $printer...");
+            
+            my $printer_options_str = '';
+
+            if ( $cups_printers_config->{$printer}->{delete} ) {
+                $self->debug( 1, "Printer $printer marked for deletion" );
+            } else {
+                my $printer_uri = $cups_printers_config->{$printer}->{uri};
+                unless ( $printer_uri ) {
+                    unless ( $cups_printers_config->{$printer}->{protocol} ) {
+                        $self->error("Printer $printer configuration failure: neither printer URI nor printer protocol defined");
                         next;
                     }
-                    else {
-                        $self->OK("Printer $printer added");
+                    unless ( $cups_printers_config->{$printer}->{server} ) {
+                        $self->error("Printer $printer configuration failure: either printer URI nor printer server defined");
+                        next;
                     }
+                    $printer_uri = lc($cups_printers_config->{$printer}->{protocol} . "://" . 
+                                                                  $cups_printers_config->{$printer}->{server} . "/");
+                    if ( $cups_printers_config->{$printer}->{printer} ) {
+                        $printer_uri .= $cups_printers_config->{$printer}->{printer};
+                    } else {
+                        $printer_uri .= $printer;
+                    }
+                }
+                $printer_options_str .= "-v\t$printer_uri\t";
 
-                    if ( $self->printerEnable( $printer, $printers{$printer}->{enable} ) ) {
-                        $self->warn( "Failed to " . $enable_actions[ $printers{$printer}->{enable} ] . " printer $printer" );
+                # Assume printer is enabled by default
+                if ( !defined($cups_printers_config->{$printer}->{enable}) ) {
+                    $cups_printers_config->{$printer}->{enable} = 1;
+                }
+
+                for my $option ( keys(%printer_options_supported) ) {
+                    if ( $cups_printers_config->{$printer}->{$option} ) {
+                        $printer_options_str .= $printer_options_supported{$option} . "\t" . $cups_printers_config->{$printer}->{$option} . "\t";
                     }
                 }
             }
 
-            if (   $default_printer
-                && exists( $printers{$default_printer} )
-                && !$printers{$default_printer}->{delete} )
-            {
-                if ( $self->printerDefault($default_printer) ) {
-                    $self->warn("Error defining printer $default_printer as the default printer");
+            if ( $cups_printers_config->{$printer}->{delete} ) {
+                if ( $self->printerDelete($printer) ) {
+                    $self->warn("Error deleting printer $printer");
+                } else {
+                    $self->OK("Printer $printer deleted");
                 }
-                else {
-                    $self->OK("Default printer defined to $default_printer");
+            } else {
+                if ( $self->printerAdd($printer, $printer_options_str) ) {
+                    $self->warn("Error adding printer $printer");
+                    next;
+                } else {
+                    $self->OK("Printer $printer added to configuration");
                 }
-            }
-            else {
-                $self->warn("Default printer $default_printer doesn't exist. Ignoring");
+                if ( $self->printerEnable($printer, $cups_printers_config->{$printer}->{enable}) ) {
+                    $self->warn( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
+                }
             }
         }
 
+        if (   $default_printer
+            && exists( $cups_printers_config->{$default_printer} )
+            && !$cups_printers_config->{$default_printer}->{delete} )
+        {
+            if ( $self->printerDefault($default_printer) ) {
+                $self->warn("Error defining printer $default_printer as the default printer");
+            } else {
+                $self->OK("Default printer defined to $default_printer");
+            }
+        } else {
+            $self->warn("Default printer $default_printer doesn't exist. Ignoring");
+        }
     }
 
     return 0;    # Success
@@ -448,10 +456,15 @@ sub printerAdd()
         $self->error("$function_name : 'options' argument missing");
         return 1;
     }
-    $self->debug( 1, "$function_name : defining printer '$printer' (options='$options'" );
-    execute( [ $lpadmin_cmd, "-p", $printer, split( '\t', $options ) ] );
+    $self->debug( 1, "$function_name : defining printer '$printer' (options='$options')" );
+    my $cmd = CAF::Process->new( [  $lpadmin_cmd, "-p", $printer, split('\t', $options ) ], log => $self );
+    my $error_msg = $cmd->output();
+    my $status = $?;
+    if ( $status ) {
+      $self->debug(1, "$function_name : error adding printer '$printer': $error_msg");
+    }
 
-    return $?;
+    return $status;
 }
 
 # Delete a printer. If the printer doesn't exist, return success.
@@ -515,8 +528,7 @@ sub printerEnable()
         CAF::Process->new( [ $enable_cmd, $printer ], log => $self )->run();
         CAF::Process->new( [ $accept_cmd, $printer ], log => $self )->run();
         $self->debug( 1, "$function_name : enabling printer '$printer'" );
-    }
-    else {
+    } else {
         CAF::Process->new( [ $disable_cmd, $printer ], log => $self )->run();
         $self->debug( 1, "$function_name : disabling printer '$printer'" );
     }
@@ -694,8 +706,7 @@ sub serviceControl ()
     if ( $action eq "start" ) {
         if ( $cur_state eq "stopped" ) {
             $real_action = "start";
-        }
-        else {
+        } else {
             $self->debug( 1, "$function_name : service $service already running. Nothing done." );
             return;
         }
@@ -704,20 +715,17 @@ sub serviceControl ()
         if ( $cur_state eq "stopped" ) {
             $self->debug( 1, "$function_name : service $service already stopped. Nothing done." );
             return;
-        }
-        else {
+        } else {
             $real_action = "stop";
         }
     }
     elsif ( $action eq "reload" ) {
         if ( $cur_state eq "stopped" ) {
             $real_action = "start";
-        }
-        else {
+        } else {
             $real_action = "reload";
         }
-    }
-    else {
+    } else {
         $self->error("$function_name : internal error : unsupported action ($action)");
         return 1;
     }
@@ -930,8 +938,7 @@ sub buildConfigContents ()
             push @newcontents, $line;
             $line_num++;
         }
-    }
-    else {
+    } else {
         $newcontents[0] = "$intro\n#";
         my @intro_lines = split /\cj/, $newcontents[0];    # /\cj/ matches embedded \n
                                                            # $file_line_offset need to take into accout intro line added
@@ -977,8 +984,7 @@ sub buildConfigContents ()
                         $file_line_offset++;
                         $line_modified = 1;
                     }
-                }
-                else {
+                } else {
                     if ( $newcontents[$line] !~ /^\s*\#/ ) {
                         $self->debug( 1, "$function_name : file line $file_line commented out" );
                         $newcontents[$line] = "#$newcontents[$line]";
@@ -996,8 +1002,7 @@ sub buildConfigContents ()
                 }
                 $entry_num++;
             }
-        }
-        else {
+        } else {
 
             # In a new file, don't add commented out lines
             if ( defined($config_value) ) {

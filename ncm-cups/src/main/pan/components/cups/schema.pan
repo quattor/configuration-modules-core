@@ -16,7 +16,6 @@ declaration template components/cups/schema;
 include {'quattor/schema'};
 
 type component_cups_printer = {
-    "name"          : string
     "server"        ? string
     "protocol"      ? string
     "printer"       ? string
@@ -54,7 +53,7 @@ type component_cups = {
     "defaultprinter"    ? string
     "nodetype"          ? string with match (SELF,"client|server")
     "options"           ? component_cups_options
-    "printers"          ? component_cups_printer[]
+    "printers"          ? component_cups_printer{}
 };
 
 bind "/software/components/cups" = component_cups;
