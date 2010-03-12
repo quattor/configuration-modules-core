@@ -2,7 +2,7 @@
 # This is 'cups.pm', a ncm-cups's file
 ################################################################################
 #
-# VERSION:    1.2.0, 19/03/09 15:18
+# VERSION:    2.0.0, 12/03/10 16:19
 # AUTHOR:     Michel Jouvin <jouvin@lal.in2p3.fr>
 # MAINTAINER: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
