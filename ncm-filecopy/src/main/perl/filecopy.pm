@@ -156,8 +156,12 @@ sub Configure($$@) {
   # multiple files.
   foreach my $command (keys(%commands)) {
     $self->info("Executing command: $command");
-    my $cmd = CAF::Process->new([$command], log => $self);
-    my $cmd_output = $cmd->output();      # Also execute the command
+    my $cmd_output;
+    my $cmd = CAF::Process->new([$command], log => $self,
+				shell => 1,
+				stdout => \$cmd_output,
+				stderr => "stdout");
+    $cmd->execute();
     if ( $? ) {
       $self->error("Command failed. Command output: $cmd_output\n");
     } else {
