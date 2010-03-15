@@ -119,9 +119,10 @@ sub change_cfig_val($$@$$$$){
             keep   => "first",
             add    => "last"
             );
+        $self->info ("1 updated $tplelement $changeback") if ($changes);
     }
 
-    if ($changeback == 1 &&  ! $config->elementExists($base . $tplelement) ) {
+    if ($changeback == 1 && ! $config->elementExists($base . $tplelement) ) {
         $changes+= NCM::Check::lines($conf,
             linere => "^#*\\s*$fileconfname\\s.*",
             goodre => "#$fileconfname\\s.*",
@@ -129,7 +130,10 @@ sub change_cfig_val($$@$$$$){
             keep   => "first",
             add    => "last"
             );
+        $self->info ("2 updated $tplelement $changeback \"$defaultconfVal\"") if ($changes);
     }
+
+
 
     return $changes; # 0 or 1 otherwise we have an error that is not cached
 
@@ -151,6 +155,9 @@ sub build_ldap_config($$@) {
     
     # Make a backup of the file
     LC::File::copy($conf,$conf."$$",preserve => 1 );
+
+        system 'grep -E "pam_password|tls_cacertdir" /etc/ldap.conf';
+
 
     # The distinguished name to bind to the server with.
     $changes +=  change_cfig_val($self, $config, $base, "/binddn", "binddn", "NA", 1);
@@ -227,6 +234,7 @@ sub build_ldap_config($$@) {
     $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/unixHomeDirectory", "nss_override_attribute_value unixHomeDirectory", "", 1);
     $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/loginShell",        "nss_override_attribute_value loginShell",        "", 1);
     $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/gecos",             "nss_override_attribute_value gecos",             "", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/gidNumber",         "nss_override_attribute_value gidNumber",         "", 1);
 
     # nss_initgroups_ignoreusers
     $changes +=  change_cfig_val($self, $config, $base, "/nss_initgroups_ignoreusers", "nss_initgroups_ignoreusers", "", 1);
@@ -256,10 +264,22 @@ sub build_ldap_config($$@) {
     # pam_check_host_attr uses account objectclass host attribute
     $changes +=  change_cfig_val($self, $config, $base, "/pam_check_host_attr","pam_check_host_attr","no",1);
 
+    # logging, debugging
+    $changes +=  change_cfig_val($self, $config, $base, "/log_dir","log_dir","",1);
+    $changes +=  change_cfig_val($self, $config, $base, "/debug",  "debug",  "",1);
+
+    # page results
+    $changes +=  change_cfig_val($self, $config, $base, "/nss_paged_results","nss_paged_results","yes", 1);
+    $changes +=  change_cfig_val($self, $config, $base, "/pagesize",         "pagesize",         "1000",1);
+
 
     if ( $changes ) {
         unlink($conf.".old");
         LC::File::move($conf."$$",$conf.".old");
+        # restore SElinux context (awaiting resolution of https://savannah.cern.ch/bugs/index.php?37668
+        if (-x "/sbin/restorecon" and -x "/usr/sbin/selinuxenabled"){
+            system("/usr/sbin/selinuxenabled") || system("/sbin/restorecon -nvv /etc/ldap.conf") || $self->info("Restored SElinux context for /etc/ldap.conf");
+        }
     } else {
         unlink($conf."$$");
     }

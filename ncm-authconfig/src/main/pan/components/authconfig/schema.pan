@@ -65,6 +65,7 @@ type authconfig_nss_override_attribute_value = {
   "unixHomeDirectory"	? string
   "loginShell"      	? string
   "gecos"           	? string
+  "gidNumber"           ? long
 };
 
 
@@ -98,6 +99,10 @@ type authconfig_method_ldap_type = {
   "nss_map_attribute"              ? authconfig_nss_map_attribute
   "nss_override_attribute_value"   ? authconfig_nss_override_attribute_value
   "nss_initgroups_ignoreusers"     ? string
+  "debug"                          ? long
+  "log_dir"                        ? string
+  "nss_paged_results"              ? string with match(self,"yes|no")
+  "pagesize"                       ? long
 };
 
 type authconfig_method_nis_type = {
