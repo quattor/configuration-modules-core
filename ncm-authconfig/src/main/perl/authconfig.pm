@@ -119,7 +119,6 @@ sub change_cfig_val($$@$$$$){
             keep   => "first",
             add    => "last"
             );
-        $self->info ("1 updated $tplelement $changeback") if ($changes);
     }
 
     if ($changeback == 1 && ! $config->elementExists($base . $tplelement) ) {
@@ -130,7 +129,6 @@ sub change_cfig_val($$@$$$$){
             keep   => "first",
             add    => "last"
             );
-        $self->info ("2 updated $tplelement $changeback \"$defaultconfVal\"") if ($changes);
     }
 
 
@@ -155,9 +153,6 @@ sub build_ldap_config($$@) {
     
     # Make a backup of the file
     LC::File::copy($conf,$conf."$$",preserve => 1 );
-
-        system 'grep -E "pam_password|tls_cacertdir" /etc/ldap.conf';
-
 
     # The distinguished name to bind to the server with.
     $changes +=  change_cfig_val($self, $config, $base, "/binddn", "binddn", "NA", 1);
@@ -277,9 +272,9 @@ sub build_ldap_config($$@) {
         unlink($conf.".old");
         LC::File::move($conf."$$",$conf.".old");
         # restore SElinux context (awaiting resolution of https://savannah.cern.ch/bugs/index.php?37668
-        if (-x "/sbin/restorecon" and -x "/usr/sbin/selinuxenabled"){
-            system("/usr/sbin/selinuxenabled") || system("/sbin/restorecon -nvv /etc/ldap.conf") || $self->info("Restored SElinux context for /etc/ldap.conf");
-        }
+        #if (-x "/sbin/restorecon" and -x "/usr/sbin/selinuxenabled"){
+        #    system("/usr/sbin/selinuxenabled") || system("/sbin/restorecon -nvv /etc/ldap.conf") || $self->info("Restored SElinux context for /etc/ldap.conf");
+        #}
     } else {
         unlink($conf."$$");
     }
