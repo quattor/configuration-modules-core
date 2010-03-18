@@ -997,7 +997,7 @@ sub Configure {
 
         my @op;
         foreach my $k (@optkeys) {
-            my $v=${%$opts}{$k};
+            my $v=${$opts}{$k};
             push(@op, "$k $v");
         }
 
