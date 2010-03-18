@@ -171,7 +171,14 @@ sub Configure {
         }
 
         ## collect /hardware info
-        my $hwaddr_path= "/hardware/cards/nic/".$ifacename."/hwaddr";
+        my $hw_path= "/hardware/cards/nic/".$ifacename;
+        
+        ## CERN nic = list patch
+        if (! $config->elementExists($hw_path)) {
+            $hw_path = "/hardware/cards/nic/".$1 if ($ifacename =~ m/^eth(\d+)/);
+        };
+        my $hwaddr_path = $hw_path."/hwaddr";        
+        
         if ($config->elementExists($hwaddr_path)) {
             my $mac=$config->getValue($hwaddr_path);
             ## check MAC address? can we trust type definitions?
