@@ -48,6 +48,7 @@ type SOFTWARE_REPOSITORY = {
 
 type component_spma_type = {
     include structure_component
+    "tmpdir"        ? string # path to the temporary directory
     "unescape"      ? boolean # use escape function
     "trailprefix"   ? boolean # if no escape function, use underscore prefix
     "userpkgs"      ? string with match (SELF, 'yes|no') # Allow user packages

@@ -37,6 +37,11 @@ the profile has not been escaped with PAN's escape() function. This setting is
 only meaningful when using a tool different than PAN for generating CDB
 profiles.
 
+=item /software/components/spma/tmpdir : string
+
+If defined, set the path to the temporary directory (for compatibility
+with -bad- packages that need to remove the sticky bit from /tmp)
+
 =back
 
 Flags for SPMA setting changes (see man spma(1) for details) in spma.conf

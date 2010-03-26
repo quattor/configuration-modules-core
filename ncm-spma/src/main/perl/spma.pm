@@ -419,10 +419,18 @@ sub Configure {
         return;
     }
 
+    if ($config->elementExists('/software/components/spma/tmpdir')) {
+        $tmpdir = $config->elementExists('/software/components/spma/tmpdir');
+        $self->debug(1, "tmpdir defined in spma : $tmpdir");
+        mkdir $tmpdir, 0755 if (! -e $tmpdir );
+    } else {
+        $tmpdir = $tempdir;
+        $self->debug(1, "tmpdir not defined in spma : using $tmpdir");
+    }
     #
     # update the spma config file
     #
-    my ($tscfh, $tmp_scnf_fn) = tempfile('spma.conf.XXXX', DIR => $tempdir, UNLINK => 1);
+    my ($tscfh, $tmp_scnf_fn) = tempfile('spma.conf.XXXX', DIR => $tmpdir, UNLINK => 1);
     $self->debug(1, "created tmp file $tmp_scnf_fn");
     # we don't need the file handle
     unless(close($tscfh)) {
@@ -469,7 +477,7 @@ sub Configure {
     #
     # build the target config file
     #
-    my ($ttcfh, $tmp_tcfg_fn) = tempfile('spma-target.cf.XXXX', DIR => $tempdir, UNLINK => 1);
+    my ($ttcfh, $tmp_tcfg_fn) = tempfile('spma-target.cf.XXXX', DIR => $tmpdir, UNLINK => 1);
     $self->debug(1, "created tmp file $tmp_tcfg_fn");
     unless($self->write_trgtconf_file($rep, $pkgs, $ttcfh)) {
         $self->error("cannot write target configuration file $tmp_tcfg_fn");
