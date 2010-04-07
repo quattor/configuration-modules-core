@@ -45,6 +45,7 @@ type component_iptables_rule = {
     "log-tcp-options"    ? boolean
     "log-tcp-sequence"   ? boolean
     "log-ip-options"     ? boolean
+    "log-uid"            ? boolean
     "reject-with"        ? string
     "set-class"          ? string
     "limit-burst"        ? string

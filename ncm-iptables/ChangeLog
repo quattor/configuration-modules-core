@@ -1,3 +1,8 @@
+2010-04-07  David Groep
+
+	* Release: 2.3.9
+	- Added support for --log-uid optin in log target
+
 2009-11-30  Jan IVEN
 
 	* Release: 2.3.8
