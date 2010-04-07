@@ -1,3 +1,9 @@
+2010-04-07  Loic Brarda
+
+	* Release: 0.5.0
+	- Change LC::Process::execute calls to remove strings using shell expension to be compatible with perl-LC
+	-1.1.6
+
 2009-04-22  Loic Brarda
 
 	* Release: 0.4.5

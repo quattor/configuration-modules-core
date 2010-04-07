@@ -21,6 +21,7 @@ use vars qw(@ISA $EC $this_app);
 $EC=LC::Exception::Context->new->will_store_all;
 use LC::File qw(copy remove move);
 use LC::Check;
+use CAF::Process;
 
 #few declarations
 my @nodes;
@@ -118,7 +119,8 @@ sub Configure {
         my $sillyCheck = "$clientUrl";
         $sillyCheck =~ s/\$/\\\$/g;
         $self->debug(2,"$0: sillyCheck $sillyCheck");
-        my $ccmConfFile = "$f_path/root/etc/ccm.conf";
+        my $chroot_path = "$f_path/root";
+        my $ccmConfFile = "$chroot_path/etc/ccm.conf";
         if ( -e $ccmConfFile) {
             $self->debug(4,"checking $ccmConfFile\n");
             my $changes+=NCM::Check::lines($ccmConfFile,
@@ -128,9 +130,9 @@ sub Configure {
                 );
         }
         my($stdout,$stderr);
-        $self->debug(2,"$0: chrooting ccm-fetch on $f_path/root");
+        $self->debug(2,"$0: chrooting ccm-fetch on $chroot_path");
         LC::Process::execute(
-            [ "/usr/sbin/chroot $f_path/root /usr/sbin/ccm-fetch" ],
+            [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ccm-fetch" ],
             timeout => 300,
             stdout => \$stdout,
             stderr => \$stderr
@@ -138,9 +140,9 @@ sub Configure {
         $self->debug(5,"$0: stdout :\n$stdout");
         $self->debug(4,"$0: stderr :\n$stderr");
     
-        $self->debug(2,"$0: chrooting ncm-ncd --co --all on $f_path/root");
+        $self->debug(2,"$0: chrooting ncm-ncd --co --all on $chroot_path");
         LC::Process::execute(
-            [ "/usr/sbin/chroot $f_path/root /usr/sbin/ncm-ncd --co --all" ],
+            [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ncm-ncd --co --all" ],
             timeout => 300,
             stdout => \$stdout,
             stderr => \$stderr
@@ -339,7 +341,7 @@ sub del_pxeos{
     my($stdout,$stderr);
     my $ret_val=0;
     LC::Process::execute(
-                [ "/usr/sbin/pxeos -d $name" ],
+                [ "/usr/sbin/pxeos", "-d", $name ],
                 timeout => 100,
                 stdout => \$stdout,
                 stderr => \$stderr
@@ -520,7 +522,7 @@ sub aii_dhcp_config{
     #execute aii,will read nodelist file and do the magic..
     my($stdout,$stderr);
     LC::Process::execute(
-                [ $aii_command." --cdburl $cdb --profile_prefix $prefix --configurelist ".$nodelist_file." --noosinstall --nonbp" ],
+                [ $aii_command", "--cdburl", $cdb, "--profile_prefix", $prefix, "--configurelist", $nodelist_file, "--noosinstall", "--nonbp"],
                 timeout => \$timeout,
                 stdout => \$stdout,
                 stderr => \$stderr
@@ -662,6 +664,9 @@ sub dhcpdWrite{
                 if ( "$tag" eq "filename" or "$tag" eq "rootpath" ){
                     print FH "\t$dhcpTag{$tag} \"$value\";\n";
                 }
+                elsif ( "$tag" eq "options" ){
+                    print FH "\t$value;\n";
+                }
                 elsif ( "$tag" ne "bootdevice" ){
                     print FH "\t$dhcpTag{$tag} $value;\n";
                 }
@@ -678,8 +683,8 @@ sub dhcpdWrite{
                     mode        => 0644
                     );
     if ( $changes ) {
-        $self->debug (3, "dhcpd.conf changed, will reload dhcpd.");
-        system ("/sbin/service","dhcpd", "reload" );
+        $self->debug (3, "dhcpd.conf changed, will restart dhcpd.");
+        CAF::Process->new (["/sbin/service", "dhcpd reload"], log => $self)->run();
     }
     &cleanup;
     return;
