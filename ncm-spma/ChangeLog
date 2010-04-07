@@ -1,3 +1,8 @@
+2010-04-07  Ronald Starink
+
+	* Release: 1.7.1
+	- Fixed missing declaration $tmpdir
+
 2010-03-26  Loic Brarda
 
 	* Release: 1.7.0

@@ -8,7 +8,7 @@ include { 'components/spma/schema' };
 include { 'components/spma/functions' };
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-spma","1.7.0-1","noarch");
+"/software/packages" = pkg_repl("ncm-spma","1.7.1-1","noarch");
 
 "/software/components/spma/active" ?= true;
 "/software/components/spma/dispatch" ?= true;

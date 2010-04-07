@@ -419,6 +419,7 @@ sub Configure {
         return;
     }
 
+    my $tmpdir;
     if ($config->elementExists('/software/components/spma/tmpdir')) {
         $tmpdir = $config->elementExists('/software/components/spma/tmpdir');
         $self->debug(1, "tmpdir defined in spma : $tmpdir");
