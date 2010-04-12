@@ -89,7 +89,7 @@ sub Configure {
 
 
       $self->info("Checking if MySQL service ($service) is enabled and started...");
-      my $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service on"], log => $self);
+      my $cmd = CAF::Process->new(["/sbin/chkconfig $service on"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->error("Error enabling MySQL server on local node");
@@ -136,28 +136,37 @@ sub Configure {
         my %indexes;
         my $i = 0;
         my $blank_lines = 0;
+        
+        # Iterate over config to locate [mysqld] section if any.
+        # [mysqld] section is not necessarily the first one.
         for ($i=0; $i<@mysql_conf; $i++) {
           chomp $mysql_conf[$i];
           $self->debug(2,"Processing line ".($i+1).": >>>$mysql_conf[$i]<<<");
-          # Section [mysqld] found
-          if ( $mysql_conf[$i] =~ /^\s*\[\s*mysqld\s*\]/ ) {
-            if ( $server_section_found ) {
-              $self->warn('Duplicated [mysqld] section was found at line'.($i+1));
+          # New section found
+          if ( $mysql_conf[$i] =~ /^\s*\[\s*([\w.\-]+)\s*\]/ ) {
+            my $section_name = $1;
+            # Section [mysqld] found
+            if ( $1 eq 'mysqld' ) {
+              if ( $server_section_found ) {
+                $self->warn('Duplicated [mysqld] section was found at line'.($i+1));
+              } else {
+                $self->debug(1,"[mysqld] start line: ".($i+1));
+                $server_section_found = 1;
+                $blank_lines = 0;
+              }
             } else {
-              $self->debug(1,"[mysqld] start line: ".($i+1));
-              $server_section_found = 1;
-              $blank_lines = 0;
-              next;              
+              $self->debug(2,"New section found at line ".($i+1).": $section_name");
+              # If [mysqld] has already been processed, there is no point to iterate more...
+              if ( $server_section_found ) {
+                last;
+              }              
             }
+            next;              
           }
           # Process [mysqld] section looking for parameters to modify, until the end of the section
           # (end of configuration or new section)
           if ( $server_section_found ) {
-            if ( $mysql_conf[$i] =~ /^\s*(\[\s*[\w\-]+\s*\])/ )  {
-              $self->debug(2,"New section found at line ".($i+1).": $1");
-              $blank_lines = 0;
-              last;
-            } elsif ( length($mysql_conf[$i]) == 0 ) {
+            if ( $mysql_conf[$i] =~ /^\s*$/ ) {
               $blank_lines += 1;
             } else {
               if ( $blank_lines > 0 ) {
@@ -173,8 +182,10 @@ sub Configure {
             }
           }
         }
-        # Go back to find the find blank line
-        $self->debug(2,"Line number after configuration file parsing ".($i+1).". Going back to find first blank line...");
+        
+        # Go back to find last non blank line (last line of [mysqld] section if it exists else last line of the config file)
+        # and set pointer to next line after it.
+        $self->debug(2,"Line number after configuration file parsing. ".($i+1).". Going back to find first non blank line...");
         my $mysqld_conf_next;
         for ($mysqld_conf_next=$i-1; $mysqld_conf_next>=0; $mysqld_conf_next--) {
           if ( $mysql_conf[$mysqld_conf_next] !~ /^\s*$/ ) {
@@ -183,6 +194,7 @@ sub Configure {
         }
         $mysqld_conf_next++;
         $self->debug(1,"Next line number after [mysqld] section : ".($mysqld_conf_next+1));
+
         # Copy the rest of the original configuration in a temporary array
         my @conf_end;
         for (my $i=$mysqld_conf_next; $i<@mysql_conf; $i++) {
@@ -191,6 +203,7 @@ sub Configure {
         }
         $self->debug(1,"Number of lines remaining after [mysqld] section : ".@conf_end);
         $self->debug(2,"Remaining lines content: \n".join("\n",@conf_end));
+
         # Change/add parameters
         for my $option (keys(%{$server->{options}})) {
           if ( exists($indexes{$option}) ) {
@@ -218,6 +231,7 @@ sub Configure {
 
         # Update option file
         my $mysql_conf_content = join "\n", @mysql_conf;
+        $mysql_conf_content .= "\n";
         $changes = LC::Check::file ($mysql_conf_file,
                                    'backup' => '.old',
                                    'contents' => encode_utf8($mysql_conf_content),
