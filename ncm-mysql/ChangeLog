@@ -1,3 +1,9 @@
+2010-04-12  Michel Jouvin
+
+	* Release: 1.2.1
+	- Fix my.cfg processing when [mysqld] section is not the first one
+	Ensure there is a trailing \n in my.cnf to avoid unnecessary update
+
 2010-02-01  Michel Jouvin
 
 	* Release: 1.2.0
