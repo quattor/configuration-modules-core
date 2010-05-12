@@ -1,3 +1,10 @@
+2010-05-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.1
+	- Make it work with latest LC::Process.
+	
+	Use properly CAF::Process and disable shell expansions finally.
+
 2010-01-28  Michel Jouvin
 
 	* Release: 1.1.0

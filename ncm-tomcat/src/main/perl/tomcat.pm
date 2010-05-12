@@ -32,8 +32,8 @@ use EDG::WP4::CCM::Resource;
 use XML::Parser;
 use Data::Dumper;
 use File::Copy;
-use LC::Process;
-
+use CAF::Process;
+use LC::Find;
 
 # my $mainconf = "/etc/httpd/conf/httpd.conf";
 my $confdir = "/etc/tomcat5";
@@ -152,7 +152,7 @@ sub conf_tomcat_conf {
 
 
 
-sub save_config($$) {
+sub save_config {
 
     my ($self, $conffile) = @_;
 
@@ -164,14 +164,29 @@ sub save_config($$) {
 
 }
 
+sub adjust_ownerships
+{
+    my ($self) = @_;
+
+    my ($usr, $grp) = (getpwnam('tomcat'))[2,3];
+
+    my $fnd = LC::Find->new();
+
+    $fnd->callback(sub {
+		       chown($usr, $grp, $LC::Find::Path);
+		   });
+    $fnd->find(qw(/usr/share/tomcat5/webapps
+		  /etc/tomcat5/Catalina/localhost));
+    chmod (0775, '/usr/share/tomcat5/webapps/');
+}
 
 
-##########################################################################
-sub Configure($$) {
-##########################################################################
-  my ($self,$config)=@_;
-  my ($ifRestart);
-  $ifRestart = 1;
+
+sub Configure {
+
+    my ($self,$config)=@_;
+    my ($ifRestart);
+    $ifRestart = 1;
 
     $self->error("$cdbpath doesn\'t exist ") && return
         unless $config->elementExists($cdbpath);
@@ -180,7 +195,6 @@ sub Configure($$) {
 
     my $spaces = "";
     while ($element->hasNextElement()) {
-    
         my $confelem = $element->getNextElement();
         my $confname = $confelem->getName();
 
@@ -207,7 +221,7 @@ sub Configure($$) {
                 $self->save_config($conffile);
                 unless (open (OF, ">$conffile")) {
                     $self->error("Cannot open config file $conffile: $!");
-                     exit;
+		    exit;
                 }
                 # print OF $header;
                 while ($appconfelem->hasNextElement()) {
@@ -231,13 +245,11 @@ sub Configure($$) {
         }
 
     }
-    
     if ($config->elementExists($serviceOptPath)) {
         $element = $config->getElement($serviceOptPath);
         while ($element->hasNextElement()) {
             my $elem = $element->getNextElement();
             my $name = $elem->getName();
-          
             if ($name eq 'RestartTomcat') {
                 if ($elem->getValue() eq 'true') {
                     $ifRestart = 1;
@@ -255,23 +267,20 @@ sub Configure($$) {
         $tomcat_user =~  s/\s*//g;
         my $keystore_file = "/home/$tomcat_user/.keystore";
         my $keystore_comm = `openssl pkcs12 -export -in  /etc/grid-security/hostcert.pem -inkey /etc/grid-security/hostkey.pem  -out $keystore_file -name tomcat  -CApath /etc/grid-security/certificates/  -caname root -chain -passout pass:changeit`
-        unless -f $keystore_file;
+	    unless -f $keystore_file;
     }
 
-    my $tomcatuser = (getpwnam('tomcat'))[2];
-    my $tomcatgroup = (getpwnam('tomcat'))[3];
-    LC::Process::run("chown $tomcatuser:$tomcatgroup -R /usr/share/tomcat5/webapps/");
-    LC::Process::run("chown $tomcatuser:$tomcatgroup -R /etc/tomcat5/Catalina/localhost/");
-    chmod (0775, '/usr/share/tomcat5/webapps/');
+    $self->adjust_ownserships();
 
-    if ($ifRestart == 1) {
-      LC::Process::run('/etc/init.d/tomcat5 stop');
-      LC::Process::run('/etc/init.d/tomcat5 start');
+    if ($ifRestart) {
+	CAF::Process->new([qw(/etc/init.d/tomcat5 stop)],
+			  log => $self)->run();
+	CAF::Process->new([qw(/etc/init.d/tomcat5 start)],
+			  log => $self)->run();
     }
 
-    return; # return code is not checked.
-
+    return 1;
 }
 
-1; # Perl module requirement.
+1;				# Perl module requirement.
 
