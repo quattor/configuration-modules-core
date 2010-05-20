@@ -1,3 +1,10 @@
+2010-05-20  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.2
+	- Use less commands and drop subshells when they are needed.
+
+	Thanks to Wojciech Lapka for the tests.
+
 2010-05-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.1.1

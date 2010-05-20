@@ -172,6 +172,8 @@ sub adjust_ownerships
 
     my $fnd = LC::Find->new();
 
+    $fnd->flags(FIND_FOLLOW_TOP);
+
     $fnd->callback(sub {
 		       chown($usr, $grp, $LC::Find::Path);
 		   });
@@ -270,7 +272,7 @@ sub Configure {
 	    unless -f $keystore_file;
     }
 
-    $self->adjust_ownserships();
+    $self->adjust_ownerships();
 
     if ($ifRestart) {
 	CAF::Process->new([qw(/etc/init.d/tomcat5 stop)],
