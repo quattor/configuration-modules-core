@@ -1,3 +1,8 @@
+2010-05-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.7.2
+	- Stop relying on subshells, as needed for upgrading to perl-LC 1.1.6.
+
 2010-04-07  Ronald Starink
 
 	* Release: 1.7.1

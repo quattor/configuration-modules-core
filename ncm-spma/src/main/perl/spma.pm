@@ -22,7 +22,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 use EDG::WP4::CCM::Element qw(unescape);
 
 use NCM::Check;
-use LC::Process;
+use CAF::Process;
 use LC::Exception qw(SUCCESS);
 use LC::File qw(copy);
 use File::Temp qw(tempfile tempdir);
@@ -39,8 +39,6 @@ my $spma_tcfg_file = '/var/lib/spma-target.cf';
 # unescape by defaut
 my $dounescape = 1;
 my $trailprefix = 1;
-
-my $tempdir = '/tmp';
 
 #
 # small helper function for unescaping chars
@@ -254,53 +252,55 @@ sub get_packages ($) {
 sub run_spma($$$) {
     my ($self, $sconf_file, $stcfg_file) = @_;
 
-    my $spma_exec="/usr/bin/spma";
+    my ($stdout, $stderr);
 
-    # command line options to ncm-ncd override whatever we have in the config file
+    my $spma_exec= CAF::Process->new(["/usr/bin/spma"],
+				     log => $self,
+				     timeout => 8000,
+				     stdout => \$stdout,
+				     stderr => \$stderr);
+
+    # command line options to ncm-ncd override whatever we have in the
+    # config file
     if($main::this_app->option("quiet")) {
-	$spma_exec .= " --quiet";
+	$spma_exec->pushargs("--quiet");
     } else {
 	if ($main::this_app->option("verbose")) {
-	    $spma_exec .= " --verbose";
+	    $spma_exec->pushargs("--verbose");
 	}
 	if($main::this_app->option("debug")) {
-	    $spma_exec .= " --debug ".$main::this_app->option("debug");
+	    $spma_exec->pushargs("--debug",$main::this_app->option("debug"));
 	}
     }
-    $self->info("running the SPMA: '$spma_exec'");
+    $self->info("running the SPMA");
 
     if ($NoAction) {
-        $spma_exec .= " --noaction" .
-            " --cfgfile=$sconf_file".
-            " --targetconf=$stcfg_file";
+	$spma_exec->pushargs("--noaction",
+			     "--cfgfile=$sconf_file",
+			     "--targetconf=$stcfg_file");
         $self->info('running SPMA in noaction mode');
     }
 
-    my ($stdout,$stderr);
-    my $execute_status = LC::Process::execute(
-        [$spma_exec],
-        timeout => 8000,
-        stdout => \$stdout,
-        stderr => \$stderr
-    );
+    my $execute_status = $spma_exec->execute();
 
     my $retval=$?;
     unless (defined $execute_status && $execute_status) {
-        $self->error("could not execute $spma_exec");
+        $self->error("Could not execute SPMA");
         return;
     }
     if ($stdout) {
-        $self->info("'$spma_exec' output produced: (please check spma.log)");
+        $self->info("SPMA output produced: (please check spma.log)");
         $self->report($stdout);
     }
     if ($stderr) {
-        $self->warn("'$spma_exec' STDERR output produced: (please check spma.log)");
+        $self->warn("SPMA STDERR output produced: (please check spma.log)");
         $self->report($stderr);
     }
     if ($retval) {
-        $self->error("'$spma_exec' failed with exit status $retval (please check spma.log)");
+        $self->error("SPMA failed with exit status $retval ",
+		     "(please check spma.log)");
     } else {
-        $self->OK("'$spma_exec' finished succesfully (please check spma.log)");
+        $self->OK("SPMA finished succesfully (please check spma.log)");
     }
 }
 
@@ -413,19 +413,21 @@ sub Configure {
 ##########################################################################
     my ($self,$config)=@_;
 
+    my $tmpdir;
     unless ($config->elementExists('/software/packages') &&
             $config->elementExists('/software/repositories')) {
-        $self->info("/software/repositories or /software/packages does not exist, skipping SPMA configuration");
+        $self->info("/software/repositories or /software/packages ",
+		    "does not exist, skipping SPMA configuration");
         return;
     }
 
     my $tmpdir;
     if ($config->elementExists('/software/components/spma/tmpdir')) {
-        $tmpdir = $config->elementExists('/software/components/spma/tmpdir');
+        $tmpdir = $config->getElement('/software/components/spma/tmpdir')->getValue();
         $self->debug(1, "tmpdir defined in spma : $tmpdir");
         mkdir $tmpdir, 0755 if (! -e $tmpdir );
     } else {
-        $tmpdir = $tempdir;
+        $tmpdir = "/tmp";
         $self->debug(1, "tmpdir not defined in spma : using $tmpdir");
     }
     #
