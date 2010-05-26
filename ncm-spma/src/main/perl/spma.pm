@@ -313,7 +313,8 @@ sub update_spmaconf_file($$$) {
     my ($self, $config, $conffile) = @_;
 
     my @keys=qw(userpkgs userprio packager usespmlist rpmexclusive debug verbose
-                cachedir localcache proxy proxytype proxyhost proxyport headnode
+                cachedir localcache headnode
+                proxy proxytype proxyhost proxyport proxyrandom
                 checksig protectkernel);
 
     unless (-e $conffile && -w $conffile) {

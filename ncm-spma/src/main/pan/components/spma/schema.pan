@@ -66,6 +66,7 @@ type component_spma_type = {
     "proxytype"     ? string with match (SELF, 'forward|reverse') # select proxy type, forward or reverse
     "proxyhost"     ? string # comma-separated list of proxy hosts
     "proxyport"     ? string # proxy port number
+    "proxyrandom"   ? string with match (SELF, 'yes|no') # randomize proxyhost
     "headnode"      ? boolean # use head node
 };
 
