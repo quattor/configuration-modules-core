@@ -482,7 +482,7 @@ sub Configure($$@) {
           sleep 1;
           
           my $execute_status = LC::Process::execute( 
-                  [ "service nscd reload" ],
+                  [ "service nscd stop ; sleep 1 ; killall nscd ; sleep 1 ; service nscd start" ],
                   timeout => 30,
                   stdout => \$stdout,
                   stderr => \$stderr

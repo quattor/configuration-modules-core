@@ -1,3 +1,9 @@
+2010-05-28  Ronald Starink
+
+	* Release: 1.2.5
+	- Fix Savannah #68056 - reconfiguration with ncm-authconfig causes non-responsive nscd
+    - Fix warnings for deprecated syntax of *.tpl files
+
 2010-03-15  Jan van Eldik
 
 	* Release: 1.2.4

@@ -5,17 +5,17 @@
 
 declaration template components/authconfig/schema;
 
-include quattor/schema;
-include pan/types;
+include { 'quattor/schema' };
+include { 'pan/types' };
 
 type authconfig_pamadditions_line_type = {
-  "order"       : string with match(self,"first|last")
+  "order"       : string with match(SELF,"first|last")
   "entry"       : string
 };
 
 type authconfig_pamadditions_type = {
   "conffile"	: string
-  "section"     : string with match(self,"auth|account|password|session")
+  "section"     : string with match(SELF,"auth|account|password|session")
   "lines"       : authconfig_pamadditions_line_type[]
 };
 
@@ -101,7 +101,7 @@ type authconfig_method_ldap_type = {
   "nss_initgroups_ignoreusers"     ? string
   "debug"                          ? long
   "log_dir"                        ? string
-  "nss_paged_results"              ? string with match(self,"yes|no")
+  "nss_paged_results"              ? string with match(SELF,"yes|no")
   "pagesize"                       ? long
 };
 
@@ -158,5 +158,5 @@ type component_authconfig_type = {
   "pamadditions" ? authconfig_pamadditions_type{}
 };
 
-type "/software/components/authconfig" = component_authconfig_type;
+bind "/software/components/authconfig" = component_authconfig_type;
 
