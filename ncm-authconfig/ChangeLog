@@ -1,3 +1,10 @@
+2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.6
+	- Do not depend on subshells anymore.
+
+        For compatibility with perl-LC 1.1.6 and better coding practices.
+
 2010-05-28  Ronald Starink
 
 	* Release: 1.2.5

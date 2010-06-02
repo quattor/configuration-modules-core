@@ -290,24 +290,24 @@ sub build_authconfig_command($$@) {
 
     my ($self, $config, $base) = @_;
 
-    my $cmd="authconfig --kickstart";
+    my @cmd=qw(authconfig --kickstart);
 
     if ( &getValueDefault($config,$base."/useshadow","true") eq "true" ) {
-      $cmd.=" --enableshadow";
+      push(@cmd, "--enableshadow");
     } else {
-      $cmd.=" --disableshadow";
+      push(@cmd, "--disableshadow");
     }
 
     if ( &getValueDefault($config,$base."/usemd5","false") eq "true" ) {
-      $cmd.=" --enablemd5";
+      push(@cmd, "--enablemd5");
     } else {
-      $cmd.=" --disablemd5";
+      push(@cmd, "--disablemd5");
     }
 
     if ( &getValueDefault($config,$base."/usecache","false") eq "true" ) {
-      $cmd.=" --enablecache";
+      push(@cmd, "--enablecache");
     } else {
-      $cmd.=" --disablecache";
+      push(@cmd,"--disablecache");
     }
 
 
@@ -326,11 +326,11 @@ sub build_authconfig_command($$@) {
             $self->debug(1,"authentication method $m_name set to disabled");
             foreach ( $m_name ) {
 #            /afs/   and $cmd.=" --disableafs"; # Removed see email from 11/22/2007
-            /ldap/  and $cmd.=" --disableldap --disableldapauth";
-            /krb5/  and $cmd.=" --disablekrb5";
-            /hesiod/ and $cmd.=" --disablehesiod";
-            /smb/   and $cmd.=" --disablesmbauth";
-            /nis/   and $cmd.=" --disablenis";
+            /ldap/  and push(@cmd, qw(--disableldap --disableldapauth));
+            /krb5/  and push(@cmd, "--disablekrb5");
+            /hesiod/ and push(@cmd, "--disablehesiod");
+            /smb/   and push(@cmd, "--disablesmbauth");
+            /nis/   and push(@cmd, "--disablenis");
             /files/ and $self->warn("Cannot disable file-based auth");
             }
             next;
@@ -353,7 +353,8 @@ sub build_authconfig_command($$@) {
                 $servers and $servers.=",";
                 $servers.=($nissrv_elmt->getNextElement())->getValue();
             }
-            $cmd.=" --enablenis --nisdomain $domain --nisserver $servers";
+            push(@cmd, "--enablenis", "--nisdomain",
+		 $domain, "--nisserver", $servers);
         };
         /krb5/ and do {
             my $realm=$config->getValue($m_path."/realm");
@@ -370,8 +371,9 @@ sub build_authconfig_command($$@) {
                 $adminservers.=($krbsrv_elmt->getNextElement())->getValue();
             }
 
-            $cmd.=" --enablekrb5 --krb5realm $realm --krb5kdc $kdcs";
-            $cmd.=" --krb5adminserver $adminservers";
+            push(@cmd, "--enablekrb5", "--krb5realm",
+		 $realm,  "--krb5kdc", "$kdcs");
+            push(@cmd, "--krb5adminserver", $adminservers);
         };
         /smb/ and do {
             my $wg=$config->getValue($m_path."/workgroup");
@@ -381,12 +383,14 @@ sub build_authconfig_command($$@) {
                 $servers and $servers.=",";
                 $servers.=($srv_elmt->getNextElement())->getValue();
             }
-            $cmd.=" --enablesmbauth --smbworkgroup $wg --smbservers $servers";
+            push(@cmd, qw(--enablesmbauth --smbworkgroup),
+		 $wg, "--smbservers", $servers);
         };
         /hesiod/ and do {
             my $rhs=$config->getValue($m_path."/rhs");
             my $lhs=$config->getValue($m_path."/lhs");
-            $cmd.=" --enablehesiod --hesiodlhs $lhs --hesiodrhs $rhs";
+            push(@cmd, "--enablehesiod", "--hesiodlhs", $lhs,
+		 "--hesiodrhs", $rhs);
         };
         /ldap/ and do {
             my $nssonly = "false";
@@ -394,9 +398,9 @@ sub build_authconfig_command($$@) {
                 $nssonly = $config->getValue($m_path."/nssonly");
             }
             if ( $nssonly eq "false" ) { 
-                $cmd.=" --enableldapauth --enableldap";
+                push(@cmd, qw(--enableldapauth --enableldap));
             } else {
-                $cmd.=" --disableldapauth --enableldap";
+                push(@cmd, qw(--disableldapauth --enableldap));
             }
 
             my $servers="";
@@ -405,13 +409,12 @@ sub build_authconfig_command($$@) {
                 $servers and $servers.=",";
                 $servers.=($srv_elmt->getNextElement())->getValue();
             }
-            $cmd.=" --ldapserver \"$servers\"";
-
-            $cmd.=" --ldapbasedn ".$config->getValue($m_path."/basedn");
+            push(@cmd, "--ldapserver", $servers);
+            push(@cmd, "--ldapbasedn=".$config->getValue($m_path."/basedn"));
 
             my $usetls=&getValueDefault($config,$m_path."/tls/enable","false");
             if ( $usetls eq "true" ) {
-                $cmd.=" --enableldaptls";
+                push(@cmd, "--enableldaptls");
             }
         };
 
@@ -419,7 +422,7 @@ sub build_authconfig_command($$@) {
 
     } # while ( method )
 
-    return $cmd;
+    return @cmd;
 }
 
 
@@ -436,24 +439,24 @@ sub Configure($$@) {
     my $safemode=&getValueDefault($config,$base."/safemode","false");
 
     # authconfig basic configuration
-    my $authconfig_cmd=$self->build_authconfig_command($config,$base);
+    my @authconfig_cmd=$self->build_authconfig_command($config,$base);
 
     $self->debug(1,"Executing authconfig command with safemode=".$safemode);
-    $self->debug(2,"Command = $authconfig_cmd");
-	print "$authconfig_cmd\n";
+    $self->debug(2,"Command = ", join(" ", @authconfig_cmd));
     if ( $safemode eq "false" ) { # execute the authconfig command 
 
         my ($stdout,$stderr);
 
         my $execute_status = LC::Process::execute( 
-                [ $authconfig_cmd ],
-                timeout => 60,
-                stdout => \$stdout,
-                stderr => \$stderr
+	    \@authconfig_cmd,
+	    timeout => 60,
+	    stdout => \$stdout,
+	    stderr => \$stderr
             );
 
         if ( $? >> 8) {
-            $self->error("authconfig command failed: $?\n$authconfig_cmd");
+            $self->error("authconfig command failed: $?");
+	    $self->error(join(" ", @authconfig_cmd));
         }
 
         if ( $stdout ) {
@@ -480,40 +483,39 @@ sub Configure($$@) {
           
           # This is due to nscd failing when nscd restart is called in a short period of time
           sleep 1;
-          
-          my $execute_status = LC::Process::execute( 
-                  [ "service nscd stop ; sleep 1 ; killall nscd ; sleep 1 ; service nscd start" ],
-                  timeout => 30,
-                  stdout => \$stdout,
-                  stderr => \$stderr
-              );
-  
-          if ( $? >> 8) {
-              $self->error("authconfig nscd restart failed: $?");
-          }
-  
-          if ( $stdout ) {
-              $self->info("authconfig nscd restart command output produced:");
-              $self->report($stdout);
-          }
-          if ( $stderr ) {
-              $self->info("authconfig nscd restart command ERROR produced:");
-              $self->report($stderr);
-          }
-        }
 
-    }
-    if ( $config->elementExists($base."/pamadditions") ) {
-      my $method_elmt=$config->getElement("$base/pamadditions");
-      while ( $method_elmt->hasNextElement() ) {
-        my $m_elmt=$method_elmt->getNextElement();
-        my $m_path=($m_elmt->getPath())->toString();
-        $self->build_pam_systemauth($config,$m_path);
+	  # Ugly hack for making fix for bug #68056 work with latest perl-LC.
+          foreach my $i (([qw(service nscd stop)],
+			 [qw(killall nscd)],
+			 [qw(sleep 1)],
+			 [qw(service nscd start)])){
+	      LC::Process::execute($i,
+				   timeout => 30,
+				   stdout => \$stdout,
+				   stderr => \$stderr
+				  );
+	      if ($?) {
+		  $self->error("authconfig nscd restart failed: $?");
+	      }
+	      if ( $stdout ) {
+		  $self->info("authconfig nscd restart command output produced:");
+		  $self->report($stdout);
+	      }
+	      if ($stderr ) {
+		  $self->info("authconfig nscd restart command ERROR produced:");
+		  $self->report($stderr);
+	      }
+	  }
       }
     }
-      
-
-
+    if ( $config->elementExists($base."/pamadditions") ) {
+	my $method_elmt=$config->getElement("$base/pamadditions");
+	while ( $method_elmt->hasNextElement() ) {
+	    my $m_elmt=$method_elmt->getNextElement();
+	    my $m_path=($m_elmt->getPath())->toString();
+	    $self->build_pam_systemauth($config,$m_path);
+	}
+    }
     return 1;
 }
 
