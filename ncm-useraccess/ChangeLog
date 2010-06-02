@@ -1,3 +1,8 @@
+2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.9
+	- Create the SSH directories with the minimal permissions to prevent race conditions.
+
 2010-02-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.5.8

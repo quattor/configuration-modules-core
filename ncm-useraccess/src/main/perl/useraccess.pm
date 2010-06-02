@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.8 : 02/02/10 12:27
+# Version: 1.5.9 : 02/06/10 15:22
 # 
 #
 # Note: all methods in this component are called in a
@@ -144,9 +144,8 @@ sub initialize_user
     # This might not exist yet.
     my $ssh_dir = "$home/" . SSH_DIR;
     if (! -d "$ssh_dir") {
-	mkdir("$ssh_dir");
+	mkdir("$ssh_dir", 0700);
 	chown($uid, $gid, $ssh_dir);
-	chmod(0700, $ssh_dir);
     }
     return ($uid, $gid, $home);
 }
