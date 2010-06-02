@@ -103,24 +103,24 @@ sub Configure {
 	    } elsif($config->elementExists("$servpath/on")) {
 		  $self->info("service $service has both 'add' and 'on' settings defined, 'on' implies 'add'");
 	    } elsif (! $currentservices{$service} ) {
-	      push @cmdlist, "$chkconfigcmd --add $service";
+	      push(@cmdlist, [$chkconfigcmd, "--add", $service]);
 	      $self->info("$service: adding to chkconfig");
 
 	      if($startstop and $startstop eq 'true') {
 		# this smells broken - shouldn't we check the desired runlevel? At least we no longer do this at install time.
-		  push @servicecmdlist, "$servicecmd $service start";
+		  push(@servicecmdlist, [$servicecmd, $service, "start"]);
 	      }
 	    } else {
 	      $self->debug(2, "$service is already known to chkconfig, no need to 'add'");
 	    }
 	  } elsif ($optname eq 'del' and $optval eq 'true') {
 	    if ($currentservices{$service} ) {
-	      push @cmdlist, "$chkconfigcmd $service off";
-	      push @cmdlist, "$chkconfigcmd --del $service";
+	      push(@cmdlist, [$chkconfigcmd, $service, "off"]);
+	      push(@cmdlist, [$chkconfigcmd, "--del", $service]);
 	      $self->info("$service: removing from chkconfig");
 
 	      if($startstop and $startstop eq 'true') {
-		push @servicecmdlist, "$servicecmd $service stop";
+		push(@servicecmdlist, [$servicecmd, $service, "stop"]);
 	      }
 	    } else {
 	      $self->debug(2, "$service is not known to chkconfig, no need to 'del'");
@@ -148,15 +148,17 @@ sub Configure {
 		      }
 		  } else {
 		      $self->info("$service was not configured, 'add'ing it");
-		      push @cmdlist, "$chkconfigcmd --add $service";
+		      push(@cmdlist, [$chkconfigcmd, "--add", $service]);
 		  }
 		  if ($optval ne $currentlevellist) {
 		      $self->info("$service was 'on' for \"$currentlevellist\", new list is \"$optval\"");
-		      push @cmdlist, "$chkconfigcmd $service off";
-		      push @cmdlist, "$chkconfigcmd --level $optval $service on";
+		      push(@cmdlist, [$chkconfigcmd, $service, "off"]);
+		      push(@cmdlist, [$chkconfigcmd, "--level", $optval,
+				      $service, "on"]);
 		      if($startstop and $startstop eq 'true'  
 			 and ($optval =~ /$currentrunlevel/)) {
-			  push @servicecmdlist, "$servicecmd $service start";
+			  push(@servicecmdlist,[$servicecmd, $service,
+						"start"]);
 		      }
 		  } else {
 		      $self->debug(2, "$service already 'on' for \"$optval\", nothing to do");
@@ -193,10 +195,11 @@ sub Configure {
 		      $todo &&                    # do nothing if service is already off for everything we'd like to turn off..
 		      ($optval ne $currentlevellist)) {
 		      $self->info("$service was 'off' for '$currentlevellist', new list is '$optval', diff is '$todo'");
-		      push @cmdlist, "$chkconfigcmd --level $optval $service off";
+		      push(@cmdlist, [$chkconfigcmd, "--level", $optval,
+				      $service, "off"]);
 		      if($startstop and $startstop eq 'true'
 			 and ($optval =~ /$currentrunlevel/)) {
-			  push @cmdlist, "$servicecmd $service stop";
+			  push(@cmdlist, [$servicecmd, $service, "stop"]);
 		      }
 		  }
 	      }
@@ -210,9 +213,10 @@ sub Configure {
 	      } elsif(validrunlevels($optval)) {
 		    # FIXME - check against current?.
 		  if($optval) {
-		      push @cmdlist, "$chkconfigcmd --level $optval $service reset";
+		      push(@cmdlist,[$chkconfigcmd, "--level", $optval,
+				     $service, "reset"]);
 		  } else {
-		      push @cmdlist, "$chkconfigcmd $service reset";
+		      push(@cmdlist, [$chkconfigcmd, $service, "reset"]);
 		  } 
 	      } else {
 		  $self->warn("invalid runlevel string $optval defined for ".
@@ -247,8 +251,8 @@ sub Configure {
 	  if (defined($currentrunlevel) and  $currentservices{$oldservice}[$currentrunlevel] ne 'off' ) {
 	      # they supposedly are even active _right now_.
 	      $self->debug(2,"$oldservice was not 'off' in current level $currentrunlevel, 'off'ing and 'stop'ping it..");
-	      push @servicecmdlist, "$servicecmd $oldservice stop";
-	      push @cmdlist, "$chkconfigcmd $oldservice off";
+	      push(@servicecmdlist, [$servicecmd, $oldservice, "stop"]);
+	      push(@cmdlist, [$chkconfigcmd, $oldservice, "off"]);
 	  } else {
 	      # see whether this was non-off somewhere else
 	      my $was_on = "";
@@ -260,7 +264,8 @@ sub Configure {
 		  }
 	      }
 	      if($was_on) {
-		  push @cmdlist, "$chkconfigcmd --level $was_on $oldservice off";
+		  push(@cmdlist, [$chkconfigcmd, "--level", $was_on,
+				  $oldservice, "off"]);
 	      } else {
 		  $self->debug(2,"$oldservice was already 'off', nothing to do");
 	      }
@@ -275,9 +280,9 @@ sub Configure {
       $self->info("executing command: $cmd");
       
       unless($NoAction) {
-	  my $out = output("$cmd");
+	  my $out = output(@$cmd);
 	  if(!defined("$cmd")) {
-	      $self->warn("cannot execute $cmd");
+	      $self->warn("cannot execute ", join(" ", @$cmd));
 	  } elsif ($? >> 8) {
 	      chomp($out);
 	      $self->warn($out);
@@ -295,9 +300,9 @@ sub Configure {
 	      $self->info("executing command: $cmd");
 	      
 	      unless($NoAction) {
-		  my $out = output("$cmd");
-		  if(!defined("$cmd")) {
-		      $self->warn("cannot execute $cmd");
+		  my $out = output(@$cmd);
+		  if(!defined($cmd)) {
+		      $self->warn("cannot execute ", join(" ", @$cmd));
 		  } elsif ($? >> 8) {
 		      chomp($out);
 		      $self->warn($out);
