@@ -62,7 +62,14 @@ type component_iptables_rule = {
     "length"            ? string
     "set"               ? boolean
     "rcheck"            ? boolean
+    "remove"            ? boolean
+    "rdest"             ? boolean
+    "rsource"           ? boolean
+    "rttl"              ? boolean
+    "update"            ? boolean
     "seconds"           ? number
+    "hitcount"          ? number
+    "name"              ? string
     "pkt-type"          ? string   
 
 };
