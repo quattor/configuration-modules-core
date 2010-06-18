@@ -277,7 +277,7 @@ sub Configure {
   #perform the "chkconfig" commands 
   for my $cmd (@cmdlist) {
       #info 
-      $self->info("executing command: $cmd");
+      $self->info("executing command: ".join(" ", @$cmd));
       
       unless($NoAction) {
 	  my $out = output(@$cmd);
@@ -297,7 +297,7 @@ sub Configure {
 	  my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
 	  for my $cmd (@orderedservicecmdlist) {
 	      #info 
-	      $self->info("executing command: $cmd");
+	      $self->info("executing command: ". join(" ", @$cmd));
 	      
 	      unless($NoAction) {
 		  my $out = output(@$cmd);
@@ -335,15 +335,10 @@ sub service_filter {
     my $action;
     my @new_actions;
     for my $line (@service_actions) {
-	if ($line =~  /$servicecmd (\w+) (stop|start)/) {
-	    $service = $1;
-	    $action = $2;
-	} else {
-	    $self->error("internal error: unknown service command $line");
-	    next;
-	}
-
-	my $current_state=output("$servicecmd $service status");
+        $service = $line->[1];
+	$action = $line->[2];
+	
+	my $current_state=output($servicecmd, $service, 'status');
 
 	if($action eq 'start' && $current_state =~ /is running/s ) {
 	    $self->debug(2,"$service already running, no need to '$action'");
@@ -358,7 +353,7 @@ sub service_filter {
 		# can't figure out
 		$self->info("can't figure out whether $service needs $action from\n$current_state");
 	    }
-	    push(@new_actions, "$servicecmd $service $action");
+	    push(@new_actions, [$servicecmd, $service, $action]);
 	}
     }
     return @new_actions;
@@ -382,17 +377,13 @@ sub service_order {
     my $action;
 
     for my $line (@service_actions) {
-	if ($line =~  /$servicecmd (\w+) (stop|start)/) {
-	    $service = $1;
-	    $action = $2;
-	} else {
-	    $self->error("internal error: unknown service command $line");
-	    next;
-	}
+        $service = $line->[1];
+	$action = $line->[2];
+	
 	my $prio;
 	if($action eq 'stop') {
 	    $prio = 99;
-	    my @files = glob("/etc/rc".$currentrunlevel."d/K*$service");
+	    my @files = glob("/etc/rc".$currentrunlevel.".d/K*$service");
 	    if($files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
 		$prio = $1;
 		$self->debug(3,"found stop prio $prio for $service");
@@ -402,7 +393,7 @@ sub service_order {
 	    push (@stop_list, [$prio, $line]);
 	} elsif ($action eq 'start') {
 	    $prio = 1; # actually, these all should be chkconfiged on!
-	    my @files = glob("/etc/rc".$currentrunlevel."d/S*$service");
+	    my @files = glob("/etc/rc".$currentrunlevel.".d/S*$service");
 	    if($files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
 		$prio = $1;
 		$self->debug(3,"found start prio $prio for $service");

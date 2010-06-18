@@ -1,3 +1,8 @@
+2010-06-18  Jan IVEN
+
+	* Release: 1.1.10
+	- fix for broken startstop, bad logging (#68930). Patch from A.Nowak
+
 2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.1.9
