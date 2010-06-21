@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.5, 14/07/09 12:24
+# VERSION:    1.2.6, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -41,8 +41,8 @@ use File::Compare;
 use File::Copy;
 use Net::Ping;
 use Data::Dumper;
-
-use LC::Process;
+use CAF::Process;
+use CAF::FileEditor;
 use LC::File;
 
 # Ethtool formats query information differently from set parameters so
@@ -554,23 +554,22 @@ sub Configure {
         };
     };
 
-    my $cmd;
+    my @cmds;
     ## restart network
     ## capturing system output/exit-status here is not useful.
     ## network status is tested separately
 
     ## ifdown dev OR network stop
     if ($exifiles{"/etc/sysconfig/network"} == 1) {
-        $cmd="/sbin/service network stop";
+        @cmds = [qw(/sbin/service network stop)];
     } else {
-        $cmd="";
         foreach my $if (sort keys %ifdown) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            $cmd .= "/sbin/ifdown $if;";
+	    push(@cmds, ["/sbin/ifdown", $if]);
         }
     }
-    runrun($cmd);
+    $self->runrun(@cmds);
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
@@ -582,17 +581,17 @@ sub Configure {
     ## ifup OR network start
     if (($exifiles{"/etc/sysconfig/network"} == 1) ||
         ($exifiles{"/etc/sysconfig/network"} == 2)) {
-        $cmd="/sbin/service network start";
+        @cmds = [qw(/sbin/service network start)];
     } else {
-        $cmd="";
+        @cmds = ();
         foreach my $if (sort keys %ifup) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            $cmd .= "/sbin/ifup $if boot;";
-            $cmd .= "sleep 10;" if ($if =~ m/bond/);
+	    push(@cmds, ["/sbin/ifup", $if, "boot"]);
+            push(@cmds, [qw(sleep 10)]) if ($if =~ m/bond/);
         }
     }
-    runrun($cmd);
+    $self->runrun(@cmds);
     ## test network
     if (test_network()) {
         ## if ok, clean up backups
@@ -622,8 +621,8 @@ sub Configure {
         ## current config. useful for debugging
         my $failure_config=get_current_config();
 
-        $cmd="/sbin/service network stop";
-        runrun($cmd);
+	$self->runrun([qw(/sbin/service network stop)]);
+
         ## revert to original files
         foreach my $file (keys %exifiles) {
             if ($exifiles{$file} == 2) {
@@ -648,8 +647,7 @@ sub Configure {
             }
         }
         ## ifup OR network start
-        $cmd="/sbin/service network start";
-        runrun($cmd);
+	$self->runrun([qw(/sbin/service network start)]);
         ## test it again
         if (test_network()) {
             $self->info("Old network config restored.");
@@ -712,8 +710,7 @@ sub Configure {
         sleep($sleep_time);
         ## it should be in $PATH
         $self->info("$func: trying ccm-fetch");
-        my $cmd="ccm-fetch";
-        runrun($cmd);
+        $self->runrun(["ccm-fetch"]);
         my $exitcode=$?;
         if ($? == 0) {
             $self->info("$func: OK: network up");
@@ -725,34 +722,21 @@ sub Configure {
     }
 
     sub get_current_config {
-        my $func = "get_current_config";
+	my $output;
+	my $fh = CAF::FileEditor->new("/etc/sysconfig/network",
+				      log => $self);
+	$fh->cancel();
+	$output = ${$fh->string_ref()};
 
-        my $cmd;
-        my $output="";
-
-        $cmd = "cat /etc/sysconfig/network";
-        $output .= "\n$cmd\n";
-        $output .= runrun($cmd);
-
-        $cmd = "ls -ltr /etc/sysconfig/network-scripts";
-        $output .= "\n$cmd\n";
-        $output .= runrun($cmd);
-
-        $cmd = "/sbin/ifconfig";
-        $output .= "\n$cmd\n";
-        $output .= runrun($cmd);
-
-        $cmd="/sbin/route -n";
-        $output .= "\n$cmd\n";
-        $output .= runrun($cmd);
+        $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
+        $output .= $self->runrun(["/sbin/ifconfig"]);
+        $output .= $self->runrun([qw(/sbin/route -n)]);
 
         ## when brctl is missing, this would generate an error. 
         ## but it is harmless to skip the show command.
         my $brexe = "/usr/sbin/brctl";
-        $cmd="$brexe show";
-        $output .= "\n$cmd\n";
         if (-x $brexe) {
-            $output .= runrun($cmd);
+            $output .= $self->runrun([$brexe, "show"]);
         } else {
             $output .= "Missing $brexe executable.\n";
         };
@@ -854,20 +838,19 @@ sub Configure {
     }
 
     sub runrun {
-        my $cmd = shift|| "";
-        return if ($cmd eq "");
+        my ($self, @cmds) = @_;
+        return if (!@cmds);
 
-        ## new style
-        my $output;
-        if(LC::Process::execute([$cmd],
-                                "stdout" => \$output,
-                                "stderr" => "stdout"
-            ) && ($? == 0)) {
-                $self->debug(4,"runrun succesfully ran \"$cmd\"");
-        } else {
-                $self->error("runrun failed to run \"$cmd\": output $output");
-        }
-        return $output;
+	my @output;
+
+	foreach my $i (@cmds) {
+	    push(@output, CAF::Process->new($i, log => $self)->output());
+	    if ($?) {
+		$self->error("Error output: $output[-1]");
+	    }
+	}
+
+        return join("", @output);
     }
 
 
@@ -954,16 +937,7 @@ sub Configure {
         my $setoption="--$sectionname";
         $setoption="--set-$sectionname" if ($sectionname eq "ring");
         $setoption="--change" if ($sectionname eq "ethtool");
-        $cmd="$ethtoolcmd $setoption $ethname ".join(' ',@opts);
-        my $out;
-        if (LC::Process::execute([$cmd],
-                                "stdout" => \$out,
-                                "stderr" => "stdout"
-                ) ) {
-                    $self->info("ethtoolSetOptions: Succesfully ran \"$cmd\"");
-         } else {
-                    $self->error("ethtoolSetOptions: Failed to run \"$cmd\": output $out.");
-         }
+	$self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
     }
 
     # Creates a string defining the bonding or ethtool  options.
