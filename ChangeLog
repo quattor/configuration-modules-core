@@ -1,3 +1,8 @@
+2010-06-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.3
+	- Fix a typo when running GROUPMOD.
+
 2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.2

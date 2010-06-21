@@ -446,7 +446,7 @@ sub modify_groups
     my $rt = 1;
 
     foreach my $i (@$groups) {
-	my $cmd = CAF::Process->new([GROUPMOD, $i->{profile}->{guid},
+	my $cmd = CAF::Process->new([GROUPMOD, $i->{profile}->{gid},
 				     $i->{system}->[NAME]],
 				    log => $self);
 	$cmd->run();
