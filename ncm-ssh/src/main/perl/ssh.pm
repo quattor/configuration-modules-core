@@ -80,10 +80,13 @@ sub Configure {
               if ( $option_set eq 'comment_options' ) {
                 $comment = '#';
               }
+
+	      my $escaped_val = $val;
+	      $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
               my $result = NCM::Check::lines($ssh_config_file,
                                              backup => '.old',
                                              linere => '(?i)^\W*'.$option.'\s+\S+',
-                                             goodre => '\s*'.$comment.'\s*'.$option.'\s+'.$val,
+                                             goodre => '\s*'.$comment.'\s*'.$option.'\s+'.$escaped_val,
                                              good   => $comment."$option $val",
                                              keep   => 'first',
                                              add    => 'last'
@@ -102,7 +105,7 @@ sub Configure {
           chmod $perms,$ssh_config_file or $self->warn("cannot reset permissions on $ssh_config_file ($!)");
           if ( $component eq 'daemon' ) {
             $self->info("Restarting $component...");
-	    CAF::Process->new([qw(@SSH_STARTUP_SCRIPT sshd reload)],
+	    CAF::Process->new([qw(/sbin/service sshd reload)],
 			      log => $self)->run();
 	    $self->error("Failed to reload $component") if $?;
           }

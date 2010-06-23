@@ -1,3 +1,8 @@
+2010-06-23  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.2
+	- Fix bug #68458.
+
 2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 2.0.1
