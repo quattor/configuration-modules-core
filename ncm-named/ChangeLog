@@ -1,3 +1,8 @@
+2010-06-23  Ronald Starink
+
+	* Release: 2.0.1
+	- Split command string so that the command is separated from the options in the call to CAF::Process->new. This is apparently needed for interoperability with perl-LC >= 1.1.6
+
 2010-02-03  Michel Jouvin
 
 	* Release: 2.0.0

@@ -119,7 +119,7 @@ sub Configure {
   # Ignore named startup configuration if startup script is not present (service not configured)
 
   my $service = "named";
-  my $cmd = CAF::Process->new(["/sbin/chkconfig --list $service"], log => $self);
+  my $cmd = CAF::Process->new(["/sbin/chkconfig", "--list $service"], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->debug(1,"Service $service doesn't exist on current host. Skipping $service configuration.");
@@ -166,7 +166,7 @@ sub Configure {
     $self->info("Disabling service $service...");
     $reboot_state = "off";
   }
-  $cmd = CAF::Process->new(["/sbin/chkconfig --level 345 $service $reboot_state"], log => $self);
+  $cmd = CAF::Process->new(["/sbin/chkconfig", "--level 345", $service, $reboot_state], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->error("Error defining service $service state for next reboot.");
@@ -179,7 +179,7 @@ sub Configure {
 
   $self->debug(1,"Checking if service $service is started...");
   my $named_started = 1;
-  $cmd = CAF::Process->new(["/sbin/service $service status"], log => $self);
+  $cmd = CAF::Process->new(["/sbin/service", $service, "status"], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->debug(1,"Service $service not running.");
@@ -205,7 +205,7 @@ sub Configure {
   
   if ( $action ) {
     $self->info("Doing a $action of service $service...");
-    $cmd = CAF::Process->new(["/sbin/service $service $action"], log => $self);
+    $cmd = CAF::Process->new(["/sbin/service", $service, $action], log => $self);
     my $cmd_output = $cmd->output();      # Also execute the command
     if ( $? ) {
       $self->debug(1,"Failed to update service $service state.\nError message: $cmd_output");
