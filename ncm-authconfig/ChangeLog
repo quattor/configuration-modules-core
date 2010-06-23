@@ -1,3 +1,8 @@
+2010-06-23  Ronald Starink
+
+	* Release: 1.2.7
+	- Component always failed when restarting nscd after changing ldap configuration. Now we don't try to stop nscd anymore, just kill it and start again.
+
 2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.2.6

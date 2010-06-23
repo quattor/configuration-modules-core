@@ -70,15 +70,15 @@ sub build_pam_systemauth($$@) {
         $rem_value=~s/\s+/\\s+/g;
         $rem_value=~s/\[/\\[/g;
        
-	# WARNING: this will result in each .so module only to be used once
+        # WARNING: this will result in each .so module only to be used once
         # and argument changes to be considered insignificant to functionality
         #.....not anymore...
-		
+                
         (my $linere_value=$m_value)=~/(\S*.so)(.*)/ig;
         $linere_value = $1;
         $linere_value=~s/\$/\\\$/g;
         $linere_value=~s/\//\\\//g;
-			
+                        
         my $newline=sprintf("%-12s%s",$section,$m_value);
 
         $changes+= NCM::Check::lines($conf,
@@ -354,7 +354,7 @@ sub build_authconfig_command($$@) {
                 $servers.=($nissrv_elmt->getNextElement())->getValue();
             }
             push(@cmd, "--enablenis", "--nisdomain",
-		 $domain, "--nisserver", $servers);
+                 $domain, "--nisserver", $servers);
         };
         /krb5/ and do {
             my $realm=$config->getValue($m_path."/realm");
@@ -372,7 +372,7 @@ sub build_authconfig_command($$@) {
             }
 
             push(@cmd, "--enablekrb5", "--krb5realm",
-		 $realm,  "--krb5kdc", "$kdcs");
+                 $realm,  "--krb5kdc", "$kdcs");
             push(@cmd, "--krb5adminserver", $adminservers);
         };
         /smb/ and do {
@@ -384,13 +384,13 @@ sub build_authconfig_command($$@) {
                 $servers.=($srv_elmt->getNextElement())->getValue();
             }
             push(@cmd, qw(--enablesmbauth --smbworkgroup),
-		 $wg, "--smbservers", $servers);
+                 $wg, "--smbservers", $servers);
         };
         /hesiod/ and do {
             my $rhs=$config->getValue($m_path."/rhs");
             my $lhs=$config->getValue($m_path."/lhs");
             push(@cmd, "--enablehesiod", "--hesiodlhs", $lhs,
-		 "--hesiodrhs", $rhs);
+                 "--hesiodrhs", $rhs);
         };
         /ldap/ and do {
             my $nssonly = "false";
@@ -448,15 +448,15 @@ sub Configure($$@) {
         my ($stdout,$stderr);
 
         my $execute_status = LC::Process::execute( 
-	    \@authconfig_cmd,
-	    timeout => 60,
-	    stdout => \$stdout,
-	    stderr => \$stderr
+            \@authconfig_cmd,
+            timeout => 60,
+            stdout => \$stdout,
+            stderr => \$stderr
             );
 
         if ( $? >> 8) {
             $self->error("authconfig command failed: $?");
-	    $self->error(join(" ", @authconfig_cmd));
+            $self->error(join(" ", @authconfig_cmd));
         }
 
         if ( $stdout ) {
@@ -484,37 +484,38 @@ sub Configure($$@) {
           # This is due to nscd failing when nscd restart is called in a short period of time
           sleep 1;
 
-	  # Ugly hack for making fix for bug #68056 work with latest perl-LC.
-          foreach my $i (([qw(service nscd stop)],
-			 [qw(killall nscd)],
-			 [qw(sleep 1)],
-			 [qw(service nscd start)])){
-	      LC::Process::execute($i,
-				   timeout => 30,
-				   stdout => \$stdout,
-				   stderr => \$stderr
-				  );
-	      if ($?) {
-		  $self->error("authconfig nscd restart failed: $?");
-	      }
-	      if ( $stdout ) {
-		  $self->info("authconfig nscd restart command output produced:");
-		  $self->report($stdout);
-	      }
-	      if ($stderr ) {
-		  $self->info("authconfig nscd restart command ERROR produced:");
-		  $self->report($stderr);
-	      }
-	  }
+          # Ugly hack for making fix for bug #68056 work with latest perl-LC.
+          # To make it even uglier: do NOT try a nice "service stop nscd" because
+          # that always fails. Just kill the beast and start it again.
+          foreach my $i (([qw(killall nscd)],
+                         [qw(sleep 1)],
+                         [qw(service nscd start)])){
+              LC::Process::execute($i,
+                                   timeout => 30,
+                                   stdout => \$stdout,
+                                   stderr => \$stderr
+                                  );
+              if ($?) {
+                  $self->error("authconfig nscd restart failed: $?");
+              }
+              if ( $stdout ) {
+                  $self->info("authconfig nscd restart command output produced:");
+                  $self->report($stdout);
+              }
+              if ($stderr ) {
+                  $self->info("authconfig nscd restart command ERROR produced:");
+                  $self->report($stderr);
+              }
+          }
       }
     }
     if ( $config->elementExists($base."/pamadditions") ) {
-	my $method_elmt=$config->getElement("$base/pamadditions");
-	while ( $method_elmt->hasNextElement() ) {
-	    my $m_elmt=$method_elmt->getNextElement();
-	    my $m_path=($m_elmt->getPath())->toString();
-	    $self->build_pam_systemauth($config,$m_path);
-	}
+        my $method_elmt=$config->getElement("$base/pamadditions");
+        while ( $method_elmt->hasNextElement() ) {
+            my $m_elmt=$method_elmt->getNextElement();
+            my $m_path=($m_elmt->getPath())->toString();
+            $self->build_pam_systemauth($config,$m_path);
+        }
     }
     return 1;
 }
