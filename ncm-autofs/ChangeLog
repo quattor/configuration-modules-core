@@ -1,3 +1,8 @@
+2010-07-01  Ronald Starink
+
+	* Release: 2.0.1
+	- Made component compatible with perl-LC >= 1.1.6
+
 2010-02-12  Michel Jouvin
 
 	* Release: 2.0.0

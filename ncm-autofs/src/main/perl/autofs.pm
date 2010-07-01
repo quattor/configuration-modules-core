@@ -290,7 +290,7 @@ sub Configure($$@) {
     #reload if changed the conf-file
     if($cnt) {
       $self->info("Reloading autofs");
-      my $cmd = CAF::Process->new(['/sbin/service autofs reload'], log => $self);
+      my $cmd = CAF::Process->new(['/sbin/service', 'autofs', 'reload'], log => $self);
       my $output = $cmd->output();       # Also executes the command
       if ( $? ) {
         $self->error('command "/sbin/service autofs reload" failed. Command ouput: '.$output);
