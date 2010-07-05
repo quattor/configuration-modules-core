@@ -329,7 +329,7 @@ sub Configure {
             # unmount the file system
             $self->info("Unmounting FS $fs and removing from $fstab_file");
 
-            $ret = LC::Process::execute(["umount $fs"], 
+            $ret = LC::Process::execute(["umount",$fs], 
                                            "stderr" => \$err);
             unless (defined($ret) and $ret) {
                 $self->warn("umount $fs failed with code $?:\n$err");
@@ -379,7 +379,7 @@ sub Configure {
 	};
 	# start the daemon
         $self->info("Starting DRBD daemon");
-        $ret = LC::Process::execute(["service drbd start"],
+        $ret = LC::Process::execute(["/sbin/service","drbd","start"],
                                     "stderr" => \$err);
 	
         unless (defined($ret) and $ret) {
@@ -389,7 +389,7 @@ sub Configure {
             
         # first a dry run
         $self->info("Doing dry run of drbdadm");
-        $ret = LC::Process::execute(["drbdadm -d adjust all"],
+        $ret = LC::Process::execute(["drbdadm","-d","adjust","all"],
                                     "stderr" => \$err);
         unless (defined($ret) and $ret) {
             $self->error("Dry run of drbdadm failed with code $?:\n$err");
@@ -398,7 +398,7 @@ sub Configure {
         
         # now the real run
         $self->info("Real run of drbdadm");
-        $ret = LC::Process::execute(["drbdadm adjust all"], 
+        $ret = LC::Process::execute(["drbdadm","adjust","all"], 
                                     "stderr" => \$err);
         unless (defined($ret) && $ret) {
             $self->error("Running drbdadm failed with code $?");
@@ -439,7 +439,8 @@ sub Configure {
                 my $cmd = "drbdadm -- --do-what-I-say primary $res";
                 $self->info($cmd);
                 
-                $ret = LC::Process::execute([$cmd], "stderr" => \$err);
+                my @cmdargs = (split /\s+/, $cmd);
+                $ret = LC::Process::execute(\@cmdargs, "stderr" => \$err);
                 unless (defined($ret) && $ret) {
                     $self->error("Command $cmd failed with code $?:\n$err");
                     return;
