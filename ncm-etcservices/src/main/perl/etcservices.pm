@@ -137,6 +137,10 @@ sub Configure($$) {
     # of the service and the related port:
     my $first_cdb_word="$1" if ($entry_value =~ /^(\S+)\s+(\S+)/);
     my $second_cdb_word="$2" if ($entry_value =~ /^(\S+)\s+(\S+)/);
+    # $third_cdb_word matches the protocol part of the entry (udp or tcp).  This
+    # avoids the code below erroneously replacing the tcp with udp entries, and
+    # vice-versa. - 2010-07-06, James Thorne <james.thorne@stfc.ac.uk>
+    my $third_cdb_word="$3" if ($entry_value =~ /^(\S+)\s+(\S+)\/(\S+)/);
 
     $nl=0;
 
@@ -146,14 +150,23 @@ sub Configure($$) {
          # And here the ones we are checking at the current /etc/services line:
          my $first_etc_word="$1" if ($lines[$nl] =~ /^(\S+)\s+(\S+)/);
          my $second_etc_word="$2" if ($lines[$nl] =~ /^(\S+)\s+(\S+)/);
+	 # $third_etc_word matches the protocol part of the /etc/services line
+	 # (udp or tcp) for the same reasons as $third_cdb_word above
+	 # - 2010-07-06, James Thorne <james.thorne@stfc.ac.uk>
+	 my $third_etc_word="$3" if ($lines[$nl] =~ /^(\S+)\s+(\S+)\/(\S+)/);
 
 	 #    Sometimes the lines are empty so those variables will not be initialised
 	 # and we will got an error. We avoid that with the following:
-	 if ((defined $first_cdb_word) and (defined $second_cdb_word) and
-             (defined $first_etc_word) and (defined $second_etc_word)) {
+	 # $third_*_word added by James Thorne, 2010-07-06
+	 if ((defined $first_cdb_word) and (defined $second_cdb_word) and (defined $third_cdb_word) and
+	     (defined $first_etc_word) and (defined $second_etc_word) and (defined $third_etc_word)) {
 
             # If the port has changed we replace the /etc/services line by the CDB one
-	    if (($first_cdb_word eq $first_etc_word) and 
+	    # We also check that we are doing this for the correct protocol with:
+            # ($third_cdb_word eq $third_etc_word)
+	    # - 2010-07-06, James Thorne <james.thorne@stfc.ac.uk>
+	    if (($first_cdb_word eq $first_etc_word) and
+	        ($third_cdb_word eq $third_etc_word) and
                 ($second_cdb_word ne $second_etc_word)) {
 
 	       $lines[$nl] =~ s/.*/$entry_value/;

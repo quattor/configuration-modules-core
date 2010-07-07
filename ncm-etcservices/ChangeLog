@@ -1,3 +1,8 @@
+2010-07-06  Ian Collier
+
+	* Release: 1.s21.0
+	-  Fix to logic so you can configure both tcp and udp for same service.
+
 2007-06-25  Michel Jouvin
 
 	* Release: 1.1.0
