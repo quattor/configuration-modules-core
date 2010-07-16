@@ -77,6 +77,7 @@ type component_diskless_type={
     "dhcp_clients" ? dhcp_clients_type{}
 # this is optional since in some cases the clients don't have an individual profile
     "client_profiles" ? string{}
+    "do_pxeos" : boolean = true
 };
 
 function is_valid_subnet_path = {

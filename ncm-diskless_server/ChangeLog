@@ -1,3 +1,12 @@
+2010-07-16  Loic Brarda
+
+	* Release: 0.6.0
+	- Corrected many LC/CAF::Process problems
+	Use CAF::Filewriter to write proto ccm.conf
+	Only give ccm-fetch and ncm-ncd in debug 5
+	Make pxeos step optionnal (with do_pxeos option)
+	.
+
 2010-04-07  Loic Brarda
 
 	* Release: 0.5.0

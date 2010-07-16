@@ -22,6 +22,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 use LC::File qw(copy remove move);
 use LC::Check;
 use CAF::Process;
+use CAF::FileEditor;
 
 #few declarations
 my @nodes;
@@ -104,13 +105,14 @@ sub Configure {
     #pxeos won't create the image otherwise and won't give an
     #error message
     #now do the pxeos and pxeboot for these nodes..
-    my $rtrn_val=$self->pxe_config($config,$base);
-    $self->debug(2,"pxe_config returned : $rtrn_val");
-    
-    if($rtrn_val==-1){
-        $self->error("pxeos failed, cannot continue with installation of nodes.");
-        &cleanup;
-        return 1;
+    if($config->elementExists($base."/do_pxeos") && $config->getValue($base."/do_pxeos") eq "true") {
+        my $rtrn_val=$self->pxe_config($config,$base);
+        $self->debug(2,"pxe_config returned : $rtrn_val");
+        if($rtrn_val==-1){
+            $self->error("pxeos failed, cannot continue with installation of nodes.");
+            &cleanup;
+            return 1;
+        }
     }
     # update shared root filesystem
     if($config->elementExists($base."/protonode_profile")) {
@@ -121,38 +123,56 @@ sub Configure {
         $self->debug(2,"$0: sillyCheck $sillyCheck");
         my $chroot_path = "$f_path/root";
         my $ccmConfFile = "$chroot_path/etc/ccm.conf";
-        if ( -e $ccmConfFile) {
-            $self->debug(4,"checking $ccmConfFile\n");
-            my $changes+=NCM::Check::lines($ccmConfFile,
-                linere=>"profile .*",
-                goodre=>"profile $sillyCheck",
-                good  =>"profile $clientUrl"
-                );
-        }
+        my $fh = CAF::FileEditor->open ($ccmConfFile, log => $self);
+        my $ref_to_contents = $fh->string_ref;
+        $$ref_to_contents =~ s/^(profiles\s*).*(\s*)/$1$clientUrl$2/;
+        $fh->close();
+#         if (! -e $ccmConfFile) {
+#             $self->debug(4,"checking $ccmConfFile (clientUrl : $clientUrl)\n");
+#             my $changes+=NCM::Check::lines($ccmConfFile,
+#                 linere=>"profile .*",
+#                 goodre=>"profile $sillyCheck",
+#                 good  =>"profile $clientUrl"
+#                 );
+#         }
         my($stdout,$stderr);
-        $self->debug(2,"$0: chrooting ccm-fetch on $chroot_path");
-        LC::Process::execute(
+        $self->info("$0: chrooting ccm-fetch on $chroot_path");
+        CAF::Process->new(
             [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ccm-fetch" ],
             timeout => 300,
             stdout => \$stdout,
-            stderr => \$stderr
-            );
-        $self->debug(5,"$0: stdout :\n$stdout");
-        $self->debug(4,"$0: stderr :\n$stderr");
+            stderr => \$stderr,
+            log => $self
+            )->run();
+        if ( $stdout ) {
+            $self->debug(5, "ccm-fetch on $chroot_path command output produced:");
+            $self->debug(5, $stdout);
+        }
+        if ( $stderr ) {
+            $self->debug(5, "ccm-fetch on $chroot_path command ERROR produced:");
+            $self->debug(5, $stderr);
+        }
     
-        $self->debug(2,"$0: chrooting ncm-ncd --co --all on $chroot_path");
-        LC::Process::execute(
-            [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ncm-ncd --co --all" ],
+        $self->info("$0: chrooting ncm-ncd --co --all on $chroot_path");
+        CAF::Process->new(
+            [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ncm-ncd", "--co", "--all" ],
             timeout => 300,
             stdout => \$stdout,
-            stderr => \$stderr
-        );
-        $self->debug(5,"$0: stdout :\n$stdout");
-        $self->debug(4,"$0: stderr :\n$stderr");
+            stderr => \$stderr,
+            log => $self
+        )->run();
+        if ( $stdout ) {
+            $self->debug(5, "ncm-ncd --co --all on $chroot_path command output produced:");
+            $self->debug(5, $stdout);
+        }
+        if ( $stderr ) {
+            $self->debug(5, "ncm-ncd --co --all on $chroot_path command ERROR produced:");
+            $self->debug(5, $stderr);
+        }
     }
 
     #now create the pxe files
-    $self->debug(2,"$0: going to call pxeboot_config");
+    $self->info("$0: going to call pxeboot_config");
     $self->pxeboot_config($config,$base,@nodes);
     
     # create file that contains the hostname of the diskless server
@@ -230,14 +250,14 @@ sub add_dlsnfile{
 
 sub pxe_config{
     my($self,$config,$path)=@_;
-    my $pxeos_cmd="/usr/sbin/pxeos -a ";
+    my @pxeos_cmd=("/usr/sbin/pxeos", "-a ");
     my $descro="";
     my $ret_val = 0;
     
     #add description,optional
     if($config->elementExists($path."/pxe/descro")){
         $descro=$config->getValue($path."/pxe/descro");
-        $pxeos_cmd .= "-i \"$descro\"";
+        push @pxeos_cmd, ("-i", "\"$descro\"");
     }
     #add protocol
     unless($config->elementExists($path."/pxe/protocol")){
@@ -245,15 +265,15 @@ sub pxe_config{
         return -1;
     }
     my $proto=$config->getValue($path."/pxe/protocol");
-    $pxeos_cmd .= " -p $proto";
+    push @pxeos_cmd, ("-p", "$proto");
     
     #it's diskless by default so add -D 1
-    $pxeos_cmd .= " -D 1";
+    push @pxeos_cmd, "-D", "1";
     
     # are we debugging ?
     *this_app = \$main::this_app;
     if ($this_app->option('debug')) {
-        $pxeos_cmd .= " --debug";
+        push @pxeos_cmd, "--debug";
     }
     
     #add server
@@ -267,7 +287,7 @@ sub pxe_config{
         return -1;
     }
     my $server=$config->getValue("/system/network/interfaces/$netdev/ip");
-    $pxeos_cmd .= " -s $server";
+    push @pxeos_cmd, "-s" ,"$server";
     
     #define kernel name
     unless ($config->elementExists($path."/pxe/kernel")){
@@ -275,7 +295,7 @@ sub pxe_config{
         return -1;
     }
     my $kernel = $config->getValue($path."/pxe/kernel");
-    $pxeos_cmd .= " -k $kernel";
+    push @pxeos_cmd, "-k", "$kernel";
     
     #define the image directory
     unless($config->elementExists($path."/pxe/image")){
@@ -283,7 +303,7 @@ sub pxe_config{
         return -1;
     }
     my $image = $config->getValue($path."/pxe/image");
-    $pxeos_cmd .= " -L $image";
+    push @pxeos_cmd, "-L", "$image";
     
     #specify OS name
     unless($config->elementExists($path."/pxe/name")){
@@ -291,15 +311,15 @@ sub pxe_config{
         return -1;
     }
     my $os_name=$config->getValue($path."/pxe/name");
-    $pxeos_cmd .= " $os_name";
+    push @pxeos_cmd, "$os_name";
     
-    $self->debug(2,"pxe_config: pxeos command would be $pxeos_cmd ");
+    $self->debug(2,"pxe_config: pxeos command would be @pxeos_cmd ");
     #before executing pxeos make sure things have changed..
     #/tftpboot is the standard location that pxe xml file resides
     #first time pxe is run,pxeos.xml doesn't exist
     unless (open(PXEOS_FILE,"/tftpboot/linux-install/pxelinux.cfg/pxeos.xml")){
         $self->debug(2,"pxe_config: no pxeos.xml, will run pxeos command and return");
-        $ret_val=$self->run_pxeos($pxeos_cmd);
+        $ret_val=$self->run_pxeos(@pxeos_cmd);
         return $ret_val;
     }
     my $px_line="";
@@ -319,7 +339,7 @@ sub pxe_config{
     #has changed,remove old files and rerun
     elsif($px_line=~/<OperatingSystems>\s*<\/OperatingSystems>/){
         $self->debug(2,"pxe_config: config file exists,no OS defined, will run pxeos command and return");
-        $ret_val=$self->run_pxeos($pxeos_cmd);
+        $ret_val=$self->run_pxeos(@pxeos_cmd);
         return $ret_val;
     }
     elsif($px_line=~/Name=\"$os_name\"/mg){
@@ -328,11 +348,11 @@ sub pxe_config{
         }
         $self->info("removing old OS and updating");
     
-        $ret_val=$self->run_pxeos($pxeos_cmd);
+        $ret_val=$self->run_pxeos(@pxeos_cmd);
         return $ret_val;
     }
     else {
-        $ret_val=$self->run_pxeos($pxeos_cmd);
+        $ret_val=$self->run_pxeos(@pxeos_cmd);
         return $ret_val;
     }
 }
@@ -340,12 +360,13 @@ sub del_pxeos{
     my($self,$name)=@_;
     my($stdout,$stderr);
     my $ret_val=0;
-    LC::Process::execute(
+    CAF::Process->new(
                 [ "/usr/sbin/pxeos", "-d", $name ],
                 timeout => 100,
                 stdout => \$stdout,
-                stderr => \$stderr
-                );
+                stderr => \$stderr,
+                log => $self
+                )->run();
     if ( $? >> 8) {
         $self->error("pxeos delete failed: $?");
         $ret_val=-1;
@@ -363,18 +384,19 @@ sub del_pxeos{
     return $ret_val;
 }
 sub run_pxeos{
-    my($self,$cmd)=@_;
+    my($self,@cmd)=@_;
     my $ret_val=0;
     
     
     #run pxeos command
     my($stdout,$stderr);
-    LC::Process::execute(
-                [ $cmd ],
+    CAF::Process->new(
+                [ @cmd ],
                 timeout => 300,
                 stdout => \$stdout,
-                stderr => \$stderr
-                );
+                stderr => \$stderr,
+                log => $self
+                )->run();
     if ( $? >> 8) {
         $self->error("pxeos configure failed: $?");
         $ret_val=-1;
@@ -393,8 +415,8 @@ sub run_pxeos{
 
 sub pxeboot_config{
     my($self,$config,$path,@node_list)=@_;
-    my ($ramdisk, $os_name, $pxeboot_cmd);
-    my $pxeboot_base_cmd="/usr/sbin/pxeboot -a";
+    my ($ramdisk, $os_name, @pxeboot_cmd);
+    my @pxeboot_base_cmd=("/usr/sbin/pxeboot", "-a");
     # for the extraction of the boot device from the node profile
     # !!!    will become obsolete soon, kept for compatibility      !!!
     my ( $cm, $cfg, $ele, %nic_list, $nic, $macpath, $mac);
@@ -418,7 +440,7 @@ sub pxeboot_config{
     }
     $os_name=$config->getValue($path."/pxe/name");
     
-    $pxeboot_base_cmd .= " -r $ramdisk -O $os_name";
+    push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
     #call pxeboot for every node
     my $node;
     my $bootDevice;
@@ -478,15 +500,19 @@ sub pxeboot_config{
         }
         #
         # specify a snaphot name to avoid switching between using the snapshot "node" and "node.domain"
-        $pxeboot_cmd = $pxeboot_base_cmd . " -e $bootDevice --snapshot $nodename $node";
-        $self->debug(2,"pxeboot command will be: $pxeboot_cmd");
+#         @pxeboot_cmd = @pxeboot_base_cmd;
+#         push @pxeboot_cmd, "-e", "$bootDevice", "--snapshot", "$nodename", "$node";
+#         $self->debug(2,"pxeboot command will be: @pxeboot_cmd");
         my($stdout,$stderr);
-        LC::Process::execute(
-                [ $pxeboot_cmd ],
+        my $proc = CAF::Process->new(
+                [@pxeboot_base_cmd],
                 timeout => 100,
                 stdout => \$stdout,
-                stderr => \$stderr
+                stderr => \$stderr,
+                log => $self
                 );
+        $proc->pushargs ("-e", "$bootDevice", "--snapshot", "$nodename", "$node");
+        $proc->run();
         if ( $? >> 8) {
             $self->error("pxeboot configure failed: $?");
         }
@@ -521,12 +547,13 @@ sub aii_dhcp_config{
     close FH;
     #execute aii,will read nodelist file and do the magic..
     my($stdout,$stderr);
-    LC::Process::execute(
-                [ $aii_command", "--cdburl", $cdb, "--profile_prefix", $prefix, "--configurelist", $nodelist_file, "--noosinstall", "--nonbp"],
+    CAF::Process->new(
+                [ $aii_command, "--cdburl", $cdb, "--profile_prefix", $prefix, "--configurelist", $nodelist_file, "--noosinstall", "--nonbp"],
                 timeout => \$timeout,
                 stdout => \$stdout,
-                stderr => \$stderr
-                );
+                stderr => \$stderr,
+                log => $self
+                )->run();
     if ( $? >> 8) {
         $self->error("aii configure failed: $?");
         $ret_val=1
@@ -542,7 +569,7 @@ sub aii_dhcp_config{
     }
     # reload does start the service if it is not running already,
     # but the implicit 'stop' will give an error (that we happily ignore)
-        # system ("/sbin/service","dhcpd", "reload" );
+        # system ("/sbin/service","dhcpd", "restart" );
     return $ret_val;
 }
 
@@ -684,7 +711,7 @@ sub dhcpdWrite{
                     );
     if ( $changes ) {
         $self->debug (3, "dhcpd.conf changed, will restart dhcpd.");
-        CAF::Process->new (["/sbin/service", "dhcpd reload"], log => $self)->run();
+        CAF::Process->new (["/sbin/service", "dhcpd", "restart"], log => $self)->run();
     }
     &cleanup;
     return;
