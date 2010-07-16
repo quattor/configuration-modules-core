@@ -1,5 +1,10 @@
 2010-07-16  Loic Brarda
 
+	* Release: 0.6.1
+	- Cleaned dhcpd.conf creation
+
+2010-07-16  Loic Brarda
+
 	* Release: 0.6.0
 	- Corrected many LC/CAF::Process problems
 	Use CAF::Filewriter to write proto ccm.conf

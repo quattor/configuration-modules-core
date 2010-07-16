@@ -57,7 +57,7 @@ sub Configure {
         while ( $method->hasNextElement() ) {
             my $element=$method->getNextElement();
             my $path=($element->getPath())->toString();
-            my $rt_str=$self->dhcpdGetNetInfo($config,$path);
+            my $rt_str=$self->dhcpdGetSubnetInfo($config,$path);
             push @entries,$rt_str;
         }
         $self->dhcpdWrite($config,@entries);
@@ -573,48 +573,33 @@ sub aii_dhcp_config{
     return $ret_val;
 }
 
-sub dhcpdGetNetInfo{
+sub dhcpdGetSubnetInfo{
     my ($self,$config,$base)=@_;
     my $entry="";
 
     unless($config->elementExists($base."/subnet") && $config->elementExists($base."/netmask")){
-        $self->error("error,try to see if a subnet and a \
-                netmask have been declared");
+        $self->Warning("No subnet declared for dhcpd config.");
         return;
     }
     my $subnet = $config->getValue($base."/subnet");
     my $netmask = $config->getValue($base."/netmask");
 
+        #TODO: Add option checking
+        #put everything into order
+    $entry = "subnet $subnet netmask $netmask {\n";
     if($config->elementExists($base."/options")){
-        my %options;
         my $method = $config->getElement($base."/options");
         while($method->hasNextElement()){
             my $element=$method->getNextElement();
             my %tmp_options=$element->getHash();
             #dereference the hash
             foreach (keys %tmp_options){
-                $options{$_} =$tmp_options{$_}->getValue();
+                $entry .= "\toption $_ ".$tmp_options{$_}->getValue().";\n";
             }
         }
-        #TODO: Add option checking
-        #put everything into order
-        $entry = "subnet $subnet netmask $netmask {\n";
-        foreach(keys %options){
-            $entry .= "option $_ $options{$_};\n";
-        }
-        if ( !$config->elementExists("/software/components/diskless_server/dhcp_clients")){
-            $entry .= "}\n";
-        }
     }
-    else{
-        if ( $config->elementExists("/software/components/diskless_server/dhcp_clients")){
-            $entry = "subnet $subnet netmask $netmask {\n";
-        }
-        else{
-            $entry = "subnet $subnet netmask $netmask {\n}";
-        }
-    }
-    print $entry;
+    $entry .= "}\n\n";
+#     print $entry;
     return $entry;
 
 }
@@ -656,7 +641,7 @@ sub dhcpdWrite{
             $self->error("Neither search list nor domain name found for diskless server.");
         }
         $value = $config->getValue($base."/dhcp_header/log_facility");
-        print FH "log-facility $value;\n";
+        print FH "log-facility $value;\n\n";
     }
     else{
         # no dhcp_header in profile? Use the template
@@ -683,7 +668,7 @@ sub dhcpdWrite{
         }
         foreach $clientName (keys %clientHash){
             $self->debug(5,"extracting dhcp info for client $clientName");
-            print FH "    host $clientName$domainname {\n";
+            print FH "host $clientName$domainname {\n";
             my %clientValues = $clientHash{$clientName}->getHash();
             foreach $tag (keys %clientValues){
                 my $value = $clientValues{$tag}->getValue();
@@ -698,9 +683,8 @@ sub dhcpdWrite{
                     print FH "\t$dhcpTag{$tag} $value;\n";
                 }
             }
-            print FH "    }\n\n";
+            print FH "}\n\n";
         }
-        print FH "}\n";
     }
     close FH || die "can't close $!";
     my $changes += LC::Check::file("$conf_file",
