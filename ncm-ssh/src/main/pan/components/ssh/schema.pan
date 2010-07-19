@@ -92,6 +92,7 @@ type ssh_client_options_type = {
     "RhostsAuthentication"              ? string with match (SELF, 'yes|no')
     "StrictHostKeyChecking"             ? string with match (SELF, 'yes|no')
     "UsePrivilegedPort"                 ? string with match (SELF, 'yes|no')
+    "GSSAPIDelegateCredentials"         ? string with match (SELF, 'yes|no')
 };
 
 type ssh_daemon_type = {

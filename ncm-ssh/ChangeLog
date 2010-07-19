@@ -1,3 +1,8 @@
+2010-07-19  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.4
+	- Add support for the GSSAPIDelegateCredentials client option.
+
 2010-07-16  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 2.0.3
