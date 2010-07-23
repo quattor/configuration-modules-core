@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.8 : 08/09/09 17:40
+# Version: 1.1.9 : 23/07/10 13:38
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -74,7 +74,6 @@ use constant BOOLEAN_OPTS	=> qw(long_otp_prompt
 				      stay_setuid
 				      env_reset
 				      use_loginclass
-				      passwd_tries
 				      );
 use constant INT_OPTS		=> qw(passwd_tries
 				    loglinelen
@@ -224,7 +223,7 @@ sub write_sudoers {
 		$self->error ("Couldn't open " . FILE_PATH);
 		return;
 	}
-	$fh->print ("# File created by ncm-sudo v. 1.1.8\n",
+	$fh->print ("# File created by ncm-sudo v. 1.1.9\n",
 		    "# Report bugs to CERN's savannah\n".
 		    "# Read man(5) sudoers for understanding the structure ".
 		    "of this file\n");
