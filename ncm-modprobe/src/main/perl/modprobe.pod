@@ -53,7 +53,7 @@ None.
 
 =head1 BUGS
 
-None known.
+Cannot clean out "install" and "remove" lines again.
 
 =head1 AUTHOR
 

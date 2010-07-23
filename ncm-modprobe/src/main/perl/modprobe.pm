@@ -111,10 +111,15 @@ sub process_install
     my ($i, $j, $str);
 
     foreach $i (@{$t->{modules}}) {
+	my $name = $i->{name};
 	if (exists($i->{install})) {
+	    my $command = $i->{install};
 	    foreach $j ($f1, $f2) {
 		$str = ${$j->string_ref()};
-		$str =~ s!^install $i->{name}.*$!install $i->{name} {$i->{install}}!mg;
+		$str =~ s{^install $name\s.*}{}mg;
+		$str .= "install $name $command\n";
+                $self->debug(4, "Added 'install' for $name: $command");
+		$j->set_contents($str);
 	    }
 	}
     }
@@ -129,10 +134,15 @@ sub process_remove
     my ($i, $j, $str);
 
     foreach $i (@{$t->{modules}}) {
+	my $name = $i->{name};
 	if (exists($i->{remove})) {
+	    my $command = $i->{remove};
 	    foreach $j ($f1, $f2) {
 		$str = ${$j->string_ref()};
-		$str =~ s!^remove $i->{name}.*$!remove $i->{name} {$i->{remove}}!mg;
+		$str =~ s{^remove $name\s.*}{}mg;
+		$str .= "remove $name $command\n";
+                $self->debug(4, "Added 'remove' for $name: $command");
+		$j->set_contents($str);
 	    }
 	}
     }
