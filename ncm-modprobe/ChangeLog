@@ -1,3 +1,8 @@
+2010-07-23  Jan IVEN
+
+	* Release: 1.2.1
+	- bug #70562: install/remove doesn't work
+
 2009-07-24  Luis Fernando Muñoz Mejías
 
 	* Release: 1.2.0
