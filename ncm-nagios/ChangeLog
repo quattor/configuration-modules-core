@@ -1,3 +1,8 @@
+2010-07-28  Ronald Starink
+
+	* Release: 1.4.13
+	- Added action_url to host and service types
+
 2010-03-04  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 1.4.12

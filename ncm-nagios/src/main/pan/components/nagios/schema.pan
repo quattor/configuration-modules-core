@@ -97,6 +97,7 @@ type structure_nagios_host = {
 	"notifications_enabled" ? boolean
 	"stalking_options" ? string with match (SELF, "^(o|d|u)$")
 	"register" : boolean = true
+	"action_url" ? string
 };
 
 # Hostgroup definition
@@ -146,6 +147,7 @@ type structure_nagios_service = {
 	"stalking_options" ? stalking_string[]
 	"register" : boolean = true
 	"failure_prediction_enabled" ? boolean
+	"action_url" ? string
 } with has_host_or_hostgroup (SELF);;
 
 # Servicegroup definition:

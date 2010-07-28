@@ -5,7 +5,7 @@
 # File: nagios.pm
 # Implementation of ncm-nagios
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.4.12 : 04/03/10 11:51
+# Version: 1.4.13 : 28/07/10 12:08
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
