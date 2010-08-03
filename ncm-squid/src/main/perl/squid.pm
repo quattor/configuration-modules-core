@@ -20,10 +20,10 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 
 use NCM::Check;
-use LC::Process qw(run output);
+use CAF::Process;
 use LC::File qw(copy destroy differ file_contents makedir move path_for_open remove);
 use LC::Fatal qw(chown);
-
+use POSIX;
 
 ############################################################################
 # Globals
@@ -143,14 +143,14 @@ sub Configure {
     # Initialization.
 
     # check now if squid is running
-    $cmd = '/sbin/service squid status';
-    $self->debug(5, "cmd: $cmd");
-    unless(run($cmd)) {
-        $self->error("command $cmd failed");
-        &cleanup($self, $first_run);
+    CAF::Process->new([qw(/sbin/service squid status)],
+		      log => $self)->run();
+    if ($? &&  WEXITSTATUS($?) != 3) {
+        $self->error("Failed to check squid daemon status");
+        $self->cleanup($first_run);
         return;
     }
-    $is_stopped = $?;
+    $is_stopped = 0;
 
     # Look for the signature file.
     unless(-e $squidSignFilePath) {
@@ -158,18 +158,18 @@ sub Configure {
         # save the config file and replace it with the default one
         unless(copy($squidConfFilePath, $squidCBakFilePath)) {
             $self->error("cannot create $squidCBakFilePath");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         unless(copy($squidCDefFilePath, $squidConfFilePath)) {
             $self->error("cannot create $squidConfFilePath");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         # put a signature file in place. Record here the otiginal status
         unless(open(SFILE, '>', path_for_open($squidSignFilePath))) {
             $self->error("cannot create $squidSignFilePath");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         print(SFILE <<EOF
@@ -185,7 +185,7 @@ EOF
     my ($squid_uid, $squid_gid) = (getpwnam($squid_user))[2, 3];
     unless(defined($squid_uid) and defined($squid_gid)) {
         $self->error("cannot get 'squid' uid/gid");
-        &cleanup($self, $first_run);
+        $self->cleanup( $first_run);
         return;
     }
     $self->debug(5, "squid_uid = $squid_uid, squid_gid = $squid_gid");
@@ -193,7 +193,7 @@ EOF
     # all modifications are done to a temporary file
     unless(copy($squidConfFilePath, $squidCTmpFilePath)) {
         $self->error("cannot create $squidCTmpFilePath");
-        &cleanup($self, $first_run);
+        $self->cleanup($first_run);
         return;
     }
 
@@ -215,7 +215,7 @@ EOF
             my $boptname = $bce->getName();
             unless($bce->isProperty()) {
                 $self->error("$boptname is not a property");
-                &cleanup($self, $first_run);
+                $self->cleanup($first_run);
                 return;
             }
             my $bval = $bce->getValue();
@@ -250,7 +250,7 @@ EOF
             my $soptname = $sce->getName();
             unless($sce->isProperty()) {
                 $self->error("$soptname is not a property");
-                &cleanup($self, $first_run);
+                $self->cleanup($first_run);
                 return;
             }
             my $sval = $sce->getValue();
@@ -280,7 +280,7 @@ EOF
     # some stuff is mandatory here
     unless($config->elementExists($multiValPath)) {
         $self->error("cannot get $multiValPath. At least one 'acl' and one 'http_access' are needed");
-        &cleanup($self, $first_run);
+        $self->cleanup($first_run);
         return;
     }
 
@@ -292,7 +292,7 @@ EOF
         my $moptname = $mce->getName();
         unless($mce->isResource()) {
             $self->error("$moptname is not a resource");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         $self->debug(5, "MULTI resource: $moptname");
@@ -308,12 +308,12 @@ EOF
                 my $property = $entry{name};
                 unless(defined($property)) {
                     $self->error("undefined name for acl");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("name is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $name = $property->getValue();
@@ -322,12 +322,12 @@ EOF
                 $property = $entry{type};
                 unless(defined($property)) {
                     $self->error("undefined type for acl");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("type is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $type = $property->getValue();
@@ -337,12 +337,12 @@ EOF
                 my $resource = $entry{targets};
                 unless(defined($resource)) {
                     $self->error("undefined targets for acl");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($resource->isResource()) {
                     $self->error("targets is not a resource");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my @targets = ();
@@ -350,7 +350,7 @@ EOF
                     my $targ = $resource->getNextElement();
                     unless($targ->isProperty()) {
                         $self->error("target is not a property");
-                        &cleanup($self, $first_run);
+                        $self->cleanup($first_run);
                         return;
                     }
                     push(@targets, $targ->getValue());
@@ -378,12 +378,12 @@ EOF
                 my $property = $entry{type};
                 unless(defined($property)) {
                     $self->error("undefined type for cache_dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("type is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $type = $property->getValue();
@@ -392,12 +392,12 @@ EOF
                 $property = $entry{directory};
                 unless(defined($property)) {
                     $self->error("undefined directory for cache_dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("directory is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $directory = $property->getValue();
@@ -406,12 +406,12 @@ EOF
                 $property = $entry{MBsize};
                 unless(defined($property)) {
                     $self->error("undefined MBsize for cache_dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("MBsize is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $MBsize = $property->getValue();
@@ -420,12 +420,12 @@ EOF
                 $property = $entry{level1};
                 unless(defined($property)) {
                     $self->error("undefined level1 for cache_dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("level1 is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $level1 = $property->getValue();
@@ -434,12 +434,12 @@ EOF
                 $property = $entry{level2};
                 unless(defined($property)) {
                     $self->error("undefined level2 for cache_dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("level2 is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $level2 = $property->getValue();
@@ -462,12 +462,12 @@ EOF
                 my $property = $entry{policy};
                 unless(defined($property)) {
                     $self->error("undefined policy for http_access");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("policy is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $policy = $property->getValue();
@@ -477,12 +477,12 @@ EOF
                 my $resource = $entry{acls};
                 unless(defined($resource)) {
                     $self->error("undefined acls for http_access");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($resource->isResource()) {
                     $self->error("acls is not a resource");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my @acls = ();
@@ -490,7 +490,7 @@ EOF
                     my $acl = $resource->getNextElement();
                     unless($acl->isProperty()) {
                         $self->error("acl is not a property");
-                        &cleanup($self, $first_run);
+                        $self->cleanup($first_run);
                         return;
                     }
                     push(@acls, $acl->getValue());
@@ -522,12 +522,12 @@ EOF
                 my $property = $entry{pattern};
                 unless(defined($property)) {
                     $self->error("undefined pattern for refresh_pattern");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("pattern is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $pattern = $property->getValue();
@@ -536,12 +536,12 @@ EOF
                 $property = $entry{min};
                 unless(defined($property)) {
                     $self->error("undefined min for refresh_pattern");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("min is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $min = $property->getValue();
@@ -550,12 +550,12 @@ EOF
                 $property = $entry{percent};
                 unless(defined($property)) {
                     $self->error("undefined percent for refresh_pattern");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("percent is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $percent = $property->getValue();
@@ -564,12 +564,12 @@ EOF
                 $property = $entry{max};
                 unless(defined($property)) {
                     $self->error("undefined max for refresh_pattern");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless($property->isProperty()) {
                     $self->error("max is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 my $max = $property->getValue();
@@ -613,7 +613,7 @@ EOF
                 my $serv = $mce->getNextElement();
                 unless($serv->isProperty()) {
                     $self->error("server is not a property");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 push(@servers, $serv->getValue());
@@ -643,21 +643,16 @@ EOF
     $reload = differ($squidCTmpFilePath, $squidConfFilePath);
     unless(defined($reload)) {
         $self->error("cannot compare files");
-        &cleanup($self, $first_run);
+        $self->cleanup($first_run);
         return;
     }
     if($reload) {
         # first check that the new config is good
-        my $cmd = '/usr/sbin/squid -k parse -f '.$squidCTmpFilePath;
-        $self->debug(5, "cmd: $cmd");
-        unless(run($cmd)) {
-            $self->error("command $cmd failed");
-            &cleanup($self, $first_run);
-            return;
-        }
-        if($?) {
-            $self->error("configuration error! Check template pro_software_component_squid");
-            &cleanup($self, $first_run);
+	CAF::Process->new([qw(/usr/sbin/squid -k parse -f), $squidCTmpFilePath],
+			  log => $self)->run();
+	if ($?) {
+            $self->error("Wrong config file: $squidCTmpFilePath");
+            $self->cleanup($first_run);
             return;
         }
 
@@ -665,13 +660,13 @@ EOF
         %new_swaps = &get_swap_config($self, $squidCTmpFilePath, 0);
         if($new_swaps{'_ERROR_'}) {
             $self->error("cannot get new swap configuration");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         %current_swaps = &get_swap_config($self, $squidConfFilePath, 1);
         if($current_swaps{'_ERROR_'}) {
             $self->error("cannot get current swap configuration");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
         # since the default swap is implicitly pre-configured, add it if missing
@@ -699,15 +694,14 @@ EOF
             # the service must be stopped!
             unless($is_stopped) {
                 # squid is running
-                $cmd = '/sbin/service squid stop';
-                $self->debug(5, "cmd: $cmd");
-                unless(run($cmd)) {
-                    $self->error("command $cmd failed");
-                    &cleanup($self, $first_run);
+		CAF::Process->new([qw(/sbin/service squid stop)],
+				  log => $self)->run();
+		if ($?) {
+                    $self->error("Failed to stop Squid");
+                    $self->cleanup($first_run);
                     return;
                 }
-                 # need a check on $? here???
-                 $is_stopped = 1;
+		$is_stopped = 1;
             }
             # reconfigure swaps
             my $dir = '';
@@ -721,25 +715,25 @@ EOF
             for $dir (keys(%new_swaps)) {
                 unless(makedir($dir, 0750)) {
                     $self->error("cannot make swap $dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
                 unless(chown($squid_uid, $squid_gid, $dir)) {
                     $self->error("cannot chown swap $dir");
-                    &cleanup($self, $first_run);
+                    $self->cleanup($first_run);
                     return;
                 }
             $self->info("swap $dir [$new_swaps{$dir}] created");
             }
             # rebuild actually the swap structure
-            $cmd = '/usr/sbin/squid -z -f '.$squidCTmpFilePath;
-            $self->debug(5, "cmd: $cmd");
-            my $cmdres = output($cmd);
+	    my $cmdres = CAF::Process->new([qw(/usr/sbin/squid -z -f),
+					    $squidCTmpFilePath],
+					   log => $self)->output();
             chomp($cmdres);
             $self->verbose("$cmdres");
-            if($cmdres =~ /FATAL/) {
-                $self->error("command $cmd failed");
-                &cleanup($self, $first_run);
+            if($? || $cmdres =~ /FATAL/) {
+                $self->error("Failed to rebuild Squid swap structure");
+                $self->cleanup($first_run);
                 return;
             }
         }
@@ -748,23 +742,21 @@ EOF
         $self->debug(5, "installing new config");
         unless(copy($squidCTmpFilePath, $squidConfFilePath)) {
             $self->error("cannot install $squidConfFilePath");
-            &cleanup($self, $first_run);
+            $self->cleanup($first_run);
             return;
         }
 
         # service re-loading/starting here
-        $cmd = $is_stopped ?
-                '/sbin/service squid start' :
-                '/sbin/service squid reload';
-        $self->debug(5, "cmd: $cmd");
-        unless(run($cmd)) {
-            $self->error("command $cmd failed");
-            &cleanup($self, $first_run);
+	CAF::Process->new(['/sbin/service squid',
+			   $is_stopped ? 'start' : 'reload'])->run();
+	if ($?) {
+            $self->error("Failed to reload Squid with the new configuration");
+            $self->cleanup($first_run);
             return;
         }
     }
 
-    unless(&cleanup($self, 0)) {
+    unless($self->cleanup(0)) {
         $self->warn("cleanup failed");
     }
 
@@ -783,164 +775,164 @@ sub Unconfigure {
     my %old_swaps = ();
     my $reload = 0;
 
+    my $cmd;
+
     # proceed only if the signature file is in place
-    if(-e $squidSignFilePath) {
-        # check if squid is running
-        my $cmd = '/sbin/service squid status';
-        $self->debug(5, "cmd: $cmd");
-        unless(run($cmd)) {
-            $self->error("command $cmd failed");
-            return;
-        }
-        my $is_stopped = $?;
-        # get the original running status
-        my $sigf_contents = file_contents($squidSignFilePath);
-        unless(defined($sigf_contents)) {
-            $self->error("cannot read $squidSignFilePath");
-            return;
-        }
-        my $was_stopped = '';
-        for(split(/\n/, $sigf_contents)) {
-            if(/^\s*WAS_STOPPED\s*=\s*(\d+)/) {
-                $was_stopped = $1 if(defined($1));
-                last;
-            }
-        }
-        if($was_stopped eq '') {
-            $self->error("missing/wrong WAS_STOPPED line in signature file $squidSignFilePath");
-            return;
-        }
-
-        # Get literal u/gid for the squid user
-        my ($squid_uid, $squid_gid) = (getpwnam($squid_user))[2, 3];
-        unless(defined($squid_uid) and defined($squid_gid)) {
-            $self->error("cannot get 'squid' uid/gid");
-            return;
-        }
-        $self->debug(5, "squid_uid = $squid_uid, squid_gid = $squid_gid");
-
-        # check original and current configs
-        $reload = differ($squidCBakFilePath, $squidConfFilePath);
-        unless(defined($reload)) {
-            $self->error("cannot compare files");
-            return;
-        }
-        $self->debug(5, "reload=$reload, is_stopped=$is_stopped, was_stopped=$was_stopped");
-
-        # get current and old swap configurations
-        %current_swaps = &get_swap_config($self, $squidConfFilePath, 1);
-        if($current_swaps{'_ERROR_'}) {
-            $self->error("cannot get current swap configuration");
-            return;
-        }
-        %old_swaps = &get_swap_config($self, $squidCBakFilePath, 0);
-        if($old_swaps{'_ERROR_'}) {
-            $self->error("cannot get new swap configuration");
-            return;
-        }
-
-        # ...since squid insists in looking for its default swap dir, be sure it
-        # is re-built
-        $old_swaps{$squidDefSwapDir} = $squidDefSwapPar
-            unless($old_swaps{$squidDefSwapDir});
-        $current_swaps{$squidDefSwapDir} = $squidDefSwapPar
-            unless(%current_swaps);
-        $self->debug(5, "current swaps: ".join(' ', keys(%current_swaps)));
-        $self->debug(5, "old swaps    : ".join(' ', keys(%old_swaps)));
-        # ...compare old and current sets and erase the common tuples
-        if(%current_swaps) {
-            for(keys(%old_swaps)) {
-                if(defined($current_swaps{$_}) and
-                    ($current_swaps{$_} eq $old_swaps{$_})) {
-                    # no changes on this swap directive
-                    delete($current_swaps{$_});
-                    delete($old_swaps{$_});
-                }
-            }
-        }
-
-        # now 'old_swaps' holds swaps to be re-created, and those to be deleted
-        # are in 'current_swaps'.
-        if(%current_swaps or %old_swaps) {
-            # the service must be stopped!
-            unless($is_stopped) {
-                # squid is running
-                $cmd = '/sbin/service squid stop';
-                $self->debug(5, "cmd: $cmd");
-                unless(run($cmd)) {
-                    $self->error("command $cmd failed");
-                    return;
-                }
-                # need a check on $? here???
-                $is_stopped = 1;
-            }
-            # reconfigure swaps
-            my $dir = '';
-            for $dir (keys(%current_swaps)) {
-                unless(destroy($dir)) {
-                    # this is not critical
-                    $self->warn("cannot remove swap $dir");
-                }
-                $self->info("swap $dir [$current_swaps{$dir}] removed");
-            }
-            for $dir (keys(%old_swaps)) {
-                unless(makedir($dir, 0750)) {
-                    $self->error("cannot make swap $dir");
-                    return;
-                }
-                unless(chown($squid_uid, $squid_gid, $dir)) {
-                    $self->error("cannot chown swap $dir");
-                    return;
-                }
-                $self->info("swap $dir [$old_swaps{$dir}] created");
-            }
-            # rebuild actually the swap structure
-            $cmd = '/usr/sbin/squid -z -f '.$squidCBakFilePath;
-            $self->debug(5, "cmd: $cmd");
-            my $cmdres = output($cmd);
-            chomp($cmdres);
-            $self->verbose("$cmdres");
-            if($cmdres =~ /FATAL/) {
-                $self->error("command $cmd failed");
-                return;
-            }
-            $reload = 1;
-            # actual restart is performed after having restored the original
-            # config...
-        }
-
-        # restore the original config
-        unless(&cleanup($self, 1)) {
-            $self->error("cleanup failed");
-            return;
-        }
-        $self->debug(5, "reload=$reload, is_stopped=$is_stopped, was_stopped=$was_stopped");
-        $cmd = '';
-        if($reload) {
-            # restart the service only if it was originally running
-            unless($was_stopped) {
-                $cmd = $is_stopped ?
-                        '/sbin/service squid start' :
-                        '/sbin/service squid reload';
-            }
-            elsif(!$is_stopped) {
-                $cmd = '/sbin/service squid stop';
-            }
-
-        }
-        elsif($was_stopped and !$is_stopped) {
-                $cmd = '/sbin/service squid stop';
-        }
-        # run the command
-        if($cmd) {
-            $self->debug(5, "cmd: $cmd");
-            unless(run($cmd)) {
-                $self->error("command $cmd failed");
-                return;
-            }
-        }
+    return 1 unless -e $squidSignFilePath;
+    # check if squid is running
+    CAF::Process->new([qw(/sbin/service squid status)],
+		      log => $self)->run();
+    if ($?) {
+	$self->error("Failed to query squid status");
+	return;
+    }
+    my $is_stopped = $?;
+    # get the original running status
+    my $sigf_contents = file_contents($squidSignFilePath);
+    unless(defined($sigf_contents)) {
+	$self->error("cannot read $squidSignFilePath");
+	return;
+    }
+    my $was_stopped = '';
+    for(split(/\n/, $sigf_contents)) {
+	if(/^\s*WAS_STOPPED\s*=\s*(\d+)/) {
+	    $was_stopped = $1 if(defined($1));
+	    last;
+	}
+    }
+    if($was_stopped eq '') {
+	$self->error("missing/wrong WAS_STOPPED line in signature file $squidSignFilePath");
+	return;
     }
 
+    # Get literal u/gid for the squid user
+    my ($squid_uid, $squid_gid) = (getpwnam($squid_user))[2, 3];
+    unless(defined($squid_uid) and defined($squid_gid)) {
+	$self->error("cannot get 'squid' uid/gid");
+	return;
+    }
+    $self->debug(5, "squid_uid = $squid_uid, squid_gid = $squid_gid");
+
+    # check original and current configs
+    $reload = differ($squidCBakFilePath, $squidConfFilePath);
+    unless(defined($reload)) {
+	$self->error("cannot compare files");
+	return;
+    }
+    $self->debug(5, "reload=$reload, is_stopped=$is_stopped, was_stopped=$was_stopped");
+
+    # get current and old swap configurations
+    %current_swaps = &get_swap_config($self, $squidConfFilePath, 1);
+    if($current_swaps{'_ERROR_'}) {
+	$self->error("cannot get current swap configuration");
+	return;
+    }
+    %old_swaps = &get_swap_config($self, $squidCBakFilePath, 0);
+    if($old_swaps{'_ERROR_'}) {
+	$self->error("cannot get new swap configuration");
+	return;
+    }
+
+    # ...since squid insists in looking for its default swap dir, be sure it
+    # is re-built
+    $old_swaps{$squidDefSwapDir} = $squidDefSwapPar
+	unless($old_swaps{$squidDefSwapDir});
+    $current_swaps{$squidDefSwapDir} = $squidDefSwapPar
+	unless(%current_swaps);
+    $self->debug(5, "current swaps: ".join(' ', keys(%current_swaps)));
+    $self->debug(5, "old swaps    : ".join(' ', keys(%old_swaps)));
+    # ...compare old and current sets and erase the common tuples
+    if(%current_swaps) {
+	for(keys(%old_swaps)) {
+	    if(defined($current_swaps{$_}) and
+		   ($current_swaps{$_} eq $old_swaps{$_})) {
+		# no changes on this swap directive
+		delete($current_swaps{$_});
+		delete($old_swaps{$_});
+	    }
+	}
+    }
+
+    # now 'old_swaps' holds swaps to be re-created, and those to be deleted
+    # are in 'current_swaps'.
+    if(%current_swaps or %old_swaps) {
+	# the service must be stopped!
+	unless($is_stopped) {
+	    # squid is running
+	    CAF::Process->new([qw(/sbin/service squid stop)],
+			      log => $self)->run();
+	    if ($?) {
+		$self->error("Failed to stop squid");
+		return;
+	    }
+	    # need a check on $? here???
+	    $is_stopped = 1;
+	}
+	# reconfigure swaps
+	my $dir = '';
+	for $dir (keys(%current_swaps)) {
+	    unless(destroy($dir)) {
+		# this is not critical
+		$self->warn("cannot remove swap $dir");
+	    }
+	    $self->info("swap $dir [$current_swaps{$dir}] removed");
+	}
+	for $dir (keys(%old_swaps)) {
+	    unless(makedir($dir, 0750)) {
+		$self->error("cannot make swap $dir");
+		return;
+	    }
+	    unless(chown($squid_uid, $squid_gid, $dir)) {
+		$self->error("cannot chown swap $dir");
+		return;
+	    }
+	    $self->info("swap $dir [$old_swaps{$dir}] created");
+	}
+	# rebuild actually the swap structure
+	my $cmdres = CAF::Process->new([qw(/usr/sbin/squid -z -f),
+					$squidCBakFilePath],
+				       log =>$self)->output();
+	chomp($cmdres);
+	$self->verbose("$cmdres");
+	if($? || $cmdres =~ /FATAL/) {
+	    $self->error("command $cmd failed");
+	    return;
+	}
+	$reload = 1;
+	# actual restart is performed after having restored the original
+	# config...
+    }
+
+    # restore the original config
+    unless($self->cleanup(1)) {
+	$self->error("cleanup failed");
+	return;
+    }
+    $self->debug(5, "reload=$reload, is_stopped=$is_stopped, was_stopped=$was_stopped");
+    if($reload) {
+	# restart the service only if it was originally running
+	unless($was_stopped) {
+	    $cmd = CAF::Process->new(['/sbin/service squid',
+				      ($is_stopped ? 'start' : 'reload')],
+				     log => $self);
+	}
+	elsif(!$is_stopped) {
+	    $cmd = CAF::Process->new([qw(/sbin/service squid stop)],
+				     log => $self);
+	}
+        elsif($was_stopped and !$is_stopped) {
+	    $cmd = CAF::Process->new([qw(/sbin/service squid stop)],
+				     log => $self);
+        }
+        # run the command
+	if($cmd) {
+	    $cmd->run();
+	    if ($?) {
+		$self->error("Failed to restart or stop the service");
+		return;
+	    }
+	}
+    }
     return;
 }
 

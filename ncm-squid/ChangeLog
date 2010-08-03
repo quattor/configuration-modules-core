@@ -1,3 +1,8 @@
+2010-08-03  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 0.3.3
+	- Stop relying on subshells.
+
 2007-12-19  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
 
 	* Release: 0.3.2
