@@ -1,3 +1,12 @@
+2010-08-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.5
+	- Condrestart instead of reload the service.
+
+	At instalation time, if no post_reboot script was used, we saw the
+	component failing because ssh hadn't started yet. This fixes the
+	issue.
+
 2010-07-19  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 2.0.4

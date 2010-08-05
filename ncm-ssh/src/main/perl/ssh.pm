@@ -100,12 +100,12 @@ sub Configure {
           }
         }
 
-        #reload if changed the conf-file
+        #restart if changed the conf-file
         if($cnt) {
           chmod $perms,$ssh_config_file or $self->warn("cannot reset permissions on $ssh_config_file ($!)");
           if ( $component eq 'daemon' ) {
             $self->info("Restarting $component...");
-	    CAF::Process->new([qw(/sbin/service sshd reload)],
+	    CAF::Process->new([qw(/sbin/service sshd condrestart)],
 			      log => $self)->run();
 	    $self->error("Failed to reload $component") if $?;
           }
