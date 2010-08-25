@@ -77,7 +77,7 @@ sub Configure($$@) {
         }
 
   unlink $to_unlink;
-        $self->log("error ($?) deleting file $_") if $?;
+        $self->log("error ($?) deleting file $to_unlink") if $?;
     }
 
     # Only continue if the entries line is defined. 
