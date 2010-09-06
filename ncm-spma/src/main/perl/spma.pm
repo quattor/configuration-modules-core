@@ -73,58 +73,14 @@ sub _unescape ($) {
 #
 sub get_repositories($) {
     my ($self, $config) = @_;
-
-    #
-    # get the repositories
-    #
     my %repository=();
-
     my $path='/software/repositories';
+    my $rep_list = $config->getElement($path)->getTree();
 
-    my $rep_list=$config->getElement($path);
-    unless (defined $rep_list) {
-        $EC->ignore_error();
-        $self->error('cannot access config path: '.$path);
-        return undef;
-    }
-
-    my ($rep_el,$rep_el_name,$rep_name,$rep_name_str,$url);
-    my ($rep_prot,$rep_prot_entry,$rep_prot_entry_name,$rep_prot_url);
-    my ($rep_prot_name,$rep_prot_name_str);
-
-    #
-    # the NVA API navigation functions would profit from
-    # shortcut methods for relative navigation,
-    # something like
-    #
-    # $newelement=$oldelement->down('relative/path')
-    #
-    # and probably also
-    #
-    # $newelvalue=$oldelement->downvalue('relative/path');
-    #
-    # instead of having to instantiate a new element from
-    # $config
-    #
-
-    while($rep_list->hasNextElement()) {
-        $rep_el=$rep_list->getNextElement();
-        $rep_el_name=$rep_el->getName();
-        $rep_name=$config->getElement($path.'/'.$rep_el_name.'/name');
-        $rep_name_str=$rep_name->getValue();
-
-        $rep_prot=$config->getElement($path.'/'.$rep_el_name.'/protocols');
-        while ($rep_prot->hasNextElement()) {
-            $rep_prot_entry=$rep_prot->getNextElement();
-            $rep_prot_entry_name=$rep_prot_entry->getName();
-            $rep_prot_name=$config->getElement
-                ($path.'/'.$rep_el_name.'/protocols/'.
-                $rep_prot_entry_name.'/name');
-            $rep_prot_url=$config->getElement
-                ($path.'/'.$rep_el_name.'/protocols/'.
-                $rep_prot_entry_name.'/url');
-            $repository{$rep_name_str}{$rep_prot_name->getValue()}=
-                $rep_prot_url->getValue();
+    for my $rep (@{$rep_list}) {
+        for my $prot (@{$rep->{protocols}}) {
+            $self->debug(3, "repository: " . $rep->{name} . " at " . $prot->{url});
+            $repository{$rep->{name}}{$prot->{name}}=$prot->{url};
         }
     }
     return \%repository;
@@ -136,111 +92,89 @@ sub get_repositories($) {
 # returns a reference to an array with the list of
 # target packages.
 # each element of the array is a reference to a hash:
-# 'rep'     => repository name (eg. 'CERN_CC')
 # 'name'    => package name    (eg. 'emacs')
 # 'version' => version-release (eg. '20.4-3')
-# 'arch'    => ref(@array) with architectures (eg. i386,ia64)
-#
-# 'flags'   => flags ref(%hash) with flagtype=>value ('reboot'=>'true')
+# 'arch'    => ref(%hash) with arch=>repository (eg. 'i386=>'repo_A', 'ia64'=>'repo_B')
+# 'flags'   => ref(%hash) with flagtype=>value ('reboot'=>'true')
 #
 sub get_packages ($) {
-    my ($self,$config,$rep)=@_;
+    my ($self,$config,$rep) = @_;
 
-    my @pkg_list=();
+    my $error = 0;
+    my $path = '/software/packages';
 
-    my $error=0;
-    my $path='/software/packages';
-
-    my ($pkg_el,$pkg_name,$pkg_verlist,$pkgver,$pkgver_name);
-    my ($pkgver_arch,$pkgver_rep,$pkg_flaglist,$pkg_flag,$use_rep);
-
-    my $pkg_list=$config->getElement($path);
-    while ($pkg_list->hasNextElement()) {
-        $pkg_el=$pkg_list->getNextElement();
-        $pkg_name=$pkg_el->getName();
-        #
-        # go for the versions
-        #
-        $pkg_verlist=$config->getElement($path.'/'.$pkg_name);
-
-        while($pkg_verlist->hasNextElement()) {
-            $pkgver=$pkg_verlist->getNextElement();
-            $pkgver_name=$pkgver->getName();
-
-            $self->debug(3,"package: $pkg_name version: $pkgver_name");
-            $pkgver_arch=$config->getElement($path.'/'.$pkg_name.
-                                            '/'.$pkgver_name.'/arch');
-            if (!defined $pkgver_arch) {
-                $self->error('cannot get architecture for '.
-                            &_unescape($pkg_name).'-'.&_unescape($pkgver_name));
-                $error++;
-                next;
+    my @package_list = ();
+    my $pkg_list = $config->getElement($path)->getTree();
+    # Iterate over package names
+    for my $pkg (sort keys %{$pkg_list}) {
+        # Iterate over versions
+        for my $ver (sort keys %{$pkg_list->{$pkg}}) {
+            my $arch_list = {};
+            my $arch = $pkg_list->{$pkg}->{$ver}->{arch};
+            my $use_rep = '';
+            # Single repository for all architectures
+            if ( defined($pkg_list->{$pkg}->{$ver}->{repository}) ) {
+                $use_rep = $pkg_list->{$pkg}->{$ver}->{repository};
             }
-            my @arch_list=();
-            if ($pkgver_arch->isProperty()) {
-                # "classic" schema
-                # arch is a property and specifies directly an architecture
-                if ($pkgver_arch->getValue() eq '') {
-                    $EC->ignore_error();
-                    $self->error('empty architecture for '.
-                                &_unescape($pkg_name).'-'.&_unescape($pkgver_name));
-                    $error++;
-                    next;
+            # Architecture now available in three flavors
+            if (ref($arch) eq 'HASH') {
+                # Architecture comes from a nlist
+                for my $i (keys %{$arch}) {
+                    # Value is the repository name
+                    $arch_list->{$i} = $arch->{$i};
+                }
+            } else {
+                # No repository was specified
+                if ( $use_rep eq '' ) {
+                    if ( scalar(keys(%{$rep})) == 1 ) {
+                        # One repository for all packages
+                        $use_rep = (keys%{$rep})[0];
+                    } else {
+                        $EC->ignore_error();
+                        $self->error('cannot guess repository for ' . &_unescape($pkg)
+                            . '-' . &_unescape($ver));
+                        $error++;
+                        next;
+                    }
+                }
+                if ( ref($arch) eq 'ARRAY') {
+                    # Architecture comes from a list
+                    for my $i (@{$arch}) {
+                        $arch_list->{$i} = $use_rep;
+                    }
                 } else {
-                    @arch_list=($pkgver_arch->getValue());
-                }
-            } else {
-                # "new" schema
-                # arch is a list of architectures
-                @arch_list=map {$_->getValue()} ($pkgver_arch->getList());
-                $self->debug(3,"        arch: ".join (',',@arch_list));
-            }
-
-            $pkgver_rep=$config->getElement($path.'/'.$pkg_name.
-                                            '/'.$pkgver_name.'/repository');
-            if (!defined $pkgver_rep || $pkgver_rep->getValue() eq '') {
-                $EC->ignore_error();
-                #
-                # if more than one repository available, give up, otherwise
-                # assume unique repository is the one to use
-                #
-                my @reps=keys %{$rep};
-                if (scalar @reps >1) {
-                    $self->error('cannot guess repository for '.
-                                &_unescape($pkg_name).'-'.&_unescape($pkgver_name));
-                    $error++;
-                    next;
-                } else {
-                    $use_rep=$reps[0];
-                }
-            } else {
-                $use_rep=$pkgver_rep->getValue();
-            }
-            #
-            # get the per package flags, if any
-            #
-            my %flags=();
-            unless ($pkg_flaglist=$config->getElement($path.'/'.$pkg_name.
-                                                    '/'.$pkgver_name.'/flags')) {
-                $EC->ignore_error();
-            } else {
-                while ($pkg_flaglist->hasNextElement()) {
-                    $pkg_flag=$pkg_flaglist->getNextElement();
-                    $flags{$pkg_flag->getName()}=$pkg_flag->getValue();
+                    if ( $arch eq '' ) {
+                        # Architecture comes from a property
+                        $EC->ignore_error();
+                        $self->error('empty architecture for ' . &_unescape($pkg)
+                            . '-' . &_unescape($ver));
+                        $error++;
+                        next;
+                    } else {
+                        $arch_list->{$arch} = $use_rep;
+                    }
                 }
             }
-
-            push(@pkg_list, {
-                    'rep'     => $use_rep,
-                    'name'    => &_unescape($pkg_name),
-                    'version' => &_unescape($pkgver_name),
-                    'arch'    => \@arch_list,
-                    'flags'   => \%flags,
-                }
-            );
+            # Get flags, if any
+            my %flags = ();
+            if ( defined($pkg_list->{$pkg}->{$ver}->{flags}) ) {
+                %flags = $pkg_list->{$pkg}->{$ver}->{flags};
+            }
+            # Output for debugging
+            $self->debug(3, "package: " . &_unescape($pkg)
+                . "; version: " . &_unescape($ver)
+                . "; arch: " . join(',', keys %{$arch_list})
+                . "; reps: " . join(',', values %{$arch_list})
+                . "; flags: " . join(',', %flags));
+            # Add to package list
+            push(@package_list, {
+                'name' => &_unescape($pkg),
+                'version' => &_unescape($ver),
+                'arch' => $arch_list,
+                'flags' => \%flags});
         }
     }
-    return $error ? undef : \@pkg_list;
+    return $error ? undef : \@package_list;
 }
 
 
@@ -374,34 +308,37 @@ sub update_spmaconf_file($$$) {
 sub write_trgtconf_file($$$) {
     my ($self, $hr_rep, $ar_pgks, $trgt_fh) = @_;
 
-    print $trgt_fh "#\n#\n# generated by NCM SPMA component at ".scalar(localtime)."\n#\n#\n";
+    print $trgt_fh "#\n#\n# generated by NCM SPMA component at "
+        . scalar(localtime) . "\n#\n#\n";
     my ($i, $ver, $rel);
     foreach $i (@$ar_pgks) {
         # SPMA wants separate version and release
-        ($ver,$rel) = split('-',$i->{'version'});
-        unless (exists($hr_rep->{$i->{'rep'}}{'http'})) {
-            $self->error ("no HTTP protocol found for repository ".$i->{'rep'});
-            return;
-            # this is arbitrary. In a next version,
-            # there should be the possibility of specifying
-            # which protocols are acceptable (ordered list)
-        }
-
-        #
-        # flags
-        #
-        my (@flags,$f);
+        ($ver, $rel) = split('-', $i->{'version'});
+        # Flags
+        my (@flags, $f);
         foreach $f (keys %{$i->{'flags'}}) {
             if ($i->{'flags'}->{$f} eq 'true') {
-                push(@flags,uc($f));
+                push(@flags, uc($f));
             }
         }
-
-        my $arch;
-        foreach $arch (@{$i->{'arch'}}) {
-            print $trgt_fh $hr_rep->{$i->{'rep'}}{'http'} .' '.$i->{'name'}.
-                ' '.$ver.' '.$rel.' '.$arch.' '.
-                join(' ',@flags)."\n";
+        # Print one line per architecture
+        for my $arch ( sort keys %{$i->{'arch'}} ) {
+            my $rep = $i->{'arch'}->{$arch};
+            # Check protocol is 'http'
+            unless ( exists($hr_rep->{$rep}{'http'}) ) {
+                # this is arbitrary. In a next version,
+                # there should be the possibility of specifying
+                # which protocols are acceptable (ordered list)
+                $self->error ("no HTTP protocol found for repository " . $rep);
+                return;
+            }
+            # Line to print
+            my $line = $hr_rep->{$rep}{'http'} . ' ' .$i->{'name'} . ' '
+                . $ver . ' ' . $rel . ' ' . $arch . ' ' . join(' ', @flags);
+            # Output for debugging
+            $self->debug(4, $line);
+            # Print to file handle
+            print $trgt_fh $line . "\n";
         }
     }
 
@@ -414,7 +351,6 @@ sub Configure {
 ##########################################################################
     my ($self,$config)=@_;
 
-    my $tmpdir;
     unless ($config->elementExists('/software/packages') &&
             $config->elementExists('/software/repositories')) {
         $self->info("/software/repositories or /software/packages ",
@@ -422,6 +358,7 @@ sub Configure {
         return;
     }
 
+    my $tmpdir;
     if ($config->elementExists('/software/components/spma/tmpdir')) {
         $tmpdir = $config->getElement('/software/components/spma/tmpdir')->getValue();
         $self->debug(1, "tmpdir defined in spma : $tmpdir");

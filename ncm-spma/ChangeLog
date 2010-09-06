@@ -1,15 +1,15 @@
-2010-05-26  <unknown>
+2010-09-06  Victor Mendoza
+
+	* Release: 1.8.0
+	- perl module update, compatible with v2.0 schema
+
+2010-05-26  Nick Williams
 
 	* Release: 1.7.3
 	- support proxyrandom in the config for spma
 	
 	spma 1.11.6 supports "proxyrandom" as an option. This release provides
 	support for that field within the spma.conf file.
-
-2010-05-26  Nick Williams
-
-	* Release: 1.7.3
-	- Provide proxyrandom support
 
 2010-05-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
