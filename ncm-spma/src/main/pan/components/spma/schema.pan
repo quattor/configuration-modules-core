@@ -21,9 +21,10 @@ type SOFTWARE_PACKAGE_FLAGS = {
     "unwanted" ? boolean # "Unwanted package ?"
 };
 
+type SOFTWARE_PACKAGE_REP = string with repository_exists(SELF,"/software/repositories");
+
 type SOFTWARE_PACKAGE = {
-    "arch" : string[] # "Package architectures"
-    "repository" ? string with repository_exists(SELF,"/software/repositories") # "Repository name"
+    "arch" : SOFTWARE_PACKAGE_REP{} # architectures
     "components" ? string[] # "Depending components"
     "flags" ?  SOFTWARE_PACKAGE_FLAGS
 };
@@ -71,3 +72,5 @@ type component_spma_type = {
 };
 
 bind "/software/components/spma" = component_spma_type;
+bind '/software/repositories' = SOFTWARE_REPOSITORY [];
+bind '/software/packages' = SOFTWARE_PACKAGE {} {};

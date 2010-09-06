@@ -1,5 +1,13 @@
 2010-09-06  Victor Mendoza
 
+	* Release: 2.0.0
+	- WARNING ! new incompatible schema
+	- Update to v1.8, then update to v2.0
+	- Otherwise manual intervention will be required
+	- The change : architectures can now be in different repositories
+
+2010-09-06  Victor Mendoza
+
 	* Release: 1.8.0
 	- perl module update, compatible with v2.0 schema
 
