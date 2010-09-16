@@ -1,3 +1,10 @@
+2010-09-16  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.4
+	- Modify existing accounts by dropping and re-creating.
+
+	Should fix bug #63125.
+
 2010-06-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.3
