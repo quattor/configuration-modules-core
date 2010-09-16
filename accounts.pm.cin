@@ -77,6 +77,8 @@ use constant GCOS => 4;
 # Home directory, on getpw* output
 use constant PWHOME => 7;
 
+use constant EXTRA_FIELD => 9;
+
 # Pan path for the component configuration.
 use constant PATH => "/software/components/@COMP@";
 
@@ -152,17 +154,30 @@ sub must_modify_user
 {
     my ($self, $profile, $system) = @_;
 
-    $self->debug(5, "Home: ", $system->[HOME],
-		 " comment: ", $system->[GCOS],
-		 " id: ", $system->[ID],
-		 " shell: ", $system->[SHELL]);
+    $self->debug(5, "Checking for changes on account: ",
+		 "Home: $system->[HOME]",
+		 " comment: $system->[GCOS]",
+		 " id: $system->[ID]",
+		 " shell:  $system->[SHELL]",
+		 " groups: ", keys(%{$system->[EXTRA_FIELD]}));
+    $self->debug(5, "Profile specifies: ",
+		 $profile->{homeDir} ? "Home: $profile->{homeDir}" : "");
 
-    return (defined($profile->{uid}) && $profile->{uid} != $system->[ID]) ||
-	(defined($profile->{comment}) &&
-	     $profile->{comment} ne $system->[GCOS]) ||
-		 (defined($profile->{homeDir}) &&
-		      $profile->{homeDir} ne $system->[HOME]) ||
-			  (defined($profile->{shell}) && $profile->{shell} ne $system->[SHELL]);
+
+
+    return 1 if defined($profile->{uid}) && $profile->{uid} != $system->[ID];
+    return 1 if defined($profile->{comment}) &&
+	$profile->{comment} ne $system->[GCOS];
+    return 1 if defined($profile->{homeDir}) &&
+	$profile->{homeDir} ne $system->[HOME];
+    return 1 if defined($profile->{shell}) &&
+	$profile->{shell} ne $system->[SHELL];
+
+    foreach my $i (@{$profile->{groups}}) {
+	return 1 if !$system->[EXTRA_FIELD]->{$i}--;
+    }
+
+    return grep($_, values(%{$system->[EXTRA_FIELD]}));
 }
 
 # Returns the same hash reference as the input, as a sorted list of
@@ -217,8 +232,9 @@ sub classify_accounts
 {
     my ($self, $accounts, $protected, $profile) = @_;
 
-    my ($modify, $delete, $create);
-
+    my ($delete, $create, $modify);
+    $modify = {};
+    $create = {};
     my @sys = $self->sort_hash($accounts);
     my @pf = $self->sort_hash($profile);
 
@@ -229,55 +245,52 @@ sub classify_accounts
     $self->verbose(join(" ", map($_->[0], @pf)));
     $self->verbose(join(" ", keys(%$protected)));
 
+
     while ($i || $j) {
 	if ($i && $j) {
 	    $self->debug(5, "Profile: $i->[0], system: $j->[0]");
 	    if ($i->[0] eq $j->[0]) {
 		if ($self->must_modify_user($i->[1], $j->[1]->{system})) {
 		    $self->verbose("Account $i->[0] must be modified");
-		    push(@$modify, { system => $j->[1]->{system},
-				     profile => $i->[1] });
-		}
-		else {
+		    $modify->{$i->[0]} = $i->[1];
+		} else {
 		    $self->verbose("Nothing to do account $i->[0]");
 		}
 		$self->debug(5, "Removing the next element out of both arrays");
 		$i = pop(@pf);
 		$j = pop(@sys);
-	    }
-	    elsif ($self->belong_to_pool($i, $j)) {
+	    } elsif ($self->belong_to_pool($i, $j)) {
 		$self->verbose("Account $j->[0] belongs to pool $i->[0], ",
 			       "not modifying yet");
+		if ($self->must_modify_pool($i, $j)) {
+		    push(@$delete, $j->[0]);
+		    $create->{$i->[0]} = $i->[1];
+		}
 		# Don't modify pools yet
 		#push(@$modify, $i) if $self->must_modify_pool($i, $j);
 		$j = pop(@sys);
 		$was_in_pool = 1;
-	    }
-	    elsif ($i->[0] lt $j->[0]) {
+	    } elsif ($i->[0] lt $j->[0]) {
 		if ($was_in_pool) {
 		    $self->verbose("Finished pool $i->[0]");
 		    $was_in_pool = 0;
-		}
-		else {
+		} else {
 		    $self->verbose("Account $i->[0] must be created");
 		    $create->{$i->[0]} = $i->[1] unless $was_in_pool;
 		}
 		$i = pop(@pf);
-	    }
-	    else {
+	    } else {
 		if (!exists($protected->{$j->[0]})) {
 		    $self->verbose("Account $j->[0] may be deleted");
 		    push(@$delete, $j->[0]);
 		}
 		$j = pop(@sys);
 	    }
-	}
-	elsif ($i) {
+	} elsif ($i) {
 	    $self->verbose("Past the end of system accounts, adding $i->[0]");
 	    $create->{$i->[0]} = $i->[1];
 	    $i = pop(@pf);
-	}
-	else {
+	} else {
 	    $self->verbose("Past the end of profile accounts");
 	    if (!exists($protected->{$j->[0]})) {
 		push(@$delete, $j->[0]);
@@ -307,8 +320,7 @@ sub classify_groups
 	    push(@$modify, {system => $groups->{$k}->{system},
 			    profile => $v})
 		if $self->must_modify_group($v, $groups->{$k}->{system});
-	}
-	else {
+	} else {
 	    $create->{$k} = $v;
 	}
     }
@@ -333,30 +345,29 @@ sub conflicts
 {
     my ($self, $sys, $modify, $delete, $create, $field) = @_;
 
-    my (@rs, $rt, $nam, $id, @id);
+    my (%rs, $rt, $nam, $id, @id);
 
     $rt = 0;
     while (my ($k, $v) = each(%$sys)) {
 	$self->debug(5, "Filling $k: ", $v->{system}->[ID]);
-	$rs[$v->{system}->[ID]] = $k;
+	$rs{$v->{system}->[ID]} = $k;
     }
 
     foreach my $i (@$delete) {
 	$self->debug(5, "Deleting $i");
-	$rs[$sys->{$i}->{system}->[ID]] = undef;
+	$rs{$sys->{$i}->{system}->[ID]} = undef;
     }
 
     foreach my $i (@$modify) {
 	if (exists($i->{profile}->{$field})) {
-	    if (defined($rs[$i->{profile}->{$field}]) &&
-		    $rs[$i->{profile}->{$field}] ne $i->{system}->[NAME]) {
+	    if (defined($rs{$i->{profile}->{$field}}) &&
+		    $rs{$i->{profile}->{$field}} ne $i->{system}->[NAME]) {
 		$self->error("Trying to assign used $field $i->{profile}->{$field} to ",
 			     $i->{system}->[NAME], " conflicting with ",
-			     $rs[$i->{profile}->{$field}]);
+			     $rs{$i->{profile}->{$field}});
 		$rt = -1;
-	    }
-	    else {
-		$rs[$i->{profile}->{$field}] = $i->{system}->[NAME];
+	    } else {
+		$rs{$i->{profile}->{$field}} = $i->{system}->[NAME];
 	    }
 	}
     }
@@ -365,19 +376,44 @@ sub conflicts
 	$self->debug(4, "Analysing $k($field)");
 	if (exists($v->{$field})) {
 	    $self->debug(4, "Checking for clashes with $field");
-	    if (defined($rs[$v->{$field}]) && ($rs[$v->{$field}] ne $k)) {
+	    if (defined($rs{$v->{$field}}) && ($rs{$v->{$field}} ne $k)) {
 		$self->error("Trying to assign used $field $v->{$field} to $k, ",
-			     "conflicting with $rs[$v->{$field}]");
+			     "conflicting with $rs{$v->{$field}}");
 		$rt = -1;
-	    }
-	    else {
-		$rs[$v->{$field}] = $k;
+	    } else {
+		$rs{$v->{$field}} = $k;
 	    }
 	}
     }
     return $rt;
 }
 
+
+# Adds to each user the list of groups he belongs to.
+sub add_group_info_to_users
+{
+    my ($self, $users, $groups) = @_;
+
+    while (my ($group, $info) = each(%$groups)) {
+	next unless $info->{system}->[IDLIST];
+	my @members = split(",", $info->{system}->[IDLIST]);
+	foreach my $i (@members) {
+	    $self->debug(5, "Adding user $i to group $group");
+	    $users->{$i}->{system}->[EXTRA_FIELD]->{$group} = 1;
+	}
+    }
+}
+
+sub conflict_accounts
+{
+    my ($self, $sys, $modify, $delete, $create, $field) = @_;
+
+    my (@to_delete, %to_create, @to_modify);
+
+    @to_delete = (@$delete, keys(%$modify));
+    %to_create = (%$create, %$modify);
+    return $self->conflicts($sys, undef, \@to_delete, \%to_create, $field);
+}
 
 # Schedules what has to be done. Returns a hash listing:
 #
@@ -403,9 +439,13 @@ sub schedule
     my %u = $self->list_system_members($self->wrap_getent(PASSWD_FILE));
     my %g = $self->list_system_members($self->wrap_getent(GROUP_FILE));
 
+    $self->add_group_info_to_users(\%u, \%g);
+
     @ret{"modify_groups", "delete_groups", "create_groups"} =
 	$self->classify_groups(\%g, $tree->{kept_groups}, $tree->{groups});
-    @ret{"modify_accounts", "delete_accounts", "create_accounts"} =
+    @ret{"modify_accounts",
+	 "delete_accounts",
+	 "create_accounts"} =
 	$self->classify_accounts(\%u, $tree->{kept_users}, $tree->{users});
 
     $tree->{remove_unknown} or @ret{"delete_groups","delete_accounts"} =
@@ -413,13 +453,16 @@ sub schedule
 
     return if $self->conflicts(\%g, @ret{"modify_groups", "delete_groups",
 					     "create_groups"}, 'gid');
-    return if $self->conflicts(\%u, @ret{"modify_accounts", "delete_accounts",
-					     "create_accounts"}, 'uid');
+    return if $self->conflict_accounts(\%u,
+				       @ret{"modify_accounts",
+					    "delete_accounts",
+					    "create_accounts"},
+				       'uid');
     return %ret;
 }
 
 # Deletes the accounts marked for deletion. It removes as many as
-# possible. Returns -1 in case of any single error in the deletion
+# possible. Returns undef in case of any single error in the deletion
 # process.
 sub delete_stuff
 {
@@ -575,8 +618,7 @@ sub create_home
 			$self->error("Couldn't create directory $f");
 			return;
 		    }
-		}
-		else {
+		} else {
 		    copy($src, $f, preserve => 1);
 		}
 	    }
@@ -628,8 +670,7 @@ sub create_accounts
 			 (exists($pf->{shell}) ? $pf->{shell} : ""));
 		push(@users, join(":", @flds));
 	    }
-	}
-	else {
+	} else {
 	    push(@flds, $a, "x",
 		 $pf->{uid},
 		 (exists($pf->{groups}) ? (getgrnam($pf->{groups}->[0]))[ID] : ""),
@@ -658,8 +699,7 @@ sub create_accounts
 		    if exists($pf->{groups}) &&
 			(scalar(@{$pf->{groups}}) > 1);
 	    }
-	}
-	else {
+	} else {
 	    $self->create_home($a) if $pf->{createHome};
 	    $self->add_to_groups($a, $pf->{groups})
 		if exists($pf->{groups}) &&
@@ -738,18 +778,22 @@ sub Configure
     my $t = $config->getElement(PATH)->getTree();
 
     my %tasks = $self->schedule($t) or return 0;
+    my @tmp;
 
     if ($NoAction) {
 	$self->info("--noaction specified, doing nothing");
     } else {
 	$self->delete_stuff($tasks{delete_accounts}, USERDEL);
+	@tmp = keys(%{$tasks{modify_accounts}});
+	$self->delete_stuff(\@tmp, USERDEL);
 	$self->delete_stuff($tasks{delete_groups}, GROUPDEL);
 	$self->root_password($t->{rootpwd}) if exists($t->{rootpwd});
 	$self->login_defs($t->{login_defs}) if exists($t->{login_defs});
 	$self->modify_groups($tasks{modify_groups}, $t) or return 0;
 	$self->create_groups($tasks{create_groups}) or return 0;
-	$self->modify_accounts($tasks{modify_accounts}, $t) or return 0;
+	#$self->modify_accounts($tasks{modify_accounts}, $t) or return 0;
 	$self->create_accounts($tasks{create_accounts}) or return 0;
+	$self->create_accounts($tasks{modify_accounts}) or return 0;
 	$self->set_passwords($t->{users}) or return 0;
     }
     return 1;
