@@ -1,3 +1,8 @@
+2010-09-17  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.5
+	- Fix problems in RHES4, since lnewusers doesn't seem to work there.
+
 2010-09-16  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.4

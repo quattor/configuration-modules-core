@@ -51,6 +51,9 @@ use constant CHPASSWD => qw(chpasswd -e);
 # Changing user properties
 use constant USERMOD => 'usermod';
 
+# Modifying the UID of an account
+use constant CHUID => (USERMOD, "-u");
+
 # Changing group properties
 use constant GROUPMOD => qw(lgroupmod -g);
 
@@ -493,43 +496,6 @@ sub modify_groups
     return $rt;
 }
 
-# Modifies accounts. The accounts given are reset to what the profile
-# specifies for them, excepting for the password, which is handled by
-# the set_passwords method.
-#
-# Please note that if the profile settings clash with some LDAP
-# settings, the account won't be modified.
-sub modify_accounts
-{
-    my ($self, $accounts) = @_;
-
-    my $rt = 1;
-
-    foreach my $i (@$accounts) {
-	my $cmd = CAF::Process->new([USERMOD], log => $self);
-	$cmd->pushargs((exists($i->{profile}->{groups}) ?
-			    (GROUPSOPT,
-			     join(",", map((getgrnam($_))[ID],
-					   @{$i->{profile}->{groups}})))
-				: ()),
-		       (exists($i->{profile}->{homeDir}) ?
-			    (HOMEOPT, $i->{profile}->{homeDir}, MOVEHOMEOPT)
-				: ()),
-		       (exists($i->{profile}->{comment}) ?
-			    (GCOSOPT, $i->{profile}->{comment}) : ()),
-		       (exists($i->{profile}->{shell}) ?
-			    (SHELLOPT, $i->{profile}->{shell}) : ()),
-		       (IDOPT, $i->{profile}->{uid}),
-		       $i->{system}->[NAME]);
-	$cmd->run();
-	if ($?) {
-	    $self->error("Failed to adjust user ", $i->{system}->[NAME]);
-	    $rt = undef;
-	}
-    }
-    return $rt;
-}
-
 # Creates groups
 sub create_groups
 {
@@ -639,6 +605,26 @@ sub add_to_groups
     }
 }
 
+# lnewuser seems to be broken on RHES4, and doesn't set the correct
+# UIDs or group memberships. We fix it here.
+sub work_around_stupid_rhes4_bug
+{
+    my ($self, $accounts) = @_;
+
+    my $rh = LC::File::file_contents("/etc/redhat-release");
+    $rh =~ m{^Red Hat Enterprise Linux ES release 4} or return;
+    $self->verbose("On RHES 4, UIDs may be wrong. Fixing");
+    while (my ($a, $pf) = each(%$accounts)) {
+	my $cmd = CAF::Process->new([USERMOD], log => $self);
+	$cmd->pushargs(IDOPT, $pf->{uid});
+	$cmd->pushargs($a);
+	$cmd->run();
+	if ($?) {
+	    $self->error("Failed to set up properly account $a");
+	}
+    }
+}
+
 # Creates users, with their homes if needed.
 sub create_accounts
 {
@@ -682,6 +668,7 @@ sub create_accounts
 	return;
     }
 
+    $self->work_around_stupid_rhes4_bug($accounts);
     while (my ($a, $pf) = each(%$accounts)) {
 	if (exists($pf->{poolSize})) {
 	    for my $i (0..$pf->{poolSize}-1) {
@@ -698,6 +685,7 @@ sub create_accounts
 		    (scalar(@{$pf->{groups}}) > 1);
 	}
     }
+
     return 1;
 }
 
