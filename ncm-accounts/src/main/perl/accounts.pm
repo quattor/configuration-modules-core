@@ -158,8 +158,6 @@ sub must_modify_user
     $self->debug(5, "Profile specifies: ",
 		 $profile->{homeDir} ? "Home: $profile->{homeDir}" : "");
 
-
-
     return 1 if defined($profile->{uid}) && $profile->{uid} != $system->[ID];
     return 1 if defined($profile->{comment}) &&
 	$profile->{comment} ne $system->[GCOS];
@@ -405,7 +403,10 @@ sub conflict_accounts
 
     my (@to_delete, %to_create, @to_modify);
 
-    @to_delete = (@$delete, keys(%$modify));
+    if ($delete) {
+	@to_delete = @$delete;
+    }
+    push(@to_delete,  keys(%$modify));
     %to_create = (%$create, %$modify);
     return $self->conflicts($sys, undef, \@to_delete, \%to_create, $field);
 }
@@ -629,45 +630,54 @@ sub work_around_stupid_rhes4_bug
 sub create_accounts
 {
     my ($self, $accounts, $tree) = @_;
-    my (@users);
+    my (@users, $out);
 
     $self->verbose("Creating needed accounts");
     while (my ($a, $pf) = each(%$accounts)) {
 	$self->verbose("Processing account $a");
 	my @flds;
+	my $group = exists($pf->{groups}) ?
+	    (getgrnam($pf->{groups}->[0]))[ID] : "";
+
+	if (!defined($group)) {
+	    $self->error("Couldn't get group $pf->{groups}->[0] ",
+			 "as specified in the profile. Skipping account $a");
+	    next;
+	}
 	if (exists($pf->{poolStart})) {
 	    $self->verbose("Account $a is a pool with $pf->{poolSize} members");
 	    for my $i (0..$pf->{poolSize}-1) {
 		my $tail = sprintf("%0$pf->{poolDigits}d", $pf->{poolStart}+$i);
 		@flds = ("$a$tail", "x",
 			 $pf->{uid} + $i,
-			 (exists($pf->{groups}) ?
-			      (getgrnam($pf->{groups}->[0]))[ID] : ""),
+			 $group,
 			 (exists($pf->{comment}) ? $pf->{comment} : ""),
 			 (exists($pf->{homeDir}) ? "$pf->{homeDir}$tail" : ""),
 			 (exists($pf->{shell}) ? $pf->{shell} : ""));
 		push(@users, join(":", @flds));
 	    }
 	} else {
-	    push(@flds, $a, "x",
-		 $pf->{uid},
-		 (exists($pf->{groups}) ? (getgrnam($pf->{groups}->[0]))[ID] : ""),
-		 (exists($pf->{comment}) ? $pf->{comment} : ""),
-		 (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
-		 (exists($pf->{shell}) ? $pf->{shell} : ""));
+	    @flds = ($a, "x",
+		     $pf->{uid},
+		     $group,
+		     (exists($pf->{comment}) ? $pf->{comment} : ""),
+		     (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
+		     (exists($pf->{shell}) ? $pf->{shell} : ""));
 	    push(@users, join(":", @flds));
 	}
     }
 
-    my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users));
+    my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users),
+				stderr => \$out);
     $cmd->execute();
 
 
-    if ($?) {
-	$self->error("Failed to execute ", join(" ", USERADD));
-	return;
+    if ($out =~ m{Error creating account for}) {
+	$self->error("Failed to create some accounts: $out");
     }
 
+    # We have to go on: some accounts may have not been created, but
+    # some others may still be there and we have to fix them.
     $self->work_around_stupid_rhes4_bug($accounts);
     while (my ($a, $pf) = each(%$accounts)) {
 	if (exists($pf->{poolSize})) {

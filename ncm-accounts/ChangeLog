@@ -1,3 +1,9 @@
+2010-09-29  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.0.6
+	- Fix bug #73342, and another one when the component had
+	nothing to do.
+
 2010-09-17  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.5
