@@ -747,7 +747,7 @@ EOF
         }
 
         # service re-loading/starting here
-	CAF::Process->new(['/sbin/service squid',
+	CAF::Process->new([qw(/sbin/service squid),
 			   $is_stopped ? 'start' : 'reload'])->run();
 	if ($?) {
             $self->error("Failed to reload Squid with the new configuration");
@@ -912,7 +912,7 @@ sub Unconfigure {
     if($reload) {
 	# restart the service only if it was originally running
 	unless($was_stopped) {
-	    $cmd = CAF::Process->new(['/sbin/service squid',
+	    $cmd = CAF::Process->new([qw(/sbin/service squid),
 				      ($is_stopped ? 'start' : 'reload')],
 				     log => $self);
 	}
