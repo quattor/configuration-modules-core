@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.9 : 23/07/10 13:38
+# Version: 1.1.10 : 12/10/10 14:35
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -21,7 +21,8 @@ use EDG::WP4::CCM::Element;
 use EDG::WP4::CCM::Resource;
 use EDG::WP4::CCM::Property;
 use NCM::Check;
-use FileHandle;
+use CAF::FileWriter;
+use CAF::Process;
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -43,6 +44,8 @@ use constant { USER_ALIASES	=> PROFILE_BASE . "user_aliases",
 	       PRIVILEGE_CMD	=> "cmd",
 	       PRIVILEGE_OPTS	=> "options"
        };
+
+use constant VISUDO_CHECK => qw(/usr/sbin/visudo -c -f /proc/self/fd/0);
 
 # All possible "Default" options separated by type.
 use constant BOOLEAN_OPTS	=> qw(long_otp_prompt
@@ -207,45 +210,96 @@ sub generate_privilege_lines {
 	return $lns;
 }
 
+# Returns true if the contents of the file passed as an argument make
+# a valid /etc/sudoers.
+sub is_valid_sudoers
+{
+    my ($self, $fh) = @_;
+
+    my $cnts = $fh->string_ref();
+
+    my ($err, $out);
+
+    my $proc = CAF::Process->new ([VISUDO_CHECK], stdin => $$cnts,
+				  stderr => \$err, stdout => \$out,
+				  log => $self);
+
+    $proc->execute();
+
+    if ($? || $out !~ m{parsed OK}) {
+	$self->error ("sudoers check said: $err");
+	return 0;
+    } else {
+	$self->warning ($err) if $err;
+    }
+    return 1;
+}
+
 # write_sudoers method
 #
 # Writes all its arguments to the FILE_PATH file, with the sudoers
-# format.
+# format. Before actually writing, it checks that the contents of the
+# new file are valid. If they are not, the new contents are discarded
+# and the old file is kept.
+#
 # Arguments: ($_[0] = self!)
 # $_[1]: a reference to a hash containing the aliases for users,
 # run_as, hosts and commands.
 # $_[2]: a reference to an array of default options lines.
 # $_[3]: a reference to an array of privilege escalation lines
 sub write_sudoers {
-	my ($self, $aliases, $opts, $lns) = @_;
-	my $fh = FileHandle->new (FILE_PATH, "w");
-	unless ($fh) {
-		$self->error ("Couldn't open " . FILE_PATH);
-		return;
-	}
-	$fh->print ("# File created by ncm-sudo v. 1.1.9\n",
-		    "# Report bugs to CERN's savannah\n".
-		    "# Read man(5) sudoers for understanding the structure ".
-		    "of this file\n");
+    my ($self, $aliases, $opts, $lns) = @_;
 
-    $fh->print ("\n# User alias specification\n");
-	$fh->print ("User_Alias\t", $_, "\n") foreach (@{${$aliases}
-							 {USER_ALIASES()}});
-    $fh->print ("\n# Runas alias specification\n");
-	$fh->print ("Runas_Alias\t", $_, "\n") foreach (@{${$aliases}
-							  {RUNAS_ALIASES()}});
-    $fh->print ("\n# Cmnd alias specification\n");
-	$fh->print ("Cmnd_Alias\t", $_, "\n") foreach (@{${$aliases}
-							 {CMD_ALIASES()}});
-    $fh->print ("\n# Host alias specification\n");
-	$fh->print ("Host_Alias\t", $_, "\n") foreach (@{${$aliases}
-							 {HOST_ALIASES()}});
-    $fh->print ("\n# Defaults specification\n");
-	$fh->print ("Defaults", $_, "\n") foreach (@$opts);
-    $fh->print ("\n# User privilege specification\n");
-	$fh->print ("$_\n") foreach (@$lns);
-	$fh->close;
-	return 0;
+    my $fh = CAF::FileWriter->new (FILE_PATH,
+				   mode => 0440,
+				   owner => 0,
+				   group => 0,
+				   backup => '.old',
+				   log => $self);
+
+    print $fh ("# File created by ncm-sudo v. 1.1.10\n",
+	       "# Report bugs to CERN's savannah\n",
+	       "# Read man(5) sudoers for understanding the structure\n",
+	       "# of this file\n");
+
+    print $fh ("\n# User alias specification\n");
+
+    foreach my $alias (@{$aliases->{USER_ALIASES()}}) {
+	printf $fh "%-15s %10s\n", "User_Alias", $alias;
+    }
+
+    print $fh "\n# Runas alias specification\n";
+    foreach my $alias (@{$aliases->{RUNAS_ALIASES()}}) {
+	printf $fh "%-15s %10s\n", "Runas_Alias", $alias;
+    }
+
+    print $fh "\n# Command alias specification\n";
+    foreach my $alias (@{$aliases->{CMD_ALIASES()}}) {
+	printf $fh "%-15s %10s\n", "Cmnd_Alias", $alias;
+    }
+
+    print $fh "\n# Host alias specification";
+    foreach my $alias (@{$aliases->{HOST_ALIASES()}}) {
+	printf $fh "%-15s %10s\n", "Host_Alias", $alias;
+    }
+
+    print $fh ("\n# Defaults specification\n");
+    foreach my $opt ((@$opts)) {
+	printf  "%-10s %10s\n", "Defaults", $opt;
+    }
+
+    print $fh ("\n# User privilege specification\n");
+    foreach my $line (@$lns) {
+	print $fh "$line\n";
+    }
+
+    if (!$self->is_valid_sudoers($fh)) {
+	$self->error("Invalid sudoers file. Not saving");
+	$fh->cancel();
+    }
+
+    $fh->close();
+    return 0;
 }
 
 # Configure method.

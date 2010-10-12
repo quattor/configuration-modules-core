@@ -1,3 +1,11 @@
+2010-10-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.10
+	- Fix bug #73901
+
+	Verify that the contents of the sudoers file are *really* correct,
+	and raise an error (and keep the old file) if they are not.
+
 2010-07-23  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.1.9
