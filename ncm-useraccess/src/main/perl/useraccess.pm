@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.9 : 02/06/10 15:22
+# Version: 1.5.10 : 18/10/10 15:11
 # 
 #
 # Note: all methods in this component are called in a
@@ -281,7 +281,7 @@ sub pam_listfile
 
 
 
-# Adds to the procesed user the complete configuration from the roles
+# Adds to the processed user the complete configuration from the roles
 # he belongs to.
 #
 # Arguments:
@@ -407,7 +407,7 @@ sub Configure
 
 
 # Removes the configuration for all users. Use this if you want to
-# lock all accounts, or need to lock a few accunts using two Quattor
+# lock all accounts, or need to lock a few accounts using two Quattor
 # steps. See the man page for more information.
 sub Unconfigure
 {
