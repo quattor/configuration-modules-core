@@ -1,3 +1,8 @@
+2010-10-25  Charles Loomis
+
+	* Release: 2.3.10
+	- Ensure dport and sport options occur after match to avoid stacktrace
+
 2010-04-07  David Groep
 
 	* Release: 2.3.9
