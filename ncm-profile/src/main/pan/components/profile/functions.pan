@@ -16,7 +16,7 @@ declaration template components/profile/functions;
 # 'script_name' is parsed and if it ends with extension '.sh' or '.csh', extension is removed and
 # script flavor is set accordingly.
 #
-# If the variable already exists, it's value is replaced. A variable value may be a string, boolean, long or a list
+# If the variable already exists, its value is replaced. A variable value may be a string, boolean, long or a list
 # of string. If necessary, they are converted to string. A list is converted into a colon separated string.
 #
 
@@ -85,7 +85,7 @@ function component_profile_add_env = {
 #     - append: this value is appended to an existing value, if any
 #
 # This function may be called several times for the same path variable with different value_type.
-# If the path variable element already exists, it's value is updated.
+# If the path variable element already exists, its value is updated.
 
 function component_profile_add_path = {
   function_name = 'component_profile_add_path';
