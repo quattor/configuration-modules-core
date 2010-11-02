@@ -5,7 +5,7 @@
 # File: filesystems.pm
 # Implementation of ncm-filesystems
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 0.11.0 : 09/02/10 21:31
+# Version: 1.0.0 : 02/11/10 16:30
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -25,7 +25,7 @@ use Cwd qw(abs_path);
 use NCM::BlockdevFactory qw (build);
 use NCM::Filesystem;
 use NCM::Partition qw (partition_compare);
-use constant PROTECTED_PATH => "/software/components/filesystems/protected_mounts";
+use constant PROTECTED_PATH => "/software/components/fstab/protected_mounts";
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -40,6 +40,7 @@ sub protected_hash
 	my $pl = $config->getElement (PROTECTED_PATH)->getTree;
 
 	foreach my $i (@$pl) {
+		$ph{$i} = 0;
 		my $path = abs_path("$i/");
 		$ph{$path} = 0 if $path;
 	}
@@ -57,9 +58,9 @@ sub fshash
 	return %fsh;
 }
 
-# Frees space on the system. It removes filesystems with !preserve &&
-# format and filesystems no longer present in the profile. Returns 0
-# on success, -1 on error.
+# Frees space on the system. It removes filesystems that are not
+# present in the profile anymore, and are *not* present in the
+# protected hash either. Returns 0 on success, -1 on error.
 sub free_space
 {
 	my ($self, $cfg, $protected, @fs) = @_;
@@ -67,36 +68,19 @@ sub free_space
 	my %ph = $protected;
 	my %fsh = fshash (\@fs);
 
-	$self->info ("Checking for filesystems that should be removed");
-	foreach (@fs) {
-		$self->debug (5, "Filesystem $_->{mountpoint} is",
-			     exists $ph{$_->{mountpoint}}? "":" not",
-			     " in the protected hash list");
-		if ((!exists $ph{$_->{mountpoint}}) && ($_->remove_if_needed!=0)) {
-			throw_error ("Couldn't remove filesystem $_->{mountpoint}");
-			return -1;
-		}
-	}
-
 	my $fl = output ("grep", "^[[:space:]]*#", "/etc/fstab", "-v");
 
 	$self->info ("Checking filesystems not defined in the profile");
 	my @fstab = split ("\n+", $fl);
 	foreach my $l (@fstab) {
 		$self->debug (5,"Fstab line: $l");
-		$l =~ m{^\S+\s+(\S+)\s};
-		my $keepfs=(exists $fsh{$1} || exists $ph{$1});
-		$self->debug (5, "Filesystem $1 should ", 
-			     $keepfs? "not " : "", "be removed:",
-			     exists $fsh{$1}?"": " not",
-			     " in the profile",
-			     exists $ph{$1}?" and is ":" and is not ",
-			     "protected.");
-		unless ($keepfs) {
-			$self->debug (5, "Actually removing $1");
-			my $f = NCM::Filesystem->new_from_fstab ($l);
-			$self->debug (5, "Filesystem $f->{mountpoint} left the profile: removing it");
-			$f->remove_if_needed==0 or return -1;
+		$l =~ m{^\S+\s+(\S+)\s} or next;
+		my $mount = $1;
+		next if(exists $fsh{$mount} || exists $ph{$mount}
+		       || exists($ph{abs_path($mount)}));
+		$self->verbose("Removing filesystem $mount");
+		my $f = NCM::Filesystem->new_from_fstab ($l);
+		$f->remove_if_needed==0 or return -1;
 		}
 	}
 	return 0;

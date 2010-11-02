@@ -1,3 +1,11 @@
+2010-11-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.0
+	- Move the fstab functionality to ncm-fstab.
+
+	The component now depends on ncm-fstab, to correctly deliver
+	its results.
+
 2010-02-09  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 0.11.0

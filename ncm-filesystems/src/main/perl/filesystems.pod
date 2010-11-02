@@ -9,7 +9,10 @@
 
 The I<filesystems> component manages the filesystems on a node. It is able
 to create and remove blockdevices without restarting or
-re-installing. These filesystems can be mounted or added to fstab.
+re-installing.
+
+These filesystems will be later mounted/unmounted, and added/removed
+from fstab, using ncm-fstab.
 
 The component doesn't provide any special resources at the moment. It
 just watches for changes on /system/filesystems and /system/blockdevices and
