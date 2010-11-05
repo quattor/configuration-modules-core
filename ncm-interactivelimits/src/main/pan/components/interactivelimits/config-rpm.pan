@@ -5,11 +5,11 @@
 
 unique template components/interactivelimits/config-rpm;
 
-include components/interactivelimits/schema;
-include pan/functions;
+include { 'components/interactivelimits/schema' };
+include { 'pan/functions' };
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-interactivelimits","1.1.0-1","noarch");
+"/software/packages"=pkg_repl("ncm-interactivelimits","1.1.1-1","noarch");
 
 # standard component settings
 "/software/components/interactivelimits/dependencies/pre" = list("spma");
