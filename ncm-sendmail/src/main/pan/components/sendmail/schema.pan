@@ -10,7 +10,7 @@
  
 declaration template components/sendmail/schema;
  
-include quattor/schema;
+include { 'quattor/schema' };
  
  
 type component_sendmail = {
@@ -22,5 +22,5 @@ type component_sendmail = {
   'allowexternal' ? boolean # "Should external (non-localhost) SMTP connections be allowed" 
 };
  
-type "/software/components/sendmail" = component_sendmail;
+bind "/software/components/sendmail" = component_sendmail;
 
