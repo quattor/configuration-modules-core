@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.10 : 12/10/10 14:35
+# Version: 1.1.11 : 11/11/10 11:55
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -17,12 +17,9 @@ package NCM::Component::sudo;
 use strict;
 use warnings;
 use NCM::Component;
-use EDG::WP4::CCM::Element;
-use EDG::WP4::CCM::Resource;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
 use CAF::FileWriter;
 use CAF::Process;
+use NCM::Filesystem;
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -230,7 +227,7 @@ sub is_valid_sudoers
 	$self->error ("sudoers check said: $err");
 	return 0;
     } else {
-	$self->warning ($err) if $err;
+	$self->warn ($err) if $err;
     }
     return 1;
 }
@@ -257,7 +254,7 @@ sub write_sudoers {
 				   backup => '.old',
 				   log => $self);
 
-    print $fh ("# File created by ncm-sudo v. 1.1.10\n",
+    print $fh ("# File created by ncm-sudo v. 1.1.11\n",
 	       "# Report bugs to CERN's savannah\n",
 	       "# Read man(5) sudoers for understanding the structure\n",
 	       "# of this file\n");
