@@ -43,6 +43,7 @@ type structure_login_defs = {
 type component_accounts = {
     include structure_component
     'rootpwd'    ? string
+    'rootshell'  ? string
     'shadowpwd'  ? boolean
     'users'      ? structure_userinfo{}
     'groups'     ? structure_groupinfo{}

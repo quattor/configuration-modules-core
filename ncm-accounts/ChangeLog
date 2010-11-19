@@ -1,3 +1,12 @@
+2010-11-19  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.1.0
+	- Add a "rootshell" field to the schema.
+
+	This allows users to modify the root shell without having the
+	root account destroyed and re-created in the process, which
+	shows loads of problems.
+
 2010-09-29  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.0.6
