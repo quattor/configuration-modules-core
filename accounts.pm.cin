@@ -65,6 +65,9 @@ use constant CHUID => (USERMOD, "-u");
 # Changing group properties
 use constant GROUPMOD => qw(lgroupmod -g);
 
+# Change the shell for root
+use constant CHROOTSHELL => qw(lusermod root -s);
+
 # UID for user structures, GID for group structures.
 use constant ID => 2;
 # List of groups for users, list of members for groups.
@@ -719,6 +722,26 @@ sub root_password
     }
 }
 
+# Sets up the root shell.
+sub root_shell
+{
+    my ($self, $rootshell) = @_;
+
+    my $shells = CAF::FileEditor->new("/etc/shells", log => $self);
+    $shells->cancel();
+
+    if (${$shells->string_ref()} !~ m{^$rootshell$}m) {
+	$self->warn("$rootshell is not a known shell. Changing anyways");
+    }
+
+    $self->verbose("Setting up root shell to $rootshell");
+
+    CAF::Process->new([CHROOTSHELL, $rootshell], log => $self)->run();
+    if ($?) {
+	$self->error("Failed to set root shell");
+    }
+}
+
 # Sets login_defs, if needed
 sub login_defs
 {
@@ -786,6 +809,7 @@ sub Configure
 	$self->delete_stuff(\@tmp, USERDEL);
 	$self->delete_stuff($tasks{delete_groups}, GROUPDEL);
 	$self->root_password($t->{rootpwd}) if exists($t->{rootpwd});
+	$self->root_shell($t->{rootshell}) if exists($t->{rootshell});
 	$self->login_defs($t->{login_defs}) if exists($t->{login_defs});
 	$self->modify_groups($tasks{modify_groups}, $t) or return 0;
 	$self->create_groups($tasks{create_groups}) or return 0;
