@@ -132,6 +132,10 @@ If defined, sets the ownership to given user (name or number).
 
 If defined, sets the group ownership to the given group (name or number).
 
+=item min_age
+
+The minimum number of minutes old that the file must be to be considered valid for download (defaults to 0);
+
 =back
 
 =back

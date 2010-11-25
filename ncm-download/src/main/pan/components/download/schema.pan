@@ -39,6 +39,7 @@ type component_download_file = {
     "perm"    ? string
     "owner"   ? string
     "group"   ? string
+    "min_age" : long = 0     # Don't consider the remote file to be new until it is this number of minutes old
 };
 
 type component_download_type = extensible {
