@@ -66,7 +66,7 @@ sub Configure {
       
       my $startstop;
       my $cs = $srvcs->getNextElement(); #current service
-      my $service = $cs->getName();
+      my $service = $self->unescape($cs->getName());
 
       #get startstop value if it exists
       my $servpath = $cs->getPath()->toString();

@@ -1,3 +1,12 @@
+2010-11-25  Nick Williams
+
+	* Release: 1.2.0
+	- unescape the service names
+	
+	Some service names (at least on RHEL5) have underscores in the name
+	which is illegal as a hash key. So we need to escape them, which means
+	we also need to unescape them in the component
+
 2010-06-18  Jan IVEN
 
 	* Release: 1.1.10
