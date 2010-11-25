@@ -17,6 +17,7 @@ use EDG::WP4::CCM::Element;
 use File::Path;
 use File::Copy;
 use File::Basename;
+use Fcntl ':mode';
 
 local(*DTA);
 
@@ -114,6 +115,11 @@ sub process_path {
         $self->error("$path exists but isn't a directory");
         return 0;
     } 
+    if (not (($type eq "f") or ($type eq "d"))) {
+        # Bad entry. 
+        $self->error("bad file type ($type) given");
+        return 0;
+    } 
 
     # Untainted all variable (UID/GID/PATH/PERM) see bug #42704
     if ($uid =~ /^(.*)$/) {
@@ -139,56 +145,70 @@ sub process_path {
         } else {
                 $self->error("Bad data in $perm");
         }
+
+    my $exists = 0;
+    my $correct_ownership = 0;
+    my $correct_permissions = 0;
+    # Check if file exists and if permissions are correct
+	if ( -e $path ) {
+		$self->debug(1,"$path exists");
+		$exists = 1;
+		my ($_dev,$_ino,$_mode,$_nlink,$_uid,$_gid,$_rdev,$_size,
+				$_atime,$_mtime,$_ctime,$_blksize,$_blocks) = stat($path);
+		# Show permissions in conventional octal format
+		my $_operm = sprintf "%04o", S_IMODE($_mode);
+		my $operm = sprintf "%04o", $perm;
+
+		if(($uid == $_uid) and ($gid == $_gid)){
+			$self->debug(1,"$path has correct ownership $_uid:$_gid");
+			$correct_ownership = 1;
+		} else {
+			$self->debug(1,"$path has ownership $_uid:$_gid, not $uid:$gid");
+		};
+
+		if($operm == $_operm){
+			$self->debug(1,"$path has correct permissions $_operm" );
+			$correct_permissions = 1;
+		} else {
+			$self->debug(1,"$path has permissions $_operm, not $operm");
+		}
+	}
     # Make the file or directory.
-    if ($type eq "f") {
+	if(not $exists) {
+		if ($type eq "f") {
+			# Make the file.  
+			open TMP, ">>$path";
+			close TMP;
+			if (! -f $path) {
+				$self->error("error creating file $path");
+				return 0;
+			}
+		} elsif ($type eq "d") {
+			# Make the directory and any parent directories. 
+			eval { mkpath($path,0,$perm) };
+			if ($@) {
+				$self->error("error making directory: $@");
+				return 0;
+			}
+		}
+	}
 
-        # Make the file.  
-        open TMP, ">>$path";
-        close TMP;
-        if (! -f $path) {
-            $self->error("error creating file $path");
-            return 0;
-        }
+	if(not $correct_ownership) {
+		my $cnt = chown $uid, $gid, $path;
+		if ($cnt != 1) {
+			$self->error("can't change owner on $path");
+			return 0;
+		}
+	}
 
-        my $cnt = chown $uid, $gid, $path;
-        if ($cnt != 1) {
-            $self->error("can't change owner on $path");
-            return 0;
-        }
+	if(not $correct_permissions) {
+		my $cnt = chmod $perm, $path;
+		if ($cnt != 1) {
+			$self->error("can't change permissions on $path");
+			return 0;
+		}
+	}
 
-        $cnt = chmod $perm, $path;
-        if ($cnt != 1) {
-            $self->error("can't change permissions on $path");
-            return 0;
-        }
-
-    } elsif ($type eq "d") {
-
-        # Make the directory and any parent directories. 
-        eval { mkpath($path,0,$perm) };
-        if ($@) {
-            $self->error("error making directory: $@");
-            return 0;
-        }
-
-        my $cnt = chown $uid, $gid, $path;
-        if ($cnt != 1) {
-            $self->error("can't change owner on $path");
-            return 0;
-        }
-
-        $cnt = chmod $perm, $path;
-        if ($cnt != 1) {
-            $self->error("can't change permissions on $path");
-            return 0;
-        }
-
-    } else {
-
-        # Bad entry. 
-        $self->error("bad file type ($type) given");
-        return 0;
-    }
 
     # Copy files into newly created directory if necessary.
     my $initdir = $pathentry->{initdir};

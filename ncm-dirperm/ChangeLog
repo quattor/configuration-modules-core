@@ -1,3 +1,9 @@
+2010-11-25  David O'Callaghan,,,,david.ocallaghan@cs.tcd.ie
+
+	* Release: 1.5.0
+	- Check existence, ownership and permission of paths and 
+	  skip creation, chown, chmod if they're already OK.
+
 2009-02-12  Nick Williams
 
 	* Release: 1.4.1
