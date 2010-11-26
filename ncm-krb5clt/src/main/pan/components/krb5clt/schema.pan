@@ -12,12 +12,16 @@ include quattor/schema;
 type component_krb5clt = {
         include structure_component
 
+        # top-level comment, triggers diff behaviour from scripts
+        "cern_use_ad_kdc"         ? boolean
         # libdefaults
 	"default_realm"		? string
 	"ticket_lifetime"	? string
 	"renew_lifetime"	? string
 	"forwardable"		? boolean
 	"proxiable"		? boolean
+        "default_tkt_enctypes"  ? string
+        "allow_weak_crypto"     ? string with match (self, 'true|false')
 	# realms
 	"cern_kpasswd_server"	? string
 	"cern_admin_server"	? string
@@ -47,7 +51,9 @@ type component_krb5clt = {
         # The next options require CERN patches to pam_krb5
         "pam_cern_nullafs"	? string with match (self, 'true|false')
         "pam_cern_prefer2b"	? string with match (self, 'true|false')
-
+        # use with AD
+        "pkinit_pool"           ? string
+        "pkinit_anchors"        ? string
 
         # the following optional entries are for compatibility
         # with the previous version, and can eventually be removed
