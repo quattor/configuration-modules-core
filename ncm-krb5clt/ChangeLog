@@ -1,3 +1,8 @@
+2010-11-26  Jan IVEN
+
+	* Release: 2.1.6
+	- add allow_weak_crypto, default_tkt_enctypes, pkinit_pool,pkinit_anchors, cern_use_ad_kdc
+
 2010-01-14  Jan IVEN
 
 	* Release: 2.1.5
