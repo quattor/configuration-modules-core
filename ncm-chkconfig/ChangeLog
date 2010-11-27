@@ -1,3 +1,13 @@
+2010-11-27  Nick Williams
+
+	* Release: 1.2.1
+	- When using the 'default' setting, not all runlevels were set
+	
+	The default setting allows all runlevels of non-specified services
+	to be set to the same value, however an inappropriate 'last' meant
+	that only the first runlevel of the service was reset, not all the
+	runlevels.
+
 2010-11-25  Nick Williams
 
 	* Release: 1.2.0

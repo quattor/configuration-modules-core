@@ -258,12 +258,11 @@ sub Configure {
 	      my $was_on = "";
 	      for my $i ((0..6)) {
 		  if ( $currentservices{$oldservice}[$i] ne 'off' ) {
-		      $self->debug(2,"$oldservice was not 'off' in level $i, 'off'ing it..");
 		      $was_on .= $i;
-		      last;
 		  }
 	      }
 	      if($was_on) {
+                  $self->debug(2,"$oldservice was not 'off' in levels $was_on, 'off'ing it..");
 		  push(@cmdlist, [$chkconfigcmd, "--level", $was_on,
 				  $oldservice, "off"]);
 	      } else {
