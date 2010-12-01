@@ -1,3 +1,12 @@
+2010-12-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.1.1
+	- Fixes bug #75833.
+
+	An account belonging to only one group was considered to need
+	modifications all the time, due to an off-by-one error in the
+	checks.
+
 2010-11-19  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.1.0

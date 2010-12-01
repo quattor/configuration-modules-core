@@ -695,7 +695,7 @@ sub create_accounts
 	    $self->create_home($a) if $pf->{createHome};
 	    $self->add_to_groups($a, $pf->{groups})
 		if exists($pf->{groups}) &&
-		    (scalar(@{$pf->{groups}}) > 1);
+		    (scalar(@{$pf->{groups}}));
 	}
     }
 
