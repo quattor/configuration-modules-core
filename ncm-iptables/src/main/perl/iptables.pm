@@ -567,7 +567,7 @@ FOR:     for($i=0, $purge=0; $i<=$#keys; $i++) {
 		    $@ = "keys unsorted";
 		    return @keys;
 		}
-		next if ( $options_ord{$keys[$i]} > $options_ord{$keys[$m]} );
+		next if ( $options_ord{$keys[$i]} >= $options_ord{$keys[$m]} );
 		$reg      = $keys[$i];
 		$keys[$i] = $keys[$m];
 		$keys[$m] = $reg;
