@@ -29,14 +29,14 @@ sub Configure($$@) {
 
     # Get the configuration base path. 
     my $cfgpath = '/etc/ssh';
-    if ($config->elementExists('$base/configpath')) {
-        $cfgbase = $config->getValue('$base/configpath');
+    if ($config->elementExists($base.'/configpath')) {
+        $cfgpath = $config->getValue('$base/configpath');
     }
 
     # Files to modify.
-    my %fname = {'rsa1' => "$cfgpath/ssh_host_key", 
+    my %fnames = ('rsa1' => "$cfgpath/ssh_host_key", 
                  'rsa'  => "$cfgpath/ssh_host_rsa_key",
-                 'dsa'  => "$cfgpath/ssh_host_dsa_key"}; 
+                 'dsa'  => "$cfgpath/ssh_host_dsa_key"); 
 
     # Fill each of the files and set the permissions appropriately. 
     foreach (('rsa1','rsa','dsa')) {
@@ -44,25 +44,26 @@ sub Configure($$@) {
         my $private = $config->getValue("$base/$_/private");
 
         # Private key.
-        my $fname = $fname{$_};
+        my $fname = $fnames{$_};
         open FH, ">$fname";
         print FH $private . "\n";
         close FH;
-        chmod $fname 0600;
-        chown 0 $fname;
+        chmod 0600, $fname;
+        chown 0,0, $fname;
 
         # Public key. 
         $fname = "$fname.pub";
         open FH, ">$fname";
-        print FH $pubic . "\n";
+        print FH $public . "\n";
         close FH;
-        chmod $fname 0644;
-        chown 0 $fname;
+        chmod 0644, $fname;
+        chown 0,0, $fname;
     }
 
     # Create the known hosts file. 
     my $contents = '';
     my $index = 0;
+    my @hostlist;
     while ($config->elementExists("$base/knownhosts/$index")) {
         my $element = $config->getElement("$base/knownhosts/$index/hostnames");
         my @elements = $element->getList();
@@ -83,8 +84,8 @@ sub Configure($$@) {
         open FH, ">$fname";
         print FH $contents;
         close FH;
-        chmod $fname 0644;
-        chown 0 $fname;
+        chmod 0644, $fname;
+        chown 0,0, $fname;
     } elsif (-e $fname) {
         unlink $fname;
     }
