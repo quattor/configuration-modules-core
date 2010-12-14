@@ -65,6 +65,7 @@ sub Configure($$@) {
     my $index = 0;
     my @hostlist;
     while ($config->elementExists("$base/knownhosts/$index")) {
+        @hostlist = ();
         my $element = $config->getElement("$base/knownhosts/$index/hostnames");
         my @elements = $element->getList();
         foreach my $e (@elements) {
