@@ -562,7 +562,10 @@ sub create_home
 
     $dir = $1;
 
-    if (!makedir($dir, 0700)) {
+    # Parent directories, if created, need to be readable by the new
+    # user. The next step ensures the home directory is readable only
+    # by the owner.
+    if (!makedir($dir, 0755)) {
 	$self->error("Failed to create home directory: $dir ",
 		     "for account $account");
 	return;

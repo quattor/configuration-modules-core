@@ -1,3 +1,12 @@
+2011-01-11  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.1.2
+	- Create directories above user's home with 0755 mode.
+
+	Otherwise, the user can't read these directories and thus can't
+	access to his own home. The final directory has 0700 permissions,
+	though.
+
 2010-12-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.1.1
