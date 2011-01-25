@@ -35,6 +35,7 @@ type structure_altlogrotate_logrot = {
     'ifempty'         ? boolean
     'missingok'       ? boolean
     'sharedscripts'   ? boolean
+    'dateext'         ? boolean
 
     'compresscmd'     ? string
     'uncompresscmd'   ? string

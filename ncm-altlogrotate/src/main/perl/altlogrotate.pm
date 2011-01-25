@@ -149,6 +149,11 @@ sub processHash {
 	$contents .= "copytruncate\n";
     }
     
+    if (defined($entry{dateext})) {
+	$contents .= 'no' unless ($entry{copytruncate}->getValue() eq 'true');
+	$contents .= "dateext\n";
+    }
+    
     if (defined($entry{delaycompress})) {
 	$contents .= 'no' unless ($entry{delaycompress}->getValue() eq 'true');
 	$contents .= "delaycompress\n";
