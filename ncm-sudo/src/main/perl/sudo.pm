@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.2.0 : 21/02/11 11:38
+# Version: 1.2.1 : 21/02/11 11:46
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -253,7 +253,7 @@ sub write_sudoers {
 				   backup => '.old',
 				   log => $self);
 
-    print $fh ("# File created by ncm-sudo v. 1.2.0\n",
+    print $fh ("# File created by ncm-sudo v. 1.2.1\n",
 	       "# Report bugs to CERN's savannah\n",
 	       "# Read man(5) sudoers for understanding the structure\n",
 	       "# of this file\n");

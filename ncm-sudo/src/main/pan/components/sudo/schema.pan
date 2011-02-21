@@ -125,7 +125,7 @@ type structure_sudo_ldap = {
     "sudoRunAsUser" : string[] = list("ALL")
     "sudoHost" : string[] = list("ALL")
     "sudoCommand" : string[] = list("ALL")
-}
+};
 
 
 # Structure for the component. See man sudoers for information on user_aliases,
@@ -142,6 +142,7 @@ type structure_component_sudo = {
 	"cmd_aliases"		?	type_cmd_alias	{}
 	"privilege_lines"	:	structure_privilege_line[]
 	"include"               ?       string[]
+	"ldap"                  ?       structure_sudo_ldap
 };
 
 bind "/software/components/sudo" = structure_component_sudo;

@@ -1,5 +1,10 @@
 2011-02-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 1.2.1
+	- Fix a syntax error in the schema. Sorry about it.
+
+2011-02-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
 	* Release: 1.2.0
 	- Allow to include other sudoers files.
 
