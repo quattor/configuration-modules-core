@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.12 : 12/11/10 14:21
+# Version: 1.2.0 : 21/02/11 11:38
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -244,7 +244,7 @@ sub is_valid_sudoers
 # $_[2]: a reference to an array of default options lines.
 # $_[3]: a reference to an array of privilege escalation lines
 sub write_sudoers {
-    my ($self, $aliases, $opts, $lns) = @_;
+    my ($self, $aliases, $opts, $lns, $includes) = @_;
 
     my $fh = CAF::FileWriter->new (FILE_PATH,
 				   mode => 0440,
@@ -253,7 +253,7 @@ sub write_sudoers {
 				   backup => '.old',
 				   log => $self);
 
-    print $fh ("# File created by ncm-sudo v. 1.1.12\n",
+    print $fh ("# File created by ncm-sudo v. 1.2.0\n",
 	       "# Report bugs to CERN's savannah\n",
 	       "# Read man(5) sudoers for understanding the structure\n",
 	       "# of this file\n");
@@ -279,6 +279,11 @@ sub write_sudoers {
 	printf $fh "%-15s %10s\n", "Host_Alias", $alias;
     }
 
+    print $fh ("\n# Files to be included\n");
+    foreach my $include (@$includes) {
+	print $fh "#include $include\n";
+    }
+
     print $fh ("\n# Defaults specification\n");
     foreach my $opt ((@$opts)) {
 	printf  "%-10s %10s\n", "Defaults", $opt;
@@ -298,6 +303,18 @@ sub write_sudoers {
     return 0;
 }
 
+# Generates the #include <filename> lines.
+sub generate_includes
+{
+    my ($self, $config) = @_;
+
+    if ($config->elementExists ("/software/components/sudo/includes")) {
+	return $config->getElement ("/software/components/sudo/includes")
+	    ->getTree();
+    }
+    return [];
+}
+
 # Configure method.
 #
 # Assume mandatory fields are there. You'll have to crash anyways if
@@ -307,8 +324,9 @@ sub Configure {
 
 	my $aliases = $self->generate_aliases ($config);
 	my $opts = $self->generate_general_options ($config);
+	my $incls = $self->generate_includes ($config);
 	my $lns = $self->generate_privilege_lines ($config);
 
-	return !$self->write_sudoers ($aliases, $opts, $lns);
+	return !$self->write_sudoers ($aliases, $opts, $lns, $incls);
 
 }

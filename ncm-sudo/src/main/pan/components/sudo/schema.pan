@@ -115,6 +115,19 @@ type structure_sudo_defaults = {
 	"options"	:	structure_sudo_default_options
 };
 
+# Configuration for the sudoers.ldap
+type structure_sudo_ldap = {
+    "dn" : string
+    "objectClass" ? string[]
+    "sudoOption" ? structure_sudo_default_options
+    "description" : string
+    "sudoUser" : string[]
+    "sudoRunAsUser" : string[] = list("ALL")
+    "sudoHost" : string[] = list("ALL")
+    "sudoCommand" : string[] = list("ALL")
+}
+
+
 # Structure for the component. See man sudoers for information on user_aliases,
 # host_aliases, run_as_aliases and cmd_aliases
 # All alias names must be in capitals.
@@ -128,6 +141,7 @@ type structure_component_sudo = {
 	"host_aliases"		?	type_host_alias	{}
 	"cmd_aliases"		?	type_cmd_alias	{}
 	"privilege_lines"	:	structure_privilege_line[]
+	"include"               ?       string[]
 };
 
 bind "/software/components/sudo" = structure_component_sudo;
