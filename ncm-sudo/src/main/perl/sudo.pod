@@ -148,7 +148,7 @@ run_as users, hosts and commands.
 =head1 INCLUDING OTHER FILES
 
 The sudoers file allows to include other configuration files, to keep
-the configurations simpler. The C<include> field allows to specify a
+the configurations simpler. The C<includes> field allows to specify a
 list of files that should be included.
 
 =head1 EXAMPLES
