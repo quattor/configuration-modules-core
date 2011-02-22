@@ -141,7 +141,7 @@ type structure_component_sudo = {
 	"host_aliases"		?	type_host_alias	{}
 	"cmd_aliases"		?	type_cmd_alias	{}
 	"privilege_lines"	:	structure_privilege_line[]
-	"include"               ?       string[]
+	"includes"               ?       string[]
 	"ldap"                  ?       structure_sudo_ldap
 };
 
