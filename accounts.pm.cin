@@ -147,7 +147,7 @@ sub must_modify_group
 {
     my ($self, $profile, $system) = @_;
 
-    $self->debug(5, "Profile: ", join(" ", %$profile),
+    $self->debug(2, "Profile: ", join(" ", %$profile),
 		 " System: ", join(" ", @$system));
     return exists($profile->{gid}) &&
 	($profile->{gid} != $system->[ID]);
@@ -160,13 +160,13 @@ sub must_modify_user
 {
     my ($self, $profile, $system) = @_;
 
-    $self->debug(5, "Checking for changes on account: ",
+    $self->debug(2, "Checking for changes on account: ",
 		 "Home: $system->[HOME]",
 		 " comment: $system->[GCOS]",
 		 " id: $system->[ID]",
 		 " shell:  $system->[SHELL]",
 		 " groups: ", keys(%{$system->[EXTRA_FIELD]}));
-    $self->debug(5, "Profile specifies: ",
+    $self->debug(2, "Profile specifies: ",
 		 $profile->{homeDir} ? "Home: $profile->{homeDir}" : "");
 
     return 1 if defined($profile->{uid}) && $profile->{uid} != $system->[ID];
@@ -212,19 +212,22 @@ sub belong_to_pool
     return exists($pf->[1]->{poolStart}) &&
 	($sys->[0] =~ m{^$pf->[0](\d{$pf->[1]->{poolDigits}})$}) &&
 	    (($1 >= $pf->[1]->{poolStart}) &&
-		 ($1 <= ($pf->[1]->{poolStart} + $pf->[1]->{poolSize})));
+		 ($1 < ($pf->[1]->{poolStart} + $pf->[1]->{poolSize})));
 }
 
-# 
+# Returns whether the pool in the system should be modified because it
+# doesn't match the description in the profile. For now, this only
+# means the UIDs have changed.
 sub must_modify_pool
 {
     my ($self, $pf, $sys) = @_;
 
-    $sys->[0] =~ m{(\d+)$};
-
     return 0 unless exists($pf->[1]->{uid});
 
-    if ($2 - $pf->[1]->{poolStart} + $pf->[1]->{uid} != $sys->[1]->[ID]) {
+    $sys->[0] =~ m{(\d+)$};
+
+    if ($1 - $pf->[1]->{poolStart} + $pf->[1]->{uid} !=
+	    $sys->[1]->{system}->[ID]) {
 	return 1;
     }
     return 0;
@@ -252,7 +255,7 @@ sub classify_accounts
 
     while ($i || $j) {
 	if ($i && $j) {
-	    $self->debug(5, "Profile: $i->[0], system: $j->[0]");
+	    $self->debug(2, "Profile: $i->[0], system: $j->[0]");
 	    if ($i->[0] eq $j->[0]) {
 		if ($self->must_modify_user($i->[1], $j->[1]->{system})) {
 		    $self->verbose("Account $i->[0] must be modified");
@@ -260,18 +263,15 @@ sub classify_accounts
 		} else {
 		    $self->verbose("Nothing to do account $i->[0]");
 		}
-		$self->debug(5, "Removing the next element out of both arrays");
+		$self->debug(2, "Removing the next element out of both arrays");
 		$i = pop(@pf);
 		$j = pop(@sys);
 	    } elsif ($self->belong_to_pool($i, $j)) {
-		$self->verbose("Account $j->[0] belongs to pool $i->[0], ",
-			       "not modifying yet");
 		if ($self->must_modify_pool($i, $j)) {
+		    $self->verbose("Modifying pool $i->[0]");
 		    push(@$delete, $j->[0]);
 		    $create->{$i->[0]} = $i->[1];
 		}
-		# Don't modify pools yet
-		#push(@$modify, $i) if $self->must_modify_pool($i, $j);
 		$j = pop(@sys);
 		$was_in_pool = 1;
 	    } elsif ($i->[0] lt $j->[0]) {
@@ -353,12 +353,12 @@ sub conflicts
 
     $rt = 0;
     while (my ($k, $v) = each(%$sys)) {
-	$self->debug(5, "Filling $k: ", $v->{system}->[ID]);
+	$self->debug(2, "Filling $k: ", $v->{system}->[ID]);
 	$rs{$v->{system}->[ID]} = $k;
     }
 
     foreach my $i (@$delete) {
-	$self->debug(5, "Deleting $i");
+	$self->debug(2, "Deleting $i");
 	$rs{$sys->{$i}->{system}->[ID]} = undef;
     }
 
@@ -402,7 +402,7 @@ sub add_group_info_to_users
 	next unless $info->{system}->[IDLIST];
 	my @members = split(",", $info->{system}->[IDLIST]);
 	foreach my $i (@members) {
-	    $self->debug(5, "Adding user $i to group $group");
+	    $self->debug(2, "Adding user $i to group $group");
 	    $users->{$i}->{system}->[EXTRA_FIELD]->{$group} = 1;
 	}
     }
@@ -758,7 +758,7 @@ sub login_defs
 
     while (my ($k, $v) = each(%$defs)) {
 	my $e = uc($k);
-	$self->debug(5, "Destroying key: $e");
+	$self->debug(2, "Destroying key: $e");
 	@lines = grep($_ !~ m{^[^#]*$e\W}, @lines);
 	push(@lines, "$e $v");
     }
@@ -777,7 +777,14 @@ sub set_passwords
     my @pass;
 
     while (my ($a, $v) = each(%$accounts)) {
-	push(@pass, "$a:$v->{password}") if exists($v->{password});
+	if ($v->{poolSize}) {
+	    for my $i (0..$v->{poolSize}-1) {
+		push(@pass, sprintf("%s%0$v->{poolDigits}d:%s",
+				    $a, $i+$v->{poolStart}, $v->{password}));
+	    }
+	} else {
+	    push(@pass, "$a:$v->{password}") if exists($v->{password});
+	}
     }
 
     if (@pass) {
