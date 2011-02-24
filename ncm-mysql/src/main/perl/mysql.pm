@@ -27,6 +27,10 @@ local(*DTA);
 # Define paths for convenience.
 my $base = "/software/components/mysql";
 
+# Define some commands explicitly
+my $chkconfig = "/sbin/chkconfig";
+my $servicecmd = "/sbin/service";
+
 my $true = "true";
 my $false = "false";
 
@@ -73,7 +77,7 @@ sub Configure {
       my $service;
       # SL3=mysql, SL4+=mysqld
       for my $name ('mysqld', 'mysql') {
-        my $cmd = CAF::Process->new(["/sbin/chkconfig --list $name"], log => $self);
+        my $cmd = CAF::Process->new([$chkconfig, "--list", $name], log => $self);
         $cmd->output();      # Also execute the command
         unless ( $? ) {
           $service = $name;
@@ -89,19 +93,18 @@ sub Configure {
 
 
       $self->info("Checking if MySQL service ($service) is enabled and started...");
-      my $cmd = CAF::Process->new(["/sbin/chkconfig $service on"], log => $self);
+      my $cmd = CAF::Process->new([$chkconfig, $service, "on"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->error("Error enabling MySQL server on local node");
         return(1);
       }
 
-      # MySQL doesn't support 'service status'
-      $cmd = CAF::Process->new(["ps -e|grep mysqld_safe"], log => $self);
+      $cmd = CAF::Process->new([$servicecmd, $service, "status"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->info("Starting MySQL server...");
-        $cmd = CAF::Process->new(["/sbin/service $service start"], log => $self);
+        $cmd = CAF::Process->new([$servicecmd, $service, "start"], log => $self);
         my $cmd_output = $cmd->output();      # Also execute the command
         $status = $?;
         if ( $? ) {
@@ -345,7 +348,7 @@ sub Configure {
 #
 # Arguments :
 #  server : hash describing MySQL server to check (see schema)
-#  command : mysql command to execute. Can be a literal command or a script if preceded by '<'. Should not be quoted.
+#  command : mysql command to execute. Can be a literal command or a script if preceded by 'source'. Should not be quoted.
 #  database : database to apply the command to (optional, in particular in case of scripts)
 sub mysqlExecCmd () {
   my $function_name = "mysqlExecCmd";
@@ -361,18 +364,19 @@ sub mysqlExecCmd () {
     return 0;
   }
 
-  unless ( $database ) {
-    $database = ''
+  my @cmd_array = ("mysql", "-h", $server->{host},
+                            "-u", $server->{adminuser});
+  if ( $server->{adminpwd} && (length($server->{adminpwd}) > 0) ) {
+    push @cmd_array, "--password=$server->{adminpwd}";
   }
+  if ( $database && (length($database) > 0) ) {
+    push @cmd_array, $database;
+  }
+  push @cmd_array, "--exec", $command;
+  my $cmd_string = join " ",@cmd_array;
+  $self->debug(2,"$function_name : executing MySQL command <<<".$cmd_string.">>>");
 
-  # Don't add --exec and don't quote command if this is a script
-  unless ( $command =~ /^\s*</ ) {
-    $command = "--exec '" . $command . "'";
-  };
-
-  $self->debug(2,"$function_name : executing MySQL command <<<mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command>>>");
-
-  my $cmd = CAF::Process->new(["mysql -h $server->{host} -u '$server->{adminuser}' --password='$server->{adminpwd}' $database $command"],
+  my $cmd = CAF::Process->new(\@cmd_array,
                               log => $self);
   my $output = $cmd->output();      # Also execute the command
   my $status = $?;
@@ -394,6 +398,7 @@ sub mysqlExecCmd () {
 sub mysqlCheckAdminPwd() {
   my $function_name = "mysqlCheckAdminPwd";
   my ($self,$server) = @_;
+  my $test_cmd = "use mysql";
 
   unless ( $server ) {
     $self->error("$function_name : 'server' argument missing");
@@ -402,43 +407,59 @@ sub mysqlCheckAdminPwd() {
 
   my $status = 1;  # Assume failure by default
 
-  $self->debug(1,"$function_name : Checking MySQL administrator on $server->{host} (user=$server->{adminuser}, pwd=$server->{adminpwd}");
-
-  # First check if administrator account is working without password (try to use mysql database)
+  # First check if administrator account is working without password for either the specified server host or localhost
   my $admin_pwd_saved = $server->{adminpwd};
   my $server_host_saved = $server->{host};
   $server->{adminpwd} = '';
-  $status = $self->mysqlExecCmd($server,"use mysql");
-
-  # If it fails, check with localhost if administrator account is working without password (try to use mysql database)
-  if ( $status ) {
-    $self->debug(1,"$function_name : checking if user ".$server->{adminuser}." has access without password on localhost");
-    $server->{host} = 'localhost';
-    $status = $self->mysqlExecCmd($server,"use mysql");
+  my @db_hosts = ($server->{host}, 'localhost');
+  while ( $status && @db_hosts ) {
+    $server->{host} = shift @db_hosts;
+    $self->debug(1,"$function_name : checking if user ".$server->{adminuser}." has access to ".$server->{host}." without password");
+    $status = $self->mysqlExecCmd($server,$test_cmd);
   }
 
-  if ( $status ) {  # administrator has a password set, try it
-    # First check if administrator password is working (just trying to connect)
+  # If previous test fails, administrator has a password set, test the password specified in the configuration.
+  # This is done both for server host and localhost, in case that just one works. If just one works, force
+  # reinitialization of the password.
+  if ( $status ) {
     $server->{adminpwd} = $admin_pwd_saved;
-    $status = $self->mysqlExecCmd($server,"</dev/null");
+    $status = 0;
+    for my $host ($server_host_saved, 'localhost') {
+      $server->{host} = $host;
+      $self->debug(1,"$function_name : checking if user ".$server->{adminuser}." has access to ".$server->{host}." with password '".$server->{adminpwd}."'");
+      my $this_status = $self->mysqlExecCmd($server,$test_cmd);
+      if ( $this_status ) {
+        $status = 1;
+      } else {
+        # adminhost is a special feature to handle initial admin creation when it should be done using localhost
+        $server->{adminhost} = $server->{host};
+      }
+    }
   } else {
     $self->debug(1,"$function_name : MySQL administrator ($server->{adminuser}) password not set on $server->{host}");
     $status = 1;  # Force initialization of password
+    # adminhost is a special feature to handle initial admin creation when it should be done using localhost
+    $server->{adminhost} = $server->{host};
   }
 
-  # adminhost is a special feature to handle initial admin creation when it should be done using localhost
-  $server->{adminhost} = $server->{host};
+  # Restore normal server host
   $server->{host} = $server_host_saved;
 
   # If it fails, try to change it assuming a password has not yet been set (even if previous test failed)
   if ( $status ) {
     $self->debug(1,"$function_name : trying to set administrator password on $server->{host}");
     $status = $self->mysqlAddUser(undef,$server->{adminuser},$admin_pwd_saved,'ALL',0,$server);
-    if ( $status && ($server->{host} ne $this_host_full) && ($server->{host} ne 'localhost') ) {
-      $self->warn("Error setting administrator password on server ".$server->{host}." : check access is allowed with full privileges for $server->{adminuser} on $this_host_full");
+    if ( $status ) {
+      if ( ($server->{host} ne $this_host_full) && ($server->{host} ne 'localhost') ) {
+        $self->warn("Error setting administrator password on server ".$server->{host}." : check access is allowed with full privileges for $server->{adminuser} on $this_host_full");
+      } else {
+        $self->warn("Error setting administrator password on server ".$server->{host}.". Trying to continue...");
+      }
+    } else {
+      $self->debug(1,"$function_name : administrator password successfully set on $server->{host}");
     }
   } else {
-    $self->debug(1,"$function_name : MySQL administrator password succeeded");
+    $self->debug(1,"$function_name : MySQL administrator password check succeeded");
   }
 
   $server->{adminpwd} = $admin_pwd_saved;
@@ -520,8 +541,8 @@ sub mysqlAddUser() {
   }
 
   # Allow the user to connect both from localhost and real host name.
-  # To handle initial creation of admin user when only one of them can be used, allow hostname
-  # used for administration to be different value than actual host name (e.g. localhost).
+  # To handle initial creation of admin user where only one of them can be used, allow hostname
+  # used for administration to be a different value than actual host name (e.g. localhost).
   my @db_hosts = ($user_host);
   if ( $user_host eq $this_host_full ) {
     push @db_hosts,'localhost';
@@ -539,6 +560,12 @@ sub mysqlAddUser() {
       # Error already signaled by caller
       $self->debug(1,"$function_name: Failed to grant access to $userid on database $database (host=$host)");
       return $status;
+    } else {
+      # Update the password to use for next command in case it was updated
+      # by the previous command.
+      if ( ($database eq '*.*') && ($host eq $admin_server->{host}) && ($userid eq $admin_server->{adminuser}) ) {
+        $admin_server->{adminpwd} = $db_pwd;
+      }
     }
 
     # Backward compatibility for pre-4.1 clients, like perl-DBI-1.32
@@ -634,7 +661,7 @@ sub mysqlExecuteScript() {
     return 0;
   }
 
-  $status = $self->mysqlExecCmd($server,"< $script",$database);
+  $status = $self->mysqlExecCmd($server,"source $script",$database);
   if ( $status ) {
     $self->debug(1,"$function_name: Error executing script $script");
   }
