@@ -158,22 +158,43 @@ sub must_modify_user
 		 " id: $system->[ID]",
 		 " shell:  $system->[SHELL]",
 		 " groups: ", keys(%{$system->[EXTRA_FIELD]}));
-    $self->debug(2, "Profile specifies: ",
-		 $profile->{homeDir} ? "Home: $profile->{homeDir}" : "");
 
-    return 1 if defined($profile->{uid}) && $profile->{uid} != $system->[ID];
-    return 1 if defined($profile->{comment}) &&
-	$profile->{comment} ne $system->[GCOS];
-    return 1 if defined($profile->{homeDir}) &&
-	$profile->{homeDir} ne $system->[HOME];
-    return 1 if defined($profile->{shell}) &&
-	$profile->{shell} ne $system->[SHELL];
-
-    foreach my $i (@{$profile->{groups}}) {
-	return 1 if !$system->[EXTRA_FIELD]->{$i}--;
+    if (defined($profile->{uid}) && $profile->{uid} != $system->[ID]) {
+	$self->verbose("Profile uid $profile->{uid} != system uid ",
+		       "$system->[ID]");
+	return 1;
+    }
+    if (defined($profile->{comment}) &&
+	$profile->{comment} ne $system->[GCOS]) {
+	$self->verbose("Profile comment $profile->{comment} != ",
+		       "system gecos $system->[GCOS]");
+	return 1;
+    }
+    if (defined($profile->{homeDir}) &&
+	$profile->{homeDir} ne $system->[HOME]) {
+	$self->verbose("Profile homeDir $profile->{homeDir} != ",
+		       "system homedir $system->[HOME]");
+	return 1;
+    }
+    if (defined($profile->{shell}) &&
+	$profile->{shell} ne $system->[SHELL]) {
+	$self->verbose("Profile shell $profile->{shell} != ",
+		       "system shell $system->[SHELL]");
+	return 1;
     }
 
-    return grep($_, values(%{$system->[EXTRA_FIELD]}));
+    foreach my $i (@{$profile->{groups}}) {
+	if (!$system->[EXTRA_FIELD]->{$i}--) {
+	    $self->verbose("Profile specifies a group not in the system: $i");
+	    return 1;
+	};
+    }
+
+    if (grep($_, values(%{$system->[EXTRA_FIELD]}))) {
+	$self->verbose("System specifies more groups than the profile");
+	return 1;
+    }
+    return 0;
 }
 
 # Returns the same hash reference as the input, as a sorted list of
@@ -345,7 +366,7 @@ sub conflicts
 
     $rt = 0;
     while (my ($k, $v) = each(%$sys)) {
-	$self->debug(2, "Filling $k: ", $v->{system}->[ID]);
+	$self->debug(2, "Filling $field for $k: ", $v->{system}->[ID]);
 	$rs{$v->{system}->[ID]} = $k;
     }
 
@@ -619,7 +640,8 @@ sub work_around_stupid_rhes4_bug
     my ($self, $accounts) = @_;
 
     my $rh = LC::File::file_contents("/etc/redhat-release");
-    $rh =~ m{^Red Hat Enterprise Linux ES release 4} or return;
+    $rh =~ m{^Red\sHat\sEnterprise\sLinux\sES\srelease\s4|
+	     Scientific\sLinux.*\s4\.}x or return;
     $self->verbose("On RHES 4, UIDs may be wrong. Fixing");
     while (my ($a, $pf) = each(%$accounts)) {
 	my $cmd = CAF::Process->new([USERMOD], log => $self);
@@ -815,7 +837,6 @@ sub Configure
 	$self->login_defs($t->{login_defs}) if exists($t->{login_defs});
 	$self->modify_groups($tasks{modify_groups}, $t) or return 0;
 	$self->create_groups($tasks{create_groups}) or return 0;
-	#$self->modify_accounts($tasks{modify_accounts}, $t) or return 0;
 	$self->create_accounts($tasks{create_accounts}) or return 0;
 	$self->create_accounts($tasks{modify_accounts}) or return 0;
 	$self->set_passwords($t->{users}) or return 0;

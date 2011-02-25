@@ -1,3 +1,11 @@
+2011-02-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.1.4
+	- Work around the libuser bug in SL4.
+
+	In the way, be even more verbose on why an account is going to be
+	modified.
+
 2011-02-23  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.1.3
