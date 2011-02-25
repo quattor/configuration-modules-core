@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.6, 21/06/10 15:26
+# VERSION:    1.2.7, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -207,6 +207,15 @@ sub Configure {
                             "this very very probably not a problem. ",
                             "Please contact the developers in case you ",
                             "think it is.)");
+            } elsif ($ifacename =~ m/^ib/) {
+                ## this is very very likely an IPoIB interface
+                $self->info("No value found for the hwaddr ",
+                            "of interface $ifacename. ",
+                            "Setting set_hwaddr to false. ",
+                            "As it appears to be a IPoIB interface, ",
+                            "this very very probably not a problem. ",
+                            "Please contact the developers in case you ",
+                            "think it is.)");
             } else {
                 $self->warn("No value found for the hwaddr of ",
                             "interface $ifacename. Setting set_hwaddr ",
@@ -221,7 +230,7 @@ sub Configure {
     opendir(DIR, $dir_pref);
     ## here's the reason why it only verifies eth, bond, bridge, usb and vlan
     ## devices. add regexp at will
-    my $dev_regexp='-((eth|bond|br|vlan|usb)\d+(\.\d+)?)';
+    my $dev_regexp='-((eth|bond|br|vlan|usb|ib)\d+(\.\d+)?)';
     ## $1 is the device name
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
         $exifiles{"$dir_pref/$file"} = -1;
