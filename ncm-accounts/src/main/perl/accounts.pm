@@ -633,16 +633,15 @@ sub add_to_groups
     }
 }
 
-# lnewuser seems to be broken on RHES4, and doesn't set the correct
-# UIDs or group memberships. We fix it here.
-sub work_around_stupid_rhes4_bug
+# lnewuser seems to be broken on RH4 (including SL, CentOS), and
+# doesn't set the correct UIDs or group memberships. We fix it here.
+sub work_around_stupid_rh4_bug
 {
     my ($self, $accounts) = @_;
 
     my $rh = LC::File::file_contents("/etc/redhat-release");
-    $rh =~ m{^Red\sHat\sEnterprise\sLinux\sES\srelease\s4|
-	     Scientific\sLinux.*\s4\.}x or return;
-    $self->verbose("On RHES 4, UIDs may be wrong. Fixing");
+    $rh =~ m{release 4\.}i or return;
+    $self->verbose("On RH 4-like, UIDs may be wrong. Fixing");
     while (my ($a, $pf) = each(%$accounts)) {
 	my $cmd = CAF::Process->new([USERMOD], log => $self);
 	$cmd->pushargs(IDOPT, $pf->{uid});
@@ -706,7 +705,7 @@ sub create_accounts
 
     # We have to go on: some accounts may have not been created, but
     # some others may still be there and we have to fix them.
-    $self->work_around_stupid_rhes4_bug($accounts);
+    $self->work_around_stupid_rh4_bug($accounts);
     while (my ($a, $pf) = each(%$accounts)) {
 	if (exists($pf->{poolSize})) {
 	    for my $i (0..$pf->{poolSize}-1) {
