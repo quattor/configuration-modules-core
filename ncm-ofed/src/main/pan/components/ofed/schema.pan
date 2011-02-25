@@ -20,7 +20,10 @@ type component_ofed_openib_options = {
     ## SRP High Availability
     "srpha_enable" : boolean = false
     "srp_daemon_enable" : boolean = false
-};
+    
+    ## IPoIB MTU setting
+    "ipoib_mtu" : long = 64*1024
+} = nlist();
 
 ## openib modules (OPENIBMODULES)
 type component_ofed_openib_modules = {
@@ -46,7 +49,7 @@ type component_ofed_openib_modules = {
     
     ## ISCSI RDMA
     "iser" : boolean = false
-};
+} = nlist();
 
 ## openib modules (OPENIBHARDWARE)
 type component_ofed_openib_hardware = {
@@ -68,7 +71,7 @@ type component_ofed_openib_hardware = {
     "cxgb3" : boolean = false
     ## NetEffect
     "nes" : boolean = false
-};
+} = nlist();
 
 
 type component_ofed_openib = {
@@ -80,7 +83,7 @@ type component_ofed_openib = {
 
     ## at least one needs to be on
     "hardware" : component_ofed_openib_hardware
-};
+} = nlist();
 
 type component_ofed_type = {
     include structure_component
