@@ -71,7 +71,7 @@ sub Configure {
 
     our ($self,$config)=@_;
 
-    our $base
+    our $base;
     my ($result,$tree,$contents);
     
     # Save the date.
@@ -95,7 +95,8 @@ sub Configure {
     
         my $tr = $config->getElement("$base/$p")->getTree;
         $c .= "\n";
-        foreach my $o (@os) {
+        my $o;
+        foreach $o (@os) {
             if ($o eq "ipoib_mtu") {
                 $ans=${%$tr}{$o};
             } else {
@@ -104,7 +105,7 @@ sub Configure {
             }; 
             $c .= uc($o)."$suff=".$ans."\n";
         }
-        foreach my $o (keys(%$tr)) {
+        foreach $o (keys(%$tr)) {
             $self->warn("Unknown $o in $p") if (! (grep {$_ eq $o} @os));
         }
         $c .= "\n";
