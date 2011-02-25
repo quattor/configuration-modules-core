@@ -11,12 +11,11 @@ package NCM::Component::authconfig;
 
 use strict;
 use NCM::Component;
-use LC::Process;
+use CAF::Process;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-
+use CAF::FileEditor;
 use File::Path;
 
 use EDG::WP4::CCM::Element;
@@ -26,499 +25,331 @@ delete($ENV{"DISPLAY"});
 
 local(*DTA);
 
-##########################################################################
-sub getValueDefault() {
-##########################################################################
-    my ($config, $pathname, $default) = @_;
+sub update_pam_file
+{
+    my ($self, $tree) = @_;
 
-    if ($config->elementExists($pathname)) {
-        return $config->getValue($pathname);
-    } else {
-      return $default;
+    my $fh = CAF::FileEditor->new($tree->{conffile},
+				  log => $self, backup => ".old");
+
+    foreach my $i (@{$tree->{lines}}) {
+	my $whence = $i->{order} eq 'first' ?
+	    BEGINNING_OF_FILE : ENDING_OF_FILE;
+
+	$i->{entry} =~ m{(\S+\.so)};
+	my $module = $1;
+	$fh->add_or_replace_lines(qr{^#?\\s*$tree->{section}\s+$module},
+				  qr{^$tree->{section}\s+$i->{entry}$},
+				  "$tree->{section} $i->{entry}}", $whence);
+    }
+
+    $fh->close();
+}
+
+sub build_pam_systemauth
+{
+    my ($self, $tree) = @_;
+
+    foreach my $i (sort(keys(%$tree))) {
+	$self->update_pam_file($tree->{$i})
     }
 }
 
+# Disable an authentication method
+sub disable_method
+{
+    my ($self, $method, $cmd) = @_;
 
-##########################################################################
-sub build_pam_systemauth($$@) {
-##########################################################################
-
-    my ($self, $config, $base) = @_;
-
-    # in the /etc/pam.d/system_auth file, some additional stuff can be 
-    # set to allow fine-grained access control
-
-    my $conf = &getValueDefault($config,$base."/conffile","/etc/pam.d/system_auth");
-    my $changes=0;
-
-    LC::File::copy($conf,$conf."$$",preserve => 1 );
-    
-    my $section = $config->getValue($base."/section");
-
-    my $method_elmt=$config->getElement("$base/lines");
-
-    while ( $method_elmt->hasNextElement() ) {
-        my $m_elmt=$method_elmt->getNextElement();
-
-        my $m_name=$m_elmt->getName();
-        my $m_path=($m_elmt->getPath())->toString();
-        my $m_value=$config->getValue($m_path."/entry");
-        my $m_order=$config->getValue($m_path."/order");
-        
-       (my $rem_value=$m_value)=~s/\//\\\//g;
-        $rem_value=~s/\$/\\\$/g;
-        $rem_value=~s/\s+/\\s+/g;
-        $rem_value=~s/\[/\\[/g;
-       
-        # WARNING: this will result in each .so module only to be used once
-        # and argument changes to be considered insignificant to functionality
-        #.....not anymore...
-                
-        (my $linere_value=$m_value)=~/(\S*.so)(.*)/ig;
-        $linere_value = $1;
-        $linere_value=~s/\$/\\\$/g;
-        $linere_value=~s/\//\\\//g;
-                        
-        my $newline=sprintf("%-12s%s",$section,$m_value);
-
-        $changes+= NCM::Check::lines($conf,
-            linere => "^#?\\s*$section(.*?)$linere_value.*",
-            goodre => "^$section\\s+${rem_value}\\s*",
-            good   => "$newline",
-            keep   => $m_order,
-            add    => $m_order
-            );
+    if ($method eq 'files') {
+	$self->warn("Cannot disable files method");
+	return;
     }
 
-    if ( $changes ) {
-        unlink($conf.".old");
-        LC::File::move($conf."$$",$conf.".old");
-    } else {
-        unlink($conf."$$");
-    }
-
-    $self->info("Modified $conf in $changes places");
+    $self->verbose("Disabling authentication method $method");
+    $cmd->pushargs("--disable$method");
 }
 
-##########################################################################
-sub change_cfig_val($$@$$$$){
-##########################################################################
+# Enable the "files" authentication method in nsswitch. Actually, it
+# does nothing.
+sub enable_files
+{
+    my $self = shift;
 
-    my ($self, $config, $base, $tplelement, $fileconfname, $defaultconfVal, $changeback) = @_;
-    my $changes = 0;
-    #This could be passed in as a parameter, but this would make the call string even longer
-    my $conf = &getValueDefault($config,$base."/conffile","/etc/ldap.conf");
-
-    if ( $config->elementExists($base . $tplelement) ) {
-        my $elementVal = $config->getValue($base . $tplelement);
-        my $elementValre = quotemeta($elementVal);
-        $changes+= NCM::Check::lines($conf,
-            linere => "^#?\\s*$fileconfname\\s+.*",
-            goodre => "^$fileconfname\\s+$elementValre\\s*",
-            good   => "$fileconfname $elementVal",
-            keep   => "first",
-            add    => "last"
-            );
-    }
-
-    if ($changeback == 1 && ! $config->elementExists($base . $tplelement) ) {
-        $changes+= NCM::Check::lines($conf,
-            linere => "^#*\\s*$fileconfname\\s.*",
-            goodre => "#$fileconfname\\s.*",
-            good   => "#$fileconfname $defaultconfVal",
-            keep   => "first",
-            add    => "last"
-            );
-    }
-
-
-
-    return $changes; # 0 or 1 otherwise we have an error that is not cached
-
-}
-                                                                     
-##########################################################################
-sub build_ldap_config($$@) {
-##########################################################################
-
-    my ($self, $config, $base) = @_;
-
-
-    # from the ldap.conf file, some values are set correctly
-    # by the authconfig command. These attributes are
-    # "host", "base", "ssl", and "pam_password crypt"
-
-    my $conf = &getValueDefault($config,$base."/conffile","/etc/ldap.conf");
-    my $changes=0;
-    
-    # Make a backup of the file
-    LC::File::copy($conf,$conf."$$",preserve => 1 );
-
-    # The distinguished name to bind to the server with.
-    $changes +=  change_cfig_val($self, $config, $base, "/binddn", "binddn", "NA", 1);
-
-    # The credentials to bind with.
-    $changes +=  change_cfig_val($self, $config, $base, "/bindpw", "bindpw", "NA", 1);
-
-    # scope
-    $changes +=  change_cfig_val($self, $config, $base, "/scope", "scope", "sub", 0);
-
-    # The distinguished name to bind to the server with
-    # if the effective user ID is root.
-    $changes +=  change_cfig_val($self, $config, $base, "/rootbinddn", "rootbinddn", "NA", 0);
-
-    # The port
-    $changes +=  change_cfig_val($self, $config, $base, "/port", "port", "NA", 0);
-
-    # Idle timelimit; client will close connections
-    # (nss_ldap only) if the server has not been contacted
-    # for the number of seconds specified below.
-    $changes +=  change_cfig_val($self, $config, $base, "/timeouts/idle", "idle_timelimit", "NA", 0);
-
-    # Bind/connect timelimit
-    $changes +=  change_cfig_val($self, $config, $base, "/timeouts/bind", "bind_timelimit", "NA", 0);
-
-    # Search timelimit
-    $changes +=  change_cfig_val($self, $config, $base, "/timeouts/search", "timelimit", "NA", 0);
-
-    # Filter to AND with uid=%s
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_filter", "pam_filter", "objectclass=posixAccount", 1);
-
-    # Require and verify server certificate (yes/no)
-    $changes +=  change_cfig_val($self, $config, $base, "/tls/peercheck", "tls_checkpeer", "no", 1);
-
-    # CA certificates for server certificate verification
-    $changes +=  change_cfig_val($self, $config, $base, "/tls/cacertfile", "tls_cacertfile", "/etc/ssl/ca.cert", 1);
-
-    # CA certificates for server certificate verification
-    $changes +=  change_cfig_val($self, $config, $base, "/tls/cacertdir", "tls_cacertdir", "/etc/ssl/certs", 1);
-
-    # SSL cipher suite
-    # See man ciphers for syntax
-    $changes +=  change_cfig_val($self, $config, $base, "/tls/ciphers", "tls_ciphers", "TLSv1", 1);
-
-    # TLS_REQCERT
-    $changes +=  change_cfig_val($self, $config, $base, "/tls/reqcert", "TLS_REQCERT", "never", 0);
-
-    # Where to look for the users
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_base_passwd", "nss_base_passwd", "", 1);
-
-    # Where to look for groups
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_base_group", "nss_base_group", "", 1);
-
-    # Reconnect policy: hard (default) will retry connecting to
-    # the software with exponential backoff, soft will fail
-    # immediately.
-    $changes +=  change_cfig_val($self, $config, $base, "/bind_policy", "bind_policy", "", 1);
-    
-    # Mappings
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_objectclass/posixAccount", "nss_map_objectclass posixAccount", "user", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_objectclass/shadowAccount", "nss_map_objectclass shadowAccount", "user", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_objectclass/posixGroup", "nss_map_objectclass posixGroup", "group", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uid", "nss_map_attribute uid", "sAMAccountName", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/homeDirectory", "nss_map_attribute homeDirectory", "unixHomeDirectory", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uniqueMember", "nss_map_attribute uniqueMember", "member", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/uidNumber", "nss_map_attribute uidNumber", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/gidNumber", "nss_map_attribute gidNumber", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/cn", "nss_map_attribute cn", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/userPassword", "nss_map_attribute userPassword", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/loginShell", "nss_map_attribute loginShell", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_map_attribute/gecos", "nss_map_attribute gecos", "", 1);
-
-    # nss_override_attribute_value
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/unixHomeDirectory", "nss_override_attribute_value unixHomeDirectory", "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/loginShell",        "nss_override_attribute_value loginShell",        "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/gecos",             "nss_override_attribute_value gecos",             "", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_override_attribute_value/gidNumber",         "nss_override_attribute_value gidNumber",         "", 1);
-
-    # nss_initgroups_ignoreusers
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_initgroups_ignoreusers", "nss_initgroups_ignoreusers", "", 1);
-
-    # The user ID attribute (defaults to uid)
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_login_attribute", "pam_login_attribute", "sAMAccountName", 1);
-    
-    # Netscape SDK SSL options
-    if ( $config->elementExists($base . "/ssl")   or
-         ( ! $config->elementExists($base . "/tls") and
-           ! $config->elementExists($base . "/ssl") ) ) {
-      $changes +=  change_cfig_val($self, $config, $base, "/ssl", "ssl", "start_tls", 1);
-    }
-
-    # Group to enforce membership of
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_groupdn","pam_groupdn","cn=PAM,ou=Groups,dc=example,dc=com",1);
-
-    # Group member attribute
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_member_attribute","pam_member_attribute","uniquemember",1);
-
-    # Password crypting : see README.pam_ldap in nss_ldap doc
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_password","pam_password","md5",1);
-    
-    # pam_check_service_attr uses ldapns.schema authorizedServiceObject class
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_check_service_attr","pam_check_service_attr","no",1);
-
-    # pam_check_host_attr uses account objectclass host attribute
-    $changes +=  change_cfig_val($self, $config, $base, "/pam_check_host_attr","pam_check_host_attr","no",1);
-
-    # logging, debugging
-    $changes +=  change_cfig_val($self, $config, $base, "/log_dir","log_dir","",1);
-    $changes +=  change_cfig_val($self, $config, $base, "/debug",  "debug",  "",1);
-
-    # page results
-    $changes +=  change_cfig_val($self, $config, $base, "/nss_paged_results","nss_paged_results","yes", 1);
-    $changes +=  change_cfig_val($self, $config, $base, "/pagesize",         "pagesize",         "1000",1);
-
-
-    if ( $changes ) {
-        unlink($conf.".old");
-        LC::File::move($conf."$$",$conf.".old");
-        # restore SElinux context (awaiting resolution of https://savannah.cern.ch/bugs/index.php?37668
-        #if (-x "/sbin/restorecon" and -x "/usr/sbin/selinuxenabled"){
-        #    system("/usr/sbin/selinuxenabled") || system("/sbin/restorecon -nvv /etc/ldap.conf") || $self->info("Restored SElinux context for /etc/ldap.conf");
-        #}
-    } else {
-        unlink($conf."$$");
-    }
-
-    $self->info("Modified $conf in $changes places");
-
-    return $changes;
+    $self->verbose("Files method is always enabled");
 }
 
-##########################################################################
-sub build_authconfig_command($$@) {
-##########################################################################
+# Adds the authconfig command-line options to enable Kerberos5
+# authentication to $cmd.
+sub enable_krb5
+{
+    my ($self, $cfg, $cmd) = @_;
 
-    my ($self, $config, $base) = @_;
+    $self->verbose("Enabling KRB5 authentication");
 
-    my @cmd=qw(authconfig --kickstart);
-
-    if ( &getValueDefault($config,$base."/useshadow","true") eq "true" ) {
-      push(@cmd, "--enableshadow");
-    } else {
-      push(@cmd, "--disableshadow");
-    }
-
-    if ( &getValueDefault($config,$base."/usemd5","false") eq "true" ) {
-      push(@cmd, "--enablemd5");
-    } else {
-      push(@cmd, "--disablemd5");
-    }
-
-    if ( &getValueDefault($config,$base."/usecache","false") eq "true" ) {
-      push(@cmd, "--enablecache");
-    } else {
-      push(@cmd,"--disablecache");
-    }
-
-
-    # loop over all methods in the configuration and try to
-    # recognise them
-
-    my $method_elmt=$config->getElement("$base/method");
-
-    while ( $method_elmt->hasNextElement() ) {
-        my $m_elmt=$method_elmt->getNextElement();
-
-        my $m_name=$m_elmt->getName();
-        my $m_path=($m_elmt->getPath())->toString();
-
-        if ( $config->getValue($m_path."/enable") ne "true" ) {
-            $self->debug(1,"authentication method $m_name set to disabled");
-            foreach ( $m_name ) {
-#            /afs/   and $cmd.=" --disableafs"; # Removed see email from 11/22/2007
-            /ldap/  and push(@cmd, qw(--disableldap --disableldapauth));
-            /krb5/  and push(@cmd, "--disablekrb5");
-            /hesiod/ and push(@cmd, "--disablehesiod");
-            /smb/   and push(@cmd, "--disablesmbauth");
-            /nis/   and push(@cmd, "--disablenis");
-            /files/ and $self->warn("Cannot disable file-based auth");
-            }
-            next;
-        }
-
-        # these methods are now to be enabled
-
-        foreach ( $m_name ) {
-        /files/ and do {
-        };
-#         /afs/ and do {
-#             my $afscell=$config->getValue($m_path."/cell");
-#             $cmd.=" --enableafs --afscell $afscell";
-#         };
-        /nis/ and do {
-            my $domain=$config->getValue($m_path."/domain");
-            my $servers="";
-            my $nissrv_elmt=$config->getElement($m_path."/servers");
-            while ( $nissrv_elmt->hasNextElement() ) {
-                $servers and $servers.=",";
-                $servers.=($nissrv_elmt->getNextElement())->getValue();
-            }
-            push(@cmd, "--enablenis", "--nisdomain",
-                 $domain, "--nisserver", $servers);
-        };
-        /krb5/ and do {
-            my $realm=$config->getValue($m_path."/realm");
-            my $kdcs="";
-            my $krbsrv_elmt=$config->getElement($m_path."/kdcs");
-            while ( $krbsrv_elmt->hasNextElement() ) {
-                $kdcs and $kdcs.=",";
-                $kdcs.=($krbsrv_elmt->getNextElement())->getValue();
-            }
-            my $adminservers="";
-            $krbsrv_elmt=$config->getElement($m_path."/adminserver");
-            while ( $krbsrv_elmt->hasNextElement() ) {
-                $adminservers and $adminservers.=",";
-                $adminservers.=($krbsrv_elmt->getNextElement())->getValue();
-            }
-
-            push(@cmd, "--enablekrb5", "--krb5realm",
-                 $realm,  "--krb5kdc", "$kdcs");
-            push(@cmd, "--krb5adminserver", $adminservers);
-        };
-        /smb/ and do {
-            my $wg=$config->getValue($m_path."/workgroup");
-            my $servers="";
-            my $srv_elmt=$config->getElement($m_path."/servers");
-            while ( $srv_elmt->hasNextElement() ) {
-                $servers and $servers.=",";
-                $servers.=($srv_elmt->getNextElement())->getValue();
-            }
-            push(@cmd, qw(--enablesmbauth --smbworkgroup),
-                 $wg, "--smbservers", $servers);
-        };
-        /hesiod/ and do {
-            my $rhs=$config->getValue($m_path."/rhs");
-            my $lhs=$config->getValue($m_path."/lhs");
-            push(@cmd, "--enablehesiod", "--hesiodlhs", $lhs,
-                 "--hesiodrhs", $rhs);
-        };
-        /ldap/ and do {
-            my $nssonly = "false";
-            if ( $config->elementExists($m_path."/nssonly")) {
-                $nssonly = $config->getValue($m_path."/nssonly");
-            }
-            if ( $nssonly eq "false" ) { 
-                push(@cmd, qw(--enableldapauth --enableldap));
-            } else {
-                push(@cmd, qw(--disableldapauth --enableldap));
-            }
-
-            my $servers="";
-            my $srv_elmt=$config->getElement($m_path."/servers");
-            while ( $srv_elmt->hasNextElement() ) {
-                $servers and $servers.=",";
-                $servers.=($srv_elmt->getNextElement())->getValue();
-            }
-            push(@cmd, "--ldapserver", $servers);
-            push(@cmd, "--ldapbasedn=".$config->getValue($m_path."/basedn"));
-
-            my $usetls=&getValueDefault($config,$m_path."/tls/enable","false");
-            if ( $usetls eq "true" ) {
-                push(@cmd, "--enableldaptls");
-            }
-        };
-
-        } # foreach ( $m_name )
-
-    } # while ( method )
-
-    return @cmd;
+    $cmd->pushargs(qw(--enablekrb5 --krb5realm));
+    $cmd->pushargs($cfg->{realm});
+    $cmd->pushargs("--krb5kdc", join(",", @{$cfg->{kdcs}}));
+    $cmd->pushargs("--krb5adminserver", join(",", @{$cfg->{adminservers}}));
 }
 
+# Adds the authconfig command-line options to enable SMB
+# authentication to $cmd.
+sub enable_smb
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    $self->verbose("Enabling SMB authentication");
+
+    $cmd->pushargs(qw(--enablesmbauth --smbworkgroup));
+    $cmd->pushargs($cfg->{workgroup});
+    $cmd->pushargs("--smbservers", join(",", @{$cfg->{servers}}));
+}
+
+# Adds the authconfig command-line options to enable NIS
+# authentication to $cmd.
+sub enable_nis
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    $self->verbose("Enabling NIS authentication");
+    $cmd->pushargs(qw(--enablenis --nisdomain));
+    $cmd->pushargs($cfg->{domain});
+    $cmd->pushargs("--nisserver", join(",", @{$cfg->{servers}}));
+}
+
+# Adds the authconfig command-line options to enable HESIOD
+# authentication to $cmd.
+sub enable_hesiod
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    $self->verbose("Enabling Hesiod authentication");
+    $cmd->pushargs(qw(--enablehesiod --hesiodlhs));
+    $cmd->pushargs($cfg->{lhs});
+    $cmd->pushargs("--hesiodrhs", $cfg->{rhs});
+}
+
+# Adds the authconfig command-line options to enable LDAP
+# authentication to $cmd.
+sub enable_ldap
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    if ($cfg->{nssonly}) {
+	$cmd->pushargs("--disableldapauth");
+    } else {
+	$cmd->pushargs("--enableldapauth");
+    }
+
+    $cmd->pushargs("--enableldap");
+    $cmd->pushargs("--ldapserver", join(",", @{$cfg->{servers}}));
+    $cmd->pushargs("--ldapbasedn=$cfg->{basedn}");
+    $cmd->pushargs("--enableldaptls") if $cfg->{enableldaptls};
+}
+
+# Adds the authconfig command-line options to enable NSLCD (LDAP as of
+# SL6) authentication to $cmd.
+sub enable_nslcd
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    my $srv = $cfg->{uri};
+    $srv =~ s{.*://}{};
+    $srv =~ s{/.*$}{};
+    $cmd->pushargs(qw(--enableldapauth --enableldap));
+    $cmd->pushargs("--ldapserver", $srv);
+    $cmd->pushargs("--ldapbasedn=$cfg->{basedn}");
+    $cmd->pushargs("--enableldaptls") if $cfg->{ssl} && $cfg->{ssl} ne 'off';
+}
+
+sub authconfig
+{
+    my ($self, $t) = @_;
+
+    my ($stdout, $stderr);
+    my $cmd = CAF::Process->new([qw(authconfig --kickstart)],
+				log => $self,
+				stdout => \$stdout,
+				stderr => \$stderr,
+				timeout => 60);
 
 
-##########################################################################
-sub Configure($$@) {
-##########################################################################
-    
+    foreach my $i (qw(shadow cache)) {
+	$cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
+    }
+
+    $cmd->pushargs("--passalgo=$t->{passalgorithm}");
+
+    while (my ($method, $v) = each(%{$t->{method}})) {
+	if ($v->{enable}) {
+	    $method = "enable_$method";
+	    $self->$method($v, $cmd);
+	} else {
+	    $self->disable_method($method, $cmd)
+	}
+    }
+    $cmd->setopts(timeout => 60,
+		  stdout => \$stdout,
+		  stderr => \$stderr);
+    $cmd->execute();
+    if ($stdout) {
+	$self->info("authconfig command output produced:");
+	$self->report($stdout);
+    }
+    if ($stderr) {
+	$self->info("authconfig command ERROR produced:");
+	$self->report($stderr);
+    }
+}
+
+# Configures /etc/ldap.conf which is the file configuring LDAP
+# authentication on SL5.
+sub configure_ldap
+{
+    my ($self, $tree) = @_;
+
+    delete($tree->{enable});
+    my $fh = CAF::FileWriter->new($tree->{conffile},
+				  group => 28,
+				  log => $self,
+				  backup => ".old");
+    delete($tree->{conffile});
+    # These fields have different
+    print $fh "idle_timelimit $tree->{timeouts}->{idle}\n";
+    print $fh "bind_timelimit $tree->{timeouts}->{bind}\n";
+    print $fh "timelimit $tree->{timeouts}->{search}\n";
+    print $fh "tls_checkpeer ",
+	$tree->{tls}->{peercheck} ? "true" : "false", "\n";
+    print $fh "tls_cacertfile $tree->{tls}->{cacertfile}\n"
+	if $tree->{tls}->{cacertfile};
+    print $fh "tls_cacertdir  $tree->{tls}->{cacertdir}\n"
+	if $tree->{tls}->{cacertdir};
+    print $fh "tls_ciphers $tree->{tls}->{ciphers}\n"
+	if $tree->{tls}->{ciphers};
+    print $fh "TLS_REQCERT $tree->{tls}->{reqcert}\n";
+    print $fh "uri ", join(" ", map("ldap://$_/", @{$tree->{servers}})), "\n";
+    print $fh "base $tree->{basedn}\n";
+
+    delete ($tree->{basedn});
+    delete ($tree->{tls});
+    delete ($tree->{timeouts});
+    delete ($tree->{servers});
+    foreach my $i (qw(nss_map_objectclass nss_map_attribute
+		      nss_override_attribute_value)) {
+	while (my ($k, $v) = each(%{$tree->{$i}})) {
+	    print $fh "$i $k $v\n";
+	}
+	delete($tree->{$i});
+    }
+
+    while (my ($k, $v) = each(%$tree)) {
+	print $fh "$k $v\n";
+    }
+
+    return $fh->close();
+}
+
+# Configures nslcd, if needed.
+sub configure_nslcd
+{
+    my ($self, $tree) = @_;
+
+    my $fh = CAF::FileWriter->new("/etc/nslcd.conf",
+				  mode => 0600,
+				  log => $self);
+    my ($changed, $proc);
+
+    delete($tree->{enable});
+
+    print $fh "# File generated by ", __PACKAGE__, ". Do not edit edit\n";
+
+    print $fh "base $tree->{basedn}\n";
+    delete($tree->{basedn});
+    while (my ($group, $values) = each(%{$tree->{map}})) {
+	while (my ($k, $v) = each(%$values)) {
+	    print $fh "map $group $k $v\n";
+	}
+    }
+    delete($tree->{map});
+
+    while (my ($k, $v) = each(%$tree)) {
+	if (!ref($v)) {
+	    print $fh "$k $v";
+	} elsif (ref($v) eq 'ARRAY') {
+	    print $fh  "$k ", join(",", $k, @$v);
+	} elsif (ref($v) eq 'HASH') {
+	    while (my ($kh, $vh) = each(%$v)) {
+		print $fh "$k $kh $vh\n";
+	    }
+	}
+	print $fh "\n";
+    }
+
+    if ($changed = $fh->close()) {
+	CAF::Process->new([qw(/sbin/service nslcd restart)],
+			  log => $self)->run();
+	if ($?) {
+	    $self->error("Failed to restart nslcd");
+	}
+    }
+    return $changed;
+}
+
+# Restarts NSCD if that is needed. It's ugly because on some versions
+# of SL stopping or starting may fail.
+sub restart_nscd
+{
+    my $self = shift;
+
+    $self->verbose("Attempting to restart nscd");
+    my $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
+				timeout => 30)->execute();
+    sleep(1);
+    $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
+			     timeout => 30)->execute();
+    sleep(2);
+
+    $cmd = CAF::Process->new([qw(service nscd start)],
+			     log => $self,
+			     timeout => 30)->execute();
+
+    sleep(1);
+    $? = 0;
+    $cmd = CAF::Process->new([qw(nscd -i passwd)],
+			     log => $self)->run();
+
+    if ($?) {
+	$self->error("Failed to restart NSCD");
+    }
+}
+
+sub Configure
+{
     my ($self, $config) = @_;
 
-    # Define paths for convenience. 
-    my $base = "/software/components/authconfig";
-
-    my $safemode=&getValueDefault($config,$base."/safemode","false");
+    my $t = $config->getElement("/software/components/authconfig")->getTree();
+    my $cache = $t->{usecache};
+    my $restart;
 
     # authconfig basic configuration
-    my @authconfig_cmd=$self->build_authconfig_command($config,$base);
+    $self->authconfig($t);
 
-    $self->debug(1,"Executing authconfig command with safemode=".$safemode);
-    $self->debug(2,"Command = ", join(" ", @authconfig_cmd));
-    if ( $safemode eq "false" ) { # execute the authconfig command 
-
-        my ($stdout,$stderr);
-
-        my $execute_status = LC::Process::execute( 
-            \@authconfig_cmd,
-            timeout => 60,
-            stdout => \$stdout,
-            stderr => \$stderr
-            );
-
-        if ( $? >> 8) {
-            $self->error("authconfig command failed: $?");
-            $self->error(join(" ", @authconfig_cmd));
-        }
-
-        if ( $stdout ) {
-            $self->info("authconfig command output produced:");
-            $self->report($stdout);
-        }
-        if ( $stderr ) {
-            $self->info("authconfig command ERROR produced:");
-            $self->report($stderr);
-        }
-
+    # On SL5 this configures LDAP authentication. On other versions
+    # this probably doesn't hurt anyways.
+    if ($t->{method}->{ldap}->{enable}) {
+	$restart = $self->configure_ldap($t->{method}->{ldap});
     }
 
-    # the LDAP method has additional configuration in /etc/ldap.conf
-    if ( &getValueDefault($config,
-            $base."/method/ldap/enable","false") eq "true" ) {
-
-        my $nchanges = $self->build_ldap_config($config,$base."/method/ldap");
-        if ( $nchanges and 
-             ( &getValueDefault($config,$base."/usecache","false") eq "true" ) ) {
-
-          $self->debug(1,"LDAP configuration changed and usecache enabled: restarting nscd");
-          my ($stdout,$stderr);
-          
-          # This is due to nscd failing when nscd restart is called in a short period of time
-          sleep 1;
-
-          # Ugly hack for making fix for bug #68056 work with latest perl-LC.
-          # To make it even uglier: do NOT try a nice "service stop nscd" because
-          # that always fails. Just kill the beast and start it again.
-          foreach my $i (([qw(killall nscd)],
-                         [qw(sleep 1)],
-                         [qw(service nscd start)])){
-              LC::Process::execute($i,
-                                   timeout => 30,
-                                   stdout => \$stdout,
-                                   stderr => \$stderr
-                                  );
-              if ($?) {
-                  $self->error("authconfig nscd restart failed: $?");
-              }
-              if ( $stdout ) {
-                  $self->info("authconfig nscd restart command output produced:");
-                  $self->report($stdout);
-              }
-              if ($stderr ) {
-                  $self->info("authconfig nscd restart command ERROR produced:");
-                  $self->report($stderr);
-              }
-          }
-      }
+    # This configures LDAP authentication on SL6.
+    if ($t->{method}->{nslcd}->{enable}) {
+	$restart ||= $self->configure_nslcd($t->{method}->{nslcd});
     }
-    if ( $config->elementExists($base."/pamadditions") ) {
-        my $method_elmt=$config->getElement("$base/pamadditions");
-        while ( $method_elmt->hasNextElement() ) {
-            my $m_elmt=$method_elmt->getNextElement();
-            my $m_path=($m_elmt->getPath())->toString();
-            $self->build_pam_systemauth($config,$m_path);
-        }
-    }
+
+    $self->build_pam_systemauth($t->{pamadditions});
+
+    $self->restart_nscd() if $restart;
+
     return 1;
 }
 
-1;      # Required for PERL modules
-
+1;

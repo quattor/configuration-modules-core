@@ -1,3 +1,12 @@
+2011-02-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.0
+	- Rewrite and configure nslcd.
+
+	The component needed a full rewrite, and in the way, it has now
+	the ability to configure nslcd, which controls LDAP authentication
+	in RH6-based systems.
+
 2010-06-23  Ronald Starink
 
 	* Release: 1.2.7
