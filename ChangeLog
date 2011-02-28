@@ -1,5 +1,10 @@
 2011-02-28  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 5.1.7
+	- Provide summaries of scheduled activities in INFO level.
+
+2011-02-28  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
 	* Release: 5.1.6
 	- Add more protected users.
 
