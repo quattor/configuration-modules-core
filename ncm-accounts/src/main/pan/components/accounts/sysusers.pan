@@ -59,4 +59,15 @@ unique template components/accounts/sysusers;
     'exim' ,'',
     'haldaemon' ,'',
     'hpglview' ,'',
-    'sindes' ,'');
+    'sindes' ,'',
+    'amanda', '',
+    'ldap', '',
+    'oprofile', '',
+    'pegasus', '',
+    'services', '',
+    'quagga', '',
+    'radiusd', '',
+    'squid', '',
+    'tomcat', '',
+    'uuidd', '',
+    'webalizer', '');

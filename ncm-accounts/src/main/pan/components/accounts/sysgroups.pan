@@ -67,4 +67,15 @@ unique template components/accounts/sysgroups;
     'exim' ,'',
     'stapdev' ,'',
     'lemon', '',
-    'haldaemon' ,'');
+    'haldaemon' ,'',
+    'amanda', '',
+    'ldap', '',
+    'oprofile', '',
+    'pegasus', '',
+    'services', '',
+    'quagga', '',
+    'radiusd', '',
+    'squid', '',
+    'tomcat', '',
+    'uuidd', '',
+    'webalizer', '');
