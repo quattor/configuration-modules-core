@@ -481,20 +481,23 @@ sub schedule
     return %ret;
 }
 
-# Deletes the accounts marked for deletion. It removes as many as
-# possible. Returns undef in case of any single error in the deletion
-# process.
+# Deletes the accounts or groups marked for deletion. It removes as
+# many as possible. Returns undef in case of any single error in the
+# deletion process.
 sub delete_stuff
 {
     my ($self, $accounts, @command) = @_;
 
+    $accounts or return;
     my $rt = 1;
+
+    $self->info("Going to delete: ", scalar(@$accounts), " objects");
 
     foreach my $i (@$accounts) {
 	my $cmd = CAF::Process->new([@command, $i], log => $self);
 	$cmd->run();
 	if ($?) {
-	    $self->error("Error when deleting account $i");
+	    $self->error("Error when deleting $i");
 	    $rt = undef;
 	}
     }
@@ -507,6 +510,9 @@ sub modify_groups
     my ($self, $groups) = @_;
 
     my $rt = 1;
+
+    $groups or return 1;
+    $self->info("Modifying ", scalar(@$groups), " groups");
 
     foreach my $i (@$groups) {
 	my $cmd = CAF::Process->new([GROUPMOD, $i->{profile}->{gid},
@@ -526,7 +532,7 @@ sub create_groups
 {
     my ($self, $groups) = @_;
 
-    $self->verbose("Creating needed groups");
+    $self->info("Creating ", scalar(keys(%$groups)), " needed groups");
     while (my ($g, $desc) = each(%$groups)) {
 	my $cmd = CAF::Process->new([GROUPADD], log => $self);
 	$cmd->pushargs(GIDPARAM, $desc->{gid}) if exists($desc->{gid});
@@ -659,7 +665,7 @@ sub create_accounts
     my ($self, $accounts, $tree) = @_;
     my (@users, $out);
 
-    $self->verbose("Creating needed accounts");
+    $self->info("Creating ", scalar(keys(%$accounts)), " accounts");
     while (my ($a, $pf) = each(%$accounts)) {
 	$self->verbose("Processing account $a");
 	my @flds;
@@ -697,7 +703,6 @@ sub create_accounts
     my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users),
 				stderr => \$out);
     $cmd->execute();
-
 
     if ($out =~ m{Error creating account for}) {
 	$self->error("Failed to create some accounts: $out");
@@ -803,7 +808,7 @@ sub set_passwords
     if (@pass) {
 	$self->verbose("Changing passwords");
 	push(@pass, "");
-	my $cmd = CAF::Process->new([CHPASSWD], stdin => join("\n", @pass)) if @pass;
+	my $cmd = CAF::Process->new([CHPASSWD], stdin => join("\n", @pass));
 	$cmd->execute();
 	if ($?) {
 	    $self->error("Failed to execute ", join(" ", CHPASSWD));
