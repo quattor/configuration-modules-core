@@ -1,7 +1,7 @@
 COMP=accounts
 NAME=ncm-$(COMP)
 DESCR=accounts NCM component.
-VERSION=5.1.7
+VERSION=5.2.0
 RELEASE=1
 AUTHOR=Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>, Charles Loomis <charles.loomis@cern.ch>, Stephen Childs <childss@cs.tcd.ie>
 MAINTAINER=Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
@@ -16,4 +16,4 @@ TESTVARS=
 MANSECT=8
 MANDIR=
 
-DATE=28/02/11 19:57
+DATE=01/03/11 21:53

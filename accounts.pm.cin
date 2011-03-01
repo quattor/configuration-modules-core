@@ -160,6 +160,8 @@ sub must_modify_user
 {
     my ($self, $profile, $system) = @_;
 
+    my @extra;
+
     $self->debug(2, "Checking for changes on account: ",
 		 "Home: $system->[HOME]",
 		 " comment: $system->[GCOS]",
@@ -192,66 +194,56 @@ sub must_modify_user
     }
 
     foreach my $i (@{$profile->{groups}}) {
-	if (!$system->[EXTRA_FIELD]->{$i}--) {
+	$self->debug(2, "Comparing profile group $i with system");
+	if (!$system->[EXTRA_FIELD]->{$i}) {
 	    $self->verbose("Profile specifies a group not in the system: $i");
 	    return 1;
-	};
+	} else {
+	    $system->[EXTRA_FIELD]->{$i} = 0;
+	}
     }
 
-    if (grep($_, values(%{$system->[EXTRA_FIELD]}))) {
-	$self->verbose("System specifies more groups than the profile");
-	return 1;
-    }
-    return 0;
-}
-
-# Returns the same hash reference as the input, as a sorted list of
-# elements [ $hash_key, $hash_value ]
-sub sort_hash
-{
-    my ($self, $h) = @_;
-
-    my @r;
-
-    while (my ($k, $v) = each(%$h)) {
-	push(@r, [$k, $v]);
-    }
-
-    return sort({$b->[0] cmp $a->[0]} @r);
-}
-
-# Returns true if the system account $sys belongs to the pool
-# described to the profile account $pf. That is:
-#
-# - $pf belongs to a pool (and has a poolStart field)
-# - $sys is $pf' base name plus a few digits
-# - The number of the account is in an acceptable range.
-sub belong_to_pool
-{
-    my ($self, $pf, $sys) = @_;
-
-    return exists($pf->[1]->{poolStart}) &&
-	($sys->[0] =~ m{^$pf->[0](\d{$pf->[1]->{poolDigits}})$}) &&
-	    (($1 >= $pf->[1]->{poolStart}) &&
-		 ($1 < ($pf->[1]->{poolStart} + $pf->[1]->{poolSize})));
-}
-
-# Returns whether the pool in the system should be modified because it
-# doesn't match the description in the profile. For now, this only
-# means the UIDs have changed.
-sub must_modify_pool
-{
-    my ($self, $pf, $sys) = @_;
-
-    return 0 unless exists($pf->[1]->{uid});
-
-    $sys->[0] =~ m{(\d+)$};
-
-    if ($1 - $pf->[1]->{poolStart} + $pf->[1]->{uid} !=
-	    $sys->[1]->{system}->[ID]) {
-	return 1;
+    while (my ($group, $v) = each(%{$system->[EXTRA_FIELD]})) {
+	if ($v) {
+	    $self->verbose("System specifies a group not in the profile: ",
+			  $group);
+	    return 1;
+	}
     }
     return 0;
+}
+
+# Expands the profile to the list of desired accounts, including
+# pools.
+sub compute_desired_accounts
+{
+    my ($self, $profile) = @_;
+
+    my $ds = {};
+
+    $self->verbose("Preparing map of desired accounts in the system");
+    while (my ($k, $v) = each(%$profile)) {
+	if (exists($v->{poolSize})) {
+	    foreach my $i (0..$v->{poolSize}-1) {
+		my $account = sprintf("%s%0$v->{poolDigits}d", $k,
+				      $v->{poolStart}+$i);
+		while (my ($l, $m) = each(%$v)) {
+		    $ds->{$account}->{profile}->{$l} = $m;
+		}
+		$ds->{$account}->{profile}->{uid} = $v->{uid}+$i;
+		if ($v->{homeDir}) {
+		    my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
+					$v->{poolStart}+$i);
+		    $ds->{$account}->{profile}->{homeDir} = $home;
+		}
+		$ds->{$account}->{in_system} = 0;
+	    }
+	} else {
+	    $ds->{$k}->{profile} = $v;
+	    $ds->{$k}->{in_system} = 0;
+	}
+    }
+    return $ds;
 }
 
 # Returns three structures with the users that need actions, as it
@@ -260,68 +252,37 @@ sub classify_accounts
 {
     my ($self, $accounts, $protected, $profile) = @_;
 
-    my ($delete, $create, $modify);
+    my ($delete, $create, $modify, $pfm);
     $modify = {};
     $create = {};
-    my @sys = $self->sort_hash($accounts);
-    my @pf = $self->sort_hash($profile);
+    $delete = [];
 
-    my $i = pop(@pf);
-    my $j = pop(@sys);
-    my $was_in_pool = 0;
+    $pfm = $self->compute_desired_accounts($profile);
 
-    $self->verbose(join(" ", map($_->[0], @pf)));
-    $self->verbose(join(" ", keys(%$protected)));
-
-
-    while ($i || $j) {
-	if ($i && $j) {
-	    $self->debug(2, "Profile: $i->[0], system: $j->[0]");
-	    if ($i->[0] eq $j->[0]) {
-		if ($self->must_modify_user($i->[1], $j->[1]->{system})) {
-		    $self->verbose("Account $i->[0] must be modified");
-		    $modify->{$i->[0]} = $i->[1];
-		} else {
-		    $self->verbose("Nothing to do account $i->[0]");
-		}
-		$self->debug(2, "Removing the next element out of both arrays");
-		$i = pop(@pf);
-		$j = pop(@sys);
-	    } elsif ($self->belong_to_pool($i, $j)) {
-		if ($self->must_modify_pool($i, $j)) {
-		    $self->verbose("Modifying pool $i->[0]");
-		    push(@$delete, $j->[0]);
-		    $create->{$i->[0]} = $i->[1];
-		}
-		$j = pop(@sys);
-		$was_in_pool = 1;
-	    } elsif ($i->[0] lt $j->[0]) {
-		if ($was_in_pool) {
-		    $self->verbose("Finished pool $i->[0]");
-		    $was_in_pool = 0;
-		} else {
-		    $self->verbose("Account $i->[0] must be created");
-		    $create->{$i->[0]} = $i->[1] unless $was_in_pool;
-		}
-		$i = pop(@pf);
+    while (my ($acc, $st) = each(%$accounts)) {
+	$self->verbose("Evaluating account $acc");
+	if (exists($pfm->{$acc})) {
+	    if ($self->must_modify_user($pfm->{$acc}->{profile},
+					$st->{system})) {
+		$self->verbose("Account $acc must be modified");
+		push(@$delete, $acc);
+		$create->{$acc} = $pfm->{$acc}->{profile};
 	    } else {
-		if (!exists($protected->{$j->[0]})) {
-		    $self->verbose("Account $j->[0] may be deleted");
-		    push(@$delete, $j->[0]);
-		}
-		$j = pop(@sys);
+		$self->verbose("Nothing to do for account $acc");
 	    }
-	} elsif ($i) {
-	    $self->verbose("Past the end of system accounts, adding $i->[0]");
-	    $create->{$i->[0]} = $i->[1];
-	    $i = pop(@pf);
+	    $pfm->{$acc}->{in_system} = 1;
 	} else {
-	    $self->verbose("Past the end of profile accounts");
-	    if (!exists($protected->{$j->[0]})) {
-		push(@$delete, $j->[0]);
-		$self->verbose("removing $j->[0]");
+	    unless (exists($protected->{$acc})) {
+		$self->verbose("Have to delete account $acc");
+		push(@$delete, $acc);
 	    }
-	    $j = pop(@sys);
+	}
+    }
+
+    while (my ($acc, $st) = each(%$pfm)) {
+	if (!$st->{in_system}) {
+	    $self->verbose("Adding account $acc");
+	    $create->{$acc} = $st->{profile};
 	}
     }
 
@@ -685,27 +646,13 @@ sub create_accounts
 			 "as specified in the profile. Skipping account $a");
 	    next;
 	}
-	if (exists($pf->{poolStart})) {
-	    $self->verbose("Account $a is a pool with $pf->{poolSize} members");
-	    for my $i (0..$pf->{poolSize}-1) {
-		my $tail = sprintf("%0$pf->{poolDigits}d", $pf->{poolStart}+$i);
-		@flds = ("$a$tail", "x",
-			 $pf->{uid} + $i,
-			 $group,
-			 (exists($pf->{comment}) ? $pf->{comment} : ""),
-			 (exists($pf->{homeDir}) ? "$pf->{homeDir}$tail" : ""),
-			 (exists($pf->{shell}) ? $pf->{shell} : ""));
-		push(@users, join(":", @flds));
-	    }
-	} else {
-	    @flds = ($a, "x",
-		     $pf->{uid},
-		     $group,
-		     (exists($pf->{comment}) ? $pf->{comment} : ""),
-		     (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
-		     (exists($pf->{shell}) ? $pf->{shell} : ""));
-	    push(@users, join(":", @flds));
-	}
+	@flds = ($a, "x",
+		 $pf->{uid},
+		 $group,
+		 (exists($pf->{comment}) ? $pf->{comment} : ""),
+		 (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
+		 (exists($pf->{shell}) ? $pf->{shell} : ""));
+	push(@users, join(":", @flds));
     }
 
     my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users),
@@ -720,20 +667,10 @@ sub create_accounts
     # some others may still be there and we have to fix them.
     $self->work_around_stupid_rh4_bug($accounts);
     while (my ($a, $pf) = each(%$accounts)) {
-	if (exists($pf->{poolSize})) {
-	    for my $i (0..$pf->{poolSize}-1) {
-		my $tail = sprintf("%0$pf->{poolDigits}d", $i);
-		$self->create_home("$a$tail") if $pf->{createHome};
-		$self->add_to_groups("$a$tail", $pf->{groups})
-		    if exists($pf->{groups}) &&
-			(scalar(@{$pf->{groups}}) > 1);
-	    }
-	} else {
-	    $self->create_home($a) if $pf->{createHome};
-	    $self->add_to_groups($a, $pf->{groups})
-		if exists($pf->{groups}) &&
-		    (scalar(@{$pf->{groups}}));
-	}
+	$self->create_home($a) if $pf->{createHome};
+	$self->add_to_groups($a, $pf->{groups})
+	    if exists($pf->{groups}) &&
+		(scalar(@{$pf->{groups}}));
     }
 
     return 1;
@@ -803,14 +740,7 @@ sub set_passwords
     my @pass;
 
     while (my ($a, $v) = each(%$accounts)) {
-	if ($v->{poolSize}) {
-	    for my $i (0..$v->{poolSize}-1) {
-		push(@pass, sprintf("%s%0$v->{poolDigits}d:%s",
-				    $a, $i+$v->{poolStart}, $v->{password}));
-	    }
-	} else {
-	    push(@pass, "$a:$v->{password}") if exists($v->{password});
-	}
+	push(@pass, "$a:$v->{password}") if exists($v->{password});
     }
 
     if (@pass) {
@@ -851,7 +781,7 @@ sub Configure
 	$self->create_groups($tasks{create_groups}) or return 0;
 	$self->create_accounts($tasks{create_accounts}) or return 0;
 	$self->create_accounts($tasks{modify_accounts}) or return 0;
-	$self->set_passwords($t->{users}) or return 0;
+	$self->set_passwords($tasks{create_accounts}) or return 0;
     }
     return 1;
 }
