@@ -347,7 +347,7 @@ sub Configure
 
     $self->build_pam_systemauth($t->{pamadditions});
 
-    $self->restart_nscd() if $restart;
+    $self->restart_nscd() if $cache && $restart;
 
     return 1;
 }
