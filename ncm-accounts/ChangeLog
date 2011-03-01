@@ -1,3 +1,15 @@
+2011-03-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.2.0
+	- Simplify the scheduling phase.
+
+	The new method expands pool accounts as if they were normal
+	accounts, which makes it easier to handle pool
+	growth/shrinkage (they're normal accounts after that pass). It
+	also reduces a big bunch of code.
+
+	This fixes bugs when dealing with pool accounts.
+
 2011-02-28  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.1.7
