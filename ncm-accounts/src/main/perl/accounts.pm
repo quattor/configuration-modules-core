@@ -257,8 +257,7 @@ sub classify_accounts
 	    if ($self->must_modify_user($pfm->{$acc}->{profile},
 					$st->{system})) {
 		$self->verbose("Account $acc must be modified");
-		push(@$delete, $acc);
-		$create->{$acc} = $pfm->{$acc}->{profile};
+		$modify->{$acc} = $pfm->{$acc}->{profile};
 	    } else {
 		$self->verbose("Nothing to do for account $acc");
 	    }

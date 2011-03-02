@@ -1,3 +1,8 @@
+2011-03-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 5.2.1
+	- Better report modified and deleted accounts.
+
 2011-03-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 5.2.0
