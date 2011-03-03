@@ -5,7 +5,7 @@
 # File: filesystems.pm
 # Implementation of ncm-filesystems
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.0.0 : 02/11/10 16:30
+# Version: 1.0.1 : 03/03/11 19:03
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -65,7 +65,7 @@ sub free_space
 {
 	my ($self, $cfg, $protected, @fs) = @_;
 
-	my %ph = $protected;
+	my %ph = %$protected;
 	my %fsh = fshash (\@fs);
 
 	my $fl = output ("grep", "^[[:space:]]*#", "/etc/fstab", "-v");
@@ -77,11 +77,11 @@ sub free_space
 		$l =~ m{^\S+\s+(\S+)\s} or next;
 		my $mount = $1;
 		next if(exists $fsh{$mount} || exists $ph{$mount}
-		       || exists($ph{abs_path($mount)}));
+			    || exists($ph{abs_path($mount)}));
 		$self->verbose("Removing filesystem $mount");
 		my $f = NCM::Filesystem->new_from_fstab ($l);
 		$f->remove_if_needed==0 or return -1;
-		}
+
 	}
 	return 0;
 }
