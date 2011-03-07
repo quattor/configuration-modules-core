@@ -9,10 +9,10 @@ include { 'components/accounts/schema' };
 include { 'components/accounts/functions' };
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-accounts','5.2.1-1','noarch');
+'/software/packages'=pkg_repl('ncm-accounts','6.0.0-1','noarch');
 '/software/components/accounts/dependencies/pre' ?= list('spma');
 
-'/software/components/accounts/version' = '5.2.1';
+'/software/components/accounts/version' = '6.0.0';
  
 # Include system users and groups which shouldn't be removed
 # by default.  The machine configuration can still modify or
