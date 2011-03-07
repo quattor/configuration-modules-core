@@ -1,3 +1,8 @@
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.1
+	- Fix broken Perl code.
+
 2010-09-01  Nick Williams
 
 	* Release: 1.3.0
