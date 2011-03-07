@@ -21,7 +21,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use EDG::WP4::CCM::Configuration;
 use CAF::Process;
-use CAF::FileEditor;
+use CAF::FileWriter;
 use LC::File qw(directory_contents);
 use Fcntl qw(:seek);
 
@@ -43,30 +43,13 @@ sub file_open
 # component.
 sub process_aliases
 {
-    my ($self, $t, $f1, $f2) = @_;
+    my ($self, $t, $fh) = @_;
 
-    my ($i, $name, $as, $str, %aliases, $a);
-    foreach $i (@{$t->{modules}}) {
+    my ($name, $as, %aliases, $a);
+    foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{alias})) {
-	    $self->debug(4, "Adding alias $i->{alias} for $i->{name}");
-	    if (exists($aliases{$i->{name}})) {
-		push(@{$aliases{$i->{name}}}, $i->{alias});
-	    } else {
-		$aliases{$i->{name}} = [$i->{alias}];
-	    }
-	}
-    }
-
-    foreach $i ($f1, $f2) {
-	$str = ${$i->string_ref()};
-	while (($name, $as) = each(%aliases)) {
-	    $self->debug(4, "Printing aliases for: $name");
-	    $str =~ s{^alias\s+\S+\s+$name$}{}mg;
-	    $i->set_contents($str);
-	    seek($i, 0, SEEK_END);
-	    foreach $a (@$as) {
-		print $i "alias $a $name\n";
-	    }
+	    $self->verbose("Adding alias $i->{alias} for $i->{name}");
+	    print $fh "alias $i->{name} $i->{alias}\n";
 	}
     }
 }
@@ -75,29 +58,14 @@ sub process_aliases
 # any module listed here are the *only* ones to be applied.
 sub process_options
 {
-    my ($self, $t, $f1, $f2) = @_;
+    my ($self, $t, $fh) = @_;
 
-    my ($i, $name, $opt, $str, %options, $o);
+    my ($name, $opt, $str, %options, $o);
 
-    foreach $i (@{$t->{modules}}) {
+    foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{options})) {
-	    $self->debug(4, "Module $i->{name}: Adding options $i->{options}");
-	    if (exists($options{$i->{name}})) {
-		push(@{$options{$i->{name}}}, $i->{options});
-	    } else {
-		$options{$i->{name}} = [$i->{options}];
-	    }
-	}
-    }
-
-    foreach $i ($f1, $f2) {
-	$str = ${$i->string_ref()};
-	while (($name, $opt) = each(%options)) {
-	    $self->debug(4, "Adding options ", join(" ", @$opt), " to module $name");
-	    $str =~ s{^options $name\s.*}{}mg;
-	    $i->set_contents($str);
-	    seek($i, 0, SEEK_END);
-	    print $i "options $name ", join(" ", @$opt), "\n";
+	    $self->verbose("Module $i->{name}: Adding options $i->{options}");
+	    print $fh "options $i->{name} ", join(" ", @{$i->{options}}), "\n";
 	}
     }
 }
@@ -106,21 +74,12 @@ sub process_options
 # different module is allowed. Others may be deleted.
 sub process_install
 {
-    my ($self, $t, $f1, $f2) = @_;
+    my ($self, $t, $fh) = @_;
 
-    my ($i, $j, $str);
-
-    foreach $i (@{$t->{modules}}) {
-	my $name = $i->{name};
+    foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{install})) {
-	    my $command = $i->{install};
-	    foreach $j ($f1, $f2) {
-		$str = ${$j->string_ref()};
-		$str =~ s{^install $name\s.*}{}mg;
-		$str .= "install $name $command\n";
-                $self->debug(4, "Added 'install' for $name: $command");
-		$j->set_contents($str);
-	    }
+	    print $fh "install $i->{name} $i->{install}\n";
+	    $self->verbose("Added 'install' for $i->{name}: $i->{command}");
 	}
     }
 }
@@ -129,21 +88,12 @@ sub process_install
 # different module is allowed. Others may be deleted.
 sub process_remove
 {
-    my ($self, $t, $f1, $f2) = @_;
+    my ($self, $t, $fh) = @_;
 
-    my ($i, $j, $str);
-
-    foreach $i (@{$t->{modules}}) {
-	my $name = $i->{name};
+    foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{remove})) {
-	    my $command = $i->{remove};
-	    foreach $j ($f1, $f2) {
-		$str = ${$j->string_ref()};
-		$str =~ s{^remove $name\s.*}{}mg;
-		$str .= "remove $name $command\n";
-                $self->debug(4, "Added 'remove' for $name: $command");
-		$j->set_contents($str);
-	    }
+	    print $fh "remove $i->{name} $i->{remove}\n";
+	    $self->verbose("Added 'remove' for $i->{name}: $i->{remove}");
 	}
     }
 }
@@ -151,62 +101,38 @@ sub process_remove
 # Re-generates the initrds, if needed.
 sub mkinitrd
 {
-    my ($self, $f24, $f26) = @_;
+    my ($self) = @_;
 
-    my ($i, $dir, @releases, @rs, $cmd, $str);
+    my ($dir, @releases, @rs, $cmd);
 
     $dir = directory_contents("/boot");
 
-    foreach $i (@$dir) {
-	if ($i =~ m{^^System\.map\-(2\.[46]\.*)$}) {
+    foreach my $i (@$dir) {
+	if ($i =~ m{^^System\.map\-(2\.6\.*)$}) {
 	    push(@releases, $1);
 	}
     }
 
-    $str = $f24->string_ref();
-    $$str =~ s{^\s*\n}{}mg;
-    $f24->set_contents($str);
-
-    if ($f24->close()) {
-	@rs = grep(m{^2\.4}, @releases);
-	foreach $i (@rs) {
-	    $cmd = CAF::Process->new(
-		["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
-		log => $self)->run();
-	}
-    }
-
-    $str = $f26->string_ref();
-    $$str =~ s{^\s*\n}{}mg;
-    $f26->set_contents($str);
-
-    if ($f26->close()) {
-	@rs = grep(m{^2\.6}, @releases);
-	foreach $i (@rs) {
-	    $cmd = CAF::Process->new(
-		["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
-		log => $self)->run();
-	}
+    foreach my $i (@releases) {
+	$cmd = CAF::Process->new(
+	    ["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
+	    log => $self)->run();
     }
 }
 
 sub Configure {
     my ($self,$config)=@_;
-    my ($t, $f24, $f26, $c, $i);
 
-    $t = $config->getElement("/software/components/modprobe")->getTree();
-    $f24 = $self->file_open("/etc/modules.conf");
-    $f26 = $self->file_open("/etc/modprobe.conf");
+    my $t = $config->getElement("/software/components/modprobe")->getTree();
+    my $fh = CAF::FileWriter->new("/etc/modprobe.d/ncm-modprobe.conf", log => $self);
 
-    $self->process_aliases($t, $f24, $f26);
-    $self->process_options($t, $f24, $f26);
-    $self->process_install($t, $f24, $f26);
-    $self->process_remove($t, $f24, $f26);
+    $self->process_aliases($t, $fh);
+    $self->process_options($t, $fh);
+    $self->process_install($t, $fh);
+    $self->process_remove($t, $fh);
 
-    $self->mkinitrd($f24, $f26);
+    $self->mkinitrd($fh) if $fh->close();
     return 1;
 }
-
-
 
 1;

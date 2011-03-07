@@ -1,3 +1,8 @@
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.0
+	- Make it work with SL 6. Drop any support for SL 3, and don't know about SL4.
+
 2010-07-23  Jan IVEN
 
 	* Release: 1.2.1
