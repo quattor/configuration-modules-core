@@ -1,4 +1,15 @@
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 6.0.0
+	- Re-write the component because of scalability issues.
+
+	It now handles /etc/passwd, /etc/group and /etc/shadow
+	directly, instead of calling any subcommands. This shows linear
+	performance, as opposed to the quadratic performance libuser used
+	to show.
+
+	The drawback is that files are now not sorted at all, which should
+	be fine in all sane situations.
 
 2011-03-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
