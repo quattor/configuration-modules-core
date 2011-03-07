@@ -85,11 +85,15 @@ use constant PWHOME => 7;
 
 use constant EXTRA_FIELD => 9;
 
+# Password field in /etc/shadow.
+use constant PASSWORD_FIELD => 1;
+
 # Pan path for the component configuration.
 use constant PATH => "/software/components/@COMP@";
 
 use constant PASSWD_FILE => "/etc/passwd";
 use constant GROUP_FILE => "/etc/group";
+use constant SHADOW_FILE => "/etc/shadow";
 use constant LOGINDEFS_FILE => "/etc/login.defs";
 
 use constant GIDPARAM => '-g';
@@ -103,115 +107,6 @@ use constant SHELLOPT => '-s';
 use constant GCOSOPT => '-c';
 use constant IDOPT => '-u';
 
-# Stupid replacement for getpwent and getgrent. It expects a file name
-# as its argument, typically either /etc/passwd or /etc/group.
-#
-# It returns a function which will return one entry per call, a la
-# getpwent or getgrent, but without considering all the LDAP accounts.
-sub wrap_getent
-{
-    my ($self, $file) = @_;
-    my $fh = CAF::FileEditor->new($file, log => $self);
-    $fh->cancel();
-    seek($fh, 0, SEEK_SET);
-
-    return sub {
-	my $l = <$fh>;
-	defined $l or return;
-	chomp($l);
-	$self->debug (4, "Read line: $l");
-	return split(":", $l);
-    };
-}
-
-# Returns all the system elements, either groups or users. To do so,
-# it receives a reference to either getpwent or getgrent as its
-# argument.
-sub list_system_members
-{
-    my ($self, $func) = @_;
-
-    my %h;
-
-    while (my @i = $func->()) {
-	$h{$i[NAME]} = { system => \@i,
-			 to_delete => 1};
-    }
-    return %h;
-}
-
-# Returns whether the existing group must be modified. Receives as
-# arguments the group definition in the profile and a reference to the
-# output of getgr() for that group.
-sub must_modify_group
-{
-    my ($self, $profile, $system) = @_;
-
-    $self->debug(2, "Profile: ", join(" ", %$profile),
-		 " System: ", join(" ", @$system));
-    return exists($profile->{gid}) &&
-	($profile->{gid} != $system->[ID]);
-}
-
-# Returns whether the existing user must be modified. Receives as
-# arguments the user definition in the profile, and a reference to the
-# output of getpw() for that account.
-sub must_modify_user
-{
-    my ($self, $profile, $system) = @_;
-
-    my @extra;
-
-    $self->debug(2, "Checking for changes on account: ",
-		 "Home: $system->[HOME]",
-		 " comment: $system->[GCOS]",
-		 " id: $system->[ID]",
-		 " shell:  $system->[SHELL]",
-		 " groups: ", keys(%{$system->[EXTRA_FIELD]}));
-
-    if (defined($profile->{uid}) && $profile->{uid} != $system->[ID]) {
-	$self->verbose("Profile uid $profile->{uid} != system uid ",
-		       "$system->[ID]");
-	return 1;
-    }
-    if (defined($profile->{comment}) &&
-	$profile->{comment} ne $system->[GCOS]) {
-	$self->verbose("Profile comment $profile->{comment} != ",
-		       "system gecos $system->[GCOS]");
-	return 1;
-    }
-    if (defined($profile->{homeDir}) &&
-	$profile->{homeDir} ne $system->[HOME]) {
-	$self->verbose("Profile homeDir $profile->{homeDir} != ",
-		       "system homedir $system->[HOME]");
-	return 1;
-    }
-    if (defined($profile->{shell}) &&
-	$profile->{shell} ne $system->[SHELL]) {
-	$self->verbose("Profile shell $profile->{shell} != ",
-		       "system shell $system->[SHELL]");
-	return 1;
-    }
-
-    foreach my $i (@{$profile->{groups}}) {
-	$self->debug(2, "Comparing profile group $i with system");
-	if (!$system->[EXTRA_FIELD]->{$i}) {
-	    $self->verbose("Profile specifies a group not in the system: $i");
-	    return 1;
-	} else {
-	    $system->[EXTRA_FIELD]->{$i} = 0;
-	}
-    }
-
-    while (my ($group, $v) = each(%{$system->[EXTRA_FIELD]})) {
-	if ($v) {
-	    $self->verbose("System specifies a group not in the profile: ",
-			  $group);
-	    return 1;
-	}
-    }
-    return 0;
-}
 
 # Expands the profile to the list of desired accounts, including
 # pools.
@@ -228,334 +123,459 @@ sub compute_desired_accounts
 		my $account = sprintf("%s%0$v->{poolDigits}d", $k,
 				      $v->{poolStart}+$i);
 		while (my ($l, $m) = each(%$v)) {
-		    $ds->{$account}->{profile}->{$l} = $m;
+		    $ds->{$account}->{$l} = $m;
 		}
-		$ds->{$account}->{profile}->{uid} = $v->{uid}+$i;
+		$ds->{$account}->{uid} = $v->{uid}+$i;
+		$ds->{$account}->{name} = $account;
 		if ($v->{homeDir}) {
 		    my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
 					$v->{poolStart}+$i);
-		    $ds->{$account}->{profile}->{homeDir} = $home;
+		    $ds->{$account}->{homeDir} = $home;
 		}
-		$ds->{$account}->{in_system} = 0;
 	    }
-	} else {
-	    $ds->{$k}->{profile} = $v;
-	    $ds->{$k}->{in_system} = 0;
+	}
+	else {
+	    $ds->{$k} = $v;
+	    $ds->{$k}->{name} = $k;
 	}
     }
+
     return $ds;
 }
 
-# Returns three structures with the users that need actions, as it
-# happens with classify_groups It considers pool accounts as well.
-sub classify_accounts
+# Returns a map for /etc/groups.
+sub build_group_map
 {
-    my ($self, $accounts, $protected, $profile) = @_;
+    my $self = shift;
 
-    my ($delete, $create, $modify, $pfm);
-    $modify = {};
-    $create = {};
-    $delete = [];
+    my %rt;
 
-    $pfm = $self->compute_desired_accounts($profile);
+    my $fh = CAF::FileEditor->new(GROUP_FILE, log => $self);
+    $fh->cancel();
+    seek($fh, 0, SEEK_SET);
 
-    while (my ($acc, $st) = each(%$accounts)) {
-	$self->verbose("Evaluating account $acc");
-	if (exists($pfm->{$acc})) {
-	    if ($self->must_modify_user($pfm->{$acc}->{profile},
-					$st->{system})) {
-		$self->verbose("Account $acc must be modified");
-		$modify->{$acc} = $pfm->{$acc}->{profile};
-	    } else {
-		$self->verbose("Nothing to do for account $acc");
-	    }
-	    $pfm->{$acc}->{in_system} = 1;
-	} else {
-	    unless (exists($protected->{$acc})) {
-		$self->verbose("Have to delete account $acc");
-		push(@$delete, $acc);
-	    }
+    $self->verbose("Building group map");
+
+    while (my $l = <$fh>) {
+	chomp($l);
+	next unless $l;
+	$self->debug(2, "Read group line $l");
+	my @flds = split(":", $l);
+	my $h = { name => $flds[NAME] };
+	$h->{gid} = $flds[ID];
+	my %mb;
+	if ($flds[IDLIST]) {
+	    %mb = map(($_ => 1), split(",", $flds[IDLIST]));
 	}
+	$h->{members} = \%mb;
+	$rt{$h->{name}} = $h;
     }
 
-    while (my ($acc, $st) = each(%$pfm)) {
-	if (!$st->{in_system}) {
-	    $self->verbose("Adding account $acc");
-	    $create->{$acc} = $st->{profile};
-	}
-    }
-
-    return ($modify, $delete, $create);
+    return \%rt;
 }
 
-
-# Returns three structures with the groups that need some actions
-# (modification, deletion, creation). It receives as arguments the
-# existing groups, those which must NOT be removed no matter what and
-# the entities present in the profile.
-sub classify_groups
-{
-    my ($self, $groups, $protected, $profile) = @_;
-
-    my ($modify, $delete, $create);
-
-    while (my ($k, $v) = each(%$profile)) {
-	if (exists($groups->{$k})) {
-	    $groups->{$k}->{to_delete} = 0;
-	    push(@$modify, {system => $groups->{$k}->{system},
-			    profile => $v})
-		if $self->must_modify_group($v, $groups->{$k}->{system});
-	} else {
-	    $create->{$k} = $v;
-	}
-    }
-
-    while (my ($k, $v) = each(%$groups)) {
-	push(@$delete, $k) if $v->{to_delete} && !exists($protected->{$k})
-	    && $k ne 'root';
-    }
-    return ($modify, $delete, $create);
-}
-
-# Checks for conflicts in the resulting status list.
-#
-# It returns 0 if everything is expected to go all right, -1 in case
-# of expected errors.
-#
-# Accepts the hash of entities (users or groups in the system), the
-# scheduled modifications, the scheduled deletions, the scheduled
-# creations and the field in the profile with the numeric ID. This
-# last one must be either "gid" or "uid".
-sub conflicts
-{
-    my ($self, $sys, $modify, $delete, $create, $field) = @_;
-
-    my (%rs, $rt, $nam, $id, @id);
-
-    $rt = 0;
-    while (my ($k, $v) = each(%$sys)) {
-	$self->debug(2, "Filling $field for $k: ", $v->{system}->[ID]);
-	$rs{$v->{system}->[ID]} = $k;
-    }
-
-    foreach my $i (@$delete) {
-	$self->debug(2, "Deleting $i");
-	$rs{$sys->{$i}->{system}->[ID]} = undef;
-    }
-
-    foreach my $i (@$modify) {
-	if (exists($i->{profile}->{$field})) {
-	    if (defined($rs{$i->{profile}->{$field}}) &&
-		    $rs{$i->{profile}->{$field}} ne $i->{system}->[NAME]) {
-		$self->error("Trying to assign used $field $i->{profile}->{$field} to ",
-			     $i->{system}->[NAME], " conflicting with ",
-			     $rs{$i->{profile}->{$field}});
-		$rt = -1;
-	    } else {
-		$rs{$i->{profile}->{$field}} = $i->{system}->[NAME];
-	    }
-	}
-    }
-
-    while (my ($k, $v) = each(%$create)) {
-	$self->debug(4, "Analysing $k($field)");
-	if (exists($v->{$field})) {
-	    $self->debug(4, "Checking for clashes with $field");
-	    if (defined($rs{$v->{$field}}) && ($rs{$v->{$field}} ne $k)) {
-		$self->error("Trying to assign used $field $v->{$field} to $k, ",
-			     "conflicting with $rs{$v->{$field}}");
-		$rt = -1;
-	    } else {
-		$rs{$v->{$field}} = $k;
-	    }
-	}
-    }
-    return $rt;
-}
-
-
-# Adds to each user the list of groups he belongs to.
-sub add_group_info_to_users
-{
-    my ($self, $users, $groups) = @_;
-
-    while (my ($group, $info) = each(%$groups)) {
-	next unless $info->{system}->[IDLIST];
-	my @members = split(",", $info->{system}->[IDLIST]);
-	foreach my $i (@members) {
-	    $self->debug(2, "Adding user $i to group $group");
-	    $users->{$i}->{system}->[EXTRA_FIELD]->{$group} = 1;
-	}
-    }
-}
-
-sub conflict_accounts
-{
-    my ($self, $sys, $modify, $delete, $create, $field) = @_;
-
-    my (@to_delete, %to_create, @to_modify);
-
-    if ($delete) {
-	@to_delete = @$delete;
-    }
-    push(@to_delete,  keys(%$modify));
-    %to_create = (%$create, %$modify);
-    return $self->conflicts($sys, undef, \@to_delete, \%to_create, $field);
-}
-
-# Schedules what has to be done. Returns a hash listing:
-#
-# Accounts to be removed. This list will be empty if the
-# remove_unknown flag is false in the profile.
-#
-# Groups to be removed. This list will be empty if the remove_unknown
-# flag is false in the profile.
-#
-# Groups to be modified
-# Groups to be created
-# Accounts to be modified
-# Accounts to be created
-#
-# Returns undef in case of errors, so the component can fail without
-# breaking the system.
-sub schedule
-{
-    my ($self, $tree) = @_;
-
-    my %ret;
-
-    my %u = $self->list_system_members($self->wrap_getent(PASSWD_FILE));
-    my %g = $self->list_system_members($self->wrap_getent(GROUP_FILE));
-
-    $self->add_group_info_to_users(\%u, \%g);
-
-    @ret{"modify_groups", "delete_groups", "create_groups"} =
-	$self->classify_groups(\%g, $tree->{kept_groups}, $tree->{groups});
-    @ret{"modify_accounts",
-	 "delete_accounts",
-	 "create_accounts"} =
-	$self->classify_accounts(\%u, $tree->{kept_users}, $tree->{users});
-
-    $tree->{remove_unknown} or @ret{"delete_groups","delete_accounts"} =
-	([], []);
-
-    return if $self->conflicts(\%g, @ret{"modify_groups", "delete_groups",
-					     "create_groups"}, 'gid');
-    return if $self->conflict_accounts(\%u,
-				       @ret{"modify_accounts",
-					    "delete_accounts",
-					    "create_accounts"},
-				       'uid');
-    return %ret;
-}
-
-# Deletes the accounts or groups marked for deletion. It removes as
-# many as possible. Returns undef in case of any single error in the
-# deletion process.
-sub delete_stuff
-{
-    my ($self, $accounts, @command) = @_;
-
-    $accounts or return;
-    my $rt = 1;
-
-    $self->info("Going to delete: ", scalar(@$accounts), " objects");
-
-    foreach my $i (@$accounts) {
-	my $cmd = CAF::Process->new([@command, $i], log => $self);
-	$cmd->run();
-	if ($?) {
-	    $self->error("Error when deleting $i");
-	    $rt = undef;
-	}
-    }
-    return $rt;
-}
-
-# Modifies groups.
-sub modify_groups
+# Returns a map for /etc/passwd
+sub build_passwd_map
 {
     my ($self, $groups) = @_;
 
-    my $rt = 1;
+    my $fh = CAF::FileEditor->new(PASSWD_FILE, log => $self);
+    $fh->cancel();
+    seek($fh, 0, SEEK_SET);
 
-    $groups or return 1;
-    $self->info("Modifying ", scalar(@$groups), " groups");
+    my %rt;
 
-    foreach my $i (@$groups) {
-	my $cmd = CAF::Process->new([GROUPMOD, $i->{profile}->{gid},
-				     $i->{system}->[NAME]],
-				    log => $self);
-	$cmd->run();
-	if ($?) {
-	    $self->error("Failed to adjust group ", $i->{system}->[NAME]);
-	    $rt = undef;
+    $self->verbose("Building an account map");
+
+
+    while (my $l = <$fh>) {
+	chomp($l);
+	next unless $l;
+	$self->debug(2, "Read line $l");
+	my @flds = split(":", $l);
+	my $h = { name => $flds[NAME] };
+	$h->{uid} = $flds[ID];
+	$h->{main_group} = $flds[IDLIST];
+	$h->{homeDir} = $flds[HOME];
+	$h->{shell} = $flds[SHELL];
+	$h->{comment} = $flds[GCOS];
+	$rt{$h->{name}} = $h;
+    }
+
+    while (my ($group, $st) = each(%$groups)) {
+	foreach my $acc (keys(%{$st->{members}})) {
+	    push(@{$rt{$acc}->{groups}}, $group);
 	}
     }
-    return $rt;
+
+    return \%rt;
 }
 
-# Creates groups
-sub create_groups
+sub add_shadow_info
+{
+    my ($self, $passwd) = @_;
+
+    my $fh = CAF::FileEditor->new(SHADOW_FILE, log => $self);
+    $fh->cancel();
+    seek($fh, 0, SEEK_SET);
+
+    $self->verbose("Adding passwords to the accounts map");
+
+    while (my $l = <$fh>) {
+	next unless $l;
+	my @flds = split(":", $l);
+	$passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
+    }
+}
+
+# Returns a map for /etc/shadow
+
+# Returns three hash references: one for accounts, another one for
+# groups, and the last one for shadow.
+#
+# Each member of each hash is a hash reference with a meaningful name
+# for each field. If a field is a complex one (say, the list of
+# members of a group, it will be a hash as well).
+sub build_system_map
+{
+    my $self = shift;
+
+    my $groups = $self->build_group_map();
+    my $passwd = $self->build_passwd_map($groups);
+    $self->add_shadow_info($passwd);
+
+    $self->info(sprintf("System has %d accounts in %d groups",
+			scalar(keys(%$passwd)), scalar(keys(%$groups))));
+
+    return { groups => $groups, passwd => $passwd};
+}
+
+# Deletes any groups in the $system not in the $profile, excepting
+# those in the $kept list.
+sub delete_groups
+{
+    my ($self, $system, $profile, $kept) = @_;
+
+    while (my ($group, $cfg) = each(%{$system->{groups}})) {
+	if (!(exists($profile->{$group}) || exists($kept->{$group}))) {
+	    $self->debug(2, "Marking group $group for removal");
+	    delete($system->{groups}->{$group});
+	}
+    }
+}
+
+# Applies to $system the groups in $profile, by adding or modifying as
+# needed.
+sub apply_profile_groups
+{
+    my ($self, $system, $profile) = @_;
+
+    while (my ($group, $cfg) = each(%$profile)) {
+	if (!exists($system->{groups}->{$group})) {
+	    $self->debug(2, "Scheduling addition of group $group");
+	    $system->{groups}->{$group} = { name => $group,
+					    members => {},
+					    gid => $cfg->{gid}};
+	} elsif ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
+	    $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
+	    $system->{groups}->{$group}->{gid} = $cfg->{gid};
+	}
+    }
+}
+
+# Aligns groups in the $system to the description in the $profile,
+# knowing that $kept groups shouldn't be removed ever (but they can be
+# modified), and other groups in the system but not in the profile can
+# be removed only if $remove_unknown allows for it.
+sub adjust_groups
+{
+    my ($self, $system, $profile, $kept, $remove_unknown) = @_;
+
+    $self->verbose("Adjusting groups");
+
+    $self->delete_groups($system, $profile, $kept) if $remove_unknown;
+    $self->apply_profile_groups($system, $profile);
+}
+
+# Deletes from the $system an $account.
+sub delete_account
+{
+    my ($self, $system, $account) = @_;
+
+    foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
+	$self->debug(2, "Deleting account $account from group $i");
+	delete($system->{groups}->{$i}->{members}->{$account});
+    }
+
+    delete($system->{passwd}->{$account});
+}
+
+# Adds to $system the account named $name, with the properties
+# described in $cfg.
+sub add_account
+{
+    my ($self, $system, $name, $cfg) = @_;
+
+    foreach my $i (@{$cfg->{groups}}) {
+	$self->debug(3, "Reviewing group $i for account $name");
+	if (exists($system->{groups}->{$i})) {
+	    $system->{groups}->{$i}->{members}->{$name} = 1;
+	    # Pool accounts share their group structure. If it has
+	    # already been changed, we need to do no more.
+	} elsif ($i !~ m{^\d+$}) {
+	    $self->debug(2, "Account $name assigned to non-local group $i");
+	    my @g = getgrnam($i);
+	    if (@g) {
+		$i = $g[ID];
+		$self->debug(2, "Account $name resolved in group $i")
+	    } else {
+		$self->error("Not found group $i for account $name. Skiping");
+		return;
+	    }
+	}
+    }
+    if ($cfg->{groups}->[0] =~ m{^\d+$}) {
+	$cfg->{main_group} = $cfg->{groups}->[0];
+    } else {
+	$cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
+    }
+    $system->{passwd}->{$name} = $cfg;
+}
+
+sub delete_unneeded_accounts
+{
+    my ($self, $system, $profile, $kept) = @_;
+
+    while (my ($account, $cfg) = each(%{$system->{passwd}})) {
+	if (!(exists($profile->{$account}) || exists($kept->{$account}) ||
+		  $account eq 'root')) {
+	    $self->debug(2, "Marking account $account for deletion");
+	    $self->delete_account($system, $account);
+	}
+    }
+}
+
+# Adds or modifies to $system the needed accounts in $profile
+sub add_profile_accounts
+{
+    my ($self, $system, $profile) = @_;
+
+    while (my ($account, $cfg) = each(%{$profile})) {
+	if (exists($system->{passwd}->{$account})) {
+	    $self->debug(2, "Account $account exists in the system. ",
+			 "Regenerating from scratch");
+	    # Inherit the existing password if not specified in the profile.
+	    if (!exists($cfg->{password})) {
+		$self->debug(1, "Account $account inherits ",
+			     "password from the system");
+		$cfg->{password} = $system->{passwd}->{$account}->{password};
+	    }
+	    $self->delete_account($system, $account);
+	}
+	$self->debug(2, "Adding account $account to the system");
+	$self->add_account($system, $account, $cfg);
+    }
+}
+
+# Aligns the accounts in the $system to those in the
+# $profile. Accounts in $kept are not removed even if they don't
+# belong to the $profile.
+sub adjust_accounts
+{
+    my ($self, $system, $profile, $kept, $remove_unknown) = @_;
+
+    $self->verbose("Adjusting accounts");
+
+    $self->delete_unneeded_accounts($system, $profile, $kept)
+	if $remove_unknown;
+
+    $self->add_profile_accounts($system, $profile);
+
+}
+
+# Returns a normal user structure from the fields related to root in
+# the profile.
+sub compute_root_user
+{
+    my ($self, $system, $tree) = @_;
+
+    return { uid => 0,
+	     groups => $system->{root}->{groups},
+	     password => $tree->{rootpwd},
+	     shell => $tree->{rootshell}
+	    };
+}
+
+# Returns whether the groups in the system are consistent.
+sub groups_are_consistent
 {
     my ($self, $groups) = @_;
 
-    $self->info("Creating ", scalar(keys(%$groups)), " needed groups");
-    while (my ($g, $desc) = each(%$groups)) {
-	my $cmd = CAF::Process->new([GROUPADD], log => $self);
-	$cmd->pushargs(GIDPARAM, $desc->{gid}) if exists($desc->{gid});
-	$cmd->pushargs($g);
-	$cmd->run();
-	if ($?) {
-	    $self->error("Failed to create group $g");
-	    return;
+    my $ok = 1;
+    my %ids;
+
+    $self->verbose("Checking for groups consistency");
+    while (my ($group, $st) = each(%$groups)) {
+	$self->debug(2, "Checking for consistency of group $group");
+	if (exists($ids{$st->{gid}})) {
+	    $self->error("Collision found between groups $st->{name} and ",
+			 $ids{$st->{gid}}, " for id $st->{gid}");
+	    $ok = 0;
+	} else {
+	    $ids{$st->{gid}} = $group;
 	}
     }
-    return 1;
+    return $ok;
 }
 
+# Returns whether the accounts in the system are consistent (have
+# unique IDs and all the groups they belong to actually exist).
+sub accounts_are_consistent
+{
+    my ($self, $accounts, $groups) = @_;
+
+    $self->verbose("Checking for account consistency");
+
+    my $ok = 1;
+    my %ids;
+
+    while (my ($account, $st) = each(%$accounts)) {
+	$self->debug(2, "Checking for consistency of account $account");
+	if (exists($ids{$st->{uid}})) {
+	    $self->error("Collision found between accounts $account and ",
+			 "$ids{$st->{uid}} for id $st->{uid}");
+	    $ok = 0;
+	} else {
+	    $ids{$st->{uid}} = $account;
+	}
+	foreach my $i (@{$st->{groups}}) {
+	    if ($i !~ m{^\d+$} && !exists($groups->{$i})) {
+		$ok = 0;
+		$self->error("Account $account assigned to non-existing group ",
+			     $i);
+	    }
+	}
+    }
+    return $ok;
+}
+
+# Returns whether the $system is consistent. That is: that group IDs
+# are unique, that all account IDs are unique, and that all the groups
+# accounts belong to actually exist.
+sub is_consistent
+{
+    my ($self, $system) = @_;
+
+    my $ok;
+
+    $self->verbose("Checking for system consistency");
+    $ok = $self->groups_are_consistent($system->{groups});
+
+
+    return $ok;
+}
+
+# Commits the group configuration.
+sub commit_groups
+{
+    my ($self, $groups) = @_;
+
+    my (@group, @ln, $fh);
+
+    $self->verbose("Preparing group file");
+
+    while (my ($g, $cfg) = each(%$groups)) {
+	@ln =  ($g, "x", $cfg->{gid},
+		join(",", keys(%{$cfg->{members}})));
+	push(@group, join(":", @ln));
+    }
+
+    $self->info("Committing ", scalar(@group), " groups");
+
+    $fh = CAF::FileWriter->new(GROUP_FILE, log => $self,
+			       backup => ".old");	
+    print $fh join("\n", @group, "");
+    $fh->close();
+}
+
+sub commit_accounts
+{
+    my ($self, $accounts) = @_;
+
+    $self->verbose("Committing passwd and shadow files");
+
+    my (@passwd, @shadow, @ln, $fh);
+
+    while (my ($account, $cfg) = each(%$accounts)) {
+	@ln =  ($account, "x", $cfg->{uid},
+		$cfg->{main_group},
+		(exists($cfg->{comment}) ?
+		     $cfg->{comment} : ""),
+		(exists($cfg->{homeDir}) ?
+		     $cfg->{homeDir} : ""),
+		(exists($cfg->{shell}) ? $cfg->{shell} : ""));
+	push(@passwd, join(":", @ln));
+	@ln = ($account,
+	       (exists($cfg->{password}) ? $cfg->{password} : "*"),
+	       15034, 0, 99999, 7, "", "", "");
+	push(@shadow, join(":", @ln));
+    }
+
+    $self->info("Committing ", scalar(@passwd), " accounts");
+    $fh = CAF::FileWriter->new(PASSWD_FILE, log => $self,
+			       backup => ".old");
+    print $fh join("\n", @passwd, "");
+    $fh->close();
+    $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
+			       backup => ".old",
+			       mode => 0400);
+    print $fh join("\n", @shadow, "");
+    $fh->close();
+}
+
+# Returns a sanitized (untainted) version of the path given as an
+# argument, or causes an error if the path is not valid.
 sub sanitize_path
 {
     my ($self, $path) = @_;
 
     if ($path !~ m{^(/[-\w\./]+)$}) {
-	$self->error("Unsafe path: $path");
-	return;
+        $self->error("Unsafe path: $path");
+        return;
     }
     return $1;
 }
 
-# Creates the home directory for a given account.  The home directory
-# is created first, and then all the contents on /etc/skel are copied,
-# and permissions are adjusted.
-#
-# Only at the end of the process the user is given access to the
-# already set-up directory.
-#
-# Returns true in case of success, false otherwise.
-# Receives the account name and the path to the home dir.
+
+
+# Creates the home directory of account $account, which should be
+# configured with the provided $cfg.
 sub create_home
 {
-    my ($self, $account) = @_;
-    my ($uid, $gid, $dir) = (getpwnam($account))[ID,IDLIST,PWHOME];
+    my ($self, $account, $cfg) = @_;
 
-    $self->verbose("Creating home directory for $account at $dir");
+    my ($dir, $uid, $gid);
+    $self->verbose("Creating home directory for $account at $cfg->{homeDir}");
 
-    if ($dir !~ m{^(/[-/\w\.]+$)}) {
-	$self->error("Unsafe to create home directory: $dir ",
-		     "for account: $account");
+    $dir = $self->sanitize_path($cfg->{homeDir}) or return;
+    if ($cfg->{uid} !~ m{^(\d+)$}) {
+	$self->error("Wrong uid for $account, not creating its home dir");
 	return;
     }
+    $uid = $1;
 
-    $dir = $1;
-
+    if ($cfg->{main_group} !~ m{^(\d+)$}) {
+	$self->error("Wrong group for $account, not creating its home dir");
+	return;
+    }
+    $gid = $1;
     # Parent directories, if created, need to be readable by the new
     # user. The next step ensures the home directory is readable only
     # by the owner.
     if (!makedir($dir, 0755)) {
-	$self->error("Failed to create home directory: $dir ",
-		     "for account $account");
-	return;
+        $self->error("Failed to create home directory: $dir ",
+                     "for account $account");
+        return;
     }
 
     # Close the access while we copy everything from /etc/skel. This
@@ -565,196 +585,52 @@ sub create_home
 
     my $find = LC::Find->new();
     $find->callback(
-	sub {
-	    my $d = $self->sanitize_path("$dir/$LC::Find::SubDir") or return;
-	    my $f = $self->sanitize_path("$d/$LC::Find::Name") or return;
-	    my $src =  $self->sanitize_path(join("/", $LC::Find::TopDir,
-						 $LC::Find::SubDir,
-						 $LC::Find::Name)) or return;
-	    if (! -e $f) {
-		if (-d $src) {
-		    $self->verbose("Creating directory $f for $src");
-		    if (!makedir($f, 0700)) {
-			$self->error("Couldn't create directory $f");
-			return;
-		    }
-		} else {
-		    copy($src, $f, preserve => 1);
-		}
-	    }
-	    chown($uid, $gid, $f);
-	}
+        sub {
+            my $d = $self->sanitize_path("$dir/$LC::Find::SubDir") or return;
+            my $f = $self->sanitize_path("$d/$LC::Find::Name") or return;
+            my $src =  $self->sanitize_path(join("/", $LC::Find::TopDir,
+                                                 $LC::Find::SubDir,
+                                                 $LC::Find::Name)) or return;
+            if (! -e $f) {
+                if (-d $src) {
+                    $self->verbose("Creating directory $f for $src");
+                    if (!makedir($f, 0700)) {
+                        $self->error("Couldn't create directory $f");
+                        return;
+                    }
+                } else {
+                    copy($src, $f, preserve => 1);
+                }
+            }
+            chown($uid, $gid, $f);
+        }
        );
 
     $find->find(SKELDIR);
     chown($uid, $gid, $dir);
-    return 1;
 }
 
-# Adds the account to the list of groups given as arguments.
-sub add_to_groups
-{
-    my ($self, $account, $groups) = @_;
-
-    my @gids = map((getgrnam($_))[ID], @$groups);
-
-    my $cmd = CAF::Process->new([USERMOD, GROUPSOPT, join(",", @gids),
-				 $account],
-				log => $self);
-    $cmd->run();
-    if ($?) {
-	$self->error("Failed to add $a to groups", join(", ", @$groups));
-    }
-}
-
-# lnewuser seems to be broken on RH4 (including SL, CentOS), and
-# doesn't set the correct UIDs or group memberships. We fix it here.
-sub work_around_stupid_rh4_bug
+# Builds all the home directories for any accounts miss itº and their
+# createHome is true
+sub build_home_dirs
 {
     my ($self, $accounts) = @_;
 
-    my $rh = LC::File::file_contents("/etc/redhat-release");
-    $rh =~ m{release 4\.}i or return;
-    $self->verbose("On RH 4-like, UIDs may be wrong. Fixing");
-    while (my ($a, $pf) = each(%$accounts)) {
-	my $cmd = CAF::Process->new([USERMOD], log => $self);
-	$cmd->pushargs(IDOPT, $pf->{uid});
-	$cmd->pushargs($a);
-	$cmd->run();
-	if ($?) {
-	    $self->error("Failed to set up properly account $a");
+    while (my ($account, $cfg) = each(%$accounts)) {
+	if ($cfg->{createHome} && ! -d $cfg->{homeDir}) {
+	    $self->create_home($account, $cfg);
 	}
     }
 }
 
-# Creates users, with their homes if needed.
-sub create_accounts
+sub commit_configuration
 {
-    my ($self, $accounts, $tree) = @_;
-    my (@users, $out);
+    my ($self, $system) = @_;
 
-    $self->info("Creating ", scalar(keys(%$accounts)), " accounts");
-    while (my ($a, $pf) = each(%$accounts)) {
-	$self->verbose("Processing account $a");
-	my @flds;
-	my $group = exists($pf->{groups}) ?
-	    (getgrnam($pf->{groups}->[0]))[ID] : "";
-
-	if (!defined($group)) {
-	    $self->error("Couldn't get group $pf->{groups}->[0] ",
-			 "as specified in the profile. Skipping account $a");
-	    next;
-	}
-	@flds = ($a, "x",
-		 $pf->{uid},
-		 $group,
-		 (exists($pf->{comment}) ? $pf->{comment} : ""),
-		 (exists($pf->{homeDir}) ? $pf->{homeDir} : ""),
-		 (exists($pf->{shell}) ? $pf->{shell} : ""));
-	push(@users, join(":", @flds));
-    }
-
-    my $cmd = CAF::Process->new([USERADD], stdin => join("\n", @users),
-				stderr => \$out);
-    $cmd->execute();
-
-    if ($out =~ m{Error creating account for}) {
-	$self->error("Failed to create some accounts: $out");
-    }
-
-    # We have to go on: some accounts may have not been created, but
-    # some others may still be there and we have to fix them.
-    $self->work_around_stupid_rh4_bug($accounts);
-    while (my ($a, $pf) = each(%$accounts)) {
-	$self->create_home($a) if $pf->{createHome};
-	$self->add_to_groups($a, $pf->{groups})
-	    if exists($pf->{groups}) &&
-		(scalar(@{$pf->{groups}}));
-    }
-
-    return 1;
+    $self->commit_groups($system->{groups});
+    $self->commit_accounts($system->{passwd});
+    $self->build_home_dirs($system->{passwd});
 }
-
-# Sets up the root password.
-sub root_password
-{
-    my ($self, $rootpwd) = @_;
-
-    $self->verbose("Setting up root password");
-    CAF::Process->new([CHPASSWD], stdin => "root:$rootpwd\n")->execute();
-    if ($?) {
-	$self->error("Failed to set root password");
-    }
-}
-
-# Sets up the root shell.
-sub root_shell
-{
-    my ($self, $rootshell) = @_;
-
-    my $shells = CAF::FileEditor->new("/etc/shells", log => $self);
-    $shells->cancel();
-
-    if (${$shells->string_ref()} !~ m{^$rootshell$}m) {
-	$self->warn("$rootshell is not a known shell. Changing anyways");
-    }
-
-    $self->verbose("Setting up root shell to $rootshell");
-
-    CAF::Process->new([CHROOTSHELL, $rootshell], log => $self)->run();
-    if ($?) {
-	$self->error("Failed to set root shell");
-    }
-}
-
-# Sets login_defs, if needed
-sub login_defs
-{
-    my ($self, $defs) = @_;
-
-    my $fh = CAF::FileEditor->open(LOGINDEFS_FILE, log => $self,
-				   backup => '.old');
-    my $cnts = ${$fh->string_ref()};
-
-    my @lines = split("\n", $cnts);
-
-    while (my ($k, $v) = each(%$defs)) {
-	my $e = uc($k);
-	$self->debug(2, "Destroying key: $e");
-	@lines = grep($_ !~ m{^[^#]*$e\W}, @lines);
-	push(@lines, "$e $v");
-    }
-    $fh->set_contents(join("\n", @lines, ""));
-    $fh->close();
-}
-
-# Sets all the passwords for the users defined in the profile. This is
-# done inconditionally on every run of the component, as it's
-# relatively cheap to do it and we don't need to look at the shadow
-# file to guess who actually needs to modify it.
-sub set_passwords
-{
-    my ($self, $accounts) = @_;
-
-    my @pass;
-
-    while (my ($a, $v) = each(%$accounts)) {
-	push(@pass, "$a:$v->{password}") if exists($v->{password});
-    }
-
-    if (@pass) {
-	$self->verbose("Changing passwords");
-	push(@pass, "");
-	my $cmd = CAF::Process->new([CHPASSWD], stdin => join("\n", @pass));
-	$cmd->execute();
-	if ($?) {
-	    $self->error("Failed to execute ", join(" ", CHPASSWD));
-	    return;
-	}
-    }
-}
-
-
 
 # Configure method
 sub Configure
@@ -763,26 +639,23 @@ sub Configure
 
     my $t = $config->getElement(PATH)->getTree();
 
-    my %tasks = $self->schedule($t) or return 0;
-    my @tmp;
+    my $system = $self->build_system_map();
 
-    if ($NoAction) {
-	$self->info("--noaction specified, doing nothing");
-    } else {
-	$self->delete_stuff($tasks{delete_accounts}, USERDEL);
-	@tmp = keys(%{$tasks{modify_accounts}});
-	$self->delete_stuff(\@tmp, USERDEL);
-	$self->delete_stuff($tasks{delete_groups}, GROUPDEL);
-	$self->root_password($t->{rootpwd}) if exists($t->{rootpwd});
-	$self->root_shell($t->{rootshell}) if exists($t->{rootshell});
-	$self->login_defs($t->{login_defs}) if exists($t->{login_defs});
-	$self->modify_groups($tasks{modify_groups}, $t) or return 0;
-	$self->create_groups($tasks{create_groups}) or return 0;
-	$self->create_accounts($tasks{create_accounts}) or return 0;
-	$self->create_accounts($tasks{modify_accounts}) or return 0;
-	$self->set_passwords($tasks{create_accounts}) or return 0;
+    $t->{users} = $self->compute_desired_accounts($t->{users});
+    $self->{users}->{root} = $self->compute_root_user($system, $t);
+
+    $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
+			 $t->{remove_unknown});
+    $self->adjust_accounts($system, $t->{users}, $t->{kept_users},
+			   $t->{remove_unknown});
+    if (!$self->is_consistent($system)) {
+	$self->error("System would be inconsistent. ",
+		     "Leaving without changing anything");
+	return 0;
     }
-    return 1;
+    if (!$NoAction) {
+	$self->commit_configuration($system);
+    }
 }
 
 1;
