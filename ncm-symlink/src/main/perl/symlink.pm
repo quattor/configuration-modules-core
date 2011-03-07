@@ -52,7 +52,7 @@ sub Configure($$@) {
 ##########################################################################
     
   my ($self, $config) = @_;
-  my $base = "/software/components/symlink";
+  my $base = $self->prefix();
 
   # If the list of links exists, actually do something!
   if ($config->elementExists("$base/links")) {
@@ -193,7 +193,7 @@ sub process_vars {
 sub process_global_options {
 
   my ($self, $config) = @_;
-  my $base = "/software/components/symlink";
+  my $base = $self->prefix();
 
   if ( $config->elementExists("$base/options/exists") ) {
     $exists_def = $self->getPanBoolean($config->getElement("$base/options/exists")->getValue());

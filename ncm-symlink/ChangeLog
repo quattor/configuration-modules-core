@@ -1,5 +1,14 @@
 2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 1.3.2
+	- Depend on ncm-ncd 1.3.2 or higher.
+
+	The code in v1.3.0 was fine, but depended on a new version of
+	ncm-ncd, which was not expected, and broke CERN
+	upgrades. Let's make the dependency explicit.
+
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
 	* Release: 1.3.1
 	- Fix broken Perl code.
 
