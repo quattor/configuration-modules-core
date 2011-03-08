@@ -1,3 +1,10 @@
+2011-03-08  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.1
+	- Fix the code not following the schema.
+
+	Thanks to Andreas Nowack for the report.
+
 2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.3.0

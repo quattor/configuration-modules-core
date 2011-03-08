@@ -49,7 +49,7 @@ sub process_aliases
     foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{alias})) {
 	    $self->verbose("Adding alias $i->{alias} for $i->{name}");
-	    print $fh "alias $i->{name} $i->{alias}\n";
+	    print $fh "alias $i->{alias} $i->{name}\n";
 	}
     }
 }
@@ -65,7 +65,7 @@ sub process_options
     foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{options})) {
 	    $self->verbose("Module $i->{name}: Adding options $i->{options}");
-	    print $fh "options $i->{name} ", join(" ", @{$i->{options}}), "\n";
+	    print $fh "options $i->{name} $i->{options}\n";
 	}
     }
 }
