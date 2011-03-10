@@ -1,3 +1,11 @@
+2011-03-10  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 6.0.1
+	- Sort the passwd file before writing it.
+
+	It should work around some buggy software that is not capable
+	to find its account if it's too down in /etc/passwd.
+
 2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 6.0.0

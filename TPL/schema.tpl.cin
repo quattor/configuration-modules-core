@@ -20,7 +20,7 @@ type structure_userinfo = {
     'homeDir'    ? string
     'createHome' ? boolean
     'createKeys' ? boolean
-    'groups'     ? string[]
+    'groups'     : string[]
     'password'   ? string
     'shell'      ? string
     'uid'        : long(0..)
