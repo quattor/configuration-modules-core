@@ -491,6 +491,7 @@ sub commit_groups
     $fh->close();
 }
 
+# Compares two account structures, as they're going to be sorted.
 sub accounts_sort($$)
 {
     my ($a, $b) = @_;
@@ -508,6 +509,10 @@ sub accounts_sort($$)
     return $a->{name} cmp $b->{name};
 }
 
+# Commits the accounts into /etc/passwd and /etc/shadow.  These files
+# are sorted, so that existing accounts are left at the beginning of
+# the file, and new accounts are added in lexicographical order. This
+# way, the resulting file is less surprising to the reader.
 sub commit_accounts
 {
     my ($self, $accounts) = @_;
