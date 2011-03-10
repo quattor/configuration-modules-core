@@ -1,5 +1,10 @@
 2011-03-10  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
+	* Release: 6.0.2
+	- Slightly better comments in the code.
+
+2011-03-10  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
 	* Release: 6.0.1
 	- Sort the passwd file before writing it.
 
