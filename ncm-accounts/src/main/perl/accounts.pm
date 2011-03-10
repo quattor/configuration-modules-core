@@ -175,11 +175,11 @@ sub build_passwd_map
     $fh->cancel();
     seek($fh, 0, SEEK_SET);
 
-    my %rt;
+    my (%rt, $ln);
 
     $self->verbose("Building an account map");
 
-
+    $ln = 0;
     while (my $l = <$fh>) {
 	chomp($l);
 	next unless $l;
@@ -191,6 +191,7 @@ sub build_passwd_map
 	$h->{homeDir} = $flds[HOME];
 	$h->{shell} = $flds[SHELL];
 	$h->{comment} = $flds[GCOS];
+	$h->{ln} = ++$ln;
 	$rt{$h->{name}} = $h;
     }
 
@@ -490,6 +491,23 @@ sub commit_groups
     $fh->close();
 }
 
+sub accounts_sort($$)
+{
+    my ($a, $b) = @_;
+
+    my $cmp;
+
+    if (exists($a->{ln}) && exists($b->{ln})) {
+	$cmp = $a->{ln} <=> $b->{ln};
+	return $cmp if $cmp;
+    } elsif (exists($a->{ln})) {
+	return -1;
+    } elsif (exists($b->{ln})) {
+	return 1;
+    }
+    return $a->{name} cmp $b->{name};
+}
+
 sub commit_accounts
 {
     my ($self, $accounts) = @_;
@@ -498,8 +516,8 @@ sub commit_accounts
 
     my (@passwd, @shadow, @ln, $fh);
 
-    while (my ($account, $cfg) = each(%$accounts)) {
-	@ln =  ($account, "x", $cfg->{uid},
+    foreach my $cfg (sort accounts_sort (values(%$accounts))) {
+	@ln =  ($cfg->{name}, "x", $cfg->{uid},
 		$cfg->{main_group},
 		(exists($cfg->{comment}) ?
 		     $cfg->{comment} : ""),
@@ -507,7 +525,7 @@ sub commit_accounts
 		     $cfg->{homeDir} : ""),
 		(exists($cfg->{shell}) ? $cfg->{shell} : ""));
 	push(@passwd, join(":", @ln));
-	@ln = ($account,
+	@ln = ($cfg->{name},
 	       (exists($cfg->{password}) ? $cfg->{password} : "*"),
 	       15034, 0, 99999, 7, "", "", "");
 	push(@shadow, join(":", @ln));
