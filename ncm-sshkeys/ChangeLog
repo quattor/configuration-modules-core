@@ -1,3 +1,8 @@
+2011-03-11  Michel Jouvin
+
+	* Release: 1.1.6
+	- Fix deprecated syntax for panc v8
+
 2010-12-14  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 1.1.5

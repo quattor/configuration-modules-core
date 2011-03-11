@@ -5,7 +5,7 @@
 
 declaration template components/sshkeys/schema;
 
-include quattor/schema;
+include { 'quattor/schema' };
 
 type structure_ssh_keypair = {
         'private' : string
@@ -26,6 +26,6 @@ type component_sshkeys = {
         'knownhosts' ? structure_ssh_hostlist[]
 };
 
-type '/software/components/sshkeys' = component_sshkeys;
+bind '/software/components/sshkeys' = component_sshkeys;
 
 
