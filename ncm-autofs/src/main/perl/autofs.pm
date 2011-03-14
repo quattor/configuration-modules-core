@@ -207,7 +207,7 @@ sub Configure($$@) {
 
         $master_entry_attrs{$mapname} = ();
         $master_entry_attrs{$mapname}->{type} = $maptype;
-        $master_entry_attrs{$mapname}->{options} = $map_config->{options};
+        $master_entry_attrs{$mapname}->{options} = $map_config->{options} || "";
         # Ensure options start with a '-'
         if (  (length($master_entry_attrs{$mapname}->{options}) > 0) && ($master_entry_attrs{$mapname}->{options} !~ /^-/) ) {
           $master_entry_attrs{$mapname}->{options} = '-' . $master_entry_attrs{$mapname}->{options};
@@ -235,7 +235,7 @@ sub Configure($$@) {
                                            owner=> "root",
                                            group=>"root",
                                            mode=>0755);
-            unless ( $status ) {
+            if ( ! defined( $status ) || $status < 0 ) {
               $self->warn("Program map file $mapname cannot be made executable");
             }
           }

@@ -1,3 +1,9 @@
+2011-03-14  Ronald Starink
+
+	* Release: 2.0.2
+	- Permitted empty mount options field
+    - Fixed processing of result of LC::Check::status for maptype program
+
 2010-07-01  Ronald Starink
 
 	* Release: 2.0.1
