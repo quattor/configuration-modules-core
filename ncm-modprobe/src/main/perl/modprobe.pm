@@ -124,7 +124,8 @@ sub Configure {
     my ($self,$config)=@_;
 
     my $t = $config->getElement("/software/components/modprobe")->getTree();
-    my $fh = CAF::FileWriter->new("/etc/modprobe.d/ncm-modprobe.conf", log => $self);
+    my $fh = CAF::FileWriter->new($t->{file}, log => $self,
+				  backup => '.old');
 
     $self->process_aliases($t, $fh);
     $self->process_options($t, $fh);

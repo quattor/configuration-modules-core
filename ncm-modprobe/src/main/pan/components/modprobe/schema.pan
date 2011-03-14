@@ -16,6 +16,7 @@ type module_type = {
 
 type component_modprobe_type = {
     include structure_component
+    "file"      : string = "/etc/modprobe.conf"
     "modules"   : module_type[1..] # modules to load"
 };
 
