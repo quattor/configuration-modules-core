@@ -51,6 +51,7 @@ type component_iptables_rule = {
     "limit-burst"        ? string
     "to-destination"     ? string
     "to-ports"           ? string
+    "to-source"           ? string
     "uid-owner"          ? string
     "tcp-flags"          ? string
     "tcp-option"         ? string

@@ -1,3 +1,8 @@
+2011-03-21  Christos Theodosiou,ctheodos@grid.auth.gr
+
+	* Release: 2.3.12
+	- Added support for --to-source for SNAT
+
 2010-12-07  Victor Mendoza <vmendoza@cern.ch>
 
 	* Release: 2.3.11

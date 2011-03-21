@@ -108,6 +108,7 @@ my %options_ord = ( '-N'                  => 0,
                     '--log-uid'           => 20,
                     '--limit-burst'       => 21,
                     '--to-destination'    => 22,
+                    '--to-source'         => 22,
                     '--to-ports'          => 22
     );
 
@@ -154,6 +155,7 @@ my %options_tra = ( 'new_chain'          => '-N',
                     'set-class'                 => '--set-class',
                     'limit-burst'        => '--limit-burst',
                     'to-destination'     => '--to-destination',
+                    'to-source'          => '--to-source',
                     'to-ports'           => '--to-ports',
                     'uid-owner'          => '--uid-owner',
                     'tcp-flags'                 => '--tcp-flags',
@@ -211,6 +213,7 @@ my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a
                     '--set-class'       => '\d{1,2}:\d{1,2}',
                     '--limit-burst'     => '\S+',
                     '--to-destination'  => '\S+',
+                    '--to-source'       => '\S+',
                     '--to-ports'        => '\d+(-\d+)?',
                     '--uid-owner'       => '\d+',
                     '--tcp-flags'       => '\S+',
