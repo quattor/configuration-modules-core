@@ -79,7 +79,7 @@ sub process_install
     foreach my $i (@{$t->{modules}}) {
 	if (exists($i->{install})) {
 	    print $fh "install $i->{name} $i->{install}\n";
-	    $self->verbose("Added 'install' for $i->{name}: $i->{command}");
+	    $self->verbose("Added 'install' for $i->{name}: $i->{install}");
 	}
     }
 }
