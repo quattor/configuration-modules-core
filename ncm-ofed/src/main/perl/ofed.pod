@@ -31,23 +31,6 @@ Hardware modules to load
 
 =back
 
-=head1 RESOURCES
-
-=over
-
-=item /software/components/ofed/active : boolean
-
-activates/deactivates the component.
-
-=item /software/components/ofed/servers/ : list of time servers
-
-=item /software/components/ofed/clientnetworks : list of { net=, mask= }
-
-optional: clients that can use this server to synchronize. Default allows
-connections from localhost only.
-
-=back
-
 =head1 DEPENDENCIES
 
 =head2 Components to be run before:
