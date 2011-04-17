@@ -1,0 +1,44 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::gpfs - NCM gpfs configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+This component configures GPFS.
+
+=item  /software/components/gpfs/base
+
+=back
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head1 BUGS
+
+none known.
+
+=head1 AUTHOR
+
+Stijn De Weirdt <stijn.dweirdt@ugent.be>
+
+=head1 SEE ALSO
+
+ncm-ncd(1), gpfs(1)
+
+=cut
