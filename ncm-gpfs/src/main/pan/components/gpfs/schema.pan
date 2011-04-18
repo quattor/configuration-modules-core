@@ -13,6 +13,7 @@ type component_gpfs_base = {
     "useproxy" ? boolean = false
     "usecurl" ? boolean = false
     "useccmcertwithcurl" ? boolean = false
+    "usesindesgetcertcertwithcurl" ? boolean = false
 };
 
 type component_gpfs_type = {

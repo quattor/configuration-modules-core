@@ -129,7 +129,7 @@ sub Configure {
             return;
         };
     
-        unshift(@opts,$curlcmd);
+        unshift(@opts,$curlcmd,'-s');
         
 
         my $cwd=`pwd`;
@@ -153,7 +153,8 @@ sub Configure {
     sub remove_existing_rpms {
         my $ret = 1;
         my $allrpms = runrpm("-q","-a","gpfs.*","--qf","%{NAME}\\n");
-    
+        return if (!$allrpms);
+            
         my @removerpms;
         for my $found (split('\n',$allrpms)) {
             if (grep { $found =~ m/$_/ } GPFSRPMS) {
@@ -167,7 +168,7 @@ sub Configure {
     
         stopgpfs(1);
         if (scalar @removerpms) {
-            runrpm("-e",@removerpms) || $ret = 0;
+            runrpm("-e",@removerpms) || return;
         } else {
             $self->info("No rpms to be removed.")
         }
@@ -194,8 +195,11 @@ sub Configure {
             }
             
             my @certscurl;
+
             if (${%$tr}{'useccmcertwithcurl'}) {
                 ## use ccm certificates with curl?
+                ## - does not work yet. curl cert is key_cert in one file 
+                ## -- like sindes_getcert client_cert_key
                 my $ccmpath="/software/components/ccm";
                 my $ccmtr = $config->getElement($ccmpath)->getTree;
                 if (${%$ccmtr}{'cert_file'}) {
@@ -203,6 +207,18 @@ sub Configure {
                     push(@certscurl,'--cacert',${%$ccmtr}{'ca_file'}) if (${%$ccmtr}{'ca_file'});
                 } else {
                     $self->error("No CCM cert file set in $ccmpath/cert_file: ".${%$ccmtr}{'cert_file'});
+                };
+            }
+
+            if (${%$tr}{'usesindesgetcertcertwithcurl'}) {
+                ## use sindesgetcert certificates with curl?
+                my $sgpath="/software/components/sindes_getcert";
+                my $sgtr = $config->getElement($sgpath)->getTree;
+                if (${%$sgtr}{'cert_file'}) {
+                    push(@certscurl,'--cert',${%$sgtr}{'cert_dir'}."/".${%$sgtr}{'client_cert_key'}) if (${%$ccmtr}{'client_cert_key'});
+                    push(@certscurl,'--cacert',${%$sgtr}{'cert_dir'}."/".${%$sgtr}{'ca_cert'}) if (${%$ccmtr}{'ca_cert'});
+                } else {
+                    $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".${%$sgtr}{'client_cert_key'});
                 };
             }
 
@@ -222,10 +238,10 @@ sub Configure {
 
             my $tmp="/tmp";
             if (scalar @downloadrpms) {
-                runcurl($tmp,@certscurl,@downloadrpms) || $ret = 0 ;
+                runcurl($tmp,@certscurl,@downloadrpms) || return ;
             };         
             
-            runrpm("-U",@proxy,@rpms) || $ret = 0;
+            runrpm("-U",@proxy,@rpms) || return;
             
             ## cleanup downloaded rpms
             for my $rpm (@downloadrpms) {
