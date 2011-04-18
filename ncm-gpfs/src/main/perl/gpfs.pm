@@ -68,8 +68,8 @@ sub Configure {
     ## how to retrigger spma afterwards?
     my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     if ( ! -f $baseinstalled) {
-        remove_existing_rpms();
-        install_base_rpms();
+        remove_existing_rpms() || return 1;
+        install_base_rpms() || return 1;
         ## update? 
         ## no! 
         ## - stop here 
@@ -116,10 +116,11 @@ sub Configure {
         } else {
             $self->debug(2,"Ran '$cmd' succesfully.")
         }
-        return $output;
+        return $output  || 1;
     };
 
     sub runcurl {
+        my $tmppath = shift;
         my @opts=@_;
     
         my $curlcmd = "/usr/bin/curl";
@@ -129,8 +130,14 @@ sub Configure {
         };
     
         unshift(@opts,$curlcmd);
+        
 
+        my $cwd=`pwd`;
+        chomp($cwd);
+        chdir($tmppath) || $self->error("Failed to change to directory $tmppath.") && return;
         my $output = CAF::Process->new(\@opts, log => $self)->output();
+        chdir($cwd) || $self->error("Failed to change back to directory $cwd.") && return;
+
         my $cmd=join(" ",@opts);
 
         if ($?) {
@@ -139,11 +146,12 @@ sub Configure {
         } else {
             $self->debug(2,"Ran '$cmd' succesfully.")
         }
-        return $output;
+        return $output || 1;
     };
 
 
     sub remove_existing_rpms {
+        my $ret = 1;
         my $allrpms = runrpm("-q","-a","gpfs.*","--qf","%{NAME}\\n");
     
         my @removerpms;
@@ -151,19 +159,24 @@ sub Configure {
             if (grep { $found =~ m/$_/ } GPFSRPMS) {
                 push(@removerpms, $found);
             } else {
-                $self->error("Not removing unknown found rpm that matched gpfs.*: $found. \n")
+                $self->error("Not removing unknown found rpm that matched gpfs.*: $found. \n");
+                $ret = 0;
+                
             }; 
         };  
     
         stopgpfs(1);
         if (scalar @removerpms) {
-            runrpm("-e",@removerpms);
+            runrpm("-e",@removerpms) || $ret = 0;
         } else {
             $self->info("No rpms to be removed.")
         }
+        
+        return $ret;
     };
 
     sub install_base_rpms {
+        my $ret = 1;
         if ($config->elementExists("$base/base")) {
             my $tr = $config->getElement("$base/base")->getTree;
     
@@ -186,7 +199,7 @@ sub Configure {
                 my $ccmpath="/software/components/ccm";
                 my $ccmtr = $config->getElement($ccmpath)->getTree;
                 if (${%$ccmtr}{'cert_file'}) {
-                    push(@certscurl,'--cert',${%$ccmtr}{'cert_file'}) if (${%$ccmtr}{'cert_file'});
+                    push(@certscurl,'--cert',${%$ccmtr}{'key_file'}) if (${%$ccmtr}{'key_file'});
                     push(@certscurl,'--cacert',${%$ccmtr}{'ca_file'}) if (${%$ccmtr}{'ca_file'});
                 } else {
                     $self->error("No CCM cert file set in $ccmpath/cert_file: ".${%$ccmtr}{'cert_file'});
@@ -209,10 +222,10 @@ sub Configure {
 
             my $tmp="/tmp";
             if (scalar @downloadrpms) {
-                runcurl($tmp,@certscurl,@downloadrpms);
+                runcurl($tmp,@certscurl,@downloadrpms) || $ret = 0 ;
             };         
             
-            runrpm("-U",@proxy,@rpms);
+            runrpm("-U",@proxy,@rpms) || $ret = 0;
             
             ## cleanup downloaded rpms
             for my $rpm (@downloadrpms) {
@@ -220,12 +233,15 @@ sub Configure {
                     $self->debug(3,"File $tmp/$rpm deleted successfully.");
                 } else {
                     $self->error("File $tmp/$rpm was not deleted.");
+                    $ret=0;
                 }
             }
                 
         } else {
             $self->error("base path $base/base not found.");
+            $ret=0;
         };
+        return $ret;
     };
 
     sub rungpfs {
@@ -253,19 +269,19 @@ sub Configure {
         } else {
             $self->debug(2,"Ran '$cmd' succesfully.")
         }
-        return $output;
+        return $output || 1;
     };
 
     sub stopgpfs {
         my $neom = shift || 0;
         ## local shutdown
-        rungpfs($eom,"mmshutdown");
+        return rungpfs($neom,"mmshutdown");
     };
 
     sub startgpfs {
         my $neom = shift || 0;
         ## local startup
-        rungpfs($eom,"mmstartup");
+        return rungpfs($neom,"mmstartup");
     };
 
 }
