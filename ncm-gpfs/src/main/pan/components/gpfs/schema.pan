@@ -11,6 +11,8 @@ type component_gpfs_base = {
     "rpms" : string[]
     "baseurl"  : string
     "useproxy" ? boolean = false
+    "usecurl" ? boolean = false
+    "useccmcertwithcurl" ? boolean = false
 };
 
 type component_gpfs_type = {

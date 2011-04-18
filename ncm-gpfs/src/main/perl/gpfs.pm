@@ -35,12 +35,12 @@ use constant GPFSCONFIGDIR => '/var/mmfs/';
 use constant GPFSCONFIG => '/var/mmfs/gen/mmsdrfs';
 use constant GPFSNODECONFIG => '/var/mmfs/gen/mmfsNodeData';
 use constant GPFSRPMS => qw(
-                            gpfs.base
-                            gpfs.docs
-                            gpfs.gpl
-                            gpfs.gplbin
-                            gpfs.gui
-                            gpfs.msg.en_US
+                            ^gpfs.base$
+                            ^gpfs.docs$
+                            ^gpfs.gpl$
+                            ^gpfs.gplbin-\d\S+$
+                            ^gpfs.gui$
+                            ^gpfs.msg.en_US$
                            );
 
 my $compname = "NCM-gpfs";
@@ -66,7 +66,7 @@ sub Configure {
     ## - then install gpfs abse rpms from optional location
     ## -- location should be kept secret
     ## how to retrigger spma afterwards?
-    my $baseinstalled = GPFSCONFIGDIR + "/.quattorbaseinstalled";
+    my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     if ( ! -f $baseinstalled) {
         remove_existing_rpms();
         install_base_rpms();
@@ -99,7 +99,7 @@ sub Configure {
     sub runrpm {
         my @opts=@_;
     
-        my $rpmcmd = "/usr/bin/rpm";
+        my $rpmcmd = "/bin/rpm";
         if (! -f $rpmcmd) {
             $self->error("Rpm cmd $rpmcmd not found.");
             return;
@@ -114,29 +114,56 @@ sub Configure {
             $self->error("Error running '$cmd' output: $output");
             return;
         } else {
-            $self->debug("Ran '$cmd' succesfully.")
+            $self->debug(2,"Ran '$cmd' succesfully.")
         }
         return $output;
     };
 
+    sub runcurl {
+        my @opts=@_;
+    
+        my $curlcmd = "/usr/bin/rpm";
+        if (! -f $rpmcmd) {
+            $self->error("Curl cmd $curlcmd not found.");
+            return;
+        };
+    
+        unshift(@opts,$curlcmd);
+
+        my $output = CAF::Process->new(@opts, log => $self)->output();
+        my $cmd=join(" ",@opts);
+
+        if ($?) {
+            $self->error("Error running '$cmd' output: $output");
+            return;
+        } else {
+            $self->debug(2,"Ran '$cmd' succesfully.")
+        }
+        return $output;
+    };
+
+
     sub remove_existing_rpms {
-        my $allrpms = runrpms("-q","-a","'gpfs.*'","--qf","'%{NAME}\n'");
+        my $allrpms = runrpm("-q","-a","gpfs.*","--qf","%{NAME}\\n");
     
         my @removerpms;
         for my $found (split('\n',$allrpms)) {
-            if (grep { $_ eq $found } GPFSRPMS) {
+            if (grep { $found =~ m/$_/ } GPFSRPMS) {
                 push(@removerpms, $found);
             } else {
                 $self->error("Not removing unknown found rpm that matched gpfs.*: $found. \n")
             }; 
         };  
     
-        stopgpfs();
-        runrpms("-e",@removerpms);            
+        stopgpfs(0);
+        if (scalar @removerpms) {
+            runrpm("-e",@removerpms);
+        } else {
+            $self->info("No rpms to be removed.")
+        }
     };
 
     sub install_base_rpms {
-        my rpms;
         if ($config->elementExists("$base/base")) {
             my $tr = $config->getElement("$base/base")->getTree;
     
@@ -153,24 +180,65 @@ sub Configure {
                 };
             }
             
-            foreach my $rpm (@{${%$tr}{'rpms'}}) {
-                my $fullrpm = ${%$tr}{'baseurl'}."/".$rpm
-                push(@rpms,"'".$fullrpm."'");
-                $self->debug("Added base rpm $rpm.")
+            my @certscurl;
+            if (${%$tr}{'useccmcertwithcurl'}) {
+                ## use ccm certificates with curl?
+                my $ccmpath="/software/components/ccm";
+                my $ccmtr = $config->getElement($ccmpath)->getTree;
+                if (${%$ccmtr}{'cert_file'}) {
+                    push(@certscurl,'--cert',${%$ccmtr}{'cert_file'}) if (${%$ccmtr}{'cert_file'});
+                    push(@certscurl,'--cacert',${%$ccmtr}{'ca_file'}) if (${%$ccmtr}{'ca_file'});
+                } else {
+                    $self->error("No CCM cert file set in $ccmpath/cert_file: ".${%$ccmtr}{'cert_file'});
+                };
             }
+
+            my @rpms;
+            my @downloadrpms;
+            foreach my $rpm (@{${%$tr}{'rpms'}}) {
+                my $fullrpm = ${%$tr}{'baseurl'}."/".$rpm;
+                
+                if (${%$tr}{'usecurl'}) {
+                    push(@downloadrpms,"-O",$fullrpm);
+                    push(@rpms,$rpm);
+                } else {
+                    push(@rpms,$rpm);
+                };
+                $self->debug(2,"Added base rpm $rpm.")
+            }
+
+            my $tmp="/tmp";
+            if (scalar @downloadrpms) {
+                runcurl($tmp,@sindescurl,@downloadrpms);
+            };         
             
-            runrpm("-U",@proxy,@rpms);    
+            runrpm("-U",@proxy,@rpms);
+            
+            ## cleanup downloaded rpms
+            for my $rpm (@downloadrpms) {
+                if (unlink("$tmp/$rpm") == 0) {
+                    $self->debug(3,"File $tmp/$rpm deleted successfully.");
+                } else {
+                    $self->error("File $tmp/$rpm was not deleted.");
+                }
+            }
+                
         } else {
             $self->error("base path $base/base not found.");
         };
     };
 
     sub rungpfs {
+        my $erroronmissing = shift;
         my @cmds=@_;
     
         my $cmdexe = GPFSBIN."/".shift(@cmds);
         if (! -f $cmdexe) {
-            $self->error("GPFS cmd $cmdexe not found.");
+            if ($erroronmissing) {
+                $self->error("GPFS cmd $cmdexe not found.");
+            } else {
+                $self->info("GPFS cmd $cmdexe not found.");
+            };
             return;
         };
     
@@ -183,19 +251,21 @@ sub Configure {
             $self->error("Error running '$cmd' output: $output");
             return;
         } else {
-            $self->debug("Ran '$cmd' succesfully.")
+            $self->debug(2,"Ran '$cmd' succesfully.")
         }
         return $output;
     };
 
     sub stopgpfs {
+        my $eom = shift || 1;
         ## local shutdown
-        rungpfs("mmshutdown");
+        rungpfs($eom,"mmshutdown");
     };
 
     sub startgpfs {
+        my $eom = shift || 1;
         ## local startup
-        rungpfs("mmstartup");
+        rungpfs($eom,"mmstartup");
     };
 
 }

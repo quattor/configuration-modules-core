@@ -5,3 +5,7 @@
         - Untested.
         - Base rpms only.
 
+2011-04-18  SDW
+
+        * Release: 0.5.1
+        - Download rpms first with and optionally ccm certificates
