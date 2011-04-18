@@ -107,7 +107,7 @@ sub Configure {
     
         unshift(@opts,$rpmcmd,"-v");
 
-        my $output = CAF::Process->new(@opts, log => $self)->output();
+        my $output = CAF::Process->new(\@opts, log => $self)->output();
         my $cmd=join(" ",@opts);
 
         if ($?) {
@@ -122,15 +122,15 @@ sub Configure {
     sub runcurl {
         my @opts=@_;
     
-        my $curlcmd = "/usr/bin/rpm";
-        if (! -f $rpmcmd) {
+        my $curlcmd = "/usr/bin/curl";
+        if (! -f $curlcmd) {
             $self->error("Curl cmd $curlcmd not found.");
             return;
         };
     
         unshift(@opts,$curlcmd);
 
-        my $output = CAF::Process->new(@opts, log => $self)->output();
+        my $output = CAF::Process->new(\@opts, log => $self)->output();
         my $cmd=join(" ",@opts);
 
         if ($?) {
@@ -155,7 +155,7 @@ sub Configure {
             }; 
         };  
     
-        stopgpfs(0);
+        stopgpfs(1);
         if (scalar @removerpms) {
             runrpm("-e",@removerpms);
         } else {
@@ -209,7 +209,7 @@ sub Configure {
 
             my $tmp="/tmp";
             if (scalar @downloadrpms) {
-                runcurl($tmp,@sindescurl,@downloadrpms);
+                runcurl($tmp,@certscurl,@downloadrpms);
             };         
             
             runrpm("-U",@proxy,@rpms);
@@ -229,22 +229,22 @@ sub Configure {
     };
 
     sub rungpfs {
-        my $erroronmissing = shift;
+        my $noerroronmissing = shift;
         my @cmds=@_;
     
         my $cmdexe = GPFSBIN."/".shift(@cmds);
         if (! -f $cmdexe) {
-            if ($erroronmissing) {
-                $self->error("GPFS cmd $cmdexe not found.");
-            } else {
+            if ($noerroronmissing) {
                 $self->info("GPFS cmd $cmdexe not found.");
+            } else {
+                $self->error("GPFS cmd $cmdexe not found.");
             };
             return;
         };
     
         unshift(@cmds,$cmdexe);
 
-        my $output = CAF::Process->new(@cmds, log => $self)->output();
+        my $output = CAF::Process->new(\@cmds, log => $self)->output();
         my $cmd=join(" ",@cmds);
 
         if ($?) {
@@ -257,13 +257,13 @@ sub Configure {
     };
 
     sub stopgpfs {
-        my $eom = shift || 1;
+        my $neom = shift || 0;
         ## local shutdown
         rungpfs($eom,"mmshutdown");
     };
 
     sub startgpfs {
-        my $eom = shift || 1;
+        my $neom = shift || 0;
         ## local startup
         rungpfs($eom,"mmstartup");
     };
