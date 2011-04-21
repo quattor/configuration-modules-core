@@ -44,7 +44,7 @@ type component_drbd_resource_syncer_type = {
 };
 
 type component_drbd_resource_net_type = {
-    "sndbuf_size" ? long         # kB
+    "sndbuf_size" ? string       # If nothing specified, DRBD is using 128k
     "timeout" ? long(1..)        # units of 0.1 sec
     "connect_int" ? long(1..)    # unit of 1 sec
     "ping_int" ? long(1..)       # unit of 1 sec
