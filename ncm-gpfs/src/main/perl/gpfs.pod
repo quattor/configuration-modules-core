@@ -17,6 +17,8 @@ This component configures GPFS.
 
 =item  /software/components/gpfs/base
 
+=item  /software/components/gpfs/cfg
+
 =back
 
 =head1 DEPENDENCIES
