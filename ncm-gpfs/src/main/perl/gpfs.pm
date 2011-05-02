@@ -218,7 +218,8 @@ sub Configure {
 
     sub remove_existing_rpms {
         my $ret = 1;
-        my $allrpms = runrpm("-q","-a","gpfs.*","--qf","%{NAME}\\n");
+        my $tr;
+        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME}\\n");
         return if (!$allrpms);
             
         my @removerpms;
@@ -234,7 +235,6 @@ sub Configure {
     
         stopgpfs(1);
         if (scalar @removerpms) {
-            my $tr;
             runrpm($tr,"-e",@removerpms) || return;
         } else {
             $self->info("No rpms to be removed.")
@@ -333,7 +333,7 @@ sub Configure {
         my $ret = 1;
         my $url = ${%$tr}{'url'};
         my $tmp="/tmp";
-        runcurl($tmp,$tr,$url) || return ;
+        runcurl($tmp,$tr,"-O",$url) || return 0;
         ## move file
         if (! move($tmp."/".basename($url),GPFSCONFIG)) {
             ## moving failed?
@@ -358,7 +358,7 @@ sub Configure {
             }
             close(FH);
             ## write     
-            $result = LC::Check::file( GPFSNODECONFIG,
+            my $result = LC::Check::file( GPFSNODECONFIG,
                                   backup => ".old",
                                   contents => encode_utf8($txt),
                                 );
