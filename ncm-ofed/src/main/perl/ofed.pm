@@ -98,10 +98,10 @@ sub Configure {
         my $o;
         foreach $o (@os) {
             if ($o eq "ipoib_mtu") {
-                $ans=${%$tr}{$o};
+                $ans=%$tr->{$o};
             } else {
                 $ans="no";
-                $ans = "yes" if (exists(${%$tr}{$o}) && ${%$tr}{$o});
+                $ans = "yes" if (exists(%$tr->{$o}) && %$tr->{$o});
             }; 
             $c .= uc($o)."$suff=".$ans."\n";
         }
