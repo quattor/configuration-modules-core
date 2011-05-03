@@ -29,6 +29,7 @@ use LC::File;
 
 use File::Basename;
 use File::Copy;
+use Cwd;
 use Encode qw(encode_utf8);
 
 use constant GPFSBIN => '/usr/lpp/mmfs/bin';
@@ -198,7 +199,7 @@ sub Configure {
         unshift(@opts,$curlcmd,'-s',@certscurl);
         
 
-        my $cwd=`pwd`;
+        my $cwd=getcwd;
         chomp($cwd);
         chdir($tmppath) || $self->error("Failed to change to directory $tmppath.") && return;
         my $output = CAF::Process->new(\@opts, log => $self)->output();
