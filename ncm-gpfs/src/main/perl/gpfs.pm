@@ -123,15 +123,15 @@ sub Configure {
         my @opts=@_;
 
         my @proxy;
-        if (${%$tr}{'useproxy'}) {
+        if ($tr && %$tr->{'useproxy'}) {
             ## check if spma proxy is set and then use it
             my $spmapath="/software/components/spma";
             my $spmatr = $config->getElement($spmapath)->getTree;
-            if (${%$spmatr}{'proxy'}) {
-                push(@proxy,'--httpproxy',${%$spmatr}{'proxyhost'}) if (${%$spmatr}{'proxyhost'});
-                push(@proxy,'--httpport',${%$spmatr}{'proxyport'}) if (${%$spmatr}{'proxyport'});
+            if (%$spmatr->{'proxy'}) {
+                push(@proxy,'--httpproxy',%$spmatr->{'proxyhost'}) if (%$spmatr->{'proxyhost'});
+                push(@proxy,'--httpport',%$spmatr->{'proxyport'}) if (%$spmatr->{'proxyport'});
             } else {
-                $self->error("No SPMA proxy set in $spmapath/proxy: ".${%$spmatr}{'proxy'});
+                $self->error("No SPMA proxy set in $spmapath/proxy: ".%$spmatr->{'proxy'});
             };
         }
     
@@ -168,29 +168,29 @@ sub Configure {
 
         my @certscurl;
 
-        if (${%$tr}{'useccmcertwithcurl'}) {
+        if ($tr && %$tr->{'useccmcertwithcurl'}) {
             ## use ccm certificates with curl?
             ## - does not work yet. curl cert is key_cert in one file 
             ## -- like sindes_getcert client_cert_key
             my $ccmpath="/software/components/ccm";
             my $ccmtr = $config->getElement($ccmpath)->getTree;
-            if (${%$ccmtr}{'cert_file'}) {
-                push(@certscurl,'--cert',${%$ccmtr}{'key_file'}) if (${%$ccmtr}{'key_file'});
-                push(@certscurl,'--cacert',${%$ccmtr}{'ca_file'}) if (${%$ccmtr}{'ca_file'});
+            if (%$ccmtr->{'cert_file'}) {
+                push(@certscurl,'--cert',%$ccmtr->{'key_file'}) if (%$ccmtr->{'key_file'});
+                push(@certscurl,'--cacert',%$ccmtr->{'ca_file'}) if (%$ccmtr->{'ca_file'});
             } else {
-                $self->error("No CCM cert file set in $ccmpath/cert_file: ".${%$ccmtr}{'cert_file'});
+                $self->error("No CCM cert file set in $ccmpath/cert_file: ".%$ccmtr->{'cert_file'});
             };
         }
 
-        if (${%$tr}{'usesindesgetcertcertwithcurl'}) {
+        if ($tr && %$tr->{'usesindesgetcertcertwithcurl'}) {
             ## use sindesgetcert certificates with curl?
             my $sgpath="/software/components/sindes_getcert";
             my $sgtr = $config->getElement($sgpath)->getTree;
-            if (${%$sgtr}{'client_cert_key'}) {
-               push(@certscurl,'--cert',${%$sgtr}{'cert_dir'}."/".${%$sgtr}{'client_cert_key'}) if (${%$sgtr}{'client_cert_key'});
-               push(@certscurl,'--cacert',${%$sgtr}{'cert_dir'}."/".${%$sgtr}{'ca_cert'}) if (${%$sgtr}{'ca_cert'});
+            if (%$sgtr->{'client_cert_key'}) {
+               push(@certscurl,'--cert',%$sgtr->{'cert_dir'}."/".%$sgtr->{'client_cert_key'}) if (%$sgtr->{'client_cert_key'});
+               push(@certscurl,'--cacert',%$sgtr->{'cert_dir'}."/".%$sgtr->{'ca_cert'}) if (%$sgtr->{'ca_cert'});
             } else {
-               $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".${%$sgtr}{'client_cert_key'});
+               $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".%$sgtr->{'client_cert_key'});
             };
         }
 
@@ -250,11 +250,11 @@ sub Configure {
 
             my @rpms;
             my @downloadrpms;
-            foreach my $rpm (@{${%$tr}{'rpms'}}) {
-                my $fullrpm = ${%$tr}{'baseurl'}."/".$rpm;
+            foreach my $rpm (@{%$tr->{'rpms'}}) {
+                my $fullrpm = %$tr->{'baseurl'}."/".$rpm;
                 $fullrpm =~ s/\/\/$rpm/\/$rpm/;
                 
-                if (${%$tr}{'usecurl'}) {
+                if (%$tr->{'usecurl'}) {
                     push(@downloadrpms,"-O",$fullrpm);
                     push(@rpms,$rpm);
                 } else {
@@ -331,7 +331,7 @@ sub Configure {
     sub get_cfg {
         my $tr = shift;
         my $ret = 1;
-        my $url = ${%$tr}{'url'};
+        my $url = %$tr->{'url'};
         my $tmp="/tmp";
         runcurl($tmp,$tr,"-O",$url) || return 0;
         ## move file
@@ -346,7 +346,7 @@ sub Configure {
     sub get_nodefile_from_cfg {
         my $tr = shift;
         my $ret = 1;
-        my $subn = ${%$tr}{'subnet'};
+        my $subn = %$tr->{'subnet'};
         my $hostname =  $config->getValue("/system/network/hostname");
         $subn =~ s/\./\\./g;
         my $regexp = "MEMBER_NODE.*$hostname\.$subn";
