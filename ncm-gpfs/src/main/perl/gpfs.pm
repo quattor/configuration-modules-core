@@ -272,12 +272,15 @@ sub Configure {
             runrpm($tr,"-U","--nodeps",@rpms) || return;
             
             ## cleanup downloaded rpms
-            for my $rpm (@downloadrpms) {
-                if (unlink("$tmp/$rpm") == 0) {
-                    $self->debug(3,"File $tmp/$rpm deleted successfully.");
-                } else {
-                    $self->error("File $tmp/$rpm was not deleted.");
-                    $ret=0;
+            for my $rpm (@rpms) {
+                $rpm = basename($rpm);
+                if (-f "$tmp/$rpm") {
+                    if(unlink("$tmp/$rpm")) {
+                        $self->debug(3,"File $tmp/$rpm deleted successfully.");
+                    } else {
+                        $self->error("File $tmp/$rpm was not deleted.");
+                        $ret=0;
+                    }
                 }
             }
                 
