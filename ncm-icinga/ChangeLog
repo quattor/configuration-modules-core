@@ -1,0 +1,12 @@
+2011-04-04  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Added ido2db utils.
+
+2011-03-30  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* icinga.pm.cin: Fixed directory problems.
+
+2011-03-11  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* icinga.pm.cin: First Icinga component.
+
