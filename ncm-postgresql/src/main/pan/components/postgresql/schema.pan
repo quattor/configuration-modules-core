@@ -41,6 +41,8 @@ type component_pgsql = {
 	"databases" ? pg_db{}
 	"commands" ? string{}
 	"config" ? structure_pgsql_comp_config
+	"pg_version" ? string
+	"pg_engine" ? string
 };
 
 type "/software/components/postgresql" = component_pgsql;

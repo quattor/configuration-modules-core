@@ -38,8 +38,10 @@ sub Configure {
   foreach $name (@all_names) {
   	$p{$name}{changed} = 0;
   }	
-  our $comp='postgresql';	
+  our $comp='postgresql';
   my $base = "/software/components/$comp";
+  my $pg_version_suf = "-".fetch("$base/pg_version", "");
+  my $pg_engine = fetch("$base/pg_engine", "/usr/bin/");
   my $fqdn = $config->getValue("/system/network/hostname").".".$config->getValue("/system/network/domainname");
   my $shortname = $config->getValue("/system/network/hostname");
   our $debug_print = "15";
@@ -56,7 +58,7 @@ sub Configure {
   ## this default value is used in check_status
   my $pg_script_name="POSTGRES_DUMMY_VALUE";
    
-  my $pg_etc_init_def = "/etc/init.d/postgresql";
+  my $pg_etc_init_def = "/etc/init.d/postgresql".$pg_version_suf;
   ## this one comes with the installation
   if (! -e $pg_etc_init_def) {
 	  $self->error("$pg_etc_init_def not found. Check your postgres installation.");
@@ -168,11 +170,19 @@ sub Configure {
 				## determine initialisation
 				## starting from 8.2, initdb is a separate postgres call
 				## lets assume postmaster is there
-				my $cmd="postmaster --version";
+				my $cmd="$pg_engine/postmaster --version";
 				my $out=`$cmd`;
 				if ($out) {
 					if ($out =~ m/(\d+)\.(\d+).(\d+)\s*$/) {
-						if (($1 >= 8) && ($2 >= 2)) {
+						my $doInitdb = 0;
+						if (($1 > 8)){
+							$doInitdb = 1;
+						} elsif ($1 == 8) {
+							if ($2 >= 2 ){
+								$doInitdb = 1;
+							}
+						}
+						if ($doInitdb) {
 							## postgres 8.2+
 							$self->info("Initdb $pg_script_name to trigger the initialisation (found release $1.$2.$3 > 8.2).");
 							if (! initdb_service(1,$pg_script_name)) {
