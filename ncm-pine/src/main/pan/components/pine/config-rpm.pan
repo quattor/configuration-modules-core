@@ -4,7 +4,7 @@
 
 
 unique template components/pine/config-rpm;
-include components/pine/schema;
+include {'components/pine/schema'};
 
 # Package to install
 '/software/packages'=pkg_repl('ncm-pine','1.2.11-1','noarch');

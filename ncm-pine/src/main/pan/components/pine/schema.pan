@@ -5,7 +5,7 @@
 
 declaration template components/pine/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 
 type component_pine_type = {
@@ -21,6 +21,6 @@ type component_pine_type = {
 	'disableauth'  ? string 	# "authentication methods to disable"
 };
 
-type "/software/components/pine" = component_pine_type;
+bind "/software/components/pine" = component_pine_type;
 
 
