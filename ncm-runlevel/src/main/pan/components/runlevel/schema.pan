@@ -7,10 +7,10 @@
 
 declaration template components/runlevel/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 function is_valid_runlevel = {
-    level = argv[0];
+    level = ARGV[0];
     if(level>0 && level<6) return(true);
     error("Invalid runlevel value: " + to_string(level));
     return(false);
@@ -18,8 +18,8 @@ function is_valid_runlevel = {
 
 type component_runlevel_type = {
     include structure_component
-    "initdefault" : long with { is_valid_runlevel(self)}
+    "initdefault" : long with { is_valid_runlevel(SELF)}
 };
 
-type "/software/components/runlevel" = component_runlevel_type;
+bind "/software/components/runlevel" = component_runlevel_type;
 

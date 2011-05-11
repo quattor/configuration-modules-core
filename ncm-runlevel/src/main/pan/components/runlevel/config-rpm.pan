@@ -6,7 +6,7 @@
 ################################################################################
 
 unique template components/runlevel/config-rpm;
-include components/runlevel/schema;
+include {'components/runlevel/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-runlevel","1.0.1-1","noarch");
