@@ -14,7 +14,7 @@
 
 declaration template components/postgresql/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type pg_db = {
 	"user" ? string
@@ -45,5 +45,5 @@ type component_pgsql = {
 	"pg_engine" ? string
 };
 
-type "/software/components/postgresql" = component_pgsql;
+bind "/software/components/postgresql" = component_pgsql;
 

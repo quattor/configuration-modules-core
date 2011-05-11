@@ -12,7 +12,7 @@
 ############################################################
 
 unique template components/postgresql/config-rpm;
-include components/postgresql/schema;
+include {'components/postgresql/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-postgresql","0.1.4-1","noarch");
