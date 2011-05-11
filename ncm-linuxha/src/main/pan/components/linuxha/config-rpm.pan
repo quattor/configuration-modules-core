@@ -11,7 +11,7 @@
 ############################################################
  
 unique template components/linuxha/config-rpm;
-include components/linuxha/schema;
+include {'components/linuxha/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-linuxha","1.1.2-1","noarch");

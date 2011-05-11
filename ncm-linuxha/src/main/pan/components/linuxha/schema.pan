@@ -12,7 +12,7 @@
 
 declaration template components/linuxha/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 # Old Quattor 1.1 use this instead
 #include components/type;
 
@@ -44,4 +44,4 @@ type component_linuxha_type = {
     "respawn" ? string
 };
 
-type "/software/components/linuxha" = component_linuxha_type;
+bind "/software/components/linuxha" = component_linuxha_type;
