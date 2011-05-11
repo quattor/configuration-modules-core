@@ -5,7 +5,7 @@
 
 declaration template components/ldconf/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type component_ldconf = {
     include structure_component
@@ -13,6 +13,6 @@ type component_ldconf = {
     'paths'    ? string[]
 };
 
-type '/software/components/ldconf' = component_ldconf;
+bind '/software/components/ldconf' = component_ldconf;
 
 
