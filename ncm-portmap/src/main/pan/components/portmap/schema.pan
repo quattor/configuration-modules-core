@@ -7,11 +7,11 @@
 
 declaration template components/portmap/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type component_portmap_type = {
   include structure_component
   "enabled" : boolean
 };
 
-type "/software/components/portmap" = component_portmap_type;
+bind "/software/components/portmap" = component_portmap_type;
