@@ -5,7 +5,7 @@
 
 unique template components/mailaliases/config-rpm;
 
-include components/mailaliases/schema;
+include {'components/mailaliases/schema'};
 
 # Package to install.
 "/software/packages"=pkg_repl("ncm-mailaliases","1.1.2-1","noarch");

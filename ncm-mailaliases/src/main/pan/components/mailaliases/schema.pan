@@ -5,7 +5,7 @@
 
 declaration template components/mailaliases/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 #include pro/declaration/email/type;
 
 #define type component_mailaliases_type = {
@@ -25,4 +25,4 @@ type component_mailaliases_type = {
     "user" ? mail_user_type{}
 };
 
-type "/software/components/mailaliases" = component_mailaliases_type;
+bind "/software/components/mailaliases" = component_mailaliases_type;
