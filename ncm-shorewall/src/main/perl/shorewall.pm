@@ -34,7 +34,7 @@ use Encode qw(encode_utf8);
 my $compname = "NCM-shorewall";
 my $mypath = '/software/components/shorewall';
 
-use constant SHOREWALLCFGDIR = "/etc/shorewall/";
+use constant SHOREWALLCFGDIR => "/etc/shorewall/";
 
 ## shorewall v4 config
 
@@ -71,10 +71,9 @@ sub Configure {
 
     our ($self,$config)=@_;
 
-    our $base;
     my ($result,$tree,$contents,$type);
     
-    my $reload =0;
+    my %reload;
     
     # Save the date.
     my $date = localtime();
@@ -82,10 +81,11 @@ sub Configure {
     sub writecfg {
         my $typ = shift;
         my $contents = shift;
+        my $refreload = shift;
         my $changed = 0;
-        my $cfgfile=SHOREWALLCFGDIR+$type;
+        my $cfgfile=SHOREWALLCFGDIR.$typ;
         if ( -e $cfgfile && (LC::File::file_contents($cfgfile) eq $contents)) {
-            $self->debug(2,"Nothing changed.")
+            $self->debug(2,"Nothing changed for $typ.")
         } else {
             ## write cfgfile
             $changed = 1;
@@ -100,27 +100,83 @@ sub Configure {
                 return -1;
             }
         }
+        %$refreload->{$typ}=$changed;
         return $changed;                
     }
+
+    sub tostring {
+        my $ref=shift;
+
+        if (ref($ref) eq "ARRAY") {
+            return join(",",@$ref);
+        } elsif (ref($ref) eq "SCALAR") {
+        } elsif (ref($ref) eq "HASH") {
+        } else {
+            ## not a ref, just string
+            return $ref;
+        }
+    };
     
     #### BEGIN ZONES
     $type="zones";
-    $tree=$config->etElement("$base/$type")->getTree;
-    $contents="## Created by shorewall at $date\n##\n";
-    foreach $tr (@$tree) {
+    $tree=$config->getElement("$mypath/$type")->getTree;
+    $contents="##\n## $type config created by shorewall\n##\n";
+    foreach my $tr (@$tree) {
         foreach my $kw (ZONES) {
             my $val = "-";
-            if (exists(%$tr->{$kw})) {
-                $val = %$tr->{$kw}; 
-            };
+            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val.=":".tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));  
             $contents.="$val\t";
         }
         $contents.="\n";
     }
-    $reload = writecfg($type,$contents) || $reload;
-    return 1 if ($reload < 0);
+    return 1 if (writecfg($type,$contents,\%reload) < 0);
     #### END ZONES
+
+    #### BEGIN INTERFACES
+    $type="interfaces";
+    $tree=$config->getElement("$mypath/$type")->getTree;
+    $contents="##\n## $type config created by shorewall\n##\n";
+    foreach my $tr (@$tree) {
+        foreach my $kw (INTERFACES) {
+            my $val = "-";
+            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val.=":".tostring(%$tr->{'port'}) if (($kw eq "interface") && exists(%$tr->{'port'}));
+            $contents.="$val\t";
+        }
+        $contents.="\n";
+    }
+    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    #### END INTERFACES
+
     
+    #### BEGIN RULES
+    $type="rules";
+    $tree=$config->getElement("$mypath/$type")->getTree;
+    $contents="##\n## $type config created by shorewall\n##\n";
+    foreach my $tr (@$tree) {
+        foreach my $kw (RULES) {
+            my $val = "-";
+            if (exists(%$tr->{$kw})) {
+                if (($kw eq "src") || ($kw eq "dst")) {
+                    my $tmp=%$tr->{$kw};
+                    $val = $tmp->{'zone'};
+                    $val .= ":".tostring($tmp->{'interface'}) if (exists($tmp->{'interface'}));
+                    $val .= ":".tostring($tmp->{'address'}) if (exists($tmp->{'address'}));
+                } else {
+                    $val = tostring(%$tr->{$kw});
+                }
+            };
+            $val = uc($val) if ($kw eq "action");
+            $val .= ":".tostring(%$tr->{'group'}) if ($kw eq "user" && exists(%$tr->{'group'}));
+            $contents.="$val\t";
+        }
+        $contents.="\n";
+    }
+    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    #### END RULES
+
+    #### add ccm-fetch test. in case of failure, roll back cfg.
 
 }
 
