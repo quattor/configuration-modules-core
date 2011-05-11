@@ -5,6 +5,6 @@
 
 unique template components/iscsitarget/config-rpm;
 
-include components/iscsitarget/schema;
+include {'components/iscsitarget/schema'};
 
 "/software/components/iscsitarget/active" ?= true;
