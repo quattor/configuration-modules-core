@@ -4,7 +4,7 @@
 
 
 unique template components/hostsaccess/config-rpm;
-include components/hostsaccess/schema;
+include {'components/hostsaccess/schema'};
 
 # Package to install
 '/software/packages'=pkg_repl('ncm-hostsaccess','1.1.3-1','noarch');

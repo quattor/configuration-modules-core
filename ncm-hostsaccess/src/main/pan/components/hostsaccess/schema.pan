@@ -5,7 +5,7 @@
 
 declaration template components/hostsaccess/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type structure_hostsaccess_entry = {
     'daemon' ? string
@@ -18,4 +18,4 @@ type component_hostsaccess = {
     'deny'  ? structure_hostsaccess_entry[]
 };
 
-type '/software/components/hostsaccess' = component_hostsaccess;
+bind '/software/components/hostsaccess' = component_hostsaccess;
