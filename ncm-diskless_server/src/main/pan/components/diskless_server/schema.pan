@@ -14,9 +14,9 @@ type dhcp_options_type={
 };
 
 type dhcp_header_type={
-    "ddns_update_style" : string with match (self,'ad-hoc|interim|none')
-    "unknown_clients" : string with match (self,'allow|deny')
-    "use_host_decl_names" : string with match (self,'on|off')
+    "ddns_update_style" : string with match (SELF,'ad-hoc|interim|none')
+    "unknown_clients" : string with match (SELF,'allow|deny')
+    "use_host_decl_names" : string with match (SELF,'on|off')
     "log_facility" : string
     "search" ? string[]
 };
@@ -40,7 +40,7 @@ type dhcp_clients_type={
 
 type pxe_type={
     "descro" ? string
-    "protocol" : string with match (self,'NFS|FTP|HTTP')
+    "protocol" : string with match (SELF,'NFS|FTP|HTTP')
     "netdev" : string
     "kernel" : string
     "image" : string
@@ -81,7 +81,7 @@ type component_diskless_type={
 };
 
 function is_valid_subnet_path = {
-    entry="/software/components/diskless_server/dhcp/_"+argv[0]+"/";
+    entry="/software/components/diskless_server/dhcp/_"+ARGV[0]+"/";
     if (exists(entry)){
         return(true);
     }else{
@@ -129,7 +129,7 @@ function get_client_boot_device = {
     if ( argc != 1 ){
         error("Wrong ARGC :" + ARGC + "please specify nodename.");
     };
-    node = argv[0];
+    node = ARGV[0];
     client_devices = nlist();
     nics = value("//profile_" + node + "/hardware/cards/nic");
     ok = first(nics,k,v);
@@ -200,7 +200,7 @@ function append_dl_export_list = {
         target_nodes[length(target_nodes)] = node + value("/software/components/diskless_server/dl_nfs/rootdiroptions" );
         i = next( client_nodes, k, node );
     };
-    # pxeos/pxeboot want the server to export the directories to himself...
+    # pxeos/pxeboot want the server to export the directories to himSELF...
     target_nodes[length(target_nodes)] = value("/system/network/hostname") + value("/software/components/diskless_server/dl_nfs/rootdiroptions" );
     exports_entry["path"] =  pxe_imagedir + "/root";
     exports_entry["hosts"] = target_nodes;
@@ -215,7 +215,7 @@ function append_dl_export_list = {
         target_nodes[length(target_nodes)] = node + value("/software/components/diskless_server/dl_nfs/snapshotoptions" );
         i = next( client_nodes, k, node );
     };
-    # pxeos/pxeboot want the server to export the directories to himself...
+    # pxeos/pxeboot want the server to export the directories to himSELF...
     target_nodes[length(target_nodes)] = value("/system/network/hostname") + value("/software/components/diskless_server/dl_nfs/snapshotoptions" );
     exports_entry["path"] =  pxe_imagedir + "/snapshot";
     exports_entry["hosts"] = target_nodes;
@@ -225,4 +225,4 @@ function append_dl_export_list = {
 
 };
 
-type "/software/components/diskless_server" = component_diskless_type;
+bind "/software/components/diskless_server" = component_diskless_type;

@@ -5,7 +5,7 @@
 
 
 unique template components/diskless_server/config-rpm;
-include components/diskless_server/schema;
+include {'components/diskless_server/schema'};
 
 # Common settings
 #"/software/components/diskless_server/dependencies/pre" = list("spma");
