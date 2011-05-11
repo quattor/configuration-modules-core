@@ -5,7 +5,7 @@
 
 
 unique template components/pvss/config-rpm;
-include components/pvss/schema;
+include {'components/pvss/schema'};
 
 # Common settings
 #"/software/components/pvss/dependencies/pre" = list("spma");

@@ -29,4 +29,4 @@ type component_pvss_type={
     "mail_address" ? string
 };
 
-type "/software/components/pvss" = component_pvss_type;
+bind "/software/components/pvss" = component_pvss_type;
