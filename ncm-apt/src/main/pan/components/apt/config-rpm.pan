@@ -4,7 +4,7 @@
 
 
 unique template components/apt/config-rpm;
-include components/apt/schema;
+include {'components/apt/schema'};
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-apt","0.1.0-1","noarch");

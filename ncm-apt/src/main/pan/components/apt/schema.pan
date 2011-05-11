@@ -5,7 +5,7 @@
 
 declaration template components/apt/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type structure_apt = {
     "something" : string
@@ -16,6 +16,6 @@ type component_apt = {
     "config" ? structure_apt[]
 };
 
-type "/software/components/apt" = component_apt;
+bind "/software/components/apt" = component_apt;
 
 
