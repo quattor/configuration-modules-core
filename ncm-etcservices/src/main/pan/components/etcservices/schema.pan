@@ -7,12 +7,12 @@
 
 declaration template components/etcservices/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type component_etcservices_type = {
 	include structure_component
 	"entries" : string []
 };
 
-type "/software/components/etcservices" = component_etcservices_type;
+bind "/software/components/etcservices" = component_etcservices_type;
 
