@@ -5,12 +5,12 @@
 
 declaration template components/sindes_getcert/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type sindes_getcert = {
     include structure_component
     ## only supported protocol?
-    'protocol'          : string with match (self, 'https://')
+    'protocol'          : string with match (SELF, 'https://')
     'server'            : type_network_name
     'new_cert_port'     : long
     'renew_cert_port'   : long
