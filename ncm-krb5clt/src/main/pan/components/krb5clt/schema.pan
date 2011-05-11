@@ -7,7 +7,7 @@
 
 declaration template components/krb5clt/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type component_krb5clt = {
         include structure_component
@@ -21,7 +21,7 @@ type component_krb5clt = {
 	"forwardable"		? boolean
 	"proxiable"		? boolean
         "default_tkt_enctypes"  ? string
-        "allow_weak_crypto"     ? string with match (self, 'true|false')
+        "allow_weak_crypto"     ? string with match (SELF, 'true|false')
 	# realms
 	"cern_kpasswd_server"	? string
 	"cern_admin_server"	? string
@@ -30,27 +30,27 @@ type component_krb5clt = {
         # other PAM appdefault options, valid for 2.2.8
         "pam_banner"		? string
         "pam_ccache_dir"	? string
-        "pam_existing_ticket"	? string with match (self, 'true|false')
-        "pam_ignore_afs"	? string with match (self, 'true|false')
-        "pam_ignore_unknown_principals"		? string with match (self, 'true|false')
-        "pam_initial_prompt"	? string with match (self, 'true|false')
+        "pam_existing_ticket"	? string with match (SELF, 'true|false')
+        "pam_ignore_afs"	? string with match (SELF, 'true|false')
+        "pam_ignore_unknown_principals"		? string with match (SELF, 'true|false')
+        "pam_initial_prompt"	? string with match (SELF, 'true|false')
         "pam_keytab"		? string
-        "pam_krb4_convert"	? string with match (self, 'true|false')
-        "pam_krb4_convert_524"	? string with match (self, 'true|false')
-        "pam_krb4_use_as_req"	? string with match (self, 'true|false')
+        "pam_krb4_convert"	? string with match (SELF, 'true|false')
+        "pam_krb4_convert_524"	? string with match (SELF, 'true|false')
+        "pam_krb4_use_as_req"	? string with match (SELF, 'true|false')
         "pam_mappings"		? string
         "pam_minimum_uid"	? long
-        "pam_no_user_check"	? string with match (self, 'true|false')
+        "pam_no_user_check"	? string with match (SELF, 'true|false')
         "pam_realm"		? string
         "pam_renew_lifetime"	? string
         "pam_ticket_lifetime"	? string
-        "pam_tokens"		? string with match (self, 'true|false')
+        "pam_tokens"		? string with match (SELF, 'true|false')
         "pam_use_shmem"		? string
         "pam_validate"		? string
         "pam_afs_cells"		? string
         # The next options require CERN patches to pam_krb5
-        "pam_cern_nullafs"	? string with match (self, 'true|false')
-        "pam_cern_prefer2b"	? string with match (self, 'true|false')
+        "pam_cern_nullafs"	? string with match (SELF, 'true|false')
+        "pam_cern_prefer2b"	? string with match (SELF, 'true|false')
         # use with AD
         "pkinit_pool"           ? string
         "pkinit_anchors"        ? string
@@ -80,5 +80,5 @@ type component_krb5clt = {
 	"realms/default_domain"		? string
 };
 
-type "/software/components/krb5clt" = component_krb5clt;
+bind "/software/components/krb5clt" = component_krb5clt;
 

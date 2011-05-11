@@ -6,7 +6,7 @@
 ################################################################################
 
 unique template components/krb5clt/config-rpm;
-include components/krb5clt/schema;
+include {'components/krb5clt/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-krb5clt","2.1.7-1","noarch");
