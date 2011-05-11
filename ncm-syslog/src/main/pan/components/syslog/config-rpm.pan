@@ -4,7 +4,7 @@
 
 
 unique template components/syslog/config-rpm;
-include components/syslog/schema;
+include {'components/syslog/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-syslog","0.1.7-4","noarch");
