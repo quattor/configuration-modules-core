@@ -7,7 +7,7 @@
 
 declaration template components/fsprobe/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 # Information needed for Kerberos authentication
 type structure_kerberos = {
@@ -43,5 +43,5 @@ type structure_component_fsprobe = {
 	"roles"	? structure_fsprobe_auth {}
 };
 
-type "/software/components/fsprobe" = structure_component_fsprobe;
+bind "/software/components/fsprobe" = structure_component_fsprobe;
 

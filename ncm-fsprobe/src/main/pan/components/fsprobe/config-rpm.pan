@@ -5,7 +5,7 @@
 # template pro_software_component_fsprobe
 
 unique template components/fsprobe/config-rpm;
-include components/fsprobe/schema;
+include {'components/fsprobe/schema'};
 include components/fsprobe/functions;
 
 # Package to install:
