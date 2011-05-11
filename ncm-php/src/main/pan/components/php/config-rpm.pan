@@ -6,7 +6,7 @@
 
 unique template components/php/config-rpm;
 
-include components/php/schema;
+include {'components/php/schema'};
  
    # Package to install
 #   "/software/packages" = pkg_repl('<phpRPMname>', '<ver>', '<arch>');

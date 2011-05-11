@@ -15,14 +15,14 @@ include pan/structures;
 
 
 type php_boolval = long(0..1);
-type php_boolstr = string with match(self, "^(true|false)$");
-type php_onoffstr = string with match(self, "^(On|Off)$");
-type php_quotedstr = string with match(self, '".*"');
-type php_colorstr = string with match(self, "^#[0-9a-zA-Z]{6}$");
-type php_quotedtagstr = string with match(self, '^"<.*>"$');
-type php_mbstr = string with match(self, '^\d+(M|B)?$');
-type php_dirstr = string with match(self, '^[\w/]*$');
-type php_quotedmailstr = string with match(self, '".*@.*"');
+type php_boolstr = string with match(SELF, "^(true|false)$");
+type php_onoffstr = string with match(SELF, "^(On|Off)$");
+type php_quotedstr = string with match(SELF, '".*"');
+type php_colorstr = string with match(SELF, "^#[0-9a-zA-Z]{6}$");
+type php_quotedtagstr = string with match(SELF, '^"<.*>"$');
+type php_mbstr = string with match(SELF, '^\d+(M|B)?$');
+type php_dirstr = string with match(SELF, '^[\w/]*$');
+type php_quotedmailstr = string with match(SELF, '".*@.*"');
 
 type structure_php_all_type = {
     "name" ?    string
@@ -119,7 +119,7 @@ type structure_php_main = {
     "error_log" ?    string
     "variables_order" ?    php_quotedstr
     "register_globals" ?    php_onoffstr
-    "register_argc_argv" ?    php_onoffstr
+    "register_argc_ARGV" ?    php_onoffstr
     "post_max_size" ?    php_mbstr
     "gpc_order" ?    php_quotedstr
     "magic_quotes_gpc" ?    php_onoffstr
@@ -554,6 +554,6 @@ type component_php = {
 };
 
 
-type "/software/components/php" = component_php;
+bind "/software/components/php" = component_php;
     
 
