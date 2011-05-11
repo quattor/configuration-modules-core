@@ -10,7 +10,7 @@
 ############################################################
  
 unique template components/srvtab/config-rpm;
-include components/srvtab/schema;
+include {'components/srvtab/schema'};
 
 # Package to install
 "/software/packages"=pkg_repl("ncm-srvtab","1.2.2-1","noarch");

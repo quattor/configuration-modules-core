@@ -18,6 +18,6 @@ type component_srvtab_type = {
    "verbose"   : boolean 	# "tell the script creting the credentials to be verbose"
 };
 
-type "/software/components/srvtab" = component_srvtab_type;
+bind "/software/components/srvtab" = component_srvtab_type;
 
 
