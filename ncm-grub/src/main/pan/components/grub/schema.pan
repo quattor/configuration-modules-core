@@ -5,7 +5,7 @@
 
 declaration template components/grub/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 type type_kernel = {
     "kernelpath"    : string
@@ -25,5 +25,5 @@ type component_grub_type = {
 };
 
 
-type "/software/components/grub" = component_grub_type;
+bind "/software/components/grub" = component_grub_type;
 

@@ -5,9 +5,9 @@
 
 unique template components/grub/config-rpm;
 
-include components/grub/schema;
+include {'components/grub/schema'};
 
-include pan/functions;
+include {'pan/functions'};
 
 # Package to install.
 "/software/packages"=pkg_repl("ncm-grub","2.1.2-1","noarch");
