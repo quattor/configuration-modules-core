@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-include components/pakiti/schema;
+include {'components/pakiti/schema'};
 
 # Package to install.
 "/software/packages"=pkg_repl("ncm-pakiti","1.0.0-1","noarch");

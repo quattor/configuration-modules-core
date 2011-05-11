@@ -5,7 +5,7 @@
 
 declaration template components/pakiti/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 
 type component_pakiti_type = {
@@ -15,5 +15,5 @@ type component_pakiti_type = {
     "method" : string
 };
 
-type "/software/components/pakiti" = component_pakiti_type;
+bind "/software/components/pakiti" = component_pakiti_type;
 
