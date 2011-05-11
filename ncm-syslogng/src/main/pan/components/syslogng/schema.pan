@@ -4,20 +4,20 @@
 
 declaration template components/syslogng/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 
 # Convenience definitions
 type filterstring = string with exists ("/software/components/syslogng/filters/"
-					+ self) ||
-                               error ("No filters with name " + self);
+					+ SELF) ||
+                               error ("No filters with name " + SELF);
 type srcstring = string with exists ("/software/components/syslogng/sources/"
-				     + self) ||
-                               error ("No sources with name " + self);
+				     + SELF) ||
+                               error ("No sources with name " + SELF);
 type dststring = string with exists ("/software/components/syslogng/destinations/"
-				    + self) ||
-                               error ("No destinations with name " + self);
+				    + SELF) ||
+                               error ("No destinations with name " + SELF);
 
-type prioritystring = string with match (self, "^(emerg|alert|crit|err|warning|notice|info|debug)$");
+type prioritystring = string with match (SELF, "^(emerg|alert|crit|err|warning|notice|info|debug)$");
 
 # Common options for every destination
 type structure_syslogng_dstcommon = {
@@ -120,7 +120,7 @@ type structure_syslogng_log_rule_flags = {
 
 # Common options for a source
 type structure_syslogng_srccommon = {
-	"flags" ? string with match (self, "^(no-parse|kernel)$")
+	"flags" ? string with match (SELF, "^(no-parse|kernel)$")
 	"log_msg_size" ? long
 	"log_iw_size" ? long
 	"log_fetch_limit" ? long
@@ -237,7 +237,7 @@ type structure_syslogng_options = {
 	"dir_group" : string = "root"
 	"dir_perm" : long = 0700
 	"ts_format" : string = "rfc3164"
-	"use_dns" : string with match (self, "yes|no|persist_only")
+	"use_dns" : string with match (SELF, "yes|no|persist_only")
 	"dns_cache" : boolean = true
 	"dns_cache_size" : long = 1007
 	"dns_cache_expire" : long = 3600
@@ -264,5 +264,5 @@ type structure_component_syslogng = {
 	"log_rules" : structure_syslogng_log_rule[]
 };
 
-type "/software/components/syslogng" = structure_component_syslogng;
+bind "/software/components/syslogng" = structure_component_syslogng;
 
