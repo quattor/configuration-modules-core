@@ -5,7 +5,7 @@
 
 declaration template components/oramonserver/schema;
 
-include quattor/schema;
+include {'quattor/schema'};
 # Old Quattor 1.1 use this instead 
 #include components/type;
 
@@ -16,5 +16,5 @@ type component_oramonserver_type = {
     "conf" : structure_monitoring
 };
 
-type "/software/components/oramonserver" = component_oramonserver_type;
+bind "/software/components/oramonserver" = component_oramonserver_type;
 

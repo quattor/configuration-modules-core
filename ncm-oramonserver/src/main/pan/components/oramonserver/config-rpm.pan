@@ -5,7 +5,7 @@
 
 unique template components/oramonserver/config-rpm;
 
-include components/oramonserver/schema;
+include {'components/oramonserver/schema'};
 
 # Package to install.
 "/software/packages"=pkg_repl("ncm-oramonserver","1.0.16-1","noarch");
