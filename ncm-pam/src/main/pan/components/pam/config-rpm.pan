@@ -102,7 +102,7 @@ function pam_add_stack = {
 # Ick. this is a horrible interface.
 # The filename for ACLs is forced
 # to be /etc/acls/<servicename>.allow|deny. If you want something
-# else, don't use the function but construct the structure yourself.
+# else, don't use the function but construct the structure yourSELF.
 # Example:
 # "/software/components/pam/services" = pam_add_acl("sshd", "auth", "required", "deny", "users", list("bob", "fred"));
 function pam_add_listfile_acl = {
