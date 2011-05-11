@@ -1,0 +1,16 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+unique template components/shorewall/config-rpm;
+include { 'components/shorewall/schema' };
+
+# Package to install
+"/software/packages"=pkg_repl("ncm-shorewall","0.5.0-1","noarch");
+
+'/software/components/shorewall/version' ?= '0.5.0';
+
+"/software/components/shorewall/dependencies/pre" ?= list("spma");
+"/software/components/shorewall/active" ?= true;
+"/software/components/shorewall/dispatch" ?= true;
