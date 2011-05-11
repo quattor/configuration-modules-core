@@ -4,7 +4,7 @@
 
 
 unique template components/tftpd/config-rpm;
-include components/tftpd/schema;
+include {'components/tftpd/schema'};
 
 # Common settings
 #"/software/components/tftpd/dependencies/pre" = list("spma");
