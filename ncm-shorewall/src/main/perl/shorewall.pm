@@ -224,33 +224,31 @@ sub Configure {
     $type="shorewall";
     $tree=$config->getElement("$mypath/$type")->getTree;
     my $head="##\n## $type config created by shorewall\n##\n";
-    $contents=LC::File::file_contents(SHOREWALLCFGDIR.$typ.".conf");
+    $contents=LC::File::file_contents(SHOREWALLCFGDIR.$type.".conf");
     $contents = $head.$contents if (! $contents =~ m/$head/);
-    foreach my $tr (@$tree) {
-        foreach my $kw (SHOREWALL_BOOLEAN) {
-            my $ukw=uc($kw);
-            if (exists(%$tr->{$kw})) {
-                my $new="No";
-                $new = "Yes" if (%$tr->{$kw});
-                my $reg="^$ukw";
-                $contents =~ s/$reg/$ukw=$new/m
-            };
-        }
-        foreach my $kw (SHOREWALL_STRING) {
-            my $ukw=uc($kw);
-            if (exists(%$tr->{$kw})) {
-                my $new=%$tr->{$kw};
-                my $reg="^$ukw";
-                $contents =~ s/$reg/$ukw=$new/m
-            };
-        }
+    foreach my $kw (SHOREWALL_BOOLEAN) {
+        my $ukw=uc($kw);
+        if (exists(%$tree->{$kw})) {
+            my $new="No";
+            $new = "Yes" if (%$tree->{$kw});
+            my $reg="^".$ukw.".*\$";
+            $contents =~ s/$reg/$ukw=$new/m
+        };
+    }
+    foreach my $kw (SHOREWALL_STRING) {
+        my $ukw=uc($kw);
+        if (exists(%$tree->{$kw})) {
+            my $new=%$tree->{$kw};
+            my $reg="^".$ukw.".*\$";
+            $contents =~ s/$reg/$ukw=$new/m
+        };
     }
     return 1 if (writecfg($type,$contents,\%reload) < 0);
     #### END CONFIG
 
 
     #### restart/reload/test/rollback
-    sub restartreload = {
+    sub restartreload {
         my $resomething = shift;
         my $restart = shift;
         if ($resomething) {
@@ -271,7 +269,7 @@ sub Configure {
     };
 
 
-    sub testfail = {
+    sub testfail {
         my $fail=1;
         ## sometimes it's possible that routing is a bit behind, so set this variable to some larger value
         my $sleep_time = 15;
@@ -294,13 +292,13 @@ sub Configure {
     foreach $type (keys %reload){
         $r=$reload{$type} || $r;
     }
-    restartreload($r,$r{'shorewall'});
+    restartreload($r,$reload{'shorewall'});
     if (testfail()) {
         $self->error("New config fails test. Going to revert to old config.");
         ## roll back
         
         ## restart
-        restartreload($r,$r{'shorewall'});
+        restartreload($r,$reload{'shorewall'});
         ## retest
         if (testfail()) {
             $self->error("Restoring old config still fails test.");
