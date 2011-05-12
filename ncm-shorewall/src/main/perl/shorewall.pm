@@ -249,22 +249,17 @@ sub Configure {
 
     #### restart/reload/test/rollback
     sub restartreload {
-        my $resomething = shift;
         my $restart = shift;
-        if ($resomething) {
-            if($restart) {
-                $self->info("Going to restart.");
-                CAF::Process->new([qw(/etc/init.d/shorewall stop)],
-                    log => $self)->run();
-                CAF::Process->new([qw(/etc/init.d/shorewall start)],
-                    log => $self)->run();
-            } else {
-                $self->info("Going to reload.");
-                CAF::Process->new([qw(/etc/init.d/shorewall reload)],
-                   log => $self)->run();
-            }
+        if($restart) {
+            $self->info("Going to restart.");
+            CAF::Process->new([qw(/etc/init.d/shorewall stop)],
+                log => $self)->run();
+            CAF::Process->new([qw(/etc/init.d/shorewall start)],
+                log => $self)->run();
         } else {
-            $self->debug(2,"Nothing to restart/reload.");
+            $self->info("Going to reload.");
+            CAF::Process->new([qw(/etc/init.d/shorewall reload)],
+                log => $self)->run();
         }
     };
 
@@ -292,18 +287,23 @@ sub Configure {
     foreach $type (keys %reload){
         $r=$reload{$type} || $r;
     }
-    restartreload($r,$reload{'shorewall'});
-    if (testfail()) {
-        $self->error("New config fails test. Going to revert to old config.");
-        ## roll back
-        
-        ## restart
-        restartreload($r,$reload{'shorewall'});
-        ## retest
-        if (testfail()) {
-            $self->error("Restoring old config still fails test.");
-        }
-    }    
+
+    if ($r) {
+        restartreload($reload{'shorewall'});
+        if ($r && testfail()) {
+            $self->error("New config fails test. Going to revert to old config.");
+            ## roll back
+            rollback(\%reload);        
+            ## restart
+            restartreload($reload{'shorewall'});
+            ## retest
+            if (testfail()) {
+                $self->error("Restoring old config still fails test.");
+            }
+        }    
+    } else {
+        $self->debug(2,"Nothing to restart/reload.");
+    }
     
 }
 
