@@ -65,12 +65,12 @@ use constant RULES => qw(action
                          time
                          );
 
-use constant POLICY => (src
-                        dst
-                        policy
-                        loglevel
-                        burst
-                        connlimit
+use constant POLICY => qw(src
+                          dst
+                          policy
+                          loglevel
+                          burst
+                          connlimit
                         );
 
 use constant SHOREWALL_BOOLEAN => qw (startup_enabled
