@@ -65,9 +65,102 @@ use constant RULES => qw(action
                          time
                          );
 
+use constant POLICY => (src
+                        dst
+                        policy
+                        loglevel
+                        burst
+                        connlimit
+                        );
+
 use constant SHOREWALL_BOOLEAN => qw (startup_enabled
+                                      log_martians
+                                      clear_tc
+                                      adminisabsentminded
+                                      blacklistnewonly
+                                      pkttype
+                                      expand_policies
+                                      delete_then_add
+                                      auto_comment
+                                      mangle_enabled
+                                      restore_default_route
+                                      accounting
+                                      dynamic_blacklist
+                                      exportmodules
+                                      logtagonly
+                                      add_ip_aliases
+                                      add_snat_aliases
+                                      retain_aliases
+                                      tc_expert
+                                      mark_in_forward_chain
+                                      clampmss
+                                      route_filter
+                                      detect_dnat_ipaddrs
+                                      disable_ipv6
+                                      dynamic_zones
+                                      null_route_rfc1918
+                                      save_ipsets
+                                      mapoldactions
+                                      fastaccept
+                                      implicit_continue
+                                      high_route_marks
+                                      exportparams
+                                      keep_rt_tables
+                                      multicast
+                                      use_default_rt
+                                      automake
+                                      wide_tc_marks
+                                      track_providers
+                                      optimize_accounting
+                                      load_helpers_only
+                                      require_interface
+                                      complete
                                       );
-use constant SHOREWALL_STRING => qw(ip_forwading
+use constant SHOREWALL_STRING => qw(verbosity
+                                    logfile
+                                    startup_log
+                                    log_verbosity
+                                    logformat
+                                    loglimit
+                                    logallnew
+                                    blacklist_loglevel
+                                    maclist_log_level
+                                    tcp_flags_log_level
+                                    smurf_log_level
+                                    iptables
+                                    ip
+                                    tc
+                                    ipset
+                                    perl
+                                    path
+                                    shorewall_shell
+                                    subsyslock
+                                    modulesdir
+                                    config_path
+                                    restorefile
+                                    ipsecfile
+                                    lockfile
+                                    drop_default
+                                    reject_default
+                                    accept_default
+                                    queue_default
+                                    nfqueue_default
+                                    rsh_command
+                                    rcp_command
+                                    ip_forwarding
+                                    tc_enabled
+                                    tc_priomap
+                                    mutex_timeout
+                                    module_suffix
+                                    maclist_table
+                                    maclist_ttl
+                                    optimize
+                                    dont_load
+                                    zone2zone
+                                    forward_clear_mark
+                                    blacklist_disposition
+                                    maclist_disposition
+                                    tcp_flags_disposition
                                     );
 
 ##########################################################################
@@ -193,6 +286,22 @@ sub Configure {
     return 1 if (writecfg($type,$contents,\%reload) < 0);
     #### END INTERFACES
 
+    #### BEGIN POLICY
+    $type="policy";
+    $tree=$config->getElement("$mypath/$type")->getTree;
+    $contents="##\n## $type config created by shorewall\n##\n";
+    foreach my $tr (@$tree) {
+        foreach my $kw (POLICY) {
+            my $val = "-";
+            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val = uc($val) if ($kw eq "policy");
+            $val.=":".tostring(%$tr->{'limit'}) if (($kw eq "burst") && exists(%$tr->{'limit'}));
+            $contents.="$val\t";
+        }
+        $contents.="\n";
+    }
+    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    #### END POLICY
     
     #### BEGIN RULES
     $type="rules";
