@@ -65,6 +65,11 @@ use constant RULES => qw(action
                          time
                          );
 
+use constant SHOREWALL_BOOLEAN => qw (startup_enabled
+                                      );
+use constant SHOREWALL_STRING => qw(ip_forwading
+                                    );
+
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -78,12 +83,44 @@ sub Configure {
     # Save the date.
     my $date = localtime();
 
+    sub rollback {
+        my $relref = shift;
+        ## all entries with non-zero value have to be rolled back. 
+        ## also the ones with -1!
+        foreach my $typ (keys %$relref) {
+            if (%$relref->{$typ}) {
+                my $cfgfile=SHOREWALLCFGDIR.$typ;
+                $cfgfile .=".conf" if ($typ eq "shorewall"); 
+                ## move file to .failed
+                my $src=$cfgfile;
+                my $dst="$cfgfile.failed";
+                if (LC::File::move($src,$dst)) {
+                    $self->debug(2,"Moved $src to $dst");
+                } else {
+                    $self->error("Failed to move $src to $dst");
+                }
+                ## if .old exists, move that to 
+                my $src="$cfgfile.old";
+                my $dst=$cfgfile;
+                if (-e $src && LC::File::move($src,$dst)) {
+                    $self->debug(2,"Moved $src to $dst");
+                } else {
+                    $self->error("Failed to move $src to $dst");
+                }
+            } else {
+                $self->debug(2,"Not rolling back $typ.");
+            }
+        };
+    };
+
+    
     sub writecfg {
         my $typ = shift;
         my $contents = shift;
         my $refreload = shift;
         my $changed = 0;
         my $cfgfile=SHOREWALLCFGDIR.$typ;
+        $cfgfile .=".conf" if ($typ eq "shorewall"); 
         if ( -e $cfgfile && (LC::File::file_contents($cfgfile) eq $contents)) {
             $self->debug(2,"Nothing changed for $typ.")
         } else {
@@ -97,12 +134,17 @@ sub Configure {
                 $self->log("$cfgfile updated");
             } else {
                 $self->error("$cfgfile update failed");
-                return -1;
+                $changed=-1;
             }
         }
         %$refreload->{$typ}=$changed;
+        if ($changed < 0) {
+            rollback($refreload);
+        }        
         return $changed;                
     }
+
+
 
     sub tostring {
         my $ref=shift;
@@ -116,6 +158,8 @@ sub Configure {
             return $ref;
         }
     };
+
+
     
     #### BEGIN ZONES
     $type="zones";
@@ -176,8 +220,93 @@ sub Configure {
     return 1 if (writecfg($type,$contents,\%reload) < 0);
     #### END RULES
 
-    #### add ccm-fetch test. in case of failure, roll back cfg.
+    #### BEGIN CONFIG
+    $type="shorewall";
+    $tree=$config->getElement("$mypath/$type")->getTree;
+    my $head="##\n## $type config created by shorewall\n##\n";
+    $contents=LC::File::file_contents(SHOREWALLCFGDIR.$typ.".conf");
+    $contents = $head.$contents if (! $contents =~ m/$head/);
+    foreach my $tr (@$tree) {
+        foreach my $kw (SHOREWALL_BOOLEAN) {
+            my $ukw=uc($kw);
+            if (exists(%$tr->{$kw})) {
+                my $new="No";
+                $new = "Yes" if (%$tr->{$kw});
+                my $reg="^$ukw";
+                $contents =~ s/$reg/$ukw=$new/m
+            };
+        }
+        foreach my $kw (SHOREWALL_STRING) {
+            my $ukw=uc($kw);
+            if (exists(%$tr->{$kw})) {
+                my $new=%$tr->{$kw};
+                my $reg="^$ukw";
+                $contents =~ s/$reg/$ukw=$new/m
+            };
+        }
+    }
+    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    #### END CONFIG
 
+
+    #### restart/reload/test/rollback
+    sub restartreload = {
+        my $resomething = shift;
+        my $restart = shift;
+        if ($resomething) {
+            if($restart) {
+                $self->info("Going to restart.");
+                CAF::Process->new([qw(/etc/init.d/shorewall stop)],
+                    log => $self)->run();
+                CAF::Process->new([qw(/etc/init.d/shorewall start)],
+                    log => $self)->run();
+            } else {
+                $self->info("Going to reload.");
+                CAF::Process->new([qw(/etc/init.d/shorewall reload)],
+                   log => $self)->run();
+            }
+        } else {
+            $self->debug(2,"Nothing to restart/reload.");
+        }
+    };
+
+
+    sub testfail = {
+        my $fail=1;
+        ## sometimes it's possible that routing is a bit behind, so set this variable to some larger value
+        my $sleep_time = 15;
+        sleep($sleep_time);
+        
+        CAF::Process->new([qw(/usr/sbin/ccm-fetch)],
+                    log => $self)->run();
+        my $exitcode=$?;
+        if ($? == 0) {
+            $self->debug(2,"ccm-fetch OK");
+            $fail = 0;
+        } else {
+            $self->error("ccm-fetch FAILED");
+        }
+        return $fail;
+    }
+
+
+    my $r=0;
+    foreach $type (keys %reload){
+        $r=$reload{$type} || $r;
+    }
+    restartreload($r,$r{'shorewall'});
+    if (testfail()) {
+        $self->error("New config fails test. Going to revert to old config.");
+        ## roll back
+        
+        ## restart
+        restartreload($r,$r{'shorewall'});
+        ## retest
+        if (testfail()) {
+            $self->error("Restoring old config still fails test.");
+        }
+    }    
+    
 }
 
 

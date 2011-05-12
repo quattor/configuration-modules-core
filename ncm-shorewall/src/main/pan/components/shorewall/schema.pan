@@ -56,11 +56,18 @@ type component_shorewall_rules = {
     "time" ? string 
 };
 
+type component_shorewall_shorewall = {
+    "startup_enabled" : boolean
+    ## no boolean
+    "ip_forwarding" ? string with match(SELF,"(On|Off|Keep)")
+};
+
 type component_shorewall_type = {
     include structure_component
     "zones" : component_shorewall_zones[]
     "interfaces" : component_shorewall_interfaces[]
     "rules" : component_shorewall_rules[]
+    "shorewall" : component_shorewall_shorewall
 };
 
 bind "/software/components/shorewall" = component_shorewall_type;

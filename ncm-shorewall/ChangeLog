@@ -1,3 +1,8 @@
+2011-05-12  SDW
+
+        * Release: 0.5.1
+        - Support for zones, interfaces, rules en the config file
+
 2011-05-11  SDW
 
         * Release: 0.5.0
