@@ -251,11 +251,15 @@ sub Configure {
             } else {
                 return $empty;
             }
-        } elsif ($refref) eq "SCALAR") {
-        } elsif ($refref) eq "HASH") {
+        } elsif ($refref eq "SCALAR") {
+        } elsif ($refref eq "HASH") {
         } else {
             ## not a ref, just string
-            return $ref;
+            if ("$ref" eq "") {
+                return "-";
+            } else { 
+                return $ref;
+            }
         }
     };
 
