@@ -241,11 +241,18 @@ sub Configure {
 
     sub tostring {
         my $ref=shift;
+        my $refref=ref($ref);
+        ## use this when 
+        my $empty='-';
 
-        if (ref($ref) eq "ARRAY") {
-            return join(",",@$ref);
-        } elsif (ref($ref) eq "SCALAR") {
-        } elsif (ref($ref) eq "HASH") {
+        if ($refref eq "ARRAY") {
+            if (scalar @$ref) {
+                return join(",",@$ref);
+            } else {
+                return $empty;
+            }
+        } elsif ($refref) eq "SCALAR") {
+        } elsif ($refref) eq "HASH") {
         } else {
             ## not a ref, just string
             return $ref;
