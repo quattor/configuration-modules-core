@@ -81,8 +81,8 @@ sub Configure {
 
     our ($self,$config)=@_;
     my $base_path = '/system/network';
-    ## keep a hash of all files.
-    our  %exifiles;
+    ## keep a hash of all files and links.
+    our  %exifiles,%exilinks;
     my $fail="-failed";
 
     my ($path,$file_name,$text);
@@ -233,11 +233,16 @@ sub Configure {
     my $dev_regexp='-((eth|bond|br|vlan|usb|ib)\d+(\.\d+)?)';
     ## $1 is the device name
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
-        $exifiles{"$dir_pref/$file"} = -1;
-        ## backup all involved files
-        if ($file=~m/([:A-Za-z0-9.-]*)/) {
-            my $untaint_file=$1;
-            mk_bu("$dir_pref/$untaint_file");
+        if ( -l "$dir_pref/$file" ) {
+            ## keep the links separate
+            $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
+        } else {
+            $exifiles{"$dir_pref/$file"} = -1;
+            ## backup all involved files
+            if ($file=~m/([:A-Za-z0-9.-]*)/) {
+                my $untaint_file=$1;
+                mk_bu("$dir_pref/$untaint_file");
+            }
         }
     }
     closedir(DIR);
@@ -407,13 +412,30 @@ sub Configure {
         ## on file per alias
         if (exists($net{$iface}{aliases})) {
             foreach my $al (keys %{$net{$iface}{aliases}}) {
-                $file_name = "$dir_pref/ifcfg-$iface:$al";
                 $exifiles{$file_name} = 1;
+                my $tmpdev;
                 if ($net{$iface}{'device'}) {
-                    $text = "DEVICE=".$net{$iface}{'device'}.':'.$al."\n";
+                    $tmpdev=$net{$iface}{'device'}.':'.$al;
                 } else {
-                    $text = "DEVICE=".$iface.':'.$al."\n";
+                    $tmpdev=$iface.':'.$al;
                 }
+                ## this is the only way it will work for VLANs
+                ## if vlan device is vlanX and teh DEVICE is eg ethY.Z
+                ##   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
+                ## otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for 
+                ## ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
+                ## problem is, we want both
+                ## adding symlinks however is not the best thing to do...
+                $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
+                if ($net{$iface}{vlan} eq "true") {
+                    my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
+                    if ($file_name_sym ne $file_name) 
+                        if(! -e $file_name_sym) {
+                            ## this will create broken link, if $file_name is not yet existing
+                            symlink($file_name,$file_name_sym) if (! -l $file_name_sym); 
+                        };
+                }
+                $text = "DEVICE=$tmpdev\n";
                 if ( $net{$iface}{aliases}{$al}{'ip'}) {
                     $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
                 }
@@ -634,7 +656,7 @@ sub Configure {
         ## current config. useful for debugging
         my $failure_config=get_current_config();
 
-	$self->runrun([qw(/sbin/service network stop)]);
+        $self->runrun([qw(/sbin/service network stop)]);
 
         ## revert to original files
         foreach my $file (keys %exifiles) {
@@ -660,7 +682,7 @@ sub Configure {
             }
         }
         ## ifup OR network start
-	$self->runrun([qw(/sbin/service network start)]);
+        $self->runrun([qw(/sbin/service network start)]);
         ## test it again
         if (test_network()) {
             $self->info("Old network config restored.");
@@ -686,6 +708,13 @@ sub Configure {
                 "please let us know.")
         };
     }
+    
+    ### remove all unresolved links
+    ### final cleanup
+    for my $link (keys %exilinks) {
+        unlink($link) if (! -e $link);
+    };
+    
     ##
     ## end of configure
     ##
