@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.7, 21/06/10 15:26
+# VERSION:    1.2.8, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -409,7 +409,11 @@ sub Configure {
             foreach my $al (keys %{$net{$iface}{aliases}}) {
                 $file_name = "$dir_pref/ifcfg-$iface:$al";
                 $exifiles{$file_name} = 1;
-                $text = "DEVICE=".$iface.':'.$al."\n";
+                if ($net{$iface}{'device'}) {
+                    $text = "DEVICE=".$net{$iface}{'device'}.':'.$al."\n";
+                } else {
+                    $text = "DEVICE=".$iface.':'.$al."\n";
+                }
                 if ( $net{$iface}{aliases}{$al}{'ip'}) {
                     $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
                 }

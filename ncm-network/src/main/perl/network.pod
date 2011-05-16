@@ -2,7 +2,7 @@
 # This is 'network.pod', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.7, 21/06/10 15:26
+# VERSION:    1.2.8, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
