@@ -82,7 +82,7 @@ sub Configure {
     our ($self,$config)=@_;
     my $base_path = '/system/network';
     ## keep a hash of all files and links.
-    our  %exifiles,%exilinks;
+    our (%exifiles,%exilinks);
     my $fail="-failed";
 
     my ($path,$file_name,$text);
@@ -236,8 +236,10 @@ sub Configure {
         if ( -l "$dir_pref/$file" ) {
             ## keep the links separate
             $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
+            $self->debug(3,"Found ifcfg link $file in dir ".$pref_dir);
         } else {
             $exifiles{"$dir_pref/$file"} = -1;
+            $self->debug(3,"Found ifcfg file $file in dir ".$pref_dir);
             ## backup all involved files
             if ($file=~m/([:A-Za-z0-9.-]*)/) {
                 my $untaint_file=$1;
@@ -418,7 +420,7 @@ sub Configure {
                     $tmpdev=$net{$iface}{'device'}.':'.$al;
                 } else {
                     $tmpdev=$iface.':'.$al;
-                }
+                };
                 ## this is the only way it will work for VLANs
                 ## if vlan device is vlanX and teh DEVICE is eg ethY.Z
                 ##   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
@@ -429,12 +431,15 @@ sub Configure {
                 $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
                 if ($net{$iface}{vlan} eq "true") {
                     my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
-                    if ($file_name_sym ne $file_name) 
+                    if ($file_name_sym ne $file_name) { 
                         if(! -e $file_name_sym) {
                             ## this will create broken link, if $file_name is not yet existing
-                            symlink($file_name,$file_name_sym) if (! -l $file_name_sym); 
+                            if (! -l $file_name_sym) {
+                                symlink($file_name,$file_name_sym) || $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
+                            }; 
                         };
-                }
+                    };
+                };
                 $text = "DEVICE=$tmpdev\n";
                 if ( $net{$iface}{aliases}{$al}{'ip'}) {
                     $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
@@ -525,7 +530,7 @@ sub Configure {
     ## for general network: separate?
     ## for devices: create list of affected devices
     
-    ## For now, the order of vlans is not chnaged and left completely to the network scripts
+    ## For now, the order of vlans is not changed and left completely to the network scripts
     ## I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
     ## If you need this, buy more network adapters ;)
     my (%ifdown,%ifup);
@@ -545,8 +550,8 @@ sub Configure {
                     my $ma = "";
                     if ( -e $file) {
                         open(FILE,bu($file)) ||
-                                $self->error("Can't open the backup ",
-                                             bu($file), " of $file.");
+                                $self->error("reading ifcfg: can't open the backup ",
+                                             bu($file), " of $file. ($!)");
                         while (<FILE>) {
                             $sl=$1 if (m/SLAVE=(\w+)/);
                             $ma=$1 if (m/MASTER=(\w+)/);
@@ -608,9 +613,9 @@ sub Configure {
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy(bu($file).$fail,$file) || $self->error("Can't copy ".bu($file).$fail." to $file.");
+            copy(bu($file).$fail,$file) || $self->error("replace modified/new files :can't copy ".bu($file).$fail." to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
-            unlink($file) || $self->error("Can't unlink $file.");
+            unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
     }
     ## ifup OR network start
@@ -635,11 +640,11 @@ sub Configure {
             if ($exifiles{$file} != 0) {
                 if (-e bu($file)) {
                     unlink(bu($file)) ||
-                        $self->warn("Can't unlink ".bu($file)) ;
+                        $self->warn("cleanup backups: can't unlink ".bu($file)." ($!)") ;
                 }
                 if (-e bu($file).$fail) {
                     unlink(bu($file).$fail) ||
-                        $self->warn("Can't unlink ".bu($file).$fail);
+                        $self->warn("cleanup backups: can't unlink ".bu($file).$fail." ($!)");
                 }
             }
         }
@@ -735,8 +740,9 @@ sub Configure {
         my $func="mk_bu";
         ## makes backup of file
         my $file = shift || $self->error("$func: No file given.");
-
-        copy($file, bu($file)) || $self->error("$func: Can't create backup of $file to ".bu($file));
+        
+        $self->debug(3,"$func: create backup of $file to ".bu($file));
+        copy($file, bu($file)) || $self->error("$func: Can't create backup of $file to ".bu($file)." ($!)");
     }
 
     sub test_network {
@@ -836,20 +842,23 @@ sub Configure {
         my $backup_file = bu($file);
 
         if (-e $backup_file.$failed) {
+            $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
             unlink($backup_file.$failed)||
-            $self->warn("$func: Can't unlink ".$backup_file.$failed);
+            $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
         }
 
+        $self->debug(3,"$func: writing ".$backup_file.$failed);
         open(FILE,"> ".$backup_file.$failed) ||
-            $self->error("$func: Can't write to ".$backup_file.$failed);
+            $self->error("$func: Can't write to ".$backup_file.$failed." ($!)");
         print FILE $text;
         close(FILE);
         if (compare($file,$backup_file.$failed) == 0) {
             ## they're equal, remove backup files
+            $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file$failed);
             unlink($backup_file) ||
-            $self->warn("$func: Can't unlink ".$backup_file) ;
+                $self->warn("$func: Can't unlink ".$backup_file." ($!)") ;
             unlink($backup_file.$failed) ||
-            $self->warn("$func: Can't unlink ".$backup_file.$failed);
+                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
             return 0;
         } else {
             if (-e $file) {
@@ -883,14 +892,14 @@ sub Configure {
         my ($self, @cmds) = @_;
         return if (!@cmds);
 
-	my @output;
+        my @output;
 
-	foreach my $i (@cmds) {
-	    push(@output, CAF::Process->new($i, log => $self)->output());
-	    if ($?) {
-		$self->error("Error output: $output[-1]");
+        foreach my $i (@cmds) {
+            push(@output, CAF::Process->new($i, log => $self)->output());
+            if ($?) {
+                $self->error("Error output: $output[-1]");
+	       }
 	    }
-	}
 
         return join("", @output);
     }
