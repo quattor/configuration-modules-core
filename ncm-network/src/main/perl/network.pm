@@ -236,10 +236,10 @@ sub Configure {
         if ( -l "$dir_pref/$file" ) {
             ## keep the links separate
             $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
-            $self->debug(3,"Found ifcfg link $file in dir ".$pref_dir);
+            $self->debug(3,"Found ifcfg link $file in dir ".$dir_pref);
         } else {
             $exifiles{"$dir_pref/$file"} = -1;
-            $self->debug(3,"Found ifcfg file $file in dir ".$pref_dir);
+            $self->debug(3,"Found ifcfg file $file in dir ".$dir_pref);
             ## backup all involved files
             if ($file=~m/([:A-Za-z0-9.-]*)/) {
                 my $untaint_file=$1;
@@ -385,6 +385,7 @@ sub Configure {
 
         ## write iface ifcfg- file text
         $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+        $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
         ## route config, interface based.
         ## hey, where are the static routes?
@@ -409,11 +410,13 @@ sub Configure {
                 }
             };
             $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+            $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
         ## on file per alias
         if (exists($net{$iface}{aliases})) {
             foreach my $al (keys %{$net{$iface}{aliases}}) {
+                $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
                 $exifiles{$file_name} = 1;
                 my $tmpdev;
                 if ($net{$iface}{'device'}) {
@@ -428,7 +431,6 @@ sub Configure {
                 ## ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
                 ## problem is, we want both
                 ## adding symlinks however is not the best thing to do...
-                $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
                 if ($net{$iface}{vlan} eq "true") {
                     my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
                     if ($file_name_sym ne $file_name) { 
@@ -451,6 +453,7 @@ sub Configure {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
                 $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+                $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
         
@@ -524,6 +527,7 @@ sub Configure {
     }
     
     $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+    $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
 
     ## we now have a list with files and values.
@@ -539,6 +543,7 @@ sub Configure {
             my $if=$1;
             ## ifdown: all devices that have files with non-zero status
             if ($exifiles{$file} != 0) {
+                $self->debug(3,"exifiles file $file with non-zero value found: ".$exifiles{$file});
                 $ifdown{$if}=1;
                 ## bonding: if you bring down a slave, allways bring
                 ## down it's master
@@ -613,7 +618,7 @@ sub Configure {
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy(bu($file).$fail,$file) || $self->error("replace modified/new files :can't copy ".bu($file).$fail." to $file. ($!)");
+            copy(bu($file).$fail,$file) || $self->error("replace modified/new files: can't copy ".bu($file).$fail." to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
@@ -854,7 +859,7 @@ sub Configure {
         close(FILE);
         if (compare($file,$backup_file.$failed) == 0) {
             ## they're equal, remove backup files
-            $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file$failed);
+            $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file.$failed);
             unlink($backup_file) ||
                 $self->warn("$func: Can't unlink ".$backup_file." ($!)") ;
             unlink($backup_file.$failed) ||

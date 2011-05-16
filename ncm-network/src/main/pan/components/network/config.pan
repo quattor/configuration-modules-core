@@ -2,7 +2,7 @@
 # This is 'TPL/config.tpl', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.8-3, 21/06/10 15:26
+# VERSION:    1.2.8-4, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -21,7 +21,7 @@ unique template components/network/config;
 include { 'components/network/schema' };
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-network","1.2.8-3","noarch");
+"/software/packages"=pkg_repl("ncm-network","1.2.8-4","noarch");
 
 '/software/components/network/version' ?= '1.2.8';
 
