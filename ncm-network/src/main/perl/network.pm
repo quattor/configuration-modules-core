@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.8, 21/06/10 15:26
+# VERSION:    1.2.9, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -269,6 +269,12 @@ sub Configure {
         } else {
             ### default: assuming that ONBOOT=yes
             $text .=  "ONBOOT=yes\n";
+        }
+        if (exists($net{$iface}{nmcontrolled}) && $net{$iface}{nmcontrolled}) {
+            $text .= "NM_CONTROLLED='".$net{$iface}{nmcontrolled}."'\n";
+        } else {
+            ### default: assuming that ONBOOT=yes
+            $text .=  "NM_CONTROLLED='no'\n";
         }
         ### first check the device
         if ($net{$iface}{'device'}) {
