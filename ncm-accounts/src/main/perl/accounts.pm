@@ -531,7 +531,9 @@ sub commit_accounts
 		(exists($cfg->{shell}) ? $cfg->{shell} : ""));
 	push(@passwd, join(":", @ln));
 	@ln = ($cfg->{name},
-	       (exists($cfg->{password}) ? $cfg->{password} : "*"),
+	       #(exists($cfg->{password}) ? $cfg->{password} : "*"),
+                (defined($cfg->{password}) ? $cfg->{password} : "*"),
+
 	       15034, 0, 99999, 7, "", "", "");
 	push(@shadow, join(":", @ln));
     }
