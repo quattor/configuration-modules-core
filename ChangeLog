@@ -1,3 +1,8 @@
+2011-06-17  Veronique Lefebure,31 1-022,,
+
+	* Release: 6.0.3
+	- "now default pwd in schema is set to  and empty passwd are forbidden
+
 2011-03-10  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 6.0.2
