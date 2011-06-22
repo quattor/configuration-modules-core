@@ -27,7 +27,7 @@ type component_ccm = {
     'key_file'         ? string
     'ca_file'          ? string
     'ca_dir'           ? string
-    'world_readable'   : long(0..1) = 1
+    'world_readable'   : long(0..1) = 0
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")
 };
