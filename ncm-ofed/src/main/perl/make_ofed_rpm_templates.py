@@ -47,7 +47,8 @@ def getrpms(p):
     if len(rpms) == 0:
         error("No rpms found in %s"%p)
     
-    processlist=['static','debuginfo','devel','rpms']
+    processlist=['static','debuginfo','devel','mpi','rpms']
+    mpiregexp=re.compile('(mpi|mvapich|mpich)')
     res={}
     for pr in processlist:
         res[pr]=[]
@@ -61,7 +62,13 @@ def getrpms(p):
         name='-'.join(fullname[:vidx])
         
         added=False
-        for pr in processlist[:-1]:
+
+        if (not added) and mpiregexp.search(name):
+            res['mpi'].append([name,version,arch])
+            added=True
+            debug("Added to %s: %s"%('mpi',[name,version,arch]))
+        
+        for pr in processlist[:-2]:
             if (not added) and ( pr in fullname[:vidx]):
                 res[pr].append([name,version,arch])
                 added=True
@@ -82,6 +89,8 @@ variable PKG_ARCH_OFED ?= PKG_ARCH_DEFAULT;
 
     pkgs=''
     kernelvar=''
+
+    rpms.sort()
 
     for r in rpms:
         name='"%s"'%r[0]
