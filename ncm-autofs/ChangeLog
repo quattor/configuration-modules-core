@@ -1,3 +1,13 @@
+2011-07-05  Steve Traylen,31 1-001,+4122767XXXX,
+
+	* Release: 2.0.4
+	- Empty release, commit error.
+
+2011-07-05  Steve Traylen,31 1-001,+4122767XXXX,
+
+	* Release: 2.0.3
+	- https://savannah.cern.ch/bugs/index.php?83959 , don't reload if service autofs status fails.
+
 2011-03-14  Ronald Starink
 
 	* Release: 2.0.2
