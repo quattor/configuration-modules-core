@@ -1,3 +1,8 @@
+2011-07-17  piojo
+
+	* Release: 2.0.2
+	- Fix bug #80779
+
 2011-03-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 2.0.1

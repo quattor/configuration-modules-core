@@ -40,7 +40,7 @@ sub update_pam_file
 	my $module = $1;
 	$fh->add_or_replace_lines(qr{^#?\\s*$tree->{section}\s+$module},
 				  qr{^$tree->{section}\s+$i->{entry}$},
-				  "$tree->{section} $i->{entry}}", $whence);
+				  "$tree->{section} $i->{entry}\n", $whence);
     }
 
     $fh->close();
