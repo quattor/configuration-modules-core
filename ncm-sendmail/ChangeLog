@@ -1,3 +1,8 @@
+2010-11-05  Loic Brarda
+
+	* Release: 1.6.5
+	- renamed specfile.spec to specfile-example.spec : if someone needs the rpm scripts, they can still be put back
+
 2010-11-05  Ronald Starink
 
 	* Release: 1.6.4
