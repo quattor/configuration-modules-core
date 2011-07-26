@@ -1,3 +1,12 @@
+2011-07-26  RonaldS
+
+	* Release: 1.4.14
+	- Added support for: 
+        [nagios] check_result_reaper_frequency, max_check_result_reaper_time
+        [host] retry_interval
+    - Added comments in schema to indicate options deprecated in Nagios 3
+)
+
 2010-07-28  Ronald Starink
 
 	* Release: 1.4.13

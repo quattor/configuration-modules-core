@@ -43,6 +43,7 @@ type structure_nagios_host_generic = {
         "check_command" : commandstrings
         "max_check_attempts" : long
         "check_interval" ? long
+        "retry_interval" ? long
         "active_checks_enabled" ? boolean
         "passive_checks_enabled" ? boolean
         "check_period" : timeperiodstring
@@ -127,7 +128,7 @@ type structure_nagios_service = {
 	"active_checks_enabled" ? boolean
 	"passive_checks_enabled" ? boolean
 	"check_period" ? timeperiodstring
-	"parallelize_check" ? boolean
+	"parallelize_check" ? boolean                           # deprecated in Nagios 3
 	"obsess_over_service" ? boolean
 	"check_freshness" ? boolean
 	"freshness_threshold" ? long
@@ -211,6 +212,7 @@ type structure_nagios_timeperiod = {
 };
 
 # Extended information for services
+# Deprecated in Nagios 3
 type structure_nagios_serviceextinfo = {
 	"host_name" ? hoststring[]
 	"service_description" : string
@@ -263,8 +265,8 @@ type structure_nagios_nagios_cfg = {
 	"command_check_interval" : long = -1
 	"command_file" : string = "/var/log/nagios/rw/nagios.cmd"
 	"external_command_buffer_slots" : long = 4096
-	"comment_file" : string = "/var/log/nagios/comments.dat"
-	"downtime_file" : string = "/var/log/nagios/downtime.dat"
+	"comment_file" : string = "/var/log/nagios/comments.dat"    # deprecated in Nagios 3
+	"downtime_file" : string = "/var/log/nagios/downtime.dat"   # deprecated in Nagios 3
 	"lock_file" : string = "/var/run/nagios.pid"
 	"temp_file" : string = "/var/log/nagios/nagios.tmp"
 	"event_broker_options" : long = -1
@@ -285,7 +287,9 @@ type structure_nagios_nagios_cfg = {
 	"host_inter_check_delay_method" : string = "s"
 	"max_host_check_spread" : long = 30
 	"max_concurrent_checks" : long = 0
-	"service_reaper_frequency" : long = 10
+	"service_reaper_frequency" : long = 10              # deprecated in Nagios 3
+    "check_result_reaper_frequency" ? long              # replaces check_result_reaper_frequency
+    "max_check_result_reaper_time" ? long
 	"check_result_buffer_slots" ? long
 	"auto_reschedule_checks" : boolean = false
 	"auto_rescheduling_interval" : long = 30
@@ -329,7 +333,7 @@ type structure_nagios_nagios_cfg = {
 	"service_freshness_check_interval" : long = 60
 	"check_host_freshness" : boolean = true
 	"host_freshness_check_interval" : long = 60
-	"aggregate_status_updates" : boolean = true
+	"aggregate_status_updates" : boolean = true             # deprecated in Nagios 3
 	"status_update_interval" : long = 30
 	"enable_flap_detection" : boolean = true
 	"low_service_flap_threshold" : long = 15
