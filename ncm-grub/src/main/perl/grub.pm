@@ -20,6 +20,7 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+$NCM::Component::grub::NoActionSupported = 1;
 
 sub parseKernelArgs {
     my ($kernelargs)=@_;
