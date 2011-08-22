@@ -227,7 +227,7 @@ sub configure_ldap
     print $fh "tls_ciphers $tree->{tls}->{ciphers}\n"
 	if $tree->{tls}->{ciphers};
     print $fh "TLS_REQCERT $tree->{tls}->{reqcert}\n";
-    for $i (0 .. $#{$tree->{servers}}) {
+    for my $i (0 .. $#{$tree->{servers}}) {
         if (!($tree->{servers}[$i] =~ /:/)) { 
             $tree->{servers}[$i] = 'ldap://'.$tree->{servers}[$i].'/';
         }

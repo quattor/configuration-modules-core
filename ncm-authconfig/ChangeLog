@@ -1,5 +1,10 @@
 2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
 
+	* Release: 2.0.4
+	- Fixed typo.
+
+2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
+
 	* Release: 2.0.3
 	- Do not add "ldap://" prefix on ldap servers when the provided server string is  a URI (includes ":")
 
