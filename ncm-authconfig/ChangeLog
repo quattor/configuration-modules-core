@@ -1,3 +1,8 @@
+2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.3
+	- Do not add "ldap://" prefix on ldap servers when the provided server string is  a URI (includes ":")
+
 2011-07-17  piojo
 
 	* Release: 2.0.2
