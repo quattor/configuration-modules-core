@@ -249,6 +249,7 @@ type component_authconfig_type = {
   "passalgorithm" : hash_string = "md5"
   "useshadow"	? boolean
   "usecache"	? boolean
+  "enableforcelegacy"	: boolean = false
   "startstop"	? boolean
   "usemd5"      : boolean
   "method"	? authconfig_method_type

@@ -180,6 +180,8 @@ sub authconfig
 
     $cmd->pushargs("--passalgo=$t->{passalgorithm}");
 
+    $cmd->pushargs("--enableforcelegacy") if $t->{enableforcelegacy};
+
     while (my ($method, $v) = each(%{$t->{method}})) {
 	if ($v->{enable}) {
 	    $method = "enable_$method";
