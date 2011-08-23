@@ -281,7 +281,7 @@ sub configure_nslcd
 	if (!ref($v)) {
 	    print $fh "$k $v";
 	} elsif (ref($v) eq 'ARRAY') {
-	    print $fh  "$k ", join(",", $k, @$v);
+	    print $fh  "$k ", join(",", @$v);
 	} elsif (ref($v) eq 'HASH') {
 	    while (my ($kh, $vh) = each(%$v)) {
 		print $fh "$k $kh $vh\n";

@@ -214,7 +214,7 @@ type authconfig_method_nslcd_type = {
     "map"     ? authconfig_nslcd_maps
     "bind_timelimit" ? long
     "timelimit" ? long
-    "iddle_timelimit" ? long
+    "idle_timelimit" ? long
     "reconnect_sleeptime" ? long
     "reconnect_retrytime" ? long
     "ssl"     ? string with match(SELF, "^on|off|start_tls$")

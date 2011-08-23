@@ -1,3 +1,9 @@
+2011-08-23  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.5
+	- Fixed iddle_timelimit typo
+	Fixed ARRAY value printing for nslcd.conf
+
 2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 2.0.4
