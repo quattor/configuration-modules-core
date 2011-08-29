@@ -60,7 +60,7 @@ sub Configure {
 
 
   # Update resolver configuration file with appropriate servers
-  if ( $named_config->{servers} || $server_enabled ) {
+  if ( $named_config->{servers} || ($server_enabled && $named_config->{use_localhost}) ) {
     $self->info("Checking /etc/resolv.conf...");
     my $changes += LC::Check::file("/etc/resolv.conf",
                                    source => "/etc/resolv.conf",
@@ -74,7 +74,7 @@ sub Configure {
                                                       push @newcontents, $line;
                                                     }
                                                   };
-                                                  if ( $server_enabled ) {
+                                                  if ( $server_enabled && $named_config->{use_localhost} ) {
                                                     push @newcontents, "nameserver 127.0.0.1\t\t# added by Quattor"
                                                   }
                                                   for my $named_server (@{$named_config->{servers}}) {

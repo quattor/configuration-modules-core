@@ -32,6 +32,7 @@ type component_named = {
     include structure_component
     "serverConfig"  ? string
     "configfile"    ? string
+    "use_localhost" : boolean = true
     "start"         ? boolean
     "servers"       ? string[]
     "options"       ? string[]
