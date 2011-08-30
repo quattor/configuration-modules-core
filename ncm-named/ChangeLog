@@ -1,5 +1,11 @@
 2011-08-30  Christos Triantafyllidis,ctria@grid.auth.gr
 
+	* Release: 2.0.3
+	- Fixed CAF::Process->new call arguments
+	Using chrooted named path if defined in sysconfig
+
+2011-08-30  Christos Triantafyllidis,ctria@grid.auth.gr
+
 	* Release: 2.0.2
 	- Added use_localhost option (enabled by default) to allow disabling the usage of localhost as resolver in case that the component is configuring a named server.
 

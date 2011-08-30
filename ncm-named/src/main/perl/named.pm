@@ -119,7 +119,7 @@ sub Configure {
   # Ignore named startup configuration if startup script is not present (service not configured)
 
   my $service = "named";
-  my $cmd = CAF::Process->new(["/sbin/chkconfig", "--list $service"], log => $self);
+  my $cmd = CAF::Process->new(["/sbin/chkconfig", "--list", $service], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->debug(1,"Service $service doesn't exist on current host. Skipping $service configuration.");
@@ -130,28 +130,41 @@ sub Configure {
   # or with the reference file, if one of them has been specified
 
   my $server_changes;
+  my $named_root_dir;
+
+  open(SYSCONF, '/etc/sysconfig/named');
+  while ( my $line = <SYSCONF> ) {
+      if ($line =~ /ROOTDIR/) {
+          $line =~ s/^\s*ROOTDIR\s*=//g;
+          chomp($line);
+          $named_root_dir = $line;
+      }
+  }
+  close(SYSCONF);
+
   if ( $named_config->{serverConfig} ) {
-      $self->info("Checking $service configuration (/etc/named.conf)...");
-      $server_changes = LC::Check::file("/etc/named.conf",
+
+      $self->info("Checking $service configuration (".$named_root_dir."/etc/named.conf)...");
+      $server_changes = LC::Check::file($named_root_dir."/etc/named.conf",
                                         contents    => encode_utf8($named_config->{serverConfig}),
                                         backup      => '.ncm-named',
                                         owner       => 0,
                                         mode        => 0644
                                        );
       unless (defined($server_changes)) {
-        $self->error('error updating /etc/named.conf');
+        $self->error('error updating '.$named_root_dir.'/etc/named.conf');
         return;
       }
   } elsif ( $named_config->{configfile} ) {
-      $self->info("Checking $service configuration (/etc/named.conf) using ".$named_config->{configfile}."...");
-      $server_changes = LC::Check::file("/etc/named.conf",
+      $self->info("Checking $service configuration (".$named_root_dir."/etc/named.conf) using ".$named_config->{configfile}."...");
+      $server_changes = LC::Check::file($named_root_dir."/etc/named.conf",
                                         source      => $named_config->{configfile},
                                         backup      => '.ncm-named',
                                         owner       => 0,
                                         mode        => 0644
                                        );
       unless (defined($server_changes)) {
-        $self->error('error updating /etc/named.conf from reference file '.$named_config->{configfile});
+        $self->error('error updating '.$named_root_dir.'/etc/named.conf from reference file '.$named_config->{configfile});
         return;
       }
   }
@@ -166,7 +179,7 @@ sub Configure {
     $self->info("Disabling service $service...");
     $reboot_state = "off";
   }
-  $cmd = CAF::Process->new(["/sbin/chkconfig", "--level 345", $service, $reboot_state], log => $self);
+  $cmd = CAF::Process->new(["/sbin/chkconfig", "--level", "345", $service, $reboot_state], log => $self);
   $cmd->output();      # Also execute the command
   if ( $? ) {
     $self->error("Error defining service $service state for next reboot.");
