@@ -1,3 +1,8 @@
+2011-08-31  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.7
+	- Fixed regexp in update_pam_file
+
 2011-08-23  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 2.0.6

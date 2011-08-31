@@ -38,7 +38,7 @@ sub update_pam_file
 
 	$i->{entry} =~ m{(\S+\.so)};
 	my $module = $1;
-	$fh->add_or_replace_lines(qr{^#?\\s*$tree->{section}\s+$module},
+	$fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
 				  qr{^$tree->{section}\s+$i->{entry}$},
 				  "$tree->{section} $i->{entry}\n", $whence);
     }
