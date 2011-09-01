@@ -1,5 +1,11 @@
 2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
 
+	* Release: 2.0.9
+	- Fixed typo for adminservers in krb5 method
+	Made ldap attribute optional
+
+2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
+
 	* Release: 2.0.8
 	- Added pam_lookup_policy attribute for ldap method
 

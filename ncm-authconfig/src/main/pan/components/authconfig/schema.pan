@@ -85,12 +85,12 @@ type authconfig_method_ldap_type = {
   "port"	? type_port
   "timeouts"	? authconfig_method_ldap_timeouts_type
   "pam_filter"	: string = "objectclass=posixAccount"
-  "pam_login_attribute"	: string = "sAMAccountName"
+  "pam_login_attribute"	? string
   "pam_lookup_policy" ? string
   "pam_password"    ? string
-  "pam_groupdn"	: string = "cn=PAM,ou=Groups,dc=example,dc=com"
-  "pam_member_attribute"	: string = "uniquemember"
-  "pam_check_service_attr"	: string = "no"
+  "pam_groupdn"	? string
+  "pam_member_attribute"	? string
+  "pam_check_service_attr"	? string
   "pam_check_host_attr"	? string
   "pam_min_uid"	? long
   "pam_max_uid"	? long
@@ -117,7 +117,7 @@ type authconfig_method_nis_type = {
 type authconfig_method_krb5_type = {
   include authconfig_method_generic_type
   "kdcs"	: type_hostname[]
-  "adminserver"	: type_hostname[]
+  "adminservers"	: type_hostname[]
   "realm"	: string
 };
 
