@@ -86,6 +86,7 @@ type authconfig_method_ldap_type = {
   "timeouts"	? authconfig_method_ldap_timeouts_type
   "pam_filter"	: string = "objectclass=posixAccount"
   "pam_login_attribute"	: string = "sAMAccountName"
+  "pam_lookup_policy" ? string
   "pam_password"    ? string
   "pam_groupdn"	: string = "cn=PAM,ou=Groups,dc=example,dc=com"
   "pam_member_attribute"	: string = "uniquemember"

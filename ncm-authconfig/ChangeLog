@@ -1,3 +1,8 @@
+2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.8
+	- Added pam_lookup_policy attribute for ldap method
+
 2011-08-31  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 2.0.7
