@@ -2,7 +2,7 @@
 # This is 'network.pm', a ncm-network's file
 ################################################################################
 #
-# VERSION:    1.2.9, 21/06/10 15:26
+# VERSION:    1.2.10, 21/06/10 15:26
 # AUTHOR:     Stijn De Weirdt 
 # MAINTAINER: Stijn De Weirdt 
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -87,7 +87,7 @@ sub Configure {
 
     my ($path,$file_name,$text);
 
-    ## current setup, will be printed in case of major failure    
+    ## current setup, will be printed in case of major failure
     my $init_config=get_current_config();
 
     ###
@@ -172,13 +172,13 @@ sub Configure {
 
         ## collect /hardware info
         my $hw_path= "/hardware/cards/nic/".$ifacename;
-        
+
         ## CERN nic = list patch
         if (! $config->elementExists($hw_path)) {
             $hw_path = "/hardware/cards/nic/".$1 if ($ifacename =~ m/^eth(\d+)/);
         };
-        my $hwaddr_path = $hw_path."/hwaddr";        
-        
+        my $hwaddr_path = $hw_path."/hwaddr";
+
         if ($config->elementExists($hwaddr_path)) {
             my $mac=$config->getValue($hwaddr_path);
             ## check MAC address? can we trust type definitions?
@@ -186,7 +186,7 @@ sub Configure {
                 $net{$ifacename}{'hwaddr'} = $mac;
             } else {
                 $self->error("The configured hwaddr ".$mac." for interface ".$ifacename." didn't pass the regexp. Setting set_hwaddr to false. (Please contact the developers in case you think it is a valid MAC address).");
-                $net{$ifacename}{'set_hwaddr'} = 'false'; 
+                $net{$ifacename}{'set_hwaddr'} = 'false';
             }
         } else {
             if ($ifacename =~ m/^bond/) {
@@ -221,7 +221,7 @@ sub Configure {
                             "interface $ifacename. Setting set_hwaddr ",
                             "to false.");
             };
-            $net{$ifacename}{'set_hwaddr'} = 'false'; 
+            $net{$ifacename}{'set_hwaddr'} = 'false';
         }
     }
 
@@ -230,7 +230,7 @@ sub Configure {
     opendir(DIR, $dir_pref);
     ## here's the reason why it only verifies eth, bond, bridge, usb and vlan
     ## devices. add regexp at will
-    my $dev_regexp='-((eth|bond|br|vlan|usb|ib)\d+(\.\d+)?)';
+    my $dev_regexp='-((eth|em|bond|br|vlan|usb|ib)\d+(\.\d+)?)';
     ## $1 is the device name
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
         if ( -l "$dir_pref/$file" ) {
@@ -295,7 +295,7 @@ sub Configure {
                                 "brctl not found");
             }
         }
-        
+
         ## set the HWADDR
         ## what about bonding??
         my $set_hwaddr = 0;
@@ -374,7 +374,7 @@ sub Configure {
         if( exists($net{$iface}{vlan}) ) {
             if ($net{$iface}{vlan} eq "true") {
                 $text .= "VLAN=yes\n";
-                ## is this really needed? 
+                ## is this really needed?
                 $text .= "ISALIAS=no\n";
             } else {
                 $text .= "VLAN=no\n";
@@ -433,18 +433,18 @@ sub Configure {
                 ## this is the only way it will work for VLANs
                 ## if vlan device is vlanX and teh DEVICE is eg ethY.Z
                 ##   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
-                ## otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for 
+                ## otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
                 ## ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
                 ## problem is, we want both
                 ## adding symlinks however is not the best thing to do...
                 if ($net{$iface}{vlan} eq "true") {
                     my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
-                    if ($file_name_sym ne $file_name) { 
+                    if ($file_name_sym ne $file_name) {
                         if(! -e $file_name_sym) {
                             ## this will create broken link, if $file_name is not yet existing
                             if (! -l $file_name_sym) {
                                 symlink($file_name,$file_name_sym) || $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
-                            }; 
+                            };
                         };
                     };
                 };
@@ -462,8 +462,8 @@ sub Configure {
                 $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
-        
-    }   
+
+    }
 
     ###
     ### /etc/sysconfig/network
@@ -531,7 +531,7 @@ sub Configure {
     if ($config->elementExists($path."/gatewaydev")) {
         $text .= "GATEWAYDEV=".$config->getValue($path."/gatewaydev")."\n";
     }
-    
+
     $exifiles{$file_name}=file_dump($file_name,$text,$fail);
     $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
@@ -539,7 +539,7 @@ sub Configure {
     ## we now have a list with files and values.
     ## for general network: separate?
     ## for devices: create list of affected devices
-    
+
     ## For now, the order of vlans is not changed and left completely to the network scripts
     ## I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
     ## If you need this, buy more network adapters ;)
@@ -555,7 +555,7 @@ sub Configure {
                 ## down it's master
                 if (exists($net{$if}{'master'})) {
                     $ifdown{$net{$if}{'master'}}=1;
-                } elsif ($file =~ m/ifcfg-$if/) {    
+                } elsif ($file =~ m/ifcfg-$if/) {
                     ## here's the tricky part: see if it used to be a slave. the bond-master must be restarted for this.
                     my $sl = "";
                     my $ma = "";
@@ -692,7 +692,7 @@ sub Configure {
                 $self->info("RECOVER: Restoring file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
-                }   
+                }
                 copy(bu($file),$file) ||
                     $self->error("Can't copy ".bu($file)." to $file.");
             }
@@ -724,13 +724,13 @@ sub Configure {
                 "please let us know.")
         };
     }
-    
+
     ### remove all unresolved links
     ### final cleanup
     for my $link (keys %exilinks) {
         unlink($link) if (! -e $link);
     };
-    
+
     ##
     ## end of configure
     ##
@@ -751,7 +751,7 @@ sub Configure {
         my $func="mk_bu";
         ## makes backup of file
         my $file = shift || $self->error("$func: No file given.");
-        
+
         $self->debug(3,"$func: create backup of $file to ".bu($file));
         copy($file, bu($file)) || $self->error("$func: Can't create backup of $file to ".bu($file)." ($!)");
     }
@@ -791,7 +791,7 @@ sub Configure {
         $output .= $self->runrun(["/sbin/ifconfig"]);
         $output .= $self->runrun([qw(/sbin/route -n)]);
 
-        ## when brctl is missing, this would generate an error. 
+        ## when brctl is missing, this would generate an error.
         ## but it is harmless to skip the show command.
         my $brexe = "/usr/sbin/brctl";
         if (-x $brexe) {
@@ -881,7 +881,7 @@ sub Configure {
             }
         };
     }
-    
+
     ## this is how it used to be used
     sub runrunold {
         my $cmd = shift||"";
@@ -894,9 +894,9 @@ sub Configure {
         open(FILE,$cmd." 2>&1 |");
         $output .= $_ while (<FILE>);
         close(FILE);
-            
+
         return $output
-        
+
     }
 
     sub runrun {
@@ -942,7 +942,7 @@ sub Configure {
                         $v = "off";
                         $v = "on" if ($v =~ m/(Y|y)es/);
                     }
-                 
+
                     $current{$k}=$v;
                 }
             }
@@ -952,7 +952,7 @@ sub Configure {
         return %current;
     }
 
-    
+
     sub ethtoolSetOptions {
         my ($ethname,$sectionname,$optionref)=@_;
         my %options=%$optionref;
@@ -962,7 +962,7 @@ sub Configure {
         my %current=ethtoolGetCurrent($ethname,$sectionname);
 
         # Loop over template settings and check that they are known but different
-        
+
         ## key ordering (important for autoneg/speed/duplex)
         my @optkeys;
         foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
@@ -971,7 +971,7 @@ sub Configure {
         foreach my $tmp (sort keys %options) {
             push(@optkeys,$tmp) if (!(grep {$_ eq $tmp} @optkeys));
         };
-        
+
         my @opts;
         for my $k (@optkeys) {
             my $v=$options{$k};
@@ -992,7 +992,7 @@ sub Configure {
                 push(@opts,$k,$v);
             }
         }
-        
+
         ## nothing to do?
         return if (! @opts);
 
