@@ -1,3 +1,9 @@
+2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.10
+	- Do not require definition of ldap servers (for SRV record lookup)
+	The uri of nslcd may be "DNS" so switching it from hosturi to string
+
 2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 2.0.9

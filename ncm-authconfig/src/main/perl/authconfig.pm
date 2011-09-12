@@ -142,7 +142,8 @@ sub enable_ldap
     }
 
     $cmd->pushargs("--enableldap");
-    $cmd->pushargs("--ldapserver", join(",", @{$cfg->{servers}}));
+    $cmd->pushargs("--ldapserver", join(",", @{$cfg->{servers}}))
+        if exists $cfg->{servers};
     $cmd->pushargs("--ldapbasedn=$cfg->{basedn}");
     $cmd->pushargs("--enableldaptls") if $cfg->{enableldaptls};
 }
