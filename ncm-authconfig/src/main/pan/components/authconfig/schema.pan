@@ -96,6 +96,7 @@ type authconfig_method_ldap_type = {
   "pam_max_uid"	? long
   "nss_base_passwd"	? string
   "nss_base_group"	? string
+  "nss_base_shadow"	? string
   "bind_policy"	? string
   "ssl"	: string = "start_tls"
   "nss_map_objectclass"            ? authconfig_nss_map_objectclass
