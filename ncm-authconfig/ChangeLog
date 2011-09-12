@@ -1,5 +1,10 @@
 2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
 
+	* Release: 2.0.12
+	- Fixed nslcd for DNS uri
+
+2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
+
 	* Release: 2.0.11
 	- Added nss_base_shadow option for ldap configuration
 
