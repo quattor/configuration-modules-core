@@ -64,7 +64,7 @@ type structure_icinga_host_generic = {
         "notifications_enabled" ? boolean
         "stalking_options" ? string with match (SELF, "^(o|d|u)$")
         "register" : boolean = true
-};
+} = nlist();
 
 # Host definition.
 type structure_icinga_host = {
@@ -88,6 +88,7 @@ type structure_icinga_host = {
 	"high_flap_threshold" ? long
 	"flap_detection_enabled" : boolean = true
 	"process_perf_data" ? boolean
+	"failure_prediction_enabled" ? boolean = true
 	"retain_status_information" ? boolean
 	"retain_nonstatus_information" ? boolean
 	"contact_groups" : contactgroupstring[]
@@ -98,19 +99,19 @@ type structure_icinga_host = {
 	"stalking_options" ? string with match (SELF, "^(o|d|u)$")
 	"register" : boolean = true
 	"action_url" ? string
-};
+} = nlist();
 
 # Hostgroup definition
 type structure_icinga_hostgroup = {
 	"alias"	: string
 	"members" ? hoststring[]
-};
+} = nlist();
 
 # Host dependency definition
 type structure_icinga_hostdependency = {
 	"dependent_host_name" : hoststring # Should be string[]?
 	"notification_failure_criteria" : host_notification_string[]
-};
+} = nlist();
 
 # Service definition
 type structure_icinga_service = {
@@ -158,7 +159,7 @@ type structure_icinga_servicegroup = {
 	"notes" ? string
 	"notes_url" ? type_absoluteURI
 	"action_url" ? type_absoluteURI
-};
+} = nlist();
 
 # Servicedependency definition:
 type structure_icinga_servicedependency = {
@@ -185,14 +186,14 @@ type structure_icinga_contact = {
 	"host_notification_commands" : commandstrings []
 	"service_notification_commands" : commandstrings []
 	"email" : string
-	"pager" : string
-};
+	"pager" ? string
+} = nlist();
 
 # Contact group definition
 type structure_icinga_contactgroup = {
 	"alias" : string
 	"members" : contactstring[]
-};
+} = nlist();
 
 # Time range definition
 type timerange = string with
@@ -208,7 +209,7 @@ type structure_icinga_timeperiod = {
 	"friday"	? timerange
 	"saturday"	? timerange
 	"sunday"	? timerange
-};
+} = nlist();
 
 # Extended information for services
 type structure_icinga_serviceextinfo = {
@@ -227,8 +228,17 @@ type structure_icinga_cgi_cfg = {
 		    "main_config_file"      : string = "/etc/icinga/icinga.cfg"
 	        "physical_html_path"    : string = "/usr/share/icinga"
 	        "url_html_path"         : string = "/icinga"
+	        "url_stylesheets_path"	: string = "/icinga/stylesheets"
+	        "http_charset"			: string = "utf-8"
 	        "show_context_help"     : boolean = false
-		    "use_pending_states"    : boolean = true
+	        "highlight_table_rows"	: boolean = false
+	        "use_pending_states"    : boolean = true
+	        "use_logging"			: boolean = false
+	        "cgi_log_file"			: string = "/var/log/icinga/gui/icinga-cgi.log"
+	        "cgi_log_rotation_method" : string = "d"
+	        "cgi_log_archive_path" : string = "/var/log/icinga/gui"
+	        "enforce_comments_on_actions" : boolean = false
+	        "first_day_of_week" : boolean = false
 	        "use_authentication"    : boolean = true
 		    "use_ssl_authentication": boolean = false
 	        "authorized_for_system_information" : string = "icingaadmin"
@@ -239,6 +249,7 @@ type structure_icinga_cgi_cfg = {
 	        "authorized_for_all_service_commands" : string = "icingaadmin"
 	        "authorized_for_all_host_commands" : string = "icingaadmin"
 	        "show_all_services_host_is_authorized_for": boolean = true
+	        "show_partial_hostgroups" : boolean = false
 	        "statusmap_background_image"    ? string
 	        "default_statusmap_layout"  : long = 5
 	        "default_statuswrl_layout"  : long = 4
@@ -250,15 +261,14 @@ type structure_icinga_cgi_cfg = {
 	        "action_url_target"         : string = "main"
 		    "notes_url_target"          : string = "main"
 		    "lock_author_names"         : boolean = true
+		    "default_downtime_duration" : long = 7200
 		    "status_show_long_plugin_output": boolean = false
 		    "tac_show_only_hard_state": boolean = false
-	        "host_unreachable_sound"    ? string
-	        "host_down_sound"           ? string
-	        "service_critical_sound"    ? string
-	        "service_warning_sound"     ? string
-	        "service_unknown_sound"     ? string
-	        "normal_sound"              ? string
-};
+		    "suppress_maintenance_downtime : boolean = false
+		    "show_tac_header"			: boolean = true
+		    "show_tac_header_pending"	: boolean = true
+		    "tab_friendly_titles"		: boolean = true
+} = nlist();
 
 # General options
 type structure_icinga_icinga_cfg = {
@@ -283,8 +293,11 @@ type structure_icinga_icinga_cfg = {
 	"log_host_retries" : boolean = true
 	"log_event_handlers" : boolean = true
 	"log_initial_states" : boolean = false
+	"log_current_states" : boolean = true
 	"log_external_commands" : boolean = true
 	"log_passive_checks" : boolean = true
+	"log_external_command_user" : boolean = false
+	"log_long_plugin_output" : boolean = false
 	"global_host_event_handler" ? string
 	"service_inter_check_delay_method" : string = "s"
 	"max_service_check_spread" : long = 30
@@ -308,6 +321,7 @@ type structure_icinga_icinga_cfg = {
 	"state_retention_file" : string = "/var/icinga/retention.dat"
 	"retention_update_interval" : long = 60
 	"use_retained_program_state" : boolean = true
+	"dump_retained_host_service_states_to_neb" : boolean = true 
 	"use_retained_scheduling_info" : boolean = false
 	"interval_length" : long = 60
 	"use_aggressive_host_checking" : boolean = false
@@ -320,8 +334,8 @@ type structure_icinga_icinga_cfg = {
 	"process_performance_data" : boolean = true
 	"service_perfdata_command" : commandstrings = list("process-service-perfdata")
 	"host_perfdata_command" : commandstrings = list("process-host-perfdata")
-	"host_perfdata_file" : string = "/var/log/icinga/host-perf.dat"
-	"service_perfdata_file" : string = "/var/log/icinga/service-perf.dat"
+	"host_perfdata_file" : string = "/var/icinga/host-perf.dat"
+	"service_perfdata_file" : string = "/var/icinga/service-perf.dat"
 	"host_perfdata_file_template" : string = "[HOSTPERFDATA]\t$TIMET$\t$HOSTNAME$\t$HOSTEXECUTIONTIME$\t$HOSTOUTPUT$\t$HOSTPERFDATA$"
 	"service_perfdata_file_template" : string = "[SERVICEPERFDATA]\t$TIMET$\t$HOSTNAME$\t$SERVICEDESC$\t$SERVICEEXECUTIONTIME$\t$SERVICELATENCY$\t$SERVICEOUTPUT$\t$SERVICEPERFDATA$"
 	"host_perfdata_file_mode" : string = "a"
@@ -344,6 +358,8 @@ type structure_icinga_icinga_cfg = {
 	"high_host_flap_threshold" : long = 20
 	"date_format" : string = "euro"
 	"p1_file" : string = "/usr/bin/p1.pl"
+	"stalking_event_handlers_for_hosts" : boolean = false
+	"stalking_event_handlers_for_services" : boolean = false
 	"illegal_object_name_chars" : string = "`~!$%^&*|'<>?,()\"" 
 	"illegal_macro_output_chars" : string = "`~$^&|'<>\""
 	"use_regexp_matching" : boolean = true
@@ -352,8 +368,8 @@ type structure_icinga_icinga_cfg = {
 	"admin_pager" : string = "pageicinga"
 	"daemon_dumps_core" : boolean = false
 	# To be used on icinga v3
-	"check_result_path" ? string= "/var/icinga/checkresults" 
-	"precached_object_file" ? string  = "/var/icinga/objects.precache" 
+	"check_result_path" ? string
+	"precached_object_file" ? string = "/var/icinga/objects.precache"
 	"temp_path" ? string
 	"retained_host_attribute_mask" ? long
 	"retained_service_attribute_mask" ? long
@@ -382,10 +398,11 @@ type structure_icinga_icinga_cfg = {
 	"debug_verbosity" ? long (0..2)
 	"max_debug_file_size" ? long
     "ocsp_command" ? string
-};
+    "check_result_path" : string = "/var/icinga/checkresults"
+    "event_profiling_enabled" : boolean = false
+} = nlist();
 	
 type structure_icinga_service_list=structure_icinga_service[];
-
 
 type structure_icinga_ido2db_cfg = {
     "lock_file" : string = "/var/icinga/ido2db.lock"
@@ -408,35 +425,38 @@ type structure_icinga_ido2db_cfg = {
     "max_hostchecks_age" : long = 1440
     "max_eventhandlers_age" : long = 10080
     "max_externalcommands_age" : long = 10080
-    "trim_db_interval" : long = 60
+    "clean_realtime_tables_on_core_startup" : boolean = true
+    "clean_config_tables_on_core_startup" : boolean = true
+    "trim_db_interval" : long = 3600
+    "housekeeping_thread_startup_delay" : long = 300
     "debug_level" : long = 0
     "debug_verbosity" : long = 1
     "debug_file" : string = "/var/icinga/ido2db.debug"
-    "max_debug_file_size" : long = 1000000
+    "max_debug_file_size" : long = 100000000
+    "oci_errors_to_syslog" : boolean = true
 } = nlist();
-
 
 # Everything that can be handled by this component
 type structure_component_icinga = {
 	include structure_component
-	"hosts"		: structure_icinga_host {}
-	"hosts_generic"  ? structure_icinga_host_generic {}
-	"hostgroups"	? structure_icinga_hostgroup {}
+	"hosts"	: structure_icinga_host {}
+	"hosts_generic" ? structure_icinga_host_generic {}
+	"hostgroups" ? structure_icinga_hostgroup {}
 	"hostdependencies" ? structure_icinga_hostdependency {}
-	"services"	: structure_icinga_service_list {}
+	"services" : structure_icinga_service_list {}
 	"servicegroups"	? structure_icinga_servicegroup {}
-	"general"       : structure_icinga_icinga_cfg
-    	"cgi"           : structure_icinga_cgi_cfg
+	"general" : structure_icinga_icinga_cfg
+    "cgi" : structure_icinga_cgi_cfg
 	"serviceextinfo" ? structure_icinga_serviceextinfo []
-        "servicedependencies" ?  structure_icinga_servicedependency []
-	"timeperiods"	: structure_icinga_timeperiod {}
-	"contacts"	: structure_icinga_contact {}
+    "servicedependencies" ?  structure_icinga_servicedependency []
+	"timeperiods" : structure_icinga_timeperiod {}
+	"contacts" : structure_icinga_contact {}
 	"contactgroups"	: structure_icinga_contactgroup {}
-	"commands"	: string {}
-	"macros"	? string {}
+	"commands" : string {}
+	"macros" ? string {}
 	"external_files" ? string[]
 	"external_dirs" ? string[]
-	"ido2db" : structure_icinga_ido2db_cfg {}
+	"ido2db" : structure_icinga_ido2db_cfg
 	# Service escalations and dependencies are left for later
 	# versions.
 };

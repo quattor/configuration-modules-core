@@ -1,3 +1,7 @@
+2011-09-20 Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Updated everything to work with icinga 1.5.1.
+
 2011-04-04  Wouter Depypere  <wouter.depypere@ugent.be>
 
 	* Added ido2db utils.
