@@ -174,8 +174,8 @@ sub print_cgi
 							   tab_friendly_titles							   
                              } ) {
                 print FH "$opt=$t->{$opt}\n";   
-            }
-        }        
+        }
+      
 
         # optional fields
         foreach my $opt ( qw { icinga_check_command
