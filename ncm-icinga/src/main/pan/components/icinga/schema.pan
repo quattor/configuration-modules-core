@@ -11,7 +11,7 @@ include {'quattor/schema'};
 # Pan statements like create ("...") or value ("...")
 
 type hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
-	SELF=="*";
+	SELF=="*" || SELF == 'dummy';
 
 type hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + SELF) || SELF=="*";
 
@@ -65,6 +65,7 @@ type structure_icinga_host_generic = {
         "stalking_options" ? string with match (SELF, "^(o|d|u)$")
         "register" : boolean = true
 } = nlist();
+
 
 # Host definition.
 type structure_icinga_host = {
@@ -264,7 +265,7 @@ type structure_icinga_cgi_cfg = {
 		    "default_downtime_duration" : long = 7200
 		    "status_show_long_plugin_output": boolean = false
 		    "tac_show_only_hard_state": boolean = false
-		    "suppress_maintenance_downtime : boolean = false
+		    "suppress_maintenance_downtime" : boolean = false
 		    "show_tac_header"			: boolean = true
 		    "show_tac_header_pending"	: boolean = true
 		    "tab_friendly_titles"		: boolean = true
@@ -296,7 +297,7 @@ type structure_icinga_icinga_cfg = {
 	"log_current_states" : boolean = true
 	"log_external_commands" : boolean = true
 	"log_passive_checks" : boolean = true
-	"log_external_command_user" : boolean = false
+	"log_external_commands_user" : boolean = false
 	"log_long_plugin_output" : boolean = false
 	"global_host_event_handler" ? string
 	"service_inter_check_delay_method" : string = "s"
@@ -344,6 +345,7 @@ type structure_icinga_icinga_cfg = {
 	"service_perfdata_file_processing_interval" : long = 0
 	"host_perfdata_file_processing_command" ? commandstrings
 	"service_perfdata_file_processing_command" ? commandstrings
+	"allow_empty_hostgroup_assignment" ? boolean
 	"obsess_over_services" : boolean = false
 	"check_for_orphaned_services" : boolean = true
 	"check_service_freshness" : boolean = true
@@ -439,6 +441,7 @@ type structure_icinga_ido2db_cfg = {
 # Everything that can be handled by this component
 type structure_component_icinga = {
 	include structure_component
+	"ignore_hosts" ? string[]
 	"hosts"	: structure_icinga_host {}
 	"hosts_generic" ? structure_icinga_host_generic {}
 	"hostgroups" ? structure_icinga_hostgroup {}

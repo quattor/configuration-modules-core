@@ -45,7 +45,7 @@ use constant ICINGA_FILES => { general	=>  '/etc/icinga/icinga.cfg',
 			       ido2db=>'/etc/icinga/ido2db.cfg'
 			     };
 use constant BASEPATH => "/software/components/icinga/";
-use constant REMAINING_OBJECTS => qw {servicegroups hostgroups contactgroups timeperiods};
+use constant REMAINING_OBJECTS => qw {servicegroups contactgroups timeperiods};
 
 use constant ICINGAUSR => (getpwnam ("icinga"))[2];
 use constant ICINGAGRP => (getpwnam ("icinga"))[3];
@@ -131,45 +131,57 @@ sub print_cgi
 
         my $t = $cfg->getElement (BASEPATH . 'cgi')->getTree;
         print FH "main_config_file=".ICINGA_FILES->{general}."\n";
-        print FH "physical_html_path=$t->{physical_html_path}\n";
-        print FH "url_html_path=$t->{url_html_path}\n";
-        print FH "show_context_help=$t->{show_context_help}\n";
-        print FH "use_pending_states=$t->{use_pending_states}\n";
-        print FH "use_authentication=$t->{use_authentication}\n";
-        print FH "use_ssl_authentication=$t->{use_ssl_authentication}\n";
-        print FH "show_all_services_host_is_authorized_for=$t->{show_all_services_host_is_authorized_for}\n";
-        print FH "default_statusmap_layout=$t->{default_statusmap_layout}\n";
-        print FH "default_statuswrl_layout=$t->{default_statuswrl_layout}\n";
-        print FH "ping_syntax=$t->{ping_syntax}\n";
-        print FH "refresh_rate=$t->{refresh_rate}\n";
-        print FH "escape_html_tags=$t->{escape_html_tags}\n";
-        print FH "persistent_ack_comments=$t->{persistent_ack_comments}\n";
-        print FH "action_url_target=$t->{action_url_target}\n";
-        print FH "notes_url_target=$t->{notes_url_target}\n";
-        print FH "lock_author_names=$t->{lock_author_names}\n";
-        print FH "status_show_long_plugin_output=$t->{status_show_long_plugin_output}\n";
-        print FH "tac_show_only_hard_state=$t->{tac_show_only_hard_state}\n";
-        
 
-        # optional fields
-        foreach my $opt ( qw { icinga_check_command
-                               default_user_name 
-                               authorized_for_system_information
+        # required fields
+        foreach my $opt ( qw { physical_html_path
+                               url_html_path 
+							   url_stylesheets_path
+							   http_charset
+							   show_context_help
+							   highlight_table_rows
+							   use_pending_states
+							   use_logging
+							   cgi_log_file
+							   cgi_log_rotation_method
+							   cgi_log_archive_path
+							   enforce_comments_on_actions
+							   first_day_of_week							   
+							   use_authentication
+							   use_ssl_authentication
+							   authorized_for_system_information
                                authorized_for_system_commands
                                authorized_for_configuration_information
                                authorized_for_all_services
                                authorized_for_all_hosts
                                authorized_for_all_service_commands
                                authorized_for_all_host_commands
-                               authorized_for_read_only
+							   show_all_services_host_is_authorized_for
+							   show_partial_hostgroups
+							   default_statusmap_layout
+							   default_statuswrl_layout
+							   ping_syntax
+							   refresh_rate
+							   escape_html_tags
+							   persistent_ack_comments
+							   action_url_target
+							   notes_url_target
+							   lock_author_names
+							   status_show_long_plugin_output
+							   tac_show_only_hard_state
+							   suppress_maintenance_downtime
+							   show_tac_header
+							   show_tac_header_pending
+							   tab_friendly_titles							   
+                             } ) {
+                print FH "$opt=$t->{$opt}\n";   
+            }
+        }        
+
+        # optional fields
+        foreach my $opt ( qw { icinga_check_command
+                               default_user_name
                                statusmap_background_image
                                statuswrl_include
-                               host_unreachable_sound
-                               host_down_sound
-                               service_critical_sound
-                               service_warning_sound
-                               service_unknown_sound
-                               normal_sound
                                csv_delimiter
                                csv_data_enclosure
                                enable_splunk_integration
@@ -225,31 +237,82 @@ sub print_hosts
     open (FH, ">".ICINGA_FILES->{hosts});
 
     my $t = $cfg->getElement (BASEPATH . 'hosts')->getTree;
+    
+    my $ign = [];
+    if ($cfg->elementExists(BASEPATH . 'ignore_hosts')){
+        $ign = $cfg->getElement (BASEPATH . 'ignore_hosts')->getTree;
+    }
+    
     while (my ($host, $hostdata) = each (%$t)) {
-	print FH "define host {\n",
-	     "\thost_name\t$host\n";
-	while (my ($k, $v) = each (%$hostdata)) {
-	    if (ref ($v)) {
-		if ($k =~ m{command} || $k =~ m{handler}) {
-		    print FH "\t$k\t", join ("!", @$v), "\n";
+    	#ignore some nodes
+    	if ( $host ~~ $ign ) {
+        	$this_app->info("skipping host " . $host );
+        }
+	    else{
+    		print FH "define host {\n",
+	     	"\thost_name\t$host\n";
+			while (my ($k, $v) = each (%$hostdata)) {
+	    		if (ref ($v)) {
+					if ($k =~ m{command} || $k =~ m{handler}) {
+		    			print FH "\t$k\t", join ("!", @$v), "\n";
+					}
+					else {
+		    			print FH "\t$k\t", join (",", @$v), "\n";
+					}
+	    		}
+	    		else {
+				print FH "\t$k\t$v\n";
+	    		}
+			}
+			unless (exists $hostdata->{address}) {
+		    	$this_app->debug (5, "DNS looking for $host");
+		    	my @addr = gethostbyname ($host);
+		    	print FH "\taddress\t", inet_ntoa ($addr[4]), "\n";
+			}
+			print FH "}\n";
 		}
-		else {
-		    print FH "\t$k\t", join (",", @$v), "\n";
-		}
-	    }
-	    else {
-		print FH "\t$k\t$v\n";
-	    }
-	}
-	unless (exists $hostdata->{address}) {
-	    $this_app->debug (5, "DNS looking for $host");
-	    my @addr = gethostbyname ($host);
-	    print FH "\taddress\t", inet_ntoa ($addr[4]), "\n";
-	}
-	print FH "}\n";
     }
     close (FH);
     chown (ICINGAUSR, ICINGAGRP, ICINGA_FILES->{hosts});
+}
+
+# Prints all the hostgroup defenitions on /etc/icinga/objects/hostgroups.cfg
+sub print_hostgroups
+{
+    my $cfg = shift;
+
+    unlink (ICINGA_FILES->{hostgroups});
+    open (FH, ">".ICINGA_FILES->{hostgroups});
+    
+    my $t = $cfg->getElement (BASEPATH . 'hostgroups')->getTree;
+
+
+    my $ign = [];
+    if ($cfg->elementExists(BASEPATH . 'ignore_hosts')){
+        $ign = $cfg->getElement (BASEPATH . 'ignore_hosts')->getTree;
+    }
+
+	while(my ($hostgroup, $hostgroupinst) = each (%$t)) {
+		print FH "define hostgroup {\n",
+			"\thostgroup_name\t", unescape ($hostgroup), "\n";
+		while (my ($a, $b) = each (%$hostgroupinst)) {
+			if (ref ($b)) {
+				my @c = @$b;
+		    	foreach my $ignorehost (@$ign){
+		    		@c = grep { $_ ne $ignorehost } @c;
+		    	}
+		    	
+		    	print FH "\t$a\t", join (",", @c), "\n" if (scalar(@c));
+		    	
+			}
+			else {
+		    	print FH "\t$a\t$b\n";
+			}			
+		}		
+		print FH "}\n";
+	}
+	close (FH);
+    chown (ICINGAUSR, ICINGAGRP, ICINGA_FILES->{hostgroups});
 }
 
 # Prints all the service definitions on /etc/icinga/objects/services.cfg
@@ -453,6 +516,7 @@ sub Configure
     print_macros ($config);
     print_hosts ($config);
     print_hosts_generic ($config);
+    print_hostgroups ($config);
     print_commands ($config);
     print_services ($config);
     print_servicedependencies ($config);
@@ -472,12 +536,12 @@ sub Configure
 	    print $fh "define $kv {\n",
 		 "\t$kv","_name\t$k\n";
 	    while (my ($a, $b) = each (%$v)) {
-		if (ref ($b)) {
-		    print $fh "\t$a\t", join (",", @$b), "\n";
-		}
-		else {
-		    print $fh "\t$a\t$b\n";
-		}
+			if (ref ($b)) {
+		    	print $fh "\t$a\t", join (",", @$b), "\n";
+			}
+			else {
+		    	print $fh "\t$a\t$b\n";
+			}
 	    }
 	    print $fh "}\n";
 	}
