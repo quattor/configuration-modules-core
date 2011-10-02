@@ -56,10 +56,10 @@ sub Configure {
     our ($self,$config)=@_;
 
     my ($result,$tree,$contents);
-    
+
     # Save the date.
     my $date = localtime();
-    
+
     ## base rpms
     ## remove existing gpfs rpms if certain is not found
     ## - then install gpfs abse rpms from optional location
@@ -70,11 +70,11 @@ sub Configure {
     if ( ! -f $baseinstalled) {
         remove_existing_rpms() || return 1;
         install_base_rpms() || return 1;
-        ## update? 
-        ## no! 
-        ## - stop here 
+        ## update?
+        ## no!
+        ## - stop here
         ## - next run should trigger spma which will update to the correct rpms
-        
+
         ## write the $baseinstalled file
         ## - set the date
         $result = LC::Check::file( $baseinstalled,
@@ -87,7 +87,7 @@ sub Configure {
             $self->error("$baseinstalled failed");
             return 1;
         }
-        
+
     } else {
         if ( ! -f $basiccfg) {
             ## get gpfs config file if not found
@@ -96,12 +96,12 @@ sub Configure {
                 get_cfg($tr) || return 1;
                 ## extract current single node entry if not found
                 get_nodefile_from_cfg($tr) || return 1;
-                
+
             } else {
                 $self->error("base path $mypath/cfg not found.");
                 return 1;
             };
-                
+
 
             ## write the $basiccfg file
             ## - set the date
@@ -115,7 +115,7 @@ sub Configure {
                 $self->error("$basiccfg failed");
                 return 1;
             }
-        }    
+        }
     };
 
 
@@ -124,24 +124,24 @@ sub Configure {
         my @opts=@_;
 
         my @proxy;
-        if ($tr && %$tr->{'useproxy'}) {
+        if ($tr && $tr->{'useproxy'}) {
             ## check if spma proxy is set and then use it
             my $spmapath="/software/components/spma";
             my $spmatr = $config->getElement($spmapath)->getTree;
-            if (%$spmatr->{'proxy'}) {
-                push(@proxy,'--httpproxy',%$spmatr->{'proxyhost'}) if (%$spmatr->{'proxyhost'});
-                push(@proxy,'--httpport',%$spmatr->{'proxyport'}) if (%$spmatr->{'proxyport'});
+            if ($spmatr->{'proxy'}) {
+                push(@proxy,'--httpproxy',$spmatr->{'proxyhost'}) if ($spmatr->{'proxyhost'});
+                push(@proxy,'--httpport',$spmatr->{'proxyport'}) if ($spmatr->{'proxyport'});
             } else {
-                $self->error("No SPMA proxy set in $spmapath/proxy: ".%$spmatr->{'proxy'});
+                $self->error("No SPMA proxy set in $spmapath/proxy: ".$spmatr->{'proxy'});
             };
         }
-    
+
         my $rpmcmd = "/bin/rpm";
         if (! -f $rpmcmd) {
             $self->error("Rpm cmd $rpmcmd not found.");
             return;
         };
-    
+
         unshift(@opts,$rpmcmd,"-v",@proxy);
 
         my $output = CAF::Process->new(\@opts, log => $self)->output();
@@ -160,7 +160,7 @@ sub Configure {
         my $tmppath = shift;
         my $tr = shift;
         my @opts=@_;
-    
+
         my $curlcmd = "/usr/bin/curl";
         if (! -f $curlcmd) {
             $self->error("Curl cmd $curlcmd not found.");
@@ -169,38 +169,44 @@ sub Configure {
 
         my @certscurl;
 
-        if ($tr && %$tr->{'useccmcertwithcurl'}) {
+        if ($tr && $tr->{'useccmcertwithcurl'}) {
             ## use ccm certificates with curl?
-            ## - does not work yet. curl cert is key_cert in one file 
+            ## - does not work yet. curl cert is key_cert in one file
             ## -- like sindes_getcert client_cert_key
             my $ccmpath="/software/components/ccm";
             my $ccmtr = $config->getElement($ccmpath)->getTree;
-            if (%$ccmtr->{'cert_file'}) {
-                push(@certscurl,'--cert',%$ccmtr->{'key_file'}) if (%$ccmtr->{'key_file'});
-                push(@certscurl,'--cacert',%$ccmtr->{'ca_file'}) if (%$ccmtr->{'ca_file'});
+            if ($ccmtr->{'cert_file'}) {
+                push(@certscurl,'--cert',$ccmtr->{'key_file'}) if ($ccmtr->{'key_file'});
+                push(@certscurl,'--cacert',$ccmtr->{'ca_file'}) if ($ccmtr->{'ca_file'});
             } else {
-                $self->error("No CCM cert file set in $ccmpath/cert_file: ".%$ccmtr->{'cert_file'});
+                $self->error("No CCM cert file set in $ccmpath/cert_file: ".$ccmtr->{'cert_file'});
             };
         }
 
-        if ($tr && %$tr->{'usesindesgetcertcertwithcurl'}) {
+        if ($tr && $tr->{'usesindesgetcertcertwithcurl'}) {
             ## use sindesgetcert certificates with curl?
             my $sgpath="/software/components/sindes_getcert";
             my $sgtr = $config->getElement($sgpath)->getTree;
-            if (%$sgtr->{'client_cert_key'}) {
-               push(@certscurl,'--cert',%$sgtr->{'cert_dir'}."/".%$sgtr->{'client_cert_key'}) if (%$sgtr->{'client_cert_key'});
-               push(@certscurl,'--cacert',%$sgtr->{'cert_dir'}."/".%$sgtr->{'ca_cert'}) if (%$sgtr->{'ca_cert'});
+            if ($sgtr->{'client_cert_key'}) {
+               push(@certscurl,'--cert',$sgtr->{'cert_dir'}."/".$sgtr->{'client_cert_key'}) if ($sgtr->{'client_cert_key'});
+               push(@certscurl,'--cacert',$sgtr->{'cert_dir'}."/".$sgtr->{'ca_cert'}) if ($sgtr->{'ca_cert'});
             } else {
-               $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".%$sgtr->{'client_cert_key'});
+               $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".$sgtr->{'client_cert_key'});
             };
         }
 
-    
+
         unshift(@opts,$curlcmd,'-s',@certscurl);
-        
+
 
         my $cwd=getcwd;
         chomp($cwd);
+        # Untaint it
+        if ( $cwd =~ qr|^([-+@\w./]+)$| ) {
+            $cwd = $1;
+        } else {
+            $self->error("Couldn't untaint \$cwd: [$cwd]") && return ;
+        }
         chdir($tmppath) || $self->error("Failed to change to directory $tmppath.") && return;
         my $output = CAF::Process->new(\@opts, log => $self)->output();
         chdir($cwd) || $self->error("Failed to change back to directory $cwd.") && return;
@@ -220,27 +226,31 @@ sub Configure {
     sub remove_existing_rpms {
         my $ret = 1;
         my $tr;
-        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME}\\n");
+        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME}-%{VERSION}-%{RELEASE}\\n");
         return if (!$allrpms);
-            
+
         my @removerpms;
         for my $found (split('\n',$allrpms)) {
-            if (grep { $found =~ m/$_/ } GPFSRPMS) {
-                push(@removerpms, $found);
+            my @res=split(' ',$found);
+            my $foundname=$res[0];
+            my $foundfullname=$res[1];
+
+            if (grep { $foundname =~ m/$_/ } GPFSRPMS) {
+                push(@removerpms, $foundfullname);
             } else {
-                $self->error("Not removing unknown found rpm that matched gpfs.*: $found. \n");
+                $self->error("Not removing unknown found rpm that matched gpfs.*: $found (full: $foundfullname). \n");
                 $ret = 0;
-                
-            }; 
+
+            };
         };
-    
+
         stopgpfs(1);
         if (scalar @removerpms) {
             runrpm($tr,"-e",@removerpms) || return;
         } else {
             $self->info("No rpms to be removed.")
         }
-        
+
         return $ret;
     };
 
@@ -251,11 +261,11 @@ sub Configure {
 
             my @rpms;
             my @downloadrpms;
-            foreach my $rpm (@{%$tr->{'rpms'}}) {
-                my $fullrpm = %$tr->{'baseurl'}."/".$rpm;
+            foreach my $rpm (@{$tr->{'rpms'}}) {
+                my $fullrpm = $tr->{'baseurl'}."/".$rpm;
                 $fullrpm =~ s/\/\/$rpm/\/$rpm/;
-                
-                if (%$tr->{'usecurl'}) {
+
+                if ($tr->{'usecurl'}) {
                     push(@downloadrpms,"-O",$fullrpm);
                     push(@rpms,$rpm);
                 } else {
@@ -267,11 +277,11 @@ sub Configure {
             my $tmp="/tmp";
             if (scalar @downloadrpms) {
                 runcurl($tmp,$tr,@downloadrpms) || return ;
-            };         
+            };
 
             ##  gpfs complains about libstdc++.so.5, but it's not needed
             runrpm($tr,"-U","--nodeps",@rpms) || return;
-            
+
             ## cleanup downloaded rpms
             for my $rpm (@rpms) {
                 $rpm = basename($rpm);
@@ -284,7 +294,7 @@ sub Configure {
                     }
                 }
             }
-                
+
         } else {
             $self->error("base path $mypath/base not found.");
             $ret=0;
@@ -295,7 +305,7 @@ sub Configure {
     sub rungpfs {
         my $noerroronmissing = shift;
         my @cmds=@_;
-    
+
         my $cmdexe = GPFSBIN."/".shift(@cmds);
         if (! -f $cmdexe) {
             if ($noerroronmissing) {
@@ -305,7 +315,7 @@ sub Configure {
             };
             return;
         };
-    
+
         unshift(@cmds,$cmdexe);
 
         my $output = CAF::Process->new(\@cmds, log => $self)->output();
@@ -331,11 +341,11 @@ sub Configure {
         ## local startup
         return rungpfs($neom,"mmstartup");
     };
-    
+
     sub get_cfg {
         my $tr = shift;
         my $ret = 1;
-        my $url = %$tr->{'url'};
+        my $url = $tr->{'url'};
         my $tmp="/tmp";
         runcurl($tmp,$tr,"-O",$url) || return 0;
         ## move file
@@ -346,11 +356,11 @@ sub Configure {
         }
         return $ret;
     };
-    
+
     sub get_nodefile_from_cfg {
         my $tr = shift;
         my $ret = 1;
-        my $subn = %$tr->{'subnet'};
+        my $subn = $tr->{'subnet'};
         my $hostname =  $config->getValue("/system/network/hostname");
         $subn =~ s/\./\\./g;
         my $regexp = "MEMBER_NODE.*$hostname\.$subn";
@@ -361,7 +371,7 @@ sub Configure {
                 $txt .= $_ if (m/$regexp/);
             }
             close(FH);
-            ## write     
+            ## write
             my $result = LC::Check::file( GPFSNODECONFIG,
                                   backup => ".old",
                                   contents => encode_utf8($txt),
@@ -372,7 +382,7 @@ sub Configure {
                 $self->error(GPFSNODECONFIG." failed");
                 return 1;
             }
-            
+
         } else {
              $self->error("Can't open ".GPFSCONFIG." for reading.");
              return 0;
@@ -383,4 +393,4 @@ sub Configure {
 
 
 # Required for end of module
-1;  
+1;
