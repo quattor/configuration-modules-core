@@ -267,7 +267,11 @@ sub print_hosts
 			unless (exists $hostdata->{address}) {
 		    	$this_app->debug (5, "DNS looking for $host");
 		    	my @addr = gethostbyname ($host);
-		    	print FH "\taddress\t", inet_ntoa ($addr[4]), "\n";
+		    	if ( scalar @addr == 0 ) {
+		    		$this_app->error("No IP found for host " . $host . ". The host is probably not in DNS." );
+		    	else {
+		    		print FH "\taddress\t", inet_ntoa ($addr[4]), "\n";
+		    	}
 			}
 			print FH "}\n";
 		}
