@@ -7,7 +7,7 @@ unique template components/gpfs/config-rpm;
 include { 'components/gpfs/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-gpfs","0.6.1-3","noarch");
+"/software/packages"=pkg_repl("ncm-gpfs","0.6.1-4","noarch");
 
 '/software/components/gpfs/version' ?= '0.6.1';
 
