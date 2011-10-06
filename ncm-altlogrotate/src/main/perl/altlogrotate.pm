@@ -150,7 +150,7 @@ sub processHash {
     }
     
     if (defined($entry{dateext})) {
-	$contents .= 'no' unless ($entry{copytruncate}->getValue() eq 'true');
+	$contents .= 'no' unless ($entry{dateext}->getValue() eq 'true');
 	$contents .= "dateext\n";
     }
     
