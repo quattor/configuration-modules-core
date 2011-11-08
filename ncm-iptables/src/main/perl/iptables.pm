@@ -269,7 +269,7 @@ sub dns2ip ( $ ) {
 	$name = $1;
     }
 
-    if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$/ ) {
+    if ( $name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$|\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ ) { # optional netmask or CIDR postfix
 	$self->debug(2, "dns2ip-OK: already numeric");
 	if ($isneg) {
 	    return "! ".$name;

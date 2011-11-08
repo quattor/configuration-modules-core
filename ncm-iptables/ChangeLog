@@ -1,3 +1,8 @@
+2011-11-08  Jan Iven,31 1-013,+41227674957,
+
+	* Release: 2.3.13
+	- bug #88629: RFE: ncm-iptables: allow for full netmask in source/destinations
+
 2011-03-21  Christos Theodosiou,ctheodos@grid.auth.gr
 
 	* Release: 2.3.12
