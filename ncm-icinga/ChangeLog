@@ -1,3 +1,14 @@
+2011-12-14  LFM
+
+	* Release: 0.0.3
+	- Adjust to the coding style document.
+	
+	* Use CAF::FileWriter and CAF::Process.
+	* Simplify some functions.
+	* Log via $self and not $this_app.
+	
+	This fixes some situations where errors were not diagnosed by ncm-ncd.
+
 2011-10-04 Wouter Depypere  <wouter.depypere@ugent.be>
 
 	* Added nicer error handling in component.
