@@ -5,18 +5,22 @@
 # File: icinga.pm
 # Implementation of ncm-icinga
 # Author: Wouter Depypere <wouter.depypere@ugent.be>
-# Version: 0.0.3 : 14/12/11 17:27
+# Version: 0.0.4 : 16/12/11 15:01
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
 # $self->$method ($config) way, unless explicitly stated.
+
+# Note in style: all methods return their file handle object, even if
+# it will be discarded (and thus closed). This way, it's possible to
+# write tests that verify the in-memory contents of the files, and
+# running them without any special privileges.
 
 package NCM::Component::icinga;
 
 use strict;
 use warnings;
 use NCM::Component ;
-use EDG::WP4::CCM::Property;
 use EDG::WP4::CCM::Element qw (unescape);
 use Socket;
 use CAF::Process;
@@ -62,7 +66,7 @@ use constant ICINGA_CHECK_RESULT => ICINGA_SPOOL . 'checkresults';
 # Prints the main Icinga file, icinga.cfg.
 sub print_general
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->new (ICINGA_FILES->{general},
 				   log => $self,
@@ -70,33 +74,23 @@ sub print_general
 				   group => ICINGAGRP,
 				   mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'general')->getTree;
     my $el;
     my $ed;
 
-    if ($cfg->elementExists (BASEPATH . 'external_files')) {
-	$el = $cfg->getElement (BASEPATH . 'external_files')->getTree;
-    } else {
-	$el = [];
-    }
+    $el = $t->{external_files} || [];
+    $ed = $t->{external_dirs} || [];
 
-    if ($cfg->elementExists (BASEPATH . 'external_dirs')) {
-	$ed = $cfg->getElement (BASEPATH . 'external_dirs')->getTree;
-    } else {
-	$ed = [];
-    }
-
-    print $fh "log_file=$t->{log_file}\n";
+    print $fh "log_file=$t->{general}->{log_file}\n";
 
     while (my ($k, $path) = each (%{ICINGA_FILES()})) {
 	next if ($k eq 'general' || $k eq 'cgi' || $k eq 'ido2db' );
-	if ($cfg->elementExists (BASEPATH.$k)) {
+	if (exists($t->{$k})) {
 	    print $fh $k eq 'macros'?"resource_file":"cfg_file",
 		 "=$path\n";
 	}
     }
 
-    while (my ($k, $v) = each (%$t)) {
+    while (my ($k, $v) = each (%{$t->{general}})) {
 	next if $k eq 'log_file';
 	if (ref ($v)) {
 	    print $fh "$k=", join ("!", @$v), "\n";
@@ -113,12 +107,26 @@ sub print_general
 	print $fh "cfg_dir=$f\n";
     }
 
+    return $fh;
+}
+
+sub make_dirs
+{
+    my ($self, $t) = @_;
+
     my $path = $t->{check_result_path} || ICINGA_CHECK_RESULT;
-    mkpath ($path);
+    mkpath ($path, { error => \my $err,
+		     mode => 0770,
+		     owner => ICINGAUSR,
+		     group => ICINGAGRP
+		   }
+	   );
+
+    foreach my $i (@$err) {
+	my ($f, $msg) = %$i;
+	$self->error("Couldn't create $f: $msg");
+    }
     chown (ICINGAUSR, ICINGAGRP, ICINGA_SPOOL) if -d ICINGA_SPOOL;
-    chown (ICINGAUSR, ICINGAGRP, $path);
-    $fh->close();
-    chmod (0770, ICINGA_SPOOL, $path);
     chown (0, ICINGAGRP, ICINGA_FILES->{cfgdir});
     chmod (0755, ICINGA_FILES->{cfgdir});
 }
@@ -126,9 +134,9 @@ sub print_general
 # Prints the IcingaCGI configuration file, cgi.cfg.
 sub print_cgi
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
-    $cfg->elementExists (BASEPATH . 'cgi') or return;
+    defined ($t) or return;
 
     my $fh = CAF::FileWriter->new (ICINGA_FILES->{cgi},
 				   log => $self,
@@ -136,21 +144,22 @@ sub print_cgi
 				   owner => ICINGAUSR,
 				   group => ICINGAGRP);
 
-    my $t = $cfg->getElement (BASEPATH . 'cgi')->getTree;
     print $fh "main_config_file=".ICINGA_FILES->{general}."\n";
 
     while (my ($opt, $val) = each (%$t)) {
 	print $fh "$opt=$val\n";
     }
+    return $fh;
 }
 
 # Prints all the host template definitions on
 # /etc/icinga/objects/hosts_generic.cfg;
 sub print_hosts_generic
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
-    $cfg->elementExists(BASEPATH . 'hosts_generic') or return;
+
+    defined($t) or return;
 
     my $fh = CAF::FileWriter->open(ICINGA_FILES->{hosts_generic},
 				   owner => ICINGAUSR,
@@ -158,7 +167,6 @@ sub print_hosts_generic
 				   log => $self,
 				   mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'hosts_generic')->getTree;
     while (my ($host, $hostdata) = each (%$t)) {
 	print $fh "define host {\n";
 	while (my ($k, $v) = each (%$hostdata)) {
@@ -174,13 +182,13 @@ sub print_hosts_generic
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints all the host definitions on /etc/icinga/objects/hosts.cfg
 sub print_hosts
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t, $ign) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{hosts},
 				    owner => ICINGAUSR,
@@ -188,12 +196,7 @@ sub print_hosts
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'hosts')->getTree;
-
-    my $ign = [];
-    if ($cfg->elementExists(BASEPATH . 'ignore_hosts')) {
-	$ign = $cfg->getElement (BASEPATH . 'ignore_hosts')->getTree;
-    }
+    $ign ||= [];
 
     while (my ($host, $hostdata) = each (%$t)) {
 	#ignore some nodes
@@ -202,7 +205,7 @@ sub print_hosts
 	    next;
 	}
 	print $fh "define host {\n",
-	     "\thost_name\t$host\n";
+	  "\thost_name\t$host\n";
 	while (my ($k, $v) = each (%$hostdata)) {
 	    if (ref ($v)) {
 		if ($k =~ m{command} || $k =~ m{handler}) {
@@ -226,13 +229,13 @@ sub print_hosts
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
      # Prints all the hostgroup defenitions on /etc/icinga/objects/hostgroups.cfg
 sub print_hostgroups
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t, $ign) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{hostgroups},
 				    owner => ICINGAUSR,
@@ -240,12 +243,8 @@ sub print_hostgroups
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'hostgroups')->getTree;
+    $ign ||= [];
 
-    my $ign = [];
-    if ($cfg->elementExists(BASEPATH . 'ignore_hosts')) {
-	$ign = $cfg->getElement (BASEPATH . 'ignore_hosts')->getTree;
-    }
 
     while (my ($hostgroup, $hostgroupinst) = each (%$t)) {
 	print $fh "define hostgroup {\n",
@@ -263,13 +262,13 @@ sub print_hostgroups
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
-     # Prints all the service definitions on /etc/icinga/objects/services.cfg
-     sub print_services
+# Prints all the service definitions on /etc/icinga/objects/services.cfg
+sub print_services
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{services},
 				    owner => ICINGAUSR,
@@ -277,7 +276,6 @@ sub print_hostgroups
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'services')->getTree;
     while (my ($service, $serviceinstances) = each (%$t)) {
 	foreach my $servicedata (@$serviceinstances) {
 	    print $fh "define service {\n",
@@ -296,13 +294,13 @@ sub print_hostgroups
 	    print $fh "}\n";
 	}
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints all the macros to /etc/icinga/resources.cfg
 sub print_macros
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{macros},
 				    owner => ICINGAUSR,
@@ -310,20 +308,16 @@ sub print_macros
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'macros')->getTree;
-
     while (my ($macro, $val) = each (%$t)) {
 	print $fh "\$$macro\$=$val\n";
     }
-    $fh->close();
+    return $fh;
 }
 
-     # Prints the command definitions to /etc/icinga/objects/commands.cfg
-     sub print_commands
+# Prints the command definitions to /etc/icinga/objects/commands.cfg
+sub print_commands
 {
-    my ($self, $cfg) = @_;
-
-    my $t = $cfg->getElement (BASEPATH . 'commands')->getTree;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{commands},
 				    owner => ICINGAUSR,
@@ -340,12 +334,13 @@ define command {
 EOF
     }
 
+    return $fh;
 }
 
 # Prints all contacts to /etc/icinga/objects/contacts.cfg
 sub print_contacts
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{contacts},
 				    owner => ICINGAUSR,
@@ -353,7 +348,6 @@ sub print_contacts
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'contacts')->getTree;
     while (my ($cnt, $cntst) = each (%$t)) {
 	print $fh "define contact {\n",
 	     "\tcontact_name\t$cnt\n";
@@ -374,22 +368,21 @@ sub print_contacts
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints the service dependencies configuration files.
 sub print_servicedependencies
 {
-    my ($self, $cfg) = @_;
-    $cfg->elementExists (BASEPATH . "servicedependencies") or return;
+    my ($self, $t) = @_;
+
+    defined($t) or return;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{servicedependencies},
 				    owner => ICINGAUSR,
 				    group => ICINGAGRP,
 				    log => $self,
 				    mode => 0444);
-
-    my $t = $cfg->getElement (BASEPATH . "servicedependencies")->getTree;
 
     foreach my $i (@$t) {
 	print $fh "define servicedependency {\n";
@@ -400,15 +393,15 @@ sub print_servicedependencies
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints the extended service configuration files.
 sub print_serviceextinfo
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
-    $cfg->elementExists (BASEPATH . "serviceextinfo") or return;
+    defined($t) or return;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{serviceextinfo},
 				    owner => ICINGAUSR,
@@ -416,10 +409,7 @@ sub print_serviceextinfo
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . "serviceextinfo")->getTree;
-
-    foreach my $i (@$t)
-    {
+    foreach my $i (@$t) {
 	print $fh "define serviceextinfo {\n";
 	while (my ($k, $v) = each (%$i))
 	{
@@ -428,15 +418,15 @@ sub print_serviceextinfo
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints the host dependency configuration files.
 sub print_hostdependencies
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
-    $cfg->elementExists (BASEPATH . "hostdependencies") or return;
+    defined($t) or return;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{hostdependencies},
 				    owner => ICINGAUSR,
@@ -444,25 +434,21 @@ sub print_hostdependencies
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . "hostdependencies")->getTree;
-
-    while (my ($host, $dependency) = each (%$t))
-    {
+    while (my ($host, $dependency) = each (%$t)) {
 	print $fh "define hostdependency {\n",
 	     "\thost_name\t$host\n";
-	while (my ($k, $v) = each (%$dependency))
-	{
+	while (my ($k, $v) = each (%$dependency)) {
 	    print $fh "\t$k\t", ref ($v) ? join (',', @$v):$v, "\n";
 	}
 	print $fh "}\n";
     }
-    $fh->close();
+    return $fh;
 }
 
 # Prints the ido2db configuration file.
 sub print_ido2db_config
 {
-    my ($self, $cfg) = @_;
+    my ($self, $t) = @_;
 
     my $fh = CAF::FileWriter->open (ICINGA_FILES->{ido2db},
 				    owner => ICINGAUSR,
@@ -470,63 +456,45 @@ sub print_ido2db_config
 				    log => $self,
 				    mode => 0444);
 
-    my $t = $cfg->getElement (BASEPATH . 'ido2db')->getTree;
-
     while (my ($ido2db_setting, $val) = each (%$t)) {
 	print $fh "$ido2db_setting=$val\n";
     }
 
-    $fh->close();
+    return $fh;
 }
 
-     # Configure method. Writes all the configuration files and starts or
-     # reloads the Icinga service
-sub Configure
+# Prints one of the files listed in REMAINING_OBJECTS.
+sub print_other
 {
-    my ($self, $config) = @_;
-    my $mask = umask;
+    my ($self, $t, $file) = @_;
 
-    $self->print_general ($config);
-    $self->print_cgi ($config);
-    $self->print_macros ($config);
-    $self->print_hosts ($config);
-    $self->print_hosts_generic ($config);
-    $self->print_hostgroups ($config);
-    $self->print_commands ($config);
-    $self->print_services ($config);
-    $self->print_servicedependencies ($config);
-    $self->print_contacts ($config);
-    $self->print_serviceextinfo ($config);
-    $self->print_hostdependencies ($config);
-    $self->print_ido2db_config ($config);
-
-    # Print the rest of objects
-    foreach my $i (REMAINING_OBJECTS)
-    {
-	next unless $config->elementExists(BASEPATH . $i);
-	my $fh = CAF::FileWriter->open (ICINGA_FILES->{$i},
-					owner => ICINGAUSR,
-					group => ICINGAGRP,
-					log => $self,
-				       );
-
-	my $t = $config->getElement (BASEPATH.$i)->getTree;
-	$i =~ m{(.*[^s])s?$};
-	my $kv = $1;
-	while (my ($k, $v) = each (%$t)) {
-	    print $fh "define $kv {\n",
-		 "\t$kv","_name\t$k\n";
-	    while (my ($a, $b) = each (%$v)) {
-		if (ref ($b)) {
-		    print $fh "\t$a\t", join (",", @$b), "\n";
-		} else {
-		    print $fh "\t$a\t$b\n";
-		}
+    my $fh = CAF::FileWriter->open (ICINGA_FILES->{$file},
+				    owner => ICINGAUSR,
+				    group => ICINGAGRP,
+				    log => $self,
+				   );
+    # The files must not be empty!
+    $file =~ m{(.*[^s])s?$};
+    my $kv = $1;
+    while (my ($k, $v) = each (%$t)) {
+	print $fh "define $kv {\n",
+	     "\t$kv","_name\t$k\n";
+	while (my ($a, $b) = each (%$v)) {
+	    if (ref ($b)) {
+		print $fh "\t$a\t", join (",", @$b), "\n";
+	    } else {
+		print $fh "\t$a\t$b\n";
 	    }
-	    print $fh "}\n";
 	}
-	$fh->close ($fh);
+	print $fh "}\n";
     }
+    return $fh;
+}
+
+# Restarts the Icinga daemon if needed.
+sub restart_icinga
+{
+    my $self = shift;
 
     my $cmd = CAF::Process->new([qw(service icinga)], log => $self);
 
@@ -536,5 +504,39 @@ sub Configure
 	$cmd->pushargs("restart");
     }
     $cmd->run();
+    return $cmd;
+}
+
+# Configure method. Writes all the configuration files and starts or
+# reloads the Icinga service
+sub Configure
+{
+    my ($self, $config) = @_;
+
+    my $t = $config->getElement(BASEPATH)->getTree();
+
+    $self->make_dirs($t);
+    $self->print_general ($t);
+    $self->print_cgi ($t->{cgi});
+    $self->print_macros ($t->{macros});
+    $self->print_hosts ($t->{hosts}, $t->{ignore_hosts});
+    $self->print_hosts_generic ($t->{hosts_generic});
+    $self->print_hostgroups ($t->{hostgroups}, $t->{ignore_hosts});
+    $self->print_commands ($t->{commands});
+    $self->print_services ($t->{services});
+    $self->print_servicedependencies ($t->{servicedependencies});
+    $self->print_contacts ($t->{contacts});
+    $self->print_serviceextinfo ($t->{serviceextinfo});
+    $self->print_hostdependencies ($t->{hostdependencies});
+    $self->print_ido2db_config ($t->{ido2db});
+
+    # Print the rest of objects
+    foreach my $i (REMAINING_OBJECTS) {
+	next unless exists ($t->{$i});
+	$self->print_other ($t->{$i}, $i);
+    }
+
+    $self->restart_icinga();
+
     return !$?;
 }
