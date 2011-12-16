@@ -5,7 +5,7 @@
 # File: icinga.pm
 # Implementation of ncm-icinga
 # Author: Wouter Depypere <wouter.depypere@ugent.be>
-# Version: 0.0.4 : 16/12/11 15:01
+# Version: 0.0.5 : 16/12/11 15:03
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a

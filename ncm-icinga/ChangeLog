@@ -1,5 +1,14 @@
 2011-12-16  LFM
 
+	* Release: 0.0.5
+	- Add a complete test suite.
+	
+	It contains some "fake" modules to ensure the test suite doesn't
+	try to do any privileged actions. But we now know what files are being
+	written, and their contents.
+
+2011-12-16  LFM
+
 	* Release: 0.0.4
 	- Restructure the code.
 
