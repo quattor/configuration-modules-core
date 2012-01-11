@@ -1,3 +1,8 @@
+2012-01-11  Luis Fernando Muñoz Mejías
+
+	* Release: 6.0.5
+	- Fix the handling of the root account.
+
 2011-06-17  Veronique Lefebure,31 1-022,,
 
 	* Release: 6.0.4

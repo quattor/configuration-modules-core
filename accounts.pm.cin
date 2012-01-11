@@ -400,11 +400,17 @@ sub compute_root_user
 {
     my ($self, $system, $tree) = @_;
 
-    return { uid => 0,
-	     groups => $system->{root}->{groups},
+    my $u = { uid => 0,
+	     groups => $system->{passwd}->{root}->{groups},
 	     password => $tree->{rootpwd},
-	     shell => $tree->{rootshell}
+	     shell => $tree->{rootshell},
+	     homeDir => "/root",
+	     main_group => 0,
+	     comment => "root",
+	     name => 'root',
+	     ln => $system->{passwd}->{root}->{ln}
 	    };
+    return $u;
 }
 
 # Returns whether the groups in the system are consistent.
@@ -666,7 +672,7 @@ sub Configure
     my $system = $self->build_system_map();
 
     $t->{users} = $self->compute_desired_accounts($t->{users});
-    $self->{users}->{root} = $self->compute_root_user($system, $t);
+    $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
 			 $t->{remove_unknown});
