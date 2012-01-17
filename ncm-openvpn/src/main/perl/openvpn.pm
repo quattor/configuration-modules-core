@@ -72,6 +72,9 @@ sub setup_server
 	 if exists($tree->{push});
     delete($tree->{push});
 
+    print $fh join(" ", "keepalive", @{$tree->{keepalive}}), "\n";
+    delete($tree->{keepalive});
+
     while (my ($k, $v) = each(%$tree)) {
 	# Boolean options are printed only if they are true
 	if ($v eq '1') {
