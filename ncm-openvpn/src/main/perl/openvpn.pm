@@ -22,7 +22,8 @@ sub setup_client
     $self->verbose("Setting up client: $client");
 
     my $fh = CAF::FileWriter->new($cfg->{configfile},
-				  log => $self);
+				  log => $self,
+				  backup => ".old");
     delete($cfg->{configfile});
 
 
@@ -59,7 +60,8 @@ sub setup_server
 
     $self->verbose("Setting up server configuration");
     my $fh = CAF::FileWriter->open($tree->{configfile},
-				   log => $self);
+				   log => $self,
+				   backup => ".old");
     delete($tree->{configfile});
 
     print $fh join("\n", map("push $_", @{$tree->{push}}), "")
