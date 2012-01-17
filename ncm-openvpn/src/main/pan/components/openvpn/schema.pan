@@ -75,7 +75,7 @@ type structure_component_openvpn_client = {
 type structure_component_openvpn = {
     include structure_component
     "server"            ? structure_component_openvpn_server
-    "client"            ? structure_component_openvpn_client
+    "clients"            ? structure_component_openvpn_client{}
 };
 
 bind "/software/components/openvpn" = structure_component_openvpn;

@@ -8,97 +8,92 @@ package NCM::Component::openvpn;
 use strict;
 use warnings;
 use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
-use LC::Process qw (execute);
+use CAF::Process;
+use CAF::FileWriter;
 use LC::Exception qw (throw_error);
-use EDG::WP4::CCM::Element qw(unescape);
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
-use constant SERVER_PATH => '/software/components/openvpn/server';
+sub setup_client
+{
+    my ($self, $client, $cfg) = @_;
 
-use constant CLIENT_PATH => '/software/components/openvpn/client';
+    $self->verbose("Setting up client: $client");
+
+    my $fh = CAF::FileWriter->new($cfg->{configfile},
+				  log => $self);
+    delete($cfg->{configfile});
+
+
+    print $fh join("\n", map("remote $_", @{$cfg->{remote}}), "");
+    delete($cfg->{remote});
+
+    while (my ($k, $v) = each(%$cfg)) {
+	# Boolean options are printed only if they are true
+	if ($v eq '1') {
+	    print $fh "$k\n";
+	} elsif ($v ne '0') {
+	    print $fh "$k $v\n";
+	}
+    }
+    return $fh->close();
+}
+
+sub setup_clients
+{
+    my ($self, $tree) = @_;
+
+    my $changed = 0;
+
+    while (my ($clnt, $cfg) = each(%$tree)) {
+	$changed ||= $self->setup_client($clnt, $cfg);
+    }
+
+    return $changed;
+}
+
+sub setup_server
+{
+    my ($self, $tree) = @_;
+
+    $self->verbose("Setting up server configuration");
+    my $fh = CAF::FileWriter->open($tree->{configfile},
+				   log => $self);
+    delete($tree->{configfile});
+
+    print $fh join("\n", map("push $_", @{$tree->{push}}), "")
+	 if exists($tree->{push});
+    delete($tree->{push});
+
+    while (my ($k, $v) = each(%$tree)) {
+	# Boolean options are printed only if they are true
+	if ($v eq '1') {
+	    print $fh "$k\n";
+	} elsif ($v ne '0') {
+	    print $fh "$k $v\n";
+	}
+    }
+
+    return $fh->close();
+}
 
 sub Configure
 {
     my ($self, $config) = @_;
 
-    # server configuration
-    if ( $config->elementExists(SERVER_PATH) ) {
-      my $serverconf = $config->getElement(SERVER_PATH);
-      while ( $serverconf->hasNextElement ) {
-        my $st = $serverconf->getNextElement()->getTree;
-        my $fh = FileHandle->new (&unescape($st->{"configfile"}), 'w');
-        unless ($fh) {
-            throw_error ("Couldn't open " . &unescape($st->{"configfile"}));
-            return 0;
-        }
+    my $t = $config->getElement("/software/components/openvpn")->getTree();
+    my $changed = 0;
 
-        my $resource = $serverconf->getCurrentElement();
-        while ($resource->hasNextElement()) {
-          my $elmt = $resource->getNextElement();
-          next if $elmt->getName() eq "configfile";
+    $changed ||= $self->setup_clients($t->{clients}) if exists($t->{clients});
+    $changed ||= $self->setup_servers($t->{server}) if exists($t->{server});
 
-          if ( $elmt->getType() == 33 ) {
-            $fh->print($elmt->getName()."\n") if $elmt->getValue();
-          } elsif ( $elmt->getName() eq "push" ) {
-            my @routes;
-            while ( $elmt->hasNextElement() ) {
-              push @routes, $elmt->getNextElement()->getValue();
-            }
-            foreach (@routes){
-                $fh->print("push \"$_\"\n");
-            }
-          } else {
-            $fh->print($elmt->getName()." ".$elmt->getValue()."\n");
-          }
-        }
+    $self->verbose("Restarting OpenVPN daemon");
 
-
-        chmod (0644, &unescape($st->{"configfile"}));
-        execute (["/etc/init.d/openvpn", "restart"]);
-      }
+    if ($changed) {
+	CAF::Process->new([qw(/etc/init.d/openvpn restart)],
+			  log => $self)->run();
+	return !$?;
     }
-
-    # client config
-    if ( $config->elementExists(CLIENT_PATH) ) {
-      my $clientconf = $config->getElement(CLIENT_PATH);
-      while ( $clientconf->hasNextElement ) {
-        my $st = $clientconf->getNextElement()->getTree;
-        my $fh = FileHandle->new (&unescape($st->{"configfile"}), 'w');
-        unless ($fh) {
-            throw_error ("Couldn't open " . &unescape($st->{"configfile"}));
-            return 0;
-        }
-
-        my $resource = $clientconf->getCurrentElement();
-        while ($resource->hasNextElement()) {
-          my $elmt = $resource->getNextElement();
-          next if $elmt->getName() eq "configfile";
-
-          if ( $elmt->getType() == 33 ) {
-            $fh->print($elmt->getName()."\n") if $elmt->getValue();
-          } elsif ( $elmt->getName() eq "remote" ) {
-            my @servers;
-            while ( $elmt->hasNextElement() ) {
-              push @servers, $elmt->getNextElement()->getValue();
-            }
-            foreach (@servers) {
-                $fh->print("remote $_\n");
-            }
-          } else {
-            $fh->print($elmt->getName()." ".$elmt->getValue()."\n");
-          }
-        }
-
-
-        chmod (0644, &unescape($st->{"configfile"}));
-        execute (["/etc/init.d/openvpn", "restart"]);
-      }
-    }
-
     return 1;
 }
