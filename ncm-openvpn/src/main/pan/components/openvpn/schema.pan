@@ -46,6 +46,7 @@ type structure_component_openvpn_server = {
     "verb"              ? long(0..11)
     "management"	? string
     "topology"		? string
+    "cipher"            : string = 'BF-CBC'
 };
 
 type structure_component_openvpn_client = {
@@ -70,6 +71,7 @@ type structure_component_openvpn_client = {
     "remote-random"	? boolean = false
     "resolv-retry"	? string
     "verb"		? long(0..11)
+    "cipher"            : string = 'BF-CBC'
 };
 
 type structure_component_openvpn = {
