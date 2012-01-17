@@ -10,7 +10,7 @@ type structure_component_openvpn_server = {
     "configfile"        : string
     "server"            ? string
     "server-bridge"	? string
-    "port"              : port = 1194
+    "port"              : type_port = 1194
     "proto"             : string with match (SELF, 'udp|tcp')
     "dev"               : string with match (SELF, 'tun|tap')
     "ca"                : string
@@ -51,7 +51,7 @@ type structure_component_openvpn_server = {
 type structure_component_openvpn_client = {
     "configfile"        : string
     "client"	        : boolean = false
-    "port"              : port = 1194
+    "port"              : type_port = 1194
     "remote"            : string[]
     "proto"      	: string with match (SELF, 'udp|tcp')
     "dev"     		: string with match (SELF, 'tun|tap')
