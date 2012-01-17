@@ -97,9 +97,9 @@ sub Configure
     $changed ||= $self->setup_clients($t->{clients}) if exists($t->{clients});
     $changed ||= $self->setup_servers($t->{server}) if exists($t->{server});
 
-    $self->verbose("Restarting OpenVPN daemon");
 
     if ($changed) {
+	$self->verbose("Restarting OpenVPN daemon");
 	CAF::Process->new([qw(/etc/init.d/openvpn restart)],
 			  log => $self)->run();
 	return !$?;
