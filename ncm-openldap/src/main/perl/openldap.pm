@@ -22,8 +22,7 @@ use CAF::FileWriter;
 use CAF::Process;
 use File::Path;
 use File::Basename;
-
-use Readonly;
+use EDG::WP4::CCM::Element qw(unescape);
 
 use constant PADDING => " "x4;
 use constant SLAPTEST => qw(/usr/sbin/slaptest -f /proc/self/fd/0 -v);
@@ -33,9 +32,9 @@ sub print_replica_information
 {
     my ($self, $fh, $tree) = @_;
 
+    $self->verbose("Printing database replica information");
     my @flds = qw(syncrepl);
 
-    $self->verbose("Printing database replica information");
     if (exists($tree->{attrsonly})) {
     	push(@flds, "attrsonly");
     	delete($tree->{attrsonly});
@@ -46,26 +45,27 @@ sub print_replica_information
 	delete($tree->{schemachecking});
     }
 
-    if (exists($tree->{retries})) {
-    	my $rt = sprintf(qq{retries="%s"},
-    			 join(" ", map("$_->{interval} $_->{retries}",
-    				       @{$tree->{retries}})));
+    if (exists($tree->{retry})) {
+    	my $rt = sprintf(qq{retry="%s"},
+    			 join(" ", map("$_->{interval} " .
+				       ($_->{retries} ? $_->{retries} : '+'),
+    				       @{$tree->{retry}})));
     	push(@flds, $rt);
-    	delete($tree->{retries});
+    	delete($tree->{retry});
     }
-
     if (exists($tree->{attrs})) {
 	my $rt = sprintf(qq{attrs="%s"},
-			 join("," @{$tree->{attrs}}));
+			 join(",", @{$tree->{attrs}}));
 	push(@flds, $rt);
-	delete($tree->{retries});
+	delete($tree->{attrs});
     }
 
     while (my ($k, $v) = each(%$tree)) {
+	$v=qq{"$v"} if $v =~ m{=};
     	push(@flds, "$k=$v");
     }
 
-    print $fh PADDING, join(" ", @flds), "\n";
+    print $fh  join(" ", @flds), "\n";
 }
 
 # Prints a database or a backend section to $fh, based on the contents
@@ -74,33 +74,37 @@ sub print_database_class
 {
     my ($self, $fh, $type, $tree) = @_;
 
+    $self->verbose("Printing a $type of class $tree->{class}");
+
     print $fh "$type $tree->{class}\n";
     delete($tree->{class});
+
 
     foreach my $i (qw(add_content_acl hidden lastmod mirrormode
 		      monitoring readonly)) {
 	if (exists($tree->{$i})) { 
-	    print $fh PADDING, $i, ($tree->{$i} ? "on":"off"), "\n";
+	    print $fh  "$i ", ($tree->{$i} ? "on":"off"), "\n";
 	    delete($tree->{$i});
 	}
     }
 
     if (exists($tree->{restrict})) {
-	print $fh PADDING, join(" ", "restrict", @{$tree->{restrict}}), "\n";
+	print $fh  join(" ", "restrict", @{$tree->{restrict}}), "\n";
 	delete($tree->{restrict});
     }
 
     if (exists($tree->{limits})) {
 	while (my ($k, $v) = each(%{$tree->{limits}})) {
-	    print $fh PADDING, "limits $k";
-	    print $fh " size.soft $v->{size}->{soft}"
-		if exists($v->{size}->{soft});
-	    print $fh " size.hard $v->{size}->{hard}"
-		if exists($v->{size}->{hard});
-	    print $fh " time.soft $v->{time}->{soft}"
-		if exists($v->{time}->{soft});
-	    print $fh " time.soft $v->{time}->{hard}"
-		if exists($v->{time}->{hard});
+	    print $fh  "limits ", unescape($k);
+	    foreach my $i (qw(size time)) {
+		foreach my $j (qw(soft hard)) {
+		    if (exists($v->{$i}->{$j})) {
+			print $fh "=$i.$j ",
+			    ($v->{$i}->{$j} < 0 ?
+			     "unlimited":$v->{$i}->{$j});
+		    }
+		}
+	    }
 	    print $fh "\n";
 	}
 	delete($tree->{limits});
@@ -108,13 +112,23 @@ sub print_database_class
 
     if (exists($tree->{backend_specific})) {
 	while (my ($k, $v) = each(%{$tree->{backend_specific}})) {
-	    print $fh PADDING, join("\n", map("$k $_", @$v), "");
+	    print $fh  join("\n", map("$k $_", @$v), "");
 	}
 	delete($tree->{backend_specific});
     }
 
+    if (exists($tree->{suffix})) {
+	print $fh qq{suffix "$tree->{suffix}"\n};
+	delete($tree->{suffix});
+    }
+
     while (my ($k, $v) = each(%$tree)) {
-	print $fh PADDING, "$k $v\n";
+	print $fh  "$k $v\n" unless $k eq 'syncrepl';
+    }
+
+    if (exists($tree->{syncrepl})) {
+	$self->print_replica_information($fh, $tree->{syncrepl});
+	delete($tree->{syncrepl});
     }
 }
 
@@ -123,12 +137,14 @@ sub print_global_options
 {
     my ($self, $fh, $t) = @_;
 
+    $self->verbose("Printing slapd global options");
+
     foreach my $i (@{$t->{access}}) {
 	print $fh "access to $i->{what}";
 	print $fh " by $i->{who}"
 	    if exists($i->{who});
-	print $fh " $i->{what}"
-	    if exists($i->{what});
+	print $fh " $i->{access}"
+	    if exists($i->{access});
 	print $fh " $i->{control}"
 	    if exists($i->{control});
 	print $fh "\n";
@@ -173,8 +189,8 @@ sub valid_config
 {
     my ($self, $fh) = @_;
 
-    $self->verb("Validating the generated configuration");
-    my $cmd = CAF::Process->new($SLAPTEST,
+    $self->verbose("Validating the generated configuration");
+    my $cmd = CAF::Process->new([SLAPTEST],
 				log => $self,
 				stdin => "$fh",
 				stdout => \my $out,
@@ -202,6 +218,10 @@ sub Configure
 				  log => $self,
 				  backup => '.old');
 
+    foreach my $i (@{$t->{include_schema}}) {
+	print $fh "include $i\n";
+    }
+
     # We may have to run things in the legacy mode. Hopefully this
     # will get removed.
     if ($t->{database} eq '') {
@@ -213,7 +233,7 @@ sub Configure
 	    $self->print_database_class($fh, "database", $i);
 	}
     } else {
-	$self->legacy_setup($config, $fh);
+	$self->legacy_setup($config, $fh, $t);
     }
 
     if ($self->valid_config($fh)) {
@@ -227,11 +247,12 @@ sub Configure
 # accurate schema.
 sub legacy_setup
 {
-    my ($self, $config, $fh) = @_;
+    my ($self, $config, $fh, $t) = @_;
 
-    foreach my $i (@{$t->{include_schema}}) {
-	print $fh "include $i\n";
-    }
+    $self->verbose("Running ", __PACKAGE__, " in legacy mode");
+
+    my ($database, $suffix, $rootdn, $rootpw, $directory, $loglevel,
+	$argsfile, $pidfile, $base, $ldap_config);
 
 
 
