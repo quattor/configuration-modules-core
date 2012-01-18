@@ -165,6 +165,7 @@ type ldap_replica_cfg = {
      "logbase" ? string
      "logfilter" ? string
      "syncdata" ? string with match(SELF, "^(default|accesslog|changelog)$")
+     "filter" ? string
 };
 
 type ldap_database_limits = {
@@ -193,7 +194,7 @@ type ldap_database = {
      "syncrepl" ? ldap_replica_cfg
      "updatedn" ? string
      "updateref" ? type_absoluteURI
-     "backend_specific" ? string{}[]
+     "backend_specific" ? string[]{}
 };
 
 type component_openldap = {

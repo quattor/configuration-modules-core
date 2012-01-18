@@ -54,6 +54,13 @@ sub print_replica_information
     	delete($tree->{retries});
     }
 
+    if (exists($tree->{attrs})) {
+	my $rt = sprintf(qq{attrs="%s"},
+			 join("," @{$tree->{attrs}}));
+	push(@flds, $rt);
+	delete($tree->{retries});
+    }
+
     while (my ($k, $v) = each(%$tree)) {
     	push(@flds, "$k=$v");
     }
@@ -97,6 +104,13 @@ sub print_database_class
 	    print $fh "\n";
 	}
 	delete($tree->{limits});
+    }
+
+    if (exists($tree->{backend_specific})) {
+	while (my ($k, $v) = each(%{$tree->{backend_specific}})) {
+	    print $fh PADDING, join("\n", map("$k $_", @$v), "");
+	}
+	delete($tree->{backend_specific});
     }
 
     while (my ($k, $v) = each(%$tree)) {
