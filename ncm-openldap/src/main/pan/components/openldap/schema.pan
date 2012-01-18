@@ -193,6 +193,7 @@ type ldap_database = {
      "syncrepl" ? ldap_replica_cfg
      "updatedn" ? string
      "updateref" ? type_absoluteURI
+     "backend_specific" ? string{}[]
 };
 
 type component_openldap = {
