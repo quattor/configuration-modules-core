@@ -190,11 +190,11 @@ sub valid_config
     my ($self, $fh) = @_;
 
     $self->verbose("Validating the generated configuration");
-    my $cmd = CAF::Process->new([SLAPTEST],
-				log => $self,
-				stdin => "$fh",
-				stdout => \my $out,
-				stderr => \my $err)->execute();
+    CAF::Process->new([SLAPTEST],
+		      log => $self,
+		      stdin => "$fh",
+		      stdout => \my $out,
+		      stderr => \my $err)->execute();
 
     if ($?) {
 	$fh->cancel();
@@ -205,6 +205,21 @@ sub valid_config
 	$self->verbose("Generated output: $out\n$err");
     }
 
+    return !$?;
+}
+
+sub restart_slapd
+{
+    my $self = shift;
+
+    $self->verbose("Restarting slapd with the new configuration");
+    CAF::Process->new([SLAPRESTART],
+		      log => $self)->run();
+    if ($?) {
+	$self->error("Failed to restart slapd");
+    } else {
+	$self->verbose("slapd restarted successfully");
+    }
     return !$?;
 }
 
