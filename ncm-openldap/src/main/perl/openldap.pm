@@ -26,6 +26,7 @@ use EDG::WP4::CCM::Element qw(unescape);
 
 use constant PADDING => " "x4;
 use constant SLAPTEST => qw(/usr/sbin/slaptest -f /proc/self/fd/0 -v);
+use constant SLAPRESTART => qw(/sbin/service slapd restart);
 
 # Prints the replica information for a database into $fh
 sub print_replica_information
@@ -208,6 +209,7 @@ sub valid_config
     return !$?;
 }
 
+#Restarts the SLAPD daemon.
 sub restart_slapd
 {
     my $self = shift;
@@ -252,6 +254,7 @@ sub Configure
     }
 
     if ($self->valid_config($fh)) {
+	$fh->close();
 	$self->restart_slapd();
 	return 1;
     }
