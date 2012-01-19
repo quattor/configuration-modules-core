@@ -250,14 +250,14 @@ sub add_dlsnfile{
 
 sub pxe_config{
     my($self,$config,$path)=@_;
-    my @pxeos_cmd=("/usr/sbin/pxeos", "-a ");
+    my @pxeos_cmd=("/usr/sbin/pxeos", "-a");
     my $descro="";
     my $ret_val = 0;
     
     #add description,optional
     if($config->elementExists($path."/pxe/descro")){
         $descro=$config->getValue($path."/pxe/descro");
-        push @pxeos_cmd, ("-i", "\"$descro\"");
+        push @pxeos_cmd, ("-i", $descro);
     }
     #add protocol
     unless($config->elementExists($path."/pxe/protocol")){
