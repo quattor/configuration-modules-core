@@ -22,10 +22,10 @@ use CAF::FileWriter;
 use CAF::Process;
 use File::Path;
 use File::Basename;
+use File::Copy;
 use EDG::WP4::CCM::Element qw(unescape);
 
-use constant PADDING => " "x4;
-use constant SLAPTEST => qw(/usr/sbin/slaptest -f /proc/self/fd/0 -v);
+use constant SLAPTEST => qw(/usr/sbin/slaptest -v -f);
 use constant SLAPRESTART => qw(/sbin/service slapd restart);
 
 # Prints the replica information for a database into $fh
@@ -188,17 +188,18 @@ sub print_global_options
 # SLAPD, that would allow to reload the service.
 sub valid_config
 {
-    my ($self, $fh) = @_;
+    my ($self, $file) = @_;
 
     $self->verbose("Validating the generated configuration");
-    CAF::Process->new([SLAPTEST],
-		      log => $self,
-		      stdin => "$fh",
-		      stdout => \my $out,
-		      stderr => \my $err)->execute();
+    my $cmd = CAF::Process->new([SLAPTEST],
+				log => $self,
+				stdout => \my $out,
+				stderr => \my $err);
+
+    $cmd->pushargs($file);
+    $cmd->execute();
 
     if ($?) {
-	$fh->cancel();
 	$self->error("Invalid slapd configuration generated");
 	$self->info("Standard output: $out");
 	$self->info("Standard error: $err");
@@ -233,7 +234,8 @@ sub Configure
 
     my $fh = CAF::FileWriter->new($t->{conf_file},
 				  log => $self,
-				  backup => '.old');
+				  backup => ".$$",
+				  mode => 0440);
 
     foreach my $i (@{$t->{include_schema}}) {
 	print $fh "include $i\n";
@@ -253,10 +255,15 @@ sub Configure
 	$self->legacy_setup($config, $fh, $t);
     }
 
-    if ($self->valid_config($fh)) {
-	$fh->close();
+    # We have to save unconditionally because slaptest doesn't read
+    # from pipes. :(
+    $fh->close();
+    if ($self->valid_config($t->{conf_file})) {
 	$self->restart_slapd();
 	return 1;
+    } else {
+	$self->verbose("Restoring the old configuration file");
+	move("$t->{conf_file}.$$", $t->{conf_file});
     }
     return 0;
 }
