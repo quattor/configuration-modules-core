@@ -15,7 +15,7 @@ unique template components/postgresql/config-rpm;
 include {'components/postgresql/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-postgresql","0.1.4-1","noarch");
+"/software/packages"=pkg_repl("ncm-postgresql","0.1.5-1","noarch");
  
  ## chkconfig is needed because the component can start postgres using the start script
 "/software/components/postgresql/dependencies/pre" ?= list("spma","chkconfig");

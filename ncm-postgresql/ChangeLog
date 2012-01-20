@@ -1,3 +1,6 @@
+2012-01-20 SDW
+    * add full schema config for hba and main config
+
 2011-03-22
 	* rewrite for version 9. 9.0 is a transition version which appends version numbering to scripts and directories
 

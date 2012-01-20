@@ -85,7 +85,7 @@ wouter.depypere@ugent.be
 
 =head1 VERSION
 
-0.1.4
+0.1.5
 
 =head1 SEE ALSO
 
