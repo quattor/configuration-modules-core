@@ -1,3 +1,8 @@
+2012-01-20  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.5
+	- Add support for authenticating via certificates.
+
 2009-02-13  Nick Williams
 
 	* Release: 1.1.3

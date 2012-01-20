@@ -147,7 +147,6 @@ sub Configure {
             $min_age = $inf->{files}->{$f}->{min_age};
         }
 
-
         my $success = 0;
         if (@proxyhosts && $inf->{files}->{$f}->{proxy}) {
             my $attempts = scalar @proxyhosts;
@@ -161,6 +160,10 @@ sub Configure {
                                             timeout => $inf->{timeout},
                                             proxy => $proxy,
                                             gssneg => $gss,
+					    cacert => $inf->{cacert},
+					    capath => $inf->{capath},
+					    cert => $inf->{cert},
+					    key => $inf->{key},
                                             min_age => $min_age);
                 if ($success) {
                     @proxyhosts = ($proxy, @proxyhosts);
@@ -178,7 +181,11 @@ sub Configure {
                                  href => $source,
                                  timeout => $inf->{timeout},
                                  gssneg => $gss,
-                                 min_age => $min_age)) {
+				 cacert => $inf->{cacert},
+				 capath => $inf->{capath},
+				 cert => $inf->{cert},
+				 key => $inf->{key},
+				 min_age => $min_age)) {
                 $self->error("failed to retrieve $source, skipping");
                 next;
             }
@@ -219,13 +226,15 @@ sub Configure {
 
 sub download {
     my ($self, %opts) = @_;
-    my ($file, $source, $timeout, $proxy, $gssneg, $min_age);
+    my ($file, $source, $timeout, $proxy, $gssneg, $min_age,
+	$cacert, $capath, $cert, $key);
     $file    = delete $opts{file};
     $source  = delete $opts{href};
     $timeout = delete $opts{timeout};
     $proxy   = delete $opts{proxy} || "";
     $gssneg  = delete $opts{gssneg} || 0;
     $min_age = delete $opts{min_age} || 0;
+
 
     $self->debug(1, "Processing file $file");
 
@@ -245,13 +254,18 @@ sub download {
         push(@opts, "-m", $timeout);
     }
 
+    foreach my $op (qw(cacert cert capath key)) {
+	push(@opts, "--$op", $opts{$op});
+    }
+
     if ($gssneg) {
         # If negotiate extension is required, then we'll
         # enabled and put in a dummy username/password.
         push(@opts, "--negotiate", "-u", "x:x");
     }
 
-    # Get timestamp of any existing file, defaulting to zero if the file doesn't exist
+    # Get timestamp of any existing file, defaulting to zero if the
+    # file doesn't exist
     my $timestamp_existing = 0;
     if (-e $file) {
         $timestamp_existing  = (stat($file))[9];
@@ -263,10 +277,10 @@ sub download {
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
-                $self->debug(1, "running /usr/bin/curl " . join(" ", @opts) . " $source");
-
                 my $errs = "";
-                my $proc = CAF::Process->new([ "/usr/bin/curl", @opts, $source], stderr => \$errs);
+                my $proc = CAF::Process->new([ "/usr/bin/curl", @opts, $source],
+                                             stderr => \$errs,
+                                             log => $self);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     $self->debug(1, "curl failed (" . ($?>>8) .")");
@@ -291,6 +305,5 @@ sub download {
         return 0; # fail
     }
 }
-
 
 1; #required for Perl modules

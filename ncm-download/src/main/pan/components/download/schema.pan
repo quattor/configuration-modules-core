@@ -40,6 +40,10 @@ type component_download_file = {
     "owner"   ? string
     "group"   ? string
     "min_age" : long = 0     # Don't consider the remote file to be new until it is this number of minutes old
+    "cacert"  ? string
+    "capath"  ? string
+    "cert" ? string
+    "key" ? string
 };
 
 type component_download_type = extensible {
