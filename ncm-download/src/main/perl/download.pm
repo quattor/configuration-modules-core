@@ -102,7 +102,8 @@ sub Configure {
                 $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
                 # Assume "kinit" is in the PATH.
                 my $errs = "";
-                my $proc = CAF::Process->new(["kinit", "-k"], stderr => \$errs);
+                my $proc = CAF::Process->new(["kinit", "-k"], stderr => \$errs,
+					    log => $self);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     $self->error("could not get GSSAPI credentials: $errs");
@@ -160,10 +161,10 @@ sub Configure {
                                             timeout => $inf->{timeout},
                                             proxy => $proxy,
                                             gssneg => $gss,
-					    cacert => $inf->{cacert},
-					    capath => $inf->{capath},
-					    cert => $inf->{cert},
-					    key => $inf->{key},
+					    cacert => $inf->{files}->{$f}->{cacert},
+					    capath => $inf->{files}->{$f}->{capath},
+					    cert => $inf->{files}->{$f}->{cert},
+					    key =>  $inf->{files}->{$f}->{key},
                                             min_age => $min_age);
                 if ($success) {
                     @proxyhosts = ($proxy, @proxyhosts);
@@ -181,11 +182,10 @@ sub Configure {
                                  href => $source,
                                  timeout => $inf->{timeout},
                                  gssneg => $gss,
-				 cacert => $inf->{cacert},
-				 capath => $inf->{capath},
-				 cert => $inf->{cert},
-				 key => $inf->{key},
-				 min_age => $min_age)) {
+				 cacert => $inf->{files}->{$f}->{cacert},
+				 capath => $inf->{files}->{$f}->{capath},
+				 cert => $inf->{files}->{$f}->{cert},
+				 key =>  $inf->{files}->{$f}->{key},				 min_age => $min_age)) {
                 $self->error("failed to retrieve $source, skipping");
                 next;
             }
@@ -213,7 +213,8 @@ sub Configure {
         my $cmd = $inf->{files}->{$f}->{post};
         if ($cmd) {
             my $errs = "";
-            my $proc = CAF::Process->new([ $cmd, $file], stderr => \$errs);
+            my $proc = CAF::Process->new([ $cmd, $file], stderr => \$errs,
+					 log => $self);
             $proc->execute();
             if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                 $self->error("post-process of $file gave errors: $errs");
@@ -234,9 +235,12 @@ sub download {
     $proxy   = delete $opts{proxy} || "";
     $gssneg  = delete $opts{gssneg} || 0;
     $min_age = delete $opts{min_age} || 0;
+    $cacert  = delete $opts{cacert};
+    $capath  = delete $opts{capath};
+    $key     = delete $opts{key};
+    $cert    = delete $opts{cert};
 
-
-    $self->debug(1, "Processing file $file");
+    $self->debug(1, "Processing file $file from $source");
 
     if ($proxy) {
         $source =~ s{^([a-z]+)://([^/]+)/}{$1://$proxy/};
@@ -254,14 +258,26 @@ sub download {
         push(@opts, "-m", $timeout);
     }
 
-    foreach my $op (qw(cacert cert capath key)) {
-	push(@opts, "--$op", $opts{$op});
-    }
-
     if ($gssneg) {
         # If negotiate extension is required, then we'll
         # enabled and put in a dummy username/password.
         push(@opts, "--negotiate", "-u", "x:x");
+    }
+
+    if ($key) {
+	push(@opts, "--key", $key);
+    }
+
+    if ($cacert) {
+	push(@opts, "--cacert", $cacert);
+    }
+
+    if ($capath) {
+	push(@opts, "--capath", $capath);
+    }
+
+    if ($cert) {
+	push(@opts, "--cert", $cert);
     }
 
     # Get timestamp of any existing file, defaulting to zero if the
@@ -273,7 +289,6 @@ sub download {
 
     my $timestamp_threshold = (time() - ($min_age * 60)); # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
     my $timestamp_remote    = LWP::UserAgent->new->head($source)->headers->last_modified(); # :D
-
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
@@ -283,7 +298,7 @@ sub download {
                                              log => $self);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
-                    $self->debug(1, "curl failed (" . ($?>>8) .")");
+                    $self->error(1, "curl failed (" . ($?>>8) ."): $errs");
                     return 0; # Curl barfed, so we fail
                 } else {
                     $self->debug(1, "We seem to have sucessfully downloaded a new copy of the file");
