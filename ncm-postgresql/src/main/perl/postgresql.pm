@@ -40,13 +40,15 @@ sub Configure {
   }	
   our $comp='postgresql';
   my $base = "/software/components/$comp";
+
+  our $debug_print = "15";
+  $debug_print = fetch("$base/config/debug_print",$debug_print);
+  $self->info("Debug_print=$debug_print");
+
   my $pg_version_suf = "-".fetch("$base/pg_version", "");
   my $pg_engine = fetch("$base/pg_engine", "/usr/bin/");
   my $fqdn = $config->getValue("/system/network/hostname").".".$config->getValue("/system/network/domainname");
   my $shortname = $config->getValue("/system/network/hostname");
-  our $debug_print = "15";
-  $debug_print = fetch("$base/config/debug_print",$debug_print);
-  $self->info("Debug_print=$debug_print");
 
 
   ## proposed structure
@@ -92,7 +94,7 @@ sub Configure {
   $p{$name}{filename}="$pg_dir/data/postgresql.conf";
   $p{$name}{write_empty}=0;
   if ($config->elementExists("/software/components/postgresql/config/main")) {
-    $v{$name}{PURE_TEXT}=create_pgostgresql_hbaconfig();
+    $v{$name}{PURE_TEXT}=create_pgostgresql_mainconfig();
   } else {
     $v{$name}{PURE_TEXT}=fetch("$base/postgresql_conf");
   } 
@@ -102,7 +104,7 @@ sub Configure {
   $p{$name}{filename}="$pg_dir/data/pg_hba.conf";
   $p{$name}{write_empty}=0;
   if ($config->elementExists("/software/components/postgresql/config/hba")) {
-    $v{$name}{PURE_TEXT}=create_pgostgresql_mainconfig();
+    $v{$name}{PURE_TEXT}=create_pgostgresql_hbaconfig();
   } else {
     $v{$name}{PURE_TEXT}=fetch("$base/pg_hba");
   } 
@@ -299,7 +301,8 @@ sub pd {
   my $method = shift || "i";
   my $level = shift || "5";
   
-  if ($level <= $debug_print) {
+  ## force strings to numeric compare 
+  if ("$level" <= "$debug_print") {
 	  if ($method =~ m/^i/) { 
 	  	$self->info($text);
 	  } elsif ($method =~ m/^e/) {
@@ -1038,207 +1041,209 @@ sub create_pgdb {
 ############################################################################
 
 use constant MAINCONFIG_INT => qw(
-    port,
-    max_connections,
-    superuser_reserved_connections,
-    unix_socket_permissions,
-    tcp_keepalives_idle,
-    tcp_keepalives_interval,
-    tcp_keepalives_count,
-    max_prepared_transactions,
-    max_files_per_process,
-    vacuum_cost_page_hit,
-    vacuum_cost_page_miss,
-    vacuum_cost_page_dirty,
-    vacuum_cost_limit,
-    bgwriter_lru_maxpages,
-    effective_io_concurrency,
-    wal_buffers,
-    commit_delay,
-    commit_siblings,
-    checkpoint_segments,
-    archive_timeout,
-    max_wal_senders,
-    wal_keep_segments,
-    vacuum_defer_cleanup_age,
-    geqo_threshold,
-    geqo_effort,
-    geqo_pool_size,
-    geqo_generations,
-    default_statistics_target,
-    from_collapse_limit,
-    join_collapse_limit,
-    log_file_mode,
-    log_rotation_size,
-    log_min_duration_statement,
-    log_temp_files,
-    track_activity_query_size,
-    log_autovacuum_min_duration,
-    autovacuum_max_workers,
-    autovacuum_vacuum_threshold,
-    autovacuum_analyze_threshold,
-    autovacuum_freeze_max_age,
-    autovacuum_vacuum_cost_limit,
-    statement_timeout,
-    vacuum_freeze_min_age,
-    vacuum_freeze_table_age,
-    extra_float_digits,
-    max_locks_per_transaction,
-    max_pred_locks_per_transaction,
+    port
+    max_connections
+    superuser_reserved_connections
+    unix_socket_permissions
+    tcp_keepalives_idle
+    tcp_keepalives_interval
+    tcp_keepalives_count
+    max_prepared_transactions
+    max_files_per_process
+    vacuum_cost_page_hit
+    vacuum_cost_page_miss
+    vacuum_cost_page_dirty
+    vacuum_cost_limit
+    bgwriter_lru_maxpages
+    effective_io_concurrency
+    wal_buffers
+    commit_delay
+    commit_siblings
+    checkpoint_segments
+    archive_timeout
+    max_wal_senders
+    wal_keep_segments
+    vacuum_defer_cleanup_age
+    geqo_threshold
+    geqo_effort
+    geqo_pool_size
+    geqo_generations
+    default_statistics_target
+    from_collapse_limit
+    join_collapse_limit
+    log_file_mode
+    log_rotation_size
+    log_min_duration_statement
+    log_temp_files
+    track_activity_query_size
+    log_autovacuum_min_duration
+    autovacuum_max_workers
+    autovacuum_vacuum_threshold
+    autovacuum_analyze_threshold
+    autovacuum_freeze_max_age
+    autovacuum_vacuum_cost_limit
+    statement_timeout
+    vacuum_freeze_min_age
+    vacuum_freeze_table_age
+    extra_float_digits
+    max_locks_per_transaction
+    max_pred_locks_per_transaction
 );
 
 use constant MAINCONFIG_BOOL => qw(
-    bonjour,
-    ssl,
-    password_encryption,
-    db_user_namespace,
-    krb_caseins_users,
-    fsync,
-    synchronous_commit,
-    full_page_writes,
-    archive_mode,
-    hot_standby,
-    hot_standby_feedback,
-    enable_bitmapscan,
-    enable_hashagg,
-    enable_hashjoin,
-    enable_indexscan,
-    enable_material,
-    enable_mergejoin,
-    enable_nestloop,
-    enable_seqscan,
-    enable_sort,
-    enable_tidscan,
-    geqo,
-    logging_collector,
-    log_truncate_on_rotation,
-    silent_mode,
-    debug_print_parse,
-    debug_print_rewritten,
-    debug_print_plan,
-    debug_pretty_print,
-    log_checkpoints,
-    log_connections,
-    log_disconnections,
-    log_duration,
-    log_hostname,
-    log_lock_waits,
-    track_activities,
-    track_counts,
-    update_process_title,
-    log_parser_stats,
-    log_planner_stats,
-    log_executor_stats,
-    log_statement_stats,
-    autovacuum,
-    check_function_bodies,
-    default_transaction_read_only,
-    default_transaction_deferrable,
-    array_nulls,
-    default_with_oids,
-    escape_string_warning,
-    lo_compat_privileges,
-    quote_all_identifiers,
-    sql_inheritance,
-    standard_conforming_strings,
-    synchronize_seqscans,
-    transform_null_equals,
-    exit_on_error,
-    restart_after_crash,
+    bonjour
+    ssl
+    password_encryption
+    db_user_namespace
+    krb_caseins_users
+    fsync
+    synchronous_commit
+    full_page_writes
+    archive_mode
+    hot_standby
+    hot_standby_feedback
+    enable_bitmapscan
+    enable_hashagg
+    enable_hashjoin
+    enable_indexscan
+    enable_material
+    enable_mergejoin
+    enable_nestloop
+    enable_seqscan
+    enable_sort
+    enable_tidscan
+    geqo
+    logging_collector
+    log_truncate_on_rotation
+    silent_mode
+    debug_print_parse
+    debug_print_rewritten
+    debug_print_plan
+    debug_pretty_print
+    log_checkpoints
+    log_connections
+    log_disconnections
+    log_duration
+    log_hostname
+    log_lock_waits
+    track_activities
+    track_counts
+    update_process_title
+    log_parser_stats
+    log_planner_stats
+    log_executor_stats
+    log_statement_stats
+    autovacuum
+    check_function_bodies
+    default_transaction_read_only
+    default_transaction_deferrable
+    array_nulls
+    default_with_oids
+    escape_string_warning
+    lo_compat_privileges
+    quote_all_identifiers
+    sql_inheritance
+    standard_conforming_strings
+    synchronize_seqscans
+    transform_null_equals
+    exit_on_error
+    restart_after_crash
 );
 
 use constant MAINCONFIG_QUO => qw(
-    data_directory,
-    hba_file,
-    ident_file,
-    external_pid_file,
-    listen_addresses,
-    unix_socket_directory,
-    unix_socket_group,
-    bonjour_name,
-    ssl_ciphers,
-    krb_server_keyfile,
-    krb_srvname,
-    shared_preload_libraries,
-    archive_command,
-    synchronous_standby_names,
-    log_destination,
-    log_directory,
-    log_filename,
-    syslog_facility,
-    syslog_ident,
-    log_line_prefix,
-    log_statement,
-    log_timezone,
-    stats_temp_directory,
-    search_path,
-    default_tablespace,
-    temp_tablespaces,
-    default_transaction_isolation,
-    session_replication_role,
-    bytea_output,
-    xmlbinary,
-    xmloption,
-    datestyle,
-    intervalstyle,
-    timezone,
-    timezone_abbreviations,
-    lc_messages,
-    lc_monetary,
-    lc_numeric,
-    lc_time,
-    default_text_search_config,
-    dynamic_library_path,
-    local_preload_libraries,
-    custom_variable_classes,
+    data_directory
+    hba_file
+    ident_file
+    external_pid_file
+    listen_addresses
+    unix_socket_directory
+    unix_socket_group
+    bonjour_name
+    ssl_ciphers
+    krb_server_keyfile
+    krb_srvname
+    shared_preload_libraries
+    archive_command
+    synchronous_standby_names
+    log_destination
+    log_directory
+    log_filename
+    syslog_facility
+    syslog_ident
+    log_line_prefix
+    log_statement
+    log_timezone
+    stats_temp_directory
+    search_path
+    default_tablespace
+    temp_tablespaces
+    default_transaction_isolation
+    session_replication_role
+    bytea_output
+    xmlbinary
+    xmloption
+    datestyle
+    intervalstyle
+    timezone
+    timezone_abbreviations
+    lc_messages
+    lc_monetary
+    lc_numeric
+    lc_time
+    default_text_search_config
+    dynamic_library_path
+    local_preload_libraries
+    custom_variable_classes
 );
 
 use constant MAINCONFIG_STR => qw(
-    authentication_timeout,
-    ssl_renegotiation_limit,
-    shared_buffers,
-    temp_buffers,
-    work_mem,
-    maintenance_work_mem,
-    max_stack_depth,
-    vacuum_cost_delay,
-    bgwriter_delay,
-    bgwriter_lru_multiplier,
-    wal_level,
-    wal_sync_method,
-    wal_writer_delay,
-    checkpoint_timeout,
-    checkpoint_completion_target,
-    checkpoint_warning,
-    wal_sender_delay,
-    replication_timeout,
-    max_standby_archive_delay,
-    max_standby_streaming_delay,
-    wal_receiver_status_interval,
-    seq_page_cost,
-    random_page_cost,
-    cpu_tuple_cost,
-    cpu_index_tuple_cost,
-    cpu_operator_cost,
-    effective_cache_size,
-    geqo_selection_bias,
-    geqo_seed,
-    constraint_exclusion,
-    cursor_tuple_fraction,
-    log_rotation_age,
-    client_min_messages,
-    log_min_messages,
-    log_min_error_statement,
-    log_error_verbosity,
-    track_functions,
-    autovacuum_naptime,
-    autovacuum_vacuum_scale_factor,
-    autovacuum_analyze_scale_factor,
-    autovacuum_vacuum_cost_delay,
-    client_encoding,
-    deadlock_timeout,
-    backslash_quote,
+    authentication_timeout
+    ssl_renegotiation_limit
+    shared_buffers
+    temp_buffers
+    work_mem
+    maintenance_work_mem
+    max_stack_depth
+    vacuum_cost_delay
+    bgwriter_delay
+    bgwriter_lru_multiplier
+    wal_level
+    wal_sync_method
+    wal_writer_delay
+    checkpoint_timeout
+    checkpoint_completion_target
+    checkpoint_warning
+    wal_sender_delay
+    replication_timeout
+    max_standby_archive_delay
+    max_standby_streaming_delay
+    wal_receiver_status_interval
+    seq_page_cost
+    random_page_cost
+    cpu_tuple_cost
+    cpu_index_tuple_cost
+    cpu_operator_cost
+    effective_cache_size
+    geqo_selection_bias
+    geqo_seed
+    constraint_exclusion
+    cursor_tuple_fraction
+    log_rotation_age
+    client_min_messages
+    log_min_messages
+    log_min_error_statement
+    log_error_verbosity
+    track_functions
+    autovacuum_naptime
+    autovacuum_vacuum_scale_factor
+    autovacuum_analyze_scale_factor
+    autovacuum_vacuum_cost_delay
+    client_encoding
+    deadlock_timeout
+    backslash_quote
 );
+
+
 
 
 ##########################################################################
@@ -1246,7 +1251,7 @@ sub create_pgostgresql_mainconfig {
 ##########################################################################
     ## returns string with config file
     
-    my ($result,$tree,$contents);
+    my ($result,$contents);
 
     # walk through the parts and generate the config
     my $base = "/software/components/postgresql/config/main";
@@ -1255,7 +1260,7 @@ sub create_pgostgresql_mainconfig {
         return;
     };
 
-    my $tree = $config->getElement("$base")->getTree;
+    our $tree = $config->getElement("$base")->getTree;
 
     my @alloptions;
     push(@alloptions,MAINCONFIG_INT,MAINCONFIG_STR,MAINCONFIG_QUO,MAINCONFIG_BOOL);
@@ -1265,9 +1270,7 @@ sub create_pgostgresql_mainconfig {
     
     $contents = '';
 
-    $contents .= "#\n# File generated by ncm-postgresql on $date\n#\n";
-
-    sub getcfg {
+    sub get_cfg {
         my $mod = shift;
         ## options
         my @options = @_;
@@ -1276,10 +1279,10 @@ sub create_pgostgresql_mainconfig {
         my ($ans,$opt);
 
         foreach $opt (@options) {
-            next if (!exists(%$tree->{$opt}));
+            next if (!exists($tree->{$opt}));
 
             my $val='';
-            my $ref=%$tree->{$opt};
+            my $ref=$tree->{$opt};
             if (ref($ref) eq "ARRAY") {
                 $val=join(",",@$ref);
             } else {
@@ -1322,7 +1325,7 @@ sub create_pgostgresql_mainconfig {
 sub create_pgostgresql_hbaconfig {
 ##########################################################################
     ##
-    my ($result,$tree,$contents);
+    my ($result,$contents);
 
     # walk through the parts and generate the config
     my $base = "/software/components/postgresql/config/hba";
@@ -1333,9 +1336,8 @@ sub create_pgostgresql_hbaconfig {
 
     my $tree = $config->getElement("$base")->getTree;
 
-    $contents = '';
-    $contents .= "#\n# File generated by ncm-postgresql on $date\n#\n";
-    
+    $contents='';
+        
     # local      DATABASE  USER  METHOD  [OPTIONS]
     # host       DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
     # hostssl    DATABASE  USER  ADDRESS  METHOD  [OPTIONS]
@@ -1343,16 +1345,16 @@ sub create_pgostgresql_hbaconfig {
     
     foreach my $rule (@$tree) {
         my @c;
-        push(@c,%$rule->{host});
-        push(@c,join(",",@{%$rule->{database}}));
-        push(@c,join(",",@{%$rule->{user}}));
-        if (exists(%$rule->{address})) {
-            push(@c,%$rule->{address});
+        push(@c,$rule->{host});
+        push(@c,join(",",@{$rule->{database}}));
+        push(@c,join(",",@{$rule->{user}}));
+        if (exists($rule->{address})) {
+            push(@c,$rule->{address});
         }
-        psuh(@c,%$rule->{method});
-        if (exists(%$rule->{options})) {
+        push(@c,$rule->{method});
+        if (exists($rule->{options})) {
             my @tmp; 
-            while (my ($k,$v) = each(%{%$rule->{options}})) {
+            while (my ($k,$v) = each(%{$rule->{options}})) {
                 push(@tmp,"$k=$v");
             }
             push(@c,join(" ",@tmp));

@@ -48,7 +48,7 @@ function pgsql_is_hba_address = {
 
 
 type pgsql_hba_database = string with pgsql_is_hba_db(SELF);
-type pgsql_hba_user = string with match(SELF,"^(+|@)?\w+$")
+type pgsql_hba_user = string with match(SELF,'^(\+|@)?\w+$');
 
 
 type pgsql_hba = {
@@ -168,7 +168,7 @@ type pgsql_mainconfig = {
     "log_filename"                       : string     = "postgresql-%a.log"
     "log_file_mode"                      ? long       # 600
     "log_truncate_on_rotation"           : boolean    = true
-    "log_rotation_age"                   : string     = 1d
+    "log_rotation_age"                   : string     = "1d"
     "log_rotation_size"                  : long       = 0
     "syslog_facility"                    ? string     # "LOCAL0"
     "syslog_ident"                       ? string     # "postgres"
@@ -268,7 +268,7 @@ type pg_db = {
 
 type structure_pgsql_comp_config = {
 	"debug_print" ? long 
-	"hba" ? pgsql_hba
+	"hba" ? pgsql_hba[]
 	"main" ? pgsql_mainconfig
 };
 
