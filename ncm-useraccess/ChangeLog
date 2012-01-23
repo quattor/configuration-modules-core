@@ -1,3 +1,11 @@
+2012-01-23  Luis Fernando Muñoz Mejías
+
+	* Release: 1.5.11
+	- Relax the umask.
+
+	It was creating .ssh directories without the -x flag, breaking
+	SSH.
+
 2010-10-18  root
 
 	* Release: 1.5.10

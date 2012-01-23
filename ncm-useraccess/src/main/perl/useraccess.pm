@@ -5,7 +5,7 @@
 # File: useraccess.pm
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.10 : 18/10/10 15:11
+# Version: 1.5.11 : 23/01/12 14:33
 # 
 #
 # Note: all methods in this component are called in a
@@ -30,7 +30,7 @@ use CAF::FileEditor;
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
-use constant MASK	=> 0177;
+use constant MASK	=> 077;
 
 use constant PATH	=> "/software/components/useraccess/";
 use constant KRB4	=> "kerberos4";
