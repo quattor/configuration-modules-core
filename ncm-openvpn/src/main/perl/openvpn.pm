@@ -50,7 +50,8 @@ sub setup_clients
     my $changed = 0;
 
     while (my ($clnt, $cfg) = each(%$tree)) {
-	$changed ||= $self->setup_client($clnt, $cfg);
+	my $rt = $self->setup_client($clnt, $cfg);
+	$changed ||= $rt;
     }
 
     return $changed;
@@ -95,7 +96,7 @@ sub Configure
     my $changed = 0;
 
     $changed ||= $self->setup_clients($t->{clients}) if exists($t->{clients});
-    $changed ||= $self->setup_servers($t->{server}) if exists($t->{server});
+    $changed ||= $self->setup_server($t->{server}) if exists($t->{server});
 
 
     if ($changed) {
