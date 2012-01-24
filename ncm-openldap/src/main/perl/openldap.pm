@@ -140,14 +140,16 @@ sub print_global_options
 
     $self->verbose("Printing slapd global options");
 
-    foreach my $i (@{$t->{access}}) {
-	print $fh "access to $i->{what}";
-	print $fh " by $i->{who}"
-	    if exists($i->{who});
-	print $fh " $i->{access}"
-	    if exists($i->{access});
-	print $fh " $i->{control}"
-	    if exists($i->{control});
+    while (my ($what, $by) = each(%{$t->{access}})) {
+	my $w = unescape($what);
+	print $fh "access to $w ";
+	foreach my $i (@$by) {
+	    print $fh "by ";
+	    foreach my $j (qw(who access control)) {
+		print $fh "$i->{$j} "
+		  if exists($i->{$j});
+	    }
+	}
 	print $fh "\n";
     }
 

@@ -2,7 +2,7 @@
 # This is 'TPL/schema.tpl', a ncm-openldap's file
 ################################################################################
 #
-# VERSION:    1.0.0-1, 02/02/10 15:50
+# VERSION:    1.0.0-2, 02/02/10 15:50
 # AUTHOR:     Daniel Jouvenot <jouvenot@lal.in2p3.fr>
 # MAINTAINER: Guillaume Philippon <philippo@lal.in2p3.fr>
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
@@ -36,12 +36,13 @@ type ldap_buffer_size = {
 } with exists(SELF["read"]) || exists(SELF["write"]) ||
      error("Either 'read' or 'write' limits must be supplied");
 
-type ldap_access = {
-     "what" : string
+type ldap_access_item = {
      "who" ? string
      "access" ? string
      "control" ? string
 };
+
+type ldap_access = ldap_access_item[];
 
 type auth_regexp = {
      "match" : string
@@ -51,7 +52,7 @@ type auth_regexp = {
 type ldap_syntax = string{};
 
 type ldap_global = {
-     "access" : ldap_access[]  = list()
+     "access" : ldap_access{} = nlist()
      "allow" ? string[]
      "argsfile" ? string
      "attributeoptions" ? string[]
