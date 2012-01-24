@@ -286,7 +286,12 @@ sub pxe_config{
         $self->error("There is no ip for device $netdev");
         return -1;
     }
-    my $server=$config->getValue("/system/network/interfaces/$netdev/ip");
+    my $server;
+    if ($config->elementExists($path."/pxe/nfs_server")) {
+        $server=$config->getValue($path."/pxe/nfs_server");
+    } else {
+        $server=$config->getValue("/system/network/interfaces/$netdev/ip");
+    }
     push @pxeos_cmd, "-s" ,"$server";
     
     #define kernel name

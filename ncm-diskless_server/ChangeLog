@@ -1,3 +1,8 @@
+2012-01-24  Loic Brarda
+
+	* Release: 0.7.1
+	- Add support for a separate nfs server
+
 2012-01-19  Loic Brarda
 
 	* Release: 0.7.0
