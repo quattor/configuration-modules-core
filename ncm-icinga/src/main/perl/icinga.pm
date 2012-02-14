@@ -5,7 +5,7 @@
 # File: icinga.pm
 # Implementation of ncm-icinga
 # Author: Wouter Depypere <wouter.depypere@ugent.be>
-# Version: 0.0.5 : 16/12/11 15:03
+# Version: 0.0.6 : 14/02/12 20:09
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
@@ -81,6 +81,7 @@ sub print_general
     $ed = $t->{external_dirs} || [];
 
     print $fh "log_file=$t->{general}->{log_file}\n";
+    delete $t->{general}->{log_file};
 
     while (my ($k, $path) = each (%{ICINGA_FILES()})) {
 	next if ($k eq 'general' || $k eq 'cgi' || $k eq 'ido2db' );
@@ -88,6 +89,13 @@ sub print_general
 	    print $fh $k eq 'macros'?"resource_file":"cfg_file",
 		 "=$path\n";
 	}
+    }
+
+    if (exists($t->{general}->{broker_module})) {
+	foreach my $bm (@{$t->{general}->{broker_module}}) {
+	    print $fh "broker_module = $bm\n";
+	}
+	delete($t->{general}->{broker_module});
     }
 
     while (my ($k, $v) = each (%{$t->{general}})) {

@@ -100,6 +100,7 @@ type structure_icinga_host = {
 	"stalking_options" ? string with match (SELF, "^(o|d|u)$")
 	"register" : boolean = true
 	"action_url" ? string
+	"notes" ? string
 } = nlist();
 
 # Hostgroup definition
