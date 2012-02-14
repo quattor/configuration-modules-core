@@ -1,5 +1,10 @@
 2012-02-14  Luis Fernando Muñoz Mejías
 
+	* Release: 0.0.7
+	- Add tests.
+
+2012-02-14  Luis Fernando Muñoz Mejías
+
 	* Release: 0.0.6
 	- Print properly broker_module directives.
 

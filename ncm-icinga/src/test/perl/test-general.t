@@ -4,7 +4,7 @@ use warnings;
 
 use FindBin qw($Bin);
 use lib "$Bin";
-use Test::More tests => 46;
+use Test::More tests => 48;
 use File::Find;
 
 use CAF::Application;
@@ -35,6 +35,7 @@ sub init_tree
 			 hello => 'a',
 			 world => [1, 2],
 			 log_file => "foo.log",
+			 broker_module => [ "/foo init=1", "/bar init=2" ]
 			},
 	     cgi => '/etc/icinga/cgi.cfg',
 	     hosts	=> '/etc/icinga/objects/hosts.cfg',
@@ -51,7 +52,7 @@ sub init_tree
 	     timeperiods => '/etc/icinga/objects/timeperiods.cfg',
 	     hostdependencies => '/etc/icinga/objects/hostdependencies.cfg',
 	     ido2db => '/etc/icinga/ido2db.cfg',
-	     cfgdir => '/etc/icinga'
+	     cfgdir => '/etc/icinga',
 	   };
 }
 
@@ -77,7 +78,7 @@ sub validate_tree
     like("$file", qr"world=1!2",
 	 "General key world found with the correct value");
 
-    like("$file", qr"log_file=$tree->{general}->{log_file}$"m,
+    like("$file", qr"log_file=foo.log"m,
 	 "Log file properly recorded");
 
     my %h = %{NCM::Component::icinga::ICINGA_FILES()};
@@ -91,6 +92,8 @@ sub validate_tree
 
     unlike("$file", qr"^(?:hostgroups|hosts)=",
 	   "Only general and selected keys are printed");
+    like("$file", qr"^broker_module\s*=\s*/foo init=1$"m,
+	 "Configuration for broker modules is printed in its own lines");
 }
 
 =pod
