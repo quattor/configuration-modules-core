@@ -50,6 +50,7 @@ type component_mysql_db_options = {
   'users'        ? component_mysql_db_user{}
   'initScript'   ? component_mysql_db_script
   'initOnce'     : boolean = false
+  'createDb'     : boolean = true
   # tableOptions is a nlist of table where value is a nlist of parameter/value pairs
   'tableOptions' ? string{}{}
 };
