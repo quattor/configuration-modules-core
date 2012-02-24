@@ -292,6 +292,7 @@ sub Configure {
 
     # Create database
     my $init_script = undef;
+    my $createDb = $databases->{$database}->{createDb};
     if ( $databases->{$database}->{initScript} ) {
       if ( $databases->{$database}->{initScript}->{file} ) {
         $init_script = $databases->{$database}->{initScript}->{file};
@@ -308,7 +309,7 @@ sub Configure {
         $self->warn('Neither script file nor script content specified. Internal error');
       }
     }
-    if ( $self->mysqlAddDb($database,$init_script,$databases->{$database}->{initOnce}) ) {
+    if ( $self->mysqlAddDb($database,$init_script,$databases->{$database}->{initOnce},$createDb) ) {
       $self->error("Error creating database $database on server $server->{host}");
       next;
     }
@@ -592,9 +593,10 @@ sub mysqlAddUser() {
 #  database : database to create
 #  script   : script to create the database and tables if it doesn't exist (optional)
 #  initOnce : execute script only if database wasn't existing yet (Default: false, always reexecute script)
+#  createDb : if false, execute the script without creating the database before
 sub mysqlAddDb() {
   my $function_name = "mysqlAddDb";
-  my ($self,$database,$script,$initOnce) = @_;
+  my ($self,$database,$script,$initOnce,$createDb) = @_;
   my $status = 0;
 
   unless ( $database ) {
@@ -606,6 +608,10 @@ sub mysqlAddDb() {
     $initOnce = 0;
   }
 
+  unless ( defined($createDb) ) {
+    $createDb = 1;
+  }
+
   my $db_found = 0;
   my $server = $servers->{$databases->{$database}->{server}};
 
@@ -613,10 +619,15 @@ sub mysqlAddDb() {
   $status = $self->mysqlExecCmd($server,"use $database");
 
   if ( $status ) {
-    $self->debug(1,"$function_name : creating database $database");
-    $status = $self->mysqlExecCmd($server,"CREATE DATABASE ".$database);
-    if ( $status ) {
-      $self->debug(1,"Error creating database $database (status=$status)")
+    $self->debug(1,"$function_name : database $database not found");
+    if ( $createDb ) {
+      $self->debug(1,"$function_name : creating database $database");
+      $status = $self->mysqlExecCmd($server,"CREATE DATABASE ".$database);
+      if ( $status ) {
+        $self->debug(1,"Error creating database $database (status=$status)")
+      }
+    } else {
+      $self->debug(1,"$function_name : skipping creation of the database $database");
     }
   } else {
     $db_found = 1;
@@ -626,13 +637,21 @@ sub mysqlAddDb() {
 
   if ( defined($script) ) {
     if ( $db_found && $initOnce ) {
-      $self->debug(1,"Skipping execution of database initialization script (database already created)");
+      $self->debug(1,"$function_name :  skipping execution of database initialization script (database already created)");
     } else {
-      $status = $self->mysqlExecuteScript($server,$script,$database);
+      $self->debug(1,"$function_name :  executing the database initialization script");
+      if ( $createDb ) {
+        $status = $self->mysqlExecuteScript($server,$script,$database);
+      } else {
+        $status = $self->mysqlExecuteScript($server,$script);
+      }
       if ( $status ) {
         $self->warn("Error executing initialization script ($script) for database $database");
       }
     }
+  } elsif ( (! $db_found) && (! $createDb) ) {
+    $self->error("$function_name : the database does not exist and the initialization script is not defined");
+    return 1;
   }
 
   return($status);
@@ -666,7 +685,7 @@ sub mysqlExecuteScript() {
     $self->debug(1,"$function_name: Error executing script $script");
   }
 
-  return $script;
+  return $status;
 }
 
 
