@@ -182,7 +182,7 @@ sub print_database_class
             foreach my $i (qw(size time)) {
                 foreach my $j (qw(soft hard)) {
                     if (exists($v->{$i}->{$j})) {
-                        print $fh "=$i.$j ",
+                        print $fh " $i.$j=",
                             ($v->{$i}->{$j} < 0 ?
                              "unlimited":$v->{$i}->{$j});
                     }
