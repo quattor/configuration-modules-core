@@ -57,6 +57,8 @@ type structure_component_openvpn_server = {
     "ccd-exclusive"	? boolean
     "script-security"	? long(0..3)
     "keepalive"		: long[2] = list(10, 120)
+    "client-connect"	? string
+    "client-disconnect"	? string
 };
 
 type structure_component_openvpn_client = {
