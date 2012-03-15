@@ -46,6 +46,7 @@ type pxe_type={
     "image" : string
     "name" : string
     "ramdisk" : long
+    "append" ? string
 };
 
 #

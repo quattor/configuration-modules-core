@@ -290,7 +290,7 @@ sub pxe_config{
     if ($config->elementExists($path."/pxe/nfs_server")) {
         $server=$config->getValue($path."/pxe/nfs_server");
     } else {
-        $server=$config->getValue("/system/network/interfaces/$netdev/ip");
+        my $server=$config->getValue("/system/network/interfaces/$netdev/ip");
     }
     push @pxeos_cmd, "-s" ,"$server";
     
@@ -446,6 +446,12 @@ sub pxeboot_config{
     $os_name=$config->getValue($path."/pxe/name");
     
     push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
+    
+    if ($config->elementExists($path."/pxe/append")) {
+        $append=$config->getValue($path."/pxe/append");
+        push @pxeboot_base_cmd, "-A", "$append";
+    }
+    
     #call pxeboot for every node
     my $node;
     my $bootDevice;
