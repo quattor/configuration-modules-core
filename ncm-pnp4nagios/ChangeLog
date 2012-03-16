@@ -1,3 +1,8 @@
+2012-02-21	Wouter Depypere	<wouter.depypere@ugent.be>
+
+	* Release: 2.1.0
+	- Reworked to work with pnp4nagios 0.6.16-1
+
 2009-04-03  <unknown>
 
 	* Release: 2.0.0

@@ -6,111 +6,136 @@ declaration template components/pnp4nagios/schema;
 
 include {'quattor/schema'};
 
-# Convenience type definitions
-
-type viewskey = long with exists ("/software/components/pnp4nagios/php/views/" + to_string(SELF)) ||
-                               error ("No views with key " + to_string(SELF));
- 
-
-# Npcd configuration options
-type structure_pnp4nagios_npcd = {
-	"user" : string = "nagios"
-	"group" : string = "nagios"
-	"log_type" : string with match (SELF, "syslog|file")
-	"log_file" : string = "/var/log/pnp4nagios//perfdata.log" # path to your logfile
-	"max_logfile_size" : long = 10485760 # maximum filesize (bytes) before the logfile will rotated.
-	"log_level" : string with match (SELF, "0|1|2|-1")
-	"perfdata_spool_dir" : string = "/var/log/nagios/spool/perfdata"
-	"perfdata_file_run_cmd" : string = "/usr/libexec/pnp4nagios/process_perfdata.pl"
-	"perfdata_file_run_cmd_args" : string = "-b"
-	"npcd_max_threads" : long = 5 # how many parallel threads we should start
-	"sleep_time" : long = 15 # how many seconds should npcd wait between dirscans
-	"use_load_threshold" : string with match (SELF,"0|1")
-	"load_threshold" : double = 10.0
-	"pid_file" : string = "/var/run/npcd.pid"
+type pnp4nagios_php_view_type = {
+    'title'	    : string
+    'start'     : long
 };
 
-# Php configuration options conf
-type structure_pnp4nagios_php_conf = {
-	"rrdtool" : string = "/usr/bin/rrdtool" # Path to rrdtool
-	"graph_width" : long = 500
-	"graph_height" : long = 100
-	"graph_opt" : string = "" # Additional Options for RRDTool
-	"rrdbase" :string = "/var/lib/pnp4nagios/"# Directory where the RRD Files will be stored
-	"page_dir" : string = "/etc/pnp4nagios//pages/" # Page Config Location
-	"refresh" : long = 90 # Site Refresh Time in Secounds
-	"max_age" : long = (60*60*60) # Max Age for RRD Files in Secounds
-	"temp" : string = "/var/tmp" # Directory for Temporary Files used for PDF creation
-	"nagios_base" : string = "/nagios/cgi-bin"
-	"allowed_for_service_links": string = "EVERYONE" # Which User is allowed to see additional Service Links
-	"allowed_for_host_search" : string = "EVERYONE" # Who can use the Host Search Funktion
-	"allowed_for_host_overview" : string = "EVERYONE" # Who can use the Host Overview
-	"allowed_for_pages" :string = "EVERYONE" # Who can use the Pages function
-	"overview-range" : viewskey = 0 # Key from array views ??? 
-	"lang" : string with match (SELF,"de|en|nl|se|fr")
-	"date_fmt" : string = "d.m.y G:i"
-	"use_fpdf" : long(0..1) = 1 # Use FPDF Lib for PDF Creation
-	"background_pdf" : string = "/etc/pnp4nagios//background.pdf" # Use this file as PDF Background
-	"use_calendar" : long(0..1) = 1 # Enable JSCalendar
+type pnp4nagios_npcd_log_type = string with match(SELF,"file|syslog");
+type pnp4nagios_php_paper_size = string with match(SELF,"A4|Letter");
+type pnp4nagios_php_ui_theme = string with match(SELF,"smoothness|lightness|redmond|multisite");
+type pnp4nagios_php_lang = string with match(SELF,"en_US|de_DE|es_ES|ru_RU|fr_FR");
+type pnp4nagios_perfdata_RRD_storage_type = string with match(SELF,"SINGLE|MULTIPLE");
+
+type pnp4nagios_npcd_config = {
+    "user"                                 : string    = 'nagios'
+    "group"                                : string    = 'nagios'
+    "log_type"                             : pnp4nagios_npcd_log_type  = 'syslog'
+    "log_file"                             : string    = '/var/log/pnp4nagios/npcd.log'
+    "max_logfile_size"                     : long      = 10485760
+    "log_level"                            : long(0..2) = 0
+    "perfdata_spool_dir"                   : string    = '/var/spool/pnp4nagios/'
+    "perfdata_file_run_cmd"                : string    = '/usr/libexec/pnp4nagios/process_perfdata.pl'
+    "perfdata_file_run_cmd_args"           : string    = '-b'
+    "identify_npcd"                        : boolean   = true
+    "npcd_max_threads"                     : long      = 5
+    "sleep_time"                           : long      = 15
+    "load_threshold"                       : double    = 0.0
+    "pid_file"                             : string    = '/var/run/npcd.pid'
+    "perfdata_file"                        : string    = '/var/log/pnp4nagios/perfdata.dump'
+    "perfdata_spool_filename"              : string    = 'perfdata'
+    "perfdata_file_processing_interval"    : long      = 15
 };
 
-# Php configuration options view
-type structure_pnp4nagios_php_view = {
-	"index" : long
-	"title" : string
-	"start" : long # Start timerange in seconds
+type pnp4nagios_php_config = {
+    'use_url_rewriting'                            : boolean = true
+    'rrdtool'                                      : string = "/usr/bin/rrdtool"
+    'graph_width'                                  : long = 500
+    'graph_height'                                 : long   = 100
+    'zgraph_width'                                 : long = 500
+    'zgraph_height'                                : long = 100
+    'right_zoom_offset'                            : long = 30
+    'pdf_width'                                    : long = 675
+    'pdf_height'                                   : long = 100
+    'pdf_page_size'                                : pnp4nagios_php_paper_size = "A4"
+    'pdf_margin_top'                               : long = 30
+    'pdf_margin_left'                              : double = 17.5
+    'pdf_margin_right'                             : long = 10
+    'graph_opt'                                    : string = ''
+    'pdf_graph_opt'                                : string = ''
+    'rrdbase'                                      : string = '/var/lib/pnp4nagios/'
+    'page_dir'                                     : string = '/etc/pnp4nagios/pages/'
+    'refresh'                                      : long = 90
+    'max_age'                                      : long = 21600
+    'temp'                                         : string = '/var/tmp'
+    'nagios_base'                                  : string = '/nagios/cgi-bin'
+    'multisite_base_url'                           : string = '/check_mk'
+    'multisite_site'                               : string = ''
+    'auth_enabled'                                 : boolean = false
+    'livestatus_socket'                            : string = 'unix:/usr/local/nagios/var/rw/live'
+    'allowed_for_all_services'                     : string = ''
+    'allowed_for_all_hosts'                        : string = ''
+    'allowed_for_service_links'                    : string = 'EVERYONE'
+    'allowed_for_host_search'                      : string = 'EVERYONE'
+    'allowed_for_host_overview'                    : string = 'EVERYONE'
+    'allowed_for_pages'                            : string = 'EVERYONE'
+    'overview-range'                               : long   = 1
+    'popup-width'                                  : string = '300px'
+    'ui-theme'                                     : pnp4nagios_php_ui_theme = 'smoothness'
+    'lang'                                         : pnp4nagios_php_lang = 'en_US'
+    'date_fmt'                                     : string = 'd.m.y G:i'
+    'enable_recursive_template_search'             : boolean = true
+    'show_xml_icon'                                : boolean = true
+    'use_fpdf'                                     : boolean = true
+    'background_pdf'                               : string = '/etc/pnp4nagios/background.pdf'
+    'use_calendar'                                 : boolean = true
+    'views'                                        : pnp4nagios_php_view_type[] = list(nlist('title', 'Four_Hours', 'start', 14400), nlist('title', 'Twentyfive_Hours', 'start', 90000), nlist('title', 'One_Week', 'start', 630000), nlist('title', 'One_Month', 'start', 2764800), nlist('title', 'One_Year', 'start', 32832000))
+    'rrd_daemon_opts'                              : string = ''
+    'template_dirs'                                : string[] = list('/usr/share/icinga/html/pnp4nagios/templates', '/usr/share/icinga/html/pnp4nagios/templates.dist')
+    'special_template_dir'                         : string = '/usr/share/icinga/html/pnp4nagios/templates.special'
+    'mobile_devices'                               : string = 'iPhone|iPod|iPad|android'
 };
 
-
-# Php configuration options
-type structure_pnp4nagios_php = {
-	"conf" : structure_pnp4nagios_php_conf
-	"views" : structure_pnp4nagios_php_view[]
+type pnp4nagios_nagios_config = {
+    'process_performance_data'                            : boolean   = true
+    'service_perfdata_command'                            : string    = 'process-service-perfdata'
+    'process_performance_data'                            : boolean   = true
+    'service_perfdata_file'                               : string    = '/var/log/pnp4nagios/service-perfdata'
+    'service_perfdata_file_template'                      : string    = 'DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$'
+    'service_perfdata_file_mode'                          : string    = 'a'
+    'service_perfdata_file_processing_interval'           : long      = 15
+    'service_perfdata_file_processing_command'            : string    = 'process-service-perfdata-file'
+    'host_perfdata_file'                                  : string    = '/var/log/pnp4nagios//host-perfdata'
+    'host_perfdata_file_template'                         : string    = 'DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$'
+    'host_perfdata_file_mode'                             : string    = 'a'
+    'host_perfdata_file_processing_interval'              : long      = 15
+    'host_perfdata_file_processing_command'               : string    = 'process-host-perfdata-file'
+    'process_performance_data'                            : boolean   = true
+    'broker_module'					  : string[]  =list("/usr/lib64/npcdmod.o", "config_file=/etc/pnp4nagios/npcd.cfg")
 };
 
-# Page configuration options
-type structure_pnp4nagios_page_cfg = {
-	"page_name" : string
-	"use_regex" : string with match (SELF,"0|1")
+type pnp4nagios_perfdata_config = {
+    'timeout'               : long      = 15
+    'use_rrds'              : boolean   = true
+    'rrdpath'               : string    = '/var/lib/pnp4nagios/'
+    'rrdtool'               : string    = '/usr/bin/rrdtool'
+    'cfg_dir'               : string    = '/etc/pnp4nagios/'
+    'rrd_storage_type'      : pnp4nagios_perfdata_RRD_storage_type = 'SINGLE'
+    'rrd_heartbeat'         : long      = 8460
+    'rra_cfg'               : string    = '/etc/pnp4nagios/rra.cfg'
+    'rra_step'              : long      = 60
+    'log_file'              : string    = '/var/log/pnp4nagios/perfdata.log'
+    'log_level'             : long(0..2) = 0
+    'xml_enc'               : string    = 'UTF-8'
+    'xml_update_delay'      : long      = 0
+    'rrd_daemon_opts'       ? string    # unix:/tmp/rrdcached.sock
+    'stats_dir'             : string    = '/var/log/pnp4nagios/stats'
+    'prefork'               : boolean   = true
+    'gearman_host'          : string    = 'localhost:4730'
+    'requests_per_child'    : long      = 10000
+    'encryption'            : boolean   = true
+    'key'                   : string    = 'should_be_changed'
+    'key_file'              ? string    # /etc/pnp4nagios/secret.key
 };
 
-# Graph configuration options
-type structure_pnp4nagios_page_graph = {
-	"host_name" : string
-	"service_desc" : string
-};
-
-# Page options
-type structure_pnp4nagios_page = {
-	"page_cfg" : structure_pnp4nagios_page_cfg
-	"graphs" : structure_pnp4nagios_page_graph[]
-};
-
-# Template configuration options def
-type structure_pnp4nagios_template_def = {
-	"def" : string
-	"cond" ? string
-};
-
-# Template configuration options dataset
-type structure_pnp4nagios_template_dataset = {
-	"index" : long
-	"opt" : string
-	"defs" : structure_pnp4nagios_template_def[]
-};
-
-# Template options
-type structure_pnp4nagios_template = {
-	"datasets" : structure_pnp4nagios_template_dataset[]
-};
 
 # The full definition for the component
 type structure_component_pnp4nagios = {
 	include structure_component
-	"npcd" : structure_pnp4nagios_npcd
-	"php" : structure_pnp4nagios_php
-	"pages" ? structure_pnp4nagios_page{}
-	"templates" ? structure_pnp4nagios_template{}
+	"npcd" : pnp4nagios_npcd_config
+	"php" : pnp4nagios_php_config
+	"perfdata" : pnp4nagios_perfdata_config
+	"nagios" : pnp4nagios_nagios_config
 };
 
 bind "/software/components/pnp4nagios" = structure_component_pnp4nagios;

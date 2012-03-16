@@ -7,15 +7,15 @@
 
 =head1 DESCRIPTION
 
-This component configures the nagios addon, pnp4nagios
+This component configures the nagios/icinga addon, pnp4nagios
 
 =head1 FILES
 
 This component touches the following files: 
 /etc/pnp4nagios/npcd.cfg
 /etc/pnp4nagios/config.php
-
-and creates pages and/or templates in the specified directories
+/etc/pnp4nagios/nagios.cfg
+/etc/pnp4nagios/process_perfdata.cfg
 
 =head1 STRUCTURE
 
@@ -33,13 +33,13 @@ Named list of npcd configuration options.
 
 Named list of php configuration options.
 
-=item * /software/components/pnp4nagios/pages : page{}
+=item * /software/components/pnp4nagios/nagios
 
-Named list of C<page> structures, indexed by C<page> file name. 
+Named list of nagios configuration options.
 
-=item * /software/components/pnp4nagios/templates : template{}
+=item * /software/components/pnp4nagios/perfata
 
-Named list of C<template> structures, indexed by C<template> file name.
+Named list of perfdata configuration options.
 
 =back
 

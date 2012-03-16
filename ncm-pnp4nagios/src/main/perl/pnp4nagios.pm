@@ -5,208 +5,203 @@
 # File: pnp4nagios.pm
 # Implementation of ncm-pnp4nagios
 # Author: Laura del Cano Novales <laura.delcano@uam.es>
-# Version: 2.0.0 : 03/04/09 14:39
+# Version: 2.1.0 : 03/04/09 14:39
 #  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
 # $self->$method ($config) way, unless explicitly stated.
 
-package NCM::Component::pnp4nagios;
+# Note in style: all methods return their file handle object, even if
+# it will be discarded (and thus closed). This way, it's possible to
+# write tests that verify the in-memory contents of the files, and
+# running them without any special privileges.
 
-#
-# a few standard statements, mandatory for all components
-#
+package NCM::Component::pnp4nagios;
 
 use strict;
 use warnings;
-use NCM::Component;
-our @ISA = qw(NCM::Component);
-our $EC=LC::Exception::Context->new->will_store_all;
-
-use EDG::WP4::CCM::Element;
-
-use CAF::FileWriter;
+use NCM::Component ;
+use EDG::WP4::CCM::Element qw (unescape);
+use Socket;
 use CAF::Process;
+use CAF::FileWriter;
+use LC::Exception qw (throw_error);
+use File::Path;
 
-use constant PATH       => '/software/components/pnp4nagios/';
-use constant NPCD_CONFIG_FILE => '/etc/pnp4nagios/npcd.cfg';
-use constant PHP_CONFIG_FILE => '/etc/pnp4nagios/config.php';
-use constant PAGES_DIR_DEF => '/etc/pnp4nagios/pages';
-use constant TEMPLATES_DIR_DEF => '/usr/share/nagios/html/pnp4nagios/templates';
-use constant NPCD_PIDFILE => '/var/run/npcd.pid';
-use constant NPCD_RELOAD => qw (/sbin/service npcd reload);
-use constant NPCD_START => qw (/sbin/service npcd start);
+our @ISA = qw (NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all();
 
-my $pages_dir = PAGES_DIR_DEF;
+use constant PNP4NAGIOS_FILES => { nagios	=>  '/etc/pnp4nagios/nagios.cfg',
+			       				   php      =>  '/etc/pnp4nagios/config.php',
+			       				   npcd	    =>  '/etc/pnp4nagios/npcd.cfg',
+			       				   perfdata	=>  '/etc/pnp4nagios/process_perfdata.cfg',
+			     };
+			     
+use constant BASEPATH => "/software/components/pnp4nagios/";
+			     
+my $PNP4NAGIOS_USR;
+my $PNP4NAGIOS_GRP;
 
+#thank you npcd for requiring a correctly ordened config file
+use constant NPCD_OPTIONS => qw(user group log_type log_file max_logfile_size log_level 
+						perfdata_spool_dir perfdata_file_run_cmd perfdata_file_run_cmd_args identify_npcd npcd_max_threads
+ 						sleep_time load_threshold pid_file perfdata_file perfdata_spool_filename perfdata_file_processing_interval);
+			     
 
-# Prints npcd conf file.
-# Fields need to be in order and last line should be empty
-sub print_npcd_file
+# Prints all settings for nagios
+sub print_nagios
 {
-        my ($self, $fh, $cfg) = @_;
-        
-        use constant NPCD_FIELDS => qw(user group log_type log_file max_logfile_size 
-        	log_level perfdata_spool_dir perfdata_file_run_cmd perfdata_file_run_cmd_args
-        	npcd_max_threads sleep_time use_load_threshold load_threshold pid_file);
-        
-        foreach my $item (NPCD_FIELDS) {
-    		print $fh "$item = $cfg->{$item}\n" if (exists($cfg->{$item}));
-		} 
+    my ($self, $t) = @_;
 
-		print $fh "\n";
-        return;
+    my $fh = CAF::FileWriter->open (PNP4NAGIOS_FILES->{nagios},
+				    owner => $PNP4NAGIOS_USR,
+				    group => $PNP4NAGIOS_GRP,
+				    log => $self,
+				    mode => 0444);
 
-}
-
-# Prints php conf file.
-sub print_php_file
-{
-        my ($self, $fh, $cfg, $elem) = @_;
-        
-        my $elem_conf=$elem->getConfiguration();
-        
-        print $fh "<?php\n";
-        while (my ($k, $v) = each %{$cfg->{'conf'}}) {
-        	my $elem_k = $elem_conf->getElement(PATH . "php/conf/$k/");
-            if ($elem_k->isType(EDG::WP4::CCM::Element::STRING)) {
-            	print $fh "\$conf[\'$k\'] = \"$v\";\n";
-            } else {
-                print $fh "\$conf[\'$k\'] = $v;\n";
-            };
-        	
-        	# If option = page_dir save it on the global variable
-        	if ($k eq 'page_dir') {
-        		$pages_dir = $v;
-        	}
-        }
-
-        foreach my $view (@{$cfg->{'views'}}) {
-			print $fh "\$views[$view->{'index'}][\"title\"] = \"$view->{'title'}\";\n";
-			print $fh "\$views[$view->{'index'}][\"start\"] = $view->{'start'};\n";
-        }
-        print $fh "?>\n";        
-        return;
-}
-
-# Prints page file.
-sub print_page_file
-{
-        my ($self, $fh, $cfg) = @_;
-        
-        # Print page definition
-        print $fh "define page {\n";     
-        while (my ($k, $v) = each %{$cfg->{'page_cfg'}}) {
-        	print $fh " $k $v\n";
-        }
-        print $fh "}\n";
-        
-        # Print graph definition
-        foreach my $graph (@{$cfg->{'graphs'}}) {
-        	print $fh "define graph {\n";     
-        	while (my ($kg, $vg) = each %{$graph}) {
-        		print $fh " $kg $vg\n";
-        	}
-        	print $fh "}\n";        
-        }
-        return;
-
-}
-
-# Prints template file.
-sub print_template_file
-{
-        my ($self, $fh, $cfg) = @_;
-        my $count = 0;
-        
-        print $fh "<?php\n";
-                
-        # For each dataset print configuration
-        foreach my $dataset (@{$cfg->{'datasets'}}) {
-        	# Print option
-        	print $fh "\$opt[$dataset->{'index'}] = \"$dataset->{'opt'}\";\n";
-        	
-        	# Print definitions
-        	foreach my $def (@{$dataset->{'defs'}}) {
-        		print $fh "if ($def->{'cond'}) {\n" if (exists($def->{'cond'}));
-        		print $fh "\$def[$dataset->{'index'}] ";
-        		print $fh "." unless ($count == 0); 
-        		print $fh "= \"$def->{'def'}\";\n";
-        		print $fh "}\n" if (exists($def->{'cond'}));
-        		$count++;
-        	}       
-        }
-        
-        print $fh "?>\n";   
-        return;
-
-}
-##########################################################################
-# Reloads npcd daemon, if it is running.
-##########################################################################
-sub npcd_reload
-{
-	my $proc;
-    if (-f NPCD_PIDFILE) {
-    	$proc = CAF::Process->new ([NPCD_RELOAD]);
-    } else {
-        $proc = CAF::Process->new ([NPCD_START]);
+    while (my ($opt, $val) = each (%$t)) {
+		if (ref ($val)) {
+			print $fh "$opt=", join (" ", @$val), "\n";
+		} else {
+		    print $fh "$opt=$val\n";
+		}
     }
-    $proc->run();
+    return $fh;
 }
 
+# Prints all settings for npcd
+sub print_npcd
+{
+    my ($self, $t) = @_;
 
-##########################################################################
-sub Configure($$) {
-##########################################################################
-    my ($self,$config)=@_;
+    my $fh = CAF::FileWriter->open (PNP4NAGIOS_FILES->{npcd},
+				    owner => $PNP4NAGIOS_USR,
+				    group => $PNP4NAGIOS_GRP,
+				    log => $self,
+				    mode => 0444);
 
-    my $t = $config->getElement (PATH)->getTree;
-
-    # Print npcd config file
-    my $fh_npcd = CAF::FileWriter->new (NPCD_CONFIG_FILE);
-    my $npcd = $t->{'npcd'};
-
-    $self->print_npcd_file($fh_npcd,$npcd);
-
-    # Print php config file
-    my $fh_php = CAF::FileWriter->new (PHP_CONFIG_FILE);
-    my $php = $t->{'php'};
-
-	my $elem = $config->getElement(PATH . "php/");
+	foreach my $something (NPCD_OPTIONS) {
 	
-    $self->print_php_file($fh_php,$php, $elem);
+		my $val = $t -> {$something};
+		print $fh "$something = $val\n";
 
-    # For each page specified write a config file    
-    my $fh_page;
-    my $pages = $t->{'pages'};
+	}
+	print $fh "\n";
+	
+    return $fh;
+}
 
-    while (my ($kp, $vp) = each (%$pages)) {
-        my $page = $kp;
+# Prints all settings for perfdata
+sub print_perfdata
+{
+    my ($self, $t) = @_;
 
-        $fh_page = CAF::FileWriter->new ("$pages_dir/$page.cfg");
-		$self->print_page_file($fh_page,$vp);
-        
-    	$fh_page->close;
+    my $fh = CAF::FileWriter->open (PNP4NAGIOS_FILES->{perfdata},
+				    owner => $PNP4NAGIOS_USR,
+				    group => $PNP4NAGIOS_GRP,
+				    log => $self,
+				    mode => 0444);
+
+    while (my ($opt, $val) = each (%$t)) {
+    	if ( $opt eq "use_rrds"){
+    		print $fh "USE_RRDs = $val\n";
+    	} else {
+	    	print $fh uc($opt) . " = $val\n";
+	    }
     }
+    return $fh;
+}
 
+# Prints all settings for php
+sub print_php
+{
+    my ($self, $t) = @_;
 
-    # For each template specified write a config file 
-    my $fh_template;   
-    my $templates = $t->{'templates'};
-    while (my ($kt, $vt) = each (%$templates)) {
-        my $template = $kt;
+    my $fh = CAF::FileWriter->open (PNP4NAGIOS_FILES->{php},
+				    owner => $PNP4NAGIOS_USR,
+				    group => $PNP4NAGIOS_GRP,
+				    log => $self,
+				    mode => 0444);
+				    
+	print $fh "<\?php\n";
 
-        $fh_template = CAF::FileWriter->new (TEMPLATES_DIR_DEF . "/$template.php");
-		$self->print_template_file($fh_template,$vt);
-        
-    	$fh_template->close;
+    while (my ($opt, $val) = each (%$t)) {
+    	#Special boolean :s
+    	if ( $opt eq "auth_enabled"){
+    		if ( $val ) {
+    			print $fh "\$conf['$opt']=TRUE;\n";
+    		} else {
+    			print $fh "\$conf['$opt']=FALSE;\n";
+    		}
+    		
+    	} else {
+    		#write views
+    		if ( $opt eq "views"){
+            	foreach my $it (@$val) {
+                	print $fh "\$views[]= array('title' => '$it->{title}', 'start' => ($it->{start}) );\n";
+                }
+    			
+    		} else {
+	            #write template_dirs
+                if ( $opt eq "template_dirs"){
+     	           foreach my  $templ_dir  (@$val) {
+            	       print $fh "\$conf['$opt'][]=\"$templ_dir\";\n";
+        	       }
+
+    			} else {
+    			
+    				if ( $opt eq "rrd_daemon_opts"){
+    					print $fh "\$conf['".uc($opt)."']=\"$val\";\n";
+    					
+    				} else {    			
+	    				#Don't quote a number
+						if ( $val =~ /^[+-]?\d+$/ ) {
+							print $fh "\$conf['$opt']=$val;\n";
+							
+						#Write the rest
+						} else {
+		    				print $fh "\$conf['$opt']=\"$val\";\n";
+						}
+					}
+				}
+			}
+		}
     }
     
-    # Reload the npcd service
-    $self-> npcd_reload();
-    	
-    return; # return code is not checked.
+    print $fh "?\>\n";
+    
+    return $fh;
 }
+	     
+# Restarts the npcd daemon if needed.
+sub restart_npcd
+{
+    my $self = shift;
 
-1; # Perl module requirement.
+    my $cmd = CAF::Process->new([qw(service npcd restart)], log => $self);
+
+    $cmd->run();
+    return $cmd;
+}
+			     
+# Configure method. Writes all the configuration files and starts or
+# reloads the npcd service
+sub Configure
+{
+    my ($self, $config) = @_;
+
+    my $t = $config->getElement(BASEPATH)->getTree();
+
+	$PNP4NAGIOS_USR = (getpwnam ($t->{npcd}->{user}))[2];
+	$PNP4NAGIOS_GRP = (getpwnam ($t->{npcd}->{user}))[3];
+
+    $self->print_nagios ($t->{nagios});
+    $self->print_php ($t->{php});
+    $self->print_perfdata ($t->{perfdata});
+	$self->print_npcd ($t->{npcd});
+	
+    $self->restart_npcd();
+
+    return !$?;
+}
+1;
