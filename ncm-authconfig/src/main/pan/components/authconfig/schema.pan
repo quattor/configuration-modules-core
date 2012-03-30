@@ -117,8 +117,8 @@ type authconfig_method_nis_type = {
 
 type authconfig_method_krb5_type = {
   include authconfig_method_generic_type
-  "kdcs"	: type_hostname[]
-  "adminservers"	: type_hostname[]
+  "kdcs"	? type_hostname[]
+  "adminservers"	? type_hostname[]
   "realm"	: string
 };
 

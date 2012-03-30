@@ -88,8 +88,10 @@ sub enable_krb5
 
     $cmd->pushargs(qw(--enablekrb5 --krb5realm));
     $cmd->pushargs($cfg->{realm});
-    $cmd->pushargs("--krb5kdc", join(",", @{$cfg->{kdcs}}));
-    $cmd->pushargs("--krb5adminserver", join(",", @{$cfg->{adminservers}}));
+    $cmd->pushargs("--krb5kdc", join(",", @{$cfg->{kdcs}}))
+        if exists $cfg->{kdcs};
+    $cmd->pushargs("--krb5adminserver", join(",", @{$cfg->{adminservers}}))
+        if exists $cfg->{adminservers};
 }
 
 # Adds the authconfig command-line options to enable SMB
