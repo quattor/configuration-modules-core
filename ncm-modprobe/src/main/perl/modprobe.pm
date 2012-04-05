@@ -26,18 +26,6 @@ use LC::File qw(directory_contents);
 use Fcntl qw(:seek);
 
 
-# Opens a file
-sub file_open
-{
-    my ($self, $filename) = @_;
-
-    my $fh = CAF::FileEditor->new($filename,
-				  backup => '.old', log => $self,
-				  owner => 0, group => 0, mode => 0600);
-    $fh->cancel() unless ${$fh->string_ref()};
-    return $fh;
-}
-
 # Processes the aliases and prints them on the correct files. All
 # aliases for a module given in the profile are controlled by this
 # component.
@@ -103,22 +91,20 @@ sub mkinitrd
 {
     my ($self) = @_;
 
-    my ($dir, @releases, @rs, $cmd);
+    my ($dir, @rs, $cmd);
 
     $dir = directory_contents("/boot");
 
     foreach my $i (@$dir) {
 	if ($i =~ m{^^System\.map\-(2\.6\.*)$}) {
-	    push(@releases, $1);
+	    my $rl = $1;
+	    CAF::Process->new(["mkinitrd", "-f", "/boot/initrd-$rl.img", $rl],
+			      log => $self)->run();
+	    $self->error("Unable to build the initrd for $rl") if $?;
 	}
     }
-
-    foreach my $i (@releases) {
-	$cmd = CAF::Process->new(
-	    ["/sbin/mkinitrd -f", "/boot/initrd-$i.img", "$i"],
-	    log => $self)->run();
-    }
 }
+
 
 sub Configure {
     my ($self,$config)=@_;
