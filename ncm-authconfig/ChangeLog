@@ -1,3 +1,8 @@
+2012-04-11  Luis Fernando Muñoz Mejías
+
+	* Release: 2.0.14
+	- Readd bindpw to NLSCD configuration and allow for nss_connect_policy.
+
 2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
 
 	* Release: 2.0.12

@@ -70,6 +70,7 @@ type authconfig_nss_override_attribute_value = {
   "gidNumber"           ? long
 };
 
+type connect_policy = string with (SELF=="oneshot" || SELF=="persistent");
 
 type authconfig_method_ldap_type = {
   include authconfig_method_generic_type
@@ -107,6 +108,7 @@ type authconfig_method_ldap_type = {
   "log_dir"                        ? string
   "nss_paged_results"              : yesnostring = "yes"
   "pagesize"                       ? long
+  "nss_connect_policy"             ? connect_policy = "oneshot"
 };
 
 type authconfig_method_nis_type = {
@@ -230,10 +232,11 @@ type authconfig_method_nslcd_type = {
     "pagesize" ? long
     "nss_initgroups_ignoreusers" ? string[]
     "pam_authz_search" ? string
+    "bindpw" ? string
 };
 
 type authconfig_method_type = {
-  "files"	? authconfig_method_files_type 
+  "files"	? authconfig_method_files_type
   "ldap"	? authconfig_method_ldap_type
   "nis"		? authconfig_method_nis_type
   "krb5"	? authconfig_method_krb5_type
