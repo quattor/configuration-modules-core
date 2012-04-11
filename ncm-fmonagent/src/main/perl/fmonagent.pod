@@ -11,6 +11,8 @@ NCM::fmonagent - NCM Lemon Monitoring Agent configuration component
 
 =head1 SYNOPSIS
 
+=over
+
 =item Configure()
 
 Creates configuration file(s) and restarts the lemon-agent service.
@@ -31,11 +33,17 @@ sensor top_dir/sensors/sensor_name.conf files.
 
 Not available.
 
+=back
+
 =head1 RESOURCES
+
+=over
 
 =item /software/components/fmonagent/active     : boolean
 
 activates/deactivates the component.
+
+=back
 
 =head1 DEPENDENCIES
 
