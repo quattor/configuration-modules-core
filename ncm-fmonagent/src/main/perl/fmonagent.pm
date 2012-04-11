@@ -698,6 +698,10 @@ sub Configure {
 					
 						$timeout = $mon->getValue("$exception/_$id/actuator/timeout");
 						$metrics{$id} .= "$offset\t\tTimeout\t$timeout\n";
+						if ($mon->elementExists("$exception/_$id/actuator/resampleoffset")) {
+							my $resampleoffset = $mon->getValue("$exception/_$id/actuator/resampleoffset");
+							$metrics{$id} .= "$offset\t\tReSampleOffset\t$resampleoffset\n";
+						}	
 					}
 				}
 			}
