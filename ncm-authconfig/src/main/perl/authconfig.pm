@@ -215,7 +215,7 @@ sub configure_ldap
     my $fh = CAF::FileWriter->new($tree->{conffile},
 				  group => 28,
 				  log => $self,
-				  mode => 0600,
+				  mode => 0644,
 				  backup => ".old");
     delete($tree->{conffile});
     # These fields have different
