@@ -7,17 +7,29 @@ declaration template components/postfix/schema;
 
 include { 'quattor/schema' };
 
+@{
+    Types of lookup tables (databases) Postfix is capable to handle.
+}
 type postfix_lookup_type_string = string with
     match (SELF, "^(btree|cdb|cidr|dbm|environ|fail|hash|internal|ldap" +
 	   "|memcache|mysql|netinfo|nis|nisplus|pcre|pgsql|proxy|regexp" +
 	   "|sdbm|socketmap|sqlite|static|tcp|texthash|unix)$") ||
     error ("Wrong Postfix lookup type. See http://www.postfix.org/DATABASE_README.html for details");
 
+@{
+    Definition of a lookup in Postfix
+}
 type postfix_lookup = {
+    @{ The type of the database for this lookup }
     "type" : postix_lookup_type_string
-    "file" : string
+    @{ The name of the lookup (DB connection, file name...) }
+    "name" : string
 };
 
+@{
+    Description of a Postfix LDAP database. See
+	http://www.postfix.org/ldap_table.5.html
+}
 type postfix_ldap_database = {
     "server_host" : type_fqdn
     "server_port" ? type_port
@@ -56,6 +68,12 @@ final variable HOURS = MINUTES * 60;
 final variable DAYS = HOURS * 24;
 final variable WEEKS = DAYS * 7;
 
+@{
+    All fields available in main.cf. Nothing is mandatory here, since
+    it all has default values. Time limits are expressed in
+    SECONDS. Multiply by the appropriate constant above to simplify
+    your code.
+}
 type postfix_main = {
     "_2bounce_notice_recipient" ? string
     "access_map_reject_code" ? long
@@ -584,10 +602,18 @@ type postfix_main = {
     "virtual_uid_maps" ? string
 } = nlist();
 
+@{
+    Define multiple Postfix databases
+}
 type postfix_databases = {
+    @{ LDAP databases, indexed by file name (relative to /etc/postfix)}
     'ldap' ? postfix_ldap_database{}
 };
 
+@{
+    Entries in the master.cf file. See the master man page for more
+    details.
+}
 type postfix_master = {
     "type" : string
     "private" : boolean = true
@@ -600,7 +626,8 @@ type postfix_master = {
 
 type postfix_component = {
     include structure_component
-    'main' : postfix_main
+    @{
+    'main' : postfix_main{}
     'master' : postfix_master{}
     'databases' ? postix_databases
 };
