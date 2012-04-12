@@ -1,5 +1,10 @@
 2012-04-12  Luis Fernando Muñoz Mejías
 
+	* Release: 2.0.16
+	- Fix wrong permissions of /etc/ldap.conf
+
+2012-04-12  Luis Fernando Muñoz Mejías
+
 	* Release: 2.0.15
 	- Fix the mode of /etc/ldap.conf
 
