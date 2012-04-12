@@ -394,7 +394,9 @@ sub compute_root_user
 
     my $u = { uid => 0,
 	     groups => $system->{passwd}->{root}->{groups},
-	     password => $tree->{rootpwd},
+	     password => ($tree->{rootpwd}
+			  || $system->{passwd}->{root}->{password}
+			  || '!'),
 	     shell => $tree->{rootshell},
 	     homeDir => "/root",
 	     main_group => 0,
@@ -492,7 +494,7 @@ sub commit_groups
     $self->info("Committing ", scalar(@group), " groups");
 
     $fh = CAF::FileWriter->new(GROUP_FILE, log => $self,
-			       backup => ".old");	
+			       backup => ".old");
     print $fh join("\n", @group, "");
     $fh->close();
 }

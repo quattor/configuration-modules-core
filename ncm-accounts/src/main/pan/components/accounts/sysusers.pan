@@ -62,6 +62,7 @@ unique template components/accounts/sysusers;
     'sindes' ,'',
     'amanda', '',
     'ldap', '',
+    'nslcd', '',
     'oprofile', '',
     'pegasus', '',
     'services', '',

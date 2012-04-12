@@ -1,3 +1,10 @@
+2012-04-12  Luis Fernando Muñoz Mejías
+
+	* Release: 6.0.6
+	- Fix bugs and protect the nlscd account by default.
+	
+	This is the account used by LDAP authentication service on SL6.
+
 2012-01-11  Luis Fernando Muñoz Mejías
 
 	* Release: 6.0.5
