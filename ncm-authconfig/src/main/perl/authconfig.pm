@@ -23,8 +23,6 @@ use EDG::WP4::CCM::Element;
 # prevent authconfig from trying to launch in X11 mode
 delete($ENV{"DISPLAY"});
 
-local(*DTA);
-
 sub update_pam_file
 {
     my ($self, $tree) = @_;
@@ -217,6 +215,7 @@ sub configure_ldap
     my $fh = CAF::FileWriter->new($tree->{conffile},
 				  group => 28,
 				  log => $self,
+				  mode => 0600,
 				  backup => ".old");
     delete($tree->{conffile});
     # These fields have different
@@ -233,7 +232,7 @@ sub configure_ldap
 	if $tree->{tls}->{ciphers};
     print $fh "TLS_REQCERT $tree->{tls}->{reqcert}\n";
     for my $i (0 .. $#{$tree->{servers}}) {
-        if (!($tree->{servers}[$i] =~ /:/)) { 
+        if (!($tree->{servers}[$i] =~ /:/)) {
             $tree->{servers}[$i] = 'ldap://'.$tree->{servers}[$i].'/';
         }
     }
