@@ -1,3 +1,8 @@
+2012-04-18  Ronald Starink
+
+	* Release: 1.2.4
+	- Enabled configuration of Defaults and added support for commands in Defaults
+
 2011-02-22  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 	* Release: 1.2.3

@@ -112,6 +112,7 @@ type structure_sudo_defaults = {
 	"user"		?	string
 	"run_as"	?	string
 	"host"		?	type_host_sudo
+	"cmd"		?	string
 	"options"	:	structure_sudo_default_options
 };
 

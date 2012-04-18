@@ -5,7 +5,7 @@
 # File: sudo.pm
 # Implementation of ncm-sudo
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.2.3 : 22/02/11 16:20
+# Version: 1.2.4 : 18/04/12 11:34
 # Read carefully sudoers(5) man page before using this component!!
 #
 # Note: all methods in this component are called in a
@@ -157,6 +157,8 @@ sub generate_general_options {
 			$ln = ">" . $def{PRIVILEGE_RUNAS()}->getValue . "\t";
 		} elsif (defined $def{PRIVILEGE_HOST ()}) {
 			$ln = "@" . $def{PRIVILEGE_HOST ()}->getValue . "\t";
+		} elsif (defined $def{PRIVILEGE_CMD ()}) {
+			$ln = "!" . $def{PRIVILEGE_CMD ()}->getValue . "\t";
 		} else {
 			$ln = "\t";
 		}
@@ -253,7 +255,7 @@ sub write_sudoers {
 				   backup => '.old',
 				   log => $self);
 
-    print $fh ("# File created by ncm-sudo v. 1.2.3\n",
+    print $fh ("# File created by ncm-sudo v. 1.2.4\n",
 	       "# Report bugs to CERN's savannah\n",
 	       "# Read man(5) sudoers for understanding the structure\n",
 	       "# of this file\n");
@@ -286,7 +288,7 @@ sub write_sudoers {
 
     print $fh ("\n# Defaults specification\n");
     foreach my $opt ((@$opts)) {
-	printf  "%-10s %10s\n", "Defaults", $opt;
+	printf $fh "%s%s\n", "Defaults", $opt;
     }
 
     print $fh ("\n# User privilege specification\n");
