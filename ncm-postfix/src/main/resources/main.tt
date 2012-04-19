@@ -1,0 +1,13 @@
+# File generated with the Template Toolkit. Do not edit.
+# ==========================================================================
+# service type  private unpriv  chroot  wakeup  maxproc command + args
+#               (yes)   (yes)   (yes)   (never) (100)
+# ==========================================================================
+[% FOREACH line IN master.pairs %]
+    [%- line.key %] [% line.value.type -%]
+    [% FOREACH v IN ["private", "unprivileged", "chroot"] %]
+        [%- INCLUDE yes_no_boolean.tt value= line.value.$v %]
+    [% END %]
+    [%- line.value.wakeup -%] [% line.value.maxproc %] [% line.value.command %]
+
+[% END %]
