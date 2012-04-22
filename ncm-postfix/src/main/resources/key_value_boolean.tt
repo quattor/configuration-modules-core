@@ -1,0 +1,1 @@
+[% key %] [% joiner %] [% INCLUDE $bool_handler value=value %]
