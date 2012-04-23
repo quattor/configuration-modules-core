@@ -26,8 +26,12 @@ use CAF::Process;
 use CAF::FileEditor;
 use CAF::Application;
 use IO::String;
-
+use EDG::WP4::CCM::Configuration;
+use EDG::WP4::CCM::Fetch;
 use Exporter;
+use Cwd;
+use Carp qw(croak);
+use File::Path qw(make_path);
 
 =pod
 
@@ -169,10 +173,30 @@ with the value of the appropriate entry in C<%desired_file_contents>
 
 Prevents the buffers from being released when explicitly closing a file.
 
+=back
+
 =cut
 
 *IO::String::close = sub {};
 
+sub prepare_profile_configs
+{
+    my ($profile) = @_;
+
+    my $dir = getcwd();
+
+    make_path("target/test/$profile");
+    system(q{cd src/test/resources &&
+             panc -x json --output-dir=../../../target/test/$profile $profile.pan});
+    my $f = EDG::WP4::CCM::Fetch->new({
+				       FOREIGN => 0,
+				       PROFILE_URL => "file://$dir/target/test/$profile/$profile.json",
+				       CACHE_ROOT => "target/test/cache/$profile",
+				       TIMEOUT => 1,
+				       RETRIES => 1,
+				       });
+    $f->fetchProfile() or croak "Unable to fetch profile $profile";
+}
 
 1;
 
