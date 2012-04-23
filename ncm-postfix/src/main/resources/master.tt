@@ -6,7 +6,7 @@
 [% FOREACH line IN master.pairs %]
     [%- line.key %] [% line.value.type -%]
     [% FOREACH v IN ["private", "unprivileged", "chroot"] %]
-        [%- INCLUDE yes_no_boolean.tt value= line.value.$v %]
+        [%- INCLUDE postfix/yes_no_boolean.tt value= line.value.$v -%]
     [% END %]
     [%- line.value.wakeup -%] [% line.value.maxproc %] [% line.value.command %]
 
