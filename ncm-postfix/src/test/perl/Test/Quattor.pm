@@ -25,6 +25,7 @@ use CAF::FileWriter;
 use CAF::Process;
 use CAF::FileEditor;
 use CAF::Application;
+use IO::String;
 
 use Exporter;
 
@@ -65,7 +66,7 @@ our @EXPORT_OK = qw(%files_contents %commands_run);
 
 
 
-$main::this_app = CAF::Application->new('a', @ARGV);
+$main::this_app = CAF::Application->new('a', "--verbose", @ARGV);
 
 no warnings 'redefine';
 
@@ -133,6 +134,8 @@ foreach my $method (qw(output toutput)) {
 
 *CAF::FileWriter::open = \&CAF::FileWriter::new;
 
-#*CAF::FileWriter::new = \&CAF::FileWriter::open;
+*IO::String::close = sub {
+};
+
 
 1;
