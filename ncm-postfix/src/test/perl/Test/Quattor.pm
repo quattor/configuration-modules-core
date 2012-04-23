@@ -62,9 +62,17 @@ deal with.
 
 our %desired_outputs;
 
+=pod
+
+=item * C<%desired_file_contents>
+
+Optionally, initial contents for a file that should be "edited".
+
+=cut
+
+our %desired_file_contents;
+
 our @EXPORT_OK = qw(%files_contents %commands_run);
-
-
 
 $main::this_app = CAF::Application->new('a', "--verbose", @ARGV);
 
@@ -80,11 +88,6 @@ In order to achieve this, the following functions are redefined
 automatically:
 
 =over
-
-=item C<CAF::FileWriter::open>
-
-Prevents any files from being actually written, and allows the object
-to be inspected afterwards.
 
 =cut
 
@@ -123,6 +126,15 @@ foreach my $method (qw(output toutput)) {
     };
 }
 
+=pod
+
+=item C<CAF::FileWriter::open>
+
+Overriding this function allows us to inspect its contents after the
+unit under tests has released it.
+
+=cut
+
 *old_open = \&CAF::FileWriter::new;
 
 *CAF::FileWriter::new = sub {
@@ -134,8 +146,40 @@ foreach my $method (qw(output toutput)) {
 
 *CAF::FileWriter::open = \&CAF::FileWriter::new;
 
-*IO::String::close = sub {
+=pod
+
+=item C<CAF::FileEditor::new>
+
+It's just calling CAF::FileWriter::new, plus initialising its contnts
+with the value of the appropriate entry in C<%desired_file_contents>
+
+=cut
+
+*CAF::FileEditor::new = sub {
+    my $f = CAF::FileWriter::new(@_);
+    $f->set_contents($desired_file_contents{*$f->{filename}});
+    return $f;
 };
+
+*CAF::FileEditor::open = \&CAF::FileEditor::new;
+
+=pod
+
+=item C<IO::String::close>
+
+Prevents the buffers from being released when explicitly closing a file.
+
+=cut
+
+*IO::String::close = sub {};
 
 
 1;
+
+__END__
+
+=pod
+
+=back
+
+=cut
