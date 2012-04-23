@@ -4,7 +4,7 @@ use warnings;
 use CAF::Object;
 use FindBin qw($Bin);
 use lib $Bin;
-use Test::Quattor qw(%files_contents %commands_run);
+use Test::Quattor;
 use NCM::Component::postfix;
 use Test::More tests => 4;
 use CAF::Object;
@@ -43,8 +43,8 @@ my $rs = $cmp->handle_config_file({master => $master},
 
 ok($rs, "Successfully handled the master config file");
 
-ok(exists($Test::Quattor::files_contents{"/etc/postfix/master.cf"}), "Correct file opened");
-my $fh = $Test::Quattor::files_contents{"/etc/postfix/master.cf"};
+my $fh = get_file("/etc/postfix/master.cf");
+ok(defined($fh), "Correct file opened");
 like($fh, qr{^foo\s+hello\s+yes\s+yes\s+yes\s+\d+\s+\d+\s+Hello, world\s*$}m,
      "First line correctly rendered");
 like($fh, qr{^bar\s+world\s+no\s+no\s+no\s+\d+\s+\d+\s+World, hello\s*$}m,

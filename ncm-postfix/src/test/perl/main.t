@@ -4,7 +4,7 @@ use warnings;
 use CAF::Object;
 use FindBin qw($Bin);
 use lib $Bin;
-use Test::Quattor qw(%files_contents %commands_run);
+use Test::Quattor;
 use NCM::Component::postfix;
 use Test::More tests => 6;
 use CAF::Object;
@@ -28,8 +28,8 @@ my $rs = $cmp->handle_config_file($main,
 
 ok($rs, "Successfully handled the master config file");
 
-ok(exists($Test::Quattor::files_contents{"/etc/postfix/main.cf"}), "Correct file opened");
-my $fh = $Test::Quattor::files_contents{"/etc/postfix/main.cf"};
+my $fh = get_file("/etc/postfix/main.cf");
+ok(defined($fh), "Correct file opened");
 like($fh, qr{^2bounce_notice_recipient\s*=\s*$main->{_2bounce_notice_recipient}\s*$}m,
      "Bounce notice had its heading '_' correctly removed");
 like($fh, qr{^allow_percent_hack\s*=\s*yes}m, "True boolean correctly parsed");
