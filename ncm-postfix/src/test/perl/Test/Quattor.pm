@@ -28,8 +28,6 @@ use CAF::Application;
 
 use Exporter;
 
-our @EXPORT_OK = qw(%files_contents %commands_run);
-
 =pod
 
 =item * C<%files_contents>
@@ -63,6 +61,10 @@ deal with.
 
 our %desired_outputs;
 
+our @EXPORT_OK = qw(%files_contents %commands_run);
+
+
+
 $main::this_app = CAF::Application->new('a', @ARGV);
 
 no warnings 'redefine';
@@ -84,13 +86,6 @@ Prevents any files from being actually written, and allows the object
 to be inspected afterwards.
 
 =cut
-
-*CAF::FileWriter::open = sub {
-    my $self = shift;
-    $files_contents{*$self->{filename}} = $self;
-};
-
-*CAF::FileWriter::new = \&CAF::FileWriter::open;
 
 no strict 'refs';
 
@@ -126,5 +121,18 @@ foreach my $method (qw(output toutput)) {
 	return $desired_outputs{$cmd};
     };
 }
+
+*old_open = \&CAF::FileWriter::new;
+
+*CAF::FileWriter::new = sub {
+    my $f = old_open(@_);
+
+    $files_contents{*$f->{filename}} = $f;
+    return $f;
+};
+
+*CAF::FileWriter::open = \&CAF::FileWriter::new;
+
+#*CAF::FileWriter::new = \&CAF::FileWriter::open;
 
 1;
