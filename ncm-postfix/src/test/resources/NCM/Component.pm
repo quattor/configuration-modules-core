@@ -22,7 +22,9 @@ sub _initialize
     $self->{log} = $log || $main::this_app;
 
     $self->{template} = Template->new(INCLUDE_PATH =>
-				      'target/share/templates');
+				      'target/share/templates/quattor',
+				      DEBUG => 'undef'
+	);
 
     return 1;
 }
