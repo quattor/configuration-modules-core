@@ -13,6 +13,10 @@ use strict;
 use warnings;
 use parent 'CAF::Object';
 use Template;
+use Template::Stash;
+
+$Template::Stash::PRIVATE = undef;
+
 
 sub _initialize
 {
@@ -23,7 +27,7 @@ sub _initialize
 
     $self->{template} = Template->new(INCLUDE_PATH =>
 				      'target/share/templates/quattor',
-				      DEBUG => 'undef'
+				      #DEBUG => 'undef'
 	);
 
     return 1;
