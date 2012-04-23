@@ -105,6 +105,8 @@ Optionally, initial contents for a file that should be "edited".
 
 my %desired_file_contents;
 
+my %configs;
+
 our @EXPORT = qw(get_command set_file_contents get_file
 		 get_config_for_profile);
 
@@ -118,6 +120,9 @@ sub prepare_profile_cache
 
     my $cache = "target/test/cache/$profile";
     make_path($cache);
+    system("echo no > $cache/global.lock");
+    system("echo 1 > $cache/current.cid");
+    system("echo 1 > $cache/latest.cid");
     system(qq{cd src/test/resources &&
              panc -x json --output-dir=../../../target/test/profiles $profile.pan}) == 0
 	or croak("Unable to compile profile $profile");
@@ -129,9 +134,10 @@ sub prepare_profile_cache
 				       })
 	or croak ("Couldn't create fetch object");
     $f->{CACHE_ROOT} = $cache;
-    $main::this_app->verbose("Cache root should be: $cache ",
-			     "while we got: $f->{CACHE_ROOT}");
     $f->fetchProfile() or croak "Unable to fetch profile $profile";
+
+    my $cm =  EDG::WP4::CCM::CacheManager->new($cache);
+    $configs{$profile} = $cm->getUnlockedConfiguration();
 }
 
 
@@ -178,6 +184,7 @@ foreach my $method (qw(run execute trun)) {
 	$commands_run{$cmd} = { object => $self,
 				method => $method
 			      };
+	$? = 0;
 	if ($self->{opts}->{stdout}) {
 	    $self->{opts}->{stdout} = $desired_outputs{$cmd};
 	}
@@ -192,6 +199,7 @@ foreach my $method (qw(output toutput)) {
 	my $cmd = join(" ", @{$self->{COMMAND}});
 	$commands_run{$cmd} = { object => $self,
 				method => $method};
+	$? = 0;
 	return $desired_outputs{$cmd};
     };
 }
@@ -322,14 +330,7 @@ sub get_config_for_profile
 {
     my ($profile) = @_;
 
-    my $cache = "target/test/cache/$profile";
-
-    -d $cache or croak("Cache for $profile not found in $cache");
-
-    my $cm = EDG::WP4::CCM::CacheManager->new($cache);
-
-    return $cm->getLockedConfiguration();
-
+    return $configs{$profile};
 }
 
 1;
