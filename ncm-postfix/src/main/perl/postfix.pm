@@ -46,7 +46,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 sub restart_postfix {
     my ($self) = @_;
     CAF::Process->new(\@RESTART, log => $self)->run();
-    return;
+    return !$?;
 }
 
 # Fills a configuration file from the profile subtree $tree. The file
@@ -97,7 +97,9 @@ sub Configure {
     my $t = $config->getElement($base)->getTree();
     $self->handle_config_file($t, $FILES{master}) or $ok = 0;
     $self->handle_config_file($t->{main}, $FILES{main}) or $ok = 0;
-    $self->handle_databases($t->{databases}) if exists($t->{databases}) or $ok = 0;
+    if (exists($t->{databases})) {
+	$self->handle_databases($t->{databases}) or $ok = 0;
+    }
     $self->restart_postfix() or $ok = 0;
     return $ok;
 }
