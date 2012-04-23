@@ -1,17 +1,45 @@
+# -*- mode: cperl -*-
+
 =pod
+
+=head1 SYNOPSIS
+
+    use Test::Quattor qw(test_profile1 test_profile2...);
 
 =head1 DESCRIPTION
 
 C<Test::Quattor>
 
-Backup methods for several C<CAF> modules, that will prevent tests
-from actually modifying the state of the system, while allowing an NCM
-component to follow a realistic execution path.
+Module preparing the environment for testing Quattor code.
+
+=head1 LOADING
+
+When loading this module it will compile any profiles given as arguments. So,
+
+    use Test::Quattor qw(foo);
+
+will trigger a compilation of C<src/test/resources/foo.pan> and the
+creation of a binary cache for it. The compiled profile will be stored
+as C<target/test/profiles/foo.json>, while the cache will be stored in
+under C<target/test/profiles/foo/>.
+
+This binary cache may be converted in an
+L<EDG::WP4::CCM::Configuration> object using the
+C<get_config_for_profile> function.
+
+=head1 INTERNAL INFRASTRUCTURE
+
+=head2 Module variables
+
+This module provides backup methods for several C<CAF> modules. They
+will prevent tests from actually modifying the state of the system,
+while allowing an NCM component to follow a realistic execution path.
 
 These backups record what files are being written, what commands are
 being run, and allow for inspection by a test.
 
-For now, this is done via a few global variables:
+This is done with several functions, see B<Redefined functions> below,
+that control the following variables:
 
 =over 4
 
@@ -27,10 +55,11 @@ use CAF::FileEditor;
 use CAF::Application;
 use IO::String;
 use EDG::WP4::CCM::Configuration;
+use EDG::WP4::CCM::CacheManager;
 use EDG::WP4::CCM::Fetch;
-use Exporter;
+use base 'Exporter';
 use Cwd;
-use Carp qw(croak);
+use Carp qw(carp croak);
 use File::Path qw(make_path);
 
 =pod
@@ -42,7 +71,7 @@ absolute paths to the files.
 
 =cut
 
-our %files_contents;
+my %files_contents;
 
 =pod
 
@@ -52,7 +81,7 @@ CAF::Process objects being associated to a command execution.
 
 =cut
 
-our %commands_run;
+my %commands_run;
 
 =pod
 
@@ -64,7 +93,7 @@ deal with.
 
 =cut
 
-our %desired_outputs;
+my %desired_outputs;
 
 =pod
 
@@ -74,13 +103,49 @@ Optionally, initial contents for a file that should be "edited".
 
 =cut
 
-our %desired_file_contents;
+my %desired_file_contents;
 
-our @EXPORT_OK = qw(%files_contents %commands_run);
+our @EXPORT = qw(get_command set_file_contents get_file
+		 get_config_for_profile);
 
 $main::this_app = CAF::Application->new('a', "--verbose", @ARGV);
 
-no warnings 'redefine';
+sub prepare_profile_cache
+{
+    my ($profile) = @_;
+
+    my $dir = getcwd();
+
+    my $cache = "target/test/cache/$profile";
+    make_path($cache);
+    system(qq{cd src/test/resources &&
+             panc -x json --output-dir=../../../target/test/profiles $profile.pan}) == 0
+	or croak("Unable to compile profile $profile");
+    my $f = EDG::WP4::CCM::Fetch->new({
+				       FOREIGN => 0,
+				       CONFIG => 'src/test/resources/ccm.cfg',
+				       CACHE_ROOT => $cache,
+				       PROFILE_URL => "file://$dir/target/test/profiles/$profile.json",
+				       })
+	or croak ("Couldn't create fetch object");
+    $f->{CACHE_ROOT} = $cache;
+    $main::this_app->verbose("Cache root should be: $cache ",
+			     "while we got: $f->{CACHE_ROOT}");
+    $f->fetchProfile() or croak "Unable to fetch profile $profile";
+}
+
+
+sub import
+{
+    my $class = shift;
+
+    make_path("target/test/profiles");
+    foreach my $pf (@_) {
+	prepare_profile_cache($pf);
+    }
+
+    $class->SUPER::export_to_level(1, $class, @EXPORT);
+}
 
 =pod
 
@@ -95,6 +160,7 @@ automatically:
 
 =cut
 
+no warnings 'redefine';
 no strict 'refs';
 
 =pod
@@ -177,25 +243,93 @@ Prevents the buffers from being released when explicitly closing a file.
 
 =cut
 
+
 *IO::String::close = sub {};
 
-sub prepare_profile_configs
+use warnings 'redefine';
+
+=pod
+
+=head1 FUNCTIONS FOR EXTERNAL USE
+
+The following functions are exported by default:
+
+=over
+
+=item C<get_file>
+
+Returns the object that has manipulated C<$filename>
+
+=cut
+
+sub get_file
+{
+    my ($filename) = @_;
+
+    if (exists($files_contents{$filename})) {
+	return $files_contents{$filename};
+    }
+    return undef;
+}
+
+=pod
+
+=item C<set_file_contents>
+
+For file C<$filename>, sets the initial C<$contents> the component shuold see.
+
+=cut
+
+sub set_file_contents
+{
+    my ($filename, $contents) = @_;
+
+    $desired_file_contents{$filename} = $contents;
+}
+
+=pod
+
+=item C<get_command>
+
+Returns all the information recorded about the execution of C<$cmd>,
+if it has been executed. This is a hash reference in which the
+C<object> element is the C<CAF::Process> object itself, and the
+C<method> element is the function that executed the command.
+
+=cut
+
+sub get_command
+{
+    my ($cmd) = @_;
+
+    if (exists($commands_run{$cmd})) {
+	return $commands_run{$cmd};
+    }
+    return undef;
+}
+
+=pod
+
+=item C<get_config_for_profile>
+
+Returns a configuration object for the profile given as an
+argument. The profile should be one of the arguments given to this
+module when loading it.
+
+=cut
+
+sub get_config_for_profile
 {
     my ($profile) = @_;
 
-    my $dir = getcwd();
+    my $cache = "target/test/cache/$profile";
 
-    make_path("target/test/$profile");
-    system(q{cd src/test/resources &&
-             panc -x json --output-dir=../../../target/test/$profile $profile.pan});
-    my $f = EDG::WP4::CCM::Fetch->new({
-				       FOREIGN => 0,
-				       PROFILE_URL => "file://$dir/target/test/$profile/$profile.json",
-				       CACHE_ROOT => "target/test/cache/$profile",
-				       TIMEOUT => 1,
-				       RETRIES => 1,
-				       });
-    $f->fetchProfile() or croak "Unable to fetch profile $profile";
+    -d $cache or croak("Cache for $profile not found in $cache");
+
+    my $cm = EDG::WP4::CCM::CacheManager->new($cache);
+
+    return $cm->getLockedConfiguration();
+
 }
 
 1;
@@ -205,5 +339,11 @@ __END__
 =pod
 
 =back
+
+=head1 BUGS
+
+Probably many. It does quite a lot of internal black magic to make
+your executions safe. Please ensure your component doesn't try to
+outsmart the C<CAF> library and everything should be fine.
 
 =cut
