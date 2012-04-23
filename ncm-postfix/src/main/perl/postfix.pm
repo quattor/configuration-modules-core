@@ -58,7 +58,9 @@ sub handle_config_file
 	$self->error("Unable to process template for $files->{file}: ",
 		     $self->template()->error());
 	$fh->cancel();
+	return;
     }
+    return 1;
 }
 
 sub handle_databases
@@ -84,7 +86,7 @@ sub Configure {
     my ($self, $config, $base) = @_;
 
     my $t = $config->getElement($base)->getTree();
-    $self->handle_config_file($t->{master}, $FILES{master});
+    $self->handle_config_file({master => $t->{master}}, $FILES{master});
     $self->handle_config_file($t->{main}, $FILES{main});
     $self->handle_databases($t->{databases}) if exists($t->{databases});
     $self->restart_postfix();
