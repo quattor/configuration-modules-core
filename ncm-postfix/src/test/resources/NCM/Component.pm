@@ -27,6 +27,12 @@ sub _initialize
     return 1;
 }
 
+sub template
+{
+    my $self = shift;
+    return $self->{template};
+}
+
 no strict 'refs';
 foreach my $i (qw(verbose error info ok debug)) {
     *{$i} = sub {
