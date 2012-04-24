@@ -45,8 +45,8 @@ ok($rs, "Successfully handled the master config file");
 
 my $fh = get_file("/etc/postfix/master.cf");
 ok(defined($fh), "Correct file opened");
-like($fh, qr{^foo\s+hello\s+yes\s+yes\s+yes\s+\d+\s+\d+\s+Hello, world\s*$}m,
+like($fh, qr{^foo\s+hello\s+y\s+y\s+y\s+\d+\s+\d+\s+Hello, world\s*$}m,
      "First line correctly rendered");
-like($fh, qr{^bar\s+world\s+no\s+no\s+no\s+\d+\s+\d+\s+World, hello\s*$}m,
+like($fh, qr{^bar\s+world\s+n\s+n\s+n\s+\d+\s+\d+\s+World, hello\s*$}m,
      "Last line correctly rendered");
 
