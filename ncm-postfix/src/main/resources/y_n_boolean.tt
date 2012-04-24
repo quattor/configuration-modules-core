@@ -1,0 +1,5 @@
+[%- IF value -%]
+    y
+[%- ELSE -%]
+    n
+[%- END -%]
