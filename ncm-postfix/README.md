@@ -20,4 +20,5 @@ It is still quite incomplete. It requires:
 ## What it currently does:
 
 * Generates correctly `main.cf` and `master.cf`
-* Configures correctly LDAP databases.
+* Configures correctly accesses to
+  [LDAP lookup tables](http://www.postfix.org/LDAP_README.html).
