@@ -95,7 +95,7 @@ type postfix_main = {
     "address_verify_transport_maps" ? string
     "address_verify_virtual_transport" ? string
     "alias_database" ? postfix_lookup
-    "alias_maps" ? string[]
+    "alias_maps" ? postfix_lookup[]
     "allow_mail_to_commands" ? string[]
     "allow_mail_to_files" ? string[]
     "allow_min_user" ? boolean
@@ -202,7 +202,7 @@ type postfix_main = {
     "ignore_mx_lookup_error" ? boolean
     "import_environment" ? string
     "in_flow_delay" ? long
-    "inet_interfaces" ? string
+    "inet_interfaces" ? string[]
     "inet_protocols" ? string
     "initial_destination_concurrency" ? long
     "internal_mail_filter_classes" ? string
@@ -301,9 +301,9 @@ type postfix_main = {
     "manpage_directory" ? string
     "maps_rbl_domains" ? string
     "maps_rbl_reject_code" ? long
-    "masquerade_classes" ? string
-    "masquerade_domains" ? string
-    "masquerade_exceptions" ? string
+    "masquerade_classes" ? string[]
+    "masquerade_domains" ? string[]
+    "masquerade_exceptions" ? string[]
     "max_idle" ? long
     "max_use" ? long
     "maximal_backoff_time" ? long
@@ -627,9 +627,11 @@ type postfix_master = {
 
 type postfix_component = {
     include structure_component
-    @{
-    'main' : postfix_main{}
+    @{ Contents of the main.cf file }
+    'main' : postfix_main
+    @{ Contents of the master.cf file }
     'master' : postfix_master[]
+    @{ Definition of Postfix databases }
     'databases' ? postfix_databases
 };
 
