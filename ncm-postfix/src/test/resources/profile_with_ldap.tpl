@@ -1,4 +1,4 @@
-object template profile1;
+object template profile_with_ldap;
 
 prefix "/software/components/postfix/master/0";
 
@@ -22,3 +22,7 @@ prefix "/software/components/postfix/master/1";
 "wakeup" = 100;
 "maxproc" = 20;
 "command" = "World, hello";
+
+prefix "/software/components/postfix/databases/ldap/ldap-aliases.cf";
+
+"result_format" = "%s";

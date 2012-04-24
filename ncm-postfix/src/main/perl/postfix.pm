@@ -23,7 +23,7 @@ use File::Path;
 use Template;
 use Readonly;
 
-Readonly::Array my @RESTART => qw(/sbin/service postfix restart);
+Readonly::Array my @RESTART => qw(/sbin/service postfix condrestart);
 Readonly::Hash my %FILES => {
 			     main => { file => "/etc/postfix/main.cf",
 				       template => "postfix/main.tt" },
@@ -36,7 +36,7 @@ Readonly::Hash my %FILES => {
 			    };
 
 Readonly::Scalar my $DBS_BASE => "/etc/postfix/";
-
+Readonly::Scalar my $PATH => "/software/components/postfix";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -91,10 +91,10 @@ sub handle_databases
 }
 
 sub Configure {
-    my ($self, $config, $base) = @_;
+    my ($self, $config) = @_;
 
     my $ok = 1;
-    my $t = $config->getElement($base)->getTree();
+    my $t = $config->getElement($PATH)->getTree();
     $self->handle_config_file($t, $FILES{master}) or $ok = 0;
     $self->handle_config_file($t->{main}, $FILES{main}) or $ok = 0;
     if (exists($t->{databases})) {
