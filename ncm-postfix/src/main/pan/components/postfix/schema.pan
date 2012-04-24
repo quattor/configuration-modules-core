@@ -622,13 +622,14 @@ type postfix_master = {
     "wakeup" : long = 0
     "maxproc" : long = 100
     "command" : string
+    "name" : string
 };
 
 type postfix_component = {
     include structure_component
     @{
     'main' : postfix_main{}
-    'master' : postfix_master{}
+    'master' : postfix_master[]
     'databases' ? postfix_databases
 };
 

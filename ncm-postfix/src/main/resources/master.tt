@@ -3,11 +3,11 @@
 # service type  private unpriv  chroot  wakeup  maxproc command + args
 #               (yes)   (yes)   (yes)   (never) (100)
 # ==========================================================================
-[% FOREACH line IN master.pairs %]
-    [%- line.key %] [% line.value.type -%]
+[% FOREACH line IN master %]
+    [%- line.name %] [% line.type -%]
     [% FOREACH v IN ["private", "unprivileged", "chroot"] %]
-        [%- INCLUDE postfix/y_n_boolean.tt value= line.value.$v -%]
+        [%- INCLUDE postfix/y_n_boolean.tt value= line.$v -%]
     [% END %]
-    [%- line.value.wakeup -%] [% line.value.maxproc %] [% line.value.command %]
+    [%- line.wakeup -%] [% line.maxproc %] [% line.command %]
 
 [% END %]
