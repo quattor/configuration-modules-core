@@ -15,8 +15,92 @@ postfix
 
 =head2 /software/components/postfix
 
-The configuration information for the component.  Each field should
-be described in this section. 
+The configuration information for the component. This structure
+contains three fields:
+
+=over
+
+=item C<main>
+
+An nlist with all the possible configuration values for
+C</etc/postfix/main.cf>. See L<main(5) for more details.
+
+=item C<master>
+
+A list with all entries for C</etc/postfix/master.cf>. See
+L<master(5)> for all the details. For each line, we have to provide:
+
+=over
+
+=item C<name> : string
+
+Name of the entry (first field in the line).
+
+=item C<type> :  string
+
+Type of service/socket for this entry.
+
+=item C<private> : boolean
+
+Defaults to true.
+
+=item C<unprivileged> : boolean
+
+Defaults to true
+
+=item C<chroot> : boolean
+
+Defaults to true
+
+=item C<maxproc> : long
+
+Maximum number of processes that may be instantiated following this
+line Defaults to 100.
+
+=item C<wakeup> : long
+
+=item C<command>
+
+=back
+
+=item C<databases>
+
+An optional structure describing additional Postfix databases (lookup
+tables in Postfix terminology). See
+L<http://www.postfix.org/DATABASE_README.html> for more information.
+
+Each subtree is associated with a class of lookup tables. Each class
+of lookup tables is an nlist, in which the keys are the file names
+(relative to /etc/postfix) that configure the access to such a database.
+
+Currently, only LDAP lookups can be described, see
+L<http://www.postfix.org/LDAP_README.html>
+
+=head1 EXAMPLES
+
+=head2 Minimal configuration
+
+An empty nlist is valid for C<main.cf>:
+
+    "/software/components/postfix/main" = nlist();
+
+=head2 Storing aliases in LDAP
+
+Declaring an alias database stored in an LDAP server can be achieved as follows:
+
+    "/software/components/postfix/main/alias_maps" = append(
+        nlist(
+           "type", "ldap",
+           "name", "/etc/postfix/ldap-aliases.cf"));
+
+And we can instruct Postfix to access this database:
+
+    prefix "/software/components/postfix/databases/ldap/ldap-aliases.cf";
+
+    "server_host" = "foo.bar.com";
+    "search_base" = "OU=foo,CN=bar";
+    "query_filter" = "(an-ldap-filter)";
+    "result_format" = "%s";
 
 =head1 AUTHOR
 
