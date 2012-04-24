@@ -257,7 +257,7 @@ sub pxe_config{
     #add description,optional
     if($config->elementExists($path."/pxe/descro")){
         $descro=$config->getValue($path."/pxe/descro");
-        push @pxeos_cmd, ("-i", $descro);
+        push @pxeos_cmd, ("-i", "'$descro'");
     }
     #add protocol
     unless($config->elementExists($path."/pxe/protocol")){
@@ -290,7 +290,7 @@ sub pxe_config{
     if ($config->elementExists($path."/pxe/nfs_server")) {
         $server=$config->getValue($path."/pxe/nfs_server");
     } else {
-        my $server=$config->getValue("/system/network/interfaces/$netdev/ip");
+        $server=$config->getValue("/system/network/interfaces/$netdev/ip");
     }
     push @pxeos_cmd, "-s" ,"$server";
     
@@ -448,7 +448,7 @@ sub pxeboot_config{
     push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
     
     if ($config->elementExists($path."/pxe/append")) {
-        $append=$config->getValue($path."/pxe/append");
+        my $append=$config->getValue($path."/pxe/append");
         push @pxeboot_base_cmd, "-A", "$append";
     }
     
