@@ -21,7 +21,7 @@ type postfix_lookup_type_string = string with
 }
 type postfix_lookup = {
     @{ The type of the database for this lookup }
-    "type" : postix_lookup_type_string
+    "type" : postfix_lookup_type_string
     @{ The name of the lookup (DB connection, file name...) }
     "name" : string
 };
@@ -149,7 +149,7 @@ type postfix_main = {
     "default_destination_recipient_limit" ? long
     "default_extra_recipient_limit" ? long
     "default_minimum_delivery_slots" ? long
-    "default_privs" ? booleanbody
+    "default_privs" ? string
     "default_process_limit" ? long
     "default_rbl_reply" ? string
     "default_recipient_limit" ? long
@@ -171,13 +171,13 @@ type postfix_main = {
     "dont_remove" ? long
     "double_bounce_sender" ? string
     "duplicate_filter_limit" ? long
-    "empty_address_recipient" ? STRING
+    "empty_address_recipient" ? string
     "enable_original_recipient" ? boolean
     "error_notice_recipient" ? string
     "error_service_name" ? string
     "execution_directory_expansion_filter" ? string
     "expand_owner_alias" ? boolean
-    "export_environment" ? STRING
+    "export_environment" ? string
     "fallback_transport" ? string
     "fallback_transport_maps" ? string
     "fast_flush_domains" ? string
@@ -200,7 +200,7 @@ type postfix_main = {
     "hopcount_limit" ? long
     "html_directory" ? boolean
     "ignore_mx_lookup_error" ? boolean
-    "import_environment" ? STRING
+    "import_environment" ? string
     "in_flow_delay" ? long
     "inet_interfaces" ? string
     "inet_protocols" ? string
@@ -489,7 +489,7 @@ type postfix_main = {
     "smtpd_error_sleep_time" ? long
     "smtpd_etrn_restrictions" ? string
     "smtpd_expansion_filter" ? string
-    "smtpd_forbidden_commands" ? STRING
+    "smtpd_forbidden_commands" ? string
     "smtpd_hard_error_limit" ? long
     "smtpd_helo_required" ? boolean
     "smtpd_helo_restrictions" ? string
@@ -516,7 +516,7 @@ type postfix_main = {
     "smtpd_sasl_exceptions_networks" ? string
     "smtpd_sasl_local_domain" ? string
     "smtpd_sasl_path" ? string
-    "smtpd_sasl_security_options" ? booleananonymous
+    "smtpd_sasl_security_options" ? string
     "smtpd_sasl_tls_security_options" ? string
     "smtpd_sasl_type" ? string
     "smtpd_sender_login_maps" ? string
@@ -560,10 +560,10 @@ type postfix_main = {
     "syslog_facility" ? string
     "syslog_name" ? string
     "tls_daemon_random_bytes" ? long
-    "tls_export_cipherlist" ? STRING
-    "tls_high_cipherlist" ? STRING
-    "tls_low_cipherlist" ? STRING
-    "tls_medium_cipherlist" ? STRING
+    "tls_export_cipherlist" ? string
+    "tls_high_cipherlist" ? string
+    "tls_low_cipherlist" ? string
+    "tls_medium_cipherlist" ? string
     "tls_null_cipherlist" ? string
     "tls_random_bytes" ? long
     "tls_random_exchange_name" ? string
@@ -629,7 +629,7 @@ type postfix_component = {
     @{
     'main' : postfix_main{}
     'master' : postfix_master{}
-    'databases' ? postix_databases
+    'databases' ? postfix_databases
 };
 
 bind '/software/components/postfix' = postfix_component;
