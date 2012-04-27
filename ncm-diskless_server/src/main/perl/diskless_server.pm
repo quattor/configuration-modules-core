@@ -447,9 +447,10 @@ sub pxeboot_config{
     
     push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
     
+    my $global_append;
     if ($config->elementExists($path."/pxe/append")) {
-        my $append=$config->getValue($path."/pxe/append");
-        push @pxeboot_base_cmd, "-A", "$append";
+        my $global_append=$config->getValue($path."/pxe/append");
+#         push @pxeboot_base_cmd, "-A", "$append";
     }
     
     #call pxeboot for every node
@@ -509,6 +510,13 @@ sub pxeboot_config{
             $self->error("diskless_server:no boot device found for node $node, skip this node.");
             next;
         }
+        
+        my $append;
+        if ($config->elementExists($path."/dhcp_clients/".$nodename."/append")) {
+            my append=$config->getValue($path."/dhcp_clients/".$nodename."/append");
+        }
+        push @pxeboot_base_cmd, "-A", "$global_append $append";
+        
         #
         # specify a snaphot name to avoid switching between using the snapshot "node" and "node.domain"
 #         @pxeboot_cmd = @pxeboot_base_cmd;
