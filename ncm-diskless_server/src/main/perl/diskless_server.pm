@@ -512,8 +512,8 @@ sub pxeboot_config{
         }
         
         my $append;
-        if ($config->elementExists($path."/dhcp_clients/".$nodename."/append")) {
-            my append=$config->getValue($path."/dhcp_clients/".$nodename."/append");
+        if ($config->elementExists($path."/dhcp_clients/".$nodename."/pxe_append")) {
+            $append=$config->getValue($path."/dhcp_clients/".$nodename."/pxe_append");
         }
         push @pxeboot_base_cmd, "-A", "$global_append $append";
         

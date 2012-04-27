@@ -94,6 +94,10 @@ Size of the ramdisk,if not set default is 40MB
 
 The name of the active network device (eth0,wlan0,etc...)
 
+=head3 /software/components/diskless_server/pxe/append: string
+
+Optional string to add to the append line of the pxe config files
+
 =head2 /software/components/diskless_server/rwfiles : strings list
 
 List containing the files to be added in files.custom

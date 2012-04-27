@@ -36,7 +36,7 @@ type dhcp_clients_type={
     "nextserver" : type_ip
     "filename" : string
     "rootpath" : string
-    "append" ? string
+    "pxe_append" ? string
 };
 
 type pxe_type={
