@@ -25,15 +25,15 @@ local(*DTA);
 ##########################################################################
 sub Configure($$@) {
 ##########################################################################
-    
+
     my ($self, $config) = @_;
 
-    # Define paths for convenience. 
+    # Define paths for convenience.
     my $base = "/software/components/dirperm";
 
     # Get ncm-dirperm config into a hash
     my $dirperm_config = $config->getElement($base)->getTree();
-    
+
     # If the list of paths exists, actually do something!
 
     if ( $dirperm_config->{paths} ) {
@@ -49,14 +49,14 @@ sub process_path {
 
     my ($self, $pathentry) = @_;
 
-    # Pull out the values and check that they really are defined. 
+    # Pull out the values and check that they really are defined.
     my $path = $pathentry->{path};
     if (!defined($path)) {
         $self->error("entry with undefined path");
         return 0;
     }
 
-    # Get the owner. 
+    # Get the owner.
     my $owner = $pathentry->{owner};
     if (!defined($owner)) {
         $self->error("entry with undefined owner");
@@ -71,7 +71,7 @@ sub process_path {
     my $group = undef;
     if ($owner =~ m/^([\w\-_\.]+)(?::(\S+))?$/) {
 
-        # Collect the uid and gid to use. 
+        # Collect the uid and gid to use.
         $user = $1;
         $group = $2 if ($2);
 
@@ -89,8 +89,8 @@ sub process_path {
         $self->error("owner field with bad format ($owner)");
         return 0;
     }
-    
-    # Permissions. 
+
+    # Permissions.
     my $perm = oct($pathentry->{perm});
     if (!defined($perm)) {
         $self->error("entry with undefined permissions");
@@ -106,20 +106,25 @@ sub process_path {
 
     $self->debug(1,"Configuring $path : Type=$type, Owner=$user, Group=" . ($group ? $group : "undefined") . ", Permissions=oct($perm)");
 
+    if ((-l $path) && (! -e $path)) {
+	$self->error("$path is a broken symlink");
+	return 0;
+    }
+
     # Check for errors in the type of an already existing file.
     if (($type eq "f") && (-d $path)) {
         $self->error("$path exists but isn't a file");
         return 0;
-    } 
+    }
     if (($type eq "d") && (-e $path) && (!-d $path) ) {
         $self->error("$path exists but isn't a directory");
         return 0;
-    } 
+    }
     if (not (($type eq "f") or ($type eq "d"))) {
-        # Bad entry. 
+        # Bad entry.
         $self->error("bad file type ($type) given");
         return 0;
-    } 
+    }
 
     # Untainted all variable (UID/GID/PATH/PERM) see bug #42704
     if ($uid =~ /^(.*)$/) {
@@ -176,7 +181,7 @@ sub process_path {
     # Make the file or directory.
 	if(not $exists) {
 		if ($type eq "f") {
-			# Make the file.  
+			# Make the file.
 			open TMP, ">>$path";
 			close TMP;
 			if (! -f $path) {
@@ -184,7 +189,7 @@ sub process_path {
 				return 0;
 			}
 		} elsif ($type eq "d") {
-			# Make the directory and any parent directories. 
+			# Make the directory and any parent directories.
 			eval { mkpath($path,0,$perm) };
 			if ($@) {
 				$self->error("error making directory: $@");
@@ -216,27 +221,27 @@ sub process_path {
         if ($type eq "d") {
             foreach my $element (@{$initdir}) {
                 my $srcdir = $element;
-                
+
                 # Ensure that this is a directory and exists.
                 if (! -d $srcdir) {
                     $self->error("initdir path ($srcdir) doesn't exist");
                     next;
                 }
-                
+
                 # Collect the ordinary files to copy.
                 opendir DIR, "$srcdir";
                 my @files = grep -T, map "$srcdir/$_", readdir DIR;
                 closedir DIR;
-                
+
                 # Copy the files. This uses the default permissions
-                # on the copy as the original dirperm object did. 
+                # on the copy as the original dirperm object did.
                 # Don't clobber files which exist already.
                 foreach (@files) {
                     my $dstfile = "$path/" . basename($_);
                     if (! -f $dstfile) {
                         copy($_,$dstfile);
                         $self->error("error copying file $_") if ($?);
-                        
+
                         my $cnt = chown $uid, $gid, $dstfile;
                         if ($cnt != 1) {
                             $self->error("can't change owner on $dstfile");
@@ -246,7 +251,7 @@ sub process_path {
                 }
             }
         } else {
-            
+
             # initdir has been specified on a file entry
             $self->error("initdir specified for non-directory entry");
             return 0;
