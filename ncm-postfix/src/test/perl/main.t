@@ -6,7 +6,7 @@ use FindBin qw($Bin);
 use lib $Bin;
 use Test::Quattor;
 use NCM::Component::postfix;
-use Test::More tests => 8;
+use Test::More tests => 9;
 use CAF::Object;
 no strict 'refs';
 
@@ -26,6 +26,7 @@ my $main = {
 			     name => "quux" }
 			  ],
 	    allow_mail_to_files => [ qw(a b c d) ],
+	    mydestination => [ 1,2,3],
 	   };
 
 
@@ -48,3 +49,5 @@ like($fh, qr{^alias_maps\s*=\s*foo:bar,\s*baz:quux(?:,)?\s*$}m,
      "Alias maps correctly defined");
 like($fh, qr{^allow_mail_to_files\s*=\s*a, b, c, d\s*$}m,
      "List field correctly handled");
+like($fh, qr{^mydestination\s*=\s*1, 2, 3\s*$}m,
+     "mydestination correctly generated");
