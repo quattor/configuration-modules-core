@@ -1,17 +1,8 @@
-################################################################################
-# This is '@SELF@', a @NAME@'s file
-################################################################################
-#
-# VERSION:    @VERSION@-@RELEASE@, @DATE@
-# AUTHOR:     @AUTHOR@
-# MAINTAINER: @MAINTAINER@
-# LICENSE:    @LICENSE@
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
 
-declaration template components/@COMP@/schema;
+declaration template components/accounts/schema;
 
 include { 'quattor/schema' };
 
@@ -62,4 +53,4 @@ type component_accounts = {
     'ldap'       ? boolean
 };
 
-bind '/software/components/@COMP@' = component_accounts;
+bind '/software/components/accounts' = component_accounts;

@@ -1,23 +1,15 @@
-################################################################################
-# This is '@SELF@', a @NAME@'s file
-################################################################################
-#
-# VERSION:    @VERSION@, @DATE@
-# AUTHOR:     @AUTHOR@
-# MAINTAINER: @MAINTAINER@
-# LICENSE:    @LICENSE@
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
 
 =head1 NAME
 
-@NAME@: NCM component to manage the local accounts on the machine.
+ncm-accounts: NCM component to manage the local accounts on the machine.
 
 =head1 DESCRIPTION
 
-The I<@COMP@> component manages the local accounts on a machine. LDAP
+The I<accounts> component manages the local accounts on a machine. LDAP
 authentication depends on the LDAP configuration, which is handled by
 L<ncm-authconfig>.
 
@@ -25,7 +17,7 @@ Shadowing of passwords is also controlled by L<ncm-authconfig>.
 
 =head1 FUNCTIONS
 
-@COMP@ provides several functions as an API to handle creation of users and groups.
+accounts provides several functions as an API to handle creation of users and groups.
 They are mainly targeted at helping creating consistent accounts across machines,
 using a central definition of all accounts and a per machine list of accounts to be
 actually created.
@@ -98,11 +90,11 @@ It updates a structure_accounts (return value may be assigned to "/software/comp
 
 =head1 RESOURCES
 
-=head2 /software/components/@COMP@/rootpwd
+=head2 /software/components/accounts/rootpwd
 
 The crypted root password for the machine.
 
-=head2 /software/components/@COMP@/users
+=head2 /software/components/accounts/users
 
 An nlist of users to configure on the node.  The key is the account
 name (or base name for pool accounts). The numerical UID is
@@ -169,7 +161,7 @@ will create three accounts atlas0 atlas1 atlas2.
 
 =back
 
-=head2 /software/components/@COMP@/groups
+=head2 /software/components/accounts/groups
 
 An nlist of groups to configure on the node.  The key is the group
 name.  At least one field must be specified.
@@ -186,7 +178,7 @@ the optional gid number for the group
 
 =back
 
-=head2 /software/components/@COMP@/login_defs
+=head2 /software/components/accounts/login_defs
 
 A nlist of values to be set in /etc/login.defs. NOTE: This
 configuration file is specific to RedHat-like systems; setting will be
@@ -225,7 +217,7 @@ If useradd should create home directories for users by default
 
 =back
 
-=head2 /software/components/@COMP@/remove_unknown
+=head2 /software/components/accounts/remove_unknown
 
 Flag to indicate whether unknown accounts should be deleted.  The
 default is false.  The root account can never be removed.
@@ -247,7 +239,7 @@ B<won't> be fixed.
 The component has been tested with C<files> as the primary source on
 /etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
 produce strange behaviour. These settings are not controlled by
-ncm-@COMP@ but by L<ncm-authconfig>.
+ncm-accounts but by L<ncm-authconfig>.
 
 =head1 SEE ALSO
 

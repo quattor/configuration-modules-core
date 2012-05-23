@@ -1,33 +1,17 @@
-################################################################################
-# This is '@SELF@', a @NAME@'s file
-################################################################################
-#
-# VERSION:    @VERSION@-@RELEASE@, @DATE@
-# AUTHOR:     @AUTHOR@
-# MAINTAINER: @MAINTAINER@
-# LICENSE:    @LICENSE@
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
-############################################################
-#
-# function definitions for defining accounts
-#
-#
-#
-#
-############################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
 
-declaration template components/@COMP@/functions;
+declaration template components/accounts/functions;
 
 variable ACCOUNTS_USER_HOME_ROOT ?= '/home';
 variable ACCOUNTS_USER_CREATE_HOME ?= true;
 variable ACCOUNTS_USER_AUTOGROUP ?= true;
 variable ACCOUNTS_USER_CHECK_GROUP ?= true;
 variable ACCOUNTS_IGNORE_MISSING_GROUPS ?= false;
-variable ACCOUNTS_USER_COMMENT ?= 'Created by @NAME@';
-variable ACCOUNTS_GROUP_COMMENT ?= 'Created by @NAME@';
+variable ACCOUNTS_USER_COMMENT ?= 'Created by ncm-accounts';
+variable ACCOUNTS_GROUP_COMMENT ?= 'Created by ncm-accounts';
 
 
 # create_group(groupname:string,
@@ -50,7 +34,7 @@ function create_group = {
     group_params = ARGV[1];
 
     if ( !exists(SELF) ) {
-        error(function_name + " : /software/components/@COMP@ doesn't exist");
+        error(function_name + " : /software/components/accounts doesn't exist");
     };
     accounts = SELF;
 
@@ -83,7 +67,7 @@ function create_user = {
     user_params = ARGV[1];
 
     if ( !exists(SELF) ) {
-        error(function_name + " : /software/components/@COMP@ doesn't exist");
+        error(function_name + " : /software/components/accounts doesn't exist");
     };
     accounts = SELF;
 
@@ -147,7 +131,7 @@ function create_user = {
 #
 # Function to create users or groups from a nlist containing user or group characteristics.
 # User/group characteristics must be provided as structure_userinfo/structure_groupinfo.
-# 
+#
 # Second parameter, if presents, gives the list of users to create from user_list.
 # This allows to use a unique user/group definition for all nodes, to warrant consistency
 # between nodes.
@@ -178,7 +162,7 @@ function create_accounts_from_db = {
     };
 
     if ( !exists(SELF) ) {
-        error(function_name + " : /software/components/@COMP@ doesn't exist");
+        error(function_name + " : /software/components/accounts doesn't exist");
     };
     accounts = SELF;
 
