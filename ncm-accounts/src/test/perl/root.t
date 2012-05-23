@@ -17,6 +17,19 @@ Test how the root account is set
 my $cmp = NCM::Component::accounts->new('accounts');
 
 # System's root user mockup
+
+=pod
+
+=head1 TEST TYPES
+
+=head2 Almost empty system, no specification in the profile
+
+Root account should be blocked, but root groups are always read from
+the system.
+
+=cut
+
+
 my $sys = { passwd => { root => {
 				 groups => [ qw(g1 g2 g3) ],
 				 shell => 'invalid root shell',
@@ -42,6 +55,15 @@ is($root->{password}, "!", "Root account with no passwords is blocked");
 is($root->{shell}, undef, "Root shell is not inherited from system");
 is($root->{ln}, 42, "Root will be written in the same old line in the file");
 
+=pod
+
+=head2 Inheriting settings from system
+
+When the profile doesn't state otherwise, password is inherited from
+the system. However, the shell isn't.
+
+=cut
+
 $sys->{passwd}->{root}->{password} = "An old password";
 $root = $cmp->compute_root_user($sys, $pfr);
 is($root->{password}, $sys->{passwd}->{root}->{password},
@@ -49,6 +71,13 @@ is($root->{password}, $sys->{passwd}->{root}->{password},
 $pfr->{rootpwd} = "A new password";
 $pfr->{rootshell} = "A valid root shell";
 $root = $cmp->compute_root_user($sys, $pfr);
+
+=pod
+
+=head2 Overriding ancient values with profile-provided ones
+
+=cut
+
 is($root->{shell}, $pfr->{rootshell},
    "Root receives its shell only from the profile");
 is($root->{password}, $pfr->{rootpwd},
