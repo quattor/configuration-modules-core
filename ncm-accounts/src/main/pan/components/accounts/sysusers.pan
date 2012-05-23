@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 ############################################################
 #
 # System users which shouldn't be removed by component.

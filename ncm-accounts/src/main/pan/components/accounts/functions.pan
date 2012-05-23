@@ -1,15 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
-############################################################
-#
-# function definitions for defining accounts
-#
-#
-#
-#
-############################################################
+# ${build-info}
 
 declaration template components/accounts/functions;
 
@@ -139,7 +131,7 @@ function create_user = {
 #
 # Function to create users or groups from a nlist containing user or group characteristics.
 # User/group characteristics must be provided as structure_userinfo/structure_groupinfo.
-# 
+#
 # Second parameter, if presents, gives the list of users to create from user_list.
 # This allows to use a unique user/group definition for all nodes, to warrant consistency
 # between nodes.

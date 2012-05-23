@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 declaration template components/accounts/schema;
 
 include { 'quattor/schema' };

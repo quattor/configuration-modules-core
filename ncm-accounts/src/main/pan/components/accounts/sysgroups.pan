@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 ############################################################
 #
 # System groups which shouldn't be removed by component.

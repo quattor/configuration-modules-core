@@ -1,7 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
+# ${build-info}
 
 package NCM::Component::accounts;
 
@@ -26,39 +26,6 @@ our @ISA = qw(NCM::Component);
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
-
-# Commands we might run. We'll resort always to libusers' variants.
-
-# Adding users. We don't want their home directories created. The
-# component will take care of it, as we'll have to copy the files from
-# /etc/skel anyways.
-use constant USERADD => qw(lnewusers -M);
-
-# Deleting users. We don't want their home directories removed, just
-# in case.
-use constant USERDEL => qw(luserdel -G);
-
-
-# Adding groups
-use constant GROUPADD => "lgroupadd";
-
-# Deleting groups
-use constant GROUPDEL => "lgroupdel";
-
-# Changing passwords
-use constant CHPASSWD => qw(chpasswd -e);
-
-# Changing user properties
-use constant USERMOD => 'usermod';
-
-# Modifying the UID of an account
-use constant CHUID => (USERMOD, "-u");
-
-# Changing group properties
-use constant GROUPMOD => qw(lgroupmod -g);
-
-# Change the shell for root
-use constant CHROOTSHELL => qw(lusermod root -s);
 
 # UID for user structures, GID for group structures.
 use constant ID => 2;
@@ -88,17 +55,7 @@ use constant GROUP_FILE => "/etc/group";
 use constant SHADOW_FILE => "/etc/shadow";
 use constant LOGINDEFS_FILE => "/etc/login.defs";
 
-use constant GIDPARAM => '-g';
 use constant SKELDIR => "/etc/skel";
-
-# Parameters for usermod
-use constant GROUPSOPT => '-G';
-use constant HOMEOPT => '-d';
-use constant MOVEHOMEOPT => '-m';
-use constant SHELLOPT => '-s';
-use constant GCOSOPT => '-c';
-use constant IDOPT => '-u';
-
 
 # Expands the profile to the list of desired accounts, including
 # pools.
