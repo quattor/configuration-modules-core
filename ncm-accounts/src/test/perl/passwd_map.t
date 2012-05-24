@@ -29,8 +29,15 @@ bin:x:uidforbin:groupforbin:comment for bin:homeforbin:binshell
 daemon:x:uidfordaemon:groupfordaemon:comment for daemon:homefordaemon:daemonshell
 EOF
 
+use constant SHADOW_CONTENTS => <<EOF;
+root:apassword:15329:0:99999:7:::
+bin:*:15209:0:99999:7:::
+daemon:*:15209:0:99999:7:::
+EOF
+
 set_file_contents("/etc/group", GROUP_CONTENTS);
 set_file_contents("/etc/passwd", PASSWD_CONTENTS);
+set_file_contents("/etc/shadow", SHADOW_CONTENTS);
 
 my $cmp = NCM::Component::accounts->new("accounts");
 
@@ -88,6 +95,8 @@ foreach my $i (qw(root bin daemon)) {
        "User $i received the correct main group");
     is($user->{shell}, $i . "shell", "User $i received the correct shell");
     is($user->{homeDir}, "homefor$i", "User $i received the correct home");
+    ok(!exists($user->{password}),
+       "Password not set before reading /etc/shadow");
 }
 
 ok(!exists($u->{root}->{groups}),
@@ -96,5 +105,36 @@ is(scalar(@{$u->{bin}->{groups}}), 2,
    "bin account listed in the correct groups");
 ok(grep("bin", @{$u->{bin}->{groups}}), "bin is listed in the bin group");
 ok(grep("daemon", @{$u->{bin}->{groups}}), "bin is listed in the daemon group");
+
+=pod
+
+=head2 SHADOW PASSWORD HANDLING
+
+Passwords should be read from /etc/shadow and set accordingly.
+
+=cut
+
+$cmp->add_shadow_info($u);
+is($u->{root}->{password}, "apassword", "Root got the correct password");
+is($u->{bin}->{password}, "*", "Locked password is correctly set");
+
+=pod
+
+=head2 MAP CREATION ALTOGETHER
+
+The map the component creates out of the three files should contain
+all the desired information.
+
+=cut
+
+my $sys = $cmp->build_system_map();
+ok(exists($sys->{groups}), "Full system map contains groups");
+ok(exists($sys->{groups}->{bin}->{members}->{bin}),
+   "Groups in the full system map are correct");
+ok(exists($sys->{passwd}), "Full system map contains the users");
+is($sys->{passwd}->{root}->{uid}, "uidforroot",
+   "Full system map contains correct users");
+is($sys->{passwd}->{bin}->{password}, "*",
+   "Full system map contains shadow information");
 
 done_testing();
