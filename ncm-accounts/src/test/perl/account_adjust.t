@@ -3,14 +3,14 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(users/nokept users/tochange); # users/remove_unknown users/inconsistent);
+use Test::Quattor qw(users/nokept users/tochange users/adjust_accounts);
 use NCM::Component::accounts;
 use CAF::Reporter;
 
 sub users_in
 {
     my ($u) = @_;
-    return scalar(keys(%{$u->{passwd}}));
+    return scalar(keys(%{$u->{passwd}})) || scalar(keys(%{$u->{users}}));
 }
 
 sub groups_in
@@ -120,10 +120,24 @@ $sys = $cmp->build_system_map();
 my $cfg = get_config_for_profile('users/nokept');
 my $t = $cfg->getElement("/software/components/accounts")->getTree();
 $t->{users} = $cmp->compute_desired_accounts($t->{users});
-$cmp->delete_unneeded_accounts($sys, $t);
+$cmp->delete_unneeded_accounts($sys, $t->{users});
 ok(exists($sys->{passwd}->{root}), "root account is never ever removed");
 is(users_in($sys), 1,
    "Accounts in the system but not in the profile get removed (excepting root)");
+
+=pod
+
+=item Preserving accounts that are in the system and in the profile
+
+=cut
+
+$sys = $cmp->build_system_map();
+$t->{users}->{daemon} = $sys->{passwd}->{daemon};
+$cmp->delete_unneeded_accounts($sys, $t->{users}, {bin => 1,
+						   foobar => 1});
+is(users_in($sys), 3,
+   "Accounts in the profile remain in the system");
+delete($t->{users}->{daemon});
 
 =pod
 
@@ -133,14 +147,15 @@ kept list
 =cut
 
 $sys = $cmp->build_system_map();
-$cmp->delete_unneeded_accounts($sys, $t, {bin => 1,
-					  foobar => 1});
+$cmp->delete_unneeded_accounts($sys, $t->{users}, {bin => 1,
+						   foobar => 1});
 
 ok(exists($sys->{passwd}->{root}),
    "root account is respected even if there is a kept list without it");
 ok(exists($sys->{passwd}->{bin}),
    "Account from the kept list stays in the system");
 is(users_in($sys), 2, "Only preserved accounts remain in the system");
+
 
 =pod
 
@@ -162,6 +177,7 @@ preserved) or in both.
 =cut
 
 $sys = $cmp->build_system_map();
+$t = $cfg->getElement("/software/components/accounts")->getTree();
 ok(!exists($sys->{groups}->{$t->{users}->{nopool}->{groups}->[0]}),
    "Account nopool really has no valid groups");
 $cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
@@ -170,10 +186,27 @@ ok(!exists($sys->{passwd}->{nopool}), "Account with no valid groups is not added
 
 =pod
 
+=item Add an account whose group was in the system but not in
+/etc/group
+
+For instance, adding a local account to a group that comes present
+from LDAP
+
+=cut
+
+$sys = $cmp->build_system_map();
+$t->{users}->{nopool}->{groups} = ['wheel'];
+$cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
+ok(exists($sys->{passwd}->{nopool}),
+   "Account with a valid group out of /etc/group is added");
+
+=pod
+
 =item Add an account with valid group to the system
 
 =cut
 
+$sys = $cmp->build_system_map();
 $u = users_in($sys);
 
 $cmp->{ERROR} = 0;
@@ -186,6 +219,7 @@ ok(exists($sys->{passwd}->{nopool}), "Account nopool really added");
 ok(exists($sys->{groups}->{root}->{members}->{nopool}),
    "Account nopool added to its group");
 is($sys->{passwd}->{nopool}->{main_group}, 0, "Account's main group correctly chosen");
+
 
 =pod
 
@@ -274,5 +308,53 @@ This is needed, f.i, when setting an account's password with SINDES.
 
 is($sys->{passwd}->{pool03}->{password}, "anotherpassword",
    "Passwords from the system are reused when not defined in the profile");
+
+=pod
+
+=back
+
+=head2 C<adjust_accounts>
+
+Test how accounts are added and removed
+
+=over
+
+=item When C<remove_unknown> is false
+
+Accounts in the system must be preserved, independently of the value of C<kept_users>
+
+=cut
+
+$sys = $cmp->build_system_map();
+$cfg = get_config_for_profile('users/adjust_accounts');
+$t = $cfg->getElement("/software/components/accounts")->getTree();
+$u = users_in($sys) + users_in($t);
+$cmp->adjust_accounts($sys, $t->{users});
+is(users_in($sys), $u,
+   "New users added while old ones preserved in absence of remove_unknown");
+$sys = $cmp->build_system_map();
+$cmp->adjust_accounts($sys, $t->{users}, { bin => 1, baz => 1});
+is(users_in($sys), $u,
+   "New users added while old ones preserved in absence of remove_unknown, with kept_users");
+$sys = $cmp->build_system_map();
+
+=pod
+
+=item When C<remove_unknonw> is true
+
+Only root, accounts in the profile, or accounts in C<kept_users> list
+that already existed, must stay.
+
+=cut
+
+$cmp->adjust_accounts($sys, $t->{users}, {}, 1);
+is(users_in($sys), users_in($t)+1,
+   "Users not in the profile (except root) are removed");
+$sys = $cmp->build_system_map();
+$cmp->adjust_accounts($sys, $t->{users}, {bin => 1}, 1);
+is(users_in($sys), users_in($t)+2,
+   "Users not in the profile (except root or kept ones) are removed");
+
+
 
 done_testing();

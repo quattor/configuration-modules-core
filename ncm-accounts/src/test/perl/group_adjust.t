@@ -101,6 +101,11 @@ is(groups_in($sys), 4,
 is($sys->{groups}->{g1}->{gid}, $t->{groups}->{g1}->{gid},
    "System group g1 had its gid updated");
 
+$t->{groups}->{g1}->{gid} = "a random group";
+$cmp->apply_profile_groups($sys, $t->{groups});
+is($sys->{groups}->{g1}->{gid}, "a random group",
+   "Group g1 changed its gid");
+
 =pod
 
 =head2 C<adjust_groups>
