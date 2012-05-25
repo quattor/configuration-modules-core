@@ -376,7 +376,7 @@ sub groups_are_consistent
     while (my ($group, $st) = each(%$groups)) {
 	$self->debug(2, "Checking for consistency of group $group");
 	if (exists($ids{$st->{gid}})) {
-	    $self->error("Collision found between groups $st->{name} and ",
+	    $self->error("Collision found between groups $group and ",
 			 $ids{$st->{gid}}, " for id $st->{gid}");
 	    $ok = 0;
 	} else {
