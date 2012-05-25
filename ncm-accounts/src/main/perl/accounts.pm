@@ -406,13 +406,6 @@ sub accounts_are_consistent
 	} else {
 	    $ids{$st->{uid}} = $account;
 	}
-	foreach my $i (@{$st->{groups}}) {
-	    if ($i !~ m{^\d+$} && !exists($groups->{$i})) {
-		$ok = 0;
-		$self->error("Account $account assigned to non-existing group ",
-			     $i);
-	    }
-	}
     }
     return $ok;
 }
@@ -424,13 +417,9 @@ sub is_consistent
 {
     my ($self, $system) = @_;
 
-    my $ok;
-
     $self->verbose("Checking for system consistency");
-    $ok = $self->groups_are_consistent($system->{groups});
-
-
-    return $ok;
+    return  $self->groups_are_consistent($system->{groups}) &&
+      $self->accounts_are_consistent($system->{passwd});
 }
 
 # Commits the group configuration.
