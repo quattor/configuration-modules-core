@@ -1,4 +1,5 @@
-object template users/adjust_accounts;
+object template users/adjust_accounts
+;
 
 prefix "/software/components/accounts/users";
 
