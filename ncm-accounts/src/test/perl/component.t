@@ -14,8 +14,8 @@ use CAF::Object;
 
 Test that the Configure method does the correct things.
 
-To reduce the testing effort (there are already lots of tests), we'll
-replace most methods by stubs here.
+Instead of producing zillions of fake profiles, we'll replace by stubs
+all methods called by C<Configure>.
 
 What we want to test is:
 
@@ -40,9 +40,6 @@ use warnings 'redefine';
 my $cmp = NCM::Component::accounts->new('accounts');
 
 my $cfg = get_config_for_profile('users/consistent');
-
-
-
 
 $cmp->{returns}->{compute_desired_accounts} = {};
 $cmp->{returns}->{compute_root_user} = {};

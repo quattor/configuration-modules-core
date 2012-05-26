@@ -19,7 +19,7 @@ EOF
 use constant PASSWD => <<EOF;
 root:x:0:0:root:/root:/bin/bash
 bin:x:1:1:bin:/bin:/sbin/nologin
-foo:x:1000:100::/home/foo:/bin/bash
+foo:x:1000:100::ljhlkjhjljh:/bin/bash
 bar:x:1001:100:bar::/bin/bash
 baz:x:1002:100:::
 EOF
@@ -117,6 +117,53 @@ like("$fh", qr{^root:rootpassword:(?:.*:){6}}m, "/etc/shadow received the root a
 like("$fh", qr{^baz:\*}m, "Account without password is locked in /etc/shadow");
 like("$fh", qr{^(?:(?:.*:){8}\n){5}}, "All lines correctly rendered in /etc/shadow");
 is(*$fh->{options}->{mode}, 0400, "Only root may read /etc/shadow");
+
+=pod
+
+=head2 Choosing which home directories need to be recreated
+
+=cut
+
+# Disable home dir creation. We don't need it in this test
+# series. Instead, we just record which home dirs would have been
+# created.
+no warnings 'redefine';
+*NCM::Component::accounts::create_home = sub{
+    my ($self, $acc) = @_;
+    push(@{$self->{created_homes}}, $acc);
+};
+use warnings 'redefine';
+
+$sys->{passwd}->{foo}->{createHome} = 1;
+$sys->{passwd}->{root}->{createHome} = 1;
+$sys->{passwd}->{bar}->{createHome} = 0;
+
+$cmp->build_home_dirs($sys->{passwd});
+
+is(scalar(@{$cmp->{created_homes}}), 1,
+   "Attempted to create the correct amount of home dirs");
+is($cmp->{created_homes}->[0], "foo", "The home dir for the corract account was created");
+
+
+=pod
+
+=head2 C<commit_configuration>
+
+This function must ensure that groups and accounts are committed, and
+that the requested home dirs are created
+
+=cut
+
+$sys->{passwd}->{foo}->{shell} = "newshell";
+$sys->{groups}->{root}->{gid} = 42;
+delete($cmp->{created_homes});
+
+$cmp->commit_configuration($sys);
+is($cmp->{created_homes}->[0], "foo", "commit_configuration creates home dirs");
+$fh = get_file("/etc/passwd");
+like($fh, qr{^foo:.*:newshell$}m, "commit_configuration calls commit_accounts");
+$fh = get_file("/etc/group");
+like($fh, qr{^root:x:42}m, "commit_configuration calls commit_groups");
 
 Test::NoWarnings::had_no_warnings();
 
