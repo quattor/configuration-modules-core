@@ -626,6 +626,8 @@ sub Configure
     if (!$NoAction) {
 	$self->commit_configuration($system);
     }
+
+    return 1;
 }
 
 1;
