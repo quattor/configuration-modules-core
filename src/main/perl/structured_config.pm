@@ -38,6 +38,14 @@ sub restart_daemon {
     return 1;
 }
 
+sub needs_restarting
+{
+    my ($self, $fh, $srv) = @_;
+
+    return $fh->close() && $srv->{daemon};
+}
+
+
 # Generate $file, configuring $srv. It will instantiate the correct
 # configuration module (typically JSON::XS, YAML::XS, Config::General
 # or Config::Tiny.
@@ -49,7 +57,7 @@ sub handle_service
     my $group = getgrnam($srv->{group});
     my $perms = $srv->{mode};
 
-    if ($srv->{module} =~ m{^(\w+(?:::\w+)*(?:\s*qw\((?:\w*\s*)*\)))$}) {
+    if ($srv->{module} =~ m{^(\w+(?:::\w+)*(?:\s*qw\((?:\w*\s*)*\))?)$}) {
 	eval "use $1";
 	if ($@) {
 	    $self->error("Unable to load module $srv->{module}: $@");
@@ -72,7 +80,7 @@ sub handle_service
 				  group => $group);
 
     print $fh $m->($d, $srv->{contents}), "\n";
-    if ($fh->close() && exists($srv->{daemon})) {
+    if ($self->needs_restarting($fh, $srv)) {
 	$self->{daemons}->{$srv->{daemon}} = 1;
     }
     return 1;
