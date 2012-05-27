@@ -7,7 +7,7 @@ declaration template components/${project.artifactId}/schema;
 
 include { 'quattor/schema' };
 
-type ${project.artifact_id}_extension = extensible {};
+type ${project.artifactId}_extension = extensible {};
 
 type ${project.artifactId}_config =  {
      'mode' : long = 0644
