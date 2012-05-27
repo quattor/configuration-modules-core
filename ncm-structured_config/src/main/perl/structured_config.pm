@@ -18,6 +18,7 @@ use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
+use EDG::WP4::CCM::Element qw(unescape);
 
 use Readonly;
 
@@ -67,6 +68,7 @@ sub handle_service
 
     my $d = $srv->{module}->new();
     my $m = $d->can("Dump") 	||
+	$d->can("encode")       ||
 	$d->can("write_string") ||
 	$d->can("save_string");
 
