@@ -53,12 +53,9 @@ sub handle_service
 {
     my ($self, $file, $srv) = @_;
 
-    my $owner = getpwnam($srv->{owner});
-    my $group = getgrnam($srv->{group});
-    my $perms = $srv->{mode};
-
     if ($srv->{module} =~ m{^(\w+(?:::\w+)*(?:\s*qw\((?:\w*\s*)*\))?)$}) {
-	eval "use $1";
+	$srv->{module} = $1;
+	eval "use $srv->{module}";
 	if ($@) {
 	    $self->error("Unable to load module $srv->{module}: $@");
 	    return;
@@ -72,6 +69,15 @@ sub handle_service
     my $m = $d->can("Dump") 	||
 	$d->can("write_string") ||
 	$d->can("save_string");
+
+    if (!$m) {
+	$self->error("Module $srv->{module} doesn't support any known method");
+	return;
+    }
+
+    my $owner = getpwnam($srv->{owner});
+    my $group = getgrnam($srv->{group});
+    my $perms = $srv->{mode};
 
     my $fh = CAF::FileWriter->new($file,
 				  log 	=> $self,
