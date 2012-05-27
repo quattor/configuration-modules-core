@@ -85,6 +85,17 @@ my %commands_run;
 
 =pod
 
+=item * C<%commands_status>
+
+Desired exit status for a command. If the command is not present here,
+it is assumed to succeed.
+
+=cut
+
+my %command_status;
+
+=pod
+
 =item * C<%desired_outputs>
 
 When we know the component will call C<CAF::Process::output> and
@@ -108,7 +119,7 @@ my %desired_file_contents;
 my %configs;
 
 our @EXPORT = qw(get_command set_file_contents get_file
-		 get_config_for_profile);
+		 get_config_for_profile set_command_status);
 
 $main::this_app = CAF::Application->new('a', "--verbose", @ARGV);
 
@@ -184,7 +195,11 @@ foreach my $method (qw(run execute trun)) {
 	$commands_run{$cmd} = { object => $self,
 				method => $method
 			      };
-	$? = 0;
+	if (exists($command_status{$cmd})) {
+	    $? = $command_status{$cmd};
+	} else {
+	    $? = 0;
+	}
 	if ($self->{opts}->{stdout}) {
 	    $self->{opts}->{stdout} = $desired_outputs{$cmd};
 	}
@@ -331,6 +346,13 @@ sub get_config_for_profile
     my ($profile) = @_;
 
     return $configs{$profile};
+}
+
+sub set_command_status
+{
+    my ($cmd, $st) = @_;
+
+    $command_status{$cmd} = $st;
 }
 
 1;
