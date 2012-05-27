@@ -19,9 +19,8 @@ NCM components:
 * Configuration of [sudo](https://en.wikipedia.org/wiki/Sudo).
 * Configuration of [Nagios](http://www.nagios.org) and NRPE.
 * Configuration of [Icinga](http://www.icinga.org).
-...
 
-And much more.
+... and much more.
 
 ## TODO ##
 
