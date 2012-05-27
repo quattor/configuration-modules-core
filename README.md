@@ -16,9 +16,9 @@ An incomplete list of what you can expect with our current library of
 NCM components:
 
 * Addition/removal/modification of local accounts
-* Configuration of [sudo]().
-* Configuration of [Nagios](www.nagios.org) and NRPE.
-* Configuration of [Icinga](www.icinga.org).
+* Configuration of [sudo](https://en.wikipedia.org/wiki/Sudo).
+* Configuration of [Nagios](http://www.nagios.org) and NRPE.
+* Configuration of [Icinga](http://www.icinga.org).
 ...
 
 And much more.
