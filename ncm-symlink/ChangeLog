@@ -1,5 +1,10 @@
 2012-05-29  Nick Williams
 
+	* Release: 1.1.0
+	- remove some cruft accidentally included in first commit
+
+2012-05-29  Nick Williams
+
 	* Release: 1.0.0
 	- initial commit
 
