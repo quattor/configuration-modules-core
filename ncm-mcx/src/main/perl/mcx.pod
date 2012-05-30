@@ -1,0 +1,50 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=begin comment
+
+Be sure to put a blank line before and after every formatting command
+
+=end comment
+
+=head1 NAME
+
+mcx : MCX NCM component.
+
+=head1 DESCRIPTION
+
+Generic MCX component. This component does not do any filtering of MCX values, but directly applies provided configuration into the local MCX configuration of the OS X computer. 
+
+=head1 RESOURCES
+
+=head2 /software/components/mcx/configuration
+
+An nlist of MCX data to apply.
+
+=head1 DEPENDENCIES
+
+ncm-directoryservices
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Nick Williams <Nick.Williams@morganstanley.com>
+
+=head1 MAINTAINER
+
+Nick Williams <Nick.Williams@morganstanley.com>
+
+=head1 VERSION
+
+1.0.0
+
+=head1 SEE ALSO
+
+ncm-ncd(1), ncm-directoryservices(1)
+
+=cut
