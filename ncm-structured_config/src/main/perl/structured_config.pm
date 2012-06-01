@@ -39,6 +39,20 @@ sub restart_daemon {
     return 1;
 }
 
+sub load_module
+{
+    my ($self, $module) = @_;
+
+    $self->verbose("Loading module $module");
+
+    eval "use $module";
+    if ($@) {
+	$self->error("Unable to load $module: $@");
+	return;
+    }
+    return 1;
+}
+
 sub needs_restarting
 {
     my ($self, $fh, $srv) = @_;
@@ -46,6 +60,49 @@ sub needs_restarting
     return $fh->close() && $srv->{daemon};
 }
 
+sub json
+{
+    my ($self, $cfg) = @_;
+
+    $self->load_module("JSON::XS") or return;
+    my $j = JSON::XS->new();
+    return $j->encode($cfg);
+}
+
+sub yaml
+{
+    my ($self, $cfg) = @_;
+
+    $self->load_module("YAML::XS") or return;
+
+    if ($@) {
+	$self->error("Unable to load YAML::XS: $@");
+	return;
+    }
+
+    return YAML::XS::Dump($cfg);
+}
+
+sub tiny
+{
+    my ($self, $cfg) = @_;
+
+    $self->load_module("Config::Tiny") or return;
+
+    my $c = Config::Tiny->new();
+
+    $c->{_} = $cfg;
+    return $c->as_string();
+}
+
+sub general
+{
+    my ($self, $cfg) = @_;
+
+    $self->load_module("Config::General") or return;
+    my $c = Config::General->new($cfg);
+    return $c->save_string();
+}
 
 # Generate $file, configuring $srv. It will instantiate the correct
 # configuration module (typically JSON::XS, YAML::XS, Config::General
@@ -54,26 +111,16 @@ sub handle_service
 {
     my ($self, $file, $srv) = @_;
 
-    if ($srv->{module} =~ m{^(\w+(?:::\w+)*(?:\s*qw\((?:\w*\s*)*\))?)$}) {
-	$srv->{module} = $1;
-	eval "use $srv->{module}";
-	if ($@) {
-	    $self->error("Unable to load module $srv->{module}: $@");
-	    return;
-	}
-    } else {
-	$self->error("Module $srv->{module} is not a valid Perl module");
+    my $method;
+
+    if ($srv->{module} !~ m{^(\w+)$}) {
+	$self->error("Invalid configuration style: $srv->{module}");
 	return;
     }
 
-    my $d = $srv->{module}->new();
-    my $m = $d->can("Dump") 	||
-	$d->can("encode")       ||
-	$d->can("write_string") ||
-	$d->can("save_string");
-
-    if (!$m) {
-	$self->error("Module $srv->{module} doesn't support any known method");
+    $method = $self->can(lc($1));
+    if (!$method) {
+	$self->error("Don't know how to handle $srv->{module}-style configs");
 	return;
     }
 
@@ -87,7 +134,7 @@ sub handle_service
 				  owner => $owner,
 				  group => $group);
 
-    print $fh $m->($d, $srv->{contents}), "\n";
+    print $fh $method->($self, $srv->{contents}), "\n";
     if ($self->needs_restarting($fh, $srv)) {
 	$self->{daemons}->{$srv->{daemon}} = 1;
     }

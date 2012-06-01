@@ -45,9 +45,10 @@ ok(!$cmp->handle_service("foo", $srv),
 is($shouldnt_be_reached, undef,
    "Sanitization prevented malicious code injection");
 $srv->{module} = 'ljhljh';
+$cmp->{ERROR} = 0;
 ok(!$cmp->handle_service("foo", $srv),
    "Non-existing module raises an error");
-ok($@, "Exception was risen on non-existing module");
+is($cmp->{ERROR}, 1, "Error found and diagnosed");
 
 =pod
 

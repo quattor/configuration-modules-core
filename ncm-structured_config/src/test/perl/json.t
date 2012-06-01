@@ -35,8 +35,8 @@ my $cfg = {
 				a => [0..3]
 				}
 			},
-	   daemon => 'httpd',,
-	   module => "JSON::Any"
+	   daemon => 'httpd',
+	   module => "json",
 	  };
 
 my $restart = 1;
