@@ -39,7 +39,7 @@ Nick Williams <Nick.Williams@morganstanley.com>
 
 =head1 VERSION
 
-1.0.0
+1.1.0
 
 =head1 SEE ALSO
 

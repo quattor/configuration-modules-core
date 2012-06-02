@@ -93,6 +93,7 @@ sub check_ldapv3 {
     # So we write to an alternate location and check that file.
     my $binfile = "/Library/Preferences/OpenDirectory/Configurations/LDAPv3/$node.plist";
     my $txtfile = "/var/lib/ncm-directoryservices/ldapv3-$node.plist";
+    LC::Check::directory("/Library/Preferences/OpenDirectory/Configurations/LDAPv3");
     LC::Check::directory("/var/lib/ncm-directoryservices");
 
     my $plist = $self->element_to_plist($inf);
@@ -110,6 +111,7 @@ sub check_ldapv3 {
         my $out = $proc->output();
         if ($? >> 8) {
             $self->error("failed to convert plist to binary ($binfile): $out");
+            unlink($txtfile); # Make sure we try again next time!
             # XXX: put the original file back
             return 0;
         }
@@ -119,7 +121,7 @@ sub check_ldapv3 {
         if (!killall('INT', '/usr/libexec/opendirectoryd')) {
             $self->warn("failed to restart opendirectoryd ($!)");
         }
-        sleep(1);
+        sleep(3);
     }
 }
 
