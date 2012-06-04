@@ -92,7 +92,7 @@ sub tiny
     my $c = Config::Tiny->new();
 
     $c->{_} = $cfg;
-    return $c->as_string();
+    return $c->write_string();
 }
 
 sub general
