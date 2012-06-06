@@ -4,7 +4,7 @@ use warnings;
 
 use FindBin qw($Bin);
 use lib "$Bin";
-use Test::More tests => 48;
+use Test::More tests => 49;
 use File::Find;
 
 use CAF::Application;
@@ -155,3 +155,11 @@ for my $i (1..3) {
 delete($t->{external_files});
 delete($t->{external_dirs});
 validate_tree($t, $rs);
+
+$t = init_tree();
+
+my $c = $t->{hosts_generic};
+delete($t->{hosts_generic});
+$rs = $comp->print_general($t);
+unlike("$rs", qr{^cfg_file\s*=\s*$c$}m,
+       "Non-existing files don't get printed");

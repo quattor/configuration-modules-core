@@ -15,6 +15,7 @@
     <modules>
         <module>ncm-accounts</module>
 	<module>ncm-structured_config</module>
+	<module>ncm-icinga</module>
     </modules>
 
 </project>
