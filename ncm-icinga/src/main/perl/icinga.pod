@@ -1,7 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
+# ${build-info}
 
 =pod
 
@@ -28,9 +28,9 @@ Global settings for Icinga. These settings will be written in
 
 =item * /software/components/icinga/cgi
 
-Configuration of the Icinga web interface. 
+Configuration of the Icinga web interface.
 This path is optional. If it exists, the settings will be
-written in /etc/icinga/cgi.cfg. 
+written in /etc/icinga/cgi.cfg.
 
 =item * /software/components/icinga/hosts
 

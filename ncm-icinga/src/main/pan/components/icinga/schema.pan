@@ -1,6 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
 declaration template components/icinga/schema;
 
@@ -24,7 +25,7 @@ type contactgroupstring = string with exists ("/software/components/icinga/conta
 	SELF=="*";
 
 type contactstring = string with exists ("/software/components/icinga/contacts/" + SELF) ||
-	SELF=="*";	
+	SELF=="*";
 
 type servicegroupstring = string with exists ("/software/components/icinga/servicegroups/" + SELF) ||
 	SELF=="*";
@@ -69,7 +70,7 @@ type structure_icinga_host_generic = {
 
 # Host definition.
 type structure_icinga_host = {
-	"alias" : string 
+	"alias" : string
 	"use" ? string # Used to insert a template host declaration
 	"address" ? type_ip # If not present, gethostbyname will be used.
 	"parents" ? hoststring[]
@@ -118,7 +119,7 @@ type structure_icinga_hostdependency = {
 # Service definition
 type structure_icinga_service = {
 	"name"	? string # Used when it s a template declaration
-	"use" ? string # Used to include template 
+	"use" ? string # Used to include template
 	"host_name" ? hoststring[]
 	"hostgroup_name" ? hostgroupstring[]
 	"servicegroups" ? servicegroupstring []
@@ -172,7 +173,7 @@ type structure_icinga_servicedependency = {
 	"hostgroup_name" ? hostgroupstring
 	"service_description" : string
 	"inherits_parent" ? boolean
-	"execution_failure_criteria" ? execution_failure_string [] 
+	"execution_failure_criteria" ? execution_failure_string []
 	"notification_failure_criteria" ? notification_failure_string []
 	"dependency_period" ? timeperiodstring
 } with has_host_or_hostgroup (SELF);;
@@ -217,7 +218,7 @@ type structure_icinga_timeperiod = {
 type structure_icinga_serviceextinfo = {
 	"host_name" ? hoststring[]
 	"service_description" : string
-	"hostgroup_name" ? hostgroupstring[]	
+	"hostgroup_name" ? hostgroupstring[]
 	"notes" ? string
 	"notes_url" ? type_absoluteURI
 	"action_url" ? type_absoluteURI
@@ -323,7 +324,7 @@ type structure_icinga_icinga_cfg = {
 	"state_retention_file" : string = "/var/icinga/retention.dat"
 	"retention_update_interval" : long = 60
 	"use_retained_program_state" : boolean = true
-	"dump_retained_host_service_states_to_neb" : boolean = true 
+	"dump_retained_host_service_states_to_neb" : boolean = true
 	"use_retained_scheduling_info" : boolean = false
 	"interval_length" : long = 60
 	"use_aggressive_host_checking" : boolean = false
@@ -365,7 +366,7 @@ type structure_icinga_icinga_cfg = {
 	"use_embedded_perl_implicitly" : boolean = true
 	"stalking_event_handlers_for_hosts" : boolean = false
 	"stalking_event_handlers_for_services" : boolean = false
-	"illegal_object_name_chars" : string = "`~!$%^&*|'<>?,()\"" 
+	"illegal_object_name_chars" : string = "`~!$%^&*|'<>?,()\""
 	"illegal_macro_output_chars" : string = "`~$^&|'<>\""
 	"use_regexp_matching" : boolean = true
 	"use_true_regexp_matching" : boolean = false
@@ -406,7 +407,7 @@ type structure_icinga_icinga_cfg = {
     "check_result_path" : string = "/var/icinga/checkresults"
     "event_profiling_enabled" : boolean = false
 } = nlist();
-	
+
 type structure_icinga_service_list=structure_icinga_service[];
 
 type structure_icinga_ido2db_cfg = {

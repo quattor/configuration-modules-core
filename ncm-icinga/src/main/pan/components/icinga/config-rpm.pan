@@ -1,13 +1,8 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
-################################################################################
-# This is 'TPL/config.tpl', a ncm-icinga's file
-################################################################################
-#
-#
-################################################################################
 unique template components/icinga/config-rpm;
 include {'components/icinga/functions'};
 include {'components/icinga/schema'};

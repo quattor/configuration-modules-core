@@ -1,24 +1,21 @@
-#!/usr/bin/perl
+# -*- mode: cperl -*-
+# ${license-info}
+# ${author-info}
+# ${build-info}
+
+=pod
+
+=head1 Smoke test
+
+Basic test that ensures that our module will load correctly.
+
+B<Do not disable this test>. And do not push anything to SF without
+having run, at least, this test.
+
+=cut
+
 use strict;
 use warnings;
-use FindBin qw($Bin);
-use lib "$Bin";
 use Test::More tests => 1;
-use File::Find;
-
-BEGIN {
-
-    my $lib;
-    File::Find::find(sub {
-		   if ($_ eq 'icinga.pm' &&
-		       $File::Find::dir ne "$Bin/..") {
-		       $lib = $File::Find::name
-		   }
-	       },
-	       "$Bin/..");
-    $lib =~ m{(.*)/NCM/Component/icinga.pm} or die "Not found! $lib";
-    unshift(@INC, $1);
-}
 
 use_ok("NCM::Component::icinga");
-

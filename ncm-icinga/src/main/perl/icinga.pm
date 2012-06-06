@@ -1,12 +1,8 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
-# File: icinga.pm
-# Implementation of ncm-icinga
-# Author: Wouter Depypere <wouter.depypere@ugent.be>
-# Version: 0.0.7 : 14/02/12 20:30
-#  ** Generated file : do not edit **
 #
 # Note: all methods in this component are called in a
 # $self->$method ($config) way, unless explicitly stated.
