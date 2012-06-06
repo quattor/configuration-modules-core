@@ -132,6 +132,7 @@ sub handle_service
 				  log 	=> $self,
 				  mode 	=> $perms,
 				  owner => $owner,
+				  backup => $srv->{backup},
 				  group => $group);
 
     print $fh $method->($self, $srv->{contents}), "\n";
