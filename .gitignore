@@ -3,4 +3,3 @@ target/
 *#*
 *.#*
 junit_output.xml
-cover_db/

@@ -1,0 +1,252 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-accounts: NCM component to manage the local accounts on the machine.
+
+=head1 DESCRIPTION
+
+The I<accounts> component manages the local accounts on a machine. LDAP
+authentication depends on the LDAP configuration, which is handled by
+L<ncm-authconfig>.
+
+Shadowing of passwords is also controlled by L<ncm-authconfig>.
+
+=head1 FUNCTIONS
+
+accounts provides several functions as an API to handle creation of users and groups.
+They are mainly targeted at helping creating consistent accounts across machines,
+using a central definition of all accounts and a per machine list of accounts to be
+actually created.
+
+All these functions update a structure_accounts (return value may be assigned to
+"/software/components/accounts").
+
+Behaviour of these functions can be customized by definining some variables before
+calling them, mainly :
+
+=over 4
+
+=item ACCOUNTS_USER_HOME_ROOT
+
+defines default root for home directory (D: /home)
+
+=item ACCOUNTS_USER_CREATE_HOME
+
+defines if home directory must be created by default (D : true)
+
+=item ACCOUNTS_USER_AUTOGROUP
+
+defines if a group must be defined with the same name as the user, if no group
+has been explicitly specified (D: true).
+
+=item ACCOUNTS_USER_CHECK_GROUP
+
+defines if the default group must be created if it doesn't exist, with a gid
+equals to uid (D: true)
+
+=item ACCOUNTS_USER_COMMENT
+
+defines a default value for user comment (D: "Created by ncm-accounts")
+
+=item ACCOUNTS_GROUP_COMMENT
+
+defines a default value for group comment (D: "Created by ncm-accounts")
+
+=back
+
+=head2 create_accounts_from_db(userList:nlist, users:list:optional, accountType:optional)
+
+This function creates users or groups from a nlist containing user or group characteristics.
+It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+
+User/group characteristics must be provided as structure_userinfo/structure_groupinfo.
+
+Second parameter, if presents, gives the list of users to create from user_list.
+This allows to use a unique user/group definition for all nodes, to warrant consistency
+between nodes.
+
+By default (accountType undefined or 0), this function creates user accounts.
+To create groups, set third parameter (accountType) to 1.
+
+
+=head2 create_group(groupname:string, params:structure_groupinfo)
+
+This function creates a group, applying some defaults defined by variables and checking
+information consistency.
+It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+
+
+
+=head2 create_user(username:string, params:structure_userinfo)
+
+This function creates a user, applying some defaults defined by variables and checking
+ information consistency (e.g. group existence).
+It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+
+
+=head1 RESOURCES
+
+=head2 /software/components/accounts/rootpwd
+
+The crypted root password for the machine.
+
+=head2 /software/components/accounts/users
+
+An nlist of users to configure on the node.  The key is the account
+name (or base name for pool accounts). The numerical UID is
+mandatory. The available fields are:
+
+=over
+
+=item comment
+
+real name or comment about user.  Defaults to user name itself.
+
+=item homeDir
+
+full path of the home directory of the user.  Defaults
+to the system default. For pool accounts this will be used as a
+base for creating numbered home directories; if this is not set
+the username will be used as a base.
+
+=item createHome
+
+boolean indicating whether to create a home directory for the user.
+Defaults to false.
+
+=item groups
+
+a list of groups for this user.  The first group listed
+is the primary group.  If this is not given, then it will default to a
+group named identically to the user name. NOTE: If this group already
+exists, then the command to add the user will fail.
+
+=item password
+
+the crypted password entry for the user.  No
+default. If not given it will result in a locked account.
+
+=item shell
+
+the shell for the user.  Defaults to /bin/bash.
+
+=item uid
+
+the uid value for this account. Mandatory. This is interpreted as the
+base uid value for pool accounts (i.e. poolSize > 0).
+
+=item poolStart
+
+the index at which to start the pool accounts.  The
+default is 0.  This must be a non-negative number.
+
+=item poolDigits
+
+the number of digits to which the pool account
+numbers are padded. For example a value of 3 will create accounts
+atlas000, atlas001, etc. The default is the number of digits in the
+highest-numbered pool account.
+
+=item poolSize
+
+number of pool accounts to create.  The default is
+0 which indicates that it is a normal (unique) account.  A value
+greater than 0 will create a set of numbered accounts with the given
+user name as a base.  E.g. a base name of "atlas" and a poolSize=3
+will create three accounts atlas0 atlas1 atlas2.
+
+=back
+
+=head2 /software/components/accounts/groups
+
+An nlist of groups to configure on the node.  The key is the group
+name.  At least one field must be specified.
+
+=over
+
+=item comment
+
+ignored, but provided so gid doesn't have to be
+
+=item gid
+
+the optional gid number for the group
+
+=back
+
+=head2 /software/components/accounts/login_defs
+
+A nlist of values to be set in /etc/login.defs. NOTE: This
+configuration file is specific to RedHat-like systems; setting will be
+ignored on other systems.  This file configures all kinds of default
+settings such as:
+
+=over
+
+=item uid_min, uid_max
+
+Min/max values for automatic uid selection in useradd
+
+=item gid_min, gid_max
+
+Min/max values for automatic gid selection in groupadd
+
+=item pass_max_days
+
+Maximum number of days a password may be used.
+
+=item pass_min_days
+
+Minimum number of days allowed between password changes.
+
+=item pass_min_len
+
+Minimum acceptable password length.
+
+=item pass_warn_age
+
+Number of days warning given before a password expires.
+
+=item create_home
+
+If useradd should create home directories for users by default
+
+=back
+
+=head2 /software/components/accounts/remove_unknown
+
+Flag to indicate whether unknown accounts should be deleted.  The
+default is false.  The root account can never be removed.
+
+=head1 LIMITATIONS
+
+=head2 Local users belonging to LDAP groups
+
+When a local user has to belong to a group defined only on LDAP, a
+local group with the desired numerical ID is created.
+
+This group has the same name as the user ID. It will be removed on the
+next run of the component if C<remove_unknown> is set to true. This is
+somewhat ugly, but doesn't affect the system behaviour at all, so it
+B<won't> be fixed.
+
+=head2 nsswitch.conf status
+
+The component has been tested with C<files> as the primary source on
+/etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
+produce strange behaviour. These settings are not controlled by
+ncm-accounts but by L<ncm-authconfig>.
+
+=head1 SEE ALSO
+
+L<ncm-authconfig>
+
+=head1 AUTHOR
+
+Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+=cut
