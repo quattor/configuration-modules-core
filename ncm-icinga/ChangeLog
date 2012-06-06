@@ -1,0 +1,63 @@
+2012-02-14  Luis Fernando Muñoz Mejías
+
+	* Release: 0.0.7
+	- Add tests.
+
+2012-02-14  Luis Fernando Muñoz Mejías
+
+	* Release: 0.0.6
+	- Print properly broker_module directives.
+
+2011-12-16  LFM
+
+	* Release: 0.0.5
+	- Add a complete test suite.
+	
+	It contains some "fake" modules to ensure the test suite doesn't
+	try to do any privileged actions. But we now know what files are being
+	written, and their contents.
+
+2011-12-16  LFM
+
+	* Release: 0.0.4
+	- Restructure the code.
+
+	It is more readable now, and also it's easier to automate tests.
+
+2011-12-14  LFM
+
+	* Release: 0.0.3
+	- Adjust to the coding style document.
+	
+	* Use CAF::FileWriter and CAF::Process.
+	* Simplify some functions.
+	* Log via $self and not $this_app.
+	
+	This fixes some situations where errors were not diagnosed by ncm-ncd.
+
+2011-10-04 Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Added nicer error handling in component.
+
+2011-09-23 Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Changed schema to represent all the options in icinga 1.5.1
+	* Updated component code
+	* Fixed some minor issues
+
+2011-09-20 Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Updated everything to work with icinga 1.5.1.
+
+2011-04-04  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* Added ido2db utils.
+
+2011-03-30  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* icinga.pm.cin: Fixed directory problems.
+
+2011-03-11  Wouter Depypere  <wouter.depypere@ugent.be>
+
+	* icinga.pm.cin: First Icinga component.
+
