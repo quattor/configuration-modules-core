@@ -5,7 +5,8 @@
 
 =head1 NAME
 
-ncm-${project.artifactId}: Configure services whose config format is standard, such as YAML or JSON.
+ncm-${project.artifactId}: Configure services whose config format is
+very widespread, such as YAML or JSON.
 
 =head1 DESCRIPTION
 
@@ -15,11 +16,91 @@ ${project.artifactId}
 
 =head2 /software/components/${project.artifactId}
 
-The configuration information for the component.  Each field should
-be described in this section. 
+The configuration information for the component.  It is an nlist of
+C<services>, indexed by absolute path. Each service contains:
+
+=over 4
+
+=item * C<mode> : long
+
+File permissions. Defaults to 0644.
+
+=item * C<owner> : string
+
+File owner. Defaults to root.
+
+=item * C<group> : string
+
+File group. Defaults to root.
+
+=item * backup ? string
+
+Extension for the file's backup.
+
+=item * module : string
+
+Module to render the configuration file. See L<CONFIGURATION MODULES>
+below.
+
+=item * daemon ? string
+
+Daemon to restart if the file changes.
+
+Even if multiple C<services> are associated to the same daemon, the
+daemon will be restarted at most once.
+
+=item * contents
+
+A free-form structure describing the valid entries for the
+configuration file. It is recommended to define another type for each
+config file, and bind it to these contents, to get the best
+validation.
+
+=back
+
+=head1 CONFIGURATION MODULES
+
+The following formats my be rendered:
+
+=over 4
+
+=item * general
+
+Uses Perl's L<Config::General>. This leads to configuration files
+similar to this one:
+
+    <nlist>
+      <another nlist>
+        scalar value
+        another scalar value>
+      </another nlist>
+    </nlist>
+    list_element 0
+    list_element 1
+    list_element 2
+
+=item * tiny
+
+Uses Perl's L<Config::Tiny>, typically for C<key = value> files.
+
+=item * yaml
+
+Uses Perl's L<YAML::XS> for rendering YAML configuration files.
+
+=item * json
+
+Uses L<JSON::XS> for rendering JSON configuration files.
+
+=back
+
+=head1 EXAMPLES
 
 =head1 AUTHOR
 
 ${author-info}
+
+=head1 TODO
+
+Anyone knows of a good Apache config renderer for Perl??
 
 =cut
