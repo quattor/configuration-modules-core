@@ -508,6 +508,9 @@ sub restart_icinga
 	$cmd->pushargs("restart");
     }
     $cmd->run();
+    if ($?) {
+	$self->error ("Unable to restart Icinga");
+    }
     return $cmd;
 }
 
