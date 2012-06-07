@@ -95,6 +95,35 @@ Uses L<JSON::XS> for rendering JSON configuration files.
 
 =head1 EXAMPLES
 
+=head2 Configuring /etc/ccm.conf
+
+The well-known /etc/ccm.conf can be defined like this:
+
+=head3 Define a valid structure for the file
+
+    type ccm_conf_file = {
+        "profile" : type_absoluteURI
+        "debug" : long(0..5)
+        "force" : boolean = false
+        ...
+    };
+
+    bind "/software/components/structured_config/{/etc/ccm.conf}/contents" = ccm_conf_file;
+
+=head3 Fill in the contents
+
+    prefix "/software/components/structured_config/{/etc/ccm.conf}"
+
+    "contents/profile" = "http://www.google.com";
+    "module" = "general";
+
+=head3 And that's it
+
+Now, just compile and deploy. You should get the same results as with
+old good ncm-ccm.
+
+
+
 =head1 AUTHOR
 
 ${author-info}
