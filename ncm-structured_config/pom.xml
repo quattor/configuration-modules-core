@@ -35,22 +35,15 @@
 
   <developers>
     <developer>
-      <name>Luis Fernando Muñoz Mejías</name>
+      <name>Luis Fernando Mu&ntilde;oz Mej&iacute;as</name>
       <email>Luis.Munoz@UGent.be</email>
     </developer>
   </developers>
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
+      <name>Luis Fernando Mu&ntilde;oz Mej&iacute;as</name>
+      <email>Luis.Munoz@UGent.be</email>
       <roles>
 	<role>author</role>
       </roles>
