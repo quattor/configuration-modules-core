@@ -515,7 +515,7 @@ sub pxeboot_config{
         if ($config->elementExists($path."/dhcp_clients/".$nodename."/pxe_append")) {
             $append=$config->getValue($path."/dhcp_clients/".$nodename."/pxe_append");
         }
-        push @pxeboot_base_cmd, "-A", "$global_append $append";
+        push @pxeboot_base_cmd, "-A", "'$global_append $append'";
         
         #
         # specify a snaphot name to avoid switching between using the snapshot "node" and "node.domain"
