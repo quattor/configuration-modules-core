@@ -124,16 +124,13 @@ sub handle_service
 	return;
     }
 
-    my $owner = getpwnam($srv->{owner});
-    my $group = getgrnam($srv->{group});
-    my $perms = $srv->{mode};
+    my %opts  = (log => $self,
+		 mode => $srv->{mode},
+		 owner => scalar(getpwnam($srv->{owner})),
+		 group => scalar(getgrnam($srv->{group})));
+    $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
-    my $fh = CAF::FileWriter->new($file,
-				  log 	=> $self,
-				  mode 	=> $perms,
-				  owner => $owner,
-				  backup => $srv->{backup},
-				  group => $group);
+    my $fh = CAF::FileWriter->new($file, %opts);
 
     print $fh $method->($self, $srv->{contents}), "\n";
     if ($self->needs_restarting($fh, $srv)) {
