@@ -1,9 +1,7 @@
 # Simple testing profile for sudo component.
 # One correct alias defined for users_aliases field. Should work OK.
 object template profile_test1aliases_cmd;
-include pro_declaration_types;
-include pro_declaration_component_sudo;
-include pro_declaration_functions_sudo;
+
 
 "/software/components/sudo/privilege_lines" = list (
 	nlist ( "user",		"ALL",
