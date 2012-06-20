@@ -305,7 +305,9 @@ sub write_sudoers {
     return 0;
 }
 
-# Generates the #include <filename> lines.
+# Generates the #include <filename> lines. Uses getTree because it was
+# added later. The rest of the component should get adapted. Just not
+# now.
 sub generate_includes
 {
     my ($self, $config) = @_;
