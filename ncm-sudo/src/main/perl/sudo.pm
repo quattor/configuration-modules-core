@@ -163,18 +163,18 @@ sub generate_general_options {
 			$ln = "\t";
 		}
 		my %opts = $def{PRIVILEGE_OPTS()}->getHash;
-		foreach (BOOLEAN_OPTS) {
-			if (defined $opts{$_}) {
-				if ($opts{$_}->getValue eq 'true') {
-					$ln .= "$_\t";
+		foreach my $b (BOOLEAN_OPTS) {
+			if (defined $opts{$b}) {
+				if ($opts{$b}->getValue eq 'true') {
+					$ln .= "$b\t";
 				} else {
-					$ln .= "!$_\t";
+					$ln .= "!$b\t";
 				}
 			}
 		}
-		foreach (INT_OPTS, STRING_OPTS) {
-			$ln .= "$_=" . $opts{$_}->getValue . "\t"
-			if defined $opts{$_};
+		foreach my $o (INT_OPTS, STRING_OPTS) {
+			$ln .= "$o=" . $opts{$o}->getValue . "\t"
+			if defined $opts{$o};
 		}
 		$ln =~ s{\t$}{};
 		push (@$dfl, $ln);
