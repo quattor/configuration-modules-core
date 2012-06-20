@@ -1,0 +1,136 @@
+2012-04-18  Ronald Starink
+
+	* Release: 1.2.4
+	- Enabled configuration of Defaults and added support for commands in Defaults
+
+2011-02-22  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.3
+	- Update the documentation.
+
+l2011-02-22  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.2
+	- Fix typo in the schema.
+
+2011-02-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.1
+	- Fix a syntax error in the schema. Sorry about it.
+
+2011-02-21  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.0
+	- Allow to include other sudoers files.
+
+2010-11-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.12
+	- Remove wrong dependency.
+
+2010-11-11  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.11
+	- Fix bug #75192
+
+2010-10-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.10
+	- Fix bug #73901
+
+	Verify that the contents of the sudoers file are *really* correct,
+	and raise an error (and keep the old file) if they are not.
+
+2010-07-23  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.1.9
+	- Fix bug #70562.
+
+	passwd_tries was processed both as a boolean option and as an
+	integer option, when according to the sudoers man page it's only
+	an integer one.
+
+2009-09-08  Loic Brarda
+
+	* Release: 1.1.8
+	- Added env_keep and env_delete options
+	Added some comments in the generated sudoers file
+
+2009-02-13  Nick Williams
+
+	* Release: 1.1.7
+	- fix templates for panc v8 syntax (argc -> ARGC was previously neglected)
+
+2009-02-13  Nick Williams
+
+	* Release: 1.1.6
+	- fix templates for panc v8 syntax (argv -> ARGV was previously neglected)
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 1.1.5
+	- Updated to comply with Panc v8 requirements.
+
+2007-07-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.4
+	- Improved alias handling and its documentation.
+
+2007-06-28  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.3
+	- Corrected wrong conversion from make tplconvert.
+
+2007-06-07  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.2
+	- Missed some tplconvert errors... now it's OK
+
+2007-04-03  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.1
+	- Removed deprecated 'descro'.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.0
+	- Removed old non-namespaced templates.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.7
+	- Adapted to the namespaces conversion.
+
+2007-03-26  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.6
+	- This is the good one, I promise.
+
+2007-03-26  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.5
+	- Adapted to the NEW namespaced layout.
+
+2007-03-02  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.4
+	- Replaced absolute path with relative one in Makefile
+
+2007-02-22  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.3
+	- Adapted to the namespaces structure.
+
+2007-02-21  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.2
+	- Tagging the component.
+
+2007-02-21  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* sudo.pm.cin: Completed implementation, starting testing.
+
+2007-02-19  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* sudo.pm.cin: Very first alpha version
+
