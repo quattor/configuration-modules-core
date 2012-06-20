@@ -254,8 +254,7 @@ sub write_sudoers {
 				   backup => '.old',
 				   log => $self);
 
-    print $fh ("# File created by ncm-sudo v. 1.2.4\n",
-	       "# Report bugs to CERN's savannah\n",
+    print $fh ("# File created by ncm-sudo v. ${project.version}\n",
 	       "# Read man(5) sudoers for understanding the structure\n",
 	       "# of this file\n");
 
