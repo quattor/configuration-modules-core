@@ -214,12 +214,11 @@ sub is_valid_sudoers
 {
     my ($self, $fh) = @_;
 
-    my $cnts = $fh->string_ref();
-
     my ($err, $out);
 
-    my $proc = CAF::Process->new ([VISUDO_CHECK], stdin => $$cnts,
+    my $proc = CAF::Process->new ([VISUDO_CHECK], stdin => "$fh",
 				  stderr => \$err, stdout => \$out,
+				  keeps_state => 1,
 				  log => $self);
 
     $proc->execute();
