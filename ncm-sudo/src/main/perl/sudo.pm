@@ -274,7 +274,7 @@ sub write_sudoers {
 	printf $fh "%-15s %10s\n", "Cmnd_Alias", $alias;
     }
 
-    print $fh "\n# Host alias specification";
+    print $fh "\n# Host alias specification\n";
     foreach my $alias (@{$aliases->{HOST_ALIASES()}}) {
 	printf $fh "%-15s %10s\n", "Host_Alias", $alias;
     }
