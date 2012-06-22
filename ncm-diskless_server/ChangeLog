@@ -1,5 +1,10 @@
 2012-06-22  Loic Brarda
 
+	* Release: 0.8.2
+	- fix bug in generating dhcpd.conf (introduced by the pxe_append parameter)
+
+2012-06-22  Loic Brarda
+
 	* Release: 0.8.1
 	- fix append options handling
 

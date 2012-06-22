@@ -699,7 +699,7 @@ sub dhcpdWrite{
                 elsif ( "$tag" eq "options" ){
                     print FH "\t$value;\n";
                 }
-                elsif ( "$tag" ne "bootdevice" ){
+                elsif ( "$tag" ne "bootdevice" and "$tag" ne "pxe_append"){
                     print FH "\t$dhcpTag{$tag} $value;\n";
                 }
             }
