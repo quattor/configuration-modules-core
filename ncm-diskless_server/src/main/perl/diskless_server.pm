@@ -447,9 +447,10 @@ sub pxeboot_config{
     
     push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
     
-    my $global_append;
+    my $global_append = "";
     if ($config->elementExists($path."/pxe/append")) {
-        my $global_append=$config->getValue($path."/pxe/append");
+        $global_append=$config->getValue($path."/pxe/append");
+#         $self->debug(5, "global append = $global_append");
 #         push @pxeboot_base_cmd, "-A", "$append";
     }
     
@@ -511,12 +512,12 @@ sub pxeboot_config{
             next;
         }
         
-        my $append;
+        my $append = "";
         if ($config->elementExists($path."/dhcp_clients/".$nodename."/pxe_append")) {
             $append=$config->getValue($path."/dhcp_clients/".$nodename."/pxe_append");
         }
-        push @pxeboot_base_cmd, "-A", "'$global_append $append'";
-        
+        $append = "'$global_append $append'";
+        $self->debug(5, "total append = $append");
         #
         # specify a snaphot name to avoid switching between using the snapshot "node" and "node.domain"
 #         @pxeboot_cmd = @pxeboot_base_cmd;
@@ -530,7 +531,7 @@ sub pxeboot_config{
                 stderr => \$stderr,
                 log => $self
                 );
-        $proc->pushargs ("-e", "$bootDevice", "--snapshot", "$nodename", "$node");
+        $proc->pushargs ("-e", "$bootDevice", "--snapshot", "$nodename", "-A", $append, "$node");
         $proc->run();
         if ( $? >> 8) {
             $self->error("pxeboot configure failed: $?");
