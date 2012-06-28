@@ -55,6 +55,9 @@ use constant GROUP_FILE => "/etc/group";
 use constant SHADOW_FILE => "/etc/shadow";
 use constant LOGINDEFS_FILE => "/etc/login.defs";
 
+# Default groups for the root account.
+use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
+
 use constant SKELDIR => "/etc/skel";
 
 # Expands the profile to the list of desired accounts, including
@@ -284,6 +287,7 @@ sub add_account
 	    }
 	}
     }
+
     if ($cfg->{groups}->[0] =~ m{^\d+$}) {
 	$cfg->{main_group} = $cfg->{groups}->[0];
     } else {
@@ -349,17 +353,29 @@ sub compute_root_user
 {
     my ($self, $system, $tree) = @_;
 
+    my $g = $system->{passwd}->{root}->{groups};
+
+    if (!$g || !@$g) {
+	$self->warn ("No groups found for root in the system. ",
+		     "Assigning default ones: ",
+		     join(", ", ROOT_DEFAULT_GROUPS));
+	$g = [ROOT_DEFAULT_GROUPS];
+    } else {
+	my @f = grep($_ ne "root", @$g);
+	$g = [ "root", @f];
+    }
+
     my $u = { uid => 0,
-	     groups => $system->{passwd}->{root}->{groups},
-	     password => ($tree->{rootpwd}
+	      groups => $g,
+	      password => ($tree->{rootpwd}
 			  || $system->{passwd}->{root}->{password}
 			  || '!'),
-	     shell => $tree->{rootshell},
-	     homeDir => "/root",
-	     main_group => 0,
-	     comment => "root",
-	     name => 'root',
-	     ln => $system->{passwd}->{root}->{ln}
+	      shell => $tree->{rootshell},
+	      homeDir => "/root",
+	      main_group => 0,
+	      comment => "root",
+	      name => 'root',
+	      ln => $system->{passwd}->{root}->{ln}
 	    };
     return $u;
 }

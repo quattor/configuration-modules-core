@@ -46,6 +46,9 @@ my $root = $cmp->compute_root_user($sys, $pfr);
 
 is($root->{uid}, 0, "New root user has the correct UID");
 
+
+is(shift(@{$root->{groups}}), 'root', "Root always gets added to the root group");
+
 for my $i (0..scalar(@{$sys->{passwd}->{root}->{groups}})) {
     is($root->{groups}->[$i], $sys->{passwd}->{root}->{groups}->[$i],
        "Root groups inherited correctly from the system");
@@ -82,5 +85,15 @@ is($root->{shell}, $pfr->{rootshell},
    "Root receives its shell only from the profile");
 is($root->{password}, $pfr->{rootpwd},
    "Profile's root password takes priority over system's old password");
+
+delete($sys->{passwd}->{root}->{groups});
+$root = $cmp->compute_root_user($sys, $pfr);
+ok(exists($root->{groups}), "Root gets a default set of groups when none exist");
+is($root->{groups}->[0], "root", "Default group list starts with root");
+$sys->{passwd}->{root}->{groups} = [];
+$root = $cmp->compute_root_user($sys, $pfr);
+ok(exists($root->{groups}),
+   "Root gets a default set of groups when the system list is empty");
+is($root->{groups}->[0], "root", "Default group list starts with root");
 
 done_testing();
