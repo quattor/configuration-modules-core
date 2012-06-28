@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 use Test::Quattor;
-use NCM::Component::structured_config;
+use NCM::Component::metaconfig;
 use CAF::Object;
 
 
@@ -20,7 +20,7 @@ Test that a daemon gets restarted if needed.
 =cut
 
 
-my $cmp = NCM::Component::structured_config->new('structured_config');
+my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 ok($cmp->restart_daemon("foo"), "Successful restart_daemon returns true");
 set_command_status("/sbin/service foo restart", 1);

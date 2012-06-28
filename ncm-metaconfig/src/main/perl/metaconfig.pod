@@ -108,11 +108,11 @@ The well-known /etc/ccm.conf can be defined like this:
         ...
     };
 
-    bind "/software/components/structured_config/{/etc/ccm.conf}/contents" = ccm_conf_file;
+    bind "/software/components/metaconfig/{/etc/ccm.conf}/contents" = ccm_conf_file;
 
 =head3 Fill in the contents
 
-    prefix "/software/components/structured_config/{/etc/ccm.conf}"
+    prefix "/software/components/metaconfig/{/etc/ccm.conf}"
 
     "contents/profile" = "http://www.google.com";
     "module" = "general";

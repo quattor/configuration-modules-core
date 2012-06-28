@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 use Test::Quattor qw(simple);
-use NCM::Component::structured_config;
+use NCM::Component::metaconfig;
 use CAF::Object;
 use CAF::FileWriter;
 
@@ -27,7 +27,7 @@ Test how the need for restarting a service is handled
 =cut
 
 
-my $cmp = NCM::Component::structured_config->new('structured_config');
+my $cmp = NCM::Component::metaconfig->new('metaconfig');
 my $fh = CAF::FileWriter->new('foo');
 ok(!$cmp->needs_restarting($fh, { 'daemon' => 'foo' }),
    "No restarting on unchanged file");

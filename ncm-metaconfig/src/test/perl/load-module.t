@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::structured_config;
+use NCM::Component::metaconfig;
 
 my $mod;
 
@@ -29,7 +29,7 @@ Test how configuration-rendering modules are loaded.
 
 =cut
 
-my $cmp = NCM::Component::structured_config->new('structured_config');
+my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 
 

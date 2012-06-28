@@ -14,7 +14,7 @@
 
     <modules>
         <module>ncm-accounts</module>
-	<module>ncm-structured_config</module>
+	<module>ncm-metaconfig</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
     </modules>

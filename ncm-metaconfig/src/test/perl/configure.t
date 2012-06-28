@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor qw(simple);
-use NCM::Component::structured_config;
+use NCM::Component::metaconfig;
 use CAF::Object;
 
 eval { use JSON::XS; };
@@ -22,7 +22,7 @@ Test the configure() method.
 =cut
 
 
-my $cmp = NCM::Component::structured_config->new('structured_config');
+my $cmp = NCM::Component::metaconfig->new('metaconfig');
 my $cfg = get_config_for_profile('simple');
 
 is($cmp->Configure($cfg), 1, "Configure succeeds");
@@ -36,7 +36,7 @@ ok(!$c, "Daemon was not restarted when there are no changes");
 # Pretend there are changes
 
 no warnings 'redefine';
-*NCM::Component::structured_config::needs_restarting = sub {
+*NCM::Component::metaconfig::needs_restarting = sub {
     return 1;
 };
 use warnings 'redefine';

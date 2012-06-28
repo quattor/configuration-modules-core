@@ -3,4 +3,4 @@ use strict;
 use warnings;
 use Test::More tests => 1;
 
-use_ok("NCM::Component::structured_config");
+use_ok("NCM::Component::metaconfig");
