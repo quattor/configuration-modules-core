@@ -1,3 +1,6 @@
+2012-07-02 SDW
+    * add pro/epilogue shared script in postgres sysconfig
+
 2012-01-20 SDW
     * add full schema config for hba and main config
 
