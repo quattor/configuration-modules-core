@@ -22,7 +22,6 @@ eval {use Class::Inspector; };
 
 plan skip_all => "Imposible to redefine already tested methods. Skipping" if $@;
 
-my %called;
 my $f = Class::Inspector->functions('NCM::Component::sudo');
 
 # Replaces the methods passed as arguments with stubs that allow to
@@ -36,7 +35,8 @@ sub disable_all_executions
     my $j;
     foreach my $i (@funcs) {
 	*{"NCM::Component::sudo::$i" } = sub {
-	    $called{$i} = ++$j;
+	    my $self = shift;
+	    $self->{$i} = ++$j;
 	    return 0;
 	};
     }
@@ -51,8 +51,8 @@ disable_all_executions(@disabled);
 $cmp->Configure();
 
 foreach my $i (grep($_ !~ m{^write}, @disabled)) {
-    ok(exists($called{$i}), "Method $i gets called");
-    ok($called{$i} < $called{write_sudoers}, "sudoers called after $i");
+    ok(exists($cmp->{$i}), "Method $i gets called");
+    ok($cmp->{$i} < $cmp->{write_sudoers}, "write_sudoers called after $i");
 }
 
 done_testing();
