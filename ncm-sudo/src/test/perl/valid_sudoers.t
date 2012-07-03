@@ -10,6 +10,14 @@ use NCM::Component::sudo;
 use constant INVALID => "123445";
 use constant VALID => "root ALL=(ALL) NOPASSWD: ALL\n";
 
+=pod
+
+=head1 DESCRIPTION
+
+Test the ability to distinguish valid from invaild sudoers files.
+
+=cut
+
 my $cmp = NCM::Component::sudo->new('sudo');
 
 ok($cmp->is_valid_sudoers(VALID), "Valid /etc/sudoers correctly recognized");

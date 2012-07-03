@@ -8,6 +8,15 @@ use Test::Quattor qw(profile_test0aliases
 		     profile_test1aliases);
 use NCM::Component::sudo;
 
+=pod
+
+=head1 DESCRIPTION
+
+Test how aliases are generated. We need to test B<user>, B<run_as>,
+B<command> and B<host> aliases.
+
+=cut
+
 my $cmp = NCM::Component::sudo->new('sudo');
 
 my $cfg = get_config_for_profile('profile_test0aliases');

@@ -6,6 +6,14 @@ use Test::More;
 use Test::Quattor qw(profile_0opts profile_all_options profile_empty);
 use NCM::Component::sudo;
 
+=pod
+
+=head1 DESCRIPTION
+
+Test the generation of defaults lines for /etc/sudoers.
+
+=cut
+
 my $cmp = NCM::Component::sudo->new('sudo');
 
 my $cfg = get_config_for_profile('profile_0opts');

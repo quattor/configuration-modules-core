@@ -6,6 +6,14 @@ use Test::More;
 use Test::Quattor qw(profile_0lines profile_1line);
 use NCM::Component::sudo;
 
+=pod
+
+=head1 DESCRIPTION
+
+Tests the generation of privilege lines.
+
+=cut
+
 my $cmp = NCM::Component::sudo->new('sudo');
 
 my $cfg = get_config_for_profile('profile_0lines');

@@ -6,6 +6,18 @@ use Test::More;
 use Test::Quattor;
 use NCM::Component::sudo;
 
+=pod
+
+=head1 DESCRIPTION
+
+Test the C<Configure> method. We only have to ensure that all methods
+are called in the correct order, which is to say C<write_sudoers> is
+called last.
+
+All other methods must be called, but B<before> C<write_sudoers>.
+
+=cut
+
 eval {use Class::Inspector; };
 
 plan skip_all => "Imposible to redefine already tested methods. Skipping" if $@;
@@ -13,6 +25,8 @@ plan skip_all => "Imposible to redefine already tested methods. Skipping" if $@;
 my %called;
 my $f = Class::Inspector->functions('NCM::Component::sudo');
 
+# Replaces the methods passed as arguments with stubs that allow to
+# track in which order they are called.
 sub disable_all_executions
 {
     my @funcs = @_;

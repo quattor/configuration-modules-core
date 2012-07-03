@@ -9,6 +9,18 @@ use CAF::Object;
 use File::Temp qw(tempfile);
 $CAF::Object::NoAction = 1;
 
+=pod
+
+=head1 DESCRIPTION
+
+Tests the generation of /etc/sudoers files.
+
+Implies validating the contents of an C</etc/sudoers> file before
+actually writting it to disk, and ensuring the method is really able
+to write valid files from a valid profile.
+
+=cut
+
 my $cmp = NCM::Component::sudo->new('sudo');
 
 my $USER = NCM::Component::sudo::USER_ALIASES();
