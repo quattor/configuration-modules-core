@@ -6,7 +6,7 @@
 # Implementation of ncm-useraccess
 # Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
 # Version: 1.5.11 : 23/01/12 14:33
-# 
+#
 #
 # Note: all methods in this component are called in a
 # $self->$method ($config) way, unless explicitly stated.
@@ -171,13 +171,13 @@ sub set_kerberos
 	    return -1;
 	}
 	my $fh = $fhs->{$key};
-	defined $fh or throw_error("File for $key doesn't exist on user $user");
 	foreach (@$ct) {
 	    print $fh $_->{PRINCIPAL()};
 	    print $fh $sep, $_->{INSTANCE()} if (defined $_->{INSTANCE()});
 	    print $fh "@", $_->{REALM()}, "\n";
 	}
     }
+    return 0;
 }
 
 # Downloads the public keys files from the given URLs and writes them
@@ -191,22 +191,23 @@ sub set_ssh_fromurls
 
     my $err = 0;
     my $cnt = $cfg->{SSH_KEYS_URLS()};
-    return unless defined $cnt;
+    return 0 unless defined $cnt;
     if (!defined $fh) {
 	$self->error("Impossible to write authorized public keys for ",
 		     "user $user");
 	return -1;
     }
     my $ua = LWP::UserAgent->new;
-    foreach (@$cnt) {
-	my $rp = $ua->get ($_);
+    foreach my $url (@$cnt) {
+	my $rp = $ua->get ($url);
 	if ($rp->is_success) {
 	    print $fh $rp->content;
 	} else {
-	    $self->error("Key not found: $_");
+	    $self->error("Key not found: $url");
 	    $err = -1;
 	}
     }
+    return $err;
 }
 
 # Fills the .ssh/authorized_keys file with the keys written in the
@@ -217,13 +218,16 @@ sub set_ssh_fromkeys
     my ($self, $user, $cfg, $fh) = @_;
 
     my $cnt = $cfg->{SSH_KEYS()};
-    return unless defined $cnt;
+    return 0 unless defined $cnt;
     if (!defined $fh) {
 	$self->error("Impossible to write authorized SSH keys from ",
 		     "profile for user $user");
 	return -1;
     }
-    print $fh "$_\n" foreach (@$cnt);
+    foreach my $key (@$cnt) {
+	print $fh "$key\n";
+    }
+    return 0;
 }
 
 # Inscribes the currently processed user into the ACLs for each
