@@ -1,0 +1,37 @@
+2009-07-22  Victor Mendoza, LPNHE
+
+	* Release: 1.1.0
+	- Updated schema, changes are not compatible with previous versions, upgrade with care
+	- Normalized option names to match configuration file
+	- Removed add_rc and call to chkconfig (should be configured with ncm-chkconfig)
+	- Added some testing
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 1.0.4
+	- Updated to comply with Panc v8 requirements.
+
+2008-06-26  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.0.3
+	- Adding support for optional external configuration files
+
+2008-02-12  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.2
+	- Fixed compilation bug.
+
+2007-07-05  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.1
+	- Added forgotten Makefile. Minor cleanups.
+
+2007-04-19  Luis Fernando Muñoz Mejías  <lfmunozmejias@gmail.com>
+
+	* nrpe.pm.cin (Configure): Tested.
+
+	* TPL/schema.tpl.cin: Changed allowed_hosts to a list.
+
+	* nrpe.pm.cin: Run make header.
+	(Configure): Added call to chkconfig.
+
