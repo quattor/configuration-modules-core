@@ -161,8 +161,8 @@ sub set_kerberos
 {
     my ($self, $user, $cfg, $fhs) = @_;
 
-    foreach (KRB_SETTINGS) {
-	my ($key, $sep) = @$_;
+    foreach my $i (KRB_SETTINGS) {
+	my ($key, $sep) = @$i;
 	$self->debug(1, "Kerberos settings for user: $user");
 	my $ct = $cfg->{$key};
 	next unless defined $ct;
