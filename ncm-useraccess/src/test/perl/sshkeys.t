@@ -78,4 +78,13 @@ is($cmp->set_ssh_fromkeys("foo", $u), -1,
    "Invalid filehandle gets reported");
 is($cmp->{ERROR}, 1, "The filehandle error is reported");
 
+=pod
+
+=head2 The absence of the keys list doesn't trigger any errors
+
+=cut
+
+is($cmp->set_ssh_fromkeys("foo", {}), 0,
+   "Non-existing SSH keys list is handled correctly");
+
 done_testing();
