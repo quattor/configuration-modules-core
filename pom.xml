@@ -17,6 +17,7 @@
 	<module>ncm-metaconfig</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
+	<module>ncm-useraccess</module>
     </modules>
 
 </project>
