@@ -311,6 +311,7 @@ sub set_roles
 	    return -1;
 	}
     }
+    return 0;
 }
 
 
@@ -373,11 +374,11 @@ sub Configure
 
     my ($self, $config) = @_;
 
-    my $uhash = $config->getElement(PATH . USERS)->getTree();
-    my $rlhash = $config->getElement(PATH . ROLES)->getTree()
-	if $config->elementExists(PATH . ROLES);
-    my $acls = $config->getElement(PATH . ACLSERVICES)->getTree()
-	if $config->elementExists(PATH . ACLSERVICES);
+    my $t = $config->getElement(PATH)->getTree();
+
+    my $uhash = $t->{USERS()};
+    my $rlhash = $t->{ROLES()};
+    my $acls = $t->{ACLSERVICES()};
     my $mask = umask;
     my $ok = 1;
     umask(MASK);
@@ -393,9 +394,9 @@ sub Configure
 	my $fhash = $self->files($uconfig, $uid, $gid, $home);
 	if ($self->set_kerberos($user, $uconfig, $fhash) ||
 	    $self->set_ssh_fromurls($user, $uconfig,
-	    $fhash->{SSH_KEYS()}) ||
+				    $fhash->{SSH_KEYS()}) ||
 	    $self->set_ssh_fromkeys($user, $uconfig,
-	    $fhash->{SSH_KEYS()}) ||
+				    $fhash->{SSH_KEYS()}) ||
 	    $self->set_acls($user, $uconfig) ||
 	    $self->set_roles($user, $uconfig->{ROLES()},
 			     $rlhash, $fhash)) {
