@@ -1,0 +1,275 @@
+2012-01-23  Luis Fernando Muñoz Mejías
+
+	* Release: 1.5.11
+	- Relax the umask.
+
+	It was creating .ssh directories without the -x flag, breaking
+	SSH.
+
+2010-10-18  root
+
+	* Release: 1.5.10
+	- Minor typo fixes.
+
+2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.9
+	- Create the SSH directories with the minimal permissions to prevent race conditions.
+
+2010-02-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.8
+	- Fix the permissions of the files modified by the component.
+
+2009-11-27  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.7
+	- Make it more difficult that entries not belonging to pam_listfile are removed.
+	
+	Sometimes we removed weird Pam constructions, leading to DoS in the target machine.
+
+2009-11-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.6
+	- Fix the removal of outdated entries on PAM files.
+
+2009-11-24 Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.5
+	- Add ACLs to PAM 'session' lines as well.
+	
+	Otherwise, AFS users would be allowed to log in, ignoring whatever
+	contents the ACL had.
+
+2009-11-18  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.5.4
+	- Enable ACLs right on the top of the PAM files.
+	
+	Otherwise, there are "sufficient" conditions that will prevent ACLs from being checked.
+
+2009-11-17  <unknown>
+
+	* Release: 1.5.3
+	- Merge the fix of bug #52174
+
+2009-05-18  Luis Fernando Muñoz Mejías
+
+	* Release: 1.5.2
+	- Document the managed_credentials field.
+
+2009-05-15  Luis Fernando Muñoz Mejías
+
+	* Release: 1.5.1
+	- Fix a typo that made the component assume it shouldn't handle any credentials at all.
+
+2009-05-13  Luis Fernando Muñoz Mejías
+
+	* Release: 1.5.0
+	- Add a hack to control which files should be managed by the
+	component.
+
+	CERN was using different tools for handling the
+	.ssh/authorized_keys file, and was colliding with this
+	component. The proper way to solve it would be by disabling
+	this component on the affected users, but they needed it to
+	control PAM ACLs. And PAM ACLs should be moved to a different
+	component but that needs some time I don't have, so this is
+	the quick hack.
+
+2009-02-10  Luis Fernando Muñoz Mejías,Luis.Fernando.Munoz.Mejias@cern.ch
+
+	* Release: 1.4.6
+	- Replacing "remove" with "unlink" to keep it more
+	standard-perl-ish.
+
+2009-02-10  Luis Fernando Muñoz Mejías,<Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.4.5
+	- Fixing some crashes when the user's home dir is not
+	writeable.
+
+	To do it, I removed the use of LC::File::{remove,makedir}, as I
+	don't have time to learn how to deal with exceptions on perl-LC.
+
+2008-11-15  <unknown>
+
+	* Release: 1.4.4
+	- Fixing tags.
+
+2008-11-15  <unknown>
+
+	* Release: 1.4.3
+	- Fixing bug #43788.
+
+2008-10-21  "Luis Fernando"
+
+	* Release: 1.4.2
+	- Fixed bug #43121.
+	
+	Using CAF::FileWriter to ensure that files are written only when they
+	have contents.
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 1.4.1
+	- Updated to comply with Panc v8 requirements.
+
+2008-09-09  "Luis Fernando"
+
+	* Release: 1.4.0
+	- Added the Unconfigure method to allow to effectively lock user accounts.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.11
+	- Sanitized the ACL initialization code.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.10
+	- Fixing typos on the sanitation of PAM files.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.9
+	- Fixed a typo.
+
+2008-07-09  "Luis Fernando"
+
+	* Release: 1.3.8
+	- Sanitizing the service names when handling ACLs, to make taint mode happy.
+
+2008-06-13  "Luis Fernando"
+
+	* Release: 1.3.7
+	- Tagged what couldn't be tagged on previous commit.
+
+2008-06-12  "Luis Fernando"
+
+	* Release: 1.3.7
+	- Improved the way read-only home dirs are handled. Now it doesn't crash if the FS
+	is read-only but no settings are specified.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.5
+	- Fixing (fhopefully) non-existing settings with non-writable home dirs.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.4
+	- Reverting 1.3.3, as it didn't work as expected.
+
+2008-06-10  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.3
+	- Don't cause any errors if the files of a user can't be opened but there are no settings for him.
+	For instance, if home directories are mounted with AFS, root won't be able to reach them, but if
+	the user doesn't have any Kerberos or SSH settings no errors should be thrown.
+
+2008-02-20  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.2
+	- Fixed bug #33683
+
+2008-02-20  Michel Jouvin
+
+	* Release: 1.3.1
+	- Add property configSerial (see documentation)
+
+2008-02-12  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.0
+	- Fixed (and tested) a set of race conditions that might have allowed an
+	attacker to set symlinks to overwrite arbitrary files.
+
+2008-02-12  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.2
+	- Trying to fix a nasty race condition that would allow attackers
+	to symlink and overwrite arbitrary files.
+
+2007-05-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.1
+	- Documentation update.
+
+2007-05-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.0
+	- Simplified the code with Cal's comments on but #26767
+	Added support for nested roles.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.0
+	- Removed old non-namespaced templates.
+
+2007-03-30  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.11
+	- Adapted to the latest namespaces
+
+2007-03-26  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.10
+	- Adapted to the NEW templates layout.
+
+2007-03-22  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.9
+	- Small correction on user's initialization
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.8
+	- Updated the documentation.
+	Small behaviour changes in ACLs.
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.7
+	- Added support for roles, as required in the workshop.
+	Still no support for default values.
+	Depends on ccm-1.5.11.
+
+2007-03-21  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.6
+	- Added support for roles, as required in the workshop.
+	Still no support for default values.
+	Depends on ccm-1.5.11.
+
+2007-03-08  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.5
+	- Documentation cleanup.
+
+2007-03-02  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.4
+	- Improvements to documentation.
+
+2007-03-02  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.2
+	- Removed absolute paths in Makefile
+
+2007-03-01  Luis Fernando MUNOZ MEJIAS
+
+	* Release: 1.0.1
+	- Created the ncm-component that replaces ncm-access_control (together with ncm-sudo). Read the documentation. It should be complemented with a future ncm-pam, but since nobody seems to need this one, I may not do it.
+
+2007-03-01  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* useraccess.pod.cin: Written the documentation. At last!
+
+2007-02-26  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* TPL/pro_declaration_functions_useraccess.tpl.cin: Added
+	functions for role management.
+
+	* TPL/pro_declaration_component_useraccess.tpl.cin: Created all
+	data structures.
+
