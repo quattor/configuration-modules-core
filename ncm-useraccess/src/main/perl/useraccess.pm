@@ -409,24 +409,4 @@ sub Configure
     return $ok;
 }
 
-
-# Removes the configuration for all users. Use this if you want to
-# lock all accounts, or need to lock a few accounts using two Quattor
-# steps. See the man page for more information.
-sub Unconfigure
-{
-    my ($self, $config) = @_;
-    my $mask = umask;
-    umask (MASK);
-    $self->initialize_acls;
-    my $uhash = $config->getElement (PATH . USERS)->getTree;
-    while (my ($user, $uconfig) = each (%$uhash)) {
-	$self->info("Dropping configuration for user $user");
-	my ($uid, $gid, $home) = $self->initialize_user($user);
-	$self->files($uconfig, $uid, $gid, $home);
-    }
-    umask($mask);
-    return 1;
-}
-
 1;
