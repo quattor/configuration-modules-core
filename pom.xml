@@ -19,6 +19,7 @@
         <module>ncm-directoryservices</module>
         <module>ncm-etcservices</module>
         <module>ncm-mailaliases</module>
+        <module>ncm-nagios</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

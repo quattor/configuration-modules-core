@@ -1,0 +1,161 @@
+2011-07-26  RonaldS
+
+	* Release: 1.4.14
+	- Added support for: 
+        [nagios] check_result_reaper_frequency, max_check_result_reaper_time
+        [host] retry_interval
+    - Added comments in schema to indicate options deprecated in Nagios 3
+)
+
+2010-07-28  Ronald Starink
+
+	* Release: 1.4.13
+	- Added action_url to host and service types
+
+2010-03-04  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 1.4.12
+	- Fixed typo
+
+2010-03-04  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 1.4.11
+	- Added support for external configuration fdirs, via the new external__dirs[] field of the main structure.
+
+2009-11-05  Guillaume Philippon
+
+	* Release: 1.4.10
+	- Fix issue when you didn t declare hosts_generic (backward compatible)
+
+2009-11-03  Guillaume Philippon
+
+	* Release: 1.4.9
+	- Add host template support
+
+2009-01-23  RonaldS
+
+	* Release: 1.4.8
+	- Added support for configuration of the web interface (via cgi.cfg)
+
+2009-01-22  RonaldS
+
+	* Release: 1.4.7
+	- Adding optional field ocsp_command to general options
+
+2008-08-28  "Luis Fernando"
+
+	* Release: 1.4.6
+	- Fixing typos.
+
+2008-08-28  "Luis Fernando"
+
+	* Release: 1.4.5
+	- Added Nagios 3.0 general configuration options.
+
+2008-08-28  "Luis Fernando"
+
+	* Release: 1.4.4
+	- More fixes when there are several services with the same description.
+
+2008-08-28  "Luis Fernando"
+
+	* Release: 1.4.3
+	- Removing service_description, as discussed on the mailing lists and agreed with Stephen.
+
+2008-08-28  "Luis Fernando"
+
+	* Release: 1.4.2
+	- Added a dependency on CCM >= 2.1.
+
+2008-08-05  "Luis Fernando"
+
+	* Release: 1.4.1
+	- Documentation improvements.
+
+2008-08-05  "Luis Fernando"
+
+	* Release: 1.4.0
+	- Fixing some permissions and ownerships.
+	Removed the "service_description" field on services, as descriptions are now the keys on service nlists.
+
+2008-07-16  Stephen Childs
+
+	* Release: 1.3.3
+	- Services are now stored as nlist of equivalent services.
+
+2008-07-14  Stephen Childs
+
+	* Release: 1.3.2
+	- Made services an nlist.
+	Added service groups, dependencies.
+	Renamed serviceext to serviceextinfo.
+
+2008-07-11  "Luis Fernando"
+
+	* Release: 1.3.1
+	- check_result_buffer_slots breaks Nagios 3.0.3. Made optional.
+
+2008-07-03  "Luis Fernando"
+
+	* Release: 1.3.0
+	- Improving the validation, added functions template for this purpose.
+
+2008-07-03  "Luis Fernando"
+
+	* Release: 1.2.6
+	- Fixed the extended service information (serviceextinfo) handling.
+
+2008-06-25  "Luis Fernando"
+
+	* Release: 1.2.5
+	- Fixed a bug on external files.
+
+2008-06-25  "Luis Fernando"
+
+	* Release: 1.2.4
+	- Improving the debugging output.
+
+2008-06-25  "Luis Fernando"
+
+	* Release: 1.2.3
+	- Improving the debugging output.
+
+2008-06-25  "Luis Fernando"
+
+	* Release: 1.2.2
+	- Added some debug output.
+
+2008-06-02  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.1
+	- Checking the return value of the Nagios invocation to report errors.
+
+2008-03-24  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.0
+	- Added support for external configuration files, via the new external_files[] field of the main structure.
+
+2007-11-08  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.2
+	- Fixing some bugs when handling performance data
+
+2007-11-07  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.1
+	- Fixing some bugs on the schema...
+
+2007-11-06  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.0
+	- Changed the schema. Booleans instead of longs.
+
+2007-09-27  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.1
+	- Added ncm-nagios to CVS.
+
+2007-09-25  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* nagios.pm.cin: Started Nagios component.
+
