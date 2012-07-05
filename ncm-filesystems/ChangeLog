@@ -1,0 +1,130 @@
+2011-03-03  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.1
+	- Bug fixes.
+
+2010-11-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.0
+	- Move the fstab functionality to ncm-fstab.
+
+	The component now depends on ncm-fstab, to correctly deliver
+	its results.
+
+2010-02-09  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 0.11.0
+	- Fix a bug when a 'protected' filesystem could be formatted.
+
+	The protected list was used for avoiding re-creating the block
+	device, but this is not enough: we need use it to avoid
+	formatting it as well if it already exists.
+
+2009-03-26  Unknown
+
+	* Release: 0.10.4
+	- Further changes to reporting.
+
+2009-03-26  Unknown
+
+	* Release: 0.10.3
+	- Tidied up reporting.
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 0.10.2
+	- Updated to comply with Panc v8 requirements.
+
+2008-03-12  Luis Fernando Muñoz Mejías
+
+	* Release: 0.10.1
+	- Fixed a bug that might break the component when no partitions at all were defined.
+	Thanks to Ricardo Salgueiro for finding this.
+
+2008-02-20  Luis Fernando Muñoz Mejías
+
+	* Release: 0.10.0
+	- Moved the information about filesystems and blockdevices to pan-templates, which is their final place.
+
+2007-10-16  Luis Fernando Muñoz Mejías
+
+	* Release: 0.9.1
+	- Improved some default values.
+
+2007-09-19  Luis Fernando Muñoz Mejías
+
+	* Release: 0.9.0
+	- Added full control of every filesystem on the system. Filesystems
+	removed from the profile will be removed, unless they exist on a
+	protected mounts list.
+
+2007-08-31  Luis Fernando Muñoz Mejías
+
+	* Release: 0.8.3
+	- Added support for --noaction.
+
+2007-08-24  Luis Fernando Muñoz Mejías
+
+	* Release: 0.8.2
+	- Fixed a typo in the documentation.
+
+2007-08-06  Luis Fernando Muñoz Mejías
+
+	* Release: 0.8.1
+	- Moved the function for comparing partitions into Partition.pm.
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.8.0
+	- Fixing bugs and improving the reports. Thanks to Jan Michael.
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.7
+	- Fixed silly bugs
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.6
+	- Added exception context
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.5
+	- Fixed silly �Perl errors
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.4
+	- Fixed wrong package name.
+
+2007-07-17  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.3
+	- Improving the output in error scenario.
+
+2007-07-11  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.2
+	- Moved the Pan path into a layout that fits CERN's CDB structure.
+
+2007-06-27  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.1
+	- Wrote a full man page, with a small example.
+
+2007-06-27  Luis Fernando Muñoz Mejías
+
+	* Release: 0.7.0
+	- Added the component to CVS
+	Documentation outlined.
+
+2007-06-22  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* filesystems.pod.cin: Added the documentation.
+
+	* filesystems.pm.cin: Implemented the component. Currently it just
+	checks filesystems. When the component gets stable (and AII
+	supports it) it will remove blockdevices that aren't on the
+	profile.
+
