@@ -16,6 +16,7 @@
         <module>ncm-accounts</module>
 	<module>ncm-metaconfig</module>
         <module>ncm-mcx</module>
+        <module>ncm-directoryservices</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

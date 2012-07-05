@@ -1,0 +1,21 @@
+2012-06-02  Nick Williams
+
+	* Release: 1.1.0
+	- force the component to run again if it fails to create the plist
+
+2012-05-29  Nick Williams
+
+	* Release: 1.0.0
+	- initial commit
+
+2012-05-29  Nick Williams
+
+	* Release: 1.0.0
+	- initial commit
+
+2012-05-01  Nick Williams <Nick.Williams@morganstanley.com>
+
+	* Release 1.0.0
+
+	Initial release for development purposes
+
