@@ -1,0 +1,111 @@
+2010-08-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.5
+	- Condrestart instead of reload the service.
+
+	At instalation time, if no post_reboot script was used, we saw the
+	component failing because ssh hadn't started yet. This fixes the
+	issue.
+
+2010-07-19  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.4
+	- Add support for the GSSAPIDelegateCredentials client option.
+
+2010-07-16  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.3
+	- Merge common SSH client and server options.
+
+	This brings many more options to the client configuration with
+	almost no extra code.
+
+2010-06-23  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.2
+	- Fix bug #68458.
+
+2010-02-05  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.1
+	- Use CAF::Process for restarting the daemon.
+
+2009-04-15  Michel Jouvin
+
+	* Release: 2.0.0
+	- Fix typo in comments
+
+2009-04-15  Michel Jouvin
+
+	* Release: 2.0.0
+	- Rewrite using getTree() API
+	Add support for comment_options in client options
+	Increase severity of some errors
+	Write documentation
+
+2009-02-13  Nick Williams
+
+	* Release: 1.1.4
+	- upgrade templates to panc v8 syntax
+
+2008-10-06  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.1.3
+	- Added client options: EnableSSHKeysign HostbasedAuthentication X11Forwarding.
+	- Cleaned up man page.
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.1
+	- Fix change in schema name
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.11
+	- Remove deprecated 'define' keyword
+
+2006-08-30  Jan Van Eldik
+
+        * Release: 1.0.10
+        - fix small ooops...
+
+2006-08-30  Vlado Bahyl
+
+        * Release: 1.0.9
+        - added support for client options
+
+2006-08-21  Jan Iven,31-2009,74957,
+
+        * Release: 1.0.8
+        - added server-side options for 4.3p2 (plus CERN/HPN patches)
+
+2006-03-12  Charles Loomis
+
+        * Release: 1.0.7
+        - add pro_software* template
+
+2005-07-27  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.6
+        - Added additional sshd_config options and addressed indirect bug#9748 on file permissions
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.4
+        - change to structure_component; rearrange
+
+2004-06-07  Vlado Bahyl
+
+        * Release: 1.0.3
+        - defined component declaration
+
+2004-06-03  Teemu SIDOROFF
+
+        * Release: 1.0.2
+        - initial version
