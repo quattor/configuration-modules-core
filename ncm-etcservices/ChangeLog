@@ -1,0 +1,74 @@
+2010-07-06  Ian Collier
+
+	* Release: 1.s21.0
+	-  Fix to logic so you can configure both tcp and udp for same service.
+
+2007-06-25  Michel Jouvin
+
+	* Release: 1.1.0
+	- Convert to namespace
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.8
+	- Remove deprecated 'define' keyword
+
+2005-05-09  Juan Antonio LOPEZ PEREZ
+
+        * Release: 1.0.7
+        - Now the component eliminates duplicated lines, if any, on /etc/services
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.6
+        - really add pro_software template
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.5
+        - add pro_software template
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.4
+        - change to structure_component; rearrange
+
+2005-03-02  German Cancio Melia
+
+        * Release: 1.0.3
+        - Generalized to be used on Solaris as well as Linux - location of /etc/services now OS dependent and defined in config.mk
+
+2004-11-08  Juan Antonio Lopez Perez <Juan.Lopez.Perez@cern.ch>
+
+	-   I have found and corrected another bug. The /etc/services file 
+	  must be a link to /etc/inet/services but the component overwrote 
+	  that link each time that it performed an update from the CDB. 
+	  This was because of the 'rename' perl command. When you rename a
+	  file in Perl (also in linux) with the name of an existing file, 
+	  it is overwritten without any warning of error. The component
+	  wrote the changes to a temporal file and renamed it later as 
+	  /etc/services so the link from /etc/services to /etc/inet/services
+	  was deleted.
+
+	-   Now the component will write directly to /etc/inet/services and 
+	  the link will be not deleted.
+
+2004-11-04  Juan Antonio Lopez Perez <Juan.Lopez.Perez@cern.ch>
+
+	-   Bug #5012 corrected. Now, if the component finds a /etc/services
+	  line with the same content as the one stored at the CDB but with a 
+	  different port, that port will be corrected. Before the component 
+	  just added the correct line AFTER the wrong one. 
+	-   I also added many comments to the code.
+	-   Currently I am the maintainer of the component so I changed also
+	  the MAINTAINER file.
+
+2003-12-05  Juan Manuel PELEGRIN CARCELEN
+
+        * Release: 1.0.2
+        - Add etcservices component
+
+2003-11-20  Juan Manuel PELEGRIN CARCELEN  <jpelegri@sunbdev12.cern.ch>
+
+	* add etcservices component
+
