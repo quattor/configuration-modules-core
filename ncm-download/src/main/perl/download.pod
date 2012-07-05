@@ -1,0 +1,189 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the EU DataGrid Software License.  You should
+# have received a copy of the license with this program, and the license
+# is published at http://eu-datagrid.web.cern.ch/eu-datagrid/license.html.
+#
+# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
+# CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
+#
+# THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE AND ANY WARRANTY OF NON-INFRINGEMENT, ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THIS
+# SOFTWARE MAY BE REDISTRIBUTED TO OTHERS ONLY BY EFFECTIVELY USING
+# THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
+# TERMS THAT MAY APPLY.
+#
+################################################################################
+# Coding style: emulate <TAB> characters with 4 spaces, thanks!
+################################################################################
+
+=head1 NAME
+
+NCM::download - NCM download configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Returns
+error in case of failure.
+
+=item Unconfigure()
+
+not available.
+
+=back
+
+=head1 DESCRIPTION
+
+Downloads files onto the local machine during the configuration, and
+optionally post-processes the files. The download is achieved by
+invoking "curl", so any URLs acceptable to curl (including local
+URL's) are allowed.
+
+=head1 RESOURCES
+
+=over
+
+=item /software/components/download/active : boolean
+
+activates/deactivates the component.
+
+=item /software/components/download/proto : string
+
+The default protocol to use for any sources which do not
+specify the protocol.
+
+=item /software/components/download/server : string
+
+The default server hostname to use for any sources which
+do not specify the source.
+
+=item /software/components/download/proxyhosts : list
+
+A list of strings. Each string should be a hostname (and possibly with ':port'
+suffix). If this is specifed, then a reverse proxy configuration is assumed
+for all of the file source. Whenever a file is downloaded, each of the
+proxy hosts will be used first before attempting the original source URL. The
+first proxy host to respond will be used for all subsequent download attempts.
+
+=item /software/components/download/files : nlist
+
+An nlist keyed by the escaped filename that is required for the
+destination file. The value associated with each key should be an
+nlist containing the following values:
+
+=over 4
+
+=item href
+
+A URL (either absolute, or relative) that describes the source of the
+file. The URL can be specified as relative by ommitting the server
+name and/or the protocol, in which case the component defaults will be
+used. Local files can be used as source, such as
+file://localhost/etc/foo.txt or even file:///etc/foo.txt.
+
+=item post
+
+If specified, then the value will be used as a command to run
+whenever the file is updated. Note that if the update is
+optimised away by the download process (e.g. if the file is
+already up-to-date), the command will still be executed, so it
+is the responsibility of this command to determine what work
+needs to be done, if any.
+
+=item gssapi
+
+If true, then curl will be invoked with GSSAPI Negotiate
+extension enabled, using the host keytab as the identity.
+
+=item proxy
+
+If false, then the proxy configuration will be ignored for
+this file. This defaults to true. This has no effect when
+there are no proxy hosts defined.
+
+=item perm
+
+If defined, sets the permissions of the file to the defined
+permissions (defined in octal, e.g. 0644).
+
+=item owner
+
+If defined, sets the ownership to given user (name or number).
+
+=item group
+
+If defined, sets the group ownership to the given group (name or number).
+
+=item min_age
+
+The minimum number of minutes old that the file must be to be considered valid for download (defaults to 0);
+
+=back
+
+=back
+
+=head1 FILES MODIFIED
+
+The component download modifies only the files specified within
+the configuration.
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head1 EXAMPLES
+
+  "/software/components/download/active" = true;
+  "/software/components/download" = nlist(
+	"server", "mydownloadserver.com",
+	"proto",  "http",
+  );
+  "/software/components/download/files" = npush(
+	escape("/etc/passwd"), nlist(
+                 "href", "https://secure.my.domain",
+		 "post", "/usr/local/mk_passwd"
+               ),
+  );
+  "/software/components/download/files" = npush(
+	escape("/usr/local/foo.txt"), nlist(
+                 "href", "file:///etc/foo.txt",
+		 "owner", "john",
+                 "perm", "0400"
+               )
+  );
+
+=head1 BUGS
+
+none known.
+
+=head1 SEE ALSO
+
+ncm-ncd(1)
+
+=cut
+
+
