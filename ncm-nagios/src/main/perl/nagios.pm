@@ -67,13 +67,13 @@ sub print_general
     my $el;
     my $ed;
 
-    if ($cfg->elementExists (BASEPATH . 'external_files')) { 
+    if ($cfg->elementExists (BASEPATH . 'external_files')) {
 	$el = $cfg->getElement (BASEPATH . 'external_files')->getTree;
     } else {
 	$el = [];
     }
 
-    if ($cfg->elementExists (BASEPATH . 'external_dirs')) { 
+    if ($cfg->elementExists (BASEPATH . 'external_dirs')) {
 	$ed = $cfg->getElement (BASEPATH . 'external_dirs')->getTree;
     } else {
 	$ed = [];
@@ -141,7 +141,7 @@ sub print_cgi
 
         # optional fields
         foreach my $opt ( qw { nagios_check_command
-                               default_user_name 
+                               default_user_name
                                authorized_for_system_information
                                authorized_for_system_commands
                                authorized_for_configuration_information
@@ -156,10 +156,10 @@ sub print_cgi
                                service_critical_sound
                                service_warning_sound
                                service_unknown_sound
-                               normal_sound 
+                               normal_sound
                              } ) {
             if ( $t->{$opt} ) {
-                print FH "$opt=$t->{$opt}\n";   
+                print FH "$opt=$t->{$opt}\n";
             }
         }
 
@@ -304,7 +304,7 @@ EOF
     close (FH);
     chown (NAGIOSUSR, NAGIOSGRP, NAGIOS_FILES->{commands});
 }
-    
+
 # Prints all contacts to /etc/nagios/contacts.cfg
 sub print_contacts
 {
@@ -458,3 +458,5 @@ sub Configure
     umask ($mask);
     return !$?;
 }
+
+1;
