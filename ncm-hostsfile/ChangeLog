@@ -1,0 +1,41 @@
+2009-04-20  Nick Williams
+
+	* Release: 2.0.0
+	- refactor, new functionality of optional 'takeover'
+
+2009-04-20  Nick Williams
+
+	* Release: 2.0.0
+	- Upgrade PAN syntax to v8
+	- Upgrade component to use LC::Check and LC::File for reading/writing
+	  instead of using hand-rolled versions.
+	- provide "takeover" flag (defaults to false for backwards compatibility)
+	  which indicates if manually managed hosts can be "taken over" by this
+	  component instead of leaving them alone.
+	- line ordering based on hostname is preserved, instead of
+	  sorting alphabetically.
+
+2008-05-27  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.1
+	- Fixed the inclusion paths to match current distribution of Pan templates.
+
+2007-10-17  Tim Bell
+
+	* Release: 1.1.0
+	- Namespace support
+
+2007-09-05  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.0.3
+	- MAINTAINER file removed, info moved to config.mk
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.2
+	- Remove deprecated 'define' keyword
+
+2006-12-31  Tim Bell
+	* Release: 1.0.0
+	- First release
+
