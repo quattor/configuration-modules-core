@@ -1,0 +1,154 @@
+2011-06-22  Michel Jouvin
+
+	* Release: 1.3.0
+	- Change world_readable default to 0
+
+2009-03-15  Nick Williams
+
+	* Release: 1.2.2
+	- typo
+
+2009-03-14  Nick Williams
+
+	* Release: 1.2.1
+	- Missed out the updated schema.tpl for dbformat
+
+2009-03-14  Nick Williams
+
+	* Release: 1.2.0
+	- Supports dbformat within the ccm.conf. Uses more standard libraries
+	for writing and installing the configuration file.
+
+2008-09-16  "Luis Fernando"
+
+	* Release: 1.1.8
+	- Updated to comply with Panc v8 requirements.
+
+2008-08-14  "Luis Fernando"
+
+	* Release: 1.1.7
+	- Fixed bug #33801.
+
+2007-04-03  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.6
+	- Add missing @
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.5
+	- fix include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.4
+	- correct include for structures
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.3
+	- add version; change structure include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.2
+	- update headers
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.1.1
+	- replace changes removed by tplcvssync
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.1.0
+	- convert to namespaced templates
+
+2006-12-04  Marco Emilio Poleggi
+
+	* Release: 1.0.7
+	- fixed tag for profile_failover
+
+2006-11-06  German Cancio Melia
+
+        * Release: 1.0.6
+        - Added profile_failover also to template
+
+2006-10-16  German Cancio Melia
+
+        * Release: 1.0.5
+        - Added profile_failover URI as available with ccm 1.5.0
+
+2006-02-17  Charles Loomis
+
+        * Release: 1.0.4
+        - use default operator; remove 'default' keyword
+
+2005-08-19  Charles Loomis
+
+        * Release: 1.0.3
+        - fix syntax errors
+
+2005-08-14  Charles Loomis
+
+        * Release: 1.0.2
+        - add check to ensure new configuration works (#9755)
+
+2005-06-03  German Cancio Melia
+
+        * Release: 1.0.1
+        - Minor cosmetics
+
+2005-05-04  Charles Loomis
+
+        * Release: 1.0.0
+        - rearrange files; bump to version 1
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.9
+        - fix another comparision problem
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.8
+        - fix bad comparision in template
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.7
+        - update definition template names
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.6
+        - change default location of configuration file 
+
+2004-09-12  Charles Loomis
+
+        * Release: 0.0.5
+        - templates aren't preprocessed
+
+2004-09-12  Charles Loomis
+
+        * Release: 0.0.4
+        - fix bad variable subst. in config.mk
+
+2004-09-09  Charles Loomis
+
+        * Release: 0.0.3
+        - add missing default
+
+2004-09-09  Charles Loomis
+
+        * Release: 0.0.2
+        - fix typo in definition
+
+2004-09-09  Charles Loomis
+
+        * Release: 0.0.1
+        - fix component name
+
+2004-08-15  Charles Loomis  <charles.loomis@cern.ch>
+
+	* 0.0.0: First test version
