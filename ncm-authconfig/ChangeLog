@@ -1,0 +1,296 @@
+2012-04-12  Luis Fernando Muñoz Mejías
+
+	* Release: 2.0.16
+	- Fix wrong permissions of /etc/ldap.conf
+
+2012-04-12  Luis Fernando Muñoz Mejías
+
+	* Release: 2.0.15
+	- Fix the mode of /etc/ldap.conf
+
+	It may leak the bind password to unauthorised users.
+
+2012-04-11  Luis Fernando Muñoz Mejías
+
+	* Release: 2.0.14
+	- Readd bindpw to NLSCD configuration and allow for nss_connect_policy.
+
+2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.12
+	- Fixed nslcd for DNS uri
+
+2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.11
+	- Added nss_base_shadow option for ldap configuration
+
+2011-09-12  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.10
+	- Do not require definition of ldap servers (for SRV record lookup)
+	The uri of nslcd may be "DNS" so switching it from hosturi to string
+
+2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.9
+	- Fixed typo for adminservers in krb5 method
+	Made ldap attribute optional
+
+2011-09-01  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.8
+	- Added pam_lookup_policy attribute for ldap method
+
+2011-08-31  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.7
+	- Fixed regexp in update_pam_file
+
+2011-08-23  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.6
+	- Added option to 'enableforcelegacy'
+
+2011-08-23  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.5
+	- Fixed iddle_timelimit typo
+	Fixed ARRAY value printing for nslcd.conf
+
+2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.4
+	- Fixed typo.
+
+2011-08-22  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.3
+	- Do not add "ldap://" prefix on ldap servers when the provided server string is  a URI (includes ":")
+
+2011-07-17  piojo
+
+	* Release: 2.0.2
+	- Fix bug #80779
+
+2011-03-01  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.1
+	- Restart nscd only if "usecache" is set to true.
+
+2011-02-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 2.0.0
+	- Rewrite and configure nslcd.
+
+	The component needed a full rewrite, and in the way, it has now
+	the ability to configure nslcd, which controls LDAP authentication
+	in RH6-based systems.
+
+2010-06-23  Ronald Starink
+
+	* Release: 1.2.7
+	- Component always failed when restarting nscd after changing ldap configuration. Now we don't try to stop nscd anymore, just kill it and start again.
+
+2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.2.6
+	- Do not depend on subshells anymore.
+
+        For compatibility with perl-LC 1.1.6 and better coding practices.
+
+2010-05-28  Ronald Starink
+
+	* Release: 1.2.5
+	- Fix Savannah #68056 - reconfiguration with ncm-authconfig causes non-responsive nscd
+    - Fix warnings for deprecated syntax of *.tpl files
+
+2010-03-15  Jan van Eldik
+
+	* Release: 1.2.4
+	- Added the following LDAP fields: 
+	  nss_paged_results
+	  pagesize
+	  debug 
+	  log_dir
+	  nss_override_attribute_value/gidNumber
+
+2009-05-27  Loic Brarda
+
+	* Release: 1.2.0
+	- Added the following LDAP fields : scope, TLS_REQCERT, nss_map_attribute uidNumber, nss_map_attribute gidNumber, nss_map_attribute cn, nss_map_attribute loginShell, nss_map_attribute gecos, pam_password
+
+2009-05-12  Jan van Eldik
+
+	* Release: 1.1.17
+	- allow removal of binddn and bindpw entries in ldap configuration file
+
+2009-05-11  Jan van Eldik
+
+	* Release: 1.1.16
+	- allow anonymous access to ldap server (ie. allow removal of binddn and bindpw entries in ldap configuration file)
+
+2009-01-30  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.15
+	- Relaxed ldap servers type to allow for URIs, needed for RHEL5 (but illegal for RHEL <=4)
+
+2009-01-30  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.15
+	- Relaxed ldap servers type to allow for URIs, needed for RHEL5 (but illegal for RHEL <=4)
+
+2009-01-30  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.15
+	- Relaxed ldap servers type to allow for URIs, needed for RHEL5 (but illegal for RHEL <=4)
+
+2008-11-19  David Groep, H1.56,+31 20 5922179
+
+	* Release: 1.1.14
+	- Added pam_check_service_attr and pam_check_host_attr configuration capability (LDAP)
+	.
+
+2008-10-03  Jan Van Eldik
+
+	* Release: 1.1.13
+	- additional parameter nss_initgroups_ignoreusers for ldap.conf
+
+2008-09-29  Jan Van Eldik
+
+	* Release: 1.1.12
+	- support nss_override_attribute_value to override
+	unixHomeDirectory, loginShell
+
+2008-09-04  Jan Van Eldik
+
+	* Release: 1.1.11
+	- Minor enhancements
+
+2008-06-24  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.1.10
+	- Fixing syntax error in schema.tpl and tagging as release (most recent changes were not tagged)
+
+2008-05-13  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.9
+	- consolidated changes and additional config from Didi
+
+2008-02-14  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.7
+	- Added more pam_* attributes for restricting login based on LDAP groups
+
+2008-02-13  root
+
+	* Release: 1.1.6
+	- Fix --enablesbmauth option (was --enablesmb)
+
+2008-02-01  David Groep, H1.56,+31 20 592 2179
+
+	* Release: 1.1.5
+	- Added possibility to configure pam_filter in ldap.conf, thanks to geerd-dietger.hoffmann@cern.ch
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.1.4
+	- Adjust to new naming convention
+
+2007-03-28  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.3
+	- added headers
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.2
+	- added missing tags in templates
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.1
+	- ouch, failed to remove templates :(
+
+2007-03-21  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.0
+	- New templates based on namespaces added; old one removed
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.15
+	- Remove deprecated 'define' keyword
+
+2007-01-23  Matthias SCHROEDER
+
+        * Release: 1.0.14
+        - prevent authconfig from trying to launch in X11 mode
+
+2006-03-27  Vasilis Christaras
+	* Release: 1.0.13
+	- Fixed problems with authconfig cmd exit codes 
+
+2006-03-10 Vasilis Christaras
+	* Release: 1.0.12
+	- Added [arguments] support at /etc/pam.d/system-auth
+
+2005-08-07  Charles Loomis
+
+        * Release: 1.0.10
+        - NIS domain is not necessarily a FQDN
+
+2005-08-05  Charles Loomis
+
+        * Release: 1.0.9
+        - use standard types for validation (#10007)
+
+2005-08-05  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.8
+        - Removed validation from hostname(lists), solving bug#10007
+
+2005-08-05  Charles Loomis
+
+        * Release: 1.0.7
+        - fix bug #9038
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.0.6
+        - change to structure_component
+
+2005-03-07  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.5
+        - Added pamadditions functionality to modify pam.d/system-auth file after running authconfig
+
+2005-01-13  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.4
+        - added support for MD5, shadow, and cache (nscd)
+
+2004-12-24  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.3
+        - Refaired bug on LDAP authentication (PAM)
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.2
+        - Fixed prototype error in getValueDefault
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.1
+        - fixed bug in enabling TLS over ldap (now uses --enableldaptls)
+
+2004-12-23  David Groep, H1.57,+31 20 592 2179
+
+        * Release: 1.0.0
+        - New release for use with Quattor 1.0.0
+
+2004-08-13  David Groep
+
+        * 0.1.0: First Version
+
