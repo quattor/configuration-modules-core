@@ -1,0 +1,12 @@
+2008-08-18  "Luis Fernando"
+
+	* Release: 1.0.0
+	- Added to the repository.
+
+2008-08-18  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* TPL/schema.tpl.cin: Added the data structures for aii-shellfe and
+	aii-dhcpd.
+
+	* aiiserver.pm.cin: Initial implementation.
+

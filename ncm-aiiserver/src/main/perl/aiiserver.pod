@@ -1,0 +1,35 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=pod
+
+=head1 DESCRIPTION
+
+The I<aiiserver> component manages the configuration of an AII
+(Automated Installation Infrastructure) server.
+
+=head1 STRUCTURE
+
+The following fields are provided:
+
+=over 4
+
+=item * /software/components/aiiserver/aii-shellfe
+
+Configures the aii-shellfe tool. See L<aii-shellfe(8)>, section
+OPTIONS for more information.
+
+=item * /software/components/aiiserver/aii-dhcp
+
+Configures the aii-dhcp legacy tool. See L<aii-dhcp(8)>, section
+OPTIONS for more information.
+
+=back
+
+=head1 SEE ALSO
+
+L<aii-shellfe(8), L<aii-dhcp(8)>, L<aii>
+
+=cut
