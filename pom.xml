@@ -47,6 +47,7 @@
         <module>ncm-fstab</module>
         <module>ncm-syslogng</module>
         <module>ncm-syslog</module>
+        <module>ncm-squid</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
