@@ -1,0 +1,140 @@
+2010-03-12  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.4.1
+	- Adapt to the latest perl-LC and perl-CAF releases.
+	
+	They block shell expansion by default, and this component *needs it*.
+	Use the API they provide for such cases.
+
+2010-01-29  Michel Jouvin
+
+	* Release: 1.4.0
+	- Add support for a source file rather than an embedded content
+	Use CAF::Process() instead of calling system()
+	Use getTree() API
+	Make backup property required with a default value (true) matching current behaviour
+	Message cleanups
+
+2009-07-06  Loic Brarda
+
+	* Release: 1.3.5
+	- Make conversion to UTF8 optionnal.
+	Fix Documentation.
+
+2009-04-13  Michel Jouvin
+
+	* Release: 1.3.4
+	- Fix processing of backup option
+
+2009-04-13  Michel Jouvin
+
+	* Release: 1.3.4
+	- Fix processing of group property (https://savannah.cern.ch/bugs/?48967)
+
+2009-02-24  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.3.3
+	- Added boolean option backup to suppress creation of <file>.old. By default, backups are created.
+
+2009-02-24  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.3.4
+	- [your comment here]
+
+2009-02-24  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.3.3
+	- Added boolean option backup to suppress creation of <file>.old. By default, backups are created.
+
+2008-10-14  Michel Jouvin
+
+	* Release: 1.3.2
+	- panc v8 compliance
+
+2008-08-27  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.3.1
+	- Removed unescape() function as it is provided by ccm >= 2.1.0
+
+2007-07-23  Michel Jouvin
+
+	* Release: 1.3.0
+	- Add support for setuid/setgid permission
+
+2007-05-16  Michel Jouvin
+
+	* Release: 1.2.1
+	- Do a restart even if there is a change only in perms or owner/group
+
+2007-05-16  Michel Jouvin
+
+	* Release: 1.2.0
+	- Add support for UTF-8 characters
+	Rewrite of update code using LC::Check::file
+	Rename conditional to forcedRestart and restore original behaviour of conditional update by default
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.4
+	- fix include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.3
+	- add version; change structure include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.2
+	- update headers
+
+2007-03-25  Stijn De Weirdt
+
+	* Release: 1.1.1
+	- fix typos
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.1.0
+	- move to namespaced templates
+
+2006-02-17  Stijn De Weirdt
+
+        * Release: 1.0.8
+        - add namespaces templates
+        - fix behaviour of 'changed' state
+    	- add conditional option (both component wide and per file), defaults to false
+
+2006-02-17  Charles Loomis
+
+        * Release: 1.0.7
+        - remove 'define' keyword; use default operator
+
+2004-12-21  Charles Loomis
+
+        * Release: 1.0.6
+        - fix bug in permissions setting
+
+2004-12-20  Charles Loomis
+
+        * Release: 1.0.5
+        - fix various bugs
+
+2004-12-19  Charles Loomis
+
+        * Release: 1.0.1
+        - create directory when needed
+
+2004-12-16  Charles Loomis
+
+        * Release: 1.0.0
+        - first working version
+
+2004-12-16  Charles Loomis
+
+        * Release: 0.0.1
+        - fix pan syntax error
+
+2004-12-16  Charles Loomis  <charles.loomis@cern.ch>
+
+	* 0.0.0: First test version
