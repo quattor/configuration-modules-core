@@ -1,0 +1,75 @@
+2011-08-30  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.3
+	- Fixed CAF::Process->new call arguments
+	Using chrooted named path if defined in sysconfig
+
+2011-08-30  Christos Triantafyllidis,ctria@grid.auth.gr
+
+	* Release: 2.0.2
+	- Added use_localhost option (enabled by default) to allow disabling the usage of localhost as resolver in case that the component is configuring a named server.
+
+2010-06-23  Ronald Starink
+
+	* Release: 2.0.1
+	- Split command string so that the command is separated from the options in the call to CAF::Process->new. This is apparently needed for interoperability with perl-LC >= 1.1.6
+
+2010-02-03  Michel Jouvin
+
+	* Release: 2.0.0
+	- Fix typo in messages (reference to undefined variable)
+
+2010-02-03  Michel Jouvin
+
+	* Release: 2.0.0
+	- Backward-compatible rewrite with CAF::Process and getTree() API
+	Add new option 'serverConfig' to specify /etc/named.conf contents.
+	Make 'start' property optional and if false, stop/disable named.
+	Documentation update.
+
+2009-04-27  Ronald Starink, NIKHEF, x5180
+
+	* Release: 1.2.3
+	- Added support for options field
+
+2008-10-11  root
+
+	* Release: 1.2.2
+	- Define component version
+
+2008-10-10  root
+
+	* Release: 1.2.1
+	- Fix mistake in previous mod
+
+2008-10-10  root
+
+	* Release: 1.2.1
+	- Move start property initialization to schema.tpl
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.1.4
+	- Remove deprecated 'define' keyword
+
+2006-11-14  Matthias SCHROEDER
+
+        * Release: 1.1.3
+        - Allow to configure search line of /etc/resolve.conf
+
+2005-07-20  root
+
+        * Release: 1.1.2
+        - Initial version (based on CERN ncm-named)
+
+2005-07-20  Michel Jouvin  <jouvin@lal.in2p3.fr>
+
+	* named.pm.cin : first implementation, based on CERN ncm-named (numbered 1.1.1 to be greater than CERN version)
+	
+
