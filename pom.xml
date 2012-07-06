@@ -35,6 +35,7 @@
         <module>ncm-filecopy</module>
         <module>ncm-dirperm</module>
         <module>ncm-aiiserver</module>
+        <module>ncm-cdp</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

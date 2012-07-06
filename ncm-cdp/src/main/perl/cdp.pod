@@ -1,0 +1,45 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+The I<cdp> component manages the configuration file
+/etc/cdp-listend.conf.
+
+=head1 DESCRIPTION
+
+The I<cdp> component manages the configuration file for the
+cdp-listend daemon.
+
+=head1 RESOURCES
+
+=head2 configfile (/etc/cdp-listend.conf)
+
+The location of the configuration file.  Normally this should not be
+changed. 
+
+=head2 port
+
+The port used by the daemon.  
+
+=head2 nch
+
+The binary to execute when receiving a CDB update packet.
+
+=head2 nch_smear
+
+The range of time delay for executing the nch executable.  The
+execution will be delayed by [0, nch_smear] seconds.
+
+=head2 fetch
+
+The binary to execute when receiving a CCM update packet.
+
+=head2 fetch_smear
+
+The range of time delay for executing the fetch executable.  The
+execution will be delayed by [0, fetch_smear] seconds.
+
+=cut

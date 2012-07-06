@@ -1,0 +1,63 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.0.4
+	- fix templates for panc v8 syntax, and correct documentation of name of cfgfile
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.0.3
+	- fix include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.0.2
+	- add version; change structure include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.0.1
+	- update headers
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.0.0
+	- production component; change to version 1
+
+2007-03-25  Charles Loomis
+
+	* Release: 0.1.0
+	- change to namespaced templates
+
+2006-02-17  Charles Loomis
+
+        * Release: 0.0.6
+        - use range for long validation; remove 'define' keyword; use default operator
+
+2005-02-13  Charles Loomis
+
+        * Release: 0.0.5
+        - use type_port; move template
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.4
+        - make consistent with quattor 1.0.0 templates
+
+2004-12-07  Charles Loomis
+
+        * Release: 0.0.3
+        - change default location of configuration file
+
+2004-09-12  Charles Loomis
+
+        * Release: 0.0.2
+        - templates aren't preprocessed
+
+2004-09-12  Charles Loomis
+
+        * Release: 0.0.1
+        - fix bad variable subst. in config.mk 
+
+2004-08-15  Charles Loomis  <charles.loomis@cern.ch>
+
+	* 0.0.0: First test version
