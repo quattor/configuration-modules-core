@@ -57,6 +57,7 @@
         <module>ncm-symlink</module>
         <module>ncm-gpfs</module>
         <module>ncm-sysconfig</module>
+        <module>ncm-selinux</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
