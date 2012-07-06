@@ -1,0 +1,125 @@
+2012-04-05  Luis Fernando Muñoz Mejías
+
+	* Release: 1.3.3
+	- Give a better default file for the configuration and bugfixes.
+
+2011-04-12 Ulrich Schwickerath <Ulrich.Schwickerath@cern.ch>
+	* Release 1.3.2-2
+	- fix verbose printing statement
+
+2011-03-14  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.2
+	- Add a "filename" field to the schema
+
+	This allows to have the same code working on SL4, 5 and 6
+
+2011-03-08  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.1
+	- Fix the code not following the schema.
+
+	Thanks to Andreas Nowack for the report.
+
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.0
+	- Make it work with SL 6. Drop any support for SL 3, and don't know about SL4.
+
+2010-07-23  Jan IVEN
+
+	* Release: 1.2.1
+	- bug #70562: install/remove doesn't work
+
+2009-07-24  Luis Fernando Muñoz Mejías
+
+	* Release: 1.2.0
+	- Make it able to modify existing lines, not only to add new ones.
+
+	It was only able to add lines to /etc/modprobe.conf, which meant
+	that if you needed to change something (f.i, different options to
+	a module) you needed to log into the machine, remove the options
+	line and re-run the component. Otherwise, two "option" lines would
+	be added. It's better now. However, it doesn't REMOVE lines. F.i,
+	if you want to remove an alias you still have to do it manually.
+
+2009-02-13  Nick Williams
+
+	* Release: 1.1.4
+	- upgrade templates to panc v8 syntax
+
+2008-08-26  "Luis Fernando"
+
+	* Release: 1.1.3
+	- Relax the restriction on System.map versions, to allow custom kernels.
+
+2008-04-29  Jan Van Eldik
+
+	* Release: 1.1.2
+	- Only run mkinitrd if /etc/modules.conf has changed
+
+2007-05-16  Vlado BAHYL
+
+	* Release: 1.1.1
+	- reverting modification from 1.0.3
+
+2007-04-17  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.0
+	- namespaced
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.7
+	- Increase relase number following previous fix
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.7
+	- Remove invalid property 'start' in pro_software_component_modprobe
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.7
+	- Add a MAINTAINER in config.mk
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.6
+	- Add a pro_software_component_modprobe template
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.5
+	- Remove deprecated 'define' keyword
+
+2006-06-29  Marco Emilio Poleggi
+
+        * Release: 1.0.4
+        - Component ported to Quattor 1.2, thanks to Hugo
+
+2006-06-15  Vlado BAHYL
+
+        * Release: 1.0.3
+        - fixed bug with alias
+
+2005-07-11  Hugo MONTEIRO CACOTE
+
+        * Release: 1.0.2
+        - override a modules option for the one defined in CDB
+
+2005-07-06  Hugo MONTEIRO CACOTE
+
+        * Release: 1.0.1
+        - second release clean up
+
+2005-07-06  Hugo MONTEIRO CACOTE
+
+        * Release: 0.0.2
+        - first release
+
+2005-03-29  Hugo MONTEIRO CACOTE
+
+        * Release: 0.0.0
+        - first release
+
