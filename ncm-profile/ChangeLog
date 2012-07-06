@@ -1,0 +1,104 @@
+2010-10-27  root
+
+	* Release: 2.1.3
+	- Documentation fixes.
+
+2008-10-15  root
+
+	* Release: 2.1.2
+	- Fix removal of unescape()
+	panc v8 compliance
+
+2008-08-29  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 2.1.1
+	- Removed unescape() function as it is provided by ccm >= 2.1.0
+
+2008-04-10  root
+
+	* Release: 2.1.0
+	- Add option flavorSuffix to suppress suffix .sh/.csh
+	Fix lost flavors information for default script
+
+2008-03-14  root
+
+	* Release: 2.0.2
+	- Fix component_profile_add_path() function
+	Update documentation
+
+2008-02-13  root
+
+	* Release: 2.0.1
+	- Allow variable value to be string, long, boolean and list of string in add_env_or_path function
+	Fix add_env and add_path functions when variable name and value are passed as separate arguments
+
+2008-02-10  root
+
+	* Release: 2.0.0
+	- Add Michel Jouvin to maintainer list
+
+2008-02-10  root
+
+	* Release: 2.0.0
+	- ncm-profile extended to manage an arbitrary number of scripts (scripts resource)
+	Rewritten using getTree API()
+	Maintain a list of managed scripts
+
+2007-04-16  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.1.4
+	- fixed missing quote in schema.tpl
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.3
+	- fix include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.2
+	- add version; change structure include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.1
+	- change headers
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.1.0
+	- move to namespaced templates
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.3
+	- Remove deprecated 'define' keyword
+
+2005-01-11  Charles Loomis
+
+        * Release: 1.0.2
+        - fix csh scripts
+
+2004-12-07  Charles Loomis
+
+        * Release: 1.0.1
+        - make template consistent with quattor 1.0.0
+
+2004-12-01  Charles Loomis
+
+        * Release: 1.0.0
+        - first working version
+
+2004-12-01  Charles Loomis
+
+        * Release: 0.0.3
+        - make resources with defaults optional
+
+2004-12-01  Charles Loomis
+
+        * Release: 0.0.2
+        - fix syntax errors
+
+2004-11-30  Charles LOOMIS  <charles.loomis@cern.ch>
+
+	* First version in CVS
