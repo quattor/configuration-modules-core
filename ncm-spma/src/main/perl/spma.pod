@@ -1,0 +1,148 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::spma - NCM spma configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Generates or updates the SPMA target configuration file, typically
+F</var/lib/spma-target.cf>, and (optionally) runs SPMA.
+
+=item Unconfigure()
+
+Not applicable.
+
+=back
+
+=head1 RESOURCES
+
+=over
+
+=item /software/components/spma/active : boolean
+
+activates/deactivates the component.
+
+=item /software/components/spma/unescape : boolean
+
+if defined and set to false, then it is assumed that the package information in
+the profile has not been escaped with PAN's escape() function. This setting is
+only meaningful when using a tool different than PAN for generating CDB
+profiles.
+
+=item /software/components/spma/tmpdir : string
+
+If defined, set the path to the temporary directory (for compatibility
+with -bad- packages that need to remove the sticky bit from /tmp)
+
+=back
+
+Flags for SPMA setting changes (see man spma(1) for details) in spma.conf
+
+Important note: Once a flag is set in the CDB profile and the
+component is run, it is _not_ sufficient to remove it from the CDB
+profile for returning to the old spma.conf configuration
+file. Configuration entries which are not defined in the CDB profile
+are kept untouched in spma.conf.
+
+=over
+
+=item /software/components/spma/userpkgs : string ("yes|no")
+
+=item /software/components/spma/userprio : string ("yes|no")
+
+=item /software/components/spma/protectkernel : string ("yes|no")
+
+=item /software/components/spma/packager : string ("rpm|pkg|..")
+
+=item /software/components/spma/usespmlist : string ("yes|no")
+
+=item /software/components/spma/rpmexclusive: string ("yes|no")
+
+
+=item /software/components/spma/debug: string ("0|1|2|3|4|5")
+
+=item /software/components/spma/verbose: string ("0|1")
+
+
+=item /software/components/spma/cachedir: string
+
+=item /software/components/spma/localcache: string ("yes|no")
+
+
+=item /software/components/spma/proxy: string ("yes|no")
+
+=item /software/components/spma/proxytype: string ("forward|reverse")
+
+=item /software/components/spma/proxyhost: string
+
+=item /software/components/spma/proxyport: string
+
+=back
+
+Flag for running SPMA after updating the configuration:
+
+=over
+
+=item /software/components/spma/run: string ("yes|no")
+
+Note that the SPMA itself will honour the "no-action" mode when ncm-ncd is
+invoked with B<--noaction>.
+
+=back
+
+Flag for indicating if SPMA should use the head node as specified under
+/hardware/headnode/name instead of 'proxyhost':
+
+=over
+
+=item /software/components/spma/headnode: boolean
+
+Note that if /hardware/headnode/name is not defined, but the above resource is set to
+true, then the component will not change the defined proxy host if any.
+
+=back
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none. However, since the SPMA is typically used for updating components
+in RPM/PKG format, it is convenient to run the SPMA component before any
+other.
+
+=head1 FILES
+
+F</etc/spma.conf>, F</var/lib/spma-target.cf>.
+
+=head1 NOTES
+
+This component honors the B<--noaction> mode.
+
+=head1 BUGS
+
+The typing of the CDB entries is yet to be done: for now, all of them are
+strings.
+
+=head1 AUTHOR
+
+German Cancio <German.Cancio@cern.ch>
+
+=head1 SEE ALSO
+
+ncm-ncd(1)
+
+=cut
+
+

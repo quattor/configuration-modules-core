@@ -1,0 +1,413 @@
+2010-09-06  Victor Mendoza
+
+	* Release: 2.0.0
+	- WARNING ! new incompatible schema
+	- Update to v1.8, then update to v2.0
+	- Otherwise manual intervention will be required
+	- The change : architectures can now be in different repositories
+
+2010-09-06  Victor Mendoza
+
+	* Release: 1.8.0
+	- perl module update, compatible with v2.0 schema
+
+2010-05-26  Nick Williams
+
+	* Release: 1.7.3
+	- support proxyrandom in the config for spma
+	
+	spma 1.11.6 supports "proxyrandom" as an option. This release provides
+	support for that field within the spma.conf file.
+
+2010-05-25  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.7.2
+	- Stop relying on subshells, as needed for upgrading to perl-LC 1.1.6.
+
+2010-04-07  Ronald Starink
+
+	* Release: 1.7.1
+	- Fixed missing declaration $tmpdir
+
+2010-03-26  Loic Brarda
+
+	* Release: 1.7.0
+	- Added a tmpdir parameter (for compatibility with -bad- packages that need to remove the sticky bit from /tmp)
+
+2009-05-14  Michel Jouvin
+
+	* Release: 1.6.0
+	- Redo tagversion after failure
+
+2009-05-14  Michel Jouvin
+
+	* Release: 1.6.0
+	- Fix several bugs in previous mods breaking in particular pkg_ronly()
+
+2009-05-14  Michel Jouvin
+
+	* Release: 1.6.0
+	- Allow pkg_add() to readd the same package version/arch without 'multi' option
+
+2009-05-13  Michel Jouvin
+
+	* Release: 1.6.0
+	- Cleanup pkg_repl() code
+	Fix "multi" option (http://savannah.cern.ch/bugs/?50337)
+	Improve debugging messages
+
+2008-11-25  root
+
+	* Release: 1.5.5
+	- Code cleanup (remove unnecessary object copy, replace while by foreach)
+
+2008-10-06  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.5.4
+	- renamed unsecape to stop annoying warnings
+
+2008-09-22  Michel Jouvin
+
+	* Release: 1.5.3
+	- Convert to PAN v8 syntax (changes forgotten in previous release)
+
+2008-09-22  Michel Jouvin
+
+	* Release: 1.5.2
+	- Update templates to PAN v8 syntax (v7 compatible)
+
+2008-08-29  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.5.1
+	- Changed unescape() to call upstream that provided by ccm >= 2.1.0
+
+2008-06-16  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.5.0
+	- Refactored to fully support --noaction mode: config files are always
+	processed as temporary files.
+
+2008-06-12  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.4.10
+	- forgot to add TPL/repository_cleanup.tpl.cin
+
+2008-06-06  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.4.9
+	- added TPL/repository_cleanup.tpl.cin (moved from pan-templates)
+
+2008-01-30  German Cancio Melia
+
+	* Release: 1.4.8
+	- Added 'checksig' to allowed params below /sw/comp/spma
+	Fixed logic when 'headnode' is set to false
+
+2007-12-21  German Cancio Melia
+
+	* Release: 1.4.7
+	- Better documented behaviour for default configuration entries (cf Savannah #24025)
+
+2007-11-30  Charles Loomis
+
+	* Release: 1.4.6
+	- move function (named_item_exists) from standard pan templates to spma function definitions
+
+2007-04-24  Michel Jouvin
+
+	* Release: 1.4.5
+	- Fix incorrect detection of existing package version in pkg_repl when multiple archs exist (Savanah #25762)
+	Improved debugging messages
+
+2007-04-20  Michel Jouvin
+
+	* Release: 1.4.4
+	- Fix SPMA pkg_xxx functions (unnecessary self copy)
+	Merge structures.tpl into schema.tpl
+
+2007-03-29  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.4.3
+	- Now compliant with the latest namespace framework. Some clean-up
+
+2007-03-28  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.4.2
+	- added new header. Other deprecated keywords converted
+
+2007-03-23  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.4.1
+	- templates adjustments + pod cleanup
+
+2007-03-23  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 1.4.0
+	- Old templates removed, new ones reconverted. To be tested
+
+2007-02-15  German Cancio Melia
+
+	* Release: 1.3.8
+	- First version with namespaced template set
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.3.7
+	- Remove deprecated 'define' keyword
+
+2006-09-11  German Cancio Melia
+
+        * Release: 1.3.6
+        - Adding fix provided by Andreas Nowack for Savannah #18268 (pkg_del and pkg_ronly do not work properly)
+
+2006-08-15  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+        * Release: 1.3.5
+        - Fix #19060
+
+2006-06-08  "Stephen Childs"
+
+        * Release: 1.3.4
+        - Added spaces in the debug output (fix for #17249).
+
+2006-06-05  Michel Jouvin
+
+        * Release: 1.3.3
+        - Fix pkg_del() error if no version specified; fix pkg_add() error when checking for old versions (bug 17123)
+
+2006-05-29  Michel Jouvin
+
+        * Release: 1.3.2
+        - Fix several problems with handling of old version in pkg_del() and pkg_add() (bug #17123)
+
+2006-05-09  Michel Jouvin
+
+        * Release: 1.3.1
+        - Fix pkg_del() not working if no arch specified (bug #16675)
+
+2006-04-24  Michel Jouvin
+
+        * Release: 1.3.0
+        - pkg_add rewritten as a wrapper of pkg_repl(), like pkg_add and pkg_ronly
+
+2006-04-24  Michel Jouvin
+
+        * Release: 1.2.25
+        - pkg_ronly() rewritten as a pkg_repl wrapper to add support for multiple ar
+
+2006-04-23  Michel Jouvin
+
+        * Release: 1.2.24
+        - pkg_del rewritten as a pkg_repl wrapper to add support for multiple archs (#16207)
+
+2006-04-23  Michel Jouvin
+
+        * Release: 1.2.23
+        - Fix invalid deletion of iterator when looping over a list (#16211)
+
+2006-04-12  Michel Jouvin
+
+        * Release: 1.2.22
+        - Add handling of several architecture per RPM in pkg_repl (#16207)
+
+2006-03-28  German Cancio Melia
+
+        * Release: 1.2.21
+        - Changed head node path to /hardware/headnode/name
+
+2006-03-26  Charles Loomis
+
+        * Release: 1.2.20
+        - change order of with and descro statements for newer panc compiler
+
+2005-07-06  German Cancio Melia
+
+        * Release: 1.2.19
+        - Skip SPMA if /software/repositories or /software/packages does not exist.
+
+2005-07-06  German Cancio Melia
+
+        * Release: 1.2.18
+        - Commented out entries for SPMA typing (/software/packages and /software/repositories) as problems arise making them optional
+
+2005-07-06  German Cancio Melia
+
+        * Release: 1.2.17
+        - Make fields for /software/packages and /software/repositories optional
+
+2005-07-03  German Cancio Melia
+
+        * Release: 1.2.16
+        - Fix Savannah #9312 (rpmt fails but ncm-cdispd continues)
+
+2005-05-03  Charles Loomis
+
+        * Release: 1.2.15
+        - add missing template
+
+2005-05-03  Charles Loomis
+
+        * Release: 1.2.14
+        - refactor spma functions and structures
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.2.13
+        - change to structure_component
+
+2005-04-23  German Cancio Melia
+
+        * Release: 1.2.12
+        - Exit gracefully if /software/packages does not exist. See Savannah task #1908.
+
+2005-04-18  German Cancio Melia
+
+        * Release: 1.2.11
+        - Now accepts multiple architectures defined per package/version (see Savannah #1893)
+
+2005-04-12  Charles Loomis
+
+        * Release: 1.2.10
+        - add software template for spma
+
+2005-02-09  German CANCIO MELIA
+
+        * Release: 1.2.9
+        - Changed behaviour of --noaction: now generates the config file but runs SPMA in noaction mode
+
+2004-11-25  German CANCIO MELIA
+
+        * Release: 1.2.8
+        - Now do not generate any error message if only one repository is used and no repository is found for a given package
+
+2004-11-22  German CANCIO MELIA
+
+        * Release: 1.2.7
+        - Added new field for supporting non-escaped package names and versions when using PAN
+
+2004-10-19  German CANCIO MELIA
+
+        * Release: 1.2.6
+        - Turn an error (no headnode) into warning as otherwise SPMA is not run by wrapper
+
+2004-10-19  German CANCIO MELIA
+
+        * Release: 1.2.5
+        - Fixed small bug - deactivate proxy if head node selected but none configured
+
+2004-09-02  German CANCIO MELIA
+
+        * Release: 1.2.4
+        - Minor bugfix. Now the component returns an error if the head node is activated but not defined
+
+2004-09-01  German CANCIO MELIA
+
+        * Release: 1.2.3
+        - Added new headnode resource support
+
+2004-04-08  German CANCIO MELIA
+
+        * Release: 1.2.1
+        - Added new unescape flag for non-PAN CDB based profiles
+
+2004-02-17  German CANCIO MELIA
+
+        * Release: 1.2.0
+        - Full support of proxy configurations; minor bugfix in Check::Lines
+
+2004-02-17  German CANCIO MELIA
+
+        * Release: 1.1.18
+        - Added support for proxy configuration in spma.conf (as of SPMA 1.9.1)
+
+2004-02-04  German CANCIO MELIA
+
+        * Release: 1.1.17
+        - Fixed small bug in regexp for spma.conf file
+
+2004-01-28  German CANCIO MELIA
+
+        * Release: 1.1.16
+        - Added 'run' docu to pod file
+
+2004-01-23  German CANCIO MELIA
+
+        * Release: 1.1.15
+        - SPMA can now be run from within component ('run' eq 'yes')
+
+2003-11-04  German CANCIO MELIA
+
+        * Release: 1.1.12
+        - removed unused config.mk entries
+
+2003-09-23  German CANCIO MELIA
+
+        * Release: 1.1.11
+        - Added switch for 'priority to user packages'
+
+2003-09-10  German CANCIO MELIA
+
+        * Release: 1.1.9
+        - Removed Makefile and specfile, as now in QUATTOR build tools. 
+
+2003-09-09  German CANCIO MELIA
+
+        * Release: 1.1.8
+        - removed hardcoded path, s%/var/lib/%@QTTR_VAR@/lib%
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.1.7
+        - Use will_store_all (includes also warnings)
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.1.6
+        - do not rename temp file if in $noAction!
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.1.5
+        - smallish docu improvement
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.1.4
+        - Improved .pod documentation, added new options to .tpl file
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.1.3
+        - Updated documentation
+
+2003-08-29  German CANCIO MELIA
+
+        * Release: 1.1.2
+        - manages now also the SPMA spma.conf configuration file entries
+
+2003-08-25 CVS: new release (gcancio)
+
+        * Release: 1.1.1
+        - bugfix in makefile
+
+2003-08-22 CVS: new release (gcancio)
+
+        * Release: 1.1.0
+        - Cleanup and polish port to new Quattor build tools
+
+2003-08-19  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* added declaration tpl file for PAN
+
+2003-07-30  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* added support for $NoAction, general cleanup
+
+2003-07-30  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* first functional version (using exception handling)
+
+2003-07-25  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* first version
+
