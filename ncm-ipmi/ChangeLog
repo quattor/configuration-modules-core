@@ -1,0 +1,20 @@
+2010-06-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.4
+	- Run the commands with the CAF framework for better traceability.
+
+2010-02-25  Guillaume Philippon
+
+	* Release: 1.0.3
+	- Oups, some uncommited fix
+
+2010-02-25  Guillaume Philippon
+
+	* Release: 1.0.2
+	- Add chkconfig support + Fix variable declaration issue
+
+2010-02-25 Guillaume PHILIPPON, <philippo@lal.in2p3.fr>
+
+        * Release : 1.0.0
+                - first release based on RPM installation procedure
+
