@@ -39,6 +39,7 @@
         <module>ncm-ipmi</module>
         <module>ncm-cron</module>
         <module>ncm-nscd</module>
+        <module>ncm-chkconfig</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
