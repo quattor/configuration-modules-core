@@ -1,0 +1,66 @@
+2011-02-24  Michel Jouvin
+
+	* Release: 1.3.0
+	- * Fix CAF:Process() arguments for compatibility with CAF::Process 1.8.7.
+	     * Fix discovery of working administration host.
+	     * Fix update of password for global administrator to prevent failures occuring just after the update
+
+2010-04-12  Michel Jouvin
+
+	* Release: 1.2.1
+	- Fix my.cfg processing when [mysqld] section is not the first one
+	Ensure there is a trailing \n in my.cnf to avoid unnecessary update
+
+2010-02-01  Michel Jouvin
+
+	* Release: 1.2.0
+	- Do not configure a database if hosting server configuration failed
+	Use CAF::Process instead of qx//
+	Fix logic error in MySQL service check
+
+2009-05-07  Michel Jouvin
+
+	* Release: 1.1.4
+	- Fix parsing of existing my.cnf
+	Improve debug messages
+
+2008-10-18  root
+
+	* Release: 1.1.3
+	- Fix mysql service check
+
+2008-10-15  root
+
+	* Release: 1.1.2
+	- Fix removal of unescape()
+	panc v8 compliance
+	Fix chkconfig (remove --list)
+
+2008-08-29  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 1.1.1
+	- Removed unescape() function as it is provided by ccm >= 2.1.0
+
+2008-07-24  Michel Jouvin
+
+	* Release: 1.1.0
+	- Add support for user@host
+	Update documentation
+
+2008-04-04  root
+
+	* Release: 0.9.1
+	- Fix bug in regexp
+
+2008-03-14  root
+
+	* Release: 1.0.0
+	- Allow user password to be empty string (but not administrator pwd)
+	Add informational messages
+	Bump version number to 1.0
+
+2007-12-13  Michel Jouvin
+
+	* Release: 0.9.0
+	- Initial version
+

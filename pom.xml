@@ -42,6 +42,7 @@
         <module>ncm-chkconfig</module>
         <module>ncm-profile</module>
         <module>ncm-postgresql</module>
+        <module>ncm-mysql</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
