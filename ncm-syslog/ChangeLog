@@ -1,0 +1,84 @@
+2008-03-12  Michel Jouvin
+
+	* Release: 0.1.7
+	- Fix typo in previous mod (invalid start property initialized)
+
+2008-03-10  root
+
+	* Release: 0.1.7
+	- Fix config.tpl.cin (missing pkg_add() for component RPM)
+
+2007-05-10  Matthias SCHROEDER
+
+	* Release: 0.1.6
+	- Allow to enter comments
+
+2007-05-10  Matthias SCHROEDER
+
+	* Release: 0.1.4
+	- squash more bugs
+
+2007-05-10  Matthias SCHROEDER
+
+	* Release: 0.1.3
+	- some fugbixes
+
+2007-05-10  Matthias SCHROEDER
+
+	* Release: 0.1.2
+	- add option to allow full control over syslog.conf
+
+2007-04-17  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 0.1.1
+	- clean-up and some fixes in the templates. TO BE TESTED!
+
+2007-04-17  Matthias SCHROEDER
+
+	* Release: 0.1.0
+	- make namespace compliant (I hope...)
+
+2007-04-17  Matthias SCHROEDER
+
+	* Release: 0.0.11
+	- fix issue with facility *
+
+2007-02-23  Matthias SCHROEDER
+
+        * Release: 0.0.10
+        - avoid problem with regex on slc3 (unquoted facility)
+
+2007-02-15  Michel Jouvin
+
+	* Release: 0.0.9
+	- Remove deprecated 'define' keyword
+
+2006-09-05  Matthias SCHROEDER
+
+        * Release: 0.0.8
+        - Fix bug recognizing existing facilities and matching priority *
+
+2006-08-31  Matthias SCHROEDER
+
+        * Release: 0.0.7
+        - Allow setting SYSLOGD and KLOGD options
+
+2006-08-30  Matthias SCHROEDER
+
+        * Release: 0.0.6
+        - Do individual checks for facility, priority and actions before doing modifications
+
+2006-08-30  Matthias SCHROEDER
+
+        * Release: 0.0.4
+        - Allow adding facilities and priorities for existing actions
+
+
+2006-07-22  Ulrich Schwickerath <ulrich.schwickerath@cern.ch> -0.0.3
+	* make selectors optional. This is needed for conditional 
+	  configurations. If no selector is given, no action is taken
+	  and only a information is logged.
+
+2006-07-22  Ulrich Schwickerath <ulrich.schwickerath@cern.ch> -0.0.2
+	
+	* first version
