@@ -52,6 +52,7 @@
         <module>ncm-shorewall</module>
         <module>ncm-interactivelimits</module>
         <module>ncm-portmap</module>
+        <module>ncm-raidman</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
