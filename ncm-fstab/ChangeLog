@@ -1,0 +1,19 @@
+2010-11-03  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.2
+	- Fix the dependencies to match out-of-CERN standards.
+
+2010-11-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.1
+	- Add the documentation.
+
+2010-11-02  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.0.0
+	- Unleash the component!
+
+2010-10-27  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 0.1.0
+	- Beginning.
