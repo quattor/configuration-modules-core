@@ -50,6 +50,7 @@
         <module>ncm-squid</module>
         <module>ncm-srvtab</module>
         <module>ncm-shorewall</module>
+        <module>ncm-interactivelimits</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

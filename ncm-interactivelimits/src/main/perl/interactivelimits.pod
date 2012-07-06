@@ -1,0 +1,67 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::interactivelimits - NCM interactivelimits configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Updates the /etc/security/limits.conf - file with system limits
+for interactive users.
+This file is read by /lib/security/pam_limits.so and the values
+defined there are respected.
+Returns error in case of failure.
+
+=item Unconfigure()
+
+not available.
+
+=back
+
+=head1 RESOURCES
+
+=over
+
+=item /software/components/interactivelimits/active : boolean
+
+Activates/deactivates the component.
+
+=item /software/components/interactivelimits/values : list
+
+Defines all values that should be configured in /etc/security/limits.conf.
+
+Example of such a definition from a node profile:
+
+  "/software/components/interactivelimits/values" = list(
+    list("username", "soft", "core", "0"),
+    list("username", "hard", "nofile", "65536"),
+    list("username", "soft", "nproc", "16384"),
+    list("username", "hard", "as", "unlimited"),
+  );
+
+=back
+
+=head1 DEPENDENCIES
+
+None.
+
+=head1 BUGS
+
+None known.
+
+=head1 AUTHOR
+
+Vladimir Bahyl <Vladimir.Bahyl@cern.ch>
+
+=head1 SEE ALSO
+
+pam(8), ncm-ncd(1)
+
+=cut
