@@ -37,6 +37,7 @@
         <module>ncm-aiiserver</module>
         <module>ncm-cdp</module>
         <module>ncm-ipmi</module>
+        <module>ncm-cron</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
