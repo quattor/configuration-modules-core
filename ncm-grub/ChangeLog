@@ -1,0 +1,133 @@
+2011-08-08  Veronique Lefebure,31 1-022,,
+
+	* Release: 2.1.3
+	- add NoActionSupported
+
+2007-08-09  Juan Antonio LOPEZ PEREZ
+
+	* Release: 2.1.2
+	- Added backwards-compatibility with older versions by adding a 'fullcontrol' switch and functionality of the two modes explained in the man page. Corrected bug #27962 related with the chop of the last character of the arguments. Improved the logging when 'fullcontrol' is true saying now if the component changed the current kernel arguments and how. Work done in collaboration with in collaboration with Pablo Gutierrez Llamas <pablo.gutierrez.llamas@cern.ch>.
+
+2007-05-14  Juan Antonio LOPEZ PEREZ
+
+	* Release: 2.1.1
+	- Added patch to configure the arguments passed to the default kernel 
+	to match exactly the contents of the 'grub/args' CDB entry. In previous
+	releases we needed to know in advance which arguments grub.conf
+	currently has if we wanted them to be deleted or substituted by this
+	component.
+	- Patch made in collaboration with Pablo Gutierrez Llamas 
+	<pablo.gutierrez.llamas@cern.ch>
+
+2007-03-30  Marco Emilio Poleggi,<Marco.Poleggi@cern.ch>
+
+	* Release: 2.1.0
+	- converted to new namespace framework. Obsolete and deprecated stuff 
+	removed
+
+2007-02-15  German Cancio Melia
+
+	* Release: 2.0.3
+	- First version with namespaced templates
+
+2007-02-15  Michel Jouvin
+
+	* Release: 2.0.2
+	- Remove deprecated 'define' keyword
+
+2006-06-01  "Stephen Childs"
+
+        * Release: 2.0.1
+        - Fixed typo in name of grubby executable.
+
+2006-05-29  "Stephen Childs"
+
+        * Release: 2.0.0
+        - Added support for multiboot kernels (e.g. Xen) and for configuring multiple kernels. (#17039)
+
+2005-10-18  German Cancio Melia
+
+        * Release: 1.2.13
+        - Added 'Files Modified' section in POD documentation
+
+2005-04-20  German Cancio Melia
+
+        * Release: 1.2.12
+        - Minor logging changes
+
+2005-04-19  German Cancio Melia
+
+        * Release: 1.2.11
+        - Added new /software/components/grub/prefix parameter for different kernel prefix
+
+2005-04-12  Charles Loomis
+
+        * Release: 1.2.10
+        - add package installation to software template
+
+2005-04-05  German Cancio Melia
+
+        * Release: 1.2.9
+        - Patch for adding arguments to kernel in grub.conf, by Stijn De Weirdt <stdweird@hep.iihe.ac.be>
+
+2003-11-07  German CANCIO MELIA
+
+        * Release: 1.2.8
+        - added to CERN quattor CVS repository
+
+2003-11-04  German CANCIO MELIA
+
+        * Release: 1.2.7
+        - removed unused config.mk entries
+
+2003-09-22  German CANCIO MELIA
+
+        * Release: 1.2.6
+        - Use /system/kernel/version instead of CCConfig; increases EDG wide portability
+
+2003-09-10  German CANCIO MELIA
+
+        * Release: 1.2.5
+        - Removed Makefile and specfile, as now in QUATTOR build tools. 
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.2.4
+        - Use will_store_all (includes also warnings)
+
+2003-09-01  German CANCIO MELIA
+
+        * Release: 1.2.3
+        - improved the documentation
+
+2003-08-25 CVS: new release (gcancio)
+
+        * Release: 1.2.2
+        - small bugfix in Makefile
+
+2003-08-25 CVS: new release (gcancio)
+
+        * Release: 1.2.1
+        - added pan template to RPM
+
+2003-08-22 CVS: new release (gcancio)
+
+        * Release: 1.2.0
+        - Cleanup and polish port to new Quattor build tools
+
+2003-08-19  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* added declaration tpl file for PAN
+
+2003-07-30  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* added support for $NoAction, general cleanup
+
+2003-07-30  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* small bugfixes, added exception context preamble
+
+2003-07-25  German CANCIO MELIA  <gcancio@asis-w6.cern.ch>
+
+	* first version
+
