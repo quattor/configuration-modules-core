@@ -1,0 +1,35 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+=head1 NAME
+
+NCM::nscd - NCM component to configure nscd
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Configures the name service caching daemon (nscd). See the C<nscd.conf(5)> man page 
+or the CDB schema file for allowed options. Booleans have to be written as
+I<yes> or I<no> in the template, this is the way I<nscd> expects them.
+
+=back
+
+=head1 FILES
+
+modifies C</etc/nscd.conf> and a temporary file in C</etc>.
+
+
+=head1 AUTHOR
+
+Jan.Iven@cern.ch
+
+=head1 SEE ALSO
+
+nscd(8), nscd.conf(5)
+
+=cut
+
