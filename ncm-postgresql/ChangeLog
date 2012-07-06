@@ -1,0 +1,25 @@
+2012-07-02 SDW
+    * add pro/epilogue shared script in postgres sysconfig
+
+2012-01-20 SDW
+    * add full schema config for hba and main config
+
+2011-03-22
+	* rewrite for version 9. 9.0 is a transition version which appends version numbering to scripts and directories
+
+2008-06-17 SDW
+    * enable lang support
+
+2008-01-31 SDW
+    * fix stdout/stderr redirection to logfile
+    * enable different user to inject inital sql then owner
+
+2007-12-05 SDW
+	* fix 8.2 initialisation
+
+2007-03-31 SDW
+	* namespace fixes
+
+2006-08-26  SDW
+
+	* first version
