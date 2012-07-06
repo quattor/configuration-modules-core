@@ -29,6 +29,7 @@
         <module>ncm-hostsaccess</module>
         <module>ncm-grub</module>
         <module>ncm-pakiti</module>
+        <module>ncm-nfs</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
