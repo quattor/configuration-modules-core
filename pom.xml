@@ -55,6 +55,7 @@
         <module>ncm-raidman</module>
         <module>ncm-ofed</module>
         <module>ncm-symlink</module>
+        <module>ncm-gpfs</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

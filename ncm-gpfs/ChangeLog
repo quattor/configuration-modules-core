@@ -1,0 +1,22 @@
+2011-05-02  SDW
+
+        * Release: 0.6.0
+        - Simple mmsdrfs initialisation support
+
+2011-04-18  SDW
+
+        * Release: 0.5.
+        - Fix typos
+
+2011-04-18  SDW
+
+        * Release: 0.5.1
+        - Download rpms first with and optionally ccm certificates
+
+2011-04-11  SDW
+
+        * Release: 0.5.0
+        - Initial commit.
+        - Untested.
+        - Base rpms only.
+
