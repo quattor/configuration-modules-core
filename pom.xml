@@ -31,6 +31,7 @@
         <module>ncm-pakiti</module>
         <module>ncm-nfs</module>
         <module>ncm-pnp4nagios</module>
+        <module>ncm-slocate</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
