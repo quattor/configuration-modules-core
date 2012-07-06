@@ -1,0 +1,45 @@
+2009-01-27  Luis Fernando Muñoz Mejías,Luis.Fernando.Munoz.Mejias@cern.ch
+
+	* Release: 1.1.0
+	- Build tools hating me.
+
+2009-01-27  Luis Fernando Muñoz Mejías
+
+	* Release: 1.1.0
+	- New attempt, the build tools hate me.
+
+2009-01-27  Luis Fernando Muñoz Mejías <luis.fernando.munoz.mejias@cern.ch>
+
+	* Release: 1.1.0
+	- Added support for exclude_filters and nesting several filters.
+
+	Now, all possible logical combinations are possible by combining
+	filters.
+
+2008-05-09  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.3
+	- Removed TCP fields from UDP sources
+
+2008-05-09  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.2
+	- Fixed bug when handling network sources.
+
+2007-10-17  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.1
+	- Small documentation improvemente.
+
+2007-10-17  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.0
+	- Added to CVS. New component for configuring syslog-ng. If you don't know
+	what logging facility you are using, check ncm-syslog first.
+
+2007-10-16  Luis Fernando Muñoz Mejías  <mejias@delta.ft.uam.es>
+
+	* TPL/schema.tpl.cin: Fixing compilation errors.
+
+	* syslogng.pm.cin: Component implementation.
+
