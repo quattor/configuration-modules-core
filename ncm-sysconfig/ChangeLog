@@ -1,0 +1,49 @@
+2009-02-13  Nick Williams
+
+	* Release: 1.2.1
+	- fix templates for panc v8 syntax
+
+2008-01-30  Michel Jouvin
+
+	* Release: 1.2.0
+	- Use LC::Check::file to update files (to provide a message when a file is updated)
+	Use new getTree() API
+
+2008-01-28  Giuseppe Lo Re
+
+	* Release: 1.1.4
+	- fix around the open() calls
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.3
+	- fix include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.2
+	- add version; change structure include
+
+2007-03-29  Charles Loomis
+
+	* Release: 1.1.1
+	- change headers
+
+2007-03-25  Charles Loomis
+
+	* Release: 1.1.0
+	- move to namespaced templates
+
+2006-02-25  Charles Loomis
+
+        * Release: 1.0.2
+        - fill in proper values; not names of hashes
+
+2006-02-25  Charles Loomis
+
+        * Release: 1.0.1
+        - first version of component
+
+2006-02-25  Charles Loomis  <loomis@lal.in2p3.fr>
+
+	* First version in CVS
