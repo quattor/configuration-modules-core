@@ -1,0 +1,56 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::ofed - NCM ofed configuration component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+This component configures OFED.
+
+=item  /software/components/ofed/openib
+
+=item config 
+Config file loaction for openib (default /etc/infiniband/openib.conf).
+
+=item options
+Config options
+
+=item modules
+Modules to load
+
+=item hardware
+Hardware modules to load
+
+=back
+
+=head1 DEPENDENCIES
+
+=head2 Components to be run before:
+
+none.
+
+=head2 Components to be run after:
+
+none.
+
+=head1 BUGS
+
+none known.
+
+=head1 AUTHOR
+
+Stijn De Weirdt <stijn.dweirdt@ugent.be>
+
+=head1 SEE ALSO
+
+ncm-ncd(1), ofed(1)
+
+=cut
