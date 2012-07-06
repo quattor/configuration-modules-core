@@ -1,0 +1,87 @@
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.2
+	- Depend on ncm-ncd 1.3.2 or higher.
+
+	The code in v1.3.0 was fine, but depended on a new version of
+	ncm-ncd, which was not expected, and broke CERN
+	upgrades. Let's make the dependency explicit.
+
+2011-03-07  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 1.3.1
+	- Fix broken Perl code.
+
+2010-09-01  Nick Williams
+
+	* Release: 1.3.0
+	- Make the component subclassable (required ncm-ncd 1.3.2)
+
+2009-02-13  Nick Williams
+
+	* Release: 1.2.1
+	- upgrade templates to panc v8 syntax
+
+2007-04-04  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.0
+	- new namespace schema support
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.1.6
+	- Remove deprecated 'define' keyword
+
+2006-07-27  Michel Jouvin
+
+        * Release: 1.1.5
+        - Tag a real release for last commited change...
+
+2006-05-09  Michel Jouvin
+
+        * Release: 1.1.4
+        - Fix typo line 90 (bug #16635)
+
+2006-05-09  Michel Jouvin
+
+        * Release: 1.1.4
+        - Fix typo line 90 (bug #16635)
+
+2006-02-14  Michel Jouvin
+
+        * Release: 1.1.4
+        - Fix broken processing of link specific options, avoid processing multiple time a link if multiply defined (use last definition)
+
+2005-10-02  root
+
+        * Release: 1.1.3
+        - Create link parent directory if it doesn't exist
+
+2005-07-29  root
+
+        * Release: 1.1.2
+        - Fix spurious lines in template
+
+2005-07-28  root
+
+        * Release: 1.1.1
+        - Fix problem in documentation (examples not displayed)
+
+2005-07-06  root
+
+        * Release: 1.1.0
+        - Improvement of replacement options
+
+2005-06-10  Michel Jouvin
+
+        * Release: 1.0.1
+        - Add new NCM component to manage symlinks (ncm-symlinks)
+
+2005-06-09  Michel Jouvin  <jouvin@lal.in2p3.fr>
+
+	* config.mk (VERSION): version defined to 1.0.0
+
+2005-06-04  Michel Jouvin  <jouvin@lal.in2p3.fr>
+
+	* Initial implementation (version 0.9.0)
+
