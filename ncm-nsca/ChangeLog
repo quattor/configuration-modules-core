@@ -1,0 +1,10 @@
+2009-02-10  <unknown>
+
+	* Release: 1.0.1
+	- - Make send_nsca.cfg owned by user and group nagios
+	- Fix typo that caused an empty value for encryption field in send_nsca.cfg
+
+2009-01-19  Ronald Starink  <ronalds@nikhef.nl>
+
+    * Initial release
+
