@@ -1,0 +1,24 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+apt: NCM component to control APT configuration
+
+=head1 DESCRIPTION
+
+The I<apt> component manages the configuration of APT.
+
+=head1 RESOURCES
+
+=head2 /software/components/apt/something
+
+A dummy parameters.
+
+=head1 apt Example
+
+"/software/components/apt/something" = "dummy";
+
+=cut
