@@ -72,6 +72,7 @@
         <module>ncm-pine</module>
         <module>ncm-apt</module>
         <module>ncm-autofs</module>
+        <module>ncm-altlogrotate</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
