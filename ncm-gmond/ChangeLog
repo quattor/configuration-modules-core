@@ -1,0 +1,9 @@
+2009-04-23  RonaldS
+
+	* Release: 1.0.1
+	- Using proper types in the schema
+
+2009-04-17  Ronald Starink  <ronalds@nikhef.nl>
+
+    * Initial release
+
