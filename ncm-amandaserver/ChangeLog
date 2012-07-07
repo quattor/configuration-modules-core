@@ -1,0 +1,32 @@
+2009-04-03  <unknown>
+
+	* Release: 2.1.0
+	- Initial version
+
+2009-04-03  <unknown>
+
+	* Release: 2.0.0
+	- 
+
+2008-11-21 Laura del Caño Novales  <laura.delcano@ft.uam.es>
+
+	* Release: 1.0.4
+	- Stop using File Handle module when possible (still needed to create
+	empty files like tapelist) and use CAF and LC modules instead. Also 
+	use CAF::Process to run system commands.
+2008-09-11  Laura del Caño Novales  <laura.delcano@ft.uam.es>
+
+	* Release: 1.0.2
+	- new release
+
+2008-09-11  <unknown>
+
+	* Release: 1.0.1
+	- 
+
+2008-07-31  Laura del Caño Novales  <laura.delcano@ft.uam.es>
+
+	* Release 1.0.0.
+
+	* Initial component implementation.
+
