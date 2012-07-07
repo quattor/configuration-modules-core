@@ -63,6 +63,7 @@
         <module>ncm-amandaserver</module>
         <module>ncm-nsca</module>
         <module>ncm-diskless_server</module>
+        <module>ncm-php</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
