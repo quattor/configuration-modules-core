@@ -76,6 +76,7 @@
         <module>ncm-alternatives</module>
         <module>ncm-pam</module>
         <module>ncm-ntpd</module>
+        <module>ncm-sshkeys</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>

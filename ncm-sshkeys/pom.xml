@@ -1,0 +1,72 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.quattor.cfg.module</groupId>
+  <artifactId>sshkeys</artifactId>
+
+  <packaging>pom</packaging>
+  <version>1.1.6-SNAPSHOT</version>
+  <name>sshkeys NCM component.</name>
+
+  <repositories>
+    <repository>
+      <id>quattor-releases</id>
+      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
+    </repository>
+  </repositories>
+
+  <parent>
+    <groupId>org.quattor.maven</groupId>
+    <artifactId>build-profile</artifactId>
+    <version>1.18</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>Apache 2 License</name>
+      <url>http://www.opensource.org/licenses/apache2.0</url>
+      <comments>Copyright (c) Responsible Organization</comments>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Charles Loomis</name>
+      <email>charles.loomis@cern.ch</email>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Jane SMITH</name>
+      <email>smith@example.com</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Joe DOE</name>
+      <email>doe@example.org</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0.0-RC3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
