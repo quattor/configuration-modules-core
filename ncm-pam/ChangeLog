@@ -1,0 +1,17 @@
+2009-06-26  Nick Williams
+
+	* Release: 1.4.0
+	- Fix the license information
+
+2009-06-23  Nick Williams
+
+	* Release: 1.3.0
+	- initial commit
+
+2009-02-13 Nick Williams
+        * Release 1.1.0
+        - upgrade templates to panc v8 syntax
+
+2008-02-15 <njw>
+
+        * Initial import
