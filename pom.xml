@@ -69,6 +69,7 @@
         <module>ncm-oramonserver</module>
         <module>ncm-resolver</module>
         <module>ncm-xen</module>
+        <module>ncm-pine</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
