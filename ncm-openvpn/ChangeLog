@@ -1,0 +1,18 @@
+2012-01-23  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.2
+	- Run through all client configs.
+
+2012-01-17  Luis Fernando Muñoz Mejías
+
+	* Release: 1.0.1
+	- Tag updated schema and code refactoring.
+
+2009-02-19  Tristan Suerink  <tsuerink@nikhef.nl>
+
+    * Initial release
+
+Builded a component for configuring OpenVPN client and server.
+All the basic configuration possibilities are included.
+Support for generating multiple configuration files per type.
+
