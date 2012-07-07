@@ -66,6 +66,7 @@
         <module>ncm-php</module>
         <module>ncm-gmond</module>
         <module>ncm-runlevel</module>
+        <module>ncm-oramonserver</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
 	<module>ncm-sudo</module>
