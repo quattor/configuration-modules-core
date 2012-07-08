@@ -1,0 +1,104 @@
+2009-11-10  luisfmunoz
+
+	* Release: 3.0.2
+	- Update the examples in the POD file.
+
+2009-08-04  Michel Jouvin
+
+	* Release: 3.0.1
+	- panc v8 compatibility
+
+2009-04-03  Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
+
+	* Release: 3.0.0
+	- Fix bug #48076
+
+	And remove all backwards compatibility with an already broken
+	schema. There was no clean way to have this done with old "smart"
+	escaping, as _backlog would always be considered an escaped
+	string.
+
+2009-03-17  Jan van Eldik
+
+	* Release: 2.0.2
+	- [bug #45710] unescape function should not be called in compat-v1 mode
+
+2008-08-29  Marco Emilio Poleggi,<Marco.Poleggi@cnaf.infn.it>
+
+	* Release: 2.0.1
+	- Removed unescape() function as it is provided by ccm >= 2.1.0
+
+2008-04-28  root
+
+	* Release: 2.0.0
+	- Complete rewrite including :
+	 * A new incompatible but clean schema
+	 * More configuration options
+	 * Update documentation
+	 * Use of getTree() API
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.2
+	- This time, really add config.tpl.cin
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.1
+	- Added mandatory config.tpl file
+
+2007-03-30  Ronald Starink, NIKHEF, +31205922179, ronalds@nikhef.nl
+
+	* Release: 1.2.0
+	- - Adjusted to new schema
+	- Added headers
+
+2007-02-22  Vlado BAHYL
+
+	* Release: 1.1.9
+	- Ignore all standard component entries.
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.1.8
+	- Remove deprecated 'define' keyword
+
+2005-05-02  Charles Loomis
+
+        * Release: 1.1.7
+        - **** Access allowed.
+
+2005-03-03  Marc Poulhies
+
+        * Release: 1.1.6
+        - Component now handles every defined keys in profile. manpage fixed.
+
+2005-02-17  Jan Van Eldik
+
+        * Release: 1.1.5
+        - added new key fsDOTaioDASHmaxDASHsize
+
+2004-07-05  Vlado Bahyl
+
+        * Release: 1.1.4
+        - devDOTraidDOTspeed_limit_max and devDOTraidDOTspeed_limit_min added
+
+2004-04-14  Vlado Bahyl
+
+        * Release: 1.1.3
+        - vmDOTminDASHreadahead added
+
+2004-02-19  Vlado Bahyl
+
+        * Release: 1.1.2
+        - netDOTipv4DOTtcp_wmem and netDOTipv4DOTtcp_rmem added
+
+2004-02-17  Vlado Bahyl
+
+        * Release: 1.1.1
+        - Initial version
+
+2004-02-09  Benjamin Chardi <Benjamin.Chardi.Marco@cern.ch>
+
+	* first version
+
