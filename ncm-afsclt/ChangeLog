@@ -1,0 +1,104 @@
+2008-09-29  root
+
+	* Release: 1.5.6
+	- Compliance with panc v8 syntax
+
+2008-08-25  Jan Iven
+
+	* Release: 1.5.5
+	- * Fix the AFS cache mount point detection
+
+2008-08-12  Jan Iven
+
+	* Release: 1.5.4
+	- do not configure PAM "account" lines for Kerberos, does not work as expected..
+
+2008-08-01  Jan Iven
+
+	* Release: 1.5.3
+	- * fix taint warnings
+	* cope with SLC5 no longer having a PAM entry for screensavers
+	* more finegrained PAM control
+
+2007-06-25  Michel Jouvin
+
+	* Release: 1.5.0
+	- Convert to namespace
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.4.5
+	- Add missing TPL/pro_software_component_afsclt
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.4.4
+	- Remove deprecated 'define' keyword
+
+2006-06-29  Jan Iven,31-2009,74957,
+
+        * Release: 1.4.3
+        - configure PAM on Linux
+
+2006-06-06  Jan Iven,31-2009,74957,
+
+        * Release: 1.4.2
+        - handle AFS cache partitions correctly.
+
+2006-05-19  Jan Iven,31-2009,74957,
+
+        * Release: 1.4.1
+        - directly modifies ThisCell file; only run "authconfig" if PAM config needs changing.
+
+2006-02-09  Jan Iven,31-2009,74957,
+
+        * Release: 1.3.1
+
+2006-02-09  Jan Iven
+        * Release: 1.3.0
+        * add /etc/sysconfig/afs cache size config
+        * make cellservdb into a URL, can get CellServDB from web
+        * don't update in-kernel cell info with NoAction
+        * Linux/RPM: add trigger on /etc/sysconfig/afs
+        
+2005-08-05  Juan Antonio Lopez Perez
+
+        * Release: 1.2.9
+        - Solaris porting
+	   + the fs executable is at /usr/afsws/bin so we put that 
+	directory first in the path
+	   + authconfig is not used so Configure_Cell is not needed
+	   + the firewall is not enabled so we don't run Configure_firewall
+	   + the afs configuration files are not updated from the CDB so 
+	we don't use Configure_Config.
+
+
+2005-02-24  Jan Iven,31-2009,74957,
+
+        * Release: 1.2.8
+        - * bugfixees, non-fatal missing cacheinfo file for JvE
+
+2004-09-27  Jan Iven,31-2009,74957,
+
+        * Release: 1.2.7
+        - added CellServDB features from SUE/afs
+
+2004-09-15  Jan Iven,31-2009,74957,
+
+        * Release: 1.2.6
+        - check authconfig exit code, downgrade missing iptables to INFO
+
+2004-09-06  Jan Iven,31-2009,74957,
+
+        * Release: 1.2.5
+        - added AFS cache size control
+
+* Mon Jul 19 2004 Jan Iven <Jan.Iven@cern.ch>  1.2.4-1
+- replace die() by error()/warn(), missing iptables is no longer fatal
+
+* Mon Jun 28 2004 Jan Iven <Jan.Iven@cern.ch>
+- configure OPTIONS, VERBOSE, settime
+
+* Sat Mar 06 2004 Jaroslaw Polok <jaroslaw.polok@cern.ch>
+- initial build (weekend was rainy ;-))
+
