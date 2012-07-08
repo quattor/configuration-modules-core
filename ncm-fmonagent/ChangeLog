@@ -1,0 +1,220 @@
+2009-02-13  root
+
+	* Release: 1.3.3
+	- Tag version after the fix of build tools
+
+2008-12-23  root
+
+	* Release: 1.3.3
+	- Commit into SF repository last pending changes
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- Rename component-specific 'version' conflicting with global component version
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- Add a default no_contact_timeout
+
+2008-12-10  root
+
+	* Release: 1.3.3
+	- panc v8 compliance
+
+2008-09-24
+	* Release 1.3.2
+	- Check on boot whether running from NCM run or not and delay start if yes
+	
+2008-09-23 mirsi
+	* Release 1.3.1
+	- Fixed tainted perl warning.
+	
+2008-06-23 mirsi
+	* Release 1.3.0
+	- Added user, default sensor user for agent and user option for sensors.
+
+2008-06-16 mirsi
+	* Release 1.2.2
+	- Untainting 
+	
+2008-05-29 mirsi
+	* Release 1.2.1
+	- Changed to work with lemon-agent and edg-fmon-agent 
+	- Chnaged to work with /system/monitoring and /software/components/lemon paths
+	
+2008-04-23 mirsi
+
+	* Release 1.2.0
+	- Changed to work with lemon-agent v3.0.0+
+	
+2008-01-17 mirsi
+	* Release: 1.1.4
+	- Added MaxCacheBytes and MaxCacheItems options to transport
+	
+2007-11-14  Dennis Waldron
+
+        * Release: 1.1.3
+        - Added support for time based correlations syntax
+
+2007-07-06  Dennis Waldron
+
+	* Release: 1.1.2
+	- Added missing ReferenceTime attribute to Metric instance configuration
+
+2007-06-27  Michel Jouvin
+
+	* Release: 1.1.1
+	- Fix restart command (condrestart no longer supported)
+
+2007-06-26  Michel Jouvin
+
+	* Release: 1.1.0
+	- Fix typo
+
+2007-06-26  Michel Jouvin
+
+	* Release: 1.1.0
+	- Convert to namespace
+
+2007-04-27  Dennis Waldron
+
+        * Release: 1.0.35
+        - suppressed perl warnings on bad correlation strings
+
+2007-04-23  Dennis Waldron
+
+        * Release: 1.0.34
+        - - Added support for localising metrics
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.0.33
+	- Remove deprecated 'define' keyword
+
+2006-09-27  Dennis Waldron
+
+        * Release: 1.0.32
+        - changed the index smoothing value from 1 to 0 for exceptions
+
+2006-09-22  Dennis Waldron
+
+        * Release: 1.0.31
+        - Disable smoothing on metrics and exceptions where the period of timing is 0. Prevent the Maxtime option of smoothing to be greater then the expiry time of the agents cache
+
+2006-09-11  Dennis Waldron
+
+        * Release: 1.0.30
+        - base timing offset of exceptions on the highest offset of contributing metrics
+
+2006-08-30  Dennis Waldron
+
+        * Release: 1.0.29
+        - new release
+
+2006-02-04 mirsi
+	* Release: 1.0.23
+	- fix for Timing for old stle exceptions
+
+2006-01-31 mirsi
+	* Release: 1.0.22
+	- added supports option
+	
+2006-01-19 mirsi
+	* Release: 1.0.21
+	- always restart monitoring on run
+	- remove all old _CDB files
+	- sysconfig modification taken out
+	- smoothing allowed for exceptions
+	
+2005-11-15 mirsi
+	* Release: 1.0.20
+	- Fixing a few bugs.
+	
+2005-11-14 mirsi
+	* Release: 1.0.19
+	- support for 2.10.0 agent
+	- split file configuration for metrics
+	- added single file support for backward compatibility
+	
+2005-09-29 mirsi
+        * Release: 1.0.18
+        - fix for check on status of service start/restart/stop
+        - added SamplingOnDemand by default + keep all samples - needed for check-this-host
+ 
+2005-08-19 mirsi
+	* Release: 1.0.16
+	- fix for sure sensor metric.dat file generation
+	
+2005-08-04 mirsi
+	* Release: 1.0.15
+	- split file schema implemented
+	- schema for new exceptions prepared
+	
+2005-07-21 mirsi
+	* Release: 1.0.14
+	- skip 1.0.13 due to unify distribution
+	- Changes the default to be /etc/edg-fmon-agent.conf in preparation
+	  for the change to split config file scheme.
+
+2005-06-30 mirsi
+	* Release: 1.0.12
+	- Fix for index position of exception reference field
+	
+2005-06-09 mirsi
+	* Release: 1.0.11
+	- Added time window argument to maxruns of actuator.
+	
+2005-05-27  German Cancio Melia
+
+        * Release: 1.0.10
+        - Generalized the component packaging and moved to 'core'
+
+2005-04-01 mirsi
+	* release 1.0.9
+	- added some printout on missing reference metric
+	- added check for active actuator
+	
+2005-03-11 mirsi
+	* release 1.0.8
+	- coupling to metric and exception
+	
+2005-03-03 mirsi
+
+	* release 1.0.7
+	- expansion for exception metric is a separate tree /monitoring/exception
+
+2004-09-14  Jan Van Eldik
+
+        * Release: 1.0.6
+        - fixes for transport layer and forsure reference value handling
+
+2004-09-10  Jan Van Eldik
+
+        * Release: 1.0.5
+        - alpha-version of CDB based component
+
+2004-08-30  Jan Van Eldik
+
+        * Release: 1.0.4
+        - stupid modification to keep quattor happy. we are slaves to our tools.
+
+2004-08-26  Jan Van Eldik
+
+        * Release: 1.0.3
+        - bug fix release
+
+2004-07-16  German CANCIO MELIA
+
+        * Release: 1.0.2
+        - do not skip smoothing for exception metrics
+
+2004-07-14  Jan Van Eldik
+
+        * Release: 1.0.1
+        - updates for new fmon-agent features, 
+
+2004-06-15  Jan van Eldik <Jan.van.Eldik@cern.ch>
+
+	* first version
