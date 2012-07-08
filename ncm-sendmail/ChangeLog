@@ -1,0 +1,105 @@
+2010-11-05  Loic Brarda
+
+	* Release: 1.6.5
+	- renamed specfile.spec to specfile-example.spec : if someone needs the rpm scripts, they can still be put back
+
+2010-11-05  Ronald Starink
+
+	* Release: 1.6.4
+	- Updated schema for compliance with Pan v8
+
+2007-10-18  Jan Iven
+
+	* Release: 1.6.3
+	- * no "local relay" for local accounts with bad home directory
+	* do not print full list of "local relay" accounts (only in debug=5 mode)
+
+2007-07-24  Jan Iven
+
+	* Release: 1.6.2
+	- fixed 'allowexternal' option to no longer uncomment other 'option' lines
+
+2007-07-20  Ronald Starink, NIKHEF, x2179
+
+	* Release: 1.6.1
+	- Fixing schema include and type name
+
+2007-07-20  Ronald Starink, NIKHEF, x2179
+
+	* Release: 1.6.0
+	- Upgrade to new schema
+
+2007-07-06  Ronald Starink, NIKHEF, x2179
+
+        * Release: 1.5.3
+        - Check existence of paths before getting the value of the path.
+
+2007-02-15  Michel Jouvin
+
+	* Release: 1.5.2
+	- Remove deprecated 'define' keyword
+
+2007-02-06  Jan Iven
+
+        * Release: 1.5.1
+        - can now configure whether external SMTP connections are allowed
+
+2006-03-09  Jan Iven,31-2009,74957,
+
+        * Release: 1.4.3
+        - write local user list to separate file, see https://enterprise.redhat.com/issue-tracker/beta/?module=issues&action=view&tid=86600&gid=715
+
+2006-02-14  Jan Iven,31-2009,74957,
+
+        * Release: 1.4
+        - (previous "release" actually went back to 1.4-1..)
+
+2006-02-14  Jan Iven,31-2009,74957,
+
+        * Release: 1.4
+
+
+2006-02-14  Jan Iven
+
+        * Release: 1.4.2
+	- guess all local users more smartly from passwd/aliases/minuid
+
+2006-01-23  Jan Iven
+        * Release: 1.4
+        - fix the localuser list
+
+2005-04-20  Jan Iven,31-2009,74957,
+
+        * Release: 1.3
+        - ensure good exit code from postinstall for ncm-ncd
+
+2005-04-18  Jan Iven,31-2009,74957,
+
+        * Release: 1.3
+        - re-run after component update
+
+2005-04-05  Jan Iven,31-2009,74957,
+
+        * Release: 1.2
+        - added LOCAL_USER (default root), error checking on missing keys, noaction wrapper
+
+2005-02-04  Jan Iven,31-2009,74957,
+
+        * Release: 1.2
+        - Masquerading and LocalRelay implemented
+
+2005-02-04  Christophe Raber,31-2005,74157
+
+	* Release: 1.2
+	- Relay all unqualified names added
+
+2005-01-25  Christophe Raber,31-2005,74157,
+                                                                                
+        * Release: 1.1
+        - Return-Path header Masquerading added
+
+2004-10-01  Jan Iven,31-2009,74957,
+
+        * Release: 1.0
+        - First real release
+
