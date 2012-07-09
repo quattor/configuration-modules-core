@@ -11,4 +11,4 @@ include { 'components/profile/functions' };
 '/software/packages'=pkg_repl('ncm-profile','2.1.3-1','noarch');
 '/software/components/profile/dependencies/pre' ?= list('spma');
 
-'/software/components/profile/version' ?= '2.1.3';
+'/software/components/profile/version' ?= '${project.version}';

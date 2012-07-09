@@ -9,7 +9,7 @@ include { 'components/ntpd/schema' };
 # Package to install
 "/software/packages"=pkg_repl("ncm-ntpd","1.1.5-1","noarch");
 
-'/software/components/ntpd/version' ?= '1.1.5';
+'/software/components/ntpd/version' ?= '${project.version}';
 
 "/software/components/ntpd/dependencies/pre" ?= list("spma");
 "/software/components/ntpd/active" ?= true;

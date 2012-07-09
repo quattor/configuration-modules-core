@@ -37,7 +37,7 @@ include { 'pan/functions' };
 # standard component settings
 "/software/components/resolver/active" ?=  true ;
 "/software/components/resolver/dispatch" ?=  true ;
-"/software/components/resolver/version" = "2.0.0";
+"/software/components/resolver/version" = '${project.version}';
 #"/software/components/resolver/release" = "2";
 
 "/software/packages"=pkg_repl("ncm-resolver","2.0.0-2","noarch");

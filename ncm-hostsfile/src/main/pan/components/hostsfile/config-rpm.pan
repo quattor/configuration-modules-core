@@ -11,4 +11,4 @@ include { 'components/hostsfile/schema' };
 
 # Package to install
 '/software/packages'=pkg_repl('ncm-hostsfile','2.0.0-1','noarch');
-'/software/components/hostsfile/version' = '2.0.0';
+'/software/components/hostsfile/version' = '${project.version}';

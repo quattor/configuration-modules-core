@@ -11,7 +11,7 @@ include { 'components/fmonagent/schema' };
 # Package to install
 "/software/packages"=pkg_repl("ncm-fmonagent","1.3.3-1","noarch");
 
-'/software/components/fmonagent/version' ?= '1.3.3';
+'/software/components/fmonagent/version' ?= '${project.version}';
 
 "/software/components/fmonagent/dependencies/pre" ?= list("spma");
 "/software/components/fmonagent/active" 		?= true;

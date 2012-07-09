@@ -11,5 +11,5 @@ include { 'components/sshkeys/schema' };
 '/software/packages'=pkg_repl('ncm-sshkeys','1.1.6-1','noarch');
 '/software/components/sshkeys/dependencies/pre' ?= list('spma');
 
-'/software/components/sshkeys/version' = '1.1.6';
+'/software/components/sshkeys/version' = '${project.version}';
 

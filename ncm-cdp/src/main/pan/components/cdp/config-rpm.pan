@@ -10,5 +10,5 @@ include { 'components/cdp/schema' };
 '/software/packages'=pkg_repl('ncm-cdp','1.0.4-1','noarch');
 '/software/components/cdp/dependencies/pre' ?= list('spma');
 
-'/software/components/cdp/version' = '1.0.4';
+'/software/components/cdp/version' = '${project.version}';
 

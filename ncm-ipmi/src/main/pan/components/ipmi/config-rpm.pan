@@ -10,7 +10,7 @@ include { 'components/ipmi/schema' };
 # Package to install
 "/software/packages"=pkg_repl("ncm-ipmi","1.0.4-1","noarch");
 
-'/software/components/ipmi/version' = '1.0.4';
+'/software/components/ipmi/version' = '${project.version}';
 
 "/software/components/ipmi/dependencies/post" ?= list("spma");
 "/software/components/ipmi/active" ?= true;

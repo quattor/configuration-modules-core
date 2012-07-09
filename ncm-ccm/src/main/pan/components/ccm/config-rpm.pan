@@ -10,5 +10,5 @@ include {'components/ccm/schema'};
 '/software/packages'=pkg_repl('ncm-ccm','1.3.0-1','noarch');
 '/software/components/ccm/dependencies/pre' ?= list('spma');
 
-'/software/components/ccm/version' ?= '1.3.0';
+'/software/components/ccm/version' ?= '${project.version}';
 

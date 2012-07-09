@@ -10,4 +10,4 @@ include {'components/ldconf/schema'};
 '/software/packages'=pkg_repl('ncm-ldconf','1.3.3-1','noarch');
 '/software/components/ldconf/dependencies/pre' ?= list('spma');
 
-'/software/components/ldconf/version' = '1.3.3';
+'/software/components/ldconf/version' = '${project.version}';

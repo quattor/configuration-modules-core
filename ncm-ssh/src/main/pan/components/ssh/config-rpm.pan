@@ -10,7 +10,7 @@ include { 'components/ssh/schema' };
 # Package to install
 "/software/packages" = pkg_repl("ncm-ssh","2.0.5-1","noarch");
 
-'/software/components/ssh/version' ?= '2.0.5';
+'/software/components/ssh/version' ?= '${project.version}';
 
 "/software/components/ssh/dependencies/pre" ?= list("spma");
 "/software/components/ssh/active" ?= true;

@@ -10,4 +10,4 @@ include {'components/hostsaccess/schema'};
 '/software/packages'=pkg_repl('ncm-hostsaccess','1.1.3-1','noarch');
 '/software/components/hostsaccess/dependencies/pre' ?= list('spma');
 
-'/software/components/hostsaccess/version' = '1.1.3';
+'/software/components/hostsaccess/version' = '${project.version}';

@@ -10,4 +10,4 @@ include { 'components/sysconfig/schema' };
 '/software/packages'=pkg_repl('ncm-sysconfig','1.2.1-1','noarch');
 '/software/components/sysconfig/dependencies/pre' ?= list('spma');
 
-'/software/components/sysconfig/version' ?= '1.2.1';
+'/software/components/sysconfig/version' ?= '${project.version}';

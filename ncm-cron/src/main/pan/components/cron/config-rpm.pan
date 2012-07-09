@@ -10,4 +10,4 @@ include { 'components/cron/schema' };
 '/software/packages'=pkg_repl('ncm-cron','1.4.3-1','noarch');
 '/software/components/cron/dependencies/pre' ?= list('spma');
 
-'/software/components/cron/version' = '1.4.3';
+'/software/components/cron/version' = '${project.version}';

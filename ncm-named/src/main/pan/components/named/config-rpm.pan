@@ -18,7 +18,7 @@ include { 'components/named/schema' };
 # Package to install
 "/software/packages"=pkg_repl("ncm-named","2.0.3-1","noarch");
  
-'/software/components/named/version' ?= '2.0.3';
+'/software/components/named/version' ?= '${project.version}';
 
 "/software/components/named/dependencies/pre" ?= list("spma");
 "/software/components/named/active" ?= true;

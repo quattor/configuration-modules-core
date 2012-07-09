@@ -9,7 +9,7 @@ include { 'components/ofed/schema' };
 # Package to install
 "/software/packages"=pkg_repl("ncm-ofed","0.5.1-3","noarch");
 
-'/software/components/ofed/version' ?= '0.5.1';
+'/software/components/ofed/version' ?= '${project.version}';
 
 "/software/components/ofed/dependencies/pre" ?= list("spma");
 "/software/components/ofed/active" ?= true;
