@@ -78,7 +78,6 @@
         <module>ncm-sshkeys</module>
         <module>ncm-tomcat</module>
         <module>ncm-afsclt</module>
-        <module>ncm-crashdump</module>
         <module>ncm-drbd</module>
         <module>ncm-fmonagent</module>
         <module>ncm-fsprobe</module>
@@ -99,7 +98,6 @@
         <module>ncm-state</module>
         <module>ncm-sysctl</module>
         <module>ncm-tftpd</module>
-        <module>ncm-xdk</module>
         <module>ncm-zephyrclt</module>
 	<module>ncm-nrpe</module>
 	<module>ncm-icinga</module>
