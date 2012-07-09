@@ -17,6 +17,7 @@ package NCM::Component::grub;
 
 use strict;
 use NCM::Component;
+use EDG::WP4::CCM::Element;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
@@ -403,7 +404,7 @@ sub Configure {
               }
           }
       }
-      
+
       ## at this point the `$grubby --default-kernel` should equal $fulldefaultkernelpath
 
       # Check if 'fullcontrol' is defined in CDB
@@ -415,7 +416,7 @@ sub Configure {
       else{
 	  $self->debug(2,"fullcontrol is not defined or false");
       }
-      
+
       # If we want full control of the arguments:
       if ( $fullcontrol ) {
 
@@ -430,7 +431,7 @@ sub Configure {
 
           ## Check current arguments
 	  my $kernelargsremove;
-	  
+
 	  my $info = `$grubby --info=$fulldefaultkernelpath`;
 	  if($info =~ /args=\"(.*)\"\n/){
 	      $kernelargsremove = $1;
@@ -445,14 +446,14 @@ sub Configure {
 	  else{
 	      ## Remove all the arguments
 	      if ($kernelargsremove ne "") {
-		  $kernelargsremove = "--remove-args=\"".$kernelargsremove."\"";		  
+		  $kernelargsremove = "--remove-args=\"".$kernelargsremove."\"";
 		  `$grubby --update-kernel=$fulldefaultkernelpath $kernelargsremove`;
 		  if ($?) {
 		      $self->error("can't run $grubby --update-kernel=$fulldefaultkernelpath $kernelargsremove");
 		      return;
 		  }
-	      }	  
-	      
+	      }
+
 	      ## Add the specified inside $kernelargs
 	      if ($kernelargsadd ne "") {
 		  print "\nKernelArgAdd", $kernelargsadd, "\n";
@@ -464,7 +465,7 @@ sub Configure {
 		  }
 		  $self->OK("Updated boot kernel arguments with $kernelargsadd $kernelargsremove");
 	      }
-	      
+
 	      else {
 		  $self->OK("Updated boot kernel with no arguments");
 	      }
@@ -476,8 +477,8 @@ sub Configure {
 	  if ($config->elementExists($kernelargspath)) {
 	      my $kernelargs=$config->getValue($kernelargspath);
 	      my ($kernelargsadd, $kernelargsremove) = grubbyArgsOptions($kernelargs,"");
-	      
-	      
+
+
 	      my $s=`$grubby --update-kernel=$fulldefaultkernelpath $kernelargsadd $kernelargsremove`;
 	      if ($?) {
 		  $self->error("can't run $grubby --update-kernel=$fulldefaultkernelpath $kernelargsadd $kernelargsremove");
