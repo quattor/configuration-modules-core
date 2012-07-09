@@ -20,6 +20,7 @@ use Data::Dumper;
 use NCM::Template;
 use LC::Sysinfo;
 use Fcntl;
+use EDG::WP4::CCM::Element;
 
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);

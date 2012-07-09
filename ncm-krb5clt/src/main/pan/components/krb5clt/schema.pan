@@ -67,18 +67,6 @@ type component_krb5clt = {
 	"kdc"		? nlist
 	"kadmin"	? nlist
 
-        #########################################
-	# were also in previous structure, eventually remove..
-	"libdefaults/default_realm"	? string
-	"libdefaults/default_etypes"	? string
-	"libdefaults/default_etypes_des" ? string
-	"libdefaults/ticket_lifetime"   ? long
-	"libdefaults/renew_lifetime"    ? long
-	"realms/kdc"			? list
-	"realms/admin_server"		? string
-	"realms/kpasswd_server"		? string
-	"realms/default_domain"		? string
 };
 
 bind "/software/components/krb5clt" = component_krb5clt;
-
