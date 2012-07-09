@@ -8,7 +8,8 @@ unique template components/xen/config-rpm;
 include { "components/xen/schema" };
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-xen","0.2.2-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 # standard component settings
 "/software/components/xen/dependencies/pre" = list("spma");

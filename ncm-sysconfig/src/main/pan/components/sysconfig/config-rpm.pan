@@ -7,7 +7,8 @@ unique template components/sysconfig/config-rpm;
 include { 'components/sysconfig/schema' };
  
 # Package to install
-'/software/packages'=pkg_repl('ncm-sysconfig','1.2.1-1','noarch');
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 '/software/components/sysconfig/dependencies/pre' ?= list('spma');
 
 '/software/components/sysconfig/version' ?= '${project.version}';

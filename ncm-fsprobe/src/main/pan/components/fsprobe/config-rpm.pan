@@ -10,7 +10,8 @@ include {'components/fsprobe/functions'};
 
 # Package to install:
 # Package to install
-"/software/packages"=pkg_repl("ncm-fsprobe","1.2.0-2","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
  # This component should be run after ncm-accounts, if present.
 "/software/components/fsprobe/dependencies/pre" = {
 	if (exists ("/software/components/accounts")) {

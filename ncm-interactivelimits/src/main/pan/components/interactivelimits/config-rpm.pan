@@ -9,7 +9,8 @@ include { 'components/interactivelimits/schema' };
 include { 'pan/functions' };
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-interactivelimits","1.1.1-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 # standard component settings
 "/software/components/interactivelimits/dependencies/pre" = list("spma");

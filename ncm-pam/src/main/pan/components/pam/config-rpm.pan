@@ -44,7 +44,8 @@ include {'pan/functions'};
 "/software/components/pam/directory" ?= "/etc/pam.d";
 "/software/components/pam/acldir"    ?= "/etc/pam.acls";
 
-"/software/packages" = pkg_repl("ncm-pam", value("/software/components/pam/version") + '-' + value("/software/components/pam/release"), "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 #
 # takes (service, type, control, module, options?)

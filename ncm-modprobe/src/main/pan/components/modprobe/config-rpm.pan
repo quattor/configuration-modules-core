@@ -7,7 +7,8 @@ unique template components/modprobe/config-rpm;
 include { 'components/modprobe/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-modprobe","1.3.3-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 "/software/components/modprobe/dependencies/pre" ?= list("spma");
 "/software/components/modprobe/active" ?= true;

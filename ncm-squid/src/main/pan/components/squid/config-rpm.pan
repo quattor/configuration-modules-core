@@ -7,7 +7,8 @@ unique template components/squid/config-rpm;
 include {'components/squid/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-squid","0.3.5-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 # Common settings
 #"/software/components/squid/dependencies/pre" = list("spma");

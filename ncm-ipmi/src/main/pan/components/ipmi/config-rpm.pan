@@ -8,7 +8,8 @@ unique template components/ipmi/config-rpm;
 include { 'components/ipmi/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-ipmi","1.0.4-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 '/software/components/ipmi/version' = '${project.version}';
 

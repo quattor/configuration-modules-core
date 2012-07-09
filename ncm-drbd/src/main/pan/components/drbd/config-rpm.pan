@@ -13,7 +13,8 @@ unique template components/drbd/config-rpm;
 include { 'components/drbd/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-drbd","1.0.7-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
  
 '/software/components/drbd/version' ?= '${project.version}';
 

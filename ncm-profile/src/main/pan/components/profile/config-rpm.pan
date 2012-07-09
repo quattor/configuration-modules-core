@@ -8,7 +8,8 @@ include { 'components/profile/schema' };
 include { 'components/profile/functions' };
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-profile','2.1.3-1','noarch');
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 '/software/components/profile/dependencies/pre' ?= list('spma');
 
 '/software/components/profile/version' ?= '${project.version}';

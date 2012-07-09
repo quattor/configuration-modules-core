@@ -9,7 +9,8 @@ unique template components/runlevel/config-rpm;
 include {'components/runlevel/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-runlevel","1.0.1-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
  
 "/software/components/runlevel/dependencies/pre" ?= list("spma");
 "/software/components/runlevel/active" ?= true;

@@ -7,7 +7,8 @@ unique template components/altlogrotate/config-rpm;
 include { 'components/altlogrotate/schema' };
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-altlogrotate','1.1.8-1','noarch');
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 '/software/components/altlogrotate/dependencies/pre' ?= list('spma');
 
 '/software/components/altlogrotate/version' = '${project.version}';

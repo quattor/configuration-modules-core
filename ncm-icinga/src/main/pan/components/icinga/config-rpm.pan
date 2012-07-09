@@ -8,7 +8,8 @@ include {'components/icinga/functions'};
 include {'components/icinga/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-icinga","0.0.7-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 "/software/components/icinga/dependencies/pre" ?=  list ("spma");
 
 "/software/components/icinga/active" ?= true;

@@ -10,7 +10,8 @@ include { 'components/tomcat/schema' };
 
  
 # Package to install
-"/software/packages"=pkg_repl('ncm-tomcat', '1.1.2-1', 'noarch');
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 '/software/components/tomcat/version' ?= '${project.version}';
 

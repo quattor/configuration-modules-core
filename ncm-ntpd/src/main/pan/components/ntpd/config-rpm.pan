@@ -7,7 +7,8 @@ unique template components/ntpd/config-rpm;
 include { 'components/ntpd/schema' };
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-ntpd","1.1.5-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 '/software/components/ntpd/version' ?= '${project.version}';
 

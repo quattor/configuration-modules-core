@@ -8,7 +8,8 @@ unique template components/pakiti/config-rpm;
 include {'components/pakiti/schema'};
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-pakiti","1.0.0-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 # standard component settings
 "/software/components/pakiti/active" ?=  true ;

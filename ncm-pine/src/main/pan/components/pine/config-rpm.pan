@@ -7,7 +7,8 @@ unique template components/pine/config-rpm;
 include {'components/pine/schema'};
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-pine','1.2.11-1','noarch');
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 "/software/components/pine/dependencies/pre" ?= list("spma");
 "/software/components/pine/active" ?= true;

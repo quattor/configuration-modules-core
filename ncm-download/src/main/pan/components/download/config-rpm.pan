@@ -40,4 +40,5 @@ include { "pan/functions" };
 "/software/components/download/version"  = '${project.version}';
 "/software/components/download/release"  = "1";
 
-"/software/packages" = pkg_repl("ncm-download", "1.1.6-1", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+

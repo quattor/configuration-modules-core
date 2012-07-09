@@ -7,7 +7,8 @@ unique template components/sindes_getcert/config-rpm;
 include {'components/sindes_getcert/schema'};
 
 # Package to install
-"/software/packages"=pkg_repl("ncm-sindes_getcert","0.1.0-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
  
 "/software/components/sindes_getcert/dependencies/pre" ?= list("spma");
 "/software/components/sindes_getcert/active" ?= true;

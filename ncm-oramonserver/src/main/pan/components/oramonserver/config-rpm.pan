@@ -8,7 +8,8 @@ unique template components/oramonserver/config-rpm;
 include {'components/oramonserver/schema'};
 
 # Package to install.
-"/software/packages"=pkg_repl("ncm-oramonserver","1.0.16-1","noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+
 
 # standard component settings
 "/software/components/oramonserver/dependencies/pre" = list("spma");
