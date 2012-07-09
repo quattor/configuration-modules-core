@@ -17,6 +17,7 @@ use strict;
 use NCM::Component;
 use NCM::Check;
 use vars qw(@ISA $EC $this_app);
+use EDG::WP4::CCM::Element;
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use LC::File qw(copy remove move);
@@ -80,7 +81,7 @@ sub Configure {
         return 1;
     }
     # if we have a path /software/components/diskless_server/dhcp_clients, we have all
-    # info we need in our profile (and dhcpdWrite took care of that), 
+    # info we need in our profile (and dhcpdWrite took care of that),
     # and we do not need to use aii any more...
     #
     if(!$config->elementExists($base."/dhcp_clients")){
@@ -152,7 +153,7 @@ sub Configure {
             $self->debug(5, "ccm-fetch on $chroot_path command ERROR produced:");
             $self->debug(5, $stderr);
         }
-    
+
         $self->info("$0: chrooting ncm-ncd --co --all on $chroot_path");
         CAF::Process->new(
             [ "/usr/sbin/chroot", $chroot_path, "/usr/sbin/ncm-ncd", "--co", "--all" ],
@@ -174,7 +175,7 @@ sub Configure {
     #now create the pxe files
     $self->info("$0: going to call pxeboot_config");
     $self->pxeboot_config($config,$base,@nodes);
-    
+
     # create file that contains the hostname of the diskless server
     $self->add_dlsnfile($config,$base);
     #create files.custom
@@ -208,7 +209,7 @@ sub add_rwfiles{
     $f_path =~ s/\/\z//;
     $f_path .= "/snapshot";
     my $rwfile=$f_path."/files.custom";
-    
+
     #add the lines
     $self->debug(2,"Entries for files.custom:\n$f_values");
     my $changes = LC::Check::file("$rwfile",
@@ -233,13 +234,13 @@ sub add_dlsnfile{
     my $dlsnfile=$f_path."/diskless_server.name";
     $self->debug(2,"Will add hostname file at : $dlsnfile");
     my $hostname = $config->getValue("/system/network/hostname");
-    
+
     #add the lines
     unless (-e $dlsnfile){
         `touch $dlsnfile`;
     };
-    
-    
+
+
     NCM::Check::lines($dlsnfile,
                     linere=>".*",
                     goodre=>"\^$hostname\$",
@@ -253,7 +254,7 @@ sub pxe_config{
     my @pxeos_cmd=("/usr/sbin/pxeos", "-a");
     my $descro="";
     my $ret_val = 0;
-    
+
     #add description,optional
     if($config->elementExists($path."/pxe/descro")){
         $descro=$config->getValue($path."/pxe/descro");
@@ -266,16 +267,16 @@ sub pxe_config{
     }
     my $proto=$config->getValue($path."/pxe/protocol");
     push @pxeos_cmd, ("-p", "$proto");
-    
+
     #it's diskless by default so add -D 1
     push @pxeos_cmd, "-D", "1";
-    
+
     # are we debugging ?
     *this_app = \$main::this_app;
     if ($this_app->option('debug')) {
         push @pxeos_cmd, "--debug";
     }
-    
+
     #add server
     unless ($config->elementExists($path."/pxe/netdev")){
         $self->error("The active network device must be specified");
@@ -293,7 +294,7 @@ sub pxe_config{
         $server=$config->getValue("/system/network/interfaces/$netdev/ip");
     }
     push @pxeos_cmd, "-s" ,"$server";
-    
+
     #define kernel name
     unless ($config->elementExists($path."/pxe/kernel")){
         $self->error("A kernel name must be specified");
@@ -301,7 +302,7 @@ sub pxe_config{
     }
     my $kernel = $config->getValue($path."/pxe/kernel");
     push @pxeos_cmd, "-k", "$kernel";
-    
+
     #define the image directory
     unless($config->elementExists($path."/pxe/image")){
         $self->error("Undefined image directory");
@@ -309,7 +310,7 @@ sub pxe_config{
     }
     my $image = $config->getValue($path."/pxe/image");
     push @pxeos_cmd, "-L", "$image";
-    
+
     #specify OS name
     unless($config->elementExists($path."/pxe/name")){
         $self->error("Specify a name for this OS");
@@ -317,7 +318,7 @@ sub pxe_config{
     }
     my $os_name=$config->getValue($path."/pxe/name");
     push @pxeos_cmd, "$os_name";
-    
+
     $self->debug(2,"pxe_config: pxeos command would be @pxeos_cmd ");
     #before executing pxeos make sure things have changed..
     #/tftpboot is the standard location that pxe xml file resides
@@ -334,12 +335,12 @@ sub pxe_config{
     }
     #fix weird characters
         $kernel=~ s!(\.|\*|\+|\?|\|\"/)!\\$1!mg;
-    
+
         if($px_line=~/>.*$kernel.*$image.*Name=\"$os_name\".*\/>/m){
             #same nothing to be done
         $self->info("OS already exists,not updating");
         return 0;
-    
+
     }
     #has changed,remove old files and rerun
     elsif($px_line=~/<OperatingSystems>\s*<\/OperatingSystems>/){
@@ -352,7 +353,7 @@ sub pxe_config{
             $self->warn("deletion of the $os_name OS failed.Will try to run pxeos to create a new");
         }
         $self->info("removing old OS and updating");
-    
+
         $ret_val=$self->run_pxeos(@pxeos_cmd);
         return $ret_val;
     }
@@ -376,7 +377,7 @@ sub del_pxeos{
         $self->error("pxeos delete failed: $?");
         $ret_val=-1;
     }
-    
+
     if ( $stdout ) {
         $self->info("pxeos delete command output produced:");
         $self->report($stdout);
@@ -385,14 +386,14 @@ sub del_pxeos{
         $self->info("pxeos delete command ERROR produced:");
         $self->report($stderr);
     }
-    
+
     return $ret_val;
 }
 sub run_pxeos{
     my($self,@cmd)=@_;
     my $ret_val=0;
-    
-    
+
+
     #run pxeos command
     my($stdout,$stderr);
     CAF::Process->new(
@@ -406,7 +407,7 @@ sub run_pxeos{
         $self->error("pxeos configure failed: $?");
         $ret_val=-1;
     }
-    
+
     if ( $stdout ) {
         $self->info("pxeos configure command output produced:");
         $self->report($stdout);
@@ -439,21 +440,21 @@ sub pxeboot_config{
     else{
         $ramdisk=$config->getValue($path."/pxe/ramdisk");
     }
-    
+
     unless ($config->elementExists($path."/pxe/name")){
         return	$self->error("Specify an OS nane to be used");
     }
     $os_name=$config->getValue($path."/pxe/name");
-    
+
     push @pxeboot_base_cmd, "-r", "$ramdisk", "-O", "$os_name";
-    
+
     my $global_append = "";
     if ($config->elementExists($path."/pxe/append")) {
         $global_append=$config->getValue($path."/pxe/append");
 #         $self->debug(5, "global append = $global_append");
 #         push @pxeboot_base_cmd, "-A", "$append";
     }
-    
+
     #call pxeboot for every node
     my $node;
     my $bootDevice;
@@ -469,7 +470,7 @@ sub pxeboot_config{
             # copied from aii-shellfe of aii-server 1.0.42-1
             # create new CacheManager (default cache will be used)
             $cm = EDG::WP4::CCM::CacheManager->new("/tmp/aii/$node");
-            
+
             # get (locked) current configuration
             $cfg = $cm->getLockedConfiguration(0);
             # get list of NICs from profile
@@ -486,10 +487,10 @@ sub pxeboot_config{
                     . "from CDB for $node");
                 next;
             }
-            foreach $nic (values %nic_list) {                
+            foreach $nic (values %nic_list) {
                 $macpath = $nic->getPath();
                 $macpath = $macpath->down('hwaddr');
-                
+
                 # get MAC address from profile
                 if ($cfg->elementExists($macpath)) {
                     next unless (($cfg->elementExists($nic->getPath()->down('boot'))) && ($cfg->getElement($nic->getPath()->down('boot'))->getValue() eq "true"));
@@ -511,7 +512,7 @@ sub pxeboot_config{
             $self->error("diskless_server:no boot device found for node $node, skip this node.");
             next;
         }
-        
+
         my $append = "";
         if ($config->elementExists($path."/dhcp_clients/".$nodename."/pxe_append")) {
             $append=$config->getValue($path."/dhcp_clients/".$nodename."/pxe_append");
@@ -536,7 +537,7 @@ sub pxeboot_config{
         if ( $? >> 8) {
             $self->error("pxeboot configure failed: $?");
         }
-        
+
         if ( $stdout ) {
             $self->info("pxeboot configure command output produced:");
             $self->report($stdout);
@@ -670,7 +671,7 @@ sub dhcpdWrite{
             $self->error("cannot copy $template to $temp_file");
             return;
         }
-        open FH,"+>> $temp_file"||die "cannot open $temp_file";	
+        open FH,"+>> $temp_file"||die "cannot open $temp_file";
     }
     foreach (@to_file){
         print FH;

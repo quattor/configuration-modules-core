@@ -2,6 +2,8 @@
 # ${developer-info}
 # ${author-info}
 
+unique template components/pakiti/config-rpm;
+
 
 include {'components/pakiti/schema'};
 
@@ -11,6 +13,3 @@ include {'components/pakiti/schema'};
 # standard component settings
 "/software/components/pakiti/active" ?=  true ;
 "/software/components/pakiti/dispatch" ?=  true ;
-
-
-

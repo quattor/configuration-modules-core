@@ -5,9 +5,9 @@
 
 declaration template components/php/schema;
 
-include pan/structures;
+include {'quattor/schema'};
 
-    
+
 ############################################################
 # PHP config
 ############################################################
@@ -37,7 +37,7 @@ type structure_php_zlib = {
     "output_handler" ?    long
 
 };
-    
+
 type structure_php_argsep = {
 
     include structure_php_all_type
@@ -46,7 +46,7 @@ type structure_php_argsep = {
     "input"  ? php_quotedstr
 
 };
-    
+
 
 type structure_php_highlight = {
 
@@ -57,7 +57,7 @@ type structure_php_highlight = {
     "bg"      ?    php_colorstr
     "default" ?    php_colorstr
     "html"    ?    php_colorstr
-};    
+};
 
 
 
@@ -66,14 +66,14 @@ type structure_php_cgi = {
     include structure_php_all_type
     "rfc2616_headers" ?    php_boolval
 
-};    
+};
 
 
 # [PHP]
 type structure_php_main = {
 
     include structure_php_all_type
-    
+
     "zlib" ?    structure_php_zlib
     "highlight" ?    structure_php_highlight
     "cgi" ?    structure_php_cgi
@@ -114,7 +114,7 @@ type structure_php_main = {
     "html_errors" ?    php_onoffstr
     "docref_root" ?    string
     "docref_ext" ?    string
-    "error_prepend_string" ?   php_quotedtagstr 
+    "error_prepend_string" ?   php_quotedtagstr
     "error_append_string" ?    php_quotedtagstr
     "error_log" ?    string
     "variables_order" ?    php_quotedstr
@@ -143,7 +143,7 @@ type structure_php_main = {
     "user_agent"?    php_quotedstr
     "default_socket_timeout" ?    long
 
-};    
+};
 
 # [Syslog]
 type structure_php_syslog = {
@@ -151,7 +151,7 @@ type structure_php_syslog = {
     include structure_php_all_type
     "define_syslog_variables"  ?    string
 
-};    
+};
 
 
 # [mail function]
@@ -162,7 +162,7 @@ type structure_php_mailfunct = {
     "smtp_port" ?    long
     "sendmail_path" ? string
 
-};    
+};
 
 
 type structure_php_class = {
@@ -170,7 +170,7 @@ type structure_php_class = {
     include structure_php_all_type
     "path" ? string
 
-};    
+};
 
 
 # [Java]
@@ -189,7 +189,7 @@ type structure_php_sql = {
     include structure_php_all_type
     "safe_mode" ?    php_onoffstr
 
-};    
+};
 
 
 # [OBDC]
@@ -224,8 +224,8 @@ type structure_php_mysql = {
     "connect_timeout" ?    long
     "trace_mode" ?    php_onoffstr
 
-};    
- 
+};
+
 
 # [mSQL]
 type structure_php_msql = {
@@ -235,7 +235,7 @@ type structure_php_msql = {
     "max_persistent" ?    long
     "max_links" ?    long
 
-};    
+};
 
 
 # [PostgresSQL]
@@ -248,9 +248,9 @@ type structure_php_pgsql = {
     "max_links" ?    long
     "ignore_notice" ?    long
     "log_notice" ?    long
-    
+
 };
-    
+
 
 # [Sybase]
 type structure_php_sybase = {
@@ -263,7 +263,7 @@ type structure_php_sybase = {
     "min_error_severity" ?    long
     "min_message_severity" ?    long
     "compatability_mode" ?    php_onoffstr
-    
+
 };
 
 
@@ -277,7 +277,7 @@ type structure_php_sybct = {
     "min_server_severity" ?    long
     "min_client_severity" ?    long
 
-};    
+};
 
 # [dbx]
 type structure_php_dbx = {
@@ -294,7 +294,7 @@ type structure_php_bcmath = {
     include structure_php_all_type
     "scale" ?    long
 
-};    
+};
 
 
 # [browscap]
@@ -304,7 +304,7 @@ type structure_php_browscap = {
     "browscap" ? string
 
 };
-    
+
 
 # [Informix]
 type structure_php_ifx = {
@@ -321,7 +321,7 @@ type structure_php_ifx = {
     "charasvarchar" ?    long
     "blobinfile" ?    long
     "nullformat" ?    long
-    
+
 };
 
 
@@ -332,7 +332,7 @@ type structure_php_urlrw = {
 
 };
 
-    
+
 # [Session]
 type structure_php_session = {
 
@@ -361,7 +361,7 @@ type structure_php_session = {
     "url_rewriter"  ? structure_php_urlrw
 
 };
-    
+
 
 # [MSSQL]
 type structure_php_mssql = {
@@ -382,8 +382,8 @@ type structure_php_mssql = {
     "secure_connection" ?    php_onoffstr
     "max_procs" ?    long
 
-};    
-    
+};
+
 
 # [Assertion]
 type structure_php_assert = {
@@ -396,7 +396,7 @@ type structure_php_assert = {
     "quiet_eval" ?    long
 
 };
-    
+
 
 # [Ingres II]
 type structure_php_ingres = {
@@ -410,7 +410,7 @@ type structure_php_ingres = {
     "default_password" ?    string
 
 };
-    
+
 
 # [Verisign Payflow Pro]
 type structure_php_pfpro = {
@@ -425,7 +425,7 @@ type structure_php_pfpro = {
     "proxypassword" ?    string
 
 };
-    
+
 
 # [Sockets]
 type structure_php_sockets = {
@@ -434,7 +434,7 @@ type structure_php_sockets = {
     "use_system_read" ?    php_onoffstr
 
 };
-    
+
 
 # [com]
 type structure_php_com = {
@@ -446,7 +446,7 @@ type structure_php_com = {
     "autoregister_casesensitive" ?    php_boolstr
     "autoregister_verbose" ?    php_boolstr
 
-};    
+};
 
 
 # [Printer]
@@ -455,7 +455,7 @@ type structure_php_printer = {
     include structure_php_all_type
     "default_printer" ?    php_quotedstr
 
-};    
+};
 
 # [php_mbstring]
 type structure_php_mbstring = {
@@ -471,7 +471,7 @@ type structure_php_mbstring = {
     "func_overload" ?    long
 
 };
-    
+
 
 # [FrontBase]
 type structure_php_fbsql = {
@@ -491,7 +491,7 @@ type structure_php_fbsql = {
     "max_results" ?    long
     "batchSize" ?    long
 
-};    
+};
 
 # [Crack]
 type structure_php_crack = {
@@ -499,7 +499,7 @@ type structure_php_crack = {
     include structure_php_all_type
     "crack.default_dictionary" ?     php_quotedstr
 
-};    
+};
 
 # [exif]
 type structure_php_exif = {
@@ -513,7 +513,7 @@ type structure_php_exif = {
     "decode_jis_intel"    ?    string
 
 };
-    
+
 
 
 type component_php_conf = {
@@ -555,5 +555,3 @@ type component_php = {
 
 
 bind "/software/components/php" = component_php;
-    
-
