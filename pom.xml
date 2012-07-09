@@ -70,7 +70,6 @@
         <module>ncm-resolver</module>
         <module>ncm-xen</module>
         <module>ncm-pine</module>
-        <module>ncm-apt</module>
         <module>ncm-autofs</module>
         <module>ncm-altlogrotate</module>
         <module>ncm-alternatives</module>
