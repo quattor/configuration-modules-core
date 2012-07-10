@@ -1,0 +1,5 @@
+[%- IF value -%]
+    yes
+[%- ELSE -%]
+    no
+[%- END -%]
