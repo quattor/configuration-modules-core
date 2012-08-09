@@ -2,6 +2,10 @@
 # ${developer-info}
 # ${author-info}
 
+=pod
+
+=head1 DESCRIPTION
+
 Updates the /etc/sysconfig/fsprobe configuration.  This is used by
 the CERN-CC-fsprobe package to start fsprobe on the relevant file systems.
 
@@ -27,12 +31,6 @@ For example,
   "/software/components/fsprobe/syslog" = true;
   "/software/components/fsprobe/mailto" = "system.admin@cern.ch";
   "/software/components/fsprobe/options" = "--MultiPattern --RndWait --SleepTime 300 --ContinueOnDiff --DumpBuffers "+fsprobedirectio;
-
-=item Unconfigure()
-
-not available.
-
-=head1 RESOURCES
 
 =head1 DEPENDENCIES
 
