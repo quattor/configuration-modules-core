@@ -7,6 +7,8 @@
 # a few standard statements, mandatory for all components
 #
 
+package NCM::Component::fsprobe;
+
 use strict;
 use NCM::Component;
 use vars qw(@ISA $EC);
@@ -18,7 +20,7 @@ use LC::Process;
 use LC::File;
 use Socket;
 use Data::Dumper;
-    
+
 #
 # OO stuff
 #
@@ -181,7 +183,7 @@ sub Configure {
 
 	my $fsprobesysconfig="/etc/sysconfig/fsprobe";
 	my $oldcontents="";
-	
+
 	if (open(SYS,"$fsprobesysconfig")) {
 	    while (<SYS>) {
 		next if (/^#/);
