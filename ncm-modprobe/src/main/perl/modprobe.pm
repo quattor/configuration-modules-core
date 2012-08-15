@@ -110,8 +110,11 @@ sub Configure {
     my ($self,$config)=@_;
 
     my $t = $config->getElement("/software/components/modprobe")->getTree();
-    my $fh = CAF::FileWriter->new($t->{file}, log => $self,
-				  backup => '.old');
+
+    # Do not create a backup file as module-init-tools up to and including RH6
+    # does not check the file extension, and would happily process the backup
+    # file
+    my $fh = CAF::FileWriter->new($t->{file}, log => $self);
 
     $self->process_aliases($t, $fh);
     $self->process_options($t, $fh);
