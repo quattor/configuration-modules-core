@@ -126,8 +126,8 @@ type structure_icinga_service = {
 	"is_volatile" ? boolean
 	"check_command" ? commandstrings
 	"max_check_attempts" : long
-	"normal_check_interval" : long
-	"retry_check_interval" : long
+	"check_interval" : long
+	"retry_interval" : long
 	"active_checks_enabled" ? boolean
 	"passive_checks_enabled" ? boolean
 	"check_period" ? timeperiodstring
