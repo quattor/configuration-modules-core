@@ -18,6 +18,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use File::Copy;
+use File::Path;
 use LC::Process qw(run);
 use LC::Check;
 
@@ -849,9 +850,16 @@ sub Configure($$@) {
     $self->error($@) and return 1 if $?;
 
     ######################################################################
+    # Create tmpdir if necessary
+    ######################################################################
+    my $tmpdir = "/var/tmp/ncm/";
+    mkpath($tmpdir, 0, 0755 ) unless ( -e $tmpdir );
+    $self->error($@) and return 1 if $?;
+
+    ######################################################################
     # Write changes to file
     ######################################################################
-    my $iptc_temp = "/var/ncm/tmp/iptables.tmp";
+    my $iptc_temp = $tmpdir . "iptables.tmp";
     unlink($iptc_temp);
 
     &WriteFile($self, $iptc_temp, $iptables );

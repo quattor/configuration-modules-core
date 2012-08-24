@@ -1,3 +1,8 @@
+2012-08-24  Victor Mendoza <vmendoza@cern.ch>
+
+	* Release: 2.3.14
+	- /var/ncm is no longer provided by ncm-ncd-2.0, use /var/tmp/ncm instead
+
 2011-11-08  Jan Iven,31 1-013,+41227674957,
 
 	* Release: 2.3.13
