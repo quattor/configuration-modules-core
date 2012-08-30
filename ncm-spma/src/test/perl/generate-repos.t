@@ -31,6 +31,13 @@ my $repos = [ { name => "a_repo",
 	      }
 	    ];
 
+no warnings 'redefine';
+*CAF::FileWriter::cancel = sub {
+    my $self = shift;
+    *$self->{CANCELED}++;
+    *$self->{save} = 0;
+};
+use warnings 'redefine';
 
 my $cmp = NCM::Component::spma->new("spma");
 
@@ -49,11 +56,11 @@ like("$fh", qr{^baseurl=$url$}m,
      "Repository got the correct URL");
 like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
 
-$repos->[0]->{name} = "another_repo";
 is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), 0,
    "Errors on template rendering are detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
-
+$fh = get_file("/etc/yum.repos.d/$name.repo");
+ok(*$fh->{CANCELED}, "File with error is cancelled");
 
 =pod
 
