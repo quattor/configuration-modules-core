@@ -36,7 +36,6 @@ sub cleanup_old_repos
 {
     my ($self, $repo_dir, $allowed_repos) = @_;
 
-    warn "Repos dir is $repo_dir";
     my $dir;
     if (!opendir($dir, $repo_dir)) {
 	$self->error("Unable to read repositories in $repo_dir");
@@ -51,6 +50,7 @@ sub cleanup_old_repos
     foreach my $i (@$rm) {
 	# We use $f here to make Devel::Cover happy
 	my $f = "$repo_dir/$i.repo";
+	$self->verbose("Unlinking outdated repository $f");
 	if (!unlink($f)) {
 	    $self->error("Unable to remove outdated repository $i: $!");
 	    return 0;
@@ -64,8 +64,9 @@ sub initialize_repos_dir
 {
     my ($self, $repo_dir) = @_;
     if (! -d $repo_dir) {
-	if (!mkpath($repo_dir)) {
-	    self->error("Unable to create repository dir $repo_dir");
+	$self->verbose("$repo_dir didn't exist. Creating it");
+	if (!eval{mkpath($repo_dir)} || $@) {
+	    $self->error("Unable to create repository dir $repo_dir: $@");
 	    return 0;
 	}
     }
@@ -84,7 +85,7 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    $self->initialize_repos_dir($REPOS_DIR)) || return 0;
+    $self->initialize_repos_dir($REPOS_DIR) || return 0;
     return 1;
 }
 1; # required for Perl modules
