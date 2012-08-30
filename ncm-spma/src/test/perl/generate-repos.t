@@ -36,7 +36,7 @@ my $cmp = NCM::Component::spma->new("spma");
 
 Readonly my $REPOS_DIR => "/etc/yum.repos.d";
 Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
-
+Readonly my $PROXY_HOST => "aproxy";
 
 is($cmp->generate_repos($REPOS_DIR, $repos,
 			$REPOS_TEMPLATE), 1);
@@ -48,5 +48,51 @@ my $name = $repos->[0]->{name};
 like("$fh", qr{^baseurl=$url$}m,
      "Repository got the correct URL");
 like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
+
+$repos->[0]->{name} = "another_repo";
+is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), 0,
+   "Errors on template rendering are detected");
+is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
+
+
+=pod
+
+=head2 Proxy-related settings
+
+When passing proxy-related arguments, we need to test a few things:
+
+=over 4
+
+=item * Forward proxies don't affect how the repository is rendered
+
+=cut
+
+$name = "forward_proxy";
+$repos->[0]->{name} = $name;
+
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
+			'forward'), 1,
+   "Proxy settings succeed");
+
+$fh = get_file("$REPOS_DIR/$name.repo");
+
+like("$fh", qr{^baseurl=$url$}m,
+     "Forward proxy settings don't affect to the URL");
+
+=over 4
+
+=item * Reverse proxies have their URLs modified
+
+=cut
+
+$name = "reverse_proxy";
+$repos->[0]->{name} = $name;
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+			$PROXY_HOST, 'reverse'), 1,
+   "Files with reverse proxies are properly rendered");
+
+$fh = get_file("$REPOS_DIR/$name.repo");
+like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
+     "Reverse proxies modify the URLs in the config files");
 
 done_testing();
