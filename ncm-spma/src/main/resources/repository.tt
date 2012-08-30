@@ -1,3 +1,7 @@
+# Basic Yum repository file. See the man pages for
+# NCM::Component::${project.artifactId} and yum.conf
+# for more details.
+
 [[%name%]]
 name=[%name%]
 baseurl=[% FOREACH repo IN protocols %]
