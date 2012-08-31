@@ -77,6 +77,11 @@ sub initialize_repos_dir
     return 1;
 }
 
+# Generates the repository files in $repos_dir based on the contents
+# of the $repos subtree. It uses Template::Toolkit $template to render
+# the file. Optionally, proxy information will be used. In that case,
+# it will use the $proxy host, wich is of $type "reverse" or
+# "forward", and runs on the given $port.
 sub generate_repos
 {
     my ($self, $repos_dir, $repos, $template, $proxy, $type, $port) = @_;
@@ -104,6 +109,8 @@ sub generate_repos
 
     return 1;
 }
+
+
 
 sub Configure
 {
