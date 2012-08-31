@@ -56,8 +56,8 @@ configuration files.
 
 =cut
 
-is($cmp->generate_repos($REPOS_DIR, $repos,
-			$REPOS_TEMPLATE), 1);
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE), 1,
+   "Basic repository correctly created");
 
 
 my $fh = get_file("/etc/yum.repos.d/a_repo.repo");
