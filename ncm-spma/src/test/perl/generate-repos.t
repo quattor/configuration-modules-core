@@ -123,6 +123,19 @@ $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
      "Reverse proxies modify the URLs in the config files");
 
+=pod
+
+=item * Port number shows up with reverse proxies
+
+=cut
+
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+			$PROXY_HOST, 'reverse', 12345), 1,
+   "Reverse proxies on special ports are properly rendered");
+$fh = get_file("$REPOS_DIR/$name.repo");
+like("$fh", qr{^baseurl=http://$PROXY_HOST:12345$}m,
+     "Port number is rendered with the reverse proxy");
+
 done_testing();
 
 =pod
