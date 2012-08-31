@@ -45,8 +45,20 @@ Readonly my $REPOS_DIR => "/etc/yum.repos.d";
 Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
 Readonly my $PROXY_HOST => "aproxy";
 
+=pod
+
+=head1 TESTS
+
+=head2 Creation of a valid repository file
+
+The information from the profile should be reflected in the
+configuration files.
+
+=cut
+
 is($cmp->generate_repos($REPOS_DIR, $repos,
 			$REPOS_TEMPLATE), 1);
+
 
 my $fh = get_file("/etc/yum.repos.d/a_repo.repo");
 ok(defined($fh), "Correct file opened");
@@ -55,6 +67,15 @@ my $name = $repos->[0]->{name};
 like("$fh", qr{^baseurl=$url$}m,
      "Repository got the correct URL");
 like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
+
+=pod
+
+=head2 Error handling
+
+Failures in rendering a template are reported, and nothing is written
+to disk.
+
+=cut
 
 is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), 0,
    "Errors on template rendering are detected");
@@ -86,7 +107,7 @@ $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=$url$}m,
      "Forward proxy settings don't affect to the URL");
 
-=over 4
+=pod
 
 =item * Reverse proxies have their URLs modified
 
@@ -103,3 +124,9 @@ like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
      "Reverse proxies modify the URLs in the config files");
 
 done_testing();
+
+=pod
+
+=back
+
+=cut
