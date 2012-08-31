@@ -28,6 +28,9 @@ use Readonly;
 
 Readonly my $REPOS_DIR => "/etc/yum.repos.d";
 Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
+Readonly my $REPOS_TREE => "/software/repositories";
+Readonly my $PKGS_TREE => "/software/packages";
+Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
 
 our $NoActionSupported = 1;
 
@@ -106,7 +109,14 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    $self->initialize_repos_dir($REPOS_DIR) || return 0;
+    my $repos = $config->getElement($REPOS_TREE)->getTree();
+    my $t = $config->getElement($CMP_TREE)->getTree();
+    my $pkgs = $config->getElement($PKGS_TREE)->getTree();
+    $self->initialize_repos_dir($REPOS_DIR) or return 0;
+    $self->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $t->{proxyhost},
+			  $t->{proxytype}, $t->{proxyport}) or return 0;
+    $self->update_pkgs($pkgs, $t->{run_spma} eq 'yes', $t->{userpkgs} eq 'yes')
+      or return 0;
     return 1;
 }
 1; # required for Perl modules
