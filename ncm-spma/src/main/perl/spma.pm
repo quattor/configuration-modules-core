@@ -2,13 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-#
-# spma component - NCM SPMA configuration component
-#
-# generates the SPMA configuration file, runs SPMA if required.
-#
-################################################################################
-
 package NCM::Component::spma;
 #
 # a few standard statements, mandatory for all components
@@ -31,6 +24,7 @@ Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
 Readonly my $REPOS_TREE => "/software/repositories";
 Readonly my $PKGS_TREE => "/software/packages";
 Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
+Readonly my $YUM_CMD => [qw(yum shell)];
 
 our $NoActionSupported = 1;
 
@@ -110,7 +104,63 @@ sub generate_repos
     return 1;
 }
 
+sub schedule_removal
+{
+    my ($self, $remove) = @_;
 
+    return join("\n", map("remove $_", @$remove));
+}
+
+sub schedule_install
+{
+    my ($self, $install) = @_;
+
+    return join("\n", map("install $_", @$install));
+}
+
+sub installed_pkgs {}
+sub wanted_pkgs {}
+sub solve_transaction {}
+sub apply_transaction {
+
+    my ($self, $tx) = @_;
+
+    my $cmd = CAF::Process->new($YUM_CMD, log => $self, stdin => $tx,
+    				stdout => \my $rs, stderr => 'stdout',
+				keeps_state => 1);
+    $cmd->run();
+
+    if ($?) {
+    	$self->verbose("Failed transaction: $tx");
+    	$self->error("Failed to execute transaction: $rs");
+    } else {
+    	$self->info("Yum output: $rs");
+    }
+    return !$?;
+}
+
+# Updates the packages on the system.
+sub update_pkgs
+{
+    my ($self, $pkgs, $run, $allow_user_pkgs) = @_;
+
+    my $installed = $self->installed_pkgs() or return 0;
+    my $wanted = $self->wanted_pkgs($pkgs) or return 0;
+    my $to_remove = $installed-$wanted;
+
+    my ($tx, $rs);
+
+    if (!$allow_user_pkgs) {
+	$tx = $self->schedule_removal($to_remove);
+    }
+
+    $tx .= $self->schedule_install($wanted);
+
+    $tx .= $self->solve_transaction($run);
+
+    $self->apply_transaction($tx) or return 0;
+    return 1;
+}
 
 sub Configure
 {
