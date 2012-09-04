@@ -92,9 +92,15 @@ ok($cmp->{SOLVE_TRANSACTION}->{called}, "Transaction solving is called");
 is($cmp->{SOLVE_TRANSACTION}->{args}->[0], "run",
    "Transaction solving receives the correct flag");
 
+ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
+is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
+   "Transaction application receives installation but not removal as argument");
+
 =pod
 
 =item * When C<userpkgs> is false, it tries to remove outdated packages.
+
+=back
 
 =cut
 
@@ -102,6 +108,85 @@ is($cmp->update_pkgs("pkgs", "run", 0), 1, "Basic run without userpkgs succeeds"
 is($cmp->{SCHEDULE_REMOVAL}->{called}, 1,
    "When userpkgs is disabled, the method tries to uninstall stuff");
 is($cmp->{SCHEDULE_REMOVAL}->{args}->[0], -2,
-   "Correct packages scheduled for removal");
+   "Correct packages scheduled for removal without usrpkgs");
+is($cmp->{APPLY_TRANSACTION}->{args}->[0], "remove\ninstall\nsolve\n",
+   "Transaction applycation without userpkgs receives removal");
+
+=pod
+
+=head2 Error handling
+
+We simulate failures in the callees, from the end to the beginning. We
+ensure that the return value is correct and that the execution stops
+in the correct point.
+
+=over
+
+=cut
+
+# For easier comparison, reset all call counters
+
+foreach my $m (qw(apply_transaction solve_transaction schedule_install
+		  schedule_removal wanted_pkgs installed_pkgs)) {
+    $cmp->{uc($m)}->{called} = 0;
+}
+
+=pod
+
+=item * Failure in C<apply_transaction> means all methods get executed
+
+=cut
+
+$cmp->{APPLY_TRANSACTION}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in apply_transaction is propagated");
+
+foreach my $m (qw(apply_transaction solve_transaction schedule_install
+		  schedule_removal wanted_pkgs installed_pkgs)) {
+    is($cmp->{uc($m)}->{called}, 1,
+       "Method $m called when apply_transaction fails");
+}
+
+=pod
+
+=item * Failure in C<wanted_pkgs> means only C<installed_pkgs> and
+C<wanted_pkgs> get executed.
+
+=cut
+
+$cmp->{WANTED_PKGS}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in wanted_pkgs is propagated");
+
+foreach my $m (qw(apply_transaction solve_transaction schedule_install
+		  schedule_removal)) {
+    is($cmp->{uc($m)}->{called}, 1,
+       "Method $m called when apply_transaction fails");
+}
+
+is($cmp->{WANTED_PKGS}->{called}, 2,
+   "Failure was actually triggered by wanted_pkgs");
+is($cmp->{INSTALLED_PKGS}->{called}, 2,
+   "installed_pkgs called before wanted_pkgs");
+
+=pod
+
+=item * Failure in C<installed_pkgs> means no other method is executed.
+
+=cut
+
+$cmp->{INSTALLED_PKGS}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in installed_pkgs is propagated");
+is($cmp->{WANTED_PKGS}->{called}, 2,
+   "wanted_pkgs is not called when installed_pkgs fails");
+foreach my $m (qw(apply_transaction solve_transaction schedule_install
+		  schedule_removal)) {
+    is($cmp->{uc($m)}->{called}, 1,
+       "Method $m called when apply_transaction fails");
+}
 
 done_testing();
