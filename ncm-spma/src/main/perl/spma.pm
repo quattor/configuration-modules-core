@@ -146,12 +146,11 @@ sub update_pkgs
 
     my $installed = $self->installed_pkgs() or return 0;
     my $wanted = $self->wanted_pkgs($pkgs) or return 0;
-    my $to_remove = $installed-$wanted;
 
     my ($tx, $rs);
 
     if (!$allow_user_pkgs) {
-	$tx = $self->schedule_removal($to_remove);
+	$tx = $self->schedule_removal($installed-$wanted);
     }
 
     $tx .= $self->schedule_install($wanted);
