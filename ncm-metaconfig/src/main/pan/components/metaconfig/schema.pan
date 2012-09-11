@@ -14,7 +14,7 @@ type ${project.artifactId}_config =  {
      'owner' : string = 'root'
      'group' : string = 'root'
      'daemon' ? string
-     'module' : string with match(SELF, "tt|general|tiny|yaml|json")
+     'module' : string
      'backup' ? string
      'contents' : ${project.artifactId}_extension
 } = nlist();
