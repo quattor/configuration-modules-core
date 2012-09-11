@@ -17,6 +17,8 @@ plan skip_all => "Template::Toolkit not found" if $@;
 
 $CAF::Object::NoAction = 1;
 
+# For these tests, we don't really need any Template::Toolkit. Just be
+# sure that it gets called with the expected arguments.
 no warnings 'redefine';
 *NCM::Component::template = sub {
     my ($self) = @_;
