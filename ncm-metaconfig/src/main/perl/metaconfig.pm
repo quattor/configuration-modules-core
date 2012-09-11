@@ -104,6 +104,21 @@ sub general
     return $c->save_string();
 }
 
+sub tt
+{
+    my ($self, $cfg, $file) = @_;
+
+    $file =~ m{^.*/([^/]*)/([^/]+?)(:?\.[^.]+)?$};
+    my $t = "metaconfig/$1/$2.tt";
+    my $str;
+    my $tpl = $self->template();
+    if (!$tpl->process($t, $cfg, \$str)) {
+	$self->error("Unable to process template for file $file: ",
+		     $tpl->error());
+    }
+    return $str;
+}
+
 # Generate $file, configuring $srv. It will instantiate the correct
 # configuration module (typically JSON::XS, YAML::XS, Config::General
 # or Config::Tiny.
@@ -132,7 +147,7 @@ sub handle_service
 
     my $fh = CAF::FileWriter->new($file, %opts);
 
-    print $fh $method->($self, $srv->{contents}), "\n";
+    print $fh $method->($self, $srv->{contents}, $file), "\n";
     if ($self->needs_restarting($fh, $srv)) {
 	$self->{daemons}->{$srv->{daemon}} = 1;
     }
