@@ -19,6 +19,8 @@ use CAF::Process;
 use File::Basename;
 use File::Path;
 use EDG::WP4::CCM::Element qw(unescape);
+use Cwd qw(abs_path);
+use File::Spec::Functions qw(abs2rel file_name_is_absolute);
 
 use Readonly;
 
@@ -104,16 +106,52 @@ sub general
     return $c->save_string();
 }
 
+sub sanitize_template
+{
+    my ($self, $tplname) = @_;
+
+    if (file_name_is_absolute($tplname)) {
+	$self->error ("Must have a relative template name");
+	return undef;
+    }
+
+    if ($tplname !~ m{\.tt$}) {
+	$tplname .= ".tt";
+    }
+
+    $tplname = "metaconfig/$tplname";
+    # Sorry, we have to break the rule of Demeter here
+    my $base = $self->template()->service()->context()->config()->{INCLUDE_PATH};
+    $self->debug(3, "We must ensure that all templates lie below $base");
+    $tplname = abs_path("$base/$tplname");
+    if (!$tplname || !-f $tplname) {
+	$self->error ("Non-existing template name given");
+	return undef;
+    }
+
+    if ($tplname =~ m{^$base/(metaconfig/.*)$}) {
+	return $1;
+    } else {
+	$self->error ("Insecure template name. Final template must be under $base");
+	return undef;
+    }
+}
+
+
 sub tt
 {
-    my ($self, $cfg, $file) = @_;
+    my ($self, $cfg, $template) = @_;
 
-    $file =~ m{^.*/([^/]*)/([^/]+?)(:?\.[^.]+)?$};
-    my $t = "metaconfig/$1/$2.tt";
-    my $str;
-    my $tpl = $self->template();
-    if (!$tpl->process($t, $cfg, \$str)) {
-	$self->error("Unable to process template for file $file: ",
+    my ($sane_tpl, $str, $tpl);
+    $sane_tpl = $self->sanitize_template($template);
+    if (!$sane_tpl) {
+	$self->error("Invalid template name: $template");
+	return;
+    }
+
+    $tpl = $self->template();
+    if (!$tpl->process($sane_tpl, $cfg, \$str)) {
+	$self->error("Unable to process template for file $template: ",
 		     $tpl->error());
     }
     return $str;
@@ -128,15 +166,16 @@ sub handle_service
 
     my $method;
 
-    if ($srv->{module} !~ m{^(\w+)$}) {
+    if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
 	$self->error("Invalid configuration style: $srv->{module}");
 	return;
     }
 
-    $method = $self->can(lc($1));
-    if (!$method) {
-	$self->error("Don't know how to handle $srv->{module}-style configs");
-	return;
+    if ($method = $self->can(lc($1))) {
+	$self->debug(3, "Rendering file $file with $method");
+    } else {
+	$method = \&tt;
+	$self->debug(3, "Using Template toolkit to render $file");
     }
 
     my %opts  = (log => $self,
@@ -147,7 +186,7 @@ sub handle_service
 
     my $fh = CAF::FileWriter->new($file, %opts);
 
-    print $fh $method->($self, $srv->{contents}, $file), "\n";
+    print $fh $method->($self, $srv->{contents}, $srv->{module}), "\n";
     if ($self->needs_restarting($fh, $srv)) {
 	$self->{daemons}->{$srv->{daemon}} = 1;
     }

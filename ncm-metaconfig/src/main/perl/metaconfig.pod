@@ -91,21 +91,14 @@ Uses Perl's L<YAML::XS> for rendering YAML configuration files.
 
 Uses L<JSON::XS> for rendering JSON configuration files.
 
-=item * tt
+=item * Any other string
 
 Uses L<Template::Toolkit> for rendering configuration files in formats
 supplied by the user.
 
-The name of the template to be used is derived from the file name to
-be rendered. It must be located under
-C</usr/share/templates/quattor/metaconfig/<template_name>>.
-
-The template name takes the name of the last directory and of the file
-itself, replacing the extension with C<tt>.
-
-For instance, C</etc/icinga/objects/services.cfg> would require
-template
-C</usr/share/templates/quattor/metaconfig/objects/services.tt>.
+The name of the template is given by this field. It B<must> be a path
+relative to C<metaconfig/>, and the component actively sanitizes this
+field.
 
 =back
 

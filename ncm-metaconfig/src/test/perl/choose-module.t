@@ -21,6 +21,15 @@ Test how invalid/impossible Perl modules are handled.
 
 =cut
 
+no warnings 'redefine';
+
+*NCM::Component::metaconfig::tt = sub {
+    my ($self, @args) = @_;
+    $self->{tt}++;
+    return 1;
+};
+
+use warnings 'redefine';
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
@@ -44,25 +53,20 @@ ok(!$cmp->handle_service("foo", $srv),
    "Malicious module name triggers an error");
 is($shouldnt_be_reached, undef,
    "Sanitization prevented malicious code injection");
-$srv->{module} = 'ljhljh';
-$cmp->{ERROR} = 0;
-ok(!$cmp->handle_service("foo", $srv),
-   "Non-existing module raises an error");
-is($cmp->{ERROR}, 1, "Error found and diagnosed");
 
 =pod
 
-=head2 Unsupported modules
+=head2 Defaulting to Template::Toolkit
 
-Existing modules that don't support the expected interface are
-rejected.
+By default the C<tt> method is invoked
 
 =cut
 
 $cmp->{ERRORS} = 0;
 
-$srv->{module} = 'File::Temp';
-ok(!$cmp->handle_service('foo', $srv),
-   "Existing but unsupported module is detected");
+$srv->{module} = 'foo/bar';
+ok($cmp->handle_service('foo', $srv),
+   "Services may fall safely to the template toolkit");
+is($cmp->{tt}, 1, "Unknown modules fall back to the template toolkit");
 
 done_testing();
