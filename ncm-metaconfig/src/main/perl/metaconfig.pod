@@ -91,6 +91,22 @@ Uses Perl's L<YAML::XS> for rendering YAML configuration files.
 
 Uses L<JSON::XS> for rendering JSON configuration files.
 
+=item * tt
+
+Uses L<Template::Toolkit> for rendering configuration files in formats
+supplied by the user.
+
+The name of the template to be used is derived from the file name to
+be rendered. It must be located under
+C</usr/share/templates/quattor/metaconfig/<template_name>>.
+
+The template name takes the name of the last directory and of the file
+itself, replacing the extension with C<tt>.
+
+For instance, C</etc/icinga/objects/services.cfg> would require
+template
+C</usr/share/templates/quattor/metaconfig/objects/services.tt>.
+
 =back
 
 =head1 EXAMPLES
@@ -123,7 +139,6 @@ Now, just compile and deploy. You should get the same results as with
 old good ncm-ccm.
 
 
-
 =head1 AUTHOR
 
 ${author-info}
@@ -131,5 +146,8 @@ ${author-info}
 =head1 TODO
 
 Anyone knows of a good Apache config renderer for Perl??
+
+A better way for deriving the name of the template from the file name
+would be appreciated.
 
 =cut
