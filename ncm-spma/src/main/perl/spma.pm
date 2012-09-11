@@ -118,9 +118,24 @@ sub schedule_install
     return join("\n", map("install $_", @$install));
 }
 
-sub installed_pkgs {}
-sub wanted_pkgs {}
-sub solve_transaction {}
+sub installed_pkgs {
+    my $self = shift;
+}
+
+sub wanted_pkgs {
+    my ($self, $pkgs) = @_;
+}
+
+sub solve_transaction {
+    my ($self, $run) = @_;
+
+    my $rs = "transaction solve\n";
+    if ($run) {
+	$rs .= "transaction apply\n";
+    }
+    return $rs;
+}
+
 sub apply_transaction {
 
     my ($self, $tx) = @_;
