@@ -6,5 +6,5 @@ prefix "/software/components/metaconfig/services/{/foo/bar}";
 "owner" = 'root';
 "group" = 'root';
 "module" = "json";
-"daemon" = "foo";
+"daemon/0" = "foo";
 "contents" = nlist("foo", "bar");

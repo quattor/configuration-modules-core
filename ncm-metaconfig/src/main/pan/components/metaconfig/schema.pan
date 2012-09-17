@@ -13,7 +13,7 @@ type ${project.artifactId}_config =  {
      'mode' : long = 0644
      'owner' : string = 'root'
      'group' : string = 'root'
-     'daemon' ? string
+     'daemon' ? string[]
      'module' : string
      'backup' ? string
      'contents' : ${project.artifactId}_extension

@@ -59,7 +59,7 @@ sub needs_restarting
 {
     my ($self, $fh, $srv) = @_;
 
-    return $fh->close() && $srv->{daemon};
+    return $fh->close() && $srv->{daemon} && scalar(@{$srv->{daemon}});
 }
 
 sub json
@@ -188,7 +188,9 @@ sub handle_service
 
     print $fh $method->($self, $srv->{contents}, $srv->{module}), "\n";
     if ($self->needs_restarting($fh, $srv)) {
-	$self->{daemons}->{$srv->{daemon}} = 1;
+	foreach my $d (@{$srv->{daemon}}) {
+	    $self->{daemons}->{$d} = 1;
+	}
     }
     return 1;
 }
