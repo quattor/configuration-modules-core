@@ -155,7 +155,7 @@ C<wanted_pkgs> get executed.
 
 =cut
 
-$cmp->{WANTED_PKGS}->{return} = 0;
+$cmp->{WANTED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in wanted_pkgs is propagated");
@@ -177,7 +177,7 @@ is($cmp->{INSTALLED_PKGS}->{called}, 2,
 
 =cut
 
-$cmp->{INSTALLED_PKGS}->{return} = 0;
+$cmp->{INSTALLED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in installed_pkgs is propagated");

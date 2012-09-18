@@ -25,6 +25,7 @@ Readonly my $REPOS_TREE => "/software/repositories";
 Readonly my $PKGS_TREE => "/software/packages";
 Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
 Readonly my $YUM_CMD => [qw(yum shell)];
+Readonly my $RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
 
 our $NoActionSupported = 1;
 
@@ -118,8 +119,19 @@ sub schedule_install
     return join("\n", map("install $_", @$install));
 }
 
+# Returns a set of all installed packages
 sub installed_pkgs {
     my $self = shift;
+
+    my $cmd = CAF::Process->new($RPM_QUERY, keeps_state => 1,
+				log => $self);
+
+    my @pkgs = split(/\n/, $cmd->output());
+    if ($?) {
+	return undef;
+    }
+
+    return Set::Scalar->new(@pkgs);
 }
 
 sub wanted_pkgs {
@@ -159,8 +171,10 @@ sub update_pkgs
 {
     my ($self, $pkgs, $run, $allow_user_pkgs) = @_;
 
-    my $installed = $self->installed_pkgs() or return 0;
+    my $installed = $self->installed_pkgs();
+    defined($installed) or return 0;
     my $wanted = $self->wanted_pkgs($pkgs) or return 0;
+    defined($wanted) or return 0;
 
     my ($tx, $rs);
 
@@ -190,4 +204,5 @@ sub Configure
       or return 0;
     return 1;
 }
+
 1; # required for Perl modules
