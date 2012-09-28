@@ -7,6 +7,7 @@ package NCM::Component::spma;
 # a few standard statements, mandatory for all components
 #
 use strict;
+use warnings;
 use parent 'NCM::Component';
 our $EC=LC::Exception::Context->new->will_store_all;
 
