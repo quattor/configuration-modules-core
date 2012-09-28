@@ -121,7 +121,8 @@ sub schedule_install
 }
 
 # Returns a set of all installed packages
-sub installed_pkgs {
+sub installed_pkgs
+{
     my $self = shift;
 
     my $cmd = CAF::Process->new($RPM_QUERY, keeps_state => 1,
@@ -135,8 +136,20 @@ sub installed_pkgs {
     return Set::Scalar->new(@pkgs);
 }
 
-sub wanted_pkgs {
+sub wanted_pkgs
+{
     my ($self, $pkgs) = @_;
+
+    my @pkl;
+
+    while (my ($pkg, $st) = each(%$pkgs)) {
+	while (my ($ver, $arch) = each(%$st)) {
+	    foreach my $i (keys(%{$arch->{arch}})) {
+		push(@pkl, sprintf("%s-%s.%s", unescape($pkg), unescape($ver), $i));
+	    }
+	}
+    }
+    return Set::Scalar->new(@pkl);
 }
 
 sub solve_transaction {
@@ -149,7 +162,8 @@ sub solve_transaction {
     return $rs;
 }
 
-sub apply_transaction {
+sub apply_transaction
+{
 
     my ($self, $tx) = @_;
 
