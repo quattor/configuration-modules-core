@@ -7,8 +7,8 @@
 
 =head1 DESCRIPTION
 
-Tests for the C<schedule_install> method.  This method adds an
-C<install $pkg> line for each package.
+Tests for the C<schedule> method.  This method adds an C<install $pkg>
+or C<remove $pkg> line for each package.
 
 =head1 TESTS
 
