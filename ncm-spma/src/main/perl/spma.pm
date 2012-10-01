@@ -29,6 +29,7 @@ Readonly my $YUM_CMD => [qw(yum -y shell)];
 Readonly my $RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
 Readonly my $REMOVE => "remove";
 Readonly my $INSTALL => "install";
+Readonly my $YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 
 our $NoActionSupported = 1;
 
@@ -179,6 +180,16 @@ sub apply_transaction
     return !$?;
 }
 
+sub versionlock
+{
+    my ($self, $wanted) = @_;
+
+    my $fh = CAF::FileWriter->new($YUM_PACKAGE_LIST, log => $self);
+    print $fh join("\n", @$wanted, "");
+    $fh->close();
+}
+
+
 # Updates the packages on the system.
 sub update_pkgs
 {
@@ -200,6 +211,7 @@ sub update_pkgs
     $tx .= $self->solve_transaction($run);
 
     $self->apply_transaction($tx) or return 0;
+    $self->versionlock($wanted);
     return 1;
 }
 

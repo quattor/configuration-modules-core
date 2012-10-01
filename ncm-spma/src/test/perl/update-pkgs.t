@@ -53,7 +53,7 @@ use Set::Scalar;
 no warnings 'redefine';
 no strict 'refs';
 
-foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction
+foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
 		       solve_transaction)) {
     *{"NCM::Component::spma::$method"} = sub {
 	my $self = shift;
@@ -99,6 +99,9 @@ ok(!$cmp->{SCHEDULE}->{remove}->{called},
 ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
    "Transaction application receives installation but not removal as argument");
+is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
+is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
+       "Locked package versions with correct arguments");
 
 =pod
 
