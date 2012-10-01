@@ -109,6 +109,8 @@ sub generate_repos
     return 1;
 }
 
+# Returns a yum shell line for $op-erating on the $target
+# packages. $op is typically "install" or "remove".
 sub schedule
 {
     my ($self, $op, $target) = @_;
@@ -132,6 +134,7 @@ sub installed_pkgs
     return Set::Scalar->new(@pkgs);
 }
 
+# Returns a set with the desired packages.
 sub wanted_pkgs
 {
     my ($self, $pkgs) = @_;
@@ -148,7 +151,9 @@ sub wanted_pkgs
     return Set::Scalar->new(@pkl);
 }
 
-
+# Returns the yum shell command to apply the transaction. If run, the
+# transaction will be applied. Otherwise it will just be solved and
+# printed.
 sub solve_transaction {
     my ($self, $run) = @_;
 
@@ -159,6 +164,7 @@ sub solve_transaction {
     return $rs;
 }
 
+# Actually calls yum to execute transaction $tx
 sub apply_transaction
 {
 
