@@ -8,9 +8,9 @@ package NCM::Component::spma;
 #
 use strict;
 use warnings;
-use parent 'NCM::Component';
+use NCM::Component;
 our $EC=LC::Exception::Context->new->will_store_all;
-
+our @ISA = qw(NCM::Component);
 use EDG::WP4::CCM::Element qw(unescape);
 
 use CAF::Process;
@@ -152,11 +152,12 @@ sub wanted_pkgs
     return Set::Scalar->new(@pkl);
 }
 
+
 sub solve_transaction {
     my ($self, $run) = @_;
 
     my $rs = "transaction solve\n";
-    if ($run) {
+    if ($run && !$NoAction) {
 	$rs .= "transaction apply\n";
     }
     return $rs;
