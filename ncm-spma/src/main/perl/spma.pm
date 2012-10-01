@@ -153,7 +153,7 @@ sub solve_transaction {
 
     my $rs = "transaction solve\n";
     if ($run && !$NoAction) {
-	$rs .= "transaction apply\n";
+	$rs .= "transaction run\n";
     }
     return $rs;
 }
