@@ -27,6 +27,8 @@ Readonly my $PKGS_TREE => "/software/packages";
 Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
 Readonly my $YUM_CMD => [qw(yum -y shell)];
 Readonly my $RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
+Readonly my $REMOVE => "remove";
+Readonly my $INSTALL => "install";
 
 our $NoActionSupported = 1;
 
@@ -106,18 +108,11 @@ sub generate_repos
     return 1;
 }
 
-sub schedule_removal
+sub schedule
 {
-    my ($self, $remove) = @_;
+    my ($self, $op, $target) = @_;
 
-    return join("\n", map("remove $_", @$remove));
-}
-
-sub schedule_install
-{
-    my ($self, $install) = @_;
-
-    return join("\n", map("install $_", @$install));
+    return sprintf("%s %s\n", $op, join(" ", @$target));
 }
 
 # Returns a set of all installed packages
@@ -197,10 +192,10 @@ sub update_pkgs
     my ($tx, $rs);
 
     if (!$allow_user_pkgs) {
-	$tx = $self->schedule_removal($installed-$wanted);
+	$tx = $self->schedule($REMOVE, $installed-$wanted);
     }
 
-    $tx .= $self->schedule_install($wanted);
+    $tx .= $self->schedule($INSTALL, $wanted);
 
     $tx .= $self->solve_transaction($run);
 
