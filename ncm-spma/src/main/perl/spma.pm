@@ -25,7 +25,7 @@ Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
 Readonly my $REPOS_TREE => "/software/repositories";
 Readonly my $PKGS_TREE => "/software/packages";
 Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
-Readonly my $YUM_CMD => [qw(yum shell)];
+Readonly my $YUM_CMD => [qw(yum -y shell)];
 Readonly my $RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
 
 our $NoActionSupported = 1;
@@ -168,13 +168,15 @@ sub apply_transaction
 
     my ($self, $tx) = @_;
 
+    $self->verbose("Running transaction: $tx");
+
     my $cmd = CAF::Process->new($YUM_CMD, log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => 'stdout',
 				keeps_state => 1);
+
     $cmd->run();
 
     if ($?) {
-    	$self->verbose("Failed transaction: $tx");
     	$self->error("Failed to execute transaction: $rs");
     } else {
     	$self->info("Yum output: $rs");
