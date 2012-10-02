@@ -90,4 +90,16 @@ is($cmp->{ERROR}, 2, "Error in unlink is reported");
 # Restore permissions on the repository for future executions.
 chmod(0700, $REPO_DIR);
 
+=pod
+
+=head2 The userpkgs flag is set
+
+In this case, nothing should be done.
+
+=cut
+
+initialize_repos();
+is($cmp->cleanup_old_repos($REPO_DIR, $repos, 1), 1, "userpkgs succeeds");
+ok(-e "$REPO_DIR/repository2.repo", "Unlisted repo is kept under userpkgs");
+
 done_testing();

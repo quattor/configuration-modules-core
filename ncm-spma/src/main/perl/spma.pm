@@ -33,11 +33,13 @@ Readonly my $YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 
 our $NoActionSupported = 1;
 
-# Removes any repositories present in the system that are not listed in
-# $allowed_repos.
+# If user packages are not allowed, removes any repositories present
+# in the system that are not listed in $allowed_repos.
 sub cleanup_old_repos
 {
-    my ($self, $repo_dir, $allowed_repos) = @_;
+    my ($self, $repo_dir, $allowed_repos, $userpkgs) = @_;
+
+    return 1 if $userpkgs;
 
     my $dir;
     if (!opendir($dir, $repo_dir)) {
@@ -227,11 +229,15 @@ sub Configure
 
     my $repos = $config->getElement($REPOS_TREE)->getTree();
     my $t = $config->getElement($CMP_TREE)->getTree();
+    # Convert these crappily-defined fields into real Perl booleans.
+    $t->{run_spma} = $t->{run_spma} eq 'yes';
+    $t->{userpkgs} = $t->{user_pkgs} eq 'yes';
     my $pkgs = $config->getElement($PKGS_TREE)->getTree();
     $self->initialize_repos_dir($REPOS_DIR) or return 0;
+    $self->cleanup_old_repos($REPOS_DIR, $repos, $t->{userpkgs});
     $self->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $t->{proxyhost},
 			  $t->{proxytype}, $t->{proxyport}) or return 0;
-    $self->update_pkgs($pkgs, $t->{run_spma} eq 'yes', $t->{userpkgs} eq 'yes')
+    $self->update_pkgs($pkgs, $t->{run_spma}, $t->{userpkgs})
       or return 0;
     return 1;
 }
