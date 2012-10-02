@@ -188,6 +188,7 @@ sub apply_transaction
     return !$?;
 }
 
+# Lock the versions of all packages, for the versionlock Yum plugin.
 sub versionlock
 {
     my ($self, $wanted) = @_;
