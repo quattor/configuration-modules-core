@@ -25,8 +25,6 @@ use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
-plan skip_all => "No RPM database to play with" if ! -x "/bin/rpm";
-
 my $cmp = NCM::Component::spma->new("spma");
 my $pkg = Set::Scalar->new(qw(a b));
 
