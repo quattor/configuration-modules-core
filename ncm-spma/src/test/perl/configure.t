@@ -189,4 +189,48 @@ ok($cmp->{CLEANUP_OLD_REPOS}->{args}->[2],
    "Userpackages are passed correctly to cleanup_old_repos");
 
 
+=pod
+
+=head2 Error handling
+
+We also test that all errors in functions are correctly handled
+
+=over
+
+=item * The update of packages fails
+
+We expect an error code to be returned.
+
+=cut
+
+$call_order = 0;
+$cmp->{UPDATE_PKGS}->{return} = 0;
+is($cmp->Configure($cfg), 0, "Failure in update_pkgs is propagated");
+is($cmp->{UPDATE_PKGS}->{called}, $call_order,
+   "update_pkgs is called during the first error test");
+$cmp->{UPDATE_PKGS}->{called} = 0;
+
+=pod
+
+=item * Any other method fails
+
+The error is propagated, and C<update_pkgs> is never called
+
+=cut
+
+foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
+    $cmp->{uc($f)}->{return} = 0;
+    is($cmp->Configure($cfg), 0, "Failure in $f is propagated");
+    is($cmp->{UPDATE_PKGS}->{called}, 0,
+       "update_pkgs is not called when a method $f fails");
+    $cmp->{uc($f)}->{return} = 1;
+}
+
+
 done_testing();
+
+__END__
+
+=pod
+
+=back

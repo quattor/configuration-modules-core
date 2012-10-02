@@ -235,7 +235,7 @@ sub Configure
     $t->{userpkgs} = $t->{userpkgs} eq 'yes';
     my $pkgs = $config->getElement($PKGS_TREE)->getTree();
     $self->initialize_repos_dir($REPOS_DIR) or return 0;
-    $self->cleanup_old_repos($REPOS_DIR, $repos, $t->{userpkgs});
+    $self->cleanup_old_repos($REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
     $self->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $t->{proxyhost},
 			  $t->{proxytype}, $t->{proxyport}) or return 0;
     $self->update_pkgs($pkgs, $t->{run}, $t->{userpkgs})
