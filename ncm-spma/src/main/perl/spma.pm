@@ -89,6 +89,7 @@ sub generate_repos
 
     $proxy .= ":$port" if defined($port);
 
+
     foreach my $repo (@$repos) {
 	my $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.repo",
 				      log => $self);
@@ -99,7 +100,9 @@ sub generate_repos
 	if ($proxy && ($type eq 'reverse')) {
 	    $repo->{protocols}->[0]->{url} =~ s{^(.*?)://[^/]+(/?)}{$1://$proxy$2};
 	}
-	if (!$self->template()->process($template, $repo, $fh)) {
+
+	my $rs = $self->template()->process($template, $repo, $fh);
+	if (!$rs) {
 	    $self->error ("Unable to generate repository $repo->{name}: ",
 			  $self->template()->error());
 	    $fh->cancel();
@@ -206,7 +209,7 @@ sub update_pkgs
 
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
-    my $wanted = $self->wanted_pkgs($pkgs) or return 0;
+    my $wanted = $self->wanted_pkgs($pkgs);
     defined($wanted) or return 0;
 
     my ($tx, $rs);
