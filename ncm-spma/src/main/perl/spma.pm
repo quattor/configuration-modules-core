@@ -172,13 +172,13 @@ sub apply_transaction
 
     my ($self, $tx) = @_;
 
-    $self->verbose("Running transaction: $tx");
+    $self->debug(5, "Running transaction: $tx");
 
     my $cmd = CAF::Process->new($YUM_CMD, log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => 'stdout',
 				keeps_state => 1);
 
-    $cmd->run();
+    $cmd->execute();
 
     if ($?) {
     	$self->error("Failed to execute transaction: $rs");
