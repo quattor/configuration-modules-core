@@ -41,6 +41,8 @@ plan skip_all => "No RPM database to play with" if ! -x "/bin/rpm";
 
 my $cmp = NCM::Component::spma->new("spma");
 
+set_desired_output($CMD, "");
+
 my $pkgs = $cmp->installed_pkgs();
 isa_ok($pkgs, "Set::Scalar", "Received an empty set, with no errors");
 
