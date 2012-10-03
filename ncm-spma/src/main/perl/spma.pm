@@ -246,7 +246,7 @@ sub Configure
     my $t = $config->getElement($CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
-    $t->{userpkgs} = $t->{userpkgs} eq 'yes';
+    $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
     my $pkgs = $config->getElement($PKGS_TREE)->getTree();
     $self->initialize_repos_dir($REPOS_DIR) or return 0;
     $self->cleanup_old_repos($REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
