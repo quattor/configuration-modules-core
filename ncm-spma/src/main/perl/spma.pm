@@ -218,6 +218,11 @@ sub update_pkgs
     my $wanted = $self->wanted_pkgs($pkgs);
     defined($wanted) or return 0;
 
+    if ($installed == $wanted) {
+	$self->verbose("Nothing to install or remove");
+	return 1;
+    }
+
     my ($tx, $rs);
 
     if (!$allow_user_pkgs) {

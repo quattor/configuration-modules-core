@@ -107,8 +107,6 @@ is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
 
 =item * When C<userpkgs> is false, it tries to remove outdated packages.
 
-=back
-
 =cut
 
 is($cmp->update_pkgs("pkgs", "run", 0), 1, "Basic run without userpkgs succeeds");
@@ -120,6 +118,27 @@ is($cmp->{APPLY_TRANSACTION}->{args}->[0], "remove\ninstall\nsolve\n",
    "Transaction applycation without userpkgs receives removal");
 
 =pod
+
+=item * When the desired and installed sets are the same, we do nothing
+
+Should speed things up considerably
+
+=cut
+
+foreach my $f (qw(apply_transaction solve_transaction schedule
+		  wanted_pkgs installed_pkgs)) {
+    $cmp->{uc($f)}->{called} = 0;
+}
+
+$cmp->{WANTED_PKGS}->{return} = $cmp->{INSTALLED_PKGS}->{return};
+is($cmp->update_pkgs("pkgs", "run"), 1, "No-op invocation succeeds");
+is($cmp->{SCHEDULE}->{called}, 0, "No scheduling needed for no-op invocation");
+
+$cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(x y z));
+
+=pod
+
+=back
 
 =head2 Error handling
 
@@ -211,5 +230,7 @@ is($cmp->{SCHEDULE}->{remove}->{called}, 1,
    "No removal scheduling when installed_pkgs fails");
 is($cmp->{SCHEDULE}->{install}->{called}, 1,
    "No install scheduling when installed_pkgs fails");
+
+
 
 done_testing();
