@@ -91,15 +91,15 @@ When passing proxy-related arguments, we need to test a few things:
 
 =over 4
 
-=item * Forward proxies don't affect how the repository is rendered
+=item * Reverse proxies don't affect how the repository is rendered
 
 =cut
 
-$name = "forward_proxy";
+$name = "reverse_proxy";
 $repos->[0]->{name} = $name;
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
-			'forward'), 1,
+			'reverse'), 1,
    "Proxy settings succeed");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
@@ -109,32 +109,32 @@ like("$fh", qr{^baseurl=$url$}m,
 
 =pod
 
-=item * Reverse proxies have their URLs modified
+=item * Forward proxies have their URLs modified
 
 =cut
 
-$name = "reverse_proxy";
+$name = "forward_proxy";
 $repos->[0]->{name} = $name;
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-			$PROXY_HOST, 'reverse'), 1,
-   "Files with reverse proxies are properly rendered");
+			$PROXY_HOST, 'forward'), 1,
+   "Files with forward proxies are properly rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
-     "Reverse proxies modify the URLs in the config files");
+     "Forward proxies modify the URLs in the config files");
 
 =pod
 
-=item * Port number shows up with reverse proxies
+=item * Port number shows up with forward proxies
 
 =cut
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-			$PROXY_HOST, 'reverse', 12345), 1,
-   "Reverse proxies on special ports are properly rendered");
+			$PROXY_HOST, 'forward', 12345), 1,
+   "Forward proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=http://$PROXY_HOST:12345$}m,
-     "Port number is rendered with the reverse proxy");
+     "Port number is rendered with the forward proxy");
 
 done_testing();
 
