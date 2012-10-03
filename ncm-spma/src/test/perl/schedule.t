@@ -34,4 +34,7 @@ is(substr($txt, -1, 1), "\n", "String ends in newline");
 $txt = $cmp->schedule("remove", \@pkgs);
 like($txt, qr{^remove}, "Remove operation is printed");
 
+is($cmp->schedule("remove", []), "",
+   "Empty operation yields no command for the Yum shell");
+
 done_testing();

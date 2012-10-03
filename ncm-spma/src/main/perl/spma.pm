@@ -124,7 +124,7 @@ sub schedule
 {
     my ($self, $op, $target) = @_;
 
-    return sprintf("%s %s\n", $op, join(" ", @$target));
+    return @$target ? sprintf("%s %s\n", $op, join(" ", @$target)) : "";
 }
 
 # Returns a set of all installed packages
