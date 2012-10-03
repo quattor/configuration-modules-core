@@ -103,11 +103,6 @@ is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
 is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
        "Locked package versions with correct arguments");
 
-is($cmp->{SCHEDULE}->{install}->{args}->[0], 'a',
-   "Correct package scheduled to be installed");
-is(scalar(@{$cmp->{SCHEDULE}->{install}->{args}}), 1,
-   "Already installed packages aren't re-scheduled");
-
 =pod
 
 =item * When C<userpkgs> is false, it tries to remove outdated packages.
