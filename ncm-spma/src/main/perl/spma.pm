@@ -18,18 +18,17 @@ use CAF::FileWriter;
 use LC::Exception qw(SUCCESS);
 use Set::Scalar;
 use File::Path qw(mkpath);
-use Readonly;
 
-Readonly my $REPOS_DIR => "/etc/yum.repos.d";
-Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
-Readonly my $REPOS_TREE => "/software/repositories";
-Readonly my $PKGS_TREE => "/software/packages";
-Readonly my $CMP_TREE => "/software/components/${project.artifactId}";
-Readonly my $YUM_CMD => [qw(yum -y shell)];
-Readonly my $RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
-Readonly my $REMOVE => "remove";
-Readonly my $INSTALL => "install";
-Readonly my $YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
+use constant REPOS_DIR => "/etc/yum.repos.d";
+use constant REPOS_TEMPLATE => "spma/repository.tt";
+use constant REPOS_TREE => "/software/repositories";
+use constant PKGS_TREE => "/software/packages";
+use constant CMP_TREE => "/software/components/${project.artifactId}";
+use constant YUM_CMD => [qw(yum -y shell)];
+use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
+use constant REMOVE => "remove";
+use constant INSTALL => "install";
+use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 
 our $NoActionSupported = 1;
 
@@ -132,7 +131,7 @@ sub installed_pkgs
 {
     my $self = shift;
 
-    my $cmd = CAF::Process->new($RPM_QUERY, keeps_state => 1,
+    my $cmd = CAF::Process->new(RPM_QUERY, keeps_state => 1,
 				log => $self);
 
     my $out = $cmd->output();
@@ -184,7 +183,7 @@ sub apply_transaction
 
     $self->debug(5, "Running transaction: $tx");
 
-    my $cmd = CAF::Process->new($YUM_CMD, log => $self, stdin => $tx,
+    my $cmd = CAF::Process->new(YUM_CMD, log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => 'stdout',
 				keeps_state => 1);
 
@@ -203,7 +202,7 @@ sub versionlock
 {
     my ($self, $wanted) = @_;
 
-    my $fh = CAF::FileWriter->new($YUM_PACKAGE_LIST, log => $self);
+    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
     print $fh join("\n", @$wanted, "");
     $fh->close();
 }
@@ -222,14 +221,14 @@ sub update_pkgs
     my ($tx, $rs);
 
     if (!$allow_user_pkgs) {
-	$tx = $self->schedule($REMOVE, $installed-$wanted);
+	$tx = $self->schedule(REMOVE, $installed-$wanted);
     }
 
     # Schedulling the installation of all wanted packages over and
     # over again will work. But it will be unnecessarily slow. We can
     # greatly reduce the size of the transaction if we just tell Yum
     # to install what is missing.
-    $tx .= $self->schedule($INSTALL, $wanted-$installed);
+    $tx .= $self->schedule(INSTALL, $wanted-$installed);
 
     $tx .= $self->solve_transaction($run);
 
@@ -242,15 +241,15 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    my $repos = $config->getElement($REPOS_TREE)->getTree();
-    my $t = $config->getElement($CMP_TREE)->getTree();
+    my $repos = $config->getElement(REPOS_TREE)->getTree();
+    my $t = $config->getElement(CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
-    my $pkgs = $config->getElement($PKGS_TREE)->getTree();
-    $self->initialize_repos_dir($REPOS_DIR) or return 0;
-    $self->cleanup_old_repos($REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
-    $self->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $t->{proxyhost},
+    my $pkgs = $config->getElement(PKGS_TREE)->getTree();
+    $self->initialize_repos_dir(REPOS_DIR) or return 0;
+    $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
+    $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE, $t->{proxyhost},
 			  $t->{proxytype}, $t->{proxyport}) or return 0;
     $self->update_pkgs($pkgs, $t->{run}, $t->{userpkgs})
       or return 0;
