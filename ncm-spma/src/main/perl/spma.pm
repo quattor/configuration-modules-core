@@ -225,7 +225,11 @@ sub update_pkgs
 	$tx = $self->schedule($REMOVE, $installed-$wanted);
     }
 
-    $tx .= $self->schedule($INSTALL, $wanted);
+    # Schedulling the installation of all wanted packages over and
+    # over again will work. But it will be unnecessarily slow. We can
+    # greatly reduce the size of the transaction if we just tell Yum
+    # to install what is missing.
+    $tx .= $self->schedule($INSTALL, $wanted-$installed);
 
     $tx .= $self->solve_transaction($run);
 
