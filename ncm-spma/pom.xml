@@ -35,22 +35,36 @@
 
   <developers>
     <developer>
-      <name>German Cancio</name>
-      <email>German.Cancio@cern.ch</email>
+      <name>Luis Fernando Muñoz Mejías</name>
+      <email>Luis.Munoz@UGent.be</email>
     </developer>
   </developers>
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
+      <name>Germán Cancio</name>
+      <email>German.Cancio@cern.ch</email>
       <roles>
 	<role>author</role>
       </roles>
     </contributor>
     <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
+      <name>Marco Emilio Poleggi</name>
+      <email>marcoep@gmail.com</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Michel Jouvin</name>
+      <email>jouvin@lal.in2p3.fr</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Jan Iven</name>
+      <email>Jan.Iven@cern.ch</email>
       <roles>
 	<role>author</role>
       </roles>
