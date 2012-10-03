@@ -35,7 +35,7 @@ isa_ok($pkgs, "Set::Scalar", "Received an empty set, with no errors");
 # Watch out: GPG keys for a repository may be shipped via RPMs, and
 # those may have a "(none)" arch.
 foreach my $pkg (@$pkgs) {
-    like($pkg, qr!^(?:(?:\S+(?:-[^-\s]+){2}\.\w+)|(?:gpg-pubkey-\w+-\w+\.\(none\)))$!,
+    like($pkg, qr!^\S+(?:-[^-\s]+){2}\.\w+$!,
 	 "Package $pkg has the correct format string");
 }
 

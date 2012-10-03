@@ -109,6 +109,10 @@ sub generate_repos
 	    return 0;
 	}
 	$fh->close();
+	$fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.pkgs",
+				   log => $self);
+	print $fh "# Additional configuration for $repo->{name}\n";
+	$fh->close();
     }
 
     return 1;
@@ -131,10 +135,13 @@ sub installed_pkgs
     my $cmd = CAF::Process->new($RPM_QUERY, keeps_state => 1,
 				log => $self);
 
-    my @pkgs = split(/\n/, $cmd->output());
+    my $out = $cmd->output();
     if ($?) {
 	return undef;
     }
+    # We don't consider gpg-pubkeys, which won't come from any
+    # downloaded RPM, anyways.
+    my @pkgs = grep($_ !~ m{^gpg-pubkey.*\(none\)$}, split(/\n/, $out));
 
     return Set::Scalar->new(@pkgs);
 }
