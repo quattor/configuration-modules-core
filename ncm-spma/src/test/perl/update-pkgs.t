@@ -68,6 +68,9 @@ sub NCM::Component::spma::schedule {
     my ($self, $op, $args) = @_;
     $self->{SCHEDULE}->{$op}->{args} = $args;
     $self->{SCHEDULE}->{$op}->{called}++;
+    if (exists($self->{SCHEDULE}->{$op}->{return})) {
+	return $self->{SCHEDULE}->{$op}->{return};
+    }
     return "$op\n";
 }
 
@@ -135,6 +138,7 @@ Should speed things up considerably
 foreach my $f (qw(apply_transaction solve_transaction schedule
 		  packages_to_remove wanted_pkgs installed_pkgs)) {
     $cmp->{uc($f)}->{called} = 0;
+    $cmp->{uc($f)}->{args} = [];
 }
 
 $cmp->{WANTED_PKGS}->{return} = $cmp->{INSTALLED_PKGS}->{return};
@@ -142,6 +146,25 @@ is($cmp->update_pkgs("pkgs", "run"), 1, "No-op invocation succeeds");
 is($cmp->{SCHEDULE}->{called}, 0, "No scheduling needed for no-op invocation");
 
 $cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(x y z));
+
+=pod
+
+=item * When the transaction is empty we do nothing
+
+Yet another speedup.
+
+This may happen if the only differences between installed and wanted
+packages are dependencies of the latter set.
+
+=cut
+
+$cmp->{SCHEDULE}->{install}->{return} = "";
+$cmp->{SCHEDULE}->{remove}->{return} = "";
+
+is($cmp->update_pkgs("pkgs", "run", 0), 1, "Empty transaction succeeds");
+diag(join(" ", @{$cmp->{APPLY_TRANSACTION}->{args}}));
+is($cmp->{APPLY_TRANSACTION}->{called}, 0,
+   "Empty transaction doesnt' call Yum");
 
 =pod
 
@@ -166,7 +189,7 @@ foreach my $m (qw(apply_transaction solve_transaction schedule
 
 $cmp->{SCHEDULE}->{install}->{called} = 0;
 $cmp->{SCHEDULE}->{remove}->{called} = 0;
-
+$cmp->{SCHEDULE}->{install}->{return} = "install foo";
 
 =pod
 

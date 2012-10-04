@@ -251,10 +251,14 @@ sub update_pkgs
 
     $tx .= $self->schedule(INSTALL, $wanted-$installed);
 
-    $tx .= $self->solve_transaction($run);
-
-    $self->apply_transaction($tx) or return 0;
     $self->versionlock($wanted);
+
+    # Call Yum only if there is something to do.
+    if ($tx) {
+	$tx .= $self->solve_transaction($run);
+	$self->apply_transaction($tx) or return 0;
+    }
+
     return 1;
 }
 
