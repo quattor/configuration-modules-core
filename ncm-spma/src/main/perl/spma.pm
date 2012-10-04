@@ -220,7 +220,9 @@ sub packages_to_remove
 	return;
     }
 
-    my $leaves = Set::Scalar->new(split(/\n/, $out));
+    # The leave set doesn't contain the header lines, which are just
+    # garbage.
+    my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
     return $leaves-$wanted;
 }
 

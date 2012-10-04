@@ -46,12 +46,12 @@ my $cmp = NCM::Component::spma->new("spma");
 
 my $wanted = Set::Scalar->new(qw(a b c));
 
-set_desired_output($LEAVES, "a\n");
+set_desired_output($LEAVES, "yum plugins\na\n");
 
 my $s = $cmp->packages_to_remove($wanted);
 ok(defined($s), "Packages to remove succeeds");
 isa_ok($s, "Set::Scalar::Null", "Received a correct object");
-ok(!$s, "No packages to remove");
+ok(!$s, "No packages to remove. Garbage lines from package-cleanup discarded");
 
 =pod
 
@@ -61,12 +61,13 @@ There are leaf packages out of the profile.
 
 =cut
 
-set_desired_output($LEAVES, "d\n");
+set_desired_output($LEAVES, "yum plugins\nd\n");
 
 $s = $cmp->packages_to_remove($wanted);
 ok($s, "Packages to remove succeeds and is not empty");
 
 is($s, Set::Scalar->new("d"), "Correct set will be removed");
+
 
 =pod
 
