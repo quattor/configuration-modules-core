@@ -54,7 +54,7 @@ no warnings 'redefine';
 no strict 'refs';
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
-		       solve_transaction)) {
+		       packages_to_remove solve_transaction)) {
     *{"NCM::Component::spma::$method"} = sub {
 	my $self = shift;
 	$self->{uc($method)}->{args} = \@_;
@@ -79,6 +79,7 @@ my $cmp = NCM::Component::spma->new("spma");
 my $pkgs = {};
 $cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(a b c));
 $cmp->{INSTALLED_PKGS}->{return} = Set::Scalar->new(qw(b c d));
+$cmp->{PACKAGES_TO_REMOVE}->{return} = Set::Scalar->new(qw(a));
 $cmp->{SOLVE_TRANSACTION}->{return} = "solve\n";
 $cmp->{APPLY_TRANSACTION}->{return} = "apply";
 
@@ -96,12 +97,14 @@ is($cmp->{SCHEDULE}->{install}->{called}, 1, "Installation of packages is called
 ok(!$cmp->{SCHEDULE}->{remove}->{called},
    "With allow userpkgs, no removal is scheduled");
 
+ok(!$cmp->{PACKAGES_TO_REMOVE}->{called}, "No packages to be removed with userpkgs");
+
 ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
    "Transaction application receives installation but not removal as argument");
 is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
 is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
-       "Locked package versions with correct arguments");
+   "Locked package versions with correct arguments");
 
 =pod
 
@@ -110,6 +113,10 @@ is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
 =cut
 
 is($cmp->update_pkgs("pkgs", "run", 0), 1, "Basic run without userpkgs succeeds");
+is($cmp->{PACKAGES_TO_REMOVE}->{called}, 1,
+   "When userpkgs is disabled, it chooses packages for removal");
+is(scalar(@{$cmp->{PACKAGES_TO_REMOVE}->{args}}), 1,
+   "packages_to_remove called with the expected set of arguments");
 is($cmp->{SCHEDULE}->{remove}->{called}, 1,
    "When userpkgs is disabled, the method tries to uninstall stuff");
 is($cmp->{SCHEDULE}->{remove}->{args}->members(), 1,
@@ -126,7 +133,7 @@ Should speed things up considerably
 =cut
 
 foreach my $f (qw(apply_transaction solve_transaction schedule
-		  wanted_pkgs installed_pkgs)) {
+		  packages_to_remove wanted_pkgs installed_pkgs)) {
     $cmp->{uc($f)}->{called} = 0;
 }
 
@@ -153,12 +160,13 @@ in the correct point.
 # For easier comparison, reset all call counters
 
 foreach my $m (qw(apply_transaction solve_transaction schedule
-		  wanted_pkgs installed_pkgs)) {
+		  wanted_pkgs installed_pkgs packages_to_remove)) {
     $cmp->{uc($m)}->{called} = 0;
 }
 
 $cmp->{SCHEDULE}->{install}->{called} = 0;
 $cmp->{SCHEDULE}->{remove}->{called} = 0;
+
 
 =pod
 
@@ -172,7 +180,7 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in apply_transaction is propagated");
 
 foreach my $m (qw(apply_transaction solve_transaction
-		  wanted_pkgs installed_pkgs)) {
+		  packages_to_remove wanted_pkgs installed_pkgs)) {
     is($cmp->{uc($m)}->{called}, 1,
        "Method $m called when apply_transaction fails");
 }
@@ -184,8 +192,22 @@ is($cmp->{SCHEDULE}->{install}->{called}, 1,
 
 =pod
 
-=item * Failure in C<wanted_pkgs> means only C<installed_pkgs> and
-C<wanted_pkgs> get executed.
+=item * Failure in C<packages_to_remove> means apply_transaction is not called
+
+=cut
+
+$cmp->{PACKAGES_TO_REMOVE}->{return} = undef;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in packages_to_remove is propagated");
+is($cmp->{APPLY_TRANSACTION}->{called}, 1,
+   "Apply transaction is not called when packages_to_remove fails");
+is($cmp->{SOLVE_TRANSACTION}->{called}, 1,
+   "Solve transaction is not called when packages_to_remove fails");
+
+=pod
+
+=item * Failure in C<wanted_pkgs> means only C<installed_pkgs> and C<wanted_pkgs> get executed.
 
 =cut
 
@@ -196,7 +218,7 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
 
 foreach my $m (qw(apply_transaction solve_transaction)) {
     is($cmp->{uc($m)}->{called}, 1,
-       "Method $m called when apply_transaction fails");
+       "Method $m called when wanted_pkgs fails");
 }
 
 is($cmp->{SCHEDULE}->{remove}->{called}, 1,
@@ -204,9 +226,9 @@ is($cmp->{SCHEDULE}->{remove}->{called}, 1,
 is($cmp->{SCHEDULE}->{install}->{called}, 1,
    "No installation scheduling happens when whanted_pkgs fails");
 
-is($cmp->{WANTED_PKGS}->{called}, 2,
+is($cmp->{WANTED_PKGS}->{called}, 3,
    "Failure was actually triggered by wanted_pkgs");
-is($cmp->{INSTALLED_PKGS}->{called}, 2,
+is($cmp->{INSTALLED_PKGS}->{called}, 3,
    "installed_pkgs called before wanted_pkgs");
 
 =pod
@@ -219,7 +241,7 @@ $cmp->{INSTALLED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in installed_pkgs is propagated");
-is($cmp->{WANTED_PKGS}->{called}, 2,
+is($cmp->{WANTED_PKGS}->{called}, 3,
    "wanted_pkgs is not called when installed_pkgs fails");
 foreach my $m (qw(apply_transaction solve_transaction)) {
     is($cmp->{uc($m)}->{called}, 1,

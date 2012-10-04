@@ -29,6 +29,7 @@ use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
+use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all)];
 
 our $NoActionSupported = 1;
 
@@ -202,6 +203,22 @@ sub versionlock
     $fh->close();
 }
 
+# Returns the set of packages to remove. A package must be removed if
+# it is a leaf package and is not listed in $wanted.
+sub packages_to_remove
+{
+    my ($self, $wanted) = @_;
+
+    my $out = CAF::Process->new(LEAF_PACKAGES, log => $self)->output();
+
+    if ($?) {
+	$self->error ("Unable to find leaf packages");
+	return;
+    }
+
+    my $leaves = Set::Scalar->new(split(/\n/, $out));
+    return $leaves-$wanted;
+}
 
 # Updates the packages on the system.
 sub update_pkgs
@@ -218,13 +235,15 @@ sub update_pkgs
 	return 1;
     }
 
-    my ($tx, $rs);
+    my ($tx, $to_rm);
 
     if (!$allow_user_pkgs) {
-	$tx = $self->schedule(REMOVE, $installed-$wanted);
+	$to_rm = $self->packages_to_remove($wanted);
+	defined($to_rm) or return 0;
+	$tx = $self->schedule(REMOVE, $to_rm);
     }
 
-    $tx .= $self->schedule(INSTALL, $wanted);
+    $tx .= $self->schedule(INSTALL, $wanted-$installed);
 
     $tx .= $self->solve_transaction($run);
 
