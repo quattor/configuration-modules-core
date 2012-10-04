@@ -24,7 +24,7 @@ use constant REPOS_TEMPLATE => "spma/repository.tt";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
-use constant YUM_CMD => [qw(yum -y shell)];
+use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
@@ -171,6 +171,8 @@ sub solve_transaction {
     my $rs = "transaction solve\n";
     if ($run && !$NoAction) {
 	$rs .= "transaction run\n";
+    } else {
+	$rs .= "transaction reset\n";
     }
     return $rs;
 }
@@ -183,18 +185,11 @@ sub apply_transaction
 
     $self->debug(5, "Running transaction: $tx");
 
-    my $cmd = CAF::Process->new(YUM_CMD, log => $self, stdin => $tx,
+    my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => 'stdout',
 				keeps_state => 1);
 
     $cmd->execute();
-
-    if ($?) {
-    	$self->error("Failed to execute transaction: $rs");
-    } else {
-    	$self->info("Yum output: $rs");
-    }
-    return !$?;
 }
 
 # Lock the versions of all packages, for the versionlock Yum plugin.

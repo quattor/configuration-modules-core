@@ -30,12 +30,12 @@ my $tail = $cmp->solve_transaction(1);
 is($tail, "transaction solve\ntransaction run\n",
    "Transaction correctly defined when the run parameter is set");
 $tail = $cmp->solve_transaction(0);
-is($tail, "transaction solve\n",
+is($tail, "transaction solve\ntransaction reset\n",
    "Transaction solved but not executed when run is not set");
 
 $NCM::Component::NoAction = 1;
 $tail = $cmp->solve_transaction(1);
-is($tail, "transaction solve\n",
+is($tail, "transaction solve\ntransaction reset\n",
    "Transaction solved but not executed when NoAction is set");
 
 done_testing();
