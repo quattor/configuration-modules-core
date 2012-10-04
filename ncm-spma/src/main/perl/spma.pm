@@ -15,6 +15,7 @@ use EDG::WP4::CCM::Element qw(unescape);
 
 use CAF::Process;
 use CAF::FileWriter;
+use CAF::FileEditor;
 use LC::Exception qw(SUCCESS);
 use Set::Scalar;
 use File::Path qw(mkpath);
@@ -30,6 +31,9 @@ use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all)];
+
+use constant YUM_CONF_FILE => "/etc/yum.conf";
+use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 
 our $NoActionSupported = 1;
 
@@ -252,6 +256,20 @@ sub update_pkgs
     return 1;
 }
 
+# Set up a few things about Yum.conf. Somewhere in the future this may
+# have its own schema, or be delegated to some other component. To be
+# seen.
+sub configure_yum
+{
+    my ($self, $cfgfile) = @_;
+    my $fh = CAF::FileEditor->new($cfgfile, log => $self);
+
+    $fh->add_or_replace_lines(CLEANUP_ON_REMOVE,
+			      CLEANUP_ON_REMOVE. q{\s*=\s*1},
+			      "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
+    $fh->close();
+}
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -266,6 +284,7 @@ sub Configure
     $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
     $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE, $t->{proxyhost},
 			  $t->{proxytype}, $t->{proxyport}) or return 0;
+    $self->configure_yum(YUM_CONF_FILE);
     $self->update_pkgs($pkgs, $t->{run}, $t->{userpkgs})
       or return 0;
     return 1;
