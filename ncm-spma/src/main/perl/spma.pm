@@ -188,7 +188,12 @@ sub apply_transaction
 
     my ($self, $tx) = @_;
 
+    # Expire Yum caches to ensure that too recent packages that may be
+    # listed in the profile get installed.
+    $tx = "clean expire-cache\n" . $tx;
+
     $self->debug(5, "Running transaction: $tx");
+
 
     my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => \my $err,

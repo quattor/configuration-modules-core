@@ -40,7 +40,7 @@ is($cmp->apply_transaction($TX), 1, "Transaction succeeds in normal conditions")
 my $cmd = get_command($YUM);
 ok($cmd, "Yum shell correctly called");
 is($cmd->{method}, "execute", "Yum shell was execute'd");
-is($cmd->{object}->{OPTIONS}->{stdin}, $TX,
+like($cmd->{object}->{OPTIONS}->{stdin}, qr{$TX$},
    "Yum shell was given the correct transaction");
 
 set_desired_err($YUM, "\nError: package");

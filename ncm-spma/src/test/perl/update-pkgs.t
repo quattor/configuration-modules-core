@@ -162,7 +162,6 @@ $cmp->{SCHEDULE}->{install}->{return} = "";
 $cmp->{SCHEDULE}->{remove}->{return} = "";
 
 is($cmp->update_pkgs("pkgs", "run", 0), 1, "Empty transaction succeeds");
-diag(join(" ", @{$cmp->{APPLY_TRANSACTION}->{args}}));
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "Empty transaction doesnt' call Yum");
 
