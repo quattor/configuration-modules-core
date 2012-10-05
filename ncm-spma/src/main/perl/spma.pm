@@ -191,10 +191,18 @@ sub apply_transaction
     $self->debug(5, "Running transaction: $tx");
 
     my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
-    				stdout => \my $rs, stderr => 'stdout',
+    				stdout => \my $rs, stderr => \my $err,
 				keeps_state => 1);
 
     $cmd->execute();
+
+    $self->verbose("Output: $rs");
+
+    if ($err =~ m{^Error: }m) {
+	$self->error("Problems in transaction: $err");
+	return 0;
+    }
+    return 1;
 }
 
 # Lock the versions of all packages, for the versionlock Yum plugin.

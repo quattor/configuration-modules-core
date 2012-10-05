@@ -32,6 +32,9 @@ Readonly my $YUM => join(" ", NCM::Component::spma::YUM_CMD);
 
 my $cmp = NCM::Component::spma->new("spma");
 
+set_desired_err($YUM, "");
+set_desired_output($YUM, "");
+
 is($cmp->apply_transaction($TX), 1, "Transaction succeeds in normal conditions");
 
 my $cmd = get_command($YUM);
@@ -39,5 +42,10 @@ ok($cmd, "Yum shell correctly called");
 is($cmd->{method}, "execute", "Yum shell was execute'd");
 is($cmd->{object}->{OPTIONS}->{stdin}, $TX,
    "Yum shell was given the correct transaction");
+
+set_desired_err($YUM, "\nError: package");
+
+is($cmp->apply_transaction($TX), 0, "Error in transaction detected");
+is($cmp->{ERROR}, 1, "Error is reported");
 
 done_testing();
