@@ -154,13 +154,12 @@ sub enable_nslcd
 {
     my ($self, $cfg, $cmd) = @_;
 
-    my $srv = $cfg->{uri};
-    $srv =~ s{.*://}{};
-    $srv =~ s{/.*$}{};
     $cmd->pushargs(qw(--enableldapauth --enableldap));
-    $cmd->pushargs("--ldapserver", $srv);
+    $cmd->pushargs("--ldapserver", join(",", @{$cfg->{uri}}));
     $cmd->pushargs("--ldapbasedn=$cfg->{basedn}");
-    $cmd->pushargs("--enableldaptls") if $cfg->{ssl} && $cfg->{ssl} ne 'off';
+
+    # Only enable TLS if requested; just setting ssl on should not enable TLS.
+    $cmd->pushargs("--enableldaptls") if $cfg->{ssl} && $cfg->{ssl} eq "start_tls";
 }
 
 sub authconfig
@@ -176,7 +175,7 @@ sub authconfig
 
 
     foreach my $i (qw(shadow cache)) {
-	$cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
+	    $cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
     }
 
     $cmd->pushargs("--passalgo=$t->{passalgorithm}");
@@ -188,7 +187,7 @@ sub authconfig
 	    $method = "enable_$method";
 	    $self->$method($v, $cmd);
 	} else {
-	    $self->disable_method($method, $cmd)
+            $self->disable_method($method, $cmd)
 	}
     }
     $cmd->setopts(timeout => 60,
@@ -280,6 +279,12 @@ sub configure_nslcd
 	}
     }
     delete($tree->{map});
+
+    # uri needs whitespace-separated list of values
+    if ( exists $tree->{uri} ) {
+        print $fh "uri ", join(" ", @{$tree->{uri}});
+        delete($tree->{uri});
+    }
 
     while (my ($k, $v) = each(%$tree)) {
 	if (!ref($v)) {

@@ -1,3 +1,9 @@
+2012-10-05  Ronald Starink
+
+	* Release: 2.0.17
+	- Allow multiple URIs for nslcd -- note: backward incompatible schema change!
+	- Only enable TLS in nslcd when explicity requested, thus also enabling SSL 
+
 2012-04-12  Luis Fernando Muñoz Mejías
 
 	* Release: 2.0.16

@@ -206,7 +206,7 @@ type authconfig_method_nslcd_type = {
     "threads" ? long
     "uid"     ? string
     "gid"     ? string
-    "uri"     ? type_hostURI
+    "uri"     ? type_hostURI[]
     "binddn"  ? string
     "rootpwmoddn" ? string
     "krb5_ccname" ? string
