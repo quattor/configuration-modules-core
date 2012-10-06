@@ -7,7 +7,7 @@ use Test::Quattor;
 use Carp qw(carp cluck);
 use LC::File;
 use subs qw(NCM::Component::accounts::mkdir NCM::Component::accounts::chown
-	    NCM::Component::accounts::copy);
+	    NCM::Component::accounts::copy($$;%));
 use NCM::Component::accounts;
 use Test::MockModule;
 use Readonly;
@@ -28,7 +28,7 @@ sub my_chown
 our (%created_dirs, %copied_files);
 
 # Provide a fake makedir function, to control
-sub my_makedir
+sub my_makedir($;$)
 {
     my ($dir, $mode) = @_;
     if (exists($created_dirs{$dir})) {
@@ -42,15 +42,14 @@ sub my_makedir
 }
 
 # Provide a fake copy function
-sub my_copy
+sub my_copy($$;%)
 {
     my ($src, $dst, %opts) = @_;
 
     $copied_files{$src}->{$dst} = \%opts;
 }
 
-my $mock = Test::MockModule->new('NCM::Component::accounts');
-
+# Provide a sanitization argument that can trigger failures on demmand.
 sub my_sanitize
 {
     my ($self, $path) = @_;
@@ -62,6 +61,7 @@ sub my_sanitize
     }
 }
 
+my $mock = Test::MockModule->new('NCM::Component::accounts');
 $mock->mock('makedir', \&my_makedir);
 $mock->mock('copy', \&my_copy);
 $mock->mock('chown', \&my_chown);
