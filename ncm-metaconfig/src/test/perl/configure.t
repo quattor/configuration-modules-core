@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use Test::Quattor qw(simple);
 use NCM::Component::metaconfig;
+use Test::MockModule;
 use CAF::Object;
 
 eval { use JSON::XS; };
@@ -12,6 +13,8 @@ eval { use JSON::XS; };
 plan skip_all => "Testing module not found in the system" if $@;
 
 $CAF::Object::NoAction = 1;
+
+my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
 =pod
 
@@ -35,11 +38,7 @@ ok(!$c, "Daemon was not restarted when there are no changes");
 
 # Pretend there are changes
 
-no warnings 'redefine';
-*NCM::Component::metaconfig::needs_restarting = sub {
-    return 1;
-};
-use warnings 'redefine';
+$mock->mock('needs_restarting', 1);
 
 $cmp->Configure($cfg);
 $c = get_command("/sbin/service foo restart");
