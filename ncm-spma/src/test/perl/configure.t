@@ -26,35 +26,33 @@ use Readonly;
 use Test::More;
 use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
 use NCM::Component::spma;
-use Test::MockModule;
+use Test::MockObject::Extends;
 use CAF::Object;
 use Set::Scalar;
 use Class::Inspector;
+use Carp qw(confess);
+
+Readonly my $UPDATE_PKGS => -1;
+Readonly my $GENERATE_REPOS => 3;
+
+$SIG{__DIE__} = 'DEFAULT';
+
 
 my @funcs = grep(m{^[a-z]} && $_ ne 'unescape',
 		 @{Class::Inspector->functions("NCM::Component::spma")});
 
-my $mock = Test::MockModule->new("NCM::Component::spma");
+my $cmp = NCM::Component::spma->new("spma");
+my $mock = Test::MockObject::Extends->new($cmp);
 
-my $call_order = 0;
-
-
-foreach my $f (@funcs) {
-    $mock->mock($f, sub {
-		    my ($self, @args) = @_;
-		    $self->{uc($f)}->{called} = ++$call_order;
-		    $self->{uc($f)}->{args} = \@args;
-		    return $self->{uc($f)}->{return} // 1;
-		});
-};
+$mock->set_true(@funcs);
 
 $CAF::Object::NoAction = 1;
 
-my $cmp = NCM::Component::spma->new("spma");
 
 my $cfg = get_config_for_profile("simple");
 my $repos = $cfg->getElement("/software/repositories")->getTree();
 my $pkgs = $cfg->getElement("/software/packages")->getTree();
+my %calls;
 
 is($cmp->Configure($cfg), 1, "Simple configuration succeeds");
 
@@ -71,17 +69,25 @@ All the top-level methods are called, with C<update_pkgs> being the last one.
 
 =cut
 
-foreach my $f (map(uc($_), @funcs)) {
-    next if $f eq "UPDATE_PKGS";
-    if (exists($cmp->{$f})) {
-	ok($cmp->{$f}->{called} < $cmp->{UPDATE_PKGS}->{called},
-	   "Method $f called before UPDATE_PKGS");
-    }
-}
+
+my $name = $mock->call_pos($UPDATE_PKGS);
+is($name, "update_pkgs", "Packages are updated at the end of the component");
+my @args = $mock->call_args($UPDATE_PKGS);
+ok($args[2], "Run argument is correctly passed");
+ok(!$args[3], "No user packages allowed in update_pkgs");
+ok(exists($args[1]->{ConsoleKit}),
+  "A package list is passed to UPDATE_PKGS");
 
 =pod
 
 =head3 Correct arguments to each callee
+
+=cut
+
+while (my ($name, $args) = $mock->next_call()) {
+    $calls{$name} = $args;
+}
+
 
 =over
 
@@ -89,7 +95,7 @@ foreach my $f (map(uc($_), @funcs)) {
 
 =cut
 
-is($cmp->{INITIALIZE_REPOS_DIR}->{args}->[0], "/etc/yum.repos.d",
+is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d",
    "Correct Yum repository directory initialized");
 
 =pod
@@ -98,14 +104,15 @@ is($cmp->{INITIALIZE_REPOS_DIR}->{args}->[0], "/etc/yum.repos.d",
 
 =cut
 
+@args = @{$calls{cleanup_old_repos}};
 
-is($cmp->{CLEANUP_OLD_REPOS}->{args}->[0], "/etc/yum.repos.d",
+is($args[1], "/etc/yum.repos.d",
    "Correct Yum repository directory to be cleaned up");
-is(ref($cmp->{CLEANUP_OLD_REPOS}->{args}->[1]), 'ARRAY',
+is(ref($args[2]), 'ARRAY',
    'A list with repositories is passed to clean up non-existing repos');
-is($cmp->{CLEANUP_OLD_REPOS}->{args}->[1]->[0]->{name}, $repos->[0]->{name},
+is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to cleanup_old_repos");
-ok(!$cmp->{CLEANUP_OLD_REPOS}->{args}->[2], "No user repositories allowed");
+ok(!$args[3], "No user repositories allowed");
 
 =pod
 
@@ -113,28 +120,16 @@ ok(!$cmp->{CLEANUP_OLD_REPOS}->{args}->[2], "No user repositories allowed");
 
 =cut
 
-is($cmp->{GENERATE_REPOS}->{args}->[0], "/etc/yum.repos.d",
+@args = @{$calls{generate_repos}};
+is($args[1], "/etc/yum.repos.d",
    "Correct Yum repository directory to be initialised");
-is(ref($cmp->{GENERATE_REPOS}->{args}->[1]), 'ARRAY',
+is(ref($args[2]), 'ARRAY',
    "A list of repositories is passed to generate_repos");
-is($cmp->{GENERATE_REPOS}->{args}->[1]->[0]->{name}, $repos->[0]->{name},
+is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to generate_repos");
-like($cmp->{GENERATE_REPOS}->{args}->[2], qr{spma/.*repo.*tt$},
+like($args[3], qr{spma/.*repo.*tt$},
      "Correct repository template passed");
-ok(!$cmp->{GENERATE_REPOS}->{args}->[3], "No proxy passed to generate_repos");
-
-=pod
-
-=item * C<update_pkgs>
-
-=back
-
-=cut
-
-ok(exists($cmp->{UPDATE_PKGS}->{args}->[0]->{ConsoleKit}),
-   "A package list is passed to UPDATE_PKGS");
-ok($cmp->{UPDATE_PKGS}->{args}->[1], "Run argument is correctly");
-ok(!$cmp->{UPDATE_PKGS}->{args}->[2], "No user packages allowed in update_pkgs");
+ok(!$args[4], "No proxy passed to generate_repos");
 
 =pod
 
@@ -148,13 +143,15 @@ $cfg = get_config_for_profile("with_proxy");
 
 my $t = $cfg->getElement("/software/components/spma")->getTree();
 
+$mock->clear();
+
 is($cmp->Configure($cfg), 1, "Proxy settings don't affect the outcome");
-is($cmp->{GENERATE_REPOS}->{args}->[3], $t->{proxyhost},
-   "Correct proxy host passed to generate_repos");
-is($cmp->{GENERATE_REPOS}->{args}->[4], $t->{proxytype},
-   "Correct proxy type passed to generate_repos");
-is($cmp->{GENERATE_REPOS}->{args}->[5], $t->{proxyport},
-   "Correct proxy port passed to generate_repos");
+
+@args = $mock->call_args($GENERATE_REPOS);
+
+is($args[4], $t->{proxyhost}, "Correct proxy host passed to generate_repos");
+is($args[5], $t->{proxytype}, "Correct proxy type passed to generate_repos");
+is($args[6], $t->{proxyport}, "Correct proxy port passed to generate_repos");
 
 =pod
 
@@ -166,8 +163,11 @@ It must show up when calling C<update_pkgs>
 
 $cfg = get_config_for_profile("without_spma");
 
+$mock->clear();
+
 $cmp->Configure($cfg);
-ok(!$cmp->{UPDATE_PKGS}->{args}->[1], "No run is correctly passed to update_pkgs");
+@args = $mock->call_args($UPDATE_PKGS);
+ok(!$args[2], "No run is correctly passed to update_pkgs");
 
 =pod
 
@@ -179,13 +179,15 @@ They show up in C<cleanup_old_repos> and C<update_pkgs>
 
 $cfg = get_config_for_profile("with_pkgs");
 
+$mock->clear();
+
 $cmp->Configure($cfg);
 
-ok($cmp->{UPDATE_PKGS}->{args}->[1],
-   "User packages are passed correctly to update_pkgs");
-ok($cmp->{CLEANUP_OLD_REPOS}->{args}->[2],
-   "Userpackages are passed correctly to cleanup_old_repos");
-
+while (my ($n, $a) = $mock->next_call()) {
+    if ($n eq 'update_pkgs' || $n eq 'cleanup_old_repos') {
+	ok($a->[3], "User packages are passed correctly to $name");
+    }
+}
 
 =pod
 
@@ -201,12 +203,12 @@ We expect an error code to be returned.
 
 =cut
 
-$call_order = 0;
-$cmp->{UPDATE_PKGS}->{return} = 0;
+$mock->clear();
+$mock->set_false('update_pkgs');
+
+
 is($cmp->Configure($cfg), 0, "Failure in update_pkgs is propagated");
-is($cmp->{UPDATE_PKGS}->{called}, $call_order,
-   "update_pkgs is called during the first error test");
-$cmp->{UPDATE_PKGS}->{called} = 0;
+$mock->called_ok('update_pkgs', "update_pkgs is called");
 
 =pod
 
@@ -216,14 +218,14 @@ The error is propagated, and C<update_pkgs> is never called
 
 =cut
 
-foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
-    $cmp->{uc($f)}->{return} = 0;
-    is($cmp->Configure($cfg), 0, "Failure in $f is propagated");
-    is($cmp->{UPDATE_PKGS}->{called}, 0,
-       "update_pkgs is not called when a method $f fails");
-    $cmp->{uc($f)}->{return} = 1;
-}
 
+foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
+    $mock->clear();
+    $mock->set_false($f);
+    is($cmp->Configure($cfg), 0, "Failure in $f is propagated");
+    ok(!$mock->called('update_pkgs'));
+    $mock->set_true($f);
+}
 
 done_testing();
 
@@ -232,3 +234,5 @@ __END__
 =pod
 
 =back
+
+=cut
