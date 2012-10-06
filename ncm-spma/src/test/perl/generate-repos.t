@@ -17,8 +17,12 @@ use warnings;
 use Test::Quattor;
 use Test::More;
 use NCM::Component::spma;
+use Test::MockModule;
 use Readonly;
 use CAF::Object;
+use CAF::FileWriter;
+
+
 
 $CAF::Object::NoAction = 1;
 
@@ -31,13 +35,14 @@ my $repos = [ { name => "a_repo",
 	      }
 	    ];
 
-no warnings 'redefine';
-*CAF::FileWriter::cancel = sub {
+my $mock = Test::MockModule->new('CAF::FileWriter');
+
+$mock->mock('cancel', sub {
     my $self = shift;
     *$self->{CANCELED}++;
     *$self->{save} = 0;
-};
-use warnings 'redefine';
+});
+
 
 my $cmp = NCM::Component::spma->new("spma");
 
