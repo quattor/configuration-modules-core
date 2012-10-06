@@ -6,7 +6,9 @@ use Test::More;
 use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::FileWriter;
+use File::Path qw(mkpath);
 use Cwd qw(abs_path);
+use Carp qw(confess);
 
 eval {use Template};
 plan skip_all => "Template::Toolkit not found" if $@;
@@ -14,7 +16,6 @@ plan skip_all => "Template::Toolkit not found" if $@;
 use Readonly;
 
 Readonly my $TEMPLATE => "metaconfig/foo.tt";
-
 
 =pod
 
@@ -38,8 +39,14 @@ inputs.
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
-$cmp->template()->service()->context()->config()->{INCLUDE_PATH} =
-  abs_path($cmp->template()->service()->context()->config()->{INCLUDE_PATH});
+Readonly my $DIR => $cmp->template()->service()->context()->config()->{INCLUDE_PATH};
+
+mkpath($DIR);
+
+
+diag($cmp->template()->service()->context()->config()->{INCLUDE_PATH});
+
+$cmp->template()->service()->context()->config()->{INCLUDE_PATH} = abs_path($DIR);
 
 =pod
 
@@ -75,9 +82,8 @@ prevent cross-directory traversals.
 
 =cut
 
-my $dir = $cmp->template()->{SERVICE}->{CONTEXT}->{CONFIG}->{INCLUDE_PATH};
 
-my $fh = CAF::FileWriter->new("$dir/$TEMPLATE");
+my $fh = CAF::FileWriter->new("$DIR/$TEMPLATE");
 print $fh "Test content";
 $fh->close();
 
