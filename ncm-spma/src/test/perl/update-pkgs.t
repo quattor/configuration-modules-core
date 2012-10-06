@@ -38,7 +38,7 @@ use Readonly;
 use Test::Quattor;
 use Test::More;
 use NCM::Component::spma;
-
+use Test::MockModule;
 use File::Path qw(mkpath rmtree);
 use LC::File;
 
@@ -50,32 +50,30 @@ use Set::Scalar;
 #
 # All our backup methods will return 1 unless specified by the test
 # script.
-no warnings 'redefine';
-no strict 'refs';
+
+my $mock = Test::MockModule->new('NCM::Component::spma');
+
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
 		       packages_to_remove solve_transaction)) {
-    *{"NCM::Component::spma::$method"} = sub {
-	my $self = shift;
-	$self->{uc($method)}->{args} = \@_;
-	$self->{uc($method)}->{called}++;
-	return exists($self->{uc($method)}->{return}) ?
-	  $self->{uc($method)}->{return} : 1;
-    };
+    $mock->mock($method,  sub {
+		    my $self = shift;
+		    $self->{uc($method)}->{args} = \@_;
+		    $self->{uc($method)}->{called}++;
+		    return exists($self->{uc($method)}->{return}) ?
+		      $self->{uc($method)}->{return} : 1;
+		});
 }
 
-sub NCM::Component::spma::schedule {
-    my ($self, $op, $args) = @_;
-    $self->{SCHEDULE}->{$op}->{args} = $args;
-    $self->{SCHEDULE}->{$op}->{called}++;
-    if (exists($self->{SCHEDULE}->{$op}->{return})) {
-	return $self->{SCHEDULE}->{$op}->{return};
-    }
-    return "$op\n";
-}
-
-use warnings 'redefine';
-use strict 'refs';
+$mock->mock('schedule', sub {
+		my ($self, $op, $args) = @_;
+		$self->{SCHEDULE}->{$op}->{args} = $args;
+		$self->{SCHEDULE}->{$op}->{called}++;
+		if (exists($self->{SCHEDULE}->{$op}->{return})) {
+		    return $self->{SCHEDULE}->{$op}->{return};
+		}
+		return "$op\n";
+	    });
 
 my $cmp = NCM::Component::spma->new("spma");
 
