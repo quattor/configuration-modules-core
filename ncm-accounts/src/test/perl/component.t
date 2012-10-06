@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use Test::Quattor qw(users/consistent);
 use NCM::Component::accounts;
+use Test::MockModule;
 use CAF::Object;
 
 
@@ -21,21 +22,17 @@ What we want to test is:
 
 =cut
 
-no strict 'refs';
-no warnings 'redefine';
+my $mock = Test::MockModule->new("NCM::Component::accounts");
 
 foreach my $i (qw(compute_desired_accounts compute_root_user
 		  adjust_groups adjust_accounts is_consistent commit_configuration
 		  build_system_map)) {
-    *{"NCM::Component::accounts::$i"} = sub {
-	my $self = shift;
-	$self->{called}->{$i} = 1;
-	return $self->{returns}->{$i};
-    };
+    $mock->mock($i, sub {
+		    my $self = shift;
+		    $self->{called}->{$i} = 1;
+		    return $self->{returns}->{$i};
+		});
 }
-
-use strict 'refs';
-use warnings 'redefine';
 
 my $cmp = NCM::Component::accounts->new('accounts');
 
