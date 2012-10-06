@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::accounts;
+use Test::MockModule;
 use CAF::Object;
 require Test::NoWarnings;
 
@@ -127,12 +128,12 @@ is(*$fh->{options}->{mode}, 0400, "Only root may read /etc/shadow");
 # Disable home dir creation. We don't need it in this test
 # series. Instead, we just record which home dirs would have been
 # created.
-no warnings 'redefine';
-*NCM::Component::accounts::create_home = sub{
-    my ($self, $acc) = @_;
-    push(@{$self->{created_homes}}, $acc);
-};
-use warnings 'redefine';
+my $mock = Test::MockModule->new('NCM::Component::accounts');
+
+$mock->mock("create_home",  sub{
+		my ($self, $acc) = @_;
+		push(@{$self->{created_homes}}, $acc);
+	    });
 
 $sys->{passwd}->{foo}->{createHome} = 1;
 $sys->{passwd}->{root}->{createHome} = 1;
