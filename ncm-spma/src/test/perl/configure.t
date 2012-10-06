@@ -26,6 +26,7 @@ use Readonly;
 use Test::More;
 use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
 use NCM::Component::spma;
+use Test::MockModule;
 use CAF::Object;
 use Set::Scalar;
 use Class::Inspector;
@@ -33,22 +34,19 @@ use Class::Inspector;
 my @funcs = grep(m{^[a-z]} && $_ ne 'unescape',
 		 @{Class::Inspector->functions("NCM::Component::spma")});
 
-no warnings 'redefine';
-no strict 'refs';
+my $mock = Test::MockModule->new("NCM::Component::spma");
 
 my $call_order = 0;
 
-foreach my $f (@funcs) {
-    *{"NCM::Component::spma::$f"} = sub {
-	my ($self, @args) = @_;
-	$self->{uc($f)}->{called} = ++$call_order;
-	$self->{uc($f)}->{args} = \@args;
-	return $self->{uc($f)}->{return} // 1;
-    };
-};
 
-use warnings 'redefine';
-use strict 'refs';
+foreach my $f (@funcs) {
+    $mock->mock($f, sub {
+		    my ($self, @args) = @_;
+		    $self->{uc($f)}->{called} = ++$call_order;
+		    $self->{uc($f)}->{args} = \@args;
+		    return $self->{uc($f)}->{return} // 1;
+		});
+};
 
 $CAF::Object::NoAction = 1;
 
