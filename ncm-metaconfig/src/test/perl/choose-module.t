@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::metaconfig;
+use Test::MockModule;
 use CAF::Object;
 
 
@@ -21,15 +22,13 @@ Test how invalid/impossible Perl modules are handled.
 
 =cut
 
-no warnings 'redefine';
+my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
-*NCM::Component::metaconfig::tt = sub {
-    my ($self, @args) = @_;
-    $self->{tt}++;
-    return 1;
-};
-
-use warnings 'redefine';
+$mock->mock('tt', sub {
+		my ($self, @args) = @_;
+		$self->{tt}++;
+		return 1;
+	    });
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
