@@ -149,9 +149,9 @@ is($cmp->Configure($cfg), 1, "Proxy settings don't affect the outcome");
 
 @args = $mock->call_args($GENERATE_REPOS);
 
-is($args[4], $t->{proxyhost}, "Correct proxy host passed to generate_repos");
-is($args[5], $t->{proxytype}, "Correct proxy type passed to generate_repos");
-is($args[6], $t->{proxyport}, "Correct proxy port passed to generate_repos");
+is($args[-3], $t->{proxyhost}, "Correct proxy host passed to generate_repos");
+is($args[-2], $t->{proxytype}, "Correct proxy type passed to generate_repos");
+is($args[-1], $t->{proxyport}, "Correct proxy port passed to generate_repos");
 
 =pod
 
