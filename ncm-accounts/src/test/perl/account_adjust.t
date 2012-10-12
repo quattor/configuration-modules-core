@@ -6,6 +6,7 @@ use Test::More;
 use Test::Quattor qw(users/nokept users/tochange users/adjust_accounts);
 use NCM::Component::accounts;
 use CAF::Reporter;
+use English;
 
 sub users_in
 {
@@ -195,7 +196,8 @@ from LDAP
 =cut
 
 $sys = $cmp->build_system_map();
-$t->{users}->{nopool}->{groups} = ['wheel'];
+$g = getgrgid($GID);
+$t->{users}->{nopool}->{groups} = [$g];
 $cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
 ok(exists($sys->{passwd}->{nopool}),
    "Account with a valid group out of /etc/group is added");
