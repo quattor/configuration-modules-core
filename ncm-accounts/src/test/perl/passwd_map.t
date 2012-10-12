@@ -58,7 +58,7 @@ foreach my $i (qw(root bin daemon)) {
 }
 is(scalar(keys(%$g)), 3, "Exact groups mapped");
 
-is(scalar(keys($g->{root}->{members})), 0,
+is(scalar(keys(%{$g->{root}->{members}})), 0,
    "root group didn't receive any members");
 foreach my $i (qw(bin daemon)) {
     is(scalar(keys(%{$g->{$i}->{members}})), 2,
