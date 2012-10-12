@@ -61,7 +61,7 @@ is(scalar(keys(%$g)), 3, "Exact groups mapped");
 is(scalar(keys($g->{root}->{members})), 0,
    "root group didn't receive any members");
 foreach my $i (qw(bin daemon)) {
-    is(scalar(keys($g->{$i}->{members})), 2,
+    is(scalar(keys(%{$g->{$i}->{members}})), 2,
        "Group $i received the correct amount of members");
     foreach my $j (qw(bin daemon)) {
 	ok(exists($g->{$i}->{members}->{$j}), "Group $i received member $j");
