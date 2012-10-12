@@ -28,7 +28,7 @@ my $rs = $cmp->handle_databases({ldap => $ldap });
 
 ok($rs, "Successfully handled the LDAP config file");
 
-while (my ($db, $cfg) = each($ldap)) {
+while (my ($db, $cfg) = each(%$ldap)) {
     my $fh = get_file("/etc/postfix/$db");
     ok(defined($fh), "Database $db correctly created");
     while (my ($k, $v) = each(%$cfg)) {
