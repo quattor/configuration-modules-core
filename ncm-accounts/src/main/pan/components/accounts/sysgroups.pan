@@ -39,6 +39,8 @@ unique template components/accounts/sysgroups;
     'dip' ,'',
     'gdm' ,'',
     'xfs' ,'',
+    'nginx', '',
+    'tcpdump', '',
     'mailnull' ,'',
     'ftp' ,'',
     'lock' ,'',

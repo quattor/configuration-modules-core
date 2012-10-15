@@ -22,6 +22,8 @@ unique template components/accounts/sysusers;
     'mail' ,'',
     'news' ,'',
     'uucp' ,'',
+    'nginx', '',
+    'tcpdump', '',
     'operator' ,'',
     'games' ,'',
     'gopher' ,'',
