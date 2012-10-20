@@ -104,7 +104,7 @@ ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
    "Transaction application receives installation but not removal as argument");
 is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
-is($cmp->{VERSIONLOCK}->{args}->[0], $cmp->{WANTED_PKGS}->{return},
+is($cmp->{VERSIONLOCK}->{args}->[0], "pkgs",
    "Locked package versions with correct arguments");
 
 =pod

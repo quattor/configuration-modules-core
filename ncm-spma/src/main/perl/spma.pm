@@ -31,6 +31,7 @@ use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
+use constant YUM_EXPIRE => qw(yum clean expire-cache);
 
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
@@ -192,19 +193,34 @@ sub solve_transaction {
     return join("\n", @rs, "");
 }
 
+# Expires Yum caches before modifying the system.  Failure to do so
+# would lead to recent packages not being seen or installed during the
+# execution.  In the worst case, the package is an upgrade to an
+# existing one, and either the old version is left around, or even
+# worse, the old version is removed and the new version is not
+# installed at all.
+sub expire_yum_caches
+{
+    my ($self) = @_;
+
+    CAF::Process->new([YUM_EXPIRE], log => $self, stdout => \my $out,
+		      stderr => \my $err)->execute();
+    $self->verbose("Cleanup output: $out");
+    if ($?) {
+	$self->error ("Unable to clean up Yum caches: error: $err");
+	return 0;
+    }
+    return 1;
+}
+
 # Actually calls yum to execute transaction $tx
 sub apply_transaction
 {
 
     my ($self, $tx) = @_;
 
-    # Expire Yum caches to ensure that too recent packages that may be
-    # listed in the profile get installed.
-    $tx = "clean expire-cache\n" . $tx;
-
+    $self->expire_yum_caches() or return 0;
     $self->debug(5, "Running transaction: $tx");
-
-
     my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => \my $err,
 				keeps_state => 1);
@@ -295,7 +311,7 @@ sub update_pkgs
 
     $tx .= $self->schedule(INSTALL, $wanted-$installed);
 
-    $self->versionlock($wanted);
+    $self->versionlock($pkgs);
 
     # Call Yum only if there is something to do.
     if ($tx) {
