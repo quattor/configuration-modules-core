@@ -128,7 +128,11 @@ sub schedule
 {
     my ($self, $op, $target) = @_;
 
-    return @$target ? sprintf("%s %s\n", $op, join(" ", @$target)) : "";
+    if (@$target) {
+	map(s{;}{.}, @$target);
+	return  sprintf("%s %s\n", $op, join(" ", @$target));
+    }
+    return "";
 }
 
 # Returns a set of all installed packages
@@ -159,7 +163,7 @@ sub wanted_pkgs
 
     while (my ($pkg, $st) = each(%$pkgs)) {
 	my $name = unescape($pkg);
-	if ($st) {
+	if (%$st) {
 	    while (my ($ver, $archs) = each(%$st)) {
 		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
 	    }
@@ -221,13 +225,11 @@ sub versionlock
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
-	if ($ver) {
-	    my $name = unescape($pkg);
-	    while (my ($v, $a) = each(%$ver)) {
-		my $version = unescape($v);
-		foreach my $arch (keys(%{$a->{arch}})) {
-		    print $fh "$name-$version.$arch\n";
-		}
+	my $name = unescape($pkg);
+	while (my ($v, $a) = each(%$ver)) {
+	    my $version = unescape($v);
+	    foreach my $arch (keys(%{$a->{arch}})) {
+		print $fh "$name-$version.$arch\n";
 	    }
 	}
     }
@@ -254,15 +256,16 @@ sub packages_to_remove
     # garbage.
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
 
-    my $remove = $leaves-$wanted;
-    foreach my $pkg ($remove) {
+    my $candidates = $leaves-$wanted;
+    my $false_positives = Set::Scalar->new();
+    foreach my $pkg (@$candidates) {
 	my $name = (split(/;/, $pkg))[0];
 	if ($wanted->has($name)) {
-	    $remove->del($pkg);
+	    $false_positives->insert($pkg);
 	}
     }
 
-    return $remove;
+    return $candidates-$false_positives;
 }
 
 # Updates the packages on the system.
@@ -273,7 +276,6 @@ sub update_pkgs
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
     my $wanted = $self->wanted_pkgs($pkgs);
-    defined($wanted) or return 0;
 
     if ($installed == $wanted) {
 	$self->verbose("Nothing to install or remove");

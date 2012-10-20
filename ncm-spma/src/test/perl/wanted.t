@@ -61,13 +61,14 @@ my $wanted = {
 								 }
 						       }
 				},
+	      "kde" => {}
 	     };
 
 my $pkgs = $cmp->wanted_pkgs($wanted);
 isa_ok($pkgs, "Set::Scalar", "Received a set, with no errors");
 
 foreach my $pkg (@$pkgs) {
-    like($pkg, qr!^.*;\w+$!,
+    like($pkg, qr!^.*(;\w+)?$!,
 	 "Package $pkg has the correct format string");
     unlike($pkg, qr{-_}, "All fields are correctly unescaped");
 }

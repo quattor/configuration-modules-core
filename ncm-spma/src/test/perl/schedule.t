@@ -24,12 +24,13 @@ use Test::Quattor;
 
 my $cmp = NCM::Component::spma->new("spma");
 
-my @pkgs = qw(foo-1.2.3 bar-4.5.6);
+my @pkgs = qw(foo;a bar;b c);
 
 my $txt = $cmp->schedule("install", \@pkgs);
 like($txt, qr"^install", "Operation is printed");
-like($txt, qr{foo-1.2.3}, "Package foo is printed");
-like($txt, qr{bar-4.5.6}, "Package bar is printed");
+like($txt, qr{\s*foo\.a\s*}, "Package foo is printed correctly");
+like($txt, qr{\s*bar\.b\s*}, "Package bar is printed");
+like($txt, qr{\s*c\s*}, "Package c with no arch is printed");
 is(substr($txt, -1, 1), "\n", "String ends in newline");
 $txt = $cmp->schedule("remove", \@pkgs);
 like($txt, qr{^remove}, "Remove operation is printed");

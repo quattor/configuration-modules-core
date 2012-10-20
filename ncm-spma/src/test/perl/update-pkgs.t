@@ -139,9 +139,12 @@ foreach my $f (qw(apply_transaction solve_transaction schedule
     $cmp->{uc($f)}->{args} = [];
 }
 
+$cmp->{SCHEDULE}->{install}->{called} = $cmp->{SCHEDULE}->{remove}->{called} = 0;
+
 $cmp->{WANTED_PKGS}->{return} = $cmp->{INSTALLED_PKGS}->{return};
 is($cmp->update_pkgs("pkgs", "run"), 1, "No-op invocation succeeds");
-is($cmp->{SCHEDULE}->{called}, 0, "No scheduling needed for no-op invocation");
+is($cmp->{SCHEDULE}->{install}->{called}, 0,
+   "No scheduling needed for no-op invocation");
 
 $cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(x y z));
 

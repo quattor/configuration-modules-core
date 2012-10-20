@@ -44,9 +44,9 @@ Readonly my $LEAVES => join(" ", @{NCM::Component::spma::LEAF_PACKAGES()});
 
 my $cmp = NCM::Component::spma->new("spma");
 
-my $wanted = Set::Scalar->new(qw(a b c));
+my $wanted = Set::Scalar->new(qw(a;noarch b c));
 
-set_desired_output($LEAVES, "yum plugins\na\n");
+set_desired_output($LEAVES, "yum plugins\na;noarch\n");
 
 my $s = $cmp->packages_to_remove($wanted);
 ok(defined($s), "Packages to remove succeeds");
@@ -61,13 +61,23 @@ There are leaf packages out of the profile.
 
 =cut
 
-set_desired_output($LEAVES, "yum plugins\nd\n");
+set_desired_output($LEAVES, "yum plugins\nd;noarch\n");
 
 $s = $cmp->packages_to_remove($wanted);
 ok($s, "Packages to remove succeeds and is not empty");
 
-is($s, Set::Scalar->new("d"), "Correct set will be removed");
+is($s, Set::Scalar->new("d;noarch"), "Correct set will be removed");
 
+set_desired_output($LEAVES, "yum plugins\nb;i686\n");
+
+$s = $cmp->packages_to_remove($wanted);
+isa_ok($s, "Set::Scalar::Null", "Package wanted by name is not removed");
+
+set_desired_output($LEAVES, "yum plugins\na;x86_64\n");
+$s = $cmp->packages_to_remove($wanted);
+
+is($s, Set::Scalar->new("a;x86_64"),
+   "Package installed with wrong architecture will be removed");
 
 =pod
 
