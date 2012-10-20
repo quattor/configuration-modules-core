@@ -67,12 +67,12 @@ my $pkgs = $cmp->wanted_pkgs($wanted);
 isa_ok($pkgs, "Set::Scalar", "Received a set, with no errors");
 
 foreach my $pkg (@$pkgs) {
-    like($pkg, qr!^(?:(?:\S+(?:-[^-\s]+){2}\.\w+)|(?:gpg-pubkey-\w+-\w+\.\(none\)))$!,
+    like($pkg, qr!^.*;\w+$!,
 	 "Package $pkg has the correct format string");
     unlike($pkg, qr{-_}, "All fields are correctly unescaped");
 }
 
-is(scalar(grep(m{^glibc-}, @$pkgs)), 2,
+is(scalar(grep(m{^glibc}, @$pkgs)), 2,
    "Multiple architectures for the same package are correctly handled");
 
 done_testing();

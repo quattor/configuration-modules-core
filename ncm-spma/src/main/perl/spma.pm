@@ -26,11 +26,11 @@ use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
 use constant YUM_CMD => qw(yum -y shell);
-use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n)];
+use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
-use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all)];
+use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
 
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
@@ -158,10 +158,13 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	while (my ($ver, $arch) = each(%$st)) {
-	    foreach my $i (keys(%{$arch->{arch}})) {
-		push(@pkl, sprintf("%s-%s.%s", unescape($pkg), unescape($ver), $i));
+	my $name = unescape($pkg);
+	if ($st) {
+	    while (my ($ver, $archs) = each(%$st)) {
+		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
 	    }
+	} else {
+	    push(@pkl, $name);
 	}
     }
     return Set::Scalar->new(@pkl);
@@ -173,13 +176,13 @@ sub wanted_pkgs
 sub solve_transaction {
     my ($self, $run) = @_;
 
-    my $rs = "transaction solve\n";
+    my @rs = "transaction solve";
     if ($run && !$NoAction) {
-	$rs .= "transaction run\n";
+	@rs = ("distro-sync", @rs, "transaction run");
     } else {
-	$rs .= "transaction reset\n";
+	push(@rs, "transaction reset");
     }
-    return $rs;
+    return join("\n", @rs, "");
 }
 
 # Actually calls yum to execute transaction $tx
@@ -210,18 +213,32 @@ sub apply_transaction
     return 1;
 }
 
-# Lock the versions of all packages, for the versionlock Yum plugin.
+# Lock the versions of any packages that have them
 sub versionlock
 {
-    my ($self, $wanted) = @_;
+    my ($self, $pkgs) = @_;
 
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
-    print $fh join("\n", @$wanted, "");
+
+    while (my ($pkg, $ver) = each(%$pkgs)) {
+	if ($ver) {
+	    my $name = unescape($pkg);
+	    while (my ($v, $a) = each(%$ver)) {
+		my $version = unescape($v);
+		foreach my $arch (keys(%{$a->{arch}})) {
+		    print $fh "$name-$version.$arch\n";
+		}
+	    }
+	}
+    }
+
     $fh->close();
 }
 
 # Returns the set of packages to remove. A package must be removed if
-# it is a leaf package and is not listed in $wanted.
+# it is a leaf package and is not listed in $wanted, or if its
+# architecture doesn't match the architectures specified in $wanted
+# for that package.
 sub packages_to_remove
 {
     my ($self, $wanted) = @_;
@@ -236,7 +253,16 @@ sub packages_to_remove
     # The leave set doesn't contain the header lines, which are just
     # garbage.
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
-    return $leaves-$wanted;
+
+    my $remove = $leaves-$wanted;
+    foreach my $pkg ($remove) {
+	my $name = (split(/;/, $pkg))[0];
+	if ($wanted->has($name)) {
+	    $remove->del($pkg);
+	}
+    }
+
+    return $remove;
 }
 
 # Updates the packages on the system.

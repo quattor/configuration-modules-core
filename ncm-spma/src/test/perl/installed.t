@@ -34,7 +34,7 @@ use Readonly;
 
 $CAF::Object::NoAction = 1;
 
-Readonly my $CMD => q(rpm -qa --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n);
+Readonly my $CMD => q(rpm -qa --qf %{NAME};%{ARCH}\n);
 
 plan skip_all => "No RPM database to play with" if ! -x "/bin/rpm";
 
@@ -46,13 +46,13 @@ set_desired_output($CMD, "");
 my $pkgs = $cmp->installed_pkgs();
 isa_ok($pkgs, "Set::Scalar", "Received an empty set, with no errors");
 
-set_desired_output($CMD, q{glibc-2.5.16-1.x86_64
-kernel-3.0.2-34.x86_64
+set_desired_output($CMD, q{glibc;x86_64
+kernel;x86_64
 });
 
 $pkgs = $cmp->installed_pkgs();
 is(scalar(@$pkgs), 2, "Set contains two packages");
-ok($pkgs->has(q{kernel-3.0.2-34.x86_64}), "Set contains the expected list of packages");
+ok($pkgs->has(q{kernel;x86_64}), "Set contains the expected list of packages");
 
 
 set_command_status($CMD, 1);
