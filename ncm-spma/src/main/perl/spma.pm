@@ -128,11 +128,14 @@ sub schedule
 {
     my ($self, $op, $target) = @_;
 
-    if (@$target) {
-	map(s{;}{.}, @$target);
-	return  sprintf("%s %s\n", $op, join(" ", @$target));
+    return "" if !@$target;
+
+    my @ls;
+    foreach my $pkg (@$target) {
+	push(@ls, $pkg);
+	$ls[-1] =~ s{;}{.};
     }
-    return "";
+    return  sprintf("%s %s\n", $op, join(" ", @ls));
 }
 
 # Returns a set of all installed packages
