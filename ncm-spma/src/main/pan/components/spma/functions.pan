@@ -33,50 +33,7 @@ function repository_exists = {
 ########################################################
 
 function resolve_pkg_rep = {
-    error=0;
-    errorstr="";
-    rep_list = ARGV[0];
-    debug("Assigning repositories to packages...");
-
-    foreach (name;pkg_list_name;SELF) {
-        foreach (version;pkg_list_name_version;pkg_list_name) {
-            if (exists(pkg_list_name_version['repository'])) {
-                rep_mask = pkg_list_name_version['repository'];
-                pkg_list_name_version['repository'] = undef;
-            } else {
-                rep_mask = '';
-            };
-            foreach (arch;i;pkg_list_name_version['arch']) {
-                rep_mask = i;
-
-                debug ("Processing package " + unescape(name) + " version " + unescape(version) + " arch " + arch);
-                id = escape(unescape(name) + "-" + unescape(version) + "-" + arch);
-
-                rep_found = false;
-                in_list = first(rep_list,t,curr_rep);
-                while ( in_list && ! rep_found) {
-                    if(match(curr_rep["name"],rep_mask) && exists(curr_rep["contents"][id])) {
-                        debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
-                        rep_found = true;
-                        SELF[name][version]['arch'][arch] = curr_rep['name'];
-                    } else {
-                        in_list = next(rep_list,t,curr_rep);
-                    };
-                };
-              
-                if( ! rep_found ) {
-                    errorstr = errorstr+"\n  name: "+unescape(name)+" version: "+unescape(version)+" arch: "+arch+"";
-                    error=error+1;
-                };
-            };
-        };
-    };
-
-    if (error == 0) {
-        SELF;
-    } else {
-        error ("cannot find any repository holding the following package(s): "+errorstr+"\n");
-    };
+    return (SELF);
 };
 
 ########################################################

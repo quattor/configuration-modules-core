@@ -17,7 +17,7 @@ include { 'components/spma/functions' };
 type SOFTWARE_PACKAGE_REP = string with repository_exists(SELF,"/software/repositories");
 
 type SOFTWARE_PACKAGE = {
-    "arch" : SOFTWARE_PACKAGE_REP{} # architectures
+    "arch" ? SOFTWARE_PACKAGE_REP{} # architectures
 };
 
 type SOFTWARE_REPOSITORY_PACKAGE = {
