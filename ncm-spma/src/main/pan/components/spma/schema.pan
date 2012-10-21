@@ -14,19 +14,10 @@ include { 'components/spma/functions' };
 #
 ############################################################
 
-type SOFTWARE_PACKAGE_FLAGS = {
-    "reboot" ? boolean # "Needs reboot after install ?"
-    "offprod" ? boolean # "Don't install if node in production ?"
-    "mandatory" ? boolean # "Mandatory package ?"
-    "unwanted" ? boolean # "Unwanted package ?"
-};
-
 type SOFTWARE_PACKAGE_REP = string with repository_exists(SELF,"/software/repositories");
 
 type SOFTWARE_PACKAGE = {
     "arch" : SOFTWARE_PACKAGE_REP{} # architectures
-    "components" ? string[] # "Depending components"
-    "flags" ?  SOFTWARE_PACKAGE_FLAGS
 };
 
 type SOFTWARE_REPOSITORY_PACKAGE = {
