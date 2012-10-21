@@ -9,8 +9,4 @@
 
 template  components/spma/repository_cleanup;
 
-
-"/software/packages" = resolve_pkg_rep(value("/software/repositories"));
 "/software/repositories" = purge_rep_list(value("/software/packages"));
-
-
