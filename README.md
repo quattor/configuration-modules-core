@@ -3,6 +3,8 @@ NCM Components
 
 # NCM Components #
 
+[![Build Status](http://jenkins1.ugent.be/job/NCM_components/badge/icon)](http://jenkins1.ugent.be/job/NCM_components/)
+
 ## Description ##
 
 Node Configuration Manager's components are Perl modules that
@@ -25,4 +27,3 @@ NCM components:
 ## TODO ##
 
 We need a link with the full documentation!
-
