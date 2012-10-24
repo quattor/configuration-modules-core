@@ -3,7 +3,7 @@ NCM Components
 
 # NCM Components #
 
-[![Build Status](http://jenkins1.ugent.be/job/NCM_components/badge/icon)](http://jenkins1.ugent.be/job/NCM_components/)
+[![Build Status](https://jenkins1.ugent.be/job/NCM_components/badge/icon)](https://jenkins1.ugent.be/job/NCM_components/)
 
 ## Description ##
 
