@@ -627,7 +627,11 @@ sub Configure
 
     my $system = $self->build_system_map();
 
-    $t->{users} = $self->compute_desired_accounts($t->{users});
+    if ($t->{users}) {
+	$t->{users} = $self->compute_desired_accounts($t->{users});
+    } else {
+	$t->{users} = {};
+    }
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
