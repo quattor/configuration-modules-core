@@ -12,7 +12,7 @@ include { 'components/accounts/functions' };
 
 '/software/components/accounts/dependencies/pre' ?= list('spma');
 
-'/software/components/accounts/version' = '${project.version}';
+'/software/components/accounts/version' = '${no-snapshot-version}';
 
 # Include system users and groups which shouldn't be removed
 # by default.  The machine configuration can still modify or
