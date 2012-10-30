@@ -148,9 +148,9 @@ sub build_passwd_map
 	my $h = { name => $flds[NAME] };
 	$h->{uid} = $flds[ID];
 	$h->{main_group} = $flds[IDLIST];
-	$h->{homeDir} = $flds[HOME];
-	$h->{shell} = $flds[SHELL];
-	$h->{comment} = $flds[GCOS];
+	$h->{homeDir} = $flds[HOME] || "";
+	$h->{shell} = $flds[SHELL] || "";
+	$h->{comment} = $flds[GCOS] || "";
 	$h->{ln} = ++$ln;
 	$rt{$h->{name}} = $h;
     }
