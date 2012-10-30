@@ -37,7 +37,7 @@ tcpdump:x:72:72::/:/sbin/nologin
 nagios:x:498:497::/var/spool/nagios:/sbin/nologin
 rpc:x:32:32:Rpcbind Daemon:/var/cache/rpcbind:/sbin/nologin
 tss:x:59:59:Account used by the trousers package to sandbox the tcsd::
-daemon:/dev/null:/sbin/nologin
+daemon:x:2:2:/dev/null:/sbin/nologin
 abrt:x:173:173::/etc/abrt:/sbin/nologin
 lemon:x:497:496:lemon user:/var/empty/lemon:/sbin/nologin
 nrpe:x:496:495:NRPE user for the NRPE service:/:/sbin/nologin
