@@ -370,7 +370,8 @@ sub compute_root_user
 	      password => ($tree->{rootpwd}
 			  || $system->{passwd}->{root}->{password}
 			  || '!'),
-	      shell => $tree->{rootshell},
+	      shell => $tree->{rootshell} ||
+		  $system->{passwd}->{root}->{shell},
 	      homeDir => "/root",
 	      main_group => 0,
 	      comment => "root",

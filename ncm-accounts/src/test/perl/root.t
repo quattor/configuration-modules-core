@@ -55,7 +55,8 @@ for my $i (0..scalar(@{$sys->{passwd}->{root}->{groups}})) {
 }
 
 is($root->{password}, "!", "Root account with no passwords is blocked");
-is($root->{shell}, undef, "Root shell is not inherited from system");
+is($root->{shell}, $sys->{passwd}->{root}->{shell},
+   "Root shell is not inherited from system");
 is($root->{ln}, 42, "Root will be written in the same old line in the file");
 
 =pod
