@@ -72,9 +72,11 @@ sub Configure
 			$self->debug(1,"Processing $component $option_set");
 			my $ssh_component_config = $ssh_config->{$component}->{$option_set};
 			while (my ($option, $val) = each(%$ssh_component_config)) {
-			    my $comment = '';
+			    my $comment;
 			    if ( $option_set eq 'comment_options' ) {
 				$comment = '#';
+			    } else {
+				$comment = '';
 			    }
 
 			    my $escaped_val = $val;
