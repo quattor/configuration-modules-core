@@ -46,7 +46,7 @@ sub Configure {
   # and the options that must be commented out.
   #
 
-  for my $component ('daemon', 'client') {
+  foreach my $component (qw(daemon client)) {
     my $component_name;
     my $ssh_config_file;
     if ( $component eq 'daemon' ) {
@@ -65,11 +65,11 @@ sub Configure {
         my $cnt = 0;
   
         # Options defined take precedence over commented out
-        for my $option_set ('comment_options', 'options') {
+        foreach my $option_set (qw(comment_options options)) {
           if ( $ssh_config->{$component}->{$option_set} ) {
             $self->debug(1,"Processing $component $option_set");
             my $ssh_component_config = $ssh_config->{$component}->{$option_set};
-            for my $option (keys(%{$ssh_component_config})) {
+            foreach my $option (keys(%{$ssh_component_config})) {
               my $val = $ssh_component_config->{$option};
               unless ( defined($val) ) { 
                 $self->error("no value found for option $option");
