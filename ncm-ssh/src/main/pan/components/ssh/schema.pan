@@ -7,33 +7,35 @@ declaration template components/ssh/schema;
 
 include { 'quattor/schema' };
 
+type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
+
 type ssh_core_options_type = {
-    "AddressFamily"                     ? string with match (SELF, 'any|inet|inet6')
-    "ChallengeResponseAuthentication"   ? string with match (SELF, 'yes|no')
+    "AddressFamily"                     ? string with match (SELF, '^(any|inet|inet6)$')
+    "ChallengeResponseAuthentication"   ? ssh_yesnostring
     "Ciphers"                           ? string
-    "Compression"                       ? string with match (SELF, 'yes|delayed|no')
-    "GSSAPIAuthentication"              ? string with match (SELF, 'yes|no')
-    "GSSAPICleanupCredentials"          ? string with match (SELF, 'yes|no')
-    "GatewayPorts"                      ? string with match (SELF, 'yes|no')
-    "HostbasedAuthentication"           ? string with match (SELF, 'yes|no')
-    "LogLevel"                          ? string with match (SELF, 'DEBUG|INFO|NOTICE|WARNING|ERR|CRIT|ALERT|EMERG')
+    "Compression"                       ? string with match (SELF, '^(yes|delayed|no)$')
+    "GSSAPIAuthentication"              ? ssh_yesnostring
+    "GSSAPICleanupCredentials"          ? ssh_yesnostring
+    "GatewayPorts"                      ? ssh_yesnostring
+    "HostbasedAuthentication"           ? ssh_yesnostring
+    "LogLevel"                          ? string with match (SELF, '^(DEBUG|INFO|NOTICE|WARNING|ERR|CRIT|ALERT|EMERG)$')
     "MACs"                              ? string
-    "PasswordAuthentication"            ? string with match (SELF, 'yes|no')
+    "PasswordAuthentication"            ? ssh_yesnostring
     "Protocol"                          ? string
-    "PubkeyAuthentication"              ? string with match (SELF, 'yes|no')
-    "RSAAuthentication"                 ? string with match (SELF, 'yes|no')
-    "RhostsRSAAuthentication"           ? string with match (SELF, 'yes|no')
-    "SendEnv"                           ? string with match (SELF, 'yes|no')
-    "TCPKeepAlive"                      ? string with match (SELF, 'yes|no')
+    "PubkeyAuthentication"              ? ssh_yesnostring
+    "RSAAuthentication"                 ? ssh_yesnostring
+    "RhostsRSAAuthentication"           ? ssh_yesnostring
+    "SendEnv"                           ? ssh_yesnostring
+    "TCPKeepAlive"                      ? ssh_yesnostring
     "XAuthLocation"                     ? string
 };
 
 type ssh_daemon_options_type = {
     include ssh_core_options_type
-    "AFSTokenPassing"                   ? string with match (SELF, 'yes|no')
-    "AcceptEnv"                         ? string with match (SELF, 'yes|no')
+    "AFSTokenPassing"                   ? ssh_yesnostring
+    "AcceptEnv"                         ? ssh_yesnostring
     "AllowGroups"                       ? string
-    "AllowTcpForwarding"                ? string with match (SELF, 'yes|no')
+    "AllowTcpForwarding"                ? ssh_yesnostring
     "AllowUsers"                        ? string
     "AuthorizedKeysFile"                ? string
     "Banner"                            ? string
@@ -42,57 +44,57 @@ type ssh_daemon_options_type = {
     "DenyGroups"                        ? string
     "DenyUsers"                         ? string
     "HostKey"                           ? string
-    "HPNDisabled"                       ? string with match (SELF, 'yes|no')
+    "HPNDisabled"                       ? ssh_yesnostring
     "HPNBufferSize"                     ? long
-    "IgnoreRhosts"                      ? string with match (SELF, 'yes|no')
-    "IgnoreUserKnownHosts"              ? string with match (SELF, 'yes|no')
-    "KerberosAuthentication"            ? string with match (SELF, 'yes|no')
-    "KerberosGetAFSToken"               ? string with match (SELF, 'yes|no')
-    "KerberosOrLocalPasswd"             ? string with match (SELF, 'yes|no')
-    "KerberosTgtPassing"                ? string with match (SELF, 'yes|no')
-    "KerberosTicketCleanup"             ? string with match (SELF, 'yes|no')
+    "IgnoreRhosts"                      ? ssh_yesnostring
+    "IgnoreUserKnownHosts"              ? ssh_yesnostring
+    "KerberosAuthentication"            ? ssh_yesnostring
+    "KerberosGetAFSToken"               ? ssh_yesnostring
+    "KerberosOrLocalPasswd"             ? ssh_yesnostring
+    "KerberosTgtPassing"                ? ssh_yesnostring
+    "KerberosTicketCleanup"             ? ssh_yesnostring
     "KeyRegenerationInterval"           ? long
     "ListenAddress"                     ? string
     "LoginGraceTime"                    ? long
     "MaxAuthTries"                      ? long
     "MaxStartups"                       ? long
-    "NoneEnabled"                       ? string with match (SELF, 'yes|no')
-    "PermitEmptyPasswords"              ? string with match (SELF, 'yes|no')
-    "PermitRootLogin"                   ? string with match (SELF, 'yes|without-password|forced-commands-only|no')
-    "PermitTunnel"                      ? string with match (SELF, 'yes|point-to-point|ethernet|no')
-    "PermitUserEnvironment"             ? string with match (SELF, 'yes|no')
+    "NoneEnabled"                       ? ssh_yesnostring
+    "PermitEmptyPasswords"              ? ssh_yesnostring
+    "PermitRootLogin"                   ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
+    "PermitTunnel"                      ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
+    "PermitUserEnvironment"             ? ssh_yesnostring
     "PidFile"                           ? string
     "Port"                              ? long
-    "PrintLastLog"                      ? string with match (SELF, 'yes|no')
-    "PrintMotd"                         ? string with match (SELF, 'yes|no')
-    "RhostsAuthentication"              ? string with match (SELF, 'yes|no')
+    "PrintLastLog"                      ? ssh_yesnostring
+    "PrintMotd"                         ? ssh_yesnostring
+    "RhostsAuthentication"              ? ssh_yesnostring
     "ServerKeyBits"                     ? long
-    "ShowPatchLevel"                    ? string with match (SELF, 'yes|no')
-    "StrictModes"                       ? string with match (SELF, 'yes|no')
+    "ShowPatchLevel"                    ? ssh_yesnostring
+    "StrictModes"                       ? ssh_yesnostring
     "Subsystem"                         ? string
-    "SyslogFacility"                    ? string with match (SELF, 'AUTH|AUTHPRIV|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL0|LOCAL1|LOCAL2|LOCAL3|LOCAL4|LOCAL5|LOCAL6|LOCAL7')
+    "SyslogFacility"                    ? string with match (SELF, '^(AUTH|AUTHPRIV|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL0|LOCAL1|LOCAL2|LOCAL3|LOCAL4|LOCAL5|LOCAL6|LOCAL7)$')
     "TcpRcvBuf"                         ? long
-    "TcpRcvBufPoll"                     ? string with match (SELF, 'yes|no')
-    "UseDNS"                            ? string with match (SELF, 'yes|no')
-    "UseLogin"                          ? string with match (SELF, 'yes|no')
-    "UsePAM"                            ? string with match (SELF, 'yes|no')
-    "UsePrivilegeSeparation"            ? string with match (SELF, 'yes|no')
-    "VerifyReverseMapping"              ? string with match (SELF, 'yes|no')
+    "TcpRcvBufPoll"                     ? ssh_yesnostring
+    "UseDNS"                            ? ssh_yesnostring
+    "UseLogin"                          ? ssh_yesnostring
+    "UsePAM"                            ? ssh_yesnostring
+    "UsePrivilegeSeparation"            ? ssh_yesnostring
+    "VerifyReverseMapping"              ? ssh_yesnostring
     "X11DisplayOffset"                  ? long
-    "X11Forwarding"                     ? string with match (SELF, 'yes|no')
-    "X11UseLocalhost"                   ? string with match (SELF, 'yes|no')
+    "X11Forwarding"                     ? ssh_yesnostring
+    "X11UseLocalhost"                   ? ssh_yesnostring
 };
 
 type ssh_client_options_type = {
     include ssh_core_options_type
-    "EnableSSHKeysign"                  ? string with match (SELF, 'yes|no')
-    "ForwardAgent"                      ? string with match (SELF, 'yes|no')
-    "ForwardX11"                        ? string with match (SELF, 'yes|no')
+    "EnableSSHKeysign"                  ? ssh_yesnostring
+    "ForwardAgent"                      ? ssh_yesnostring
+    "ForwardX11"                        ? ssh_yesnostring
     "Port"                              ? long
-    "RhostsAuthentication"              ? string with match (SELF, 'yes|no')
-    "StrictHostKeyChecking"             ? string with match (SELF, 'yes|no')
-    "UsePrivilegedPort"                 ? string with match (SELF, 'yes|no')
-    "GSSAPIDelegateCredentials"         ? string with match (SELF, 'yes|no')
+    "RhostsAuthentication"              ? ssh_yesnostring
+    "StrictHostKeyChecking"             ? ssh_yesnostring
+    "UsePrivilegedPort"                 ? ssh_yesnostring
+    "GSSAPIDelegateCredentials"         ? ssh_yesnostring
 };
 
 type ssh_daemon_type = {
