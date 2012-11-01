@@ -28,6 +28,8 @@ $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use CAF::Process;
 use LC::File qw(copy file_contents);
+use constant SSHD_CONFIG => "/etc/ssh/sshd_config";
+use constant SSH_CONFIG => "/etc/ssh/ssh_config";
 
 sub Configure
 {
@@ -50,10 +52,10 @@ sub Configure
 	my $ssh_config_file;
 	if ( $component eq 'daemon' ) {
 	    $component_name = 'sshd';
-	    $ssh_config_file = '/etc/ssh/sshd_config';
+	    $ssh_config_file = SSHD_CONFIG;
 	} else {
 	    $component_name = 'ssh client';
-	    $ssh_config_file = '/etc/ssh/ssh_config';
+	    $ssh_config_file = SSH_CONFIG;
 	}
 	if ( $ssh_config->{$component} ) {
 	    $self->info("Checking $component_name configuration...");
