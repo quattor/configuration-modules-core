@@ -157,7 +157,7 @@ sub build_passwd_map
 
     while (my ($group, $st) = each(%$groups)) {
 	foreach my $acc (keys(%{$st->{members}})) {
-	    push(@{$rt{$acc}->{groups}}, $group);
+	    push(@{$rt{$acc}->{groups}}, $group) if exists($rt{$acc});
 	}
     }
 
@@ -307,6 +307,15 @@ sub delete_unneeded_accounts
 	    $self->delete_account($system, $account);
 	}
     }
+    # Remove unneeded group members that may come from LDAP/NIS/other
+    # sources.
+    while (my ($group, $cfg) = each(%{$system->{groups}})) {
+	foreach my $m (keys(%{$cfg->{members}})) {
+	    if (!exists($system->{passwd}->{$m})) {
+		delete($cfg->{members}->{$m});
+	    }
+	}
+    }
 }
 
 # Adds or modifies to $system the needed accounts in $profile
@@ -413,6 +422,8 @@ sub accounts_are_consistent
 
     my $ok = 1;
     my %ids;
+
+
 
     while (my ($account, $st) = each(%$accounts)) {
 	$self->debug(2, "Checking for consistency of account $account");

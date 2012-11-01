@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 use Test::NoWarnings;
 use Test::Quattor qw(andreas_bug);
 use NCM::Component::accounts;
@@ -53,7 +53,7 @@ EOF
 
 Readonly my $GROUP => << 'EOF';
 bin:x:1:bin,root,daemon
-floppy:x:19:
+floppy:x:19:icomefromldapohyeah
 lock:x:54:
 lemon:x:496:
 mailnull:x:47:
@@ -124,13 +124,18 @@ EOF
 
 =head1 SYNOPSIS
 
-This is the test suite for yet another bug reported by Andrea Chierici.
+This is the test suite for two bugs reported by Andrea Chierici.
 
-In his layout, he uses ncm-accounts only for setting up root password
+In his layout, he uses ncm-accounts mostly for setting up root password
 and parameters.
 
 It seems under these circumstances lots of undefined warnings and
-collissions happen.
+collissions happen. First thing is to enable Test::NoWarnings
+
+Next, he sometimes adds an account that comes from ldap to some
+specific local group (i.e, specialization for some hosts).
+
+We check that as well.
 
 =cut
 
@@ -143,5 +148,6 @@ set_file_contents("/etc/shadow", $SHADOW);
 
 is($cmp->Configure($cfg), 1, "Configuration works");
 
-
-#Test::NoWarnings::had_no_warnings();
+my $fh = get_file("/etc/group");
+like($fh, qr{:icomefromldap\w+$}m,
+     "Account coming from LDAP but having a local group is kept with remove_unknown=true");

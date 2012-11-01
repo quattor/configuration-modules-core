@@ -23,7 +23,7 @@ sub groups_in
 use constant GROUP_CONTENTS => <<EOF;
 root:x:0:
 bin:x:1:bin,daemon
-daemon:x:2:bin,daemon
+daemon:x:2:bin,daemon,fubar
 EOF
 
 use constant PASSWD_CONTENTS => <<EOF;
@@ -328,6 +328,8 @@ Accounts in the system must be preserved, independently of the value of C<kept_u
 =cut
 
 $sys = $cmp->build_system_map();
+ok(exists($sys->{groups}->{daemon}->{members}->{fubar}),
+   "Account from ldap is part of the tree");
 $cfg = get_config_for_profile('users/adjust_accounts');
 $t = $cfg->getElement("/software/components/accounts")->getTree();
 $u = users_in($sys) + users_in($t);
@@ -338,6 +340,8 @@ $sys = $cmp->build_system_map();
 $cmp->adjust_accounts($sys, $t->{users}, { bin => 1, baz => 1});
 is(users_in($sys), $u,
    "New users added while old ones preserved in absence of remove_unknown, with kept_users");
+ok(exists($sys->{groups}->{daemon}->{members}->{fubar}),
+   "Group member from an external account source (like LDAP) stays when not remove_unknown");
 $sys = $cmp->build_system_map();
 
 =pod
@@ -353,10 +357,10 @@ $cmp->adjust_accounts($sys, $t->{users}, {}, 1);
 is(users_in($sys), users_in($t)+1,
    "Users not in the profile (except root) are removed");
 $sys = $cmp->build_system_map();
-$cmp->adjust_accounts($sys, $t->{users}, {bin => 1}, 1);
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1);
 is(users_in($sys), users_in($t)+2,
    "Users not in the profile (except root or kept ones) are removed");
-
-
+ok(!exists($sys->{groups}->{daemon}->{members}->{fubar}),
+   "Users coming from LDAP are removed from local groups if remove_unknown is true and they are not in the profile");
 
 done_testing();

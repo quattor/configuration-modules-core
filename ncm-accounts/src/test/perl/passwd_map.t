@@ -20,7 +20,7 @@ Test how the basic map of users and groups is generated from
 use constant GROUP_CONTENTS => <<EOF;
 root:x:0:
 bin:x:1:bin,daemon
-daemon:x:2:bin,daemon
+daemon:x:2:bin,daemon,fubarr
 EOF
 
 use constant PASSWD_CONTENTS => <<EOF;
@@ -60,13 +60,15 @@ is(scalar(keys(%$g)), 3, "Exact groups mapped");
 
 is(scalar(keys(%{$g->{root}->{members}})), 0,
    "root group didn't receive any members");
-foreach my $i (qw(bin daemon)) {
-    is(scalar(keys(%{$g->{$i}->{members}})), 2,
-       "Group $i received the correct amount of members");
-    foreach my $j (qw(bin daemon)) {
-	ok(exists($g->{$i}->{members}->{$j}), "Group $i received member $j");
-    }
-}
+is(scalar(keys(%{$g->{bin}->{members}})), 2,
+   "Group bin received the correct amount of members");
+ok(exists($g->{bin}->{members}->{bin}), "Group bin received user bin");
+ok(exists($g->{bin}->{members}->{daemon}), "Group bin received user daemon");
+is(scalar(keys(%{$g->{daemon}->{members}})), 3,
+   "Group daemon received the correct amount of members");
+ok(exists($g->{daemon}->{members}->{bin}), "Group bin received user bin");
+ok(exists($g->{daemon}->{members}->{daemon}), "Group bin received user daemon");
+ok(exists($g->{daemon}->{members}->{fubarr}), "Group bin received LDAP-only account");
 
 is($g->{root}->{gid}, 0, "root received the correct gid");
 is($g->{bin}->{gid}, 1, "bin received the correct gid");
@@ -136,5 +138,7 @@ is($sys->{passwd}->{root}->{uid}, "uidforroot",
    "Full system map contains correct users");
 is($sys->{passwd}->{bin}->{password}, "*",
    "Full system map contains shadow information");
+ok(!exists($sys->{passwd}->{fubarr}),
+   "LDAP account assigned to a group is not introduced into passwd");
 
 done_testing();
