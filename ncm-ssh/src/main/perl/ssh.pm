@@ -25,9 +25,8 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 
-use NCM::Check;
 use CAF::Process;
-use LC::File qw(copy file_contents);
+use CAF::FileEditor;
 use constant SSHD_CONFIG => "/etc/ssh/sshd_config";
 use constant SSH_CONFIG => "/etc/ssh/ssh_config";
 
@@ -115,7 +114,7 @@ sub Configure
 	}
     }
 
-    return;
+    return 1;
 }
 
 ##########################################################################
