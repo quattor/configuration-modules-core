@@ -123,6 +123,10 @@
 		<directoryIncluded>false</directoryIncluded>
 	      </mapping>
 	    </mappings>
+	    <requires>
+	      <require>yum >= 3.2.29</require>
+	      <require>yum-utils >= 1.1.30</require>
+	    </requires>
 	  </configuration>
 	</plugin>
       </plugins>
