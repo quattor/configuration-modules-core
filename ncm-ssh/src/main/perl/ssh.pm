@@ -41,10 +41,11 @@ sub Configure
     my $ssh_config = $config->getElement($base)->getTree();
 
     #
-    # Process options for SSH daemon and client: processing is almost identical for both.
-    # Main difference is that the daemon must be restarted if changes were made to the configuration file.
-    # This is made of 2 set of options : the options that must be defined with their value
-    # and the options that must be commented out.
+    # Process options for SSH daemon and client: processing is almost
+    # identical for both.  Main difference is that the daemon must be
+    # restarted if changes were made to the configuration file.  This
+    # is made of 2 set of options : the options that must be defined
+    # with their value and the options that must be commented out.
     #
 
     foreach my $component (qw(daemon client)) {
@@ -70,13 +71,7 @@ sub Configure
 		    if ( $ssh_config->{$component}->{$option_set} ) {
 			$self->debug(1,"Processing $component $option_set");
 			my $ssh_component_config = $ssh_config->{$component}->{$option_set};
-			foreach my $option (keys(%{$ssh_component_config})) {
-			    my $val = $ssh_component_config->{$option};
-			    unless ( defined($val) ) {
-				$self->error("no value found for option $option");
-				next;
-			    }
-
+			while (my ($option, $val) = each(%$ssh_component_config)) {
 			    my $comment = '';
 			    if ( $option_set eq 'comment_options' ) {
 				$comment = '#';
