@@ -126,6 +126,7 @@
 	    <requires>
 	      <require>yum >= 3.2.29</require>
 	      <require>yum-utils >= 1.1.30</require>
+	      <require>yum-versionlock</require>
 	    </requires>
 	  </configuration>
 	</plugin>
