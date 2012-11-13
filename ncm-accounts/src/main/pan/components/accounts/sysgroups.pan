@@ -78,5 +78,8 @@ unique template components/accounts/sysgroups;
     'radiusd', '',
     'squid', '',
     'tomcat', '',
+    'stap-server','',
+    'amandabackup', '',
+    'saslauth','',
     'uuidd', '',
     'webalizer', '');
