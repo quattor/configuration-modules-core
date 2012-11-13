@@ -4,20 +4,8 @@
 
 unique template components/accounts/config;
 
-include { 'components/accounts/schema' };
-include { 'components/accounts/functions' };
+include { 'components/${project.artifactId}/schema' };
+include { 'components/${project.artifactId}/functions' };
+include { 'components/${project.artifactId}/config-rpm' };
 
 # Package to install
-'/software/packages'=pkg_repl('ncm-accounts','${project.version}-1','noarch');
-'/software/components/accounts/dependencies/pre' ?= list('spma');
-
-'/software/components/accounts/version' = '${no-snapshot-version}';
-
-# Include system users and groups which shouldn't be removed
-# by default.  The machine configuration can still modify or
-# remove them manually.
-include { 'components/accounts/sysgroups' };
-include { 'components/accounts/sysusers' };
-
-'/software/components/accounts/active' ?= true;
-'/software/components/accounts/dispatch' ?= true;
