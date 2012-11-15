@@ -9,7 +9,7 @@ unique template components/krb5clt/config-rpm;
 include {'components/krb5clt/schema'};
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
  
 "/software/components/krb5clt/dependencies/pre" ?= list("spma");

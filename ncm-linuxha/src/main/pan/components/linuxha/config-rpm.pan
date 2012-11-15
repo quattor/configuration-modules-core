@@ -14,7 +14,7 @@ unique template components/linuxha/config-rpm;
 include {'components/linuxha/schema'};
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
  
 "/software/components/linuxha/dependencies/pre" ?= list("spma");

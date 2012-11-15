@@ -40,5 +40,5 @@ include { 'pan/functions' };
 "/software/components/resolver/version" = '${project.version}';
 #"/software/components/resolver/release" = "2";
 
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

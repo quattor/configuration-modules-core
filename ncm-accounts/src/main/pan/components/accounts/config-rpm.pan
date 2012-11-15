@@ -8,7 +8,7 @@ include { 'components/accounts/schema' };
 include { 'components/accounts/functions' };
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 '/software/components/accounts/dependencies/pre' ?= list('spma');
 

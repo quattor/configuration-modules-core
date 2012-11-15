@@ -11,6 +11,6 @@ include { 'components/postfix/config-common' };
 prefix '/software/components/postfix';
 
 # Install Quattor configuration module via RPM package.
-'/software/packages' = pkg_repl('ncm-postfix','${no-snapshot-version}-${RELEASE}','noarch');
+'/software/packages' = pkg_repl('ncm-postfix','${no-snapshot-version}-${rpm.release}','noarch');
 'dependencies/pre' ?= list('spma');
 

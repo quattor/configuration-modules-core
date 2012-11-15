@@ -11,5 +11,5 @@ include { 'components/nscd/schema' };
 "/software/components/nscd/hosts/positive-time-to-live" ?= 300;
 "/software/components/nscd/active" ?= true;
 "/software/components/nscd/dispatch" ?= true;
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

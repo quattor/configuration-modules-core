@@ -9,7 +9,7 @@ unique template components/fmonagent/config-rpm;
 include { 'components/fmonagent/schema' };
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${RELEASE}", "noarch");
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
 '/software/components/fmonagent/version' ?= '${project.version}';
