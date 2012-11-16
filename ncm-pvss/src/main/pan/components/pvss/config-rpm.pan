@@ -4,10 +4,11 @@
 
 
 
-unique template components/pvss/config-rpm;
-include {'components/pvss/schema'};
+unique template components/${project.artifactId}/config-rpm;
+include {'components/${project.artifactId}/schema'};
 
 # Common settings
-#"/software/components/pvss/dependencies/pre" = list("spma");
-"/software/components/pvss/active" = true;
-"/software/components/pvss/dispatch" ?= true;
+#"/software/components/${project.artifactId}/dependencies/pre" = list("spma");
+"/software/components/${project.artifactId}/active" = true;
+"/software/components/${project.artifactId}/dispatch" ?= true;
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
