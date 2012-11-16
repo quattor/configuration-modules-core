@@ -2,10 +2,11 @@
 # ${developer-info}
 # ${author-info}
 
-unique template components/accounts/config-rpm;
+unique template components/${project.artifactId}/config-rpm;
 
 include { 'components/accounts/schema' };
 include { 'components/accounts/functions' };
+include { 'components/${project.artifactId}/config-common'};
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
@@ -19,6 +20,3 @@ include { 'components/accounts/functions' };
 # remove them manually.
 include { 'components/accounts/sysgroups' };
 include { 'components/accounts/sysusers' };
-
-'/software/components/accounts/active' ?= true;
-'/software/components/accounts/dispatch' ?= true;
