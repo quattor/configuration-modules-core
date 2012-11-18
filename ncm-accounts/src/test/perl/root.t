@@ -56,8 +56,13 @@ for my $i (0..scalar(@{$sys->{passwd}->{root}->{groups}})) {
 
 is($root->{password}, "!", "Root account with no passwords is blocked");
 is($root->{shell}, $sys->{passwd}->{root}->{shell},
-   "Root shell is not inherited from system");
+   "Root shell is inherited from system");
 is($root->{ln}, 42, "Root will be written in the same old line in the file");
+
+delete($sys->{passwd}->{root}->{shell});
+$root = $cmp->compute_root_user($sys, $pfr);
+is($root->{shell}, "/bin/bash",
+   "Root shell set to bash when not available in the profile or the system");
 
 =pod
 
@@ -74,13 +79,14 @@ is($root->{password}, $sys->{passwd}->{root}->{password},
    "Root inherits the password from the system, when present");
 $pfr->{rootpwd} = "A new password";
 $pfr->{rootshell} = "A valid root shell";
-$root = $cmp->compute_root_user($sys, $pfr);
 
 =pod
 
 =head2 Overriding ancient values with profile-provided ones
 
 =cut
+
+$root = $cmp->compute_root_user($sys, $pfr);
 
 is($root->{shell}, $pfr->{rootshell},
    "Root receives its shell only from the profile");

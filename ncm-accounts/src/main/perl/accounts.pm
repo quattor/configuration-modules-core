@@ -380,7 +380,7 @@ sub compute_root_user
 			  || $system->{passwd}->{root}->{password}
 			  || '!'),
 	      shell => $tree->{rootshell} ||
-		  $system->{passwd}->{root}->{shell},
+		  $system->{passwd}->{root}->{shell} || "/bin/bash",
 	      homeDir => "/root",
 	      main_group => 0,
 	      comment => "root",

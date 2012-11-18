@@ -11,4 +11,4 @@ include { 'components/${project.artifactId}/config-common' };
 prefix '/software/components/${project.artifactId}';
 
 # Embed the Quattor configuration module into XML profile.
-'code' = file_contents('components/${project.artifactId}/${project.artifactId}.pm'); 
+'code' = file_contents('components/${project.artifactId}/${project.artifactId}.pm');
