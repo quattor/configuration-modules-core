@@ -1,8 +1,6 @@
 NCM Components
 ==========
 
-# NCM Components #
-
 [![Build Status](https://jenkins1.ugent.be/job/NCM_components/badge/icon)](https://jenkins1.ugent.be/job/NCM_components/)
 
 ## Description ##
