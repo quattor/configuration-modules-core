@@ -11,5 +11,5 @@ include { "components/dirperm/schema" };
 
 '/software/components/dirperm/dependencies/pre' ?= list('spma');
 
-'/software/components/dirperm/version' = '${project.version}';
+'/software/components/dirperm/version' = '${no-snapshot-version}';
  

@@ -11,4 +11,4 @@ include {'components/ldconf/schema'};
 
 '/software/components/ldconf/dependencies/pre' ?= list('spma');
 
-'/software/components/ldconf/version' = '${project.version}';
+'/software/components/ldconf/version' = '${no-snapshot-version}';

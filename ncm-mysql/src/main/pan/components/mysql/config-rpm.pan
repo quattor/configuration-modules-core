@@ -10,7 +10,7 @@ include { 'components/mysql/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
  
-'/software/components/mysql/version' ?= '${project.version}';
+'/software/components/mysql/version' ?= '${no-snapshot-version}';
 
 "/software/components/mysql/dependencies/pre" ?= list("spma");
 "/software/components/mysql/active" ?= true;

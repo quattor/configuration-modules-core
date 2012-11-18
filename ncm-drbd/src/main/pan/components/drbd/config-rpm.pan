@@ -16,7 +16,7 @@ include { 'components/drbd/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
  
-'/software/components/drbd/version' ?= '${project.version}';
+'/software/components/drbd/version' ?= '${no-snapshot-version}';
 
 "/software/components/drbd/dependencies/pre" ?= list("spma");
 "/software/components/drbd/active" ?= true;

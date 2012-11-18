@@ -17,7 +17,7 @@ include { 'components/autofs/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/autofs/version' = '${project.version}';
+'/software/components/autofs/version' = '${no-snapshot-version}';
 
 "/software/components/autofs/dependencies/pre" ?= list("spma");
 "/software/components/autofs/active" ?= true;

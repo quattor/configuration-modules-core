@@ -11,7 +11,7 @@ include { 'components/ssh/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/ssh/version' ?= '${project.version}';
+'/software/components/ssh/version' ?= '${no-snapshot-version}';
 
 "/software/components/ssh/dependencies/pre" ?= list("spma");
 "/software/components/ssh/active" ?= true;

@@ -12,5 +12,5 @@ include { 'components/sshkeys/schema' };
 
 '/software/components/sshkeys/dependencies/pre' ?= list('spma');
 
-'/software/components/sshkeys/version' = '${project.version}';
+'/software/components/sshkeys/version' = '${no-snapshot-version}';
 

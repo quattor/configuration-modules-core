@@ -12,4 +12,4 @@ include { 'components/profile/functions' };
 
 '/software/components/profile/dependencies/pre' ?= list('spma');
 
-'/software/components/profile/version' ?= '${project.version}';
+'/software/components/profile/version' ?= '${no-snapshot-version}';

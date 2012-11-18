@@ -11,4 +11,4 @@ include { 'components/altlogrotate/schema' };
 
 '/software/components/altlogrotate/dependencies/pre' ?= list('spma');
 
-'/software/components/altlogrotate/version' = '${project.version}';
+'/software/components/altlogrotate/version' = '${no-snapshot-version}';

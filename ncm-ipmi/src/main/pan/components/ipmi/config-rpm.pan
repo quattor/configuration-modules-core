@@ -11,7 +11,7 @@ include { 'components/ipmi/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/ipmi/version' = '${project.version}';
+'/software/components/ipmi/version' = '${no-snapshot-version}';
 
 "/software/components/ipmi/dependencies/post" ?= list("spma");
 "/software/components/ipmi/active" ?= true;

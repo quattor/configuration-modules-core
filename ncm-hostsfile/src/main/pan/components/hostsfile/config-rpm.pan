@@ -12,4 +12,4 @@ include { 'components/hostsfile/schema' };
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
-'/software/components/hostsfile/version' = '${project.version}';
+'/software/components/hostsfile/version' = '${no-snapshot-version}';

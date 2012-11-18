@@ -12,7 +12,7 @@ include { 'components/fmonagent/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/fmonagent/version' ?= '${project.version}';
+'/software/components/fmonagent/version' ?= '${no-snapshot-version}';
 
 "/software/components/fmonagent/dependencies/pre" ?= list("spma");
 "/software/components/fmonagent/active" 		?= true;

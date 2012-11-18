@@ -10,7 +10,7 @@ include { 'components/gpfs/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/gpfs/version' ?= '${project.version}';
+'/software/components/gpfs/version' ?= '${no-snapshot-version}';
 
 "/software/components/gpfs/dependencies/pre" ?= list("spma");
 "/software/components/gpfs/active" ?= true;

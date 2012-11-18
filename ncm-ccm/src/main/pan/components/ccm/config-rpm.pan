@@ -11,5 +11,5 @@ include {'components/ccm/schema'};
 
 '/software/components/ccm/dependencies/pre' ?= list('spma');
 
-'/software/components/ccm/version' ?= '${project.version}';
+'/software/components/ccm/version' ?= '${no-snapshot-version}';
 

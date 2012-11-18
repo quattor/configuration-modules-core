@@ -11,4 +11,4 @@ include {'components/hostsaccess/schema'};
 
 '/software/components/hostsaccess/dependencies/pre' ?= list('spma');
 
-'/software/components/hostsaccess/version' = '${project.version}';
+'/software/components/hostsaccess/version' = '${no-snapshot-version}';

@@ -11,5 +11,5 @@ include { 'components/filecopy/schema' };
 
 '/software/components/filecopy/dependencies/pre' ?= list('spma');
 
-'/software/components/filecopy/version' = '${project.version}';
+'/software/components/filecopy/version' = '${no-snapshot-version}';
   

@@ -36,7 +36,7 @@ include {'components/pam/schema'};
 include {'pan/functions'};
 
 # standard component settings
-"/software/components/pam/version"    = '${project.version}';
+"/software/components/pam/version"    = '${no-snapshot-version}';
 # release is not yet standard.
 #"/software/components/pam/release"    = "1";
 "/software/components/pam/active"    ?=  true;

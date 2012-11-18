@@ -11,5 +11,5 @@ include { 'components/cdp/schema' };
 
 '/software/components/cdp/dependencies/pre' ?= list('spma');
 
-'/software/components/cdp/version' = '${project.version}';
+'/software/components/cdp/version' = '${no-snapshot-version}';
 

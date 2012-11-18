@@ -11,5 +11,5 @@ include { 'components/nfs/schema' };
 
 '/software/components/nfs/dependencies/pre' ?= list('spma');
 
-'/software/components/nfs/version' = '${project.version}';
+'/software/components/nfs/version' = '${no-snapshot-version}';
   

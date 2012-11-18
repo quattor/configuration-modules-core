@@ -11,4 +11,4 @@ include { 'components/cron/schema' };
 
 '/software/components/cron/dependencies/pre' ?= list('spma');
 
-'/software/components/cron/version' = '${project.version}';
+'/software/components/cron/version' = '${no-snapshot-version}';

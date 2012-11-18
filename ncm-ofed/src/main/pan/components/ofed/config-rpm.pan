@@ -10,7 +10,7 @@ include { 'components/ofed/schema' };
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 
-'/software/components/ofed/version' ?= '${project.version}';
+'/software/components/ofed/version' ?= '${no-snapshot-version}';
 
 "/software/components/ofed/dependencies/pre" ?= list("spma");
 "/software/components/ofed/active" ?= true;

@@ -11,4 +11,4 @@ include { 'components/sysconfig/schema' };
 
 '/software/components/sysconfig/dependencies/pre' ?= list('spma');
 
-'/software/components/sysconfig/version' ?= '${project.version}';
+'/software/components/sysconfig/version' ?= '${no-snapshot-version}';

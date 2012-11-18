@@ -37,7 +37,7 @@ include { "pan/functions" };
 # standard component settings
 "/software/components/download/active"   ?= true ;
 "/software/components/download/dispatch" ?= false ;
-"/software/components/download/version"  = '${project.version}';
+"/software/components/download/version"  = '${no-snapshot-version}';
 "/software/components/download/release"  = "1";
 
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

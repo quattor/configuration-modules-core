@@ -37,7 +37,7 @@ include { 'pan/functions' };
 # standard component settings
 "/software/components/resolver/active" ?=  true ;
 "/software/components/resolver/dispatch" ?=  true ;
-"/software/components/resolver/version" = '${project.version}';
+"/software/components/resolver/version" = '${no-snapshot-version}';
 #"/software/components/resolver/release" = "2";
 
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
