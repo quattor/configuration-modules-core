@@ -229,7 +229,7 @@ sub apply_transaction
 
     $self->verbose("Output: $rs");
 
-    if ($err =~ m{^Error: }m) {
+    if ($? || $err =~ m{^Error: }m) {
 	$self->error("Problems in transaction: $err");
 	return 0;
     }

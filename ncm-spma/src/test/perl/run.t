@@ -83,4 +83,9 @@ set_desired_err($YUM, "\nError: package");
 is($cmp->apply_transaction($TX), 0, "Error in transaction detected");
 is($cmp->{ERROR}, 1, "Error is reported");
 
+set_command_status($YUM, 1);
+set_desired_err($YUM, "Yabbadabadoo");
+is($cmp->apply_transaction($TX), 0,
+   "Error in Yum internals during transaction detected");
+
 done_testing();
