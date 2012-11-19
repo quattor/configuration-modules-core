@@ -58,9 +58,9 @@ ok(!get_command($YUM), "Failure in cache cleanup prevents transaction execution"
 
 =pod
 
-=over 4
-
 =item * Successes in the cleanup of caches allow for transaction execution
+
+=back
 
 =head2 Transaction executions
 
