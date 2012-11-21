@@ -248,7 +248,7 @@ sub versionlock
 	while (my ($v, $a) = each(%$ver)) {
 	    my $version = unescape($v);
 	    foreach my $arch (keys(%{$a->{arch}})) {
-		print $fh "$name-$version.$arch\n";
+		print $fh "0:$name-$version.$arch\n";
 	    }
 	}
     }
