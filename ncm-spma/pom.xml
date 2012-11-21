@@ -9,7 +9,7 @@
   <artifactId>spma</artifactId>
 
   <packaging>pom</packaging>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <name>NCM SPMA configuration component</name>
 
   <repositories>
