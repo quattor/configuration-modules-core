@@ -36,6 +36,7 @@ type SOFTWARE_REPOSITORY = {
     "owner" ? string  # "Contact person (email)"
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
     "contents" ? SOFTWARE_REPOSITORY_PACKAGE {} {}
+    "priority" ? long(1..99)
 };
 
 type component_spma_type = {
