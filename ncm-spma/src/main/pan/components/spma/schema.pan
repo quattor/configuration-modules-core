@@ -37,6 +37,8 @@ type SOFTWARE_REPOSITORY = {
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
     "contents" ? SOFTWARE_REPOSITORY_PACKAGE {} {}
     "priority" ? long(1..99)
+    "enabled" : boolean = true
+    "gpgcheck" : boolean = false
 };
 
 type component_spma_type = {
