@@ -35,6 +35,7 @@ use constant YUM_EXPIRE => qw(yum clean expire-cache);
 
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant REPOQUERY => qw(repoquery --envra);
 
 our $NoActionSupported = 1;
 
@@ -241,19 +242,30 @@ sub versionlock
 {
     my ($self, $pkgs) = @_;
 
-    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
+    my $cmd = CAF::Process->new([REPOQUERY], log => $self,
+				keeps_state => 1);
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
 	my $name = unescape($pkg);
 	while (my ($v, $a) = each(%$ver)) {
 	    my $version = unescape($v);
 	    foreach my $arch (keys(%{$a->{arch}})) {
-		print $fh "0:$name-$version.$arch\n";
+		$cmd->pushargs("$name-$version.$arch");
 	    }
 	}
     }
 
+    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
+    print $fh $cmd->output();
+
+    if ($?) {
+	$self->error("Failure while determining epochs for packages: $fh");
+	$fh->cancel();
+	return 0;
+    }
+
     $fh->close();
+    return 1;
 }
 
 # Returns the set of packages to remove. A package must be removed if
@@ -311,7 +323,7 @@ sub update_pkgs
 
     $tx .= $self->schedule(INSTALL, $wanted-$installed);
 
-    $self->versionlock($pkgs);
+    $self->versionlock($pkgs) or return 0;
 
     # Call Yum only if there is something to do.
     if ($tx) {

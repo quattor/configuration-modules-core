@@ -25,7 +25,10 @@ use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
+Readonly::Array my @REPOQUERY => NCM::Component::spma::REPOQUERY;
+
 my $cmp = NCM::Component::spma->new("spma");
+
 
 my $pkgs = {
 	      "ConsoleKit"=> {
@@ -60,13 +63,35 @@ my $pkgs = {
 	    "kde" => {}
 	     };
 
-$cmp->versionlock($pkgs);
+
+# I don't know in which order the arguments will be passed!!
+set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
+			"glibc-2.12-1.47.el6_2.9.i686"),
+    q{0:glibc-2.12-1.47.el6_2.9.x86_64
+1:glibc-2.12-1.47.el6_2.9.i686});
+set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
+			"glibc-2.12-1.47.el6_2.9.x86_64"),
+    q{0:glibc-2.12-1.47.el6_2.9.x86_64
+1:glibc-2.12-1.47.el6_2.9.i686});
+is($cmp->versionlock({ glibc => $pkgs->{glibc},
+		       kde => $pkgs->{kde}}), 1,
+   "Simple versionlock succeeds");
 
 my $fh = get_file("/etc/yum/pluginconf.d/versionlock.list");
 
-like($fh, qr{^tzdata-java-.*\.noarch$}m,
-     "Package tzdata-java listed in version lock");
-like($fh, qr{glibc.*i686}, "glibc listed in version lock");
-unlike($fh, qr{^kde}, "Package kde with no version is not version locked");
+like($fh, qr{^\d:glibc.*i686}m, "glibc listed in version lock");
+like($fh, qr{^\d:glibc.*x86_64}m, "glibc listed in version lock winth all archs");
+unlike($fh, qr{kde}, "Package kde with no version is not version locked");
+
+set_command_status(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
+			"glibc-2.12-1.47.el6_2.9.i686"), 1);
+set_command_status(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
+			"glibc-2.12-1.47.el6_2.9.x86_64"), 1);
+
+
+is($cmp->versionlock({ glibc => $pkgs->{glibc} }), 0,
+   "Errors in repoquery are propagated");
+is($cmp->{ERROR}, 1, "Errors in versionlock are logged");
+
 
 done_testing();

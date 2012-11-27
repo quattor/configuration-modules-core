@@ -75,6 +75,20 @@ $mock->mock('schedule', sub {
 		return "$op\n";
 	    });
 
+sub clear_mock_counters
+{
+    my $cmp = shift;
+    foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
+		      wanted_pkgs installed_pkgs packages_to_remove)) {
+	$cmp->{uc($m)}->{called} = 0;
+    }
+
+    $cmp->{SCHEDULE}->{install}->{called} = 0;
+    $cmp->{SCHEDULE}->{remove}->{called} = 0;
+    $cmp->{SCHEDULE}->{install}->{return} = "install foo";
+
+}
+
 my $cmp = NCM::Component::spma->new("spma");
 
 my $pkgs = {};
@@ -181,15 +195,7 @@ in the correct point.
 =cut
 
 # For easier comparison, reset all call counters
-
-foreach my $m (qw(apply_transaction solve_transaction schedule
-		  wanted_pkgs installed_pkgs packages_to_remove)) {
-    $cmp->{uc($m)}->{called} = 0;
-}
-
-$cmp->{SCHEDULE}->{install}->{called} = 0;
-$cmp->{SCHEDULE}->{remove}->{called} = 0;
-$cmp->{SCHEDULE}->{install}->{return} = "install foo";
+clear_mock_counters($cmp);
 
 =pod
 
@@ -215,17 +221,36 @@ is($cmp->{SCHEDULE}->{install}->{called}, 1,
 
 =pod
 
+=item * Failure in <versionlock> means nothing is applied
+
+=cut
+
+clear_mock_counters($cmp);
+
+$cmp->{VERSIONLOCK}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in versionlrmock is detected");
+is($cmp->{VERSIONLOCK}->{called}, 1, "versionlock is actually called");
+is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
+   "solve_transaction is not called if versionlock fails");
+
+
+=pod
+
 =item * Failure in C<packages_to_remove> means apply_transaction is not called
 
 =cut
+
+clear_mock_counters($cmp);
 
 $cmp->{PACKAGES_TO_REMOVE}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in packages_to_remove is propagated");
-is($cmp->{APPLY_TRANSACTION}->{called}, 1,
+is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "Apply transaction is not called when packages_to_remove fails");
-is($cmp->{SOLVE_TRANSACTION}->{called}, 1,
+is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
    "Solve transaction is not called when packages_to_remove fails");
 
 =pod
@@ -234,24 +259,26 @@ is($cmp->{SOLVE_TRANSACTION}->{called}, 1,
 
 =cut
 
+clear_mock_counters($cmp);
+
 $cmp->{WANTED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in wanted_pkgs is propagated");
 
 foreach my $m (qw(apply_transaction solve_transaction)) {
-    is($cmp->{uc($m)}->{called}, 1,
-       "Method $m called when wanted_pkgs fails");
+    is($cmp->{uc($m)}->{called}, 0,
+       "Method $m not called when wanted_pkgs fails");
 }
 
-is($cmp->{SCHEDULE}->{remove}->{called}, 1,
+is($cmp->{SCHEDULE}->{remove}->{called}, 0,
    "No removal scheduling happens when wanted_pkgs fails");
-is($cmp->{SCHEDULE}->{install}->{called}, 1,
-   "No installation scheduling happens when whanted_pkgs fails");
+is($cmp->{SCHEDULE}->{install}->{called}, 0,
+   "No installation scheduling happens when wanted_pkgs fails");
 
-is($cmp->{WANTED_PKGS}->{called}, 3,
+is($cmp->{WANTED_PKGS}->{called}, 1,
    "Failure was actually triggered by wanted_pkgs");
-is($cmp->{INSTALLED_PKGS}->{called}, 3,
+is($cmp->{INSTALLED_PKGS}->{called}, 1,
    "installed_pkgs called before wanted_pkgs");
 
 =pod
@@ -260,22 +287,23 @@ is($cmp->{INSTALLED_PKGS}->{called}, 3,
 
 =cut
 
+clear_mock_counters($cmp);
+
 $cmp->{INSTALLED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in installed_pkgs is propagated");
-is($cmp->{WANTED_PKGS}->{called}, 3,
+is($cmp->{WANTED_PKGS}->{called}, 0,
    "wanted_pkgs is not called when installed_pkgs fails");
 foreach my $m (qw(apply_transaction solve_transaction)) {
-    is($cmp->{uc($m)}->{called}, 1,
+    is($cmp->{uc($m)}->{called}, 0,
        "Method $m called when apply_transaction fails");
 }
 
-is($cmp->{SCHEDULE}->{remove}->{called}, 1,
+is($cmp->{SCHEDULE}->{remove}->{called}, 0,
    "No removal scheduling when installed_pkgs fails");
-is($cmp->{SCHEDULE}->{install}->{called}, 1,
+is($cmp->{SCHEDULE}->{install}->{called}, 0,
    "No install scheduling when installed_pkgs fails");
-
 
 
 done_testing();
