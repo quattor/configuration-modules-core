@@ -242,8 +242,10 @@ sub versionlock
 {
     my ($self, $pkgs) = @_;
 
+    my ($out, $err);
     my $cmd = CAF::Process->new([REPOQUERY], log => $self,
-				keeps_state => 1);
+				keeps_state => 1,
+				stdout => \$out, stderr => \$err);
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
 	my $name = unescape($pkg);
@@ -255,15 +257,16 @@ sub versionlock
 	}
     }
 
-    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
-    print $fh $cmd->output();
 
-    if ($?) {
-	$self->error("Failure while determining epochs for packages: $fh");
-	$fh->cancel();
+    $cmd->execute();
+
+    if ($? || $err =~ m{^Could not match}m) {
+	$self->error("Failure while determining epochs for packages: $err");
 	return 0;
     }
 
+    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
+    print $fh "$out\n";
     $fh->close();
     return 1;
 }

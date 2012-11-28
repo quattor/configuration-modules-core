@@ -60,7 +60,8 @@ my $pkgs = {
 								 }
 						       }
 				},
-	    "kde" => {}
+	      "kde" => {},
+	      "foo" => { "a" => { "arch" => { "x" => "arepo" } } },
 	     };
 
 
@@ -69,10 +70,14 @@ set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
 			"glibc-2.12-1.47.el6_2.9.i686"),
     q{0:glibc-2.12-1.47.el6_2.9.x86_64
 1:glibc-2.12-1.47.el6_2.9.i686});
+set_desired_err(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
+			"glibc-2.12-1.47.el6_2.9.i686"), "");
 set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
 			"glibc-2.12-1.47.el6_2.9.x86_64"),
     q{0:glibc-2.12-1.47.el6_2.9.x86_64
 1:glibc-2.12-1.47.el6_2.9.i686});
+set_desired_err(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
+			"glibc-2.12-1.47.el6_2.9.x86_64"), "");
 is($cmp->versionlock({ glibc => $pkgs->{glibc},
 		       kde => $pkgs->{kde}}), 1,
    "Simple versionlock succeeds");
@@ -93,5 +98,7 @@ is($cmp->versionlock({ glibc => $pkgs->{glibc} }), 0,
    "Errors in repoquery are propagated");
 is($cmp->{ERROR}, 1, "Errors in versionlock are logged");
 
+set_desired_err(join(" ", @REPOQUERY, "foo-a.x"), "Could not match: this is a bogus package!!");
+is($cmp->versionlock({ foo => $pkgs->{foo}}), 0, "Unmatched package triggers an error");
 
 done_testing();
