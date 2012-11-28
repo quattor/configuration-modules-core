@@ -245,22 +245,35 @@ sub versionlock
     my $cmd = CAF::Process->new([REPOQUERY], log => $self,
 				keeps_state => 1,
 				stdout => \$out, stderr => \$err);
+    my $locked = Set::Scalar->new();
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
 	my $name = unescape($pkg);
 	while (my ($v, $a) = each(%$ver)) {
 	    my $version = unescape($v);
 	    foreach my $arch (keys(%{$a->{arch}})) {
-		$cmd->pushargs("$name-$version.$arch");
+		$locked->insert("$name-$version.$arch");
 	    }
 	}
     }
 
+    $cmd->pushargs(@$locked);
 
     $cmd->execute();
 
     if ($? || $err =~ m{^Could not match}m) {
 	$self->error("Failure while determining epochs for packages: $err");
+	return 0;
+    }
+
+    # Ensure that all the packages that we wanted to lock have been
+    # resolved!!!
+    foreach my $pkg (split(/\n/, $out)) {
+	my @envra = split(/:/, $pkg);
+	$locked->delete($envra[1]);
+    }
+    if (@$locked) {
+	$self->error("Couldn't lock versions for $locked");
 	return 0;
     }
 
