@@ -220,7 +220,6 @@ sub apply_transaction
 
     my ($self, $tx) = @_;
 
-    $self->expire_yum_caches() or return 0;
     $self->debug(5, "Running transaction: $tx");
     my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
     				stdout => \my $rs, stderr => \my $err,
@@ -325,6 +324,8 @@ sub update_pkgs
     }
 
     $tx .= $self->schedule(INSTALL, $wanted-$installed);
+
+    $self->expire_yum_caches() or return 0;
 
     $self->versionlock($pkgs) or return 0;
 

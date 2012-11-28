@@ -55,6 +55,7 @@ my $mock = Test::MockModule->new('NCM::Component::spma');
 
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
+		       expire_yum_caches
 		       packages_to_remove solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
@@ -79,6 +80,7 @@ sub clear_mock_counters
 {
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
+		      expire_yum_caches
 		      wanted_pkgs installed_pkgs packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
     }
@@ -120,6 +122,7 @@ is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
 is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
 is($cmp->{VERSIONLOCK}->{args}->[0], "pkgs",
    "Locked package versions with correct arguments");
+is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "Package cache is expired");
 
 =pod
 
@@ -219,9 +222,10 @@ is($cmp->{SCHEDULE}->{remove}->{called}, 1,
 is($cmp->{SCHEDULE}->{install}->{called}, 1,
    "Schedule for install when transaction fails");
 
+
 =pod
 
-=item * Failure in <versionlock> means nothing is applied
+=item * Failure in C<versionlock> means nothing is applied
 
 =cut
 
@@ -234,6 +238,20 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
 is($cmp->{VERSIONLOCK}->{called}, 1, "versionlock is actually called");
 is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
    "solve_transaction is not called if versionlock fails");
+
+=pod
+
+=item * Failure in C<expire_yum_caches> means versionlock is not called
+
+=cut
+
+clear_mock_counters($cmp);
+$cmp->{EXPIRE_YUM_CACHES}->{return} = 0;
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in versionlrmock is detected");
+is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "expire_yum_caches is actually called");
+is($cmp->{VERSIONLOCK}->{called}, 0,
+   "versionlock is not called if cache expiration fails");
 
 
 =pod
