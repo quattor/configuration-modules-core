@@ -114,6 +114,7 @@ sub build_group_map
 	$self->debug(2, "Read group line $l");
 	my @flds = split(":", $l);
 	my $h = { name => $flds[NAME] };
+	next unless $h->{name};
 	$h->{gid} = $flds[ID];
 	my %mb;
 	if ($flds[IDLIST]) {
@@ -146,6 +147,7 @@ sub build_passwd_map
 	$self->debug(2, "Read line $l");
 	my @flds = split(":", $l);
 	my $h = { name => $flds[NAME] };
+	next unless $h->{name};
 	$h->{uid} = $flds[ID];
 	$h->{main_group} = $flds[IDLIST];
 	$h->{homeDir} = $flds[HOME] || "";

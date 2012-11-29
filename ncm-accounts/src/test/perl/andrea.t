@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Test::NoWarnings;
 use Test::Quattor qw(andreas_bug);
 use NCM::Component::accounts;
@@ -49,6 +49,7 @@ amandabackup:x:33:6:Amanda user:/var/lib/amanda:/bin/bash
 uuidd:x:495:493:UUID generator helper daemon:/var/lib/libuuid:/sbin/nologin
 ident:x:98:98::/:/sbin/nologin
 sam:x:24459:30035:Sam Station:/home/sam:/bin/bash
+:x:::::
 EOF
 
 Readonly my $GROUP => << 'EOF';
@@ -151,3 +152,5 @@ is($cmp->Configure($cfg), 1, "Configuration works");
 my $fh = get_file("/etc/group");
 like($fh, qr{:icomefromldap\w+$}m,
      "Account coming from LDAP but having a local group is kept with remove_unknown=true");
+$fh = get_file("/etc/passwd");
+unlike($fh, qr{:::}, "Empty user is removed");
