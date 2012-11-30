@@ -38,7 +38,9 @@ use constant { USER_ALIASES	=> PROFILE_BASE . "user_aliases",
 	       PRIVILEGE_HOST	=> "host",
 	       PRIVILEGE_RUNAS	=> "run_as",
 	       PRIVILEGE_CMD	=> "cmd",
-	       PRIVILEGE_OPTS	=> "options"
+	       PRIVILEGE_OPTS	=> "options",
+	       INCLUDES		=> PROFILE_BASE . "includes",
+	       INCLUDES_DIRS	=> PROFILE_BASE . "includes_dirs"
        };
 
 use constant VISUDO_CHECK => qw(/usr/sbin/visudo -c -f /proc/self/fd/0);
@@ -244,8 +246,11 @@ sub is_valid_sudoers
 # run_as, hosts and commands.
 # $_[2]: a reference to an array of default options lines.
 # $_[3]: a reference to an array of privilege escalation lines
+# $_[4]: a reference to an array of files to be directly included
+# $_[5]: a reference to an array of directories with files to be
+# directly included.
 sub write_sudoers {
-    my ($self, $aliases, $opts, $lns, $includes) = @_;
+    my ($self, $aliases, $opts, $lns, $includes, $includes_dirs) = @_;
 
     my $fh = CAF::FileWriter->new (FILE_PATH,
 				   mode => 0440,
@@ -284,6 +289,12 @@ sub write_sudoers {
 	print $fh "#include $include\n";
     }
 
+    print $fh "\n# Directories to be included\n";
+    foreach my $include (@$includes_dirs) {
+	print $fh "#includedir $include\n";
+    }
+
+
     print $fh ("\n# Defaults specification\n");
     foreach my $opt ((@$opts)) {
 	printf $fh "%s%s\n", "Defaults", $opt;
@@ -308,14 +319,15 @@ sub write_sudoers {
 # now.
 sub generate_includes
 {
-    my ($self, $config) = @_;
+    my ($self, $config, $path) = @_;
 
-    if ($config->elementExists ("/software/components/sudo/includes")) {
-	return $config->getElement ("/software/components/sudo/includes")
-	    ->getTree();
+    if ($config->elementExists ($path)) {
+	return $config->getElement ($path)->getTree();
     }
     return [];
 }
+
+
 
 # Configure method.
 #
@@ -326,9 +338,9 @@ sub Configure {
 
 	my $aliases = $self->generate_aliases ($config);
 	my $opts = $self->generate_general_options ($config);
-	my $incls = $self->generate_includes ($config);
+	my $incls = $self->generate_includes ($config, INCLUDES);
+	my $incls_dirs = $self->generate_includes ($config, INCLUDES_DIRS);
 	my $lns = $self->generate_privilege_lines ($config);
 
-	return !$self->write_sudoers ($aliases, $opts, $lns, $incls);
-
+	return !$self->write_sudoers ($aliases, $opts, $lns, $incls, $incls_dirs);
 }

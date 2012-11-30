@@ -38,7 +38,7 @@ no warnings 'redefine';
 use warnings 'redefine';
 
 
-my ($aliases, $opts, $lns, $includes);
+my ($aliases, $opts, $lns, $includes, $includes_dirs);
 
 $aliases = { $USER => ["u"],
 	     $RUNAS => ["r"],
@@ -48,10 +48,10 @@ $aliases = { $USER => ["u"],
 $opts = ["\to"];
 $lns = ["l"];
 $includes = ["i"];
+$includes_dirs = ["id"];
 
 
-
-$cmp->write_sudoers($aliases, $opts, $lns, $includes);
+$cmp->write_sudoers($aliases, $opts, $lns, $includes, $includes_dirs);
 my $fh = get_file("/etc/sudoers");
 is($cmp->{ERROR}, 1, "Invalid sudoers get reported and cancelled");
 
@@ -66,6 +66,7 @@ like($fh, qr{^Host_Alias\s*h$}m, "Host aliases generated");
 like($fh, qr{^#include i$}m, "Include lines generated");
 like($fh, qr{^Defaults\s*o$}m, "Defaults lines generated");
 like($fh, qr{^l$}m, "Privilege lines generated");
+like($fh, qr{^#includedir id$}m, "Includedir lines generated");
 
 $lns = ["root ALL=(ALL) ALL"];
 $aliases = {$USER => [],
@@ -75,10 +76,11 @@ $aliases = {$USER => [],
 	    };
 $includes = [];
 $opts = [];
+$includes_dirs = [];
 
 $is_valid_sudoers = 1;
 
-$cmp->write_sudoers($aliases, $opts, $lns, $includes);
+$cmp->write_sudoers($aliases, $opts, $lns, $includes, $includes_dirs);
 
 is($cmp->{ERROR}, 1, "Valid sudoers don't trigger any more errors");
 
