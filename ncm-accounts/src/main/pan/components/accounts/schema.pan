@@ -12,7 +12,7 @@ type structure_userinfo = {
     'createHome' ? boolean
     'createKeys' ? boolean
     'groups'     : string[]
-    'password'   : string = '!'
+    'password'   ? string
     'shell'      ? string
     'uid'        : long(0..)
     'poolStart'  ? long(0..)

@@ -293,6 +293,7 @@ sub add_account
     } else {
 	$cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
     }
+    $cfg->{password} ||= "!";
     $system->{passwd}->{$name} = $cfg;
 }
 

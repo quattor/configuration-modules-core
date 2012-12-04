@@ -241,6 +241,17 @@ is($sys->{passwd}->{nopool}->{main_group}, $t->{users}->{nopool}->{groups}->[0],
 
 =pod
 
+=item An account with no password is locked
+
+=cut
+
+$sys = $cmp->build_system_map();
+delete($t->{users}->{nopool}->{password});
+$cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
+is($sys->{passwd}->{nopool}->{password}, "!", "Account with no password is locked");
+
+=pod
+
 =back
 
 =head2 C<add_profile_accounts>
