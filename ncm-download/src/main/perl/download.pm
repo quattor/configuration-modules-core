@@ -241,61 +241,59 @@ sub download {
     my ($self, %opts) = @_;
     my ($file, $source, $timeout, $proxy, $gssneg, $min_age,
 	$cacert, $capath, $cert, $key);
-    $file    = delete $opts{file};
-    $source  = delete $opts{href};
-    $timeout = delete $opts{timeout};
-    $proxy   = delete $opts{proxy} || "";
-    $gssneg  = delete $opts{gssneg} || 0;
-    $min_age = delete $opts{min_age} || 0;
-    $cacert  = delete $opts{cacert};
-    $capath  = delete $opts{capath};
-    $key     = delete $opts{key};
-    $cert    = delete $opts{cert};
+    $source  = $opts{href};
+    $timeout = $opts{timeout};
+    $proxy   = $opts{proxy} || "";
+    $gssneg  = $opts{gssneg} || 0;
+    $min_age = $opts{min_age} || 0;
+    $cacert  = $opts{cacert};
+    $capath  = $opts{capath};
+    $key     = $opts{key};
+    $cert    = $opts{cert};
 
     $self->debug(1, "Processing file $file from $source");
+
+    my $proc = CAF::Process->new([qw(/usr/bin/curl -s -R -f --create-dirs -o),
+				  $opts{file}],
+				 stderr => \my $errs,
+				 log => $self);
 
     if ($proxy) {
         $source =~ s{^([a-z]+)://([^/]+)/}{$1://$proxy/};
     }
 
-    my @opts = (
-                "-s", # quiet
-                "-R", # timestamp based on remote URL
-                "-o", $file, # output-file $file
-                "-f", # fail on server error
-                "--create-dirs",
-               );
-
     if ($timeout) {
-        push(@opts, "-m", $timeout);
+        $proc->pushargs("-m", $timeout);
     }
 
     if ($gssneg) {
         # If negotiate extension is required, then we'll
         # enabled and put in a dummy username/password.
-        push(@opts, "--negotiate", "-u", "x:x");
+        $proc->pushargs(qw(--negotiate -u x:x));
     }
 
     if ($key) {
-	push(@opts, "--key", $key);
+	$proc->pushargs("--key", $key);
     }
 
     if ($cacert) {
-	push(@opts, "--cacert", $cacert);
+	$proc->pushargs("--cacert", $cacert);
     }
 
     if ($capath) {
-	push(@opts, "--capath", $capath);
+	$proc->pushargs("--capath", $capath);
     }
 
     if ($cert) {
-	push(@opts, "--cert", $cert);
+	$proc->pushargs("--cert", $cert);
     }
+
+    $proc->pushargs($source);
 
     # Get timestamp of any existing file, defaulting to zero if the
     # file doesn't exist
     my $timestamp_existing = 0;
-    if (-e $file) {
+    if (-e $opts{file}) {
         $timestamp_existing  = (stat($file))[9];
     }
 
@@ -304,10 +302,6 @@ sub download {
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
-                my $errs = "";
-                my $proc = CAF::Process->new([ "/usr/bin/curl", @opts, $source],
-                                             stderr => \$errs,
-                                             log => $self);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     $self->error(1, "curl failed (" . ($?>>8) ."): $errs");
