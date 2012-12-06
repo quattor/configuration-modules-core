@@ -155,7 +155,7 @@ sub Configure {
                 # take the head of the list and rotate to the end...
                 # we do this in order to avoid continually trying a dead
                 # proxy - once we've found one that works, we'll keep using it.
-                my $proxy = shift @proxyhosts; 
+                my $proxy = shift @proxyhosts;
                 $success += $self->download(file => $file,
                                             href => $source,
                                             timeout => $inf->{timeout},
@@ -225,6 +225,18 @@ sub Configure {
     return 0;
 }
 
+sub get_head
+{
+    my ($self, $source, %opts) = @_;
+
+    local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if exists($opts{cert});
+    local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if (exists($opts{key}));
+    local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if (exists($opts{cacert}));
+    local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if (exists($opts{capath}));
+
+    return LWP::UserAgent->new->head($source);
+}
+
 sub download {
     my ($self, %opts) = @_;
     my ($file, $source, $timeout, $proxy, $gssneg, $min_age,
@@ -288,7 +300,7 @@ sub download {
     }
 
     my $timestamp_threshold = (time() - ($min_age * 60)); # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
-    my $timestamp_remote    = LWP::UserAgent->new->head($source)->headers->last_modified(); # :D
+    my $timestamp_remote    = $self->get_head($source, %opts)->headers->last_modified(); # :D;
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
