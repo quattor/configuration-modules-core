@@ -8,15 +8,15 @@ use NCM::Component::metaconfig;
 use CAF::Object;
 use Readonly;
 
-eval {use Config::Tiny;};
+eval "use Config::Tiny";
 
-Readonly my $STR => "An arbitrary string";
-
-plan skip_all => "Config::Tiny not found" if $@;
+if ($@) {
+    plan skip_all => "Config::Tiny not found";
+}
 
 $CAF::Object::NoAction = 1;
 
-our $sane_templates = "foo/bar";
+Readonly my $STR => "An arbitrary string";
 
 
 =pod
