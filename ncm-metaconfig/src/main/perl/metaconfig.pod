@@ -81,7 +81,8 @@ similar to this one:
 
 =item * tiny
 
-Uses Perl's L<Config::Tiny>, typically for C<key = value> files.
+Uses Perl's L<Config::Tiny>, typically for C<key = value> files or
+INI-like files with sections separated by C<[section]> headers.
 
 =item * yaml
 
