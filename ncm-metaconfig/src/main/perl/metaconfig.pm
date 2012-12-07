@@ -93,7 +93,13 @@ sub tiny
 
     my $c = Config::Tiny->new();
 
-    $c->{_} = $cfg;
+    while (my ($k, $v) = each(%$cfg)) {
+	if (ref($v)) {
+	    $c->{$k} = $v;
+	} else {
+	    $c->{_}->{$k} = $v;
+	}
+    }
     return $c->write_string();
 }
 
