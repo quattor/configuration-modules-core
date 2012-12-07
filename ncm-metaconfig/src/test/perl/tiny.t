@@ -8,7 +8,7 @@ use NCM::Component::metaconfig;
 use CAF::Object;
 use Readonly;
 
-eval {use Config::Tiny};
+eval {use Config::Tiny;};
 
 Readonly my $STR => "An arbitrary string";
 
