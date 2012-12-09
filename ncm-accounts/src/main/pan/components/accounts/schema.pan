@@ -13,7 +13,7 @@ type structure_userinfo = {
     'createKeys' ? boolean
     'groups'     : string[]
     'password'   ? string
-    'shell'      ? string
+    'shell'      : string = '/bin/bash'
     'uid'        : long(0..)
     'poolStart'  ? long(0..)
     'poolDigits' ? long(1..)
