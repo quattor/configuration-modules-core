@@ -128,11 +128,17 @@ exists, then the command to add the user will fail.
 =item password
 
 the crypted password entry for the user.  No
-default. If not given it will result in a locked account.
+default. If not given it will result in a locked account, except if
+the account already exists and has a defined password: in this case, it will
+be kept.
 
 =item shell
 
-the shell for the user.  Defaults to /bin/bash.
+the shell for the user. If it is defined as an empty string, the current shell
+is preserved for an existing account (for a new account, it will remain undefined,
+meaning that the default shell on the system will be used). 
+
+Defaults to /bin/bash.
 
 =item uid
 

@@ -336,6 +336,12 @@ sub add_profile_accounts
 			     "password from the system");
 		$cfg->{password} = $system->{passwd}->{$account}->{password};
 	    }
+	    # Inherit the existing shell if it absent or an empty string in the profile.
+	    if (!exists($cfg->{shell}) || (length($cfg->{shell}) == 0)) {
+		$self->debug(1, "Account $account: current ",
+			     "shell preserved");
+		$cfg->{shell} = $system->{passwd}->{$account}->{shell};
+	    }
 	    $self->delete_account($system, $account);
 	}
 	$self->debug(2, "Adding account $account to the system");
