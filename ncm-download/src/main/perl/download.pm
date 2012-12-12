@@ -251,7 +251,7 @@ sub download {
     $key     = $opts{key};
     $cert    = $opts{cert};
 
-    $self->debug(1, "Processing file $file from $source");
+    $self->debug(1, "Processing file $opts{file} from $source");
 
     my $proc = CAF::Process->new([qw(/usr/bin/curl -s -R -f --create-dirs -o),
 				  $opts{file}],
