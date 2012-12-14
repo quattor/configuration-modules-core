@@ -55,7 +55,7 @@ my $mock = Test::MockModule->new('NCM::Component::spma');
 
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
-		       expire_yum_caches
+		       expire_yum_caches complete_transaction
 		       packages_to_remove solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
@@ -80,7 +80,7 @@ sub clear_mock_counters
 {
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
-		      expire_yum_caches
+		      expire_yum_caches complete_transaction
 		      wanted_pkgs installed_pkgs packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
     }
@@ -110,6 +110,7 @@ is($cmp->{WANTED_PKGS}->{args}->[0], "pkgs",
 ok($cmp->{SOLVE_TRANSACTION}->{called}, "Transaction solving is called");
 is($cmp->{SOLVE_TRANSACTION}->{args}->[0], "run",
    "Transaction solving receives the correct flag");
+ok($cmp->{COMPLETE_TRANSACTION}->{called}, "Transaction completion is called");
 is($cmp->{SCHEDULE}->{install}->{called}, 1, "Installation of packages is called");
 ok(!$cmp->{SCHEDULE}->{remove}->{called},
    "With allow userpkgs, no removal is scheduled");
@@ -322,6 +323,14 @@ is($cmp->{SCHEDULE}->{remove}->{called}, 0,
    "No removal scheduling when installed_pkgs fails");
 is($cmp->{SCHEDULE}->{install}->{called}, 0,
    "No install scheduling when installed_pkgs fails");
+is($cmp->{COMPLETE_TRANSACTION}->{called}, 1,
+   "Transaction completion is always called");
 
+clear_mock_counters($cmp);
+$cmp->{COMPLETE_TRANSACTION}->{return} = 0;
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in complete_transaction is propagated");
+is($cmp->{INSTALLED_PKGS}->{called}, 0,
+   "Subsequent methods are not called if we can't complete previous transactions");
 
 done_testing();

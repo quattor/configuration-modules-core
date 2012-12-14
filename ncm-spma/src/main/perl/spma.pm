@@ -36,6 +36,7 @@ use constant YUM_EXPIRE => qw(yum clean expire-cache);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --envra);
+use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 
 our $NoActionSupported = 1;
 
@@ -314,10 +315,32 @@ sub packages_to_remove
     return $candidates-$false_positives;
 }
 
+# Completes any pending transactions
+sub complete_transaction
+{
+    my ($self) = @_;
+
+    my $cmd = CAF::Process->new([YUM_COMPLETE_TRANSACTION], log => $self,
+				stdout => \my $out, stderr => \my $err);
+
+    $cmd->execute();
+
+    if ($? || $err =~ m{^Error:}m) {
+	$self->error("Failed to complete pending transactions: $out\n$err");
+	return 0;
+    } else {
+	$self->verbose("Pending transactions completed: $out");
+	$self->warn("Pending transactions produced warnings: $err") if $err;
+	return 1;
+    }
+}
+
 # Updates the packages on the system.
 sub update_pkgs
 {
     my ($self, $pkgs, $run, $allow_user_pkgs) = @_;
+
+    $self->complete_transaction() or return 0;
 
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
