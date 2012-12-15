@@ -33,9 +33,10 @@ ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
 my $fh = get_file("/etc/ccm.conf");
 isa_ok($fh, "CAF::FileWriter", "A file was opened");
 like($fh, qr{(?:^\w+ [\w\-/\.]+$)+}m, "Lines are correctly printed");
+unlike($fh, qr{^(?:version|config)}m, "Unwanted fields are removed");
 
 
-set_command_status("/usr/sbin/ccm-fetch -config /dev/fd/0", 1);
+set_command_status(join(" ", NCM::Component::ccm::TEST_COMMAND), 1);
 
 $cmp->Configure($cfg);
 is($cmp->{ERROR}, 1, "Failure in ccm-fetch is detected");
