@@ -31,6 +31,14 @@
     </snapshotRepository>
   </distributionManagement>
 
+
+  <scm>
+    <connection>scm:git:git://github.com/quattor/ncm-components-core.git</connection>
+    <developerConnection>scm:git:git@github.com:quattor/ncm-components-core.git</developerConnection>
+    <url>https://github.com/quattor/ncm-components-core</url>
+  </scm>
+
+
   <modules>
     <module>ncm-accounts</module>
     <module>ncm-metaconfig</module>
