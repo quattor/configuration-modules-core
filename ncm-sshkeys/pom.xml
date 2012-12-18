@@ -6,7 +6,7 @@
   <artifactId>sshkeys</artifactId>
 
   <packaging>pom</packaging>
-  <version>1.1.7-SNAPSHOT</version>
+  <version>12.12.0</version>
   <name>sshkeys NCM component.</name>
 
   <repositories>
