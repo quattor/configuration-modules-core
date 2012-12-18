@@ -6,7 +6,7 @@
   <artifactId>xen</artifactId>
 
   <packaging>pom</packaging>
-  <version>0.2.2</version>
+  <version>0.2.3-SNAPSHOT</version>
   <name>Component to configure Xen domains</name>
 
   <repositories>

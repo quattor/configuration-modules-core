@@ -6,7 +6,7 @@
   <artifactId>srvtab</artifactId>
 
   <packaging>pom</packaging>
-  <version>1.2.2</version>
+  <version>1.2.3-SNAPSHOT</version>
   <name>NCM srvtab configuration component</name>
 
   <repositories>

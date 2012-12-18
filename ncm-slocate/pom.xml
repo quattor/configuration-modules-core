@@ -6,7 +6,7 @@
   <artifactId>slocate</artifactId>
 
   <packaging>pom</packaging>
-  <version>1.0.5</version>
+  <version>1.0.6-SNAPSHOT</version>
   <name>NCM slocate component</name>
 
   <repositories>

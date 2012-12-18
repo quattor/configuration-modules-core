@@ -6,7 +6,7 @@
   <artifactId>alternatives</artifactId>
 
   <packaging>pom</packaging>
-  <version>0.1.0</version>
+  <version>0.1.1-SNAPSHOT</version>
   <name>Manages the update-alternatives mechanism.</name>
 
   <repositories>

@@ -6,7 +6,7 @@
   <artifactId>sudo</artifactId>
 
   <packaging>pom</packaging>
-  <version>1.2.4</version>
+  <version>1.2.5-SNAPSHOT</version>
   <name>sudo NCM component</name>
 
   <repositories>
