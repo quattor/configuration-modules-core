@@ -207,6 +207,7 @@ sub build_system_map
 
 # Deletes any groups in the $system not in the $profile, excepting
 # those in the $kept list.
+# Adjuss
 sub delete_groups
 {
     my ($self, $system, $profile, $kept) = @_;
@@ -259,7 +260,10 @@ sub delete_account
 
     foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
 	$self->debug(2, "Deleting account $account from group $i");
-	delete($system->{groups}->{$i}->{members}->{$account});
+
+	if (exists($system->{groups}->{$i})) {
+	    delete($system->{groups}->{$i}->{members}->{$account});
+	}
     }
 
     delete($system->{passwd}->{$account});

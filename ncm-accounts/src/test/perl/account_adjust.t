@@ -24,12 +24,14 @@ use constant GROUP_CONTENTS => <<EOF;
 root:x:0:
 bin:x:1:bin,daemon
 daemon:x:2:bin,daemon,fubar
+foo:x:2:fubar
 EOF
 
 use constant PASSWD_CONTENTS => <<EOF;
 root:x:uidforroot:groupforroot:comment for root:homeforroot:rootshell
 bin:x:uidforbin:groupforbin:comment for bin:homeforbin:binshell
 daemon:x:uidfordaemon:groupfordaemon:comment for daemon:homefordaemon:daemonshell
+fubar:x:uidforfubar:2:comment for fubar:homeforfubar:fubarshell
 EOF
 
 use constant SHADOW_CONTENTS => <<EOF;
@@ -84,9 +86,9 @@ is(groups_in($sys), $g, "Removing a non-existing account doesn't affect any grou
 
 $cmp->delete_account($sys, "root");
 ok(!exists($sys->{passwd}->{root}), "groupless account removed");
-is(users_in($sys), 2,
+is(users_in($sys), 3,
    "Valid accounts preserved after removal of groupless account");
-is(groups_in($sys), 3,
+is(groups_in($sys), 4,
    "Groups not modified after removal of groupless account");
 
 =pod
@@ -101,7 +103,23 @@ foreach my $g (qw(bin daemon)) {
     ok(!exists($sys->{groups}->{$g}->{members}->{bin}),
        "Account bin successfully removed from group $g");
 }
-is(users_in($sys), 1, "Valid accounts have not been removed");
+is(users_in($sys), 2, "Valid accounts have not been removed");
+
+=pod
+
+=item * When one of the groups it belonged to was scheduled for removal
+
+=cut
+
+delete($sys->{groups}->{foo});
+$cmp->delete_account($sys, "fubar");
+ok(!exists($sys->{passwd}->{fubar}), "Account successfully deleted");
+ok(!exists($sys->{groups}->{foo}), "Removed group is not resurrected by mistake");
+
+is(users_in($sys), 1, "All unneeded accounts have been removed");
+is(groups_in($sys), 3, "No groups are resurrected");
+
+=cut
 
 =pod
 
