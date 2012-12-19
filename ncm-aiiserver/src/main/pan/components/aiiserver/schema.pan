@@ -18,6 +18,7 @@ type structure_aiishellfe = {
 	"ca_file"	? string
 	"key_file"	? string
 	"cert_file"	? string
+	"profile_format" : string = "xml"
 };
 
 type structure_aiidhcp = {

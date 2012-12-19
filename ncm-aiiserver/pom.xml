@@ -1,7 +1,4 @@
-<project
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -9,7 +6,7 @@
   <artifactId>aiiserver</artifactId>
 
   <packaging>pom</packaging>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>12.12.1-SNAPSHOT</version>
   <name>aiiserver NCM component.</name>
 
   <repositories>
@@ -39,34 +36,5 @@
       <email>mejias@delta.ft.uam.es</email>
     </developer>
   </developers>
-
-  <contributors>
-    <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-  </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>

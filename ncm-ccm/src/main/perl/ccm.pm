@@ -15,6 +15,7 @@ use LC::Exception;
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch -config /proc/self/fd/0);
 
 sub Configure
 {
@@ -23,11 +24,12 @@ sub Configure
     # Define paths for convenience.
     my $t = $config->getElement("/software/components/ccm")->getTree();
 
-    my $fh = CAF::FileWriter->new($t->{config_file}, log => $self);
+    my $fh = CAF::FileWriter->new($t->{configFile}, log => $self);
     delete($t->{active});
     delete($t->{dispatch});
     delete($t->{dependencies});
-    delete($t->{config_file});
+    delete($t->{configFile});
+    delete($t->{version});
 
     while (my ($k, $v) = each(%$t)) {
 	print $fh "$k $v\n";
@@ -35,9 +37,9 @@ sub Configure
 
     # Check that ccm-fetch can work with the new file.
     my $errs = "";
-    my $test = CAF::Process->new([qw(/usr/sbin/ccm-fetch -config /dev/fd/0)],
+    my $test = CAF::Process->new([TEST_COMMAND],
 				 log => $self, stdin => "$fh",
-				 stderr => \my $errs);
+				 stderr => \$errs);
     $test->execute();
     if ($? != 0) {
         $self->error("failed to ccm-fetch with new config: $errs");

@@ -1,14 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-			     http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.quattor</groupId>
   <artifactId>ncm-components</artifactId>
   <packaging>pom</packaging>
 
-  <version>2.0.0-SNAPSHOT</version>
+  <version>12.12.1-SNAPSHOT</version>
 
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
@@ -30,6 +27,14 @@
       <url>http://stratuslab-srv01.lal.in2p3.fr:8081/content/repositories/quattor-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
+
+
+  <scm>
+    <connection>scm:git:git://github.com/quattor/ncm-components-core.git</connection>
+    <developerConnection>scm:git:git@github.com:quattor/ncm-components-core.git</developerConnection>
+    <url>https://github.com/quattor/ncm-components-core</url>
+  </scm>
+
 
   <modules>
     <module>ncm-accounts</module>

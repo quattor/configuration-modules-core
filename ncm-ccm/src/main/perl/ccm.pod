@@ -16,7 +16,7 @@ manpage for more details.
 
 =head1 RESOURCES
 
-=head2 configfile (/etc/ccm.conf)
+=head2 configFile (/etc/ccm.conf)
 
 The location of the configuration file.  Normally this should not be
 changed.
@@ -70,7 +70,7 @@ Number of times to try to get the context from the server.
 =head2 retrieve_wait
 
 Number of seconds to wait between attempts to get the context from the
-server. 
+server.
 
 =head2 cert_file
 
