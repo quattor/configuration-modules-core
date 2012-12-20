@@ -55,6 +55,11 @@ use constant GROUP_FILE => "/etc/group";
 use constant SHADOW_FILE => "/etc/shadow";
 use constant LOGINDEFS_FILE => "/etc/login.defs";
 
+use constant UID_MIN_KEY => "UID_MIN";
+use constant GID_MIN_KEY => "GID_MIN";
+use constant UID_MIN_DEF => 100;
+use constant GID_MIN_DEF => 100;
+
 # Default groups for the root account.
 use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
 
@@ -166,6 +171,43 @@ sub build_passwd_map
     return \%rt;
 }
 
+# Returns a map for /etc/login.defs
+sub build_login_defs_map
+{
+    my $self = shift;
+
+    my $fh = CAF::FileEditor->new(LOGINDEFS_FILE, log => $self);
+    $fh->cancel();
+    seek($fh, 0, SEEK_SET);
+
+    my (%rt, $ln);
+
+    $self->verbose("Retrieving ".LOGINDEFS_FILE." parameters");
+
+    $ln = 0;
+    while (my $l = <$fh>) {
+      chomp($l);
+      next unless $l;
+      $l =~ s/^\s+//;
+      next if ( $l =~ /^#/);
+      $self->debug(2, "Read line $l");
+      my @flds = split(/\s+/, $l);
+      $self->debug(1, "Found: ".$flds[0]."=".$flds[1]);
+      $rt{$flds[0]} = $flds[1];
+    }
+
+    if ( !exists($rt{&UID_MIN_KEY}) ) {
+      $self->warn(UID_MIN_KEY." not defined. Using default value (".UID_MIN_DEF.")");
+      $rt{UID_MIN_KEY} = UID_MIN_DEF;
+    }
+    if ( !exists($rt{&GID_MIN_KEY}) ) {
+      $self->warn(GID_MIN_KEY." not defined. Using default value (".GID_MIN_DEF.")");
+      $rt{GID_MIN_KEY} = GID_MIN_DEF;
+    }
+
+    return \%rt;
+}
+
 sub add_shadow_info
 {
     my ($self, $passwd) = @_;
@@ -198,11 +240,12 @@ sub build_system_map
     my $groups = $self->build_group_map();
     my $passwd = $self->build_passwd_map($groups);
     $self->add_shadow_info($passwd);
+    my $logindefs = $self->build_login_defs_map();
 
     $self->info(sprintf("System has %d accounts in %d groups",
 			scalar(keys(%$passwd)), scalar(keys(%$groups))));
 
-    return { groups => $groups, passwd => $passwd};
+    return { groups => $groups, passwd => $passwd, logindefs => $logindefs};
 }
 
 # Deletes any groups in the $system not in the $profile, excepting
@@ -213,7 +256,7 @@ sub delete_groups
     my ($self, $system, $profile, $kept) = @_;
 
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
-	if (!(exists($profile->{$group}) || exists($kept->{$group}))) {
+	if (!(exists($profile->{$group}) || exists($kept->{$group}) || ($cfg->{gid} < $system->{logindefs}->{GID_MIN_KEY}))) {
 	    $self->debug(2, "Marking group $group for removal");
 	    delete($system->{groups}->{$group});
 	}
@@ -308,8 +351,11 @@ sub delete_unneeded_accounts
     my ($self, $system, $profile, $kept) = @_;
 
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
-	if (!(exists($profile->{$account}) || exists($kept->{$account}) ||
-		  $account eq 'root')) {
+	if (!(exists($profile->{$account}) ||
+              exists($kept->{$account}) ||
+              ($cfg->{uid} < $system->{logindefs}->{UID_MIN_KEY}) ||
+	      ($account eq 'root')
+             )) {
 	    $self->debug(2, "Marking account $account for deletion");
 	    $self->delete_account($system, $account);
 	}
@@ -653,23 +699,23 @@ sub Configure
     my $system = $self->build_system_map();
 
     if ($t->{users}) {
-	$t->{users} = $self->compute_desired_accounts($t->{users});
+	    $t->{users} = $self->compute_desired_accounts($t->{users});
     } else {
-	$t->{users} = {};
+	    $t->{users} = {};
     }
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
-			 $t->{remove_unknown});
+			$t->{remove_unknown});
     $self->adjust_accounts($system, $t->{users}, $t->{kept_users},
 			   $t->{remove_unknown});
     if (!$self->is_consistent($system)) {
-	$self->error("System would be inconsistent. ",
+	    $self->error("System would be inconsistent. ",
 		     "Leaving without changing anything");
-	return 0;
+	    return 0;
     }
     if (!$NoAction) {
-	$self->commit_configuration($system);
+	    $self->commit_configuration($system);
     }
 
     return 1;
