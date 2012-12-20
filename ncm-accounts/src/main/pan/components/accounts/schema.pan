@@ -48,6 +48,8 @@ type component_accounts = {
     'groups'     ? structure_groupinfo{}
     'login_defs' ? structure_login_defs
     'remove_unknown' : boolean = false
+    # Really useful only if remove_uknown=true
+    'preserve_system_accounts' : boolean = true
     'kept_users' : string{}
     'kept_groups' : string{}
     'ldap'       ? boolean
