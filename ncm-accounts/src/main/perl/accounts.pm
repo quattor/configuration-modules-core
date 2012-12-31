@@ -114,19 +114,19 @@ sub build_group_map
     $self->verbose("Building group map");
 
     while (my $l = <$fh>) {
-	chomp($l);
-	next unless $l;
-	$self->debug(2, "Read group line $l");
-	my @flds = split(":", $l);
-	my $h = { name => $flds[NAME] };
-	next unless $h->{name};
-	$h->{gid} = $flds[ID];
-	my %mb;
-	if ($flds[IDLIST]) {
-	    %mb = map(($_ => 1), split(",", $flds[IDLIST]));
-	}
-	$h->{members} = \%mb;
-	$rt{$h->{name}} = $h;
+      chomp($l);
+      next unless $l;
+      $self->debug(2, "Read group line $l");
+      my @flds = split(":", $l);
+      my $h = { name => $flds[NAME] };
+      next unless $h->{name};
+      $h->{gid} = $flds[ID];
+      my %mb;
+      if ($flds[IDLIST]) {
+          %mb = map(($_ => 1), split(",", $flds[IDLIST]));
+      }
+      $h->{members} = \%mb;
+      $rt{$h->{name}} = $h;
     }
 
     return \%rt;
@@ -147,25 +147,25 @@ sub build_passwd_map
 
     $ln = 0;
     while (my $l = <$fh>) {
-	chomp($l);
-	next unless $l;
-	$self->debug(2, "Read line $l");
-	my @flds = split(":", $l);
-	my $h = { name => $flds[NAME] };
-	next unless $h->{name};
-	$h->{uid} = $flds[ID];
-	$h->{main_group} = $flds[IDLIST];
-	$h->{homeDir} = $flds[HOME] || "";
-	$h->{shell} = $flds[SHELL] || "";
-	$h->{comment} = $flds[GCOS] || "";
-	$h->{ln} = ++$ln;
-	$rt{$h->{name}} = $h;
+     chomp($l);
+     next unless $l;
+     $self->debug(2, "Read line $l");
+     my @flds = split(":", $l);
+     my $h = { name => $flds[NAME] };
+     next unless $h->{name};
+     $h->{uid} = $flds[ID];
+     $h->{main_group} = $flds[IDLIST];
+     $h->{homeDir} = $flds[HOME] || "";
+     $h->{shell} = $flds[SHELL] || "";
+     $h->{comment} = $flds[GCOS] || "";
+     $h->{ln} = ++$ln;
+     $rt{$h->{name}} = $h;
     }
 
     while (my ($group, $st) = each(%$groups)) {
-	foreach my $acc (keys(%{$st->{members}})) {
-	    push(@{$rt{$acc}->{groups}}, $group) if exists($rt{$acc});
-	}
+      foreach my $acc (keys(%{$st->{members}})) {
+          push(@{$rt{$acc}->{groups}}, $group) if exists($rt{$acc});
+      }
     }
 
     return \%rt;
@@ -208,6 +208,7 @@ sub build_login_defs_map
     return \%rt;
 }
 
+# Add /etc/shadow information to the map build from /etc/passwd
 sub add_shadow_info
 {
     my ($self, $passwd) = @_;
@@ -219,13 +220,16 @@ sub add_shadow_info
     $self->verbose("Adding passwords to the accounts map");
 
     while (my $l = <$fh>) {
-	next unless $l;
-	my @flds = split(":", $l);
-	$passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
+      next unless $l;
+      my @flds = split(":", $l);
+      if ( exists($passwd->{$flds[NAME]}) ) {
+        $passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
+      } else {
+        $self->debug(2,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
+      }
     }
 }
 
-# Returns a map for /etc/shadow
 
 # Returns three hash references: one for accounts, another one for
 # groups, and the last one for shadow.
@@ -522,15 +526,18 @@ sub commit_groups
     $self->verbose("Preparing group file");
 
     while (my ($g, $cfg) = each(%$groups)) {
-	@ln =  ($g, "x", $cfg->{gid},
-		join(",", keys(%{$cfg->{members}})));
-	push(@group, join(":", @ln));
+      @ln =  ($g,
+              "x",
+              $cfg->{gid},
+              join(",", keys(%{$cfg->{members}}))
+             );
+      push(@group, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@group), " groups");
 
     $fh = CAF::FileWriter->new(GROUP_FILE, log => $self,
-			       backup => ".old");
+                               backup => ".old");
     print $fh join("\n", @group, "");
     $fh->close();
 }
@@ -566,29 +573,29 @@ sub commit_accounts
     my (@passwd, @shadow, @ln, $fh);
 
     foreach my $cfg (sort accounts_sort (values(%$accounts))) {
-	@ln =  ($cfg->{name}, "x", $cfg->{uid},
-		$cfg->{main_group},
-		(exists($cfg->{comment}) ?
-		     $cfg->{comment} : ""),
-		(exists($cfg->{homeDir}) ?
-		     $cfg->{homeDir} : ""),
-		(exists($cfg->{shell}) ? $cfg->{shell} : ""));
-	push(@passwd, join(":", @ln));
-	@ln = ($cfg->{name},
-                (defined($cfg->{password}) ? $cfg->{password} : "*"),
-
-	       15034, 0, 99999, 7, "", "", "");
-	push(@shadow, join(":", @ln));
+      @ln =  ($cfg->{name}, 
+              "x",
+              $cfg->{uid},
+      	      $cfg->{main_group},
+      	      (exists($cfg->{comment}) ? $cfg->{comment} : ""),
+      	      (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
+      	      (exists($cfg->{shell}) ? $cfg->{shell} : "")
+      	     );
+      push(@passwd, join(":", @ln));
+      @ln = ($cfg->{name},
+             (defined($cfg->{password}) ? $cfg->{password} : "*"),
+             15034, 0, 99999, 7, "", "", "");
+      push(@shadow, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@passwd), " accounts");
     $fh = CAF::FileWriter->new(PASSWD_FILE, log => $self,
-			       backup => ".old");
+                               backup => ".old");
     print $fh join("\n", @passwd, "");
     $fh->close();
     $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
-			       backup => ".old",
-			       mode => 0400);
+                               backup => ".old",
+                               mode => 0400);
     print $fh join("\n", @shadow, "");
     $fh->close();
 }
