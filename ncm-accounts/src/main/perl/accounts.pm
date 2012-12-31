@@ -1,7 +1,21 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+# #
+# Software subject to following license(s):
+#   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
+#   Copyright (c) Responsible Organization
+#
+
+# #
+# Current developer(s):
+#   Luis Fernando Muñoz Mejías <Luis.Munoz@UGent.be>
+#
+
+# #
+# Author(s): Jane SMITH, Joe DOE
+#
+
+# #
+      # accounts, 12.12.1-SNAPSHOT, SNAPSHOT20121231164032, 20121231-1740
+      #
 
 package NCM::Component::accounts;
 
@@ -59,6 +73,20 @@ use constant UID_MIN_KEY => "UID_MIN";
 use constant GID_MIN_KEY => "GID_MIN";
 use constant UID_MIN_DEF => 100;
 use constant GID_MIN_DEF => 100;
+
+# Mapping between configuration schema and /etc/login.defs keywords.
+# One entry must exist for each login.defs keyword that is manageable through this component.
+# Key is a configuration property, value is the matching login.defs keyword.
+my %logindefs_mapping = ('create_home', 'CREATE_HOME', 
+                         'gid_max', 'GID_MAX',
+                         'gid_min', 'GID_MIN',
+                         'pass_max_days', 'PASS_MAX_DAYS',
+                         'pass_min_days', 'PASS_MIN_DAYS',
+                         'pass_min_len', 'PASS_MIN_LEN',
+                         'pass_warn_age', 'PASS_WARN_AGE',
+                         'uid_max', 'UID_MAX',
+                         'uid_min', 'UID_MIN',
+                         );
 
 # Default groups for the root account.
 use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
@@ -174,10 +202,9 @@ sub build_passwd_map
 # Returns a map for /etc/login.defs
 sub build_login_defs_map
 {
-    my $self = shift;
+    my ($self,$login_defs) = @_;
 
     my $fh = CAF::FileEditor->new(LOGINDEFS_FILE, log => $self);
-    $fh->cancel();
     seek($fh, 0, SEEK_SET);
 
     my (%rt, $ln);
@@ -192,8 +219,21 @@ sub build_login_defs_map
       next if ( $l =~ /^#/);
       $self->debug(2, "Read line $l");
       my @flds = split(/\s+/, $l);
-      $self->debug(1, "Found: ".$flds[0]."=".$flds[1]);
       $rt{$flds[0]} = $flds[1];
+    }
+
+    while (my ($p,$v) = each(%{$login_defs}) ) {
+      if ( exists($logindefs_mapping{$p}) ) {
+        $rt{$logindefs_mapping{$p}} = $v;
+        $fh->add_or_replace_lines(qr/^\s*$logindefs_mapping{$p}\s+/,
+                                  qr/^\s*$logindefs_mapping{$p}\s+$v\s*$/,
+                                  $logindefs_mapping{$p}."\t".$v,
+                                  ENDING_OF_FILE,
+                                 );
+        $self->debug(1, LOGINDEFS_FILE.": ".$logindefs_mapping{$p}." set to ".$v);
+      } else {
+        $self->warn("No ".LOGINDEFS_FILE." matching keyword defined for login_defs/$p property (internal inconsistency)")
+      }
     }
 
     if ( !exists($rt{&UID_MIN_KEY}) ) {
@@ -205,6 +245,8 @@ sub build_login_defs_map
       $rt{&GID_MIN_KEY} = GID_MIN_DEF;
     }
 
+    $fh->close();
+    
     return \%rt;
 }
 
@@ -239,12 +281,12 @@ sub add_shadow_info
 # members of a group, it will be a hash as well).
 sub build_system_map
 {
-    my $self = shift;
+    my ($self,$login_defs) = @_;
 
     my $groups = $self->build_group_map();
     my $passwd = $self->build_passwd_map($groups);
     $self->add_shadow_info($passwd);
-    my $logindefs = $self->build_login_defs_map();
+    my $logindefs = $self->build_login_defs_map($login_defs);
 
     $self->info(sprintf("System has %d accounts in %d groups",
 			scalar(keys(%$passwd)), scalar(keys(%$groups))));
@@ -706,7 +748,7 @@ sub Configure
 
     my $t = $config->getElement(PATH)->getTree();
 
-    my $system = $self->build_system_map();
+    my $system = $self->build_system_map($t->{login_defs});
 
     if ($t->{users}) {
 	    $t->{users} = $self->compute_desired_accounts($t->{users});
