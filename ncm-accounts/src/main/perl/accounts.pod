@@ -87,6 +87,11 @@ This function creates a user, applying some defaults defined by variables and ch
  information consistency (e.g. group existence).
 It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
 
+=head2 keep_user_group(user_or_group:string or list of string)
+
+This functions adds a user or group to the kept_users or kept_groups resources. The
+argument can be a string or list of strings. The return value can be assigned to 
+/software/components/accounts/kept_users or /software/components/accounts/kept_groups.
 
 =head1 RESOURCES
 
