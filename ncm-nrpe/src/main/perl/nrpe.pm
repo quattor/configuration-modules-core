@@ -23,51 +23,49 @@ use constant FILE => '/etc/nagios/nrpe.cfg';
 sub Configure {
     my ($self, $config) = @_;
     my $st = $config->getElement (PATH)->getTree;
-    
+
     # Open file
     my $fw = CAF::FileWriter->open (FILE, log => $self);
 
     # Output caution header
-    $fw->print ("# /etc/nagios/nrpe.cfg\n");
-    $fw->print ("# written by ncm-nrpe. Do not edit!\n");
-    
+    print $fw ("# /etc/nagios/nrpe.cfg\n");
+    print $fw ("# written by ncm-nrpe. Do not edit!\n");
+
     # Output unreferenced options
     while (my ($key, $value) = each (%{$st})) {
-      $fw->print ("$key=$value\n") unless (ref($value) eq "ARRAY" || ref($value) eq "HASH");
+      print $fw ("$key=$value\n") unless (ref($value) eq "ARRAY" || ref($value) eq "HASH");
     }
 
     # Output allowed_hosts array as a comma separated string
-    $fw->print ("allowed_hosts=" . join (",", @{$st->{allowed_hosts}}) . "\n");
+    print $fw ("allowed_hosts=" . join (",", @{$st->{allowed_hosts}}) . "\n");
 
-    # Output nrpe_commands 
+    # Output nrpe_commands
     while (my ($cmdname, $cmdline) = each (%{$st->{command}})) {
-        $fw->print ("command[$cmdname]=$cmdline\n");
+        print $fw ("command[$cmdname]=$cmdline\n");
     }
 
     # Output external files' includes
     foreach my $fn (@{$st->{include}}) {
-        $fw->print ("include=$fn\n");
+        print $fw ("include=$fn\n");
     }
-    
+
     # Output directory includes
     foreach my $dn (@{$st->{include_dir}}) {
-        $fw->print ("include_dir=$dn\n");
-    } 
+        print $fw ("include_dir=$dn\n");
+    }
 
     # Close the output file
     $fw->close ();
 
     # Restart daemon
-    my $proc = CAF::Process->new (["/etc/init.d/nrpe", "restart"], log => $self);
+    my $proc = CAF::Process->new ([qw(/sbin/service nrpe restart)], log => $self);
     $proc->execute ();
-        
-    # Check PID file
-    $st->{pid_file} = '/var/run/nrpe.pid' unless(exists $st->{pid_file});
-    unless (-s $st->{pid_file}) {
-        throw_error ("nrpe failed to restart");
-        return;
+
+    if ($?) {
+	$self->error("Failed to restart NRPE");
+	return 0;
     }
-    
+
     # Success
     return 1;
 }
