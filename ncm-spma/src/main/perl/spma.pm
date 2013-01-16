@@ -104,10 +104,14 @@ sub generate_repos
 	# Only forward proxies are handled here. Forward proxies
 	# should be specified in /etc/yum.conf, in the proxyhost=
 	# field.
-	if ($proxy && ($type eq 'forward')) {
-	    $repo->{protocols}->[0]->{url} =~ s{^(.*?)://[^/]+(/?)}{$1://$proxy$2};
+	if ($proxy) {
+	    if ($type eq 'reverse') {
+		$repo->{protocols}->[0]->{url} =~
+		    s{^(.*?)://[^/]+(/?)}{$1://$proxy$2};
+	    } elsif ($type eq 'forward') {
+		$repo->{proxy} = $proxy;
+	    }
 	}
-
 	my $rs = $self->template()->process($template, $repo, $fh);
 	if (!$rs) {
 	    $self->error ("Unable to generate repository $repo->{name}: ",

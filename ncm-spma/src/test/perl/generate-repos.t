@@ -26,14 +26,24 @@ use CAF::FileWriter;
 
 $CAF::Object::NoAction = 1;
 
+Readonly my $REPOS_DIR => "/etc/yum.repos.d";
+Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
+Readonly my $PROXY_HOST => "aproxy";
+Readonly my $PROXY_PORT => 9876;
+Readonly my $URL => "http://localhost.localdomain";
 
-my $repos = [ { name => "a_repo",
+sub initialise_repos
+{
+    return [ { name => "a_repo",
 		owner => 'localuser@localdomain',
 		protocols => [ { name => "http",
-				 url => "http://localhost.localdomain" }
+				 url => $URL }
 			     ]
 	      }
 	    ];
+}
+
+my $repos = initialise_repos();
 
 my $mock = Test::MockModule->new('CAF::FileWriter');
 
@@ -45,10 +55,6 @@ $mock->mock('cancel', sub {
 
 
 my $cmp = NCM::Component::spma->new("spma");
-
-Readonly my $REPOS_DIR => "/etc/yum.repos.d";
-Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
-Readonly my $PROXY_HOST => "aproxy";
 
 =pod
 
@@ -82,6 +88,8 @@ to disk.
 
 =cut
 
+$repos->[0]->{protocols}->[0]->{url} = $URL;
+
 is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), 0,
    "Errors on template rendering are detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
@@ -100,17 +108,23 @@ When passing proxy-related arguments, we need to test a few things:
 
 =cut
 
-$name = "reverse_proxy";
+
+$repos = initialise_repos();
+
+$name = "forward_proxy";
 $repos->[0]->{name} = $name;
+$repos->[0]->{protocols}->[0]->{url} = $URL;
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
-			'reverse'), 1,
+			'forward'), 1,
    "Proxy settings succeed");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 
 like("$fh", qr{^baseurl=$url$}m,
      "Forward proxy settings don't affect to the URL");
+like($fh, qr{^proxy=http://$PROXY_HOST$}m,
+     "Proxy line rendered for forward proxies");
 
 =pod
 
@@ -118,28 +132,44 @@ like("$fh", qr{^baseurl=$url$}m,
 
 =cut
 
-$name = "forward_proxy";
+$repos = initialise_repos();
+
+$repos->[0]->{protocols}->[0]->{url} = $URL;
+
+$name = "reverse_proxy";
 $repos->[0]->{name} = $name;
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-			$PROXY_HOST, 'forward'), 1,
+			$PROXY_HOST, 'reverse'), 1,
    "Files with forward proxies are properly rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
-     "Forward proxies modify the URLs in the config files");
+     "Reverse proxies modify the URLs in the config files");
 
 =pod
 
-=item * Port number shows up with forward proxies
+=item * Port number shows up with proxies
 
 =cut
 
+$repos->[0]->{protocols}->[0]->{url} = $URL;
+
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-			$PROXY_HOST, 'forward', 12345), 1,
+			$PROXY_HOST, 'reverse', $PROXY_PORT), 1,
+   "Reverse proxies on special ports are properly rendered");
+$fh = get_file("$REPOS_DIR/$name.repo");
+like("$fh", qr{^baseurl=http://$PROXY_HOST:$PROXY_PORT$}m,
+     "Port number is rendered with the reverse proxy");
+
+$repos->[0]->{protocols}->[0]->{url} = $URL;
+
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+			$PROXY_HOST, 'forward', $PROXY_PORT), 1,
    "Forward proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
-like("$fh", qr{^baseurl=http://$PROXY_HOST:12345$}m,
+like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
      "Port number is rendered with the forward proxy");
+
 
 done_testing();
 

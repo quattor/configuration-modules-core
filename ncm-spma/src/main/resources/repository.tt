@@ -13,4 +13,7 @@ gpgcheck=[% gpgcheck %]
 include=/etc/yum.repos.d/[%name%].pkgs
 [% IF priority %]
 priority=[% priority %]
+[% END -%]
+[% IF proxy -%]
+proxy=http://[% proxy %]
 [% END %]
