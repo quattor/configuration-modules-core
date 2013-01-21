@@ -9,7 +9,7 @@
 
 Tests for the C<configure_yum> method.  This method modifies the
 yum.conf file to ensure it has the C<clean_requirements_on_remove>
-flag before starting.
+flag before starting, and the C<obsolete> is set to the expected value.
 
 =head1 TESTS
 
@@ -31,7 +31,7 @@ use CAF::Object;
 
 Readonly my $YUM_FILE => "target/test/cleanup.conf";
 Readonly my $FIELD => NCM::Component::spma::CLEANUP_ON_REMOVE;
-
+Readonly my $OBSOLETE => NCM::Component::spma::OBSOLETE;
 
 
 
@@ -41,14 +41,15 @@ my $cmp = NCM::Component::spma->new("spma");
 
 =pod
 
-=item * If it doesn't exist, it is appended.
+=item * If they don't exist, it is appended.
 
 =cut
 
 set_file_contents($YUM_FILE, "a=1");
-$cmp->configure_yum($YUM_FILE);
+$cmp->configure_yum($YUM_FILE, 0);
 my $fh = get_file($YUM_FILE);
-is("$fh", "a=1\n$FIELD=1\n", "Correct expansion");
+like("$fh", qr{a=1\n$FIELD=1}, "Correct expansion");
+like("$fh", qr{^$OBSOLETE=0$}m, "Obsolete is expanded properly");
 
 =pod
 
@@ -57,9 +58,9 @@ is("$fh", "a=1\n$FIELD=1\n", "Correct expansion");
 =cut
 
 set_file_contents($YUM_FILE, "$FIELD=fubar");
-$cmp->configure_yum($YUM_FILE);
+$cmp->configure_yum($YUM_FILE, 0);
 $fh = get_file($YUM_FILE);
-is("$fh", "\n$FIELD=1\n", "Correct substitution");
+like("$fh", qr{^$FIELD=1$}m, "Correct substitution");
 
 =pod
 
@@ -67,9 +68,15 @@ is("$fh", "\n$FIELD=1\n", "Correct substitution");
 
 =cut
 
-set_file_contents($YUM_FILE, "$FIELD=1");
-$cmp->configure_yum($YUM_FILE);
+set_file_contents($YUM_FILE, "$FIELD=1\n$OBSOLETE=0");
+$cmp->configure_yum($YUM_FILE, 0);
 $fh = get_file($YUM_FILE);
-is("$fh", "$FIELD=1", "The method is idempotent");
+is("$fh", "$FIELD=1\n$OBSOLETE=0", "The method is idempotent");
+
+=pod
+
+=item *
+
+=cut
 
 done_testing();

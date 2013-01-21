@@ -63,6 +63,7 @@ type component_spma_type = {
     "proxyport"     ? string # proxy port number
     "proxyrandom"   ? string with match (SELF, 'yes|no') # randomize proxyhost
     "headnode"      ? boolean # use head node
+    "process_obsoletes" : boolean = false
 };
 
 bind "/software/components/spma" = component_spma_type;

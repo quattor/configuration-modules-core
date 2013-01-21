@@ -44,6 +44,17 @@ with -bad- packages that need to remove the sticky bit from /tmp)
 
 =back
 
+Flags for Yum processing:
+
+=over
+
+=item /software/components/spma/process_obsoletes : boolean
+
+Make Yum replace obsoleted packages by their recommended counterparts.
+Defaults to C<false> to keep backwards compatibility.
+
+=back
+
 Flags for SPMA setting changes (see man spma(1) for details) in spma.conf
 
 Important note: Once a flag is set in the CDB profile and the
@@ -144,5 +155,3 @@ German Cancio <German.Cancio@cern.ch>
 ncm-ncd(1)
 
 =cut
-
-
