@@ -35,7 +35,6 @@ type SOFTWARE_REPOSITORY = {
     "name" ? string  # "Repository name"
     "owner" ? string  # "Contact person (email)"
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
-    "contents" ? SOFTWARE_REPOSITORY_PACKAGE {} {}
     "priority" ? long(1..99)
     "enabled" : boolean = true
     "gpgcheck" : boolean = false

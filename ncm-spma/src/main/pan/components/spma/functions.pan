@@ -46,6 +46,9 @@ function resolve_pkg_rep = {
 ############################
 
 function purge_rep_list = {
+    foreach (i;rep;SELF) {
+        rep['contents'] = null;
+    };
     SELF;
 };
 
