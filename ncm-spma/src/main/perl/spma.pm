@@ -400,6 +400,11 @@ sub Configure
 {
     my ($self, $config) = @_;
 
+    # We are parsing some outputs in this component.  We must set a
+    # locale that we can understand.
+    local $ENV{LANG} = 'C';
+    local $ENV{LC_ALL} = 'C';
+
     my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $t = $config->getElement(CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.

@@ -227,6 +227,17 @@ foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
     $mock->set_true($f);
 }
 
+=pod
+
+=item * The LANG environment variable is kept
+
+=cut
+
+$mock->mock('generate_repos', sub {
+		    is($ENV{LANG}, "C", "LANG environment variable kept");
+		    return 1;
+	    });
+
 done_testing();
 
 __END__
