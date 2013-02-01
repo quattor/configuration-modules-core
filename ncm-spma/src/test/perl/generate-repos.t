@@ -35,10 +35,12 @@ Readonly my $URL => "http://localhost.localdomain";
 sub initialise_repos
 {
     return [ { name => "a_repo",
-		owner => 'localuser@localdomain',
-		protocols => [ { name => "http",
-				 url => $URL }
-			     ]
+	       owner => 'localuser@localdomain',
+	       protocols => [ { name => "http",
+				url => $URL }
+			     ],
+	       includepkgs => [qw(foo bar)],
+	       excludepkgs => [qw(baz quux)],
 	      }
 	    ];
 }
@@ -78,6 +80,9 @@ my $name = $repos->[0]->{name};
 like("$fh", qr{^baseurl=$url$}m,
      "Repository got the correct URL");
 like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
+like($fh, qr{^includepkgs=foo bar$}m, "Included packages listed correctly");
+like($fh, qr{^exclude=baz quux$}m, "Excluded packages listed correctly");
+
 
 =pod
 

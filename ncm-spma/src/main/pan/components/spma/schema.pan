@@ -38,6 +38,8 @@ type SOFTWARE_REPOSITORY = {
     "priority" ? long(1..99)
     "enabled" : boolean = true
     "gpgcheck" : boolean = false
+    "includepkgs" ? string[]
+    "excludepkgs" ? string[]
 };
 
 type component_spma_type = {
