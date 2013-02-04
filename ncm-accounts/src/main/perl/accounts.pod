@@ -228,13 +228,6 @@ If useradd should create home directories for users by default
 Flag to indicate whether unknown accounts should be deleted.  The
 default is false.  The root account can never be removed.
 
-=head2 /software/components/accounts/preserve_system_accounts
-
-Flag to indicate if accounts and groups in the system range (as defined
-by UID_MAX and GID_MAX in /etc/login.defs) must be preserved even if
-they have not been added explicitely to the list of accounts/groups to
-be kept. This flag is ignored if remove_unknown=false.
-
 =head1 LIMITATIONS
 
 =head2 Local users belonging to LDAP groups

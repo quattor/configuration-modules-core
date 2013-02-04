@@ -198,11 +198,11 @@ sub build_login_defs_map
 
     if ( !exists($rt{&UID_MIN_KEY}) ) {
       $self->warn(UID_MIN_KEY." not defined. Using default value (".UID_MIN_DEF.")");
-      $rt{&UID_MIN_KEY} = UID_MIN_DEF;
+      $rt{UID_MIN_KEY} = UID_MIN_DEF;
     }
     if ( !exists($rt{&GID_MIN_KEY}) ) {
       $self->warn(GID_MIN_KEY." not defined. Using default value (".GID_MIN_DEF.")");
-      $rt{&GID_MIN_KEY} = GID_MIN_DEF;
+      $rt{GID_MIN_KEY} = GID_MIN_DEF;
     }
 
     return \%rt;
@@ -253,16 +253,13 @@ sub build_system_map
 # Adjuss
 sub delete_groups
 {
-    my ($self, $system, $profile, $kept, $preserve_system_groups) = @_;
+    my ($self, $system, $profile, $kept) = @_;
 
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
-      if (!(exists($profile->{$group}) ||
-            exists($kept->{$group}) || 
-            ($preserve_system_groups) && ($cfg->{gid} < $system->{logindefs}->{&GID_MIN_KEY})
-           )) {
-	      $self->debug(2, "Marking group $group for removal");
-	      delete($system->{groups}->{$group});
-      }
+	if (!(exists($profile->{$group}) || exists($kept->{$group}) || ($cfg->{gid} < $system->{logindefs}->{GID_MIN_KEY}))) {
+	    $self->debug(2, "Marking group $group for removal");
+	    delete($system->{groups}->{$group});
+	}
     }
 }
 
@@ -273,15 +270,15 @@ sub apply_profile_groups
     my ($self, $system, $profile) = @_;
 
     while (my ($group, $cfg) = each(%$profile)) {
-      if (!exists($system->{groups}->{$group})) {
-        $self->debug(2, "Scheduling addition of group $group");
-        $system->{groups}->{$group} = { name => $group,
-                                        members => {},
-                                        gid => $cfg->{gid}};
-      } elsif ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
-        $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
-        $system->{groups}->{$group}->{gid} = $cfg->{gid};
-      }
+	if (!exists($system->{groups}->{$group})) {
+	    $self->debug(2, "Scheduling addition of group $group");
+	    $system->{groups}->{$group} = { name => $group,
+					    members => {},
+					    gid => $cfg->{gid}};
+	} elsif ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
+	    $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
+	    $system->{groups}->{$group}->{gid} = $cfg->{gid};
+	}
     }
 }
 
@@ -291,11 +288,11 @@ sub apply_profile_groups
 # be removed only if $remove_unknown allows for it.
 sub adjust_groups
 {
-    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_system_accounts) = @_;
+    my ($self, $system, $profile, $kept, $remove_unknown) = @_;
 
     $self->verbose("Adjusting groups");
 
-    $self->delete_groups($system, $profile, $kept, $preserve_system_accounts) if $remove_unknown;
+    $self->delete_groups($system, $profile, $kept) if $remove_unknown;
     $self->apply_profile_groups($system, $profile);
 }
 
@@ -341,9 +338,9 @@ sub add_account
     }
 
     if ($cfg->{groups}->[0] =~ m{^\d+$}) {
-      $cfg->{main_group} = $cfg->{groups}->[0];
+	$cfg->{main_group} = $cfg->{groups}->[0];
     } else {
-      $cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
+	$cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
     }
     $cfg->{password} ||= "!";
     $system->{passwd}->{$name} = $cfg;
@@ -351,26 +348,26 @@ sub add_account
 
 sub delete_unneeded_accounts
 {
-    my ($self, $system, $profile, $kept, $preserve_system_accounts) = @_;
+    my ($self, $system, $profile, $kept) = @_;
 
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
-      if (!(exists($profile->{$account}) ||
-            exists($kept->{$account}) ||
-            ($preserve_system_accounts) && ($cfg->{uid} < $system->{logindefs}->{&UID_MIN_KEY}) ||
-            ($account eq 'root')
-           )) {
-        $self->debug(2, "Marking account $account for deletion");
-        $self->delete_account($system, $account);
-      }
+	if (!(exists($profile->{$account}) ||
+              exists($kept->{$account}) ||
+              ($cfg->{uid} < $system->{logindefs}->{UID_MIN_KEY}) ||
+	      ($account eq 'root')
+             )) {
+	    $self->debug(2, "Marking account $account for deletion");
+	    $self->delete_account($system, $account);
+	}
     }
     # Remove unneeded group members that may come from LDAP/NIS/other
     # sources.
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
-      foreach my $m (keys(%{$cfg->{members}})) {
-        if (!exists($system->{passwd}->{$m})) {
-          delete($cfg->{members}->{$m});
-        }
-      }
+	foreach my $m (keys(%{$cfg->{members}})) {
+	    if (!exists($system->{passwd}->{$m})) {
+		delete($cfg->{members}->{$m});
+	    }
+	}
     }
 }
 
@@ -407,11 +404,11 @@ sub add_profile_accounts
 # belong to the $profile.
 sub adjust_accounts
 {
-    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_system_accounts) = @_;
+    my ($self, $system, $profile, $kept, $remove_unknown) = @_;
 
     $self->verbose("Adjusting accounts");
 
-    $self->delete_unneeded_accounts($system, $profile, $kept, $preserve_system_accounts)
+    $self->delete_unneeded_accounts($system, $profile, $kept)
 	if $remove_unknown;
 
     $self->add_profile_accounts($system, $profile);
@@ -709,9 +706,9 @@ sub Configure
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
-			$t->{remove_unknown}, $t->{preserve_system_accounts});
+			$t->{remove_unknown});
     $self->adjust_accounts($system, $t->{users}, $t->{kept_users},
-			   $t->{remove_unknown}, $t->{preserve_system_accounts});
+			   $t->{remove_unknown});
     if (!$self->is_consistent($system)) {
 	    $self->error("System would be inconsistent. ",
 		     "Leaving without changing anything");
