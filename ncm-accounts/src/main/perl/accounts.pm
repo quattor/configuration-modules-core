@@ -58,6 +58,9 @@ use constant PWHOME => 7;
 
 use constant EXTRA_FIELD => 9;
 
+# Password field in /etc/shadow.
+use constant PASSWORD_FIELD => 1;
+
 # Pan path for the component configuration.
 use constant PATH => "/software/components/accounts";
 
@@ -66,16 +69,10 @@ use constant GROUP_FILE => "/etc/group";
 use constant SHADOW_FILE => "/etc/shadow";
 use constant LOGINDEFS_FILE => "/etc/login.defs";
 
-# Default value for parameters defined in /etc/login.defs.
-# These value are mainly used when creating new accounts: only parameters used by this component
-# must have a value defined here. These values are not used to update /etc/login.defs.
-# The key MUST match the login.defs parameter name.
-my %logindefs_defaults = ('GID_MIN', 100,
-                          'UID_MIN', 100,
-                          'PASS_MIN_DAYS', 0,
-                          'PASS_MAX_DAYS', 99999,
-                          'PASS_WARN_AGE', 7,
-                         );
+use constant UID_MIN_KEY => "UID_MIN";
+use constant GID_MIN_KEY => "GID_MIN";
+use constant UID_MIN_DEF => 100;
+use constant GID_MIN_DEF => 100;
 
 # Mapping between configuration schema and /etc/login.defs keywords.
 # One entry must exist for each login.defs keyword that is manageable through this component.
@@ -83,31 +80,13 @@ my %logindefs_defaults = ('GID_MIN', 100,
 my %logindefs_mapping = ('create_home', 'CREATE_HOME', 
                          'gid_max', 'GID_MAX',
                          'gid_min', 'GID_MIN',
-                         'mail_dir', 'MAIL_DIR',
                          'pass_max_days', 'PASS_MAX_DAYS',
                          'pass_min_days', 'PASS_MIN_DAYS',
                          'pass_min_len', 'PASS_MIN_LEN',
                          'pass_warn_age', 'PASS_WARN_AGE',
                          'uid_max', 'UID_MAX',
                          'uid_min', 'UID_MIN',
-                         'umask', 'UMASK',
-                         'userdel_cmd', 'USERDEL_CMD',
-                         'usergroups_enab', 'USERGROUP_ENAB',
                          );
-
-# Symbolic names for shadow fields
-use constant PASSWORD_FIELD => 1;
-use constant PASS_LAST_CHANGE => 2;
-use constant PASS_MIN_DAYS => 3;
-use constant PASS_MAX_DAYS => 4;
-use constant PASS_WARN_AGE => 5;
-use constant ACCOUNT_INACTIVE => 6;
-use constant ACCOUNT_EXPIRATION => 7;
-                         
-# Defaults for shadow fields if not defined in /etc/login.defs
-use constant PASS_LAST_CHANGE_DEF => 15034;
-use constant ACCOUNT_INACTIVE_DEF => "";
-use constant ACCOUNT_EXPIRATION_DEF => "";
 
 # Default groups for the root account.
 use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
@@ -124,25 +103,26 @@ sub compute_desired_accounts
 
     $self->verbose("Preparing map of desired accounts in the system");
     while (my ($k, $v) = each(%$profile)) {
-      if (exists($v->{poolSize})) {
-        foreach my $i (0..$v->{poolSize}-1) {
-          my $account = sprintf("%s%0$v->{poolDigits}d", $k,
-          $v->{poolStart}+$i);
-          while (my ($l, $m) = each(%$v)) {
-            $ds->{$account}->{$l} = $m;
-          }
-          $ds->{$account}->{uid} = $v->{uid}+$i;
-          $ds->{$account}->{name} = $account;
-          if ($v->{homeDir}) {
-            my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
-                                $v->{poolStart}+$i);
-            $ds->{$account}->{homeDir} = $home;
-          }
-        }
-      } else {
-        $ds->{$k} = $v;
-        $ds->{$k}->{name} = $k;
-      }
+	if (exists($v->{poolSize})) {
+	    foreach my $i (0..$v->{poolSize}-1) {
+		my $account = sprintf("%s%0$v->{poolDigits}d", $k,
+				      $v->{poolStart}+$i);
+		while (my ($l, $m) = each(%$v)) {
+		    $ds->{$account}->{$l} = $m;
+		}
+		$ds->{$account}->{uid} = $v->{uid}+$i;
+		$ds->{$account}->{name} = $account;
+		if ($v->{homeDir}) {
+		    my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
+					$v->{poolStart}+$i);
+		    $ds->{$account}->{homeDir} = $home;
+		}
+	    }
+	}
+	else {
+	    $ds->{$k} = $v;
+	    $ds->{$k}->{name} = $k;
+	}
     }
 
     return $ds;
@@ -247,7 +227,7 @@ sub build_login_defs_map
         $rt{$logindefs_mapping{$p}} = $v;
         $fh->add_or_replace_lines(qr/^\s*$logindefs_mapping{$p}\s+/,
                                   qr/^\s*$logindefs_mapping{$p}\s+$v\s*$/,
-                                  $logindefs_mapping{$p}."\t".$v."\n",
+                                  $logindefs_mapping{$p}."\t".$v,
                                   ENDING_OF_FILE,
                                  );
         $self->debug(1, LOGINDEFS_FILE.": ".$logindefs_mapping{$p}." set to ".$v);
@@ -256,13 +236,13 @@ sub build_login_defs_map
       }
     }
 
-    # Define default value for missing parameters used by this component.
-    # Do not update /etc/login.defs with these internal default values.
-    while (my ($k,$v) = each(%logindefs_defaults)) {
-      if ( !exists($rt{$k}) ) {
-        $self->warn($k." not defined in ".LOGINDEFS_FILE.". Using default value (".$v.")");
-        $rt{$k} = $v;
-      }      
+    if ( !exists($rt{&UID_MIN_KEY}) ) {
+      $self->warn(UID_MIN_KEY." not defined. Using default value (".UID_MIN_DEF.")");
+      $rt{&UID_MIN_KEY} = UID_MIN_DEF;
+    }
+    if ( !exists($rt{&GID_MIN_KEY}) ) {
+      $self->warn(GID_MIN_KEY." not defined. Using default value (".GID_MIN_DEF.")");
+      $rt{&GID_MIN_KEY} = GID_MIN_DEF;
     }
 
     $fh->close();
@@ -286,12 +266,6 @@ sub add_shadow_info
       my @flds = split(":", $l);
       if ( exists($passwd->{$flds[NAME]}) ) {
         $passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
-        $passwd->{$flds[NAME]}->{pass_min_days} = $flds[PASS_MIN_DAYS];
-        $passwd->{$flds[NAME]}->{pass_max_days} = $flds[PASS_MAX_DAYS];
-        $passwd->{$flds[NAME]}->{pass_warn_age} = $flds[PASS_WARN_AGE];
-        $passwd->{$flds[NAME]}->{pass_last_change} = $flds[PASS_LAST_CHANGE];
-        $passwd->{$flds[NAME]}->{inactive} = $flds[ACCOUNT_INACTIVE];
-        $passwd->{$flds[NAME]}->{expiration} = $flds[ACCOUNT_EXPIRATION];
       } else {
         $self->debug(2,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
       }
@@ -315,7 +289,7 @@ sub build_system_map
     my $logindefs = $self->build_login_defs_map($login_defs);
 
     $self->info(sprintf("System has %d accounts in %d groups",
-                scalar(keys(%$passwd)), scalar(keys(%$groups))));
+			scalar(keys(%$passwd)), scalar(keys(%$groups))));
 
     return { groups => $groups, passwd => $passwd, logindefs => $logindefs};
 }
@@ -330,10 +304,10 @@ sub delete_groups
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
       if (!(exists($profile->{$group}) ||
             exists($kept->{$group}) || 
-            ($preserve_system_groups) && ($cfg->{gid} < $system->{logindefs}->{GID_MIN})
+            ($preserve_system_groups) && ($cfg->{gid} < $system->{logindefs}->{&GID_MIN_KEY})
            )) {
-        $self->debug(2, "Marking group $group for removal");
-        delete($system->{groups}->{$group});
+	      $self->debug(2, "Marking group $group for removal");
+	      delete($system->{groups}->{$group});
       }
     }
 }
@@ -377,11 +351,11 @@ sub delete_account
     my ($self, $system, $account) = @_;
 
     foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
-      $self->debug(2, "Deleting account $account from group $i");
+	$self->debug(2, "Deleting account $account from group $i");
 
-      if (exists($system->{groups}->{$i})) {
-        delete($system->{groups}->{$i}->{members}->{$account});
-      }
+	if (exists($system->{groups}->{$i})) {
+	    delete($system->{groups}->{$i}->{members}->{$account});
+	}
     }
 
     delete($system->{passwd}->{$account});
@@ -394,22 +368,22 @@ sub add_account
     my ($self, $system, $name, $cfg) = @_;
 
     foreach my $i (@{$cfg->{groups}}) {
-      $self->debug(3, "Reviewing group $i for account $name");
-      if (exists($system->{groups}->{$i})) {
-        $system->{groups}->{$i}->{members}->{$name} = 1;
-        # Pool accounts share their group structure. If it has
-        # already been changed, we need to do no more.
-      } elsif ($i !~ m{^\d+$}) {
-        $self->debug(2, "Account $name assigned to non-local group $i");
-        my @g = getgrnam($i);
-        if (@g) {
-          $i = $g[ID];
-          $self->debug(2, "Account $name resolved in group $i")
-        } else {
-          $self->error("Not found group $i for account $name. Skiping");
-          return;
-        }
-      }
+	$self->debug(3, "Reviewing group $i for account $name");
+	if (exists($system->{groups}->{$i})) {
+	    $system->{groups}->{$i}->{members}->{$name} = 1;
+	    # Pool accounts share their group structure. If it has
+	    # already been changed, we need to do no more.
+	} elsif ($i !~ m{^\d+$}) {
+	    $self->debug(2, "Account $name assigned to non-local group $i");
+	    my @g = getgrnam($i);
+	    if (@g) {
+		$i = $g[ID];
+		$self->debug(2, "Account $name resolved in group $i")
+	    } else {
+		$self->error("Not found group $i for account $name. Skiping");
+		return;
+	    }
+	}
     }
 
     if ($cfg->{groups}->[0] =~ m{^\d+$}) {
@@ -428,7 +402,7 @@ sub delete_unneeded_accounts
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
-            ($preserve_system_accounts) && ($cfg->{uid} < $system->{logindefs}->{UID_MIN}) ||
+            ($preserve_system_accounts) && ($cfg->{uid} < $system->{logindefs}->{&UID_MIN_KEY}) ||
             ($account eq 'root')
            )) {
         $self->debug(2, "Marking account $account for deletion");
@@ -452,26 +426,25 @@ sub add_profile_accounts
     my ($self, $system, $profile) = @_;
 
     while (my ($account, $cfg) = each(%{$profile})) {
-      if (exists($system->{passwd}->{$account})) {
-        $self->debug(2, "Account $account exists in the system. ",
-                        "Regenerating from the profile.");
-        # Inherit from the existing account everything not specified in the profile.
-        # This includes all the information in /etc/shadow for the account, including the password.
-        while (my ($param,$v) = each(%{$system->{passwd}->{$account}})) {
-          if (!exists($cfg->{$param})) {
-            $self->debug(1, "Account $account inherits '$param' from the system");
-            $cfg->{$param} = $v;
-          }          
-        }
-        # Also inherit the existing shell if it is an empty string in the profile.
-        if ( length($cfg->{shell}) == 0 ) {
-          $self->debug(1, "Account $account: current shell preserved");
-          $cfg->{shell} = $system->{passwd}->{$account}->{shell};
-        }
-        $self->delete_account($system, $account);
-      }
-      $self->debug(2, "Adding account $account to the system");
-      $self->add_account($system, $account, $cfg);
+	if (exists($system->{passwd}->{$account})) {
+	    $self->debug(2, "Account $account exists in the system. ",
+			 "Regenerating from scratch");
+	    # Inherit the existing password if not specified in the profile.
+	    if (!exists($cfg->{password})) {
+		$self->debug(1, "Account $account inherits ",
+			     "password from the system");
+		$cfg->{password} = $system->{passwd}->{$account}->{password};
+	    }
+	    # Inherit the existing shell if it absent or an empty string in the profile.
+	    if (!exists($cfg->{shell}) || (length($cfg->{shell}) == 0)) {
+		$self->debug(1, "Account $account: current ",
+			     "shell preserved");
+		$cfg->{shell} = $system->{passwd}->{$account}->{shell};
+	    }
+	    $self->delete_account($system, $account);
+	}
+	$self->debug(2, "Adding account $account to the system");
+	$self->add_account($system, $account, $cfg);
     }
 }
 
@@ -485,7 +458,7 @@ sub adjust_accounts
     $self->verbose("Adjusting accounts");
 
     $self->delete_unneeded_accounts($system, $profile, $kept, $preserve_system_accounts)
-      if $remove_unknown;
+	if $remove_unknown;
 
     $self->add_profile_accounts($system, $profile);
 
@@ -500,28 +473,28 @@ sub compute_root_user
     my $g = $system->{passwd}->{root}->{groups};
 
     if (!$g || !@$g) {
-      $self->warn ("No groups found for root in the system. ",
-                   "Assigning default ones: ",
-                   join(", ", ROOT_DEFAULT_GROUPS));
-      $g = [ROOT_DEFAULT_GROUPS];
+	$self->warn ("No groups found for root in the system. ",
+		     "Assigning default ones: ",
+		     join(", ", ROOT_DEFAULT_GROUPS));
+	$g = [ROOT_DEFAULT_GROUPS];
     } else {
-      my @f = grep($_ ne "root", @$g);
-      $g = [ "root", @f];
+	my @f = grep($_ ne "root", @$g);
+	$g = [ "root", @f];
     }
 
-    my $u = {uid => 0,
-             groups => $g,
-             password => ($tree->{rootpwd}
-                         || $system->{passwd}->{root}->{password}
-                         || '!'),
-             shell => $tree->{rootshell} ||
-                      $system->{passwd}->{root}->{shell} || "/bin/bash",
-             homeDir => "/root",
-             main_group => 0,
-             comment => "root",
-             name => 'root',
-             ln => $system->{passwd}->{root}->{ln}
-            };
+    my $u = { uid => 0,
+	      groups => $g,
+	      password => ($tree->{rootpwd}
+			  || $system->{passwd}->{root}->{password}
+			  || '!'),
+	      shell => $tree->{rootshell} ||
+		  $system->{passwd}->{root}->{shell} || "/bin/bash",
+	      homeDir => "/root",
+	      main_group => 0,
+	      comment => "root",
+	      name => 'root',
+	      ln => $system->{passwd}->{root}->{ln}
+	    };
     return $u;
 }
 
@@ -535,14 +508,14 @@ sub groups_are_consistent
 
     $self->verbose("Checking for groups consistency");
     while (my ($group, $st) = each(%$groups)) {
-      $self->debug(2, "Checking for consistency of group $group");
-      if (exists($ids{$st->{gid}})) {
-        $self->error("Collision found between groups $group and ",
-                     $ids{$st->{gid}}, " for id $st->{gid}");
-        $ok = 0;
-      } else {
-        $ids{$st->{gid}} = $group;
-      }
+	$self->debug(2, "Checking for consistency of group $group");
+	if (exists($ids{$st->{gid}})) {
+	    $self->error("Collision found between groups $group and ",
+			 $ids{$st->{gid}}, " for id $st->{gid}");
+	    $ok = 0;
+	} else {
+	    $ids{$st->{gid}} = $group;
+	}
     }
     return $ok;
 }
@@ -558,15 +531,17 @@ sub accounts_are_consistent
     my $ok = 1;
     my %ids;
 
+
+
     while (my ($account, $st) = each(%$accounts)) {
-      $self->debug(2, "Checking for consistency of account $account");
-      if (exists($ids{$st->{uid}})) {
-        $self->error("Collision found between accounts $account and ",
-                     "$ids{$st->{uid}} for id $st->{uid}");
-        $ok = 0;
-      } else {
-        $ids{$st->{uid}} = $account;
-      }
+	$self->debug(2, "Checking for consistency of account $account");
+	if (exists($ids{$st->{uid}})) {
+	    $self->error("Collision found between accounts $account and ",
+			 "$ids{$st->{uid}} for id $st->{uid}");
+	    $ok = 0;
+	} else {
+	    $ids{$st->{uid}} = $account;
+	}
     }
     return $ok;
 }
@@ -580,7 +555,7 @@ sub is_consistent
 
     $self->verbose("Checking for system consistency");
     return  $self->groups_are_consistent($system->{groups}) &&
-            $self->accounts_are_consistent($system->{passwd});
+      $self->accounts_are_consistent($system->{passwd});
 }
 
 # Commits the group configuration.
@@ -617,12 +592,12 @@ sub accounts_sort($$)
     my $cmp;
 
     if (exists($a->{ln}) && exists($b->{ln})) {
-      $cmp = $a->{ln} <=> $b->{ln};
-      return $cmp if $cmp;
+	$cmp = $a->{ln} <=> $b->{ln};
+	return $cmp if $cmp;
     } elsif (exists($a->{ln})) {
-      return -1;
+	return -1;
     } elsif (exists($b->{ln})) {
-      return 1;
+	return 1;
     }
     return $a->{name} cmp $b->{name};
 }
@@ -633,7 +608,7 @@ sub accounts_sort($$)
 # way, the resulting file is less surprising to the reader.
 sub commit_accounts
 {
-    my ($self, $accounts, $login_defs) = @_;
+    my ($self, $accounts) = @_;
 
     $self->verbose("Committing passwd and shadow files");
 
@@ -651,14 +626,7 @@ sub commit_accounts
       push(@passwd, join(":", @ln));
       @ln = ($cfg->{name},
              (defined($cfg->{password}) ? $cfg->{password} : "*"),
-             (defined($cfg->{pass_last_change}) ? $cfg->{pass_last_change} : PASS_LAST_CHANGE_DEF),
-             (defined($cfg->{pass_min_days}) ? $cfg->{pass_min_days} : $login_defs->{PASS_MIN_DAYS}),
-             (defined($cfg->{pass_max_days}) ? $cfg->{pass_max_days} : $login_defs->{PASS_MAX_DAYS}),
-             (defined($cfg->{pass_warn_age}) ? $cfg->{pass_warn_age} : $login_defs->{PASS_WARN_AGE}),
-             (defined($cfg->{inactive}) ? $cfg->{inactive} : ACCOUNT_INACTIVE_DEF),
-             (defined($cfg->{expiration}) ? $cfg->{expiration} : ACCOUNT_EXPIRATION_DEF),
-             ""
-            );
+             15034, 0, 99999, 7, "", "", "");
       push(@shadow, join(":", @ln));
     }
 
@@ -700,14 +668,14 @@ sub create_home
 
     $dir = $self->sanitize_path($cfg->{homeDir}) or return;
     if ($cfg->{uid} !~ m{^(\d+)$}) {
-      $self->error("Wrong uid for $account, not creating its home dir");
-      return;
+	$self->error("Wrong uid for $account, not creating its home dir");
+	return;
     }
     $uid = $1;
 
     if ($cfg->{main_group} !~ m{^(\d+)$}) {
-      $self->error("Wrong group for $account, not creating its home dir");
-      return;
+	$self->error("Wrong group for $account, not creating its home dir");
+	return;
     }
     $gid = $1;
     # Parent directories, if created, need to be readable by the new
@@ -745,7 +713,7 @@ sub create_home
             }
             chown($uid, $gid, $f);
         }
-      );
+       );
 
     $find->find(SKELDIR);
     chown($uid, $gid, $dir);
@@ -758,9 +726,9 @@ sub build_home_dirs
     my ($self, $accounts) = @_;
 
     while (my ($account, $cfg) = each(%$accounts)) {
-      if ($cfg->{createHome} && ! -d $cfg->{homeDir}) {
-          $self->create_home($account, $cfg);
-      }
+	if ($cfg->{createHome} && ! -d $cfg->{homeDir}) {
+	    $self->create_home($account, $cfg);
+	}
     }
 }
 
@@ -769,7 +737,7 @@ sub commit_configuration
     my ($self, $system) = @_;
 
     $self->commit_groups($system->{groups});
-    $self->commit_accounts($system->{passwd},$system->{logindefs});
+    $self->commit_accounts($system->{passwd});
     $self->build_home_dirs($system->{passwd});
 }
 
@@ -783,23 +751,23 @@ sub Configure
     my $system = $self->build_system_map($t->{login_defs});
 
     if ($t->{users}) {
-          $t->{users} = $self->compute_desired_accounts($t->{users});
+	    $t->{users} = $self->compute_desired_accounts($t->{users});
     } else {
-          $t->{users} = {};
+	    $t->{users} = {};
     }
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
-                         $t->{remove_unknown}, $t->{preserve_system_accounts});
+			$t->{remove_unknown}, $t->{preserve_system_accounts});
     $self->adjust_accounts($system, $t->{users}, $t->{kept_users},
-                           $t->{remove_unknown}, $t->{preserve_system_accounts});
+			   $t->{remove_unknown}, $t->{preserve_system_accounts});
     if (!$self->is_consistent($system)) {
-          $self->error("System would be inconsistent. ",
-                       "Leaving without changing anything");
-          return 0;
+	    $self->error("System would be inconsistent. ",
+		     "Leaving without changing anything");
+	    return 0;
     }
     if (!$NoAction) {
-          $self->commit_configuration($system);
+	    $self->commit_configuration($system);
     }
 
     return 1;

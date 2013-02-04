@@ -37,10 +37,6 @@ type structure_login_defs = {
     'pass_min_len' ? long(1..)
     'pass_warn_age' ? long(1..)
     'create_home' ? string with match (SELF,'yes|no')
-    'mail_dir' ? string
-    'umask' ? string
-    'userdel_cmd' ? string
-    'usergroups_enab' ? boolean
 };
 
 type component_accounts = {
