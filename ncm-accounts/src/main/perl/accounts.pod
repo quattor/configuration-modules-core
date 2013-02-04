@@ -228,41 +228,12 @@ If useradd should create home directories for users by default
 Flag to indicate whether unknown accounts should be deleted.  The
 default is false.  The root account can never be removed.
 
-=head2 /software/components/accounts/preserved_accounts
+=head2 /software/components/accounts/preserve_system_accounts
 
-This property may have 3 values: 'none', 'system', 'dyn_user_group'. It controls
-the accounts/groups that have to be preserved when 'remove_unknown' is true 
-(it has no effect when remove_unknown=false).
-
-The effect of each possible value is
-
-=over
-=item system
-
-all accounts/groups in the system range (strictly below GID/UID_MIN as
-defined in /etc/login.defs) are preserved even though they are not present
-in the configuration. It is possible to use login_defs/uid_min and
-login_defs/gid_min properties to control the preserved ranges.
-
-=item dyn_user_group
-
-all accounts/groups in the system range and in the
-range used for dynamic uid/gid allocation by useradd command, ie. all
-accounts/groups with uid/gid less or equal to GID/UID_MAX as defined in 
-/etc/login.defs, are preserved. The exact list of accounts preserved
-depends on UID/GID_MAX value. It is possible to use login_defs/uid_max and
-login_defs/gid_max properties to control the preserved ranges. Not that
-remove_unknown=true with preserved_accounts=dyn_user_group and UID/GID_MAX
-set to the highest possible IDs is equivalent to remove_unknown=false.
-
-=item none
-
-all existing accounts/groups not present in the configuration are
-removed from the system (except root).
-
-=back
-
-Default: dyn_user_group
+Flag to indicate if accounts and groups in the system range (as defined
+by UID_MIN and GID_MIN in /etc/login.defs) must be preserved even if
+they have not been added explicitely to the list of accounts/groups to
+be kept. This flag is ignored if remove_unknown=false.
 
 =head1 LIMITATIONS
 

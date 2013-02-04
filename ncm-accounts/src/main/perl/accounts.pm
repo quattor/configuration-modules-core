@@ -71,9 +71,7 @@ use constant LOGINDEFS_FILE => "/etc/login.defs";
 # must have a value defined here. These values are not used to update /etc/login.defs.
 # The key MUST match the login.defs parameter name.
 my %logindefs_defaults = ('GID_MIN', 100,
-                          'GID_MAX', 65535,
                           'UID_MIN', 100,
-                          'UID_MAX', 65535,
                           'PASS_MIN_DAYS', 0,
                           'PASS_MAX_DAYS', 99999,
                           'PASS_WARN_AGE', 7,
@@ -224,7 +222,7 @@ sub build_passwd_map
 # Returns a map for /etc/login.defs
 sub build_login_defs_map
 {
-    my ($self,$login_defs,$preserved_accounts) = @_;
+    my ($self,$login_defs) = @_;
 
     my $fh = CAF::FileEditor->new(LOGINDEFS_FILE, log => $self);
     seek($fh, 0, SEEK_SET);
@@ -267,18 +265,6 @@ sub build_login_defs_map
       }      
     }
 
-    # Define the maximum uid/gid to be preserved according to
-    # $preserved_account value.
-    #  - system: system range only must be preserved
-    #  - dyn_user_group: up to GID/UID_MAX (included) must be preserved
-    if ( $preserved_accounts eq 'system' ) {
-      $rt{max_uid_preserved} = $rt{UID_MIN} - 1;
-      $rt{max_gid_preserved} = $rt{GID_MIN} - 1;
-    } elsif ( $preserved_accounts eq 'dyn_user_group' ) {
-      $rt{max_uid_preserved} = $rt{UID_MAX};
-      $rt{max_gid_preserved} = $rt{GID_MAX};      
-    }
-    
     $fh->close();
     
     return \%rt;
@@ -321,12 +307,12 @@ sub add_shadow_info
 # members of a group, it will be a hash as well).
 sub build_system_map
 {
-    my ($self,$login_defs,$preserve_accounts) = @_;
+    my ($self,$login_defs) = @_;
 
     my $groups = $self->build_group_map();
     my $passwd = $self->build_passwd_map($groups);
     $self->add_shadow_info($passwd);
-    my $logindefs = $self->build_login_defs_map($login_defs,$preserve_accounts);
+    my $logindefs = $self->build_login_defs_map($login_defs);
 
     $self->info(sprintf("System has %d accounts in %d groups",
                 scalar(keys(%$passwd)), scalar(keys(%$groups))));
@@ -339,12 +325,12 @@ sub build_system_map
 # Adjuss
 sub delete_groups
 {
-    my ($self, $system, $profile, $kept, $preserve_groups) = @_;
+    my ($self, $system, $profile, $kept, $preserve_system_groups) = @_;
 
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
       if (!(exists($profile->{$group}) ||
             exists($kept->{$group}) || 
-            ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
+            ($preserve_system_groups) && ($cfg->{gid} < $system->{logindefs}->{GID_MIN})
            )) {
         $self->debug(2, "Marking group $group for removal");
         delete($system->{groups}->{$group});
@@ -377,11 +363,11 @@ sub apply_profile_groups
 # be removed only if $remove_unknown allows for it.
 sub adjust_groups
 {
-    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_accounts) = @_;
+    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_system_accounts) = @_;
 
     $self->verbose("Adjusting groups");
 
-    $self->delete_groups($system, $profile, $kept, $preserve_accounts) if $remove_unknown;
+    $self->delete_groups($system, $profile, $kept, $preserve_system_accounts) if $remove_unknown;
     $self->apply_profile_groups($system, $profile);
 }
 
@@ -437,12 +423,12 @@ sub add_account
 
 sub delete_unneeded_accounts
 {
-    my ($self, $system, $profile, $kept, $preserve_accounts) = @_;
+    my ($self, $system, $profile, $kept, $preserve_system_accounts) = @_;
 
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
-            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_gid_preserved}) ||
+            ($preserve_system_accounts) && ($cfg->{uid} < $system->{logindefs}->{UID_MIN}) ||
             ($account eq 'root')
            )) {
         $self->debug(2, "Marking account $account for deletion");
@@ -494,11 +480,11 @@ sub add_profile_accounts
 # belong to the $profile.
 sub adjust_accounts
 {
-    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_accounts) = @_;
+    my ($self, $system, $profile, $kept, $remove_unknown, $preserve_system_accounts) = @_;
 
     $self->verbose("Adjusting accounts");
 
-    $self->delete_unneeded_accounts($system, $profile, $kept, $preserve_accounts)
+    $self->delete_unneeded_accounts($system, $profile, $kept, $preserve_system_accounts)
       if $remove_unknown;
 
     $self->add_profile_accounts($system, $profile);
@@ -793,12 +779,8 @@ sub Configure
     my ($self, $config) = @_;
 
     my $t = $config->getElement(PATH)->getTree();
-    my $preserve_accounts = 0;
-    if ( $t->{preserved_accounts} ne 'none' ) {
-      $preserve_accounts = 1;
-    }
 
-    my $system = $self->build_system_map($t->{login_defs},$t->{preserved_accounts});
+    my $system = $self->build_system_map($t->{login_defs});
 
     if ($t->{users}) {
           $t->{users} = $self->compute_desired_accounts($t->{users});
@@ -808,9 +790,9 @@ sub Configure
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
     $self->adjust_groups($system, $t->{groups},  $t->{kept_groups},
-                         $t->{remove_unknown}, $preserve_accounts);
+                         $t->{remove_unknown}, $t->{preserve_system_accounts});
     $self->adjust_accounts($system, $t->{users}, $t->{kept_users},
-                           $t->{remove_unknown}, $preserve_accounts);
+                           $t->{remove_unknown}, $t->{preserve_system_accounts});
     if (!$self->is_consistent($system)) {
           $self->error("System would be inconsistent. ",
                        "Leaving without changing anything");
