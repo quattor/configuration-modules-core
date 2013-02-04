@@ -85,5 +85,4 @@ unique template components/accounts/sysgroups;
     'webalizer', '',
     'cimsrvr', '',
     'vboxusers', '',
-    'apacheds', '',
    );
