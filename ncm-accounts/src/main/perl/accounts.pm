@@ -293,7 +293,7 @@ sub add_shadow_info
         $passwd->{$flds[NAME]}->{inactive} = $flds[ACCOUNT_INACTIVE];
         $passwd->{$flds[NAME]}->{expiration} = $flds[ACCOUNT_EXPIRATION];
       } else {
-        $self->debug(1,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
+        $self->debug(2,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
       }
     }
 }
@@ -453,7 +453,7 @@ sub add_profile_accounts
 
     while (my ($account, $cfg) = each(%{$profile})) {
       if (exists($system->{passwd}->{$account})) {
-        $self->debug(1, "Account $account exists in the system. ",
+        $self->debug(2, "Account $account exists in the system. ",
                         "Regenerating from the profile.");
         # Inherit from the existing account everything not specified in the profile.
         # This includes all the information in /etc/shadow for the account, including the password.
@@ -465,7 +465,7 @@ sub add_profile_accounts
         }
         # Also inherit the existing shell if it is an empty string in the profile.
         if ( length($cfg->{shell}) == 0 ) {
-          $self->debug(2, "Account $account: current shell preserved");
+          $self->debug(1, "Account $account: current shell preserved");
           $cfg->{shell} = $system->{passwd}->{$account}->{shell};
         }
         $self->delete_account($system, $account);
