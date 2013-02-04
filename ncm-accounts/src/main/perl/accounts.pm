@@ -163,7 +163,6 @@ sub build_group_map
 
     $self->verbose("Building group map");
 
-    my $ln = 1;
     while (my $l = <$fh>) {
       chomp($l);
       next unless $l;
@@ -171,23 +170,13 @@ sub build_group_map
       my @flds = split(":", $l);
       my $h = { name => $flds[NAME] };
       next unless $h->{name};
-      if ( $h->{name} =~ /^\+/ ) {
-        # Lines starting with a '+' are special lines to refer to NIS netgroup or LDAP groups
-        # that can be used in passwd or shadow files. But they are invalid in group file.
-        # It happens that some sites tend to add the same line in group file as in passwd file:
-        # To avoid errors in the component, just discard those lines.
-        $self->warn("line $ln in ".GROUP_FILE." is starting by '+': it'll be ignored as it is invalid.");
-        next;
-      } else {
-        $h->{gid} = $flds[ID];
-        my %mb;
-        if ($flds[IDLIST]) {
-            %mb = map(($_ => 1), split(",", $flds[IDLIST]));
-        }
-        $h->{members} = \%mb;
-        $rt{$h->{name}} = $h;
+      $h->{gid} = $flds[ID];
+      my %mb;
+      if ($flds[IDLIST]) {
+          %mb = map(($_ => 1), split(",", $flds[IDLIST]));
       }
-      $ln++;
+      $h->{members} = \%mb;
+      $rt{$h->{name}} = $h;
     }
 
     return \%rt;
@@ -208,28 +197,19 @@ sub build_passwd_map
 
     $ln = 0;
     while (my $l = <$fh>) {
-      chomp($l);
-      next unless $l;
-      $self->debug(2, "Read line $l");
-      my @flds = split(":", $l);
-      my $h = { name => $flds[NAME] };
-      next unless $h->{name};
-      if ( $h->{name} =~ /^\+/ ) {
-        # Lines starting with a '+' are special lines to refer to NIS netgroup or LDAP groups.
-        # Keep them unchanged. They will be appended at the end of the passwd file.
-        if ( ! $rt{_passwd_special_lines_} ) {
-          $rt{_passwd_special_lines_} = ();
-        }
-        push @{$rt{_passwd_special_lines_}}, $l;
-      } else {
-        $h->{uid} = $flds[ID];
-        $h->{main_group} = $flds[IDLIST];
-        $h->{homeDir} = $flds[HOME] || "";
-        $h->{shell} = $flds[SHELL] || "";
-        $h->{comment} = $flds[GCOS] || "";
-        $h->{ln} = ++$ln;
-        $rt{$h->{name}} = $h;       
-      }
+     chomp($l);
+     next unless $l;
+     $self->debug(2, "Read line $l");
+     my @flds = split(":", $l);
+     my $h = { name => $flds[NAME] };
+     next unless $h->{name};
+     $h->{uid} = $flds[ID];
+     $h->{main_group} = $flds[IDLIST];
+     $h->{homeDir} = $flds[HOME] || "";
+     $h->{shell} = $flds[SHELL] || "";
+     $h->{comment} = $flds[GCOS] || "";
+     $h->{ln} = ++$ln;
+     $rt{$h->{name}} = $h;
     }
 
     while (my ($group, $st) = each(%$groups)) {
@@ -318,25 +298,16 @@ sub add_shadow_info
     while (my $l = <$fh>) {
       next unless $l;
       my @flds = split(":", $l);
-      if ( $flds[NAME] =~ /^\+/ ) {
-        # Lines starting with a '+' are special lines to refer to NIS netgroup or LDAP groups.
-        # Keep them unchanged. They will be appended at the end of the shadow file.
-        if ( ! $passwd->{_shadow_special_lines_} ) {
-          $passwd->{_shadow_special_lines_} = {};
-        }
-        push @{$passwd->{_shadow_special_lines_}}, $l;
+      if ( exists($passwd->{$flds[NAME]}) ) {
+        $passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
+        $passwd->{$flds[NAME]}->{pass_min_days} = $flds[PASS_MIN_DAYS];
+        $passwd->{$flds[NAME]}->{pass_max_days} = $flds[PASS_MAX_DAYS];
+        $passwd->{$flds[NAME]}->{pass_warn_age} = $flds[PASS_WARN_AGE];
+        $passwd->{$flds[NAME]}->{pass_last_change} = $flds[PASS_LAST_CHANGE];
+        $passwd->{$flds[NAME]}->{inactive} = $flds[ACCOUNT_INACTIVE];
+        $passwd->{$flds[NAME]}->{expiration} = $flds[ACCOUNT_EXPIRATION];
       } else {
-        if ( exists($passwd->{$flds[NAME]}) ) {
-          $passwd->{$flds[NAME]}->{password} = $flds[PASSWORD_FIELD];
-          $passwd->{$flds[NAME]}->{pass_min_days} = $flds[PASS_MIN_DAYS];
-          $passwd->{$flds[NAME]}->{pass_max_days} = $flds[PASS_MAX_DAYS];
-          $passwd->{$flds[NAME]}->{pass_warn_age} = $flds[PASS_WARN_AGE];
-          $passwd->{$flds[NAME]}->{pass_last_change} = $flds[PASS_LAST_CHANGE];
-          $passwd->{$flds[NAME]}->{inactive} = $flds[ACCOUNT_INACTIVE];
-          $passwd->{$flds[NAME]}->{expiration} = $flds[ACCOUNT_EXPIRATION];
-        } else {
-          $self->debug(1,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
-        }
+        $self->debug(1,"Shadow entry ' ".$flds[NAME]."' ignored: no matching entry in password file");
       }
     }
 }
@@ -348,9 +319,6 @@ sub add_shadow_info
 # Each member of each hash is a hash reference with a meaningful name
 # for each field. If a field is a complex one (say, the list of
 # members of a group, it will be a hash as well).
-# In $passwd hash, there are 2 specific entries that must be moved off the hash:
-# _passwd_special_lines_ and _shadow_special_lines. They refer to lines that must
-# be kept as is.
 sub build_system_map
 {
     my ($self,$login_defs,$preserve_accounts) = @_;
@@ -360,22 +328,10 @@ sub build_system_map
     $self->add_shadow_info($passwd);
     my $logindefs = $self->build_login_defs_map($login_defs,$preserve_accounts);
 
-    my $special_lines = {};
-    if ( exists($passwd->{_passwd_special_lines_}) ) {
-      $special_lines->{passwd} = $passwd->{_passwd_special_lines_};
-      delete ($passwd->{_passwd_special_lines_});
-      $self->debug(1,scalar(@{$special_lines->{passwd}})." special lines found in ".PASSWD_FILE)
-    }
-    if ( exists($passwd->{_shadow_special_lines}) ) {
-      $special_lines->{shadow} = $passwd->{_shadow_special_lines};
-      delete ($passwd->{_shadow_special_lines});
-      $self->debug(1,scalar(@{$special_lines->{shadow}})." special lines found in ".SHADOW_FILE)
-    }
-    
     $self->info(sprintf("System has %d accounts in %d groups",
                 scalar(keys(%$passwd)), scalar(keys(%$groups))));
 
-    return { groups => $groups, passwd => $passwd, logindefs => $logindefs, special_lines => $special_lines};
+    return { groups => $groups, passwd => $passwd, logindefs => $logindefs};
 }
 
 # Deletes any groups in the $system not in the $profile, excepting
@@ -691,7 +647,7 @@ sub accounts_sort($$)
 # way, the resulting file is less surprising to the reader.
 sub commit_accounts
 {
-    my ($self, $accounts, $special_lines, $login_defs) = @_;
+    my ($self, $accounts, $login_defs) = @_;
 
     $self->verbose("Committing passwd and shadow files");
 
@@ -707,7 +663,6 @@ sub commit_accounts
       	      (exists($cfg->{shell}) ? $cfg->{shell} : "")
       	     );
       push(@passwd, join(":", @ln));
-      
       @ln = ($cfg->{name},
              (defined($cfg->{password}) ? $cfg->{password} : "*"),
              (defined($cfg->{pass_last_change}) ? $cfg->{pass_last_change} : PASS_LAST_CHANGE_DEF),
@@ -722,26 +677,10 @@ sub commit_accounts
     }
 
     $self->info("Committing ", scalar(@passwd), " accounts");
-
-    # Readd special lines if any at the end of passwd file
-    if ( exists($special_lines->{passwd}) ) {
-      $self->debug(1,scalar(@{$special_lines->{passwd}})." special lines preserved in ".PASSWD_FILE);
-      foreach my $l (@{$special_lines->{passwd}}) {
-        push @passwd, $l;
-      }
-    }
     $fh = CAF::FileWriter->new(PASSWD_FILE, log => $self,
                                backup => ".old");
     print $fh join("\n", @passwd, "");
     $fh->close();
-
-    # Readd special lines if any at the end of shadow file
-    if ( exists($special_lines->{shadow}) ) {
-      $self->debug(1,scalar(@{$special_lines->{shadow}})." special lines preserved in ".SHADOW_FILE);
-      foreach my $l (@{$special_lines->{shadow}}) {
-        push @shadow, $l;
-      }
-    }
     $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
                                backup => ".old",
                                mode => 0400);
@@ -844,7 +783,7 @@ sub commit_configuration
     my ($self, $system) = @_;
 
     $self->commit_groups($system->{groups});
-    $self->commit_accounts($system->{passwd},$system->{special_lines},$system->{logindefs});
+    $self->commit_accounts($system->{passwd},$system->{logindefs});
     $self->build_home_dirs($system->{passwd});
 }
 
