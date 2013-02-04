@@ -118,7 +118,7 @@ The well-known /etc/ccm.conf can be defined like this:
         ...
     };
 
-    bind "/software/components/metaconfig/{/etc/ccm.conf}/contents" = ccm_conf_file;
+    bind "/software/components/metaconfig/services/{/etc/ccm.conf}/contents" = ccm_conf_file;
 
 =head3 Fill in the contents
 
