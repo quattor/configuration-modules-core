@@ -80,6 +80,4 @@ unique template components/accounts/sysusers;
     'squid', '',
     'tomcat', '',
     'uuidd', '',
-    'webalizer', '',
-    'apacheds', '',
-   );
+    'webalizer', '');

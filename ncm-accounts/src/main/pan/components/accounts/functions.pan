@@ -44,7 +44,7 @@ function create_group = {
 
     accounts['groups'][groupname] = group_params;
 
-    accounts;
+    return (accounts);
 };
 
 # create_user(username:string,
@@ -119,7 +119,7 @@ function create_user = {
 
     accounts['users'][username] = user_params;
 
-    accounts;
+    return (accounts);
 };
 
 
@@ -192,36 +192,5 @@ function create_accounts_from_db = {
         };
     };
 
-    accounts;
-};
-
-
-# keep_user_group(user_or_group)
-#
-# Return value : kept_users or kept_groups structure
-#
-# Add a user or group (string) or list of users or groups (list of strings) to the 
-# kept_users or kept_groups resource. 
-# If the user/group is already present in the list, it is ignored but it
-# doesn't cause an error.
-#
-
-function keep_user_group = {
-    function_name = 'keep_user_group';
-
-    if ( (ARGC != 1) || (!is_string(ARGV[0]) && !is_list(ARGV[0])) ) {
-        error(function_name + ' requires 1 argument (string or list of strings)');
-    };
-    
-    if ( is_string(ARGV[0]) ) {
-      tmp = ARGV[0];
-      ARGV[0] = undef;
-      ARGV[0] = list(tmp);
-    };
-    
-    foreach (i;v;ARGV[0]) {
-      SELF[v] = '';
-    };
-
-    SELF;
+    return (accounts);
 };
