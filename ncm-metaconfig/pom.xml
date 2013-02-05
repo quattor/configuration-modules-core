@@ -50,13 +50,20 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
+	<plugin>
+	  <groupId>org.codehaus.mojo</groupId>
+	  <artifactId>rpm-maven-plugin</artifactId>
+	  <configuration>
+            <requires>
+              <require>perl(Config::Tiny)</require>
+              <require>perl(Config::General)</require>
+              <require>perl(JSON::XS)</require>
+              <require>perl(YAML::XS)</require>
+              <require>perl(Template)</require>
+            </requires>
+	  </configuration>
+	</plugin>
       </plugins>
     </pluginManagement>
   </build>
-
 </project>
