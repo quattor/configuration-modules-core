@@ -82,8 +82,4 @@ unique template components/accounts/sysgroups;
     'amandabackup', '',
     'saslauth','',
     'uuidd', '',
-    'webalizer', '',
-    'cimsrvr', '',
-    'vboxusers', '',
-    'apacheds', '',
-   );
+    'webalizer', '');
