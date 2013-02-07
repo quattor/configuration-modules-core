@@ -6,7 +6,7 @@
   <artifactId>spma</artifactId>
 
   <packaging>pom</packaging>
-  <version>12.12.1-SNAPSHOT</version>
+  <version>13.2.0</version>
   <name>NCM SPMA configuration component</name>
 
   <repositories>
@@ -121,8 +121,8 @@
 	      </mapping>
 	    </mappings>
 	    <requires>
-	      <require>yum >= 3.2.29</require>
-	      <require>yum-utils >= 1.1.30</require>
+	      <require>yum &gt;= 3.2.29</require>
+	      <require>yum-utils &gt;= 1.1.30</require>
 	      <require>yum-versionlock</require>
 	      <require>yum-priorities</require>
 	    </requires>
