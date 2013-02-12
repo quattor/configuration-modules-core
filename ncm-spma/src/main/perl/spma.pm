@@ -35,7 +35,7 @@ use constant YUM_EXPIRE => qw(yum clean expire-cache);
 
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
-use constant REPOQUERY => qw(repoquery --envra);
+use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
 
