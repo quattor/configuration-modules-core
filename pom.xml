@@ -30,9 +30,9 @@
 
 
   <scm>
-    <connection>scm:git:git://github.com/quattor/ncm-components-core.git</connection>
-    <developerConnection>scm:git:git@github.com:quattor/ncm-components-core.git</developerConnection>
-    <url>https://github.com/quattor/ncm-components-core</url>
+    <connection>scm:git:git://github.com/quattor/configuration-modules-git.git</connection>
+    <developerConnection>scm:git:git@github.com:quattor/configuration-modules-core.git</developerConnection>
+    <url>https://github.com/quattor/configuration-modules-core</url>
   </scm>
 
 
