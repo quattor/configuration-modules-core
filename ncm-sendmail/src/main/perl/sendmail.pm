@@ -198,9 +198,10 @@ sub Configure {
     ## Set the outgoing mail server
     if($config->elementExists($cfgpathsmtpserver)) {
       my $cfgvaluesmtpserver=$config->getValue($cfgpathsmtpserver);
+      my $quotedsmtpserver=quotemeta($cfgvaluesmtpserver);
       NCM::Check::lines($cfgfilemc,
 			linere => ".*define.*SMART_HOST.*",
-			goodre => "^define.\`SMART_HOST',`".$cfgvaluesmtpserver."\'.dnl",
+			goodre => "^define.\`SMART_HOST',`".$quotedsmtpserver."\'.dnl",
 			good   => "define(`SMART_HOST',`".$cfgvaluesmtpserver."')dnl",
 		       );
       $self->info("using smarthost:  $cfgvaluesmtpserver");
