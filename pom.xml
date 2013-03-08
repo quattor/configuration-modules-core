@@ -36,6 +36,7 @@
   </scm>
 
 
+<module>ncm-openldap</module>
   <modules>
     <module>ncm-accounts</module>
     <module>ncm-metaconfig</module>
