@@ -94,7 +94,7 @@ sub Configure($$@) {
         }
 
         my $fname = $name;
-	$file =~ s{[/ ]}{_}g;
+	$file =~ s{[/\s]}{_}g;
 	my $file = "$crond/$fname.ncm-cron.cron";
         $self->info("Checking cron entry $name ($file)...");
 
