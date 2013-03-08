@@ -6,6 +6,8 @@ use Test::More;
 use Test::Quattor;
 use NCM::Component::accounts;
 use Readonly;
+use CAF::Object;
+$CAF::Object::NoAction = 1;
 
 Readonly my $PASSWD => <<EOF;
 root:x:0:1:root:/root:/bin/bash
@@ -38,6 +40,8 @@ Readonly::Hash my %kept_users => (root => 1,
 				  daemon => 1);
 
 
+use constant LOGIN_DEFS => {};
+
 =pod
 
 =head1 DESCRIPTION
@@ -57,7 +61,7 @@ set_file_contents("/etc/passwd", $PASSWD);
 set_file_contents("/etc/group", $GROUP);
 set_file_contents("/etc/shadow", $SHADOW);
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 $cmp->adjust_groups($sys, {}, \%kept_groups, 1);
 ok(!exists($sys->{groups}->{fuse}), "Fuse group is removed");

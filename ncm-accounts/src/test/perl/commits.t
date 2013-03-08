@@ -33,7 +33,7 @@ bar:foonpassword:1:2:3:::
 baz:*:1:2:3:::
 EOF
 
-
+use constant LOGIN_DEFS => {};
 
 
 set_file_contents("/etc/group", GROUP);
@@ -50,7 +50,7 @@ Test that the correct lines end up in the correct file.
 
 my $cmp = NCM::Component::accounts->new('accounts');
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 $cmp->commit_groups($sys->{groups});
 

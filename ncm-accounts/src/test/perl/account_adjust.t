@@ -6,7 +6,10 @@ use Test::More;
 use Test::Quattor qw(users/nokept users/tochange users/adjust_accounts);
 use NCM::Component::accounts;
 use CAF::Reporter;
+use CAF::Object;
 use English;
+
+$CAF::Object::NoAction = 1;
 
 sub users_in
 {
@@ -40,6 +43,7 @@ bin:*:15209:0:99999:7:::
 daemon:*:15209:0:99999:7:::
 EOF
 
+use constant LOGIN_DEFS => {};
 
 set_file_contents("/etc/passwd", PASSWD_CONTENTS);
 set_file_contents("/etc/group", GROUP_CONTENTS);
@@ -47,7 +51,7 @@ set_file_contents("/etc/shadow", SHADOW_CONTENTS);
 
 my $cmp = NCM::Component::accounts->new('accounts');
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 
 =pod
@@ -135,7 +139,7 @@ Remove any accounts from the system that shouldn't be there, by:
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 my $cfg = get_config_for_profile('users/nokept');
 my $t = $cfg->getElement("/software/components/accounts")->getTree();
 $t->{users} = $cmp->compute_desired_accounts($t->{users});
@@ -150,7 +154,7 @@ is(users_in($sys), 1,
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $t->{users}->{daemon} = $sys->{passwd}->{daemon};
 $cmp->delete_unneeded_accounts($sys, $t->{users}, {bin => 1,
 						   foobar => 1});
@@ -165,7 +169,7 @@ kept list
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $cmp->delete_unneeded_accounts($sys, $t->{users}, {bin => 1,
 						   foobar => 1});
 
@@ -195,7 +199,7 @@ preserved) or in both.
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $t = $cfg->getElement("/software/components/accounts")->getTree();
 ok(!exists($sys->{groups}->{$t->{users}->{nopool}->{groups}->[0]}),
    "Account nopool really has no valid groups");
@@ -213,7 +217,7 @@ from LDAP
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $g = getgrgid($GID);
 $t->{users}->{nopool}->{groups} = [$g];
 $cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
@@ -226,7 +230,7 @@ ok(exists($sys->{passwd}->{nopool}),
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $u = users_in($sys);
 
 $cmp->{ERROR} = 0;
@@ -247,7 +251,7 @@ is($sys->{passwd}->{nopool}->{main_group}, 0, "Account's main group correctly ch
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $t->{users}->{nopool}->{groups} = [42424242];
 $cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
 ok(exists($sys->{passwd}->{nopool}), "Account nopool really added with numeric ID");
@@ -263,7 +267,7 @@ is($sys->{passwd}->{nopool}->{main_group}, $t->{users}->{nopool}->{groups}->[0],
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 delete($t->{users}->{nopool}->{password});
 $cmp->add_account($sys, 'nopool', $t->{users}->{nopool});
 is($sys->{passwd}->{nopool}->{password}, "!", "Account with no password is locked");
@@ -283,7 +287,7 @@ have to ensure:
 
 $t = $cfg->getElement("/software/components/accounts")->getTree();
 $t->{users} = $cmp->compute_desired_accounts($t->{users});
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $cmp->{ERROR} = 0;
 $cmp->add_profile_accounts($sys, $t->{users});
 
@@ -356,7 +360,7 @@ Accounts in the system must be preserved, independently of the value of C<kept_u
 
 =cut
 
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 ok(exists($sys->{groups}->{daemon}->{members}->{fubar}),
    "Account from ldap is part of the tree");
 $cfg = get_config_for_profile('users/adjust_accounts');
@@ -365,13 +369,13 @@ $u = users_in($sys) + users_in($t);
 $cmp->adjust_accounts($sys, $t->{users});
 is(users_in($sys), $u,
    "New users added while old ones preserved in absence of remove_unknown");
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $cmp->adjust_accounts($sys, $t->{users}, { bin => 1, baz => 1});
 is(users_in($sys), $u,
    "New users added while old ones preserved in absence of remove_unknown, with kept_users");
 ok(exists($sys->{groups}->{daemon}->{members}->{fubar}),
    "Group member from an external account source (like LDAP) stays when not remove_unknown");
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 =pod
 
@@ -385,7 +389,7 @@ that already existed, must stay.
 $cmp->adjust_accounts($sys, $t->{users}, {}, 1);
 is(users_in($sys), users_in($t)+1,
    "Users not in the profile (except root) are removed");
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 $cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1);
 is(users_in($sys), users_in($t)+2,
    "Users not in the profile (except root or kept ones) are removed");

@@ -5,6 +5,8 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::accounts;
+use CAF::Object;
+$CAF::Object::NoAction = 1;
 
 =pod
 
@@ -34,6 +36,8 @@ root:apassword:15329:0:99999:7:::
 bin:*:15209:0:99999:7:::
 daemon:*:15209:0:99999:7:::
 EOF
+
+use constant LOGIN_DEFS => {};
 
 set_file_contents("/etc/group", GROUP_CONTENTS);
 set_file_contents("/etc/passwd", PASSWD_CONTENTS);
@@ -129,7 +133,7 @@ all the desired information.
 
 =cut
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 ok(exists($sys->{groups}), "Full system map contains groups");
 ok(exists($sys->{groups}->{bin}->{members}->{bin}),
    "Groups in the full system map are correct");
