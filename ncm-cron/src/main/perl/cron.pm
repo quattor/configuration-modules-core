@@ -92,8 +92,11 @@ sub Configure($$@) {
             $self->error("Undefined name for cron entry; skipping");
             next;
         }
-        $self->info("Checking cron entry $name...");
-        my $file = "$crond/$name.ncm-cron.cron";
+
+        my $fname = $name;
+	$file =~ s{[/ ]}{_}g;
+	my $file = "$crond/$fname.ncm-cron.cron";
+        $self->info("Checking cron entry $name ($file)...");
 
         # User: use root if not specified.
         my $user = 'root';
@@ -144,7 +147,7 @@ sub Configure($$@) {
 	    $log_disabled = 1;
 	    $self->debug(1,'Log file disabled.');
         } else {
-	    $log_name = "/var/log/$name$cron_log_extension";
+	    $log_name = "/var/log/$fname$cron_log_extension";
 	    $log_owner = undef;
 	    $log_group = undef;
 	    $log_mode = 0640;
