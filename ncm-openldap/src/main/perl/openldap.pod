@@ -1,0 +1,8 @@
+=head1 NAME
+
+openldap -- NCM component to control entries in /etc/openldap/slapd.conf
+
+=head1 DESCRIPTION
+
+The I<openldap> component manages the openldap server config file
+/etc/openldap/slapd.conf.
