@@ -40,7 +40,7 @@ use constant DB_CONFIG_SET => qw(
     lg_max
 );
 
-sub create_db_config_file 
+sub create_db_config_file
 {
     my ($self, $directory, $tree) = @_;
     if (-d $directory) {
@@ -48,10 +48,10 @@ sub create_db_config_file
         while (my ($k, $v) = each(%$tree)) {
             $k="set_$k" if (grep $_ eq $k, DB_CONFIG_SET);
             $v=join(" ",@$v) if (ref($v) eq "ARRAY");
-            $contents.="$k $v\n";          
+            $contents.="$k $v\n";
         }
-        
-        ## try to write it        
+
+        ## try to write it
         my $fname = "$directory/DB_CONFIG";
         my $result = LC::Check::file( $fname,
                                       contents => encode_utf8($contents),
@@ -71,7 +71,7 @@ sub create_db_config_file
     };
 };
 
-## monitoring 
+## monitoring
 ## default at end of slapd.conf (>= v2.4)
 sub print_monitoring
 {
@@ -87,11 +87,11 @@ sub print_monitoring
 sub print_overlay
 {
     my ($self, $fh, $overlay, $tree) = @_;
-    
+
     my %overlay_boolean = (
         "syncprov" => ["nopresent","reloadhint"]
     );
-    
+
     while (my ($k, $v) = each(%$tree)) {
         if (grep $_ eq $k, @{$overlay_boolean{$overlay}}) {
             $v = $v ? "TRUE" : "FALSE";
@@ -99,7 +99,7 @@ sub print_overlay
             $v=join(" ",@$v);
         }
         print $fh "$overlay-$k $v\n";
-    };    
+    };
 }
 
 # Prints the replica information for a database into $fh
@@ -157,7 +157,7 @@ sub print_database_class
 
     foreach my $i (qw(add_content_acl hidden lastmod mirrormode
               monitoring readonly)) {
-        if (exists($tree->{$i})) { 
+        if (exists($tree->{$i})) {
             print $fh  "$i ", ($tree->{$i} ? "on":"off"), "\n";
             delete($tree->{$i});
         }
@@ -208,7 +208,7 @@ sub print_database_class
     if (exists($tree->{db_config})) {
         if (exists($tree->{directory})) {
             ## deal with exit code? restart ldap when file changed?
-            $self->create_db_config_file($tree->{directory},$tree->{db_config});            
+            $self->create_db_config_file($tree->{directory},$tree->{db_config});
         } else {
             $self->error("db_config defined but not directory");
         }
@@ -224,7 +224,7 @@ sub print_database_class
         delete($tree->{syncrepl});
     }
 
-    ## overlays are last    
+    ## overlays are last
     if (exists($tree->{overlay})) {
         while (my ($overlay, $overlaytree) = each(%{$tree->{overlay}})) {
             print $fh "overlay $overlay\n";
@@ -232,9 +232,9 @@ sub print_database_class
         }
         delete($tree->{overlay});
     }
-    
+
     print $fh "\n";
-    
+
 }
 
 # Prints the global options for the slapd.conf file.
@@ -248,7 +248,7 @@ sub print_global_options
         ## what
         my $what;
         if (exists($access->{attrs})) {
-            $what="attrs=".join(',',@{$access->{attrs}});   
+            $what="attrs=".join(',',@{$access->{attrs}});
         } elsif (exists($access->{what})) {
             $what=$access->{what};
         } else {
@@ -256,7 +256,7 @@ sub print_global_options
         }
         print $fh "access to $what";
 
-        ## by 
+        ## by
         foreach my $by (@{$access->{by}}) {
             print $fh "\n".INDENTATION."by ".join(" ",@$by);
         }
@@ -267,13 +267,13 @@ sub print_global_options
     while (my ($name, $value) = each(%{$t->{"tls"}})) {
         print $fh "TLS$name $value\n";
     }
-    
+
     delete($t->{"tls"});
 
     print $fh map("moduleload $_\n",
               @{$t->{"moduleload"}});
     delete($t->{"moduleload"});
-    
+
 
     print $fh map("authz-regexp $_->{match} $_->{replace}\n",
           @{$t->{"authz-regexp"}});
@@ -304,7 +304,7 @@ sub print_global_options
         }
         print $fh "\n";
     }
-    
+
     print $fh "\n";
 }
 
@@ -387,7 +387,7 @@ sub Configure
         $self->restart_slapd();
         return 1;
     } else {
-        $self->info("Restoring the old configuration file; invalid configuration file stored in $t->{conf_file}.invalid");
+        $self->error("Restoring the old configuration file; invalid configuration file stored in $t->{conf_file}.invalid");
         move($t->{conf_file}, "$t->{conf_file}.invalid") || $self->error("Moving $t->{conf_file} to $t->{conf_file}.invalid failed: $!");
         move("$t->{conf_file}.$$", $t->{conf_file})  || $self->error("Moving $t->{conf_file}.$$ to $t->{conf_file} failed: $!");
     }
