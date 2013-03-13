@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.quattor.cfg.module</groupId>
+<artifactId>network</artifactId>
+
+  <packaging>pom</packaging>
+  <version>1.2.10-SNAPSHOT</version>
+<name>Component to configure network settings </name>
+
+  <parent>
+    <groupId>org.quattor.maven</groupId>
+    <artifactId>build-profile</artifactId>
+    <version>1.28</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>Apache 2 License</name>
+      <url>http://www.opensource.org/licenses/apache2.0</url>
+      <comments>Copyright (c) Responsible Organization</comments>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Guillaume Philippon</name>
+      <email>philippo@lal.in2p3.fr</email>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Daniel Jouvenot</name>
+      <email>Jouvenot@lal.in2p3.fr</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0.0-RC3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
