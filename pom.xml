@@ -76,6 +76,7 @@
     <module>ncm-srvtab</module>
     <module>ncm-shorewall</module>
     <module>ncm-interactivelimits</module>
+    <module>ncm-openldap</module>
     <module>ncm-portmap</module>
     <module>ncm-raidman</module>
     <module>ncm-ofed</module>
