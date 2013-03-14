@@ -274,34 +274,6 @@ is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
 
 =pod
 
-=item * Failure in C<wanted_pkgs> means only C<installed_pkgs> and C<wanted_pkgs> get executed.
-
-=cut
-
-clear_mock_counters($cmp);
-
-$cmp->{WANTED_PKGS}->{return} = undef;
-
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
-   "Failure in wanted_pkgs is propagated");
-
-foreach my $m (qw(apply_transaction solve_transaction)) {
-    is($cmp->{uc($m)}->{called}, 0,
-       "Method $m not called when wanted_pkgs fails");
-}
-
-is($cmp->{SCHEDULE}->{remove}->{called}, 0,
-   "No removal scheduling happens when wanted_pkgs fails");
-is($cmp->{SCHEDULE}->{install}->{called}, 0,
-   "No installation scheduling happens when wanted_pkgs fails");
-
-is($cmp->{WANTED_PKGS}->{called}, 1,
-   "Failure was actually triggered by wanted_pkgs");
-is($cmp->{INSTALLED_PKGS}->{called}, 1,
-   "installed_pkgs called before wanted_pkgs");
-
-=pod
-
 =item * Failure in C<installed_pkgs> means no other method is executed.
 
 =cut
