@@ -351,11 +351,6 @@ sub update_pkgs
     defined($installed) or return 0;
     my $wanted = $self->wanted_pkgs($pkgs);
 
-    if ($installed == $wanted) {
-	$self->verbose("Nothing to install or remove");
-	return 1;
-    }
-
     my ($tx, $to_rm);
 
     if (!$allow_user_pkgs) {
@@ -370,11 +365,8 @@ sub update_pkgs
 
     $self->versionlock($pkgs) or return 0;
 
-    # Call Yum only if there is something to do.
-    if ($tx) {
-	$tx .= $self->solve_transaction($run);
-	$self->apply_transaction($tx) or return 0;
-    }
+    $tx .= $self->solve_transaction($run);
+    $self->apply_transaction($tx) or return 0;
 
     return 1;
 }
