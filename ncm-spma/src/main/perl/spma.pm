@@ -383,12 +383,18 @@ sub update_pkgs
     defined($installed) or return 0;
     my $wanted = $self->wanted_pkgs($pkgs);
 
+    $self->expire_yum_caches() or return 0;
+
+    $self->versionlock($pkgs) or return 0;
+
     if ($installed == $wanted) {
 	$self->verbose("Nothing to install or remove");
 	return 1;
     }
 
-    my ($tx, $to_rm);
+    my ($tx, $to_rm, $to_install);
+
+    $to_install = $wanted-$installed;
 
     if (!$allow_user_pkgs) {
 	$to_rm = $self->packages_to_remove($wanted);
@@ -396,11 +402,7 @@ sub update_pkgs
 	$tx = $self->schedule(REMOVE, $to_rm);
     }
 
-    $tx .= $self->schedule(INSTALL, $wanted-$installed);
-
-    $self->expire_yum_caches() or return 0;
-
-    $self->versionlock($pkgs) or return 0;
+    $tx .= $self->schedule(INSTALL, $to_install);
 
     # Call Yum only if there is something to do.
     if ($tx) {
