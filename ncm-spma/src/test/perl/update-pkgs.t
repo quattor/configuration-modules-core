@@ -80,9 +80,12 @@ sub clear_mock_counters
 {
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
-		      expire_yum_caches complete_transaction
+		      expire_yum_caches complete_transaction spare_dependencies
 		      wanted_pkgs installed_pkgs packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
+	if ($m !~ m{pkgs$}) {
+	    $cmp->{uc($m)}->{return} = 1;
+	}
     }
 
     $cmp->{SCHEDULE}->{install}->{called} = 0;
