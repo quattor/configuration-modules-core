@@ -238,7 +238,7 @@ clear_mock_counters($cmp);
 $cmp->{VERSIONLOCK}->{return} = 0;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
-   "Failure in versionlrmock is detected");
+   "Failure in versionlock is detected");
 is($cmp->{VERSIONLOCK}->{called}, 1, "versionlock is actually called");
 is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
    "solve_transaction is not called if versionlock fails");
