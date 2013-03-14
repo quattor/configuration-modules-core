@@ -16,7 +16,7 @@ invocation to C<repoquery>.
 =head2 Sucessful executions
 
 The method must succeed, because the command invocation does.  We have
-two cases here:
+three cases here:
 
 =over
 
@@ -41,6 +41,19 @@ my $cmp = NCM::Component::spma->new("spma");
 my ($to_install, $to_rm);
 
 $to_install = Set::Scalar->new("pkg;noarch");
+
+=pod
+
+=item * There is nothing to remove.
+
+The command is not even called
+
+=cut
+
+is($cmp->spare_dependencies($to_rm, $to_install), 1,
+   "Execution succeeds when there is nothing to remove");
+my $cmd = get_command($REPO_CMD);
+ok(!$cmd, "When nothing to remove the command is not even called");
 
 =pod
 
