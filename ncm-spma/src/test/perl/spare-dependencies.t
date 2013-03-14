@@ -53,7 +53,25 @@ The command is not even called
 is($cmp->spare_dependencies($to_rm, $to_install), 1,
    "Execution succeeds when there is nothing to remove");
 my $cmd = get_command($REPO_CMD);
+
 ok(!$cmd, "When nothing to remove the command is not even called");
+
+=pod
+
+=item * There is nothing to install
+
+The command is not called either
+
+=cut
+
+$to_rm = Set::Scalar->new("dep;noarch");
+
+is($cmp->spare_dependencies($to_rm, undef), 1,
+   "Execution succeeds when there is nothing to install");
+$cmd = get_command($REPO_CMD);
+ok(!$cmd, "When nothing to install the command is not even called");
+$cmd = get_command(join(" ", NCM::Component::spma::REPO_DEPS));
+ok(!$cmd, "Really, nothing to install means no command is called");
 
 =pod
 
@@ -63,8 +81,6 @@ must be installed.
 The package won't be removed, then.
 
 =cut
-
-$to_rm = Set::Scalar->new("dep;noarch");
 
 is($cmp->spare_dependencies($to_rm, $to_install), 1,
    "Basic execution succeeded");
