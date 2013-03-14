@@ -399,6 +399,7 @@ sub update_pkgs
     if (!$allow_user_pkgs) {
 	$to_rm = $self->packages_to_remove($wanted);
 	defined($to_rm) or return 0;
+	$self->spare_dependencies($to_rm, $to_install) or return 0;
 	$tx = $self->schedule(REMOVE, $to_rm);
     }
 
