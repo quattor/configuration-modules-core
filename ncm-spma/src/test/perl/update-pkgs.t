@@ -119,6 +119,8 @@ ok(!$cmp->{SCHEDULE}->{remove}->{called},
    "With allow userpkgs, no removal is scheduled");
 
 ok(!$cmp->{PACKAGES_TO_REMOVE}->{called}, "No packages to be removed with userpkgs");
+ok(!$cmp->{SPARE_DEPENDENCIES}->{called},
+   "No dependencies to double-check with userpkgs");
 
 ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
@@ -144,7 +146,10 @@ is($cmp->{SCHEDULE}->{remove}->{called}, 1,
 is($cmp->{SCHEDULE}->{remove}->{args}->members(), 1,
    "Correct packages scheduled for removal without usrpkgs");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "remove\ninstall\nsolve\n",
-   "Transaction applycation without userpkgs receives removal");
+   "Transaction application without userpkgs receives removal");
+is($cmp->{SPARE_DEPENDENCIES}->{called}, 1,
+   "Dependencies to spare are processed if no user packages are allowed");
+
 
 =pod
 
@@ -308,4 +313,26 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
    "Subsequent methods are not called if we can't complete previous transactions");
 
+
+=pod
+
+=item * Failures in C<spare_dependencies> are detected and propagated
+
+=cut
+
+clear_mock_counters();
+
+$cmp->{SPARE_DEPENDENCIES}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "run", 0), 0,
+   "Failure in spare_dependencies is propagated");
+is($cmp->{APPLY_TRANSACTION}->{called}, 0,
+   "No transaction is attempted if spare_dependencies fails");
+
 done_testing();
+
+=pod
+
+=back
+
+=cut
