@@ -36,6 +36,7 @@ use constant YUM_EXPIRE => qw(yum clean expire-cache);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
+use constant REPO_DEPS => qw(repoquery --resolve --requires --qf %{NAME};%{ARCH});
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
 
@@ -338,6 +339,37 @@ sub complete_transaction
 	$self->warn("Pending transactions produced warnings: $err") if $err;
 	return 1;
     }
+}
+
+# Removes from $to_rm any packages that are depended on by any of the
+# packages in $to_install.
+#
+# If any package in $to_install depended on anything in $to_rm we'd
+# get a conflict when running the transaction.  We ensure this won't
+# happen.
+#
+# It needs to call repoquery, and it might be slow during
+# installations.
+sub spare_dependencies
+{
+    my ($self, $to_rm, $to_install) = @_;
+
+    my $cmd = CAF::Process->new([REPO_DEPS, @$to_install], log => $self,
+				stdout => \my $deps, stderr => \my $err);
+
+    $cmd->execute();
+
+    if ($? || $err =~ m{^Error:}m) {
+	$self->error ("Couldn't check if the new packages depend on some ",
+		      "package we might remove");
+	return 0;
+    }
+
+    foreach my $dep (split("\n", $deps)) {
+	$to_rm->delete($dep);
+    }
+
+    return 1;
 }
 
 # Updates the packages on the system.
