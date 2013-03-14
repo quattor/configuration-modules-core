@@ -352,8 +352,13 @@ sub spare_dependencies
     my ($self, $to_rm, $to_install) = @_;
 
     return 1 if !$to_rm || !$to_install;
-    my $cmd = CAF::Process->new([REPO_DEPS, @$to_install], log => $self,
+    my $cmd = CAF::Process->new([REPO_DEPS], log => $self,
 				stdout => \my $deps, stderr => \my $err);
+
+    foreach my $pkg (@$to_install) {
+	$pkg =~ s{;}{.};
+	$cmd->pushargs($pkg);
+    }
 
     $cmd->execute();
 

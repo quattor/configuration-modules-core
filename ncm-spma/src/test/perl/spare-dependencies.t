@@ -31,7 +31,7 @@ use Test::Quattor;
 use Set::Scalar;
 
 Readonly my $REPO_CMD => join(" ", NCM::Component::spma::REPO_DEPS,
-			      "pkg;noarch");
+			      "pkg.noarch");
 
 set_desired_output($REPO_CMD, "dep;noarch");
 set_desired_err($REPO_CMD, "");
