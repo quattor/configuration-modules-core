@@ -1,21 +1,6 @@
-# #
-# Software subject to following license(s):
-#   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
-#   Copyright (c) Responsible Organization
-#
-
-# #
-# Current developer(s):
-#   Luis Fernando Muñoz Mejías <Luis.Munoz@UGent.be>
-#
-
-# #
-# Author(s): Jane SMITH, Joe DOE
-#
-
-# #
-      # accounts, 12.12.1-SNAPSHOT, SNAPSHOT20121231164032, 20121231-1740
-      #
+# ${license-info}
+# ${developer-info}
+# ${author-info}
 
 package NCM::Component::accounts;
 
