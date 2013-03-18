@@ -91,7 +91,7 @@ use constant PASS_MAX_DAYS => 4;
 use constant PASS_WARN_AGE => 5;
 use constant ACCOUNT_INACTIVE => 6;
 use constant ACCOUNT_EXPIRATION => 7;
-                         
+
 # Defaults for shadow fields if not defined in /etc/login.defs
 use constant PASS_LAST_CHANGE_DEF => 15034;
 use constant ACCOUNT_INACTIVE_DEF => "";
@@ -368,7 +368,7 @@ sub delete_groups
 
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
       if (!(exists($profile->{$group}) ||
-            exists($kept->{$group}) || 
+            exists($kept->{$group}) ||
             ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
            )) {
         $self->debug(2, "Marking group $group for removal");
@@ -500,10 +500,10 @@ sub add_profile_accounts
           if (!exists($cfg->{$param})) {
             $self->debug(1, "Account $account inherits '$param' from the system");
             $cfg->{$param} = $v;
-          }          
+          }
         }
         # Also inherit the existing shell if it is an empty string in the profile.
-        if ( length($cfg->{shell}) == 0 ) {
+        if (!$cfg->{shell}) {
           $self->debug(2, "Account $account: current shell preserved");
           $cfg->{shell} = $system->{passwd}->{$account}->{shell};
         }
@@ -679,7 +679,7 @@ sub commit_accounts
     my (@passwd, @shadow, @ln, $fh);
 
     foreach my $cfg (sort accounts_sort (values(%$accounts))) {
-      @ln =  ($cfg->{name}, 
+      @ln =  ($cfg->{name},
               "x",
               $cfg->{uid},
       	      $cfg->{main_group},
@@ -688,7 +688,7 @@ sub commit_accounts
       	      (exists($cfg->{shell}) ? $cfg->{shell} : "")
       	     );
       push(@passwd, join(":", @ln));
-      
+
       @ln = ($cfg->{name},
              (defined($cfg->{password}) ? $cfg->{password} : "*"),
              (defined($cfg->{pass_last_change}) ? $cfg->{pass_last_change} : PASS_LAST_CHANGE_DEF),

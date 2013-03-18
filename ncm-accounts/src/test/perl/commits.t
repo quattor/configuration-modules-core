@@ -26,11 +26,11 @@ baz:x:1002:100:::
 EOF
 
 use constant SHADOW => <<EOF;
-root:rootpassword:0:0:0:::
-bin:binpassword:5:6:7:::
-foo:foonpassword:1:2:3:::
-bar:foonpassword:1:2:3:::
-baz:*:1:2:3:::
+root:rootpassword:0:0:0::::
+bin:binpassword:5:6:7::::
+foo:foonpassword:1:2:3::::
+bar:foonpassword:1:2:3::::
+baz:*:1:2:3::::
 EOF
 
 use constant LOGIN_DEFS => {};
