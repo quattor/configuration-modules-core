@@ -1,5 +1,9 @@
 object template users/consistent;
 
+prefix "/software/components/accounts";
+
+"preserved_accounts" = "none";
+
 prefix "/software/components/accounts/groups";
 
 "foo/gid" = 0;
