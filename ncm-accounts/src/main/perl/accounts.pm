@@ -858,9 +858,7 @@ sub Configure
                        "Leaving without changing anything");
           return 0;
     }
-    if (!$NoAction) {
-          $self->commit_configuration($system);
-    }
+    $self->commit_configuration($system);
 
     return 1;
 }

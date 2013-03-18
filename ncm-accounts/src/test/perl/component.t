@@ -84,16 +84,4 @@ foreach my $i (qw(compute_desired_accounts compute_root_user
 }
 
 
-=pod
-
-=item C<NoAction> prevents any commits
-
-=cut
-
-$NCM::Component::NoAction = 1;
-
-
-is($cmp->Configure($cfg), 1, "Execution is successful with consistent state and NoAction");
-ok(!$cmp->{called}->{commit_configuration}, "NoAction prevents committing");
-
 done_testing();
