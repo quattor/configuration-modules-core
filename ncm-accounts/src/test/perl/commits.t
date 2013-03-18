@@ -107,7 +107,7 @@ delete($sys->{passwd}->{baz}->{comment});
 delete($sys->{passwd}->{baz}->{homeDir});
 delete($sys->{passwd}->{baz}->{password});
 
-$cmp->commit_accounts($sys->{passwd});
+$cmp->commit_accounts($sys->{passwd}, {passwd => [], shadow => []});
 
 $fh = get_file("/etc/passwd");
 isa_ok($fh, "CAF::FileWriter", "/etc/passwd was written");
