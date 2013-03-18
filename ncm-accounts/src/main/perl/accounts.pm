@@ -19,7 +19,6 @@ use File::Basename;
 use File::Path;
 use LC::Find;
 use LC::File qw(copy makedir);
-use Readonly;
 
 our @ISA = qw(NCM::Component);
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -55,33 +54,35 @@ use constant LOGINDEFS_FILE => "/etc/login.defs";
 # These value are mainly used when creating new accounts: only parameters used by this component
 # must have a value defined here. These values are not used to update /etc/login.defs.
 # The key MUST match the login.defs parameter name.
-Readonly::Hash my %LOGINDEFS_DEFAULTS => ('GID_MIN', 100,
-                                          'GID_MAX', 65535,
-                                          'UID_MIN', 100,
-                                          'UID_MAX', 65535,
-                                          'PASS_MIN_DAYS', 0,
-                                          'PASS_MAX_DAYS', 99999,
-                                          'PASS_WARN_AGE', 7,
-                                         );
+use constant LOGINDEFS_DEFAULTS => {
+        GID_MIN => 100,
+        GID_MAX => 65535,
+        UID_MIN => 100,
+        UID_MAX => 65535,
+        PASS_MIN_DAYS => 0,
+        PASS_MAX_DAYS => 99999,
+        PASS_WARN_AGE => 7,
+};
 
 # Mapping between configuration schema and /etc/login.defs keywords.
 # One entry must exist for each login.defs keyword that is manageable
 # through this component.  Key is a configuration property, value is
 # the matching login.defs keyword.
-Readonly::Hash my %LOGINDEFS_MAPPING => ('create_home', 'CREATE_HOME',
-                                         'gid_max', 'GID_MAX',
-                                         'gid_min', 'GID_MIN',
-                                         'mail_dir', 'MAIL_DIR',
-                                         'pass_max_days', 'PASS_MAX_DAYS',
-                                         'pass_min_days', 'PASS_MIN_DAYS',
-                                         'pass_min_len', 'PASS_MIN_LEN',
-                                         'pass_warn_age', 'PASS_WARN_AGE',
-                                         'uid_max', 'UID_MAX',
-                                         'uid_min', 'UID_MIN',
-                                         'umask', 'UMASK',
-                                         'userdel_cmd', 'USERDEL_CMD',
-                                         'usergroups_enab', 'USERGROUP_ENAB',
-                                       );
+use constant LOGINDEFS_MAPPING => {
+        create_home => 'CREATE_HOME',
+        gid_max => 'GID_MAX',
+        gid_min => 'GID_MIN',
+        mail_dir => 'MAIL_DIR',
+        pass_max_days => 'PASS_MAX_DAYS',
+        pass_min_days => 'PASS_MIN_DAYS',
+        pass_min_len => 'PASS_MIN_LEN',
+        pass_warn_age => 'PASS_WARN_AGE',
+        uid_max => 'UID_MAX',
+        uid_min => 'UID_MIN',
+        umask => 'UMASK',
+        userdel_cmd => 'USERDEL_CMD',
+        usergroups_enab => 'USERGROUP_ENAB',
+};
 
 # Symbolic names for shadow fields
 use constant PASSWORD_FIELD => 1;
@@ -250,14 +251,15 @@ sub build_login_defs_map
     }
 
     while (my ($p,$v) = each(%{$login_defs}) ) {
-      if ( exists($LOGINDEFS_MAPPING{$p}) ) {
-        $rt{$LOGINDEFS_MAPPING{$p}} = $v;
-        $fh->add_or_replace_lines(qr/^\s*$LOGINDEFS_MAPPING{$p}\s+/,
-                                  qr/^\s*$LOGINDEFS_MAPPING{$p}\s+$v\s*$/,
-                                  $LOGINDEFS_MAPPING{$p}."\t".$v."\n",
+      if ( exists(LOGINDEFS_MAPPING->{$p}) ) {
+          my $k = LOGINDEFS_MAPPING->{$p};
+          $rt{$k} = $v;
+        $fh->add_or_replace_lines(qr/^\s*$k\s+/,
+                                  qr/^\s*$k\s+$v\s*$/,
+                                  "$k\t$v\n",
                                   ENDING_OF_FILE,
                                  );
-        $self->debug(1, LOGINDEFS_FILE.": $LOGINDEFS_MAPPING{$p}.set to $v");
+        $self->debug(1, LOGINDEFS_FILE.": $k.set to $v");
       } else {
         $self->warn("No ".LOGINDEFS_FILE." matching keyword defined for login_defs/$p property (internal inconsistency)")
       }
@@ -265,7 +267,7 @@ sub build_login_defs_map
 
     # Define default value for missing parameters used by this component.
     # Do not update /etc/login.defs with these internal default values.
-    while (my ($k,$v) = each(%LOGINDEFS_DEFAULTS)) {
+    while (my ($k,$v) = each(%{LOGINDEFS_DEFAULTS()})) {
       if ( !exists($rt{$k}) ) {
         $self->warn($k." not defined in ".LOGINDEFS_FILE.". Using default value (".$v.")");
         $rt{$k} = $v;
