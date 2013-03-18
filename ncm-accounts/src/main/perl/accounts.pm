@@ -705,24 +705,14 @@ sub commit_accounts
     $self->info("Committing ", scalar(@passwd), " accounts");
 
     # Readd special lines if any at the end of passwd file
-    if ( exists($special_lines->{passwd}) ) {
-      $self->debug(1,scalar(@{$special_lines->{passwd}})." special lines preserved in ".PASSWD_FILE);
-      foreach my $l (@{$special_lines->{passwd}}) {
-        push @passwd, $l;
-      }
-    }
+    push(@passwd, @{$special_lines->{passwd}});
     $fh = CAF::FileWriter->new(PASSWD_FILE, log => $self,
                                backup => ".old");
     print $fh join("\n", @passwd, "");
     $fh->close();
 
     # Readd special lines if any at the end of shadow file
-    if ( exists($special_lines->{shadow}) ) {
-      $self->debug(1,scalar(@{$special_lines->{shadow}})." special lines preserved in ".SHADOW_FILE);
-      foreach my $l (@{$special_lines->{shadow}}) {
-        push @shadow, $l;
-      }
-    }
+    push(@shadow, @{$special_lines->{shadow}});
     $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
                                backup => ".old",
                                mode => 0400);
@@ -825,7 +815,8 @@ sub commit_configuration
     my ($self, $system) = @_;
 
     $self->commit_groups($system->{groups});
-    $self->commit_accounts($system->{passwd},$system->{special_lines},$system->{logindefs});
+    $self->commit_accounts($system->{passwd}, $system->{special_lines},
+                           $system->{logindefs});
     $self->build_home_dirs($system->{passwd});
 }
 
