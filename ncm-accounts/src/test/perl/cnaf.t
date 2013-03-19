@@ -151,6 +151,7 @@ adm:*:15209:0:99999:7:::
 lp:*:15209:0:99999:7:::
 EOF
 
+use constant LOGIN_DEFS => {};
 
 sub init_test
 {
@@ -168,7 +169,7 @@ my $t = $cfg->getElement("/software/components/accounts")->getTree();
 init_test();
 
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 my $root = $cmp->compute_root_user($sys, $t);
 
@@ -212,7 +213,7 @@ that starts off *without* root, has a correct root account.
 =cut
 
 init_test();
-$sys = $cmp->build_system_map();
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 delete($sys->{passwd}->{root});
 $t = $cfg->getElement("/software/components/accounts")->getTree();
 $root = $cmp->compute_root_user($sys, $t);
