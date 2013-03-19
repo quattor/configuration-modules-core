@@ -5,6 +5,8 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::accounts;
+use CAF::Object;
+$CAF::Object::NoAction = 1;
 
 =pod
 
@@ -29,11 +31,22 @@ bin:x:uidforbin:groupforbin:comment for bin:homeforbin:binshell
 daemon:x:uidfordaemon:groupfordaemon:comment for daemon:homefordaemon:daemonshell
 EOF
 
+use constant NIS_PASSWD_CONTENTS => PASSWD_CONTENTS .
+    "\n+nisusr:x:uidfornisusr:groupfornisusr:commentfornisusr:homefornis:nisshell";
+
+
+
 use constant SHADOW_CONTENTS => <<EOF;
 root:apassword:15329:0:99999:7:::
 bin:*:15209:0:99999:7:::
 daemon:*:15209:0:99999:7:::
 EOF
+
+use constant NIS_SHADOW_CONTENTS => PASSWD_CONTENTS .
+    "\n+nisusr:nispwd:5:6:8:::\n";
+
+
+use constant LOGIN_DEFS => {};
 
 set_file_contents("/etc/group", GROUP_CONTENTS);
 set_file_contents("/etc/passwd", PASSWD_CONTENTS);
@@ -84,7 +97,10 @@ with the group information already gathered.
 =cut
 
 my $u = $cmp->build_passwd_map($g);
-is(scalar(keys(%$u)), 3, "Correct amount of users mapped");
+is(scalar(keys(%$u)), 4, "Correct amount of users mapped");
+ok(exists($u->{_passwd_special_lines_}), "One entry is added for 'special' lines");
+is(scalar(@{$u->{_passwd_special_lines_}}), 0,
+   "No special entries created without NIS entries");
 
 foreach my $i (qw(root bin daemon)) {
     my $user = $u->{$i};
@@ -110,6 +126,20 @@ ok(grep("daemon", @{$u->{bin}->{groups}}), "bin is listed in the daemon group");
 
 =pod
 
+=head3 Handling of special lines
+
+Lines that might come from some NIS netgroup
+
+=cut
+
+set_file_contents("/etc/passwd", NIS_PASSWD_CONTENTS);
+
+$u = $cmp->build_passwd_map($g);
+
+is(scalar(@{$u->{_passwd_special_lines_}}), 1, "NIS account stored as special");
+
+=pod
+
 =head2 SHADOW PASSWORD HANDLING
 
 Passwords should be read from /etc/shadow and set accordingly.
@@ -120,6 +150,24 @@ $cmp->add_shadow_info($u);
 is($u->{root}->{password}, "apassword", "Root got the correct password");
 is($u->{bin}->{password}, "*", "Locked password is correctly set");
 
+ok(exists($u->{_shadow_special_lines_}),
+   "No shadow special lines field always created");
+is(scalar(@{$u->{_shadow_special_lines_}}), 0,
+   "No shadow special lines found");
+
+
+=pod
+
+=head3 Handling of shadow entries for NIS accounts
+
+=cut
+
+set_file_contents("/etc/shadow", NIS_SHADOW_CONTENTS);
+
+$cmp->add_shadow_info($u);
+is(scalar(@{$u->{_shadow_special_lines_}}), 1,
+   "Shadow special lines defined if there are NIS accounts");
+
 =pod
 
 =head2 MAP CREATION ALTOGETHER
@@ -129,7 +177,10 @@ all the desired information.
 
 =cut
 
-my $sys = $cmp->build_system_map();
+set_file_contents("/etc/passwd", PASSWD_CONTENTS);
+set_file_contents("/etc/shadow", SHADOW_CONTENTS);
+
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 ok(exists($sys->{groups}), "Full system map contains groups");
 ok(exists($sys->{groups}->{bin}->{members}->{bin}),
    "Groups in the full system map are correct");
@@ -140,5 +191,21 @@ is($sys->{passwd}->{bin}->{password}, "*",
    "Full system map contains shadow information");
 ok(!exists($sys->{passwd}->{fubarr}),
    "LDAP account assigned to a group is not introduced into passwd");
+is(scalar(@{$sys->{special_lines}->{passwd}}), 0, "No special lines introduced");
+
+=pod
+
+=head3 Check also the handling of special lines
+
+=cut
+
+set_file_contents("/etc/passwd", NIS_PASSWD_CONTENTS);
+set_file_contents("/etc/shadow", NIS_SHADOW_CONTENTS);
+$sys = $cmp->build_system_map(LOGIN_DEFS,'none');
+ok(exists($sys->{groups}->{bin}->{members}->{bin}),
+   "Groups are correctly defined even with NIS-special entries");
+is($sys->{passwd}->{root}->{uid}, "uidforroot",
+   "System map is correct for non-NIS accounts");
+is(scalar(@{$sys->{special_lines}->{passwd}}), 1, "NIS lines stored as special");
 
 done_testing();

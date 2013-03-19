@@ -23,17 +23,18 @@ bin:x:1:1:bin:/bin:/sbin/nologin
 foo:x:1000:100::ljhlkjhjljh:/bin/bash
 bar:x:1001:100:bar::/bin/bash
 baz:x:1002:100:::
++hello:x:2002:2002:::
 EOF
 
 use constant SHADOW => <<EOF;
-root:rootpassword:0:0:0:::
-bin:binpassword:5:6:7:::
-foo:foonpassword:1:2:3:::
-bar:foonpassword:1:2:3:::
-baz:*:1:2:3:::
+root:rootpassword:0:0:0::::
+bin:binpassword:5:6:7::::
+foo:foonpassword:1:2:3::::
+bar:foonpassword:1:2:3::::
+baz:*:1:2:3::::
 EOF
 
-
+use constant LOGIN_DEFS => {};
 
 
 set_file_contents("/etc/group", GROUP);
@@ -50,7 +51,7 @@ Test that the correct lines end up in the correct file.
 
 my $cmp = NCM::Component::accounts->new('accounts');
 
-my $sys = $cmp->build_system_map();
+my $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 $cmp->commit_groups($sys->{groups});
 
@@ -107,7 +108,7 @@ delete($sys->{passwd}->{baz}->{comment});
 delete($sys->{passwd}->{baz}->{homeDir});
 delete($sys->{passwd}->{baz}->{password});
 
-$cmp->commit_accounts($sys->{passwd});
+$cmp->commit_accounts($sys->{passwd}, $sys->{special_lines});
 
 $fh = get_file("/etc/passwd");
 isa_ok($fh, "CAF::FileWriter", "/etc/passwd was written");
@@ -163,8 +164,10 @@ $cmp->commit_configuration($sys);
 is($cmp->{created_homes}->[0], "foo", "commit_configuration creates home dirs");
 $fh = get_file("/etc/passwd");
 like($fh, qr{^foo:.*:newshell$}m, "commit_configuration calls commit_accounts");
+like($fh, qr{^\+hello}m, "NIS line is committed");
 $fh = get_file("/etc/group");
 like($fh, qr{^root:x:42}m, "commit_configuration calls commit_groups");
+
 
 Test::NoWarnings::had_no_warnings();
 
