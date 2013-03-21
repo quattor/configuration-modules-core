@@ -6,7 +6,7 @@
   <artifactId>diskless_server</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.3.0</version>
+  <version>13.3.1-SNAPSHOT</version>
   <name>NCM diskless server configuration component</name>
 
   <repositories>
