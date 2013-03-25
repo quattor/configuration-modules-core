@@ -53,7 +53,7 @@ sub mkinitrd
     $dir = directory_contents("/boot");
 
     foreach my $i (@$dir) {
-	if ($i =~ m{^^System\.map\-(2\.6\.*)$}) {
+	if ($i =~ m{^System\.map\-(2\.6\..*)$}) {
 	    my $rl = $1;
 	    CAF::Process->new(["mkinitrd", "-f", "/boot/initrd-$rl.img", $rl],
 			      log => $self)->run();
