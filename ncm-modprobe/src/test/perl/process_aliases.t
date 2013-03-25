@@ -40,7 +40,7 @@ Readonly::Hash my %TREE => (modules => [
        ]
                            );
 
-$cmp->process_aliases(\%TREE, $fh);
+$cmp->process_alias(\%TREE, $fh);
 
 like($fh, qr{^alias\s+module_alias1\s+module_name1$}m,
      "First alias line rendered correctly");

@@ -26,65 +26,22 @@ use LC::File qw(directory_contents);
 use Fcntl qw(:seek);
 
 
-# Processes the aliases and prints them on the correct files. All
-# aliases for a module given in the profile are controlled by this
-# component.
-sub process_aliases
-{
-    my ($self, $t, $fh) = @_;
+no strict 'refs';
 
-    my ($name, $as, %aliases, $a);
-    foreach my $i (@{$t->{modules}}) {
-	if (exists($i->{alias})) {
-	    $self->verbose("Adding alias $i->{alias} for $i->{name}");
-	    print $fh "alias $i->{alias} $i->{name}\n";
-	}
-    }
+foreach my $method (qw(alias options install remove)) {
+    *{__PACKAGE__."::process_$method"} = sub {
+        my ($self, $t, $fh) = @_;
+        foreach my $i (@{$t->{modules}}) {
+            if (exists($i->{$method})) {
+                $self->verbose("Adding $method $i->{$method} for $i->{name}");
+                print $fh "$method $i->{$method} $i->{name}\n";
+            }
+        }
+    };
 }
 
-# Processes the options for all modules. Again, all the options for
-# any module listed here are the *only* ones to be applied.
-sub process_options
-{
-    my ($self, $t, $fh) = @_;
+use strict 'refs';
 
-    my ($name, $opt, $str, %options, $o);
-
-    foreach my $i (@{$t->{modules}}) {
-	if (exists($i->{options})) {
-	    $self->verbose("Module $i->{name}: Adding options $i->{options}");
-	    print $fh "options $i->{name} $i->{options}\n";
-	}
-    }
-}
-
-# Processess all the install scriptlets. Only one scriptlet per
-# different module is allowed. Others may be deleted.
-sub process_install
-{
-    my ($self, $t, $fh) = @_;
-
-    foreach my $i (@{$t->{modules}}) {
-	if (exists($i->{install})) {
-	    print $fh "install $i->{name} $i->{install}\n";
-	    $self->verbose("Added 'install' for $i->{name}: $i->{install}");
-	}
-    }
-}
-
-# Processes all the remove scriptlets. Only one such scriptlet per
-# different module is allowed. Others may be deleted.
-sub process_remove
-{
-    my ($self, $t, $fh) = @_;
-
-    foreach my $i (@{$t->{modules}}) {
-	if (exists($i->{remove})) {
-	    print $fh "remove $i->{name} $i->{remove}\n";
-	    $self->verbose("Added 'remove' for $i->{name}: $i->{remove}");
-	}
-    }
-}
 
 # Re-generates the initrds, if needed.
 sub mkinitrd
@@ -116,7 +73,7 @@ sub Configure {
     # file
     my $fh = CAF::FileWriter->new($t->{file}, log => $self);
 
-    $self->process_aliases($t, $fh);
+    $self->process_alias($t, $fh);
     $self->process_options($t, $fh);
     $self->process_install($t, $fh);
     $self->process_remove($t, $fh);
