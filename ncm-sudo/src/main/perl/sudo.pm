@@ -120,7 +120,6 @@ sub generate_aliases {
 		next unless $config->elementExists ($alias);
 		my $list = $config->getElement ($alias);
 		next unless defined $list;
-		$self->debug (5, "Alias list: $alias\tList\t$list");
 		while ($list->hasNextElement) {
 			my $lm = $list->getNextElement;
 			my $ln = $lm->getName;
@@ -131,7 +130,6 @@ sub generate_aliases {
 			push (@{$$aliases{$alias}}, $ln);
 		}
 	}
-	$self->debug (5, %$aliases);
 	return $aliases;
 }
 
@@ -196,7 +194,6 @@ sub generate_privilege_lines {
 	my $list = $config->getElement (PRIVILEGE_LINES);
 	while ($list->hasNextElement) {
 		my $el = $list->getNextElement;
-		$self->debug (1, $el->getPath);
 		my %info = $el->getHash;
 		my $ln = $info{PRIVILEGE_USER()}->getValue;
 		$ln .= "\t" . $info{PRIVILEGE_HOST()}->getValue;
@@ -205,7 +202,6 @@ sub generate_privilege_lines {
 		if defined $info{PRIVILEGE_OPTS()};
 		$ln .= $info{PRIVILEGE_CMD()}->getValue;
 		push (@$lns, $ln);
-		$self->debug (5, %info);
 	}
 	return $lns;
 }
