@@ -9,7 +9,7 @@
 
 Basic test that ensures that our module will load correctly.
 
-B<Do not disable this test>. And do not push anything to SF without
+B<Do not disable this test>. And do not push anything upstream without
 having run, at least, this test.
 
 =cut
