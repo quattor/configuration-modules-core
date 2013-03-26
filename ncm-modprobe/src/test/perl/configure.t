@@ -5,12 +5,12 @@
 
 =pod
 
-=head1
+=head1 Description
 
-Basic test that ensures that our module will load correctly.
+Unit test for the C<Configure> method.
 
-B<Do not disable this test>. And do not push anything to SF without
-having run, at least, this test.
+No real work is done here.  We only ensure the logic is correct and
+the appropriate methods are called.
 
 =cut
 
@@ -33,6 +33,8 @@ no warnings 'redefine';
 
 my $called = 1;
 
+# We mock file closing to control whether or not mkinitrd is to b
+# called.
 sub CAF::FileWriter::close
 {
     my ($self, $file, %opts) = @_;

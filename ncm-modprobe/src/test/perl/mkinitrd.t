@@ -5,12 +5,12 @@
 
 =pod
 
-=head1 Test the C<process_aliases> method.
+=head1 DESCRIPTION
 
-Basic test that ensures that our module will load correctly.
+Test the C<mkinitrd> method.
 
-B<Do not disable this test>. And do not push anything to SF without
-having run, at least, this test.
+Ensures the C<mkinitrd> command will be executed for all the
+C<System.map> files present in a directory.
 
 =cut
 

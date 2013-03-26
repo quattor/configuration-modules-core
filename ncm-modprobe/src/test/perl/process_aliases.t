@@ -5,12 +5,12 @@
 
 =pod
 
-=head1 Test the C<process_aliases> method.
+=head1 DESCRIPTION
 
-Basic test that ensures that our module will load correctly.
+Test the C<process_alias> method.
 
-B<Do not disable this test>. And do not push anything to SF without
-having run, at least, this test.
+This method is identical to C<process_install>, C<process_options> and
+C<process_remove>.  It's enough to test this one.
 
 =cut
 
