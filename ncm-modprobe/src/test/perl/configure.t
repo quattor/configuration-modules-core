@@ -31,23 +31,23 @@ $cmp = Test::MockObject::Extends->new($cmp);
 
 no warnings 'redefine';
 
-my $i = 1;
+my $called = 1;
 
 sub CAF::FileWriter::close
 {
     my ($self, $file, %opts) = @_;
 
-    return $i--;
+    return $called--;
 }
 
 
 my @methods = grep($_ =~ m{^process|mkinitr},
                    @{Class::Inspector->functions("NCM::Component::modprobe")});
 
-foreach my $i (@methods) {
-    $cmp->mock($i, sub {
+foreach my $method (@methods) {
+    $cmp->mock($method, sub {
                    my $self = shift;
-                   $self->{uc($i)}++;
+                   $self->{uc($method)}++;
                });
 }
 
@@ -60,11 +60,11 @@ foreach my $i (@methods) {
 }
 
 $cmp->Configure($cfg);
-foreach my $i (@methods) {
-    if ($i =~ m{mkinitrd}) {
-        is($cmp->{uc($i)}, 1, "mkinitrd is not called if there are no changes");
+foreach my $method (@methods) {
+    if ($method =~ m{mkinitrd}) {
+        is($cmp->{uc($method)}, 1, "mkinitrd is not called if there are no changes");
     } else {
-        is($cmp->{uc($i)}, 2, "Method $i is called inconditionally");
+        is($cmp->{uc($method)}, 2, "Method $method is called inconditionally");
     }
 }
 
