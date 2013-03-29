@@ -338,11 +338,16 @@ sub complete_transaction
 }
 
 
-# Runs yum distro-sync.
-# Before proceeding we must
+# Runs yum distro-sync.  Before modifying the installed sets we must
+# align the system to the repositories.  Otherwise we'll get a lot of problems.
 sub distrosync
 {
-    my ($self) = @_;
+    my ($self, $run) = @_;
+
+    if (!$run) {
+	$self->info("Skipping yum distro-sync");
+	return 1;
+    }
 
     my $cmd = CAF::Process->new([YUM_DISTRO_SYNC], log => $self,
                                 stdout => \my $out, stderr => \my $err);
@@ -369,7 +374,7 @@ sub update_pkgs
 
     $self->versionlock($pkgs) or return 0;
 
-    $self->distrosync() or return 0;
+    $self->distrosync($run) or return 0;
 
     my $wanted = $self->wanted_pkgs($pkgs);
     my $installed = $self->installed_pkgs();
