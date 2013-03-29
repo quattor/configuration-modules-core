@@ -30,7 +30,7 @@ use CAF::Object;
 use Readonly;
 
 Readonly my $RPMQ => join(" ", @{NCM::Component::spma::RPM_QUERY()});
-Readonly my $YUMSHELL => join(" ", NCM::Component::spma::YUM_CMD);
+Readonly my $DISTROSYNC => join(" ", NCM::Component::spma::YUM_DISTRO_SYNC);
 Readonly my $YUMEXPIRE => join(" ", NCM::Component::spma::YUM_EXPIRE);
 Readonly my $REPOQ => join(" ", NCM::Component::spma::REPOQUERY,
 			   "ncm-cdp-1.0.4-1.noarch");
@@ -38,8 +38,8 @@ Readonly my $YUMCT => join(" ", NCM::Component::spma::YUM_COMPLETE_TRANSACTION);
 Readonly my $LEAF => join(" ", @{NCM::Component::spma::LEAF_PACKAGES()});
 
 set_desired_output($RPMQ, "ncm-cdp;noarch\n");
-set_desired_err($YUMSHELL, "");
-set_desired_output($YUMSHELL, "");
+set_desired_err($DISTROSYNC, "");
+set_desired_output($DISTROSYNC, "");
 set_desired_err($YUMEXPIRE, "");
 set_desired_output($YUMEXPIRE, "");
 set_desired_err($REPOQ, "");
@@ -59,8 +59,7 @@ my $wanted = {
 
 $cmp->update_pkgs($wanted, 1, 0);
 
-my $cmd = get_command($YUMSHELL);
+my $cmd = get_command($DISTROSYNC);
 ok(defined($cmd), "Command is truly called");
-ok($cmp->{DEBUG}, "Debugging stuff called");
 
 done_testing();
