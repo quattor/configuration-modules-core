@@ -27,7 +27,7 @@ use Test::Quattor;
 my $cmp = NCM::Component::spma->new("spma");
 
 my $tail = $cmp->solve_transaction(1);
-is($tail, "distro-sync\ntransaction solve\ntransaction run\n",
+is($tail, "transaction solve\ntransaction run\n",
    "Transaction correctly defined when the run parameter is set");
 $tail = $cmp->solve_transaction(0);
 is($tail, "transaction solve\ntransaction reset\n",

@@ -32,11 +32,10 @@ use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
 use constant YUM_EXPIRE => qw(yum clean expire-cache);
-
+use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
-use constant REPO_DEPS => qw(repoquery --resolve --requires --qf %{NAME};%{ARCH});
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
 
@@ -191,9 +190,9 @@ sub solve_transaction {
 
     my @rs = "transaction solve";
     if ($run && !$NoAction) {
-	@rs = ("distro-sync", @rs, "transaction run");
+        push(@rs, "transaction run");
     } else {
-	push(@rs, "transaction reset");
+        push(@rs, "transaction reset");
     }
     return join("\n", @rs, "");
 }
@@ -212,7 +211,7 @@ sub expire_yum_caches
 		      stderr => \my $err)->execute();
     $self->verbose("Cleanup output: $out");
     if ($?) {
-	$self->error ("Unable to clean up Yum caches: error: $err");
+        $self->error ("Unable to clean up Yum caches: error: $err");
 	return 0;
     }
     return 1;
@@ -338,40 +337,29 @@ sub complete_transaction
     }
 }
 
-# Removes from $to_rm any packages that are depended on by any of the
-# packages in $to_install.
-#
-# If any package in $to_install depended on anything in $to_rm we'd
-# get a conflict when running the transaction.  We ensure this won't
-# happen.
-#
-# It needs to call repoquery, and it might be slow during
-# installations.
-sub spare_dependencies
+
+# Runs yum distro-sync.  Before modifying the installed sets we must
+# align the system to the repositories.  Otherwise we'll get a lot of problems.
+sub distrosync
 {
-    my ($self, $to_rm, $to_install) = @_;
+    my ($self, $run) = @_;
 
-    return 1 if !$to_rm || !$to_install;
-    my $cmd = CAF::Process->new([REPO_DEPS], log => $self,
-				stdout => \my $deps, stderr => \my $err);
-
-    foreach my $pkg (@$to_install) {
-	$pkg =~ s{;}{.};
-	$cmd->pushargs($pkg);
+    if (!$run) {
+	$self->info("Skipping yum distro-sync");
+	return 1;
     }
 
+    my $cmd = CAF::Process->new([YUM_DISTRO_SYNC], log => $self,
+                                stdout => \my $out, stderr => \my $err);
     $cmd->execute();
 
     if ($? || $err =~ m{^Error:}m) {
-	$self->error ("Couldn't check if the new packages depend on some ",
-		      "package we might remove");
-	return 0;
+        $self->error("Failed to synchronise with the upstream repositories: $out\n$err");
+        return 0;
     }
 
-    foreach my $dep (split("\n", $deps)) {
-	$to_rm->delete($dep);
-    }
-
+    $self->verbose("Synchronisation with upstream distribution completed: $out");
+    $self->warn("Syncrhonisation produced warnings: $err") if $err;
     return 1;
 }
 
@@ -382,13 +370,15 @@ sub update_pkgs
 
     $self->complete_transaction() or return 0;
 
-    my $installed = $self->installed_pkgs();
-    defined($installed) or return 0;
-    my $wanted = $self->wanted_pkgs($pkgs);
-
     $self->expire_yum_caches() or return 0;
 
     $self->versionlock($pkgs) or return 0;
+
+    $self->distrosync($run) or return 0;
+
+    my $wanted = $self->wanted_pkgs($pkgs);
+    my $installed = $self->installed_pkgs();
+    defined($installed) or return 0;
 
     my ($tx, $to_rm, $to_install);
 
@@ -397,14 +387,15 @@ sub update_pkgs
     if (!$allow_user_pkgs) {
 	$to_rm = $self->packages_to_remove($wanted);
 	defined($to_rm) or return 0;
-	$self->spare_dependencies($to_rm, $to_install) or return 0;
 	$tx = $self->schedule(REMOVE, $to_rm);
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
 
-    $tx .= $self->solve_transaction($run);
-    $self->apply_transaction($tx) or return 0;
+    if ($tx) {
+        $tx .= $self->solve_transaction($run);
+        $self->apply_transaction($tx) or return 0;
+    }
 
     return 1;
 }
