@@ -298,7 +298,8 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(LEAF_PACKAGES, log => $self)->output();
+    my $out = CAF::Process->new(LEAF_PACKAGES, keeps_state => 1,
+                                log => $self)->output();
 
     if ($?) {
 	$self->error ("Unable to find leaf packages");
