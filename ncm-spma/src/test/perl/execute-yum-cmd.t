@@ -36,7 +36,7 @@ my $cmp = NCM::Component::spma->new("spma");
 set_desired_output($CMD, "a");
 set_desired_err($CMD, "");
 
-is($cmp->execute_yum_command([$CMD], $WHY), "",
+is($cmp->execute_yum_command([$CMD], $WHY), 1,
    "Successful execution detected");
 ok(!$cmp->{ERROR}, "No errors reported");
 
