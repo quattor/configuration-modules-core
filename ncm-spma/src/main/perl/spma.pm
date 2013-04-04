@@ -39,6 +39,8 @@ use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
 use constant REPO_DEPS => qw(repoquery --requires --resolve --qf %{NAME};%{ARCH});
+use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive
+				 --qf %{NAME}\n%{NAME};%{ARCH});
 
 our $NoActionSupported = 1;
 
@@ -323,13 +325,39 @@ sub packages_to_remove
     return $candidates-$false_positives;
 }
 
+# Queries for packages packages that depend on $rm, and if there is a
+# match in $install, it removes the $rm entry.
+sub spare_deps_whatreq
+{
+    my ($self, $rm, $install) = @_;
+
+    my @to_rm;
+
+    foreach my $pk (@$rm) {
+	my $arg = $pk;
+	$arg =~ s{;}{.};
+	my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+						  "determine what requires $pk", 1);
+	return 0 if !defined($whatreqs);
+	foreach my $wr (split("\n", $whatreqs)) {
+	    if ($install->has($wr)) {
+		push(@to_rm, $pk);
+	    }
+	}
+    }
+
+    $rm->delete(@to_rm);
+    return 1;
+}
+
+
 # Queries for all the dependencies of the packages in $install and
 # removes them from $rm.
 sub spare_deps_requires
 {
     my ($self, $rm, $install) = @_;
 
-    my (@pkgs, $out);
+    my (@pkgs);
 
     foreach my $pkg (@$install) {
 	$pkg =~ s{;}{.};
@@ -337,7 +365,7 @@ sub spare_deps_requires
     }
 
     my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
-					  "dependencies of install candidates");
+					  "dependencies of install candidates", 1);
 
     return 0 if !defined $deps;
 
