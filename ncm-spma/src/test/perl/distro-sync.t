@@ -25,7 +25,7 @@ use CAF::Object;
 Readonly my $CMD => join(" ", NCM::Component::spma::YUM_DISTRO_SYNC);
 
 set_desired_err($CMD, "");
-set_desired_output($CMD, "");
+set_desired_output($CMD, "distrosync");
 
 my $cmp = NCM::Component::spma->new("spma");
 
@@ -51,7 +51,7 @@ it succeeded or not.
 
 =cut
 
-is($cmp->distrosync(1), 1, "Basic distroync succeeds");;
+ok($cmp->distrosync(1), "Basic distroync succeeds");;
 
 $cmd = get_command($CMD);
 ok($cmd, "yum distro-sync was called");
@@ -59,15 +59,15 @@ is($cmd->{method}, "execute", "yum distro-sync was execute'd");
 
 set_desired_err($CMD, "\nError: package");
 
-is($cmp->distrosync(1), 0, "Error in distro-sync detected");
+ok(!$cmp->distrosync(1), "Error in distro-sync detected");
 is($cmp->{ERROR}, 1, "Error is reported");
 
 set_command_status($CMD, 1);
 set_desired_err($CMD, "Yabbadabadoo");
-is($cmp->distrosync(1), 0,
+ok(!$cmp->distrosync(1),
    "Error in Yum internals during distrosync detected");
 
 set_command_status($CMD, 0);
-is($cmp->distrosync(1), 1, "yum distrosync succeeds even with minor warnings");
+ok($cmp->distrosync(1), "yum distrosync succeeds even with minor warnings");
 
 done_testing();
