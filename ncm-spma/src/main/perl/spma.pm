@@ -38,6 +38,7 @@ use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
+use constant REPO_DEPS => qw(repoquery --requires --resolve --qf %{NAME};%{ARCH});
 
 our $NoActionSupported = 1;
 
@@ -333,6 +334,31 @@ sub packages_to_remove
     }
 
     return $candidates-$false_positives;
+}
+
+# Queries for all the dependencies of the packages in $install and
+# removes them from $rm.
+sub spare_deps_requires
+{
+    my ($self, $rm, $install) = @_;
+
+    my (@pkgs, $out);
+
+    foreach my $pkg (@$install) {
+	$pkg =~ s{;}{.};
+	push(@pkgs, $pkg);
+    }
+
+    my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
+					  "dependencies of install candidates");
+
+    return 0 if !defined $deps;
+
+    foreach my $dep (split("\n", $deps)) {
+       $rm->delete($dep);
+    }
+
+    return 1;
 }
 
 # Removes from $rm any packages that are depended on by any of the
