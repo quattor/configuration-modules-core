@@ -355,18 +355,7 @@ sub distrosync
 	return 1;
     }
 
-    my $cmd = CAF::Process->new([YUM_DISTRO_SYNC], log => $self,
-                                stdout => \my $out, stderr => \my $err);
-    $cmd->execute();
-
-    if ($? || $err =~ m{^Error:}m) {
-        $self->error("Failed to synchronise with the upstream repositories: $out\n$err");
-        return 0;
-    }
-
-    $self->verbose("Synchronisation with upstream distribution completed: $out");
-    $self->warn("Syncrhonisation produced warnings: $err") if $err;
-    return 1;
+    return $self->execute_yum_command([YUM_DISTRO_SYNC], "synchronisation with upstream");
 }
 
 # Updates the packages on the system.
