@@ -238,14 +238,7 @@ sub expire_yum_caches
 {
     my ($self) = @_;
 
-    CAF::Process->new([YUM_EXPIRE], log => $self, stdout => \my $out,
-		      stderr => \my $err)->execute();
-    $self->verbose("Cleanup output: $out");
-    if ($?) {
-	$self->error ("Unable to clean up Yum caches: error: $err");
-	return 0;
-    }
-    return 1;
+    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches"));
 }
 
 # Actually calls yum to execute transaction $tx
