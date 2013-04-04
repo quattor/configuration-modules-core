@@ -323,6 +323,7 @@ sub packages_to_remove
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
 
     my $candidates = $leaves-$wanted;
+
     my $false_positives = Set::Scalar->new();
     foreach my $pkg (@$candidates) {
 	my $name = (split(/;/, $pkg))[0];
@@ -333,6 +334,29 @@ sub packages_to_remove
 
     return $candidates-$false_positives;
 }
+
+# Removes from $rm any packages that are depended on by any of the
+# packages in $install.
+#
+# If any package in $install depended on anything in $rm we'd
+# get a conflict when running the transaction.  We ensure this won't
+# happen.
+#
+# It needs to call repoquery, and on large transactions that may be
+# slow.  That's why we try to optimise and run the smallest possible
+# query between --requires $install or --whatrequires $rm.
+sub spare_dependencies
+{
+    my ($self, $rm, $install) = @_;
+
+    return 1 if (!$rm || !$install);
+    if (scalar(@$rm) < scalar(@$install)) {
+	return $self->spare_deps_whatreq($rm, $install);
+    } else {
+	return $self->spare_deps_requires($rm, $install);
+    }
+}
+
 
 # Completes any pending transactions
 sub complete_transaction
@@ -382,6 +406,7 @@ sub update_pkgs
     if (!$allow_user_pkgs) {
 	$to_rm = $self->packages_to_remove($wanted);
 	defined($to_rm) or return 0;
+	$self->spare_dependencies($to_rm, $to_install);
 	$tx = $self->schedule(REMOVE, $to_rm);
     }
 
