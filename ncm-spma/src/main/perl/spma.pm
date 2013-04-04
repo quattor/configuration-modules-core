@@ -326,19 +326,8 @@ sub complete_transaction
 {
     my ($self) = @_;
 
-    my $cmd = CAF::Process->new([YUM_COMPLETE_TRANSACTION], log => $self,
-				stdout => \my $out, stderr => \my $err);
-
-    $cmd->execute();
-
-    if ($? || $err =~ m{^Error:}m) {
-	$self->error("Failed to complete pending transactions: $out\n$err");
-	return 0;
-    } else {
-	$self->verbose("Pending transactions completed: $out");
-	$self->warn("Pending transactions produced warnings: $err") if $err;
-	return 1;
-    }
+    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+                                              "complete previous transactions"));
 }
 
 # Removes from $to_rm any packages that are depended on by any of the
