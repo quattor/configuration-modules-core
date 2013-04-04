@@ -23,24 +23,40 @@ use Readonly;
 use Test::More;
 use NCM::Component::spma;
 use Test::Quattor;
+use CAF::Object;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::YUM_EXPIRE);
+$CAF::Object::NoAction = 1;
+
+Readonly my $CMD => "foo bar bar";
+Readonly my $WHY => "Hello world";
 
 my $cmp = NCM::Component::spma->new("spma");
 
-set_desired_output($CMD, "");
+
+set_desired_output($CMD, "a");
 set_desired_err($CMD, "");
 
-ok($cmp->expire_yum_caches(), "Successful execution detected");
+is($cmp->execute_yum_command([$CMD], $WHY), 1,
+   "Successful execution detected");
 ok(!$cmp->{ERROR}, "No errors reported");
 
 my $cmd = get_command($CMD);
+
+ok($cmd->{object}->{NoAction}, "keeps state is false");
 ok($cmd, "Correct command called");
 is($cmd->{method}, "execute", "Correct method called");
 
+is($cmp->execute_yum_command([$CMD], $WHY, 1), "a",
+   "Command with keep_state executed successfully");
+$cmd = get_command($CMD);
+ok(!$cmd->{object}->{NoAction}, "keeps_state passed correctly");
+
+set_desired_err($CMD, "Error: foo bar!!");
+is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in output detected");
+
 set_command_status($CMD, 1);
-ok(!$cmp->expire_yum_caches(), "Errors in cleanup detected");
-is($cmp->{ERROR}, 1, "Errors reported");
+is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in execution detected");
+is($cmp->{ERROR}, 2, "Errors reported");
 
 
 done_testing();

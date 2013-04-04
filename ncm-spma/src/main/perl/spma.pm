@@ -128,6 +128,49 @@ sub generate_repos
     return 1;
 }
 
+=pod
+
+=head2 C<execute_yum_command>
+
+Executes C<$command> for reason C<$why>. Optionally with standard
+input C<$stdin>.  The command may be executed even under --noaction if
+C<$keeps_state> has a true value.
+
+If the command is executed, this method returns its standard output
+upon success or C<undef> in case of error.  If the command is not
+executed the method always returns a true value (usually 1, but don't
+rely on this!).
+
+Yum-based commands require annoying error handling: they may exit 0
+even upon errors.  In those cases, we have to detect errors by looking
+at stderr.  This method just encapsulates all that logic, keeping the
+callers clean.
+
+=cut
+
+sub execute_yum_command
+{
+    my ($self, $command, $why, $keeps_state, $stdin) = @_;
+
+    my $cmd = CAF::Process->new($command, log => $self,
+                                stdout => \my $out,
+                                stdin => $stdin,
+                                keeps_state => $keeps_state,
+                                stderr => \my $err);
+
+    $cmd->execute();
+
+    if ($? || $err =~ m{^(Error:|Could not match)}m) {
+        $self->error("Failed $why: $err");
+        $self->warn("Command output: $out");
+        return undef;
+    }
+    $self->warn("$why produced warnings: $err") if $err;
+    $self->verbose("$why output: $out");
+    return $cmd->{NoAction} || $out;
+}
+
+
 # Returns a yum shell line for $op-erating on the $target
 # packages. $op is typically "install" or "remove".
 sub schedule
@@ -208,14 +251,7 @@ sub expire_yum_caches
 {
     my ($self) = @_;
 
-    CAF::Process->new([YUM_EXPIRE], log => $self, stdout => \my $out,
-		      stderr => \my $err)->execute();
-    $self->verbose("Cleanup output: $out");
-    if ($?) {
-	$self->error ("Unable to clean up Yum caches: error: $err");
-	return 0;
-    }
-    return 1;
+    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches"));
 }
 
 # Actually calls yum to execute transaction $tx
@@ -225,19 +261,8 @@ sub apply_transaction
     my ($self, $tx) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
-    				stdout => \my $rs, stderr => \my $err,
-				keeps_state => 1);
-
-    $cmd->execute();
-
-    $self->verbose("Output: $rs");
-
-    if ($? || $err =~ m{^Error: }m) {
-	$self->error("Problems in transaction: $err");
-	return 0;
-    }
-    return 1;
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, $tx);
+    return defined($ok);
 }
 
 # Lock the versions of any packages that have them
@@ -245,10 +270,6 @@ sub versionlock
 {
     my ($self, $pkgs) = @_;
 
-    my ($out, $err);
-    my $cmd = CAF::Process->new([REPOQUERY], log => $self,
-				keeps_state => 1,
-				stdout => \$out, stderr => \$err);
     my $locked = Set::Scalar->new();
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
@@ -261,14 +282,9 @@ sub versionlock
 	}
     }
 
-    $cmd->pushargs(@$locked);
-
-    $cmd->execute();
-
-    if ($? || $err =~ m{^Could not match}m) {
-	$self->error("Failure while determining epochs for packages: $err");
-	return 0;
-    }
+    my $out = $self->execute_yum_command([REPOQUERY, @$locked],
+                                         "determining epochs", 1);
+    return 0 if !defined($out);
 
     # Ensure that all the packages that we wanted to lock have been
     # resolved!!!
@@ -295,7 +311,8 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(LEAF_PACKAGES, log => $self)->output();
+    my $out = CAF::Process->new(LEAF_PACKAGES, keeps_state => 1,
+                                log => $self)->output();
 
     if ($?) {
 	$self->error ("Unable to find leaf packages");
@@ -323,19 +340,8 @@ sub complete_transaction
 {
     my ($self) = @_;
 
-    my $cmd = CAF::Process->new([YUM_COMPLETE_TRANSACTION], log => $self,
-				stdout => \my $out, stderr => \my $err);
-
-    $cmd->execute();
-
-    if ($? || $err =~ m{^Error:}m) {
-	$self->error("Failed to complete pending transactions: $out\n$err");
-	return 0;
-    } else {
-	$self->verbose("Pending transactions completed: $out");
-	$self->warn("Pending transactions produced warnings: $err") if $err;
-	return 1;
-    }
+    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+                                              "complete previous transactions"));
 }
 
 # Removes from $to_rm any packages that are depended on by any of the
