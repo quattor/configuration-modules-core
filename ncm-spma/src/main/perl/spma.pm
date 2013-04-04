@@ -154,7 +154,7 @@ sub execute_yum_command
     }
     $self->warn("$why produced warnings: $err") if $err;
     $self->verbose("$why output: $out");
-    return $out;
+    return $cmd->{NoAction} || $out;
 }
 
 

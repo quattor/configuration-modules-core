@@ -32,10 +32,12 @@ Readonly my $WHY => "Hello world";
 
 my $cmp = NCM::Component::spma->new("spma");
 
+
 set_desired_output($CMD, "a");
 set_desired_err($CMD, "");
 
-is($cmp->execute_yum_command([$CMD], $WHY), "a", "Successful execution detected");
+is($cmp->execute_yum_command([$CMD], $WHY), "",
+   "Successful execution detected");
 ok(!$cmp->{ERROR}, "No errors reported");
 
 my $cmd = get_command($CMD);
