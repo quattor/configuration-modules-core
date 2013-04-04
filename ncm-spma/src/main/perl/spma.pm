@@ -262,7 +262,7 @@ sub apply_transaction
 
     $self->debug(5, "Running transaction: $tx");
     my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, $tx);
-    return $ok;
+    return defined($ok);
 }
 
 # Lock the versions of any packages that have them
