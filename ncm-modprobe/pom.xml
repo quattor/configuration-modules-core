@@ -6,7 +6,7 @@
   <artifactId>modprobe</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1-SNAPSHOT</version>
+  <version>13.1-rc</version>
   <name>ncm modprobe configuration component</name>
 
   <repositories>

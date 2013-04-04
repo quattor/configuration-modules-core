@@ -6,7 +6,7 @@
   <artifactId>postfix</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1-SNAPSHOT</version>
+  <version>13.1-rc</version>
   <name>Postfix server configuration</name>
 
   <repositories>

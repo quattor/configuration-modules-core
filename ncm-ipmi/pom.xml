@@ -6,7 +6,7 @@
   <artifactId>ipmi</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1-SNAPSHOT</version>
+  <version>13.1-rc</version>
   <name>Used to manage trivial IPMI configuration</name>
 
   <repositories>
