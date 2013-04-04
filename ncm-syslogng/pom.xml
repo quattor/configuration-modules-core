@@ -6,7 +6,7 @@
   <artifactId>syslogng</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1-rc</version>
+  <version>13.2-rc-SNAPSHOT</version>
   <name>syslog-ng NCM component.</name>
 
   <repositories>
