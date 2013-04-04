@@ -7,13 +7,13 @@
 <artifactId>network</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.3.1-SNAPSHOT</version>
+  <version>13.1-SNAPSHOT</version>
 <name>Component to configure network settings </name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.28</version>
+    <version>1.31</version>
   </parent>
 
   <licenses>
