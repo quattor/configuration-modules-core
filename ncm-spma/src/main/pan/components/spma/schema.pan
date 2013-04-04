@@ -29,6 +29,10 @@ type SOFTWARE_REPOSITORY_PACKAGE = {
 type SOFTWARE_REPOSITORY_PROTOCOL = {
     "name" : string  # "Protocol name"
     "url" : string  # "URL for the given protocol"
+    "cacert" ? string  # Path to CA certificate
+    "clientkey" ? string # Path to client key
+    "clientcert" ? string # Path to client certificate
+    "verify" ? boolean # Whether to verify the SSL certificate
 };
 
 type SOFTWARE_REPOSITORY = {
