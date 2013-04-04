@@ -128,13 +128,26 @@ sub generate_repos
     return 1;
 }
 
-# Executes $command for reason $why. Optionally with standard input
-# $stdin.
-#
-# Yum-based commands require annoying error handling: they may exit 0
-# even upon errors.  In those cases, we have to detect errors by
-# looking at stderr.  This method just encapsulates all that logic,
-# keeping the callers clean.
+=pod
+
+=head2 C<execute_yum_command>
+
+Executes C<$command> for reason C<$why>. Optionally with standard
+input C<$stdin>.  The command may be executed even under --noaction if
+C<$keeps_state> has a true value.
+
+If the command is executed, this method returns its standard output
+upon success or C<undef> in case of error.  If the command is not
+executed not executed the method always returns a true value (usually
+1, but don't rely on this!).
+
+Yum-based commands require annoying error handling: they may exit 0
+even upon errors.  In those cases, we have to detect errors by looking
+at stderr.  This method just encapsulates all that logic, keeping the
+callers clean.
+
+=cut
+
 sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin) = @_;
