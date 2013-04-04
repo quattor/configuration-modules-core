@@ -98,6 +98,7 @@ is($cmp->versionlock({ glibc => $pkgs->{glibc} }), 0,
    "Errors in repoquery are propagated");
 is($cmp->{ERROR}, 1, "Errors in versionlock are logged");
 
+set_desired_output(join(" ", @REPOQUERY, "foo-a.x"), "");
 set_desired_err(join(" ", @REPOQUERY, "foo-a.x"), "Could not match: this is a bogus package!!");
 is($cmp->versionlock({ foo => $pkgs->{foo}}), 0, "Unmatched package triggers an error");
 

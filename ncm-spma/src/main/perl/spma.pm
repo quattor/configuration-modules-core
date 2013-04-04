@@ -147,7 +147,7 @@ sub execute_yum_command
 
     $cmd->execute();
 
-    if ($? || $err =~ m{^Error:}m) {
+    if ($? || $err =~ m{^(Error:|Could not match)}m) {
         $self->error("Failed $why: $err");
         $self->warn("Command output: $out");
         return undef;
@@ -257,10 +257,6 @@ sub versionlock
 {
     my ($self, $pkgs) = @_;
 
-    my ($out, $err);
-    my $cmd = CAF::Process->new([REPOQUERY], log => $self,
-				keeps_state => 1,
-				stdout => \$out, stderr => \$err);
     my $locked = Set::Scalar->new();
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
@@ -273,14 +269,9 @@ sub versionlock
 	}
     }
 
-    $cmd->pushargs(@$locked);
-
-    $cmd->execute();
-
-    if ($? || $err =~ m{^Could not match}m) {
-	$self->error("Failure while determining epochs for packages: $err");
-	return 0;
-    }
+    my $out = $self->execute_yum_command([REPOQUERY, @$locked],
+                                         "determining epochs", 1);
+    return 0 if !defined($out);
 
     # Ensure that all the packages that we wanted to lock have been
     # resolved!!!
