@@ -56,6 +56,7 @@ my $mock = Test::MockModule->new('NCM::Component::spma');
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
 		       expire_yum_caches complete_transaction distrosync
+		       spare_dependencies
 		       packages_to_remove solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
