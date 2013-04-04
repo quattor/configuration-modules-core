@@ -248,19 +248,8 @@ sub apply_transaction
     my ($self, $tx) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $cmd = CAF::Process->new([YUM_CMD], log => $self, stdin => $tx,
-    				stdout => \my $rs, stderr => \my $err,
-				keeps_state => 1);
-
-    $cmd->execute();
-
-    $self->verbose("Output: $rs");
-
-    if ($? || $err =~ m{^Error: }m) {
-	$self->error("Problems in transaction: $err");
-	return 0;
-    }
-    return 1;
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, $tx);
+    return $ok;
 }
 
 # Lock the versions of any packages that have them
