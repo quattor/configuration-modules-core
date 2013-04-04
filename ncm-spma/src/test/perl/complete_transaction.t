@@ -40,7 +40,7 @@ my $cmp = NCM::Component::spma->new("spma");
 
 =cut
 
-is($cmp->complete_transaction(), 1, "Basic transaction completion succeeds");;
+ok($cmp->complete_transaction(), "Basic transaction completion succeeds");;
 
 my $cmd = get_command($CMD);
 ok($cmd, "yum-complete-transaction was called");
@@ -48,16 +48,16 @@ is($cmd->{method}, "execute", "yum-complete-transaction was execute'd");
 
 set_desired_err($CMD, "\nError: package");
 
-is($cmp->complete_transaction(), 0, "Error in transaction completion detected");
+ok(!$cmp->complete_transaction(), "Error in transaction completion detected");
 is($cmp->{ERROR}, 1, "Error is reported");
 
 set_command_status($CMD, 1);
 set_desired_err($CMD, "Yabbadabadoo");
-is($cmp->complete_transaction(), 0,
+ok(!$cmp->complete_transaction(),
    "Error in Yum internals during transaction detected");
 
 set_command_status($CMD, 0);
-is($cmp->complete_transaction(), 1,
+ok($cmp->complete_transaction(),
    "Transaction succeeds even with minor warnings");
 
 done_testing();
