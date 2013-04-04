@@ -287,7 +287,6 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
    "Subsequent methods are not called if we can't complete previous transactions");
 
-
 =pod
 
 =item * Failures in C<distrosync> are detected and propagated
@@ -299,7 +298,7 @@ clear_mock_counters();
 $cmp->{DISTROSYNC}->{return} = 0;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
-   "Failure in spare_dependencies is propagated");
+   "Failure in distrosync is propagated");
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "No transaction is attempted if distrosync fails");
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
