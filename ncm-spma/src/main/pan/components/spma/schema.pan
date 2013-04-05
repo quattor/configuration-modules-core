@@ -44,6 +44,7 @@ type SOFTWARE_REPOSITORY = {
     "gpgcheck" : boolean = false
     "includepkgs" ? string[]
     "excludepkgs" ? string[]
+    "skip_if_unavailable" : boolean = false
 };
 
 type component_spma_type = {
