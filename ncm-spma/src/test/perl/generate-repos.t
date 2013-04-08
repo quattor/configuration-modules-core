@@ -36,6 +36,7 @@ sub initialise_repos
 {
     return [ { name => "a_repo",
 	       owner => 'localuser@localdomain',
+	       enabled => 1,
 	       protocols => [ { name => "http",
 				url => $URL }
 			     ],
@@ -83,6 +84,30 @@ like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
 like($fh, qr{^includepkgs=foo bar$}m, "Included packages listed correctly");
 like($fh, qr{^exclude=baz quux$}m, "Excluded packages listed correctly");
 
+
+=pod
+
+It must also handle properly the rendering of SSL fields
+
+=cut
+
+unlike($fh, qr{^sslcacert}m, "No SSL fields printed if not needed");
+
+$repos = initialise_repos();
+$repos->[0]->{protocols} = [{cacert => "ca path",
+                             clientkey => "key path",
+                             clientcert => "cert path"}];
+
+
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE), 1,
+   "Repository with SSL correctly created");
+$fh = get_file("/etc/yum.repos.d/a_repo.repo");
+like($fh, qr{^sslcacert=$repos->[0]->{protocols}->[0]->{cacert}}m,
+     "SSL CA correctly printed");
+like($fh, qr{^sslclientkey=$repos->[0]->{protocols}->[0]->{clientkey}}m,
+     "SSL key correctly printed");
+like($fh, qr{^sslclientcert=$repos->[0]->{protocols}->[0]->{clientcert}}m,
+     "SSL cert correctly printed");
 
 =pod
 
