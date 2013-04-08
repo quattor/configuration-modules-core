@@ -66,4 +66,24 @@
     </pluginManagement>
   </build>
 
+  <build>
+    <plugins>
+      <plugin>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>rpm-maven-plugin</artifactId>
+	<configuration>
+	  <mappings combine.children="append">
+	    <mapping>
+	      <directory>/usr/lib/ncm/config/profile/managed_files/</directory>
+	      <filemode>755</filemode>
+		<username>root</username>
+		<groupname>root</groupname>
+		<directoryIncluded>true</directoryIncluded>
+	      </mapping>
+	    </mappings>
+	</configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
