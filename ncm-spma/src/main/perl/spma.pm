@@ -41,6 +41,8 @@ use constant OBSOLETE => "obsoletes";
 use constant REPO_DEPS => qw(repoquery --requires --resolve --qf %{NAME};%{ARCH});
 use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive
                                  --qf %{NAME}\n%{NAME};%{ARCH});
+use constant SMALL_REMOVAL => 3;
+use constant LARGE_INSTALL => 200;
 
 our $NoActionSupported = 1;
 
@@ -397,14 +399,20 @@ sub spare_deps_requires
 # happen.
 #
 # It needs to call repoquery, and on large transactions that may be
-# slow.  That's why we try to optimise and run the smallest possible
-# query between --requires $install or --whatrequires $rm.
+# slow.  That's why we try to optimise the easy case where there is
+# almost nothing to remove and a lot of new things to add.
 sub spare_dependencies
 {
     my ($self, $rm, $install) = @_;
 
     return 1 if (!$rm || !$install);
-    if (scalar(@$rm) < scalar(@$install)) {
+    my $n = scalar(@$rm);
+
+    # The whatreq path seems to have *cubic* cost!! It's still a big
+    # speedup for installations, where we want to remove almost
+    # nothing and may want to install and upgrade quite a lot of
+    # things.
+    if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
 	return $self->spare_deps_whatreq($rm, $install);
     } else {
 	return $self->spare_deps_requires($rm, $install);

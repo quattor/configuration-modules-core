@@ -49,16 +49,18 @@ is($cmp->spare_dependencies($rm, $install), 1, "Nothing is done on empty install
 
 =head2 The correct callee is chosen
 
-The methods to be called are chosen based on the expected size of the
-transaction.
+In most circumstances the C<requires> path is used.  Only in very
+large installations with almost nothing to remove we resort to the
+C<whatreq> path.
 
 =cut
 
-$install->insert(qw(a b));
-is($cmp->spare_dependencies($rm, $install), "whatreq",
-   "Correct method is called when whatreq path is faster");
-$rm->insert(qw(d e f g));
+$install->insert(qw(a b c d));
 is($cmp->spare_dependencies($rm, $install), "requires",
-   "Correct method is called when requires path is faster");
+   "Correct method is called when install part is small");
+
+$install->insert(0..2000);
+is($cmp->spare_dependencies($rm, $install), "whatreq",
+   "The whatrequires method is called only when the win is obvious");
 
 done_testing();
