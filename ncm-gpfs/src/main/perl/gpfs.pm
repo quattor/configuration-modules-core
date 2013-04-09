@@ -226,7 +226,7 @@ sub Configure {
     sub remove_existing_rpms {
         my $ret = 1;
         my $tr;
-        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME} %{NAME}-%{VERSION}-%{rpm.release}\\n");
+        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
         return if (!$allrpms);
 
         my @removerpms;
