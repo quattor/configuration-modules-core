@@ -406,7 +406,6 @@ sub spare_dependencies
     my ($self, $rm, $install) = @_;
 
     return 1 if (!$rm || !$install);
-    my $n = scalar(@$rm);
 
     # The whatreq path seems to have *cubic* cost!! It's still a big
     # speedup for installations, where we want to remove almost
