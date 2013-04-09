@@ -33,10 +33,10 @@ our $EC=LC::Exception::Context->new->will_store_all;
 sub restart_daemon {
     my ($self, $daemon) = @_;
     CAF::Process->new(["/sbin/service", $daemon, "restart"],
-		      log => $self)->run();
+                      log => $self)->run();
     if ($?) {
-	$self->error("Impossible to restart $daemon");
-	return;
+        $self->error("Impossible to restart $daemon");
+        return;
     }
     return 1;
 }
@@ -49,8 +49,8 @@ sub load_module
 
     eval "use $module";
     if ($@) {
-	$self->error("Unable to load $module: $@");
-	return;
+        $self->error("Unable to load $module: $@");
+        return;
     }
     return 1;
 }
@@ -78,8 +78,8 @@ sub yaml
     $self->load_module("YAML::XS") or return;
 
     if ($@) {
-	$self->error("Unable to load YAML::XS: $@");
-	return;
+        $self->error("Unable to load YAML::XS: $@");
+        return;
     }
 
     return YAML::XS::Dump($cfg);
@@ -94,11 +94,11 @@ sub tiny
     my $c = Config::Tiny->new();
 
     while (my ($k, $v) = each(%$cfg)) {
-	if (ref($v)) {
-	    $c->{$k} = $v;
-	} else {
-	    $c->{_}->{$k} = $v;
-	}
+        if (ref($v)) {
+            $c->{$k} = $v;
+        } else {
+            $c->{_}->{$k} = $v;
+        }
     }
     return $c->write_string();
 }
@@ -117,12 +117,12 @@ sub sanitize_template
     my ($self, $tplname) = @_;
 
     if (file_name_is_absolute($tplname)) {
-	$self->error ("Must have a relative template name");
-	return undef;
+        $self->error ("Must have a relative template name");
+        return undef;
     }
 
     if ($tplname !~ m{\.tt$}) {
-	$tplname .= ".tt";
+        $tplname .= ".tt";
     }
 
     $tplname = "metaconfig/$tplname";
@@ -131,15 +131,15 @@ sub sanitize_template
     $self->debug(3, "We must ensure that all templates lie below $base");
     $tplname = abs_path("$base/$tplname");
     if (!$tplname || !-f $tplname) {
-	$self->error ("Non-existing template name given");
-	return undef;
+        $self->error ("Non-existing template name given");
+        return undef;
     }
 
     if ($tplname =~ m{^$base/(metaconfig/.*)$}) {
-	return $1;
+        return $1;
     } else {
-	$self->error ("Insecure template name. Final template must be under $base");
-	return undef;
+        $self->error ("Insecure template name. Final template must be under $base");
+        return undef;
     }
 }
 
@@ -151,14 +151,15 @@ sub tt
     my ($sane_tpl, $str, $tpl);
     $sane_tpl = $self->sanitize_template($template);
     if (!$sane_tpl) {
-	$self->error("Invalid template name: $template");
-	return;
+        $self->error("Invalid template name: $template");
+        return;
     }
 
     $tpl = $self->template();
     if (!$tpl->process($sane_tpl, $cfg, \$str)) {
-	$self->error("Unable to process template for file $template: ",
-		     $tpl->error());
+        $self->error("Unable to process template for file $template: ",
+                     $tpl->error());
+        return undef;
     }
     return $str;
 }
@@ -170,33 +171,39 @@ sub handle_service
 {
     my ($self, $file, $srv) = @_;
 
-    my $method;
+    my ($method, $str);
 
     if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
-	$self->error("Invalid configuration style: $srv->{module}");
-	return;
+        $self->error("Invalid configuration style: $srv->{module}");
+        return;
     }
 
     if ($method = $self->can(lc($1))) {
-	$self->debug(3, "Rendering file $file with $method");
+        $self->debug(3, "Rendering file $file with $method");
     } else {
-	$method = \&tt;
-	$self->debug(3, "Using Template toolkit to render $file");
+        $method = \&tt;
+        $self->debug(3, "Using Template toolkit to render $file");
+    }
+
+    $str = $method->($self, $srv->{contents}, $srv->{module});
+
+    if (!defined($str)) {
+        $self->error("Failed to render $file. Skipping");
+        return;
     }
 
     my %opts  = (log => $self,
-		 mode => $srv->{mode},
-		 owner => scalar(getpwnam($srv->{owner})),
-		 group => scalar(getgrnam($srv->{group})));
+                 mode => $srv->{mode},
+                 owner => scalar(getpwnam($srv->{owner})),
+                 group => scalar(getgrnam($srv->{group})));
     $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
     my $fh = CAF::FileWriter->new($file, %opts);
-
-    print $fh $method->($self, $srv->{contents}, $srv->{module}), "\n";
+    print $fh "$str\n";
     if ($self->needs_restarting($fh, $srv)) {
-	foreach my $d (@{$srv->{daemon}}) {
-	    $self->{daemons}->{$d} = 1;
-	}
+        foreach my $d (@{$srv->{daemon}}) {
+            $self->{daemons}->{$d} = 1;
+        }
     }
     return 1;
 }
@@ -209,12 +216,12 @@ sub Configure
     my $t = $config->getElement($PATH)->getTree();
 
     while (my ($f, $c) = each(%{$t->{services}})) {
-	$self->handle_service(unescape($f), $c);
+        $self->handle_service(unescape($f), $c);
     }
 
     # Restart any daemons whose configurations we have changed.
     foreach my $d (keys(%{$self->{daemons}})) {
-	$self->restart_daemon($d);
+        $self->restart_daemon($d);
     }
     return 1;
 }
