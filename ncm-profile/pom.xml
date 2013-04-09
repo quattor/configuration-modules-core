@@ -39,31 +39,29 @@
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
+      <name>Luis Fernando Muñoz Mejías</name>
+      <email>luis.munoz@ugent.be</email>
     </contributor>
   </contributors>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+    <plugins>
+      <plugin>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>rpm-maven-plugin</artifactId>
+	<configuration>
+	  <mappings combine.children="append">
+	    <mapping>
+	      <directory>/usr/lib/ncm/config/profile/managed_files/</directory>
+	      <filemode>755</filemode>
+		<username>root</username>
+		<groupname>root</groupname>
+		<directoryIncluded>true</directoryIncluded>
+	      </mapping>
+	    </mappings>
+	</configuration>
+      </plugin>
+    </plugins>
   </build>
 
 </project>
