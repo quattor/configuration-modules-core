@@ -6,7 +6,7 @@
   <artifactId>spma</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.2-rc-SNAPSHOT</version>
+  <version>12.12.0</version>
   <name>NCM SPMA configuration component</name>
 
   <repositories>
@@ -32,36 +32,22 @@
 
   <developers>
     <developer>
-      <name>Luis Fernando Muñoz Mejías</name>
-      <email>Luis.Munoz@UGent.be</email>
+      <name>German Cancio</name>
+      <email>German.Cancio@cern.ch</email>
     </developer>
   </developers>
 
   <contributors>
     <contributor>
-      <name>Germán Cancio</name>
-      <email>German.Cancio@cern.ch</email>
+      <name>Jane SMITH</name>
+      <email>smith@example.com</email>
       <roles>
 	<role>author</role>
       </roles>
     </contributor>
     <contributor>
-      <name>Marco Emilio Poleggi</name>
-      <email>marcoep@gmail.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Michel Jouvin</name>
-      <email>jouvin@lal.in2p3.fr</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Jan Iven</name>
-      <email>Jan.Iven@cern.ch</email>
+      <name>Joe DOE</name>
+      <email>doe@example.org</email>
       <roles>
 	<role>author</role>
       </roles>
@@ -76,58 +62,6 @@
           <artifactId>panc-maven-plugin</artifactId>
           <version>9.0.0-RC3</version>
         </plugin>
-	<plugin>
-	  <artifactId>maven-resources-plugin</artifactId>
-	  <version>2.4.3</version>
-	  <executions>
-	    <execution>
-	      <id>filter-tt-sources</id>
-	      <phase>process-sources</phase>
-	      <goals>
-		<goal>copy-resources</goal>
-	      </goals>
-	      <configuration>
-		<encoding>UTF-8</encoding>
-		<outputDirectory>${project.build.directory}/share/templates/quattor/${project.artifactId}</outputDirectory>
-		<resources>
-		  <resource>
-		    <directory>src/main/resources</directory>
-		    <filtering>false</filtering>
-		    <includes>
-		      <include>*.tt</include>
-		    </includes>
-		  </resource>
-		</resources>
-	      </configuration>
-	    </execution>
-	  </executions>
-	</plugin>
-	<plugin>
-	  <groupId>org.codehaus.mojo</groupId>
-	  <artifactId>rpm-maven-plugin</artifactId>
-	  <configuration>
-	    <mappings combine.children="append">
-	      <mapping>
-		<directory>/usr/share/templates/</directory>
-		<filemode>644</filemode>
-		<username>root</username>
-		<groupname>root</groupname>
-		<sources>
-		  <source>
-		    <location>${project.build.directory}/share/templates/</location>
-		  </source>
-		</sources>
-		<directoryIncluded>false</directoryIncluded>
-	      </mapping>
-	    </mappings>
-	    <requires>
-	      <require>yum &gt;= 3.2.29</require>
-	      <require>yum-utils &gt;= 1.1.30</require>
-	      <require>yum-versionlock</require>
-	      <require>yum-priorities</require>
-	    </requires>
-	  </configuration>
-	</plugin>
       </plugins>
     </pluginManagement>
   </build>
