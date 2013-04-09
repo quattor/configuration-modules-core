@@ -159,6 +159,7 @@ sub tt
     if (!$tpl->process($sane_tpl, $cfg, \$str)) {
 	$self->error("Unable to process template for file $template: ",
 		     $tpl->error());
+	return undef;
     }
     return $str;
 }
@@ -170,7 +171,7 @@ sub handle_service
 {
     my ($self, $file, $srv) = @_;
 
-    my $method;
+    my ($method, $str);
 
     if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
 	$self->error("Invalid configuration style: $srv->{module}");
@@ -184,6 +185,13 @@ sub handle_service
 	$self->debug(3, "Using Template toolkit to render $file");
     }
 
+    $str = $method->($self, $srv->{contents}, $srv->{module});
+
+    if (!defined($str)) {
+	$self->error("Failed to render $file. Skipping");
+	return;
+    }
+
     my %opts  = (log => $self,
 		 mode => $srv->{mode},
 		 owner => scalar(getpwnam($srv->{owner})),
@@ -191,8 +199,7 @@ sub handle_service
     $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
     my $fh = CAF::FileWriter->new($file, %opts);
-
-    print $fh $method->($self, $srv->{contents}, $srv->{module}), "\n";
+    print $fh "$str\n";
     if ($self->needs_restarting($fh, $srv)) {
 	foreach my $d (@{$srv->{daemon}}) {
 	    $self->{daemons}->{$d} = 1;
