@@ -18,7 +18,7 @@ type ssh_core_options_type = {
     "GSSAPICleanupCredentials"          ? ssh_yesnostring
     "GatewayPorts"                      ? ssh_yesnostring
     "HostbasedAuthentication"           ? ssh_yesnostring
-    "LogLevel"                          ? string with match (SELF, '^(DEBUG|INFO|NOTICE|WARNING|ERR|CRIT|ALERT|EMERG)$')
+    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG1|DEBUG2|DEBUG3)$')
     "MACs"                              ? string
     "PasswordAuthentication"            ? ssh_yesnostring
     "Protocol"                          ? string
