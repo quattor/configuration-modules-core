@@ -160,7 +160,7 @@ sub execute_yum_command
 
     $cmd->execute();
 
-    if ($? || $err =~ m{^(Error:|Could not match)}m) {
+    if ($? || $err =~ m{^(Error|Failed|Could not match)}m) {
         $self->error("Failed $why: $err");
         $self->warn("Command output: $out");
         return undef;
