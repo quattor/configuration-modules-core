@@ -15,3 +15,5 @@ prefix '/software/components/${project.artifactId}';
 
 'active' ?= true;
 'dispatch' ?= true;
+
+"register_change" = append("/system/network");
