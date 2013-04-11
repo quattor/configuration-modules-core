@@ -53,10 +53,16 @@ ok(!$cmd->{object}->{NoAction}, "keeps_state passed correctly");
 
 set_desired_err($CMD, "Error: foo bar!!");
 is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in output detected");
+is($cmp->{ERROR}, 1, "Errors reported");
+
+set_desired_err($CMD, "Error in PREIN scriptlet");
+
+is($cmp->execute_yum_command([$CMD], $WHY), undef,
+   "Errors in scriptlet execution detected, see issue #42");
 
 set_command_status($CMD, 1);
 is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in execution detected");
-is($cmp->{ERROR}, 2, "Errors reported");
+
 
 
 done_testing();
