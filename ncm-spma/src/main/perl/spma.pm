@@ -152,11 +152,16 @@ sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin) = @_;
 
-    my $cmd = CAF::Process->new($command, log => $self,
-                                stdout => \my $out,
-                                stdin => $stdin,
-                                keeps_state => $keeps_state,
-                                stderr => \my $err);
+    my (%opts, $out, $err);
+
+    %opts = ( log => $self,
+	      stdout => \$out,
+	      stderr => \$err,
+	      keeps_state => $keeps_state);
+
+    $opts{stdin} = $stdin if defined($stdin);
+
+    my $cmd = CAF::Process->new($command, %opts);
 
     $cmd->execute();
 
