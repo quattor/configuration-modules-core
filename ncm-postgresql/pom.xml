@@ -6,7 +6,7 @@
   <artifactId>postgresql</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.0-rc3-SNAPSHOT</version>
+  <version>13.1.0-rc3</version>
   <name>NCM component to manage PostgreSQL configuration.</name>
 
   <repositories>

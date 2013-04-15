@@ -6,7 +6,7 @@
   <artifactId>linuxha</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.0-rc3-SNAPSHOT</version>
+  <version>13.1.0-rc3</version>
   <name>Linux-HA configuration component</name>
 
   <repositories>

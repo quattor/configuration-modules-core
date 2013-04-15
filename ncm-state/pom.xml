@@ -6,7 +6,7 @@
   <artifactId>state</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.0-rc3-SNAPSHOT</version>
+  <version>13.1.0-rc3</version>
   <name>NCM state configuration component</name>
 
   <repositories>
