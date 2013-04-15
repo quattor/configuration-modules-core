@@ -6,7 +6,7 @@
   <artifactId>raidman</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.2-rc-SNAPSHOT</version>
+  <version>13.1.0-rc2</version>
   <name>NCM component for RAID management</name>
 
   <repositories>
