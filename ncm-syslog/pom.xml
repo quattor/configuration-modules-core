@@ -6,7 +6,7 @@
   <artifactId>syslog</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.0-rc3</version>
+  <version>13.1.0-rc4-SNAPSHOT</version>
   <name>NCM component for editing /etc/syslog.conf</name>
 
   <repositories>
