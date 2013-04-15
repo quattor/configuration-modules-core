@@ -64,9 +64,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-  </build>
-
-  <build>
     <plugins>
       <plugin>
 	<groupId>org.codehaus.mojo</groupId>
