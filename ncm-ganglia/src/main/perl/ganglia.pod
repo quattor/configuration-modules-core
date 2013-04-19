@@ -1,0 +1,25 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-ganglia: Ganglia components
+
+=head1 DESCRIPTION
+
+ganglia
+
+=head1 RESOURCES
+
+=head2 /software/components/ganglia
+
+The configuration information for the component.  Each field should
+be described in this section. 
+
+=head1 AUTHOR
+
+${author-info}
+
+=cut

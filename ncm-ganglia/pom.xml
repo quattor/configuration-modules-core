@@ -1,0 +1,92 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.quattor.cfg.module</groupId>
+  <artifactId>ganglia</artifactId>
+
+  <packaging>pom</packaging>
+  <version>1.0.22-SNAPSHOT</version>
+  <name>Ganglia components</name>
+
+  <properties>
+    <nexus.release.repository.name>fedora-14-releases</nexus.release.repository.name>
+    <nexus.snapshot.repository.name>fedora-14-snapshots</nexus.snapshot.repository.name>
+  </properties>
+
+  <distributionManagement>
+    <repository>
+      <id>stratuslab.releases</id>
+      <name>Releases</name>
+      <url>http://repo.stratuslab.eu:8081/content/repositories/${nexus.release.repository.name}</url>
+    </repository>
+    <snapshotRepository>
+      <id>stratuslab.snapshots</id>
+      <name>Snapshots</name>
+      <url>http://repo.stratuslab.eu:8081/content/repositories/${nexus.snapshot.repository.name}</url>
+    </snapshotRepository>
+    <site>
+      <id>hudson.webserver</id>
+      <url>scp://hudson.stratuslab.eu/var/www/quattor</url>
+    </site>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>quattor-releases</id>
+      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
+    </repository>
+  </repositories>
+ 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>quattor-releases</id>
+      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <parent>
+    <groupId>org.quattor.maven</groupId>
+    <artifactId>build-profile</artifactId>
+    <version>1.15</version>
+    <relativePath />
+  </parent>
+
+  <licenses>
+    <license>
+      <name>Apache 2 License</name>
+      <url>http://www.opensource.org/licenses/apache2.0</url>
+      <comments>Copyright (c) Responsible Organization</comments>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Guillaume PHILIPPON</name>
+      <email>guillaume.philippon@lal.in2p3.fr</email>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Guillaume PHILIPPON</name>
+      <email>guillaume.philippon@lal.in2p3.fr</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
