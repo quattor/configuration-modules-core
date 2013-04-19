@@ -1,0 +1,143 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=pod
+
+=head1 DESCRIPTION
+
+The I<libvirtd> component manages the configuration of the
+the libvirtd daemon.
+
+=head1 CONFIGURATION PARAMETERS
+
+The base path for all of the configuration parameters is
+    /software/components/libvirtd.  The following sections describe the
+    elements that are permitted directly below this base path.  With
+    further parameters described in each section.  All parameters are
+    optional.  Except the configuration file location. 
+
+=head2 libvirtd_config (R '/etc/libvirt/libvirtd.conf')
+
+This string defines the location of the libvirtd configuration file.
+
+=head2 network
+
+This sections contains the networking parameters.
+
+=over 4
+
+=item * listen_tls: 0 or 1, enabled by default
+
+=item * listen_tcp: 0 or 1, disabled by default
+
+=item * tls_port: port number (16514) or service name
+
+=item * tcp_port: port number (16509) or service name
+
+=item * listen_addr (type_hostname): IPv4/v6 address or hostname
+
+=item * mdns_adv: 0 or 1, enabled by default
+
+=item * mdns_name: default string is "Virtualization Host HOSTNAME"
+
+=back
+
+=head2 socket
+
+This section contains the configuration for unix sockets.
+
+=over 4
+
+=item * 
+
+=item * unix_sock_group: restricted to root by default
+
+=item * unix_sock_ro_perms: octal string, default allows any user
+
+=item * unix_sock_rw_perms: octal string
+
+=item * unix_sock_dir: directory of created sockets
+
+=back 
+
+=head2 authn
+
+This section contains the authentication parameters.
+
+=over 4
+
+=item * auth_unix_ro: 'none|sasl|polkit', default anyone
+
+=item * auth_unix_rw: 'none|sasl|polkit', default polkit
+
+=item * auth_tcp' ? 'none|sasl', should be 'sasl' for production
+
+=item * auth_tls' ? 'none|sasl'
+
+=back
+
+=head2 tls
+
+This section contains the parameters for TLS. 
+
+=over 4
+
+=item * key_file: full path to key file
+
+=item * cert_file: full path to certificate file
+
+=item * ca_file: full path to certificate authority certificate
+
+=item * crl_file: fall path to CRL
+
+=back
+
+=head2 authz
+
+This section contains the authorization parameters. 
+
+=over 4
+
+=item * tls_no_verify_certificate: 0 or 1, defaults to verification
+
+=item * tls_allowed_dn_list: list of allowed DNs
+
+=item * sasl_allowed_username_list: list of allowed usernames
+
+=back
+
+=head2 processing
+
+This section contains the parameters used to control the processing. 
+
+=over 4
+
+=item * max_clients: maximum number of clients
+
+=item * min_workers: minimum number of workers
+
+=item * max_workers: maximum number of workers
+
+=item * max_requests: maximum number of requests
+
+=item * max_client_requests: maximum number of client requests
+
+=back
+
+=head2 logging
+
+This section contains the parameters used to control the logging.
+
+=over 4
+
+=item * log_level: 4=errors,3=warnings,2=info,1=debug,0=none
+
+=item * log_filters: list of filters, see man for format
+
+=item * log_outputs: list of outputs, see man for format
+
+=back
+
+=cut
