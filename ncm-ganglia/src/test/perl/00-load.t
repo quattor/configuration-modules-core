@@ -9,8 +9,8 @@
 
 Basic test that ensures that our module will load correctly.
 
-B<Do not disable this test>. And do not push anything to SF without
-having run, at least, this test.
+B<Do not disable this test>. And do not push anything to GitHub
+without having run, at least, this test.
 
 =cut
 
