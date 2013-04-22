@@ -14,6 +14,8 @@ unique template components/accounts/sysusers;
 '/software/components/accounts/kept_users' ?= nlist(
     'bin' ,'',
     'daemon' ,'',
+    'dhcpd', '',
+    'dhcp', '',
     'adm' ,'',
     'lp' ,'',
     'sync' ,'',
