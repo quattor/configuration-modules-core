@@ -15,6 +15,8 @@ unique template components/accounts/sysgroups;
     'bin', '',
     'daemon' ,'',
     'sys' ,'',
+    'dhcpd', '',
+    'dhcp', '',
     'adm' ,'',
     'tty' ,'',
     'disk' ,'',
