@@ -637,7 +637,7 @@ sub commit_groups
       @ln =  ($g,
               "x",
               $cfg->{gid},
-              join(",", keys(%{$cfg->{members}}))
+              join(",", sort(keys(%{$cfg->{members}})))
              );
       push(@group, join(":", @ln));
     }
@@ -646,7 +646,7 @@ sub commit_groups
 
     $fh = CAF::FileWriter->new(GROUP_FILE, log => $self,
                                backup => ".old");
-    print $fh join("\n", @group, "");
+    print $fh join("\n", sort(@group), "");
     $fh->close();
 }
 
