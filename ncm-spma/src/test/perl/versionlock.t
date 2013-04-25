@@ -31,53 +31,60 @@ my $cmp = NCM::Component::spma->new("spma");
 
 
 my $pkgs = {
-	      "ConsoleKit"=> {
-			      "_30_2e4_2e1_2d3_2eel6"=> {
-							 "arch"=> {
-								   "x86_64"=> "sl620_x86_64"
-								  }
-							}
-			     },
-	      "ConsoleKit_2dlibs"=> {
-				     "_30_2e4_2e1_2d3_2eel6"=> {
-								"arch"=> {
-									  "x86_64"=> "sl620_x86_64"
-									 }
-							       }
-				    },
-	      "glibc"=> {
-			 "_32_2e12_2d1_2e47_2eel6_5f2_2e9"=> {
-							      "arch"=> {
-									"i686"=> "sl620_x86_64_updates",
-									"x86_64"=> "sl620_x86_64_updates"
-								       }
-							     }
-			},
-	      "tzdata_2djava"=> {
-				 "_32012b_2d3_2eel6"=> {
-							"arch"=> {
-								  "noarch"=> "sl620_x86_64_updates"
-								 }
-						       }
-				},
-	      "kde" => {},
-	      "foo" => { "a" => { "arch" => { "x" => "arepo" } } },
-	     };
+    "ConsoleKit"=> {
+	"_30_2e4_2e1_2d3_2eel6"=> {
+	    "arch"=> {
+		"x86_64"=> "sl620_x86_64"
+	       }
+	   }
+       },
+    "ConsoleKit_2dlibs"=> {
+	"_30_2e4_2e1_2d3_2eel6"=> {
+	    "arch"=> {
+		"x86_64"=> "sl620_x86_64"
+	       }
+	   }
+       },
+    "glibc"=> {
+	"_32_2e12_2d1_2e47_2eel6_5f2_2e9"=> {
+	    "arch"=> {
+		"i686"=> "sl620_x86_64_updates",
+		"x86_64"=> "sl620_x86_64_updates"
+	       }
+	   }
+       },
+    "tzdata_2djava"=> {
+	"_32012b_2d3_2eel6"=> {
+	    "arch"=> {
+		"noarch"=> "sl620_x86_64_updates"
+	       }
+	   }
+       },
+    "kde" => {},
+    "foo" => { "a" => { "arch" => { "x" => "arepo" } } },
+    "python_2a" => {
+	"_32_2e7_2e5_2del6" => {
+	    "arch" => {
+		"x86_64" => {}
+	       }
+	   }
+       }
+   };
 
 
 # I don't know in which order the arguments will be passed!!
 set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
 			"glibc-2.12-1.47.el6_2.9.i686"),
-    q{0:glibc-2.12-1.47.el6_2.9.x86_64
+		   q{0:glibc-2.12-1.47.el6_2.9.x86_64
 1:glibc-2.12-1.47.el6_2.9.i686});
 set_desired_err(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.x86_64",
-			"glibc-2.12-1.47.el6_2.9.i686"), "");
+		     "glibc-2.12-1.47.el6_2.9.i686"), "");
 set_desired_output(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
 			"glibc-2.12-1.47.el6_2.9.x86_64"),
-    q{0:glibc-2.12-1.47.el6_2.9.x86_64
+		   q{0:glibc-2.12-1.47.el6_2.9.x86_64
 1:glibc-2.12-1.47.el6_2.9.i686});
 set_desired_err(join(" ", @REPOQUERY, "glibc-2.12-1.47.el6_2.9.i686",
-			"glibc-2.12-1.47.el6_2.9.x86_64"), "");
+		     "glibc-2.12-1.47.el6_2.9.x86_64"), "");
 is($cmp->versionlock({ glibc => $pkgs->{glibc},
 		       kde => $pkgs->{kde}}), 1,
    "Simple versionlock succeeds");
@@ -106,5 +113,14 @@ set_desired_err(join(" ", @REPOQUERY, "foo-a.x"), "");
 set_desired_output(join(" ", @REPOQUERY, "foo-a.x"), "");
 is($cmp->versionlock({foo => $pkgs->{foo}}), 0,
    "Not locking packages that should be triggers an error");
+
+set_desired_output(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"),
+		   q{0:python-2.7.5-el6.x86_64
+0:python-libs-2.7.5-el6.x86_64
+0:python-devel-2.7.5-el6.x86_64});
+set_desired_err(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"));
+
+is($cmp->versionlock({python_2a => $pkgs->{python_2a}}), 1,
+   "Locking of packages with wildcards succeeds");
 
 done_testing();
