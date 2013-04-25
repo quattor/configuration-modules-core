@@ -172,6 +172,7 @@ sub build_group_map
             %mb = map(($_ => 1), split(",", $flds[IDLIST]));
         }
         $h->{members} = \%mb;
+	$h->{ln} = $ln;
         $rt{$h->{name}} = $h;
       }
       $ln++;
@@ -633,20 +634,20 @@ sub commit_groups
 
     $self->verbose("Preparing group file");
 
-    while (my ($g, $cfg) = each(%$groups)) {
-      @ln =  ($g,
-              "x",
-              $cfg->{gid},
-              join(",", sort(keys(%{$cfg->{members}})))
-             );
-      push(@group, join(":", @ln));
+    foreach my $cfg (sort accounts_sort (values(%$groups))) {
+	@ln =  ($cfg->{name},
+		"x",
+		$cfg->{gid},
+		join(",", sort(keys(%{$cfg->{members}})))
+	       );
+	push(@group, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@group), " groups");
 
     $fh = CAF::FileWriter->new(GROUP_FILE, log => $self,
                                backup => ".old");
-    print $fh join("\n", sort(@group), "");
+    print $fh join("\n", @group, "");
     $fh->close();
 }
 
@@ -658,12 +659,12 @@ sub accounts_sort($$)
     my $cmp;
 
     if (exists($a->{ln}) && exists($b->{ln})) {
-      $cmp = $a->{ln} <=> $b->{ln};
-      return $cmp if $cmp;
+	$cmp = $a->{ln} <=> $b->{ln};
+	return $cmp if $cmp;
     } elsif (exists($a->{ln})) {
-      return -1;
+	return -1;
     } elsif (exists($b->{ln})) {
-      return 1;
+	return 1;
     }
     return $a->{name} cmp $b->{name};
 }
