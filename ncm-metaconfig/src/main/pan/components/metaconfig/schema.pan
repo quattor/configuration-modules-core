@@ -16,6 +16,7 @@ type ${project.artifactId}_config =  {
      'daemon' ? string[]
      'module' : string
      'backup' ? string
+     'preamble' ? string
      'contents' : ${project.artifactId}_extension
 } = nlist();
 
