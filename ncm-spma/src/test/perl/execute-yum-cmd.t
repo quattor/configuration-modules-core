@@ -60,6 +60,12 @@ set_desired_err($CMD, "Error in PREIN scriptlet");
 is($cmp->execute_yum_command([$CMD], $WHY), undef,
    "Errors in scriptlet execution detected, see issue #42");
 
+set_desired_err($CMD, "");
+set_desired_output($CMD, "No package foo available");
+
+is($cmp->execute_yum_command([$CMD], $WHY), undef,
+   "Unavailable packages detected and alerted");
+
 set_command_status($CMD, 1);
 is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in execution detected");
 

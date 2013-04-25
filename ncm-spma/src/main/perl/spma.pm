@@ -152,7 +152,7 @@ sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin) = @_;
 
-    my (%opts, $out, $err);
+    my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
 	      stdout => \$out,
@@ -165,8 +165,12 @@ sub execute_yum_command
 
     $cmd->execute();
 
-    if ($? || $err =~ m{^(Error|Failed|Could not match)}m) {
+    if ($? || $err =~ m{^(Error|Failed|Could not match)}m ||
+	    (@missing = ($out =~ m{^No package (.*) available}mg))) {
         $self->error("Failed $why: $err");
+	if (@missing) {
+	    $self->error("Missing packages: ", join(" ", @missing));
+	}
         $self->warn("Command output: $out");
         return undef;
     }
