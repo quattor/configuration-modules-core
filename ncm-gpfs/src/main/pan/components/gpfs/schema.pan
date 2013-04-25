@@ -23,6 +23,7 @@ type component_gpfs_base = {
     "usecurl" ? boolean = false
     "useccmcertwithcurl" ? boolean = false
     "usesindesgetcertcertwithcurl" ? boolean = false
+    "useyum" : boolean = true
 };
 
 type component_gpfs_type = {

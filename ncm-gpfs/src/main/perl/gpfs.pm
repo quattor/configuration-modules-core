@@ -48,7 +48,6 @@ use constant GPFSRPMS => qw(
 my $compname = "NCM-gpfs";
 my $mypath = '/software/components/gpfs';
 
-
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -75,6 +74,18 @@ sub Configure {
 
     # Save the date.
     my $date = localtime();
+
+    my $useyum = 1; # default on
+    my $cfgtr;
+
+    if ($config->elementExists("$mypath/cfg")) {
+        $cfgtr = $config->getElement("$mypath/cfg")->getTree;
+    } else {
+        $self->error("base path $mypath/cfg not found.");
+        return 1;
+    };
+
+    $useyum = $cfgtr{useyum} if (exists($cfgtr{useyum}));
 
     ## base rpms
     ## remove existing gpfs rpms if certain is not found
@@ -104,17 +115,14 @@ sub Configure {
             return 1;
         }
 
-    } else {
-        if ( ! -f $basiccfg) {
-            ## get gpfs config file if not found
-            if ($config->elementExists("$mypath/cfg")) {
-                my $tr = $config->getElement("$mypath/cfg")->getTree;
-                get_cfg($tr) || return 1;
-            } else {
-                $self->error("base path $mypath/cfg not found.");
-                return 1;
-            };
+        if ($useyum) {
+            runyum('distro-sync');
+        }
 
+    } else {
+        ## get gpfs config file if not found
+        if ( ! -f $basiccfg) {
+            get_cfg($cfgtr) || return 1;
 
             ## write the $basiccfg file
             ## - set the date
@@ -162,6 +170,30 @@ sub Configure {
         };
 
         unshift(@opts,$rpmcmd,"-v",@proxy);
+
+        my $output = CAF::Process->new(\@opts, log => $self)->output();
+        my $cmd=join(" ",@opts);
+
+        if ($?) {
+            $self->error("Error running '$cmd' output: $output");
+            return;
+        } else {
+            $self->debug(2,"Ran '$cmd' succesfully.")
+        }
+        return $output  || 1;
+    };
+
+    sub runyum {
+        my $tr = shift;
+        my @opts=@_;
+
+        my $yumcmd = "/usr/bin/yum";
+        if (! -f $yumcmd) {
+            $self->error("Yum cmd $yumcmd not found.");
+            return;
+        };
+
+        unshift(@opts,$yumcmd,"-y");
 
         my $output = CAF::Process->new(\@opts, log => $self)->output();
         my $cmd=join(" ",@opts);
@@ -259,13 +291,17 @@ sub Configure {
             } else {
                 $self->error("Not removing unknown found rpm that matched gpfs.*: $found (full: $foundfullname). \n");
                 $ret = 0;
-
             };
         };
 
         stopgpfs(1);
         if (scalar @removerpms) {
-            runrpm($tr,"-e",@removerpms) || return;
+            if ($useyum) {
+                # for dependencies
+                runyum($tr,"remove",@removerpms) || return;
+            } else {
+                runrpm($tr,"-e",@removerpms) || return;
+            };
         } else {
             $self->info("No rpms to be removed.")
         }
