@@ -30,8 +30,8 @@ use LC::File;
 use File::Basename;
 use File::Copy;
 use Cwd;
-use Encode qw(encode_utf8);
 
+use constant TMP_DOWNLOAD => '/tmp/ncm-gpfs-download';
 use constant GPFSBIN => '/usr/lpp/mmfs/bin';
 use constant GPFSCONFIGDIR => '/var/mmfs/';
 use constant GPFSCONFIG => '/var/mmfs/gen/mmsdrfs';
@@ -54,6 +54,22 @@ sub Configure {
 ##########################################################################
 
     our ($self,$config)=@_;
+
+    # create download dir
+    if(-e TMP_DOWNLOAD) {
+        if(! unlink(TMP_DOWNLOAD) ){
+            $self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD);
+            return 1;
+        }
+    }
+    if(! mkdir(TMP_DOWNLOAD)) {
+        $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD);
+        return 1;
+    }
+    if(! chmod(0700,TMP_DOWNLOAD)) {
+        $self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD);
+        return 1;
+    }
 
     my ($result,$tree,$contents);
 
@@ -94,9 +110,6 @@ sub Configure {
             if ($config->elementExists("$mypath/cfg")) {
                 my $tr = $config->getElement("$mypath/cfg")->getTree;
                 get_cfg($tr) || return 1;
-                ## extract current single node entry if not found
-                get_nodefile_from_cfg($tr) || return 1;
-
             } else {
                 $self->error("base path $mypath/cfg not found.");
                 return 1;
@@ -117,6 +130,12 @@ sub Configure {
             }
         }
     };
+
+    # cleanup
+    if(! unlink(TMP_DOWNLOAD) ){
+        $self->error("Failed to remove tmp download dir ".TMP_DOWNLOAD);
+        return 1;
+    }
 
 
     sub runrpm {
@@ -196,7 +215,7 @@ sub Configure {
         }
 
 
-        unshift(@opts,$curlcmd,'-s',@certscurl);
+        unshift(@opts,$curlcmd,'-s','-f',@certscurl);
 
 
         my $cwd=getcwd;
@@ -274,7 +293,7 @@ sub Configure {
                 $self->debug(2,"Added base rpm $rpm.")
             }
 
-            my $tmp="/tmp";
+            my $tmp=TMP_DOWNLOAD;
             if (scalar @downloadrpms) {
                 runcurl($tmp,$tr,@downloadrpms) || return ;
             };
@@ -346,32 +365,51 @@ sub Configure {
         my $tr = shift;
         my $ret = 1;
         my $url = $tr->{'url'};
-        my $tmp="/tmp";
+        my $tmp=TMP_DOWNLOAD;
         runcurl($tmp,$tr,"-O",$url) || return 0;
-        ## move file
-        if (! move($tmp."/".basename($url),GPFSCONFIG)) {
-            ## moving failed?
-            $self->error("Moving cfg from ".$tmp."/".basename($url)." to ".GPFSCONFIG." failed");
-            return 0;
-        }
-        return $ret;
-    };
+        # sanity check
+        my $tmpcfg = $tmp."/".basename($url);
 
-    sub get_nodefile_from_cfg {
-        my $tr = shift;
-        my $ret = 1;
         my $subn = $tr->{'subnet'};
         my $hostname =  $config->getValue("/system/network/hostname");
         $subn =~ s/\./\\./g;
-        my $regexp = "MEMBER_NODE.*$hostname\.$subn";
+        my $regexp = "^MEMBER_NODE.*$hostname\.$subn";
+
+        my $fulltxt='';
         my $txt='';
-        if(open(FH,GPFSCONFIG)) {
+        if(open(FH,$tmpcfg)) {
             while (<FH>) {
+                $fulltxt .= $_;
                 ## there should be only one...
-                $txt .= $_ if (m/$regexp/);
+                if (m/$regexp/) {
+                    if (length($txt) > 0) {
+                        $self->error('Ignoring another node match for regexp $regexp found: $_.');
+                    } else {
+                        $txt .= $_
+                    };
+                };
             }
             close(FH);
-            ## write
+
+            ## check fulltxt content (curl -f should not generate any 404-html pages or such, but you never know)
+            if (! $fulltxt ~= m/^%%.*VERSION_LINE/) {
+                $self->error('Invalid config file found');
+                return 1;
+            }
+
+            # write config
+            my $result = LC::Check::file( GPFSCONFIG,
+                                  backup => ".old",
+                                  contents => encode_utf8($fulltxt),
+                                );
+            if ($result) {
+                $self->info(GPFSCONFIG." set");
+            } else {
+                $self->error(GPFSCONFIG." failed");
+                return 1;
+            }
+
+            # write nodeconfig
             my $result = LC::Check::file( GPFSNODECONFIG,
                                   backup => ".old",
                                   contents => encode_utf8($txt),
@@ -384,7 +422,7 @@ sub Configure {
             }
 
         } else {
-             $self->error("Can't open ".GPFSCONFIG." for reading.");
+             $self->error("Can't open $tmpcfg for reading.");
              return 0;
         };
     };
