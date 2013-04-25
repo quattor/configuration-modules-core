@@ -25,6 +25,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 use Encode;
 use CAF::Process;
 use CAF::FileEditor;
+use CAF::FileWriter;
 use LC::File;
 
 use File::Basename;
@@ -53,40 +54,19 @@ my $mypath = '/software/components/gpfs';
 sub Configure {
 ##########################################################################
 
-    our ($self,$config)=@_;
+    our ($self, $config)=@_;
 
-    # create download dir
-    if(-e TMP_DOWNLOAD) {
-        rmtree([TMP_DOWNLOAD]) ||$self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
-    }
-    mkdir(TMP_DOWNLOAD) || $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
-    chmod(0700,TMP_DOWNLOAD) ||$self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
+    return 1 if (create_tmpdir());
 
-    my $startcwd=getcwd;
-    chomp($startcwd);
-    # Untaint it
-    if ( $startcwd =~ qr|^([-+@\w./]+)$| ) {
-        $startcwd = $1;
-    } else {
-        $self->error("Couldn't untaint \$startcwd: [$startcwd]") && return 1;
-    }
-    chdir(TMP_DOWNLOAD) || $self->error("Failed to change to directory ".TMP_DOWNLOAD) && return 1;
-
-
-    my ($result,$tree,$contents);
+    my ($tmpfh, $tree, $contents);
+    our $startcwd;
 
     # Save the date.
     my $date = localtime();
 
     our $useyum = 1; # default on
-    my $cfgtr;
 
-    if ($config->elementExists("$mypath/cfg")) {
-        $cfgtr = $config->getElement("$mypath/cfg")->getTree;
-    } else {
-        $self->error("base path $mypath/cfg not found.");
-        return 1;
-    };
+    my $cfgtr = $config->getElement("$mypath/cfg")->getTree;
 
     $useyum = $cfgtr->{useyum} if (exists($cfgtr->{useyum}));
 
@@ -97,7 +77,7 @@ sub Configure {
     ## how to retrigger spma afterwards?
     my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     my $basiccfg = GPFSCONFIGDIR . "/.quattorbasiccfg";
-    if ( ! -f $baseinstalled) {
+    if (! -f $baseinstalled) {
         remove_existing_rpms() || return 1;
         install_base_rpms() || return 1;
         ## update?
@@ -107,40 +87,77 @@ sub Configure {
 
         ## write the $baseinstalled file
         ## - set the date
-        $result = LC::Check::file( $baseinstalled,
-                                  backup => ".old",
-                                  contents => encode_utf8($date),
-                                );
-        if (defined($result)) {
-            $self->info("$baseinstalled set (result $result changes)");
-        } else {
-            $self->error("$baseinstalled failed");
-            return 1;
-        }
+        $tmpfh = CAF::FileWriter->open($baseinstalled,
+                                       backup => ".old",
+                                       log => $self,
+                                      );
+        print $tmpfh, $date;
+        $tmpfh->close();
     }
 
     ## get gpfs config file if not found
-    if ( ! -f $basiccfg) {
+    if (! -f $basiccfg) {
         get_cfg($cfgtr) || return 1;
 
         ## write the $basiccfg file
         ## - set the date
-        $result = LC::Check::file( $basiccfg,
-                              backup => ".old",
-                              contents => encode_utf8($date),
-                            );
-        if (defined($result)) {
-            $self->info("$basiccfg set (result $result changes)");
-        } else {
-            $self->error("$basiccfg failed");
-            return 1;
-        }
+
+        $tmpfh = CAF::FileWriter->open($basiccfg,
+                                       backup => ".old",
+                                       log => $self,
+                                      );
+        print $tmpfh, $date;
+        $tmpfh->close();
     }
 
-    # cleanup
-    chdir($startcwd) || $self->error("Failed to change back to directory $startcwd.") && return 1;
-    rmtree([TMP_DOWNLOAD]) || $self->error("Failed to remove tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
+    return 1 if (cleanup_tmpdir());
 
+    # subroutines from here
+    sub create_tmpdir {
+        # create download dir
+        if (-e TMP_DOWNLOAD) {
+            if (! rmtree([TMP_DOWNLOAD])) {
+                $self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD.": $!");
+                return 1;
+            }
+        }
+        if (! mkdir(TMP_DOWNLOAD)) {
+            $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD.": $!");
+            return 1;
+        }
+        if (! chmod(0700, TMP_DOWNLOAD)) {
+            $self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD.": $!");
+            return 1;
+        }
+
+        $startcwd=getcwd;
+        chomp($startcwd);
+        # Untaint it
+        if ($startcwd =~ qr|^([-+@\w./]+)$|) {
+            $startcwd = $1;
+        } else {
+            $self->error("Couldn't untaint \$startcwd: [$startcwd]");
+            return 1;
+        }
+        if (! chdir(TMP_DOWNLOAD)) {
+            $self->error("Failed to change to directory ".TMP_DOWNLOAD);
+            return 1;
+        }
+        return 0;
+    }
+
+    sub cleanup_tmpdir {
+        # cleanup
+        if (!chdir($startcwd)) {
+            $self->error("Failed to change back to directory $startcwd.");
+            return 1;
+        }
+        if (! rmtree([TMP_DOWNLOAD])) {
+            $self->error("Failed to remove tmp download dir ".TMP_DOWNLOAD.": $!");
+            return 1;
+        };
+        return 0;
+    }
 
     sub runrpm {
         my $tr = shift;
@@ -152,30 +169,23 @@ sub Configure {
             my $spmapath="/software/components/spma";
             my $spmatr = $config->getElement($spmapath)->getTree;
             if ($spmatr->{'proxy'}) {
-                push(@proxy,'--httpproxy',$spmatr->{'proxyhost'}) if ($spmatr->{'proxyhost'});
-                push(@proxy,'--httpport',$spmatr->{'proxyport'}) if ($spmatr->{'proxyport'});
+                push(@proxy, '--httpproxy', $spmatr->{'proxyhost'}) if ($spmatr->{'proxyhost'});
+                push(@proxy, '--httpport', $spmatr->{'proxyport'}) if ($spmatr->{'proxyport'});
             } else {
                 $self->error("No SPMA proxy set in $spmapath/proxy: ".$spmatr->{'proxy'});
             };
         }
 
         my $rpmcmd = "/bin/rpm";
-        if (! -f $rpmcmd) {
-            $self->error("Rpm cmd $rpmcmd not found.");
-            return;
-        };
 
-        unshift(@opts,$rpmcmd,"-v",@proxy);
-
-        my $output = CAF::Process->new(\@opts, log => $self)->output();
-        my $cmd=join(" ",@opts);
+        my $proc = CAF::Process->new([$rpmcmd, "-v", @proxy, @opts], log => $self);
+        my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running '$cmd' output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
             return;
-        } else {
-            $self->debug(2,"Ran '$cmd' succesfully.")
         }
+
         return $output  || 1;
     };
 
@@ -184,21 +194,13 @@ sub Configure {
         my @opts=@_;
 
         my $yumcmd = "/usr/bin/yum";
-        if (! -f $yumcmd) {
-            $self->error("Yum cmd $yumcmd not found.");
-            return;
-        };
 
-        unshift(@opts,$yumcmd,"-y");
-
-        my $output = CAF::Process->new(\@opts, log => $self)->output();
-        my $cmd=join(" ",@opts);
+        my $proc = CAF::Process->new([$yumcmd, "-y", @opts], log => $self);
+        my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running '$cmd' output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
             return;
-        } else {
-            $self->debug(2,"Ran '$cmd' succesfully.")
         }
         return $output  || 1;
     };
@@ -209,10 +211,6 @@ sub Configure {
         my @opts=@_;
 
         my $curlcmd = "/usr/bin/curl";
-        if (! -f $curlcmd) {
-            $self->error("Curl cmd $curlcmd not found.");
-            return;
-        };
 
         my @certscurl;
 
@@ -223,8 +221,8 @@ sub Configure {
             my $ccmpath="/software/components/ccm";
             my $ccmtr = $config->getElement($ccmpath)->getTree;
             if ($ccmtr->{'cert_file'}) {
-                push(@certscurl,'--cert',$ccmtr->{'key_file'}) if ($ccmtr->{'key_file'});
-                push(@certscurl,'--cacert',$ccmtr->{'ca_file'}) if ($ccmtr->{'ca_file'});
+                push(@certscurl, '--cert', $ccmtr->{'key_file'}) if ($ccmtr->{'key_file'});
+                push(@certscurl, '--cacert', $ccmtr->{'ca_file'}) if ($ccmtr->{'ca_file'});
             } else {
                 $self->error("No CCM cert file set in $ccmpath/cert_file: ".$ccmtr->{'cert_file'});
             };
@@ -235,27 +233,21 @@ sub Configure {
             my $sgpath="/software/components/sindes_getcert";
             my $sgtr = $config->getElement($sgpath)->getTree;
             if ($sgtr->{'client_cert_key'}) {
-               push(@certscurl,'--cert',$sgtr->{'cert_dir'}."/".$sgtr->{'client_cert_key'}) if ($sgtr->{'client_cert_key'});
-               push(@certscurl,'--cacert',$sgtr->{'cert_dir'}."/".$sgtr->{'ca_cert'}) if ($sgtr->{'ca_cert'});
+               push(@certscurl, '--cert', $sgtr->{'cert_dir'}."/".$sgtr->{'client_cert_key'}) if ($sgtr->{'client_cert_key'});
+               push(@certscurl, '--cacert', $sgtr->{'cert_dir'}."/".$sgtr->{'ca_cert'}) if ($sgtr->{'ca_cert'});
             } else {
                $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".$sgtr->{'client_cert_key'});
             };
         }
 
-
-        unshift(@opts,$curlcmd,'-s','-f',@certscurl);
-
-
-        my $output = CAF::Process->new(\@opts, log => $self)->output();
-
-        my $cmd=join(" ",@opts);
+        my $proc = CAF::Process->new([$curlcmd, "-s", "-f", @certscurl, @opts], log => $self);
+        my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running '$cmd' output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
             return;
-        } else {
-            $self->debug(2,"Ran '$cmd' succesfully.")
         }
+
         return $output || 1;
     };
 
@@ -263,12 +255,12 @@ sub Configure {
     sub remove_existing_rpms {
         my $ret = 1;
         my $tr;
-        my $allrpms = runrpm($tr,"-q","-a","gpfs.*","--qf","%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
+        my $allrpms = runrpm($tr, "-q", "-a", "gpfs.*", "--qf", "%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
         return if (!$allrpms);
 
         my @removerpms;
-        for my $found (split('\n',$allrpms)) {
-            my @res=split(' ',$found);
+        for my $found (split('\n', $allrpms)) {
+            my @res=split(' ', $found);
             my $foundname=$res[0];
             my $foundfullname=$res[1];
 
@@ -284,9 +276,9 @@ sub Configure {
         if (scalar @removerpms) {
             if ($useyum) {
                 # for dependencies
-                runyum($tr,"remove",@removerpms) || return;
+                runyum($tr, "remove", @removerpms) || return;
             } else {
-                runrpm($tr,"-e",@removerpms) || return;
+                runrpm($tr, "-e", @removerpms) || return;
             };
         } else {
             $self->info("No rpms to be removed.")
@@ -307,28 +299,28 @@ sub Configure {
                 $fullrpm =~ s/\/\/$rpm/\/$rpm/;
 
                 if ($tr->{'usecurl'}) {
-                    push(@downloadrpms,"-O",$fullrpm);
-                    push(@rpms,$rpm);
+                    push(@downloadrpms, "-O", $fullrpm);
+                    push(@rpms, $rpm);
                 } else {
-                    push(@rpms,$rpm);
+                    push(@rpms, $rpm);
                 };
-                $self->debug(2,"Added base rpm $rpm.")
+                $self->debug(2, "Added base rpm $rpm.")
             }
 
             my $tmp=TMP_DOWNLOAD;
             if (scalar @downloadrpms) {
-                runcurl($tmp,$tr,@downloadrpms) || return ;
+                runcurl($tmp, $tr, @downloadrpms) || return ;
             };
 
             ##  gpfs complains about libstdc++.so.5, but it's not needed
-            runrpm($tr,"-U","--nodeps",@rpms) || return;
+            runrpm($tr, "-U", "--nodeps", @rpms) || return;
 
             ## cleanup downloaded rpms
             for my $rpm (@rpms) {
                 $rpm = basename($rpm);
                 if (-f "$tmp/$rpm") {
-                    if(unlink("$tmp/$rpm")) {
-                        $self->debug(3,"File $tmp/$rpm deleted successfully.");
+                    if (unlink("$tmp/$rpm")) {
+                        $self->debug(3, "File $tmp/$rpm deleted successfully.");
                     } else {
                         $self->error("File $tmp/$rpm was not deleted.");
                         $ret=0;
@@ -336,7 +328,7 @@ sub Configure {
                 }
             }
             if ($useyum) {
-                runyum($tr,'distro-sync');
+                runyum($tr, 'distro-sync');
             }
 
         } else {
@@ -361,16 +353,16 @@ sub Configure {
             return;
         };
 
-        unshift(@cmds,$cmdexe);
+        unshift(@cmds, $cmdexe);
 
         my $output = CAF::Process->new(\@cmds, log => $self)->output();
-        my $cmd=join(" ",@cmds);
+        my $cmd=join(" ", @cmds);
 
         if ($?) {
             $self->error("Error running '$cmd' output: $output");
             return;
         } else {
-            $self->debug(2,"Ran '$cmd' succesfully.")
+            $self->debug(2, "Ran '$cmd' succesfully.")
         }
         return $output || 1;
     };
@@ -378,13 +370,13 @@ sub Configure {
     sub stopgpfs {
         my $neom = shift || 0;
         ## local shutdown
-        return rungpfs($neom,"mmshutdown");
+        return rungpfs($neom, "mmshutdown");
     };
 
     sub startgpfs {
         my $neom = shift || 0;
         ## local startup
-        return rungpfs($neom,"mmstartup");
+        return rungpfs($neom, "mmstartup");
     };
 
     sub get_cfg {
@@ -392,65 +384,45 @@ sub Configure {
         my $ret = 1;
         my $url = $tr->{'url'};
         my $tmp=TMP_DOWNLOAD;
-        runcurl($tmp,$tr,"-O",$url) || return 0;
+        my $output = runcurl($tmp, $tr, $url);
+        return 0 if (! $output);
+
         # sanity check
         my $tmpcfg = $tmp."/".basename($url);
 
         my $subn = $tr->{'subnet'};
         my $hostname =  $config->getValue("/system/network/hostname");
         $subn =~ s/\./\\./g;
-        my $regexp = "^MEMBER_NODE.*$hostname\.$subn";
+        my $regexp = "MEMBER_NODE.*$hostname\.$subn";
 
-        my $fulltxt='';
-        my $txt='';
-        if(open(FH,$tmpcfg)) {
-            while (<FH>) {
-                $fulltxt .= $_;
-                ## there should be only one...
-                if (m/$regexp/) {
-                    if (length($txt) > 0) {
-                        $self->error('Ignoring another node match for regexp $regexp found: $_.');
-                    } else {
-                        $txt .= $_
-                    };
+        my $gpfsconfigfh=CAF::FileWriter->open(GPFSCONFIG,
+                                               backup => ".old",
+                                               log => $self);
+        my $gpfsnodeconfigfh=CAF::FileWriter->open(GPFSNODECONFIG,
+                                                   backup => ".old",
+                                                   log => $self);
+        for (split /^/, $output) {
+            print $gpfsconfigfh $_;
+
+            # there should be only one...
+            if (m/$regexp/) {
+                if (length("$gpfsnodeconfigfh") > 0) {
+                    $self->error('Ignoring another node match for regexp $regexp found: $_.');
+                } else {
+                    print $gpfsnodeconfigfh $_;
                 };
-            }
-            close(FH);
+            };
+        }
 
-            ## check fulltxt content (curl -f should not generate any 404-html pages or such, but you never know)
-            if (! $fulltxt =~ m/^\%\%.*VERSION_LINE/) {
-                $self->error('Invalid config file found');
-                return 1;
-            }
-
-            # write config
-            my $result = LC::Check::file( GPFSCONFIG,
-                                  backup => ".old",
-                                  contents => $fulltxt,
-                                );
-            if (defined($result)) {
-                $self->info(GPFSCONFIG." set (result $result changes)");
-            } else {
-                $self->error(GPFSCONFIG." failed");
-                return 1;
-            }
-
-            # write nodeconfig
-            $result = LC::Check::file( GPFSNODECONFIG,
-                                  backup => ".old",
-                                  contents => $txt,
-                                );
-            if (defined($result)) {
-                $self->info(GPFSNODECONFIG." set (result $result changes)");
-            } else {
-                $self->error(GPFSNODECONFIG." failed");
-                return 1;
-            }
-
-        } else {
-             $self->error("Can't open $tmpcfg for reading.");
-             return 0;
-        };
+        ## check fulltxt content (curl -f should not generate any 404-html pages or such, but you never know)
+        if ("$gpfsconfigfh" !~ m/^%%.*VERSION_LINE/) {
+            $self->error('Invalid config file found');
+            $gpfsconfigfh->cancel();
+            $gpfsnodeconfigfh->cancel();
+            return 1;
+        }
+        $gpfsconfigfh->close();
+        $gpfsnodeconfigfh->close();
     };
 
 }
