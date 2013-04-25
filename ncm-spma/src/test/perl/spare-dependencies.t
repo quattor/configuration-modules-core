@@ -7,18 +7,11 @@
 
 =head1 DESCRIPTION
 
-Tests for the C<spare_dependencies> method.  This method removes
-packages to be deleted if they are listed in the output of a "magic"
-invocation to C<repoquery>.
+Tests for the C<spare_dependencies> method.  This method actually
+chooses one of two other methods, depending on the estimated size of
+the query.
 
 =head1 TESTS
-
-=head2 Sucessful executions
-
-The method must succeed, because the command invocation does.  We have
-three cases here:
-
-=over
 
 =cut
 
@@ -27,98 +20,47 @@ use warnings;
 use Readonly;
 use Test::More;
 use NCM::Component::spma;
-use Test::Quattor;
+use CAF::Object;
+use Test::MockModule;
 use Set::Scalar;
 
-Readonly my $REPO_CMD => join(" ", NCM::Component::spma::REPO_DEPS,
-			      "pkg.noarch");
-
-set_desired_output($REPO_CMD, "dep;noarch");
-set_desired_err($REPO_CMD, "");
-
+my $mock = Test::MockModule->new('NCM::Component::spma');
 my $cmp = NCM::Component::spma->new("spma");
 
-my ($to_install, $to_rm);
+$mock->mock("spare_deps_whatreq", "whatreq");
+$mock->mock("spare_deps_requires", "requires");
 
-$to_install = Set::Scalar->new("pkg;noarch");
-
-=pod
-
-=item * There is nothing to remove.
-
-The command is not even called
-
-=cut
-
-is($cmp->spare_dependencies($to_rm, $to_install), 1,
-   "Execution succeeds when there is nothing to remove");
-my $cmd = get_command($REPO_CMD);
-
-ok(!$cmd, "When nothing to remove the command is not even called");
+my $install = Set::Scalar->new();
+my $rm = Set::Scalar->new();
 
 =pod
 
-=item * There is nothing to install
+=head2 Nothing to be done
 
-The command is not called either
+If either set is empty, nothing is done.
 
 =cut
 
-$to_rm = Set::Scalar->new("dep;noarch");
-
-is($cmp->spare_dependencies($to_rm, undef), 1,
-   "Execution succeeds when there is nothing to install");
-$cmd = get_command($REPO_CMD);
-ok(!$cmd, "When nothing to install the command is not even called");
-$cmd = get_command(join(" ", NCM::Component::spma::REPO_DEPS));
-ok(!$cmd, "Really, nothing to install means no command is called");
+is($cmp->spare_dependencies($rm, $install), 1, "Nothing is done on empty sets");
+$rm->insert("a");
+is($cmp->spare_dependencies($rm, $install), 1, "Nothing is done on empty install");
 
 =pod
 
-=item * A package to be removed is depended upon by something that
-must be installed.
+=head2 The correct callee is chosen
 
-The package won't be removed, then.
-
-=cut
-
-is($cmp->spare_dependencies($to_rm, $to_install), 1,
-   "Basic execution succeeded");
-ok(!@$to_rm, "Dependency successfully removed from the list of packages to remove");
-
-=pod
-
-=item * The packages to be installed don't depend on any packages to
-be removed
-
-The package will still be listed for removal.
-
-=back
+In most circumstances the C<requires> path is used.  Only in very
+large installations with almost nothing to remove we resort to the
+C<whatreq> path.
 
 =cut
 
-$to_rm = Set::Scalar->new("nodep;noarch");
+$install->insert(qw(a b c d));
+is($cmp->spare_dependencies($rm, $install), "requires",
+   "Correct method is called when install part is small");
 
-is($cmp->spare_dependencies($to_rm, $to_install), 1,
-   "Execution with no overlapping dependencies succeeds");
-is(scalar(@$to_rm), 1,
-   "Packages to remove are preserved if no dependencies overlap");
-
-=pod
-
-=head2  Execution failures
-
-If repoquery fails or report an error, it must be propagated to its caller.
-
-=cut
-
-set_desired_err($REPO_CMD, "Error: this is an error");
-is($cmp->spare_dependencies($to_rm, $to_install), 0,
-   "Errors in repoquery are reported");
-
-set_command_status($REPO_CMD, 1);
-is($cmp->spare_dependencies($to_rm, $to_install), 0,
-   "Failures in repoquery are detected and propagated");
-
+$install->insert(0..2000);
+is($cmp->spare_dependencies($rm, $install), "whatreq",
+   "The whatrequires method is called only when the win is obvious");
 
 done_testing();
