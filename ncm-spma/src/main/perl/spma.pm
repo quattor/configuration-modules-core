@@ -219,7 +219,7 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	my $name = unescape($pkg);
+	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
 	if (%$st) {
 	    while (my ($ver, $archs) = each(%$st)) {
 		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
