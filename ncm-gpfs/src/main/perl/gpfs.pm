@@ -1,7 +1,6 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
 #
 # gpfs - NCM GPFS component
 #
@@ -23,17 +22,19 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 
+use Encode;
 use CAF::Process;
 use CAF::FileEditor;
 use LC::File;
 
 use File::Basename;
 use File::Copy;
+use File::Path 'rmtree';
 use Cwd;
 
 use constant TMP_DOWNLOAD => '/tmp/ncm-gpfs-download';
 use constant GPFSBIN => '/usr/lpp/mmfs/bin';
-use constant GPFSCONFIGDIR => '/var/mmfs/';
+use constant GPFSCONFIGDIR => '/var/mmfs';
 use constant GPFSCONFIG => '/var/mmfs/gen/mmsdrfs';
 use constant GPFSNODECONFIG => '/var/mmfs/gen/mmfsNodeData';
 use constant GPFSRPMS => qw(
@@ -56,26 +57,28 @@ sub Configure {
 
     # create download dir
     if(-e TMP_DOWNLOAD) {
-        if(! unlink(TMP_DOWNLOAD) ){
-            $self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD);
-            return 1;
-        }
+        rmtree([TMP_DOWNLOAD]) ||$self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
     }
-    if(! mkdir(TMP_DOWNLOAD)) {
-        $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD);
-        return 1;
+    mkdir(TMP_DOWNLOAD) || $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
+    chmod(0700,TMP_DOWNLOAD) ||$self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
+
+    my $startcwd=getcwd;
+    chomp($startcwd);
+    # Untaint it
+    if ( $startcwd =~ qr|^([-+@\w./]+)$| ) {
+        $startcwd = $1;
+    } else {
+        $self->error("Couldn't untaint \$startcwd: [$startcwd]") && return 1;
     }
-    if(! chmod(0700,TMP_DOWNLOAD)) {
-        $self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD);
-        return 1;
-    }
+    chdir(TMP_DOWNLOAD) || $self->error("Failed to change to directory ".TMP_DOWNLOAD) && return 1;
+
 
     my ($result,$tree,$contents);
 
     # Save the date.
     my $date = localtime();
 
-    my $useyum = 1; # default on
+    our $useyum = 1; # default on
     my $cfgtr;
 
     if ($config->elementExists("$mypath/cfg")) {
@@ -85,7 +88,7 @@ sub Configure {
         return 1;
     };
 
-    $useyum = $cfgtr{useyum} if (exists($cfgtr{useyum}));
+    $useyum = $cfgtr->{useyum} if (exists($cfgtr->{useyum}));
 
     ## base rpms
     ## remove existing gpfs rpms if certain is not found
@@ -108,42 +111,35 @@ sub Configure {
                                   backup => ".old",
                                   contents => encode_utf8($date),
                                 );
-        if ($result) {
-            $self->info("$baseinstalled set");
+        if (defined($result)) {
+            $self->info("$baseinstalled set (result $result changes)");
         } else {
             $self->error("$baseinstalled failed");
             return 1;
         }
+    }
 
-        if ($useyum) {
-            runyum('distro-sync');
+    ## get gpfs config file if not found
+    if ( ! -f $basiccfg) {
+        get_cfg($cfgtr) || return 1;
+
+        ## write the $basiccfg file
+        ## - set the date
+        $result = LC::Check::file( $basiccfg,
+                              backup => ".old",
+                              contents => encode_utf8($date),
+                            );
+        if (defined($result)) {
+            $self->info("$basiccfg set (result $result changes)");
+        } else {
+            $self->error("$basiccfg failed");
+            return 1;
         }
-
-    } else {
-        ## get gpfs config file if not found
-        if ( ! -f $basiccfg) {
-            get_cfg($cfgtr) || return 1;
-
-            ## write the $basiccfg file
-            ## - set the date
-            $result = LC::Check::file( $basiccfg,
-                                  backup => ".old",
-                                  contents => encode_utf8($date),
-                                );
-            if ($result) {
-                $self->info("$basiccfg set");
-            } else {
-                $self->error("$basiccfg failed");
-                return 1;
-            }
-        }
-    };
+    }
 
     # cleanup
-    if(! unlink(TMP_DOWNLOAD) ){
-        $self->error("Failed to remove tmp download dir ".TMP_DOWNLOAD);
-        return 1;
-    }
+    chdir($startcwd) || $self->error("Failed to change back to directory $startcwd.") && return 1;
+    rmtree([TMP_DOWNLOAD]) || $self->error("Failed to remove tmp download dir ".TMP_DOWNLOAD.": $!") && return 1;
 
 
     sub runrpm {
@@ -250,17 +246,7 @@ sub Configure {
         unshift(@opts,$curlcmd,'-s','-f',@certscurl);
 
 
-        my $cwd=getcwd;
-        chomp($cwd);
-        # Untaint it
-        if ( $cwd =~ qr|^([-+@\w./]+)$| ) {
-            $cwd = $1;
-        } else {
-            $self->error("Couldn't untaint \$cwd: [$cwd]") && return ;
-        }
-        chdir($tmppath) || $self->error("Failed to change to directory $tmppath.") && return;
         my $output = CAF::Process->new(\@opts, log => $self)->output();
-        chdir($cwd) || $self->error("Failed to change back to directory $cwd.") && return;
 
         my $cmd=join(" ",@opts);
 
@@ -349,11 +335,15 @@ sub Configure {
                     }
                 }
             }
+            if ($useyum) {
+                runyum($tr,'distro-sync');
+            }
 
         } else {
             $self->error("base path $mypath/base not found.");
             $ret=0;
         };
+
         return $ret;
     };
 
@@ -428,7 +418,7 @@ sub Configure {
             close(FH);
 
             ## check fulltxt content (curl -f should not generate any 404-html pages or such, but you never know)
-            if (! $fulltxt ~= m/^%%.*VERSION_LINE/) {
+            if (! $fulltxt =~ m/^\%\%.*VERSION_LINE/) {
                 $self->error('Invalid config file found');
                 return 1;
             }
@@ -436,22 +426,22 @@ sub Configure {
             # write config
             my $result = LC::Check::file( GPFSCONFIG,
                                   backup => ".old",
-                                  contents => encode_utf8($fulltxt),
+                                  contents => $fulltxt,
                                 );
-            if ($result) {
-                $self->info(GPFSCONFIG." set");
+            if (defined($result)) {
+                $self->info(GPFSCONFIG." set (result $result changes)");
             } else {
                 $self->error(GPFSCONFIG." failed");
                 return 1;
             }
 
             # write nodeconfig
-            my $result = LC::Check::file( GPFSNODECONFIG,
+            $result = LC::Check::file( GPFSNODECONFIG,
                                   backup => ".old",
-                                  contents => encode_utf8($txt),
+                                  contents => $txt,
                                 );
-            if ($result) {
-                $self->info(GPFSNODECONFIG." set");
+            if (defined($result)) {
+                $self->info(GPFSNODECONFIG." set (result $result changes)");
             } else {
                 $self->error(GPFSNODECONFIG." failed");
                 return 1;
