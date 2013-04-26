@@ -49,6 +49,17 @@ Daemon to restart if the file changes.
 Even if multiple C<services> are associated to the same daemon, the
 daemon will be restarted at most once.
 
+=item * preamble ? string
+
+Text to place at start of file.
+
+It can be useful to include context in a configuration file, in the form of
+a comment, such as how it was generated. Most of the formats that can be
+output by this component support "comment" lines, but none of the modules that
+it uses will generate them. The preamble attribute will be written out
+verbatim, before the contents is generated. No comment character is added,
+the user must specify this as part of the preamble string.
+
 =item * contents
 
 A free-form structure describing the valid entries for the
