@@ -199,6 +199,7 @@ sub handle_service
     $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
     my $fh = CAF::FileWriter->new($file, %opts);
+    print $fh "$srv->{preamble}\n" if $srv->{preamble};
     print $fh "$str\n";
     if ($self->needs_restarting($fh, $srv)) {
         foreach my $d (@{$srv->{daemon}}) {
