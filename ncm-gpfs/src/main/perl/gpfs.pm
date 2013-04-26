@@ -54,17 +54,17 @@ my $mypath = '/software/components/gpfs';
 sub Configure {
 ##########################################################################
 
-    our ($self, $config)=@_;
+    my ($self, $config) = @_;
 
     return 1 if (create_tmpdir());
 
     my ($tmpfh, $tree, $contents);
-    our $startcwd;
+    my $startcwd;
 
     # Save the date.
     my $date = localtime();
 
-    our $useyum = 1; # default on
+    my $useyum = 1; # default on
 
     my $cfgtr = $config->getElement("$mypath/cfg")->getTree;
 
@@ -83,7 +83,8 @@ sub Configure {
         ## update?
         ## no!
         ## - stop here
-        ## - next run should trigger spma which will update to the correct rpms
+        ## - next run should trigger spma which will
+        ##   update to the correct rpms
 
         ## write the $baseinstalled file
         ## - set the date
@@ -91,7 +92,7 @@ sub Configure {
                                        backup => ".old",
                                        log => $self,
                                       );
-        print $tmpfh, $date;
+        print $tmpfh $date;
         $tmpfh->close();
     }
 
@@ -106,7 +107,7 @@ sub Configure {
                                        backup => ".old",
                                        log => $self,
                                       );
-        print $tmpfh, $date;
+        print $tmpfh $date;
         $tmpfh->close();
     }
 
@@ -117,16 +118,19 @@ sub Configure {
         # create download dir
         if (-e TMP_DOWNLOAD) {
             if (! rmtree([TMP_DOWNLOAD])) {
-                $self->error("Failed to remove existing tmp download dir ".TMP_DOWNLOAD.": $!");
+                $self->error("Failed to remove existing tmp download dir ",
+                             TMP_DOWNLOAD.": $!");
                 return 1;
             }
         }
         if (! mkdir(TMP_DOWNLOAD)) {
-            $self->error("Failed to create tmp download dir ".TMP_DOWNLOAD.": $!");
+            $self->error("Failed to create tmp download dir ",
+                         TMP_DOWNLOAD.": $!");
             return 1;
         }
         if (! chmod(0700, TMP_DOWNLOAD)) {
-            $self->error("Failed to chmod 0700 tmp download dir ".TMP_DOWNLOAD.": $!");
+            $self->error("Failed to chmod 0700 tmp download dir ",
+                         TMP_DOWNLOAD.": $!");
             return 1;
         }
 
@@ -169,20 +173,25 @@ sub Configure {
             my $spmapath="/software/components/spma";
             my $spmatr = $config->getElement($spmapath)->getTree;
             if ($spmatr->{'proxy'}) {
-                push(@proxy, '--httpproxy', $spmatr->{'proxyhost'}) if ($spmatr->{'proxyhost'});
-                push(@proxy, '--httpport', $spmatr->{'proxyport'}) if ($spmatr->{'proxyport'});
+                push(@proxy, '--httpproxy', $spmatr->{'proxyhost'})
+                    if ($spmatr->{'proxyhost'});
+                push(@proxy, '--httpport', $spmatr->{'proxyport'})
+                    if ($spmatr->{'proxyport'});
             } else {
-                $self->error("No SPMA proxy set in $spmapath/proxy: ".$spmatr->{'proxy'});
+                $self->error("No SPMA proxy set in $spmapath/proxy: ",
+                             $spmatr->{'proxy'});
             };
         }
 
         my $rpmcmd = "/bin/rpm";
 
-        my $proc = CAF::Process->new([$rpmcmd, "-v", @proxy, @opts], log => $self);
+        my $proc = CAF::Process->new([$rpmcmd, "-v", @proxy, @opts],
+                                     log => $self);
         my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}),
+                         " output: $output");
             return;
         }
 
@@ -199,7 +208,8 @@ sub Configure {
         my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}),
+                         " output: $output");
             return;
         }
         return $output  || 1;
@@ -221,10 +231,13 @@ sub Configure {
             my $ccmpath="/software/components/ccm";
             my $ccmtr = $config->getElement($ccmpath)->getTree;
             if ($ccmtr->{'cert_file'}) {
-                push(@certscurl, '--cert', $ccmtr->{'key_file'}) if ($ccmtr->{'key_file'});
-                push(@certscurl, '--cacert', $ccmtr->{'ca_file'}) if ($ccmtr->{'ca_file'});
+                push(@certscurl, '--cert', $ccmtr->{'key_file'})
+                     if ($ccmtr->{'key_file'});
+                push(@certscurl, '--cacert', $ccmtr->{'ca_file'})
+                     if ($ccmtr->{'ca_file'});
             } else {
-                $self->error("No CCM cert file set in $ccmpath/cert_file: ".$ccmtr->{'cert_file'});
+                $self->error("No CCM cert file set in $ccmpath/cert_file: ",
+                             $ccmtr->{'cert_file'});
             };
         }
 
@@ -233,18 +246,25 @@ sub Configure {
             my $sgpath="/software/components/sindes_getcert";
             my $sgtr = $config->getElement($sgpath)->getTree;
             if ($sgtr->{'client_cert_key'}) {
-               push(@certscurl, '--cert', $sgtr->{'cert_dir'}."/".$sgtr->{'client_cert_key'}) if ($sgtr->{'client_cert_key'});
-               push(@certscurl, '--cacert', $sgtr->{'cert_dir'}."/".$sgtr->{'ca_cert'}) if ($sgtr->{'ca_cert'});
+               push(@certscurl, '--cert',
+                    $sgtr->{'cert_dir'}."/".$sgtr->{'client_cert_key'})
+                    if ($sgtr->{'client_cert_key'});
+               push(@certscurl, '--cacert',
+                    $sgtr->{'cert_dir'}."/".$sgtr->{'ca_cert'})
+                    if ($sgtr->{'ca_cert'});
             } else {
-               $self->error("No sindes_getcert cert file set in $sgpath/client_cert_key: ".$sgtr->{'client_cert_key'});
+               $self->error("No sindes_getcert cert file set in ",
+                            "$sgpath/client_cert_key: ".$sgtr->{'client_cert_key'});
             };
         }
 
-        my $proc = CAF::Process->new([$curlcmd, "-s", "-f", @certscurl, @opts], log => $self);
+        my $proc = CAF::Process->new([$curlcmd, "-s", "-f", @certscurl, @opts],
+                                     log => $self);
         my $output = $proc->output();
 
         if ($?) {
-            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}), " output: $output");
+            $self->error("Error running ", join(" ", @{$proc->{COMMAND}}),
+                         " output: $output");
             return;
         }
 
@@ -255,11 +275,12 @@ sub Configure {
     sub remove_existing_rpms {
         my $ret = 1;
         my $tr;
-        my $allrpms = runrpm($tr, "-q", "-a", "gpfs.*", "--qf", "%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
+        my $allrpms = runrpm($tr, "-q", "-a", "gpfs.*",
+                             "--qf", "%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
         return if (!$allrpms);
 
         my @removerpms;
-        for my $found (split('\n', $allrpms)) {
+        foreach my $found (split('\n', $allrpms)) {
             my @res=split(' ', $found);
             my $foundname=$res[0];
             my $foundfullname=$res[1];
@@ -267,7 +288,8 @@ sub Configure {
             if (grep { $foundname =~ m/$_/ } GPFSRPMS) {
                 push(@removerpms, $foundfullname);
             } else {
-                $self->error("Not removing unknown found rpm that matched gpfs.*: $found (full: $foundfullname). \n");
+                $self->error("Not removing unknown found rpm that matched gpfs.*:",
+                             " $found (full: $foundfullname). \n");
                 $ret = 0;
             };
         };
@@ -327,9 +349,6 @@ sub Configure {
                     }
                 }
             }
-            if ($useyum) {
-                runyum($tr, 'distro-sync');
-            }
 
         } else {
             $self->error("base path $mypath/base not found.");
@@ -361,8 +380,6 @@ sub Configure {
         if ($?) {
             $self->error("Error running '$cmd' output: $output");
             return;
-        } else {
-            $self->debug(2, "Ran '$cmd' succesfully.")
         }
         return $output || 1;
     };
@@ -401,20 +418,22 @@ sub Configure {
         my $gpfsnodeconfigfh=CAF::FileWriter->open(GPFSNODECONFIG,
                                                    backup => ".old",
                                                    log => $self);
-        for (split /^/, $output) {
+        foreach (split /^/, $output) {
             print $gpfsconfigfh $_;
 
             # there should be only one...
             if (m/$regexp/) {
                 if (length("$gpfsnodeconfigfh") > 0) {
-                    $self->error('Ignoring another node match for regexp $regexp found: $_.');
+                    $self->error('Ignoring another node match for ',
+                                 'regexp $regexp found: $_.');
                 } else {
                     print $gpfsnodeconfigfh $_;
                 };
             };
         }
 
-        ## check fulltxt content (curl -f should not generate any 404-html pages or such, but you never know)
+        # check fulltxt content (curl -f should not generate any
+        #   404-html pages or such, but you never know)
         if ("$gpfsconfigfh" !~ m/^%%.*VERSION_LINE/) {
             $self->error('Invalid config file found');
             $gpfsconfigfh->cancel();
