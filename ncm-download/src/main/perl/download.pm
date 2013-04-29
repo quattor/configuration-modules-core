@@ -266,7 +266,7 @@ sub download {
     # file doesn't exist
     my $timestamp_existing = 0;
     if (-e $opts{file}) {
-        $timestamp_existing  = (stat($file))[9];
+        $timestamp_existing  = (stat($opts{file}))[9];
     }
 
     my $timestamp_threshold = (time() - ($min_age * 60)); # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
