@@ -24,9 +24,8 @@
 
   <licenses>
     <license>
-      <name>Apache 2 License</name>
-      <url>http://www.opensource.org/licenses/apache2.0</url>
-      <comments>Copyright (c) Responsible Organization</comments>
+      <name>EU Datagris</name>
+      <url>http://opensource.org/licenses/EUDatagrid</url>
     </license>
   </licenses>
 
@@ -39,31 +38,13 @@
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
+      <name>Luis Fernando Muñoz Menías</name>
+      <email>Luis.Munoz@UGent.be</email>
     </contributor>
     <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
+      <name>Wouter Depypere</name>
+      <email>Wouter.Depypere@UGent.be</email>
     </contributor>
   </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>
