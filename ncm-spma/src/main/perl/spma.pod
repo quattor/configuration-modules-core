@@ -29,6 +29,8 @@ the profile has not been escaped with PAN's escape() function. This setting is
 only meaningful when using a tool different than PAN for generating CDB
 profiles.
 
+Currently ignored.
+
 =item /software/components/spma/tmpdir : string
 
 If defined, set the path to the temporary directory (for compatibility
@@ -36,7 +38,7 @@ with -bad- packages that need to remove the sticky bit from /tmp)
 
 =back
 
-Flags for Yum processing:
+=head2 Flags for Yum processing:
 
 =over
 
@@ -51,7 +53,7 @@ Defaults to C<false> to keep backwards compatibility.
 
 =item /software/components/spma/protectkernel : string ("yes|no")
 
-Obsolete.  This is delegated to Yum.
+Obsolete and ignore.  This is delegated to Yum.
 
 =item /software/components/spma/packager : string ("rpm|pkg|..")
 
