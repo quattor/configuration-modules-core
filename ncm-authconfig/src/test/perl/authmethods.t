@@ -25,7 +25,13 @@ my $cmp = NCM::Component::authconfig->new("authconfig");
 
 my $cmd = CAF::Process->new([]);
 
+=pod
 
+=head2 C<enable_krb5>
+
+Test the different KRB5-related parameters
+
+=cut
 
 $cmp->enable_krb5({realm => "foo", adminservers => [qw(admin admin2)],
 		   kdcs => [qw(kdc kdc2)]}, $cmd);
