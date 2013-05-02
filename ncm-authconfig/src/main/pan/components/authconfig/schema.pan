@@ -235,6 +235,13 @@ type authconfig_method_nslcd_type = {
     "bindpw" ? string
 };
 
+type authconfig_method_sssd_type = {
+    include authconfig_method_generic_type
+    "nssonly" : boolean = false
+};
+
+
+
 type authconfig_method_type = {
   "files"	? authconfig_method_files_type
   "ldap"	? authconfig_method_ldap_type
@@ -244,6 +251,7 @@ type authconfig_method_type = {
   "hesiod"	? authconfig_method_hesiod_type
   "afs"		? authconfig_method_afs_type
   "nslcd"       ? authconfig_method_nslcd_type
+  "sssd"	? authconfig_method_sssd_type
 };
 
 type hash_string = string with match(SELF, "^(descrypt|md5|sha256|sha512)$");
