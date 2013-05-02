@@ -47,6 +47,15 @@
   <build>
     <pluginManagement>
       <plugins>
+	<plugin>
+	  <groupId>org.codehaus.mojo</groupId>
+	  <artifactId>rpm-maven-plugin</artifactId>
+	  <configuration>
+	    <requires>
+	      <require>authconfig</require>
+	    </requires>
+	  </configuration>
+	</plugin>
       </plugins>
     </pluginManagement>
   </build>
