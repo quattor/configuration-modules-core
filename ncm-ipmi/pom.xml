@@ -9,13 +9,6 @@
   <version>13.3.1-SNAPSHOT</version>
   <name>Used to manage trivial IPMI configuration</name>
 
-  <repositories>
-    <repository>
-      <id>quattor-releases</id>
-      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
-    </repository>
-  </repositories>
-
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
@@ -36,5 +29,16 @@
       <email>philippo@lal.in2p3.fr</email>
     </developer>
   </developers>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0.0-RC3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
 </project>
