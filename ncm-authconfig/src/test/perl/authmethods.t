@@ -68,4 +68,22 @@ is($cmd->{COMMAND}->[2], "wg", "Correct SMB workgroup passed");
 is($cmd->{COMMAND}->[3], "--smbservers", "SMB servers defined");
 is($cmd->{COMMAND}->[4], "srv1,srv2", "Correct SMB servers defined");
 
+=pod
+
+=head2 C<enable_nis>
+
+Test the NIS-related authentication parameters
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_nis({domain => "dom", servers => [qw(srv1 srv2)]}, $cmd);
+
+is($cmd->{COMMAND}->[0], "--enablenis", "NIS enabled");
+is($cmd->{COMMAND}->[1], "--nisdomain", "NIS domain specified");
+is($cmd->{COMMAND}->[2], "dom", "Correct NIS domain passed");
+is($cmd->{COMMAND}->[3], "--nisserver", "NIS server specified");
+is($cmd->{COMMAND}->[4], "srv1,srv2", "Correct NIS servers passed");
+
 done_testing();
