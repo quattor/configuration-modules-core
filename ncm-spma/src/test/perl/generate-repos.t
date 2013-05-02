@@ -204,6 +204,20 @@ $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
      "Port number is rendered with the forward proxy");
 
+=pod
+
+=item * Many hosts listed as reverse proxies lead to many baseurls in the Yum repo
+
+=cut
+
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+			"$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
+   "List of reverse proxies succeeds to be rendered");
+
+$fh = get_file("$REPOS_DIR/$name.repo");
+like($fh, qr{^baseurl= \s* http://$PROXY_HOST:$PROXY_PORT$
+	     \n \s* http://another:$PROXY_PORT$ }xm,
+     "List of reverse proxies correctly rendered");
 
 done_testing();
 
