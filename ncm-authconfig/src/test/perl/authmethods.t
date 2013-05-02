@@ -51,4 +51,21 @@ is($cmd->{COMMAND}->[1], "--krb5realm", "KRB5 realm enabled inconditionally");
 ok(!grep(m{krb5admin|krb5kdc}, @{$cmd->{COMMAND}}),
    "KRB5 KDC and admins are not passed unless defined");
 
+=pod
+
+=head2 C<enable_smb>
+
+Test the Samba-related authentication parameters
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_smb({workgroup => "wg", servers => [qw(srv1 srv2)]}, $cmd);
+is($cmd->{COMMAND}->[0], "--enablesmbauth", "SMB authentication is enabled");
+is($cmd->{COMMAND}->[1], "--smbworkgroup", "SMB work group is set up");
+is($cmd->{COMMAND}->[2], "wg", "Correct SMB workgroup passed");
+is($cmd->{COMMAND}->[3], "--smbservers", "SMB servers defined");
+is($cmd->{COMMAND}->[4], "srv1,srv2", "Correct SMB servers defined");
+
 done_testing();
