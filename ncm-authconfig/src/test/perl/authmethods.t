@@ -104,4 +104,37 @@ is($cmd->{COMMAND}->[2], "l", "Correct LHS passed");
 is($cmd->{COMMAND}->[3], "--hesiodrhs", "RHS enabled");
 is($cmd->{COMMAND}->[4], "r", "Correct RHS passed");
 
+=pod
+
+=head2 C<enable_ldap>
+
+Test the LDAP parameters for authconfig.
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_ldap({nssonly => 1, basedn => "dn",}, $cmd);
+is($cmd->{COMMAND}->[0], "--disableldapauth", "LDAP auth disabled when nssonly");
+is($cmd->{COMMAND}->[1], "--enableldap", "LDAP enabled anyways");
+is($cmd->{COMMAND}->[2], "--ldapbasedn=dn", "Correct DN passed");
+ok(!grep(m{ldapserver|ldaptls}, @{$cmd->{COMMAND}}),
+   "Unneeded options are not passed");
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_ldap({nssonly => 0,
+		   basedn => "dn",
+		   servers => [qw(srv1 srv2)],
+		   enableldaptls => 1},
+		  $cmd);
+
+is($cmd->{COMMAND}->[0], "--enableldapauth", "LDAP auth enabled when not nssonly");
+is($cmd->{COMMAND}->[1], "--enableldap", "LDAP is enabled inconditionally");
+is($cmd->{COMMAND}->[2], "--ldapserver", "LDAP servers are enabled when specified");
+is($cmd->{COMMAND}->[3], "srv1,srv2", "Correct LDAP servers passed");
+is($cmd->{COMMAND}->[4], "--ldapbasedn=dn", "Correct DN passed");
+is($cmd->{COMMAND}->[5], "--enableldaptls",
+   "LDAP TLS enabled when specified in the profile");
+
 done_testing();
