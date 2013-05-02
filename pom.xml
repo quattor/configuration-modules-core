@@ -130,6 +130,8 @@
     <module>ncm-icinga</module>
     <module>ncm-sudo</module>
     <module>ncm-useraccess</module>
+    <module>ncm-ganglia</module>
+    <module>ncm-libvirtd</module>
   </modules>
 
   <build>
