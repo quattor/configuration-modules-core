@@ -86,4 +86,22 @@ is($cmd->{COMMAND}->[2], "dom", "Correct NIS domain passed");
 is($cmd->{COMMAND}->[3], "--nisserver", "NIS server specified");
 is($cmd->{COMMAND}->[4], "srv1,srv2", "Correct NIS servers passed");
 
+=pod
+
+=head2 C<enable_hesiod>
+
+Test the Hesiod-based authentication parameters
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_hesiod({lhs => "l", rhs => "r"}, $cmd);
+
+is($cmd->{COMMAND}->[0], "--enablehesiod", "Hesiod enabled");
+is($cmd->{COMMAND}->[1], "--hesiodlhs", "LHS enabled");
+is($cmd->{COMMAND}->[2], "l", "Correct LHS passed");
+is($cmd->{COMMAND}->[3], "--hesiodrhs", "RHS enabled");
+is($cmd->{COMMAND}->[4], "r", "Correct RHS passed");
+
 done_testing();
