@@ -157,4 +157,41 @@ $cmp->enable_sssd({nssonly => 1}, $cmd);
 is($cmd->{COMMAND}->[0], "--disablesssdauth", "SSSD auth disabled when nssonly");
 is($cmd->{COMMAND}->[1], "--enablesssd", "SSSD enabled when nssonly");
 
+=pod
+
+=head2 C<enable_nslcd>
+
+Test the NSLCD parameters
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+my $h = {uri => [qw(u1 u2)], basedn => "dn", ssl => "start_tls"};
+
+$cmp->enable_nslcd($h, $cmd);
+
+is($cmd->{COMMAND}->[0], "--enableldapauth", "LDAP auth always enabled with NSLCD");
+is($cmd->{COMMAND}->[1], "--enableldap", "LDAP enabled with NSLCD");
+is($cmd->{COMMAND}->[2], "--ldapserver", "LDAP servers defined with NSLCD");
+is($cmd->{COMMAND}->[3], "u1,u2", "Correct LDAP URLs defined with NSLCD");
+is($cmd->{COMMAND}->[4], "--ldapbasedn=dn", "Correct DN passed");
+is($cmd->{COMMAND}->[5], "--enableldaptls", "TLS enabled when expected");
+
+$cmd = CAF::Process->new([]);
+
+$h->{ssl} = "ljhljhljh";
+
+$cmp->enable_nslcd($h, $cmd);
+
+ok(!grep(m{ldaptls}, @{$cmd->{COMMAND}}),
+   "No TLS defined unless explicitly started the profile");
+
+$cmd = CAF::Process->new([]);
+delete($h->{ssl});
+$cmp->enable_nslcd($h, $cmd);
+
+ok(!grep(m{ldaptls}, @{$cmd->{COMMAND}}),
+   "No TLS defined if no SSL parameters in the profile");
+
 done_testing();
