@@ -137,4 +137,24 @@ is($cmd->{COMMAND}->[4], "--ldapbasedn=dn", "Correct DN passed");
 is($cmd->{COMMAND}->[5], "--enableldaptls",
    "LDAP TLS enabled when specified in the profile");
 
+=pod
+
+=head2 C<enable_sssd>
+
+Test the SSSD parameters
+
+=cut
+
+$cmd = CAF::Process->new([]);
+
+$cmp->enable_sssd({nssonly => 0}, $cmd);
+
+is($cmd->{COMMAND}->[0], "--enablesssdauth", "SSSD auth enabled when not nssonly");
+is($cmd->{COMMAND}->[1], "--enablesssd", "SSSD enabled inconditionally");
+
+$cmd = CAF::Process->new([]);
+$cmp->enable_sssd({nssonly => 1}, $cmd);
+is($cmd->{COMMAND}->[0], "--disablesssdauth", "SSSD auth disabled when nssonly");
+is($cmd->{COMMAND}->[1], "--enablesssd", "SSSD enabled when nssonly");
+
 done_testing();
