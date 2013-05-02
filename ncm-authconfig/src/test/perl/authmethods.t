@@ -194,4 +194,14 @@ $cmp->enable_nslcd($h, $cmd);
 ok(!grep(m{ldaptls}, @{$cmd->{COMMAND}}),
    "No TLS defined if no SSL parameters in the profile");
 
+=pod
+
+=head2 C<enable_files>
+
+Nothing to test here.  Just ensure it runs and doesn't crash.
+
+=cut
+
+$cmp->enable_files();
+
 done_testing();
