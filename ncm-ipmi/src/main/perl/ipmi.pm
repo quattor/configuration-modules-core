@@ -45,19 +45,19 @@ sub Configure($$) {
   CAF::Process->new([qw(service ipmi restart)], log => $self)->run();
 
   for my $user (@{$users}) {
-	my $userid = $user->{userid};
+        my $userid = $user->{userid};
         my $login  = $user->{login};
-	my $passwd = $user->{password};
-	my $priv   = $user->{priv};
+        my $passwd = $user->{password};
+        my $priv   = $user->{priv};
 
-	CAF::Process->new([IPMI_EXEC, qw(user set name), $userid, $login],
-			  log => $self)->run();
-	CAF::Process->([IPMI_EXEC, qw(user set password), $userid, $passwd],
-		      log => $self)->run();
+        CAF::Process->new([IPMI_EXEC, qw(user set name), $userid, $login],
+                          log => $self)->run();
+        CAF::Process->new([IPMI_EXEC, qw(user set password), $userid, $passwd],
+                      log => $self)->run();
   }
 
   CAF::Process->new([IPMI_EXEC, qw(mc reset cold)],
-		    log => $self)->run();
+                    log => $self)->run();
 
   return; # return code is not checked.
 }
@@ -65,7 +65,7 @@ sub Configure($$) {
 
 
 sub ConfigureNetwork {
-	return;
+        return;
 }
 
 1; # Perl module requirement.
