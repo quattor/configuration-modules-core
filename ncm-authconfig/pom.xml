@@ -39,29 +39,23 @@
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
+      <name>Luis Fernando Muñoz Mejías</name>
+      <email>Luis.Munoz@UGent.be</email>
     </contributor>
   </contributors>
 
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
+	<plugin>
+	  <groupId>org.codehaus.mojo</groupId>
+	  <artifactId>rpm-maven-plugin</artifactId>
+	  <configuration>
+	    <requires>
+	      <require>authconfig</require>
+	    </requires>
+	  </configuration>
+	</plugin>
       </plugins>
     </pluginManagement>
   </build>
