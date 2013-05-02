@@ -162,6 +162,19 @@ sub enable_nslcd
     $cmd->pushargs("--enableldaptls") if $cfg->{ssl} && $cfg->{ssl} eq "start_tls";
 }
 
+# Adds the authconfig command-line to enable SSSD.
+sub enable_sssd
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    if ($cfg->{nssonly}) {
+	$cmd->pushargs(qw(--disablesssdauth));
+    } else {
+	$cmd->pushargs(qw(--enablesssdauth));
+    }
+    $cmd->pushargs("--enablesssd");
+}
+
 sub authconfig
 {
     my ($self, $t) = @_;
