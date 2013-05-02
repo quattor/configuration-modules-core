@@ -9,42 +9,6 @@
   <version>1.27-SNAPSHOT</version>
   <name>libvirtd configuration</name>
 
-  <properties>
-    <nexus.release.repository.name>fedora-14-releases</nexus.release.repository.name>
-    <nexus.snapshot.repository.name>fedora-14-snapshots</nexus.snapshot.repository.name>
-  </properties>
-
-  <distributionManagement>
-    <repository>
-      <id>stratuslab.releases</id>
-      <name>Releases</name>
-      <url>http://repo.stratuslab.eu:8081/content/repositories/${nexus.release.repository.name}</url>
-    </repository>
-    <snapshotRepository>
-      <id>stratuslab.snapshots</id>
-      <name>Snapshots</name>
-      <url>http://repo.stratuslab.eu:8081/content/repositories/${nexus.snapshot.repository.name}</url>
-    </snapshotRepository>
-    <site>
-      <id>hudson.webserver</id>
-      <url>scp://hudson.stratuslab.eu/var/www/quattor</url>
-    </site>
-  </distributionManagement>
-
-  <repositories>
-    <repository>
-      <id>quattor-releases</id>
-      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>quattor-releases</id>
-      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
@@ -66,5 +30,18 @@
       <email>loomis@lal.in2p3.fr</email>
     </developer>
   </developers>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0.0-RC3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
 
 </project>
