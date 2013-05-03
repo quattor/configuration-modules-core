@@ -262,6 +262,8 @@ type ldap_req_checks = string with match(SELF, "^(never|allow|try|demand|hard)$"
 type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") ||
     error ("Invalid LDAP alias dereferencing method: " + SELF);
 
+type ldap_order = string with match(SELF, "^(filter|expire|authorized_service|host)$");
+
 @{
     LDAP access provider for SSSD.  See the sssd-ldap man page.
     Timeouts are expressed in seconds.
@@ -340,9 +342,11 @@ type authconfig_sssd_ldap = {
     "ldap_krb5_keytab" ? string
     "ldap_krb5_init_creds" ? boolean
     "ldap_pwd_policy" : string = "none"
-
-
-
+    "ldap_chpass_dns_service_name" ? string
+    "ldap_chpass_update_last_change" : boolean = False
+    "ldap_access_filter" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
+    "ldap_access_order" : ldap_order = "filter"
+    "ldap_deref" ? string
     "ldap_opt_timeout" :  long = 6
     "ldap_offline_timeout" ? long
     "ldap_tls_cacert" ?  string
@@ -353,24 +357,54 @@ type authconfig_sssd_ldap = {
     "ldap_tls_reqcert" ? ldap_req_checks = "hard"
     "ldap_sasl_mech" ?  string
     "ldap_sasl_authid" ?  string
-    "krb5_server" ?  string[]
-    "krb5_backup_server" ?  string[]
+    "krb5_server" ?  string
+    "krb5_backup_server" ?  string
     "krb5_realm" ?  string[]
-    "krb5_canonicalize" ?  boolean[]
+    "krb5_canonicalize" ?  boolean
     "ldap_krb5_keytab" ?  string
-    "ldap_krb5_init_creds" ?  boolean[]
+    "ldap_krb5_init_creds" ?  boolean
     "ldap_entry_usn" ?  string[]
-    "ldap_rootdse_last_usn" ?  string[]
+    "ldap_rootdse_last_usn" ?  string
     "ldap_referrals" :  boolean = true
     "ldap_krb5_ticket_lifetime" ?  long
     "ldap_dns_service_name" ?  string
     "ldap_deref" : ldap_deref = "never"
     "ldap_page_size" :  long = 1000
     "ldap_deref_threshold" ?  long
-    "ldap_sasl_canonicalize" ?  boolean[]
+    "ldap_sasl_canonicalize" ?  boolean
     "ldap_sasl_minssf" ?  long
     "ldap_connection_expire_timeout" :  long = 900
     "ldap_disable_paging" :  boolean = false
+    "ldap_sudorule_object_class" : string = "sudoRole"
+    "ldap_sudorule_name" : string = "cn"
+    "ldap_sudorule_command" : string = "sudoCommand"
+    "ldap_sudorule_host" : string = "sudoHost"
+    "ldap_sudorule_user" : string = "sudoUser"
+    "ldap_sudorule_option" : string = "sudoOption"
+    "ldap_sudorule_runasuser" : string = "sudoRunAsUser"
+    "ldap_sudorule_runasgroup" : string = "sudoRunAsGroup"
+    "ldap_sudorule_notbefore" : string = "sudoNotBefore"
+    "ldap_sudorule_notafter" : string = "sudoNotAfter"
+    "ldap_sudorule_order" : string = "sudoOrder"
+    "ldap_sudo_full_refresh_interval" : long = 21600
+    "ldap_sudo_smart_refresh_interval" : long = 900
+    "ldap_sudo_use_host_filter" : boolean = true
+    "ldap_sudo_hostnames" ? string
+    "ldap_sudo_ip" ? string
+    "ldap_sudo_include_netgroups" : boolean = true
+    "ldap_sudo_include_regexp" : boolean = true
+    "ldap_autofs_map_object_class" : string = "automountMap"
+    "ldap_autofs_map_name" : string = "ou"
+    "ldap_autofs_entry_object_class" : string = "automountMap"
+    "ldap_autofs_entry_key" : string = "cn"
+    "ldap_autofs_entry_value" : string = "automountInformation"
+    "ldap_netgroup_search_base" ? string
+    "ldap_user_search_base" ? string
+    "ldap_group_search_base" ? string
+    "ldap_user_search_filter" ? string
+    "ldap_group_search_filter" ? string
+    "ldap_sudo_search_base" ? string
+    "ldap_autofs_search_base" ? string
 };
 
 type authconfig_method_sssd_type = {
