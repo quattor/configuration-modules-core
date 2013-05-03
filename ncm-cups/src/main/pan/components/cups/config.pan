@@ -14,10 +14,4 @@
 unique template components/cups/config;
 include {'components/cups/schema'};
 
-# Package to install
-"/software/packages"=pkg_repl("ncm-cups","2.0.0-1","noarch");
-
-'/software/components/cups/version' = '2.0.0';
-
 "/software/components/cups/dependencies/pre" ?= list("spma");
-
