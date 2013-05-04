@@ -49,11 +49,20 @@ Defaults to C<false> to keep backwards compatibility.
 
 =item /software/components/spma/userpkgs : string ("yes|no")
 
+Whether SPMA should keep any packages the user may have installed
+manually.
+
+Set to C<no> to make the SPMA take full control of all your software
+installations.  Set to C<yes> to preserve any packages you installed
+by hand.  If you do so, SPMA will never remove a package.
+
 =item /software/components/spma/userprio : string ("yes|no")
+
+Obsoleted and ignored.
 
 =item /software/components/spma/protectkernel : string ("yes|no")
 
-Obsolete and ignore.  This is delegated to Yum.
+Obsolete and ignored.  This is delegated to Yum.
 
 =item /software/components/spma/packager : string ("rpm|pkg|..")
 
