@@ -42,31 +42,19 @@
 
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
+      <name>Luis Fernando Muñoz Mejías</name>
+      <email>Luis.Munoz@UGent.be</email>
     </contributor>
     <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
+        <name>Marco Emilio Poleggi</name>
+    </contributor>
+    <contributor>
+        <name>Stephen Childs</name>
+    </contributor>
+    <contributor>
+        <name>Loïc Brarda</name>
+        <email>Loic.Brarda@cern.ch</email>
     </contributor>
   </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>
