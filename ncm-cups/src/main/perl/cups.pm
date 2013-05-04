@@ -1,15 +1,7 @@
-################################################################################
-# This is 'cups.pm', a ncm-cups's file
-################################################################################
-#
-# VERSION:    2.0.0, 12/03/10 16:19
-# AUTHOR:     Michel Jouvin <jouvin@lal.in2p3.fr>
-# MAINTAINER: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# LICENSE:    http://cern.ch/eu-datagrid/license.html
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
 #
 # NCM cups component
 #
@@ -148,7 +140,7 @@ sub Configure
 
     # Retrieve configuration
     my $cups_config = $config->getElement($base)->getTree();
-    
+
     # Check that CUPS commands are available.
     for my $cmd (@accept_cmd) {
       if ( -x $cmd ) {
@@ -179,7 +171,7 @@ sub Configure
       $self->error("CUPS 'enable' command not found.");
       return 1;
     }
-    
+
     for my $cmd (@lpadmin_cmd) {
       if ( -x $cmd ) {
         $lpadmin_cmd = $cmd;
@@ -210,7 +202,7 @@ sub Configure
               $self->warn("Internal error : unsupported option '$option_name'");
               next;    # Log a warning but continue processing
           }
-  
+
           # Get option value and and if option is 'ServerName', do some specific
           # processing to determine if this machine need to run the server
           my $option_value = $cups_config->{options}->{$option_name};
@@ -220,7 +212,7 @@ sub Configure
                   $self->warn("Server name not fully qualified. Adding domain $domain");
                   $option_value = $this_host_full;
               }
-  
+
               # If server=localhost, better to use real name in configuration file
               if ( $option_value eq "localhost" ) {
                   $option_value = $this_host_full;
@@ -237,7 +229,7 @@ sub Configure
                   }
               }
           }
-  
+
           # $option_roles is a list of roles separated by ','
           # If $option_value is empty, treat as a request to comment out the line
           # if present (to use cups default).
@@ -250,7 +242,7 @@ sub Configure
                   if ( $option_value =~ /^\s+$/ ) {
                       $option_value = '';
                   }
-  
+
                   # If CUPS server is current host, use 127.0.0.1 for the client
                   if (   ( $option_role eq "client" )
                       && ( $option_name  eq "ServerName" )
@@ -357,7 +349,7 @@ sub Configure
 
         for my $printer (keys(%{$cups_printers_config})) {
             $self->debug(1,"Processing printer $printer...");
-            
+
             my $printer_options_str = '';
 
             if ( $cups_printers_config->{$printer}->{delete} ) {
@@ -373,7 +365,7 @@ sub Configure
                         $self->error("Printer $printer configuration failure: either printer URI nor printer server defined");
                         next;
                     }
-                    $printer_uri = lc($cups_printers_config->{$printer}->{protocol} . "://" . 
+                    $printer_uri = lc($cups_printers_config->{$printer}->{protocol} . "://" .
                                                                   $cups_printers_config->{$printer}->{server} . "/");
                     if ( $cups_printers_config->{$printer}->{printer} ) {
                         $printer_uri .= $cups_printers_config->{$printer}->{printer};
