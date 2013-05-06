@@ -241,14 +241,14 @@ type authconfig_method_nslcd_type = {
 };
 
 type authconfig_sssd_domain  = extensible {
-    "acccess_provider" : string with match(SELF, "^(simple|ldap)$")
+    "ldap" ? authconfig_sssd_ldap{}
+    "simple" ? authconfig_sssd_simple{}
 };
 
 @{
     Simple access provider for SSSD.  See the sssd-simple man page.
 }
 type authconfig_sssd_simple = {
-    "acccess_provider" : string = "simple"
     "allow_users" ? string[]
     "deny_users" ? string[]
     "allow_groups" ? string[]
@@ -311,7 +311,6 @@ type sssd_service = {
     Timeouts are expressed in seconds.
 }
 type authconfig_sssd_ldap = {
-    "access_provider" : string = "ldap"
     "user" : sssd_user
     "group" : sssd_group
     "chpass" ? sssd_chpass
@@ -359,10 +358,11 @@ type authconfig_sssd_ldap = {
     "use_object_class" : string = "posixAccount"
 };
 
+
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
-    "domains" : authconfig_sssd_domain{}
+    "domains" : authconfig_sssd_domain
 };
 
 
