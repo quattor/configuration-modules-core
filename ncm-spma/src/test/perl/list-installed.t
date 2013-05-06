@@ -37,6 +37,8 @@ isa_ok($pkgs, "Set::Scalar", "Received an empty set, with no errors");
 foreach my $pkg (@$pkgs) {
     like($pkg, qr{^(?:[-+\.\w]+)(?:;\w+)?$},
 	 "Package $pkg has the correct format string");
+    like($pkg, qr{^([\w\.\-\+]+)[*?]?},
+	 "Package $pkg matches our wildcard regexp");
 }
 
 done_testing();

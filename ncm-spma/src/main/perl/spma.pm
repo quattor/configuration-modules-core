@@ -227,7 +227,7 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	my $name = unescape($pkg);
+	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
 	if (%$st) {
 	    while (my ($ver, $archs) = each(%$st)) {
 		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
@@ -305,7 +305,9 @@ sub versionlock
 	my @envra = split(/:/, $pkg);
 	$locked->delete($envra[1]);
     }
-    if (@$locked) {
+    # We're fine if the only packages we have left in $locked are
+    # those with wildcards.
+    if (grep($_ !~ m{[*?]}, @$locked)) {
 	$self->error("Couldn't lock versions for $locked");
 	return 0;
     }
