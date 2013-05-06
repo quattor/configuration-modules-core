@@ -1,0 +1,9 @@
+[% FOREACH s IN simple.pairs %]
+[domain/[% s.key %]]
+[%    INCLUDE authconfig/domains/simple.tt desc=s.value %]
+[% END %]
+
+[% FOREACH l IN ldap.pairs %]
+[domain/[% l.key %]]
+[%     INCLUDE authconfig/domains/ldap.tt desc=l.value %]
+[% END %]
