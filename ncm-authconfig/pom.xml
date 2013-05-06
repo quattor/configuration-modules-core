@@ -26,8 +26,8 @@
 
   <developers>
     <developer>
-      <name>David Groep</name>
-      <email>davidg@nikhef.nl</email>
+      <name>Luis Fernando Muñoz Mejías</name>
+      <email>Luis.Munoz@UGent.be</email>
     </developer>
   </developers>
 
@@ -36,6 +36,16 @@
       <name>Luis Fernando Muñoz Mejías</name>
       <email>Luis.Munoz@UGent.be</email>
     </contributor>
+    <contributor>
+      <name>David Groep</name>
+      <email>davidg@nikhef.nl</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Jan van Eldik</name>
+    </contributor>  
   </contributors>
 
   <build>
