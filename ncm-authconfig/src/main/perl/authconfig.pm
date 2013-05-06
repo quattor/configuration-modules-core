@@ -20,6 +20,9 @@ use File::Path;
 
 use EDG::WP4::CCM::Element;
 
+use constant SSSD_FILE => '/etc/sssd/sssd.conf';
+use constant TT_FILE => 'authconfig/sssd.tt';
+
 # prevent authconfig from trying to launch in X11 mode
 delete($ENV{"DISPLAY"});
 
@@ -322,6 +325,29 @@ sub configure_nslcd
     return $changed;
 }
 
+sub configure_sssd
+{
+    my ($self, $config) = @_;
+
+    my $fh = CAF::FileWriter->new(SSSD_FILE, log => $self, mode => 0600);
+    if (!$self->template()->process(TT_FILE, $config, $fh)) {
+        $self->error("Unable to render template ", TT_FILE, ": ",
+                     $self->template()->error());
+        return 0;
+    }
+    my $changed = $fh->close();
+
+    if ($changed) {
+        CAF::Process->new([qw(/sbin/service sssd restart)],
+                          log => $self)->run();
+        if ($?) {
+            $self->error("Failed to restart SSSD");
+        }
+    }
+    return $changed;
+}
+
+
 # Restarts NSCD if that is needed. It's ugly because on some versions
 # of SL stopping or starting may fail.
 sub restart_nscd
@@ -350,6 +376,7 @@ sub restart_nscd
     }
 }
 
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -370,6 +397,10 @@ sub Configure
     # This configures LDAP authentication on SL6.
     if ($t->{method}->{nslcd}->{enable}) {
 	$restart ||= $self->configure_nslcd($t->{method}->{nslcd});
+    }
+
+    if ($t->{method}->{sssd}->{enable}) {
+        $restart ||= $self->configure_sssd($t->{method}->{sssd});
     }
 
     $self->build_pam_systemauth($t->{pamadditions});
