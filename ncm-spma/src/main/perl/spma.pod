@@ -5,22 +5,14 @@
 
 =head1 NAME
 
-NCM::spma - NCM spma configuration component
+NCM::spma - Quattor's package manager
 
 =head1 SYNOPSIS
 
-=over
-
-=item Configure()
-
-Generates or updates the SPMA target configuration file, typically
-F</var/lib/spma-target.cf>, and (optionally) runs SPMA.
-
-=item Unconfigure()
-
-Not applicable.
-
-=back
+This document describes how to control the behaviour of the package
+manager itself.  For information on how to manage packages with
+Quattor, please check
+L<http://quattor.org/documentation/2013/04/05/package-management.html>.
 
 =head1 RESOURCES
 
@@ -37,6 +29,8 @@ the profile has not been escaped with PAN's escape() function. This setting is
 only meaningful when using a tool different than PAN for generating CDB
 profiles.
 
+Currently ignored.
+
 =item /software/components/spma/tmpdir : string
 
 If defined, set the path to the temporary directory (for compatibility
@@ -44,7 +38,7 @@ with -bad- packages that need to remove the sticky bit from /tmp)
 
 =back
 
-Flags for Yum processing:
+=head2 Flags for Yum processing:
 
 =over
 
@@ -53,71 +47,83 @@ Flags for Yum processing:
 Make Yum replace obsoleted packages by their recommended counterparts.
 Defaults to C<false> to keep backwards compatibility.
 
-=back
-
-Flags for SPMA setting changes (see man spma(1) for details) in spma.conf
-
-Important note: Once a flag is set in the CDB profile and the
-component is run, it is _not_ sufficient to remove it from the CDB
-profile for returning to the old spma.conf configuration
-file. Configuration entries which are not defined in the CDB profile
-are kept untouched in spma.conf.
-
-=over
-
 =item /software/components/spma/userpkgs : string ("yes|no")
+
+Whether SPMA should keep any packages the user may have installed
+manually.
+
+Set to C<no> to make the SPMA take full control of all your software
+installations.  Set to C<yes> to preserve any packages you installed
+by hand.  If you do so, SPMA will never remove a package.
 
 =item /software/components/spma/userprio : string ("yes|no")
 
+Obsoleted and ignored.
+
 =item /software/components/spma/protectkernel : string ("yes|no")
+
+Obsolete and ignored.  This is delegated to Yum.
 
 =item /software/components/spma/packager : string ("rpm|pkg|..")
 
+Currently only Yum is implemented, and other values are ignored.
+
 =item /software/components/spma/usespmlist : string ("yes|no")
+
+Obsolete.  Currently ignored.
 
 =item /software/components/spma/rpmexclusive: string ("yes|no")
 
+Obsolete.  Currently ignored.
 
 =item /software/components/spma/debug: string ("0|1|2|3|4|5")
 
+Obsolete.  Currently ignored.
+
 =item /software/components/spma/verbose: string ("0|1")
 
+Obsolete.  Currently ignored.
 
 =item /software/components/spma/cachedir: string
 
+Obsolete.  Currently ignored.
+
 =item /software/components/spma/localcache: string ("yes|no")
 
+Obsolete.  Currently ignored.
 
 =item /software/components/spma/proxy: string ("yes|no")
 
+Whether to use a proxy.
+
 =item /software/components/spma/proxytype: string ("forward|reverse")
+
+Type of proxy (reverse or forward).
 
 =item /software/components/spma/proxyhost: string
 
+Comma-separated list of proxy hosts.  If you have a forward proxy you
+should specify only one.  You may specify several reverse proxies
+here, and they will be appended to the C<baseurl> entry of each
+repository's configuration.
+
 =item /software/components/spma/proxyport: string
 
-=back
-
-Flag for running SPMA after updating the configuration:
-
-=over
+Port where the proxies are listening.
 
 =item /software/components/spma/run: string ("yes|no")
 
-Note that the SPMA itself will honour the "no-action" mode when ncm-ncd is
-invoked with B<--noaction>.
+Whether to actually run Yum operations that may install, remove or
+update packages.
 
 =back
 
-Flag for indicating if SPMA should use the head node as specified under
-/hardware/headnode/name instead of 'proxyhost':
 
 =over
 
 =item /software/components/spma/headnode: boolean
 
-Note that if /hardware/headnode/name is not defined, but the above resource is set to
-true, then the component will not change the defined proxy host if any.
+Ignored.
 
 =back
 
@@ -148,10 +154,24 @@ strings.
 
 =head1 AUTHOR
 
-German Cancio <German.Cancio@cern.ch>
+Original author: German Cancio <German.Cancio@cern.ch>
+
+Author of the Yum-based package manager: Luis Fernando Muñoz Mejías
+
 
 =head1 SEE ALSO
 
-ncm-ncd(1)
+You must read this document to understand how to manage packages
+with Quattor:
+
+L<http://quattor.org/documentation/2013/04/05/package-management.html>,
+
+These links detail experiences and strategies relevant for managing
+software installations in large sites:
+
+L<http://quattor.org/documentation/2013/02/07/yum-package-management.html>,
+L<http://quattor.org/documentation/2013/01/29/spma-yum-upgrade.html>
+L<http://quattor.org/blog/2013/01/29/package-layout-proposal.html>
+L<http://quattor.org/blog/2013/03/27/cleaning-up-packages.html>
 
 =cut
