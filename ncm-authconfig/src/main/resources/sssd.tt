@@ -1,3 +1,12 @@
+[sssd]
+[% INCLUDE authconfig/global.tt desc=global %]
+
+[pam]
+[% INCLUDE authconfig/services/pam.tt desc=pam %]
+
+[nss]
+[% INCLUDE authconfig/services/nss.tt desc=nss %]
+
 [% FOREACH s IN simple.pairs %]
 [domain/[% s.key %]]
 [%    INCLUDE authconfig/domains/simple.tt desc=s.value %]

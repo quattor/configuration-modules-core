@@ -359,10 +359,43 @@ type authconfig_sssd_ldap = {
 };
 
 
+type sssd_global = {
+    "config_file_version" : long = 2
+    "services" : sssd_service[]
+    "reconnection_retries" : integer = 3
+    "re_expression" ?  string
+    "full_name_format" ? string
+    "try_inotify" : boolean = true
+    "krb5_rcache_dir" ? string
+    "default_domain_suffix" ? string
+};
+
+type sssd_pam = {
+    "offline_credentials_expiration" : long = 0
+    "offline_failed_login_attempts" : long = 0
+    "offline_failed_login_delay" : long =  5
+    "pam_verbosity" : long =  1
+    "pam_id_timeout" : long =  5
+    "pam_pwd_expiration_warning" : long =  0
+    "get_domains_timeout" : long =  60
+};
+
+type sssd_nss = {
+    "enum_cache_timeout" : long = 120
+    "entry_cache_nowait_percentage" ? long
+    "entry_negative_timeout" : long = 15
+    "filter_users" : string = "root"
+    "filter_users_in_groups" : boolean = true
+    "filter_groups" : string = "root"
+};
+
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
     "domains" : authconfig_sssd_domain
+    "global" : sssd_global
+    "pam" : sssd_pam
+    "nss" : sssd_nss
 };
 
 
