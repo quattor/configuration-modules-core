@@ -33,7 +33,10 @@ my $t = {
 	bar => {
 	    access_provider => "simple",
 	    simple => {
-		"allow_users" => ["us1"]
+		allow_users => ["us1"]
+	       },
+	    local => {
+		default_shell => "bash"
 	       }
 	   },
        }
@@ -53,5 +56,6 @@ like($str, qr{^\[domain/bar\]$}m, "Simple domain name printed");
 like($str, qr{^simple_allow_users\s*=\s*us1$}m, "Simple fields printed");
 like($str, qr{^domains\s*=\*(?:foo,\s*bar)|(?:bar,\s*foo)$}m,
      "Domains correctly retrieved");
+like($str, qr{^default_shell\s*=\s*bash$}m, "Local fields printed");
 
 done_testing();

@@ -402,10 +402,21 @@ type sssd_nss = {
     "filter_groups" : string = "root"
 };
 
+type authconfig_sssd_local = {
+       "default_shell" : string = "/bin/bash"
+       "base_directory" : string = "/home"
+       "create_homedir" : boolean = true
+       "remove_homedir" : boolean = true
+       "homedir_umask" : long = 077
+       "skel_dir" : string = "/etc/skel"
+       "mail_dir" : string = "/var/mail"
+       "userdel_cmd" ? string
+};
 
 type authconfig_sssd_domain  = extensible {
     "ldap" ? authconfig_sssd_ldap
     "simple" ? authconfig_sssd_simple
+    "local" ? authconfig_sssd_local
     "access_provider" ? sssd_provider_string
     "id_provider" ? sssd_provider_string
     "auth_provider" ? sssd_provider_string
