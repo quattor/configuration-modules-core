@@ -23,17 +23,21 @@ use NCM::Component::authconfig;
 my $cmp = NCM::Component::authconfig->new("authconfig");
 
 my $t = {
-    ldap => {
+    domains => {
 	foo => {
-	    uri => ['u1']
-	    }
-	},
-    simple => {
+	    access_provider => "ldap",
+	    ldap => {
+		uri => [qw(u1 u2)]
+	       }
+	   },
 	bar => {
-	    allow_users => ['us1']
-	}
-    }
-};
+	    access_provider => "simple",
+	    simple => {
+		"allow_users" => ["us1"]
+	       }
+	   },
+       }
+   };
 
 
 my $str;
@@ -44,8 +48,10 @@ ok($cmp->template()->process('authconfig/sssd.tt', $t, \$str),
 is($cmp->template()->error(), "", "No errors in rendering the template");
 
 like($str, qr{^\[domain/foo\]$}m, "LDAP domain name printed");
-like($str, qr{^ldap_uri\s*=\s*u1$}m, "LDAP fields printed");
+like($str, qr{^ldap_uri\s*=\s*u1,\s*u2$}m, "LDAP fields printed");
 like($str, qr{^\[domain/bar\]$}m, "Simple domain name printed");
 like($str, qr{^simple_allow_users\s*=\s*us1$}m, "Simple fields printed");
+like($str, qr{^domains\s*=\*(?:foo,\s*bar)|(?:bar,\s*foo)$}m,
+     "Domains correctly retrieved");
 
 done_testing();

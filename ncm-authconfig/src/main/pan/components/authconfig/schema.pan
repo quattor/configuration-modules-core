@@ -240,9 +240,34 @@ type authconfig_method_nslcd_type = {
     "bindpw" ? string
 };
 
+@{
+    Valid SSSD providers.  For now we only implement ldap, simple and local
+}
+type sssd_provider_string = string with match(SELF, "^(ldap|simple|local)$");
+
 type authconfig_sssd_domain  = extensible {
-    "ldap" ? authconfig_sssd_ldap{}
-    "simple" ? authconfig_sssd_simple{}
+    "ldap" ? authconfig_sssd_ldap
+    "simple" ? authconfig_sssd_simple
+    "access_provider" ? sssd_provider_string
+    "id_provider" ? sssd_provider_string
+    "auth_provider" ? sssd_provider_string
+    "chpass_provider" ? sssd_provider_string
+    "sudo_provider" ? string
+    "selinux_provider" ? string
+    "subdomains_provider" ? string
+    "autofs_provider" ? string
+    "hostid_provider" ? string
+    "re_expression" : string = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)"
+    "full_name_format" : string = "%1$s@%2$s"
+    "lookup_family_order" : string = "ipv4_first"
+    "dns_resolver_timeout" : long = 5
+    "dns_discovery_domain" ? string
+    "override_gid" ? long
+    "case_sensitive" : boolean = true
+    "proxy_fast_alias" : boolean = false
+    "subdomain_homedir" : string = "/home/%d/%u"
+    "proxy_pam_target" ? string
+    "proxy_lib_name" ? string
 };
 
 @{
@@ -266,6 +291,9 @@ type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") 
 
 type ldap_order = string with match(SELF, "^(filter|expire|authorized_service|host)$");
 
+@{
+    LDAP chpass fields
+}
 type sssd_chpass = {
     "uri" ? type_absoluteURI[]
     "backup_uri" ? type_absoluteURI[]
@@ -279,6 +307,9 @@ type sssd_ldap_defaults = {
     "authtok" ?  string
 };
 
+@{
+    LDAP netgroup fields
+}
 type sssd_netgroup = {
     "object_class" : string = "nisNetgroup"
     "name" : string = "cn"
@@ -289,6 +320,9 @@ type sssd_netgroup = {
     "search_base" ? string
 };
 
+@{
+    LDAP autofs fields
+}
 type sssd_autofs = {
     "map_object_class" : string = "automountMap"
     "map_name" : string = "ou"
@@ -298,6 +332,9 @@ type sssd_autofs = {
     "search_base" ? string
 };
 
+@{
+    LDAP IP service fields
+}
 type sssd_service = {
     "object_class" : string = "ipService"
     "name" : string = "cn"
@@ -392,7 +429,7 @@ type sssd_nss = {
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
-    "domains" : authconfig_sssd_domain
+    "domains" : authconfig_sssd_domain{}
     "global" : sssd_global
     "pam" : sssd_pam
     "nss" : sssd_nss
