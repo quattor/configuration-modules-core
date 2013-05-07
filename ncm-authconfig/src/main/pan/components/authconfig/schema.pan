@@ -245,30 +245,6 @@ type authconfig_method_nslcd_type = {
 }
 type sssd_provider_string = string with match(SELF, "^(ldap|simple|local)$");
 
-type authconfig_sssd_domain  = extensible {
-    "ldap" ? authconfig_sssd_ldap
-    "simple" ? authconfig_sssd_simple
-    "access_provider" ? sssd_provider_string
-    "id_provider" ? sssd_provider_string
-    "auth_provider" ? sssd_provider_string
-    "chpass_provider" ? sssd_provider_string
-    "sudo_provider" ? string
-    "selinux_provider" ? string
-    "subdomains_provider" ? string
-    "autofs_provider" ? string
-    "hostid_provider" ? string
-    "re_expression" : string = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)"
-    "full_name_format" : string = "%1$s@%2$s"
-    "lookup_family_order" : string = "ipv4_first"
-    "dns_resolver_timeout" : long = 5
-    "dns_discovery_domain" ? string
-    "override_gid" ? long
-    "case_sensitive" : boolean = true
-    "proxy_fast_alias" : boolean = false
-    "subdomain_homedir" : string = "/home/%d/%u"
-    "proxy_pam_target" ? string
-    "proxy_lib_name" ? string
-};
 
 @{
     Simple access provider for SSSD.  See the sssd-simple man page.
@@ -399,7 +375,7 @@ type authconfig_sssd_ldap = {
 type sssd_global = {
     "config_file_version" : long = 2
     "services" : sssd_service[]
-    "reconnection_retries" : integer = 3
+    "reconnection_retries" : long = 3
     "re_expression" ?  string
     "full_name_format" ? string
     "try_inotify" : boolean = true
@@ -424,6 +400,32 @@ type sssd_nss = {
     "filter_users" : string = "root"
     "filter_users_in_groups" : boolean = true
     "filter_groups" : string = "root"
+};
+
+
+type authconfig_sssd_domain  = extensible {
+    "ldap" ? authconfig_sssd_ldap
+    "simple" ? authconfig_sssd_simple
+    "access_provider" ? sssd_provider_string
+    "id_provider" ? sssd_provider_string
+    "auth_provider" ? sssd_provider_string
+    "chpass_provider" ? sssd_provider_string
+    "sudo_provider" ? string
+    "selinux_provider" ? string
+    "subdomains_provider" ? string
+    "autofs_provider" ? string
+    "hostid_provider" ? string
+    "re_expression" : string = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)"
+    "full_name_format" : string = "%1$s@%2$s"
+    "lookup_family_order" : string = "ipv4_first"
+    "dns_resolver_timeout" : long = 5
+    "dns_discovery_domain" ? string
+    "override_gid" ? long
+    "case_sensitive" : boolean = true
+    "proxy_fast_alias" : boolean = false
+    "subdomain_homedir" : string = "/home/%d/%u"
+    "proxy_pam_target" ? string
+    "proxy_lib_name" ? string
 };
 
 type authconfig_method_sssd_type = {
