@@ -52,7 +52,7 @@
 	<configuration>
 	  <mappings combine.children="append">
 	    <mapping>
-	      <directory>/usr/lib/ncm/config/profile/managed_files/</directory>
+	      <directory>/usr/lib/ncm/config/profile/</directory>
 	      <filemode>755</filemode>
 		<username>root</username>
 		<groupname>root</groupname>
