@@ -437,8 +437,22 @@ type authconfig_sssd_domain  = extensible {
     "subdomain_homedir" : string = "/home/%d/%u"
     "proxy_pam_target" ? string
     "proxy_lib_name" ? string
-};
+    "min_id" : long = 1
+    "max_id" : long = 0
+    "enumerate" : boolean = false
+    "force_timeout" : long = 60
+    "entry_cache_timeout" : long = 5400
+    "entry_cache_user_timeout" ? long
+    "entry_cache_group_timeout" ? long
+    "entry_cache_netgroup_timeout" ? long
+    "entry_cache_service_timeout" ? long
+    "entry_cache_sudo_timeout" ? long
+    "entry_cache_autofs_timeout" ? long
+    "cache_credentials" : boolean = false
+    "account_cache_expiration" : long = 0
+    "pwd_expiration_warning" ? long
 
+};
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
