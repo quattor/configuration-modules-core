@@ -6,7 +6,7 @@
   <artifactId>drbd</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.3.1-SNAPSHOT</version>
+  <version>13.5.0</version>
   <name>DRBD configuration component</name>
 
   <repositories>

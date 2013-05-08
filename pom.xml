@@ -5,7 +5,7 @@
   <artifactId>ncm-components</artifactId>
   <packaging>pom</packaging>
 
-  <version>13.3.1-SNAPSHOT</version>
+  <version>13.5.0</version>
 
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
