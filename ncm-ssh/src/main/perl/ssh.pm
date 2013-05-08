@@ -28,7 +28,7 @@ use CAF::Process;
 use CAF::FileEditor;
 use constant SSHD_CONFIG => "/etc/ssh/sshd_config";
 use constant SSH_CONFIG => "/etc/ssh/ssh_config";
-use constant SSH_VALIDATE => qw(sshd -t -f /proc/self/fd/0);
+use constant SSH_VALIDATE => qw(/usr/sbin/sshd -t -f /proc/self/fd/0);
 
 # Returns true if $file is a valid SSHD configuration file.
 sub valid_sshd_file
