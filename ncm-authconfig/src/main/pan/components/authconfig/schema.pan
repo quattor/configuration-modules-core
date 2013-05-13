@@ -327,7 +327,7 @@ type authconfig_sssd_ldap = {
     "user" : sssd_user
     "group" : sssd_group
     "chpass" ? sssd_chpass
-    "defaults" : sssd_ldap_defaults
+    "default" : sssd_ldap_defaults
     "sasl" ? sssd_sasl
     "krb5" ? sssd_krb5
     "sudo" ? sssd_sudo

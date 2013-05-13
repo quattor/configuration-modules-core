@@ -1,7 +1,7 @@
 access_provider = ldap
 [% INCLUDE authconfig/domains/ldap/user.tt desc=desc.user %]
 [% INCLUDE authconfig/domains/ldap/group.tt desc=desc.group %]
-[% INCLUDE authconfig/domains/ldap/defaults.tt desc=desc.defaults %]
+[% INCLUDE authconfig/domains/ldap/defaults.tt desc=desc.default %]
 
 [% IF desc.exists('sasl') %]
 [%     INCLUDE authconfig/domains/ldap/sasl.tt desc=desc.sasl %]

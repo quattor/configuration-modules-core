@@ -27,7 +27,7 @@ my $t = {
 		sudo => { hostnames => 'sh' },
 		user => { shell => 'us' },
 		group => { name => 'gn' },
-		defaults => { bind_dn => 'db' },
+		default => { bind_dn => 'db' },
 		sasl => { mech => 'sam' },
 		krb5 => { keytab => 'kt' },
 		tls => { key => 'tk' },
