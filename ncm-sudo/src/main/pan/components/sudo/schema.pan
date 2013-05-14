@@ -2,11 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# Type definition pro_declaration_component_sudo
-#
-#
-#
-#
 # Data structures modelling the whole sudo behaviour.
 # See ncm-sudo man page for more details.
 

@@ -2,8 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# template pro_software_component_sudo
-
 unique template components/sudo/config-rpm;
 include {'components/sudo/schema'};
 include {'components/sudo/functions'};
