@@ -2,8 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# template pro_software_component_useraccess
-
 unique template components/useraccess/config-rpm;
 include {'components/useraccess/schema'};
 
