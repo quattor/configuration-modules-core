@@ -311,7 +311,7 @@ type sssd_autofs = {
 @{
     LDAP IP service fields
 }
-type sssd_service = {
+type sssd_ldap_service = {
     "object_class" : string = "ipService"
     "name" : string = "cn"
     "port" : string = "ipServicePort"
@@ -338,7 +338,7 @@ type authconfig_sssd_ldap = {
     "backup_uri" ?  type_absoluteURI[]
     "search_base" ?  string
     "schema" : ldap_schema = "rfc2307"
-    "service" ? sssd_service
+    "service" ? sssd_ldap_service
 
     "krb5_backup_server" ?  string
     "krb5_canonicalize" ?  boolean
@@ -371,6 +371,7 @@ type authconfig_sssd_ldap = {
     "use_object_class" : string = "posixAccount"
 };
 
+type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
 
 type sssd_global = {
     "config_file_version" : long = 2
