@@ -162,7 +162,7 @@ like($fh, qr{^proxy=http://$PROXY_HOST$}m,
 
 =pod
 
-=item * Forward proxies have their URLs modified
+=item * Reverse proxies have their URLs modified
 
 =cut
 
@@ -174,7 +174,7 @@ $name = "reverse_proxy";
 $repos->[0]->{name} = $name;
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
                         $PROXY_HOST, 'reverse'), 1,
-   "Files with forward proxies are properly rendered");
+   "Files with reverse proxies are properly rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=\s*http://$PROXY_HOST$}m,
