@@ -331,6 +331,7 @@ type authconfig_sssd_ldap = {
     "sasl" ? sssd_sasl
     "krb5" ? sssd_krb5
     "sudo" ? sssd_sudo
+    "sudorule" ? sssd_sudorule
     "tls" ? sssd_tls
     "netgroup" ? sssd_netgroup
     "autofs" ? sssd_autofs
@@ -357,6 +358,7 @@ type authconfig_sssd_ldap = {
     "enumeration_search_timeout" : long = 60
     "force_upper_case_realm" : boolean = false
     "groups_use_matching_rule_in_chain" ? boolean
+    "id_use_start_tls" ? boolean
     "id_mapping" : boolean = false
     "network_timeout" : long = 6
     "ns_account_lock" : string = "nsAccountLock"

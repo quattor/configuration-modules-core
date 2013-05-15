@@ -27,7 +27,6 @@ type sssd_sudorule = {
 };
 
 type sssd_sudo = {
-    "rules" : sssd_sudorule = nlist()
     "full_refresh_interval" : long = 21600
     "smart_refresh_interval" : long = 900
     "use_host_filter" : boolean = true
