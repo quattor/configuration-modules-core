@@ -1,7 +1,0 @@
-[% IF desc.exists('bind_dn') %]
-ldap_default_bind_dn = [% desc.bind_dn %]
-[% END %]
-ldap_default_authtok_type = [% desc.authtok_type %]
-[% IF desc.exists('authtok') %]
-ldap_default_authtok = [% desc.authok %]
-[% END %]

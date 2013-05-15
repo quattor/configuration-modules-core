@@ -1,8 +1,0 @@
-ldap_autofs_map_object_class = [% desc.map_object_class %]
-ldap_autofs_map_name = [% desc.map_name %]
-ldap_autofs_entry_object_class = [% desc.entry_object_class %]
-ldap_autofs_entry_key = [% desc.entry_key %]
-ldap_autofs_entry_value = [% desc.entry_value %]
-[% IF desc.exists('search_base') %]
-ldap_autofs_search_base = [% desc.search_base %]
-[% END %]

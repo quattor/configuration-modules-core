@@ -1,7 +1,0 @@
-offline_credentials_expiration = [% desc.offline_credentials_expiration %]
-offline_failed_login_attempts = [% desc.offline_failed_login_attempts %]
-offline_failed_login_delay = [% desc.offline_failed_login_delay %]
-pam_verbosity = [% desc.pam_verbosity %]
-pam_id_timeout = [% desc.pam_id_timeout %]
-pam_pwd_expiration_warning = [% desc.pam_pwd_expiration_warning %]
-get_domains_timeout = [% desc.get_domains_timeout %]

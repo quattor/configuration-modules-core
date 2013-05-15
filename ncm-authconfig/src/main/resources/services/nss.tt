@@ -1,8 +1,0 @@
-enum_cache_timeout = [% desc.enum_cache_timeout %]
-[% IF desc.exists('entry_cache_nowait_percentage') %]
-entry_cache_nowait_percentage = [% desc.entry_cache_nowait_percentage %]
-[% END %]
-entry_negative_timeout = [% desc.entry_negative_timeout %]
-filter_users = [% desc.filter_users %]
-filter_users_in_groups = [% desc.filter_users_in_groups %]
-filter_groups = [% desc.filter_groups %]
