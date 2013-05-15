@@ -330,6 +330,7 @@ sub configure_sssd
     my ($self, $config, $file, $tt) = @_;
 
     my $fh = CAF::FileWriter->new($file, log => $self, mode => 0600);
+    print $fh "\n";
     my $ok = $self->template()->process($tt, $config, $fh);
     if (!$ok) {
         $self->error("Unable to render template ", TT_FILE, ": ",
