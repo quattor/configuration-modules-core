@@ -3,8 +3,8 @@
 ################################################################################
 #
 # VERSION:    1.2.10, 21/06/10 15:26
-# AUTHOR:     Stijn De Weirdt 
-# MAINTAINER: Stijn De Weirdt 
+# AUTHOR:     Stijn De Weirdt
+# MAINTAINER: Stijn De Weirdt
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
 #
 ################################################################################
@@ -230,7 +230,7 @@ sub Configure {
     opendir(DIR, $dir_pref);
     ## here's the reason why it only verifies eth, bond, bridge, usb and vlan
     ## devices. add regexp at will
-    my $dev_regexp='-((eth|em|bond|br|vlan|usb|ib)\d+(\.\d+)?)';
+    my $dev_regexp='-((eth|em|bond|br|vlan|usb|ib|p\d+p)\d+(\.\d+)?)';
     ## $1 is the device name
     foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
         if ( -l "$dir_pref/$file" ) {
