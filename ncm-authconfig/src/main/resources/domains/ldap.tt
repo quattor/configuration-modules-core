@@ -14,7 +14,7 @@
 [%- FOREACH name IN subtree -%]
 [%-     IF desc.exists(name) -%]
 [%          INCLUDE authconfig/generic.tt dict=desc.$name prefix="ldap_${name}_"
-                                          bool=booleans.$name colonlist=lists.$name %]
+                                          bool=booleans.$name colonlist=colonlists.$name %]
 [%      END -%]
 [%- END -%]
 [%- ldapkrb5 = ['krb5_backup_server', 'krb5_canonicalize', 'krb5_realm', 'krb5_server'] -%]
