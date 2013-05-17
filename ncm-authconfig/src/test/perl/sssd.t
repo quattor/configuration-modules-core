@@ -24,23 +24,23 @@ my $cmp = NCM::Component::authconfig->new("authconfig");
 
 my $t = {
     domains => {
-	foo => {
-	    access_provider => "ldap",
-	    ldap => {
-		uri => [qw(u1 u2)]
-	       }
-	   },
-	bar => {
-	    access_provider => "simple",
-	    simple => {
-		allow_users => ["us1"]
-	       },
-	    local => {
-		default_shell => "bash"
-	       }
-	   },
-       }
-   };
+        foo => {
+            access_provider => "ldap",
+            ldap => {
+            uri => [qw(u1 u2)]
+            }
+        },
+        bar => {
+        	    access_provider => "simple",
+        	    simple => {
+            		allow_users => ["us1"]
+        	       },
+        	    local => {
+            		default_shell => "bash"
+                }
+           },
+    }
+};
 
 
 my $str;
