@@ -1,4 +1,3 @@
-access_provider = ldap
 [% subtree = [
     'user', 'group', 'default',
     'sasl', 'krb5', 'tls', 'netgroup', 'autofs',
