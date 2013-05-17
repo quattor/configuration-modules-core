@@ -49,6 +49,6 @@ like($str, qr{^colonlist\s*=\s*1:\s*2$}m, "Sample colonlist field rendered corre
 like($str, qr{^justastring\s*=\s*astring$}m, "Sample justastring field rendered correctly");
 like($str, qr{^boolfalse\s*=\s*False$}m, "Sample boolean false field rendered correctly");
 like($str, qr{^booltrue\s*=\s*True$}m, "Sample boolean true field rendered correctly");
-like($str, qr{^exclude\s*=\s*somevalue$}m, "Sample field excluded correctly");
+unlike($str, qr{^exclude\s*=\s*somevalue$}m, "Sample field excluded correctly");
 
 done_testing();
