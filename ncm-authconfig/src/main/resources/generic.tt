@@ -4,6 +4,8 @@
 [%          CASE exclude # just skip -%]
 [%          CASE list # make comma separated list -%]
 [% keyval %] = [% pair.value.join(',') %]
+[%          CASE colonlist # make colon separated list -%]
+[% keyval %] = [% pair.value.join(':') %]
 [%          CASE bool -%]
 [% keyval %] = [% pair.value ? 'True' : 'False' %]
 [%          CASE -%]
