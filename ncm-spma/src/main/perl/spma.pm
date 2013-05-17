@@ -169,8 +169,9 @@ sub execute_yum_command
 
     $cmd->execute();
 
-    if ($? || $err =~ m{^(Error|Failed|Could not match)}m ||
-	    (@missing = ($out =~ m{^No package (.*) available}mg))) {
+    if ($? ||
+	$err =~ m{^(?:Error|Failed|(?:Could not match)|(?:Transaction encountered.*error))}mi ||
+	(@missing = ($out =~ m{^No package (.*) available}mg))) {
         $self->error("Failed $why: $err");
 	if (@missing) {
 	    $self->error("Missing packages: ", join(" ", @missing));
