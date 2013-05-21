@@ -143,10 +143,12 @@ sub Configure($$@) {
         my $log_mode;
         my $log_params = $entry->{log};
         my $log_disabled = 0;
+        my $log_to_file = 0;
         if ( $log_params->{'disabled'} ) {
             $log_disabled = 1;
             $self->debug(1,'Log file disabled.');
         } else {
+            $log_to_file = 1;
             $log_name = "/var/log/$fname$cron_log_extension";
             $log_owner = undef;
             $log_group = undef;
@@ -278,6 +280,11 @@ sub Configure($$@) {
         if ( $log_disabled ) {
             $contents .= "$frequency $user ($command)";
         } else {
+            if (! $log_to_file) {
+                # how did we get here?
+                $self->error("No log handling specified nor disabled, going to log to file.");
+                $log_to_file = 1;
+            }
             $contents .= "$frequency $user ($date; $command) >> $log_name 2>&1";
         }
         $contents .= "\n";
@@ -287,11 +294,11 @@ sub Configure($$@) {
                                       mode => 0644,
         );
         if ( $changes < 0 ) {
-            $self->error("Error updadating cron file $file");
+            $self->error("Error updating cron file $file");
         }
 
         # Create the log file and change the owner if necessary.
-        if ( ! $log_params->{'disabled'} ) {
+        if ( $log_to_file ) {
             if ( -f $log_name ) {
                 $changes = LC::Check::status($log_name,
                                  owner => $log_owner,
