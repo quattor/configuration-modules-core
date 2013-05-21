@@ -27,6 +27,11 @@ local(*DTA);
 
 my $crond = "/etc/cron.d";
 
+use constant SYSLOG_METHODS => qw(
+                                  logger
+                                  );
+
+
 ##########################################################################
 sub Configure($$@) {
 ##########################################################################
@@ -132,10 +137,12 @@ sub Configure($$@) {
         }
 
 
-        # Log file name, owner and mode.  Default is to create one in
-        # /var/log using the cron entry name.  If specified log file
-        # name is not an absolute path, create it in /var/log. if log
-        # file property 'disabled' is true, do not create/configure a
+        # Log file name, owner and mode.
+        # If a syslog method is defined, use that method to log to syslog (unless
+        # syslog is explicitly disbaled).
+        # Default is to create a logfile in /var/log using the cron entry name.
+        # If specified log file name is not an absolute path, create it in
+        # /var/log. If log file property 'disabled' is true, do not create/configure a
         # log file.
         my $log_name;
         my $log_owner;
@@ -144,10 +151,33 @@ sub Configure($$@) {
         my $log_params = $entry->{log};
         my $log_disabled = 0;
         my $log_to_file = 0;
+        my $syslog_params = $entry->{syslog};
+        my $syslog_method = $syslog_params->{method}
+        my $log_to_syslog = 0;
+        my $syslog_logger_fn; # used for syslog logger method
         if ( $log_params->{'disabled'} ) {
             $log_disabled = 1;
-            $self->debug(1,'Log file disabled.');
-        } else {
+            $self->debug(1,'Logging disabled.');
+        } else if ($syslog_method && (! $syslog_params->{'disabled'})) {
+            if ($syslog_method eq "logger") {
+                # where is the logger (/bin/logger on el5, /usr/bin/logger in el6)
+                if (-f "/bin/logger") {
+                    $syslog_logger_fn = "/bin/logger";
+                    $log_to_syslog = 1;
+                } else if (-f "/usr/bin/logger") {
+                    $syslog_logger_fn = "/usr/bin/logger";
+                    $log_to_syslog = 1;
+                } else {
+                    $self->error("Unable to find logger binary for syslog method logger.");
+                }
+            } else if (grep { $_ eq $syslog_method} SYSLOG_METHODS) {
+                # at the very least check if the method is known
+                $log_to_syslog = 1;
+            } else {
+                $self->error("Unsupported syslog method $syslog_method. Not going to syslog.");
+            }
+        }
+        if (!($log_disabled || $log_to_syslog)) {
             $log_to_file = 1;
             $log_name = "/var/log/$fname$cron_log_extension";
             $log_owner = undef;
@@ -224,7 +254,7 @@ sub Configure($$@) {
                 !$entry->{frequency} ||
                 ref $entry->{frequency}) {
                 $self->error("undefined/invalid frequency for $name " .
-                 "cron entry; skipping");
+                             "cron entry; skipping");
                 next;
             }
             $frequency = $entry->{frequency};
@@ -279,9 +309,22 @@ sub Configure($$@) {
         $contents .= $cronenv;
         if ( $log_disabled ) {
             $contents .= "$frequency $user ($command)";
+        } else if ($log_to_syslog) {
+            if ($syslog_method eq "logger") {
+                my $tag;
+                if (exists($syslog_params->{tag})) {
+                    $tag = $syslog_params->{tag};
+                } else {
+                    $tag = $name;
+                }
+                if (exists($syslog_params->{tagprefix})) {
+                    $tag = $syslog_params->{tagprefix}.$tag;
+                }
+                $contents .= "$frequency $user ($command) 2&>1 |$syslog_logger_fn -t $tag -p $syslog_parms->{facility}.$syslog_parms->{level}";
+            }
         } else {
             if (! $log_to_file) {
-                # how did we get here?
+                # how did we get here? will this even work?
                 $self->error("No log handling specified nor disabled, going to log to file.");
                 $log_to_file = 1;
             }
