@@ -20,11 +20,10 @@ function structure_cron_log_valid = {
 };
 
 type structure_cron_syslog = {
-    'method'    : string = 'logger' with match(SELF,'^(logger)$')
     'facility'  : string = 'user'
     'level'     : string = 'notice'
-    'tagprefix' ? string    # prefix tag
-    'tag'       ? string    # use this fixed tag instead of name
+    'tagprefix' ? string with (!match(SELF,"\s")) # prefix tag
+    'tag'       ? string with (!match(SELF,"\s")) # use this fixed tag instead of name
 };
 
 type structure_cron_log = {
