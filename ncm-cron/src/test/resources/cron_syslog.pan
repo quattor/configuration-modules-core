@@ -1,14 +1,14 @@
-object template cron_log;
+object template cron_syslog;
 
 "/software/components/cron/entries" =
-  push(nlist(
+  append(nlist(
     "name","test_default_log",
     "user","myspecialroot",
     "frequency", "1 2 3 4 5",
     "command", "some command"));
 
 "/software/components/cron/entries" =
-  push(nlist(
+  append(nlist(
     "name","test_nolog",
     "user","root",
     "log",nlist("disable",true),
@@ -16,10 +16,13 @@ object template cron_log;
     "command", "some command"));
 
 "/software/components/cron/entries" =
-  push(nlist(
+  append(nlist(
     "name","test_syslog",
     "user","root",
-    "syslog",nlist(),
+    "syslog",nlist(
+        'facility', 'user',
+        'level', 'notice'
+    ),
     "frequency", "* * * * *",
     "command", "some command"));
 
