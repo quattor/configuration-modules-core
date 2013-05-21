@@ -19,6 +19,14 @@ function structure_cron_log_valid = {
   true;
 };
 
+type structure_cron_syslog = {
+    'method'    : string = 'logger' with match(SELF,'^(logger)$')
+    'facility'  : string = 'user'
+    'level'     : string = 'notice'
+    'tagprefix' ? string    # prefix tag
+    'tag'       ? string    # use this fixed tag instead of name
+};
+
 type structure_cron_log = {
     'disabled'  ? boolean
     'name'      ? string
@@ -45,6 +53,7 @@ type structure_cron = {
     'comment'   ? string
     'env'       ? string{}
     'log'       ? structure_cron_log
+    'syslog'    ? structure_cron_syslog
 };
 
 type component_cron = {
