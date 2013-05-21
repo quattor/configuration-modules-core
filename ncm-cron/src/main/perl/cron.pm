@@ -26,10 +26,12 @@ use Encode qw(encode_utf8);
 
 local(*DTA);
 
+use constant CRON_LOGFILE_SUBDIR => "/var/log/";
+
 my $crond = "/etc/cron.d";
 
 ##########################################################################
-sub Configure($$@) {
+sub Configure {
 ##########################################################################
 
     my ($self, $config) = @_;
@@ -139,13 +141,13 @@ sub Configure($$@) {
         my $log_params = $entry->{log};
         my $log_disabled = 0;
         my $log_to_file = 0;
-        my $syslog_params = $entry->{syslog};
         my $log_to_syslog = 0;
+        my $syslog_params = $entry->{syslog};
         my $syslog_logger_fn; # used for syslog logger method
         if ( $log_params->{'disabled'} ) {
             $log_disabled = 1;
             $self->debug(1,'Logging disabled.');
-        } elsif (! $syslog_params->{'disabled'}) {
+        } elsif ($syslog_params && (! $syslog_params->{'disabled'})) {
             # where is the logger (/bin/logger on el5, /usr/bin/logger in el6)
             if (-f "/bin/logger") {
                 $syslog_logger_fn = "/bin/logger";
@@ -167,7 +169,7 @@ sub Configure($$@) {
             if ( $log_params->{name} ) {
                 $log_name = $log_params->{name};
                 unless ( $log_name =~ /^\s*\// ) {
-                    $log_name = '/var/log/' . $log_name;
+                    $log_name = CRON_LOGFILE_SUBDIR . $log_name;
                 }
             }
             if ( $log_params->{owner} ) {
@@ -317,11 +319,11 @@ sub Configure($$@) {
 
         # Create the log file and change the owner if necessary.
         if ( $log_to_file ) {
-            # looks like overkill but can't be easily replaced with
-            # CAF::FileWriter (will override) or
-            # CAF::FileEditor (will read in all data)
             my $changes;
             if ( -f $log_name ) {
+                # looks like overkill but can't be easily replaced with
+                # CAF::FileWriter (will override) or
+                # CAF::FileEditor (will read in all data)
                 $changes = LC::Check::status($log_name,
                                  owner => $log_owner,
                                  group => $log_group,
@@ -331,15 +333,13 @@ sub Configure($$@) {
                     $self->error("Error setting owner/permissions on log file $log_name");
                 }
             } else {
-                $changes = LC::Check::file($log_name,
-                               contents => '',
-                               owner => $log_owner,
-                               group => $log_group,
-                               mode => $log_mode,
-                    );
-                if ( $changes < 0 ) {
-                    $self->warn("Error creating log file $log_name");
-                }
+                # initialise the logfile, use CAF::FileWriter to allow testing
+                my $logfilefh = CAF::FileWriter->new($log_name,
+                                                     contents => '',
+                                                     owner => $log_owner,
+                                                     group => $log_group,
+                                                     mode => $log_mode);
+                $logfilefh->close();
             }
         }
     }
