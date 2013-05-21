@@ -211,12 +211,12 @@ like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
 =cut
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-			"$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
+                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
    "List of reverse proxies succeeds to be rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 like($fh, qr{^baseurl= \s* http://$PROXY_HOST:$PROXY_PORT$
-	     \n \s* http://another:$PROXY_PORT$ }xm,
+             \n \s* http://another:$PROXY_PORT$ }xm,
      "List of reverse proxies correctly rendered");
 
 done_testing();
