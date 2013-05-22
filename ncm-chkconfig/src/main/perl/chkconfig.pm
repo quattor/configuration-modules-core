@@ -27,7 +27,7 @@ $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::chkconfig::NoActionSupported = 1;
 
 use NCM::Check;
-use LC::Process qw(run output);
+use CAF::Process;
 
 my $chkconfigcmd = "/sbin/chkconfig";
 my $servicecmd   = "/sbin/service";
@@ -274,17 +274,13 @@ sub Configure {
 
     #perform the "chkconfig" commands
     for my $cmd (@cmdlist) {
-        #info
-        $self->info("executing command: ".join(" ", @$cmd));
+        # TODO: remove or not? previous code had @$cmd in join when $cmd was undefined, which would crash perl
+        next if(!defined("$cmd"));
 
-        unless($NoAction) {
-            my $out = output(@$cmd);
-            if(!defined("$cmd")) {
-                $self->warn("cannot execute ", join(" ", @$cmd));
-            } elsif ($? >> 8) {
-                chomp($out);
-                $self->warn($out);
-            }
+        my $out = CAF::Process->new($cmd, log=>$self)->output();
+        if ($? >> 8) {
+            chomp($out);
+            $self->warn($out);
         }
     }
 
@@ -294,17 +290,13 @@ sub Configure {
             my @filteredservicelist = $self->service_filter(@servicecmdlist);
             my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
             for my $cmd (@orderedservicecmdlist) {
-                #info
-                $self->info("executing command: ". join(" ", @$cmd));
+                # TODO: remove or not? previous code had @$cmd in join when $cmd was undefined, which would crash perl
+                next if(!defined("$cmd"));
 
-                unless($NoAction) {
-                    my $out = output(@$cmd);
-                    if(!defined($cmd)) {
-                        $self->warn("cannot execute ", join(" ", @$cmd));
-                    } elsif ($? >> 8) {
-                        chomp($out);
-                        $self->warn($out);
-                    }
+                my $out = CAF::Process->new($cmd, log=>$self)->output();
+                if ($? >> 8) {
+                    chomp($out);
+                    $self->warn($out);
                 }
             }
         }
@@ -336,7 +328,7 @@ sub service_filter {
         $service = $line->[1];
         $action = $line->[2];
 
-        my $current_state=output($servicecmd, $service, 'status');
+        my $current_state=CAF::Process->new([$servicecmd, $service, 'status'],log=>$self)->output();
 
         if($action eq 'start' && $current_state =~ /is running/s ) {
             $self->debug(2,"$service already running, no need to '$action'");
