@@ -277,17 +277,17 @@ sub Configure {
         if ( $entry->{comment}) {
             my $comment = $entry->{comment};
             my @lines = split /\n/m, $comment;
-            foreach (@lines) {
-                print $cronfh "# " . $_ . "\n";
+            foreach my $line (@lines) {
+                print $cronfh "# $line\n";
             }
         }
 
         # Determine if there is an environment to set.  If so,
         # extract the key value pairs.
         my $env_entries = $entry->{env};
-        if ( $env_entries ) {
-            foreach (sort keys %{$env_entries}) {
-                print $cronfh "$_=" . $env_entries->{$_} . "\n";
+        if ($env_entries) {
+            foreach my $k (sort keys %{$env_entries}) {
+                print $cronfh "$k=$env_entries->{$k}\n";
             }
         }
 
