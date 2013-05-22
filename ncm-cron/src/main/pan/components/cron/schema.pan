@@ -53,7 +53,7 @@ type structure_cron = {
     'env'       ? string{}
     'log'       ? structure_cron_log
     'syslog'    ? structure_cron_syslog
-};
+} with !(exists(SELF['log']) && exists(SELF['syslog'])) || error("At most one of log or syslog can be defined");
 
 type component_cron = {
     include structure_component
