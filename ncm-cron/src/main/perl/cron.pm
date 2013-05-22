@@ -67,7 +67,7 @@ sub Configure {
         # Untainted to_unlink to work with tainted perl mode (-T option)
         if ($to_unlink =~ /^($crond\/.*$cron_entry_regexp)$/) {
             $to_unlink = $1;                     # $to_unlink is now untainted
-            $self->error("deleting file $to_unlink failed ($?)") if (unlink($to_unlink));
+            $self->error("deleting file $to_unlink failed ($!)") if (unlink($to_unlink));
         } else {
             $self->error("Bad data in $to_unlink");
         }
