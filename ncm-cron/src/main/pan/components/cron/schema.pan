@@ -22,7 +22,7 @@ function structure_cron_log_valid = {
 type structure_cron_syslog = {
     'facility'  : string = 'user'
     'level'     : string = 'notice'
-    'tagprefix' ? string with (!match(SELF,'\s')) # prefix tag
+    'tagprefix' : string = 'ncm-cron.' with (!match(SELF,'\s')) # prefix tag
     'tag'       ? string with (!match(SELF,'\s')) # use this fixed tag instead of name
 };
 
