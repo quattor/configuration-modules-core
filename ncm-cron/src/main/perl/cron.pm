@@ -72,7 +72,7 @@ sub Configure {
         }
 
         unlink $to_unlink;
-        $self->log("error ($?) deleting file $to_unlink") if $?;
+        $self->error("deleting file $to_unlink failed ($?)") if $?;
     }
 
     # Only continue if the entries line is defined.
@@ -129,11 +129,11 @@ sub Configure {
 
         # Log file name, owner and mode.
         # If a syslog method is defined, use that method to log to syslog (unless
-        # syslog is explicitly disbaled).
+        # syslog is explicitly disabled).
         # Default is to create a logfile in /var/log using the cron entry name.
-        # If specified log file name is not an absolute path, create it in
-        # /var/log. If log file property 'disabled' is true, do not create/configure a
-        # log file.
+        # If specified log file name is not an absolute path, create it in /var/log.
+        # If log file property 'disabled' is true, do not create/configure any logging
+        # (log file or syslog).
         my $log_name;
         my $log_owner;
         my $log_group;
@@ -309,7 +309,7 @@ sub Configure {
         } else {
             if (! $log_to_file) {
                 # how did we get here? will this even work?
-                $self->error("No log handling specified nor disabled, going to log to file.");
+                $self->warn("No log handling specified nor disabled, going to log to file.");
                 $log_to_file = 1;
             }
             print $cronfh "$frequency $user ($date; $command) >> $log_name 2>&1\n";
