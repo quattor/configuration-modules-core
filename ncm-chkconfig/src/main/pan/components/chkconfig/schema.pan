@@ -16,25 +16,30 @@ include { 'quattor/schema' };
 
 function chkconfig_allow_combinations = {
     if ( ARGC != 1 || ! is_nlist(ARGV[0]) ) {
-        error(function_name + ' requires 1 nlist as argument');
+        error('chkconfig_allow_combinations requires 1 nlist as argument');
     };
     service = ARGV[0];
 
-    act_map = nlist(
+    # A mapping between chkconfig service_types that the component will
+    # prefer over other service_types. The ones listed here are considered
+    # dangerous.
+    # Others combinations are still allowed (eg combining del and off,
+    # where del will be preferred)
+    svt_map = nlist(
         'del',list("add","on","reset"),
         'off',list("on","reset"),
         'on',list("reset"),
     );
-    foreach(winact;actlist;act_map) {
-        if (exists(service[winact])) {
-            foreach(idx;act;actlist) {
-                if (exists(service[act])) {
-                    error(format("Cannot combine '%s' with '%s' (%s would win).",winact,act,winact));
+    foreach(win_svt;svt_list;svt_map) {
+        if (exists(service[win_svt])) {
+            foreach(idx;svt;svt_list) {
+                if (exists(service[svt])) {
+                    error(format("Cannot combine '%s' with '%s' (%s would win).",win_svt, svt, win_svt));
                 };
             };
         };
     };
-    true;
+    return(true);
 };
 
 type service_type = {
