@@ -335,10 +335,10 @@ sub Configure {
             } else {
                 # initialise the logfile, use CAF::FileWriter to allow testing
                 my $logfilefh = CAF::FileWriter->new($log_name,
-                                                     contents => '',
                                                      owner => $log_owner,
                                                      group => $log_group,
-                                                     mode => $log_mode);
+                                                     mode => $log_mode,
+                                                     log => $self);
                 $logfilefh->close();
             }
         }
