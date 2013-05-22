@@ -352,38 +352,34 @@ sub service_order {
         $service = $line->[1];
         $action = $line->[2];
 
-        my $prio;
+        my ($prio,$serviceprefix);
         if($action eq 'stop') {
             $prio = 99;
-            my $globtxt = "/etc/rc".$currentrunlevel.".d/K*$service";
-            my @files = glob($globtxt);
-            if ($#files == 0) {
-                $self->warn("No files found matching $globtxt");
-            } elsif ($#files > 1) {
-                $self->warn("$#files files found matching $globtxt, using first one. List: ".join(',',@files));
-            }
-            if($#files && $files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
-                $prio = $1;
-                $self->debug(3,"Found stop prio $prio for $service");
-            } else {
-                $self->debug(3,"Did not find stop prio for $service, assume $prio");
-            }
-            push (@stop_list, [$prio, $line]);
+            $serviceprefix = 'K';
         } elsif ($action eq 'start') {
             $prio = 1; # actually, these all should be chkconfiged on!
-            my $globtxt = "/etc/rc".$currentrunlevel.".d/S*$service";
-            my @files = glob($globtxt);
-            if ($#files == 0) {
-                $self->warn("No files found matching $globtxt");
-            } elsif ($#files > 1) {
-                $self->warn("$#files files found matching $globtxt, using first one. List: ".join(',',@files));
-            }
-            if($#files && $files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
-                $prio = $1;
-                $self->debug(3,"Found start prio $prio for $service");
-            } else {
-                $self->warn("Did not find start prio for $service, assume $prio");
-            }
+            $serviceprefix = 'S';
+        }
+
+        my $globtxt = "/etc/rc$currentrunlevel.d/$serviceprefix*$service";
+        my @files = glob($globtxt);
+        if ($#files == 0) {
+            $self->warn("No files found matching $globtxt");
+        } elsif ($#files > 1) {
+            $self->warn("$#files files found matching $globtxt, using first one.".
+                        " List: ".join(',',@files));
+        }
+        if($#files && $files[0] =~ m:/$serviceprefix(\d+)$service:) { # assume first file/link, if any.
+            $prio = $1;
+            $self->debug(3,"Found $action prio $prio for $service");
+        } else {
+            $self->warn("Did not find $action prio for $service, assume $prio");
+        }
+
+
+        if($action eq 'stop') {
+            push (@stop_list, [$prio, $line]);
+        } elsif ($action eq 'start') {
             if ($prio < $bootprio) {
                 push (@start_list, [$prio, $line]);
             } else {
