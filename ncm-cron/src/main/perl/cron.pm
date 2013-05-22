@@ -304,7 +304,7 @@ sub Configure {
             if (exists($syslog_params->{tagprefix})) {
                 $tag = $syslog_params->{tagprefix}.$tag;
             }
-            print $cronfh "$frequency $user ($command) 2&>1 |";
+            print $cronfh "$frequency $user ($command) 2>&1 |";
             print $cronfh "$syslog_logger_fn -t $tag -p $syslog_params->{facility}.$syslog_params->{level}\n";
         } else {
             if (! $log_to_file) {
