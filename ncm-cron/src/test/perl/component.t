@@ -4,9 +4,7 @@ use warnings;
 use Test::More;
 use CAF::Object;
 use Test::Quattor qw(cron_syslog);
-use File::Path qw(mkpath);
 use NCM::Component::cron;
-use Test::MockModule;
 
 
 $CAF::Object::NoAction = 1;
