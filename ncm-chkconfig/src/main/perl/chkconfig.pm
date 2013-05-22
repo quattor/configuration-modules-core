@@ -23,11 +23,20 @@ use strict;
 use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
+
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::chkconfig::NoActionSupported = 1;
 
 use NCM::Check;
 use CAF::Process;
+
+# these won't be turned off with default settings
+use constant DEFAULT_PROTECTED_SERVICES  => qw(
+                                               'network'
+                                               'messagebus'
+                                               'haldaemon'
+                                               'sshd'
+                                               );
 
 my $chkconfigcmd = "/sbin/chkconfig";
 my $servicecmd   = "/sbin/service";
@@ -36,49 +45,33 @@ my $servicecmd   = "/sbin/service";
 sub Configure {
 ##########################################################################
     my ($self,$config)=@_;
-    my $default = 'ignore';
-    my %currentservices;
-    my %configuredservices;
+    my (%configuredservices, @cmdlist, @servicecmdlist, $default);
 
-    my $currentrunlevel;
+    my $tree = $config->getElement('/software/components/chkconfig')->getTree();
 
-    if ($config->elementExists('/software/components/chkconfig/default')) {
-        $default=$config->getValue('/software/components/chkconfig/default');
+    if (exists($tree{default}) {
+        $default = $tree{default};
+    } else {
+        $default = 'ignore';
     }
-    $self->info("default setting for non-specified services: $default");
+    $self->info("Default setting for non-specified services: $default");
 
-    %currentservices = $self->get_current_services_hash();
+    my %currentservices = $self->get_current_services_hash();
 
-    $currentrunlevel = $self->getcurrentrunlevel();
+    my $currentrunlevel = $self->getcurrentrunlevel();
 
-    my $valPath = '/software/components/chkconfig/service';
 
-    unless($config->elementExists($valPath)) {
-        $self->error("cannot get $valPath");
-        return;
-    }
-    my $srvcs = $config->getElement($valPath);
-
-    my @cmdlist;
-    my @servicecmdlist;
-
-    while($srvcs->hasNextElement()) {
-        my $startstop;
-        my $cs = $srvcs->getNextElement(); #current service
-        my $service = $self->unescape($cs->getName());
+    while(my ($cs, $detail) = each $tree{service}) {
+        my ($service, $startstop);
 
         #get startstop value if it exists
-        my $servpath = $cs->getPath()->toString();
-
-        if($config->elementExists("$servpath/startstop")) {
-            my $ssel = $config->getElement("$servpath/startstop");
-            $startstop = $ssel->getValue();
-        }
+        $startstop = $detail{startstop} if (exists($detail{startstop}));
 
         #override the service name to use value of 'name' if it is set
-        if($config->elementExists("$servpath/name")) {
-            my $nameel = $config->getElement("$servpath/name");
-            $service = $nameel->getValue();
+        if (exists($detail{name})) {
+            $service = $detail{name};
+        } else {
+            $service = $self->unescape($cs);
         }
 
         # remember about this one for later
@@ -88,50 +81,50 @@ sub Configure {
         # of the more obvious ones, but eventually we need a single
         # entry per service.
 
-        while($cs->hasNextElement()) {
-
-            my $opt = $cs->getNextElement();
-            my $optname = lc($opt->getName());
-            my $optval =  lc($opt->getValue());
+        while(my ($optname, $optval) = each $detail) {
             chomp $optval;
+            my $msg = "$service: ";
 
             # 6 kinds of entries: on,off,reset,add,del and startstop.
             if($optname eq 'add' and $optval eq 'true') {
-                if($config->elementExists("$servpath/del")) {
-                    $self->warn("service $service has both 'add' and 'del' settings defined, 'del' wins");
-                } elsif($config->elementExists("$servpath/on")) {
-                    $self->info("service $service has both 'add' and 'on' settings defined, 'on' implies 'add'");
+                if(exists($detail{del})) {
+                    $self->warn("Service $service has both 'add' and 'del' settings defined, 'del' wins");
+                } elsif($detail{on}) {
+                    $self->info("Service $service has both 'add' and 'on' settings defined, 'on' implies 'add'");
                 } elsif (! $currentservices{$service} ) {
+                    $msg .= "adding to chkconfig";
                     push(@cmdlist, [$chkconfigcmd, "--add", $service]);
-                    $self->info("$service: adding to chkconfig");
 
-                    if($startstop and $startstop eq 'true') {
+                    if($startstop) {
                         # this smells broken - shouldn't we check the desired runlevel? At least we no longer do this at install time.
+                        $msg .= " and starting";
                         push(@servicecmdlist, [$servicecmd, $service, "start"]);
                     }
+                    $self->info($msg);
                 } else {
                     $self->debug(2, "$service is already known to chkconfig, no need to 'add'");
                 }
-            } elsif ($optname eq 'del' and $optval eq 'true') {
+            } elsif ($optname eq 'del' and $optval) {
                 if ($currentservices{$service} ) {
+                    $msg .= "removing from chkconfig";
                     push(@cmdlist, [$chkconfigcmd, $service, "off"]);
                     push(@cmdlist, [$chkconfigcmd, "--del", $service]);
-                    $self->info("$service: removing from chkconfig");
 
-                    if($startstop and $startstop eq 'true') {
+                    if($startstop) {
+                        $msg .= " and stopping";
                         push(@servicecmdlist, [$servicecmd, $service, "stop"]);
                     }
+                    $self->info($msg);
                 } else {
                     $self->debug(2, "$service is not known to chkconfig, no need to 'del'");
                 }
-
             } elsif ($optname eq 'on') {
-                if($config->elementExists("$servpath/off")) {
-                    $self->warn("service $service has both 'on' and 'off' settings defined, 'off' wins");
-                } elsif ($config->elementExists("$servpath/del")) {
-                    $self->warn("service $service has both 'on' and 'del' settings defined, 'del' wins");
-                } elsif(!validrunlevels($optval)) {
-                    $self->warn("invalid runlevel string $optval defined for ".
+                if(exists($detail{off})) {
+                    $self->warn("Service $service has both 'on' and 'off' settings defined, 'off' wins");
+                } elsif (exists($detail{del})) {
+                    $self->warn("Service $service has both 'on' and 'del' settings defined, 'del' wins");
+                } elsif(!$self->validrunlevels($optval)) {
+                    $self->warn("Invalid runlevel string $optval defined for ".
                                 "option \'$optname\' in service $service, ignoring");
                 } else {
                     if(!$optval) {
@@ -150,24 +143,26 @@ sub Configure {
                         push(@cmdlist, [$chkconfigcmd, "--add", $service]);
                     }
                     if ($optval ne $currentlevellist) {
-                        $self->info("$service was 'on' for \"$currentlevellist\", new list is \"$optval\"");
+                        $msg .= "was 'on' for \"$currentlevellist\", new list is \"$optval\"";
                         push(@cmdlist, [$chkconfigcmd, $service, "off"]);
                         push(@cmdlist, [$chkconfigcmd, "--level", $optval,
                              $service, "on"]);
                         if($startstop and $startstop eq 'true'
                                 and ($optval =~ /$currentrunlevel/)) {
+                            $msg .= " ; and starting";
                             push(@servicecmdlist,[$servicecmd, $service,
                                 "start"]);
                         }
+                        $self->info($msg);
                     } else {
                         $self->debug(2, "$service already 'on' for \"$optval\", nothing to do");
                     }
                 }
             } elsif ($optname eq 'off') {
-                if($config->elementExists("$servpath/del")) {
+                if(exists($detail{del})) {
                     $self->info("service $service has both 'off' and 'del' settings defined, 'del' wins");
-                } elsif(!validrunlevels($optval)) {
-                    $self->warn("invalid runlevel string $optval defined for ".
+                } elsif(!$self->validrunlevels($optval)) {
+                    $self->warn("Invalid runlevel string $optval defined for ".
                                 "option \'$optname\' in service $service");
                 } else {
                     if(!$optval) {
@@ -193,46 +188,48 @@ sub Configure {
                     if ($currentlevellist &&        # do not attempt to turn off a non-existing service
                             $todo &&                    # do nothing if service is already off for everything we'd like to turn off..
                             ($optval ne $currentlevellist)) {
-                        $self->info("$service was 'off' for '$currentlevellist', new list is '$optval', diff is '$todo'");
+                        $msg .= "was 'off' for '$currentlevellist', new list is '$optval', diff is '$todo'";
                         push(@cmdlist, [$chkconfigcmd, "--level", $optval,
                                         $service, "off"]);
-                        if($startstop and $startstop eq 'true'
-                                and ($optval =~ /$currentrunlevel/)) {
+                        if($startstop and ($optval =~ /$currentrunlevel/)) {
+                            $msg .= "; and stopping";
                             push(@cmdlist, [$servicecmd, $service, "stop"]);
                         }
+                        $self->info($msg);
                     }
                 }
             } elsif ($optname eq 'reset') {
-                if($config->elementExists("$servpath/del")) {
+                if(exists($detail{del})) {
                     $self->warn("service $service has both 'reset' and 'del' settings defined, 'del' wins");
-                } elsif($config->elementExists("$servpath/off")) {
+                } elsif(exists($detail{off})) {
                     $self->warn("service $service has both 'reset' and 'off' settings defined, 'off' wins");
-                } elsif($config->elementExists("$servpath/on")) {
+                } elsif(exists($detail{on})) {
                     $self->warn("service $service has both 'reset' and 'on' settings defined, 'on' wins");
-                } elsif(validrunlevels($optval)) {
+                } elsif($self->validrunlevels($optval)) {
                     # FIXME - check against current?.
+                    $msg .= 'chkconfig reset';
                     if($optval) {
                         push(@cmdlist,[$chkconfigcmd, "--level", $optval,
                                         $service, "reset"]);
                     } else {
                         push(@cmdlist, [$chkconfigcmd, $service, "reset"]);
                     }
+                    $self->info($msg);
                 } else {
-                    $self->warn("invalid runlevel string $optval defined for ".
+                    $self->warn("Invalid runlevel string $optval defined for ".
                                 "option $optname in service $service");
                 }
-
             } elsif ($optname eq 'startstop' or $optname eq 'add' or
                         $optname eq 'del' or $optname eq 'name') {
                 # do nothing
             } else {
-                $self->error("undefined option name $optname in service $service");
+                $self->error("Undefined option name $optname in service $service");
                 return;
             }
         } # while
     } # while
 
-    # check for leftover services that are known to the machine but not in CDB
+    # check for leftover services that are known to the machine but not in template
     if ($default eq 'off') {
         $self->debug(2,"Looking for other services to turn 'off'");
         for my $oldservice (keys(%currentservices)) {
@@ -241,15 +238,15 @@ sub Configure {
                 next;
             }
             # special case "network" and friends, awfully hard to recover from if turned off.. #54376
-            my @services_protected_against_dumb_admin = ('network', 'messagebus', 'haldaemon', 'sshd');
-            if(grep { $oldservice eq $_ } @services_protected_against_dumb_admin)  {
-                $self->warn("cowardly refusing to turn '$oldservice' off via a default setting..");
+            if(grep { $oldservice eq $_ } DEFAULT_PROTECTED_SERVICES)  {
+                $self->warn("DEFAULT_PROTECTED_SERVICES: refusing to turn '$oldservice' off via a default setting.");
                 next;
             }
             # turn 'em off.
             if (defined($currentrunlevel) and  $currentservices{$oldservice}[$currentrunlevel] ne 'off' ) {
                 # they supposedly are even active _right now_.
                 $self->debug(2,"$oldservice was not 'off' in current level $currentrunlevel, 'off'ing and 'stop'ping it..");
+                $self->info("$oldservice: oldservice stop and chkconfig off");
                 push(@servicecmdlist, [$servicecmd, $oldservice, "stop"]);
                 push(@cmdlist, [$chkconfigcmd, $oldservice, "off"]);
             } else {
@@ -271,16 +268,12 @@ sub Configure {
         }
     }
 
-
     #perform the "chkconfig" commands
     for my $cmd (@cmdlist) {
-        # TODO: remove or not? previous code had @$cmd in join when $cmd was undefined, which would crash perl
-        next if(!defined("$cmd"));
-
         my $out = CAF::Process->new($cmd, log=>$self)->output();
         if ($? >> 8) {
             chomp($out);
-            $self->warn($out);
+            $self->warn("Exitcode $?, output $out");
         }
     }
 
@@ -290,18 +283,15 @@ sub Configure {
             my @filteredservicelist = $self->service_filter(@servicecmdlist);
             my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
             for my $cmd (@orderedservicecmdlist) {
-                # TODO: remove or not? previous code had @$cmd in join when $cmd was undefined, which would crash perl
-                next if(!defined("$cmd"));
-
                 my $out = CAF::Process->new($cmd, log=>$self)->output();
                 if ($? >> 8) {
                     chomp($out);
-                    $self->warn($out);
+                    $self->warn("Exitcode $?, output $out");
                 }
             }
         }
     } else {
-        $self->info("not running any 'service' commands at install time.");
+        $self->info("Not running any 'service' commands at install time.");
     }
     return;
 }
@@ -321,9 +311,7 @@ sub service_filter {
     #   If in doubt, we leave the command..
     my $self = shift;
     my @service_actions = @_;
-    my $service;
-    my $action;
-    my @new_actions;
+    my ($service, $action, @new_actions);
     for my $line (@service_actions) {
         $service = $line->[1];
         $action = $line->[2];
@@ -332,22 +320,21 @@ sub service_filter {
 
         if($action eq 'start' && $current_state =~ /is running/s ) {
             $self->debug(2,"$service already running, no need to '$action'");
-            next;
         } elsif ($action eq 'stop' && $current_state =~ /is stopped/s ) {
             $self->debug(2,"$service already stopped, no need to '$action'");
-            next;
         } else {    # keep.
             if( $current_state =~ /is (running|stopped)/s) {  # these are obvious - not the desired state.
                 $self->debug(2,"$service: '$current_state', needs '$action'");
             } else {
                 # can't figure out
-                $self->info("can't figure out whether $service needs $action from\n$current_state");
+                $self->info("Can't figure out whether $service needs $action from\n$current_state");
             }
             push(@new_actions, [$servicecmd, $service, $action]);
         }
     }
     return @new_actions;
 }
+
 ##########################################################################
 sub service_order {
 ##########################################################################
@@ -359,12 +346,8 @@ sub service_order {
     my $self = shift;
     my $currentrunlevel = shift;
     my @service_actions = @_;
-    my @new_actions;
-    my @stop_list;
-    my @start_list;
+    my (@new_actions, @stop_list, @start_list, $service, $action);
     my $bootprio = 999; # FIXME: until we can figure that out
-    my $service;
-    my $action;
 
     for my $line (@service_actions) {
         $service = $line->[1];
@@ -375,34 +358,32 @@ sub service_order {
             $prio = 99;
             my $globtxt = "/etc/rc".$currentrunlevel.".d/K*$service";
             my @files = glob($globtxt);
-            my $nrfiles = scalar @files;
-            if ($nrfiles == 0) {
+            if ($#files == 0) {
                 $self->warn("No files found matching $globtxt");
-            } elsif ($nrfiles > 1) {
-                $self->warn("$nrfiles files found matching $globtxt, using first one. List: ".join(',',@files));
+            } elsif ($#files > 1) {
+                $self->warn("$#files files found matching $globtxt, using first one. List: ".join(',',@files));
             }
-            if($nrfiles && $files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
+            if($#files && $files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
                 $prio = $1;
-                $self->debug(3,"found stop prio $prio for $service");
+                $self->debug(3,"Found stop prio $prio for $service");
             } else {
-                $self->debug(3,"did not find stop prio for $service, assume $prio");
+                $self->debug(3,"Did not find stop prio for $service, assume $prio");
             }
             push (@stop_list, [$prio, $line]);
         } elsif ($action eq 'start') {
             $prio = 1; # actually, these all should be chkconfiged on!
             my $globtxt = "/etc/rc".$currentrunlevel.".d/S*$service";
             my @files = glob($globtxt);
-            my $nrfiles = scalar @files;
-            if ($nrfiles == 0) {
+            if ($#files == 0) {
                 $self->warn("No files found matching $globtxt");
-            } elsif ($nrfiles > 1) {
-                $self->warn("$nrfiles files found matching $globtxt, using first one. List: ".join(',',@files));
+            } elsif ($#files > 1) {
+                $self->warn("$#files files found matching $globtxt, using first one. List: ".join(',',@files));
             }
-            if($nrfiles && $files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
+            if($#files && $files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
                 $prio = $1;
-                $self->debug(3,"found start prio $prio for $service");
+                $self->debug(3,"Found start prio $prio for $service");
             } else {
-                $self->warn("did not find start prio for $service, assume $prio");
+                $self->warn("Did not find start prio for $service, assume $prio");
             }
             if ($prio < $bootprio) {
                 push (@start_list, [$prio, $line]);
@@ -419,9 +400,9 @@ sub service_order {
 }
 
 ##########################################################################
-sub validrunlevels(\$) {
+sub validrunlevels {
 ##########################################################################
-    my $str = shift;
+    my ($self, $str) = @_;
     chomp($str);
 
     return 1 unless ($str);
@@ -434,49 +415,41 @@ sub validrunlevels(\$) {
 }
 
 ##########################################################################
-sub getcurrentrunlevel($) {
+sub getcurrentrunlevel {
 ##########################################################################
     my $self = shift;
     my $level = 3;
     if( -x "/sbin/runlevel" ) {
-        if(! open(LV, "/sbin/runlevel|")) {
-            $self->error("cannot launch '/sbin/runlevel': $!")
+        my $line = CAF::Process->new(["/sbin/runlevel"],log=>$self)->output();
+        chomp($line);
+        # N 5
+        if ($line && $line =~ /\w+\s+(\d+)/) {
+            $level = $1;
+            $self->info("Current runlevel is $level");
         } else {
-            my $line = <LV>;
-            chomp($line);
-            # N 5
-            if ($line =~ /\w\s(\d)/) {
-                $level = $1;
-                $self->info("current runlevel is $level");
-            } else {
-                $self->info("cannot get runlevel from 'runlevel': $line (during installation?)");  # happens at install time
-                $level=undef;
-            }
+            $self->info("Cannot get runlevel from 'runlevel': $line (during installation?) (exitcode $?)");  # happens at install time
+            $level=undef;
         }
     } elsif ( -x "/usr/bin/who" ) {
-        if(! open(LV, "/usr/bin/who -r |")) {
-            $self->error("cannot launch '/usr/bin/who -r': $!")
+        my $line = CAF::Process->new(["/usr/bin/who","-r"],log=>$self)->output();
+        chomp($line);
+        #          run-level 5  Feb 19 16:08                   last=S
+        if ($line && $line =~ /run-level\s+(\d+)\s/) {
+            $level = $1;
+            $self->info("Current runlevel is $level");
         } else {
-            my $line = <LV>;
-            chomp($line);
-            #          run-level 5  Feb 19 16:08                   last=S
-            if ($line =~ /run-level\s+(\d+)\s/) {
-                $level = $1;
-                $self->info("current runlevel is $level");
-            } else {
-                $self->info("cannot get runlevel from 'who -r': $line (during installation?)");
-                $level=undef;
-            }
+            $self->info("Cannot get runlevel from 'who -r': $line (during installation?) (exitcode $?)");
+            $level=undef;
         }
     } else {
-        $self->warn("no way to determine current runlevel, assuming $level");
+        $self->warn("No way to determine current runlevel, assuming $level");
     }
     return $level;
 }
 
 ##########################################################################
 # see what is currently configured in terms of services
-sub get_current_services_hash($) {
+sub get_current_services_hash {
 ##########################################################################
     my $self = shift;
     my %current;
