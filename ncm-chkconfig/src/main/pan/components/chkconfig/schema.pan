@@ -14,7 +14,7 @@ declaration template components/chkconfig/schema;
 
 include { 'quattor/schema' };
 
-function chkconfig_allow_combinations {
+function chkconfig_allow_combinations = {
     if ( ARGC != 1 || ! is_nlist(ARGV[0]) ) {
         error(function_name + ' requires 1 nlist as argument');
     };
@@ -30,10 +30,10 @@ function chkconfig_allow_combinations {
             foreach(idx;act;actlist) {
                 if (exists(service[act])) {
                     error(format("Cannot combine '%s' with '%s' (%s would win).",winact,act,winact));
-                }
-            }
-        }
-    }
+                };
+            };
+        };
+    };
     true;
 };
 
