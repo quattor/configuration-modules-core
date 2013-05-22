@@ -381,8 +381,15 @@ sub service_order {
         my $prio;
         if($action eq 'stop') {
             $prio = 99;
-            my @files = glob("/etc/rc".$currentrunlevel.".d/K*$service");
-            if($files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
+            my $globtxt = "/etc/rc".$currentrunlevel.".d/K*$service";
+            my @files = glob($globtxt);
+            my $nrfiles = scalar @files;
+            if ($nrfiles == 0) {
+                $self->warn("No files found matching $globtxt");
+            } elsif ($nrfiles > 1) {
+                $self->warn("$nrfiles files found matching $globtxt, using first one. List: ".join(',',@files));
+            }
+            if($nrfiles && $files[0] =~ m:/K(\d+)$service:) { # assume first file/link, if any.
                 $prio = $1;
                 $self->debug(3,"found stop prio $prio for $service");
             } else {
@@ -391,8 +398,15 @@ sub service_order {
             push (@stop_list, [$prio, $line]);
         } elsif ($action eq 'start') {
             $prio = 1; # actually, these all should be chkconfiged on!
-            my @files = glob("/etc/rc".$currentrunlevel.".d/S*$service");
-            if($files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
+            my $globtxt = "/etc/rc".$currentrunlevel.".d/S*$service";
+            my @files = glob($globtxt);
+            my $nrfiles = scalar @files;
+            if ($nrfiles == 0) {
+                $self->warn("No files found matching $globtxt");
+            } elsif ($nrfiles > 1) {
+                $self->warn("$nrfiles files found matching $globtxt, using first one. List: ".join(',',@files));
+            }
+            if($nrfiles && $files[0] =~ m:/S(\d+)$service:) { # assume first file/link, if any.
                 $prio = $1;
                 $self->debug(3,"found start prio $prio for $service");
             } else {
