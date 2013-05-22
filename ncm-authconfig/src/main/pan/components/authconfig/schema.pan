@@ -416,7 +416,7 @@ type authconfig_sssd_local = {
        "userdel_cmd" ? string
 };
 
-type authconfig_sssd_domain  = extensible {
+type authconfig_sssd_domain  = {
     "ldap" ? authconfig_sssd_ldap
     "simple" ? authconfig_sssd_simple
     "local" ? authconfig_sssd_local
