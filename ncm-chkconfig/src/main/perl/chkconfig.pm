@@ -44,13 +44,13 @@ my $servicecmd   = "/sbin/service";
 ##########################################################################
 sub Configure {
 ##########################################################################
-    my ($self,$config)=@_;
+    my ($self, $config)=@_;
     my (%configuredservices, @cmdlist, @servicecmdlist, $default);
 
-    my $tree = $config->getElement('/software/components/chkconfig')->getTree();
+    my $tree = $config->getElement('/software/components/chkconfig')->getTree;
 
-    if (exists($tree{default}) {
-        $default = $tree{default};
+    if (exists($tree->{default})) {
+        $default = $tree->{default};
     } else {
         $default = 'ignore';
     }
@@ -61,15 +61,15 @@ sub Configure {
     my $currentrunlevel = $self->getcurrentrunlevel();
 
 
-    while(my ($cs, $detail) = each $tree{service}) {
+    while(my ($cs, $detail) = each %{$tree->{service}}) {
         my ($service, $startstop);
 
         #get startstop value if it exists
-        $startstop = $detail{startstop} if (exists($detail{startstop}));
+        $startstop = $detail->{startstop} if (exists($detail->{startstop}));
 
         #override the service name to use value of 'name' if it is set
-        if (exists($detail{name})) {
-            $service = $detail{name};
+        if (exists($detail->{name})) {
+            $service = $detail->{name};
         } else {
             $service = $self->unescape($cs);
         }
@@ -81,15 +81,15 @@ sub Configure {
         # of the more obvious ones, but eventually we need a single
         # entry per service.
 
-        while(my ($optname, $optval) = each $detail) {
+        while(my ($optname, $optval) = each %$detail) {
             chomp $optval;
             my $msg = "$service: ";
 
             # 6 kinds of entries: on,off,reset,add,del and startstop.
             if($optname eq 'add' and $optval eq 'true') {
-                if(exists($detail{del})) {
+                if(exists($detail->{del})) {
                     $self->warn("Service $service has both 'add' and 'del' settings defined, 'del' wins");
-                } elsif($detail{on}) {
+                } elsif($detail->{on}) {
                     $self->info("Service $service has both 'add' and 'on' settings defined, 'on' implies 'add'");
                 } elsif (! $currentservices{$service} ) {
                     $msg .= "adding to chkconfig";
@@ -119,9 +119,9 @@ sub Configure {
                     $self->debug(2, "$service is not known to chkconfig, no need to 'del'");
                 }
             } elsif ($optname eq 'on') {
-                if(exists($detail{off})) {
+                if(exists($detail->{off})) {
                     $self->warn("Service $service has both 'on' and 'off' settings defined, 'off' wins");
-                } elsif (exists($detail{del})) {
+                } elsif (exists($detail->{del})) {
                     $self->warn("Service $service has both 'on' and 'del' settings defined, 'del' wins");
                 } elsif(!$self->validrunlevels($optval)) {
                     $self->warn("Invalid runlevel string $optval defined for ".
@@ -133,7 +133,7 @@ sub Configure {
                     }
                     my $currentlevellist = "";
                     if ($currentservices{$service} ) {
-                        for my $i (0.. 6) {
+                        foreach my $i (0.. 6) {
                             if ($currentservices{$service}[$i] eq 'on') {
                                 $currentlevellist .= "$i";
                             }
@@ -159,7 +159,7 @@ sub Configure {
                     }
                 }
             } elsif ($optname eq 'off') {
-                if(exists($detail{del})) {
+                if(exists($detail->{del})) {
                     $self->info("service $service has both 'off' and 'del' settings defined, 'del' wins");
                 } elsif(!$self->validrunlevels($optval)) {
                     $self->warn("Invalid runlevel string $optval defined for ".
@@ -172,12 +172,12 @@ sub Configure {
                     my $currentlevellist = "";
                     my $todo = "";
                     if ($currentservices{$service} ) {
-                        for my $i (0.. 6) {
+                        foreach my $i (0.. 6) {
                             if ($currentservices{$service}[$i] eq 'off') {
                                 $currentlevellist .= "$i";
                             }
                         }
-                        for my $s (split('',$optval)) {
+                        foreach my $s (split('',$optval)) {
                             if ($currentlevellist !~ /$s/) {
                                 $todo .="$s";
                             } else {
@@ -199,11 +199,11 @@ sub Configure {
                     }
                 }
             } elsif ($optname eq 'reset') {
-                if(exists($detail{del})) {
+                if(exists($detail->{del})) {
                     $self->warn("service $service has both 'reset' and 'del' settings defined, 'del' wins");
-                } elsif(exists($detail{off})) {
+                } elsif(exists($detail->{off})) {
                     $self->warn("service $service has both 'reset' and 'off' settings defined, 'off' wins");
-                } elsif(exists($detail{on})) {
+                } elsif(exists($detail->{on})) {
                     $self->warn("service $service has both 'reset' and 'on' settings defined, 'on' wins");
                 } elsif($self->validrunlevels($optval)) {
                     # FIXME - check against current?.
@@ -232,7 +232,7 @@ sub Configure {
     # check for leftover services that are known to the machine but not in template
     if ($default eq 'off') {
         $self->debug(2,"Looking for other services to turn 'off'");
-        for my $oldservice (keys(%currentservices)) {
+        foreach my $oldservice (keys(%currentservices)) {
             if ($configuredservices{$oldservice}) {
                 $self->debug(2,"$oldservice is explicitly configured, keeping it");
                 next;
@@ -252,7 +252,7 @@ sub Configure {
             } else {
                 # see whether this was non-off somewhere else
                 my $was_on = "";
-                for my $i ((0..6)) {
+                foreach my $i ((0..6)) {
                     if ( $currentservices{$oldservice}[$i] ne 'off' ) {
                         $was_on .= $i;
                     }
@@ -269,7 +269,7 @@ sub Configure {
     }
 
     #perform the "chkconfig" commands
-    for my $cmd (@cmdlist) {
+    foreach my $cmd (@cmdlist) {
         my $out = CAF::Process->new($cmd, log=>$self)->output();
         if ($? >> 8) {
             chomp($out);
@@ -282,7 +282,7 @@ sub Configure {
         if ($#servicecmdlist >= 0) {
             my @filteredservicelist = $self->service_filter(@servicecmdlist);
             my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
-            for my $cmd (@orderedservicecmdlist) {
+            foreach my $cmd (@orderedservicecmdlist) {
                 my $out = CAF::Process->new($cmd, log=>$self)->output();
                 if ($? >> 8) {
                     chomp($out);
@@ -293,7 +293,6 @@ sub Configure {
     } else {
         $self->info("Not running any 'service' commands at install time.");
     }
-    return;
 }
 
 ##########################################################################
@@ -312,7 +311,7 @@ sub service_filter {
     my $self = shift;
     my @service_actions = @_;
     my ($service, $action, @new_actions);
-    for my $line (@service_actions) {
+    foreach my $line (@service_actions) {
         $service = $line->[1];
         $action = $line->[2];
 
@@ -349,7 +348,7 @@ sub service_order {
     my (@new_actions, @stop_list, @start_list, $service, $action);
     my $bootprio = 999; # FIXME: until we can figure that out
 
-    for my $line (@service_actions) {
+    foreach my $line (@service_actions) {
         $service = $line->[1];
         $action = $line->[2];
 
@@ -453,15 +452,18 @@ sub get_current_services_hash {
 ##########################################################################
     my $self = shift;
     my %current;
-    if(! open (GET, "$chkconfigcmd --list |")) {
-        $self->error("cannot get list of current services from $chkconfigcmd: $!");
+    my $data = CAF::Process->new([$chkconfigcmd, '--list'],log=>$self)->output();
+
+    if($?) {
+        $self->error("Cannot get list of current services from $chkconfigcmd: $!");
         return;
-    }
-    while(<GET>) {
-        # afs       0:off   1:off   2:off   3:off   4:off   5:off   6:off
-        # ignore the "xinetd based services"
-        if (/^([\w\-]+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
-            $current{$1} = [$2,$3,$4,$5,$6,$7,$8];
+    } else {
+        foreach my $line (split(/\n/,$data)) {
+            # afs       0:off   1:off   2:off   3:off   4:off   5:off   6:off
+            # ignore the "xinetd based services"
+            if ($line =~ m/^([\w\-]+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
+                $current{$1} = [$2,$3,$4,$5,$6,$7,$8];
+            }
         }
     }
     return %current;
