@@ -28,15 +28,16 @@ $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::chkconfig::NoActionSupported = 1;
 
 use NCM::Check;
+use EDG::WP4::CCM::Element qw(unescape);
 use CAF::Process;
 
 # these won't be turned off with default settings
-use constant DEFAULT_PROTECTED_SERVICES  => qw(
-                                               'network'
-                                               'messagebus'
-                                               'haldaemon'
-                                               'sshd'
-                                               );
+my %default_protected_services = (
+    network => 1,
+    messagebus => 1,
+    haldaemon => 1,
+    sshd => 1,
+);
 
 my $chkconfigcmd = "/sbin/chkconfig";
 my $servicecmd   = "/sbin/service";
@@ -71,7 +72,7 @@ sub Configure {
         if (exists($detail->{name})) {
             $service = $detail->{name};
         } else {
-            $service = $self->unescape($cs);
+            $service = unescape($cs);
         }
 
         # remember about this one for later
@@ -80,13 +81,11 @@ sub Configure {
         # unfortunately not all combinations make sense. Check for some
         # of the more obvious ones, but eventually we need a single
         # entry per service.
-
         while(my ($optname, $optval) = each %$detail) {
-            chomp $optval;
             my $msg = "$service: ";
 
             # 6 kinds of entries: on,off,reset,add,del and startstop.
-            if($optname eq 'add' and $optval eq 'true') {
+            if($optname eq 'add' && $optval) {
                 if(exists($detail->{del})) {
                     $self->warn("Service $service has both 'add' and 'del' settings defined, 'del' wins");
                 } elsif($detail->{on}) {
@@ -104,7 +103,7 @@ sub Configure {
                 } else {
                     $self->debug(2, "$service is already known to chkconfig, no need to 'add'");
                 }
-            } elsif ($optname eq 'del' and $optval) {
+            } elsif ($optname eq 'del' && $optval) {
                 if ($currentservices{$service} ) {
                     $msg .= "removing from chkconfig";
                     push(@cmdlist, [$chkconfigcmd, $service, "off"]);
@@ -147,11 +146,9 @@ sub Configure {
                         push(@cmdlist, [$chkconfigcmd, $service, "off"]);
                         push(@cmdlist, [$chkconfigcmd, "--level", $optval,
                              $service, "on"]);
-                        if($startstop and $startstop eq 'true'
-                                and ($optval =~ /$currentrunlevel/)) {
+                        if($startstop && ($optval =~ /$currentrunlevel/)) {
                             $msg .= " ; and starting";
-                            push(@servicecmdlist,[$servicecmd, $service,
-                                "start"]);
+                            push(@servicecmdlist,[$servicecmd, $service, "start"]);
                         }
                         $self->info($msg);
                     } else {
@@ -238,8 +235,8 @@ sub Configure {
                 next;
             }
             # special case "network" and friends, awfully hard to recover from if turned off.. #54376
-            if(grep { $oldservice eq $_ } DEFAULT_PROTECTED_SERVICES)  {
-                $self->warn("DEFAULT_PROTECTED_SERVICES: refusing to turn '$oldservice' off via a default setting.");
+            if(exists($default_protected_services{$oldservice}))  {
+                $self->warn("default_protected_services: refusing to turn '$oldservice' off via a default setting.");
                 next;
             }
             # turn 'em off.
@@ -269,26 +266,14 @@ sub Configure {
     }
 
     #perform the "chkconfig" commands
-    foreach my $cmd (@cmdlist) {
-        my $out = CAF::Process->new($cmd, log=>$self)->output();
-        if ($? >> 8) {
-            chomp($out);
-            $self->warn("Exitcode $?, output $out");
-        }
-    }
+    $self->run_and_warn(\@cmdlist);
 
     #perform the "service" commands - these need ordering and filtering
     if($currentrunlevel) {
         if ($#servicecmdlist >= 0) {
             my @filteredservicelist = $self->service_filter(@servicecmdlist);
             my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
-            foreach my $cmd (@orderedservicecmdlist) {
-                my $out = CAF::Process->new($cmd, log=>$self)->output();
-                if ($? >> 8) {
-                    chomp($out);
-                    $self->warn("Exitcode $?, output $out");
-                }
-            }
+            $self->run_and_warn(\@orderedservicecmdlist);
         }
     } else {
         $self->info("Not running any 'service' commands at install time.");
@@ -308,8 +293,7 @@ sub service_filter {
     #   drop anything that isn't from being stopped.
     #   relies on 'service bla status' to return something useful (lots don't).
     #   If in doubt, we leave the command..
-    my $self = shift;
-    my @service_actions = @_;
+    my ($self, @service_actions) = @_;
     my ($service, $action, @new_actions);
     foreach my $line (@service_actions) {
         $service = $line->[1];
@@ -342,9 +326,7 @@ sub service_order {
     #   Ideally, figure out whether we are booting, and at what priority, and don't do things that will be done anyway..
     #   might get some services that need stopping but are no longer registered with chkconfig - these get killed late.
 
-    my $self = shift;
-    my $currentrunlevel = shift;
-    my @service_actions = @_;
+    my ($self, $currentrunlevel, @service_actions) = @_;
     my (@new_actions, @stop_list, @start_list, $service, $action);
     my $bootprio = 999; # FIXME: until we can figure that out
 
@@ -363,13 +345,14 @@ sub service_order {
 
         my $globtxt = "/etc/rc$currentrunlevel.d/$serviceprefix*$service";
         my @files = glob($globtxt);
-        if ($#files == 0) {
+        my $nrfiles = scalar(@files);
+        if ($nrfiles == 0) {
             $self->warn("No files found matching $globtxt");
-        } elsif ($#files > 1) {
-            $self->warn("$#files files found matching $globtxt, using first one.".
+        } elsif ($nrfiles > 1) {
+            $self->warn("$nrfiles files found matching $globtxt, using first one.".
                         " List: ".join(',',@files));
         }
-        if($#files && $files[0] =~ m:/$serviceprefix(\d+)$service:) { # assume first file/link, if any.
+        if($nrfiles && $files[0] =~ m:/$serviceprefix(\d+)$service:) { # assume first file/link, if any.
             $prio = $1;
             $self->debug(3,"Found $action prio $prio for $service");
         } else {
@@ -422,7 +405,7 @@ sub getcurrentrunlevel {
             $level = $1;
             $self->info("Current runlevel is $level");
         } else {
-            $self->info("Cannot get runlevel from 'runlevel': $line (during installation?) (exitcode $?)");  # happens at install time
+            $self->warn("Cannot get runlevel from 'runlevel': $line (during installation?) (exitcode $?)");  # happens at install time
             $level=undef;
         }
     } elsif ( -x "/usr/bin/who" ) {
@@ -433,7 +416,7 @@ sub getcurrentrunlevel {
             $level = $1;
             $self->info("Current runlevel is $level");
         } else {
-            $self->info("Cannot get runlevel from 'who -r': $line (during installation?) (exitcode $?)");
+            $self->warn("Cannot get runlevel from 'who -r': $line (during installation?) (exitcode $?)");
             $level=undef;
         }
     } else {
@@ -465,6 +448,18 @@ sub get_current_services_hash {
     return %current;
 }
 
+##########################################################################
+sub run_and_warn {
+##########################################################################
+    my ($self, $cmdlistref) = @_;
+    foreach my $cmd (@$cmdlistref) {
+        my $out = CAF::Process->new($cmd, log=>$self)->output();
+        if ($?) {
+            chomp($out);
+            $self->warn("Exitcode $?, output $out");
+        }
+    }
+}
 
 1; #required for Perl modules
 
