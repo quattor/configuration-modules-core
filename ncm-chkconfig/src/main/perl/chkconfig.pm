@@ -61,14 +61,18 @@ sub Configure {
 
     my $currentrunlevel = $self->getcurrentrunlevel();
 
-    while(my ($service, $detail) = each %{$tree->{service}}) {
-        my $startstop;
+    while(my ($escservice, $detail) = each %{$tree->{service}}) {
+        my ($service, $startstop);
 
         #get startstop value if it exists
         $startstop = $detail->{startstop} if (exists($detail->{startstop}));
 
         #override the service name to use value of 'name' if it is set
-        $service = $detail->{name} if (exists($detail->{name}));
+        if (exists($detail->{name})) {
+            $service = $detail->{name};
+        } else {
+            $service = unescape($escservice);
+        }
 
         # remember about this one for later
         $configuredservices{$service}=1;

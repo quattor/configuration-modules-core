@@ -5,7 +5,7 @@ use Test::More;
 use CAF::Object;
 use Test::Quattor qw(simple_services);
 use NCM::Component::chkconfig;
-
+use Readonly;
 
 $CAF::Object::NoAction = 1;
 
@@ -17,14 +17,14 @@ Test the C<Configure> method of the component.
 
 =cut
 
-my $chkconfig_list_output = <<EOF;
+Readonly my $CHKCONFIG_LIST_OUTPUT => <<EOF;
 test_on            0:off   1:off   2:off   3:off   4:off   5:off   6:off
 othername          0:off   1:off   2:off   3:off   4:off   5:off   6:off
 test_off           0:off   1:off   2:off   3:off   4:on    5:off   6:off
 test_del           0:off   1:off   2:off   3:off   4:off   5:off   6:off
 EOF
 
-set_desired_output("/sbin/chkconfig --list",$chkconfig_list_output);
+set_desired_output("/sbin/chkconfig --list",$CHKCONFIG_LIST_OUTPUT);
 
 set_desired_output("/sbin/runlevel","N 5");
 
