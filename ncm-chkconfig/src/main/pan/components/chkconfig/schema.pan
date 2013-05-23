@@ -15,6 +15,9 @@ declaration template components/chkconfig/schema;
 include { 'quattor/schema' };
 
 function chkconfig_allow_combinations = {
+    # Check if certain combinations of service_types are allowed
+    # Return true if they are allowed, throws an error otherwise
+
     if ( ARGC != 1 || ! is_nlist(ARGV[0]) ) {
         error('chkconfig_allow_combinations requires 1 nlist as argument');
     };
