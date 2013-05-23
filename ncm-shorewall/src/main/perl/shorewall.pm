@@ -163,7 +163,8 @@ use constant SHOREWALL_STRING => qw(verbosity
                                     tcp_flags_disposition
                                     );
 
-sub writecfg {
+sub writecfg
+{
     my ($self, $typ, $contents, $refreload) = @_;
 
     my $changed = 0;
@@ -202,7 +203,7 @@ sub rollback
     ## also the ones with -1!
     foreach my $typ (keys %$relref) {
         if (%$relref->{$typ}) {
-            my $cfgfile=SHOREWALLCFGDIR.$typ;
+            my $cfgfile = SHOREWALLCFGDIR.$typ;
             $cfgfile .=".conf" if ($typ eq "shorewall");
             ## move file to .failed
             my $src=$cfgfile;
@@ -257,20 +258,18 @@ sub tostring
     ## use this when
     my $empty='-';
 
-    if ($refref eq "ARRAY") {
-        if (scalar @$ref) {
-            return join(",",@$ref);
-        } else {
+    if (!$refref) {
+        if ($ref eq "") {
             return $empty;
         }
-    } elsif ($refref eq "SCALAR") {
-    } elsif ($refref eq "HASH") {
-    } else {
-        ## not a ref, just string
-        if ("$ref" eq "") {
-            return "-";
-        } else {
+        else {
             return $ref;
+        }
+    } elsif ($refref eq "ARRAY") {
+        if (@$ref) {
+            return join(",", @$ref);
+        } else {
+            return $empty;
         }
     }
 }
