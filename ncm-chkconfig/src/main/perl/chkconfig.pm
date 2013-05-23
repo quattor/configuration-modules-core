@@ -61,19 +61,14 @@ sub Configure {
 
     my $currentrunlevel = $self->getcurrentrunlevel();
 
-
-    while(my ($cs, $detail) = each %{$tree->{service}}) {
-        my ($service, $startstop);
+    while(my ($service, $detail) = each %{$tree->{service}}) {
+        my $startstop;
 
         #get startstop value if it exists
         $startstop = $detail->{startstop} if (exists($detail->{startstop}));
 
         #override the service name to use value of 'name' if it is set
-        if (exists($detail->{name})) {
-            $service = $detail->{name};
-        } else {
-            $service = unescape($cs);
-        }
+        $service = $detail->{name} if (exists($detail->{name}));
 
         # remember about this one for later
         $configuredservices{$service}=1;
@@ -168,7 +163,7 @@ sub Configure {
                     }
                     my $currentlevellist = "";
                     my $todo = "";
-                    if ($currentservices{$service} ) {
+                    if ($currentservices{$service}) {
                         foreach my $i (0.. 6) {
                             if ($currentservices{$service}[$i] eq 'off') {
                                 $currentlevellist .= "$i";
@@ -278,6 +273,8 @@ sub Configure {
     } else {
         $self->info("Not running any 'service' commands at install time.");
     }
+
+    return 1;
 }
 
 ##########################################################################
