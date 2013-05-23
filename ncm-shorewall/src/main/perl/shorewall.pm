@@ -249,6 +249,32 @@ sub testfail
 }
 
 
+sub tostring
+{
+    my ($self, $ref) = @_;
+    my $ref=shift;
+    my $refref=ref($ref);
+    ## use this when
+    my $empty='-';
+
+    if ($refref eq "ARRAY") {
+        if (scalar @$ref) {
+            return join(",",@$ref);
+        } else {
+            return $empty;
+        }
+    } elsif ($refref eq "SCALAR") {
+    } elsif ($refref eq "HASH") {
+    } else {
+        ## not a ref, just string
+        if ("$ref" eq "") {
+            return "-";
+        } else {
+            return $ref;
+        }
+    }
+}
+
 
 ##########################################################################
 sub Configure {
@@ -263,32 +289,6 @@ sub Configure {
     # Save the date.
     my $date = localtime();
 
-    sub tostring {
-        my $ref=shift;
-        my $refref=ref($ref);
-        ## use this when
-        my $empty='-';
-
-        if ($refref eq "ARRAY") {
-            if (scalar @$ref) {
-                return join(",",@$ref);
-            } else {
-                return $empty;
-            }
-        } elsif ($refref eq "SCALAR") {
-        } elsif ($refref eq "HASH") {
-        } else {
-            ## not a ref, just string
-            if ("$ref" eq "") {
-                return "-";
-            } else {
-                return $ref;
-            }
-        }
-    };
-
-
-
     #### BEGIN ZONES
     $type="zones";
     $tree=$config->getElement("$mypath/$type")->getTree;
@@ -296,8 +296,8 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (ZONES) {
             my $val = "-";
-            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
-            $val.=":".tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));
+            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val.=":".$self->tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -312,8 +312,8 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (INTERFACES) {
             my $val = "-";
-            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
-            $val.=":".tostring(%$tr->{'port'}) if (($kw eq "interface") && exists(%$tr->{'port'}));
+            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val.=":".$self->tostring(%$tr->{'port'}) if (($kw eq "interface") && exists(%$tr->{'port'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -328,9 +328,9 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (POLICY) {
             my $val = "-";
-            $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
             $val = uc($val) if ($kw eq "policy");
-            $val.=":".tostring(%$tr->{'limit'}) if (($kw eq "burst") && exists(%$tr->{'limit'}));
+            $val.=":".$self->tostring(%$tr->{'limit'}) if (($kw eq "burst") && exists(%$tr->{'limit'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -349,14 +349,14 @@ sub Configure {
                 if (($kw eq "src") || ($kw eq "dst")) {
                     my $tmp=%$tr->{$kw};
                     $val = $tmp->{'zone'};
-                    $val .= ":".tostring($tmp->{'interface'}) if (exists($tmp->{'interface'}));
-                    $val .= ":".tostring($tmp->{'address'}) if (exists($tmp->{'address'}));
+                    $val .= ":".$self->tostring($tmp->{'interface'}) if (exists($tmp->{'interface'}));
+                    $val .= ":".$self->tostring($tmp->{'address'}) if (exists($tmp->{'address'}));
                 } else {
-                    $val = tostring(%$tr->{$kw});
+                    $val = $self->tostring(%$tr->{$kw});
                 }
             };
             $val = uc($val) if ($kw eq "action");
-            $val .= ":".tostring(%$tr->{'group'}) if ($kw eq "user" && exists(%$tr->{'group'}));
+            $val .= ":".$self->tostring(%$tr->{'group'}) if ($kw eq "user" && exists(%$tr->{'group'}));
             $contents.="$val\t";
         }
         $contents.="\n";
