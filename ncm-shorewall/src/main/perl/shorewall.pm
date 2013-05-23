@@ -189,7 +189,7 @@ sub writecfg
         }
     }
 
-    %$refreload->{$typ}=$changed;
+    $refreload->{$typ}=$changed;
     if ($changed < 0) {
         rollback($refreload);
     }
@@ -202,7 +202,7 @@ sub rollback
     ## all entries with non-zero value have to be rolled back.
     ## also the ones with -1!
     foreach my $typ (keys %$relref) {
-        if (%$relref->{$typ}) {
+        if ($relref->{$typ}) {
             my $cfgfile = SHOREWALLCFGDIR.$typ;
             $cfgfile .=".conf" if ($typ eq "shorewall");
             ## move file to .failed
@@ -214,8 +214,8 @@ sub rollback
                 $self->error("Failed to move $src to $dst");
             }
             ## if .old exists, move that to
-            my $src="$cfgfile.old";
-            my $dst=$cfgfile;
+	    $src="$cfgfile.old";
+	    $dst=$cfgfile;
             if (-e $src && LC::File::move($src,$dst)) {
                 $self->debug(2,"Moved $src to $dst");
             } else {
@@ -252,7 +252,7 @@ sub testfail
 sub tostring
 {
     my ($self, $ref) = @_;
-    my $ref=shift;
+
     my $refref=ref($ref);
     ## use this when
     my $empty='-';
@@ -294,8 +294,8 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (ZONES) {
             my $val = "-";
-            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
-            $val.=":".$self->tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));
+            $val = $self->tostring($tr->{$kw}) if (exists($tr->{$kw}));
+            $val.=":".$self->tostring($tr->{'parent'}) if (($kw eq "zone") && exists($tr->{'parent'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -310,8 +310,8 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (INTERFACES) {
             my $val = "-";
-            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
-            $val.=":".$self->tostring(%$tr->{'port'}) if (($kw eq "interface") && exists(%$tr->{'port'}));
+            $val = $self->tostring($tr->{$kw}) if (exists($tr->{$kw}));
+            $val.=":".$self->tostring($tr->{'port'}) if (($kw eq "interface") && exists($tr->{'port'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -326,9 +326,9 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (POLICY) {
             my $val = "-";
-            $val = $self->tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
+            $val = $self->tostring($tr->{$kw}) if (exists($tr->{$kw}));
             $val = uc($val) if ($kw eq "policy");
-            $val.=":".$self->tostring(%$tr->{'limit'}) if (($kw eq "burst") && exists(%$tr->{'limit'}));
+            $val.=":".$self->tostring($tr->{'limit'}) if (($kw eq "burst") && exists($tr->{'limit'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -343,18 +343,18 @@ sub Configure {
     foreach my $tr (@$tree) {
         foreach my $kw (RULES) {
             my $val = "-";
-            if (exists(%$tr->{$kw})) {
+            if (exists($tr->{$kw})) {
                 if (($kw eq "src") || ($kw eq "dst")) {
-                    my $tmp=%$tr->{$kw};
+                    my $tmp=$tr->{$kw};
                     $val = $tmp->{'zone'};
                     $val .= ":".$self->tostring($tmp->{'interface'}) if (exists($tmp->{'interface'}));
                     $val .= ":".$self->tostring($tmp->{'address'}) if (exists($tmp->{'address'}));
                 } else {
-                    $val = $self->tostring(%$tr->{$kw});
+                    $val = $self->tostring($tr->{$kw});
                 }
             };
             $val = uc($val) if ($kw eq "action");
-            $val .= ":".$self->tostring(%$tr->{'group'}) if ($kw eq "user" && exists(%$tr->{'group'}));
+            $val .= ":".$self->tostring($tr->{'group'}) if ($kw eq "user" && exists($tr->{'group'}));
             $contents.="$val\t";
         }
         $contents.="\n";
@@ -370,17 +370,17 @@ sub Configure {
     $contents = $head.$contents if (! $contents =~ m/$head/);
     foreach my $kw (SHOREWALL_BOOLEAN) {
         my $ukw=uc($kw);
-        if (exists(%$tree->{$kw})) {
+        if (exists($tree->{$kw})) {
             my $new="No";
-            $new = "Yes" if (%$tree->{$kw});
+            $new = "Yes" if ($tree->{$kw});
             my $reg="^".$ukw.".*\$";
             $contents =~ s/$reg/$ukw=$new/m
         };
     }
     foreach my $kw (SHOREWALL_STRING) {
         my $ukw=uc($kw);
-        if (exists(%$tree->{$kw})) {
-            my $new=%$tree->{$kw};
+        if (exists($tree->{$kw})) {
+            my $new=$tree->{$kw};
             my $reg="^".$ukw.".*\$";
             $contents =~ s/$reg/$ukw=$new/m
         };
