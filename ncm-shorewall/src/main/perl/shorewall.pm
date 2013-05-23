@@ -239,7 +239,6 @@ sub testfail
 
     CAF::Process->new([qw(/usr/sbin/ccm-fetch)],
                       log => $self)->run();
-    my $exitcode=$?;
     if ($? == 0) {
         $self->debug(2,"ccm-fetch OK");
         $fail = 0;
