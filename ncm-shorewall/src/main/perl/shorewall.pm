@@ -226,6 +226,28 @@ sub rollback
     }
 }
 
+sub testfail
+{
+    my ($self) = @_;
+
+    my $fail=1;
+    ## sometimes it's possible that routing is a bit behind, so set
+    ## this variable to some larger value
+    my $sleep_time = 15;
+    sleep($sleep_time);
+
+    CAF::Process->new([qw(/usr/sbin/ccm-fetch)],
+                      log => $self)->run();
+    my $exitcode=$?;
+    if ($? == 0) {
+        $self->debug(2,"ccm-fetch OK");
+        $fail = 0;
+    } else {
+        $self->error("ccm-fetch FAILED");
+    }
+    return $fail;
+}
+
 
 
 ##########################################################################
@@ -386,24 +408,6 @@ sub Configure {
     };
 
 
-    sub testfail {
-        my $fail=1;
-        ## sometimes it's possible that routing is a bit behind, so set this variable to some larger value
-        my $sleep_time = 15;
-        sleep($sleep_time);
-
-        CAF::Process->new([qw(/usr/sbin/ccm-fetch)],
-                    log => $self)->run();
-        my $exitcode=$?;
-        if ($? == 0) {
-            $self->debug(2,"ccm-fetch OK");
-            $fail = 0;
-        } else {
-            $self->error("ccm-fetch FAILED");
-        }
-        return $fail;
-    }
-
 
     my $r=0;
     foreach $type (keys %reload){
@@ -412,14 +416,14 @@ sub Configure {
 
     if ($r) {
         restartreload($reload{'shorewall'});
-        if ($r && testfail()) {
+        if ($r && $self->testfail()) {
             $self->error("New config fails test. Going to revert to old config.");
             ## roll back
             $self->rollback(\%reload);
             ## restart
             restartreload($reload{'shorewall'});
             ## retest
-            if (testfail()) {
+            if ($self->testfail()) {
                 $self->error("Restoring old config still fails test.");
             }
         }
