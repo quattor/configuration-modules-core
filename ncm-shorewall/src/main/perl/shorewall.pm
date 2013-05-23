@@ -195,6 +195,39 @@ sub writecfg {
     return $changed;
 }
 
+sub rollback
+{
+    my ($self, $relref) = @_;
+    ## all entries with non-zero value have to be rolled back.
+    ## also the ones with -1!
+    foreach my $typ (keys %$relref) {
+        if (%$relref->{$typ}) {
+            my $cfgfile=SHOREWALLCFGDIR.$typ;
+            $cfgfile .=".conf" if ($typ eq "shorewall");
+            ## move file to .failed
+            my $src=$cfgfile;
+            my $dst="$cfgfile.failed";
+            if (LC::File::move($src,$dst)) {
+                $self->debug(2,"Moved $src to $dst");
+            } else {
+                $self->error("Failed to move $src to $dst");
+            }
+            ## if .old exists, move that to
+            my $src="$cfgfile.old";
+            my $dst=$cfgfile;
+            if (-e $src && LC::File::move($src,$dst)) {
+                $self->debug(2,"Moved $src to $dst");
+            } else {
+                $self->error("Failed to move $src to $dst");
+            }
+        } else {
+            $self->debug(2,"Not rolling back $typ.");
+        }
+    }
+}
+
+
+
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -207,41 +240,6 @@ sub Configure {
 
     # Save the date.
     my $date = localtime();
-
-    sub rollback {
-        my $relref = shift;
-        ## all entries with non-zero value have to be rolled back.
-        ## also the ones with -1!
-        foreach my $typ (keys %$relref) {
-            if (%$relref->{$typ}) {
-                my $cfgfile=SHOREWALLCFGDIR.$typ;
-                $cfgfile .=".conf" if ($typ eq "shorewall");
-                ## move file to .failed
-                my $src=$cfgfile;
-                my $dst="$cfgfile.failed";
-                if (LC::File::move($src,$dst)) {
-                    $self->debug(2,"Moved $src to $dst");
-                } else {
-                    $self->error("Failed to move $src to $dst");
-                }
-                ## if .old exists, move that to
-                my $src="$cfgfile.old";
-                my $dst=$cfgfile;
-                if (-e $src && LC::File::move($src,$dst)) {
-                    $self->debug(2,"Moved $src to $dst");
-                } else {
-                    $self->error("Failed to move $src to $dst");
-                }
-            } else {
-                $self->debug(2,"Not rolling back $typ.");
-            }
-        };
-    };
-
-
-
-
-
 
     sub tostring {
         my $ref=shift;
@@ -417,7 +415,7 @@ sub Configure {
         if ($r && testfail()) {
             $self->error("New config fails test. Going to revert to old config.");
             ## roll back
-            rollback(\%reload);
+            $self->rollback(\%reload);
             ## restart
             restartreload($reload{'shorewall'});
             ## retest
