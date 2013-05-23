@@ -42,13 +42,13 @@ use constant ZONES => qw( zone
                           type
                           options
                           inoptions
-                          outoptions  
+                          outoptions
                          );
 
 use constant INTERFACES => qw(zone
                               interface
                               broadcast
-                              options    
+                              options
                               );
 
 use constant RULES => qw(action
@@ -163,6 +163,38 @@ use constant SHOREWALL_STRING => qw(verbosity
                                     tcp_flags_disposition
                                     );
 
+sub writecfg {
+    my ($self, $typ, $contents, $refreload) = @_;
+
+    my $changed = 0;
+    my $cfgfile=SHOREWALLCFGDIR.$typ;
+
+    $cfgfile .=".conf" if ($typ eq "shorewall");
+
+    if ( -e $cfgfile && (LC::File::file_contents($cfgfile) eq $contents)) {
+        $self->debug(2,"Nothing changed for $typ.")
+    } else {
+        ## write cfgfile
+        $changed = 1;
+        my $result = LC::Check::file( $cfgfile,
+                                   backup => ".old",
+                                   contents => encode_utf8($contents),
+                                  );
+        if ($result) {
+            $self->info("$cfgfile updated");
+        } else {
+            $self->error("$cfgfile update failed");
+            $changed=-1;
+        }
+    }
+
+    %$refreload->{$typ}=$changed;
+    if ($changed < 0) {
+        rollback($refreload);
+    }
+    return $changed;
+}
+
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -170,20 +202,20 @@ sub Configure {
     our ($self,$config)=@_;
 
     my ($result,$tree,$contents,$type);
-    
+
     my %reload;
-    
+
     # Save the date.
     my $date = localtime();
 
     sub rollback {
         my $relref = shift;
-        ## all entries with non-zero value have to be rolled back. 
+        ## all entries with non-zero value have to be rolled back.
         ## also the ones with -1!
         foreach my $typ (keys %$relref) {
             if (%$relref->{$typ}) {
                 my $cfgfile=SHOREWALLCFGDIR.$typ;
-                $cfgfile .=".conf" if ($typ eq "shorewall"); 
+                $cfgfile .=".conf" if ($typ eq "shorewall");
                 ## move file to .failed
                 my $src=$cfgfile;
                 my $dst="$cfgfile.failed";
@@ -192,7 +224,7 @@ sub Configure {
                 } else {
                     $self->error("Failed to move $src to $dst");
                 }
-                ## if .old exists, move that to 
+                ## if .old exists, move that to
                 my $src="$cfgfile.old";
                 my $dst=$cfgfile;
                 if (-e $src && LC::File::move($src,$dst)) {
@@ -206,43 +238,15 @@ sub Configure {
         };
     };
 
-    
-    sub writecfg {
-        my $typ = shift;
-        my $contents = shift;
-        my $refreload = shift;
-        my $changed = 0;
-        my $cfgfile=SHOREWALLCFGDIR.$typ;
-        $cfgfile .=".conf" if ($typ eq "shorewall"); 
-        if ( -e $cfgfile && (LC::File::file_contents($cfgfile) eq $contents)) {
-            $self->debug(2,"Nothing changed for $typ.")
-        } else {
-            ## write cfgfile
-            $changed = 1;
-            $result = LC::Check::file( $cfgfile,
-                               backup => ".old",
-                               contents => encode_utf8($contents),
-                              );
-            if ($result) {
-                $self->log("$cfgfile updated");
-            } else {
-                $self->error("$cfgfile update failed");
-                $changed=-1;
-            }
-        }
-        %$refreload->{$typ}=$changed;
-        if ($changed < 0) {
-            rollback($refreload);
-        }        
-        return $changed;                
-    }
+
+
 
 
 
     sub tostring {
         my $ref=shift;
         my $refref=ref($ref);
-        ## use this when 
+        ## use this when
         my $empty='-';
 
         if ($refref eq "ARRAY") {
@@ -257,14 +261,14 @@ sub Configure {
             ## not a ref, just string
             if ("$ref" eq "") {
                 return "-";
-            } else { 
+            } else {
                 return $ref;
             }
         }
     };
 
 
-    
+
     #### BEGIN ZONES
     $type="zones";
     $tree=$config->getElement("$mypath/$type")->getTree;
@@ -273,12 +277,12 @@ sub Configure {
         foreach my $kw (ZONES) {
             my $val = "-";
             $val = tostring(%$tr->{$kw}) if (exists(%$tr->{$kw}));
-            $val.=":".tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));  
+            $val.=":".tostring(%$tr->{'parent'}) if (($kw eq "zone") && exists(%$tr->{'parent'}));
             $contents.="$val\t";
         }
         $contents.="\n";
     }
-    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    return 1 if ($self->writecfg($type,$contents,\%reload) < 0);
     #### END ZONES
 
     #### BEGIN INTERFACES
@@ -294,7 +298,7 @@ sub Configure {
         }
         $contents.="\n";
     }
-    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    return 1 if ($self->writecfg($type,$contents,\%reload) < 0);
     #### END INTERFACES
 
     #### BEGIN POLICY
@@ -311,9 +315,9 @@ sub Configure {
         }
         $contents.="\n";
     }
-    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    return 1 if ($self->writecfg($type,$contents,\%reload) < 0);
     #### END POLICY
-    
+
     #### BEGIN RULES
     $type="rules";
     $tree=$config->getElement("$mypath/$type")->getTree;
@@ -337,7 +341,7 @@ sub Configure {
         }
         $contents.="\n";
     }
-    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    return 1 if ($self->writecfg($type,$contents,\%reload) < 0);
     #### END RULES
 
     #### BEGIN CONFIG
@@ -363,7 +367,7 @@ sub Configure {
             $contents =~ s/$reg/$ukw=$new/m
         };
     }
-    return 1 if (writecfg($type,$contents,\%reload) < 0);
+    return 1 if ($self->writecfg($type,$contents,\%reload) < 0);
     #### END CONFIG
 
 
@@ -389,7 +393,7 @@ sub Configure {
         ## sometimes it's possible that routing is a bit behind, so set this variable to some larger value
         my $sleep_time = 15;
         sleep($sleep_time);
-        
+
         CAF::Process->new([qw(/usr/sbin/ccm-fetch)],
                     log => $self)->run();
         my $exitcode=$?;
@@ -413,20 +417,20 @@ sub Configure {
         if ($r && testfail()) {
             $self->error("New config fails test. Going to revert to old config.");
             ## roll back
-            rollback(\%reload);        
+            rollback(\%reload);
             ## restart
             restartreload($reload{'shorewall'});
             ## retest
             if (testfail()) {
                 $self->error("Restoring old config still fails test.");
             }
-        }    
+        }
     } else {
         $self->debug(2,"Nothing to restart/reload.");
     }
-    
+
 }
 
 
 # Required for end of module
-1;  
+1;
