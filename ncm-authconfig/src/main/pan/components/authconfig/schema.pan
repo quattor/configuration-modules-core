@@ -376,7 +376,7 @@ type authconfig_sssd_ldap = {
 type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
 
 type sssd_global = {
-    "debug_level" : hex_string = '0x0210'
+    "debug_level" : long = 0x0210
     "config_file_version" : long = 2
     "services" : sssd_service[]
     "reconnection_retries" : long = 3
@@ -388,7 +388,7 @@ type sssd_global = {
 };
 
 type sssd_pam = {
-    "debug_level" : hex_string = '0x0210'
+    "debug_level" : long = 0x0210
     "offline_credentials_expiration" : long = 0
     "offline_failed_login_attempts" : long = 0
     "offline_failed_login_delay" : long =  5
@@ -399,7 +399,7 @@ type sssd_pam = {
 };
 
 type sssd_nss = {
-    "debug_level" : hex_string = '0x0210'
+    "debug_level" : long = 0x0210
     "enum_cache_timeout" : long = 120
     "entry_cache_nowait_percentage" ? long
     "entry_negative_timeout" : long = 15
@@ -427,7 +427,7 @@ type authconfig_sssd_domain  = {
     "id_provider" ? sssd_provider_string
     "auth_provider" ? sssd_provider_string
     "chpass_provider" ? sssd_provider_string
-    "debug_level" : hex_string = '0x0210'
+    "debug_level" : long = 0x0210
     "sudo_provider" ? string
     "selinux_provider" ? string
     "subdomains_provider" ? string
