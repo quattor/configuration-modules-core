@@ -14,7 +14,6 @@ include {'components/${project.artifactId}/sssd-sasl'};
 include {'components/${project.artifactId}/sssd-tls'};
 
 type yesnostring = string with match(SELF,"yes|no");
-type hex_string = string with match(SELF,"^0x[0123456789ABCDEF]+");
 
 type authconfig_pamadditions_line_type = {
   "order"       : string with match(SELF,"first|last")
@@ -379,7 +378,7 @@ type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
 type sssd_global = {
     "debug_level" : hex_string = '0x0210'
     "config_file_version" : long = 2
-    "services" : string[]
+    "services" : sssd_service[]
     "reconnection_retries" : long = 3
     "re_expression" ?  string
     "full_name_format" ? string
