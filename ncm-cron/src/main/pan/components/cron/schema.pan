@@ -56,7 +56,7 @@ type structure_cron = {
 } with { if(exists(SELF['log']) && exists(SELF['syslog'])) {
             error("At most one of log or syslog can be defined");
          } else {
-            return(true);
+            true;
          }
        };
 
