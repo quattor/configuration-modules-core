@@ -31,7 +31,8 @@ type postfix_lookup = {
 	http://www.postfix.org/ldap_table.5.html
 }
 type postfix_ldap_database = {
-    "server_host" : type_fqdn
+    "server_host" : type_fqdn[]
+    "server_host_protocol" ? string with match(SELF,"^ldaps?$")
     "server_port" ? type_port
     "timeout" ? long
     "search_base" : string

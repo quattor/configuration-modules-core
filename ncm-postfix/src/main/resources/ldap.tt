@@ -3,8 +3,11 @@
 # The template has been semi-automatically generated from the component's schema.
 
 [% IF     server_host.defined %]
-server_host = [% server_host %]
-[% END -%]
+server_host =
+[%-      FOREACH host IN server_host -%]
+ [%         server_host_protocol %][% server_host_protocol.defined ? "://" : "" %][% host -%]
+[%-      END -%]
+[%- END %]
 [% IF     server_port.defined %]
 server_port = [% server_port %]
 [% END -%]
