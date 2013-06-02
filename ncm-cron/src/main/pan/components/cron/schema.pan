@@ -19,6 +19,13 @@ function structure_cron_log_valid = {
   true;
 };
 
+type structure_cron_syslog = {
+    'facility'  : string = 'user'
+    'level'     : string = 'notice'
+    'tagprefix' : string = 'ncm-cron.' with (!match(SELF,'\s')) # prefix tag
+    'tag'       ? string with (!match(SELF,'\s')) # use this fixed tag instead of name
+};
+
 type structure_cron_log = {
     'disabled'  ? boolean
     'name'      ? string
@@ -45,7 +52,13 @@ type structure_cron = {
     'comment'   ? string
     'env'       ? string{}
     'log'       ? structure_cron_log
-};
+    'syslog'    ? structure_cron_syslog
+} with { if(exists(SELF['log']) && exists(SELF['syslog'])) {
+            error("At most one of log or syslog can be defined");
+         } else {
+            true;
+         }
+       };
 
 type component_cron = {
     include structure_component
