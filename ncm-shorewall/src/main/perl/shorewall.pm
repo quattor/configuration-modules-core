@@ -215,10 +215,12 @@ sub rollback
             }
 	    $src="$cfgfile.old";
 	    $dst=$cfgfile;
-            if (-e $src && LC::File::move($src,$dst)) {
-                $self->debug(2,"Moved $src to $dst");
-            } else {
-                $self->error("Failed to move $src to $dst");
+            if (-e $src) {
+                if (LC::File::move($src,$dst)) {
+                    $self->debug(2,"Moved $src to $dst");
+                } else {
+                    $self->error("Failed to move $src to $dst");
+                }
             }
         } else {
             $self->debug(2,"Not rolling back $typ.");
