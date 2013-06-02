@@ -1,5 +1,7 @@
 object template simple;
 
+"/software/components/nrpe/mode" = 0640;
+
 prefix "/software/components/nrpe/options";
 
 "_42" = 42;

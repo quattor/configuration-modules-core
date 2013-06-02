@@ -24,8 +24,16 @@ sub Configure {
     my ($self, $config) = @_;
     my $st = $config->getElement (PATH)->getTree;
 
+    my $mode = $config->getElement('/software/components/nrpe/mode')->getValue();
+    my $owner = $st->{nrpe_user};
+    my $group = $st->{nrpe_group};
+
     # Open file
-    my $fw = CAF::FileWriter->open (FILE, log => $self);
+    my $fw = CAF::FileWriter->open (FILE,
+                                    mode => $mode,
+                                    owner => $owner,
+                                    group => $group,
+                                    log => $self);
 
     # Output caution header
     print $fw ("# /etc/nagios/nrpe.cfg\n");
