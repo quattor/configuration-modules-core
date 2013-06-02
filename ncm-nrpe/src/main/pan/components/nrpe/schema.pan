@@ -27,6 +27,7 @@ type component_nrpe_options = {
 
 type structure_component_nrpe = {
     include structure_component
+    'mode' : long = 0640
     'options'                   : component_nrpe_options
 };
 
