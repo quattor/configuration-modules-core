@@ -213,7 +213,6 @@ sub rollback
             } else {
                 $self->error("Failed to move $src to $dst");
             }
-            ## if .old exists, move that to
 	    $src="$cfgfile.old";
 	    $dst=$cfgfile;
             if (-e $src && LC::File::move($src,$dst)) {
@@ -254,7 +253,6 @@ sub tostring
     my ($self, $ref) = @_;
 
     my $refref=ref($ref);
-    ## use this when
     my $empty='-';
 
     if (!$refref) {
