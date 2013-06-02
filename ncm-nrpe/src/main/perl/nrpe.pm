@@ -24,23 +24,33 @@ sub Configure {
     my ($self, $config) = @_;
     my $st = $config->getElement (PATH)->getTree;
 
+    my $mode = $config->getElement('/software/components/nrpe/mode')->getValue();
+    my $owner = "root";
+    my $group = $st->{nrpe_group};
+
     # Open file
-    my $fw = CAF::FileWriter->open (FILE, log => $self);
+    my $fw = CAF::FileWriter->open (FILE,
+                                    mode => $mode,
+                                    owner => $owner,
+                                    group => $group,
+                                    log => $self);
 
     # Output caution header
     print $fw ("# /etc/nagios/nrpe.cfg\n");
     print $fw ("# written by ncm-nrpe. Do not edit!\n");
 
-    # Output unreferenced options
-    while (my ($key, $value) = each (%{$st})) {
-      print $fw ("$key=$value\n") unless (ref($value) eq "ARRAY" || ref($value) eq "HASH");
+    # Output unreferenced options sorted
+    foreach my $key (sort(keys %{$st})) {
+        my $value = $st->{$key};
+        print $fw ("$key=$value\n") unless (ref($value) eq "ARRAY" || ref($value) eq "HASH");
     }
 
     # Output allowed_hosts array as a comma separated string
     print $fw ("allowed_hosts=" . join (",", @{$st->{allowed_hosts}}) . "\n");
 
-    # Output nrpe_commands
-    while (my ($cmdname, $cmdline) = each (%{$st->{command}})) {
+    # Output nrpe_commands sorted
+    foreach my $cmdname (sort(keys %{$st->{command}})) {
+        my $cmdline = $st->{command}->{$cmdname};
         print $fw ("command[$cmdname]=$cmdline\n");
     }
 
