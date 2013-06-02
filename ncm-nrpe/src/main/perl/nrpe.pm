@@ -25,7 +25,7 @@ sub Configure {
     my $st = $config->getElement (PATH)->getTree;
 
     my $mode = $config->getElement('/software/components/nrpe/mode')->getValue();
-    my $owner = $st->{nrpe_user};
+    my $owner = "root";
     my $group = $st->{nrpe_group};
 
     # Open file
