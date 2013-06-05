@@ -102,6 +102,9 @@ sub Configure {
 }
 
 sub getcfg {
+    # simple function to convert the configuration tree into values
+    # most values are boolean that need to be converted in yes/no, some
+    # keys also have to get a LOAD suffix
     my ($self, $config, $cfgfh, $p, @options) = @_;
 
     print $cfgfh "\n";
