@@ -101,7 +101,8 @@ type structure_interface = {
 
   "vlan" ? boolean
   "physdev"    ? string with exists ("/system/network/interfaces/" + SELF)
-}; 
+  "nmcontrolled"     ? boolean
+};
 
 
 ############################################################
@@ -120,5 +121,7 @@ type structure_network = {
      "nisdomain"        ? type_fqdn
      "nozeroconf"       ? boolean
      "set_hwaddr"       ? boolean
+     "nmcontrolled"     ? boolean
+     "allow_nm"         ? boolean
 };
 
