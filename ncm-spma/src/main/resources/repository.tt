@@ -32,7 +32,7 @@ include=/etc/yum.repos.d/[%name%].pkgs
 priority=[% priority %]
 [% END -%]
 [% IF proxy -%]
-proxy=http://[% proxy %]
+proxy=[% proxy %]
 [% END %]
 includepkgs=[% includepkgs.join(' ') %]
 exclude=[% excludepkgs.join(' ') %]
