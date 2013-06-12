@@ -14,19 +14,21 @@ type sindes_getcert = {
     'server'            : type_network_name
     'new_cert_port'     : long
     'renew_cert_port'   : long
-    
+
     'domain_name'       : string
     'x509_O'            : string
     'x509_OU'           : string
-    
+
     'cert_dir'          : string
     'client_key'        : string
     'client_cert'       : string
     'client_cert_key'   : string
-    
+
     'ca_cert'           : string
     'ca_cert_rpm'       : string
-    
+
+    'key_length'        : long = 1024
+
     'aii_gw'            ? type_network_name
 };
 
