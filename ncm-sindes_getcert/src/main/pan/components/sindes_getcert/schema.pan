@@ -10,7 +10,7 @@ include {'quattor/schema'};
 type sindes_getcert = {
     include structure_component
     ## only supported protocol?
-    'protocol'          : string with match (SELF, 'https://')
+    'protocol'          : type_absoluteURI with match (SELF, 'https://')
     'server'            : type_network_name
     'new_cert_port'     : long
     'renew_cert_port'   : long
