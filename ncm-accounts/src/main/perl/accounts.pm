@@ -448,7 +448,7 @@ sub add_account
           $i = $g[ID];
           $self->debug(2, "Account $name resolved in group $i")
         } else {
-          $self->error("Not found group $i for account $name. Skiping");
+          $self->error("Not found group $i for account $name. Skipping");
           return;
         }
       }
