@@ -168,14 +168,16 @@ sub execute_yum_command
     my $cmd = CAF::Process->new($command, %opts);
 
     $cmd->execute();
-
     if ($? ||
-	$err =~ m{^(?:Error|Failed|(?:Could not match)|(?:Transaction encountered.*error))}mi ||
-	(@missing = ($out =~ m{^No package (.*) available}mg))) {
+        $err =~ m{^(?:Error|Failed|
+                      (?:Could \s+ not \s+ match)|
+                      (?:Transaction \s+ encountered.*error)|
+                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
+        (@missing = ($out =~ m{^No package (.*) available}omg))) {
         $self->error("Failed $why: $err");
-	if (@missing) {
-	    $self->error("Missing packages: ", join(" ", @missing));
-	}
+        if (@missing) {
+            $self->error("Missing packages: ", join(" ", @missing));
+        }
         $self->warn("Command output: $out");
         return undef;
     }

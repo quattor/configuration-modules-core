@@ -69,6 +69,11 @@ set_desired_err($CMD, "Transaction encountered a serious error");
 is($cmp->execute_yum_command([$CMD], $WHY), undef,
    "Yet another Yum error is correctly diagnosed");
 
+set_desired_err($CMD,
+                join(" ", qw{https://foobar.xml: [Errno 14] PYCURL ERROR 22 -
+                             "The requested URL returned error: 403 Forbidden"}),
+                "Unreachable repositories detected");
+
 set_desired_err($CMD, "");
 set_desired_output($CMD, "No package foo available");
 
