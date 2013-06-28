@@ -359,7 +359,7 @@ sub Configure
 
     my $t = $config->getElement($self->prefix())->getTree();
 
-    my $backupsuff = ".$$";
+    my $backupsuff = ".".time();
 
     my $fh = CAF::FileWriter->new($t->{conf_file},
                   log => $self,
@@ -387,11 +387,12 @@ sub Configure
         # rename conf_dir/slapd.d
         if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
             my $slapdddir = dirname($t->{conf_file})."/slapd.d";
-            $self->info("Moving slapd.d dir $slapdddir to $slapdddir.orig.");
             if ( -d $slapdddir ) {
-                move($slapdddir, $slapdddir.".orig")  || $self->error("Moving $slapdddir to $slapdddir.orig failed: $!");
+                my $origsuff = "orig.".time();
+                $self->info("Moving slapd.d dir $slapdddir to $slapdddir.$origsuff.");
+                move($slapdddir, "$slapdddir.$origsuff")  || $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
             } else {
-                $self->info("Moving slapd.d dir $slapdddir: no such dir found.")
+                $self->debug("Moving slapd.d dir $slapdddir: no such dir found.")
             }
         }
     } else {
