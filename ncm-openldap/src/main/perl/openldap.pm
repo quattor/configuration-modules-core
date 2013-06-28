@@ -27,7 +27,7 @@ use EDG::WP4::CCM::Element qw(unescape);
 use Encode qw(encode_utf8);
 
 
-use constant SLAPTEST => qw(/usr/sbin/slaptest -v -f);
+use constant SLAPTEST => qw(/usr/sbin/slaptest -v -u -f);
 use constant SLAPRESTART => qw(/sbin/service slapd restart);
 
 ## fixed indentation for conf files
@@ -216,13 +216,16 @@ sub print_database_class
     }
 
     while (my ($k, $v) = each(%$tree)) {
-        print $fh  "$k $v\n" unless (grep $_ eq $k, qw(syncrepl overlay));
+        print $fh  "$k $v\n" unless (grep $_ eq $k, qw(syncrepl overlay updateref));
     }
 
     if (exists($tree->{syncrepl})) {
         $self->print_replica_information($fh, $tree->{syncrepl});
         delete($tree->{syncrepl});
     }
+
+    ## updateref should be put after syncrepl
+    print $fh  "updateref ".$tree->{updateref}."\n" if (exists($tree->{updateref}));
 
     ## overlays are last
     if (exists($tree->{overlay})) {
@@ -356,9 +359,13 @@ sub Configure
 
     my $t = $config->getElement($self->prefix())->getTree();
 
+    my $backupsuff = ".$$";
+
     my $fh = CAF::FileWriter->new($t->{conf_file},
                   log => $self,
-                  backup => ".$$",
+                  backup => $backupsuff,
+                  owner => 'root',
+                  group => 'ldap',
                   mode => 0440);
 
     foreach my $i (@{$t->{include_schema}}) {
@@ -376,6 +383,17 @@ sub Configure
             $self->print_database_class($fh, "database", $i);
         }
         $self->print_monitoring($fh,$t->{monitoring}) if (exists($t->{monitoring}));
+
+        ## rename conf_dir/slapd.d
+        if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
+            my $slapdddir = dirname($t->{conf_file})."/slapd.d";
+            $self->info("Moving slapd.d dir $slapdddir to $slapdddir.orig.");
+            if ( -d $slapdddir ) {
+                move($slapdddir, $slapdddir.".orig")  || $self->error("Moving $slapdddir to $slapdddir.orig failed: $!");
+            } else {
+                $self->info("Moving slapd.d dir $slapdddir: no such dir found.")
+            }
+        }
     } else {
         $self->legacy_setup($config, $fh, $t);
     }
@@ -387,9 +405,14 @@ sub Configure
         $self->restart_slapd();
         return 1;
     } else {
-        $self->error("Restoring the old configuration file; invalid configuration file stored in $t->{conf_file}.invalid");
+        $self->info("Restoring the old configuration file; invalid configuration file stored in $t->{conf_file}.invalid");
         move($t->{conf_file}, "$t->{conf_file}.invalid") || $self->error("Moving $t->{conf_file} to $t->{conf_file}.invalid failed: $!");
-        move("$t->{conf_file}.$$", $t->{conf_file})  || $self->error("Moving $t->{conf_file}.$$ to $t->{conf_file} failed: $!");
+        if (-f "$t->{conf_file}$backupsuff") {
+            move("$t->{conf_file}$backupsuff", $t->{conf_file})  || $self->error("Moving $t->{conf_file}$backupsuff to $t->{conf_file} failed: $!");
+        } else {
+            $self->info("Restoring the old configuration file: no backup file $t->{conf_file}$backupsuff found");
+        }
+
     }
     return 0;
 }
