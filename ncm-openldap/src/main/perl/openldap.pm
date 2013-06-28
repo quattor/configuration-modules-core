@@ -30,7 +30,7 @@ use Encode qw(encode_utf8);
 use constant SLAPTEST => qw(/usr/sbin/slaptest -v -u -f);
 use constant SLAPRESTART => qw(/sbin/service slapd restart);
 
-## fixed indentation for conf files
+# fixed indentation for conf files
 use constant INDENTATION => "    ";
 
 use constant DB_CONFIG_SET => qw(
@@ -51,7 +51,7 @@ sub create_db_config_file
             $contents.="$k $v\n";
         }
 
-        ## try to write it
+        # try to write it
         my $fname = "$directory/DB_CONFIG";
         my $result = LC::Check::file( $fname,
                                       contents => encode_utf8($contents),
@@ -71,12 +71,12 @@ sub create_db_config_file
     };
 };
 
-## monitoring
-## default at end of slapd.conf (>= v2.4)
+# monitoring
+# default at end of slapd.conf (>= v2.4)
 sub print_monitoring
 {
     my ($self, $fh, $tree) = @_;
-    ## some default settings
+    # some default settings
     if (exists($tree->{default}) && $tree->{default}) {
         print $fh "\n","monitoring on","\n","database monitor","\n";
         delete($tree->{default});
@@ -207,7 +207,7 @@ sub print_database_class
 
     if (exists($tree->{db_config})) {
         if (exists($tree->{directory})) {
-            ## deal with exit code? restart ldap when file changed?
+            # deal with exit code? restart ldap when file changed?
             $self->create_db_config_file($tree->{directory},$tree->{db_config});
         } else {
             $self->error("db_config defined but not directory");
@@ -224,10 +224,10 @@ sub print_database_class
         delete($tree->{syncrepl});
     }
 
-    ## updateref should be put after syncrepl
+    # updateref should be put after syncrepl
     print $fh  "updateref ".$tree->{updateref}."\n" if (exists($tree->{updateref}));
 
-    ## overlays are last
+    # overlays are last
     if (exists($tree->{overlay})) {
         while (my ($overlay, $overlaytree) = each(%{$tree->{overlay}})) {
             print $fh "overlay $overlay\n";
@@ -248,7 +248,7 @@ sub print_global_options
     $self->verbose("Printing slapd global options");
 
     foreach my $access (@{$t->{access}}) {
-        ## what
+        # what
         my $what;
         if (exists($access->{attrs})) {
             $what="attrs=".join(',',@{$access->{attrs}});
@@ -259,7 +259,7 @@ sub print_global_options
         }
         print $fh "access to $what";
 
-        ## by
+        # by
         foreach my $by (@{$access->{by}}) {
             print $fh "\n".INDENTATION."by ".join(" ",@$by);
         }
@@ -384,7 +384,7 @@ sub Configure
         }
         $self->print_monitoring($fh,$t->{monitoring}) if (exists($t->{monitoring}));
 
-        ## rename conf_dir/slapd.d
+        # rename conf_dir/slapd.d
         if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
             my $slapdddir = dirname($t->{conf_file})."/slapd.d";
             $self->info("Moving slapd.d dir $slapdddir to $slapdddir.orig.");
