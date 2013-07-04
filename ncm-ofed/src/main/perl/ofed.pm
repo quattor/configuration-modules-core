@@ -36,7 +36,7 @@ use constant OPENIBOPTIONS => qw(
     srpha_enable
     srp_daemon_enable
     ipoib_mtu
-    sysctl
+    run_sysctl
     run_affinity_tuner
     node_desc
     node_desc_time_before_update
