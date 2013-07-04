@@ -32,24 +32,33 @@ use constant OPENIBOPTIONS => qw(
     onboot
     renice_ib_mad
     set_ipoib_cm
+    set_ipoib_channels
     srpha_enable
     srp_daemon_enable
     ipoib_mtu
+    sysctl
+    run_affinity_tuner
+    node_desc
+    node_desc_time_before_update
 );
 use constant OPENIBMODULES => qw(
     ucm
     rdma_cm
     rdma_ucm
     ipoib
+    e_ipoib
     sdp
     srp
     srpt
     rds
     iser
+    mlx4_vnic
+    mlx4_fc
 );
 use constant OPENIBHARDWARE => qw(
     mthca
     mlx4
+    mlx5
     mlx_en
     ipath
     qib
