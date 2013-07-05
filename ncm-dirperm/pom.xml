@@ -6,7 +6,7 @@
   <artifactId>dirperm</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.5.1-SNAPSHOT</version>
+  <version>13.6.0</version>
   <name>dirperm NCM component.</name>
 
 
