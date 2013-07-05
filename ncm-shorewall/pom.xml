@@ -6,15 +6,9 @@
   <artifactId>shorewall</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.5.1-SNAPSHOT</version>
+  <version>13.6.1-SNAPSHOT</version>
   <name>NCM Shorewall configuration component</name>
 
-  <repositories>
-    <repository>
-      <id>quattor-releases</id>
-      <url>http://lapp-repo01.in2p3.fr:8081/nexus/content/repositories/releases/</url>
-    </repository>
-  </repositories>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
