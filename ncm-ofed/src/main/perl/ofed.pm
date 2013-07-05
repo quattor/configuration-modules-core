@@ -125,7 +125,7 @@ sub getcfg {
     foreach my $option (@options) {
         my $ans="no";
 
-        if ($option eq "ipoib_mtu") {
+        if ($option eq "ipoib_mtu" or $option eq "node_desc") {
             $ans=$tr->{$option};
         } else {
             $ans = "yes" if (exists($tr->{$option}) && $tr->{$option});
