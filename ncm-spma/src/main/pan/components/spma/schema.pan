@@ -14,10 +14,19 @@ include { 'components/spma/functions' };
 #
 ############################################################
 
+type SOFTWARE_PACKAGE_FLAGS = {
+    "reboot" ? boolean # "Needs reboot after install ?"
+    "offprod" ? boolean # "Don't install if node in production ?"
+    "mandatory" ? boolean # "Mandatory package ?"
+    "unwanted" ? boolean # "Unwanted package ?"
+};
+
 type SOFTWARE_PACKAGE_REP = string with repository_exists(SELF,"/software/repositories");
 
 type SOFTWARE_PACKAGE = {
-    "arch" ? string{} # architectures
+    "arch" : SOFTWARE_PACKAGE_REP{} # architectures
+    "components" ? string[] # "Depending components"
+    "flags" ?  SOFTWARE_PACKAGE_FLAGS
 };
 
 type SOFTWARE_REPOSITORY_PACKAGE = {
@@ -29,22 +38,13 @@ type SOFTWARE_REPOSITORY_PACKAGE = {
 type SOFTWARE_REPOSITORY_PROTOCOL = {
     "name" : string  # "Protocol name"
     "url" : string  # "URL for the given protocol"
-    "cacert" ? string  # Path to CA certificate
-    "clientkey" ? string # Path to client key
-    "clientcert" ? string # Path to client certificate
-    "verify" ? boolean # Whether to verify the SSL certificate
 };
 
 type SOFTWARE_REPOSITORY = {
     "name" ? string  # "Repository name"
     "owner" ? string  # "Contact person (email)"
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
-    "priority" ? long(1..99)
-    "enabled" : boolean = true
-    "gpgcheck" : boolean = false
-    "includepkgs" ? string[]
-    "excludepkgs" ? string[]
-    "skip_if_unavailable" : boolean = false
+    "contents" ? SOFTWARE_REPOSITORY_PACKAGE {} {}
 };
 
 type component_spma_type = {
@@ -69,7 +69,6 @@ type component_spma_type = {
     "proxyport"     ? string # proxy port number
     "proxyrandom"   ? string with match (SELF, 'yes|no') # randomize proxyhost
     "headnode"      ? boolean # use head node
-    "process_obsoletes" : boolean = false
 };
 
 bind "/software/components/spma" = component_spma_type;

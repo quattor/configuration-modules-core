@@ -36,7 +36,7 @@ my $cmp = NCM::Component::spma->new("spma");
 
 
 set_desired_err($YUM, "");
-set_desired_output($YUM, "Transaction");
+set_desired_output($YUM, "");
 
 =pod
 
@@ -46,7 +46,7 @@ set_desired_output($YUM, "Transaction");
 
 =cut
 
-ok($cmp->apply_transaction($TX), "Basic transaction succeeds");;
+is($cmp->apply_transaction($TX), 1, "Basic transaction succeeds");;
 
 my $cmd = get_command($YUM);
 ok($cmd, "Yum shell correctly called");
@@ -56,12 +56,12 @@ like($cmd->{object}->{OPTIONS}->{stdin}, qr{$TX$},
 
 set_desired_err($YUM, "\nError: package");
 
-ok(!$cmp->apply_transaction($TX), "Error in transaction detected");
+is($cmp->apply_transaction($TX), 0, "Error in transaction detected");
 is($cmp->{ERROR}, 1, "Error is reported");
 
 set_command_status($YUM, 1);
 set_desired_err($YUM, "Yabbadabadoo");
-ok(!$cmp->apply_transaction($TX),
+is($cmp->apply_transaction($TX), 0,
    "Error in Yum internals during transaction detected");
 
 done_testing();

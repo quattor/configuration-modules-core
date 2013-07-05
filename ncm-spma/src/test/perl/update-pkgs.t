@@ -55,8 +55,7 @@ my $mock = Test::MockModule->new('NCM::Component::spma');
 
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
-		       expire_yum_caches complete_transaction distrosync
-		       spare_dependencies
+		       expire_yum_caches complete_transaction spare_dependencies
 		       packages_to_remove solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
@@ -81,7 +80,7 @@ sub clear_mock_counters
 {
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
-		      expire_yum_caches complete_transaction distrosync
+		      expire_yum_caches complete_transaction spare_dependencies
 		      wanted_pkgs installed_pkgs packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
 	if ($m !~ m{pkgs$}) {
@@ -120,7 +119,8 @@ ok(!$cmp->{SCHEDULE}->{remove}->{called},
    "With allow userpkgs, no removal is scheduled");
 
 ok(!$cmp->{PACKAGES_TO_REMOVE}->{called}, "No packages to be removed with userpkgs");
-ok($cmp->{DISTROSYNC}->{called}, "Yum distrosync is called");
+ok(!$cmp->{SPARE_DEPENDENCIES}->{called},
+   "No dependencies to double-check with userpkgs");
 
 ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
@@ -147,6 +147,32 @@ is($cmp->{SCHEDULE}->{remove}->{args}->members(), 1,
    "Correct packages scheduled for removal without usrpkgs");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "remove\ninstall\nsolve\n",
    "Transaction application without userpkgs receives removal");
+is($cmp->{SPARE_DEPENDENCIES}->{called}, 1,
+   "Dependencies to spare are processed if no user packages are allowed");
+
+
+=pod
+
+=item * When the desired and installed sets are the same, we do nothing
+
+Should speed things up considerably
+
+=cut
+
+foreach my $f (qw(apply_transaction solve_transaction schedule
+		  packages_to_remove wanted_pkgs installed_pkgs)) {
+    $cmp->{uc($f)}->{called} = 0;
+    $cmp->{uc($f)}->{args} = [];
+}
+
+$cmp->{SCHEDULE}->{install}->{called} = $cmp->{SCHEDULE}->{remove}->{called} = 0;
+
+$cmp->{WANTED_PKGS}->{return} = $cmp->{INSTALLED_PKGS}->{return};
+is($cmp->update_pkgs("pkgs", "run"), 1, "No-op invocation succeeds");
+# is($cmp->{SCHEDULE}->{install}->{called}, 0,
+#    "No scheduling needed for no-op invocation");
+
+$cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(x y z));
 
 =pod
 
@@ -158,13 +184,12 @@ repository.
 
 =cut
 
-clear_mock_counters($cmp);
 $cmp->{SCHEDULE}->{install}->{return} = "";
 $cmp->{SCHEDULE}->{remove}->{return} = "";
 
 is($cmp->update_pkgs("pkgs", "run", 0), 1, "Empty transaction succeeds");
-is($cmp->{APPLY_TRANSACTION}->{called}, 0,
-   "Empty transaction doesn't need Yum shell");
+is($cmp->{APPLY_TRANSACTION}->{called}, 2,
+   "Empty transaction calls Yum");
 
 =pod
 
@@ -256,7 +281,7 @@ is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
 
 =pod
 
-=item * Failure in C<installed_pkgs> means no scheduling is attempted.
+=item * Failure in C<installed_pkgs> means no other method is executed.
 
 =cut
 
@@ -266,11 +291,11 @@ $cmp->{INSTALLED_PKGS}->{return} = undef;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
    "Failure in installed_pkgs is propagated");
-is($cmp->{SCHEDULE}->{install}->{called}, 0,
-   "No installation is scheduled if we cannot derive installed packages");
+is($cmp->{WANTED_PKGS}->{called}, 0,
+   "wanted_pkgs is not called when installed_pkgs fails");
 foreach my $m (qw(apply_transaction solve_transaction)) {
     is($cmp->{uc($m)}->{called}, 0,
-       "Method $m not called when installed_pkgs fails");
+       "Method $m called when apply_transaction fails");
 }
 
 is($cmp->{SCHEDULE}->{remove}->{called}, 0,
@@ -287,22 +312,21 @@ is($cmp->update_pkgs("pkgs", "run", 0), 0,
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
    "Subsequent methods are not called if we can't complete previous transactions");
 
+
 =pod
 
-=item * Failures in C<distrosync> are detected and propagated
+=item * Failures in C<spare_dependencies> are detected and propagated
 
 =cut
 
 clear_mock_counters();
 
-$cmp->{DISTROSYNC}->{return} = 0;
+$cmp->{SPARE_DEPENDENCIES}->{return} = 0;
 
 is($cmp->update_pkgs("pkgs", "run", 0), 0,
-   "Failure in distrosync is propagated");
+   "Failure in spare_dependencies is propagated");
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
-   "No transaction is attempted if distrosync fails");
-is($cmp->{INSTALLED_PKGS}->{called}, 0,
-   "No check for installed packages if distrosync fails");
+   "No transaction is attempted if spare_dependencies fails");
 
 done_testing();
 
