@@ -6,7 +6,7 @@
   <artifactId>useraccess</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.6.0</version>
+  <version>13.6.1-SNAPSHOT</version>
   <name>Component managing the ways users can get interactive access to a machine.</name>
 
 
