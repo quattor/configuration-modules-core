@@ -210,14 +210,30 @@ like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
 
 =cut
 
+$repos = initialise_repos();
+
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
                         "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
    "List of reverse proxies succeeds to be rendered");
 
-$fh = get_file("$REPOS_DIR/$name.repo");
+$fh = get_file("$REPOS_DIR/$repos->[0]->{name}.repo");
 like($fh, qr{^baseurl= \s* http://$PROXY_HOST:$PROXY_PORT$
              \n \s* http://another:$PROXY_PORT$ }xm,
      "List of reverse proxies correctly rendered");
+
+=pod
+
+=item * A proxy listed on the repo is always used as a forward proxy.
+
+=cut
+
+$repos = initialise_repos();
+$repos->[0]->{proxy} = "http://not.your.proxy";
+is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
+   "Repository with its own proxies rendered correctly");
+$fh = get_file("/etc/yum.repos.d/a_repo.repo");
+like($fh, qr{^proxy\s*=\s*http://not.your.proxy$}m, "Proxy set up correctly");
 
 done_testing();
 
