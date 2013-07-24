@@ -23,13 +23,14 @@ type component_ccm = {
     'lock_wait'        : long(0..) = 30
     'retrieve_retries' : long(0..) = 3
     'retrieve_wait'    : long(0..) = 30
-    'cert_file'        ? string 
+    'cert_file'        ? string
     'key_file'         ? string
     'ca_file'          ? string
     'ca_dir'           ? string
     'world_readable'   : long(0..1) = 0
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")
+    'trust'            ? string
 };
 
 bind '/software/components/ccm' = component_ccm;

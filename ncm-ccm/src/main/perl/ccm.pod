@@ -94,4 +94,13 @@ protocol.
 Whether the profiles should be world-readable.  This takes either a 0
 or 1.
 
+=head2 trust
+
+A list of kerberos identities that should be trusted.
+The value should be a comma-separated list of principals. If
+the received profile is encrypted using kerberos, then this
+list of trusted identities is consulted. If the
+encryption author does not match any of these identities,
+then the profile will be rejected.
+
 =cut
