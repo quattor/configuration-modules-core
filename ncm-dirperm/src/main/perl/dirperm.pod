@@ -28,7 +28,27 @@ exist.
 
 A list of files/directories to manage with this component.  Each entry
 must be of the structure_dirperm_entry type which has the following
-fields: path, owner, perm, type, initdir.  
+fields: path, owner, perm, type, initdir, checkmount.
+
+=over 4
+
+=item B<checkmount> : boolean (optional)
+
+Pertinent for file/directory creation on non-root mounted filesystems.
+
+By default, if a file/directory is configured to be created on a non-root
+filesystem, and the filesystem is not mounted when ncm-dirperm is
+executed, the file/directory will be created on the root filesystem.
+There is a potential of filling up the root filesystem.
+
+When checkmount is set to 'true', ncm-dirperm checks if the file/directory
+resides on a configured filesystem in '/system/filesystems' and then
+checks if the filesystem is actual mounted at creation time.  If the
+filesystem is not mounted, then throw an error.
+
+Default : false
+
+=back
 
 =head1 EXAMPLES
  

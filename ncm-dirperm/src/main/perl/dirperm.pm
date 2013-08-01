@@ -21,6 +21,8 @@ use Fcntl ':mode';
 
 local(*DTA);
 
+my @configured_mounts;
+my %available_mounts;
 
 ##########################################################################
 sub Configure($$@) {
@@ -30,6 +32,39 @@ sub Configure($$@) {
 
     # Define paths for convenience.
     my $base = "/software/components/dirperm";
+
+    # Define paths for filesytems.
+    my $filesystems = "/system/filesystems";
+
+    # Get filesystem config into a hash.
+    my $filesystems_config = $config->getElement($filesystems)->getTree();
+
+    # Get the list of configured mountpoints
+    my @unsorted;
+    foreach my $entry (@{$filesystems_config}) {
+        push @unsorted, $entry->{mountpoint} . "/";
+    }
+
+    # Sort the list of configured mountpoints
+    @configured_mounts = sort @unsorted;
+
+    $self->debug(5,"Configured mounts on the server:");
+    foreach my $cfg_mnt (@configured_mounts) {
+        $self->debug(5,"\t$cfg_mnt");
+    }
+
+    # Get actual mountpoints available on the server into a hash.
+    open (MTAB, "/etc/mtab");
+    for my $line (<MTAB>) {
+        my ($device, $mnt_point, $fstype, $options) = split /\s+/, $line;
+        $mnt_point .= "/";
+        $available_mounts{$mnt_point}++;
+    }
+
+    $self->debug(5,"Filesystem mounts available on the server:");
+    foreach my $act_mnt (sort keys %available_mounts) {
+        $self->debug(5,"\t$act_mnt");
+    }
 
     # Get ncm-dirperm config into a hash
     my $dirperm_config = $config->getElement($base)->getTree();
@@ -189,11 +224,33 @@ sub process_path {
 				return 0;
 			}
 		} elsif ($type eq "d") {
+
+            # Should we check if the needed mount is actually mounted?
+            # (i.e. don't build path on / (root) if the mount point is not available)
+            if ($pathentry->{checkmount}) {
+                # Which mountpoint is path built on?
+                my $path_mountpoint;
+                $self->debug(5,"checkmount for path: $path");
+                foreach my $mntpt (@configured_mounts) {
+                    $self->debug(5,"\t\tmntpt: $mntpt");
+                    if ($path =~ /^$mntpt/) {
+                        $path_mountpoint = $mntpt;
+                        $self->debug(5,"\t\t\tMATCHED!!!");
+                    }
+                }
+
+                # is that mountpoint available?
+                if (not exists($available_mounts{$path_mountpoint})) {
+                    $self->error("filesytem mount $path_mountpoint not available for $path. skipping.");
+                    return 0;
+                }
+            }
+
 			# Make the directory and any parent directories.
 			eval { mkpath($path,0,$perm) };
 			if ($@) {
 				$self->error("error making directory: $@");
-				return 0;
+				next;
 			}
 		}
 	}
@@ -225,7 +282,7 @@ sub process_path {
                 # Ensure that this is a directory and exists.
                 if (! -d $srcdir) {
                     $self->error("initdir path ($srcdir) doesn't exist");
-                    next;
+                    return 0;
                 }
 
                 # Collect the ordinary files to copy.

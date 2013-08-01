@@ -35,6 +35,7 @@ type structure_dirperm_entry = {
     'owner'   : string with match(SELF, '\w+(:\w+)?')
     'type'    : string with match(SELF, 'd|f')
     'initdir' ? string[] 
+	'checkmount' : boolean = false
 } with dirperm_permissions_valid(SELF);
 
 type component_dirperm = {
