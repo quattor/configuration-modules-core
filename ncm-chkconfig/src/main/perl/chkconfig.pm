@@ -63,7 +63,7 @@ sub Configure {
   my @servicecmdlist;
 
   while($srvcs->hasNextElement()) {
-      
+
       my $startstop;
       my $cs = $srvcs->getNextElement(); #current service
       my $service = $self->unescape($cs->getName());
@@ -90,7 +90,7 @@ sub Configure {
       # entry per service.
 
       while($cs->hasNextElement()) {
-	  
+
 	  my $opt = $cs->getNextElement();
 	  my $optname = lc($opt->getName());
 	  my $optval =  lc($opt->getValue());
@@ -125,8 +125,8 @@ sub Configure {
 	    } else {
 	      $self->debug(2, "$service is not known to chkconfig, no need to 'del'");
 	    }
-		
-	  } elsif ($optname eq 'on') { 
+
+	  } elsif ($optname eq 'on') {
 	      if($config->elementExists("$servpath/off")) {
 		  $self->warn("service $service has both 'on' and 'off' settings defined, 'off' wins");
 	      } elsif ($config->elementExists("$servpath/del")) {
@@ -152,25 +152,25 @@ sub Configure {
 		  }
 		  if ($optval ne $currentlevellist) {
 		      $self->info("$service was 'on' for \"$currentlevellist\", new list is \"$optval\"");
-		      push(@cmdlist, [$chkconfigcmd, $service, "off"]);
+		      push(@cmdlist, [$chkconfigcmd, $service, "off", "--level", "0123456"]);
 		      push(@cmdlist, [$chkconfigcmd, "--level", $optval,
 				      $service, "on"]);
-		      if($startstop and $startstop eq 'true'  
+		      if($startstop and $startstop eq 'true'
 			 and ($optval =~ /$currentrunlevel/)) {
 			  push(@servicecmdlist,[$servicecmd, $service,
 						"start"]);
 		      }
 		  } else {
 		      $self->debug(2, "$service already 'on' for \"$optval\", nothing to do");
-		  } 
-	      }  
-	  } elsif ($optname eq 'off') { 
+		  }
+	      }
+	  } elsif ($optname eq 'off') {
 	      if($config->elementExists("$servpath/del")) {
 		  $self->info("service $service has both 'off' and 'del' settings defined, 'del' wins");
 	      } elsif(!validrunlevels($optval)) {
 		  $self->warn("invalid runlevel string $optval defined for ".
 			      "option \'$optname\' in service $service");
-	      } else {		   
+	      } else {
 		  if(!$optval) {
 		      $optval = '2345'; # default as per doc (man chkconfig)
 		      $self->debug(2, "$service: assuming default 'on' runlevels to be $optval");  # 'on' because this means we have to turn them 'off' here..
@@ -217,13 +217,13 @@ sub Configure {
 				     $service, "reset"]);
 		  } else {
 		      push(@cmdlist, [$chkconfigcmd, $service, "reset"]);
-		  } 
+		  }
 	      } else {
 		  $self->warn("invalid runlevel string $optval defined for ".
 			      "option $optname in service $service");
 	      }
 
-	  } elsif ($optname eq 'startstop' or $optname eq 'add' or 
+	  } elsif ($optname eq 'startstop' or $optname eq 'add' or
 		   $optname eq 'del' or $optname eq 'name') {
 	      # do nothing
 	  } else {
@@ -272,12 +272,12 @@ sub Configure {
       }
   }
 
-  
-  #perform the "chkconfig" commands 
+
+  #perform the "chkconfig" commands
   for my $cmd (@cmdlist) {
-      #info 
+      #info
       $self->info("executing command: ".join(" ", @$cmd));
-      
+
       unless($NoAction) {
 	  my $out = output(@$cmd);
 	  if(!defined("$cmd")) {
@@ -295,9 +295,9 @@ sub Configure {
 	  my @filteredservicelist = $self->service_filter(@servicecmdlist);
 	  my @orderedservicecmdlist = $self->service_order($currentrunlevel, @filteredservicelist);
 	  for my $cmd (@orderedservicecmdlist) {
-	      #info 
+	      #info
 	      $self->info("executing command: ". join(" ", @$cmd));
-	      
+
 	      unless($NoAction) {
 		  my $out = output(@$cmd);
 		  if(!defined($cmd)) {
@@ -305,7 +305,7 @@ sub Configure {
 		  } elsif ($? >> 8) {
 		      chomp($out);
 		      $self->warn($out);
-		  } 
+		  }
 	      }
 	  }
       }
@@ -336,7 +336,7 @@ sub service_filter {
     for my $line (@service_actions) {
         $service = $line->[1];
 	$action = $line->[2];
-	
+
 	my $current_state=output($servicecmd, $service, 'status');
 
 	if($action eq 'start' && $current_state =~ /is running/s ) {
@@ -378,7 +378,7 @@ sub service_order {
     for my $line (@service_actions) {
         $service = $line->[1];
 	$action = $line->[2];
-	
+
 	my $prio;
 	if($action eq 'stop') {
 	    $prio = 99;
@@ -418,7 +418,7 @@ sub validrunlevels(\$) {
 ##########################################################################
     my $str = shift;
     chomp($str);
-    
+
     return 1 unless ($str);
 
     if($str =~ /^[0-7]+$/) {
@@ -482,7 +482,7 @@ sub get_current_services_hash($) {
   while(<GET>) {
     # afs       0:off   1:off   2:off   3:off   4:off   5:off   6:off
     # ignore the "xinetd based services"
-    if (/^([\w\-]+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
+    if (/^([\w.\-]+)\s+0:(\w+)\s+1:(\w+)\s+2:(\w+)\s+3:(\w+)\s+4:(\w+)\s+5:(\w+)\s+6:(\w+)/) {
       $current{$1} = [$2,$3,$4,$5,$6,$7,$8];
     }
   }
