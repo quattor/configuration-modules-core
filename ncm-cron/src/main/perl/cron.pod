@@ -14,16 +14,32 @@ Files managed by this component will have the ncm-cron.cron suffix.
 Other files in the directory are not affected by this component.  The
 name of each file will be taken from the nlist name.
 
+This component can also be used to configure which users are permitted
+to use the crontab command via the cron.allow and cron.deny files.
 
 =head1 MAIN RESOURCES
 
 =head2 /software/components/cron/entries
 
-A list containing cron structures (described above).  
+A list containing cron structures (described below).
+
+=head2 /software/components/cron/allow
+
+A list of user names to be written into the cron.allow file.
+
+=head2 /software/components/cron/deny
+
+A list of user names to be written into the cron.deny file.
+
+=head2 /software/components/cron/securitypath
+
+Location of the cron.allow and cron.deny files. Defaults to '/etc'.
+
+
 
 =head1 ENTRY RESOURCES
 
-Each cron entry in the /software/components/cron/entries list may 
+Each cron entry in the /software/components/cron/entries list may
 contain the properties and resources described below. One of "frequency"
 or "timing" must be specified.
 
@@ -43,7 +59,7 @@ Default : None
 
 =item B<env> : nlist (optional)
 
-An optional nlist containing environment variable that must be 
+An optional nlist containing environment variable that must be
 defined before executing the command. Key is
 the variable name, value is variable value.
 
@@ -51,10 +67,10 @@ Default : None
 
 =item B<frequency> : string (optional)
 
-Execution frequency for the command, using standard cron syntax. 
+Execution frequency for the command, using standard cron syntax.
 Minutes field can be 'AUTO' : in this case,
-a random value between 0 and 59 inclusive is generated. 
-This can be used to avoid too many machines executing the same 
+a random value between 0 and 59 inclusive is generated.
+This can be used to avoid too many machines executing the same
 cron at the same time. See also the "timing" element.
 
 Default : None
@@ -67,21 +83,21 @@ Default : user's primary group
 
 =item B<log> : nlist (optional)
 
-A nlist allowing to define specific attributes for cron log file. 
+A nlist allowing to define specific attributes for cron log file.
 Supported attributes are :
 
 =over 4
 
-=item name 
+=item name
 
 name of the log file. If the name is not an absolute file name, file is created in /var/log.
 Default name is the cron file name with .log extension in /var/log.
 
-=item owner 
+=item owner
 
 owner/group of the log file, using owner:group format. group can be ommitted.
 
-=item mode 
+=item mode
 
 permissions of log file specified as a string interpreted as an octal number.
 
@@ -104,10 +120,10 @@ contain any of the keys: 'minute', 'hour', 'day', 'month' and 'weekday'. An
 unspecified key will have a value of '*'. A further key of 'smear' can
 be used to specify (in seconds) a maximum interval for smearing the start
 time, which can be as much as a day. When a smeared job is created, a
-random increment between zero and the smear time is applied to the start time of the 
+random increment between zero and the smear time is applied to the start time of the
 job.  If the start time results in the job running on the following day, then all other
 fields (day, weekday, etc) will be suitably modified. When smearing is
-specified, then the start minute (and possibly hour, if smear is more than one hour) must be 
+specified, then the start minute (and possibly hour, if smear is more than one hour) must be
 specified as a simple absolute (e.g. '2') and cannot be variations such as lists or ranges.
 Time specifications such as ranges, lists and steps are supported except for
 named values (e.g. "1" must be used instead of "mon").
@@ -145,7 +161,7 @@ Default : root
       "command", "/bin/date")
     );
 
-This will create three files in /etc/cron.d: 
+This will create three files in /etc/cron.d:
   ls.ncm-cron.cron
   hostname.ncm-cron.cron
   date.ncm-cron.cron
