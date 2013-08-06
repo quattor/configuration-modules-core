@@ -76,7 +76,7 @@ type structure_component_openvpn_client = {
 
 type structure_component_openvpn = {
     include structure_component
-    "server"            ? structure_component_openvpn_server
+    "server"            ? structure_component_openvpn_server{}
     "clients"            ? structure_component_openvpn_client{}
 };
 

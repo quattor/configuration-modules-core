@@ -59,9 +59,9 @@ sub setup_clients
 
 sub setup_server
 {
-    my ($self, $tree) = @_;
+    my ($self, $srv, $tree) = @_;
 
-    $self->verbose("Setting up server configuration");
+    $self->verbose("Setting up server $srv configuration");
     my $fh = CAF::FileWriter->open($tree->{configfile},
 				   log => $self,
 				   backup => ".old");
@@ -88,6 +88,20 @@ sub setup_server
     return $fh->close();
 }
 
+sub setup_servers
+{
+    my ($self, $tree) = @_;
+
+    my $changed = 0;
+
+    while (my ($srv, $cfg) = each(%$tree)) {
+	my $rt = $self->setup_server($srv, $cfg);
+	$changed ||= $rt;
+    }
+
+    return $changed;
+}
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -96,7 +110,7 @@ sub Configure
     my $changed = 0;
 
     $changed ||= $self->setup_clients($t->{clients}) if exists($t->{clients});
-    $changed ||= $self->setup_server($t->{server}) if exists($t->{server});
+    $changed ||= $self->setup_servers($t->{server}) if exists($t->{server});
 
 
     if ($changed) {
