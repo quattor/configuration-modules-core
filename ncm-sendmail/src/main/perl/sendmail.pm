@@ -254,7 +254,7 @@ sub Configure {
     unless($NoAction) {
       my $s=`/usr/bin/m4 "$cfgfilemc" 2>&1 > "$cfgfilecf"`;
       if ($? >> 8) {
-	$self->ERROR("m4 error while converting sendmail config: $s");
+	$self->error("m4 error while converting sendmail config: $s");
       }
       $self->info("converted sendmail config $cfgfilemc -> $cfgfilecf");
     } else {
