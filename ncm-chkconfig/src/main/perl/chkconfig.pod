@@ -72,6 +72,10 @@ already the case), otherwise the option is ignored. Please note that
 some services do not turn themselves on, and so in addition need an
 explicit I<on> for the appropriate runlevels.
 
+If service has value 'add', and is already known to chkconfig, 'reset'
+will be run. This will restore service runlevel to its default values
+and protect from any manual changes of runlevels by /sbin/chkconfig.
+
 =item /software/components/chkconfig/service/<service>/del : boolean
 
 If the value is true, removes service from management by chkconfig, otherwise
