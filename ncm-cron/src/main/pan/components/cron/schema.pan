@@ -52,8 +52,7 @@ type component_cron = {
     'entries' ? structure_cron[]
     'deny'    ? string[]
     'allow'   ? string[]
+    'securitypath' : string = '/etc'
 };
 
 bind '/software/components/cron' = component_cron;
-
-

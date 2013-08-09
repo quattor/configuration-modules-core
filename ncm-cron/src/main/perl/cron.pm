@@ -47,20 +47,21 @@ sub Configure($$@) {
     # Load ncm-cron configuration into a hash
     my $cron_config = $config->getElement($base)->getTree();
     my $cron_entries = $cron_config->{entries};
+    my $securitypath = $cron_config->{securitypath};
 
     # Define cron.allow / cron.deny files
     if (exists $cron_config->{allow} ) {
-	if ( security_file('allow',$cron_config->{allow}) < 0 ) {
-	    $self->error('Unable to write cron.allow');
-	};
+        if ( security_file('allow',$cron_config->{allow},$securitypath) < 0 ) {
+            $self->error('Unable to write cron.allow');
+        };
     }
     if (exists $cron_config->{deny} ) {
-	if ( security_file('deny',$cron_config->{deny}) < 0 ) {
-	    $self->error('Unable to write cron.deny');
-	};
+        if ( security_file('deny',$cron_config->{deny},$securitypath) < 0 ) {
+            $self->error('Unable to write cron.deny');
+        };
     }
 
-    # Collect the current entries managed by ncm-cron in the cron.d directory.
+    # Collect the current entries managed by @NAME@ in the cron.d directory.
     opendir DIR, $crond;
     my @files = grep /$cron_entry_regexp$/, map "$crond/$_", readdir DIR;
     closedir DIR;
@@ -69,20 +70,20 @@ sub Configure($$@) {
     # in the profile indicates that there should be no entries in the
     # cron.d directory either.
     foreach my $to_unlink (@files) {
-	# Untainted to_unlink to work with tainted perl mode (-T option)
-	if ($to_unlink =~ /^(.*)$/) {
-	    $to_unlink = $1;                     # $to_unlink is now untainted
-	} else {
-	    $self->error("Bad data in $to_unlink");
-	}
+        # Untainted to_unlink to work with tainted perl mode (-T option)
+        if ($to_unlink =~ /^(.*)$/) {
+            $to_unlink = $1;                     # $to_unlink is now untainted
+        } else {
+            $self->error("Bad data in $to_unlink");
+        }
 
-	unlink $to_unlink;
-	$self->log("error ($?) deleting file $to_unlink") if $?;
+        unlink $to_unlink;
+        $self->log("error ($?) deleting file $to_unlink") if $?;
     }
 
     # Only continue if the entries line is defined.
     unless ($cron_entries) {
-	return 1;
+        return 1;
     }
 
     # Loop through all of the entries creating one cron file for each
@@ -92,11 +93,8 @@ sub Configure($$@) {
             $self->error("Undefined name for cron entry; skipping");
             next;
         }
-
-        my $fname = $name;
-	$fname =~ s{[/\s]}{_}g;
-	my $file = "$crond/$fname.ncm-cron.cron";
-        $self->info("Checking cron entry $name ($file)...");
+        $self->info("Checking cron entry $name...");
+        my $file = "$crond/$name.ncm-cron.cron";
 
         # User: use root if not specified.
         my $user = 'root';
@@ -132,11 +130,10 @@ sub Configure($$@) {
         }
 
 
-        # Log file name, owner and mode.  Default is to create one in
-        # /var/log using the cron entry name.  If specified log file
-        # name is not an absolute path, create it in /var/log. if log
-        # file property 'disabled' is true, do not create/configure a
-        # log file.
+        # Log file name, owner and mode.
+        # Default is to create one in /var/log using the cron entry name.
+        # If specified log file name is not an absolute path, create it in /var/log.
+        # if log file property 'disabled' is true, do not create/configure a log file.
         my $log_name;
         my $log_owner;
         my $log_group;
@@ -144,33 +141,33 @@ sub Configure($$@) {
         my $log_params = $entry->{log};
         my $log_disabled = 0;
         if ( $log_params->{'disabled'} ) {
-	    $log_disabled = 1;
-	    $self->debug(1,'Log file disabled.');
+            $log_disabled = 1;
+            $self->debug(1,'Log file disabled.');
         } else {
-	    $log_name = "/var/log/$fname$cron_log_extension";
-	    $log_owner = undef;
-	    $log_group = undef;
-	    $log_mode = 0640;
+            $log_name = "/var/log/$name$cron_log_extension";
+            $log_owner = undef;
+            $log_group = undef;
+            $log_mode = 0640;
 
-	    if ( $log_params->{name} ) {
-		$log_name = $log_params->{name};
-		unless ( $log_name =~ /^\s*\// ) {
-		    $log_name = '/var/log/' . $log_name;
-		}
-	    }
-	    if ( $log_params->{owner} ) {
-		my $owner_group = $log_params->{owner};
-		($log_owner, $log_group) = split /:/, $owner_group;
-	    }
-	    unless ( $log_owner ) {
-		$log_owner = $user;
-	    }
-	    unless ( $log_group ) {
-		$log_group = $group;
-	    }
-	    if ( $log_params->{mode} ) {
-		$log_mode = oct($log_params->{mode});
-	    }
+            if ( $log_params->{name} ) {
+                $log_name = $log_params->{name};
+                unless ( $log_name =~ /^\s*\// ) {
+                    $log_name = '/var/log/' . $log_name;
+                }
+            }
+            if ( $log_params->{owner} ) {
+                my $owner_group = $log_params->{owner};
+                ($log_owner, $log_group) = split /:/, $owner_group;
+            }
+            unless ( $log_owner ) {
+                $log_owner = $user;
+            }
+            unless ( $log_group ) {
+                $log_group = $group;
+            }
+            if ( $log_params->{mode} ) {
+                $log_mode = oct($log_params->{mode});
+            }
         }
 
         # Frequency of the cron entry.  May contain AUTO for the
@@ -205,24 +202,24 @@ sub Configure($$@) {
                 $smear = int(rand($smear));
                 my ($overflow,$dayoverflow);
                 ($timing->{minute}, $overflow) =
-		    addtime($timing->{minute}, $smear, 0, 59);
+                    addtime($timing->{minute}, $smear, 0, 59);
                 ($timing->{hour}, $overflow) =
-		    addtime($timing->{hour}, $overflow, 0, 23);
+                    addtime($timing->{hour}, $overflow, 0, 23);
                 ($timing->{weekday}, $dayoverflow) =
-		    addtime($timing->{weekday}, $overflow, 0, 6);
+                    addtime($timing->{weekday}, $overflow, 0, 6);
                 ($timing->{day}, $dayoverflow) =
-		    addtime($timing->{day}, $overflow, 1, 31);
+                    addtime($timing->{day}, $overflow, 1, 31);
                 ($timing->{month}, $overflow) =
-		    addtime($timing->{month}, $dayoverflow, 1, 12);
+                    addtime($timing->{month}, $dayoverflow, 1, 12);
                 $self->info("smeared $name by $smear");
             }
-	    $frequency = "$timing->{minute} $timing->{hour} $timing->{day} $timing->{month} $timing->{weekday}";
+            $frequency = "$timing->{minute} $timing->{hour} $timing->{day} $timing->{month} $timing->{weekday}";
         } else {
             if (!exists $entry->{frequency} ||
                 !$entry->{frequency} ||
                 ref $entry->{frequency}) {
                 $self->error("undefined/invalid frequency for $name " .
-			     "cron entry; skipping");
+                    "cron entry; skipping");
                 next;
             }
             $frequency = $entry->{frequency};
@@ -276,42 +273,42 @@ sub Configure($$@) {
         $contents .= $comment;
         $contents .= $cronenv;
         if ( $log_disabled ) {
-	    $contents .= "$frequency $user ($command)";
+            $contents .= "$frequency $user ($command)";
         } else {
-	    $contents .= "$frequency $user ($date; $command) >> $log_name 2>&1";
+            $contents .= "$frequency $user ($date; $command) >> $log_name 2>&1";
         }
         $contents .= "\n";
 
         my $changes = LC::Check::file("$file",
                                       contents => encode_utf8($contents),
                                       mode => 0644,
-	    );
+        );
         if ( $changes < 0 ) {
             $self->error("Error updadating cron file $file");
         }
 
         # Create the log file and change the owner if necessary.
         if ( ! $log_params->{'disabled'} ) {
-	    if ( -f $log_name ) {
-		$changes = LC::Check::status($log_name,
-					     owner => $log_owner,
-					     group => $log_group,
-					     mode => $log_mode,
-		    );
-		if ( $changes < 0 ) {
-		    $self->error("Error setting owner/permissions on log file $log_name");
-		}
-	    } else {
-		$changes = LC::Check::file($log_name,
-					   contents => '',
-					   owner => $log_owner,
-					   group => $log_group,
-					   mode => $log_mode,
-		    );
-		if ( $changes < 0 ) {
-		    $self->warn("Error creating log file $log_name");
-		}
-	    }
+            if ( -f $log_name ) {
+                $changes = LC::Check::status($log_name,
+                                            owner => $log_owner,
+                                            group => $log_group,
+                                            mode => $log_mode,
+                );
+                if ( $changes < 0 ) {
+                    $self->error("Error setting owner/permissions on log file $log_name");
+                }
+            } else {
+                $changes = LC::Check::file($log_name,
+                                           contents => '',
+                                           owner => $log_owner,
+                                           group => $log_group,
+                                           mode => $log_mode,
+                );
+                if ( $changes < 0 ) {
+                    $self->warn("Error creating log file $log_name");
+                }
+            }
         }
     }
 
@@ -378,27 +375,27 @@ sub addtime {
 }
 
 sub security_file {
-    my ($file_type,$user_list) = @_;
+    my ($file_type, $user_list, $securitypath) = @_;
     my $user_contents = '';
     my $file = '';
 
     for my $user (@{$user_list}) {
-	$user_contents .= $user . "\n";
+        $user_contents .= $user . "\n";
     }
     my $contents = "#\n# File generated by ncm-cron. DO NOT EDIT.\n#\n";
     $contents .= $user_contents;
 
     if ( $file_type eq 'deny' ) {
-	$file = '/etc/cron.deny';
+        $file = "$securitypath/cron.deny";
     } else {
-	$file = '/etc/cron.allow';
+        $file = "$securitypath/cron.allow";
     }
 
     my $changes = LC::Check::file("$file",
-				  contents => encode_utf8($contents),
-				  mode => 0644,
-	);
-    return $changes;
+                                  contents => encode_utf8($contents),
+                                  mode => 0644,
+    );
+    return $changes
 }
 
 1;      # Required for PERL modules
