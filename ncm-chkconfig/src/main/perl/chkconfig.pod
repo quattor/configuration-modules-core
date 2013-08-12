@@ -65,12 +65,16 @@ If set, the value is used as the name of the service instead of using the
 Resets the service on defined run levels. Reset with no run levels specified 
 affects every run level. 
 
+
 =item /software/components/chkconfig/service/<service>/add : boolean
 
 If the value is true, adds service for management by chkconfig (if not
 already the case), otherwise the option is ignored. Please note that
 some services do not turn themselves on, and so in addition need an
 explicit I<on> for the appropriate runlevels.
+If service has value 'add', and is already known to chkconfig, 'reset' 
+will be run. This will restore service runlevel to it's original values
+and protecting any manual changes of runlevels by /sbin/chkconfig.
 
 =item /software/components/chkconfig/service/<service>/del : boolean
 
