@@ -317,13 +317,13 @@ sub versionlock
     my $locked = Set::Scalar->new();
 
     while (my ($pkg, $ver) = each(%$pkgs)) {
-	my $name = unescape($pkg);
-	while (my ($v, $a) = each(%$ver)) {
-	    my $version = unescape($v);
-	    foreach my $arch (keys(%{$a->{arch}})) {
-		$locked->insert("$name-$version.$arch");
-	    }
-	}
+        my $name = unescape($pkg);
+        while (my ($v, $a) = each(%$ver)) {
+            my $version = unescape($v);
+            foreach my $arch (keys(%{$a->{arch}})) {
+                $locked->insert("$name-$version.$arch");
+            }
+        }
     }
 
     my $out = $self->execute_yum_command([REPOQUERY, @$locked],
@@ -333,14 +333,8 @@ sub versionlock
     # Ensure that all the packages that we wanted to lock have been
     # resolved!!!
     foreach my $pkg (split(/\n/, $out)) {
-	my @envra = split(/:/, $pkg);
-	$locked->delete($envra[1]);
-    }
-    # We're fine if the only packages we have left in $locked are
-    # those with wildcards.
-    if (grep($_ !~ m{[*?]}, @$locked)) {
-	$self->error("Couldn't lock versions for $locked");
-	return 0;
+        my @envra = split(/:/, $pkg);
+        $locked->delete($envra[1]);
     }
 
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
