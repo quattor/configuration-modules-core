@@ -320,6 +320,7 @@ sub versionlock
         my $name = unescape($pkg);
         while (my ($v, $a) = each(%$ver)) {
             my $version = unescape($v);
+            next if $version eq '*';
             foreach my $arch (keys(%{$a->{arch}})) {
                 $locked->insert("$name-$version.$arch");
             }
@@ -332,9 +333,23 @@ sub versionlock
 
     # Ensure that all the packages that we wanted to lock have been
     # resolved!!!
+
+    # First, globbed packages must have their base package installed
+    # and locked (i.e, python*2.6 must have locked python-2.6).
+    foreach my $l (@$locked) {
+        $locked->delete($l);
+        $l =~ s{\*}{}g;
+        $locked->insert($l);
+    }
+
     foreach my $pkg (split(/\n/, $out)) {
         my @envra = split(/:/, $pkg);
         $locked->delete($envra[1]);
+    }
+
+    if (@$locked) {
+        $self->error("Unable to lock: $locked");
+        return 0;
     }
 
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
