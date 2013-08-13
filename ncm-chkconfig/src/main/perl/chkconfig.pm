@@ -100,7 +100,8 @@ sub Configure {
                     }
                     $self->info($msg);
                 } else {
-                    $self->debug(2, "$service is already known to chkconfig, no need to 'add'");
+	      $self->debug(2, "$service is already known to chkconfig, but running 'reset'");
+	      push(@cmdlist, [$chkconfigcmd, $service, "reset"]);
                 }
             } elsif ($optname eq 'del' && $optval) {
                 if ($currentservices{$service} ) {
