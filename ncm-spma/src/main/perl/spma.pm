@@ -309,48 +309,73 @@ sub apply_transaction
     return defined($ok);
 }
 
-# Lock the versions of any packages that have them
-sub versionlock
+# Prepares two sets of stuff to versionlock, from the escaped
+# structure in $pkgs.  Returns a set with the package names that need
+# to be versionlocked, and a reference to a list to be passed to
+# repoquery.
+#
+# The set has the * globs removed from the package names, to fix issue
+# #100.  It doesn't remove them from the versions, so that we can
+# still lock stuff like "any available python 2.7 (but not the
+# 2.4.x!!)
+sub prepare_lock_lists
 {
     my ($self, $pkgs) = @_;
 
     my $locked = Set::Scalar->new();
 
+    my $toquery = [];
+
     while (my ($pkg, $ver) = each(%$pkgs)) {
         my $name = unescape($pkg);
+        my $gn = $name;
+        $gn =~ s{\*}{}g;
         while (my ($v, $a) = each(%$ver)) {
             my $version = unescape($v);
             next if $version eq '*';
             foreach my $arch (keys(%{$a->{arch}})) {
-                $locked->insert("$name-$version.$arch");
+                $locked->insert("$gn-$version.$arch");
+                push(@$toquery, "$name-$version.$arch");
             }
         }
     }
 
-    my $out = $self->execute_yum_command([REPOQUERY, @$locked],
-                                         "determining epochs", 1);
-    return 0 if !defined($out);
+    return ($locked, $toquery);
+}
+
+# Returns whether the $locked string locks all the items in
+# $wanted_locked.  Warning: $wanted_locked will be modified!!
+#
+# TODO: report correctly when a globbed version is missing (say, no
+# python-2.7* could be locked)
+sub locked_all_packages
+{
+    my ($self, $wanted_locked, $locked) = @_;
 
     # Ensure that all the packages that we wanted to lock have been
     # resolved!!!
-
-    # First, globbed packages must have their base package installed
-    # and locked (i.e, python*2.6 must have locked python-2.6).
-    foreach my $l (@$locked) {
-        $locked->delete($l);
-        $l =~ s{\*}{}g;
-        $locked->insert($l);
-    }
-
-    foreach my $pkg (split(/\n/, $out)) {
+    foreach my $pkg (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkg);
-        $locked->delete($envra[1]);
+        $wanted_locked->delete($envra[1]);
     }
 
-    if (@$locked) {
-        $self->error("Unable to lock: $locked");
+    if (grep($_ !~ m{[*?]}, @$wanted_locked)) {
+        $self->error("Unable to lock: $wanted_locked");
         return 0;
     }
+    return 1;
+}
+
+# Lock the versions of any packages that have them
+sub versionlock
+{
+    my ($self, $pkgs) = @_;
+
+    my ($locked, $toquery) = $self->prepare_lock_lists($pkgs);
+    my $out = $self->execute_yum_command([REPOQUERY, @$toquery],
+                                         "determining epochs", 1);
+    return 0 if !defined($out) || !$self->locked_all_packages($locked, $out);
+
 
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
     print $fh "$out\n";
