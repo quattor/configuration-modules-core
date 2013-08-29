@@ -28,6 +28,8 @@ Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+our $NoActionSupported = 1;
+
 # Restart any daemon that has seen its configuration changed by the
 # component.
 sub restart_daemon {
