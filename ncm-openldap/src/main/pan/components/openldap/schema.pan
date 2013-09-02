@@ -16,7 +16,7 @@ declaration template components/openldap/schema;
 include { 'quattor/schema' };
 
 function openldap_loglevels_to_long = {
-    # converts a list of named loglevels to it's numeric value
+    # converts a list of named loglevels to its numeric value
     # returns undef in case of unknown entry
     # returns (whichever comes first in list)
     #   0 if one of the values is nologging
@@ -59,13 +59,15 @@ function openldap_loglevels_to_long = {
         if(lvl == 'nologging' || lvl == 'any') {
             return(the_map[lvl]);
         };
-        total = total + the_map[lvl];
+        total = total | the_map[lvl];
     };
     total;
 };
 
 type long_pow2 = long with (SELF==1||SELF==2||SELF==4||SELF==8||
     SELF==16||SELF==32||SELF==64||SELF==128||SELF==256||SELF==512||
+    SELF==1024||SELF==2048||SELF==4096||SELF==8192||SELF==16384||
+    SELF==32768||SELF==65536||
     error("Only powers of two are accepted"));
 
 # Possible acceptable values
@@ -310,7 +312,10 @@ type component_openldap = {
 	'backends'	? ldap_database[]
 	'databases'	? ldap_database[]
 	'monitoring' ? ldap_monitoring
-	'move_slapdd' ? boolean = true  # move the /etc/openldap/slapd.d dir
+	# move the /etc/openldap/slapd.d dir (this  
+	#  configuration method takes preferences over the  
+	#  slapd.conf file, but it is not supported by the component)
+	'move_slapdd' ? boolean = true  
 };
 
 bind '/software/components/openldap' = component_openldap;
