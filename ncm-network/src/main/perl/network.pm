@@ -613,7 +613,7 @@ sub Configure {
         };
     };
 
-    my @cmds;
+    my @disablenm_cmds = ();
 
     ## allow NetworkMnager to run or not?
     if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
@@ -621,16 +621,15 @@ sub Configure {
         # warning: this can cause troubles with the recovery to previous state in case of failure
         # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
         # (or better yet, post ncm-spma)
-        @cmds = ();
-        push(@cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
-        push(@cmds,["/sbin/service NetworkManager stop"]);
-        $self->runrun(@cmds);
+        push(@disablenm_cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
+        push(@disablenm_cmds,["/sbin/service NetworkManager stop"]);
+        $self->runrun(@disablenm_cmds);
     };
 
     ## restart network
     ## capturing system output/exit-status here is not useful.
     ## network status is tested separately
-    @cmds = ();
+    my @cmds = ();
     ## ifdown dev OR network stop
     if ($exifiles{"/etc/sysconfig/network"} == 1) {
         @cmds = [qw(/sbin/service network stop)];
