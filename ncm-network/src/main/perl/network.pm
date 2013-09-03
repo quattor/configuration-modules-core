@@ -531,6 +531,14 @@ sub Configure {
     if ($config->elementExists($path."/gatewaydev")) {
         $text .= "GATEWAYDEV=".$config->getValue($path."/gatewaydev")."\n";
     }
+    ## nmcontrolled
+    if ($config->elementExists($path."/nmcontrolled")) {
+        if ($config->getValue($path."/nmcontrolled") eq "true") {
+            $text .= "NM_CONTROLLED=yes\n";
+        } else {
+            $text .= "NM_CONTROLLED=no\n";
+        }
+    }
 
     $exifiles{$file_name}=file_dump($file_name,$text,$fail);
     $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
@@ -605,11 +613,23 @@ sub Configure {
         };
     };
 
-    my @cmds;
+    my @disablenm_cmds = ();
+
+    ## allow NetworkMnager to run or not?
+    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
+        # no checking, forcefully stopping NetworkManager
+        # warning: this can cause troubles with the recovery to previous state in case of failure
+        # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
+        # (or better yet, post ncm-spma)
+        push(@disablenm_cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
+        push(@disablenm_cmds,["/sbin/service NetworkManager stop"]);
+        $self->runrun(@disablenm_cmds);
+    };
+
     ## restart network
     ## capturing system output/exit-status here is not useful.
     ## network status is tested separately
-
+    my @cmds = ();
     ## ifdown dev OR network stop
     if ($exifiles{"/etc/sysconfig/network"} == 1) {
         @cmds = [qw(/sbin/service network stop)];
