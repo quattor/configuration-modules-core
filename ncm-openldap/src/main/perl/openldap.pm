@@ -353,6 +353,20 @@ sub restart_slapd
     return !$?;
 }
 
+# Move slapd.d dir (newer, unsupported configuration method)
+sub move_slapdd_dir
+{
+    my ($self,$slapdddir) = @_;
+
+    if ( -d $slapdddir ) {
+        my $origsuff = "orig.".time();
+        $self->info("Moving slapd.d dir $slapdddir to $slapdddir.$origsuff.");
+        move($slapdddir, "$slapdddir.$origsuff")  || $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
+    } else {
+        $self->debug("Moving slapd.d dir $slapdddir: no such dir found.");
+    }
+}
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -384,16 +398,9 @@ sub Configure
         }
         $self->print_monitoring($fh,$t->{monitoring}) if (exists($t->{monitoring}));
 
-        # rename conf_dir/slapd.d
+        # move conf_dir/slapd.d
         if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
-            my $slapdddir = dirname($t->{conf_file})."/slapd.d";
-            if ( -d $slapdddir ) {
-                my $origsuff = "orig.".time();
-                $self->info("Moving slapd.d dir $slapdddir to $slapdddir.$origsuff.");
-                move($slapdddir, "$slapdddir.$origsuff")  || $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
-            } else {
-                $self->debug("Moving slapd.d dir $slapdddir: no such dir found.")
-            }
+            $self->move_slapdd_dir(dirname($t->{conf_file})."/slapd.d");
         }
     } else {
         $self->legacy_setup($config, $fh, $t);
