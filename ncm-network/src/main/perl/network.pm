@@ -359,6 +359,26 @@ sub Configure {
             $text .= "SLAVE=yes\n";
         }
 
+        # LINKDELAY
+        if (exists($net{$iface}{linkdelay})) {
+            $text .= "LINKDELAY=".$net{$iface}{linkdelay}."\n";
+        }
+
+        # set some bridge-releated parameters
+        # bridge STP
+        if (exists($net{$iface}{stp})) {
+            if($net{$iface}{stp}) {
+                $text .= "STP=on\n";
+            } else {
+                $text .= "STP=off\n";
+            }
+        }
+        # bridge DELAY
+        if (exists($net{$iface}{delay})) {
+            $text .= "DELAY=".$net{$iface}{delay}."\n";
+        }
+
+        # add generated options strings
         if (exists($net{$iface}{bonding_opts})) {
             $text .= $net{$iface}{bonding_opts};
         }
