@@ -157,8 +157,8 @@ sub Configure {
                     }
                     $net{$ifacename}{$elementname}{$elnr}=\%tmp_el;
                 }
-            } elsif ($elementname =~ m/^bonding_opts$/) {
-                $net{$ifacename}{$elementname} = bonding_options($element);
+            } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
+                $net{$ifacename}{$elementname} = make_key_equal_value_string($elementname, $element);
             } elsif (defined($ethtool_option_map{$elementname})) {
                 ## set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
                 $net{$ifacename}{$elementname."_opts"} = ethtool_options($element) if ($elementname eq "ethtool");
@@ -1022,18 +1022,17 @@ sub Configure {
 	$self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
     }
 
-    # Creates a string defining the bonding or ethtool  options.
-    sub bonding_options {
-        my ($el) = @_;
+    # Creates a string defining the bonding/bridging or ethtool options.
+    sub make_key_equal_value_string {
+        my ($variablename, $el) = @_;
         my $opts = $el->getTree();
-        my $st = "BONDING_OPTS=";
         my @op;
 
         while (my ($k, $v) = each(%$opts)) {
             push(@op, "$k=$v");
         }
 
-        return "$st'" . join(' ', @op) . "'\n";
+        return uc($variablename) . "='" . join(' ', @op) . "'\n";
     }
 
     sub ethtool_options {
