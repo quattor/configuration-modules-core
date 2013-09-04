@@ -1085,6 +1085,7 @@ sub Configure {
 
 
     #### real end of configure
+    return 1;
 }
 
 1;
