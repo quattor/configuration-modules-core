@@ -26,6 +26,7 @@ use Set::Scalar;
 $CAF::Object::NoAction = 1;
 
 Readonly::Array my @REPOQUERY => NCM::Component::spma::REPOQUERY;
+Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
 
 my $cmp = NCM::Component::spma->new("spma");
 
@@ -96,7 +97,7 @@ is($cmp->versionlock({ glibc => $pkgs->{glibc},
 		       kde => $pkgs->{kde}}), 1,
    "Simple versionlock succeeds");
 
-my $fh = get_file("/etc/yum/pluginconf.d/versionlock.list");
+my $fh = get_file($FILE);
 
 like($fh, qr{^\d:glibc.*i686}m, "glibc listed in version lock");
 like($fh, qr{^\d:glibc.*x86_64}m, "glibc listed in version lock winth all archs");
@@ -129,6 +130,9 @@ set_desired_err(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"));
 
 is($cmp->versionlock({python_2a => $pkgs->{python_2a}}), 1,
    "Locking of packages with wildcards succeeds");
+
+$fh = get_file($FILE);
+like($fh, qr{^0:python}m, "Versionlocked packages are correctly listed");
 
 set_desired_output(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"), "");
 is($cmp->versionlock({pythoh_2a => $pkgs->{python_2a}}), 0,
