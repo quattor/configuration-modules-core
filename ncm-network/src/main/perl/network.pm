@@ -74,6 +74,7 @@ my %ethtool_option_map=(
    );
 my $ethtoolcmd="/usr/sbin/ethtool";
 
+use constant FAILED_SUFFIX => '-failed';
 
 ##########################################################################
 sub Configure {
@@ -83,7 +84,6 @@ sub Configure {
     my $base_path = '/system/network';
     ## keep a hash of all files and links.
     our (%exifiles,%exilinks);
-    my $fail="-failed";
 
     my ($path,$file_name,$text);
 
@@ -414,7 +414,7 @@ sub Configure {
         }
 
         ## write iface ifcfg- file text
-        $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+        $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
         $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
         ## route config, interface based.
@@ -439,7 +439,7 @@ sub Configure {
                     $text .= "NETMASK".$rt."=255.255.255.255\n";
                 }
             };
-            $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+            $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
             $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
@@ -482,7 +482,7 @@ sub Configure {
                 if ( $net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
-                $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+                $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
                 $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
@@ -564,7 +564,7 @@ sub Configure {
         }
     }
 
-    $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+    $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
     $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
 
@@ -669,7 +669,7 @@ sub Configure {
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy(bu($file).$fail,$file) || $self->error("replace modified/new files: can't copy ".bu($file).$fail." to $file. ($!)");
+            copy(bu($file).FAILED_SUFFIX,$file) || $self->error("replace modified/new files: can't copy ".bu($file).FAILED_SUFFIX." to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
@@ -698,9 +698,9 @@ sub Configure {
                     unlink(bu($file)) ||
                         $self->warn("cleanup backups: can't unlink ".bu($file)." ($!)") ;
                 }
-                if (-e bu($file).$fail) {
-                    unlink(bu($file).$fail) ||
-                        $self->warn("cleanup backups: can't unlink ".bu($file).$fail." ($!)");
+                if (-e bu($file).FAILED_SUFFIX) {
+                    unlink(bu($file).FAILED_SUFFIX) ||
+                        $self->warn("cleanup backups: can't unlink ".bu($file).FAILED_SUFFIX." ($!)");
                 }
             }
         }
@@ -708,7 +708,7 @@ sub Configure {
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     bu(" "), "with suffix $fail. ",
+                     bu(" "), "with suffix ",FAILED_SUFFIX ,". ",
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         ## if not, revert and pray now done with a pure network
