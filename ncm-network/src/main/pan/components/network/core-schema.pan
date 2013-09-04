@@ -35,6 +35,19 @@ type structure_bonding_options = {
     "primary" : string with exists("/system/network/interfaces/" + SELF)
 };
 
+# describes the bridging options 
+# (parameters for /sys/class/net/<br>/brport)
+type structure_briding_options = {
+    "bpdu_guard" ? long
+    "flush" ? long
+    "hairpin_mode" ? long
+    "multicast_fast_leave" ? long
+    "multicast_router" ? long
+    "path_cost" ? long
+    "priority" ? long
+    "root_block" ? long
+};
+
 #
 # structure_interface_offload
 #
@@ -102,6 +115,11 @@ type structure_interface = {
   "vlan" ? boolean
   "physdev"    ? string with exists ("/system/network/interfaces/" + SELF)
   "nmcontrolled"     ? boolean
+  
+  "linkdelay" ? long # LINKDELAY  
+  "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
+  "delay" ? long # brctl setfd DELAY
+  "bridging_opts" ? structure_briding_options 
 };
 
 
