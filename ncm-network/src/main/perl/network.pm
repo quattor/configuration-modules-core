@@ -73,8 +73,6 @@ my %ethtool_option_map=(
 my $ethtoolcmd="/usr/sbin/ethtool";
 
 
-
-
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -661,7 +659,7 @@ sub Configure {
         foreach my $if (sort keys %ifdown) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-	    push(@cmds, ["/sbin/ifdown", $if]);
+            push(@cmds, ["/sbin/ifdown", $if]);
         }
     }
     $self->runrun(@cmds);
@@ -682,7 +680,7 @@ sub Configure {
         foreach my $if (sort keys %ifup) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-	    push(@cmds, ["/sbin/ifup", $if, "boot"]);
+            push(@cmds, ["/sbin/ifup", $if, "boot"]);
             push(@cmds, [qw(sleep 10)]) if ($if =~ m/bond/);
         }
     }
@@ -825,11 +823,11 @@ sub Configure {
     }
 
     sub get_current_config {
-	my $output;
-	my $fh = CAF::FileEditor->new("/etc/sysconfig/network",
-				      log => $self);
-	$fh->cancel();
-	$output = ${$fh->string_ref()};
+        my $output;
+        my $fh = CAF::FileEditor->new("/etc/sysconfig/network",
+                                      log => $self);
+        $fh->cancel();
+        $output = ${$fh->string_ref()};
 
         $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
         $output .= $self->runrun(["/sbin/ifconfig"]);
@@ -898,8 +896,8 @@ sub Configure {
 
         if (-e $backup_file.$failed) {
             $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
-            unlink($backup_file.$failed)||
-            $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
+            unlink($backup_file.$failed) ||
+                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
         }
 
         $self->debug(3,"$func: writing ".$backup_file.$failed);
@@ -936,8 +934,8 @@ sub Configure {
             push(@output, CAF::Process->new($i, log => $self)->output());
             if ($?) {
                 $self->error("Error output: $output[-1]");
-	       }
-	    }
+           }
+        }
 
         return join("", @output);
     }
@@ -1026,7 +1024,7 @@ sub Configure {
         my $setoption="--$sectionname";
         $setoption="--set-$sectionname" if ($sectionname eq "ring");
         $setoption="--change" if ($sectionname eq "ethtool");
-	$self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
+        $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
     }
 
     # Creates a string defining the bonding/bridging or ethtool options.
