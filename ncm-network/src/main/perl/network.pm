@@ -43,6 +43,7 @@ use Net::Ping;
 use Data::Dumper;
 use CAF::Process;
 use CAF::FileEditor;
+use CAF::FileWriter;
 use LC::File;
 
 # Ethtool formats query information differently from set parameters so
@@ -590,14 +591,15 @@ sub Configure {
                     my $sl = "";
                     my $ma = "";
                     if ( -e $file) {
-                        open(FILE,bu($file)) ||
-                                $self->error("reading ifcfg: can't open the backup ",
-                                             bu($file), " of $file. ($!)");
-                        while (<FILE>) {
-                            $sl=$1 if (m/SLAVE=(\w+)/);
-                            $ma=$1 if (m/MASTER=(\w+)/);
+                        $self->debug(3, "reading ifcfg from the backup ", bu($file));
+                        my $fh = CAF::FileEditor->new(bu($file), log => $self);
+                        $fh->cancel();
+                        seek($fh, 0, SEEK_SET);
+                        while (my $l = <$fh>) {
+                            $sl=$1 if ($l =~ m/SLAVE=(\w+)/);
+                            $ma=$1 if ($l =~ m/MASTER=(\w+)/);
                         }
-                        close(FILE);
+                        $fh->close();                   
                     }
                     $ifdown{$ma}=1 if (($sl eq "yes") && ($ma =~ m/bond/));
                 } elsif (exists($net{$if}{'set_hwaddr'})
@@ -901,10 +903,10 @@ sub Configure {
         }
 
         $self->debug(3,"$func: writing ".$backup_file.$failed);
-        open(FILE,"> ".$backup_file.$failed) ||
-            $self->error("$func: Can't write to ".$backup_file.$failed." ($!)");
-        print FILE $text;
-        close(FILE);
+        my $fh = CAF::FileWriter->new($backup_file.$failed, log=>$self);
+        print $fh $text;
+        $fh->close();
+
         if (compare($file,$backup_file.$failed) == 0) {
             ## they're equal, remove backup files
             $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file.$failed);
