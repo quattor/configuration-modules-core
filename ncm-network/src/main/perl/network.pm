@@ -363,6 +363,10 @@ sub Configure {
             $text .= $net{$iface}{bonding_opts};
         }
 
+        if (exists($net{$iface}{bridging_opts})) {
+            $text .= $net{$iface}{bridging_opts};
+        }
+
         if (exists($net{$iface}{ethtool_opts})) {
             $text .= $net{$iface}{ethtool_opts};
         }
