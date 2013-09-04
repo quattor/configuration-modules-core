@@ -44,6 +44,7 @@ use Data::Dumper;
 use CAF::Process;
 use CAF::FileEditor;
 use CAF::FileWriter;
+use Fcntl qw(SEEK_SET);
 use LC::File;
 
 # Ethtool formats query information differently from set parameters so
