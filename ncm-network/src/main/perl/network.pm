@@ -926,23 +926,6 @@ sub Configure {
         };
     }
 
-    ## this is how it used to be used
-    sub runrunold {
-        my $cmd = shift||"";
-        return if ($cmd eq "");
-
-        ## old style
-        my $output;
-        $self->info("Going to run: $cmd");
-        #system($cmd);
-        open(FILE,$cmd." 2>&1 |");
-        $output .= $_ while (<FILE>);
-        close(FILE);
-
-        return $output
-
-    }
-
     sub runrun {
         my ($self, @cmds) = @_;
         return if (!@cmds);
