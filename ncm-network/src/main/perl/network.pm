@@ -714,13 +714,17 @@ sub Configure {
         foreach my $file (keys %exifiles) {
             ## don't clean up files that are not changed
             if ($exifiles{$file} != 0) {
-                if (-e bu($file)) {
-                    unlink(bu($file)) ||
-                        $self->warn("cleanup backups: can't unlink ".bu($file)." ($!)") ;
+                if (-e $self->gen_backup_filename($file)) {
+                    unlink($self->gen_backup_filename($file)) ||
+                        $self->warn("cleanup backups: can't unlink ",
+                                    $self->gen_backup_filename($file),
+                                    " ($!)") ;
                 }
-                if (-e bu($file).FAILED_SUFFIX) {
-                    unlink(bu($file).FAILED_SUFFIX) ||
-                        $self->warn("cleanup backups: can't unlink ".bu($file).FAILED_SUFFIX." ($!)");
+                if (-e $self->gen_backup_filename($file).FAILED_SUFFIX) {
+                    unlink($self->gen_backup_filename($file).FAILED_SUFFIX) ||
+                        $self->warn("cleanup backups: can't unlink ",
+                                    $self->gen_backup_filename($file).FAILED_SUFFIX,
+                                    " ($!)");
                 }
             }
         }
@@ -728,7 +732,7 @@ sub Configure {
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     bu(" "), "with suffix ",FAILED_SUFFIX ,". ",
+                     $self->gen_backup_filename(" "), "with suffix ",FAILED_SUFFIX,
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         ## if not, revert and pray now done with a pure network
