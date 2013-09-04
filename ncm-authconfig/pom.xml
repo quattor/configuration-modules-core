@@ -46,9 +46,11 @@
     <contributor>
       <name>Jan van Eldik</name>
     </contributor>
+    <contributor>
+        <name>Stijn De Weirdt</name>
+        <email>stijn.deweirdt@ugent.be</email>
+    </contributor>
   </contributors>
-
-
 
   <build>
     <pluginManagement>
