@@ -198,7 +198,9 @@ sub Configure {
             if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
                 $net{$ifacename}{'hwaddr'} = $mac;
             } else {
-                $self->error("The configured hwaddr ".$mac." for interface ".$ifacename." didn't pass the regexp. Setting set_hwaddr to false. (Please contact the developers in case you think it is a valid MAC address).");
+                $self->error("The configured hwaddr ", $mac, " for interface ",$ifacename,
+                             " didn't pass the regexp. Setting set_hwaddr to false. ",
+                             "(Please contact the developers in case you think it is a valid MAC address).");
                 $net{$ifacename}{'set_hwaddr'} = 'false';
             }
         } else {
@@ -480,7 +482,9 @@ sub Configure {
                         if(! -e $file_name_sym) {
                             ## this will create broken link, if $file_name is not yet existing
                             if (! -l $file_name_sym) {
-                                symlink($file_name,$file_name_sym) || $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
+                                symlink($file_name,$file_name_sym) || 
+                                    $self->error("Failed to create symlink ",
+                                                 "from $file_name to $file_name_sym ($!)");
                             };
                         };
                     };
@@ -982,7 +986,8 @@ sub Configure {
                 }
             }
         } else {
-            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed. (output: $out, stderr: $err)");
+            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
+                         " (output: $out, stderr: $err)");
         }
         return %current;
     }
@@ -1016,7 +1021,8 @@ sub Configure {
             } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
                 $currentv=$current{$ethtool_option_map{$sectionname}{$k}};
             } else {
-                $self->info("ethtoolSetOptions: Skipping setting for $ethname/$sectionname/$k to $v as not in ethtool");
+                $self->info("ethtoolSetOptions: Skipping setting for ",
+                            "$ethname/$sectionname/$k to $v as not in ethtool");
                 next;
             }
 
