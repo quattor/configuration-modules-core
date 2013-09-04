@@ -37,7 +37,7 @@ type structure_bonding_options = {
 
 # describes the bridging options 
 # (parameters for /sys/class/net/<br>/brport)
-type structure_briding_options = {
+type structure_bridging_options = {
     "bpdu_guard" ? long
     "flush" ? long
     "hairpin_mode" ? long
@@ -119,7 +119,7 @@ type structure_interface = {
   "linkdelay" ? long # LINKDELAY  
   "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
   "delay" ? long # brctl setfd DELAY
-  "bridging_opts" ? structure_briding_options 
+  "bridging_opts" ? structure_bridging_options 
 };
 
 
