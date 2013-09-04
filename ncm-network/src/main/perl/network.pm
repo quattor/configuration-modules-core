@@ -76,6 +76,19 @@ my $ethtoolcmd="/usr/sbin/ethtool";
 
 use constant FAILED_SUFFIX => '-failed';
 
+# gen_backup_filename: returns backup filename for given file
+sub gen_backup_filename 
+{
+    my ($self, $file) = @_;
+    my $back_dir="/tmp";
+
+    my $back="$file";
+    $back =~ s/\//_/g;
+    my $backup_file = "$back_dir/$back";
+    return $backup_file;
+}
+
+
 ##########################################################################
 sub Configure {
 ##########################################################################
@@ -592,8 +605,8 @@ sub Configure {
                     my $sl = "";
                     my $ma = "";
                     if ( -e $file) {
-                        $self->debug(3, "reading ifcfg from the backup ", bu($file));
-                        my $fh = CAF::FileEditor->new(bu($file), log => $self);
+                        $self->debug(3, "reading ifcfg from the backup ", $self->gen_backup_filename($file));
+                        my $fh = CAF::FileEditor->new($self->gen_backup_filename($file), log => $self);
                         $fh->cancel();
                         seek($fh, 0, SEEK_SET);
                         while (my $l = <$fh>) {
@@ -669,7 +682,10 @@ sub Configure {
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy(bu($file).FAILED_SUFFIX,$file) || $self->error("replace modified/new files: can't copy ".bu($file).FAILED_SUFFIX." to $file. ($!)");
+            copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) || 
+                $self->error("replace modified/new files: can't copy ",
+                             $self->gen_backup_filename($file).FAILED_SUFFIX,
+                             " to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
@@ -731,15 +747,15 @@ sub Configure {
                 if (-e $file) {
                     unlink($file) || $self->error("Can't unlink $file.") ;
                 }
-                copy(bu($file),$file) ||
-                    $self->error("Can't copy ".bu($file)." to $file.");
+                copy($self->gen_backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
             } elsif ($exifiles{$file} == -1) {
                 $self->info("RECOVER: Restoring file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
                 }
-                copy(bu($file),$file) ||
-                    $self->error("Can't copy ".bu($file)." to $file.");
+                copy($self->gen_backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
             }
         }
         ## ifup OR network start
@@ -780,25 +796,16 @@ sub Configure {
     ## end of configure
     ##
 
-    sub bu {
-        my $func="bu";
-        ## returns backup filename of file
-        my $file = shift || $self->error("$func: No file given.");
-        my $back_dir="/tmp";
-
-        my $back="$file";
-        $back =~ s/\//_/g;
-        my $backup_file = "$back_dir/$back";
-        return $backup_file;
-    }
 
     sub mk_bu {
         my $func="mk_bu";
         ## makes backup of file
         my $file = shift || $self->error("$func: No file given.");
 
-        $self->debug(3,"$func: create backup of $file to ".bu($file));
-        copy($file, bu($file)) || $self->error("$func: Can't create backup of $file to ".bu($file)." ($!)");
+        $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
+        copy($file, $self->gen_backup_filename($file)) || 
+            $self->error("$func: Can't create backup of $file to ",
+                         $self->gen_backup_filename($file), " ($!)");
     }
 
     sub test_network {
@@ -895,7 +902,7 @@ sub Configure {
         my $failed = shift || $self->error("$func: No failed suffix.");
 
         ## check for subdirectories?
-        my $backup_file = bu($file);
+        my $backup_file = $self->gen_backup_filename($file);
 
         if (-e $backup_file.$failed) {
             $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
