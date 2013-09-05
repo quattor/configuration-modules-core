@@ -37,7 +37,7 @@ $l = $cmp->generate_privilege_lines($cfg);
 is(scalar(@$l), 1, "Correct line rendered");
 
 unlike($l->[0], qr{::}, "No empty options");
-unlike($l->[0], qr{\b:}, "No useless semicolons");
+unlike($l->[0], qr{\B:}, "No useless semicolons");
 like($l->[0], qr{NOPASSWD:EXEC:}, "New options rendered correctly");
 
 done_testing();
