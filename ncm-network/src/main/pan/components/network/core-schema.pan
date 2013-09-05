@@ -99,7 +99,7 @@ type structure_interface = {
   "driver"  ? string
   "bootproto" ? string
   "onboot" ? string
-  "type"    ? string
+  "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL)$')
   "device"  ? string
   "master" ? string
   "mtu"       ? long
