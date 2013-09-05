@@ -22,6 +22,8 @@ use constant MOUNT => qw(/bin/mount);
 our @ISA = qw(NCM::Component);
 our $EC = LC::Exception::Context->new()->will_store_all();
 
+$NCM::Component::fstab::NoActionSupported = 1;
+
 # Updates entries in /etc/fstab. Returns a hash with the mountpoints
 # that exist in the profile.
 sub update_entries
