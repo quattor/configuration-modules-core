@@ -34,7 +34,7 @@ type structure_privilege_line = {
 	"user"		: string	# "User invoking sudo"
 	"run_as"	: string	# "User the program will run under"
 	"host"		: string	# "host the command can be run from"
-	"options"	? string	with match (SELF, "^(PASSWD|NOPASSWD)$")
+	"options"	? string	with match (SELF, "^(NOPASSWD:|PASSWD:|NOEXEC:|EXEC:|SETENV:|NOSETENV:|LOG_INPUT:|NOLOG_INPUT:|LOG_OUTPUT:|NOLOG_OUTPUT:)+$")
 					# "Specific options for this command"
 	"cmd"		: string	# "The command being run"
 };
