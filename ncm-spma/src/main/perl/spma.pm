@@ -38,8 +38,9 @@ use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
 use constant OBSOLETE => "obsoletes";
-use constant REPO_DEPS => qw(repoquery --requires --resolve --qf %{NAME};%{ARCH});
-use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive
+use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
+                             --qf %{NAME};%{ARCH});
+use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
                                  --qf %{NAME}\n%{NAME};%{ARCH});
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
@@ -454,8 +455,10 @@ sub spare_dependencies
     # nothing and may want to install and upgrade quite a lot of
     # things.
     if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
+        $self->debug(3, "Sparing dependencies in the whatreq path");
 	return $self->spare_deps_whatreq($rm, $install);
     } else {
+        $self->debug(3, "Sparing dependencies in the requires path");
 	return $self->spare_deps_requires($rm, $install);
     }
 }
