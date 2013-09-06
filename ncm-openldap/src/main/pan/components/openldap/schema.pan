@@ -15,8 +15,59 @@ declaration template components/openldap/schema;
 
 include { 'quattor/schema' };
 
+function openldap_loglevels_to_long = {
+    # converts a list of named loglevels to its numeric value
+    # returns undef in case of unknown entry
+    # returns (whichever comes first in list)
+    #   0 if one of the values is nologging
+    #   -1 if one the values is any
+    if ( ARGC != 1 || ! is_list(ARGV[0])) {
+        error('openldap_loglevel_map requires 1 list argument');
+    };
+    lvls = ARGV[0];
+
+    default = 'stats';
+
+    the_map = nlist(
+        "any", -1, # log all
+        "nologging", 0, # (has no official naming) absolutely no logging (none just means very very high loglevel)
+        "trace", 1, # trace function calls
+        "packets", 2, # debug packet handling
+        "args", 4, # heavy trace debugging (function args)
+        "conns", 8, # connection management
+        "BER", 16, # print out packets sent and received
+        "filter", 32, # search filter processing
+        "config", 64, # configuration file processing
+        "ACL", 128, # access control list processing
+        "stats", 256, # connections, LDAP operations, results (recommended)
+        "stats2", 512, # stats log entries sent
+        "shell", 1024, # print communication with shell backends
+        "parse", 2048, # entry parsing
+        "sync", 16384, # LDAPSync replication
+        "none", 32768, # only messages that get logged whatever log level is set
+    );
+
+    if (length(lvls) == 0) {
+        lvls = list(default);
+    };
+
+    total=0;
+    foreach(idx;lvl;lvls) {
+        if(!exists(the_map[lvl])) {
+            return(undef);
+        };
+        if(lvl == 'nologging' || lvl == 'any') {
+            return(the_map[lvl]);
+        };
+        total = total | the_map[lvl];
+    };
+    total;
+};
+
 type long_pow2 = long with (SELF==1||SELF==2||SELF==4||SELF==8||
     SELF==16||SELF==32||SELF==64||SELF==128||SELF==256||SELF==512||
+    SELF==1024||SELF==2048||SELF==4096||SELF==8192||SELF==16384||
+    SELF==32768||SELF==65536||
     error("Only powers of two are accepted"));
 
 # Possible acceptable values
@@ -43,14 +94,14 @@ type ldap_access_item = {
 };
 
 type ldap_access = {
-    ## what: hwta = literal string (eg *)
-    "what"      ? string
-    ## what attrs turns insto attrs=opt1,opt2
-    "attrs"     ? string[]
-    
-    
-    ## by : eg list(list(who,access,control))
-    "by"        : string[][]
+    # what: what = literal string (eg *)
+    "what" ? string
+    # what attrs turns insto attrs=opt1,opt2
+    "attrs" ? string[]
+
+
+    # by : eg list(list(who,access,control))
+    "by" : string[][]
 };
 
 type auth_regexp = {
@@ -76,15 +127,15 @@ type tls_options = {
 
 type ldap_global = {
     "access"                    : ldap_access[] = list()
-     "allow" ? string[]
-     "argsfile" ? string
-     "attributeoptions" ? string[]
-# Indexed by attribute name. See RFC4512 for all details.
-     "attributetype" ? ldap_syntax{}
-     "authid-rewrite" ? string
-     "authz-policy" ? string
-     "authz-regexp" : auth_regexp[] = list()
-     "concurrency" ? long
+    "allow" ? string[]
+    "argsfile" ? string
+    "attributeoptions" ? string[]
+    # Indexed by attribute name. See RFC4512 for all details.
+    "attributetype" ? ldap_syntax{}
+    "authid-rewrite" ? string
+    "authz-policy" ? string
+    "authz-regexp" : auth_regexp[] = list()
+    "concurrency" ? long
     "conn_max_pending_auth" ? long
     "defaultsearchbase" ? string
     "disallow" ? string[]
@@ -130,9 +181,9 @@ type ldap_global = {
 
 type ldap_database_string = string with
      match(SELF, "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|" +
-	   "monitor|null|passwd|perl|relay|shell|sql)$") ||
+	             "monitor|null|passwd|perl|relay|shell|sql)$") ||
      error("Unknown LDAP database type. " +
-	   "Check sladpd.conf man page");
+	       "Check sladpd.conf man page");
 
 type ldap_ops = string with
      match(SELF, '^(add|bind|compare|delete|modify|rename|search|read|write|'+
@@ -183,13 +234,13 @@ type ldap_replica_cfg = {
 };
 
 
-## overlay Replication (SyncProvider)
+# overlay Replication (SyncProvider)
 type ldap_overlay_syncprov = {
-    ## use a list for checkpoint: first val is ops, second value is minutes
+    # use a list for checkpoint: first val is ops, second value is minutes
     "checkpoint"            ? long[] with (length(SELF) == 2)
     "sessionlog"            ? long
     "nopresent"             ? boolean
-    "reloadhint"            ? boolean  
+    "reloadhint"            ? boolean
 };
 
 type type_ldap_overlay = {
@@ -222,13 +273,13 @@ type ldap_database = {
      "db_config"        ? type_db_config
      "directory"        ? string
      "extra_attrs" ? string[]
-     ## eg list(list(list("entryCSN","entryUUID"),list("eq")))
+     # eg list(list(list("entryCSN","entryUUID"),list("eq")))
      "index"            ? string[][][]
      "hidden" : boolean = false
      "lastmod" : boolean = true
      "limits" ? ldap_database_limits{}
      "maxderefdepth" : long = 15
-     "mirrormode" : boolean = false
+     "mirrormode" ? boolean # don't set it (not setting it is not equal to false or true)
      "monitoring" ? boolean
      "overlay"          ? type_ldap_overlay
      "readonly" ? boolean = false
@@ -260,7 +311,11 @@ type component_openldap = {
 	'global'   ? ldap_global
 	'backends'	? ldap_database[]
 	'databases'	? ldap_database[]
-	'monitoring'       ? ldap_monitoring
+	'monitoring' ? ldap_monitoring
+	# move the /etc/openldap/slapd.d dir (this  
+	#  configuration method takes preferences over the  
+	#  slapd.conf file, but it is not supported by the component)
+	'move_slapdd' ? boolean = true  
 };
 
 bind '/software/components/openldap' = component_openldap;
