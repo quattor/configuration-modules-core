@@ -26,6 +26,7 @@ use Set::Scalar;
 $CAF::Object::NoAction = 1;
 
 Readonly::Array my @REPOQUERY => NCM::Component::spma::REPOQUERY;
+Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
 
 my $cmp = NCM::Component::spma->new("spma");
 
@@ -68,7 +69,14 @@ my $pkgs = {
 		"x86_64" => {}
 	       }
 	   }
-       }
+       },
+    "perl" => {
+        "_35_2e10_2a" => {
+            "arch" => {
+                "x86_64" => {}
+               }
+           }
+       },
    };
 
 
@@ -89,7 +97,7 @@ is($cmp->versionlock({ glibc => $pkgs->{glibc},
 		       kde => $pkgs->{kde}}), 1,
    "Simple versionlock succeeds");
 
-my $fh = get_file("/etc/yum/pluginconf.d/versionlock.list");
+my $fh = get_file($FILE);
 
 like($fh, qr{^\d:glibc.*i686}m, "glibc listed in version lock");
 like($fh, qr{^\d:glibc.*x86_64}m, "glibc listed in version lock winth all archs");
@@ -122,5 +130,32 @@ set_desired_err(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"));
 
 is($cmp->versionlock({python_2a => $pkgs->{python_2a}}), 1,
    "Locking of packages with wildcards succeeds");
+
+$fh = get_file($FILE);
+like($fh, qr{^0:python}m, "Versionlocked packages are correctly listed");
+
+set_desired_output(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"), "");
+is($cmp->versionlock({pythoh_2a => $pkgs->{python_2a}}), 0,
+   "Detected non-locked packages when wildcards are present");
+
+set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "perl-5.10.1-1.x86_64");
+is($cmp->versionlock({perl => $pkgs->{perl}}), 1,
+   "Version with star is processed correctly");
+
+TODO : {
+    local $TODO = <<'EOF';
+I don't know yet what to do when the version has a star.  I cannot
+detect it with trivial set operations, and brute force pattern
+matching makes this method quadratic.  Using tries or other fancy
+data structures looks like overengineering at this stage.
+
+In my little tests, brute force pattern matching is OK for up to 2000
+versionlocked packages.  Is anyone installing more than 2000 packages?
+EOF
+
+    set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "");
+    is($cmp->versionlock({perl => $pkgs->{perl}}), 0,
+       "Failure to versionlock star version is reported");
+}
 
 done_testing();
