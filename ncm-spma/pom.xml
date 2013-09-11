@@ -6,7 +6,7 @@
   <artifactId>spma</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.6.1-SNAPSHOT</version>
+  <version>13.9.0</version>
   <name>NCM SPMA configuration component</name>
 
 
