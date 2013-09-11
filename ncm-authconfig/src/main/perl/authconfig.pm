@@ -20,6 +20,9 @@ use File::Path;
 
 use EDG::WP4::CCM::Element;
 
+use constant SSSD_FILE => '/etc/sssd/sssd.conf';
+use constant TT_FILE => 'authconfig/sssd.tt';
+
 # prevent authconfig from trying to launch in X11 mode
 delete($ENV{"DISPLAY"});
 
@@ -160,6 +163,19 @@ sub enable_nslcd
 
     # Only enable TLS if requested; just setting ssl on should not enable TLS.
     $cmd->pushargs("--enableldaptls") if $cfg->{ssl} && $cfg->{ssl} eq "start_tls";
+}
+
+# Adds the authconfig command-line to enable SSSD.
+sub enable_sssd
+{
+    my ($self, $cfg, $cmd) = @_;
+
+    if ($cfg->{nssonly}) {
+	$cmd->pushargs(qw(--disablesssdauth));
+    } else {
+	$cmd->pushargs(qw(--enablesssdauth));
+    }
+    $cmd->pushargs("--enablesssd");
 }
 
 sub authconfig
@@ -309,6 +325,31 @@ sub configure_nslcd
     return $changed;
 }
 
+sub configure_sssd
+{
+    my ($self, $config, $file, $tt) = @_;
+
+    my $fh = CAF::FileWriter->new($file, log => $self, mode => 0600);
+    print $fh "\n";
+    my $ok = $self->template()->process($tt, $config, $fh);
+    if (!$ok) {
+        $self->error("Unable to render template ", TT_FILE, ": ",
+                     $self->template()->error());
+	$fh->cancel();
+    }
+    my $changed = $fh->close();
+
+    if ($changed) {
+        CAF::Process->new([qw(/sbin/service sssd restart)],
+                          log => $self)->run();
+        if ($?) {
+            $self->error("Failed to restart SSSD");
+        }
+    }
+    return $changed;
+}
+
+
 # Restarts NSCD if that is needed. It's ugly because on some versions
 # of SL stopping or starting may fail.
 sub restart_nscd
@@ -337,6 +378,7 @@ sub restart_nscd
     }
 }
 
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -357,6 +399,11 @@ sub Configure
     # This configures LDAP authentication on SL6.
     if ($t->{method}->{nslcd}->{enable}) {
 	$restart ||= $self->configure_nslcd($t->{method}->{nslcd});
+    }
+
+    if ($t->{method}->{sssd}->{enable}) {
+        $restart ||= $self->configure_sssd($t->{method}->{sssd},
+					   SSSD_FILE, TT_FILE);
     }
 
     $self->build_pam_systemauth($t->{pamadditions});

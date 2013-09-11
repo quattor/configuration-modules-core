@@ -1,0 +1,37 @@
+[% subtree = [
+    'user', 'group', 'default',
+    'sasl', 'krb5', 'tls', 'netgroup', 'autofs',
+    'sudo', 'sudorule', 'service'
+] -%]
+[%- booleans = {
+    "sasl" = ["canonicalize"]
+    "krb5" = ["init_creds"]
+    "sudo" = ["use_host_filter", "include_netgroups", "include_regexp"]
+} -%]
+[%- colonlists = {
+    "tls" = ["cipher_suite"]
+} -%]
+[%- FOREACH name IN subtree -%]
+[%-     IF desc.exists(name) -%]
+[%          INCLUDE authconfig/generic.tt dict=desc.$name prefix="ldap_${name}_"
+                                          bool=booleans.$name colonlist=colonlists.$name %]
+[%      END -%]
+[%- END -%]
+[%- ldapkrb5 = ['krb5_backup_server', 'krb5_canonicalize', 'krb5_realm', 'krb5_server'] -%]
+[%- FOREACH name IN ldapkrb5 -%]
+[%-     IF desc.exists(name) -%]
+[% name %] =
+[%-         SWITCH name -%]
+[%-             CASE ['krb5_canonicalize'] -%]
+[%- desc.$name ? 'True' : 'False' %]
+[%-             CASE -%]
+[%- desc.$name %]
+[%          END -%]
+[%      END -%]
+[%- END -%]
+[%- INCLUDE authconfig/generic.tt dict=desc exclude=subtree.merge(ldapkrb5)
+                                  prefix="ldap_" list=["uri", "backup_uri", "entry_usn"]
+                                  bool=["disable_paging", "force_upper_case_realm", "referrals",
+                                        "groups_use_matching_rule_in_chain",
+                                        "id_use_start_tls", "id_mapping"]
+-%]

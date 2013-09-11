@@ -8,6 +8,11 @@ declaration template components/authconfig/schema;
 include { 'quattor/schema' };
 include { 'pan/types' };
 
+include {'components/${project.artifactId}/sssd-user'};
+include {'components/${project.artifactId}/sssd-sudo'};
+include {'components/${project.artifactId}/sssd-sasl'};
+include {'components/${project.artifactId}/sssd-tls'};
+
 type yesnostring = string with match(SELF,"yes|no");
 
 type authconfig_pamadditions_line_type = {
@@ -235,6 +240,237 @@ type authconfig_method_nslcd_type = {
     "bindpw" ? string
 };
 
+@{
+    Valid SSSD providers.  For now we only implement ldap, simple and local
+}
+type sssd_provider_string = string with match(SELF, "^(ldap|simple|local)$");
+
+
+@{
+    Simple access provider for SSSD.  See the sssd-simple man page.
+}
+type authconfig_sssd_simple = {
+    "allow_users" ? string[]
+    "deny_users" ? string[]
+    "allow_groups" ? string[]
+    "deny_groups" ? string[]
+};
+
+type ldap_schema = string with match(SELF, "^(IPA|AD|rfc2307|rfc2307bis)") ||
+    error ("LDAP schema must be valid according to sssd-ldap: " + SELF);
+
+type ldap_authok = string with match(SELF, "^(obfuscated_)?password") ||
+    error ("LDAP authok must be valid according to sssd-ldap: " + SELF);
+
+type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") ||
+    error ("Invalid LDAP alias dereferencing method: " + SELF);
+
+type ldap_order = string with match(SELF, "^(filter|expire|authorized_service|host)$");
+
+@{
+    LDAP chpass fields
+}
+type sssd_chpass = {
+    "uri" ? type_absoluteURI[]
+    "backup_uri" ? type_absoluteURI[]
+    "dns_service_name" ? string
+    "update_last_change" : boolean = false
+};
+
+type sssd_ldap_defaults = {
+    "bind_dn" ?  string
+    "authtok_type" : ldap_authok = "password"
+    "authtok" ?  string
+};
+
+@{
+    LDAP netgroup fields
+}
+type sssd_netgroup = {
+    "object_class" : string = "nisNetgroup"
+    "name" : string = "cn"
+    "member" : string = "memberNisNetgroup"
+    "triple" : string = "nisNetgroupTriple"
+    "uuid" : string = "nsUniqueId"
+    "modify_timestamp" : string = "modifyTimestamp"
+    "search_base" ? string
+};
+
+@{
+    LDAP autofs fields
+}
+type sssd_autofs = {
+    "map_object_class" : string = "automountMap"
+    "map_name" : string = "ou"
+    "entry_object_class" : string = "automountMap"
+    "entry_key" : string = "cn"
+    "entry_value" : string = "automountInformation"
+    "search_base" ? string
+};
+
+@{
+    LDAP IP service fields
+}
+type sssd_ldap_service = {
+    "object_class" : string = "ipService"
+    "name" : string = "cn"
+    "port" : string = "ipServicePort"
+    "proto" : string = "ipServiceProtocol"
+    "search_base" ? string
+};
+
+@{
+    LDAP access provider for SSSD.  See the sssd-ldap man page.
+    Timeouts are expressed in seconds.
+}
+type authconfig_sssd_ldap = {
+    "user" : sssd_user
+    "group" : sssd_group
+    "chpass" ? sssd_chpass
+    "default" : sssd_ldap_defaults
+    "sasl" ? sssd_sasl
+    "krb5" ? sssd_krb5
+    "sudo" ? sssd_sudo
+    "sudorule" ? sssd_sudorule
+    "tls" ? sssd_tls
+    "netgroup" ? sssd_netgroup
+    "autofs" ? sssd_autofs
+    "uri" :  type_absoluteURI[]
+    "backup_uri" ?  type_absoluteURI[]
+    "search_base" ?  string
+    "schema" : ldap_schema = "rfc2307"
+    "service" ? sssd_ldap_service
+
+    "krb5_backup_server" ?  string
+    "krb5_canonicalize" ?  boolean
+    "krb5_realm" ?  string[]
+    "krb5_server" ?  string
+    "access_filter" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
+    "access_order" : ldap_order = "filter"
+    "connection_expire_timeout" :  long = 900
+    "deref" : ldap_deref = "never"
+    "deref" ? string
+    "deref_threshold" ?  long
+    "disable_paging" :  boolean = false
+    "dns_service_name" ?  string
+    "entry_usn" ?  string[]
+    "enumeration_refresh_timeout" : long = 300
+    "enumeration_search_timeout" : long = 60
+    "force_upper_case_realm" : boolean = false
+    "groups_use_matching_rule_in_chain" ? boolean
+    "id_use_start_tls" ? boolean
+    "id_mapping" : boolean = false
+    "network_timeout" : long = 6
+    "ns_account_lock" : string = "nsAccountLock"
+    "offline_timeout" ? long
+    "opt_timeout" :  long = 6
+    "page_size" :  long = 1000
+    "purge_cache_timeout" : long = 10800
+    "pwd_policy" : string = "none"
+    "referrals" :  boolean = true
+    "rootdse_last_usn" ?  string
+    "search_timeout" : long = 6
+    "use_object_class" : string = "posixAccount"
+};
+
+type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
+
+type sssd_global = {
+    "debug_level" : long = 0x0210
+    "config_file_version" : long = 2
+    "services" : sssd_service[]
+    "reconnection_retries" : long = 3
+    "re_expression" ?  string
+    "full_name_format" ? string
+    "try_inotify" : boolean = true
+    "krb5_rcache_dir" ? string
+    "default_domain_suffix" ? string
+};
+
+type sssd_pam = {
+    "debug_level" : long = 0x0210
+    "offline_credentials_expiration" : long = 0
+    "offline_failed_login_attempts" : long = 0
+    "offline_failed_login_delay" : long =  5
+    "pam_verbosity" : long =  1
+    "pam_id_timeout" : long =  5
+    "pam_pwd_expiration_warning" : long =  0
+    "get_domains_timeout" : long =  60
+};
+
+type sssd_nss = {
+    "debug_level" : long = 0x0210
+    "enum_cache_timeout" : long = 120
+    "entry_cache_nowait_percentage" ? long
+    "entry_negative_timeout" : long = 15
+    "filter_users" : string = "root"
+    "filter_users_in_groups" : boolean = true
+    "filter_groups" : string = "root"
+};
+
+type authconfig_sssd_local = {
+       "default_shell" : string = "/bin/bash"
+       "base_directory" : string = "/home"
+       "create_homedir" : boolean = true
+       "remove_homedir" : boolean = true
+       "homedir_umask" : long = 077
+       "skel_dir" : string = "/etc/skel"
+       "mail_dir" : string = "/var/mail"
+       "userdel_cmd" ? string
+};
+
+type authconfig_sssd_domain  = {
+    "ldap" ? authconfig_sssd_ldap
+    "simple" ? authconfig_sssd_simple
+    "local" ? authconfig_sssd_local
+    "access_provider" ? sssd_provider_string
+    "id_provider" ? sssd_provider_string
+    "auth_provider" ? sssd_provider_string
+    "chpass_provider" ? sssd_provider_string
+    "debug_level" : long = 0x0210
+    "sudo_provider" ? string
+    "selinux_provider" ? string
+    "subdomains_provider" ? string
+    "autofs_provider" ? string
+    "hostid_provider" ? string
+    "re_expression" : string = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)"
+    "full_name_format" : string = "%1$s@%2$s"
+    "lookup_family_order" : string = "ipv4_first"
+    "dns_resolver_timeout" : long = 5
+    "dns_discovery_domain" ? string
+    "override_gid" ? long
+    "case_sensitive" : boolean = true
+    "proxy_fast_alias" : boolean = false
+    "subdomain_homedir" : string = "/home/%d/%u"
+    "proxy_pam_target" ? string
+    "proxy_lib_name" ? string
+    "min_id" : long = 1
+    "max_id" : long = 0
+    "enumerate" : boolean = false
+    "force_timeout" : long = 60
+    "entry_cache_timeout" : long = 5400
+    "entry_cache_user_timeout" ? long
+    "entry_cache_group_timeout" ? long
+    "entry_cache_netgroup_timeout" ? long
+    "entry_cache_service_timeout" ? long
+    "entry_cache_sudo_timeout" ? long
+    "entry_cache_autofs_timeout" ? long
+    "cache_credentials" : boolean = false
+    "account_cache_expiration" : long = 0
+    "pwd_expiration_warning" ? long
+
+};
+type authconfig_method_sssd_type = {
+    include authconfig_method_generic_type
+    "nssonly" : boolean = false
+    "domains" : authconfig_sssd_domain{}
+    "global" : sssd_global
+    "pam" : sssd_pam
+    "nss" : sssd_nss
+};
+
+
+
 type authconfig_method_type = {
   "files"	? authconfig_method_files_type
   "ldap"	? authconfig_method_ldap_type
@@ -244,6 +480,7 @@ type authconfig_method_type = {
   "hesiod"	? authconfig_method_hesiod_type
   "afs"		? authconfig_method_afs_type
   "nslcd"       ? authconfig_method_nslcd_type
+  "sssd"	? authconfig_method_sssd_type
 };
 
 type hash_string = string with match(SELF, "^(descrypt|md5|sha256|sha512)$");
