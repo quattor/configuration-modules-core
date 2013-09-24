@@ -35,19 +35,6 @@ type structure_bonding_options = {
     "primary" : string with exists("/system/network/interfaces/" + SELF)
 };
 
-# describes the bridging options 
-# (parameters for /sys/class/net/<br>/brport)
-type structure_bridging_options = {
-    "bpdu_guard" ? long
-    "flush" ? long
-    "hairpin_mode" ? long
-    "multicast_fast_leave" ? long
-    "multicast_router" ? long
-    "path_cost" ? long
-    "priority" ? long
-    "root_block" ? long
-};
-
 #
 # structure_interface_offload
 #
@@ -99,7 +86,7 @@ type structure_interface = {
   "driver"  ? string
   "bootproto" ? string
   "onboot" ? string
-  "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL)$')
+  "type"    ? string
   "device"  ? string
   "master" ? string
   "mtu"       ? long
@@ -114,13 +101,7 @@ type structure_interface = {
 
   "vlan" ? boolean
   "physdev"    ? string with exists ("/system/network/interfaces/" + SELF)
-  "nmcontrolled"     ? boolean
-  
-  "linkdelay" ? long # LINKDELAY  
-  "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
-  "delay" ? long # brctl setfd DELAY
-  "bridging_opts" ? structure_bridging_options 
-};
+}; 
 
 
 ############################################################
@@ -139,7 +120,5 @@ type structure_network = {
      "nisdomain"        ? type_fqdn
      "nozeroconf"       ? boolean
      "set_hwaddr"       ? boolean
-     "nmcontrolled"     ? boolean
-     "allow_nm"         ? boolean
 };
 
