@@ -198,7 +198,7 @@ sub generate_privilege_lines {
 		my $ln = $info{PRIVILEGE_USER()}->getValue;
 		$ln .= "\t" . $info{PRIVILEGE_HOST()}->getValue;
 		$ln .= "= (". $info{PRIVILEGE_RUNAS()}->getValue . ")\t";
-		$ln .= $info{PRIVILEGE_OPTS()}->getValue . "\t"
+		$ln .= $info{PRIVILEGE_OPTS()}->getValue . ":\t"
 		if defined $info{PRIVILEGE_OPTS()};
 		$ln .= $info{PRIVILEGE_CMD()}->getValue;
 		push (@$lns, $ln);
