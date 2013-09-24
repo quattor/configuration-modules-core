@@ -31,7 +31,7 @@ my $cmp = NCM::Component::spma->new("spma");
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");
 
-ok($cmp->expire_yum_caches(), "Successful execution detected");
+is($cmp->expire_yum_caches(), 1, "Successful execution detected");
 ok(!$cmp->{ERROR}, "No errors reported");
 
 my $cmd = get_command($CMD);
@@ -39,7 +39,7 @@ ok($cmd, "Correct command called");
 is($cmd->{method}, "execute", "Correct method called");
 
 set_command_status($CMD, 1);
-ok(!$cmp->expire_yum_caches(), "Errors in cleanup detected");
+is($cmp->expire_yum_caches(), 0, "Errors in cleanup detected");
 is($cmp->{ERROR}, 1, "Errors reported");
 
 

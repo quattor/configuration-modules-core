@@ -35,17 +35,14 @@ Readonly my $URL => "http://localhost.localdomain";
 sub initialise_repos
 {
     return [ { name => "a_repo",
-               owner => 'localuser@localdomain',
-               enabled => 1,
-               protocols => [ { name => "http",
-                                url => $URL },
-                              { name => "http",
-                                url => "$URL/another/path" },
-                             ],
-               includepkgs => [qw(foo bar)],
-               excludepkgs => [qw(baz quux)],
-              }
-            ];
+	       owner => 'localuser@localdomain',
+	       protocols => [ { name => "http",
+				url => $URL }
+			     ],
+	       includepkgs => [qw(foo bar)],
+	       excludepkgs => [qw(baz quux)],
+	      }
+	    ];
 }
 
 my $repos = initialise_repos();
@@ -80,38 +77,12 @@ my $fh = get_file("/etc/yum.repos.d/a_repo.repo");
 ok(defined($fh), "Correct file opened");
 my $url = $repos->[0]->{protocols}->[0]->{url};
 my $name = $repos->[0]->{name};
-like("$fh", qr{^baseurl=\s*$URL$}m,
+like("$fh", qr{^baseurl=$url$}m,
      "Repository got the correct URL");
-$url = $repos->[0]->{protocols}->[1]->{url};
-like("$fh", qr{^\s+$url$}m, "Additional base URLs added");
 like("$fh", qr{^\[$name\]$}m, "Repository got the correct name");
 like($fh, qr{^includepkgs=foo bar$}m, "Included packages listed correctly");
 like($fh, qr{^exclude=baz quux$}m, "Excluded packages listed correctly");
 
-
-=pod
-
-It must also handle properly the rendering of SSL fields
-
-=cut
-
-unlike($fh, qr{^sslcacert}m, "No SSL fields printed if not needed");
-
-$repos = initialise_repos();
-$repos->[0]->{protocols} = [{cacert => "ca path",
-                             clientkey => "key path",
-                             clientcert => "cert path"}];
-
-
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE), 1,
-   "Repository with SSL correctly created");
-$fh = get_file("/etc/yum.repos.d/a_repo.repo");
-like($fh, qr{^sslcacert=$repos->[0]->{protocols}->[0]->{cacert}}m,
-     "SSL CA correctly printed");
-like($fh, qr{^sslclientkey=$repos->[0]->{protocols}->[0]->{clientkey}}m,
-     "SSL key correctly printed");
-like($fh, qr{^sslclientcert=$repos->[0]->{protocols}->[0]->{clientcert}}m,
-     "SSL cert correctly printed");
 
 =pod
 
@@ -150,19 +121,19 @@ $repos->[0]->{name} = $name;
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
-                        'forward'), 1,
+			'forward'), 1,
    "Proxy settings succeed");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
 
-like("$fh", qr{^baseurl=\s*$URL$}m,
+like("$fh", qr{^baseurl=$url$}m,
      "Forward proxy settings don't affect to the URL");
 like($fh, qr{^proxy=http://$PROXY_HOST$}m,
      "Proxy line rendered for forward proxies");
 
 =pod
 
-=item * Reverse proxies have their URLs modified
+=item * Forward proxies have their URLs modified
 
 =cut
 
@@ -173,11 +144,11 @@ $repos->[0]->{protocols}->[0]->{url} = $URL;
 $name = "reverse_proxy";
 $repos->[0]->{name} = $name;
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'reverse'), 1,
-   "Files with reverse proxies are properly rendered");
+			$PROXY_HOST, 'reverse'), 1,
+   "Files with forward proxies are properly rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
-like("$fh", qr{^baseurl=\s*http://$PROXY_HOST$}m,
+like("$fh", qr{^baseurl=http://$PROXY_HOST$}m,
      "Reverse proxies modify the URLs in the config files");
 
 =pod
@@ -189,51 +160,21 @@ like("$fh", qr{^baseurl=\s*http://$PROXY_HOST$}m,
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'reverse', $PROXY_PORT), 1,
+			$PROXY_HOST, 'reverse', $PROXY_PORT), 1,
    "Reverse proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
-like("$fh", qr{^baseurl=\s*http://$PROXY_HOST:$PROXY_PORT$}m,
+like("$fh", qr{^baseurl=http://$PROXY_HOST:$PROXY_PORT$}m,
      "Port number is rendered with the reverse proxy");
 
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
 is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'forward', $PROXY_PORT), 1,
+			$PROXY_HOST, 'forward', $PROXY_PORT), 1,
    "Forward proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
      "Port number is rendered with the forward proxy");
 
-=pod
-
-=item * Many hosts listed as reverse proxies lead to many baseurls in the Yum repo
-
-=cut
-
-$repos = initialise_repos();
-
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
-   "List of reverse proxies succeeds to be rendered");
-
-$fh = get_file("$REPOS_DIR/$repos->[0]->{name}.repo");
-like($fh, qr{^baseurl= \s* http://$PROXY_HOST:$PROXY_PORT$
-             \n \s* http://another:$PROXY_PORT$ }xm,
-     "List of reverse proxies correctly rendered");
-
-=pod
-
-=item * A proxy listed on the repo is always used as a forward proxy.
-
-=cut
-
-$repos = initialise_repos();
-$repos->[0]->{proxy} = "http://not.your.proxy";
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
-   "Repository with its own proxies rendered correctly");
-$fh = get_file("/etc/yum.repos.d/a_repo.repo");
-like($fh, qr{^proxy\s*=\s*http://not.your.proxy$}m, "Proxy set up correctly");
 
 done_testing();
 

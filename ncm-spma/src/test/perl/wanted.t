@@ -32,50 +32,42 @@ my $cmp = NCM::Component::spma->new("spma");
 
 # A list of packages, based on a real profile.
 my $wanted = {
-    "ConsoleKit"=> {
-	"_30_2e4_2e1_2d3_2eel6"=> {
-	    "arch"=> {
-		"x86_64"=> "sl620_x86_64"
-	       }
-	   }
-       },
-    "ConsoleKit_2dlibs"=> {
-	"_30_2e4_2e1_2d3_2eel6"=> {
-	    "arch"=> {
-		"x86_64"=> "sl620_x86_64"
-	       }
-	   }
-       },
-    "glibc"=> {
-	"_32_2e12_2d1_2e47_2eel6_5f2_2e9"=> {
-	    "arch"=> {
-		"i686"=> "sl620_x86_64_updates",
-		"x86_64"=> "sl620_x86_64_updates"
-	       }
-	   }
-       },
-    "tzdata_2djava"=> {
-	"_32012b_2d3_2eel6"=> {
-	    "arch"=> {
-		"noarch"=> "sl620_x86_64_updates"
-	       }
-	   }
-       },
-    "kde" => {},
-    "python_2a" => {
-	"_32_2e7_2e5_2del6" => {
-	    "arch" => {
-		"x86_64" => {}
-	       }
-	   }
-       },
-};
+	      "ConsoleKit"=> {
+			      "_30_2e4_2e1_2d3_2eel6"=> {
+							 "arch"=> {
+								   "x86_64"=> "sl620_x86_64"
+								  }
+							}
+			     },
+	      "ConsoleKit_2dlibs"=> {
+				     "_30_2e4_2e1_2d3_2eel6"=> {
+								"arch"=> {
+									  "x86_64"=> "sl620_x86_64"
+									 }
+							       }
+				    },
+	      "glibc"=> {
+			 "_32_2e12_2d1_2e47_2eel6_5f2_2e9"=> {
+							      "arch"=> {
+									"i686"=> "sl620_x86_64_updates",
+									"x86_64"=> "sl620_x86_64_updates"
+								       }
+							     }
+			},
+	      "tzdata_2djava"=> {
+				 "_32012b_2d3_2eel6"=> {
+							"arch"=> {
+								  "noarch"=> "sl620_x86_64_updates"
+								 }
+						       }
+				},
+	      "kde" => {}
+	     };
 
 my $pkgs = $cmp->wanted_pkgs($wanted);
 isa_ok($pkgs, "Set::Scalar", "Received a set, with no errors");
 
-foreach my $pkg (@$pkgs)
-{
+foreach my $pkg (@$pkgs) {
     like($pkg, qr!^.*(;\w+)?$!,
 	 "Package $pkg has the correct format string");
     unlike($pkg, qr{-_}, "All fields are correctly unescaped");
@@ -83,6 +75,5 @@ foreach my $pkg (@$pkgs)
 
 is(scalar(grep(m{^glibc}, @$pkgs)), 2,
    "Multiple architectures for the same package are correctly handled");
-ok($pkgs->has("python;x86_64"), "Package with wildcards correctly handled");
 
 done_testing();

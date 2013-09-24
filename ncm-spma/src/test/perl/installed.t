@@ -34,7 +34,10 @@ use Readonly;
 
 $CAF::Object::NoAction = 1;
 
-Readonly my $CMD => join(" ", @{NCM::Component::spma::RPM_QUERY()});
+Readonly my $CMD => q(rpm -qa --qf %{NAME};%{ARCH}\n);
+
+plan skip_all => "No RPM database to play with" if ! -x "/bin/rpm";
+
 
 my $cmp = NCM::Component::spma->new("spma");
 
