@@ -114,12 +114,6 @@
 		<directoryIncluded>false</directoryIncluded>
 	      </mapping>
 	    </mappings>
-	    <requires>
-	      <require>yum &gt;= 3.2.29</require>
-	      <require>yum-utils &gt;= 1.1.30</require>
-	      <require>yum-versionlock</require>
-	      <require>yum-priorities</require>
-	    </requires>
 	  </configuration>
 	</plugin>
       </plugins>
