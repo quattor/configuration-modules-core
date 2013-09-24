@@ -43,6 +43,8 @@ use Net::Ping;
 use Data::Dumper;
 use CAF::Process;
 use CAF::FileEditor;
+use CAF::FileWriter;
+use Fcntl qw(SEEK_SET);
 use LC::File;
 
 # Ethtool formats query information differently from set parameters so
@@ -72,7 +74,19 @@ my %ethtool_option_map=(
    );
 my $ethtoolcmd="/usr/sbin/ethtool";
 
+use constant FAILED_SUFFIX => '-failed';
 
+# gen_backup_filename: returns backup filename for given file
+sub gen_backup_filename 
+{
+    my ($self, $file) = @_;
+    my $back_dir="/tmp";
+
+    my $back="$file";
+    $back =~ s/\//_/g;
+    my $backup_file = "$back_dir/$back";
+    return $backup_file;
+}
 
 
 ##########################################################################
@@ -83,7 +97,6 @@ sub Configure {
     my $base_path = '/system/network';
     ## keep a hash of all files and links.
     our (%exifiles,%exilinks);
-    my $fail="-failed";
 
     my ($path,$file_name,$text);
 
@@ -157,8 +170,8 @@ sub Configure {
                     }
                     $net{$ifacename}{$elementname}{$elnr}=\%tmp_el;
                 }
-            } elsif ($elementname =~ m/^bonding_opts$/) {
-                $net{$ifacename}{$elementname} = bonding_options($element);
+            } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
+                $net{$ifacename}{$elementname} = make_key_equal_value_string($elementname, $element);
             } elsif (defined($ethtool_option_map{$elementname})) {
                 ## set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
                 $net{$ifacename}{$elementname."_opts"} = ethtool_options($element) if ($elementname eq "ethtool");
@@ -185,7 +198,9 @@ sub Configure {
             if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
                 $net{$ifacename}{'hwaddr'} = $mac;
             } else {
-                $self->error("The configured hwaddr ".$mac." for interface ".$ifacename." didn't pass the regexp. Setting set_hwaddr to false. (Please contact the developers in case you think it is a valid MAC address).");
+                $self->error("The configured hwaddr ", $mac, " for interface ",$ifacename,
+                             " didn't pass the regexp. Setting set_hwaddr to false. ",
+                             "(Please contact the developers in case you think it is a valid MAC address).");
                 $net{$ifacename}{'set_hwaddr'} = 'false';
             }
         } else {
@@ -359,8 +374,32 @@ sub Configure {
             $text .= "SLAVE=yes\n";
         }
 
+        # LINKDELAY
+        if (exists($net{$iface}{linkdelay})) {
+            $text .= "LINKDELAY=".$net{$iface}{linkdelay}."\n";
+        }
+
+        # set some bridge-releated parameters
+        # bridge STP
+        if (exists($net{$iface}{stp})) {
+            if($net{$iface}{stp}) {
+                $text .= "STP=on\n";
+            } else {
+                $text .= "STP=off\n";
+            }
+        }
+        # bridge DELAY
+        if (exists($net{$iface}{delay})) {
+            $text .= "DELAY=".$net{$iface}{delay}."\n";
+        }
+
+        # add generated options strings
         if (exists($net{$iface}{bonding_opts})) {
             $text .= $net{$iface}{bonding_opts};
+        }
+
+        if (exists($net{$iface}{bridging_opts})) {
+            $text .= $net{$iface}{bridging_opts};
         }
 
         if (exists($net{$iface}{ethtool_opts})) {
@@ -390,7 +429,7 @@ sub Configure {
         }
 
         ## write iface ifcfg- file text
-        $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+        $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
         $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
         ## route config, interface based.
@@ -415,7 +454,7 @@ sub Configure {
                     $text .= "NETMASK".$rt."=255.255.255.255\n";
                 }
             };
-            $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+            $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
             $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
@@ -443,7 +482,9 @@ sub Configure {
                         if(! -e $file_name_sym) {
                             ## this will create broken link, if $file_name is not yet existing
                             if (! -l $file_name_sym) {
-                                symlink($file_name,$file_name_sym) || $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
+                                symlink($file_name,$file_name_sym) || 
+                                    $self->error("Failed to create symlink ",
+                                                 "from $file_name to $file_name_sym ($!)");
                             };
                         };
                     };
@@ -458,7 +499,7 @@ sub Configure {
                 if ( $net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
-                $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+                $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
                 $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
@@ -531,8 +572,16 @@ sub Configure {
     if ($config->elementExists($path."/gatewaydev")) {
         $text .= "GATEWAYDEV=".$config->getValue($path."/gatewaydev")."\n";
     }
+    ## nmcontrolled
+    if ($config->elementExists($path."/nmcontrolled")) {
+        if ($config->getValue($path."/nmcontrolled") eq "true") {
+            $text .= "NM_CONTROLLED=yes\n";
+        } else {
+            $text .= "NM_CONTROLLED=no\n";
+        }
+    }
 
-    $exifiles{$file_name}=file_dump($file_name,$text,$fail);
+    $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);
     $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
 
@@ -560,14 +609,15 @@ sub Configure {
                     my $sl = "";
                     my $ma = "";
                     if ( -e $file) {
-                        open(FILE,bu($file)) ||
-                                $self->error("reading ifcfg: can't open the backup ",
-                                             bu($file), " of $file. ($!)");
-                        while (<FILE>) {
-                            $sl=$1 if (m/SLAVE=(\w+)/);
-                            $ma=$1 if (m/MASTER=(\w+)/);
+                        $self->debug(3, "reading ifcfg from the backup ", $self->gen_backup_filename($file));
+                        my $fh = CAF::FileEditor->new($self->gen_backup_filename($file), log => $self);
+                        $fh->cancel();
+                        seek($fh, 0, SEEK_SET);
+                        while (my $l = <$fh>) {
+                            $sl=$1 if ($l =~ m/SLAVE=(\w+)/);
+                            $ma=$1 if ($l =~ m/MASTER=(\w+)/);
                         }
-                        close(FILE);
+                        $fh->close();                   
                     }
                     $ifdown{$ma}=1 if (($sl eq "yes") && ($ma =~ m/bond/));
                 } elsif (exists($net{$if}{'set_hwaddr'})
@@ -605,11 +655,23 @@ sub Configure {
         };
     };
 
-    my @cmds;
+    my @disablenm_cmds = ();
+
+    ## allow NetworkMnager to run or not?
+    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
+        # no checking, forcefully stopping NetworkManager
+        # warning: this can cause troubles with the recovery to previous state in case of failure
+        # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
+        # (or better yet, post ncm-spma)
+        push(@disablenm_cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
+        push(@disablenm_cmds,["/sbin/service NetworkManager stop"]);
+        $self->runrun(@disablenm_cmds);
+    };
+
     ## restart network
     ## capturing system output/exit-status here is not useful.
     ## network status is tested separately
-
+    my @cmds = ();
     ## ifdown dev OR network stop
     if ($exifiles{"/etc/sysconfig/network"} == 1) {
         @cmds = [qw(/sbin/service network stop)];
@@ -617,14 +679,17 @@ sub Configure {
         foreach my $if (sort keys %ifdown) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-	    push(@cmds, ["/sbin/ifdown", $if]);
+            push(@cmds, ["/sbin/ifdown", $if]);
         }
     }
     $self->runrun(@cmds);
     ## replace modified/new files
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy(bu($file).$fail,$file) || $self->error("replace modified/new files: can't copy ".bu($file).$fail." to $file. ($!)");
+            copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) || 
+                $self->error("replace modified/new files: can't copy ",
+                             $self->gen_backup_filename($file).FAILED_SUFFIX,
+                             " to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
@@ -638,7 +703,7 @@ sub Configure {
         foreach my $if (sort keys %ifup) {
             ## how do we actually know that the device was up?
             ## eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-	    push(@cmds, ["/sbin/ifup", $if, "boot"]);
+            push(@cmds, ["/sbin/ifup", $if, "boot"]);
             push(@cmds, [qw(sleep 10)]) if ($if =~ m/bond/);
         }
     }
@@ -649,13 +714,17 @@ sub Configure {
         foreach my $file (keys %exifiles) {
             ## don't clean up files that are not changed
             if ($exifiles{$file} != 0) {
-                if (-e bu($file)) {
-                    unlink(bu($file)) ||
-                        $self->warn("cleanup backups: can't unlink ".bu($file)." ($!)") ;
+                if (-e $self->gen_backup_filename($file)) {
+                    unlink($self->gen_backup_filename($file)) ||
+                        $self->warn("cleanup backups: can't unlink ",
+                                    $self->gen_backup_filename($file),
+                                    " ($!)") ;
                 }
-                if (-e bu($file).$fail) {
-                    unlink(bu($file).$fail) ||
-                        $self->warn("cleanup backups: can't unlink ".bu($file).$fail." ($!)");
+                if (-e $self->gen_backup_filename($file).FAILED_SUFFIX) {
+                    unlink($self->gen_backup_filename($file).FAILED_SUFFIX) ||
+                        $self->warn("cleanup backups: can't unlink ",
+                                    $self->gen_backup_filename($file).FAILED_SUFFIX,
+                                    " ($!)");
                 }
             }
         }
@@ -663,7 +732,7 @@ sub Configure {
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     bu(" "), "with suffix $fail. ",
+                     $self->gen_backup_filename(" "), "with suffix ",FAILED_SUFFIX,
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         ## if not, revert and pray now done with a pure network
@@ -686,15 +755,15 @@ sub Configure {
                 if (-e $file) {
                     unlink($file) || $self->error("Can't unlink $file.") ;
                 }
-                copy(bu($file),$file) ||
-                    $self->error("Can't copy ".bu($file)." to $file.");
+                copy($self->gen_backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
             } elsif ($exifiles{$file} == -1) {
                 $self->info("RECOVER: Restoring file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
                 }
-                copy(bu($file),$file) ||
-                    $self->error("Can't copy ".bu($file)." to $file.");
+                copy($self->gen_backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
             }
         }
         ## ifup OR network start
@@ -735,25 +804,16 @@ sub Configure {
     ## end of configure
     ##
 
-    sub bu {
-        my $func="bu";
-        ## returns backup filename of file
-        my $file = shift || $self->error("$func: No file given.");
-        my $back_dir="/tmp";
-
-        my $back="$file";
-        $back =~ s/\//_/g;
-        my $backup_file = "$back_dir/$back";
-        return $backup_file;
-    }
 
     sub mk_bu {
         my $func="mk_bu";
         ## makes backup of file
         my $file = shift || $self->error("$func: No file given.");
 
-        $self->debug(3,"$func: create backup of $file to ".bu($file));
-        copy($file, bu($file)) || $self->error("$func: Can't create backup of $file to ".bu($file)." ($!)");
+        $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
+        copy($file, $self->gen_backup_filename($file)) || 
+            $self->error("$func: Can't create backup of $file to ",
+                         $self->gen_backup_filename($file), " ($!)");
     }
 
     sub test_network {
@@ -781,11 +841,11 @@ sub Configure {
     }
 
     sub get_current_config {
-	my $output;
-	my $fh = CAF::FileEditor->new("/etc/sysconfig/network",
-				      log => $self);
-	$fh->cancel();
-	$output = ${$fh->string_ref()};
+        my $output;
+        my $fh = CAF::FileEditor->new("/etc/sysconfig/network",
+                                      log => $self);
+        $fh->cancel();
+        $output = ${$fh->string_ref()};
 
         $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
         $output .= $self->runrun(["/sbin/ifconfig"]);
@@ -850,19 +910,19 @@ sub Configure {
         my $failed = shift || $self->error("$func: No failed suffix.");
 
         ## check for subdirectories?
-        my $backup_file = bu($file);
+        my $backup_file = $self->gen_backup_filename($file);
 
         if (-e $backup_file.$failed) {
             $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
-            unlink($backup_file.$failed)||
-            $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
+            unlink($backup_file.$failed) ||
+                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
         }
 
         $self->debug(3,"$func: writing ".$backup_file.$failed);
-        open(FILE,"> ".$backup_file.$failed) ||
-            $self->error("$func: Can't write to ".$backup_file.$failed." ($!)");
-        print FILE $text;
-        close(FILE);
+        my $fh = CAF::FileWriter->new($backup_file.$failed, log=>$self);
+        print $fh $text;
+        $fh->close();
+
         if (compare($file,$backup_file.$failed) == 0) {
             ## they're equal, remove backup files
             $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file.$failed);
@@ -882,23 +942,6 @@ sub Configure {
         };
     }
 
-    ## this is how it used to be used
-    sub runrunold {
-        my $cmd = shift||"";
-        return if ($cmd eq "");
-
-        ## old style
-        my $output;
-        $self->info("Going to run: $cmd");
-        #system($cmd);
-        open(FILE,$cmd." 2>&1 |");
-        $output .= $_ while (<FILE>);
-        close(FILE);
-
-        return $output
-
-    }
-
     sub runrun {
         my ($self, @cmds) = @_;
         return if (!@cmds);
@@ -909,8 +952,8 @@ sub Configure {
             push(@output, CAF::Process->new($i, log => $self)->output());
             if ($?) {
                 $self->error("Error output: $output[-1]");
-	       }
-	    }
+           }
+        }
 
         return join("", @output);
     }
@@ -947,7 +990,8 @@ sub Configure {
                 }
             }
         } else {
-            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed. (output: $out, stderr: $err)");
+            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
+                         " (output: $out, stderr: $err)");
         }
         return %current;
     }
@@ -981,7 +1025,8 @@ sub Configure {
             } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
                 $currentv=$current{$ethtool_option_map{$sectionname}{$k}};
             } else {
-                $self->info("ethtoolSetOptions: Skipping setting for $ethname/$sectionname/$k to $v as not in ethtool");
+                $self->info("ethtoolSetOptions: Skipping setting for ",
+                            "$ethname/$sectionname/$k to $v as not in ethtool");
                 next;
             }
 
@@ -999,21 +1044,20 @@ sub Configure {
         my $setoption="--$sectionname";
         $setoption="--set-$sectionname" if ($sectionname eq "ring");
         $setoption="--change" if ($sectionname eq "ethtool");
-	$self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
+        $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
     }
 
-    # Creates a string defining the bonding or ethtool  options.
-    sub bonding_options {
-        my ($el) = @_;
+    # Creates a string defining the bonding/bridging or ethtool options.
+    sub make_key_equal_value_string {
+        my ($variablename, $el) = @_;
         my $opts = $el->getTree();
-        my $st = "BONDING_OPTS=";
         my @op;
 
         while (my ($k, $v) = each(%$opts)) {
             push(@op, "$k=$v");
         }
 
-        return "$st'" . join(' ', @op) . "'\n";
+        return uc($variablename) . "='" . join(' ', @op) . "'\n";
     }
 
     sub ethtool_options {
@@ -1042,6 +1086,7 @@ sub Configure {
 
 
     #### real end of configure
+    return 1;
 }
 
 1;
