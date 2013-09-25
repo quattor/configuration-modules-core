@@ -6,7 +6,7 @@
   <artifactId>resolver</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.9.1-SNAPSHOT</version>
+  <version>13.1.2-RC2-SNAPSHOT</version>
   <name>Quattor Component</name>
 
 
