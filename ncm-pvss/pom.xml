@@ -6,7 +6,7 @@
   <artifactId>pvss</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-rc4-SNAPSHOT</version>
+  <version>13.1.2-rc4</version>
   <name>NCM pvss configuration and patching component</name>
 
 

@@ -6,7 +6,7 @@
   <artifactId>pacemaker</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-rc4-SNAPSHOT</version>
+  <version>13.1.2-rc4</version>
   <name>Linux-HA configuration component based on pacemaker</name>
 
 
