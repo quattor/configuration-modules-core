@@ -6,7 +6,7 @@
   <artifactId>cups</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC3</version>
+  <version>13.1.2-RC4-SNAPSHOT</version>
   <name>CUPS configuration component</name>
 
 
