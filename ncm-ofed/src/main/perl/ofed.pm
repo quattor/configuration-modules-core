@@ -36,7 +36,7 @@ use constant OPENIBOPTIONS => qw(
     srpha_enable
     srp_daemon_enable
     ipoib_mtu
-    sysctl
+    run_sysctl
     run_affinity_tuner
     node_desc
     node_desc_time_before_update
@@ -125,7 +125,7 @@ sub getcfg {
     foreach my $option (@options) {
         my $ans="no";
 
-        if ($option eq "ipoib_mtu") {
+        if ($option eq "ipoib_mtu" or $option eq "node_desc") {
             $ans=$tr->{$option};
         } else {
             $ans = "yes" if (exists($tr->{$option}) && $tr->{$option});

@@ -29,7 +29,8 @@ isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter rdma.conf file written")
 # generic
 unlike($fh, qr/SRP_DAEMON_ENABLE_LOAD/m, "No suffix for options");
 like($fh, qr/SRP_DAEMON_ENABLE=(yes|no)/m, "Boolean options");
-like($fh, qr/IPOIB_MTU=\d+/m, "Non-boolean option");
+like($fh, qr/IPOIB_MTU=\d+/m, "Non-boolean option for MTU");
+like($fh, qr/NODE_DESC=myname/m, "Non-boolean option node description");
 
 like($fh, qr/MLX4_LOAD=(yes|no)/m, "Suffix for hardware, boolena value");
 like($fh, qr/RDMA_CM_LOAD=(yes|no)/m, "Suffix for modules, boolena value");

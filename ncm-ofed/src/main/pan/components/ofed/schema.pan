@@ -16,7 +16,7 @@ type component_ofed_openib_options = {
 
     ## disable for large clusters
     "set_ipoib_cm" : boolean = true
-    "set_ipoib_channels" : boolean = true
+    "set_ipoib_channels" : boolean = false
 
     ## SRP High Availability
     "srpha_enable" : boolean = false
