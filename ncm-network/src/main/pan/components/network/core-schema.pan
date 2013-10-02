@@ -148,7 +148,6 @@ type structure_network = {
     "default_gateway"  ? type_ip
     "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
     "interfaces"       : structure_interface{}
-    #     "nameserver"       : type_ip[]
     "nameserver"       ? type_ip[]
     "nisdomain"        ? type_fqdn
     "nozeroconf"       ? boolean
