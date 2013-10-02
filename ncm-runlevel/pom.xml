@@ -6,7 +6,7 @@
   <artifactId>runlevel</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.9.1-SNAPSHOT</version>
+  <version>13.1.2-rc3</version>
   <name>Setting the initdefault runlevel in /etc/inittab</name>
 
 

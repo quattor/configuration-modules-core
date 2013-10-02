@@ -6,7 +6,7 @@
   <artifactId>rproxy</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.9.1-SNAPSHOT</version>
+  <version>13.1.2-rc3</version>
   <name>NCM Apache configuration component for installing a caching reverse proxy</name>
 
 

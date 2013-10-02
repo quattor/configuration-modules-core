@@ -6,7 +6,7 @@
   <artifactId>altlogrotate</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.9.1-SNAPSHOT</version>
+  <version>13.1.2-rc3</version>
   <name>altlogrotate component.</name>
 
 
