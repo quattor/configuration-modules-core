@@ -20,7 +20,7 @@ type dhcp_header_type={
     "log_facility" : string
     "search" ? string[]
 };
- 
+
 type dhcp_type={
     "subnet" : type_hostname
     "netmask" : type_hostname
@@ -115,7 +115,7 @@ function fill_dhcp_clients_list = {
         #dhcp_nodeinfo["nextserver"] = value("/system/network/hostname");
         pxe_device = value("/software/components/diskless_server/pxe/netdev");
         dhcp_nodeinfo["nextserver"] = value("/system/network/interfaces/" + pxe_device + "/ip");
-        # file name 
+        # file name
         dhcp_nodeinfo["filename"] = "linux-install/pxelinux.0";
         # the option root-path (this we could also do in the component instead of putting it in the profile!)
         dhcp_nodeinfo["rootpath"] = dhcp_nodeinfo["nextserver"] + ":" + value("/software/components/diskless_server/pxe/image") + "/root";
@@ -127,15 +127,15 @@ function fill_dhcp_clients_list = {
 };
 
 function get_client_boot_device = {
-    # 
-    if ( argc != 1 ){
+    #
+    if ( ARGC != 1 ){
         error("Wrong ARGC :" + ARGC + "please specify nodename.");
     };
     node = ARGV[0];
     client_devices = nlist();
     nics = value("//profile_" + node + "/hardware/cards/nic");
     ok = first(nics,k,v);
-    
+
     while(ok){
         debug("checking interface " + k);
         if( exists("//profile_" + node + "/hardware/cards/nic/"+k+"/boot") && value("//profile_" + node + "/hardware/cards/nic/"+k+"/boot") ) {
