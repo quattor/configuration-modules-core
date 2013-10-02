@@ -32,6 +32,7 @@ type structure_bonding_options = {
     "mode" : long
     "miimon" : long
     "updelay" : long
+    "downdelay" ? long
     "primary" : string with exists("/system/network/interfaces/" + SELF)
 };
 
