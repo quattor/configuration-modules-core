@@ -118,12 +118,12 @@ type structure_interface = {
     "fqdn" ? string
     "network_environment" ? string
     "network_type" ? string
-  "nmcontrolled"     ? boolean
-  
-  "linkdelay" ? long # LINKDELAY  
-  "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
-  "delay" ? long # brctl setfd DELAY
-  "bridging_opts" ? structure_bridging_options 
+    "nmcontrolled"     ? boolean
+
+    "linkdelay" ? long # LINKDELAY
+    "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
+    "delay" ? long # brctl setfd DELAY
+    "bridging_opts" ? structure_bridging_options
 };
 
 
@@ -153,8 +153,8 @@ type structure_network = {
     "nisdomain"        ? type_fqdn
     "nozeroconf"       ? boolean
     "set_hwaddr"       ? boolean
-     "nmcontrolled"     ? boolean
-     "allow_nm"         ? boolean
+    "nmcontrolled"     ? boolean
+    "allow_nm"         ? boolean
     "primary_ip"       ? string
     "routers"          ? structure_router{}
 };
