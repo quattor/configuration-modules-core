@@ -6,7 +6,7 @@
   <artifactId>tftpd</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC2-SNAPSHOT</version>
+  <version>13.1.2-RC3</version>
   <name>NCM tftpd configuration component</name>
 
 

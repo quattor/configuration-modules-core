@@ -6,7 +6,7 @@
   <artifactId>nagios</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC2-SNAPSHOT</version>
+  <version>13.1.2-RC3</version>
   <name>nagios NCM component.</name>
 
 
