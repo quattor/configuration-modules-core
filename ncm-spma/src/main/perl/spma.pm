@@ -197,21 +197,21 @@ sub execute_yum_command
     my $cmd = CAF::Process->new($command, %opts);
 
     $cmd->execute();
+    $self->warn("$why produced warnings: $err") if $err;
+    $self->verbose("$why output: $out");
     if ($? ||
         $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
                       (?:Transaction \s+ encountered.*error)|
                       (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
         (@missing = ($out =~ m{^No package (.*) available}omg))) {
+        $self->warn("Command output: $out");
         $self->error("Failed $why: $err");
         if (@missing) {
             $self->error("Missing packages: ", join(" ", @missing));
         }
-        $self->warn("Command output: $out");
         return undef;
     }
-    $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out");
     return $cmd->{NoAction} || $out;
 }
 
