@@ -297,8 +297,8 @@ sub configure_nslcd
     delete($tree->{map});
 
     # uri needs whitespace-separated list of values
-    if ( exists $tree->{uri} ) {
-        print $fh "uri ", join(" ", @{$tree->{uri}});
+    if (exists $tree->{uri}) {
+        print $fh "uri ", join(" ", @{$tree->{uri}}), "\n";
         delete($tree->{uri});
     }
 
