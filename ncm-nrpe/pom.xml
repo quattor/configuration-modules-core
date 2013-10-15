@@ -6,7 +6,7 @@
   <artifactId>nrpe</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC4-SNAPSHOT</version>
+  <version>13.1.2</version>
   <name>Component configuring NRPE</name>
 
 

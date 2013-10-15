@@ -6,7 +6,7 @@
   <artifactId>sysctl</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC4-SNAPSHOT</version>
+  <version>13.1.2</version>
   <name>NCM sysctl configuration component</name>
 
 

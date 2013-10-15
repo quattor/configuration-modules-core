@@ -6,7 +6,7 @@
   <artifactId>pnp4nagios</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-RC4-SNAPSHOT</version>
+  <version>13.1.2</version>
   <name>nagios addon pnp4nagios NCM component.</name>
 
 
