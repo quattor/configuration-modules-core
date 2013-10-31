@@ -14,7 +14,7 @@ include {'quattor/schema'};
 type hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
 	SELF=="*" || SELF == 'dummy';
 
-type hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + SELF) || SELF=="*";
+type hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF=="*";
 
 type commandstrings = string [] with exists ("/software/components/icinga/commands/" + SELF[0]);
 
