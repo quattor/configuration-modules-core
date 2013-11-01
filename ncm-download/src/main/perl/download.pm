@@ -250,11 +250,12 @@ sub download {
     $capath  = $opts{capath};
     $key     = $opts{key};
     $cert    = $opts{cert};
+	$file    = $opts{file};
 
-    $self->debug(1, "Processing file $opts{file} from $source");
+    $self->debug(1, "Processing file $file from $source");
 
     my $proc = CAF::Process->new([qw(/usr/bin/curl -s -R -f --create-dirs -o),
-				  $opts{file}],
+				  $file],
 				 stderr => \my $errs,
 				 log => $self);
 
@@ -293,8 +294,8 @@ sub download {
     # Get timestamp of any existing file, defaulting to zero if the
     # file doesn't exist
     my $timestamp_existing = 0;
-    if (-e $opts{file}) {
-        $timestamp_existing  = (stat($file))[9];
+    if (-e $file) {
+        $timestamp_existing  = (stat(_))[9];
     }
 
     my $timestamp_threshold = (time() - ($min_age * 60)); # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
