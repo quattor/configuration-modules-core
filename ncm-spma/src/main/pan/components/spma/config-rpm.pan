@@ -13,6 +13,7 @@ include { 'components/spma/functions' };
 
 "/software/components/spma/active" ?= true;
 "/software/components/spma/dispatch" ?= true;
-"/software/components/spma/register_change" ?= list("/software/packages");
+"/software/components/spma/register_change" ?= list("/software/packages",
+                                                    "/software/repositories");
 
 "/software/components/spma/run" ?= "yes";
