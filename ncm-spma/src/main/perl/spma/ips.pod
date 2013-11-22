@@ -1,0 +1,187 @@
+##############################################################################
+#
+# Copyright (C) 2013 Contributor
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+##############################################################################
+#
+# NCM::Component::spma::ips
+# Author: Mark R. Bannister
+#
+# NCM SPMA configuration component for IPS.
+#
+##############################################################################
+
+=head1 NAME
+
+NCM::Component::spma::ips - NCM SPMA configuration component for IPS
+
+=head1 SYNOPSIS
+
+B<Configure ()>
+
+=head1 DESCRIPTION
+
+Invoked by B<NCM::Component::spma> via 'B<ncm-ncd -configure ncm-spma>' when
+B</software/components/spma/packager> is B<ips>.  Processes requests for
+IPS packages to be added to a new Solaris boot environment and generates a
+command file that may be executed by B<spma-run>.
+
+This module is intended for package management with Quattor on Solaris 11
+or later.
+
+=head1 RESOURCES
+
+=over
+
+=item B</software/catalogues> ? nlist {}
+
+A list of catalogues (package groups) to install.  The format is:
+
+{I<package_name>}/{I<version>}
+
+For example:
+
+    prefix '/software/catalogues';
+    '{pkg://solaris/entire}/{0.5.11,5.11-0.175.1.10.0.5.0}' = '';
+
+The intention is that a host's software inventory is predominantly defined
+by a small number of software catalogues that pull in almost all of the
+packages required for the build.
+
+Catalogues must be versioned and a host is progressed from one version
+of a build to another by shifting the catalogue version numbers.
+
+=item B</software/requests> ? nlist ()
+
+A list of additional packages to install.  The format is:
+
+{I<package_name>}[/{I<version>}]
+
+For example:
+
+    '/software/requests/{ms/afs/client}' = nlist();
+    '/software/requests/{idr537}/{2}' = '';
+
+The version number is optional and should generally be omitted.  It is
+intended that the version number of packages that can be requested individually
+are defined by a catalogue (e.g. constrained by an incorporate dependency).
+
+=item B</software/uninstall> ? nlist ()
+
+A list of packages to uninstall.  Packages in this list will not be installed,
+and will be passed to the B<pkg install> command via the B<--reject> option.
+The format is the same as with B</software/requests>.
+
+=item B</software/components/spma/packager> ? string
+
+Must contain 'B<ips>' to use this module.
+
+=item B</software/components/spma/run> ? string
+
+Set to B<yes> to allow this module to launch B<spma-run --execute> to make
+immediate changes to the new boot environment.  If set to B<no> or omitted,
+this module prepares and validates the changes only, but does not perform
+any updates, it will be the responsibility of an external process to launch
+B<spma-run --execute> in this case.
+
+=item B</software/components/spma/userpkgs> ? string
+
+Set to B<yes> to allow user-installed packages.  If set to B<no> or omitted,
+then SPMA will find all leaf packages that have not been requested and
+uninstall them via B<--reject> arguments to B<pkg install>.
+
+=item B</software/components/spma/pkgpaths> : string []
+
+Contains a list of resource paths where catalogues and individual package
+requests are located.  Should be set to:
+
+    list("/software/catalogues", "/software/requests");
+
+=item B</software/components/spma/uninstpaths> : string []
+
+Contains a list of resource paths where packages to uninstall are located.
+Should be set to:
+
+    list("/software/uninstall");
+
+=item B</software/components/spma/cmdfile> : string
+
+Where to save commands for the B<spma-run> script.  Default location
+is B</var/tmp/spma-commands>.
+
+=item B</software/components/spma/flagfile> ? string
+
+File to touch if B</software/components/spma/run> is set to B<no> and this
+module has determined that there is work to do, i.e. packages to install or
+to uninstall.  If the file exists after this module has completed, then
+B<spma-run --execute> can be run to create a new BE and make package changes
+in that BE.
+
+=item B</software/components/spma/ips/bename> ? string
+
+Name of boot environment that B<spma-run> will use when making any
+changes to packages.  If a BE by that name already exists, then a
+unique number will be appended to the name.  Package changes will
+be effected via 'B<pkg install --be-name> I<bename>'.
+
+If this resource is missing then 'B<pkg install --require-new-be>' will be used
+instead, leaving Solaris to decide on the name of the new BE.
+
+=item B</software/components/spma/ips/rejectidr> : boolean
+
+Add a B<--reject> option to the B<pkg install> command for every Solaris IDR
+installed that has not been explicitly requested.
+
+Default is B<true>.
+
+=item B</software/components/spma/ips/freeze> : boolean
+
+Ignore frozen packages.  This will prevent SPMA from updating or uninstalling
+frozen packages.
+
+Default is B<true>.
+
+=back
+
+=head1 NOTES
+
+This module does not support making changes in the currently active boot
+environment.  The intention is that it is executed when a host is rebooted
+via a call to 'B<ncm-ncd -configure spma>' and then 'B<spma-run --execute>'
+called immediately afterwards.  The system will then reboot into the
+newly created boot environment if any changes were made.
+
+IPS publisher configuration is currently not supported by this module.
+
+=head1 EXAMPLE CONFIGURATION
+
+The following PAN code snippet demonstrates how to prepare SPMA for
+Solaris:
+
+    #
+    # Configure SPMA appropriately for Solaris
+    #
+    prefix "/software/components/spma";
+    "packager" = "ips";
+    "pkgpaths" = list("/software/catalogues", "/software/requests");
+    "uninstpaths" = list("/software/uninstall");
+    "register_change" = list("/software/catalogues",
+                             "/software/requests",
+                             "/software/uninstall");
+    "flagfile" = "/var/tmp/spma-run-flag"
+
+=head1 SEE ALSO
+
+B<ncm-ncd>(1), B<panc>(5), B<pkg>(5), B<spma-run --man>, B<pkgtree -h>.

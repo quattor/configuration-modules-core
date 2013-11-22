@@ -1,0 +1,651 @@
+#!/usr/bin/perl
+##############################################################################
+#
+# Copyright (C) 2013 Contributor
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+##############################################################################
+#
+# spma-run
+# Author: Mark R. Bannister
+#
+# Executes command output from ncm-spma component.
+#
+##############################################################################
+
+use strict;
+use warnings;
+
+#
+# Set-up Common Application Framework
+#
+BEGIN {
+    unshift(@INC, '/usr/lib/perl');
+    unshift(@INC, '/opt/edg/lib/perl');
+}
+
+##############################################################################
+# SPMARUN PACKAGE
+##############################################################################
+
+package spmarun;
+
+use CAF::Application;
+use CAF::Reporter;
+use CAF::Process;
+use LC::Exception qw (SUCCESS throw_error);
+use CAF::Lock qw(FORCE_IF_STALE FORCE_ALWAYS);
+
+use vars qw(@ISA);
+@ISA = qw(CAF::Application CAF::Reporter);
+
+use constant VERSION => '2.2.1';
+use constant PATH_CMDFILE => '/software/components/spma/cmdfile';
+use constant NCM_QUERY => '/usr/bin/ncm-query --pan';
+use constant LOG_FILE => '/var/log/spma-run.log';
+use constant PKG_INSTALL_N => '/usr/bin/pkg install -n';
+use constant PKG_INSTALL => '/usr/bin/pkg install';
+
+##############################################################################
+# app_options()
+#
+# Add extra options to those defined in CAF::Application
+##############################################################################
+sub app_options
+{
+    push (my @array,
+
+        { NAME    => 'cmdfile=s',
+          HELP    => 'command file produced by ncm-spma.',
+          DEFAULT => undef },
+
+        { NAME    => 'execute',
+          HELP    => 'perform all operations.',
+          DEFAULT => undef },
+
+        { NAME    => 'forcelock',
+          HELP    => 'take over application lock.  Use with care.',
+          DEFAULT => undef },
+
+        { NAME    => 'get-be-name',
+          HELP    => 'return BE name that would be used.',
+          DEFAULT => undef },
+
+        { NAME    => 'get-install',
+          HELP    => 'return name of leaf packages that would be installed.',
+          DEFAULT => undef },
+
+        { NAME    => 'get-reject',
+          HELP    => 'return name of packages that would be rejected.',
+          DEFAULT => undef },
+
+        { NAME    => 'ignorelock',
+          HELP    => 'ignore application lock.  Use with care.',
+          DEFAULT => undef },
+
+        { NAME    => 'logfile=s',
+          HELP    => 'file to write log messages.',
+          DEFAULT => undef },
+
+        { NAME    => 'man',
+          HELP    => 'display man page.',
+          DEFAULT => undef },
+
+        { NAME    => 'noaction',
+          HELP    => 'do not perform any operations.',
+          DEFAULT => undef },
+
+        { NAME    => 'retries=i',
+          HELP    => 'number of retries if spma-run is locked.',
+          DEFAULT => 10 },
+
+        { NAME    => 'timeout=i',
+          HELP    => 'maximum time in seconds between retries.',
+          DEFAULT => 30 },
+
+    );
+    return \@array;
+}
+
+##############################################################################
+# lock()
+#
+# Obtain application lock
+##############################################################################
+sub lock
+{
+    my $self = shift;
+
+    $self->{LOCK} = CAF::Lock->new('/var/lock/quattor/spma-run');
+
+    my $lock_flag = FORCE_IF_STALE;
+    $lock_flag = FORCE_ALWAYS if $self->option("forcelock");
+
+    unless ($self->{LOCK}->set_lock($self->option("retries"),
+                                  $self->option("timeout"),
+                                  $lock_flag)) {
+        return undef;
+    }
+    return SUCCESS;
+}
+
+##############################################################################
+# finish()
+#
+# Release application lock and exit
+##############################################################################
+sub finish
+{
+    my ($self, $ret) = @_;
+
+    $self->{LOCK}->unlock() if $self->{LOCK} && $self->{LOCK}->is_set();
+    exit($ret);
+}
+
+##############################################################################
+# _initialize()
+#
+# Initialize application
+##############################################################################
+sub _initialize
+{
+    my $self = shift;
+
+    #
+    # Set-up common properties
+    #
+    $self->{'VERSION'} = VERSION;
+
+    $self->{'USAGE'} = "
+Usage: spma-run <options ...>
+
+spma-run executes the package changes determined by the
+Quattor NCM spma configuration component.
+
+Currently supported for IPS packages on Solaris 11 only.
+";
+
+    #
+    # Start initialization of CAF::Application
+    #
+    unless ($self->SUPER::_initialize(@_)) {
+        return undef;
+    }
+
+    #
+    # Check we are running as root
+    #
+    if ($>) {
+        $self->error("This program must be run by root");
+        exit(-1);
+    }
+
+    #
+    # Set-up log file (except in noaction mode)
+    #
+    if ($self->option("execute")) {
+        $self->{'LOGFILE'} = $self->option("logfile") || LOG_FILE;
+        $self->{'LOG'} = CAF::Log->new($self->{'LOGFILE'}, 'at');
+        return undef unless defined($self->{'LOG'});
+        $self->set_report_logfile($self->{'LOG'});
+    }
+
+    #
+    # /var/run is volatile on Solaris
+    #
+    mkdir("/var/run/quattor-components");
+    return SUCCESS;
+}
+
+##############################################################################
+# run_pkg_command()
+#
+# Runs pkg command and processes exit status
+##############################################################################
+sub run_pkg_command
+{
+    my ($self, $cmd, @args) = @_;
+
+    unshift(@args, split(/ /, $cmd));
+    my $proc = CAF::Process->new(\@args, log => $self);
+    my $output = $proc->output();
+    $self->report($output);
+
+    my $status;
+    if ($? & 127) {
+        $self->error("'$cmd': child died with signal " . ($? & 127));
+        $self->finish(-1);
+    } else {
+        $status = ($? >> 8);
+        $self->report("Status: $status");
+    }
+
+    if ($status == 4) {
+        $self->report("spma-run: no updates necessary");
+        $self->finish(1);
+    } elsif ($status != 0) {
+        $self->error("An error occurred running '$cmd' " .
+                         "(exit status $status)");
+        $self->finish(2);
+    }
+}
+
+##############################################################################
+# report_install()
+#
+# Reports list of packages that are requested for install from pkg command
+##############################################################################
+sub report_install
+{
+    my ($self, @command) = @_;
+    my $next_opt = 0;
+    my @lst;
+
+    chomp @command;
+    for my $arg (@command) {
+        if ($arg =~ /^--/) {
+            $next_opt = 1;
+        } elsif ($next_opt) {
+            $next_opt = 0;
+        } else {
+            push @lst, $arg;
+        }
+    }
+    $self->report(join("\n", sort @lst));
+}
+
+##############################################################################
+# report_reject()
+#
+# Reports list of packages that are rejected on pkg command line
+##############################################################################
+sub report_reject
+{
+    my ($self, @command) = @_;
+    my $next_reject = 0;
+    my @lst;
+
+    chomp @command;
+    for my $arg (@command) {
+        if ($next_reject) {
+            push @lst, $arg;
+            $next_reject = 0;
+        } elsif ($arg eq '--reject') {
+            $next_reject = 1;
+        }
+    }
+    $self->report(join("\n", sort @lst));
+}
+
+##############################################################################
+# MAIN PACKAGE
+##############################################################################
+
+package main;
+
+use strict;
+use warnings;
+
+use Pod::Usage;
+use Fcntl ":mode";
+use LC::Exception qw (SUCCESS throw_error);
+use vars qw($this_app %SIG);
+
+my $ec=LC::Exception::Context->new->will_store_errors;
+
+#
+# Fix umask
+#
+umask(022);
+
+#
+# Minimal PATH
+#
+$ENV{"PATH"} = "/bin:/sbin:/usr/bin:/usr/sbin";
+
+#
+# Unbuffer STDOUT & STDERR
+#
+autoflush STDOUT 1;
+autoflush STDERR 1;
+
+##############################################################################
+# signal_handler()
+#
+# Catch signal and exit gracefully
+##############################################################################
+sub signal_handler
+{
+    my $signal = shift;
+
+    #
+    # Ignore further signals
+    #
+    $SIG{'INT'} ='IGNORE';
+    $SIG{'TERM'}='IGNORE';
+    $SIG{'QUIT'}='IGNORE';
+    $SIG{'USR2'}='IGNORE';
+    $SIG{'HUP'}='IGNORE';
+    $this_app->warn('signal handler: received signal: ' . $signal);
+
+    #
+    # Handle the signal
+    #
+    $this_app->error('spma-run exiting gracefully');
+    $this_app->finish(-1);
+}
+
+##############################################################################
+# START HERE
+##############################################################################
+
+#
+# Initialize the application
+#
+unless ($this_app = spmarun->new($0, @ARGV)) {
+    throw_error("cannot start application");
+}
+
+#
+# Display man page and exit if requested to do so
+#
+pod2usage(-verbose => 3, -exitval => 0) if $this_app->option('man');
+pod2usage(-verbose => 0) unless $this_app->option('execute') or
+                                $this_app->option('noaction') or
+                                $this_app->option('get-be-name') or
+                                $this_app->option('get-install') or
+                                $this_app->option('get-reject');
+
+#
+# Handle signals properly
+#
+$SIG{'INT'}  = \&signal_handler;
+$SIG{'TERM'} = \&signal_handler;
+$SIG{'QUIT'} = \&signal_handler;
+$SIG{'USR2'} = \&signal_handler;
+$SIG{'HUP'}  = 'IGNORE';
+
+#
+# Get name of command file to process either
+# via --cmdfile option or else by calling ncm-query
+#
+my $cmdfile = $this_app->option('cmdfile');
+unless (defined($cmdfile)) {
+    my $path = spmarun::PATH_CMDFILE;
+    my $cmd = spmarun::NCM_QUERY . " " . $path;
+    my $proc = CAF::Process->new([split(/ /, $cmd)]);
+    my $output = $proc->output();
+    unless (length($output)>0) {
+        $ec->ignore_error();
+        $this_app->error("cannot execute: $cmd");
+        $this_app->finish(-1);
+    }
+    my $line = (grep /$path.*=/, $output)[0];
+    $line =~ s/;.*$//;
+    $line =~ s/[" ]//g;
+    $cmdfile = (split /=/, $line)[1];
+    chomp($cmdfile);
+}
+
+if (length($cmdfile) == 0 or ! -e $cmdfile) {
+    $this_app->error("command file '$cmdfile' is missing\n" .
+             "        run 'ncm-ncd -configure spma' to create it");
+    $this_app->finish(-1);
+}
+
+#
+# Security checks
+#
+if (! -o $cmdfile) {
+    $this_app->error("command file '$cmdfile' has wrong owner\n" .
+             "        must be owned by root user");
+    $this_app->finish(-1);
+}
+my $mode = (stat($cmdfile))[2];
+if (($mode & S_IWGRP) or ($mode & S_IWOTH)) {
+    $this_app->error("command file '$cmdfile' too permissive\n" .
+             "        should be writable by root only");
+    $this_app->finish(-1);
+}
+
+#
+# Read command file
+#
+$this_app->verbose("spma-run: reading $cmdfile ...");
+my $fh;
+if (!open($fh, "<", $cmdfile)) {
+    $this_app->error("cannot read: $cmdfile");
+    $this_app->finish(-1);
+}
+my @command = split(/ /, <$fh>);
+chomp @command;
+unshift(@command, "--accept");
+close($fh);
+
+#
+# Obtain BE name
+#
+my $flag_opt = 0;
+my $bename;
+for my $arg (@command) {
+    if ($flag_opt) {
+        $bename = $arg;
+        last;
+    }
+    $flag_opt = 1 if $arg eq '--be-name';
+}
+
+#
+# Report BE name if that is all that is requested
+#
+if ($this_app->option('get-be-name')) {
+    $this_app->report($bename);
+    $this_app->finish(0);
+}
+
+#
+# Report list of packages to install if requested
+#
+if ($this_app->option('get-install')) {
+    $this_app->report_install(@command);
+    $this_app->finish(0);
+}
+
+#
+# Report list of packages to reject if requested
+#
+if ($this_app->option('get-reject')) {
+    $this_app->report_reject(@command);
+    $this_app->finish(0);
+}
+
+my $verbose = "";
+$verbose = " -v" if $this_app->option('verbose');
+
+unless ($this_app->option('execute')) {
+    #
+    # Execute in noaction mode to determine if anything would be done
+    #
+    $this_app->report("spma-run: checking packages for install in BE '$bename' (dry run) ...");
+    $this_app->run_pkg_command(spmarun::PKG_INSTALL_N . $verbose, @command);
+    $this_app->report("spma-run: validation passed, package selection ok");
+
+    #
+    # Stop now if running in noaction mode
+    #
+    $this_app->finish(0);
+}
+
+#
+# Execute the command for real
+#
+$this_app->report("spma-run: executing package changes in BE '$bename' ...");
+$this_app->run_pkg_command(spmarun::PKG_INSTALL . $verbose, @command);
+$this_app->report("spma-run: success");
+$this_app->finish(0);
+
+__END__
+
+=head1 NAME
+
+spma-run - Executes command output from ncm-spma component
+
+=head1 SYNOPSIS
+
+B<spma-run> [B<--cmdfile> I<file>] [B<--forcelock>] [B<--ignorelock>]
+            [B<--logfile> I<file>] [B<--retries> I<n>]
+            [B<--timeout> I<secs>] [B<--debug> I<n>] [B<--quiet>]
+            [B<--verbose>] [B<--help>] [B<--man>] [B<--version>]
+            {B<--execute>|B<--noaction>|
+               B<--get-be-name>|B<--get-install>|B<--get-reject>}
+
+=head1 DESCRIPTION
+
+B<spma-run --execute> executes the package changes determined by the
+Quattor NCM B<spma> configuration component.  Currently supported
+for IPS packages on Solaris 11 only.
+
+Alternatively, provide the B<--noaction> argument instead, and no changes
+will be made.  See description of B<--noaction> in B<OPTIONS> below.
+
+The output file from B<ncm-spma> provides all of the
+arguments required for a B<pkg install> command, including
+the name of the boot environment that will be created.  It is
+recommended that B<ncm-ncd -configure spma> is run immediately
+prior to executing B<spma-run> so that the commands are
+up-to-date with the current system state.
+
+=head1 RETURN VALUE
+
+B<spma-run --execute> returns 1 if no changes were made, or 0 if changes
+have been made indicating that a new boot environment has
+been created with some packaging differences, or >1 if an error
+occurred.
+
+In B<noaction> mode returns 1 if no changes would have been made,
+or 0 if changes would have been made, or >1 if an error occurred.
+
+=head1 OPTIONS
+
+The following options are supported:
+
+=over 5
+
+=item B<--cmdfile> I<file>
+
+By default, B<spma-run> obtains the name of the output file
+to process by running B<ncm-query> and looking at the
+B</software/components/spma/cmdfile> resource.
+
+This option allows the command filename to be overridden,
+in which case B<ncm-query> will not be executed.
+
+=item B<--debug> I<n>
+
+Set the debugging level.
+
+=item B<--execute>
+
+Enables run mode.  Live changes will be made on the system.
+
+=item B<--forcelock>
+
+Take over application lock forcibly.  Use with care.
+
+=item B<--get-be-name>
+
+Return name of boot environment that would be created if any
+package updates were to be made, but make no changes.  The name
+of the BE can only be determined if B<ncm-spma> was provided
+with one via the Quattor host profile.
+
+=item B<--get-install>
+
+Return list of package names that would be passed to the B<pkg install>
+command.
+
+=item B<--get-reject>
+
+Return list of package names that would be passed via B<--reject>
+arguments to the B<pkg install> command.
+
+=item B<--help>
+
+Display help page.  See also --man option.
+
+=item B<--ignorelock>
+
+Ignore application lock.  Use with care.
+
+=item B<--logfile> I<file>
+
+By default, B<spma-run> logs to B</var/log/spma-run.log>.  This
+option elects a different log file.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--noaction>
+
+Runs the B<pkg install> command with the B<-n> option to
+make no changes but only determine if any changes would
+have been made, and if so, the B<pkg install> command that
+would have been executed and the name of the boot environment
+that would have been created.
+
+Nothing is written to the log file if this option is given.
+
+=item B<--quiet>
+
+Suppresses output to stdout.
+
+=item B<--retries> I<n>
+
+By default B<spma-run> will retry up to 10 times if the application
+is locked by another process invocation.  This option amends the number
+of retries.
+
+=item B<--timeout> I<secs>
+
+By default B<spma-run> will wait 30 seconds between retries if the
+application is locked by another process invocation.  This option amends
+the timeout.
+
+=item B<--verbose>
+
+Display more detailed output on operations performed.
+
+=item B<--version>
+
+Display version number.
+
+=back
+
+=head1 FILES
+
+=over 5
+
+=item B</var/log/spma-run.log>
+
+Default log file.
+
+=back
+
+=head1 SEE ALSO
+
+B<ncm-ncd>(1), B<ncm-spma>(1), B<ncm-query>(1).
+
+=cut
+

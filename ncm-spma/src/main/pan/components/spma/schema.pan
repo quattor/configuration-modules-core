@@ -7,6 +7,7 @@ declaration template components/spma/schema;
 
 include { 'quattor/schema' };
 include { 'components/spma/functions' };
+include { 'components/spma/ips/schema' };
 
 ############################################################
 #
@@ -50,13 +51,14 @@ type SOFTWARE_REPOSITORY = {
 
 type component_spma_type = {
     include structure_component
+    include component_spma_ips
     "tmpdir"        ? string # path to the temporary directory
     "unescape"      ? boolean # use escape function
     "trailprefix"   ? boolean # if no escape function, use underscore prefix
     "userpkgs"      ? string with match (SELF, 'yes|no') # Allow user packages
     "userprio"      ? string with match (SELF, 'yes|no') # Priority to user packages
     "protectkernel" ? string with match (SELF, 'yes|no') # Prevent currrent kernel from being removed
-    "packager"      ? string  with match (SELF, '(rpm|pkg)') # system packager to be used (rpm,pkg)
+    "packager"      ? string with match (SELF, '(rpm|pkg|ips)') # system packager to be used (rpm,pkg,ips)
     "rpmexclusive"  ? string with match (SELF, 'yes|no') # stop other processes using rpm db
     "usespmlist"    ? string with match (SELF, 'yes|no') # Have SPMA controlling any packages
     "debug"         ? string with match (SELF, '0|1|2|3|4|5') # debug level (0-5)
@@ -71,6 +73,10 @@ type component_spma_type = {
     "proxyrandom"   ? string with match (SELF, 'yes|no') # randomize proxyhost
     "headnode"      ? boolean # use head node
     "process_obsoletes" : boolean = false
+    "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions
+    "uninstpaths"   ? string[] # where to find uninstall definitions
+    "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
+    "flagfile"      ? string # touch this file if there is work to do (i.e. spma-run --execute)
 };
 
 bind "/software/components/spma" = component_spma_type;
