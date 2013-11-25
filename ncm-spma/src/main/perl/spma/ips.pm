@@ -123,12 +123,10 @@ sub frozen_ips
 #
 sub image_create
 {
-    my ($self) = @_;
+    my ($self, $dir) = @_;
 
-    if (-d SPMA_IMAGEDIR and
-            (! -o SPMA_IMAGEDIR or ! -d SPMA_IMAGEDIR . "/var/pkg")) {
-        rmtree(SPMA_IMAGEDIR) or die "wrong owner, cannot remove " .
-                                     SPMA_IMAGEDIR . ": $!";
+    if (-d $dir and (! -o $dir or ! -d "$dir/var/pkg")) {
+        rmtree($dir) or die "wrong owner, cannot remove $dir: $!";
     }
 
     #
@@ -136,13 +134,12 @@ sub image_create
     # populate it and use it if we don't already have one of if the
     # list of publishers has changed since the last time it was created
     #
-    my $imagedir_new = SPMA_IMAGEDIR . ".new";
+    my $imagedir_new = "$dir.new";
     if (-d $imagedir_new) {
         rmtree($imagedir_new) or die "wrong owner, cannot remove " .
-                                     $imagedir_new . ": $!";
+                                     "$imagedir_new: $!";
     }
-    mkdir($imagedir_new) or die "cannot create directory " .
-                                $imagedir_new . ": $!";
+    mkdir($imagedir_new) or die "cannot create directory $imagedir_new: $!";
 
     #
     # Copy publisher configuration from existing system to
@@ -154,11 +151,10 @@ sub image_create
     my $proc = CAF::Process->new(PKG_PUBLISHER, log => $self);
     my @output = split /\n/, $proc->output();
     die "cannot get publishers" if $?;
-    my $pubcfg = SPMA_IMAGEDIR . "/pkg-publisher.conf";
-    my $pubcfg_new = $imagedir_new . "/pkg-publisher.conf";
+    my $pubcfg = "$dir/pkg-publisher.conf";
+    my $pubcfg_new = "$imagedir_new/pkg-publisher.conf";
     my $fh;
-    open($fh, ">", $pubcfg_new) or die "cannot write to " . $pubcfg_new .
-                                       ": $!";
+    open($fh, ">", $pubcfg_new) or die "cannot write to $pubcfg_new: $!";
     my @pubcmds;
     for (@output) {
         my ($publisher, $sticky, $syspub, $enabled, $type,
@@ -169,14 +165,14 @@ sub image_create
         my $cmd = PKG_SET_PUBLISHER;
         my @cmd = @$cmd;
         push @cmd, "-g", $uri, $publisher;
-        $cmd[2] = SPMA_IMAGEDIR;
+        $cmd[2] = $dir;
         print $fh join(" ", @cmd) . "\n";
         $cmd[2] = $imagedir_new;
         push @pubcmds, [@cmd];
     }
-    close($fh) or die "cannot close " . $pubcfg_new . ": $!";
+    close($fh) or die "cannot close $pubcfg_new: $!";
 
-    if (-d SPMA_IMAGEDIR) {
+    if (-d $dir) {
         #
         # Delete existing image directory if publisher configuration
         # has changed since it was created
@@ -187,14 +183,14 @@ sub image_create
                                      owner       => 0,
                                      mode        => 0644);
         if ($result) {
-            unless (rmtree(SPMA_IMAGEDIR)) {
+            unless (rmtree($dir)) {
                 unlink($pubcfg);
-                die "cannot remove " . SPMA_IMAGEDIR . ": $!";
+                die "cannot remove $dir: $!";
             }
         }
     }
 
-    unless (-d SPMA_IMAGEDIR) {
+    unless (-d $dir) {
         #
         # Run pkg image-create to create an image directory
         # that can be used for package operations
@@ -215,8 +211,8 @@ sub image_create
             die "failed to set publisher in image directory" if $?;
         }
 
-        rename($imagedir_new, SPMA_IMAGEDIR) or die "cannot rename " .
-                               $imagedir_new . " to " . SPMA_IMAGEDIR . ": $!";
+        rename($imagedir_new, $dir) or die "cannot rename $imagedir_new to " .
+                                           "$dir: $!";
     } else {
         rmtree($imagedir_new);
     }
@@ -232,7 +228,7 @@ sub get_fresh_pkgs
     #
     # Create new empty image directory, simulating fresh install
     #
-    $self->image_create();
+    $self->image_create(SPMA_IMAGEDIR);
 
     #
     # Run pkg install command that would be run against the empty
