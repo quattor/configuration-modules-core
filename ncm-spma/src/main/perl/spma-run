@@ -304,7 +304,7 @@ sub get_cmdfile
     unless (defined($cmdfile)) {
         my $path = spmarun::PATH_CMDFILE;
         my $cmd = spmarun::NCM_QUERY . " " . $path;
-        my $proc = CAF::Process->new([split(/ /, $cmd)]);
+        my $proc = CAF::Process->new([$cmd], log => $self);
         my $output = $proc->output();
         unless (length($output) > 0) {
             $ec->ignore_error() if defined($ec);
