@@ -56,6 +56,8 @@ use constant NCM_QUERY => '/usr/bin/ncm-query --pan';
 use constant LOG_FILE => '/var/log/spma-run.log';
 use constant PKG_INSTALL_N => '/usr/bin/pkg install -n';
 use constant PKG_INSTALL => '/usr/bin/pkg install';
+use constant PKG_NO_CHANGES => 4;      # if pkg returns 4
+                                       # then there was nothing to do
 
 ##############################################################################
 # app_options()
@@ -231,7 +233,7 @@ sub run_pkg_command
         $self->report("Status: $status");
     }
 
-    if ($status == 4) {
+    if ($status == PKG_NO_CHANGES) {
         $self->report("spma-run: no updates necessary");
         $self->finish(1);
     } elsif ($status != 0) {

@@ -39,6 +39,9 @@ use constant SPMA_RUN_EXECUTE => [qw(/usr/bin/spma-run --execute)];
 use constant PKG_INSTALL_NV => [qw(/usr/bin/pkg -R <rootdir> install -nv)];
 use constant SPMA_IMAGEDIR => "/var/tmp/.ncm-spma-image";
 
+use constant PKG_NO_CHANGES => 4;      # if pkg returns 4 or spma-run returns 1
+use constant SPMA_RUN_NO_CHANGES => 1; # then there was nothing to do
+
 #
 # Returns a hash with packages in the given nlist.
 #
@@ -243,7 +246,8 @@ sub get_fresh_pkgs
     for (@$wanted) { push @$pkgcmd, $_; }
 
     $self->info("performing dry-run package install in empty image");
-    my @output = split /\n/, $self->run_pkg_command($pkgcmd, 0, 4);
+    my @output = split /\n/, $self->run_pkg_command($pkgcmd, 0,
+                                                    PKG_NO_CHANGES);
     my $start = 0;
     my $fresh_set = Set::Scalar->new();
     for my $line (@output) {
@@ -594,7 +598,8 @@ sub update_ips
             # would be changed, so that the flagfile can be updated
             #
             $self->info("performing dry-run package install test");
-            if ($self->run_pkg_command(SPMA_RUN_NOACTION, 1, 1) == 0) {
+            if ($self->run_pkg_command(SPMA_RUN_NOACTION, 1,
+                                       SPMA_RUN_NO_CHANGES) == 0) {
                 $fh = CAF::FileWriter->new($flagfile, log => $self,
                                            owner => 0, mode => 0644);
                 $fh->close();
@@ -605,7 +610,8 @@ sub update_ips
             }
         } else {
             $self->info("performing live package updates in new BE");
-            if ($self->run_pkg_command(SPMA_RUN_EXECUTE, 1, 1) == 0) {
+            if ($self->run_pkg_command(SPMA_RUN_EXECUTE, 1,
+                                       SPMA_RUN_NO_CHANGES) == 0) {
                 $self->info("package changes made in new BE");
             } else {
                 $self->info("no package updates were required, " .
