@@ -31,12 +31,22 @@ sub call_entry_point
 {
     my ($self, $entry_point, $config) = @_;
     my $t = $config->getElement(CMP_TREE)->getTree();
-    my $submod = "NCM::Component::spma::$t->{packager}";
+
+    my $packager = $t->{packager};
+    $packager =~ s/[^\w]//g;
+    if ($packager ne $t->{packager}) {
+        $self->error("Packager name contains illegal characters: " .
+                     $t->{packager});
+        return undef;
+    }
+
+    my $submod = "NCM::Component::spma::$packager";
     eval "use $submod";
     if ($@) {
         $self->error("Failed to load $submod: $@");
         return undef;
     }
+
     my $NoAction = $self->{NoAction};
     bless($self, "$submod");
     $self->{NoAction} = $NoAction;
