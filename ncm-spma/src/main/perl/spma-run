@@ -46,6 +46,7 @@ use CAF::Reporter;
 use CAF::Process;
 use LC::Exception qw (SUCCESS throw_error);
 use CAF::Lock qw(FORCE_IF_STALE FORCE_ALWAYS);
+use Fcntl ":mode";
 
 use vars qw(@ISA);
 @ISA = qw(CAF::Application CAF::Reporter);
@@ -217,10 +218,10 @@ Currently supported for IPS packages on Solaris 11 only.
 ##############################################################################
 sub run_pkg_command
 {
-    my ($self, $cmd, @args) = @_;
+    my ($self, $cmd, $args) = @_;
 
-    unshift(@args, split(/ /, $cmd));
-    my $proc = CAF::Process->new(\@args, log => $self);
+    unshift(@$args, split(/ /, $cmd));
+    my $proc = CAF::Process->new($args, log => $self);
     my $output = $proc->output();
     $self->report($output);
 
@@ -250,12 +251,12 @@ sub run_pkg_command
 ##############################################################################
 sub report_install
 {
-    my ($self, @command) = @_;
+    my ($self, $command) = @_;
     my $next_opt = 0;
     my @lst;
 
-    chomp @command;
-    for my $arg (@command) {
+    chomp @$command;
+    for my $arg (@$command) {
         if ($arg =~ /^--/) {
             $next_opt = 1;
         } elsif ($next_opt) {
@@ -274,12 +275,12 @@ sub report_install
 ##############################################################################
 sub report_reject
 {
-    my ($self, @command) = @_;
+    my ($self, $command) = @_;
     my $next_reject = 0;
     my @lst;
 
-    chomp @command;
-    for my $arg (@command) {
+    chomp @$command;
+    for my $arg (@$command) {
         if ($next_reject) {
             push @lst, $arg;
             $next_reject = 0;
@@ -288,6 +289,101 @@ sub report_reject
         }
     }
     $self->report(join("\n", sort @lst));
+}
+
+##############################################################################
+# get_cmdfile()
+#
+# Returns name of command file, either given as argument or from PAN template
+##############################################################################
+sub get_cmdfile
+{
+    my ($self, $ec) = @_;
+
+    my $cmdfile = $self->option('cmdfile');
+    unless (defined($cmdfile)) {
+        my $path = spmarun::PATH_CMDFILE;
+        my $cmd = spmarun::NCM_QUERY . " " . $path;
+        my $proc = CAF::Process->new([split(/ /, $cmd)]);
+        my $output = $proc->output();
+        unless (length($output) > 0) {
+            $ec->ignore_error() if defined($ec);
+            $self->error("cannot execute: $cmd");
+            $self->finish(-1);
+        }
+
+        my $line = (grep /$path.*=/, $output)[0];
+        $line =~ s/;.*$//;
+        $line =~ s/[" ]//g;
+
+        $cmdfile = (split /=/, $line)[1];
+        chomp($cmdfile);
+    }
+
+    if (length($cmdfile) == 0 or ! -e $cmdfile) {
+        $self->error("command file '$cmdfile' is missing\n" .
+                     "        run 'ncm-ncd -configure spma' to create it");
+        $self->finish(-1);
+    }
+
+    #
+    # Security checks
+    #
+    if (! -o $cmdfile) {
+        $self->error("command file '$cmdfile' has wrong owner\n" .
+                     "        must be owned by root user");
+        $self->finish(-1);
+    }
+    my $mode = (stat($cmdfile))[2];
+    if (($mode & S_IWGRP) or ($mode & S_IWOTH)) {
+        $self->error("command file '$cmdfile' too permissive\n" .
+                     "        should be writable by root only");
+        $self->finish(-1);
+    }
+
+    return $cmdfile;
+}
+
+##############################################################################
+# read_cmdfile()
+#
+# Reads command file returned by get_cmdfile() into an array
+##############################################################################
+sub read_cmdfile
+{
+    my ($self, $cmdfile) = @_;
+
+    my $fh;
+    if (!open($fh, "<", $cmdfile)) {
+        $self->error("cannot read: $cmdfile");
+        $self->finish(-1);
+    }
+    my @command = split(/ /, <$fh>);
+    chomp @command;
+    unshift(@command, "--accept");
+    close($fh);
+    return \@command;
+}
+
+##############################################################################
+# read_be_name()
+#
+# Reads BE name from --be-name argument in given command line, if it is present
+##############################################################################
+sub read_be_name
+{
+    my ($self, $command) = @_;
+
+    my $flag_opt = 0;
+    my $bename;
+    for my $arg (@$command) {
+        if ($flag_opt) {
+            $bename = $arg;
+            last;
+        }
+        $flag_opt = 1 if $arg eq '--be-name';
+    }
+    return $bename;
 }
 
 ##############################################################################
@@ -300,7 +396,6 @@ use strict;
 use warnings;
 
 use Pod::Usage;
-use Fcntl ":mode";
 use LC::Exception qw (SUCCESS throw_error);
 use vars qw($this_app %SIG);
 
@@ -382,71 +477,18 @@ $SIG{'HUP'}  = 'IGNORE';
 # Get name of command file to process either
 # via --cmdfile option or else by calling ncm-query
 #
-my $cmdfile = $this_app->option('cmdfile');
-unless (defined($cmdfile)) {
-    my $path = spmarun::PATH_CMDFILE;
-    my $cmd = spmarun::NCM_QUERY . " " . $path;
-    my $proc = CAF::Process->new([split(/ /, $cmd)]);
-    my $output = $proc->output();
-    unless (length($output)>0) {
-        $ec->ignore_error();
-        $this_app->error("cannot execute: $cmd");
-        $this_app->finish(-1);
-    }
-    my $line = (grep /$path.*=/, $output)[0];
-    $line =~ s/;.*$//;
-    $line =~ s/[" ]//g;
-    $cmdfile = (split /=/, $line)[1];
-    chomp($cmdfile);
-}
-
-if (length($cmdfile) == 0 or ! -e $cmdfile) {
-    $this_app->error("command file '$cmdfile' is missing\n" .
-             "        run 'ncm-ncd -configure spma' to create it");
-    $this_app->finish(-1);
-}
-
-#
-# Security checks
-#
-if (! -o $cmdfile) {
-    $this_app->error("command file '$cmdfile' has wrong owner\n" .
-             "        must be owned by root user");
-    $this_app->finish(-1);
-}
-my $mode = (stat($cmdfile))[2];
-if (($mode & S_IWGRP) or ($mode & S_IWOTH)) {
-    $this_app->error("command file '$cmdfile' too permissive\n" .
-             "        should be writable by root only");
-    $this_app->finish(-1);
-}
+my $cmdfile = $this_app->get_cmdfile($ec);
 
 #
 # Read command file
 #
 $this_app->verbose("spma-run: reading $cmdfile ...");
-my $fh;
-if (!open($fh, "<", $cmdfile)) {
-    $this_app->error("cannot read: $cmdfile");
-    $this_app->finish(-1);
-}
-my @command = split(/ /, <$fh>);
-chomp @command;
-unshift(@command, "--accept");
-close($fh);
+my $command = $this_app->read_cmdfile($cmdfile);
 
 #
 # Obtain BE name
 #
-my $flag_opt = 0;
-my $bename;
-for my $arg (@command) {
-    if ($flag_opt) {
-        $bename = $arg;
-        last;
-    }
-    $flag_opt = 1 if $arg eq '--be-name';
-}
+my $bename = $this_app->read_be_name($command);
 
 #
 # Report BE name if that is all that is requested
@@ -460,7 +502,7 @@ if ($this_app->option('get-be-name')) {
 # Report list of packages to install if requested
 #
 if ($this_app->option('get-install')) {
-    $this_app->report_install(@command);
+    $this_app->report_install($command);
     $this_app->finish(0);
 }
 
@@ -468,7 +510,7 @@ if ($this_app->option('get-install')) {
 # Report list of packages to reject if requested
 #
 if ($this_app->option('get-reject')) {
-    $this_app->report_reject(@command);
+    $this_app->report_reject($command);
     $this_app->finish(0);
 }
 
@@ -480,7 +522,7 @@ unless ($this_app->option('execute')) {
     # Execute in noaction mode to determine if anything would be done
     #
     $this_app->report("spma-run: checking packages for install in BE '$bename' (dry run) ...");
-    $this_app->run_pkg_command(spmarun::PKG_INSTALL_N . $verbose, @command);
+    $this_app->run_pkg_command(spmarun::PKG_INSTALL_N . $verbose, $command);
     $this_app->report("spma-run: validation passed, package selection ok");
 
     #
@@ -493,7 +535,7 @@ unless ($this_app->option('execute')) {
 # Execute the command for real
 #
 $this_app->report("spma-run: executing package changes in BE '$bename' ...");
-$this_app->run_pkg_command(spmarun::PKG_INSTALL . $verbose, @command);
+$this_app->run_pkg_command(spmarun::PKG_INSTALL . $verbose, $command);
 $this_app->report("spma-run: success");
 $this_app->finish(0);
 
