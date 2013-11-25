@@ -134,12 +134,11 @@ sub image_create
     # populate it and use it if we don't already have one of if the
     # list of publishers has changed since the last time it was created
     #
-    my $imagedir_new = "$dir.new";
-    if (-d $imagedir_new) {
-        rmtree($imagedir_new) or die "wrong owner, cannot remove " .
-                                     "$imagedir_new: $!";
+    my $newdir = "$dir.new";
+    if (-d $newdir) {
+        rmtree($newdir) or die "wrong owner, cannot remove $newdir: $!";
     }
-    mkdir($imagedir_new) or die "cannot create directory $imagedir_new: $!";
+    mkdir($newdir) or die "cannot create directory $newdir: $!";
 
     #
     # Copy publisher configuration from existing system to
@@ -152,7 +151,7 @@ sub image_create
     my @output = split /\n/, $proc->output();
     die "cannot get publishers" if $?;
     my $pubcfg = "$dir/pkg-publisher.conf";
-    my $pubcfg_new = "$imagedir_new/pkg-publisher.conf";
+    my $pubcfg_new = "$newdir/pkg-publisher.conf";
     my $fh;
     open($fh, ">", $pubcfg_new) or die "cannot write to $pubcfg_new: $!";
     my @pubcmds;
@@ -167,7 +166,7 @@ sub image_create
         push @cmd, "-g", $uri, $publisher;
         $cmd[2] = $dir;
         print $fh join(" ", @cmd) . "\n";
-        $cmd[2] = $imagedir_new;
+        $cmd[2] = $newdir;
         push @pubcmds, [@cmd];
     }
     close($fh) or die "cannot close $pubcfg_new: $!";
@@ -196,8 +195,8 @@ sub image_create
         # that can be used for package operations
         #
         my $cmd = PKG_IMAGE_CREATE;
-        push @$cmd, $imagedir_new;
         my $proc = CAF::Process->new($cmd, log => $self);
+        $proc->pushargs($newdir);
         $proc->run();
         die "failed to create image" if $?;
 
@@ -211,10 +210,9 @@ sub image_create
             die "failed to set publisher in image directory" if $?;
         }
 
-        rename($imagedir_new, $dir) or die "cannot rename $imagedir_new to " .
-                                           "$dir: $!";
+        rename($newdir, $dir) or die "cannot rename $newdir to $dir: $!";
     } else {
-        rmtree($imagedir_new);
+        rmtree($newdir);
     }
 }
 
