@@ -22,7 +22,7 @@ prefix '/software/components/${project.artifactId}';
 'register_change' = list('/software/catalogues',
                          '/software/requests',
                          '/software/uninstall');
-'flagfile' = '/var/tmp/spma-run-flag'
+'flagfile' = '/var/tmp/spma-run-flag';
 
 #
 # Make active
