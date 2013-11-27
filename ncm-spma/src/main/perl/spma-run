@@ -51,7 +51,7 @@ use Fcntl ":mode";
 use vars qw(@ISA);
 @ISA = qw(CAF::Application CAF::Reporter);
 
-use constant VERSION => '2.2.1';
+use constant VERSION => '${project.version}';
 use constant PATH_CMDFILE => '/software/components/spma/cmdfile';
 use constant NCM_QUERY => '/usr/bin/ncm-query --pan';
 use constant LOG_FILE => '/var/log/spma-run.log';
