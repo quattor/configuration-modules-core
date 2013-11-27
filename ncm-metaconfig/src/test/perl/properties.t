@@ -7,7 +7,7 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
 
-eval {use Config::Properties};
+eval "use Config::Properties";
 plan skip_all => "Config::Properties not found" if $@;
 
 $CAF::Object::NoAction = 1;
