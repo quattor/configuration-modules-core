@@ -103,6 +103,11 @@ Uses Perl's L<YAML::XS> for rendering YAML configuration files.
 
 Uses L<JSON::XS> for rendering JSON configuration files.
 
+=item * properties
+
+Uses L<Config::Properties> for rendering Java-style configuration
+files.
+
 =item * Any other string
 
 Uses L<Template::Toolkit> for rendering configuration files in formats
