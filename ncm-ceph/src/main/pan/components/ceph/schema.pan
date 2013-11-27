@@ -8,7 +8,7 @@ declaration template components/${project.artifactId}/schema;
 include { 'quattor/schema' };
 
 type ${project.artifactId}_config = {
-    'dummy' : string = 'OK'
+
 } = nlist();
 
 type ${project.artifactId}_component = {
