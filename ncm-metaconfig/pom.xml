@@ -6,7 +6,7 @@
   <artifactId>metaconfig</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.2-rc5-SNAPSHOT</version>
+  <version>13.9.1-SNAPSHOT</version>
   <name>Configure services whose config format is standard, such as YAML or JSON.</name>
 
 
@@ -54,6 +54,7 @@
               <require>perl(JSON::XS)</require>
               <require>perl(YAML::XS)</require>
               <require>perl(Template)</require>
+              <require>perl(Config::Properties)</require>
             </requires>
 	  </configuration>
 	</plugin>

@@ -87,6 +87,21 @@ sub yaml
     return YAML::XS::Dump($cfg);
 }
 
+sub properties
+{
+    my ($self, $cfg) = @_;
+
+    $self->load_module("Config::Properties");
+
+    if ($@) {
+        $self->error("Unable to load Config::Properties");
+    }
+
+    my $config = Config::Properties->new();
+    $config->setFromTree($cfg);
+    return $config->saveToString();
+}
+
 sub tiny
 {
     my ($self, $cfg) = @_;
