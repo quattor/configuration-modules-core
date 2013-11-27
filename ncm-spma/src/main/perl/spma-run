@@ -321,8 +321,8 @@ sub get_cmdfile
     }
 
     if (length($cmdfile) == 0 or ! -e $cmdfile) {
-        $self->error("command file '$cmdfile' is missing\n" .
-                     "        run 'ncm-ncd -configure spma' to create it");
+        $self->error("command file '$cmdfile' is missing, " .
+                     "run 'ncm-ncd -configure spma' to create it");
         $self->finish(-1);
     }
 
@@ -330,14 +330,14 @@ sub get_cmdfile
     # Security checks
     #
     if (! -o $cmdfile) {
-        $self->error("command file '$cmdfile' has wrong owner\n" .
-                     "        must be owned by root user");
+        $self->error("command file '$cmdfile' has wrong owner, " .
+                     "must be owned by root user");
         $self->finish(-1);
     }
     my $mode = (stat($cmdfile))[2];
     if (($mode & S_IWGRP) or ($mode & S_IWOTH)) {
-        $self->error("command file '$cmdfile' too permissive\n" .
-                     "        should be writable by root only");
+        $self->error("command file '$cmdfile' too permissive, " .
+                     "should be writable by root only");
         $self->finish(-1);
     }
 
