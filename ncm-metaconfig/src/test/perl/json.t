@@ -7,7 +7,7 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
 
-eval {use JSON::Any};
+eval "use JSON::Any";
 plan skip_all => "JSON::Any not found" if $@;
 
 $CAF::Object::NoAction = 1;

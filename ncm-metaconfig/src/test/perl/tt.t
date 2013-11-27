@@ -7,7 +7,7 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
 
-eval {use Template};
+eval "use Template";
 
 use Readonly;
 
