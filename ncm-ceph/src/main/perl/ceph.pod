@@ -1,0 +1,25 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for CEPH
+
+=head1 DESCRIPTION
+
+${project.artifactId}
+
+=head1 RESOURCES
+
+=head2 /software/components/${project.artifactId}
+
+The configuration information for the component.  Each field should
+be described in this section. 
+
+=head1 AUTHOR
+
+${author-info}
+
+=cut
