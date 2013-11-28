@@ -33,7 +33,7 @@ use CAF::Process;
 
 local(*DTA);
 
-# Define paths for convenience. 
+# Define paths for convenience.
 my $base = "/software/components/named";
 
 my $true = "true";
@@ -46,7 +46,7 @@ sub Configure {
 
   # Get config into a perl Hash
   my $named_config = $config->getElement($base)->getTree();
-  
+
   # Check if named server must be enabled
 
   my $server_enabled;
@@ -95,7 +95,7 @@ sub Configure {
                                        good   => "search @domains");
       }
     }
-    
+
     # options
     if ( $named_config->{options} ) {
       my @options;
@@ -142,6 +142,12 @@ sub Configure {
   }
   close(SYSCONF);
 
+  if ($named_root_dir !~ m{^(/[-\w\./]+)$}) {
+      $self->error("Weird named root dir: $named_root_dir");
+      return;
+  }
+  $named_root_dir = $1;
+
   if ( $named_config->{serverConfig} ) {
 
       $self->info("Checking $service configuration (".$named_root_dir."/etc/named.conf)...");
@@ -168,10 +174,10 @@ sub Configure {
         return;
       }
   }
-  
+
   # Enable named service
-  
-  my $reboot_state;  
+
+  my $reboot_state;
   if ( $server_enabled ) {
     $self->info("Enabling service $service...");
     $reboot_state = "on";
@@ -200,7 +206,7 @@ sub Configure {
   } else {
     $self->debug(1,"Service $service is running.");
   }
-  
+
   my $action;
   if ( defined($server_enabled) ) {
     if ( $server_enabled ) {
@@ -215,7 +221,7 @@ sub Configure {
       };
     }
   }
-  
+
   if ( $action ) {
     $self->info("Doing a $action of service $service...");
     $cmd = CAF::Process->new(["/sbin/service", $service, $action], log => $self);
@@ -227,7 +233,7 @@ sub Configure {
   } else {
     $self->debug(1,"No need to start/stop/restart service $service");
   }
-  
+
 
   return;
 }
