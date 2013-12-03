@@ -363,7 +363,7 @@ sub move_slapdd_dir
         $self->info("Moving slapd.d dir $slapdddir to $slapdddir.$origsuff.");
         move($slapdddir, "$slapdddir.$origsuff")  || $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
     } else {
-        $self->debug("Moving slapd.d dir $slapdddir: no such dir found.");
+        $self->debug(2, "Moving slapd.d dir $slapdddir: no such dir found.");
     }
 }
 
