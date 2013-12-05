@@ -6,7 +6,7 @@
   <artifactId>selinux</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.12</version>
+  <version>13.13-SNAPSHOT</version>
   <name>SELinux config component</name>
 
 

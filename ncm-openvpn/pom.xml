@@ -6,7 +6,7 @@
   <artifactId>openvpn</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.12</version>
+  <version>13.13-SNAPSHOT</version>
   <name>Component configuring the OpenVPN.</name>
 
   <parent>
