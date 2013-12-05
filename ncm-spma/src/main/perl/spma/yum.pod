@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-NCM::spma - Quattor's package manager
+NCM::Component::spma::yum - NCM SPMA configuration component for Yum
 
 =head1 SYNOPSIS
 
@@ -66,7 +66,7 @@ Obsolete and ignored.  This is delegated to Yum.
 
 =item /software/components/spma/packager : string ("rpm|pkg|..")
 
-Currently only Yum is implemented, and other values are ignored.
+Must contain C<yum> to use this module.
 
 =item /software/components/spma/usespmlist : string ("yes|no")
 
