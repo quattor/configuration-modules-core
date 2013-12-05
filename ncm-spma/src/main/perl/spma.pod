@@ -1,0 +1,19 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::Component::spma - Quattor's package manager
+
+=head1 SYNOPSIS
+
+The SPMA component passes off to different back-ends depending
+on the type of packaging system specified in
+B</software/components/spma/packager>.
+
+See B<NCM::Component::spma::yum> for Yum and
+B<NCM::Component::spma::ips> for Solaris IPS.
+
+=cut
