@@ -161,6 +161,12 @@ Solaris:
                              "/software/uninstall");
     "flagfile" = "/var/tmp/spma-run-flag"
 
+=head1 AUTHOR
+
+Original author: German Cancio <German.Cancio@cern.ch>
+
+Author of the IPS-based package manager: Mark R. Bannister.
+
 =head1 SEE ALSO
 
 B<ncm-ncd>(1), B<panc>(5), B<pkg>(5), B<spma-run --man>, B<pkgtree -h>.
