@@ -2,7 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
-package NCM::Component::spma;
+package NCM::Component::spma::yum;
 #
 # a few standard statements, mandatory for all components
 #
