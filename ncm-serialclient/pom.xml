@@ -6,7 +6,7 @@
   <artifactId>serialclient</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.12.0</version>
+  <version>13.12.1-SNAPSHOT</version>
   <name>NCM serial client configuration component</name>
 
 
