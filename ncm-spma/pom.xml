@@ -65,11 +65,6 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
 	<plugin>
 	  <artifactId>maven-resources-plugin</artifactId>
 	  <version>2.4.3</version>
@@ -96,6 +91,50 @@
 	    </execution>
 	  </executions>
 	</plugin>
+        <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                  <id>filter-spma-sources</id>
+                  <phase>process-sources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${project.build.directory}/lib/perl/NCM/Component/spma</outputDirectory>
+                      <resources>
+                          <resource>
+                              <directory>src/main/perl/spma</directory>
+                              <includes>
+                                  <include>*.pm</include>
+                              </includes>
+                              <filtering>true</filtering>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+              <execution>
+                  <id>filter-spma-pod</id>
+                  <phase>process-sources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${project.build.directory}/doc/pod/NCM/Component/spma</outputDirectory>
+                      <resources>
+                          <resource>
+                              <directory>src/main/perl/spma</directory>
+                              <includes>
+                                  <include>*.pod</include>
+                              </includes>
+                              <filtering>true</filtering>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+            </executions>
+        </plugin>
 	<plugin>
 	  <groupId>org.codehaus.mojo</groupId>
 	  <artifactId>rpm-maven-plugin</artifactId>
