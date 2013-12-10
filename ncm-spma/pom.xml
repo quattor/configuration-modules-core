@@ -60,6 +60,13 @@
 	<role>author</role>
       </roles>
     </contributor>
+    <contributor>
+      <name>Mark R. Bannister</name>
+      <email>mark.bannister@morganstanley.com</email>
+      <roles>
+	<role>author</role>
+      </roles>
+    </contributor>
   </contributors>
 
   <build>
