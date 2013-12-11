@@ -28,6 +28,37 @@ Readonly::Scalar my $RESTART => '/etc/init.d/${project.artifactId} restart';
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+sub run_command {
+  # Loop over all of the commands and execute them.  Do this after
+  # everything to take care of any dependencies between writing
+  # multiple files.
+    my ($self, @command) = @_;
+    $self->info("Executing command: @command");
+    my $cmd_output;
+    my $cmd = CAF::Process->new(@command, log => $self,
+				shell => 1,
+				stdout => \$cmd_output,
+				stderr => "stdout");
+    $cmd->execute();
+    if ( $? ) {
+      $self->error("Command failed. Command output: $cmd_output\n");
+    } else {
+      $self->debug(1,"Command output: $cmd_output\n");
+    }
+    return ($?, $cmd_output)
+}
+
+sub run_ceph_command {
+    my ($self, @command) = @_;
+    unshift @command, 'ceph'
+    return self->run_command(@command)
+}
+
+sub run_ceph_deploy_command {
+    my ($self, @command) = @_;
+    unshift @command, 'ceph-deploy'
+    return self->run_command(@command)
+}
 # Restart the process.
 sub restart_daemon {
     my ($self) = @_;
