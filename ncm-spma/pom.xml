@@ -103,6 +103,46 @@
 	    <artifactId>maven-resources-plugin</artifactId>
             <executions>
               <execution>
+                  <id>filter-spma-top-sources</id>
+                  <phase>process-sources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${project.build.directory}/lib/perl/NCM/Component</outputDirectory>
+                      <resources>
+                          <resource>
+                              <directory>src/main/perl</directory>
+                              <includes>
+                                  <include>*.pm</include>
+                                  <include>spma-run</include>
+                              </includes>
+                              <filtering>true</filtering>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+              <execution>
+                  <id>filter-spma-top-pod</id>
+                  <phase>process-sources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${project.build.directory}/doc/pod/NCM/Component</outputDirectory>
+                      <resources>
+                          <resource>
+                              <directory>src/main/perl</directory>
+                              <includes>
+                                  <include>*.pod</include>
+                                  <include>spma-run</include>
+                              </includes>
+                              <filtering>true</filtering>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+              <execution>
                   <id>filter-spma-sources</id>
                   <phase>process-sources</phase>
                   <goals>
