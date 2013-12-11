@@ -16,7 +16,8 @@ having run, at least, this test.
 
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 use_ok("NCM::Component::spma");
 use_ok("NCM::Component::spma::yum");
+use_ok("NCM::Component::spma::ips");
