@@ -25,19 +25,19 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 
 
 Readonly my $YUM_FILE => "target/test/cleanup.conf";
-Readonly my $FIELD => NCM::Component::spma::CLEANUP_ON_REMOVE;
-Readonly my $OBSOLETE => NCM::Component::spma::OBSOLETE;
+Readonly my $FIELD => NCM::Component::spma::yum::CLEANUP_ON_REMOVE;
+Readonly my $OBSOLETE => NCM::Component::spma::yum::OBSOLETE;
 
 
 
 $CAF::Object::NoAction = 1;
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

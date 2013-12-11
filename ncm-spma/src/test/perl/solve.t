@@ -20,11 +20,11 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::Quattor;
 
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $tail = $cmp->solve_transaction(1);
 is($tail, "transaction solve\ntransaction run\n",

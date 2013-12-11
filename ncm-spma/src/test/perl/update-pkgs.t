@@ -37,7 +37,7 @@ use Readonly;
 
 use Test::Quattor;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::MockModule;
 use File::Path qw(mkpath rmtree);
 use LC::File;
@@ -51,7 +51,7 @@ use Set::Scalar;
 # All our backup methods will return 1 unless specified by the test
 # script.
 
-my $mock = Test::MockModule->new('NCM::Component::spma');
+my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
@@ -95,7 +95,7 @@ sub clear_mock_counters
 
 }
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $pkgs = {};
 $cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(a b c));

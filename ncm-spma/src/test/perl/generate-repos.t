@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use Test::Quattor;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::MockModule;
 use Readonly;
 use CAF::Object;
@@ -59,7 +59,7 @@ $mock->mock('cancel', sub {
 });
 
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

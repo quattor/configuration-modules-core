@@ -21,12 +21,12 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::Quattor;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::YUM_EXPIRE);
+Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_EXPIRE);
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");

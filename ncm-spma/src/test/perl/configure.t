@@ -25,7 +25,7 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::MockObject::Extends;
 use CAF::Object;
 use Set::Scalar;
@@ -39,9 +39,9 @@ $SIG{__DIE__} = 'DEFAULT';
 
 
 my @funcs = grep(m{^[a-z]} && $_ ne 'unescape',
-		 @{Class::Inspector->functions("NCM::Component::spma")});
+		 @{Class::Inspector->functions("NCM::Component::spma::yum")});
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 my $mock = Test::MockObject::Extends->new($cmp);
 
 $mock->set_true(@funcs);

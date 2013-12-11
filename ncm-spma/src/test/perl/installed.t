@@ -28,15 +28,15 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Readonly;
 
 $CAF::Object::NoAction = 1;
 
-Readonly my $CMD => join(" ", @{NCM::Component::spma::RPM_QUERY()});
+Readonly my $CMD => join(" ", @{NCM::Component::spma::yum::RPM_QUERY()});
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 

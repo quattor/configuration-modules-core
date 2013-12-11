@@ -21,7 +21,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::Quattor;
 use CAF::Object;
 
@@ -30,7 +30,7 @@ $CAF::Object::NoAction = 1;
 Readonly my $CMD => "foo bar bar";
 Readonly my $WHY => "Hello world";
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 
 set_desired_output($CMD, "a");

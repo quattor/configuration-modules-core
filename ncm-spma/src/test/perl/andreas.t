@@ -25,17 +25,17 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Readonly;
 
-Readonly my $RPMQ => join(" ", @{NCM::Component::spma::RPM_QUERY()});
-Readonly my $DISTROSYNC => join(" ", NCM::Component::spma::YUM_DISTRO_SYNC);
-Readonly my $YUMEXPIRE => join(" ", NCM::Component::spma::YUM_EXPIRE);
-Readonly my $REPOQ => join(" ", NCM::Component::spma::REPOQUERY,
+Readonly my $RPMQ => join(" ", @{NCM::Component::spma::yum::RPM_QUERY()});
+Readonly my $DISTROSYNC => join(" ", NCM::Component::spma::yum::YUM_DISTRO_SYNC);
+Readonly my $YUMEXPIRE => join(" ", NCM::Component::spma::yum::YUM_EXPIRE);
+Readonly my $REPOQ => join(" ", NCM::Component::spma::yum::REPOQUERY,
 			   "ncm-cdp-1.0.4-1.noarch");
-Readonly my $YUMCT => join(" ", NCM::Component::spma::YUM_COMPLETE_TRANSACTION);
-Readonly my $LEAF => join(" ", @{NCM::Component::spma::LEAF_PACKAGES()});
+Readonly my $YUMCT => join(" ", NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION);
+Readonly my $LEAF => join(" ", @{NCM::Component::spma::yum::LEAF_PACKAGES()});
 
 set_desired_output($RPMQ, "ncm-cdp;noarch\n");
 set_desired_err($DISTROSYNC, "");
@@ -50,7 +50,7 @@ set_desired_output($LEAF, "");
 
 $CAF::Object::NoAction = 1;
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 # A list of packages, based on a real profile.
 my $wanted = {

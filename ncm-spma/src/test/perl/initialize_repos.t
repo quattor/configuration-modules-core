@@ -21,7 +21,7 @@ use Readonly;
 
 use Test::Quattor;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 
 use File::Path qw(mkpath rmtree);
 use LC::File;
@@ -29,7 +29,7 @@ use LC::File;
 Readonly my $VALID_DIR => "target/test/init.repos.d";
 Readonly my $INVALID_DIR => "/dev/null/foo";
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 rmtree($VALID_DIR);
 
