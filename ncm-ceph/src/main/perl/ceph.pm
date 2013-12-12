@@ -20,6 +20,7 @@ use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
+use JSON::XS;
 
 use Readonly;
 Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
@@ -44,13 +45,13 @@ sub run_command {
 
 sub run_ceph_command {
     my ($self, $command) = @_;
-    unshift @$command, 'ceph';
+    unshift @$command, qw(ceph -f json);
     return $self->run_command($command);
 }
 
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
-    unshift @$command, 'ceph-deploy';
+    unshift @$command, qw(ceph-deploy);
     return $self->run_command($command);
 }
 # Restart the process.
@@ -58,6 +59,11 @@ sub restart_daemon {
     my ($self) = @_;
     CAF::Process->new([qw($RESTART)], log => $self)->run();
     return;
+}
+sub json_to_hash {
+    my ($self, $jstring) = @_;
+    my $decoded = decode_json($jstring);
+    return %$decoded;
 }
 
 sub Configure {
