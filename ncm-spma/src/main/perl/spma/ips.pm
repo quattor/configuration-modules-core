@@ -179,7 +179,7 @@ sub image_create
         my $result = LC::Check::file(undef,
                                      source      => $pubcfg_new,
                                      destination => $pubcfg,
-                                     owner       => 0,
+                                     owner       => $<,
                                      mode        => 0644);
         if ($result) {
             unless (rmtree($dir)) {
