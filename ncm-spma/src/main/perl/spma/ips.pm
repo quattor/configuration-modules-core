@@ -221,12 +221,13 @@ sub image_create
 #
 sub get_fresh_pkgs
 {
-    my ($self, $wanted) = @_;
+    my ($self, $wanted, $imagedir) = @_;
 
     #
     # Create new empty image directory, simulating fresh install
     #
-    $self->image_create(SPMA_IMAGEDIR);
+    $imagedir = SPMA_IMAGEDIR unless defined($imagedir);
+    $self->image_create($imagedir);
 
     #
     # Run pkg install command that would be run against the empty
@@ -235,7 +236,7 @@ sub get_fresh_pkgs
     # packages IPS would have installed
     #
     my $pkgcmd = PKG_INSTALL_NV;
-    $$pkgcmd[2] = SPMA_IMAGEDIR;
+    $$pkgcmd[2] = $imagedir;
 
     for (@$wanted) { push @$pkgcmd, $_; }
 
