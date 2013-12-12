@@ -1,6 +1,6 @@
 # ${license-info}
-# ${developer-info}
-# ${author-info}
+# Author: ${spma.ips.author} <${spma.ips.email}>
+# ${build-info}
 
 package NCM::Component::spma::ips;
 
