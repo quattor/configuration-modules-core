@@ -316,7 +316,7 @@ sub get_unique_be
 #
 sub merge_pkg_paths
 {
-    my ($config, $respath) = @_;
+    my ($self, $config, $respath) = @_;
     my %merged_pkgs;
 
     for my $path (@$respath) {
@@ -642,8 +642,8 @@ sub Configure
     #
     # Merge software package requests from potentially multiple paths
     #
-    my $merged_pkgs = merge_pkg_paths($config, $t->{pkgpaths});
-    my $merged_uninst = merge_pkg_paths($config, $t->{uninstpaths});
+    my $merged_pkgs = $self->merge_pkg_paths($config, $t->{pkgpaths});
+    my $merged_uninst = $self->merge_pkg_paths($config, $t->{uninstpaths});
     $self->update_ips($merged_pkgs, $merged_uninst, $t->{run},
                       $t->{userpkgs}, $t->{cmdfile}, $t->{flagfile},
                       $t->{ips}->{bename}, $t->{ips}->{rejectidr},
