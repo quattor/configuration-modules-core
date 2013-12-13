@@ -1,6 +1,6 @@
 # -*- mode: cperl -*-
 # ${license-info}
-# ${author-info}
+# Author: ${spma.ips.author} <${spma.ips.email}>
 # ${build-info}
 
 =pod
@@ -20,7 +20,7 @@ to verify the contents of the pkg-publisher.conf file.
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 use NCM::Component::spma::ips;
 use Test::Quattor;
 use Readonly;
@@ -46,6 +46,7 @@ if (-d $imagedir) {
 set_desired_output($PKG_PUBLISHER, $publishers);
 
 $cmp->image_create($imagedir);
+ok(defined(get_command($PKG_PUBLISHER)), "pkg publisher command was invoked");
 my $pubfile = "$imagedir/pkg-publisher.conf";
 ok(-f $pubfile, "pkg-publisher.conf file created");
 

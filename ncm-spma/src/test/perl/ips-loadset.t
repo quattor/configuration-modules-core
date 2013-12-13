@@ -1,6 +1,6 @@
 # -*- mode: cperl -*-
 # ${license-info}
-# ${author-info}
+# Author: ${spma.ips.author} <${spma.ips.email}>
 # ${build-info}
 
 =pod
@@ -69,8 +69,7 @@ my $cmp = NCM::Component::spma::ips->new("spma");
 set_desired_output($PKG_LIST, $pkg_list_subset);
 
 my $installed_set = $cmp->load_installed_set();
-my $cmd = get_command($PKG_LIST);
-ok(defined($cmd), "pkg list command was invoked");
+ok(defined(get_command($PKG_LIST)), "pkg list command was invoked");
 
 my %pkg_hash;
 for my $line (split /\n/, $pkg_list_subset) {

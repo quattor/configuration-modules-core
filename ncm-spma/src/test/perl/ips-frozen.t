@@ -1,6 +1,6 @@
 # -*- mode: cperl -*-
 # ${license-info}
-# ${author-info}
+# Author: ${spma.ips.author} <${spma.ips.email}>
 # ${build-info}
 
 =pod
@@ -55,8 +55,7 @@ sub test_frozen
     set_desired_output($PKG_LIST_V, $pkg_out);
 
     my $frozen_hash = $cmp->frozen_ips();
-    my $cmd = get_command($PKG_LIST_V);
-    ok(defined($cmd), "pkg list command was invoked");
+    ok(defined(get_command($PKG_LIST_V)), "pkg list command was invoked");
 
     is(keys %$frozen_hash, $num_frozen,
                 "Frozen packages hash has correct number of elements");

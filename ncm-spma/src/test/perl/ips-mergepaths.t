@@ -1,6 +1,6 @@
 # -*- mode: cperl -*-
 # ${license-info}
-# ${author-info}
+# Author: ${spma.ips.author} <${spma.ips.email}>
 # ${build-info}
 
 =pod
