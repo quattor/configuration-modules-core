@@ -12,6 +12,7 @@ prefix "/software/components/spma";
 "register_change" = list("/software/catalogues", "/software/requests",
                          "/software/uninstall");
 "flagfile" = "/var/tmp/spma-run-flag";
+"ips/imagedir" = "/var/tmp/.ncm-spma-image.test.$$";
 
 #
 # Subscribe to some catalogues
