@@ -148,8 +148,12 @@ sub image_create
     # and does not currently take account of other publisher properties
     #
     my $proc = CAF::Process->new(PKG_PUBLISHER, log => $self);
-    my @output = split /\n/, $proc->output();
+    my $out = $proc->output();
     die "cannot get publishers" if $?;
+
+    my @output;
+    @output = split /\n/, $out if defined($out);
+
     my $pubcfg = "$dir/pkg-publisher.conf";
     my $pubcfg_new = "$newdir/pkg-publisher.conf";
     my $fh;
