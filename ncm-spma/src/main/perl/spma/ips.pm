@@ -582,7 +582,7 @@ sub update_ips
     # Write command file
     #
     my $fh = CAF::FileWriter->new($cmdfile, log => $self,
-                                  owner => 0, mode => 0644);
+                                  owner => $<, mode => 0644);
 
     my $be_opts;
     if (defined $bename) {
@@ -609,7 +609,7 @@ sub update_ips
             if ($self->run_pkg_command(SPMA_RUN_NOACTION, 1,
                                        SPMA_RUN_NO_CHANGES) == 0) {
                 $fh = CAF::FileWriter->new($flagfile, log => $self,
-                                           owner => 0, mode => 0644);
+                                           owner => $<, mode => 0644);
                 $fh->close();
                 $self->info("package changes are pending, " .
                             "use spma-run to query");
