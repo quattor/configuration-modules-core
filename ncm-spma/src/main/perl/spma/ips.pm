@@ -230,7 +230,6 @@ sub get_fresh_pkgs
     #
     # Create new empty image directory, simulating fresh install
     #
-    $imagedir = SPMA_IMAGEDIR unless defined($imagedir);
     $self->image_create($imagedir);
 
     #
@@ -426,7 +425,7 @@ sub pkg_keys
 sub update_ips
 {
     my ($self, $pkgs, $uninst, $run_now, $allow_user_pkgs, $cmdfile, $flagfile,
-            $bename, $include_idrs, $freeze) = @_;
+            $bename, $include_idrs, $freeze, $imagedir) = @_;
 
     #
     # Delete flagfile now, so the result cannot be misinterpreted
@@ -515,7 +514,7 @@ sub update_ips
         #
         # Get set of packages that would be installed in a fresh image
         #
-        $fresh_set = $self->get_fresh_pkgs($wanted_freshkeys);
+        $fresh_set = $self->get_fresh_pkgs($wanted_freshkeys, $imagedir);
 
         #
         # Convert into an array of user packages to remove
@@ -553,7 +552,8 @@ sub update_ips
                 # Get set of packages that would be installed in a fresh image
                 # (but only if we haven't already got this information)
                 #
-                $fresh_set = $self->get_fresh_pkgs($wanted_freshkeys);
+                $fresh_set = $self->get_fresh_pkgs($wanted_freshkeys,
+                                                   $imagedir);
             }
             my @rm_avoid;
             for my $pkg (keys %avoid) {
@@ -641,9 +641,19 @@ sub Configure
 
 #    my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $t = $config->getElement(CMP_TREE)->getTree();
-    # Convert these crappily-defined fields into real Perl booleans.
+
+    #
+    # Convert yes/no fields to boolean
+    #
     $t->{run} = defined($t->{run}) && $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
+
+    #
+    # Set default imagedir if required
+    #
+    my $imagedir = $t->{ips}->{imagedir};
+    $imagedir = SPMA_IMAGEDIR unless defined($imagedir);
+    $imagedir =~ s/\$\$/$$/g;    # support $$ expansion in imagedir (unit tests)
 
     #
     # Merge software package requests from potentially multiple paths
@@ -653,7 +663,7 @@ sub Configure
     $self->update_ips($merged_pkgs, $merged_uninst, $t->{run},
                       $t->{userpkgs}, $t->{cmdfile}, $t->{flagfile},
                       $t->{ips}->{bename}, $t->{ips}->{rejectidr},
-                      $t->{ips}->{freeze}) or return 0;
+                      $t->{ips}->{freeze}, $imagedir) or return 0;
     return 1;
 }
 
