@@ -361,6 +361,7 @@ sub run_pkg_command
     my ($self, $cmd, $log, $exit_void) = @_;
     my $proc = CAF::Process->new($cmd, log => $self);
     my $output = $proc->output();
+    $output = "" unless defined($output);
 
     my $status = $?;
     my $sdesc;
