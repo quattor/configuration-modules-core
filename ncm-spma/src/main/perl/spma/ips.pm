@@ -109,7 +109,11 @@ sub frozen_ips
 
     my %hash;
     my $proc = CAF::Process->new(PKG_LIST_V, log => $self);
-    my @output = split /\n/, $proc->output();
+    my $out = $proc->output();
+
+    my @output;
+    @output = split /\n/, $out if defined($out);
+
     die "cannot get verbose list of packages" if $?;
     for (grep / if.$/, @output) {
         my ($pkg, $ver) = split /@/, (split / /)[0];
@@ -440,7 +444,7 @@ sub update_ips
     my $proc = CAF::Process->new(BEADM_LIST, log => $self);
     my $beadm_list = $proc->output();
     die "cannot get list of BEs" if $?;
-    unless (grep /;NR;/, $beadm_list) {
+    unless (defined($beadm_list) and grep /;NR;/, $beadm_list) {
         $self->error("current BE is not active after reboot, terminating");
         return 0;
     }
@@ -528,7 +532,11 @@ sub update_ips
     # whether to explicitly install them or not
     #
     $proc = CAF::Process->new(PKG_AVOID, log => $self);
-    my @output = split /\n/, $proc->output();
+    my $out = $proc->output();
+
+    my @output;
+    @output = split /\n/, $out if defined($out);
+
     if (@output) {
         my (%pkg_map, %avoid);
         for (@output) {
