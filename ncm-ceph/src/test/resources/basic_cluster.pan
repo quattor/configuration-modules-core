@@ -55,7 +55,7 @@ variable config = nlist (
 
 prefix '/software/components/ceph/clusters';
 
-'ceph1' = nlist (
+'ceph' = nlist (
      'config', config,
      'osdhosts', nlist (
         'ceph002', osdhost2,

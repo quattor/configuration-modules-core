@@ -30,8 +30,10 @@ my $mock = Test::MockModule->new('NCM::Component::ceph');
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 
-set_desired_output("ceph -f json mon dump 2> /dev/null", $data::MONJSON);
+set_desired_output("ceph -f json mon dump --cluster ceph 2> /dev/null", 
+    $data::MONJSON);
 
+$cmp->use_cluster();
 my $fsid = $cmp->get_fsid();
 my $mons = $cmp->mon_hash();
 

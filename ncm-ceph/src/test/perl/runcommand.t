@@ -25,11 +25,12 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ceph->new("ceph");
 
-set_desired_output("ceph -f json mon dump 2> /dev/null", $data::MONJSON);
+set_desired_output("ceph -f json mon dump --cluster ceph 2> /dev/null", $data::MONJSON);
 
-my @fullcmd = qw(ceph -f json mon dump 2> /dev/null);
+my @fullcmd = qw(ceph -f json mon dump --cluster ceph 2> /dev/null);
 my @cephcmd = qw(mon dump);
 
+$cmp->use_cluster();
 my $output = $cmp->run_command(\@fullcmd);
 is($output,$data::MONJSON, 'running ceph command');
 

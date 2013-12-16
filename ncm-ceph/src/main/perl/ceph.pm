@@ -29,6 +29,16 @@ Readonly::Scalar my $RESTART => '/etc/init.d/${project.artifactId} restart';
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+#set the working cluster, (if not given, use the default cluster 'ceph')
+sub use_cluster {
+    my ($self, $cluster) = @_;
+    $cluster ||= 'ceph';
+    if ($cluster ne 'ceph') {
+        $self->error("Not yet implemented!");
+    }
+    $self->{cluster} = $cluster;
+}
+# run a command and return the output
 sub run_command {
     my ($self, $command) = @_;
     my $cmd_output = CAF::Process->new($command, log => $self)->output();
@@ -39,33 +49,37 @@ sub run_command {
     }
     return $cmd_output;
 }
-
+# run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command) = @_;
     unshift @$command, qw(ceph -f json);
+    push @$command, ('--cluster', $self->{cluster});
     push  @$command, qw(2> /dev/null); #only output the json content
     return $self->run_command($command);
 }
 
+# run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
     # als ceph user runnen of root configureren
     unshift @$command, qw(ceph-deploy);
+    push @$command, ('--cluster', $self->{cluster});
     return $self->run_command($command);
 }
-
+# Gets the fsid of the cluster
 sub get_fsid {
     my ($self) = @_;
     my $monhash = decode_json($self->run_ceph_command([qw(mon dump)]));
     return $monhash->{fsid}
 }
+# Gets the OSD map
 sub osd_hash {
     my ($self) = @_;
     my $osdtree = decode_json($self->run_ceph_command([qw(osd tree)]));
     my $osddump = decode_json($self->run_ceph_command([qw(osd dump)]));
 #    my %osdparsed = {};
 }    
-
+# Gets the MON map
 sub mon_hash {
     my ($self) = @_;
     my $monsh = decode_json($self->run_ceph_command([qw(mon dump)]));
