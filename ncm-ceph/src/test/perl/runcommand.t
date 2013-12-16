@@ -15,6 +15,7 @@ Test the runs of ceph commands
 use strict;
 use warnings;
 use Test::More;
+use Test::Deep;
 use Test::Quattor;
 use NCM::Component::ceph;
 use CAF::Object;
@@ -24,18 +25,21 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ceph->new("ceph");
 
-set_desired_output("ceph -f json mon dump", $data::jsonout);
+set_desired_output("ceph -f json mon dump 2> /dev/null", $data::MONJSON);
 
-my @fullcmd = qw(ceph -f json mon dump);
+my @fullcmd = qw(ceph -f json mon dump 2> /dev/null);
 my @cephcmd = qw(mon dump);
 
 my $output = $cmp->run_command(\@fullcmd);
-is($output,$data::jsonout);
+is($output,$data::MONJSON, 'running ceph command');
+
 my $outputc = $cmp->run_ceph_command(\@cephcmd);
-is($outputc,$data::jsonout);
-my %jhash = $cmp->json_to_hash($data::jsonout);
-is(%jhash,%data::jsondecode);
-diag explain \%jhash;
-diag explain \%data::jsondecode;
+is($outputc,$data::MONJSON,'running ceph command');
+
+my $fsid = $cmp->get_fsid();
+is($fsid,$data::FSID, 'comparing fsid');
+diag $fsid;
+my $mons = $cmp->mon_hash();
+cmp_deeply($mons,\%data::MONS, 'comparing monitor hashes');
 
 done_testing();

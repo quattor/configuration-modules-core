@@ -14,10 +14,8 @@ package data;
 use strict;
 use warnings;
 
-
-our $jsonout = '{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002b","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}],"quorum":[0,1,2]}';
-
-our %jsondecode =  (
+use Readonly;
+Readonly::Hash our  %MONJSONDECODE => (
     'created' => '0.000000',
     'epoch' => 11,
     'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
@@ -46,3 +44,25 @@ our %jsondecode =  (
     ]
 );
 
+Readonly our $MONJSON => '{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002b","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}],"quorum":[0,1,2]}';
+
+Readonly our $FSID => 'a94f9906-ff68-487d-8193-23ad04c1b5c4';
+
+#Readonly::Hash our %MONS => ( 
+our %MONS = ( 
+    'ceph001' => {
+        'addr' => '10.141.8.180:6789/0',
+        'name' => 'ceph001',
+        'rank' => 1
+    },
+    'ceph002b' => {
+        'addr' => '10.141.8.181:6754/0',
+        'name' => 'ceph002b',
+        'rank' => 0
+    },
+    'ceph003' => {
+        'addr' => '10.141.8.182:6789/0',
+        'name' => 'ceph003',
+        'rank' => 2
+    }
+);

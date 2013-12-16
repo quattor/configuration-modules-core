@@ -29,9 +29,6 @@ Readonly::Scalar my $RESTART => '/etc/init.d/${project.artifactId} restart';
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
-  # Loop over all of the commands and execute them.  Do this after
-  # everything to take care of any dependencies between writing
-  # multiple files.
 sub run_command {
     my ($self, $command) = @_;
     my $cmd_output = CAF::Process->new($command, log => $self)->output();
@@ -40,32 +37,52 @@ sub run_command {
     } else {
       $self->debug(1,"Command output: $cmd_output\n");
     }
-    return ($?, $cmd_output);
+    return $cmd_output;
 }
 
 sub run_ceph_command {
     my ($self, $command) = @_;
     unshift @$command, qw(ceph -f json);
+    push  @$command, qw(2> /dev/null); #only output the json content
     return $self->run_command($command);
 }
 
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
+    # als ceph user runnen of root configureren
     unshift @$command, qw(ceph-deploy);
     return $self->run_command($command);
 }
+
+sub get_fsid {
+    my ($self) = @_;
+    my $monhash = decode_json($self->run_ceph_command([qw(mon dump)]));
+    return $monhash->{fsid}
+}
+sub osd_hash {
+    my ($self) = @_;
+    my $osdtree = decode_json($self->run_ceph_command([qw(osd tree)]));
+    my $osddump = decode_json($self->run_ceph_command([qw(osd dump)]));
+#    my %osdparsed = {};
+}    
+
+sub mon_hash {
+    my ($self) = @_;
+    my $monsh = decode_json($self->run_ceph_command([qw(mon dump)]));
+    my %monparsed = ();
+    foreach (@{$monsh->{mons}}){
+        my $omon = $_;
+        $monparsed{$omon->{name}} = $omon;
+    }
+    return \%monparsed;
+}        
+    
 # Restart the process.
 sub restart_daemon {
     my ($self) = @_;
     CAF::Process->new([qw($RESTART)], log => $self)->run();
     return;
 }
-sub json_to_hash {
-    my ($self, $jstring) = @_;
-    my $decoded = decode_json($jstring);
-    return %$decoded;
-}
-
 sub Configure {
     my ($self, $config) = @_;
 
