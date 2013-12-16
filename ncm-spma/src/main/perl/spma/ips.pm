@@ -328,6 +328,7 @@ sub merge_pkg_paths
     my %merged_pkgs;
 
     for my $path (@$respath) {
+        next unless $config->elementExists($path);
         my $pkgs = $config->getElement($path)->getTree();
         if (!%merged_pkgs) {
             %merged_pkgs = %{$pkgs};
