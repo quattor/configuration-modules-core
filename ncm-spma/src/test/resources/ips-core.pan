@@ -11,7 +11,8 @@ prefix "/software/components/spma";
 "uninstpaths" = list("/software/uninstall");
 "register_change" = list("/software/catalogues", "/software/requests",
                          "/software/uninstall");
-"flagfile" = "/var/tmp/spma-run-flag";
+"cmdfile" = "/var/tmp/spma-commands.test.$$";
+"flagfile" = "/var/tmp/spma-run-flag.test.$$";
 "ips/imagedir" = "/var/tmp/.ncm-spma-image.test.$$";
 
 #

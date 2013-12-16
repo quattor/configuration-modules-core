@@ -661,7 +661,16 @@ sub Configure
     #
     my $imagedir = $t->{ips}->{imagedir};
     $imagedir = SPMA_IMAGEDIR unless defined($imagedir);
-    $imagedir =~ s/\$\$/$$/g;    # support $$ expansion in imagedir (unit tests)
+
+    #
+    # Support $$ expansion in cmdfile, flagfile and imagedir
+    # (chiefly needed by the unit tests)
+    #
+    my $cmdfile = $t->{cmdfile};
+    my $flagfile = $t->{flagfile};
+    $cmdfile =~ s/\$\$/$$/g;
+    $flagfile =~ s/\$\$/$$/g;
+    $imagedir =~ s/\$\$/$$/g;
 
     #
     # Merge software package requests from potentially multiple paths
@@ -669,7 +678,7 @@ sub Configure
     my $merged_pkgs = $self->merge_pkg_paths($config, $t->{pkgpaths});
     my $merged_uninst = $self->merge_pkg_paths($config, $t->{uninstpaths});
     $self->update_ips($merged_pkgs, $merged_uninst, $t->{run},
-                      $t->{userpkgs}, $t->{cmdfile}, $t->{flagfile},
+                      $t->{userpkgs}, $cmdfile, $flagfile,
                       $t->{ips}->{bename}, $t->{ips}->{rejectidr},
                       $t->{ips}->{freeze}, $imagedir) or return 0;
     return 1;
