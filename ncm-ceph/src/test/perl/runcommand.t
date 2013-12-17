@@ -25,12 +25,15 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ceph->new("ceph");
 
-set_desired_output("ceph -f json mon dump --cluster ceph 2> /dev/null", $data::MONJSON);
+set_desired_output("ceph -f json mon dump --cluster ceph", $data::MONJSON);
 
-my @fullcmd = qw(ceph -f json mon dump --cluster ceph 2> /dev/null);
+my @fullcmd = qw(ceph -f json mon dump --cluster ceph);
 my @cephcmd = qw(mon dump);
 
-$cmp->use_cluster();
+my $wr = $cmp->use_cluster('bla');
+ok(!$wr, 'non default cluster not implemented');
+my $de =  $cmp->use_cluster();
+ok($de, 'default cluster');
 my $output = $cmp->run_command(\@fullcmd);
 is($output,$data::MONJSON, 'running ceph command');
 
@@ -38,9 +41,13 @@ my $outputc = $cmp->run_ceph_command(\@cephcmd);
 is($outputc,$data::MONJSON,'running ceph command');
 
 my $fsid = $cmp->get_fsid();
-is($fsid,$data::FSID, 'comparing fsid');
-diag $fsid;
+is($fsid,$data::FSID, 'retrieving fsid');
+#diag $fsid;
 my $mons = $cmp->mon_hash();
-cmp_deeply($mons,\%data::MONS, 'comparing monitor hashes');
+cmp_deeply($mons,\%data::MONS, 'build monitor hash');
 
+#my $osds = $cmp->osd_hash();
+#TODO implement
+#ok($osds, 'build osd hash');
+ 
 done_testing();
