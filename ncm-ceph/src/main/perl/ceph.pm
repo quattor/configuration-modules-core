@@ -34,7 +34,7 @@ sub use_cluster {
     my ($self, $cluster) = @_;
     $cluster ||= 'ceph';
     if ($cluster ne 'ceph') {
-        $self->error("Not yet implemented!"); 
+        $self->error("Not yet implemented!\n"); 
         return 0;
     }
     $self->{cluster} = $cluster;
@@ -106,7 +106,33 @@ sub mon_hash {
         $monparsed{$omon->{name}} = $omon;
     }
     return \%monparsed;
-}        
+} 
+       
+sub process_config {
+    my ($self, $qconf) = @_;
+    # TODO implement
+}
+
+sub process_mons {
+    my ($self, $qmons) = @_;
+    # TODO implement
+}
+
+sub process_osds {
+    my ($self, $qosds) = @_;
+    # TODO implement
+}
+
+syb do_deploy {
+    my ($self) = @_;
+    if (!@{$self->{deploy_cmds}}) {
+        return 'ok';
+    } else {
+        # TODO implement
+        return 0;
+    }
+      
+}
     
 # Restart the process.
 sub restart_daemon {
@@ -124,9 +150,15 @@ sub Configure {
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
         if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
+            $self->error("fsid of $clus not matching!\n");
             return 0;
         }
-        
+        $self->{deploy_cmds} = [];
+        $self->{man_commands} = [];
+        $self->process_config($cluster->{config}) or return 0;
+        $self->process_mons($cluster->{monitors}) or return 0;
+        $self->process_osds($cluster->{osdhosts}) or return 0;
+        return $self->do_deploy(); 
     }
     # Create the configuration file.
 
