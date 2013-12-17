@@ -60,6 +60,10 @@ it uses will generate them. The preamble attribute will be written out
 verbatim, before the contents is generated. No comment character is added,
 the user must specify this as part of the preamble string.
 
+=item * filename ? string
+
+Use filename as filename instead of the service key (the default). 
+
 =item * contents
 
 A free-form structure describing the valid entries for the
