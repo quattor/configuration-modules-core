@@ -190,6 +190,11 @@ sub handle_service
 
     my ($method, $str);
 
+    if ($srv->{filename}) {
+        $self->debug(3, "Using filename $srv->{filename} for service $file");
+        $file = $srv->{filename};
+    }
+
     if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
         $self->error("Invalid configuration style: $srv->{module}");
         return;
