@@ -38,6 +38,9 @@ unlike($fh, qr{^(?:version|config)}m, "Unwanted fields are removed");
 
 set_command_status(join(" ", NCM::Component::ccm::TEST_COMMAND), 1);
 
+is(scalar(grep(m{ccm-fetch|cfgfile}, NCM::Component::ccm::TEST_COMMAND)), 2,
+   "Expected arguments passed to ccm-fetch");
+
 $cmp->Configure($cfg);
 is($cmp->{ERROR}, 1, "Failure in ccm-fetch is detected");
 $fh = get_file("/etc/ccm.conf");
