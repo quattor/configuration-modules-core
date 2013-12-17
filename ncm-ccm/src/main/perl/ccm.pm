@@ -15,7 +15,7 @@ use LC::Exception;
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
-use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch -config /proc/self/fd/0);
+use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch -cfgfile /proc/self/fd/0);
 
 sub Configure
 {
