@@ -9,7 +9,6 @@ include { 'quattor/schema' };
 
 @{ type for a generic ceph daemon}
 type ceph_daemon = {
-    'id'    : long
     'name'  : string
     'up'    ? boolean = true
 };
@@ -21,6 +20,7 @@ type ceph_monitor = {
 @{ ceph osd-specific type}
 type ceph_osd = {
     include ceph_daemon
+    'id'            : long
     'uuid'          : string
     'in'            ? boolean = true
     'osd_path'      : string

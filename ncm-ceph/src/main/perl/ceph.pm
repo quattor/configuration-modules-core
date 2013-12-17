@@ -103,6 +103,7 @@ sub mon_hash {
     my %monparsed = ();
     foreach (@{$monsh->{mons}}){
         my $omon = $_;
+        
         $monparsed{$omon->{name}} = $omon;
     }
     return \%monparsed;
@@ -123,15 +124,30 @@ sub process_osds {
     # TODO implement
 }
 
+sub process_msds {
+    my ($self, $qmsds) = @_;
+    # TODO implement
+}
+
 sub do_deploy {
     my ($self) = @_;
-    if (!@{$self->{deploy_cmds}}) {
+    # TODO implement:    
+    #   - configuration changes (injection or with restarting daemons (sequentially)?)
+    #   - deploy new osds/mons/msd daemons
+    #   - list commands for changed/removed daemons 
+    if (!%{$self->{cfgchanges}} and !@{$self->{deploy_cmds}} and !@{$self->{man_cmds}}) { 
         return 'ok';
-    } else {
-        # TODO implement
-        return 0;
+    } else {    
+        if (%{$self->{cfgchanges}}){
+            return 0;
+        }
+        if (@{$self->{deploy_cmds}}) {
+            return 0;
+        }
+        if (@{$self->{man_cmds}}) {
+            return 0;
+        }
     }
-      
 }
     
 # Restart the process.
@@ -153,11 +169,15 @@ sub Configure {
             $self->error("fsid of $clus not matching!\n");
             return 0;
         }
+        $self->{cfgchanges} = {};
         $self->{deploy_cmds} = [];
-        $self->{man_commands} = [];
+        $self->{man_cmds} = [];
         $self->process_config($cluster->{config}) or return 0;
         $self->process_mons($cluster->{monitors}) or return 0;
         $self->process_osds($cluster->{osdhosts}) or return 0;
+        if ($cluster->{msds}) {
+            $self->process_msds($cluster->{msds}) or return 0;
+        }
         return $self->do_deploy(); 
     }
     # Create the configuration file.

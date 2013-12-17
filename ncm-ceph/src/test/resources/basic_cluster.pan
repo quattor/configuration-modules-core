@@ -33,19 +33,16 @@ variable OSDHOST3 = nlist (
         );
 
 variable MONITOR1 =  nlist(
-    'id', 0,
     'name', 'ceph002b',
-    'addr', 'ip:poort',
+    'addr', '10.141.8.181:6789/0',
 );
 variable MONITOR2 =  nlist(
-    'id', 1,
     'name', 'ceph001',
-    'addr', 'ip:poort',
+    'addr', '10.141.8.180:6789/0',
 );
 variable MONITOR3 =  nlist(
-    'id', 2,
     'name', 'ceph003',
-    'addr', 'ip:poort',
+    'addr', '10.141.8.182:6789/0',
 );
 
 variable CONFIG = nlist (

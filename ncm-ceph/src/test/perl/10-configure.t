@@ -38,13 +38,10 @@ my $fsid = $cmp->get_fsid();
 my $mons = $cmp->mon_hash();
 
 my $t = $cfg->getElement($PATH)->getTree();
-#diag explain $t;
 my $cluster = $t->{clusters}->{ceph};
 my $id = $cluster->{config}->{fsid};
-#diag explain $cluster;
-#diag $id;
+diag explain $cluster;
 
 my $output = $cmp->Configure($cfg);
-ok($output, 'Configure (tmp)');
-diag $output;
+ok($output, 'Configure ');
 done_testing();

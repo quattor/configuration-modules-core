@@ -42,10 +42,10 @@ is($outputc,$data::MONJSON,'running ceph command');
 
 my $fsid = $cmp->get_fsid();
 is($fsid,$data::FSID, 'retrieving fsid');
-#diag $fsid;
+
 my $mons = $cmp->mon_hash();
 cmp_deeply($mons,\%data::MONS, 'build monitor hash');
-
+diag explain $mons;
 #my $osds = $cmp->osd_hash();
 #TODO implement
 #ok($osds, 'build osd hash');
