@@ -17,6 +17,7 @@ type ${project.artifactId}_config =  {
      'module' : string
      'backup' ? string
      'preamble' ? string
+     'filename' ? string
      'contents' : ${project.artifactId}_extension
 } = nlist();
 
