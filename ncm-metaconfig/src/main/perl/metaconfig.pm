@@ -191,8 +191,12 @@ sub handle_service
     my ($method, $str);
 
     if ($srv->{filename}) {
-        $self->debug(3, "Using filename $srv->{filename} for service $file");
-        $file = $srv->{filename};
+        if ($srv->{filename} !~ m{^(/.*)$}) {
+            $self->error("Unaccepatble file name $srv->{filename}: should be absolute path");
+            return undef;
+        }
+        $self->debug(3, "Using filename $1 for service $file");
+        $file = $1;
     }
 
     if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
