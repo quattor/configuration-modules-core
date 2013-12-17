@@ -123,7 +123,7 @@ sub process_osds {
     # TODO implement
 }
 
-syb do_deploy {
+sub do_deploy {
     my ($self) = @_;
     if (!@{$self->{deploy_cmds}}) {
         return 'ok';

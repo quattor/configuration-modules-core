@@ -41,6 +41,10 @@ my $t = $cfg->getElement($PATH)->getTree();
 #diag explain $t;
 my $cluster = $t->{clusters}->{ceph};
 my $id = $cluster->{config}->{fsid};
-diag explain $cluster;
-diag $id;
+#diag explain $cluster;
+#diag $id;
+
+my $output = $cmp->Configure($cfg);
+ok($output, 'Configure (tmp)');
+diag $output;
 done_testing();
