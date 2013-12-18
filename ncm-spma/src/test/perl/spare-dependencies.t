@@ -19,13 +19,13 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::MockModule;
 use Set::Scalar;
 
-my $mock = Test::MockModule->new('NCM::Component::spma');
-my $cmp = NCM::Component::spma->new("spma");
+my $mock = Test::MockModule->new('NCM::Component::spma::yum');
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 $mock->mock("spare_deps_whatreq", "whatreq");
 $mock->mock("spare_deps_requires", "requires");

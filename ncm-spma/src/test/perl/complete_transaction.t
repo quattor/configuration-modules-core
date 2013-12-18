@@ -21,16 +21,16 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::MockModule;
 
-Readonly my $CMD => NCM::Component::spma::YUM_COMPLETE_TRANSACTION;
+Readonly my $CMD => NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION;
 
 set_desired_err($CMD, "");
 set_desired_output($CMD, "");
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

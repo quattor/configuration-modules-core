@@ -21,18 +21,18 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::MockModule;
 
-my $mock = Test::MockModule->new('NCM::Component::spma');
+my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 
 $CAF::Object::NoAction = 1;
 
 Readonly my $TX => "a transaction text";
-Readonly my $YUM => join(" ", NCM::Component::spma::YUM_CMD);
+Readonly my $YUM => join(" ", NCM::Component::spma::yum::YUM_CMD);
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 
 set_desired_err($YUM, "");

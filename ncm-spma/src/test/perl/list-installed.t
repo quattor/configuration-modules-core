@@ -22,12 +22,12 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 
 
 plan skip_all => "No RPM database to play with" if ! -x "/bin/rpm";
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $pkgs = $cmp->installed_pkgs();
 isa_ok($pkgs, "Set::Scalar", "Received an empty set, with no errors");

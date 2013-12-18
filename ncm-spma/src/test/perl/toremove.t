@@ -27,10 +27,10 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Set::Scalar;
 
-Readonly my $LEAVES => join(" ", @{NCM::Component::spma::LEAF_PACKAGES()});
+Readonly my $LEAVES => join(" ", @{NCM::Component::spma::yum::LEAF_PACKAGES()});
 
 =pod
 
@@ -42,7 +42,7 @@ Readonly my $LEAVES => join(" ", @{NCM::Component::spma::LEAF_PACKAGES()});
 
 =cut
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $wanted = Set::Scalar->new(qw(a;noarch b c));
 

@@ -16,12 +16,12 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::MockModule;
 use Set::Scalar;
 
-my $cmp = NCM::Component::spma->new("spma");
-my $mock = Test::MockModule->new("NCM::Component::spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
+my $mock = Test::MockModule->new("NCM::Component::spma::yum");
 
 foreach my $method (qw(complete_transaction expire_yum_caches versionlock
 		       distrosync apply_transaction)) {
