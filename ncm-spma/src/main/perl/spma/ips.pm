@@ -215,7 +215,8 @@ sub image_create
         for $cmd (@pubcmds) {
             $proc = CAF::Process->new($cmd, log => $self);
             $proc->run();
-            die "failed to set publisher in image directory" if $?;
+            die "failed to set publisher in image directory: '" .
+                join(" ", @$cmd) . "' failed" if $?;
         }
 
         rename($newdir, $dir) or die "cannot rename $newdir to $dir: $!";
