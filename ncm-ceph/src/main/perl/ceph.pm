@@ -48,7 +48,8 @@ sub run_command {
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
     if ( $? ) {
-        $self->error("Command failed. Command output: $cmd_err\n");
+        $self->error("Command failed. Error Message: $cmd_err\n" . 
+            "Command output:$cmd_outputt\n");
         return 0;
     } else {
         $self->debug(1,"Command output: $cmd_output\n");
@@ -139,12 +140,15 @@ sub do_deploy {
         return 'ok';
     } else {    
         if (%{$self->{cfgchanges}}){
+            # TODO implement
             return 0;
         }
         if (@{$self->{deploy_cmds}}) {
+            # TODO implement
             return 0;
         }
         if (@{$self->{man_cmds}}) {
+            # TODO implement
             return 0;
         }
     }
