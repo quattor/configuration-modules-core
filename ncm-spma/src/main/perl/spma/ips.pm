@@ -288,7 +288,7 @@ sub ips_to_remove
 
     $self->info(scalar(@rm_list) . " user package(s) to reject");
     $self->log("user packages to reject: " .
-               join(" ", @rm_list)) if @rm_list > 0;
+               join(" ", @rm_list)) if @rm_list;
     return \@rm_list;
 }
 
@@ -459,7 +459,7 @@ sub update_ips
     my $wanted_freshkeys = $wanted_keys;
     $self->info(scalar(@$wanted_keys) . " package(s) requested");
     $self->log("requested packages: " . join(" ", @$wanted_keys))
-        if @$wanted_keys > 0;
+        if @$wanted_keys;
 
     my $installed_set = $self->load_installed_set()
         if $include_idrs or !$allow_user_pkgs;
@@ -474,7 +474,7 @@ sub update_ips
     }
     $self->info(scalar(@$reject_keys) . " package(s) rejected");
     $self->log("rejected packages: " . join(" ", @$reject_keys))
-        if @$reject_keys > 0;
+        if @$reject_keys;
 
     my $frozen;
     if ($freeze and %{$frozen = $self->frozen_ips()}) {
@@ -492,7 +492,7 @@ sub update_ips
         my $frozen_keys = $self->pkg_keys($frozen);
         $self->info(scalar(@$frozen_keys) . " package(s) frozen");
         $self->log("frozen packages: " . join(" ", @$frozen_keys))
-            if @$frozen_keys > 0;
+            if @$frozen_keys;
 
         my %pkg_map;
         for my $fmri (keys %$frozen) {
