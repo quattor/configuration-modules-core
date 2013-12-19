@@ -61,13 +61,13 @@ function resolve_pkg_rep = {
                         rep_found = true;
                         SELF[name][version]['arch'][arch] = curr_rep['name'];
                     } else {
-                        repos[length(repos)] = curr_rep["name"];
+                        append(repos, curr_rep["name"]);
                         in_list = next(rep_list,t,curr_rep);
                     };
                 };
               
                 if( ! rep_found ) {
-                    errorstr = errorstr+"\n  name: "+unescape(name)+" version: "+unescape(version)+" arch: "+arch+" repositories: "+to_string(repos)+"";
+                    errorstr = format("%s\nname: %s version: %s arch: %s", errorstr, unescape(name), unescape(version), arch);
                     error=error+1;
                 };
             };
