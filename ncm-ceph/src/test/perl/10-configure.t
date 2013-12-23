@@ -15,6 +15,7 @@ Test the runs of ceph commands
 use strict;
 use warnings;
 use Test::More;
+use Test::Deep;
 use Test::Quattor qw(basic_cluster);
 use Test::MockModule;
 use NCM::Component::ceph;
@@ -40,8 +41,24 @@ my $mons = $cmp->mon_hash();
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 my $id = $cluster->{config}->{fsid};
-diag explain $cluster;
+#diag explain $cluster;
 
-my $output = $cmp->Configure($cfg);
-ok($output, 'Configure ');
+my $type = 'mon';
+my $cephh = $cmp->mon_hash();
+my $quath = $cluster->{monitors};
+
+$cmp->init_commands();
+my $outputmon = $cmp->process_mons($quath);
+ok($outputmon, 'ceph quattor cmp for mon');
+
+cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
+
+my $dodeploy = $cmp->do_deploy();
+ok($dodeploy, 'try running the commands');
+
+cmp_deeply($cmp->{deploy_cmds},[],'deploy commands has been run');
+cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
+
+#my $output = $cmp->Configure($cfg);
+#ok($output, 'Configure ');
 done_testing();

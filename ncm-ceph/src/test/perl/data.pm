@@ -48,8 +48,7 @@ Readonly our $MONJSON => '{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5
 
 Readonly our $FSID => 'a94f9906-ff68-487d-8193-23ad04c1b5c4';
 
-#Readonly::Hash our %MONS => ( 
-our %MONS = ( 
+Readonly::Hash our %MONS => ( 
     'ceph001' => {
         'addr' => '10.141.8.180:6789/0',
         'name' => 'ceph001',
@@ -66,3 +65,16 @@ our %MONS = (
         'rank' => 2
     }
 );
+
+Readonly::Array our @DELMON => (
+    ['mon',
+    'destroy',
+    'ceph002b']
+);
+
+Readonly::Array our @ADDMON => (
+    ['mon',
+    'create',
+    'ceph002']
+);
+
