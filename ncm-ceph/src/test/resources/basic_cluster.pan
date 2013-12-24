@@ -38,7 +38,7 @@ variable MONITOR2 =  nlist(
 );
 variable MONITOR3 =  nlist(
     'name', 'ceph003',
-    'up', true,
+    'up', false,
 );
 
 variable CONFIG = nlist (

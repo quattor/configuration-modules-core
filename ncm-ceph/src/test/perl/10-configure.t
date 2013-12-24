@@ -33,6 +33,7 @@ my $cmp = NCM::Component::ceph->new('ceph');
 
 set_desired_output("ceph -f json mon dump --cluster ceph", 
     $data::MONJSON);
+set_desired_output("ceph -f json quorum_status --cluster ceph", $data::STATE);
 
 $cmp->use_cluster();
 my $fsid = $cmp->get_fsid();

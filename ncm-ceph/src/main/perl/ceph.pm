@@ -68,6 +68,12 @@ sub run_ceph_command {
     return $self->run_command($command);
 }
 
+sub run_daemon_command {
+    my ($self, $command) = @_;
+    unshift @$command, qw(/etc/init.d/ceph);
+    return $self->run_command($command);
+}
+
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
@@ -111,8 +117,15 @@ sub mon_hash {
     my ($self) = @_;
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
     my $monsh = decode_json($jstr);
+    $jstr = $self->run_ceph_command([qw(quorum_status)]) or return 0;
+    my $monstate = decode_json($jstr);
     my %monparsed = ();
     foreach my $mon (@{$monsh->{mons}}){
+        if ($mon->{name} ~~ @{$monstate->{quorum_names}}){
+            $mon->{up} = 1;
+        } else {
+            $mon->{up} = 0;
+        }
         $monparsed{$mon->{name}} = $mon;
     }
     return \%monparsed;
@@ -207,9 +220,17 @@ sub config_mon {
                 return 0;
             }
         }
-        #TODO: checking service
-#        my $state = $self->get_daemon_state(..);
+        if ($quatmon->{up} ne $cephmon->{up}){
+            my @command; 
+            if ($quatmon->{up}) {
+                @command = qw(start); 
+            } else {
+                @command = qw(stop);
+            }
+            push @command, "mon.$quatmon->{name}";
+            push @{$self->{daemon_cmds}}, [@command];
         }
+    }
     return 1;   
 }
 
@@ -279,8 +300,8 @@ sub do_deploy {
         $self->run_ceph_command($cmd) or return 0;
     }
     while (my $cmd = shift @{$self->{daemon_cmds}}) {
-        # TODO implement
-        return 0;
+#TODO: test  
+        $self->run_daemon_command($cmd) or return 0;
     }
     return 1;
 }
@@ -298,7 +319,7 @@ sub init_commands {
     $self->{cfgchanges} = {};
     $self->{deploy_cmds} = [];
     $self->{ceph_cmds} = [];
-    $self->{service_cmds} = [];
+    $self->{daemon_cmds} = [];
     $self->{man_cmds} = [];
 }
 # Compare the configuration (and prepare commands) 
