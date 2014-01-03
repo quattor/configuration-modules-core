@@ -31,9 +31,9 @@ my $mock = Test::MockModule->new('NCM::Component::ceph');
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 
-set_desired_output("ceph -f json mon dump --cluster ceph", 
+set_desired_output("/usr/bin/ceph -f json mon dump --cluster ceph", 
     $data::MONJSON);
-set_desired_output("ceph -f json quorum_status --cluster ceph", $data::STATE);
+set_desired_output("/usr/bin/ceph -f json quorum_status --cluster ceph", $data::STATE);
 
 $cmp->use_cluster();
 my $fsid = $cmp->get_fsid();
@@ -59,7 +59,7 @@ $cmp->{is_deploy} = 'true';
 my $dodeploy = $cmp->do_deploy();
 ok($dodeploy, 'try running the commands');
 
-my $deployaddstring = "su - ceph -c 'ceph-deploy mon create ceph002 --cluster ceph'";
+my $deployaddstring = "su - ceph -c '/usr/bin/ceph-deploy --cluster ceph mon create ceph002'";
 my $cmd = get_command($deployaddstring);
 ok(defined($cmd), "mon add was invoked");
 

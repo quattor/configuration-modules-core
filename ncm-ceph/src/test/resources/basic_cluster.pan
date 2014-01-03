@@ -6,25 +6,21 @@ variable OSDS = nlist (
         'id', 0,
         'host', 'ceph002', 
         'name', 'osd.0',
-        'uuid', 'caers5d54',
     ),
     'osd.2', nlist(
         'id', 2,
         'host', 'ceph002', 
         'name', 'osd.2',
-        'uuid', 'caer5dds4',
     ),
     'osd.1', nlist(
         'id', 1,
         'host', 'ceph003', 
         'name', 'osd.1',
-        'uuid', 'ca3sa8354'
     ),
     'osd.3', nlist(
         'id', 3,
         'host', 'ceph003', 
         'name', 'osd.3',
-        'uuid', 'cas34ds4'
     )
 );
 

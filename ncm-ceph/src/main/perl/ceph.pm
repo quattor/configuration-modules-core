@@ -61,7 +61,7 @@ sub run_command {
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command) = @_;
-    unshift (@$command, qw(ceph -f json));
+    unshift (@$command, qw(/usr/bin/ceph -f json));
     push (@$command, ('--cluster', $self->{cluster}));
     return $self->run_command($command);
 }
@@ -76,8 +76,7 @@ sub run_daemon_command {
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
     # run as user configured for 'ceph-deploy'
-    unshift (@$command, qw(ceph-deploy));
-    push (@$command, ('--cluster', $self->{cluster}));
+    unshift (@$command, ('/usr/bin/ceph-deploy', '--cluster', $self->{cluster}));
     if (grep(m{[;&>|"']}, @$command)) {
         $self->error("Invalid shell escapes found in command ",
          join(" ", @$command));
@@ -320,12 +319,12 @@ sub init_commands {
 sub check_configuration {
     my ($self, $cluster) = @_;
     $self->init_commands();
-    $self->process_config($cluster->{config}) or return 0;
+#    $self->process_config($cluster->{config}) or return 0;
     $self->process_mons($cluster->{monitors}) or return 0;
-    $self->process_osds($cluster->{osdhosts}) or return 0;
-    if ($cluster->{msds}) {
-        $self->process_msds($cluster->{msds}) or return 0;
-    }
+#    $self->process_osds($cluster->{osdhosts}) or return 0;
+#    if ($cluster->{msds}) {
+#        $self->process_msds($cluster->{msds}) or return 0;
+#    }
     return 1;
 }
         
