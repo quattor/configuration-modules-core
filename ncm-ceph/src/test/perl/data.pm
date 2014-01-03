@@ -64,7 +64,7 @@ Readonly::Hash our %MONS => (
     'ceph003' => {
         'addr' => '10.141.8.182:6789/0',
         'name' => 'ceph003',
-        'up'   => 0,
+        'up'   => '',
         'rank' => 2
     }
 );

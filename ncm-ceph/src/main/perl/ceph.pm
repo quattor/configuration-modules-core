@@ -42,6 +42,9 @@ sub run_command {
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
+    if (!$cmd_output) {
+        $cmd_output = '<none>';
+    }
     if ($?) {
         $self->error("Command failed. Error Message: $cmd_err\n" . 
             "Command output: $cmd_output\n");
@@ -215,7 +218,7 @@ sub config_mon {
                 return 0;
             }
         }
-        if ($quatmon->{up} ne $cephmon->{up}){
+        if ($quatmon->{up} xor $cephmon->{up}){
             my @command; 
             if ($quatmon->{up}) {
                 @command = qw(start); 
@@ -270,7 +273,7 @@ sub config_daemon {
     }
     elsif ($type eq 'msd'){
         $self->config_msd($action,$daemonh);
-    else {
+    } else {
         $self->error("No such type: $type");
     }
 }

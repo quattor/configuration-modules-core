@@ -53,11 +53,27 @@ my $outputmon = $cmp->process_mons($quath);
 ok($outputmon, 'ceph quattor cmp for mon');
 
 cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
+diag explain @{$cmp->{daemon_cmds}};
 
+$cmp->{is_deploy} = 'true';
 my $dodeploy = $cmp->do_deploy();
 ok($dodeploy, 'try running the commands');
 
-cmp_deeply($cmp->{deploy_cmds},[],'deploy commands has been run');
+my $deployaddstring = "su - ceph -c 'ceph-deploy mon create ceph002 --cluster ceph'";
+my $cmd = get_command($deployaddstring);
+ok(defined($cmd), "mon add was invoked");
+
+$deployaddstring = "/etc/init.d/ceph start mon.ceph003";
+$cmd = get_command($deployaddstring);
+ok(!defined($cmd), "mon3 start invoked");
+$deployaddstring = "/etc/init.d/ceph stop mon.ceph003";
+$cmd = get_command($deployaddstring);
+ok(!defined($cmd), "mon3 stop must not be invoked");
+$deployaddstring = "/etc/init.d/ceph start mon.ceph001";
+$cmd = get_command($deployaddstring);
+ok(!defined($cmd), "mon1 stop must not be invoked");
+
+cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
 cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
 
 #my $output = $cmp->Configure($cfg);
