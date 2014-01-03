@@ -28,6 +28,10 @@
 
   <developers>
     <developer>
+      <name>Kenneth Waegeman</name>
+      <email>Kenneth.Waegeman@UGent.be</email>
+    </developer>
+    <developer>
       <name>Luis Fernando Muñoz Mejías</name>
       <email>Luis.Munoz@UGent.be</email>
     </developer>
@@ -37,3 +41,4 @@
   </contributors>
 
 </project>
+

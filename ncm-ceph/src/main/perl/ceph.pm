@@ -14,18 +14,13 @@ use LC::Exception;
 use LC::Find;
 use LC::File qw(copy makedir);
 
-use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
 use JSON::XS;
-
 use Readonly;
-Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
-
-Readonly::Scalar my $RESTART => '/etc/init.d/${project.artifactId} restart';
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -47,14 +42,14 @@ sub run_command {
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
-    if ( $? ) {
+    if ($?) {
         $self->error("Command failed. Error Message: $cmd_err\n" . 
-            "Command output:$cmd_output\n");
+            "Command output: $cmd_output\n");
         return 0;
     } else {
         $self->debug(1,"Command output: $cmd_output\n");
         if ($cmd_err) {
-            $self->warn("Command stderr outputt: $cmd_err\n");
+            $self->warn("Command stderr output: $cmd_err\n");
         }    
     }
     return $cmd_output;
@@ -63,14 +58,14 @@ sub run_command {
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command) = @_;
-    unshift @$command, qw(ceph -f json);
-    push @$command, ('--cluster', $self->{cluster});
+    unshift (@$command, qw(ceph -f json));
+    push (@$command, ('--cluster', $self->{cluster}));
     return $self->run_command($command);
 }
 
 sub run_daemon_command {
     my ($self, $command) = @_;
-    unshift @$command, qw(/etc/init.d/ceph);
+    unshift (@$command, qw(/etc/init.d/ceph));
     return $self->run_command($command);
 }
 
@@ -78,10 +73,14 @@ sub run_daemon_command {
 sub run_ceph_deploy_command {
     my ($self, $command) = @_;
     # run as user configured for 'ceph-deploy'
-    unshift @$command, qw(ceph-deploy);
-    push @$command, ('--cluster', $self->{cluster});
+    unshift (@$command, qw(ceph-deploy));
+    push (@$command, ('--cluster', $self->{cluster}));
+    if (grep(m{[;&>|"']}, @$command)) {
+        $self->error("Invalid shell escapes found in command ",
+         join(" ", @$command));
+    }
     $command = ["'" . join(' ',@$command) . "'"];
-    unshift @$command, qw(su - ceph -c);
+    unshift (@$command, qw(su - ceph -c));
     return $self->run_command($command);
 }
 
@@ -121,11 +120,7 @@ sub mon_hash {
     my $monstate = decode_json($jstr);
     my %monparsed = ();
     foreach my $mon (@{$monsh->{mons}}){
-        if ($mon->{name} ~~ @{$monstate->{quorum_names}}){
-            $mon->{up} = 1;
-        } else {
-            $mon->{up} = 0;
-        }
+        $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         $monparsed{$mon->{name}} = $mon;
     }
     return \%monparsed;
@@ -139,7 +134,7 @@ sub msd_hash {
 
 # Do a comparison of quattor config and the actual ceph config 
 # for a given type (cfg, mon, osd, msd)
-sub ceph_quator_cmp {
+sub ceph_quattor_cmp {
     my ($self, $type, $quath, $cephh) = @_;
     foreach my $qkey (keys %{$quath}) {
         if (exists $cephh->{$qkey}) {
@@ -161,32 +156,32 @@ sub ceph_quator_cmp {
 sub process_config {
     my ($self, $qconf) = @_;
     my $cconf = $self->get_config() or return 0;
-    return $self->ceph_quator_cmp('cfg', $qconf, $cconf);
+    return $self->ceph_quattor_cmp('cfg', $qconf, $cconf);
 }
 
 # Compare ceph mons with the quattor mons
 sub process_mons {
     my ($self, $qmons) = @_;
     my $cmons = $self->mon_hash() or return 0;
-    return $self->ceph_quator_cmp('mon', $qmons, $cmons);
+    return $self->ceph_quattor_cmp('mon', $qmons, $cmons);
 }
 
 # Compare cephs osd with the quattor osds
 sub process_osds {
     my ($self, $qosds) = @_;
     my $cosds = $self->osd_hash() or return 0;
-    return $self->ceph_quator_cmp('osd', $qosds, $cosds);
+    return $self->ceph_quattor_cmp('osd', $qosds, $cosds);
 }
 
 # Compare cephs msd with the quattor msds
 sub process_msds {
     my ($self, $qmsds) = @_;
     my $cmsds = $self->msd_hash() or return 0;
-    return $self->ceph_quator_cmp('msd', $qmsds, $cmsds);
+    return $self->ceph_quattor_cmp('msd', $qmsds, $cmsds);
 }
 
 # Prepare the commands to change a config entry
-sub config_config {
+sub config_cfgfile {
     my ($self, $action,$daemonh) = @_;
     # TODO implement
     if ($action eq 'add'){
@@ -203,12 +198,12 @@ sub config_mon {
     my ($self, $action,$daemonh) = @_;
     if ($action eq 'add'){
         my @command = qw(mon create);
-        push @command, $daemonh->{name};
-        push @{$self->{deploy_cmds}}, [@command];
+        push (@command, $daemonh->{name});
+        push (@{$self->{deploy_cmds}}, [@command]);
     } elsif ($action eq 'del') {
         my @command = qw(mon destroy);
-        push @command, $daemonh->{name};
-        push @{$self->{man_cmds}}, [@command];
+        push (@command, $daemonh->{name});
+        push (@{$self->{man_cmds}}, [@command]);
     } else { #compare config
         my $quatmon = $daemonh->[0];
         my $cephmon = $daemonh->[1];
@@ -227,8 +222,8 @@ sub config_mon {
             } else {
                 @command = qw(stop);
             }
-            push @command, "mon.$quatmon->{name}";
-            push @{$self->{daemon_cmds}}, [@command];
+            push (@command, "mon.$quatmon->{name}");
+            push (@{$self->{daemon_cmds}}, [@command]);
         }
     }
     return 1;   
@@ -265,7 +260,7 @@ sub config_msd {
 sub config_daemon {
     my ($self, $type,$action,$daemonh) = @_;
     if ($type eq 'cfg'){
-        $self->config_config($action,$daemonh);
+        $self->config_cfgfile($action,$daemonh);
     }
     elsif ($type eq 'mon'){
         $self->config_mon($action,$daemonh);
@@ -275,6 +270,8 @@ sub config_daemon {
     }
     elsif ($type eq 'msd'){
         $self->config_msd($action,$daemonh);
+    else {
+        $self->error("No such type: $type");
     }
 }
 
@@ -306,13 +303,6 @@ sub do_deploy {
     return 1;
 }
     
-# Restart the process.
-sub restart_daemon {
-    my ($self) = @_;
-    CAF::Process->new([qw($RESTART)], log => $self)->run();
-    return;
-}
-
 #Initialize array buckets
 sub init_commands {
     my ($self) = @_;
@@ -322,6 +312,7 @@ sub init_commands {
     $self->{daemon_cmds} = [];
     $self->{man_cmds} = [];
 }
+
 # Compare the configuration (and prepare commands) 
 sub check_configuration {
     my ($self, $cluster) = @_;
@@ -339,7 +330,7 @@ sub Configure {
     my ($self, $config) = @_;
 
     # Get full tree of configuration information for component.
-    my $t = $config->getElement($PATH)->getTree();
+    my $t = $config->getElement($self->prefix())->getTree();
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
@@ -355,10 +346,7 @@ sub Configure {
         if (@{$self->{man_cmds}}) {
             #TODO: print this
         }
-    # Create the configuration file.
 
-    # Restart the daemon if necessary.
-    restart_daemon();
     }
 }
 
