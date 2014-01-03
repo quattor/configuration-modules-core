@@ -81,7 +81,7 @@ sub run_ceph_deploy_command {
         $self->error("Invalid shell escapes found in command ",
          join(" ", @$command));
     }
-    $command = ["'" . join(' ',@$command) . "'"];
+    $command = [join(' ',@$command)];
     unshift (@$command, qw(su - ceph -c));
     return $self->run_command($command);
 }
