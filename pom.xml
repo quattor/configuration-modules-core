@@ -134,7 +134,7 @@
     <module>ncm-ganglia</module>
     <module>ncm-libvirtd</module>
     <module>ncm-cups</module>
-    <module>ceph</module>
+    <module>ncm-ceph</module>
   </modules>
 
   <build>
