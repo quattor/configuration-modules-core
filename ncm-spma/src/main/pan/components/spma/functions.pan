@@ -54,18 +54,20 @@ function resolve_pkg_rep = {
 
                 rep_found = false;
                 in_list = first(rep_list,t,curr_rep);
+                repos=list();
                 while ( in_list && ! rep_found) {
                     if(match(curr_rep["name"],rep_mask) && exists(curr_rep["contents"][id])) {
                         debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
                         rep_found = true;
                         SELF[name][version]['arch'][arch] = curr_rep['name'];
                     } else {
+                        append(repos, curr_rep["name"]);
                         in_list = next(rep_list,t,curr_rep);
                     };
                 };
               
                 if( ! rep_found ) {
-                    errorstr = errorstr+"\n  name: "+unescape(name)+" version: "+unescape(version)+" arch: "+arch+"";
+                    errorstr = format("%s\nname: %s version: %s arch: %s", errorstr, unescape(name), unescape(version), arch);
                     error=error+1;
                 };
             };
