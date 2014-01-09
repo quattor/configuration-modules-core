@@ -42,10 +42,11 @@ sub run_command {
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
+    my $rc = $?;
     if (!$cmd_output) {
         $cmd_output = '<none>';
     }
-    if ($?) {
+    if ($rc) {
         $self->error("Command failed. Error Message: $cmd_err\n" . 
             "Command output: $cmd_output\n");
         return 0;
@@ -213,7 +214,7 @@ sub config_mon {
         my @monattrs = ('name');
         foreach my $attr (@monattrs) {
             if ($quatmon->{$attr} ne $cephmon->{$attr}){
-                $self->error("Attribute $attr of $quatmon->{name} not corresponding");
+                $self->error("Attribute $attr of $quatmon->{name} not corresponding\n");
                 return 0;
             }
         }
@@ -273,7 +274,7 @@ sub config_daemon {
     elsif ($type eq 'msd'){
         $self->config_msd($action,$daemonh);
     } else {
-        $self->error("No such type: $type");
+        $self->error("No such type: $type\n");
     }
 }
 
@@ -299,8 +300,11 @@ sub do_deploy {
         $self->run_ceph_command($cmd) or return 0;
     }
     while (my $cmd = shift @{$self->{daemon_cmds}}) {
-#TODO: test  
         $self->run_daemon_command($cmd) or return 0;
+    }
+    $self->info("Commands to be run manually:\n");
+    while (my $cmd = shift @{$self->{man_cmds}}) {
+        $self->info(join(" ", @$cmd) . "\n");
     }
     return 1;
 }
@@ -341,14 +345,18 @@ sub Configure {
             return 0;
         }
         $self->{is_deploy} = 'true'; #TODO: from quattor
-        $self->check_configuration($cluster);
-        $self->do_deploy(); 
-        # recheck config
-        $self->check_configuration($cluster);
-        if (@{$self->{man_cmds}}) {
-            #TODO: print this
+        $self->debug(1,"checking configuration\n");
+        $self->check_configuration($cluster) or return 0;
+        $self->debug(1,"deploying commands\n");
+        $self->do_deploy() or return 0; 
+        $self->debug(1,"rechecking configuration\n");
+        $self->check_configuration($cluster) or return 0;
+        $self->info("Commands to be run manually:\n");
+        while (my $cmd = shift @{$self->{man_cmds}}) {
+            $self->info(join(" ", @$cmd) . "\n");
         }
-
+        #TODO: list commands that didn't run successfully (=are still in the arrays)
+        return 1;
     }
 }
 

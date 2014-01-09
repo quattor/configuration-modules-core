@@ -55,6 +55,7 @@ ok($outputmon, 'ceph quattor cmp for mon');
 cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
 diag explain @{$cmp->{daemon_cmds}};
 
+cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
 $cmp->{is_deploy} = 'true';
 my $dodeploy = $cmp->do_deploy();
 ok($dodeploy, 'try running the commands');
@@ -74,8 +75,7 @@ $cmd = get_command($deployaddstring);
 ok(!defined($cmd), "mon1 stop must not be invoked");
 
 cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
-cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
 
-#my $output = $cmp->Configure($cfg);
-#ok($output, 'Configure ');
+my $configure = $cmp->Configure($cfg);
+ok($configure, 'Configure method');
 done_testing();
