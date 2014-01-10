@@ -141,11 +141,13 @@ sub ceph_quattor_cmp {
     my ($self, $type, $quath, $cephh) = @_;
     foreach my $qkey (keys %{$quath}) {
         if (exists $cephh->{$qkey}) {
+            $quath->{$qkey}->{name} = $qkey;
             my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
             #check attrs and reconfigure
             $self->config_daemon($type,'change', $pair) or return 0;
             delete $cephh->{$qkey};
         } else {
+            $quath->{$qkey}->{name} = $qkey;
             $self->config_daemon($type, 'add',$quath->{$qkey}) or return 0;
         }
     }
@@ -218,7 +220,10 @@ sub config_mon {
                 return 0;
             }
         }
-        if ($quatmon->{up} xor $cephmon->{up}){
+        if ($cephmon->{addr} =~ /0\.0\.0\.0:0/) { #Initial (unconfigured) member
+               $self->config_mon('add', $quatmon);
+        }
+        if (($quatmon->{name} eq $self->{hostname}) and ($quatmon->{up} xor $cephmon->{up})){
             my @command; 
             if ($quatmon->{up}) {
                 @command = qw(start); 
@@ -294,6 +299,7 @@ sub do_deploy {
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {
+        $self->info("host is no deployhost, skipping ceph-deploy commands.\n");
         $self->{deploy_cmds} = [];
     }
     while (my $cmd = shift @{$self->{ceph_cmds}}) {
@@ -337,6 +343,9 @@ sub Configure {
 
     # Get full tree of configuration information for component.
     my $t = $config->getElement($self->prefix())->getTree();
+    my $netw = $config->getElement('/system/network')->getTree();
+    $self->{hostname} = $netw->{hostname};
+    #$self->{fqdn} = $netw->{hostname} . "." . $netw->{domainname};
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
@@ -344,7 +353,8 @@ sub Configure {
             $self->error("fsid of $clus not matching!\n");
             return 0;
         }
-        $self->{is_deploy} = 'true'; #TODO: from quattor
+       
+        $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : '' ;
         $self->debug(1,"checking configuration\n");
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");
@@ -359,5 +369,6 @@ sub Configure {
         return 1;
     }
 }
+
 
 1; # Required for perl module!

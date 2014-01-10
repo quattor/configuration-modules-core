@@ -49,6 +49,7 @@ my $cephh = $cmp->mon_hash();
 my $quath = $cluster->{monitors};
 
 $cmp->init_commands();
+$cmp->{hostname} = 'ceph001';
 my $outputmon = $cmp->process_mons($quath);
 ok($outputmon, 'ceph quattor cmp for mon');
 
@@ -78,4 +79,5 @@ cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
 
 my $configure = $cmp->Configure($cfg);
 ok($configure, 'Configure method');
+
 done_testing();

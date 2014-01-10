@@ -9,7 +9,6 @@ include { 'quattor/schema' };
 
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
-    'name'  : string
     'up'    ? boolean = true
 };
 
