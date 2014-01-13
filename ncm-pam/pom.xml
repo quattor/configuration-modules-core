@@ -7,8 +7,7 @@
 
   <packaging>pom</packaging>
   <version>13.12.1-SNAPSHOT</version>
-  <name>Morgan Stanley Component</name>
-
+  <name>Component to configure PAM</name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
@@ -24,24 +23,10 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <name>njw</name>
-      <email>njw</email>
-    </developer>
-  </developers>
-
   <contributors>
     <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
+      <name>Nick Williams</name>
+      <email>nick.williams@morganstanley.com</email>
       <roles>
 	<role>author</role>
       </roles>
