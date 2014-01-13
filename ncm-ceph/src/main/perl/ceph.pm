@@ -39,6 +39,7 @@ sub use_cluster {
 sub run_command {
     my ($self, $command) = @_;
     my ($cmd_output, $cmd_err);
+    #push ($self->{rancmds}, $command);
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
@@ -49,11 +50,13 @@ sub run_command {
     if ($rc) {
         $self->error("Command failed. Error Message: $cmd_err\n" . 
             "Command output: $cmd_output\n");
+        $self->{lasterr} = $cmd_err;
         return 0;
     } else {
         $self->debug(1,"Command output: $cmd_output\n");
         if ($cmd_err) {
             $self->warn("Command stderr output: $cmd_err\n");
+            $self->{lasterr} = $cmd_err;
         }    
     }
     return $cmd_output;
@@ -325,6 +328,50 @@ sub init_commands {
     $self->{man_cmds} = [];
 }
 
+#Checks if cluster is configured on this node.
+#If not try to get config of other node or give commands to create cluster
+sub cluster_ready_check {
+    my ($self, $hosts) = @_;
+    if (!$self->run_ceph_deploy_command([qw(admin), $self->{hostname}])) { 
+        # Something is not configured or there is no existing cluster 
+        my $ok= 0;
+        my $okhost;
+        $self->{inner} = 1;
+        foreach my $host (@{$hosts}) {
+            if ($self->run_ceph_deploy_command([qw(gatherkeys), $host])) {
+                $ok = 1;
+                $okhost = $host;
+                last;
+            }    
+        }
+        if (!$ok) {
+            #Manual commando's for new cluster  
+            #Push to deploy_cmds (and pre-run dodeploy) for automization, 
+            #but take care of race conditions
+            my @newcmd = qw(new);
+            foreach my $host (@{$hosts}) {
+                push (@newcmd, $host);
+            }
+            push (@{$self->{man_cmds}}, [@newcmd]);
+
+            foreach my $host (@{$hosts}) {
+                my @moncr = qw(mon create);
+                push (@moncr, $host);
+                push (@{$self->{man_cmds}}, [@moncr]);
+            }
+            return 0;
+        } else {
+            $self->run_ceph_deploy_command([qw(config pull), $okhost]) or return 0;
+            $self->run_ceph_deploy_command([qw(admin), $self->{hostname}]) or return 0;
+        }
+    }    
+    if (!$self->run_ceph_command([qw(status)]) 
+            && ($self->{lasterr} eq 'Error initializing cluster client: Error')) {
+        $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+        return 0;
+    }
+    return 1;
+}
 # Compare the configuration (and prepare commands) 
 sub check_configuration {
     my ($self, $cluster) = @_;
@@ -349,6 +396,7 @@ sub Configure {
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
+        #$self->cluster_ready_check($cluster->{config}->{mon_initial_members}) or return 0;
         if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
             $self->error("fsid of $clus not matching!\n");
             return 0;

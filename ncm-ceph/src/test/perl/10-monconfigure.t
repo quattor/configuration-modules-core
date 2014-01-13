@@ -42,7 +42,6 @@ my $mons = $cmp->mon_hash();
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 my $id = $cluster->{config}->{fsid};
-#diag explain $cluster;
 
 my $type = 'mon';
 my $cephh = $cmp->mon_hash();
@@ -50,6 +49,7 @@ my $quath = $cluster->{monitors};
 
 $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
+#Main monitor comparison function:
 my $outputmon = $cmp->process_mons($quath);
 ok($outputmon, 'ceph quattor cmp for mon');
 
@@ -77,6 +77,7 @@ ok(!defined($cmd), "mon1 stop must not be invoked");
 
 cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
 
+#TODO Move this 
 my $configure = $cmp->Configure($cfg);
 ok($configure, 'Configure method');
 
