@@ -21,6 +21,7 @@ use File::Basename;
 use File::Path;
 use JSON::XS;
 use Readonly;
+#use Config::Tiny;
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -103,7 +104,9 @@ sub get_fsid {
 # Gets the config of the cluster
 sub get_config {
     my ($self) = @_;
-    # TODO implement fileread
+    my $cephcfg = Config::Tiny->new;
+    $cephcfg = Config::Tiny->read( '/etc/ceph/ceph.conf' );
+    return $cephcfg;
 }
 
 # Gets the OSD map
@@ -216,7 +219,7 @@ sub config_mon {
         my $quatmon = $daemonh->[0];
         my $cephmon = $daemonh->[1];
         # checking immutable attributes
-        my @monattrs = ('name');
+        my @monattrs = ();
         foreach my $attr (@monattrs) {
             if ($quatmon->{$attr} ne $cephmon->{$attr}){
                 $self->error("Attribute $attr of $quatmon->{name} not corresponding\n");
@@ -330,9 +333,10 @@ sub init_commands {
 
 #Checks if cluster is configured on this node.
 #If not try to get config of other node or give commands to create cluster
+#Fail if cluster not ready and no deploy hosts
 sub cluster_ready_check {
     my ($self, $hosts) = @_;
-    if (!$self->run_ceph_deploy_command([qw(admin), $self->{hostname}])) { 
+    if ($self->{is_deploy} && !$self->run_ceph_deploy_command([qw(admin), $self->{hostname}])) { 
         # Something is not configured or there is no existing cluster 
         my $ok= 0;
         my $okhost;
@@ -367,10 +371,28 @@ sub cluster_ready_check {
     }    
     if (!$self->run_ceph_command([qw(status)]) 
             && ($self->{lasterr} eq 'Error initializing cluster client: Error')) {
-        $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+        if ($self->{is_deploy}) {
+            $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+        } else {
+            $self->error("Cluster not configured and no ceph deploy host.." . 
+                "Run on a deploy host!\n"); 
+        }
         return 0;
     }
     return 1;
+}
+
+#Make all defined hosts ceph admin hosts (=able to run ceph commands)
+#This is not (necessary) the same as ceph-deploy hosts!
+sub set_admin_hosts {
+    my ($self, $hosts) = @_;
+    if ($self->{is_deploy}) {
+        my @admins=qw(admin);
+        foreach my $mon (keys %{$hosts}) {
+            push(@admins, $mon);
+        }
+        $self->run_ceph_deploy_command(\@admins); 
+    }
 }
 # Compare the configuration (and prepare commands) 
 sub check_configuration {
@@ -396,13 +418,15 @@ sub Configure {
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
-        #$self->cluster_ready_check($cluster->{config}->{mon_initial_members}) or return 0;
+        $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : '' ;
+        $self->cluster_ready_check($cluster->{config}->{mon_initial_members}) or return 0;
+        $self->set_admin_hosts($cluster->{monitors});
+        $self->set_admin_hosts($cluster->{osdhosts});
         if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
             $self->error("fsid of $clus not matching!\n");
             return 0;
         }
        
-        $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : '' ;
         $self->debug(1,"checking configuration\n");
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");

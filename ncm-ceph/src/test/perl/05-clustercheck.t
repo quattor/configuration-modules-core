@@ -35,6 +35,7 @@ my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();
+$cmp->{is_deploy} = 1;
 $cmp->{hostname} = 'ceph001';
 my $admin = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph admin ceph001";
 my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001";
@@ -45,7 +46,7 @@ my @gathers = ($gather1, $gather2, $gather3);
 set_desired_output("/usr/bin/ceph -f json status --cluster ceph", $data::STATE);
 
 # Already working cluster
-set_desired_output($admin,'');
+#set_desired_output($admin,'');
 set_command_status($admin,0);
 set_desired_err($admin,'');
 
@@ -62,7 +63,7 @@ $cmd = get_command($config2);
 ok(!defined($cmd), "cluster already set up: pull config was not invoked to ceph002");
 
 # Totally new cluster
-set_desired_output($admin,'');
+#set_desired_output($admin,'');
 set_command_status($admin,1);
 #set_desired_error($admin,'');
 foreach my $gcmd (@gathers) {
@@ -73,10 +74,17 @@ $cmp->init_commands();
 $clustercheck= $cmp->cluster_ready_check($cluster->{config}->{mon_initial_members});
 foreach my $gcmd (@gathers) {
     $cmd = get_command($gcmd);
-    ok(defined($cmd), "no cluster: gather was invoked");
+    ok(defined($cmd), "no cluster: gather had been tried");
 }
 $cmd = get_command($config2);
 ok(!defined($cmd), "new cluster manual: pull config was not invoked to ceph002");
 diag explain $cmp->{man_cmds};
+
+# Only ceph002 already configured
+
+set_command_status($gather2,0);
+$clustercheck= $cmp->cluster_ready_check($cluster->{config}->{mon_initial_members});
+$cmd = get_command($config2);
+ok(defined($cmd), "pull config was invoked to ceph002 (been configured)");
 
 done_testing();
