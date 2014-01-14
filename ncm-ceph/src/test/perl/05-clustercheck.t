@@ -78,7 +78,7 @@ foreach my $gcmd (@gathers) {
 }
 $cmd = get_command($config2);
 ok(!defined($cmd), "new cluster manual: pull config was not invoked to ceph002");
-diag explain $cmp->{man_cmds};
+#diag explain $cmp->{man_cmds};
 
 # Only ceph002 already configured
 

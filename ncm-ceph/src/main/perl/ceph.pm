@@ -21,8 +21,9 @@ use File::Basename;
 use File::Path;
 use JSON::XS;
 use Readonly;
-#use Config::Tiny;
+use Config::Tiny;
 
+Readonly::Scalar my $CFGPATH => '/etc/ceph/ceph.conf';
 our $EC=LC::Exception::Context->new->will_store_all;
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
@@ -105,8 +106,12 @@ sub get_fsid {
 sub get_config {
     my ($self) = @_;
     my $cephcfg = Config::Tiny->new;
-    $cephcfg = Config::Tiny->read( '/etc/ceph/ceph.conf' );
-    return $cephcfg;
+    $cephcfg = Config::Tiny->read($CFGPATH);
+    if (!$cephcfg->{global}) {
+        $self->error("Not a valid config file found");
+        return 0;
+    }
+    return $cephcfg->{global};
 }
 
 # Gets the OSD map
@@ -147,18 +152,16 @@ sub ceph_quattor_cmp {
     my ($self, $type, $quath, $cephh) = @_;
     foreach my $qkey (keys %{$quath}) {
         if (exists $cephh->{$qkey}) {
-            $quath->{$qkey}->{name} = $qkey;
             my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
             #check attrs and reconfigure
-            $self->config_daemon($type,'change', $pair) or return 0;
+            $self->config_daemon($type,'change',$qkey,$pair) or return 0;
             delete $cephh->{$qkey};
         } else {
-            $quath->{$qkey}->{name} = $qkey;
-            $self->config_daemon($type, 'add',$quath->{$qkey}) or return 0;
+            $self->config_daemon($type, 'add',$qkey,$quath->{$qkey}) or return 0;
         }
     }
     foreach my $ckey (keys %{$cephh}) {
-        $self->config_daemon($type,'del',$cephh->{$ckey}) or return 0;
+        $self->config_daemon($type,'del',$ckey,$cephh->{$ckey}) or return 0;
     }        
     return 'ok';
 }
@@ -191,29 +194,37 @@ sub process_msds {
     return $self->ceph_quattor_cmp('msd', $qmsds, $cmsds);
 }
 
-# Prepare the commands to change a config entry
+# Prepare the commands to change a global config entry
 sub config_cfgfile {
-    my ($self, $action,$daemonh) = @_;
-    # TODO implement
+    my ($self,$action,$name,$values) = @_;
     if ($action eq 'add'){
-    
-    } elsif ($action eq 'del') {
-    
-    } else {
+        $self->info("$name added to config file\n");
+        $self->{cephgcfg}->{$name} = $values;
 
-    } 
+    } elsif ($action eq 'change') {
+        my $quat = $values->[0];
+        my $ceph = $values->[1];
+        #TODO: check if changes are valid
+        if ($quat!=$ceph) {
+            $self->info("$name changed from $ceph to $quat\n");
+        }
+        $self->{cephgcfg}->{$name} = $values;        
+    } else {# Deletion not needed, we made a new one
+        $self->info("$name deleted from config file\n");
+    }
+    return 1; 
 }
 
 # Prepare the commands to change/add/delete a monitor  
 sub config_mon {
-    my ($self, $action,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
         my @command = qw(mon create);
-        push (@command, $daemonh->{name});
+        push (@command, $name);
         push (@{$self->{deploy_cmds}}, [@command]);
     } elsif ($action eq 'del') {
         my @command = qw(mon destroy);
-        push (@command, $daemonh->{name});
+        push (@command, $name);
         push (@{$self->{man_cmds}}, [@command]);
     } else { #compare config
         my $quatmon = $daemonh->[0];
@@ -222,21 +233,21 @@ sub config_mon {
         my @monattrs = ();
         foreach my $attr (@monattrs) {
             if ($quatmon->{$attr} ne $cephmon->{$attr}){
-                $self->error("Attribute $attr of $quatmon->{name} not corresponding\n");
+                $self->error("Attribute $attr of $name not corresponding\n");
                 return 0;
             }
         }
         if ($cephmon->{addr} =~ /0\.0\.0\.0:0/) { #Initial (unconfigured) member
                $self->config_mon('add', $quatmon);
         }
-        if (($quatmon->{name} eq $self->{hostname}) and ($quatmon->{up} xor $cephmon->{up})){
+        if (($name eq $self->{hostname}) and ($quatmon->{up} xor $cephmon->{up})){
             my @command; 
             if ($quatmon->{up}) {
                 @command = qw(start); 
             } else {
                 @command = qw(stop);
             }
-            push (@command, "mon.$quatmon->{name}");
+            push (@command, "mon.$name");
             push (@{$self->{daemon_cmds}}, [@command]);
         }
     }
@@ -245,7 +256,7 @@ sub config_mon {
 
 # Prepare the commands to change/add/delete an osd
 sub config_osd {
-    my ($self, $action,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh) = @_;
     # TODO implement
     if ($action eq 'add'){
     
@@ -258,7 +269,7 @@ sub config_osd {
 
 # Prepare the commands to change/add/delete an msd
 sub config_msd {
-    my ($self, $action,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh) = @_;
     # TODO implement
     if ($action eq 'add'){
     
@@ -272,18 +283,18 @@ sub config_msd {
 
 # Configure on a type basis
 sub config_daemon {
-    my ($self, $type,$action,$daemonh) = @_;
+    my ($self, $type,$action,$name,$daemonh) = @_;
     if ($type eq 'cfg'){
-        $self->config_cfgfile($action,$daemonh);
+        $self->config_cfgfile($action,$name,$daemonh);
     }
     elsif ($type eq 'mon'){
-        $self->config_mon($action,$daemonh);
+        $self->config_mon($action,$name,$daemonh);
     }
     elsif ($type eq 'osd'){
-        $self->config_osd($action,$daemonh);
+        $self->config_osd($action,$name,$daemonh);
     }
     elsif ($type eq 'msd'){
-        $self->config_msd($action,$daemonh);
+        $self->config_msd($action,$name,$daemonh);
     } else {
         $self->error("No such type: $type\n");
     }
@@ -295,11 +306,11 @@ sub do_deploy {
     # TODO implement:    
     #   - configuration changes (injection or with restarting daemons (sequentially)?)
     #   - deploy new osds/mons/msd daemons
-    #   - list commands for changed/removed daemons 
-    if (%{$self->{cfgchanges}}){
-        # TODO implement
-        return 0;
-    }
+    #   - list commands for changed/removed daemons
+
+    $self->{cephcfg}->{global} = $self->{cephgcfg};
+    $self->{cephcfg}->write($CFGPATH);
+
     if ($self->{is_deploy}){ #Run only on deploy host(s)
         while (my $cmd = shift @{$self->{deploy_cmds}}) {
             $self->run_ceph_deploy_command($cmd) or return 0;
@@ -324,7 +335,8 @@ sub do_deploy {
 #Initialize array buckets
 sub init_commands {
     my ($self) = @_;
-    $self->{cfgchanges} = {};
+    $self->{cephcfg} = Config::Tiny->new;
+    $self->{cephgcfg} = {};
     $self->{deploy_cmds} = [];
     $self->{ceph_cmds} = [];
     $self->{daemon_cmds} = [];
