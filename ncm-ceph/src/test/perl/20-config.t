@@ -31,7 +31,7 @@ my $mock = Test::MockModule->new('NCM::Component::ceph');
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 $cmp->use_cluster();
-
+$cmp->{cfgfile} = 'tmpfile';
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 my $quath = $cluster->{config};
@@ -39,12 +39,12 @@ diag explain $quath;
 $cmp->init_commands();
 my $output = $cmp->process_config($quath);
 #diag explain $cmp->get_config();
-#diag explain $cmp->{cephgcfg};
+diag explain $cmp->{cephgcfg};
 ok($output, 'ceph quattor cmp for cfg');
 
 my $dodeploy = $cmp->do_deploy();
 ok($dodeploy, 'try making the config');
-#diag explain $cmp->{cephcfg};
+diag explain $cmp->{cephcfg};
 
 
 done_testing();

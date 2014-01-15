@@ -19,11 +19,12 @@ use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
+#use File::Copy;
 use JSON::XS;
 use Readonly;
 use Config::Tiny;
 
-Readonly::Scalar my $CFGPATH => '/etc/ceph/ceph.conf';
+Readonly::Scalar my $CFGPATH => '/etc/ceph/';
 our $EC=LC::Exception::Context->new->will_store_all;
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
@@ -35,13 +36,14 @@ sub use_cluster {
         return 0;
     }
     $self->{cluster} = $cluster;
+    $self->{cfgfile} = $CFGPATH . $cluster . '.conf';
 }
 
 # run a command and return the output
 sub run_command {
     my ($self, $command) = @_;
     my ($cmd_output, $cmd_err);
-    #push ($self->{rancmds}, $command);
+    $self->debug(2, join(" ",@$command));
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
@@ -55,7 +57,7 @@ sub run_command {
         $self->{lasterr} = $cmd_err;
         return 0;
     } else {
-        $self->debug(1,"Command output: $cmd_output\n");
+        $self->debug(2,"Command output: $cmd_output\n");
         if ($cmd_err) {
             $self->warn("Command stderr output: $cmd_err\n");
             $self->{lasterr} = $cmd_err;
@@ -80,12 +82,21 @@ sub run_daemon_command {
 
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
-    my ($self, $command) = @_;
+    my ($self, $command, $dir) = @_;
     # run as user configured for 'ceph-deploy'
     unshift (@$command, ('/usr/bin/ceph-deploy', '--cluster', $self->{cluster}));
-    if (grep(m{[;&>|"']}, @$command)) {
-        $self->error("Invalid shell escapes found in command ",
+    if (grep(m{[;&>|"']}, @$command) ) {
+        $self->error("Invalid shell escapes found in command ", 
          join(" ", @$command));
+        return 0;
+    }
+    if ($dir) {
+        if (grep(m{[;&>|"']}, $dir)) {
+            $self->error("Invalid shell escapes found in directory ", 
+             join(" ", $dir));
+            return 0;
+        }    
+        unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
     unshift (@$command, qw(su - ceph -c));
@@ -106,7 +117,7 @@ sub get_fsid {
 sub get_config {
     my ($self) = @_;
     my $cephcfg = Config::Tiny->new;
-    $cephcfg = Config::Tiny->read($CFGPATH);
+    $cephcfg = Config::Tiny->read($self->{cfgfile});
     if (!$cephcfg->{global}) {
         $self->error("Not a valid config file found");
         return 0;
@@ -170,6 +181,7 @@ sub ceph_quattor_cmp {
 sub process_config {
     my ($self, $qconf) = @_;
     my $cconf = $self->get_config() or return 0;
+    $self->debug(3,%$qconf);
     return $self->ceph_quattor_cmp('cfg', $qconf, $cconf);
 }
 
@@ -194,23 +206,53 @@ sub process_msds {
     return $self->ceph_quattor_cmp('msd', $qmsds, $cmsds);
 }
 
+# Pull config from host
+sub pull_cfg {
+    my ($self, $host) = @_;
+    my $pullfile = $self->{qtmp} . 'ceph.conf';
+    my $hostfile = $pullfile . '.' . $host;
+    if (-e $pullfile) {
+        move($pullfile, $pullfile . '.bak');
+    }   
+    $self->run_ceph_deploy_command([qw(config pull), $host], $self->{qtmp}) or return 0;
+    if (-e $hostfile) {
+        move($hostfile, $hostfile . '.bak');
+    }   
+    move($pullfile, $hostfile);
+    
+    my $cephcfg = Config::Tiny->new;
+
+    
+}
 # Prepare the commands to change a global config entry
 sub config_cfgfile {
     my ($self,$action,$name,$values) = @_;
     if ($action eq 'add'){
         $self->info("$name added to config file\n");
+        if ($name eq 'mon_initial_members'){
+            $values = join(',',@$values); 
+        }
         $self->{cephgcfg}->{$name} = $values;
 
     } elsif ($action eq 'change') {
         my $quat = $values->[0];
         my $ceph = $values->[1];
+        if ($name eq 'mon_initial_members'){
+            $quat = join(',',@$quat); 
+        }
         #TODO: check if changes are valid
-        if ($quat!=$ceph) {
+        if ($quat ne $ceph) {
             $self->info("$name changed from $ceph to $quat\n");
         }
-        $self->{cephgcfg}->{$name} = $values;        
-    } else {# Deletion not needed, we made a new one
-        $self->info("$name deleted from config file\n");
+        $self->{cephgcfg}->{$name} = $quat;        
+    } elsif ($action eq 'del'){
+        # If we want only quattor settings: Deletion not needed, we made a new one
+        #$self->info("$name deleted from config file\n");
+        # If we want to keep the existing configuration settings that are not in Quattor:
+        $self->info("$name not in quattor\n");
+        $self->config_cfgfile('add',$name,$values)
+    } else {
+        $self->error("Action $action not supported!");
     }
     return 1; 
 }
@@ -226,7 +268,7 @@ sub config_mon {
         my @command = qw(mon destroy);
         push (@command, $name);
         push (@{$self->{man_cmds}}, [@command]);
-    } else { #compare config
+    } elsif ($action eq 'change') { #compare config
         my $quatmon = $daemonh->[0];
         my $cephmon = $daemonh->[1];
         # checking immutable attributes
@@ -251,6 +293,9 @@ sub config_mon {
             push (@{$self->{daemon_cmds}}, [@command]);
         }
     }
+    else {
+        $self->error("Action $action not supported!");
+    }
     return 1;   
 }
 
@@ -261,7 +306,7 @@ sub config_osd {
     if ($action eq 'add'){
     
     } elsif ($action eq 'del') {
-    
+   
     } else {
 
     } 
@@ -300,6 +345,19 @@ sub config_daemon {
     }
 }
 
+# Write the config file
+sub write_config {
+    my ($self, $cfgfile ) = @_;
+    $self->{cephcfg}->{global} = $self->{cephgcfg};
+    if (!$self->{cephcfg}->write($cfgfile)) {
+        $self->error("Could not write config file $cfgfile!\n"); 
+        return 0;
+    }
+    $self->debug(2,"content writen to config file $cfgfile!\n" . %{$self->{cephcfg}});
+    #Add newline?
+    return 1;
+}
+
 # Push new config to ceph cluster
 sub do_deploy {
     my ($self) = @_;
@@ -307,11 +365,13 @@ sub do_deploy {
     #   - configuration changes (injection or with restarting daemons (sequentially)?)
     #   - deploy new osds/mons/msd daemons
     #   - list commands for changed/removed daemons
-
-    $self->{cephcfg}->{global} = $self->{cephgcfg};
-    $self->{cephcfg}->write($CFGPATH);
-
+    if ($self->{cephgcfg}) {
+        if ($self->{is_deploy}) {
+            $self->write_config($self->{cfgfile}) or return 0;
+        } 
+    }       
     if ($self->{is_deploy}){ #Run only on deploy host(s)
+        $self->info("Running ceph-deploy commands.\n");
         while (my $cmd = shift @{$self->{deploy_cmds}}) {
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
@@ -331,7 +391,17 @@ sub do_deploy {
     }
     return 1;
 }
-    
+
+#Make a temporary directory for push and pulls
+sub init_qdepl {
+    my ($self, $cephusr) = @_;
+    my $qdir = $cephusr->{homeDir} . '/quattor' ;
+    mkdir -p $qdir;
+    chown $cephusr->uid, $cephusr->uid, ($qdir);
+
+    $self->{qtmp} = $qdir; 
+  
+}   
 #Initialize array buckets
 sub init_commands {
     my ($self) = @_;
@@ -361,9 +431,9 @@ sub cluster_ready_check {
             }    
         }
         if (!$ok) {
-            #Manual commando's for new cluster  
-            #Push to deploy_cmds (and pre-run dodeploy) for automization, 
-            #but take care of race conditions
+            # Manual commando's for new cluster  
+            # Push to deploy_cmds (and pre-run dodeploy) for automation, 
+            # but take care of race conditions
             my @newcmd = qw(new);
             foreach my $host (@{$hosts}) {
                 push (@newcmd, $host);
@@ -382,7 +452,7 @@ sub cluster_ready_check {
         }
     }    
     if (!$self->run_ceph_command([qw(status)]) 
-            && ($self->{lasterr} eq 'Error initializing cluster client: Error')) {
+            && ($self->{lasterr} =~ 'Error initializing cluster client: Error')) {
         if ($self->{is_deploy}) {
             $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
         } else {
@@ -410,7 +480,7 @@ sub set_admin_hosts {
 sub check_configuration {
     my ($self, $cluster) = @_;
     $self->init_commands();
-#    $self->process_config($cluster->{config}) or return 0;
+    $self->process_config($cluster->{config}) or return 0;
     $self->process_mons($cluster->{monitors}) or return 0;
 #    $self->process_osds($cluster->{osdhosts}) or return 0;
 #    if ($cluster->{msds}) {
@@ -421,19 +491,18 @@ sub check_configuration {
         
 sub Configure {
     my ($self, $config) = @_;
-
+    $self->info($self->run_command([qw(cd /home/kwaegema)]));
     # Get full tree of configuration information for component.
     my $t = $config->getElement($self->prefix())->getTree();
     my $netw = $config->getElement('/system/network')->getTree();
     $self->{hostname} = $netw->{hostname};
+    #$self->init_qdepl($config->getElement('/software/components/accounts/users/ceph')->getTree());
     #$self->{fqdn} = $netw->{hostname} . "." . $netw->{domainname};
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
         $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : '' ;
         $self->cluster_ready_check($cluster->{config}->{mon_initial_members}) or return 0;
-        $self->set_admin_hosts($cluster->{monitors});
-        $self->set_admin_hosts($cluster->{osdhosts});
         if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
             $self->error("fsid of $clus not matching!\n");
             return 0;
@@ -443,6 +512,8 @@ sub Configure {
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");
         $self->do_deploy() or return 0; 
+        $self->set_admin_hosts($cluster->{monitors});
+        $self->set_admin_hosts($cluster->{osdhosts});
         $self->debug(1,"rechecking configuration\n");
         $self->check_configuration($cluster) or return 0;
         $self->info("Commands to be run manually:\n");

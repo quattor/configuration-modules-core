@@ -36,6 +36,7 @@ set_desired_output("/usr/bin/ceph -f json mon dump --cluster ceph",
 set_desired_output("/usr/bin/ceph -f json quorum_status --cluster ceph", $data::STATE);
 
 $cmp->use_cluster();
+$cmp->{cfgfile} = 'tmpfile';
 my $fsid = $cmp->get_fsid();
 my $mons = $cmp->mon_hash();
 
@@ -76,9 +77,5 @@ $cmd = get_command($deployaddstring);
 ok(!defined($cmd), "mon1 stop must not be invoked");
 
 cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
-
-#TODO Move this 
-my $configure = $cmp->Configure($cfg);
-ok($configure, 'Configure method');
 
 done_testing();
