@@ -191,11 +191,7 @@
 	  <groupId>org.codehaus.mojo</groupId>
 	  <artifactId>rpm-maven-plugin</artifactId>
 	  <configuration>
-              <!-- Do not depend on the Solaris-specific code, even if
-                   we currently package it. -->
-              <defineStatements>
-                  <defineStatement>__requires_exclude perl\\(IPS</defineStatement>
-              </defineStatements>
+            <autoRequires>false</autoRequires>
 	    <mappings combine.children="append">
 	      <mapping>
 		<directory>/usr/share/templates/</directory>
@@ -215,6 +211,17 @@
 	      <require>yum-utils &gt;= 1.1.30</require>
 	      <require>yum-versionlock</require>
 	      <require>yum-priorities</require>
+	      <require>perl(CAF::FileEditor)</require>
+	      <require>perl(CAF::FileWriter)</require>
+	      <require>perl(CAF::Process)</require>
+	      <require>perl(EDG::WP4::CCM::Element)</require>
+	      <require>perl(File::Path)</require>
+	      <require>perl(LC::Exception)</require>
+	      <require>perl(NCM::Component)</require>
+	      <require>perl(Set::Scalar)</require>
+	      <require>perl(constant)</require>
+	      <require>perl(strict)</require>
+	      <require>perl(warnings)</require>
 	    </requires>
 	  </configuration>
 	</plugin>
