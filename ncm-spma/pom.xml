@@ -191,6 +191,11 @@
 	  <groupId>org.codehaus.mojo</groupId>
 	  <artifactId>rpm-maven-plugin</artifactId>
 	  <configuration>
+              <!-- Do not depend on the Solaris-specific code, even if
+                   we currently package it. -->
+              <defineStatements>
+                  <defineStatement>__requires_exclude perl\\(IPS</defineStatement>
+              </defineStatements>
 	    <mappings combine.children="append">
 	      <mapping>
 		<directory>/usr/share/templates/</directory>
