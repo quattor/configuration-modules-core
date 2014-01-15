@@ -58,7 +58,7 @@ type component_spma_type = {
     "userpkgs"      ? string with match (SELF, 'yes|no') # Allow user packages
     "userprio"      ? string with match (SELF, 'yes|no') # Priority to user packages
     "protectkernel" ? string with match (SELF, 'yes|no') # Prevent currrent kernel from being removed
-    "packager"      ? string with match (SELF, '(yum|ips)') # system packager to be used (yum,ips)
+    "packager"      : string = "yum" with match (SELF, '(yum|ips)') # system packager to be used (yum,ips)
     "rpmexclusive"  ? string with match (SELF, 'yes|no') # stop other processes using rpm db
     "usespmlist"    ? string with match (SELF, 'yes|no') # Have SPMA controlling any packages
     "debug"         ? string with match (SELF, '0|1|2|3|4|5') # debug level (0-5)
