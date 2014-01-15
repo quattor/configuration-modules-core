@@ -64,7 +64,7 @@ Obsoleted and ignored.
 
 Obsolete and ignored.  This is delegated to Yum.
 
-=item /software/components/spma/packager : string ("rpm|pkg|..")
+=item /software/components/spma/packager : string
 
 Must contain C<yum> to use this module.
 
