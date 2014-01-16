@@ -84,18 +84,21 @@ sub run_daemon_command {
 sub run_ceph_deploy_command {
     my ($self, $command, $dir) = @_;
     # run as user configured for 'ceph-deploy'
+    if ($dir && ($dir eq '#')) {
+        unshift (@$command, '--overwrite-conf');
+    }
     unshift (@$command, ('/usr/bin/ceph-deploy', '--cluster', $self->{cluster}));
     if (grep(m{[;&>|"']}, @$command) ) {
         $self->error("Invalid shell escapes found in command ", 
          join(" ", @$command));
         return 0;
     }
-    if ($dir) {
+    if ($dir && ($dir ne '#')) {
         if (grep(m{[;&>|"']}, $dir)) {
             $self->error("Invalid shell escapes found in directory ", 
              join(" ", $dir));
             return 0;
-        }    
+        }
         unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
