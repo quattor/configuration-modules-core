@@ -288,7 +288,7 @@ sub config_cfgfile {
     } elsif ($action eq 'change') {
         my $quat = $values->[0];
         my $ceph = $values->[1];
-        if ($name eq 'mon_initial_members'){
+        if (ref($quat) eq 'ARRAY'){
             $quat = join(',',@$quat); 
         }
         #TODO: check if changes are valid
@@ -423,6 +423,7 @@ sub do_deploy {
     if ($self->{is_deploy}){ #Run only on deploy host(s)
         $self->info("Running ceph-deploy commands.\n");
         while (my $cmd = shift @{$self->{deploy_cmds}}) {
+            $self->debug(1,@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {
@@ -433,6 +434,7 @@ sub do_deploy {
         $self->run_ceph_command($cmd) or return 0;
     }
     while (my $cmd = shift @{$self->{daemon_cmds}}) {
+        $self->debug(1,@$cmd);
         $self->run_daemon_command($cmd) or return 0;
     }
     $self->print_man_cmds();
@@ -513,15 +515,16 @@ sub cluster_ready_check {
     if (!$self->run_ceph_command([qw(status)])) {
         #    && ($self->{lasterr} =~ 'Error initializing cluster client: Error')) {
         if ($self->{is_deploy}) {
-            if (!$self->set_admin_host($cluster->{config},$self->{hostname})) {
+            if (!$self->set_admin_host($cluster->{config},$self->{hostname}) 
+             || !$self->run_ceph_command([qw(status)])) {
                 $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
                 return 0;
                 }
         } else {
             $self->error("Cluster not configured and no ceph deploy host.." . 
                 "Run on a deploy host!\n"); 
+            return 0;
         }
-        return 0;
     }
     if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
         $self->error("fsid of $self->{cluster} not matching!\n");
@@ -554,7 +557,16 @@ sub check_configuration {
 #    }
     return 1;
 }
-        
+
+#generate mon hosts
+sub gen_mon_host {
+    my ($self, $config, $domain) = @_;
+    $config->{mon_host} = [];
+    foreach my $host (@{$config->{mon_initial_members}}) {
+        push (@{$config->{mon_host}},$host . '.' . $domain);
+    }
+}
+           
 sub Configure {
     my ($self, $config) = @_;
     # Get full tree of configuration information for component.
@@ -562,11 +574,12 @@ sub Configure {
     my $netw = $config->getElement('/system/network')->getTree();
     my $user = $config->getElement('/software/components/accounts/users/ceph')->getTree();
     $self->{hostname} = $netw->{hostname};
-    #$self->{fqdn} = $netw->{hostname} . "." . $netw->{domainname};
+    $self->{fqdn} = $netw->{hostname} . "." . $netw->{domainname};
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
         $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : '' ;
+        $self->gen_mon_host($cluster->{config}, $netw->{domainname});
         if (!$self->cluster_ready_check($cluster, $user)) {
             $self->print_man_cmds();
             return 0; 
