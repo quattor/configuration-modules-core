@@ -19,12 +19,10 @@ use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
-#use File::Copy;
 use JSON::XS;
 use Readonly;
 use Config::Tiny;
 
-Readonly::Scalar my $CFGPATH => '/etc/ceph/';
 our $EC=LC::Exception::Context->new->will_store_all;
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
@@ -36,7 +34,6 @@ sub use_cluster {
         return 0;
     }
     $self->{cluster} = $cluster;
-    $self->{cfgfile} = $CFGPATH . $cluster . '.conf';
 }
 
 # run a command and return the output
@@ -183,7 +180,7 @@ sub ceph_quattor_cmp {
 # Compare ceph config with the quattor cluster config
 sub process_config {
     my ($self, $qconf) = @_;
-    #un only once?
+    # Run only once?
     my $hosts = $qconf->{mon_initial_members};
     foreach my $host (@{$hosts}) {
         # Set config and make admin host
