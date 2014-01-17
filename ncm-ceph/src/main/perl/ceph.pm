@@ -249,6 +249,7 @@ sub pull_compare_push {
         
     } else {
         $self->{comp} = 1;
+        $self->debug(3, %$cconf);
         $self->ceph_quattor_cmp('cfg', $config, $cconf) or return 0;
         if ($self->{comp}== 1) {
             #Config the same, no push needed
@@ -398,14 +399,21 @@ sub config_daemon {
 
 # Write the config file
 sub write_config {
-    my ($self, $config, $cfgfile ) = @_;
+    my ($self, $cfg, $cfgfile ) = @_;
     my $tinycfg = Config::Tiny->new;
+    my $config = { %$cfg };
+    foreach my $key (%{$config}) {
+        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
+            $config->{$key} = join(',',@{$config->{$key}});
+            $self->debug(3,$config->{$key});
+        }
+    }
     $tinycfg->{global} = $config;
     if (!$tinycfg->write($cfgfile)) {
         $self->error("Could not write config file $cfgfile!\n"); 
         return 0;
     }
-    $self->debug(2,"content writen to config file $cfgfile!\n" . % $config);
+    $self->debug(2,"content writen to config file $cfgfile!\n");
     return 1;
 }
 
@@ -434,7 +442,7 @@ sub do_deploy {
 # Print out the commands that should be run manually
 sub print_man_cmds {
     my ($self) = @_;
-    if (@{$self->{man_cmds}}) {
+    if ($self->{man_cmds} && @{$self->{man_cmds}}) {
         $self->info("Commands to be run manually:\n");
         while (my $cmd = shift @{$self->{man_cmds}}) {
             $self->info(join(" ", @$cmd) . "\n");
@@ -502,10 +510,13 @@ sub cluster_ready_check {
             $self->init_qdepl($cephusr, $cluster->{config}) or return 0;
         }
     }    
-    if (!$self->run_ceph_command([qw(status)]) 
-            && ($self->{lasterr} =~ 'Error initializing cluster client: Error')) {
+    if (!$self->run_ceph_command([qw(status)])) {
+        #    && ($self->{lasterr} =~ 'Error initializing cluster client: Error')) {
         if ($self->{is_deploy}) {
-            $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+            if (!$self->set_admin_host($cluster->{config},$self->{hostname})) {
+                $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+                return 0;
+                }
         } else {
             $self->error("Cluster not configured and no ceph deploy host.." . 
                 "Run on a deploy host!\n"); 
