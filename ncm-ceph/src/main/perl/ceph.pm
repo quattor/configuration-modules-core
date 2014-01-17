@@ -592,6 +592,7 @@ sub Configure {
         $self->check_configuration($cluster) or return 0;
         $self->print_man_cmds();
         #TODO: list commands that didn't run successfully (=are still in the arrays)
+        $self->debug(1,'Done');
         return 1;
     }
 }
