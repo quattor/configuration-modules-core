@@ -446,7 +446,7 @@ sub init_qdepl {
     my ($self, $cephusr, $config) = @_;
     my $qdir = $cephusr->{homeDir} . '/quattor/' ;
     mkdir -p $qdir;
-    chown $cephusr->uid, $cephusr->uid, ($qdir);
+    chown $cephusr->{uid}, $cephusr->{uid}, ($qdir);
 
     $self->{qtmp} = $qdir; 
     
