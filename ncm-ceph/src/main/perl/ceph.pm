@@ -457,7 +457,7 @@ sub init_qdepl {
     my ($self, $cephusr, $config) = @_;
     my $qdir = $cephusr->{homeDir} . '/quattor/' ;
     mkdir -p $qdir;
-    chown $cephusr->{uid}, $cephusr->{uid}, ($qdir);
+    chown $cephusr->{uid}, $cephusr->{gid}, ($qdir);
 
     $self->{qtmp} = $qdir; 
     
@@ -573,8 +573,9 @@ sub Configure {
     my $t = $config->getElement($self->prefix())->getTree();
     my $netw = $config->getElement('/system/network')->getTree();
     my $user = $config->getElement('/software/components/accounts/users/ceph')->getTree();
+    my $group = $config->getElement('/software/components/accounts/groups/ceph')->getTree();
+    $user->{gid} = $group->{gid};
     $self->{hostname} = $netw->{hostname};
-    $self->{fqdn} = $netw->{hostname} . "." . $netw->{domainname};
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
@@ -588,10 +589,7 @@ sub Configure {
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");
         $self->do_deploy() or return 0; 
-        $self->debug(1,"rechecking configuration\n");
-        $self->check_configuration($cluster) or return 0;
         $self->print_man_cmds();
-        #TODO: list commands that didn't run successfully (=are still in the arrays)
         $self->debug(1,'Done');
         return 1;
     }
