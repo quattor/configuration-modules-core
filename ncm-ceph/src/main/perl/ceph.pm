@@ -19,6 +19,7 @@ use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
 use File::Path;
+use File::Copy qw(move);
 use JSON::XS;
 use Readonly;
 use Config::Tiny;
