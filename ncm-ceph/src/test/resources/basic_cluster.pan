@@ -52,3 +52,5 @@ prefix '/software/components/ceph/clusters';
 );         
 
 '/system/network/hostname' = 'ceph003';
+
+'/software/components/accounts/users/ceph' = nlist('homeDir', '/tmp');
