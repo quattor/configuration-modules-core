@@ -49,7 +49,7 @@ foreach my $gcmd (@gathers) {
     set_command_status($gcmd,1);
     set_desired_err($gcmd,'');
 }
-$self->{cephusr} = { 'homeDir' => '/tmp' };
+$cmp->{cephusr} = { 'homeDir' => '/tmp' };
 $cmp->init_commands();
 my $clustercheck= $cmp->cluster_ready_check($cluster);
 my $cmd;
