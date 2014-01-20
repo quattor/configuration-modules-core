@@ -68,8 +68,8 @@ $cceph =  {
    'blaaa' => 'bla'
  };
 $output = $cmp->ceph_quattor_cmp('cfg', $quath, $cceph);
-ok($output, 'ceph quattor cmp for cfg');
-is($cmp->{comp},-1,'config the same');
+ok(!$output, 'ceph config has attributes not in quattor');
+is($cmp->{comp},-1,'config differs');
 
 $cmp->{comp} = 1;
 $cceph =  {
@@ -77,6 +77,6 @@ $cceph =  {
  };
 $output = $cmp->ceph_quattor_cmp('cfg', $quath, $cceph);
 ok($output, 'ceph quattor cmp for cfg');
-is($cmp->{comp},-1,'config the same');
+is($cmp->{comp},-1,'config differs');
 
 done_testing();

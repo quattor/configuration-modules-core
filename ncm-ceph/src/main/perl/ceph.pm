@@ -320,11 +320,11 @@ sub config_cfgfile {
             $self->{comp} = -1;
         }
     } elsif ($action eq 'del'){
-        #TODO If we want to keep the existing configuration settings that are not in Quattor, we need to log it here
-        $self->info("$name not in quattor\n");
-        $self->info("$name deleted from config file\n");
+        #TODO If we want to keep the existing configuration settings that are not in Quattor, we need to log it here. For now we expect that every used config parameter is in Quattor
+        $self->error("$name not in quattor\n");
+        #$self->info("$name deleted from config file\n");
         $self->{comp} = -1;
-        
+        return 0;
     } else {
         $self->error("Action $action not supported!");
         return 0;
