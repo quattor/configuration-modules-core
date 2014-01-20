@@ -21,6 +21,9 @@ use Test::MockModule;
 use NCM::Component::ceph;
 use CAF::Object;
 use data;
+use File::Temp qw(tempdir);
+use Config::Tiny;
+use Data::Structure::Util qw( unbless );
 use Readonly;
 Readonly::Scalar my $PATH => '/software/components/ceph';
 
@@ -49,7 +52,9 @@ foreach my $gcmd (@gathers) {
     set_command_status($gcmd,1);
     set_desired_err($gcmd,'');
 }
-$cmp->{cephusr} = { 'homeDir' => '/tmp' };
+my $usr =  getpwuid($<);
+my $tempdir = tempdir(CLEANUP => 1);
+$cmp->{cephusr} = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
 $cmp->init_commands();
 my $clustercheck= $cmp->cluster_ready_check($cluster);
 my $cmd;
@@ -60,4 +65,15 @@ foreach my $gcmd (@gathers) {
 #diag explain $cmp->{man_cmds};
 cmp_deeply($cmp->{man_cmds}, \@data::NEWCLUS);
 
+my $initcheck= $cmp->init_qdepl($cluster->{config});
+ok(-d $tempdir. '/ncm-ceph/old', "tmpdirs created");
+ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
+
+my $tinycfg = Config::Tiny->read($tempdir . '/ceph.conf');
+my $cfghash = {   'global' => {
+    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+    'mon_initial_members' => 'ceph001,ceph002,ceph003'   
+    }
+};
+cmp_deeply(unbless($tinycfg), $cfghash);
 done_testing();
