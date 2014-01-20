@@ -49,9 +49,9 @@ foreach my $gcmd (@gathers) {
     set_command_status($gcmd,1);
     set_desired_err($gcmd,'');
 }
-my $cephusr = { 'homeDir' => '/tmp' };
+$self->{cephusr} = { 'homeDir' => '/tmp' };
 $cmp->init_commands();
-my $clustercheck= $cmp->cluster_ready_check($cluster, $cephusr);
+my $clustercheck= $cmp->cluster_ready_check($cluster);
 my $cmd;
 foreach my $gcmd (@gathers) {
     $cmd = get_command($gcmd);

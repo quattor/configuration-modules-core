@@ -18,7 +18,7 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 use File::Basename;
-use File::Path;
+use File::Path qw(make_path);
 use File::Copy qw(move);
 use JSON::XS;
 use Readonly;
@@ -118,6 +118,10 @@ sub get_config {
     my ($self, $file) = @_;
     my $cephcfg = Config::Tiny->new;
     $cephcfg = Config::Tiny->read($file);
+    if (scalar(keys %$cephcfg) > 1) {
+        $self->error("NO support for daemons not installed with ceph-deploy\n",
+            "only global section expected, provided sections: ", keys %$cephcfg)
+    }
     if (!$cephcfg->{global}) {
         $self->error("Not a valid config file found");
         return 0;
@@ -244,7 +248,7 @@ sub pull_cfg {
 
     move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
     
-    my $cephcfg = $self->get_config($hostfile) or return 0;
+    my $cephcfg = $self->get_config($self->{qtmp} . $hostfile) or return 0;
 
     return $cephcfg;    
 }
@@ -476,10 +480,8 @@ sub init_qdepl {
     my ($self, $config) = @_;
     my $cephusr = $self->{cephusr};
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/' ;
-    my $odir = $qdir . '/old/' ;
-    mkdir -p $qdir;
-    mkdir -p $odir;
-    chown $cephusr->{uid}, $cephusr->{gid}, ($qdir);
+    my $odir = $qdir . 'old/' ;
+    make_path($qdir, $odir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
 
     $self->{qtmp} = $qdir; 
     
