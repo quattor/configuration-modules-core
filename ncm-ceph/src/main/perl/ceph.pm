@@ -468,7 +468,7 @@ sub do_deploy {
 sub print_man_cmds {
     my ($self) = @_;
     if ($self->{man_cmds} && @{$self->{man_cmds}}) {
-        $self->info("Commands to be run manually:\n");
+        $self->info("Commands to be run manually (as ceph user):\n");
         while (my $cmd = shift @{$self->{man_cmds}}) {
             $self->info(join(" ", @$cmd) . "\n");
         }
@@ -519,14 +519,13 @@ sub cluster_ready_check {
             # Manual commands for new cluster  
             # Push to deploy_cmds (and pre-run dodeploy) for automation, 
             # but take care of race conditions
-            my @newcmd = qw(new);
+            my @newcmd = qw(/usr/bin/ceph-deploy new);
             foreach my $host (@{$hosts}) {
                 push (@newcmd, $host);
             }
             push (@{$self->{man_cmds}}, [@newcmd]);
-            my @moncr = qw(mon create-initial);
+            my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
             push (@{$self->{man_cmds}}, [@moncr]);
-            }
             return 0;
         } else {
             # Set config file in place and prepare ceph-deploy
@@ -548,10 +547,11 @@ sub cluster_ready_check {
             return 0;
         }
     }
-    if ($cluster->{config}->{fsid} ne $self->get_fsid()) {
+    my $fsid = $self->get_fsid();
+    if ($cluster->{config}->{fsid} ne $fsid) {
         $self->error("fsid of $self->{cluster} not matching!\n", 
             "Quattor value: $cluster->{config}->{fsid}\n", 
-            "Cluster value: $self->get_fsid()\n");
+            "Cluster value: $fsid\n");
         return 0;
     }
     return 1;
