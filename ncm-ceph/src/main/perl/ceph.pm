@@ -114,7 +114,7 @@ sub get_fsid {
 }
 
 # Gets the config of the cluster
-sub get_config {
+sub get_global_config {
     my ($self, $file) = @_;
     my $cephcfg = Config::Tiny->new;
     $cephcfg = Config::Tiny->read($file);
@@ -248,7 +248,7 @@ sub pull_cfg {
 
     move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
     
-    my $cephcfg = $self->get_config($self->{qtmp} . $hostfile) or return 0;
+    my $cephcfg = $self->get_global_config($self->{qtmp} . $hostfile) or return 0;
 
     return $cephcfg;    
 }
