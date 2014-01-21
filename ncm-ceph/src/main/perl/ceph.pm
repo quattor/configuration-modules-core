@@ -524,11 +524,8 @@ sub cluster_ready_check {
                 push (@newcmd, $host);
             }
             push (@{$self->{man_cmds}}, [@newcmd]);
-
-            foreach my $host (@{$hosts}) {
-                my @moncr = qw(mon create);
-                push (@moncr, $host);
-                push (@{$self->{man_cmds}}, [@moncr]);
+            my @moncr = qw(mon create-initial);
+            push (@{$self->{man_cmds}}, [@moncr]);
             }
             return 0;
         } else {
