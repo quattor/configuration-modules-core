@@ -66,8 +66,7 @@ sub run_command {
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command) = @_;
-    unshift (@$command, qw(/usr/bin/ceph -f json));
-    push (@$command, ('--cluster', $self->{cluster}));
+    unshift (@$command, ('/usr/bin/ceph', '-f', 'json','--cluster', $self->{cluster}));
     return $self->run_command($command);
 }
 
@@ -263,6 +262,17 @@ sub push_cfg {
     }     
 }
 
+# Makes the changes in the config file realtime by using ceph injectargs
+sub inject_realtime {
+    my ($self, $host, $changes) = @_;
+    my @cmd;
+    for my $param (keys %{$changes}) {
+        @cmd = ('tell',"*.$host",'injectargs','--');
+        my $keyvalue = "--$param=$changes->{$param}";
+        $self->info("injecting $keyvalue realtime on $host");
+        $self->run_ceph_command([@cmd, $keyvalue]);
+    }
+}
 # Pulls config from host, compares it with quattor config and pushes the config back if needed
 sub pull_compare_push {
     my ($self, $config, $host) = @_;
@@ -272,13 +282,15 @@ sub pull_compare_push {
         
     } else {
         $self->{comp} = 1;
+        $self->{cfgchanges} = {};
         $self->debug(3, "Pulled config:", %$cconf);
         $self->ceph_quattor_cmp('cfg', $config, $cconf) or return 0;
         if ($self->{comp} == 1) {
             #Config the same, no push needed
             return 1;
         } elsif ($self->{comp} == -1) {
-            return $self->push_cfg($host,1);
+            $self->push_cfg($host,1) or return 0;
+            $self->inject_realtime($host, $self->{cfgchanges}) or return 0;
         } else {# 0 already catched
             $self->error('No valid value returned after comparison');
             return 0;
@@ -303,10 +315,11 @@ sub config_cfgfile {
     }   
     if ($action eq 'add'){
         $self->info("$name added to config file\n");
-        if ($name eq 'mon_initial_members'){
+        if (ref($values) eq 'ARRAY'){
             $values = join(',',@$values); 
         }
         $self->{comp} = -1;
+        $self->{cfgchanges}->{$name} = $values;
 
     } elsif ($action eq 'change') {
         my $quat = $values->[0];
@@ -318,6 +331,7 @@ sub config_cfgfile {
         if ($quat ne $ceph) {
             $self->info("$name changed from $ceph to $quat\n");
             $self->{comp} = -1;
+            $self->{cfgchanges}->{$name} = $quat;
         }
     } elsif ($action eq 'del'){
         #TODO If we want to keep the existing configuration settings that are not in Quattor, we need to log it here. For now we expect that every used config parameter is in Quattor
@@ -366,6 +380,10 @@ sub config_mon {
             }
             push (@command, "mon.$name");
             push (@{$self->{daemon_cmds}}, [@command]);
+        }
+        if (!$cephmon->{up} && !$self->run_ceph_deploy_command([qw(gatherkeys), $name])) {
+            # Node reinstalled without first destroying it
+            return $self->config_mon('add',$name,$quatmon);
         }
     }
     else {

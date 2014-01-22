@@ -31,9 +31,9 @@ my $mock = Test::MockModule->new('NCM::Component::ceph');
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 
-set_desired_output("/usr/bin/ceph -f json mon dump --cluster ceph", 
+set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump", 
     $data::MONJSON);
-set_desired_output("/usr/bin/ceph -f json quorum_status --cluster ceph", $data::STATE);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph quorum_status", $data::STATE);
 
 $cmp->use_cluster();
 $cmp->{cfgfile} = 'tmpfile';

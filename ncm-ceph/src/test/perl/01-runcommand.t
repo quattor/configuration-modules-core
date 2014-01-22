@@ -25,10 +25,10 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ceph->new("ceph");
 
-set_desired_output("/usr/bin/ceph -f json mon dump --cluster ceph", $data::MONJSON);
-my @fullcmd = qw(/usr/bin/ceph -f json mon dump --cluster ceph);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump", $data::MONJSON);
+my @fullcmd = qw(/usr/bin/ceph -f json --cluster ceph mon dump);
 my @cephcmd = qw(mon dump);
-set_desired_output("/usr/bin/ceph -f json quorum_status --cluster ceph", $data::STATE);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph quorum_status", $data::STATE);
 my $deploycmdstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002";
 my @cdepcmd = qw(mon create ceph002);
 set_desired_output($deploycmdstring, "Monitor ceph002 created");

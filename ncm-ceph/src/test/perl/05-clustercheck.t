@@ -44,7 +44,7 @@ my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph0
 my $gather2 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph002";
 my $gather3 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph003";
 my @gathers = ($gather1, $gather2, $gather3);
-set_desired_output("/usr/bin/ceph -f json status --cluster ceph", $data::STATE);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph status", $data::STATE);
 
 
 # Totally new cluster
