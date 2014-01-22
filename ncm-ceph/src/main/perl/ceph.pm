@@ -145,10 +145,14 @@ sub osd_hash {
     my $osdtree = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
-    # TODO implement
+
     # my %osdparsed = {};
 }
-    
+
+# Matches the OSD with the underlying disk/path 
+sub match_osd {
+    my ($self, ) = @_;
+
 # Gets the MON map
 sub mon_hash {
     my ($self) = @_;
