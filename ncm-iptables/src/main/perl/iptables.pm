@@ -41,7 +41,7 @@ my %iptables_totality = (); # hash of tables, chains & targets
 @{$iptables_totality{filter}{commands}} = ('-A', '-D', '-I', '-R', '-N');
 
 @{$iptables_totality{nat}{chains}}   = ('prerouting', 'output', 'postrouting');
-@{$iptables_totality{nat}{targets}}  = ('dnat', 'snat', 'masquerade', 'redirect');
+@{$iptables_totality{nat}{targets}}  = ('dnat', 'snat', 'masquerade', 'redirect', 'log');
 @{$iptables_totality{nat}{commands}} = ('-A', '-D', '-I', '-R', '-N');
 
 @{$iptables_totality{mangle}{chains}}   = ('prerouting', 'input', 'output', 'forward', 'postrouting');
