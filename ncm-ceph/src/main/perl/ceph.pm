@@ -76,6 +76,20 @@ sub run_daemon_command {
     return $self->run_command($command);
 }
 
+#Runs a command as the ceph user
+sub run_command_as_ceph {
+    my ($self, $command) = @_;
+    if (grep(m{[;&>|"']}, @$command) ) {
+        $self->error("Invalid shell escapes found in command ", 
+            join(" ", @$command));
+        return 0;
+    }
+    $command = [join(' ',@$command)];
+    unshift (@$command, qw(su - ceph -c));
+    return $self->run_command($command);
+}
+
+
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
     my ($self, $command, $dir, $overwrite) = @_;
@@ -381,8 +395,9 @@ sub config_mon {
             push (@command, "mon.$name");
             push (@{$self->{daemon_cmds}}, [@command]);
         }
-        if (!$cephmon->{up} && !$self->run_ceph_deploy_command([qw(gatherkeys), $name])) {
+        if (!$cephmon->{up} && !$self->run_command_as_ceph(['ssh', $name, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" ])) {
             # Node reinstalled without first destroying it
+            $self->info("Monitor $name shall be reinstalled");
             return $self->config_mon('add',$name,$quatmon);
         }
     }
