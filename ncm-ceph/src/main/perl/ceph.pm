@@ -392,7 +392,7 @@ sub config_mon {
             push (@command, "mon.$name");
             push (@{$self->{daemon_cmds}}, [@command]);
         }
-       my  @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
+        my @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
