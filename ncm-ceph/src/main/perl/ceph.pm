@@ -435,16 +435,7 @@ sub config_mon {
                $self->config_mon('add', $quatmon);
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
-        if (($name eq $self->{hostname}) and ($quatmon->{up} xor $cephmon->{up})){
-            my @command; 
-            if ($quatmon->{up}) {
-                @command = qw(start); 
-            } else {
-                @command = qw(stop);
-            }
-            push (@command, "mon.$name");
-            push (@{$self->{daemon_cmds}}, [@command]);
-        }
+        
         my @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
