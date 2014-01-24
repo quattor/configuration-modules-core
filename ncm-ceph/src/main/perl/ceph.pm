@@ -429,15 +429,12 @@ sub config_mon {
         my $cephmon = $daemonh->[1];
         # checking immutable attributes
         my @monattrs = ();
-        foreach my $attr (@monattrs) {
-            if ($quatmon->{$attr} ne $cephmon->{$attr}){
-                $self->error("Attribute $attr of $name not corresponding\n");
-                return 0;
-            }
-        }
+        $self->check_immutables($name, \@monattrs, $quatmon, $cephmon) or return 0;
+        
         if ($cephmon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
                $self->config_mon('add', $quatmon);
         }
+        $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
         if (($name eq $self->{hostname}) and ($quatmon->{up} xor $cephmon->{up})){
             my @command; 
             if ($quatmon->{up}) {
@@ -460,18 +457,66 @@ sub config_mon {
     }
     return 1;   
 }
-
+#does a check on unchangable attributes, returns 0 if different
+sub check_immutables {
+    my ($self, $name, $imm, $quat, $ceph) = @_;
+    my $rc =1;
+    foreach my $attr (@{$imm}) {
+        if ($quat->{$attr} ne $ceph->{$attr}){
+            $self->error("Attribute $attr of $name not corresponding\n", 
+            "Quattor: $quat->{$attr}\n",
+            "Ceph: $ceph->{$attr}\n");
+            $rc=0;
+        }
+    }
+    return $rc;
+}
+# Checks and changes the state on the host
+sub check_state {
+    my ($self, $id, $host, $type, $quat, $ceph) = @_;
+    if (($host eq $self->{hostname}) and ($quat->{up} xor $ceph->{up})){
+        my @command; 
+        if ($quat->{up}) {
+            @command = qw(start); 
+        } else {
+            @command = qw(stop);
+        }
+        push (@command, "$type.$id");
+        push (@{$self->{daemon_cmds}}, [@command]);
+    }
+} 
 # Prepare the commands to change/add/delete an osd
 sub config_osd {
     my ($self,$action,$name,$daemonh) = @_;
-    # TODO implement
     if ($action eq 'add'){
-    
+        my $prepcmd = [qw(osd prepare)];
+        my $activcmd = [qw(osd activate)];
+        my $pathstring = "$daemonh->{host}:$daemonh->{osd_path}";
+        if ($daemonh->{journal_path}) {
+            $pathstring = "$pathstring:$daemonh->{journal_path}";
+        }
+        for my $command (($prepcmd, $activcmd)) {
+            push (@$command, $pathstring);
+            push (@{$self->{deploy_cmds}}, $command);
+        }
     } elsif ($action eq 'del') {
+        my @command = qw(osd destroy);
+        push (@command, $name);
+        push (@{$self->{man_cmds}}, [@command]);
    
-    } else {
+    } elsif ($action eq 'change') { #compare config
+        my $quatosd = $daemonh->[0];
+        my $cephosd = $daemonh->[1];
+        # checking immutable attributes
+        my @osdattrs = ('id', 'host', 'osd_path', 'journal_path');
+        $self->check_immutables($name, \@osdattrs, $quatosd, $cephosd) or return 0;
 
-    } 
+        $self->check_state($quatosd->{id}, $quatosd->{host}, 'osd', $quatosd, $cephosd);
+        #TODO: In&out?
+    } else {
+        $self->error("Action $action not supported!");
+    }
+    return 1;
 }
 
 # Prepare the commands to change/add/delete an msd
