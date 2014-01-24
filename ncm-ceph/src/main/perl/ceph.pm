@@ -145,7 +145,7 @@ sub osd_hash {
     my $osdtree = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
-    my %osdparsed = {};
+    my %osdparsed = ();
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
         my $name;
@@ -178,17 +178,17 @@ sub get_osd_location {
     my $osdlink = "/var/lib/ceph/osd/$self->{cluster}-$osd";
     if (!$host) {
         $self->error("Can not find osd without a hostname\n");
-        return 0;
+        return ;
     }   
     
-    # check if physical exists?
+    # TODO: check if physical exists?
     my @catcmd = ('/usr/bin/ssh', $host, 'cat');
     my $ph_uuid = $self->run_command_as_ceph([@catcmd, 'fsid']);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
             "Ceph value: $uuid}\n", 
             "Disk value: $ph_uuid\n");
-        return 0;    
+        return ;    
     }
     my $ph_fsid =  $self->run_command_as_ceph([@catcmd, 'ceph_fsid']);
     my $fsid = $self->get_fsid();
@@ -196,7 +196,7 @@ sub get_osd_location {
         $self->error("fsid for osd.$osd not matching with this cluster!\n", 
             "Cluster value: $fsid\n", 
             "Disk value: $ph_fsid\n");
-        return 0;
+        return ;
     }
     my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
     my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
