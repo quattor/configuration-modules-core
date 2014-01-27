@@ -9,7 +9,7 @@ include { 'quattor/schema' };
 
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
-    'up'    ? boolean = true
+    'up'    : boolean = true
 };
 
 @{ ceph monitor-specific type @}

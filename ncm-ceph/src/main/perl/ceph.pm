@@ -183,14 +183,14 @@ sub get_osd_location {
     
     # TODO: check if physical exists?
     my @catcmd = ('/usr/bin/ssh', $host, 'cat');
-    my $ph_uuid = $self->run_command_as_ceph([@catcmd, 'fsid']);
+    my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
             "Ceph value: $uuid}\n", 
             "Disk value: $ph_uuid\n");
         return ;    
     }
-    my $ph_fsid =  $self->run_command_as_ceph([@catcmd, 'ceph_fsid']);
+    my $ph_fsid =  $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
     my $fsid = $self->get_fsid();
     if ($ph_fsid ne $fsid) {
         $self->error("fsid for osd.$osd not matching with this cluster!\n", 
@@ -480,6 +480,7 @@ sub check_state {
 sub config_osd {
     my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
+        #TODO: change to 'create' ?
         my $prepcmd = [qw(osd prepare)];
         my $activcmd = [qw(osd activate)];
         my $pathstring = "$daemonh->{host}:$daemonh->{osd_path}";
@@ -499,7 +500,10 @@ sub config_osd {
         my $quatosd = $daemonh->[0];
         my $cephosd = $daemonh->[1];
         # checking immutable attributes
-        my @osdattrs = ('id', 'host', 'osd_path', 'journal_path');
+        my @osdattrs = ('id', 'host', 'osd_path');
+        if ($quatosd->{journal_path}) {
+            push(@osdattrs, 'journal_path');
+        }
         $self->check_immutables($name, \@osdattrs, $quatosd, $cephosd) or return 0;
 
         $self->check_state($quatosd->{id}, $quatosd->{host}, 'osd', $quatosd, $cephosd);

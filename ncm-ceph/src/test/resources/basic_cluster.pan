@@ -4,20 +4,25 @@ object template basic_cluster;
 variable OSDS = nlist (
     'osd.0', nlist(
         'id', 0,
-        'host', 'ceph002', 
+        'host', 'ceph001', 
+        'osd_path', '/var/lib/ceph/osd/sdc'
     ),
     'osd.2', nlist(
         'id', 2,
         'host', 'ceph002', 
+        'osd_path', '/var/lib/ceph/osd/sdc',
+        'journal_path', '/var/lib/ceph/log/sda4/osd-2/journal'
     ),
     'osd.1', nlist(
         'id', 1,
-        'host', 'ceph003', 
+        'host', 'ceph001', 
+        'osd_path', '/var/lib/ceph/osd/sdd',
+        'journal_path', '/var/lib/ceph/log/sda4/osd-1/journal'
     ),
-    'osd.3', nlist(
-        'id', 3,
-        'host', 'ceph003', 
-    )
+#    'osd.3', nlist(
+#        'id', 3,
+#        'host', 'ceph003', 
+#    )
 );
 
 variable MONITOR1 =  nlist(

@@ -114,11 +114,46 @@ Readonly::Hash our %MONS => (
     }
 );
 
+Readonly::Hash our %OSDS => ( 
+   'osd.0' => {
+     'host' => 'ceph001',
+     'id' => 0,
+     'in' => 1,
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-0/journal',
+     'name' => 'osd.0',
+     'osd_path' => '/var/lib/ceph/osd/sdc',
+     'up' => 1,
+     'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+   },
+   'osd.1' => {
+     'host' => 'ceph001',
+     'id' => 1,
+     'in' => 1,
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-1/journal',
+     'name' => 'osd.1',
+     'osd_path' => '/var/lib/ceph/osd/sdd',
+     'up' => 1,
+     'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+   }
+);
+
 Readonly::Array our @DELMON => (
     ['mon',
     'destroy',
     'ceph002b']
 );
+
+Readonly::Array our @ADDOSD => (
+ [
+   'osd',
+   'prepare',
+   'ceph002:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-2/journal'
+ ],
+ [
+   'osd',
+   'activate',
+   'ceph002:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-2/journal'
+ ]);
 
 Readonly::Array our @ADDMON => (
     ['mon',
