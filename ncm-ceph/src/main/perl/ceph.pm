@@ -148,13 +148,12 @@ sub osd_hash {
     my %osdparsed = ();
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
-        my $name;
-        my $host;
+        my ($name,$host);
         foreach my $tosd (@{$osdtree->{nodes}}) {
             if ($tosd->{type} eq 'osd' && $tosd->{id} == $id) {
                 $name = $tosd->{name};
             }
-            if ($tosd->{type} eq 'host' && $id ~~ $tosd->{children}) {
+            elsif ($tosd->{type} eq 'host' && $id ~~ $tosd->{children}) { # Requires Perl > 5.10 !
                 $host = $tosd->{name};
             }
         }
@@ -163,8 +162,16 @@ sub osd_hash {
             return 0;
         }
         my ($osdloc, $journalloc) = $self->get_osd_location($id, $host, $osd->{uuid}) or return 0;
-        my $osdp = { name => $name, host => $host, id => $id, uuid => $osd->{uuid}, 
-            up => $osd->{up}, in => $osd->{in}, osd_path => $osdloc, journal_path => $journalloc };
+        my $osdp = { 
+            name            => $name, 
+            host            => $host, 
+            id              => $id, 
+            uuid            => $osd->{uuid}, 
+            up              => $osd->{up}, 
+            in              => $osd->{in}, 
+            osd_path        => $osdloc, 
+            journal_path    => $journalloc 
+        };
         $osdparsed{$name} = $osdp;
     }
     return \%osdparsed;
@@ -174,7 +181,6 @@ sub osd_hash {
 # checks whoami,fsid and ceph_fsid and returns the real path
 sub get_osd_location {
     my ($self,$osd, $host, $uuid) = @_;
-    $osd = "$osd";
     my $osdlink = "/var/lib/ceph/osd/$self->{cluster}-$osd";
     if (!$host) {
         $self->error("Can not find osd without a hostname\n");
@@ -186,7 +192,7 @@ sub get_osd_location {
     my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
-            "Ceph value: $uuid}\n", 
+            "Ceph value: $uuid\n", 
             "Disk value: $ph_uuid\n");
         return ;    
     }
@@ -455,8 +461,8 @@ sub check_immutables {
     foreach my $attr (@{$imm}) {
         if ($quat->{$attr} ne $ceph->{$attr}){
             $self->error("Attribute $attr of $name not corresponding\n", 
-            "Quattor: $quat->{$attr}\n",
-            "Ceph: $ceph->{$attr}\n");
+                "Quattor: $quat->{$attr}\n",
+                "Ceph: $ceph->{$attr}\n");
             $rc=0;
         }
     }
