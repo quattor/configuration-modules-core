@@ -52,8 +52,8 @@ set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-0/fsid',
 set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-1/fsid',
     'ae77eef3-70a2-4b64-b795-2dee713bfe41');
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-0','/var/lib/ceph/osd/sdc');
-set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-0/journal','/var/lib/ceph/log/sda4/osd-0/journal');
-set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1/journal','/var/lib/ceph/log/sda4/osd-1/journal');
+set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-0/journal','/var/lib/ceph/log/sda4/osd-0/journal');
+set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal','/var/lib/ceph/log/sda4/osd-1/journal');
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib/ceph/osd/sdd');
 
 $cmp->use_cluster();

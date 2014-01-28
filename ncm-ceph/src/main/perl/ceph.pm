@@ -46,7 +46,7 @@ sub run_command {
     $cmd->execute();
     my $rc = $?;
     if (!$cmd_output) {
-        $cmd_output = '<none>';
+        $cmd_output = "0 but true";
     }
     if ($rc) {
         $self->error("Command failed. Error Message: $cmd_err\n" , 
@@ -92,7 +92,7 @@ sub run_command_as_ceph {
     
     $self->shell_escapes($command) or return 0; 
     if ($dir) {
-        $self->shell_escapes($dir) or return 0;
+        $self->shell_escapes([$dir]) or return 0;
         unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
@@ -189,14 +189,14 @@ sub get_osd_location {
     
     # TODO: check if physical exists?
     my @catcmd = ('/usr/bin/ssh', $host, 'cat');
-    my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
+    chomp(my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']));
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
             "Ceph value: $uuid\n", 
             "Disk value: $ph_uuid\n");
         return ;    
     }
-    my $ph_fsid =  $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
+    chomp(my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']));
     my $fsid = $self->get_fsid();
     if ($ph_fsid ne $fsid) {
         $self->error("fsid for osd.$osd not matching with this cluster!\n", 
@@ -205,10 +205,25 @@ sub get_osd_location {
         return ;
     }
     my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
-    my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
-    my $journalloc = $self->run_command_as_ceph([@loccmd, "$osdlink/journal" ]);
+    chomp(my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]));
+    chomp(my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]));
     return $osdloc, $journalloc;
 
+}
+
+# Checks if the disk is empty
+sub check_empty {
+    my ($self, $loc, $host) = @_;
+
+    my @lscmd = ('/usr/bin/ssh', $host, 'ls', '-1', $loc);
+    my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
+    my $lines = $lsoutput =~ tr/\n//;
+    if ($lines != 0) {
+        $self->error("$loc is not empty!");
+        return 0;
+    } else {
+        return 1;
+    }    
 }
 
 # Gets the MON map
@@ -236,7 +251,7 @@ sub msd_hash {
 # for a given type (cfg, mon, osd, msd)
 sub ceph_quattor_cmp {
     my ($self, $type, $quath, $cephh) = @_;
-    foreach my $qkey (keys %{$quath}) {
+    foreach my $qkey (sort(keys %{$quath})) {
         if (exists $cephh->{$qkey}) {
             my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
             #check attrs and reconfigure
@@ -487,10 +502,16 @@ sub config_osd {
     my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
         #TODO: change to 'create' ?
+        $self->check_empty($daemonh->{osd_path}, $daemonh->{host}) or return 0;
+        $self->debug(2,"Adding $name");
         my $prepcmd = [qw(osd prepare)];
         my $activcmd = [qw(osd activate)];
         my $pathstring = "$daemonh->{host}:$daemonh->{osd_path}";
         if ($daemonh->{journal_path}) {
+            (my $journaldir = $daemonh->{journal_path}) =~ s{/journal$}{};
+            my $mkdircmd = ['/usr/bin/ssh', $daemonh->{host}, 'sudo', '/bin/mkdir', '-p', $journaldir];
+            $self->run_command_as_ceph($mkdircmd); 
+            $self->check_empty($journaldir, $daemonh->{host}) or return 0; 
             $pathstring = "$pathstring:$daemonh->{journal_path}";
         }
         for my $command (($prepcmd, $activcmd)) {
@@ -708,7 +729,7 @@ sub check_configuration {
     $self->init_commands();
     $self->process_config($cluster->{config}) or return 0;
     $self->process_mons($cluster->{monitors}) or return 0;
-#    $self->process_osds($cluster->{osdhosts}) or return 0;
+    $self->process_osds($cluster->{osds}) or return 0;
 #    if ($cluster->{msds}) {
 #        $self->process_msds($cluster->{msds}) or return 0;
 #    }
