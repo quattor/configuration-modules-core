@@ -27,8 +27,8 @@ type ceph_osd = {
     'journal_path'  ? string
 };
 
-@{ ceph msd-specific type @}
-type ceph_msd = {
+@{ ceph mds-specific type @}
+type ceph_mds = {
      include ceph_daemon
 };
 
@@ -50,7 +50,7 @@ type ceph_cluster = {
     'config'                    : ceph_cluster_config
     'osds'                      : ceph_osd {}
     'monitors'                  : ceph_monitor {1..}
-    'msds'                      ? ceph_msd {}
+    'mdss'                      ? ceph_mds {}
     'deployhosts'               : type_fqdn {1..}
 };
 

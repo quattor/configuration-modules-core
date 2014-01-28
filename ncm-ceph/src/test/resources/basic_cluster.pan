@@ -25,6 +25,11 @@ variable OSDS = nlist (
 #    )
 );
 
+variable MDSS = nlist (
+    'ceph002', nlist(
+        'up', true
+    )
+);
 variable MONITOR1 =  nlist(
     'up', true,
 );
@@ -45,6 +50,7 @@ prefix '/software/components/ceph/clusters';
 'ceph' = nlist (
     'config', CONFIG,
     'osds', OSDS,
+    'mdss', MDSS,
     'monitors', nlist (
         'ceph001', MONITOR2,
         'ceph002', MONITOR1,

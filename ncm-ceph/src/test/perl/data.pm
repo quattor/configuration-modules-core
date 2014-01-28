@@ -91,6 +91,49 @@ Readonly our $OSDDJSON => '{ "epoch": 11,
                 "exists",
                 "up"]}]
 }';
+
+Readonly our $MDSJSON => '
+{ "mdsmap": { "epoch": 13,
+      "flags": 0,
+      "created": "2014-01-21 14:57:37.202097",
+      "modified": "2014-01-28 15:27:10.886643",
+      "tableserver": 0,
+      "root": 0,
+      "session_timeout": 60,
+      "session_autoclose": 300,
+      "max_file_size": 1099511627776,
+      "last_failure": 6,
+      "last_failure_osd_epoch": 27,
+      "compat": { "compat": {},
+          "ro_compat": {},
+          "incompat": { "feature_1": "base v0.20",
+              "feature_2": "client writeable ranges",
+              "feature_3": "default file layouts on dirs",
+              "feature_4": "dir inode in separate object",
+              "feature_5": "mds uses versioned encoding"}},
+      "max_mds": 1,
+      "in": [
+            0],
+      "up": { "mds_0": 4665},
+      "failed": [],
+      "stopped": [],
+      "info": { 
+          "gid_5047": { "gid": 5047,
+              "name": "ceph001",
+              "rank": -1,
+              "incarnation": 0,
+              "state": "up:standby",
+              "state_seq": 1,
+              "addr": "10.141.8.180:6810\/37555",
+              "standby_for_rank": -1,
+              "standby_for_name": "",
+              "export_targets": []}},
+      "data_pools": [
+            0],
+      "metadata_pool": 1},
+  "mdsmap_first_committed": 1}
+';
+
 Readonly our $FSID => 'a94f9906-ff68-487d-8193-23ad04c1b5c4';
 
 Readonly::Hash our %MONS => ( 
@@ -137,6 +180,13 @@ Readonly::Hash our %OSDS => (
    }
 );
 
+Readonly::Hash our %MDSS => ( 
+    'ceph001'   => {
+        'gid'   => 5047,
+        'name'  => 'ceph001',
+        'up'    => 1
+   }
+);
 Readonly::Array our @DELMON => (
     ['mon',
     'destroy',
@@ -157,6 +207,11 @@ Readonly::Array our @ADDOSD => (
 
 Readonly::Array our @ADDMON => (
     ['mon',
+    'create',
+    'ceph002']
+);
+Readonly::Array our @ADDMDS => (
+    ['mds',
     'create',
     'ceph002']
 );
