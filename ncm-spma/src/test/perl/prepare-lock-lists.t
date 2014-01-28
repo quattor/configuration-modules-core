@@ -18,11 +18,11 @@ Verifies that all the packages we wanted to lock down are actually locked down.
 use strict;
 use warnings;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::Quattor;
 use Set::Scalar;
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $pkglist = {
           "nc"=> {},

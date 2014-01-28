@@ -20,16 +20,16 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::Quattor;
 use Set::Scalar;
 
 my $install = Set::Scalar->new('pkg;noarch');
 my $rm = Set::Scalar->new('dep;noarch', 'nodep;noarch');
-my $cmp = NCM::Component::spma->new('spma');
+my $cmp = NCM::Component::spma::yum->new('spma');
 
-Readonly my $CMD => join(" ", NCM::Component::spma::REPO_DEPS, 'pkg.noarch');
+Readonly my $CMD => join(" ", NCM::Component::spma::yum::REPO_DEPS, 'pkg.noarch');
 
 set_desired_output($CMD, 'dep;noarch');
 set_desired_err($CMD, '');

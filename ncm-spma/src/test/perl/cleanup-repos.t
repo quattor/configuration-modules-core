@@ -21,7 +21,7 @@ use Readonly;
 
 use Test::Quattor;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 
 use File::Path qw(mkpath rmtree);
 use LC::File;
@@ -43,7 +43,7 @@ my $repos = [ { name => "repository",
 	      }
 	    ];
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

@@ -19,15 +19,15 @@ use warnings;
 use Readonly;
 use Test::More;
 use Test::Quattor;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use CAF::Object;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::YUM_DISTRO_SYNC);
+Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_DISTRO_SYNC);
 
 set_desired_err($CMD, "");
 set_desired_output($CMD, "distrosync");
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

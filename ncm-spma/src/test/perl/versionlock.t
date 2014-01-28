@@ -18,17 +18,17 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma;
+use NCM::Component::spma::yum;
 use Test::Quattor;
 use CAF::Object;
 use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
-Readonly::Array my @REPOQUERY => NCM::Component::spma::REPOQUERY;
+Readonly::Array my @REPOQUERY => NCM::Component::spma::yum::REPOQUERY;
 Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
 
-my $cmp = NCM::Component::spma->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 
 my $pkgs = {
