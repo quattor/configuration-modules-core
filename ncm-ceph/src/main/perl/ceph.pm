@@ -3,6 +3,15 @@
 # ${author-info}
 # ${build-info}
 
+
+# This component needs a 'ceph' user. 
+# The user should be able to run these commands with sudo without password:
+# /usr/bin/ceph-deploy
+# /usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))
+# /usr/bin/python -u -c import sys;exec(eval(sys.stdin.readline()))
+# /bin/mkdir
+#
+
 package NCM::Component::${project.artifactId};
 
 use strict;
@@ -189,14 +198,16 @@ sub get_osd_location {
     
     # TODO: check if physical exists?
     my @catcmd = ('/usr/bin/ssh', $host, 'cat');
-    chomp(my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']));
+    my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
+    chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
             "Ceph value: $uuid\n", 
             "Disk value: $ph_uuid\n");
         return ;    
     }
-    chomp(my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']));
+    my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
+    chomp($ph_fsid);
     my $fsid = $self->get_fsid();
     if ($ph_fsid ne $fsid) {
         $self->error("fsid for osd.$osd not matching with this cluster!\n", 
@@ -205,8 +216,10 @@ sub get_osd_location {
         return ;
     }
     my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
-    chomp(my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]));
-    chomp(my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]));
+    my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
+    my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]);
+    chomp($osdloc);
+    chomp($journalloc);
     return $osdloc, $journalloc;
 
 }
@@ -503,7 +516,7 @@ sub config_osd {
     if ($action eq 'add'){
         #TODO: change to 'create' ?
         $self->check_empty($daemonh->{osd_path}, $daemonh->{host}) or return 0;
-        $self->debug(2,"Adding $name");
+        $self->debug(2,"Adding osd $name");
         my $prepcmd = [qw(osd prepare)];
         my $activcmd = [qw(osd activate)];
         my $pathstring = "$daemonh->{host}:$daemonh->{osd_path}";
