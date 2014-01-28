@@ -573,7 +573,6 @@ sub config_mds {
     if ($action eq 'add'){
         my @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mds/$self->{cluster}-$name/done" );
         my $mds_exists = $self->run_command_as_ceph([@donecmd]);
-        $self->{opop} = $mds_exists ;
         
         if ($mds_exists) { # A down ceph mds daemon is not in map
             if ($daemonh->{up}) {
@@ -777,9 +776,7 @@ sub check_configuration {
     $self->process_config($cluster->{config}) or return 0;
     $self->process_mons($cluster->{monitors}) or return 0;
     $self->process_osds($cluster->{osds}) or return 0;
-#    if ($cluster->{mdss}) {
-#        $self->process_mdss($cluster->{mdss}) or return 0;
-#    }
+    $self->process_mdss($cluster->{mdss}) or return 0;
     return 1;
 }
 
