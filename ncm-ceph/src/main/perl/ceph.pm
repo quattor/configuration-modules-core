@@ -379,12 +379,16 @@ sub push_cfg {
 sub inject_realtime {
     my ($self, $host, $changes) = @_;
     my @cmd;
+    my @noninject = ('mon_host', 'mon_initial_members', 'public_network', 'filestore_xattr_use_omap');
     for my $param (keys %{$changes}) {
-        @cmd = ('tell',"*.$host",'injectargs','--');
-        my $keyvalue = "--$param=$changes->{$param}";
-        $self->info("injecting $keyvalue realtime on $host");
-        $self->run_ceph_command([@cmd, $keyvalue]);
+        if (!($param ~~ @noninject)) { # Requires Perl > 5.10 !
+            @cmd = ('tell',"*.$host",'injectargs','--');
+            my $keyvalue = "--$param=$changes->{$param}";
+            $self->info("injecting $keyvalue realtime on $host");
+            $self->run_ceph_command([@cmd, $keyvalue]) or return 0;
+        }
     }
+    return 1;
 }
 # Pulls config from host, compares it with quattor config and pushes the config back if needed
 sub pull_compare_push {
