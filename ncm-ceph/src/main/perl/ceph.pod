@@ -11,6 +11,18 @@ ncm-${project.artifactId}: Configuration module for CEPH
 
 ${project.artifactId}
 
+=head1 INITIAL CREATION
+
+To set up the initial cluster, some steps should be taken:
+    - First create a ceph user with passwordless ssh access to the other hosts of the cluster
+        e.g. by distributing the public key of the ceph-deploy hosts over the cluster hosts
+            (As described in the ceph-deploy documentation)
+    - Run the component a first time, you should get the initial commands for your cluster. 
+    - Run these commands
+    - Get the generated cluster fsid out of the config file (/etc/ceph/ceph.conf) 
+            and put it in the Quattor scheme
+    - Run the component again to start the configuration of the new cluster
+
 =head1 RESOURCES
 
 =head2 /software/components/${project.artifactId}
