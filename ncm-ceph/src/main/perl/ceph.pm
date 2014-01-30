@@ -34,7 +34,12 @@ use Readonly;
 use Config::Tiny;
 
 our $EC=LC::Exception::Context->new->will_store_all;
-Readonly::Array my @noninject => ('mon_host', 'mon_initial_members', 'public_network', 'filestore_xattr_use_omap');
+Readonly my @noninject = qw(
+    mon_host 
+    mon_initial_members
+    public_network
+    filestore_xattr_use_omap
+);
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
