@@ -34,7 +34,7 @@ use Readonly;
 use Config::Tiny;
 
 our $EC=LC::Exception::Context->new->will_store_all;
-Readonly my @noninject = qw(
+Readonly::Array my @noninject => qw(
     mon_host 
     mon_initial_members
     public_network
