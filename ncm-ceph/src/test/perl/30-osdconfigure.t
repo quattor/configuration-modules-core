@@ -37,7 +37,7 @@ set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump",
     $data::OSDDJSON);
 set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree", 
     $data::OSDTJSON);
-my $basestr = 'su - ceph -c /usr/bin/ssh ceph001 ';
+my $basestr = 'su - ceph -c /usr/bin/ssh 10.141.8.180 ';
 
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
@@ -52,8 +52,8 @@ set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-0/fsid',
 set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-1/fsid',
     'ae77eef3-70a2-4b64-b795-2dee713bfe41');
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-0','/var/lib/ceph/osd/sdc');
-set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-0/journal','/var/lib/ceph/log/sda4/osd-0/journal');
-set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal','/var/lib/ceph/log/sda4/osd-1/journal');
+set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-0/journal','/var/lib/ceph/log/sda4/osd-sdc/journal');
+set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal','/var/lib/ceph/log/sda4/osd-sdd/journal');
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib/ceph/osd/sdd');
 
 $cmp->use_cluster();
@@ -61,11 +61,11 @@ $cmp->{cfgfile} = 'tmpfile';
 
 my $type = 'osd';
 my $cephh = $cmp->osd_hash();
-cmp_deeply($cephh, \%data::OSDS);
-my $quath = $cluster->{osds};
+cmp_deeply($cephh, \%data::OSDS, 'OSD hash');
+my $quath = $cluster->{osdhosts};
 
-#diag explain $cephh;
-
+#diag explain $quath;
+cmp_deeply($cmp->flatten_osds($quath), \%data::FLATTEN, 'OSD flatten');
 $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
 #Main  comparison function:
@@ -73,5 +73,4 @@ my $output = $cmp->process_osds($quath);
 ok($output, 'ceph quattor cmp for mon');
 
 cmp_deeply($cmp->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
-
 done_testing();

@@ -33,7 +33,6 @@ my $cmp = NCM::Component::ceph->new('ceph');
 
 set_desired_output("/usr/bin/ceph -f json --cluster ceph mds stat",
     $data::MDSJSON);
-my $basestr = 'su - ceph -c /usr/bin/ssh ceph001 ';
 
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
@@ -46,7 +45,7 @@ my $cephh = $cmp->mds_hash();
 cmp_deeply($cephh, \%data::MDSS);
 my $quath = $cluster->{mdss};
 
-my $donecmd = 'su - ceph -c /usr/bin/ssh ceph002 test -e /var/lib/ceph/mds/ceph-ceph002/done';
+my $donecmd = 'su - ceph -c /usr/bin/ssh ceph002.cubone.os test -e /var/lib/ceph/mds/ceph-ceph002/done';
 
 set_command_status($donecmd,1);
 set_desired_err($donecmd,'');

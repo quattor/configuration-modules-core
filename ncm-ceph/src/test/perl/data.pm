@@ -158,27 +158,49 @@ Readonly::Hash our %MONS => (
 );
 
 Readonly::Hash our %OSDS => ( 
-   'osd.0' => {
+   'ceph001:/var/lib/ceph/osd/sdc' => {
      'host' => 'ceph001',
      'id' => 0,
      'in' => 1,
-     'journal_path' => '/var/lib/ceph/log/sda4/osd-0/journal',
+     'ip' => '10.141.8.180',
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
      'name' => 'osd.0',
      'osd_path' => '/var/lib/ceph/osd/sdc',
      'up' => 1,
      'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
    },
-   'osd.1' => {
+   'ceph001:/var/lib/ceph/osd/sdd' => {
      'host' => 'ceph001',
      'id' => 1,
      'in' => 1,
-     'journal_path' => '/var/lib/ceph/log/sda4/osd-1/journal',
+     'ip' => '10.141.8.180',
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
      'name' => 'osd.1',
      'osd_path' => '/var/lib/ceph/osd/sdd',
      'up' => 1,
      'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
    }
 );
+
+Readonly::Hash our %FLATTEN => (
+   'ceph001:/var/lib/ceph/osd/sdc' => {
+     'fqdn' => 'ceph001.cubone.os',
+     'host' => 'ceph001',
+     'osd_path' => '/var/lib/ceph/osd/sdc'
+   },
+   'ceph001:/var/lib/ceph/osd/sdd' => {
+     'fqdn' => 'ceph001.cubone.os',
+     'host' => 'ceph001',
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+     'osd_path' => '/var/lib/ceph/osd/sdd'
+   },
+   'ceph002:/var/lib/ceph/osd/sdc' => {
+     'fqdn' => 'ceph002.cubone.os',
+     'host' => 'ceph002',
+     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+     'osd_path' => '/var/lib/ceph/osd/sdc'
+   }
+ );
 
 Readonly::Hash our %MDSS => ( 
     'ceph001'   => {
@@ -197,31 +219,31 @@ Readonly::Array our @ADDOSD => (
  [
    'osd',
    'prepare',
-   'ceph002:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-2/journal'
+   'ceph002.cubone.os:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-sdc/journal'
  ],
  [
    'osd',
    'activate',
-   'ceph002:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-2/journal'
+   'ceph002.cubone.os:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-sdc/journal'
  ]);
 
 Readonly::Array our @ADDMON => (
     ['mon',
     'create',
-    'ceph002']
+    'ceph002.cubone.os']
 );
 Readonly::Array our @ADDMDS => (
     ['mds',
     'create',
-    'ceph002']
+    'ceph002.cubone.os']
 );
 Readonly::Array our @NEWCLUS => (
    [
      '/usr/bin/ceph-deploy',
      'new',
-     'ceph001',
-     'ceph002',
-     'ceph003'
+     'ceph001.cubone.os',
+     'ceph002.cubone.os',
+     'ceph003.cubone.os'
    ],
    [
      '/usr/bin/ceph-deploy',

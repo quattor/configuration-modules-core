@@ -40,9 +40,9 @@ my $cluster = $t->{clusters}->{ceph};
 $cmp->use_cluster();
 $cmp->{is_deploy} = 1;
 $cmp->{hostname} = 'ceph001';
-my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001";
-my $gather2 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph002";
-my $gather3 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph003";
+my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001.cubone.os";
+my $gather2 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph002.cubone.os";
+my $gather3 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph003.cubone.os";
 my @gathers = ($gather1, $gather2, $gather3);
 set_desired_output("/usr/bin/ceph -f json --cluster ceph status", $data::STATE);
 
@@ -56,6 +56,7 @@ my $usr =  getpwuid($<);
 my $tempdir = tempdir(CLEANUP => 1);
 $cmp->{cephusr} = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
 $cmp->init_commands();
+$cmp->gen_mon_host($cluster);
 my $clustercheck= $cmp->cluster_ready_check($cluster);
 my $cmd;
 foreach my $gcmd (@gathers) {
@@ -72,7 +73,8 @@ ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
 my $tinycfg = Config::Tiny->read($tempdir . '/ceph.conf');
 my $cfghash = {   'global' => {
     'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
-    'mon_initial_members' => 'ceph001,ceph002,ceph003'   
+    'mon_initial_members' => 'ceph001,ceph002,ceph003',   
+    'mon_host' => 'ceph001.cubone.os,ceph002.cubone.os,ceph003.cubone.os'   
     }
 };
 cmp_deeply(unbless($tinycfg), $cfghash);

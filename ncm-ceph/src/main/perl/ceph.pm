@@ -26,12 +26,14 @@ use LC::File qw(copy makedir);
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
+use Config::Tiny;
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(move);
 use JSON::XS;
 use Readonly;
-use Config::Tiny;
+
+
 
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly::Array my @noninject => qw(
@@ -40,6 +42,7 @@ Readonly::Array my @noninject => qw(
     public_network
     filestore_xattr_use_omap
 );
+Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
@@ -132,9 +135,13 @@ sub run_ceph_deploy_command {
 # Gets the fsid of the cluster
 sub get_fsid {
     my ($self) = @_;
+    if ($self->{fsid}){
+        return $self->{fsid}; 
+    }
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
     my $monhash = decode_json($jstr);
-    return $monhash->{fsid};
+    $self->{fsid} = $monhash->{fsid};
+    return $self->{fsid};
 }
 
 # Gets the config of the cluster
@@ -176,10 +183,13 @@ sub osd_hash {
             $self->error("Parsing osd commands went wrong");
             return 0;
         }
-        my ($osdloc, $journalloc) = $self->get_osd_location($id, $host, $osd->{uuid}) or return 0;
+        my @addr = split(':', $osd->{public_addr});
+        my $ip = $addr[0];
+        my ($osdloc, $journalloc) = $self->get_osd_location($id, $ip, $osd->{uuid}) or return 0;
         my $osdp = { 
             name            => $name, 
             host            => $host, 
+            ip              => $ip, 
             id              => $id, 
             uuid            => $osd->{uuid}, 
             up              => $osd->{up}, 
@@ -187,7 +197,8 @@ sub osd_hash {
             osd_path        => $osdloc, 
             journal_path    => $journalloc 
         };
-        $osdparsed{$name} = $osdp;
+        my $osdstr = "$host:$osdloc";
+        $osdparsed{$osdstr} = $osdp;
     }
     return \%osdparsed;
 }
@@ -318,11 +329,39 @@ sub process_mons {
     return $self->ceph_quattor_cmp('mon', $qmons, $cmons);
 }
 
+sub unescape ($) {
+    my ($self,$str)=@_;
+
+    $str =~ s!(_[0-9a-f]{2})!sprintf("%c",hex($1))!eg;
+    return $str;
+}
+# Converts a host/osd hierarchy in a 'host:osd' structure
+sub flatten_osds {
+    my ($self, $hosds) = @_; 
+    my %flat = ();
+    foreach my $host (keys %{$hosds}){
+        my $osds = $hosds->{$host}->{osds};
+        foreach my $osd (keys %{$osds}){
+            my $newosd = $osds->{$osd};
+            $newosd->{host} = $host;
+            $newosd->{fqdn} = $hosds->{$host}->{fqdn};
+            my $osdpath = $self->unescape($osd);
+            if ($osdpath !~ m|^/|){
+                $osdpath = $OSDBASE . $osdpath;
+            }
+            $newosd->{osd_path} = $osdpath;
+            my $osdstr = "$host:$osdpath" ;
+            $flat{$osdstr} = $newosd;
+        }
+    }
+    return \%flat;
+}
 # Compare cephs osd with the quattor osds
 sub process_osds {
     my ($self, $qosds) = @_;
+    my $qflosds = $self->flatten_osds($qosds);
     my $cosds = $self->osd_hash() or return 0;
-    return $self->ceph_quattor_cmp('osd', $qosds, $cosds);
+    return $self->ceph_quattor_cmp('osd', $qflosds, $cosds);
 }
 
 # Compare cephs mds with the quattor mds
@@ -474,7 +513,7 @@ sub config_mon {
     my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
         my @command = qw(mon create);
-        push (@command, $name);
+        push (@command, $daemonh->{fqdn});
         push (@{$self->{deploy_cmds}}, [@command]);
     } elsif ($action eq 'del') {
         my @command = qw(mon destroy);
@@ -492,7 +531,7 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
         
-        my @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
+        my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
@@ -537,16 +576,16 @@ sub config_osd {
     my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
         #TODO: change to 'create' ?
-        $self->check_empty($daemonh->{osd_path}, $daemonh->{host}) or return 0;
+        $self->check_empty($daemonh->{osd_path}, $daemonh->{fqdn}) or return 0;
         $self->debug(2,"Adding osd $name");
         my $prepcmd = [qw(osd prepare)];
         my $activcmd = [qw(osd activate)];
-        my $pathstring = "$daemonh->{host}:$daemonh->{osd_path}";
+        my $pathstring = "$daemonh->{fqdn}:$daemonh->{osd_path}";
         if ($daemonh->{journal_path}) {
             (my $journaldir = $daemonh->{journal_path}) =~ s{/journal$}{};
-            my $mkdircmd = ['/usr/bin/ssh', $daemonh->{host}, 'sudo', '/bin/mkdir', '-p', $journaldir];
+            my $mkdircmd = ['/usr/bin/ssh', $daemonh->{fqdn}, 'sudo', '/bin/mkdir', '-p', $journaldir];
             $self->run_command_as_ceph($mkdircmd); 
-            $self->check_empty($journaldir, $daemonh->{host}) or return 0; 
+            $self->check_empty($journaldir, $daemonh->{fqdn}) or return 0; 
             $pathstring = "$pathstring:$daemonh->{journal_path}";
         }
         for my $command (($prepcmd, $activcmd)) {
@@ -555,20 +594,20 @@ sub config_osd {
         }
     } elsif ($action eq 'del') {
         my @command = qw(osd destroy);
-        push (@command, $name);
+        push (@command, $daemonh->{name});
         push (@{$self->{man_cmds}}, [@command]);
    
     } elsif ($action eq 'change') { #compare config
         my $quatosd = $daemonh->[0];
         my $cephosd = $daemonh->[1];
         # checking immutable attributes
-        my @osdattrs = ('id', 'host', 'osd_path');
+        my @osdattrs = ('host', 'osd_path');
         if ($quatosd->{journal_path}) {
             push(@osdattrs, 'journal_path');
         }
         $self->check_immutables($name, \@osdattrs, $quatosd, $cephosd) or return 0;
-
-        $self->check_state($quatosd->{id}, $quatosd->{host}, 'osd', $quatosd, $cephosd);
+        (my $id = $cephosd->{id}) =~ s/^osd\.//;
+        $self->check_state($id, $quatosd->{host}, 'osd', $quatosd, $cephosd);
         #TODO: In&out?
     } else {
         $self->error("Action $action not supported!");
@@ -580,17 +619,18 @@ sub config_osd {
 sub config_mds {
     my ($self,$action,$name,$daemonh) = @_;
     if ($action eq 'add'){
-        my @donecmd = ('/usr/bin/ssh', $name, 'test','-e',"/var/lib/ceph/mds/$self->{cluster}-$name/done" );
+        my $fqdn = $daemonh->{fqdn};
+        my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{cluster}-$name/done" );
         my $mds_exists = $self->run_command_as_ceph([@donecmd]);
         
         if ($mds_exists) { # A down ceph mds daemon is not in map
-            if ($daemonh->{up}) {
+            if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
                 push (@{$self->{daemon_cmds}}, [@command]);
             }
         } else {
             my @command = qw(mds create);
-            push (@command, $name);
+            push (@command, $fqdn);
             push (@{$self->{deploy_cmds}}, [@command]);
         }   
     } elsif ($action eq 'del') {
@@ -704,6 +744,7 @@ sub init_commands {
     $self->{ceph_cmds} = [];
     $self->{daemon_cmds} = [];
     $self->{man_cmds} = [];
+    $self->{fsid} = '';
 }
 
 #Checks if cluster is configured on this node.
@@ -713,7 +754,7 @@ sub cluster_ready_check {
     my ($self, $cluster) = @_;
     if ($self->{is_deploy}) { 
         # Check If something is not configured or there is no existing cluster 
-        my $hosts = $cluster->{config}->{mon_initial_members};
+        my $hosts = $cluster->{config}->{mon_host};
         my $ok= 0;
         my $okhost;
         $self->{inner} = 1;
@@ -784,20 +825,45 @@ sub check_configuration {
     $self->init_commands();
     $self->process_config($cluster->{config}) or return 0;
     $self->process_mons($cluster->{monitors}) or return 0;
-    $self->process_osds($cluster->{osds}) or return 0;
+    $self->process_osds($cluster->{osdhosts}) or return 0;
     $self->process_mdss($cluster->{mdss}) or return 0;
     return 1;
 }
 
 #generate mon hosts
 sub gen_mon_host {
-    my ($self, $config, $domain) = @_;
+    my ($self, $cluster) = @_;
+    my $config = $cluster->{config};
     $config->{mon_host} = [];
     foreach my $host (@{$config->{mon_initial_members}}) {
-        push (@{$config->{mon_host}},$host . '.' . $domain);
+        push (@{$config->{mon_host}},$cluster->{monitors}->{$host}->{fqdn});
     }
 }
-           
+sub check_versions {
+    my ($self, $qceph, $qdeploy) = @_;
+    $self->use_cluster;
+    my $cversion = $self->run_ceph_command([qw(--version)]);
+    my @vl = split(' ',$cversion);
+    my $cephv = $vl[2];
+    $self->run_ceph_deploy_command([qw(--version)]);
+    my $deplv = $self->{lasterr};
+    if ($deplv) {
+        chomp($deplv);
+    }
+    if ($qceph && ($cephv ne $qceph)) {
+        $self->error("Ceph version not corresponding!\n",
+            "Ceph: $cephv, Quattor: $qceph\n");
+        return 0;
+    }        
+    if ($qdeploy && ($deplv ne $qdeploy)) {
+        $self->error("Ceph-deploy version not corresponding!\n",
+            "Ceph-deploy: $deplv, Quattor: $qdeploy\n");
+        return 0;
+    }
+    return 1;
+}
+            
+
 sub Configure {
     my ($self, $config) = @_;
     # Get full tree of configuration information for component.
@@ -807,11 +873,12 @@ sub Configure {
     my $group = $config->getElement('/software/components/accounts/groups/ceph')->getTree();
     $self->{cephusr}->{gid} = $group->{gid};
     $self->{hostname} = $netw->{hostname};
+    $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
     foreach my $clus (keys %{$t->{clusters}}){
         $self->use_cluster($clus) or return 0;
         my $cluster = $t->{clusters}->{$clus};
         $self->{is_deploy} = $cluster->{deployhosts}->{$self->{hostname}} ? 1 : 0 ;
-        $self->gen_mon_host($cluster->{config}, $netw->{domainname});
+        $self->gen_mon_host($cluster);
         if (!$self->cluster_ready_check($cluster)) {
             $self->print_man_cmds();
             return 0; 

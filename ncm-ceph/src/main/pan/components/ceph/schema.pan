@@ -15,21 +15,27 @@ type ceph_daemon = {
 @{ ceph monitor-specific type @}
 type ceph_monitor = {
     include ceph_daemon
+    'fqdn'  : type_fqdn
 };
+
 
 @{ ceph osd-specific type @}
 type ceph_osd = {
     include ceph_daemon
-    'id'            : long
-    'host'          : string
     'in'            ? boolean = true
-    'osd_path'      : string
     'journal_path'  ? string
+};
+
+@{ ceph osd-specific type @}
+type ceph_osd_host = {
+    'fqdn'          : type_fqdn
+    'osds'          : ceph_osd {}
 };
 
 @{ ceph mds-specific type @}
 type ceph_mds = {
      include ceph_daemon
+    'fqdn'  : type_fqdn
 };
 
 @{ ceph cluster-wide config parameters @}
@@ -42,12 +48,17 @@ type ceph_cluster_config = {
     'auth_service_required'     : string = 'cephx'
     'auth_client_required'      : string = 'cephx'
     'auth_cluster_required'     : string = 'cephx'
+    'osd_pool_default_pg_num'   : long(0..) = 600
+    'osd_pool_default_pgp_num'  : long(0..) = 600
+    'osd_pool_default_size'     : long(0..) = 2
+    'osd_pool_default_min_size' : long(0..) = 1
+
 };
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
 type ceph_cluster = {
     'config'                    : ceph_cluster_config
-    'osds'                      : ceph_osd {}
+    'osdhosts'                  : ceph_osd_host {}
     'monitors'                  : ceph_monitor {1..}
     'mdss'                      ? ceph_mds {}
     'deployhosts'               : type_fqdn {1..}
@@ -56,7 +67,10 @@ type ceph_cluster = {
 @{ ceph clusters @}
 type ${project.artifactId}_component = {
     include structure_component
-    'clusters'  : ceph_cluster {}
+    'clusters'         : ceph_cluster {}
+    'ceph_version'     ? string 
+    'deploy_version'   ? string 
+
 };
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

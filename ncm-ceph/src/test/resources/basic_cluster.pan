@@ -2,41 +2,41 @@ object template basic_cluster;
 
 
 variable OSDS = nlist (
-    'osd.0', nlist(
-        'id', 0,
-        'host', 'ceph001', 
-        'osd_path', '/var/lib/ceph/osd/sdc'
-    ),
-    'osd.2', nlist(
-        'id', 2,
-        'host', 'ceph002', 
-        'osd_path', '/var/lib/ceph/osd/sdc',
-        'journal_path', '/var/lib/ceph/log/sda4/osd-2/journal'
-    ),
-    'osd.1', nlist(
-        'id', 1,
-        'host', 'ceph001', 
-        'osd_path', '/var/lib/ceph/osd/sdd',
-        'journal_path', '/var/lib/ceph/log/sda4/osd-1/journal'
-    ),
-#    'osd.3', nlist(
-#        'id', 3,
-#        'host', 'ceph003', 
-#    )
+    'ceph001', nlist (
+        'fqdn', 'ceph001.cubone.os',
+        'osds', nlist(
+            escape('/var/lib/ceph/osd/sdc'), nlist(),
+            'sdd', nlist(
+                'journal_path', '/var/lib/ceph/log/sda4/osd-sdd/journal'
+                )
+            )
+        ),
+    'ceph002', nlist (
+        'fqdn', 'ceph002.cubone.os',
+        'osds', nlist(
+            'sdc', nlist(
+            'journal_path', '/var/lib/ceph/log/sda4/osd-sdc/journal'
+            )
+        )
+    )
 );
 
 variable MDSS = nlist (
     'ceph002', nlist(
+        'fqdn', 'ceph002.cubone.os',
         'up', true
     )
 );
 variable MONITOR1 =  nlist(
+    'fqdn', 'ceph001.cubone.os',
     'up', true,
 );
 variable MONITOR2 =  nlist(
+    'fqdn', 'ceph002.cubone.os',
     'up', true,
 );
 variable MONITOR3 =  nlist(
+    'fqdn', 'ceph003.cubone.os',
     'up', true,
 );
 
@@ -49,11 +49,11 @@ prefix '/software/components/ceph/clusters';
 
 'ceph' = nlist (
     'config', CONFIG,
-    'osds', OSDS,
+    'osdhosts', OSDS,
     'mdss', MDSS,
     'monitors', nlist (
-        'ceph001', MONITOR2,
-        'ceph002', MONITOR1,
+        'ceph001', MONITOR1,
+        'ceph002', MONITOR2,
         'ceph003', MONITOR3
     ),
     'deployhosts', nlist (

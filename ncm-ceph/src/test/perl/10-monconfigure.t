@@ -62,7 +62,7 @@ $cmp->{is_deploy} = 'true';
 my $dodeploy = $cmp->do_deploy();
 ok($dodeploy, 'try running the commands');
 
-my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002";
+my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002.cubone.os";
 my $cmd = get_command($deployaddstring);
 ok(defined($cmd), "mon add was invoked");
 
