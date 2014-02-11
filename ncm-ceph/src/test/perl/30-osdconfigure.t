@@ -64,7 +64,7 @@ my $cephh = $cmp->osd_hash();
 cmp_deeply($cephh, \%data::OSDS, 'OSD hash');
 my $quath = $cluster->{osdhosts};
 
-#diag explain $quath;
+#diag explain $cephh;
 cmp_deeply($cmp->flatten_osds($quath), \%data::FLATTEN, 'OSD flatten');
 $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
@@ -73,4 +73,5 @@ my $output = $cmp->process_osds($quath);
 ok($output, 'ceph quattor cmp for mon');
 
 cmp_deeply($cmp->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
+
 done_testing();

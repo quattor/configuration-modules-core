@@ -33,8 +33,6 @@ use File::Copy qw(move);
 use JSON::XS;
 use Readonly;
 
-
-
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly::Array my @noninject => qw(
     mon_host 
@@ -329,12 +327,15 @@ sub process_mons {
     return $self->ceph_quattor_cmp('mon', $qmons, $cmons);
 }
 
+#TODO FIX Should be used from base Component class, but getting error:
+# Can't locate object method "unescape" via package "NCM::Component::ceph"
 sub unescape ($) {
     my ($self,$str)=@_;
 
     $str =~ s!(_[0-9a-f]{2})!sprintf("%c",hex($1))!eg;
     return $str;
 }
+
 # Converts a host/osd hierarchy in a 'host:osd' structure
 sub flatten_osds {
     my ($self, $hosds) = @_; 
@@ -839,6 +840,8 @@ sub gen_mon_host {
         push (@{$config->{mon_host}},$cluster->{monitors}->{$host}->{fqdn});
     }
 }
+
+# Checks if the versions of ceph and ceph-deploy are compatible
 sub check_versions {
     my ($self, $qceph, $qdeploy) = @_;
     $self->use_cluster;
