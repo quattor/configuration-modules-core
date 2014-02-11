@@ -865,7 +865,6 @@ sub check_versions {
     }
     return 1;
 }
-            
 
 sub Configure {
     my ($self, $config) = @_;
