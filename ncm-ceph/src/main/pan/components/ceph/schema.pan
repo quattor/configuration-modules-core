@@ -7,6 +7,27 @@ declaration template components/${project.artifactId}/schema;
 
 include { 'quattor/schema' };
 
+function check_osd_names = {
+    names = list();
+    clusters = ARGV[0]['clusters'];
+    foreach (name;cluster;clusters) {
+        append(names, name);
+    };
+
+    foreach (name;cluster;clusters) {
+        foreach (host;hvals;clusters[name]['osdhosts']) {
+            foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
+                foreach (idex;clname;names) {
+                    if (match(osd,clname + '-\d+$')){
+                        error("Osd path: " + osd + " is a ceph-reserved path!"); 
+                        return(false);
+                    };
+                };
+            };
+        };
+    };
+   return(true);
+};
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
     'up'    : boolean = true
@@ -49,10 +70,10 @@ type ceph_cluster_config = {
     'filestore_xattr_use_omap'  : boolean = true
     'osd_journal_size'          : long(0..) = 10240
     'mon_initial_members'       : string [1..]
-    'public_network'            : string #TODO: check/write type for this
-    'auth_service_required'     : string = 'cephx'
-    'auth_client_required'      : string = 'cephx'
-    'auth_cluster_required'     : string = 'cephx'
+    'public_network'            : string with match(SELF,'^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$')
+    'auth_service_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
+    'auth_client_required'      : string = 'cephx' with match(SELF, '^(cephx|none)$')
+    'auth_cluster_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'osd_pool_default_pg_num'   : long(0..) = 600
     'osd_pool_default_pgp_num'  : long(0..) = 600
     'osd_pool_default_size'     : long(0..) = 2
@@ -72,8 +93,8 @@ type ceph_cluster = {
 type ${project.artifactId}_component = {
     include structure_component
     'clusters'         : ceph_cluster {}
-    'ceph_version'     ? string 
-    'deploy_version'   ? string 
-};
+    'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
+    'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
+} with check_osd_names(SELF);
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;
