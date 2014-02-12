@@ -18,7 +18,13 @@ type ceph_monitor = {
     'fqdn'  : type_fqdn
 };
 
-@{ ceph osd-specific type @}
+@{ 
+ceph osd-specific type 
+The key of the osd should be the path to the mounted disk. 
+This can be an absolute path or a relative one to /var/lib/ceph/osd/
+journal_path should be the path to a journal file
+This can be an absolute path or a relative one to /var/lib/ceph/log/
+@}
 type ceph_osd = {
     include ceph_daemon
     'in'            ? boolean = true

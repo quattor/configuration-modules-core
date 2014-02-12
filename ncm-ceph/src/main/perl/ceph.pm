@@ -27,6 +27,7 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 use Config::Tiny;
+use EDG::WP4::CCM::Element qw(unescape);
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(move);
@@ -41,6 +42,7 @@ Readonly::Array my @noninject => qw(
     filestore_xattr_use_omap
 );
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
+Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
@@ -133,12 +135,13 @@ sub run_ceph_deploy_command {
 # Gets the fsid of the cluster
 sub get_fsid {
     my ($self) = @_;
-    if ($self->{fsid}){
-        return $self->{fsid}; 
+    if (!defined($self->{fsid})){
+        my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
+        my $monhash = decode_json($jstr);
+        $self->{fsid} = $monhash->{fsid};
+        $self->debug(3, 'Set fsid from mon dump to '.$self->{fsid});
     }
-    my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
-    my $monhash = decode_json($jstr);
-    $self->{fsid} = $monhash->{fsid};
+    $self->debug(2, 'Fsid '.$self->{fsid});
     return $self->{fsid};
 }
 
@@ -327,15 +330,6 @@ sub process_mons {
     return $self->ceph_quattor_cmp('mon', $qmons, $cmons);
 }
 
-#TODO FIX Should be used from base Component class, but getting error:
-# Can't locate object method "unescape" via package "NCM::Component::ceph"
-sub unescape ($) {
-    my ($self,$str)=@_;
-
-    $str =~ s!(_[0-9a-f]{2})!sprintf("%c",hex($1))!eg;
-    return $str;
-}
-
 # Converts a host/osd hierarchy in a 'host:osd' structure
 sub flatten_osds {
     my ($self, $hosds) = @_; 
@@ -346,9 +340,12 @@ sub flatten_osds {
             my $newosd = $osds->{$osd};
             $newosd->{host} = $host;
             $newosd->{fqdn} = $hosds->{$host}->{fqdn};
-            my $osdpath = $self->unescape($osd);
+            my $osdpath = unescape($osd);
             if ($osdpath !~ m|^/|){
                 $osdpath = $OSDBASE . $osdpath;
+            }
+            if (exists($newosd->{journal_path}) && $newosd->{journal_path} !~ m|^/|){
+                $newosd->{journal_path} = $JOURNALBASE . $newosd->{journal_path};
             }
             $newosd->{osd_path} = $osdpath;
             my $osdstr = "$host:$osdpath" ;
@@ -532,7 +529,8 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
         
-        my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
+        my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 
+            'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
@@ -609,7 +607,7 @@ sub config_osd {
         $self->check_immutables($name, \@osdattrs, $quatosd, $cephosd) or return 0;
         (my $id = $cephosd->{id}) =~ s/^osd\.//;
         $self->check_state($id, $quatosd->{host}, 'osd', $quatosd, $cephosd);
-        #TODO: In&out?
+        #TODO: Make it possible to bring osd 'in' or 'out' the cluster ?
     } else {
         $self->error("Action $action not supported!");
     }
@@ -745,7 +743,7 @@ sub init_commands {
     $self->{ceph_cmds} = [];
     $self->{daemon_cmds} = [];
     $self->{man_cmds} = [];
-    $self->{fsid} = '';
+    undef $self->{fsid};
 }
 
 #Checks if cluster is configured on this node.
