@@ -71,6 +71,7 @@ type ceph_cluster_config = {
     'osd_journal_size'          : long(0..) = 10240
     'mon_initial_members'       : string [1..]
     'public_network'            : string with match(SELF,'^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$')
+    'cluster_network'           ? string with match(SELF,'^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$')
     'auth_service_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'auth_client_required'      : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'auth_cluster_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
