@@ -47,6 +47,7 @@ Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;
+    undef $self->{fsid};
     $cluster ||= 'ceph';
     if ($cluster ne 'ceph') {
         $self->error("Not yet implemented!\n"); 
@@ -530,7 +531,7 @@ sub config_mon {
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
         
         my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 
-            'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
+                       'test','-e',"/var/lib/ceph/mon/$self->{cluster}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
@@ -743,7 +744,6 @@ sub init_commands {
     $self->{ceph_cmds} = [];
     $self->{daemon_cmds} = [];
     $self->{man_cmds} = [];
-    undef $self->{fsid};
 }
 
 #Checks if cluster is configured on this node.
@@ -775,6 +775,7 @@ sub cluster_ready_check {
             push (@{$self->{man_cmds}}, [@newcmd]);
             my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
             push (@{$self->{man_cmds}}, [@moncr]);
+            $self->init_qdepl($cluster->{config});
             return 0;
         } else {
             # Set config file in place and prepare ceph-deploy
