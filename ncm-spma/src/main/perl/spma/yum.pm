@@ -361,7 +361,9 @@ sub locked_all_packages
     }
 
     if (grep($_ !~ m{[*?]}, @$wanted_locked)) {
-        $self->error("Unable to lock: $wanted_locked");
+        $self->error("Unable to lock: $wanted_locked. ",
+                     "This package with this version doesn't exist in any ",
+                     "configured repositories");
         return 0;
     }
     return 1;
