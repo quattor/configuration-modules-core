@@ -436,7 +436,6 @@ sub Configure {
 	  my $info = `$grubby --info=$fulldefaultkernelpath`;
 	  if($info =~ /args=\"(.*)\"\n/){
 	      $kernelargsremove = $1;
-	      chop($kernelargsremove);
 	      print "\nKernelArgRemove", $kernelargsremove, "\n";
 	  }
 
