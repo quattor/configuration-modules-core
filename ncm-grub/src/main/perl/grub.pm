@@ -409,7 +409,8 @@ sub Configure {
 
       # Check if 'fullcontrol' is defined in CDB
       my $fullcontrol = 0;
-      if ( $config->elementExists("/software/components/grub/fullcontrol") && $config->getValue("/software/components/grub/fullcontrol") ){
+      if ( $config->elementExists("/software/components/grub/fullcontrol")
+          && ($config->getValue("/software/components/grub/fullcontrol") eq "true")){
 	  $fullcontrol = 1;
 	  $self->debug(2,"fullcontrol is true");
       }
