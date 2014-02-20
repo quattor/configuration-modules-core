@@ -816,7 +816,7 @@ sub set_admin_host {
         $self->pull_compare_push($config, $host) or return 0;
         my @admins=qw(admin);
         push(@admins, $host);
-        $self->run_ceph_deploy_command(\@admins); 
+        $self->run_ceph_deploy_command(\@admins,'',1 ); #overwrite for stupid ceph deploy
     }
 }
 # Compare the configuration (and prepare commands) 
