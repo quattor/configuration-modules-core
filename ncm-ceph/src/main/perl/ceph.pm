@@ -768,11 +768,15 @@ sub cluster_ready_check {
             # Manual commands for new cluster  
             # Push to deploy_cmds (and pre-run dodeploy) for automation, 
             # but take care of race conditions
-            my @newcmd = qw(/usr/bin/ceph-deploy new);
+            
+            my @newcmd = qw(new);
             foreach my $host (@{$hosts}) {
                 push (@newcmd, $host);
             }
-            push (@{$self->{man_cmds}}, [@newcmd]);
+            if (!-f "$self->{cephusr}->{homeDir}/$self->{cluster}.mon.keyring"){
+                $self->run_ceph_deploy_command([@newcmd]);
+            }
+            #push (@{$self->{man_cmds}}, [@newcmd]);
             my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
             push (@{$self->{man_cmds}}, [@moncr]);
             $self->init_qdepl($cluster->{config});

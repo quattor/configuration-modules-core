@@ -238,13 +238,13 @@ Readonly::Array our @ADDMDS => (
     'ceph002.cubone.os']
 );
 Readonly::Array our @NEWCLUS => (
-   [
-     '/usr/bin/ceph-deploy',
-     'new',
-     'ceph001.cubone.os',
-     'ceph002.cubone.os',
-     'ceph003.cubone.os'
-   ],
+#   [
+#     '/usr/bin/ceph-deploy',
+#     'new',
+#     'ceph001.cubone.os',
+#     'ceph002.cubone.os',
+#     'ceph003.cubone.os'
+#   ],
    [
      '/usr/bin/ceph-deploy',
      'mon',
