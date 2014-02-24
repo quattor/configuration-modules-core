@@ -830,6 +830,90 @@ sub check_configuration {
     return 1;
 }
 
+# Do actions after deploying of daemons and global configuration
+sub do_post_actions {
+    my ($self, $cluster) = @_;
+    $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}) or return 0;
+    
+    return 1;
+}
+sub ceph_crash {
+    my ($self) = @_;
+    # Get crushmap and store backup
+
+    # Make hash of crushmap
+}
+
+sub crash_merge {
+    my ($self, $hash, $osdhosts) = @_;
+    foreach my $name (%{$hash}) {
+        my $bucket = $hash->{$name};
+        if ($bucket->{buckets}) {
+            # Recurse.
+            $self->crash_merge($bucket->{buckets}, $osdhosts) or return 0;
+        } else {
+            if ($bucket->{type} eq 'host') {
+                if ($osdhosts->{$name}){
+                    my $osds = $osdhosts->{$name}->{osds};
+                    foreach my $osd (%{$osds}){
+                        my $osdb;
+                        if($osds->{$osd}->{crush_weight} ){
+                            $osdb = { weight => $osds->{$osd}->{crush_weight} };
+                        } else {
+                            $osdb = {};
+                        }
+                        my $osdname = $self->get_osd_name($name, $osd) or return 0;
+                        $bucket->{buckets}->{$osdname} = $osdb;
+                        }
+                } else {
+                    $self->error("No such hostname in ceph cluster: $name");
+                    return 0;
+                }    
+            }
+        }
+    }
+    return 1;
+}
+
+sub set_weights {
+#recursive
+#start top down
+#check if some weight is set on this level
+#if weight is set, set max_weight( specified or set from other values, and weight_set
+#If bottom and no weight is set: All 1 or set values, and return up
+#If weight is set on some top, go down and uniformly divide onto direct childeren, 
+#unless something on that level is set,
+
+}
+
+sub quat_crash {
+    my ($self,$crushmap, $osdhosts);
+    my $types = $crushmap->{types}; #Must at least contain 'host', 'osd' and 'pool' #TODO:check
+    $self->crash_merge($crushmap->{buckets}, $osdhosts) or return 0;
+    $self->set_weights($crushmap->{buckets}) or return 0;
+    return $crushmap;
+}
+
+sub cmp_crash {
+    my ($self, $cephcr, $quatcr) = @_;
+    # Check for valid changes in the map?
+    return 1;
+}
+
+# write out the crushmap
+sub write_crash {
+    my ($self, $crash) = @_;
+
+}   
+sub process_crushmap {
+    my ($self, $crushmap, $osdhosts) = @_;
+    my $cephcr = $self->ceph_crash() or return 0;
+    my $quatcr = $self->quat_crash($crushmap, $osdhosts) or return 0;
+    $self->cmp_crash($cephcr, $quatcr) or return 0;
+
+    return $self->write_crash($quatcr);
+}
+
 #generate mon hosts
 sub gen_mon_host {
     my ($self, $cluster) = @_;
@@ -887,7 +971,8 @@ sub Configure {
         $self->debug(1,"checking configuration\n");
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");
-        $self->do_deploy() or return 0; 
+        $self->do_deploy() or return 0;
+        #$self->do_post_actions($cluster) or return 0; 
         $self->print_man_cmds();
         $self->debug(1,'Done');
         return 1;
