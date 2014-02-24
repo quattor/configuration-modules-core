@@ -12,7 +12,7 @@ C<call_entry_point> method.
 
 =head1 TESTS
 
-=head2 Successful executions
+o=head2 Successful executions
 
 =over
 
@@ -113,10 +113,6 @@ $mock->mock('Configure', undef);
 $cmp = NCM::Component::spma->new('spma');
 $cfg = get_config_for_profile('valid_global');
 ok(!$cmp->Configure($cfg), "Failure in underlying packager is triggered");
-
-=pod
-
-=
 
 done_testing();
 
