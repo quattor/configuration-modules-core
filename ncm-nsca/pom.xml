@@ -6,7 +6,7 @@
   <artifactId>nsca</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.12.1-SNAPSHOT</version>
+  <version>14.2.0-rc1</version>
   <name>Component configuring the Nagios NSCA service.</name>
 
 
