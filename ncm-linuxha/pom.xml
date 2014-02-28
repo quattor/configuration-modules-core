@@ -6,7 +6,7 @@
   <artifactId>linuxha</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.2.0-rc2-SNAPSHOT</version>
+  <version>14.2.0</version>
   <name>Linux-HA configuration component</name>
 
 

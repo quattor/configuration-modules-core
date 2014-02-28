@@ -6,7 +6,7 @@
   <artifactId>ssh</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.2.0-rc2-SNAPSHOT</version>
+  <version>14.2.0</version>
   <name>NCM SSH configuration component</name>
 
 
