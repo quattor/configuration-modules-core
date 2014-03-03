@@ -6,7 +6,7 @@
   <artifactId>zephyrclt</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.2.1</version>
+  <version>14.2.2-SNAPSHOT</version>
   <name>NCM Zephyr client configuration component</name>
 
 
