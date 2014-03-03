@@ -130,7 +130,6 @@ type ceph_cluster = {
     'mdss'                      ? ceph_mds {}
     'deployhosts'               : type_fqdn {1..}
     'crushmap'                  ? ceph_crushmap
-    
 };
 
 @{ ceph clusters @}

@@ -35,7 +35,6 @@ use EDG::WP4::CCM::Element qw(unescape);
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
-#use Hash::Diff qw( diff left_diff );
 use List::Util qw( min max );
 use JSON::XS;
 use Readonly;
@@ -859,7 +858,6 @@ sub check_configuration {
 sub do_post_actions {
     my ($self, $cluster) = @_;
     $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}) or return 0;
-    
     return 1;
 }
 
@@ -871,7 +869,6 @@ sub ceph_crash {
     my $crushdir = $self->{qtmp} . 'crushmap';
     $self->run_ceph_command(['osd', 'getcrushmap', '-o', "$crushdir/crushmap.bin"]);
     $self->run_command(['crushtool', '-d', "$crushdir/crushmap.bin", '-o', "$crushdir/crushmap"]);
-    #copy("$crushdir/crushmap", "$crushdir/crushmap.". time() );
     return $crushdump;
 }
 
@@ -890,7 +887,7 @@ sub crash_merge {
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){
                         my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path}) or return 0;
-                        my $osdb = { name => $osdname, weight => $osds->{$osd}->{crush_weight}, type => 'osd' };
+                        my $osdb = { name => $osdname, weight => $osds->{$osd}->{crush_weight}, type => 'osd'};
                         push(@{$bucket->{buckets}}, $osdb);
                         (my $id = $osdname) =~ s/^osd\.//;
                         my $device = { id => $id, name => $osdname };
@@ -922,7 +919,8 @@ sub set_weights {
         if (!$bucket->{weight}){
             $bucket->{weight} = $weight;
         } elsif ($weight != $bucket->{weight}) {
-            $self->warn("Bucket weight of $bucket->{name} in Quattor differs from the sum of the child buckets!\n",
+            $self->warn("Bucket weight of $bucket->{name} ", 
+                "in Quattor differs from the sum of the child buckets!\n",
                 "Quattor: $bucket->{weight} \n", 
                 "Sum: $weight");
         }
@@ -976,6 +974,7 @@ sub quat_crash {
     return $crushmap;
 }
 
+# Collect the already used ids
 sub set_used_crush_id {
     my ($self, $id) = @_;
     if (!$self->{crush_ids}) {
@@ -985,6 +984,7 @@ sub set_used_crush_id {
     }
 }
 
+# Generate an available (Not used) id
 sub generate_crush_id {
     my ($self, $way) = @_;
     my $newid;
@@ -1110,6 +1110,7 @@ sub write_crash {
     return 1;
 }   
 
+# Processes the Ceph CRUSHMAP
 sub process_crushmap {
     my ($self, $crushmap, $osdhosts) = @_;
     my $cephcr = $self->ceph_crash() or return 0;
