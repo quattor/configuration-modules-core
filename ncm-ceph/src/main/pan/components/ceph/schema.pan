@@ -50,7 +50,7 @@ type ceph_osd = {
     include ceph_daemon
     'in'            ? boolean = true
     'journal_path'  ? string
-    'crush_weight'  : double(0..) = 1
+    'crush_weight'  : double(0..) = 1.0
 };
 
 @{ ceph osdhost-specific type @}
@@ -89,7 +89,7 @@ type ceph_crushmap_bucket = {
     'alg'       : string = 'straw' with match(SELF, '^(uniform|list|tree|straw)$')
     'hash'      : long = 0
     'weight'    ? long(0..)
-    'buckets'   ? ceph_crushmap_bucket[]
+    'buckets'   ? nlist[] # TODO with check if bucket
 };
 
 @{ ceph crushmap rule step @}
@@ -107,18 +107,19 @@ type ceph_crushmap_rule_step = {
 
 @{ ceph crushmap rule definition @}
 type ceph_crushmap_rule = {
+    'name'              : string
     'type'              : string = 'replicated' with match(SELF, '^(replicated|raid4)$')
     'ruleset'           ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
     'min_size'          : long(0..) = 0
     'max_size'          : long(0..) = 10
-    'step'              : ceph_crushmap_rule_step[1..] 
+    'steps'              : ceph_crushmap_rule_step[1..] 
 };
 
 @{ ceph crushmap definition @}
 type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
-    'rules'     : ceph_crushmap_rule{1..}
+    'rules'     : ceph_crushmap_rule[1..]
 }; # TODO with check
 
 @{ overarching ceph cluster type, with osds, mons and msds @}

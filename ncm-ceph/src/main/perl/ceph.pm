@@ -21,17 +21,20 @@ use base qw(NCM::Component);
 
 use LC::Exception;
 use LC::Find;
-use LC::File qw(copy makedir);
+use LC::File qw(makedir);
 
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
-use Data::Compare qw(Compare);
+use Data::Compare 1.23 qw(Compare); # taint-safe since 1.23;
+                                    # Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/ 
+                                    # Attention: Package has some versions like 1.2101 and 1.2102 .. 
+use Data::Dumper;
 use Config::Tiny;
 use EDG::WP4::CCM::Element qw(unescape);
 use File::Basename;
 use File::Path qw(make_path);
-use File::Copy qw(move);
+use File::Copy qw(copy move);
 #use Hash::Diff qw( diff left_diff );
 use List::Util qw( min max );
 use JSON::XS;
@@ -46,6 +49,7 @@ Readonly::Array my @noninject => qw(
 );
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
+Readonly my $TT_FILE => 'ceph/crush.tt';
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
@@ -209,6 +213,16 @@ sub osd_hash {
     return \%osdparsed;
 }
 
+# Get the osd name from the host and path
+sub get_osd_name {
+    my ($self, $host, $location) = @_;
+    my @catcmd = ('/usr/bin/ssh', $host, 'cat');
+    my $id = $self->run_command_as_ceph([@catcmd, $location . '/whoami']);
+    chomp($id);
+    $id = $id + 0;
+    return "osd.$id";
+}   
+
 # Check/gets the OSDs underlying disk/path 
 # checks whoami,fsid and ceph_fsid and returns the real path
 sub get_osd_location {
@@ -353,6 +367,7 @@ sub flatten_osds {
                 $newosd->{journal_path} = $JOURNALBASE . $newosd->{journal_path};
             }
             $newosd->{osd_path} = $osdpath;
+            $osds->{$osd}->{osd_path} = $osdpath;
             my $osdstr = "$host:$osdpath" ;
             $flat{$osdstr} = $newosd;
         }
@@ -363,6 +378,7 @@ sub flatten_osds {
 sub process_osds {
     my ($self, $qosds) = @_;
     my $qflosds = $self->flatten_osds($qosds);
+    $self->debug(5, 'OSD lay-out', Dumper($qosds));
     my $cosds = $self->osd_hash() or return 0;
     return $self->ceph_quattor_cmp('osd', $qflosds, $cosds);
 }
@@ -734,7 +750,8 @@ sub init_qdepl {
     my $cephusr = $self->{cephusr};
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/' ;
     my $odir = $qdir . 'old/' ;
-    make_path($qdir, $odir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
+    my $crushdir = $qdir . 'crushmap/' ;
+    make_path($qdir, $odir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
 
     $self->{qtmp} = $qdir; 
     
@@ -850,10 +867,11 @@ sub do_post_actions {
 sub ceph_crash {
     my ($self) = @_;
     my $jstr = $self->run_ceph_command([qw(osd crush dump)]) or return 0;
-    my $crushdump = decode_json($jstr); #wrong weights, but ignored at this moment
-    $self->run_ceph_command(['osd', 'getcrushmap', '-o', "$self->{qtmp}/crushmap.bin"]);
-    $self->run_command(['crushtool', '-d', "$self->{qtmp}/crushmap.bin", '-o', "$self->{qtmp}/crushmap"]);
-    copy("$self->{qtmp}/crushmap", "$self->{qtmp}/crushmap". time() );
+    my $crushdump = decode_json($jstr); #wrong weights, but ignored at this momenta
+    my $crushdir = $self->{qtmp} . 'crushmap';
+    $self->run_ceph_command(['osd', 'getcrushmap', '-o', "$crushdir/crushmap.bin"]);
+    $self->run_command(['crushtool', '-d', "$crushdir/crushmap.bin", '-o', "$crushdir/crushmap"]);
+    #copy("$crushdir/crushmap", "$crushdir/crushmap.". time() );
     return $crushdump;
 }
 
@@ -871,7 +889,7 @@ sub crash_merge {
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){
-                        my $osdname = $self->get_osd_name($name, $osd) or return 0;
+                        my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path}) or return 0;
                         my $osdb = { name => $osdname, weight => $osds->{$osd}->{crush_weight}, type => 'osd' };
                         push(@{$bucket->{buckets}}, $osdb);
                         (my $id = $osdname) =~ s/^osd\.//;
@@ -917,13 +935,17 @@ sub flatten_buckets {
     my ($self, $buckets, $flats) = @_;
     my $titems = [];
     foreach my $bucket ( @{$buckets}) {
-        push($titems, { name => $bucket->{name}, weight => $bucket->{weight} });
+        push(@$titems, { name => $bucket->{name}, weight => $bucket->{weight} });
         if ($bucket->{buckets}) {
             my $citems = $self->flatten_buckets($bucket->{buckets}, $flats);         
-        $bucket->{items} = $citems;
-        delete $bucket->{buckets};
+            $bucket->{items} = $citems;
+            delete $bucket->{buckets};
+            $bucket->{chash} = delete $bucket->{hash}; # Protected in tt-files
+        
         }
-        push(@$flats, $bucket);
+        if($bucket->{type} ne 'osd'){
+            push(@$flats, $bucket);
+        }
     }
     return $titems;
 }
@@ -955,7 +977,7 @@ sub quat_crash {
 }
 
 sub set_used_crush_id {
-    my ($self, $id);
+    my ($self, $id) = @_;
     if (!$self->{crush_ids}) {
         $self->{crush_ids} = [$id];
     } else {
@@ -966,11 +988,11 @@ sub set_used_crush_id {
 sub generate_crush_id {
     my ($self, $way) = @_;
     my $newid;
-    if ($way eq = -1) {
-        my $min = min @{$self->{crush_ids}};
+    if ($way == -1) {
+        my $min = min(@{$self->{crush_ids}});
         $newid = $min - 1;
-    } elsif ($way eq = 1) {
-        my $max = max @{$self->{crush_ids}};
+    } elsif ($way == 1) {
+        my $max = max(@{$self->{crush_ids}});
         $newid = $max + 1;
     }
     $self->set_used_crush_id($newid);
@@ -989,7 +1011,7 @@ sub cmp_crash {
     }
     # Types
     if (!Compare($cephcr->{types}, $quatcr->{types})) {
-        $self->warn("Some types are changed in the crushmap!\n");
+        $self->warn("Types are changed in the crushmap!\n");
     }    
  
     # Buckets
@@ -998,8 +1020,8 @@ sub cmp_crash {
         my $found = 0;
         foreach my $qbuck (@{$quatcr->{buckets}}){
             if ($cbuck->{name} eq $qbuck->{name}){
-                if ($cbuck->{type} ne $qbuck->{type}) {
-                    $self->warn("Type of $cbuck->{name} changed from $cbuck->{type} to $qbuck->{type}!");
+                if ($cbuck->{type_name} ne $qbuck->{type}) {
+                    $self->warn("Type of $cbuck->{name} changed from $cbuck->{type_name} to $qbuck->{type}!");
                 } # Or error and return ?
                 $self->set_used_crush_id($cbuck->{id});
                 $qbuck->{id} = $cbuck->{id};
@@ -1014,7 +1036,7 @@ sub cmp_crash {
     foreach my $qbuck (@{$quatcr->{buckets}}){
         if (!defined($qbuck->{id})){
             $qbuck->{id} = $self->generate_crush_id(-1);
-            $self->info("Bucket $cbuck->{name} added to crushmap");
+            $self->info("Bucket $qbuck->{name} added to crushmap");
         }     
     }
         
@@ -1023,38 +1045,69 @@ sub cmp_crash {
     foreach my $crule (@{$cephcr->{rules}}) {
         my $found = 0;
         foreach my $qrule (@{$quatcr->{rules}}){
-            if ($crule->{name} eq $qrule->{name}){
+            if ($crule->{rule_name} eq $qrule->{name}){
                 if (defined($qrule->{ruleset})){
                     if ($crule->{ruleset} ne $qrule->{ruleset}) {
-                        $self->warn("Ruleset of $crule->{name} changed",
+                        $self->warn("Ruleset of $qrule->{name} changed",
                             "from $crule->{ruleset} to $qrule->{ruleset}!");
                     }
                 } else {
                     $qrule->{ruleset} = $crule->{ruleset};
                 }
-                $self->set_used_crush_id($cbuck->{ruleset});
+                $self->set_used_crush_id($crule->{ruleset});
                 $found = 1;
                 last;
             }
         }
         if (!$found) {
-            $self->info("Rule $crule->{name} removed from crushmap");
+            $self->info("Rule $crule->{rule_name} removed from crushmap");
         }
     }
     foreach my $qrule (@{$quatcr->{rules}}){
         if (!defined($qrule->{ruleset})){
             $qrule->{ruleset} = $self->generate_crush_id(1);
-            $self->info("Rule $crule->{name} added to crushmap");
+            $self->info("Rule $qrule->{name} added to crushmap");
         }     
     }       
      
     return 1;
 }
 
-# write out the crushmap
+# write out the crushmap and install into cluster
 sub write_crash {
     my ($self, $crash) = @_;
     #Use tt files
+    my $crushdir = $self->{qtmp} . 'crushmap';
+    my $plainfile = "$crushdir/crushmap"; 
+
+    my $fh = CAF::FileWriter->new($plainfile, log => $self, 
+                                backup => "." . time() );
+    print $fh  "\n";
+    $self->debug(5, Dumper($crash));
+    my $ok = $self->template()->process($TT_FILE, $crash, $fh);
+    if (!$ok) {
+        $self->error("Unable to render template ", $TT_FILE, ": ",
+                     $self->template()->error());
+        $fh->cancel();
+        return 0;
+    }
+    my $changed = $fh->close();
+
+    if ($changed) {
+        # compile and set crushmap    
+        if (!$self->run_command(['crushtool', '-c', "$plainfile", '-o', "$crushdir/crushmap.bin"])){
+            $self->error("Could not compile crushmap!");
+            return 0;
+        }
+#        if (!$self->run_ceph_command(['osd', 'setcrushmap', '-o', "$crushdir/crushmap.bin"])) {
+#            $self->error("Could not install crushmap!");
+#            return 0;
+#        }
+        $self->debug(1, "Changed crushmap installed");
+    } else {
+        $self->debug(2, "Crushmap not changed");
+    }
+    return 1;
 }   
 
 sub process_crushmap {
@@ -1124,7 +1177,7 @@ sub Configure {
         $self->check_configuration($cluster) or return 0;
         $self->debug(1,"deploying commands\n");
         $self->do_deploy() or return 0;
-        #$self->do_post_actions($cluster) or return 0; 
+        $self->do_post_actions($cluster) or return 0; 
         $self->print_man_cmds();
         $self->debug(1,'Done');
         return 1;
