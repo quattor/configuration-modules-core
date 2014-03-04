@@ -37,26 +37,22 @@ my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();
-my $crash = $cluster->{crushmap};
+my $crush = $cluster->{crushmap};
 $cmp->flatten_osds($cluster->{osdhosts});
-$cmp->quat_crash($crash, $cluster->{osdhosts});
-cmp_deeply($crash, \%crushdata::QUATMAP, 'hash from quattor built');
+$cmp->quat_crush($crush, $cluster->{osdhosts});
+cmp_deeply($crush, \%crushdata::QUATMAP, 'hash from quattor built');
 $cmp->{qtmp} = '/tmp';
-my $chash = $cmp->ceph_crash();
+my $chash = $cmp->ceph_crush();
 cmp_deeply($chash, \%crushdata::CEPHMAP, 'hash from ceph built');
-$crash->{devices} = $chash->{devices}; # resolved on live system
-$cmp->cmp_crash($chash, $crash);
-cmp_deeply($crash, \%crushdata::CMPMAP, 'hash after compare and ids built');
+$crush->{devices} = $chash->{devices}; # resolved on live system
+$cmp->cmp_crush($chash, $crush);
+cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
 
 my $str;
-ok($cmp->template()->process('ceph/crush.tt', $crash, \$str),
+ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
    "Template successfully rendered");
 
 is($str,$crushdata::WRITEMAP, 'written crushmap ok');
 is($cmp->template()->error(), "", "No errors in rendering the template");
-
-#like($str, qr{^\[domain/foo\]$}m, "LDAP domain name printed");
-#like($str, qr{^ldap_uri\s*=\s*u1,\s*u2$}m, "LDAP fields printed");
-
 
 done_testing();

@@ -1317,6 +1317,7 @@ rule rbd {
     step emit
 }
 
+# end crush map
 END
 
 Readonly our $BASEMAP => <<END;
@@ -1376,5 +1377,6 @@ rule rbd {
     step emit
 }
 
+# end crush map
 END
 

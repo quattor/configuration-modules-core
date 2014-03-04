@@ -46,7 +46,8 @@
               <require>ceph</require>
             </requires>
           </configuration>
-        </plugin>       <plugin>
+        </plugin>       
+        <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.4.3</version>
           <executions>
@@ -71,6 +72,26 @@
               </configuration>
             </execution>
           </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <mappings combine.children="append">
+              <mapping>
+                <directory>/usr/share/templates/</directory>
+                <filemode>644</filemode>
+                <username>root</username>
+                <groupname>root</groupname>
+                <sources>
+                  <source>
+                    <location>${project.build.directory}/share/templates/</location>
+                  </source>
+                </sources>
+                <directoryIncluded>false</directoryIncluded>
+              </mapping>
+            </mappings>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

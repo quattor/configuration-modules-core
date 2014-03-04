@@ -35,10 +35,10 @@ my $cmp = NCM::Component::ceph->new('ceph');
 my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
-my $crash = $cluster->{crushmap};
+my $crush = $cluster->{crushmap};
 my $str;
 
-ok($cmp->template()->process('ceph/crush.tt', $crash, \$str),
+ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
    "Template successfully rendered");
 is($str,$crushdata::BASEMAP, 'written crushmap ok');
 is($cmp->template()->error(), "", "No errors in rendering the template");

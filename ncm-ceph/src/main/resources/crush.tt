@@ -4,31 +4,27 @@
 [% FOREACH device IN devices -%]
 device [% device.id %] [% device.name %]
 [% END %]
-[%- -%]
-
 #types
 [% FOREACH type IN types -%]
 type [% type.type_id %] [% type.name %]
 [% END %]
-[%- -%]
-
 #buckets
 [% FOREACH bucket IN buckets -%]
 [%-     IF bucket.type != 'osd'  -%]
-[% bucket.type %] [% bucket.name %] {
+[%          bucket.type %] [% bucket.name %] {
 [%          FILTER indent -%]
-id [% bucket.id %]
-# weight [% bucket.weight  %]
-alg [% bucket.alg %]
-hash [% # 'hash' returns a bucket hash 
-bucket.chash %]
+id [%           bucket.id %]
+# weight [%     bucket.weight  %]
+alg [%          bucket.alg %]
+hash [% # 'hash' returns a bucket hash, renamed to chash in the component
+                bucket.chash %]
 [%              FOREACH item IN bucket.items -%]
-item [% item.name %] weight [% item.weight %]
-[%                  END %]
-[%-             END -%]
+item [%             item.name %] weight [% item.weight %]
+[%              END %]
+[%-         END -%]
 }
 
-[%     END -%]
+[%      END -%]
 [% END -%]
 #rules
 [% FOREACH rule IN rules -%]
@@ -39,13 +35,14 @@ type [% rule.type %]
 min_size [% rule.min_size %]
 max_size [% rule.max_size %]
 [%              FOREACH step IN rule.steps -%]
-step take [% step.take %]
-[%                      FOREACH choice IN step.choices -%]
-step [% choice.chtype %] [% choice.number %] type [% choice.bktype %]
-[%-                      END %]
+step take [%        step.take %]
+[%                  FOREACH choice IN step.choices -%]
+step [%                 choice.chtype %] [% choice.number %] type [% choice.bktype %]
+[%-                 END %]
 step emit
 [%              END %]
 [%-     END -%]
 }
 
 [% END -%]
+# end crush map
