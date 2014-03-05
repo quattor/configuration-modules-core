@@ -127,8 +127,6 @@ function check_is_bucket = {
     };
     true;
 };
- 
-        
 
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
@@ -191,8 +189,6 @@ function is_ceph_crushmap_bucket_alg = {
     true;
 };
     
-#type type_ceph_crushmap_bucket_alg = string with match(SELF, '^(uniform|list|tree|straw)$');
-
 @{ ceph crushmap bucket definition @}
 type ceph_crushmap_bucket = {
     'name'          : string #Must be unique
