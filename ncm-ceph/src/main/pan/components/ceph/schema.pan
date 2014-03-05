@@ -28,6 +28,108 @@ function check_osd_names = {
     };
    return(true);
 };
+
+function check_crushmap = {
+    names = list();
+    types = ARGV[0]['types'];
+    #check types
+    if(index('osd', types) == -1 || index('host', types) == -1) {
+        error("Types should at least contain type 'osd' and 'host'.");
+        return(false);
+    };
+    # check buckets (names, attrs, types)
+    foreach(idx;bucket;ARGV[0]['buckets']) {
+        if (!check_is_bucket(bucket, names, types, 1)){
+            return(false);
+        };
+    };
+    # check rule names
+    rulenames = list();
+    foreach(idx;rule;ARGV[0]['rules']) {
+        if(index(rule['name'], rulenames) != -1) {
+            error("Duplicate rule name " + rule['name']);
+            return(false);
+        } else {
+            append(rulenames, rule['name']);
+        };
+        foreach(idx;step;rule['steps']) {
+            if(index(step['take'], names) == -1) {
+                error("rule " + rule['name'] + " selects a non-existing bucket " + step['take']);
+                return(false);
+            };
+        };
+    };
+    true;
+};
+
+function check_is_bucket = {
+    bucket = ARGV[0];
+    names = ARGV[1];
+    types = ARGV[2];
+    top = ARGV[3];
+    if(!is_nlist(bucket)) {
+        error("Invalid bucket! Bucket should be an nlist.");
+        return(false);
+    };    
+    if(!exists(bucket['name']) || !is_string(bucket['name']) ) {
+        error("Invalid bucket! Expected 'name' of type string");
+        return(false);
+    };
+    if(!exists(bucket['type']) || !is_string(bucket['type']) ) {
+        error("Invalid bucket! Expected 'type' of type string");
+        return(false);
+    } else {
+        if(index(bucket['type'], types) == -1) {
+            error("Invalid bucket type: " + bucket['type'] + " not in crushmap 'types'!");
+            return(false);
+        };
+    };
+    if(exists(bucket['alg']) && !is_ceph_crushmap_bucket_alg(bucket['alg'])) {
+        error("Bucket attribute 'alg' invalid. Got " + bucket['alg']);
+        return(false);
+    };
+    if(exists(bucket['hash']) && !is_long(bucket['hash'])) {
+        error("Bucket attribute 'hash' invalid. Expected long, but got " + bucket['hash']);
+        return(false);
+    };
+    if(exists(bucket['weight']) && (!is_double(bucket['weight']) || bucket['weight'] < 0)) {
+        error("Bucket attribute 'weight' invalid. Expected positive double.");
+        return(false);
+    };
+    valids = list('name','type','alg','hash','weight','buckets');
+    if(top == 1){
+        append(valids, 'defaultalg');
+        append(valids, 'defaulthash');
+    };
+    foreach(attr;val;bucket) {
+        if(index(attr, valids) == -1) {
+            error("Attribute " + attr + " of bucket not supported!");
+            retrun(false);
+        };
+    };        
+     
+    if(index(bucket['name'], names) != -1) {
+        error("Duplicate bucket name " + bucket['name']);
+        return(false);
+    } else {
+        append(names, bucket['name']);
+    };
+    debug("Bucket " + bucket['name']);
+    # Check attributes
+
+    #recurse if buckets exists
+    if(exists(bucket['buckets'])){
+        foreach(idx;cbucket;bucket['buckets']) {
+            if (!check_is_bucket(cbucket, names, types, 0)){
+                return(false);
+            };
+        };
+    };
+    true;
+};
+ 
+        
+
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
     'up'    : boolean = true
@@ -81,15 +183,26 @@ type ceph_cluster_config = {
     'osd_pool_default_size'     : long(0..) = 2
     'osd_pool_default_min_size' : long(0..) = 1
 };
+function is_ceph_crushmap_bucket_alg = {
+    if (!match(ARGV[0], '^(uniform|list|tree|straw)$')){
+        error(ARGV[0] +  'is not a valid bucket algorithm');
+        return(false);
+    };
+    true;
+};
+    
+#type type_ceph_crushmap_bucket_alg = string with match(SELF, '^(uniform|list|tree|straw)$');
 
 @{ ceph crushmap bucket definition @}
 type ceph_crushmap_bucket = {
-    'name'      : string
-    'type'      : string # Must be in ceph_crushmap types
-    'alg'       : string = 'straw' with match(SELF, '^(uniform|list|tree|straw)$')
-    'hash'      : long = 0
-    'weight'    ? long(0..)
-    'buckets'   ? nlist[] # TODO with check if bucket
+    'name'          : string #Must be unique
+    'type'          : string # Must be in ceph_crushmap types
+    'alg'           ? string with is_ceph_crushmap_bucket_alg(SELF)
+    'hash'          ? long = 0
+    'weight'        ? double(0..)
+    'defaultalg'    : string = 'straw' with is_ceph_crushmap_bucket_alg(SELF)
+    'defaulthash'   : long = 0
+    'buckets'       ? nlist[] # the idea: recursive buckets
 };
 
 @{ ceph crushmap rule step @}
@@ -101,7 +214,7 @@ type ceph_crushmap_rule_choice = {
 
 @{ ceph crushmap rule step @}
 type ceph_crushmap_rule_step = {
-    'take'       : string
+    'take'       : string # Should be a valid bucket
     'choices'    : ceph_crushmap_rule_choice[1..]
 };
 
@@ -119,8 +232,8 @@ type ceph_crushmap_rule = {
 type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
-    'rules'     : ceph_crushmap_rule[1..]
-}; # TODO with check
+    'rules'     : ceph_crushmap_rule[1..] #with check_rulenames(SELF)
+} with check_crushmap(SELF); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
 type ceph_cluster = {

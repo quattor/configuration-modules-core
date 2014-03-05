@@ -18,7 +18,7 @@ id [%           bucket.id %]
 alg [%          bucket.alg %]
 hash [% # 'hash' returns a bucket hash, renamed to chash in the component
                 bucket.chash %]
-[%              FOREACH item IN bucket.items -%]
+[%              FOREACH item IN bucket.bitems -%]
 item [%             item.name %] weight [% item.weight %]
 [%              END %]
 [%-         END -%]

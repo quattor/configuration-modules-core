@@ -952,17 +952,35 @@ sub set_weights {
 }
 
 # Makes an one-dimensional array of buckets from a hierarchical one.
+# Also fix default attributes (See Quattor schema)
 sub flatten_buckets {
-    my ($self, $buckets, $flats) = @_;
+    my ($self, $buckets, $flats, $defaults) = @_;
     my $titems = [];
     foreach my $bucket ( @{$buckets}) {
+        # First fix attributes
+        my $bdefaults;
+        if (!$defaults) {
+            $bdefaults = {
+                alg => $bucket->{defaultalg},
+                hash => $bucket->{defaulthash},
+            };
+        } else {
+            $bdefaults = $defaults;
+        }
+        if (!defined($bucket->{alg})) {
+            $bucket->{alg} = $bdefaults->{alg};
+        }
+        if (!defined($bucket->{hash})) {
+            $bucket->{hash} = $bdefaults->{hash};
+        }
+        # hash is a protected variable in TT, renaming it here
+        $bucket->{chash} = delete $bucket->{hash}; 
+        
         push(@$titems, { name => $bucket->{name}, weight => $bucket->{weight} });
         if ($bucket->{buckets}) {
-            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats);         
-            $bucket->{items} = $citems;
+            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $bdefaults);         
+            $bucket->{bitems} = $citems; #items also sort of used in tt files
             delete $bucket->{buckets};
-            # hash is a protected variable in TT, renaming it here
-            $bucket->{chash} = delete $bucket->{hash}; 
         
         }
         if($bucket->{type} ne 'osd'){

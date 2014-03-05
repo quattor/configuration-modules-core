@@ -101,22 +101,20 @@ prefix '/software/components/ceph/clusters/ceph';
         nlist(
             'name', 'default',
             'type', 'root',
-            'hash', 0,
+            'defaultalg', 'straw',
+            'defaulthash', 0,
             'buckets', list(
                 nlist(
                     'name', 'ceph001',
                     'type', 'host',
-                    'hash', 0,
                 ),
                 nlist(
                     'name', 'ceph002',
                     'type', 'host',
-                    'hash', 0,
                 ),
                 nlist(
                     'name', 'ceph003',
                     'type', 'host',
-                    'hash', 0,
                 ),
             ),
         ),

@@ -20,8 +20,8 @@ Readonly our $CRUSHMAP_01 => '{"devices":[{"id":0,"name":"osd.0"},{"id":1,"name"
 Readonly::Hash our %QUATMAP => (
    'buckets' => [
      {
-       'chash' => '0',
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -71,13 +71,14 @@ Readonly::Hash our %QUATMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
        'name' => 'ceph001',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -127,13 +128,14 @@ Readonly::Hash our %QUATMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
        'name' => 'ceph002',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -183,13 +185,14 @@ Readonly::Hash our %QUATMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
        'name' => 'ceph003',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'ceph001',
            'weight' => 12
@@ -203,6 +206,9 @@ Readonly::Hash our %QUATMAP => (
            'weight' => 12
          }
        ],
+       'chash' => '0',
+       'defaultalg' => 'straw',
+       'defaulthash' => '0',
        'name' => 'default',
        'type' => 'root',
        'weight' => 36
@@ -832,9 +838,8 @@ Readonly::Hash our %CEPHMAP => (
 Readonly::Hash our %CMPMAP => (
    'buckets' => [
      {
-       'chash' => '0',
-       'id' => -2,
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -884,14 +889,15 @@ Readonly::Hash our %CMPMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
+       'id' => -2,
        'name' => 'ceph001',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'id' => -3,
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -941,14 +947,15 @@ Readonly::Hash our %CMPMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
+       'id' => -3,
        'name' => 'ceph002',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'id' => -4,
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'osd.0',
            'weight' => '1'
@@ -998,14 +1005,15 @@ Readonly::Hash our %CMPMAP => (
            'weight' => '1'
          }
        ],
+       'chash' => '0',
+       'id' => -4,
        'name' => 'ceph003',
        'type' => 'host',
        'weight' => 12
      },
      {
-       'chash' => '0',
-       'id' => -1,
-       'items' => [
+       'alg' => 'straw',
+       'bitems' => [
          {
            'name' => 'ceph001',
            'weight' => 12
@@ -1019,6 +1027,10 @@ Readonly::Hash our %CMPMAP => (
            'weight' => 12
          }
        ],
+       'chash' => '0',
+       'defaultalg' => 'straw',
+       'defaulthash' => '0',
+       'id' => -1,
        'name' => 'default',
        'type' => 'root',
        'weight' => 36
@@ -1178,11 +1190,11 @@ Readonly::Hash our %CMPMAP => (
        'name' => 'host',
        'type_id' => 1
      },
-    {
-      'name' => 'root',
-      'type_id' => 2
-    }
-  ]
+     {
+       'name' => 'root',
+       'type_id' => 2
+     }
+   ]
 );
 Readonly our $WRITEMAP => <<END;
 #begin crush map
@@ -1222,7 +1234,7 @@ type 2 root
 host ceph001 {
     id -2
     # weight 12
-    alg 
+    alg straw
     hash 0
     item osd.0 weight 1
     item osd.0 weight 1
@@ -1241,7 +1253,7 @@ host ceph001 {
 host ceph002 {
     id -3
     # weight 12
-    alg 
+    alg straw
     hash 0
     item osd.0 weight 1
     item osd.0 weight 1
@@ -1260,7 +1272,7 @@ host ceph002 {
 host ceph003 {
     id -4
     # weight 12
-    alg 
+    alg straw
     hash 0
     item osd.0 weight 1
     item osd.0 weight 1
@@ -1279,7 +1291,7 @@ host ceph003 {
 root default {
     id -1
     # weight 36
-    alg 
+    alg straw
     hash 0
     item ceph001 weight 12
     item ceph002 weight 12
@@ -1336,14 +1348,6 @@ root default {
     # weight 
     alg 
     hash 
-    item  weight 
-    item  weight 
-    item  weight 
-    item  weight 
-    item  weight 
-    item  weight 
-    item  weight 
-    item  weight 
 }
 
 #rules
