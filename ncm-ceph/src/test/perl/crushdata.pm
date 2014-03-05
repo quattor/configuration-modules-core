@@ -1249,7 +1249,6 @@ host ceph001 {
     item osd.0 weight 1
     item osd.0 weight 1
 }
-
 host ceph002 {
     id -3
     # weight 12
@@ -1268,7 +1267,6 @@ host ceph002 {
     item osd.0 weight 1
     item osd.0 weight 1
 }
-
 host ceph003 {
     id -4
     # weight 12
@@ -1287,7 +1285,6 @@ host ceph003 {
     item osd.0 weight 1
     item osd.0 weight 1
 }
-
 root default {
     id -1
     # weight 36
@@ -1308,7 +1305,6 @@ rule data {
     step chooseleaf firstn  type host
     step emit
 }
-
 rule metadata {
     ruleset 1
     type 
@@ -1318,7 +1314,6 @@ rule metadata {
     step chooseleaf firstn  type host
     step emit
 }
-
 rule rbd {
     ruleset 2
     type 
@@ -1360,7 +1355,6 @@ rule data {
     step chooseleaf firstn  type host
     step emit
 }
-
 rule metadata {
     ruleset 
     type 
@@ -1370,7 +1364,6 @@ rule metadata {
     step chooseleaf firstn  type host
     step emit
 }
-
 rule rbd {
     ruleset 
     type 

@@ -10,39 +10,11 @@ type [% type.type_id %] [% type.name %]
 [% END %]
 #buckets
 [% FOREACH bucket IN buckets -%]
-[%-     IF bucket.type != 'osd'  -%]
-[%          bucket.type %] [% bucket.name %] {
-[%          FILTER indent -%]
-id [%           bucket.id %]
-# weight [%     bucket.weight  %]
-alg [%          bucket.alg %]
-hash [% # 'hash' returns a bucket hash, renamed to chash in the component
-                bucket.chash %]
-[%              FOREACH item IN bucket.bitems -%]
-item [%             item.name %] weight [% item.weight %]
-[%              END %]
-[%-         END -%]
-}
-
-[%      END -%]
-[% END -%]
+[% INCLUDE 'ceph/crush-bucket.tt' bk=bucket %]
+[% END %]
 #rules
-[% FOREACH rule IN rules -%]
-rule [% rule.name %] {
-[%      FILTER indent -%]
-ruleset [% rule.ruleset %]
-type [% rule.type %]
-min_size [% rule.min_size %]
-max_size [% rule.max_size %]
-[%              FOREACH step IN rule.steps -%]
-step take [%        step.take %]
-[%                  FOREACH choice IN step.choices -%]
-step [%                 choice.chtype %] [% choice.number %] type [% choice.bktype %]
-[%-                 END %]
-step emit
-[%              END %]
-[%-     END -%]
-}
+[%- FOREACH rule IN rules -%]
+[% INCLUDE 'ceph/crush-rule.tt' ru=rule %]
+[%- END %]
 
-[% END -%]
 # end crush map
