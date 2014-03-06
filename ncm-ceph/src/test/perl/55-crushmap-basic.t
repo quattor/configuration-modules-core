@@ -50,7 +50,7 @@ cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
 my $str;
 ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
    "Template successfully rendered");
-
+# Full crushmap test, but device items not completely mocked (have all id 0)
 is($str,$crushdata::WRITEMAP, 'written crushmap ok');
 is($cmp->template()->error(), "", "No errors in rendering the template");
 

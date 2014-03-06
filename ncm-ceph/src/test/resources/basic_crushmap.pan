@@ -57,13 +57,16 @@ prefix '/software/components/ceph/clusters/ceph';
         nlist(
             'name', 'data',
             'type', 'replicated',
+            'min_size', 0,
+            'max_size', 10,
             'steps', list(
                 nlist(
                     'take', 'default', 
                     'choices', list(
                         nlist(
                             'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
+                            'bktype', 'host',
+                            'number', 0,
                         ),
                     ),
                 ),
@@ -72,13 +75,16 @@ prefix '/software/components/ceph/clusters/ceph';
         nlist(
             'name', 'metadata',
             'type', 'replicated',
+            'min_size', 0,
+            'max_size', 10,
             'steps', list(
                 nlist(
                     'take', 'default', 
                     'choices', list(
                         nlist(
                             'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
+                            'bktype', 'host',
+                            'number', 0,
                         ),
                     ),
                 ),
@@ -87,13 +93,16 @@ prefix '/software/components/ceph/clusters/ceph';
         nlist(
             'name', 'rbd',
             'type', 'replicated',
+            'min_size', 0,
+            'max_size', 10,
             'steps', list(
                 nlist(
                     'take', 'default', 
                     'choices', list(
                         nlist(
                             'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
+                            'bktype', 'host',
+                            'number', 0,
                         ),
                     ),
                 ),

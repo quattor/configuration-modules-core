@@ -1,4 +1,5 @@
-[%- import(bk) -%]
+[%- # to avoid possible vmethod issues (items and hash)
+    import(bk) -%]
 [%- IF type != 'osd'  -%]
 [%      type %] [% name %] {
 [%      FILTER indent -%]

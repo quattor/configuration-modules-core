@@ -5,8 +5,8 @@
 device [% device.id %] [% device.name %]
 [% END %]
 #types
-[% FOREACH type IN types -%]
-type [% type.type_id %] [% type.name %]
+[% FOREACH typ IN types -%]
+type [% typ.type_id %] [% typ.name %]
 [% END %]
 #buckets
 [% FOREACH bucket IN buckets -%]
