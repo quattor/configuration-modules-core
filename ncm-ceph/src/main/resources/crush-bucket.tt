@@ -1,15 +1,14 @@
-[% IMPORT(bk) %]
-[%-     IF bucket.type != 'osd'  -%]
-[%          bucket.type %] [% bucket.name %] {
-[%          FILTER indent -%]
-id [%           bucket.id %]
-# weight [%     bucket.weight  %]
-alg [%          bucket.alg %]
-hash [% # 'hash' returns a bucket hash, renamed to chash in the component
-                bucket.chash %]
-[%              FOREACH item IN bucket.bitems -%]
-item [%             item.name %] weight [% item.weight %]
-[%              END %]
-[%-         END -%]
+[%- import(bk) -%]
+[%- IF type != 'osd'  -%]
+[%      type %] [% name %] {
+[%      FILTER indent -%]
+id [%       id %]
+# weight [% weight  %]
+alg [%      alg %]
+hash [%     hash %]
+[%          FOREACH item IN items -%]
+item [%         item.name %] weight [% item.weight %]
+[%          END %]
+[%-     END -%]
 }
-[%-      END -%]
+[%- END -%]

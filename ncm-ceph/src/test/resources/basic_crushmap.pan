@@ -56,6 +56,7 @@ prefix '/software/components/ceph/clusters/ceph';
     'rules', list (
         nlist(
             'name', 'data',
+            'type', 'replicated',
             'steps', list(
                 nlist(
                     'take', 'default', 
@@ -70,6 +71,7 @@ prefix '/software/components/ceph/clusters/ceph';
         ),
         nlist(
             'name', 'metadata',
+            'type', 'replicated',
             'steps', list(
                 nlist(
                     'take', 'default', 
@@ -84,6 +86,7 @@ prefix '/software/components/ceph/clusters/ceph';
         ),
         nlist(
             'name', 'rbd',
+            'type', 'replicated',
             'steps', list(
                 nlist(
                     'take', 'default', 

@@ -956,30 +956,28 @@ sub set_weights {
 sub flatten_buckets {
     my ($self, $buckets, $flats, $defaults) = @_;
     my $titems = [];
-    foreach my $bucket ( @{$buckets}) {
+    foreach my $tmpbucket ( @{$buckets}) {
         # First fix attributes
         my $bdefaults;
-        if (!$defaults) {
+        if (!$defaults) { # Assume processing top level bucket
             $bdefaults = {
-                alg => $bucket->{defaultalg},
-                hash => $bucket->{defaulthash},
+                alg => $tmpbucket->{defaultalg},
+                hash => $tmpbucket->{defaulthash},
             };
         } else {
             $bdefaults = $defaults;
         }
-        if (!defined($bucket->{alg})) {
-            $bucket->{alg} = $bdefaults->{alg};
-        }
-        if (!defined($bucket->{hash})) {
-            $bucket->{hash} = $bdefaults->{hash};
-        }
-        # hash is a protected variable in TT, renaming it here
-        $bucket->{chash} = delete $bucket->{hash}; 
+        my %bucketh;
+        #set default values
+        @bucketh{ keys %$bdefaults} = values %$bdefaults;
+        # update with tmpbucket
+        @bucketh{keys %$tmpbucket} = values %$tmpbucket;
+        my $bucket = \%bucketh;
         
         push(@$titems, { name => $bucket->{name}, weight => $bucket->{weight} });
         if ($bucket->{buckets}) {
             my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $bdefaults);         
-            $bucket->{bitems} = $citems; #items also sort of used in tt files
+            $bucket->{items} = $citems; 
             delete $bucket->{buckets};
         
         }
@@ -1159,7 +1157,6 @@ sub cmp_crush_rules {
 # Compare the generated crushmap with the installed one
 sub cmp_crush {
     my ($self, $cephcr, $quatcr) = @_;
-    # Check for valid changes in the map, rules?
     # Use already existing ids
     # Devices: this should match exactly
     if (!Compare($cephcr->{devices}, $quatcr->{devices})) {
@@ -1209,10 +1206,10 @@ sub write_crush {
             $self->error("Could not compile crushmap!");
             return 0;
         }
-#        if (!$self->run_ceph_command(['osd', 'setcrushmap', '-o', "$crushdir/crushmap.bin"])) {
-#            $self->error("Could not install crushmap!");
-#            return 0;
-#        }
+        if (!$self->run_ceph_command(['osd', 'setcrushmap', '-o', "$crushdir/crushmap.bin"])) {
+            $self->error("Could not install crushmap!");
+            return 0;
+        }
         $self->debug(1, "Changed crushmap installed");
     } else {
         $self->debug(2, "Crushmap not changed");

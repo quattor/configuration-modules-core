@@ -10,11 +10,10 @@ type [% type.type_id %] [% type.name %]
 [% END %]
 #buckets
 [% FOREACH bucket IN buckets -%]
-[% INCLUDE 'ceph/crush-bucket.tt' bk=bucket %]
+[%     INCLUDE 'ceph/crush-bucket.tt' bk=bucket %]
 [% END %]
 #rules
-[%- FOREACH rule IN rules -%]
-[% INCLUDE 'ceph/crush-rule.tt' ru=rule %]
-[%- END %]
-
+[% FOREACH rule IN rules -%]
+[%     INCLUDE 'ceph/crush-rule.tt' ru=rule %]
+[% END %]
 # end crush map

@@ -4,9 +4,10 @@
 # ${build-info}
 
 declaration template components/${project.artifactId}/schema;
-
+ 
 include { 'quattor/schema' };
 
+@{ functions that checks that the ceph osd names are no ceph reserved paths @}
 function check_osd_names = {
     names = list();
     clusters = ARGV[0]['clusters'];
@@ -29,6 +30,11 @@ function check_osd_names = {
    return(true);
 };
 
+@{ 
+Function that checks the ceph crushmap
+This includes uniqueness of bucket and rule name,
+recursive bucket typing, and rules using existing buckets
+@}
 function check_crushmap = {
     names = list();
     types = ARGV[0]['types'];
@@ -62,6 +68,11 @@ function check_crushmap = {
     true;
 };
 
+@{ 
+Function that checks the bucket type recursively
+This includes attribute type and value checking,
+and the uniqueness of names
+@}
 function check_is_bucket = {
     bucket = ARGV[0];
     names = ARGV[1];
@@ -181,6 +192,9 @@ type ceph_cluster_config = {
     'osd_pool_default_size'     : long(0..) = 2
     'osd_pool_default_min_size' : long(0..) = 1
 };
+
+@{ function that checks that it is a valid algorithm. 
+Function also used in check_crushmap @}
 function is_ceph_crushmap_bucket_alg = {
     if (!match(ARGV[0], '^(uniform|list|tree|straw)$')){
         error(ARGV[0] +  'is not a valid bucket algorithm');
@@ -216,7 +230,7 @@ type ceph_crushmap_rule_step = {
 
 @{ ceph crushmap rule definition @}
 type ceph_crushmap_rule = {
-    'name'              : string
+    'name'              : string #Must be unique
     'type'              : string = 'replicated' with match(SELF, '^(replicated|raid4)$')
     'ruleset'           ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
     'min_size'          : long(0..) = 0
@@ -228,7 +242,7 @@ type ceph_crushmap_rule = {
 type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
-    'rules'     : ceph_crushmap_rule[1..] #with check_rulenames(SELF)
+    'rules'     : ceph_crushmap_rule[1..]
 } with check_crushmap(SELF); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
