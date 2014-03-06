@@ -1,4 +1,4 @@
-[%- # to avoid possible vmethod issues (items and hash)
+[%- # to avoid possible vmethod issues 
     import(ru) -%]
 rule [% name %] {
 [% FILTER indent -%]
