@@ -14,7 +14,7 @@ Features that are implemented at this moment:
 
 The implementation keeps safety as top priority. Therefore:
 
-* The config of MON, OSD and MDSs are first checkedi completely. Only if no errors were found, the actual changes will be deployed.
+* The config of MON, OSD and MDSs are first checked completely. Only if no errors were found, the actual changes will be deployed.
 * No removals of MONs, OSDs or MDSs are actually done at this moment. Instead of removing itself, it prints the commands to use.
 * Backup files are always made of the configfiles and decompiled crushmap files. 
 These timestamped files can be found in the 'ncm-ceph' folder in the home directory of the ceph user
@@ -50,8 +50,8 @@ Other things needed before using the component:
 
 # Points that need attention/improvement
 
-* Controlled restart of the daemons if changes are commited that requires daemon restart
-* ceph-deploy removal osd command is not yet implemented
+* There is not yet a controlled restart of the daemons if changes are commited that requires daemon restart
+* ceph-deploy removal osd command is not yet implemented (by ceph-deploy itself)
 * If some host of the defined cluster is down, the whole component is unable to run.
 * Default pg-num not respected by ceph-deploy. Pools still need manual intervention at that point.
 * Scalabilty issues: at this point the ssh connections are per osd instead of per host.
