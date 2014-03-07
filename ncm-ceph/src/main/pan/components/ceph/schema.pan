@@ -208,7 +208,7 @@ type ceph_crushmap_bucket = {
     'name'          : string #Must be unique
     'type'          : string # Must be in ceph_crushmap types
     'alg'           ? string with is_ceph_crushmap_bucket_alg(SELF)
-    'hash'          ? long = 0
+    'hash'          ? long = 0 # 0 is rjenkins1
     'weight'        ? double(0..)
     'defaultalg'    : string = 'straw' with is_ceph_crushmap_bucket_alg(SELF)
     'defaulthash'   : long = 0
