@@ -19,17 +19,17 @@ The implementation keeps safety as top priority. Therefore:
 * Backup files are always made of the configfiles and decompiled crushmap files. 
 These timestamped files can be found in the 'ncm-ceph' folder in the home directory of the ceph user
 * When something is not right and returns an error, the whole component exits.
-* By default, the component will only run if the versions of ceph and ceph-deploy match with the tested versions.
+* You can set the version of ceph and ceph-deploy in the Quattor scheme. The component will then only run if the versions of ceph and ceph-deploy match with those versions.
 
 ## How to run component
 
 * The schema details are annotated in the schema file. 
 * Example pan files are included in the examples folder and also in the test folders.
-* For details on running the component, look at the component man page.
+* For details on doing the initial run of the component, look at the component man page.
 
 # Dependencies
 
-The component is tested with Ceph version 0.72.2 and Ceph-Deploy version 1.3.5. By default, it will only work with these versions.
+The component is tested with Ceph version 0.72.2 and Ceph-Deploy version 1.3.5. 
 
 Following package dependencies should be installed to run the component:
 
@@ -39,6 +39,8 @@ Following package dependencies should be installed to run the component:
 * perl-Data-Compare >= 1.23 !
 
 This version of Data-Compare can be found on [http://www.city-fan.org/ftp/contrib/perl-modules/]
+
+Attention: Some repositories (e.g. rpmforge) are shipping some versions like 1.2101 and 1.2102.
 
 Other things needed before using the component:
 
@@ -53,11 +55,17 @@ Other things needed before using the component:
 * There is not yet a controlled restart of the daemons if changes are commited that requires daemon restart
 * ceph-deploy removal osd command is not yet implemented (by ceph-deploy itself)
 * If some host of the defined cluster is down, the whole component is unable to run.
-* Default pg-num not respected by ceph-deploy. Pools still need manual intervention at that point.
+* Default pg-num and pgp-num not respected by ceph-deploy. Pools still need manual intervention at that point:
+
+  `ceph osd pool set {pool-name} pg_num {pg_num}`
+
+  `ceph osd pool set {pool-name} pgp_num {pg_num}`
 * Scalabilty issues: at this point the ssh connections are per osd instead of per host.
+* Ceph-disk is not enforced. You have to make sure that the filesystems are created with recommended tuning (see examples)
 
 # Future features
 
 * Finer configuration control (Per-osd/host base)
 * Pool support
 * Firefly support?
+* Wildcard support in version numbers

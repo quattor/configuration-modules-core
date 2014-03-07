@@ -9,7 +9,7 @@ ncm-${project.artifactId}: Configuration module for CEPH
 
 =head1 DESCRIPTION
 
-${project.artifactId}
+For an overview of the features of this component, read the README.md file.
 
 =head1 INITIAL CREATION
 
