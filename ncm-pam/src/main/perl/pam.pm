@@ -92,7 +92,7 @@ sub Configure {
 		  my @o = ();
 		  foreach my $kv (sort keys %{$spec->{options}}) {
 		      if ($config->getElement("$prefix/services/$service/$type/$pos/options/$kv")->isType(BOOLEAN)) {
-			  push(@o, $kv) if $config->getElement("$prefix/services/$service/$type/$pos/options/$kv");
+			  push(@o, $kv) if $spec->{options}->{$kv};
 		      } else {
 			  push(@o, "$kv=$spec->{options}->{$kv}");
 		      }
