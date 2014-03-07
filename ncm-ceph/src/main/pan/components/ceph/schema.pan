@@ -8,7 +8,7 @@ declaration template components/${project.artifactId}/schema;
 include { 'quattor/schema' };
 
 @{ functions that checks that the ceph osd names are no ceph reserved paths @}
-function check_osd_names = {
+function valid_osd_names = {
     names = list();
     clusters = ARGV[0]['clusters'];
     foreach (name;cluster;clusters) {
@@ -37,21 +37,23 @@ recursive bucket typing, and rules using existing buckets
 @}
 function check_crushmap = {
     names = list();
-    types = ARGV[0]['types'];
+    types = ARGV[0];
+    buckets = ARGV[1];
+    rules = ARGV[2];
     #check types
     if(index('osd', types) == -1 || index('host', types) == -1) {
         error("Types should at least contain type 'osd' and 'host'.");
         return(false);
     };
     # check buckets (names, attrs, types)
-    foreach(idx;bucket;ARGV[0]['buckets']) {
-        if (!check_is_bucket(bucket, names, types, 1)){
+    foreach(idx;bucket;buckets) {
+        if (!is_bucket(bucket, names, types, 1)){
             return(false);
         };
     };
     # check rule names
     rulenames = list();
-    foreach(idx;rule;ARGV[0]['rules']) {
+    foreach(idx;rule;rules) {
         if(index(rule['name'], rulenames) != -1) {
             error("Duplicate rule name " + rule['name']);
             return(false);
@@ -73,7 +75,7 @@ Function that checks the bucket type recursively
 This includes attribute type and value checking,
 and the uniqueness of names
 @}
-function check_is_bucket = {
+function is_bucket = {
     bucket = ARGV[0];
     names = ARGV[1];
     types = ARGV[2];
@@ -131,7 +133,7 @@ function check_is_bucket = {
     #recurse if buckets exists
     if(exists(bucket['buckets'])){
         foreach(idx;cbucket;bucket['buckets']) {
-            if (!check_is_bucket(cbucket, names, types, 0)){
+            if (!is_bucket(cbucket, names, types, 0)){
                 return(false);
             };
         };
@@ -182,8 +184,8 @@ type ceph_cluster_config = {
     'filestore_xattr_use_omap'  : boolean = true
     'osd_journal_size'          : long(0..) = 10240
     'mon_initial_members'       : string [1..]
-    'public_network'            : string with match(SELF,'^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$')
-    'cluster_network'           ? string with match(SELF,'^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$')
+    'public_network'            : type_network_name
+    'cluster_network'           ? type_network_name
     'auth_service_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'auth_client_required'      : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'auth_cluster_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
@@ -243,7 +245,7 @@ type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
     'rules'     : ceph_crushmap_rule[1..]
-} with check_crushmap(SELF); 
+} with check_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
 type ceph_cluster = {
@@ -261,6 +263,6 @@ type ${project.artifactId}_component = {
     'clusters'         : ceph_cluster {}
     'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
-} with check_osd_names(SELF);
+} with valid_osd_names(SELF);
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

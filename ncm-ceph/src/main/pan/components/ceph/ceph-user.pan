@@ -21,3 +21,5 @@ prefix '/software/components/accounts';
     "createHome", true,
 );
 
+'kept_users/ceph' = '';
+'kept_groups/ceph' = '';

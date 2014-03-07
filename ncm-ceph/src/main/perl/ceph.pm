@@ -14,6 +14,7 @@
 
 package NCM::Component::${project.artifactId};
 
+use 5.10.1;
 use strict;
 use warnings;
 
@@ -41,7 +42,7 @@ use JSON::XS;
 use Readonly;
 
 our $EC=LC::Exception::Context->new->will_store_all;
-Readonly::Array my @noninject => qw(
+Readonly::Array my @NONINJECT => qw(
     mon_host 
     mon_initial_members
     public_network
@@ -57,7 +58,7 @@ sub use_cluster {
     undef $self->{fsid};
     $cluster ||= 'ceph';
     if ($cluster ne 'ceph') {
-        $self->error("Not yet implemented!\n"); 
+        $self->error("Not yet implemented!"); 
         return 0;
     }
     $self->{cluster} = $cluster;
@@ -70,40 +71,37 @@ sub run_command {
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
     $cmd->execute();
-    my $rc = $?;
-    if (!$cmd_output) {
-        $cmd_output = "0 but true";
-    }
-    if ($rc) {
-        $self->error("Command failed. Error Message: $cmd_err\n" , 
-            "Command output: $cmd_output\n");
-        $self->{lasterr} = $cmd_err;
-        return 0;
+    if ($?) {
+        $self->error("Command failed. Error Message: $cmd_err");
+        if ($cmd_output) {
+            $self->verbose("Command output: $cmd_output");
+        }
+        return;
     } else {
-        $self->verbose(2,"Command output: $cmd_output\n");
+        if ($cmd_output) {
+            $self->verbose("Command output: $cmd_output");
+        }
         if ($cmd_err) {
-            $self->verbose("Command stderr output: $cmd_err\n");
-            $self->{lasterr} = $cmd_err;
+            $self->verbose("Command stderr output: $cmd_err");
         }    
     }
-    return $cmd_output;
+    #return $cmd_output || "0 but true";
+    return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
 }
 
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command) = @_;
-    unshift (@$command, ('/usr/bin/ceph', '-f', 'json','--cluster', $self->{cluster}));
-    return $self->run_command($command);
+    return $self->run_command([qw(/usr/bin/ceph -f json --cluster), $self->{cluster}, @$command]);
 }
 
 sub run_daemon_command {
     my ($self, $command) = @_;
-    unshift (@$command, qw(/sbin/service ceph));
-    return $self->run_command($command);
+    return $self->run_command([qw(/sbin/service ceph), @$command]);
 }
 
 #checks for shell escapes
-sub shell_escapes {
+sub has_shell_escapes {
     my ($self, $cmd) = @_;
     if (grep(m{[;&>|"']}, @$cmd) ) {
         $self->error("Invalid shell escapes found in ", 
@@ -117,14 +115,13 @@ sub shell_escapes {
 sub run_command_as_ceph {
     my ($self, $command, $dir) = @_;
     
-    $self->shell_escapes($command) or return 0; 
+    $self->has_shell_escapes($command) or return; 
     if ($dir) {
-        $self->shell_escapes([$dir]) or return 0;
+        $self->has_shell_escapes([$dir]) or return;
         unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
-    unshift (@$command, qw(su - ceph -c));
-    return $self->run_command($command);
+    return $self->run_command([qw(su - ceph -c), @$command]);
 }
 
 
@@ -135,8 +132,7 @@ sub run_ceph_deploy_command {
     if ($overwrite) {
         unshift (@$command, '--overwrite-conf');
     }
-    unshift (@$command, ('/usr/bin/ceph-deploy', '--cluster', $self->{cluster}));
-    return $self->run_command_as_ceph($command, $dir);
+    return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir);
 }
 
 ## Retrieving information of ceph cluster
@@ -157,11 +153,11 @@ sub get_fsid {
 # Gets the config of the cluster
 sub get_global_config {
     my ($self, $file) = @_;
-    my $cephcfg = Config::Tiny->new;
+    my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
     if (scalar(keys %$cephcfg) > 1) {
-        $self->error("NO support for daemons not installed with ceph-deploy\n",
-            "only global section expected, provided sections: ", keys %$cephcfg)
+        $self->error("NO support for daemons not installed with ceph-deploy.",
+            "Only global section expected, provided sections: ", join(",", keys %$cephcfg));
     }
     if (!$cephcfg->{global}) {
         $self->error("Not a valid config file found");
@@ -229,7 +225,7 @@ sub get_osd_location {
     my ($self,$osd, $host, $uuid) = @_;
     my $osdlink = "/var/lib/ceph/osd/$self->{cluster}-$osd";
     if (!$host) {
-        $self->error("Can not find osd without a hostname\n");
+        $self->error("Can not find osd without a hostname");
         return ;
     }   
     
@@ -238,18 +234,18 @@ sub get_osd_location {
     my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
-        $self->error("UUID for osd.$osd of ceph command output differs from that on the disk\n",
-            "Ceph value: $uuid\n", 
-            "Disk value: $ph_uuid\n");
+        $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
+            "Ceph value: $uuid, ", 
+            "Disk value: $ph_uuid");
         return ;    
     }
     my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
     chomp($ph_fsid);
     my $fsid = $self->get_fsid();
     if ($ph_fsid ne $fsid) {
-        $self->error("fsid for osd.$osd not matching with this cluster!\n", 
-            "Cluster value: $fsid\n", 
-            "Disk value: $ph_fsid\n");
+        $self->error("fsid for osd.$osd not matching with this cluster! ", 
+            "Cluster value: $fsid, ", 
+            "Disk value: $ph_fsid");
         return ;
     }
     my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
@@ -290,6 +286,7 @@ sub mon_hash {
     }
     return \%monparsed;
 }
+
 # Gets the MDS map 
 sub mds_hash {
     my ($self) = @_;
@@ -308,6 +305,7 @@ sub mds_hash {
     }
     return \%mdsparsed;
 }       
+
 ## Processing and comparing between Quattor and Ceph
 
 # Do a comparison of quattor config and the actual ceph config 
@@ -353,13 +351,12 @@ sub process_mons {
 sub flatten_osds {
     my ($self, $hosds) = @_; 
     my %flat = ();
-    foreach my $host (keys %{$hosds}){
-        my $osds = $hosds->{$host}->{osds};
-        foreach my $osd (keys %{$osds}){
-            my $newosd = $osds->{$osd};
-            $newosd->{host} = $host;
-            $newosd->{fqdn} = $hosds->{$host}->{fqdn};
-            my $osdpath = unescape($osd);
+    while (my ($hostname, $host) = each(%{$hosds})) {
+        my $osds = $host->{osds};
+        while (my ($osdpath, $newosd) = each(%{$osds})) {
+            $newosd->{host} = $hostname;
+            $newosd->{fqdn} = $host->{fqdn};
+            $osdpath = unescape($osdpath);
             if ($osdpath !~ m|^/|){
                 $osdpath = $OSDBASE . $osdpath;
             }
@@ -367,8 +364,7 @@ sub flatten_osds {
                 $newosd->{journal_path} = $JOURNALBASE . $newosd->{journal_path};
             }
             $newosd->{osd_path} = $osdpath;
-            $osds->{$osd}->{osd_path} = $osdpath;
-            my $osdstr = "$host:$osdpath" ;
+            my $osdstr = "$hostname:$osdpath" ;
             $flat{$osdstr} = $newosd;
         }
     }
@@ -416,8 +412,8 @@ sub move_to_old {
 # Pull config from host
 sub pull_cfg {
     my ($self, $host) = @_;
-    my $pullfile = $self->{cluster} . '.conf';
-    my $hostfile = $pullfile . '.' . $host;
+    my $pullfile = "$self->{cluster}.conf";
+    my $hostfile = "$pullfile.$host";
     $self->move_to_old($pullfile) or return 0;
     $self->run_ceph_deploy_command([qw(config pull), $host], $self->{qtmp}) or return 0;
     $self->move_to_old($hostfile) or return 0;
@@ -444,7 +440,7 @@ sub inject_realtime {
     my ($self, $host, $changes) = @_;
     my @cmd;
     for my $param (keys %{$changes}) {
-        if (!($param ~~ @noninject)) { # Requires Perl > 5.10 !
+        if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
             @cmd = ('tell',"*.$host",'injectargs','--');
             my $keyvalue = "--$param=$changes->{$param}";
             $self->info("injecting $keyvalue realtime on $host");
@@ -459,7 +455,6 @@ sub pull_compare_push {
     my $cconf = $self->pull_cfg($host);
     if (!$cconf) {
         return $self->push_cfg($host);
-        
     } else {
         $self->{comp} = 1;
         $self->{cfgchanges} = {};
@@ -494,7 +489,7 @@ sub config_cfgfile {
         }
     }   
     if ($action eq 'add'){
-        $self->info("$name added to config file\n");
+        $self->info("$name added to config file");
         if (ref($values) eq 'ARRAY'){
             $values = join(',',@$values); 
         }
@@ -509,14 +504,14 @@ sub config_cfgfile {
         }
         #TODO: check if changes are valid
         if ($quat ne $ceph) {
-            $self->info("$name changed from $ceph to $quat\n");
+            $self->info("$name changed from $ceph to $quat");
             $self->{comp} = -1;
             $self->{cfgchanges}->{$name} = $quat;
         }
     } elsif ($action eq 'del'){
         # TODO If we want to keep the existing configuration settings that are not in Quattor, 
         # we need to log it here. For now we expect that every used config parameter is in Quattor
-        $self->error("$name not in quattor\n");
+        $self->error("$name not in quattor");
         #$self->info("$name deleted from config file\n");
         $self->{comp} = -1;
         return 0;
@@ -569,9 +564,9 @@ sub check_immutables {
     my $rc =1;
     foreach my $attr (@{$imm}) {
         if ($quat->{$attr} ne $ceph->{$attr}){
-            $self->error("Attribute $attr of $name not corresponding\n", 
-                "Quattor: $quat->{$attr}\n",
-                "Ceph: $ceph->{$attr}\n");
+            $self->error("Attribute $attr of $name not corresponding.", 
+                "Quattor: $quat->{$attr}, ",
+                "Ceph: $ceph->{$attr}");
             $rc=0;
         }
     }
@@ -685,7 +680,7 @@ sub config_daemon {
     elsif ($type eq 'mds'){
         $self->config_mds($action,$name,$daemonh);
     } else {
-        $self->error("No such type: $type\n");
+        $self->error("No such type: $type");
     }
 }
 
@@ -702,10 +697,10 @@ sub write_config {
     }
     $tinycfg->{global} = $config;
     if (!$tinycfg->write($cfgfile)) {
-        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?\n"); 
+        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?"); 
         return 0;
     }
-    $self->debug(2,"content written to config file $cfgfile\n");
+    $self->debug(2,"content written to config file $cfgfile");
     return 1;
 }
 
@@ -713,13 +708,13 @@ sub write_config {
 sub do_deploy {
     my ($self) = @_;
     if ($self->{is_deploy}){ #Run only on deploy host(s)
-        $self->info("Running ceph-deploy commands.\n");
+        $self->info("Running ceph-deploy commands.");
         while (my $cmd = shift @{$self->{deploy_cmds}}) {
             $self->debug(1,@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {
-        $self->info("host is no deployhost, skipping ceph-deploy commands.\n");
+        $self->info("host is no deployhost, skipping ceph-deploy commands.");
         $self->{deploy_cmds} = [];
     }
     while (my $cmd = shift @{$self->{ceph_cmds}}) {
@@ -737,9 +732,9 @@ sub do_deploy {
 sub print_man_cmds {
     my ($self) = @_;
     if ($self->{man_cmds} && @{$self->{man_cmds}}) {
-        $self->info("Commands to be run manually (as ceph user):\n");
+        $self->info("Commands to be run manually (as ceph user):");
         while (my $cmd = shift @{$self->{man_cmds}}) {
-            $self->info(join(" ", @$cmd) . "\n");
+            $self->info(join(" ", @$cmd));
         }
     }
 }
@@ -810,22 +805,22 @@ sub cluster_ready_check {
         if ($self->{is_deploy}) {
             if (!$self->set_admin_host($cluster->{config},$self->{hostname}) 
                     || !$self->run_ceph_command([qw(status)])) {
-                $self->error("Cannot connect to ceph cluster!\n"); #This should not happen
+                $self->error("Cannot connect to ceph cluster!"); #This should not happen
                 return 0;
             } else {
                 $self->debug(1,"Node ready to receive ceph-commands");
             }
         } else {
             $self->error("Cluster not configured and no ceph deploy host.." . 
-                "Run on a deploy host!\n"); 
+                "Run on a deploy host!"); 
             return 0;
         }
     }
     my $fsid = $self->get_fsid();
     if ($cluster->{config}->{fsid} ne $fsid) {
-        $self->error("fsid of $self->{cluster} not matching!\n", 
-            "Quattor value: $cluster->{config}->{fsid}\n", 
-            "Cluster value: $fsid\n");
+        $self->error("fsid of $self->{cluster} not matching! ", 
+            "Quattor value: $cluster->{config}->{fsid}, ", 
+            "Cluster value: $fsid");
         return 0;
     }
     return 1;
@@ -881,7 +876,7 @@ sub crush_merge {
             # Recurse.
 
             if (!$self->crush_merge($bucket->{buckets}, $osdhosts, $devices)){
-                $self->debug(2, "Failed to merge buckets of $bucket->{name} with osds\n",
+                $self->debug(2, "Failed to merge buckets of $bucket->{name} with osds",
                     "Buckets:", Dumper($bucket->{buckets}));  
                 return 0;
             }
@@ -943,8 +938,8 @@ sub set_weights {
             $bucket->{weight} = $weight;
         } elsif ($weight != $bucket->{weight}) {
             $self->warn("Bucket weight of $bucket->{name} ", 
-                "in Quattor differs from the sum of the child buckets!\n",
-                "Quattor: $bucket->{weight} \n", 
+                "in Quattor differs from the sum of the child buckets! ",
+                "Quattor: $bucket->{weight} ", 
                 "Sum: $weight");
         }
     }
@@ -1189,7 +1184,7 @@ sub write_crush {
     my $fh = CAF::FileWriter->new($plainfile, log => $self, 
                                 backup => "." . time() );
     print $fh  "\n";
-    $self->debug(5, "Crushmap hash ready to be written to file:\n", Dumper($crush));
+    $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
     my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
     if (!$ok) {
         $self->error("Unable to render template ", $CRUSH_TT_FILE, ": ",
@@ -1244,19 +1239,18 @@ sub check_versions {
     my $cversion = $self->run_ceph_command([qw(--version)]);
     my @vl = split(' ',$cversion);
     my $cephv = $vl[2];
-    $self->run_ceph_deploy_command([qw(--version)]);
-    my $deplv = $self->{lasterr};
+    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)]);
     if ($deplv) {
         chomp($deplv);
     }
     if ($qceph && ($cephv ne $qceph)) {
-        $self->error("Ceph version not corresponding!\n",
-            "Ceph: $cephv, Quattor: $qceph\n");
+        $self->error("Ceph version not corresponding! ",
+            "Ceph: $cephv, Quattor: $qceph");
         return 0;
     }        
     if ($qdeploy && ($deplv ne $qdeploy)) {
-        $self->error("Ceph-deploy version not corresponding!\n",
-            "Ceph-deploy: $deplv, Quattor: $qdeploy\n");
+        $self->error("Ceph-deploy version not corresponding! ",
+            "Ceph-deploy: $deplv, Quattor: $qdeploy");
         return 0;
     }
     return 1;
@@ -1281,9 +1275,9 @@ sub Configure {
             $self->print_man_cmds();
             return 0; 
         }       
-        $self->debug(1,"checking configuration\n");
+        $self->debug(1,"checking configuration");
         $self->check_configuration($cluster) or return 0;
-        $self->debug(1,"deploying commands\n");
+        $self->debug(1,"deploying commands");
         $self->do_deploy() or return 0;
         $self->do_post_actions($cluster) or return 0; 
         $self->print_man_cmds();
