@@ -456,19 +456,15 @@ sub pull_compare_push {
     if (!$cconf) {
         return $self->push_cfg($host);
     } else {
-        $self->{comp} = 1;
         $self->{cfgchanges} = {};
         $self->debug(3, "Pulled config:", %$cconf);
         $self->ceph_quattor_cmp('cfg', $config, $cconf) or return 0;
-        if ($self->{comp} == 1) {
+        if (!%{$self->{cfgchanges}}) {
             #Config the same, no push needed
             return 1;
-        } elsif ($self->{comp} == -1) {
+        } else {
             $self->push_cfg($host,1) or return 0;
             $self->inject_realtime($host, $self->{cfgchanges}) or return 0;
-        } else {# 0 already catched
-            $self->error('No valid value returned after comparison');
-            return 0;
         }
     }    
 }
@@ -493,7 +489,6 @@ sub config_cfgfile {
         if (ref($values) eq 'ARRAY'){
             $values = join(',',@$values); 
         }
-        $self->{comp} = -1;
         $self->{cfgchanges}->{$name} = $values;
 
     } elsif ($action eq 'change') {
@@ -505,7 +500,6 @@ sub config_cfgfile {
         #TODO: check if changes are valid
         if ($quat ne $ceph) {
             $self->info("$name changed from $ceph to $quat");
-            $self->{comp} = -1;
             $self->{cfgchanges}->{$name} = $quat;
         }
     } elsif ($action eq 'del'){
@@ -513,7 +507,6 @@ sub config_cfgfile {
         # we need to log it here. For now we expect that every used config parameter is in Quattor
         $self->error("$name not in quattor");
         #$self->info("$name deleted from config file\n");
-        $self->{comp} = -1;
         return 0;
     } else {
         $self->error("Action $action not supported!");
