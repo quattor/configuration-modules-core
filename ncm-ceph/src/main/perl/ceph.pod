@@ -20,10 +20,8 @@ To set up the initial cluster, some steps should be taken:
             (As described in the ceph-deploy documentation: 
                         http://ceph.com/docs/master/start/quick-start-preflight/)
     - Run the component a first time. 
-            It shall fail, but you should get the initial commands for your cluster
-    - Run these commands
-    - Get the generated cluster fsid out of the config file (/etc/ceph/ceph.conf) 
-            and put it in the Quattor scheme
+            It shall fail, but you should get the initial command for your cluster
+    - Run this command
     - Run the component again to start the configuration of the new cluster
 
 =head1 RESOURCES

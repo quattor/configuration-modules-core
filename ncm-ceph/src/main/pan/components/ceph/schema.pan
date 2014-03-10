@@ -178,7 +178,7 @@ type ceph_mds = {
 
 @{ ceph cluster-wide config parameters @}
 type ceph_cluster_config = {
-    'fsid'                      : string
+    'fsid'                      : string # Should be generated with uuidgen
     'filestore_xattr_use_omap'  : boolean = true
     'osd_journal_size'          : long(0..) = 10240
     'mon_initial_members'       : string [1..]
