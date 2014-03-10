@@ -1,7 +1,7 @@
 [%- # to avoid possible vmethod issues 
     import(ru) -%]
 rule [% name %] {
-[% FILTER indent -%]
+[% FILTER indent("\t") -%]
 ruleset [% ruleset %]
 type [% type %]
 min_size [% min_size %]

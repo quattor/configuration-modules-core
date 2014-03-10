@@ -265,7 +265,7 @@ sub check_empty {
     my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
     my $lines = $lsoutput =~ tr/\n//;
     if ($lines != 0) {
-        $self->error("$loc is not empty!");
+        $self->error("$loc on $host is not empty!");
         return 0;
     } else {
         return 1;
@@ -881,13 +881,14 @@ sub crush_merge {
                     foreach my $osd (sort(keys %{$osds})){
                         my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
-                            $self->error("Could not find osd name for", 
-                                $osds->{$osd}->{osd_path}, "on $name");
+                            $self->error("Could not find osd name for ", 
+                                $osds->{$osd}->{osd_path}, " on $name");
                             return 0;
                         }
                         my $osdb = { 
                             name => $osdname, 
-                            weight => $osds->{$osd}->{crush_weight}, 
+                            # Ceph is rounding the weight
+                            weight => int((1000 * $osds->{$osd}->{crush_weight}) + 0.5)/1000.0 , 
                             type => 'osd'
                         };
                         push(@{$bucket->{buckets}}, $osdb);

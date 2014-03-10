@@ -1391,9 +1391,9 @@ Readonly::Hash our %CMPMAP => (
    ]
 );
 Readonly our $WRITEMAP => <<END;
-#begin crush map
+# begin crush map
 
-#devices
+# devices
 device 0 osd.0
 device 1 osd.1
 device 2 osd.2
@@ -1432,153 +1432,153 @@ device 33 osd.33
 device 34 osd.34
 device 35 osd.35
 
-#types
+# types
 type 0 osd
 type 1 host
 type 2 root
 
-#buckets
+# buckets
 host ceph001 {
-    id -2
-    # weight 12
-    alg straw
-    hash 0
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
+	id -2		# do not change unnecessarily
+	# weight 12
+	alg straw
+	hash 0	# rjenkins1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
 }
 host ceph002 {
-    id -3
-    # weight 12
-    alg straw
-    hash 0
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
+	id -3		# do not change unnecessarily
+	# weight 12
+	alg straw
+	hash 0	# rjenkins1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
 }
 host ceph003 {
-    id -4
-    # weight 12
-    alg straw
-    hash 0
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
-    item osd.0 weight 1
+	id -4		# do not change unnecessarily
+	# weight 12
+	alg straw
+	hash 0	# rjenkins1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
+	item osd.0 weight 1
 }
 root default {
-    id -1
-    # weight 36
-    alg straw
-    hash 0
-    item ceph001 weight 12
-    item ceph002 weight 12
-    item ceph003 weight 12
+	id -1		# do not change unnecessarily
+	# weight 36
+	alg straw
+	hash 0	# rjenkins1
+	item ceph001 weight 12
+	item ceph002 weight 12
+	item ceph003 weight 12
 }
 
-#rules
+# rules
 rule data {
-    ruleset 0
-    type replicated
-    min_size 0
-    max_size 10
-    step take default
-    step chooseleaf firstn 0 type host
-    step emit
+	ruleset 0
+	type replicated
+	min_size 0
+	max_size 10
+	step take default
+	step chooseleaf firstn 0 type host
+	step emit
 }
 rule metadata {
-    ruleset 1
-    type replicated
-    min_size 0
-    max_size 10
-    step take default
-    step chooseleaf firstn 0 type host
-    step emit
+	ruleset 1
+	type replicated
+	min_size 0
+	max_size 10
+	step take default
+	step chooseleaf firstn 0 type host
+	step emit
 }
 rule rbd {
-    ruleset 2
-    type replicated
-    min_size 0
-    max_size 10
-    step take default
-    step chooseleaf firstn 0 type host
-    step emit
+	ruleset 2
+	type replicated
+	min_size 0
+	max_size 10
+	step take default
+	step chooseleaf firstn 0 type host
+	step emit
 }
 
 # end crush map
 END
 
 Readonly our $BASEMAP => <<END;
-#begin crush map
+# begin crush map
 
-#devices
+# devices
 
-#types
+# types
 type  
 type  
 type  
 
-#buckets
+# buckets
 root default {
-    id 
-    # weight 
-    alg 
-    hash 
+	id 		# do not change unnecessarily
+	# weight 
+	alg 
+	hash 
 }
 
-#rules
+# rules
 rule data {
-    ruleset 
-    type 
-    min_size 
-    max_size 
-    step take default
-    step chooseleaf firstn  type host
-    step emit
+	ruleset 
+	type 
+	min_size 
+	max_size 
+	step take default
+	step chooseleaf firstn  type host
+	step emit
 }
 rule metadata {
-    ruleset 
-    type 
-    min_size 
-    max_size 
-    step take default
-    step chooseleaf firstn  type host
-    step emit
+	ruleset 
+	type 
+	min_size 
+	max_size 
+	step take default
+	step chooseleaf firstn  type host
+	step emit
 }
 rule rbd {
-    ruleset 
-    type 
-    min_size 
-    max_size 
-    step take default
-    step chooseleaf firstn  type host
-    step emit
+	ruleset 
+	type 
+	min_size 
+	max_size 
+	step take default
+	step chooseleaf firstn  type host
+	step emit
 }
 
 # end crush map
