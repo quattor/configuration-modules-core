@@ -1194,7 +1194,7 @@ sub write_crush {
             $self->error("Could not compile crushmap!");
             return 0;
         }
-        if (!$self->run_ceph_command(['osd', 'setcrushmap', '-o', "$crushdir/crushmap.bin"])) {
+        if (!$self->run_ceph_command(['osd', 'setcrushmap', '-i', "$crushdir/crushmap.bin"])) {
             $self->error("Could not install crushmap!");
             return 0;
         }
