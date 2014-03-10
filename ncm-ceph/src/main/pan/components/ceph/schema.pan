@@ -235,7 +235,7 @@ type ceph_crushmap_rule = {
     'name'              : string #Must be unique
     'type'              : string = 'replicated' with match(SELF, '^(replicated|raid4)$')
     'ruleset'           ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
-    'min_size'          : long(0..) = 0
+    'min_size'          : long(0..) = 1
     'max_size'          : long(0..) = 10
     'steps'              : ceph_crushmap_rule_step[1..] 
 };
