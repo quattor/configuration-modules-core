@@ -7,4 +7,5 @@
 unique template components/network/config;
 
 
+include { 'components/${project.artifactId}/config-common' };
 include { 'components/${project.artifactId}/config-rpm' };
