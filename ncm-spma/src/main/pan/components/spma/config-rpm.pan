@@ -9,6 +9,7 @@ include { 'components/spma/functions' };
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
+"/software/groups" ?= nlist();
 
 
 "/software/components/spma/active" ?= true;
@@ -17,4 +18,3 @@ include { 'components/spma/functions' };
                                                     "/software/repositories");
 
 "/software/components/spma/run" ?= "yes";
-"/software/groups" ?= nlist();
