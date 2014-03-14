@@ -37,6 +37,10 @@ foreach my $pkg (qw(a b c)) {
     ok($pkgs->has($pkg), "Package $pkg in set");
 }
 
+$pkgs = $cmp->expand_groups({});
+isa_ok($pkgs, "Set::Scalar", "Empty group list returns a set");
+ok($pkgs->is_empty(), "Empty group list returns an empty set");
+
 set_command_status($CMD, 1);
 
 $pkgs = $cmp->expand_groups({foo => { optional => '', mandatory => 1 }});
