@@ -205,6 +205,7 @@ sub execute_yum_command
         $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
                       (?:Transaction \s+ encountered.*error)|
+                      (?:Unknown \s+ group \s+  package \s+ type) |
                       (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
         (@missing = ($out =~ m{^No package (.*) available}omg))) {
         $self->warn("Command output: $out");
