@@ -17,3 +17,4 @@ include { 'components/spma/functions' };
                                                     "/software/repositories");
 
 "/software/components/spma/run" ?= "yes";
+"/software/groups" ?= nlist();

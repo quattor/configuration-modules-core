@@ -24,6 +24,7 @@ use constant REPOS_DIR => "/etc/yum.repos.d";
 use constant REPOS_TEMPLATE => "spma/repository.tt";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
+use constant GROUPS_TREE => "/software/groups";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
 use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
@@ -44,6 +45,7 @@ use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
                                  --qf %{NAME}\n%{NAME};%{ARCH});
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
+use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
 
 our $NoActionSupported = 1;
 
@@ -249,6 +251,26 @@ sub installed_pkgs
     my @pkgs = grep($_ !~ m{^gpg-pubkey.*\(none\)$}, split(/\n/, $out));
 
     return Set::Scalar->new(@pkgs);
+}
+
+# Returns the set of packages in all the $groups passed as arguments,
+# or undef if ANY of the groups cannot be expanded.  For now it calls
+# repoquery once per group.  I hope there will be few enough groups in
+# the profile so that this isn't a performance bottleneck.
+sub expand_groups
+{
+    my ($self, $groups) = @_;
+
+    my $pkgs = Set::Scalar->new();
+
+    while (my ($group, $types) = each(%$groups)) {
+        my $what = join(",", grep($types->{$_}, keys(%$types)));
+        my $lst = $self->execute_yum_command([REPOGROUP, $what, $group],
+                                             "Group expansion", 1)
+            or return undef;
+        $pkgs->insert(split(/\n/, $lst));
+    }
+    return $pkgs;
 }
 
 # Returns a set with the desired packages.
@@ -527,7 +549,7 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $run, $allow_user_pkgs) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs) = @_;
 
     $self->complete_transaction() or return 0;
 
@@ -537,7 +559,8 @@ sub update_pkgs
 
     $self->distrosync($run) or return 0;
 
-    my $wanted = $self->wanted_pkgs($pkgs);
+    my $wanted = $self->expand_groups($groups) or return 0;
+    $wanted += $self->wanted_pkgs($pkgs);
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
 
@@ -594,12 +617,18 @@ sub Configure
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
     my $pkgs = $config->getElement(PKGS_TREE)->getTree();
+    my $groups;
+    if ($config->elementExists(GROUPS_TREE)) {
+        $groups = $config->getElement(GROUPS_TREE)->getTree();
+    } else {
+        $groups = {};
+    }
     $self->initialize_repos_dir(REPOS_DIR) or return 0;
     $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
     $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE, $t->{proxyhost},
 			  $t->{proxytype}, $t->{proxyport}) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
-    $self->update_pkgs($pkgs, $t->{run}, $t->{userpkgs})
+    $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs})
 	or return 0;
     return 1;
 }
