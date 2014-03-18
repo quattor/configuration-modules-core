@@ -87,7 +87,8 @@ sub Configure($$@) {
 
     my %file_opts;
     if ( $file_config->{perms} ) {
-      $file_opts{'mode'} = $file_config->{perms};
+      # LC::Check::status expects the mode to be an octal string
+      $file_opts{'mode'} = oct($file_config->{perms});
     }
     if ( $file_config->{group} ) {
       $file_opts{'group'} = $file_config->{group};
