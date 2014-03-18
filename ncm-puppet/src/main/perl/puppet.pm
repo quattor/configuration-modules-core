@@ -19,6 +19,7 @@ use CAF::Process;
 use Config::Tiny;
 use YAML::XS;
 
+use Readonly;
 
 Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
 Readonly::Scalar my $MODULE_INSTALL => 'puppet module upgrade %s %s||puppet module install %s %s';

@@ -58,8 +58,6 @@ The parameters of each item are.
 
 content of the file
 
-= back
-
 The default for "nodefiles" is one file quattor_default.pp with content "hiera_include('classes')".
 
 =head2 /software/components/${project.artifactId}/hieradata
@@ -77,6 +75,7 @@ Named list of modules to be downloaded from the puppetlab forge. Each module has
 version of the module.
 
 = back
+= back 
 
 =head1 AUTHOR
 
