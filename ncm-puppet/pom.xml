@@ -33,21 +33,22 @@
     </developer>
   </developers>
 
-  <contributors>
-    <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-  </contributors>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <requires>
+              <require>perl(Config::Tiny)</require>
+              <require>perl(YAML::XS)</require>
+            </requires>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
 
 </project>
