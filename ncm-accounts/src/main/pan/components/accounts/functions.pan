@@ -13,6 +13,44 @@ variable ACCOUNTS_IGNORE_MISSING_GROUPS ?= false;
 variable ACCOUNTS_USER_COMMENT ?= 'Created by ncm-accounts';
 variable ACCOUNTS_GROUP_COMMENT ?= 'Created by ncm-accounts';
 
+#
+# test if (list of) user(s) or group(s) is defined in either users/groups or kept_users/groups
+# first argument is the type ('user' or 'group'), 
+# second (and more) argument(s) the name(s)    
+# e.g. is_user_or_group("user", "root", "nagios", "foo", "bar")
+# or 2nd element is a list of name(s)
+# e.g. is_user_or_group("user", list("root", "nagios", "foo", "bar"))
+#
+function is_user_or_group = {
+    if ((ARGC < 2) || ! (ARGV[0] == 'user' || ARGV[0] == 'group')) {
+        error("is_user_or_group expects at least 2 arguments : first the type (user or group)");
+    };
+    typ = ARGV[0];
+    if(is_list(ARGV[1])) {
+        names=ARGV[1];
+        idx=0;
+    } else if (is_string(ARGV[1])) {
+        names=ARGV;
+        idx=1; # skip first idx=0
+    } else {
+        error("2nd argument is either a list (list of names) or "+
+              "a string (2nd and other arguments as list of names)");
+    };
+    pref = "/software/components/accounts";
+    name_exists = true;
+    while(idx < length(names)) {
+        name=names[idx];
+        path = format("%s/%ss/%s", pref, typ, name);
+        kept_path = format("%s/kept_%ss/%s", pref, typ, name);
+        name_exists = name_exists && (path_exists(path) || path_exists(kept_path));
+        idx = idx + 1;
+    };
+    return(name_exists);
+};
+
+type defined_user = string with is_user_or_group("user", SELF);
+type defined_group = string with is_user_or_group("group", SELF);
+
 
 # create_group(groupname:string,
 #             params:structure_groupinfo)
