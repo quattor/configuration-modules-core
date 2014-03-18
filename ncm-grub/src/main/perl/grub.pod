@@ -104,6 +104,10 @@ Optionally set an initial ramdisk image to be loaded when booting.
 
 The title string that will be used to describe this entry in grub.conf.
 
+=item /hardware/console ? string
+
+The console settings may be defined here.
+
 =back
 
 =head1 FILES MODIFIED
@@ -160,7 +164,6 @@ title Xen 3 / XenLinux 2.6.16
         kernel /xen-3.0.2-2.gz dom0_mem=400000 addthis
         module /vmlinuz-2.6.16-xen3_86.1_rhel4.1 max_loop=128 root=/dev/hda2 ro
         module /initrd-2.6.16-xen3_86.1_rhel4.1
-
 
 =head1 BUGS
 
