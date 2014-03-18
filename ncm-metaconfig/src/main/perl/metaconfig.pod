@@ -83,7 +83,7 @@ similar to this one:
     <nlist>
       <another nlist>
         scalar value
-        another scalar value>
+        another scalar value
       </another nlist>
     </nlist>
     list_element 0
