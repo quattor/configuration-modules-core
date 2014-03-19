@@ -6,22 +6,24 @@
 package NCM::Component::${project.artifactId};
 
 use strict;
+use warnings;
 use NCM::Component;
 use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
+use base qw(NCM::Component);
 $EC  = LC::Exception::Context->new->will_store_all;
 
 use EDG::WP4::CCM::Element qw(unescape);
 
-use LC::File;
 use CAF::Process;
+use CAF::FileWriter;
 
 use Config::Tiny;
 use YAML::XS;
 
+our $NoActionSupported = 1;
+
 use Readonly;
 
-Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
 Readonly::Scalar my $MODULE_INSTALL => 'puppet module upgrade %s %s||puppet module install %s %s';
 Readonly::Scalar my $NODEFILES_PATH => '/etc/puppet/manifests';
 Readonly::Scalar my $PUPPET_CONFIG_FILE => '/etc/puppet/puppet.conf';
@@ -35,7 +37,7 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    my $confighash = $config->getElement($PATH)->getTree();
+    my $confighash = $config->getElement($self->prefix)->getTree();
     
     # Update the config file
     $self->tiny($confighash->{puppetconf},$PUPPET_CONFIG_FILE);
@@ -63,10 +65,7 @@ sub nodefiles {
     foreach my $file (sort keys %{$confighash->{nodefiles}}){
 	if($confighash->{nodefiles}->{$file}->{contents}){
 	    my $path=$NODEFILES_PATH."/".unescape($file);
-	    LC::Check::file(
-		$path,
-		contents => $confighash->{nodefiles}->{$file}->{contents},
-		);
+	    $self->checkfile($path,$confighash->{nodefiles}->{$file}->{contents});
 	}
 	
     }
@@ -141,10 +140,7 @@ sub tiny {
         }
     }
 
-    LC::Check::file(
-                $file,
-                contents => $c->write_string(),
-                );
+    $self->checkfile($file,$c->write_string());
     
     return 0;
     
@@ -156,11 +152,8 @@ sub yaml {
     my $cfg=shift;
     my $file=shift;
 
-    LC::Check::file(
-                $file,
-                contents => YAML::XS::Dump($self->unescape_keys($cfg)),
-                );
-    
+    $self->checkfile($file,YAML::XS::Dump($self->unescape_keys($cfg)));    
+
     return 0;
 }
 
@@ -181,5 +174,19 @@ sub unescape_keys {
     
     return $res;
 };
+
+sub checkfile {
+    my $self=shift;
+    my $file=shift;
+    my $content=shift;
+
+    my %opts  = ( log => $self);
+    my $fh = CAF::FileWriter->new($file, %opts);
+    print  $fh $content;
+
+    return 0;
+}
+
+
 
 1;    # Required for PERL modules
