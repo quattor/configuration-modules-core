@@ -6,7 +6,7 @@
   <artifactId>icinga</artifactId>
 
   <packaging>pom</packaging>
-  <version>13.1.3-rc1</version>
+  <version>13.1.3-rc2-SNAPSHOT</version>
   <name>Icinga NCM component</name>
 
 
