@@ -5,5 +5,4 @@
 
 unique template components/${project.artifactId}/config;
 
-include { 'components/${project.artifactId}/config-common' };
 include { 'components/${project.artifactId}/config-rpm' };
