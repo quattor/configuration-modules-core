@@ -7,8 +7,11 @@ unique template components/${project.artifactId}/config-xml;
 
 include { 'components/${project.artifactId}/config-common' };
 
+variable PACKAGE_MANAGER = 'yum';
+
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 
+'packager' = PACKAGE_MANAGER;
 # Embed the Quattor configuration module into XML profile.
 'code' = file_contents('components/${project.artifactId}/${project.artifactId}.pm'); 

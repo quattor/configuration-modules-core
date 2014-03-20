@@ -9,10 +9,15 @@ include { 'components/spma/functions' };
 
 include { 'components/spma/config-common' };
 
+variable PACKAGE_MANAGER = 'yum';
+
+# Set prefix to root of component configuration.
+prefix '/software/components/${project.artifactId}';
+
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
+'packages' = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
-
-"/software/components/spma/register_change" ?= list("/software/packages",
-                                                    "/software/repositories");
-"/software/components/spma/run" ?= "yes";
+'packager' = PACKAGE_MANAGER;
+'register_change' ?= list("/software/packages",
+                          "/software/repositories");
+'run' ?= "yes";

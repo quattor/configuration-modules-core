@@ -10,13 +10,15 @@ include { 'components/${project.artifactId}/schema' };
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 
+variable PACKAGE_MANAGER = 'ips';
+
 #'version' = '${project.version}';
 #'package' = 'NCM::Component';
 
 #
 # Configure SPMA appropriately for Solaris 11
 #
-'packager' = 'ips';
+'packager' = PACKAGE_MANAGER;
 'pkgpaths' = list('/software/catalogues', '/software/requests');
 'uninstpaths' = list('/software/uninstall');
 'register_change' = list('/software/catalogues',
