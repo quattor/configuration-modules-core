@@ -7,6 +7,10 @@ unique template components/${project.artifactId}/config-common;
 
 include { 'components/${project.artifactId}/schema' };
 
+variable PACKAGE_MANAGER = "yum";
+
+variable PACKAGE_MANAGER = 'yum';
+
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 
