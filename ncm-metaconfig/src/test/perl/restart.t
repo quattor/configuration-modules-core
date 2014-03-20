@@ -22,7 +22,7 @@ Test that a daemon gets restarted if needed.
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
-ok($cmp->restart_daemon("foo"), "Successful restart_daemon returns true");
+ok($cmp->restart_linux("foo"), "Successful restart_daemon returns true");
 set_command_status("/sbin/service foo restart", 1);
-ok(!$cmp->restart_daemon("foo"), "Failed restart_daemon returns false");
+ok(!$cmp->restart_linux("foo"), "Failed restart_daemon returns false");
 is($cmp->{ERROR}, 1, "Failed restart_daemon triggers an error message");
