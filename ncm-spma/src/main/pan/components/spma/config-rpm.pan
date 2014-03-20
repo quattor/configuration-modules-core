@@ -4,16 +4,13 @@
 
 
 unique template components/spma/config-rpm;
-include { 'components/spma/schema' };
-include { 'components/spma/functions' };
+
+# Set prefix to root of component configuration.
+prefix '/software/components/${project.artifactId}';
 
 # Package to install
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
+'packages' = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
-
-"/software/components/spma/active" ?= true;
-"/software/components/spma/dispatch" ?= true;
-"/software/components/spma/register_change" ?= list("/software/packages",
-                                                    "/software/repositories");
-
-"/software/components/spma/run" ?= "yes";
+'packager' = 'yum';
+'register_change' ?= list("/software/packages",
+                          "/software/repositories");
