@@ -24,12 +24,13 @@ our $NoActionSupported = 1;
 
 use Readonly;
 
-Readonly::Scalar my $MODULE_INSTALL => 'puppet module upgrade %s %s||puppet module install %s %s';
+Readonly::Scalar my $MODULE_UPGRADE => 'puppet module upgrade %s %s';
+Readonly::Scalar my $MODULE_INSTALL => 'puppet module install %s %s';
 Readonly::Scalar my $NODEFILES_PATH => '/etc/puppet/manifests';
 Readonly::Scalar my $PUPPET_CONFIG_FILE => '/etc/puppet/puppet.conf';
 Readonly::Scalar my $HIERA_CONFIG_FILE => '/etc/puppet/hiera.yaml';
 Readonly::Scalar my $HIERA_DATA_FILE => '/etc/puppet/hieradata/quattor.yaml';
-Readonly::Scalar my $APPLY => 'puppet apply --detailed-exitcodes -v -l /var/log/puppet/log %s;test $? == 2;';
+Readonly::Scalar my $APPLY => 'puppet apply --detailed-exitcodes -v -l /var/log/puppet/log %s;';
 
 local (*DTA);
 
@@ -39,54 +40,63 @@ sub Configure
 
     my $confighash = $config->getElement($self->prefix)->getTree();
     
-    # Update the config file
     $self->tiny($confighash->{puppetconf},$PUPPET_CONFIG_FILE);
     
     $self->yaml($confighash->{hieraconf},$HIERA_CONFIG_FILE);
     
-    # Install/Upgrade modules
     $self->install_modules($confighash) if(defined($confighash->{modules})); 
     
     $self->yaml($confighash->{hieradata},$HIERA_DATA_FILE) if(defined($confighash->{hieradata}));
     
-    # Prepare the node files
-    $self->nodefiles($confighash);
+    $self->nodefiles($confighash->{nodefiles});
     
-    # Run puppet apply
     $self->apply($confighash);
     
     return 0;
 }
 
+# For each "nodefiles" entry check the the content of the file (if given in the profile)
+# arguments:
+# $confighash: ref to the hash with the profile data structure
+#
 sub nodefiles {
-    my $self=shift;
-    my $confighash=shift;
-
-    foreach my $file (sort keys %{$confighash->{nodefiles}}){
-	if($confighash->{nodefiles}->{$file}->{contents}){
+    my ($self, $confighash) = @_;
+ 
+    foreach my $file (sort keys %{$confighash}){
+	if($confighash->{$file}->{contents}){
 	    my $path=$NODEFILES_PATH."/".unescape($file);
-	    $self->checkfile($path,$confighash->{nodefiles}->{$file}->{contents});
+	    $self->checkfile($path,$confighash->{$file}->{contents});
 	}
 	
     }
     return 0;
 }
 
-
-
+# For each "nodefiles" entry run "puppet --apply <nodefile>"
+# arguments:
+# $confighash: ref to the hash with the profile data structure
+#
 sub apply {
-    my $self=shift;
-    my $confighash=shift;
+    my ($self, $confighash) = @_;
 
     foreach my $file (sort keys %{$confighash->{nodefiles}}){
 
-	$self->cmd_exec(sprintf($APPLY,$NODEFILES_PATH."/".unescape($file)))
+	my ($exit_code,$output)=$self->cmd_exec(sprintf($APPLY,$NODEFILES_PATH."/".unescape($file)));
+	
+	if ( ($exit_code != 0) && ($exit_code != 2)) {
+	    $self->error("Apply command failed. Output: $output\n");
+	} else {
+	    $self->debug(1,"Apply command successfully executed. Output: $output\n");
+	}
     }
 }
 
+# Install/Updates the required puppet modules
+# arguments:
+# $confighash: ref to the hash with the profile data structure
+#
 sub install_modules {
-    my $self=shift;
-    my $confighash=shift;
+    my ($self, $confighash) = @_;
 
     foreach my $mod (sort keys %{$confighash->{modules}}){
 	my $module=unescape($mod);
@@ -94,15 +104,29 @@ sub install_modules {
 	if(defined($confighash->{modules}->{$mod}->{version})){
 	    $version="--version=".$confighash->{modules}->{$mod}->{version};
 	}
-	my $cl = sprintf($MODULE_INSTALL,$module,$version,$module,$version);
-	$self->cmd_exec($cl);
+
+	my ($exit_code,$output)= $self->cmd_exec(sprintf($MODULE_UPGRADE,$module,$version));
+	if ( $exit_code != 0){
+	    ($exit_code,$output)= $self->cmd_exec(sprintf($MODULE_INSTALL,$module,$version));
+	    if ( $exit_code != 0){
+		$self->debug(1,"Install upgrade command successfully executed. Output: $output\n");
+	    }else{
+		$self->error("Both Upgrade and Install command failed on module $module. Output: $output\n");
+	    }
+	}else{
+	    $self->debug(1,"Module upgrade command successfully executed. Output: $output\n");
+	}	
     }
     return 0;
 }
 
+# Wrapper of CAF::Process: execute a shell command line.
+# Returns the array (EXIT_CODE,OUTPUT_STRING)
+# arguments:
+# $cl: command line string
+#
 sub cmd_exec {
-    my $self=shift;
-    my $cl=shift;
+    my ($self, $cl) = @_;
 
     my $cmd_output;
 
@@ -112,23 +136,23 @@ sub cmd_exec {
 				stderr => "stdout");
     $cmd->execute();
 
-    if ( $? ) {
-	$self->error("Command failed. Command output: $cmd_output\n");
-    } else {
-	$self->debug(1,"Command output: $cmd_output\n");
-    }
+#    if ( $? ) {
+#	$self->error("Command failed. Command output: $cmd_output\n");
+#    } else {
+#	$self->debug(1,"Command output: $cmd_output\n");
+#    }
 
-    return $cmd_output;
-
+    return ($?,$cmd_output);
+    
 }
 
-
-
-
+# Create a Config::Tiny configuration file based on a hash
+# arguments:
+# $cfg: ref to the hash with the configuration parameters and values
+# $file: file location
+#
 sub tiny {
-    my $self=shift;
-    my $cfg=shift;
-    my $file=shift;
+    my ($self, $cfg, $file) = @_;
 
     my $c = Config::Tiny->new();
 
@@ -146,21 +170,26 @@ sub tiny {
     
 }
 
-
+# Create a YAML file based on a hash
+# arguments:
+# $cfg: ref to the hash with the configuration parameters and values
+# $file: file location
+#
 sub yaml {
-    my $self=shift;
-    my $cfg=shift;
-    my $file=shift;
+    my ($self, $cfg, $file) = @_;
 
     $self->checkfile($file,YAML::XS::Dump($self->unescape_keys($cfg)));    
 
     return 0;
 }
 
+# Unescape all the hash keys of a given data structure
+# arguments:
+# $cfg: reference to the data structure
+#
 sub unescape_keys {
-    my $self=shift;
-    my $cfg=shift;
-
+    my ($self, $cfg) = @_;
+ 
     my $res={};
 
     while (my ($k, $v) = each(%$cfg)) {
@@ -175,18 +204,19 @@ sub unescape_keys {
     return $res;
 };
 
+# Wrapper of CAF::FileWriter. Ensure that a file has a given content
+# arguments:
+# $file: file location
+# $content: content string
+#
 sub checkfile {
-    my $self=shift;
-    my $file=shift;
-    my $content=shift;
-
+    my ($self, $file, $content) = @_;
+ 
     my %opts  = ( log => $self);
-    my $fh = CAF::FileWriter->new($file, %opts);
+    my $fh = CAF::FileWriter->new($file, log => $self);
     print  $fh $content;
 
     return 0;
 }
-
-
 
 1;    # Required for PERL modules
