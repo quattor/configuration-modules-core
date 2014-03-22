@@ -24,13 +24,15 @@ our $NoActionSupported = 1;
 
 use Readonly;
 
+
 Readonly::Scalar my $MODULE_UPGRADE => 'puppet module upgrade %s %s';
 Readonly::Scalar my $MODULE_INSTALL => 'puppet module install %s %s';
 Readonly::Scalar my $NODEFILES_PATH => '/etc/puppet/manifests';
 Readonly::Scalar my $PUPPET_CONFIG_FILE => '/etc/puppet/puppet.conf';
 Readonly::Scalar my $HIERA_CONFIG_FILE => '/etc/puppet/hiera.yaml';
 Readonly::Scalar my $HIERA_DATA_FILE => '/etc/puppet/hieradata/quattor.yaml';
-Readonly::Scalar my $APPLY => 'puppet apply --detailed-exitcodes -v -l /var/log/puppet/log %s;';
+Readonly::Scalar my $PUPPET_LOGS => '/var/log/puppet/log';
+Readonly::Scalar my $APPLY => 'puppet apply --detailed-exitcodes -v -l '.$PUPPET_LOGS.' %s';
 
 local (*DTA);
 
@@ -83,10 +85,13 @@ sub apply {
 
 	my ($exit_code,$output)=$self->cmd_exec(sprintf($APPLY,$NODEFILES_PATH."/".unescape($file)));
 	
-	if ( ($exit_code != 0) && ($exit_code != 2)) {
-	    $self->error("Apply command failed. Output: $output\n");
+	if (($exit_code != 0)&&($exit_code != 2)) {
+	    $self->error("Apply command failed with code $exit_code. See $PUPPET_LOGS.\n");
 	} else {
-	    $self->debug(1,"Apply command successfully executed. Output: $output\n");
+	    if($exit_code == 2){
+		$self->info("Puppet apply performed some actions. See  $PUPPET_LOGS.\n");
+	    }
+	    $self->debug(1,"Apply command successfully executed. See  $PUPPET_LOGS.\n");
 	}
     }
 }
@@ -121,7 +126,7 @@ sub install_modules {
 }
 
 # Wrapper of CAF::Process: execute a shell command line.
-# Returns the array (EXIT_CODE,OUTPUT_STRING)
+# Returns the couple (EXIT_CODE,OUTPUT_STRING)
 # arguments:
 # $cl: command line string
 #
@@ -131,19 +136,11 @@ sub cmd_exec {
     my $cmd_output;
 
     my $cmd = CAF::Process->new([$cl], log => $self,
-                                shell => 1,
                                 stdout => \$cmd_output,
 				stderr => "stdout");
     $cmd->execute();
 
-#    if ( $? ) {
-#	$self->error("Command failed. Command output: $cmd_output\n");
-#    } else {
-#	$self->debug(1,"Command output: $cmd_output\n");
-#    }
-
-    return ($?,$cmd_output);
-    
+    return ($?>>8,$cmd_output);    
 }
 
 # Create a Config::Tiny configuration file based on a hash
