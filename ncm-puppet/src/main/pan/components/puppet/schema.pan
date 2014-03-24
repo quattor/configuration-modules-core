@@ -26,7 +26,15 @@ type ${project.artifactId}_puppetconf = extensible {
         "main" : ${project.artifactId}_puppetconf_main
 };
 
-type ${project.artifactId}_hieraconf = extensible {};
+type puppet_hieraconf_yaml = extensible {
+        "_3adatadir" : string = "/etc/puppet/hieradata"
+};
+
+type puppet_hieraconf = extensible {
+        "_3abackends" : string[] = list("yaml")
+        "_3ayaml" : puppet_hieraconf_yaml
+        "_3ahierarchy" : string[] = list("quattor")
+};
 
 type ${project.artifactId}_hieradata = extensible {};
 
