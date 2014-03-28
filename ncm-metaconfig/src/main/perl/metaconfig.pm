@@ -32,7 +32,7 @@ our $NoActionSupported = 1;
 
 # Restart any daemon that has seen its configuration changed by the
 # component.
-sub restart_daemon {
+sub restart_linux {
     my ($self, $daemon) = @_;
     CAF::Process->new(["/sbin/service", $daemon, "restart"],
                       log => $self)->run();
@@ -41,6 +41,25 @@ sub restart_daemon {
         return;
     }
     return 1;
+}
+
+sub restart_solaris
+{
+    my ($self, $daemon) = @_;
+
+    CAF::Process->new([qw(svcadm restart), $daemon],
+                      log => $self)->run();
+    if ($?) {
+        $self->error("Impossible to restart $daemon");
+        return;
+    }
+    return 1;
+}
+
+if ($^O eq 'linux') {
+    *restart_daemon = \&restart_linux;
+} else {
+    *restart_daemon = \&restart_solaris;
 }
 
 sub load_module
