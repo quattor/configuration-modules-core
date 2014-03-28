@@ -56,8 +56,8 @@ my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
 		       expire_yum_caches complete_transaction distrosync
-		       spare_dependencies
-		       packages_to_remove solve_transaction)) {
+		       spare_dependencies expand_groups packages_to_remove
+                       solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
 		    $self->{uc($method)}->{args} = \@_;
@@ -82,7 +82,8 @@ sub clear_mock_counters
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
 		      expire_yum_caches complete_transaction distrosync
-		      wanted_pkgs installed_pkgs packages_to_remove)) {
+                      expand_groups wanted_pkgs installed_pkgs
+                      packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
 	if ($m !~ m{pkgs$}) {
 	    $cmp->{uc($m)}->{return} = 1;
@@ -104,7 +105,7 @@ $cmp->{PACKAGES_TO_REMOVE}->{return} = Set::Scalar->new(qw(a));
 $cmp->{SOLVE_TRANSACTION}->{return} = "solve\n";
 $cmp->{APPLY_TRANSACTION}->{return} = "apply";
 
-is($cmp->update_pkgs("pkgs", "run", "allow"), 1,
+is($cmp->update_pkgs("pkgs", "groups", "run", "allow"), 1,
    "Basic invocation returns success");
 is($cmp->{INSTALLED_PKGS}->{called}, 1, "Installed packages called");
 is(scalar(@{$cmp->{INSTALLED_PKGS}->{args}}), 0,
@@ -136,7 +137,7 @@ is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "Package cache is expired");
 
 =cut
 
-is($cmp->update_pkgs("pkgs", "run", 0), 1, "Basic run without userpkgs succeeds");
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 1, "Basic run without userpkgs succeeds");
 is($cmp->{PACKAGES_TO_REMOVE}->{called}, 1,
    "When userpkgs is disabled, it chooses packages for removal");
 is(scalar(@{$cmp->{PACKAGES_TO_REMOVE}->{args}}), 1,
@@ -162,7 +163,7 @@ clear_mock_counters($cmp);
 $cmp->{SCHEDULE}->{install}->{return} = "";
 $cmp->{SCHEDULE}->{remove}->{return} = "";
 
-is($cmp->update_pkgs("pkgs", "run", 0), 1, "Empty transaction succeeds");
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 1, "Empty transaction succeeds");
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "Empty transaction doesn't need Yum shell");
 
@@ -191,7 +192,7 @@ clear_mock_counters($cmp);
 
 $cmp->{APPLY_TRANSACTION}->{return} = 0;
 
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in apply_transaction is propagated");
 
 foreach my $m (qw(apply_transaction solve_transaction
@@ -216,7 +217,7 @@ clear_mock_counters($cmp);
 
 $cmp->{VERSIONLOCK}->{return} = 0;
 
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in versionlock is detected");
 is($cmp->{VERSIONLOCK}->{called}, 1, "versionlock is actually called");
 is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
@@ -230,7 +231,7 @@ is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
 
 clear_mock_counters($cmp);
 $cmp->{EXPIRE_YUM_CACHES}->{return} = 0;
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in versionlrmock is detected");
 is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "expire_yum_caches is actually called");
 is($cmp->{VERSIONLOCK}->{called}, 0,
@@ -247,7 +248,7 @@ clear_mock_counters($cmp);
 
 $cmp->{PACKAGES_TO_REMOVE}->{return} = undef;
 
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in packages_to_remove is propagated");
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "Apply transaction is not called when packages_to_remove fails");
@@ -264,7 +265,7 @@ clear_mock_counters($cmp);
 
 $cmp->{INSTALLED_PKGS}->{return} = undef;
 
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in installed_pkgs is propagated");
 is($cmp->{SCHEDULE}->{install}->{called}, 0,
    "No installation is scheduled if we cannot derive installed packages");
@@ -282,10 +283,27 @@ is($cmp->{COMPLETE_TRANSACTION}->{called}, 1,
 
 clear_mock_counters($cmp);
 $cmp->{COMPLETE_TRANSACTION}->{return} = 0;
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in complete_transaction is propagated");
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
    "Subsequent methods are not called if we can't complete previous transactions");
+
+=pod
+
+=item * Failure in C<expand_groups> means no scheduling is attempted
+
+=cut
+
+clear_mock_counters($cmp);
+$cmp->{EXPAND_GROUPS}->{return} = undef;
+
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
+   "Failure in expand_groups is propagated");
+is($cmp->{SCHEDULE}->{remove}->{called}, 0,
+   "No removal scheduling when group expansion fails");
+is($cmp->{SCHEDULE}->{install}->{called}, 0,
+   "No installation scheduling when group expansion fails");
+
 
 =pod
 
@@ -297,7 +315,7 @@ clear_mock_counters();
 
 $cmp->{DISTROSYNC}->{return} = 0;
 
-is($cmp->update_pkgs("pkgs", "run", 0), 0,
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in distrosync is propagated");
 is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "No transaction is attempted if distrosync fails");

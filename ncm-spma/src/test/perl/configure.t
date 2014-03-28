@@ -73,8 +73,9 @@ All the top-level methods are called, with C<update_pkgs> being the last one.
 my $name = $mock->call_pos($UPDATE_PKGS);
 is($name, "update_pkgs", "Packages are updated at the end of the component");
 my @args = $mock->call_args($UPDATE_PKGS);
-ok($args[2], "Run argument is correctly passed");
-ok(!$args[3], "No user packages allowed in update_pkgs");
+is(ref($args[2]), 'HASH', "Set of groups is passed");
+ok($args[3], "Run argument is correctly passed");
+ok(!$args[4], "No user packages allowed in update_pkgs");
 ok(exists($args[1]->{ConsoleKit}),
   "A package list is passed to UPDATE_PKGS");
 
@@ -167,7 +168,7 @@ $mock->clear();
 
 $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
-ok(!$args[2], "No run is correctly passed to update_pkgs");
+ok(!$args[3], "No run is correctly passed to update_pkgs");
 
 =pod
 

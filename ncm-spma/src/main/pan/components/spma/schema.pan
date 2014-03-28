@@ -49,6 +49,12 @@ type SOFTWARE_REPOSITORY = {
     "proxy" ? string with SELF == '' || is_absoluteURI(SELF)
 };
 
+type SOFTWARE_GROUP = {
+    "mandatory" : boolean = true
+    "optional" : boolean = false
+    "default" : boolean = true
+};
+
 type component_spma_type = {
     include structure_component
     include component_spma_ips
@@ -82,3 +88,4 @@ type component_spma_type = {
 bind "/software/components/spma" = component_spma_type;
 bind '/software/repositories' = SOFTWARE_REPOSITORY [];
 bind '/software/packages' = SOFTWARE_PACKAGE {} {};
+bind "/software/groups" = SOFTWARE_GROUP{};
