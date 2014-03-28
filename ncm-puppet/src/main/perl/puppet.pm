@@ -84,7 +84,8 @@ sub apply {
 
     foreach my $file (sort keys %{$cfg}){
 
-	my ($exit_code,$output)=$self->cmd_exec([@APPLY,$PUPPET_LOGS,$NODEFILES_PATH."/".unescape($file)]);
+        my $out=CAF::Process->new([@APPLY,$PUPPET_LOGS,$NODEFILES_PATH."/".unescape($file)], log => $self)->output();
+        my $exit_code=$?>>8;
 	
 	if (($exit_code != 0)&&($exit_code != 2)) {
 	    $self->error("Apply command failed with code $exit_code. See $PUPPET_LOGS.\n");
@@ -105,43 +106,31 @@ sub install_modules {
     my ($self, $cfg) = @_;
 
     foreach my $mod (sort keys %{$cfg}){
-	my $module=unescape($mod);
-	my $version='';
-	if(defined($cfg->{$mod}->{version})){
-	    $version="--version=".$cfg->{$mod}->{version};
-	}
+        my $module=unescape($mod);
+        my @args;
+        if(defined($cfg->{$mod}->{version})){
+            my $version="--version=".$cfg->{$mod}->{version};
+            @args=($module,$version);
+        }else{
+            @args=($module);
+        }
 
-	my ($exit_code,$output)= $self->cmd_exec([@MODULE_UPGRADE,$module,$version]);
-	if ( $exit_code != 0){
-	    ($exit_code,$output)= $self->cmd_exec([@MODULE_INSTALL,$module,$version]);
-	    if ( $exit_code != 0){
-		$self->debug(1,"Install upgrade command successfully executed. Output: $output\n");
-	    }else{
-		$self->error("Both Upgrade and Install command failed on module $module. Output: $output\n");
-	    }
-	}else{
-	    $self->debug(1,"Module upgrade command successfully executed. Output: $output\n");
-	}	
+
+        my $out=CAF::Process->new([@MODULE_UPGRADE,@args],log => $self)->output();
+        my $ok=!($?>>8);
+        if (!$ok){
+            $out=CAF::Process->new([@MODULE_INSTALL,@args],log => $self)->output();
+            $ok=!($?>>8);
+            if ($ok){
+                $self->debug(1,"Module install command successfully executed. Output: $out\n");
+            }else{
+                $self->error("Both Upgrade and Install command failed on module $module. Output: $out\n");
+            }
+        }else{
+            $self->debug(1,"Module upgrade command successfully executed. Output: $out\n");
+        }
     }
     return 0;
-}
-
-# Wrapper of CAF::Process: execute a shell command line.
-# Returns the couple (EXIT_CODE,OUTPUT_STRING)
-# arguments:
-# $cl: command line string
-#
-sub cmd_exec {
-    my ($self, $cl) = @_;
-
-    my $cmd_output;
-
-    my $cmd = CAF::Process->new($cl, log => $self,
-                                stdout => \$cmd_output,
-				stderr => "stdout");
-    $cmd->execute();
-
-    return ($?>>8,$cmd_output);    
 }
 
 # Create a Config::Tiny configuration file based on a hash
