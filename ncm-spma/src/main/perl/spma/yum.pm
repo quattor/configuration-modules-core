@@ -260,6 +260,10 @@ sub wanted_pkgs
 
     while (my ($pkg, $st) = each(%$pkgs)) {
 	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
+        if (!$name) {
+            $self->warn("Invalid package name: ", unescape($pkg));
+            next;
+        }
 	if (%$st) {
 	    while (my ($ver, $archs) = each(%$st)) {
 		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));

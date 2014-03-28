@@ -85,4 +85,8 @@ is(scalar(grep(m{^glibc}, @$pkgs)), 2,
    "Multiple architectures for the same package are correctly handled");
 ok($pkgs->has("python;x86_64"), "Package with wildcards correctly handled");
 
+$pkgs = $cmp->wanted_pkgs({'@malformed' => {}});
+isa_ok($pkgs, "Set::Scalar", "List with malformed packages still succeeds");
+is(scalar(@$pkgs), 0, "Malformed package names are skipped");
+
 done_testing();
