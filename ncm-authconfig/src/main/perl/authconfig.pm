@@ -375,17 +375,17 @@ sub restart_nscd
         sleep(2);
         $start->execute();
         sleep(1);
+        $clean->run();
         if ($?) {
-            $self->warn("Failed attempt $i to restart nslcd");
+            $self->warn("Failed attempt to restart NSCD $i time(s)");
         } else {
             last;
         }
+        sleep(1);
     }
 
-    $? = 0;
-    $clean->run();
     if ($?) {
-        $self->error("Failed to restart NSCD");
+        $self->error("Failed hard to restart NSCD");
     }
 }
 
