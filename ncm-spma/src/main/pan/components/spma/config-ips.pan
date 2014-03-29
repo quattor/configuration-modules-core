@@ -5,13 +5,8 @@
 
 unique template components/${project.artifactId}/config-ips;
 
-include { 'components/${project.artifactId}/schema' };
-
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
-
-#'version' = '${project.version}';
-#'package' = 'NCM::Component';
 
 #
 # Configure SPMA appropriately for Solaris 11
@@ -24,8 +19,3 @@ prefix '/software/components/${project.artifactId}';
                          '/software/uninstall');
 'flagfile' = '/var/tmp/spma-run-flag';
 
-#
-# Make active
-#
-'active' ?= true;
-'dispatch' ?= true;
