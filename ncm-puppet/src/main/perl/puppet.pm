@@ -176,18 +176,33 @@ sub yaml {
 #
 sub unescape_keys {
     my ($self, $cfg) = @_;
- 
-    my $res={};
+    
+    my $res;
 
-    while (my ($k, $v) = each(%$cfg)) {
+    if(ref($cfg) eq ref({})){
+	$res={};
+
+	while (my ($k, $v) = each(%$cfg)) {
 	
-	if(ref($v) eq ref({})){
-	    $res->{unescape($k)}= $self->unescape_keys($v);
-	}else{
-	    $res->{unescape($k)}=$v;
+	    if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
+		$res->{unescape($k)}= $self->unescape_keys($v);
+	    }else{
+		$res->{unescape($k)}=$v;
+	    }
+	}
+    }else{
+	$res=[];
+
+	foreach my $v (@$cfg) {
+	
+	    if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
+		push @$res, $self->unescape_keys($v);
+	    }else{
+		push @$res, $v;
+	    }
 	}
     }
-    
+
     return $res;
 }
 
