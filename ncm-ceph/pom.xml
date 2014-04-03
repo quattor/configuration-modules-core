@@ -1,0 +1,102 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.quattor.cfg.module</groupId>
+  <artifactId>ceph</artifactId>
+
+  <packaging>pom</packaging>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>Configuration module for CEPH</name>
+
+  <parent>
+    <groupId>org.quattor.maven</groupId>
+    <artifactId>build-profile</artifactId>
+    <version>1.32</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>Apache 2 License</name>
+      <url>http://www.opensource.org/licenses/apache2.0</url>
+      <comments>Copyright (c) Responsible Organization</comments>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Kenneth Waegeman</name>
+      <email>Kenneth.Waegeman@UGent.be</email>
+    </developer>
+  </developers>
+
+  <contributors>
+  </contributors>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <requires>
+              <require>ceph</require>
+            </requires>
+          </configuration>
+        </plugin>       
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.4.3</version>
+          <executions>
+            <execution>
+              <id>filter-tt-sources</id>
+              <phase>process-sources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <encoding>UTF-8</encoding>
+                <outputDirectory>${project.build.directory}/share/templates/quattor/${project.artifactId}</outputDirectory>
+                <resources>
+                  <resource>
+                    <directory>src/main/resources</directory>
+                    <filtering>false</filtering>
+                    <includes>
+                      <include>**/*.tt</include>
+                    </includes>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <mappings combine.children="append">
+              <mapping>
+                <directory>/usr/share/templates/</directory>
+                <filemode>644</filemode>
+                <username>root</username>
+                <groupname>root</groupname>
+                <sources>
+                  <source>
+                    <location>${project.build.directory}/share/templates/</location>
+                  </source>
+                </sources>
+                <directoryIncluded>false</directoryIncluded>
+              </mapping>
+            </mappings>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+
+</project>
+

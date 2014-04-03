@@ -1,0 +1,38 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for CEPH
+
+=head1 DESCRIPTION
+
+For an overview of the features of this component, read the README.md file.
+
+=head1 INITIAL CREATION
+
+To set up the initial cluster, some steps should be taken:
+    - First create a ceph user on all the hosts.
+    - The deployhost(s) should have passwordless ssh access to all the hosts of the cluster
+        e.g. by distributing the public key(s) of the ceph-deploy host(s) over the cluster hosts
+            (As described in the ceph-deploy documentation: 
+                        http://ceph.com/docs/master/start/quick-start-preflight/)
+    - Run the component a first time. 
+            It shall fail, but you should get the initial command for your cluster
+    - Run this command
+    - Run the component again to start the configuration of the new cluster
+
+=head1 RESOURCES
+
+=head2 /software/components/${project.artifactId}
+
+The configuration information for the component.  Each field should
+be described in this section. 
+
+=head1 AUTHOR
+
+${author-info}
+
+=cut
