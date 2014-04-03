@@ -54,7 +54,7 @@ like($str, qr{^\[domain/foo\]$}m, "LDAP domain name printed");
 like($str, qr{^ldap_uri\s*=\s*u1,\s*u2$}m, "LDAP fields printed");
 like($str, qr{^\[domain/bar\]$}m, "Simple domain name printed");
 like($str, qr{^simple_allow_users\s*=\s*us1$}m, "Simple fields printed");
-like($str, qr{^domains\s*=\*(?:foo,\s*bar)|(?:bar,\s*foo)$}m,
+like($str, qr{^domains\s*=\s*(?:foo,\s*bar)|(?:bar,\s*foo)$}m,
      "Domains correctly retrieved");
 like($str, qr{^default_shell\s*=\s*bash$}m, "Local fields printed");
 
