@@ -32,12 +32,417 @@ activates/deactivates the component.
 
 =item /software/components/ntpd/servers/ : list of time servers
 
+=item /software/components/ntpd/serverlist/ : list of { server=hostname, options=nlist() }
+
+=back
+
+=over 2
+
+=item server : string (required)
+
+Can be ip address or qualified DNS hostname
+
+=item options : nlist (optional)
+
+Refer to man ntp.conf for details for command options for server
+
+Default : /software/components/ntpd/defaultoptions or None if not specified
+and defaultoptions
+
+=over
+
+=item autokey:   boolean (optional)
+
+=item burst:     boolean  (optional)
+
+=item iburst:    boolean  (optional)
+
+=item key:       long  (optional)
+
+=item minpoll:   long  (optional)
+
+=item maxpoll:   long  (optional)
+
+=item noselect:  boolean  (optional)
+
+=item preempt:   boolean  (optional)
+
+=item prefer:    boolean  (optional)
+
+=item true:      boolean  (optional)
+
+=item version:   long  (optional)
+
+=back
+
 =item /software/components/ntpd/clientnetworks : list of { net=, mask= }
 
 optional: clients that can use this server to synchronize. Default allows
 connections from localhost only.
 
+=item /software/components/ntpd/defaultoptions : nlist (optional)
+
+Specifies default command options for each timeserver defined in servers
+or serverlist.
+Refer to man ntp.conf for details.
+
+Default : None
+
+=over
+
+=item autokey:   boolean (optional)
+
+=item burst:     boolean  (optional)
+
+=item iburst:    boolean  (optional)
+
+=item key:       long  (optional)
+
+=item minpoll:   long  (optional)
+
+=item maxpoll:   long  (optional)
+
+=item noselect:  boolean  (optional)
+
+=item preempt:   boolean  (optional)
+
+=item prefer:    boolean  (optional)
+
+=item true:      boolean  (optional)
+
+=item version:   long  (optional)
+
 =back
+
+=item /software/components/ntpd/restrictdefault : nlist (optional)
+
+Refer to man ntp_acc for more information or access control commands.
+
+Default : restrict default ignore
+
+=over
+
+=item mask:        ip address or hostname (optional)
+
+Address can be a address of a host or network and can be a valid host DNS name.
+=item ignore:      boolean (Default to True)
+
+=item kod:         boolean (optional)
+
+=item limited:     boolean (optional)
+
+=item lowpriotrap: boolean (optional)
+
+=item nomodify:    boolean (optional)
+
+=item noquery:     boolean (optional)
+
+=item nopeer:      boolean (optional)
+
+=item noserve:     boolean (optional)
+
+=item notrap:      boolean (optional)
+
+=item notrust:     boolean (optional)
+
+=item ntpport:     boolean (optional)
+
+=item version:     long(1..4) (optional)
+
+Deny packets that do not match the current NTP version
+
+=back
+
+=item /software/components/ntpd/authenticate : boolean (optional)
+
+Adds string 'authenticate yes' to ntp.conf
+
+Default : None
+
+=item /software/components/ntpd/broadcastdelay : double (optional)
+
+Double value in seconds to set network delay between local and remote servers.
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=item /software/components/ntpd/keyfile : string (optional)
+
+Specifies the complete path and location of the MD5 key file containing the
+keys and key identifiers used by ntpd, ntpq and ntpdc when operating with
+symmetric key cryptography.
+Refer to man ntp_auth for more details.
+
+Default : None
+
+=item /software/components/ntpd/trustedkey : list of integers (optional)
+
+Requires keyfile set.
+Refer to man ntp_auth for more details.
+
+Default : None
+
+=item /software/components/ntpd/requestkey : long (optional)
+
+Specifies the key identifier to use with the ntpdc utility program.
+Requires keyfile set.
+Refer to man ntp_auth for more details.
+
+Default : None
+
+=item /software/components/ntpd/controlkey : long (optional)
+
+Specifies the key identifier to use with the ntpq utility.
+Requires keyfile set.
+Refer to man ntp_auth for more details.
+
+Default : None
+
+=item /software/components/ntpd/driftfile : string (optional)
+
+This command specifies the complete path and name of the file used to record
+the frequency of the local clock oscillator.
+
+Default : None
+
+=item /software/components/ntpd/includefile : string (optional)
+
+This command allows additional configuration commands to be included
+from a separate file.
+
+Default : None
+
+=item /software/components/ntpd/logfile : string (optional)
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=item /software/components/ntpd/logconfig : list of strings (optional)
+Log configuration arguments must be defined in a list of strings.
+Values for each argument must follow the defined in ntp_misc manual.
+Refer to man ntp_misc for more details.
+
+examples:
+
+prefix "/software/components/ntpd";
+
+#logconfig =syncstatus +sysevents
+"logconfig" = list("=syncstatus", "+sysevent");
+
+Default : None
+
+
+=item /software/components/ntpd/statsdir : string (optional)
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=item /software/components/ntpd/statistics : nlist (optional)
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+example:
+prefix "/software/components/ntpd";
+
+"statistics" = nlist();
+"statistics/loopstats" = true;
+"statistics/peerstats" = true;
+
+
+=over
+
+=item clockstats :  boolean (optional)
+
+=item cryptostats : boolean (optional)
+
+=item loopstats :   boolean (optional)
+
+=item peerstats :   boolean (optional)
+
+=item rawstats :    boolean (optional)
+
+=item sysstats :    boolean (optional)
+
+=back
+
+=item /software/components/ntpd/filegen : list of nlist (optional)
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+example:
+
+#filegen loopstats file loopstats type day enable
+#filegen peerstats file peerstats type day enable
+prefix "/software/components/ntpd";
+
+"filegen" = list();
+"filegen/0" = nlist();
+"filegen/0/name" = "loopstats";
+"filegen/0/file" = "loopstats";
+"filegen/0/type" = "day";
+"filegen/0/enableordisable" = "enable";
+"filegen/1" = nlist();
+"filegen/1/name" = "peerstats";
+"filegen/1/file" = "peerstats";
+"filegen/1/type" = "day";
+"filegen/1/enableordisable" = "enable";
+
+=over
+
+=item name : string (optional)
+
+value can be set to 'clockstats|cryptostats|loopstats|peerstats|rawstats|sysstats'
+
+=item file : string (optional)
+
+=item type : string (optional)
+
+value can be 'none|pid|day|week|month|year|age'
+
+=item linkornolink"    ? string (optional)
+
+value must be either 'link' or 'nolink'
+
+=item enableordisable : string (optional)
+
+value must be either 'enable' or 'disable'
+
+
+=back
+
+=item /software/components/ntpd/enable : nlist (optional)
+
+Provides a way to enable various system options.
+Flags not mentioned are unaffected.
+Note that all of these flags can be controlled remotely using
+the ntpdc utility program
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=over
+
+=item auth :      boolean (optional)
+
+=item blient :    boolean (optional)
+
+=item calibrate : boolean (optional)
+
+=item kernel :    boolean (optional)
+
+=item monitor :   boolean (optional)
+
+=item ntp :       boolean (optional)
+
+=item pps :       boolean (optional)
+
+=item stats :     boolean (optional)
+
+=back
+
+
+=item /software/components/ntpd/disable : nlist (optional)
+
+Provides a way to enable various system options.
+Flags not mentioned are unaffected.
+Note that all of these flags can be controlled remotely using
+the ntpdc utility program
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=over
+
+=item auth :       boolean (optional)
+
+=item blient :     boolean (optional)
+
+=item calibrate :  boolean (optional)
+
+=item kernel :     boolean (optional)
+
+=item monitor :    boolean (optional)
+
+=item ntp :        boolean (optional)
+
+=item pps :        boolean (optional)
+
+=item stats :      boolean (optional)
+
+=back
+
+=item /software/components/ntpd/tinker : nlist (optional)
+
+Refer to man ntp_misc for more details.
+
+Default : None
+
+=over 7
+
+=item allan:      long (optional)
+
+=item dispersion: long (optional)
+
+=item freq:       long (optional)
+
+=item huffpuff:   long (optional)
+
+=item panic:      long (optional)
+
+=item step:       long (optional)
+
+=item stepout:    long (optional)
+
+=back
+
+=back
+
+
+=over
+
+=item /software/components/ntpd/servicename : string (optional)
+
+override the deamon name to restart service. some platforms such as solaris
+use a different service name to represent ntpd.
+
+Example:
+	# solaris
+	"/software/components/ntpd/servicename" = "svc:/network/ntpd";
+
+	# linux
+	"/software/components/ntpd/servicename" = "ntpd";
+
+Default : "ntpd" (linux), "svc:/network/ntpd" (solaris)
+
+=back
+
+=over
+
+=item /software/components/ntpd/includelocalhost : boolean (optional)
+
+includes fudge options for localhost's clock
+
+Default : true
+
+=back
+
+=over
+
+=item /software/components/ntpd/enablelocalhostdebug : boolean (optional)
+
+Allows some debugging via ntpdc on localhost but with no modifications
+
+Default : true
+
+=back
+
 
 =head1 DEPENDENCIES
 
@@ -53,9 +458,17 @@ none.
 
 none known.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
+=over 2
+
+=item *
 Thorsten Kleinwort <Thorsten.Kleinwort@cern.ch>
+
+=item *
+John Monteiro <John.Monteiro@morganstanley.com>
+
+=back
 
 =head1 SEE ALSO
 
