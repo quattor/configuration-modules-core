@@ -40,6 +40,562 @@ Readonly::Array our @REBUCKETS => (
    }
 );
 
+Readonly::Array our @RELBBUCKETS => (
+     {
+       'buckets' => [
+         {
+           'buckets' => [
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             }
+           ],
+           'name' => 'ceph001',
+           'type' => 'host'
+         },
+         {
+           'buckets' => [
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             }
+           ],
+           'name' => 'ceph002',
+           'type' => 'host'
+         },
+         {
+           'buckets' => [
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-0'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             },
+             {
+               'labels' => [
+                 'tst-1'
+               ],
+               'name' => 'osd.0',
+               'type' => 'osd',
+               'weight' => '1'
+             }
+           ],
+           'name' => 'ceph003',
+           'type' => 'host'
+         }
+       ],
+       'defaultalg' => 'straw',
+       'defaulthash' => '0',
+       'labels' => [
+         'tst-0',
+         'tst-1'
+       ],
+       'name' => 'default',
+       'type' => 'root'
+     }
+);
+
+Readonly::Array our @LBBUCKETS => (
+   {
+     'buckets' => [
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph001-tst-0',
+         'type' => 'host'
+       },
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph002-tst-0',
+         'type' => 'host'
+       },
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph003-tst-0',
+         'type' => 'host'
+       }
+     ],
+     'defaultalg' => 'straw',
+     'defaulthash' => '0',
+     'name' => 'default-tst-0',
+     'type' => 'root'
+   },
+   {
+     'buckets' => [
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph001-tst-1',
+         'type' => 'host'
+       },
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph002-tst-1',
+         'type' => 'host'
+       },
+       {
+         'buckets' => [
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           }
+         ],
+         'name' => 'ceph003-tst-1',
+         'type' => 'host'
+       }
+     ],
+     'defaultalg' => 'straw',
+     'defaulthash' => '0',
+     'name' => 'default-tst-1',
+     'type' => 'root'
+   }
+);
+
 Readonly::Array our @FLBUCKETS => (
    {
      'alg' => 'straw',
@@ -1536,6 +2092,7 @@ END
 
 Readonly our $BASEMAP => <<END;
 # begin crush map
+tunable test_tune 0
 
 # devices
 

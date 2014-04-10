@@ -40,7 +40,7 @@ use File::Copy qw(copy move);
 use List::Util qw( min max );
 use JSON::XS;
 use Readonly;
-
+use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly::Array my @NONINJECT => qw(
     mon_host 
@@ -166,6 +166,19 @@ sub get_global_config {
     return $cephcfg->{global};
 }
 
+# get host of ip; save the map to avoid repetition
+sub get_host {
+    my ($self, $ip) = @_;
+    if (!$self->{hostmap}) {
+        $self->{hostmap} = {};
+    }
+    if (!$self->{hostmap}->{$ip}) {
+        $self->{hostmap}->{$ip} = gethostbyaddr(Socket::inet_aton($ip), Socket::AF_INET());
+        $self->debug(3, "host of $ip is $self->{hostmap}->{$ip}");
+    }
+    return $self->{hostmap}->{$ip};
+}
+    
 # Gets the OSD map
 sub osd_hash {
     my ($self) = @_;
@@ -177,20 +190,16 @@ sub osd_hash {
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
         my ($name,$host);
-        foreach my $tosd (@{$osdtree->{nodes}}) {
-            if ($tosd->{type} eq 'osd' && $tosd->{id} == $id) {
-                $name = $tosd->{name};
-            }
-            elsif ($tosd->{type} eq 'host' && $id ~~ $tosd->{children}) { # Requires Perl > 5.10 !
-                $host = $tosd->{name};
-            }
-        }
-        if (!$name || !$host) {
-            $self->error("Parsing osd commands went wrong");
-            return 0;
-        }
+        $name = "osd.$id";
         my @addr = split(':', $osd->{public_addr});
         my $ip = $addr[0];
+        $host = $self->get_host($ip);
+        if (!$host) {
+            $self->error("Parsing osd commands went wrong: Could not retreive fqdn of ip $ip.");
+            return 0;
+        }
+        my @fhost = split('\.', $host);
+        $host = $fhost[0];
         my ($osdloc, $journalloc) = $self->get_osd_location($id, $ip, $osd->{uuid}) or return 0;
         my $osdp = { 
             name            => $name, 
@@ -845,7 +854,9 @@ sub check_configuration {
 # Do actions after deploying of daemons and global configuration
 sub do_post_actions {
     my ($self, $cluster) = @_;
-    $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}) or return 0;
+    if ($cluster->{crushmap}) {
+        $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}) or return 0;
+    }
     return 1;
 }
 
@@ -889,8 +900,11 @@ sub crush_merge {
                             name => $osdname, 
                             # Ceph is rounding the weight
                             weight => int((1000 * $osds->{$osd}->{crush_weight}) + 0.5)/1000.0 , 
-                            type => 'osd'
+                            type => 'osd',
                         };
+                        if ($osds->{$osd}->{labels}) {
+                            $osdb->{labels} = $osds->{$osd}->{labels};
+                        }
                         push(@{$bucket->{buckets}}, $osdb);
                         (my $id = $osdname) =~ s/^osd\.//;
                         my $device = { 
@@ -907,6 +921,45 @@ sub crush_merge {
         }
     }
     return 1;
+}
+
+#If applicable, replace buckets with labeled ones
+sub labelize_buckets {
+    my ($self, $buckets ) = @_;    
+    my @newbuckets = ();
+    foreach my $bucket (@{$buckets}){
+        if ($bucket->{labels} && @{$bucket->{labels}}) {
+            foreach my $label (@{$bucket->{labels}}) {
+                push(@newbuckets, $self->labelize_bucket($bucket, $label));
+            }
+        } else {
+             push(@newbuckets, $bucket);
+        }
+    }
+    return \@newbuckets;
+}
+
+# get a bucket hash for a labeled root
+sub labelize_bucket {
+    my ($self, $tbucket, $label ) = @_; 
+    my %lhash = %{$tbucket};
+    if ($lhash{type} ne 'osd') {
+        $lhash{name} = "$lhash{name}-$label";
+    }
+    if ($tbucket->{buckets} && @{$tbucket->{buckets}}) { 
+        $lhash{buckets} = [];
+        foreach my $bucket ( @{$tbucket->{buckets}}) {
+            if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
+                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label) );
+            }        
+        }
+        if (!@{$lhash{buckets}}) {
+            # check/eliminate empty buckets
+            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
+        }
+    }
+    delete $lhash{labels}; # Not needed anymore
+    return \%lhash;
 }
 
 # Escalate the weights that has been set
@@ -1006,6 +1059,9 @@ sub quat_crush {
     }
     my @sorted = sort { $a->{id} <=> $b->{id} } @$devices;
     $crushmap->{devices} = \@sorted;
+    
+    $crushmap->{buckets} = $self->labelize_buckets($crushmap->{buckets});
+    
     foreach my $bucket (@{$crushmap->{buckets}}){
         if (!defined($self->set_weights($bucket))) {
             $self->debug(1, "Something went wrong when setting weight of $bucket->{name}");
@@ -1177,7 +1233,7 @@ sub write_crush {
 
     my $fh = CAF::FileWriter->new($plainfile, log => $self, 
                                 backup => "." . time() );
-    print $fh  "\n";
+    print $fh  "# begin crush map\n";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
     my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
     if (!$ok) {

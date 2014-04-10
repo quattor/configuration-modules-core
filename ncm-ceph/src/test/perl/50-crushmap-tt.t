@@ -36,8 +36,7 @@ my $t = $cfg->getElement($PATH)->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 my $crush = $cluster->{crushmap};
-my $str;
-
+my $str = "# begin crush map\n";
 ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
    "Template successfully rendered");
 # Very basic template, not filled in

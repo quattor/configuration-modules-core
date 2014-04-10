@@ -1,5 +1,6 @@
-# begin crush map
-
+[% FOREACH pair IN tunables.pairs -%]
+tunable [% pair.key %] [% pair.value %]
+[% END %]
 # devices
 [% FOREACH device IN devices -%]
 device [% device.id %] [% device.name %]

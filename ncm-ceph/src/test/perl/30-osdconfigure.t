@@ -27,7 +27,6 @@ Readonly::Scalar my $PATH => '/software/components/ceph';
 
 $CAF::Object::NoAction = 1;
 my $mock = Test::MockModule->new('NCM::Component::ceph');
-
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 
@@ -60,6 +59,7 @@ $cmp->use_cluster();
 $cmp->{cfgfile} = 'tmpfile';
 
 my $type = 'osd';
+$mock->mock('get_host', 'ceph001.cubone.os' );
 my $cephh = $cmp->osd_hash();
 cmp_deeply($cephh, \%data::OSDS, 'OSD hash');
 my $quath = $cluster->{osdhosts};

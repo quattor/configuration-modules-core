@@ -53,6 +53,9 @@ prefix '/software/components/ceph/clusters/ceph';
 
 'crushmap' = nlist(
     'types' , list('osd','host','root'),
+    'tunables', nlist(
+        'test_tune', 0
+    ),
     'rules', list (
         nlist(
             'name', 'data',

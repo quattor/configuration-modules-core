@@ -109,7 +109,11 @@ function is_bucket = {
         error("Bucket attribute 'weight' invalid. Expected positive double.");
         return(false);
     };
-    valids = list('name','type','alg','hash','weight','buckets');
+    if(exists(bucket['labels']) && !is_list(bucket['labels'])) {
+        error("Invalid labels! Labels should be an list.");
+        return(false);
+    };     
+    valids = list('name','type','alg','hash','weight','buckets','labels');
     if(top == 1){
         append(valids, 'defaultalg');
         append(valids, 'defaulthash');
@@ -120,14 +124,23 @@ function is_bucket = {
             retrun(false);
         };
     };        
-     
-    if(index(bucket['name'], names) != -1) {
-        error("Duplicate bucket name " + bucket['name']);
-        return(false);
+    cnames = list();
+    if(exists(bucket['labels'])) { 
+        foreach(li;label;bucket['labels']) {
+            append(cnames, format('%s-%s', bucket['name'], label));
+        };
     } else {
-        append(names, bucket['name']);
+        append(cnames, bucket['name']);   
     };
-    debug("Bucket " + bucket['name']);
+    foreach(ni;cname;cnames) {
+        if(index(cname, names) != -1) {
+            error("Duplicate bucket name " + cname);
+            return(false);
+        } else {
+            append(names, cname);
+        };
+        debug("Bucket " + cname);
+    };
     # Check attributes
 
     #recurse if buckets exists
@@ -164,6 +177,7 @@ type ceph_osd = {
     'in'            ? boolean = true
     'journal_path'  ? string
     'crush_weight'  : double(0..) = 1.0
+    'labels'        ? string[]
 };
 
 @{ ceph osdhost-specific type @}
@@ -214,6 +228,7 @@ type ceph_crushmap_bucket = {
     'weight'        ? double(0..)
     'defaultalg'    : string = 'straw' with is_ceph_crushmap_bucket_alg(SELF)
     'defaulthash'   : long = 0
+    'labels'        ? string[]
     'buckets'       ? nlist[] # the idea: recursive buckets
 };
 
@@ -245,6 +260,7 @@ type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
     'rules'     : ceph_crushmap_rule[1..]
+    'tunables'  ? long{}
 } with check_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
@@ -261,7 +277,7 @@ type ceph_cluster = {
 type ${project.artifactId}_component = {
     include structure_component
     'clusters'         : ceph_cluster {}
-    'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
+    'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9])*')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
 } with valid_osd_names(SELF);
 

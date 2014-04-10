@@ -47,7 +47,7 @@ cmp_deeply($chash, \%crushdata::CEPHMAP, 'hash from ceph built');
 $crush->{devices} = $chash->{devices}; # resolved on live system
 $cmp->cmp_crush($chash, $crush);
 cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
-my $str;
+my $str = "# begin crush map\n";
 ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
    "Template successfully rendered");
 # Full crushmap test, but device items not completely mocked (have all id 0)
