@@ -5,7 +5,7 @@
 
 declaration template components/spma/functions;
 
-variable DEF = "";
+variable DEF ?= '';
 
 ############################################################
 #
@@ -252,29 +252,11 @@ function pkg_add = {
 #
 # Replace package in the list
 #
-# pkg_repl <name> <new version> <arch> [options] [flags] [repository]
+# pkg_repl <name> <new version> <arch>
 #
 # In fact pkg_repl() is the real workhorse of pkg_add/pkg_del/pkg_repl/pkg_ronly.
 # Other functions are just wrappers of pkg_repl(). 'options' argument
 # is used to tailor this function behaviour for a particular purpose.
-#
-# 'options' allows to specify a specific version to replace and/or
-# flags to modify pkg_repl behaviour. This argument can  be a string or
-# a list of string if several options are specified together.
-# Possible flags are :
-#   - 'samearch' to indicate that a previous version is replaced only
-#     if it is for the same architecture
-#   - 'allarchs' to cancel 'samearch' behaviour
-#   - 'delete' to delete an existing package without replacing it (in this
-#     case name/version/arch arguments specify the package to delete and
-#     version specified in options is ignored)
-#   - 'ronly' : replace an existing package, else do nothing
-#   - 'addonly' : add a new package but fail if the package already exists
-#   - 'multi' : allow multiple version of a package when adding a package (addonly
-#     option must be specified too).
-#
-# if options is not specified, all versions are replaced but only
-# it they are for the same architecture (samearch).
 #
 # if no version existed in the profile, the new version
 # is just added.
@@ -291,214 +273,63 @@ function pkg_repl = {
 
     e_name = escape(name);
 
-    multiarch = true;
-    deleteonly = false;
-    mustexist = undef;        # 'mustexist' is a 3-state variable (undef, true, false)
-    singleversion = true;     # 'mustexist' must be false (strict add) for singleversion=false to be used
-    options  = undef;
-    old_version = DEF;
     if( ARGC > 3 ) {
-        if ( is_list(ARGV[3]) ) {
-            options = ARGV[3];
-        } else {
-            options = list(ARGV[3]);
-        };
-    };
-    if( is_defined(options) ) {
-        foreach (i;option;options) {
-            if ( option == "samearch" ) {
-                multiarch = true;
-            } else if ( option == "allarchs" ) {
-                multiarch = false;
-            } else if ( option == "delete" ) {
-                deleteonly = true;
-            } else if ( option == "ronly" ) {
-                mustexist = true;
-            } else if ( option == "addonly" ) {
-                mustexist = false;
-            } else if ( option == "multi" ) {
-                singleversion = false;
-            } else {
-                old_version = option;
-                debug ("    old version being replaced: "+old_version);
-            };
-        };
-
-        # To simplify further processing, reset singleversion to true if
-        # 'mustexist' option is not false (strict add). singleversion=false
-        # is meaningful and allowed only if mustexist=false.
-        if ( !singleversion && (!is_defined(mustexist) || mustexist) ) {
-            debug ("   singleversion reset to false as mustexist is not false");
-            singleversion = true;
-        };
+      error('Usage: pkg_repl accepts 3 arguments');
     };
 
-    # Retrieve package version : it is mandatory except for delete
-    if (ARGC > 1 && ARGV[1] != DEF) {
-        version = ARGV[1];
+    version = undef;
+    arch = undef;
+        
+    if ( (ARGC == 1) || ( (ARGC > 1) && (ARGV[1] == '') ) ) {
+      if ( is_list(package_default[u_name]) ) {
+        version = package_default[u_name][0];
+        if ( exists(package_default[u_name][1]) ) {
+          arch = package_default[u_name][1];
+        };
     } else {
-        if ( deleteonly ) {
-            version = DEF;
-        } else {
-            if (exists(package_default[u_name][0])) {
-                version = package_default[u_name][0];
-            } else {
-                error("no default package version defined for package: "+name);
-            };
-        };
-    };
-    e_version = escape(version);
-
-    # If 'deleteonly' option is present, version to delete is the 2nd arg (package version)
-    if ( deleteonly ) {
-        old_version = version;
-        debug ("   old version being deleted: '"+old_version+"'");
-    };
-
-    # Retrieve package architecture
-    if (ARGC > 2 && ARGV[2] != DEF) {
+      version = ARGV[1];
+      if ( (ARGC == 3) && (ARGV[2] != '') ) {
         arch = ARGV[2];
+      };
+    };
+
+    if ( exists(SELF[escape(ARGV[0])]) ) {
+      package_params = SELF[escape(ARGV[0])];
     } else {
-        if (exists(package_default[u_name][1])) {
-            arch = package_default[u_name][1];
-        } else {
-            if ( !deleteonly || multiarch ) {
-                error("no default package architecture defined for package: "+name);
-            };
-            # fix bug #19060
-            arch = "";
-        };
+      package_params = undef;
+      SELF[escape(ARGV[0]) = nlist();
     };
-
-    if(ARGC > 4) {
-        flags = ARGV[4];
+    if ( is_defined(version) ) {
+      # Check if the version is already part of the package and in this case, only add a new arch if needed.
+      # Else reply existing version.
+      # FIXME : should probably replace only a version/arch combination... but this could lead to different versions for 
+      # different arch and will probably not work... Could also upgrade version for all archs already defined?
+      version_e = escape(version);
+      if ( is_defined(package_params[version_e]) ) {
+        arch_params = package_params[version_e];
+        # If arch is unspecified, remove any explicit arch
+        if ( is_defined(arch) ) {
+          if ( index(arch_params,arch) < 0 ) {
+            arch_params[arch] = '';
+          };
+        } else {
+          arch_params = nlist();
+        };
+      } else {
+        if ( is_defined(arch) ) {
+          arch_params=nlist('arch', nlist(arch,''));
+        } else {
+          arch_params=nlist();
+        };
+      };
+      SELF[escape(ARGV[0])][version_e] = arch_params;
     } else {
-        flags = DEF;
+      # Refuse to replace an explicit version by an undefined version
+      if ( is_defined(package_params) ) {
+        error(format('Attempt to unlock version of package %s (version %s'),ARGV[0],unescape(key(package_params,0))));
+      };
     };
-
-    if(ARGC > 5) {
-        rep = ARGV[5];
-    } else {
-        rep = DEF;
-    };
-
-    # Check if version to be added/replaced/deleted already exists
-    debug("Checking if package " + name + " version '"+ old_version + "' arch '" + arch + "' exists");
-    e_old_version = escape(old_version);
-    pkg_found = nlist();            # Will track the version of the same package with the same arch already present
-    pkg_found_identical = false;    # Will track if the same package version/arch is already present
-    versions_to_delete = list();
-    if ( exists(SELF[e_name]) && is_defined(SELF[e_name]) ) {
-        debug('Package found. Checking arch and version...');
-        foreach (current_version;current_pkg;SELF[e_name]) {
-            cur_pkg_found = undef;
-            cur_pkg_identical = false;
-            if( (old_version == DEF) || (e_old_version == current_version) ) {
-                # Process only arch matching the package passed as an argument
-                if ( multiarch ) {
-                    if ( !is_defined(SELF[e_name][current_version]["arch"]) ) {
-                        error("arch missing for package "+name+" version "+unescape(current_version));
-                    };
-                    if ( !is_defined(arch) ) {
-                        error("Error deleting version "+unescape(current_version)+" : no arch specified");
-                    };
-                    newarch = nlist();
-                    foreach (current_arch;k;SELF[e_name][current_version]['arch']) {
-                        if ( arch == current_arch ) {
-                            cur_pkg_found = current_version;
-                        } else {
-                            newarch[current_arch] = rep;
-                        };
-                    };
-                # Process all archs: don't keep any arch if the version must be deleted
-                } else {
-                    debug('Processing all archs for package '+name);
-                    newarch = nlist();
-                    cur_pkg_found = current_version;
-                };
-
-                # mustexist=true or undef
-                # Existing version must be removed except if this is the same one as the
-                # one to add/replace (deleteonly=false).
-                # Do the appropriate action depending on other archs being present:
-                # if yes, update the arch list for the package/version entry, else remove
-                # the version entry.
-                if ( !is_defined(mustexist) || mustexist  ) {
-                    if ( deleteonly || (is_defined(cur_pkg_found) && (cur_pkg_found!=e_version)) ) {
-                        if ( length(newarch) == 0 ) {
-                            versions_to_delete[length(versions_to_delete)] = current_version;
-                        } else {
-                            debug('Redefining list of installed arch for version '+unescape(current_version)+' ('+to_string(newarch)+')');
-                            SELF[e_name][current_version]['arch'] = newarch;
-                        };
-                    };
-                };
-            };
-
-            if ( is_defined(cur_pkg_found) ) {
-                pkg_found[cur_pkg_found] = true;    # Value is meaningless
-            };
-        };
-
-        if ( exists(pkg_found[e_version]) ) {
-            pkg_found_identical = true;
-        };
-
-        if ( length(pkg_found) == 0 ) {
-            debug("Package "+name+" version '"+old_version+"' arch '"+arch+"' not present in current configuration");
-        } else {
-            # mustexist=false (strict add) : if another version is already present and
-            # 'multi' option has not been specified (singleversion=true), throw an error.
-            # If the same version/arch (and only this one) is already present, just do nothing.
-            if ( is_defined(mustexist) && !mustexist && singleversion ) {
-                if ( pkg_found_identical && (length(pkg_found) == 1) ) {
-                    debug('Package '+name+' ('+version+','+arch+') already present in the profile with the same version/arch: nothing done.');
-                    return(SELF);
-                } else {
-                    installed_vers = list();
-                    foreach (k;v;pkg_found) {
-                        installed_vers[length(installed_vers)] = unescape(k);
-                    };
-                    error ("Package "+name+" ("+arch+") already present in profile, without multi-version option (version requested="+
-                        version+",present="+to_string(installed_vers)+")");
-                };
-            };
-        };
-
-        # Delete versions marked for deletion
-        if ( length(versions_to_delete) > 0 ) {
-            foreach (i;v;versions_to_delete) {
-                debug('Deleting version '+unescape(v)+' (all archs)');
-                SELF[e_name][v] = null;
-            };
-            if (!first(SELF[e_name], x_a, x_b)) {
-                SELF[e_name] = null;
-            };
-        };
-    };
-
-    # If package is not yet present in the profile, check if strict
-    # replace (no implicit add) has been requested.
-    if ( is_defined(mustexist) && mustexist && (length(pkg_found) == 0) ) {
-        debug('mustexist=true (ronly) but package not found in profile: nothing done.');
-        return (SELF);
-    };
-
-    # Replace package except if 'delete' option as been specified.
-    if ( !deleteonly ) {
-        if ( pkg_found_identical ) {
-            debug("Package "+name+" version "+version+" arch "+arch+" already present");
-        } else {
-            debug("Adding package " + name + " new version: "+ version + " arch " + arch);
-            if (! multiarch) {
-                SELF[e_name][e_version]['arch'] = undef;
-            };
-            SELF[e_name][e_version]['arch'][arch] = rep;
-        };
-        if(is_nlist(flags)) {
-            SELF[e_name][e_version]["flags"] = flags;
-        };
-    };
+    
     SELF;
 };
 
