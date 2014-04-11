@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Deep;
-#use Test::Quattor qw(labeled_crushmap);
+use Test::Quattor qw(labeled_crushmap);
 use NCM::Component::ceph;
 use CAF::Object;
 use crushdata;
@@ -26,17 +26,22 @@ Readonly::Scalar my $PATH => '/software/components/ceph';
 
 $CAF::Object::NoAction = 1;
 
-#my $cfg = get_config_for_profile('labeled_crushmap');
 my $cmp = NCM::Component::ceph->new('ceph');
-
-#my $t = $cfg->getElement($PATH)->getTree();
-#my $cluster = $t->{clusters}->{ceph};
-
 $cmp->use_cluster();
-#my $crush = $cluster->{crushmap};
-#$cmp->flatten_osds($cluster->{osdhosts});
-#$cmp->quat_crush($crush, $cluster->{osdhosts});
-#$cmp->crush_merge($crush->{buckets}, $cluster->{osdhosts}, []);
+
+my $generate = 0;
+
+if ($generate) {
+    my $cfg = get_config_for_profile('labeled_crushmap');
+    my $t = $cfg->getElement($PATH)->getTree();
+    my $cluster = $t->{clusters}->{ceph};
+
+    my $crush = $cluster->{crushmap};
+    $cmp->flatten_osds($cluster->{osdhosts});
+    $cmp->crush_merge($crush->{buckets}, $cluster->{osdhosts}, []);
+
+    diag explain $crush->{buckets};
+}
 
 my $buckets = \@crushdata::RELBBUCKETS;
 my $newbuckets = $cmp->labelize_buckets($buckets);
