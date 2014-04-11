@@ -110,10 +110,10 @@ function is_bucket = {
         return(false);
     };
     if(exists(bucket['labels']) && !is_list(bucket['labels'])) {
-        error("Invalid labels! Labels should be an list.");
+        error("Invalid labels! Labels should be a list.");
         return(false);
     };     
-    valids = list('name','type','alg','hash','weight','buckets','labels');
+    valids = list('name', 'type', 'alg', 'hash', 'weight', 'buckets', 'labels');
     if(top == 1){
         append(valids, 'defaultalg');
         append(valids, 'defaulthash');
@@ -171,13 +171,14 @@ The key of the ceph_osd should be the path to the mounted disk.
 This can be an absolute path or a relative one to /var/lib/ceph/osd/
 journal_path should be the path to a journal file
 This can be an absolute path or a relative one to /var/lib/ceph/log/
+With labels osds can be grouped. This should also be defined in root. 
 @}
 type ceph_osd = {
     include ceph_daemon
     'in'            ? boolean = true
     'journal_path'  ? string
     'crush_weight'  : double(0..) = 1.0
-    'labels'        ? string[]
+    'labels'        ? string[1..]
 };
 
 @{ ceph osdhost-specific type @}
@@ -228,7 +229,7 @@ type ceph_crushmap_bucket = {
     'weight'        ? double(0..)
     'defaultalg'    : string = 'straw' with is_ceph_crushmap_bucket_alg(SELF)
     'defaulthash'   : long = 0
-    'labels'        ? string[]
+    'labels'        ? string[1..] # divide hierarchy on a osd label base
     'buckets'       ? nlist[] # the idea: recursive buckets
 };
 
@@ -255,12 +256,18 @@ type ceph_crushmap_rule = {
     'steps'              : ceph_crushmap_rule_step[1..] 
 };
 
-@{ ceph crushmap definition @}
+@{ 
+ceph crushmap definition 
+The crushmap defines some types of buckets,
+a hierarchical bucket structure,
+rules for traversing these buckets
+and tunables for magic numbers.
+@}
 type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
     'rules'     : ceph_crushmap_rule[1..]
-    'tunables'  ? long{}
+    'tunables'  ? long{} 
 } with check_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
@@ -277,7 +284,7 @@ type ceph_cluster = {
 type ${project.artifactId}_component = {
     include structure_component
     'clusters'         : ceph_cluster {}
-    'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9])*')
+    'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
 } with valid_osd_names(SELF);
 

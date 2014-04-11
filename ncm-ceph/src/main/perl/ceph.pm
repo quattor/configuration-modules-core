@@ -169,14 +169,14 @@ sub get_global_config {
 # get host of ip; save the map to avoid repetition
 sub get_host {
     my ($self, $ip) = @_;
-    if (!$self->{hostmap}) {
-        $self->{hostmap} = {};
+    if (!$self->{_hostmap}) {
+        $self->{_hostmap} = {};
     }
-    if (!$self->{hostmap}->{$ip}) {
-        $self->{hostmap}->{$ip} = gethostbyaddr(Socket::inet_aton($ip), Socket::AF_INET());
-        $self->debug(3, "host of $ip is $self->{hostmap}->{$ip}");
+    if (!$self->{_hostmap}->{$ip}) {
+        $self->{_hostmap}->{$ip} = gethostbyaddr(Socket::inet_aton($ip), Socket::AF_INET());
+        $self->debug(3, "host of $ip is $self->{_hostmap}->{$ip}");
     }
-    return $self->{hostmap}->{$ip};
+    return $self->{_hostmap}->{$ip};
 }
     
 # Gets the OSD map
@@ -195,7 +195,7 @@ sub osd_hash {
         my $ip = $addr[0];
         $host = $self->get_host($ip);
         if (!$host) {
-            $self->error("Parsing osd commands went wrong: Could not retreive fqdn of ip $ip.");
+            $self->error("Parsing osd commands went wrong: Could not retrieve fqdn of ip $ip.");
             return 0;
         }
         my @fhost = split('\.', $host);
@@ -923,6 +923,29 @@ sub crush_merge {
     return 1;
 }
 
+# get a bucket hash for a labeled root
+sub labelize_bucket {
+    my ($self, $tbucket, $label ) = @_; 
+    my %lhash = %{$tbucket};
+    if ($lhash{type} ne 'osd') {
+        $lhash{name} = "$lhash{name}-$label";
+    }
+    if ($tbucket->{buckets} && @{$tbucket->{buckets}}) { 
+        $lhash{buckets} = [];
+        foreach my $bucket (@{$tbucket->{buckets}}) {
+            if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
+                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label));
+            }        
+        }
+        if (!@{$lhash{buckets}}) {
+            # check/eliminate empty buckets
+            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
+        }
+    }
+    delete $lhash{labels}; # Not needed anymore
+    return \%lhash;
+}
+
 #If applicable, replace buckets with labeled ones
 sub labelize_buckets {
     my ($self, $buckets ) = @_;    
@@ -937,29 +960,6 @@ sub labelize_buckets {
         }
     }
     return \@newbuckets;
-}
-
-# get a bucket hash for a labeled root
-sub labelize_bucket {
-    my ($self, $tbucket, $label ) = @_; 
-    my %lhash = %{$tbucket};
-    if ($lhash{type} ne 'osd') {
-        $lhash{name} = "$lhash{name}-$label";
-    }
-    if ($tbucket->{buckets} && @{$tbucket->{buckets}}) { 
-        $lhash{buckets} = [];
-        foreach my $bucket ( @{$tbucket->{buckets}}) {
-            if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
-                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label) );
-            }        
-        }
-        if (!@{$lhash{buckets}}) {
-            # check/eliminate empty buckets
-            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
-        }
-    }
-    delete $lhash{labels}; # Not needed anymore
-    return \%lhash;
 }
 
 # Escalate the weights that has been set
