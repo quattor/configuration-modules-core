@@ -8,10 +8,19 @@
 =head1 Testing base functions
 
 Tests the functionality of the lower function of the puppet component: 
- * unescape_keys
- * checkfile
- * yaml
- * tiny
+
+=over 4
+
+=item * unescape_keys: checks that the functions correctly returns a data structure with unescaped hash keys.
+
+=item * checkfile: checks that the functions correctly modifies the content of a file to set it to the desired value.
+
+=item * yaml: checks that the function writes a sensible yaml file.
+
+=item * tiny: checks that the function writes a sensible tiny file.
+
+=back
+
 =cut
 
 use strict;

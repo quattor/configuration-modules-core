@@ -27,18 +27,36 @@ Readonly::Scalar my $WRONG => "This is a wrong fake content";
 Readonly::Scalar my $FILES_DIR => "/etc/puppet/manifests";
 Readonly::Scalar my $APPLY_CMD => "puppet apply --detailed-exitcodes -v -l /var/log/puppet/log";
 
-#Test that the node files are written properly (also checking that the files names are unescaped)
-#
+=pod
+
+Tests that the node files are written properly by the nodefiles function. Also checking that the files names are unescaped. 2 tests.
+
+=cut
+
 set_file_contents("$FILES_DIR/foo1.pp",$WRONG);
 set_file_contents("$FILES_DIR/foo2.pp",$WRONG);
 $comp->nodefiles({'foo1_2epp' => {'contents'=>$GOOD},'foo2_2epp' => {'contents'=>$GOOD}});
 is(get_file("$FILES_DIR/foo1.pp"),$GOOD,"checkfile function puts the correct content in the node files");
 is(get_file("$FILES_DIR/foo2.pp"),$GOOD,"checkfile function puts the correct content in the node files");
 
-#1st Case: all apply command run succesfully and perform no actions
-# - all command invoked and returing 0
-# - no info/error messages
-#
+=pod
+
+Tests that the apply function correctly runs the "puppet apply" command. Three scenarions are taken into account:
+
+=over 4
+
+=item * All apply commands run successfully and perform no actions (4 tests):
+
+=over 4
+
+=item * tests that "puppet apply" is invoked for each of the nodefiles (all set to exit with status 0);
+
+=item * tests that no "INFO" or "ERROR" message is raised by the component.
+
+=back
+
+=cut
+
 set_command_status("$APPLY_CMD $FILES_DIR/foo1.pp",0);
 set_command_status("$APPLY_CMD $FILES_DIR/foo2.pp",0);
 
@@ -49,10 +67,20 @@ ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo2.pp")), "2nd apply command is 
 ok(!exists($comp->{ERROR}), "No errors in normal execution");
 ok(!exists($comp->{INFO}), "No messages when there are no changes");
 
-#2nd Case: all apply command run succesfully, one of them performs an action
-# - 1 commad returns status 2. Both commands are invoked
-# - no errors messages + 1 info message
-#
+=pod
+
+=item * All apply commands run successfully, one of them performs some action (4 tests):
+
+=over 4
+
+=item * tests that "puppet apply" is invoked for each of the nodefiles (one is set to exit with status 2);
+
+=item * tests that an "INFO" message and no "ERROR" message is raised by the component.
+
+=back
+
+=cut
+
 set_command_status("$APPLY_CMD $FILES_DIR/foo3.pp",2<<8);
 set_command_status("$APPLY_CMD $FILES_DIR/foo4.pp",0);
 
@@ -63,10 +91,22 @@ ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo4.pp")), "2nd apply command is 
 ok(!exists($comp->{ERROR}), "No errors in normal execution");
 ok(exists($comp->{INFO}), "A message is printed to inform that a change was made");
 
-#2nd Case: the apply command fails
-# - the command returns error status
-# - the component exits with error message
-#
+=pod
+
+=item * One "puppet apply" command fail (3 tests):
+
+=over 4
+
+=item * tests that "puppet apply" is invoked (it is set to exit with status 6);
+
+=item * tests that an "ERROR" message is raised by the component.
+
+=back
+
+=back
+
+=cut
+
 set_command_status("$APPLY_CMD $FILES_DIR/foo5.pp",6<<8);
 
 $comp->apply({'foo5_2epp' => {'contents'=>$GOOD}});
