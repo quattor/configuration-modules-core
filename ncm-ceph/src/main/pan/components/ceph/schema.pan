@@ -208,6 +208,7 @@ type ceph_cluster_config = {
     'osd_pool_default_pgp_num'  : long(0..) = 600
     'osd_pool_default_size'     : long(0..) = 2
     'osd_pool_default_min_size' : long(0..) = 1
+    'osd_crush_update_on_start' : boolean = false
 };
 
 @{ function that checks that it is a valid algorithm. 
