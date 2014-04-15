@@ -30,6 +30,6 @@ OPTIONS for more information.
 
 =head1 SEE ALSO
 
-L<aii-shellfe(8), L<aii-dhcp(8)>, L<aii>
+L<aii-shellfe(8)>, L<aii-dhcp(8)>, L<aii>
 
 =cut
