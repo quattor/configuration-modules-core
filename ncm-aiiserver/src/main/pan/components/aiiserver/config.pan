@@ -5,5 +5,43 @@
 
 unique template components/${project.artifactId}/config;
 
-include { 'components/${project.artifactId}/config-common' };
-include { 'components/${project.artifactId}/config-rpm' };
+include { 'components/${project.artifactId}/schema' };
+
+# Package to install
+'/software/packages' = pkg_repl('ncm-${project.artifactId}', '${no-snapshot-version}-${rpm.release}', 'noarch');
+
+# Set prefix to root of component configuration.
+prefix '/software/components/${project.artifactId}';
+
+#'version' = '${project.version}';
+#'package' = 'NCM::Component';
+
+'active' ?= true;
+'dispatch' ?= true;
+'pre' ?=  list ('spma');
+
+'aii-shellfe/ca_file' ?= {
+    if ( path_exists('/software/components/ccm/ca_file') && is_defined('/software/components/ccm/ca_file') ) {
+        value ('/software/components/ccm/ca_file');
+    } else {
+        null;
+    };
+};
+
+'aii-shellfe/key_file' ?= {
+    if ( path_exists('/software/components/ccm/key_file') && is_defined('/software/components/ccm/key_file') ) {
+        value ('/software/components/ccm/key_file');
+    } else {
+        null;
+    };
+};
+
+
+'aii-shellfe/cert_file' ?= {
+    if ( path_exists('/software/components/ccm/cert_file') && is_defined('/software/components/ccm/cert_file') ) {
+        value ('/software/components/ccm/cert_file');
+    } else {
+        null;
+    };
+};
+
