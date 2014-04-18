@@ -5,8 +5,9 @@
 
 =pod
 
-=head1 run Ceph command test
-Test the runs of ceph commands
+=head1 DESCRIPTION
+
+Test the flatten_buckets method
 
 
 =cut
@@ -22,16 +23,13 @@ use NCM::Component::ceph;
 use CAF::Object;
 use crushdata;
 use Readonly;
-Readonly::Scalar my $PATH => '/software/components/ceph';
-
 
 $CAF::Object::NoAction = 1;
-my $mock = Test::MockModule->new('NCM::Component::ceph');
 
 my $cfg = get_config_for_profile('basic_crushmap');
 my $cmp = NCM::Component::ceph->new('ceph');
 
-my $t = $cfg->getElement($PATH)->getTree();
+my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();

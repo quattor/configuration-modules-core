@@ -206,9 +206,10 @@ type ceph_cluster_config = {
     'auth_cluster_required'     : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'osd_pool_default_pg_num'   : long(0..) = 600
     'osd_pool_default_pgp_num'  : long(0..) = 600
-    'osd_pool_default_size'     : long(0..) = 2
-    'osd_pool_default_min_size' : long(0..) = 1
+    'osd_pool_default_size'     : long(0..) = 3
+    'osd_pool_default_min_size' : long(0..) = 2
     'osd_crush_update_on_start' : boolean = false
+    'mon_cluster_log_to_syslog' : boolean = true
 };
 
 @{ function that checks that it is a valid algorithm. 

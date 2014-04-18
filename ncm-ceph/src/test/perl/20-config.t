@@ -5,8 +5,9 @@
 
 =pod
 
-=head1 run Ceph command test
-Test the runs of ceph commands
+=head1 DESCRIPTION
+
+Test the configuration of the ceph.conf file
 
 
 =cut
@@ -22,16 +23,13 @@ use NCM::Component::ceph;
 use CAF::Object;
 use data;
 use Readonly;
-Readonly::Scalar my $PATH => '/software/components/ceph';
-
 
 $CAF::Object::NoAction = 1;
-my $mock = Test::MockModule->new('NCM::Component::ceph');
 
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 $cmp->use_cluster();
-my $t = $cfg->getElement($PATH)->getTree();
+my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 my $quath = $cluster->{config};
 #diag explain $quath;

@@ -1,12 +1,8 @@
 object template basic_crushmap;
 
 
-
 '/system/network/hostname' = 'ceph003';
 '/system/network/domainname' = 'cubone.os';
-
-'/software/components/accounts/users/ceph' =  nlist('homeDir', '/tmp', 'gid', '111' );
-'/software/components/accounts/groups/ceph' = nlist('gid', '111');
 
 variable CEPH_HOSTS = list('ceph001', 'ceph002', 'ceph003');
 variable CEPH_OSD_DISKS = list('sdc','sdd','sde','sdf','sdg','sdh','sdi','sdj','sdk','sdl','sdm','sdn');
@@ -49,89 +45,61 @@ prefix '/software/components/ceph';
 'ceph_version'   =  '0.72.2';
 'deploy_version' = '1.3.5';
 
-prefix '/software/components/ceph/clusters/ceph';
 
-'crushmap' = nlist(
-    'types' , list('osd','host','root'),
-    'rules', list (
+variable BASE_STEPS = list(
+    nlist(
+        'take', 'default', 
+        'choices', list(
         nlist(
-            'name', 'data',
-            'type', 'replicated',
-            'min_size', 0,
-            'max_size', 10,
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host',
-                            'number', 0,
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        nlist(
-            'name', 'metadata',
-            'type', 'replicated',
-            'min_size', 0,
-            'max_size', 10,
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host',
-                            'number', 0,
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        nlist(
-            'name', 'rbd',
-            'type', 'replicated',
-            'min_size', 0,
-            'max_size', 10,
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host',
-                            'number', 0,
-                        ),
-                    ),
-                ),
-            ),
-        ),
-    ),
-    'buckets', list(
-        nlist(
-            'name', 'default',
-            'type', 'root',
-            'defaultalg', 'straw',
-            'defaulthash', 0,
-            'buckets', list(
-                nlist(
-                    'name', 'ceph001',
-                    'type', 'host',
-                ),
-                nlist(
-                    'name', 'ceph002',
-                    'type', 'host',
-                ),
-                nlist(
-                    'name', 'ceph003',
-                    'type', 'host',
-                ),
+            'chtype', 'chooseleaf firstn',
+            'bktype', 'host',
+            'number', 0,
             ),
         ),
     ),
 );
+
+prefix "/software/components/ceph/clusters/ceph/crushmap/";
+
+'types' = list('osd','host','root');
+
+'rules/0/name' = 'data';
+'rules/0/type' = 'replicated';
+'rules/0/min_size' = 0;
+'rules/0/max_size' = 10;
+'rules/0/steps' = BASE_STEPS;
+
+'rules/1/name' = 'metadata';
+'rules/1/type' = 'replicated';
+'rules/1/min_size' = 0;
+'rules/1/max_size' = 10;
+'rules/1/steps' = BASE_STEPS;
+        
+'rules/2/name' = 'rbd';
+'rules/2/type' = 'replicated';
+'rules/2/min_size' = 0;
+'rules/2/max_size' = 10;
+'rules/2/steps' = BASE_STEPS;
+
+'buckets/0/name' = 'default';
+'buckets/0/type' = 'root';
+'buckets/0/defaultalg' = 'straw';
+'buckets/0/defaulthash' = 0;
+'buckets/0/buckets' = list(
+    nlist(
+        'name', 'ceph001',
+        'type', 'host',
+    ),
+    nlist(
+        'name', 'ceph002',
+        'type', 'host',
+    ),
+    nlist(
+        'name', 'ceph003',
+        'type', 'host',
+    ),
+);
+prefix '/software/components/ceph/clusters/ceph';
 'config' = CONFIG;
 'osdhosts' = {
     t=nlist();    

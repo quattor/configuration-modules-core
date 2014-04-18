@@ -15,7 +15,24 @@ use strict;
 use warnings;
 
 use Readonly;
+
+=pod 
+
+=head $CRUSHMAP_01
+
+Crushmap reference json out of Ceph
+
+=cut
+
 Readonly our $CRUSHMAP_01 => '{"devices":[{"id":0,"name":"osd.0"},{"id":1,"name":"osd.1"},{"id":2,"name":"osd.2"},{"id":3,"name":"osd.3"},{"id":4,"name":"osd.4"},{"id":5,"name":"osd.5"},{"id":6,"name":"osd.6"},{"id":7,"name":"osd.7"},{"id":8,"name":"osd.8"},{"id":9,"name":"osd.9"},{"id":10,"name":"osd.10"},{"id":11,"name":"osd.11"},{"id":12,"name":"osd.12"},{"id":13,"name":"osd.13"},{"id":14,"name":"osd.14"},{"id":15,"name":"osd.15"},{"id":16,"name":"osd.16"},{"id":17,"name":"osd.17"},{"id":18,"name":"osd.18"},{"id":19,"name":"osd.19"},{"id":20,"name":"osd.20"},{"id":21,"name":"osd.21"},{"id":22,"name":"osd.22"},{"id":23,"name":"osd.23"},{"id":24,"name":"osd.24"},{"id":25,"name":"osd.25"},{"id":26,"name":"osd.26"},{"id":27,"name":"osd.27"},{"id":28,"name":"osd.28"},{"id":29,"name":"osd.29"},{"id":30,"name":"osd.30"},{"id":30,"name":"osd.30"},{"id":31,"name":"osd.31"},{"id":32,"name":"osd.32"},{"id":33,"name":"osd.33"},{"id":34,"name":"osd.34"},{"id":35,"name":"osd.35"}],"types":[{"type_id":0,"name":"osd"},{"type_id":1,"name":"host"},{"type_id":2,"name":"rack"},{"type_id":3,"name":"row"},{"type_id":4,"name":"room"},{"type_id":5,"name":"datacenter"},{"type_id":6,"name":"root"}],"buckets":[{"id":-1,"name":"default","type_id":6,"type_name":"root","weight":5725225,"alg":"straw","hash":"rjenkins1","items":[{"id":-5,"weight":5725225,"pos":0},{"id":-6,"weight":0,"pos":1}]},{"id":-2,"name":"ceph001","type_id":1,"type_name":"host","weight":2862612,"alg":"straw","hash":"rjenkins1","items":[{"id":0,"weight":238551,"pos":0},{"id":1,"weight":238551,"pos":1},{"id":2,"weight":238551,"pos":2},{"id":3,"weight":238551,"pos":3},{"id":4,"weight":238551,"pos":4},{"id":5,"weight":238551,"pos":5},{"id":6,"weight":238551,"pos":6},{"id":7,"weight":238551,"pos":7},{"id":8,"weight":238551,"pos":8},{"id":9,"weight":238551,"pos":9},{"id":10,"weight":238551,"pos":10},{"id":11,"weight":238551,"pos":11}]},{"id":-3,"name":"ceph002","type_id":1,"type_name":"host","weight":2862612,"alg":"straw","hash":"rjenkins1","items":[{"id":12,"weight":238551,"pos":0},{"id":13,"weight":238551,"pos":1},{"id":14,"weight":238551,"pos":2},{"id":15,"weight":238551,"pos":3},{"id":16,"weight":238551,"pos":4},{"id":17,"weight":238551,"pos":5},{"id":18,"weight":238551,"pos":6},{"id":19,"weight":238551,"pos":7},{"id":20,"weight":238551,"pos":8},{"id":21,"weight":238551,"pos":9},{"id":22,"weight":238551,"pos":10},{"id":23,"weight":238551,"pos":11}]},{"id":-4,"name":"ceph003","type_id":1,"type_name":"host","weight":0,"alg":"straw","hash":"rjenkins1","items":[]},{"id":-5,"name":"test1","type_id":2,"type_name":"rack","weight":5725224,"alg":"straw","hash":"rjenkins1","items":[{"id":-2,"weight":2862612,"pos":0},{"id":-3,"weight":2862612,"pos":1}]},{"id":-6,"name":"test2","type_id":2,"type_name":"rack","weight":0,"alg":"straw","hash":"rjenkins1","items":[{"id":-4,"weight":0,"pos":0}]}],"rules":[{"rule_id":0,"rule_name":"data","ruleset":0,"type":1,"min_size":1,"max_size":10,"steps":[{"op":"take","item":-1},{"op":"chooseleaf_firstn","num":0,"type":"host"},{"op":"emit"}]},{"rule_id":1,"rule_name":"metadata","ruleset":1,"type":1,"min_size":1,"max_size":10,"steps":[{"op":"take","item":-1},{"op":"chooseleaf_firstn","num":0,"type":"host"},{"op":"emit"}]},{"rule_id":2,"rule_name":"rbd","ruleset":2,"type":1,"min_size":1,"max_size":10,"steps":[{"op":"take","item":-1},{"op":"chooseleaf_firstn","num":0,"type":"host"},{"op":"emit"}]}],"tunables":{"choose_local_tries":2,"choose_local_fallback_tries":5,"choose_total_tries":19,"chooseleaf_descend_once":0}}';
+
+=pod 
+
+=head @REBUCKETS
+
+Recursive bucket structure, to be flatten 
+
+=cut
 
 Readonly::Array our @REBUCKETS => (
    {
@@ -39,6 +56,15 @@ Readonly::Array our @REBUCKETS => (
      'type' => 'root'
    }
 );
+
+=pod 
+
+=head @RELBBUCKETS
+
+Bucket structure, to be labeled by labelize_buckets 
+
+=cut
+
 
 Readonly::Array our @RELBBUCKETS => (
      {
@@ -361,6 +387,14 @@ Readonly::Array our @RELBBUCKETS => (
      }
 );
 
+=pod 
+
+=head @LBBUCKETS
+
+Label, output of labelize_buckets(@RELBBUCKETS) 
+
+=cut
+
 Readonly::Array our @LBBUCKETS => (
    {
      'buckets' => [
@@ -596,6 +630,14 @@ Readonly::Array our @LBBUCKETS => (
    }
 );
 
+=pod 
+
+=head @FLBUCKETS
+
+Crushmap Flattened buckets of @REFLBUCKETS
+
+=cut
+
 Readonly::Array our @FLBUCKETS => (
    {
      'alg' => 'straw',
@@ -638,6 +680,15 @@ Readonly::Array our @FLBUCKETS => (
      'type' => 'root'
    }
 );
+
+=pod 
+
+=head @QUATMAP
+
+generated hash by quat_crush function of the basic_crushmap.pan template
+
+=cut
+
 Readonly::Hash our %QUATMAP => (
    'buckets' => [
      {
@@ -1053,6 +1104,15 @@ Readonly::Hash our %QUATMAP => (
      }
    ]
 );
+
+=pod 
+
+=head @CEPHMAP
+
+generated hash by ceph_crush function from the $CRUSHMAP_01 json
+
+=cut
+
 Readonly::Hash our %CEPHMAP => (
    'buckets' => [
      {
@@ -1946,6 +2006,14 @@ Readonly::Hash our %CMPMAP => (
      }
    ]
 );
+=pod 
+
+=head @WRITEMAP
+
+generated crushmap file by write_crush function from the $QUATMAP 
+
+=cut
+
 Readonly our $WRITEMAP => <<END;
 # begin crush map
 
@@ -2089,6 +2157,14 @@ rule rbd {
 
 # end crush map
 END
+
+=pod 
+
+=head @BASEMAP
+
+generated basic crushmap from tt file
+
+=cut
 
 Readonly our $BASEMAP => <<END;
 # begin crush map

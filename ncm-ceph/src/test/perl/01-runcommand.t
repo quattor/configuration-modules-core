@@ -5,7 +5,8 @@
 
 =pod
 
-=head1 run Ceph command test
+=head1 DESCRIPTION
+
 Test the runs of ceph commands
 
 

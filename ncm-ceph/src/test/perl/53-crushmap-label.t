@@ -5,7 +5,7 @@
 
 =pod
 
-=head1 Crushmap labeling test
+=head1 DESCRIPTION
 Test the conversion of labeled crushmap buckets
 
 
@@ -21,8 +21,6 @@ use NCM::Component::ceph;
 use CAF::Object;
 use crushdata;
 use Readonly;
-Readonly::Scalar my $PATH => '/software/components/ceph';
-
 
 $CAF::Object::NoAction = 1;
 
@@ -33,7 +31,7 @@ my $generate = 0;
 
 if ($generate) {
     my $cfg = get_config_for_profile('labeled_crushmap');
-    my $t = $cfg->getElement($PATH)->getTree();
+    my $t = $cfg->getElement($cmp->prefix())->getTree();
     my $cluster = $t->{clusters}->{ceph};
 
     my $crush = $cluster->{crushmap};
