@@ -1,0 +1,7 @@
+2013-03-01 (Version 14.2.2) -- A. Sartirana <sartiran@llr.in2p3.fr>
+
+    Initial version of component.
+2013-03-18 (Version 14.2.2) -- A. Sartirana <sartiran@llr.in2p3.fr>
+
+    Added hiera support.
+	
