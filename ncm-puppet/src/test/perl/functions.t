@@ -7,7 +7,7 @@
 
 =head1 Testing base functions
 
-Tests the functionality of the lower function of the puppet component: 
+Tests the functionality of the lower function of the puppet component:
 
 =over 4
 
@@ -96,20 +96,20 @@ cmp_deeply($comp->unescape_keys(\%HASH_IN),\%HASH_EXP,"The unescape_keys functio
 #
 set_file_contents($TESTFILE,$WRONG);
 $comp->checkfile($TESTFILE,$GOOD);
-is(get_file($TESTFILE),$GOOD,"checkfile function puts the correct content in the file");
+my $fh = get_file($TESTFILE);
+is("$fh", $GOOD, "checkfile function puts the correct content in the file");
 
 #Testing yaml
 #
 set_file_contents($TESTFILE,$WRONG);
 $comp->yaml(\%HASH_IN,$TESTFILE);
-is(get_file($TESTFILE),$YAML,"yaml function writes a good yaml file");
+
+$fh = get_file($TESTFILE);
+is("$fh", $YAML, "yaml function writes a good yaml file");
 
 #Testing tiny
 #
 set_file_contents($TESTFILE,$WRONG);
 $comp->tiny(\%HASH_TINY,$TESTFILE);
-is(get_file($TESTFILE),$TINY,"tiny function writes a good tiny file");
-
-
-
-
+$fh = get_file($TESTFILE);
+is("$fh", $TINY, "tiny function writes a good tiny file");
