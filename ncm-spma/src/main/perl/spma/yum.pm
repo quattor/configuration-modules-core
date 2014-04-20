@@ -260,6 +260,10 @@ sub wanted_pkgs
 
     while (my ($pkg, $st) = each(%$pkgs)) {
 	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
+        if (!$name) {
+            $self->error("Invalid package name: ", unescape($pkg));
+            return undef;
+        }
 	if (%$st) {
 	    while (my ($ver, $archs) = each(%$st)) {
 		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
@@ -537,7 +541,7 @@ sub update_pkgs
 
     $self->distrosync($run) or return 0;
 
-    my $wanted = $self->wanted_pkgs($pkgs);
+    my $wanted = $self->wanted_pkgs($pkgs) or return 0;
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
 
