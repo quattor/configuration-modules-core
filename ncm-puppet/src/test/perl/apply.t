@@ -33,11 +33,16 @@ Tests that the node files are written properly by the nodefiles function. Also c
 
 =cut
 
+my $fh;
+
 set_file_contents("$FILES_DIR/foo1.pp",$WRONG);
 set_file_contents("$FILES_DIR/foo2.pp",$WRONG);
-$comp->nodefiles({'foo1_2epp' => {'contents'=>$GOOD},'foo2_2epp' => {'contents'=>$GOOD}});
-is(get_file("$FILES_DIR/foo1.pp"),$GOOD,"checkfile function puts the correct content in the node files");
-is(get_file("$FILES_DIR/foo2.pp"),$GOOD,"checkfile function puts the correct content in the node files");
+$comp->nodefiles({'foo1_2epp' => {'contents'=>$GOOD},
+                  'foo2_2epp' => {'contents'=>$GOOD}});
+$fh = get_file("$FILES_DIR/foo1.pp");
+is("$fh", $GOOD, "checkfile function puts the correct content in the node files");
+$fh = get_file("$FILES_DIR/foo2.pp");
+is("$fh", $GOOD, "checkfile function puts the correct content in the node files");
 
 =pod
 
