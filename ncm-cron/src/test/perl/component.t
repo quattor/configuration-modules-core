@@ -33,6 +33,16 @@ like($fh, qr/root/m, "Check user");
 # check for logging
 like($fh, qr/ >> .*? 2>&1/m, "Check for log redirection in default log");
 
+# Check smear is rounding correctly
+$fh = get_file("/etc/cron.d/test_smear_max_items.ncm-cron.cron");
+isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter smeared cron file written");
+
+# check smear rounding boundary case
+# If smear is 0 the smear code isn't used, so we have to leave room for
+# something to be smeared. Hence don't check the minutes but set the other
+# items to maximu.
+like($fh, qr/23 31 12 6/m, "Check smear rounding");
+
 # check the logfile if it's empty
 $fh = get_file("/var/log/test_default_log.ncm-cron.log");
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter default log file written");
