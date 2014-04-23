@@ -95,6 +95,8 @@ sub Configure($$@) {
     return 1;
 }
 
+# The C<expand_cmds> function interprets all substrings that start and end with 
+# C<@@> as a command, and expands the C<value> with the respecitive output.
 sub expand_cmds {
 
     my ($self, $value) = @_;
@@ -117,6 +119,9 @@ sub expand_cmds {
 }
 
 
+# The C<expand_vars> function interprets all substrings that start with C<{> and end with 
+# C<}> as a variable in the global C<context_vars> environment, and expands the C<value> 
+# with the resp value.
 sub expand_vars {
 
     my ($self, $value) = @_;
