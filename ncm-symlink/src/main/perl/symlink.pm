@@ -344,6 +344,13 @@ sub process_link {
             return 0;
         }
 
+        if ($target =~ /^([ &:#-\@\w.]+)$/) {
+            $target = $1; #data is now untainted
+        } else {
+            $self->error("Invalid character(s) in target $target.");
+            return 0;
+        }
+
         # 'replace' flag : define existing file type that can be replaced
 
         # First copy global defaults
