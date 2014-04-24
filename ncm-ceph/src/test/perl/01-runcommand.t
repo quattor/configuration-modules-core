@@ -47,9 +47,6 @@ is($output,$data::MONJSON,'running ceph command');
 $output = $cmp->run_ceph_deploy_command(\@cdepcmd);
 is($output,"Monitor ceph002 created",'ceph-deploy command');
 
-my $fsid = $cmp->get_fsid();
-is($fsid,$data::FSID, 'retrieving fsid');
-
 my $mons = $cmp->mon_hash();
 cmp_deeply($mons,\%data::MONS, 'build monitor hash');
 #diag explain $mons;

@@ -35,8 +35,8 @@ set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump",
 set_desired_output("/usr/bin/ceph -f json --cluster ceph quorum_status", $data::STATE);
 
 $cmp->use_cluster();
+$cmp->{clname} = 'ceph';
 $cmp->{cfgfile} = 'tmpfile';
-my $fsid = $cmp->get_fsid();
 my $mons = $cmp->mon_hash();
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
@@ -57,8 +57,7 @@ cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
 diag explain @{$cmp->{daemon_cmds}};
 
 cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
-$cmp->{is_deploy} = 'true';
-my $dodeploy = $cmp->do_deploy();
+my $dodeploy = $cmp->do_deploy(1);
 ok($dodeploy, 'try running the commands');
 
 my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002.cubone.os";

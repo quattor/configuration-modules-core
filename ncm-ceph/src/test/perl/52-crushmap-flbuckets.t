@@ -29,9 +29,6 @@ $CAF::Object::NoAction = 1;
 my $cfg = get_config_for_profile('basic_crushmap');
 my $cmp = NCM::Component::ceph->new('ceph');
 
-my $t = $cfg->getElement($cmp->prefix())->getTree();
-my $cluster = $t->{clusters}->{ceph};
-
 $cmp->use_cluster();
 my $buckets = \@crushdata::REBUCKETS;
 my $newbuckets=[];

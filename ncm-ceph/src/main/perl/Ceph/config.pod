@@ -1,0 +1,18 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for CEPH
+
+=head1 DESCRIPTION
+
+Configuration module for CEPH
+
+=head1 AUTHOR
+
+${author-info}
+
+=cut

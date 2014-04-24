@@ -35,8 +35,8 @@ my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();
-$cmp->{is_deploy} = 1;
-$cmp->{hostname} = 'ceph001';
+my $is_deploy = 1;
+my $hostname = 'ceph001';
 my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001.cubone.os";
 my $gather2 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph002.cubone.os";
 my $gather3 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph003.cubone.os";
@@ -51,19 +51,18 @@ foreach my $gcmd (@gathers) {
 }
 my $usr =  getpwuid($<);
 my $tempdir = tempdir(CLEANUP => 1);
-$cmp->{cephusr} = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
-$cmp->init_commands();
+my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
 $cmp->gen_mon_host($cluster);
-my $clustercheck= $cmp->cluster_ready_check($cluster);
+my $clustercheck= $cmp->cluster_exists_check($cluster, $cephusr);
 my $cmd;
 foreach my $gcmd (@gathers) {
     $cmd = get_command($gcmd);
     ok(defined($cmd), "no cluster: gather had been tried");
 }
-#diag explain $cmp->{man_cmds};
-cmp_deeply($cmp->{man_cmds}, \@data::NEWCLUS);
+ok(!$clustercheck, "no cluster, return 0");
 
-my $initcheck= $cmp->init_qdepl($cluster->{config});
+my $initcheck= $cmp->init_qdepl($cluster->{config}, $cephusr);
+$cmp->write_config($cluster->{config}, "$tempdir/ceph.conf");
 ok(-d $tempdir. '/ncm-ceph/old', "tmpdirs created");
 ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
 

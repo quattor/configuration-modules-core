@@ -36,6 +36,7 @@ my $cluster = $t->{clusters}->{ceph};
 
 
 $cmp->use_cluster();
+$cmp->{clname} = 'ceph';
 $cmp->{cfgfile} = 'tmpfile';
 
 my $cephh = $cmp->mds_hash();
