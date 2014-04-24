@@ -26,10 +26,12 @@ OPTIONS for more information.
 Configures the aii-dhcp legacy tool. See L<aii-dhcp(8)>, section
 OPTIONS for more information.
 
+This components also uses configuration parameters related to https from L<ncm-ccm>: ca_dir, ca_file, cert_file, key_file.
+
 =back
 
 =head1 SEE ALSO
 
-L<aii-shellfe(8), L<aii-dhcp(8)>, L<aii>
+L<aii-shellfe(8)>, L<aii-dhcp(8)>, L<aii>, L<ncm-ccm>
 
 =cut
