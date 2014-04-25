@@ -67,12 +67,12 @@ my $quath = $cluster->{osdhosts};
 
 #diag explain $cephh;
 cmp_deeply($cmp->flatten_osds($quath), \%data::FLATTEN, 'OSD flatten');
-$cmp->init_commands();
+my $cmdh = $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
 #Main  comparison function:
-my $output = $cmp->process_osds($quath);
+my $output = $cmp->process_osds($quath, $cmdh);
 ok($output, 'ceph quattor cmp for mon');
 
-cmp_deeply($cmp->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
+cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
 
 done_testing();

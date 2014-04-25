@@ -47,17 +47,17 @@ my $type = 'mon';
 my $cephh = $cmp->mon_hash();
 my $quath = $cluster->{monitors};
 
-$cmp->init_commands();
+my $cmdh = $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
 #Main monitor comparison function:
-my $outputmon = $cmp->process_mons($quath);
+my $outputmon = $cmp->process_mons($quath, $cmdh);
 ok($outputmon, 'ceph quattor cmp for mon');
 
-cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
-diag explain @{$cmp->{daemon_cmds}};
+cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
+diag explain @{$cmdh->{daemon_cmds}};
 
-cmp_deeply($cmp->{man_cmds}, \@data::DELMON, 'commands to be run manually');
-my $dodeploy = $cmp->do_deploy(1);
+cmp_deeply($cmdh->{man_cmds}, \@data::DELMON, 'commands to be run manually');
+my $dodeploy = $cmp->do_deploy(1, $cmdh);
 ok($dodeploy, 'try running the commands');
 
 my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002.cubone.os";
@@ -74,6 +74,6 @@ $deployaddstring = "/etc/init.d/ceph start mon.ceph001";
 $cmd = get_command($deployaddstring);
 ok(!defined($cmd), "mon1 stop must not be invoked");
 
-cmp_deeply($cmp->{deploy_cmds},[],'deploy commands are cleared');
+cmp_deeply($cmdh->{deploy_cmds},[],'deploy commands are cleared');
 
 done_testing();

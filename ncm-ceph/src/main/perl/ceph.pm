@@ -30,12 +30,7 @@ use File::Copy qw(copy move);
 use JSON::XS;
 our $EC=LC::Exception::Context->new->will_store_all;
 
-sub test_cr {
-    my ($self, $b1, $b2) = @_;
-    return flatten_buckets($self, $b1, $b2);
-}
-
-#Set config and Make a temporary directory for push and pulls
+#Make sure  a temporary directory is created for push and pulls
 sub init_qdepl {
     my ($self, $config, $cephusr) = @_;
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/' ;
@@ -48,7 +43,7 @@ sub init_qdepl {
    
 #Checks if cluster is configured on this node.
 sub cluster_exists_check {
-    my ($self, $cluster, $cephusr) = @_;
+    my ($self, $cluster, $cephusr, $clname) = @_;
     # Check If something is not configured or there is no existing cluster 
     my $hosts = $cluster->{config}->{mon_host};
     my $ok= 0;
@@ -69,7 +64,7 @@ sub cluster_exists_check {
         foreach my $host (@{$hosts}) {
             push (@newcmd, $host);
         }
-        if (!-f "$cephusr->{homeDir}/$self->{cluster}.mon.keyring"){
+        if (!-f "$cephusr->{homeDir}/$clname.mon.keyring"){
             $self->run_ceph_deploy_command([@newcmd]);
         }
         my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
@@ -102,13 +97,13 @@ sub cluster_ready_check {
 
 #Checks the fsid value of the ceph dump with quattor value
 sub cluster_fsid_check {
-    my ($self, $cluster) = @_;
+    my ($self, $cluster, $clname) = @_;
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
     my $monhash = decode_json($jstr);
     my $fsid = $monhash->{fsid};
     $self->debug(3, 'fsid from mon dump is '.$fsid);
     if ($cluster->{config}->{fsid} ne $fsid) {
-        $self->error("fsid of $self->{cluster} not matching! ", 
+        $self->error("fsid of $clname not matching! ", 
             "Quattor value: $cluster->{config}->{fsid}, ", 
             "Cluster value: $fsid");
         return 0;
@@ -163,7 +158,7 @@ sub do_prepare_cluster {
     if ($is_deploy) {
         $qtmp = $self->init_qdepl($cluster->{config}, $cephusr) or return 0;
         $gvalues->{qtmp} = $qtmp;
-        my $clexists = $self->cluster_exists_check($cluster, $cephusr);
+        my $clexists = $self->cluster_exists_check($cluster, $cephusr, $clname);
         my $cfgfile = "$cephusr->{homeDir}/$clname.conf";
         $self->write_config($cluster->{config}, $cfgfile) or return 0;
         if (!$clexists) {
@@ -171,7 +166,7 @@ sub do_prepare_cluster {
         }   
     }
     $self->cluster_ready_check($cluster, $is_deploy, $hostname) or return 0;  
-    $self->cluster_fsid_check($cluster) or return 0;  
+    $self->cluster_fsid_check($cluster, $clname) or return 0;  
 
 }
 

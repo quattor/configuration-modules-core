@@ -41,40 +41,40 @@ my $cceph =  {
 my $output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
 ok(!$output, 'ceph quattor cmp for cfg');
 
-$cmp->{cfgchanges} = {};
+my $cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001,ceph002,ceph003'
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
+$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
 ok($output, 'ceph quattor cmp for cfg');
-ok(!%{$cmp->{cfgchanges}},'config the same');
+ok(!%{$cfgchanges},'config the same');
 
-$cmp->{cfgchanges} = {};
+$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001,ceph002', #different
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
+$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
 ok($output, 'ceph quattor cmp for cfg');
-ok(%{$cmp->{cfgchanges}},'config differs');
+ok(%{$cfgchanges},'config differs');
 
-$cmp->{cfgchanges} = {};
+$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001,ceph002,ceph003',
    'blaaa' => 'bla'
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
+$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
 ok(!$output, 'ceph config has attributes not in quattor');
-ok(!%{$cmp->{cfgchanges}},'config differs but not in quattor');
+ok(!%{$cfgchanges},'config differs but not in quattor');
 
-$cmp->{cfgchanges} = {};
+$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
+$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
 ok($output, 'ceph quattor cmp for cfg');
-ok(%{$cmp->{cfgchanges}},'config differs');
+ok(%{$cfgchanges},'config differs');
 
 done_testing();

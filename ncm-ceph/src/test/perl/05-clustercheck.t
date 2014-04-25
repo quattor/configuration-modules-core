@@ -53,7 +53,7 @@ my $usr =  getpwuid($<);
 my $tempdir = tempdir(CLEANUP => 1);
 my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
 $cmp->gen_mon_host($cluster);
-my $clustercheck= $cmp->cluster_exists_check($cluster, $cephusr);
+my $clustercheck= $cmp->cluster_exists_check($cluster, $cephusr, 'ceph');
 my $cmd;
 foreach my $gcmd (@gathers) {
     $cmd = get_command($gcmd);

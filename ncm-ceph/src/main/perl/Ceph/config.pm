@@ -52,21 +52,20 @@ sub get_global_config {
 ## Processing and comparing between Quattor and Ceph
 
 # Do a comparison of quattor config and the actual ceph config 
-# for a given type (cfg, mon, osd, mds)
 sub cmp_cfgfile {
-    my ($self, $type, $quath, $cephh) = @_;
+    my ($self, $type, $quath, $cephh, $cfgchanges) = @_;
     foreach my $qkey (sort(keys %{$quath})) {
         if (exists $cephh->{$qkey}) {
             my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
             #check attrs and reconfigure
-            $self->config_cfgfile('change', $qkey, $pair) or return 0;
+            $self->config_cfgfile('change', $qkey, $pair, $cfgchanges) or return 0;
             delete $cephh->{$qkey};
         } else {
-            $self->config_cfgfile('add', $qkey, $quath->{$qkey}) or return 0;
+            $self->config_cfgfile('add', $qkey, $quath->{$qkey}, $cfgchanges) or return 0;
         }
     }
     foreach my $ckey (keys %{$cephh}) {
-        $self->config_cfgfile('del', $ckey, $cephh->{$ckey}) or return 0;
+        $self->config_cfgfile('del', $ckey, $cephh->{$ckey}, $cfgchanges) or return 0;
     }        
     return 1;
 }
@@ -141,21 +140,21 @@ sub pull_compare_push {
     if (!$cconf) {
         return $self->push_cfg($host);
     } else {
-        $self->{cfgchanges} = {};
+        my $cfgchanges = {};
         $self->debug(3, "Pulled config:", %$cconf);
-        $self->cmp_cfgfile('cfg', $config, $cconf) or return 0;
-        if (!%{$self->{cfgchanges}}) {
+        $self->cmp_cfgfile('cfg', $config, $cconf, $cfgchanges) or return 0;
+        if (!%{$cfgchanges}) {
             #Config the same, no push needed
             return 1;
         } else {
             $self->push_cfg($host,1) or return 0;
-            $self->inject_realtime($host, $self->{cfgchanges}) or return 0;
+            $self->inject_realtime($host, $cfgchanges) or return 0;
         }
     }    
 }
 # Prepare the commands to change a global config entry
 sub config_cfgfile {
-    my ($self,$action,$name,$values) = @_;
+    my ($self,$action,$name,$values, $cfgchanges) = @_;
     if ($name eq 'fsid') {
         if ($action ne 'change'){
             $self->error("config has no fsid!");
@@ -174,7 +173,7 @@ sub config_cfgfile {
         if (ref($values) eq 'ARRAY'){
             $values = join(',',@$values); 
         }
-        $self->{cfgchanges}->{$name} = $values;
+        $cfgchanges->{$name} = $values;
 
     } elsif ($action eq 'change') {
         my $quat = $values->[0];
@@ -185,7 +184,7 @@ sub config_cfgfile {
         #TODO: check if changes are valid
         if ($quat ne $ceph) {
             $self->info("$name changed from $ceph to $quat");
-            $self->{cfgchanges}->{$name} = $quat;
+            $cfgchanges->{$name} = $quat;
         }
     } elsif ($action eq 'del'){
         # TODO If we want to keep the existing configuration settings that are not in Quattor, 

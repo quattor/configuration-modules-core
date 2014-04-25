@@ -47,11 +47,11 @@ my $donecmd = 'su - ceph -c /usr/bin/ssh ceph002.cubone.os test -e /var/lib/ceph
 
 set_command_status($donecmd,1);
 set_desired_err($donecmd,'');
-$cmp->init_commands();
+my $cmdh = $cmp->init_commands();
 $cmp->{hostname} = 'ceph001';
 #Main  comparison function:
-my $output = $cmp->process_mdss($quath);
+my $output = $cmp->process_mdss($quath, $cmdh);
 ok($output, 'ceph quattor cmp for mds');
-cmp_deeply($cmp->{deploy_cmds}, \@data::ADDMDS, 'deploy commands prepared');
+cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDMDS, 'deploy commands prepared');
 
 done_testing();

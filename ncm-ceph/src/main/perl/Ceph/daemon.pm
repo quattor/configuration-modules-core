@@ -178,28 +178,28 @@ sub mds_hash {
 # Do a comparison of quattor config and the actual ceph config 
 # for a given type (cfg, mon, osd, mds)
 sub ceph_quattor_cmp {
-    my ($self, $type, $quath, $cephh) = @_;
+    my ($self, $type, $quath, $cephh, $cmdh) = @_;
     foreach my $qkey (sort(keys %{$quath})) {
         if (exists $cephh->{$qkey}) {
             my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
             #check attrs and reconfigure
-            $self->config_daemon($type, 'change', $qkey, $pair) or return 0;
+            $self->config_daemon($type, 'change', $qkey, $pair, $cmdh) or return 0;
             delete $cephh->{$qkey};
         } else {
-            $self->config_daemon($type, 'add', $qkey, $quath->{$qkey}) or return 0;
+            $self->config_daemon($type, 'add', $qkey, $quath->{$qkey}, $cmdh) or return 0;
         }
     }
     foreach my $ckey (keys %{$cephh}) {
-        $self->config_daemon($type, 'del', $ckey, $cephh->{$ckey}) or return 0;
+        $self->config_daemon($type, 'del', $ckey, $cephh->{$ckey}, $cmdh) or return 0;
     }        
     return 1;
 }
 
 # Compare ceph mons with the quattor mons
 sub process_mons {
-    my ($self, $qmons) = @_;
+    my ($self, $qmons, $cmdh) = @_;
     my $cmons = $self->mon_hash() or return 0;
-    return $self->ceph_quattor_cmp('mon', $qmons, $cmons);
+    return $self->ceph_quattor_cmp('mon', $qmons, $cmons, $cmdh);
 }
 
 # Converts a host/osd hierarchy in a 'host:osd' structure
@@ -227,31 +227,31 @@ sub flatten_osds {
 }
 # Compare cephs osd with the quattor osds
 sub process_osds {
-    my ($self, $qosds) = @_;
+    my ($self, $qosds, $cmdh) = @_;
     my $qflosds = $self->flatten_osds($qosds);
     $self->debug(5, 'OSD lay-out', Dumper($qosds));
     my $cosds = $self->osd_hash() or return 0;
-    return $self->ceph_quattor_cmp('osd', $qflosds, $cosds);
+    return $self->ceph_quattor_cmp('osd', $qflosds, $cosds, $cmdh);
 }
 
 # Compare cephs mds with the quattor mds
 sub process_mdss {
-    my ($self, $qmdss) = @_;
+    my ($self, $qmdss, $cmdh) = @_;
     my $cmdss = $self->mds_hash() or return 0;
-    return $self->ceph_quattor_cmp('mds', $qmdss, $cmdss);
+    return $self->ceph_quattor_cmp('mds', $qmdss, $cmdss, $cmdh);
 }
 
 # Prepare the commands to change/add/delete a monitor  
 sub config_mon {
-    my ($self,$action,$name,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my @command = qw(mon create);
         push (@command, $daemonh->{fqdn});
-        push (@{$self->{deploy_cmds}}, [@command]);
+        push (@{$cmdh->{deploy_cmds}}, [@command]);
     } elsif ($action eq 'del') {
         my @command = qw(mon destroy);
         push (@command, $name);
-        push (@{$self->{man_cmds}}, [@command]);
+        push (@{$cmdh->{man_cmds}}, [@command]);
     } elsif ($action eq 'change') { #compare config
         my $quatmon = $daemonh->[0];
         my $cephmon = $daemonh->[1];
@@ -260,16 +260,16 @@ sub config_mon {
         $self->check_immutables($name, \@monattrs, $quatmon, $cephmon) or return 0;
         
         if ($cephmon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
-               $self->config_mon('add', $quatmon);
+               $self->config_mon('add', $name, $quatmon, $cmdh);
         }
-        $self->check_state($name, $name, 'mon', $quatmon, $cephmon);
+        $self->check_state($name, $name, 'mon', $quatmon, $cephmon, $cmdh);
         
         my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 
                        'test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
-            return $self->config_mon('add',$name,$quatmon);
+            return $self->config_mon('add',$name,$quatmon, $cmdh);
         }
     }
     else {
@@ -293,7 +293,7 @@ sub check_immutables {
 }
 # Checks and changes the state on the host
 sub check_state {
-    my ($self, $id, $host, $type, $quat, $ceph) = @_;
+    my ($self, $id, $host, $type, $quat, $ceph, $cmdh) = @_;
     if (($host eq $self->{hostname}) and ($quat->{up} xor $ceph->{up})){
         my @command; 
         if ($quat->{up}) {
@@ -302,12 +302,12 @@ sub check_state {
             @command = qw(stop);
         }
         push (@command, "$type.$id");
-        push (@{$self->{daemon_cmds}}, [@command]);
+        push (@{$cmdh->{daemon_cmds}}, [@command]);
     }
 } 
 # Prepare the commands to change/add/delete an osd
 sub config_osd {
-    my ($self,$action,$name,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         #TODO: change to 'create' ?
         $self->check_empty($daemonh->{osd_path}, $daemonh->{fqdn}) or return 0;
@@ -324,12 +324,12 @@ sub config_osd {
         }
         for my $command (($prepcmd, $activcmd)) {
             push (@$command, $pathstring);
-            push (@{$self->{deploy_cmds}}, $command);
+            push (@{$cmdh->{deploy_cmds}}, $command);
         }
     } elsif ($action eq 'del') {
         my @command = qw(osd destroy);
         push (@command, $daemonh->{name});
-        push (@{$self->{man_cmds}}, [@command]);
+        push (@{$cmdh->{man_cmds}}, [@command]);
    
     } elsif ($action eq 'change') { #compare config
         my $quatosd = $daemonh->[0];
@@ -341,7 +341,7 @@ sub config_osd {
         }
         $self->check_immutables($name, \@osdattrs, $quatosd, $cephosd) or return 0;
         (my $id = $cephosd->{id}) =~ s/^osd\.//;
-        $self->check_state($id, $quatosd->{host}, 'osd', $quatosd, $cephosd);
+        $self->check_state($id, $quatosd->{host}, 'osd', $quatosd, $cephosd, $cmdh);
         #TODO: Make it possible to bring osd 'in' or 'out' the cluster ?
     } else {
         $self->error("Action $action not supported!");
@@ -351,7 +351,7 @@ sub config_osd {
 
 # Prepare the commands to change/add/delete an mds
 sub config_mds {
-    my ($self,$action,$name,$daemonh) = @_;
+    my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
         my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
@@ -360,23 +360,23 @@ sub config_mds {
         if ($mds_exists) { # A down ceph mds daemon is not in map
             if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
-                push (@{$self->{daemon_cmds}}, [@command]);
+                push (@{$cmdh->{daemon_cmds}}, [@command]);
             }
         } else {
             my @command = qw(mds create);
             push (@command, $fqdn);
-            push (@{$self->{deploy_cmds}}, [@command]);
+            push (@{$cmdh->{deploy_cmds}}, [@command]);
         }   
     } elsif ($action eq 'del') {
         my @command = qw(mds destroy);
         push (@command, $name);
-        push (@{$self->{man_cmds}}, [@command]);
+        push (@{$cmdh->{man_cmds}}, [@command]);
     
     } elsif ($action eq 'change') {
         my $quatmds = $daemonh->[0];
         my $cephmds = $daemonh->[1];
         # Note: A down ceph mds daemon is not in map
-        $self->check_state($name, $name, 'mds', $quatmds, $cephmds);
+        $self->check_state($name, $name, 'mds', $quatmds, $cephmds, $cmdh);
     } else {
         $self->error("Action $action not supported!");
     }
@@ -386,15 +386,15 @@ sub config_mds {
 
 # Configure on a type basis
 sub config_daemon {
-    my ($self, $type,$action,$name,$daemonh) = @_;
+    my ($self, $type,$action,$name,$daemonh, $cmdh) = @_;
     if ($type eq 'mon'){
-        $self->config_mon($action,$name,$daemonh);
+        $self->config_mon($action,$name,$daemonh, $cmdh);
     }
     elsif ($type eq 'osd'){
-        $self->config_osd($action,$name,$daemonh);
+        $self->config_osd($action,$name,$daemonh, $cmdh);
     }
     elsif ($type eq 'mds'){
-        $self->config_mds($action,$name,$daemonh);
+        $self->config_mds($action,$name,$daemonh, $cmdh);
     } else {
         $self->error("No such type: $type");
     }
@@ -402,45 +402,45 @@ sub config_daemon {
 
 # Deploy daemons 
 sub do_deploy {
-    my ($self, $is_deploy) = @_;
+    my ($self, $is_deploy, $cmdh) = @_;
     if ($is_deploy){ #Run only on deploy host(s)
         $self->info("Running ceph-deploy commands.");
-        while (my $cmd = shift @{$self->{deploy_cmds}}) {
+        while (my $cmd = shift @{$cmdh->{deploy_cmds}}) {
             $self->debug(1,@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {
         $self->info("host is no deployhost, skipping ceph-deploy commands.");
-        $self->{deploy_cmds} = [];
+        $cmdh->{deploy_cmds} = [];
     }
-    while (my $cmd = shift @{$self->{ceph_cmds}}) {
+    while (my $cmd = shift @{$cmdh->{ceph_cmds}}) {
         $self->run_ceph_command($cmd) or return 0;
     }
-    while (my $cmd = shift @{$self->{daemon_cmds}}) {
+    while (my $cmd = shift @{$cmdh->{daemon_cmds}}) {
         $self->debug(1,"Daemon command:", @$cmd);
         $self->run_daemon_command($cmd) or return 0;
     }
-    $self->print_cmds($self->{man_cmds});
+    $self->print_cmds($cmdh->{man_cmds});
     return 1;
 }
 
 #Initialize array buckets
 sub init_commands {
     my ($self) = @_;
-    $self->{deploy_cmds} = [];
-    $self->{ceph_cmds} = [];
-    $self->{daemon_cmds} = [];
-    $self->{man_cmds} = [];
+    my $cmdh = {};
+    $cmdh->{deploy_cmds} = [];
+    $cmdh->{ceph_cmds} = [];
+    $cmdh->{daemon_cmds} = [];
+    $cmdh->{man_cmds} = [];
+    return $cmdh;
 }
 
 # Compare the configuration (and prepare commands) 
 sub check_daemon_configuration {
-    my ($self, $cluster) = @_;
-    $self->init_commands();
-    $self->process_mons($cluster->{monitors}) or return 0;
-    $self->process_osds($cluster->{osdhosts}) or return 0;
-    $self->process_mdss($cluster->{mdss}) or return 0;
-    return 1;
+    my ($self, $cluster, $cmdh) = @_;
+    $self->process_mons($cluster->{monitors}, $cmdh) or return 0;
+    $self->process_osds($cluster->{osdhosts}, $cmdh) or return 0;
+    $self->process_mdss($cluster->{mdss}, $cmdh) or return 0;
 }
 
 # Does the configuration and deployment of daemons
@@ -450,9 +450,10 @@ sub do_daemon_actions {
     $self->{hostname} = $gvalues->{hostname};
     my $is_deploy = $gvalues->{is_deploy};
     $self->{fsid} = $cluster->{config}->{fsid};
-    $self->check_daemon_configuration($cluster) or return 0;
+    my $cmdh = $self->init_commands();
+    $self->check_daemon_configuration($cluster, $cmdh) or return 0;
     $self->debug(1,"deploying commands");    
-    return $self->do_deploy($is_deploy);
+    return $self->do_deploy($is_deploy, $cmdh);
 }
 
 1; # Required for perl module!
