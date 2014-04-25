@@ -18,7 +18,6 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_crushmap_tt);
-use Test::MockModule;
 use NCM::Component::ceph;
 use CAF::Object;
 use crushdata;

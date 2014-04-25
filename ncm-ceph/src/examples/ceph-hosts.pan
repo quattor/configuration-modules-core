@@ -8,14 +8,18 @@ include 'components/fstab/config';
 include 'components/filesystems/config';
 include 'components/ceph/config';
 
+
 prefix "/software/packages";
 "{xfsprogs}" = nlist();
 "{xfsdump}" = nlist();
+"{redhat-lsb}" = nlist();
 
 variable OS_REPOSITORY_LIST = append('ceph-deploy');
 variable OS_REPOSITORY_LIST = append('ceph-extras-noarch');
 variable OS_REPOSITORY_LIST = append('ceph-extras');
 variable OS_REPOSITORY_LIST = append('ceph-noarch');
+variable OS_REPOSITORY_LIST = append('ceph-testing');
+variable OS_REPOSITORY_LIST = append('ceph-testing-noarch');
 variable OS_REPOSITORY_LIST = append('ceph');
 
 ## add ceph user
@@ -25,9 +29,11 @@ include 'components/sudo/config';
 include 'components/ceph/ceph-user';
 include 'components/ceph/sudo';
 
+"/software/components/chkconfig/service/ceph/on" = "";
 
 final variable CEPH_DEPLOY_PUBKEYS = list(
-"ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAy4Qtc2Re7IeO1qcDW0shTuYJ5lKVkRmksj7TrWAy8gyB1CfmcCJA/sIJLYpvOephOu7LewhvCisjUpfsh6wj5PHeVl7q3AkQRe1JUHq5tedli4qCT3jv0FStCNSAUrHFf2oADJhKStTuiIPd+S2CGaWEAMj6aU+IE55yss7Y9BXCrtkDvEwTwyS1ZFi922cdyP8uSj0VGURcFuttT+e8wYfkQhXgf0EaYIo1U02YlNj183pYPjfc3Es6A39tHsid3FEEOGlLvTmEcHpAJeqBGbVmGHASYrskLr24zdpLe6EGLvuEmbXKZSOYmhfVPsvc5h8KCL55RthXkoANtqIbcQ== ceph@ceph001.cubone.os");
+"ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAt/NFRkQ1lsTMpEsucmob+67YgKbUWEXtE8gZZ/SD1MIFNS1MCniaGC5bCD61YadGgG0yd0mQxEbzg3jPnMjhYG0mHGtGeKkfFMIw/RxpHfb635I+aA1w9LczfQ2qYYZ4bcMqZI5K0kNdgyL9tkutY3tL6nAy2iscqcek7NdqW872ddoRn2LmOejpTKIcEs3Ya405yw/gcf0R+9bN+lELHxy/mlXE6XY1LjxXF5CKrsDicg8TyoFg/zMxLH0C0EeTpW4ubijw46GoCFBEWJjLR9YwgzFKFK4xzVYaTPcCnRF6aLUBpUVDrAXiNDYFUSMeNaIWb51MDCyJulAFPGmqcQ== ceph@ceph001.cubone.os"
+);
 "/software/components/useraccess/users/ceph/ssh_keys" = {
     foreach(idx;pubkey;CEPH_DEPLOY_PUBKEYS) {
         append(pubkey);
@@ -74,87 +80,64 @@ variable CONFIG = nlist (
 );
 
 prefix '/software/components/ceph';
-'ceph_version'   =  '0.72.2';
+'ceph_version'   =  '0.79';
 'deploy_version' = '1.3.5';
 
 '/software/packages' = pkg_repl("ceph*",format("%s-*",value('/software/components/ceph/ceph_version')),'x86_64');
 '/software/packages' = pkg_repl("ceph-deploy",format("%s-*",value('/software/components/ceph/deploy_version')),'noarch');
 
 
-prefix '/software/components/ceph/clusters/ceph';
+prefix '/software/components/ceph/clusters/ceph/crushmap';
 
-'crushmap' = nlist(
-    'types' , list('osd','host','root'),
-    'rules', list (
-        nlist(
-            'name', 'data',
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        nlist(
-            'name', 'metadata',
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        nlist(
-            'name', 'rbd',
-            'steps', list(
-                nlist(
-                    'take', 'default', 
-                    'choices', list(
-                        nlist(
-                            'chtype', 'chooseleaf firstn',
-                            'bktype', 'host'
-                        ),
-                    ),
-                ),
-            ),
-        ),
-    ),
-    'buckets', list(
-        nlist(
-            'name', 'default',
-            'type', 'root',
-            'hash', 0,
-            'buckets', list(
-                nlist(
-                    'name', 'ceph001',
-                    'type', 'host',
-                    'hash', 0,
-                ),
-                nlist(
-                    'name', 'ceph002',
-                    'type', 'host',
-                    'hash', 0,
-                ),
-                nlist(
-                    'name', 'ceph003',
-                    'type', 'host',
-                    'hash', 0,
-                ),
-            ),
-        ),
+variable BASE_CHOICES = list(
+    nlist(
+        'chtype', 'chooseleaf firstn',
+        'bktype', 'host',
     ),
 );
 
+'types' = list('osd','host','root');
+'tunables' = nlist(
+    'choose_local_tries', 0,
+    'choose_local_fallback_tries', 0,
+    'choose_total_tries', 50, 
+    'chooseleaf_descend_once', 1
+);
+
+'rules/0/name' = 'data';
+'rules/0/type' = 'replicated';
+'rules/0/steps/0/take' = 'default-sas';
+'rules/0/steps/0/choices' = BASE_CHOICES;
+
+'rules/1/name' = 'metadata';
+'rules/1/type' = 'replicated';
+'rules/1/steps/0/take' = 'default-ssd';
+'rules/1/steps/0/choices' = BASE_CHOICES;
+    
+'rules/2/name' = 'rbd';
+'rules/2/type' = 'replicated';
+'rules/2/steps/0/take' = 'default-sas';
+'rules/2/steps/0/choices' = BASE_CHOICES;
+
+'buckets/0/name' = 'default';
+'buckets/0/type' = 'root';
+'buckets/0/labels' = list('ssd','sas');
+'buckets/0/buckets' = list(
+    nlist(
+        'name', 'ceph001',
+        'type', 'host',
+    ),  
+    nlist(
+        'name', 'ceph002',
+        'type', 'host',
+    ),  
+    nlist(
+        'name', 'ceph003',
+        'type', 'host',
+    ),
+);
+
+prefix '/software/components/ceph/clusters/ceph';
 'config' = CONFIG;
 'osdhosts' = {
     t=nlist();    
@@ -164,7 +147,14 @@ prefix '/software/components/ceph/clusters/ceph';
             jdx= odx % length(CEPH_JOURNAL_DISKS); ## RR over journal disks
             d[disk] = nlist(
                 'journal_path', format('/var/lib/ceph/log/%s/osd-%s/journal', CEPH_JOURNAL_DISKS[jdx], disk),
-                'crush_weight', CEPH_DEFAULT_OSD_WEIGHT
+                'crush_weight', CEPH_DEFAULT_OSD_WEIGHT,
+                'labels', list('sas'),
+            );
+        };
+        foreach(odx;disk;CEPH_JOURNAL_DISKS) {
+            d[disk] = nlist(
+                'crush_weight', CEPH_DEFAULT_OSD_WEIGHT,
+                'labels', list('ssd'),
             );
         };
         t[host] = nlist(

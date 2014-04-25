@@ -29,8 +29,6 @@ my $cfg = get_config_for_profile('basic_crushmap');
 my $cmp = NCM::Component::ceph->new('ceph');
 my $mock = Test::MockModule->new('NCM::Component::ceph');
 my $daemonmock = Test::MockModule->new('NCM::Component::Ceph::daemon');
-my $configmock = Test::MockModule->new('NCM::Component::Ceph::config');
-my $crushmock = Test::MockModule->new('NCM::Component::Ceph::crushmap');
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};

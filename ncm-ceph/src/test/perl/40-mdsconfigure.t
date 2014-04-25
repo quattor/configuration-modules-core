@@ -17,7 +17,6 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_cluster);
-use Test::MockModule;
 use NCM::Component::ceph;
 use CAF::Object;
 use data;
