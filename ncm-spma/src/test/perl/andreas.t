@@ -57,7 +57,7 @@ my $wanted = {
 	  "ncm_2dcdp" => {
 		  "_31_2e0_2e4_2d1" => { arch => { noarch => '' }}}};
 
-$cmp->update_pkgs($wanted, 1, 0);
+$cmp->update_pkgs($wanted, {}, 1, 0);
 
 my $cmd = get_command($DISTROSYNC);
 ok(defined($cmd), "Command is truly called");
