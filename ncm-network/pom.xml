@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>org.quattor.cfg.module</groupId>
-<artifactId>network</artifactId>
-
+  <artifactId>network</artifactId>
   <packaging>pom</packaging>
   <version>14.2.2-SNAPSHOT</version>
-<name>Component to configure network settings </name>
-
+  <name>Component to configure network settings </name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
     <version>1.34</version>
   </parent>
-
   <licenses>
     <license>
       <name>Apache 2 License</name>
@@ -23,40 +18,35 @@
       <comments>Copyright (c) Responsible Organization</comments>
     </license>
   </licenses>
-
   <developers>
     <developer>
       <name>Guillaume Philippon</name>
       <email>philippo@lal.in2p3.fr</email>
     </developer>
   </developers>
-
   <contributors>
     <contributor>
       <name>Daniel Jouvenot</name>
       <email>Jouvenot@lal.in2p3.fr</email>
       <roles>
-	<role>author</role>
+        <role>author</role>
       </roles>
     </contributor>
   </contributors>
-
   <build>
     <pluginManagement>
       <plugins>
-	<plugin>
-	  <groupId>org.codehaus.mojo</groupId>
-	  <artifactId>rpm-maven-plugin</artifactId>
-	  <configuration>
-	    <requires>
-	      <require>bridge-utils</require>
-          <require>net-tools</require>
-	    </requires>
-	  </configuration>
-	</plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <requires>
+              <require>bridge-utils</require>
+              <require>net-tools</require>
+            </requires>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
-
-
 </project>
