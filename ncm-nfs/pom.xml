@@ -6,7 +6,7 @@
   <artifactId>nfs</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.4.0-rc1</version>
+  <version>14.4.0-rc2-SNAPSHOT</version>
   <name>NFS NCM component.</name>
 
 
