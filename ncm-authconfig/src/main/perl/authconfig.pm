@@ -22,6 +22,7 @@ use EDG::WP4::CCM::Element;
 
 use constant SSSD_FILE => '/etc/sssd/sssd.conf';
 use constant TT_FILE => 'authconfig/sssd.tt';
+use constant NSCD_LOCK => '/var/lock/subsys/nscd';
 
 # prevent authconfig from trying to launch in X11 mode
 delete($ENV{"DISPLAY"});
@@ -357,16 +358,25 @@ sub restart_nscd
     my $self = shift;
 
     $self->verbose("Attempting to restart nscd");
-    my $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
-				timeout => 30)->execute();
-    sleep(1);
-    $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
-			     timeout => 30)->execute();
-    sleep(2);
 
-    $cmd = CAF::Process->new([qw(service nscd start)],
-			     log => $self,
-			     timeout => 30)->execute();
+    # try a restart first. This is more reliable, as a stop/start
+    # may fail to remove /var/lock/subsys/nscd
+    my $cmd = CAF::Process->new([qw(service nscd restart)], log => $self,
+				timeout => 30)->execute();
+
+    if ($?>0) {
+      $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
+			       timeout => 30)->execute();
+      sleep(1);
+      $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
+			       timeout => 30)->execute();
+      sleep(2);
+      unlink(NSCD_LOCK) if -e NSCD_LOCK;
+      $cmd = CAF::Process->new([qw(service nscd start)],
+			       log => $self,
+			       timeout => 30)->execute();
+
+    }
 
     sleep(1);
     $? = 0;
