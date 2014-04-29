@@ -357,16 +357,25 @@ sub restart_nscd
     my $self = shift;
 
     $self->verbose("Attempting to restart nscd");
-    my $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
-				timeout => 30)->execute();
-    sleep(1);
-    $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
-			     timeout => 30)->execute();
-    sleep(2);
 
-    $cmd = CAF::Process->new([qw(service nscd start)],
-			     log => $self,
-			     timeout => 30)->execute();
+    # try a restart first. This is more reliable, as a stop/start
+    # may fail to remove /var/lock/subsys/nscd
+    my $cmd = CAF::Process->new([qw(service nscd restart)], log => $self,
+				timeout => 30)->execute();
+
+    if ($?>0) {
+      $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
+			       timeout => 30)->execute();
+      sleep(1);
+      $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
+			       timeout => 30)->execute();
+      sleep(2);
+      -e '/var/lock/subsys/nscd' and unlink '/var/lock/subsys/nscd';
+      $cmd = CAF::Process->new([qw(service nscd start)],
+			       log => $self,
+			       timeout => 30)->execute();
+
+    }
 
     sleep(1);
     $? = 0;
