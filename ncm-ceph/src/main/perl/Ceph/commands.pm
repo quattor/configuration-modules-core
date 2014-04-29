@@ -40,6 +40,7 @@ sub use_cluster {
         return 0;
     }
     $self->{cluster} = $cluster;
+    return 1;
 }
 
 # run a command and return the output

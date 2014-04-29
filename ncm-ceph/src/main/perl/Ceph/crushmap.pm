@@ -50,6 +50,7 @@ sub get_osd_name {
     $id = $id + 0; # Only keep the integer part
     return "osd.$id";
 }   
+
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
     my ($self, $cluster, $gvalues) = @_;
@@ -160,16 +161,11 @@ sub labelize_buckets {
     return \@newbuckets;
 }
 
-# Escalate the weights that has been set
+# Escalate the weights that have been set
 sub set_weights {
     my ($self, $bucket ) = @_;
-    if (!$bucket->{buckets}) {
-        if ($bucket->{type} ne 'osd') {
-            $self->error('Lowest level of crushmap should be an OSD, but ', $bucket->{name},
-                ' has no child buckets and is not an osd!' );
-            return;
-        }
-    } else {
+
+    if ($bucket->{buckets}) {
         my $weight = 0.00;
         foreach my $child (@{$bucket->{buckets}}) {
             my $chweight = $self->set_weights($child);
@@ -187,6 +183,12 @@ sub set_weights {
                 "Quattor: $bucket->{weight} ", 
                 "Sum: $weight");
         }
+    } else {
+        if ($bucket->{type} ne 'osd') {
+            $self->error('Lowest level of crushmap should be an OSD, but ', $bucket->{name},
+                ' has no child buckets and is not an osd!' );
+            return;
+        }
     }
     return $bucket->{weight};
 }
@@ -198,25 +200,17 @@ sub flatten_buckets {
     my $titems = [];
     foreach my $tmpbucket ( @{$buckets}) {
         # First fix attributes
-        my $bdefaults;
-        if (!$defaults) { # Assume processing top level bucket
-            $bdefaults = {
-                alg => $tmpbucket->{defaultalg},
-                hash => $tmpbucket->{defaulthash},
-            };
-        } else {
-            $bdefaults = $defaults;
+        if (!$defaults) { #top bucket; set default values
+            $defaults = { alg => $tmpbucket->{defaultalg}, hash => $tmpbucket->{defaulthash}};
         }
-        my %bucketh;
-        #set default values
-        @bucketh{ keys %$bdefaults} = values %$bdefaults;
+        my %bucketh = %$defaults;
         # update with tmpbucket
         @bucketh{keys %$tmpbucket} = values %$tmpbucket;
         my $bucket = \%bucketh;
         
         push(@$titems, { name => $bucket->{name}, weight => $bucket->{weight} });
         if ($bucket->{buckets}) {
-            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $bdefaults);         
+            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $defaults);         
             $bucket->{items} = $citems; 
             delete $bucket->{buckets};
         
@@ -275,57 +269,50 @@ sub quat_crush {
 
 # Collect the already used crush ids, all id's should be unique
 sub set_used_bucket_id {
-    my ($self, $id) = @_;
-    if (!$self->{_crush_ids}) {
-        $self->{_crush_ids} = [$id];
-    } else {
-        if ($id ~~ @{$self->{_crush_ids}}) {
-            $self->error("ID $id already used in crushmap buckets!");
-            return 0;
-        } 
-        push(@{$self->{_crush_ids}}, $id);
-    }
+    my ($self, $id, $crush_ids) = @_;
+    if ($id ~~ @{$crush_ids}) {
+        $self->error("ID $id already used in crushmap buckets!");
+        return 0;
+    } 
+    push(@{$crush_ids}, $id);
     return 1;
 }
 
 # Collect the already used ruleset ids, id's can be the same
 sub set_used_ruleset_id {
-    my ($self, $id) = @_;
-    if (!$self->{_ruleset_ids}) {
-        $self->{_ruleset_ids} = [$id];
-    } else {
-        push(@{$self->{_ruleset_ids}}, $id);
-    }
+    my ($self, $id, $ruleset_ids) = @_;
+    
+    push(@{$ruleset_ids}, $id);
     return 1;
 }
 
 # Generate an available (not used) ruleset id
 # Make sure the used id's are already inserted
 sub generate_ruleset_id {
-    my ($self) = @_;
+    my ($self, $ruleset_ids) = @_;
     my $newid;
-    if (!$self->{_ruleset_ids}) { #crushmap from scratch
+    if (!@{$ruleset_ids}) { #crushmap from scratch
         $newid = 0;
     } else {
-        my $max = max(@{$self->{_ruleset_ids}});
+        my $max = max(@{$ruleset_ids});
         $newid = $max + 1;
     }
-    $self->set_used_ruleset_id($newid);
+    $self->set_used_ruleset_id($newid, $ruleset_ids);
     return $newid;
 }
 
 # Generate an available (not used) crush bucket id
 # Make sure the used id's are already inserted
 sub generate_bucket_id {
-    my ($self) = @_;
+    my ($self, $crush_ids) = @_;
     my $newid;
-    if (!$self->{_crush_ids}) { #crushmap from scratch
+    if (!@{$crush_ids}) { #crushmap from scratch
         $newid = -1;
     } else {
-        my $min = min(@{$self->{_crush_ids}});
+        my $min = min(@{$crush_ids});
         $newid = $min - 1;
     }
-    $self->set_used_bucket_id($newid);
+    $self->set_used_bucket_id($newid, $crush_ids);
     return $newid;
 }
 
@@ -333,6 +320,7 @@ sub generate_bucket_id {
 # Also get ids here
 sub cmp_crush_buckets {
     my ($self, $cephbucks, $quatbucks) = @_;
+    my $crush_ids = [];
     foreach my $cbuck (@{$cephbucks}) {
         my $found = 0;
         foreach my $qbuck (@{$quatbucks}){
@@ -340,7 +328,7 @@ sub cmp_crush_buckets {
                 if ($cbuck->{type_name} ne $qbuck->{type}) {
                     $self->warn("Type of $cbuck->{name} changed from $cbuck->{type_name} to $qbuck->{type}!");
                 }
-                if (!$self->set_used_bucket_id($cbuck->{id})) {
+                if (!$self->set_used_bucket_id($cbuck->{id}, $crush_ids)) {
                      $self->error("Could not set id of $cbuck->{name}!");
                      return 0;
                 }
@@ -355,7 +343,7 @@ sub cmp_crush_buckets {
     }
     foreach my $qbuck (@{$quatbucks}){
         if (!defined($qbuck->{id})){
-            $qbuck->{id} = $self->generate_bucket_id();
+            $qbuck->{id} = $self->generate_bucket_id($crush_ids);
             $self->info("Bucket $qbuck->{name} added to crushmap");
         }     
     }
@@ -366,6 +354,7 @@ sub cmp_crush_buckets {
 # Also get rulesets here
 sub cmp_crush_rules {
     my ($self, $cephrules, $quatrules) = @_;
+    my $ruleset_ids = [];
     foreach my $crule (@{$cephrules}) {
         my $found = 0;
         foreach my $qrule (@{$quatrules}){
@@ -378,7 +367,7 @@ sub cmp_crush_rules {
                 } else {
                     $qrule->{ruleset} = $crule->{ruleset};
                 }
-                $self->set_used_ruleset_id($qrule->{ruleset});
+                $self->set_used_ruleset_id($qrule->{ruleset}, $ruleset_ids);
                 $found = 1;
                 last;
             }
@@ -389,7 +378,7 @@ sub cmp_crush_rules {
     }
     foreach my $qrule (@{$quatrules}){
         if (!defined($qrule->{ruleset})){
-            $qrule->{ruleset} = $self->generate_ruleset_id();
+            $qrule->{ruleset} = $self->generate_ruleset_id($ruleset_ids);
             $self->info("Rule $qrule->{name} added to crushmap");
         }     
     }       
@@ -434,7 +423,7 @@ sub write_crush {
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
     my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
     if (!$ok) {
-        $self->error("Unable to render template ", $CRUSH_TT_FILE, ": ",
+        $self->error("Unable to render template $CRUSH_TT_FILE : ",
                      $self->template()->error());
         $fh->cancel();
         $fh->close();

@@ -19,7 +19,8 @@ use strict;
 use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
-use base qw(NCM::Component NCM::Component::Ceph::commands NCM::Component::Ceph::crushmap NCM::Component::Ceph::daemon NCM::Component::Ceph::config );
+use base qw(NCM::Component NCM::Component::Ceph::commands NCM::Component::Ceph::crushmap
+    NCM::Component::Ceph::daemon NCM::Component::Ceph::config );
 
 use LC::Exception;
 use LC::Find;
@@ -28,6 +29,7 @@ use LC::File qw(makedir);
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
 use JSON::XS;
+use Sys::Hostname;
 our $EC=LC::Exception::Context->new->will_store_all;
 
 #Make sure  a temporary directory is created for push and pulls
@@ -151,25 +153,28 @@ sub do_prepare_cluster {
     my ($self, $cluster, $gvalues) = @_;
     $self->gen_mon_host($cluster);
     my $qtmp;
-    my $cephusr = $gvalues->{cephusr};
-    my $is_deploy = $gvalues->{is_deploy};
-    my $hostname = $gvalues->{hostname};
-    my $clname = $gvalues->{clname};
-    if ($is_deploy) {
-        $qtmp = $self->init_qdepl($cluster->{config}, $cephusr) or return 0;
+    if ($gvalues->{is_deploy}) {
+        $qtmp = $self->init_qdepl($cluster->{config}, $gvalues->{cephusr}) or return 0;
         $gvalues->{qtmp} = $qtmp;
-        my $clexists = $self->cluster_exists_check($cluster, $cephusr, $clname);
-        my $cfgfile = "$cephusr->{homeDir}/$clname.conf";
+        my $clexists = $self->cluster_exists_check($cluster, $gvalues->{cephusr}, $gvalues->{clname});
+        my $cfgfile = "$gvalues->{cephusr}->{homeDir}/$gvalues->{clname}.conf";
         $self->write_config($cluster->{config}, $cfgfile) or return 0;
         if (!$clexists) {
             return 0;
         }   
     }
-    $self->cluster_ready_check($cluster, $is_deploy, $hostname) or return 0;  
-    $self->cluster_fsid_check($cluster, $clname) or return 0;  
+    $self->cluster_ready_check($cluster, $gvalues->{is_deploy}, $gvalues->{hostname}) or return 0;  
+    $self->cluster_fsid_check($cluster, $gvalues->{clname}) or return 0;  
 
 }
 
+# Main method for configuring the ceph cluster. 
+# use_cluster sets the active cluster
+# do_prepare_cluster checks the cluster_existence and prepares the cluster for ceph-deploy, 
+# and writes the config file from quattor (but does not install it)
+# do_config_actions checks the config from and distribuate the configfile to the hosts.
+# do_daemon_actions checks daemons and create/change/remove when needed.
+# do_crush_actions builds and installs the crushmap
 sub do_configure {
     my ($self, $cluster, $gvalues) = @_;
     $self->use_cluster($gvalues->{clname}) or return 0;
@@ -194,19 +199,17 @@ sub Configure {
     my $cephusr = $config->getElement('/software/components/accounts/users/ceph')->getTree();
     my $group = $config->getElement('/software/components/accounts/groups/ceph')->getTree();
     $cephusr->{gid} = $group->{gid};
-    my $hostname = $netw->{hostname};
-
+    my $hostname = hostname;
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
 
-    foreach my $clus (keys %{$t->{clusters}}){
-        my $cluster = $t->{clusters}->{$clus};
+    while (my ($clus, $cluster) = each(%{$t->{clusters}})) {
         my $is_deploy = $cluster->{deployhosts}->{$hostname} ? 1 : 0 ;
         
         my $gvalues = { 
             clname => $clus,
             hostname => $hostname,
             is_deploy => $is_deploy,
-            cephusr => $ $cephusr
+            cephusr => $cephusr
         }; 
         $self->do_configure($cluster, $gvalues) or return 0;
         return 1;

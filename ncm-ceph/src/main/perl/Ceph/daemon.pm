@@ -30,6 +30,7 @@ use File::Copy qw(copy move);
 use JSON::XS;
 use Readonly;
 use Socket;
+use Sys::Hostname;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
@@ -37,15 +38,12 @@ Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
-    my ($self, $ip) = @_;
-    if (!$self->{_hostmap}) {
-        $self->{_hostmap} = {};
+    my ($self, $ip, $hostmap) = @_;
+    if (!$hostmap->{$ip}) {
+        $hostmap->{$ip} = gethostbyaddr(Socket::inet_aton($ip), Socket::AF_INET());
+        $self->debug(3, "host of $ip is $hostmap->{$ip}");
     }
-    if (!$self->{_hostmap}->{$ip}) {
-        $self->{_hostmap}->{$ip} = gethostbyaddr(Socket::inet_aton($ip), Socket::AF_INET());
-        $self->debug(3, "host of $ip is $self->{_hostmap}->{$ip}");
-    }
-    return $self->{_hostmap}->{$ip};
+    return $hostmap->{$ip};
 }
     
 # Gets the OSD map
@@ -56,13 +54,14 @@ sub osd_hash {
     $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
     my %osdparsed = ();
+    my $hostmap = {};
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
         my ($name,$host);
         $name = "osd.$id";
         my @addr = split(':', $osd->{public_addr});
         my $ip = $addr[0];
-        $host = $self->get_host($ip);
+        $host = $self->get_host($ip, $hostmap);
         if (!$host) {
             $self->error("Parsing osd commands went wrong: Could not retrieve fqdn of ip $ip.");
             return 0;
@@ -274,9 +273,11 @@ sub config_mon {
     }
     else {
         $self->error("Action $action not supported!");
+        return 0;
     }
     return 1;   
 }
+
 #does a check on unchangable attributes, returns 0 if different
 sub check_immutables {
     my ($self, $name, $imm, $quat, $ceph) = @_;
@@ -294,7 +295,8 @@ sub check_immutables {
 # Checks and changes the state on the host
 sub check_state {
     my ($self, $id, $host, $type, $quat, $ceph, $cmdh) = @_;
-    if (($host eq $self->{hostname}) and ($quat->{up} xor $ceph->{up})){
+    my $hostname = hostname;
+    if (($host eq $hostname) and ($quat->{up} xor $ceph->{up})){
         my @command; 
         if ($quat->{up}) {
             @command = qw(start); 
@@ -345,6 +347,7 @@ sub config_osd {
         #TODO: Make it possible to bring osd 'in' or 'out' the cluster ?
     } else {
         $self->error("Action $action not supported!");
+        return 0;
     }
     return 1;
 }
@@ -356,9 +359,9 @@ sub config_mds {
         my $fqdn = $daemonh->{fqdn};
         my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
         my $mds_exists = $self->run_command_as_ceph([@donecmd]);
-        
-        if ($mds_exists) { # A down ceph mds daemon is not in map
-            if ($daemonh->{up} && ($name eq $self->{hostname})) {
+        my $hostname = hostname; 
+        if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
+            if ($daemonh->{up} && ($name eq $hostname)) {
                 my @command = ('start', "mds.$name");
                 push (@{$cmdh->{daemon_cmds}}, [@command]);
             }
@@ -379,6 +382,7 @@ sub config_mds {
         $self->check_state($name, $name, 'mds', $quatmds, $cephmds, $cmdh);
     } else {
         $self->error("Action $action not supported!");
+        return 0;
     }
     return 1;
 }
@@ -388,15 +392,17 @@ sub config_mds {
 sub config_daemon {
     my ($self, $type,$action,$name,$daemonh, $cmdh) = @_;
     if ($type eq 'mon'){
-        $self->config_mon($action,$name,$daemonh, $cmdh);
+        return $self->config_mon($action,$name,$daemonh, $cmdh);
     }
     elsif ($type eq 'osd'){
-        $self->config_osd($action,$name,$daemonh, $cmdh);
+        return $self->config_osd($action,$name,$daemonh, $cmdh);
     }
     elsif ($type eq 'mds'){
-        $self->config_mds($action,$name,$daemonh, $cmdh);
-    } else {
+        return $self->config_mds($action,$name,$daemonh, $cmdh);
+    } 
+    else {
         $self->error("No such type: $type");
+        return 0;
     }
 }
 
@@ -447,7 +453,6 @@ sub check_daemon_configuration {
 sub do_daemon_actions {
     my ($self, $cluster, $gvalues) = @_;
     $self->{clname} = $gvalues->{clname};
-    $self->{hostname} = $gvalues->{hostname};
     my $is_deploy = $gvalues->{is_deploy};
     $self->{fsid} = $cluster->{config}->{fsid};
     my $cmdh = $self->init_commands();

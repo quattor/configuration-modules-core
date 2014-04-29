@@ -35,7 +35,7 @@ Function that checks the ceph crushmap
 This includes uniqueness of bucket and rule name,
 recursive bucket typing, and rules using existing buckets
 @}
-function check_crushmap = {
+function is_crushmap = {
     names = list();
     types = ARGV[0];
     buckets = ARGV[1];
@@ -213,7 +213,7 @@ type ceph_cluster_config = {
 };
 
 @{ function that checks that it is a valid algorithm. 
-Function also used in check_crushmap @}
+Function also used in is_crushmap @}
 function is_ceph_crushmap_bucket_alg = {
     if (!match(ARGV[0], '^(uniform|list|tree|straw)$')){
         error(ARGV[0] +  'is not a valid bucket algorithm');
@@ -270,7 +270,7 @@ type ceph_crushmap = {
     'buckets'   : ceph_crushmap_bucket [1..]
     'rules'     : ceph_crushmap_rule[1..]
     'tunables'  ? long{} 
-} with check_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
+} with is_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
 
 @{ overarching ceph cluster type, with osds, mons and msds @}
 type ceph_cluster = {

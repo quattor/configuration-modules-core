@@ -24,6 +24,7 @@ use File::Copy qw(copy move);
 use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
+# array of non-injectable (not live applicable) configuration settings
 Readonly::Array my @NONINJECT => qw(
     mon_host 
     mon_initial_members
