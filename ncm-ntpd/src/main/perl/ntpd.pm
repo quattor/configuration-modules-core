@@ -33,11 +33,12 @@ use Readonly;
 
 Readonly::Scalar my $PATH     => '/software/components/${project.artifactId}';
 Readonly::Scalar my $COMPNAME => 'ncm-${project.artifactId}';
-Readonly::Scalar my $NTPDCONF => '/etc/ntp.conf';
 
-Readonly::Scalar my $STEPTICKERS        => '/etc/ntp/step-tickers';
 Readonly::Scalar my $DEFAULT_SERVICE    => '${project.artifactId}';
 Readonly::Scalar my $DEFAULTSOL_SERVICE => 'svc:/network/ntp';
+
+Readonly::Scalar our $NTPDCONF    => '/etc/ntp.conf';
+Readonly::Scalar our $STEPTICKERS => '/etc/ntp/step-tickers';
 
 our $EC = LC::Exception::Context->new->will_store_all;
 $NCM::Component::ntpd::NoActionSupported = 1;
@@ -48,9 +49,8 @@ sub Configure {
 	# Getting the time servers from "/software/components/ntpd/servers"
 	# with IP address
 	#
-	my %ntp_servers;
+	my @ntp_servers;
 	my @client_networks;
-	my @ntp_server_ips;
 
 	if ($NoAction) {
 		$self->warn("Running Configure with NoAction set to $NoAction");
@@ -58,36 +58,20 @@ sub Configure {
 
 	my $cfg = $config->getElement($PATH)->getTree();
 
-	# get service name if this is set in configuration.
-	# otherwise set default for solaris or linux
-	my $servicename;
-	if (exists $cfg->{servicename}) {
-		$servicename = $cfg->{servicename};
-	} elsif ($^O eq 'solaris') {
-		$servicename = $DEFAULTSOL_SERVICE;
-	} else {
-		$servicename = $DEFAULT_SERVICE;
-	}
-
-	# build restart service command base on os
-	my $restart_cmd;
-	if ($^O eq 'solaris') {
-		$restart_cmd = "/sbin/svcadm restart $servicename";
-	} else {
-		$restart_cmd = "/sbin/service $servicename reload";
-	}
-
 	# look for legacy-style servers
 	if (exists $cfg->{servers} and ref($cfg->{servers}) eq 'ARRAY') {
 		foreach my $time_server (@{$cfg->{servers}}) {
 			my $ip = gethostbyname($time_server);
 			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server " . $time_server . " - ignoring!");
+				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
 				next;
 			}
 			$ip = inet_ntoa($ip);
-			$ntp_servers{$ip} = $cfg->{defaultoptions};
-			push(@ntp_server_ips, $ip);
+			push(@ntp_servers, {
+					server_address => $ip,
+					server_options => $cfg->{defaultoptions},
+				}
+			);
 			$self->debug(3, "found NTP server $ip (for $time_server)");
 		}
 	}
@@ -100,17 +84,20 @@ sub Configure {
 			my $time_server = $time_server_def->{server};
 			my $ip          = gethostbyname($time_server);
 			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server " . $time_server . " - ignoring!");
+				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
 				next;
 			}
 			$ip = inet_ntoa($ip);
-			$ntp_servers{$ip} = $time_server_def->{options} || $cfg->{defaultoptions};
-			push(@ntp_server_ips, $ip);
-			$self->debug(3, "found NTP servegr $ip (for $time_server)");
+			push(@ntp_servers, {
+					server_address => $ip,
+					server_options => $time_server_def->{options} || $cfg->{defaultoptions},
+				}
+			);
+			$self->debug(3, "found NTP server $ip (for $time_server)");
 		}
 	}
 
-	if (!keys %ntp_servers) {
+	unless (scalar @ntp_servers > 0) {
 		$self->error("No (valid) ntp server(s) defined");
 		return 0;
 	}
@@ -125,6 +112,40 @@ sub Configure {
 	}
 
 	# Declare the ntp servers in /etc/ntp.conf and /etc/ntp/step-tickers
+	my $ntpconf_changed = $self->write_ntpd_config($cfg, \@ntp_servers, \@client_networks);
+	my $ntpstep_changed = $self->write_ntpd_step_tickers($cfg, \@ntp_servers);
+
+	# Restart the daemon if necessary.
+	if ( $self->needs_restarting($ntpconf_changed, $ntpstep_changed) ) {
+		$self->restart_service_ntpd($cfg);
+	} else {
+		$self->debug(1,'no config file changes, no restart of ${project.artifactId} required');
+	}
+
+	return 1;
+}
+
+sub write_ntpd_step_tickers {
+	my ($self, $cfg, $ntp_servers) = @_;
+
+	my $stfh = CAF::FileWriter->new(
+		$STEPTICKERS,
+		log    => $self,
+		mode   => 0644,
+		backup => '.old',
+	);
+
+	if (@{$ntp_servers}) {
+		print $stfh map { $_->{server_address} . "\n" } @{$ntp_servers};
+	}
+
+	return $stfh->close();
+}
+
+
+sub write_ntpd_config {
+	my ($self, $cfg, $ntp_servers, $client_networks) = @_;
+
 	my $fh = CAF::FileWriter->new(
 		$NTPDCONF,
 		log    => $self,
@@ -216,8 +237,9 @@ sub Configure {
 	print $fh "\n# Servers\n";
 
 	# configured servers
-	foreach my $ip (@ntp_server_ips) {
-		my $opts = $ntp_servers{$ip};
+	for my $ntp_server (@{$ntp_servers}) {
+		my $ip = $ntp_server->{server_address};
+		my $opts = $ntp_server->{server_options};
 		my @o    = ();
 		if (ref($opts) eq 'HASH') {
 			@o = map {
@@ -249,10 +271,10 @@ sub Configure {
 	}
 
 	# add our own clients in case we are a real "server"
-	if (@client_networks) {
+	if (@{$client_networks}) {
 		print $fh "server 127.0.0.1\n";
 	}
-	for my $client (@client_networks) {
+	for my $client (@{$client_networks}) {
 		print $fh "restrict " . $$client[0] . " mask " . $$client[1] . " nomodify notrap\n";
 	}
 
@@ -293,34 +315,42 @@ sub Configure {
 		}
 	}
 
-	if (@ntp_server_ips) {
-		my $stfh = CAF::FileWriter->new(
-			$STEPTICKERS,
-			log    => $self,
-			mode   => 0644,
-			backup => '.old',
-		);
-
-		print $stfh sprintf("%s\n", join("\n", @ntp_server_ips));
-		$stfh->close();
-	}
-
-	# Restart the daemon if necessary.
-	if ($self->needs_restarting($fh)) {
-		$self->debug(3,"restarting ntpd deamon");
-		CAF::Process->new([$restart_cmd], log => $self)->run();
-		$self->info('restarted ${project.artifactId} after config file changes');
-	} else {
-		$self->debug(1,'no config file changes, no restart of ${project.artifactId} required');
-	}
-
-	return 1;
+	return $fh->close();
 }
 
 sub needs_restarting {
-	my ($self, $fh, $stfh) = @_;
+	my ($self, $ntpconf_ret, $ntpstep_ret) = @_;
 
-	return $fh->close();
+	return $ntpconf_ret || $ntpstep_ret;
+}
+
+sub restart_service_ntpd {
+	my ($self, $cfg) = @_;
+
+	# get service name if this is set in configuration.
+	# otherwise set default for solaris or linux
+	my $servicename;
+	if (exists $cfg->{servicename}) {
+		$servicename = $cfg->{servicename};
+	} elsif ($^O eq 'solaris') {
+		$servicename = $DEFAULTSOL_SERVICE;
+	} else {
+		$servicename = $DEFAULT_SERVICE;
+	}
+
+	# build restart service command base on os
+	my $restart_cmd;
+	if ($^O eq 'solaris') {
+		$restart_cmd = "/sbin/svcadm restart $servicename";
+	} else {
+		$restart_cmd = "/sbin/service $servicename restart";
+	}
+
+	$self->debug(3,"restarting ntpd deamon");
+	CAF::Process->new([$restart_cmd], log => $self)->run();
+	$self->info('restarted ${project.artifactId} after config file changes');
+
+	return;
 }
 
 sub Unconfigure {
