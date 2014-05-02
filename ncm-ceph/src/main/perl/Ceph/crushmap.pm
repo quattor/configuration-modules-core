@@ -67,6 +67,7 @@ sub ceph_crush {
     my $crushdump = decode_json($jstr); #wrong weights, but ignored at this moment
     $self->run_ceph_command(['osd', 'getcrushmap', '-o', "$crushdir/crushmap.bin"]);
     $self->run_command(['/usr/bin/crushtool', '-d', "$crushdir/crushmap.bin", '-o', "$crushdir/crushmap"]);
+    $self->git_commit($crushdir, "$crushdir/crushmap", "decoded crushmap from ceph");
     return $crushdump;
 }
 
@@ -417,8 +418,8 @@ sub write_crush {
     #Use tt files
     my $plainfile = "$crushdir/crushmap"; 
 
-    my $fh = CAF::FileWriter->new($plainfile, log => $self, 
-                                backup => "." . time() );
+    my $fh = CAF::FileWriter->new($plainfile, log => $self);
+    
     print $fh  "# begin crush map\n";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
     my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
@@ -432,6 +433,7 @@ sub write_crush {
     my $changed = $fh->close();
 
     if ($changed) {
+        $self->git_commit($crushdir, $plainfile, "crushmap edited by ncm-ceph");
         # compile and set crushmap    
         if (!$self->run_command(['/usr/bin/crushtool', '-c', "$plainfile", '-o', "$crushdir/crushmap.bin"])){
             $self->error("Could not compile crushmap!");

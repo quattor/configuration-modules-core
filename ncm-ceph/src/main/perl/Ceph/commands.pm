@@ -29,6 +29,7 @@ use CAF::Process;
 # Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/ 
 # Attention: Package has some versions like 1.2101 and 1.2102 .. 
 use File::Basename;
+use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
 
 #set the working cluster, (if not given, use the default cluster 'ceph')
@@ -143,6 +144,17 @@ sub write_config {
     }   
     $self->debug(2,"content written to config file $cfgfile");
     return 1;
+}
+
+# Adds and commits a file to the repo
+# working_dir may be a subdir, 
+# file can be absolute or relative to working copy
+sub git_commit {
+    my ($self, $work_tree, $file, $message) = @_;
+    my $gitr = Git::Repository->new( work_tree => $work_tree );
+    $gitr->run( add => $file );
+    $gitr->run( commit => '-m', $message ) or return 0;    
+    return 1;    
 }
 
 1; # Required for perl module!

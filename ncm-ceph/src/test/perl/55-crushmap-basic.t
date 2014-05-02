@@ -14,6 +14,7 @@ Test generating crushmap from quattor, comparing and writing to file
 
 use strict;
 use warnings;
+use File::Temp qw(tempdir);
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_crushmap);
@@ -21,6 +22,7 @@ use NCM::Component::ceph;
 use CAF::Object;
 use crushdata;
 use Readonly;
+use File::Touch;
 
 $CAF::Object::NoAction = 1;
 
@@ -37,7 +39,9 @@ my $crush = $cluster->{crushmap};
 $cmp->flatten_osds($cluster->{osdhosts}); # Is normally done in the daemon part
 $cmp->quat_crush($crush, $cluster->{osdhosts});
 cmp_deeply($crush, \%crushdata::QUATMAP, 'hash from quattor built');
-my $crushdir = '/tmp/crushmap';
+my $crushdir = tempdir(CLEANUP => 1);
+$cmp->init_git($crushdir);
+touch("$crushdir/crushmap");
 my $chash = $cmp->ceph_crush($crushdir);
 cmp_deeply($chash, \%crushdata::CEPHMAP, 'hash from ceph built');
 $crush->{devices} = $chash->{devices}; # resolved on live system

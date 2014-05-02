@@ -71,40 +71,15 @@ sub cmp_cfgfile {
     return 1;
 }
 
-# Move old config files to old dir with timestamp
-sub move_to_old {
-    my ($self, $filename) = @_;
-    my $origdir = $self->{qtmp};
-    my $olddir = $origdir . "old/";
-    my $filepath = $origdir . $filename;
-    
-    if (!-d $olddir) {
-        $self->error("Directory $olddir does not exists");
-        return 0;
-    }
-    if (-e $filepath) {
-        my $suff = ".old." . time();
-        my $newfile = $olddir . $filename . $suff;
-        $self->debug('3', "Moving file $filepath to $newfile");
-        if (!move($filepath, $newfile)){ 
-            $self->error("Moving $filepath to $newfile failed: $!");
-            return 0;
-        }
-    } 
-    return 1;
-}  
-    
 # Pull config from host
 sub pull_cfg {
     my ($self, $host) = @_;
     my $pullfile = "$self->{clname}.conf";
     my $hostfile = "$pullfile.$host";
-    $self->move_to_old($pullfile) or return 0;
     $self->run_ceph_deploy_command([qw(config pull), $host], $self->{qtmp}) or return 0;
-    $self->move_to_old($hostfile) or return 0;
 
     move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
-    
+    $self->git_commit($self->{qtmp}, $hostfile, "pulled config of host $host"); 
     my $cephcfg = $self->get_global_config($self->{qtmp} . $hostfile) or return 0;
 
     return $cephcfg;    

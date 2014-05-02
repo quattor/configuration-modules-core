@@ -28,18 +28,26 @@ use LC::File qw(makedir);
 
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
+use Git::Repository;
 use JSON::XS;
 use Sys::Hostname;
 our $EC=LC::Exception::Context->new->will_store_all;
 
+# Initiates gitrepo
+sub init_git {
+    my ($self, $qdir) = @_;
+    if (!-d "$qdir/.git"){
+        Git::Repository->run( init => $qdir );
+    } # Access with my $gitr = Git::Repository->new( work_tree => $qdir );
+}
+ 
 #Make sure  a temporary directory is created for push and pulls
 sub init_qdepl {
     my ($self, $config, $cephusr) = @_;
-    my $qdir = $cephusr->{homeDir} . '/ncm-ceph/' ;
-    my $odir = $qdir . 'old/' ;
+    my $qdir = $cephusr->{homeDir} . '/ncm-ceph/';
     my $crushdir = $qdir . 'crushmap/' ;
-    make_path($qdir, $odir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
-
+    make_path($qdir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
+    $self->init_git($qdir);
     return $qdir; 
 }
    
