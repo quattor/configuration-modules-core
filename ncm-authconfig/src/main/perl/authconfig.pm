@@ -22,6 +22,7 @@ use EDG::WP4::CCM::Element;
 
 use constant SSSD_FILE => '/etc/sssd/sssd.conf';
 use constant TT_FILE => 'authconfig/sssd.tt';
+use constant NSCD_LOCK => '/var/lock/subsys/nscd';
 
 # prevent authconfig from trying to launch in X11 mode
 delete($ENV{"DISPLAY"});
@@ -357,35 +358,33 @@ sub restart_nscd
     my $self = shift;
 
     $self->verbose("Attempting to restart nscd");
-    my $stop = CAF::Process->new([qw(service nscd stop)], log => $self,
-                                timeout => 30);
-    my $kill = CAF::Process->new([qw(killall nscd)], log => $self,
-                                 timeout => 30);
-    my $start = CAF::Process->new([qw(service nscd start)],
-                                  log => $self,
-                                  timeout => 30);
-    my $clean = CAF::Process->new([qw(nscd -i passwd)], log => $self);
 
-    # Retry up to three times because nscd tends to fail during
-    # restart.
-    for my $i (1..3) {
-        $stop->execute();
-        sleep(1);
-        $kill->execute();
-        sleep(2);
-        $start->execute();
-        sleep(1);
-        $clean->run();
-        if ($?) {
-            $self->warn("Failed attempt to restart NSCD $i time(s)");
-        } else {
-            last;
-        }
-        sleep(1);
+    # try a restart first. This is more reliable, as a stop/start
+    # may fail to remove /var/lock/subsys/nscd
+    my $cmd = CAF::Process->new([qw(service nscd restart)], log => $self,
+				timeout => 30)->execute();
+
+    if ($?>0) {
+      $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
+			       timeout => 30)->execute();
+      sleep(1);
+      $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
+			       timeout => 30)->execute();
+      sleep(2);
+      unlink(NSCD_LOCK) if -e NSCD_LOCK;
+      $cmd = CAF::Process->new([qw(service nscd start)],
+			       log => $self,
+			       timeout => 30)->execute();
+
     }
 
+    sleep(1);
+    $? = 0;
+    $cmd = CAF::Process->new([qw(nscd -i passwd)],
+			     log => $self)->run();
+
     if ($?) {
-        $self->error("Failed hard to restart NSCD");
+	$self->error("Failed to restart NSCD");
     }
 }
 
