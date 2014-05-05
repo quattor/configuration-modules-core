@@ -1,0 +1,18 @@
+[%- # to avoid possible vmethod issues 
+    import(ru) -%]
+rule [% name %] {
+[% FILTER indent("\t") -%]
+ruleset [% ruleset %]
+type [% type %]
+min_size [% min_size %]
+max_size [% max_size %]
+[%     FOREACH step IN steps -%]
+step take [% step.take %]
+[%         FOREACH choice IN step.choices -%]
+step [%        choice.chtype %] [% choice.number %] type [% choice.bktype %]
+[%-        END %]
+step emit
+[%     END %]
+[%- END -%]
+}
+[%- -%]

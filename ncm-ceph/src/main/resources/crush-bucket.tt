@@ -1,0 +1,15 @@
+[%- # to avoid possible vmethod issues (items and hash)
+    import(bk) -%]
+[%- IF type != 'osd'  -%]
+[%      type %] [% name %] {
+[%      FILTER indent("\t") -%]
+id [%       id %]		# do not change unnecessarily
+# weight [% weight  %]
+alg [%      alg %]
+hash [%     hash %][%- IF hash == 0 -%]	# rjenkins1[%- END %]
+[%          FOREACH item IN items -%]
+item [%         item.name %] weight [% item.weight %]
+[%          END %]
+[%-     END -%]
+}
+[%- END -%]

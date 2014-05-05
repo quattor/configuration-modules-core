@@ -135,6 +135,7 @@
     <module>ncm-libvirtd</module>
     <module>ncm-cups</module>
     <module>ncm-puppet</module>
+    <module>ncm-ceph</module>
   </modules>
 
   <build>
@@ -155,3 +156,4 @@
   </build>
 
 </project>
+
