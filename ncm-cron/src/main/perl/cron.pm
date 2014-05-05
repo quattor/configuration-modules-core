@@ -386,7 +386,7 @@ sub addtime {
                 $from += $step;
             }
         } else {
-            push(@list, $range % $max);
+            push(@list, $range);
         }
     }
     # unique the list....
