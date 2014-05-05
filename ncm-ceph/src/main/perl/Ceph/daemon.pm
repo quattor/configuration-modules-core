@@ -295,8 +295,7 @@ sub check_immutables {
 # Checks and changes the state on the host
 sub check_state {
     my ($self, $id, $host, $type, $quat, $ceph, $cmdh) = @_;
-    my $hostname = hostname;
-    if (($host eq $hostname) and ($quat->{up} xor $ceph->{up})){
+    if (($host eq $self->{hostname}) and ($quat->{up} xor $ceph->{up})){
         my @command; 
         if ($quat->{up}) {
             @command = qw(start); 
@@ -359,9 +358,8 @@ sub config_mds {
         my $fqdn = $daemonh->{fqdn};
         my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
         my $mds_exists = $self->run_command_as_ceph([@donecmd]);
-        my $hostname = hostname; 
         if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
-            if ($daemonh->{up} && ($name eq $hostname)) {
+            if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
                 push (@{$cmdh->{daemon_cmds}}, [@command]);
             }
@@ -455,6 +453,7 @@ sub do_daemon_actions {
     $self->{clname} = $gvalues->{clname};
     my $is_deploy = $gvalues->{is_deploy};
     $self->{fsid} = $cluster->{config}->{fsid};
+    $self->{hostname} = $gvalues->{hostname};
     my $cmdh = $self->init_commands();
     $self->check_daemon_configuration($cluster, $cmdh) or return 0;
     $self->debug(1,"deploying commands");    

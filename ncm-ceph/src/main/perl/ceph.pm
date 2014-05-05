@@ -30,7 +30,7 @@ use File::Path qw(make_path);
 use File::Copy qw(copy move);
 use Git::Repository;
 use JSON::XS;
-use Sys::Hostname;
+use Text::Glob qw(match_glob);
 our $EC=LC::Exception::Context->new->will_store_all;
 
 # Initiates gitrepo
@@ -80,7 +80,9 @@ sub cluster_exists_check {
         my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
         $self->print_cmds([[@moncr]]);
         return 0;
-    } 
+    } else {
+        return 1;
+    }
 }
 
 #Fail if cluster not ready and no deploy hosts
@@ -103,6 +105,7 @@ sub cluster_ready_check {
             return 0;
         }
     }
+    return 1;
 }
 
 #Checks the fsid value of the ceph dump with quattor value
@@ -143,12 +146,12 @@ sub check_versions {
     if ($deplv) {
         chomp($deplv);
     }
-    if ($qceph && ($cephv ne $qceph)) {
+    if ($qceph && (!match_glob($qceph, $cephv))) {
         $self->error("Ceph version not corresponding! ",
             "Ceph: $cephv, Quattor: $qceph");
         return 0;
     }        
-    if ($qdeploy && ($deplv ne $qdeploy)) {
+    if ($qdeploy && (!match_glob($qdeploy, $deplv))) {
         $self->error("Ceph-deploy version not corresponding! ",
             "Ceph-deploy: $deplv, Quattor: $qdeploy");
         return 0;
@@ -207,7 +210,8 @@ sub Configure {
     my $cephusr = $config->getElement('/software/components/accounts/users/ceph')->getTree();
     my $group = $config->getElement('/software/components/accounts/groups/ceph')->getTree();
     $cephusr->{gid} = $group->{gid};
-    my $hostname = hostname;
+    my $hostname = $netw->{hostname};
+    $self->debug(5, "Running on host $hostname.");
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
 
     while (my ($clus, $cluster) = each(%{$t->{clusters}})) {

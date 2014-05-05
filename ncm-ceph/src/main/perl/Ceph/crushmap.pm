@@ -54,7 +54,7 @@ sub get_osd_name {
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
     my ($self, $cluster, $gvalues) = @_;
-    if ($cluster->{crushmap}) {
+    if ($cluster->{crushmap} && $gvalues->{is_deploy}) {
         $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}, $gvalues) or return 0;
     }
     return 1;

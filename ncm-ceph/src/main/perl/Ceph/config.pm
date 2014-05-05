@@ -99,6 +99,8 @@ sub push_cfg {
 sub inject_realtime {
     my ($self, $host, $changes) = @_;
     my @cmd;
+    my @shorthost = split('.', $host);
+    $host = $shorthost[0];
     for my $param (keys %{$changes}) {
         if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
             @cmd = ('tell',"*.$host",'injectargs','--');
@@ -123,8 +125,8 @@ sub pull_compare_push {
             #Config the same, no push needed
             return 1;
         } else {
-            $self->push_cfg($host,1) or return 0;
             $self->inject_realtime($host, $cfgchanges) or return 0;
+            $self->push_cfg($host,1) or return 0;
         }
     }    
 }
