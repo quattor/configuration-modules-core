@@ -95,6 +95,8 @@ Following package dependencies should be installed to run the component:
 
 =item * perl-Data-Compare >= 1.23 !
 
+=item * perl-Git-Repository
+
 =back
 
 This version of Data-Compare can be found on http://www.city-fan.org/ftp/contrib/perl-modules/

@@ -37,6 +37,7 @@ Following package dependencies should be installed to run the component:
 * perl-Config-Tiny 
 * perl-Test-Deep
 * perl-Data-Compare >= 1.23 !
+* perl-Git-Repository
 
 This version of Data-Compare can be found on [http://www.city-fan.org/ftp/contrib/perl-modules/]
 
