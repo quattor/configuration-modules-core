@@ -14,7 +14,8 @@ include 'components/sudo/config';
         "/usr/bin/ceph-deploy", 
         "/usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))", 
         "/usr/bin/python -u -c import sys;exec(eval(sys.stdin.readline()))", 
-        "/bin/mkdir"
+        "/bin/mkdir",
+        "/usr/bin/file -s *"
     );
     foreach (i; cmd; sudolist){
         nl = nlist("host", "ALL",
