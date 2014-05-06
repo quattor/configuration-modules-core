@@ -127,7 +127,7 @@ sub get_osd_location {
 # If raw device is given, check for existing file systems
 sub check_empty {
     my ($self, $loc, $host) = @_;
-    if ($loc =~ m/^\/dev\//){
+    if ($loc =~ m{^/dev/}){
         my $cmd = ['/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc];
         my $output = $self->run_command_as_ceph($cmd) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
@@ -140,7 +140,7 @@ sub check_empty {
         my $lscmd = ['/usr/bin/ssh', $host, 'ls', '-1', $loc];
         my $lsoutput = $self->run_command_as_ceph($lscmd) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
-        if ($lines != 0) {
+        if ($lines) {
             $self->error("$loc on $host is not empty!");
             return 0;
         } 
