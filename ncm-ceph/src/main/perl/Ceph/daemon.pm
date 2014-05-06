@@ -128,19 +128,17 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m/^\/dev\//){
-        my @lscmd = ('/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc);
-        my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
-        my @lssplit = split(' ', $lsoutput);
-        my $dtype = $lssplit[1];
-        if ($dtype ne 'data') { 
-            $self->error("Raw device $loc on $host returned type $dtype. Expected 'data'");
+        my $cmd = ['/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc];
+        my $output = $self->run_command_as_ceph($cmd) or return 0;
+        if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
+            $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
     } else {
         my $mkdircmd = ['/usr/bin/ssh', $host, 'sudo', '/bin/mkdir', '-p', $loc];
         $self->run_command_as_ceph($mkdircmd); 
-        my @lscmd = ('/usr/bin/ssh', $host, 'ls', '-1', $loc);
-        my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
+        my $lscmd = ['/usr/bin/ssh', $host, 'ls', '-1', $loc];
+        my $lsoutput = $self->run_command_as_ceph($lscmd) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines != 0) {
             $self->error("$loc on $host is not empty!");
