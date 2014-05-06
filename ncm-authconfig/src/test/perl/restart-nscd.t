@@ -28,8 +28,20 @@ my $cmp = NCM::Component::authconfig->new("authconfig");
 $cmp->restart_nscd();
 
 foreach my $cmd (("service nscd stop", "service nscd start",
-                  "killall nscd", "nscd -i passwd")) {
-    ok(get_command($cmd), "Command $cmd is executed");
+                  "killall nscd")) {
+    ok(!get_command($cmd), "Command $cmd is not executed if restart succeeds");
+}
+
+ok(get_command("service nscd restart"), "NSCD is always restarted");
+ok(get_command("nscd -i passwd"), "NSCD cache is always cleaned");
+
+set_command_status("service nscd restart", 1);
+
+$cmp->restart_nscd();
+
+foreach my $cmd (("service nscd stop", "service nscd start",
+                  "killall nscd")) {
+    ok(get_command($cmd), "Command $cmd is executed if restart fails");
 }
 
 done_testing();

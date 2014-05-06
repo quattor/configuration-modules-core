@@ -362,29 +362,29 @@ sub restart_nscd
     # try a restart first. This is more reliable, as a stop/start
     # may fail to remove /var/lock/subsys/nscd
     my $cmd = CAF::Process->new([qw(service nscd restart)], log => $self,
-				timeout => 30)->execute();
+                                timeout => 30)->execute();
 
-    if ($?>0) {
+    if ($?) {
       $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
-			       timeout => 30)->execute();
+                               timeout => 30)->execute();
       sleep(1);
       $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
-			       timeout => 30)->execute();
+                               timeout => 30)->execute();
       sleep(2);
       unlink(NSCD_LOCK) if -e NSCD_LOCK;
       $cmd = CAF::Process->new([qw(service nscd start)],
-			       log => $self,
-			       timeout => 30)->execute();
+                               log => $self,
+                               timeout => 30)->execute();
 
     }
 
     sleep(1);
     $? = 0;
     $cmd = CAF::Process->new([qw(nscd -i passwd)],
-			     log => $self)->run();
+                             log => $self)->run();
 
     if ($?) {
-	$self->error("Failed to restart NSCD");
+        $self->error("Failed to restart NSCD");
     }
 }
 
