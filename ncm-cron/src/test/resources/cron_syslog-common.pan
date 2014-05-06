@@ -1,4 +1,9 @@
-object template cron_syslog;
+unique template cron_syslog-common;
+# Note that the user names are somewhat odd.
+# User names are not mocked so they must exist on the system doing
+# the testing. Because cronfiles on solaris are stored by user name it makes
+# testing easier if there is a different file for each test, hence using a
+# different user name.
 
 "/software/components/cron/entries" =
   append(nlist(
@@ -14,7 +19,7 @@ object template cron_syslog;
 "/software/components/cron/entries" =
   append(nlist(
     "name","test_smear_max_items",
-    "user","root",
+    "user","lp",
     "timing", nlist("minute", "0",
                     "hour", "23",
                     "day", "31",
@@ -26,7 +31,7 @@ object template cron_syslog;
 "/software/components/cron/entries" =
   append(nlist(
     "name","test_nolog",
-    "user","root",
+    "user","adm",
     "log",nlist("disabled",true),
     "frequency", "* * * * *",
     "command", "some command"));
@@ -34,7 +39,7 @@ object template cron_syslog;
 "/software/components/cron/entries" =
   append(nlist(
     "name","test_syslog",
-    "user","root",
+    "user","nobody",
     "syslog",nlist(
         'facility', 'user',
         'level', 'notice'

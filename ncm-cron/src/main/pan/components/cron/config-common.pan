@@ -13,5 +13,13 @@ prefix '/software/components/${project.artifactId}';
 #'version' = '${project.version}';
 #'package' = 'NCM::Component';
 
+'securitypath' ?= {
+    if (exists('/system/archetype/os') &&
+            value('/system/archetype/os') == 'solaris') {
+        '/etc/cron.d';
+    } else {
+        '/etc';
+    };
+};
 'active' ?= true;
 'dispatch' ?= true;

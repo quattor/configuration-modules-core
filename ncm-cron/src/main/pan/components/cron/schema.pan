@@ -1,6 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
 
 declaration template components/cron/schema;
@@ -65,6 +66,8 @@ type component_cron = {
     'entries' ? structure_cron[]
     'deny'    ? string[]
     'allow'   ? string[]
+    # required for multi os
+    'securitypath' : string = '/etc' # Linux default
 };
 
 bind '/software/components/cron' = component_cron;

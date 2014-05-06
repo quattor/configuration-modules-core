@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Test::More;
 use CAF::Object;
-use Test::Quattor qw(cron_syslog);
+use Test::Quattor qw(cron_linux);
 use NCM::Component::cron;
 
 
@@ -17,7 +17,7 @@ Test the C<Configure> method of the component.
 
 =cut
 
-my $cfg = get_config_for_profile('cron_syslog');
+my $cfg = get_config_for_profile('cron_linux');
 my $cmp = NCM::Component::cron->new('cron');
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
