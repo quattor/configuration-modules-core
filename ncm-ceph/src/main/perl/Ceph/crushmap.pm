@@ -393,8 +393,7 @@ sub cmp_crush {
     # Use already existing ids
     # Devices: this should match exactly
     if (!Compare($cephcr->{devices}, $quatcr->{devices})) {
-        $self->error("Devices list of Quattor does not match with devices in existing crushmap.");
-        return 0;
+        $self->warn("Devices list of Quattor does not match with devices in existing crushmap.");
     }
     # Types
     if (!Compare($cephcr->{types}, $quatcr->{types})) {

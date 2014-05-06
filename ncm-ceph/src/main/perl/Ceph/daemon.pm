@@ -123,19 +123,31 @@ sub get_osd_location {
 
 }
 
-# Checks if the disk is empty
+# If directory is given, checks if the directory is empty
+# If raw device is given, check for existing file systems
 sub check_empty {
     my ($self, $loc, $host) = @_;
-
-    my @lscmd = ('/usr/bin/ssh', $host, 'ls', '-1', $loc);
-    my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
-    my $lines = $lsoutput =~ tr/\n//;
-    if ($lines != 0) {
-        $self->error("$loc on $host is not empty!");
-        return 0;
+    if ($loc =~ m/^\/dev\//){
+        my @lscmd = ('/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc);
+        my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
+        my @lssplit = split(' ', $lsoutput);
+        my $dtype = $lssplit[1];
+        if ($dtype ne 'data') { 
+            $self->error("Raw device $loc on $host returned type $dtype. Expected 'data'");
+            return 0;
+        }
     } else {
-        return 1;
-    }    
+        my $mkdircmd = ['/usr/bin/ssh', $host, 'sudo', '/bin/mkdir', '-p', $loc];
+        $self->run_command_as_ceph($mkdircmd); 
+        my @lscmd = ('/usr/bin/ssh', $host, 'ls', '-1', $loc);
+        my $lsoutput = $self->run_command_as_ceph([@lscmd]) or return 0;
+        my $lines = $lsoutput =~ tr/\n//;
+        if ($lines != 0) {
+            $self->error("$loc on $host is not empty!");
+            return 0;
+        } 
+    }
+    return 1;    
 }
 
 # Gets the MON map
@@ -318,8 +330,6 @@ sub config_osd {
         my $pathstring = "$daemonh->{fqdn}:$daemonh->{osd_path}";
         if ($daemonh->{journal_path}) {
             (my $journaldir = $daemonh->{journal_path}) =~ s{/journal$}{};
-            my $mkdircmd = ['/usr/bin/ssh', $daemonh->{fqdn}, 'sudo', '/bin/mkdir', '-p', $journaldir];
-            $self->run_command_as_ceph($mkdircmd); 
             $self->check_empty($journaldir, $daemonh->{fqdn}) or return 0; 
             $pathstring = "$pathstring:$daemonh->{journal_path}";
         }
@@ -450,14 +460,17 @@ sub check_daemon_configuration {
 # Does the configuration and deployment of daemons
 sub do_daemon_actions {
     my ($self, $cluster, $gvalues) = @_;
-    $self->{clname} = $gvalues->{clname};
     my $is_deploy = $gvalues->{is_deploy};
-    $self->{fsid} = $cluster->{config}->{fsid};
-    $self->{hostname} = $gvalues->{hostname};
-    my $cmdh = $self->init_commands();
-    $self->check_daemon_configuration($cluster, $cmdh) or return 0;
-    $self->debug(1,"deploying commands");    
-    return $self->do_deploy($is_deploy, $cmdh);
+    if ($is_deploy){
+        $self->{clname} = $gvalues->{clname};
+        $self->{fsid} = $cluster->{config}->{fsid};
+        $self->{hostname} = $gvalues->{hostname};
+        my $cmdh = $self->init_commands();
+        $self->check_daemon_configuration($cluster, $cmdh) or return 0;
+        $self->debug(1,"deploying commands");    
+        return $self->do_deploy($is_deploy, $cmdh);
+    }
+    return 1;
 }
 
 1; # Required for perl module!
