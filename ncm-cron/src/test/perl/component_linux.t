@@ -5,7 +5,9 @@ use Test::More;
 use CAF::Object;
 use Test::Quattor qw(cron_linux);
 use NCM::Component::cron;
+use Test::MockModule;
 
+$NCM::Component::cron::osname = "linux";  # Overrides $osname in NCM::Component::cron
 
 $CAF::Object::NoAction = 1;
 
@@ -16,6 +18,11 @@ $CAF::Object::NoAction = 1;
 Test the C<Configure> method of the component.
 
 =cut
+
+# Mock LC::Check methods
+our $LCCheck = Test::MockModule->new("LC::Check");
+$LCCheck->mock(absence => sub ($;%) {return 1});
+$LCCheck->mock(status => sub ($;%) {return 1});
 
 my $cfg = get_config_for_profile('cron_linux');
 my $cmp = NCM::Component::cron->new('cron');

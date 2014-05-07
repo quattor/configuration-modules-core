@@ -6,6 +6,7 @@ use CAF::Object;
 use Test::Quattor qw(cron_solaris);
 use NCM::Component::cron;
 
+$NCM::Component::cron::osname = "solaris";  # Overrides $osname in NCM::Component::cron
 
 $CAF::Object::NoAction = 1;
 
@@ -17,8 +18,8 @@ Test the C<Configure> method of the component.
 
 =cut
 
-# Note that the user names are somewhat odd.
-# User names are not mocked so they must exist on the system doing
+# Note that the user names used below will appear somewhat odd.
+# The user names are not mocked, so they must exist on the system doing
 # the testing. Because cronfiles on solaris are stored by user name it makes
 # testing easier if there is a different file for each test, hence using a
 # different user name.
