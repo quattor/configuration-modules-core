@@ -82,7 +82,7 @@ be described in this section.
 
 =head1 DEPENDENCIES
 
-The component is tested with Ceph version 0.79 and ceph-deploy version 1.4.0. 
+The component is tested with Ceph version 0.80 and ceph-deploy version 1.5.1. 
 
 Following package dependencies should be installed to run the component:
 =over
