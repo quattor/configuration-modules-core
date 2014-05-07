@@ -6,7 +6,7 @@
   <artifactId>pakiti</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.4.0-rc2</version>
+  <version>14.4.0-rc3-SNAPSHOT</version>
   <name>NCM pakiti configuration component</name>
 
 
