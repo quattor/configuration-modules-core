@@ -22,6 +22,7 @@ use EDG::WP4::CCM::Element;
 use LC::Check;
 use CAF::FileWriter;
 use CAF::FileEditor;
+use CAF::Process;
 
 use Encode qw(encode_utf8);
 use English;
@@ -37,6 +38,7 @@ my $solaris_crondir = "/var/spool/cron/crontabs";
 my $ncmStart = "###### NCM-CRON BEGIN:";
 my $ncmStop = "###### NCM-CRON END:";
 my $ncmMsg = "Do not edit lines from NCM-CRON BEGIN to NCM-CRON END";
+my $ncmMsgEnd = "This comment intentionally left blank";
 our $osname = $OSNAME;  # 'our' is required for testing to override the os
 
 my $cron_entry_extension_prefix = ".ncm-cron";
@@ -281,7 +283,7 @@ sub Configure {
             if (!exists $solCronFiles{$fPath}) {
                 $self->debug(1, "Creating new cronfile $fPath");
                 $solCronFiles{$fPath} = CAF::FileWriter->new($fPath,
-                                                    mode => 0644,
+                                                    mode => 0600,
                                                     owner => "root",
                                                     group => "sys",
                                                     log => $self);
@@ -311,17 +313,33 @@ sub Configure {
 
         # Determine if there is an environment to set.  If so,
         # extract the key value pairs.
+        my $solEnv = "";
         my $env_entries = $entry->{env};
         if ($env_entries) {
             foreach my $k (sort keys %{$env_entries}) {
-                print $cronfh "$k=$env_entries->{$k}\n";
+                if ($osname eq "solaris") {
+                    $solEnv .= "$k=$env_entries->{$k}; export $k; ";
+                } else {
+                    print $cronfh "$k=$env_entries->{$k}\n";
+                }
             }
         }
 
+        # This is a hack to avoid seperate print statements for each os.
+        # Solaris requires environment variables to be put inside the
+        # sub shell, while Linux requires the user to be put outside the command.
+        # This will look odd in the below print statements as only ")" will be
+        # obvious in the print string.
+        my $shell_prefix = "";
+        if ($osname eq "solaris") {
+            $shell_prefix = "($solEnv";
+        } else {
+            $shell_prefix = "$user (";
+        }
 
-        my $os_cron_user = ($osname eq "solaris") ? "" : $user;
         if ( $log_disabled ) {
-            print $cronfh "$frequency $os_cron_user ($command)\n";
+            # Opening "(" is in $shell_prefix
+            print $cronfh "$frequency $shell_prefix $command)\n";
         } elsif ($log_to_syslog) {
             my $tag;
             if (exists($syslog_params->{tag})) {
@@ -332,7 +350,8 @@ sub Configure {
             if (exists($syslog_params->{tagprefix})) {
                 $tag = $syslog_params->{tagprefix}.$tag;
             }
-            print $cronfh "$frequency $os_cron_user ($command) 2>&1 |";
+            # Opening "(" is in $shell_prefix
+            print $cronfh "$frequency $shell_prefix $command) 2>&1 |";
             print $cronfh "$syslog_logger_fn -t $tag -p " .
                 "$syslog_params->{facility}.$syslog_params->{level}\n";
         } else {
@@ -341,7 +360,8 @@ sub Configure {
                 $self->warn("No log handling specified nor disabled, going to log to file.");
                 $log_to_file = 1;
             }
-            print $cronfh "$frequency $os_cron_user ($date; $command) >> $log_name 2>&1\n";
+            # Opening "(" is in $shell_prefix
+            print $cronfh "$frequency $shell_prefix $date; $command) >> $log_name 2>&1\n";
         }
 
         $cronfh->close() unless $osname eq "solaris";
@@ -372,11 +392,18 @@ sub Configure {
             }
         }
     }
-    # For any Solaris files add the NCM-CRON END: tag and write the file.
-    foreach my $fil (keys(%solCronFiles)) {
-        my $fh = $solCronFiles{$fil};
-        print $fh "$ncmStop\n";
-        $fh->close();
+    # For Solaris: for each file add the NCM-CRON END: tag and write the file.
+    #              Reload the cron daemon
+    if ($osname eq "solaris") {
+        foreach my $fil (keys(%solCronFiles)) {
+            my $fh = $solCronFiles{$fil};
+            print $fh "$ncmStop $ncmMsgEnd\n";
+            $fh->close();
+        }
+        my $p = CAF::Process->new(['/sbin/svcadm', 'refresh', 'cron']);
+        $p->run();
+        $self->error("Could not refresh cron by running \"svcadm refresh cron\"")
+            if $?;
     }
 
     return 1;
@@ -386,9 +413,15 @@ sub Unconfigure {
     my ($self, $config) = @_;
 
     my %solCronFiles = $self->cleanCrontabs("Unconfigure");
-    # Close the solaris crontabs
-    foreach my $fh (values(%solCronFiles)) {
-        $fh->close();
+    # Close the solaris crontabs and refresh cron
+    if ($osname eq "solaris") {
+        foreach my $fh (values(%solCronFiles)) {
+            $fh->close();
+        }
+        my $p = CAF::Process->new(['/sbin/svcadm', 'refresh', 'cron']);
+        $p->run();
+        $self->error("Could not refresh cron by running \"svcadm refresh cron\"")
+            if $?;
     }
     return;
 }  # of Unconfigure()
@@ -408,7 +441,11 @@ sub cleanCrontabs {
             my $fPath = "$solaris_crondir/$fil";
             if (-f $fPath) {
                 $self->debug(2, "Checking $fPath");
-                my $fh = $solCronFiles{$fPath} = CAF::FileEditor->open($fPath, log=>$self);
+                my $fh = $solCronFiles{$fPath} =
+                    CAF::FileEditor->open($fPath, log=>$self,
+                                                  mode => 0600,
+                                                  owner => "root",
+                                                  group => "sys");
                 my $outlines = "";
                 my $foundNCM = 0;
                 foreach my $line (split("\n", "$fh")) {
@@ -501,6 +538,8 @@ sub security_file {
     my ($self, $file_type, $user_list, $securitypath) = @_;
 
     my $secfh = CAF::FileWriter->new("$securitypath/cron.$file_type",
+                                     owner => "root",
+                                     group => "sys",
                                      backup => ".old",
                                      mode => 0644,
                                      log => $self);
@@ -518,7 +557,7 @@ sub security_file {
 sub isOldSolarisFile {
     my ($self, $fPath, $line) = @_;
     my $ncmOldFile = "# File generated by ncm-cron. DO NOT EDIT.";
-    $line =~ /$ncmOldFile/ && do { 
+    $line =~ /$ncmOldFile/ && do {
         $self->info("Converting old style cron file: $fPath");
         return 1;
     };

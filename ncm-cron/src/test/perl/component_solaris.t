@@ -18,6 +18,11 @@ Test the C<Configure> method of the component.
 
 =cut
 
+# Mock LC::Check methods
+our $LCCheck = Test::MockModule->new("LC::Check");
+$LCCheck->mock(absence => sub ($;%) {return 1});
+$LCCheck->mock(status => sub ($;%) {return 1});
+
 # Note that the user names used below will appear somewhat odd.
 # The user names are not mocked, so they must exist on the system doing
 # the testing. Because cronfiles on solaris are stored by user name it makes
@@ -52,7 +57,7 @@ $fh = get_file("/var/log/test_default_log.ncm-cron.log");
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter default log file written");
 like($fh, qr/^$/, "Check for empty log file");
 
-$fh = get_file("/var/spool/cron/crontabs/adm");
+$fh = get_file("/var/spool/cron/crontabs/bin");
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter nolog file written");
 
 unlike($fh, qr/ >> .*? 2>&1/m, "No log redirection when log disabled");

@@ -31,7 +31,7 @@ unique template cron_syslog-common;
 "/software/components/cron/entries" =
   append(nlist(
     "name","test_nolog",
-    "user","adm",
+    "user","bin",
     "log",nlist("disabled",true),
     "frequency", "* * * * *",
     "command", "some command"));
