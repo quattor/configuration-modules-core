@@ -323,7 +323,7 @@ function pkg_repl = {
             } else {
                 existing_versions = list();
                 foreach (k;v;SELF[e_name]) {
-                    existing_versions = append(unescape(k));
+                    existing_versions[length(existing_versions)] = unescape(k);
                 };
             };
             error(format('Package %s is already part of the profile (existing version=%s, requested version=%s)',ARGV[0],to_string(existing_versions),to_string(version)));
