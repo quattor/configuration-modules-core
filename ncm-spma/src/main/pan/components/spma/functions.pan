@@ -171,13 +171,9 @@ function pkg_del = {
             if ( is_defined(SELF[e_name][e_version]) ) {
                 if ( is_defined(arch) ) {
                     if ( is_defined(SELF[e_name][e_version]['arch'][arch]) ) {
-                        if ( length(SELF[e_name][e_version]['arch'][arch]) == 1 ) {
-                            debug(format('%s: deleting package %s version %s arch %s is the only arch, deleting version',OBJECT,ARGV[0],version,arch));
-                            if ( length(SELF[e_name][e_version]) == 1 ) {
-                                SELF[e_name] = null;
-                            } else {
-                                SELF[e_name][e_version] = null;
-                            };
+                        if ( length(SELF[e_name][e_version]['arch']) == 1 ) {
+                            debug(format('%s: deleting package %s version %s: %s is the only arch, deleting version',OBJECT,ARGV[0],version,arch));
+                            SELF[e_name][e_version] = null;
                         } else {
                             SELF[e_name][e_version]['arch'][arch] = null;
                         };
@@ -186,11 +182,11 @@ function pkg_del = {
                     };
                 } else {
                     debug(format('%s: deleting package %s version %s (all archs)',OBJECT,ARGV[0],version));
-                    if ( length(SELF[e_name][e_version]) == 1 ) {
-                        SELF[e_name] = null;
-                    } else {
-                        SELF[e_name][e_version] = null;
-                    };
+                    SELF[e_name][e_version] = null;
+                };
+                if ( length(SELF[e_name]) == 0 ) {
+                    debug(format('%s: no version left for package %s: deleting it',OBJECT,ARGV[0]));
+                    SELF[e_name] = null;
                 };
             } else {
                 debug(format('%s: package %s version %s not part of the configuration, nothing done',OBJECT,ARGV[0],version));
@@ -228,48 +224,6 @@ function pkg_del = {
 
 ########################################################
 #
-# Add package to the package list
-#
-# pkg_add <name> [version] [arch]
-#
-# examples:
-#
-# add emacs-19.34.i386 to the profile
-# "/software/packages"=pkg_add("emacs","19.34","i386");
-#
-# add the most recent of emacs to the profile
-# "/software/packages"=pkg_add("emacs");
-#
-# Only the <name> is mandatory.
-#
-# If [version] or [arch] are not defined, YUM will determine what is
-# appropriate.
-#
-# pkg_add() is a wrapper of pkg_repl() that is the real workhorse.
-#
-########################################
-function pkg_add = {
-    debug(format('%s: pkg_add: adding package %s',OBJECT,ARGV[0]));
-
-    version = undef;
-    arch = undef;
-    if( (ARGC == 0) || (ARGC > 3) ) {
-        error('Usage: pkg_add requires 1 argument and accepts up to 3 arguments');
-    };
-
-    if( ARGC > 1 ) {
-        version = ARGV[1];
-    };
-
-    if( ARGC > 2 ) {
-        arch = ARGV[2];
-    };
-
-    pkg_repl(ARGV[0], version, arch, list('addonly'));
-};
-
-########################################################
-#
 # Replace package in the list
 #
 # pkg_repl <name> <new version> <arch> [<options>]
@@ -303,19 +257,23 @@ function pkg_repl = {
     # Use default value only if version is specified as an empty string.
     # In this case, raise an error if there is no default version defined.
     if ( ARGC > 1 ) {
-        if ( ARGV[1] == '' ) {
-            if ( is_list(package_default[u_name]) ) {
-                version = package_default[u_name][0];
-                if ( exists(package_default[u_name][1]) ) {
-                    arch = package_default[u_name][1];
+        # When pkg_repl is called from pkg_add/ronly, 4th argument is defined
+        # event though version and/or arch can be undefined.
+        if ( is_defined(ARGV[1]) ) {
+            if ( ARGV[1] == '' ) {
+                if ( is_list(package_default[u_name]) ) {
+                    version = package_default[u_name][0];
+                    if ( exists(package_default[u_name][1]) ) {
+                        arch = package_default[u_name][1];
+                    };
+                } else {
+                    error(format('No default version defined for package %s',ARGV[0]));
                 };
             } else {
-                error(format('No default version defined for package %s',ARGV[0]));
-            };
-        } else {
-            version = ARGV[1];
-            if ( (ARGC >= 3) && (ARGV[2] != '') ) {
-              arch = ARGV[2];
+                version = ARGV[1];
+                if ( (ARGC >= 3) && (ARGV[2] != '') ) {
+                  arch = ARGV[2];
+                };
             };
         };
     };
@@ -453,6 +411,48 @@ function pkg_repl = {
     SELF;
 };
 
+
+########################################################
+#
+# Add package to the package list
+#
+# pkg_add <name> [version] [arch]
+#
+# examples:
+#
+# add emacs-19.34.i386 to the profile
+# "/software/packages"=pkg_add("emacs","19.34","i386");
+#
+# add the most recent of emacs to the profile
+# "/software/packages"=pkg_add("emacs");
+#
+# Only the <name> is mandatory.
+#
+# If [version] or [arch] are not defined, YUM will determine what is
+# appropriate.
+#
+# pkg_add() is a wrapper of pkg_repl() that is the real workhorse.
+#
+########################################
+function pkg_add = {
+    debug(format('%s: pkg_add: adding package %s',OBJECT,ARGV[0]));
+
+    version = undef;
+    arch = undef;
+    if( (ARGC == 0) || (ARGC > 3) ) {
+        error('Usage: pkg_add requires 1 argument and accepts up to 3 arguments');
+    };
+
+    if( ARGC > 1 ) {
+        version = ARGV[1];
+    };
+
+    if( ARGC > 2 ) {
+        arch = ARGV[2];
+    };
+
+    pkg_repl(ARGV[0], version, arch, list('addonly'));
+};
 
 ########################################################
 #
