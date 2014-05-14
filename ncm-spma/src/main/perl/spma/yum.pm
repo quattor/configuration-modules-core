@@ -564,8 +564,14 @@ sub update_pkgs
 
     $self->distrosync($run) or return 0;
 
-    my $wanted = $self->expand_groups($groups) or return 0;
-    $wanted += $self->wanted_pkgs($pkgs);
+    my $group_pkgs = $self->expand_groups($groups);
+    defined($group_pkgs) or return 0;
+
+    my $wanted_pkgs = $self->wanted_pkgs($pkgs);
+    defined($wanted_pkgs) or return 0;
+
+    my $wanted = $group_pkgs + $wanted_pkgs;
+
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
 
