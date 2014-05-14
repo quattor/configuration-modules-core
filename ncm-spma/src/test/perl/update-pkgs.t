@@ -102,6 +102,7 @@ my $pkgs = {};
 $cmp->{WANTED_PKGS}->{return} = Set::Scalar->new(qw(a b c));
 $cmp->{INSTALLED_PKGS}->{return} = Set::Scalar->new(qw(b c d));
 $cmp->{PACKAGES_TO_REMOVE}->{return} = Set::Scalar->new(qw(a));
+$cmp->{EXPAND_GROUPS}->{return} = Set::Scalar->new();
 $cmp->{SOLVE_TRANSACTION}->{return} = "solve\n";
 $cmp->{APPLY_TRANSACTION}->{return} = "apply";
 
