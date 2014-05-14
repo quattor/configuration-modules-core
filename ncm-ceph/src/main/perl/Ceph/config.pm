@@ -151,7 +151,7 @@ sub config_cfgfile {
     if ($action eq 'add'){
         $self->info("$name added to config file");
         if (ref($values) eq 'ARRAY'){
-            $values = join(',',@$values); 
+            $values = join(', ',@$values); 
         }
         $cfgchanges->{$name} = $values;
 
@@ -159,7 +159,7 @@ sub config_cfgfile {
         my $quat = $values->[0];
         my $ceph = $values->[1];
         if (ref($quat) eq 'ARRAY'){
-            $quat = join(',',@$quat); 
+            $quat = join(', ',@$quat); 
         }
         #TODO: check if changes are valid
         if ($quat ne $ceph) {
