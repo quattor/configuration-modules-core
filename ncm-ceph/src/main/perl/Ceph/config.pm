@@ -99,7 +99,7 @@ sub push_cfg {
 sub inject_realtime {
     my ($self, $host, $changes) = @_;
     my @cmd;
-    my @shorthost = split('.', $host);
+    my @shorthost = split('\.', $host);
     $host = $shorthost[0];
     for my $param (keys %{$changes}) {
         if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
