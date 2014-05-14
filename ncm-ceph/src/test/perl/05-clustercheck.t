@@ -51,7 +51,7 @@ foreach my $gcmd (@gathers) {
 my $usr =  getpwuid($<);
 my $tempdir = tempdir(CLEANUP => 1);
 my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
-$cmp->gen_mon_host($cluster);
+$cmp->gen_extra_config($cluster);
 my $clustercheck= $cmp->cluster_exists_check($cluster, $cephusr, 'ceph');
 my $cmd;
 foreach my $gcmd (@gathers) {
@@ -68,8 +68,9 @@ ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
 my $tinycfg = Config::Tiny->read($tempdir . '/ceph.conf');
 my $cfghash = {   'global' => {
     'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
-    'mon_initial_members' => 'ceph001,ceph002,ceph003',   
-    'mon_host' => 'ceph001.cubone.os,ceph002.cubone.os,ceph003.cubone.os'   
+    'mon_initial_members' => 'ceph001, ceph002, ceph003',   
+    'mon_host' => 'ceph001.cubone.os, ceph002.cubone.os, ceph003.cubone.os',   
+    'osd_crush_update_on_start' => 1,
     }
 };
 cmp_deeply(unbless($tinycfg), $cfghash);

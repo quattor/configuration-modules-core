@@ -47,7 +47,7 @@ $daemonmock->mock('check_daemon_configuration', 1 );
 $mock->mock('ceph_crush', 1 );
 $mock->mock('get_osd_name', 1 );
 $mock->mock('cmp_crush', 1 );
-$cmp->gen_mon_host($cluster); #From do_prepare_cluster
+$cmp->gen_extra_config($cluster); #From do_prepare_cluster
 my $output = $cmp->do_configure($cluster, $gvalues);
 ok($output, 'do_configure ok');
 my $cmdstr = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph config push ceph001.cubone.os";

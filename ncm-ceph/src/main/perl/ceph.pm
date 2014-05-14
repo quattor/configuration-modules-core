@@ -126,13 +126,26 @@ sub cluster_fsid_check {
 }
 
 #generate mon hosts
-sub gen_mon_host {
+sub gen_extra_config {
     my ($self, $cluster) = @_;
     my $config = $cluster->{config};
     $config->{mon_host} = [];
-    foreach my $host (@{$config->{mon_initial_members}}) {
-        push (@{$config->{mon_host}},$cluster->{monitors}->{$host}->{fqdn});
+    foreach my $host (sort(keys(%{$cluster->{monitors}}))) {
+        push (@{$config->{mon_host}}, $cluster->{monitors}->{$host}->{fqdn});
     }
+    if (!$config->{osd_crush_update_on_start}) {
+        $config->{osd_crush_update_on_start} = $cluster->{crushmap} ? 0 : 1 ;
+    }
+    my @allhosts = @{$config->{mon_host}};
+    while(my ($host, $osd) = each(%{$cluster->{osdhosts}})) { 
+        push (@allhosts, $osd->{fqdn});
+    }
+    while(my ($host, $mds) = each(%{$cluster->{mdss}})) { 
+        push (@allhosts, $mds->{fqdn});
+    }
+    my @uniquehosts = do { my %seen; grep { !$seen{$_}++ } @allhosts };
+    $cluster->{allhosts} = \@uniquehosts;
+                          
 }
 
 # Checks if the versions of ceph and ceph-deploy are compatible
@@ -162,7 +175,7 @@ sub check_versions {
 # Prepare for ceph-deploy and cluster actions
 sub do_prepare_cluster {
     my ($self, $cluster, $gvalues) = @_;
-    $self->gen_mon_host($cluster);
+    $self->gen_extra_config($cluster);
     my $qtmp;
     if ($gvalues->{is_deploy}) {
         $qtmp = $self->init_qdepl($cluster->{config}, $gvalues->{cephusr}) or return 0;
@@ -192,7 +205,7 @@ sub do_configure {
     $self->debug(1,"preparing cluster");
     $self->do_prepare_cluster($cluster, $gvalues) or return 0; 
     $self->debug(1,"checking configuration");
-    $self->do_config_actions($cluster->{config}, $gvalues) or return 0;
+    $self->do_config_actions($cluster, $gvalues) or return 0;
     $self->debug(1,"configuring daemons");
     $self->do_daemon_actions($cluster, $gvalues) or return 0;
     $self->debug(1,"configuring crushmap");

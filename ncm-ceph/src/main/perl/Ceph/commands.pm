@@ -133,7 +133,7 @@ sub write_config {
     my $config = { %$cfg };
     foreach my $key (%{$config}) {
         if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
-            $config->{$key} = join(',',@{$config->{$key}});
+            $config->{$key} = join(', ',@{$config->{$key}});
             $self->debug(3,"Array converted to string:", $config->{$key});
         }
     }   
