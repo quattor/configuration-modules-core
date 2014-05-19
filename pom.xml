@@ -89,7 +89,6 @@
     <module>ncm-iscsitarget</module>
     <module>ncm-amandaserver</module>
     <module>ncm-nsca</module>
-    <module>ncm-diskless_server</module>
     <module>ncm-php</module>
     <module>ncm-gmond</module>
     <module>ncm-runlevel</module>
