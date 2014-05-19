@@ -89,7 +89,6 @@
     <module>ncm-runlevel</module>
     <module>ncm-resolver</module>
     <module>ncm-xen</module>
-    <module>ncm-pine</module>
     <module>ncm-autofs</module>
     <module>ncm-altlogrotate</module>
     <module>ncm-pam</module>
