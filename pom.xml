@@ -53,7 +53,6 @@
     <module>ncm-grub</module>
     <module>ncm-nfs</module>
     <module>ncm-pnp4nagios</module>
-    <module>ncm-slocate</module>
     <module>ncm-filecopy</module>
     <module>ncm-dirperm</module>
     <module>ncm-postfix</module>
