@@ -102,7 +102,6 @@
     <module>ncm-named</module>
     <module>ncm-network</module>
     <module>ncm-openvpn</module>
-    <module>ncm-pvss</module>
     <module>ncm-rproxy</module>
     <module>ncm-sendmail</module>
     <module>ncm-serialclient</module>
