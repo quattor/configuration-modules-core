@@ -79,7 +79,6 @@
     <module>ncm-symlink</module>
     <module>ncm-gpfs</module>
     <module>ncm-sysconfig</module>
-    <module>ncm-selinux</module>
     <module>ncm-authconfig</module>
     <module>ncm-amandaserver</module>
     <module>ncm-nsca</module>
