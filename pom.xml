@@ -106,7 +106,6 @@
     <module>ncm-modprobe</module>
     <module>ncm-named</module>
     <module>ncm-network</module>
-    <module>ncm-networkupstools</module>
     <module>ncm-openvpn</module>
     <module>ncm-pacemaker</module>
     <module>ncm-pvss</module>

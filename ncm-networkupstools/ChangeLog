@@ -1,9 +1,0 @@
-2008-08-22  "Luis Fernando"
-
-	* Release: 1.0.0
-	- Added to CVS. Currently, it has only been tested with an APC SmartUPS 1500.
-	Feedback is appreciated.
-
-2007-07-10  Luis Fernando Muñoz Mejías
-
-	* Initial component writing, not tested yet.
