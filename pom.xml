@@ -104,7 +104,6 @@
     <module>ncm-fmonagent</module>
     <module>ncm-fsprobe</module>
     <module>ncm-gmetad</module>
-    <module>ncm-krb5clt</module>
     <module>ncm-linuxha</module>
     <module>ncm-modprobe</module>
     <module>ncm-named</module>
