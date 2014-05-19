@@ -89,7 +89,6 @@
     <module>ncm-php</module>
     <module>ncm-gmond</module>
     <module>ncm-runlevel</module>
-    <module>ncm-oramonserver</module>
     <module>ncm-resolver</module>
     <module>ncm-xen</module>
     <module>ncm-pine</module>
