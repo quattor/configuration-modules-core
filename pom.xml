@@ -51,7 +51,6 @@
     <module>ncm-iptables</module>
     <module>ncm-ccm</module>
     <module>ncm-grub</module>
-    <module>ncm-pakiti</module>
     <module>ncm-nfs</module>
     <module>ncm-pnp4nagios</module>
     <module>ncm-slocate</module>
