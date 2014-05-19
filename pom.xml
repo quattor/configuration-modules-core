@@ -97,7 +97,6 @@
     <module>ncm-openvpn</module>
     <module>ncm-sendmail</module>
     <module>ncm-spma</module>
-    <module>ncm-state</module>
     <module>ncm-sysctl</module>
     <module>ncm-tftpd</module>
     <module>ncm-zephyrclt</module>
