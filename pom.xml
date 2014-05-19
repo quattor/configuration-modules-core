@@ -51,7 +51,6 @@
     <module>ncm-download</module>
     <module>ncm-iptables</module>
     <module>ncm-ccm</module>
-    <module>ncm-hostsaccess</module>
     <module>ncm-grub</module>
     <module>ncm-pakiti</module>
     <module>ncm-nfs</module>
