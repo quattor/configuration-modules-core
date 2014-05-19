@@ -69,7 +69,6 @@
     <module>ncm-fstab</module>
     <module>ncm-syslogng</module>
     <module>ncm-syslog</module>
-    <module>ncm-squid</module>
     <module>ncm-srvtab</module>
     <module>ncm-shorewall</module>
     <module>ncm-interactivelimits</module>
