@@ -99,7 +99,6 @@
     <module>ncm-pine</module>
     <module>ncm-autofs</module>
     <module>ncm-altlogrotate</module>
-    <module>ncm-alternatives</module>
     <module>ncm-pam</module>
     <module>ncm-ntpd</module>
     <module>ncm-sshkeys</module>
