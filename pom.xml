@@ -96,7 +96,6 @@
     <module>ncm-sendmail</module>
     <module>ncm-spma</module>
     <module>ncm-sysctl</module>
-    <module>ncm-zephyrclt</module>
     <module>ncm-nrpe</module>
     <module>ncm-icinga</module>
     <module>ncm-sudo</module>
