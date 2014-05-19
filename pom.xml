@@ -103,7 +103,6 @@
     <module>ncm-sshkeys</module>
     <module>ncm-tomcat</module>
     <module>ncm-afsclt</module>
-    <module>ncm-drbd</module>
     <module>ncm-fmonagent</module>
     <module>ncm-fsprobe</module>
     <module>ncm-gmetad</module>
