@@ -86,7 +86,6 @@
     <module>ncm-altlogrotate</module>
     <module>ncm-pam</module>
     <module>ncm-ntpd</module>
-    <module>ncm-sshkeys</module>
     <module>ncm-tomcat</module>
     <module>ncm-afsclt</module>
     <module>ncm-fmonagent</module>
