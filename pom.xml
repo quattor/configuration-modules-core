@@ -85,7 +85,6 @@
     <module>ncm-authconfig</module>
     <module>ncm-amandaserver</module>
     <module>ncm-nsca</module>
-    <module>ncm-php</module>
     <module>ncm-gmond</module>
     <module>ncm-runlevel</module>
     <module>ncm-resolver</module>
