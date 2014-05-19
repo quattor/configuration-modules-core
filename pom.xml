@@ -43,7 +43,6 @@
     <module>ncm-mcx</module>
     <module>ncm-directoryservices</module>
     <module>ncm-etcservices</module>
-    <module>ncm-mailaliases</module>
     <module>ncm-nagios</module>
     <module>ncm-filesystems</module>
     <module>ncm-hostsfile</module>
@@ -51,12 +50,9 @@
     <module>ncm-download</module>
     <module>ncm-iptables</module>
     <module>ncm-ccm</module>
-    <module>ncm-hostsaccess</module>
     <module>ncm-grub</module>
-    <module>ncm-pakiti</module>
     <module>ncm-nfs</module>
     <module>ncm-pnp4nagios</module>
-    <module>ncm-slocate</module>
     <module>ncm-filecopy</module>
     <module>ncm-dirperm</module>
     <module>ncm-postfix</module>
@@ -73,67 +69,39 @@
     <module>ncm-fstab</module>
     <module>ncm-syslogng</module>
     <module>ncm-syslog</module>
-    <module>ncm-squid</module>
-    <module>ncm-srvtab</module>
     <module>ncm-shorewall</module>
     <module>ncm-interactivelimits</module>
     <module>ncm-openldap</module>
-    <module>ncm-portmap</module>
-    <module>ncm-raidman</module>
     <module>ncm-ofed</module>
     <module>ncm-symlink</module>
     <module>ncm-gpfs</module>
     <module>ncm-sysconfig</module>
-    <module>ncm-selinux</module>
     <module>ncm-authconfig</module>
-    <module>ncm-iscsitarget</module>
     <module>ncm-amandaserver</module>
     <module>ncm-nsca</module>
-    <module>ncm-diskless_server</module>
-    <module>ncm-php</module>
     <module>ncm-gmond</module>
-    <module>ncm-runlevel</module>
-    <module>ncm-oramonserver</module>
     <module>ncm-resolver</module>
-    <module>ncm-xen</module>
-    <module>ncm-pine</module>
     <module>ncm-autofs</module>
     <module>ncm-altlogrotate</module>
-    <module>ncm-alternatives</module>
     <module>ncm-pam</module>
     <module>ncm-ntpd</module>
-    <module>ncm-sshkeys</module>
-    <module>ncm-tomcat</module>
     <module>ncm-afsclt</module>
-    <module>ncm-drbd</module>
     <module>ncm-fmonagent</module>
     <module>ncm-fsprobe</module>
     <module>ncm-gmetad</module>
-    <module>ncm-krb5clt</module>
-    <module>ncm-linuxha</module>
     <module>ncm-modprobe</module>
     <module>ncm-named</module>
     <module>ncm-network</module>
-    <module>ncm-networkupstools</module>
     <module>ncm-openvpn</module>
-    <module>ncm-pacemaker</module>
-    <module>ncm-pvss</module>
-    <module>ncm-rproxy</module>
     <module>ncm-sendmail</module>
-    <module>ncm-serialclient</module>
-    <module>ncm-sindes_getcert</module>
     <module>ncm-spma</module>
-    <module>ncm-state</module>
     <module>ncm-sysctl</module>
-    <module>ncm-tftpd</module>
-    <module>ncm-zephyrclt</module>
     <module>ncm-nrpe</module>
     <module>ncm-icinga</module>
     <module>ncm-sudo</module>
     <module>ncm-useraccess</module>
     <module>ncm-ganglia</module>
     <module>ncm-libvirtd</module>
-    <module>ncm-cups</module>
     <module>ncm-puppet</module>
     <module>ncm-ceph</module>
   </modules>

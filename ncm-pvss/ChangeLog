@@ -1,4 +1,0 @@
-2009-05-20  Loic Brarda
-
-	* Release: 0.0.9
-	- fix test of boolean options (action was executed when value was defined as false)
