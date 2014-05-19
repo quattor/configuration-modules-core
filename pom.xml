@@ -100,7 +100,6 @@
     <module>ncm-network</module>
     <module>ncm-openvpn</module>
     <module>ncm-sendmail</module>
-    <module>ncm-serialclient</module>
     <module>ncm-sindes_getcert</module>
     <module>ncm-spma</module>
     <module>ncm-state</module>
