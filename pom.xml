@@ -85,7 +85,6 @@
     <module>ncm-sysconfig</module>
     <module>ncm-selinux</module>
     <module>ncm-authconfig</module>
-    <module>ncm-iscsitarget</module>
     <module>ncm-amandaserver</module>
     <module>ncm-nsca</module>
     <module>ncm-php</module>
