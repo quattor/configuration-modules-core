@@ -43,7 +43,6 @@
     <module>ncm-mcx</module>
     <module>ncm-directoryservices</module>
     <module>ncm-etcservices</module>
-    <module>ncm-mailaliases</module>
     <module>ncm-nagios</module>
     <module>ncm-filesystems</module>
     <module>ncm-hostsfile</module>
