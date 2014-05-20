@@ -143,7 +143,7 @@ sub gen_extra_config {
     while(my ($host, $mds) = each(%{$cluster->{mdss}})) { 
         push (@allhosts, $mds->{fqdn});
     }
-    my @uniquehosts = do { my %seen; grep { !$seen{$_}++ } @allhosts };
+    my @uniquehosts = keys({map {($_ => 1)} @allhosts}); 
     $cluster->{allhosts} = \@uniquehosts;
                           
 }
