@@ -61,6 +61,10 @@ sub osd_hash {
         $name = "osd.$id";
         my @addr = split(':', $osd->{public_addr});
         my $ip = $addr[0];
+        if (!$ip) {
+            $self->error("IP of osd osd.$id not set or misconfigured!");
+            return 0;
+        }
         $host = $self->get_host($ip, $hostmap);
         if (!$host) {
             $self->error("Parsing osd commands went wrong: Could not retrieve fqdn of ip $ip.");

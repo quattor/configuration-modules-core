@@ -99,7 +99,7 @@ sub push_cfg {
 sub inject_realtime {
     my ($self, $host, $changes) = @_;
     my @cmd;
-    my @shorthost = split('.', $host);
+    my @shorthost = split('\.', $host);
     $host = $shorthost[0];
     for my $param (keys %{$changes}) {
         if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
@@ -107,6 +107,8 @@ sub inject_realtime {
             my $keyvalue = "--$param=$changes->{$param}";
             $self->info("injecting $keyvalue realtime on $host");
             $self->run_ceph_command([@cmd, $keyvalue]) or return 0;
+        } else {
+            $self->warn("Non-injectable value $param changed");
         }
     }
     return 1;
@@ -149,7 +151,7 @@ sub config_cfgfile {
     if ($action eq 'add'){
         $self->info("$name added to config file");
         if (ref($values) eq 'ARRAY'){
-            $values = join(',',@$values); 
+            $values = join(', ',@$values); 
         }
         $cfgchanges->{$name} = $values;
 
@@ -157,7 +159,7 @@ sub config_cfgfile {
         my $quat = $values->[0];
         my $ceph = $values->[1];
         if (ref($quat) eq 'ARRAY'){
-            $quat = join(',',@$quat); 
+            $quat = join(', ',@$quat); 
         }
         #TODO: check if changes are valid
         if ($quat ne $ceph) {
@@ -190,15 +192,15 @@ sub set_admin_host {
 
 # Do all config actions
 sub do_config_actions {
-    my ($self, $qconf, $gvalues) = @_;
+    my ($self, $cluster, $gvalues) = @_;
     my $is_deploy = $gvalues->{is_deploy}; 
     $self->{qtmp} = $gvalues->{qtmp};
     $self->{clname} = $gvalues->{clname};
-    my $hosts = $qconf->{mon_host};
+    my $hosts = $cluster->{allhosts};
     if ($is_deploy) {
         foreach my $host (@{$hosts}) {
             # Set config and make admin host
-            $self->set_admin_host($qconf, $host) or return 0;
+            $self->set_admin_host($cluster->{config}, $host) or return 0;
         }
     }
     return 1;
