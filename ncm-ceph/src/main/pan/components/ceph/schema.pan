@@ -279,7 +279,7 @@ type ceph_cluster = {
     'osdhosts'                  : ceph_osd_host {}
     'monitors'                  : ceph_monitor {1..}
     'mdss'                      ? ceph_mds {}
-    'deployhosts'               : type_fqdn {1..} # key should match value of /system/network/hostname
+    'deployhosts'               : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
     'crushmap'                  ? ceph_crushmap
 };
 
