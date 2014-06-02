@@ -6,7 +6,7 @@
   <artifactId>symlink</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc2-SNAPSHOT</version>
+  <version>14.5.0-rc2</version>
   <name>symlink NCM component.</name>
 
 

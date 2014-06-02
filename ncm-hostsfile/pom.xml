@@ -6,7 +6,7 @@
   <artifactId>hostsfile</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc2-SNAPSHOT</version>
+  <version>14.5.0-rc2</version>
   <name>/etc/hosts management for local hosts entries</name>
 
 
