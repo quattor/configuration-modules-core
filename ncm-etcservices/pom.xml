@@ -6,7 +6,7 @@
   <artifactId>etcservices</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc7</version>
+  <version>14.5.0-rc8-SNAPSHOT</version>
   <name>/etc/services configuration component</name>
 
 
