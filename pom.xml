@@ -50,6 +50,7 @@
     <module>ncm-download</module>
     <module>ncm-iptables</module>
     <module>ncm-ccm</module>
+    <module>ncm-hostsaccess</module>
     <module>ncm-grub</module>
     <module>ncm-nfs</module>
     <module>ncm-pnp4nagios</module>
