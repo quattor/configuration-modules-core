@@ -6,7 +6,7 @@
   <artifactId>mcx</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc9-SNAPSHOT</version>
+  <version>14.5.0-rc9</version>
   <name>MCX NCM component.</name>
 
 
