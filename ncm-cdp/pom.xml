@@ -6,7 +6,7 @@
   <artifactId>cdp</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc11-SNAPSHOT</version>
+  <version>14.5.0-rc11</version>
   <name>cdp NCM component.</name>
 
 
