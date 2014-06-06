@@ -6,7 +6,7 @@
   <artifactId>gpfs</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc12-SNAPSHOT</version>
+  <version>14.5.0</version>
   <name>NCM GPFS component</name>
 
 

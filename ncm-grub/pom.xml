@@ -6,7 +6,7 @@
   <artifactId>grub</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc12-SNAPSHOT</version>
+  <version>14.5.0</version>
   <name>NCM grub configuration component</name>
 
 
