@@ -6,7 +6,7 @@
   <artifactId>cron</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.5.0-rc10-SNAPSHOT</version>
+  <version>14.5.0-rc10</version>
   <name>CRON NCM component.</name>
 
 
