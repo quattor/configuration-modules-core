@@ -18,6 +18,6 @@ prefix '/software/components/${project.artifactId}';
 
 'active' ?= true;
 'dispatch' ?= true;
-'pre' ?=  list ('spma');
+'dependencies/pre' ?=  list ('spma');
 # This component depends on ncm-ccm configuration for https params
 'register_change' = append('/software/components/ccm');
