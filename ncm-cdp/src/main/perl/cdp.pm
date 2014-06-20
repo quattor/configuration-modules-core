@@ -31,8 +31,8 @@ sub Configure
     delete($t->{configFile});
     delete($t->{version});
 
-    while (my ($k, $v) = each (%$t)) {
-	print $fh "$k = $v\n";
+    foreach my $k (sort keys %$t) {
+        print $fh "$k = $t->{$k}\n";    
     }
 
     $fh->close();
