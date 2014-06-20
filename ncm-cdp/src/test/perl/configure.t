@@ -35,4 +35,9 @@ isa_ok($fh, "CAF::FileWriter", "A file was opened");
 like($fh, qr{(?:^\w+\s*=\s*[\w\-/\.]+$)+}m, "Lines are correctly printed");
 unlike($fh, qr{^(?:version|config)}m, "Unwanted fields are removed");
 
+like($fh, qr{^fetch_offset\s*=\s*5\s*$}m, "Correct fetch_offset line");
+like($fh, qr{^fetch_smear\s*=\s*8\s*$}m, "Correct fetch_smear line");
+like($fh, qr{^nch_smear\s*=\s*10\s*$}m, "Correct nch_smear line");
+like($fh, qr{^port\s*=\s*7777\s*$}m, "Correct port line");
+
 done_testing();
