@@ -17,12 +17,12 @@ function dirperm_permissions_valid = {
   if ( SELF['type'] == 'd' ) {
      if ( !match(SELF['perm'],'^[0-7]?[0-7]{3,3}$') ) {
        perm_valid=false;
-       error('dirperm : invalid permissions ('+SELF['perm']+') for directory '+SELF['path']); 
+       error('dirperm : invalid permissions ('+SELF['perm']+') for directory '+SELF['path']);
      };
   } else {
      if ( !match(SELF['perm'],'^[02-6]?[0-7]{3,3}$') ) {
        perm_valid=false;
-       error('dirperm : invalid permissions ('+SELF['perm']+') for file '+SELF['path']); 
+       error('dirperm : invalid permissions ('+SELF['perm']+') for file '+SELF['path']);
      };
   };
 
@@ -30,11 +30,11 @@ function dirperm_permissions_valid = {
 };
 
 type structure_dirperm_entry = {
-    'path'    : string
-    'perm'    : string with match(SELF,'[0-7]{3,4}') 
+    'path'    : string with match(SELF, '^/')
+    'perm'    : string with match(SELF,'[0-7]{3,4}')
     'owner'   : string with match(SELF, '\w+(:\w+)?')
     'type'    : string with match(SELF, 'd|f')
-    'initdir' ? string[] 
+    'initdir' ? string[]
 } with dirperm_permissions_valid(SELF);
 
 type component_dirperm = {
