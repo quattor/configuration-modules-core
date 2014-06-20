@@ -95,6 +95,8 @@ type ssh_client_options_type = {
     "StrictHostKeyChecking"             ? ssh_yesnostring
     "UsePrivilegedPort"                 ? ssh_yesnostring
     "GSSAPIDelegateCredentials"         ? ssh_yesnostring
+    "BatchMode"                         ? ssh_yesnostring
+    "ConnectTimeout"                    ? long
 };
 
 type ssh_daemon_type = {
