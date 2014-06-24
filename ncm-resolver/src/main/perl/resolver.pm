@@ -107,12 +107,11 @@ sub Configure {
     # we commit to this.
     $self->log("using $host to test our dns config");
     my $out = "";
-    my $errs = "";
     my $rc = LC::Process::execute(["/usr/bin/host", $host, $testserver],
-                                stderr => \$errs,
+                                stderr => 'stdout',
                                 stdout => \$out);
     if (!$rc || $out =~ /timed out/) {
-        $self->error("will not change resolv.conf; looking up $host on $testserver fails with: $errs");
+        $self->error("will not change resolv.conf; looking up $host on $testserver fails with output: $out");
         if ($inf->{dnscache}) {
             # We need to put the dnscache config back to the way it was
             $self->change_dnscache($inf, $servers_file, $old);
@@ -151,10 +150,10 @@ sub change_dnscache {
             $self->log("$servers_file unchanged");
         } else {
             $self->log("updated $servers_file");
-    
+
             my $errs = "";
             my $out= "";
-            my $rc = LC::Process::execute(["/etc/init.d/dnscache", "restart" ], stderr => \$errs, stdout => \$out); 
+            my $rc = LC::Process::execute(["/etc/init.d/dnscache", "restart" ], stderr => \$errs, stdout => \$out);
             $self->debug(5, "restart dnscache said: $out");
             if (!$rc) {
                 $self->error("failed to restart dnscache: $errs");
