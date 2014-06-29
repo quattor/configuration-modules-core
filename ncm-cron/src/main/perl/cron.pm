@@ -82,7 +82,7 @@ sub Configure {
 
     # Clean up crontabs/cron files and return an empty hash for Linux or a hash
     # of cron filehandles for solaris.
-    my %solCronFiles = $self->cleanCrontabs("Configure");
+    my %solCronFiles = $self->cleanCrontabs("Configure",$cron_entries);
 
     # Only continue if the entries line is defined.
     unless ($cron_entries) {
@@ -90,7 +90,7 @@ sub Configure {
     }
 
     # Loop through all of the entries creating one cron entry for each.
-    # For Linux this will be a seperate file. For solaris this will an entry
+    # For Linux this will be a seperate file. For solaris this will be an entry
     # in the users crontab file.
     foreach my $entry (@{$cron_entries}) {
         my $name = $entry->{name};
@@ -427,7 +427,29 @@ sub Unconfigure {
 }  # of Unconfigure()
 
 sub cleanCrontabs {
-    my ($self, $configType) = @_;
+    my ($self, $configType, $cronEntries) = @_;
+
+    # %cronEntryNames is a hash that will be filled with all $cronEntries names.
+    # Only existing cron entries not present in this hash will be removed.
+    # Currently implement only for Linux.
+    my %cronEntryNames = ();
+    foreach my $entry (@{$cronEntries}) {
+        my $name = $entry->{name};
+        # This cannot happen as this will have already been detected/reported by main code
+        # which ignores the buggy entry. Anyway, harmess to double check...
+        unless ($name) {
+            $self->error("cleanCrontabs(): undefined name for cron entry, skipping it (internal error)");
+            next;
+        }
+        if ($osname eq "solaris") {
+            # Not yet implemented
+            next;
+        } else { # Linux
+            my $fname = "$name.ncm-cron.cron";;
+            $fname =~ s{[/\s]}{_}g;
+            $cronEntryNames{$fname} = ''; # Value is meaningless
+        }
+    }
 
     # Solaris: Collect the crontabs in /var/spool/cron/crontabs then delete
     # any ncm-cron entries. These are identified as lines between:
@@ -477,6 +499,7 @@ sub cleanCrontabs {
         opendir DIR, $linux_crondir;
         while (my $to_unlink = readdir DIR) {
             next if $to_unlink !~ /$cron_entry_regexp$/;
+            next if defined($cronEntryNames{$to_unlink});
             $to_unlink = "$linux_crondir/$to_unlink";
             # untainted to_unlink to work with tainted perl mode (-t option)
             if ($to_unlink =~ m{^($linux_crondir/.*$cron_entry_regexp)$}) {
