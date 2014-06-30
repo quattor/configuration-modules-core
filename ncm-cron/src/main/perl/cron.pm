@@ -490,11 +490,9 @@ sub cleanCrontabs {
             }
         }
         closedir DIR;
-    # Linux: Collect the current entries managed by ncm-cron in the cron.d
-    # directory and actually delete them.  This should always be done as no
-    # entries in the profile indicates that there should be no ncm entries in
-    # the cron.d directory either.
-    # Returns an empty hash
+    # Linux: collect the current entries managed by ncm-cron in the cron.d
+    # directory and delete those no longer part of the configuration.
+    # Returns an empty hash (return value unused in Linux context).
     } else {
         opendir DIR, $linux_crondir;
         while (my $to_unlink = readdir DIR) {
