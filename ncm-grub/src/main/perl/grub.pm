@@ -26,6 +26,12 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::grub::NoActionSupported = 1;
 
+# Magic version used to work around the fact this component
+# is not properly handling an undefined version value.
+# FIXME: to be removed as soon as this component has been fixed
+#        and the template library has been updated
+use constant KERNEL_MAGIC_VERSION => 'YUM-managed';
+
 Readonly::Scalar my $GRUBCONF => '/boot/grub/grub.conf';
 
 sub parseKernelArgs {
@@ -450,7 +456,15 @@ sub Configure {
       return;
   }
   unless (-e $fulldefaultkernelpath) {
-      $self->error ("Kernel $fulldefaultkernelpath not found");
+      # Empty string and 'YUM-managed' are 2 magic values used as a quick and dirty workaround
+      # to avoid unnecessarily breaking configurations (having ncm-grub returns an error).
+      # Note that in this case ncm-grub does essentially nothing useful: in particular Grub
+      # arguments are not processed.
+      if ( !$kernelversion || $kernelversion eq '' || ($kernelversion eq  KERNEL_MAGIC_VERSION) ) {
+          $self->warn ("No kernel version defined: no action done");
+      } else {
+          $self->error ("Kernel $fulldefaultkernelpath not found");
+      }
       return;
   }
 
