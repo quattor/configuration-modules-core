@@ -165,6 +165,65 @@ sub generate_repos
 
 =pod
 
+=head2 C<execute_yum_command_core>
+
+A wrapper function around the C<yum> command, that has the same arguments
+as the C<execute_yum_command> function, but returns a 5 element tuple with 
+as first element the noaction flag, followed by the wether or not the yum 
+command was succesful (based upon additional error handling),  
+stdout, stderr and an optional custom error message.
+
+It is provided to be able to do postprocessing and/or take additional actions 
+based on the returned tuple; for most cases, you should look at 
+C<execute_yum_command>.  
+
+Yum-based commands require annoying error handling: they may exit 0
+even upon errors.  In those cases, we have to detect errors by looking
+at stderr.  This method just encapsulates all that logic, keeping the
+callers clean.
+
+=cut
+
+
+sub execute_yum_command_core
+{
+    my ($self, $command, $why, $keeps_state, $stdin) = @_;
+
+    my ($out, $err, @missing, $errmsg);
+
+    my $success = 1;
+
+    my %opts = ( log => $self,
+          stdout => \$out,
+          stderr => \$err,
+          keeps_state => $keeps_state);
+
+    $opts{stdin} = $stdin if defined($stdin);
+
+    my $cmd = CAF::Process->new($command, %opts);
+
+    $cmd->execute();
+    $self->verbose("$why output: $out");
+    if ($? ||
+        $err =~ m{^(?:Error|Failed|
+                      (?:Could \s+ not \s+ match)|
+                      (?:Transaction \s+ encountered.*error)|
+                      (?:Unknown \s+ group \s+  package \s+ type) |
+                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
+        (@missing = ($out =~ m{^No package (.*) available}omg))) {
+
+        $success = 0;        
+        if (@missing) {
+            $errmsg= "Missing packages: ". join(" ", @missing);
+        }
+    }
+
+    return ($cmd->{NoAction}, $success, $out, $err, $errmsg); 
+}
+
+
+=pod
+
 =head2 C<execute_yum_command>
 
 Executes C<$command> for reason C<$why>. Optionally with standard
@@ -176,47 +235,23 @@ upon success or C<undef> in case of error.  If the command is not
 executed the method always returns a true value (usually 1, but don't
 rely on this!).
 
-Yum-based commands require annoying error handling: they may exit 0
-even upon errors.  In those cases, we have to detect errors by looking
-at stderr.  This method just encapsulates all that logic, keeping the
-callers clean.
-
 =cut
 
 sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin) = @_;
 
-    my (%opts, $out, $err, @missing);
+    my ($noaction, $success, $out, $err, $errmsg) = $self->execute_yum_command_core($command, $why, $keeps_state, $stdin);
 
-    %opts = ( log => $self,
-          stdout => \$out,
-          stderr => \$err,
-          keeps_state => $keeps_state);
-
-    $opts{stdin} = $stdin if defined($stdin);
-
-    my $cmd = CAF::Process->new($command, %opts);
-
-    $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out");
-    if ($? ||
-        $err =~ m{^(?:Error|Failed|
-                      (?:Could \s+ not \s+ match)|
-                      (?:Transaction \s+ encountered.*error)|
-                      (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
-        (@missing = ($out =~ m{^No package (.*) available}omg))) {
-            
+    if ($success) {
+        return $noaction || $out;
+    } else {
         $self->warn("Command output: $out");
         $self->error("Failed $why: $err");
-        if (@missing) {
-            $self->error("Missing packages: ", join(" ", @missing));
-        }
+        $self->error($errmsg) if $errmsg;
         return undef;
     }
-    return $cmd->{NoAction} || $out;
 }
 
 
