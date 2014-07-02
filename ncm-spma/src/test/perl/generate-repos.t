@@ -72,7 +72,7 @@ configuration files.
 
 =cut
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE)),
    "Basic repository correctly created");
 
 
@@ -103,7 +103,7 @@ $repos->[0]->{protocols} = [{cacert => "ca path",
                              clientcert => "cert path"}];
 
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE)),
    "Repository with SSL correctly created");
 $fh = get_file("/etc/yum.repos.d/a_repo.repo");
 like($fh, qr{^sslcacert=$repos->[0]->{protocols}->[0]->{cacert}}m,
@@ -124,7 +124,7 @@ to disk.
 
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
-is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), 0,
+is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), undef,
    "Errors on template rendering are detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
 $fh = get_file("/etc/yum.repos.d/$name.repo");
@@ -149,8 +149,8 @@ $name = "forward_proxy";
 $repos->[0]->{name} = $name;
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
-                        'forward'), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE, $PROXY_HOST,
+                               'forward')),
    "Proxy settings succeed");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
@@ -172,8 +172,8 @@ $repos->[0]->{protocols}->[0]->{url} = $URL;
 
 $name = "reverse_proxy";
 $repos->[0]->{name} = $name;
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'reverse'), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                        $PROXY_HOST, 'reverse')),
    "Files with reverse proxies are properly rendered");
 
 $fh = get_file("$REPOS_DIR/$name.repo");
@@ -188,8 +188,8 @@ like("$fh", qr{^baseurl=\s*http://$PROXY_HOST$}m,
 
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'reverse', $PROXY_PORT), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                                $PROXY_HOST, 'reverse', $PROXY_PORT)),
    "Reverse proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^baseurl=\s*http://$PROXY_HOST:$PROXY_PORT$}m,
@@ -197,8 +197,8 @@ like("$fh", qr{^baseurl=\s*http://$PROXY_HOST:$PROXY_PORT$}m,
 
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        $PROXY_HOST, 'forward', $PROXY_PORT), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                                $PROXY_HOST, 'forward', $PROXY_PORT)),
    "Forward proxies on special ports are properly rendered");
 $fh = get_file("$REPOS_DIR/$name.repo");
 like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
@@ -212,8 +212,8 @@ like("$fh", qr{^proxy=http://$PROXY_HOST:$PROXY_PORT$}m,
 
 $repos = initialise_repos();
 
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                                "$PROXY_HOST,another", 'reverse', $PROXY_PORT)),
    "List of reverse proxies succeeds to be rendered");
 
 $fh = get_file("$REPOS_DIR/$repos->[0]->{name}.repo");
@@ -229,8 +229,8 @@ like($fh, qr{^baseurl= \s* http://$PROXY_HOST:$PROXY_PORT$
 
 $repos = initialise_repos();
 $repos->[0]->{proxy} = "http://not.your.proxy";
-is($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
-                        "$PROXY_HOST,another", 'reverse', $PROXY_PORT), 1,
+ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE,
+                                "$PROXY_HOST,another", 'reverse', $PROXY_PORT)),
    "Repository with its own proxies rendered correctly");
 $fh = get_file("/etc/yum.repos.d/a_repo.repo");
 like($fh, qr{^proxy\s*=\s*http://not.your.proxy$}m, "Proxy set up correctly");

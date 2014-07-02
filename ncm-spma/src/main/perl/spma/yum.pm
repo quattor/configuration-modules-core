@@ -33,6 +33,7 @@ use constant INSTALL => "install";
 use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
 use constant YUM_EXPIRE => qw(yum clean expire-cache);
+use constant YUM_PURGE_METADATA => qw(yum clean metadata);
 use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
@@ -126,6 +127,7 @@ sub generate_forward_proxy_urls
 # the file. Optionally, proxy information will be used. In that case,
 # it will use the $proxy host, wich is of $type "reverse" or
 # "forward", and runs on the given $port.
+# Returns undef on errors, or the number of repository files that were changed.
 sub generate_repos
 {
     my ($self, $repos_dir, $repos, $template, $proxy, $type, $port) = @_;
@@ -133,6 +135,7 @@ sub generate_repos
     my @px = split(",", $proxy) if $proxy;
     @px = map("$_:$port", @px) if $port;
 
+    my $changes = 0;
 
     foreach my $repo (@$repos) {
         my $prots = $repo->{protocols}->[0];
@@ -151,16 +154,16 @@ sub generate_repos
             $self->error ("Unable to generate repository $repo->{name}: ",
                           $self->template()->error());
             $fh->cancel();
-            return 0;
+            return undef;
         }
-        $fh->close();
+        $changes += $fh->close();
         $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.pkgs",
                                    log => $self);
         print $fh "# Additional configuration for $repo->{name}\n";
         $fh->close();
     }
 
-    return 1;
+    return $changes;
 }
 
 =pod
@@ -536,6 +539,15 @@ sub complete_transaction
                                               "complete previous transactions"));
 }
 
+# Purges the Yum repository caches.  For now we only care about the
+# metadata, in order to avoid re-downloading re-installed packages.
+sub purge_yum_caches
+{
+    my ($self) = @_;
+
+    return defined($self->execute_yum_command([YUM_PURGE_METADATA],
+                                              "purge repository metadata"));
+}
 
 # Runs yum distro-sync.  Before modifying the installed sets we must
 # align the system to the repositories.  Otherwise we'll get a lot of problems.
@@ -554,11 +566,15 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge) = @_;
 
     $self->complete_transaction() or return 0;
 
-    $self->expire_yum_caches() or return 0;
+    if ($purge) {
+        $self->purge_yum_caches() or return 0;
+    } else {
+        $self->expire_yum_caches() or return 0;
+    }
 
     $self->versionlock($pkgs) or return 0;
 
@@ -622,6 +638,7 @@ sub Configure
     local $ENV{LANG} = 'C';
     local $ENV{LC_ALL} = 'C';
 
+    my $purge_caches;
     my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $t = $config->getElement(CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.
@@ -636,11 +653,13 @@ sub Configure
     }
     $self->initialize_repos_dir(REPOS_DIR) or return 0;
     $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
-    $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE, $t->{proxyhost},
-			  $t->{proxytype}, $t->{proxyport}) or return 0;
+    $purge_caches = $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE,
+                                          $t->{proxyhost}, $t->{proxytype},
+                                          $t->{proxyport});
+    defined($purge_caches) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
-    $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs})
-	or return 0;
+    $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs}, $purge_caches)
+        or return 0;
     return 1;
 }
 

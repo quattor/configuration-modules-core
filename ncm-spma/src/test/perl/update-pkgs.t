@@ -57,7 +57,7 @@ my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
 		       expire_yum_caches complete_transaction distrosync
 		       spare_dependencies expand_groups packages_to_remove
-                       solve_transaction)) {
+                       purge_yum_caches solve_transaction)) {
     $mock->mock($method,  sub {
 		    my $self = shift;
 		    $self->{uc($method)}->{args} = \@_;
@@ -82,7 +82,7 @@ sub clear_mock_counters
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
 		      expire_yum_caches complete_transaction distrosync
-                      expand_groups wanted_pkgs installed_pkgs
+                      expand_groups wanted_pkgs installed_pkgs purge_yum_caches
                       packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
 	if ($m !~ m{pkgs$}) {
@@ -322,6 +322,24 @@ is($cmp->{APPLY_TRANSACTION}->{called}, 0,
    "No transaction is attempted if distrosync fails");
 is($cmp->{INSTALLED_PKGS}->{called}, 0,
    "No check for installed packages if distrosync fails");
+
+=pod
+
+=item * Failures in cache expiration are detected and propagated.
+
+=cut
+
+clear_mock_counters();
+$cmp->{EXPIRE_YUM_CACHES}->{return} = 0;
+is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
+   "Failure to expire caches is propagated");
+
+$cmp->{EXPIRE_YUM_CACHES}->{return} = 1;
+$cmp->{PURGE_YUM_CACHES}->{return} = 0;
+
+is($cmp->update_pkgs("pkgs", "groups", "run", 0, 1), 0,
+   "Metadata purging is called when the purge flag is true, and error is handled correctly");
+
 
 done_testing();
 
