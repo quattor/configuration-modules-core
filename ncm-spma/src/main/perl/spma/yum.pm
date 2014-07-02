@@ -611,7 +611,7 @@ sub update_pkgs
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
 
-    my ($tx, $to_rm, $to_install);
+    my ($to_rm, $to_install);
 
     $to_install = $wanted-$installed;
 
@@ -619,16 +619,31 @@ sub update_pkgs
         $to_rm = $self->packages_to_remove($wanted);
         defined($to_rm) or return 0;
         $self->spare_dependencies($to_rm, $to_install);
-        $tx = $self->schedule(REMOVE, $to_rm);
+    }
+
+    $self->remove_and_install($run, $to_rm, $to_install) or return 0;
+
+    return 1;
+}
+
+# create and apply the transactions to remove and install packages 
+sub remove_and_install 
+{
+    my ($self, $run, $to_rm, $to_install)= @_;
+
+    my $tx;
+    if (defined($to_rm)) {
+        $tx .= $self->schedule(REMOVE, $to_rm);
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
 
     if ($tx) {
         $tx .= $self->solve_transaction($run);
-        $self->apply_transaction($tx) or return 0;
+        
+        return $self->apply_transaction($tx);
     }
-
+    
     return 1;
 }
 
