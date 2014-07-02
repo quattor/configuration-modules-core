@@ -655,7 +655,60 @@ sub remove_and_install
     if ($tx) {
         $tx .= $self->solve_transaction($run);
         
-        return $self->apply_transaction($tx);
+        # instead of $self->apply_transaction($tx)
+        $self->debug(5, "Running transaction: $tx");
+        my $why = "running transaction";
+        my ($noaction, $success, $out, $err, $errmsg) = $self->execute_yum_command_core([YUM_CMD], $why, 1, $tx);
+        if ($success) {
+            # exit with apply_transaction result from execute_yum_command_success 
+            return defined($self->execute_yum_command_success($noaction, $out)); 
+        } else {
+            # look for certain patterns in the stdout/stderr and try again
+            
+            # pattern 1: 
+            #   package X has a dependency Y which has a dependency Z
+            #   X has to be installed, but Z was selected for removal
+            #   (due to non-recursive dependency lookup (which would 
+            #    be too slow to perform each time))
+            #   example error output:   
+            #   Error: Package: usermode-1.111-5.el7.x86_64 (c7x_x86_64)
+            #       Requires: passwd
+            #       Removing: passwd-0.79-4.el7.x86_64 (@anaconda)
+            #           passwd = 0.79-4.el7
+            if (defined($to_rm)) {
+                # the \.(\w+) should match the arch 
+                my $regexp = qr{^Error:\s*Package:\s*.*\s*$^\s*Requires:\s*(\S+)\s*$^\s*Removing:\s*\1-\d\S*\.(\w+)(?:\s+\(|\s*$)}m;
+                    
+                my $found = Scalar::Set->new;
+                while ($err =~ m/$regexp/g) {
+                    my $pkg = "$1.$2"; # NAME.ARCH (repoquery format is transformed from ; -> .)
+                    next if $found->has($pkg);
+
+                    my $dbgmsg = "Found a matching Requires/Removing for $pkg,";
+                    if ($to_rm->has($pkg)) {
+                        $self->debug(2, '$dbgmsg removing it from to_rm set.');
+                        $to_rm->delete($pkg);
+                    } else {
+                        $self->debug(2, '$dbgmsg but is not part of the to_rm set.');
+                    }
+                    $found->insert($pkg);
+                }
+                
+                # redo the transaction
+                $tx = $self->schedule(REMOVE, $to_rm);
+                $tx .= $self->schedule(INSTALL, $to_install);
+                if ($tx) {
+                    $tx .= $self->solve_transaction($run);
+            
+                    return $self->apply_transaction($tx);
+                };
+                
+            } 
+            
+            # If you get here, exit with apply_transaction result from execute_yum_command_fail 
+            return defined($self->execute_yum_command_fail($why, $out, $err, $errmsg)); 
+            
+        }
     }
     
     return 1;
