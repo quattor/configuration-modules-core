@@ -221,6 +221,23 @@ sub execute_yum_command_core
     return ($cmd->{NoAction}, $success, $out, $err, $errmsg); 
 }
 
+# what execute_yum_command does upon success
+sub execute_yum_command_success
+{
+    my ($self, $noaction, $out) = @_;
+    return $noaction || $out;
+}
+
+# what execute_yum_command does upon failure
+sub execute_yum_command_fail
+{
+    my ($self, $why, $out, $err, $errmsg) = @_;
+
+    $self->warn("Command output: $out");
+    $self->error("Failed $why: $err");
+    $self->error($errmsg) if $errmsg;
+    return undef;
+}
 
 =pod
 
@@ -245,12 +262,9 @@ sub execute_yum_command
 
     $self->warn("$why produced warnings: $err") if $err;
     if ($success) {
-        return $noaction || $out;
+        return $self->execute_yum_command_success($noaction , $out);
     } else {
-        $self->warn("Command output: $out");
-        $self->error("Failed $why: $err");
-        $self->error($errmsg) if $errmsg;
-        return undef;
+        return $self->execute_yum_command_fail($why, $out, $err, $errmsg);
     }
 }
 
