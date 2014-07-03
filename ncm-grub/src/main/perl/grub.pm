@@ -26,6 +26,12 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::grub::NoActionSupported = 1;
 
+# Magic version used to work around the fact this component
+# is not properly handling an undefined version value.
+# FIXME: to be removed as soon as this component has been fixed
+#        and the template library has been updated
+use constant KERNEL_MAGIC_VERSION => 'YUM-managed';
+
 Readonly::Scalar my $GRUBCONF => '/boot/grub/grub.conf';
 
 sub parseKernelArgs {
@@ -89,7 +95,19 @@ sub Configure {
     return;
   }
   my $kernelversion=$config->getValue($kernelpath);
-  my $fulldefaultkernelpath=$prefix.'/'.$kernelname.'-'.$kernelversion;
+  my $fulldefaultkernelpath;
+  # To workaround a bug in ncm-grub < 14.6.0, version used to be defined to
+  # YUM-managed when the default kernel should not be managed by ncm-grub.
+  # The intent is to remove the use of this magic version in favor of an empty
+  # string as ncm-grub requires the version to be defined because it registers for
+  # changes to this property. To help with the transition, temporarily support both.
+  # FIXME: remove the support for the magic version (14.8?).
+  if ( !$kernelversion || ($kernelversion eq  KERNEL_MAGIC_VERSION) ) {
+      $kernelversion = '';
+      $self->debug(1,"No kernel version defined: default kernel will not be set");
+  } else {
+      $fulldefaultkernelpath=$prefix.'/'.$kernelname.'-'.$kernelversion;
+  }
 
   my $cons = undef;
   my $consolepath = "/hardware/console/serial";
@@ -161,8 +179,7 @@ sub Configure {
   if ("$check_grubby_mbsupport" eq "grubby: bad argument --add-multiboot: missing argument") {
       $grubby_has_mbsupport=1;
       $self->verbose("This version of grubby has support for multiboot kernels");
-  }
-  else {
+  } else {
       $grubby_has_mbsupport=0;
       $self->verbose("This version of grubby has no support for multiboot kernels");
   }
@@ -320,8 +337,7 @@ sub Configure {
                   print GRUBCONF $grubconfstring;
                   close(GRUBCONF);
 
-              }
-              else {
+              } else {
                   $self->verbose("Adding kernel using native grubby multiboot support");
                   my ($mbargsadd, $mbargsremove, $kernelargsadd, $kernelargsremove);
 
@@ -348,8 +364,8 @@ sub Configure {
                   $self->verbose("Configuring kernel using grubby command: $grubbystring");
                   my $grubbyresult=`$grubby $grubbystring 2>&1`;
               }
-          }
-          else {
+
+          } else {
               $self->info("Adding new standard kernel");
               $grubbystring.=" --add-kernel=\"$fullkernelpath\"";
 
@@ -398,8 +414,7 @@ sub Configure {
                   $self->verbose("Updating kernel using grubby command: $grubbystring");
                   my $grubbyresult=`$grubby $grubbystring 2>&1`;
 
-              }
-              else {
+              } else {
                   $self->warn("Updating multiboot kernel using non-multiboot grubby: check results");
                   $grubbystring.=" --update-kernel=\"$fullmultibootpath\"";
 
@@ -449,7 +464,7 @@ sub Configure {
       $self->error ("$grubby not found");
       return;
   }
-  unless (-e $fulldefaultkernelpath) {
+  if ( defined($fulldefaultkernelpath) && !-e $fulldefaultkernelpath) {
       $self->error ("Kernel $fulldefaultkernelpath not found");
       return;
   }
@@ -471,8 +486,10 @@ sub Configure {
 
 
   unless ($NoAction) {
-      if ($oldkernel eq $fulldefaultkernelpath) {
-          $self->info("correct kernel (".$kernelversion.") already configured");
+      if ( !defined($fulldefaultkernelpath) || ($oldkernel eq $fulldefaultkernelpath) ) {
+          my $kernel_version_str = "($kernelversion)" if $kernelversion;
+          $self->info("correct kernel $kernel_version_str already configured");
+          $fulldefaultkernelpath = $oldkernel unless defined($fulldefaultkernelpath);
       } else {
           my $s=`$grubby --set-default $fulldefaultkernelpath`;
 
@@ -576,9 +593,8 @@ sub Configure {
 		  $self->OK("Updated boot kernel with no arguments");
 	      }
 	  }
-      }
-      # If we want no full control of the arguments
-      else {
+      } else {
+          # If we want no full control of the arguments
 	  my $kernelargspath="/software/components/grub/args";
 	  if ($config->elementExists($kernelargspath)) {
 	      my $kernelargs=$config->getValue($kernelargspath);
@@ -591,13 +607,11 @@ sub Configure {
 		  return;
 	      }
 	      ## since you can't check the current kernelargs with grubby, lets hope for the best?
-	      $self->verbose("Updated boot kernel ($fulldefaultkernelpath) arguments with $kernelargsadd $kernelargsremove");
+	      $self->OK("Updated boot kernel ($fulldefaultkernelpath) arguments with $kernelargsadd $kernelargsremove");
 	  } else {
 	      $self->verbose("No kernel arguments set");
 	  }
       }
-      # all OK
-      $self->OK("Updated boot kernel version to $fulldefaultkernelpath");
   }
   return;
 }
