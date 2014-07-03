@@ -262,7 +262,7 @@ sub Configure {
       my $user = unescape($user_e);
       $self->info("Granting user $user access to all databases on server $server_name...");
       my $user_params = $server->{users}->{$user_e};
-      if ( mysqlAddUser(undef,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd},$server) ) {
+      if ( $self->mysqlAddUser(undef,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd},$server) ) {
         $self->error("Error granting user $user access to all databases on server $server_name");
         next;
       }
