@@ -26,12 +26,6 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::grub::NoActionSupported = 1;
 
-# Magic version used to work around the fact this component
-# is not properly handling an undefined version value.
-# FIXME: to be removed as soon as this component has been fixed
-#        and the template library has been updated
-use constant KERNEL_MAGIC_VERSION => 'YUM-managed';
-
 Readonly::Scalar my $GRUBCONF => '/boot/grub/grub.conf';
 
 sub parseKernelArgs {
@@ -96,13 +90,8 @@ sub Configure {
   }
   my $kernelversion=$config->getValue($kernelpath);
   my $fulldefaultkernelpath;
-  # To workaround a bug in ncm-grub < 14.6.0, version used to be defined to
-  # YUM-managed when the default kernel should not be managed by ncm-grub.
-  # The intent is to remove the use of this magic version in favor of an empty
-  # string as ncm-grub requires the version to be defined because it registers for
-  # changes to this property. To help with the transition, temporarily support both.
-  # FIXME: remove the support for the magic version (14.8?).
-  if ( !$kernelversion || ($kernelversion eq  KERNEL_MAGIC_VERSION) ) {
+  # An undefined kernel version or an empty string are treated equally
+  if ( !$kernelversion ) {
       $kernelversion = '';
       $self->debug(1,"No kernel version defined: default kernel will not be set");
   } else {
