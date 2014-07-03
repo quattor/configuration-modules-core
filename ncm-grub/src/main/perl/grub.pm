@@ -26,6 +26,8 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::grub::NoActionSupported = 1;
 
+use constant KERNELPATH_CONFIG => '/system/kernel/version';
+
 Readonly::Scalar my $GRUBCONF => '/boot/grub/grub.conf';
 
 sub parseKernelArgs {
@@ -83,16 +85,13 @@ sub Configure {
     $prefix = $config->getValue("/software/components/grub/prefix");
   }
   my $kernelname='vmlinuz';
-  my $kernelpath='/system/kernel/version';
-  unless ($config->elementExists($kernelpath)) {
-    $self->error("cannot get $kernelpath");
-    return;
-  }
-  my $kernelversion=$config->getValue($kernelpath);
+  my $kernelversion = '';
+  if ( $config->elementExists(KERNELPATH_CONFIG) ) {
+      $kernelversion = $config->getValue(KERNELPATH_CONFIG);
+  };
   my $fulldefaultkernelpath;
   # An undefined kernel version or an empty string are treated equally
   if ( !$kernelversion ) {
-      $kernelversion = '';
       $self->debug(1,"No kernel version defined: default kernel will not be set");
   } else {
       $fulldefaultkernelpath=$prefix.'/'.$kernelname.'-'.$kernelversion;
@@ -477,7 +476,7 @@ sub Configure {
   unless ($NoAction) {
       if ( !defined($fulldefaultkernelpath) || ($oldkernel eq $fulldefaultkernelpath) ) {
           my $kernel_version_str = "($kernelversion)" if $kernelversion;
-          $self->info("correct kernel $kernel_version_str already configured");
+          $self->info("correct kernel $kernelversion already configured");
           $fulldefaultkernelpath = $oldkernel unless defined($fulldefaultkernelpath);
       } else {
           my $s=`$grubby --set-default $fulldefaultkernelpath`;
