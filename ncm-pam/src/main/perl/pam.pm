@@ -4,13 +4,13 @@
 # ${developer-info}
 # ${author-info}
 
-################################################################################
+#########################################################################
 # Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+#########################################################################
 #
 # Component to configure PAM
 #
-###############################################################################
+#########################################################################
 
 package NCM::Component::pam;
 
@@ -19,11 +19,14 @@ package NCM::Component::pam;
 #
 
 use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+use warnings;
 
+#use NCM::Component;
+use base qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
+
+use CAF::FileWriter;
 use EDG::WP4::CCM::Element qw(BOOLEAN);
 
 ##########################################################################
@@ -88,16 +91,13 @@ sub Configure {
       my $file = "$inf->{directory}/$service";
       $file =~ s{//+}{/}g;
       my $mode = $inf->{services}->{$service}->{perm} || "0444";
-      my $result = LC::Check::file($file, 
-                                   backup => ".OLD",
-                                   contents => $body,
-                                   owner => "root",
-                                   group => "root",
-                                   mode => $mode,
-                                  );
-      if ($result) {
-          $self->log("updated $file");
-      }
+      my $fh = CAF::FileWriter->new($file, log => $self,
+                                    owner  => "root",
+                                    group  => "root",
+                                    mode   => $mode,
+                                    backup => ".OLD");
+      print $fh $body;
+      $fh->close();
   }
 
   foreach my $access (sort keys %{$inf->{access}}) {
@@ -113,23 +113,20 @@ sub Configure {
     if(defined($inf->{access}->{$access}->{lastacl})) {
        my $lastacl = $inf->{access}->{$access}->{lastacl};
        my $permission = $lastacl->{permission};
-       my $users      = $lastacl->{users};
+       my $users      = $lastacl->{users} || "";
        my $origins    = $lastacl->{origins};
        $body .= "$permission:$users:$origins\n";
     }
 
     my $mode = 0444;
 
-    my $result = LC::Check::file($file,
-                                 backup => ".OLD",
-                                 contents => $body,
-                                 owner => "root",
-                                 group => "root",
-                                 mode => $mode,
-                                );
-      if ($result) {
-          $self->log("updated $file");
-      }
+    my $fh = CAF::FileWriter->new($file, log => $self,
+                                  owner  => "root",
+                                  group  => "root",
+                                  mode   => $mode,
+                                  backup => ".OLD");
+    print $fh $body;
+    $fh->close();
   }
 
   return 1;
@@ -139,16 +136,15 @@ sub make_acl_file {
     my ($self, $acl) = @_;
     my $content = join("\n", sort @{$acl->{items}});
     my $mode = $acl->{mode} || "0444";
-    my $result = LC::Check::file($acl->{filename},
-                                 backup => ".OLD",
-                                 contents => $content,
-                                 owner => "root",
-                                 group => "root",
-                                 mode => $mode,
-                                );
-      if ($result) {
-          $self->log("updated ACL $acl->{filename}");
-      }
+    my $fh = CAF::FileWriter->new($acl->{filename},
+                                  log => $self,
+                                  owner  => "root",
+                                  group  => "root",
+                                  mode   => $mode,
+                                  backup => ".OLD");
+    print $fh $content;
+    $fh->close();
+    return;
 }
 
 1; #required for Perl modules
