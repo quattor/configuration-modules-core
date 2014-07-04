@@ -113,7 +113,7 @@ sub Configure {
     if(defined($inf->{access}->{$access}->{lastacl})) {
        my $lastacl = $inf->{access}->{$access}->{lastacl};
        my $permission = $lastacl->{permission};
-       my $users      = $lastacl->{users} || "";
+       my $users      = $lastacl->{users};
        my $origins    = $lastacl->{origins};
        $body .= "$permission:$users:$origins\n";
     }
