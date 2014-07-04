@@ -29,8 +29,13 @@ is($cmp->Configure($cfg), 1, "Configure succeeds");
 my $fh = get_file("/etc/security/access.conf");
 ok($fh, "A file was actually created");
 isa_ok($fh, "CAF::FileWriter");
+like($fh, qr{-:ALL:ALL$}, "last acl is set correctly");
+
 my $pf = get_file("/etc/pam.d/sshd");
 ok($pf, "An /etc/pam.d file was created");
 isa_ok($pf, "CAF::FileWriter");
+like($pf, qr{password\s+include /etc/pam.d/system-auth},
+     "correctly includes system-auth");
+like($pf, qr{auth\s+required}, "auth required line present");
 
 done_testing();
