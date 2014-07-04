@@ -13,15 +13,15 @@
 
 package NCM::Component::sudo;
 
-
 use strict;
 use warnings;
 use NCM::Component;
 use CAF::FileWriter;
 use CAF::Process;
 
-our @ISA = qw (NCM::Component);
+use base qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 # Path for the sudoers file.
 use constant FILE_PATH		=> '/etc/sudoers';
