@@ -6,7 +6,7 @@
   <artifactId>authconfig</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.6.0</version>
+  <version>14.6.1-SNAPSHOT</version>
   <name>authconfig NCM component</name>
 
 

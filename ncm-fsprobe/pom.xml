@@ -6,7 +6,7 @@
   <artifactId>fsprobe</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.6.0</version>
+  <version>14.6.1-SNAPSHOT</version>
   <name>file system probe configuration</name>
 
 

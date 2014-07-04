@@ -6,7 +6,7 @@
   <artifactId>ncm-components</artifactId>
   <packaging>pom</packaging>
 
-  <version>14.6.0</version>
+  <version>14.6.1-SNAPSHOT</version>
 
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
