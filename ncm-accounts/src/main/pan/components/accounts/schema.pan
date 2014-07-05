@@ -24,7 +24,7 @@ type structure_userinfo = {
 
 type structure_groupinfo = {
     'comment'    ? string
-    'gid'        ? long(1..)
+    'gid'        : long(1..)
 };
 
 type structure_login_defs = {
