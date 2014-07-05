@@ -19,9 +19,12 @@ package NCM::Component::named;
 use strict;
 use NCM::Component;
 use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
+require Exporter;
+our @ISA = qw(NCM::Component Exporter);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
+use Fcntl qw(SEEK_SET);
+use CAF::FileEditor;
 
 use EDG::WP4::CCM::Element;
 
@@ -33,8 +36,13 @@ use CAF::Process;
 
 local(*DTA);
 
+# To ease testing
+our @EXPORT = qw( NAMED_SYSCONFIG NCM_NAMED_CONFIG_BASE );
+
 # Define paths for convenience.
-my $base = "/software/components/named";
+use constant NAMED_CONFIG_FILE => '/etc/named.conf';
+use constant NAMED_SYSCONFIG => '/etc/sysconfig/named';
+use constant NCM_NAMED_CONFIG_BASE => "/software/components/named";
 
 my $true = "true";
 my $false = "false";
@@ -45,7 +53,7 @@ sub Configure {
   my ($self,$config)=@_;
 
   # Get config into a perl Hash
-  my $named_config = $config->getElement($base)->getTree();
+  my $named_config = $config->getElement(NCM_NAMED_CONFIG_BASE)->getTree();
 
   # Check if named server must be enabled
 
@@ -130,47 +138,32 @@ sub Configure {
   # or with the reference file, if one of them has been specified
 
   my $server_changes;
-  my $named_root_dir;
-
-  open(SYSCONF, '/etc/sysconfig/named');
-  while ( my $line = <SYSCONF> ) {
-      if ($line =~ /ROOTDIR/) {
-          $line =~ s/^\s*ROOTDIR\s*=//g;
-          chomp($line);
-          $named_root_dir = $line;
-      }
-  }
-  close(SYSCONF);
-
-  if ($named_root_dir !~ m{^(/[-\w\./]+)$}) {
-      $self->error("Weird named root dir: $named_root_dir");
-      return;
-  }
-  $named_root_dir = $1;
+  my $named_root_dir = $self->getNamedRootDir();
+  return unless defined($named_root_dir);
 
   if ( $named_config->{serverConfig} ) {
 
-      $self->info("Checking $service configuration (".$named_root_dir."/etc/named.conf)...");
-      $server_changes = LC::Check::file($named_root_dir."/etc/named.conf",
+      $self->info("Checking $service configuration (".$named_root_dir.NAMED_CONFIG_FILE.")...");
+      $server_changes = LC::Check::file($named_root_dir.NAMED_CONFIG_FILE,
                                         contents    => encode_utf8($named_config->{serverConfig}),
                                         backup      => '.ncm-named',
                                         owner       => 0,
                                         mode        => 0644
                                        );
       unless (defined($server_changes)) {
-        $self->error('error updating '.$named_root_dir.'/etc/named.conf');
+        $self->error('error updating '.$named_root_dir.NAMED_CONFIG_FILE);
         return;
       }
   } elsif ( $named_config->{configfile} ) {
-      $self->info("Checking $service configuration (".$named_root_dir."/etc/named.conf) using ".$named_config->{configfile}."...");
-      $server_changes = LC::Check::file($named_root_dir."/etc/named.conf",
+      $self->info("Checking $service configuration (".$named_root_dir.NAMED_CONFIG_FILE.") using ".$named_config->{configfile}."...");
+      $server_changes = LC::Check::file($named_root_dir.NAMED_CONFIG_FILE,
                                         source      => $named_config->{configfile},
                                         backup      => '.ncm-named',
                                         owner       => 0,
                                         mode        => 0644
                                        );
       unless (defined($server_changes)) {
-        $self->error('error updating '.$named_root_dir.'/etc/named.conf from reference file '.$named_config->{configfile});
+        $self->error('error updating '.$named_root_dir.NAMED_CONFIG_FILE.' from reference file '.$named_config->{configfile});
         return;
       }
   }
@@ -236,6 +229,50 @@ sub Configure {
 
 
   return;
+}
+
+
+##########################################################################
+# Retrieve named root dir (used when named is chrooted) from sysconfig file
+# and check that it is a valid path, as defined by ROOTDIR variable.
+# If the sysconfig file is not present or the ROOTDIR variable is not
+# explicitely defined, assume that named is not run chrooted and return an
+# empty string.
+#
+# Return value : named root dir if defined or the empty string
+#
+sub getNamedRootDir {
+###########################################################################
+
+  my $self = shift;
+  my $named_root_dir = "";
+
+  my $fh = CAF::FileEditor->new(NAMED_SYSCONFIG, log => $self);
+  unless ( defined($fh) ) {
+      return "";
+  }
+  $fh->cancel();
+
+  while ( my $line = <$fh> ) {
+      if ($line =~ /^\s*ROOTDIR\s*=/) {
+          $line =~ s/^\s*ROOTDIR\s*=//g;
+          chomp($line);
+          $named_root_dir = $line;
+      }
+  }
+
+  $fh->close();
+
+  if ( !$named_root_dir ) {
+      $self->debug(1,"No named root directory definition found in ".NAMED_SYSCONFIG.", assume named is not chrooted");
+  } elsif  ( $named_root_dir =~ m{^['"]?(/[-\w\./]+)['"]?$}) {
+      $named_root_dir = $1;
+      $self->debug(1,"named root dir successfully retrieved from ".NAMED_SYSCONFIG.": $named_root_dir");
+  } else {
+      $self->error("Weird named root dir: $named_root_dir");
+  }
+
+  return $named_root_dir;
 }
 
 1; #required for Perl modules
