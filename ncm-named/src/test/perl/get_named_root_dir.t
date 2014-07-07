@@ -4,7 +4,7 @@ use warnings;
 use Test::More tests => 10;
 use Test::NoWarnings;
 use Test::Quattor;
-use NCM::Component::named qw(NAMED_SYSCONFIG);
+use NCM::Component::named;
 use Readonly;
 use CAF::Object;
 
@@ -71,35 +71,35 @@ This is a test suite for ncm-named getNamedRootDir() function.
 
 my $cmp = NCM::Component::named->new('named');
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_UNCOMMENTED_LINE);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_UNCOMMENTED_LINE);
 my $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"single uncommented line: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_UNCOMMENTED_LINE_QUOTED);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_UNCOMMENTED_LINE_QUOTED);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"single uncommented line with quotes: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_UNCOMMENTED_LINE_2QUOTED);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_UNCOMMENTED_LINE_2QUOTED);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"single uncommented line with double quotes: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_UNCOMMENTED_LINE_2QUOTED);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_UNCOMMENTED_LINE_2QUOTED);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"complete file with uncommented value: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_COMMENTED_LINE);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_COMMENTED_LINE);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,'',"single commented line: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_COMMENTED_LINE);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_COMMENTED_LINE);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,'',"complete file with commented value: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_UNCOMMENTED_LINE.TEST_SYSCONFIG_COMMENTED_LINE);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_UNCOMMENTED_LINE.TEST_SYSCONFIG_COMMENTED_LINE);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"complete file with commented value: named root directory has expected value");
 
-set_file_contents(NAMED_SYSCONFIG, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_COMMENTED_LINE.TEST_SYSCONFIG_UNCOMMENTED_LINE);
+set_file_contents($NAMED_SYSCONFIG_FILE, TEST_SYSCONFIG_HEADER.TEST_SYSCONFIG_COMMENTED_LINE.TEST_SYSCONFIG_UNCOMMENTED_LINE);
 $named_root_dir = $cmp->getNamedRootDir();
 is($named_root_dir,TEST_ROOTDIR_VALUE,"complete file with commented value: named root directory has expected value");
 

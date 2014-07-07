@@ -22,30 +22,32 @@ use vars qw(@ISA $EC);
 require Exporter;
 our @ISA = qw(NCM::Component Exporter);
 $EC=LC::Exception::Context->new->will_store_all;
+use Readonly;
 use NCM::Check;
-use Fcntl qw(SEEK_SET);
-use CAF::FileEditor;
-
-use EDG::WP4::CCM::Element;
-
+use Fcntl qw(SEEK_SET SEEK_END);
 use Encode qw(encode_utf8);
 
-use LC::File qw(copy);
-use LC::Check;
+use EDG::WP4::CCM::Element;
+use CAF::FileEditor qw(ENDING_OF_FILE);
+use CAF::FileWriter;
 use CAF::Process;
+use CAF::Service;
 
 local(*DTA);
 
 # To ease testing
-our @EXPORT = qw( NAMED_SYSCONFIG NCM_NAMED_CONFIG_BASE );
+our @EXPORT = qw( $NAMED_CONFIG_FILE $NAMED_SYSCONFIG_FILE $RESOLVER_CONF_FILE);
 
 # Define paths for convenience.
-use constant NAMED_CONFIG_FILE => '/etc/named.conf';
-use constant NAMED_SYSCONFIG => '/etc/sysconfig/named';
-use constant NCM_NAMED_CONFIG_BASE => "/software/components/named";
+Readonly our $NAMED_CONFIG_FILE => '/etc/named.conf';
+Readonly our $NAMED_SYSCONFIG_FILE => '/etc/sysconfig/named';
+Readonly our $RESOLVER_CONF_FILE => '/etc/resolv.conf';
 
-my $true = "true";
-my $false = "false";
+Readonly my $NAMED_SERVICE => "named";
+
+# From CAF::FileEditor
+use constant IO_SEEK_BEGIN => (0, SEEK_SET);
+
 
 ##########################################################################
 sub Configure {
@@ -53,10 +55,11 @@ sub Configure {
     my ($self,$config)=@_;
 
     # Get config into a perl Hash
-    my $named_config = $config->getElement(NCM_NAMED_CONFIG_BASE)->getTree();
+    my $named_config = $config->getElement($self->prefix())->getTree();
 
     # Check if named server must be enabled
 
+    # $server_enabled is a tri-state variable (undefined, 0 or 1)
     my $server_enabled;
     if ( defined($named_config->{start}) ) {
         if ( $named_config->{start} ) {
@@ -68,120 +71,128 @@ sub Configure {
 
 
     # Update resolver configuration file with appropriate servers
+
+    $self->info("Checking $RESOLVER_CONF_FILE...");
+    my $fh = CAF::FileEditor->new($RESOLVER_CONF_FILE,
+                                  backup => '.old',
+                                  log => $self,
+                                 );
     if ( $named_config->{servers} || ($server_enabled && $named_config->{use_localhost}) ) {
-        $self->info("Checking /etc/resolv.conf...");
-        my $changes += LC::Check::file("/etc/resolv.conf",
-                                       source => "/etc/resolv.conf",
-                                       backup => '.old',
-                                       code   => sub {
-                                                      return() unless @_;
-                                                      my @oldcontents = split /\n/, $_[0];
-                                                      my @newcontents;
-                                                      for my $line (@oldcontents) {
-                                                        if ($line !~ /^\s*nameserver\s+/i) {
-                                                          push @newcontents, $line;
-                                                        }
-                                                      };
-                                                      if ( $server_enabled && $named_config->{use_localhost} ) {
-                                                        push @newcontents, "nameserver 127.0.0.1\t\t# added by Quattor"
-                                                      }
-                                                      for my $named_server (@{$named_config->{servers}}) {
-                                                        push @newcontents, "nameserver $named_server\t\t# added by Quattor"
-                                                      }
-                                                      return(join "\n",@newcontents);
-                                                     }
-                                      );
-      if ( $named_config->{search} ) {
-          my @domains;
-          for my $domain (@{$named_config->{search}}) {
-              push @domains, $domain;
-          }
-          if ( @domains ){
-              $changes += NCM::Check::lines("/etc/resolv.conf",
-                                            linere => "^\\s*search\\s*.*",
-                                            goodre => "^\\s*search\\s*@domains",
-                                            good   => "search @domains");
-          }
-      }
-
-      # options
-      if ( $named_config->{options} ) {
-          my @options;
-          for my $option (@{$named_config->{options}}) {
-              push @options, $option;
-          }
-          if ( @options ){
-              $changes += NCM::Check::lines("/etc/resolv.conf",
-                                            linere => "^\\s*options\\s*.*",
-                                            goodre => "^\\s*options\\s*@options",
-                                            good   => "options @options");
-          }
-      }
-
-      unless (defined($changes)) {
-          $self->error('error modifying /etc/resolv.conf');
-          return;
-      }
+        $fh->remove_lines(q(^(?i)\s*nameserver\s+), 
+                          q(no good line));
+        if ( $server_enabled && $named_config->{use_localhost} ) {
+          print $fh "nameserver 127.0.0.1\t\t# added by Quattor\n";
+        }
+        for my $named_server (@{$named_config->{servers}}) {
+          print $fh "nameserver $named_server\t\t# added by Quattor\n";
+        }
+       
+       if ( $named_config->{search} ) {
+            $fh->add_or_replace_lines("^\\s*search\\s*.*",
+                                      "^\\s*search\\s*@{$named_config->{search}}",
+                                      "search @{$named_config->{search}}",
+                                      ENDING_OF_FILE,
+                                     );
+	        }
     }
 
-    # Ignore named startup configuration if startup script is not present (service not configured)
+    # options
+    if ( $named_config->{options} ) {
+        $fh->add_or_replace_lines("^\\s*options\\s*.*",
+                                  "^\\s*options\\s*$named_config->{options}",,
+                                  "options $named_config->{options}",
+                                  ENDING_OF_FILE,
+                                 );
+    }
 
-    my $service = "named";
-    my $cmd = CAF::Process->new(["/sbin/chkconfig", "--list", $service], log => $self);
+    $self->debug(1,"New $RESOLVER_CONF_FILE contents:\n".$fh->stringify()."\n");
+    my $changes = $fh->close();
+    unless (defined($changes)) {
+        $self->error("error modifying $RESOLVER_CONF_FILE");
+    }
+
+
+    # Do not do named configuration if startup script is not present (service not configured).
+    # FIXME: to be replaced by CAF::Service if/when it supports chkconfig actions
+
+    my $NAMED_SERVICE = "named";
+    my $cmd = CAF::Process->new(["/sbin/chkconfig", "--list", $NAMED_SERVICE], log => $self);
     $cmd->output();      # Also execute the command
     if ( $? ) {
-        $self->debug(1,"Service $service doesn't exist on current host. Skipping $service configuration.");
+        $self->debug(1,"Service $NAMED_SERVICE doesn't exist on current host. Skipping $NAMED_SERVICE configuration.");
         return(1);
     }
+
 
     # Update named configuration file with configuration embedded in the configuration
     # or with the reference file, if one of them has been specified
 
     my $server_changes;
     my $named_root_dir = $self->getNamedRootDir();
-    return unless defined($named_root_dir);
+    my $named_config_file_path = $named_root_dir.$NAMED_CONFIG_FILE;
+    my $named_config_contents;
 
+    $fh = CAF::FileWriter->new($named_config_file_path,
+                                   backup      => '.ncm-named',
+                                   owner       => 'root',
+                                   mode        => 0644,
+                                   log => $self,
+                                  );
     if ( $named_config->{serverConfig} ) {
-
-        $self->info("Checking $service configuration (".$named_root_dir.NAMED_CONFIG_FILE.")...");
-        $server_changes = LC::Check::file($named_root_dir.NAMED_CONFIG_FILE,
-                                          contents    => encode_utf8($named_config->{serverConfig}),
-                                          backup      => '.ncm-named',
-                                          owner       => 0,
-                                          mode        => 0644
-                                         );
-        unless (defined($server_changes)) {
-            $self->error('error updating '.$named_root_dir.NAMED_CONFIG_FILE);
-            return;
-        }
+        $self->info("Checking $NAMED_SERVICE configuration ($named_config_file_path)...");
+        $named_config_contents = encode_utf8($named_config->{serverConfig});
     } elsif ( $named_config->{configfile} ) {
-        $self->info("Checking $service configuration (".$named_root_dir.NAMED_CONFIG_FILE.") using ".$named_config->{configfile}."...");
-        $server_changes = LC::Check::file($named_root_dir.NAMED_CONFIG_FILE,
-                                          source      => $named_config->{configfile},
-                                          backup      => '.ncm-named',
-                                          owner       => 0,
-                                          mode        => 0644
-                                         );
-        unless (defined($server_changes)) {
-            $self->error('error updating '.$named_root_dir.NAMED_CONFIG_FILE.' from reference file '.$named_config->{configfile});
-            return;
-        }
+        $self->info("Checking $NAMED_SERVICE configuration ($named_config_file_path) using $named_config->{configfile}...");
+        my $src_fh = CAF::FileEditor->new($named_config->{configfile}, log => $self);
+        $src_fh->cancel();
+        $named_config_contents = $src_fh->stringify();
+        $src_fh->close();
+    }
+    print $fh $named_config_contents;
+    $server_changes = $fh->close();
+    unless (defined($server_changes)) {
+        $self->error('error updating $named_config_file_path');
+        return;
+    }
+
+    $self->updateServiceState($NAMED_SERVICE,$server_enabled,$server_changes);
+}
+
+
+##########################################################################
+# This function is used to update permanent and live state of the named
+# service. It accepts 3 arguments:
+#   - service_name: the name of the service
+#   - service_enabled: 1 if service is enable, 0 if disabled, undef if
+#                      undefined (nothing done)
+#   - config_changes: non-zero if a config file was changed. Will trig
+#                     a restart if the service is already running.
+#
+# FIXME: to be replaced by CAF::Service when/if a similar method is provided.
+#
+sub updateServiceState {
+##########################################################################
+
+    my ($self, $service_name, $service_enabled, $config_changes) = @_;
+    unless ( $service_name && defined($config_changes) ) {
+        $self->error("updateServiceState(): missing arguments (internal error)");
+        return;
     }
 
     # Enable named service
 
     my $reboot_state;
-    if ( $server_enabled ) {
-        $self->info("Enabling service $service...");
+    if ( $service_enabled ) {
+        $self->info("Enabling service $service_name...");
         $reboot_state = "on";
     } else {
-        $self->info("Disabling service $service...");
+        $self->info("Disabling service $service_name...");
         $reboot_state = "off";
     }
-    $cmd = CAF::Process->new(["/sbin/chkconfig", "--level", "345", $service, $reboot_state], log => $self);
+    my $cmd = CAF::Process->new(["/sbin/chkconfig", "--level", "345", $service_name, $reboot_state], log => $self);
     $cmd->output();      # Also execute the command
     if ( $? ) {
-        $self->error("Error defining service $service state for next reboot.");
+        $self->error("Error defining service $service_name state for next reboot.");
     }
 
     # Start named if enabled and not yet started.
@@ -189,23 +200,24 @@ sub Configure {
     # Restart after a configuration change if enabled and started.
     # Do nothing if the 'start' property is not defined.
 
-    $self->debug(1,"Checking if service $service is started...");
+    $self->debug(1,"Checking if service $service_name is started...");
     my $named_started = 1;
-    $cmd = CAF::Process->new(["/sbin/service", $service, "status"], log => $self);
+    # FIXME: to be replaced by CAF::Service if/when it offers a status() method
+    $cmd = CAF::Process->new(["/sbin/service", $service_name, "status"], log => $self);
     $cmd->output();      # Also execute the command
     if ( $? ) {
-        $self->debug(1,"Service $service not running.");
+        $self->debug(1,"Service $service_name not running.");
         $named_started = 0;
     } else {
-        $self->debug(1,"Service $service is running.");
+        $self->debug(1,"Service $service_name is running.");
     }
 
     my $action;
-    if ( defined($server_enabled) ) {
-        if ( $server_enabled ) {
+    if ( defined($service_enabled) ) {
+        if ( $service_enabled ) {
           if ( ! $named_started ) {
               $action = 'start';
-          } elsif ( $server_changes ) {
+          } elsif ( $config_changes ) {
               $action = 'restart';
           }
         } else {
@@ -216,15 +228,15 @@ sub Configure {
     }
 
     if ( $action ) {
-        $self->info("Doing a $action of service $service...");
-        $cmd = CAF::Process->new(["/sbin/service", $service, $action], log => $self);
-        my $cmd_output = $cmd->output();      # Also execute the command
+        $self->info("Doing a $action of service $service_name...");
+        my $srv = CAF::Service->new([$service_name], log => $self);
+        $srv->$action();
         if ( $? ) {
-            $self->debug(1,"Failed to update service $service state.\nError message: $cmd_output");
+            $self->debug(1,"Failed to update service $service_name state.");
             $named_started = 0;
         }
     } else {
-        $self->debug(1,"No need to start/stop/restart service $service");
+        $self->debug(1,"No need to start/stop/restart service $service_name");
     }
 
 
@@ -247,29 +259,30 @@ sub getNamedRootDir {
     my $self = shift;
     my $named_root_dir = "";
 
-    my $fh = CAF::FileEditor->new(NAMED_SYSCONFIG, log => $self);
+    my $fh = CAF::FileEditor->new($NAMED_SYSCONFIG_FILE, log => $self);
     unless ( defined($fh) ) {
+        $self->debug(1,"$NAMED_SYSCONFIG_FILE not found, assume named is not chrooted");
         return "";
     }
     $fh->cancel();
 
+    $fh->seek(IO_SEEK_BEGIN);
     while ( my $line = <$fh> ) {
-        if ($line =~ /^\s*ROOTDIR\s*=/) {
-            $line =~ s/^\s*ROOTDIR\s*=//g;
-            chomp($line);
-            $named_root_dir = $line;
+        if ($line =~ /^\s*ROOTDIR\s*=\s*(.*)(\s+#.*)*$/) {
+            chomp($1);
+            $named_root_dir = $1;
         }
     }
 
     $fh->close();
 
     if ( !$named_root_dir ) {
-        $self->debug(1,"No named root directory definition found in ".NAMED_SYSCONFIG.", assume named is not chrooted");
+        $self->debug(1,"No named root directory definition found in $NAMED_SYSCONFIG_FILE, assume named is not chrooted");
     } elsif  ( $named_root_dir =~ m{^['"]?(/[-\w\./]+)['"]?$}) {
         $named_root_dir = $1;
-        $self->debug(1,"named root dir successfully retrieved from ".NAMED_SYSCONFIG.": $named_root_dir");
+        $self->debug(1,"named root dir successfully retrieved from $NAMED_SYSCONFIG_FILE: $named_root_dir");
     } else {
-        $self->error("Weird named root dir: $named_root_dir");
+        $self->error("Named chroot directory (ROOTDIR in $NAMED_SYSCONFIG_FILE) is not a valid path: $named_root_dir");
     }
 
     return $named_root_dir;
