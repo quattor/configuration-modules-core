@@ -7,15 +7,12 @@ use Test::Quattor qw(simple);
 use NCM::Component::metaconfig;
 use Test::MockModule;
 use CAF::Object;
-use CAF::Service;
 
 eval { use JSON::XS; };
 
 plan skip_all => "Testing module not found in the system" if $@;
 
 $CAF::Object::NoAction = 1;
-*CAF::Service::restart = *CAF::Service::restart_linux_sysv;
-
 
 my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
