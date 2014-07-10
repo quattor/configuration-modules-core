@@ -8,8 +8,6 @@ use NCM::Component::pam;
 use Test::MockModule;
 use CAF::Object;
 
-plan skip_all => "Testing module not found in the system" if $@;
-
 $CAF::Object::NoAction = 1;
 
 my $mock = Test::MockModule->new('NCM::Component::pam');
