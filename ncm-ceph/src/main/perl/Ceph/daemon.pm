@@ -35,7 +35,9 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
-Readonly::Array our @SSH_COMMAND => ('/usr/bin/ssh', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r');
+Readonly::Array our @SSH_COMMAND => (
+'/usr/bin/ssh', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
+);
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
