@@ -268,6 +268,7 @@ sub write_ntpd_config {
 	if ($cfg->{enablelocalhostdebug}) {
 		print $fh "\n# Allow some debugging via ntpdc, but no modifications\n";
 		print $fh "restrict 127.0.0.1 nomodify notrap\n";
+		print $fh "restrict ::1 nomodify notrap\n";
 	}
 
 	# add our own clients in case we are a real "server"
