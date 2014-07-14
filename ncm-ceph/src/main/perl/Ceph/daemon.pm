@@ -49,8 +49,6 @@ sub get_host {
 # Gets the OSD map
 sub osd_hash {
     my ($self) = @_;
-    my $jstr = $self->run_ceph_command([qw(osd tree)]) or return 0;
-    my $osdtree = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
     my %osdparsed = ();
