@@ -42,7 +42,8 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
 
 Readonly::Array our @SSH_COMMAND => (
-'/usr/bin/ssh', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
+'/usr/bin/ssh', '-o', 'ControlMaster=auto', 
+'-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
 
 # Get the osd name from the host and path
