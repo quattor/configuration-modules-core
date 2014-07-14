@@ -23,6 +23,13 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Nathan Dimmock</name>
+      <email>nathan.dimmock@morganstanley.com</email>
+    </developer>
+  </developers>
+
   <contributors>
     <contributor>
       <name>Nick Williams</name>
@@ -31,18 +38,13 @@
 	<role>author</role>
       </roles>
     </contributor>
+    <contributor>
+      <name>Nathan Dimmock</name>
+      <email>nathan.dimmock@morganstanley.com</email>
+      <roles>
+        <role>author</role>
+      </roles>
+    </contributor>
   </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>
