@@ -41,10 +41,12 @@ use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
 
+Readonly::Array our @SSH_COMMAND => ('/usr/bin/ssh', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r');
+
 # Get the osd name from the host and path
 sub get_osd_name {
     my ($self, $host, $location) = @_;
-    my @catcmd = ('/usr/bin/ssh', $host, 'cat');
+    my @catcmd = (@SSH_COMMAND, $host, 'cat');
     my $id = $self->run_command_as_ceph([@catcmd, "$location/whoami"]) or return 0;
     chomp($id);
     $id = $id + 0; # Only keep the integer part
@@ -246,6 +248,7 @@ sub quat_crush {
     $crushmap->{types} = \@newtypes;
 
     my $devices = [];
+    $self->info('Verifying information and merging into crushmap (This can take a while)..');
     if (!$self->crush_merge($crushmap->{buckets}, $osdhosts, $devices)){
         $self->error("Could not merge the required information into the crushmap");
         return 0;

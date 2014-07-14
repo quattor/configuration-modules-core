@@ -35,7 +35,7 @@ set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump",
     $data::OSDDJSON);
 set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree", 
     $data::OSDTJSON);
-my $basestr = 'su - ceph -c /usr/bin/ssh 10.141.8.180 ';
+my $basestr = 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r 10.141.8.180 ';
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};

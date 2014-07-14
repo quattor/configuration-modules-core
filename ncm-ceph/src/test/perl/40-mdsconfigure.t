@@ -42,7 +42,7 @@ my $cephh = $cmp->mds_hash();
 cmp_deeply($cephh, \%data::MDSS);
 my $quath = $cluster->{mdss};
 
-my $donecmd = 'su - ceph -c /usr/bin/ssh ceph002.cubone.os test -e /var/lib/ceph/mds/ceph-ceph002/done';
+my $donecmd = 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph002.cubone.os test -e /var/lib/ceph/mds/ceph-ceph002/done';
 
 set_command_status($donecmd,1);
 set_desired_err($donecmd,'');

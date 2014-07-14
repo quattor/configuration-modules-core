@@ -35,6 +35,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
+Readonly::Array our @SSH_COMMAND => ('/usr/bin/ssh', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r');
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
@@ -98,7 +99,7 @@ sub get_osd_location {
     }   
     
     # TODO: check if physical exists?
-    my @catcmd = ('/usr/bin/ssh', $host, 'cat');
+    my @catcmd = (@SSH_COMMAND, $host, 'cat');
     my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
@@ -116,7 +117,7 @@ sub get_osd_location {
             "Disk value: $ph_fsid");
         return ;
     }
-    my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
+    my @loccmd = (@SSH_COMMAND, $host, '/bin/readlink');
     my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
     my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]);
     chomp($osdloc);
@@ -130,16 +131,16 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m{^/dev/}){
-        my $cmd = ['/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc];
+        my $cmd = [@SSH_COMMAND, $host, 'sudo', '/usr/bin/file', '-s', $loc];
         my $output = $self->run_command_as_ceph($cmd) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
             $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
     } else {
-        my $mkdircmd = ['/usr/bin/ssh', $host, 'sudo', '/bin/mkdir', '-p', $loc];
+        my $mkdircmd = [@SSH_COMMAND, $host, 'sudo', '/bin/mkdir', '-p', $loc];
         $self->run_command_as_ceph($mkdircmd); 
-        my $lscmd = ['/usr/bin/ssh', $host, 'ls', '-1', $loc];
+        my $lscmd = [@SSH_COMMAND, $host, 'ls', '-1', $loc];
         my $lsoutput = $self->run_command_as_ceph($lscmd) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines) {
@@ -241,6 +242,7 @@ sub process_osds {
     my ($self, $qosds, $cmdh) = @_;
     my $qflosds = $self->flatten_osds($qosds);
     $self->debug(5, 'OSD lay-out', Dumper($qosds));
+    $self->info('Building osd information hash, this can take a while..');
     my $cosds = $self->osd_hash() or return 0;
     return $self->ceph_quattor_cmp('osd', $qflosds, $cosds, $cmdh);
 }
@@ -275,7 +277,7 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon, $cmdh);
         
-        my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 
+        my @donecmd = (@SSH_COMMAND, $quatmon->{fqdn}, 
                        'test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done" );
         if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
             # Node reinstalled without first destroying it
@@ -366,7 +368,7 @@ sub config_mds {
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
-        my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
+        my @donecmd = (@SSH_COMMAND, $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
         my $mds_exists = $self->run_command_as_ceph([@donecmd]);
         if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
             if ($daemonh->{up} && ($name eq $self->{hostname})) {
@@ -418,9 +420,9 @@ sub config_daemon {
 sub do_deploy {
     my ($self, $is_deploy, $cmdh) = @_;
     if ($is_deploy){ #Run only on deploy host(s)
-        $self->info("Running ceph-deploy commands.");
+        $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
         while (my $cmd = shift @{$cmdh->{deploy_cmds}}) {
-            $self->debug(1,@$cmd);
+            $self->info('Running deploy command: ',@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {
