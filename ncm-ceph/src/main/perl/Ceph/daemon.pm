@@ -35,10 +35,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
-Readonly::Array our @SSH_COMMAND => (
-'/usr/bin/ssh', '-o', 'ControlMaster=auto', 
-'-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
-);
+Readonly::Array my @SSH_COMMAND => @NCM::Component::Ceph::commands::SSH_COMMAND;
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
@@ -425,7 +422,7 @@ sub do_deploy {
     if ($is_deploy){ #Run only on deploy host(s)
         $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
         while (my $cmd = shift @{$cmdh->{deploy_cmds}}) {
-            $self->info('Running deploy command: ',@$cmd);
+            $self->debug(1, 'Running deploy command: ',@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {

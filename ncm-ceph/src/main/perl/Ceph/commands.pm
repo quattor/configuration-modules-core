@@ -32,6 +32,11 @@ use File::Basename;
 use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
 
+use Readonly;
+Readonly::Array our @SSH_COMMAND => (
+'/usr/bin/ssh', '-o', 'ControlMaster=auto', 
+'-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
+);
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;
