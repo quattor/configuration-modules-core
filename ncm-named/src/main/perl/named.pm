@@ -229,7 +229,9 @@ sub updateServiceState {
 
     if ( $action ) {
         $self->info("Doing a $action of service $service_name...");
-        my $srv = CAF::Service->new([$service_name], log => $self);
+        my %opt;
+        $opt{timeout} = 0;
+        my $srv = CAF::Service->new([$service_name], log => $self, %opt);
         $srv->$action();
         if ( $? ) {
             $self->debug(1,"Failed to update service $service_name state.");
