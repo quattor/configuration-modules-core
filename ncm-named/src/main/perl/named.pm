@@ -147,7 +147,7 @@ sub Configure {
     print $fh $named_config_contents;
     $server_changes = $fh->close();
     unless (defined($server_changes)) {
-        $self->error('error updating $named_config_file_path');
+        $self->error("error updating $named_config_file_path");
         return;
     }
 
