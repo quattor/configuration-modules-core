@@ -24,7 +24,6 @@ our @ISA = qw(NCM::Component Exporter);
 $EC=LC::Exception::Context->new->will_store_all;
 use Readonly;
 use NCM::Check;
-use Fcntl qw(SEEK_SET SEEK_END);
 use Encode qw(encode_utf8);
 
 use EDG::WP4::CCM::Element;
@@ -44,9 +43,6 @@ Readonly our $NAMED_SYSCONFIG_FILE => '/etc/sysconfig/named';
 Readonly our $RESOLVER_CONF_FILE => '/etc/resolv.conf';
 
 Readonly my $NAMED_SERVICE => "named";
-
-# From CAF::FileEditor
-use constant IO_SEEK_BEGIN => (0, SEEK_SET);
 
 
 ##########################################################################
@@ -268,7 +264,7 @@ sub getNamedRootDir {
     }
     $fh->cancel();
 
-    $fh->seek(IO_SEEK_BEGIN);
+    $fh->seek_begin();
     while ( my $line = <$fh> ) {
         if ($line =~ /^\s*ROOTDIR\s*=\s*(.*)(\s+#.*)*$/) {
             chomp($1);
