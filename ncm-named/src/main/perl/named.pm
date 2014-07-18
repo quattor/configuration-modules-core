@@ -32,6 +32,8 @@ use CAF::FileWriter;
 use CAF::Process;
 use CAF::Service;
 
+our $NoActionSupported = 1;
+
 local(*DTA);
 
 # To ease testing
@@ -102,8 +104,9 @@ sub Configure {
     }
 
     $self->debug(1,"New $RESOLVER_CONF_FILE contents:\n".$fh->stringify()."\n");
+    my $update_disabled = $fh->noAction();
     my $changes = $fh->close();
-    unless (defined($changes)) {
+    unless ( defined($changes) || $update_disabled ) {
         $self->error("error modifying $RESOLVER_CONF_FILE");
     }
 
@@ -116,7 +119,7 @@ sub Configure {
     $cmd->output();      # Also execute the command
     if ( $? ) {
         $self->debug(1,"Service $NAMED_SERVICE doesn't exist on current host. Skipping $NAMED_SERVICE configuration.");
-        return(1);
+        return;
     }
 
 
@@ -145,8 +148,9 @@ sub Configure {
         $src_fh->close();
     }
     print $fh $named_config_contents;
+    $update_disabled = $fh->noAction();
     $server_changes = $fh->close();
-    unless (defined($server_changes)) {
+    unless ( defined($server_changes) || $update_disabled ) {
         $self->error("error updating $named_config_file_path");
         return;
     }
@@ -170,7 +174,7 @@ sub updateServiceState {
 ##########################################################################
 
     my ($self, $service_name, $service_enabled, $config_changes) = @_;
-    unless ( $service_name && defined($config_changes) ) {
+    unless ( $service_name ) {
         $self->error("updateServiceState(): missing arguments (internal error)");
         return;
     }
