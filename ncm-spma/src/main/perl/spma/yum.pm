@@ -102,11 +102,11 @@ sub generate_reverse_proxy_urls
 
     my @l;
     foreach my $pt (@$prots) {
-	foreach my $px (@proxies) {
+        foreach my $px (@proxies) {
             my $url = $pt->{url};
-	    $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
-	    push(@l, { url => $url });
-	}
+            $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
+            push(@l, { url => $url });
+        }
     }
     return \@l;
 }
@@ -165,6 +165,82 @@ sub generate_repos
 
 =pod
 
+=head2 C<execute_yum_command_core>
+
+A wrapper function around the C<yum> command, that has the same arguments
+as the C<execute_yum_command> function, but returns a 5 element tuple with 
+as first element the noaction flag, followed by the wether or not the yum 
+command was succesful (based upon additional error handling),  
+stdout, stderr and an optional custom error message.
+
+It is provided to be able to do postprocessing and/or take additional actions 
+based on the returned tuple; for most cases, you should look at 
+C<execute_yum_command>.  
+
+Yum-based commands require annoying error handling: they may exit 0
+even upon errors.  In those cases, we have to detect errors by looking
+at stderr.  This method just encapsulates all that logic, keeping the
+callers clean.
+
+=cut
+
+
+sub execute_yum_command_core
+{
+    my ($self, $command, $why, $keeps_state, $stdin) = @_;
+
+    my ($out, $err, @missing, $errmsg);
+
+    my $success = 1;
+
+    my %opts = ( log => $self,
+          stdout => \$out,
+          stderr => \$err,
+          keeps_state => $keeps_state);
+
+    $opts{stdin} = $stdin if defined($stdin);
+
+    my $cmd = CAF::Process->new($command, %opts);
+
+    $cmd->execute();
+    $self->verbose("$why output: $out");
+    if ($? ||
+        $err =~ m{^(?:Error|Failed|
+                      (?:Could \s+ not \s+ match)|
+                      (?:Transaction \s+ encountered.*error)|
+                      (?:Unknown \s+ group \s+  package \s+ type) |
+                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
+        (@missing = ($out =~ m{^No package (.*) available}omg))) {
+
+        $success = 0;        
+        if (@missing) {
+            $errmsg= "Missing packages: ". join(" ", @missing);
+        }
+    }
+
+    return ($cmd->{NoAction}, $success, $out, $err, $errmsg); 
+}
+
+# what execute_yum_command does upon success
+sub execute_yum_command_success
+{
+    my ($self, $noaction, $out) = @_;
+    return $noaction || $out;
+}
+
+# what execute_yum_command does upon failure
+sub execute_yum_command_fail
+{
+    my ($self, $why, $out, $err, $errmsg) = @_;
+
+    $self->warn("Command output: $out");
+    $self->error("Failed $why: $err");
+    $self->error($errmsg) if $errmsg;
+    return undef;
+}
+
+=pod
+
 =head2 C<execute_yum_command>
 
 Executes C<$command> for reason C<$why>. Optionally with standard
@@ -176,46 +252,20 @@ upon success or C<undef> in case of error.  If the command is not
 executed the method always returns a true value (usually 1, but don't
 rely on this!).
 
-Yum-based commands require annoying error handling: they may exit 0
-even upon errors.  In those cases, we have to detect errors by looking
-at stderr.  This method just encapsulates all that logic, keeping the
-callers clean.
-
 =cut
 
 sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin) = @_;
 
-    my (%opts, $out, $err, @missing);
+    my ($noaction, $success, $out, $err, $errmsg) = $self->execute_yum_command_core($command, $why, $keeps_state, $stdin);
 
-    %opts = ( log => $self,
-	      stdout => \$out,
-	      stderr => \$err,
-	      keeps_state => $keeps_state);
-
-    $opts{stdin} = $stdin if defined($stdin);
-
-    my $cmd = CAF::Process->new($command, %opts);
-
-    $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out");
-    if ($? ||
-        $err =~ m{^(?:Error|Failed|
-                      (?:Could \s+ not \s+ match)|
-                      (?:Transaction \s+ encountered.*error)|
-                      (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
-        (@missing = ($out =~ m{^No package (.*) available}omg))) {
-        $self->warn("Command output: $out");
-        $self->error("Failed $why: $err");
-        if (@missing) {
-            $self->error("Missing packages: ", join(" ", @missing));
-        }
-        return undef;
+    if ($success) {
+        return $self->execute_yum_command_success($noaction , $out);
+    } else {
+        return $self->execute_yum_command_fail($why, $out, $err, $errmsg);
     }
-    return $cmd->{NoAction} || $out;
 }
 
 
@@ -229,8 +279,8 @@ sub schedule
 
     my @ls;
     foreach my $pkg (@$target) {
-	push(@ls, $pkg);
-	$ls[-1] =~ s{;}{.};
+        push(@ls, $pkg);
+        $ls[-1] =~ s{;}{.};
     }
     return  sprintf("%s %s\n", $op, join(" ", @ls));
 }
@@ -241,11 +291,11 @@ sub installed_pkgs
     my $self = shift;
 
     my $cmd = CAF::Process->new(RPM_QUERY, keeps_state => 1,
-				log => $self);
+                                log => $self);
 
     my $out = $cmd->output();
     if ($?) {
-	return undef;
+        return undef;
     }
     # We don't consider gpg-pubkeys, which won't come from any
     # downloaded RPM, anyways.
@@ -282,18 +332,18 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
-        if (!$name) {
-            $self->error("Invalid package name: ", unescape($pkg));
-            return undef;
+        my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
+            if (!$name) {
+                $self->error("Invalid package name: ", unescape($pkg));
+                return undef;
+            }
+        if (%$st) {
+            while (my ($ver, $archs) = each(%$st)) {
+                push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
+            }
+        } else {
+            push(@pkl, $name);
         }
-	if (%$st) {
-	    while (my ($ver, $archs) = each(%$st)) {
-		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
-	    }
-	} else {
-	    push(@pkl, $name);
-	}
     }
     return Set::Scalar->new(@pkl);
 }
@@ -425,8 +475,8 @@ sub packages_to_remove
                                 log => $self)->output();
 
     if ($?) {
-	$self->error ("Unable to find leaf packages");
-	return;
+        $self->error ("Unable to find leaf packages");
+        return;
     }
 
     # The leaf set doesn't contain the header lines, which are just
@@ -437,10 +487,10 @@ sub packages_to_remove
 
     my $false_positives = Set::Scalar->new();
     foreach my $pkg (@$candidates) {
-	my $name = (split(/;/, $pkg))[0];
-	if ($wanted->has($name)) {
-	    $false_positives->insert($pkg);
-	}
+        my $name = (split(/;/, $pkg))[0];
+        if ($wanted->has($name)) {
+            $false_positives->insert($pkg);
+        }
     }
 
     return $candidates-$false_positives;
@@ -455,16 +505,16 @@ sub spare_deps_whatreq
     my @to_rm;
 
     foreach my $pk (@$rm) {
-	my $arg = $pk;
-	$arg =~ s{;}{.};
-	my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
-						  "determine what requires $pk", 1);
-	return 0 if !defined($whatreqs);
-	foreach my $wr (split("\n", $whatreqs)) {
-	    if ($install->has($wr)) {
-		push(@to_rm, $pk);
-	    }
-	}
+        my $arg = $pk;
+        $arg =~ s{;}{.};
+        my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+                              "determine what requires $pk", 1);
+        return 0 if !defined($whatreqs);
+        foreach my $wr (split("\n", $whatreqs)) {
+            if ($install->has($wr)) {
+                push(@to_rm, $pk);
+            }
+        }
     }
 
     $rm->delete(@to_rm);
@@ -481,12 +531,12 @@ sub spare_deps_requires
     my (@pkgs);
 
     foreach my $pkg (@$install) {
-	$pkg =~ s{;}{.};
-	push(@pkgs, $pkg);
+        $pkg =~ s{;}{.};
+        push(@pkgs, $pkg);
     }
 
     my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
-					  "dependencies of install candidates", 1);
+                      "dependencies of install candidates", 1);
 
     return 0 if !defined $deps;
 
@@ -519,10 +569,10 @@ sub spare_dependencies
     # things.
     if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
         $self->debug(3, "Sparing dependencies in the whatreq path");
-	return $self->spare_deps_whatreq($rm, $install);
+        return $self->spare_deps_whatreq($rm, $install);
     } else {
         $self->debug(3, "Sparing dependencies in the requires path");
-	return $self->spare_deps_requires($rm, $install);
+        return $self->spare_deps_requires($rm, $install);
     }
 }
 
@@ -544,8 +594,8 @@ sub distrosync
     my ($self, $run) = @_;
 
     if (!$run) {
-	$self->info("Skipping yum distro-sync");
-	return 1;
+        $self->info("Skipping yum distro-sync");
+        return 1;
     }
 
     return $self->execute_yum_command([YUM_DISTRO_SYNC], "synchronisation with upstream");
@@ -575,24 +625,92 @@ sub update_pkgs
     my $installed = $self->installed_pkgs();
     defined($installed) or return 0;
 
-    my ($tx, $to_rm, $to_install);
+    my ($to_rm, $to_install);
 
     $to_install = $wanted-$installed;
 
     if (!$allow_user_pkgs) {
-	$to_rm = $self->packages_to_remove($wanted);
-	defined($to_rm) or return 0;
-	$self->spare_dependencies($to_rm, $to_install);
-	$tx = $self->schedule(REMOVE, $to_rm);
+        $to_rm = $self->packages_to_remove($wanted);
+        defined($to_rm) or return 0;
+        $self->spare_dependencies($to_rm, $to_install);
+    }
+
+    $self->remove_and_install($run, $to_rm, $to_install) or return 0;
+
+    return 1;
+}
+
+# create and apply the transactions to remove and install packages 
+sub remove_and_install 
+{
+    my ($self, $run, $to_rm, $to_install)= @_;
+
+    my $tx;
+    if (defined($to_rm)) {
+        $tx .= $self->schedule(REMOVE, $to_rm);
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
 
     if ($tx) {
         $tx .= $self->solve_transaction($run);
-        $self->apply_transaction($tx) or return 0;
-    }
+        
+        # instead of $self->apply_transaction($tx)
+        $self->debug(5, "Running transaction: $tx");
+        my $why = "running transaction";
+        my ($noaction, $success, $out, $err, $errmsg) = $self->execute_yum_command_core([YUM_CMD], $why, 1, $tx);
+        if ($success) {
+            # exit with apply_transaction result from execute_yum_command_success 
+            return defined($self->execute_yum_command_success($noaction, $out)); 
+        } else {
+            # look for certain patterns in the stdout/stderr and try again
+            
+            # pattern 1: 
+            #   package X has a dependency Y which has a dependency Z
+            #   X has to be installed, but Z was selected for removal
+            #   (due to non-recursive dependency lookup (which would 
+            #    be too slow to perform each time))
+            #   example error output:   
+            #   Error: Package: usermode-1.111-5.el7.x86_64 (c7x_x86_64)
+            #       Requires: passwd
+            #       Removing: passwd-0.79-4.el7.x86_64 (@anaconda)
+            #           passwd = 0.79-4.el7
+            if (defined($to_rm)) {
+                # the \.(\w+) should match the arch 
+                my $regexp = qr{^Error:\s*Package:\s*.*\s*$^\s*Requires:\s*(\S+)\s*$^\s*Removing:\s*\1-\d\S*\.(\w+)(?:\s+\(|\s*$)}m;
+                    
+                my $found = Scalar::Set->new;
+                while ($err =~ m/$regexp/g) {
+                    my $pkg = "$1.$2"; # NAME.ARCH (repoquery format is transformed from ; -> .)
+                    next if $found->has($pkg);
 
+                    my $dbgmsg = "Found a matching Requires/Removing for $pkg,";
+                    if ($to_rm->has($pkg)) {
+                        $self->debug(2, '$dbgmsg removing it from to_rm set.');
+                        $to_rm->delete($pkg);
+                    } else {
+                        $self->debug(2, '$dbgmsg but is not part of the to_rm set.');
+                    }
+                    $found->insert($pkg);
+                }
+                
+                # redo the transaction
+                $tx = $self->schedule(REMOVE, $to_rm);
+                $tx .= $self->schedule(INSTALL, $to_install);
+                if ($tx) {
+                    $tx .= $self->solve_transaction($run);
+            
+                    return $self->apply_transaction($tx);
+                };
+                
+            } 
+            
+            # If you get here, exit with apply_transaction result from execute_yum_command_fail 
+            return defined($self->execute_yum_command_fail($why, $out, $err, $errmsg)); 
+            
+        }
+    }
+    
     return 1;
 }
 
@@ -605,11 +723,11 @@ sub configure_yum
     my $fh = CAF::FileEditor->new($cfgfile, log => $self);
 
     $fh->add_or_replace_lines(CLEANUP_ON_REMOVE,
-			      CLEANUP_ON_REMOVE. q{\s*=\s*1},
-			      "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
+                  CLEANUP_ON_REMOVE. q{\s*=\s*1},
+                  "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
     $fh->add_or_replace_lines(OBSOLETE,
-			      OBSOLETE . "\\s*=\\s*$obsolete",
-			      "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
+                  OBSOLETE . "\\s*=\\s*$obsolete",
+                  "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
     $fh->close();
 }
 
@@ -637,10 +755,10 @@ sub Configure
     $self->initialize_repos_dir(REPOS_DIR) or return 0;
     $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
     $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE, $t->{proxyhost},
-			  $t->{proxytype}, $t->{proxyport}) or return 0;
+              $t->{proxytype}, $t->{proxyport}) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
     $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs})
-	or return 0;
+        or return 0;
     return 1;
 }
 
