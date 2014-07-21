@@ -26,11 +26,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::grub::NoActionSupported = 1;
 
-# Magic version used to work around the fact this component
-# is not properly handling an undefined version value.
-# FIXME: to be removed as soon as this component has been fixed
-#        and the template library has been updated
-use constant KERNEL_MAGIC_VERSION => 'YUM-managed';
+use constant KERNELPATH_CONFIG => '/system/kernel/version';
 
 Readonly::Scalar my $GRUBCONF => '/boot/grub/grub.conf';
 
@@ -89,21 +85,13 @@ sub Configure {
     $prefix = $config->getValue("/software/components/grub/prefix");
   }
   my $kernelname='vmlinuz';
-  my $kernelpath='/system/kernel/version';
-  unless ($config->elementExists($kernelpath)) {
-    $self->error("cannot get $kernelpath");
-    return;
-  }
-  my $kernelversion=$config->getValue($kernelpath);
+  my $kernelversion = '';
+  if ( $config->elementExists(KERNELPATH_CONFIG) ) {
+      $kernelversion = $config->getValue(KERNELPATH_CONFIG);
+  };
   my $fulldefaultkernelpath;
-  # To workaround a bug in ncm-grub < 14.6.0, version used to be defined to
-  # YUM-managed when the default kernel should not be managed by ncm-grub.
-  # The intent is to remove the use of this magic version in favor of an empty
-  # string as ncm-grub requires the version to be defined because it registers for
-  # changes to this property. To help with the transition, temporarily support both.
-  # FIXME: remove the support for the magic version (14.8?).
-  if ( !$kernelversion || ($kernelversion eq  KERNEL_MAGIC_VERSION) ) {
-      $kernelversion = '';
+  # An undefined kernel version or an empty string are treated equally
+  if ( !$kernelversion ) {
       $self->debug(1,"No kernel version defined: default kernel will not be set");
   } else {
       $fulldefaultkernelpath=$prefix.'/'.$kernelname.'-'.$kernelversion;
@@ -488,7 +476,7 @@ sub Configure {
   unless ($NoAction) {
       if ( !defined($fulldefaultkernelpath) || ($oldkernel eq $fulldefaultkernelpath) ) {
           my $kernel_version_str = "($kernelversion)" if $kernelversion;
-          $self->info("correct kernel $kernel_version_str already configured");
+          $self->info("correct kernel $kernelversion already configured");
           $fulldefaultkernelpath = $oldkernel unless defined($fulldefaultkernelpath);
       } else {
           my $s=`$grubby --set-default $fulldefaultkernelpath`;
