@@ -1,10 +1,9 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
-# http://eu-datagrid.web.cern.ch/eu-datagrid/license.html. 
-# 
-# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS 
+# ${build-info}
+#
+# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
 # CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
 #
 # THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -26,8 +25,8 @@
 ################################################################################
 # Coding style: emulate <TAB> characters with 4 spaces, thanks!
 ################################################################################
-        
-        
+
+
 unique template components/download/config-rpm;
 
 include { "components/download/schema" };
@@ -38,7 +37,7 @@ include { "pan/functions" };
 "/software/components/download/active"   ?= true ;
 "/software/components/download/dispatch" ?= false ;
 "/software/components/download/version"  = '${no-snapshot-version}';
-"/software/components/download/release"  = "1";
+"/software/components/download/release"  = "${rpm.release}";
 
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

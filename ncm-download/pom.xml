@@ -1,35 +1,32 @@
+<?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>download</artifactId>
-
   <packaging>pom</packaging>
-  <version>14.6.0-rc3-SNAPSHOT</version>
+  <version>14.6.1-SNAPSHOT</version>
   <name>Morgan Stanley ncm-download component</name>
-
-
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
     <version>1.35</version>
   </parent>
-
   <licenses>
     <license>
       <name>EU Datagrid</name>
       <url>http://opensource.org/licenses/EUDatagrid</url>
     </license>
   </licenses>
-
   <developers>
     <developer>
       <name>Nick Williams</name>
       <email>nick.williams@morganstanley.com</email>
     </developer>
+    <developer>
+      <name>Mark Wilson</name>
+      <email>Mark.Wilson@morganstanley.com</email>
+    </developer>
   </developers>
-
   <contributors>
     <contributor>
       <name>Luis Fernando Muñoz Mejías</name>
@@ -40,5 +37,15 @@
       <email>Wouter.Depypere@UGent.be</email>
     </contributor>
   </contributors>
-
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.quattor.pan</groupId>
+          <artifactId>panc-maven-plugin</artifactId>
+          <version>9.0.0-RC3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
