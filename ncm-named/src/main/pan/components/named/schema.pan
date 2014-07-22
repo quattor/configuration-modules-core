@@ -6,9 +6,6 @@
 #
 # type definition components/named
 #
-#
-#
-#
 ############################################################
 
 declaration template components/named/schema;
