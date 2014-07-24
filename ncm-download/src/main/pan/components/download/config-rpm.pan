@@ -22,10 +22,6 @@
 # THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
 # TERMS THAT MAY APPLY.
 #
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
-
 
 unique template components/download/config-rpm;
 
@@ -33,11 +29,8 @@ include { "components/download/schema" };
 
 include { "pan/functions" };
 
-# standard component settings
-"/software/components/download/active"   ?= true ;
-"/software/components/download/dispatch" ?= false ;
+# standard rpm settings
 "/software/components/download/version"  = '${no-snapshot-version}';
 "/software/components/download/release"  = "${rpm.release}";
 
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
-

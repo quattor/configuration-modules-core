@@ -22,9 +22,6 @@
 # THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
 # TERMS THAT MAY APPLY.
 #
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
 
 declaration template components/download/schema;
 
