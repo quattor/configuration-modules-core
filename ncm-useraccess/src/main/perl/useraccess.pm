@@ -26,6 +26,7 @@ use LC::Exception qw (throw_error);
 use LWP::UserAgent;
 use CAF::FileWriter;
 use CAF::FileEditor;
+use File::stat;
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -146,7 +147,13 @@ sub initialize_user
     if (! -d "$ssh_dir") {
         mkdir("$ssh_dir", 0700);
         chown($uid, $gid, $ssh_dir);
-    }
+    } else {
+        my $stat = stat($ssh_dir);
+        if ($stat->uid != $uid) {
+            chown($uid, $gid, $ssh_dir);
+            chmod 0700, $ssh_dir;
+        }
+    }    
     return ($uid, $gid, $home);
 }
 
