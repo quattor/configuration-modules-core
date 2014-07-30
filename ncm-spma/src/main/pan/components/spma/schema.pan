@@ -8,6 +8,7 @@ declaration template components/spma/schema;
 include 'quattor/schema';
 include 'components/spma/functions';
 include 'components/spma/ips/schema';
+include 'components/spma/yum/schema';
 
 ############################################################
 #
@@ -60,6 +61,7 @@ type boolean_yes_no = string with match (SELF, '^(yes|no)$');
 type component_spma_type = {
     include structure_component
     include component_spma_ips
+    include component_spma_yum
     "tmpdir"        ? string # path to the temporary directory
     "unescape"      ? boolean # use escape function
     "trailprefix"   ? boolean # if no escape function, use underscore prefix
