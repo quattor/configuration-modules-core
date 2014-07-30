@@ -658,8 +658,34 @@ sub Configure
                                           $t->{proxyport});
     defined($purge_caches) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
-    $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs}, $purge_caches)
-        or return 0;
+    
+    if(! $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs}, $purge_caches)) {
+        if ($t->{userpkgs}) {
+            $self->debug(1, "update_pkgs failed, userpkgs allowed");
+            return 0;
+        } elsif ($t->{userpkgs_retry}) {
+            $self->debug(1, "userpkgs_retry: 1st update_pkgs failed, going to retry with userpkgs allowed"); 
+            if($self->update_pkgs($pkgs, $groups, $t->{run}, 1, $purge_caches)) {
+                $self->debug(1, "userpkgs_retry: 2nd update_pkgs with userpkgs allowed ok, trying 3rd"); 
+                if($self->update_pkgs($pkgs, $groups, $t->{run}, 0, $purge_caches)) {
+                    # log ok
+                    $self->debug(1, "userpkgs_retry: 3rd update_pkgs with userpkgs not allowed ok."); 
+                } else {
+                    # log failure in 3rd step
+                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs not allowed failed."); 
+                    return 0;
+                };
+            } else {
+                # log failure in 2nd step
+                $self->error("userpkgs_retry: 2nd update_pkgs with userpkgs allowed failed."); 
+                return 0;
+            };
+        } else {
+            # log failure, no retry enabled 
+            $self->debug(1, "update_pkgs failed, userpkgs not allowed, no retry enabled");
+            return 0;
+        }
+    }
     return 1;
 }
 
