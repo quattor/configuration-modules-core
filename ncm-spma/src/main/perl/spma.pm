@@ -35,8 +35,9 @@ sub call_entry_point
     my $packager;
     if (defined($t->{packager})) {
         $packager = $t->{packager};
-        $packager =~ s/[^\w]//g;
-        if ($packager ne $t->{packager}) {
+        if ($packager =~ m/^(\w+)$/ && $1 eq $t->{packager}) {
+            $packager = $1;
+        } else {
             $self->error("Packager name contains illegal characters: " .
                          $t->{packager});
             return undef;
