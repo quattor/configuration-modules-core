@@ -188,8 +188,10 @@ callers clean.
 
 sub execute_yum_command
 {
-    my ($self, $command, $why, $keeps_state, $stdin, $error_is_warn) = @_;
+    my ($self, $command, $why, $keeps_state, $stdin, $error_logger) = @_;
 
+    $error_logger = "error" if ($error_logger !~ m/^(error|warn|info|verbose)$/);
+    
     my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
@@ -212,19 +214,9 @@ sub execute_yum_command
                       (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
         (@missing = ($out =~ m{^No package (.*) available}omg))) {
         $self->warn("Command output: $out");
-        my $msg = "Failed $why: $err";
-        if ($error_is_warn) {
-            $self->warn($msg);
-        } else {
-            $self->error($msg);
-        }
+        $self->$error_logger("Failed $why: $err");
         if (@missing) {
-            $msg = "Missing packages: ". join(" ", @missing); 
-            if ($error_is_warn) {
-                $self->warn($msg);
-            } else {
-                $self->error($msg);
-            }
+            $self->$error_logger("Missing packages: ", join(" ", @missing));
         }
         return undef;
     }
@@ -346,7 +338,8 @@ sub apply_transaction
     my ($self, $tx, $tx_error_is_warn) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, $tx, $tx_error_is_warn);
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, 
+                                        $tx, $tx_error_is_warn ? "warn" : "error");
     return defined($ok);
 }
 
