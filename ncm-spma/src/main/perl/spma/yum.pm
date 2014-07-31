@@ -638,30 +638,30 @@ sub update_pkgs_retry
     } else {
         if ($allow_user_pkgs) {
             # tx_error_is_warn = 0 in this case, error is logged
-            $self->verbose(1, "update_pkgs failed, userpkgs allowed");
+            $self->verbose(1, "update_pkgs failed, userpkgs=true");
             return 0;
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
-            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with userpkgs allowed"); 
+            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
             if($self->update_pkgs($pkgs, $groups, $run, 1, $purge, 0)) {
-                $self->verbose("userpkgs_retry: 2nd update_pkgs with userpkgs allowed ok, trying 3rd"); 
+                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
                 if($self->update_pkgs($pkgs, $groups, $run, 0, $purge, 0)) {
                     # log ok
-                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs not allowed ok."); 
+                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
                 } else {
                     # log failure in 3rd step
-                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs not allowed failed."); 
+                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed."); 
                     return 0;
                 };
             } else {
                 # log failure in 2nd step
-                $self->error("userpkgs_retry: 2nd update_pkgs with userpkgs allowed failed."); 
+                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed."); 
                 return 0;
             };
         } else {
             # log failure, no retry enabled 
             # tx_error_is_warn = 0 in this case, error is logged
-            $self->verbose("update_pkgs failed, userpkgs not allowed, no retry enabled");
+            $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
             return 0;
         }
     }
