@@ -239,7 +239,7 @@ type ceph_crushmap_bucket = {
 
 @{ ceph crushmap rule step @}
 type ceph_crushmap_rule_choice = {
-    'chtype'    : string with match(SELF, '^(choose firstn|chooseleaf firstn)$')
+    'chtype'    : string with match(SELF, '^(choose firstn|chooseleaf firstn|choose indep)$')
     'number'    : long = 0
     'bktype'      : string 
 };
@@ -247,13 +247,14 @@ type ceph_crushmap_rule_choice = {
 @{ ceph crushmap rule step @}
 type ceph_crushmap_rule_step = {
     'take'       : string # Should be a valid bucket
+    'set_chooseleaf_tries' ? long
     'choices'    : ceph_crushmap_rule_choice[1..]
 };
 
 @{ ceph crushmap rule definition @}
 type ceph_crushmap_rule = {
     'name'              : string #Must be unique
-    'type'              : string = 'replicated' with match(SELF, '^(replicated|raid4)$')
+    'type'              : string = 'replicated' with match(SELF, '^(replicated|erasure)$')
     'ruleset'           ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
     'min_size'          : long(0..) = 1
     'max_size'          : long(0..) = 10
