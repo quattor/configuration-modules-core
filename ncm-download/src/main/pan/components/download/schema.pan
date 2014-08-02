@@ -1,10 +1,9 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
-# http://eu-datagrid.web.cern.ch/eu-datagrid/license.html. 
-# 
-# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS 
+# ${build-info}
+#
+# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
 # CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
 #
 # THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -23,9 +22,6 @@
 # THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
 # TERMS THAT MAY APPLY.
 #
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
 
 declaration template components/download/schema;
 
