@@ -190,7 +190,7 @@ sub execute_yum_command
 {
     my ($self, $command, $why, $keeps_state, $stdin, $error_logger) = @_;
 
-    $error_logger = "error" if ($error_logger !~ m/^(error|warn|info|verbose)$/);
+    $error_logger = "error" if (!($error_logger && $error_logger =~ m/^(error|warn|info|verbose)$/));
     
     my (%opts, $out, $err, @missing);
 
