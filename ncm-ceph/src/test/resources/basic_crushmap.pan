@@ -68,7 +68,7 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 'rules/0/min_size' = 0;
 'rules/0/max_size' = 10;
 'rules/0/steps' = BASE_STEPS;
-
+'rules/0/steps/0/set_chooseleaf_tries' = 5;
 'rules/1/name' = 'metadata';
 'rules/1/type' = 'replicated';
 'rules/1/min_size' = 0;
