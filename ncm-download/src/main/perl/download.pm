@@ -205,6 +205,11 @@ sub Configure {
 sub get_head
 {
     my ($self, $source, %opts) = @_;
+    
+    # LWP should use Net::SSL (provided with Crypt::SSLeay)
+    # and Net::SSL doesn't support hostname verify
+    local $ENV{'PERL_NET_HTTPS_SSL_SOCKET_CLASS'} = 'Net::SSL';
+    local $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
 
     local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if exists($opts{cert});
     local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if (exists($opts{key}));
