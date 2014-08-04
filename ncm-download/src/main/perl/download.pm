@@ -26,10 +26,6 @@ use POSIX;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 
-# LWP should use Net::SSL (provided with Crypt::SSLeay)
-# and Net::SSL doesn't support hostname verify
-$ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = 'Net::SSL';
-$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
 # Just in case...
 $ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
