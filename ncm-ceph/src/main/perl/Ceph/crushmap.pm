@@ -20,6 +20,7 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
+use NCM::Component::Ceph::commands;
 use LC::Exception;
 use LC::Find;
 use LC::File qw(makedir);
@@ -40,8 +41,6 @@ use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
-
-Readonly::Array my @SSH_COMMAND => @NCM::Component::Ceph::commands::SSH_COMMAND;
 
 # Get the osd name from the host and path
 sub get_osd_name {

@@ -19,6 +19,9 @@ use strict;
 use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
+use base qw(Exporter);
+our @EXPORT = qw(@SSH_COMMAND);
+
 use LC::Exception;
 use LC::Find;
 
@@ -37,6 +40,7 @@ Readonly::Array our @SSH_COMMAND => (
 '/usr/bin/ssh', '-o', 'ControlMaster=auto', 
 '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
+
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;

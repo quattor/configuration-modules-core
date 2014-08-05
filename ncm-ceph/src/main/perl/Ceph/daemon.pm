@@ -20,6 +20,7 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
+use NCM::Component::Ceph::commands;
 use LC::Exception;
 use LC::Find;
 
@@ -34,8 +35,6 @@ use Sys::Hostname;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
-
-Readonly::Array my @SSH_COMMAND => @NCM::Component::Ceph::commands::SSH_COMMAND;
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
