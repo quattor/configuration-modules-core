@@ -62,14 +62,14 @@ sub osd_hash {
             $self->error("IP of osd osd.$id not set or misconfigured!");
             return 0;
         }
-        $host = $self->get_host($ip, $hostmap);
-        if (!$host) {
+        my $fqdn = $self->get_host($ip, $hostmap);
+        if (!$fqdn) {
             $self->error("Parsing osd commands went wrong: Could not retrieve fqdn of ip $ip.");
             return 0;
         }
-        my @fhost = split('\.', $host);
+        my @fhost = split('\.', $fqdn);
         $host = $fhost[0];
-        my ($osdloc, $journalloc) = $self->get_osd_location($id, $ip, $osd->{uuid}) or return 0;
+        my ($osdloc, $journalloc) = $self->get_osd_location($id, $fqdn, $osd->{uuid}) or return 0;
         my $osdp = { 
             name            => $name, 
             host            => $host, 
