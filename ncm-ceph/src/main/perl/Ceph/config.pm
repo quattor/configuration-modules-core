@@ -192,6 +192,26 @@ sub set_admin_host {
     $self->run_ceph_deploy_command(\@admins,'',1 ) or return 0; 
 }
 
+sub ssh_known_keys {
+    my ($self, $host, $key_accept) = @_;
+    if ($key_accept eq 'first'){
+    # if not in known_host, scan key and add; else do nothing
+        my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
+        my $output = $self->run_command_as_ceph($cmd);
+        my $lines = $output =~ tr/\n//;
+        if (!$lines) {
+        $cmd = ['/usr/bin/ssh-keyscan', $host];
+            $self->run_command_as_ceph($cmd);
+            $self->add_hostkey_to_ceph_known_host($cmd);
+        }
+ 
+    } elsif ($key_accept eq 'always'){
+    #SSH into machine with -o StrictHostKeyChecking=no
+        
+    }
+}
+
+
 # Do all config actions
 sub do_config_actions {
     my ($self, $cluster, $gvalues) = @_;
@@ -201,6 +221,9 @@ sub do_config_actions {
     my $hosts = $cluster->{allhosts};
     if ($is_deploy) {
         foreach my $host (@{$hosts}) {
+            if ($gvalues->{key_accept}) {
+                $self->ssh_known_keys($host, $gvalues->{key_accept});
+            }
             # Set config and make admin host
             $self->set_admin_host($cluster->{config}, $host) or return 0;
         }
