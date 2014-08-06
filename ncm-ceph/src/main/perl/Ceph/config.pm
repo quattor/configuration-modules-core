@@ -11,6 +11,8 @@ use strict;
 use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
+use NCM::Component::Ceph::commands;
+
 use LC::Exception;
 use LC::Find;
 
@@ -200,14 +202,13 @@ sub ssh_known_keys {
         my $output = $self->run_command_as_ceph($cmd);
         my $lines = $output =~ tr/\n//;
         if (!$lines) {
-        $cmd = ['/usr/bin/ssh-keyscan', $host];
-            $self->run_command_as_ceph($cmd);
-            $self->add_hostkey_to_ceph_known_host($cmd);
+            $cmd = ['/usr/bin/ssh-keyscan', $host];
+            $self->run_command_as_ceph($cmd, 0, '~/.ssh/known_hosts');
         }
- 
     } elsif ($key_accept eq 'always'){
     #SSH into machine with -o StrictHostKeyChecking=no
-        
+        my $cmd = [@SSH_COMMAND,'-o', 'StrictHostKeyChecking=no', $host, 'uname']; #dummy ssh does the trick
+        $self->run_command_as_ceph($cmd);
     }
 }
 

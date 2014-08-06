@@ -234,7 +234,8 @@ sub Configure {
             clname => $clus,
             hostname => $hostname,
             is_deploy => $is_deploy,
-            cephusr => $cephusr
+            cephusr => $cephusr,
+            key_accept => $t->{key_accept} 
         }; 
         $self->do_configure($cluster, $gvalues) or return 0;
         return 1;

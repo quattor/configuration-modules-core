@@ -99,12 +99,16 @@ sub has_shell_escapes {
     
 #Runs a command as the ceph user
 sub run_command_as_ceph {
-    my ($self, $command, $dir) = @_;
+    my ($self, $command, $dir, $append) = @_;
     
     $self->has_shell_escapes($command) or return; 
     if ($dir) {
         $self->has_shell_escapes([$dir]) or return;
         unshift (@$command, ('cd', $dir, '&&'));
+    }
+    if($append) {
+        $self->has_shell_escapes([$append]) or return;
+        push (@$command, ('>>', $append));
     }
     $command = [join(' ',@$command)];
     return $self->run_command([qw(su - ceph -c), @$command]);
