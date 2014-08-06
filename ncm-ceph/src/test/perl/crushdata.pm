@@ -2134,7 +2134,7 @@ rule data {
 	type replicated
 	min_size 0
 	max_size 10
-	set_chooseleaf_tries 5
+	step set_chooseleaf_tries 5
 	step take default
 	step chooseleaf firstn 0 type host
 	step emit
