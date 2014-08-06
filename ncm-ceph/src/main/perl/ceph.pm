@@ -53,12 +53,15 @@ sub init_qdepl {
    
 #Checks if cluster is configured on this node.
 sub cluster_exists_check {
-    my ($self, $cluster, $cephusr, $clname) = @_;
+    my ($self, $cluster, $cephusr, $clname, $key_accept) = @_;
     # Check If something is not configured or there is no existing cluster 
     my $hosts = $cluster->{config}->{mon_host};
     my $ok= 0;
     my $okhost;
     foreach my $host (@{$hosts}) {
+        if ($key_accept) {
+            $self->ssh_known_keys($host, $key_accept);
+        }
         if ($self->run_ceph_deploy_command([qw(gatherkeys), $host])) {
             $ok = 1;
             $okhost = $host;
@@ -180,7 +183,8 @@ sub do_prepare_cluster {
     if ($gvalues->{is_deploy}) {
         $qtmp = $self->init_qdepl($cluster->{config}, $gvalues->{cephusr}) or return 0;
         $gvalues->{qtmp} = $qtmp;
-        my $clexists = $self->cluster_exists_check($cluster, $gvalues->{cephusr}, $gvalues->{clname});
+        my $clexists = $self->cluster_exists_check($cluster, $gvalues->{cephusr}, $gvalues->{clname}, 
+            $gvalues->{key_accept});
         my $cfgfile = "$gvalues->{cephusr}->{homeDir}/$gvalues->{clname}.conf";
         $self->write_config($cluster->{config}, $cfgfile) or return 0;
         if (!$clexists) {
