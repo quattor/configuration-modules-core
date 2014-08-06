@@ -55,6 +55,7 @@ The implementation keeps safety as top priority. Therefore:
 
 
 To set up the initial cluster, some steps should be taken:
+
 =over 
 
 =item 1. First create a ceph user on all the hosts.
@@ -85,6 +86,7 @@ be described in this section.
 The component is tested with Ceph version 0.80 and ceph-deploy version 1.5.1. 
 
 Following package dependencies should be installed to run the component:
+
 =over
 
 =item * perl-Data-Structure-Util 
