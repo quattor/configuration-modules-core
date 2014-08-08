@@ -95,37 +95,6 @@ sub getpwnam
     }
 }
 
-# Initializes the ACLs directory: it creates it and, if it exists,
-# erases any existing ACL files.
-sub initialize_acls
-{
-    my $self = shift;
-    mkdir (ACL_DIR);
-    my ($fh, $cnt);
-    my $dir = DirHandle->new (ACL_DIR) or
-        throw_error ("Couldn't open " . ACL_DIR);
-
-    $self->verbose("Removing all ACLs from all PAM services");
-    while (my $file = $dir->read) {
-        if ($file =~ m{^([^./][^/]+)}) {
-            $file = $1;
-        } else {
-            next;
-        }
-        unlink(ACL_DIR . "/$file");
-        # Ugly, ugly, ugly UGLY hack: remove pam_listfile
-        # lines from all services.
-        $fh = CAF::FileEditor->open(PAM_DIR . "/$file",
-                                    log => $self,
-                                    backup => '.stripe');
-        $cnt = $fh->string_ref();
-        $$cnt =~ s{^\w+\s+\w+\s+pam_listfile.*user.*file=.*(?:\n)?}{}mg;
-        $fh->set_contents($$cnt);
-        $fh->close();
-    }
-    $dir->close;
-}
-
 #
 # C<directory_verify_owner> verifies the owner of directory C<dir> has expected C<uid>.
 # If not, make the directory owner and also set C<gid> 
@@ -401,7 +370,6 @@ sub Configure
     my $ok = 1;
     umask(MASK);
 
-    $self->initialize_acls();
     while (my ($user, $uconfig) = each (%$uhash)) {
         $self->info("Setting up user $user");
         my ($uid, $gid, $home) = $self->initialize_user($user);
