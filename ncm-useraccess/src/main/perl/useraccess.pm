@@ -376,8 +376,7 @@ sub close_files
 
     while (my ($k, $fh) = each(%$f)) {
         if ($mg->{$k}) {
-            my $cnt = $fh->string_ref();
-            unless ($$cnt) {
+            if (! "$fh") {
                 unlink(*$fh->{filename});
                 $fh->cancel();
             }
