@@ -135,6 +135,31 @@ sub initialize_acls
     $dir->close;
 }
 
+#
+# C<directory_verify_owner> verifies the owner of directory C<dir> has expected C<uid>.
+# If not, make the directory owner and also set C<gid> 
+# and permission C<perm>.
+# It does not check the gid nor the permissions of an existing directory, those can 
+# be user controlled.
+# If the directory does not exist, create it with these settings.
+#
+sub directory_verify_owner
+{
+    my ($self, $dir, $uid, $gid, $perm) = @_;
+    if (! -d $dir) {
+        $self->verbose("No such directory $dir, creating it with $uid/$gid/$perm");
+        mkdir($dir, $perm);
+        chown($uid, $gid, $dir);
+    } else {
+        my $stat = stat($dir);
+        if ($stat->uid != $uid) {
+            $self->verbose("Found directory $dir owned by $stat->uid, setting it to expected $uid/$gid/$perm");
+            chown($uid, $gid, $dir);
+            chmod $perm, $dir;
+        }
+    }
+}
+
 # Removes the user's existing configuration.
 sub initialize_user
 {
@@ -142,27 +167,14 @@ sub initialize_user
 
     my ($uid, $gid, $home) = $self->getpwnam ($user);
     defined $uid or return;
+
     # verify HOME dir owner
-    my $home_stat = stat($home);
-    if ($home_stat->uid != $uid) {
-        $self->verbose("Found HOME $home owned by $home_stat->uid, setting it to expected $uid/$gid");
-        chown($uid, $gid, $home);
-        chmod 0700, $home;
-    }
-    # This might not exist yet.
+    $self->directory_verify_owner($home, $uid, $gid, 0700);
+
+    # verify/create SSH dir owner
     my $ssh_dir = "$home/" . SSH_DIR;
-    if (! -d "$ssh_dir") {
-        mkdir("$ssh_dir", 0700);
-        chown($uid, $gid, $ssh_dir);
-    } else {
-        # if it does exist, verify SSH dir owner        
-        my $ssh_stat = stat($ssh_dir);
-        if ($ssh_stat->uid != $uid) {
-            $self->verbose("Found SSH $ssh_dir owned by $ssh_stat->uid, setting it to expected $uid/$gid");
-            chown($uid, $gid, $ssh_dir);
-            chmod 0700, $ssh_dir;
-        }
-    }    
+    $self->directory_verify_owner($ssh_dir, $uid, $gid, 0700);
+
     return ($uid, $gid, $home);
 }
 
