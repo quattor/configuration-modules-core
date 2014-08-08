@@ -2,15 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# File: useraccess.pm
-# Implementation of ncm-useraccess
-# Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.11 : 23/01/12 14:33
-#
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
-
 package NCM::Component::useraccess;
 
 use strict;
