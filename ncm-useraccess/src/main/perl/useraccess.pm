@@ -142,14 +142,23 @@ sub initialize_user
 
     my ($uid, $gid, $home) = $self->getpwnam ($user);
     defined $uid or return;
+    # verify HOME dir owner
+    my $home_stat = stat($home);
+    if ($home_stat->uid != $uid) {
+        $self->verbose("Found HOME $home owned by $home_stat->uid, setting it to expected $uid/$gid");
+        chown($uid, $gid, $home);
+        chmod 0700, $home;
+    }
     # This might not exist yet.
     my $ssh_dir = "$home/" . SSH_DIR;
     if (! -d "$ssh_dir") {
         mkdir("$ssh_dir", 0700);
         chown($uid, $gid, $ssh_dir);
     } else {
-        my $stat = stat($ssh_dir);
-        if ($stat->uid != $uid) {
+        # if it does exist, verify SSH dir owner        
+        my $ssh_stat = stat($ssh_dir);
+        if ($ssh_stat->uid != $uid) {
+            $self->verbose("Found SSH $ssh_dir owned by $ssh_stat->uid, setting it to expected $uid/$gid");
             chown($uid, $gid, $ssh_dir);
             chmod 0700, $ssh_dir;
         }
