@@ -109,18 +109,24 @@ sub directory_verify_owner
 {
     my ($self, $dir, $uid, $gid, $perm) = @_;
     
-    return if ($NoAction);
-
     if (! -d $dir) {
         $self->verbose("No such directory $dir, creating it with $uid/$gid/$perm");
-        mkdir($dir, $perm);
-        chown($uid, $gid, $dir);
+        if ($NoAction) {
+            $self->debug(1, "NoAction: mkdir($dir, $perm) and chown($uid, $gid, $dir) not called");
+        } else {
+            mkdir($dir, $perm);
+            chown($uid, $gid, $dir);
+        }
     } else {
         my $stat = stat($dir);
         if ($stat->uid != $uid) {
             $self->verbose("Found directory $dir owned by $stat->uid, setting it to expected $uid/$gid/$perm");
-            chown($uid, $gid, $dir);
-            chmod $perm, $dir;
+            if ($NoAction) {
+                $self->debug(1, "NoAction: chown($uid, $gid, $dir) and chmod ($perm, $dir) not called");
+            } else {
+                chown($uid, $gid, $dir);
+                chmod $perm, $dir;
+            }
         }
     }
 }
