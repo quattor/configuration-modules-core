@@ -78,6 +78,8 @@ use constant PAM_DIR	=> "/etc/pam.d";
 
 use constant ROLEPATH => '/software/components/useraccess/roles/';
 
+our $NoActionSupported = 1;
+
 # Returns the interesting information from a user. Wrapper for Perl's
 # getpwnam.
 #
@@ -106,6 +108,9 @@ sub getpwnam
 sub directory_verify_owner
 {
     my ($self, $dir, $uid, $gid, $perm) = @_;
+    
+    return if ($NoAction);
+
     if (! -d $dir) {
         $self->verbose("No such directory $dir, creating it with $uid/$gid/$perm");
         mkdir($dir, $perm);
