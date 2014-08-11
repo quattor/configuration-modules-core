@@ -33,16 +33,23 @@ my $is_deploy = 1;
 my $hostname = 'ceph001.cubone.os';
 my $keyfind = "su - ceph -c /usr/bin/ssh-keygen -F ceph001.cubone.os";
 set_desired_output($keyfind, "I am a key, I am a key!\n");# key visible
+my $scancmd = 'su - ceph -c /usr/bin/ssh-keyscan ceph001.cubone.os';
+set_desired_output($scancmd, "I am the key, I am the key!\n");
 
-$cmp->ssh_known_keys($hostname, 'first');
-my $scancmd = 'su - ceph -c /usr/bin/ssh-keyscan ceph001.cubone.os >> ~/.ssh/known_hosts';
+
+$cmp->ssh_known_keys($hostname, 'first', '/foo');
 my $cmd = get_command($scancmd);
 ok(!defined($cmd), "key found, no key added");
 
 set_desired_output($keyfind, '');# no key
-$cmp->ssh_known_keys($hostname, 'first');
+set_file_contents("/foo/.ssh/known_hosts", 
+    "The setting sun with the last light of Durins Day will shine upon the key-hole\n");
+$cmp->ssh_known_keys($hostname, 'first', '/foo');
 
 $cmd = get_command($scancmd);
 ok(defined($cmd), "add new key");
-
+# Call the function that will manipulate /etc/passwd here.
+my $fh = get_file("/foo/.ssh/known_hosts");
+is("$fh", "I am the key, I am the key!\nThe setting sun with the last light of Durins Day will shine upon the key-hole\n", 
+    "The file has received the expected contents");
 done_testing();

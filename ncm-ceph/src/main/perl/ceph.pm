@@ -60,7 +60,7 @@ sub cluster_exists_check {
     my $okhost;
     foreach my $host (@{$hosts}) {
         if ($key_accept) {
-            $self->ssh_known_keys($host, $key_accept);
+            $self->ssh_known_keys($host, $key_accept, $cephusr->{homeDir});
         }
         if ($self->run_ceph_deploy_command([qw(gatherkeys), $host])) {
             $ok = 1;

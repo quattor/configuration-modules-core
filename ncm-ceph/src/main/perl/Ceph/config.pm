@@ -11,8 +11,6 @@ use strict;
 use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
-use NCM::Component::Ceph::commands;
-
 use LC::Exception;
 use LC::Find;
 
@@ -194,25 +192,6 @@ sub set_admin_host {
     $self->run_ceph_deploy_command(\@admins,'',1 ) or return 0; 
 }
 
-sub ssh_known_keys {
-    my ($self, $host, $key_accept) = @_;
-    if ($key_accept eq 'first'){
-    # if not in known_host, scan key and add; else do nothing
-        my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
-        my $output = $self->run_command_as_ceph($cmd);
-        my $lines = $output =~ tr/\n//;
-        if (!$lines) {
-            $cmd = ['/usr/bin/ssh-keyscan', $host];
-            $self->run_command_as_ceph($cmd, 0, '~/.ssh/known_hosts');
-        }
-    } elsif ($key_accept eq 'always'){
-    #SSH into machine with -o StrictHostKeyChecking=no
-        my $cmd = [@SSH_COMMAND,'-o', 'StrictHostKeyChecking=no', $host, 'uname']; #dummy ssh does the trick
-        $self->run_command_as_ceph($cmd);
-    }
-}
-
-
 # Do all config actions
 sub do_config_actions {
     my ($self, $cluster, $gvalues) = @_;
@@ -223,7 +202,7 @@ sub do_config_actions {
     if ($is_deploy) {
         foreach my $host (@{$hosts}) {
             if ($gvalues->{key_accept}) {
-                $self->ssh_known_keys($host, $gvalues->{key_accept});
+                $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr}->{homeDir});
             }
             # Set config and make admin host
             $self->set_admin_host($cluster->{config}, $host) or return 0;
