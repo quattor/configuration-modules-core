@@ -52,7 +52,6 @@ no warnings 'redefine';
 use warnings 'redefine';
 
 
-
 my $cmp = NCM::Component::useraccess->new("useraccess");
 
 my ($u, $g, $h) = $cmp->initialize_user("foo");
@@ -66,6 +65,13 @@ ok(-d "$h/.ssh", "SSH directory is created");
 ok(defined($u), "Calling initialize_user multiple times succeeds");
 is(scalar(@chown), 1, "The SSH directory is initialized exactly once");
 
+my $testdir = "$h/test";
+$cmp->directory_verify_owner($testdir, $u, $g, 0740);
+is($chown[1]->[0], $u, "testdir $testdir assigned to owner/uid $u");
+is($chown[1]->[1], $g, "testdir $testdir assigned to group/gid $g");
+# can't really test stat, need to create directory with different user. 
+# can't assume that these tests will be run with those capabilities
+
 no warnings 'redefine';
 *NCM::Component::useraccess::getpwnam = sub {
     return undef;
@@ -74,7 +80,6 @@ use warnings 'redefine';
 
 is($cmp->initialize_user("foo"), undef,
    "An error in pwnam is transmitted to the caller");
-
 
 
 done_testing();

@@ -2,15 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# File: useraccess.pm
-# Implementation of ncm-useraccess
-# Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.5.11 : 23/01/12 14:33
-#
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
-
 package NCM::Component::useraccess;
 
 use strict;
@@ -26,11 +17,12 @@ use LC::Exception qw (throw_error);
 use LWP::UserAgent;
 use CAF::FileWriter;
 use CAF::FileEditor;
+use File::stat;
 
 our @ISA = qw (NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
-use constant MASK	=> 077;
+use constant MASK   => 077;
 
 use constant PATH	=> "/software/components/useraccess/";
 use constant KRB4	=> "kerberos4";
@@ -78,13 +70,15 @@ use constant KLOGIN_SEPARATOR	=> '.';
 use constant K5LOGIN_SEPARATOR=> '/';
 
 use constant KRB_SETTINGS => ([KRB4, KLOGIN_SEPARATOR],
-			      [KRB5, K5LOGIN_SEPARATOR]);
+                  [KRB5, K5LOGIN_SEPARATOR]);
 
 # Directories where the ACLs will be stored and for PAM configuration.
 use constant ACL_DIR	=> "/etc/acls";
 use constant PAM_DIR	=> "/etc/pam.d";
 
 use constant ROLEPATH => '/software/components/useraccess/roles/';
+
+our $NoActionSupported = 1;
 
 # Returns the interesting information from a user. Wrapper for Perl's
 # getpwnam.
@@ -96,42 +90,45 @@ sub getpwnam
 
     my @val = getpwnam($user);
     if (@val) {
-	return @val[UID, GID, HOMEDIR];
+        return @val[UID, GID, HOMEDIR];
     } else {
-	$self->error("Couldn't get system data for $user");
-	return undef;
+        $self->error("Couldn't get system data for $user");
+        return undef;
     }
 }
 
-# Initializes the ACLs directory: it creates it and, if it exists,
-# erases any existing ACL files.
-sub initialize_acls
+#
+# C<directory_verify_owner> verifies the owner of directory C<dir> has expected C<uid>.
+# If not, make the directory owner and also set C<gid> 
+# and permission C<perm>.
+# It does not check the gid nor the permissions of an existing directory, those can 
+# be user controlled.
+# If the directory does not exist, create it with these settings.
+#
+sub directory_verify_owner
 {
-    my $self = shift;
-    mkdir (ACL_DIR);
-    my ($fh, $cnt);
-    my $dir = DirHandle->new (ACL_DIR) or
-      throw_error ("Couldn't open " . ACL_DIR);
-
-    $self->verbose("Removing all ACLs from all PAM services");
-    while (my $file = $dir->read) {
-	if ($file =~ m{^([^./][^/]+)}) {
-	    $file = $1;
-	} else {
-	    next;
-	}
-	unlink(ACL_DIR . "/$file");
-	# Ugly, ugly, ugly UGLY hack: remove pam_listfile
-	# lines from all services.
-	$fh = CAF::FileEditor->open(PAM_DIR . "/$file",
-				    log => $self,
-				    backup => '.stripe');
-	$cnt = $fh->string_ref();
-	$$cnt =~ s{^\w+\s+\w+\s+pam_listfile.*user.*file=.*(?:\n)?}{}mg;
-	$fh->set_contents($$cnt);
-	$fh->close();
+    my ($self, $dir, $uid, $gid, $perm) = @_;
+    
+    if (! -d $dir) {
+        $self->verbose("No such directory $dir, creating it with $uid/$gid/$perm");
+        if ($NoAction) {
+            $self->debug(1, "NoAction: mkdir($dir, $perm) and chown($uid, $gid, $dir) not called");
+        } else {
+            mkdir($dir, $perm) || $self->warn("Failed to mkdir $dir with perm $perm: $!");
+            chown($uid, $gid, $dir) || $self->warn("Failed to chown dir $dir with uid/gid $uid/$gid: $!");
+        }
+    } else {
+        my $stat = stat($dir);
+        if ($stat->uid != $uid) {
+            $self->verbose("Found directory $dir owned by $stat->uid, setting it to expected $uid/$gid/$perm");
+            if ($NoAction) {
+                $self->debug(1, "NoAction: chown($uid, $gid, $dir) and chmod ($perm, $dir) not called");
+            } else {
+                chown($uid, $gid, $dir) || $self->warn("Failed to chown dir $dir with uid/gid $uid/$gid: $!");
+                chmod($perm, $dir) || $self->warn("Failed to chmod dir $dir with perm $perm: $!");
+            }
+        }
     }
-    $dir->close;
 }
 
 # Removes the user's existing configuration.
@@ -141,12 +138,14 @@ sub initialize_user
 
     my ($uid, $gid, $home) = $self->getpwnam ($user);
     defined $uid or return;
-    # This might not exist yet.
+
+    # verify HOME dir owner
+    $self->directory_verify_owner($home, $uid, $gid, 0700);
+
+    # verify/create SSH dir owner
     my $ssh_dir = "$home/" . SSH_DIR;
-    if (! -d "$ssh_dir") {
-	mkdir("$ssh_dir", 0700);
-	chown($uid, $gid, $ssh_dir);
-    }
+    $self->directory_verify_owner($ssh_dir, $uid, $gid, 0700);
+
     return ($uid, $gid, $home);
 }
 
@@ -162,20 +161,20 @@ sub set_kerberos
     my ($self, $user, $cfg, $fhs) = @_;
 
     foreach my $i (KRB_SETTINGS) {
-	my ($key, $sep) = @$i;
-	$self->debug(1, "Kerberos settings for user: $user");
-	my $ct = $cfg->{$key};
-	next unless defined $ct;
-	if (!defined $fhs->{$key}) {
-	    $self->error("Impossible to configure Kerberos for user $user");
-	    return -1;
-	}
-	my $fh = $fhs->{$key};
-	foreach (@$ct) {
-	    print $fh $_->{PRINCIPAL()};
-	    print $fh $sep, $_->{INSTANCE()} if (defined $_->{INSTANCE()});
-	    print $fh "@", $_->{REALM()}, "\n";
-	}
+        my ($key, $sep) = @$i;
+        $self->debug(1, "Kerberos settings for user: $user");
+        my $ct = $cfg->{$key};
+        next unless defined $ct;
+        if (!defined $fhs->{$key}) {
+            $self->error("Impossible to configure Kerberos for user $user");
+            return -1;
+        }
+        my $fh = $fhs->{$key};
+        foreach (@$ct) {
+            print $fh $_->{PRINCIPAL()};
+            print $fh $sep, $_->{INSTANCE()} if (defined $_->{INSTANCE()});
+            print $fh "@", $_->{REALM()}, "\n";
+        }
     }
     return 0;
 }
@@ -193,19 +192,19 @@ sub set_ssh_fromurls
     my $cnt = $cfg->{SSH_KEYS_URLS()};
     return 0 unless defined $cnt;
     if (!defined $fh) {
-	$self->error("Impossible to write authorized public keys for ",
-		     "user $user");
-	return -1;
+        $self->error("Impossible to write authorized public keys for ",
+                 "user $user");
+        return -1;
     }
     my $ua = LWP::UserAgent->new;
     foreach my $url (@$cnt) {
-	my $rp = $ua->get ($url);
-	if ($rp->is_success) {
-	    print $fh $rp->content;
-	} else {
-	    $self->error("Key not found: $url");
-	    $err = -1;
-	}
+        my $rp = $ua->get ($url);
+        if ($rp->is_success) {
+            print $fh $rp->content;
+        } else {
+            $self->error("Key not found: $url");
+            $err = -1;
+        }
     }
     return $err;
 }
@@ -220,12 +219,12 @@ sub set_ssh_fromkeys
     my $cnt = $cfg->{SSH_KEYS()};
     return 0 unless defined $cnt;
     if (!defined $fh) {
-	$self->error("Impossible to write authorized SSH keys from ",
-		     "profile for user $user");
-	return -1;
+        $self->error("Impossible to write authorized SSH keys from ",
+                 "profile for user $user");
+        return -1;
     }
     foreach my $key (@$cnt) {
-	print $fh "$key\n";
+        print $fh "$key\n";
     }
     return 0;
 }
@@ -244,11 +243,11 @@ sub set_acls
 
     return unless defined $cnt;
     foreach $srv (@$cnt) {
-	$fh = CAF::FileEditor->open(ACL_DIR . "/$srv",
-				    log => $self);
-				    #backup => '.print');
-	print $fh "$user\n";
-	$fh->close();
+        $fh = CAF::FileEditor->open(ACL_DIR . "/$srv",
+                        log => $self);
+                        #backup => '.print');
+        print $fh "$user\n";
+        $fh->close();
     }
 }
 
@@ -262,24 +261,24 @@ sub pam_listfile
     my ($cnt, $fh, $acl);
 
     foreach my $srv (@$services) {
-	if ($srv =~ m{^([-_\w]+)$}) {
-	    $srv = $1;
-	} else {
-	    $self->error("Invalid PAM service for setting ACL: $srv");
-	}
-	$acl = ACL_DIR . "/$srv";
-	$fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
-				    # Better a random backup?
-				    backup => '.old');
-	foreach my $i (qw(auth session)) {
-	    $fh->head_print (join("\t", $i, qw(required pam_listfile.so
-					      onerr=fail item=user sense=allow),
-				  "file=$acl\n"));
-	}
-	$fh->close();
-	if (! -f ACL_DIR . "/$srv") {
-	    $self->warn("Service $srv needs ACL but no ACL was created for it");
-	}
+        if ($srv =~ m{^([-_\w]+)$}) {
+            $srv = $1;
+        } else {
+            $self->error("Invalid PAM service for setting ACL: $srv");
+        }
+        $acl = ACL_DIR . "/$srv";
+        $fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
+                        # Better a random backup?
+                        backup => '.old');
+        foreach my $i (qw(auth session)) {
+            $fh->head_print (join("\t", $i, qw(required pam_listfile.so
+                              onerr=fail item=user sense=allow),
+                      "file=$acl\n"));
+        }
+        $fh->close();
+        if (! -f ACL_DIR . "/$srv") {
+            $self->warn("Service $srv needs ACL but no ACL was created for it");
+        }
     }
 }
 
@@ -298,18 +297,18 @@ sub set_roles
     my ($self, $user, $rllist, $rolecfgs, $fhash) = @_;
 
     foreach (@$rllist) {
-	my $cfg = $rolecfgs->{$_};
-	$self->info ("Processing role $_ for user $user");
-	if ($self->set_kerberos($user, $cfg, $fhash) ||
-	    $self->set_ssh_fromurls($user, $cfg,
-				    $fhash->{SSH_KEYS()}) ||
-	    $self->set_ssh_fromkeys($user, $cfg,
-				    $fhash->{SSH_KEYS()}) ||
-	    $self->set_acls($user, $cfg) ||
-	    $self->set_roles($user, $cfg->{ROLES()},
-			     $rolecfgs, $fhash)) {
-	    return -1;
-	}
+        my $cfg = $rolecfgs->{$_};
+        $self->info ("Processing role $_ for user $user");
+        if ($self->set_kerberos($user, $cfg, $fhash) ||
+            $self->set_ssh_fromurls($user, $cfg,
+                        $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromkeys($user, $cfg,
+                        $fhash->{SSH_KEYS()}) ||
+            $self->set_acls($user, $cfg) ||
+            $self->set_roles($user, $cfg->{ROLES()},
+                     $rolecfgs, $fhash)) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -323,23 +322,23 @@ sub files
     my $path;
     $path = "$home/" . K4LOGIN;
     $h{KRB4()} = CAF::FileWriter->new($path, log => $self,
-				      owner => $uid,
-				      group => $gid,
-				      mode => 0400);
+                      owner => $uid,
+                      group => $gid,
+                      mode => 0400);
 
     $path = "$home/" . K5LOGIN;
     $h{KRB5()} = CAF::FileWriter->new($path, log => $self,
-				      owner => $uid,
-				      group => $gid,
-				      mode => 0400);
+                      owner => $uid,
+                      group => $gid,
+                      mode => 0400);
     $path = "$home/" . SSH_AUTH;
     $h{SSH_KEYS()} = CAF::FileWriter->new($path, log => $self,
-					  owner => $uid,
-					  group => $gid,
-					  mode => 0400);
+                      owner => $uid,
+                      group => $gid,
+                      mode => 0400);
 
     foreach my $cred (@{$uconfig->{MANAGED_CREDENTIALS()}}) {
-	$h{MANAGED_CREDENTIALS()}->{$cred} = 1;
+        $h{MANAGED_CREDENTIALS()}->{$cred} = 1;
     }
 
     return \%h;
@@ -356,16 +355,15 @@ sub close_files
     delete($f->{MANAGED_CREDENTIALS()});
 
     while (my ($k, $fh) = each(%$f)) {
-	if ($mg->{$k}) {
-	    my $cnt = $fh->string_ref();
-	    unless ($$cnt) {
-		unlink(*$fh->{filename});
-		$fh->cancel();
-	    }
-	} else {
-	    $fh->cancel();
-	}
-	$fh->close();
+        if ($mg->{$k}) {
+            if (! "$fh") {
+                unlink(*$fh->{filename});
+                $fh->cancel();
+            }
+        } else {
+            $fh->cancel();
+        }
+        $fh->close();
     }
 }
 
@@ -383,27 +381,26 @@ sub Configure
     my $ok = 1;
     umask(MASK);
 
-    $self->initialize_acls();
     while (my ($user, $uconfig) = each (%$uhash)) {
-	$self->info("Setting up user $user");
-	my ($uid, $gid, $home) = $self->initialize_user($user);
-	unless (defined $uid) {
-	    $self->error("Couldn't initialize user $user, skipping");
-	    next;
-	}
-	my $fhash = $self->files($uconfig, $uid, $gid, $home);
-	if ($self->set_kerberos($user, $uconfig, $fhash) ||
-	    $self->set_ssh_fromurls($user, $uconfig,
-				    $fhash->{SSH_KEYS()}) ||
-	    $self->set_ssh_fromkeys($user, $uconfig,
-				    $fhash->{SSH_KEYS()}) ||
-	    $self->set_acls($user, $uconfig) ||
-	    $self->set_roles($user, $uconfig->{ROLES()},
-			     $rlhash, $fhash)) {
-	    $ok = 0;
-	    $self->error("Errors while configuring user $user");
-	}
-	$self->close_files($fhash);
+        $self->info("Setting up user $user");
+        my ($uid, $gid, $home) = $self->initialize_user($user);
+        unless (defined $uid) {
+            $self->error("Couldn't initialize user $user, skipping");
+            next;
+        }
+        my $fhash = $self->files($uconfig, $uid, $gid, $home);
+        if ($self->set_kerberos($user, $uconfig, $fhash) ||
+            $self->set_ssh_fromurls($user, $uconfig,
+                        $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromkeys($user, $uconfig,
+                        $fhash->{SSH_KEYS()}) ||
+            $self->set_acls($user, $uconfig) ||
+            $self->set_roles($user, $uconfig->{ROLES()},
+                     $rlhash, $fhash)) {
+            $ok = 0;
+            $self->error("Errors while configuring user $user");
+        }
+        $self->close_files($fhash);
     }
     $self->pam_listfile($acls);
     umask ($mask);
