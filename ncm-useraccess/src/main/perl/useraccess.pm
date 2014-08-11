@@ -114,8 +114,8 @@ sub directory_verify_owner
         if ($NoAction) {
             $self->debug(1, "NoAction: mkdir($dir, $perm) and chown($uid, $gid, $dir) not called");
         } else {
-            mkdir($dir, $perm);
-            chown($uid, $gid, $dir);
+            mkdir($dir, $perm) || $self->warn("Failed to mkdir $dir with perm $perm: $!");
+            chown($uid, $gid, $dir) || $self->warn("Failed to chown dir $dir with uid/gid $uid/$gid: $!");
         }
     } else {
         my $stat = stat($dir);
@@ -124,8 +124,8 @@ sub directory_verify_owner
             if ($NoAction) {
                 $self->debug(1, "NoAction: chown($uid, $gid, $dir) and chmod ($perm, $dir) not called");
             } else {
-                chown($uid, $gid, $dir);
-                chmod $perm, $dir;
+                chown($uid, $gid, $dir) || $self->warn("Failed to chown dir $dir with uid/gid $uid/$gid: $!");
+                chmod($perm, $dir) || $self->warn("Failed to chmod dir $dir with perm $perm: $!");
             }
         }
     }
