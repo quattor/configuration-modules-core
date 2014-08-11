@@ -19,9 +19,6 @@ use strict;
 use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
-use base qw(Exporter);
-our @EXPORT = qw(@SSH_COMMAND);
-
 use LC::Exception;
 use LC::Find;
 
@@ -113,6 +110,11 @@ sub run_command_as_ceph {
     return $self->run_command([qw(su - ceph -c), @$command]);
 }
 
+# Runs a command as ceph over ssh
+sub run_command_as_ceph_with_ssh {
+    my ($self, $command, $host) = @_;
+    return $self->run_command_as_ceph([@SSH_COMMAND, $host, @$command]);
+}
 
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {

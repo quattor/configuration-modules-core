@@ -20,7 +20,6 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
-use NCM::Component::Ceph::commands;
 use LC::Exception;
 use LC::Find;
 use LC::File qw(makedir);
@@ -45,8 +44,8 @@ Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
 # Get the osd name from the host and path
 sub get_osd_name {
     my ($self, $host, $location) = @_;
-    my @catcmd = (@SSH_COMMAND, $host, 'cat');
-    my $id = $self->run_command_as_ceph([@catcmd, "$location/whoami"]) or return 0;
+    my @catcmd = ('cat');
+    my $id = $self->run_command_as_ceph_with_ssh([@catcmd, "$location/whoami"], $host) or return 0;
     chomp($id);
     $id = $id + 0; # Only keep the integer part
     return "osd.$id";

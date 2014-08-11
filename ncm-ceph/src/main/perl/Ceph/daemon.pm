@@ -20,7 +20,6 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
-use NCM::Component::Ceph::commands;
 use LC::Exception;
 use LC::Find;
 
@@ -98,8 +97,8 @@ sub get_osd_location {
     }   
     
     # TODO: check if physical exists?
-    my @catcmd = (@SSH_COMMAND, $host, 'cat');
-    my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
+    my @catcmd = ('cat');
+    my $ph_uuid = $self->run_command_as_ceph_with_ssh([@catcmd, $osdlink . '/fsid'], $host);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
@@ -107,7 +106,7 @@ sub get_osd_location {
             "Disk value: $ph_uuid");
         return ;    
     }
-    my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
+    my $ph_fsid = $self->run_command_as_ceph_with_ssh([@catcmd, $osdlink . '/ceph_fsid'], $host);
     chomp($ph_fsid);
     my $fsid = $self->{fsid};
     if ($ph_fsid ne $fsid) {
@@ -116,9 +115,9 @@ sub get_osd_location {
             "Disk value: $ph_fsid");
         return ;
     }
-    my @loccmd = (@SSH_COMMAND, $host, '/bin/readlink');
-    my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
-    my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]);
+    my @loccmd = ('/bin/readlink');
+    my $osdloc = $self->run_command_as_ceph_with_ssh([@loccmd, $osdlink], $host);
+    my $journalloc = $self->run_command_as_ceph_with_ssh([@loccmd, '-f', "$osdlink/journal"], $host);
     chomp($osdloc);
     chomp($journalloc);
     return $osdloc, $journalloc;
@@ -130,17 +129,17 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m{^/dev/}){
-        my $cmd = [@SSH_COMMAND, $host, 'sudo', '/usr/bin/file', '-s', $loc];
-        my $output = $self->run_command_as_ceph($cmd) or return 0;
+        my $cmd = ['sudo', '/usr/bin/file', '-s', $loc];
+        my $output = $self->run_command_as_ceph_with_ssh($cmd, $host) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
             $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
     } else {
-        my $mkdircmd = [@SSH_COMMAND, $host, 'sudo', '/bin/mkdir', '-p', $loc];
-        $self->run_command_as_ceph($mkdircmd); 
-        my $lscmd = [@SSH_COMMAND, $host, 'ls', '-1', $loc];
-        my $lsoutput = $self->run_command_as_ceph($lscmd) or return 0;
+        my $mkdircmd = ['sudo', '/bin/mkdir', '-p', $loc];
+        $self->run_command_as_ceph_with_ssh($mkdircmd, $host); 
+        my $lscmd = ['ls', '-1', $loc];
+        my $lsoutput = $self->run_command_as_ceph_with_ssh($lscmd, $host) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines) {
             $self->error("$loc on $host is not empty!");
@@ -276,9 +275,8 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon, $cmdh);
         
-        my @donecmd = (@SSH_COMMAND, $quatmon->{fqdn}, 
-                       'test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done" );
-        if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
+        my @donecmd = ('test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done");
+        if (!$cephmon->{up} && !$self->run_command_as_ceph_with_ssh([@donecmd], $quatmon->{fqdn})) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
             return $self->config_mon('add',$name,$quatmon, $cmdh);
@@ -367,8 +365,8 @@ sub config_mds {
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
-        my @donecmd = (@SSH_COMMAND, $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
-        my $mds_exists = $self->run_command_as_ceph([@donecmd]);
+        my @donecmd = ('test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
+        my $mds_exists = $self->run_command_as_ceph_with_ssh([@donecmd], $fqdn);
         if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
             if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
