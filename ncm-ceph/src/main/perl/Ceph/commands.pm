@@ -110,10 +110,14 @@ sub run_command_as_ceph {
     return $self->run_command([qw(su - ceph -c), @$command]);
 }
 
-# Runs a command as ceph over ssh
+# Runs a command as ceph over ssh, optionally with options
 sub run_command_as_ceph_with_ssh {
-    my ($self, $command, $host) = @_;
-    return $self->run_command_as_ceph([@SSH_COMMAND, $host, @$command]);
+    my ($self, $command, $host, $ssh_options) = @_;
+    if ($ssh_options) {
+        return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command]);
+    } else {
+        return $self->run_command_as_ceph([@SSH_COMMAND, $host, @$command]);
+    }
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
