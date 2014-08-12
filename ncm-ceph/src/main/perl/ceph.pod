@@ -27,7 +27,9 @@ Features that are implemented at this moment:
 
 =item * Checking/adding/removing MDSs
 
-=item * Building up/changing a crushmap
+=item * Building up/changing a crushmap, with support for erasure code
+
+=item * Wildcard support in version numbers 
 
 =back
 
