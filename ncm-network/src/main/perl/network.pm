@@ -836,7 +836,7 @@ sub Configure {
         if ($? == 0) {
             $self->info("$func: OK: network up");
             return 1;
-        } elsif ($? == NOQUATTOR_EXITCODE) {
+        } elsif (($?>>8) == NOQUATTOR_EXITCODE) {
             $self->warn("$func: ccm-fetch failed due with NOQUATTOR. Testing network with ping.");
             return test_network_ping();
         } else {
