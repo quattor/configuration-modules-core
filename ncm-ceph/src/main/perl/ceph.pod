@@ -39,7 +39,7 @@ The implementation keeps safety as top priority. Therefore:
 
 =item * No removals of MONs, OSDs or MDSs are actually done at this moment. Instead of removing itself, it prints the commands to use. 
 
-=item * Backup files are always made of the configfiles and decompiled crushmap files. These timestamped files can be found in the 'ncm-ceph' folder in the home directory of the ceph user
+=item * Configfiles and decompiled crushmap files are saved into a git repo. This repo can be found in the 'ncm-ceph' folder in the home directory of the ceph user
 
 =item * When something is not right and returns an error, the whole component exits.
 
