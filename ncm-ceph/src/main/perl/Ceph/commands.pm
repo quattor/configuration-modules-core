@@ -134,6 +134,7 @@ sub ssh_known_keys {
         # If not in known_host, scan key and add; else do nothing
         my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
         my $output = $self->run_command_as_ceph($cmd);
+        #Count the lines of the output
         my $lines = $output =~ tr/\n//;
         if (!$lines) {
             $cmd = ['/usr/bin/ssh-keyscan', $host];
