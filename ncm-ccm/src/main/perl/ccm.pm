@@ -32,18 +32,19 @@ sub Configure
     delete($t->{version});
 
     while (my ($k, $v) = each(%$t)) {
-	print $fh "$k $v\n";
+        print $fh "$k $v\n";
     }
 
     # Check that ccm-fetch can work with the new file.
     my $errs = "";
     my $test = CAF::Process->new([TEST_COMMAND],
-				 log => $self, stdin => "$fh",
-				 stderr => \$errs);
+                                 log => $self, 
+                                 stdin => "$fh",
+                                 stderr => \$errs);
     $test->execute();
     if ($? != 0) {
         $self->error("failed to ccm-fetch with new config: $errs");
-	$fh->cancel();
+        $fh->cancel();
     }
 
     $fh->close();
