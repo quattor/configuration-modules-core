@@ -47,6 +47,7 @@ use CAF::FileEditor;
 use CAF::FileWriter;
 use Fcntl qw(SEEK_SET);
 use LC::File;
+use POSIX qw(WIFEXITED WEXITSTATUS);
 
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
@@ -833,11 +834,11 @@ sub Configure {
         # no runrun, as it would trigger error (and dependency failure)
         my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
         my $exitcode=$?;
-        if ($? == 0) {
+        if ($exitcode == 0) {
             $self->info("$func: OK: network up");
             return 1;
-        } elsif (($?>>8) == NOQUATTOR_EXITCODE) {
-            $self->warn("$func: ccm-fetch failed due with NOQUATTOR. Testing network with ping.");
+        } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
+            $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
             return test_network_ping();
         } else {
             $self->warn("$func: FAILED: network down");
