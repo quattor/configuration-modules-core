@@ -41,13 +41,13 @@ my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 my $id = $cluster->{config}->{fsid};
 
-set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-0/ceph_fsid',
+set_desired_output($basestr . '/usr/bin/cat /var/lib/ceph/osd/ceph-0/ceph_fsid',
     $data::FSID);
-set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-1/ceph_fsid',
+set_desired_output($basestr . '/usr/bin/cat /var/lib/ceph/osd/ceph-1/ceph_fsid',
     $data::FSID);
-set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-0/fsid',
+set_desired_output($basestr . '/usr/bin/cat /var/lib/ceph/osd/ceph-0/fsid',
     'e2fa588a-8c6c-4874-b76d-597299ecdf72');
-set_desired_output($basestr . 'cat /var/lib/ceph/osd/ceph-1/fsid',
+set_desired_output($basestr . '/usr/bin/cat /var/lib/ceph/osd/ceph-1/fsid',
     'ae77eef3-70a2-4b64-b795-2dee713bfe41');
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-0','/var/lib/ceph/osd/sdc');
 set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-0/journal','/var/lib/ceph/log/sda4/osd-sdc/journal');
