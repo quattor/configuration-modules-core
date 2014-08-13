@@ -96,8 +96,7 @@ sub get_osd_location {
         return ;
     }   
     
-    # TODO: check if physical exists?
-    my @catcmd = ('cat');
+    my @catcmd = ('/usr/bin/cat');
     my $ph_uuid = $self->run_command_as_ceph_with_ssh([@catcmd, $osdlink . '/fsid'], $host);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
@@ -138,7 +137,7 @@ sub check_empty {
     } else {
         my $mkdircmd = ['sudo', '/bin/mkdir', '-p', $loc];
         $self->run_command_as_ceph_with_ssh($mkdircmd, $host); 
-        my $lscmd = ['ls', '-1', $loc];
+        my $lscmd = ['/usr/bin/ls', '-1', $loc];
         my $lsoutput = $self->run_command_as_ceph_with_ssh($lscmd, $host) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines) {
@@ -275,8 +274,8 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon, $cmdh);
         
-        my @donecmd = ('test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done");
-        if (!$cephmon->{up} && !$self->run_command_as_ceph_with_ssh([@donecmd], $quatmon->{fqdn})) {
+        my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done"];
+        if (!$cephmon->{up} && !$self->run_command_as_ceph_with_ssh($donecmd, $quatmon->{fqdn})) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
             return $self->config_mon('add',$name,$quatmon, $cmdh);
@@ -365,8 +364,8 @@ sub config_mds {
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
-        my @donecmd = ('test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
-        my $mds_exists = $self->run_command_as_ceph_with_ssh([@donecmd], $fqdn);
+        my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done"];
+        my $mds_exists = $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
         if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
             if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
