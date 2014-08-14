@@ -35,7 +35,6 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
 
-
 # get host of ip; save the map to avoid repetition
 sub get_host {
     my ($self, $ip, $hostmap) = @_;
@@ -49,9 +48,7 @@ sub get_host {
 # Gets the OSD map
 sub osd_hash {
     my ($self) = @_;
-    my $jstr = $self->run_ceph_command([qw(osd tree)]) or return 0;
-    my $osdtree = decode_json($jstr);
-    $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
+    my $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
     my %osdparsed = ();
     my $hostmap = {};
@@ -99,9 +96,8 @@ sub get_osd_location {
         return ;
     }   
     
-    # TODO: check if physical exists?
-    my @catcmd = ('/usr/bin/ssh', $host, 'cat');
-    my $ph_uuid = $self->run_command_as_ceph([@catcmd, $osdlink . '/fsid']);
+    my @catcmd = ('/usr/bin/cat');
+    my $ph_uuid = $self->run_command_as_ceph_with_ssh([@catcmd, $osdlink . '/fsid'], $host);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
@@ -109,7 +105,7 @@ sub get_osd_location {
             "Disk value: $ph_uuid");
         return ;    
     }
-    my $ph_fsid = $self->run_command_as_ceph([@catcmd, $osdlink . '/ceph_fsid']);
+    my $ph_fsid = $self->run_command_as_ceph_with_ssh([@catcmd, $osdlink . '/ceph_fsid'], $host);
     chomp($ph_fsid);
     my $fsid = $self->{fsid};
     if ($ph_fsid ne $fsid) {
@@ -118,9 +114,9 @@ sub get_osd_location {
             "Disk value: $ph_fsid");
         return ;
     }
-    my @loccmd = ('/usr/bin/ssh', $host, '/bin/readlink');
-    my $osdloc = $self->run_command_as_ceph([@loccmd, $osdlink]);
-    my $journalloc = $self->run_command_as_ceph([@loccmd, '-f', "$osdlink/journal" ]);
+    my @loccmd = ('/bin/readlink');
+    my $osdloc = $self->run_command_as_ceph_with_ssh([@loccmd, $osdlink], $host);
+    my $journalloc = $self->run_command_as_ceph_with_ssh([@loccmd, '-f', "$osdlink/journal"], $host);
     chomp($osdloc);
     chomp($journalloc);
     return $osdloc, $journalloc;
@@ -132,17 +128,17 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m{^/dev/}){
-        my $cmd = ['/usr/bin/ssh', $host, 'sudo', '/usr/bin/file', '-s', $loc];
-        my $output = $self->run_command_as_ceph($cmd) or return 0;
+        my $cmd = ['sudo', '/usr/bin/file', '-s', $loc];
+        my $output = $self->run_command_as_ceph_with_ssh($cmd, $host) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
             $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
     } else {
-        my $mkdircmd = ['/usr/bin/ssh', $host, 'sudo', '/bin/mkdir', '-p', $loc];
-        $self->run_command_as_ceph($mkdircmd); 
-        my $lscmd = ['/usr/bin/ssh', $host, 'ls', '-1', $loc];
-        my $lsoutput = $self->run_command_as_ceph($lscmd) or return 0;
+        my $mkdircmd = ['sudo', '/bin/mkdir', '-p', $loc];
+        $self->run_command_as_ceph_with_ssh($mkdircmd, $host); 
+        my $lscmd = ['/usr/bin/ls', '-1', $loc];
+        my $lsoutput = $self->run_command_as_ceph_with_ssh($lscmd, $host) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines) {
             $self->error("$loc on $host is not empty!");
@@ -243,6 +239,7 @@ sub process_osds {
     my ($self, $qosds, $cmdh) = @_;
     my $qflosds = $self->flatten_osds($qosds);
     $self->debug(5, 'OSD lay-out', Dumper($qosds));
+    $self->info('Building osd information hash, this can take a while..');
     my $cosds = $self->osd_hash() or return 0;
     return $self->ceph_quattor_cmp('osd', $qflosds, $cosds, $cmdh);
 }
@@ -277,9 +274,8 @@ sub config_mon {
         }
         $self->check_state($name, $name, 'mon', $quatmon, $cephmon, $cmdh);
         
-        my @donecmd = ('/usr/bin/ssh', $quatmon->{fqdn}, 
-                       'test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done" );
-        if (!$cephmon->{up} && !$self->run_command_as_ceph([@donecmd])) {
+        my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{clname}-$name/done"];
+        if (!$cephmon->{up} && !$self->run_command_as_ceph_with_ssh($donecmd, $quatmon->{fqdn})) {
             # Node reinstalled without first destroying it
             $self->info("Monitor $name shall be reinstalled");
             return $self->config_mon('add',$name,$quatmon, $cmdh);
@@ -368,8 +364,8 @@ sub config_mds {
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
-        my @donecmd = ('/usr/bin/ssh', $fqdn, 'test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done" );
-        my $mds_exists = $self->run_command_as_ceph([@donecmd]);
+        my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{clname}-$name/done"];
+        my $mds_exists = $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
         if ($mds_exists) { # Ceph does not show a down ceph mds daemon in his mds map
             if ($daemonh->{up} && ($name eq $self->{hostname})) {
                 my @command = ('start', "mds.$name");
@@ -420,9 +416,9 @@ sub config_daemon {
 sub do_deploy {
     my ($self, $is_deploy, $cmdh) = @_;
     if ($is_deploy){ #Run only on deploy host(s)
-        $self->info("Running ceph-deploy commands.");
+        $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
         while (my $cmd = shift @{$cmdh->{deploy_cmds}}) {
-            $self->debug(1,@$cmd);
+            $self->debug(1, 'Running deploy command: ',@$cmd);
             $self->run_ceph_deploy_command($cmd) or return 0;
         }
     } else {

@@ -1047,6 +1047,7 @@ Readonly::Hash our %QUATMAP => (
                'number'  => 0,
              }
            ],
+           'set_chooseleaf_tries', 5,
            'take' => 'default'
          }
        ]
@@ -1948,6 +1949,7 @@ Readonly::Hash our %CMPMAP => (
                'chtype' => 'chooseleaf firstn'
              }
            ],
+           'set_chooseleaf_tries', 5 ,
            'take' => 'default'
          }
        ]
@@ -2132,6 +2134,7 @@ rule data {
 	type replicated
 	min_size 0
 	max_size 10
+	step set_chooseleaf_tries 5
 	step take default
 	step chooseleaf firstn 0 type host
 	step emit

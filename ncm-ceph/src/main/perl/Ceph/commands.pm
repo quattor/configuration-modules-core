@@ -32,6 +32,12 @@ use File::Basename;
 use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
 
+use Readonly;
+Readonly::Array our @SSH_COMMAND => (
+'/usr/bin/ssh', '-o', 'ControlMaster=auto', 
+'-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
+);
+
 #set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;
@@ -104,6 +110,12 @@ sub run_command_as_ceph {
     return $self->run_command([qw(su - ceph -c), @$command]);
 }
 
+# Runs a command as ceph over ssh, optionally with options
+sub run_command_as_ceph_with_ssh {
+    my ($self, $command, $host, $ssh_options) = @_;
+    $ssh_options = [] if (! defined($ssh_options));
+    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command]);
+}
 
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {

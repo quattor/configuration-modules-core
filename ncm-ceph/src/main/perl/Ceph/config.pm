@@ -30,6 +30,8 @@ Readonly::Array my @NONINJECT => qw(
     mon_initial_members
     public_network
     filestore_xattr_use_omap
+    osd_crush_update_on_start
+    osd_objectstore
 );
 
 ## Retrieving information of ceph cluster
