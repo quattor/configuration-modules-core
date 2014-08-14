@@ -47,7 +47,7 @@ sub get_host {
     
 # Gets the OSD map
 sub osd_hash {
-    my ($self) = @_;
+    my ($self, $master, $mapping) = @_; 
     my $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
     my %osdparsed = ();
@@ -83,8 +83,11 @@ sub osd_hash {
         };
         my $osdstr = "$host:$osdloc";
         $osdparsed{$osdstr} = $osdp;
+        $mapping->{get_loc}->{$id} = $osdstr;
+        $mapping->{get_id}->{$host}->{$osdloc} = $id;
+        $master->{$host}->{osds}->{osdstr} = $osdp;
     }
-    return \%osdparsed;
+    return \%osdparsed; #FIXME? 
 }
 
 # checks whoami,fsid and ceph_fsid and returns the real path
@@ -150,7 +153,7 @@ sub check_empty {
 
 # Gets the MON map
 sub mon_hash {
-    my ($self) = @_;
+    my ($self, $master) = @_;
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
     my $monsh = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(quorum_status)]) or return 0;
@@ -159,13 +162,14 @@ sub mon_hash {
     foreach my $mon (@{$monsh->{mons}}){
         $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         $monparsed{$mon->{name}} = $mon; 
+        $master->{$mon->{name}}->{mon} = $mon;
     }
     return \%monparsed;
 }
 
 # Gets the MDS map 
 sub mds_hash {
-    my ($self) = @_;
+    my ($self, $master) = @_;
     my $jstr = $self->run_ceph_command([qw(mds stat)]) or return 0;
     my $mdshs = decode_json($jstr);
     my %mdsparsed = ();
@@ -178,6 +182,9 @@ sub mds_hash {
             up => $up
         };
         $mdsparsed{$mds->{name}} = $mdsp;
+        my @fhost = split('\.', $mds->{name});
+        my $host = $fhost[0];
+        $master->{$host}->{mds} = $mdsp;
     }
     return \%mdsparsed;
 }       

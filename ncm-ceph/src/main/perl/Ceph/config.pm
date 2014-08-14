@@ -37,7 +37,7 @@ Readonly::Array my @NONINJECT => qw(
 ## Retrieving information of ceph cluster
 
 # Gets the config of the cluster
-sub get_global_config {
+sub get_global_config { #FIXME: Will be deprecated
     my ($self, $file) = @_;
     my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
@@ -74,7 +74,7 @@ sub cmp_cfgfile {
 }
 
 # Pull config from host
-sub pull_cfg {
+sub pull_cfg { #FIXME: Will be deprecated
     my ($self, $host) = @_;
     my $pullfile = "$self->{clname}.conf";
     my $hostfile = "$pullfile.$host";
