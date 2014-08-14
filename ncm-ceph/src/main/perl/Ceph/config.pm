@@ -201,6 +201,9 @@ sub do_config_actions {
     my $hosts = $cluster->{allhosts};
     if ($is_deploy) {
         foreach my $host (@{$hosts}) {
+            if ($gvalues->{key_accept}) {
+                $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr}->{homeDir});
+            }
             # Set config and make admin host
             $self->set_admin_host($cluster->{config}, $host) or return 0;
         }

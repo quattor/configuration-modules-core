@@ -127,6 +127,32 @@ sub run_ceph_deploy_command {
     return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir);
 }
 
+# Accept and add unknown keys if wanted
+sub ssh_known_keys {
+    my ($self, $host, $key_accept, $homedir) = @_; 
+    if ($key_accept eq 'first'){
+        # If not in known_host, scan key and add; else do nothing
+        my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
+        my $output = $self->run_command_as_ceph($cmd);
+        #Count the lines of the output
+        my $lines = $output =~ tr/\n//;
+        if (!$lines) {
+            $cmd = ['/usr/bin/ssh-keyscan', $host];
+            my $key = $self->run_command_as_ceph($cmd);
+            my $fh = CAF::FileEditor->open("$homedir/.ssh/known_hosts",
+                                           log => $self);
+            $fh->head_print($key);
+            $fh->close()
+        }
+    } elsif ($key_accept eq 'always'){
+        # SSH into machine with -o StrictHostKeyChecking=no
+        # dummy ssh does the trick
+        $self->run_command_as_ceph_with_ssh(['uname'], $host, ['-o', 'StrictHostKeyChecking=no']);
+    }   
+}
+
+
+
 # Print out the commands that should be run manually
 sub print_cmds {
     my ($self, $cmds) = @_;
