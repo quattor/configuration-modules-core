@@ -59,6 +59,9 @@ set_desired_err($YUM, "\nError: package");
 ok(!$cmp->apply_transaction($TX), "Error in transaction detected");
 is($cmp->{ERROR}, 1, "Error is reported");
 
+ok(!$cmp->apply_transaction($TX, 1), "Error in transaction detected (error_is_warn = true)");
+is($cmp->{ERROR}, 1, "No new error is reported (error_is_warn=true; total errors still 1)");
+
 set_command_status($YUM, 1);
 set_desired_err($YUM, "Yabbadabadoo");
 ok(!$cmp->apply_transaction($TX),
