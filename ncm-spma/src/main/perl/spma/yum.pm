@@ -156,7 +156,7 @@ sub generate_repos
             $fh->cancel();
             return undef;
         }
-        $changes += $fh->close();
+        $changes += $fh->close() || 0; # handle undef
         $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.pkgs",
                                    log => $self);
         print $fh "# Additional configuration for $repo->{name}\n";
@@ -205,14 +205,15 @@ sub execute_yum_command
 
     $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out");
+    $self->verbose("$why output: $out") if(defined($out)); 
     if ($? ||
-        $err =~ m{^(?:Error|Failed|
+        ($err && $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
                       (?:Transaction \s+ encountered.*error)|
                       (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
-        (@missing = ($out =~ m{^No package (.*) available}omg))) {
+                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi) ||
+        ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
+        ) {
         $self->warn("Command output: $out");
         $self->$error_logger("Failed $why: $err");
         if (@missing) {
