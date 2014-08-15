@@ -41,20 +41,23 @@ sub Configure
     # Check that ccm-fetch can work with the new file.
     # In presence of NOQUATTOR file, 
     # test using --force-quattor (to bypass the NOQUATTOR lock) 
-    # and new temporary directory as cache_root
-    # (cache_root dir in configfile can be tested for write permissions)
-    # TODO are we sure that the commandline overrules the cfgfile?
+    # and new temporary directory as cache_root (commandline precedes configfile)
+    # (cache_root dir in configfile can be tested for write permissions?)
       
     my $cmd = [TEST_COMMAND];
     my $tmpcache;
     if (-f NOQUATTOR) {
         # is the cache_root set in the config file?
+        # TODO (new) cache_root needs to be initialised or next ncm-ncd will fail [fail when new cache_root is set withh NOQUATTOR?]
+        #   ccm.conf value is ncm-ncd default
+        # TODO how to test the cache_root? setup CacheManager instance with 
+        # what is the goal of ccm.pm? end result ccm.conf should be default for ncm-ncd ?
         if ("$fh" =~ m/^\s*cache_root\s*=\s*(\S+)\s*$/m) {
             my $cfg_cache_root = $1;
             if ( -w $cfg_cache_root) {
-                $self->debug(1, "cache_root set in new confifg file to $cfg_cache_root and is writeable");
+                $self->debug(1, "NOQUATTOR: cache_root set in new confifg file to $cfg_cache_root and is writeable");
             } else {
-                $self->error("cache_root set in new confifg file to $cfg_cache_root and is not writeable");
+                $self->error("NOQUATTOR: cache_root set in new confifg file to $cfg_cache_root and is not writeable");
                 $fh->cancel();
                 $fh->close();
                 return 1;
@@ -67,13 +70,13 @@ sub Configure
 
         # will contain sensitive data if ccm-fetch test is succesful
         if(! chmod(0700, $tmpcache) ){
-            $self->error("Failed to chown 0700 $tmpcache, won't test ccm-fetch in NOQUATTOR mode: $!");
+            $self->error("NOQUATTOR : Failed to chown 0700 $tmpcache, won't test ccm-fetch: $!");
             $fh->cancel();
             $fh->close();
             return 1;
         };
-                
-        push(@$cmd, NOQUATTOR_FORCE, "--cache_root=$tmpcache");        
+        $self->verbose("NOQUATTOR: test ccm-fetch in temporary cache_root $tmpcache");
+        push(@$cmd, '--'.NOQUATTOR_FORCE, "--cache_root=$tmpcache");        
     }
     my $errs = "";
     my $test = CAF::Process->new($cmd,
