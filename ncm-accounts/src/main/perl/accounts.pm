@@ -649,6 +649,8 @@ sub commit_groups
                                backup => ".old");
     print $fh join("\n", @group, "");
     $fh->close();
+
+    $self->invalidate_cache('group');
 }
 
 # Compares two account structures, as they're going to be sorted.
@@ -721,6 +723,8 @@ sub commit_accounts
                                mode => 0400);
     print $fh join("\n", @shadow, "");
     $fh->close();
+
+    $self->invalidate_cache('passwd');
 }
 
 # Returns a sanitized (untainted) version of the path given as an
@@ -821,6 +825,28 @@ sub commit_configuration
     $self->commit_accounts($system->{passwd}, $system->{special_lines},
                            $system->{logindefs});
     $self->build_home_dirs($system->{passwd});
+}
+
+sub invalidate_cache
+{
+    my ($self, $cache) = @_;
+
+    $self->info("Invalidating cache: $cache");
+
+    my $cmd_output;
+    my $command;
+    $command = ['/usr/sbin/nscd', '-i', $cache];
+
+    my $cmd = CAF::Process->new($command, log => $self,
+				shell => 1,
+				stdout => \$cmd_output,
+				stderr => "stdout");
+    $cmd->execute();
+    if ( $? ) {
+      $self->error("Invalidating cache failed. Command output: $cmd_output\n");
+    } else {
+      $self->debug(1,"Command output: $cmd_output\n");
+    }
 }
 
 # Configure method
