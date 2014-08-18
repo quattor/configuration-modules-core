@@ -12,7 +12,7 @@ dirperm: permissions and file/directory creation NCM component
 Object to set permissions and ownership of files and directories.
 Will create directories if they do not exist (with the proper
 permissions).  Useful, e.g., to give every pool-user a ".globus"
-directory in its $HOME, or to create a bunch of home directories for
+directory in its C<< $HOME >>, or to create a bunch of home directories for
 poolaccounts on a non-CE machine.
 
 If the list initdir is set, then files in those directories will be
