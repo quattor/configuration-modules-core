@@ -42,6 +42,7 @@ fields: path, owner, perm, type, initdir.
              "initdir", list("/etc/skel")
             )
       );
+
 =end text
 
 =cut
