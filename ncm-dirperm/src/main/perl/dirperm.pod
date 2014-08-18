@@ -32,17 +32,14 @@ fields: path, owner, perm, type, initdir.
 
 =head1 EXAMPLES
 
-=begin text
-"/software/components/dirperm/paths" =
-  list(nlist(
-             "path",    "/export/home/alice002/.globus",
-             "owner",   "alice002:alice",
-             "perm",    "0700",
-             "type",    "d",
-             "initdir", list("/etc/skel")
-            )
-      );
-
-=end text
+    "/software/components/dirperm/paths" = list(
+        nlist(
+            "path",    "/export/home/alice002/.globus",
+            "owner",   "alice002:alice",
+            "perm",    "0700",
+            "type",    "d",
+            "initdir", list("/etc/skel")
+        ),
+     );
 
 =cut
