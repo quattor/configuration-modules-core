@@ -49,7 +49,7 @@ String, either C<< 'd' >> for directory or C<< 'f' >> for file.
 
 =item * C<< initdir >>
 
-List of strings representing full paths to directories.
+Optional list of strings representing full paths to directories.
 
 If the target is a directory, this can be used to prepopulate the directory by copying files from multiple sources.
 This is particularly useful for home directories.
