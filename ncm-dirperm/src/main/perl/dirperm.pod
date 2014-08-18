@@ -33,13 +33,26 @@ Each entry in the list must be of the C<< structure_dirperm_entry >> type which 
 
 =item * C<< path >>
 
+String representing full path of configured file/directory.
+
 =item * C<< owner >>
+
+String representing ownership, of form C<< user >> or C<< user:group >>.
 
 =item * C<< perm >>
 
+String containing octal permissions to enforce.
+
 =item * C<< type >>
 
+String, either C<< 'd' >> for directory or C<< 'f' >> for file.
+
 =item * C<< initdir >>
+
+List of strings representing full paths to directories.
+
+If the target is a directory, this can be used to prepopulate the directory by copying files from multiple sources.
+This is particularly useful for home directories.
 
 =back
 
