@@ -834,18 +834,22 @@ sub invalidate_cache
     $self->info("Invalidating cache: $cache");
 
     my $cmd_output;
-    my $command;
-    $command = ['/usr/sbin/nscd', '-i', $cache];
+    my $nscd = '/usr/sbin/nscd';
+    my $command = [$nscd, '-i', $cache];
 
-    my $cmd = CAF::Process->new($command, log => $self,
-				shell => 1,
-				stdout => \$cmd_output,
-				stderr => "stdout");
-    $cmd->execute();
-    if ( $? ) {
-      $self->error("Invalidating cache failed. Command output: $cmd_output\n");
+    if (-x $nscd) {
+        my $cmd = CAF::Process->new($command, log => $self,
+                                    shell => 1,
+                                    stdout => \$cmd_output,
+                                    stderr => "stdout");
+        $cmd->execute();
+        if ( $? ) {
+            $self->error("Invalidating cache failed. Command output: $cmd_output\n");
+        } else {
+            $self->debug(1,"Command output: $cmd_output\n");
+        }
     } else {
-      $self->debug(1,"Command output: $cmd_output\n");
+        $self->info("nscd not found, will not do anything.");
     }
 }
 
