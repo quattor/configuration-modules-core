@@ -3,7 +3,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.quattor</groupId>
-  <artifactId>ncm-components</artifactId>
+  <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
 
   <version>14.6.1-SNAPSHOT</version>
