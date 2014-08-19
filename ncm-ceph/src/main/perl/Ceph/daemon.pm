@@ -67,9 +67,21 @@ sub osd_hash {
             $self->error("Parsing osd commands went wrong: Could not retrieve fqdn of ip $ip.");
             return 0;
         }
+        
         my @fhost = split('\.', $fqdn);
         $host = $fhost[0];
+        
+        # If host is unreachable, go on with empty one. Process this later 
+        if ($master->{$host}->{fault} || !$self->test_host_connection($fqdn)) {
+            if (!$master->{$host}->{fault}) {
+                $master->{$host}->{fault} = 1;
+                $self->warn("Could not retrieve necessary information from host $host");
+            } 
+            next;
+        }
+            
         my ($osdloc, $journalloc) = $self->get_osd_location($id, $fqdn, $osd->{uuid}) or return 0;
+        
         my $osdp = { 
             name            => $name, 
             host            => $host, 
@@ -162,7 +174,7 @@ sub mon_hash {
     foreach my $mon (@{$monsh->{mons}}){
         $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         $monparsed{$mon->{name}} = $mon; 
-        $master->{$mon->{name}}->{mon} = $mon;
+        $master->{$mon->{name}}->{mon} = $mon; #One monitor per host
     }
     return \%monparsed;
 }
@@ -241,6 +253,32 @@ sub flatten_osds {
     }
     return \%flat;
 }
+
+
+#NEW FIXME:
+# Like flatten_osd, but for single host.. 
+sub structure_osds {
+    my ($self, $hostname, $host) = @_; 
+    my $osds = $host->{osds};
+    my %flat = (); 
+    while (my ($osdpath, $newosd) = each(%{$osds})) {
+        $newosd->{host} = $hostname;
+        $newosd->{fqdn} = $host->{fqdn};
+        $osdpath = unescape($osdpath);
+        if ($osdpath !~ m|^/|){
+            $osdpath = $OSDBASE . $osdpath;
+        }
+        if (exists($newosd->{journal_path}) && $newosd->{journal_path} !~ m|^/|){
+            $newosd->{journal_path} = $JOURNALBASE . $newosd->{journal_path};
+        }
+        $newosd->{osd_path} = $osdpath;
+        my $osdstr = "$hostname:$osdpath";
+        $flat{$osdstr} = $newosd;
+    }   
+    return \%flat;
+
+}
+
 # Compare cephs osd with the quattor osds
 sub process_osds {
     my ($self, $qosds, $cmdh) = @_;
@@ -444,7 +482,7 @@ sub do_deploy {
 }
 
 #Initialize array buckets
-sub init_commands {
+sub init_commands {#FIXME #NEW
     my ($self) = @_;
     my $cmdh = {};
     $cmdh->{deploy_cmds} = [];

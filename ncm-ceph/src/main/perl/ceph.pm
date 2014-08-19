@@ -20,7 +20,7 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 use base qw(NCM::Component NCM::Component::Ceph::commands NCM::Component::Ceph::crushmap
-    NCM::Component::Ceph::daemon NCM::Component::Ceph::config );
+    NCM::Component::Ceph::daemon NCM::Component::Ceph::config NCM::Component::Ceph::control );
 
 use LC::Exception;
 use LC::Find;
