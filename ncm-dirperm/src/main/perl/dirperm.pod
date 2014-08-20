@@ -6,42 +6,66 @@
 =head1 NAME
 
 dirperm: permissions and file/directory creation NCM component
- 
+
 =head1 DESCRIPTION
 
 Object to set permissions and ownership of files and directories.
 Will create directories if they do not exist (with the proper
 permissions).  Useful, e.g., to give every pool-user a ".globus"
-directory in its $HOME, or to create a bunch of home directories for
+directory in its C<< $HOME >>, or to create a bunch of home directories for
 poolaccounts on a non-CE machine.
- 
+
 If the list initdir is set, then files in those directories will be
 copied to the created directory.  They will be given the same
-ownership as the directory. 
+ownership as the directory.
 
 When creating a file, all of the parent directories must already
-exist.  
- 
+exist.
+
 =head1 RESOURCES
 
-=head2 /software/components/dirperm/paths
+=head2 C<< /software/components/dirperm/paths >>
 
-A list of files/directories to manage with this component.  Each entry
-must be of the structure_dirperm_entry type which has the following
-fields: path, owner, perm, type, initdir.  
+A list of files/directories to manage with this component.
+Each entry in the list must be of the C<< structure_dirperm_entry >> type which has the following fields:
+
+=over
+
+=item * C<< path >>
+
+String representing full path of configured file/directory.
+
+=item * C<< owner >>
+
+String representing ownership, of form C<< user >> or C<< user:group >>.
+
+=item * C<< perm >>
+
+String containing octal permissions to enforce.
+
+=item * C<< type >>
+
+String, either C<< 'd' >> for directory or C<< 'f' >> for file.
+
+=item * C<< initdir >>
+
+Optional list of strings representing full paths to directories.
+
+If the target is a directory, this can be used to prepopulate the directory by copying files from multiple sources.
+This is particularly useful for home directories.
+
+=back
 
 =head1 EXAMPLES
- 
-=begin text
-"/software/components/dirperm/paths" = 
-  list(nlist(
-             "path",    "/export/home/alice002/.globus",
-             "owner",   "alice002:alice",
-             "perm",    "0700",
-             "type",    "d",
-             "initdir", list("/etc/skel")
-            )
-      );
-=end text
+
+    "/software/components/dirperm/paths" = list(
+        nlist(
+            "path",    "/export/home/alice002/.globus",
+            "owner",   "alice002:alice",
+            "perm",    "0700",
+            "type",    "d",
+            "initdir", list("/etc/skel")
+        ),
+     );
 
 =cut
