@@ -135,7 +135,7 @@ sub pull_compare_push {
     }    
 }
 # Prepare the commands to change a global config entry
-sub config_cfgfile {
+sub config_cfgfile {#FIXME
     my ($self,$action,$name,$values, $cfgchanges) = @_;
     if ($name eq 'fsid') {
         if ($action ne 'change'){

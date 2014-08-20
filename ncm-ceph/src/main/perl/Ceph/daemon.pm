@@ -72,13 +72,15 @@ sub osd_hash {
         $host = $fhost[0];
         
         # If host is unreachable, go on with empty one. Process this later 
-        if ($master->{$host}->{fault} || !$self->test_host_connection($fqdn)) {
-            if (!$master->{$host}->{fault}) {
+        if (!defined($master->{$host}->{fault})) {
+            if (!$self->test_host_connection($fqdn)) {
                 $master->{$host}->{fault} = 1;
                 $self->warn("Could not retrieve necessary information from host $host");
-            } 
-            next;
-        }
+            } else {
+                $master->{$host}->{fault} = 0;
+            }
+        } 
+        next if $master->{$host}->{fault};
             
         my ($osdloc, $journalloc) = $self->get_osd_location($id, $fqdn, $osd->{uuid}) or return 0;
         
@@ -194,6 +196,7 @@ sub mds_hash {
             up => $up
         };
         $mdsparsed{$mds->{name}} = $mdsp;
+        #FIXME: For daemons rolled out with old version of ncm-ceph
         my @fhost = split('\.', $mds->{name});
         my $host = $fhost[0];
         $master->{$host}->{mds} = $mdsp;
@@ -338,7 +341,8 @@ sub check_immutables {
     my ($self, $name, $imm, $quat, $ceph) = @_;
     my $rc =1;
     foreach my $attr (@{$imm}) {
-        if ($quat->{$attr} ne $ceph->{$attr}){
+        if ((defined($quat->{$attr}) || defined($ceph->{$attr})) && 
+            ($quat->{$attr} ne $ceph->{$attr}) ){
             $self->error("Attribute $attr of $name not corresponding.", 
                 "Quattor: $quat->{$attr}, ",
                 "Ceph: $ceph->{$attr}");
@@ -360,9 +364,20 @@ sub check_state {
         push (@command, "$type.$id");
         push (@{$cmdh->{daemon_cmds}}, [@command]);
     }
-} 
+}
+
+sub prep_osd { #NEW
+    my ($self,$osd) = @_;
+    
+    $self->check_empty($osd->{osd_path}, $osd->{fqdn}) or return 0;
+    if ($osd->{journal_path}) {
+        (my $journaldir = $osd->{journal_path}) =~ s{/journal$}{};
+        $self->check_empty($journaldir, $osd->{fqdn}) or return 0;
+    }
+}
+
 # Prepare the commands to change/add/delete an osd
-sub config_osd {
+sub config_osd {#FIXME
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         #TODO: change to 'create' ?
@@ -402,6 +417,13 @@ sub config_osd {
         return 0;
     }
     return 1;
+}
+
+sub prep_mds { #NEW
+    my ($self, $hostname, $mds) = @_;
+        my $fqdn = $mds->{fqdn};
+        my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{clname}-$hostname/done"];
+        return $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
 }
 
 # Prepare the commands to change/add/delete an mds
