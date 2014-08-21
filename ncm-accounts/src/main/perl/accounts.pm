@@ -839,7 +839,6 @@ sub invalidate_cache
 
     if (-x $nscd) {
         my $cmd = CAF::Process->new($command, log => $self,
-                                    shell => 1,
                                     stdout => \$cmd_output,
                                     stderr => "stdout");
         $cmd->execute();
