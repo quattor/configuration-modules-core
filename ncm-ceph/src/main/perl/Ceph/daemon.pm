@@ -427,7 +427,7 @@ sub prep_mds { #NEW
 }
 
 # Prepare the commands to change/add/delete an mds
-sub config_mds {
+sub config_mds {#MFD
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my $fqdn = $daemonh->{fqdn};
@@ -480,7 +480,7 @@ sub config_daemon {
 }
 
 # Deploy daemons 
-sub do_deploy {
+sub do_deploy {#MFO
     my ($self, $is_deploy, $cmdh) = @_;
     if ($is_deploy){ #Run only on deploy host(s)
         $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");

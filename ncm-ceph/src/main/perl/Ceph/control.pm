@@ -33,7 +33,7 @@ sub configure_cluster {
 
     my $structures = $self->compare_conf($ceph_conf, $quat_conf, $mapping, $gvalues) or return 0; #This is the Main function
     
-    my $tinies = $self->set_configs($structures->{configs}, $gvalues) or return 0; 
+    my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0; 
         #Config vanuit file, reverse mapping, krijgen tiny objcs
 
     $self->deploy_daemons($structures->{deployd}, $tinies, $mapping, $structures->{restartd}) or return 0; #Met change cfg action
@@ -200,13 +200,20 @@ sub add_mds {
 sub compare_mon {
     my ($self, $hostname, $quat_mon, $ceph_mon, $structures) = @_;
    
-     
-    # check attributes, immutables
-    # check config -> changes: add to restart
-    my $changecount = $self->compare_config('mon', $hostname, $quat_mon->{config}, $ceph_mon->{config}) or return 0;
+    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
+        return $self->add_mon($hostname, $quatmon, $structures);
+    }
+    my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{clname}-$hostname/done"];
+    if (!$ceph_mon->{up} && !$self->run_command_as_ceph_with_ssh($donecmd, $quat_mon->{fqdn})) {
+        # Node reinstalled without first destroying it
+        $self->info("Monitor $name shall be reinstalled");
+        return $self->add_mon($hostname, $quatmon, $structures);
+    }
+
+    my $changes = $self->compare_config('mon', $hostname, $quat_mon->{config}, $ceph_mon->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mon} = $quat_mon->{config};
     #TODO if ($changecount > 1 && !check_state) {
-    if ($changecount > 1) {
+    if (%{$changes}){
         $structures->{restartd}->{$hostname}->{mon} =1;
     }
 
@@ -217,10 +224,10 @@ sub compare_mon {
 sub compare_mds {
     my ($self, $hostname, $quat_mds, $ceph_mds, $structures) = @_;
     
-    my $changecount = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
+    my $changes = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mds} = $quat_mds->{config};
     #TODO if ($changecount > 1 && !check_state) {
-    if ($changecount > 1) {
+    if (%{$changes}){
         $structures->{restartd}->{$hostname}->{mds} =1;
     }
 
@@ -240,10 +247,11 @@ sub compare_osd {
     
     @osdattrs = ('osd_objectstore');
     $self->check_immutables($hostname, \@osdattrs, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
-    my $changecount = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
-    $structures->{configs}->{$hostname}->{osds}->{$osdkey} = $quat_osd->{config}; 
+    my $changes = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
+    my $osd_id = $structures->{mapping}->{get_id}->{$osdkey} or return 0;
+    $structures->{configs}->{$hostname}->{"osd.$osd_id"} = $quat_osd->{config}; 
     #TODO if ($changecount > 1 && !check_state) {
-    if ($changecount > 1) {
+    if (%{$changes}){
         $structures->{restartd}->{$hostname}->{osds}->{$osdkey} =1;
     } 
     return 1;
@@ -251,7 +259,7 @@ sub compare_osd {
 
 sub compare_config {
     my ($self, $type, $key, $quat_config, $ceph_config) = @_;
-    my $retvalue = 1;
+    my $cfgchanges = {};
     while (my ($qkey, $qvalue) = each(%{$quat_config})) {
         if (exists $ceph_config->{$qkey}) {
             my $cvalue = $ceph_config->{$qkey};
@@ -260,12 +268,12 @@ sub compare_config {
             }
             if ($qvalue ne $cvalue) {
             $self->info("$qkey of $type $key changed from $cvalue to $qvalue");
-            $retvalue++;
+            $cfgchanges->{$qkey} = $qvalue;
             }
             delete $ceph_config->{$qkey};
         } else {
             $self->info("$qkey with value $qvalue added to config file of $type $key");
-            $retvalue++;
+            $cfgchanges->{$qkey} = $qvalue;
         }
     }
     foreach my $ckey (keys %{$ceph_config}) {
@@ -274,9 +282,20 @@ sub compare_config {
         $self->error("$ckey for $type $key not in quattor");
         return 0;
     }
-    return $retvalue;
+    return $cfgchanges;
 }
 
+sub compare_global {
+    my ($hostname,  $quat_config, $ceph_config, $structures) = @_;
+    my @attrs = ('fsid');
+    $self->check_immutables($hostname, \@attrs, $quat_config, $ceph_config) or return 0;
+    my $changes = $self->compare_config('global', $hostname, $quat_config, $ceph_config) or return 0;
+    $structures->{configs}->{$hostname}->{global} = $quat_config;
+    if (%{$changes}){
+        $self->inject_realtime($hostname, $changes) or return 0;
+        $structures->{restartd}->{$hostname}->{osds}->{$osdkey} =1;
+    }
+    
 
 sub compare_host {
     my ($self, $hostname, $quat_host, $ceph_host, $structures) = @_;
@@ -344,6 +363,7 @@ sub compare_conf {
         restartd => {},
         ignh => {},
         mandc  => {},
+        mapping => $mapping,
     };
     while  (my ($hostname, $host) = each(%{$quat_conf})) {
         if (exists $ceph_conf->{$hostname}) {
@@ -409,6 +429,46 @@ sub set_and_push_configs {
     return $tinies;
 }
 
+sub deploy_daemon {
+    my ($self, $cmd, $name) = @_;
+    push (@$cmd, $name);
+    $self->debug(1, 'Deploying daemon: ',@$cmd);
+    return $self->run_ceph_deploy_command($cmd);
+}
+sub deploy_daemons {
+    my ($self, $deployd, $tinies, $mapping, $restartd, $gvalues) or return 0; 
+    $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
+    while  (my ($hostname, $host) = each(%{$deploys})) {
+        if ($host->{mon} {
+            #deploy mon
+            my @command = qw(mon create);
+            $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
+        }
+        if ($host->{mds} {
+            #deploy mds
+            my @command = qw(mds create);
+            $self->deploy_daemon(\@command, $host->{mds}->{fqdn}) or return 0; 
+        }
+        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+            my $foefel = 0;
+            if ($osd->{config}->{osd_objectstore}) {
+                $self->pre_foefelare($tinies->{hostname}, $osd->{config}->{osd_objectstore});
+                $foefel = 1;
+            }
+            my $pathstring = "$daemonh->{fqdn}:$daemonh->{osd_path}";
+        if ($daemonh->{journal_path}) {
+            (my $journaldir = $daemonh->{journal_path}) =~ s{/journal$}{};
+            $self->check_empty($journaldir, $daemonh->{fqdn}) or return 0;
+            $pathstring = "$pathstring:$daemonh->{journal_path}";
+        }
+
+            my @command = qw(osd create);
+            $self->deploy_daemon(\@command, $osdloc) or return 0;
+        
+
+        }
+    # get_osd_name (host,location)
 
 
+}
 1;
