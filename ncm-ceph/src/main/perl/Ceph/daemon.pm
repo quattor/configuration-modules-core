@@ -208,7 +208,7 @@ sub mds_hash {
 
 # Do a comparison of quattor config and the actual ceph config 
 # for a given type (cfg, mon, osd, mds)
-sub ceph_quattor_cmp {
+sub ceph_quattor_cmp {#MFD
     my ($self, $type, $quath, $cephh, $cmdh) = @_;
     foreach my $qkey (sort(keys %{$quath})) {
         if (exists $cephh->{$qkey}) {
@@ -227,14 +227,14 @@ sub ceph_quattor_cmp {
 }
 
 # Compare ceph mons with the quattor mons
-sub process_mons {
+sub process_mons {#MFD
     my ($self, $qmons, $cmdh) = @_;
     my $cmons = $self->mon_hash() or return 0;
     return $self->ceph_quattor_cmp('mon', $qmons, $cmons, $cmdh);
 }
 
 # Converts a host/osd hierarchy in a 'host:osd' structure
-sub flatten_osds {
+sub flatten_osds {#MFO
     my ($self, $hosds) = @_; 
     my %flat = ();
     while (my ($hostname, $host) = each(%{$hosds})) {
@@ -283,7 +283,7 @@ sub structure_osds {
 }
 
 # Compare cephs osd with the quattor osds
-sub process_osds {
+sub process_osds {#MFD
     my ($self, $qosds, $cmdh) = @_;
     my $qflosds = $self->flatten_osds($qosds);
     $self->debug(5, 'OSD lay-out', Dumper($qosds));
@@ -293,14 +293,14 @@ sub process_osds {
 }
 
 # Compare cephs mds with the quattor mds
-sub process_mdss {
+sub process_mdss {#MFD
     my ($self, $qmdss, $cmdh) = @_;
     my $cmdss = $self->mds_hash() or return 0;
     return $self->ceph_quattor_cmp('mds', $qmdss, $cmdss, $cmdh);
 }
 
 # Prepare the commands to change/add/delete a monitor  
-sub config_mon {
+sub config_mon {#MFD
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         my @command = qw(mon create);
@@ -352,7 +352,7 @@ sub check_immutables {
     return $rc;
 }
 # Checks and changes the state on the host
-sub check_state {
+sub check_state {#TODO MFC
     my ($self, $id, $host, $type, $quat, $ceph, $cmdh) = @_;
     if (($host eq $self->{hostname}) and ($quat->{up} xor $ceph->{up})){
         my @command; 
@@ -377,7 +377,7 @@ sub prep_osd { #NEW
 }
 
 # Prepare the commands to change/add/delete an osd
-sub config_osd {#FIXME
+sub config_osd {#FIXME #MFD
     my ($self,$action,$name,$daemonh, $cmdh) = @_;
     if ($action eq 'add'){
         #TODO: change to 'create' ?

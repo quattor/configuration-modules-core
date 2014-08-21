@@ -37,7 +37,7 @@ Readonly::Array my @NONINJECT => qw(
 ## Retrieving information of ceph cluster
 
 # Gets the config of the cluster
-sub get_global_config { #FIXME: Will be deprecated
+sub get_global_config { #FIXME: #MFD
     my ($self, $file) = @_;
     my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
@@ -55,7 +55,7 @@ sub get_global_config { #FIXME: Will be deprecated
 ## Processing and comparing between Quattor and Ceph
 
 # Do a comparison of quattor config and the actual ceph config 
-sub cmp_cfgfile {
+sub cmp_cfgfile {#MFD
     my ($self, $type, $quath, $cephh, $cfgchanges) = @_;
     foreach my $qkey (sort(keys %{$quath})) {
         if (exists $cephh->{$qkey}) {
@@ -74,7 +74,7 @@ sub cmp_cfgfile {
 }
 
 # Pull config from host
-sub pull_cfg { #FIXME: Will be deprecated
+sub pull_cfg { #MFO: Will be deprecated
     my ($self, $host) = @_;
     my $pullfile = "$self->{clname}.conf";
     my $hostfile = "$pullfile.$host";
@@ -89,11 +89,12 @@ sub pull_cfg { #FIXME: Will be deprecated
 
 # Push config to host
 sub push_cfg {
-    my ($self, $host, $overwrite) = @_;
-    if ($overwrite) {
-        return $self->run_ceph_deploy_command([qw(config push), $host],'',1 );
-    }else {
-        return $self->run_ceph_deploy_command([qw(config push), $host] );
+    my ($self, $host, $overwrite, $dir) = @_;
+    
+    $overwrite = 0 if (! defined($overwrite));
+    $dir = '' if (! defined($dir));
+    
+    return $self->run_ceph_deploy_command([qw(config push), $host], $dir, $overwrite);
     }     
 }
 
@@ -116,7 +117,7 @@ sub inject_realtime {
     return 1;
 }
 # Pulls config from host, compares it with quattor config and pushes the config back if needed
-sub pull_compare_push {
+sub pull_compare_push {#MFD
     my ($self, $config, $host) = @_;
     my $cconf = $self->pull_cfg($host);
     if (!$cconf) {
@@ -135,7 +136,7 @@ sub pull_compare_push {
     }    
 }
 # Prepare the commands to change a global config entry
-sub config_cfgfile {#FIXME
+sub config_cfgfile {#FIXME #MFD
     my ($self,$action,$name,$values, $cfgchanges) = @_;
     if ($name eq 'fsid') {
         if ($action ne 'change'){
@@ -184,7 +185,7 @@ sub config_cfgfile {#FIXME
 #Make all defined hosts ceph admin hosts (=able to run ceph commands)
 #This is not (necessary) the same as ceph-deploy hosts!
 # Also deploy config file
-sub set_admin_host {
+sub set_admin_host {#MFD
     my ($self, $config, $host) = @_;
     $self->pull_compare_push($config, $host) or return 0;
     my @admins=qw(admin);

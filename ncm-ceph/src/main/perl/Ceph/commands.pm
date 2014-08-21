@@ -165,7 +165,7 @@ sub print_cmds {
 }
 
 # Write the config file
-sub write_config {
+sub write_config {#MFD
     my ($self, $cfg, $cfgfile ) = @_; 
     my $tinycfg = Config::Tiny->new;
     my $config = { %$cfg };

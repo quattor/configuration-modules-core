@@ -31,18 +31,18 @@ sub configure_cluster {
     my ($ceph_conf, $mapping) = $self->get_ceph_conf() or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
 
-    my ($configs, $deployd, $restartd, $mand, $not_configured) = 
-        $self->compare_conf($ceph_conf, $quat_conf, $gvalues) or return 0; #This is the Main function
+    my $structures = $self->compare_conf($ceph_conf, $quat_conf, $mapping, $gvalues) or return 0; #This is the Main function
     
-    my $tinies = $self->set_configs($configs, $mapping) or return 0; 
+    my $tinies = $self->set_configs($structures->{configs}, $gvalues) or return 0; 
         #Config vanuit file, reverse mapping, krijgen tiny objcs
 
-    $self->deploy_daemons($deployd, $tinies, $restartd) or return 0; #Met change cfg action
-
+    $self->deploy_daemons($structures->{deployd}, $tinies, $mapping, $structures->{restartd}) or return 0; #Met change cfg action
+    $self->destroy_daemons($structures->{destroyd}, $tinies, $mapping) or return 0;
+    #$self->restart_daemons(
     #$self->crush_actions($crushmap, $not_configured) or return 0; #Same as before, but not for new unconfigured hosts
     
-    $self->print_info($restartd, $mand, $not_configured);
-    
+    #$self->print_info($restartd, $mand, $not_configured);
+    return 1; 
     
 }
 
@@ -81,7 +81,7 @@ sub get_ceph_conf {
                     $host->{mon}->{config} = $cfg;
                 } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
                     $host->{mds}->{config} = $cfg;
-                } else { #TODO implement other section types? e.g. radosgw
+                } else { #TODO implement other section types? e.g. client, radosgw
                     $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
                         "This section will be ignored");
                 }
@@ -101,13 +101,13 @@ sub pull_host_cfg {
 
     move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
     $self->git_commit($self->{qtmp}, $hostfile, "pulled config of host $host"); 
-    my $cephcfg = $self->host_config($self->{qtmp} . $hostfile) or return 0;
+    my $cephcfg = $self->get_host_config($self->{qtmp} . $hostfile) or return 0;
 
     return $cephcfg;    
 }
 
 # Gets the config of the cluster
-sub host_config {
+sub get_host_config {
     my ($self, $file) = @_; 
     my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
@@ -121,7 +121,7 @@ sub host_config {
 #TODO: check if host is reachable, combine with ssh-thing? (At this moment same result as before
 sub test_host_connection {
     my ($self, $host) = @_;
-
+    
     return 1;
 }
 
@@ -138,7 +138,7 @@ sub get_quat_conf {
         $master->{$hostname}->{fqdn} = $host->{fqdn};
     }
     while (my ($host, $mds) = each(%{$quattor->{mdss}})) {
-        my @fhost = split('\.', $host);
+        my @fhost = split('\.', $host);# Make sure shortname is used. TODO in schema?
         my $hostname = $fhost[0];
         $master->{$hostname}->{mds} = $mds; # Only one mds
         $master->{$hostname}->{fqdn} = $mds->{fqdn};
@@ -163,21 +163,21 @@ sub add_host {
         if ($host->{mds}) {
             $self->add_mds($hostname, $host->{mds}, $structures) or return 0;
         }
-        while  (my ($osdkey, $osd) = each(%{$quat_host->{osds}}) {
-            $self->add_osd($hostname, $osdkey, $osd, $structure) or return 0;
+        while  (my ($osdkey, $osd) = each(%{$host->{osds}})) {
+            $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
         }
     }
     return 1;
 }
-sub add_osd { #OSDS should be deployed first to get an ID
-    my ($self, $hostname, $osdkey, $osd, $structure) = @_;
+sub add_osd { #OSDS should be deployed first to get an ID, and config will be added in deploy fase
+    my ($self, $hostname, $osdkey, $osd, $structures) = @_;
     
     $self->prep_osd($osd) or return 0;
     $structures->{deployd}->{$hostname}->{osds}->{$osdkey} = $osd;
 }
 
 sub add_mon {
-    my ($self, $hostname, $mon, $structure) = @_;
+    my ($self, $hostname, $mon, $structures) = @_;
 
     $structures->{deployd}->{$hostname}->{mon} = $mon;
     $structures->{configs}->{$hostname}->{mon} = $mon->{config};
@@ -185,7 +185,7 @@ sub add_mon {
 }
 
 sub add_mds {
-    my ($self, $hostname, $mds, $structure) = @_;
+    my ($self, $hostname, $mds, $structures) = @_;
     
     if (!$self->prep_mds($hostname, $mds)) { # really not existing
         $structures->{deployd}->{$hostname}->{mds} = $mds;
@@ -203,13 +203,27 @@ sub compare_mon {
      
     # check attributes, immutables
     # check config -> changes: add to restart
+    my $changecount = $self->compare_config('mon', $hostname, $quat_mon->{config}, $ceph_mon->{config}) or return 0;
+    $structures->{configs}->{$hostname}->{mon} = $quat_mon->{config};
+    #TODO if ($changecount > 1 && !check_state) {
+    if ($changecount > 1) {
+        $structures->{restartd}->{$hostname}->{mon} =1;
+    }
+
     return 1;
 
 }
 
 sub compare_mds {
     my ($self, $hostname, $quat_mds, $ceph_mds, $structures) = @_;
-#TODO
+    
+    my $changecount = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
+    $structures->{configs}->{$hostname}->{mds} = $quat_mds->{config};
+    #TODO if ($changecount > 1 && !check_state) {
+    if ($changecount > 1) {
+        $structures->{restartd}->{$hostname}->{mds} =1;
+    }
+
     return 1;
 }
 
@@ -224,24 +238,44 @@ sub compare_osd {
     }
     $self->check_immutables($hostname, \@osdattrs, $quat_osd, $ceph_osd) or return 0; 
     
-    if @osdattrs = ('osd_objectstore');
+    @osdattrs = ('osd_objectstore');
     $self->check_immutables($hostname, \@osdattrs, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
-    
-    $self->compare_config($hostname, $osdkey, $quat_osd->{config}, $ceph_osd->{config});
+    my $changecount = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
+    $structures->{configs}->{$hostname}->{osds}->{$osdkey} = $quat_osd->{config}; 
+    #TODO if ($changecount > 1 && !check_state) {
+    if ($changecount > 1) {
+        $structures->{restartd}->{$hostname}->{osds}->{$osdkey} =1;
+    } 
     return 1;
 }
 
 sub compare_config {
-    my ($self, $hostname, $daemon, $quat_config, $ceph_config) = @_;
-
-    while (my ($qkey, $qvalue) = each(%{$quat_config}) {
+    my ($self, $type, $key, $quat_config, $ceph_config) = @_;
+    my $retvalue = 1;
+    while (my ($qkey, $qvalue) = each(%{$quat_config})) {
         if (exists $ceph_config->{$qkey}) {
+            my $cvalue = $ceph_config->{$qkey};
             if (ref($qvalue) eq 'ARRAY'){
                 $qvalue = join(', ',@$qvalue);
             }
-            $self->info("$qkey of $daemon on $hostname changed from $ceph_config->{$qkey} to $qvalue");
+            if ($qvalue ne $cvalue) {
+            $self->info("$qkey of $type $key changed from $cvalue to $qvalue");
+            $retvalue++;
+            }
+            delete $ceph_config->{$qkey};
+        } else {
+            $self->info("$qkey with value $qvalue added to config file of $type $key");
+            $retvalue++;
         }
-
+    }
+    foreach my $ckey (keys %{$ceph_config}) {
+        # If we want to keep the existing configuration settings that are not in Quattor,
+        # we need to log it here. For now we expect that every used config parameter is in Quattor    
+        $self->error("$ckey for $type $key not in quattor");
+        return 0;
+    }
+    return $retvalue;
+}
 
 
 sub compare_host {
@@ -268,7 +302,7 @@ sub compare_host {
         } elsif ($ceph_host->{mds}) {
             $structures->{destroy}->{$hostname}->{mds} = $ceph_host->{mds};
         } 
-        while  (my ($osdkey, $osd) = each(%{$quat_host->{osds}}) {
+        while  (my ($osdkey, $osd) = each(%{$quat_host->{osds}})) {
             if (exists $ceph_host->{$osdkey}) {
                 $self->compare_osd($hostname, $osdkey, $quat_host->{$osdkey},
                     $ceph_host->{$osdkey}, $structures) or return 0;
@@ -296,7 +330,7 @@ sub delete_host {#TODO: Remove configfile?
 }
     
 sub compare_conf {
-    my ($ceph_conf, $quat_conf, $gvalues) = @_;
+    my ($self, $ceph_conf, $quat_conf, $mapping, $gvalues) = @_;
 
     # Compare hosts - add, delete, modify fts
     # Add: push global config, all daemons aan deploylist
@@ -314,20 +348,66 @@ sub compare_conf {
     while  (my ($hostname, $host) = each(%{$quat_conf})) {
         if (exists $ceph_conf->{$hostname}) {
             $self->compare_host($hostname, $quat_conf->{$hostname}, 
-                $ceph_conf->{$hostname}, $structures) or return 0;
+                $ceph_conf->{$hostname}, $structures) or return ;
             delete $ceph_conf->{$hostname};
         } else {
-            $self->add_host($hostname, $host, $structures) or return 0;
+            $self->add_host($hostname, $host, $structures) or return ;
         }
     }   
     while  (my ($hostname, $host) = each(%{$ceph_conf})) {
-        $self->delete_host($hostname, $host, $structures) or return 0;
+        $self->delete_host($hostname, $host, $structures) or return ;
     }    
-    return 1;
+    return $structures;
  
 }
 
+sub stringify_cfg_arrays {
+    my ($self, $cfg) = @_;
+    my $config = { %$cfg };
+    foreach my $key (%{$config}) {
+        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
+            $config->{$key} = join(', ',@{$config->{$key}});
+            $self->debug(3,"Array converted to string:", $config->{$key});
+        }
+    }
+    return $config;
+}
+ 
 
+sub set_host_config {
+    my ($self, $hostname, $host, $gvalues) = @_;
+    
+    my $pushfile = "$self->{clname}.conf";
+    my $hostfile = "$pushfile.$host";
+    my $cfgfile = $gvalues->{qtmp} . $hostfile;
+    
+    my $tinycfg = Config::Tiny->new;
+    while  (my ($daemon, $config) = each(%{$host})) {
+        $tinycfg->{$daemon} = $self->stringify_cfg_arrays($config);
+    }
+
+    if (!$tinycfg->write($cfgfile)) {
+        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?"); 
+        return 0;
+    }   
+    $self->debug(2,"content written to config file $cfgfile");
+    $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
+    move($cfgfile, $gvalues->{qtmp} .  $pushfile) or return 0;
+    $self->push_cfg($hostname, $gvalues->{qtmp}, 1) or return 0;
+    
+    return $tinycfg;
+
+}
+
+
+sub set_and_push_configs {
+    my ($self, $configs, $mapping, $gvalues) = @_;
+    my $tinies = {};
+    while  (my ($hostname, $host) = each(%{$configs})) {
+        $tinies->{hostname} = $set_host_config($hostname, $host, $gvalues) or return 0;
+    }
+    return $tinies;
+}
 
 
 
