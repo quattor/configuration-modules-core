@@ -842,18 +842,18 @@ sub invalidate_cache
                                       stdout => \$cmd_output,
                                       stderr => "stdout");
         $pgrep->execute();
-        if ( $? ) {
-            $self->info("nscd found but not running, will not do anything.");
-        } else {
+        if ( ! $? ) {
             my $cmd = CAF::Process->new($command, log => $self,
                                         stdout => \$cmd_output,
                                         stderr => "stdout");
             $cmd->execute();
-            if ( $? ) {
-                $self->error("Invalidating cache failed. Command output: $cmd_output\n");
-            } else {
+            if ( ! $? ) {
                 $self->debug(1,"Command output: $cmd_output\n");
+            } else {
+                $self->error("Invalidating cache failed. Command output: $cmd_output\n");
             }
+        } else {
+            $self->info("nscd found but not running, will not do anything.");
         }
     } else {
         $self->info("nscd not found, will not do anything.");
