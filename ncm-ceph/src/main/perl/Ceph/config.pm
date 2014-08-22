@@ -95,7 +95,6 @@ sub push_cfg {
     $dir = '' if (! defined($dir));
     
     return $self->run_ceph_deploy_command([qw(config push), $host], $dir, $overwrite);
-    }     
 }
 
 # Makes the changes in the config file realtime by using ceph injectargs
