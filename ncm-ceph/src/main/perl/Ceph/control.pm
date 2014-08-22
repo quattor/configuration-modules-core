@@ -72,18 +72,6 @@ sub get_ceph_conf {
 
 ## NEW CFG FUNCTIONS ##
 
-# Gets the config of the cluster
-sub get_host_config {
-    my ($self, $file) = @_; 
-    my $cephcfg = Config::Tiny->new();
-    $cephcfg = Config::Tiny->read($file);
-    if (!$cephcfg->{global}) {
-        $self->error("Not a valid config file found");
-        return 0;
-    }   
-    return $cephcfg;
-}
-
 #TODO: check if host is reachable, combine with ssh-thing? (At this moment same result as before
 sub test_host_connection {
     my ($self, $host) = @_;
