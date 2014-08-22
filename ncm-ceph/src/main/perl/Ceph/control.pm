@@ -71,19 +71,6 @@ sub get_ceph_conf {
 }
 
 ## NEW CFG FUNCTIONS ##
-# Pull config from host
-sub pull_host_cfg {
-    my ($self, $host) = @_; 
-    my $pullfile = "$self->{clname}.conf";
-    my $hostfile = "$pullfile.$host";
-    $self->run_ceph_deploy_command([qw(config pull), $host], $self->{qtmp}) or return 0;
-
-    move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
-    $self->git_commit($self->{qtmp}, $hostfile, "pulled config of host $host"); 
-    my $cephcfg = $self->get_host_config($self->{qtmp} . $hostfile) or return 0;
-
-    return $cephcfg;    
-}
 
 # Gets the config of the cluster
 sub get_host_config {

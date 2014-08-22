@@ -42,7 +42,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
 
 # Get the osd name from the host and path
-sub get_osd_name {#MFM
+sub get_osd_name {
     my ($self, $host, $location) = @_;
     my $id = $self->run_command_as_ceph_with_ssh(['/usr/bin/cat', "$location/whoami"], $host) or return 0;
     chomp($id);

@@ -37,43 +37,38 @@ my $cceph =  {
    'mon_initial_members' => 'ceph001, ceph002, ceph003'
  };
 #diag explain $cceph;
-my $output = $cmp->cmp_cfgfile('cfg', $quath, $cceph);
+my $output = $cmp->check_immutables('host',['fsid'], $quath, $cceph);
 ok(!$output, 'ceph quattor cmp for cfg');
 
-my $cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001, ceph002, ceph003'
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
+$output = $cmp->compare_config('cfg','key', $quath, $cceph);
 ok($output, 'ceph quattor cmp for cfg');
-ok(!%{$cfgchanges},'config the same');
+ok(!%{$output},'config the same');
 
-$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001, ceph002', #different
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
+$output = $cmp->compare_config('cfg','key', $quath, $cceph);
 ok($output, 'ceph quattor cmp for cfg');
-ok(%{$cfgchanges},'config differs');
+ok(%{$output},'config differs');
 
-$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001, ceph002, ceph003',
    'blaaa' => 'bla'
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
+$output = $cmp->compare_config('cfg','key', $quath, $cceph);
 ok(!$output, 'ceph config has attributes not in quattor');
-ok(!%{$cfgchanges},'config differs but not in quattor');
 
-$cfgchanges = {};
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
  };
-$output = $cmp->cmp_cfgfile('cfg', $quath, $cceph, $cfgchanges);
+$output = $cmp->compare_config('cfg','key', $quath, $cceph);
 ok($output, 'ceph quattor cmp for cfg');
-ok(%{$cfgchanges},'config differs');
+ok(%{$output},'config differs');
 
 done_testing();
