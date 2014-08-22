@@ -65,7 +65,7 @@ foreach my $gcmd (@gathers) {
 ok(!$clustercheck, "no cluster, return 0");
 
 my $initcheck= $cmp->init_qdepl($cluster->{config}, $cephusr);
-$cmp->write_config($cluster->{config}, "$tempdir/ceph.conf");
+$cmp->write_new_config($cluster->{config}, "$tempdir/ceph.conf");
 ok(-d $tempdir. '/ncm-ceph/.git', "tmpdirs created");
 ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
 

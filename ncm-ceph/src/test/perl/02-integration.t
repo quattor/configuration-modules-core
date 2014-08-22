@@ -43,7 +43,7 @@ my $gvalues = {
 };
 
 $mock->mock('do_prepare_cluster', 1 );
-$daemonmock->mock('check_daemon_configuration', 1 );
+$daemonmock->mock('get_ceph_conf', 1 );
 $mock->mock('ceph_crush', 1 );
 $mock->mock('get_osd_name', 1 );
 $mock->mock('cmp_crush', 1 );
@@ -52,6 +52,6 @@ my $output = $cmp->do_configure($cluster, $gvalues);
 ok($output, 'do_configure ok');
 my $cmdstr = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph config push ceph001.cubone.os";
 my $cmd = get_command($cmdstr);
-ok(defined($cmd), "config section invoked");
+#ok(defined($cmd), "config section invoked");
 
 done_testing();

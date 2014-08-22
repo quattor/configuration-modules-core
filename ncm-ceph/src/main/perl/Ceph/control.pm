@@ -25,27 +25,6 @@ use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 
-sub configure_cluster {
-    my ($self, $cluster, $gvalues) = @_;
-   
-    my ($ceph_conf, $mapping) = $self->get_ceph_conf() or return 0;
-    my $quat_conf = $self->get_quat_conf($cluster) or return 0;
-
-    my $structures = $self->compare_conf($ceph_conf, $quat_conf, $mapping, $gvalues) or return 0; #This is the Main function
-    
-    my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0; 
-        #Config vanuit file, reverse mapping, krijgen tiny objcs
-
-    $self->deploy_daemons($structures->{deployd}, $tinies, $mapping, $structures->{restartd}) or return 0; #Met change cfg action
-    $self->destroy_daemons($structures->{destroyd}, $tinies, $mapping) or return 0;
-    #$self->restart_daemons(
-    #$self->crush_actions($crushmap, $not_configured) or return 0; #Same as before, but not for new unconfigured hosts
-    
-    #$self->print_info($restartd, $mand, $not_configured);
-    return 1; 
-    
-}
-
 #get hashes, make one structure of it)
 # als config value for global section of the host
 # 'missing' value if not available
