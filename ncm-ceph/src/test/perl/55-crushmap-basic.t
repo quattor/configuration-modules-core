@@ -36,7 +36,9 @@ my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();
 my $crush = $cluster->{crushmap};
-$cmp->flatten_osds($cluster->{osdhosts}); # Is normally done in the daemon part
+while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
+    $cmp->structure_osds($hostname, $host); # Is normally done in the daemon part
+}
 $cmp->quat_crush($crush, $cluster->{osdhosts});
 cmp_deeply($crush, \%crushdata::QUATMAP, 'hash from quattor built');
 my $crushdir = tempdir(CLEANUP => 1);

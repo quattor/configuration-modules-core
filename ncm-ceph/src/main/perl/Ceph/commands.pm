@@ -151,6 +151,12 @@ sub ssh_known_keys {
     }   
 }
 
+#check if host is reachable
+sub test_host_connection {
+    my ($self, $host, $gvalues) = @_; 
+    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{homedir});
+    return $self->run_command_as_ceph_with_ssh(['uname'], $host); 
+}
 
 
 # Print out the commands that should be run manually

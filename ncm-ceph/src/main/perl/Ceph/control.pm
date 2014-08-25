@@ -29,22 +29,30 @@ our $EC=LC::Exception::Context->new->will_store_all;
 # als config value for global section of the host
 # 'missing' value if not available
 sub get_ceph_conf {
-    my ($self) = @_;
+    my ($self, $gvalues) = @_;
     
     my $master = {};
     my $mapping = { 
         'get_loc' => {}, 
         'get_id' => {}
     };
-    $self->osd_hash($master, $mapping) or return ;
+    $self->osd_hash($master, $mapping, $gvalues) or return ;
 
     $self->mon_hash($master) or return ;
     $self->mds_hash($master) or return ;
     
     while (my ($hostname, $host) = each(%{$master})) {
-        if (!$master->{$hostname}->{fault}){ #only for osd-host, mons should be reachable
-            #TODO: Should do testconnection for mons and mdss too (and liefst with fqdns)!
-            my $config = $self->pull_host_cfg($hostname) or return ; #TODO>: fqdn?
+        if (!defined($master->{$hostname}->{fault})){ #already done for osd-host
+            if (!$self->test_host_connection($master->{$hostname}->{fqdn}, $gvalues)) {
+                $master->{$hostname}->{fault} = 1;
+            }
+        }
+        if (!$master->{$hostname}->{fault}) {
+            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ; 
+            if (!$config) {
+                $self->warn("No valid config file found for host $hostname");
+                next;
+            }
             $host->{config} = $config->{global};
             while (my ($name, $cfg) = each(%{$config})) {
                 if ($name =~ m/^global$/) {
@@ -68,15 +76,6 @@ sub get_ceph_conf {
         }
     }
     return ($master, $mapping);
-}
-
-## NEW CFG FUNCTIONS ##
-
-#TODO: check if host is reachable, combine with ssh-thing? (At this moment same result as before
-sub test_host_connection {
-    my ($self, $host) = @_;
-    
-    return 1;
 }
 
 # One big quattor tree
@@ -105,7 +104,7 @@ sub get_quat_conf {
 sub add_host {
     my ($self, $hostname, $host, $structures) = @_;
     
-    if (!$self->test_host_connection($host->{fqdn})) {
+    if (!$self->test_host_connection($host->{fqdn}, $structures->{gvalues})) {
        $structures->{ignh}->{$hostname} = $host;
        $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
@@ -157,7 +156,7 @@ sub compare_mon {
     if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
         return $self->add_mon($hostname, $quat_mon, $structures);
     }
-    my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{clname}-$hostname/done"];
+    my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{cluster}-$hostname/done"];
     if (!$ceph_mon->{up} && !$self->run_command_as_ceph_with_ssh($donecmd, $quat_mon->{fqdn})) {
         # Node reinstalled without first destroying it
         $self->info("Monitor $hostname shall be reinstalled");
@@ -319,6 +318,7 @@ sub compare_conf {
         ignh => {},
         mandc  => {},
         mapping => $mapping,
+        gvalues => $gvalues,
     };
     while  (my ($hostname, $host) = each(%{$quat_conf})) {
         if (exists $ceph_conf->{$hostname}) {
@@ -349,7 +349,7 @@ sub stringify_cfg_arrays {
 }
 sub write_and_push {
     my ($self, $hostname, $tinycfg, $gvalues) = @_;
-    my $pushfile = "$self->{clname}.conf";
+    my $pushfile = "$gvalues->{clname}.conf";
     my $hostfile = "$pushfile.$hostname";
     my $cfgfile = $gvalues->{qtmp} . $hostfile;
 
@@ -446,7 +446,7 @@ sub deploy_daemons {
         if ($host->{mds}) {
             #deploy mds
             my @command = qw(mds create);
-            $self->deploy_daemon(\@command, $host->{mds}->{fqdn}) or return 0; 
+            $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname") or return 0; 
         }
     }
 }

@@ -140,18 +140,21 @@ Readonly::Hash our %MONS => (
     'ceph001' => {
         'addr' => '10.141.8.180:6789/0',
         'name' => 'ceph001',
+        'fqdn' => 'ignore',
         'up'   => 1,
         'rank' => 1
     },
     'ceph002b' => {
         'addr' => '10.141.8.181:6754/0',
         'name' => 'ceph002b',
+        'fqdn' => 'ignore',
         'up'   => 1,
         'rank' => 0
     },
     'ceph003' => {
         'addr' => '10.141.8.182:6789/0',
         'name' => 'ceph003',
+        'fqdn' => 'ignore',
         'up'   => '',
         'rank' => 2
     }
@@ -206,7 +209,8 @@ Readonly::Hash our %MDSS => (
     'ceph001'   => {
         'gid'   => 5047,
         'name'  => 'ceph001',
-        'up'    => 1
+        'up'    => 1,
+        'fqdn'  => 'ceph001.cubone.os',
    }
 );
 Readonly::Array our @DELMON => (

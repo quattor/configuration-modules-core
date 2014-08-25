@@ -204,7 +204,7 @@ sub do_configure {
     $self->debug(1,"preparing cluster");
     $self->do_prepare_cluster($cluster, $gvalues) or return 0;
     $self->debug(1,"checking configuration");
-    my ($ceph_conf, $mapping) = $self->get_ceph_conf() or return 0;
+    my ($ceph_conf, $mapping) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
     my $structures = $self->compare_conf($ceph_conf, $quat_conf, 
         $mapping, $gvalues) or return 0; #This is the Main function
@@ -238,6 +238,7 @@ sub Configure {
     while (my ($clus, $cluster) = each(%{$t->{clusters}})) {
         my $is_deploy = $cluster->{deployhosts}->{$hostname} ? 1 : 0 ;
         
+        $self->{fsid} = $cluster->{config}->{fsid}; 
         my $gvalues = { 
             clname => $clus,
             hostname => $hostname,
@@ -245,7 +246,11 @@ sub Configure {
             cephusr => $cephusr,
             key_accept => $t->{key_accept} 
         }; 
-        $self->do_configure($cluster, $gvalues) or return 0;
+        if ($is_deploy) {
+            $self->do_configure($cluster, $gvalues) or return 0;
+        } else {
+            $self->debug(1, "No deployhost, aborting configuration");
+        }
         return 1;
     }
 }
