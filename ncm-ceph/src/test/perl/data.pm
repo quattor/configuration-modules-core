@@ -137,51 +137,67 @@ Readonly our $MDSJSON => '
 Readonly our $FSID => 'a94f9906-ff68-487d-8193-23ad04c1b5c4';
 
 Readonly::Hash our %MONS => ( 
-    'ceph001' => {
-        'addr' => '10.141.8.180:6789/0',
-        'name' => 'ceph001',
-        'fqdn' => 'ignore',
-        'up'   => 1,
-        'rank' => 1
-    },
-    'ceph002b' => {
-        'addr' => '10.141.8.181:6754/0',
-        'name' => 'ceph002b',
-        'fqdn' => 'ignore',
-        'up'   => 1,
-        'rank' => 0
-    },
-    'ceph003' => {
-        'addr' => '10.141.8.182:6789/0',
-        'name' => 'ceph003',
-        'fqdn' => 'ignore',
-        'up'   => '',
-        'rank' => 2
-    }
+   'ceph001' => {
+     'fqdn' => 'ignore',
+     'mon' => {
+       'addr' => '10.141.8.180:6789/0',
+       'fqdn' => 'ignore',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     }
+   },
+   'ceph002b' => {
+     'fqdn' => 'ignore',
+     'mon' => {
+       'addr' => '10.141.8.181:6754/0',
+       'fqdn' => 'ignore',
+       'name' => 'ceph002b',
+       'rank' => 0,
+       'up' => 1
+     }
+   },
+   'ceph003' => {
+     'fqdn' => 'ignore',
+     'mon' => {
+       'addr' => '10.141.8.182:6789/0',
+       'fqdn' => 'ignore',
+       'name' => 'ceph003',
+       'rank' => 2,
+       'up' => ''
+     }
+   }
+
 );
 
 Readonly::Hash our %OSDS => ( 
-   'ceph001:/var/lib/ceph/osd/sdc' => {
-     'host' => 'ceph001',
-     'id' => 0,
-     'in' => 1,
-     'ip' => '10.141.8.180',
-     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
-     'name' => 'osd.0',
-     'osd_path' => '/var/lib/ceph/osd/sdc',
-     'up' => 1,
-     'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
-   },
-   'ceph001:/var/lib/ceph/osd/sdd' => {
-     'host' => 'ceph001',
-     'id' => 1,
-     'in' => 1,
-     'ip' => '10.141.8.180',
-     'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
-     'name' => 'osd.1',
-     'osd_path' => '/var/lib/ceph/osd/sdd',
-     'up' => 1,
-     'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+   'ceph001' => {
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'host' => 'ceph001',
+         'id' => 0,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'name' => 'osd.0',
+         'osd_path' => '/var/lib/ceph/osd/sdc',
+         'up' => 1,
+         'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'host' => 'ceph001',
+         'id' => 1,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'name' => 'osd.1',
+         'osd_path' => '/var/lib/ceph/osd/sdd',
+         'up' => 1,
+         'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+       }
+     }
    }
 );
 
@@ -206,11 +222,14 @@ Readonly::Hash our %FLATTEN => (
  );
 
 Readonly::Hash our %MDSS => ( 
-    'ceph001'   => {
-        'gid'   => 5047,
-        'name'  => 'ceph001',
-        'up'    => 1,
-        'fqdn'  => 'ceph001.cubone.os',
+   'ceph001' => {
+     'fqdn' => 'ceph001.cubone.os',
+     'mds' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'gid' => 5047,
+       'name' => 'ceph001',
+       'up' => 1
+     }
    }
 );
 Readonly::Array our @DELMON => (

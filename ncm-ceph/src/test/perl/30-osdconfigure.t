@@ -63,8 +63,9 @@ $cmp->{fsid} = $cluster->{config}->{fsid};
 my $type = 'osd';
 $mock->mock('get_host', 'ceph001.cubone.os' );
 $mockc->mock('test_host_connection', 1 );
-my $cephh = $cmp->osd_hash();
-cmp_deeply($cephh, \%data::OSDS, 'OSD hash');
+my $master = {};
+$cmp->osd_hash($master);
+cmp_deeply($master, \%data::OSDS, 'OSD hash');
 my $quath = $cluster->{osdhosts};
 
 my %tmp = ();

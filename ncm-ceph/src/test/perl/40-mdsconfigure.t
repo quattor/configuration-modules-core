@@ -39,9 +39,9 @@ $cmp->use_cluster();
 $cmp->{clname} = 'ceph';
 $cmp->{cfgfile} = 'tmpfile';
 $mock->mock('get_host', 'ceph001.cubone.os' );
-
-my $cephh = $cmp->mds_hash();
-cmp_deeply($cephh, \%data::MDSS);
+my $master = {};
+$cmp->mds_hash($master);
+cmp_deeply($master, \%data::MDSS);
 my $quath = $cluster->{mdss};
 
 my $donecmd = 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph002.cubone.os test -e /var/lib/ceph/mds/ceph-ceph002/done';

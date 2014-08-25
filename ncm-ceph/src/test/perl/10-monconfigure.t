@@ -46,8 +46,9 @@ my $type = 'mon';
 my $quath = $cluster->{monitors};
 
 $mock->mock('get_host', 'ignore' );
-my $mons = $cmp->mon_hash();
-cmp_deeply($mons,\%data::MONS, 'build monitor hash');
+my $master = {};
+$cmp->mon_hash($master);
+cmp_deeply($master,\%data::MONS, 'build monitor hash');
 #
 #cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
 #diag explain @{$cmdh->{daemon_cmds}};

@@ -108,9 +108,9 @@ sub osd_hash {
         $osdparsed{$osdstr} = $osdp;
         $mapping->{get_loc}->{$id} = $osdstr;
         $mapping->{get_id}->{$host}->{$osdloc} = $id;
-        $master->{$host}->{osds}->{osdstr} = $osdp;
+        $master->{$host}->{osds}->{$osdstr} = $osdp;
     }
-    return \%osdparsed; #FIXME? 
+    return 1;
 }
 
 # checks whoami,fsid and ceph_fsid and returns the real path
@@ -191,7 +191,7 @@ sub mon_hash {
         $master->{$mon->{name}}->{mon} = $mon; #One monitor per host
         $master->{$mon->{name}}->{fqdn} = $mon->{fqdn};
     }
-    return \%monparsed;
+    return 1;
 }
 
 # Gets the MDS map 
@@ -213,13 +213,13 @@ sub mds_hash {
         my $ip = $self->extract_ip($mds->{addr});
         $mdsp->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
         
-        #FIXME: For daemons rolled out with old version of ncm-ceph
+        # For daemons rolled out with old version of ncm-ceph
         my @fhost = split('\.', $mds->{name});
         my $host = $fhost[0];
         $master->{$host}->{mds} = $mdsp;
         $master->{$host}->{fqdn} = $mdsp->{fqdn};
     }
-    return \%mdsparsed;
+    return 1;
 }       
 
 # Converts a host/osd hierarchy in a 'host:osd' structure
@@ -275,7 +275,7 @@ sub check_state {#TODO MFC
     }
 }
 
-sub prep_osd { #NEW
+sub prep_osd { 
     my ($self,$osd) = @_;
     
     $self->check_empty($osd->{osd_path}, $osd->{fqdn}) or return 0;
@@ -285,7 +285,7 @@ sub prep_osd { #NEW
     }
 }
 
-sub prep_mds { #NEW
+sub prep_mds { 
     my ($self, $hostname, $mds) = @_;
         my $fqdn = $mds->{fqdn};
         my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{cluster}-$hostname/done"];
