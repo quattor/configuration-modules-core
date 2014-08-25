@@ -92,4 +92,95 @@ sub inject_realtime {
     return 1;
 }
 
+sub config_hash {
+    my ($self, $master, $mapping, $gvalues) = @_;
+    while (my ($hostname, $host) = each(%{$master})) {
+        if (!defined($master->{$hostname}->{fault})){ #already done for osd-host
+            if (!$self->test_host_connection($master->{$hostname}->{fqdn}, $gvalues)) {
+                $master->{$hostname}->{fault} = 1;
+            }
+        }
+        if (!$master->{$hostname}->{fault}) {
+            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ; 
+            if (!$config) {
+                $self->warn("No valid config file found for host $hostname");
+                next;
+            }
+            $host->{config} = $config->{global};
+            while (my ($name, $cfg) = each(%{$config})) {
+                if ($name =~ m/^global$/) {
+                    $host->{config} = $cfg;    
+                } elsif ($name =~ m/^osd\.(\S+)/) {
+                    my $loc = $mapping->{get_loc}->{$1};
+                    if (!$loc) {
+                        $self->error("Could not find location of $name on host $hostname");
+                        return ;
+                    }
+                    $host->{osds}->{$loc}->{config} = $cfg;
+                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { #Only one monitor per host..
+                    $host->{mon}->{config} = $cfg;
+                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
+                    $host->{mds}->{config} = $cfg;
+                } else { #TODO implement other section types? e.g. client, radosgw
+                    $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
+                        "This section will be ignored");
+                }
+            }
+        }
+    }   
+}
+
+sub stringify_cfg_arrays {
+    my ($self, $cfg) = @_;
+    my $config = { %$cfg };
+    foreach my $key (%{$config}) {
+        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
+            $config->{$key} = join(', ',@{$config->{$key}});
+            $self->debug(3,"Array converted to string:", $config->{$key});
+        }
+    }
+    return $config;
+}
+sub write_and_push {
+    my ($self, $hostname, $tinycfg, $gvalues) = @_;
+    my $pushfile = "$gvalues->{clname}.conf";
+    my $hostfile = "$pushfile.$hostname";
+    my $cfgfile = $gvalues->{qtmp} . $hostfile;
+
+    if (!$tinycfg->write($cfgfile)) {
+        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?");
+        return 0;
+    }
+    $self->debug(2,"content written to config file $cfgfile");
+    $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
+    move($cfgfile, $gvalues->{qtmp} .  $pushfile) or return 0;
+    $self->push_cfg($hostname, $gvalues->{qtmp}, 1) or return 0;
+}
+
+
+sub set_host_config {
+    my ($self, $hostname, $host, $gvalues) = @_;
+
+    my $tinycfg = Config::Tiny->new;
+    while  (my ($daemon, $config) = each(%{$host})) {
+        $tinycfg->{$daemon} = $self->stringify_cfg_arrays($config);
+    }
+
+    $self->write_and_push($hostname, $tinycfg, $gvalues) or return 0;
+
+    return $tinycfg;
+
+}
+
+
+sub set_and_push_configs {
+    my ($self, $configs, $gvalues) = @_;
+    my $tinies = {};
+    while  (my ($hostname, $host) = each(%{$configs})) {
+        $tinies->{$hostname} = $self->set_host_config($hostname, $host, $gvalues) or return 0;
+    }
+    return $tinies;
+}
+
+
 1; # Required for perl module!

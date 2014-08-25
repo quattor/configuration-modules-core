@@ -292,6 +292,69 @@ sub prep_mds {
         return $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
 }
 
+sub add_osd_to_config {
+    my ($self, $hostname, $tinycfg, $osd, $gvalues) = @_;
+
+    my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path}) or return 0;
+    $tinycfg->{$newosd} = $self->stringify_cfg_arrays($osd->{config});
+
+    return $self->write_and_push($hostname, $tinycfg, $gvalues);
+}
+
+sub foefelare {
+    my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
+    if ($osd_objectstore) {
+        $tinycfg->{global}->{osd_objectstore} = $osd_objectstore;
+    } else {
+        delete $tinycfg->{global}->{osd_objectstore};
+    }
+    return $self->write_and_push($hostname, $tinycfg, $gvalues);
+}
+
+sub deploy_daemon {
+    my ($self, $cmd, $name) = @_;
+    push (@$cmd, $name);
+    $self->debug(1, 'Deploying daemon: ',@$cmd);
+    return $self->run_ceph_deploy_command($cmd);
+}
+
+sub deploy_daemons {
+    my ($self, $deployd, $tinies, $mapping, $restartd, $gvalues) or return 0;
+    $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
+    while  (my ($hostname, $host) = each(%{$deployd})) {
+        if ($host->{mon}) {
+            #deploy mon
+            my @command = qw(mon create);
+            $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
+        }
+        my $tinycfg = $tinies->{$hostname};
+        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+            my $foefel;
+            if ($osd->{config}->{osd_objectstore}) {# pre foefel
+                $foefel = $tinycfg->{global}->{osd_objectstore};
+                $self->foefelare($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
+            }
+            my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
+            if ($osd->{journal_path}) {
+                $pathstring = "$pathstring:$osd->{journal_path}";
+            }
+            my @command = qw(osd create);
+            my $ret = $self->deploy_daemon(\@command, $pathstring);
+            if ($osd->{config}->{osd_objectstore}) { # post foefel
+                $self->foefelare($hostname, $tinycfg, $foefel, $gvalues) or return 0;
+            }
+            return 0 if (!$ret);
+            $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
+        }
+
+        if ($host->{mds}) {
+            #deploy mds
+            my @command = qw(mds create);
+            $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname") or return 0;
+        }
+    }
+}
+
 # Deploy daemons #TODO
 sub do_deploy {#MFO
     my ($self, $is_deploy, $cmdh) = @_;

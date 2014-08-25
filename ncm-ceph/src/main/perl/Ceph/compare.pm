@@ -4,7 +4,7 @@
 # ${build-info}
 
 
-package NCM::Component::Ceph::control;
+package NCM::Component::Ceph::compare;
 
 use 5.10.1;
 use strict;
@@ -41,40 +41,7 @@ sub get_ceph_conf {
     $self->mon_hash($master) or return ;
     $self->mds_hash($master) or return ;
     
-    while (my ($hostname, $host) = each(%{$master})) {
-        if (!defined($master->{$hostname}->{fault})){ #already done for osd-host
-            if (!$self->test_host_connection($master->{$hostname}->{fqdn}, $gvalues)) {
-                $master->{$hostname}->{fault} = 1;
-            }
-        }
-        if (!$master->{$hostname}->{fault}) {
-            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ; 
-            if (!$config) {
-                $self->warn("No valid config file found for host $hostname");
-                next;
-            }
-            $host->{config} = $config->{global};
-            while (my ($name, $cfg) = each(%{$config})) {
-                if ($name =~ m/^global$/) {
-                    $host->{config} = $cfg;           
-                } elsif ($name =~ m/^osd\.(\S+)/) {
-                    my $loc = $mapping->{get_loc}->{$1};
-                    if (!$loc) {
-                        $self->error("Could not find location of $name on host $hostname");
-                        return ;
-                    }
-                    $host->{osds}->{$loc}->{config} = $cfg;
-                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { #Only one monitor per host..
-                    $host->{mon}->{config} = $cfg;
-                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
-                    $host->{mds}->{config} = $cfg;
-                } else { #TODO implement other section types? e.g. client, radosgw
-                    $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
-                        "This section will be ignored");
-                }
-            }  
-        }
-    }
+    $self->config_hash( $master, $mapping, $gvalues); 
     return ($master, $mapping);
 }
 
@@ -258,7 +225,6 @@ sub compare_host {
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
         return 0; 
     } else {
-        #TODO
         $self->compare_global($hostname,  $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;        
 
         if ($quat_host->{mon} && $ceph_host->{mon}) {
@@ -335,121 +301,5 @@ sub compare_conf {
     return $structures;
  
 }
-
-sub stringify_cfg_arrays {
-    my ($self, $cfg) = @_;
-    my $config = { %$cfg };
-    foreach my $key (%{$config}) {
-        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
-            $config->{$key} = join(', ',@{$config->{$key}});
-            $self->debug(3,"Array converted to string:", $config->{$key});
-        }
-    }
-    return $config;
-}
-sub write_and_push {
-    my ($self, $hostname, $tinycfg, $gvalues) = @_;
-    my $pushfile = "$gvalues->{clname}.conf";
-    my $hostfile = "$pushfile.$hostname";
-    my $cfgfile = $gvalues->{qtmp} . $hostfile;
-
-    if (!$tinycfg->write($cfgfile)) {
-        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?");
-        return 0;
-    }
-    $self->debug(2,"content written to config file $cfgfile");
-    $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
-    move($cfgfile, $gvalues->{qtmp} .  $pushfile) or return 0;
-    $self->push_cfg($hostname, $gvalues->{qtmp}, 1) or return 0;
-}
-
-
-sub set_host_config {
-    my ($self, $hostname, $host, $gvalues) = @_;
-    
-    my $tinycfg = Config::Tiny->new;
-    while  (my ($daemon, $config) = each(%{$host})) {
-        $tinycfg->{$daemon} = $self->stringify_cfg_arrays($config);
-    }
-
-    $self->write_and_push($hostname, $tinycfg, $gvalues) or return 0;
-    
-    return $tinycfg;
-
-}
-
-
-sub set_and_push_configs {
-    my ($self, $configs, $gvalues) = @_;
-    my $tinies = {};
-    while  (my ($hostname, $host) = each(%{$configs})) {
-        $tinies->{$hostname} = $self->set_host_config($hostname, $host, $gvalues) or return 0;
-    }
-    return $tinies;
-}
-
-sub add_osd_to_config {
-    my ($self, $hostname, $tinycfg, $osd, $gvalues) = @_;
-        
-    my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path}) or return 0;
-    $tinycfg->{$newosd} = $self->stringify_cfg_arrays($osd->{config});
-
-    return $self->write_and_push($hostname, $tinycfg, $gvalues);
-}
-   
-sub foefelare {
-    my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
-    if ($osd_objectstore) {
-        $tinycfg->{global}->{osd_objectstore} = $osd_objectstore;
-    } else {
-        delete $tinycfg->{global}->{osd_objectstore};
-    }
-    return $self->write_and_push($hostname, $tinycfg, $gvalues);
-}
-
-sub deploy_daemon {
-    my ($self, $cmd, $name) = @_;
-    push (@$cmd, $name);
-    $self->debug(1, 'Deploying daemon: ',@$cmd);
-    return $self->run_ceph_deploy_command($cmd);
-}
-
-sub deploy_daemons {
-    my ($self, $deployd, $tinies, $mapping, $restartd, $gvalues) or return 0; 
-    $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
-    while  (my ($hostname, $host) = each(%{$deployd})) {
-        if ($host->{mon}) {
-            #deploy mon
-            my @command = qw(mon create);
-            $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
-        }
-        my $tinycfg = $tinies->{$hostname};
-        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
-            my $foefel;
-            if ($osd->{config}->{osd_objectstore}) {# pre foefel
-                $foefel = $tinycfg->{global}->{osd_objectstore};
-                $self->foefelare($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
-            }
-            my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
-            if ($osd->{journal_path}) {
-                $pathstring = "$pathstring:$osd->{journal_path}";
-            }
-            my @command = qw(osd create);
-            my $ret = $self->deploy_daemon(\@command, $pathstring);
-            if ($osd->{config}->{osd_objectstore}) { # post foefel
-                $self->foefelare($hostname, $tinycfg, $foefel, $gvalues) or return 0;
-            }
-            return 0 if (!$ret);
-            $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
-        }
-
-        if ($host->{mds}) {
-            #deploy mds
-            my @command = qw(mds create);
-            $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname") or return 0; 
-        }
-    }
-}
-
 
 1;
