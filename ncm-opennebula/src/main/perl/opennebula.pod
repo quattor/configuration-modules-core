@@ -1,0 +1,13 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+The I<opennebula> component manages the configuration file
+for OPENNEBULA.
+
+=head1 DESCRIPTION
+
+=cut
