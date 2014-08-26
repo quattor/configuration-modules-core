@@ -831,7 +831,7 @@ sub invalidate_cache
 {
     my ($self, $cache) = @_;
 
-    $self->info("Preparing to invalidate cache: $cache");
+    $self->debug(1, "Preparing to invalidate cache: $cache");
 
     my $cmd_output;
     my $nscd = '/usr/sbin/nscd';
@@ -848,16 +848,16 @@ sub invalidate_cache
                                         stderr => "stdout");
             $cmd->execute();
             if ( ! $? ) {
-                $self->info("Invalidated cache");
+                $self->info("Invalidated nscd cache");
                 $self->debug(1, "nscd output: '$cmd_output'\n");
             } else {
                 $self->error("Invalidating cache failed. nscd output: '$cmd_output'\n");
             }
         } else {
-            $self->info("nscd found but not running, will not do anything.");
+            $self->debug(1, "nscd found but not running, will not do anything.");
         }
     } else {
-        $self->info("nscd not found, will not do anything.");
+        $self->debug(1, "nscd not found, will not do anything.");
     }
 }
 
