@@ -7,7 +7,7 @@
 
   <packaging>pom</packaging>
   <version>14.6.1-SNAPSHOT</version>
-  <name>Quattor Component</name>
+  <name>resolver: Configure DNS resolver</name>
 
 
   <parent>
