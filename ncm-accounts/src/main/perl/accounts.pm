@@ -842,12 +842,12 @@ sub invalidate_cache
                                       stdout => \$cmd_output,
                                       stderr => "stdout");
         $pgrep->execute();
-        if ( ! $? ) {
+        if ( $? == 0 ) {
             my $cmd = CAF::Process->new($command, log => $self,
                                         stdout => \$cmd_output,
                                         stderr => "stdout");
             $cmd->execute();
-            if ( ! $? ) {
+            if ( $? == 0 ) {
                 $self->info("Invalidated nscd cache");
                 $self->debug(1, "nscd output: '$cmd_output'");
             } else {
