@@ -838,7 +838,7 @@ sub invalidate_cache
     my $command = [$nscd, '-i', $cache];
 
     if (-x $nscd) {
-        my $pgrep = CAF::Process->new(['/usr/bin/pgrep', 'nscd'], log => $self,
+        my $pgrep = CAF::Process->new(['/usr/bin/pgrep', '-f', $nscd], log => $self,
                                       stdout => \$cmd_output,
                                       stderr => "stdout");
         $pgrep->execute();
