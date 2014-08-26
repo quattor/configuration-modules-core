@@ -8,6 +8,7 @@ use strict;
 use base 'NCM::Component';
 our $EC=LC::Exception::Context->new->will_store_all;
 use CAF::FileWriter;
+use CAF::Service;
 
 use File::Path;
 use File::Basename;
@@ -34,6 +35,9 @@ sub Configure
     foreach my $k (sort keys %$t) {
         print $fh "$k = $t->{$k}\n";
     }
+
+    my $srv = CAF::Service->new(['cdp-listend'], log => $self, %opts);
+    $srv->restart();
 
     $fh->close();
     return 1;
