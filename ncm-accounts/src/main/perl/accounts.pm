@@ -849,9 +849,9 @@ sub invalidate_cache
             $cmd->execute();
             if ( ! $? ) {
                 $self->info("Invalidated nscd cache");
-                $self->debug(1, "nscd output: '$cmd_output'\n");
+                $self->debug(1, "nscd output: '$cmd_output'");
             } else {
-                $self->error("Invalidating cache failed. nscd output: '$cmd_output'\n");
+                $self->error("Invalidating cache failed. nscd output: '$cmd_output'");
             }
         } else {
             $self->debug(1, "nscd found but not running, will not do anything.");
