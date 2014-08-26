@@ -30,12 +30,10 @@ my $cmp = NCM::Component::ceph->new('ceph');
 my $mock = Test::MockModule->new('NCM::Component::Ceph::daemon');
 my $mockc = Test::MockModule->new('NCM::Component::Ceph::commands');
 
-set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump",
-    $data::MONJSON);
-set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump", 
-    $data::OSDDJSON);
-set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree", 
-    $data::OSDTJSON);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump", $data::MONJSON);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump", $data::OSDDJSON);
+set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree", $data::OSDTJSON);
+
 my $basestr = 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph001.cubone.os ';
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
@@ -64,8 +62,10 @@ my $type = 'osd';
 $mock->mock('get_host', 'ceph001.cubone.os' );
 $mockc->mock('test_host_connection', 1 );
 my $master = {};
-$cmp->osd_hash($master);
+my $mapping = {};
+$cmp->osd_hash($master, $mapping);
 cmp_deeply($master, \%data::OSDS, 'OSD hash');
+cmp_deeply($mapping, \%data::MAPPING, 'OSD map');
 my $quath = $cluster->{osdhosts};
 
 my %tmp = ();

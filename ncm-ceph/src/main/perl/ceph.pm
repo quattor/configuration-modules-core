@@ -206,7 +206,7 @@ sub do_configure {
     $self->debug(1,"checking configuration");
     my ($ceph_conf, $mapping) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
-    my $structures = $self->compare_conf($ceph_conf, $quat_conf, 
+    my $structures = $self->compare_conf($quat_conf, $ceph_conf, 
         $mapping, $gvalues) or return 0; #This is the Main function
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  

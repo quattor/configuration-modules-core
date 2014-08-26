@@ -107,7 +107,7 @@ sub osd_hash {
         my $osdstr = "$host:$osdloc";
         $osdparsed{$osdstr} = $osdp;
         $mapping->{get_loc}->{$id} = $osdstr;
-        $mapping->{get_id}->{$host}->{$osdloc} = $id;
+        $mapping->{get_id}->{$osdstr} = $id;
         $master->{$host}->{osds}->{$osdstr} = $osdp;
     }
     return 1;

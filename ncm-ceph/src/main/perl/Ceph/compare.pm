@@ -25,9 +25,7 @@ use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 
-#get hashes, make one structure of it)
-# als config value for global section of the host
-# 'missing' value if not available
+# get hashes out of ceph and from the configfiles , make one structure of it
 sub get_ceph_conf {
     my ($self, $gvalues) = @_;
     
@@ -45,25 +43,28 @@ sub get_ceph_conf {
     return ($master, $mapping);
 }
 
-# One big quattor tree
+# One big quattor tree on a host base
 sub get_quat_conf {
     my ($self, $quattor) = @_; 
     my $master = {} ;
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
         $master->{$hostname}->{mon} = $mon; # Only one monitor
         $master->{$hostname}->{fqdn} = $mon->{fqdn};
+        $master->{$hostname}->{config} = $quattor->{config};
     }
     while (my ($hostname, $host) = each(%{$quattor->{osdhosts}})) {
         $master->{$hostname}->{osds} = $self->structure_osds($hostname, $host);
         $master->{$hostname}->{fqdn} = $host->{fqdn};
+        $master->{$hostname}->{config} = $quattor->{config};
+
     }
     while (my ($host, $mds) = each(%{$quattor->{mdss}})) {
         my @fhost = split('\.', $host);# Make sure shortname is used. TODO in schema?
         my $hostname = $fhost[0];
         $master->{$hostname}->{mds} = $mds; # Only one mds
         $master->{$hostname}->{fqdn} = $mds->{fqdn};
+        $master->{$hostname}->{config} = $quattor->{config};
     }
-    $master->{global} = $quattor->{config}; 
     return $master;
 }
 
@@ -200,7 +201,7 @@ sub compare_global {
     $structures->{configs}->{$hostname}->{global} = $quat_config;
     if (%{$changes}){
         $self->inject_realtime($hostname, $changes) or return 0;
-        $structures->{restartd}->{$hostname}->{global} =1;
+       #TODO  $structures->{restartd}->{$hostname}->{global} =1;
     }
 }
     
@@ -256,7 +257,7 @@ sub delete_host {#TODO: Remove configfile?
 }
     
 sub compare_conf {
-    my ($self, $ceph_conf, $quat_conf, $mapping, $gvalues) = @_;
+    my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
 
     # Compare hosts - add, delete, modify fts
     # Add: push global config, all daemons aan deploylist
@@ -266,7 +267,6 @@ sub compare_conf {
         configs  => {},
         deployd  => {},
         destroy  => {},
-        daemon_cmds => [], #TODO: restructure this on a host base
         restartd => {},
         ignh => {},
         mandc  => {},

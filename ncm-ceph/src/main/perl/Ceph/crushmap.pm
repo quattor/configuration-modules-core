@@ -50,6 +50,19 @@ sub get_osd_name {
     return "osd.$id";
 }   
 
+sub push_weighs {
+    my ($self, $hosts) = @_;
+    while (my ($hostname, $host) = each(%{$hosts})) {
+        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+            if ($osd->{crush_weight}){
+                my $osdname = $self->get_osd_name($hostname, $osd->{osd_path}) or return 0; 
+                $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;       
+            }
+        }
+    }
+    return 1;
+}
+
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
     my ($self, $cluster, $gvalues, $ignh) = @_;

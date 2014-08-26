@@ -23,7 +23,7 @@ Readonly::Hash our  %MONJSONDECODE => (
     'mons' => [
         {
         'addr' => '10.141.8.181:6754/0',
-        'name' => 'ceph002b',
+        'name' => 'ceph002',
         'rank' => 0
         },
         {
@@ -44,7 +44,7 @@ Readonly::Hash our  %MONJSONDECODE => (
     ]
 );
 
-Readonly our $MONJSON => '{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002b","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}],"quorum":[0,1,2]}';
+Readonly our $MONJSON => '{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}],"quorum":[0,1,2]}';
 
 Readonly our $OSDTJSON => '{"nodes":[{"id":-1,"name":"default","type":"root","type_id":6,"children":[-2]},{"id":-2,"name":"ceph001","type":"host","type_id":1,"children":[1,0]},{"id":0,"name":"osd.0","exists":1,"type":"osd","type_id":0,"status":"up","reweight":"1.000000","crush_weight":"3.639999","depth":2},{"id":1,"name":"osd.1","exists":1,"type":"osd","type_id":0,"status":"up","reweight":"1.000000","crush_weight":"3.639999","depth":2}],"stray":[]}';
 
@@ -147,12 +147,12 @@ Readonly::Hash our %MONS => (
        'up' => 1
      }
    },
-   'ceph002b' => {
+   'ceph002' => {
      'fqdn' => 'ignore',
      'mon' => {
        'addr' => '10.141.8.181:6754/0',
        'fqdn' => 'ignore',
-       'name' => 'ceph002b',
+       'name' => 'ceph002',
        'rank' => 0,
        'up' => 1
      }
@@ -232,33 +232,204 @@ Readonly::Hash our %MDSS => (
      }
    }
 );
-Readonly::Array our @DELMON => (
-    ['mon',
-    'destroy',
-    'ceph002b']
-);
 
-Readonly::Array our @ADDOSD => (
- [
-   'osd',
-   'prepare',
-   'ceph002.cubone.os:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-sdc/journal'
- ],
- [
-   'osd',
-   'activate',
-   'ceph002.cubone.os:/var/lib/ceph/osd/sdc:/var/lib/ceph/log/sda4/osd-sdc/journal'
- ]);
 
-Readonly::Array our @ADDMON => (
-    ['mon',
-    'create',
-    'ceph002.cubone.os']
+Readonly::Hash our %MAPPING => ( 
+    'get_id' => {
+      'ceph001:/var/lib/ceph/osd/sdc' => 0,
+      'ceph001:/var/lib/ceph/osd/sdd' => 1
+    },  
+    'get_loc' => {
+      '0' => 'ceph001:/var/lib/ceph/osd/sdc',
+      '1' => 'ceph001:/var/lib/ceph/osd/sdd'
+    }   
 );
-Readonly::Array our @ADDMDS => (
-    ['mds',
-    'create',
-    'ceph002.cubone.os']
+Readonly::Hash our %CEPHMAP => (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+     },
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+        'config' => {
+         'option' => 'value'
+        },
+     },
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'config' => {
+           'osd_objectstore' => 'keyvaluestore-dev'
+         },
+         'host' => 'ceph001',
+         'id' => 0,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'name' => 'osd.0',
+         'osd_path' => '/var/lib/ceph/osd/sdc',
+         'up' => 1,
+         'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'host' => 'ceph001',
+         'id' => 1,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'name' => 'osd.1',
+         'osd_path' => '/var/lib/ceph/osd/sdd',
+         'up' => 1,
+         'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+       }
+     }
+   }
+);
+Readonly::Hash our %QUATMAP => (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'up' => 1
+     },
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'fqdn' => 'ceph001.cubone.os',
+         'host' => 'ceph001',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'fqdn' => 'ceph001.cubone.os',
+         'host' => 'ceph001',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdd'
+       }
+     }
+   },
+   'ceph002' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     }, 
+     'fqdn' => 'ceph002.cubone.os',
+     'mds' => {
+       'fqdn' => 'ceph002.cubone.os',
+       'up' => 1
+     },
+     'mon' => {
+       'fqdn' => 'ceph002.cubone.os',
+       'up' => 1
+     },
+     'osds' => {
+       'ceph002:/var/lib/ceph/osd/sdc' => {
+         'fqdn' => 'ceph002.cubone.os',
+         'host' => 'ceph002',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       }
+     }
+   },
+   'ceph003' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     }, 
+     'fqdn' => 'ceph003.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph003.cubone.os',
+       'up' => 1
+     }
+   }
+);
+our %CEPHFMAP = (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+     },
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mds' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'gid' => 5047,
+       'name' => 'ceph001',
+       'up' => 1
+     },
+     'mon' => {
+       'addr' => '10.141.8.180:6789/0',
+       'config' => {
+         'option' => 'value'
+       },
+       'fqdn' => 'ceph001.cubone.os',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     },
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'config' => {
+           'osd_objectstore' => 'keyvaluestore-dev'
+         },
+         'host' => 'ceph001',
+         'id' => 0,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'name' => 'osd.0',
+         'osd_path' => '/var/lib/ceph/osd/sdc',
+         'up' => 1,
+         'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'host' => 'ceph001',
+         'id' => 1,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'name' => 'osd.1',
+         'osd_path' => '/var/lib/ceph/osd/sdd',
+         'up' => 1,
+         'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+       }
+     }
+   },
+   'ceph002' => {
+     'config' => undef,
+     'fqdn' => 'ceph002.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.181:6754/0',
+       'fqdn' => 'ceph002.cubone.os',
+       'name' => 'ceph002',
+       'rank' => 0,
+       'up' => 1
+     }
+   },
+   'ceph003' => {
+     'fault' => 1,
+     'fqdn' => 'ceph003.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.182:6789/0',
+       'fqdn' => 'ceph003.cubone.os',
+       'name' => 'ceph003',
+       'rank' => 2,
+       'up' => ''
+     }
+   }
 );
 Readonly::Array our @NEWCLUS => (
 #   [
@@ -275,4 +446,4 @@ Readonly::Array our @NEWCLUS => (
    ],
 );
 
-Readonly our $STATE => '{"election_epoch":34,"quorum":[0,1],"quorum_names":["ceph001","ceph002b"],"quorum_leader_name":"ceph002b","monmap":{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002b","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}]}}';
+Readonly our $STATE => '{"election_epoch":34,"quorum":[0,1],"quorum_names":["ceph001","ceph002"],"quorum_leader_name":"ceph002","monmap":{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}]}}';
