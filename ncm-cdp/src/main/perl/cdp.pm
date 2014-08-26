@@ -32,7 +32,7 @@ sub Configure
     delete($t->{version});
 
     foreach my $k (sort keys %$t) {
-        print $fh "$k = $t->{$k}\n";    
+        print $fh "$k = $t->{$k}\n";
     }
 
     $fh->close();
