@@ -103,6 +103,9 @@ use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
 
 use constant SKELDIR => "/etc/skel";
 
+# Full path to nscd binary
+use constant NSCD => '/usr/sbin/nscd';
+
 # Expands the profile to the list of desired accounts, including
 # pools.
 sub compute_desired_accounts
@@ -834,11 +837,10 @@ sub invalidate_cache
     $self->debug(1, "Preparing to invalidate cache: $cache");
 
     my $cmd_output;
-    my $nscd = '/usr/sbin/nscd';
-    my $command = [$nscd, '-i', $cache];
+    my $command = [NSCD, '-i', $cache];
 
-    if (-x $nscd) {
-        my $pgrep = CAF::Process->new(['/usr/bin/pgrep', '-f', $nscd], log => $self,
+    if (-x NSCD) {
+        my $pgrep = CAF::Process->new(['/usr/bin/pgrep', '-f', NSCD], log => $self,
                                       stdout => \$cmd_output,
                                       stderr => "stdout");
         $pgrep->execute();
