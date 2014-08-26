@@ -43,15 +43,15 @@
   <build>
     <pluginManagement>
       <plugins>
-	<plugin>
-	  <groupId>org.codehaus.mojo</groupId>
-	  <artifactId>rpm-maven-plugin</artifactId>
-	  <configuration>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
             <requires>
               <require>/usr/bin/pgrep</require>
             </requires>
-	  </configuration>
-	</plugin>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
