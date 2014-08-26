@@ -163,7 +163,6 @@ sub test_host_connection {
 sub print_cmds {
     my ($self, $cmds) = @_;
     if ($cmds && @{$cmds}) {
-        $self->info("Commands to be run manually (as ceph user):");
         while (my $cmd = shift @{$cmds}) {
             $self->info(join(" ", @$cmd));
         }

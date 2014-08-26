@@ -110,12 +110,10 @@ sub add_mds {
     if (!$self->prep_mds($hostname, $mds)) { # really not existing
         $structures->{deployd}->{$hostname}->{mds} = $mds;
         $structures->{configs}->{$hostname}->{mds} = $mds->{config};
-    } else {#TODO  # Ceph does not show a down ceph mds daemon in his mds map
-        my @command = ('start', "mds.$hostname");
-        push (@{$structures->{daemon_cmds}}, [@command]);
+    } else {  # Ceph does not show a down ceph mds daemon in his mds map
+        $structures->{restartd}->{$hostname}->{mds} = 'start';
     }
 }
-
 
 sub compare_mon {
     my ($self, $hostname, $quat_mon, $ceph_mon, $structures) = @_;
@@ -132,11 +130,7 @@ sub compare_mon {
 
     my $changes = $self->compare_config('mon', $hostname, $quat_mon->{config}, $ceph_mon->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mon} = $quat_mon->{config};
-    #TODO if ($changecount > 1 && !check_state) {
-    if (%{$changes}){
-        $structures->{restartd}->{$hostname}->{mon} =1;
-    }
-
+    $self->check_restart($hostname, $hostname, $changes,  $quat_mon, $ceph_mon, $structures);
     return 1;
 
 }
@@ -146,11 +140,7 @@ sub compare_mds {
     
     my $changes = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mds} = $quat_mds->{config};
-    #TODO if ($changecount > 1 && !check_state) {
-    if (%{$changes}){
-        $structures->{restartd}->{$hostname}->{mds} =1;
-    }
-
+    $self->check_restart($hostname, $hostname, $changes,  $quat_mds, $ceph_mds, $structures);
     return 1;
 }
 
@@ -170,10 +160,7 @@ sub compare_osd {
     my $changes = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
     my $osd_id = $structures->{mapping}->{get_id}->{$osdkey} or return 0;
     $structures->{configs}->{$hostname}->{"osd.$osd_id"} = $quat_osd->{config}; 
-    #TODO if ($changecount > 1 && !check_state) {
-    if (%{$changes}){
-        $structures->{restartd}->{$hostname}->{osds}->{$osdkey} =1;
-    } 
+    $self->check_restart($hostname, "osd.$osd_id", $changes,  $quat_osd, $ceph_osd, $structures);
     return 1;
 }
 

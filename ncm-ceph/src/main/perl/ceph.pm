@@ -20,7 +20,7 @@ use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 use base qw(NCM::Component NCM::Component::Ceph::commands NCM::Component::Ceph::crushmap
-    NCM::Component::Ceph::daemon NCM::Component::Ceph::config NCM::Component::Ceph::control );
+    NCM::Component::Ceph::daemon NCM::Component::Ceph::config NCM::Component::Ceph::compare );
 
 use LC::Exception;
 use LC::Find;
@@ -212,11 +212,11 @@ sub do_configure {
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
     $self->deploy_daemons($structures->{deployd}, $tinies, $mapping, 
         $structures->{restartd}, $gvalues) or return 0; #Met change cfg action
-    #$self->destroy_daemons($structures->{destroyd}, $tinies, $mapping) or return 0;
-    #$self->restart_daemons(
     #TODO Same as before, but not for new unconfigured hosts
     $self->debug(1,"configuring crushmap");
-    $self->do_crush_actions($cluster, $gvalues) or return 0;
+    $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}) or return 0;
+    $self->destroy_daemons($structures->{destroyd}, $mapping) or return 0;
+    $self->restart_daemons($structures->{restartd});
     #$self->print_info($restartd, $mand, $not_configured);
     return 1;  
         
@@ -254,6 +254,5 @@ sub Configure {
         return 1;
     }
 }
-
 
 1; # Required for perl module!

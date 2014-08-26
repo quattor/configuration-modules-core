@@ -52,9 +52,19 @@ sub get_osd_name {
 
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues) = @_;
-    if ($cluster->{crushmap} && $gvalues->{is_deploy}) {
-        $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}, $gvalues) or return 0;
+    my ($self, $cluster, $gvalues, $ignh) = @_;
+    my $okhosts = {}; 
+    while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
+        if (!$ignh->{$hostname}) {
+            $okhosts->{$hostname} = $host;
+        } else {
+            $self->debug(2, "ignoring host $hostname for crushmap");
+        }
+    }   
+    if ($cluster->{crushmap}) {
+        $self->process_crushmap($cluster->{crushmap}, $okhosts, $gvalues) or return 0;
+    } else {
+        $self->push_weights($okhosts) or return 0;
     }
     return 1;
 }
@@ -88,7 +98,8 @@ sub crush_merge {
                 if ($osdhosts->{$name}){
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
-                    foreach my $osd (sort(keys %{$osds})){
+                    foreach my $osd (sort(keys %{$osds})){ 
+                        #TODO: use mapping?
                         my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
                             $self->error("Could not find osd name for ", 

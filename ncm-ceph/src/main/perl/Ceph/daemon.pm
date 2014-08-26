@@ -261,19 +261,28 @@ sub check_immutables {
     return $rc;
 }
 # Checks and changes the state on the host
-sub check_state {#TODO MFC
-    my ($self, $id, $host, $type, $quat, $ceph, $cmdh) = @_;
+sub check_state {
+    my ($self, $quat, $ceph) = @_;
     if ($quat->{up} xor $ceph->{up}){
-        my @command; 
         if ($quat->{up}) {
-            @command = qw(start); 
+            return 'start'; 
         } else {
-            @command = qw(stop);
+            return 'stop';
         }
-        push (@command, "$type.$id");
-        push (@{$cmdh->{daemon_cmds}}, [@command]);
+    } else {
+        return 0;
     }
 }
+
+sub check_restart {
+    my ($self, $hostname, $name, $changes, $qdaemon, $cdaemon, $structures) = @_; 
+    if (%{$changes} && $qdaemon->{up}){
+        $structures->{restartd}->{$hostname}->{$name} = 'restart';
+    } elsif ($self->check_state($qdaemon, $cdaemon)) {
+        $structures->{restartd}->{$hostname}->{$name} = $self->check_state($qdaemon, $cdaemon);
+    }   
+};
+
 
 sub prep_osd { 
     my ($self,$osd) = @_;
@@ -355,15 +364,45 @@ sub deploy_daemons {
     }
 }
 
-# Deploy daemons #TODO
-sub do_deploy {#MFO
-    my ($self, $is_deploy, $cmdh) = @_;
-    while (my $cmd = shift @{$cmdh->{daemon_cmds}}) {
-        $self->debug(1,"Daemon command:", @$cmd);
-        $self->run_daemon_command($cmd) or return 0;
-    }
-    $self->print_cmds($cmdh->{man_cmds});
-    return 1;
+sub destroy_daemon {
+    my ($self, $type, $name, $cmds) = @_;
+    my @command = qw(/usr/bin/ceph-deploy); 
+    push (@command, ($type, 'destroy', $name));
+    push (@$cmds, \@command);
 }
 
+sub destroy_daemons {
+    my ($self, $destroyd, $mapping) = @_; 
+    my $cmds = [];
+    $self->debug(1, 'Destroying daemons');
+    while  (my ($hostname, $host) = each(%{$destroyd})) { 
+        while  (my ($type, $daemon) = each(%{$host})) {
+            if ($type eq 'osds') {
+                while  (my ($osdloc, $osd) = each(%{$daemon})) {
+                    $self->destroy_daemon('osd', $mapping->{get_id}->{$osdloc}, $cmds);
+                }
+            } else {
+                $self->destroy_daemon($type, $hostname, $cmds);
+            }
+        }
+    }
+    $self->info("Commands to be run manually (as ceph user):");
+    $self->print_cmds($cmds);   
+}
+
+sub restart_daemons {
+    my ($self, $restartd) = @_;
+    my @cmds = (); 
+    $self->debug(1, 'restarting daemons');
+    while  (my ($hostname, $host) = each(%{$restartd})) { 
+        while  (my ($name, $action) = each(%{$host})) {
+            #can actually be done in the component by using run_command_as_ceph_with_ssh
+            push(@cmds, ['/usr/bin/ssh', $hostname, qw(/sbin/service ceph), $action, $name]); 
+        }
+    }
+    $self->info("Commands to be run manually:");
+    $self->print_cmds(\@cmds);
+}
+
+ 
 1; # Required for perl module!
