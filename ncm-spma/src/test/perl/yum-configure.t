@@ -65,17 +65,17 @@ packages and enforces the execution of the transaction. We test for:
 
 =head3 Correct flow
 
-All the top-level methods are called, with C<update_pkgs> being the last one.
+All the top-level methods are called, with C<update_pkgs_retry> being the last one.
 
 =cut
 
 
 my $name = $mock->call_pos($UPDATE_PKGS);
-is($name, "update_pkgs", "Packages are updated at the end of the component");
+is($name, "update_pkgs_retry", "Packages are updated at the end of the component");
 my @args = $mock->call_args($UPDATE_PKGS);
 is(ref($args[2]), 'HASH', "Set of groups is passed");
 ok($args[3], "Run argument is correctly passed");
-ok(!$args[4], "No user packages allowed in update_pkgs");
+ok(!$args[4], "No user packages allowed in update_pkgs_retry");
 ok(exists($args[1]->{ConsoleKit}),
   "A package list is passed to UPDATE_PKGS");
 
@@ -158,7 +158,7 @@ is($args[-1], $t->{proxyport}, "Correct proxy port passed to generate_repos");
 
 =head2 SPMA disabled
 
-It must show up when calling C<update_pkgs>
+It must show up when calling C<update_pkgs_retry>
 
 =cut
 
@@ -168,13 +168,13 @@ $mock->clear();
 
 $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
-ok(!$args[3], "No run is correctly passed to update_pkgs");
+ok(!$args[3], "No run is correctly passed to update_pkgs_retry");
 
 =pod
 
 =head2 User packages allowed
 
-They show up in C<cleanup_old_repos> and C<update_pkgs>
+They show up in C<cleanup_old_repos> and C<update_pkgs_retry>
 
 =cut
 
@@ -185,7 +185,7 @@ $mock->clear();
 $cmp->Configure($cfg);
 
 while (my ($n, $a) = $mock->next_call()) {
-    if ($n eq 'update_pkgs' || $n eq 'cleanup_old_repos') {
+    if ($n eq 'update_pkgs_retry' || $n eq 'cleanup_old_repos') {
 	ok($a->[3], "User packages are passed correctly to $name");
     }
 }
@@ -205,17 +205,17 @@ We expect an error code to be returned.
 =cut
 
 $mock->clear();
-$mock->set_false('update_pkgs');
+$mock->set_false('update_pkgs_retry');
 
 
-is($cmp->Configure($cfg), 0, "Failure in update_pkgs is propagated");
-$mock->called_ok('update_pkgs', "update_pkgs is called");
+is($cmp->Configure($cfg), 0, "Failure in update_pkgs_retry is propagated");
+$mock->called_ok('update_pkgs_retry', "update_pkgs_retry is called");
 
 =pod
 
 =item * Any other method fails
 
-The error is propagated, and C<update_pkgs> is never called
+The error is propagated, and C<update_pkgs_retry> is never called
 
 =cut
 
@@ -224,7 +224,7 @@ foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
     $mock->clear();
     $mock->set_false($f);
     is($cmp->Configure($cfg), 0, "Failure in $f is propagated");
-    ok(!$mock->called('update_pkgs'));
+    ok(!$mock->called('update_pkgs_retry'));
     $mock->set_true($f);
 }
 

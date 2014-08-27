@@ -156,7 +156,7 @@ sub generate_repos
             $fh->cancel();
             return undef;
         }
-        $changes += $fh->close();
+        $changes += $fh->close() || 0; # handle undef
         $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.pkgs",
                                    log => $self);
         print $fh "# Additional configuration for $repo->{name}\n";
@@ -188,8 +188,10 @@ callers clean.
 
 sub execute_yum_command
 {
-    my ($self, $command, $why, $keeps_state, $stdin) = @_;
+    my ($self, $command, $why, $keeps_state, $stdin, $error_logger) = @_;
 
+    $error_logger = "error" if (!($error_logger && $error_logger =~ m/^(error|warn|info|verbose)$/));
+    
     my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
@@ -203,18 +205,19 @@ sub execute_yum_command
 
     $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out");
+    $self->verbose("$why output: $out") if(defined($out)); 
     if ($? ||
-        $err =~ m{^(?:Error|Failed|
+        ($err && $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
                       (?:Transaction \s+ encountered.*error)|
                       (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi ||
-        (@missing = ($out =~ m{^No package (.*) available}omg))) {
+                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi) ||
+        ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
+        ) {
         $self->warn("Command output: $out");
-        $self->error("Failed $why: $err");
+        $self->$error_logger("Failed $why: $err");
         if (@missing) {
-            $self->error("Missing packages: ", join(" ", @missing));
+            $self->$error_logger("Missing packages: ", join(" ", @missing));
         }
         return undef;
     }
@@ -333,10 +336,11 @@ sub expire_yum_caches
 sub apply_transaction
 {
 
-    my ($self, $tx) = @_;
+    my ($self, $tx, $tx_error_is_warn) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, $tx);
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, 
+                                        $tx, $tx_error_is_warn ? "warn" : "error");
     return defined($ok);
 }
 
@@ -566,7 +570,7 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn) = @_;
 
     $self->complete_transaction() or return 0;
 
@@ -606,11 +610,59 @@ sub update_pkgs
 
     if ($tx) {
         $tx .= $self->solve_transaction($run);
-        $self->apply_transaction($tx) or return 0;
+        $self->apply_transaction($tx, $tx_error_is_warn) or return 0;
     }
 
     return 1;
 }
+
+# Updates the packages on the system.
+sub update_pkgs_retry
+{
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs) = @_;
+    
+    # If an error is logged due to failed transaction, 
+    # it might be retried and might succeed, but ncm-ncd will not allow 
+    # any component that has spma as dependency (i.e. typically all others)
+    # to run (becasue he initial attempt had an error)
+    my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
+    
+    if($self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn)) {
+        $self->verbose("update_pkgs ok");
+    } else {
+        if ($allow_user_pkgs) {
+            # tx_error_is_warn = 0 in this case, error is logged
+            $self->verbose(1, "update_pkgs failed, userpkgs=true");
+            return 0;
+        } elsif ($retry_if_not_allow_user_pkgs) {
+            # all tx failures are errors here
+            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
+            if($self->update_pkgs($pkgs, $groups, $run, 1, $purge, 0)) {
+                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
+                if($self->update_pkgs($pkgs, $groups, $run, 0, $purge, 0)) {
+                    # log ok
+                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
+                } else {
+                    # log failure in 3rd step
+                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed."); 
+                    return 0;
+                };
+            } else {
+                # log failure in 2nd step
+                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed."); 
+                return 0;
+            };
+        } else {
+            # log failure, no retry enabled 
+            # tx_error_is_warn = 0 in this case, error is logged
+            $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
+            return 0;
+        }
+    }
+    
+    return 1;
+};
+
 
 # Set up a few things about Yum.conf. Somewhere in the future this may
 # have its own schema, or be delegated to some other component. To be
@@ -658,7 +710,9 @@ sub Configure
                                           $t->{proxyport});
     defined($purge_caches) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
-    $self->update_pkgs($pkgs, $groups, $t->{run}, $t->{userpkgs}, $purge_caches)
+
+    $self->update_pkgs_retry($pkgs, $groups, $t->{run}, 
+                             $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry})
         or return 0;
     return 1;
 }

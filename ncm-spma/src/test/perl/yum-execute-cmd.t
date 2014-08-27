@@ -53,7 +53,19 @@ ok(!$cmd->{object}->{NoAction}, "keeps_state passed correctly");
 
 set_desired_err($CMD, "Error: foo bar!!");
 is($cmp->execute_yum_command([$CMD], $WHY), undef, "Errors in output detected");
-is($cmp->{ERROR}, 1, "Errors reported");
+my $errs_reported = $cmp->{ERROR};
+my $warns_reported = $cmp->{WARN};
+is($errs_reported, 1, "Errors reported");
+
+is($cmp->execute_yum_command([$CMD], $WHY, undef, undef, "error"), undef, "Errors in output detected (error logger set)");
+is($cmp->{ERROR}, $errs_reported + 1, "1 new error reported (error logger set)".$cmp->{ERROR});
+my $new_warns = $cmp->{WARN} - $warns_reported;
+$errs_reported = $cmp->{ERROR};
+$warns_reported = $cmp->{WARN};
+
+is($cmp->execute_yum_command([$CMD], $WHY, undef, undef, "warn"), undef, "Errors in output detected (warn logger set)");
+is($cmp->{ERROR}, $errs_reported, "0 new errors reported (warn logger set)");
+is($cmp->{WARN}, $warns_reported + $new_warns + 1, "1 additional new warn reported (warn logger set; 1 previous-logged-as-error now a warn)");
 
 set_desired_err($CMD, "Error in PREIN scriptlet");
 
