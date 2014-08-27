@@ -81,13 +81,14 @@ sub Configure {
         return 0;
     }
 
-    my $testserver = "";
+    my @testservers = ();
     my $resolv = "";
     if ($inf->{dnscache}) {
-        $testserver = "127.0.0.1";
+        # If we are using dnscache the server we want to test is dnscache itself
+        push(@testservers, "127.0.0.1");
         $resolv .= "nameserver 127.0.0.1\n";
     } else {
-        $testserver = $servers[0];
+        @testservers = @servers;
         foreach my $srvr (@servers) {
             $resolv .= "nameserver $srvr\n";
         }
@@ -105,12 +106,7 @@ sub Configure {
 
     # We also want to check that it's working, before
     # we commit to this.
-    my $check;
-    if ($inf->{dnscache}) {
-        $check = $self->check_dns_servers($host, [$testserver]);
-    } else {
-        $check = $self->check_dns_servers($host, @servers);
-    }
+    my $check = $self->check_dns_servers($host, @testservers);
     if (!$check) {
         $self->debug(1, "host resolution does not appear to be working");
         if ($inf->{dnscache}) {
