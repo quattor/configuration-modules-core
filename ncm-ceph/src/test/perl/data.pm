@@ -779,3 +779,97 @@ Readonly::Hash our %COMPARE2 => (
      }
    }
 );
+Readonly::Hash our %CONFIGS => (
+     'ceph001' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       },
+       'mon' => {
+         'debug_ms' => 0
+       },
+       'osd.0' => {
+         'osd_objectstore' => 'keyvaluestore-dev'
+       }
+     },  
+     'ceph002' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     },  
+     'ceph003' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     }   
+);
+
+Readonly::Hash our %TINIES => (
+   'ceph001' => {
+     'global' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => 'ceph001, ceph002, ceph003'
+     },
+     'mon' => {
+       'debug_ms' => 0
+     },
+     'osd.0' => {
+       'osd_objectstore' => 'keyvaluestore-dev'
+     }
+   },
+   'ceph002' => {
+     'global' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => 'ceph001, ceph002, ceph003'
+     },
+     'osd.2' => {
+       'osd_objectstore' => 'keyvaluestore-dev'
+     }
+   },
+   'ceph003' => {
+     'global' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => 'ceph001, ceph002, ceph003'
+     }
+   }
+); 
+Readonly::Hash our %DEPLOYD => (
+     'ceph002' => {
+       'mds' => {
+         'fqdn' => 'ceph002.cubone.os',
+         'up' => 1
+       },
+       'osds' => {
+         'ceph002:/var/lib/ceph/osd/sdc' => {
+           'config' => {
+             'osd_objectstore' => 'keyvaluestore-dev'
+           },
+           'fqdn' => 'ceph002.cubone.os',
+           'host' => 'ceph002',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'osd_path' => '/var/lib/ceph/osd/sdc'
+         }
+       }
+     },  
+     'ceph003' => {
+       'mon' => {
+         'fqdn' => 'ceph003.cubone.os',
+         'up' => 1
+       }
+     }  
+);
+
