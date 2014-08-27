@@ -357,7 +357,90 @@ Readonly::Hash our %QUATMAP => (
      }
    }
 );
-our %CEPHFMAP = (
+Readonly::Hash our %QUATIN => (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'config' => {
+           'debug_ms' => 0,
+       },
+       'fqdn' => 'ceph001.cubone.os',
+       'up' => 1
+     },
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'config' => {
+           'osd_objectstore' => 'keyvaluestore-dev'
+         },
+         'fqdn' => 'ceph001.cubone.os',
+         'up' => 1,
+         'host' => 'ceph001',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'fqdn' => 'ceph001.cubone.os',
+          'up' => 0,
+         'host' => 'ceph001',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdd'
+       }
+     }
+   },
+   'ceph002' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph002.cubone.os',
+     'mds' => {
+       'fqdn' => 'ceph002.cubone.os',
+       'up' => 1
+     },
+     'mon' => {
+       'fqdn' => 'ceph002.cubone.os',
+       'up' => 1
+     },
+     'osds' => {
+       'ceph002:/var/lib/ceph/osd/sdc' => {
+         'config' => {
+           'osd_objectstore' => 'keyvaluestore-dev'
+         },
+         'fqdn' => 'ceph002.cubone.os',
+         'host' => 'ceph002',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       }
+     }
+   },
+   'ceph003' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph003.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph003.cubone.os',
+       'up' => 1
+     }
+   }
+);
+Readonly::Hash our %CEPHFMAP => (
    'ceph001' => {
      'config' => {
        'fsid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
@@ -431,13 +514,76 @@ our %CEPHFMAP = (
      }
    }
 );
+our %CEPHIN = (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4'
+     },
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mds' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'gid' => 5047,
+       'name' => 'ceph001',
+       'up' => 1
+     },
+     'mon' => {
+       'config' => {
+           'debug_ms' => 15,
+       },
+       'addr' => '10.141.8.180:6789/0',
+       'fqdn' => 'ceph001.cubone.os',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     },
+     'osds' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => {
+         'config' => {
+           'osd_objectstore' => 'keyvaluestore-dev'
+         },
+         'host' => 'ceph001',
+         'id' => 0,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'name' => 'osd.0',
+         'osd_path' => '/var/lib/ceph/osd/sdc',
+         'up' => 1,
+         'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+       },
+       'ceph001:/var/lib/ceph/osd/sdd' => {
+         'host' => 'ceph001',
+         'id' => 1,
+         'in' => 1,
+         'ip' => '10.141.8.180',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdd/journal',
+         'name' => 'osd.1',
+         'osd_path' => '/var/lib/ceph/osd/sdd',
+         'up' => 1,
+         'uuid' => 'ae77eef3-70a2-4b64-b795-2dee713bfe41'
+       }
+     }
+   },
+   'ceph002' => {
+     'config' => undef,
+     'fqdn' => 'ceph002.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.181:6754/0',
+       'fqdn' => 'ceph002.cubone.os',
+       'name' => 'ceph002',
+       'rank' => 0,
+       'up' => 1
+     }
+   },
+);
 Readonly::Array our @NEWCLUS => (
 #   [
 #     '/usr/bin/ceph-deploy',
 #     'new',
 #     'ceph001.cubone.os',
 #     'ceph002.cubone.os',
-#     'ceph003.cubone.os'
+#     'ceph003.cubone.osG'
 #   ],
    [
      '/usr/bin/ceph-deploy',
@@ -447,3 +593,189 @@ Readonly::Array our @NEWCLUS => (
 );
 
 Readonly our $STATE => '{"election_epoch":34,"quorum":[0,1],"quorum_names":["ceph001","ceph002"],"quorum_leader_name":"ceph002","monmap":{"epoch":11,"fsid":"a94f9906-ff68-487d-8193-23ad04c1b5c4","modified":"2013-12-11 10:40:44.403149","created":"0.000000","mons":[{"rank":0,"name":"ceph002","addr":"10.141.8.181:6754\/0"},{"rank":1,"name":"ceph001","addr":"10.141.8.180:6789\/0"},{"rank":2,"name":"ceph003","addr":"10.141.8.182:6789\/0"}]}}';
+
+Readonly::Hash our %COMPARE1 => (
+   'configs' => {
+     'ceph001' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       },
+       'mon' => {
+         'debug_ms' => 0
+       },
+       'osd.0' => {
+         'osd_objectstore' => 'keyvaluestore-dev'
+       }
+     },
+     'ceph002' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     }
+   },
+   'deployd' => {
+     'ceph002' => {
+       'osds' => {
+         'ceph002:/var/lib/ceph/osd/sdc' => {
+           'config' => {
+             'osd_objectstore' => 'keyvaluestore-dev'
+           },
+           'fqdn' => 'ceph002.cubone.os',
+           'host' => 'ceph002',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'osd_path' => '/var/lib/ceph/osd/sdc'
+         }
+       }
+     }
+   },
+   'destroy' => {
+     'ceph001' => {
+       'mds' => {
+         'fqdn' => 'ceph001.cubone.os',
+         'gid' => 5047,
+         'name' => 'ceph001',
+         'up' => 1
+       }
+     }
+   },
+   'gvalues' => {},
+   'ignh' => {
+     'ceph003' => {
+       'config' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       },
+       'fqdn' => 'ceph003.cubone.os',
+       'mon' => {
+         'fqdn' => 'ceph003.cubone.os',
+         'up' => 1
+       }
+     }
+   },
+   'mapping' => {
+     'get_id' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => 0,
+       'ceph001:/var/lib/ceph/osd/sdd' => 1
+     },
+     'get_loc' => {
+       '0' => 'ceph001:/var/lib/ceph/osd/sdc',
+       '1' => 'ceph001:/var/lib/ceph/osd/sdd'
+     }
+   },
+   'restartd' => {
+     'ceph001' => {
+       'mon' => 'restart',
+       'osd.1' => 'stop'
+     },
+     'ceph002' => {
+       'mds' => 'start'
+     }
+   }
+);
+Readonly::Hash our %COMPARE2 => (
+   'configs' => {
+     'ceph001' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       },
+       'mon' => {
+         'debug_ms' => 0
+       },
+       'osd.0' => {
+         'osd_objectstore' => 'keyvaluestore-dev'
+       }
+     },
+     'ceph002' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     },
+     'ceph003' => {
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     }
+   },
+   'deployd' => {
+     'ceph002' => {
+       'mds' => {
+         'fqdn' => 'ceph002.cubone.os',
+         'up' => 1
+       },
+       'osds' => {
+         'ceph002:/var/lib/ceph/osd/sdc' => {
+           'config' => {
+             'osd_objectstore' => 'keyvaluestore-dev'
+           },
+           'fqdn' => 'ceph002.cubone.os',
+           'host' => 'ceph002',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'osd_path' => '/var/lib/ceph/osd/sdc'
+         }
+       }
+     },
+     'ceph003' => {
+       'mon' => {
+         'fqdn' => 'ceph003.cubone.os',
+         'up' => 1
+       }
+     }
+   },
+   'destroy' => {
+     'ceph001' => {
+       'mds' => {
+         'fqdn' => 'ceph001.cubone.os',
+         'gid' => 5047,
+         'name' => 'ceph001',
+         'up' => 1
+       }
+     }
+   },
+   'gvalues' => {},
+   'ignh' => {},
+   'mapping' => {
+     'get_id' => {
+       'ceph001:/var/lib/ceph/osd/sdc' => 0,
+       'ceph001:/var/lib/ceph/osd/sdd' => 1
+     },
+     'get_loc' => {
+       '0' => 'ceph001:/var/lib/ceph/osd/sdc',
+       '1' => 'ceph001:/var/lib/ceph/osd/sdd'
+     }
+   },
+   'restartd' => {
+     'ceph001' => {
+       'mon' => 'restart',
+       'osd.1' => 'stop'
+     }
+   }
+);

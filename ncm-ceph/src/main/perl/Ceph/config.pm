@@ -28,6 +28,7 @@ our $EC=LC::Exception::Context->new->will_store_all;
 Readonly::Array my @NONINJECT => qw(
     mon_host 
     mon_initial_members
+    fsid
     public_network
     filestore_xattr_use_omap
     osd_crush_update_on_start
@@ -127,7 +128,8 @@ sub config_hash {
                 }
             }
         }
-    }   
+    }
+    return 1;   
 }
 
 sub stringify_cfg_arrays {

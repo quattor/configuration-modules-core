@@ -250,8 +250,8 @@ sub check_immutables {
     my ($self, $name, $imm, $quat, $ceph) = @_;
     my $rc =1;
     foreach my $attr (@{$imm}) {
-        if ((defined($quat->{$attr}) || defined($ceph->{$attr})) && 
-            ($quat->{$attr} ne $ceph->{$attr}) ){
+        if ((defined($quat->{$attr}) xor defined($ceph->{$attr})) || 
+        (defined($quat->{$attr}) && ($quat->{$attr} ne $ceph->{$attr})) ){
             $self->error("Attribute $attr of $name not corresponding.", 
                 "Quattor: $quat->{$attr}, ",
                 "Ceph: $ceph->{$attr}");
