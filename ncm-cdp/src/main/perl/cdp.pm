@@ -36,10 +36,11 @@ sub Configure
         print $fh "$k = $t->{$k}\n";
     }
 
+    $fh->close();
+
     my $srv = CAF::Service->new(['cdp-listend'], log => $self, %opts);
     $srv->restart();
 
-    $fh->close();
     return 1;
 }
 
