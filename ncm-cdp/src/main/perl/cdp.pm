@@ -37,7 +37,7 @@ sub Configure
     }
 
     if($fh->close()) {
-        my $srv = CAF::Service->new(['cdp-listend'], log => $self, %opts);
+        my $srv = CAF::Service->new(['cdp-listend'], log => $self);
         $srv->restart();
     }
 
