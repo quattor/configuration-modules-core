@@ -93,6 +93,7 @@ sub inject_realtime {
     return 1;
 }
 
+# Builds the ceph config tree out of the existing config files
 sub config_hash {
     my ($self, $master, $mapping, $gvalues) = @_;
     while (my ($hostname, $host) = each(%{$master})) {
@@ -132,6 +133,7 @@ sub config_hash {
     return 1;   
 }
 
+# Looks for arrays in the config and makes strings out of it
 sub stringify_cfg_arrays {
     my ($self, $cfg) = @_;
     my $config = { %$cfg };
@@ -143,6 +145,8 @@ sub stringify_cfg_arrays {
     }
     return $config;
 }
+
+# Push the config to a host
 sub write_and_push {
     my ($self, $hostname, $tinycfg, $gvalues) = @_;
     my $pushfile = "$gvalues->{clname}.conf";
@@ -159,7 +163,7 @@ sub write_and_push {
     $self->push_cfg($hostname, $gvalues->{qtmp}, 1) or return 0;
 }
 
-
+# Build the Config::Tiny hash for a host and calls the push function
 sub set_host_config {
     my ($self, $hostname, $host, $gvalues) = @_;
 
@@ -174,7 +178,7 @@ sub set_host_config {
 
 }
 
-
+# Set the config for each host
 sub set_and_push_configs {
     my ($self, $configs, $gvalues) = @_;
     my $tinies = {};

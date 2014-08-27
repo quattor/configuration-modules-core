@@ -49,14 +49,6 @@ $mock->mock('get_host', 'ignore' );
 my $master = {};
 $cmp->mon_hash($master);
 cmp_deeply($master,\%data::MONS, 'build monitor hash');
-#
-#cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDMON, 'deploy commands prepared');
-#diag explain @{$cmdh->{daemon_cmds}};
-#
-#cmp_deeply($cmdh->{man_cmds}, \@data::DELMON, 'commands to be run manually');
-#my $dodeploy = $cmp->do_deploy(1, $cmdh);
-#ok($dodeploy, 'try running the commands');
-#
 #my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002.cubone.os";
 #my $cmd = get_command($deployaddstring);
 #ok(defined($cmd), "mon add was invoked");

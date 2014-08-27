@@ -210,9 +210,7 @@ sub do_configure {
         $mapping, $gvalues) or return 0; #This is the Main function
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
-    $self->deploy_daemons($structures->{deployd}, $tinies, $mapping, 
-        $structures->{restartd}, $gvalues) or return 0; #Met change cfg action
-    #TODO Same as before, but not for new unconfigured hosts
+    $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
     $self->debug(1,"configuring crushmap");
     $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}) or return 0;
     $self->destroy_daemons($structures->{destroyd}, $mapping) or return 0;

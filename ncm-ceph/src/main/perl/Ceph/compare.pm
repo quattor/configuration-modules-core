@@ -61,7 +61,7 @@ sub get_quat_conf {
 
     }
     while (my ($host, $mds) = each(%{$quattor->{mdss}})) {
-        my @fhost = split('\.', $host);# Make sure shortname is used. TODO in schema?
+        my @fhost = split('\.', $host);# Make sure shortname is used. 
         my $hostname = $fhost[0];
         $master->{$hostname}->{mds} = $mds; # Only one mds
         $master->{$hostname}->{fqdn} = $mds->{fqdn};
@@ -74,7 +74,6 @@ sub get_quat_conf {
 sub add_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Configuring new host $hostname");
-    $self->error("Configuring new host $hostname");
     if (!$self->test_host_connection($host->{fqdn}, $structures->{gvalues})) {
        $structures->{ignh}->{$hostname} = $host;
        $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
@@ -101,7 +100,6 @@ sub add_host {
 sub add_osd { 
     my ($self, $hostname, $osdkey, $osd, $structures) = @_;
     $self->debug(3, "Configuring new osd $osdkey");
-    $self->error( "Configuring new osd $osdkey");
     if (!$self->prep_osd($osd)) {
         $self->error("osd $osdkey could not be prepared. Osd directory not empty?"); 
         return 0;
@@ -114,10 +112,8 @@ sub add_osd {
 sub add_mon {
     my ($self, $hostname, $mon, $structures) = @_;
     $self->debug(3, "Configuring new mon $hostname");
-    $self->error("Configuring new mon $hostname");
     $structures->{deployd}->{$hostname}->{mon} = $mon;
     $structures->{configs}->{$hostname}->{mon} = $mon->{config} if ($mon->{config});
-    $self->error('blablabla');
     return 1;
 }
 
@@ -125,7 +121,6 @@ sub add_mon {
 sub add_mds {
     my ($self, $hostname, $mds, $structures) = @_;
     $self->debug(3, "Configuring new mds $hostname");
-    $self->error("Configuring new mds $hostname");
     if (!$self->prep_mds($hostname, $mds)) { # not existing
         $structures->{deployd}->{$hostname}->{mds} = $mds;
         $structures->{configs}->{$hostname}->{mds} = $mds->{config} if ($mds->{config});
@@ -138,7 +133,6 @@ sub add_mds {
 sub compare_mon {
     my ($self, $hostname, $quat_mon, $ceph_mon, $structures) = @_;
     $self->debug(3, "Comparing mon $hostname");
-    $self->error("Comparing mon $hostname");
     if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
         return $self->add_mon($hostname, $quat_mon, $structures);
     }
@@ -159,7 +153,7 @@ sub compare_mon {
 # Compare and change mds config
 sub compare_mds {
     my ($self, $hostname, $quat_mds, $ceph_mds, $structures) = @_;
-    $self->error("Comparing mds $hostname");   
+    $self->debug(3, "Comparing mds $hostname");   
     my $changes = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mds} = $quat_mds->{config} if ($quat_mds->{config});
     $self->check_restart($hostname, 'mds', $changes,  $quat_mds, $ceph_mds, $structures);
@@ -170,7 +164,6 @@ sub compare_mds {
 sub compare_osd {
     my ($self, $hostname, $osdkey, $quat_osd, $ceph_osd, $structures) = @_;
     $self->debug(3, "Comparing osd $osdkey");
-    $self->error("Comparing osd $osdkey");
     my @osdattrs = ();  # special case, journal path is not in 'config' section 
                         # (Should move to 'osd_journal', but would imply schema change)
     if ($quat_osd->{journal_path}) {
@@ -195,7 +188,6 @@ sub compare_config {
     my ($self, $type, $key, $quat_config, $ceph_config) = @_;
     my $cfgchanges = {};
     $self->debug(4, "Comparing config of $type $key");
-    $self->error("Comparing config of $type $key");
     while (my ($qkey, $qvalue) = each(%{$quat_config})) {
         if (ref($qvalue) eq 'ARRAY'){
             $qvalue = join(', ',@$qvalue);
@@ -224,7 +216,6 @@ sub compare_config {
 sub compare_global {
     my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
     $self->debug(3, "Comparing global section on $hostname");
-    $self->error("Comparing global section on $hostname");
     my @attrs = ('fsid');
     if ($ceph_config) {
         $self->check_immutables($hostname, \@attrs, $quat_config, $ceph_config) or return 0;
@@ -240,7 +231,6 @@ sub compare_global {
 sub compare_host {
     my ($self, $hostname, $quat_host, $ceph_host, $structures) = @_;
     $self->debug(3, "Comparing host $hostname");
-    $self->error("Comparing host $hostname");
     if ($ceph_host->{fault}) {
         # $structures->{ignh}->{$hostname} = $host; For future use ?
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
@@ -286,7 +276,6 @@ sub compare_host {
 sub delete_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Removing host $hostname");
-    $self->error("Removing host $hostname");
     if ($host->{fault}) {
         $structures->{ignh}->{$hostname} = $host;
         $self->warn("Host $hostname should be deleted, but is not reachable, so it will be ignored");
@@ -296,11 +285,10 @@ sub delete_host {
     return 1;
 }
     
+# Compare per host - add, delete, modify 
 sub compare_conf {
     my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
 
-    # Compare hosts - add, delete, modify fts
-    # Add: push global config, all daemons aan deploylist
     # Delete: NY Impl ( But give commands )
     # Modify : compare all config sections, 
     my $structures = {
@@ -313,25 +301,18 @@ sub compare_conf {
         gvalues => $gvalues,
     };
     $self->debug(2, "Comparing the quattor setup with the running cluster setup");
-    $self->error("Comparing the quattor setup with the running cluster setup");
     while  (my ($hostname, $host) = each(%{$quat_conf})) {
-        $self->error('in lus');
         if (exists($ceph_conf->{$hostname})) {
-            $self->error("Comparing started");
             $self->compare_host($hostname, $quat_conf->{$hostname}, 
                 $ceph_conf->{$hostname}, $structures) or return ;
-            $self->error("Comparing ok");
             delete $ceph_conf->{$hostname};
         } else {
-            $self->error("adding started");
             $self->add_host($hostname, $host, $structures) or return ;
         }
     }   
-    $self->error("Comparing reverse"); 
     while  (my ($hostname, $host) = each(%{$ceph_conf})) {
         $self->delete_host($hostname, $host, $structures) or return ;
     }   
-    $self->error("Comparing done"); 
     return $structures;
  
 }

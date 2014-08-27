@@ -102,7 +102,6 @@ $mockcf->mock('pull_host_cfg' => sub {
     }
 );
 my ($master, $mapping) = $cmp->get_ceph_conf();
-diag explain $master;
 cmp_deeply($master, \%data::CEPHFMAP, 'Ceph full config hash');
 
 done_testing();

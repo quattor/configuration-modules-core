@@ -274,6 +274,7 @@ sub check_state {
     }
 }
 
+# Checks which state the daemon should have
 sub check_restart {
     my ($self, $hostname, $name, $changes, $qdaemon, $cdaemon, $structures) = @_; 
     if (%{$changes} && $qdaemon->{up}){
@@ -283,7 +284,7 @@ sub check_restart {
     }   
 };
 
-
+# Do some preparation checks on a new osd
 sub prep_osd { 
     my ($self,$osd) = @_;
     
@@ -294,6 +295,7 @@ sub prep_osd {
     }
 }
 
+# Do some preparation checks on a new mds
 sub prep_mds { 
     my ($self, $hostname, $mds) = @_;
         my $fqdn = $mds->{fqdn};
@@ -301,15 +303,17 @@ sub prep_mds {
         return $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
 }
 
+# Add the config fields of a new osd to the config file
 sub add_osd_to_config {
     my ($self, $hostname, $tinycfg, $osd, $gvalues) = @_;
-
     my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path}) or return 0;
+    $self->debug(2, "adding new config for $newosd to the configfile");
     $tinycfg->{$newosd} = $self->stringify_cfg_arrays($osd->{config});
 
     return $self->write_and_push($hostname, $tinycfg, $gvalues);
 }
 
+# Puts the osd_objectstore value temporarely in the global section or back out
 sub foefelare {
     my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
     if ($osd_objectstore) {
@@ -320,6 +324,7 @@ sub foefelare {
     return $self->write_and_push($hostname, $tinycfg, $gvalues);
 }
 
+# Deploys a single daemon
 sub deploy_daemon {
     my ($self, $cmd, $name) = @_;
     push (@$cmd, $name);
@@ -327,8 +332,10 @@ sub deploy_daemon {
     return $self->run_ceph_deploy_command($cmd);
 }
 
+# Deploys the new daemons,
+# if an osd has to have a non default objectstore, this is fixed with a dirty trick here
 sub deploy_daemons {
-    my ($self, $deployd, $tinies, $mapping, $restartd, $gvalues) or return 0;
+    my ($self, $deployd, $tinies, $gvalues) = @_;
     $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
     while  (my ($hostname, $host) = each(%{$deployd})) {
         if ($host->{mon}) {
@@ -337,33 +344,38 @@ sub deploy_daemons {
             $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
         }
         my $tinycfg = $tinies->{$hostname};
-        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
-            my $foefel;
-            if ($osd->{config}->{osd_objectstore}) {# pre foefel
-                $foefel = $tinycfg->{global}->{osd_objectstore};
-                $self->foefelare($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
+        if ($host->{osds}) {
+            while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+                my $foefel;
+                if ($osd->{config}->{osd_objectstore}) {# pre foefel
+                    $self->info("deploying new osd with osd_objectstore set, will change global value");
+                    $foefel = $tinycfg->{global}->{osd_objectstore};
+                    $self->foefelare($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
+                }
+                my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
+                if ($osd->{journal_path}) {
+                    $pathstring = "$pathstring:$osd->{journal_path}";
+                }
+                my @command = qw(osd create);
+                my $ret = $self->deploy_daemon(\@command, $pathstring);
+                if ($osd->{config}->{osd_objectstore}) { # post foefel
+                    $self->foefelare($hostname, $tinycfg, $foefel, $gvalues) or return 0;
+                    $self->info("global value osd_objectstore reverted succesfully");
+                }
+                return 0 if (!$ret);
+                $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
             }
-            my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
-            if ($osd->{journal_path}) {
-                $pathstring = "$pathstring:$osd->{journal_path}";
-            }
-            my @command = qw(osd create);
-            my $ret = $self->deploy_daemon(\@command, $pathstring);
-            if ($osd->{config}->{osd_objectstore}) { # post foefel
-                $self->foefelare($hostname, $tinycfg, $foefel, $gvalues) or return 0;
-            }
-            return 0 if (!$ret);
-            $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
         }
-
         if ($host->{mds}) {
             #deploy mds
             my @command = qw(mds create);
             $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname") or return 0;
         }
     }
+    return 1;
 }
 
+# Destroys a single daemon (manually command)
 sub destroy_daemon {
     my ($self, $type, $name, $cmds) = @_;
     my @command = qw(/usr/bin/ceph-deploy); 
@@ -371,6 +383,7 @@ sub destroy_daemon {
     push (@$cmds, \@command);
 }
 
+# Destroys daemons that need to be destroyed (Manually at this moment)
 sub destroy_daemons {
     my ($self, $destroyd, $mapping) = @_; 
     my $cmds = [];
@@ -388,8 +401,9 @@ sub destroy_daemons {
     }
     $self->info("Commands to be run manually (as ceph user):");
     $self->print_cmds($cmds);   
+    return 1;
 }
-
+# Restarts daemons that need restart (Manually at this moment)
 sub restart_daemons {
     my ($self, $restartd) = @_;
     my @cmds = (); 
@@ -402,6 +416,7 @@ sub restart_daemons {
     }
     $self->info("Commands to be run manually:");
     $self->print_cmds(\@cmds);
+    return 1;
 }
 
  
