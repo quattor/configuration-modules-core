@@ -837,23 +837,23 @@ sub invalidate_cache
     $self->debug(1, "Preparing to invalidate cache: $cache");
 
     my $cmd_output;
+    my $cmd_errors;
     my $command = [NSCD, '-i', $cache];
 
     if (-x NSCD) {
         my $pgrep = CAF::Process->new(['/usr/bin/pgrep', '-f', NSCD], log => $self,
                                       stdout => \$cmd_output,
-                                      stderr => "stdout");
+                                      stderr => \$cmd_errors);
         $pgrep->execute();
         if ( $? == 0 ) {
             my $cmd = CAF::Process->new($command, log => $self,
                                         stdout => \$cmd_output,
-                                        stderr => "stdout");
+                                        stderr => \$cmd_errors);
             $cmd->execute();
             if ( $? == 0 ) {
                 $self->info("Invalidated nscd cache");
-                $self->debug(1, "nscd output: '$cmd_output'");
             } else {
-                $self->error("Invalidating cache failed. nscd output: '$cmd_output'");
+                $self->error("Invalidating cache failed");
             }
         } else {
             $self->debug(1, "nscd found but not running, will not invalidate cache.");
