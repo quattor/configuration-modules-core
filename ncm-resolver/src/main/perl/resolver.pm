@@ -105,7 +105,7 @@ sub Configure {
 
     # We also want to check that it's working, before
     # we commit to this.
-    my $check = 0;
+    my $check;
     if ($inf->{dnscache}) {
         $check = $self->check_dns_servers($host, [$testserver]);
     } else {
