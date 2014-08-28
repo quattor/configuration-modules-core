@@ -15,7 +15,7 @@ use LC::Find;
 use LC::File qw(copy makedir);
 use CAF::FileWriter;
 use CAF::FileEditor;
-use CAF::Process;
+use CAF::Service;
 use File::Basename;
 use File::Path;
 use EDG::WP4::CCM::Element qw(unescape);
@@ -30,37 +30,6 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Restart any daemon that has seen its configuration changed by the
-# component.
-sub restart_linux {
-    my ($self, $daemon) = @_;
-    CAF::Process->new(["/sbin/service", $daemon, "restart"],
-                      log => $self)->run();
-    if ($?) {
-        $self->error("Impossible to restart $daemon");
-        return;
-    }
-    return 1;
-}
-
-sub restart_solaris
-{
-    my ($self, $daemon) = @_;
-
-    CAF::Process->new([qw(svcadm restart), $daemon],
-                      log => $self)->run();
-    if ($?) {
-        $self->error("Impossible to restart $daemon");
-        return;
-    }
-    return 1;
-}
-
-if ($^O eq 'linux') {
-    *restart_daemon = \&restart_linux;
-} else {
-    *restart_daemon = \&restart_solaris;
-}
 
 sub load_module
 {
@@ -257,8 +226,9 @@ sub Configure
     }
 
     # Restart any daemons whose configurations we have changed.
-    foreach my $d (keys(%{$self->{daemons}})) {
-        $self->restart_daemon($d);
+    if ($self->{daemons}) {
+        my $srv = CAF::Service->new([keys(%{$self->{daemons}})], log => $self);
+        $srv->restart();
     }
     return 1;
 }
