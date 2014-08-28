@@ -314,7 +314,7 @@ sub add_osd_to_config {
 }
 
 # Puts the osd_objectstore value temporarely in the global section or back out
-sub foefelare {
+sub osd_trick {
     my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
     if ($osd_objectstore) {
         $tinycfg->{global}->{osd_objectstore} = $osd_objectstore;
@@ -347,10 +347,10 @@ sub deploy_daemons {
         if ($host->{osds}) {
             while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
                 my $foefel;
-                if ($osd->{config}->{osd_objectstore}) {# pre foefel
+                if ($osd->{config}->{osd_objectstore}) {# pre trick
                     $self->info("deploying new osd with osd_objectstore set, will change global value");
                     $foefel = $tinycfg->{global}->{osd_objectstore};
-                    $self->foefelare($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
+                    $self->osd_trick($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
                 }
                 my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
                 if ($osd->{journal_path}) {
@@ -358,8 +358,8 @@ sub deploy_daemons {
                 }
                 my @command = qw(osd create);
                 my $ret = $self->deploy_daemon(\@command, $pathstring);
-                if ($osd->{config}->{osd_objectstore}) { # post foefel
-                    $self->foefelare($hostname, $tinycfg, $foefel, $gvalues) or return 0;
+                if ($osd->{config}->{osd_objectstore}) { # post trick
+                    $self->osd_trick($hostname, $tinycfg, $foefel, $gvalues) or return 0;
                     $self->info("global value osd_objectstore reverted succesfully");
                 }
                 return 0 if (!$ret);
@@ -402,8 +402,10 @@ sub destroy_daemons {
             }
         }
     }
-    $self->info("Commands to be run manually (as ceph user):");
-    $self->print_cmds($cmds);   
+    if(@$cmds){
+        $self->info("Commands to be run manually (as ceph user):");
+        $self->print_cmds($cmds);
+    }   
     return 1;
 }
 # Restarts daemons that need restart (Manually at this moment)
@@ -417,8 +419,10 @@ sub restart_daemons {
             push(@cmds, ['/usr/bin/ssh', $hostname, qw(/sbin/service ceph), $action, $name]); 
         }
     }
-    $self->info("Commands to be run manually:");
-    $self->print_cmds(\@cmds);
+    if(@cmds){
+        $self->info("Commands to be run manually:");
+        $self->print_cmds(\@cmds);
+    }
     return 1;
 }
 

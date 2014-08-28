@@ -26,13 +26,17 @@ use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 # array of non-injectable (not live applicable) configuration settings
 Readonly::Array my @NONINJECT => qw(
-    mon_host 
+    mon_host
     mon_initial_members
     fsid
     public_network
+    cluster_network
     filestore_xattr_use_omap
     osd_crush_update_on_start
     osd_objectstore
+    auth_service_required
+    auth_cluster_required
+    auth_client_required
 );
 
 ## Retrieving information of ceph cluster
@@ -55,7 +59,7 @@ sub pull_host_cfg {
     my ($self, $host, $gvalues) = @_;
     my $pullfile = "$gvalues->{clname}.conf";
     my $hostfile = "$pullfile.$host";
-    $self->run_ceph_deploy_command([qw(config pull), $host], $gvalues->{qtmp}) or return ;
+    $self->run_ceph_deploy_command([qw(config pull), $host], $gvalues->{qtmp}, 1) or return ;
 
     move($gvalues->{qtmp} . $pullfile, $gvalues->{qtmp} .  $hostfile) or return ;
     $self->git_commit($gvalues->{qtmp}, $hostfile, "pulled config of host $host"); 
@@ -66,7 +70,7 @@ sub pull_host_cfg {
 
 # Push config to host
 sub push_cfg {
-    my ($self, $host, $overwrite, $dir) = @_;
+    my ($self, $host, $dir, $overwrite) = @_;
     
     $overwrite = 0 if (! defined($overwrite));
     $dir = '' if (! defined($dir));
@@ -159,8 +163,8 @@ sub write_and_push {
     }
     $self->debug(2,"content written to config file $cfgfile");
     $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
-    move($cfgfile, $gvalues->{qtmp} .  $pushfile) or return 0;
-    $self->push_cfg($hostname, $gvalues->{qtmp}, 1) or return 0;
+    move($cfgfile, $pushfile) or return 0;
+    $self->push_cfg($hostname, '', 1) or return 0;
 }
 
 # Build the Config::Tiny hash for a host and calls the push function

@@ -18,6 +18,7 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 use Config::Tiny;
+use Data::Dumper;
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
@@ -41,6 +42,7 @@ sub get_ceph_conf {
     $self->mds_hash($master) or return ;
     
     $self->config_hash( $master, $mapping, $gvalues) or return; 
+    $self->debug(5, "Ceph hash:", Dumper($master));
     return ($master, $mapping);
 }
 
@@ -67,6 +69,7 @@ sub get_quat_conf {
         $master->{$hostname}->{fqdn} = $mds->{fqdn};
         $master->{$hostname}->{config} = $quattor->{config};
     }
+    $self->debug(5, "Quattor hash:", Dumper($master));
     return $master;
 }
 
@@ -188,6 +191,9 @@ sub compare_config {
     my ($self, $type, $key, $quat_config, $ceph_config) = @_;
     my $cfgchanges = {};
     $self->debug(4, "Comparing config of $type $key");
+    $self->debug(5, "Quattor config:", Dumper($quat_config));
+    $self->debug(5, "Ceph config:", Dumper($ceph_config));
+
     while (my ($qkey, $qvalue) = each(%{$quat_config})) {
         if (ref($qvalue) eq 'ARRAY'){
             $qvalue = join(', ',@$qvalue);
@@ -225,6 +231,7 @@ sub compare_global {
     if (%{$changes}){
         $self->inject_realtime($hostname, $changes) or return 0;
     }
+    return 1;
 }
     
 #Compare different sections of an existing host
@@ -313,6 +320,7 @@ sub compare_conf {
     while  (my ($hostname, $host) = each(%{$ceph_conf})) {
         $self->delete_host($hostname, $host, $structures) or return ;
     }   
+    $self->debug(5, "Structured action hash:", Dumper($structures));
     return $structures;
  
 }
