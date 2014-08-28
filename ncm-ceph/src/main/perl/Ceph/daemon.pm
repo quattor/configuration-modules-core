@@ -293,6 +293,7 @@ sub prep_osd {
         (my $journaldir = $osd->{journal_path}) =~ s{/journal$}{};
         $self->check_empty($journaldir, $osd->{fqdn}) or return 0;
     }
+    return 1;
 }
 
 # Do some preparation checks on a new mds
@@ -317,6 +318,7 @@ sub add_osd_to_config {
 sub osd_trick {
     my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
     if ($osd_objectstore) {
+        $self->debug(2, "Doing osd_objectstore trick with value $osd_objectstore");
         $tinycfg->{global}->{osd_objectstore} = $osd_objectstore;
     } else {
         delete $tinycfg->{global}->{osd_objectstore};
@@ -337,7 +339,8 @@ sub deploy_daemon {
 sub deploy_daemons {
     my ($self, $deployd, $tinies, $gvalues) = @_;
     $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
-    while  (my ($hostname, $host) = each(%{$deployd})) {
+    foreach my $hostname (sort keys(%{$deployd})) {
+        my $host = $deployd->{$hostname};
         if ($host->{mon}) {
             #deploy mon
             my @command = qw(mon create);
@@ -345,7 +348,8 @@ sub deploy_daemons {
         }
         my $tinycfg = $tinies->{$hostname};
         if ($host->{osds}) {
-            while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+            foreach my $osdloc (sort keys(%{$host->{osds}})) {
+                my $osd = $host->{osds}->{$osdloc};
                 my $foefel;
                 if ($osd->{config}->{osd_objectstore}) {# pre trick
                     $self->info("deploying new osd with osd_objectstore set, will change global value");
@@ -358,6 +362,9 @@ sub deploy_daemons {
                 }
                 my @command = qw(osd create);
                 my $ret = $self->deploy_daemon(\@command, $pathstring);
+                #create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't, so..
+                @command = qw(osd activate); #FIXME
+                $ret = $self->deploy_daemon(\@command, $pathstring) if $ret;
                 if ($osd->{config}->{osd_objectstore}) { # post trick
                     $self->osd_trick($hostname, $tinycfg, $foefel, $gvalues) or return 0;
                     $self->info("global value osd_objectstore reverted succesfully");

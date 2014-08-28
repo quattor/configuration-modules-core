@@ -156,7 +156,7 @@ sub write_and_push {
     my $pushfile = "$gvalues->{clname}.conf";
     my $hostfile = "$pushfile.$hostname";
     my $cfgfile = $gvalues->{qtmp} . $hostfile;
-
+    $self->debug(5, "Config to write:", Dumper($tinycfg));
     if (!$tinycfg->write($cfgfile)) {
         $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?");
         return 0;
