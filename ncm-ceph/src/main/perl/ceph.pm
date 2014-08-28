@@ -82,6 +82,7 @@ sub cluster_exists_check {
         if (!-f "$cephusr->{homeDir}/$gvalues->{clname}.mon.keyring"){
             $self->run_ceph_deploy_command([@newcmd]);
         }
+        $self->info("To create a new cluster, run this command as ceph user");
         my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
         $self->print_cmds([[@moncr]]);
         return 0;
