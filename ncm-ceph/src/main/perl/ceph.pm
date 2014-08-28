@@ -213,7 +213,7 @@ sub do_configure {
     $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
     $self->debug(1,"configuring crushmap");
     $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}) or return 0;
-    $self->destroy_daemons($structures->{destroyd}, $mapping) or return 0;
+    $self->destroy_daemons($structures->{destroy}, $mapping) or return 0;
     $self->restart_daemons($structures->{restartd});
     #$self->print_info($restartd, $mand, $not_configured);
     return 1;  

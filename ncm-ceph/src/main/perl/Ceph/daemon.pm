@@ -392,7 +392,10 @@ sub destroy_daemons {
         while  (my ($type, $daemon) = each(%{$host})) {
             if ($type eq 'osds') {
                 while  (my ($osdloc, $osd) = each(%{$daemon})) {
-                    $self->destroy_daemon('osd', $mapping->{get_id}->{$osdloc}, $cmds);
+                my $osd_id = $mapping->{get_id}->{$osdloc};
+                return 0 if (!defined($osd_id));
+                my $osdname = "osd.$osd_id";
+                $self->destroy_daemon('osd', $osdname, $cmds);
                 }
             } else {
                 $self->destroy_daemon($type, $hostname, $cmds);

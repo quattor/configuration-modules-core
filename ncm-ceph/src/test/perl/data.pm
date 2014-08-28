@@ -872,4 +872,38 @@ Readonly::Hash our %DEPLOYD => (
        }
      }  
 );
-
+Readonly::Hash our %DESTROYD => (
+     'ceph001' => {
+       'mds' => {
+         'fqdn' => 'ceph001.cubone.os',
+         'gid' => 5047,
+         'name' => 'ceph001',
+         'up' => 1
+       },
+       'osds' => {
+         'ceph001:/var/lib/ceph/osd/sdc' => {
+           'config' => {
+             'osd_objectstore' => 'keyvaluestore-dev'
+           },
+           'host' => 'ceph001',
+           'id' => 0,
+           'in' => 1,
+           'ip' => '10.141.8.180',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'name' => 'osd.0',
+           'osd_path' => '/var/lib/ceph/osd/sdc',
+           'up' => 1,
+           'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+         },
+       },
+     }, 
+); 
+Readonly::Hash our %RESTARTD => (
+     'ceph001' => {
+       'mon' => 'restart',
+       'osd.1' => 'stop'
+     },
+     'ceph002' => {
+       'mds' => 'start'
+     }
+);
