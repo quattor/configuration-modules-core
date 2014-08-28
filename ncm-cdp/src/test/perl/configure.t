@@ -8,9 +8,12 @@ use CAF::Object;
 use Test::MockModule;
 use CAF::FileWriter;
 
-my $mock = Test::MockModule->new("CAF::FileWriter");
+my $s_mock = Test::MockModule->new("CAF::Service");
+$s_mock->mock("os_flavour", "linux_systemd");
 
-$mock->mock("close", sub {
+my $cf_mock = Test::MockModule->new("CAF::FileWriter");
+
+$cf_mock->mock("close", sub {
         diag("closing");
         return 1;
     });
@@ -41,7 +44,7 @@ like($fh, qr{^nch_smear\s*=\s*10\s*$}m, "Correct nch_smear line");
 like($fh, qr{^port\s*=\s*7777\s*$}m, "Correct port line");
 
 # it interprets the commands as regexps (aka systemctl on fedora desktop)
-my $c = command_history_ok([qr{(service\s+cdp-listend\s+restart|systemctl\s+restart\s+cdp-listend)}]); 
+my $c = get_command("systemctl restart cdp-listend");
 ok($c, "Daemon was restarted when there were changes");
 
 done_testing();
