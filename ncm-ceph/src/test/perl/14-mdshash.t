@@ -50,9 +50,5 @@ set_command_status($donecmd,0);
 set_desired_err($donecmd,'');
 my $output = $cmp->prep_mds('ceph002', { fqdn => 'ceph002.cubone.os' });
 ok($output, 'no new mds');
-#Main  comparison function:
-#FIXME my $output = $cmp->process_mdss($quath, $cmdh);
-#ok($output, 'ceph quattor cmp for mds');
-#FIXME cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDMDS, 'deploy commands prepared');
 
 done_testing();

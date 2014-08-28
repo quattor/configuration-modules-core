@@ -49,20 +49,5 @@ $mock->mock('get_host', 'ignore' );
 my $master = {};
 $cmp->mon_hash($master);
 cmp_deeply($master,\%data::MONS, 'build monitor hash');
-#my $deployaddstring = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph mon create ceph002.cubone.os";
-#my $cmd = get_command($deployaddstring);
-#ok(defined($cmd), "mon add was invoked");
-#
-#$deployaddstring = "/etc/init.d/ceph start mon.ceph003";
-#$cmd = get_command($deployaddstring);
-#ok(!defined($cmd), "mon3 start invoked");
-#$deployaddstring = "/etc/init.d/ceph stop mon.ceph003";
-#$cmd = get_command($deployaddstring);
-#ok(!defined($cmd), "mon3 stop must not be invoked");
-#$deployaddstring = "/etc/init.d/ceph start mon.ceph001";
-#$cmd = get_command($deployaddstring);
-#ok(!defined($cmd), "mon1 stop must not be invoked");
-#
-#cmp_deeply($cmdh->{deploy_cmds},[],'deploy commands are cleared');
 #
 done_testing();

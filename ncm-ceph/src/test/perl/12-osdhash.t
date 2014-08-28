@@ -76,8 +76,6 @@ while (my ($hostname, $host) = each(%{$quath})) {
 }
 cmp_deeply(\%tmp, \%data::FLATTEN, 'OSD flatten');
 $cmp->{hostname} = 'ceph001';
-#Main  comparison function:
 
-#FIXME cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
 
 done_testing();
