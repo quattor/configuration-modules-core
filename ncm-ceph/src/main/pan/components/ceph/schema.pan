@@ -163,7 +163,7 @@ type ceph_daemon_config = {
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
     'up'    : boolean = true
-    'config': ceph_daemon_config
+    'config'? ceph_daemon_config
 };
 
 @{ ceph monitor-specific type @}
