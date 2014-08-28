@@ -653,7 +653,7 @@ sub commit_groups
     print $fh join("\n", @group, "");
     $fh->close();
 
-    $self->invalidate_cache('group');
+    $self->invalidate_nscd_cache('group');
 }
 
 # Compares two account structures, as they're going to be sorted.
@@ -727,7 +727,7 @@ sub commit_accounts
     print $fh join("\n", @shadow, "");
     $fh->close();
 
-    $self->invalidate_cache('passwd');
+    $self->invalidate_nscd_cache('passwd');
 }
 
 # Returns a sanitized (untainted) version of the path given as an
@@ -830,11 +830,11 @@ sub commit_configuration
     $self->build_home_dirs($system->{passwd});
 }
 
-sub invalidate_cache
+sub invalidate_nscd_cache
 {
     my ($self, $cache) = @_;
 
-    $self->debug(1, "Preparing to invalidate cache: $cache");
+    $self->debug(1, "Preparing to invalidate nscd cache: $cache");
 
     my $cmd_output;
     my $cmd_errors;
@@ -853,10 +853,10 @@ sub invalidate_cache
             if ( $? == 0 ) {
                 $self->info("Invalidated nscd cache");
             } else {
-                $self->error("Invalidating cache failed");
+                $self->error("Invalidating nscd cache failed");
             }
         } else {
-            $self->debug(1, "nscd found but not running, will not invalidate cache.");
+            $self->debug(1, "nscd found but not running, will not invalidate nscd cache.");
         }
     } else {
         $self->debug(1, "nscd not found, will not do anything.");
