@@ -40,7 +40,8 @@ sub Configure
 # Do not edit
 EOF
 
-    while (my ($k, $v) = each (%{$t->{"aii-shellfe"}})) {
+    foreach my $k (sort keys %{$t->{"aii-shellfe"}}) {
+        my $v = $t->{"aii-shellfe"}->{$k};
         print $fh "$k = $v\n";
     }
     foreach my $k (CCM_IMPORTED_PROPERTIES) {
@@ -61,7 +62,8 @@ EOF
 # Do not edit
 EOF
 
-    while (my ($k, $v) = each (%{$t->{"aii-dhcp"}})) {
+    foreach my $k (sort keys %{$t->{"aii-dhcp"}}) {
+        my $v = $t->{"aii-dhcp"}->{$k};
         print $fh "$k = $v\n";
     }
     $fh->close();
