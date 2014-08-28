@@ -218,7 +218,7 @@ sub compare_config {
     }
     return $cfgchanges;
 }
-# COmpare the global config
+# Compare the global config
 sub compare_global {
     my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
     $self->debug(3, "Comparing global section on $hostname");
@@ -296,8 +296,6 @@ sub delete_host {
 sub compare_conf {
     my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
 
-    # Delete: NY Impl ( But give commands )
-    # Modify : compare all config sections, 
     my $structures = {
         configs  => {},
         deployd  => {},

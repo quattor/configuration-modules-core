@@ -583,7 +583,7 @@ Readonly::Array our @NEWCLUS => (
 #     'new',
 #     'ceph001.cubone.os',
 #     'ceph002.cubone.os',
-#     'ceph003.cubone.osG'
+#     'ceph003.cubone.os'
 #   ],
    [
      '/usr/bin/ceph-deploy',

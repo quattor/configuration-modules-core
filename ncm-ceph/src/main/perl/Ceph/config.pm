@@ -127,7 +127,7 @@ sub config_hash {
                     $host->{mon}->{config} = $cfg;
                 } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
                     $host->{mds}->{config} = $cfg;
-                } else { #TODO implement other section types? e.g. client, radosgw
+                } else {
                     $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
                         "This section will be ignored");
                 }

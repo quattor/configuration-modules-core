@@ -247,7 +247,7 @@ sub Configure {
         if ($is_deploy) {
             $self->do_configure($cluster, $gvalues) or return 0;
         } else {
-            $self->debug(1, "No deployhost, aborting configuration");
+            $self->info("No deployhost, aborting configuration");
         }
         return 1;
     }
