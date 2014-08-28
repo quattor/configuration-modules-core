@@ -44,12 +44,15 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <requires>
+              <require>/usr/bin/pgrep</require>
+            </requires>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
   </build>
-
 </project>
