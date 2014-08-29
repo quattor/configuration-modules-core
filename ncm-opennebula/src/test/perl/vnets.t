@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(base);
+use Test::Quattor qw(vnets);
 use NCM::Component::opennebula;
 use CAF::Object;
 use Test::MockModule;
@@ -12,7 +12,7 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::opennebula->new("opennebula");
 
-my $cfg = get_config_for_profile("base");
+my $cfg = get_config_for_profile("vnets");
 
 $cmp->Configure($cfg);
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
