@@ -32,18 +32,19 @@ sub get_ceph_conf {
    
     $self->debug(2, "Retrieving information from ceph");
     my $master = {};
+    my $weights = {};
     my $mapping = { 
         'get_loc' => {}, 
         'get_id' => {}
     };
-    $self->osd_hash($master, $mapping, $gvalues) or return ;
+    $self->osd_hash($master, $mapping, $weights,  $gvalues) or return ;
 
     $self->mon_hash($master) or return ;
     $self->mds_hash($master) or return ;
     
     $self->config_hash( $master, $mapping, $gvalues) or return; 
     $self->debug(5, "Ceph hash:", Dumper($master));
-    return ($master, $mapping);
+    return ($master, $mapping, $weights);
 }
 
 # One big quattor tree on a host base

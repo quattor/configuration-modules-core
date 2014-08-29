@@ -50,13 +50,16 @@ sub get_osd_name {
     return "osd.$id";
 }   
 
+# Reweight the osds if they have a different weight
 sub push_weights {
-    my ($self, $hosts) = @_;
+    my ($self, $hosts, $weights) = @_;
     while (my ($hostname, $host) = each(%{$hosts})) {
         while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
             if ($osd->{crush_weight}){
                 my $osdname = $self->get_osd_name($hostname, $osd->{osd_path}) or return 0; 
-                $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;       
+                if (!$weights->{$osdname} ||( $osd->{crush_weight} != $weights->{$osdname})  ) {
+                    $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;       
+                }
             }
         }
     }
@@ -65,7 +68,7 @@ sub push_weights {
 
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues, $ignh) = @_;
+    my ($self, $cluster, $gvalues, $ignh, $weights) = @_;
     my $okhosts = {}; 
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
         if (!$ignh->{$hostname}) {
@@ -77,7 +80,7 @@ sub do_crush_actions {
     if ($cluster->{crushmap}) {
         $self->process_crushmap($cluster->{crushmap}, $okhosts, $gvalues) or return 0;
     } else {
-        $self->push_weights($okhosts) or return 0;
+        $self->push_weights($okhosts, $weights) or return 0;
     }
     return 1;
 }

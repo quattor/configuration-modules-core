@@ -205,7 +205,7 @@ sub do_configure {
     $self->debug(1,"preparing cluster");
     $self->do_prepare_cluster($cluster, $gvalues) or return 0;
     $self->debug(1,"checking configuration");
-    my ($ceph_conf, $mapping) = $self->get_ceph_conf($gvalues) or return 0;
+    my ($ceph_conf, $mapping, $weights) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
     my $structures = $self->compare_conf($quat_conf, $ceph_conf, 
         $mapping, $gvalues) or return 0; #This is the Main function
@@ -213,7 +213,7 @@ sub do_configure {
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
     $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
     $self->debug(1,"configuring crushmap");
-    $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}) or return 0;
+    $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}, $weights) or return 0;
     $self->destroy_daemons($structures->{destroy}, $mapping) or return 0;
     $self->restart_daemons($structures->{restartd});
     #$self->print_info($restartd, $mand, $not_configured);

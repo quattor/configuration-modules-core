@@ -59,16 +59,24 @@ sub extract_ip {
         
 # Gets the OSD map
 sub osd_hash {
-    my ($self, $master, $mapping, $gvalues) = @_;      
+    my ($self, $master, $mapping, $weights, $gvalues) = @_;      
     $self->info('Building osd information hash, this can take a while..');
     my $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
     my $osddump = decode_json($jstr);  
+    $jstr = $self->run_ceph_command([qw(osd tree)]) or return 0;
+    my $osdtree = decode_json($jstr);
     my %osdparsed = ();
     my $hostmap = {};
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
         my ($name,$host);
         $name = "osd.$id";
+        foreach my $tosd (@{$osdtree->{nodes}}) {
+            if ($tosd->{type} eq 'osd' && $tosd->{id} == $id) {
+                $weights->{$name} = $tosd->{crush_weight}; # value displayed in osd dump is not the real value.. 
+                last;
+            }
+        }
         my $ip = $self->extract_ip($osd->{public_addr});
         if (!$ip) {
             $self->error("IP of osd osd.$id not set or misconfigured!");
@@ -100,7 +108,7 @@ sub osd_hash {
             id              => $id, 
             uuid            => $osd->{uuid}, 
             up              => $osd->{up}, 
-            in              => $osd->{in}, 
+            in              => $osd->{in},
             osd_path        => $osdloc, 
             journal_path    => $journalloc 
         };

@@ -60,6 +60,7 @@ Readonly our $OSDDJSON => '{ "epoch": 11,
           "uuid": "e2fa588a-8c6c-4874-b76d-597299ecdf72",
           "up": 1,
           "in": 1,
+          "weight": "1.000000",
           "last_clean_begin": 0,
           "last_clean_end": 0,
           "up_from": 4,
@@ -77,6 +78,7 @@ Readonly our $OSDDJSON => '{ "epoch": 11,
           "uuid": "ae77eef3-70a2-4b64-b795-2dee713bfe41",
           "up": 1,
           "in": 1,
+          "weight": "3.000000",
           "last_clean_begin": 0,
           "last_clean_end": 0,
           "up_from": 8,
@@ -244,6 +246,11 @@ Readonly::Hash our %MAPPING => (
       '1' => 'ceph001:/var/lib/ceph/osd/sdd'
     }   
 );
+Readonly::Hash our %WEIGHTS => (
+   'osd.0' => '3.639999',
+   'osd.1' => '3.639999'
+);
+ 
 Readonly::Hash our %CEPHMAP => (
    'ceph001' => {
      'config' => {

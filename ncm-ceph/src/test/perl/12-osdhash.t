@@ -62,10 +62,12 @@ my $type = 'osd';
 $mock->mock('get_host', 'ceph001.cubone.os' );
 $mockc->mock('test_host_connection', 1 );
 my $master = {};
+my $weights = {};
 my $mapping = {};
-$cmp->osd_hash($master, $mapping);
+$cmp->osd_hash($master, $mapping, $weights);
 cmp_deeply($master, \%data::OSDS, 'OSD hash');
 cmp_deeply($mapping, \%data::MAPPING, 'OSD map');
+cmp_deeply($weights, \%data::WEIGHTS, 'OSD map');
 my $quath = $cluster->{osdhosts};
 
 my %tmp = ();
