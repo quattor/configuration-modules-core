@@ -50,7 +50,7 @@ sub get_osd_name {
     return "osd.$id";
 }   
 
-sub push_weighs {
+sub push_weights {
     my ($self, $hosts) = @_;
     while (my ($hostname, $host) = each(%{$hosts})) {
         while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
