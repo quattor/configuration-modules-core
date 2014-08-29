@@ -631,7 +631,11 @@ Readonly::Hash our %COMPARE1 => (
      }
    },
    'deployd' => {
+     'ceph001' => {
+       'fqdn' => 'ceph001.cubone.os'
+     },
      'ceph002' => {
+       'fqdn' => 'ceph002.cubone.os',
        'osds' => {
          'ceph002:/var/lib/ceph/osd/sdc' => {
            'config' => {
@@ -733,7 +737,11 @@ Readonly::Hash our %COMPARE2 => (
      }
    },
    'deployd' => {
+     'ceph001' => {
+       'fqdn' => 'ceph001.cubone.os'
+     },
      'ceph002' => {
+       'fqdn' => 'ceph002.cubone.os',
        'mds' => {
          'fqdn' => 'ceph002.cubone.os',
          'up' => 1
@@ -751,6 +759,7 @@ Readonly::Hash our %COMPARE2 => (
        }
      },
      'ceph003' => {
+       'fqdn' => 'ceph003.cubone.os',
        'mon' => {
          'fqdn' => 'ceph003.cubone.os',
          'up' => 1

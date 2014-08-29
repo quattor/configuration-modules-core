@@ -32,6 +32,5 @@ my $cluster = $t->{clusters}->{ceph};
 $cmp->use_cluster();
 $mockc->mock('test_host_connection', 0 );
 my $structures = $cmp->compare_conf(\%data::QUATIN, \%data::CEPHIN, \%data::MAPPING, {});
-
 cmp_deeply($structures, \%data::COMPARE1, 'Action hash ok');
 done_testing();

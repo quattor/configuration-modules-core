@@ -95,6 +95,7 @@ sub add_host {
                 $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
             }
         }
+    $structures->{deployd}->{$hostname}->{fqdn} = $host->{fqdn};
     }
     return 1;
 }
@@ -276,6 +277,7 @@ sub compare_host {
                 $structures->{destroy}->{$hostname}->{osds}->{$osdkey} = $osd;
             }
         }
+    $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
     }
     return 1;
 }
