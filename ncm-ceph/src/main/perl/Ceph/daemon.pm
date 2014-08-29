@@ -351,7 +351,7 @@ sub deploy_daemons {
             foreach my $osdloc (sort keys(%{$host->{osds}})) {
                 my $osd = $host->{osds}->{$osdloc};
                 my $foefel;
-                if ($osd->{config}->{osd_objectstore}) {# pre trick
+                if ($osd->{config} && $osd->{config}->{osd_objectstore}) {# pre trick
                     $self->info("deploying new osd with osd_objectstore set, will change global value");
                     $foefel = $tinycfg->{global}->{osd_objectstore};
                     $self->osd_trick($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
@@ -365,12 +365,14 @@ sub deploy_daemons {
                 #create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't, so..
                 @command = qw(osd activate); #FIXME
                 $ret = $self->deploy_daemon(\@command, $pathstring) if $ret;
-                if ($osd->{config}->{osd_objectstore}) { # post trick
+                if ($osd->{config} && $osd->{config}->{osd_objectstore}) { # post trick
                     $self->osd_trick($hostname, $tinycfg, $foefel, $gvalues) or return 0;
                     $self->info("global value osd_objectstore reverted succesfully");
                 }
                 return 0 if (!$ret);
-                $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
+                if ($osd->{config}) {
+                    $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
+                }
             }
         }
         if ($host->{mds}) {

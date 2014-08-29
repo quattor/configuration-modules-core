@@ -21,6 +21,7 @@ use Config::Tiny;
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
+use Data::Dumper;
 use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -163,7 +164,7 @@ sub write_and_push {
     }
     $self->debug(2,"content written to config file $cfgfile");
     $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
-    move($cfgfile, $pushfile) or return 0;
+    move($cfgfile, "$gvalues->{cephusr}->{homeDir}/$pushfile") or return 0;
     $self->push_cfg($hostname, '', 1) or return 0;
 }
 

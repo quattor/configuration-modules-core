@@ -156,7 +156,7 @@ function is_bucket = {
 
 @{ ceph daemon config parameters @}
 type ceph_daemon_config = { 
-    'osd_journal_size'  : long(0..) = 10240
+    'osd_journal_size'  ? long(0..) 
     'osd_objectstore'   ? string
 };
 
