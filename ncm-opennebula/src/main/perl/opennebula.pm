@@ -143,6 +143,12 @@ sub manage_datastores
 
 sub manage_hosts
 {
+    my ($self, $one, @hosts, $type) = @_;
+
+    if ($type eq "kvm") {
+        foreach my $kvm_host (@hosts) {
+        }
+    }
 }
 
 
@@ -174,7 +180,7 @@ sub Configure
     #$self->manage_something($one, $tree->{datastores_ceph}, "datastore");
 
     # Add/remove KVM hosts
-    #$self->manage_hosts($one, $tree->{hosts_kvm});
+    $self->manage_hosts($one, $tree->{hosts_kvm}, "kvm");
 
     # Add/remove users
     #$self->manage_users($one, $config);
