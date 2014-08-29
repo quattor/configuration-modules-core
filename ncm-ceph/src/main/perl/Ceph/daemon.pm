@@ -334,19 +334,20 @@ sub deploy_daemon {
     return $self->run_ceph_deploy_command($cmd);
 }
 
-# Deploys the new daemons,
+# Deploys the new daemons and installs the config file
 # if an osd has to have a non default objectstore, this is fixed with a dirty trick here
 sub deploy_daemons {
     my ($self, $deployd, $tinies, $gvalues) = @_;
     $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
     foreach my $hostname (sort keys(%{$deployd})) {
         my $host = $deployd->{$hostname};
+        my $tinycfg = $tinies->{$hostname};
+        $self->write_and_push($host->{fqdn}, $tinycfg, $gvalues) or return 0;
         if ($host->{mon}) {
             #deploy mon
             my @command = qw(mon create);
             $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
         }
-        my $tinycfg = $tinies->{$hostname};
         if ($host->{osds}) {
             foreach my $osdloc (sort keys(%{$host->{osds}})) {
                 my $osd = $host->{osds}->{$osdloc};

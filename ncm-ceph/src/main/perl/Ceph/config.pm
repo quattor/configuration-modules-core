@@ -168,7 +168,7 @@ sub write_and_push {
     $self->push_cfg($hostname, '', 1) or return 0;
 }
 
-# Build the Config::Tiny hash for a host and calls the push function
+# Build the Config::Tiny hash for a host 
 sub set_host_config {
     my ($self, $hostname, $host, $gvalues) = @_;
 
@@ -176,8 +176,6 @@ sub set_host_config {
     while  (my ($daemon, $config) = each(%{$host})) {
         $tinycfg->{$daemon} = $self->stringify_cfg_arrays($config);
     }
-
-    $self->write_and_push($hostname, $tinycfg, $gvalues) or return 0;
 
     return $tinycfg;
 
