@@ -22,5 +22,5 @@ NCM-ceph
 
 # Future features
 
-* Finer configuration control (Per-osd/host base)
 * Pool support
+* Ceph auth

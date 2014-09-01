@@ -21,6 +21,10 @@ Features that are implemented at this moment:
 
 =item * Set admin hosts and push config
 
+=item * Fine configuration control (per daemon and/or host) 
+
+=item * Tollerates unreachable new or marked-for-deletion hosts
+
 =item * Checking/adding/removing Monitors
 
 =item * Checking/adding/removing OSDs
@@ -28,6 +32,8 @@ Features that are implemented at this moment:
 =item * Checking/adding/removing MDSs
 
 =item * Building up/changing a crushmap, with support for erasure code
+
+=item * OSD based objectstore
 
 =item * Wildcard support in version numbers 
 
@@ -85,7 +91,7 @@ be described in this section.
 
 =head1 DEPENDENCIES
 
-The component is tested with Ceph version 0.80 and ceph-deploy version 1.5.1. 
+The component is tested with Ceph version 0.84 and ceph-deploy version 1.5.11. 
 
 Following package dependencies should be installed to run the component:
 
