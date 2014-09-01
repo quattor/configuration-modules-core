@@ -307,9 +307,9 @@ sub prep_osd {
 # Do some preparation checks on a new mds
 sub prep_mds { 
     my ($self, $hostname, $mds) = @_;
-        my $fqdn = $mds->{fqdn};
-        my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{cluster}-$hostname/done"];
-        return $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
+    my $fqdn = $mds->{fqdn};
+    my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{cluster}-$hostname/done"];
+    return $self->run_command_as_ceph_with_ssh($donecmd, $fqdn);
 }
 
 # Add the config fields of a new osd to the config file
@@ -410,10 +410,10 @@ sub destroy_daemons {
         while  (my ($type, $daemon) = each(%{$host})) {
             if ($type eq 'osds') {
                 while  (my ($osdloc, $osd) = each(%{$daemon})) {
-                my $osd_id = $mapping->{get_id}->{$osdloc};
-                return 0 if (!defined($osd_id));
-                my $osdname = "osd.$osd_id";
-                $self->destroy_daemon('osd', $osdname, $cmds);
+                    my $osd_id = $mapping->{get_id}->{$osdloc};
+                    return 0 if (!defined($osd_id));
+                    my $osdname = "osd.$osd_id";
+                    $self->destroy_daemon('osd', $osdname, $cmds);
                 }
             } else {
                 $self->destroy_daemon($type, $hostname, $cmds);

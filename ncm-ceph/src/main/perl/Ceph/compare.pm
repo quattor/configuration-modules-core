@@ -37,7 +37,7 @@ sub get_ceph_conf {
         'get_loc' => {}, 
         'get_id' => {}
     };
-    $self->osd_hash($master, $mapping, $weights,  $gvalues) or return ;
+    $self->osd_hash($master, $mapping, $weights, $gvalues) or return ;
 
     $self->mon_hash($master) or return ;
     $self->mds_hash($master) or return ;
@@ -79,8 +79,8 @@ sub add_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Configuring new host $hostname");
     if (!$self->test_host_connection($host->{fqdn}, $structures->{gvalues})) {
-       $structures->{ignh}->{$hostname} = $host;
-       $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
+        $structures->{ignh}->{$hostname} = $host;
+        $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
@@ -95,7 +95,7 @@ sub add_host {
                 $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
             }
         }
-    $structures->{deployd}->{$hostname}->{fqdn} = $host->{fqdn};
+        $structures->{deployd}->{$hostname}->{fqdn} = $host->{fqdn};
     }
     return 1;
 }
@@ -184,7 +184,7 @@ sub compare_osd {
     $self->debug(5, "osd id for $osdkey is $osd_id");
     my $osdname = "osd.$osd_id";
     $structures->{configs}->{$hostname}->{$osdname} = $quat_osd->{config} if ($quat_osd->{config}); 
-    $self->check_restart($hostname, $osdname, $changes,  $quat_osd, $ceph_osd, $structures);
+    $self->check_restart($hostname, $osdname, $changes, $quat_osd, $ceph_osd, $structures);
     return 1;
 }
 
@@ -203,8 +203,8 @@ sub compare_config {
         if (exists $ceph_config->{$qkey}) {
             my $cvalue = $ceph_config->{$qkey};
             if ($qvalue ne $cvalue) {
-            $self->info("$qkey of $type $key changed from $cvalue to $qvalue");
-            $cfgchanges->{$qkey} = $qvalue;
+                $self->info("$qkey of $type $key changed from $cvalue to $qvalue");
+                $cfgchanges->{$qkey} = $qvalue;
             }
             delete $ceph_config->{$qkey};
         } else {
@@ -277,7 +277,7 @@ sub compare_host {
                 $structures->{destroy}->{$hostname}->{osds}->{$osdkey} = $osd;
             }
         }
-    $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
+        $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
     }
     return 1;
 }
