@@ -12,7 +12,6 @@ use vars qw(@ISA $EC);
 use LC::Exception;
 use Net::OpenNebula;
 
-use constant AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -81,18 +80,21 @@ sub manage_something
 {
     my ($self, $one, $resources, $type) = @_;
 
-    $self->info("Removing old ${type}/s...");
+    if (($type eq "kvm") or ($type eq "xen")) {
+        $self->manage_hosts($one, $resources, $type);
+        return
+    }
 
-    my $method = "get_$type";
-    my @exist = $one->$method(qr{^.*$});
-    foreach my $t (@existvnet) {
-        #$t->delete();
-        $self->error("missing implementation ${type} delete");
+    $self->info("Removing old ${type}/s...");
+    my $method = "get_${type}s";
+    my @existres = $one->$method(qr{^.*$});
+    foreach my $oldresource (@existres) {
+        $oldresource->delete();
     }
 
     $self->info("Creating new ${type}/s...");
-    foreach my $t (@$resources) {
-        $self->create_something($one, $t, $type);
+    foreach my $newresource (@$resources) {
+        $self->create_something($one, $newresource, $type);
     }
 }
 
@@ -145,12 +147,46 @@ sub manage_hosts
 {
     my ($self, $one, @hosts, $type) = @_;
 
-    if ($type eq "kvm") {
-        foreach my $kvm_host (@hosts) {
-        }
+    $self->info("Removing old hosts...");
+
+    # TODO: delete host is not available yet
+    my @existhost = $one->get_hosts(qr{^.*$});
+    foreach my $t (@existhost) {
+        #$t->delete();
+        $self->error('missing implementation $host->delete()');
+    }
+
+    $self->info("Creating new hosts...");
+    foreach my $host (@hosts) {
+        my %host_options = (
+            'name'    => $host, 
+            'im_mad'  => $type, 
+            'vmm_mad' => $type, 
+            'vnm_mad' => "dummy"
+        );
+        $one->create_host(%host_options);
     }
 }
 
+sub manage_users
+{
+    my ($self, $one, $users) = @_;
+
+    # TODO: delete user is not available yet
+    $self->info("Removing old users...");
+    my @existuser = $one->get_users(qr{^.*$});
+    foreach my $t (@existuser) {
+        #$t->delete();
+        $self->error('missing implementation $user->delete()');
+    }
+    
+    # TODO: create user is not available yet
+    $self->info("Creating new users...");
+    foreach my $user (@$users) {
+        $self->error('missing implementation create_user()');
+    }
+
+}
 
 # Configure basic ONE resources
 sub Configure
@@ -172,18 +208,21 @@ sub Configure
     my $one = $self->make_one($port, $host, $user, $password);
 
     # Add/remove VNETs
-    $self->manage_vnets($one, $tree->{vnets});
-    #$self->manage_something($one, $tree->{vnets}, "vnet");
+    #$self->manage_vnets($one, $tree->{vnets});
+    $self->manage_something($one, $tree->{vnets}, "vnet");
 
     # Add/remove datastores
-    $self->manage_datastores($one, $tree->{datastores_ceph});
-    #$self->manage_something($one, $tree->{datastores_ceph}, "datastore");
+    #$self->manage_datastores($one, $tree->{datastores_ceph});
+    $self->manage_something($one, $tree->{datastores_ceph}, "datastore");
 
     # Add/remove KVM hosts
-    $self->manage_hosts($one, $tree->{hosts_kvm}, "kvm");
+    my $hypervisor = "kvm";
+    #$self->manage_hosts($one, $tree->{hosts_kvm}, $hypervisor);
+    $self->manage_something($one, $tree->{hosts_kvm}, $hypervisor);
 
-    # Add/remove users
-    #$self->manage_users($one, $config);
+    # Add/remove regular users
+    #$self->manage_users($one, $tree->{users});
+    $self->manage_something($one, $tree->{users}, "user");
 
     return 1;
 }

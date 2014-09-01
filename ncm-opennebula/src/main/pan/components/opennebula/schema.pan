@@ -16,6 +16,6 @@ type component_opennebula = {
     "host" : string = 'localhost'
     "user" : string = 'oneadmin'
     "password" : string
-};
+} = nlist();
 
 bind '/software/components/opennebula' = component_opennebula;
