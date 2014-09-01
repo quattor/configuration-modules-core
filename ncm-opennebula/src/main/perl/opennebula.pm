@@ -99,50 +99,6 @@ sub manage_something
 }
 
 
-sub manage_vnets
-{
-    my ($self, $one, $vnets) = @_;
-    my $type = "vnet";
-
-    $self->info("Removing old vnets...");
-
-    # Remove the current vnets first..
-    # TODO: delete vnet is not available yet
-    my @existvnet = $one->get_vnets(qr{^.*$});
-    foreach my $t (@existvnet) {
-        #$t->delete();
-        $self->error('missing implementation $vnet->delete()');
-    }
-
-    $self->info("Creating new vnets...");
-    foreach my $vnet (@$vnets) {
-        $self->create_something($one, $vnet, $type);
-    } 
-}
-
-sub manage_datastores
-{
-    my ($self, $one, $datastores) = @_;
-    my $type = "datastore";
-
-    $self->info("Removing old datastores...");
-
-    # TODO: delete datastore is not available yet
-    my @existdatastore = $one->get_datastores(qr{^.*$});
-    foreach my $t (@existdatastore) {
-        #$t->delete();
-        $self->error('missing implementation $datastore->delete()');
-    }
-
-    # TODO: create datastore is not available yet
-    $self->info("Creating new datastores...");
-    foreach my $datastore (@$datastores) {
-        #$self->create_something($one, $datastore, $type);
-        $self->error('missing implementation create_datastore()');
-    }
-
-}
-
 sub manage_hosts
 {
     my ($self, $one, @hosts, $type) = @_;
@@ -166,26 +122,6 @@ sub manage_hosts
         );
         $one->create_host(%host_options);
     }
-}
-
-sub manage_users
-{
-    my ($self, $one, $users) = @_;
-
-    # TODO: delete user is not available yet
-    $self->info("Removing old users...");
-    my @existuser = $one->get_users(qr{^.*$});
-    foreach my $t (@existuser) {
-        #$t->delete();
-        $self->error('missing implementation $user->delete()');
-    }
-    
-    # TODO: create user is not available yet
-    $self->info("Creating new users...");
-    foreach my $user (@$users) {
-        $self->error('missing implementation create_user()');
-    }
-
 }
 
 # Configure basic ONE resources
