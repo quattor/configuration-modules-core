@@ -1,8 +1,8 @@
-object template datastores_ceph;
+object template datastores;
 
 prefix "/software/components/opennebula";
 
-"datastores_ceph" = list(
+"datastores" = list(
     nlist(
         "name", "ceph",
         "bridge_list", list("hyp004.cubone.os"),

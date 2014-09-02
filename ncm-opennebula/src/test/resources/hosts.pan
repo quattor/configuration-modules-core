@@ -1,7 +1,7 @@
-object template hosts_kvm;
+object template hosts;
 
 prefix "/software/components/opennebula";
 
-"hosts_kvm" = list(
+"hosts" = list(
     'hyp101', 'hyp102', 'hyp103', 'hyp104'
 );

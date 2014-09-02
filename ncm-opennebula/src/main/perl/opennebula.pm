@@ -147,11 +147,11 @@ sub Configure
     $self->manage_something($one, $tree->{vnets}, "vnet");
 
     # Add/remove datastores
-    $self->manage_something($one, $tree->{datastores_ceph}, "datastore");
+    $self->manage_something($one, $tree->{datastores}, "datastore");
 
     # Add/remove KVM hosts
     my $hypervisor = "kvm";
-    $self->manage_something($one, $tree->{hosts_kvm}, $hypervisor);
+    $self->manage_something($one, $tree->{hosts}, $hypervisor);
 
     # Add/remove regular users
     $self->manage_something($one, $tree->{users}, "user");
