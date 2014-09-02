@@ -18,18 +18,20 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 sub make_one 
 {
-    my ($self, $port, $host, $user, $password) = @_;
+    my ($self, $rpc) = @_;
 
-    if (! $password ) {
-        $main::this_app->error("No RPC ONE password set!");
+    if (! $rpc->{password} ) {
+        $self->error("No RPC ONE password set!");
         return;
     }
 
+    $self->verbose("Connecting to host $rpc->{host}:$rpc->{port} as user $rpc->{user} (with password)");
+
     my $one = Net::OpenNebula->new(
-        url      => "http://$host:$port/RPC2",
-        user     => $user,
-        password => $password,
-        log => $main::this_app,
+        url      => "http://$rpc->{host}:$rpc->{port}/RPC2",
+        user     => $rpc->{user},
+        password => $rpc->{password},
+        log => $self,
         fail_on_rpc_fail => 0,
     );
     return $one;
@@ -52,7 +54,7 @@ sub process_template
     my $tpl = Template->new(INCLUDE_PATH => TEMPLATEPATH);
     #if (! $tpl->process($tt_rel, $tree, \$res)) {
     if (! $tpl->process($tt_rel, $config, \$res)) {
-            $main::this_app->error("TT processing of $tt_rel failed:", 
+            $self->error("TT processing of $tt_rel failed:", 
                                           $tpl->error());
             return;
     }
@@ -82,7 +84,7 @@ sub manage_something
 
     if (($type eq "kvm") or ($type eq "xen")) {
         $self->manage_hosts($one, $resources, $type);
-        return
+        return;
     }
 
     $self->info("Removing old ${type}/s...");
@@ -108,8 +110,8 @@ sub manage_hosts
     # TODO: delete host is not available yet
     my @existhost = $one->get_hosts(qr{^.*$});
     foreach my $t (@existhost) {
-        #$t->delete();
-        $self->error('missing implementation $host->delete()');
+        $t->delete();
+        #$self->error('missing implementation $host->delete()');
     }
 
     $self->info("Creating new hosts...");
@@ -133,31 +135,25 @@ sub Configure
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
 
+    $self->error("error");
     # Connect to ONE RPC
-    my $port = $tree->{port};
-    my $host = $tree->{host};
-    my $user = $tree->{user};
-    my $password = $tree->{password};
-    
-    $main::this_app->info("THIS IS THE HOST: $host");
-   
-    my $one = $self->make_one($port, $host, $user, $password);
+    my $one = $self->make_one($tree->{rpc});
+    if (! $one ) {
+        $self->error("No ONE instance created.");
+        return 0;
+    };
 
     # Add/remove VNETs
-    #$self->manage_vnets($one, $tree->{vnets});
     $self->manage_something($one, $tree->{vnets}, "vnet");
 
     # Add/remove datastores
-    #$self->manage_datastores($one, $tree->{datastores_ceph});
     $self->manage_something($one, $tree->{datastores_ceph}, "datastore");
 
     # Add/remove KVM hosts
     my $hypervisor = "kvm";
-    #$self->manage_hosts($one, $tree->{hosts_kvm}, $hypervisor);
     $self->manage_something($one, $tree->{hosts_kvm}, $hypervisor);
 
     # Add/remove regular users
-    #$self->manage_users($one, $tree->{users});
     $self->manage_something($one, $tree->{users}, "user");
 
     return 1;

@@ -1,5 +1,7 @@
 object template vnets;
 
+include "rpc";
+
 prefix "/software/components/opennebula";
 
 "vnets" = list(
