@@ -56,6 +56,7 @@ sub process_template
     if (! $tpl->process($tt_rel, $config, \$res)) {
             $self->error("TT processing of $tt_rel failed:", 
                                           $tpl->error());
+            $main::this_app->error("TT processing of $tt_rel failed:",$tpl->error());
             return;
     }
     return $res;
@@ -68,10 +69,15 @@ sub create_something
     
     my $template = $self->process_template($data, $tt);
     my $name;
+    if (!$template) {
+        $main::this_app->error("No template data found for $tt!");
+        return;
+    }
     if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
         $name = $1;
     } else {
         $self->error("Template NAME not found!");
+        $main::this_app->error("Template NAME not found!");
         return;
     }
     my $method = "create_$tt";
@@ -84,6 +90,8 @@ sub manage_something
 
     if (!$resources) {
         $main::this_app->error("No $type resources found!");
+    } else {
+        $main::this_app->info("Found new $type resources...");
     }
 
     if (($type eq "kvm") or ($type eq "xen")) {
@@ -91,14 +99,14 @@ sub manage_something
         return;
     }
 
-    $self->info("Removing old ${type}/s...");
+    $main::this_app->info("Removing old ${type}/s...");
     my $method = "get_${type}s";
     my @existres = $one->$method(qr{^.*$});
     foreach my $oldresource (@existres) {
         $oldresource->delete();
     }
 
-    $self->info("Creating new ${type}/s...");
+    $main::this_app->info("Creating new ${type}/s...");
     foreach my $newresource (@$resources) {
         $self->create_something($one, $newresource, $type);
     }
@@ -110,6 +118,7 @@ sub manage_hosts
     my ($self, $one, @hosts, $type) = @_;
 
     $self->info("Removing old hosts...");
+    $main::this_app->info("Removing old hosts...");
 
     my @existhost = $one->get_hosts(qr{^.*$});
     foreach my $t (@existhost) {
@@ -117,6 +126,7 @@ sub manage_hosts
     }
 
     $self->info("Creating new hosts...");
+    $main::this_app->info("Creating new hosts...");
     foreach my $host (@hosts) {
         my %host_options = (
             'name'    => $host, 
@@ -142,6 +152,7 @@ sub Configure
     my $one = $self->make_one($tree->{rpc});
     if (! $one ) {
         $self->error("No ONE instance created.");
+        $main::this_app->error("No ONE instance created.");
         return 0;
     };
 
@@ -156,7 +167,7 @@ sub Configure
     $self->manage_something($one, $tree->{hosts}, $hypervisor);
 
     # Add/remove regular users
-    $self->manage_something($one, $tree->{users}, "user");
+    #$self->manage_something($one, $tree->{users}, "user");
 
     return 1;
 }
