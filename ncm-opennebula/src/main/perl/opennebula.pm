@@ -82,6 +82,10 @@ sub manage_something
 {
     my ($self, $one, $resources, $type) = @_;
 
+    if (!$resources) {
+        $main::this_app->error("No $type resources found!");
+    }
+
     if (($type eq "kvm") or ($type eq "xen")) {
         $self->manage_hosts($one, $resources, $type);
         return;
@@ -107,11 +111,9 @@ sub manage_hosts
 
     $self->info("Removing old hosts...");
 
-    # TODO: delete host is not available yet
     my @existhost = $one->get_hosts(qr{^.*$});
     foreach my $t (@existhost) {
         $t->delete();
-        #$self->error('missing implementation $host->delete()');
     }
 
     $self->info("Creating new hosts...");
