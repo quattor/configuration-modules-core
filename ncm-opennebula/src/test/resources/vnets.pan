@@ -1,6 +1,4 @@
-object template vnets;
-
-include "rpc";
+unique template vnets;
 
 prefix "/software/components/opennebula";
 

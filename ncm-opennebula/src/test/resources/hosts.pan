@@ -1,4 +1,4 @@
-object template hosts;
+unique template hosts;
 
 prefix "/software/components/opennebula";
 

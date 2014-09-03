@@ -1,4 +1,5 @@
-object template hosts_kvm;
+unique template users;
+
 
 prefix "/software/components/opennebula";
 

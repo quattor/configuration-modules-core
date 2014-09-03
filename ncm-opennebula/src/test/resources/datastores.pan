@@ -1,4 +1,4 @@
-object template datastores;
+unique template datastores;
 
 prefix "/software/components/opennebula";
 
