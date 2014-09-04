@@ -48,7 +48,11 @@ sub mock_rpc {
     my ($self, $method, @params) = @_;
     push(@rpc_history, $method);
     push(@rpc_history_full, [$method, @params]);
-    return (); # return empty list
+    if ($method eq "one.host.allocate") {
+	return []; # return ARRAY
+    } else {
+	return ();# return hash reference
+    }
 };
 
 our $opennebula = new Test::MockModule('Net::OpenNebula');
