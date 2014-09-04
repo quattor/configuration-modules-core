@@ -74,7 +74,7 @@ sub create_something
     }
     if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
         $name = $1;
-        $self->verbose("Found template NAME:$name $tt resource.");
+        $self->verbose("Found template NAME: $name within $tt resource.");
     } else {
         $self->error("Template NAME not found.");
         return;
@@ -144,14 +144,21 @@ sub manage_users
 {
     my ($self, $one, $users) = @_;
 
-    $self->info("Removing old regular users.");
     my @exitsuser = $one->get_users(qr{^.*$});
     foreach my $t (@exitsuser) {
-        $t->delete();
+        # Remove the user only if the QUATTOR flag is set
+        if ($t->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+            $self->info("Removing old regular user: ", $t->name);
+            $t->delete();
+        } else {
+            $self->info("QUATTOR flag not found. We can't remove this user: ", $t->name);
+        }
     }
 
     foreach my $user (@$users) {
         if ($user->{user} && $user->{password}) {
+            # TODO: Create users with QUATTOR flag set
+            # we have to update the user after its creation
             $self->info("Creating new user: ", $user->{user});
             $one->create_user($user->{user}, $user->{password}, "core");
         }
@@ -161,12 +168,6 @@ sub manage_users
     }
 
 }
-
-# DEBUG only (can't get the output in unittests otherwise)
-sub error { shift; $main::this_app->error(@_); };
-sub debug { shift; $main::this_app->debug(@_); };
-sub info { shift; $main::this_app->info(@_); };
-sub verbose { shift; $main::this_app->verbose(@_); };
 
 # Configure basic ONE resources
 sub Configure
