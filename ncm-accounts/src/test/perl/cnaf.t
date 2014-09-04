@@ -8,6 +8,8 @@ use NCM::Component::accounts;
 use Readonly;
 use CAF::Object;
 
+Test::NoWarnings::clear_warnings();
+
 =pod
 
 =head1 SYNOPSIS
