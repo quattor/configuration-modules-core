@@ -56,6 +56,20 @@ Set to C<no> to make the SPMA take full control of all your software
 installations.  Set to C<yes> to preserve any packages you installed
 by hand.  If you do so, SPMA will never remove a package.
 
+=item /software/components/spma/userpkgs_retry : boolean
+
+Yum-based spma might get confused and fails when it tries 
+to remove packages when C<userpkgs> is C<no> while installing 
+new ones. Typically it will (try to) remove a 
+leaf package, that is also to be installed as a dependency of a new 
+to-be-installed package.
+
+With C<userpkgs_retry> set to C<true>, the package update process 
+will be retried in case of failure in 2 steps, a first retry while 
+preserving the installed packages, and if this retry was succesful, 
+followed by a second retry where it will (try to) remove leaf packages 
+again.
+
 =item /software/components/spma/userprio : string ("yes|no")
 
 Obsoleted and ignored.

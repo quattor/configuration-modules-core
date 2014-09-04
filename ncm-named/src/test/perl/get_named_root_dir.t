@@ -7,6 +7,7 @@ use Test::Quattor;
 use NCM::Component::named;
 use Readonly;
 use CAF::Object;
+Test::NoWarnings::clear_warnings();
 
 # This is the content of the default file on SL6 (with single quote removed in the text)
 use constant TEST_SYSCONFIG_HEADER => '# BIND named process options

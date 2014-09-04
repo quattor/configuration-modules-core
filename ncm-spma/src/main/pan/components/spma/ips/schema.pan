@@ -1,15 +1,7 @@
-################################################################################
-# This is 'TPL/schema.tpl', a ncm-spma's file
-################################################################################
-#
-# VERSION:    1.0.0, 08/10/13 13:43
-# AUTHOR:     Mark R. Bannister <Mark.Bannister@morganstanley.com>
-# MAINTAINER: Mark R. Bannister <Mark.Bannister@morganstanley.com>
-# LICENSE:    http://cern.ch/eu-datagrid/license.html
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
 
 declaration template components/spma/ips/schema;
 

@@ -14,6 +14,9 @@ plan skip_all => "Testing module not found in the system" if $@;
 
 $CAF::Object::NoAction = 1;
 
+my $s_mock = Test::MockModule->new('CAF::Service');
+$s_mock->mock("os_flavour", "linux_sysv");
+
 my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
 =pod
@@ -33,7 +36,7 @@ my $fh = get_file("/foo/bar");
 ok($fh, "A file was actually created");
 isa_ok($fh, "CAF::FileWriter");
 
-my $c = get_command("/sbin/service foo restart");
+my $c = get_command("service foo restart");
 ok(!$c, "Daemon was not restarted when there are no changes");
 
 # Pretend there are changes
@@ -41,7 +44,7 @@ ok(!$c, "Daemon was not restarted when there are no changes");
 $mock->mock('needs_restarting', 1);
 
 $cmp->Configure($cfg);
-$c = get_command("/sbin/service foo restart");
+$c = get_command("service foo restart");
 ok($c, "Daemon was restarted when there were changes");
 
 done_testing();

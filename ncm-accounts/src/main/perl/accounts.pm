@@ -103,6 +103,9 @@ use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
 
 use constant SKELDIR => "/etc/skel";
 
+# Full path to nscd binary
+use constant NSCD => '/usr/sbin/nscd';
+
 # Expands the profile to the list of desired accounts, including
 # pools.
 sub compute_desired_accounts
@@ -649,6 +652,8 @@ sub commit_groups
                                backup => ".old");
     print $fh join("\n", @group, "");
     $fh->close();
+
+    $self->invalidate_nscd_cache('group');
 }
 
 # Compares two account structures, as they're going to be sorted.
@@ -721,6 +726,8 @@ sub commit_accounts
                                mode => 0400);
     print $fh join("\n", @shadow, "");
     $fh->close();
+
+    $self->invalidate_nscd_cache('passwd');
 }
 
 # Returns a sanitized (untainted) version of the path given as an
@@ -821,6 +828,39 @@ sub commit_configuration
     $self->commit_accounts($system->{passwd}, $system->{special_lines},
                            $system->{logindefs});
     $self->build_home_dirs($system->{passwd});
+}
+
+sub invalidate_nscd_cache
+{
+    my ($self, $cache) = @_;
+
+    $self->debug(1, "Preparing to invalidate nscd cache: $cache");
+
+    my $cmd_output;
+    my $cmd_errors;
+    my $command = [NSCD, '-i', $cache];
+
+    if (-x NSCD) {
+        my $pgrep = CAF::Process->new(['/usr/bin/pgrep', '-f', NSCD], log => $self,
+                                      stdout => \$cmd_output,
+                                      stderr => \$cmd_errors);
+        $pgrep->execute();
+        if ( $? == 0 ) {
+            my $cmd = CAF::Process->new($command, log => $self,
+                                        stdout => \$cmd_output,
+                                        stderr => \$cmd_errors);
+            $cmd->execute();
+            if ( $? == 0 ) {
+                $self->info("Invalidated nscd cache");
+            } else {
+                $self->error("Invalidating nscd cache failed");
+            }
+        } else {
+            $self->debug(1, "nscd found but not running, will not invalidate nscd cache.");
+        }
+    } else {
+        $self->debug(1, "nscd not found, will not do anything.");
+    }
 }
 
 # Configure method

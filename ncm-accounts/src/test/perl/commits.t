@@ -9,6 +9,8 @@ use Test::MockModule;
 use CAF::Object;
 require Test::NoWarnings;
 
+Test::NoWarnings::clear_warnings();
+
 $CAF::Object::NoAction = 1;
 
 use constant GROUP => <<EOF;

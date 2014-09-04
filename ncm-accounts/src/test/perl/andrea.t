@@ -8,6 +8,8 @@ use NCM::Component::accounts;
 use Readonly;
 use CAF::Object;
 
+Test::NoWarnings::clear_warnings();
+
 $CAF::Object::NoAction = 1;
 
 Readonly my $PASSWD => << 'EOF';
@@ -119,7 +121,6 @@ daemon:*:15209:0:99999:7:::
 adm:*:15209:0:99999:7:::
 lp:*:15209:0:99999:7:::
 EOF
-
 
 =pod
 

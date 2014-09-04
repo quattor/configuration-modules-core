@@ -7,6 +7,7 @@ use Test::Quattor qw(client server);
 use NCM::Component::named;
 use Readonly;
 use CAF::Object;
+Test::NoWarnings::clear_warnings();
 
 
 # $RESOLV_CONF_CONTENTS_1 is the expected file.
