@@ -81,13 +81,14 @@ sub Configure {
         return 0;
     }
 
-    my $testserver = "";
+    my @testservers = ();
     my $resolv = "";
     if ($inf->{dnscache}) {
-        $testserver = "127.0.0.1";
+        # If we are using dnscache the server we want to test is dnscache itself
+        push(@testservers, "127.0.0.1");
         $resolv .= "nameserver 127.0.0.1\n";
     } else {
-        $testserver = $servers[0];
+        @testservers = @servers;
         foreach my $srvr (@servers) {
             $resolv .= "nameserver $srvr\n";
         }
@@ -105,15 +106,12 @@ sub Configure {
 
     # We also want to check that it's working, before
     # we commit to this.
-    $self->log("using $host to test our dns config");
-    my $out = "";
-    my $rc = LC::Process::execute(["/usr/bin/host", $host, $testserver],
-                                stderr => 'stdout',
-                                stdout => \$out);
-    if (!$rc || $out =~ /timed out/) {
-        $self->error("will not change resolv.conf; looking up $host on $testserver fails with output: $out");
+    my $check = $self->check_dns_servers($host, @testservers);
+    if (!$check) {
+        $self->debug(1, "host resolution does not appear to be working");
         if ($inf->{dnscache}) {
             # We need to put the dnscache config back to the way it was
+            $self->debug(1, "reverting dnscache config");
             $self->change_dnscache($inf, $servers_file, $old);
         }
         return 0;
@@ -135,6 +133,34 @@ sub Configure {
     }
 
     return 1;
+}
+
+sub check_dns_servers {
+    my ($self, $host, @servers) = @_;
+
+    $self->debug(1, "using $host to test our dns config");
+
+    my $working_servers = 0;
+    foreach my $testserver (@servers) {
+        my $out = "";
+        my $rc = LC::Process::execute(["/usr/bin/host", $host, $testserver],
+                                      stderr => 'stdout',
+                                      stdout => \$out);
+        if (!$rc || $out =~ /timed out/) {
+            $self->warn("Looking up $host on $testserver failed with output: $out");
+        } else {
+            $self->debug(1, "Looking up $host on $testserver succeeded");
+            $working_servers += 1;
+        }
+    }
+
+    if ($working_servers) {
+        $self->debug(1, "$working_servers/" . @servers . " servers tested successfully");
+        return 1;
+    } else {
+        $self->error("All servers failed testing, will not change resolv.conf");
+        return 0;
+    }
 }
 
 sub change_dnscache {
