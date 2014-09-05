@@ -17,9 +17,18 @@ type opennebula_rpc = {
     "password" : string
 } = nlist();
 
+type opennebula_user = {
+    "user" : string 
+    "password" : string
+};
+
 type component_opennebula = {
     include structure_component
-    "rpc" : opennebula_rpc
+    'datastores'    : opennebula_datastore[1..]
+    'users'         : opennebula_user[]
+    'vnets'         : opennebula_vnet[]
+    'hosts'         : string[]
+    "rpc"           : opennebula_rpc
 } = nlist();
 
 bind '/software/components/opennebula' = component_opennebula;
