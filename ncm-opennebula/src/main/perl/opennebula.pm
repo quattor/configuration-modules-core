@@ -50,9 +50,7 @@ sub process_template
     my $res;
     
     my $tt_rel = "metaconfig/opennebula/$tt_name.tt";
-    #my $tree = $config->getElement('/')->getTree();
     my $tpl = Template->new(INCLUDE_PATH => TEMPLATEPATH);
-    #if (! $tpl->process($tt_rel, $tree, \$res)) {
     if (! $tpl->process($tt_rel, { $tt_name => $config }, \$res)) {
             $self->error("TT processing of $tt_rel failed:", 
                                           $tpl->error());
@@ -125,6 +123,7 @@ sub manage_hosts
     $self->info("Removing old $type hosts.");
     my @existhost = $one->get_hosts(qr{^.*$});
     foreach my $t (@existhost) {
+        $self->verbose("Removing $type host: ", $t->name);
         $t->delete();
     }
 
@@ -151,7 +150,7 @@ sub manage_users
             $self->info("Removing old regular user: ", $t->name);
             $t->delete();
         } else {
-            $self->info("QUATTOR flag not found. We can't remove this user: ", $t->name);
+            $self->error("QUATTOR flag not found. We can't remove this user: ", $t->name);
         }
     }
 
@@ -163,7 +162,7 @@ sub manage_users
             $one->create_user($user->{user}, $user->{password}, "core");
         }
         else {
-            $self->error("No user or password info available.");
+            $self->error("No user name or password info available.");
         }
     }
 
