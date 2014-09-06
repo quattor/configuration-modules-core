@@ -38,7 +38,7 @@ use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
 use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
-use constant YUM_COMPLETE_TRANSACTION => "yum-complete-transaction";
+use constant YUM_COMPLETE_TRANSACTION => qw(yum-complete-transaction -y);
 use constant OBSOLETE => "obsoletes";
 use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
                              --qf %{NAME};%{ARCH});
