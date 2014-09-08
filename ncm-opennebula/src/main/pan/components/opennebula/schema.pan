@@ -10,6 +10,10 @@ include 'pan/types';
 
 include 'metaconfig/opennebula/schema';
 
+@{ 
+Type that sets the OpenNebula conf
+to contact to ONE RPC server
+@}
 type opennebula_rpc = {
     "port" : long(0..) = 2633
     "host" : string = 'localhost'
@@ -17,11 +21,19 @@ type opennebula_rpc = {
     "password" : string
 } = nlist();
 
+@{
+Type to set OpenNebula
+regular users names and passwds
+@}
 type opennebula_user = {
     "user" : string 
     "password" : string
 };
 
+@{
+Type to define ONE basic resources
+datastores, vnets, hosts names, etc
+@}
 type component_opennebula = {
     include structure_component
     'datastores'    : opennebula_datastore[1..]
