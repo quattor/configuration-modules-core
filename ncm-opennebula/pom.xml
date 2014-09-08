@@ -60,9 +60,6 @@
                   <resource>
                     <directory>src/main/resources</directory>
                     <filtering>false</filtering>
-                    <includes>
-                      <include>**/*.tt</include>
-                    </includes>
                   </resource>
                 </resources>
               </configuration>

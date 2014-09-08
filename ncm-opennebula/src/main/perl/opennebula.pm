@@ -10,12 +10,18 @@ use NCM::Component;
 use base qw(NCM::Component);
 use vars qw(@ISA $EC);
 use LC::Exception;
+# OpenNebula Quattor component requires Net::OpenNebula module
+# available from github: https://github.com/stdweird/p5-net-opennebula
 use Net::OpenNebula;
 
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+# Function to connect to ONE RPC endpoint
+# to admin and manage OpenNebula resources 
+# it requires a valid ONE admin user/pass 
+# onadmin is used by default
 sub make_one 
 {
     my ($self, $rpc) = @_;
@@ -60,6 +66,7 @@ sub process_template
 }
 
 # Create ONE resources
+# based on resource type
 sub create_something
 {
     my ($self, $one, $tt, $data) = @_;
@@ -78,10 +85,12 @@ sub create_something
         return;
     }
     my $method = "create_$tt";
+    $self->info("Creating new $name $tt resource.");
     my $new = $one->$method($template);
-    $self->info("It was created a new $name $tt resource.");
 }
 
+# Remove/add ONE resources
+# based on resource type
 sub manage_something
 {
     my ($self, $one, $type, $resources) = @_;
@@ -115,7 +124,7 @@ sub manage_something
     }
 }
 
-
+# Function to add/remove Xen or KVM hyp hosts
 sub manage_hosts
 {
     my ($self, $one, $type, $hosts) = @_;
@@ -139,6 +148,8 @@ sub manage_hosts
     }
 }
 
+# Function to add/remove regular users
+# only if the user has the Quattor flag set
 sub manage_users
 {
     my ($self, $one, $users) = @_;
