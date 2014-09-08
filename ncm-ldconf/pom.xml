@@ -6,7 +6,7 @@
   <artifactId>ldconf</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.8.0-rc7-SNAPSHOT</version>
+  <version>14.8.0</version>
   <name>ldconf NCM component.</name>
 
 
