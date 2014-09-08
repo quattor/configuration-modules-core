@@ -43,12 +43,6 @@ sub make_one
     return $one;
 }
 
-sub new
-{
-    my $class = shift;
-    return bless {}, $class;
-}
-
 # Detect and process ONE templates
 sub process_template 
 {
@@ -87,6 +81,7 @@ sub create_something
     my $method = "create_$tt";
     $self->info("Creating new $name $tt resource.");
     my $new = $one->$method($template);
+    return $new;
 }
 
 # Remove/add ONE resources
@@ -120,7 +115,7 @@ sub manage_something
 
     $self->info("Creating new ${type}/s");
     foreach my $newresource (@$resources) {
-        $self->create_something($one, $type, $newresource);
+        my $new = $self->create_something($one, $type, $newresource);
     }
 }
 
@@ -144,7 +139,7 @@ sub manage_hosts
             'vnm_mad' => "dummy"
         );
         $self->verbose("Creating new $type host $host.");
-        $one->create_host(%host_options);
+        my $new = $one->create_host(%host_options);
     }
 }
 
@@ -170,7 +165,7 @@ sub manage_users
             # TODO: Create users with QUATTOR flag set
             # we have to update the user after its creation
             $self->info("Creating new user: ", $user->{user});
-            $one->create_user($user->{user}, $user->{password}, "core");
+            my $new = $one->create_user($user->{user}, $user->{password}, "core");
         }
         else {
             $self->error("No user name or password info available.");

@@ -9,7 +9,7 @@ use Test::MockModule;
 use CAF::FileWriter;
 
 
-# DEBUG only (can't get the output in unittests otherwise)                          
+# DEBUG only (can't get the output in unittests otherwise)
 sub dlog {
     my ($type, @args) = @_;
     diag("[".uc($type)."] ".join(" ", @args));
@@ -30,8 +30,6 @@ my $cmp = NCM::Component::opennebula->new("opennebula");
 my $cfg = get_config_for_profile("opennebula");
 
 $cmp->Configure($cfg);
-#my $ttout = $cmp->process_template($cfg, "vnet");
-#like($ttout, qr{^NAME\s+=\s+}m, "Found vnet NAME");
 
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
 
