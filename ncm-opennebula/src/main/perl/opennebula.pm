@@ -6,6 +6,7 @@
 package NCM::Component::opennebula;
 
 use strict;
+use warnings;
 use NCM::Component;
 use base qw(NCM::Component);
 use vars qw(@ISA $EC);
