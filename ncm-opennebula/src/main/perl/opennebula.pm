@@ -1,6 +1,15 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+# #
+# Software subject to following license(s):
+#   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
+#   Copyright (c) Responsible Organization
+#
+
+# #
+# Current developer(s):
+#   Alvaro Simon Garcia <Alvaro.SimonGarcia@UGent.be>
+#
+
+# 
 
 
 package NCM::Component::opennebula;
@@ -68,6 +77,7 @@ sub create_something
     
     my $template = $self->process_template($data, $tt);
     my $name;
+    my $new;
     if (!$template) {
         $self->error("No template data found for $tt.");
         return;
@@ -79,17 +89,38 @@ sub create_something
         $self->error("Template NAME not found.");
         return;
     }
-    my $method = "create_$tt";
+    my $cmethod = "create_$tt";
+
     $self->info("Creating new $name $tt resource.");
-    my $new = $one->$method($template);
+    # Check first if the resource name already exists
+    my @rname = $self->detect_name($one, $tt, $name);
+    if (!@rname) {
+        $new = $one->$cmethod($template);
+    }
     return $new;
 }
+
+sub detect_name
+{
+    my ($self, $one, $type, $name) = @_;
+    my $gmethod = "get_${type}s";
+    my @existres = $one->$gmethod(qr{^$name$});
+    if (@existres) {
+	$self->error("Name: $name is already used by a $type resource. We can't create the same resource twice.");
+	return @existres;
+    } else {
+	$self->info("Name: $name is not used by $type resource yet.");
+        return;
+    }
+}
+
 
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
 {
     my ($self, $one, $type, $resources) = @_;
+    my $remove;
 
     if (!$resources) {
         $self->error("No $type resources found.");
@@ -112,12 +143,19 @@ sub manage_something
     my @existres = $one->$method(qr{^.*$});
     foreach my $oldresource (@existres) {
         # Remove the resource only if the QUATTOR flag is set
-        if ($oldresource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+        # and they are not being used
+        if ($type eq "datastore" and !$oldresource->{extended_data}->{IMAGES}->[0]->{ID}->[0]) {
+            $remove = 1;
+        }
+        if ($type eq "vnet" and !$oldresource->{extended_data}->{TOTAL_LEASES}->[0]) {
+            $remove = 1;
+        }
+        if ($oldresource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0] and $remove) {
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
-            $self->error("QUATTOR flag not found. We can't remove this resource: ", $oldresource->name);
-        }
+            $self->error("QUATTOR flag not found or the resource is still used. We can't remove this resource: ", $oldresource->name);
+        };
     }
 
     $self->info("Creating new ${type}/s");
@@ -130,12 +168,17 @@ sub manage_something
 sub manage_hosts
 {
     my ($self, $one, $type, $hosts) = @_;
-
+    my $new;
     $self->info("Removing old $type hosts.");
     my @existhost = $one->get_hosts(qr{^.*$});
     foreach my $t (@existhost) {
-        $self->verbose("Removing $type host: ", $t->name);
-        $t->delete();
+        # Remove the host only if there are no VMs running on it
+        if ($t->{extended_data}->{HOST_SHARE}->[0]->{RUNNING_VMS}->[0]) {
+            $self->error("We can't remove this host. There are still running VMs on host: ", $t->name);
+        } else {
+            $self->info("Removing $type host: ", $t->name);
+            $t->delete();
+        }
     }
 
     foreach my $host (@$hosts) {
@@ -145,8 +188,11 @@ sub manage_hosts
             'vmm_mad' => $type, 
             'vnm_mad' => "dummy"
         );
-        $self->verbose("Creating new $type host $host.");
-        my $new = $one->create_host(%host_options);
+        my @rname = $self->detect_name($one, "host", $host);
+        if (!@rname) {
+            $self->verbose("Creating new $type host $host.");
+            $new = $one->create_host(%host_options);
+        }
     }
 }
 
@@ -155,6 +201,7 @@ sub manage_hosts
 sub manage_users
 {
     my ($self, $one, $users) = @_;
+    my $new;
 
     my @exitsuser = $one->get_users(qr{^.*$});
     foreach my $t (@exitsuser) {
@@ -171,8 +218,11 @@ sub manage_users
         if ($user->{user} && $user->{password}) {
             # TODO: Create users with QUATTOR flag set
             # we have to update the user after its creation
-            $self->info("Creating new user: ", $user->{user});
-            my $new = $one->create_user($user->{user}, $user->{password}, "core");
+            my @rname = $self->detect_name($one, "user", $user->{user});
+            if (!@rname) {
+                $self->info("Creating new user: ", $user->{user});
+                $new = $one->create_user($user->{user}, $user->{password}, "core");
+            }
         }
         else {
             $self->error("No user name or password info available.");
