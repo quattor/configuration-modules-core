@@ -111,7 +111,13 @@ sub manage_something
     my $method = "get_${type}s";
     my @existres = $one->$method(qr{^.*$});
     foreach my $oldresource (@existres) {
-        $oldresource->delete();
+        # Remove the resource only if the QUATTOR flag is set
+        if ($oldresource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+            $self->info("Removing old resource: ", $oldresource->name);
+            $oldresource->delete();
+        } else {
+            $self->error("QUATTOR flag not found. We can't remove this resource: ", $oldresource->name);
+        }
     }
 
     $self->info("Creating new ${type}/s");
