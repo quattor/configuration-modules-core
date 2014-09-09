@@ -7,7 +7,7 @@
 
 =head1 DESCRIPTION
 
-Test the configuration of the OSDs
+Test the build of the ceph configuration hash
 
 
 =cut
@@ -28,13 +28,16 @@ $CAF::Object::NoAction = 1;
 my $cfg = get_config_for_profile('basic_cluster');
 my $cmp = NCM::Component::ceph->new('ceph');
 my $mock = Test::MockModule->new('NCM::Component::Ceph::daemon');
+my $mockc = Test::MockModule->new('NCM::Component::Ceph::commands');
+my $mockcf = Test::MockModule->new('NCM::Component::Ceph::config');
 
 set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump",
     $data::MONJSON);
-set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump", 
+set_desired_output("/usr/bin/ceph -f json --cluster ceph osd dump",
     $data::OSDDJSON);
-set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree", 
+set_desired_output("/usr/bin/ceph -f json --cluster ceph osd tree",
     $data::OSDTJSON);
+
 my $basestr = 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph001.cubone.os ';
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
@@ -55,24 +58,26 @@ set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib/ceph/osd/sdd');
 
 $cmp->use_cluster();
-$cmp->{clname} = 'ceph';
-$cmp->{cfgfile} = 'tmpfile';
-
 $cmp->{fsid} = $cluster->{config}->{fsid};
-my $type = 'osd';
 $mock->mock('get_host', 'ceph001.cubone.os' );
-my $cephh = $cmp->osd_hash();
-cmp_deeply($cephh, \%data::OSDS, 'OSD hash');
-my $quath = $cluster->{osdhosts};
+$mockc->mock('test_host_connection', 1 );
+my $master = {};
+my $mapping = 
+my $config = { 
+    global => {
+        fsid => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
+    },
+    'osd.0' => {
+        osd_objectstore => 'keyvaluestore-dev'
+    },
+    'mon' => {
+        option => 'value'
+    }   
+};
 
-#diag explain $cephh;
-cmp_deeply($cmp->flatten_osds($quath), \%data::FLATTEN, 'OSD flatten');
-my $cmdh = $cmp->init_commands();
-$cmp->{hostname} = 'ceph001';
-#Main  comparison function:
-my $output = $cmp->process_osds($quath, $cmdh);
-ok($output, 'ceph quattor cmp for mon');
-
-cmp_deeply($cmdh->{deploy_cmds}, \@data::ADDOSD, 'deploy commands prepared');
+$mockcf->mock('pull_host_cfg', $config);        
+$cmp->osd_hash($master, $mapping);
+$cmp->config_hash($master, $mapping);
+cmp_deeply($master, \%data::CEPHMAP, 'Ceph config hash');
 
 done_testing();

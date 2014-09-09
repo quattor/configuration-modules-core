@@ -21,80 +21,62 @@ use Config::Tiny;
 use File::Basename;
 use File::Path qw(make_path);
 use File::Copy qw(copy move);
+use Data::Dumper;
 use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
 # array of non-injectable (not live applicable) configuration settings
 Readonly::Array my @NONINJECT => qw(
-    mon_host 
+    mon_host
     mon_initial_members
+    fsid
     public_network
+    cluster_network
     filestore_xattr_use_omap
     osd_crush_update_on_start
     osd_objectstore
+    auth_service_required
+    auth_cluster_required
+    auth_client_required
 );
 
 ## Retrieving information of ceph cluster
 
 # Gets the config of the cluster
-sub get_global_config {
-    my ($self, $file) = @_;
+sub get_host_config {
+    my ($self, $file) = @_; 
     my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
-    if (scalar(keys %$cephcfg) > 1) {
-        $self->error("NO support for daemons not installed with ceph-deploy.",
-            "Only global section expected, provided sections: ", join(",", keys %$cephcfg));
-    }
     if (!$cephcfg->{global}) {
-        $self->error("Not a valid config file found");
-        return 0;
-    }
-    return $cephcfg->{global};
+        $self->warn("Not a valid config file: $file");
+    }   
+    return $cephcfg;
 }
 
 ## Processing and comparing between Quattor and Ceph
 
-# Do a comparison of quattor config and the actual ceph config 
-sub cmp_cfgfile {
-    my ($self, $type, $quath, $cephh, $cfgchanges) = @_;
-    foreach my $qkey (sort(keys %{$quath})) {
-        if (exists $cephh->{$qkey}) {
-            my $pair = [$quath->{$qkey}, $cephh->{$qkey}];
-            #check attrs and reconfigure
-            $self->config_cfgfile('change', $qkey, $pair, $cfgchanges) or return 0;
-            delete $cephh->{$qkey};
-        } else {
-            $self->config_cfgfile('add', $qkey, $quath->{$qkey}, $cfgchanges) or return 0;
-        }
-    }
-    foreach my $ckey (keys %{$cephh}) {
-        $self->config_cfgfile('del', $ckey, $cephh->{$ckey}, $cfgchanges) or return 0;
-    }        
-    return 1;
-}
-
 # Pull config from host
-sub pull_cfg {
-    my ($self, $host) = @_;
-    my $pullfile = "$self->{clname}.conf";
+sub pull_host_cfg {
+    my ($self, $host, $gvalues) = @_;
+    my $pullfile = "$gvalues->{clname}.conf";
     my $hostfile = "$pullfile.$host";
-    $self->run_ceph_deploy_command([qw(config pull), $host], $self->{qtmp}) or return 0;
+    $self->run_ceph_deploy_command([qw(config pull), $host], $gvalues->{qtmp}, 1) or return ;
 
-    move($self->{qtmp} . $pullfile, $self->{qtmp} .  $hostfile) or return 0;
-    $self->git_commit($self->{qtmp}, $hostfile, "pulled config of host $host"); 
-    my $cephcfg = $self->get_global_config($self->{qtmp} . $hostfile) or return 0;
+    move($gvalues->{qtmp} . $pullfile, $gvalues->{qtmp} .  $hostfile) or return ;
+    $self->git_commit($gvalues->{qtmp}, $hostfile, "pulled config of host $host"); 
+    my $cephcfg = $self->get_host_config($gvalues->{qtmp} . $hostfile) or return ;
 
     return $cephcfg;    
 }
 
 # Push config to host
 sub push_cfg {
-    my ($self, $host, $overwrite) = @_;
-    if ($overwrite) {
-        return $self->run_ceph_deploy_command([qw(config push), $host],'',1 );
-    }else {
-        return $self->run_ceph_deploy_command([qw(config push), $host] );
-    }     
+    my ($self, $host, $dir, $overwrite) = @_;
+    
+    $overwrite = 0 if (! defined($overwrite));
+    $dir = '' if (! defined($dir));
+    
+    return $self->run_ceph_deploy_command([qw(admin), $host], $dir, $overwrite);
 }
 
 # Makes the changes in the config file realtime by using ceph injectargs
@@ -115,100 +97,99 @@ sub inject_realtime {
     }
     return 1;
 }
-# Pulls config from host, compares it with quattor config and pushes the config back if needed
-sub pull_compare_push {
-    my ($self, $config, $host) = @_;
-    my $cconf = $self->pull_cfg($host);
-    if (!$cconf) {
-        return $self->push_cfg($host);
-    } else {
-        my $cfgchanges = {};
-        $self->debug(3, "Pulled config:", %$cconf);
-        $self->cmp_cfgfile('cfg', $config, $cconf, $cfgchanges) or return 0;
-        if (!%{$cfgchanges}) {
-            #Config the same, no push needed
-            return 1;
-        } else {
-            $self->inject_realtime($host, $cfgchanges) or return 0;
-            $self->push_cfg($host,1) or return 0;
-        }
-    }    
-}
-# Prepare the commands to change a global config entry
-sub config_cfgfile {
-    my ($self,$action,$name,$values, $cfgchanges) = @_;
-    if ($name eq 'fsid') {
-        if ($action ne 'change'){
-            $self->error("config has no fsid!");
-            return 0;
-        } else {
-            if ($values->[0] ne $values->[1]) {
-                $self->error("config has different fsid!");
-                return 0;
-            } else {
-                return 1
+
+# Builds the ceph config tree out of the existing config files
+sub config_hash {
+    my ($self, $master, $mapping, $gvalues) = @_;
+    while (my ($hostname, $host) = each(%{$master})) {
+        if (!defined($master->{$hostname}->{fault})){ #already done for osd-host
+            if (!$self->test_host_connection($master->{$hostname}->{fqdn}, $gvalues)) {
+                $master->{$hostname}->{fault} = 1;
             }
         }
-    }   
-    if ($action eq 'add'){
-        $self->info("$name added to config file");
-        if (ref($values) eq 'ARRAY'){
-            $values = join(', ',@$values); 
-        }
-        $cfgchanges->{$name} = $values;
-
-    } elsif ($action eq 'change') {
-        my $quat = $values->[0];
-        my $ceph = $values->[1];
-        if (ref($quat) eq 'ARRAY'){
-            $quat = join(', ',@$quat); 
-        }
-        #TODO: check if changes are valid
-        if ($quat ne $ceph) {
-            $self->info("$name changed from $ceph to $quat");
-            $cfgchanges->{$name} = $quat;
-        }
-    } elsif ($action eq 'del'){
-        # TODO If we want to keep the existing configuration settings that are not in Quattor, 
-        # we need to log it here. For now we expect that every used config parameter is in Quattor
-        $self->error("$name not in quattor");
-        #$self->info("$name deleted from config file\n");
-        return 0;
-    } else {
-        $self->error("Action $action not supported!");
-        return 0;
-    }
-    return 1; 
-}
-
-#Make all defined hosts ceph admin hosts (=able to run ceph commands)
-#This is not (necessary) the same as ceph-deploy hosts!
-# Also deploy config file
-sub set_admin_host {
-    my ($self, $config, $host) = @_;
-    $self->pull_compare_push($config, $host) or return 0;
-    my @admins=qw(admin);
-    push(@admins, $host);
-    $self->run_ceph_deploy_command(\@admins,'',1 ) or return 0; 
-}
-
-# Do all config actions
-sub do_config_actions {
-    my ($self, $cluster, $gvalues) = @_;
-    my $is_deploy = $gvalues->{is_deploy}; 
-    $self->{qtmp} = $gvalues->{qtmp};
-    $self->{clname} = $gvalues->{clname};
-    my $hosts = $cluster->{allhosts};
-    if ($is_deploy) {
-        foreach my $host (@{$hosts}) {
-            if ($gvalues->{key_accept}) {
-                $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr}->{homeDir});
+        if (!$master->{$hostname}->{fault}) {
+            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ; 
+            if (!$config) {
+                $self->warn("No valid config file found for host $hostname");
+                next;
             }
-            # Set config and make admin host
-            $self->set_admin_host($cluster->{config}, $host) or return 0;
+            $host->{config} = $config->{global};
+            while (my ($name, $cfg) = each(%{$config})) {
+                if ($name =~ m/^global$/) {
+                    $host->{config} = $cfg;    
+                } elsif ($name =~ m/^osd\.(\S+)/) {
+                    my $loc = $mapping->{get_loc}->{$1};
+                    if (!$loc) {
+                        $self->error("Could not find location of $name on host $hostname");
+                        return ;
+                    }
+                    $host->{osds}->{$loc}->{config} = $cfg;
+                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { #Only one monitor per host..
+                    $host->{mon}->{config} = $cfg;
+                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
+                    $host->{mds}->{config} = $cfg;
+                } else {
+                    $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
+                        "This section will be ignored");
+                }
+            }
         }
     }
-    return 1;
+    return 1;   
 }
+
+# Looks for arrays in the config and makes strings out of it
+sub stringify_cfg_arrays {
+    my ($self, $cfg) = @_;
+    my $config = { %$cfg };
+    foreach my $key (%{$config}) {
+        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
+            $config->{$key} = join(', ',@{$config->{$key}});
+            $self->debug(3,"Array converted to string:", $config->{$key});
+        }
+    }
+    return $config;
+}
+
+# Push the config to a host
+sub write_and_push {
+    my ($self, $hostname, $tinycfg, $gvalues) = @_;
+    my $pushfile = "$gvalues->{clname}.conf";
+    my $hostfile = "$pushfile.$hostname";
+    my $cfgfile = $gvalues->{qtmp} . $hostfile;
+    $self->debug(5, "Config to write:", Dumper($tinycfg));
+    if (!$tinycfg->write($cfgfile)) {
+        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?");
+        return 0;
+    }
+    $self->debug(2,"content written to config file $cfgfile");
+    $self->git_commit($gvalues->{qtmp}, $hostfile, "configfile to push to host $hostname");
+    move($cfgfile, "$gvalues->{cephusr}->{homeDir}/$pushfile") or return 0;
+    $self->push_cfg($hostname, '', 1) or return 0;
+}
+
+# Build the Config::Tiny hash for a host 
+sub set_host_config {
+    my ($self, $hostname, $host, $gvalues) = @_;
+
+    my $tinycfg = Config::Tiny->new;
+    while  (my ($daemon, $config) = each(%{$host})) {
+        $tinycfg->{$daemon} = $self->stringify_cfg_arrays($config);
+    }
+
+    return $tinycfg;
+
+}
+
+# Set the config for each host
+sub set_and_push_configs {
+    my ($self, $configs, $gvalues) = @_;
+    my $tinies = {};
+    while  (my ($hostname, $host) = each(%{$configs})) {
+        $tinies->{$hostname} = $self->set_host_config($hostname, $host, $gvalues) or return 0;
+    }
+    return $tinies;
+}
+
 
 1; # Required for perl module!

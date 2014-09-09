@@ -35,7 +35,10 @@ if ($generate) {
     my $cluster = $t->{clusters}->{ceph};
 
     my $crush = $cluster->{crushmap};
-    $cmp->flatten_osds($cluster->{osdhosts});
+    while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
+        $cmp->structure_osds($hostname, $host); # Is normally done in the daemon part
+}
+
     $cmp->crush_merge($crush->{buckets}, $cluster->{osdhosts}, []);
 
     diag explain $crush->{buckets};

@@ -36,9 +36,21 @@ my $cluster = $t->{clusters}->{ceph};
 $cmp->use_cluster();
 my $is_deploy = 1;
 my $hostname = 'ceph001';
-my $gather1 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001.cubone.os";
-my $gather2 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph002.cubone.os";
-my $gather3 = "su - ceph -c /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph003.cubone.os";
+
+my $usr =  getpwuid($<);
+my $tempdir = tempdir(CLEANUP => 1);
+my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
+my $gvalues = { 
+    cephusr => $cephusr,
+    clname => 'ceph',
+    qtmp => "$tempdir/ncm-ceph/"
+};
+# su-ceph-ccd /tmp/ubOWjqfE4m/ncm-ceph/ && /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001.cubone.os
+my $cdp = "cd $tempdir/ncm-ceph/ &&";
+my $dpp = "/usr/bin/ceph-deploy --cluster ceph gatherkeys";
+my $gather1 = "su - ceph -c $dpp ceph001.cubone.os";
+my $gather2 = "su - ceph -c $dpp ceph002.cubone.os";
+my $gather3 = "su - ceph -c $dpp ceph003.cubone.os";
 my @gathers = ($gather1, $gather2, $gather3);
 set_desired_output("/usr/bin/ceph -f json --cluster ceph status", $data::STATE);
 
@@ -48,14 +60,7 @@ foreach my $gcmd (@gathers) {
     set_command_status($gcmd,1);
     set_desired_err($gcmd,'');
 }
-my $usr =  getpwuid($<);
-my $tempdir = tempdir(CLEANUP => 1);
-my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
 $cmp->gen_extra_config($cluster);
-my $gvalues = { 
-    cephusr => $cephusr,
-    clname => 'ceph'
-};
 my $clustercheck= $cmp->cluster_exists_check($cluster, $gvalues);
 my $cmd;
 foreach my $gcmd (@gathers) {
@@ -65,7 +70,7 @@ foreach my $gcmd (@gathers) {
 ok(!$clustercheck, "no cluster, return 0");
 
 my $initcheck= $cmp->init_qdepl($cluster->{config}, $cephusr);
-$cmp->write_config($cluster->{config}, "$tempdir/ceph.conf");
+$cmp->write_new_config($cluster->{config}, "$tempdir/ceph.conf");
 ok(-d $tempdir. '/ncm-ceph/.git', "tmpdirs created");
 ok(-f $tempdir . '/ceph.conf', "ceph-deploy config file created");
 

@@ -154,9 +154,16 @@ function is_bucket = {
     true;
 };
 
+@{ ceph daemon config parameters @}
+type ceph_daemon_config = { 
+    'osd_journal_size'  ? long(0..) 
+    'osd_objectstore'   ? string
+};
+
 @{ type for a generic ceph daemon @}
 type ceph_daemon = {
     'up'    : boolean = true
+    'config'? ceph_daemon_config
 };
 
 @{ ceph monitor-specific type @}

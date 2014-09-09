@@ -151,13 +151,18 @@ sub ssh_known_keys {
     }   
 }
 
+#check if host is reachable
+sub test_host_connection {
+    my ($self, $host, $gvalues) = @_; 
+    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{homedir});
+    return $self->run_command_as_ceph_with_ssh(['uname'], $host); 
+}
 
 
 # Print out the commands that should be run manually
 sub print_cmds {
     my ($self, $cmds) = @_;
     if ($cmds && @{$cmds}) {
-        $self->info("Commands to be run manually (as ceph user):");
         while (my $cmd = shift @{$cmds}) {
             $self->info(join(" ", @$cmd));
         }
@@ -165,17 +170,11 @@ sub print_cmds {
 }
 
 # Write the config file
-sub write_config {
+sub write_new_config {
     my ($self, $cfg, $cfgfile ) = @_; 
     my $tinycfg = Config::Tiny->new;
-    my $config = { %$cfg };
-    foreach my $key (%{$config}) {
-        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
-            $config->{$key} = join(', ',@{$config->{$key}});
-            $self->debug(3,"Array converted to string:", $config->{$key});
-        }
-    }   
-    $tinycfg->{global} = $config;
+    
+    $tinycfg->{global} = $self->stringify_cfg_arrays($cfg);
     if (!$tinycfg->write($cfgfile)) {
         $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?"); 
         return 0;

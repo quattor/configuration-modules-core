@@ -50,11 +50,37 @@ sub get_osd_name {
     return "osd.$id";
 }   
 
+# Reweight the osds if they have a different weight
+sub push_weights {
+    my ($self, $hosts, $weights) = @_;
+    while (my ($hostname, $host) = each(%{$hosts})) {
+        while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
+            if ($osd->{crush_weight}){
+                my $osdname = $self->get_osd_name($hostname, $osd->{osd_path}) or return 0; 
+                if (!$weights->{$osdname} ||( $osd->{crush_weight} != $weights->{$osdname})  ) {
+                    $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;       
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues) = @_;
-    if ($cluster->{crushmap} && $gvalues->{is_deploy}) {
-        $self->process_crushmap($cluster->{crushmap}, $cluster->{osdhosts}, $gvalues) or return 0;
+    my ($self, $cluster, $gvalues, $ignh, $weights) = @_;
+    my $okhosts = {}; 
+    while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
+        if (!$ignh->{$hostname}) {
+            $okhosts->{$hostname} = $host;
+        } else {
+            $self->debug(2, "ignoring host $hostname for crushmap");
+        }
+    }   
+    if ($cluster->{crushmap}) {
+        $self->process_crushmap($cluster->{crushmap}, $okhosts, $gvalues) or return 0;
+    } else {
+        $self->push_weights($okhosts, $weights) or return 0;
     }
     return 1;
 }
@@ -88,7 +114,8 @@ sub crush_merge {
                 if ($osdhosts->{$name}){
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
-                    foreach my $osd (sort(keys %{$osds})){
+                    foreach my $osd (sort(keys %{$osds})){ 
+                        #TODO: use mapping?
                         my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
                             $self->error("Could not find osd name for ", 
