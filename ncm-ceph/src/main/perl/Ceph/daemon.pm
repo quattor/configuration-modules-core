@@ -252,11 +252,11 @@ sub check_immutables {
     my $rc =1;
     foreach my $attr (@{$imm}) {
         if ((defined($quat->{$attr}) xor defined($ceph->{$attr})) || 
-        (defined($quat->{$attr}) && ($quat->{$attr} ne $ceph->{$attr})) ){
-            $self->error("Attribute $attr of $name not corresponding.", 
-                "Quattor: $quat->{$attr}, ",
-                "Ceph: $ceph->{$attr}");
-            $rc=0;
+            (defined($quat->{$attr}) && ($quat->{$attr} ne $ceph->{$attr})) ){
+                $self->error("Attribute $attr of $name not corresponding.", 
+                    "Quattor: $quat->{$attr}, ",
+                    "Ceph: $ceph->{$attr}");
+                $rc=0;
         }
     }
     return $rc;
@@ -316,7 +316,7 @@ sub add_osd_to_config {
 }
 
 # Puts the osd_objectstore value temporarely in the global section or back out
-sub osd_trick {
+sub osd_black_magic {
     my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
     if ($osd_objectstore) {
         $self->debug(2, "Doing osd_objectstore trick with value $osd_objectstore");
@@ -356,19 +356,17 @@ sub deploy_daemons {
                 if ($osd->{config} && $osd->{config}->{osd_objectstore}) {# pre trick
                     $self->info("deploying new osd with osd_objectstore set, will change global value");
                     $foefel = $tinycfg->{global}->{osd_objectstore};
-                    $self->osd_trick($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
+                    $self->osd_black_magic($hostname, $tinycfg, $osd->{config}->{osd_objectstore}, $gvalues) or return 0;
                 }
                 my $pathstring = "$osd->{fqdn}:$osd->{osd_path}";
                 if ($osd->{journal_path}) {
                     $pathstring = "$pathstring:$osd->{journal_path}";
                 }
-                my @command = qw(osd create);
-                my $ret = $self->deploy_daemon(\@command, $pathstring);
-                #create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't, so..
-                @command = qw(osd activate); #FIXME
-                $ret = $self->deploy_daemon(\@command, $pathstring) if $ret;
+                my $ret = $self->deploy_daemon([qw(osd create)], $pathstring);
+                #create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't yet, so..
+                $ret = $self->deploy_daemon([qw(osd activate)], $pathstring) if $ret;
                 if ($osd->{config} && $osd->{config}->{osd_objectstore}) { # post trick
-                    $self->osd_trick($hostname, $tinycfg, $foefel, $gvalues) or return 0;
+                    $self->osd_black_magic($hostname, $tinycfg, $foefel, $gvalues) or return 0;
                     $self->info("global value osd_objectstore reverted succesfully");
                 }
                 return 0 if (!$ret);
@@ -390,7 +388,7 @@ sub deploy_daemons {
 sub destroy_daemon {
     my ($self, $type, $name, $cmds) = @_;
     my @command = qw(/usr/bin/ceph-deploy); 
-    push (@command, ($type, 'destroy', $name));
+    push (@command, $type, 'destroy', $name);
     push (@$cmds, \@command);
 }
 

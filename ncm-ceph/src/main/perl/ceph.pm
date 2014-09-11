@@ -216,7 +216,6 @@ sub do_configure {
     $self->do_crush_actions($cluster, $gvalues, $structures->{skip}, $weights) or return 0;
     $self->destroy_daemons($structures->{destroy}, $mapping) or return 0;
     $self->restart_daemons($structures->{restartd});
-    #$self->print_info($restartd, $mand, $not_configured);
     return 1;  
         
 }
