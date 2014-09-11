@@ -65,7 +65,6 @@ sub osd_hash {
     my $osddump = decode_json($jstr);  
     $jstr = $self->run_ceph_command([qw(osd tree)]) or return 0;
     my $osdtree = decode_json($jstr);
-    my %osdparsed = ();
     my $hostmap = {};
     foreach my $osd (@{$osddump->{osds}}) {
         my $id = $osd->{osd};
@@ -113,7 +112,6 @@ sub osd_hash {
             journal_path    => $journalloc 
         };
         my $osdstr = "$host:$osdloc";
-        $osdparsed{$osdstr} = $osdp;
         $mapping->{get_loc}->{$id} = $osdstr;
         $mapping->{get_id}->{$osdstr} = $id;
         $master->{$host}->{osds}->{$osdstr} = $osdp;
@@ -188,13 +186,11 @@ sub mon_hash {
     my $monsh = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(quorum_status)]) or return 0;
     my $monstate = decode_json($jstr);
-    my %monparsed = ();
     my $hostmap = {};
     foreach my $mon (@{$monsh->{mons}}){
         $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         my $ip = $self->extract_ip($mon->{addr});
         $mon->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
-        $monparsed{$mon->{name}} = $mon; 
         $master->{$mon->{name}}->{mon} = $mon; #One monitor per host
         $master->{$mon->{name}}->{fqdn} = $mon->{fqdn};
     }
@@ -206,7 +202,6 @@ sub mds_hash {
     my ($self, $master) = @_;
     my $jstr = $self->run_ceph_command([qw(mds stat)]) or return 0;
     my $mdshs = decode_json($jstr);
-    my %mdsparsed = ();
     my $hostmap = {};
     foreach my $mds (values %{$mdshs->{mdsmap}->{info}}) {
         my @state = split(':', $mds->{state});
@@ -216,7 +211,6 @@ sub mds_hash {
             gid => $mds->{gid},
             up => $up
         };
-        $mdsparsed{$mds->{name}} = $mdsp;
         my $ip = $self->extract_ip($mds->{addr});
         $mdsp->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
         
