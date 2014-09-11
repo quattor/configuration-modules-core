@@ -154,7 +154,6 @@ sub get_osd_location {
     chomp($osdloc);
     chomp($journalloc);
     return $osdloc, $journalloc;
-
 }
 
 # If directory is given, checks if the directory is empty

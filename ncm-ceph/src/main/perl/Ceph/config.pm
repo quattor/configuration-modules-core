@@ -44,7 +44,7 @@ Readonly::Array my @NONINJECT => qw(
 
 # Gets the config of the cluster
 sub get_host_config {
-    my ($self, $file) = @_; 
+    my ($self, $file) = @_;
     my $cephcfg = Config::Tiny->new();
     $cephcfg = Config::Tiny->read($file);
     if (!$cephcfg->{global}) {
@@ -73,8 +73,8 @@ sub pull_host_cfg {
 sub push_cfg {
     my ($self, $host, $dir, $overwrite) = @_;
     
-    $overwrite = 0 if (! defined($overwrite));
-    $dir = '' if (! defined($dir));
+    $overwrite //= 0;
+    $dir //= '';
     
     return $self->run_ceph_deploy_command([qw(admin), $host], $dir, $overwrite);
 }

@@ -325,7 +325,6 @@ sub compare_conf {
     }   
     $self->debug(5, "Structured action hash:", Dumper($structures));
     return $structures;
- 
 }
 
 1;
