@@ -315,7 +315,7 @@ sub add_osd_to_config {
     return $self->write_and_push($hostname, $tinycfg, $gvalues);
 }
 
-# Puts the osd_objectstore value temporarely in the global section or back out
+# Puts the osd_objectstore value temporarily in the global section or back out
 sub osd_black_magic {
     my ($self, $hostname, $tinycfg, $osd_objectstore, $gvalues) = @_;
     if ($osd_objectstore) {
