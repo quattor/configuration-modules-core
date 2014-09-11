@@ -63,9 +63,8 @@ sub get_quat_conf {
         $master->{$hostname}->{config} = $quattor->{config};
 
     }
-    while (my ($host, $mds) = each(%{$quattor->{mdss}})) {
-        my @fhost = split('\.', $host);# Make sure shortname is used. 
-        my $hostname = $fhost[0];
+    while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
+        $hostname =~ s/\..*//;;
         $master->{$hostname}->{mds} = $mds; # Only one mds
         $master->{$hostname}->{fqdn} = $mds->{fqdn};
         $master->{$hostname}->{config} = $quattor->{config};
@@ -74,7 +73,7 @@ sub get_quat_conf {
     return $master;
 }
 
-#Configure a new host
+# Configure a new host
 sub add_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Configuring new host $hostname");
@@ -82,7 +81,6 @@ sub add_host {
         $structures->{ignh}->{$hostname} = $host;
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
-        
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
         if ($host->{mon}) {
             $self->add_mon($hostname, $host->{mon}, $structures) or return 0;
@@ -100,20 +98,20 @@ sub add_host {
     return 1;
 }
 
-#Configure a new osd
-#OSDS should be deployed first to get an ID, and config will be added in deploy fase
+# Configure a new osd
+# OSDS should be deployed first to get an ID, and config will be added in deploy fase
 sub add_osd { 
     my ($self, $hostname, $osdkey, $osd, $structures) = @_;
-    $self->debug(3, "Configuring new osd $osdkey");
+    $self->debug(3, "Configuring new osd $osdkey on $hostname");
     if (!$self->prep_osd($osd)) {
-        $self->error("osd $osdkey could not be prepared. Osd directory not empty?"); 
+        $self->error("osd $osdkey on $hostname could not be prepared. Osd directory not empty?"); 
         return 0;
     }
     $structures->{deployd}->{$hostname}->{osds}->{$osdkey} = $osd;
     return 1;
 }
 
-#Configure a new mon
+# Configure a new mon
 sub add_mon {
     my ($self, $hostname, $mon, $structures) = @_;
     $self->debug(3, "Configuring new mon $hostname");
@@ -122,29 +120,32 @@ sub add_mon {
     return 1;
 }
 
-#COnfigure a new mds
+# Configure a new mds
 sub add_mds {
     my ($self, $hostname, $mds, $structures) = @_;
     $self->debug(3, "Configuring new mds $hostname");
-    if (!$self->prep_mds($hostname, $mds)) { # not existing
+    if ($self->prep_mds($hostname, $mds)) { 
+        $self->debug(4, "mds $hostname not shown in mds map, but exists.");
+        $structures->{restartd}->{$hostname}->{mds} = 'start';
+    } else { 
         $structures->{deployd}->{$hostname}->{mds} = $mds;
         $structures->{configs}->{$hostname}->{mds} = $mds->{config} if ($mds->{config});
-    } else {  # Ceph does not show a down ceph mds daemon in his mds map
-        $structures->{restartd}->{$hostname}->{mds} = 'start';
     }
     return 1;
 }
+
 # Compare and change mon config
 sub compare_mon {
     my ($self, $hostname, $quat_mon, $ceph_mon, $structures) = @_;
     $self->debug(3, "Comparing mon $hostname");
-    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { #Initial (unconfigured) member
+    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { 
+        $self->debug(4, "Recreating initial (unconfigured) mon $hostname");
         return $self->add_mon($hostname, $quat_mon, $structures);
     }
     my $donecmd = ['test','-e',"/var/lib/ceph/mon/$self->{cluster}-$hostname/done"];
     if (!$ceph_mon->{up} && !$self->run_command_as_ceph_with_ssh($donecmd, $quat_mon->{fqdn})) {
         # Node reinstalled without first destroying it
-        $self->info("Monitor $hostname shall be reinstalled");
+        $self->info("Previous mon $hostname shall be reinstalled");
         return $self->add_mon($hostname, $quat_mon, $structures);
     }
 
@@ -152,7 +153,6 @@ sub compare_mon {
     $structures->{configs}->{$hostname}->{mon} = $quat_mon->{config} if ($quat_mon->{config});
     $self->check_restart($hostname, 'mon', $changes,  $quat_mon, $ceph_mon, $structures);
     return 1;
-
 }
 
 # Compare and change mds config
@@ -168,7 +168,7 @@ sub compare_mds {
 # Compare and change osd config
 sub compare_osd {
     my ($self, $hostname, $osdkey, $quat_osd, $ceph_osd, $structures) = @_;
-    $self->debug(3, "Comparing osd $osdkey");
+    $self->debug(3, "Comparing osd $osdkey on $hostname");
     my @osdattrs = ();  # special case, journal path is not in 'config' section 
                         # (Should move to 'osd_journal', but would imply schema change)
     if ($quat_osd->{journal_path}) {
@@ -180,7 +180,10 @@ sub compare_osd {
     $self->check_immutables($hostname, \@osdattrs, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
     my $changes = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
     my $osd_id = $structures->{mapping}->{get_id}->{$osdkey};
-    return 0 if (!defined($osd_id));
+    if (!defined($osd_id)) {
+        $self->error("Could not map $osdkey to an osd id");
+        return 0;
+    }
     $self->debug(5, "osd id for $osdkey is $osd_id");
     my $osdname = "osd.$osd_id";
     $structures->{configs}->{$hostname}->{$osdname} = $quat_osd->{config} if ($quat_osd->{config}); 
@@ -236,7 +239,7 @@ sub compare_global {
     return 1;
 }
     
-#Compare different sections of an existing host
+# Compare different sections of an existing host
 sub compare_host {
     my ($self, $hostname, $quat_host, $ceph_host, $structures) = @_;
     $self->debug(3, "Comparing host $hostname");
