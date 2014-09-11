@@ -4,6 +4,9 @@ use Test::MockModule;
 use Test::More;
 use Data::Dumper;
 use base 'Exporter';
+use XML::Simple;
+
+use rpcdata;
 
 our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 
@@ -44,7 +47,7 @@ sub rpc_history_ok {
     
 }
 
-sub mock_rpc {
+sub mock_rpc_basic {
     my ($self, $method, @params) = @_;
     push(@rpc_history, $method);
     push(@rpc_history_full, [$method, @params]);
@@ -55,7 +58,38 @@ sub mock_rpc {
     }
 };
 
+
+sub mock_rpc {
+    my ($self, $method, @params) = @_;
+    my @params_values;
+    foreach my $param (@params) {
+	push(@params_values, $param->[1]);
+    };
+
+    push(@rpc_history, $method);
+    push(@rpc_history_full, [$method, @params]);
+    while (my ($short, $data) = each %rpcdata::cmds) {
+	my $sameparams = join(" _ ", @params_values) eq join(" _ ", @{$data->{params}});
+	my $samemethod = $method eq $data->{method};
+
+    diag("There are rpc params: ", join(" _ ", @params_values));
+    #diag("There are data params ", join(" _ ", @{$data->{params}}));
+
+	if ($samemethod && $sameparams && defined($data->{out})) {
+	    if ($data->{out} =~ m/^\d+$/) {
+		    diag("is id ", $data->{out});
+		    return $data->{out};
+	    } else {
+		    diag("is xml ", $data->{out});
+            return XMLin($data->{out}, forcearray => 1);
+	    }
+	}
+
+    }
+};
+
 our $opennebula = new Test::MockModule('Net::OpenNebula');
+#$opennebula->mock( '_rpc',  \&mock_rpc_basic);
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
 
