@@ -68,10 +68,10 @@ sub push_weights {
 
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues, $ignh, $weights) = @_;
+    my ($self, $cluster, $gvalues, $skip, $weights) = @_;
     my $okhosts = {}; 
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
-        if (!$ignh->{$hostname}) {
+        if (!$skip->{$hostname}) {
             $okhosts->{$hostname} = $host;
         } else {
             $self->debug(2, "ignoring host $hostname for crushmap");

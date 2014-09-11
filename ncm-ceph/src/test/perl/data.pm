@@ -660,7 +660,7 @@ Readonly::Hash our %COMPARE1 => (
      }
    },
    'gvalues' => {},
-   'ignh' => {
+   'skip' => {
      'ceph003' => {
        'config' => {
          'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
@@ -777,7 +777,7 @@ Readonly::Hash our %COMPARE2 => (
      }
    },
    'gvalues' => {},
-   'ignh' => {},
+   'skip' => {},
    'mapping' => {
      'get_id' => {
        'ceph001:/var/lib/ceph/osd/sdc' => 0,

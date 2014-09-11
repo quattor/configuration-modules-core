@@ -78,7 +78,7 @@ sub add_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Configuring new host $hostname");
     if (!$self->test_host_connection($host->{fqdn}, $structures->{gvalues})) {
-        $structures->{ignh}->{$hostname} = $host;
+        $structures->{skip}->{$hostname} = $host;
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
@@ -221,6 +221,7 @@ sub compare_config {
     }
     return $cfgchanges;
 }
+
 # Compare the global config
 sub compare_global {
     my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
@@ -242,7 +243,7 @@ sub compare_host {
     my ($self, $hostname, $quat_host, $ceph_host, $structures) = @_;
     $self->debug(3, "Comparing host $hostname");
     if ($ceph_host->{fault}) {
-        # $structures->{ignh}->{$hostname} = $host; For future use ?
+        $structures->{skip}->{$hostname} = $quat_host; 
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
         return 0; 
     } else {
@@ -288,7 +289,7 @@ sub delete_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Removing host $hostname");
     if ($host->{fault}) {
-        $structures->{ignh}->{$hostname} = $host;
+        $structures->{skip}->{$hostname} = $host;
         $self->warn("Host $hostname should be deleted, but is not reachable, so it will be ignored");
     } else {
         $structures->{destroy}->{$hostname} = $host; # Does the same as destroy on everything
@@ -305,7 +306,7 @@ sub compare_conf {
         deployd  => {},
         destroy  => {},
         restartd => {},
-        ignh => {},
+        skip => {},
         mapping => $mapping,
         gvalues => $gvalues,
     };
