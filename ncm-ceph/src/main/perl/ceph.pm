@@ -41,7 +41,7 @@ sub init_git {
     } # Access with my $gitr = Git::Repository->new( work_tree => $qdir );
 }
  
-#Make sure  a temporary directory is created for push and pulls
+# Make sure  a temporary directory is created for push and pulls
 sub init_qdepl {
     my ($self, $config, $cephusr) = @_;
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/';
@@ -51,7 +51,7 @@ sub init_qdepl {
     return $qdir; 
 }
    
-#Checks if cluster is configured on this node.
+# Checks if cluster is configured on this node.
 sub cluster_exists_check {
     my ($self, $cluster, $gvalues) = @_;
     # Check If something is not configured or there is no existing cluster 
@@ -91,7 +91,7 @@ sub cluster_exists_check {
     }
 }
 
-#Fail if cluster not ready and no deploy hosts
+# Fail if cluster not ready and no deploy hosts
 sub cluster_ready_check {
     my ($self, $cluster, $is_deploy, $hostname) = @_;
    
@@ -100,7 +100,7 @@ sub cluster_ready_check {
             my @admin = ('admin', $hostname);
             $self->run_ceph_deploy_command(\@admin);
             if (!$self->run_ceph_command([qw(status)])) {
-                $self->error("Cannot connect to ceph cluster!"); #This should not happen
+                $self->error("Cannot connect to ceph cluster!"); # This should not happen
                 return 0;
             } else {
                 $self->debug(1,"Node ready to receive ceph-commands");
@@ -114,7 +114,7 @@ sub cluster_ready_check {
     return 1;
 }
 
-#Checks the fsid value of the ceph dump with quattor value
+# Checks the fsid value of the ceph dump with quattor value
 sub cluster_fsid_check {
     my ($self, $cluster, $clname) = @_;
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
@@ -131,7 +131,7 @@ sub cluster_fsid_check {
     }
 }
 
-#generate mon hosts
+# generate mon hosts
 sub gen_extra_config {
     my ($self, $cluster) = @_;
     my $config = $cluster->{config};
@@ -208,7 +208,7 @@ sub do_configure {
     my ($ceph_conf, $mapping, $weights) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
     my $structures = $self->compare_conf($quat_conf, $ceph_conf, 
-        $mapping, $gvalues) or return 0; #This is the Main function
+        $mapping, $gvalues) or return 0; # This is the Main function
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
     $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;

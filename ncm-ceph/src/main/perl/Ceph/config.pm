@@ -102,7 +102,7 @@ sub inject_realtime {
 sub config_hash {
     my ($self, $master, $mapping, $gvalues) = @_;
     while (my ($hostname, $host) = each(%{$master})) {
-        if (!defined($master->{$hostname}->{fault})){ #already done for osd-host
+        if (!defined($master->{$hostname}->{fault})){ # already done for osd-host
             if (!$self->test_host_connection($master->{$hostname}->{fqdn}, $gvalues)) {
                 $master->{$hostname}->{fault} = 1;
             }
@@ -124,9 +124,9 @@ sub config_hash {
                         return ;
                     }
                     $host->{osds}->{$loc}->{config} = $cfg;
-                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { #Only one monitor per host..
+                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { # Only one monitor per host..
                     $host->{mon}->{config} = $cfg;
-                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { #Only one mds per host..
+                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { # Only one mds per host..
                     $host->{mds}->{config} = $cfg;
                 } else {
                     $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
@@ -143,7 +143,7 @@ sub stringify_cfg_arrays {
     my ($self, $cfg) = @_;
     my $config = { %$cfg };
     foreach my $key (%{$config}) {
-        if (ref($config->{$key}) eq 'ARRAY'){ #For mon_initial_members
+        if (ref($config->{$key}) eq 'ARRAY'){ # For mon_initial_members
             $config->{$key} = join(', ',@{$config->{$key}});
             $self->debug(3,"Array converted to string:", $config->{$key});
         }

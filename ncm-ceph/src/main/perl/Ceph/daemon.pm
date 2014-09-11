@@ -191,7 +191,7 @@ sub mon_hash {
         $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         my $ip = $self->extract_ip($mon->{addr});
         $mon->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
-        $master->{$mon->{name}}->{mon} = $mon; #One monitor per host
+        $master->{$mon->{name}}->{mon} = $mon; # One monitor per host
         $master->{$mon->{name}}->{fqdn} = $mon->{fqdn};
     }
     return 1;
@@ -246,7 +246,7 @@ sub structure_osds {
 
 }
 
-#does a check on unchangable attributes, returns 0 if different
+# does a check on unchangable attributes, returns 0 if different
 sub check_immutables {
     my ($self, $name, $imm, $quat, $ceph) = @_;
     my $rc =1;
@@ -345,7 +345,7 @@ sub deploy_daemons {
         my $tinycfg = $tinies->{$hostname};
         $self->write_and_push($host->{fqdn}, $tinycfg, $gvalues) or return 0;
         if ($host->{mon}) {
-            #deploy mon
+            # deploy mon
             my @command = qw(mon create);
             $self->deploy_daemon(\@command, $host->{mon}->{fqdn}) or return 0;
         }
@@ -363,7 +363,7 @@ sub deploy_daemons {
                     $pathstring = "$pathstring:$osd->{journal_path}";
                 }
                 my $ret = $self->deploy_daemon([qw(osd create)], $pathstring);
-                #create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't yet, so..
+                # create should do a 'prepare'+'activate' according to ceph-deploy help, but it doesn't yet, so..
                 $ret = $self->deploy_daemon([qw(osd activate)], $pathstring) if $ret;
                 if ($osd->{config} && $osd->{config}->{osd_objectstore}) { # post trick
                     $self->osd_black_magic($hostname, $tinycfg, $foefel, $gvalues) or return 0;
@@ -376,7 +376,7 @@ sub deploy_daemons {
             }
         }
         if ($host->{mds}) {
-            #deploy mds
+            # deploy mds
             my @command = qw(mds create);
             $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname") or return 0;
         }
@@ -424,7 +424,7 @@ sub restart_daemons {
     $self->debug(1, 'restarting daemons');
     while  (my ($hostname, $host) = each(%{$restartd})) { 
         while  (my ($name, $action) = each(%{$host})) {
-            #can actually be done in the component by using run_command_as_ceph_with_ssh
+            # can actually be done in the component by using run_command_as_ceph_with_ssh
             push(@cmds, ['/usr/bin/ssh', $hostname, qw(/sbin/service ceph), $action, $name]); 
         }
     }
