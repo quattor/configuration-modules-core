@@ -59,7 +59,8 @@ ok(%{$output},'config differs');
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid
    'mon_initial_members' => 'ceph001, ceph002, ceph003',
-   'blaaa' => 'bla'
+   'blaaa' => 'bla',
+   'foo' => 'bar'
  };
 $output = $cmp->compare_config('cfg','key', $quath, $cceph);
 ok(!$output, 'ceph config has attributes not in quattor');

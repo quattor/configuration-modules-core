@@ -215,10 +215,8 @@ sub compare_config {
             $cfgchanges->{$qkey} = $qvalue;
         }
     }
-    foreach my $ckey (keys %{$ceph_config}) {
-        # If we want to keep the existing configuration settings that are not in Quattor,
-        # we need to log it here. For now we expect that every used config parameter is in Quattor    
-        $self->error("$ckey for $type $key not in quattor");
+    if ($ceph_config && %{$ceph_config}) {
+        $self->error("compare_config ".join(", ", keys %{$ceph_config})." for $type $key not in quattor");
         return 0;
     }
     return $cfgchanges;
