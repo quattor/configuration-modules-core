@@ -83,6 +83,8 @@ sub mock_rpc {
 		    return $data->{out};
 	    } else {
 		    diag("is xml ", $data->{out});
+            #my $xmldata = XMLin($data->{out}, ForceArray => 1);
+            #diag("xml Dumper : ", Dumper(\$xmldata));
             return XMLin($data->{out}, forcearray => 1);
 	    } 
         
