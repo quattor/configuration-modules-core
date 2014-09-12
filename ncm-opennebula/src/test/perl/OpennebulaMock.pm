@@ -83,8 +83,7 @@ sub mock_rpc {
 		    return $data->{out};
 	    } else {
 		    diag("is xml ", $data->{out});
-            #return XMLin($data->{out}, forcearray => 1);
-            return ();
+            return XMLin($data->{out}, forcearray => 1);
 	    } 
         
 
