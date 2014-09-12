@@ -227,7 +227,8 @@ sub flatten_buckets {
     my $titems = [];
     foreach my $tmpbucket ( @{$buckets}) {
         # First fix attributes
-        if (!$defaults) { # top bucket; set default values
+        if (!$defaults) { 
+            # top bucket; set default values
             $defaults = { alg => $tmpbucket->{defaultalg}, hash => $tmpbucket->{defaulthash}};
         }
         my %bucketh = %$defaults;
@@ -319,7 +320,8 @@ sub set_used_ruleset_id {
 sub generate_ruleset_id {
     my ($self, $ruleset_ids) = @_;
     my $newid;
-    if (!@{$ruleset_ids}) { # crushmap from scratch
+    if (!@{$ruleset_ids}) { 
+        # crushmap from scratch
         $newid = 0;
     } else {
         my $max = max(@{$ruleset_ids});
@@ -334,7 +336,8 @@ sub generate_ruleset_id {
 sub generate_bucket_id {
     my ($self, $crush_ids) = @_;
     my $newid;
-    if (!@{$crush_ids}) { # crushmap from scratch
+    if (!@{$crush_ids}) { 
+        # crushmap from scratch
         $newid = -1;
     } else {
         my $min = min(@{$crush_ids});

@@ -124,9 +124,9 @@ sub config_hash {
                         return ;
                     }
                     $host->{osds}->{$loc}->{config} = $cfg;
-                } elsif (($name =~ m/^mon\.(\S+)/) || ($name =~ m/^mon$/)) { # Only one monitor per host..
+                } elsif ($name =~ m{^mon(\.\S+)?}) { # Only one monitor per host..
                     $host->{mon}->{config} = $cfg;
-                } elsif (($name =~ m/^mds\.(\S+)/) || ($name =~ m/^mds$/)) { # Only one mds per host..
+                } elsif ($name =~ m{^mds(\.\S+)?}) { # Only one mds per host..
                     $host->{mds}->{config} = $cfg;
                 } else {
                     $self->error("Section $name in configfile of host $hostname not yet supported!\n", 

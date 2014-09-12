@@ -100,7 +100,8 @@ sub cluster_ready_check {
             my @admin = ('admin', $hostname);
             $self->run_ceph_deploy_command(\@admin);
             if (!$self->run_ceph_command([qw(status)])) {
-                $self->error("Cannot connect to ceph cluster!"); # This should not happen
+                # This should not happen
+                $self->error("Cannot connect to ceph cluster!");
                 return 0;
             } else {
                 $self->debug(1,"Node ready to receive ceph-commands");
@@ -208,7 +209,7 @@ sub do_configure {
     my ($ceph_conf, $mapping, $weights) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
     my $structures = $self->compare_conf($quat_conf, $ceph_conf, 
-        $mapping, $gvalues) or return 0; # This is the Main function
+        $mapping, $gvalues) or return 0; 
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
     $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
