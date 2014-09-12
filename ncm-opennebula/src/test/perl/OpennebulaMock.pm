@@ -71,9 +71,11 @@ sub mock_rpc {
     while (my ($short, $data) = each %rpcdata::cmds) {
 	my $sameparams = join(" _ ", @params_values) eq join(" _ ", @{$data->{params}});
 	my $samemethod = $method eq $data->{method};
+    diag("This is my shortname:", $short);
 
-    diag("There are rpc params: ", join(" _ ", @params_values));
+    diag("rpc params: ", join(" _ ", @params_values));
     #diag("There are data params ", join(" _ ", @{$data->{params}}));
+
 
 	if ($samemethod && $sameparams && defined($data->{out})) {
 	    if ($data->{out} =~ m/^\d+$/) {
@@ -81,11 +83,15 @@ sub mock_rpc {
 		    return $data->{out};
 	    } else {
 		    diag("is xml ", $data->{out});
-            return XMLin($data->{out}, forcearray => 1);
-	    }
-	}
+            #return XMLin($data->{out}, forcearray => 1);
+            return ();
+	    } 
+        
 
     }
+
+    }
+   
 };
 
 our $opennebula = new Test::MockModule('Net::OpenNebula');
