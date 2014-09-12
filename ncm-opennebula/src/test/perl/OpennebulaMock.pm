@@ -74,17 +74,20 @@ sub mock_rpc {
     diag("This is my shortname:", $short);
 
     diag("rpc params: ", join(" _ ", @params_values));
+    diag("rpc method: ", $method);
     #diag("There are data params ", join(" _ ", @{$data->{params}}));
 
 
 	if ($samemethod && $sameparams && defined($data->{out})) {
 	    if ($data->{out} =~ m/^\d+$/) {
 		    diag("is id ", $data->{out});
+            keys %rpcdata::cmds;
 		    return $data->{out};
 	    } else {
 		    diag("is xml ", $data->{out});
             #my $xmldata = XMLin($data->{out}, ForceArray => 1);
             #diag("xml Dumper : ", Dumper(\$xmldata));
+            keys %rpcdata::cmds;
             return XMLin($data->{out}, forcearray => 1);
 	    } 
         
