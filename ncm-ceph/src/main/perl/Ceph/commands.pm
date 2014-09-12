@@ -52,10 +52,14 @@ sub use_cluster {
 
 # run a command and return the output
 sub run_command {
-    my ($self, $command) = @_;
+    my ($self, $command, $dry) = @_;
     my ($cmd_output, $cmd_err);
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
+    if ($dry) {
+        $self->debug(5, "Dry-run mode, returning command: $cmd");
+        return $cmd;
+    }
     $cmd->execute();
     if ($?) {
         $self->error("Command failed. Error Message: $cmd_err");
@@ -99,7 +103,7 @@ sub has_shell_escapes {
     
 # Runs a command as the ceph user
 sub run_command_as_ceph {
-    my ($self, $command, $dir) = @_;
+    my ($self, $command, $dir, $dry) = @_;
     
     $self->has_shell_escapes($command) or return; 
     if ($dir) {
@@ -107,24 +111,24 @@ sub run_command_as_ceph {
         unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
-    return $self->run_command([qw(su - ceph -c), @$command]);
+    return $self->run_command([qw(su - ceph -c), @$command], $dry // 0);
 }
 
 # Runs a command as ceph over ssh, optionally with options
 sub run_command_as_ceph_with_ssh {
-    my ($self, $command, $host, $ssh_options) = @_;
+    my ($self, $command, $host, $ssh_options, $dry) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command]);
+    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command], '', $dry // 0);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
-    my ($self, $command, $dir, $overwrite) = @_;
+    my ($self, $command, $dir, $overwrite, $dry) = @_;
     # run as user configured for 'ceph-deploy'
     if ($overwrite) {
         unshift (@$command, '--overwrite-conf');
     }
-    return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir);
+    return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir, $dry // 0);
 }
 
 # Accept and add unknown keys if wanted
@@ -166,7 +170,7 @@ sub print_cmds {
     my ($self, $cmds) = @_;
     if ($cmds && @{$cmds}) {
         while (my $cmd = shift @{$cmds}) {
-            $self->info(join(" ", @$cmd));
+            $self->info("$cmd");
         }
     }
 }

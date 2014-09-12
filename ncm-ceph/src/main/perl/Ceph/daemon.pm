@@ -387,15 +387,13 @@ sub deploy_daemons {
 # Destroys a single daemon (manually command)
 sub destroy_daemon {
     my ($self, $type, $name, $cmds) = @_;
-    my @command = qw(/usr/bin/ceph-deploy); 
-    push (@command, $type, 'destroy', $name);
-    push (@$cmds, \@command);
+    return $self->run_ceph_deploy_command([$type, 'destroy', $name],'','',1);
 }
 
 # Destroys daemons that need to be destroyed (Manually at this moment)
 sub destroy_daemons {
     my ($self, $destroyd, $mapping) = @_; 
-    my $cmds = [];
+    my @cmds = ();
     $self->debug(1, 'Destroying daemons');
     while  (my ($hostname, $host) = each(%{$destroyd})) { 
         while  (my ($type, $daemon) = each(%{$host})) {
@@ -404,16 +402,16 @@ sub destroy_daemons {
                     my $osd_id = $mapping->{get_id}->{$osdloc};
                     return 0 if (!defined($osd_id));
                     my $osdname = "osd.$osd_id";
-                    $self->destroy_daemon('osd', $osdname, $cmds);
+                    push(@cmds, $self->destroy_daemon('osd', $osdname));
                 }
             } else {
-                $self->destroy_daemon($type, $hostname, $cmds);
+                push(@cmds, $self->destroy_daemon($type, $hostname));
             }
         }
     }
-    if(@$cmds){
-        $self->info("Commands to be run manually (as ceph user):");
-        $self->print_cmds($cmds);
+    if(@cmds){
+        $self->info("Commands to be run manually:");
+        $self->print_cmds(\@cmds);
     }   
     return 1;
 }
@@ -424,8 +422,7 @@ sub restart_daemons {
     $self->debug(1, 'restarting daemons');
     while  (my ($hostname, $host) = each(%{$restartd})) { 
         while  (my ($name, $action) = each(%{$host})) {
-            # can actually be done in the component by using run_command_as_ceph_with_ssh
-            push(@cmds, ['/usr/bin/ssh', $hostname, qw(/sbin/service ceph), $action, $name]); 
+            push(@cmds, $self->run_command_as_ceph_with_ssh([qw(/sbin/service ceph), $action, $name], $hostname, [],1)); 
         }
     }
     if(@cmds){
