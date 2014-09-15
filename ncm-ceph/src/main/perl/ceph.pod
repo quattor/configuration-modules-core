@@ -21,13 +21,21 @@ Features that are implemented at this moment:
 
 =item * Set admin hosts and push config
 
+=item * Fine configuration control (per daemon and/or host) 
+
+=item * Tollerates unreachable new or marked-for-deletion hosts
+
 =item * Checking/adding/removing Monitors
 
 =item * Checking/adding/removing OSDs
 
 =item * Checking/adding/removing MDSs
 
-=item * Building up/changing a crushmap
+=item * Building up/changing a crushmap, with support for erasure code
+
+=item * OSD based objectstore
+
+=item * Wildcard support in version numbers 
 
 =back
 
@@ -39,7 +47,7 @@ The implementation keeps safety as top priority. Therefore:
 
 =item * No removals of MONs, OSDs or MDSs are actually done at this moment. Instead of removing itself, it prints the commands to use. 
 
-=item * Backup files are always made of the configfiles and decompiled crushmap files. These timestamped files can be found in the 'ncm-ceph' folder in the home directory of the ceph user
+=item * Configfiles and decompiled crushmap files are saved into a git repo. This repo can be found in the 'ncm-ceph' folder in the home directory of the ceph user
 
 =item * When something is not right and returns an error, the whole component exits.
 
@@ -83,7 +91,7 @@ be described in this section.
 
 =head1 DEPENDENCIES
 
-The component is tested with Ceph version 0.80 and ceph-deploy version 1.5.1. 
+The component is tested with Ceph version 0.84 and ceph-deploy version 1.5.11. 
 
 Following package dependencies should be installed to run the component:
 
