@@ -7,19 +7,23 @@ use NCM::Component::opennebula;
 use CAF::Object;
 use Test::MockModule;
 use CAF::FileWriter;
+use Data::Dumper;
 
 use OpennebulaMock;
 
 $CAF::Object::NoAction = 1;
 
 
-
 my $cmp = NCM::Component::opennebula->new("opennebula");
 
 my $cfg = get_config_for_profile("opennebula");
+my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
+my $one = $cmp->make_one($tree->{rpc});
 
-$cmp->Configure($cfg);
+# Test vnet
+ok(exists($tree->{vnets}), "Found vnet data");
 
-ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
+$cmp->manage_something($one, "vnet", $tree->{vnets});
+ok(!exists($cmp->{ERROR}), "No errors found during vnet management execution");
 
 done_testing();

@@ -14,6 +14,15 @@ our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 my @rpc_history = ();
 my @rpc_history_full = ();
 
+# DEBUG only (can't get the output in unittests otherwise)
+sub dlog {
+    my ($type, @args) = @_;
+    diag("[".uc($type)."] ".join(" ", @args));
+}
+our $nco = new Test::MockModule('NCM::Component::opennebula');
+foreach my $type ("error", "info", "verbose", "debug") {
+    $nco->mock( $type, sub { shift; dlog($type, @_); } );
+}
 
 sub dump_rpc {
     return Dumper(\@rpc_history);
@@ -52,9 +61,9 @@ sub mock_rpc_basic {
     push(@rpc_history, $method);
     push(@rpc_history_full, [$method, @params]);
     if ($method eq "one.host.allocate") {
-	return []; # return ARRAY
+        return []; # return ARRAY
     } else {
-	return ();# return hash reference
+        return ();# return hash reference
     }
 };
 
@@ -63,47 +72,34 @@ sub mock_rpc {
     my ($self, $method, @params) = @_;
     my @params_values;
     foreach my $param (@params) {
-	push(@params_values, $param->[1]);
+        push(@params_values, $param->[1]);
     };
 
     push(@rpc_history, $method);
     push(@rpc_history_full, [$method, @params]);
+    # we need to reset the loop for some reason
+    keys %rpcdata::cmds;
     while (my ($short, $data) = each %rpcdata::cmds) {
-	my $sameparams = join(" _ ", @params_values) eq join(" _ ", @{$data->{params}});
-	my $samemethod = $method eq $data->{method};
-    diag("This is my shortname:", $short);
+        my $sameparams = join(" _ ", @params_values) eq join(" _ ", @{$data->{params}});
+        my $samemethod = $method eq $data->{method};
+        #diag("This is my shortname:", $short);
+        #diag("rpc params: ", join(" _ ", @params_values));
+        #diag("rpc method: ", $method);
 
-    diag("rpc params: ", join(" _ ", @params_values));
-    diag("rpc method: ", $method);
-    #diag("There are data params ", join(" _ ", @{$data->{params}}));
-
-
-	if ($samemethod && $sameparams && defined($data->{out})) {
-	    if ($data->{out} =~ m/^\d+$/) {
-		    diag("is id ", $data->{out});
-            keys %rpcdata::cmds;
-		    return $data->{out};
-	    } else {
-		    diag("is xml ", $data->{out});
-            #my $xmldata = XMLin($data->{out}, ForceArray => 1);
-            #diag("xml Dumper : ", Dumper(\$xmldata));
-            keys %rpcdata::cmds;
-            return XMLin($data->{out}, forcearray => 1);
-	    } 
-        
-
+        if ($samemethod && $sameparams && defined($data->{out})) {
+	        if ($data->{out} =~ m/^\d+$/) {
+                #diag("is id ", $data->{out});
+                return $data->{out};
+            } else {
+                #diag("is xml ", $data->{out});
+                return XMLin($data->{out}, forcearray => 1);
+	        } 
+        }
     }
-
-    }
-   
 };
 
 our $opennebula = new Test::MockModule('Net::OpenNebula');
 #$opennebula->mock( '_rpc',  \&mock_rpc_basic);
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
-
-
-
 1;
-
