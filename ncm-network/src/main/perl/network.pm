@@ -35,6 +35,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 
 use EDG::WP4::CCM::Element;
+use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 use NCM::Check;
 
 use File::Compare;
@@ -46,6 +47,7 @@ use CAF::FileEditor;
 use CAF::FileWriter;
 use Fcntl qw(SEEK_SET);
 use LC::File;
+use POSIX qw(WIFEXITED WEXITSTATUS);
 
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
@@ -829,11 +831,15 @@ sub Configure {
         sleep($sleep_time);
         ## it should be in $PATH
         $self->info("$func: trying ccm-fetch");
-        $self->runrun(["ccm-fetch"]);
+        # no runrun, as it would trigger error (and dependency failure)
+        my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
         my $exitcode=$?;
-        if ($? == 0) {
+        if ($exitcode == 0) {
             $self->info("$func: OK: network up");
             return 1;
+        } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
+            $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
+            return test_network_ping();
         } else {
             $self->warn("$func: FAILED: network down");
             return 0;
