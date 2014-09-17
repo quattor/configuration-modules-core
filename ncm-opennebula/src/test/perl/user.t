@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(opennebula);
+use Test::Quattor qw(user);
 use NCM::Component::opennebula;
 use CAF::Object;
 use Test::MockModule;
@@ -14,9 +14,9 @@ use OpennebulaMock;
 $CAF::Object::NoAction = 1;
 
 
-my $cmp = NCM::Component::opennebula->new("opennebula");
+my $cmp = NCM::Component::opennebula->new("user");
 
-my $cfg = get_config_for_profile("opennebula");
+my $cfg = get_config_for_profile("user");
 my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
 my $one = $cmp->make_one($tree->{rpc});
 
