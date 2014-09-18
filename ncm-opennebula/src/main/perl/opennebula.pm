@@ -1,18 +1,6 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-# Software subject to following license(s):
-#   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
-#   Copyright (c) Responsible Organization
-#
-
-# #
-# Current developer(s):
-#   Alvaro Simon Garcia <Alvaro.SimonGarcia@UGent.be>
-#
-
-# 
-
 
 package NCM::Component::opennebula;
 
@@ -60,9 +48,8 @@ sub process_template
     my $type_rel = "metaconfig/opennebula/$type_name.tt";
     my $tpl = Template->new(INCLUDE_PATH => TEMPLATEPATH);
     if (! $tpl->process($type_rel, { $type_name => $config }, \$res)) {
-            $self->error("TT processing of $type_rel failed:", 
-                                          $tpl->error());
-            return;
+        $self->error("TT processing of $type_rel failed: ",$tpl->error());
+        return;
     }
     return $res;
 }
@@ -104,7 +91,8 @@ sub detect_used_resource
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
     if (@existres) {
-	$self->error("Name: $name is already used by a $type resource. We can't create the same resource twice.");
+	$self->error("Name: $name is already used by a $type resource. ",
+                "We can't create the same resource twice.");
 	return @existres;
     } else {
 	$self->verbose("Name: $name is not used by $type resource yet.");
@@ -112,8 +100,6 @@ sub detect_used_resource
     }
 }
 
-# Create resource name
-# array list
 sub create_resource_names_list
 {
     my ($self, $one, $type, $resources) = @_;
@@ -127,6 +113,16 @@ sub create_resource_names_list
         }
     }
     return @namelist;
+}
+
+sub check_quattor_tag
+{
+    my ($self, $resource) = @_;
+    if ($resource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+        return 1;
+    } else {
+        return;
+    }
 }
 
 # Remove/add ONE resources
@@ -158,18 +154,21 @@ sub manage_something
     my %rnames = map { $_ => 1 } @namelist;
     foreach my $oldresource (@existres) {
         # Remove the resource only if the QUATTOR flag is set
-        # and they are not being used
+        # TODO: add an API for this in Net::OpenNebula
+        my $quattor = $self->check_quattor_tag($oldresource);
         if ($type eq "datastore" and !$oldresource->{extended_data}->{IMAGES}->[0]->{ID}->[0]) {
             $remove = 1;
         } 
+        # TODO: add an API for this in Net::OpenNebula
         if ($type eq "vnet" and !$oldresource->{extended_data}->{TOTAL_LEASES}->[0]) {
             $remove = 1;
         }
-        if ($oldresource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0] and $remove and !exists($rnames{$oldresource->name})) {
+        if ($quattor and $remove and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
-            $self->error("QUATTOR flag not found or the resource is still used. We can't remove this resource: ", $oldresource->name);
+            $self->error("QUATTOR flag not found or the resource is still used. ",
+                        "We can't remove this resource: ", $oldresource->name);
         };
     }
 
@@ -189,14 +188,22 @@ sub manage_hosts
     $self->info("Removing old $type hosts.");
     my @existhost = $one->get_hosts(qr{^.*$});
     my %newhosts = map { $_ => 1 } @$hosts;
+    my @rmhosts;
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
-        if ($t->{extended_data}->{HOST_SHARE}->[0]->{RUNNING_VMS}->[0] or exists($newhosts{$t->name})) {
-            $self->error("We can't remove this $type host. There are still running VMs or is a Quattor host: ", $t->name);
+        # TODO: add an API for this in Net::OpenNebula
+        if (exists($newhosts{$t->name})) {
+            $self->debug("We can't remove this $type host. Is required by Quattor: ", $t->name);
+        } elsif ($t->{extended_data}->{HOST_SHARE}->[0]->{RUNNING_VMS}->[0]) {
+            $self->debug("We can't remove this $type host. There are still running VMs: ", $t->name);
         } else {
-            $self->info("Removing $type host: ", $t->name);
+            push(@rmhosts, $t->name);
             $t->delete();
         }
+    }
+
+    if (scalar @rmhosts > 0) {
+        $self->info("Removed $type hosts: ", @rmhosts);
     }
 
     foreach my $host (@$hosts) {
@@ -219,14 +226,39 @@ sub manage_hosts
 sub manage_users
 {
     my ($self, $one, $users) = @_;
-    my ($new, @userlist);
+    my ($new, @rmusers, @userlist);
+
+    foreach my $user (@$users) {
+        if ($user->{user}) {
+            push(@userlist, $user->{user});
+        }
+    }
+
+    my @exitsuser = $one->get_users();
+    my %newusers = map { $_ => 1 } @userlist;
+
+    foreach my $t (@exitsuser) {
+        # Remove the user only if the QUATTOR flag is set
+        my $quattor = $self->check_quattor_tag($t);
+        if (exists($newusers{$t->name})) {
+            $self->log("User required by Quattor. We can't remove it: ", $t->name);
+        } elsif (!$quattor) {
+            $self->log("User Quattor flag is not set. We can't remove it: ", $t->name);
+        } else {
+            push(@rmusers, $t->name);
+            $t->delete();
+        }
+    }
+
+    if (scalar @rmusers > 0) {
+        $self->info("Removed users: ", @rmusers);
+    }
 
     foreach my $user (@$users) {
         if ($user->{user} && $user->{password}) {
             # TODO: Create users with QUATTOR flag set
             # we have to update the user after its creation
             my @rname = $self->detect_used_resource($one, "user", $user->{user});
-            push(@userlist, $user->{user});
             if (!@rname) {
                 $self->info("Creating new user: ", $user->{user});
                 $new = $one->create_user($user->{user}, $user->{password}, "core");
@@ -236,20 +268,6 @@ sub manage_users
             $self->error("No user name or password info available.");
         }
     }
-
-    my @exitsuser = $one->get_users(qr{^.*$});
-    my %newusers = map { $_ => 1 } @userlist;
-
-    foreach my $t (@exitsuser) {
-        # Remove the user only if the QUATTOR flag is set
-        if ($t->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0] and !exists($newusers{$t->name})) {
-            $self->info("Removing old regular user: ", $t->name);
-            $t->delete();
-        } else {
-            $self->error("QUATTOR flag not found or this user was already included by Quattor. We can't remove it: ", $t->name);
-        }
-    }
-
 }
 
 # Configure basic ONE resources

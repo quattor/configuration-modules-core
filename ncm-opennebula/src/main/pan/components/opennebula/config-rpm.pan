@@ -3,13 +3,13 @@
 # ${author-info}
 
 
-unique template components/opennebula/config-rpm;
-include {'components/opennebula/schema'};
+unique template components/${project.artifactId}/config-rpm;
+include {'components/${project.artifactId}/schema'};
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
-'/software/components/opennebula/dependencies/pre' ?= list('spma');
+'/software/components/${project.artifactId}/dependencies/pre' ?= list('spma');
 
-'/software/components/opennebula/version' ?= '${no-snapshot-version}';
+'/software/components/${project.artifactId}/version' ?= '${no-snapshot-version}';
 
