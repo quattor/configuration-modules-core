@@ -91,11 +91,11 @@ sub detect_used_resource
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
     if (@existres) {
-	$self->error("Name: $name is already used by a $type resource. ",
-                "We can't create the same resource twice.");
-	return @existres;
+        $self->error("Name: $name is already used by a $type resource. ",
+                    "We can't create the same resource twice.");
+        return @existres;
     } else {
-	$self->verbose("Name: $name is not used by $type resource yet.");
+        $self->verbose("Name: $name is not used by $type resource yet.");
         return;
     }
 }
