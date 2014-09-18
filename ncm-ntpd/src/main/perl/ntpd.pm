@@ -102,7 +102,7 @@ sub Configure {
 		return 0;
 	}
 
-	if (exists $cfg->{clientnetworks} && ref($cfg->{clientnetworks} eq 'ARRAY')) {
+	if (exists $cfg->{clientnetworks} && ref($cfg->{clientnetworks}) eq 'ARRAY') {
 		foreach my $client (@{$cfg->{clientnetworks}}) {
 			if (exists $client->{net} && exists $client->{mask}) {
 				push(@client_networks, [$client->{net}, $client->{mask}]);
