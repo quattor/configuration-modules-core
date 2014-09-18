@@ -186,11 +186,10 @@ sub mon_hash {
     my $monsh = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(quorum_status)]) or return 0;
     my $monstate = decode_json($jstr);
-    my $hostmap = {};
     foreach my $mon (@{$monsh->{mons}}){
         $mon->{up} = $mon->{name} ~~ @{$monstate->{quorum_names}};
         my $ip = $self->extract_ip($mon->{addr});
-        $mon->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
+        $mon->{fqdn} = $self->get_host($ip, {}) or return 0;
         $master->{$mon->{name}}->{mon} = $mon; # One monitor per host
         $master->{$mon->{name}}->{fqdn} = $mon->{fqdn};
     }
@@ -202,7 +201,6 @@ sub mds_hash {
     my ($self, $master) = @_;
     my $jstr = $self->run_ceph_command([qw(mds stat)]) or return 0;
     my $mdshs = decode_json($jstr);
-    my $hostmap = {};
     foreach my $mds (values %{$mdshs->{mdsmap}->{info}}) {
         my @state = split(':', $mds->{state});
         my $up = ($state[0] eq 'up') ? 1 : 0 ;
@@ -212,7 +210,7 @@ sub mds_hash {
             up => $up
         };
         my $ip = $self->extract_ip($mds->{addr});
-        $mdsp->{fqdn} = $self->get_host($ip, $hostmap) or return 0;
+        $mdsp->{fqdn} = $self->get_host($ip, {}) or return 0;
         
         # For daemons rolled out with old version of ncm-ceph
         my @fhost = split('\.', $mds->{name});

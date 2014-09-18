@@ -24,6 +24,8 @@ use File::Path qw(make_path);
 use File::Copy qw(copy move);
 use Readonly;
 use Socket;
+use Storable qw(dclone);
+
 our $EC=LC::Exception::Context->new->will_store_all;
 
 # get hashes out of ceph and from the configfiles , make one structure of it
@@ -193,8 +195,9 @@ sub compare_osd {
 
 # Compares the values of two given hashes
 sub compare_config {
-    my ($self, $type, $key, $quat_config, $ceph_config) = @_;
+    my ($self, $type, $key, $quat_config, $ceph_config_orig) = @_;
     my $cfgchanges = {};
+    my $ceph_config =  dclone($ceph_config_orig) if defined($ceph_config_orig);
     $self->debug(4, "Comparing config of $type $key");
     $self->debug(5, "Quattor config:", Dumper($quat_config));
     $self->debug(5, "Ceph config:", Dumper($ceph_config));
@@ -240,8 +243,9 @@ sub compare_global {
     
 # Compare different sections of an existing host
 sub compare_host {
-    my ($self, $hostname, $quat_host, $ceph_host, $structures) = @_;
+    my ($self, $hostname, $quat_host, $ceph_host_orig, $structures) = @_;
     $self->debug(3, "Comparing host $hostname");
+    my $ceph_host = dclone($ceph_host_orig);
     if ($ceph_host->{fault}) {
         $structures->{skip}->{$hostname} = $quat_host; 
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");

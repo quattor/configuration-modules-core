@@ -321,7 +321,7 @@ sub generate_ruleset_id {
     my ($self, $ruleset_ids) = @_;
     my $newid;
     if (!@{$ruleset_ids}) { 
-        # crushmap from scratch
+        $self->debug(4,"crushmap from scratch");
         $newid = 0;
     } else {
         my $max = max(@{$ruleset_ids});
@@ -337,7 +337,7 @@ sub generate_bucket_id {
     my ($self, $crush_ids) = @_;
     my $newid;
     if (!@{$crush_ids}) { 
-        # crushmap from scratch
+        $self->debug(4,"crushmap from scratch");
         $newid = -1;
     } else {
         my $min = min(@{$crush_ids});
