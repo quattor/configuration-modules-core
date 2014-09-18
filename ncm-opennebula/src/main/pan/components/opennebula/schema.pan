@@ -8,6 +8,9 @@ declaration template components/opennebula/schema;
 include 'quattor/schema';
 include 'pan/types';
 
+@{
+TODO: resolve dependency on metaconfig template repository
+@}
 include 'metaconfig/opennebula/schema';
 
 @{ 
