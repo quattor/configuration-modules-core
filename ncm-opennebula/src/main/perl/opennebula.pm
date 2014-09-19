@@ -148,9 +148,9 @@ sub detect_used_resource
         $quattor = $self->check_quattor_tag(@existres[0]);
     }
     if (@existres and !$quattor) {
-        $self->verbose("Name: $name is already used by a $type resource. ",
+        $self->error("Name: $name is already used by a $type resource. ",
                     "The Quattor flag is not set. ",
-                    "We can't create the same resource twice.");
+                    "We can't modify this resource.");
         return 1;
     } elsif (@existres and $quattor) {
         $self->verbose("Name : $name is already used by a $type resource. ",
