@@ -9,7 +9,7 @@ include {'components/${project.artifactId}/schema'};
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
-'/software/components/${project.artifactId}/dependencies/pre' ?= list('spma');
+'/software/components/${project.artifactId}/dependencies/pre' ?= list('spma', 'accounts', 'sudo', 'useraccess');
 
 '/software/components/${project.artifactId}/version' ?= '${no-snapshot-version}';
 

@@ -11,6 +11,7 @@ use base qw(NCM::Component);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use Net::OpenNebula;
+use Data::Dumper;
 
 # TODO use constant from CAF::Render
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
@@ -75,25 +76,88 @@ sub create_something
     }
     my $cmethod = "create_$type";
 
-    my @rname = $self->detect_used_resource($one, $type, $name);
-    if (!@rname) {
+    my $used = $self->detect_used_resource($one, $type, $name);
+    if (!$used) {
         $self->info("Creating new $name $type resource.");
         $new = $one->$cmethod($template);
+    } elsif ($used == -1) {
+        # resource is already there and we can modify it
+        $new = $self->update_something($one, $type, $name, $template);
     }
     return $new;
 }
 
+sub remove_something
+{
+    my ($self, $one, $type, $resources) = @_;
+    my $remove;
+    my $method = "get_${type}s";
+    my @existres = $one->$method();
+    my @namelist = $self->create_resource_names_list($one, $type, $resources);
+    my %rnames = map { $_ => 1 } @namelist;
+
+    foreach my $oldresource (@existres) {
+        # Remove the resource only if the QUATTOR flag is set
+        # TODO: add an API for this in Net::OpenNebula
+        my $quattor = $self->check_quattor_tag($oldresource);
+        if ($type eq "datastore" and !$oldresource->{extended_data}->{IMAGES}->[0]->{ID}->[0]) {
+            $remove = 1;
+        }
+        # TODO: add an API for this in Net::OpenNebula
+        if ($type eq "vnet" and !$oldresource->{extended_data}->{TOTAL_LEASES}->[0]) {
+            $remove = 1;
+        }
+        if ($quattor and $remove and !exists($rnames{$oldresource->name})) {
+            $self->info("Removing old resource: ", $oldresource->name);
+            $oldresource->delete();
+        } else {
+            $self->error("QUATTOR flag not found or the resource is still used. ",
+                        "We can't remove this resource: ", $oldresource->name);
+        };
+    }
+    return;
+}
+
+sub update_something
+{
+    my ($self, $one, $type, $name, $template) = @_;
+    my $method = "get_${type}s";
+    my $update;
+    my @existres = $one->$method(qr{^${name}$});
+    foreach my $t (@existres) {
+        # $merge=1, we don't replace, just merge the new templ
+        $self->info("Updating old $type Quattor resource with a new template: ", $name);
+        $self->debug("New $name template :", $template);
+        $update = $t->update($template, 1);
+    }
+    return $update;
+}
+
 # Detects if the resource
-# is already there
+# is already there and if quattor flag is present
+# return undef: resource not used yet
+# return 1: resource already used without Quattor flag
+# return -1: resource already used with Quattor flag set
 sub detect_used_resource
 {
     my ($self, $one, $type, $name) = @_;
+    my $quattor;
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
-    if (@existres) {
-        $self->error("Name: $name is already used by a $type resource. ",
+    if (scalar @existres > 0) {
+        $quattor = $self->check_quattor_tag(@existres[0]);
+    }
+    if (@existres and !$quattor) {
+        $self->verbose("Name: $name is already used by a $type resource. ",
+                    "The Quattor flag is not set. ",
                     "We can't create the same resource twice.");
-        return @existres;
+        return 1;
+    } elsif (@existres and $quattor) {
+        $self->verbose("Name : $name is already used by a $type resource. ",
+                    "Quattor flag is set. ",
+                    "We can modify and update this resource.");
+        return -1;
+
     } else {
         $self->verbose("Name: $name is not used by $type resource yet.");
         return;
@@ -130,7 +194,7 @@ sub check_quattor_tag
 sub manage_something
 {
     my ($self, $one, $type, $resources) = @_;
-    my ($remove, @namelist);
+    #my ($remove, @namelist);
 
     if (!$resources) {
         $self->error("No $type resources found.");
@@ -148,29 +212,7 @@ sub manage_something
     }
 
     $self->verbose("Check to remove ${type}s");
-    my $method = "get_${type}s";
-    my @existres = $one->$method(qr{^.*$});
-    my @namelist = $self->create_resource_names_list($one, $type, $resources);
-    my %rnames = map { $_ => 1 } @namelist;
-    foreach my $oldresource (@existres) {
-        # Remove the resource only if the QUATTOR flag is set
-        # TODO: add an API for this in Net::OpenNebula
-        my $quattor = $self->check_quattor_tag($oldresource);
-        if ($type eq "datastore" and !$oldresource->{extended_data}->{IMAGES}->[0]->{ID}->[0]) {
-            $remove = 1;
-        } 
-        # TODO: add an API for this in Net::OpenNebula
-        if ($type eq "vnet" and !$oldresource->{extended_data}->{TOTAL_LEASES}->[0]) {
-            $remove = 1;
-        }
-        if ($quattor and $remove and !exists($rnames{$oldresource->name})) {
-            $self->info("Removing old resource: ", $oldresource->name);
-            $oldresource->delete();
-        } else {
-            $self->error("QUATTOR flag not found or the resource is still used. ",
-                        "We can't remove this resource: ", $oldresource->name);
-        };
-    }
+    $self->remove_something($one, $type, $resources);
 
     if (scalar @$resources > 0) {
         $self->info("Creating new ${type}/s: ", scalar @$resources);
@@ -186,7 +228,7 @@ sub manage_hosts
     my ($self, $one, $type, $hosts) = @_;
     my $new;
     $self->info("Removing old $type hosts.");
-    my @existhost = $one->get_hosts(qr{^.*$});
+    my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
     my @rmhosts;
     foreach my $t (@existhost) {
@@ -213,8 +255,8 @@ sub manage_hosts
             'vmm_mad' => $type, 
             'vnm_mad' => "dummy"
         );
-        my @rname = $self->detect_used_resource($one, "host", $host);
-        if (!@rname) {
+        my $used = $self->detect_used_resource($one, "host", $host);
+        if (!$used) {
             $self->info("Creating new $type host $host.");
             $new = $one->create_host(%host_options);
         }
@@ -226,7 +268,7 @@ sub manage_hosts
 sub manage_users
 {
     my ($self, $one, $users) = @_;
-    my ($new, @rmusers, @userlist);
+    my ($new, $template, @rmusers, @userlist);
 
     foreach my $user (@$users) {
         if ($user->{user}) {
@@ -256,15 +298,19 @@ sub manage_users
 
     foreach my $user (@$users) {
         if ($user->{user} && $user->{password}) {
-            # TODO: Create users with QUATTOR flag set
-            # we have to update the user after its creation
-            my @rname = $self->detect_used_resource($one, "user", $user->{user});
-            if (!@rname) {
+            $template = $self->process_template($user, "user");
+            my $used = $self->detect_used_resource($one, "user", $user->{user});
+            if (!$used) {
                 $self->info("Creating new user: ", $user->{user});
-                $new = $one->create_user($user->{user}, $user->{password}, "core");
+                $one->create_user($user->{user}, $user->{password}, "core");
+                # Add Quattor flag
+                $new = $self->update_something($one, "user", $user->{user}, $template);
+            } elsif ($used == -1) {
+                # User is already there and we can modify it
+                $self->info("Updating user with a new template: ", $user->{user});
+                $new = $self->update_something($one, "user", $user->{user}, $template);
             }
-        }
-        else {
+        } else {
             $self->error("No user name or password info available.");
         }
     }
