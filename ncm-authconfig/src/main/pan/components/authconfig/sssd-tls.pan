@@ -20,9 +20,9 @@ type ldap_req_checks = string with match(SELF, "^(never|allow|try|demand|hard)$"
 type sssd_tls = {
     "cacert" ?  string
     "cacertdir" ?  string
-    "cert" :  string
-    "key" :  string
-    "cipher_suite" :  string[]
+    "cert" ?  string
+    "key" ?  string
+    "cipher_suite" ?  string[]
     "reqcert" : ldap_req_checks = "hard"
 } with exists(SELF["cacert"]) || exists(SELF["cacertdir"]) ||
     error("LDAP TLS requires at least one of cacert or cacertdir");
