@@ -243,7 +243,7 @@ type authconfig_method_nslcd_type = {
 @{
     Valid SSSD providers.  For now we only implement ldap, simple and local
 }
-type sssd_provider_string = string with match(SELF, "^(ldap|simple|local)$");
+type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit)$");
 
 
 @{
@@ -345,7 +345,7 @@ type authconfig_sssd_ldap = {
     "krb5_canonicalize" ?  boolean
     "krb5_realm" ?  string[]
     "krb5_server" ?  string
-    "access_filter" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
+    "access_filter" ? string
     "access_order" : ldap_order = "filter"
     "connection_expire_timeout" :  long = 900
     "deref" : ldap_deref = "never"
