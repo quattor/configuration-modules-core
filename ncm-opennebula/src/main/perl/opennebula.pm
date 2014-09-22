@@ -90,7 +90,6 @@ sub create_or_update_something
 sub remove_something
 {
     my ($self, $one, $type, $resources) = @_;
-    my $remove;
     my $method = "get_${type}s";
     my @existres = $one->$method();
     my @namelist = $self->create_resource_names_list($one, $type, $resources);
