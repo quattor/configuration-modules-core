@@ -1,4 +1,4 @@
-template client_networks;
+object template client_networks;
 
 '/software/components/ntpd' ?= nlist();
 
@@ -14,7 +14,6 @@ prefix '/software/components/ntpd';
 'serverlist/1/server' = 'localhost6';
 'serverlist/1/options' = nlist();
 'serverlist/1/options/burst' = true;
-'serverlist/1/options/prefer' = false;
 
 'clientnetworks' = list();
 'clientnetworks/0' = nlist();

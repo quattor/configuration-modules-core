@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(no_timeservers only_timeservers simple_serverlist disable_options client_networks);
+use Test::Quattor qw(no_timeservers only_timeservers simple_serverlist disable_options);
 use NCM::Component::ntpd;
 use CAF::Object;
 use Test::MockModule;
@@ -65,15 +65,6 @@ like($fh, qr/^disable\s+monitor/m, "Has monitor option disabled");
 $cmd = get_command("/sbin/service ntpd restart");
 ok( $cmd, "Daemon was restarted with simple_serverlist profile" );
 
-# Test client networks
-$cfg = get_config_for_profile('client_networks');
-is( $cmp->Configure($cfg), 1, 'Component runs correctly with client_networks profile' );
-$fh = get_file($NCM::Component::ntpd::NTPDCONF);
-isa_ok($fh, 'CAF::FileWriter', 'File is handled by CAF::FileWriter');
-like($fh, qr/^restrict\s+10\.0\.0\.0\s+mask\s+255\.0\.0\.0\s+nomodify\s+notrap/m, 'First client network found');
-like($fh, qr/^restrict\s+172\.16\.0\.0\s+mask\s+255\.240\.0\.0\s+nomodify\s+notrap/m, 'Second client network found');
-like($fh, qr/^restrict\s+192\.168\.0\.0\s+mask\s+255\.255\.0\.0\s+nomodify\s+notrap/m, 'Third client network found');
-$cmd = get_command('/sbin/service ntpd restart');
-ok($cmd, 'Daemon was restarted with client_networks profile');
+
 
 done_testing();
