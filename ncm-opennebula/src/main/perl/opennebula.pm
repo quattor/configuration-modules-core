@@ -98,15 +98,9 @@ sub remove_something
 
     foreach my $oldresource (@existres) {
         # Remove the resource only if the QUATTOR flag is set
-        # TODO: add an API for this in Net::OpenNebula
         my $quattor = $self->check_quattor_tag($oldresource);
-        if ($type eq "datastore" and !$oldresource->used()) {
-            $remove = 1;
-        } elsif ($type eq "vnet" and !$oldresource->used()) {
-            $remove = 1;
-        }
 
-        if ($quattor and $remove and !exists($rnames{$oldresource->name})) {
+        if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
@@ -231,7 +225,6 @@ sub manage_hosts
     my @rmhosts;
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
-        # TODO: add an API for this in Net::OpenNebula
         if (exists($newhosts{$t->name})) {
             $self->debug("We can't remove this $type host. Is required by Quattor: ", $t->name);
         } elsif ($t->used()) {
