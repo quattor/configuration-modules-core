@@ -223,9 +223,9 @@ sub manage_hosts
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
         if (exists($newhosts{$t->name})) {
-            $self->debug("We can't remove this $type host. Is required by Quattor: ", $t->name);
+            $self->debug(1, "We can't remove this $type host. Is required by Quattor: ", $t->name);
         } elsif ($t->used()) {
-            $self->debug("We can't remove this $type host. There are still running VMs: ", $t->name);
+            $self->debug(1, "We can't remove this $type host. There are still running VMs: ", $t->name);
         } else {
             push(@rmhosts, $t->name);
             $t->delete();
