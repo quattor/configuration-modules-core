@@ -71,7 +71,7 @@ sub create_or_update_something
         $name = $1;
         $self->verbose("Found template NAME: $name within $type resource.");
     } else {
-        $self->error("Template NAME not found.");
+        $self->error("Template NAME tag not found within $type resource: $template");
         return;
     }
     my $cmethod = "create_$type";
@@ -119,7 +119,7 @@ sub update_something
     foreach my $t (@existres) {
         # $merge=1, we don't replace, just merge the new templ
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
-        $self->debug("New $name template :", $template);
+        $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
     }
     return $update;
@@ -149,7 +149,6 @@ sub detect_used_resource
                     "Quattor flag is set. ",
                     "We can modify and update this resource.");
         return -1;
-
     } else {
         $self->verbose("Name: $name is not used by $type resource yet.");
         return;
@@ -218,7 +217,6 @@ sub manage_hosts
 {
     my ($self, $one, $type, $hosts) = @_;
     my $new;
-    $self->info("Removing old $type hosts.");
     my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
     my @rmhosts;
