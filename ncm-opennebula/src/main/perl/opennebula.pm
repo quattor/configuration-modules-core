@@ -55,9 +55,9 @@ sub process_template
     return $res;
 }
 
-# Create ONE resources
+# Create/update ONE resources
 # based on resource type
-sub create_something
+sub create_or_update_something
 {
     my ($self, $one, $type, $data) = @_;
     
@@ -100,13 +100,12 @@ sub remove_something
         # Remove the resource only if the QUATTOR flag is set
         # TODO: add an API for this in Net::OpenNebula
         my $quattor = $self->check_quattor_tag($oldresource);
-        if ($type eq "datastore" and !$oldresource->{extended_data}->{IMAGES}->[0]->{ID}->[0]) {
+        if ($type eq "datastore" and !$oldresource->used()) {
+            $remove = 1;
+        } elsif ($type eq "vnet" and !$oldresource->used()) {
             $remove = 1;
         }
-        # TODO: add an API for this in Net::OpenNebula
-        if ($type eq "vnet" and !$oldresource->{extended_data}->{TOTAL_LEASES}->[0]) {
-            $remove = 1;
-        }
+
         if ($quattor and $remove and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
@@ -148,7 +147,7 @@ sub detect_used_resource
         $quattor = $self->check_quattor_tag(@existres[0]);
     }
     if (@existres and !$quattor) {
-        $self->error("Name: $name is already used by a $type resource. ",
+        $self->verbose("Name: $name is already used by a $type resource. ",
                     "The Quattor flag is not set. ",
                     "We can't modify this resource.");
         return 1;
@@ -194,7 +193,6 @@ sub check_quattor_tag
 sub manage_something
 {
     my ($self, $one, $type, $resources) = @_;
-    #my ($remove, @namelist);
 
     if (!$resources) {
         $self->error("No $type resources found.");
@@ -218,7 +216,7 @@ sub manage_something
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
-        my $new = $self->create_something($one, $type, $newresource);
+        my $new = $self->create_or_update_something($one, $type, $newresource);
     }
 }
 
@@ -236,7 +234,7 @@ sub manage_hosts
         # TODO: add an API for this in Net::OpenNebula
         if (exists($newhosts{$t->name})) {
             $self->debug("We can't remove this $type host. Is required by Quattor: ", $t->name);
-        } elsif ($t->{extended_data}->{HOST_SHARE}->[0]->{RUNNING_VMS}->[0]) {
+        } elsif ($t->used()) {
             $self->debug("We can't remove this $type host. There are still running VMs: ", $t->name);
         } else {
             push(@rmhosts, $t->name);
@@ -263,7 +261,7 @@ sub manage_hosts
     }
 }
 
-# Function to add/remove regular users
+# Function to add/remove/update regular users
 # only if the user has the Quattor flag set
 sub manage_users
 {
@@ -283,9 +281,9 @@ sub manage_users
         # Remove the user only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($t);
         if (exists($newusers{$t->name})) {
-            $self->log("User required by Quattor. We can't remove it: ", $t->name);
+            $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
-            $self->log("User Quattor flag is not set. We can't remove it: ", $t->name);
+            $self->warn("User Quattor flag is not set. We can't remove it: ", $t->name);
         } else {
             push(@rmusers, $t->name);
             $t->delete();
@@ -311,7 +309,7 @@ sub manage_users
                 $new = $self->update_something($one, "user", $user->{user}, $template);
             }
         } else {
-            $self->error("No user name or password info available.");
+            $self->error("No user name or password info available:", $user->{user});
         }
     }
 }

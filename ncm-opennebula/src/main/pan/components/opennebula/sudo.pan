@@ -11,11 +11,10 @@ include 'components/sudo/config';
 
 "/software/components/sudo/privilege_lines" = {
      sudolist = list(
-         "/usr/bin/ceph-deploy",
-         "/usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))",
-         "/usr/bin/python -u -c import sys;exec(eval(sys.stdin.readline()))",
-         "/bin/mkdir",
-         "/usr/bin/file -s *"
+         "/sbin/service libvirtd restart",
+         "/sbin/service libvirt-guests restart",
+         "/usr/bin/virsh secret-set-value",
+         "/usr/bin/virsh secret-define"
      );
      foreach (i; cmd; sudolist){
          nl = nlist("host", "ALL",

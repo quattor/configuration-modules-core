@@ -20,7 +20,7 @@ sub dlog {
     diag("[".uc($type)."] ".join(" ", @args));
 }
 our $nco = new Test::MockModule('NCM::Component::opennebula');
-foreach my $type ("error", "info", "verbose", "debug") {
+foreach my $type ("error", "info", "verbose", "debug", "warn") {
     $nco->mock( $type, sub { shift; dlog($type, @_); } );
 }
 
@@ -100,7 +100,6 @@ sub mock_rpc {
 };
 
 our $opennebula = new Test::MockModule('Net::OpenNebula');
-#$opennebula->mock( '_rpc',  \&mock_rpc_basic);
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
 1;
