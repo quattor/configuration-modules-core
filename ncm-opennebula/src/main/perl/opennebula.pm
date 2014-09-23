@@ -7,11 +7,20 @@ package NCM::Component::opennebula;
 use strict;
 use warnings;
 use NCM::Component;
-use base qw(NCM::Component);
+use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use Net::OpenNebula;
 use Data::Dumper;
+
+# This component needs a 'oneadmin' user. 
+# The user should be able to run these commands with sudo without password:
+# /bin/mkdir
+# /bin/chown
+# /usr/sbin/service libvirtd restart
+# /usr/sbin/service libvirt-guests restart
+# /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
+# /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
 
 # TODO use constant from CAF::Render
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
