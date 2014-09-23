@@ -128,8 +128,8 @@ sub ssh_known_keys {
 
 #check if host is reachable
 sub test_host_connection {
-    my ($self, $host, $gvalues) = @_;
-    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{homedir});
+    my ($self, $host) = @_;
+    $self->ssh_known_keys($host, 'always', '~');
     return $self->run_command_as_oneadmin_with_ssh(['uname'], $host);
 }
 
