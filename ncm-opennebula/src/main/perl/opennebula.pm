@@ -24,6 +24,8 @@ use Data::Dumper;
 
 # TODO use constant from CAF::Render
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
+use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+use constant LIBVIRTKEYFILE => "/etc/ceph/ceph.client.libvirt.keyring";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -189,6 +191,57 @@ sub check_quattor_tag
     }
 }
 
+# Execute ssh commands required by ONE
+sub enable_node
+{
+    my ($self, $type, $host) = @_;
+    my ($output, $cmd, $uuid, $secret);
+    my @services = ('libvirtd', 'libvirt-guests');
+
+    # Restart libvirt services
+    foreach my $service (@services) {
+        $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
+        $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+        if (!$output) {
+            $self->error("Error restarting $service service at host: $host");
+        } else {
+            $self->info("$service service restarted at host: $host. $output");
+        }
+    }
+
+    # Add ceph keys as root and oneadmin user
+    # TODO: Check if we need to run these cmds as root or not
+    $cmd = ['sudo', '/usr/bin/virsh', 'secret-define', '--file', CEPHSECRETFILE];
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    if ($output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+        $uuid = $1;
+        $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+    } else {
+        $self->error("Required Ceph uuid not found for $type host $host.");
+        return;
+    }
+
+    $cmd = ['cat', LIBVIRTKEYFILE];
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    if ($output =~ m/^key=(.*?)$/m) {
+        $secret = $1;
+        $self->verbose("Found libvirt secret key: $secret to be used by $type host $host.");
+    } else {
+        $self->error("Required libvirt secret key not found for $type host $host.");
+        return;
+    }
+    
+    $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
+        $self->info("New Ceph key include into libvirt list: ",$output);
+        return 1;
+    } else {
+        $self->error("Error running virsh secret-set-value command: ", $output);
+        return;
+    }
+}
+
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
@@ -228,7 +281,7 @@ sub manage_hosts
     my $new;
     my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
-    my @rmhosts;
+    my (@rmhosts, @failedhost);
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
         if (exists($newhosts{$t->name})) {
@@ -254,10 +307,26 @@ sub manage_hosts
         );
         my $used = $self->detect_used_resource($one, "host", $host);
         if (!$used) {
-            $self->info("Creating new $type host $host.");
-            $new = $one->create_host(%host_options);
+            if (!$self->test_host_connection($host)) {
+                $self->warn("Could not connect to $type host: $host. ", 
+                            "This host cannot be inclued as ONE hypervisor host.");
+                push(@failedhost, $host);
+            } else {
+                my $output = $self->enable_node($type, $host);
+                if ($output) {
+                    $self->info("Creating new $type host $host.");
+                    $new = $one->create_host(%host_options);
+                } else {
+                    push(@failedhost, $host);
+                }
+            }
         }
     }
+
+    if (scalar @failedhost > 0) {
+        $self->info("Error including these $type nodes: ", @failedhost);
+    }
+
 }
 
 # Function to add/remove/update regular users
