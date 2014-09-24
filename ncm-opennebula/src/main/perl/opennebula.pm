@@ -166,6 +166,20 @@ sub detect_used_resource
     }
 }
 
+sub detect_ceph_datastores
+{
+    my ($self, $one) = @_;
+    my @datastores = $one->get_datastores();
+    
+    foreach my $datastore (@datastores) {
+        if ($datastore->{data}->{TM_MAD}->[0] eq "ceph") {
+            $self->verbose("Detected Ceph datastore: ", $datastore->name);
+            return 1;
+        }
+    }
+    $self->info("No Ceph datastores available at this moment.");
+}
+
 sub create_resource_names_list
 {
     my ($self, $one, $type, $resources) = @_;
@@ -191,23 +205,10 @@ sub check_quattor_tag
     }
 }
 
-# Execute ssh commands required by ONE
-sub enable_node
+sub enable_ceph_node
 {
     my ($self, $type, $host) = @_;
     my ($output, $cmd, $uuid, $secret);
-    my @services = ('libvirtd', 'libvirt-guests');
-
-    # Restart libvirt services
-    foreach my $service (@services) {
-        $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
-        $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
-        if (!$output) {
-            $self->error("Error restarting $service service at host: $host");
-        } else {
-            $self->info("$service service restarted at host: $host. $output");
-        }
-    }
 
     # Add ceph keys as root and oneadmin user
     # TODO: Check if we need to run these cmds as root or not
@@ -230,7 +231,7 @@ sub enable_node
         $self->error("Required libvirt secret key not found for $type host $host.");
         return;
     }
-    
+
     $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
     $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
     if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
@@ -240,6 +241,32 @@ sub enable_node
         $self->error("Error running virsh secret-set-value command: ", $output);
         return;
     }
+}
+
+# Execute ssh commands required by ONE
+# configure ceph client if necessary
+sub enable_node
+{
+    my ($self, $one, $type, $host) = @_;
+    my ($output, $cmd, $uuid, $secret);
+    my @services = ('libvirtd', 'libvirt-guests');
+
+    # Restart libvirt services
+    foreach my $service (@services) {
+        $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
+        $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+        if (!$output) {
+            $self->error("Error restarting $service service at host: $host");
+        } else {
+            $self->info("$service service restarted at host: $host. $output");
+        }
+    }
+    
+    # Check if we are using Ceph datastores
+    if ($self->detect_ceph_datastores($one)) {
+        return $self->enable_ceph_node($type, $host);
+    }
+    return 1;
 }
 
 # Remove/add ONE resources
@@ -312,7 +339,7 @@ sub manage_hosts
                             "This host cannot be inclued as ONE hypervisor host.");
                 push(@failedhost, $host);
             } else {
-                my $output = $self->enable_node($type, $host);
+                my $output = $self->enable_node($one, $type, $host);
                 if ($output) {
                     $self->info("Creating new $type host $host.");
                     $new = $one->create_host(%host_options);
