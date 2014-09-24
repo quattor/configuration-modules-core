@@ -6,8 +6,6 @@
 
 # This component needs a 'oneadmin' user. 
 # The user should be able to run these commands with sudo without password:
-# /bin/mkdir
-# /bin/chown
 # /usr/sbin/service libvirtd restart
 # /usr/sbin/service libvirt-guests restart
 # /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
