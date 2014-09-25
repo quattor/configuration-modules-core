@@ -131,28 +131,4 @@ sub test_host_connection {
     return $self->run_command_as_oneadmin_with_ssh(['uname'], $host);
 }
 
-# Print out the commands that should be run manually
-sub print_cmds {
-    my ($self, $cmds) = @_;
-    if ($cmds && @{$cmds}) {
-        while (my $cmd = shift @{$cmds}) {
-            $self->info(join(" ", @$cmd));
-        }
-    }
-}
-
-# Write the config file
-sub write_new_config {
-    my ($self, $cfg, $cfgfile ) = @_; 
-    my $tinycfg = Config::Tiny->new;
-    
-    $tinycfg->{global} = $self->stringify_cfg_arrays($cfg);
-    if (!$tinycfg->write($cfgfile)) {
-        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?"); 
-        return 0;
-    }   
-    $self->debug(2,"content written to config file $cfgfile");
-    return 1;
-}
-
 1;
