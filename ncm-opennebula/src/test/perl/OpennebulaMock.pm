@@ -99,24 +99,6 @@ sub mock_rpc {
     }
 };
 
-sub mock_ssh {
-    my ($self, $command, $host) = @_;
-    # reset loop
-    keys %sshdata::ssh;
-    while (my ($short, $data) = each %sshdata::ssh) {
-        my $sameparams = $command eq $data->{command};
-        note("This is my shortname:", $short);
-        note("ssh internal command: ", $command);
-        note("ssh dictionary command: ", $data->{command});
-        
-        if ($sameparams) {
-            note("ssh command found: ", $data->{out});
-            return $data->{out};
-        }
-
-    }
-};
-
 our $opennebula = new Test::MockModule('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
 

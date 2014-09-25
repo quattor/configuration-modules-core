@@ -9,6 +9,7 @@ use Test::MockModule;
 use CAF::FileWriter;
 
 use OpennebulaMock;
+#use commandsMock;
 
 $CAF::Object::NoAction = 1;
 

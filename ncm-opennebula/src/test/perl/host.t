@@ -10,6 +10,7 @@ use CAF::FileWriter;
 use Data::Dumper;
 
 use OpennebulaMock;
+use commandsMock;
 
 $CAF::Object::NoAction = 1;
 
