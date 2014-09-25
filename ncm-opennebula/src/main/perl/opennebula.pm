@@ -222,7 +222,7 @@ sub enable_ceph_node
         return;
     }
 
-    $cmd = ['cat', LIBVIRTKEYFILE];
+    $cmd = ['/usr/bin/cat', LIBVIRTKEYFILE];
     $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
     if ($output =~ m/^key=(.*?)$/m) {
         $secret = $1;
