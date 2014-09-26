@@ -49,7 +49,6 @@ sub run_command {
             $self->verbose("Command stderr output: $cmd_err");
         }    
     }
-    # return $cmd_output || "0 but true";
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
 }
 
@@ -59,11 +58,13 @@ sub run_virsh_command {
     return $self->run_command([qw(/usr/bin/virsh), @$command]);
 }
 
+# Restart libvirtd service after qemu.cfg changes
 sub run_daemon_libvirtd_command {
     my ($self, $command) = @_;
     return $self->run_command([qw(/sbin/service libvirtd), @$command]);
 }
 
+# Restart libvirt-guests service after qemu.cfg changes
 sub run_daemon_libvirt_guest_command {
     my ($self, $command) = @_;
     return $self->run_command([qw(/sbin/service libvirt-guests), @$command]);
