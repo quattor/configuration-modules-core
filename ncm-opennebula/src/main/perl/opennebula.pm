@@ -15,8 +15,6 @@ use Data::Dumper;
 
 # This component needs a 'oneadmin' user. 
 # The user should be able to run these commands with sudo without password:
-# /bin/mkdir
-# /bin/chown
 # /usr/sbin/service libvirtd restart
 # /usr/sbin/service libvirt-guests restart
 # /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
@@ -257,6 +255,7 @@ sub enable_node
         $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
         if (!$output) {
             $self->error("Error restarting $service service at host: $host");
+            return;
         } else {
             $self->info("$service service restarted at host: $host. $output");
         }
@@ -336,7 +335,7 @@ sub manage_hosts
         if (!$used) {
             if (!$self->test_host_connection($host)) {
                 $self->warn("Could not connect to $type host: $host. ", 
-                            "This host cannot be inclued as ONE hypervisor host.");
+                            "This host cannot be included as ONE hypervisor host.");
                 push(@failedhost, $host);
             } else {
                 my $output = $self->enable_node($one, $type, $host);
