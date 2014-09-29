@@ -195,8 +195,12 @@ sub create_resource_names_list
 
 sub check_quattor_tag
 {
-    my ($self, $resource) = @_;
-    if ($resource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+    my ($self, $resource, $user) = @_;
+
+    if ($user and $resource->{data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+        return 1;
+    }
+    elsif (!$user and $resource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
         return 1;
     } else {
         return;
@@ -373,7 +377,7 @@ sub manage_users
 
     foreach my $t (@exitsuser) {
         # Remove the user only if the QUATTOR flag is set
-        my $quattor = $self->check_quattor_tag($t);
+        my $quattor = $self->check_quattor_tag($t,1);
         if (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
