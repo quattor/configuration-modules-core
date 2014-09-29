@@ -19,6 +19,7 @@ use CAF::FileEditor;
 use LC::Exception qw(SUCCESS);
 use Set::Scalar;
 use File::Path qw(mkpath);
+use Text::Glob qw(match_glob);
 
 use constant REPOS_DIR => "/etc/yum.repos.d";
 use constant REPOS_TEMPLATE => "spma/repository.tt";
@@ -380,38 +381,100 @@ sub prepare_lock_lists
 
 # Returns whether the $locked string locks all the items in
 # $wanted_locked.  Warning: $wanted_locked will be modified!!
-#
-# TODO: report correctly when a globbed version is missing (say, no
-# python-2.7* could be locked)
+# ($locked is output from REPOQUERY).
+# When C<fullsearch> is true, the result will be checked 
+# for with glob pattern matching to verify the requested packages 
+# are in the $locked string. Otherwise, any requested package with
+# a wildcard will be assumed to have a match in the output. 
+# The main issue with fullsearch is that it is a possibly slow process. 
 sub locked_all_packages
 {
-    my ($self, $wanted_locked, $locked) = @_;
+    my ($self, $wanted_locked, $locked, $fullsearch) = @_;
 
-    # Ensure that all the packages that we wanted to lock have been
-    # resolved!!!
-    foreach my $pkg (split(/\n/, $locked)) {
-        my @envra = split(/:/, $pkg);
-        $wanted_locked->delete($envra[1]);
+    my @not_matched;
+    
+    # Process output and filter exact matches
+    foreach my $pkgstr (split(/\n/, $locked)) {
+        my @envra = split(/:/, $pkgstr);
+        my $pkg=$envra[1];
+        if ($wanted_locked->has($pkg)) {
+            $wanted_locked->delete($pkg);
+        } else {
+            # keep repoquery output of unmatched packages
+            # locked packages like kernel*-some.version will cause other 
+            # entries like kernel-devel in the repoquery output, which 
+            # will never match, so having packages in @not_locked. 
+            push(@not_matched, $pkg);
+        }
     }
+    
+    # No wanted_locked packages left, everything matched
+    if (! $wanted_locked->size()) {
+        $self->verbose("All wanted_locked packages found (without any wildcard processing).");
+        return 1;
+    }
+    
+    if ($fullsearch) {
+        # At this point, all remaining entries in the wanted_locked 
+        # might have a wildcard in them.
+        # Brute-force could possibly lead to a very slow worst case scenario
+        # 
+        # Issue: single wildcard might match multiple lines of output, 
+        # so always process all output
+        $self->verbose("Starting fullsearch on ",
+                       $wanted_locked->size," wanted packages with wildcards, ",
+                       scalar @not_matched, " unmatched packages from repoquery");
+        foreach my $wl (@$wanted_locked) {
+            # (try to) match @not_matched 
+            # TODO and remove the matches? can we assume that every 
+            # match corresponds to exactly one wildcard? probably not.
+            # e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5 
+            # would be left without (valid) match.
+            $wanted_locked->delete($wl) if (grep(match_glob($wl, $_), @not_matched));
+        }
+        $self->verbose("Finished fullsearch with remaining ",
+                       $wanted_locked->size," wanted packages with wildcards, ",
+                       scalar @not_matched, " unmatched packages from repoquery");
 
-    if (grep($_ !~ m{[*?]}, @$wanted_locked)) {
+        if ($wanted_locked->size()) {
+            $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
+            return 0;
+        } else {
+            $self->verbose("All wanted_locked packages found (with fullsearch wildcard processing).");
+            return 1;
+        }
+    } elsif (grep($_ !~ m{[*?]}, @$wanted_locked)) {
         $self->error("Unable to lock: $wanted_locked. ",
                      "These packages with these versions don't seem to exist ",
                      "in any configured repositories");
         return 0;
+    } elsif (grep($_ =~ m{[*?]}, @$wanted_locked)) {
+        # actually, only wildcards in the versions
+        $self->info("Unsure if all wanted packages are avaialble ",
+                    "due to wildcard(s) in the names and/or versions, ",
+                    "continuing as if all is fine. ",
+                    "Turn on fullsearch option to resolve the wildcards ",
+                    "(but be aware of potential speed impact: ",
+                    $wanted_locked->size," wanted packages with wildcards, ",
+                    scalar @not_matched, " unmatched packages from repoquery)");
+        return 1;
     }
+    
+    
+    # how do we get here?
+    
     return 1;
 }
 
 # Lock the versions of any packages that have them
 sub versionlock
 {
-    my ($self, $pkgs) = @_;
+    my ($self, $pkgs, $fullsearch) = @_;
 
     my ($locked, $toquery) = $self->prepare_lock_lists($pkgs);
     my $out = $self->execute_yum_command([REPOQUERY, @$toquery],
                                          "determining epochs", 1);
-    return 0 if !defined($out) || !$self->locked_all_packages($locked, $out);
+    return 0 if !defined($out) || !$self->locked_all_packages($locked, $out, $fullsearch);
 
 
     my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
@@ -444,10 +507,10 @@ sub packages_to_remove
 
     my $false_positives = Set::Scalar->new();
     foreach my $pkg (@$candidates) {
-	my $name = (split(/;/, $pkg))[0];
-	if ($wanted->has($name)) {
-	    $false_positives->insert($pkg);
-	}
+        my $name = (split(/;/, $pkg))[0];
+        if ($wanted->has($name)) {
+            $false_positives->insert($pkg);
+        }
     }
 
     return $candidates-$false_positives;
@@ -570,7 +633,7 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch) = @_;
 
     $self->complete_transaction() or return 0;
 
@@ -580,7 +643,7 @@ sub update_pkgs
         $self->expire_yum_caches() or return 0;
     }
 
-    $self->versionlock($pkgs) or return 0;
+    $self->versionlock($pkgs, $fullsearch) or return 0;
 
     $self->distrosync($run) or return 0;
 
@@ -619,7 +682,7 @@ sub update_pkgs
 # Updates the packages on the system.
 sub update_pkgs_retry
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs, $fullsearch) = @_;
     
     # If an error is logged due to failed transaction, 
     # it might be retried and might succeed, but ncm-ncd will not allow 
@@ -712,7 +775,8 @@ sub Configure
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
 
     $self->update_pkgs_retry($pkgs, $groups, $t->{run}, 
-                             $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry})
+                             $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
+                             $t->{fullsearch})
         or return 0;
     return 1;
 }
