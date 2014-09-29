@@ -25,7 +25,7 @@ use Readonly;
 
 Readonly::Array our @SSH_COMMAND => (
 '/usr/bin/ssh', '-o', 'ControlMaster=auto', 
-'-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
+'-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
 
 # Run a command and return the output
