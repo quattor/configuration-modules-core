@@ -142,20 +142,19 @@ set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "perl-5.10.1-1.x8
 is($cmp->versionlock({perl => $pkgs->{perl}}), 1,
    "Version with star is processed correctly");
 
-TODO : {
-    local $TODO = <<'EOF';
-I don't know yet what to do when the version has a star.  I cannot
-detect it with trivial set operations, and brute force pattern
-matching makes this method quadratic.  Using tries or other fancy
-data structures looks like overengineering at this stage.
 
-In my little tests, brute force pattern matching is OK for up to 2000
-versionlocked packages.  Is anyone installing more than 2000 packages?
-EOF
+set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "");
+my $tmppkgs = {perl => $pkgs->{perl}};
+my ($locked, $toquery) = $cmp->prepare_lock_lists($tmppkgs);
 
-    set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "");
-    is($cmp->versionlock({perl => $pkgs->{perl}}), 0,
-       "Failure to versionlock star version is reported");
-}
+is($cmp->locked_all_packages($locked, "", 0), 1, "Failed to lock packages with star version (but it's ok without fullsearch)");
+is($cmp->locked_all_packages($locked, "", 1), 0, "Failed to lock packages with star version (fullsearch on)");
+
+is($cmp->versionlock($tmppkgs, 0), 1,
+   "Failure to versionlock star version is reported (but it's ok without fullsearch)");
+is($cmp->versionlock($tmppkgs, 1), 0,
+   "Failure to versionlock star version is reported (fullsearch on)");
+
+
 
 done_testing();
