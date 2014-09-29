@@ -146,7 +146,7 @@ sub detect_used_resource
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
     if (scalar @existres > 0) {
-        $quattor = $self->check_quattor_tag(@existres[0]);
+        $quattor = $self->check_quattor_tag($existres[0]);
     }
     if (@existres and !$quattor) {
         $self->verbose("Name: $name is already used by a $type resource. ",
