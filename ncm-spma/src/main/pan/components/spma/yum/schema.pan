@@ -6,4 +6,5 @@ declaration template components/spma/yum/schema;
 
 type component_spma_yum = {
     "userpkgs_retry" : boolean = false  
+    "fullsearch" : boolean = false  
 };
