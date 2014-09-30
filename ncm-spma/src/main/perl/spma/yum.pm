@@ -409,7 +409,7 @@ sub locked_all_packages
     }
     
     # No wanted_locked packages left, everything matched
-    if (! $wanted_locked->size()) {
+    if (! @$wanted_locked) {
         $self->verbose("All wanted_locked packages found (without any wildcard processing).");
         return 1;
     }
@@ -436,7 +436,7 @@ sub locked_all_packages
                        $wanted_locked->size," wanted packages with wildcards, ",
                        scalar @not_matched, " unmatched packages from repoquery");
 
-        if ($wanted_locked->size()) {
+        if (@$wanted_locked) {
             $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
             return 0;
         } else {
