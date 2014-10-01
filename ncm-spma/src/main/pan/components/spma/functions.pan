@@ -401,7 +401,7 @@ function pkg_repl = {
         };
     } else {
         # Refuse to replace an explicit version by an undefined version
-        if ( is_defined(package_params) ) {
+        if ( is_defined(package_params) && (length(package_params) > 0) ) {
             error(format('Attempt to unlock version of package %s (version %s)',ARGV[0],unescape(key(package_params,0))));
         };
         debug(format('%s: adding package %s (no version/arch specified)',OBJECT,ARGV[0]));
