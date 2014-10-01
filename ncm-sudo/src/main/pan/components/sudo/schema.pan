@@ -95,6 +95,7 @@ type structure_sudo_default_options = {
     "exempt_group"          ? string
     "verifypw"              ? string
     "listpw"                ? string
+    "secure_path"           ? string
     # List syntax would be too complex for this purposes! Will be
     # added just under request.
 };
