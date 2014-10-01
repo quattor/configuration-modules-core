@@ -38,7 +38,7 @@ Readonly::Array our @SSH_COMMAND => (
 '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
 
-#set the working cluster, (if not given, use the default cluster 'ceph')
+# set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;
     $cluster ||= 'ceph';
@@ -52,10 +52,14 @@ sub use_cluster {
 
 # run a command and return the output
 sub run_command {
-    my ($self, $command) = @_;
+    my ($self, $command, $dry) = @_;
     my ($cmd_output, $cmd_err);
     my $cmd = CAF::Process->new($command, log => $self, 
         stdout => \$cmd_output, stderr => \$cmd_err);
+    if ($dry) {
+        $self->debug(5, "Dry-run mode, returning command: $cmd");
+        return $cmd;
+    }
     $cmd->execute();
     if ($?) {
         $self->error("Command failed. Error Message: $cmd_err");
@@ -86,7 +90,7 @@ sub run_daemon_command {
     return $self->run_command([qw(/sbin/service ceph), @$command]);
 }
 
-#checks for shell escapes
+# checks for shell escapes
 sub has_shell_escapes {
     my ($self, $cmd) = @_;
     if (grep(m{[;&>|"']}, @$cmd) ) {
@@ -97,9 +101,9 @@ sub has_shell_escapes {
     return 1;
 }
     
-#Runs a command as the ceph user
+# Runs a command as the ceph user
 sub run_command_as_ceph {
-    my ($self, $command, $dir) = @_;
+    my ($self, $command, $dir, $dry) = @_;
     
     $self->has_shell_escapes($command) or return; 
     if ($dir) {
@@ -107,24 +111,24 @@ sub run_command_as_ceph {
         unshift (@$command, ('cd', $dir, '&&'));
     }
     $command = [join(' ',@$command)];
-    return $self->run_command([qw(su - ceph -c), @$command]);
+    return $self->run_command([qw(su - ceph -c), @$command], $dry // 0);
 }
 
 # Runs a command as ceph over ssh, optionally with options
 sub run_command_as_ceph_with_ssh {
-    my ($self, $command, $host, $ssh_options) = @_;
+    my ($self, $command, $host, $ssh_options, $dry) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command]);
+    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command], '', $dry // 0);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
 sub run_ceph_deploy_command {
-    my ($self, $command, $dir, $overwrite) = @_;
+    my ($self, $command, $dir, $overwrite, $dry) = @_;
     # run as user configured for 'ceph-deploy'
     if ($overwrite) {
         unshift (@$command, '--overwrite-conf');
     }
-    return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir);
+    return $self->run_command_as_ceph([qw(/usr/bin/ceph-deploy --cluster), $self->{cluster}, @$command], $dir, $dry // 0);
 }
 
 # Accept and add unknown keys if wanted
@@ -134,7 +138,7 @@ sub ssh_known_keys {
         # If not in known_host, scan key and add; else do nothing
         my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
         my $output = $self->run_command_as_ceph($cmd);
-        #Count the lines of the output
+        # Count the lines of the output
         my $lines = $output =~ tr/\n//;
         if (!$lines) {
             $cmd = ['/usr/bin/ssh-keyscan', $host];
@@ -148,10 +152,12 @@ sub ssh_known_keys {
         # SSH into machine with -o StrictHostKeyChecking=no
         # dummy ssh does the trick
         $self->run_command_as_ceph_with_ssh(['uname'], $host, ['-o', 'StrictHostKeyChecking=no']);
-    }   
+    } else {
+        $self->debug(3, "SSH hostkeys not managed");
+    }  
 }
 
-#check if host is reachable
+# check if host is reachable
 sub test_host_connection {
     my ($self, $host, $gvalues) = @_; 
     $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{homedir});
@@ -164,7 +170,7 @@ sub print_cmds {
     my ($self, $cmds) = @_;
     if ($cmds && @{$cmds}) {
         while (my $cmd = shift @{$cmds}) {
-            $self->info(join(" ", @$cmd));
+            $self->info("$cmd");
         }
     }
 }

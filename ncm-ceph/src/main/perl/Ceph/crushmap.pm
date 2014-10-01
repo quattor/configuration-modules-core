@@ -68,10 +68,10 @@ sub push_weights {
 
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues, $ignh, $weights) = @_;
+    my ($self, $cluster, $gvalues, $skip, $weights) = @_;
     my $okhosts = {}; 
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
-        if (!$ignh->{$hostname}) {
+        if (!$skip->{$hostname}) {
             $okhosts->{$hostname} = $host;
         } else {
             $self->debug(2, "ignoring host $hostname for crushmap");
@@ -89,7 +89,7 @@ sub do_crush_actions {
 sub ceph_crush {
     my ($self, $crushdir) = @_;
     my $jstr = $self->run_ceph_command([qw(osd crush dump)]) or return 0;
-    my $crushdump = decode_json($jstr); #wrong weights, but ignored at this moment
+    my $crushdump = decode_json($jstr); # wrong weights, but ignored at this moment
     $self->run_ceph_command(['osd', 'getcrushmap', '-o', "$crushdir/crushmap.bin"]);
     $self->run_command(['/usr/bin/crushtool', '-d', "$crushdir/crushmap.bin", '-o', "$crushdir/crushmap"]);
     $self->git_commit($crushdir, "$crushdir/crushmap", "decoded crushmap from ceph");
@@ -172,7 +172,7 @@ sub labelize_bucket {
     return \%lhash;
 }
 
-#If applicable, replace buckets with labeled ones
+# If applicable, replace buckets with labeled ones
 sub labelize_buckets {
     my ($self, $buckets ) = @_;    
     my @newbuckets = ();
@@ -227,7 +227,8 @@ sub flatten_buckets {
     my $titems = [];
     foreach my $tmpbucket ( @{$buckets}) {
         # First fix attributes
-        if (!$defaults) { #top bucket; set default values
+        if (!$defaults) { 
+            # top bucket; set default values
             $defaults = { alg => $tmpbucket->{defaultalg}, hash => $tmpbucket->{defaulthash}};
         }
         my %bucketh = %$defaults;
@@ -256,7 +257,7 @@ sub quat_crush {
     my $type_id = 0;
     my ($type_osd, $type_host);
     foreach my $type (@{$crushmap->{types}}) {
-        #Must at least contain 'host' and 'osd', because we do the merge on these types.
+        # Must at least contain 'host' and 'osd', because we do the merge on these types.
         if ($type eq 'osd') {
             $type_osd = 1;
         } elsif ($type eq 'host') {
@@ -319,7 +320,8 @@ sub set_used_ruleset_id {
 sub generate_ruleset_id {
     my ($self, $ruleset_ids) = @_;
     my $newid;
-    if (!@{$ruleset_ids}) { #crushmap from scratch
+    if (!@{$ruleset_ids}) { 
+        $self->debug(4,"crushmap from scratch");
         $newid = 0;
     } else {
         my $max = max(@{$ruleset_ids});
@@ -334,7 +336,8 @@ sub generate_ruleset_id {
 sub generate_bucket_id {
     my ($self, $crush_ids) = @_;
     my $newid;
-    if (!@{$crush_ids}) { #crushmap from scratch
+    if (!@{$crush_ids}) { 
+        $self->debug(4,"crushmap from scratch");
         $newid = -1;
     } else {
         my $min = min(@{$crush_ids});
@@ -441,7 +444,7 @@ sub cmp_crush {
 # write out the crushmap and install into cluster
 sub write_crush {
     my ($self, $crush, $crushdir) = @_;
-    #Use tt files
+    # Use tt files
     my $plainfile = "$crushdir/crushmap"; 
 
     my $fh = CAF::FileWriter->new($plainfile, log => $self);
