@@ -13,8 +13,8 @@ include 'components/sudo/config';
      sudolist = list(
          "/sbin/service libvirtd restart",
          "/sbin/service libvirt-guests restart",
-         "/usr/bin/virsh secret-set-value",
-         "/usr/bin/virsh secret-define"
+         '/usr/bin/virsh secret-set-value *',
+         '/usr/bin/virsh secret-define *'
      );
      foreach (i; cmd; sudolist){
          nl = nlist("host", "ALL",
