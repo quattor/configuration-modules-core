@@ -50,7 +50,7 @@ my $ambiguous = -1;    # Special value to indicate that this is neither true, no
 ##########################################################################
 sub Configure($$@) {
 ##########################################################################
-    
+
     my ($self, $config) = @_;
     my $base = $self->prefix();
 
@@ -79,7 +79,7 @@ sub Configure($$@) {
             while ( $links->hasNextElement() ) {
                 my %link_options = $links->getNextElement()->getHash();
                 my $link_name = $link_options{name}->getValue();
-                
+
                 if ( exists($links{$link_name}) ) {
                     $self->debug(1,"Link $link_name already defined. Replacing previous definition...");
                 }
@@ -95,7 +95,7 @@ sub Configure($$@) {
     return 1;
 }
 
-# The C<expand_cmds> function interprets all substrings that start and end with 
+# The C<expand_cmds> function interprets all substrings that start and end with
 # C<@@> as a command, and expands the C<value> with the respecitive output.
 sub expand_cmds {
 
@@ -112,15 +112,15 @@ sub expand_cmds {
             chomp $expanded_tok;
             $newval = join "", $newval, $expanded_tok;
             $i++;
-        }    
+        }
     }
 
     return $newval;
 }
 
 
-# The C<expand_vars> function interprets all substrings that start with C<{> and end with 
-# C<}> as a variable in the global C<context_vars> environment, and expands the C<value> 
+# The C<expand_vars> function interprets all substrings that start with C<{> and end with
+# C<}> as a variable in the global C<context_vars> environment, and expands the C<value>
 # with the resp value.
 sub expand_vars {
 
@@ -165,7 +165,7 @@ sub process_vars {
     my ($self, $href) = @_;
     my %record = %$href;
 
-    # Pull out the variable name and check that it really is defined. 
+    # Pull out the variable name and check that it really is defined.
     my $name;
     if (exists($record{name})) {
         $name = $record{name}->getValue();
@@ -174,7 +174,7 @@ sub process_vars {
         return 0;
     }
 
-    # Pull out the variable value and check that it really is defined. 
+    # Pull out the variable value and check that it really is defined.
     my $value;
     if (exists($record{value})) {
         $value = $record{value}->getValue();
@@ -295,7 +295,7 @@ sub process_link {
     my ($self, $link, $href) = @_;
     my %record = %$href;
 
-    # Pull out the values and check that they really are defined. 
+    # Pull out the values and check that they really are defined.
 
     # 'exists' flag : for create, target must exist; for delete, link must exist
     my $exists_flag = $exists_def;
@@ -370,9 +370,9 @@ sub process_link {
                 my $opt_val = $replace_params{$opt}->getValue();
                 my $opt_saved_ext;
                 my $opt_enabled = $self->getPanBoolean($opt_val);
-        
+
                 $self->debug(1,"link replace option name=$opt, enabled=$opt_enabled, value=$opt_val");
-        
+
                 if ( $opt eq "none" ) {
                     if ( $opt_enabled ) {
                         for my $key (keys(%replace_opts)) {
@@ -427,14 +427,14 @@ sub process_link {
                             $replace_opts{$opt} = 0;
                             $self->debug(1,"replacement for $opt disabled");
                         }
-        
+
                     } else {
                         $self->error("Internal error : invalid replacement options ignored ($opt)");
                     }
                 }
             }
         }
-    
+
         # Use global/default backup extension if none defined
         for my $key (keys(%replace_bck_ext_def)) {
             unless ( exists($replace_bck_ext{$key}) && defined($replace_bck_ext{$key}) ) {
@@ -505,7 +505,7 @@ sub process_link {
 
         my $link_parent = dirname($link);
         if ( ! -d $link_parent ){
-            eval (mkpath($link_parent));
+            eval {mkpath($link_parent)};
             if ( $@ ) {
                 $self->error("Error creating link $link parent directory ($@)");
                 return 0;
