@@ -371,6 +371,7 @@ type authconfig_sssd_ldap = {
     "rootdse_last_usn" ?  string
     "search_timeout" : long = 6
     "use_object_class" : string = "posixAccount"
+    "account_expire_policy" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
 };
 
 type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
