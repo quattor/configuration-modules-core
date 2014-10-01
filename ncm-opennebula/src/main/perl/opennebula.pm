@@ -112,7 +112,7 @@ sub remove_something
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
-            $self->error("QUATTOR flag not found or the resource is still used. ",
+            $self->warn("QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this resource: ", $oldresource->name);
         };
     }
