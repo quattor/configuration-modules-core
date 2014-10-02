@@ -521,6 +521,22 @@ Readonly::Hash our %CEPHFMAP => (
      }
    }
 );
+our %CEPHINGW = ( 
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4'
+     },  
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.180:6789/0',
+       'fqdn' => 'ceph001.cubone.os',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     },  
+  }
+);
 our %CEPHIN = (
    'ceph001' => {
      'config' => {

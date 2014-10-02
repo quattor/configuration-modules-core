@@ -128,6 +128,8 @@ sub config_hash {
                     $host->{mon}->{config} = $cfg;
                 } elsif ($name =~ m{^mds(\.\S+)?}) { # Only one mds per host..
                     $host->{mds}->{config} = $cfg;
+                } elsif ($name eq 'client.radosgw.gateway') {
+                    $host->{radosgw}->{config} = $cfg;
                 } else {
                     $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
                         "This section will be ignored");
