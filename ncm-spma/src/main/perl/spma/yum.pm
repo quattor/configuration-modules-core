@@ -400,11 +400,11 @@ sub locked_all_packages
         if ($wanted_locked->has($pkg)) {
             $wanted_locked->delete($pkg);
         } else {
-            # keep repoquery output of unmatched packages
+            # keep repoquery output of noon-exact-matched packages
             # locked packages like kernel*-some.version will cause other 
             # entries like kernel-devel in the repoquery output, which 
             # will never match, so having packages in @not_locked. 
-            push(@not_matched, $pkg);
+            push(@not_matched, $pkg) if $pkg;
         }
     }
     
@@ -413,7 +413,7 @@ sub locked_all_packages
         $self->verbose("All wanted_locked packages found (without any wildcard processing).");
         return 1;
     }
-    
+
     if ($fullsearch) {
         # At this point, all remaining entries in the wanted_locked 
         # might have a wildcard in them.
@@ -423,7 +423,7 @@ sub locked_all_packages
         # so always process all output
         $self->verbose("Starting fullsearch on ",
                        $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " unmatched packages from repoquery");
+                       scalar @not_matched, " non-exact-matched packages from repoquery");
         foreach my $wl (@$wanted_locked) {
             # (try to) match @not_matched 
             # TODO and remove the matches? can we assume that every 
@@ -434,7 +434,7 @@ sub locked_all_packages
         }
         $self->verbose("Finished fullsearch with remaining ",
                        $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " unmatched packages from repoquery");
+                       scalar @not_matched, " non-exact-matched packages from repoquery");
 
         if (@$wanted_locked) {
             $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
@@ -456,7 +456,7 @@ sub locked_all_packages
                     "Turn on fullsearch option to resolve the wildcards ",
                     "(but be aware of potential speed impact: ",
                     $wanted_locked->size," wanted packages with wildcards, ",
-                    scalar @not_matched, " unmatched packages from repoquery)");
+                    scalar @not_matched, " non-exact-matched packages from repoquery)");
         return 1;
     }
     
