@@ -86,6 +86,42 @@ Specific mount options to be used with this entry.
 
 Default : none
 
+=head1 EXAMPLES
+
+    '/software/components/autofs' = nlist(
+        'preserveMaster', false,
+
+        'maps', nlist(
+
+            'misc', nlist(
+                'enabled',    true,
+                'preserve',   false,
+                'mapname',    '/etc/auto.misc',
+                'type',       'file',
+                'mountpoint', '/misc',
+                'entries',    nlist(
+                    'kickstart', nlist(
+                        'location', 'misc.example.com:/misc'
+                    )
+                )
+            ),
+
+            'garden', nlist(
+                'enabled',    true,
+                'preserve',   false,
+                'mapname',    '/etc/auto.garden',
+                'type',       'file',
+                'options',    '',
+                'mountpoint', '/home/garden',
+                'entries',    nlist(
+                    escape('*'), nlist(
+                        'options',  '-rw,intr,rsize=8192,wsize=8192,actimeo=60,addr=10.21.12.10',
+                        'location', 'crown-city.albion.net:/home/garden/&'
+                    )
+                )
+            ),
+        ),
+    );
 
 =head1 DEPENDENCIES
 
