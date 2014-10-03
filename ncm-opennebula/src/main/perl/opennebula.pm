@@ -124,7 +124,7 @@ sub update_something
     my ($self, $one, $type, $name, $template) = @_;
     my $method = "get_${type}s";
     my $update;
-    my @existres = $one->$method(qr{^${name}$});
+    my @existres = $one->$method(qr{^$name$});
     foreach my $t (@existres) {
         # $merge=1, we don't replace, just merge the new templ
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
