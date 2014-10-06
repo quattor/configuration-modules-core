@@ -54,7 +54,7 @@ sub get_quat_conf {
     my ($self, $quattor) = @_; 
     my $master = {} ;
     $self->debug(2, "Building information from quattor");
-    if ($quattor->{radosgw}) {
+    if ($quattor->{radosgws}) {
         while (my ($hostname, $gtw) = each(%{$quattor->{radosgws}})) {
             $master->{$hostname}->{radosgw} = $gtw; 
             $master->{$hostname}->{fqdn} = $gtw->{fqdn};
@@ -269,7 +269,7 @@ sub compare_host {
     } else {
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
         if ($quat_host->{radosgw}) {
-            $self->compare_radosgw($hostname, $quat_host->{radosgw}->{config}, $ceph_host->{radosgw}->{config});
+            $self->compare_radosgw($hostname, $quat_host->{radosgw}->{config}, $ceph_host->{radosgw}->{config}, $structures);
         } elsif ($ceph_host->{radosgw}) {
             $self->info("radosgw config of $hostname not in quattor. Will get removed");
         }
