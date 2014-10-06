@@ -272,6 +272,20 @@ sub enable_node
     return 1;
 }
 
+sub change_oneadmin_passwd
+{
+    my ($self, $passwd) = @_;
+    my ($output, $cmd);
+
+    $cmd = ['/usr/bin/oneuser', 'passwd', 'oneadmin', $passwd];
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, "localhost");
+    if (!$output) {
+        $self->error("Quattor was not able to modify current oneadmin passwd.");
+    } else {
+        $self->info("Oneadmin passwd was changed correctly.");
+    }
+}
+
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
@@ -420,6 +434,11 @@ sub Configure
     # Define paths for convenience.
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
+
+    # We must change oneadmin pass first
+    if (exists $tree->{rpc}->{password}) {
+        $self->change_oneadmin_passwd($tree->{rpc}->{password});
+    }
 
     # Connect to ONE RPC
     my $one = $self->make_one($tree->{rpc});
