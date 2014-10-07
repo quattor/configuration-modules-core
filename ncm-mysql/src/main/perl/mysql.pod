@@ -50,6 +50,10 @@ Value is a nlist with the following possible keys :
 
 =back
 
+=head1 Servicename option
+
+Name of the mysql service. If this option is specified, the chkconfig steps are skipped and this servicename is used. Correct runlevel is assumed.
+
 =head1 DEPENDENCIES
 
 None.
