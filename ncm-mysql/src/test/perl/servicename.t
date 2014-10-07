@@ -15,10 +15,8 @@ Test the servicename option
 use strict;
 use warnings;
 use Test::More;
-use Test::Deep;
 use Test::Quattor qw(basic_service);
 use NCM::Component::mysql;
-use CAF::Object;
 
 my $cfg = get_config_for_profile('basic_service');
 my $cmp = NCM::Component::mysql->new('mysql');
