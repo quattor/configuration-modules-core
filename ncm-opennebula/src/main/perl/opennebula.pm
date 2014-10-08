@@ -228,7 +228,7 @@ sub enable_ceph_node
     $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
     if ($output =~ m/^key=(.*?)$/m) {
         $secret = $1;
-        $self->verbose("Found libvirt secret key: $secret to be used by $type host $host.");
+        $self->verbose("Found libvirt secret key to be used by $type host $host.");
     } else {
         $self->error("Required libvirt secret key not found for $type host $host.");
         return;
@@ -353,20 +353,21 @@ sub manage_hosts
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
+        my $used = $self->used_host($one, $host);
         if (!$self->test_host_connection($host)) {
             $self->warn("Could not connect to $type host: $host. ", 
                         "This host cannot be included as ONE hypervisor host.");
-            $new = $one->create_host(%host_options);
             push(@failedhost, $host);
         } else {
             my $output = $self->enable_node($one, $type, $host);
             if ($output) {
                 $self->info("Creating new $type host $host.");
-                $new = $one->create_host(%host_options);
             } else {
-                $new = $one->create_host(%host_options);
                 push(@failedhost, $host);
             }
+        }
+        if (!$used) {
+            $new = $one->create_host(%host_options);
         }
     }
 
@@ -374,6 +375,16 @@ sub manage_hosts
         $self->info("Error including these $type nodes: ", join(',', @failedhost));
     }
 
+}
+
+# Detects if the host is already used by ONE
+sub used_host
+{
+    my ($self, $one, $host) = @_;
+    my @existhost = $one->get_hosts(qr{^$host$});
+    foreach my $node (@existhost) {
+        return 1;
+    }
 }
 
 # Function to add/remove/update regular users
