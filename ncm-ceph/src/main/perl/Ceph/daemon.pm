@@ -34,8 +34,7 @@ use Sys::Hostname;
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly my $OSDBASE => qw(/var/lib/ceph/osd/);
 Readonly my $JOURNALBASE => qw(/var/lib/ceph/log/);
-Readonly::Array our @LS_COMMAND => ('/bin/ls');
-Readonly::Array our @CAT_COMMAND => ('/bin/cat');
+Readonly::Array my @LS_COMMAND => ('/bin/ls');
 
 # get host of ip; save the map to avoid repetition
 sub get_host {
@@ -130,7 +129,7 @@ sub get_osd_location {
         return ;
     }   
     
-    my $ph_uuid = $self->run_command_as_ceph_with_ssh([@CAT_COMMAND, $osdlink . '/fsid'], $host);
+    my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh([$osdlink . '/fsid'], $host);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
@@ -138,7 +137,7 @@ sub get_osd_location {
             "Disk value: $ph_uuid");
         return ;    
     }
-    my $ph_fsid = $self->run_command_as_ceph_with_ssh([@CAT_COMMAND, $osdlink . '/ceph_fsid'], $host);
+    my $ph_fsid = $self->run_cat_command_as_ceph_with_ssh([$osdlink . '/ceph_fsid'], $host);
     chomp($ph_fsid);
     my $fsid = $self->{fsid};
     if ($ph_fsid ne $fsid) {
