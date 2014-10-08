@@ -253,17 +253,19 @@ sub enable_node
     my ($output, $cmd, $uuid, $secret);
     my @services = ('libvirtd', 'libvirt-guests');
 
-    # Restart libvirt services
-    foreach my $service (@services) {
-        $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
-        $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
-        if (!$output) {
-            $self->error("Error restarting $service service at host: $host");
-            return;
-        } else {
-            $self->info("$service service restarted at host: $host. $output");
-        }
-    }
+    # qemu.conf is overwritten  by opennebula-node-kvm package
+    # we don't have to restart hosts libvirt service 
+    #
+    #foreach my $service (@services) {
+    #    $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
+    #    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    #    if (!$output) {
+    #        $self->error("Error restarting $service service at host: $host");
+    #        return;
+    #    } else {
+    #        $self->info("$service service restarted at host: $host. $output");
+    #    }
+    #}
     
     # Check if we are using Ceph datastores
     if ($self->detect_ceph_datastores($one)) {
@@ -339,7 +341,7 @@ sub manage_hosts
     }
 
     if (scalar @rmhosts > 0) {
-        $self->info("Removed $type hosts: ", @rmhosts);
+        $self->info("Removed $type hosts: ", join(',', @rmhosts));
     }
 
     foreach my $host (@$hosts) {
@@ -349,26 +351,27 @@ sub manage_hosts
             'vmm_mad' => $type, 
             'vnm_mad' => "dummy"
         );
-        my $used = $self->detect_used_resource($one, "host", $host);
-        if (!$used) {
-            if (!$self->test_host_connection($host)) {
-                $self->warn("Could not connect to $type host: $host. ", 
-                            "This host cannot be included as ONE hypervisor host.");
-                push(@failedhost, $host);
+        # to keep the record of our cloud infrastructure
+        # we include the host in ONE db even if it fails
+        if (!$self->test_host_connection($host)) {
+            $self->warn("Could not connect to $type host: $host. ", 
+                        "This host cannot be included as ONE hypervisor host.");
+            $new = $one->create_host(%host_options);
+            push(@failedhost, $host);
+        } else {
+            my $output = $self->enable_node($one, $type, $host);
+            if ($output) {
+                $self->info("Creating new $type host $host.");
+                $new = $one->create_host(%host_options);
             } else {
-                my $output = $self->enable_node($one, $type, $host);
-                if ($output) {
-                    $self->info("Creating new $type host $host.");
-                    $new = $one->create_host(%host_options);
-                } else {
-                    push(@failedhost, $host);
-                }
+                $new = $one->create_host(%host_options);
+                push(@failedhost, $host);
             }
         }
     }
 
     if (scalar @failedhost > 0) {
-        $self->info("Error including these $type nodes: ", @failedhost);
+        $self->info("Error including these $type nodes: ", join(',', @failedhost));
     }
 
 }
@@ -403,7 +406,7 @@ sub manage_users
     }
 
     if (scalar @rmusers > 0) {
-        $self->info("Removed users: ", @rmusers);
+        $self->info("Removed users: ", join(',', @rmusers));
     }
 
     foreach my $user (@$users) {
