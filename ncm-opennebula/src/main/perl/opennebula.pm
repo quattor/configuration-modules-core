@@ -225,7 +225,7 @@ sub enable_ceph_node
     }
 
     $cmd = ['/usr/bin/cat', LIBVIRTKEYFILE];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
     if ($output =~ m/^key=(.*?)$/m) {
         $secret = $1;
         $self->verbose("Found libvirt secret key to be used by $type host $host.");
@@ -235,7 +235,7 @@ sub enable_ceph_node
     }
 
     $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
     if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
         $self->info("New Ceph key include into libvirt list: ",$output);
         return 1;
@@ -280,7 +280,7 @@ sub change_oneadmin_passwd
     my ($output, $cmd);
 
     $cmd = ['/usr/bin/oneuser', 'passwd', 'oneadmin', $passwd];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, "localhost");
+    $output = $self->run_command_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor was not able to modify current oneadmin passwd.");
     } else {
