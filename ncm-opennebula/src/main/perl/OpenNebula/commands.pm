@@ -30,10 +30,13 @@ Readonly::Array our @SSH_COMMAND => (
 
 # Run a command and return the output
 sub run_command {
-    my ($self, $command) = @_;
-    my ($cmd_output, $cmd_err);
-    my $cmd = CAF::Process->new($command, log => $self, 
-        stdout => \$cmd_output, stderr => \$cmd_err);
+    my ($self, $command, $secret) = @_;
+    my ($cmd_output, $cmd_err, $cmd);
+    if (! defined($secret)) {
+        $cmd = CAF::Process->new($command, log => $self, stdout => \$cmd_output, stderr => \$cmd_err);
+    } else {
+        $cmd = CAF::Process->new($command, stdout => \$cmd_output, stderr => \$cmd_err);
+    }
     $cmd->execute();
     if ($?) {
         $self->error("Command failed. Error Message: $cmd_err");
@@ -41,7 +44,7 @@ sub run_command {
             $self->verbose("Command output: $cmd_output");
         }
         return;
-    } else {
+    } elsif (! defined($secret)) {
         if ($cmd_output) {
             $self->verbose("Command output: $cmd_output");
         }
@@ -83,22 +86,18 @@ sub has_shell_escapes {
 
 # Runs a command as the oneadmin user
 sub run_command_as_oneadmin {
-    my ($self, $command, $dir) = @_;
+    my ($self, $command, $secret) = @_;
     
     $self->has_shell_escapes($command) or return; 
-    if ($dir) {
-        $self->has_shell_escapes([$dir]) or return;
-        unshift (@$command, ('cd', $dir, '&&'));
-    }
     $command = [join(' ',@$command)];
-    return $self->run_command([qw(su - oneadmin -c), @$command]);
+    return $self->run_command([qw(su - oneadmin -c), @$command], $secret);
 }
 
 # Runs a command as oneadmin over ssh, optionally with options
 sub run_command_as_oneadmin_with_ssh {
-    my ($self, $command, $host, $ssh_options) = @_;
+    my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @$command]);
+    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @$command], $secret);
 }
 
 # Accept and add unknown keys if wanted
