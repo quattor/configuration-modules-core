@@ -164,7 +164,7 @@ sub ssh_known_keys {
             my $fh = CAF::FileEditor->open("$homedir/.ssh/known_hosts",
                                            log => $self);
             $fh->head_print($key);
-            $fh->close()
+            $fh->close();
         }
     } elsif ($key_accept eq 'always'){
         # SSH into machine with -o StrictHostKeyChecking=no
