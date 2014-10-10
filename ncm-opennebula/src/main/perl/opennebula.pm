@@ -15,8 +15,6 @@ use Data::Dumper;
 
 # This component needs a 'oneadmin' user. 
 # The user should be able to run these commands with sudo without password:
-# /usr/sbin/service libvirtd restart
-# /usr/sbin/service libvirt-guests restart
 # /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
 # /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
 
@@ -212,11 +210,10 @@ sub enable_ceph_node
     my ($self, $type, $host) = @_;
     my ($output, $cmd, $uuid, $secret);
 
-    # Add ceph keys as root and oneadmin user
-    # TODO: Check if we need to run these cmds as root or not
+    # Add ceph keys as root
     $cmd = ['sudo', '/usr/bin/virsh', 'secret-define', '--file', CEPHSECRETFILE];
     $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
-    if ($output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+    if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
         $uuid = $1;
         $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
     } else {
@@ -251,22 +248,6 @@ sub enable_node
 {
     my ($self, $one, $type, $host) = @_;
     my ($output, $cmd, $uuid, $secret);
-    my @services = ('libvirtd', 'libvirt-guests');
-
-    # qemu.conf is overwritten  by opennebula-node-kvm package
-    # we don't have to restart hosts libvirt service 
-    #
-    #foreach my $service (@services) {
-    #    $cmd = ['sudo', '/usr/sbin/service', $service, 'restart'];
-    #    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
-    #    if (!$output) {
-    #        $self->error("Error restarting $service service at host: $host");
-    #        return;
-    #    } else {
-    #        $self->info("$service service restarted at host: $host. $output");
-    #    }
-    #}
-    
     # Check if we are using Ceph datastores
     if ($self->detect_ceph_datastores($one)) {
         return $self->enable_ceph_node($type, $host);
@@ -282,7 +263,7 @@ sub change_oneadmin_passwd
     $cmd = ['/usr/bin/oneuser', 'passwd', 'oneadmin', $passwd];
     $output = $self->run_command_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
-        $self->error("Quattor was not able to modify current oneadmin passwd.");
+        $self->error("Quattor unable to modify current oneadmin passwd.");
     } else {
         $self->info("Oneadmin passwd was changed correctly.");
     }
@@ -353,7 +334,6 @@ sub manage_hosts
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
-        my $used = $self->used_host($one, $host);
         if (!$self->test_host_connection($host)) {
             $self->warn("Could not connect to $type host: $host. ", 
                         "This host cannot be included as ONE hypervisor host.");
@@ -361,12 +341,12 @@ sub manage_hosts
         } else {
             my $output = $self->enable_node($one, $type, $host);
             if ($output) {
-                $self->info("Creating new $type host $host.");
+                $self->info("Created new $type host $host.");
             } else {
                 push(@failedhost, $host);
             }
         }
-        if (!$used) {
+        if (!$one->get_hosts(qr{^$host$})) {
             $new = $one->create_host(%host_options);
         }
     }
@@ -375,16 +355,6 @@ sub manage_hosts
         $self->info("Error including these $type nodes: ", join(',', @failedhost));
     }
 
-}
-
-# Detects if the host is already used by ONE
-sub used_host
-{
-    my ($self, $one, $host) = @_;
-    my @existhost = $one->get_hosts(qr{^$host$});
-    foreach my $node (@existhost) {
-        return 1;
-    }
 }
 
 # Function to add/remove/update regular users

@@ -6,8 +6,6 @@
 
 # This component needs a 'oneadmin' user. 
 # The user should be able to run these commands with sudo without password:
-# /usr/sbin/service libvirtd restart
-# /usr/sbin/service libvirt-guests restart
 # /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
 # /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
 
@@ -23,10 +21,14 @@ use CAF::Process;
 use File::Basename;
 use Readonly;
 
-Readonly::Array our @SSH_COMMAND => (
+Readonly::Array my @SSH_COMMAND => (
 '/usr/bin/ssh', '-o', 'ControlMaster=auto', 
 '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
+Readonly::Array my @VIRSH_COMMAND => ('/usr/bin/virsh');
+Readonly::Array my @SU_ONEADMIN_COMMAND => ('su - oneadmin -c');
+Readonly::Array my @SSH_KEYGEN_COMMAND => ('/usr/bin/ssh-keygen');
+Readonly::Array my @SSH_KEYSCAN_COMMAND => ('/usr/bin/ssh-keyscan');
 
 # Run a command and return the output
 sub run_command {
@@ -58,19 +60,7 @@ sub run_command {
 # Run a command prefixed with virsh and return the output
 sub run_virsh_command {
     my ($self, $command) = @_;
-    return $self->run_command([qw(/usr/bin/virsh), @$command]);
-}
-
-# Restart libvirtd service after qemu.cfg changes
-sub run_daemon_libvirtd_command {
-    my ($self, $command) = @_;
-    return $self->run_command([qw(/sbin/service libvirtd), @$command]);
-}
-
-# Restart libvirt-guests service after qemu.cfg changes
-sub run_daemon_libvirt_guest_command {
-    my ($self, $command) = @_;
-    return $self->run_command([qw(/sbin/service libvirt-guests), @$command]);
+    return $self->run_command([@VIRSH_COMMAND, @$command]);
 }
 
 # Checks for shell escapes
@@ -90,7 +80,7 @@ sub run_command_as_oneadmin {
     
     $self->has_shell_escapes($command) or return; 
     $command = [join(' ',@$command)];
-    return $self->run_command([qw(su - oneadmin -c), @$command], $secret);
+    return $self->run_command([@SU_ONEADMIN_COMMAND, @$command], $secret);
 }
 
 # Runs a command as oneadmin over ssh, optionally with options
@@ -105,17 +95,17 @@ sub ssh_known_keys {
     my ($self, $host, $key_accept, $homedir) = @_; 
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
-        my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
+        my $cmd = [@SSH_KEYGEN_COMMAND, '-F', $host];
         my $output = $self->run_command_as_oneadmin($cmd);
-        #Count the lines of the output
+        # Count the lines of the output
         my $lines = $output =~ tr/\n//;
         if (!$lines) {
-            $cmd = ['/usr/bin/ssh-keyscan', $host];
+            $cmd = [@SSH_KEYSCAN_COMMAND, $host];
             my $key = $self->run_command_as_oneadmin($cmd);
             my $fh = CAF::FileEditor->open("$homedir/.ssh/known_hosts",
                                            log => $self);
             $fh->head_print($key);
-            $fh->close()
+            $fh->close();
         }
     } elsif ($key_accept eq 'always'){
         # SSH into machine with -o StrictHostKeyChecking=no
@@ -124,7 +114,7 @@ sub ssh_known_keys {
     }   
 }
 
-#check if host is reachable
+# check if host is reachable
 sub test_host_connection {
     my ($self, $host) = @_;
     $self->ssh_known_keys($host, 'always', '~');
