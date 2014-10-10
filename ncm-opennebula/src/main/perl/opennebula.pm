@@ -13,11 +13,6 @@ use LC::Exception;
 use Net::OpenNebula;
 use Data::Dumper;
 
-# This component needs a 'oneadmin' user. 
-# The user should be able to run these commands with sudo without password:
-# /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
-# /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
-
 # TODO use constant from CAF::Render
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
 use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
