@@ -24,7 +24,7 @@ my $one = $cmp->make_one($tree->{rpc});
 # Test kvm host
 ok(exists($tree->{hosts}), "Found host data");
 
-$cmp->manage_something($one, "kvm", $tree->{hosts});
+$cmp->manage_something($one, "kvm", $tree);
 ok(!exists($cmp->{ERROR}), "No errors found during host management execution");
 
 done_testing();
