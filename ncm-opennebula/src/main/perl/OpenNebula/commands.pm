@@ -25,10 +25,11 @@ Readonly::Array my @SSH_COMMAND => (
 '/usr/bin/ssh', '-o', 'ControlMaster=auto', 
 '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
-Readonly::Array my @VIRSH_COMMAND => ('/usr/bin/virsh');
+Readonly::Array my @VIRSH_COMMAND => ('sudo /usr/bin/virsh');
 Readonly::Array my @SU_ONEADMIN_COMMAND => ('su - oneadmin -c');
 Readonly::Array my @SSH_KEYGEN_COMMAND => ('/usr/bin/ssh-keygen');
 Readonly::Array my @SSH_KEYSCAN_COMMAND => ('/usr/bin/ssh-keyscan');
+Readonly::Array my @ONEUSER_PASS_COMMAND => ('/usr/bin/oneuser passwd oneadmin');
 
 # Run a command and return the output
 sub run_command {
@@ -58,10 +59,19 @@ sub run_command {
 }
 
 # Run a command prefixed with virsh and return the output
-sub run_virsh_command {
-    my ($self, $command) = @_;
-    return $self->run_command([@VIRSH_COMMAND, @$command]);
+sub run_virsh_as_oneadmin_with_ssh {
+    my ($self, $command, $host, $secret, $ssh_options) = @_;
+    $ssh_options = [] if (! defined($ssh_options));
+    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @VIRSH_COMMAND, @$command], $secret);
 }
+
+# Run oneuser and return the output
+sub run_oneuser_as_oneadmin_with_ssh {
+    my ($self, $command, $host, $secret, $ssh_options) = @_;
+    $ssh_options = [] if (! defined($ssh_options));
+    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
+}
+
 
 # Checks for shell escapes
 sub has_shell_escapes {
