@@ -40,13 +40,13 @@ sub run_command {
         $cmd = CAF::Process->new($command, stdout => \$cmd_output, stderr => \$cmd_err);
     }
     $cmd->execute();
-    if ($?) {
+    if ($? and !$secret) {
         $self->error("Command failed. Error Message: $cmd_err");
         if ($cmd_output) {
             $self->verbose("Command output: $cmd_output");
         }
         return;
-    } elsif (! defined($secret)) {
+    } elsif (!$secret) {
         if ($cmd_output) {
             $self->verbose("Command output: $cmd_output");
         }
