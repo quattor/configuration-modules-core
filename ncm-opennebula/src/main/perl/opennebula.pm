@@ -169,6 +169,7 @@ sub detect_ceph_datastores
         }
     }
     $self->info("No Ceph datastores available at this moment.");
+    return;
 }
 
 sub create_resource_names_list
