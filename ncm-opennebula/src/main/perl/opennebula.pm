@@ -203,50 +203,50 @@ sub check_quattor_tag
 
 sub enable_ceph_node
 {
-    my ($self, $type, $host) = @_;
+    my ($self, $type, $host, $datastores) = @_;
     my ($output, $cmd, $uuid, $secret);
+    foreach my $ceph (@$datastores) {
+        if ($ceph->{ceph_user_key}) {
+            $secret = $ceph->{ceph_user_key};
+            # Add ceph keys as root
+            $cmd = ['sudo', '/usr/bin/virsh', 'secret-define', '--file', CEPHSECRETFILE];
+            $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+            if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+                $uuid = $1;
+                if ($uuid eq $ceph->{ceph_secret}) {
+                $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+                }
+                else {
+                    $self->error("UUIDs set from datastore and CEPHSECRETFILE do not match.");
+                    return;
+                }
+            } else {
+                $self->error("Required Ceph UUID not found for $type host $host.");
+                return;
+            }
 
-    # Add ceph keys as root
-    $cmd = ['sudo', '/usr/bin/virsh', 'secret-define', '--file', CEPHSECRETFILE];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
-    if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
-        $uuid = $1;
-        $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
-    } else {
-        $self->error("Required Ceph uuid not found for $type host $host.");
-        return;
+            $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
+            $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
+            if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
+                $self->info("New Ceph key include into libvirt list: ",$output);
+            } else {
+                $self->error("Error running virsh secret-set-value command: ", $output);
+                return;
+            }
+        }
     }
-
-    $cmd = ['/usr/bin/cat', LIBVIRTKEYFILE];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
-    if ($output =~ m/^key=(.*?)$/m) {
-        $secret = $1;
-        $self->verbose("Found libvirt secret key to be used by $type host $host.");
-    } else {
-        $self->error("Required libvirt secret key not found for $type host $host.");
-        return;
-    }
-
-    $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
-    if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
-        $self->info("New Ceph key include into libvirt list: ",$output);
-        return 1;
-    } else {
-        $self->error("Error running virsh secret-set-value command: ", $output);
-        return;
-    }
+    return 1;
 }
 
 # Execute ssh commands required by ONE
 # configure ceph client if necessary
 sub enable_node
 {
-    my ($self, $one, $type, $host) = @_;
+    my ($self, $one, $type, $host, $resources) = @_;
     my ($output, $cmd, $uuid, $secret);
     # Check if we are using Ceph datastores
     if ($self->detect_ceph_datastores($one)) {
-        return $self->enable_ceph_node($type, $host);
+        return $self->enable_ceph_node($type, $host, $resources->{datastores});
     }
     return 1;
 }
@@ -300,8 +300,9 @@ sub manage_something
 # Function to add/remove Xen or KVM hyp hosts
 sub manage_hosts
 {
-    my ($self, $one, $type, $hosts) = @_;
+    my ($self, $one, $type, $resources) = @_;
     my $new;
+    my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
     my (@rmhosts, @failedhost);
@@ -335,7 +336,7 @@ sub manage_hosts
                         "This host cannot be included as ONE hypervisor host.");
             push(@failedhost, $host);
         } else {
-            my $output = $self->enable_node($one, $type, $host);
+            my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
                 $self->info("Created new $type host $host.");
             } else {
@@ -435,7 +436,7 @@ sub Configure
 
     # Add/remove KVM hosts
     my $hypervisor = "kvm";
-    $self->manage_something($one, $hypervisor, $tree->{hosts});
+    $self->manage_something($one, $hypervisor, $tree);
 
     # Add/remove regular users
     $self->manage_something($one, "user", $tree->{users});
