@@ -209,8 +209,8 @@ sub enable_ceph_node
         if ($ceph->{ceph_user_key}) {
             $secret = $ceph->{ceph_user_key};
             # Add ceph keys as root
-            $cmd = ['sudo', '/usr/bin/virsh', 'secret-define', '--file', CEPHSECRETFILE];
-            $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host);
+            $cmd = ['secret-define', '--file', CEPHSECRETFILE];
+            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
             if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
                 $uuid = $1;
                 if ($uuid eq $ceph->{ceph_secret}) {
@@ -225,8 +225,8 @@ sub enable_ceph_node
                 return;
             }
 
-            $cmd = ['sudo', '/usr/bin/virsh', 'secret-set-value', '--secret', $uuid, '--base64', $secret];
-            $output = $self->run_command_as_oneadmin_with_ssh($cmd, $host, 1);
+            $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
+            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
             if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
                 $self->info("New Ceph key include into libvirt list: ",$output);
             } else {
@@ -257,7 +257,7 @@ sub change_oneadmin_passwd
     my ($output, $cmd);
 
     $cmd = ['/usr/bin/oneuser', 'passwd', 'oneadmin', $passwd];
-    $output = $self->run_command_as_oneadmin_with_ssh($cmd, "localhost", 1);
+    $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor unable to modify current oneadmin passwd.");
     } else {
