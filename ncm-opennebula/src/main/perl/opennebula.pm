@@ -206,8 +206,14 @@ sub enable_ceph_node
     my ($self, $type, $host, $datastores) = @_;
     my ($output, $cmd, $uuid, $secret);
     foreach my $ceph (@$datastores) {
-        if ($ceph->{ceph_user_key}) {
-            $secret = $ceph->{ceph_user_key};
+        if ($ceph->{tm_mad} eq 'ceph') {
+            if ($ceph->{ceph_user_key}) {
+                $self->verbose("Found Ceph user key.");
+                $secret = $ceph->{ceph_user_key};
+            } else {
+                $self->error("Ceph user key not found within Quattor template.");
+                return;
+            }
             # Add ceph keys as root
             $cmd = ['secret-define', '--file', CEPHSECRETFILE];
             $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
