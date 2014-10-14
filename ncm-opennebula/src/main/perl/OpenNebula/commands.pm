@@ -25,11 +25,11 @@ Readonly::Array my @SSH_COMMAND => (
 '/usr/bin/ssh', '-o', 'ControlMaster=auto', 
 '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
-Readonly::Array my @VIRSH_COMMAND => ('sudo /usr/bin/virsh');
-Readonly::Array my @SU_ONEADMIN_COMMAND => ('su - oneadmin -c');
+Readonly::Array my @VIRSH_COMMAND => ('sudo', '/usr/bin/virsh');
+Readonly::Array my @SU_ONEADMIN_COMMAND => ('su', '-', 'oneadmin', '-c');
 Readonly::Array my @SSH_KEYGEN_COMMAND => ('/usr/bin/ssh-keygen');
 Readonly::Array my @SSH_KEYSCAN_COMMAND => ('/usr/bin/ssh-keyscan');
-Readonly::Array my @ONEUSER_PASS_COMMAND => ('/usr/bin/oneuser passwd oneadmin');
+Readonly::Array my @ONEUSER_PASS_COMMAND => ('/usr/bin/oneuser', 'passwd', 'oneadmin');
 
 # Run a command and return the output
 sub run_command {
