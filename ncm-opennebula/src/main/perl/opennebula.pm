@@ -256,7 +256,7 @@ sub change_oneadmin_passwd
     my ($self, $passwd) = @_;
     my ($output, $cmd);
 
-    $cmd = ['/usr/bin/oneuser', 'passwd', 'oneadmin', $passwd];
+    $cmd = [$passwd];
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor unable to modify current oneadmin passwd.");
