@@ -55,7 +55,8 @@ sub Configure($$@) {
     my $base = $self->prefix();
 
     # If the list of links exists, actually do something!
-    if ($config->elementExists("$base/links")) {
+    my $link_definition_path = "$base/links";
+    if ($config->elementExists($link_definition_path)) {
 
         # Retrieve global options
         if ($config->elementExists("$base/options")) {
@@ -72,7 +73,6 @@ sub Configure($$@) {
         }
 
         # Get the list of path entries; should be a list.
-        my $link_definition_path = "$base/links";
         my %links;
         if ($config->elementExists($link_definition_path)) {
             my $links = $config->getElement($link_definition_path);
@@ -81,7 +81,7 @@ sub Configure($$@) {
                 my $link_name = $link_options{name}->getValue();
 
                 if ( exists($links{$link_name}) ) {
-                    $self->error("Link $link_name already defined. Replacing previous definition...");
+                    $self->error("Link $link_name already defined. Replacing previous definition target ".$links{$link_name}{target});
                 }
                 $links{$link_name} = \%link_options;
             }
@@ -90,6 +90,8 @@ sub Configure($$@) {
                 my $rc = $self->process_link($link,$links{$link});
             }
         }
+    } else {
+        $self->verbose("No links defined; nothing done.");
     }
 
     return 1;
