@@ -81,7 +81,7 @@ sub Configure($$@) {
                 my $link_name = $link_options{name}->getValue();
 
                 if ( exists($links{$link_name}) ) {
-                    $self->debug(1,"Link $link_name already defined. Replacing previous definition...");
+                    $self->error("Link $link_name already defined. Replacing previous definition...");
                 }
                 $links{$link_name} = \%link_options;
             }
