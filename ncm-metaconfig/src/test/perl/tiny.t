@@ -8,11 +8,7 @@ use NCM::Component::metaconfig;
 use CAF::Object;
 use Readonly;
 
-eval "use Config::Tiny";
-
-if ($@) {
-    plan skip_all => "Config::Tiny not found";
-}
+use Config::Tiny;
 
 $CAF::Object::NoAction = 1;
 
@@ -45,11 +41,18 @@ Where sections are nlists in the component's schema.
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 my $cfg = {
-    'a' => 1,
-    'b' => 2
-   };
+       contents => {
+           a => 1,
+           b => 2,
+           section => { s => 1 } 
+       },
+       module => "tiny",
+      };
 
-my $restart = 1;
+$cmp->handle_service("/foo/bar", $cfg);
+
+my $fh = get_file("/foo/bar");
+isa_ok($fh, "CAF::FileWriter", "Correct class");
 
 =pod
 
@@ -59,10 +62,9 @@ We expect just C<key=value> lines
 
 =cut
 
-is($cmp->tiny($cfg), "a=1\nb=2\n",
-   "Method returns the expected string");
+like("$fh", qr{a=1\nb=2\n},
+   "Values are rendered properly");
 
-=pod
 
 =head2 Files with sections
 
@@ -71,9 +73,7 @@ structure.
 
 =cut
 
-$cfg = { section => { a => 1 } };
-
-is($cmp->tiny($cfg), "[section]\na=1\n",
+like("$fh", qr{\[section\]\ns=1\n},
    "Sections in the file are rendered properly");
 
 done_testing();
