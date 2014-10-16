@@ -39,6 +39,7 @@ $cfg = get_config_for_profile('basic');
 is($cmp->Configure($cfg), 1, "Basic Configure returns 1");
 is_deeply($links, {"/link1" => "target1", "/link2" => "target2"}, "process_link processed links");
 ok(! defined($cmp->{ERROR}), "No error is reported");
+ok(! defined($cmp->{WARN}), "No warning is reported");
 
 $links = {};
 $cfg = get_config_for_profile('dupes');
@@ -46,7 +47,8 @@ is($cmp->Configure($cfg), 1, "Dupes Configure returns 1");
 # process last link1 with 
 is_deeply($links, {"/link1" => "target1b", "/link2" => "target2"}, "process_link processed link dupes");
 # check for logged error
-is($cmp->{ERROR}, 1, "Error is reported");
+ok(! defined($cmp->{ERROR}), "No error is reported");
+is($cmp->{WARN}, 1, "Warning is reported");
 
 
 done_testing();
