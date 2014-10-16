@@ -22,11 +22,12 @@ Test how invalid/impossible Perl modules are handled.
 
 =cut
 
-my $mock = Test::MockModule->new('NCM::Component::metaconfig');
+my $mock = Test::MockModule->new('CAF::TextRender');
 
+our $tt=0;
 $mock->mock('tt', sub {
 		my ($self, @args) = @_;
-		$self->{tt}++;
+		$tt++;
 		return 1;
 	    });
 
@@ -66,6 +67,6 @@ $cmp->{ERRORS} = 0;
 $srv->{module} = 'foo/bar';
 ok($cmp->handle_service('foo', $srv),
    "Services may fall safely to the template toolkit");
-is($cmp->{tt}, 1, "Unknown modules fall back to the template toolkit");
+is($tt, 1, "Unknown modules fall back to the template toolkit");
 
 done_testing();
