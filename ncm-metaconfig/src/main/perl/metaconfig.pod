@@ -42,9 +42,22 @@ Extension for the file's backup.
 Module to render the configuration file. See L<CONFIGURATION MODULES>
 below.
 
-=item * daemon ? string
+=item * daemons ? caf_service_action{}
 
-Daemon to restart if the file changes.
+An nlist with foreach daemon the C<CAF::Service> action to take 
+if the file changes.
+
+Even if multiple C<services> are associated to the same daemon, each action 
+for the daemon will be taken at most once.
+
+If multiple actions are to be taken for the same daemon, all actions
+will be taken (no attempt to optimize is made).
+
+=item * daemon ? string[]
+
+[Deprecated in favour of daemons]
+
+List of daemons to restart if the file changes.
 
 Even if multiple C<services> are associated to the same daemon, the
 daemon will be restarted at most once.

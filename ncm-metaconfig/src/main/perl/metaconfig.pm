@@ -22,13 +22,58 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Given metaconfigservice C<$srv> and C<CAF::FileWriter> instance C<$fh>, 
-# check if a daemon needs to be restarted. 
-sub needs_restarting
+# Add action for daemon
+sub add_action
 {
-    my ($self, $fh, $srv) = @_;
+    my ($self, $daemon, $action) = @_;
+    
+    $self->{_actions}->{$action} = () if (! $self->{_actions}->{$action});
+    if (! grep {$_ eq $daemon} @{$self->{_actions}->{$action}}) {
+        $self->debug(1, "Adding daemon $daemon action with action $action");
+        push(@{$self->{_actions}->{$action}}, $daemon);
+    }
+}
 
-    return $fh->close() && $srv->{daemon} && scalar(@{$srv->{daemon}});
+# Given metaconfigservice C<$srv> and C<CAF::FileWriter> instance C<$fh>, 
+# prepare the actions to be taken for the service service
+sub prepare_action
+{
+    my ($self, $srv) = @_;
+
+    $self->verbose('File changed, looking for daemons and actions');
+    if ($srv->{daemons}) {
+        while (my ($daemon, $action) = each %{$srv->{daemons}}) {
+            $self->add_action($daemon, $action);
+        }
+    }
+
+    if ($srv->{daemon}) {
+        $self->verbose("Deprecated daemon(s) restart via daemon field.");
+        foreach my $daemon (@{$srv->{daemon}}) {
+            if ($srv->{daemons}->{$daemon}) {
+                $self->verbose('Daemon $daemon also defined in daemons field. Adding restart action anyway.');
+            }
+            $self->add_action($daemon, 'restart');
+        }
+    }
+}
+
+# Restart any daemons whose configurations we have changed.
+sub process_actions
+{
+    my $self = shift;
+    while (my ($action, $ds) = each %{$self->{_actions}}) {
+        my $msg = "action $action for daemons ".join(',', @$ds);
+        my $srv = CAF::Service->new($ds, log => $self);
+        my $method = $srv->can($action);
+        if($method) {
+            $self->verbose("Taking $msg");                
+            $method->($srv);
+        } else {
+            $self->error("No CAF::Service method $action; no $msg");                
+        }
+    }
+   
 }
 
 # Generate $file, configuring $srv using CAF::TextRender.
@@ -61,11 +106,8 @@ sub handle_service
         return;
     }
 
-    if ($self->needs_restarting($fh, $srv)) {
-        foreach my $d (@{$srv->{daemon}}) {
-            $self->{daemons}->{$d} = 1;
-        }
-    }
+    $self->prepare_action($srv) if ($fh->close());
+
     return 1;
 }
 
@@ -80,11 +122,8 @@ sub Configure
         $self->handle_service(unescape($f), $c);
     }
 
-    # Restart any daemons whose configurations we have changed.
-    if ($self->{daemons}) {
-        my $srv = CAF::Service->new([keys(%{$self->{daemons}})], log => $self);
-        $srv->restart();
-    }
+    $self->process_actions() if ($self->{_actions});
+
     return 1;
 }
 
