@@ -142,20 +142,76 @@ set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "perl-5.10.1-1.x8
 is($cmp->versionlock({perl => $pkgs->{perl}}), 1,
    "Version with star is processed correctly");
 
-TODO : {
-    local $TODO = <<'EOF';
-I don't know yet what to do when the version has a star.  I cannot
-detect it with trivial set operations, and brute force pattern
-matching makes this method quadratic.  Using tries or other fancy
-data structures looks like overengineering at this stage.
 
-In my little tests, brute force pattern matching is OK for up to 2000
-versionlocked packages.  Is anyone installing more than 2000 packages?
-EOF
+set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "");
+my $tmppkgs = {perl => $pkgs->{perl}};
+my ($locked, $toquery) = $cmp->prepare_lock_lists($tmppkgs);
 
-    set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "");
-    is($cmp->versionlock({perl => $pkgs->{perl}}), 0,
-       "Failure to versionlock star version is reported");
+is($cmp->locked_all_packages($locked, "", 0), 1, "Failed to lock packages with star version (but it's ok without fullsearch)");
+is($cmp->locked_all_packages($locked, "", 1), 0, "Failed to lock packages with star version (fullsearch on)");
+
+is($cmp->versionlock($tmppkgs, 0), 1,
+   "Failure to versionlock star version is reported (but it's ok without fullsearch)");
+is($cmp->versionlock($tmppkgs, 1), 0,
+   "Failure to versionlock star version is reported (fullsearch on)");
+
+# make large enough output with mock versions and random ordered output
+# also make list of packages with version wildcards
+srand(0);
+# with strict, it fails for using barewords
+no strict;
+my @chars = (a..z, A..Z);
+use strict;
+sub make_rand_name {
+    my $size = shift || 8;
+    return join '', map { @chars[rand @chars] } 1 .. $size;
 }
+
+sub make_rand_version {
+    return int(rand(100)).".".int(rand(10)).".".int(rand(100));
+}
+
+sub escape {
+  my $str=shift;
+  $str =~ s/(^[0-9]|[^a-zA-Z0-9])/sprintf("_%lx", ord($1))/eg;
+  return $str;
+}
+
+my $randpkgs = {};
+my ($name, $subname, $version, $wildversion, $arch,@randrepoqueryreply);
+# insert $tot iterations; per iteration 2 packages will be added
+my $tot = 100;
+foreach my $idx (1..$tot) {
+    $name = make_rand_name(10);
+    $version = make_rand_version();
+
+    # glob that will match
+    $wildversion = $version;
+    $wildversion =~ s/^.{3}/*/;
+
+    $arch = "x86_64";
+
+    push(@randrepoqueryreply, "0:$name-$version.$arch");
+    $randpkgs->{escape($name)} = { escape($wildversion) => { "arch" => { $arch => {} } } };
+
+    $subname = make_rand_name(10);
+    push(@randrepoqueryreply, "0:$name-$subname-$version.$arch");
+    $randpkgs->{escape("$name-$subname")} = { escape($wildversion) => { "arch" => { $arch => {} } } };
+}
+
+# there's no way to guess the repoquery command that will be run (the args are not sorted).
+($locked, $toquery) = $cmp->prepare_lock_lists($randpkgs);
+is($locked->size, $tot*2, "2 packages per iteration, $tot iterations.");
+is($cmp->locked_all_packages($locked, join("\n", @randrepoqueryreply, ''), 1), 1,
+   "All wildcard versions match (fullsearch on)");
+
+# insert a packages that has no match in repoquery output
+# just reuse the last defined one
+$randpkgs->{escape("NOMATCH$name-$subname")} = { escape($wildversion) => { "arch" => { $arch => {} } } };
+($locked, $toquery) = $cmp->prepare_lock_lists($randpkgs);
+is($locked->size, $tot*2+1, "2 packages per iteration, $tot iterations; and 1 extra that can't be matched.");
+is($cmp->locked_all_packages($locked, join("\n", @randrepoqueryreply, ''), 1), 0,
+   "Wildcard versions match fails (fullsearch on)");
+
 
 done_testing();
