@@ -357,12 +357,12 @@ sub mysqlExecCmd () {
 
   unless ( $server ) {
     $self->error("$function_name : 'server' argument missing");
-    return 0;
+    return 1;
   }
 
   unless ( $command ) {
     $self->error("$function_name : 'command' argument missing");
-    return 0;
+    return 1;
   }
 
   my @cmd_array = ("mysql", "-h", $server->{host},
