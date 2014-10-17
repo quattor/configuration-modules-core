@@ -315,9 +315,9 @@ sub Configure {
     }
 
     # Alter tables if necessary
-    for my $table (@{$databases->{$database}->{options}}) {
-      $self->debug(1,"Setting options for table $table in database $database");
-      if ( $self->mysqlAlterTable($database,$table,$databases->{$database}->{options}) ) {
+    while ( (my $table, my $table_attrs) = each(%{$databases->{$database}->{tableOptions}}) ) {
+      $self->info("Setting options for table $table in database $database");
+      if ( $self->mysqlAlterTable($database,$table,$table_attrs) ) {
         $self->error("Error changing table $table characteristics");
         next;
       }
@@ -695,7 +695,7 @@ sub mysqlExecuteScript() {
 # Arguments :
 #  database : containing the table to alter
 #  table : table to alter
-#  options   : nlist (hash) of options to apply to table
+#  options   : hash reference of options to apply to table
 sub mysqlAlterTable() {
   my $function_name = "mysqlAlterTable";
   my ($self,$database,$table,$options) = @_;
@@ -719,17 +719,22 @@ sub mysqlAlterTable() {
   my $server = $servers->{$databases->{$database}->{server}};
 
   $self->debug(1,"$function_name : checking if database $database already exists");
-  $status = $self->mysqlExecCmd("use $database");
+  $status = $self->mysqlExecCmd($server,"use $database");
+  if ( $status ) {
+    $self->debug(1,"$function_name : database $database not found");
+    return $status;
+  }
 
-  for my $option (keys(%$options) ) {
+  while ( (my $option_e, my $value) = each(%$options) ) {
+    my $option = unescape($option_e);
+    my $value_token = '';
+    if ( $value ) {
+      $value_token = "=$value";
+    }
+    $self->debug(1,"$function_name : altering table $table in $database: $option$value_token");
+    $status = $self->mysqlExecCmd($server,"ALTER TABLE $table $option$value_token",$database);
     if ( $status ) {
-      $self->debug(1,"$function_name : database $database not found");
-    } else {
-      $self->debug(1,"$function_name : altering table $table in database $database");
-      $status = $self->mysqlExecCmd($server,"ALTER TABLE ".$table." ".$option."=".$options->{$option},$database);
-      if ( $status ) {
-        $self->debug(1,"$function_name: Error creating database $database (status=$status)")
-      }
+      $self->debug(1,"$function_name: Error creating database $database (status=$status)")
     }
   }
 }
