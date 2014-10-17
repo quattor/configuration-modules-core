@@ -10,12 +10,11 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
 
 use EDG::WP4::CCM::Element qw(unescape);
 
-use LC::File qw(copy);
-use LC::Check;
+use CAF::FileEditor;
+use CAF::FileWriter;
 use CAF::Process;
 
 use Encode qw(encode_utf8);
@@ -123,16 +122,16 @@ sub Configure {
       if ( $server->{options} ) {
         my $mysql_conf_file = '/etc/my.cnf';
         $self->debug(1,"Setting MySQL server parameters on ".$server->{host}." ($mysql_conf_file)");
-        my @mysql_conf;
-        if ( -f $mysql_conf_file) {
-          $status = open (MYCNF,"$mysql_conf_file");
-          unless ( $status ) {
+        my %opt;
+        $opt{backup} = '.old';
+        $opt{log} = $self;
+        my $fh = CAF::FileEditor->new($mysql_conf_file,%opt);
+        unless ( defined($fh) ) {
             $self->warn("Error opening current MySQL server configuration file ($mysql_conf_file)");
             last;       # Give up setting of server parameters
-          }
-          @mysql_conf = <MYCNF>;
-          close MYCNF;
-        }
+        };
+        $fh->seek_begin();
+        my @mysql_conf = <$fh>;
         $self->debug(2,"Number of lines in current $mysql_conf_file : ".@mysql_conf);
 
         my $server_section_found = 0;
@@ -235,10 +234,8 @@ sub Configure {
         # Update option file
         my $mysql_conf_content = join "\n", @mysql_conf;
         $mysql_conf_content .= "\n";
-        $changes = LC::Check::file ($mysql_conf_file,
-                                   'backup' => '.old',
-                                   'contents' => encode_utf8($mysql_conf_content),
-                                  );
+        $fh->set_contents(encode_utf8($mysql_conf_content));
+        my $changes = $fh->close();
         if ( $changes < 0 ) {
           $self->warn("Error updating MySQL server parameters");
         }
@@ -298,9 +295,9 @@ sub Configure {
         $init_script = $databases->{$database}->{initScript}->{file};
       } elsif ( $databases->{$database}->{initScript}->{content} ) {
         $init_script = '/tmp/' . $database . '-init.mysql';
-        $changes = LC::Check::file($init_script,
-                                   contents => encode_utf8($databases->{$database}->{initScript}->{content}),
-                            );
+        my $fh = CAF::FileWriter->new($init_script, log => $self);
+        print $fh encode_utf8($databases->{$database}->{initScript}->{content});
+        $changes = $fh->close();
         if ( $changes < 0 ) {
           $self->error("Error creating database $database init script ($init_script)");
           next;
