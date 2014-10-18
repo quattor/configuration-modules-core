@@ -314,12 +314,15 @@ sub Configure {
       next;
     }
 
-    # Alter tables if necessary
-    while ( (my $table, my $table_attrs) = each(%{$databases->{$database}->{tableOptions}}) ) {
-      $self->info("Setting options for table $table in database $database");
-      if ( $self->mysqlAlterTable($database,$table,$table_attrs) ) {
-        $self->error("Error changing table $table characteristics");
-        next;
+    # Alter tables if initOnce=0 (database was initialized).
+    # initOnce will have been reset to 0 by mysqlAddDb() if the database was not existing before.
+    unless ( $databases->{$database}->{initOnce} ) {
+      while ( (my $table, my $table_attrs) = each(%{$databases->{$database}->{tableOptions}}) ) {
+        $self->info("Setting options for table $table in database $database");
+        if ( $self->mysqlAlterTable($database,$table,$table_attrs) ) {
+          $self->error("Error changing table $table characteristics");
+          next;
+        }
       }
     }
 
@@ -592,7 +595,8 @@ sub mysqlAddUser() {
 # Arguments :
 #  database : database to create
 #  script   : script to create the database and tables if it doesn't exist (optional)
-#  initOnce : execute script only if database wasn't existing yet (Default: false, always reexecute script)
+#  initOnce : execute script only if database wasn't existing yet (Default: false, always reexecute script).
+#             initOnce is reset to 0 if database was not existing yet to allow other initializtion to proceed.
 #  createDb : if false, execute the script without creating the database before
 sub mysqlAddDb() {
   my $function_name = "mysqlAddDb";
@@ -639,6 +643,7 @@ sub mysqlAddDb() {
     if ( $db_found && $initOnce ) {
       $self->debug(1,"$function_name :  skipping execution of database initialization script (database already created)");
     } else {
+      $databases->{$database}->{initOnce} = 0;
       $self->debug(1,"$function_name :  executing the database initialization script");
       if ( $createDb ) {
         $status = $self->mysqlExecuteScript($server,$script,$database);
