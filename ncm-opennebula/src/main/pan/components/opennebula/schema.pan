@@ -25,15 +25,6 @@ type opennebula_rpc = {
 } = nlist();
 
 @{
-Type to set OpenNebula
-regular users names and passwds
-@}
-type opennebula_user = {
-    "user" : string 
-    "password" : string
-};
-
-@{
 Type to define ONE basic resources
 datastores, vnets, hosts names, etc
 @}

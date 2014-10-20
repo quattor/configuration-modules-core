@@ -7,7 +7,7 @@ package NCM::Component::opennebula;
 use strict;
 use warnings;
 use NCM::Component;
-use base qw(NCM::Component);
+use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use Net::OpenNebula;
@@ -15,6 +15,8 @@ use Data::Dumper;
 
 # TODO use constant from CAF::Render
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
+use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+use constant LIBVIRTKEYFILE => "/etc/ceph/ceph.client.libvirt.keyring";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -103,7 +105,7 @@ sub remove_something
             $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
-            $self->error("QUATTOR flag not found or the resource is still used. ",
+            $self->warn("QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this resource: ", $oldresource->name);
         };
     }
@@ -115,7 +117,7 @@ sub update_something
     my ($self, $one, $type, $name, $template) = @_;
     my $method = "get_${type}s";
     my $update;
-    my @existres = $one->$method(qr{^${name}$});
+    my @existres = $one->$method(qr{^$name$});
     foreach my $t (@existres) {
         # $merge=1, we don't replace, just merge the new templ
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
@@ -137,14 +139,14 @@ sub detect_used_resource
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
     if (scalar @existres > 0) {
-        $quattor = $self->check_quattor_tag(@existres[0]);
+        $quattor = $self->check_quattor_tag($existres[0]);
     }
-    if (@existres and !$quattor) {
+    if (!$quattor) {
         $self->verbose("Name: $name is already used by a $type resource. ",
                     "The Quattor flag is not set. ",
                     "We can't modify this resource.");
         return 1;
-    } elsif (@existres and $quattor) {
+    } elsif ($quattor) {
         $self->verbose("Name : $name is already used by a $type resource. ",
                     "Quattor flag is set. ",
                     "We can modify and update this resource.");
@@ -153,6 +155,21 @@ sub detect_used_resource
         $self->verbose("Name: $name is not used by $type resource yet.");
         return;
     }
+}
+
+sub detect_ceph_datastores
+{
+    my ($self, $one) = @_;
+    my @datastores = $one->get_datastores();
+    
+    foreach my $datastore (@datastores) {
+        if ($datastore->{data}->{TM_MAD}->[0] eq "ceph") {
+            $self->verbose("Detected Ceph datastore: ", $datastore->name);
+            return 1;
+        }
+    }
+    $self->info("No Ceph datastores available at this moment.");
+    return;
 }
 
 sub create_resource_names_list
@@ -172,11 +189,85 @@ sub create_resource_names_list
 
 sub check_quattor_tag
 {
-    my ($self, $resource) = @_;
-    if ($resource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+    my ($self, $resource, $user) = @_;
+
+    if ($user and $resource->{data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+        return 1;
+    }
+    elsif (!$user and $resource->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
         return 1;
     } else {
         return;
+    }
+}
+
+sub enable_ceph_node
+{
+    my ($self, $type, $host, $datastores) = @_;
+    my ($output, $cmd, $uuid, $secret);
+    foreach my $ceph (@$datastores) {
+        if ($ceph->{tm_mad} eq 'ceph') {
+            if ($ceph->{ceph_user_key}) {
+                $self->verbose("Found Ceph user key.");
+                $secret = $ceph->{ceph_user_key};
+            } else {
+                $self->error("Ceph user key not found within Quattor template.");
+                return;
+            }
+            # Add ceph keys as root
+            $cmd = ['secret-define', '--file', CEPHSECRETFILE];
+            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
+            if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+                $uuid = $1;
+                if ($uuid eq $ceph->{ceph_secret}) {
+                $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+                }
+                else {
+                    $self->error("UUIDs set from datastore and CEPHSECRETFILE do not match.");
+                    return;
+                }
+            } else {
+                $self->error("Required Ceph UUID not found for $type host $host.");
+                return;
+            }
+
+            $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
+            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
+            if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
+                $self->info("New Ceph key include into libvirt list: ",$output);
+            } else {
+                $self->error("Error running virsh secret-set-value command: ", $output);
+                return;
+            }
+        }
+    }
+    return 1;
+}
+
+# Execute ssh commands required by ONE
+# configure ceph client if necessary
+sub enable_node
+{
+    my ($self, $one, $type, $host, $resources) = @_;
+    my ($output, $cmd, $uuid, $secret);
+    # Check if we are using Ceph datastores
+    if ($self->detect_ceph_datastores($one)) {
+        return $self->enable_ceph_node($type, $host, $resources->{datastores});
+    }
+    return 1;
+}
+
+sub change_oneadmin_passwd
+{
+    my ($self, $passwd) = @_;
+    my ($output, $cmd);
+
+    $cmd = [$passwd];
+    $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
+    if (!$output) {
+        $self->error("Quattor unable to modify current oneadmin passwd.");
+    } else {
+        $self->info("Oneadmin passwd was changed correctly.");
     }
 }
 
@@ -215,11 +306,12 @@ sub manage_something
 # Function to add/remove Xen or KVM hyp hosts
 sub manage_hosts
 {
-    my ($self, $one, $type, $hosts) = @_;
+    my ($self, $one, $type, $resources) = @_;
     my $new;
+    my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
-    my @rmhosts;
+    my (@rmhosts, @failedhost);
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
         if (exists($newhosts{$t->name})) {
@@ -233,7 +325,7 @@ sub manage_hosts
     }
 
     if (scalar @rmhosts > 0) {
-        $self->info("Removed $type hosts: ", @rmhosts);
+        $self->info("Removed $type hosts: ", join(',', @rmhosts));
     }
 
     foreach my $host (@$hosts) {
@@ -243,12 +335,30 @@ sub manage_hosts
             'vmm_mad' => $type, 
             'vnm_mad' => "dummy"
         );
-        my $used = $self->detect_used_resource($one, "host", $host);
-        if (!$used) {
-            $self->info("Creating new $type host $host.");
-            $new = $one->create_host(%host_options);
+        # to keep the record of our cloud infrastructure
+        # we include the host in ONE db even if it fails
+        if (!$self->test_host_connection($host)) {
+            $self->warn("Could not connect to $type host: $host. ", 
+                        "This host cannot be included as ONE hypervisor host.");
+            push(@failedhost, $host);
+        } else {
+            my $output = $self->enable_node($one, $type, $host, $resources);
+            if ($output and !$one->get_hosts(qr{^$host$})) {
+                # TODO check if the host is disabled
+                # if so enable it
+                $new = $one->create_host(%host_options);
+                $self->info("Created new $type host $host.");
+            } else {
+                # TODO add the host but as disabled host
+                push(@failedhost, $host);
+            }
         }
     }
+
+    if (@failedhost) {
+        $self->error("Including these $type nodes: ", join(',', @failedhost));
+    }
+
 }
 
 # Function to add/remove/update regular users
@@ -269,7 +379,7 @@ sub manage_users
 
     foreach my $t (@exitsuser) {
         # Remove the user only if the QUATTOR flag is set
-        my $quattor = $self->check_quattor_tag($t);
+        my $quattor = $self->check_quattor_tag($t,1);
         if (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
@@ -281,7 +391,7 @@ sub manage_users
     }
 
     if (scalar @rmusers > 0) {
-        $self->info("Removed users: ", @rmusers);
+        $self->info("Removed users: ", join(',', @rmusers));
     }
 
     foreach my $user (@$users) {
@@ -313,6 +423,11 @@ sub Configure
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
 
+    # We must change oneadmin pass first
+    if (exists $tree->{rpc}->{password}) {
+        $self->change_oneadmin_passwd($tree->{rpc}->{password});
+    }
+
     # Connect to ONE RPC
     my $one = $self->make_one($tree->{rpc});
     if (! $one ) {
@@ -328,7 +443,7 @@ sub Configure
 
     # Add/remove KVM hosts
     my $hypervisor = "kvm";
-    $self->manage_something($one, $hypervisor, $tree->{hosts});
+    $self->manage_something($one, $hypervisor, $tree);
 
     # Add/remove regular users
     $self->manage_something($one, "user", $tree->{users});
