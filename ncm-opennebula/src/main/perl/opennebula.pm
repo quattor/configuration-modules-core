@@ -141,12 +141,12 @@ sub detect_used_resource
     if (scalar @existres > 0) {
         $quattor = $self->check_quattor_tag($existres[0]);
     }
-    if (@existres and !$quattor) {
+    if (!$quattor) {
         $self->verbose("Name: $name is already used by a $type resource. ",
                     "The Quattor flag is not set. ",
                     "We can't modify this resource.");
         return 1;
-    } elsif (@existres and $quattor) {
+    } elsif ($quattor) {
         $self->verbose("Name : $name is already used by a $type resource. ",
                     "Quattor flag is set. ",
                     "We can modify and update this resource.");
@@ -343,19 +343,20 @@ sub manage_hosts
             push(@failedhost, $host);
         } else {
             my $output = $self->enable_node($one, $type, $host, $resources);
-            if ($output) {
+            if ($output and !$one->get_hosts(qr{^$host$})) {
+                # TODO check if the host is disabled
+                # if so enable it
+                $new = $one->create_host(%host_options);
                 $self->info("Created new $type host $host.");
             } else {
+                # TODO add the host but as disabled host
                 push(@failedhost, $host);
             }
         }
-        if (!$one->get_hosts(qr{^$host$})) {
-            $new = $one->create_host(%host_options);
-        }
     }
 
-    if (scalar @failedhost > 0) {
-        $self->info("Error including these $type nodes: ", join(',', @failedhost));
+    if (@failedhost) {
+        $self->error("Including these $type nodes: ", join(',', @failedhost));
     }
 
 }
