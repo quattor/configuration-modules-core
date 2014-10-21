@@ -24,7 +24,15 @@ my $one = $cmp->make_one($tree->{rpc});
 # Test kvm host
 ok(exists($tree->{hosts}), "Found host data");
 
+rpc_history_reset;
 $cmp->manage_something($one, "kvm", $tree);
+#diag_rpc_history;
+ok(rpc_history_ok(["one.hostpool.info",
+                   "one.host.info",
+                   "one.datastorepool.info",
+                   "one.datastore.info",
+                   "one.host.allocate"]),
+                   "manage_something host kvm history ok");
 ok(!exists($cmp->{ERROR}), "No errors found during host management execution");
 
 done_testing();
