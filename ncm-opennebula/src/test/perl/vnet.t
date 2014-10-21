@@ -25,7 +25,13 @@ my $one = $cmp->make_one($tree->{rpc});
 # Test vnet
 ok(exists($tree->{vnets}), "Found vnet data");
 
+rpc_history_reset;
 $cmp->manage_something($one, "vnet", $tree->{vnets});
+#diag_rpc_history;
 ok(!exists($cmp->{ERROR}), "No errors found during vnet management execution");
+ok(rpc_history_ok(["one.vnpool.info",
+                   "one.vn.info",
+                   "one.vn.update"]),
+                   "manage_something vnet rpc history ok");
 
 done_testing();

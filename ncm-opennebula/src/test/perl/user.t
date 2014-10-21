@@ -20,11 +20,16 @@ my $cfg = get_config_for_profile("user");
 my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
 my $one = $cmp->make_one($tree->{rpc});
 
-# Test kvm host
-#diag("Here is the users conf: ", Dumper($tree->{users}));
-ok(exists($tree->{hosts}), "Found user data");
+# Test users
+ok(exists($tree->{users}), "Found user data");
 
+rpc_history_reset;
 $cmp->manage_something($one, "user", $tree->{users});
+#diag_rpc_history;
+ok(rpc_history_ok(["one.userpool.info",
+                   "one.user.info",
+                   "one.user.update"]),
+                   "manage_something users rpc history ok");
 ok(!exists($cmp->{ERROR}), "No errors found during user management execution");
 
 done_testing();
