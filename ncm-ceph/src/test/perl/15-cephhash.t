@@ -66,7 +66,6 @@ my $master = {};
 my $mapping = 
 my $config = { 
     global => {
-
         fsid => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
     },
     'osd.0' => {
