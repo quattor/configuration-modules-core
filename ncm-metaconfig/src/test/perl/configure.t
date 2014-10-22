@@ -12,9 +12,6 @@ use JSON::XS;
 
 $CAF::Object::NoAction = 1;
 
-my $s_mock = Test::MockModule->new('CAF::Service');
-$s_mock->mock("os_flavour", "linux_sysv");
-
 my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
 =pod
