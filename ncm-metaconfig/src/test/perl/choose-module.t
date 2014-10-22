@@ -62,8 +62,6 @@ By default the C<tt> method is invoked
 
 =cut
 
-$cmp->{ERRORS} = 0;
-
 $srv->{module} = 'foo/bar';
 ok($cmp->handle_service('foo', $srv),
    "Services may fall safely to the template toolkit");

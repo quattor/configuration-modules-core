@@ -41,6 +41,9 @@ Where sections are nlists in the component's schema.
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 my $cfg = {
+       owner => 'root',
+       group => 'root',
+       mode => 0644,
        contents => {
            a => 1,
            b => 2,

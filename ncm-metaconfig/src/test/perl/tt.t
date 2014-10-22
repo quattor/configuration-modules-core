@@ -40,6 +40,9 @@ Template::Toolkit to render an arbitrary file format.
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 my $cfg = {
+       owner => 'root',
+       group => 'root',
+       mode => 0644,
 	   contents => {
 			foo => 1,
 			bar => 2,
@@ -77,7 +80,7 @@ $cmp->{ERROR} = 0;
 
 $cfg->{module} = 'test_broken';
 $cmp->handle_service("/foo/bar2", $cfg);
-is($cmp->{ERROR}, 3, "3 errors reported when the template processing fails");
+is($cmp->{ERROR}, 1, "1 errors reported when the template processing fails");
 $fh = get_file("/foo/bar2");
 ok(!defined($fh), "Render failure, no output file");
 
@@ -90,7 +93,7 @@ ok(!defined($fh), "Render failure, no output file");
 $cfg->{module} = "invalid";
 $cmp->{ERROR} = 0;
 $cmp->handle_service("/foo/bar3", $cfg);
-is($cmp->{ERROR}, 3, "3 errors reported when the module doesn't exists");
+is($cmp->{ERROR}, 1, "1 errors reported when the module doesn't exists");
 $fh = get_file("/foo/bar3");
 ok(!defined($fh), "Non-existing module, no output file");
 
