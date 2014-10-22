@@ -58,6 +58,7 @@ set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib/ceph/osd/sdd');
 
 $cmp->use_cluster();
+$cmp->{ssh_multiplex} = 1;
 $cmp->{fsid} = $cluster->{config}->{fsid};
 $mock->mock('get_host', 'ceph001.cubone.os' );
 $mockc->mock('test_host_connection', 1 );
@@ -65,6 +66,7 @@ my $master = {};
 my $mapping = 
 my $config = { 
     global => {
+
         fsid => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
     },
     'osd.0' => {

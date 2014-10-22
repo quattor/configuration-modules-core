@@ -299,7 +299,7 @@ type ${project.artifactId}_component = {
     'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
     'key_accept'       ? string with match(SELF, '^(first|always)$') # explicit accept host keys
-    'no_controlpersist' : boolean = false
+    'ssh_multiplex'    : boolean = true
 } with valid_osd_names(SELF);
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

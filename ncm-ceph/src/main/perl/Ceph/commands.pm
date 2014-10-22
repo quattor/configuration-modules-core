@@ -33,7 +33,7 @@ use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
 
 use Readonly;
-Readonly::Array our @SSH_CONTROL_PERSIST => (
+Readonly::Array our @SSH_MULTIPLEX_OPTS => (
 '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
 );
 Readonly::Array our @SSH_COMMAND => ('/usr/bin/ssh');
@@ -118,8 +118,8 @@ sub run_command_as_ceph {
 sub run_command_as_ceph_with_ssh {
     my ($self, $command, $host, $ssh_options, $dry) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    if (!$self->{no_controlpersist}) {
-        push(@$ssh_options, @SSH_CONTROL_PERSIST);
+    if ($self->{ssh_multiplex}) {
+        push(@$ssh_options, @SSH_MULTIPLEX_OPTS);
     }
     return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command], '', $dry // 0);
 }
