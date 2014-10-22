@@ -57,7 +57,7 @@ sub handle_service
     my $fh = $trd->filewriter($file, %opts);
     
     if (!defined($fh)) {
-        $self->error("Failed to render $file. Skipping");
+        $self->error("Failed to render $file (".$trd->{fail}."). Skipping");
         return;
     }
 
