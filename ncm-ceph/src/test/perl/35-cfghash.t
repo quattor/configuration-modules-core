@@ -47,7 +47,9 @@ my $osd =  {
 };
 
 $mockc->mock('get_osd_name', "osd.2");
-$cmp->add_osd_to_config('ceph002', $tinies->{ceph002}, $osd );
+my $mapping = {};
+$cmp->add_osd_to_config('ceph002', $tinies->{ceph002}, $osd, {}, $mapping);
+cmp_deeply($mapping, \%data::MAPADD, 'adding to mapping succesful');
 cmp_deeply(unbless($tinies), \%data::TINIES, 'config structure to write ok');
 
 done_testing();

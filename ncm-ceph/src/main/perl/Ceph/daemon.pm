@@ -56,6 +56,28 @@ sub extract_ip {
     return $ip;
 }
 
+# add osd entries in the mapping hash
+sub add_to_mapping {
+    my ($self, $mapping, $id, $host, $osd_path) = @_;
+    $id =~ s/osd\.//;
+    $host =~ s/\..*//;
+    my $osdstr = "$host:$osd_path";
+    $mapping->{get_loc}->{$id} = $osdstr;
+    $mapping->{get_id}->{$osdstr} = $id;
+}
+
+# Get osd name from mapping with location
+sub get_name_from_mapping {
+    my ($self, $mapping, $host, $osd_path) = @_;
+    $host =~ s/\..*//;
+    my $osdstr = "$host:$osd_path";
+    my $osd_id = $mapping->{get_id}->{$osdstr};
+    if (!defined($osd_id)) {
+        $self->error("No id found in mapping for $osdstr");
+        return;
+    }
+    return  "osd.$osd_id";
+}
         
 # Gets the OSD map
 sub osd_hash {
@@ -111,9 +133,8 @@ sub osd_hash {
             osd_path        => $osdloc, 
             journal_path    => $journalloc 
         };
+        $self->add_to_mapping($mapping, $id, $host, $osdloc);
         my $osdstr = "$host:$osdloc";
-        $mapping->{get_loc}->{$id} = $osdstr;
-        $mapping->{get_id}->{$osdstr} = $id;
         $master->{$host}->{osds}->{$osdstr} = $osdp;
     }
     return 1;
@@ -306,8 +327,9 @@ sub prep_mds {
 
 # Add the config fields of a new osd to the config file
 sub add_osd_to_config {
-    my ($self, $hostname, $tinycfg, $osd, $gvalues) = @_;
+    my ($self, $hostname, $tinycfg, $osd, $gvalues, $mapping) = @_;
     my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path}) or return 0;
+    $self->add_to_mapping($mapping, $newosd, $hostname, $osd->{osd_path});
     $self->debug(2, "adding new config for $newosd to the configfile");
     $tinycfg->{$newosd} = $self->stringify_cfg_arrays($osd->{config});
 
@@ -337,7 +359,7 @@ sub deploy_daemon {
 # Deploys the new daemons and installs the config file
 # if an osd has to have a non default objectstore, this is fixed with a dirty trick here
 sub deploy_daemons {
-    my ($self, $deployd, $tinies, $gvalues) = @_;
+    my ($self, $deployd, $tinies, $gvalues, $mapping) = @_;
     $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
     foreach my $hostname (sort keys(%{$deployd})) {
         my $host = $deployd->{$hostname};
@@ -370,7 +392,7 @@ sub deploy_daemons {
                 }
                 return 0 if (!$ret);
                 if ($osd->{config}) {
-                    $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues) or return 0;
+                    $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues, $mapping) or return 0;
                 }
             }
         }
@@ -398,9 +420,7 @@ sub destroy_daemons {
         while  (my ($type, $daemon) = each(%{$host})) {
             if ($type eq 'osds') {
                 while  (my ($osdloc, $osd) = each(%{$daemon})) {
-                    my $osd_id = $mapping->{get_id}->{$osdloc};
-                    return 0 if (!defined($osd_id));
-                    my $osdname = "osd.$osd_id";
+                    my $osdname = $self->get_name_from_mapping($mapping, $hostname, $osd->{osd_path}) or return 0;
                     push(@cmds, $self->destroy_daemon('osd', $osdname));
                 }
             } else {

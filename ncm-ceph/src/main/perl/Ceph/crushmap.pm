@@ -52,13 +52,13 @@ sub get_osd_name {
 
 # Reweight the osds if they have a different weight
 sub push_weights {
-    my ($self, $hosts, $weights) = @_;
+    my ($self, $hosts, $weights, $gvalues) = @_;
     while (my ($hostname, $host) = each(%{$hosts})) {
         while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
             if ($osd->{crush_weight}){
-                my $osdname = $self->get_osd_name($hostname, $osd->{osd_path}) or return 0; 
+                my $osdname = $self->get_name_from_mapping($gvalues->{mapping}, $hostname, $osd->{osd_path}) or return 0;
                 if (!$weights->{$osdname} ||( $osd->{crush_weight} != $weights->{$osdname})  ) {
-                    $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;       
+                    $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;
                 }
             }
         }
@@ -68,7 +68,7 @@ sub push_weights {
 
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
-    my ($self, $cluster, $gvalues, $skip, $weights) = @_;
+    my ($self, $cluster, $gvalues, $skip, $weights, $mapping) = @_;
     my $okhosts = {}; 
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
         if (!$skip->{$hostname}) {
@@ -76,11 +76,13 @@ sub do_crush_actions {
         } else {
             $self->debug(2, "ignoring host $hostname for crushmap");
         }
-    }   
+    }
+    $self->debug(3, "Using constructed mapping for building crushmap");
+    $gvalues->{mapping} = $mapping;
     if ($cluster->{crushmap}) {
         $self->process_crushmap($cluster->{crushmap}, $okhosts, $gvalues) or return 0;
     } else {
-        $self->push_weights($okhosts, $weights) or return 0;
+        $self->push_weights($okhosts, $weights, $gvalues) or return 0;
     }
     return 1;
 }
@@ -98,13 +100,13 @@ sub ceph_crush {
 
 # Merge the osd info in the crushmap hierarchy
 sub crush_merge {
-    my ($self, $buckets, $osdhosts, $devices) = @_;
+    my ($self, $buckets, $osdhosts, $devices, $gvalues) = @_;
     foreach my $bucket ( @{$buckets}) {
         my $name = $bucket->{name};
         if ($bucket->{buckets}) {
             # Recurse.
 
-            if (!$self->crush_merge($bucket->{buckets}, $osdhosts, $devices)){
+            if (!$self->crush_merge($bucket->{buckets}, $osdhosts, $devices, $gvalues)){
                 $self->debug(2, "Failed to merge buckets of $bucket->{name} with osds",
                     "Buckets:", Dumper($bucket->{buckets}));  
                 return 0;
@@ -115,8 +117,7 @@ sub crush_merge {
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){ 
-                        #TODO: use mapping?
-                        my $osdname = $self->get_osd_name($name, $osds->{$osd}->{osd_path});
+                        my $osdname = $self->get_name_from_mapping($gvalues->{mapping}, $name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
                             $self->error("Could not find osd name for ", 
                                 $osds->{$osd}->{osd_path}, " on $name");
@@ -252,7 +253,7 @@ sub flatten_buckets {
 
 # Build up the quattor crushmap
 sub quat_crush {
-    my ($self, $crushmap, $osdhosts) = @_;
+    my ($self, $crushmap, $osdhosts, $gvalues) = @_;
     my @newtypes = ();
     my $type_id = 0;
     my ($type_osd, $type_host);
@@ -274,7 +275,7 @@ sub quat_crush {
 
     my $devices = [];
     $self->info('Verifying information and merging into crushmap (This can take a while)..');
-    if (!$self->crush_merge($crushmap->{buckets}, $osdhosts, $devices)){
+    if (!$self->crush_merge($crushmap->{buckets}, $osdhosts, $devices, $gvalues)){
         $self->error("Could not merge the required information into the crushmap");
         return 0;
     }
@@ -484,7 +485,7 @@ sub process_crushmap {
     my ($self, $crushmap, $osdhosts, $gvalues) = @_;
     my $crushdir = $gvalues->{qtmp} . 'crushmap';
     my $cephcr = $self->ceph_crush($crushdir) or return 0;
-    my $quatcr = $self->quat_crush($crushmap, $osdhosts) or return 0;
+    my $quatcr = $self->quat_crush($crushmap, $osdhosts, $gvalues) or return 0;
     $self->cmp_crush($cephcr, $quatcr) or return 0;
 
     return $self->write_crush($quatcr, $crushdir);
