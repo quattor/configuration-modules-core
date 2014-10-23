@@ -216,7 +216,7 @@ sub execute_yum_command
         ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
         ) {
         $self->warn("Command output: $out");
-        $self->$error_logger("Failed $why: $err");
+        $self->$error_logger("Failed $why: ", $err || "(empty/undef stderr)");
         if (@missing) {
             $self->$error_logger("Missing packages: ", join(" ", @missing));
         }
