@@ -20,6 +20,8 @@ my $cmp = NCM::Component::opennebula->new("opennebula");
 my $cfg = get_config_for_profile("opennebula");
 my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
 my $one = $cmp->make_one($tree->{rpc});
+# Set ssh multiplex options
+$cmp->set_ssh_command(1);
 
 # Test ONE RPC component
 rpc_history_reset;

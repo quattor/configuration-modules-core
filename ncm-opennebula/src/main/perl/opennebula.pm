@@ -445,6 +445,8 @@ sub Configure
     # Define paths for convenience.
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
+    # Set ssh multiplex options
+    $self->set_ssh_command($tree->{ssh_multiplex});
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {

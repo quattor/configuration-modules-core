@@ -21,15 +21,27 @@ use CAF::Process;
 use File::Basename;
 use Readonly;
 
-Readonly::Array my @SSH_COMMAND => (
-'/usr/bin/ssh', '-o', 'ControlMaster=auto', 
-'-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
-);
+Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
+Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 Readonly::Array my @VIRSH_COMMAND => ('sudo', '/usr/bin/virsh');
 Readonly::Array my @SU_ONEADMIN_COMMAND => ('su', '-', 'oneadmin', '-c');
 Readonly::Array my @SSH_KEYGEN_COMMAND => ('/usr/bin/ssh-keygen');
 Readonly::Array my @SSH_KEYSCAN_COMMAND => ('/usr/bin/ssh-keyscan');
 Readonly::Array my @ONEUSER_PASS_COMMAND => ('/usr/bin/oneuser', 'passwd', 'oneadmin');
+
+my $sshcmd=[];
+
+
+# Sub to set $sshcmd
+sub set_ssh_command
+{
+    my ($self, $usemultiplex) = @_;
+    push(@$sshcmd, @SSH_COMMAND);
+    if ($usemultiplex) {
+        $self->debug(2, 'Using SSH Multiplexing');
+        push(@$sshcmd, @SSH_MULTIPLEX_OPTS);
+    }
+}
 
 # Run a command and return the output
 sub run_command {
@@ -62,14 +74,14 @@ sub run_command {
 sub run_virsh_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @VIRSH_COMMAND, @$command], $secret);
+    return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @VIRSH_COMMAND, @$command], $secret);
 }
 
 # Run oneuser and return the output
 sub run_oneuser_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
+    return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
 }
 
 
@@ -97,7 +109,7 @@ sub run_command_as_oneadmin {
 sub run_command_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_oneadmin([@SSH_COMMAND, @$ssh_options, $host, @$command], $secret);
+    return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @$command], $secret);
 }
 
 # Accept and add unknown keys if wanted
