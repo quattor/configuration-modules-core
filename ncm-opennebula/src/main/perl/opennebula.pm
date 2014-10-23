@@ -104,11 +104,11 @@ sub remove_something
         my $quattor = $self->check_quattor_tag($oldresource);
 
         if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
-            $self->info("Removing old resource: ", $oldresource->{data}->{NAME}->[0]);
+            $self->info("Removing old resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
             $self->warn("QUATTOR flag not found or the resource is still used. ",
-                        "We can't remove this resource: ", $oldresource->{data}->{NAME}->[0]);
+                        "We can't remove this resource: ", $oldresource->name);
         };
     }
     return;
