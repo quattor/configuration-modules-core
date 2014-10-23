@@ -18,8 +18,14 @@ $CAF::Object::NoAction = 1;
 my $cmp = NCM::Component::opennebula->new("opennebula");
 
 my $cfg = get_config_for_profile("opennebula");
+my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
+my $one = $cmp->make_one($tree->{rpc});
 
+# Test ONE RPC component
+rpc_history_reset;
 $cmp->Configure($cfg);
+#diag_rpc_history;
+ok(rpc_history_ok(["one.system.version"]), "Configure opennebula rpc endpoint history ok");
 
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
 

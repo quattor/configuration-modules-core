@@ -19,6 +19,13 @@ use XML::Simple;
 
 our %cmds;
 my $data;
+
+# System
+
+$cmds{rpc_one_version}{params} = [];
+$cmds{rpc_one_version}{method} = "one.system.version";
+$cmds{rpc_one_version}{out} = 5;
+
 # Manage users
 
 $cmds{rpc_create_newuser}{params} = ["lsimngar", "my_fancy_pass", "core"];
