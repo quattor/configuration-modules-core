@@ -6,6 +6,7 @@ package NCM::Component::opennebula;
 
 use strict;
 use warnings;
+use version;
 use NCM::Component;
 use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
@@ -17,6 +18,7 @@ use Data::Dumper;
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
 use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 use constant LIBVIRTKEYFILE => "/etc/ceph/ceph.client.libvirt.keyring";
+use constant ONEVERSION => "4.8.0";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -102,11 +104,11 @@ sub remove_something
         my $quattor = $self->check_quattor_tag($oldresource);
 
         if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
-            $self->info("Removing old resource: ", $oldresource->name);
+            $self->info("Removing old resource: ", $oldresource->{data}->{NAME}->[0]);
             $oldresource->delete();
         } else {
             $self->warn("QUATTOR flag not found or the resource is still used. ",
-                        "We can't remove this resource: ", $oldresource->name);
+                        "We can't remove this resource: ", $oldresource->{data}->{NAME}->[0]);
         };
     }
     return;
@@ -414,6 +416,27 @@ sub manage_users
     }
 }
 
+# Check ONE endpoint and detects ONE version
+# returns false if ONE version is not supported by AII
+sub is_supported_one_version
+{
+    my ($self, $one) = @_;
+
+    my $oneversion = $one->version();
+
+    if ($oneversion) {
+        $self->info("Detected OpenNebula version: $oneversion");
+    } else {
+        $self->error("OpenNebula RPC endpoint is not reachable.");
+        return;
+    }
+
+    if (version->parse($oneversion) < version->parse(ONEVERSION)) {
+        $main::this_app->error("OpenNebula AII requires ONE v".ONEVERSION." or higher.");
+    }
+    return version->parse($oneversion) >= version->parse(ONEVERSION);
+}
+
 # Configure basic ONE resources
 sub Configure
 {
@@ -428,12 +451,15 @@ sub Configure
         $self->change_oneadmin_passwd($tree->{rpc}->{password});
     }
 
-    # Connect to ONE RPC
+    # Configure ONE RPC connector
     my $one = $self->make_one($tree->{rpc});
     if (! $one ) {
         $self->error("No ONE instance created.");
         return 0;
     };
+
+    # Check ONE RPC endpoint and OpenNebula version
+    return 0 if !$self->is_supported_one_version($one);
 
     # Add/remove VNETs
     $self->manage_something($one, "vnet", $tree->{vnets});
