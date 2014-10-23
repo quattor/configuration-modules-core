@@ -34,7 +34,8 @@ type component_opennebula = {
     'users'         : opennebula_user[]
     'vnets'         : opennebula_vnet[]
     'hosts'         : string[]
-    "rpc"           : opennebula_rpc
+    'rpc'           : opennebula_rpc
+    'ssh_multiplex' : boolean = true
 } = nlist();
 
 bind '/software/components/opennebula' = component_opennebula;

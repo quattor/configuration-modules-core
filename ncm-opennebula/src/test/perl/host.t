@@ -20,6 +20,8 @@ my $cmp = NCM::Component::opennebula->new("host");
 my $cfg = get_config_for_profile("host");
 my $tree = $cfg->getElement("/software/components/opennebula")->getTree();
 my $one = $cmp->make_one($tree->{rpc});
+# Set ssh multiplex options
+$cmp->set_ssh_command(1);
 
 # Test kvm host
 ok(exists($tree->{hosts}), "Found host data");
