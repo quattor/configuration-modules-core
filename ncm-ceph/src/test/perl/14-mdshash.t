@@ -38,7 +38,7 @@ my $cluster = $t->{clusters}->{ceph};
 $cmp->use_cluster();
 $cmp->{clname} = 'ceph';
 $cmp->{cfgfile} = 'tmpfile';
-$cmp->{ssh_multiplex} = 1;
+$cmp->set_ssh_command(1);
 $mock->mock('get_host', 'ceph001.cubone.os' );
 my $master = {};
 $cmp->mds_hash($master);

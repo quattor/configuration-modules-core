@@ -56,7 +56,7 @@ set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib
 $cmp->use_cluster();
 $cmp->{clname} = 'ceph';
 $cmp->{cfgfile} = 'tmpfile';
-$cmp->{ssh_multiplex} = 1;
+$cmp->set_ssh_command(1);
 
 $cmp->{fsid} = $cluster->{config}->{fsid};
 my $type = 'osd';

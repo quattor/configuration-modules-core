@@ -33,12 +33,24 @@ use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
 
 use Readonly;
-Readonly::Array our @SSH_MULTIPLEX_OPTS => (
-'-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/ssh_mux_%h_%p_%r'
-);
-Readonly::Array our @SSH_COMMAND => ('/usr/bin/ssh');
-Readonly::Array my @CAT_COMMAND => ('/bin/cat');
+Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
+Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
+Readonly::Array my @CAT_COMMAND => qw(/bin/cat);
 # set the working cluster, (if not given, use the default cluster 'ceph')
+
+my $sshcmd=[];
+
+# Sub to set $sshcmd
+sub set_ssh_command
+{
+    my ($self, $usemultiplex) = @_;
+    push(@$sshcmd, @SSH_COMMAND);
+    if ($usemultiplex) {
+        $self->debug(2, 'Using SSH Multiplexing');
+        push(@$sshcmd, @SSH_MULTIPLEX_OPTS);
+    }
+}
+
 sub use_cluster {
     my ($self, $cluster) = @_;
     $cluster ||= 'ceph';
@@ -118,10 +130,7 @@ sub run_command_as_ceph {
 sub run_command_as_ceph_with_ssh {
     my ($self, $command, $host, $ssh_options, $dry) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    if ($self->{ssh_multiplex}) {
-        push(@$ssh_options, @SSH_MULTIPLEX_OPTS);
-    }
-    return $self->run_command_as_ceph([@SSH_COMMAND, @$ssh_options, $host, @$command], '', $dry // 0);
+    return $self->run_command_as_ceph([@$sshcmd, @$ssh_options, $host, @$command], '', $dry // 0);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
