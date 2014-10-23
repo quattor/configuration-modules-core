@@ -49,7 +49,6 @@ sub set_ssh_command
         push(@$sshcmd, @SSH_MULTIPLEX_OPTS);
     }
 }
-
 # set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;

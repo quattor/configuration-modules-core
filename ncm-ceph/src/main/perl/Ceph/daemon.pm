@@ -129,7 +129,7 @@ sub get_osd_location {
         return ;
     }   
     
-    my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh([$osdlink . '/fsid'], $host);
+    my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/fsid"], $host);
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
@@ -137,7 +137,7 @@ sub get_osd_location {
             "Disk value: $ph_uuid");
         return ;    
     }
-    my $ph_fsid = $self->run_cat_command_as_ceph_with_ssh([$osdlink . '/ceph_fsid'], $host);
+    my $ph_fsid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/ceph_fsid"], $host);
     chomp($ph_fsid);
     my $fsid = $self->{fsid};
     if ($ph_fsid ne $fsid) {
