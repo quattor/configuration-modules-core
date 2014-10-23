@@ -221,7 +221,8 @@ type ceph_cluster_config = {
     'osd_objectstore'           ? string
 };
 
-@{ ceph rados gateway type @}
+@{ ceph rados gateway type 
+http://ceph.com/docs/master/radosgw/ @}
 type ceph_radosgw = {
     'fqdn'      : type_fqdn
     'config'    : nlist
