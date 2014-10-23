@@ -21,7 +21,7 @@ use CAF::Process;
 use File::Basename;
 use Readonly;
 
-Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
+Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 Readonly::Array my @VIRSH_COMMAND => ('sudo', '/usr/bin/virsh');
 Readonly::Array my @SU_ONEADMIN_COMMAND => ('su', '-', 'oneadmin', '-c');
