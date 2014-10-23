@@ -18,7 +18,7 @@ use Data::Dumper;
 use constant TEMPLATEPATH => "/usr/share/templates/quattor";
 use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 use constant LIBVIRTKEYFILE => "/etc/ceph/ceph.client.libvirt.keyring";
-use constant ONEVERSION => "4.8.0";
+use constant MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -431,10 +431,13 @@ sub is_supported_one_version
         return;
     }
 
-    if (version->parse($oneversion) < version->parse(ONEVERSION)) {
-        $main::this_app->error("OpenNebula AII requires ONE v".ONEVERSION." or higher.");
+    my $res= $oneversion >= MINIMAL_ONE_VERSION;
+    if ($res) {
+        $self->verbose("Version $oneversion is ok.");
+    } else {
+        $self->error("OpenNebula AII requires ONE v".MINIMAL_ONE_VERSION." or higher (found $oneversion).");
     }
-    return version->parse($oneversion) >= version->parse(ONEVERSION);
+    return $res;
 }
 
 # Configure basic ONE resources
