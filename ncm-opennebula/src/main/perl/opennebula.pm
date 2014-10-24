@@ -11,7 +11,7 @@ use NCM::Component;
 use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
-use Net::OpenNebula;
+use Net::OpenNebula 0.2.2;
 use Data::Dumper;
 
 # TODO use constant from CAF::Render
@@ -104,11 +104,11 @@ sub remove_something
         my $quattor = $self->check_quattor_tag($oldresource);
 
         if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
-            $self->info("Removing old resource: ", $oldresource->name);
+            $self->info("Removing old $type resource: ", $oldresource->name);
             $oldresource->delete();
         } else {
             $self->warn("QUATTOR flag not found or the resource is still used. ",
-                        "We can't remove this resource: ", $oldresource->name);
+                        "We can't remove this $type resource: ", $oldresource->name);
         };
     }
     return;
@@ -269,7 +269,7 @@ sub change_oneadmin_passwd
     if (!$output) {
         $self->error("Quattor unable to modify current oneadmin passwd.");
     } else {
-        $self->info("Oneadmin passwd was changed correctly.");
+        $self->info("Oneadmin passwd was set correctly.");
     }
 }
 
@@ -350,7 +350,7 @@ sub manage_hosts
                 # if so enable it
                 $new = $one->create_host(%host_options);
                 $self->info("Created new $type host $host.");
-            } else {
+            } elsif (!$output) {
                 # TODO add the host but as disabled host
                 push(@failedhost, $host);
             }
@@ -358,7 +358,7 @@ sub manage_hosts
     }
 
     if (@failedhost) {
-        $self->error("Including these $type nodes: ", join(',', @failedhost));
+        $self->error("Detected some error/s including these $type nodes: ", join(',', @failedhost));
     }
 
 }
@@ -385,7 +385,7 @@ sub manage_users
         if (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
-            $self->warn("User Quattor flag is not set. We can't remove it: ", $t->name);
+            $self->warn("QUATTOR flag not found. We can't remove this user: ", $t->name);
         } else {
             push(@rmusers, $t->name);
             $t->delete();
