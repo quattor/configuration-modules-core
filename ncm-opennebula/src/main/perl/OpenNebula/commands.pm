@@ -23,11 +23,11 @@ use Readonly;
 
 Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
-Readonly::Array my @VIRSH_COMMAND => ('sudo', '/usr/bin/virsh');
-Readonly::Array my @SU_ONEADMIN_COMMAND => ('su', '-', 'oneadmin', '-c');
-Readonly::Array my @SSH_KEYGEN_COMMAND => ('/usr/bin/ssh-keygen');
-Readonly::Array my @SSH_KEYSCAN_COMMAND => ('/usr/bin/ssh-keyscan');
-Readonly::Array my @ONEUSER_PASS_COMMAND => ('/usr/bin/oneuser', 'passwd', 'oneadmin');
+Readonly::Array my @VIRSH_COMMAND => qw(sudo /usr/bin/virsh);
+Readonly::Array my @SU_ONEADMIN_COMMAND => qw(su - oneadmin -c);
+Readonly::Array my @SSH_KEYGEN_COMMAND => qw(/usr/bin/ssh-keygen);
+Readonly::Array my @SSH_KEYSCAN_COMMAND => qw(/usr/bin/ssh-keyscan);
+Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd oneadmin);
 
 my $sshcmd=[];
 
