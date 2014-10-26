@@ -5,8 +5,8 @@
 
 =head1 NAME
 
-ncm-${project.artifactId}: Configure services whose config format is
-very widespread, such as YAML or JSON.
+ncm-${project.artifactId}: Configure services whose config format can be 
+rendered via C<CAF::TextRender>.
 
 =head1 DESCRIPTION
 
@@ -84,7 +84,7 @@ validation.
 
 =head1 CONFIGURATION MODULES
 
-The following formats my be rendered:
+The following formats can be rendered via C<CAF::TextRender>:
 
 =over 4
 
