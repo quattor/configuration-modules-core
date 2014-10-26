@@ -10,12 +10,11 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
 
 use EDG::WP4::CCM::Element qw(unescape);
 
-use LC::File qw(copy);
-use LC::Check;
+use CAF::FileEditor;
+use CAF::FileWriter;
 use CAF::Process;
 
 use Encode qw(encode_utf8);
@@ -123,16 +122,16 @@ sub Configure {
       if ( $server->{options} ) {
         my $mysql_conf_file = '/etc/my.cnf';
         $self->debug(1,"Setting MySQL server parameters on ".$server->{host}." ($mysql_conf_file)");
-        my @mysql_conf;
-        if ( -f $mysql_conf_file) {
-          $status = open (MYCNF,"$mysql_conf_file");
-          unless ( $status ) {
+        my %opt;
+        $opt{backup} = '.old';
+        $opt{log} = $self;
+        my $fh = CAF::FileEditor->new($mysql_conf_file,%opt);
+        unless ( defined($fh) ) {
             $self->warn("Error opening current MySQL server configuration file ($mysql_conf_file)");
             last;       # Give up setting of server parameters
-          }
-          @mysql_conf = <MYCNF>;
-          close MYCNF;
-        }
+        };
+        $fh->seek_begin();
+        my @mysql_conf = <$fh>;
         $self->debug(2,"Number of lines in current $mysql_conf_file : ".@mysql_conf);
 
         my $server_section_found = 0;
@@ -235,10 +234,8 @@ sub Configure {
         # Update option file
         my $mysql_conf_content = join "\n", @mysql_conf;
         $mysql_conf_content .= "\n";
-        $changes = LC::Check::file ($mysql_conf_file,
-                                   'backup' => '.old',
-                                   'contents' => encode_utf8($mysql_conf_content),
-                                  );
+        $fh->set_contents(encode_utf8($mysql_conf_content));
+        my $changes = $fh->close();
         if ( $changes < 0 ) {
           $self->warn("Error updating MySQL server parameters");
         }
@@ -298,9 +295,9 @@ sub Configure {
         $init_script = $databases->{$database}->{initScript}->{file};
       } elsif ( $databases->{$database}->{initScript}->{content} ) {
         $init_script = '/tmp/' . $database . '-init.mysql';
-        $changes = LC::Check::file($init_script,
-                                   contents => encode_utf8($databases->{$database}->{initScript}->{content}),
-                            );
+        my $fh = CAF::FileWriter->new($init_script, log => $self);
+        print $fh encode_utf8($databases->{$database}->{initScript}->{content});
+        $changes = $fh->close();
         if ( $changes < 0 ) {
           $self->error("Error creating database $database init script ($init_script)");
           next;
@@ -314,12 +311,15 @@ sub Configure {
       next;
     }
 
-    # Alter tables if necessary
-    for my $table (@{$databases->{$database}->{options}}) {
-      $self->debug(1,"Setting options for table $table in database $database");
-      if ( $self->mysqlAlterTable($database,$table,$databases->{$database}->{options}) ) {
-        $self->error("Error changing table $table characteristics");
-        next;
+    # Alter tables if initOnce=0 (database was initialized).
+    # initOnce will have been reset to 0 by mysqlAddDb() if the database was not existing before.
+    unless ( $databases->{$database}->{initOnce} ) {
+      while ( (my $table, my $table_attrs) = each(%{$databases->{$database}->{tableOptions}}) ) {
+        $self->info("Setting options for table $table in database $database");
+        if ( $self->mysqlAlterTable($database,$table,$table_attrs) ) {
+          $self->error("Error changing table $table characteristics");
+          next;
+        }
       }
     }
 
@@ -357,12 +357,12 @@ sub mysqlExecCmd () {
 
   unless ( $server ) {
     $self->error("$function_name : 'server' argument missing");
-    return 0;
+    return 1;
   }
 
   unless ( $command ) {
     $self->error("$function_name : 'command' argument missing");
-    return 0;
+    return 1;
   }
 
   my @cmd_array = ("mysql", "-h", $server->{host},
@@ -592,7 +592,8 @@ sub mysqlAddUser() {
 # Arguments :
 #  database : database to create
 #  script   : script to create the database and tables if it doesn't exist (optional)
-#  initOnce : execute script only if database wasn't existing yet (Default: false, always reexecute script)
+#  initOnce : execute script only if database wasn't existing yet (Default: false, always reexecute script).
+#             initOnce is reset to 0 if database was not existing yet to allow other initializtion to proceed.
 #  createDb : if false, execute the script without creating the database before
 sub mysqlAddDb() {
   my $function_name = "mysqlAddDb";
@@ -639,6 +640,7 @@ sub mysqlAddDb() {
     if ( $db_found && $initOnce ) {
       $self->debug(1,"$function_name :  skipping execution of database initialization script (database already created)");
     } else {
+      $databases->{$database}->{initOnce} = 0;
       $self->debug(1,"$function_name :  executing the database initialization script");
       if ( $createDb ) {
         $status = $self->mysqlExecuteScript($server,$script,$database);
@@ -695,7 +697,7 @@ sub mysqlExecuteScript() {
 # Arguments :
 #  database : containing the table to alter
 #  table : table to alter
-#  options   : nlist (hash) of options to apply to table
+#  options   : hash reference of options to apply to table
 sub mysqlAlterTable() {
   my $function_name = "mysqlAlterTable";
   my ($self,$database,$table,$options) = @_;
@@ -719,17 +721,22 @@ sub mysqlAlterTable() {
   my $server = $servers->{$databases->{$database}->{server}};
 
   $self->debug(1,"$function_name : checking if database $database already exists");
-  $status = $self->mysqlExecCmd("use $database");
+  $status = $self->mysqlExecCmd($server,"use $database");
+  if ( $status ) {
+    $self->debug(1,"$function_name : database $database not found");
+    return $status;
+  }
 
-  for my $option (keys(%$options) ) {
+  while ( (my $option_e, my $value) = each(%$options) ) {
+    my $option = unescape($option_e);
+    my $value_token = '';
+    if ( $value ) {
+      $value_token = "=$value";
+    }
+    $self->debug(1,"$function_name : altering table $table in $database: $option$value_token");
+    $status = $self->mysqlExecCmd($server,"ALTER TABLE $table $option$value_token",$database);
     if ( $status ) {
-      $self->debug(1,"$function_name : database $database not found");
-    } else {
-      $self->debug(1,"$function_name : altering table $table in database $database");
-      $status = $self->mysqlExecCmd($server,"ALTER TABLE ".$table." ".$option."=".$options->{$option},$database);
-      if ( $status ) {
-        $self->debug(1,"$function_name: Error creating database $database (status=$status)")
-      }
+      $self->debug(1,"$function_name: Error creating database $database (status=$status)")
     }
   }
 }
