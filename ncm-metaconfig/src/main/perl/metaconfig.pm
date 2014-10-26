@@ -18,6 +18,9 @@ use Readonly;
 
 Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
 
+# Has to correspond to what is allowed in the schema
+Readonly::Hash my %ALLOWED_ACTIONS => { restart => 1, reload => 1, stop_sleep_start => 1 };
+
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
@@ -84,12 +87,11 @@ sub process_actions
     while (my ($action, $ds) = each %actions) {
         my $msg = "action $action for daemons ".join(',', @$ds);
         my $srv = CAF::Service->new($ds, log => $self);
-        my $method = $srv->can($action);
-        if($method) {
+        if(exists($ALLOWED_ACTIONS{$action})) {
             $self->verbose("Taking $msg");                
-            $method->($srv);
+            $srv->$action();
         } else {
-            $self->error("No CAF::Service method $action; no $msg");                
+            $self->error("No CAF::Service allowed action $action; no $msg");                
         }
     }
    
