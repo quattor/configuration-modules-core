@@ -22,15 +22,34 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
+# Keep track of all actions to be taken in a hash
+# key = action; value = array ref to with all actions
+my %actions = ();
+
+# Convenience method to retrieve actions (mainly for unittests)
+# Returns a reference to the actions hash
+sub get_actions
+{
+    my $self = shift;
+    return \%actions;
+}
+
+# Convenience method to reset actions (mainly for unittests)
+sub reset_actions
+{
+    my $self = shift;
+    %actions = ();
+}
+
 # Add action for daemon
 sub add_action
 {
     my ($self, $daemon, $action) = @_;
     
-    $self->{_actions}->{$action} = () if (! $self->{_actions}->{$action});
-    if (! grep {$_ eq $daemon} @{$self->{_actions}->{$action}}) {
+    $actions{$action} = () if (! $actions{$action});
+    if (! grep {$_ eq $daemon} @{$actions{$action}}) {
         $self->debug(1, "Adding daemon $daemon action with action $action");
-        push(@{$self->{_actions}->{$action}}, $daemon);
+        push(@{$actions{$action}}, $daemon);
     }
 }
 
@@ -62,7 +81,7 @@ sub prepare_action
 sub process_actions
 {
     my $self = shift;
-    while (my ($action, $ds) = each %{$self->{_actions}}) {
+    while (my ($action, $ds) = each %actions) {
         my $msg = "action $action for daemons ".join(',', @$ds);
         my $srv = CAF::Service->new($ds, log => $self);
         my $method = $srv->can($action);
@@ -118,11 +137,13 @@ sub Configure
 
     my $t = $config->getElement($PATH)->getTree();
 
+    $self->reset_actions();
+    
     while (my ($f, $c) = each(%{$t->{services}})) {
         $self->handle_service(unescape($f), $c);
     }
 
-    $self->process_actions() if ($self->{_actions});
+    $self->process_actions();
 
     return 1;
 }

@@ -45,15 +45,15 @@ $cmp->add_action("daemon1", "action1");
 $cmp->add_action("daemon2", "action1");
 $cmp->add_action("daemon1", "action2");
 
-is_deeply($cmp->{_actions}, { "action1" => ["daemon1", "daemon2"], "action2" => ["daemon1"]}, 
+is_deeply($cmp->get_actions, { "action1" => ["daemon1", "daemon2"], "action2" => ["daemon1"]}, 
           "Actions added");
 
-delete $cmp->{_actions};
+$cmp->reset_actions;
 $cmp->prepare_action({'daemon' => ['d1', 'd2']});
-is_deeply($cmp->{_actions}, {"restart" => ["d1", "d2"]}, 
+is_deeply($cmp->get_actions, {"restart" => ["d1", "d2"]}, 
             "Daemon restart actions added");
 
-delete $cmp->{_actions};
+$cmp->reset_actions;
 $cmp->prepare_action({'daemon' => ['d1', 'd2'], 
                       'daemons' => {'d1' => 'reload', 
                                     'd2' => 'restart', 
@@ -61,7 +61,7 @@ $cmp->prepare_action({'daemon' => ['d1', 'd2'],
                       }});
 # d2 only once in restart
 # d1 in reload and restart                      
-is_deeply($cmp->{_actions}, { "restart" => ["d2", "d1"],  # restart from daemons is processed first
+is_deeply($cmp->get_actions, { "restart" => ["d2", "d1"],  # restart from daemons is processed first
                               'reload' => ['d1'], 
                               'doesnotexist' => ['d3']}, 
             "Daemon restart and daemons actions added");
@@ -75,13 +75,13 @@ my $cfg_d = get_config_for_profile('actions_daemons');
 my $cfg_nd = get_config_for_profile('actions_nodaemons');
 
 $restart = $reload = 0;
-delete $cmp->{_actions};
+$cmp->reset_actions;
 is($cmp->Configure($cfg_d), 1, 'Configure actions_daemons returned 1');
 is($restart, 0, '0 restarts triggered (daemons configured, no file changes)');
 is($reload, 0, '0 reload triggered (daemons configured, no file changes)');
 
 $restart = $reload = 0;
-delete $cmp->{_actions};
+$cmp->reset_actions;
 is($cmp->Configure($cfg_nd), 1, 'Configure actions_nodaemons returned 1');
 is($restart, 0, '0 restarts triggered (no daemons configured, no file changes)');
 is($reload, 0, '0 reload triggered (no daemons configured, no file changes)');
@@ -90,13 +90,13 @@ is($reload, 0, '0 reload triggered (no daemons configured, no file changes)');
 $pretend_changed=1;
 
 $restart = $reload = 0;
-delete $cmp->{_actions};
+$cmp->reset_actions;
 is($cmp->Configure($cfg_d), 1, 'Configure actions_daemons returned 1');
 is($restart, 1, '1 restarts triggered (daemons configured, file changes)');
 is($reload, 1, '1 reload triggered (daemons configured, file changes)');
 
 $restart = $reload = 0;
-delete $cmp->{_actions};
+$cmp->reset_actions;
 is($cmp->Configure($cfg_nd), 1, 'Configure actions_nodaemons returned 1');
 is($restart, 0, '0 restarts triggered (no daemons configured, file changes)');
 is($reload, 0, '0 reload triggered (no daemons configured, file changes)');
