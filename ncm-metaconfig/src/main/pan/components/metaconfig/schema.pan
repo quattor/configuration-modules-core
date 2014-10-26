@@ -9,10 +9,7 @@ include { 'quattor/schema' };
 
 type ${project.artifactId}_extension = extensible {};
 
-# TODO add start/stop?
-# TODO already add stop_sleep_start (with some fixed delay)?
-# TODO support options like synchronous, delay,... ?
-type caf_service_action = string with match(SELF, '^(restart|reload)$');
+type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
 
 type ${project.artifactId}_config =  {
      'mode' : long = 0644
