@@ -73,44 +73,20 @@ sub Configure {
     # parameters.
 
     if ( ($server->{host} eq $this_host_full) || ($server->{host} eq 'localhost') ) {
-      $self->debug(1,"Checking MySQL service name...");
-      my $service;
       my $cmd;
-      if ($servicename) {
-        $self->info("MySQL service is set to $servicename. Assuming correct runlevel."); 
-        $service = $servicename;
-      } else {
-        # SL3=mysql, SL4+=mysqld
-        for my $name ('mysqld', 'mysql') {
-            $cmd = CAF::Process->new([$chkconfig, "--list", $name], log => $self);
-            $cmd->output();      # Also execute the command
-            unless ( $? ) {
-                $service = $name;
-                last;
-            }
-        }
-        if ( $service ) {
-            $self->debug(1,"Found MySQL service name: $service");
-        } else {
-            $self->error("Can't find mysql service: neither mysql nor mysqld.");
-            return(1);
-        }
-
-
-        $self->info("Checking if MySQL service ($service) is enabled and started...");
-        $cmd = CAF::Process->new([$chkconfig, $service, "on"], log => $self);
-        $cmd->output();      # Also execute the command
-        if ( $? ) {
-            $self->error("Error enabling MySQL server on local node");
-            return(1);
-        }
+      $self->info("Checking if MySQL service ($servicename) is enabled and started...");
+      $cmd = CAF::Process->new([$chkconfig, $servicename, "on"], log => $self);
+      $cmd->output();      # Also execute the command
+      if ( $? ) {
+          $self->error("Error enabling MySQL server on local node");
+          return(1);
       }
 
-      $cmd = CAF::Process->new([$servicecmd, $service, "status"], log => $self);
+      $cmd = CAF::Process->new([$servicecmd, $servicename, "status"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->info("Starting MySQL server...");
-        $cmd = CAF::Process->new([$servicecmd, $service, "start"], log => $self);
+        $cmd = CAF::Process->new([$servicecmd, $servicename, "start"], log => $self);
         my $cmd_output = $cmd->output();      # Also execute the command
         $status = $?;
         if ( $? ) {

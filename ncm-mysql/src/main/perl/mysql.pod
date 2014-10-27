@@ -50,9 +50,9 @@ Value is a nlist with the following possible keys :
 
 =back
 
-=head1 Servicename option
+=head1 servicename option
 
-Name of the mysql service. If this option is specified, the chkconfig steps are skipped and this servicename is used. Correct runlevel is assumed.
+Name of the mysql service. Valid values are 'mysql', 'mysqld' and 'mariadb'. Defaults to 'mysqld'.
 
 =head1 DEPENDENCIES
 
