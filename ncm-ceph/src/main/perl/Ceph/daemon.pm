@@ -56,12 +56,26 @@ sub extract_ip {
     return $ip;
 }
 
+# Connect to the host to get the osd id, and save it in the map
+sub get_and_add_to_mapping {
+    my ($self, $hostname, $osd, $mapping) = @_;
+    $self->debug(4, "Trying to map $osd->{osd_path} on $osd->{fqdn}");
+    my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path});
+    if (!$newosd) {
+        $self->error("Could not retrieve osd name for $osd->{osd_path} on $osd->{fqdn}");
+        return;
+    }
+    $self->add_to_mapping($mapping, $newosd, $hostname, $osd->{osd_path});
+    return $newosd;
+}
+
 # add osd entries in the mapping hash
 sub add_to_mapping {
     my ($self, $mapping, $id, $host, $osd_path) = @_;
     $id =~ s/osd\.//;
     $host =~ s/\..*//;
     my $osdstr = "$host:$osd_path";
+    $self->debug(4, "Adding mapping between id $id and $osdstr");
     $mapping->{get_loc}->{$id} = $osdstr;
     $mapping->{get_id}->{$osdstr} = $id;
 }
@@ -74,6 +88,7 @@ sub get_name_from_mapping {
     my $osd_id = $mapping->{get_id}->{$osdstr};
     if (!defined($osd_id)) {
         $self->error("No id found in mapping for $osdstr");
+        $self->debug(5, "Mapping:", %{$mapping});
         return;
     }
     return  "osd.$osd_id";
@@ -328,8 +343,7 @@ sub prep_mds {
 # Add the config fields of a new osd to the config file
 sub add_osd_to_config {
     my ($self, $hostname, $tinycfg, $osd, $gvalues, $mapping) = @_;
-    my $newosd = $self->get_osd_name($osd->{fqdn}, $osd->{osd_path}) or return 0;
-    $self->add_to_mapping($mapping, $newosd, $hostname, $osd->{osd_path});
+    my $newosd = $self->get_and_add_to_mapping($hostname, $osd, $mapping) or return 0;
     $self->debug(2, "adding new config for $newosd to the configfile");
     $tinycfg->{$newosd} = $self->stringify_cfg_arrays($osd->{config});
 
@@ -393,6 +407,8 @@ sub deploy_daemons {
                 return 0 if (!$ret);
                 if ($osd->{config}) {
                     $self->add_osd_to_config($hostname, $tinycfg, $osd, $gvalues, $mapping) or return 0;
+                } else {
+                    $self->get_and_add_to_mapping($hostname, $osd, $mapping) or return 0;
                 }
             }
         }
