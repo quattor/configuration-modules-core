@@ -25,82 +25,74 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Keep track of all actions to be taken in a hash
-# key = action; value = array ref to with all actions
-my %actions = ();
-
-# Convenience method to retrieve actions (mainly for unittests)
-# Returns a reference to the actions hash
-sub get_actions
-{
-    my $self = shift;
-    return \%actions;
-}
-
-# Convenience method to reset actions (mainly for unittests)
-sub reset_actions
-{
-    my $self = shift;
-    %actions = ();
-}
-
-# Add action for daemon
-sub add_action
-{
-    my ($self, $daemon, $action) = @_;
-    
-    $actions{$action} = () if (! $actions{$action});
-    if (! grep {$_ eq $daemon} @{$actions{$action}}) {
-        $self->debug(1, "Adding daemon $daemon action with action $action");
-        push(@{$actions{$action}}, $daemon);
-    }
-}
-
-# Given metaconfigservice C<$srv> and C<CAF::FileWriter> instance C<$fh>, 
-# prepare the actions to be taken for the service service
+# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>, 
+# prepare the actions to be taken for this service/file.
+# Does not return anything.
 sub prepare_action
 {
-    my ($self, $srv) = @_;
+    my ($self, $srv, $file, $actions) = @_;
 
-    $self->verbose('File changed, looking for daemons and actions');
+    # Not using a hash here to detect and support 
+    # any overlap with legacy daemon-restart config
+    my @daemon_action;
+
+    my $msg = "for file $file";
+    
     if ($srv->{daemons}) {
         while (my ($daemon, $action) = each %{$srv->{daemons}}) {
-            $self->add_action($daemon, $action);
+            push(@daemon_action, $daemon, $action);
         }
     }
 
     if ($srv->{daemon}) {
-        $self->verbose("Deprecated daemon(s) restart via daemon field.");
+        $self->verbose("Deprecated daemon(s) restart via daemon field $msg.");
         foreach my $daemon (@{$srv->{daemon}}) {
             if ($srv->{daemons}->{$daemon}) {
-                $self->verbose('Daemon $daemon also defined in daemons field. Adding restart action anyway.');
+                $self->verbose('Daemon $daemon also defined in daemons field $msg. Adding restart action anyway.');
             }
-            $self->add_action($daemon, 'restart');
+            push(@daemon_action, $daemon, 'restart');
         }
+    }
+
+    my @acts;    
+    while(my ($daemon,$action) = splice(@daemon_action,0,2)) {
+        if(exists($ALLOWED_ACTIONS{$action})) {
+            $actions->{$action} ||= {};
+            $actions->{$action}->{$daemon} = 1;
+            push(@acts, "$daemon:$action");
+        } else {
+            $self->error("Not a CAF::Service allowed action ",
+                         "$action for daemon $daemon $msg ",
+                         "in profile (component/schema mismatch?).");                
+        }
+    }
+    
+    if (@acts) {
+        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $msg.");
+    } else {
+        $self->verbose("No daemon/action scheduled $msg.");
     }
 }
 
-# Restart any daemons whose configurations we have changed.
+# Take the action for all daemons as defined in hash-reference C<$actions>.
+# Does not return anything.
 sub process_actions
 {
-    my $self = shift;
-    while (my ($action, $ds) = each %actions) {
-        my $msg = "action $action for daemons ".join(',', @$ds);
-        my $srv = CAF::Service->new($ds, log => $self);
-        if(exists($ALLOWED_ACTIONS{$action})) {
-            $self->verbose("Taking $msg");                
-            $srv->$action();
-        } else {
-            $self->error("No CAF::Service allowed action $action; no $msg");                
-        }
+    my ($self, $actions) = @_;
+    while (my ($action, $ds) = each(%$actions)) {
+        my $srv = CAF::Service->new([keys(%$ds)], log => $self);
+        # CAF::Service does all the logging we need
+        $srv->$action();
     }
-   
 }
 
-# Generate $file, configuring $srv using CAF::TextRender.
+# Generate C<$file>, configuring C<$srv> using CAF::TextRender.
+# Also tracks the actions that need to be taken via the 
+# C<$actions> hash-reference.
+# Returns undef in case of rendering failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv) = @_;
+    my ($self, $file, $srv, $actions) = @_;
 
     my $trd = CAF::TextRender->new($srv->{module},
                                    $srv->{contents},
@@ -127,7 +119,7 @@ sub handle_service
         return;
     }
 
-    $self->prepare_action($srv) if ($fh->close());
+    $self->prepare_action($srv, $file, $actions) if ($fh->close());
 
     return 1;
 }
@@ -139,13 +131,13 @@ sub Configure
 
     my $t = $config->getElement($PATH)->getTree();
 
-    $self->reset_actions();
+    my $actions = {};
     
     while (my ($f, $c) = each(%{$t->{services}})) {
-        $self->handle_service(unescape($f), $c);
+        $self->handle_service(unescape($f), $c, $actions);
     }
 
-    $self->process_actions();
+    $self->process_actions($actions);
 
     return 1;
 }
