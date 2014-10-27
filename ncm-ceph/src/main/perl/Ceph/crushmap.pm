@@ -56,7 +56,8 @@ sub push_weights {
     while (my ($hostname, $host) = each(%{$hosts})) {
         while  (my ($osdloc, $osd) = each(%{$host->{osds}})) {
             if ($osd->{crush_weight}){
-                my $osdname = $self->get_name_from_mapping($gvalues->{mapping}, $hostname, $osd->{osd_path}) or return 0;
+                my $osdname = $self->get_name_from_mapping($gvalues->{mapping},
+                    $hostname, $osd->{osd_path}) or return 0;
                 if (!$weights->{$osdname} ||( $osd->{crush_weight} != $weights->{$osdname})  ) {
                     $self->run_ceph_command([qw(osd crush reweight), $osdname, $osd->{crush_weight}]) or return 0;
                 }
@@ -117,7 +118,8 @@ sub crush_merge {
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){ 
-                        my $osdname = $self->get_name_from_mapping($gvalues->{mapping}, $name, $osds->{$osd}->{osd_path});
+                        my $osdname = $self->get_name_from_mapping($gvalues->{mapping},
+                            $name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
                             $self->error("Could not find osd name for ", 
                                 $osds->{$osd}->{osd_path}, " on $name");
