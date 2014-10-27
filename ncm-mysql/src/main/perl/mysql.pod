@@ -50,7 +50,7 @@ Value is a nlist with the following possible keys :
 
 =back
 
-=head1 servicename option
+=head1 serviceName option
 
 Name of the mysql service. Valid values are 'mysql', 'mysqld' and 'mariadb'. Defaults to 'mysqld'.
 

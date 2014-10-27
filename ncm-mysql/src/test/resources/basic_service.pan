@@ -1,7 +1,7 @@
 object template basic_service;
 
 prefix "/software/components/mysql";
-"servicename" = "mariadb";
+"serviceName" = "mariadb";
 prefix "/software/components/mysql/servers/one";
 "host" = 'localhost';
 "adminpwd" = 'r00t';

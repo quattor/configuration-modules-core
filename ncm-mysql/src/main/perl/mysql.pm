@@ -59,7 +59,7 @@ sub Configure {
   my $confighash = $config->getElement($base)->getTree();
   $databases = $confighash->{databases};
   $servers = $confighash->{servers};
-  my $servicename = $confighash->{servicename};
+  my $serviceName = $confighash->{serviceName};
 
   # Loop over all servers (even if no db in the configuration uses them)
 
@@ -74,19 +74,19 @@ sub Configure {
 
     if ( ($server->{host} eq $this_host_full) || ($server->{host} eq 'localhost') ) {
       my $cmd;
-      $self->info("Checking if MySQL service ($servicename) is enabled and started...");
-      $cmd = CAF::Process->new([$chkconfig, $servicename, "on"], log => $self);
+      $self->info("Checking if MySQL service ($serviceName) is enabled and started...");
+      $cmd = CAF::Process->new([$chkconfig, $serviceName, "on"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
           $self->error("Error enabling MySQL server on local node");
           return(1);
       }
 
-      $cmd = CAF::Process->new([$servicecmd, $servicename, "status"], log => $self);
+      $cmd = CAF::Process->new([$servicecmd, $serviceName, "status"], log => $self);
       $cmd->output();      # Also execute the command
       if ( $? ) {
         $self->info("Starting MySQL server...");
-        $cmd = CAF::Process->new([$servicecmd, $servicename, "start"], log => $self);
+        $cmd = CAF::Process->new([$servicecmd, $serviceName, "start"], log => $self);
         my $cmd_output = $cmd->output();      # Also execute the command
         $status = $?;
         if ( $? ) {

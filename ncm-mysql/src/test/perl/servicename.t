@@ -7,7 +7,7 @@
 
 =head1 DESCRIPTION
 
-Test the servicename option
+Test the serviceName option
 
 =cut
 
