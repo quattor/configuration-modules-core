@@ -107,6 +107,7 @@
     <module>ncm-puppet</module>
     <module>ncm-ceph</module>
     <module>ncm-nss</module>
+    <module>ncm-opennebula</module>
   </modules>
 
   <build>
