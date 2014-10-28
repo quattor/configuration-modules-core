@@ -35,7 +35,7 @@ OpenNebula installation is 100% automated. Therefore:
 
 =item * The component only will modify/remove resources with the QUATTOR flag set, otherwise the resource is ignored
 
-=item * If the component finds any issue during hypervisor host configuration then the node is not included within OpenNebula infrastructure (the host is set as disable)
+=item * If the component finds any issue during hypervisor host configuration then the hyp node is not included within OpenNebula infrastructure
 
 =back
 
