@@ -13,12 +13,13 @@ use vars qw(@ISA $EC);
 use LC::Exception;
 use Net::OpenNebula 0.2.2;
 use Data::Dumper;
+use Readonly;
+
 
 # TODO use constant from CAF::Render
-use constant TEMPLATEPATH => "/usr/share/templates/quattor";
-use constant CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
-use constant LIBVIRTKEYFILE => "/etc/ceph/ceph.client.libvirt.keyring";
-use constant MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly::Scalar my $TEMPLATEPATH => "/usr/share/templates/quattor";
+Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -51,7 +52,7 @@ sub process_template
     my $res;
     
     my $type_rel = "metaconfig/opennebula/$type_name.tt";
-    my $tpl = Template->new(INCLUDE_PATH => TEMPLATEPATH);
+    my $tpl = Template->new(INCLUDE_PATH => $TEMPLATEPATH);
     if (! $tpl->process($type_rel, { $type_name => $config }, \$res)) {
         $self->error("TT processing of $type_rel failed: ",$tpl->error());
         return;
@@ -217,7 +218,7 @@ sub enable_ceph_node
                 return;
             }
             # Add ceph keys as root
-            $cmd = ['secret-define', '--file', CEPHSECRETFILE];
+            $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
             $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
             if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
                 $uuid = $1;
@@ -225,7 +226,7 @@ sub enable_ceph_node
                 $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
                 }
                 else {
-                    $self->error("UUIDs set from datastore and CEPHSECRETFILE do not match.");
+                    $self->error("UUIDs set from datastore and $CEPHSECRETFILE do not match.");
                     return;
                 }
             } else {
@@ -431,11 +432,11 @@ sub is_supported_one_version
         return;
     }
 
-    my $res= $oneversion >= MINIMAL_ONE_VERSION;
+    my $res= $oneversion >= $MINIMAL_ONE_VERSION;
     if ($res) {
         $self->verbose("Version $oneversion is ok.");
     } else {
-        $self->error("OpenNebula AII requires ONE v".MINIMAL_ONE_VERSION." or higher (found $oneversion).");
+        $self->error("OpenNebula AII requires ONE v$MINIMAL_ONE_VERSION or higher (found $oneversion).");
     }
     return $res;
 }
