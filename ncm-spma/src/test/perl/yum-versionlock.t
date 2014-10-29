@@ -158,10 +158,7 @@ is($cmp->versionlock($tmppkgs, 1), 0,
 # make large enough output with mock versions and random ordered output
 # also make list of packages with version wildcards
 srand(0);
-# with strict, it fails for using barewords
-no strict;
 my @chars = ("a".."z", "A".."Z");
-use strict;
 sub make_rand_name {
     my $size = shift || 8;
     return join '', map { @chars[rand @chars] } 1 .. $size;
