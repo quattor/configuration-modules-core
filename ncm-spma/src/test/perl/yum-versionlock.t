@@ -160,7 +160,7 @@ is($cmp->versionlock($tmppkgs, 1), 0,
 srand(0);
 # with strict, it fails for using barewords
 no strict;
-my @chars = (a..z, A..Z);
+my @chars = ("a".."z", "A".."Z");
 use strict;
 sub make_rand_name {
     my $size = shift || 8;
