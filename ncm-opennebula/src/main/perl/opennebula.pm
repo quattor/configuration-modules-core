@@ -11,7 +11,7 @@ use NCM::Component;
 use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
-use Net::OpenNebula 0.2.2;
+use Net::OpenNebula 0.300.0;
 use Data::Dumper;
 use Readonly;
 
@@ -341,19 +341,36 @@ sub manage_hosts
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
         if (!$self->test_host_connection($host)) {
-            $self->warn("Could not connect to $type host: $host. ", 
-                        "This host cannot be included as ONE hypervisor host.");
+            $self->warn("Could not connect to $type host: $host.");
             push(@failedhost, $host);
+            if ($one->get_hosts(qr{^$host$})) {
+                $self->enable_disable_host($one, $host, 0);
+            } else {
+                $new = $one->create_host(%host_options);
+                $self->enable_disable_host($one, $host, 0);
+            }
         } else {
             my $output = $self->enable_node($one, $type, $host, $resources);
-            if ($output and !$one->get_hosts(qr{^$host$})) {
-                # TODO check if the host is disabled
-                # if so enable it
-                $new = $one->create_host(%host_options);
-                $self->info("Created new $type host $host.");
-            } elsif (!$output) {
-                # TODO add the host but as disabled host
-                push(@failedhost, $host);
+            if ($output) {
+                if ($one->get_hosts(qr{^$host$})) {
+                    # The host is already available and OK
+                    $self->enable_disable_host($one, $host, 1);
+                } else {
+                    # The host is not available yet from ONE framework
+                    # and it is running correctly
+                    $new = $one->create_host(%host_options);
+                    $self->info("Created new $type host $host.");
+                }
+            } else {
+                if ($one->get_hosts(qr{^$host$})) {
+                    # The current host is failing our tests
+                    $self->enable_disable_host($one, $host, 0);
+                } else {
+                    # The new host is recheable but it is failing our tests
+                    # Create and disable it
+                    $new = $one->create_host(%host_options);
+                    $self->enable_disable_host($one, $host, 0);
+                }
             }
         }
     }
@@ -362,6 +379,24 @@ sub manage_hosts
         $self->error("Detected some error/s including these $type nodes: ", join(',', @failedhost));
     }
 
+}
+
+# Enable/disable hyp hosts
+sub enable_disable_host
+{
+    my ($self, $one, $host, $enable) = @_;
+    my @hosts = $one->get_hosts(qr{^$host$});
+    foreach my $t (@hosts) {
+        if ($enable) {
+                if (!$t->is_enabled) {
+                    $t->enable;
+                    $self->info("Host: $t->name is now set as enabled.");
+                }
+        } else {
+            $t->disable;
+            $self->info("Host: $t->name is now set as disabled.");
+        }
+    }
 }
 
 # Function to add/remove/update regular users
