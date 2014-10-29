@@ -6,7 +6,7 @@
   <artifactId>accounts</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc1</version>
+  <version>14.10.0-rc2-SNAPSHOT</version>
   <name>Component handling local accounts.</name>
 
   <parent>
