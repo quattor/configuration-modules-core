@@ -344,17 +344,17 @@ sub manage_hosts
             $self->warn("Could not connect to $type host: $host.");
             push(@failedhost, $host);
             if ($one->get_hosts(qr{^$host$})) {
-                $self->enable_disable_host($one, $host, 0);
+                $self->enable_disable_hypervisor($one, $host, 0);
             } else {
                 $new = $one->create_host(%host_options);
-                $self->enable_disable_host($one, $host, 0);
+                $self->enable_disable_hypervisor($one, $host, 0);
             }
         } else {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
                 if ($one->get_hosts(qr{^$host$})) {
                     # The host is already available and OK
-                    $self->enable_disable_host($one, $host, 1);
+                    $self->enable_disable_hypervisor($one, $host, 1);
                 } else {
                     # The host is not available yet from ONE framework
                     # and it is running correctly
@@ -364,12 +364,12 @@ sub manage_hosts
             } else {
                 if ($one->get_hosts(qr{^$host$})) {
                     # The current host is failing our tests
-                    $self->enable_disable_host($one, $host, 0);
+                    $self->enable_disable_hypervisor($one, $host, 0);
                 } else {
                     # The new host is recheable but it is failing our tests
                     # Create and disable it
                     $new = $one->create_host(%host_options);
-                    $self->enable_disable_host($one, $host, 0);
+                    $self->enable_disable_hypervisor($one, $host, 0);
                 }
             }
         }
@@ -382,7 +382,7 @@ sub manage_hosts
 }
 
 # Enable/disable hyp hosts
-sub enable_disable_host
+sub enable_disable_hypervisor
 {
     my ($self, $one, $host, $enable) = @_;
     my @hosts = $one->get_hosts(qr{^$host$});
