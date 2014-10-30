@@ -209,6 +209,7 @@
               <require>perl(LC::Exception)</require>
               <require>perl(NCM::Component)</require>
               <require>perl(Set::Scalar)</require>
+              <require>perl(Text::Glob)</require>
               <require>perl(constant)</require>
               <require>perl(strict)</require>
               <require>perl(warnings)</require>
