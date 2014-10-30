@@ -62,6 +62,7 @@ prefix '/software/components/ceph/clusters';
 
 );         
 
+'/software/components/ceph/ssh_multiplex' = true;
 '/system/network/hostname' = 'ceph003';
 '/system/network/domainname' = 'cubone.os';
 

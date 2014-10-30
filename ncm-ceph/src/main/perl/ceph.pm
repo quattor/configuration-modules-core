@@ -233,6 +233,7 @@ sub Configure {
     my $hostname = $netw->{hostname};
     $self->debug(5, "Running on host $hostname.");
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
+    $self->set_ssh_command($t->{ssh_multiplex});
 
     while (my ($clus, $cluster) = each(%{$t->{clusters}})) {
         my $is_deploy = $cluster->{deployhosts}->{$hostname} ? 1 : 0 ;

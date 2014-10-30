@@ -59,6 +59,7 @@ set_desired_output($basestr . '/bin/readlink -f /var/lib/ceph/osd/ceph-1/journal
 set_desired_output($basestr . '/bin/readlink /var/lib/ceph/osd/ceph-1','/var/lib/ceph/osd/sdd');
 
 $cmp->use_cluster();
+$cmp->set_ssh_command(1);
 $cmp->{fsid} = $cluster->{config}->{fsid};
 $mock->mock('get_host'  => sub {
     my ($self,$host) = @_; 
