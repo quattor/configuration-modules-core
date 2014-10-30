@@ -18,23 +18,81 @@ use Readonly;
 
 Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
 
+# Has to correspond to what is allowed in the schema
+Readonly::Hash my %ALLOWED_ACTIONS => { restart => 1, reload => 1, stop_sleep_start => 1 };
+
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Given metaconfigservice C<$srv> and C<CAF::FileWriter> instance C<$fh>, 
-# check if a daemon needs to be restarted. 
-sub needs_restarting
+# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>, 
+# prepare the actions to be taken for this service/file.
+# Does not return anything.
+sub prepare_action
 {
-    my ($self, $fh, $srv) = @_;
+    my ($self, $srv, $file, $actions) = @_;
 
-    return $fh->close() && $srv->{daemon} && scalar(@{$srv->{daemon}});
+    # Not using a hash here to detect and support 
+    # any overlap with legacy daemon-restart config
+    my @daemon_action;
+
+    my $msg = "for file $file";
+    
+    if ($srv->{daemons}) {
+        while (my ($daemon, $action) = each %{$srv->{daemons}}) {
+            push(@daemon_action, $daemon, $action);
+        }
+    }
+
+    if ($srv->{daemon}) {
+        $self->verbose("Deprecated daemon(s) restart via daemon field $msg.");
+        foreach my $daemon (@{$srv->{daemon}}) {
+            if ($srv->{daemons}->{$daemon}) {
+                $self->verbose('Daemon $daemon also defined in daemons field $msg. Adding restart action anyway.');
+            }
+            push(@daemon_action, $daemon, 'restart');
+        }
+    }
+
+    my @acts;    
+    while(my ($daemon,$action) = splice(@daemon_action,0,2)) {
+        if(exists($ALLOWED_ACTIONS{$action})) {
+            $actions->{$action} ||= {};
+            $actions->{$action}->{$daemon} = 1;
+            push(@acts, "$daemon:$action");
+        } else {
+            $self->error("Not a CAF::Service allowed action ",
+                         "$action for daemon $daemon $msg ",
+                         "in profile (component/schema mismatch?).");                
+        }
+    }
+    
+    if (@acts) {
+        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $msg.");
+    } else {
+        $self->verbose("No daemon/action scheduled $msg.");
+    }
 }
 
-# Generate $file, configuring $srv using CAF::TextRender.
+# Take the action for all daemons as defined in hash-reference C<$actions>.
+# Does not return anything.
+sub process_actions
+{
+    my ($self, $actions) = @_;
+    while (my ($action, $ds) = each(%$actions)) {
+        my $srv = CAF::Service->new([keys(%$ds)], log => $self);
+        # CAF::Service does all the logging we need
+        $srv->$action();
+    }
+}
+
+# Generate C<$file>, configuring C<$srv> using CAF::TextRender.
+# Also tracks the actions that need to be taken via the 
+# C<$actions> hash-reference.
+# Returns undef in case of rendering failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv) = @_;
+    my ($self, $file, $srv, $actions) = @_;
 
     my $trd = CAF::TextRender->new($srv->{module},
                                    $srv->{contents},
@@ -61,11 +119,8 @@ sub handle_service
         return;
     }
 
-    if ($self->needs_restarting($fh, $srv)) {
-        foreach my $d (@{$srv->{daemon}}) {
-            $self->{daemons}->{$d} = 1;
-        }
-    }
+    $self->prepare_action($srv, $file, $actions) if ($fh->close());
+
     return 1;
 }
 
@@ -76,15 +131,14 @@ sub Configure
 
     my $t = $config->getElement($PATH)->getTree();
 
+    my $actions = {};
+    
     while (my ($f, $c) = each(%{$t->{services}})) {
-        $self->handle_service(unescape($f), $c);
+        $self->handle_service(unescape($f), $c, $actions);
     }
 
-    # Restart any daemons whose configurations we have changed.
-    if ($self->{daemons}) {
-        my $srv = CAF::Service->new([keys(%{$self->{daemons}})], log => $self);
-        $srv->restart();
-    }
+    $self->process_actions($actions);
+
     return 1;
 }
 
