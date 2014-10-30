@@ -35,11 +35,16 @@ my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 $cmp->use_cluster();
+my $mapping = {};
+my $gvalues = { mapping => $mapping };
 my $crush = $cluster->{crushmap};
 while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
     $cmp->structure_osds($hostname, $host); # Is normally done in the daemon part
+    while (my ($osdkey, $osd) = each(%{$host->{osds}})) {
+        $cmp->add_to_mapping($mapping, 'osd.0', $hostname, $osd->{osd_path});
+    }
 }
-$cmp->quat_crush($crush, $cluster->{osdhosts});
+$cmp->quat_crush($crush, $cluster->{osdhosts}, $gvalues);
 cmp_deeply($crush, \%crushdata::QUATMAP, 'hash from quattor built');
 my $crushdir = tempdir(CLEANUP => 1);
 $cmp->init_git($crushdir);

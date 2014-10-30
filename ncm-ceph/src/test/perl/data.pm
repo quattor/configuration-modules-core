@@ -863,6 +863,16 @@ Readonly::Hash our %TINIES => (
      }
    }
 ); 
+
+Readonly::Hash our %MAPADD => (
+    'get_id' => {
+      'ceph002:/var/lib/ceph/osd/sdc' => '2'
+    },
+    'get_loc' => {
+      '2' => 'ceph002:/var/lib/ceph/osd/sdc'
+    }
+);
+
 Readonly::Hash our %DEPLOYD => (
      'ceph002' => {
        'mds' => {

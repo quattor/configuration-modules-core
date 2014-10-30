@@ -46,7 +46,15 @@ sub init_qdepl {
     my ($self, $config, $cephusr) = @_;
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/';
     my $crushdir = $qdir . 'crushmap/' ;
-    make_path($qdir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
+    make_path($qdir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}, error => \my $err});
+    if (@$err) {
+        $self->error("make_path returned errors:");
+        for my $diag (@$err) {
+            my ($file, $message) = %$diag;
+            $self->error("file $file: $message");
+        }
+        return 0;
+    }
     $self->init_git($qdir);
     return $qdir; 
 }
@@ -212,9 +220,9 @@ sub do_configure {
         $mapping, $gvalues) or return 0; 
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
-    $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
+    $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues, $mapping) or return 0;
     $self->debug(1,"configuring crushmap");
-    $self->do_crush_actions($cluster, $gvalues, $structures->{skip}, $weights) or return 0;
+    $self->do_crush_actions($cluster, $gvalues, $structures->{skip}, $weights, $mapping) or return 0;
     $self->destroy_daemons($structures->{destroy}, $mapping) or return 0;
     $self->restart_daemons($structures->{restartd});
     return 1;  

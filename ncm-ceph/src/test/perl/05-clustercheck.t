@@ -37,9 +37,9 @@ $cmp->use_cluster();
 my $is_deploy = 1;
 my $hostname = 'ceph001';
 
-my $usr =  getpwuid($<);
+my ($name, $p, $uid, $gid, $q) =  getpwuid($<);
 my $tempdir = tempdir(CLEANUP => 1);
-my $cephusr = { 'homeDir' => $tempdir, 'uid' => $usr , 'gid' => $usr };
+my $cephusr = { 'homeDir' => $tempdir, 'uid' => $uid , 'gid' => $gid };
 my $gvalues = { 
     cephusr => $cephusr,
     clname => 'ceph',
