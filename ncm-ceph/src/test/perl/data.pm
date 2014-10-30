@@ -15,6 +15,10 @@ use strict;
 use warnings;
 
 use Readonly;
+
+Readonly our $CATCMD => '/bin/cat';
+Readonly our $OSD_SSH_BASE_CMD => 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph001.cubone.os';
+
 Readonly::Hash our  %MONJSONDECODE => (
     'created' => '0.000000',
     'epoch' => 11,

@@ -36,7 +36,6 @@ use Readonly;
 Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 Readonly::Array my @CAT_COMMAND => qw(/bin/cat);
-# set the working cluster, (if not given, use the default cluster 'ceph')
 
 my $sshcmd=[];
 
@@ -50,7 +49,7 @@ sub set_ssh_command
         push(@$sshcmd, @SSH_MULTIPLEX_OPTS);
     }
 }
-
+# set the working cluster, (if not given, use the default cluster 'ceph')
 sub use_cluster {
     my ($self, $cluster) = @_;
     $cluster ||= 'ceph';
@@ -131,6 +130,12 @@ sub run_command_as_ceph_with_ssh {
     my ($self, $command, $host, $ssh_options, $dry) = @_;
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_ceph([@$sshcmd, @$ssh_options, $host, @$command], '', $dry // 0);
+}
+
+# Runs a cat command as ceph over ssh 
+sub run_cat_command_as_ceph_with_ssh {
+    my ($self, $command, $host) = @_;
+    return $self->run_command_as_ceph_with_ssh([@CAT_COMMAND, @$command], $host);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
