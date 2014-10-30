@@ -30,6 +30,7 @@ type component_ccm = {
     'world_readable'   : long(0..1) = 0
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")
+    'use_ssl'         : boolean = false
 };
 
 bind '/software/components/ccm' = component_ccm;
