@@ -221,6 +221,13 @@ type ceph_cluster_config = {
     'osd_objectstore'           ? string
 };
 
+@{ ceph rados gateway type 
+http://ceph.com/docs/master/radosgw/ @}
+type ceph_radosgw = {
+    'fqdn'      : type_fqdn
+    'config'    : nlist
+};
+
 @{ function that checks that it is a valid algorithm. 
 Function also used in is_crushmap @}
 function is_ceph_crushmap_bucket_alg = {
@@ -288,6 +295,7 @@ type ceph_cluster = {
     'osdhosts'                  : ceph_osd_host {}
     'monitors'                  : ceph_monitor {1..}
     'mdss'                      ? ceph_mds {}
+    'radosgws'                  ? ceph_radosgw {} # gateways are not being deployed yet, only the config
     'deployhosts'               : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
     'crushmap'                  ? ceph_crushmap
 };

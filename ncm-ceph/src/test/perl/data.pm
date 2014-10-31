@@ -525,6 +525,62 @@ Readonly::Hash our %CEPHFMAP => (
      }
    }
 );
+our %CEPHINGW = ( 
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4'
+     },  
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.180:6789/0',
+       'fqdn' => 'ceph001.cubone.os',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     },  
+  }
+);
+Readonly::Hash our %QUATMAPGW => (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'up' => 1
+     },
+     'radosgw' => {
+       'config' => {
+         'foo' => 'bar',
+         'host' => 'ceph001'
+       },
+       'fqdn' => 'ceph001.cubone.os'
+     }
+   }
+);
+Readonly::Hash our  %COMPARE1GW => (
+     'ceph001' => {
+       'client.radosgw.gateway' => {
+         'foo' => 'bar',
+         'host' => 'ceph001'
+      },
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     }
+);
 our %CEPHIN = (
    'ceph001' => {
      'config' => {

@@ -54,6 +54,13 @@ sub get_quat_conf {
     my ($self, $quattor) = @_; 
     my $master = {} ;
     $self->debug(2, "Building information from quattor");
+    if ($quattor->{radosgws}) {
+        while (my ($hostname, $gtw) = each(%{$quattor->{radosgws}})) {
+            $master->{$hostname}->{radosgw} = $gtw; 
+            $master->{$hostname}->{fqdn} = $gtw->{fqdn};
+            $master->{$hostname}->{config} = $quattor->{config};
+        }  
+    }
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
         $master->{$hostname}->{mon} = $mon; # Only one monitor
         $master->{$hostname}->{fqdn} = $mon->{fqdn};
@@ -84,6 +91,7 @@ sub add_host {
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
+        $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $host->{radosgw} if ($host->{radosgw});
         if ($host->{mon}) {
             $self->add_mon($hostname, $host->{mon}, $structures) or return 0;
         }
@@ -240,7 +248,15 @@ sub compare_global {
     }
     return 1;
 }
-    
+
+# Compare radosgw config
+sub compare_radosgw {
+    my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
+    $self->debug(3, "Comparing radosgw section on $hostname");
+    $self->compare_config('radosgw', $hostname, $quat_config, $ceph_config);
+    $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $quat_config;
+}
+
 # Compare different sections of an existing host
 sub compare_host {
     my ($self, $hostname, $quat_host, $ceph_host_orig, $structures) = @_;
@@ -251,8 +267,12 @@ sub compare_host {
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
         return 0; 
     } else {
-        $self->compare_global($hostname,  $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;        
-
+        $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
+        if ($quat_host->{radosgw}) {
+            $self->compare_radosgw($hostname, $quat_host->{radosgw}->{config}, $ceph_host->{radosgw}->{config}, $structures);
+        } elsif ($ceph_host->{radosgw}) {
+            $self->info("radosgw config of $hostname not in quattor. Will get removed");
+        }
         if ($quat_host->{mon} && $ceph_host->{mon}) {
             $self->compare_mon($hostname, $quat_host->{mon}, $ceph_host->{mon}, $structures) or return 0;
         } elsif ($quat_host->{mon}) {
