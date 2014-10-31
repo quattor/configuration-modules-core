@@ -7,8 +7,7 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
 
-eval "use JSON::Any";
-plan skip_all => "JSON::Any not found" if $@;
+use JSON::Any;
 
 $CAF::Object::NoAction = 1;
 
@@ -39,14 +38,6 @@ my $cfg = {
 	   module => "json",
 	  };
 
-my $restart = 1;
-
-no warnings 'redefine';
-*NCM::Component::metaconfig::needs_restarting = sub {
-    return $restart;
-};
-use warnings 'redefine';
-
 $cmp->handle_service("/foo/bar", $cfg);
 
 my $fh = get_file("/foo/bar");
@@ -54,13 +45,6 @@ my $fh = get_file("/foo/bar");
 isa_ok($fh, "CAF::FileWriter", "Correct class");
 my $js = JSON::Any->Load("$fh");
 is($js->{foo}, 1, "JSON file correctly created and reread");
-is($cmp->{daemons}->{'httpd'}, 1, "File marks httpd for restarting");
-
-$restart = 0;
-
-$cfg->{daemon} = 'foo';
-
-$cmp->handle_service("/foo/bar", $cfg);
-ok(!exists($cmp->{daemon}->{foo}), "The daemon won't be restarted");
+is($js->{baz}->{a}->[2], 2, "JSON file correctly created and reread (pt 2)");
 
 done_testing();

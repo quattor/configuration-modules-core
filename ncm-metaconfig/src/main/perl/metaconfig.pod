@@ -5,8 +5,8 @@
 
 =head1 NAME
 
-ncm-${project.artifactId}: Configure services whose config format is
-very widespread, such as YAML or JSON.
+ncm-${project.artifactId}: Configure services whose config format can be 
+rendered via C<CAF::TextRender>.
 
 =head1 DESCRIPTION
 
@@ -42,9 +42,22 @@ Extension for the file's backup.
 Module to render the configuration file. See L<CONFIGURATION MODULES>
 below.
 
-=item * daemon ? string
+=item * daemons ? caf_service_action{}
 
-Daemon to restart if the file changes.
+An nlist with foreach daemon the C<CAF::Service> action to take 
+if the file changes.
+
+Even if multiple C<services> are associated to the same daemon, each action 
+for the daemon will be taken at most once.
+
+If multiple actions are to be taken for the same daemon, all actions
+will be taken (no attempt to optimize is made).
+
+=item * daemon ? string[]
+
+[Deprecated in favour of daemons]
+
+List of daemons to restart if the file changes.
 
 Even if multiple C<services> are associated to the same daemon, the
 daemon will be restarted at most once.
@@ -71,7 +84,7 @@ validation.
 
 =head1 CONFIGURATION MODULES
 
-The following formats my be rendered:
+The following formats can be rendered via C<CAF::TextRender>:
 
 =over 4
 

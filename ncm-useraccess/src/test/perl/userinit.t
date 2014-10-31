@@ -28,9 +28,12 @@ rmtree("target/test/home");
 
 my @chown;
 
+# disable the 'only used once' warning here
+no warnings qw(once);
 *NCM::Component::useraccess::chown = sub {
     push(@chown, \@_);
 };
+use warnings qw(once);
 
 # And only then, we REQUIRE and NOT USE the component package. We need
 # REQUIRE because it's executed at runtime, and thus after our fake
