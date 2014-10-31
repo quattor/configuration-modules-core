@@ -69,6 +69,7 @@ type component_mysql = {
 
   'databases'    ? component_mysql_db_options{}
   'servers'      : component_mysql_server_options{}
+  'serviceName'  : string = 'mysqld' with match(SELF, '^(mysql|mysqld|mariadb)$')
 } with component_mysql_valid(SELF);
 
 bind '/software/components/mysql' = component_mysql;
