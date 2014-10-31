@@ -340,13 +340,17 @@ sub manage_hosts
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
-        my @hostinstance = $one->get_hosts(qr{^$host$});
+        my @hostinstances = $one->get_hosts(qr{^$host$});
+        if (scalar(@hostinstances) > 1) {
+            $self->error("Found more than one host $host:", join(',', @hostinstances));
+        }
+        my $hostinstance = $hostinstances[0];
         if ($self->test_host_connection($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
-                if (@hostinstance) {
+                if ($hostinstance) {
                     # The host is already available and OK
-                    $hostinstance[0]->enable if !$hostinstance[0]->is_enabled;
+                    $hostinstance->enable if !$hostinstance->is_enabled;
                     $self->info("Enabled existing host $host");
                 } else {
                     # The host is not available yet from ONE framework
@@ -355,12 +359,12 @@ sub manage_hosts
                     $self->info("Created new $type host $host.");
                 }
             } else {
-                if (@hostinstance) {
+                if ($hostinstance) {
                     # The current host is failing our tests
-                    $hostinstance[0]->disable;
+                    $hostinstance->disable;
                     $self->info("Disabled existing host $host");
                 } else {
-                    # The new host is recheable but it is failing our tests
+                    # The new host is reacheable but it is failing our tests
                     # Create and disable it
                     $new = $one->create_host(%host_options);
                     $new->disable;
@@ -370,8 +374,8 @@ sub manage_hosts
         } else {
             $self->warn("Could not connect to $type host: $host.");
             push(@failedhost, $host);
-            if (@hostinstance) {
-                $hostinstance[0]->disable;
+            if ($hostinstance) {
+                $hostinstance->disable;
                 $self->info("Disabled existing host $host");
             } else {
                 $new = $one->create_host(%host_options);
