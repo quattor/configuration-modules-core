@@ -226,7 +226,7 @@ sub enable_ceph_node
                 $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
                 }
                 else {
-                    $self->error("UUIDs set from datastore and $CEPHSECRETFILE do not match.");
+                    $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
                     return;
                 }
             } else {
@@ -340,21 +340,14 @@ sub manage_hosts
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
-        if (!$self->test_host_connection($host)) {
-            $self->warn("Could not connect to $type host: $host.");
-            push(@failedhost, $host);
-            if ($one->get_hosts(qr{^$host$})) {
-                $self->enable_disable_hypervisor($one, $host, 0);
-            } else {
-                $new = $one->create_host(%host_options);
-                $self->enable_disable_hypervisor($one, $host, 0);
-            }
-        } else {
+        my @hostinstance = $one->get_hosts(qr{^$host$});
+        if ($self->test_host_connection($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
-                if ($one->get_hosts(qr{^$host$})) {
+                if (@hostinstance) {
                     # The host is already available and OK
-                    $self->enable_disable_hypervisor($one, $host, 1);
+                    $hostinstance[0]->enable if !$hostinstance[0]->is_enabled;
+                    $self->info("Enabled existing host $host");
                 } else {
                     # The host is not available yet from ONE framework
                     # and it is running correctly
@@ -362,15 +355,28 @@ sub manage_hosts
                     $self->info("Created new $type host $host.");
                 }
             } else {
-                if ($one->get_hosts(qr{^$host$})) {
+                if (@hostinstance) {
                     # The current host is failing our tests
-                    $self->enable_disable_hypervisor($one, $host, 0);
+                    $hostinstance[0]->disable;
+                    $self->info("Disabled existing host $host");
                 } else {
                     # The new host is recheable but it is failing our tests
                     # Create and disable it
                     $new = $one->create_host(%host_options);
-                    $self->enable_disable_hypervisor($one, $host, 0);
+                    $new->disable;
+                    $self->info("Created and disabled new host $host");
                 }
+            }
+        } else {
+            $self->warn("Could not connect to $type host: $host.");
+            push(@failedhost, $host);
+            if (@hostinstance) {
+                $hostinstance[0]->disable;
+                $self->info("Disabled existing host $host");
+            } else {
+                $new = $one->create_host(%host_options);
+                $new->disable;
+                $self->info("Created and disabled new host $host");
             }
         }
     }
@@ -379,24 +385,6 @@ sub manage_hosts
         $self->error("Detected some error/s including these $type nodes: ", join(',', @failedhost));
     }
 
-}
-
-# Enable/disable hyp hosts
-sub enable_disable_hypervisor
-{
-    my ($self, $one, $host, $enable) = @_;
-    my @hosts = $one->get_hosts(qr{^$host$});
-    foreach my $t (@hosts) {
-        if ($enable) {
-                if (!$t->is_enabled) {
-                    $t->enable;
-                    $self->info("Host: $t->name is now set as enabled.");
-                }
-        } else {
-            $t->disable;
-            $self->info("Host: $t->name is now set as disabled.");
-        }
-    }
 }
 
 # Function to add/remove/update regular users
