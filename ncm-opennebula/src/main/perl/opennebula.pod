@@ -73,6 +73,35 @@ To set up the initial cluster, some steps should be taken:
 The configuration information for the component.  Each field should
 be described in this section. 
 
+=over 4
+
+=item * ssh_multiplex : boolean
+
+Set ssh multiplex options
+
+=item * tm_system_ds : string (optional)
+
+Set system datastore TM_MAD value (shared by default). Valid values:
+
+=over 5
+
+=item * shared
+
+The storage area for the system datastore is a shared directory across the hosts.
+
+=item * vmfs
+
+A specialized version of the shared one to use the vmfs file system. 
+
+=item * ssh
+
+Uses a local storage area from each host for the system datastore.
+
+=back
+
+=back
+
+
 =head1 DEPENDENCIES
 
 The component was tested with OpenNebula version 4.8 and 4.10

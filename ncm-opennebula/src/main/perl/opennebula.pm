@@ -510,6 +510,8 @@ sub Configure
     my $tree = $config->getElement($base)->getTree();
     # Set ssh multiplex options
     $self->set_ssh_command($tree->{ssh_multiplex});
+    # Set tm_system_ds if available
+    my $tm_system_ds = $tree->{tm_system_ds};
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
@@ -530,6 +532,12 @@ sub Configure
 
     # For the moment only Ceph datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores});
+    # Update system datastore TM_MAD 
+    if ($tm_system_ds) {
+        $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
+        $self->info("Updated system datastore TM_MAD = $tm_system_ds");
+    }
+
 
     my $hypervisor = "kvm";
     $self->manage_something($one, $hypervisor, $tree);

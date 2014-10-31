@@ -36,6 +36,7 @@ type component_opennebula = {
     'hosts'         : string[]
     'rpc'           : opennebula_rpc
     'ssh_multiplex' : boolean = true
+    'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = nlist();
 
 bind '/software/components/opennebula' = component_opennebula;

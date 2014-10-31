@@ -59,3 +59,4 @@ prefix "/software/components/opennebula";
 );
 
 "ssh_multiplex" = true;
+"tm_system_ds" = "ssh";
