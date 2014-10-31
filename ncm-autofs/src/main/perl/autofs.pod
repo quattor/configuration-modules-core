@@ -88,6 +88,18 @@ Default : none
 
 =head1 EXAMPLES
 
+=head2 Scenario 1 : Configure a NFS mountpoint
+
+We will mount the NFS filesystem nfsserv.example.org:/data under /tmp_mnt/nfsdata
+
+ prefix '/software/components/autofs/maps/data';
+ 'entries/nfsdata/location' = 'nfsserv.example.org:/data';
+ 'mapname'='/etc/auto.nfsdata';
+ 'mountpoint'='/tmp_mnt';
+ 'options'='rw,noatime,hard';
+
+=head2 Scenario 2 : Configuration with nlist() usage
+    
     '/software/components/autofs' = nlist(
         'preserveMaster', false,
 
