@@ -39,7 +39,19 @@ execution will be delayed by [0, nch_smear] seconds.
 
 The binary to execute when receiving a CCM update packet.
 
+=item * C<< fetch_offset ? long(0..) >>
+
+Fetch execution offset.
+
+See explanation for C<< fetch_smear >>.
+
 =item * C<< fetch_smear ? long(0..) >>
+
+Fetch time smearing.
+
+The fetch binary will be started at a point in time between
+C<< fetch_offset >> and C<< fetch_offset + fetch_smear >> seconds
+after receiving a notification packet.
 
 The range of time delay for executing the fetch executable.  The
 execution will be delayed by [0, fetch_smear] seconds.
