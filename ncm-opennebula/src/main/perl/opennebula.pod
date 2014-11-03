@@ -37,6 +37,8 @@ OpenNebula installation is 100% automated. Therefore:
 
 =item * If the component finds any issue during hypervisor host configuration then the node is included within OpenNebula infrastructure but as disabled host
 
+=item * ONE component does not generate /etc/one/oned.conf file (yet). https://github.com/quattor/configuration-modules-core/issues/365
+
 =back
 
 =head1 INITIAL CREATION
