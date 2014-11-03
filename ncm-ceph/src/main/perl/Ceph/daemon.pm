@@ -166,6 +166,12 @@ sub get_osd_location {
     }   
     
     my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/fsid"], $host);
+    if (!$ph_uuid) {
+        $self->error("Could not read uuid of osd.$osd. ",
+            "If this disk was replaced, please remove from ceph first to reinstall: ",
+            "ceph osd crush remove osd.$osd; ceph osd rm osd.$osd; ceph auth del osd.$osd;");
+        return ;
+    }
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
