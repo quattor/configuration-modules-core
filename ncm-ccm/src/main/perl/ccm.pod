@@ -98,6 +98,15 @@ protocol.
 Whether the profiles should be world-readable.  This takes either a 0
 or 1.  Defaults to 0.
 
+=item * C<< base_url ? type_absoluteURI >>
+
+If C<< profile >> is not a URL, a profile url will be calculated from
+C<< base_url >> and the local hostname.
+
+=item * C<< dbformat ? string >>
+
+Format of the local database, must be C<< DB_File >>, C<< CDB_File >> or C<< GDBM_File >>.
+
 =back
 
 =cut
