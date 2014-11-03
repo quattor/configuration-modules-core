@@ -342,7 +342,7 @@ sub manage_hosts
         # we include the host in ONE db even if it fails
         my @hostinstances = $one->get_hosts(qr{^$host$});
         if (scalar(@hostinstances) > 1) {
-            $self->error("Found more than one host $host:", join(',', @hostinstances));
+            $self->error("Found more than one host $host. Only the fist host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
         if ($self->test_host_connection($host)) {
@@ -364,7 +364,7 @@ sub manage_hosts
                     $hostinstance->disable;
                     $self->info("Disabled existing host $host");
                 } else {
-                    # The new host is reacheable but it is failing our tests
+                    # The new host is reachable but it is failing our tests
                     # Create and disable it
                     $new = $one->create_host(%host_options);
                     $new->disable;
