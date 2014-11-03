@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><nlist format="pan" name="profile">
+    <nlist name="software">
+        <nlist name="components">
+            <nlist name="opennebula">
+                <nlist name="rpc">
+                    <string name="host">myhost.domain</string>
+                    <string name="password">verysecret</string>
+                    <long name="port">1234</long>
+                    <string name="user">oneadmin</string>
+                </nlist>
+            </nlist>
+        </nlist>
+    </nlist>
+</nlist>
