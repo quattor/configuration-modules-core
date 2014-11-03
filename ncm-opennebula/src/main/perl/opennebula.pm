@@ -342,7 +342,7 @@ sub manage_hosts
         # we include the host in ONE db even if it fails
         my @hostinstances = $one->get_hosts(qr{^$host$});
         if (scalar(@hostinstances) > 1) {
-            $self->error("Found more than one host $host. Only the fist host will be modified.");
+            $self->error("Found more than one host $host. Only the first host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
         if ($self->test_host_connection($host)) {
