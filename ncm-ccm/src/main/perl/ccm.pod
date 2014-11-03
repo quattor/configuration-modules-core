@@ -106,6 +106,7 @@ C<< base_url >> and the local hostname.
 =item * C<< dbformat ? string >>
 
 Format of the local database, must be C<< DB_File >>, C<< CDB_File >> or C<< GDBM_File >>.
+If not specified, the component will default to C<< GDBM_File >>.
 
 =back
 
