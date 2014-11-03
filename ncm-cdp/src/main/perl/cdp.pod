@@ -6,7 +6,7 @@
 =head1 NAME
 
 The I<cdp> component manages the configuration file
-/etc/cdp-listend.conf.
+C<< /etc/cdp-listend.conf. >>
 
 =head1 DESCRIPTION
 
@@ -15,31 +15,40 @@ cdp-listend daemon.
 
 =head1 RESOURCES
 
-=head2 configfile (/etc/cdp-listend.conf)
+=over
+
+=item * C<< configfile : string >>
 
 The location of the configuration file.  Normally this should not be
-changed. 
+changed.  Defaults to C<< /etc/cdp-listend.conf >>
 
-=head2 port
+=item * C<< port ? type_port >>
 
 The port used by the daemon.  
 
-=head2 nch
+=item * C<< nch ? string >>
 
 The binary to execute when receiving a CDB update packet.
 
-=head2 nch_smear
+=item * C<< nch_smear ? long(0..) >>
 
 The range of time delay for executing the nch executable.  The
 execution will be delayed by [0, nch_smear] seconds.
 
-=head2 fetch
+=item * C<< fetch ? string >>
 
 The binary to execute when receiving a CCM update packet.
 
-=head2 fetch_smear
+=item * C<< fetch_smear ? long(0..) >>
 
 The range of time delay for executing the fetch executable.  The
 execution will be delayed by [0, fetch_smear] seconds.
+
+=back
+
+=head1 EXAMPLES
+
+  "/software/components/cdp/fetch" = "/usr/sbin/ccm-fetch";
+  "/software/components/cdp/fetch_smear" = 30;
 
 =cut
