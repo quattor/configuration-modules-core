@@ -121,9 +121,6 @@ C<< nlist >> with the following structure:
 
 =over
 
-
-=over
-
 =item * C<< prerotate ? string >>
 
 =item * C<< postrotate ? string >>
