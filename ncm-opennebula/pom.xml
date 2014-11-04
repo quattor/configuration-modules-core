@@ -6,14 +6,14 @@
   <artifactId>opennebula</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.6.1-SNAPSHOT</version>
+  <version>14.10.0-rc2-SNAPSHOT</version>
   <name>OpenNebula NCM component.</name>
 
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.35</version>
+    <version>1.38</version>
   </parent>
 
   <licenses>
