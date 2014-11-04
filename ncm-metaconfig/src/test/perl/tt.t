@@ -3,45 +3,27 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::MockModule;
 use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
+use Cwd;
 
-eval "use Template";
+use Template;
 
 use Readonly;
 
-Readonly my $STR => "An arbitrary string";
-
-plan skip_all => "Template::Toolkit not found" if $@;
-
 $CAF::Object::NoAction = 1;
 
-our $sane_templates = "foo/bar";
+my $mock = Test::MockModule->new('CAF::TextRender');
+$mock->mock('new', sub {
+    my $init = $mock->original("new");
+    my $trd = &$init(@_);
+    $trd->{includepath} = getcwd()."/src/test/resources";
+    $trd->{relpath} = 'rendertest';
+    return $trd;
+});
 
-# For these tests, we don't really need any Template::Toolkit. Just be
-# sure that it gets called with the expected arguments.
-no warnings 'redefine';
-*NCM::Component::template = sub {
-    my ($self) = @_;
-    return $self;
-};
-
-sub NCM::Component::process {
-    my ($self, $file, $cfg, $str) = @_;
-    $self->{$file}->{CFG} = $cfg;
-
-    $$str = $STR;
-    return !$self->{$file}->{failed};
-}
-
-*NCM::Component::metaconfig::sanitize_template = sub {
-    my ($self, $tpl) = @_;
-    $self->{TEMPLATES}->{$tpl} = 1;
-    return $sane_templates;
-};
-
-use warnings 'redefine';
 
 =pod
 
@@ -58,9 +40,9 @@ Template::Toolkit to render an arbitrary file format.
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
 my $cfg = {
-	   owner => 'root',
-	   group => 'root',
-	   mode => 0644,
+       owner => 'root',
+       group => 'root',
+       mode => 0644,
 	   contents => {
 			foo => 1,
 			bar => 2,
@@ -68,11 +50,8 @@ my $cfg = {
 				a => [0..3]
 				}
 			},
-	   daemon => 'httpd',
 	   module => "foo/bar",
 	  };
-
-my $restart = 1;
 
 =pod
 
@@ -82,15 +61,11 @@ All methods are called with the expected arguments.
 
 =cut
 
-is($cmp->tt($cfg->{contents}, $cfg->{module}), $STR,
-   "Method returns the expected string");
+$cmp->handle_service("/foo/bar", $cfg);
 
-is($cmp->{TEMPLATES}->{$cfg->{module}}, 1, "The template was sanitized");
-my $tpl_call = $cmp->{$sane_templates};
-ok($tpl_call, "Template name was sanitized");
-is($tpl_call->{CFG}, $cfg->{contents},
-   "Template processed with the correct configuration");
-ok(!exists($cmp->{ERROR}), "No errors in this run");
+my $fh = get_file("/foo/bar");
+isa_ok($fh, "CAF::FileWriter", "Correct class");
+is("$fh", "1 2 0:1:2:3\n", "Rendered correctly");
 
 =pod
 
@@ -101,9 +76,13 @@ displayed
 
 =cut
 
-$tpl_call->{failed} = 1;
-$cmp->tt($cfg->{contents}, "/foo/bar/baz.conf");
-is($cmp->{ERROR}, 2, "Errors reported when the template processing fails");
+$cmp->{ERROR} = 0;
+
+$cfg->{module} = 'test_broken';
+$cmp->handle_service("/foo/bar2", $cfg);
+is($cmp->{ERROR}, 1, "1 errors reported when the template processing fails");
+$fh = get_file("/foo/bar2");
+ok(!defined($fh), "Render failure, no output file");
 
 =pod
 
@@ -111,10 +90,12 @@ is($cmp->{ERROR}, 2, "Errors reported when the template processing fails");
 
 =cut
 
-$sane_templates = undef;
 $cfg->{module} = "invalid";
-ok(!$cmp->tt($cfg->{contents}, $cfg->{module}), "Invalid template name is detected");
-is($cmp->{TEMPLATES}->{$cfg->{module}}, 1, "Tried to sanitize invalid template");
-is($cmp->{ERROR}, 3, "Error on invalid template name was reported");
+$cmp->{ERROR} = 0;
+$cmp->handle_service("/foo/bar3", $cfg);
+is($cmp->{ERROR}, 1, "1 errors reported when the module doesn't exists");
+$fh = get_file("/foo/bar3");
+ok(!defined($fh), "Non-existing module, no output file");
+
 
 done_testing();

@@ -6,14 +6,14 @@
   <artifactId>metaconfig</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.8.1-SNAPSHOT</version>
+  <version>14.10.0-rc2-SNAPSHOT</version>
   <name>Configure services whose config format is standard, such as YAML or JSON.</name>
 
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.36</version>
+    <version>1.38</version>
   </parent>
 
   <licenses>
@@ -40,25 +40,4 @@
       </roles>
     </contributor>
   </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-	<plugin>
-	  <groupId>org.codehaus.mojo</groupId>
-	  <artifactId>rpm-maven-plugin</artifactId>
-	  <configuration>
-            <requires>
-              <require>perl(Config::Tiny)</require>
-              <require>perl(Config::General)</require>
-              <require>perl(JSON::XS)</require>
-              <require>perl(YAML::XS)</require>
-              <require>perl(Template)</require>
-              <require>perl(Config::Properties)</require>
-            </requires>
-	  </configuration>
-	</plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>

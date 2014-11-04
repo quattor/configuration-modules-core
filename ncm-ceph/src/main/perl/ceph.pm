@@ -41,17 +41,25 @@ sub init_git {
     } # Access with my $gitr = Git::Repository->new( work_tree => $qdir );
 }
  
-#Make sure  a temporary directory is created for push and pulls
+# Make sure  a temporary directory is created for push and pulls
 sub init_qdepl {
     my ($self, $config, $cephusr) = @_;
     my $qdir = $cephusr->{homeDir} . '/ncm-ceph/';
     my $crushdir = $qdir . 'crushmap/' ;
-    make_path($qdir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}});
+    make_path($qdir, $crushdir, {owner=>$cephusr->{uid}, group=>$cephusr->{gid}, error => \my $err});
+    if (@$err) {
+        $self->error("make_path returned errors:");
+        for my $diag (@$err) {
+            my ($file, $message) = %$diag;
+            $self->error("file $file: $message");
+        }
+        return 0;
+    }
     $self->init_git($qdir);
     return $qdir; 
 }
    
-#Checks if cluster is configured on this node.
+# Checks if cluster is configured on this node.
 sub cluster_exists_check {
     my ($self, $cluster, $gvalues) = @_;
     # Check If something is not configured or there is no existing cluster 
@@ -82,16 +90,16 @@ sub cluster_exists_check {
         if (!-f "$cephusr->{homeDir}/$gvalues->{clname}.mon.keyring"){
             $self->run_ceph_deploy_command([@newcmd]);
         }
-        $self->info("To create a new cluster, run this command as ceph user");
-        my @moncr = qw(/usr/bin/ceph-deploy mon create-initial);
-        $self->print_cmds([[@moncr]]);
+        $self->info("To create a new cluster, run this command");
+        my $moncr = $self->run_ceph_deploy_command([qw(mon create-initial)],'','',1);
+        $self->print_cmds([$moncr]);
         return 0;
     } else {
         return 1;
     }
 }
 
-#Fail if cluster not ready and no deploy hosts
+# Fail if cluster not ready and no deploy hosts
 sub cluster_ready_check {
     my ($self, $cluster, $is_deploy, $hostname) = @_;
    
@@ -100,7 +108,8 @@ sub cluster_ready_check {
             my @admin = ('admin', $hostname);
             $self->run_ceph_deploy_command(\@admin);
             if (!$self->run_ceph_command([qw(status)])) {
-                $self->error("Cannot connect to ceph cluster!"); #This should not happen
+                # This should not happen
+                $self->error("Cannot connect to ceph cluster!");
                 return 0;
             } else {
                 $self->debug(1,"Node ready to receive ceph-commands");
@@ -114,7 +123,7 @@ sub cluster_ready_check {
     return 1;
 }
 
-#Checks the fsid value of the ceph dump with quattor value
+# Checks the fsid value of the ceph dump with quattor value
 sub cluster_fsid_check {
     my ($self, $cluster, $clname) = @_;
     my $jstr = $self->run_ceph_command([qw(mon dump)]) or return 0;
@@ -131,7 +140,7 @@ sub cluster_fsid_check {
     }
 }
 
-#generate mon hosts
+# generate mon hosts
 sub gen_extra_config {
     my ($self, $cluster) = @_;
     my $config = $cluster->{config};
@@ -208,15 +217,14 @@ sub do_configure {
     my ($ceph_conf, $mapping, $weights) = $self->get_ceph_conf($gvalues) or return 0;
     my $quat_conf = $self->get_quat_conf($cluster) or return 0;
     my $structures = $self->compare_conf($quat_conf, $ceph_conf, 
-        $mapping, $gvalues) or return 0; #This is the Main function
+        $mapping, $gvalues) or return 0; 
     $self->debug(1,"configuring daemons");
     my $tinies = $self->set_and_push_configs($structures->{configs}, $gvalues) or return 0;  
-    $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues) or return 0;
+    $self->deploy_daemons($structures->{deployd}, $tinies, $gvalues, $mapping) or return 0;
     $self->debug(1,"configuring crushmap");
-    $self->do_crush_actions($cluster, $gvalues, $structures->{ignh}, $weights) or return 0;
+    $self->do_crush_actions($cluster, $gvalues, $structures->{skip}, $weights, $mapping) or return 0;
     $self->destroy_daemons($structures->{destroy}, $mapping) or return 0;
     $self->restart_daemons($structures->{restartd});
-    #$self->print_info($restartd, $mand, $not_configured);
     return 1;  
         
 }
@@ -233,6 +241,7 @@ sub Configure {
     my $hostname = $netw->{hostname};
     $self->debug(5, "Running on host $hostname.");
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
+    $self->set_ssh_command($t->{ssh_multiplex});
 
     while (my ($clus, $cluster) = each(%{$t->{clusters}})) {
         my $is_deploy = $cluster->{deployhosts}->{$hostname} ? 1 : 0 ;

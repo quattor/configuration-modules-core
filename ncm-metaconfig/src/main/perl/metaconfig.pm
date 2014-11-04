@@ -11,191 +11,94 @@ use warnings;
 use base qw(NCM::Component);
 
 use LC::Exception;
-use LC::Find;
-use LC::File qw(copy makedir);
-use CAF::FileWriter;
-use CAF::FileEditor;
+use CAF::TextRender;
 use CAF::Service;
-use File::Basename;
-use File::Path;
 use EDG::WP4::CCM::Element qw(unescape);
-use Cwd qw(abs_path);
-use File::Spec::Functions qw(abs2rel file_name_is_absolute);
-
 use Readonly;
 
 Readonly::Scalar my $PATH => '/software/components/${project.artifactId}';
+
+# Has to correspond to what is allowed in the schema
+Readonly::Hash my %ALLOWED_ACTIONS => { restart => 1, reload => 1, stop_sleep_start => 1 };
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-
-sub load_module
+# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>, 
+# prepare the actions to be taken for this service/file.
+# Does not return anything.
+sub prepare_action
 {
-    my ($self, $module) = @_;
+    my ($self, $srv, $file, $actions) = @_;
 
-    $self->verbose("Loading module $module");
+    # Not using a hash here to detect and support 
+    # any overlap with legacy daemon-restart config
+    my @daemon_action;
 
-    eval "use $module";
-    if ($@) {
-        $self->error("Unable to load $module: $@");
-        return;
-    }
-    return 1;
-}
-
-sub needs_restarting
-{
-    my ($self, $fh, $srv) = @_;
-
-    return $fh->close() && $srv->{daemon} && scalar(@{$srv->{daemon}});
-}
-
-sub json
-{
-    my ($self, $cfg) = @_;
-
-    $self->load_module("JSON::XS") or return;
-    my $j = JSON::XS->new();
-    return $j->encode($cfg);
-}
-
-sub yaml
-{
-    my ($self, $cfg) = @_;
-
-    $self->load_module("YAML::XS") or return;
-
-    if ($@) {
-        $self->error("Unable to load YAML::XS: $@");
-        return;
-    }
-
-    return YAML::XS::Dump($cfg);
-}
-
-sub properties
-{
-    my ($self, $cfg) = @_;
-
-    $self->load_module("Config::Properties");
-
-    if ($@) {
-        $self->error("Unable to load Config::Properties");
-    }
-
-    my $config = Config::Properties->new();
-    $config->setFromTree($cfg);
-    return $config->saveToString();
-}
-
-sub tiny
-{
-    my ($self, $cfg) = @_;
-
-    $self->load_module("Config::Tiny") or return;
-
-    my $c = Config::Tiny->new();
-
-    while (my ($k, $v) = each(%$cfg)) {
-        if (ref($v)) {
-            $c->{$k} = $v;
-        } else {
-            $c->{_}->{$k} = $v;
+    my $msg = "for file $file";
+    
+    if ($srv->{daemons}) {
+        while (my ($daemon, $action) = each %{$srv->{daemons}}) {
+            push(@daemon_action, $daemon, $action);
         }
     }
-    return $c->write_string();
-}
 
-sub general
-{
-    my ($self, $cfg) = @_;
-
-    $self->load_module("Config::General") or return;
-    my $c = Config::General->new($cfg);
-    return $c->save_string();
-}
-
-sub sanitize_template
-{
-    my ($self, $tplname) = @_;
-
-    if (file_name_is_absolute($tplname)) {
-        $self->error ("Must have a relative template name");
-        return undef;
+    if ($srv->{daemon}) {
+        $self->verbose("Deprecated daemon(s) restart via daemon field $msg.");
+        foreach my $daemon (@{$srv->{daemon}}) {
+            if ($srv->{daemons}->{$daemon}) {
+                $self->verbose('Daemon $daemon also defined in daemons field $msg. Adding restart action anyway.');
+            }
+            push(@daemon_action, $daemon, 'restart');
+        }
     }
 
-    if ($tplname !~ m{\.tt$}) {
-        $tplname .= ".tt";
+    my @acts;    
+    while(my ($daemon,$action) = splice(@daemon_action,0,2)) {
+        if(exists($ALLOWED_ACTIONS{$action})) {
+            $actions->{$action} ||= {};
+            $actions->{$action}->{$daemon} = 1;
+            push(@acts, "$daemon:$action");
+        } else {
+            $self->error("Not a CAF::Service allowed action ",
+                         "$action for daemon $daemon $msg ",
+                         "in profile (component/schema mismatch?).");                
+        }
     }
-
-    $tplname = "metaconfig/$tplname";
-    # Sorry, we have to break the rule of Demeter here
-    my $base = $self->template()->service()->context()->config()->{INCLUDE_PATH};
-    $self->debug(3, "We must ensure that all templates lie below $base");
-    $tplname = abs_path("$base/$tplname");
-    if (!$tplname || !-f $tplname) {
-        $self->error ("Non-existing template name given");
-        return undef;
-    }
-
-    if ($tplname =~ m{^$base/(metaconfig/.*)$}) {
-        return $1;
+    
+    if (@acts) {
+        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $msg.");
     } else {
-        $self->error ("Insecure template name. Final template must be under $base");
-        return undef;
+        $self->verbose("No daemon/action scheduled $msg.");
     }
 }
 
-
-sub tt
+# Take the action for all daemons as defined in hash-reference C<$actions>.
+# Does not return anything.
+sub process_actions
 {
-    my ($self, $cfg, $template) = @_;
-
-    my ($sane_tpl, $str, $tpl);
-    $sane_tpl = $self->sanitize_template($template);
-    if (!$sane_tpl) {
-        $self->error("Invalid template name: $template");
-        return;
+    my ($self, $actions) = @_;
+    while (my ($action, $ds) = each(%$actions)) {
+        my $srv = CAF::Service->new([keys(%$ds)], log => $self);
+        # CAF::Service does all the logging we need
+        $srv->$action();
     }
-
-    $tpl = $self->template();
-    if (!$tpl->process($sane_tpl, $cfg, \$str)) {
-        $self->error("Unable to process template for file $template: ",
-                     $tpl->error());
-        return undef;
-    }
-    return $str;
 }
 
-# Generate $file, configuring $srv. It will instantiate the correct
-# configuration module (typically JSON::XS, YAML::XS, Config::General
-# or Config::Tiny.
+# Generate C<$file>, configuring C<$srv> using CAF::TextRender.
+# Also tracks the actions that need to be taken via the 
+# C<$actions> hash-reference.
+# Returns undef in case of rendering failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv) = @_;
+    my ($self, $file, $srv, $actions) = @_;
 
-    my ($method, $str);
-
-    if ($srv->{module} !~ m{^([\w+/\.\-]+)$}) {
-        $self->error("Invalid configuration style: $srv->{module}");
-        return;
-    }
-
-    if ($method = $self->can(lc($1))) {
-        $self->debug(3, "Rendering file $file with $method");
-    } else {
-        $method = \&tt;
-        $self->debug(3, "Using Template toolkit to render $file");
-    }
-
-    $str = $method->($self, $srv->{contents}, $srv->{module});
-
-    if (!defined($str)) {
-        $self->error("Failed to render $file. Skipping");
-        return;
-    }
+    my $trd = CAF::TextRender->new($srv->{module},
+                                   $srv->{contents},
+                                   log => $self,
+                                   eol => 0,
+                                   );
 
     my %opts  = (log => $self,
                  mode => $srv->{mode},
@@ -203,14 +106,21 @@ sub handle_service
                  group => scalar(getgrnam($srv->{group})));
     $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
-    my $fh = CAF::FileWriter->new($file, %opts);
-    print $fh "$srv->{preamble}\n" if $srv->{preamble};
-    print $fh "$str\n";
-    if ($self->needs_restarting($fh, $srv)) {
-        foreach my $d (@{$srv->{daemon}}) {
-            $self->{daemons}->{$d} = 1;
-        }
+    $opts{header} = "$srv->{preamble}\n" if $srv->{preamble};
+
+    # This in combination with eol=0 is what the original code does
+    # TODO: switch to eol=1 and remove this footer?
+    $opts{footer} = "\n";  
+
+    my $fh = $trd->filewriter($file, %opts);
+    
+    if (!defined($fh)) {
+        $self->error("Failed to render $file (".$trd->{fail}."). Skipping");
+        return;
     }
+
+    $self->prepare_action($srv, $file, $actions) if ($fh->close());
+
     return 1;
 }
 
@@ -221,15 +131,14 @@ sub Configure
 
     my $t = $config->getElement($PATH)->getTree();
 
+    my $actions = {};
+    
     while (my ($f, $c) = each(%{$t->{services}})) {
-        $self->handle_service(unescape($f), $c);
+        $self->handle_service(unescape($f), $c, $actions);
     }
 
-    # Restart any daemons whose configurations we have changed.
-    if ($self->{daemons}) {
-        my $srv = CAF::Service->new([keys(%{$self->{daemons}})], log => $self);
-        $srv->restart();
-    }
+    $self->process_actions($actions);
+
     return 1;
 }
 

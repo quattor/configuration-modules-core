@@ -15,6 +15,10 @@ use strict;
 use warnings;
 
 use Readonly;
+
+Readonly our $CATCMD => '/bin/cat';
+Readonly our $OSD_SSH_BASE_CMD => 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r ceph001.cubone.os';
+
 Readonly::Hash our  %MONJSONDECODE => (
     'created' => '0.000000',
     'epoch' => 11,
@@ -521,6 +525,62 @@ Readonly::Hash our %CEPHFMAP => (
      }
    }
 );
+our %CEPHINGW = ( 
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4'
+     },  
+     'fault' => 0,
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'addr' => '10.141.8.180:6789/0',
+       'fqdn' => 'ceph001.cubone.os',
+       'name' => 'ceph001',
+       'rank' => 1,
+       'up' => 1
+     },  
+  }
+);
+Readonly::Hash our %QUATMAPGW => (
+   'ceph001' => {
+     'config' => {
+       'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+       'mon_initial_members' => [
+         'ceph001',
+         'ceph002',
+         'ceph003'
+       ]
+     },
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph001.cubone.os',
+       'up' => 1
+     },
+     'radosgw' => {
+       'config' => {
+         'foo' => 'bar',
+         'host' => 'ceph001'
+       },
+       'fqdn' => 'ceph001.cubone.os'
+     }
+   }
+);
+Readonly::Hash our  %COMPARE1GW => (
+     'ceph001' => {
+       'client.radosgw.gateway' => {
+         'foo' => 'bar',
+         'host' => 'ceph001'
+      },
+       'global' => {
+         'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
+         'mon_initial_members' => [
+           'ceph001',
+           'ceph002',
+           'ceph003'
+         ]
+       }
+     }
+);
 our %CEPHIN = (
    'ceph001' => {
      'config' => {
@@ -660,7 +720,7 @@ Readonly::Hash our %COMPARE1 => (
      }
    },
    'gvalues' => {},
-   'ignh' => {
+   'skip' => {
      'ceph003' => {
        'config' => {
          'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
@@ -777,7 +837,7 @@ Readonly::Hash our %COMPARE2 => (
      }
    },
    'gvalues' => {},
-   'ignh' => {},
+   'skip' => {},
    'mapping' => {
      'get_id' => {
        'ceph001:/var/lib/ceph/osd/sdc' => 0,
@@ -863,6 +923,16 @@ Readonly::Hash our %TINIES => (
      }
    }
 ); 
+
+Readonly::Hash our %MAPADD => (
+    'get_id' => {
+      'ceph002:/var/lib/ceph/osd/sdc' => '2'
+    },
+    'get_loc' => {
+      '2' => 'ceph002:/var/lib/ceph/osd/sdc'
+    }
+);
+
 Readonly::Hash our %DEPLOYD => (
      'ceph002' => {
        'mds' => {

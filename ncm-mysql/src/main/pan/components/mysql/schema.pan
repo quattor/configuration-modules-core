@@ -51,7 +51,8 @@ type component_mysql_db_options = {
   'initScript'   ? component_mysql_db_script
   'initOnce'     : boolean = false
   'createDb'     : boolean = true
-  # tableOptions is a nlist of table where value is a nlist of parameter/value pairs
+  # tableOptions is a nlist of table where value is a nlist of parameter/value pairs.
+  # If the parameter contains spaces, it must be escaped.
   'tableOptions' ? string{}{}
 };
 
@@ -68,6 +69,7 @@ type component_mysql = {
 
   'databases'    ? component_mysql_db_options{}
   'servers'      : component_mysql_server_options{}
+  'serviceName'  : string = 'mysqld' with match(SELF, '^(mysql|mysqld|mariadb)$')
 } with component_mysql_valid(SELF);
 
 bind '/software/components/mysql' = component_mysql;
