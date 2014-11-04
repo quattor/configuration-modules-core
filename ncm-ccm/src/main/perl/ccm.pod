@@ -35,7 +35,7 @@ profile failover URL in case the above is not working (see ccm-fetch manpage)
 
 =item * C<< context ? type_hostURI >>
 
-??????
+Unsupported. May be removed in a future release.
 
 =item * C<< debug : long(0..1) >>
 
