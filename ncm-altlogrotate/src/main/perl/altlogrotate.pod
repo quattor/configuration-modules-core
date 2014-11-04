@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-@COMP: NCM component to control the log rotate configuration
+ncm-altlogrotate: configuration module to control the log rotate configuration
 
 =head1 DESCRIPTION
 
