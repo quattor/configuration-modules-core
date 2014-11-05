@@ -56,18 +56,6 @@ sub rpc_history_ok {
     
 }
 
-sub mock_rpc_basic {
-    my ($self, $method, @params) = @_;
-    push(@rpc_history, $method);
-    push(@rpc_history_full, [$method, @params]);
-    if ($method eq "one.host.allocate") {
-        return []; # return ARRAY
-    } else {
-        return ();# return hash reference
-    }
-};
-
-
 sub mock_rpc {
     my ($self, $method, @params) = @_;
     my @params_values;
@@ -77,29 +65,46 @@ sub mock_rpc {
 
     push(@rpc_history, $method);
     push(@rpc_history_full, [$method, @params]);
-    # we need to reset the loop for some reason
-    keys %rpcdata::cmds;
-    while (my ($short, $data) = each %rpcdata::cmds) {
+
+    foreach my $short (sort keys %rpcdata::cmds) {
+        my $data = $rpcdata::cmds{$short};
+
         my $sameparams = join(" _ ", @params_values) eq join(" _ ", @{$data->{params}});
         my $samemethod = $method eq $data->{method};
-        note("This is my shortname:", $short);
-        note("rpc internal params: ", join(" _ ", @params_values));
-        note("rpc dictionary params: ", join(" _ ", @{$data->{params}})); 
-        note("rpc method: ", $method);
-
         if ($samemethod && $sameparams && defined($data->{out})) {
-	        if ($data->{out} =~ m/^\d+$/) {
+            note("This is my shortname:", $short);
+            note("rpc internal params: ", join(" _ ", @params_values));
+            note("rpc dictionary params: ", join(" _ ", @{$data->{params}}));
+            note("rpc method: ", $method);
+
+            if ($data->{out} =~ m/^\d+$/) {
                 note("is id ", $data->{out});
                 return $data->{out};
             } else {
                 note("is xml ", $data->{out});
                 return XMLin($data->{out}, forcearray => 1);
-	        } 
+            } 
         }
     }
 };
 
 our $opennebula = new Test::MockModule('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
+
+# Overwrite the INCLUDE_PATH with environment variable QUATTOR_TEST_TEMPLATE_INCLUDE_PATH
+# TODO we need something similar for TextRender
+our $template = new Test::MockModule('Template');
+$template->mock( 'new',  sub{
+    my ($that, %opts) = @_;
+
+    my $inclpath = $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH};
+    $opts{INCLUDE_PATH} = $inclpath if $inclpath;
+
+    my $init = $template->original("new");
+    my $t = &$init($that, %opts);
+
+    return $t;
+});
+
 
 1;
