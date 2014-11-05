@@ -6,7 +6,7 @@
   <artifactId>resolver</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>14.10.0-rc2</version>
   <name>resolver: Configure DNS resolver</name>
 
   <parent>
