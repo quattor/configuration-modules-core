@@ -11,6 +11,8 @@ ncm-altlogrotate: configuration module to control the log rotate configuration
 
 The I<altlogrotate> component manages the log rotate configuration files.
 
+It replaced the original I<logrotate> which is no longer available.
+
 =head1 RESOURCES
 
 =head2 C<< /software/components/altlogrotate/entries/ >>
