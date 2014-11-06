@@ -690,7 +690,7 @@ sub update_pkgs_retry
     # to run (becasue he initial attempt had an error)
     my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
     
-    if($self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn)) {
+    if($self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($allow_user_pkgs) {
@@ -700,9 +700,9 @@ sub update_pkgs_retry
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
             $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
-            if($self->update_pkgs($pkgs, $groups, $run, 1, $purge, 0)) {
+            if($self->update_pkgs($pkgs, $groups, $run, 1, $purge, 0, $fullsearch)) {
                 $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
-                if($self->update_pkgs($pkgs, $groups, $run, 0, $purge, 0)) {
+                if($self->update_pkgs($pkgs, $groups, $run, 0, $purge, 0, $fullsearch)) {
                     # log ok
                     $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
                 } else {
