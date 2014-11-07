@@ -689,35 +689,43 @@ sub update_pkgs_retry
     # any component that has spma as dependency (i.e. typically all others)
     # to run (becasue he initial attempt had an error)
     my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
+
+    # Introduce shortcut to call update_pkgs with the same except 2 arguments 
+    my $update_pkgs = sub {
+        my ($allow_user_pkgs, $tx_error_is_warn) = @_;
+        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, 
+                                  $purge, $tx_error_is_warn, $fullsearch);
+    };
     
-    if($self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch)) {
+    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($allow_user_pkgs) {
-            # tx_error_is_warn = 0 in this case, error is logged
-            $self->verbose(1, "update_pkgs failed, userpkgs=true");
+            # tx_error_is_warn = 0 in this case, error is already logged
+            $self->verbose("update_pkgs failed, userpkgs=true");
             return 0;
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
+            $tx_error_is_warn = 0;
+            
             $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
-            if($self->update_pkgs($pkgs, $groups, $run, 1, $purge, 0, $fullsearch)) {
+            $allow_user_pkgs = 1;
+            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
                 $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
-                if($self->update_pkgs($pkgs, $groups, $run, 0, $purge, 0, $fullsearch)) {
-                    # log ok
+                $allow_user_pkgs = 0;
+                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
                     $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
                 } else {
-                    # log failure in 3rd step
                     $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed."); 
                     return 0;
                 };
             } else {
-                # log failure in 2nd step
                 $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed."); 
                 return 0;
             };
         } else {
             # log failure, no retry enabled 
-            # tx_error_is_warn = 0 in this case, error is logged
+            # tx_error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
             return 0;
         }
