@@ -41,7 +41,6 @@ OpenNebula installation is 100% automated. Therefore:
 
 =item * The OpenNebula tt files required by the quattor component are shipped by config-templates-metaconfig package
 
-=======
 =back
 
 =head1 INITIAL CREATION
