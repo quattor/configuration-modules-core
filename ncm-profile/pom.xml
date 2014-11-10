@@ -6,7 +6,7 @@
   <artifactId>profile</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc3-SNAPSHOT</version>
+  <version>14.10.0-rc3</version>
   <name>Component to manage env. variables in profile.d directory</name>
 
 
