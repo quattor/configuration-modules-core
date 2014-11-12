@@ -553,7 +553,6 @@ sub Configure
         $self->info("Updated system datastore TM_MAD = $tm_system_ds");
     }
 
-
     my $hypervisor = "kvm";
     $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
 
