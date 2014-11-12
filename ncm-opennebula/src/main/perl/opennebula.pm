@@ -70,7 +70,7 @@ sub process_template
 sub create_or_update_something
 {
     my ($self, $one, $type, $data, %untouch) = @_;
-
+    
     my $template = $self->process_template($data, $type);
     my ($name, $new);
     if (!$template) {
