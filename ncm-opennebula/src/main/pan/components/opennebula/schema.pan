@@ -25,6 +25,18 @@ type opennebula_rpc = {
 } = nlist();
 
 @{
+Type that sets the OpenNebula
+untouchable resources
+@}
+type opennebula_untouchables = {
+    "datastores" ? string[]
+    "vnets" ? string[]
+    "users" ? string[]
+    "hosts" ? string[]
+};
+
+
+@{
 Type to define ONE basic resources
 datastores, vnets, hosts names, etc
 @}
@@ -35,6 +47,7 @@ type component_opennebula = {
     'vnets'         : opennebula_vnet[]
     'hosts'         : string[]
     'rpc'           : opennebula_rpc
+    'untouchables'  : opennebula_untouchables
     'ssh_multiplex' : boolean = true
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = nlist();

@@ -67,7 +67,7 @@ sub process_template
 # based on resource type
 sub set_resource
 {
-    my ($self, $one, $type, $data) = @_;
+    my ($self, $one, $type, $data, %untouch) = @_;
     
     my $template = $self->process_template($data, $type);
     my ($name, $new);
@@ -80,6 +80,10 @@ sub set_resource
         $self->verbose("Found template NAME: $name within $type resource.");
     } else {
         $self->error("Template NAME tag not found within $type resource: $template");
+        return;
+    }
+    if (exists($untouch{$name})) {
+        $self->info("This resource $type is protected and can not be created/updated: $name");
         return;
     }
     my $cmethod = "create_$type";
@@ -98,7 +102,7 @@ sub set_resource
 # Removes ONE resources
 sub remove_something
 {
-    my ($self, $one, $type, $resources) = @_;
+    my ($self, $one, $type, $resources, %untouch) = @_;
     my $method = "get_${type}s";
     my @existres = $one->$method();
     my @namelist = $self->create_resource_names_list($one, $type, $resources);
@@ -107,8 +111,9 @@ sub remove_something
     foreach my $oldresource (@existres) {
         # Remove the resource only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($oldresource);
-
-        if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
+        if (exists($untouch{$oldresource->name})) {
+            $self->info("This resource $type is protected and can not be removed: ", $oldresource->name);
+        } elsif ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old $type resource: ", $oldresource->name);
             my $id = $oldresource->delete();
             if (!$id) {
@@ -310,8 +315,8 @@ sub change_oneadmin_passwd
 # based on resource type
 sub manage_something
 {
-    my ($self, $one, $type, $resources) = @_;
-
+    my ($self, $one, $type, $resources, $untouchables) = @_;
+    my %untouch = map { $_ => 1 } @$untouchables;
     if (!$resources) {
         $self->error("No $type resources found.");
         return;
@@ -320,28 +325,28 @@ sub manage_something
     }
 
     if (($type eq "kvm") or ($type eq "xen")) {
-        $self->manage_hosts($one, $type, $resources);
+        $self->manage_hosts($one, $type, $resources, %untouch);
         return;
     } elsif ($type eq "user") {
-        $self->manage_users($one, $resources);
+        $self->manage_users($one, $resources, %untouch);
         return;
     }
 
     $self->verbose("Check to remove ${type}s");
-    $self->remove_something($one, $type, $resources);
+    $self->remove_something($one, $type, $resources, %untouch);
 
     if (@$resources) {
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
-        my $new = $self->set_resource($one, $type, $newresource);
+        my $new = $self->create_or_update_something($one, $type, $newresource, %untouch);
     }
 }
 
 # Function to add/remove Xen or KVM hyp hosts
 sub manage_hosts
 {
-    my ($self, $one, $type, $resources) = @_;
+    my ($self, $one, $type, $resources, %untouch) = @_;
     my $new;
     my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
@@ -349,7 +354,9 @@ sub manage_hosts
     my (@rmhosts, @failedhost);
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
-        if (exists($newhosts{$t->name})) {
+        if (exists($untouch{$t->name})) {
+            $self->info("This resource $type is protected and can not be removed: ", $t->name);
+        } elsif (exists($newhosts{$t->name})) {
             $self->debug(1, "We can't remove this $type host. Is required by Quattor: ", $t->name);
         } elsif ($t->used()) {
             $self->debug(1, "We can't remove this $type host. There are still running VMs: ", $t->name);
@@ -377,7 +384,9 @@ sub manage_hosts
             $self->error("Found more than one host $host. Only the first host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
-        if ($self->can_connect_to_host($host)) {
+        if (exists($untouch{$host})) {
+            $self->info("This resource $type is protected and can not be created/updated: $host");
+        } elsif ($self->can_connect_to_host($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
                 if ($hostinstance) {
@@ -427,7 +436,7 @@ sub disable_host
 # only if the user has the Quattor flag set
 sub manage_users
 {
-    my ($self, $one, $users) = @_;
+    my ($self, $one, $users, %untouch) = @_;
     my ($new, $template, @rmusers, @userlist);
 
     foreach my $user (@$users) {
@@ -442,7 +451,9 @@ sub manage_users
     foreach my $t (@exitsuser) {
         # Remove the user only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($t,1);
-        if (exists($newusers{$t->name})) {
+        if (exists($untouch{$t->name})) {
+            $self->info("This user is protected and can not be removed: ", $t->name);
+        } elsif (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
             $self->warn("QUATTOR flag not found. We can't remove this user: ", $t->name);
@@ -457,7 +468,9 @@ sub manage_users
     }
 
     foreach my $user (@$users) {
-        if ($user->{user} && $user->{password}) {
+        if (exists($untouch{$user->{user}})) {
+            $self->info("This user is protected and can not be created/updated: ", $user->{user});
+        } elsif ($user->{user} && $user->{password}) {
             $template = $self->process_template($user, "user");
             my $used = $self->detect_used_resource($one, "user", $user->{user});
             if (!$used) {
@@ -512,6 +525,7 @@ sub Configure
     $self->set_ssh_command($tree->{ssh_multiplex});
     # Set tm_system_ds if available
     my $tm_system_ds = $tree->{tm_system_ds};
+    my $untouchables = $tree->{untouchables};
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
@@ -528,10 +542,10 @@ sub Configure
     # Check ONE RPC endpoint and OpenNebula version
     return 0 if !$self->is_supported_one_version($one);
 
-    $self->manage_something($one, "vnet", $tree->{vnets});
+    $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
     # For the moment only Ceph datastores are configured
-    $self->manage_something($one, "datastore", $tree->{datastores});
+    $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
     # Update system datastore TM_MAD 
     if ($tm_system_ds) {
         $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
@@ -540,9 +554,9 @@ sub Configure
 
 
     my $hypervisor = "kvm";
-    $self->manage_something($one, $hypervisor, $tree);
+    $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
 
-    $self->manage_something($one, "user", $tree->{users});
+    $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
 
     return 1;
 }
