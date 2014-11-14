@@ -6,7 +6,7 @@
   <artifactId>shorewall</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0</version>
+  <version>14.10.1-SNAPSHOT</version>
   <name>NCM Shorewall configuration component</name>
 
 
