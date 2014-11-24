@@ -36,7 +36,7 @@ sub update_pam_file
                                   backup => ".old");
 
     foreach my $i (@{$tree->{lines}}) {
-        my $whence = $i->{order} eq 'first' ?
+        my @whence = $i->{order} eq 'first' ?
             BEGINNING_OF_FILE : ENDING_OF_FILE;
     
         $i->{entry} =~ m{(\S+\.so)};
@@ -44,7 +44,7 @@ sub update_pam_file
         $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
                                   qr{^$tree->{section}\s+$i->{entry}$},
                                   "$tree->{section} $i->{entry}\n", 
-                                  $whence);
+                                  @whence);
     }
 
     $fh->close();
