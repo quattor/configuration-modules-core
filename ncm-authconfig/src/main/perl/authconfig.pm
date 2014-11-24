@@ -17,6 +17,8 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 use CAF::FileEditor;
 use File::Path;
+use Fcntl qw(:seek);
+
 
 use EDG::WP4::CCM::Element;
 
@@ -35,16 +37,29 @@ sub update_pam_file
                                   log => $self, 
                                   backup => ".old");
 
+    # regexp needs to macth whole line
+    my ($start, $end) = $fh->get_header_positions(qr{^#%PAM-\d+.*$}m);
+    my @begin_whence;
+    if ($start == -1) {
+        # no header found
+        @begin_whence = BEGINNING_OF_FILE;
+    } else {
+        @begin_whence = (SEEK_SET, $end);
+    }
+
     foreach my $i (@{$tree->{lines}}) {
-        my @whence = $i->{order} eq 'first' ?
-            BEGINNING_OF_FILE : ENDING_OF_FILE;
-    
-        $i->{entry} =~ m{(\S+\.so)};
-        my $module = $1;
-        $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
-                                  qr{^$tree->{section}\s+$i->{entry}$},
-                                  "$tree->{section} $i->{entry}\n", 
-                                  @whence);
+        my @whence = $i->{order} eq 'first' ? 
+        	@begin_whence : ENDING_OF_FILE;
+
+        if ($i->{entry} =~ m{(\S+\.so)}) {
+            my $module = $1;
+            $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
+                                      qr{^$tree->{section}\s+$i->{entry}$},
+                                      "$tree->{section} $i->{entry}\n", 
+                                      @whence);
+        } else {
+            $self->error("No '.so' module found in entry '$i->{entry}'. Skipping.");
+        }
     }
 
     $fh->close();
