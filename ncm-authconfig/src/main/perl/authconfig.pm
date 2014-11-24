@@ -32,17 +32,19 @@ sub update_pam_file
     my ($self, $tree) = @_;
 
     my $fh = CAF::FileEditor->new($tree->{conffile},
-				  log => $self, backup => ".old");
+                                  log => $self, 
+                                  backup => ".old");
 
     foreach my $i (@{$tree->{lines}}) {
-	my $whence = $i->{order} eq 'first' ?
-	    BEGINNING_OF_FILE : ENDING_OF_FILE;
-
-	$i->{entry} =~ m{(\S+\.so)};
-	my $module = $1;
-	$fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
-				  qr{^$tree->{section}\s+$i->{entry}$},
-				  "$tree->{section} $i->{entry}\n", $whence);
+        my $whence = $i->{order} eq 'first' ?
+            BEGINNING_OF_FILE : ENDING_OF_FILE;
+    
+        $i->{entry} =~ m{(\S+\.so)};
+        my $module = $1;
+        $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
+                                  qr{^$tree->{section}\s+$i->{entry}$},
+                                  "$tree->{section} $i->{entry}\n", 
+                                  $whence);
     }
 
     $fh->close();
@@ -53,7 +55,7 @@ sub build_pam_systemauth
     my ($self, $tree) = @_;
 
     foreach my $i (sort(keys(%$tree))) {
-	$self->update_pam_file($tree->{$i})
+        $self->update_pam_file($tree->{$i})
     }
 }
 
@@ -63,8 +65,8 @@ sub disable_method
     my ($self, $method, $cmd) = @_;
 
     if ($method eq 'files') {
-	$self->warn("Cannot disable files method");
-	return;
+        $self->warn("Cannot disable files method");
+        return;
     }
 
     $self->verbose("Disabling authentication method $method");
@@ -140,9 +142,9 @@ sub enable_ldap
     my ($self, $cfg, $cmd) = @_;
 
     if ($cfg->{nssonly}) {
-	$cmd->pushargs("--disableldapauth");
+        $cmd->pushargs("--disableldapauth");
     } else {
-	$cmd->pushargs("--enableldapauth");
+        $cmd->pushargs("--enableldapauth");
     }
 
     $cmd->pushargs("--enableldap");
@@ -172,9 +174,9 @@ sub enable_sssd
     my ($self, $cfg, $cmd) = @_;
 
     if ($cfg->{nssonly}) {
-	$cmd->pushargs(qw(--disablesssdauth));
+        $cmd->pushargs(qw(--disablesssdauth));
     } else {
-	$cmd->pushargs(qw(--enablesssdauth));
+        $cmd->pushargs(qw(--enablesssdauth));
     }
     $cmd->pushargs("--enablesssd");
 }
@@ -185,14 +187,14 @@ sub authconfig
 
     my ($stdout, $stderr);
     my $cmd = CAF::Process->new([qw(authconfig --kickstart)],
-				log => $self,
-				stdout => \$stdout,
-				stderr => \$stderr,
-				timeout => 60);
+                log => $self,
+                stdout => \$stdout,
+                stderr => \$stderr,
+                timeout => 60);
 
 
     foreach my $i (qw(shadow cache)) {
-	    $cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
+        $cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
     }
 
     $cmd->pushargs("--passalgo=$t->{passalgorithm}");
@@ -200,24 +202,24 @@ sub authconfig
     $cmd->pushargs("--enableforcelegacy") if $t->{enableforcelegacy};
 
     while (my ($method, $v) = each(%{$t->{method}})) {
-	if ($v->{enable}) {
-	    $method = "enable_$method";
-	    $self->$method($v, $cmd);
-	} else {
-            $self->disable_method($method, $cmd)
-	}
+        if ($v->{enable}) {
+            $method = "enable_$method";
+            $self->$method($v, $cmd);
+        } else {
+                $self->disable_method($method, $cmd)
+        }
     }
     $cmd->setopts(timeout => 60,
-		  stdout => \$stdout,
-		  stderr => \$stderr);
+          stdout => \$stdout,
+          stderr => \$stderr);
     $cmd->execute();
     if ($stdout) {
-	$self->info("authconfig command output produced:");
-	$self->report($stdout);
+        $self->info("authconfig command output produced:");
+        $self->report($stdout);
     }
     if ($stderr) {
-	$self->info("authconfig command ERROR produced:");
-	$self->report($stderr);
+        $self->info("authconfig command ERROR produced:");
+        $self->report($stderr);
     }
 }
 
@@ -229,23 +231,23 @@ sub configure_ldap
 
     delete($tree->{enable});
     my $fh = CAF::FileWriter->new($tree->{conffile},
-				  group => 28,
-				  log => $self,
-				  mode => 0644,
-				  backup => ".old");
+                  group => 28,
+                  log => $self,
+                  mode => 0644,
+                  backup => ".old");
     delete($tree->{conffile});
     # These fields have different
     print $fh "idle_timelimit $tree->{timeouts}->{idle}\n";
     print $fh "bind_timelimit $tree->{timeouts}->{bind}\n";
     print $fh "timelimit $tree->{timeouts}->{search}\n";
     print $fh "tls_checkpeer ",
-	$tree->{tls}->{peercheck} ? "true" : "false", "\n";
+        $tree->{tls}->{peercheck} ? "true" : "false", "\n";
     print $fh "tls_cacertfile $tree->{tls}->{cacertfile}\n"
-	if $tree->{tls}->{cacertfile};
+        if $tree->{tls}->{cacertfile};
     print $fh "tls_cacertdir  $tree->{tls}->{cacertdir}\n"
-	if $tree->{tls}->{cacertdir};
+        if $tree->{tls}->{cacertdir};
     print $fh "tls_ciphers $tree->{tls}->{ciphers}\n"
-	if $tree->{tls}->{ciphers};
+        if $tree->{tls}->{ciphers};
     print $fh "TLS_REQCERT $tree->{tls}->{reqcert}\n";
     for my $i (0 .. $#{$tree->{servers}}) {
         if (!($tree->{servers}[$i] =~ /:/)) {
@@ -260,15 +262,15 @@ sub configure_ldap
     delete ($tree->{timeouts});
     delete ($tree->{servers});
     foreach my $i (qw(nss_map_objectclass nss_map_attribute
-		      nss_override_attribute_value)) {
-	while (my ($k, $v) = each(%{$tree->{$i}})) {
-	    print $fh "$i $k $v\n";
-	}
-	delete($tree->{$i});
+                      nss_override_attribute_value)) {
+        while (my ($k, $v) = each(%{$tree->{$i}})) {
+            print $fh "$i $k $v\n";
+        }
+        delete($tree->{$i});
     }
 
     while (my ($k, $v) = each(%$tree)) {
-	print $fh "$k $v\n";
+        print $fh "$k $v\n";
     }
 
     return $fh->close();
@@ -280,8 +282,8 @@ sub configure_nslcd
     my ($self, $tree) = @_;
 
     my $fh = CAF::FileWriter->new("/etc/nslcd.conf",
-				  mode => 0600,
-				  log => $self);
+                  mode => 0600,
+                  log => $self);
     my ($changed, $proc);
 
     delete($tree->{enable});
@@ -291,9 +293,9 @@ sub configure_nslcd
     print $fh "base $tree->{basedn}\n";
     delete($tree->{basedn});
     while (my ($group, $values) = each(%{$tree->{map}})) {
-	while (my ($k, $v) = each(%$values)) {
-	    print $fh "map $group $k $v\n";
-	}
+        while (my ($k, $v) = each(%$values)) {
+            print $fh "map $group $k $v\n";
+        }
     }
     delete($tree->{map});
 
@@ -304,24 +306,24 @@ sub configure_nslcd
     }
 
     while (my ($k, $v) = each(%$tree)) {
-	if (!ref($v)) {
-	    print $fh "$k $v";
-	} elsif (ref($v) eq 'ARRAY') {
-	    print $fh  "$k ", join(",", @$v);
-	} elsif (ref($v) eq 'HASH') {
-	    while (my ($kh, $vh) = each(%$v)) {
-		print $fh "$k $kh $vh\n";
-	    }
-	}
-	print $fh "\n";
+        if (!ref($v)) {
+            print $fh "$k $v";
+        } elsif (ref($v) eq 'ARRAY') {
+            print $fh  "$k ", join(",", @$v);
+        } elsif (ref($v) eq 'HASH') {
+            while (my ($kh, $vh) = each(%$v)) {
+                print $fh "$k $kh $vh\n";
+            }
+        }
+        print $fh "\n";
     }
 
     if ($changed = $fh->close()) {
-	CAF::Process->new([qw(/sbin/service nslcd restart)],
-			  log => $self)->run();
-	if ($?) {
-	    $self->error("Failed to restart nslcd");
-	}
+        CAF::Process->new([qw(/sbin/service nslcd restart)],
+                  log => $self)->run();
+        if ($?) {
+            $self->error("Failed to restart nslcd");
+        }
     }
     return $changed;
 }
@@ -336,7 +338,7 @@ sub configure_sssd
     if (!$ok) {
         $self->error("Unable to render template ", TT_FILE, ": ",
                      $self->template()->error());
-	$fh->cancel();
+        $fh->cancel();
     }
     my $changed = $fh->close();
 
@@ -365,16 +367,16 @@ sub restart_nscd
                                 timeout => 30)->execute();
 
     if ($?) {
-      $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
-                               timeout => 30)->execute();
-      sleep(1);
-      $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
-                               timeout => 30)->execute();
-      sleep(2);
-      unlink(NSCD_LOCK) if -e NSCD_LOCK;
-      $cmd = CAF::Process->new([qw(service nscd start)],
-                               log => $self,
-                               timeout => 30)->execute();
+        $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
+                                timeout => 30)->execute();
+        sleep(1);
+        $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
+                                timeout => 30)->execute();
+        sleep(2);
+        unlink(NSCD_LOCK) if -e NSCD_LOCK;
+        $cmd = CAF::Process->new([qw(service nscd start)],
+                                log => $self,
+                                timeout => 30)->execute();
 
     }
 
@@ -403,17 +405,17 @@ sub Configure
     # On SL5 this configures LDAP authentication. On other versions
     # this probably doesn't hurt anyways.
     if ($t->{method}->{ldap}->{enable}) {
-	$restart = $self->configure_ldap($t->{method}->{ldap});
+        $restart = $self->configure_ldap($t->{method}->{ldap});
     }
 
     # This configures LDAP authentication on SL6.
     if ($t->{method}->{nslcd}->{enable}) {
-	$restart ||= $self->configure_nslcd($t->{method}->{nslcd});
+        $restart ||= $self->configure_nslcd($t->{method}->{nslcd});
     }
 
     if ($t->{method}->{sssd}->{enable}) {
         $restart ||= $self->configure_sssd($t->{method}->{sssd},
-					   SSSD_FILE, TT_FILE);
+                                           SSSD_FILE, TT_FILE);
     }
 
     $self->build_pam_systemauth($t->{pamadditions});
