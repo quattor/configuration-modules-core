@@ -23,48 +23,61 @@ It's very basic in functionality (originally developed for dcache usage).
 =over
 
 =item C<< /software/components/postgresql/config/debug_print >>
+
 Set the debug logging level (default = 15). The default is very verbose (but best to leave as is). 
 The component can be a bit aggressive when things don't work, this will log everything. 
 
 =item C<< /software/components/postgresql/pg_script_name >>
+
 Name of the service to start postgresql (default = postgresql). 
 This should allow you to start multiple postgres instances on the same machine.
 
 =item C<< /software/components/postgresql/pg_dir >>
+
 Name of the base directory of the postgres install (default = /var/lib/pgsql). 
 This directory will be used for the installation (eg. create the PG_VERSION in subdirectory data).
 
 =item C<< /software/components/postgresql/pg_port >>
+
 Name of the port used by postgres (default = 5432).
 
 =item C<< /software/components/postgresql/postgresql_conf >>
+
 Full text of the postgresql.conf file.
 
 =item C<< /software/components/postgresql/pg_hba >>
+
 Full text of the pg_hba.conf file.
 
 =item C<< /software/components/postgresql/roles >>
+
 nlist of roles to create and alter. 
 Key is the name of the role (new roles added with CREATE ROLE).
 Value is a string used with ALTER ROLE.
 
 =item C<< /software/components/postgresql/databases >>
+
 A nlist of databases to create/initialise.
 Key is the name of the database.
 
 =item C<< /software/components/postgresql/databases/[db_name]/user >>
+
 OWNER of the database.
 
 =item C<< /software/components/postgresql/databases/[db_name]/installfile >>
+
 Optional: when a database is newly created, this file is used to initialise the database (using the pgsql -f option). 
 
 =item C<< /software/components/postgresql/databases/[db_name]/lang >>
+
 Optional: when a database is newly created, it sets the pg language for the db (using createlang), this runs after C<< installfile >>. 
 
 =item C<< /software/components/postgresql/databases/[db_name]/langfile >>
+
 Optional: when a database is newly created, this file is used to add procedures in certain lang (using pgsql -f option), this runs after successful C<< lang >>. 
 
 =item C<< /software/components/postgresql/databases/[db_name]/sql_user >>
+
 Optional: when a database is newly created, and the C<< /software/components/postgresql/databases/[db_name]/installfile >> is defined, initialise the database with this user. 
 (defaults to the owner of the db as defined in C<< /software/components/postgresql/databases/[db_name]/user >>)
 
