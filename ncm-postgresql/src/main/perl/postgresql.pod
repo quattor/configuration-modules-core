@@ -20,6 +20,8 @@ It's very basic in functionality (originally developed for dcache usage).
 
 =head1 RESOURCES
 
+=over
+
 =item C<< /software/components/postgresql/config/debug_print >>
 Set the debug logging level (default = 15). The default is very verbose (but best to leave as is). 
 The component can be a bit aggressive when things don't work, this will log everything. 
@@ -65,6 +67,8 @@ Optional: when a database is newly created, this file is used to add procedures 
 =item C<< /software/components/postgresql/databases/[db_name]/sql_user >>
 Optional: when a database is newly created, and the C<< /software/components/postgresql/databases/[db_name]/installfile >> is defined, initialise the database with this user. 
 (defaults to the owner of the db as defined in C<< /software/components/postgresql/databases/[db_name]/user >>)
+
+=back
 
 =head1 DEPENDENCIES
 
