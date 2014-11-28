@@ -18,6 +18,7 @@ use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 use NCM::Check;
 
