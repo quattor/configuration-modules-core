@@ -379,6 +379,27 @@ sub prepare_lock_lists
     return ($locked, $toquery);
 }
 
+# generate a msg for logging purposes based on 
+# wanted_locked and not_matched (passed as ref here) 
+# The message can be long because it contains list of 
+# all packages and non-exact matched repoquery output
+# Lists are not comma separated so it can be copied 
+# and used on command line
+sub _make_msg_wanted_locked
+{ 
+    
+    my ($wanted_locked, $not_matched_ref) = @_;
+    
+    my $nr_wanted_locked = $wanted_locked->size;
+    my $nr_not_matched = scalar @$not_matched_ref;
+    
+    return join(' ', "$nr_wanted_locked wanted packages with wildcards",
+                     $nr_wanted_locked ? @$wanted_locked : '', 
+                     "; $nr_not_matched non-exact matched packages from repoquery",
+                     $nr_not_matched ? @$not_matched_ref : '', 
+           );
+}
+
 # Returns whether the $locked string locks all the items in
 # $wanted_locked.  Warning: $wanted_locked will be modified!!
 # ($locked is output from REPOQUERY).
@@ -396,11 +417,11 @@ sub locked_all_packages
     # Process output and filter exact matches
     foreach my $pkgstr (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkgstr);
-        my $pkg=$envra[1];
+        my $pkg = $envra[1];
         if ($wanted_locked->has($pkg)) {
             $wanted_locked->delete($pkg);
         } else {
-            # keep repoquery output of noon-exact-matched packages
+            # keep repoquery output of non-exact matched packages
             # locked packages like kernel*-some.version will cause other 
             # entries like kernel-devel in the repoquery output, which 
             # will never match, so having packages in @not_locked. 
@@ -414,39 +435,42 @@ sub locked_all_packages
         return 1;
     }
 
+    my $msg = _make_msg_wanted_locked($wanted_locked, \@not_matched);
     if ($fullsearch) {
         # At this point, all remaining entries in the wanted_locked 
         # might have a wildcard in them.
         # Brute-force could possibly lead to a very slow worst case scenario
         # 
         # Issue: single wildcard might match multiple lines of output, 
-        # so always process all output
-        $self->verbose("Starting fullsearch on ",
-                       $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " non-exact-matched packages from repoquery");
+        #   so always process all output
+        $self->verbose("Starting fullsearch on $msg.");
         foreach my $wl (@$wanted_locked) {
             # (try to) match @not_matched 
-            # TODO and remove the matches? can we assume that every 
-            # match corresponds to exactly one wildcard? probably not.
-            # e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5 
-            # would be left without (valid) match.
+            # TODO: remove the matches? can we assume that every 
+            #  match corresponds to exactly one wildcard? probably not.
+            #  e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5 
+            #  would be left without (valid) match.
+            #  -> current implementation does not remove the matches.
             $wanted_locked->delete($wl) if (grep(match_glob($wl, $_), @not_matched));
         }
-        $self->verbose("Finished fullsearch with remaining ",
-                       $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " non-exact-matched packages from repoquery");
 
+        $msg = "Finished fullsearch with " . _make_msg_wanted_locked($wanted_locked, \@not_matched) . ".";
         if (@$wanted_locked) {
+            # You will probably want this output to resolve the error.
+            $self->info($msg);
             $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
+                
             return 0;
         } else {
+            $self->verbose($msg);
             $self->verbose("All wanted_locked packages found (with fullsearch wildcard processing).");
             return 1;
         }
     } elsif (grep($_ !~ m{[*?]}, @$wanted_locked)) {
-        $self->error("Unable to lock: $wanted_locked. ",
+        $self->error("Unable to lock all packages. ",
                      "These packages with these versions don't seem to exist ",
-                     "in any configured repositories");
+                     "in any configured repositories.", 
+                     $msg, ".");
         return 0;
     } elsif (grep($_ =~ m{[*?]}, @$wanted_locked)) {
         # actually, only wildcards in the versions
@@ -454,9 +478,7 @@ sub locked_all_packages
                     "due to wildcard(s) in the names and/or versions, ",
                     "continuing as if all is fine. ",
                     "Turn on fullsearch option to resolve the wildcards ",
-                    "(but be aware of potential speed impact: ",
-                    $wanted_locked->size," wanted packages with wildcards, ",
-                    scalar @not_matched, " non-exact-matched packages from repoquery)");
+                    "(but be aware of potential speed impact: ", $msg, ".");
         return 1;
     }
     
