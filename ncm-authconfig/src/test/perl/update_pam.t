@@ -19,8 +19,10 @@ use Test::More;
 use Test::Quattor;
 use NCM::Component::authconfig;
 use Readonly;
+use Cwd;
 
-Readonly my $PAM_FILE => "/tmp/file.pam";
+
+Readonly my $PAM_FILE => getcwd()."/target/tmp/file.pam";
 Readonly my $NEW_ENTRY => 'required pam_access.so accessfile=/tmp/acc.conf';
 
 Readonly my $PAM_FILE_DATA => <<EOF;
