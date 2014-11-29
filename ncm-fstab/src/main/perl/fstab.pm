@@ -92,7 +92,7 @@ sub delete_outdated
     }
 
     foreach my $outdated (@rm) {
-    	$self->debug(5, "Removing line $outdated");
+    	$self->info("Removing line $outdated");
     	$fstab->replace_lines (qr{$outdated}, qr{^$}, "");
     }
 }
