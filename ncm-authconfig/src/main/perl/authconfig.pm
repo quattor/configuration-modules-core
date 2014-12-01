@@ -37,7 +37,7 @@ sub update_pam_file
                                   log => $self, 
                                   backup => ".old");
 
-    # regexp needs to macth whole line
+    # regexp needs to match whole line
     my ($start, $end) = $fh->get_header_positions(qr{^#%PAM-\d+.*$}m);
     my @begin_whence;
     if ($start == -1) {
@@ -58,7 +58,7 @@ sub update_pam_file
                                       "$tree->{section} $i->{entry}\n", 
                                       @whence);
         } else {
-            $self->error("No '.so' module found in entry '$i->{entry}'. Skipping.");
+            $self->error("No '.so' module found in entry '$i->{entry}' (this is an error in the profile). Skipping.");
         }
     }
 
