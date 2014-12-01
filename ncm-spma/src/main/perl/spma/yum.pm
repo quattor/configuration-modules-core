@@ -389,15 +389,14 @@ sub _make_msg_wanted_locked
 { 
     
     my ($wanted_locked, $not_matched_ref) = @_;
-    
-    my $nr_wanted_locked = $wanted_locked->size;
-    my $nr_not_matched = scalar @$not_matched_ref;
-    
-    return join(' ', "$nr_wanted_locked wanted packages with wildcards",
-                     $nr_wanted_locked ? @$wanted_locked : '', 
-                     "; $nr_not_matched non-exact matched packages from repoquery",
-                     $nr_not_matched ? @$not_matched_ref : '', 
-           );
+
+    return sprintf(
+        "%d wanted packages with wildcards: %s, ".
+        "%d non-exact matched packages from repoquery: %s",
+        $wanted_locked->size, join(" ", @$wanted_locked),
+        scalar @$not_matched_ref, join(" ", @$not_matched_ref)
+        );
+
 }
 
 # Returns whether the $locked string locks all the items in
@@ -454,23 +453,20 @@ sub locked_all_packages
             $wanted_locked->delete($wl) if (grep(match_glob($wl, $_), @not_matched));
         }
 
-        $msg = "Finished fullsearch with " . _make_msg_wanted_locked($wanted_locked, \@not_matched) . ".";
+        $msg = "wanted_locked packages found (with fullsearch wildcard processing)." .
+            "Finished fullsearch with " .
+            _make_msg_wanted_locked($wanted_locked, \@not_matched);
         if (@$wanted_locked) {
-            # You will probably want this output to resolve the error.
-            $self->info($msg);
-            $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
-                
+            $self->error("Not all $msg.");
             return 0;
         } else {
-            $self->verbose($msg);
-            $self->verbose("All wanted_locked packages found (with fullsearch wildcard processing).");
+            $self->verbose("All $msg.");
             return 1;
         }
     } elsif (grep($_ !~ m{[*?]}, @$wanted_locked)) {
         $self->error("Unable to lock all packages. ",
                      "These packages with these versions don't seem to exist ",
-                     "in any configured repositories.", 
-                     $msg, ".");
+                     "in any configured repositories. $msg.");
         return 0;
     } elsif (grep($_ =~ m{[*?]}, @$wanted_locked)) {
         # actually, only wildcards in the versions
@@ -478,7 +474,7 @@ sub locked_all_packages
                     "due to wildcard(s) in the names and/or versions, ",
                     "continuing as if all is fine. ",
                     "Turn on fullsearch option to resolve the wildcards ",
-                    "(but be aware of potential speed impact: ", $msg, ".");
+                    "(but be aware of potential speed impact: $msg).");
         return 1;
     }
     
