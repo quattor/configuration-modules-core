@@ -104,11 +104,11 @@ sub generate_reverse_proxy_urls
 
     my @l;
     foreach my $pt (@$prots) {
-	foreach my $px (@proxies) {
+        foreach my $px (@proxies) {
             my $url = $pt->{url};
-	    $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
-	    push(@l, { url => $url });
-	}
+            $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
+            push(@l, { url => $url });
+        }
     }
     return \@l;
 }
@@ -196,9 +196,9 @@ sub execute_yum_command
     my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
-	      stdout => \$out,
-	      stderr => \$err,
-	      keeps_state => $keeps_state);
+          stdout => \$out,
+          stderr => \$err,
+          keeps_state => $keeps_state);
 
     $opts{stdin} = $stdin if defined($stdin);
 
@@ -236,8 +236,8 @@ sub schedule
 
     my @ls;
     foreach my $pkg (@$target) {
-	push(@ls, $pkg);
-	$ls[-1] =~ s{;}{.};
+        push(@ls, $pkg);
+        $ls[-1] =~ s{;}{.};
     }
     return  sprintf("%s %s\n", $op, join(" ", @ls));
 }
@@ -248,11 +248,11 @@ sub installed_pkgs
     my $self = shift;
 
     my $cmd = CAF::Process->new(RPM_QUERY, keeps_state => 1,
-				log => $self);
+                log => $self);
 
     my $out = $cmd->output();
     if ($?) {
-	return undef;
+        return undef;
     }
     # We don't consider gpg-pubkeys, which won't come from any
     # downloaded RPM, anyways.
@@ -289,18 +289,18 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
+        my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
         if (!$name) {
             $self->error("Invalid package name: ", unescape($pkg));
             return undef;
         }
-	if (%$st) {
-	    while (my ($ver, $archs) = each(%$st)) {
-		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
-	    }
-	} else {
-	    push(@pkl, $name);
-	}
+        if (%$st) {
+            while (my ($ver, $archs) = each(%$st)) {
+                push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
+            }
+        } else {
+            push(@pkl, $name);
+        }
     }
     return Set::Scalar->new(@pkl);
 }
@@ -478,9 +478,7 @@ sub locked_all_packages
         return 1;
     }
     
-    
     # how do we get here?
-    
     return 1;
 }
 
@@ -513,8 +511,8 @@ sub packages_to_remove
                                 log => $self)->output();
 
     if ($?) {
-	$self->error ("Unable to find leaf packages");
-	return;
+        $self->error ("Unable to find leaf packages");
+        return;
     }
 
     # The leaf set doesn't contain the header lines, which are just
@@ -543,16 +541,16 @@ sub spare_deps_whatreq
     my @to_rm;
 
     foreach my $pk (@$rm) {
-	my $arg = $pk;
-	$arg =~ s{;}{.};
-	my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
-						  "determine what requires $pk", 1);
-	return 0 if !defined($whatreqs);
-	foreach my $wr (split("\n", $whatreqs)) {
-	    if ($install->has($wr)) {
-		push(@to_rm, $pk);
-	    }
-	}
+        my $arg = $pk;
+        $arg =~ s{;}{.};
+        my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+                              "determine what requires $pk", 1);
+        return 0 if !defined($whatreqs);
+        foreach my $wr (split("\n", $whatreqs)) {
+            if ($install->has($wr)) {
+                push(@to_rm, $pk);
+            }
+        }
     }
 
     $rm->delete(@to_rm);
@@ -569,12 +567,12 @@ sub spare_deps_requires
     my (@pkgs);
 
     foreach my $pkg (@$install) {
-	$pkg =~ s{;}{.};
-	push(@pkgs, $pkg);
+        $pkg =~ s{;}{.};
+        push(@pkgs, $pkg);
     }
 
     my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
-					  "dependencies of install candidates", 1);
+                      "dependencies of install candidates", 1);
 
     return 0 if !defined $deps;
 
@@ -607,10 +605,10 @@ sub spare_dependencies
     # things.
     if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
         $self->debug(3, "Sparing dependencies in the whatreq path");
-	return $self->spare_deps_whatreq($rm, $install);
+        return $self->spare_deps_whatreq($rm, $install);
     } else {
         $self->debug(3, "Sparing dependencies in the requires path");
-	return $self->spare_deps_requires($rm, $install);
+        return $self->spare_deps_requires($rm, $install);
     }
 }
 
@@ -641,8 +639,8 @@ sub distrosync
     my ($self, $run) = @_;
 
     if (!$run) {
-	$self->info("Skipping yum distro-sync");
-	return 1;
+        $self->info("Skipping yum distro-sync");
+        return 1;
     }
 
     return $self->execute_yum_command([YUM_DISTRO_SYNC], "synchronisation with upstream");
@@ -681,10 +679,10 @@ sub update_pkgs
     $to_install = $wanted-$installed;
 
     if (!$allow_user_pkgs) {
-	$to_rm = $self->packages_to_remove($wanted);
-	defined($to_rm) or return 0;
-	$self->spare_dependencies($to_rm, $to_install);
-	$tx = $self->schedule(REMOVE, $to_rm);
+        $to_rm = $self->packages_to_remove($wanted);
+        defined($to_rm) or return 0;
+        $self->spare_dependencies($to_rm, $to_install);
+        $tx = $self->schedule(REMOVE, $to_rm);
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
@@ -762,11 +760,11 @@ sub configure_yum
     my $fh = CAF::FileEditor->new($cfgfile, log => $self);
 
     $fh->add_or_replace_lines(CLEANUP_ON_REMOVE,
-			      CLEANUP_ON_REMOVE. q{\s*=\s*1},
-			      "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
+                  CLEANUP_ON_REMOVE. q{\s*=\s*1},
+                  "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
     $fh->add_or_replace_lines(OBSOLETE,
-			      OBSOLETE . "\\s*=\\s*$obsolete",
-			      "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
+                  OBSOLETE . "\\s*=\\s*$obsolete",
+                  "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
     $fh->close();
 }
 
