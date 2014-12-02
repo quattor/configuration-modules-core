@@ -91,12 +91,6 @@
                 </resources>
               </configuration>
             </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <executions>
             <execution>
               <id>filter-spma-top-sources</id>
               <phase>process-sources</phase>
