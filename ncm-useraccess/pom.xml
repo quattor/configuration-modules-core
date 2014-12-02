@@ -14,6 +14,7 @@
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
     <version>1.39</version>
+    <relativePath/>
   </parent>
 
   <licenses>
