@@ -56,14 +56,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>rpm-maven-plugin</artifactId>
-          <configuration>
-            <requires>
-              <require>authconfig</require>
-            </requires>
-          </configuration>
-        </plugin>	<plugin>
 	  <artifactId>maven-resources-plugin</artifactId>
 	  <version>2.4.3</version>
 	  <executions>
@@ -93,6 +85,9 @@
 	  <groupId>org.codehaus.mojo</groupId>
 	  <artifactId>rpm-maven-plugin</artifactId>
 	  <configuration>
+            <requires>
+              <require>authconfig</require>
+            </requires>
 	    <mappings combine.children="append">
 	      <mapping>
 		<directory>/usr/share/templates/</directory>
