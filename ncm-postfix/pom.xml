@@ -35,37 +35,30 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <mappings combine.children="append">
+	      <mapping>
+	        <directory>/usr/share/templates/</directory>
+		<filemode>644</filemode>
+		<username>root</username>
+		<groupname>root</groupname>
+		<sources>
+		  <source>
+		    <location>${project.build.directory}/share/templates/</location>
+		  </source>
+		</sources>
+		<directoryIncluded>false</directoryIncluded>
+              </mapping>
+	    </mappings>
+	  </configuration>
+          <!-- <executions> -->
+          <!--   <execution> -->
+          <!--     <id>build-rpm</id> -->
+          <!--   </execution> -->
+          <!-- </executions> -->
         </plugin>
-      <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-	<artifactId>rpm-maven-plugin</artifactId>
-	<configuration>
-	  <mappings combine.children="append">
-	    <mapping>
-	      <directory>/usr/share/templates/</directory>
-		  <filemode>644</filemode>
-		  <username>root</username>
-		  <groupname>root</groupname>
-		  <sources>
-		    <source>
-		      <location>${project.build.directory}/share/templates/</location>
-		    </source>
-		  </sources>
-		  <directoryIncluded>false</directoryIncluded>
-		</mapping>
-	      </mappings>
-	    </configuration>
-	<!-- <executions> -->
-	<!--   <execution> -->
-	<!--     <id>build-rpm</id> -->
-
-	<!--   </execution> -->
-	<!-- </executions> -->
-      </plugin>
-
       </plugins>
     </pluginManagement>
     <plugins>
