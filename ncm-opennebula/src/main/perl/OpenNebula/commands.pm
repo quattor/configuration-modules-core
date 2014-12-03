@@ -21,7 +21,8 @@ use CAF::Process;
 use File::Basename;
 use Readonly;
 
-Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
+Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto 
+    -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 Readonly::Array my @VIRSH_COMMAND => qw(sudo /usr/bin/virsh);
 Readonly::Array my @SU_ONEADMIN_COMMAND => qw(su - oneadmin -c);
@@ -47,25 +48,18 @@ sub set_ssh_command
 sub run_command {
     my ($self, $command, $secret) = @_;
     my ($cmd_output, $cmd_err, $cmd);
-    if (! defined($secret)) {
-        $cmd = CAF::Process->new($command, log => $self, stdout => \$cmd_output, stderr => \$cmd_err);
-    } else {
-        $cmd = CAF::Process->new($command, stdout => \$cmd_output, stderr => \$cmd_err);
-    }
+    my %opts = (stdout => $cmd_output, stderr => \$cmd_err);
+    $opts{log} = $self if !$secret;
+    $cmd = CAF::Process->new($command, %opts);
     $cmd->execute();
-    if ($? and !$secret) {
-        $self->error("Command failed. Error Message: $cmd_err");
-        if ($cmd_output) {
-            $self->verbose("Command output: $cmd_output");
+    if (!$secret) {
+        $self->verbose("Output: $cmd_output") if $cmd_output;
+        if ($?) {
+            $self->error("Command failed: $cmd_err");
+            return;
+        } else {
+            $self->verbose("Stderr: $cmd_err");
         }
-        return;
-    } elsif (!$secret) {
-        if ($cmd_output) {
-            $self->verbose("Command output: $cmd_output");
-        }
-        if ($cmd_err) {
-            $self->verbose("Command stderr output: $cmd_err");
-        }    
     }
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
 }

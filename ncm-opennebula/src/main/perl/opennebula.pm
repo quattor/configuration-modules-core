@@ -23,6 +23,8 @@ Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+# Set OpenNebula RPC endpoint info
+# to connect to ONE API 
 sub make_one 
 {
     my ($self, $rpc) = @_;
@@ -62,7 +64,7 @@ sub process_template
 
 # Create/update ONE resources
 # based on resource type
-sub create_or_update_something
+sub set_resource
 {
     my ($self, $one, $type, $data) = @_;
     
@@ -106,7 +108,10 @@ sub remove_something
 
         if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old $type resource: ", $oldresource->name);
-            $oldresource->delete();
+            my $id = $oldresource->delete();
+            if (!$id) {
+                $self->error("Unable to remove old $type resource: ", $oldresource->name);
+            }
         } else {
             $self->warn("QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this $type resource: ", $oldresource->name);
@@ -178,7 +183,7 @@ sub detect_ceph_datastores
 sub create_resource_names_list
 {
     my ($self, $one, $type, $resources) = @_;
-    my ($name,@namelist, $template);
+    my ($name, @namelist, $template);
 
     foreach my $newresource (@$resources) {
         $template = $self->process_template($newresource, $type);
@@ -302,7 +307,7 @@ sub manage_something
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
-        my $new = $self->create_or_update_something($one, $type, $newresource);
+        my $new = $self->set_resource($one, $type, $newresource);
     }
 }
 
