@@ -98,3 +98,27 @@ restart command only if file content, permissions or owner/group has been change
 Note: the global flag 'forceRestart' takes precedence if set to 'true'.
 
 Default: false
+
+### EXAMPLE
+
+##### scenario 1 : Create a file
+
+    prefix '/software/components/filecopy/services/{/tmp/test}';
+    'config'='Contents of the file';
+    'owner'='root:root';
+    'perms'='0644';
+
+##### scenario 2 : Create a script and execute it
+
+    prefix '/software/components/filecopy/services/{/tmp/test.sh}';
+    'config' = '#!/bin/bash\n echo Hello World';
+    'restart' = '/tmp/test.sh';
+    'owner'='root:root';
+    'perms'='0755';
+
+##### scenario 3 : Copy a file (/tmp/source)
+
+    prefix '/software/components/filecopy/services/{/tmp/second-file}';
+    'source'='/tmp/source';
+    'owner'='root:root';
+    'perms'='0644';

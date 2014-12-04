@@ -1,7 +1,7 @@
 ### NAME
 
 The _cdp_ component manages the configuration file
-`/etc/cdp`-listend.conf.
+`/etc/cdp-listend.conf.`
 
 ### DESCRIPTION
 
@@ -10,29 +10,46 @@ cdp-listend daemon.
 
 ### RESOURCES
 
-#### configfile (/etc/cdp-listend.conf)
+- `configfile : string`
 
-The location of the configuration file.  Normally this should not be
-changed. 
+    The location of the configuration file.  Normally this should not be
+    changed.  Defaults to `/etc/cdp-listend.conf`
 
-#### port
+- `port ? type_port`
 
-The port used by the daemon.  
+    The port used by the daemon.  
 
-#### nch
+- `nch ? string`
 
-The binary to execute when receiving a CDB update packet.
+    The binary to execute when receiving a CDB update packet.
 
-#### nch\_smear
+- `nch_smear ? long(0..)`
 
-The range of time delay for executing the nch executable.  The
-execution will be delayed by \[0, nch\_smear\] seconds.
+    The range of time delay for executing the nch executable.  The
+    execution will be delayed by \[0, nch\_smear\] seconds.
 
-#### fetch
+- `fetch ? string`
 
-The binary to execute when receiving a CCM update packet.
+    The binary to execute when receiving a CCM update packet.
 
-#### fetch\_smear
+- `fetch_offset ? long(0..)`
 
-The range of time delay for executing the fetch executable.  The
-execution will be delayed by \[0, fetch\_smear\] seconds.
+    Fetch execution offset.
+
+    See explanation for `fetch_smear`.
+
+- `fetch_smear ? long(0..)`
+
+    Fetch time smearing.
+
+    The fetch binary will be started at a point in time between
+    `fetch_offset` and `fetch_offset + fetch_smear` seconds
+    after receiving a notification packet.
+
+    The range of time delay for executing the fetch executable.  The
+    execution will be delayed by \[0, fetch\_smear\] seconds.
+
+### EXAMPLES
+
+    "/software/components/cdp/fetch" = "/usr/sbin/ccm-fetch";
+    "/software/components/cdp/fetch_smear" = 30;

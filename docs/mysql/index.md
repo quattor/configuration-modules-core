@@ -26,6 +26,16 @@ Name of the server hosting the database. This name must match one entries in `/s
 
 Default : none.
 
+#### initOnce: boolean (optional)
+
+When true, the initialization script (initScript) is executed only if the database was not already existing.
+
+#### tableOptions: nlist of nlist (optional)
+
+This resource allows to modify table characteristics. All parameters to the ALTER TABLE command are allowed.
+The key is the name of the table, the value is a nlist where the key is the parameter name and the value is parameter
+value if any, else an empty string.
+
 #### users : nlist (optional)
 
 List of MySQL users to create and MySQL privileges they have on the database. This is a nlist. Key is the escaped userid, in
@@ -35,6 +45,10 @@ Value is a nlist with the following possible keys :
 
 - password : user MySQL password. Must be a cleartext password.
 - rights : list of MySQL privileges to grant to the user.
+
+### serviceName option
+
+Name of the mysql service. Valid values are 'mysql', 'mysqld' and 'mariadb'. Defaults to 'mysqld'.
 
 ### DEPENDENCIES
 

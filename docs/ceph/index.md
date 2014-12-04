@@ -12,16 +12,20 @@ Features that are implemented at this moment:
 
 - Creating cluster (manual step involved)
 - Set admin hosts and push config
+- Fine configuration control (per daemon and/or host) 
+- Tollerates unreachable new or marked-for-deletion hosts
 - Checking/adding/removing Monitors
 - Checking/adding/removing OSDs
 - Checking/adding/removing MDSs
-- Building up/changing a crushmap
+- Building up/changing a crushmap, with support for erasure code
+- OSD based objectstore
+- Wildcard support in version numbers 
 
 The implementation keeps safety as top priority. Therefore:
 
 - The config of MON, OSD and MDSs are first checked completely. Only if no errors were found, the actual changes will be deployed.
 - No removals of MONs, OSDs or MDSs are actually done at this moment. Instead of removing itself, it prints the commands to use. 
-- Backup files are always made of the configfiles and decompiled crushmap files. These timestamped files can be found in the 'ncm-ceph' folder in the home directory of the ceph user
+- Configfiles and decompiled crushmap files are saved into a git repo. This repo can be found in the 'ncm-ceph' folder in the home directory of the ceph user
 - When something is not right and returns an error, the whole component exits.
 - You can set the version of ceph and ceph-deploy in the Quattor scheme. The component will then only run if the versions of ceph and ceph-deploy match with those versions.
 
@@ -52,7 +56,7 @@ be described in this section.
 
 ### DEPENDENCIES
 
-The component is tested with Ceph version 0.80 and ceph-deploy version 1.5.1. 
+The component is tested with Ceph version 0.84 and ceph-deploy version 1.5.11. 
 
 Following package dependencies should be installed to run the component:
 

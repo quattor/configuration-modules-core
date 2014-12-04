@@ -11,80 +11,92 @@ manpage for more details.
 
 ### RESOURCES
 
-#### configFile (/etc/ccm.conf)
+- `configFile : string`
 
-The location of the configuration file.  Normally this should not be
-changed.
+    The location of the configuration file.  Normally this should not be
+    changed. Defaults to `/etc/ccm.conf`.
 
-#### 
+- `profile : type_hostURI`
 
-#### profile
+    The URL for the machine's profile.  You can use either the http or
+    https protocols (the file protocol is also possible eg. for tests).
+    (see ccm-fetch manpage)
 
-The URL for the machine's profile.  You can use either the http or
-https protocols (the file protocol is also possible eg. for tests).
-(see ccm-fetch manpage)
+- `profile_failover ? type_hostURI`
 
-#### profile\_failover
+    profile failover URL in case the above is not working (see ccm-fetch manpage)
 
-profile failover URL in case the above is not working (see ccm-fetch manpage)
+- `context ? type_hostURI`
 
-#### debug
+    Unsupported. May be removed in a future release.
 
-Turn on debugging.  Takes either 0 or 1.
+- `debug : long(0..1)`
 
-#### force
+    Turn on debugging.  Takes either 0 or 1.  Defaults to 0.
 
-Force fetching of the machine profile.  Turning this on ignores the
-modification times.  Takes either 0 or 1.
+- `force : long(0..1)`
 
-#### preprocessor
+    Force fetching of the machine profile.  Turning this on ignores the
+    modification times.  Takes either 0 or 1.  Defaults to 0.
 
-Preprocessor executable which combines the profile and context.
-Currently not used.
+- `preprocessor ? string`
 
-#### cache\_root
+    Preprocessor executable which combines the profile and context.
+    Currently not used.
 
-The root directory of the CCM cache.  Defaults to `/var/lib/ccm.`
+- `cache_root : string`
 
-#### get\_timeout
+    The root directory of the CCM cache.  Defaults to `/var/lib/ccm`.
 
-The timeout for the download operation in seconds.
+- `get_timeout : long(0..)`
 
-#### lock\_retries
+    The timeout for the download operation in seconds.  Defaults to 30.
 
-Number of times to try to get the lock on the cache.
+- `lock_retries : long(0..)`
 
-#### lock\_wait
+    Number of times to try to get the lock on the cache.  Defaults to 3.
 
-Number of seconds to wait between attempts to acquire the lock.
+- `lock_wait : long(0..)`
 
-#### retrieve\_retries
+    Number of seconds to wait between attempts to acquire the lock.  Defaults to 30.
 
-Number of times to try to get the context from the server.
+- `retrieve_retries : long(0..)`
 
-#### retrieve\_wait
+    Number of times to try to get the context from the server.  Defaults to 3.
 
-Number of seconds to wait between attempts to get the context from the
-server.
+- `retrieve_wait : long(0..)`
 
-#### cert\_file
+    Number of seconds to wait between attempts to get the context from the
+    server.  Defaults to 30.
 
-The certificate file to use for an https protocol.
+- `cert_file ? string`
 
-#### key\_file
+    The certificate file to use for an https protocol.
 
-The key file to use for an https protocol.
+- `key_file ? string`
 
-#### ca\_file
+    The key file to use for an https protocol.
 
-The CA file to use for an https protocol.
+- `ca_file ? string`
 
-#### ca\_dir
+    The CA file to use for an https protocol.
 
-The directory containing accepted CA certificates when using the https
-protocol.
+- `ca_dir ? string`
 
-#### world\_readable
+    The directory containing accepted CA certificates when using the https
+    protocol.
 
-Whether the profiles should be world-readable.  This takes either a 0
-or 1.
+- `world_readable : long(0..1)`
+
+    Whether the profiles should be world-readable.  This takes either a 0
+    or 1.  Defaults to 0.
+
+- `base_url ? type_absoluteURI`
+
+    If `profile` is not a URL, a profile url will be calculated from
+    `base_url` and the local hostname.
+
+- `dbformat ? string`
+
+    Format of the local database, must be `DB_File`, `CDB_File` or `GDBM_File`.
+    If not specified, the component will default to `GDBM_File`.

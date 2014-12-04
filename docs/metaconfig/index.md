@@ -1,7 +1,7 @@
 ### NAME
 
-ncm-metaconfig: Configure services whose config format is
-very widespread, such as YAML or JSON.
+ncm-metaconfig: Configure services whose config format can be 
+rendered via `CAF::TextRender`.
 
 ### DESCRIPTION
 
@@ -35,9 +35,22 @@ The configuration information for the component.  It is an nlist of
     Module to render the configuration file. See ["CONFIGURATION MODULES"](#configuration-modules)
     below.
 
-- daemon ? string
+- daemons ? caf\_service\_action{}
 
-    Daemon to restart if the file changes.
+    An nlist with foreach daemon the `CAF::Service` action to take 
+    if the file changes.
+
+    Even if multiple `services` are associated to the same daemon, each action 
+    for the daemon will be taken at most once.
+
+    If multiple actions are to be taken for the same daemon, all actions
+    will be taken (no attempt to optimize is made).
+
+- daemon ? string\[\]
+
+    \[Deprecated in favour of daemons\]
+
+    List of daemons to restart if the file changes.
 
     Even if multiple `services` are associated to the same daemon, the
     daemon will be restarted at most once.
@@ -62,7 +75,7 @@ The configuration information for the component.  It is an nlist of
 
 ### CONFIGURATION MODULES
 
-The following formats my be rendered:
+The following formats can be rendered via `CAF::TextRender`:
 
 - general
 

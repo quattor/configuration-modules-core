@@ -119,6 +119,15 @@ Quattor, please check
     Whether to actually run Yum operations that may install, remove or
     update packages.
 
+- `/software/components/spma/fullsearch`: boolean 
+
+    Yum-based spma will try to verify that all version locked packages
+    can actually be found in the provided repositories. For packages 
+    that have versions with wildcards specified, a full (and possibly slow) 
+    search of each pattern can be performed by setting `fullsearch` to true.
+    By default, the fullsearch is not performed, and for any packages that have
+    versions with wildcards, it is assumed that the repositories contain them.
+
 - `/software/components/spma/headnode`: boolean
 
     Ignored.
