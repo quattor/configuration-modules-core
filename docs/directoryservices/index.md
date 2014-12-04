@@ -1,10 +1,3 @@
----
-layout: documentation
-title: directoryservices
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 Be sure to put a blank line before and after every formatting command
 
 ### NAME

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: gmetad
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _gmetad_ component manages Ganglia's gmetad daemon.

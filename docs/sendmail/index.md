@@ -1,10 +1,3 @@
----
-layout: documentation
-title: sendmail
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::sendmail - NCM Sendmail configuration component

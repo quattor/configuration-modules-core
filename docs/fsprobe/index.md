@@ -1,10 +1,3 @@
----
-layout: documentation
-title: fsprobe
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 Updates the `/etc/sysconfig/fsprobe` configuration.  This is used by

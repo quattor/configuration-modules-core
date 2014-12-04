@@ -1,10 +1,3 @@
----
-layout: documentation
-title: gmond
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _gmond_ component manages Ganglia's gmond daemon.

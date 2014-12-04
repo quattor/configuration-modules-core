@@ -1,10 +1,3 @@
----
-layout: documentation
-title: fmonagent
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::fmonagent - NCM Lemon Monitoring Agent configuration component

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ntpd
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::ntpd - NCM ntpd configuration component

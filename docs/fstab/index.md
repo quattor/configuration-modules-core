@@ -1,10 +1,3 @@
----
-layout: documentation
-title: fstab
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _fstab_ component manages the mount points in a node. It is able

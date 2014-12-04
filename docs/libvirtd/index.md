@@ -1,10 +1,3 @@
----
-layout: documentation
-title: libvirtd
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _libvirtd_ component manages the configuration of the

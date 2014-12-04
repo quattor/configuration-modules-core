@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ccm
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 The _ccm_ component manages the configuration file

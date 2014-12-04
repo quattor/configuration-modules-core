@@ -1,10 +1,3 @@
----
-layout: documentation
-title: profile
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 profile: Create profile scripts defining environment variables and paths.

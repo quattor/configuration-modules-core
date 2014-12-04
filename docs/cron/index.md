@@ -1,10 +1,3 @@
----
-layout: documentation
-title: cron
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 cron -- NCM component to control cron entries for Linux and Solaris.

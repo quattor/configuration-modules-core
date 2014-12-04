@@ -1,10 +1,3 @@
----
-layout: documentation
-title: modprobe
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::modprobe - NCM modprobe configuration component

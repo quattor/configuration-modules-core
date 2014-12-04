@@ -1,10 +1,3 @@
----
-layout: documentation
-title: amandaserver
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 This component configures amanda server, the  "Advanced  Maryland  Automatic  

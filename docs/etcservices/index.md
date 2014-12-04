@@ -1,10 +1,3 @@
----
-layout: documentation
-title: etcservices
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::etcservices -  `/etc/services` configuration component

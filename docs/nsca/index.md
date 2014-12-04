@@ -1,10 +1,3 @@
----
-layout: documentation
-title: nsca
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _nsca_ component manages the NSCA daemon and the NSCA client configuration.

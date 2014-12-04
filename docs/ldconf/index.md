@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ldconf
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ldconf: NCM component to manage `/etc/ld.so`.conf file.

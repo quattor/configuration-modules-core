@@ -1,10 +1,3 @@
----
-layout: documentation
-title: sysconfig
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 sysconfig: management of sysconfig files

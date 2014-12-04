@@ -1,10 +1,3 @@
----
-layout: documentation
-title: iptables
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 iptables: Setup the IPTABLES firewall rules.

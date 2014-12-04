@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ofed
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::ofed - NCM ofed configuration component

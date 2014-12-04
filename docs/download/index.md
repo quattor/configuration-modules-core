@@ -1,10 +1,3 @@
----
-layout: documentation
-title: download
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::download - NCM download configuration component

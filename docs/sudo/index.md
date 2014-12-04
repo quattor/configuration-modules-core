@@ -1,10 +1,3 @@
----
-layout: documentation
-title: sudo
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _sudo_ component manages the sudo configuracion, I.E: edits

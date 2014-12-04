@@ -1,10 +1,3 @@
----
-layout: documentation
-title: icinga
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _icinga_ component manages the configuration for the Icinga

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: accounts
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-accounts: NCM component to manage the local accounts on the machine.

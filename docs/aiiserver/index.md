@@ -1,10 +1,3 @@
----
-layout: documentation
-title: aiiserver
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _aiiserver_ component manages the configuration of an AII

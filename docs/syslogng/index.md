@@ -1,10 +1,3 @@
----
-layout: documentation
-title: syslogng
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 This component configures syslog-ng, an alternative logging facility

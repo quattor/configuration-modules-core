@@ -1,10 +1,3 @@
----
-layout: documentation
-title: resolver
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::resolver - NCM resolver configuration component

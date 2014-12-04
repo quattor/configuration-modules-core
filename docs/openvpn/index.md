@@ -1,10 +1,3 @@
----
-layout: documentation
-title: openvpn
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _openvpn_ component manages the OpenVPN server and the OpenVPN client configuration.

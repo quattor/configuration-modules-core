@@ -1,10 +1,3 @@
----
-layout: documentation
-title: dirperm
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 dirperm: permissions and file/directory creation NCM component

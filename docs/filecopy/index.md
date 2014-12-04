@@ -1,10 +1,3 @@
----
-layout: documentation
-title: filecopy
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-filecopy: NCM component to manage simple configuration files and services.

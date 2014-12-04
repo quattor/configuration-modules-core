@@ -1,10 +1,3 @@
----
-layout: documentation
-title: nscd
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::nscd - NCM component to configure nscd

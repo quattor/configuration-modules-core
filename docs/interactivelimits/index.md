@@ -1,10 +1,3 @@
----
-layout: documentation
-title: interactivelimits
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::interactivelimits - NCM interactivelimits configuration component

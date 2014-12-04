@@ -1,10 +1,3 @@
----
-layout: documentation
-title: spma
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::Component::spma - Quattor's package manager

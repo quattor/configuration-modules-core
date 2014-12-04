@@ -1,10 +1,3 @@
----
-layout: documentation
-title: pnp4nagios
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 This component configures the nagios/icinga addon, pnp4nagios

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: pam
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::pam - NCM pam configuration component

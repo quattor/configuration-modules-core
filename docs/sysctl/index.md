@@ -1,10 +1,3 @@
----
-layout: documentation
-title: sysctl
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::sysctl - NCM sysctl configuration component

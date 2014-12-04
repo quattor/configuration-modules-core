@@ -1,10 +1,3 @@
----
-layout: documentation
-title: spma / yum
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::Component::spma::yum - NCM SPMA configuration component for Yum

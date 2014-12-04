@@ -1,10 +1,3 @@
----
-layout: documentation
-title: puppet
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-puppet: Component for running puppet standalone within quattor

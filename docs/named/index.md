@@ -1,10 +1,3 @@
----
-layout: documentation
-title: named
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::named - NCM named configuration component

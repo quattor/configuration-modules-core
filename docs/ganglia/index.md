@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ganglia
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-ganglia: Ganglia components

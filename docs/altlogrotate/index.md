@@ -1,10 +1,3 @@
----
-layout: documentation
-title: altlogrotate
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 @COMP: NCM component to control the log rotate configuration

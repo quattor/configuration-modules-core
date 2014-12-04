@@ -1,10 +1,3 @@
----
-layout: documentation
-title: chkconfig
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::chkconfig - NCM chkconfig component

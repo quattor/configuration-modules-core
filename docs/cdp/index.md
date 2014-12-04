@@ -1,10 +1,3 @@
----
-layout: documentation
-title: cdp
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 The _cdp_ component manages the configuration file

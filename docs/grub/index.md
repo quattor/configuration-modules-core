@@ -1,10 +1,3 @@
----
-layout: documentation
-title: grub
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::grub - NCM grub configuration component

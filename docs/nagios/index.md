@@ -1,10 +1,3 @@
----
-layout: documentation
-title: nagios
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _nagios_ component manages the configuration for the Nagios

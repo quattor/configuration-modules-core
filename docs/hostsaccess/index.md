@@ -1,10 +1,3 @@
----
-layout: documentation
-title: hostsaccess
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 hostsaccess: NCM component to control `/etc/hosts.allow` and hosts.deny files

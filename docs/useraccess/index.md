@@ -1,10 +1,3 @@
----
-layout: documentation
-title: useraccess
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The useraccess NCM component allows to manage the different ways an user

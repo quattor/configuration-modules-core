@@ -1,10 +1,3 @@
----
-layout: documentation
-title: shorewall
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::shorewall - NCM shorewall configuration component

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: network
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 network: Configure Network Settings

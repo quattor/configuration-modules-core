@@ -1,10 +1,3 @@
----
-layout: documentation
-title: filesystems
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _filesystems_ component manages the filesystems on a node. It is able

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: spma / ips
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::Component::spma::ips - NCM SPMA configuration component for IPS

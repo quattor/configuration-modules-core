@@ -1,10 +1,3 @@
----
-layout: documentation
-title: nfs
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 nfs: NCM component for NFS entries in `/etc/exports` and `/etc/fstab`

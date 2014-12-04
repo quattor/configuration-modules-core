@@ -1,10 +1,3 @@
----
-layout: documentation
-title: metaconfig
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-metaconfig: Configure services whose config format is

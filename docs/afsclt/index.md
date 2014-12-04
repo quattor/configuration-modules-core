@@ -1,10 +1,3 @@
----
-layout: documentation
-title: afsclt
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::afsclt - NCM AFS client configuration component

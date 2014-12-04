@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ipmi
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::ipmi - Components used to manage IPMI configuration

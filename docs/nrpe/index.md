@@ -1,10 +1,3 @@
----
-layout: documentation
-title: nrpe
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### DESCRIPTION
 
 The _nrpe_ component manages the NRPE daemon, which executes Nagios

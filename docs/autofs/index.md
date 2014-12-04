@@ -1,10 +1,3 @@
----
-layout: documentation
-title: autofs
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 ncm-autofs: NCM component to manage autofs configuration. 

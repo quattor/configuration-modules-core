@@ -1,10 +1,3 @@
----
-layout: documentation
-title: hostsfile
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::hostsfile - NCM local hosts file configuration component

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: syslog
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::syslog - adding entries and editing `/etc/syslog.conf`

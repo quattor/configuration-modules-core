@@ -1,10 +1,3 @@
----
-layout: documentation
-title: ssh
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::ssh - NCM SSH configuration component

@@ -1,10 +1,3 @@
----
-layout: documentation
-title: gpfs
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 NCM::gpfs - NCM gpfs configuration component

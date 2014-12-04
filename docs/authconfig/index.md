@@ -1,10 +1,3 @@
----
-layout: documentation
-title: authconfig
-category: documentation
-subcategory: components
-menu: 'components.md'
----
 ### NAME
 
 authconfig: NCM component to manage system authentication services
