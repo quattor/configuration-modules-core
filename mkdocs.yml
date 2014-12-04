@@ -1,6 +1,7 @@
 site_name: Quattor Configuration Modules (Core)
 
 pages:
+- ['index.md', 'Introduction']
 - ['accounts/index.md', 'accounts']
 - ['afsclt/index.md', 'afsclt']
 - ['aiiserver/index.md', 'aiiserver']
