@@ -24,24 +24,13 @@ use Test::More;
 use Class::Inspector;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
 $cmp = Test::MockObject::Extends->new($cmp);
 
 no warnings 'redefine';
-
-my $called = 1;
-
-# We mock file closing to control whether or not mkinitrd is to b
-# called.
-sub CAF::FileWriter::close
-{
-    my ($self, $file, %opts) = @_;
-
-    return $called--;
-}
-
 
 my @methods = grep($_ =~ m{^process|mkinitr},
                    @{Class::Inspector->functions("NCM::Component::modprobe")});
