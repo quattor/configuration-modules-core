@@ -18,7 +18,6 @@ use Readonly;
 
 
 # TODO use constant from CAF::Render
-Readonly::Scalar my $DEFAULT_INCLUDE_PATH => "/usr/share/templates/quattor";
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
