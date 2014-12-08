@@ -1,0 +1,12 @@
+Base tests for config
+---
+multiline
+metaconfigservice=/etc/mrtg/mrtg.cfg
+---
+^HtmlDir:\s/var/www/mrtg
+^ImageDir:\s/var/www/mrtg
+^LibAdd:\s/opt/rrdtool-1.4.4/lib/perl
+^LogDir:\s/var/lib/mrtg
+^LogFormat:\srrdtool
+^ThreshDir:\s/var/lib/mrtg
+^WorkDir:\s/var/lib/mrtg

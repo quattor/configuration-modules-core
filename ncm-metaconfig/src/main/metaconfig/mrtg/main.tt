@@ -1,0 +1,7 @@
+HtmlDir: [% HtmlDir %]
+ImageDir: [% ImageDir %]
+LibAdd: [% LibAdd %]
+LogDir: [% LogDir %]
+LogFormat: [% LogFormat %]
+ThreshDir: [% ThreshDir %]
+WorkDir: [% WorkDir %]
