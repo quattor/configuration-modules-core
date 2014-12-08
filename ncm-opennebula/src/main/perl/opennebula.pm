@@ -11,20 +11,21 @@ use NCM::Component;
 use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
+use CAF::TextRender;
 use Net::OpenNebula 0.300.0;
 use Data::Dumper;
 use Readonly;
 
 
 # TODO use constant from CAF::Render
-Readonly::Scalar my $TEMPLATEPATH => "/usr/share/templates/quattor";
+Readonly::Scalar my $DEFAULT_INCLUDE_PATH => "/usr/share/templates/quattor";
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
 # Set OpenNebula RPC endpoint info
-# to connect to ONE API 
+# to connect to ONE API
 sub make_one 
 {
     my ($self, $rpc) = @_;
@@ -46,20 +47,21 @@ sub make_one
     return $one;
 }
 
-# TODO replace by CAF::Render
 # Detect and process ONE templates
 sub process_template 
 {
     my ($self, $config, $type_name) = @_;
-    my $res;
     
-    my $type_rel = "metaconfig/opennebula/$type_name.tt";
-    my $tpl = Template->new(INCLUDE_PATH => $TEMPLATEPATH);
-    if (! $tpl->process($type_rel, { $type_name => $config }, \$res)) {
+    my $type_rel = "opennebula/$type_name.tt";
+    my $tpl = CAF::TextRender->new($type_rel,
+                                  { $type_name => $config },
+                                  log => $self,
+                                  );
+    if (!$tpl) {
         $self->error("TT processing of $type_rel failed: ",$tpl->error());
         return;
     }
-    return $res;
+    return $tpl;
 }
 
 # Create/update ONE resources
@@ -228,9 +230,8 @@ sub enable_ceph_node
             if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
                 $uuid = $1;
                 if ($uuid eq $ceph->{ceph_secret}) {
-                $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
-                }
-                else {
+                    $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+                } else {
                     $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
                     return;
                 }
@@ -265,6 +266,9 @@ sub enable_node
     return 1;
 }
 
+# By default OpenNebula sets a random pass
+# for oneadmin user. This function sets the
+# new pass
 sub change_oneadmin_passwd
 {
     my ($self, $passwd) = @_;
@@ -303,7 +307,7 @@ sub manage_something
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources);
 
-    if (scalar @$resources > 0) {
+    if (@$resources) {
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
@@ -425,7 +429,7 @@ sub manage_users
         }
     }
 
-    if (scalar @rmusers > 0) {
+    if (@rmusers) {
         $self->info("Removed users: ", join(',', @rmusers));
     }
 
@@ -499,17 +503,14 @@ sub Configure
     # Check ONE RPC endpoint and OpenNebula version
     return 0 if !$self->is_supported_one_version($one);
 
-    # Add/remove VNETs
     $self->manage_something($one, "vnet", $tree->{vnets});
 
-    # Add/remove datastores
+    # For the moment only Ceph datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores});
 
-    # Add/remove KVM hosts
     my $hypervisor = "kvm";
     $self->manage_something($one, $hypervisor, $tree);
 
-    # Add/remove regular users
     $self->manage_something($one, "user", $tree->{users});
 
     return 1;
