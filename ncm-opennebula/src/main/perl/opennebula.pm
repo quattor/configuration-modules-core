@@ -17,7 +17,7 @@ use Data::Dumper;
 use Readonly;
 
 
-# TODO use constant from CAF::Render
+
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
@@ -47,7 +47,7 @@ sub make_one
 }
 
 # Detect and process ONE templates
-sub process_template 
+sub process_template
 {
     my ($self, $config, $type_name) = @_;
     
@@ -95,6 +95,7 @@ sub set_resource
     return $new;
 }
 
+# Removes ONE resources
 sub remove_something
 {
     my ($self, $one, $type, $resources) = @_;
@@ -121,6 +122,7 @@ sub remove_something
     return;
 }
 
+# Updates ONE resource templates
 sub update_something
 {
     my ($self, $one, $type, $name, $template) = @_;
@@ -147,7 +149,7 @@ sub detect_used_resource
     my $quattor;
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
-    if (scalar @existres > 0) {
+    if (@existres) {
         $quattor = $self->check_quattor_tag($existres[0]);
     }
     if (!$quattor) {
@@ -210,6 +212,8 @@ sub check_quattor_tag
     }
 }
 
+# This function configures Ceph client
+# It sets ceph key in each hypervisor.
 sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
@@ -242,7 +246,7 @@ sub enable_ceph_node
             $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
             $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
             if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
-                $self->info("New Ceph key include into libvirt list: ",$output);
+                $self->info("New Ceph key include into libvirt list: ", $output);
             } else {
                 $self->error("Error running virsh secret-set-value command: ", $output);
                 return;
@@ -335,7 +339,7 @@ sub manage_hosts
         }
     }
 
-    if (scalar @rmhosts > 0) {
+    if (@rmhosts) {
         $self->info("Removed $type hosts: ", join(',', @rmhosts));
     }
 
