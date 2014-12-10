@@ -65,10 +65,10 @@ sub process_template
 
 # Create/update ONE resources
 # based on resource type
-sub set_resource
+sub create_or_update_something
 {
     my ($self, $one, $type, $data, %untouch) = @_;
-    
+
     my $template = $self->process_template($data, $type);
     my ($name, $new);
     if (!$template) {
@@ -98,6 +98,7 @@ sub set_resource
     }
     return $new;
 }
+
 
 # Removes ONE resources
 sub remove_something
