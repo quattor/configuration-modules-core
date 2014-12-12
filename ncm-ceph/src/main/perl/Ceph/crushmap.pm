@@ -24,7 +24,7 @@ use LC::Exception;
 use LC::Find;
 use LC::File qw(makedir);
 
-use CAF::FileWriter;
+use CAF::TextRender;
 use CAF::FileEditor;
 use CAF::Process;
 # taint-safe since 1.23;
@@ -39,7 +39,8 @@ use JSON::XS;
 use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
-Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
+Readonly my $CRUSH_TT_REL => 'ceph';
+Readonly my $CRUSH_MOD => 'crush';
 
 # Get the osd name from the host and path
 sub get_osd_name {
@@ -449,8 +450,7 @@ sub write_crush {
     my ($self, $crush, $crushdir) = @_;
     # Use tt files
     my $plainfile = "$crushdir/crushmap"; 
-
-    my $fh = CAF::FileWriter->new($plainfile, log => $self);
+    my $trd = CAF::TextRender->new($CRUSH_MOD, $crush, log => $self)
     
     print $fh  "# begin crush map\n";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
