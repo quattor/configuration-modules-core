@@ -9,7 +9,8 @@ ncm-${project.artifactId}: Configuration module for CEPH
 
 =head1 DESCRIPTION
 
-Configuration module for CEPH
+Module that handles the daemon tasks ( creation, destroying, restarting, ..)
+
 
 =head1 AUTHOR
 
