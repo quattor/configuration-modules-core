@@ -62,11 +62,12 @@ sub Configure
 
         $fh->cancel();
 
-        my $msg = "in the content of the CCM configfile $filename";
+        my $msg_noquattor = NOQUATTOR." set, and";
+        my $msg = "changes are pending to the CCM configfile $filename";
         if ("$fh" eq $current_config_content) {
-            $self->info("NOQUATTOR set, and no changes $msg.");
+            $self->info("$msg_noquattor no $msg.");
         } else {
-            $self->error("NOQUATTOR set, and changes $msg.");
+            $self->error("$msg_noquattor $msg.");
         }
     } else {
         # Check that ccm-fetch can work with the new file.
