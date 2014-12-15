@@ -1,10 +1,10 @@
-#!/usr/bin/perl
 use strict;
 use warnings;
 use Test::More;
+
 use Test::Quattor;
-use NCM::Component::icinga;
-use File::Path qw(rmtree);
+
+use myIcinga;
 
 use constant DIR => "target/test/icinga/dirs";
 
