@@ -15,7 +15,6 @@ use NCM::Component;
 our @ISA = qw(NCM::Component);
 our $EC  = LC::Exception::Context->new->will_store_all;
 
-use NCM::Check;
 use EDG::WP4::CCM::Configuration;
 use CAF::Process;
 use CAF::FileWriter;
