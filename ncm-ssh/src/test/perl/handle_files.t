@@ -9,6 +9,8 @@ use Readonly;
 use CAF::FileWriter;
 use Test::MockModule;
 
+$CAF::Object::NoAction = 1;
+
 my $mock = Test::MockModule->new("CAF::FileWriter");
 
 # Mock the cancel method to know if it was actually called.  Since we
@@ -38,8 +40,6 @@ The component requires some heavy refactoring, but first we need some
 basic tests to ensure we don't break the old behaviour.
 
 =cut
-
-$CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('files');
 my $cmp = NCM::Component::ssh->new('ssh');

@@ -30,8 +30,7 @@ use constant MKINITRD => "mkinitrd -f /boot/initrd-2.6.35.img 2.6.35";
 
 my $mock = Test::MockModule->new('NCM::Component::modprobe');
 
-$mock->mock('directory_contents', [qw(foo System.map-2.6.35)]);
-
+$mock->mock('directory_contents', sub ($) {return [qw(foo System.map-2.6.35)]});
 
 $CAF::Object::NoAction = 1;
 

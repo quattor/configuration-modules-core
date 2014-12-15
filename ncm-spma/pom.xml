@@ -8,7 +8,8 @@
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.40</version>
+    <relativePath/>
   </parent>
   <licenses>
     <license>
@@ -91,12 +92,6 @@
                 </resources>
               </configuration>
             </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <executions>
             <execution>
               <id>filter-spma-top-sources</id>
               <phase>process-sources</phase>

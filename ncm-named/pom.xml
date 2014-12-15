@@ -13,7 +13,8 @@
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.40</version>
+    <relativePath/>
   </parent>
 
   <licenses>
@@ -30,34 +31,5 @@
       <email>jouvin@lal.in2p3.fr</email>
     </developer>
   </developers>
-
-  <contributors>
-    <contributor>
-      <name>Jane SMITH</name>
-      <email>smith@example.com</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-    <contributor>
-      <name>Joe DOE</name>
-      <email>doe@example.org</email>
-      <roles>
-	<role>author</role>
-      </roles>
-    </contributor>
-  </contributors>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>
