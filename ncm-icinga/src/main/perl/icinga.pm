@@ -26,6 +26,7 @@ use File::Path;
 
 our @ISA = qw (NCM::Component);
 our $EC  = LC::Exception::Context->new->will_store_all();
+
 use constant ICINGA_FILES => {
     general             => '/etc/icinga/icinga.cfg',
     cgi                 => '/etc/icinga/cgi.cfg',
@@ -539,6 +540,11 @@ sub restart_icinga
 sub Configure
 {
     my ($self, $config) = @_;
+
+    if (! (defined(ICINGAUSR)  && defined(ICINGAGRP))) {
+        $self->error("Icinga user and/or group undefined");
+        return 0;
+    }
 
     my $t = $config->getElement(BASEPATH)->getTree();
 
