@@ -450,14 +450,15 @@ sub write_crush {
     my ($self, $crush, $crushdir) = @_;
     # Use tt files
     my $plainfile = "$crushdir/crushmap"; 
-    my $trd = CAF::TextRender->new($CRUSH_MOD, $crush, log => $self)
-    
-    print $fh  "# begin crush map\n";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
-    my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
-    if (!$ok) {
-        $self->error("Unable to render template $CRUSH_TT_FILE : ",
-                     $self->template()->error());
+
+    my $trd = CAF::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
+    
+    my $headr =  "# begin crush map\n";
+    my $fh = $trd->filewriter($plainfile, header => $headr );
+
+    if (!defined($fh)) {
+        $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD.");
         $fh->cancel();
         $fh->close();
         return 0;
