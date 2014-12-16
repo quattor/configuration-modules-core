@@ -57,7 +57,7 @@ sub process_template
                                   log => $self,
                                   );
     if (!$tpl) {
-        $self->error("TT processing of $type_rel failed: ",$tpl->error());
+        $self->error("TT processing of $type_rel failed.", $tpl->{fail});
         return;
     }
     return $tpl;
