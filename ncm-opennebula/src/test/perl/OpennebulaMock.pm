@@ -91,26 +91,12 @@ sub mock_rpc {
 our $opennebula = new Test::MockModule('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
-# Overwrite the INCLUDE_PATH with environment variable QUATTOR_TEST_TEMPLATE_INCLUDE_PATH
-our $template = new Test::MockModule('Template');
-$template->mock( 'new',  sub{
-    my ($that, %opts) = @_;
-
-    my $inclpath = $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH};
-    $opts{INCLUDE_PATH} = $inclpath if $inclpath;
-
-    my $init = $template->original("new");
-    my $t = &$init($that, %opts);
-
-    return $t;
-});
-
 my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
     my $trd = &$init(@_);
-    $trd->{includepath} = "/usr/share/templates/quattor";
-    $trd->{relpath} = 'metaconfig';
+    my $inclpath = $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH};
+    $trd->{includepath} = $inclpath if $inclpath;
     return $trd;
 });
 
