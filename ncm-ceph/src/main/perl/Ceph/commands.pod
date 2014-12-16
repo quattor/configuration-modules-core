@@ -9,7 +9,7 @@ ncm-${project.artifactId}: Configuration module for CEPH
 
 =head1 DESCRIPTION
 
-Configuration module for CEPH
+Module to executes commands locally or remote with ssh (as ceph user).
 
 =head1 AUTHOR
 
