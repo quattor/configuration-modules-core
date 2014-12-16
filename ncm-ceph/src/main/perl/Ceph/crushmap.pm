@@ -454,11 +454,14 @@ sub write_crush {
 
     my $trd = CAF::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
     
-    my $headr =  "# begin crush map\n";
-    my $fh = $trd->filewriter($plainfile, header => $headr );
+    if (!$trd) {
+        $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD: ",$trd->{fail});
+        return 0;
+    } 
+    my $fh = $trd->filewriter($plainfile);
 
     if (!defined($fh)) {
-        $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD.");
+        $self->error("Unable to write crushmap file $plainfile.");
         $fh->cancel();
         $fh->close();
         return 0;

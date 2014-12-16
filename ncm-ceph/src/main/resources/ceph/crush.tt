@@ -1,3 +1,4 @@
+# begin crush map
 [% FOREACH pair IN tunables.pairs -%]
 tunable [% pair.key %] [% pair.value %]
 [% END %]
