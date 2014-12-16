@@ -106,6 +106,7 @@
     <module>ncm-cups</module>
     <module>ncm-puppet</module>
     <module>ncm-ceph</module>
+    <module>ncm-nss</module>
   </modules>
 
   <build>
@@ -126,4 +127,3 @@
   </build>
 
 </project>
-
