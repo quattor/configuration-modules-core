@@ -217,7 +217,7 @@ sub check_quattor_tag
 sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
-    my ($output, $cmd, $uuid, $secret);
+    my ($secret, $uuid);
     foreach my $ceph (@$datastores) {
         if ($ceph->{tm_mad} eq 'ceph') {
             if ($ceph->{ceph_user_key}) {
@@ -227,33 +227,53 @@ sub enable_ceph_node
                 $self->error("Ceph user key not found within Quattor template.");
                 return;
             }
-            # Add ceph keys as root
-            $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
-            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
-            if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
-                $uuid = $1;
-                if ($uuid eq $ceph->{ceph_secret}) {
-                    $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
-                } else {
-                    $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
-                    return;
-                }
-            } else {
-                $self->error("Required Ceph UUID not found for $type host $host.");
-                return;
-            }
-
-            $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
-            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
-            if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
-                $self->info("New Ceph key include into libvirt list: ", $output);
-            } else {
-                $self->error("Error running virsh secret-set-value command: ", $output);
-                return;
-            }
+            $uuid = $self->set_ceph_secret($type, $host, $ceph);
+            return if !$uuid;
+            return if !self->set_ceph_keys($host, $uuid, $secret);
         }
     }
     return 1;
+}
+
+# Sets Ceph secret
+# to be used by libvirt
+sub set_ceph_secret
+{
+    my ($self, $type, $host, $ceph) = @_;
+    my $uuid;
+    # Add ceph keys as root
+    my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
+    my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
+    if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+        $uuid = $1;
+        if ($uuid eq $ceph->{ceph_secret}) {
+            $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+        } else {
+            $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
+            return;
+        }
+    } else {
+        $self->error("Required Ceph UUID not found for $type host $host.");
+        return;
+    }
+    return $uuid;
+}
+
+# Sets Ceph keys
+# to be used by libvirt
+sub set_ceph_keys
+{
+    my ($self, $host, $uuid, $secret) = @_;
+
+    my $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
+    my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
+    if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
+        $self->info("New Ceph key include into libvirt list: ", $output);
+    } else {
+        $self->error("Error running virsh secret-set-value command: ", $output);
+        return;
+    }
+    return $output;
 }
 
 # Execute ssh commands required by ONE
@@ -371,36 +391,36 @@ sub manage_hosts
                     $self->info("Created new $type host $host.");
                 }
             } else {
-                if ($hostinstance) {
-                    # The current host is failing our tests
-                    $hostinstance->disable;
-                    $self->info("Disabled existing host $host");
-                } else {
-                    # The new host is reachable but it is failing our tests
-                    # Create and disable it
-                    $new = $one->create_host(%host_options);
-                    $new->disable;
-                    $self->info("Created and disabled new host $host");
-                }
+                $self->
+                disable_host($one, $type, $host, $hostinstance, %host_options);
             }
         } else {
-            $self->warn("Could not connect to $type host: $host.");
             push(@failedhost, $host);
-            if ($hostinstance) {
-                $hostinstance->disable;
-                $self->info("Disabled existing host $host");
-            } else {
-                $new = $one->create_host(%host_options);
-                $new->disable;
-                $self->info("Created and disabled new host $host");
-            }
+            $self->
+            disable_host($one, $type, $host, $hostinstance, %host_options);
         }
     }
 
     if (@failedhost) {
-        $self->error("Detected some error/s including these $type nodes: ", join(',', @failedhost));
+        $self->error("Detected some error/s including these $type nodes: ", join(', ', @failedhost));
     }
 
+}
+
+# Disables failing hyp
+sub disable_host
+{
+    my ($self, $one, $type, $host, $hostinstance, %host_options) = @_;
+
+    $self->warn("Could not connect to $type host: $host.");
+    if ($hostinstance) {
+        $hostinstance->disable;
+        $self->info("Disabled existing host $host");
+    } else {
+        my $new = $one->create_host(%host_options);
+        $new->disable;
+        $self->info("Created and disabled new host $host");
+    }
 }
 
 # Function to add/remove/update regular users
@@ -475,7 +495,7 @@ sub is_supported_one_version
     if ($res) {
         $self->verbose("Version $oneversion is ok.");
     } else {
-        $self->error("OpenNebula AII requires ONE v$MINIMAL_ONE_VERSION or higher (found $oneversion).");
+        $self->error("OpenNebula component requires ONE v$MINIMAL_ONE_VERSION or higher (found $oneversion).");
     }
     return $res;
 }
