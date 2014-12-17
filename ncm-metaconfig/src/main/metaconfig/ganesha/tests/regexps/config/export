@@ -1,0 +1,27 @@
+Tests for export config
+---
+multiline
+metaconfigservice=/etc/ganesha/ganesha.nfsd.conf
+---
+^EXPORT {
+^\s{4}Anonymous_gid\s=\s-2;
+^\s{4}Anonymous_uid\s=\s-2;
+^\s{4}Cache_Data\s=\sFALSE;
+^\s{4}Export_Id\s=\s76;
+^\s{4}FSAL_UP_Type\s=\s"DUMB";
+^\s{4}Filesystem_id\s=\s192.167;
+^\s{4}Make_All_Users_Anonymous\s=\sFALSE;
+^\s{4}MaxRead\s=\s32768;
+^\s{4}MaxWrite\s=\s32768;
+^\s{4}NFS_Protocols\s=\s"4";
+^\s{4}NOSGID\s=\sFALSE;
+^\s{4}NOSUID\s=\sTRUE;
+^\s{4}Path\s=\s"/some/path";
+^\s{4}PrefRead\s=\s16384;
+^\s{4}PrefWrite\s=\s16384;
+^\s{4}Pseudo\s=\s"/some/pseudo/path";
+^\s{4}Tag\s=\s"example_export";
+^\s{4}Transport_Protocols\s=\s"TCP";
+^\s{4}Use_FSAL_UP\s=\sTRUE;
+^\s{4}Use_Ganesha_Write_Buffer\s=\sFALSE;
+^\s{4}Use_NFS_Commit\s=\sTRUE;
