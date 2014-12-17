@@ -1,0 +1,6 @@
+Test kdc acl file
+---
+multiline
+/var/kerberos/krb5kdc/kadm5.acl
+---
+^\*/admin@MYREALM\s\*$
