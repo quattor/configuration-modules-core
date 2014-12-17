@@ -1,0 +1,3 @@
+[% FOR pair IN remoteconf_ceph.pairs -%]
+[%    pair.key.upper %]=[% pair.value %]
+[% END -%]

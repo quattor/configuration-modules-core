@@ -1,0 +1,11 @@
+Opennebular vnet test
+---
+multiline
+---
+^NAME\s?=\s?".+"\s*$
+^TYPE\s?=\s?".+"\s*$
+^BRIDGE\s?=\s?".+"\s*$
+^GATEWAY\s?=\s?".+"\s*$
+^DNS\s?=\s?".+"\s*$
+^NETWORK_MASK\s?=\s?".+"\s*$
+^QUATTOR\s?=\s?\d+\s*$

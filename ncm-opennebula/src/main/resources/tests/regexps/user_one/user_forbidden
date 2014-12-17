@@ -1,0 +1,7 @@
+Opennebula test user forbidden
+---
+negate
+caseinsensitive
+---
+PASSWORD
+USER
