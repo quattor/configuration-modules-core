@@ -1,0 +1,9 @@
+[%- FOREACH a IN desc %]
+acl "[% a.key %]" {
+[%      FILTER indent -%]
+[%-         FOREACH n IN a.value -%]
+[%-             n %];
+[%          END -%]
+[%-     END -%]
+};
+[%  END -%]

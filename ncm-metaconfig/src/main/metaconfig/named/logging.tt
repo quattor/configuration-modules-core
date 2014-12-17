@@ -1,0 +1,10 @@
+[%- FOREACH d IN desc.channels.pairs -%]
+channel [% d.key %] {
+[%      FILTER indent -%]
+severity [% d.value.severity %];
+[%-         IF d.value.file %]
+file "[%        d.value.file %]";
+[%-         END -%]
+[%-     END %]
+};
+[%  END -%]
