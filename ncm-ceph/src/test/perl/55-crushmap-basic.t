@@ -23,6 +23,7 @@ use NCM::Component::ceph;
 use CAF::Object;
 use CAF::TextRender;
 use crushdata;
+use Cwd;
 use Readonly;
 use File::Touch;
 
@@ -57,7 +58,13 @@ $crush->{devices} = $chash->{devices}; # resolved on live system
 $cmp->cmp_crush($chash, $crush);
 cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
 
-my $trd = CAF::TextRender->new('crush', $crush, relpath => 'ceph', includepath => $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH});
+Readonly my $INCLUDEPATH => getcwd() . "/src/main/resources" ;
+my $trd = CAF::TextRender->new(
+    'crush', 
+    $crush, 
+    relpath => 'ceph', 
+    includepath => $INCLUDEPATH,
+);
 my $str = $trd->get_text;
 
 # Full crushmap test, but device items not completely mocked (have all id 0)
@@ -73,8 +80,7 @@ my $mockc = Test::MockModule->new('NCM::Component::Ceph::commands');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
     my $trd = &$init(@_);
-    my $inclpath = $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH};
-    $trd->{includepath} = $inclpath if $inclpath;
+    $trd->{includepath} = $INCLUDEPATH;
     return $trd;
 });
 

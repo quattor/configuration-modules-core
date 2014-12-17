@@ -22,6 +22,7 @@ use NCM::Component::ceph;
 use CAF::Object;
 use CAF::TextRender;
 use crushdata;
+use Cwd;
 use Readonly;
 
 $CAF::Object::NoAction = 1;
@@ -35,7 +36,12 @@ my $cluster = $t->{clusters}->{ceph};
 
 my $crush = $cluster->{crushmap};
 
-my $trd = CAF::TextRender->new('crush', $crush, relpath => 'ceph', includepath => $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH});
+my $trd = CAF::TextRender->new(
+    'crush', 
+    $crush, 
+    relpath => 'ceph', 
+    includepath => getcwd() . "/src/main/resources" 
+);
 ok($trd, "Template successfully rendered");
 my $str = $trd->get_text;
 # Very basic template, not filled in
