@@ -1,0 +1,23 @@
+[% IF preincludes -%]
+[%-     FOREACH incl IN preincludes -%]
+@[%-        incl  -%]
+[%      END -%]
+[% END -%]
+
+[% FOREACH pair IN main.pairs -%]
+[%-     FOREACH item IN pair.value -%]
+[%          pair.key %] {
+[%          FILTER indent -%]
+[%-             FOREACH attr IN item.pairs -%]
+[%                  INCLUDE metaconfig/bacula/attribute.tt key=attr.key value=attr.value %]
+[%              END -%]
+[%-         END -%]
+}
+[%      END -%]
+[%-  END -%]
+
+[% IF includes -%]
+[%-     FOREACH incl IN includes -%]
+@[%-        incl  -%]
+[%      END -%]
+[% END -%]
