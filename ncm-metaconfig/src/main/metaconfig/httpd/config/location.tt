@@ -1,0 +1,3 @@
+<location [% desc.regex ? "~ " _ desc.quotes : "" %][% desc.name %][% desc.regex ? desc.quotes : "" %]>
+[% INCLUDE metaconfig/httpd/config/directory_basic.tt FILTER indent -%]
+</location>

@@ -1,0 +1,23 @@
+[%- booleans = ["keepalive", "extendedstatus", "usecanonicalname",
+                "enablesendfile", "enablemmap", "serversignature",
+                "hostnamelookups", 
+                ]
+-%]
+[%- lists = ["directoryindex", "indexoptions", "indexignore"] -%]
+[%- quotes = ["serverroot"] -%] 
+[%- FOREACH pair IN desc.pairs -%]
+[%-     SWITCH pair.key -%]
+[%-         CASE "ssl" -%]
+[%              INCLUDE metaconfig/httpd/config/ssl.tt desc=desc.ssl -%]
+[%-         CASE "nss" -%]
+[%              INCLUDE metaconfig/httpd/config/nss.tt desc=desc.nss -%]
+[%-         CASE booleans -%]
+[%      pair.key -%] [% pair.value ? 'on' : 'off' -%]
+[%-         CASE lists -%]
+[%      pair.key -%] [% pair.value.join(" ") -%]
+[%-         CASE quotes -%]
+[%      pair.key -%] "[% pair.value -%]"
+[%-         CASE -%]
+[%      pair.key -%] [% pair.value -%]
+[%-      END %]
+[% END -%]
