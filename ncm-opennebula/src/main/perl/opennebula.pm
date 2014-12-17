@@ -51,11 +51,13 @@ sub process_template
 {
     my ($self, $config, $type_name) = @_;
     
-    my $type_rel = "opennebula/$type_name.tt";
-    my $tpl = CAF::TextRender->new($type_rel,
-                                  { $type_name => $config },
-                                  log => $self,
-                                  );
+    my $type_rel = "$type_name.tt";
+    my $tpl = CAF::TextRender->new(
+        $type_name,
+        { $type_name => $config },
+        relpath => 'opennebula',
+        log => $self,
+        );
     if (!$tpl) {
         $self->error("TT processing of $type_rel failed: $tpl->{fail}");
         return;
