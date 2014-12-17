@@ -1,0 +1,10 @@
+upstream [% name %] {
+[% FILTER indent -%]
+[%-      FOREACH h IN cfg.host %]
+server [% h %];
+[%      END -%]
+[%-      IF cfg.ip_hash -%]
+ip_hash;
+[%      END -%]
+[%- END -%]
+}
