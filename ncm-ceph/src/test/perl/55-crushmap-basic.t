@@ -58,7 +58,7 @@ $crush->{devices} = $chash->{devices}; # resolved on live system
 $cmp->cmp_crush($chash, $crush);
 cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
 
-Readonly my $INCLUDEPATH => getcwd() . "/src/main/resources" ;
+Readonly my $INCLUDEPATH => getcwd() . "/target/share/templates/quattor" ;
 my $trd = CAF::TextRender->new(
     'crush', 
     $crush, 
