@@ -1,0 +1,8 @@
+Base test for snmptrapd
+---
+multiline
+metaconfigservice=/etc/snmp/snmptrapd.conf
+---
+^traphandle\s ### COUNT 2
+^traphandle\sdefault ### COUNT 1
+^authCommunity\s\S+.*$

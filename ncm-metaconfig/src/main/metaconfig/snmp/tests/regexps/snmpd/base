@@ -1,0 +1,18 @@
+Base test for snmpd
+---
+multiline
+metaconfigservice=/etc/snmp/snmpd.conf
+---
+^group\s\S+.*$ ### COUNT 2
+^access\s\S+.*$
+^agentXRetries\s\d+$
+^agentXSocket\s\S+:\S+:\d+$
+^agentXTimeout\s\d+$
+^authcommunity\s\S+.*$
+^com2sec\s\S+.*$
+^master\s\S+$
+^pass\s\.\d.*$
+^sysContact\s\S+$
+^sysLocation\s\S+$
+^trap2sink\s\S+$
+^view\s\S+.*$

@@ -1,0 +1,8 @@
+Value test for snmptrapd
+---
+multiline
+metaconfigservice=/etc/snmp/snmptrapd.conf
+---
+^traphandle\s1.3.6.1.4.1.2.6.212\*\s/usr/bin/handle_nsca_traps.py\s-T\sgpfs\s-t\s1.2.3.4,1.2.3.5$
+^traphandle\sdefault\s/usr/bin/handle_nsca_traps.py\s-t\s1.2.3.4,1.2.3.5$
+^authCommunity\slog,execute public$
