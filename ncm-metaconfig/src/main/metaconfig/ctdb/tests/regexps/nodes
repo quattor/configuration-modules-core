@@ -1,0 +1,9 @@
+Base test for config
+---
+multiline
+/etc/ctdb/nodes
+---
+^172.24.14.190$
+^172.24.14.191$
+^172.24.14.192$
+

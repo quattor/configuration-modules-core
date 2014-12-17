@@ -1,0 +1,8 @@
+Base test for config
+---
+multiline
+/etc/ctdb/public_addresses
+---
+^172.24.14.195/16 eth0$
+^172.24.14.196/16 eth0$
+^172.24.14.197/16 eth0$
