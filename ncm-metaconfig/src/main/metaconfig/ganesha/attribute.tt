@@ -1,0 +1,35 @@
+[%- booleans = ["Make_All_Users_Anonymous", "NOSUID", "NOSGID", "PrivilegedPort", "Cache_Data",
+                "Use_NFS_Commit", "Use_Ganesha_Write_Buffer", "Use_FSAL_UP", "Link_support", "Symlink_support",
+                "CanSetTime", "auth_xdev_export", "DRC_Disabled", "DRC_TCP_Checksum", "DRC_UDP_Checksum",
+                "Drop_IO_Errors", "Drop_Inval_Errors", "Drop_Delay_Errors", "Dump_Stats_Per_Client", "NSM_Use_Caller_Name",
+                "Clustered", "export_cache_stats", "export_requests_stats", "export_maps_stats", "export_nfs_calls_detail",
+                "export_cache_inode_calls_detail", "export_fsal_calls_detail", "FH_Expire", "Returns_ERR_FH_EXPIRED",
+                "Active_krb5" ]
+-%]
+[%- comma_sep_quoted_list = ["Root_Access", "RW_Access", "R_Access", "MDONLY_Access", "MDONLY_RO_Access", "Access",
+                             "NFS_Protocols", "Transport_Protocols", "SecType"]
+-%]
+[%- long_or_never = ["Attr_Expiration_Time", "Symlink_Expiration_Time", "Directory_Expiration_Time"]
+-%]
+[%- pair.key -%] =
+[%-   SWITCH pair.key -%]
+[%-     CASE [ "Filesystem_id" ] -%]
+ [% pair.value -%]
+[%-     CASE comma_sep_quoted_list -%]
+ "[%- pair.value.join(',') -%]"
+[%-     CASE booleans -%]
+ [%       pair.value ? 'TRUE' : 'FALSE' -%]
+[%-     CASE long_or_never -%]
+[%-          IF (pair.value.match('^-1$')) -%]
+ Never
+[%-          ELSE -%]
+ [%            pair.value -%]
+[%-          END -%]
+[%-     CASE -%]
+[%-          IF (pair.value.match('^(-?\d+)$')) -%]
+ [%            pair.value -%]
+[%-          ELSE -%]
+ "[%-            pair.value -%]"
+[%-          END -%]
+[%-   END -%]
+;
