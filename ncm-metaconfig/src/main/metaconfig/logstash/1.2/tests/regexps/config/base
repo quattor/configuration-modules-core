@@ -1,0 +1,80 @@
+Base test for config
+---
+multiline
+/etc/logstash/conf.d/logstash.conf
+---
+^input \{$
+^\s{4}gelf {$
+^\s{8}type => "remotegelf"$
+^\s{8}port => 12201$
+^\s{8}remap => true$
+^\s{4}\}$
+^\s{4}file \{$
+^\s{8}tags => \[ "gpfs", "storage" \]$
+^\s{8}type => "gpfs"$
+^\s{8}path => \[ "/var/adm/ras/mmfs.log.latest" \]$
+^\s{8}stat_interval => 1$
+^\s{4}\}$
+^\}$ ### COUNT 3
+filter \{$
+^\s{4}if \[type\] == 'remotegelf' \{$
+^\s{8}mutate \{$
+^\s{12}split => \{$
+^\s{16}"tags" => ", "$
+^\s{12}\}$
+^\s{8}\}$
+^\s{4}\}$
+^\s{4}else if \[type\] == 'gpfs' \{$
+^\s{8}grok \{$
+^\s{12}add_field => \{$
+^\s{16}"program" => "gpfs"$
+^\s{12}\}$
+^\s{12}break_on_match => true$
+^\s{12}named_captures_only => true$
+^\s{12}patterns_dir => \[ "/usr/share/grok" \]$
+^\s{12}match => \{$
+^\s{16}"message" => "%\{GPFSLOG\}"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}date \{$
+^\s{12}match => \[ "timestamp", "E MMM dd HH:mm:ss.SSS yyyy", "E MMM  d HH:mm:ss.SSS yyyy" \]$
+^\s{8}\}$
+^\s{4}\}$
+^output \{$
+^\s{4}gelf \{$
+^\s{8}host => "remotehost.domain"$
+^\s{8}ship_metadata => true$
+^\s{8}ship_tags => true$
+^\s{8}level => \[ "info" \]$
+^\s{8}custom_fields => \{$
+^\s{12}"type" => "remotegelf"$
+^\s{8}\}$
+^\s{8}sender => "myhost.domain"$
+^\s{8}port => 12201$
+^\s{4}\}$
+^\s{4}if \[type\] == 'httpd' \{$
+^\s{8}gelf \{$
+^\s{12}host => "remotehost.domain"$
+^\s{12}ship_metadata => true$
+^\s{12}ship_tags => true$
+^\s{12}level => \[ "info" \]$
+^\s{12}custom_fields => \{$
+^\s{16}"type" => "remotegelf"$
+^\s{12}\}$
+^\s{12}sender => "myhost.domain"$
+^\s{12}port => 12201$
+^\s{8}\}$
+^\s{4}\}$
+^\s{4}else if \[type\] == 'remotegelf' \{$
+^\s{8}gelf \{$
+^\s{12}host => "remotehost.domain"$
+^\s{12}ship_metadata => true$
+^\s{12}ship_tags => true$
+^\s{12}level => \[ "%\{level\}" \]$
+^\s{12}custom_fields => \{$
+^\s{16}"type" => "remotegelf"$
+^\s{12}\}$
+^\s{12}facility => "%\{facility\}"$
+^\s{12}port => 12201$
+^\s{8}\}$
+^\s{4}\}$
