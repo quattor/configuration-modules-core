@@ -1,0 +1,4 @@
+[%- INCLUDE "metaconfig/logstash/1.2/type.tt" type="boolean" names=['embedded'] -%] 
+[%- INCLUDE "metaconfig/logstash/1.2/type.tt" type="string" names=['bind_host', 'cluster', 'index', 'index_type'] -%] 
+[%- INCLUDE "metaconfig/logstash/1.2/type.tt" type="stringrange" names=['port'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/type.tt" type="exact" names=['flush_size'] -%] 
