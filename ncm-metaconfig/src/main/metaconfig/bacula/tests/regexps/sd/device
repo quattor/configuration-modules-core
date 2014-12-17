@@ -1,0 +1,29 @@
+Test bacula sd Device
+---
+multiline
+metaconfigservice=/etc/bacula/bacula-sd.conf
+---
+^Device\s{
+
+^\s{4}AlwaysOpen\s=\sno
+^\s{4}Archive Device\s=\s/dev/null
+^\s{4}AutomaticMount\s=\sno
+^\s{4}Device Type\s=\sFifo
+^\s{4}Label Media\s=\syes
+^\s{4}MaximumOpenWait\s=\s60
+^\s{4}Media Type\s=\sNULL
+^\s{4}Name\s=\sdummy
+^\s{4}Random Access\s=\sno
+^\s{4}RemovableMedia\s=\sno
+
+^\s{4}Archive Device\s=\s/some/path
+^\s{4}Autochanger\s=\syes
+^\s{4}Autoselect\s=\syes
+^\s{4}Device Type\s=\sFile
+^\s{4}Drive Index\s=\s0
+^\s{4}Label Media\s=\syes
+^\s{4}Maximum Block Size\s=\s524288
+^\s{4}Maximum Network Buffer Size\s=\s262144
+^\s{4}Media Type\s=\sDumpDisk1
+^\s{4}Name\s=\svDrive-1-0
+^\s{4}Random Access\s=\syes
