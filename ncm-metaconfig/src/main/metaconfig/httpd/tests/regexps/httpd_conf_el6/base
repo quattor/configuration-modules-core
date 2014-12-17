@@ -1,0 +1,236 @@
+Base test for httpd config
+---
+multiline
+/etc/httpd/conf/httpd.conf
+---
+^accessfilename .htaccess$
+^adddefaultcharset UTF-8$
+^directoryindex index.html index.html.var$
+^enablemmap on$
+^enablesendfile on$
+^extendedstatus off$
+^group apache$
+^headername HEADER.html$
+^hostnamelookups off$
+^indexignore .\?\?\* \*~ \*\# HEADER\* README\* RCS CVS \*,v \*,t$
+^indexoptions FancyIndexing VersionSort NameWidth=\* HTMLTable Charset=UTF-8$
+^keepalive off$
+^keepalivetimeout 15$
+^maxkeepaliverequests 100$
+^pidfile run/httpd.pid$
+^readmename README.html$
+^serveradmin root@localhost$
+^serverroot "/etc/httpd"$
+^serversignature on$
+^servertokens OS$
+^timeout 60$
+^usecanonicalname off$
+^user apache$
+^loadmodule auth_basic_module modules/mod_auth_basic.so$
+^loadmodule auth_digest_module modules/mod_auth_digest.so$
+^loadmodule authn_file_module modules/mod_authn_file.so$
+^loadmodule authn_alias_module modules/mod_authn_alias.so$
+^loadmodule authn_anon_module modules/mod_authn_anon.so$
+^loadmodule authn_dbm_module modules/mod_authn_dbm.so$
+^loadmodule authn_default_module modules/mod_authn_default.so$
+^loadmodule authz_host_module modules/mod_authz_host.so$
+^loadmodule authz_user_module modules/mod_authz_user.so$
+^loadmodule authz_owner_module modules/mod_authz_owner.so$
+^loadmodule authz_groupfile_module modules/mod_authz_groupfile.so$
+^loadmodule authz_dbm_module modules/mod_authz_dbm.so$
+^loadmodule authz_default_module modules/mod_authz_default.so$
+^loadmodule ldap_module modules/mod_ldap.so$
+^loadmodule authnz_ldap_module modules/mod_authnz_ldap.so$
+^loadmodule include_module modules/mod_include.so$
+^loadmodule log_config_module modules/mod_log_config.so$
+^loadmodule logio_module modules/mod_logio.so$
+^loadmodule env_module modules/mod_env.so$
+^loadmodule ext_filter_module modules/mod_ext_filter.so$
+^loadmodule mime_magic_module modules/mod_mime_magic.so$
+^loadmodule expires_module modules/mod_expires.so$
+^loadmodule deflate_module modules/mod_deflate.so$
+^loadmodule headers_module modules/mod_headers.so$
+^loadmodule usertrack_module modules/mod_usertrack.so$
+^loadmodule setenvif_module modules/mod_setenvif.so$
+^loadmodule mime_module modules/mod_mime.so$
+^loadmodule dav_module modules/mod_dav.so$
+^loadmodule status_module modules/mod_status.so$
+^loadmodule autoindex_module modules/mod_autoindex.so$
+^loadmodule info_module modules/mod_info.so$
+^loadmodule dav_fs_module modules/mod_dav_fs.so$
+^loadmodule vhost_alias_module modules/mod_vhost_alias.so$
+^loadmodule negotiation_module modules/mod_negotiation.so$
+^loadmodule dir_module modules/mod_dir.so$
+^loadmodule actions_module modules/mod_actions.so$
+^loadmodule speling_module modules/mod_speling.so$
+^loadmodule userdir_module modules/mod_userdir.so$
+^loadmodule alias_module modules/mod_alias.so$
+^loadmodule substitute_module modules/mod_substitute.so$
+^loadmodule rewrite_module modules/mod_rewrite.so$
+^loadmodule proxy_module modules/mod_proxy.so$
+^loadmodule proxy_balancer_module modules/mod_proxy_balancer.so$
+^loadmodule proxy_ftp_module modules/mod_proxy_ftp.so$
+^loadmodule proxy_http_module modules/mod_proxy_http.so$
+^loadmodule proxy_ajp_module modules/mod_proxy_ajp.so$
+^loadmodule proxy_connect_module modules/mod_proxy_connect.so$
+^loadmodule cache_module modules/mod_cache.so$
+^loadmodule suexec_module modules/mod_suexec.so$
+^loadmodule disk_cache_module modules/mod_disk_cache.so$
+^loadmodule cgi_module modules/mod_cgi.so$
+^loadmodule version_module modules/mod_version.so$
+^alias /icons/ /var/www/icons/$
+^scriptalias /cgi-bin/ /var/www/cgi-bin/$
+^alias /error/ /var/www/error/$
+^defaulttype text/plain$
+^typesconfig /etc/mime.types$
+^addtype application/x-compress .Z$
+^addtype application/x-gzip .gz .tgz$
+^addtype application/x-x509-ca-cert .crt$
+^addtype application/x-pkcs7-crl .crl$
+^addtype text/html .shtml$
+^addhandler type-map var$
+^<directory />$
+^\s{4}options FollowSymLinks$
+^\s{4}allowoverride None$
+^</directory>$
+^<directory /var/www/html>$
+^\s{4}options Indexes FollowSymLinks$
+^\s{4}order allow,deny$
+^\s{4}allow from all$
+^\s{4}allowoverride None$
+^</directory>$
+^<directory /var/www/icons>$
+^\s{4}options Indexes MultiViews FollowSymLinks$
+^\s{4}order allow,deny$
+^\s{4}allow from all$
+^\s{4}allowoverride None$
+^</directory>$
+^<directory /var/www/cgi-bin>$
+^\s{4}options None$
+^\s{4}order allow,deny$
+^\s{4}allow from all$
+^\s{4}allowoverride None$
+^</directory>$
+^<files ~ "\^\\.ht">$
+^\s{4}order allow,deny$
+^\s{4}deny from all$
+^\s{4}satisfy All$
+^</files>$
+^<ifmodule prefork.c>$
+^\s{8}maxclients 256$
+^\s{8}maxrequestsperchild 4000$
+^\s{8}maxspareservers 20$
+^\s{8}minspareservers 5$
+^\s{8}serverlimit 256$
+^\s{8}startservers 8$
+^</ifmodule>$
+^<ifmodule worker.c>$
+^\s{8}maxclients 300$
+^\s{8}maxrequestsperchild 0$
+^\s{8}maxsparethreads 75$
+^\s{8}minsparethreads 25$
+^\s{8}startservers 4$
+^\s{8}threadsperchild 25$
+^</ifmodule>$
+^<ifmodule mod_userdir.c>$
+^\s{8}userdir disabled$
+^</ifmodule>$
+^<ifmodule mod_mime_magic.c>$
+^\s{8}mimemagicfile conf/magic$
+^</ifmodule>$
+^<ifmodule mod_dav_fs.c>$
+^\s{8}davlockdb /var/lib/dav/lockdb$
+^</ifmodule>$
+^<ifmodule mod_negotiation.c>$
+^\s{4}<ifmodule mod_include.c>$
+^\s{12}<directory /var/www/error>$
+^\s{16}options IncludesNoExec$
+^\s{16}order allow,deny$
+^\s{16}allow from all$
+^\s{16}allowoverride None$
+^\s{16}languagepriority en es de fr$
+^\s{16}forcelanguagepriority Prefer Fallback$
+^\s{16}addhandler type-map var$
+^\s{16}addoutputfilter Includes html$
+^\s{12}</directory>$
+^\s{4}</ifmodule>$
+^</ifmodule>$
+^include conf.d/\*.conf$
+^addhandler type-map var$
+^loglevel warn$
+^errorlog logs/error_log$
+^logformat "%h %l %u %t \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" combined$
+^logformat "%h %l %u %t \\"%r\\" %>s %b" common$
+^logformat "%{Referer}i -> %U" referer$
+^logformat "%{User-agent}i" agent$
+^logformat "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \\"%r\\" %b" ssl_combined$
+^customlog logs/access_log combined$
+^addlanguage ca .ca$
+^addlanguage cs .cz .cs$
+^addlanguage da .dk$
+^addlanguage de .de$
+^addlanguage el .el$
+^addlanguage en .en$
+^addlanguage eo .eo$
+^addlanguage es .es$
+^addlanguage et .et$
+^addlanguage fr .fr$
+^addlanguage he .he$
+^addlanguage hr .hr$
+^addlanguage it .it$
+^addlanguage ja .ja$
+^addlanguage ko .ko$
+^addlanguage ltz .ltz$
+^addlanguage nl .nl$
+^addlanguage nn .nn$
+^addlanguage no .no$
+^addlanguage pl .po$
+^addlanguage pt .pt$
+^addlanguage pt-BR .pt-br$
+^addlanguage ru .ru$
+^addlanguage sv .sv$
+^addlanguage zh-CN .zh-cn$
+^addlanguage zh-TW .zh-tw$
+^languagepriority en ca cs da de el eo es et fr he hr it ja ko ltz nl nn no pl pt pt-BR ru sv zh-CN zh-TW$
+^forcelanguagepriority Prefer Fallback$
+^defaulticon /icons/unknown.gif$
+^addiconbytype \(TXT,/icons/text.gif\) text/\*$
+^addiconbytype \(IMG,/icons/image2.gif\) image/\*$
+^addiconbytype \(SND,/icons/sound2.gif\) audio/\*$
+^addiconbytype \(VID,/icons/movie.gif\) video/\*$
+^addiconbyencoding \(CMP,/icons/compressed.gif\) x-compress x-gzip$
+^addicon /icons/binary.gif .bin .exe$
+^addicon /icons/binhex.gif .hqx$
+^addicon /icons/tar.gif .tar$
+^addicon /icons/world2.gif .wrl .wrl.gz .vrml .vrm .iv$
+^addicon /icons/compressed.gif .Z .z .tgz .gz .zip$
+^addicon /icons/a.gif .ps .ai .eps$
+^addicon /icons/layout.gif .html .shtml .htm .pdf$
+^addicon /icons/text.gif .txt$
+^addicon /icons/c.gif .c$
+^addicon /icons/p.gif .pl .py$
+^addicon /icons/f.gif .for$
+^addicon /icons/dvi.gif .dvi$
+^addicon /icons/uuencoded.gif .uu$
+^addicon /icons/script.gif .conf .sh .shar .csh .ksh .tcl$
+^addicon /icons/tex.gif .tex$
+^addicon /icons/bomb.gif core$
+^addicon /icons/back.gif ..$
+^addicon /icons/hand.right.gif README$
+^addicon /icons/folder.gif \^\^DIRECTORY\^\^$
+^addicon /icons/blank.gif \^\^BLANKICON\^\^$
+^addoutputfilter INCLUDES .shtml$
+^browsermatch "Mozilla/2" nokeepalive$
+^browsermatch "MSIE 4\\.0b2;" nokeepalive downgrade-1.0 force-response-1.0$
+^browsermatch "RealPlayer 4\\.0" force-response-1.0$
+^browsermatch "Java/1\\.0" force-response-1.0$
+^browsermatch "JDK/1\\.0" force-response-1.0$
+^browsermatch "Microsoft Data Access Internet Publishing Provider" redirect-carefully$
+^browsermatch "MS FrontPage" redirect-carefully$
+^browsermatch "\^WebDrive" redirect-carefully$
+^browsermatch "\^WebDAVFS/1.\[0123\]" redirect-carefully$
+^browsermatch "\^gnome-vfs/1.0" redirect-carefully$
+^browsermatch "\^XML Spy" redirect-carefully$
+^browsermatch "\^Dreamweaver-WebDAV-SCM1" redirect-carefully$
+
+
