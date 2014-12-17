@@ -1,0 +1,3 @@
+[%-  FOREACH n IN field -%]
+[%      name %] [% n %]
+[%  END -%]

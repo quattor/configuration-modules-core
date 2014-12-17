@@ -1,0 +1,2 @@
+[% INCLUDE 'metaconfig/snmp/field.tt' name='traphandle' field=traphandle %]
+[% INCLUDE 'metaconfig/snmp/main.tt' main=main %]

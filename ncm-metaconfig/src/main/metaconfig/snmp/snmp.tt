@@ -1,0 +1,7 @@
+[% FOREACH name IN ['mibs','mibdirs'] -%]
+[%-     IF ($name.size) -%]
+[%-         prefixname = "${name}prefix" -%]
+[%          name %] [% $prefixname %][% $name.join(':') %]
+[%      END -%]
+[%- END -%]
+[% INCLUDE 'metaconfig/snmp/main.tt' main=main %]
