@@ -1,0 +1,37 @@
+Base test for buoy_daemon_config
+---
+multiline
+/opt/perfsonar_ps/perfsonarbuoy_ma/etc/daemon.conf
+---
+^<port 8085>$
+^\s{4}<endpoint /perfsonar_PS/services/pSB>$
+^\s{8}module perfSONAR_PS::Services::MA::perfSONARBUOY$
+^\s{8}<perfsonarbuoy>$
+^\s{12}maintenance_interval 10$
+^\s{12}# Enable registration to the LS$
+^\s{12}enable_registration 1$
+^\s{12}# Register every hour$
+^\s{12}ls_registration_interval 60$
+^\s{12}ls_instance http://localhost:9995/perfsonar_PS/services/hLS$
+^\s{12}# use a 'file' database$
+^\s{12}metadata_db_file /var/lib/perfsonar/perfsonarbuoy_ma/store.xml$
+^\s{12}metadata_db_type file$
+^\s{12}# Directory that contains the owmesh.conf file$
+^\s{12}owmesh /opt/perfsonar_ps/perfsonarbuoy_ma/etc$
+^\s{12}# Service information$
+^\s{12}service_accesspoint http://localhost:8085/perfsonar_PS/services/pSB$
+^\s{12}service_description PerfSONAR measurement archive \(MA\) for our_project$
+^\s{12}service_name perfSONARBUOY MA$
+^\s{12}service_type MA$
+^\s{8}</perfsonarbuoy>$
+^\s{4}</endpoint>$
+^</port>$
+^reaper_interval 20$
+^# gLS Based registration$
+^disable_echo 0$
+^ls_instance http://localhost:9995/perfsonar_PS/services/hLS$
+^ls_registration_interval 60$
+^max_worker_lifetime 300$
+^max_worker_processes 30$
+^pid_dir /var/lib/perfsonar/perfsonarbuoy_ma$
+^pid_file perfsonarbuoy_ma.pid$

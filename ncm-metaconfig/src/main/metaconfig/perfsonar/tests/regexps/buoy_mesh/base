@@ -1,0 +1,173 @@
+Base test for buoy_mesh
+---
+multiline
+/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf
+---
+^# Configuration file for Perfsonar BUOY daemons$
+^# Basic stuff that will not change, to avoid littering the schema$
+^OWPSessionSuffix\s+.owp$
+^BWSessionSuffix\s+.recv.bw$
+^SummarySuffix\s+.sum$
+^OWPCmd\s+powstream$
+^BWCmd\s+bwctl$
+^SessionSumCmd\s+owstats -M$
+^DevNull\s+/dev/null$
+^# Global in nature...should not change$
+^ConfigVersion 20090716.0$
+^SecretNames\s+16Jul2009 15Jul2008 FallBack$
+^SecretName\s+16Jul2009$
+^16Jul2009\s+SayWhatAgainIDareYou$
+^15Jul2008\s+AFestivusForTheRestOfUs$
+^FallBack\s+TingsBeBerryBerryBadMon$
+^# Logging info$
+^!Debug$
+^!Verbose$
+^SyslogFacility\s+local5$
+^# add a read only user so that the cgis have minimum privileges$
+^CGIDBUser\s+readonly$
+^CGIDBPass\s+readonly$
+^CGITmpDir\s+/tmp$
+^Ploticus\s+/usr/bin/pl$
+^##################$
+^#$
+^# POSSIBLE CHANGES$
+^#$
+^##################$
+^BWBinDir\s+/usr/bin$
+^BWDataDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/bwctl$
+^OWPBinDir\s+/usr/bin$
+^OWPDataDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/owamp$
+^OwampdVarDir\s+/var/lib$
+^# If OWP/BW share directories - you can drop the prefix and only$
+^# specify the parameter once. \(e.g. BinDir works for 'both'.\)$
+^# user:group info$
+^UserName\s+perfsonar$
+^GroupName\s+perfsonar$
+^##################$
+^#$
+^# POSSIBLE CHANGES$
+^#$
+^##################$
+^# Central host config params$
+^OWPCentralHost magikarp.cubone.gent.vsc:8569$
+^BWCentralHost\s+magikarp.cubone.gent.vsc:8570$
+^# If set, only allow contact from CONTACTADDRs defined for each node$
+^!OWPVerifyPeerAddr$
+^!BWVerifyPeerAddr$
+^# read timeout on file upload socket.$
+^OWPCentralHostTimeout\s+3600$
+^BWCentralHostTimeout\s+3600$
+^# Directory on central server to stage data while parsing into db.$
+^OWPCentralDataDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/owamp/upload$
+^BWCentralDataDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/bwctl/upload$
+^OWPCentralArchDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/owamp/archive$
+^BWCentralArchDir\s+/var/lib/perfsonar/perfsonarbuoy_ma/bwctl/archive$
+^ADDRTYPES\s+\[\[ MYSITE OS \]\]$
+^#################$
+^#$
+^# POSSIBLE CHANGE \(DATABASE OPTIONS\)$
+^#$
+^#################$
+^# CentralDBHost will default to 'localhost' if not set.  This can be used$
+^# to specify another host for mysql interaction. \(not recommended\)$
+^# CentralDBHost mysql.host.com$
+^CentralDBType\s+DBI:mysql$
+^CentralDBUser\s+perfsonar$
+^CentralDBPass\s+7hc4m1$
+^BWCentralDBName\s+bwctl$
+^OWPCentralDBName\s+owamp$
+^# add a read only user so that the cgis have minimum privileges$
+^# connect/write/read timeout for sending socket \(Can be set on a$
+^# per-node bases if needed.\)$
+^SendTimeout\s+60$
+^#######################################################################$
+^## BWCTL Iperf-TCP Test Definition$
+^#$
+^# Test specification for BWTCP_4HR$
+^<TESTSPEC=BWTCP_4HR>$
+^DESCRIPTION 4 Hour TCP Throughput \(iperf\)$
+^TOOL bwctl/iperf$
+^BWTestInterval 120$
+^BWTestIntervalStartAlpha 30$
+^BWReportInterval 2$
+^#$
+^#    # TCP send/recv buffer size. \(Might not be good to set for auto-scaling$
+^#    # kernels\)$
+^#BWWindowSize            4M$
+^#$
+^#    # do a tcp test$
+^BWTestDuration\s+25$
+^</TESTSPEC>$
+^# Test specification for LAT_1MIN$
+^<TESTSPEC=LAT_1MIN>$
+^DESCRIPTION One-way latency$
+^TOOL powstream$
+^OWPINTERVAL\s+0.1$
+^OWPLOSSTHRESH\s+10$
+^#$
+^## number of session packets$
+^## 10800 is the number of seconds in 3 hours - with above 'interval'$
+^## set to 0.1 - that means 108000 packets in a 3 hour session.$
+^## Because powstream uses 2 control connections to stich together$
+^## concurrent sessions to achieve continuous testing, 3 hour long$
+^## individual sessions means our testing can survive ~6 hour$
+^## network partitions.$
+^OWPSESSIONCOUNT 10800$
+^#$
+^## number of packets in a sample \(see owstats -N \)$
+^## OWPSAMPLECOUNT MUST be an even multiple of OWPSESSIONCOUNT.$
+^##$
+^## Attempting to get a summary session ~ 1/minute. So, with the$
+^## above 'interval' of 0.1 that means roughly 600 packets per minute.$
+^OWPSAMPLECOUNT 600$
+^OWPBUCKETWIDTH 0.0001$
+^</TESTSPEC>$
+^#######################################################################$
+^# Host definitions, should equal the result of the hostname in `uname -a`, this$
+^#   is how the master will determine which machine is running a test.  Its a$
+^#   good idea to enter all machines that are involved in all tests here.$
+^#$
+^# Node specification for my.host.domain$
+^<NODE=my.host.domain>$
+^LONGNAME longname$
+^CONTACTADDR 1.2.3.5$
+^MYSITEADDR\s+1.2.3.5$
+^OSADDR\s+1.2.3.4$
+^</NODE>$
+^LOCALNODES \[\[ my.host.domain \]\]$
+^<HOST=my.host.domain>$
+^NODE\s+my.host.domain$
+^</HOST>$
+^# The next two are 'targets' of the test.  They are just running bwctl/owamp and$
+^#  do not need to be running a master collector \(for star tests\).  If we are$
+^#  running a mesh then we will need to run the collector/master.$
+^#$
+^#################$
+^#$
+^# MUST CHANGE$
+^#$
+^#################$
+^#######################################################################$
+^# Group Definitions$
+^# Description of group mysite$
+^<GROUP=mysite>$
+^DESCRIPTION Group for nodes$
+^GROUPTYPE\s+MESH$
+^NODES \[\[ my.host.domain \]\]$
+^SENDERS \[\[ my.host.domain \]\]$
+^RECEIVERS \[\[ my.host.domain \]\]$
+^</GROUP>$
+^#######################################################################$
+^# Measurement Sets$
+^<MeasurementSet=test_bwtcp4>$
+^DESCRIPTION Mesh testing - 4-hour TCP throughput \(iperf\)$
+^ADDRTYPE\s+MYSITE$
+^GROUP\s+mysite$
+^TESTSPEC\s+BWTCP_4HR$
+^</MeasurementSet>$
+^<MeasurementSet=test_lat4>$
+^DESCRIPTION Mesh testing - 1-minute latency - VSC interface$
+^ADDRTYPE\s+MYSITE$
+^GROUP\s+mysite$
+^TESTSPEC\s+LAT_1MIN$
+^</MeasurementSet>$
