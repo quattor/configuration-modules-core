@@ -1,0 +1,48 @@
+# Configuration file for the PerfSONAR lookup service daemon.
+# Generated automatically. Do not edit.
+
+[% FOREACH p IN port %]
+<port [% p.portnum %]>
+[%      FOREACH it = p.endpoint %]
+[%-         FILTER indent %]
+<endpoint [% it.name %]>
+[%             FILTER indent %]
+[%-                 FOREACH g = it.gls %]
+<gls>
+[%                     FILTER indent %]
+root [% g.root %]
+ls_ttl [% g.ls_ttl %]
+ls_registration_interval [% g.ls_registration_interval %]
+maintenance_interval [% g.maintenance_interval %]
+metadata_db_file [% g.metadata_db_file %]
+metadata_summary_db_file [% g.metadata_summary_db_file %]
+metadata_db_name [% g.metadata_db_name %]
+service_accesspoint [% g.service_accesspoint %]
+service_description [% g.service_description %]
+service_name [% g.service_name %]
+service_type [% g.service_type %]
+[%                      END -%]
+</gls>
+[%                  END -%]
+disable [% it.disable %]
+module [% it.module %]
+[%              END %]
+</endpoint>
+[%          END -%]
+</port>
+[%      END -%]
+[% END -%]
+
+ls_registration_interval [% ls_registration_interval %]
+disable_echo [% disable_echo %]
+[% IF root_hints_url %]
+root_hints_url [% root_hints_url %]
+[% END %]
+[% IF root_hints_file %]
+root_hints_file [% root_hints_file %]
+[% END %]
+reaper_interval [% reaper_interval %]
+max_worker_lifetime [% max_worker_lifetime %]
+max_worker_processes [% max_worker_processes %]
+pid_dir [% pid_dir %]
+pid_file [% pid_file %]

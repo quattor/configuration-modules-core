@@ -1,0 +1,29 @@
+
+# Basic stuff that will not change, to avoid littering the schema
+OWPSessionSuffix        .owp
+BWSessionSuffix         .recv.bw
+SummarySuffix           .sum
+
+OWPCmd                  powstream
+BWCmd                   bwctl
+SessionSumCmd           owstats -M
+DevNull                 /dev/null
+
+# Global in nature...should not change
+ConfigVersion 20090716.0
+SecretNames   16Jul2009 15Jul2008 FallBack
+SecretName    16Jul2009
+16Jul2009     SayWhatAgainIDareYou
+15Jul2008     AFestivusForTheRestOfUs
+FallBack      TingsBeBerryBerryBadMon
+
+# Logging info
+!Debug
+!Verbose
+SyslogFacility        local5
+# add a read only user so that the cgis have minimum privileges
+CGIDBUser           readonly
+CGIDBPass           readonly
+
+CGITmpDir           /tmp
+Ploticus           /usr/bin/pl
