@@ -1,0 +1,6 @@
+Base test for aggregator
+---
+multiline
+metaconfigservice=/etc/carbon/aggregation-rules.conf
+---
+^<env>\.applications.<app>\.all\.requests\s\(60\)\s=\savg <env>\.applications\.<app>\.\*\.requests

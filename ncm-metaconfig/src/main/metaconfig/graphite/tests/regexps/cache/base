@@ -1,0 +1,11 @@
+Base test for cache
+---
+multiline
+metaconfigservice=/etc/carbon/storage-schemas.conf
+---
+^\[carbon\]
+^pattern\s=\s\^carbon\\.
+^retentions\s=\s60:90d
+^\[default\]
+^pattern\s=\s\.\*
+^retentions\s=\s60s:7d,1h:90d
