@@ -19,6 +19,7 @@ use Readonly;
 
 
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+Readonly::Scalar my $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -314,6 +315,14 @@ sub change_oneadmin_passwd
     }
 }
 
+
+# Restarts opennebula service
+sub restart_opennebula_service
+{
+    my ($self) = @_;
+
+}
+
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
@@ -493,11 +502,29 @@ sub manage_users
     }
 }
 
-# Set oned.conf file 
+# Set /etc/one/oned.conf file 
 # used by OpenNebula daemon
+# oned service must be restarted afterwards
 sub set_oned_conf
 {
-  my ($self, $oned)
+    my ($self, $data) = @_;
+
+    my $oned_templ = $self->process_template($data, "oned");
+
+    my %opts  = (log => $self,
+                 mode => 0600,
+                 backup => $ONED_CONF_FILE.".back",
+                 owner => scalar(getpwnam("oneadmin")),
+                 group => scalar(getgrnam("oneadmin")));
+
+    my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
+
+    if (!defined($fh)) {
+        $self->error("Failed to render $ONED_CONF_FILE (".$oned_templ->{fail}."). Skipping");
+        return;
+    }
+    $fh->close();
+    return 1;
 }
 
 # Check ONE endpoint and detects ONE version
@@ -547,6 +574,7 @@ sub Configure
     # Set oned.conf file
     if (exists $tree->{oned}) {
         $self->set_oned_conf($tree->{oned});
+        $self->restart_opennebula_service();
     }
 
     # Configure ONE RPC connector

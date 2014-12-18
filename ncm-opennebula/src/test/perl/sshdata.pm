@@ -49,6 +49,11 @@ $ssh{ssh_libviguests_service_restart}{out} = <<'EOF';
 EOF
 $ssh{ssh_libviguests_service_restart}{exit} = 0;
 
+$ssh{opennebula_service_restart}{command} = "/usr/sbin/service opennebula restart";
+$ssh{opennebula_service_restart}{out} = <<'EOF';
+EOF
+$ssh{opennebula_service_restart}{exit} = 0;
+
 $ssh{ssh_run_uname}{command} = "su - oneadmin -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r hyp104 uname";
 $ssh{ssh_run_uname}{out} = <<'EOF';
 hyp104
