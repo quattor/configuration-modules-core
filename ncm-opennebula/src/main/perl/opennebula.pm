@@ -493,6 +493,13 @@ sub manage_users
     }
 }
 
+# Set oned.conf file 
+# used by OpenNebula daemon
+sub set_oned_conf
+{
+  my ($self, $oned)
+}
+
 # Check ONE endpoint and detects ONE version
 # returns false if ONE version is not supported by AII
 sub is_supported_one_version
@@ -529,11 +536,17 @@ sub Configure
     $self->set_ssh_command($tree->{ssh_multiplex});
     # Set tm_system_ds if available
     my $tm_system_ds = $tree->{tm_system_ds};
+    # untouchables resources
     my $untouchables = $tree->{untouchables};
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
         $self->change_oneadmin_passwd($tree->{rpc}->{password});
+    }
+
+    # Set oned.conf file
+    if (exists $tree->{oned}) {
+        $self->set_oned_conf($tree->{oned});
     }
 
     # Configure ONE RPC connector
