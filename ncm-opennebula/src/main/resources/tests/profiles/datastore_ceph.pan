@@ -1,10 +1,10 @@
 object template datastore_ceph;
 
-include 'metaconfig/opennebula/schema';
+include 'components/opennebula/schema';
 
 bind "/metaconfig/contents/datastore" = opennebula_datastore;
 
-"/metaconfig/module" = "opennebula/datastore";
+"/metaconfig/module" = "datastore";
 
 prefix "/metaconfig/contents/datastore";
 "name" = "ceph";

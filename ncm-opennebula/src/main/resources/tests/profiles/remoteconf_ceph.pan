@@ -1,10 +1,10 @@
 object template remoteconf_ceph;
 
-include 'metaconfig/opennebula/schema';
+include 'components/opennebula/schema';
 
 bind "/metaconfig/contents/remoteconf_ceph" = opennebula_remoteconf_ceph;
 
-"/metaconfig/module" = "opennebula/remoteconf_ceph";
+"/metaconfig/module" = "remoteconf_ceph";
 
 prefix "/metaconfig/contents/remoteconf_ceph";
 "pool_name" = "one";

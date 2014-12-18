@@ -1,10 +1,10 @@
 object template oned;
 
-include 'metaconfig/opennebula/schema';
+include 'components/opennebula/schema';
 
 bind "/metaconfig/contents/oned" = opennebula_oned;
 
-"/metaconfig/module" = "opennebula/oned";
+"/metaconfig/module" = "oned";
 
 prefix "/metaconfig/contents/oned";
 "db" = nlist(

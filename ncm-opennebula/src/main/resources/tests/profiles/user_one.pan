@@ -1,10 +1,10 @@
 object template user_one;
 
-include 'metaconfig/opennebula/schema';
+include 'components/opennebula/schema';
 
 bind "/metaconfig/contents/user" = opennebula_user;
 
-"/metaconfig/module" = "opennebula/user";
+"/metaconfig/module" = "user";
 
 prefix "/metaconfig/contents/user";
 "user" = "lsimngar";

@@ -1,10 +1,10 @@
 object template vnet_br100;
 
-include 'metaconfig/opennebula/schema';
+include 'components/opennebula/schema';
 
 bind "/metaconfig/contents/vnet" = opennebula_vnet;
 
-"/metaconfig/module" = "opennebula/vnet";
+"/metaconfig/module" = "vnet";
 
 prefix "/metaconfig/contents/vnet";
 "name" = "node.cubone.os";
