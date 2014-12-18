@@ -1,0 +1,8 @@
+<limit[% desc.except ? "except" : "" %] [% desc.name.join(" ") %]>
+[%- to_process = ['access'] -%] 
+[%- FOREACH p IN  to_process %]
+[%      IF desc.exists(p) -%] 
+[%-          INCLUDE "metaconfig/httpd/config/${p}.tt" desc=desc.$p FILTER indent %]
+[%-      END -%]
+[%- END %]
+</limit[% desc.except ? "except" : "" %]>

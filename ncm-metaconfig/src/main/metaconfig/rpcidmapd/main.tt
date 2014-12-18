@@ -1,0 +1,20 @@
+[%- FOREACH sub IN ['General', 'Mapping', 'Translation' ] -%]
+[[%     sub %]]
+[%      INCLUDE metaconfig/rpcidmapd/attribute.tt value=$sub %]
+[% END -%]
+
+[% IF Static -%]
+[Static]
+[%      FOREACH realm IN Static.pairs -%]
+[%-          FOREACH user IN realm.value.pairs -%]
+[%              user.key %]@[% realm.key %] = [% user.value %]
+[%          END -%]
+[%-      END -%]
+[%- END -%]
+
+[% IF UMICH_SCHEMA -%]
+[UMICH_SCHEMA]
+[%      INCLUDE metaconfig/rpcidmapd/attribute.tt value=UMICH_SCHEMA %]
+[%- END -%]
+
+

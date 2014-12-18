@@ -1,0 +1,48 @@
+[% FOREACH p IN ports %]
+<port [%p.port%]>
+[%      FILTER indent %]
+[%          FOREACH e IN p.endpoint %]
+<endpoint [% e.name %]>
+[%              FILTER indent %]
+module [% e.module %]
+<perfsonarbuoy>
+[%                  FILTER indent %]
+maintenance_interval [% e.buoy.maintenance_interval %]
+# Enable registration to the LS
+enable_registration [% e.buoy.enable_registration %]
+# Register every hour
+ls_registration_interval [% e.buoy.ls_registration_interval %]
+ls_instance [% e.buoy.ls_instance %]
+# use a 'file' database
+metadata_db_file [% e.buoy.metadata_db_file %]
+metadata_db_type [% e.buoy.metadata_db_type %]
+# Directory that contains the owmesh.conf file
+owmesh [% e.buoy.owmesh %]
+# Service information
+service_accesspoint [% e.buoy.service_accesspoint %]
+service_description [% e.buoy.service_description %]
+service_name [% e.buoy.service_name %]
+service_type [% e.buoy.service_type %]
+[%                  END %]
+</perfsonarbuoy>
+[%              END %]
+</endpoint>
+[%          END %]
+[%      END %]
+</port>
+[% END %]
+reaper_interval [% reaper_interval %]
+# gLS Based registration
+[% IF root_hints_file %]
+root_hints_file [% root_hints_file %]
+[% END %]
+[% IF root_hints_url %]
+root_hints_url [% root_hints_url %]
+[% END %]
+disable_echo [% disable_echo %]
+ls_instance [% ls_instance %]
+ls_registration_interval [% ls_registration_interval %]
+max_worker_lifetime [% max_worker_lifetime %]
+max_worker_processes [% max_worker_processes %]
+pid_dir [% pid_dir %]
+pid_file [% pid_file %]

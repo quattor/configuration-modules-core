@@ -1,0 +1,3 @@
+[%- FOREACH m IN desc -%]
+loadmodule [% m.name %] [% m.path %]
+[% END -%]

@@ -1,0 +1,17 @@
+Base test for config
+---
+multiline
+metaconfigservice=/etc/xinetd.d/tftp
+---
+^service\stftp$
+^{$
+^\s{4}cps\s=\s100 2$
+^\s{4}disable\s=\sno$
+^\s{4}flags\s=\sIPv4$
+^\s{4}per_source\s=\s11$
+^\s{4}protocol\s=\sudp$
+^\s{4}server\s=\s/usr/sbin/in.tftpd$
+^\s{4}socket_type\s=\sdgram$
+^\s{4}user\s=\sroot$
+^\s{4}wait\s=\syes$
+^}$

@@ -1,0 +1,47 @@
+value test for config
+---
+multiline
+metaconfigservice=/etc/rsyncd.conf
+---
+^log file\s=\s/var/log/rsyncd$
+^syslog facility\s=\sdaemon$
+^\[serv1\]$
+^\s{4}auth users\s=\sserv1user$
+^\s{4}comment\s=\sserv1 comment$
+^\s{4}dont compress\s=\s\*.gz \*.tgz \*.zip \*.z \*.rpm \*.deb \*.iso \*.bz2 \*.tbz$
+^\s{4}gid\s=\srsyncd$
+^\s{4}hosts allow\s=\s1.2.3.4,1.2.3.5$
+^\s{4}ignore errors\s=\sno$
+^\s{4}ignore nonreadable\s=\syes$
+^\s{4}list\s=\sno$
+^\s{4}lock file\s=\s/var/lock/serv1$
+^\s{4}max connections\s=\s2$
+^\s{4}path\s=\s/var/spool/serv1/rsync$
+^\s{4}read only\s=\syes$
+^\s{4}refuse options\s=\schecksum dry-run delete$
+^\s{4}secrets file\s=\s/etc/rsyncd.secrets$
+^\s{4}strict modes\s=\syes$
+^\s{4}timeout\s=\s600$
+^\s{4}transfer logging\s=\sno$
+^\s{4}uid\s=\srsyncd$
+^\s{4}use chroot\s=\syes$
+^\[serv2\]$
+^\s{4}auth users\s=\suserserv2$
+^\s{4}comment\s=\sserv2 other comment$
+^\s{4}dont compress\s=\s\*.gz \*.tgz \*.zip \*.z \*.rpm \*.deb \*.iso \*.bz2 \*.tbz$
+^\s{4}gid\s=\srsyncd$
+^\s{4}hosts allow\s=\s1.2.3.4,1.2.3.5$
+^\s{4}ignore errors\s=\sno$
+^\s{4}ignore nonreadable\s=\syes$
+^\s{4}list\s=\sno$
+^\s{4}lock file\s=\s/var/lock/serv2.lock$
+^\s{4}max connections\s=\s2$
+^\s{4}path\s=\s/var/run/serv2$
+^\s{4}read only\s=\syes$
+^\s{4}refuse options\s=\schecksum dry-run delete$
+^\s{4}secrets file\s=\s/etc/rsyncd.secrets$
+^\s{4}strict modes\s=\syes$
+^\s{4}timeout\s=\s600$
+^\s{4}transfer logging\s=\sno$
+^\s{4}uid\s=\srsyncd$
+^\s{4}use chroot\s=\syes$

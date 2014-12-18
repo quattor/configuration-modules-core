@@ -1,0 +1,18 @@
+[%- booleans = ["disable", "wait"] -%]
+[%- lists = ["type", "flags", "only_from", "cps"] -%]
+service [% servicename %]
+{
+[% FILTER indent -%]
+[%-     FOREACH pair IN options.pairs -%]
+[%          pair.key %] =
+[%-         SWITCH pair.key -%]
+[%-             CASE booleans -%]
+ [%                 pair.value ? 'yes' : 'no' %]
+[%-             CASE lists -%]
+ [%                 pair.value.join(' ') %]
+[%-             CASE -%]
+ [%                 pair.value %]
+[%-          END %]
+[%     END -%]
+[%- END -%]
+}

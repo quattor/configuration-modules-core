@@ -1,0 +1,8 @@
+Test default realm config
+---
+multiline
+---
+^\[libdefaults\]$
+^default_realm\s=\sKDC\.REALM$
+^\[domain_realms\]$
+^\.DEFAULT_DOMAIN\s=\sKDC\.REALM$

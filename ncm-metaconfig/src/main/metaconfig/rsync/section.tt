@@ -1,0 +1,20 @@
+[%- boolean = ['use_chroot', 'read_only', 'list', 'strict_modes', 
+               'ignore_errors', 'ignore_nonreadable', 
+               'transfer_logging'] -%]
+[%- commalist = ['auth_users', 'hosts_allow'] -%]
+[%- spacelist = ['refuse_options', 'dont_compress'] -%]
+[% FOREACH pair IN section.pairs %]
+[%-     newkey = pair.key.replace('_',' ') -%]
+[%      newkey %] = 
+[%-      SWITCH pair.key -%]
+[%-      CASE boolean -%]
+ [%- pair.value ? "yes" : "no" -%]
+[%-      CASE commalist -%]
+ [%- pair.value.join(',') -%]
+[%-      CASE spacelist -%]
+ [%- pair.value.join(' ') -%]
+[%-      CASE -%]
+ [%- pair.value -%]
+[%-      END %]
+[% END %]
+

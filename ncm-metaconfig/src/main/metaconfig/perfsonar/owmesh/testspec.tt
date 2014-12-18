@@ -1,0 +1,39 @@
+# Test specification for [% name %]
+<TESTSPEC=[% name %]>
+DESCRIPTION [% desc.description %]
+TOOL [% desc.tool %]
+[% IF desc.bw %]
+BWTestInterval [% desc.bw.interval %]
+BWTestIntervalStartAlpha [% desc.bw.start_alpha %]
+BWReportInterval [% desc.bw.report_interval %]
+#
+#    # TCP send/recv buffer size. (Might not be good to set for auto-scaling
+#    # kernels)
+#BWWindowSize            4M
+#
+#    # do a tcp test
+[% desc.type %]
+BWTestDuration  [% desc.bw.duration %]
+[% ELSE %]
+
+OWPINTERVAL     [% desc.owamp.interval %]
+OWPLOSSTHRESH   [% desc.owamp.lossthresh %]
+#
+## number of session packets
+## 10800 is the number of seconds in 3 hours - with above 'interval'
+## set to 0.1 - that means 108000 packets in a 3 hour session.
+## Because powstream uses 2 control connections to stich together
+## concurrent sessions to achieve continuous testing, 3 hour long
+## individual sessions means our testing can survive ~6 hour
+## network partitions.
+OWPSESSIONCOUNT [% desc.owamp.session_count %]
+#
+## number of packets in a sample (see owstats -N )
+## OWPSAMPLECOUNT MUST be an even multiple of OWPSESSIONCOUNT.
+##
+## Attempting to get a summary session ~ 1/minute. So, with the
+## above 'interval' of 0.1 that means roughly 600 packets per minute.
+OWPSAMPLECOUNT [% desc.owamp.sample_count %]
+OWPBUCKETWIDTH [% desc.owamp.bucket_width %]
+[% END %]
+</TESTSPEC>

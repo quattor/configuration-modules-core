@@ -1,0 +1,13 @@
+[%- FOREACH i IN value.pairs -%]
+[%      i.key %]=
+[%-      IF i.value.size > 1 -%]
+[%          i.value.join(',') %]
+[%-      ELSE -%]
+[%-          SWITCH i.key -%]
+[%-              CASE ['LDAP_use_ssl'] -%]
+[%                  i.value ? "true" : "false" %]
+[%-              CASE -%]
+[%                  i.value %]
+[%-          END -%]
+[%-      END %]
+[% END -%]

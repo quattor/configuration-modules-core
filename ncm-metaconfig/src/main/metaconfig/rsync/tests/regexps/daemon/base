@@ -1,0 +1,27 @@
+Base test for config
+---
+multiline
+metaconfigservice=/etc/rsyncd.conf
+---
+^log file\s=\s\S+$
+^syslog facility\s=\s\S+$
+^\[\S+\]$ ### COUNT 2
+^\s{4}auth users\s=\s\S+$ ### COUNT 2
+^\s{4}comment\s=\s\S+.*$ ### COUNT 2
+^\s{4}dont compress\s=\s\S+.*$ ### COUNT 2
+^\s{4}gid\s=\s\S+$ ### COUNT 2
+^\s{4}hosts allow\s=\s\S+$ ### COUNT 2
+^\s{4}ignore errors\s=\s(yes|no)$ ### COUNT 2
+^\s{4}ignore nonreadable\s=\s(yes|no)$ ### COUNT 2
+^\s{4}list\s=\s(yes|no)$ ### COUNT 2
+^\s{4}lock file\s=\s\S+$ ### COUNT 2
+^\s{4}max connections\s=\s\d+$ ### COUNT 2
+^\s{4}path\s=\s\S+$ ### COUNT 2
+^\s{4}read only\s=\s(yes|no)$ ### COUNT 2
+^\s{4}refuse options\s=\s\S+.*$ ### COUNT 2
+^\s{4}secrets file\s=\s\S+$ ### COUNT 2
+^\s{4}strict modes\s=\s(yes|no)$ ### COUNT 2
+^\s{4}timeout\s=\s\d+$ ### COUNT 2
+^\s{4}transfer logging\s=\s(yes|no)$ ### COUNT 2
+^\s{4}uid\s=\s\S+$ ### COUNT 2
+^\s{4}use chroot\s=\syes$ ### COUNT 2

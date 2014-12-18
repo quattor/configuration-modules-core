@@ -1,0 +1,16 @@
+Base test for relay config
+---
+multiline
+metaconfigservice=/etc/carbon/carbon.conf
+---
+^\[relay\]
+^DESTINATIONS\s=\s127.0.0.1:2004
+^LINE_RECEIVER_INTERFACE\s=\s0.0.0.0
+^LINE_RECEIVER_PORT\s=\s2013
+^MAX_DATAPOINTS_PER_MESSAGE\s=\s500
+^MAX_QUEUE_SIZE\s=\s10000
+^PICKLE_RECEIVER_INTERFACE\s=\s0.0.0.0
+^PICKLE_RECEIVER_PORT\s=\s2014
+^RELAY_METHOD\s=\srules
+^REPLICATION_FACTOR\s=\s1
+^USE_FLOW_CONTROL\s=\sTrue

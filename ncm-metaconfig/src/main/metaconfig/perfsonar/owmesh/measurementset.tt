@@ -1,0 +1,9 @@
+<MeasurementSet=[% name %]>
+DESCRIPTION [% desc.description %]
+ADDRTYPE    [% desc.addr_type %]
+GROUP       [% desc.group %]
+TESTSPEC    [% desc.testspec %]
+[% IF desc.exclude_self %]
+EXCLUDE_SELF
+[% END -%]
+</MeasurementSet>

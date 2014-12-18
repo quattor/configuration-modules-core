@@ -1,0 +1,9 @@
+Simple test of krb5_conf kerberos client
+---
+multiline
+metaconfigservice=/etc/krb5.conf
+---
+^\[logging\]$
+^\[libdefaults\]$
+^\[realms\]$
+^\[domain_realms\]$

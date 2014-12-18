@@ -1,0 +1,5 @@
+[% FOREACH rule IN main %]
+[[% rule.name %]]
+pattern = [% rule.pattern %]
+retentions = [% rule.retentions.join(',') %]
+[% END %]

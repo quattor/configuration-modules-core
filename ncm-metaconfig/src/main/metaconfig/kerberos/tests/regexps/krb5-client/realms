@@ -1,0 +1,9 @@
+Test logging
+---
+multiline
+---
+^\[realms\]$
+^KDC\.REALM\s=\s\{\s*$
+^\s{4}admin_server\s=\sKDC\.SERVER$
+^\s{4}kdc\s=\sKDC\.SERVER$
+^\}$

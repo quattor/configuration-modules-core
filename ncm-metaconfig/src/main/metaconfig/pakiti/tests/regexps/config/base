@@ -1,0 +1,10 @@
+Base test for config
+---
+/etc/pakiti/pakiti2-client.conf
+multiline
+---
+^servers_name\s=\spakiti.wn.iihe.ac.be\:443$
+^server_url\s=\s/feed/$
+^ca_certificate\s=\s/etc/grid-security/certificates$
+^tag\s=\sCLUSTER$
+^connection_method\s=\sopenssl$

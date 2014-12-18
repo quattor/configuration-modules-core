@@ -1,0 +1,7 @@
+[% INCLUDE metaconfig/httpd/config/system.tt %]
+[%- to_process = ['includes', 'handler', 'log', 'lang', 'icon', 'outputfilter', 'browsermatch'] -%] 
+[%- FOREACH p IN  to_process -%]
+[%-      IF ${p}.defined -%] 
+[%          INCLUDE "metaconfig/httpd/config/${p}.tt" desc=$p %]
+[%      END -%]
+[%- END %]
