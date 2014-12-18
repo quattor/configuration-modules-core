@@ -131,7 +131,7 @@ sub ssh_known_keys {
 }
 
 # check if host is reachable
-sub test_host_connection {
+sub can_connect_to_host {
     my ($self, $host) = @_;
     $self->ssh_known_keys($host, 'always', '~');
     return $self->run_command_as_oneadmin_with_ssh(['uname'], $host);

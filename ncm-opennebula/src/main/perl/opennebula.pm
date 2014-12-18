@@ -57,7 +57,7 @@ sub process_template
                                   log => $self,
                                   );
     if (!$tpl) {
-        $self->error("TT processing of $type_rel failed.", $tpl->{fail});
+        $self->error("TT processing of $type_rel failed: $tpl->{fail}");
         return;
     }
     return $tpl;
@@ -157,7 +157,7 @@ sub detect_used_resource
                     "The Quattor flag is not set. ",
                     "We can't modify this resource.");
         return 1;
-    } elsif ($quattor) {
+    } elsif ($quattor == 1) {
         $self->verbose("Name : $name is already used by a $type resource. ",
                     "Quattor flag is set. ",
                     "We can modify and update this resource.");
@@ -377,7 +377,7 @@ sub manage_hosts
             $self->error("Found more than one host $host. Only the first host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
-        if ($self->test_host_connection($host)) {
+        if ($self->can_connect_to_host($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
                 if ($hostinstance) {
