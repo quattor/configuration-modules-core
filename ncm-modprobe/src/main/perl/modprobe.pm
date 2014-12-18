@@ -14,6 +14,7 @@ use warnings;
 use NCM::Component;
 our @ISA = qw(NCM::Component);
 our $EC  = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 use EDG::WP4::CCM::Configuration;
 use CAF::Process;

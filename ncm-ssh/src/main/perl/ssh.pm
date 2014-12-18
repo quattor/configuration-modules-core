@@ -16,6 +16,7 @@ use strict;
 use base qw(NCM::Component);
 
 our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 use CAF::Process;
 use CAF::FileEditor;

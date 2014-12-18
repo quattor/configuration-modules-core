@@ -16,6 +16,8 @@ use EDG::WP4::CCM::Fetch qw(NOQUATTOR);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
+our $NoActionSupported = 1;
+
 use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch -cfgfile /proc/self/fd/0);
 
 # simple private method to test NOQUATTOR (allows mocking)
