@@ -12,6 +12,7 @@ use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
+use CAF::Service;
 use Net::OpenNebula 0.300.0;
 use Data::Dumper;
 use Readonly;
@@ -315,6 +316,15 @@ sub change_oneadmin_passwd
     }
 }
 
+# Restart one service
+# after any conf change
+sub restart_opennebula_service {
+    my ($self) = @_;
+
+    my $srv = CAF::Service->new(['opennebula'], log => $self);
+    $srv->restart();
+}
+
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
@@ -503,17 +513,8 @@ sub set_oned_conf
     my ($self, $data) = @_;
     my %opts;
     my $oned_templ = $self->process_template($data, "oned");
-    $self->info("HERE IS THE ONED: $oned_templ");
-    if (getpwnam("oneadmin") and getpwnam("oneadmin")) {
-        %opts  = (log => $self,
-                  mode => 0600,
-                  backup => $ONED_CONF_FILE.".back",
-                  owner => scalar(getpwnam("oneadmin")),
-                  group => scalar(getgrnam("oneadmin")));
-    } else {
-        $self->error("User or group oneadmin does not exist.");
-        return;
-    }
+    %opts = $self->set_oned_file_opts();
+    return if !defined(%opts);
 
     my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
 
@@ -521,11 +522,28 @@ sub set_oned_conf
         $self->error("Failed to render $ONED_CONF_FILE (".$oned_templ->{fail}."). Skipping");
         return;
     }
-
+    
     if ($fh->close()) {
         $self->restart_opennebula_service();
     }
     return 1;
+}
+
+sub set_oned_file_opts
+{
+    my ($self) = @_;
+    my %opts;
+    if (getpwnam("oneadmin") and getpwnam("oneadmin")) {
+        %opts = (log => $self,
+                 mode => 0600,
+                 backup => $ONED_CONF_FILE.".back",
+                 owner => scalar(getpwnam("oneadmin")),
+                 group => scalar(getgrnam("oneadmin")));
+        return %opts;
+    } else {
+        $self->error("User or group oneadmin does not exist.");
+        return;
+    }
 }
 
 # Check ONE endpoint and detects ONE version

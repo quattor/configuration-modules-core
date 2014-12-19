@@ -29,7 +29,7 @@ Readonly::Array my @SU_ONEADMIN_COMMAND => qw(su - oneadmin -c);
 Readonly::Array my @SSH_KEYGEN_COMMAND => qw(/usr/bin/ssh-keygen);
 Readonly::Array my @SSH_KEYSCAN_COMMAND => qw(/usr/bin/ssh-keyscan);
 Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd oneadmin);
-Readonly::Array my @OPENNEBULA_RESTART => qw(/usr/sbin/service opennebula restart);
+
 
 my $sshcmd=[];
 
@@ -78,14 +78,6 @@ sub run_oneuser_as_oneadmin_with_ssh {
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
 }
-
-# Restarts opennebula service
-# after any conf change
-sub restart_opennebula_service {
-    my ($self) = @_;
-    return $self->run_command([@OPENNEBULA_RESTART], 0);
-}
-
 
 # Checks for shell escapes
 sub has_shell_escapes {
