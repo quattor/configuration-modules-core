@@ -17,6 +17,8 @@ Features that are implemented at this moment:
 
 =over
 
+=item * oned service configuration
+
 =item * Adding/removing VNETs
 
 =item * Adding/removing datastores (only CEPH datastores for the moment)
@@ -36,10 +38,6 @@ OpenNebula installation is 100% automated. Therefore:
 =item * The component only will modify/remove resources with the QUATTOR flag set, otherwise the resource is ignored
 
 =item * If the component finds any issue during hypervisor host configuration then the node is included within OpenNebula infrastructure but as disabled host
-
-=item * ONE component does not generate /etc/one/oned.conf file (yet). https://github.com/quattor/configuration-modules-core/issues/365
-
-=item * The OpenNebula tt files required by the quattor component are shipped by config-templates-metaconfig package
 
 =back
 
