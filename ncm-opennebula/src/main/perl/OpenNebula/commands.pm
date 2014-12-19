@@ -79,6 +79,8 @@ sub run_oneuser_as_oneadmin_with_ssh {
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
 }
 
+# Restarts opennebula service
+# after any conf change
 sub restart_opennebula_service {
     my ($self) = @_;
     return $self->run_command([@OPENNEBULA_RESTART], 0);

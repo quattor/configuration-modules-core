@@ -282,6 +282,7 @@ type component_opennebula = {
     'hosts'         : string[]
     'rpc'           : opennebula_rpc
     'untouchables'  : opennebula_untouchables
+    'oned'          : opennebula_oned
     'ssh_multiplex' : boolean = true
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = nlist();
