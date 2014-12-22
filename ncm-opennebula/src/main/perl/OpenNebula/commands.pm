@@ -30,7 +30,6 @@ Readonly::Array my @SSH_KEYGEN_COMMAND => qw(/usr/bin/ssh-keygen);
 Readonly::Array my @SSH_KEYSCAN_COMMAND => qw(/usr/bin/ssh-keyscan);
 Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd oneadmin);
 
-
 my $sshcmd=[];
 
 
@@ -78,6 +77,7 @@ sub run_oneuser_as_oneadmin_with_ssh {
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
 }
+
 
 # Checks for shell escapes
 sub has_shell_escapes {
