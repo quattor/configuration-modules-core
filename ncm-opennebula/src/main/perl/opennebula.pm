@@ -229,7 +229,7 @@ sub enable_ceph_node
             }
             $uuid = $self->set_ceph_secret($type, $host, $ceph);
             return if !$uuid;
-            return if !self->set_ceph_keys($host, $uuid, $secret);
+            return if !$self->set_ceph_keys($host, $uuid, $secret);
         }
     }
     return 1;
