@@ -48,7 +48,7 @@ sub set_ssh_command
 sub run_command {
     my ($self, $command, $secret) = @_;
     my ($cmd_output, $cmd_err, $cmd);
-    my %opts = (stdout => $cmd_output, stderr => \$cmd_err);
+    my %opts = (stdout => \$cmd_output, stderr => \$cmd_err);
     $opts{log} = $self if !$secret;
     $cmd = CAF::Process->new($command, %opts);
     $cmd->execute();
