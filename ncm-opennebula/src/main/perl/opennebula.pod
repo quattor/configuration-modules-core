@@ -1,0 +1,96 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for OpenNebula
+
+=head1 DESCRIPTION
+
+Configuration module for OpenNebula. 
+
+=head1 IMPLEMENTED FEATURES
+
+Features that are implemented at this moment:
+
+=over
+
+=item * Adding/removing VNETs
+
+=item * Adding/removing datastores (only CEPH datastores for the moment)
+
+=item * Adding/removing hypervirsors 
+
+=item * Adding/removing OpenNebula regular users
+
+=back
+
+OpenNebula installation is 100% automated. Therefore:
+
+=over
+
+=item * All the new OpenNebula templates created by the component will include a QUATTOR flag
+
+=item * The component only will modify/remove resources with the QUATTOR flag set, otherwise the resource is ignored
+
+=item * If the component finds any issue during hypervisor host configuration then the node is included within OpenNebula infrastructure but as disabled host
+
+=item * ONE component does not generate /etc/one/oned.conf file (yet). https://github.com/quattor/configuration-modules-core/issues/365
+
+=item * The OpenNebula tt files required by the quattor component are shipped by config-templates-metaconfig package
+
+=back
+
+=head1 INITIAL CREATION
+
+- The schema details are annotated in the schema file.
+
+- Example pan files are included in the examples folder and also in the test folders.
+
+
+To set up the initial cluster, some steps should be taken:
+
+=over 
+
+=item 1. First install the required gems as root in your OpenNebula server: /usr/share/one/install_gems
+
+=item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster e.g. by distributing the public key(s) of the OpenNebula host over the cluster
+
+=item 3. Start OpenNebula services: # for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done
+
+=item 4. Run the component a first time
+
+=item 5. The new oneadmin password will be available from /var/lib/one/.one/one_auth.new file
+
+=back
+
+=head1 RESOURCES
+
+=head2 /software/components/${project.artifactId}
+
+The configuration information for the component.  Each field should
+be described in this section. 
+
+=head1 DEPENDENCIES
+
+The component was tested with OpenNebula version 4.8 and 4.10
+
+Following package dependencies should be installed to run the component:
+
+=over
+
+=item * perl-Config-Tiny 
+
+=item * perl-LC
+
+=item * perl-Net-OpenNebula >= 0.2.2 !
+
+=back
+
+=head1 AUTHOR
+
+${author-info}
+
+=cut

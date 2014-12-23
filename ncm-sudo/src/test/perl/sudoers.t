@@ -7,6 +7,7 @@ use Test::Quattor;
 use NCM::Component::sudo;
 use CAF::Object;
 use File::Temp qw(tempfile);
+use File::Path qw(make_path);
 $CAF::Object::NoAction = 1;
 
 =pod
@@ -86,6 +87,7 @@ is($cmp->{ERROR}, 1, "Valid sudoers don't trigger any more errors");
 
 $fh = get_file("/etc/sudoers");
 
+make_path("target/test") if ! -d "target/test";
 my ($tmp, $tmpname) = tempfile(DIR => "target/test");
 
 print $tmp "$fh";
