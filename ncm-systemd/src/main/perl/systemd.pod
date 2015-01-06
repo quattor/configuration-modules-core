@@ -1,0 +1,32 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+
+
+=head1 NAME
+
+NCM::${project.artifactId} - NCM ${project.artifactId} component
+
+=head1 SYNOPSIS
+
+=over
+
+=item Configure()
+
+Configures C<systemd> for each supported sub-system
+
+=over
+
+=item Service
+
+Configure the start and/or stop behaviour of the systemd units.
+
+=item Unit
+
+TODO: Configure/generate the systemd units.
+
+=back
+
+=back
+
+=cut
