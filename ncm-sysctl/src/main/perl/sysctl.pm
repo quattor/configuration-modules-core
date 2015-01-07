@@ -22,23 +22,20 @@ use NCM::Component;
 our @ISA = qw(NCM::Component);
 use LC::Exception qw(throw_error);
 our $EC=LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
+use CAF::Process;
 use EDG::WP4::CCM::Element;
-
 use NCM::Check;
-use LC::Process qw(trun);
-
-# For convenience
-my $base = '/software/components/sysctl';
 
 
 ##########################################################################
 sub Configure {
 ##########################################################################
     my ($self,$config)=@_;
-    
+
     # Load config into a hash
-    my $sysctl_config = $config->getElement($base)->getTree();
+    my $sysctl_config = $config->getElement($self->prefix)->getTree();
     my $variables = $sysctl_config->{variables};
     my $configFile = $sysctl_config->{confFile};
     my $changes;
@@ -94,13 +91,16 @@ sub Configure {
     # execute /sbin/sysctl -p if any change made to sysctl configuration file
     #
     if ( $changes ) {
-	unless (LC::Process::trun(300,"$sysctl_exe", "-p")) {
-	    $self->error('Failed to load sysctl settings from $configFile');
-	    return;
-	}
+        $self->verbose("Changes made to $configFile, running sysctl on it");
+        my $cmd = CAF::Process->new([$sysctl_exe, '-p', $configFile],
+                                    log => $self);
+	my $output = $cmd->output;
+        $self->debug(1, "$sysctl_exe output: $output");
+        if ($? != 0) {
+            $self->error("Error loading sysctl settings from $configFile: ".
+                            "$output");
+        }
     }
 }
-
-
 
 1; # required for Perl modules
