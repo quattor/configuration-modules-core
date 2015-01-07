@@ -16,8 +16,8 @@ include { 'quattor/schema' };
 
 type component_sysctl_structure = {
   include structure_component
-  
-  'command'   : string = '/sbin/sysctl'
+
+  'command'   : string = '/sbin/sysctl' with match(SELF, '^/.+')
   'compat-v1' : boolean = false
   'confFile'  : string = '/etc/sysctl.conf'
   'variables' ? string{}
