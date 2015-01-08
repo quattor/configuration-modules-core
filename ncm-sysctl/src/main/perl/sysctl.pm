@@ -66,7 +66,7 @@ sub Configure
     #
     if ( $changes ) {
         $self->verbose("Changes made to $configFile, running sysctl on it");
-        my $cmd = CAF::Process->new([$sysctl_exe, '-p', $configFile],
+        my $cmd = CAF::Process->new([$sysctl_exe, '-e', '-p', $configFile],
                                     log => $self);
         my $output = $cmd->output;
         if ($?) {
