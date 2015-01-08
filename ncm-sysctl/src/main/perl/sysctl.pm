@@ -29,9 +29,8 @@ use CAF::Process;
 use EDG::WP4::CCM::Element;
 use NCM::Check;
 
-##########################################################################
-sub Configure {
-##########################################################################
+sub Configure
+{
     my ($self,$config)=@_;
 
     # Load config into a hash
@@ -56,7 +55,7 @@ sub Configure {
         $self->debug(1, "confFile setting is a path");
         $changes = $self->sysctl_file($configFile, $sysctl_exe, $variables);
     } else {
-        $self->debug(1, "confFile is a single file, using sysctl.d");
+        $self->debug(1, "confFile is a relative filename, using sysctl.d");
         $changes = $self->sysctl_dir($configFile, $sysctl_exe, $variables);
         # update the configFile path for the sysctl execution
         $configFile = "/etc/sysctl.d/$configFile";
@@ -70,9 +69,9 @@ sub Configure {
         my $cmd = CAF::Process->new([$sysctl_exe, '-p', $configFile],
                                     log => $self);
         my $output = $cmd->output;
-        if ($? != 0) {
-            $self->error("Error loading sysctl settings from $configFile: ".
-                            "$output");
+        if ($?) {
+            $self->error("Error loading sysctl settings from $configFile: ",
+                         $output);
         } else {
             $self->debug(1, "$sysctl_exe output: $output");
         }
@@ -81,7 +80,8 @@ sub Configure {
 }
 
 # new method for managing files in /etc/sysctl.d
-sub sysctl_dir {
+sub sysctl_dir
+{
     my ($self, $configFile, $sysctl_exe, $variables) = @_;
     # do not create a backup as it will be read in preference to the new one
     my $fh = CAF::FileWriter->new("/etc/sysctl.d/$configFile",
@@ -98,7 +98,8 @@ sub sysctl_dir {
 }
 
 # legacy code for managing /etc/sysctl.conf
-sub sysctl_file {
+sub sysctl_file
+{
     my ($self, $configFile, $sysctl_exe, $variables) = @_;
     unless (-e $configFile && -w $configFile) {
         $self->warn("Sysctl configuration file does not exist ",
