@@ -83,8 +83,9 @@ sub Configure
 sub sysctl_dir
 {
     my ($self, $configFile, $sysctl_exe, $variables) = @_;
-    # do not create a backup as it will be read in preference to the new one
+    # *.bak is on the list of ignored files
     my $fh = CAF::FileWriter->new("/etc/sysctl.d/$configFile",
+                                  backup => ".bak",
                                   owner => "root",
                                   group => "root",
                                   mode => 0444,
