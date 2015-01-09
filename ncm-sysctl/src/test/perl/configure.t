@@ -26,7 +26,7 @@ my $cmp = NCM::Component::sysctl->new('sysctl');
 my $cfg = get_config_for_profile('simple');
 
 is($cmp->Configure($cfg), 1, "Configure succeeds");
-my $fh = get_file("/etc/sysctl.d/50-quattor");
+my $fh = get_file("/etc/sysctl.d/50-quattor.conf");
 ok($fh, "A file was actually created");
 isa_ok($fh, "CAF::FileWriter");
 like("$fh", qr{^kernel.sysrq = 1$}m, "Found kernel.sysrq variable");
