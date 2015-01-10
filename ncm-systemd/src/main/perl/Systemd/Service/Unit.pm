@@ -9,6 +9,8 @@ use 5.10.1;
 use strict;
 use warnings;
 
+use LC::Exception qw (SUCCESS);
+
 use parent qw(CAF::Object Exporter);
 
 use Readonly;
@@ -68,9 +70,12 @@ A logger instance (compatible with C<CAF::Object>).
 
 sub _initialize
 {
-    my $self  = {@_};
+    my ($self, %opts) = @_;
 
-    return 1;
+    $self->{services} = $opts{services};
+    $self->{log}  = $opts{log}  if $opts{log};
+
+    return SUCCESS;
 }
 
 
