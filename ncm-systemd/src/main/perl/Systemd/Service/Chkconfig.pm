@@ -11,7 +11,7 @@ use warnings;
 
 use parent qw(NCM::Component::Systemd::Service::Unit);
 
-use NCM::Component::Systemd::Service::Unit qw(:targets);
+use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 use Readonly;
 
@@ -61,19 +61,6 @@ A logger instance (compatible with C<CAF::Object>).
 
 =cut
 
-sub _initialize
-{
-    my $self = shift;
-
-    my $initec = $self->SUPER::_initialize(@_);
-
-    if ($initec) {
-        $self->generate_runlevel2target();
-    };
-
-    return $initec;
-}
-
 =pod
 
 =back
@@ -122,6 +109,54 @@ sub generate_runlevel2target
     }
     
     return \@runlevel2target;   
+}
+
+=pod
+
+=item convert_runlevels
+
+Convert the C<ncm-chkconfig> levels to new systemsctl targets
+
+C<legacylevel> is a string with integers e.g. "234".
+Retrun a array reference with the targets.
+
+=cut
+
+sub convert_runlevels
+{
+    my ($self, $legacylevel) = @_;
+    
+    if (! @runlevel2target) {
+        $self->verbose("Creating runlevel2target cache");
+        $self->generate_runlevel2target;
+        if (! @runlevel2target) {
+            $self->error("Failed to generate runlevel2target cache");
+            return;
+        };
+    }
+    
+    # only keep the relevant ones
+    my @targets;
+    if (defined($legacylevel)) {
+        foreach my $lvl (0..6) {
+            if ($legacylevel =~ m/$lvl/) {
+                my $target = $runlevel2target[$lvl];
+                push(@targets, $target) if (! grep {$_ eq $target} @targets);
+            }
+        }
+    
+        # only for non-default/non-valid runlevels?    
+        if (! scalar @targets) {
+            $self->warn("legacylevel set to $legacylevel, but not converted in new targets. Using default $DEFAULT_TARGET.");
+            push(@targets, $DEFAULT_TARGET);
+        } 
+        $self->verbose("Converted legacylevel '$legacylevel' in ".join(', ', @targets));
+    } else {
+        $self->verbose("legacylevel undefined, using default $DEFAULT_TARGET");
+        push(@targets, $DEFAULT_TARGET);
+    };    
+    
+    return \@targets;
 }
 
 =pod
