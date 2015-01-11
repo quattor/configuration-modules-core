@@ -113,4 +113,38 @@ is_deeply($chk->convert_runlevels('0123456'),
             ["poweroff", "rescue", "multi-user", "graphical", "reboot"], 
             "Test 012345 legacy level returns poweroff,resuce,multi-user,graphical,reboot");
 
+=pod
+
+=head2 current_services 
+
+Get services via chkconfig --list                                                                                                                     
+                                                                                                                                                      
+=cut                                                                                                                                                  
+
+
+set_output("chkconfig_list_el7");
+
+my $cs = $chk->current_services();
+use Data::Dumper;
+diag(Dumper($cs));
+is(scalar keys %$cs, 5, "Found 5 services via chkconfig");
+
+my ($name, $svc, @targets);
+
+$name = "network";
+$svc = $cs->{$name};
+is($svc->{name}, $name, "Service $name name matches");
+is($svc->{state},"on", "Service $name state on");
+is($svc->{type}, "sysv", "Service $name type sysv");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
+
+$name = "netconsole";
+$svc = $cs->{$name};
+is($svc->{name}, $name, "Service $name name matches");
+is($svc->{state},"off", "Service $name state off");
+is($svc->{type}, "sysv", "Service $name type sysv");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
+
 done_testing();
