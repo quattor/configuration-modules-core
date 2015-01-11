@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::systemd;
-use NCM::Component::Systemd::Systemctl qw(systemctl_show);
+use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL);
 
 use helper;
 
@@ -21,6 +21,7 @@ Test systemctl_show
 
 =cut
 
+is($SYSTEMCTL, "/usr/bin/systemctl", "SYSTEMCTL exported");
 
 my ($res, @names);
 

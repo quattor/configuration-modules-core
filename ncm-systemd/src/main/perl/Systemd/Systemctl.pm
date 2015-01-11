@@ -10,11 +10,11 @@ use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(systemctl_show);
+our @EXPORT_OK = qw(systemctl_show $SYSTEMCTL);
 
 use Readonly;
 
-Readonly my $SYSTEMCTL => "/usr/bin/systemctl";
+Readonly our $SYSTEMCTL => "/usr/bin/systemctl";
 
 
 =pod
@@ -50,6 +50,7 @@ to the result as output
 =back
 
 Returns undef on failure. 
+
 =cut
 
 sub systemctl_show
