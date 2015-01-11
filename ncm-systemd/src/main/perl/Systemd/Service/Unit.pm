@@ -15,22 +15,22 @@ use parent qw(CAF::Object Exporter);
 
 use Readonly;
 
-Readonly my $TARGET_DEFAULT => "default";
-Readonly my $TARGET_RESCUE => "rescue";
-Readonly my $TARGET_MULTIUSER => "multi-user";
-Readonly my $TARGET_GRAPHICAL => "graphical";
-Readonly my $TARGET_POWEROFF => "poweroff";
-Readonly my $TARGET_REBOOT => "reboot";
-Readonly my $DEFAULT_TARGET => $TARGET_MULTIUSER; # default level (if default.target is not responding)
+Readonly our $TARGET_DEFAULT => "default";
+Readonly our $TARGET_RESCUE => "rescue";
+Readonly our $TARGET_MULTIUSER => "multi-user";
+Readonly our $TARGET_GRAPHICAL => "graphical";
+Readonly our $TARGET_POWEROFF => "poweroff";
+Readonly our $TARGET_REBOOT => "reboot";
+Readonly our $DEFAULT_TARGET => $TARGET_MULTIUSER; # default level (if default.target is not responding)
 
 Readonly::Array my @TARGETS => qw($TARGET_DEFAULT $TARGET_RESCUE $TARGET_MULTIUSER $TARGET_GRAPHICAL
                                 $TARGET_POWEROFF $TARGET_REBOOT);
 
-our @EXPORT_OK = qw(@TARGETS $DEFAULT_TARGET);
-push(@EXPORT_OK, @TARGETS);
+our @EXPORT_OK = qw($DEFAULT_TARGET);
+push @EXPORT_OK, @TARGETS;
 
 our %EXPORT_TAGS = (
-    targets => [@TARGETS],
+    targets => \@TARGETS,
 );
 
 =pod

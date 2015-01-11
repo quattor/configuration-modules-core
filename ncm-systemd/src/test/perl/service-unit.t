@@ -24,6 +24,10 @@ Test exports
 =cut
 
 use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET);
+is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL,
+           $TARGET_POWEROFF, $TARGET_REBOOT],
+          [qw(default rescue multi-user graphical poweroff reboot)],
+          "TARGET names");
 is($DEFAULT_TARGET, $TARGET_MULTIUSER, "multiuser is default target");
 
 =head2 new
