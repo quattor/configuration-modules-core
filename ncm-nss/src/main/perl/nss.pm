@@ -128,6 +128,9 @@ sub buildDB {
     if ($?) {
         $self->error("running '$script' failed: $out");
         return 0;
+    } else {
+        # the command itself is already logged as VERBOSE
+        $self->debug(1, $out);
     }
     return 1;
 }
