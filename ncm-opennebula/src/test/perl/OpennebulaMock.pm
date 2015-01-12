@@ -20,13 +20,13 @@ sub dlog {
     my ($type, @args) = @_;
     diag("[".uc($type)."] ".join(" ", @args));
 }
-our $nco = new Test::MockModule('NCM::Component::opennebula');
+our $nco = Test::MockModule->new('NCM::Component::opennebula');
 foreach my $type ("error", "info", "verbose", "debug", "warn") {
     $nco->mock( $type, sub { shift; dlog($type, @_); } );
 }
 
 sub dump_rpc {
-    return Dumper(\@rpc_history);
+    return explain(\@rpc_history);
 }
 
 sub diag_rpc_history {
@@ -89,7 +89,7 @@ sub mock_rpc {
     }
 };
 
-our $opennebula = new Test::MockModule('Net::OpenNebula');
+our $opennebula = Test::MockModule->new('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
 my $mock = Test::MockModule->new('CAF::TextRender');
