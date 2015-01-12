@@ -71,7 +71,7 @@ sub process_template
 # based on resource type
 sub create_or_update_something
 {
-    my ($self, $one, $type, $data, %untouch) = @_;
+    my ($self, $one, $type, $data, %protected) = @_;
     
     my $template = $self->process_template($data, $type);
     my ($name, $new);
@@ -86,7 +86,7 @@ sub create_or_update_something
         $self->error("Template NAME tag not found within $type resource: $template");
         return;
     }
-    if (exists($untouch{$name})) {
+    if (exists($protected{$name})) {
         $self->info("This resource $type is protected and can not be created/updated: $name");
         return;
     }
@@ -107,7 +107,7 @@ sub create_or_update_something
 # Removes ONE resources
 sub remove_something
 {
-    my ($self, $one, $type, $resources, %untouch) = @_;
+    my ($self, $one, $type, $resources, %protected) = @_;
     my $method = "get_${type}s";
     my @existres = $one->$method();
     my @namelist = $self->create_resource_names_list($one, $type, $resources);
@@ -116,7 +116,7 @@ sub remove_something
     foreach my $oldresource (@existres) {
         # Remove the resource only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($oldresource);
-        if (exists($untouch{$oldresource->name})) {
+        if (exists($protected{$oldresource->name})) {
             $self->info("This resource $type is protected and can not be removed: ", $oldresource->name);
         } elsif ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old $type resource: ", $oldresource->name);
@@ -320,7 +320,6 @@ sub change_oneadmin_passwd
 # after any conf change
 sub restart_opennebula_service {
     my ($self) = @_;
-
     my $srv = CAF::Service->new(['opennebula'], log => $self);
     $srv->restart();
 }
@@ -330,7 +329,7 @@ sub restart_opennebula_service {
 sub manage_something
 {
     my ($self, $one, $type, $resources, $untouchables) = @_;
-    my %untouch = map { $_ => 1 } @$untouchables;
+    my %protected = map { $_ => 1 } @$untouchables;
     if (!$resources) {
         $self->error("No $type resources found.");
         return;
@@ -339,28 +338,28 @@ sub manage_something
     }
 
     if (($type eq "kvm") or ($type eq "xen")) {
-        $self->manage_hosts($one, $type, $resources, %untouch);
+        $self->manage_hosts($one, $type, $resources, %protected);
         return;
     } elsif ($type eq "user") {
-        $self->manage_users($one, $resources, %untouch);
+        $self->manage_users($one, $resources, %protected);
         return;
     }
 
     $self->verbose("Check to remove ${type}s");
-    $self->remove_something($one, $type, $resources, %untouch);
+    $self->remove_something($one, $type, $resources, %protected);
 
     if (@$resources) {
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
-        my $new = $self->create_or_update_something($one, $type, $newresource, %untouch);
+        my $new = $self->create_or_update_something($one, $type, $newresource, %protected);
     }
 }
 
 # Function to add/remove Xen or KVM hyp hosts
 sub manage_hosts
 {
-    my ($self, $one, $type, $resources, %untouch) = @_;
+    my ($self, $one, $type, $resources, %protected) = @_;
     my $new;
     my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
@@ -368,7 +367,7 @@ sub manage_hosts
     my (@rmhosts, @failedhost);
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
-        if (exists($untouch{$t->name})) {
+        if (exists($protected{$t->name})) {
             $self->info("This resource $type is protected and can not be removed: ", $t->name);
         } elsif (exists($newhosts{$t->name})) {
             $self->debug(1, "We can't remove this $type host. Is required by Quattor: ", $t->name);
@@ -398,7 +397,7 @@ sub manage_hosts
             $self->error("Found more than one host $host. Only the first host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
-        if (exists($untouch{$host})) {
+        if (exists($protected{$host})) {
             $self->info("This resource $type is protected and can not be created/updated: $host");
         } elsif ($self->can_connect_to_host($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
@@ -451,7 +450,7 @@ sub disable_host
 # only if the user has the Quattor flag set
 sub manage_users
 {
-    my ($self, $one, $users, %untouch) = @_;
+    my ($self, $one, $users, %protected) = @_;
     my ($new, $template, @rmusers, @userlist);
 
     foreach my $user (@$users) {
@@ -466,7 +465,7 @@ sub manage_users
     foreach my $t (@exitsuser) {
         # Remove the user only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($t,1);
-        if (exists($untouch{$t->name})) {
+        if (exists($protected{$t->name})) {
             $self->info("This user is protected and can not be removed: ", $t->name);
         } elsif (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
@@ -483,7 +482,7 @@ sub manage_users
     }
 
     foreach my $user (@$users) {
-        if (exists($untouch{$user->{user}})) {
+        if (exists($protected{$user->{user}})) {
             $self->info("This user is protected and can not be created/updated: ", $user->{user});
         } elsif ($user->{user} && $user->{password}) {
             $template = $self->process_template($user, "user");
@@ -515,11 +514,12 @@ sub set_oned_conf
     my $oned_templ = $self->process_template($data, "oned");
     %opts = $self->set_oned_file_opts();
     return if !defined(%opts);
-
     my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
 
     if (!defined($fh)) {
         $self->error("Failed to render $ONED_CONF_FILE (".$oned_templ->{fail}."). Skipping");
+        $fh->cancel();
+        $fh->close();
         return;
     }
     
@@ -533,7 +533,7 @@ sub set_oned_file_opts
 {
     my ($self) = @_;
     my %opts;
-    if (getpwnam("oneadmin") and getpwnam("oneadmin")) {
+    if (getpwnam("oneadmin") and getgrnam("oneadmin")) {
         %opts = (log => $self,
                  mode => 0600,
                  backup => $ONED_CONF_FILE.".back",
