@@ -536,7 +536,7 @@ sub set_oned_file_opts
     if (getpwnam("oneadmin") and getgrnam("oneadmin")) {
         %opts = (log => $self,
                  mode => 0600,
-                 backup => $ONED_CONF_FILE.".back",
+                 backup => ".quattor.backup",
                  owner => scalar(getpwnam("oneadmin")),
                  group => scalar(getgrnam("oneadmin")));
         return %opts;
