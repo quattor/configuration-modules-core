@@ -540,7 +540,7 @@ sub set_oned_file_opts
                  backup => ".quattor.backup",
                  owner => $ONEADMINUSR,
                  group => $ONEADMINGRP);
-        $self->verbose("Found oneadmin user ($ONEADMINUSR) and group.($ONEADMINGRP)");
+        $self->verbose("Found oneadmin user id ($ONEADMINUSR) and group id ($ONEADMINGRP).");
         return %opts;
     } else {
         $self->error("User or group oneadmin does not exist.");

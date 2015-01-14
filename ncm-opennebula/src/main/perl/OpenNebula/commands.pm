@@ -58,7 +58,7 @@ sub run_command {
             $self->error("Command failed: $cmd_err");
             return;
         } else {
-            $self->verbose("Stderr: $cmd_err");
+            $self->verbose("Stderr: $cmd_err") if defined($cmd_err);
         }
     }
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
