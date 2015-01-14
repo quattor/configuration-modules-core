@@ -18,10 +18,11 @@ use Data::Dumper;
 use Readonly;
 
 
-
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
-Readonly::Scalar my $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
+Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -36,7 +37,7 @@ sub make_one
         return;
     }
 
-    $self->verbose("Connecting to host $rpc->{host}:$rpc->{port} as user $rpc->{user} (with password)");
+    $self->verbose("Connecting to host $rpc->{host}:$rpc->{port} as user $rpc->{user} (with password) $ONEADMINUSR");
 
     my $one = Net::OpenNebula->new(
         url      => "http://$rpc->{host}:$rpc->{port}/RPC2",
@@ -513,7 +514,7 @@ sub set_oned_conf
     my %opts;
     my $oned_templ = $self->process_template($data, "oned");
     %opts = $self->set_oned_file_opts();
-    return if !defined(%opts);
+    return if ! %opts;
     my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
 
     if (!defined($fh)) {
@@ -533,12 +534,13 @@ sub set_oned_file_opts
 {
     my ($self) = @_;
     my %opts;
-    if (getpwnam("oneadmin") and getgrnam("oneadmin")) {
+    if ($ONEADMINUSR and $ONEADMINGRP) {
         %opts = (log => $self,
                  mode => 0600,
                  backup => ".quattor.backup",
-                 owner => scalar(getpwnam("oneadmin")),
-                 group => scalar(getgrnam("oneadmin")));
+                 owner => $ONEADMINUSR,
+                 group => $ONEADMINGRP);
+        $self->verbose("Found oneadmin user ($ONEADMINUSR) and group.($ONEADMINGRP)");
         return %opts;
     } else {
         $self->error("User or group oneadmin does not exist.");

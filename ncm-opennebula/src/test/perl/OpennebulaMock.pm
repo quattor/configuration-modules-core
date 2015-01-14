@@ -11,6 +11,12 @@ use rpcdata;
 
 our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 
+BEGIN {
+  *CORE::GLOBAL::getpwnam = sub { 
+        my @ids = qw(1 2 3 4);
+        return @ids;
+    };
+}
 
 my @rpc_history = ();
 my @rpc_history_full = ();
@@ -23,6 +29,10 @@ sub dlog {
 our $nco = Test::MockModule->new('NCM::Component::opennebula');
 foreach my $type ("error", "info", "verbose", "debug", "warn") {
     $nco->mock( $type, sub { shift; dlog($type, @_); } );
+}
+
+foreach my $getnam ("getpwnam", "getgrnam") {
+    $nco->mock( $getnam, sub { return 1; } );
 }
 
 sub dump_rpc {
@@ -99,6 +109,5 @@ $mock->mock('new', sub {
     $trd->{includepath} = getcwd()."/target/share/templates/quattor";
     return $trd;
 });
-
 
 1;
