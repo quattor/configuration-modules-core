@@ -206,7 +206,7 @@ sub print_database_class
     }
 
     if (exists($tree->{checkpoint})) {
-        $s = join(" ", $tree->{checkpoint});
+        my $s = join(" ", $tree->{checkpoint});
         print $fh qq{checkpoint $s\n};
         delete($tree->{checkpoint});
     }
@@ -456,7 +456,7 @@ sub legacy_setup
     }
 
     if ($config->elementExists("$base/checkpoint")) {
-        $checkpoint = join(" ", $config->getValue($base/checkpoint""));
+        my $checkpoint = join(" ", $config->getValue("$base/checkpoint"));
         print $fh "checkpoint $checkpoint";
     }
 
