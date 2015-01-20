@@ -82,13 +82,22 @@ In this case, the error must be reported
 =cut
 
 initialize_repos();
-chmod(0500, $REPO_DIR);
+if ($>) {
+  chmod(0500, $REPO_DIR);
+} else {
+  diag("Bad test for root user. Trying to set immutable bit.");
+  system("chattr +i $REPO_DIR/*repo");
+}
 is($cmp->cleanup_old_repos($REPO_DIR, $repos), 0,
    "Error reported when an outdated repo cannot be removed");
 is($cmp->{ERROR}, 2, "Error in unlink is reported");
 
 # Restore permissions on the repository for future executions.
-chmod(0700, $REPO_DIR);
+if ($>) {
+  chmod(0700, $REPO_DIR);
+} else {
+  system("chattr -i $REPO_DIR/*repo");
+}
 
 =pod
 
