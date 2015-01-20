@@ -88,3 +88,7 @@ is($cmp->set_ssh_fromkeys("foo", {}), 0,
    "Non-existing SSH keys list is handled correctly");
 
 done_testing();
+
+# cleanup fh
+$fh->close();
+
