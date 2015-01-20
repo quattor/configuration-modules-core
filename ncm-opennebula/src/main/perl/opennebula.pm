@@ -162,17 +162,17 @@ sub detect_used_resource
     my @existres = $one->$gmethod(qr{^$name$});
     if (@existres) {
         $quattor = $self->check_quattor_tag($existres[0]);
-    }
-    if (!$quattor) {
-        $self->verbose("Name: $name is already used by a $type resource. ",
-                    "The Quattor flag is not set. ",
-                    "We can't modify this resource.");
-        return 1;
-    } elsif ($quattor == 1) {
-        $self->verbose("Name : $name is already used by a $type resource. ",
-                    "Quattor flag is set. ",
-                    "We can modify and update this resource.");
-        return -1;
+        if (!$quattor) {
+            $self->verbose("Name: $name is already used by a $type resource. ",
+                        "The Quattor flag is not set. ",
+                        "We can't modify this resource.");
+            return 1;
+        } elsif ($quattor == 1) {
+            $self->verbose("Name : $name is already used by a $type resource. ",
+                        "Quattor flag is set. ",
+                        "We can modify and update this resource.");
+            return -1;
+        }
     } else {
         $self->verbose("Name: $name is not used by $type resource yet.");
         return;
