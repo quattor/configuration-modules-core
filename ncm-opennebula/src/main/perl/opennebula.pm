@@ -96,10 +96,10 @@ sub create_or_update_something
     my $used = $self->detect_used_resource($one, $type, $name);
     if (!$used) {
         $self->info("Creating new $name $type resource.");
-        $new = $one->$cmethod($template);
+        $new = $one->$cmethod("$template");
     } elsif ($used == -1) {
         # resource is already there and we can modify it
-        $new = $self->update_something($one, $type, $name, $template);
+        $new = $self->update_something($one, $type, $name, "$template");
     }
     return $new;
 }
