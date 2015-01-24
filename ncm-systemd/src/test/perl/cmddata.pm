@@ -33,7 +33,9 @@ sub _evalfn {
     die $@ if $@;
 }
 
-my @files = qw(service-systemctl_list service-systemctl_show service-legacy);
+my @files = qw(service-systemctl_list service-systemctl_show 
+               service_systemctl_list_show_gen_full_el7_ceph021
+               service-legacy);
 foreach my $file (@files) {
     _evalfn("$dirname/cmddata/$file");
 }
