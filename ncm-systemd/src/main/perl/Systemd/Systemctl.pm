@@ -61,9 +61,9 @@ sub systemctl_show
                                   );
     if (defined($name)) {
         $proc->pushargs($name);
-        $logger->verbose("service_systemctl_show for name $name");
+        $logger->verbose("systemctl_show for name $name");
     } else {
-        $logger->verbose("service_systemctl_show for manager itself, name undefined");
+        $logger->verbose("systemctl_show for manager itself, name undefined");
     }
 
     my $output = $proc->output();
