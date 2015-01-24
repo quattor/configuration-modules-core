@@ -125,11 +125,9 @@ Get services via chkconfig --list
 set_output("chkconfig_list_el7");
 
 my $cs = $chk->current_services();
-use Data::Dumper;
-diag(Dumper($cs));
 is(scalar keys %$cs, 5, "Found 5 services via chkconfig");
 
-my ($name, $svc, @targets);
+my ($name, $svc);
 
 $name = "network";
 $svc = $cs->{$name};

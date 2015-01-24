@@ -88,28 +88,28 @@ sub current_services
 
         # afs       0:off   1:off   2:off   3:off   4:off   5:off   6:off
         # ignore the "xinetd based services"
-        if ($line =~ m/^([\w\-]+)\s+((?:[0-6]:(?:on|off)(?:\s+|\s*$)){7})/) {
-            my ($servicename, $levels) = ($1, $2);
-            my $detail = {name => $servicename, type => $TYPE_SYSV, startstop => $DEFAULT_STARTSTOP};
+        next if ($line !~ m/^([\w\-]+)\s+((?:[0-6]:(?:on|off)(?:\s+|\s*$)){7})/);
 
-            if ($levels =~ m/[0-6]:on/) {
-                $self->debug(1, "Found on states for service $servicename");
-                my $ontargets = $self->convert_runlevels(join('', $levels =~ /([0-6]):on/g));
-                $detail->{state}   = "on";
-                $detail->{targets} = $ontargets;
-            } else {
-                $self->debug(1, "No on states found for service $servicename");
-                # TODO include the runlevel 0,1 and 6 in the off-conversion?
-                # if the state is off, targets don't really matter
-                my $offtargets = $self->convert_runlevels(join('', $levels =~ /([2-5]):off/g));
-                $detail->{state}   = "off";
-                $detail->{targets} = $offtargets;
-            }
+        my ($servicename, $levels) = ($1, $2);
+        my $detail = {name => $servicename, type => $TYPE_SYSV, startstop => $DEFAULT_STARTSTOP};
 
-            $self->verbose("Add chkconfig service $detail->{name}");
-            $self->debug(1, "Add chkconfig ", $self->service_text($detail));
-            $current{$servicename} = $detail;
+        if ($levels =~ m/[0-6]:on/) {
+            $self->debug(1, "Found 'on' states for service $detail->{name}");
+            my $ontargets = $self->convert_runlevels(join('', $levels =~ /([0-6]):on/g));
+            $detail->{state}   = "on";
+            $detail->{targets} = $ontargets;
+        } else {
+            $self->debug(1, "No 'on' states found for service $detail->{name}");
+            # TODO include the runlevel 0,1 and 6 in the off-conversion?
+            # if the state is off, targets don't really matter
+            my $offtargets = $self->convert_runlevels(join('', $levels =~ /([2-5]):off/g));
+            $detail->{state}   = "off";
+            $detail->{targets} = $offtargets;
         }
+
+        $self->verbose("current_services added chkconfig service $detail->{name}");
+        $self->debug(1, "current_services added chkconfig ", $self->service_text($detail));
+        $current{$servicename} = $detail;
     }
     return \%current;
 }
