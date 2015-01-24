@@ -23,12 +23,19 @@ Test exports
 
 =cut
 
-use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET);
+use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET :types $DEFAULT_STARTSTOP $DEFAULT_STATE);
 is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL,
            $TARGET_POWEROFF, $TARGET_REBOOT],
           [qw(default rescue multi-user graphical poweroff reboot)],
-          "TARGET names");
+          "exported TARGET names");
 is($DEFAULT_TARGET, $TARGET_MULTIUSER, "multiuser is default target");
+
+is_deeply([$TYPE_SYSV, $TYPE_SERVICE, $TYPE_TARGET],
+          [qw(sysv service target)],
+           "exported TYPES names");
+
+is($DEFAULT_STARTSTOP, 1, "DEFAULT startstop is $DEFAULT_STARTSTOP"); 
+is($DEFAULT_STATE, "on", "DEFAULT state is $DEFAULT_STATE");
 
 =head2 new
 
@@ -58,5 +65,46 @@ my $svc = {
 is($unit->service_text($svc), 
    "service test_del (state on startstop 0 type service targets rescue)", 
    "Generate string of service details");
+
+=pod
+
+=head2 current_services
+                                                                                                                                                      
+Get services via systemctl list-unit-files --type service                                                                                             
+                                                                                                                                                      
+=cut                                                                                                                                                  
+
+use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
+
+my $name;
+my $cs = $unit->current_services('service');
+
+is(scalar keys %$cs, 133, "Found 133 services via systemctl list-unit-files --type service");
+
+$name = 'nrpe';
+$svc = $cs->{$name};
+is($svc->{name}, $name, "Service $name name matches");
+is($svc->{state},"on", "Service $name state disabled");
+is($svc->{type}, "service", "Service $name type sysv");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
+
+# has name ending with @; is off
+$name = 'autovt@';
+$svc = $cs->{$name};
+is($svc->{name}, 'autovt', "Service $name name matches without \@");
+is($svc->{state},"off", "Service $name state disabled");
+is($svc->{type}, "service", "Service $name type sysv");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, [], "Service $name targets");
+
+# on, but failed to start
+$name = 'rc-local';
+$svc = $cs->{$name};
+is($svc->{name}, $name, "Service $name name matches");
+is($svc->{state},"on", "Service $name state disabled");
+is($svc->{type}, "service", "Service $name type sysv");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
 done_testing();
