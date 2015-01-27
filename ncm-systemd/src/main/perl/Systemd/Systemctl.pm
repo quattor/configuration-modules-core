@@ -10,7 +10,7 @@ use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(systemctl_show $SYSTEMCTL);
+our @EXPORT_OK = qw(systemctl_show $SYSTEMCTL systemctl_list_units systemctl_list_unit_files);
 
 use Readonly;
 
@@ -93,6 +93,41 @@ sub systemctl_show
     return $res;    
 }
 
+=pod
+
+=item systemctl_list_units
+
+C<logger> is a mandatory logger to pass.
+
+Return a hashreference with all units and their details for C<$type>.
+
+=cut
+
+sub systemctl_list_units
+{
+    my ($logger, $type) = @_;
+
+    my $regexp = qr{^(?<fullname>(?<name>\S+)\.(?<type>\w+))\s+(?<loaded>\S+)\s+(?<active>\S+)\s+(?<running>\S+)(?:\s+|$)}; 
+    return systemctl_list($logger, "units", $regexp, $type);
+}
+
+=pod
+
+=item systemctl_list_unit_files
+
+C<logger> is a mandatory logger to pass.
+
+Return a hashreference with all unit-files and their details for C<$type>.
+
+=cut
+
+sub systemctl_list_unit_files
+{
+    my ($logger, $type) = @_;
+
+    my $regexp = qr{^(?<fullname>(?<name>\S+)\.(?<type>\w+))\s+(?<state>\S+)(?:\s+|$)};
+    return systemctl_list($logger, "unit-files", $regexp, $type);
+}
 
 =pod
 
@@ -102,8 +137,74 @@ sub systemctl_show
 
 =over
 
+=item systemctl_list
+
+Helper method to generate and parse output from C<systemctl> list commands like
+C<list-units> or C<list-unit-files>.
+
+C<logger> is a mandatory logger to pass.
+
+C<property> is translated in the C<list-<property>> command, C<regexp> is the named 
+regular expression that is used to match the output. 
+C<type> is the type filter (if defined).
+
+The regexp must have a C<name> named group, its value is used for the keys of the
+hashreference that is returned.
+
 =cut
 
+sub systemctl_list
+{
+    my ($logger, $prop, $regexp, $type) = @_;
+    my $proc = CAF::Process->new(
+        [$SYSTEMCTL, '--all', '--no-pager', '--no-legend', '--full'],
+        log => $logger,
+        );
+
+    if($prop =~ m/^([\w-]+)$/) {
+        $proc->pushargs("list-$1");
+    } else {
+        $logger->error("Prop $prop has invalid characters.");
+        return;
+    }
+
+    my $typmsg="";
+    if($type) {
+        if($type =~ m/^(\w+)$/) {
+            $proc->pushargs("--type", $1);
+            $typmsg=" for type $type";
+        } else {
+            $logger->error("Type $type has invalid characters.");
+            return;
+        }
+    }
+
+    my $data = $proc->output();
+    my $ec = $?;
+
+    if ($ec) {
+        $logger->error(
+            "Cannot get list of current $prop$typmsg from $SYSTEMCTL: ec $ec ($data)");
+        return;
+    }
+
+    my $res = {};
+    foreach my $line (split(/\n/, $data)) {
+        if ($line !~ m/$regexp/) {
+            $logger->debug(2, "Ouptut from $proc does not match pattern $regexp: $line");
+            next;
+        };
+        
+        if(! defined($+{name})) {
+            $logger->error("No matched group 'name'. Skipping line $line");
+            next;
+        }
+        # make a hashref-copy of the magic regexp match hash
+        $res->{$+{name}} = { %+ };
+    };
+    
+    return $res;
+}
 
 =pod
 
