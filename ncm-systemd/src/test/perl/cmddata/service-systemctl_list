@@ -1,6 +1,6 @@
 # Raw data to be eval-ed 
 
-$cmds{systemctl_list_unit_files_target}{cmd}="/usr/bin/systemctl list-unit-files --all --no-pager --no-legend --type target";
+$cmds{systemctl_list_unit_files_target}{cmd}="/usr/bin/systemctl --all --no-pager --no-legend --full list-unit-files --type target";
 $cmds{systemctl_list_unit_files_target}{out}=<<'EOF';
 basic.target              static  
 bluetooth.target          static  
@@ -58,7 +58,7 @@ timers.target             static
 umount.target             static  
 EOF
 
-$cmds{systemctl_list_unit_files_service}{cmd}="/usr/bin/systemctl list-unit-files --all --no-pager --no-legend --type service";
+$cmds{systemctl_list_unit_files_service}{cmd}="/usr/bin/systemctl --all --no-pager --no-legend --full list-unit-files --type service";
 $cmds{systemctl_list_unit_files_service}{out}=<<'EOF';
 arp-ethers.service                     disabled
 atd.service                            enabled 
@@ -216,7 +216,7 @@ virtlockd.service                      static
 xinetd.service                         enabled 
 EOF
 
-$cmds{systemctl_list_units_service}{cmd}="/usr/bin/systemctl list-units --type=service --no-pager --no-legend";
+$cmds{systemctl_list_units_service}{cmd}="/usr/bin/systemctl --all --no-pager --no-legend --full list-units --type service";
 $cmds{systemctl_list_units_service}{out}=<<'EOF';
 atd.service                        loaded active running Job spooling tools
 avahi-daemon.service               loaded active running Avahi mDNS/DNS-SD Stack
@@ -272,8 +272,8 @@ systemd-vconsole-setup.service     loaded active exited  Setup Virtual Console
 xinetd.service                     loaded active running Xinetd A Powerful Replacement For Inetd
 EOF
 
-$cmds{systemctl_list_units_tagret}{cmd}="/usr/bin/systemctl list-units --type=target --no-pager --no-legend";
-$cmds{systemctl_list_units_tagret}{out}=<<'EOF';
+$cmds{systemctl_list_units_target}{cmd}="/usr/bin/systemctl --all --no-pager --no-legend --full list-units --type target";
+$cmds{systemctl_list_units_target}{out}=<<'EOF';
 basic.target        loaded active active Basic System
 cryptsetup.target   loaded active active Encrypted Volumes
 getty.target        loaded active active Login Prompts
