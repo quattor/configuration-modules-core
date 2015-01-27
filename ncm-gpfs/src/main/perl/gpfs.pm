@@ -45,6 +45,8 @@ use constant GPFSRPMS => qw(
                             ^gpfs.gplbin-\d\S+$
                             ^gpfs.gui$
                             ^gpfs.msg.en_US$
+                            ^gpfs.ext$
+                            ^gpfs.gskit$
                            );
 
 my $compname = "NCM-gpfs";
