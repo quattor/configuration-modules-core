@@ -12,7 +12,7 @@ use warnings;
 use LC::Exception qw (SUCCESS);
 
 use parent qw(CAF::Object Exporter);
-use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL);
+use NCM::Component::Systemd::Systemctl qw(systemctl_show systemctl_list_units systemctl_list_unit_files);
 
 use Readonly;
 
@@ -45,6 +45,12 @@ our %EXPORT_TAGS = (
     targets => \@TARGETS,
     types   => \@TYPES,
 );
+
+# Cache of the unitfiles for service and target
+my $unit_cache = {service => {}, target => {}};
+
+# Mapping of alias name to real name
+my $unit_alias = {service => {}, target => {}};
 
 =pod
 
@@ -113,8 +119,6 @@ sub service_text
     return $text;
 }
 
-# TODO check name for aliases; somehow keep them
-
 =pod
 
 =item current_services
@@ -125,59 +129,37 @@ determined via C<systemctl list-unit-files>.
 Specify C<type> (C<service> or C<target>; 
 type can't be C<sysv> as those have no unit files).
 
+This method also rebuilds the
+
 =cut
 
 sub current_services
 {
-    my ($self, $type) = @_;
+    my ($self) = @_;
 
-    my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
-    if (!($type && $type =~ m/$treg/)) {
-        $self->error("Undefined or wrong type $type for systemctl list-unit-files");
-        return;
-    }
+    # TODO: always update cache?
+    $self->make_cache_alias($TYPE_SERVICE);
 
     my %current;
-    # TODO move to NCM::Component::Systemd::Systemctl ?
-    my $data = CAF::Process->new(
-        [$SYSTEMCTL, 'list-unit-files', '--all', '--no-pager', '--no-legend', '--type', $type],
-        log => $self,
-        )->output();
-    my $ec = $?;
+    
+    while (my ($name,$data) = each %{$unit_cache->{$TYPE_SERVICE}}) {
+        my $detail = {name => $name, type => $TYPE_SERVICE, startstop => $DEFAULT_STARTSTOP};
 
-    if ($ec) {
-        $self->error(
-            "Cannot get list of current unit files for type $type from $SYSTEMCTL: ec $ec ($data)");
-        return;
-    }
-
-    my $reg = '^\s*(\S+)\.' . $type . '\s+(\w+)\s*$';
-    foreach my $line (split(/\n/, $data)) {
-        next if ($line !~ m/$reg/);
-
-        my ($servicename, $state) = ($1, $2);
-        my $detail = {name => $servicename, type => $type, startstop => $DEFAULT_STARTSTOP};
-
-        # correct name for trailing @
-        if ($detail->{name} =~ m/^(.*?)\@$/) {
-            $self->debug(1, "Found trailing \@ for servicename $servicename");
-            $detail->{name} = $1;
-        }
-
-        my $show = systemctl_show($self, "$detail->{name}.service");
-
-        if(!defined($show)) {
-            $self->error("Found service unit $detail->{name} with ",
-                        "state $state but systemctl_show returned undef. ",
-                        "Skipping this unit");
+        my $show = $data->{show};
+        if(! defined($show)) {
+            if ($data->{baseinstance}) {
+                $self->verbose("Base instance $name is not an actual runnable service. Skipping.");
+            } else {
+                $self->error("Found name $name without any show data. Skipping.");
+            }    
             next;
-        };
+        }
 
         my $load = $show->{LoadState};
         my $active = $show->{ActiveState};
 
         $self->verbose("Found service unit $detail->{name} with ",
-                       "state $state LoadState $load ActiveState $active");
+                       "LoadState $load ActiveState $active");
 
         my $wanted = $show->{WantedBy};
         $detail->{targets} = [];
@@ -208,7 +190,7 @@ sub current_services
 
         $self->verbose("current_services added unit file service $detail->{name}");
         $self->debug(1, "current_services added unit file ", $self->service_text($detail));
-        $current{$servicename} = $detail;
+        $current{$name} = $detail;
     }
 
     return \%current;
@@ -222,7 +204,195 @@ sub current_services
 
 =over
 
+=item make_cache_alias
+
+(Re)generate the C<unit_cache> and C<unit_alias> map 
+based on current unit files for C<type>. 
+
+Each found unit is also added as it's own alias.
+
+Supported types are C<service> and C<target>.
+
+Returns the generated cache and alias map for unittesting purposes.
+
 =cut
+
+sub make_cache_alias
+{
+    my ($self, $type) = @_;
+
+    my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
+    if (!($type && $type =~ m/$treg/)) {
+        $self->error("Undefined or wrong type $type for systemctl list-unit-files");
+        return;
+    }
+
+    # reset cache and alias for current type
+    $unit_cache->{$type} = {};
+    $unit_alias->{$type} = {};
+
+    my $units = systemctl_list_units($self, $type);
+    my $unit_files = systemctl_list_unit_files($self, $type);
+    
+    # Join them, keep data
+    while (my ($name, $data) = each %$units) {
+        $unit_cache->{$type}->{$name}->{unit} = $data;
+    }
+    while (my ($name, $data) = each %$unit_files) {
+        $unit_cache->{$type}->{$name}->{unit_file} = $data;
+    }
+
+    # Unknown names, to be checked if aliases
+    my @unknown;
+    while (my ($name, $data) = each %{$unit_cache->{$type}}) {
+        # check for instances
+        my $instance;
+        if ($name =~ m/^(.*?)\@(.*)?$/) {
+            $instance = $2;
+
+            if ($instance eq "") {
+                # A unit-file for instance-units (this shouldn't be an instance / unit).
+                $data->{baseinstance} = 1;
+
+                if (exists $data->{unit}) {
+                    $self->error("$name is an instance base unit-file; should not be listed as a unit.");
+                } else {
+                    $self->verbose("$name is an instance base unit-file; nothing to show");
+                }
+
+                next;
+            } else {
+                $self->verbose("Name $name is an instance ($instance)");
+                $data->{instance} = $instance;
+            }
+        }
+
+        my $fullname = "$name.$type";
+        my $show = systemctl_show($self, $fullname);
+
+        if(!defined($show)) {
+            $self->error("Found $type unit $name but systemctl_show returned undef. ",
+                        "Skipping this unit");
+            next;
+        };
+
+        my $pattern = '^(.*)\.'.$type.'$';
+        my $id;
+        if ($show->{Id} =~ m/$pattern/) {
+            $id = $1;
+            if ($id eq $name) {
+                $data->{show} = $show;            
+                $self->verbose("Added type $type name $name to cache.");
+            } else {
+                $self->verbose("Found id $id that doesn't match name $name.",
+                               "Adding as unknown and skipping further handling.");
+                # in particular, no aliases are processed/followed 
+                # not to risk anything being overwritten
+                push(@unknown, [$name, $id, $show]);
+                next;
+            }
+        } else {
+            $self->error("Found Id $show->{Id} for name $name type $type that ",
+                         "doesn't match expected pattern '$pattern'. ",
+                         "Skipping this unit.");
+            next;
+        }
+
+        foreach my $alias (@{$show->{Names}}) {
+            if ($alias =~ m/$pattern/) {
+                $unit_alias->{$type}->{$1} = $id;
+                $self->verbose("Added type $type alias $1 of id $id to map.");
+            } else {
+                $self->error("Found alias $alias that doesn't match expected pattern '$pattern'. Skipping.");
+            }
+        }
+    }
+
+    # Check if each alias' real name has an existing entry in cache
+    while (my ($alias, $name) = each %{$unit_alias->{$type}} ) {
+        if($alias ne $name) {
+            # removing any aliases that got in the unit_cache
+            delete $unit_cache->{$type}->{$alias};
+        }
+
+        if (! defined $unit_cache->{$type}->{$name}) {
+            $self->error("Real unit $name.$type of alias $alias has no entry in cache");
+            next;
+        }
+
+    }
+
+    # Check the unknowns
+    foreach my $unknown (@unknown) {
+        my ($name, $id, $show) = @$unknown;
+
+        my $realname = $unit_alias->{$type}->{$name};
+        if(defined $realname) {
+            $self->verbose("Unknown $name / $id is an alias for $realname");
+        } else {
+            # Most likely the realname does not list this name in its Names list
+            # Maybe this is an alias of an alias? (We don't process the aliases, 
+            # so their aliases are not added)
+            # TODO: add it as alias or always error?
+            my $realid = $unit_alias->{$type}->{$id};
+            if (defined $realid) {
+                my $cache = $unit_cache->{$type}->{$realid};
+                if ($cache->{baseinstance}) {
+                    $self->verbose("Unknown $name / $id is base instance and has missing alias entry.",
+                                   " Adding it.");
+                } else {
+                    my $realshow = $cache->{show};
+                    $self->verbose("Unknown $name / $id has missing alias entry. Adding it.",
+                                   " Names ", join(', ', @{$show->{Names}}),
+                                   " real Names ", join(', ', @{$realshow->{Names}}),
+                                   ".");
+                }
+                $unit_alias->{$type}->{$name} = $realid;
+            } else {
+                $self->error("Found unknown name $name for type $type with ",
+                             "id $id (full $show->{Id}) names ", 
+                             join(', ', @{$show->{Names}}), 
+                             ".");
+            }                    
+        }
+    }
+
+    # For unittesting purposes    
+    return $unit_cache->{$type},$unit_alias->{$type}
+}
+
+=pod
+
+=item target_build_dependency_tree
+
+Build the dependency tree C<target_tree> for all targets.
+
+=cut
+
+sub target_build_dependency_tree
+{
+    my $self = shift;
+
+    
+}
+
+=pod
+
+=item target_requires
+
+Given C<target>, returns (recursive) hash reference of all targets that are required.
+
+The keys are the target names, the values have no significance (but using hash 
+allows easy lookup).
+
+No ordering information is preserved (the whole dependency tree is squashed).
+
+=cut
+
+sub target_requires
+{
+    my ($self, $target) = @_;
+}
 
 =pod
 

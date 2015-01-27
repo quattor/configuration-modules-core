@@ -68,18 +68,66 @@ is($unit->service_text($svc),
 
 =pod
 
+=head2 make_cache_alias
+
+Generate the cache and alias for services and targets.                                                                                                                                                      
+                                                                                                                                                      
+=cut                                                                                                                                                  
+
+use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
+
+# reset errors, $cmp is logger of $unit
+$cmp->{ERROR} = 0;
+
+my ($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE);
+
+is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE');
+is(scalar keys %$service_cache, 149, 
+    'Found 149 non-alias services via systemctl list-unit-files --type $TYPE_SERVICE');
+is(scalar keys %$service_alias, 144, 
+    'Found 144 service aliases via systemctl list-unit-files --type $TYPE_SERVICE');
+
+# Tests for
+# sshd@ base instance service, different from sshd service
+ok($service_cache->{'sshd@'}->{baseinstance}, 'sshd@ base instance found');
+ok($service_cache->{'sshd'}->{show}, 'sshd service found with show data');
+ok(! $service_cache->{'sshd'}->{baseinstance}, 'sshd service is not a base instance');
+
+# getty@tty1 instance vs getty@ instance unit-file
+ok($service_cache->{'getty@'}->{baseinstance}, 'getty@ base instance found');
+ok(! $service_cache->{'getty@'}->{instance}, 'getty@ base instance has no instance data');
+
+ok(exists($service_cache->{'getty@tty1'}), 'getty@tty1 instance found');
+ok(! $service_cache->{'getty@tty1'}->{baseinstance}, 'getty@tty1 is not a base instance');
+is($service_cache->{'getty@tty1'}->{instance}, 'tty1', 'getty@tty1 instance has instance data');
+
+# some aliases
+
+
+my ($target_cache, $target_alias) = $unit->make_cache_alias($TYPE_TARGET);
+
+is($cmp->{ERROR}, 0, "No errors while processing cache and alias for $TYPE_TARGET");
+is(scalar keys %$target_cache, 48, 
+    "Found 48 non-alias targets via systemctl list-unit-files --type $TYPE_TARGET");
+is(scalar keys %$target_alias, 54, 
+    "Found 54 target aliases via systemctl list-unit-files --type $TYPE_TARGET");
+
+
+=pod
+
 =head2 current_services
                                                                                                                                                       
 Get services via systemctl list-unit-files --type service                                                                                             
                                                                                                                                                       
 =cut                                                                                                                                                  
 
-use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
-
 my $name;
-my $cs = $unit->current_services('service');
+my $cs = $unit->current_services($TYPE_SERVICE);
 
-is(scalar keys %$cs, 133, "Found 133 services via systemctl list-unit-files --type service");
+is($cmp->{ERROR}, 0, "No errors while processing current_services for $TYPE_SERVICE");
+
+is(scalar keys %$cs, 125, 
+    "Found 125 non-alias services via systemctl list-unit-files --type service");
 
 $name = 'nrpe';
 $svc = $cs->{$name};
@@ -89,15 +137,6 @@ is($svc->{type}, "service", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
-# has name ending with @; is off
-$name = 'autovt@';
-$svc = $cs->{$name};
-is($svc->{name}, 'autovt', "Service $name name matches without \@");
-is($svc->{state},"off", "Service $name state disabled");
-is($svc->{type}, "service", "Service $name type sysv");
-ok($svc->{startstop}, "Service $name startstop true");
-is_deeply($svc->{targets}, [], "Service $name targets");
-
 # on, but failed to start
 $name = 'rc-local';
 $svc = $cs->{$name};
@@ -106,5 +145,6 @@ is($svc->{state},"on", "Service $name state disabled");
 is($svc->{type}, "service", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
+
 
 done_testing();
