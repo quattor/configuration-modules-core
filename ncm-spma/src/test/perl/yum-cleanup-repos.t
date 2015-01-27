@@ -17,7 +17,7 @@ outdated repositories in /etc/yum.repos.d are removed.
 use strict;
 use warnings;
 use Readonly;
-
+use English;
 
 use Test::Quattor;
 use Test::More;
@@ -82,10 +82,12 @@ In this case, the error must be reported
 =cut
 
 initialize_repos();
-if ($>) {
+if ($EUID) {
   chmod(0500, $REPO_DIR);
 } else {
-  diag("Bad test for root user. Trying to set immutable bit.");
+  diag("Trying to set immutable bit for root user to create unremovable files. ".
+       "Run 'chattr -i $REPO_DIR/*repo' to cleanup in case of failure during this test.");
+
   system("chattr +i $REPO_DIR/*repo");
 }
 is($cmp->cleanup_old_repos($REPO_DIR, $repos), 0,
@@ -93,7 +95,7 @@ is($cmp->cleanup_old_repos($REPO_DIR, $repos), 0,
 is($cmp->{ERROR}, 2, "Error in unlink is reported");
 
 # Restore permissions on the repository for future executions.
-if ($>) {
+if ($EUID) {
   chmod(0700, $REPO_DIR);
 } else {
   system("chattr -i $REPO_DIR/*repo");
