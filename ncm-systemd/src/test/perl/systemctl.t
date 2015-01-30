@@ -3,7 +3,10 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::systemd;
-use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL systemctl_list_units systemctl_list_unit_files);
+use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL 
+    systemctl_list_units systemctl_list_unit_files
+    systemctl_list_deps
+    );
 
 use helper;
 
@@ -118,4 +121,60 @@ is_deeply($res->{'serial-getty@'},
     {name => 'serial-getty@', type => 'service', fullname => 'serial-getty@.service', state => 'static'} , 
     'Correct named groups assigned to unit-file serial-getty@.service');
 
+=pod
+
+=item systemctl_list_deps
+
+Test the systemctl_list_deps method
+
+=cut
+
+my $unitname;
+
+set_output("systemctl_list_dependencies_sshd_service");
+$unitname="sshd.service";
+$res = systemctl_list_deps($cmp, $unitname);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
+is(scalar keys %$res, 61, "Found 61 dependecies for unit $unitname");
+
+# some common ones
+my @deps = qw(-.mount basic.target local-fs.target);
+for my $depname (@deps) {
+    ok($res->{$depname}, "Unit $depname is in the list of dependencies for unit $unitname");
+}
+
+
+set_output("systemctl_list_dependencies_sshd_service_reverse");
+$res = systemctl_list_deps($cmp, $unitname, 1);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependencies");
+is(scalar keys %$res, 3, "Found 3 reverse dependecies for unit $unitname");
+
+set_output("systemctl_list_dependencies_default_target");
+$unitname="default.target";
+$res = systemctl_list_deps($cmp, $unitname);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
+is(scalar keys %$res, 95, "Found 95 dependecies for unit $unitname");
+
+set_output("systemctl_list_dependencies_default_target_reverse");
+$res = systemctl_list_deps($cmp, $unitname, 1);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependencies");
+is(scalar keys %$res, 2, "Found 2 reverse dependecies for unit $unitname");
+
+set_output("systemctl_list_dependencies_multiuser_target");
+$unitname="multi-user.target";
+$res = systemctl_list_deps($cmp, $unitname);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
+is(scalar keys %$res, 95, "Found 95 dependecies for unit $unitname");
+
+set_output("systemctl_list_dependencies_multiuser_target_reverse");
+$res = systemctl_list_deps($cmp, $unitname, 1);
+ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependencies");
+is(scalar keys %$res, 2, "Found 2 reverse dependecies for unit $unitname");
+
 done_testing();
+
+=pod 
+
+=back
+
+=cut

@@ -10,7 +10,10 @@ use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(systemctl_show $SYSTEMCTL systemctl_list_units systemctl_list_unit_files);
+our @EXPORT_OK = qw(systemctl_show $SYSTEMCTL 
+    systemctl_list_units systemctl_list_unit_files
+    systemctl_list_deps
+    );
 
 use Readonly;
 
@@ -127,6 +130,67 @@ sub systemctl_list_unit_files
 
     my $regexp = qr{^(?<fullname>(?<name>\S+)\.(?<type>\w+))\s+(?<state>\S+)(?:\s+|$)};
     return systemctl_list($logger, "unit-files", $regexp, $type);
+}
+
+=pod
+
+=item systemctl_list_deps
+
+C<logger> is a mandatory logger to pass.
+
+Return a hashreference with all dependencies 
+(i.e. required and wanted units) of the specified C<unit> 
+flattened. (This includes the unit itself).
+
+If C<reverse> is set to true (default is false), it returns
+ the revese dependencies (i.e. units with dependencies of 
+ type Wants or Requires on the given unit).
+
+The keys are the unit names, values are 1. (A hash is used 
+to allow easy lookup, instead of a list).
+
+The flattening is done via the C<--plain> option of systemctl,
+the reverse result via the C<--reverse> option. Both options 
+are available since systemd-208 (which is in e.g. EL7).
+
+=cut
+
+sub systemctl_list_deps
+{
+    my ($logger, $unit, $reverse) = @_;
+
+    # no --all !
+    my $proc = CAF::Process->new(
+        [$SYSTEMCTL, '--no-pager', '--no-legend', '--full', '--plain', 'list-dependencies'],
+        log => $logger,
+        );
+
+    my $deptxt = "dependencies";
+    if($reverse) {
+        $deptxt = "reverse $deptxt";
+        $proc->pushargs("--reverse");
+    };    
+
+    $proc->pushargs($unit);
+
+    $logger->verbose("Looking for $deptxt of unit $unit.");
+
+    my $data = $proc->output();
+    my $ec = $?;
+    if ($ec) {
+        $logger->error("Failed to list dependencies of unit $unit: command 4proc ec $ec ($data)");
+        return;
+    }
+
+    my $res = {};
+    foreach my $line (split(/\n/, $data)) {
+        # TODO: filter / postprocess entries like -.mount?
+        if ($line =~ m/^\s*(\S+)\s*$/) {
+            $res->{$1} = 1
+        }
+    };
+    
+    return $res;
 }
 
 =pod
