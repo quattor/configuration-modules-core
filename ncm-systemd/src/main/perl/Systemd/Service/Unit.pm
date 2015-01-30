@@ -124,12 +124,9 @@ sub service_text
 =item current_services
 
 Return hash reference with current configured services 
-determined via C<systemctl list-unit-files>.
+determined via C<make_cache_alias>.
 
-Specify C<type> (C<service> or C<target>; 
-type can't be C<sysv> as those have no unit files).
-
-This method also rebuilds the
+This method also rebuilds the cache and alias map.
 
 =cut
 
@@ -284,7 +281,7 @@ sub make_cache_alias
                 $data->{show} = $show;            
                 $self->verbose("Added type $type name $name to cache.");
             } else {
-                $self->verbose("Found id $id that doesn't match name $name.",
+                $self->verbose("Found id $id that doesn't match name $name. ",
                                "Adding as unknown and skipping further handling.");
                 # in particular, no aliases are processed/followed 
                 # not to risk anything being overwritten
@@ -308,27 +305,13 @@ sub make_cache_alias
         }
     }
 
-    # Check if each alias' real name has an existing entry in cache
-    while (my ($alias, $name) = each %{$unit_alias->{$type}} ) {
-        if($alias ne $name) {
-            # removing any aliases that got in the unit_cache
-            delete $unit_cache->{$type}->{$alias};
-        }
-
-        if (! defined $unit_cache->{$type}->{$name}) {
-            $self->error("Real unit $name.$type of alias $alias has no entry in cache");
-            next;
-        }
-
-    }
-
-    # Check the unknowns
+    # Check the unknowns (this completes the aliases)
     foreach my $unknown (@unknown) {
         my ($name, $id, $show) = @$unknown;
 
         my $realname = $unit_alias->{$type}->{$name};
         if(defined $realname) {
-            $self->verbose("Unknown $name / $id is an alias for $realname");
+            $self->verbose("Unknown $name / $id is an alias for $type $realname");
         } else {
             # Most likely the realname does not list this name in its Names list
             # Maybe this is an alias of an alias? (We don't process the aliases, 
@@ -338,11 +321,11 @@ sub make_cache_alias
             if (defined $realid) {
                 my $cache = $unit_cache->{$type}->{$realid};
                 if ($cache->{baseinstance}) {
-                    $self->verbose("Unknown $name / $id is base instance and has missing alias entry.",
+                    $self->verbose("Unknown $name / $id is $type base instance and has missing alias entry.",
                                    " Adding it.");
                 } else {
                     my $realshow = $cache->{show};
-                    $self->verbose("Unknown $name / $id has missing alias entry. Adding it.",
+                    $self->verbose("Unknown $name / $id has missing $type alias entry. Adding it.",
                                    " Names ", join(', ', @{$show->{Names}}),
                                    " real Names ", join(', ', @{$realshow->{Names}}),
                                    ".");
@@ -355,6 +338,21 @@ sub make_cache_alias
                              ".");
             }                    
         }
+    }
+
+    # Check if each alias' real name has an existing entry in cache
+    while (my ($alias, $name) = each %{$unit_alias->{$type}} ) {
+        if($alias ne $name && exists($unit_cache->{$type}->{$alias})) {
+            # removing any aliases that got in the unit_cache
+            $self->verbose("Removing alias $alias of $name from $type cache");
+            delete $unit_cache->{$type}->{$alias};
+        }
+
+        if (! defined $unit_cache->{$type}->{$name}) {
+            $self->error("Real unit $name.$type of alias $alias has no entry in $type cache");
+            next;
+        }
+
     }
 
     # For unittesting purposes    

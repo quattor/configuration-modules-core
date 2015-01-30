@@ -82,10 +82,10 @@ $cmp->{ERROR} = 0;
 my ($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE);
 
 is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE');
-is(scalar keys %$service_cache, 149, 
-    'Found 149 non-alias services via systemctl list-unit-files --type $TYPE_SERVICE');
+is(scalar keys %$service_cache, 145,
+    'Found 145 non-alias services via make_cache_alias $TYPE_SERVICE');
 is(scalar keys %$service_alias, 144, 
-    'Found 144 service aliases via systemctl list-unit-files --type $TYPE_SERVICE');
+    'Found 144 service aliases via make_cache_alias $TYPE_SERVICE');
 
 # Tests for
 # sshd@ base instance service, different from sshd service
@@ -102,32 +102,37 @@ ok(! $service_cache->{'getty@tty1'}->{baseinstance}, 'getty@tty1 is not a base i
 is($service_cache->{'getty@tty1'}->{instance}, 'tty1', 'getty@tty1 instance has instance data');
 
 # some aliases
-
+is($service_alias->{'dbus-org.freedesktop.hostname1'}, 'systemd-hostnamed', 
+    "dbus-org.freedesktop.hostname1 is alias of systemd-hostnamed");
+is($service_alias->{'systemd-hostnamed'}, 'systemd-hostnamed', 
+    "systemd-hostnamed is alias of itself (all services are in alias list)");
+ok(! $service_cache->{'dbus-org.freedesktop.hostname1'}, 
+    "Pure alias dbus-org.freedesktop.hostname1 is not in cache");
 
 my ($target_cache, $target_alias) = $unit->make_cache_alias($TYPE_TARGET);
 
-is($cmp->{ERROR}, 0, "No errors while processing cache and alias for $TYPE_TARGET");
-is(scalar keys %$target_cache, 48, 
-    "Found 48 non-alias targets via systemctl list-unit-files --type $TYPE_TARGET");
+is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_TARGET');
+is(scalar keys %$target_cache, 45, 
+    'Found 45 non-alias targets via make_cache_alias $TYPE_TARGET');
 is(scalar keys %$target_alias, 54, 
-    "Found 54 target aliases via systemctl list-unit-files --type $TYPE_TARGET");
+    'Found 54 target aliases via make_cache_alias $TYPE_TARGET');
 
 
 =pod
 
 =head2 current_services
-                                                                                                                                                      
-Get services via systemctl list-unit-files --type service                                                                                             
+
+Get services via the make_cache_alias
                                                                                                                                                       
 =cut                                                                                                                                                  
 
 my $name;
-my $cs = $unit->current_services($TYPE_SERVICE);
+my $cs = $unit->current_services();
 
-is($cmp->{ERROR}, 0, "No errors while processing current_services for $TYPE_SERVICE");
+is($cmp->{ERROR}, 0, 'No errors while processing current_services');
 
-is(scalar keys %$cs, 125, 
-    "Found 125 non-alias services via systemctl list-unit-files --type service");
+is(scalar keys %$cs, 137, 
+   'Found 137 non-alias services via current_services');
 
 $name = 'nrpe';
 $svc = $cs->{$name};
