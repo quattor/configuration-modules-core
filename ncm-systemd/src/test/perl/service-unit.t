@@ -48,11 +48,13 @@ my $unit = NCM::Component::Systemd::Service::Unit->new(services => $services, lo
 isa_ok($unit, "NCM::Component::Systemd::Service::Unit",
         "NCM::Component::Systemd::Service::Unit instance created");
 
+=pod
+
 =head2 service_text
 
-Test the generating text message from service details                                                                                                 
-                                                                                                                                                      
-=cut                                                                                                                                                  
+Test the generating text message from service details
+
+=cut
 
 my $svc = {
     name => "test_del",
@@ -68,11 +70,35 @@ is($unit->service_text($svc),
 
 =pod
 
+=head2 init_cache
+
+Test the init method
+
+=pod
+
+my ($u_c, $u_a, $d_c) = $unit->init_cache();
+is_deeply($u_c, {
+    service => {},
+    target => {},    
+}, "unit_cache initialised");
+
+is_deeply($u_a, {
+    service => {},
+    target => {},    
+}, "unit_alias initialised");
+
+is_deeply($d_c, {
+    deps => {},
+    rev => {},    
+}, "dependency_cache initialised");
+
+
+
 =head2 make_cache_alias
 
-Generate the cache and alias for services and targets.                                                                                                                                                      
-                                                                                                                                                      
-=cut                                                                                                                                                  
+Generate the cache and alias for services and targets.
+
+=cut
 
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 

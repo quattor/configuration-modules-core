@@ -47,10 +47,13 @@ our %EXPORT_TAGS = (
 );
 
 # Cache of the unitfiles for service and target
-my $unit_cache = {service => {}, target => {}};
+my $unit_cache = {};
 
 # Mapping of alias name to real name
-my $unit_alias = {service => {}, target => {}};
+my $unit_alias = {};
+
+# Cache the dependencies and/or reverse dependencies
+my $dependency_cache = {};
 
 =pod
 
@@ -135,6 +138,7 @@ sub current_services
     my ($self) = @_;
 
     # TODO: always update cache?
+    $self->init_cache($TYPE_SERVICE);
     $self->make_cache_alias($TYPE_SERVICE);
 
     my %current;
@@ -161,11 +165,11 @@ sub current_services
         my $wanted = $show->{WantedBy};
         $detail->{targets} = [];
         if (defined($wanted)) {
-            # TODO resolve further implied targets? 
+            # TODO resolve further implied targets (a.k.a reverse dependencies)? 
             #   e.g. if multi-user.target is wanted-by graphical.target, do we add
             #   graphical.target here too? 
             foreach my $target (@$wanted) {
-                # strip .target
+                # strip .target (but there can be non .target reverse dependencies)
                 $target =~ s/\.target$//;
                 push(@{$detail->{targets}}, $target);
             }
@@ -201,6 +205,64 @@ sub current_services
 
 =over
 
+=item init_cache
+
+(Re)Initialise all unit caches. If a C<type> is specified, 
+only those cache will be (re)initialised.
+
+Returns the caches (for unittestung mainly).
+
+Affected caches are
+
+=over
+
+=item unit_cache
+
+=item unit_alias
+
+=item dependency_cache
+
+=back
+
+=cut
+
+sub init_cache
+{
+    my ($self, $type) = @_; 
+
+    if(defined $type) {
+        $self->verbose("Initialisation of all caches for type $type.");
+
+        # reset unit_cache and alias for current type
+        $unit_cache->{$type} = {};
+        $unit_alias->{$type} = {};
+        
+        $self->verbose("Type $type initiliasation of dependency_cache not supported.");
+    } else {
+        $self->verbose("Initialisation of all caches.");
+
+        $unit_cache = {
+            service => {}, 
+            target => {}
+        };
+
+        $unit_alias = {
+            service => {}, 
+            target => {}
+        };
+        
+        $dependency_cache => {
+            deps => {},
+            rev => {},
+        };
+    }
+
+    # For unittesting
+    return $unit_cache, $unit_alias, $dependency_cache;
+}
+
+=pod
+
 =item make_cache_alias
 
 (Re)generate the C<unit_cache> and C<unit_alias> map 
@@ -223,10 +285,6 @@ sub make_cache_alias
         $self->error("Undefined or wrong type $type for systemctl list-unit-files");
         return;
     }
-
-    # reset cache and alias for current type
-    $unit_cache->{$type} = {};
-    $unit_alias->{$type} = {};
 
     my $units = systemctl_list_units($self, $type);
     my $unit_files = systemctl_list_unit_files($self, $type);
@@ -361,35 +419,43 @@ sub make_cache_alias
 
 =pod
 
-=item target_build_dependency_tree
+=item wanted_by
 
-Build the dependency tree C<target_tree> for all targets.
+Return if C<service> is wanted by C<target>. 
 
-=cut
+Any unit can be passed as C<service> or C<target>; but in 
+absence of a type specifier resp. C<.service> and C<.target> will
+be used.
 
-sub target_build_dependency_tree
-{
-    my $self = shift;
-
-    
-}
-
-=pod
-
-=item target_requires
-
-Given C<target>, returns (recursive) hash reference of all targets that are required.
-
-The keys are the target names, the values have no significance (but using hash 
-allows easy lookup).
-
-No ordering information is preserved (the whole dependency tree is squashed).
+It uses the dependecy_cache for reverse dependencies
 
 =cut
 
-sub target_requires
+sub wanted_by
 {
-    my ($self, $target) = @_;
+    my ($self, $service, $target) = @_;
+
+    if($service !~ m/\.\w+$/) {
+        $service .= ".$TYPE_SERVICE";
+    }
+
+    if($target !~ m/\.\w+$/) {
+        $target .= ".$TYPE_TARGET";
+    }
+
+    # Try lookup from reverse cache. 
+    # If not found in cache, look it up via systemctl_list_deps 
+    # with reverse enabled.
+    if(! defined $dependency_cache->{rev}->{$service}) {
+        $self->verbose("No cache for dependency for service $service and target $target.");
+        my $deps = systemctl_list_deps($service ,1);
+        $dependency_cache->{rev}->{$service} = $deps;
+    } else {
+        $self->verbose("Dependency for service $service and target $target in cache.");
+    }
+
+    return $dependency_cache->{rev}->{$service}->{$target};
+
 }
 
 =pod
