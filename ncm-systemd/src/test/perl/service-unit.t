@@ -149,8 +149,8 @@ is(scalar keys %$target_alias, 54,
 =head2 current_services
 
 Get services via the make_cache_alias
-                                                                                                                                                      
-=cut                                                                                                                                                  
+
+=cut
 
 my $name;
 my $cs = $unit->current_services();
@@ -177,5 +177,32 @@ is($svc->{type}, "service", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
+=pod
+
+=head2 wanted_by
+
+Test wanted_by
+
+=cut
+
+set_output("systemctl_list_dependencies_sshd_service_reverse");
+set_output("systemctl_list_dependencies_multiuser_target_reverse");
+ok($unit->wanted_by("sshd", "multi-user"), 
+    "sshd.service wanted by multi-user.target (default unit types))");
+ok($unit->wanted_by("sshd.service", "multi-user.target"), 
+    "sshd.service wanted by multi-user.target");
+ok($unit->wanted_by("multi-user.target", "graphical.target"), 
+    "multi-user.target wanted by graphical.target");
+
+# reset errors, $cmp is logger of $unit
+$cmp->{ERROR} = 0;
+ok(! $unit->wanted_by("sshd.service", "not.a.target"), 
+    "not.a.target not wanted by graphical.target");
+is($cmp->{ERROR}, 0, "No errors for existing service but unknown target");
+
+set_output("systemctl_list_dependencies_not_a_service_reverse");
+ok(! $unit->wanted_by("not.a.service", "not.a.target"), 
+    "not.a.target not wanted by not.a.service");
+is($cmp->{ERROR}, 1, "Error logged for unknown service");
 
 done_testing();

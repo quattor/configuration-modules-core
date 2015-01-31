@@ -178,7 +178,7 @@ sub systemctl_list_deps
     my $data = $proc->output();
     my $ec = $?;
     if ($ec) {
-        $logger->error("Failed to list dependencies of unit $unit: command 4proc ec $ec ($data)");
+        $logger->error("Failed to list dependencies of unit $unit: command $proc ec $ec ($data)");
         return;
     }
 

@@ -12,7 +12,11 @@ use warnings;
 use LC::Exception qw (SUCCESS);
 
 use parent qw(CAF::Object Exporter);
-use NCM::Component::Systemd::Systemctl qw(systemctl_show systemctl_list_units systemctl_list_unit_files);
+use NCM::Component::Systemd::Systemctl qw(
+    systemctl_show 
+    systemctl_list_units systemctl_list_unit_files
+    systemctl_list_deps
+    );
 
 use Readonly;
 
@@ -414,7 +418,7 @@ sub make_cache_alias
     }
 
     # For unittesting purposes    
-    return $unit_cache->{$type},$unit_alias->{$type}
+    return $unit_cache->{$type},$unit_alias->{$type};
 }
 
 =pod
@@ -448,7 +452,7 @@ sub wanted_by
     # with reverse enabled.
     if(! defined $dependency_cache->{rev}->{$service}) {
         $self->verbose("No cache for dependency for service $service and target $target.");
-        my $deps = systemctl_list_deps($service ,1);
+        my $deps = systemctl_list_deps($self, $service, 1);
         $dependency_cache->{rev}->{$service} = $deps;
     } else {
         $self->verbose("Dependency for service $service and target $target in cache.");

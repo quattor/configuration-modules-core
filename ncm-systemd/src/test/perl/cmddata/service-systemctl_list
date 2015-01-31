@@ -576,3 +576,10 @@ $cmds{systemctl_list_dependencies_multiuser_target_reverse}{out}=<<'EOF';
 multi-user.target
 graphical.target
 EOF
+
+$cmds{systemctl_list_dependencies_not_a_service_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse not.a.service";
+$cmds{systemctl_list_dependencies_not_a_service_reverse}{ec}=1;
+$cmds{systemctl_list_dependencies_not_a_service_reverse}{out}=<<'EOF';
+EOF
+
+
