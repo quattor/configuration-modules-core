@@ -132,6 +132,7 @@ sub service_text
 
 Return hash reference with current configured services 
 determined via C<make_cache_alias>.
+List of C<units> is passed to C<make_cache_alias>.
 
 This method also rebuilds the cache and alias map.
 
@@ -139,11 +140,12 @@ This method also rebuilds the cache and alias map.
 
 sub current_services
 {
-    my ($self) = @_;
+    my ($self, @units) = @_;
 
     # TODO: always update cache?
     $self->init_cache($TYPE_SERVICE);
-    $self->make_cache_alias($TYPE_SERVICE);
+
+    $self->make_cache_alias($TYPE_SERVICE, @units);
 
     my %current;
     
@@ -163,7 +165,7 @@ sub current_services
         my $load = $show->{LoadState};
         my $active = $show->{ActiveState};
 
-        $self->verbose("Found service unit $detail->{name} with ",
+        $self->debug(1, "Found service unit $detail->{name} with ",
                        "LoadState $load ActiveState $active");
 
         my $wanted = $show->{WantedBy};
@@ -193,8 +195,8 @@ sub current_services
             $detail->{state} = 'on';
         }
 
-        $self->verbose("current_services added unit file service $detail->{name}");
-        $self->debug(1, "current_services added unit file ", $self->service_text($detail));
+        $self->debug(1, "current_services added unit file service $detail->{name}");
+        $self->debug(2, "current_services added unit file ", $self->service_text($detail));
         $current{$name} = $detail;
     }
 
@@ -255,7 +257,7 @@ sub init_cache
             target => {}
         };
         
-        $dependency_cache => {
+        $dependency_cache = {
             deps => {},
             rev => {},
         };
@@ -270,7 +272,12 @@ sub init_cache
 =item make_cache_alias
 
 (Re)generate the C<unit_cache> and C<unit_alias> map 
-based on current unit files for C<type>. 
+based on current units and unitfiles for C<type>. 
+
+Details for each unit from C<units> are also added. 
+If C<units> is empty/undef, all found units and unitfiles 
+are. Units without a type specifier are assumed of type
+C<type>. 
 
 Each found unit is also added as it's own alias.
 
@@ -282,7 +289,7 @@ Returns the generated cache and alias map for unittesting purposes.
 
 sub make_cache_alias
 {
-    my ($self, $type) = @_;
+    my ($self, $type, @units) = @_;
 
     my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
     if (!($type && $type =~ m/$treg/)) {
@@ -303,7 +310,24 @@ sub make_cache_alias
 
     # Unknown names, to be checked if aliases
     my @unknown;
-    while (my ($name, $data) = each %{$unit_cache->{$type}}) {
+    if (@units) {
+        # Strip the type
+        my $reg = '\.'.$type.'$';
+        @units = map { $_ =~ s/$reg//; $_ } @units;
+    } else {
+        @units = sort keys %{$unit_cache->{$type}};
+    }
+    foreach my $name (@units) {
+        my $data = $unit_cache->{$type}->{$name};
+
+        if (! defined $data) {
+            # no entry in cache from units or unitfiles
+            $self->error("Trying to add details of unit $name type $type ",
+                         "but no entry in cache after adding all units and unitfiles. ",
+                         "Ignoring this unit.");
+            next;
+        }
+
         # check for instances
         my $instance;
         if ($name =~ m/^(.*?)\@(.*)?$/) {
@@ -321,7 +345,7 @@ sub make_cache_alias
 
                 next;
             } else {
-                $self->verbose("Name $name is an instance ($instance)");
+                $self->debug(1, "Name $name is an instance ($instance)");
                 $data->{instance} = $instance;
             }
         }
@@ -341,12 +365,19 @@ sub make_cache_alias
             $id = $1;
             if ($id eq $name) {
                 $data->{show} = $show;            
-                $self->verbose("Added type $type name $name to cache.");
+                $self->debug(1, "Added type $type name $name to cache.");
             } else {
                 $self->verbose("Found id $id that doesn't match name $name. ",
                                "Adding as unknown and skipping further handling.");
                 # in particular, no aliases are processed/followed 
                 # not to risk anything being overwritten
+
+                # add the real name to the list of units to check
+                if(! grep {$id eq $_} @units) {
+                    $self->verbose("Adding the id $id from unkown name $name to list of units");
+                    push(@units, $id);
+                };
+
                 push(@unknown, [$name, $id, $show]);
                 next;
             }
@@ -360,7 +391,7 @@ sub make_cache_alias
         foreach my $alias (@{$show->{Names}}) {
             if ($alias =~ m/$pattern/) {
                 $unit_alias->{$type}->{$1} = $id;
-                $self->verbose("Added type $type alias $1 of id $id to map.");
+                $self->debug(1, "Added type $type alias $1 of id $id to map.");
             } else {
                 $self->error("Found alias $alias that doesn't match expected pattern '$pattern'. Skipping.");
             }
@@ -373,7 +404,7 @@ sub make_cache_alias
 
         my $realname = $unit_alias->{$type}->{$name};
         if(defined $realname) {
-            $self->verbose("Unknown $name / $id is an alias for $type $realname");
+            $self->debug(1 ,"Unknown $name / $id is an alias for $type $realname");
         } else {
             # Most likely the realname does not list this name in its Names list
             # Maybe this is an alias of an alias? (We don't process the aliases, 
@@ -406,7 +437,7 @@ sub make_cache_alias
     while (my ($alias, $name) = each %{$unit_alias->{$type}} ) {
         if($alias ne $name && exists($unit_cache->{$type}->{$alias})) {
             # removing any aliases that got in the unit_cache
-            $self->verbose("Removing alias $alias of $name from $type cache");
+            $self->debug(1, "Removing alias $alias of $name from $type cache");
             delete $unit_cache->{$type}->{$alias};
         }
 
@@ -418,7 +449,7 @@ sub make_cache_alias
     }
 
     # For unittesting purposes    
-    return $unit_cache->{$type},$unit_alias->{$type};
+    return $unit_cache->{$type}, $unit_alias->{$type};
 }
 
 =pod

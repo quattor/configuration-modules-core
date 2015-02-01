@@ -64,7 +64,7 @@ sub systemctl_show
                                   );
     if (defined($name)) {
         $proc->pushargs($name);
-        $logger->verbose("systemctl_show for name $name");
+        $logger->debug(1, "systemctl_show for name $name");
     } else {
         $logger->verbose("systemctl_show for manager itself, name undefined");
     }
@@ -255,7 +255,7 @@ sub systemctl_list
     my $res = {};
     foreach my $line (split(/\n/, $data)) {
         if ($line !~ m/$regexp/) {
-            $logger->debug(2, "Ouptut from $proc does not match pattern $regexp: $line");
+            $logger->debug(1, "Ouptut from $proc does not match pattern $regexp: $line");
             next;
         };
         

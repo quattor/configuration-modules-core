@@ -92,13 +92,16 @@ is_deeply($d_c, {
     rev => {},    
 }, "dependency_cache initialised");
 
-
+=pod
 
 =head2 make_cache_alias
 
 Generate the cache and alias for services and targets.
 
 =cut
+
+# reset the cache
+$unit->init_cache();
 
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 
@@ -143,6 +146,34 @@ is(scalar keys %$target_cache, 45,
 is(scalar keys %$target_alias, 54, 
     'Found 54 target aliases via make_cache_alias $TYPE_TARGET');
 
+=pod
+
+=head2 make_cache_alias with units
+
+Test make_cache_alias with list of unites.
+
+=cut
+
+# reset the cache
+$unit->init_cache();
+$cmp->{ERROR} = 0;
+
+# messagebus.servcice is an alias of dbus.service
+($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE, "messagebus.service");
+is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE and units messagebus.service');
+
+is($service_alias->{'messagebus'}, 'dbus', 'messagebus is an alias for dbus');
+
+is($service_alias->{'dbus'}, 'dbus', 'dbus is its own alias');
+ok(! $service_cache->{messagebus}->{show}, "no show details for alias messagebus");
+ok($service_cache->{dbus}->{show}, "show details fro dbus");
+
+
+# basic info from list-units / list-unit-files for all units
+# only show info for messagebus / dbus
+ok($service_cache->{'sshd'}, 'basic cache info for sshd service');
+ok(! defined $service_cache->{'sshd'}->{show}, 'no show cache info for sshd service');
+
 
 =pod
 
@@ -151,7 +182,7 @@ is(scalar keys %$target_alias, 54,
 Get services via the make_cache_alias
 
 =cut
-
+$cmp->{ERROR} = 0;
 my $name;
 my $cs = $unit->current_services();
 
