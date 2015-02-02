@@ -8,7 +8,20 @@ use NCM::Component::systemd;
 use NCM::Component::Systemd::Service::Chkconfig;
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 
+use Test::MockModule;
+my $mock = Test::MockModule->new ("CAF::Process");
+
+# fake the existence tests for runlevel and who
+my $supp_exe = '';
+sub test_executable {
+    my ($self, $executable) = @_;
+    return $executable eq $supp_exe;
+  }
+$mock->mock ("_test_executable", \&test_executable);
+
+
 $CAF::Object::NoAction = 1;
+
 
 # need a logger instance (could also use CAF::Object instance)
 my $cmp = NCM::Component::systemd->new('systemd');
@@ -117,10 +130,9 @@ is_deeply($chk->convert_runlevels('0123456'),
 
 =head2 current_services 
 
-Get services via chkconfig --list                                                                                                                     
-                                                                                                                                                      
-=cut                                                                                                                                                  
+Get services via chkconfig --list
 
+=cut
 
 set_output("chkconfig_list_el7");
 
@@ -144,5 +156,45 @@ is($svc->{state},"off", "Service $name state off");
 is($svc->{type}, "sysv", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
+
+=pod
+
+=head2 default_runlevel
+
+Test default_runlevel
+
+=cut
+
+# this file has no initdefault, 
+# test the readonly  default runlevel this way
+set_file('inittab_el7');
+is($chk->default_runlevel(), 3, "Return default runlevel 3 when no initdefault is set in inittab");
+
+set_file('inittab_el6_level5');
+is($chk->default_runlevel(), 5, "Return initdefault from inittab");
+
+=pod
+
+=head2 current_runlevel
+
+Test current_runlevel
+
+=cut
+
+# runlevel fails, use who
+$supp_exe = "/usr/bin/who";
+set_desired_output("/usr/bin/who -r","         run-level 4  2014-10-13 19:34");
+is($chk->current_runlevel(), 4, "Return runlevel 4 from who -r");
+
+# use runlevel
+$supp_exe = "/sbin/runlevel";
+set_desired_output("/sbin/runlevel","N 2");
+is($chk->current_runlevel(), 2, "Return runlevel 2 from runlevel");
+
+# both fail, use default
+$supp_exe = '';
+set_file('inittab_el7');
+is($chk->current_runlevel(), $chk->default_runlevel(), "Return runlevel 3 from default runlevel");
+
 
 done_testing();

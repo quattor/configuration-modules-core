@@ -25,6 +25,10 @@ Readonly::Array my @DEFAULT_RUNLEVEL2TARGET => (
     $TARGET_REBOOT,                                             # 6
 );
 
+
+Readonly my $INITTAB => "/etc/inittab"; # meaningless in systemd
+Readonly my $DEFAULT_RUNLEVEL => 3; # If inittab has no default set 
+
 # Local cache of the mapping between runlevels and targets
 my @runlevel2target;
 
@@ -113,6 +117,8 @@ sub current_services
     }
     return \%current;
 }
+
+
 
 =pod
 
@@ -213,6 +219,87 @@ sub convert_runlevels
 
     return \@targets;
 }
+
+=pod
+
+=head2 default_runlevel
+
+C<default_runlevel> returns the default runlevel 
+via the INITTAB file. If that fails, the default
+DEFAULT_RUNLEVEL is returned.
+
+=cut
+
+sub default_runlevel
+{
+    my $self = shift;
+
+    my $defaultrunlevel = $DEFAULT_RUNLEVEL;
+
+    my $inittab = CAF::FileReader->new($INITTAB);
+    if ("$inittab" =~ m/^[^:]*:(\d):initdefault:/m) {
+        $defaultrunlevel = $1;
+        $self->verbose("Found initdefault $defaultrunlevel set in inittab $INITTAB");
+    } else {
+        $self->verbose("No initdefault set in inittab $INITTAB; using default legacy runlevel $defaultrunlevel");
+    }
+
+    return $defaultrunlevel;
+}
+
+=pod
+
+=head2 current_runlevel
+
+Return the current legacy runlevel.
+
+The rulevel is determined by trying (in order) 
+C</sbin/runlevel> or C<who -r>. If both fail, the 
+C<default_runlevel> method is called and its value 
+is returned.
+
+=cut
+
+sub current_runlevel 
+{
+    my $self = shift;
+
+    my $process = sub {
+        my ($self, $cmd, $reg) = @_;
+        my $proc = CAF::Process->new($cmd, log=>$self);
+        if (! $proc->is_executable) {
+            $self->verbose("No runlevel via command $proc (not executable)");
+            return;
+        }
+        
+        my $line = $proc->output();
+        my $ec = $?;
+        my $level;
+        if ($line && $line =~ m/$reg/m) {
+            $level = $1;
+            $self->info("Current runlevel from command $proc is $level");
+        } else {
+            # happens at install time
+            $self->warn("Cannot get runlevel from command $proc: $line (exitcode $ec).");  
+        }
+        return $level
+    };
+    
+    # output: N 5
+    my $level = &$process($self, ["/sbin/runlevel"], qr{^\w+\s+(\d+)\s*$});
+    return $level if (defined($level));
+
+    # output:         run-level 5  Feb 19 16:08                   last=S
+    $level = &$process($self, ["/usr/bin/who", "-r"], qr{^\s*run-level\s+(\d+)\s});
+    return $level if (defined($level));
+
+    # different from ncm-chkconfig:
+    #   doesn't return undef if commands produce invalid output
+    $level = $self->default_runlevel();
+    $self->verbose("Returning default runlevel $level (other commands unavailable/failed)");
+    return $level;
+}
+
 
 =pod
 
