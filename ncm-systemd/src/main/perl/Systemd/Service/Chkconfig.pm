@@ -118,7 +118,27 @@ sub current_services
     return \%current;
 }
 
+=pod 
 
+=head2 current_target
+
+Return the current target based on legacy C<current_runlevel>.
+
+=cut
+
+sub current_target
+{
+    my ($self) = @_;
+
+    my $runlevel = $self->current_runlevel();
+
+    my $target = $DEFAULT_RUNLEVEL2TARGET[$runlevel];
+
+    $self->verbose("Current target $target from runlevel $runlevel");
+
+    return $target;
+
+}
 
 =pod
 
@@ -299,7 +319,6 @@ sub current_runlevel
     $self->verbose("Returning default runlevel $level (other commands unavailable/failed)");
     return $level;
 }
-
 
 =pod
 

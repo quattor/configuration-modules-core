@@ -185,16 +185,18 @@ Test current_runlevel
 $supp_exe = "/usr/bin/who";
 set_desired_output("/usr/bin/who -r","         run-level 4  2014-10-13 19:34");
 is($chk->current_runlevel(), 4, "Return runlevel 4 from who -r");
+is($chk->current_target(), 'multi-user', "Target multi-user is the target based on runlevel 4");
 
 # use runlevel
 $supp_exe = "/sbin/runlevel";
 set_desired_output("/sbin/runlevel","N 2");
 is($chk->current_runlevel(), 2, "Return runlevel 2 from runlevel");
+is($chk->current_target(), 'multi-user', "Target multi-user is the target based on runlevel 2");
 
 # both fail, use default
 $supp_exe = '';
 set_file('inittab_el7');
 is($chk->current_runlevel(), $chk->default_runlevel(), "Return runlevel 3 from default runlevel");
-
+is($chk->current_target(), 'multi-user', "Target multi-user is the target based on runlevel 3");
 
 done_testing();
