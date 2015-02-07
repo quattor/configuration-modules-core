@@ -3,8 +3,8 @@
 ################################################################################
 #
 # VERSION:    1.2.10, 21/06/10 15:26
-# AUTHOR:     Stijn De Weirdt 
-# MAINTAINER: Stijn De Weirdt 
+# AUTHOR:     Stijn De Weirdt
+# MAINTAINER: Stijn De Weirdt
 # LICENSE:    http://cern.ch/eu-datagrid/license.html
 #
 ################################################################################
@@ -21,10 +21,12 @@ Working type definitions can be found in the README file.
 
 The I<network> component sets the network settings through /etc/sysconfig/network and the various files in /etc/sysconfig/network-scripts. Currently only support eth* devices.
 
-For restarting, a sleep value of 15 is used to make sure the restarted network is fully restarted (routing may need some time to come up completely). Because of this, adding/changing lots of things may cause some slowdown. 
+For restarting, a sleep value of 15 is used to make sure the restarted network is fully restarted (routing may need some time to come up completely). Because of this, adding/changing lots of things may cause some slowdown.
 New/changed settings are first tested by probing the CDB server on the port where the profile should be found. If this fails, the previous settings are reused.
 
 =head1 RESOURCES
+
+=over
 
 =item /system/network/realhostname
 
@@ -96,6 +98,8 @@ Set the ethernet transmit or receive buffer ring counts.  See ethtool --show-rin
 Set the wake-on-lan parameter.  See ethtool for more details of the choices.  "d" disables the
 wake-on LAN.
 
+=back
+
 =head1 NOZEROCONF
 
 Setting nozeroconf to true stops an interface from being assigned an automatic address in the 169.254. subnet.
@@ -103,6 +107,8 @@ Setting nozeroconf to true stops an interface from being assigned an automatic a
 =head1 HWADDR
 
 Explicitly set the MAC address for the interfaces in the configuration files. The MAC address is taken from /hardware/cards/nic/eth[i]/hwaddr.
+
+=over
 
 =item /system/network/set_hwaddr : boolean
 
@@ -112,6 +118,7 @@ Set the default behaviour for all interfaces. The component default is false.
 
 Set the behaviour for interface eth[i]. This overrides the default setting.
 
+=back
 
 =head1 CHANNEL BONDING
 
@@ -120,7 +127,7 @@ Set the behaviour for interface eth[i]. This overrides the default setting.
 To enable channel bonding with quattor using devices eth0 and eth1 to form bond0, proceed as follows:
 
 include pro_software_component_network;
-                                                                             
+
 "/system/network/interfaces/eth0/bootproto"="none";
 "/system/network/interfaces/eth0/master"="bond0";
 
@@ -129,9 +136,9 @@ include pro_software_component_network;
 
 "/system/network/interfaces/bond0" = NETWORK_PARAMS;
 "/system/network/interfaces/bond0/driver" = "bonding";
-                                                                             
+
 include pro_software_component_modprobe;
-"/software/components/modprobe/modules" = push(nlist("name","bonding","alias","bond0")); 
+"/software/components/modprobe/modules" = push(nlist("name","bonding","alias","bond0"));
 "/software/components/modprobe/modules" =
 push(nlist("name","bonding","options","mode=6 miimon=100"));
 
@@ -139,9 +146,9 @@ push(nlist("name","bonding","options","mode=6 miimon=100"));
 
 =head1 VLAN support
 
-Use the vlan[0-9]{0-4} interface devices and set the the explicit device name and physdev. 
-The VLAN ID is the number of the '.' in the device name. Physdev is mandatory for vlan[0-9]{0-4} device. 
-An example: 
+Use the vlan[0-9]{0-4} interface devices and set the the explicit device name and physdev.
+The VLAN ID is the number of the '.' in the device name. Physdev is mandatory for vlan[0-9]{0-4} device.
+An example:
 "/system/network/interfaces/vlan0" = VLAN_NETWORK_PARAMS;
 "/system/network/interfaces/vlan0/device" = "eth0.3";
 "/system/network/interfaces/vlan0/physdev" = "eth0";
