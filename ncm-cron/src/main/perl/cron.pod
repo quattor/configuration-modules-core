@@ -165,7 +165,7 @@ Default : root
       "timing", nlist(
           "minute", "0",
           "hour", "1",
-          "smear", "180"),
+          "smear", 180),
       "command", "/bin/date")
     );
 
