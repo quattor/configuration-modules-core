@@ -156,11 +156,11 @@ To enable channel bonding with quattor using devices eth0 and eth1 to form bond0
 
     include 'components/network/config';
 
-    "/system/network/interfaces/eth0/bootproto"="none";
-    "/system/network/interfaces/eth0/master"="bond0";
+    "/system/network/interfaces/eth0/bootproto" = "none";
+    "/system/network/interfaces/eth0/master" = "bond0";
 
-    "/system/network/interfaces/eth1/bootproto"="none";
-    "/system/network/interfaces/eth1/master"="bond0";
+    "/system/network/interfaces/eth1/bootproto" = "none";
+    "/system/network/interfaces/eth1/master" = "bond0";
 
     "/system/network/interfaces/bond0" = NETWORK_PARAMS;
     "/system/network/interfaces/bond0/driver" = "bonding";
@@ -168,9 +168,9 @@ To enable channel bonding with quattor using devices eth0 and eth1 to form bond0
     "/system/network/interfaces/bond0/bonding_opts/miimon" = 100;
 
     include 'components/modprobe/config';
-    "/software/components/modprobe/modules" = push(nlist("name","bonding","alias","bond0"));
+    "/software/components/modprobe/modules" = append(nlist("name","bonding","alias","bond0"));
 
-    "/software/components/network/dependencies/pre" = push("modprobe");
+    "/software/components/network/dependencies/pre" = append("modprobe");
 
 =head1 VLAN support
 
