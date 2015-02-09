@@ -155,17 +155,17 @@ Set the behaviour for interface eth[i]. This overrides the default setting.
 To enable channel bonding with quattor using devices eth0 and eth1 to form bond0, proceed as follows:
 
     include 'components/network/config';
+    prefix "/system/network/interfaces";
+    "eth0/bootproto" = "none";
+    "eth0/master" = "bond0";
 
-    "/system/network/interfaces/eth0/bootproto" = "none";
-    "/system/network/interfaces/eth0/master" = "bond0";
+    "eth1/bootproto" = "none";
+    "eth1/master" = "bond0";
 
-    "/system/network/interfaces/eth1/bootproto" = "none";
-    "/system/network/interfaces/eth1/master" = "bond0";
-
-    "/system/network/interfaces/bond0" = NETWORK_PARAMS;
-    "/system/network/interfaces/bond0/driver" = "bonding";
-    "/system/network/interfaces/bond0/bonding_opts/mode" = 6;
-    "/system/network/interfaces/bond0/bonding_opts/miimon" = 100;
+    "bond0" = NETWORK_PARAMS;
+    "bond0/driver" = "bonding";
+    "bond0/bonding_opts/mode" = 6;
+    "bond0/bonding_opts/miimon" = 100;
 
     include 'components/modprobe/config';
     "/software/components/modprobe/modules" = append(nlist("name","bonding","alias","bond0"));
