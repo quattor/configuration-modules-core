@@ -12,6 +12,7 @@ use warnings;
 use LC::Exception qw (SUCCESS);
 
 use parent qw(CAF::Object Exporter);
+use EDG::WP4::CCM::Element qw(unescape);
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show 
     systemctl_list_units systemctl_list_unit_files
@@ -40,7 +41,7 @@ Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET);
 
 # TODO should match schema default
 Readonly our $DEFAULT_STARTSTOP => 1; # startstop true by default
-Readonly our $DEFAULT_STATE => "on"; # state on by default
+Readonly our $DEFAULT_STATE => 'on'; # state on by default
 
 our @EXPORT_OK = qw($DEFAULT_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE);
 push @EXPORT_OK, @TARGETS, @TYPES;
@@ -202,6 +203,87 @@ sub current_services
 
     return \%current;
 }
+
+=pod
+
+=head2 current_target
+
+Return the current target.
+
+TODO: implement this. systemctl list-units --type target 
+lists all current targets (yes, with an s).
+
+=cut
+
+=pod
+
+=head2 default_target
+
+Return the default target.
+
+=cut
+
+sub default_target
+{
+    my ($self) = @_;
+
+    my $default = "$TARGET_DEFAULT.target";
+
+    # TODO: use cache?
+    my $show = systemctl_show($self, $default);
+
+    my $id = $show->{Id};
+
+    if ($id) {
+        $self->verbose("Default target based on $default corresponds with Id $id");
+    } else {
+        $self->error("Can't determine default target based on $default. Using $DEFAULT_TARGET as fall-back.");
+        $id = $DEFAULT_TARGET;
+    }
+
+    $id =~ s/\.target$//;
+
+    return $id;
+}
+
+=pod
+
+=head2 configured_services
+
+C<configured_services> parses the C<tree> hash reference and builds up the
+services to be configured. It returns a hash reference with key the service name and 
+values the details of the service.
+
+(C<tree> is typically C<$config->getElement('/software/components/systemd/service')->getTree>.)
+
+=cut
+
+sub configured_services
+{
+    my ($self, $tree) = @_;
+
+    my %services;
+    
+    while (my ($service, $detail) = each %$tree) {
+        # only set the name (not mandatory in new schema, to be added here)
+        $detail->{name} = unescape($service) if (! exists($detail->{name}));
+
+        # all new services are assumed type service
+        $detail->{type} = $TYPE_SERVICE if (! exists($detail->{type}));
+        
+        $self->verbose("Add service name $detail->{name} (service $service)");
+        $self->debug(1, "Add ", $self->service_text($detail));
+        
+        $services{$detail->{name}} = $detail;
+    }
+
+    # TODO figure out a way to specify what off-targets and what on-targets mean.
+    # If on is defined, all other targets are off
+    # If off is defined, all others are on or also off? (2nd case: off means off everywhere) 
+    
+    return \%services;
+}
+
 
 =pod
 

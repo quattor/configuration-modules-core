@@ -236,4 +236,72 @@ ok(! $unit->wanted_by("not.a.service", "not.a.target"),
     "not.a.target not wanted by not.a.service");
 is($cmp->{ERROR}, 1, "Error logged for unknown service");
 
+=pod
+
+=head2 default_target
+
+Test default_target
+
+=cut
+
+set_output('gen_full_el7_ceph021_systemctl_show_default_target_unit-files');
+is($unit->default_target(), 'multi-user', 'Found multi-user as default.target');
+
+=pod
+
+=head2 configured_services
+
+Test configured services
+
+=cut
+
+
+# Not a valid configuration tree
+#  Test name
+#  Test type
+my $tree = {
+    service1 => {
+        startstop => 1,
+        state => 'on',
+        targets => [ 'multi-user' ],
+    },
+    service2 => {
+        startstop => 0,
+        state => 'off',
+        targets => [ 'multi-user' ],
+        type => $TYPE_TARGET,
+    },
+    service3 => {
+        name => 'newservice3',
+        startstop => 0,
+        state => 'del',
+        targets => [ 'multi-user' ],
+    },
+};
+
+is_deeply($unit->configured_services($tree),
+          {
+              service1 => {
+                  name => 'service1',
+                  startstop => 1,
+                  state => 'on',
+                  targets => [ 'multi-user' ],
+                  type => $TYPE_SERVICE,
+              },
+              service2 => {
+                  name => 'service2',
+                  startstop => 0,
+                  state => 'off',
+                  targets => [ 'multi-user' ],
+                  type => $TYPE_TARGET,
+              },
+              newservice3 => {
+                  name => 'newservice3',
+                  startstop => 0,
+                  state => 'del',
+                  targets => [ 'multi-user' ],
+                  type => $TYPE_SERVICE,
+              },
+          }, "configured_services set correct name and type");
+
 done_testing();
