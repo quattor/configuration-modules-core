@@ -13,10 +13,8 @@ multiline
 ^\s{4}address\s+my.host.domain$
 ^\s{4}is_local\s+1$
 ^\s{4}<service>$
-^\s{8}type\s+owamp$
 ^\s{4}</service>$
 ^\s{4}<service>$
-^\s{8}type\s+bwctl$
 ^\s{4}</service>$
 ^\s{4}site_location\s+HERE$
 ^\s{4}site_name\s+MYSITE$
