@@ -34,6 +34,9 @@ is($cmp->set_ssh_fromkeys("foo", $u, $fh), 0,
    "SSH from keys returns with no errors");
 is("$fh", "key1\nkey2\n", "The SSH file has the correct contents");
 
+# cleanup fh
+$fh->close();
+
 =pod
 
 =head2 An empty URL list is handled correctly
@@ -63,6 +66,9 @@ is($cmp->set_ssh_fromurls("foo", {}, $fh), 0,
 is("$fh", "", "The SSH file is empty when there is no URL list");
 ok(!$cmp->{ERROR}, "No errors when populated authorized_hosts so far");
 
+# cleanup fh
+$fh->close();
+
 =pod
 
 =head2 The method raises an error if the file is wrong
@@ -89,6 +95,4 @@ is($cmp->set_ssh_fromkeys("foo", {}), 0,
 
 done_testing();
 
-# cleanup fh
-$fh->close();
 
