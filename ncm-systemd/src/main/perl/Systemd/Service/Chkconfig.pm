@@ -134,10 +134,30 @@ sub current_target
 
     my $target = $DEFAULT_RUNLEVEL2TARGET[$runlevel];
 
-    $self->verbose("Current target $target from runlevel $runlevel");
+    $self->verbose("Current target $target from current runlevel $runlevel");
 
     return $target;
+}
 
+=pod 
+
+=head2 default_target
+
+Return the default target based on legacy C<default_runlevel>.
+
+=cut
+
+sub default_target
+{
+    my ($self) = @_;
+
+    my $runlevel = $self->default_runlevel();
+
+    my $target = $DEFAULT_RUNLEVEL2TARGET[$runlevel];
+
+    $self->verbose("Default target $target from default runlevel $runlevel");
+
+    return $target;
 }
 
 =pod

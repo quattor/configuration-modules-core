@@ -175,6 +175,19 @@ is($chk->default_runlevel(), 5, "Return initdefault from inittab");
 
 =pod
 
+=head2 default_runlevel
+
+Test default_runlevel
+
+=cut
+
+set_file('inittab_el7');
+is($chk->default_runlevel(), 3, "Default runlevel is 3");
+is($chk->default_target(), 'multi-user', "Default target multi-user is the target based on default runlevel 3");
+
+
+=pod
+
 =head2 current_runlevel
 
 Test current_runlevel
@@ -195,8 +208,8 @@ is($chk->current_target(), 'multi-user', "Target multi-user is the target based 
 
 # both fail, use default
 $supp_exe = '';
-set_file('inittab_el7');
 is($chk->current_runlevel(), $chk->default_runlevel(), "Return runlevel 3 from default runlevel");
 is($chk->current_target(), 'multi-user', "Target multi-user is the target based on runlevel 3");
+
 
 done_testing();
