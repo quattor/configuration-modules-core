@@ -4,4 +4,4 @@ object template component;
 
 "/software/components/systemd/default" = "ignore";
 
-include 'service-legacy_services';
+include 'service-chkconfig_simple_services';
