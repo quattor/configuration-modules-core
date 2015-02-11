@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor;
+use Test::Quattor qw(service-unit_services);
 
 use helper;
 use NCM::Component::systemd;
@@ -255,53 +255,45 @@ Test configured services
 
 =cut
 
-
-# Not a valid configuration tree
-#  Test name
-#  Test type
-my $tree = {
-    service1 => {
+my $cfg = get_config_for_profile('service-unit_services');
+my $tree = $cfg->getElement('/software/components/systemd/service')->getTree();
+is_deeply($unit->configured_services($tree), {
+    test2_on => {
+        name => 'test2_on',
+        state => "on", 
+        targets => ["rescue", "multi-user"], 
         startstop => 1,
-        state => 'on',
-        targets => [ 'multi-user' ],
+        type => $TYPE_SERVICE,
     },
-    service2 => {
-        startstop => 0,
-        state => 'off',
-        targets => [ 'multi-user' ],
+    test2_add => {
+        name => "test2_add",
+        state => "add", 
+        targets => ["multi-user"], 
+        startstop => 1,
         type => $TYPE_TARGET,
     },
-    service3 => {
-        name => 'newservice3',
-        startstop => 0,
-        state => 'del',
-        targets => [ 'multi-user' ],
+    othername2 => {
+        name => "othername2",
+        state => "on", 
+        targets => ["multi-user"],
+        startstop => 1,
+        type => $TYPE_SERVICE,
     },
-};
+    test_off => {
+        name => "test_off",
+        state => "del",
+        targets => ["rescue"],
+        startstop => 1,
+        type => $TYPE_SERVICE,
+    },
+    test_del => {
+        name => "test_del",
+        state => "on", 
+        targets => ["rescue"], 
+        startstop => 0,
+        type => $TYPE_SERVICE,
+    },
+}, "configured_services set correct name and type");
 
-is_deeply($unit->configured_services($tree),
-          {
-              service1 => {
-                  name => 'service1',
-                  startstop => 1,
-                  state => 'on',
-                  targets => [ 'multi-user' ],
-                  type => $TYPE_SERVICE,
-              },
-              service2 => {
-                  name => 'service2',
-                  startstop => 0,
-                  state => 'off',
-                  targets => [ 'multi-user' ],
-                  type => $TYPE_TARGET,
-              },
-              newservice3 => {
-                  name => 'newservice3',
-                  startstop => 0,
-                  state => 'del',
-                  targets => [ 'multi-user' ],
-                  type => $TYPE_SERVICE,
-              },
-          }, "configured_services set correct name and type");
 
 done_testing();
