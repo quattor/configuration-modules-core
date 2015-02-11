@@ -1,11 +1,12 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor;
+use Test::Quattor qw(service-chkconfig_services);
 
 use helper;
 use NCM::Component::systemd;
 use NCM::Component::Systemd::Service::Chkconfig;
+use NCM::Component::Systemd::Service::Unit qw($TYPE_SYSV);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 
 use Test::MockModule;
@@ -211,5 +212,52 @@ $supp_exe = '';
 is($chk->current_runlevel(), $chk->default_runlevel(), "Return runlevel 3 from default runlevel");
 is($chk->current_target(), 'multi-user', "Target multi-user is the target based on runlevel 3");
 
+=pod
+
+=head2 configured_services
+
+Test configured_services
+
+=cut
+
+my $cfg = get_config_for_profile('service-chkconfig_services');
+my $tree = $cfg->getElement('/software/components/chkconfig/service')->getTree();
+is_deeply($chk->configured_services($tree), {
+    test_on => {
+        name => "test_on",
+        startstop => 1,
+        state => "on",
+        targets => ['rescue', 'multi-user'],
+        type => $TYPE_SYSV,
+    },
+    test_add => {
+        name => "test_add",
+        startstop => 1,
+        state => "add",
+        targets => ['multi-user'],
+        type => $TYPE_SYSV,
+    },
+    othername => {
+        name => "othername",
+        startstop => 1,
+        state => "on",
+        targets => ['multi-user'],
+        type => $TYPE_SYSV,
+    },
+    test_off => {
+        name => "test_off",
+        startstop => 1,
+        state => "off",
+        targets => ['multi-user', "graphical"],
+        type => $TYPE_SYSV,
+    },
+    test_del => {
+        name => "test_del",
+        startstop => 1,
+        state => "del",
+        targets => ['multi-user'],
+        type => $TYPE_SYSV,
+    },
+}, "Converted chkconfig services in new service details");
 
 done_testing();

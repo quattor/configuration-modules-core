@@ -1,4 +1,4 @@
-unique template service-legacy_services;
+unique template service-chkconfig_simple_services;
 
 prefix "/software/components/chkconfig/service";
 

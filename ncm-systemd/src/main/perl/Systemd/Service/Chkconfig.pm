@@ -11,7 +11,10 @@ use warnings;
 
 use parent qw(NCM::Component::Systemd::Service::Unit);
 
-use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET $TYPE_SYSV $DEFAULT_STARTSTOP);
+use EDG::WP4::CCM::Element qw(unescape);
+
+use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET 
+    $TYPE_SYSV $DEFAULT_STARTSTOP $DEFAULT_STATE);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 use Readonly;
 
@@ -158,6 +161,89 @@ sub default_target
     $self->verbose("Default target $target from default runlevel $runlevel");
 
     return $target;
+}
+
+=pod
+
+=head2 configured_services
+
+C<configured_services> parses the C<tree> hash reference and builds up the
+services to be configured. It returns a hash reference with key the service name and 
+values the details of the service.
+
+(C<tree> is typically C<$config->getElement('/software/components/chkconfig/service')->getTree>.)
+
+=cut
+
+sub configured_services
+{
+    my ($self, $tree) = @_;
+
+    my %services;
+
+    while (my ($service, $detail) = each %$tree) {
+        # fix the details to reflect new schema
+        
+        # all legacy types are assumed to be sysv services
+        $detail->{type} = $TYPE_SYSV;
+        
+        # set the name (not mandatory in new schema either)
+        $detail->{name} = unescape($service) if (! exists($detail->{name}));
+
+        my $reset = delete $detail->{reset};
+        $self->verbose('Ignore the reset value $reset from service $detail->{name}') if defined($reset);
+        
+        my $on = delete $detail->{on};
+        my $off = delete $detail->{off};
+
+        my $leveltxt;
+        # off-level precedes on-level (as off state precedes on state)
+        if(defined($off)) {
+            $leveltxt = $off;
+        } elsif(defined($on)) {
+            $leveltxt = $on;
+        }
+        $detail->{targets} = $self->convert_runlevels($leveltxt);
+        
+        my $add = delete $detail->{add};
+        my $del = delete $detail->{del};
+        my $state = $DEFAULT_STATE;
+        my $chkstate; # reporting only
+        
+        if($del) {
+            $state = "del"; # implies off, ignores on/add
+            $chkstate = "del";
+        } elsif(defined($off)) {
+            $state = "off"; # ignores on, implies add
+            $chkstate = "off ('$off')";
+        } elsif(defined($on)) {
+            $state = "on"; # implies add
+            $chkstate = "on ('$on')";
+        } elsif($add) {
+            $state = "add";
+            $chkstate = "add";
+        } else {
+            # how did we get here?
+            $self->error("No valid combination of legacy chkconfig states del/off/on/add found.",
+                         "Skipping this service $detail->{name}.");
+            next;
+        }
+
+        $self->verbose("legacy chkconfig $chkstate set, state is now $state");
+
+        $detail->{state} = $state;
+
+        # startstop mandatory
+        $detail->{startstop} = $DEFAULT_STARTSTOP if (! exists($detail->{startstop}));
+
+        $self->verbose("Add legacy name $detail->{name} (service $service)");
+        $self->debug(1, "Add legacy ", $self->service_text($detail));
+        $services{$detail->{name}} = $detail;
+                
+    };
+
+    return \%services;    
+
 }
 
 =pod
