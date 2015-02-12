@@ -43,8 +43,7 @@ Test creation of Unit instance
 
 =cut
 
-my $services = {};
-my $unit = NCM::Component::Systemd::Service::Unit->new(services => $services, log => $cmp);
+my $unit = NCM::Component::Systemd::Service::Unit->new(log => $cmp);
 isa_ok($unit, "NCM::Component::Systemd::Service::Unit",
         "NCM::Component::Systemd::Service::Unit instance created");
 

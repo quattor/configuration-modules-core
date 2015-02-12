@@ -76,17 +76,6 @@ Returns a new object, accepts the following options
 
 =over
 
-=item services
-
-A hash reference with service as key and a hash reference 
-with properties (according to the schema) as value.
-
-This is typical the return value of 
-     $config->getElement("/software/components/systemd/service")->getTree
-
-(and if needed, augmented with the conversion of legacy C<ncm-chkconfig> services via the 
- NCM::Component::Systemd::Service::Chkconfig module).
-
 =item log
 
 A logger instance (compatible with C<CAF::Object>).

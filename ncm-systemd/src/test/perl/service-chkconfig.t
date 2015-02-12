@@ -39,8 +39,7 @@ Test creation of Chkconfig instance
 
 =cut
 
-my $services = {};
-my $chk = NCM::Component::Systemd::Service::Chkconfig->new(services => $services, log => $cmp);
+my $chk = NCM::Component::Systemd::Service::Chkconfig->new(log => $cmp);
 isa_ok($chk, "NCM::Component::Systemd::Service::Chkconfig",
         "NCM::Component::Systemd::Service::Chkconfig instance created");
 
