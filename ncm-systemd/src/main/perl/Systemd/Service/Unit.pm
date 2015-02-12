@@ -206,7 +206,7 @@ sub current_services
 
 =pod
 
-=head2 current_target
+=item current_target
 
 Return the current target.
 
@@ -217,7 +217,7 @@ lists all current targets (yes, with an s).
 
 =pod
 
-=head2 default_target
+=item default_target
 
 Return the default target.
 
@@ -248,7 +248,7 @@ sub default_target
 
 =pod
 
-=head2 configured_services
+=item configured_services
 
 C<configured_services> parses the C<tree> hash reference and builds up the
 services to be configured. It returns a hash reference with key the service name and 
