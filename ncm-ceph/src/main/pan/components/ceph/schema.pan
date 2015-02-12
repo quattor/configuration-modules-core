@@ -225,6 +225,7 @@ type ceph_cluster_config = {
     'osd_crush_update_on_start' ? boolean 
     'mon_cluster_log_to_syslog' : boolean = true
     'osd_objectstore'           ? string
+    'enable_experimental_unrecoverable_data_corrupting_features' ? string[1..]
 };
 
 @documentation{ ceph rados gateway type 
