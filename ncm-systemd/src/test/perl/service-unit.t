@@ -266,7 +266,7 @@ is_deeply($unit->configured_services($tree), {
     },
     test2_add => {
         name => "test2_add",
-        state => "add", 
+        state => "off", 
         targets => ["multi-user"], 
         startstop => 1,
         type => $TYPE_TARGET,

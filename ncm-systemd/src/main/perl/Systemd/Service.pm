@@ -19,7 +19,7 @@ use LC::Exception qw (SUCCESS);
 use Readonly;
 
 # these won't be turned off with default settings
-# TODO add some systemd services? sysctl / rc.local
+# TODO add some systemd services? systemd itself? rc.local?
 # TODO protecting network assumes ncm-network is being used
 # TODO shouldn't these services be "always on"?
 Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
@@ -31,6 +31,14 @@ Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
 
 Readonly my $BASE => "/software/components/${project.artifactId}";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
+
+Readonly our $UNCONFIGURED_IGNORE => 'ignore';
+Readonly our $UNCONFIGURED_OFF => 'off';
+
+our @EXPORT_OK = qw($UNCONFIGURED_IGNORE $UNCONFIGURED_IGNORE);
+
+# The default w.r.t. handling unconfigured services.
+my $unconfigured_default = $UNCONFIGURED_IGNORE;
 
 =pod
 
@@ -81,7 +89,15 @@ sub configure
 {
     my ($self, $config) = @_;
 
-    my $service = $self->gather_services($config);
+    $self->set_unconfigured_default($config);
+
+    my $configured = $self->gather_configured_services($config);
+
+    my $current = $self->gather_current_services(keys %$configured);
+
+    # actions to take
+    # how do we disable certain targets of particular service?
+    # what to do with unconfigured targets?
 
 }
 
@@ -94,7 +110,49 @@ sub configure
 
 =over
 
-=item gather_services
+=item set_unconfigured_default
+
+Set the default behaviour for unconfigured services from C<ncn-systemd> 
+and legacy C<ncm-chkconfig>.
+
+=cut
+
+sub set_unconfigured_default
+{
+    my ($self, $config)= @_;
+
+    my $chkconfig = "$LEGACY_BASE/default";
+    my $unit = "$BASE/unconfigured";
+
+    # TODO add code to select.
+    my $pref = $unit;
+    my $other = $chkconfig;
+
+    if($config->elementExists($pref)) {
+        $unconfigured_default = $config->getElement($pref)->getValue();
+        $self->verbose("Set unconfigured_default to $unconfigured_default using preferred $pref.");
+    } elsif ($config->elementExists($other)) {
+        $unconfigured_default = $config->getElement($other)->getValue();
+        $self->verbose("Set unconfigured_default to $unconfigured_default using other $other.");
+    } else {
+        # This should never happen since it's mandatory in ncm-systemd schema
+        $self->info("Default not defined for preferred $pref or other $other. Current value is $unconfigured_default");
+    }
+
+    if (! (($unconfigured_default eq $UNCONFIGURED_IGNORE) || 
+           ($unconfigured_default eq $UNCONFIGURED_OFF) )) {
+        # Should be forced by schema (but now 2 schemas)
+        $self->error("Unssuported value $unconfigured_default; setting it to $UNCONFIGURED_IGNORE");
+        $unconfigured_default = $UNCONFIGURED_IGNORE;
+    }
+
+    # For unittesting only
+    return $unconfigured_default;
+}
+
+=pod
+
+=item gather_configured_services
 
 Gather the list of all configured services from both C<ncm-systemd> 
 and legacy C<ncm-chkconfig> location, and take appropriate actions.
@@ -106,32 +164,108 @@ Returns a hash reference with key the service name and value the service detail.
 
 =cut
 
-sub gather_services
+sub gather_configured_services
 {
     my ($self, $config) = @_;
 
+    my $chkconfig = {
+        path => "$LEGACY_BASE/service",
+        instance => $self->{chkconfig},
+    };
+
+    my $unit = {
+        path => "$BASE/service",
+        instance => $self->{unit},
+    };
+
+    # TODO: add code to select which one is preferred.
+    my $pref = $unit;
+    my $other = $chkconfig;
+
     my $services = {};
 
-    # Gather the legacy services first (if any)
-    if ($config->elementExists("$LEGACY_BASE/service")) {
-        my $tree = $config->getElement("$LEGACY_BASE/service")->getTree();
-        $services = $self->{chkconfig}->configured_services($tree);
+    # Gather the other services first (if any)
+    if ($config->elementExists($other->{path})) {
+        my $tree = $config->getElement($other->{path})->getTree();
+        $services = $other->{instance}->configured_services($tree);
     }
 
-    # update with new-style services (if any)
-    if ($config->elementExists("$BASE/service")) {
-        my $tree = $config->getElement("$BASE/service")->getTree();
-        my $new_services = $self->{unit}->configured_services($tree);
+    # Update with preferred services (if any)
+    if ($config->elementExists($pref->{path})) {
+        my $tree = $config->getElement($pref->{path})->getTree();
+        my $new_services = $pref->{instance}->configured_services($tree);
         while (my ($service, $detail) = each %$new_services) {
             if ($services->{$service}) {
-                $self->info("Found configured service $service via $BASE and legacy $LEGACY_BASE. ",
-                            "Using new style service details.");
+                $self->info("Found configured service $service via preferred $pref->{path} ",
+                            "and non-preferred $other->{path}. Using preferred service details.");
             }
             $services->{$service} = $detail;
         }
     }
 
-    $self->verbose("Gathered ", scalar keys %$services, " services: ", join(", ", sort keys %$services));
+    $self->verbose("Gathered ", scalar keys %$services, " configured services: ", 
+                   join(", ", sort keys %$services));
+
+    return $services;
+}
+
+=pod
+
+=item gather_current_services
+
+Gather list of current services from both C<systemctl> and legacy C<chkconfig> 
+using resp. C<unit> and C<chkconfig> C<current_services> methods.
+
+All arguments form a list of C<relevant_services> that is used to run minimal set 
+of system commands (and only if C<unconfigured_default> is C<ignore>). 
+
+=cut
+
+sub gather_current_services
+{
+    my ($self, @relevant_services) = @_;
+
+    # Also include all unconfigured services in the queries.
+    if($unconfigured_default ne $UNCONFIGURED_IGNORE) {
+        $self->verbose("Unconfigured default $unconfigured_default, ",
+                       "taking all possible services into account");
+        @relevant_services = undef;
+    } else {
+        $self->verbose("Unconfigured default $unconfigured_default, ",
+                       "using ", scalar @relevant_services," relevant services: ",
+                       join(',',@relevant_services));
+    }
+
+    # A sysv service that is not listed in chkconfig --list
+    #   you can run systemctl enable on it (it gets redirected to chkconfig)
+    #     same with disable
+    #   they do show up in list-units --all
+    #     even when only chkconfig --add is used
+    #   systemctl mask removes it from the output of chkconfig --list
+    #   systemctl umask restores it to last known state
+
+    # How to join these:
+    # TODO: re-verify (seems not to be the case?)
+    #   The only services that are not seen by systemctl are SYSV services that 
+    #   are not started via systemd (not necessarily running).
+    #   The 'chkconfig --list' is the only command not properly handled in EL7 systemd.
+    # TODO: what if someone starts a SYSV service via /etc/init.d/myservice start? 
+    #   Does systemd see this? (and how would it do that?)
+
+    my $services = $self->{chkconfig}->current_services();
+
+    my $current_units = $self->{unit}->current_services(@relevant_services);
+    while (my ($service, $detail) = each %$current_units) {
+        if ($services->{$service}) {
+            # TODO: Do we compare them to see if both are the same details or simply trust Unit?
+            $self->info("Found configured service $service via Chkconfig and Unit. ",
+                        "Using Unit service details.");
+        }
+        $services->{$service} = $detail;        
+    }
+
+    $self->verbose("Gathered ", scalar keys %$services, " current services: ", 
+                   join(", ", sort keys %$services));
 
     return $services;
 }

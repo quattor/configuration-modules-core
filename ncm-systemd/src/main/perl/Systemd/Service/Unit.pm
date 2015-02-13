@@ -163,20 +163,28 @@ sub current_services
     my %current;
     
     while (my ($name,$data) = each %{$unit_cache->{$TYPE_SERVICE}}) {
-        my $detail = {name => $name, type => $TYPE_SERVICE, startstop => $DEFAULT_STARTSTOP};
+        my $detail = {name => $name, type => $TYPE_SERVICE};
+
+        # TODO: can we refine this somehow? Or does it make no sense.
+        $detail->{startstop} = $DEFAULT_STARTSTOP;
 
         my $show = $data->{show};
         if(! defined($show)) {
             if ($data->{baseinstance}) {
                 $self->verbose("Base instance $name is not an actual runnable service. Skipping.");
+            } elsif(@units) {
+                # Lots of units that have no show data, because they aren't queried all.
+                $self->verbose("Found name $name without any show data; ",
+                               "only selected units were queried. Skipping.");
             } else {
                 $self->error("Found name $name without any show data. Skipping.");
-            }    
+            }
             next;
         }
 
         my $load = $show->{LoadState};
         my $active = $show->{ActiveState};
+        my $substate = $show->{SubState};
 
         $self->debug(1, "Found service unit $detail->{name} with ",
                        "LoadState $load ActiveState $active");
@@ -196,16 +204,13 @@ sub current_services
             $self->verbose("No WantedBy defined for service unit $detail->{name}");
         }
         
-        if($load eq 'not-found') {
-            # also has active eq 'inactive'?
-            $self->error("Component issue: found service $detail->{name} ",
-                         "with LoadState $load ActiveState $active; ",
-                         "expected active 'inactive'. Contact developers.") 
-                         if ($active ne 'inactive');
-            # unit file present, not coupled to any target
-            $detail->{state} = 'off';
-        } else {
+        # If a service is WantedBy / has a target, it is on.
+        # This is the only relevant difference between a sysv service
+        #   using the old chkconfig on and off
+        if(@{$detail->{targets}}) {
             $detail->{state} = 'on';
+        } else {
+            $detail->{state} = 'off';
         }
 
         $self->debug(1, "current_services added unit file service $detail->{name}");
