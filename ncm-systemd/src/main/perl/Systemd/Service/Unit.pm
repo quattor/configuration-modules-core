@@ -143,7 +143,9 @@ sub service_text
 
 Return hash reference with current configured services 
 determined via C<make_cache_alias>.
-List of C<units> is passed to C<make_cache_alias>.
+
+All additional arguments are a list of C<units> 
+that is passed to C<make_cache_alias>.
 
 This method also rebuilds the cache and alias map.
 

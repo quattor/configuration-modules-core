@@ -212,7 +212,8 @@ sub configured_services
             $state = "on"; # implies add
             $chkstate = "on ('$on')";
         } elsif($add) {
-            $state = "add";
+            # add gets mapped to off
+            $state = "off";
             $chkstate = "add";
         } else {
             # how did we get here?

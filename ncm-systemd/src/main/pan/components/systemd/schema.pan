@@ -15,7 +15,7 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 
 type ${project.artifactId}_service_type = {
     "name" ? string
-    "state" : string = 'on' with match(SELF,"^(on|add|off|del)$")
+    "state" : string = 'on' with match(SELF,"^(on|off|del)$")
     "targets" : ${project.artifactId}_target[] = list("multi-user") 
     "startstop" : boolean = true
     "type" : string = 'service' with match(SELF, '^(service|target|sysv)$')
@@ -24,5 +24,5 @@ type ${project.artifactId}_service_type = {
 type component_${project.artifactId}_type = {
     include structure_component
     "service" : ${project.artifactId}_service_type{}
-    "default" : string = 'ignore' with match (SELF, '^(ignore|off)$') # harmless default
+    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore|off)$') # harmless default
 };

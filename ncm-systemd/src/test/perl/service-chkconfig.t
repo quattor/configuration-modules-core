@@ -232,7 +232,7 @@ is_deeply($chk->configured_services($tree), {
     test_add => {
         name => "test_add",
         startstop => 1,
-        state => "add",
+        state => "off",
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },
