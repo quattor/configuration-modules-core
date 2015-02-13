@@ -88,7 +88,6 @@ sub _initialize
 {
     my ($self, %opts) = @_;
 
-    $self->{services} = $opts{services};
     $self->{log} = $opts{log} if $opts{log};
 
     return SUCCESS;
@@ -100,18 +99,40 @@ sub _initialize
 
 Convert service C<detail> hash to human readable string.
 
+Generates errors for missing attributes.
+
 =cut
 
 sub service_text
 {
     my ($self, $detail) = @_;
 
-    my $text = "service $detail->{name} (";
-    $text .= "state $detail->{state} ";
-    $text .= "startstop $detail->{startstop} ";
-    $text .= "type $detail->{type} ";
-    $text .= "targets " . join(",", @{$detail->{targets}});
-    $text .= ")";
+    my $text;
+    if(exists($detail->{name})) {
+        $text = "service $detail->{name} (";
+    } else {
+        $self->error("Service detail is missing name");
+        return;
+    }
+       
+    my @attributes = qw(state startstop type targets);
+    my @attrtxt;
+    foreach my $attr (@attributes) {
+        my $val = $detail->{$attr};
+        if (defined($val)) {
+            my $tmptxt = "$attr "; 
+            if(ref($val) eq 'ARRAY') {
+                $tmptxt .= join(',', @$val);
+            } else {
+                $tmptxt .= $val;
+            }
+            push(@attrtxt, $tmptxt);
+        } else {
+            $self->error("Service $detail->{name} details is missing attribute $attr");
+        }
+    }
+
+    $text .= join(' ', @attrtxt) . ")";
 
     return $text;
 }
