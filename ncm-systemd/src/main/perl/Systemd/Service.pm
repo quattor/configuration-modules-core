@@ -11,7 +11,7 @@ use warnings;
 
 use parent qw(CAF::Object Exporter);
 
-use NCM::Component::Systemd::Service::Unit;
+use NCM::Component::Systemd::Service::Unit qw(:states);
 use NCM::Component::Systemd::Service::Chkconfig;
 
 use LC::Exception qw (SUCCESS);
@@ -33,9 +33,19 @@ Readonly my $BASE => "/software/components/${project.artifactId}";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
 
 Readonly our $UNCONFIGURED_IGNORE => 'ignore';
-Readonly our $UNCONFIGURED_OFF => 'off';
+Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;
+Readonly our $UNCONFIGURED_ENABLED => $STATE_ENABLED;
+Readonly our $UNCONFIGURED_MASKED => $STATE_MASKED;
 
-our @EXPORT_OK = qw($UNCONFIGURED_IGNORE $UNCONFIGURED_IGNORE);
+Readonly::Array my @UNCONFIGURED => qw($UNCONFIGURED_IGNORE 
+    $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED $UNCONFIGURED_MASKED);
+
+our @EXPORT_OK = qw();
+push @EXPORT_OK, @UNCONFIGURED;
+
+our %EXPORT_TAGS = (
+    unconfigured => \@UNCONFIGURED,
+);
 
 # The default w.r.t. handling unconfigured services.
 my $unconfigured_default = $UNCONFIGURED_IGNORE;
@@ -99,6 +109,13 @@ sub configure
     # how do we disable certain targets of particular service?
     # what to do with unconfigured targets?
 
+    # masked:
+    #   disable, stop if runngin and startstop, mask
+    # disabled:
+    #   unmask, disable, stop if running and startstop
+    # enabled:
+    #   unmask, enable, start if not running and startstop
+
 }
 
 
@@ -121,26 +138,41 @@ sub set_unconfigured_default
 {
     my ($self, $config)= @_;
 
-    my $chkconfig = "$LEGACY_BASE/default";
-    my $unit = "$BASE/unconfigured";
+    my $path = {
+        unit => "$BASE/unconfigured",
+        chkconfig => "$LEGACY_BASE/default",
+    };
+
+    # map legacy values to new ones
+    my $chkconfig_map = {
+        off => $UNCONFIGURED_DISABLED,
+        ignore => $UNCONFIGURED_IGNORE,
+    };
 
     # TODO add code to select.
-    my $pref = $unit;
-    my $other = $chkconfig;
+    my $pref = 'unit';
+    my $other = 'chkconfig';
 
-    if($config->elementExists($pref)) {
-        $unconfigured_default = $config->getElement($pref)->getValue();
-        $self->verbose("Set unconfigured_default to $unconfigured_default using preferred $pref.");
-    } elsif ($config->elementExists($other)) {
-        $unconfigured_default = $config->getElement($other)->getValue();
-        $self->verbose("Set unconfigured_default to $unconfigured_default using other $other.");
+    my $found;
+    if($config->elementExists($path->{$pref})) {
+        $found = $pref;
+    } elsif ($config->elementExists($path->{$other})) {
+        $found = $other;
     } else {
         # This should never happen since it's mandatory in ncm-systemd schema
         $self->info("Default not defined for preferred $pref or other $other. Current value is $unconfigured_default");
     }
 
-    if (! (($unconfigured_default eq $UNCONFIGURED_IGNORE) || 
-           ($unconfigured_default eq $UNCONFIGURED_OFF) )) {
+    my $val = $config->getElement($path->{$found})->getValue();
+    if ($found eq 'chkconfig') {
+        # configure the legacy value
+        $self->verbose("Converting legacy unconfigured_default value $val to ", $chkconfig_map->{$val});
+        $val = $chkconfig_map->{$val};
+    }
+    $unconfigured_default = $val;
+    $self->verbose("Set unconfigured_default to $unconfigured_default using $found path ", $path->{$found});
+
+    if (! (grep {$_ eq $unconfigured_default} @UNCONFIGURED)) {
         # Should be forced by schema (but now 2 schemas)
         $self->error("Unssuported value $unconfigured_default; setting it to $UNCONFIGURED_IGNORE");
         $unconfigured_default = $UNCONFIGURED_IGNORE;
@@ -237,8 +269,7 @@ sub gather_current_services
     }
 
     # A sysv service that is not listed in chkconfig --list
-    #   you can run systemctl enable on it (it gets redirected to chkconfig)
-    #     same with disable
+    #   you can run systemctl enable/disable on it (it gets redirected to chkconfig)
     #   they do show up in list-units --all
     #     even when only chkconfig --add is used
     #   systemctl mask removes it from the output of chkconfig --list

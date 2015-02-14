@@ -7,7 +7,7 @@ use helper;
 use NCM::Component::systemd;
 use NCM::Component::Systemd::Service qw($UNCONFIGURED_IGNORE); 
 
-use NCM::Component::Systemd::Service::Unit qw(:types);
+use NCM::Component::Systemd::Service::Unit qw(:types :states);
 
 $CAF::Object::NoAction = 1;
 
@@ -55,55 +55,55 @@ is_deeply($svc->gather_configured_services($cfg), {
     test_on => {
         name => "test_on",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['rescue', 'multi-user'],
         type => $TYPE_SYSV,
     },
     test_add => {
         name => "test_add",
         startstop => 1,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },
     othername => {
         name => "othername",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },
     test2_on => {
         name => 'test2_on',
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["rescue", "multi-user"], 
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test2_add => {
         name => "test2_add",
-        state => "off", 
+        state => $STATE_DISABLED, 
         targets => ["multi-user"], 
         startstop => 1,
         type => $TYPE_TARGET,
     },
     othername2 => {
         name => "othername2",
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["multi-user"],
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test_off => { # from ncm-systemd
         name => "test_off",
-        state => "del",
+        state => $STATE_MASKED,
         targets => ["rescue"],
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test_del => { # from ncm-systemd
         name => "test_del",
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["rescue"], 
         startstop => 0,
         type => $TYPE_SERVICE,
@@ -128,28 +128,28 @@ is_deeply($configured, {
     network => { # sysv, on
         name => "network",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user', 'graphical'],
         type => $TYPE_SERVICE,
     },
     netconsole => { # sysv, off
         name => "netconsole",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user'],
         type => $TYPE_SERVICE,
     },
     cups => { # systemd
         name => "cups",
         startstop => 0,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => ['graphical'],
         type => $TYPE_SERVICE,
     },
     rbdmap => { # sysv, not in chkconfig
         name => "rbdmap",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user'],
         type => $TYPE_SERVICE,
     },
@@ -165,7 +165,7 @@ is_deeply(scalar keys %$current, 6, "Got 6 current services");
 is_deeply($current->{network}, { # sysv
         name => "network",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user', 'graphical'],
         type => $TYPE_SERVICE,
 }, "current network service for ceph021");
@@ -173,7 +173,7 @@ is_deeply($current->{network}, { # sysv
 is_deeply($current->{netconsole}, { # sysv
         name => "netconsole",
         startstop => 1,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => [],
         type => $TYPE_SERVICE,
 }, "current netconsole service for ceph021");
@@ -181,7 +181,7 @@ is_deeply($current->{netconsole}, { # sysv
 is_deeply($current->{cups}, { # systemd
         name => "cups",
         startstop => 1,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => [],
         type => $TYPE_SERVICE,
 }, "current cups service for ceph021");
