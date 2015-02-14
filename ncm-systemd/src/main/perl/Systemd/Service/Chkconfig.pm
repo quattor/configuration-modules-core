@@ -14,7 +14,8 @@ use parent qw(NCM::Component::Systemd::Service::Unit);
 use EDG::WP4::CCM::Element qw(unescape);
 
 use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET 
-    $TYPE_SYSV $DEFAULT_STARTSTOP $DEFAULT_STATE);
+    $TYPE_SYSV $DEFAULT_STARTSTOP $DEFAULT_STATE
+    :states);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 use Readonly;
 
@@ -95,14 +96,14 @@ sub current_services
         if ($levels =~ m/[0-6]:on/) {
             $self->debug(1, "Found 'on' states for service $detail->{name}");
             my $ontargets = $self->convert_runlevels(join('', $levels =~ /([0-6]):on/g));
-            $detail->{state}   = "on";
+            $detail->{state}   = $STATE_ENABLED;
             $detail->{targets} = $ontargets;
         } else {
             $self->debug(1, "No 'on' states found for service $detail->{name}");
             # TODO include the runlevel 0,1 and 6 in the off-conversion?
             # if the state is off, targets don't really matter
             my $offtargets = $self->convert_runlevels(join('', $levels =~ /([2-5]):off/g));
-            $detail->{state}   = "off";
+            $detail->{state}   = $STATE_DISABLED;
             $detail->{targets} = $offtargets;
         }
 
@@ -165,6 +166,22 @@ values the details of the service.
 
 (C<tree> is typically C<$config->getElement('/software/components/chkconfig/service')->getTree>.)
 
+This method converts the legacy states as following
+
+=over
+
+=item del : masked
+
+=item add: disabled
+
+=item off : disabled
+
+=item on : enabled
+
+=item reset: this state is ignored / not supported.
+
+=back
+
 =cut
 
 sub configured_services
@@ -203,17 +220,17 @@ sub configured_services
         my $chkstate; # reporting only
         
         if($del) {
-            $state = "del"; # implies off, ignores on/add
+            $state = $STATE_MASKED; # implies off, ignores on/add
             $chkstate = "del";
         } elsif(defined($off)) {
-            $state = "off"; # ignores on, implies add
+            $state = $STATE_DISABLED; # ignores on, implies add
             $chkstate = "off ('$off')";
         } elsif(defined($on)) {
-            $state = "on"; # implies add
+            $state = $STATE_ENABLED; # implies add
             $chkstate = "on ('$on')";
         } elsif($add) {
-            # add gets mapped to off
-            $state = "off";
+            # add gets mapped to off/disabled
+            $state = $STATE_DISABLED;
             $chkstate = "add";
         } else {
             # how did we get here?

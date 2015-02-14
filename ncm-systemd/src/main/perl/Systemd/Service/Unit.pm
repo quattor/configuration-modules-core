@@ -27,10 +27,12 @@ Readonly our $TARGET_MULTIUSER => "multi-user";
 Readonly our $TARGET_GRAPHICAL => "graphical";
 Readonly our $TARGET_POWEROFF  => "poweroff";
 Readonly our $TARGET_REBOOT    => "reboot";
-Readonly our $DEFAULT_TARGET =>
-    $TARGET_MULTIUSER;    # default level (if default.target is not responding)
 
-Readonly::Array my @TARGETS => qw($TARGET_DEFAULT $TARGET_RESCUE $TARGET_MULTIUSER $TARGET_GRAPHICAL
+# default level (if default.target is not responding)
+Readonly our $DEFAULT_TARGET => $TARGET_MULTIUSER;    
+
+Readonly::Array my @TARGETS => qw($TARGET_DEFAULT 
+    $TARGET_RESCUE $TARGET_MULTIUSER $TARGET_GRAPHICAL
     $TARGET_POWEROFF $TARGET_REBOOT);
 
 Readonly our $TYPE_SYSV    => 'sysv';
@@ -39,16 +41,27 @@ Readonly our $TYPE_TARGET  => 'target';
 
 Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET);
 
+# Allowed states: enabled, disabled, masked
+# Disabled does not imply OFF (can be started by other 
+#   enabled service which has the disabled service as dependency)
+# Use 'masked' if you really don't want something to be started/running.
+Readonly our $STATE_ENABLED => "enabled";
+Readonly our $STATE_DISABLED => "disabled"; 
+Readonly our $STATE_MASKED => "masked";
+
+Readonly::Array my @STATES => qw($STATE_ENABLED $STATE_DISABLED $STATE_MASKED);
+
 # TODO should match schema default
 Readonly our $DEFAULT_STARTSTOP => 1; # startstop true by default
-Readonly our $DEFAULT_STATE => 'on'; # state on by default
+Readonly our $DEFAULT_STATE => $STATE_ENABLED; # state on by default
 
 our @EXPORT_OK = qw($DEFAULT_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE);
-push @EXPORT_OK, @TARGETS, @TYPES;
+push @EXPORT_OK, @TARGETS, @TYPES, @STATES;
 
 our %EXPORT_TAGS = (
     targets => \@TARGETS,
     types   => \@TYPES,
+    states  => \@STATES,
 );
 
 # Cache of the unitfiles for service and target
@@ -204,13 +217,13 @@ sub current_services
             $self->verbose("No WantedBy defined for service unit $detail->{name}");
         }
         
-        # If a service is WantedBy / has a target, it is on.
+        # If a service is WantedBy / has a target, it is enabled.
         # This is the only relevant difference between a sysv service
         #   using the old chkconfig on and off
         if(@{$detail->{targets}}) {
-            $detail->{state} = 'on';
+            $detail->{state} = $STATE_ENABLED;
         } else {
-            $detail->{state} = 'off';
+            $detail->{state} = $STATE_DISABLED;
         }
 
         $self->debug(1, "current_services added unit file service $detail->{name}");

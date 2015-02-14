@@ -6,7 +6,7 @@ use Test::Quattor qw(service-chkconfig_services);
 use helper;
 use NCM::Component::systemd;
 use NCM::Component::Systemd::Service::Chkconfig;
-use NCM::Component::Systemd::Service::Unit qw($TYPE_SYSV);
+use NCM::Component::Systemd::Service::Unit qw($TYPE_SYSV :states);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 
 use Test::MockModule;
@@ -144,7 +144,7 @@ my ($name, $svc);
 $name = "network";
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
-is($svc->{state},"on", "Service $name state on");
+is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
 is($svc->{type}, "sysv", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
@@ -152,7 +152,7 @@ is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets")
 $name = "netconsole";
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
-is($svc->{state},"off", "Service $name state off");
+is($svc->{state},$STATE_DISABLED, "Service $name state disabled");
 is($svc->{type}, "sysv", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
@@ -225,35 +225,35 @@ is_deeply($chk->configured_services($tree), {
     test_on => {
         name => "test_on",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['rescue', 'multi-user'],
         type => $TYPE_SYSV,
     },
     test_add => {
         name => "test_add",
         startstop => 1,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },
     othername => {
         name => "othername",
         startstop => 1,
-        state => "on",
+        state => $STATE_ENABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },
     test_off => {
         name => "test_off",
         startstop => 1,
-        state => "off",
+        state => $STATE_DISABLED,
         targets => ['multi-user', "graphical"],
         type => $TYPE_SYSV,
     },
     test_del => {
         name => "test_del",
         startstop => 1,
-        state => "del",
+        state => $STATE_MASKED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
     },

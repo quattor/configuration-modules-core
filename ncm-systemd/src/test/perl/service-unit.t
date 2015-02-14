@@ -23,7 +23,9 @@ Test exports
 
 =cut
 
-use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET :types $DEFAULT_STARTSTOP $DEFAULT_STATE);
+use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET 
+    :types $DEFAULT_STARTSTOP 
+    :states $DEFAULT_STATE);
 is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL,
            $TARGET_POWEROFF, $TARGET_REBOOT],
           [qw(default rescue multi-user graphical poweroff reboot)],
@@ -34,8 +36,12 @@ is_deeply([$TYPE_SYSV, $TYPE_SERVICE, $TYPE_TARGET],
           [qw(sysv service target)],
            "exported TYPES names");
 
+is_deeply([$STATE_ENABLED, $STATE_DISABLED, $STATE_MASKED],
+          [qw(enabled disabled masked)],
+          "exported states");
+is($DEFAULT_STATE, $STATE_ENABLED, "enabled is default state");
+
 is($DEFAULT_STARTSTOP, 1, "DEFAULT startstop is $DEFAULT_STARTSTOP"); 
-is($DEFAULT_STATE, "on", "DEFAULT state is $DEFAULT_STATE");
 
 =head2 new
 
@@ -57,14 +63,14 @@ Test the generating text message from service details
 
 my $svc = {
     name => "test_del",
-    state => "on",
+    state => $STATE_ENABLED,
     type => "service",
     startstop => 0,
     targets => ["rescue"],
 };
 
 is($unit->service_text($svc), 
-   "service test_del (state on startstop 0 type service targets rescue)", 
+   "service test_del (state enabled startstop 0 type service targets rescue)", 
    "Generate string of service details");
 
 =pod
@@ -73,7 +79,7 @@ is($unit->service_text($svc),
 
 Test the init method
 
-=pod
+=cut
 
 my ($u_c, $u_a, $d_c) = $unit->init_cache();
 is_deeply($u_c, {
@@ -193,7 +199,7 @@ is(scalar keys %$cs, 137,
 $name = 'nrpe';
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
-is($svc->{state},"on", "Service $name state disabled");
+is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
 is($svc->{type}, "service", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
@@ -202,7 +208,7 @@ is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 $name = 'rc-local';
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
-is($svc->{state},"on", "Service $name state disabled");
+is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
 is($svc->{type}, "service", "Service $name type sysv");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
@@ -259,35 +265,35 @@ my $tree = $cfg->getElement('/software/components/systemd/service')->getTree();
 is_deeply($unit->configured_services($tree), {
     test2_on => {
         name => 'test2_on',
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["rescue", "multi-user"], 
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test2_add => {
         name => "test2_add",
-        state => "off", 
+        state => $STATE_DISABLED, 
         targets => ["multi-user"], 
         startstop => 1,
         type => $TYPE_TARGET,
     },
     othername2 => {
         name => "othername2",
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["multi-user"],
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test_off => {
         name => "test_off",
-        state => "del",
+        state => $STATE_MASKED,
         targets => ["rescue"],
         startstop => 1,
         type => $TYPE_SERVICE,
     },
     test_del => {
         name => "test_del",
-        state => "on", 
+        state => $STATE_ENABLED, 
         targets => ["rescue"], 
         startstop => 0,
         type => $TYPE_SERVICE,
