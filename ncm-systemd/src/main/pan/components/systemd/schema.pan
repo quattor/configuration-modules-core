@@ -24,5 +24,6 @@ type ${project.artifactId}_service_type = {
 type component_${project.artifactId}_type = {
     include structure_component
     "service" : ${project.artifactId}_service_type{}
-    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore|masked|enabled|disabled)$') # harmless default
+    # TODO: only ignore implemented so far. To add : disabled and/or masked
+    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore)$') # harmless default
 };

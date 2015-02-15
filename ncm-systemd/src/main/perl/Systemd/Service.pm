@@ -106,16 +106,21 @@ sub configure
     my $current = $self->gather_current_services(keys %$configured);
 
     # actions to take
-    # how do we disable certain targets of particular service?
-    # what to do with unconfigured targets?
+    # TODO: how do we disable certain targets of particular service?
+    # TODO: what to do with unconfigured targets?
 
     # masked:
-    #   disable, stop if runngin and startstop, mask
+    #   disable, stop if running and startstop, mask
     # disabled:
     #   unmask, disable, stop if running and startstop
     # enabled:
     #   unmask, enable, start if not running and startstop
 
+    if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
+        $self->error("Support for default unconfigured behaviour ",
+                     "$unconfigured_default is not implemented yet. ",
+                     "(Schema/component version mismatch?)");
+    }
 }
 
 
