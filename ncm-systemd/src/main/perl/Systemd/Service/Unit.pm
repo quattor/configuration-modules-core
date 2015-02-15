@@ -405,7 +405,7 @@ sub make_cache_alias
 
     my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
     if (!($type && $type =~ m/$treg/)) {
-        $self->error("Undefined or wrong type $type for systemctl list-unit-files");
+        $self->error("Undefined or wrong type $type for systemctl list-unit-files / list-units");
         return;
     }
 
@@ -485,6 +485,7 @@ sub make_cache_alias
                 # not to risk anything being overwritten
 
                 # add the real name to the list of units to check
+                # TODO potential issue for infinite loop because the type is removed?
                 if(! grep {$id eq $_} @units) {
                     $self->verbose("Adding the id $id from unkown name $name to list of units");
                     push(@units, $id);
@@ -603,6 +604,122 @@ sub wanted_by
 
     return $dependency_cache->{rev}->{$service}->{$target};
 
+}
+
+=pod
+
+=item is_active
+
+C<is_active> returns true or false and reflects if a unit is "running" or not.
+
+The following options are supported
+
+=over
+
+=item force
+
+This is based on cached values, set C<force> to true to force a cache update 
+(default false).
+
+=item sleeptime
+=item max
+
+Units that are 'reloading', 'activating' and 'deactivating' are refreshed with 
+C<sleep> (default 1 sec) and C<max> number of tries (default 3). Until 
+
+=item type
+
+Specify the C<type> of the unit (otherwise it is derived from the unit name or 
+default 'service' is assumed) 
+
+=back
+
+=cut
+
+sub is_active
+{
+    my ($self, $unit, %opts) = @_;
+    
+    my $force = exists($opts{force}) ? $opts{force} : 0;
+    my $sleep = exists($opts{sleep}) ? $opts{sleep} : 1;
+    my $max = exists($opts{max}) ? $opts{max} : 3;
+
+    $self->verbose("Running is_active with force $force sleep $sleep max $max");
+
+    my $type;
+    my $treg = '\.(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
+    if ($opts{type}) {
+        $type = $opts{type};
+        $self->verbose("Set type $type for unit $unit.");        
+    } elsif ($unit =~ m/$treg/) {
+        $type = $1;
+        $self->verbose("Found type $type based on unit $unit.");
+    } else {
+        $type = $TYPE_SERVICE;
+        $self->verbose("Could not determine type based on unit $unit ",
+                       "and pattern $treg. Using default type $type.");
+    }
+
+    if ($force) {
+        $self->verbose("Force updating the cache for the unit $unit.");
+        $self->make_cache_alias($type, $unit);
+    }
+
+    # The cache unit name as used in make_cache_alias
+    my $cunit = $unit;
+    my $reg = '\.'.$type.'$';
+    $cunit =~ s/$reg//;
+
+    my $active = $unit_cache->{$type}->{$cunit}->{show}->{ActiveState};
+    if (! defined($active)) {
+        $self->error("No ActiveState for unit $unit (cunit $cunit) found.");
+        return;
+    }
+ 
+    # Possible ActiveState values from systemd dbus interface
+    # http://www.freedesktop.org/wiki/Software/systemd/dbus/
+
+    my @inter = qw(reloading activating deactivating);
+
+    my $tries = 0;
+    while ((grep {$_ eq $active} @inter)) {
+        my $msg = "the cache for the unit $unit due to intermittent state $active";
+        if ($tries < $max) {
+            sleep($sleep);
+            $self->make_cache_alias($type, $unit);
+            $active = $unit_cache->{$type}->{$cunit}->{show}->{ActiveState};
+            if (! defined($active)) {
+                $self->error("No ActiveState for unit $unit (cunit $cunit) found ($tries of max $max).");
+                return;
+            }
+            $self->verbose("Updating $msg. New state $active.");
+            $tries++;
+        } else {
+            # Map the intermediate states to a final state.
+            # We are going to assume all will be fine.
+            if($active eq 'deactivating') {
+                $active = 'inactive';
+            } else {
+                $active = 'active';
+            }
+            $self->verbose("Max tries for updating $msg. Forced mapping to $active.");
+        }
+    }
+
+    # Must be one of the final states now.
+    my @final = qw(active inactive failed);
+    if (grep {$_ eq $active} @final) {
+        if ($active eq 'active') {
+            $self->verbose("Active $active, is_active true");
+            return 1;
+        } else {
+            $self->verbose("Active $active, is_active false");
+            return 0;
+        }
+    } else {
+        $self->error("Unsupported ActiveState $active. (Component version too old?)");
+        return;
+    }
 }
 
 =pod

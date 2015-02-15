@@ -300,5 +300,63 @@ is_deeply($unit->configured_services($tree), {
     },
 }, "configured_services set correct name and type");
 
+=pod 
+
+=head2 is_active
+
+Test is_active
+
+=cut
+
+# TODO test the looping / mapping?
+
+$cmp->{ERROR} = 0;
+
+# ceph021 output
+# active
+ok($unit->is_active('ncm-cdispd', type => 'service'), 
+   'Active ncm-cdispd SYSV service is active');
+# inactive
+ok(! $unit->is_active('cups', type => 'service'), 
+   'Inactive cups service is not active');
+# failed
+ok(! $unit->is_active('rc-local', type => 'service'), 
+   'Failed rc-local service is not active');
+
+# Force a reloading service.
+# This is from helper.pm
+use cmddata;
+my $cmdshort = 'gen_full_el7_ceph021_systemctl_show_xinetd_service_units';
+my $cmdline= $cmddata::cmds{$cmdshort}{cmd};
+my $out=$cmddata::cmds{$cmdshort}{out};
+$out =~ s/^ActiveState\s*=.*$/ActiveState=reloading/m;
+set_desired_output($cmdline, $out);
+
+# Force reloading the cache; retrials will always give same answer 
+# and then static mapping will kick in.
+ok($unit->is_active('xinetd', type => 'service', force => 1), 
+   'Reloading xinetd service is mapped to active');
+
+$out =~ s/^ActiveState\s*=.*$/ActiveState=activating/m;
+set_desired_output($cmdline, $out);
+ok($unit->is_active('xinetd', type => 'service', force => 1), 
+   'Activating xinetd service is mapped to active');
+
+$out =~ s/^ActiveState\s*=.*$/ActiveState=deactivating/m;
+set_desired_output($cmdline, $out);
+ok(! $unit->is_active('xinetd', type => 'service', force => 1), 
+   'Deactivating xinetd service is mapped to inactive');
+
+is($cmp->{ERROR}, 0, "No errors logged for known ActiveStates");
+
+$out =~ s/^ActiveState\s*=.*$/ActiveState=unkown/m;
+set_desired_output($cmdline, $out);
+ok(! defined($unit->is_active('xinetd', type => 'service', force => 1)), 
+   'Unknown ActiveState returns undef');
+is($cmp->{ERROR}, 1, "Error logged for unknown ActiveState");
+
+# restore
+$out =~ s/^ActiveState\s*=.*$/ActiveState=active/m;
+set_desired_output($cmdline, $out);
 
 done_testing();
