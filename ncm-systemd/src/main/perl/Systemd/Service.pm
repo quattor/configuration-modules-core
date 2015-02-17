@@ -37,7 +37,7 @@ Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;
 Readonly our $UNCONFIGURED_ENABLED => $STATE_ENABLED;
 Readonly our $UNCONFIGURED_MASKED => $STATE_MASKED;
 
-Readonly::Array my @UNCONFIGURED => qw($UNCONFIGURED_IGNORE 
+Readonly::Array my @UNCONFIGURED => qw($UNCONFIGURED_IGNORE
     $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED $UNCONFIGURED_MASKED);
 
 our @EXPORT_OK = qw();
@@ -90,7 +90,7 @@ sub _initialize
 
 =item configure
 
-C<configure> gathered the to-be-configured services from the C<config> using the 
+C<configure> gathered the to-be-configured services from the C<config> using the
 C<gather_services> method and then takes appropriate actions.
 
 =cut
@@ -110,11 +110,16 @@ sub configure
     # TODO: what to do with unconfigured targets?
 
     # masked:
-    #   disable, stop if running and startstop, mask
+    #   mask, stop if running and startstop
+    #     first mask, then stop (e.g. autorestart services)
+    #     or first disable, then mask, then stop if running?
+    #   replaces /etc/systemd/system/$unit.$type with symlink to /dev/null
     # disabled:
-    #   unmask, disable, stop if running and startstop
+    #   unmask?, disable, stop if running and startstop
+    #     unmask only if masked?
     # enabled:
     #   unmask, enable, start if not running and startstop
+    #     unmask only if masked?
 
     if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->error("Support for default unconfigured behaviour ",
@@ -134,7 +139,7 @@ sub configure
 
 =item set_unconfigured_default
 
-Set the default behaviour for unconfigured services from C<ncn-systemd> 
+Set the default behaviour for unconfigured services from C<ncn-systemd>
 and legacy C<ncm-chkconfig>.
 
 =cut
@@ -191,7 +196,7 @@ sub set_unconfigured_default
 
 =item gather_configured_services
 
-Gather the list of all configured services from both C<ncm-systemd> 
+Gather the list of all configured services from both C<ncm-systemd>
 and legacy C<ncm-chkconfig> location, and take appropriate actions.
 
 For any service defined in both C<ncm-systemd> and C<ncm-chkconfig> location,
@@ -240,7 +245,7 @@ sub gather_configured_services
         }
     }
 
-    $self->verbose("Gathered ", scalar keys %$services, " configured services: ", 
+    $self->verbose("Gathered ", scalar keys %$services, " configured services: ",
                    join(", ", sort keys %$services));
 
     return $services;
@@ -250,11 +255,11 @@ sub gather_configured_services
 
 =item gather_current_services
 
-Gather list of current services from both C<systemctl> and legacy C<chkconfig> 
+Gather list of current services from both C<systemctl> and legacy C<chkconfig>
 using resp. C<unit> and C<chkconfig> C<current_services> methods.
 
-All arguments form a list of C<relevant_services> that is used to run minimal set 
-of system commands (and only if C<unconfigured_default> is C<ignore>). 
+All arguments form a list of C<relevant_services> that is used to run minimal set
+of system commands (and only if C<unconfigured_default> is C<ignore>).
 
 =cut
 
@@ -282,10 +287,10 @@ sub gather_current_services
 
     # How to join these:
     # TODO: re-verify (seems not to be the case?)
-    #   The only services that are not seen by systemctl are SYSV services that 
+    #   The only services that are not seen by systemctl are SYSV services that
     #   are not started via systemd (not necessarily running).
     #   The 'chkconfig --list' is the only command not properly handled in EL7 systemd.
-    # TODO: what if someone starts a SYSV service via /etc/init.d/myservice start? 
+    # TODO: what if someone starts a SYSV service via /etc/init.d/myservice start?
     #   Does systemd see this? (and how would it do that?)
 
     my $services = $self->{chkconfig}->current_services();
@@ -297,10 +302,10 @@ sub gather_current_services
             $self->info("Found configured service $service via Chkconfig and Unit. ",
                         "Using Unit service details.");
         }
-        $services->{$service} = $detail;        
+        $services->{$service} = $detail;
     }
 
-    $self->verbose("Gathered ", scalar keys %$services, " current services: ", 
+    $self->verbose("Gathered ", scalar keys %$services, " current services: ",
                    join(", ", sort keys %$services));
 
     return $services;
@@ -310,6 +315,6 @@ sub gather_current_services
 
 =back
 
-=cut 
+=cut
 
 1;

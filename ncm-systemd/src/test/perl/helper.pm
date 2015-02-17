@@ -15,6 +15,10 @@ set_desired_output, set_desired_err and set_command_status functions.
 
 package helper;
 
+BEGIN {
+    *CORE::GLOBAL::sleep = sub {};
+}
+
 use strict;
 use warnings;
 use base 'Exporter';

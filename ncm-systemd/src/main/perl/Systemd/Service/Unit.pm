@@ -14,7 +14,7 @@ use LC::Exception qw (SUCCESS);
 use parent qw(CAF::Object Exporter);
 use EDG::WP4::CCM::Element qw(unescape);
 use NCM::Component::Systemd::Systemctl qw(
-    systemctl_show 
+    systemctl_show
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     );
@@ -29,9 +29,9 @@ Readonly our $TARGET_POWEROFF  => "poweroff";
 Readonly our $TARGET_REBOOT    => "reboot";
 
 # default level (if default.target is not responding)
-Readonly our $DEFAULT_TARGET => $TARGET_MULTIUSER;    
+Readonly our $DEFAULT_TARGET => $TARGET_MULTIUSER;
 
-Readonly::Array my @TARGETS => qw($TARGET_DEFAULT 
+Readonly::Array my @TARGETS => qw($TARGET_DEFAULT
     $TARGET_RESCUE $TARGET_MULTIUSER $TARGET_GRAPHICAL
     $TARGET_POWEROFF $TARGET_REBOOT);
 
@@ -42,11 +42,12 @@ Readonly our $TYPE_TARGET  => 'target';
 Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET);
 
 # Allowed states: enabled, disabled, masked
-# Disabled does not imply OFF (can be started by other 
+# Disabled does not imply OFF (can be started by other
 #   enabled service which has the disabled service as dependency)
 # Use 'masked' if you really don't want something to be started/running.
+# is_ufstate assumes -runtime is not what you want supported.
 Readonly our $STATE_ENABLED => "enabled";
-Readonly our $STATE_DISABLED => "disabled"; 
+Readonly our $STATE_DISABLED => "disabled";
 Readonly our $STATE_MASKED => "masked";
 
 Readonly::Array my @STATES => qw($STATE_ENABLED $STATE_DISABLED $STATE_MASKED);
@@ -127,13 +128,13 @@ sub service_text
         $self->error("Service detail is missing name");
         return;
     }
-       
+
     my @attributes = qw(state startstop type targets);
     my @attrtxt;
     foreach my $attr (@attributes) {
         my $val = $detail->{$attr};
         if (defined($val)) {
-            my $tmptxt = "$attr "; 
+            my $tmptxt = "$attr ";
             if(ref($val) eq 'ARRAY') {
                 $tmptxt .= join(',', @$val);
             } else {
@@ -154,10 +155,10 @@ sub service_text
 
 =item current_services
 
-Return hash reference with current configured services 
+Return hash reference with current configured services
 determined via C<make_cache_alias>.
 
-All additional arguments are a list of C<units> 
+All additional arguments are a list of C<units>
 that is passed to C<make_cache_alias>.
 
 This method also rebuilds the cache and alias map.
@@ -174,7 +175,7 @@ sub current_services
     $self->make_cache_alias($TYPE_SERVICE, @units);
 
     my %current;
-    
+
     while (my ($name,$data) = each %{$unit_cache->{$TYPE_SERVICE}}) {
         my $detail = {name => $name, type => $TYPE_SERVICE};
 
@@ -205,9 +206,9 @@ sub current_services
         my $wanted = $show->{WantedBy};
         $detail->{targets} = [];
         if (defined($wanted)) {
-            # TODO resolve further implied targets (a.k.a reverse dependencies)? 
+            # TODO resolve further implied targets (a.k.a reverse dependencies)?
             #   e.g. if multi-user.target is wanted-by graphical.target, do we add
-            #   graphical.target here too? 
+            #   graphical.target here too?
             foreach my $target (@$wanted) {
                 # strip .target (but there can be non .target reverse dependencies)
                 $target =~ s/\.target$//;
@@ -216,7 +217,7 @@ sub current_services
         } else {
             $self->verbose("No WantedBy defined for service unit $detail->{name}");
         }
-        
+
         # If a service is WantedBy / has a target, it is enabled.
         # This is the only relevant difference between a sysv service
         #   using the old chkconfig on and off
@@ -240,7 +241,7 @@ sub current_services
 
 Return the current target.
 
-TODO: implement this. systemctl list-units --type target 
+TODO: implement this. systemctl list-units --type target
 lists all current targets (yes, with an s).
 
 =cut
@@ -281,7 +282,7 @@ sub default_target
 =item configured_services
 
 C<configured_services> parses the C<tree> hash reference and builds up the
-services to be configured. It returns a hash reference with key the service name and 
+services to be configured. It returns a hash reference with key the service name and
 values the details of the service.
 
 (C<tree> is typically C<$config->getElement('/software/components/systemd/service')->getTree>.)
@@ -293,24 +294,24 @@ sub configured_services
     my ($self, $tree) = @_;
 
     my %services;
-    
+
     while (my ($service, $detail) = each %$tree) {
         # only set the name (not mandatory in new schema, to be added here)
         $detail->{name} = unescape($service) if (! exists($detail->{name}));
 
         # all new services are assumed type service
         $detail->{type} = $TYPE_SERVICE if (! exists($detail->{type}));
-        
+
         $self->verbose("Add service name $detail->{name} (service $service)");
         $self->debug(1, "Add ", $self->service_text($detail));
-        
+
         $services{$detail->{name}} = $detail;
     }
 
     # TODO figure out a way to specify what off-targets and what on-targets mean.
     # If on is defined, all other targets are off
-    # If off is defined, all others are on or also off? (2nd case: off means off everywhere) 
-    
+    # If off is defined, all others are on or also off? (2nd case: off means off everywhere)
+
     return \%services;
 }
 
@@ -325,7 +326,7 @@ sub configured_services
 
 =item init_cache
 
-(Re)Initialise all unit caches. If a C<type> is specified, 
+(Re)Initialise all unit caches. If a C<type> is specified,
 only those cache will be (re)initialised.
 
 Returns the caches (for unittestung mainly).
@@ -346,7 +347,7 @@ Affected caches are
 
 sub init_cache
 {
-    my ($self, $type) = @_; 
+    my ($self, $type) = @_;
 
     if(defined $type) {
         $self->verbose("Initialisation of all caches for type $type.");
@@ -354,21 +355,21 @@ sub init_cache
         # reset unit_cache and alias for current type
         $unit_cache->{$type} = {};
         $unit_alias->{$type} = {};
-        
+
         $self->verbose("Type $type initiliasation of dependency_cache not supported.");
     } else {
         $self->verbose("Initialisation of all caches.");
 
         $unit_cache = {
-            service => {}, 
+            service => {},
             target => {}
         };
 
         $unit_alias = {
-            service => {}, 
+            service => {},
             target => {}
         };
-        
+
         $dependency_cache = {
             deps => {},
             rev => {},
@@ -383,13 +384,13 @@ sub init_cache
 
 =item make_cache_alias
 
-(Re)generate the C<unit_cache> and C<unit_alias> map 
-based on current units and unitfiles for C<type>. 
+(Re)generate the C<unit_cache> and C<unit_alias> map
+based on current units and unitfiles for C<type>.
 
-Details for each unit from C<units> are also added. 
-If C<units> is empty/undef, all found units and unitfiles 
+Details for each unit from C<units> are also added.
+If C<relevant_units> is empty/undef, all found units and unitfiles
 are. Units without a type specifier are assumed of type
-C<type>. 
+C<type>.
 
 Each found unit is also added as it's own alias.
 
@@ -401,7 +402,7 @@ Returns the generated cache and alias map for unittesting purposes.
 
 sub make_cache_alias
 {
-    my ($self, $type, @units) = @_;
+    my ($self, $type, @relevant_units) = @_;
 
     my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
     if (!($type && $type =~ m/$treg/)) {
@@ -409,26 +410,31 @@ sub make_cache_alias
         return;
     }
 
-    my $units = systemctl_list_units($self, $type);
-    my $unit_files = systemctl_list_unit_files($self, $type);
-    
+    my $list_units = systemctl_list_units($self, $type);
+    my $list_unit_files = systemctl_list_unit_files($self, $type);
+
     # Join them, keep data
-    while (my ($name, $data) = each %$units) {
+    while (my ($name, $data) = each %$list_units) {
         $unit_cache->{$type}->{$name}->{unit} = $data;
     }
-    while (my ($name, $data) = each %$unit_files) {
+    while (my ($name, $data) = each %$list_unit_files) {
         $unit_cache->{$type}->{$name}->{unit_file} = $data;
     }
 
     # Unknown names, to be checked if aliases
     my @unknown;
-    if (@units) {
-        # Strip the type
-        my $reg = '\.'.$type.'$';
-        @units = map { $_ =~ s/$reg//; $_ } @units;
+    my @units;
+    if (@relevant_units) {
+        foreach my $name (@relevant_units) {
+            # tmnptype should be equal too type
+            # cname is the unit name in the cache
+            my ($tmptype, $cname) = $self->get_type_cachename($name, $type);
+            push(@units, $cname);
+        }
     } else {
         @units = sort keys %{$unit_cache->{$type}};
     }
+
     foreach my $name (@units) {
         my $data = $unit_cache->{$type}->{$name};
 
@@ -458,6 +464,7 @@ sub make_cache_alias
                 next;
             } else {
                 $self->debug(1, "Name $name is an instance ($instance)");
+                # TODO: use systemd-escape -u to decode the instance name?
                 $data->{instance} = $instance;
             }
         }
@@ -476,12 +483,12 @@ sub make_cache_alias
         if ($show->{Id} =~ m/$pattern/) {
             $id = $1;
             if ($id eq $name) {
-                $data->{show} = $show;            
+                $data->{show} = $show;
                 $self->debug(1, "Added type $type name $name to cache.");
             } else {
                 $self->verbose("Found id $id that doesn't match name $name. ",
                                "Adding as unknown and skipping further handling.");
-                # in particular, no aliases are processed/followed 
+                # in particular, no aliases are processed/followed
                 # not to risk anything being overwritten
 
                 # add the real name to the list of units to check
@@ -520,7 +527,7 @@ sub make_cache_alias
             $self->debug(1 ,"Unknown $name / $id is an alias for $type $realname");
         } else {
             # Most likely the realname does not list this name in its Names list
-            # Maybe this is an alias of an alias? (We don't process the aliases, 
+            # Maybe this is an alias of an alias? (We don't process the aliases,
             # so their aliases are not added)
             # TODO: add it as alias or always error?
             my $realid = $unit_alias->{$type}->{$id};
@@ -539,10 +546,10 @@ sub make_cache_alias
                 $unit_alias->{$type}->{$name} = $realid;
             } else {
                 $self->error("Found unknown name $name for type $type with ",
-                             "id $id (full $show->{Id}) names ", 
-                             join(', ', @{$show->{Names}}), 
+                             "id $id (full $show->{Id}) names ",
+                             join(', ', @{$show->{Names}}),
                              ".");
-            }                    
+            }
         }
     }
 
@@ -561,7 +568,7 @@ sub make_cache_alias
 
     }
 
-    # For unittesting purposes    
+    # For unittesting purposes
     return $unit_cache->{$type}, $unit_alias->{$type};
 }
 
@@ -569,9 +576,9 @@ sub make_cache_alias
 
 =item wanted_by
 
-Return if C<service> is wanted by C<target>. 
+Return if C<service> is wanted by C<target>.
 
-Any unit can be passed as C<service> or C<target>; but in 
+Any unit can be passed as C<service> or C<target>; but in
 absence of a type specifier resp. C<.service> and C<.target> will
 be used.
 
@@ -591,8 +598,8 @@ sub wanted_by
         $target .= ".$TYPE_TARGET";
     }
 
-    # Try lookup from reverse cache. 
-    # If not found in cache, look it up via systemctl_list_deps 
+    # Try lookup from reverse cache.
+    # If not found in cache, look it up via systemctl_list_deps
     # with reverse enabled.
     if(! defined $dependency_cache->{rev}->{$service}) {
         $self->verbose("No cache for dependency for service $service and target $target.");
@@ -608,6 +615,39 @@ sub wanted_by
 
 =pod
 
+=item get_type_cachename
+
+C<get_type_cachename> returns the type and cache name based on the
+C<unit> and optional C<type>.
+
+=cut
+
+sub get_type_cachename
+{
+    my ($self, $unit, $type) = @_;
+
+    my $treg = '\.(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
+    if ($type) {
+        $self->verbose("Set type $type for unit $unit.");
+    } elsif ($unit =~ m/$treg/) {
+        $type = $1;
+        $self->verbose("Found type $type based on unit $unit.");
+    } else {
+        $type = $TYPE_SERVICE;
+        $self->verbose("Could not determine type based on unit $unit ",
+                       "and pattern $treg. Using default type $type.");
+    }
+
+    # The cache unit name
+    my $cname = $unit;
+    my $reg = '\.'.$type.'$';
+    $cname =~ s/$reg//;
+
+    return $type, $cname;
+}
+
+=pod
+
 =item is_active
 
 C<is_active> returns true or false and reflects if a unit is "running" or not.
@@ -618,19 +658,18 @@ The following options are supported
 
 =item force
 
-This is based on cached values, set C<force> to true to force a cache update 
+This is based on cached values, set C<force> to true to force a cache update
 (default false).
 
 =item sleeptime
 =item max
 
-Units that are 'reloading', 'activating' and 'deactivating' are refreshed with 
-C<sleep> (default 1 sec) and C<max> number of tries (default 3). Until 
+Units that are 'reloading', 'activating' and 'deactivating' are refreshed with
+C<sleep> (default 1 sec) and C<max> number of tries (default 3). Until
 
 =item type
 
-Specify the C<type> of the unit (otherwise it is derived from the unit name or 
-default 'service' is assumed) 
+Specify the C<type> of the unit (passed to C<get_type_cachename>).
 
 =back
 
@@ -639,43 +678,26 @@ default 'service' is assumed)
 sub is_active
 {
     my ($self, $unit, %opts) = @_;
-    
+
     my $force = exists($opts{force}) ? $opts{force} : 0;
     my $sleep = exists($opts{sleep}) ? $opts{sleep} : 1;
     my $max = exists($opts{max}) ? $opts{max} : 3;
 
     $self->verbose("Running is_active with force $force sleep $sleep max $max");
 
-    my $type;
-    my $treg = '\.(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
-    if ($opts{type}) {
-        $type = $opts{type};
-        $self->verbose("Set type $type for unit $unit.");        
-    } elsif ($unit =~ m/$treg/) {
-        $type = $1;
-        $self->verbose("Found type $type based on unit $unit.");
-    } else {
-        $type = $TYPE_SERVICE;
-        $self->verbose("Could not determine type based on unit $unit ",
-                       "and pattern $treg. Using default type $type.");
-    }
+    my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
 
     if ($force) {
         $self->verbose("Force updating the cache for the unit $unit.");
         $self->make_cache_alias($type, $unit);
     }
 
-    # The cache unit name as used in make_cache_alias
-    my $cunit = $unit;
-    my $reg = '\.'.$type.'$';
-    $cunit =~ s/$reg//;
-
-    my $active = $unit_cache->{$type}->{$cunit}->{show}->{ActiveState};
+    my $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
     if (! defined($active)) {
-        $self->error("No ActiveState for unit $unit (cunit $cunit) found.");
+        $self->error("No ActiveState for unit $unit (cname $cname) found.");
         return;
     }
- 
+
     # Possible ActiveState values from systemd dbus interface
     # http://www.freedesktop.org/wiki/Software/systemd/dbus/
 
@@ -687,9 +709,9 @@ sub is_active
         if ($tries < $max) {
             sleep($sleep);
             $self->make_cache_alias($type, $unit);
-            $active = $unit_cache->{$type}->{$cunit}->{show}->{ActiveState};
+            $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
             if (! defined($active)) {
-                $self->error("No ActiveState for unit $unit (cunit $cunit) found ($tries of max $max).");
+                $self->error("No ActiveState for unit $unit (cname $cname) found ($tries of max $max).");
                 return;
             }
             $self->verbose("Updating $msg. New state $active.");
@@ -724,8 +746,102 @@ sub is_active
 
 =pod
 
+=item is_ufstate
+
+C<is_ufstate> retruns true or false if the
+UnitFile state of C<unit> matches the (simplified) C<state>.
+
+The following options are supported
+
+=over
+
+=item force
+
+This is based on cached values, set C<force> to true to force a cache update
+(default false).
+
+=item type
+
+Specify the C<type> of the unit (passed to C<get_type_cachename>).
+
 =back
 
-=cut 
+=cut
+
+sub is_ufstate
+{
+    my ($self, $unit, $state, %opts) = @_;
+
+    my $force = exists($opts{force}) ? $opts{force} : 0;
+
+    $self->verbose("is_ufstate for unit $unit and state $state with force $force");
+
+    my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
+
+    if ($force) {
+        $self->verbose("Force updating the cache for the unit $unit.");
+        $self->make_cache_alias($type, $unit);
+    }
+
+    my $ufstate = $unit_cache->{$type}->{$cname}->{show}->{UnitFileState};
+    if (! defined($ufstate)) {
+        $self->error("No UnitFileState for unit $unit (cname $cname) found.");
+        return;
+    }
+
+    # Possible UnitFileState values from systemd dbus interface
+    # http://www.freedesktop.org/wiki/Software/systemd/dbus/
+
+    my $msg = "Unit $unit with UnitFileState $ufstate";
+    if ($state eq $ufstate) {
+        $self->verbose("$msg as wanted.");
+        return 1;
+    }
+
+    # possible states:
+    #   enabled, enabled-runtime, linked, linked-runtime, masked, masked-runtime, static, disabled, invalid
+
+    # static units shouldn't be enabled/or disabled, they are static because they
+    # are required by another unit (and will be started when the other unit is).
+    # (the unit-file misses the [Install] section)
+    # we can force enable/disable/mask them by symlinking, but we shouldn't.
+    # TODO: support expert mode that allows this.
+    elsif ($ufstate eq 'static') {
+        $self->info("$msg is a static unit. ",
+                    "Not going to force the state to $state and assume this is ok.");
+        return 1;
+    }
+
+    # warn for invalid states (although not much can be done about it)
+    elsif ($ufstate eq 'invalid') {
+        $self->warn("$msg uncertain/unsupported behaviour. Assuming this is not the state $state.");
+        return 0;
+    }
+
+    # linked states: try to resolve the symlink? is this expert mode?
+    # TODO: this is a serious assumption.
+    elsif ($ufstate eq 'linked') {
+        $self->warn("$msg uncertain/unsupported behaviour. Assuming this is the state $state.");
+        return 1;
+    }
+
+    # all -runtime are non-permanent, so not supported here.
+    elsif ($ufstate =~ m/-runtime$/) {
+        $self->info("$msg is non-permanent and thus not the wanted state $state.");
+        return 0;
+    }
+
+    # the rest
+    else {
+        $self->verbose("$msg not the wanted state $state.");
+        return 0;
+    }
+}
+
+=pod
+
+=back
+
+=cut
 
 1;
