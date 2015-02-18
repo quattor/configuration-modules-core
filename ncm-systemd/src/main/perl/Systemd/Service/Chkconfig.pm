@@ -93,6 +93,8 @@ sub current_services
         my ($servicename, $levels) = ($1, $2);
         my $detail = {name => $servicename, type => $TYPE_SYSV, startstop => $DEFAULT_STARTSTOP};
 
+        $detail->{fullname} = "$servicename.$TYPE_SYSV";
+
         if ($levels =~ m/[0-6]:on/) {
             $self->debug(1, "Found 'on' states for service $detail->{name}");
             my $ontargets = $self->convert_runlevels(join('', $levels =~ /([0-6]):on/g));
@@ -198,6 +200,8 @@ sub configured_services
         
         # set the name (not mandatory in new schema either)
         $detail->{name} = unescape($service) if (! exists($detail->{name}));
+
+        $detail->{fullname} = "$detail->{name}.$TYPE_SYSV";
 
         my $reset = delete $detail->{reset};
         $self->verbose('Ignore the reset value $reset from service $detail->{name}') if defined($reset);

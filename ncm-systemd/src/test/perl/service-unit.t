@@ -32,9 +32,11 @@ is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL
           "exported TARGET names");
 is($DEFAULT_TARGET, $TARGET_MULTIUSER, "multiuser is default target");
 
-is_deeply([$TYPE_SYSV, $TYPE_SERVICE, $TYPE_TARGET],
-          [qw(sysv service target)],
+is_deeply([$TYPE_SERVICE, $TYPE_TARGET],
+          [qw(service target)],
            "exported TYPES names");
+is($TYPE_SYSV, $TYPE_SERVICE, "pure SYSV services are mapped to service type");
+is($TYPE_DEFAULT, $TYPE_SERVICE, "default type is service type");
 
 is_deeply([$STATE_ENABLED, $STATE_DISABLED, $STATE_MASKED],
           [qw(enabled disabled masked)],
@@ -65,12 +67,13 @@ my $svc = {
     name => "test_del",
     state => $STATE_ENABLED,
     type => "service",
+    fullname => "test_del.service",
     startstop => 0,
     targets => ["rescue"],
 };
 
 is($unit->service_text($svc),
-   "service test_del (state enabled startstop 0 type service targets rescue)",
+   "service test_del (state enabled startstop 0 type service fullname test_del.service targets rescue)",
    "Generate string of service details");
 
 =pod
@@ -218,27 +221,29 @@ Get services via the make_cache_alias
 =cut
 $cmp->{ERROR} = 0;
 my $name;
-my $cs = $unit->current_services();
+my $cus = $unit->current_services();
 
 is($cmp->{ERROR}, 0, 'No errors while processing current_services');
 
-is(scalar keys %$cs, 137,
+is(scalar keys %$cus, 137,
    'Found 137 non-alias services via current_services');
 
 $name = 'nrpe';
-$svc = $cs->{$name};
+$svc = $cus->{$name};
 is($svc->{name}, $name, "Service $name name matches");
 is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
-is($svc->{type}, "service", "Service $name type sysv");
+is($svc->{type}, $TYPE_SERVICE, "Service $name type $TYPE_SERVICE");
+is($svc->{fullname}, "nrpe.$TYPE_SERVICE", "Fullname service $name type sysv is $name.$TYPE_SERVICE");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
 # on, but failed to start
 $name = 'rc-local';
-$svc = $cs->{$name};
+$svc = $cus->{$name};
 is($svc->{name}, $name, "Service $name name matches");
 is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
-is($svc->{type}, "service", "Service $name type sysv");
+is($svc->{type}, $TYPE_SERVICE, "Service $name type $TYPE_SERVICE");
+is($svc->{fullname}, "$name.$TYPE_SERVICE", "Fullname service $name type service is $name.service");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
@@ -291,13 +296,15 @@ Test configured services
 
 my $cfg = get_config_for_profile('service-unit_services');
 my $tree = $cfg->getElement('/software/components/systemd/service')->getTree();
-is_deeply($unit->configured_services($tree), {
+my $cos = $unit->configured_services($tree);
+is_deeply($cos, {
     test2_on => {
         name => 'test2_on',
         state => $STATE_ENABLED,
         targets => ["rescue", "multi-user"],
         startstop => 1,
         type => $TYPE_SERVICE,
+        fullname => "test2_on.$TYPE_SERVICE",
     },
     test2_add => {
         name => "test2_add",
@@ -305,6 +312,7 @@ is_deeply($unit->configured_services($tree), {
         targets => ["multi-user"],
         startstop => 1,
         type => $TYPE_TARGET,
+        fullname => "test2_add.$TYPE_TARGET",
     },
     othername2 => {
         name => "othername2",
@@ -312,6 +320,7 @@ is_deeply($unit->configured_services($tree), {
         targets => ["multi-user"],
         startstop => 1,
         type => $TYPE_SERVICE,
+        fullname => "othername2.$TYPE_SERVICE",
     },
     test_off => {
         name => "test_off",
@@ -319,6 +328,7 @@ is_deeply($unit->configured_services($tree), {
         targets => ["rescue"],
         startstop => 1,
         type => $TYPE_SERVICE,
+        fullname => "test_off.$TYPE_SERVICE",
     },
     test_del => {
         name => "test_del",
@@ -326,8 +336,23 @@ is_deeply($unit->configured_services($tree), {
         targets => ["rescue"],
         startstop => 0,
         type => $TYPE_SERVICE,
+        fullname => "test_del.$TYPE_SERVICE",
     },
 }, "configured_services set correct name and type");
+
+=pod
+
+=head2 update_cache
+
+Test update_cache
+
+=cut
+
+my $updated = $unit->update_cache("network.service", "multi-user.target", "ceph.service", "network.target");
+is_deeply($updated, {
+    $TYPE_SERVICE => ['network.service', 'ceph.service'],
+    $TYPE_TARGET => ['multi-user.target', 'network.target'],
+}, "update_cache updated the correct services with their types");
 
 =pod
 

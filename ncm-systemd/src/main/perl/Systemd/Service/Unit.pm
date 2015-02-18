@@ -35,11 +35,15 @@ Readonly::Array my @TARGETS => qw($TARGET_DEFAULT
     $TARGET_RESCUE $TARGET_MULTIUSER $TARGET_GRAPHICAL
     $TARGET_POWEROFF $TARGET_REBOOT);
 
-Readonly our $TYPE_SYSV    => 'sysv';
 Readonly our $TYPE_SERVICE => 'service';
 Readonly our $TYPE_TARGET  => 'target';
+Readonly our $TYPE_SYSV    => $TYPE_SERVICE;
 
-Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET);
+# These are default/fallback and supported types for get_type_cachename
+Readonly our $TYPE_DEFAULT => $TYPE_SERVICE;
+Readonly::Array my @TYPES_SUPPORTED => ($TYPE_SERVICE, $TYPE_TARGET);
+
+Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET $TYPE_DEFAULT);
 
 # Allowed states: enabled, disabled, masked
 # Disabled does not imply OFF (can be started by other
@@ -129,7 +133,7 @@ sub service_text
         return;
     }
 
-    my @attributes = qw(state startstop type targets);
+    my @attributes = qw(state startstop type fullname targets);
     my @attrtxt;
     foreach my $attr (@attributes) {
         my $val = $detail->{$attr};
@@ -195,6 +199,8 @@ sub current_services
             }
             next;
         }
+        
+        $detail->{fullname} = $show->{Id};
 
         my $load = $show->{LoadState};
         my $active = $show->{ActiveState};
@@ -302,6 +308,12 @@ sub configured_services
         # all new services are assumed type service
         $detail->{type} = $TYPE_SERVICE if (! exists($detail->{type}));
 
+        # Suffix the type if no suffix is found
+        $detail->{fullname} = $detail->{name};
+        my $pat = '\.'.$detail->{type}.'$';
+        # TODO: '.' should be encoded with systemd tool (if exists?)
+        $detail->{fullname} .= ".$detail->{type}" if ($detail->{fullname} !~ m/$pat/);
+
         $self->verbose("Add service name $detail->{name} (service $service)");
         $self->debug(1, "Add ", $self->service_text($detail));
 
@@ -404,7 +416,7 @@ sub make_cache_alias
 {
     my ($self, $type, @relevant_units) = @_;
 
-    my $treg = '^(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
+    my $treg = '^(' . join('|', @TYPES_SUPPORTED) . ')$';
     if (!($type && $type =~ m/$treg/)) {
         $self->error("Undefined or wrong type $type for systemctl list-unit-files / list-units");
         return;
@@ -620,21 +632,24 @@ sub wanted_by
 C<get_type_cachename> returns the type and cache name based on the
 C<unit> and optional C<type>.
 
+If the C<type> is not specified, it will be derived using the supported types.
+If the type can't be determined this way, the default type will be used.
+
 =cut
 
 sub get_type_cachename
 {
     my ($self, $unit, $type) = @_;
 
-    my $treg = '\.(' . join('|', $TYPE_SERVICE, $TYPE_TARGET) . ')$';
+    my $treg = '\.(' . join('|', @TYPES_SUPPORTED) . ')$';
     if ($type) {
-        $self->verbose("Set type $type for unit $unit.");
+        $self->debug(1, "get_type_cachename: set type $type for unit $unit.");
     } elsif ($unit =~ m/$treg/) {
         $type = $1;
-        $self->verbose("Found type $type based on unit $unit.");
+        $self->debug(1, "get_type_cachename: found type $type based on unit $unit.");
     } else {
-        $type = $TYPE_SERVICE;
-        $self->verbose("Could not determine type based on unit $unit ",
+        $type = $TYPE_DEFAULT;
+        $self->verbose("get_type_cachename: could not determine type based on unit $unit ",
                        "and pattern $treg. Using default type $type.");
     }
 
@@ -644,6 +659,42 @@ sub get_type_cachename
     $cname =~ s/$reg//;
 
     return $type, $cname;
+}
+
+
+=pod
+
+=item update_cache
+
+Update the cache for the C<units> provided. The type of the unit is 
+derived using the C<get_type_cachename> method. 
+
+The cache is updated via the C<make_cache_alias> method.
+
+=cut
+
+sub update_cache
+{
+    my ($self, @units) = @_;
+
+    my %update = map { $_ => [] } @TYPES_SUPPORTED;
+
+    foreach my $unit (@units) {
+        my ($type, $cachename) = $self->get_type_cachename($unit);
+        # use full name, not cachename (both should work though)
+        push(@{$update{$type}}, $unit);
+    }
+
+    foreach my $type (@TYPES_SUPPORTED) {
+        my @type_units = @{$update{$type}};
+        if(@type_units) {
+            $self->verbose("update_cache: type $type units ", join(", ", @type_units));
+            $self->make_cache_alias($type, @type_units);
+        }
+    }
+
+    # for unittests only
+    return \%update;
 }
 
 =pod
@@ -683,18 +734,18 @@ sub is_active
     my $sleep = exists($opts{sleep}) ? $opts{sleep} : 1;
     my $max = exists($opts{max}) ? $opts{max} : 3;
 
-    $self->verbose("Running is_active with force $force sleep $sleep max $max");
+    $self->verbose("Running is_active (force=$force sleep=$sleep max=$max)");
 
     my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
 
     if ($force) {
-        $self->verbose("Force updating the cache for the unit $unit.");
+        $self->verbose("is_active force updating the cache for the unit $unit.");
         $self->make_cache_alias($type, $unit);
     }
 
     my $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
     if (! defined($active)) {
-        $self->error("No ActiveState for unit $unit (cname $cname) found.");
+        $self->error("is_active no ActiveState for unit $unit (cname $cname) found.");
         return;
     }
 
@@ -711,10 +762,10 @@ sub is_active
             $self->make_cache_alias($type, $unit);
             $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
             if (! defined($active)) {
-                $self->error("No ActiveState for unit $unit (cname $cname) found ($tries of max $max).");
+                $self->error("is_active no ActiveState for unit $unit (cname $cname) found ($tries of max $max).");
                 return;
             }
-            $self->verbose("Updating $msg. New state $active.");
+            $self->verbose("is_active updating $msg. New state $active.");
             $tries++;
         } else {
             # Map the intermediate states to a final state.
@@ -724,22 +775,24 @@ sub is_active
             } else {
                 $active = 'active';
             }
-            $self->verbose("Max tries for updating $msg. Forced mapping to $active.");
+            $self->verbose("is_active max tries for updating $msg. Forced mapping to $active.");
         }
     }
 
     # Must be one of the final states now.
     my @final = qw(active inactive failed);
     if (grep {$_ eq $active} @final) {
+        my $msg = "is_active: active $active for unit $unit, is_active ";
         if ($active eq 'active') {
-            $self->verbose("Active $active, is_active true");
+            $self->verbose("$msg true");
             return 1;
         } else {
-            $self->verbose("Active $active, is_active false");
+            $self->verbose("$msg false");
             return 0;
         }
     } else {
-        $self->error("Unsupported ActiveState $active. (Component version too old?)");
+        $self->error("is_active: unsupported ActiveState $active. ",
+                     "(Component version too old?)");
         return;
     }
 }
@@ -748,8 +801,10 @@ sub is_active
 
 =item is_ufstate
 
-C<is_ufstate> retruns true or false if the
+C<is_ufstate> returns true or false if the
 UnitFile state of C<unit> matches the (simplified) C<state>.
+
+An error is logged if the unit can't be queried and undef returned.
 
 The following options are supported
 
@@ -774,25 +829,25 @@ sub is_ufstate
 
     my $force = exists($opts{force}) ? $opts{force} : 0;
 
-    $self->verbose("is_ufstate for unit $unit and state $state with force $force");
+    $self->verbose("is_ufstate for unit $unit and state $state (force=$force)");
 
     my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
 
     if ($force) {
-        $self->verbose("Force updating the cache for the unit $unit.");
+        $self->verbose("is_ufstate: force updating the cache for the unit $unit.");
         $self->make_cache_alias($type, $unit);
     }
 
     my $ufstate = $unit_cache->{$type}->{$cname}->{show}->{UnitFileState};
     if (! defined($ufstate)) {
-        $self->error("No UnitFileState for unit $unit (cname $cname) found.");
+        $self->error("is_ufstate: no UnitFileState for unit $unit (cname $cname) found.");
         return;
     }
 
     # Possible UnitFileState values from systemd dbus interface
     # http://www.freedesktop.org/wiki/Software/systemd/dbus/
 
-    my $msg = "Unit $unit with UnitFileState $ufstate";
+    my $msg = "is_ufstate: unit $unit with UnitFileState '$ufstate'";
     if ($state eq $ufstate) {
         $self->verbose("$msg as wanted.");
         return 1;

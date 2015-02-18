@@ -145,7 +145,8 @@ $name = "network";
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
 is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
-is($svc->{type}, "sysv", "Service $name type sysv");
+is($svc->{type}, $TYPE_SYSV, "Service $name type TYPE_SYSV");
+is($svc->{fullname}, "$name.$TYPE_SYSV", "Fullname service $name type TYPE_SYSV is $name.$TYPE_SYSV");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
 
@@ -153,7 +154,8 @@ $name = "netconsole";
 $svc = $cs->{$name};
 is($svc->{name}, $name, "Service $name name matches");
 is($svc->{state},$STATE_DISABLED, "Service $name state disabled");
-is($svc->{type}, "sysv", "Service $name type sysv");
+is($svc->{type}, $TYPE_SYSV, "Service $name type TYPE_SYSV");
+is($svc->{fullname}, "$name.$TYPE_SYSV", "Fullname service $name type TYPE_SYSV is $name.$TYPE_SYSV");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
 
@@ -228,6 +230,7 @@ is_deeply($chk->configured_services($tree), {
         state => $STATE_ENABLED,
         targets => ['rescue', 'multi-user'],
         type => $TYPE_SYSV,
+        fullname => "test_on.$TYPE_SYSV",
     },
     test_add => {
         name => "test_add",
@@ -235,6 +238,7 @@ is_deeply($chk->configured_services($tree), {
         state => $STATE_DISABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
+        fullname => "test_add.$TYPE_SYSV",
     },
     othername => {
         name => "othername",
@@ -242,6 +246,7 @@ is_deeply($chk->configured_services($tree), {
         state => $STATE_ENABLED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
+        fullname => "othername.$TYPE_SYSV",
     },
     test_off => {
         name => "test_off",
@@ -249,6 +254,7 @@ is_deeply($chk->configured_services($tree), {
         state => $STATE_DISABLED,
         targets => ['multi-user', "graphical"],
         type => $TYPE_SYSV,
+        fullname => "test_off.$TYPE_SYSV",
     },
     test_del => {
         name => "test_del",
@@ -256,6 +262,7 @@ is_deeply($chk->configured_services($tree), {
         state => $STATE_MASKED,
         targets => ['multi-user'],
         type => $TYPE_SYSV,
+        fullname => "test_del.$TYPE_SYSV",
     },
 }, "Converted chkconfig services in new service details");
 
