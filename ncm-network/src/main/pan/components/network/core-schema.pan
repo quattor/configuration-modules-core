@@ -31,9 +31,24 @@ type structure_interface_alias = {
 type structure_bonding_options = {
     "mode" : long
     "miimon" : long
-    "updelay" : long
+    "updelay" ? long
     "downdelay" ? long
-    "primary" : string with exists("/system/network/interfaces/" + SELF)
+    "primary" ? string with exists("/system/network/interfaces/" + SELF)
+    "lacp_rate" ? long(0..1)
+} with {
+    if ( SELF['mode'] == 4 ) {
+        if ( ! exists(SELF["lacp_rate"]) ) {
+            error("Bonding using LACP configured but no rate set.");
+        };
+    } else {
+        if ( ! exists(SELF["primary"]) ) {
+            error("Bonding configured but no primary is defined.");
+        };
+        if ( ! exists(SELF["updelay"]) ) {
+            error("Bonding configured but no updelay is defined.");
+        };
+    };
+    true;
 };
 
 # describes the bridging options
