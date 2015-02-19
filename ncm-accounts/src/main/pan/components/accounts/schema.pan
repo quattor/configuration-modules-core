@@ -6,6 +6,21 @@ declaration template components/accounts/schema;
 
 include { 'quattor/schema' };
 
+function has_unique_attr = {
+    values = ARGV[0];
+    attr = ARGV[1];
+    cattrs = list();
+
+    foreach(ni;el;values) {
+        if(index(el[attr], cattrs) != -1) {
+            error(format("Duplicate attr %s : %s ", attr, el[attr]));
+            return(false);
+        } else {
+            append(cattrs, el[attr]);
+        };
+    };
+};
+
 type structure_userinfo = {
     'comment'    ? string
     'homeDir'    ? string
@@ -48,8 +63,8 @@ type component_accounts = {
     'rootpwd'    ? string
     'rootshell'  ? string
     'shadowpwd'  ? boolean
-    'users'      ? structure_userinfo{}
-    'groups'     ? structure_groupinfo{}
+    'users'      ? structure_userinfo{} with has_unique_attr(SELF, 'uid')
+    'groups'     ? structure_groupinfo{} with has_unique_attr(SELF, 'gid')
     'login_defs' ? structure_login_defs
     'remove_unknown' : boolean = false
     # Really useful only if remove_uknown=true.
