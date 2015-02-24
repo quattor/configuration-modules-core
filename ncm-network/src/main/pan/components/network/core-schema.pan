@@ -29,7 +29,7 @@ type structure_interface_alias = {
 # Describes the bonding options for configuring channel bonding on SL5
 # and similar.
 type structure_bonding_options = {
-    "mode" : long
+    "mode" : long(0..6)
     "miimon" : long
     "updelay" ? long
     "downdelay" ? long
