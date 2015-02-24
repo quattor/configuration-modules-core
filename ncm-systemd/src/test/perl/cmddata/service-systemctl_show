@@ -1,6 +1,6 @@
 # Raw data to be eval-ed
 
-$cmds{systemctl_show_network_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show network.service";
+$cmds{systemctl_show_network_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- network.service";
 $cmds{systemctl_show_network_service_el7}{out} = <<'EOF';
 Id=network.service
 Names=network.service
@@ -170,7 +170,7 @@ ExecMainCode=0
 ExecMainStatus=0
 EOF
 
-$cmds{systemctl_show_default_target_fc20}{cmd} = "/usr/bin/systemctl --no-pager --all show default.target";
+$cmds{systemctl_show_default_target_fc20}{cmd} = "/usr/bin/systemctl --no-pager --all show -- default.target";
 $cmds{systemctl_show_default_target_fc20}{out} = <<'EOF';
 Id=graphical.target
 Names=default.target runlevel5.target graphical.target
@@ -237,7 +237,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_default_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show default.target";
+$cmds{systemctl_show_default_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- default.target";
 $cmds{systemctl_show_default_target_el7}{out} = <<'EOF';
 Id=multi-user.target
 Names=default.target multi-user.target runlevel2.target runlevel4.target runlevel3.target
@@ -304,7 +304,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_ceph_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show ceph.service";
+$cmds{systemctl_show_ceph_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- ceph.service";
 $cmds{systemctl_show_ceph_service_el7}{out} = <<'EOF';
 Id=ceph.service
 Names=ceph.service
@@ -474,7 +474,7 @@ ExecMainStatus=0
 EOF
 
 
-$cmds{systemctl_show_runlevel0_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel0.target";
+$cmds{systemctl_show_runlevel0_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel0.target";
 $cmds{systemctl_show_runlevel0_target_el7}{out} = <<'EOF';
 Id=poweroff.target
 Names=runlevel0.target poweroff.target
@@ -541,7 +541,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel1_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel1.target";
+$cmds{systemctl_show_runlevel1_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel1.target";
 $cmds{systemctl_show_runlevel1_target_el7}{out} = <<'EOF';
 Id=rescue.target
 Names=rescue.target runlevel1.target
@@ -608,7 +608,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel2_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel2.target";
+$cmds{systemctl_show_runlevel2_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel2.target";
 $cmds{systemctl_show_runlevel2_target_el7}{out} = <<'EOF';
 Id=multi-user.target
 Names=default.target multi-user.target runlevel2.target runlevel4.target runlevel3.target
@@ -675,7 +675,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel3_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel3.target";
+$cmds{systemctl_show_runlevel3_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel3.target";
 $cmds{systemctl_show_runlevel3_target_el7}{out} = <<'EOF';
 Id=multi-user.target
 Names=default.target multi-user.target runlevel2.target runlevel4.target runlevel3.target
@@ -742,7 +742,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel4_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel4.target";
+$cmds{systemctl_show_runlevel4_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel4.target";
 $cmds{systemctl_show_runlevel4_target_el7}{out} = <<'EOF';
 Id=multi-user.target
 Names=default.target multi-user.target runlevel2.target runlevel4.target runlevel3.target
@@ -809,7 +809,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel5_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel5.target";
+$cmds{systemctl_show_runlevel5_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel5.target";
 $cmds{systemctl_show_runlevel5_target_el7}{out} = <<'EOF';
 Id=graphical.target
 Names=runlevel5.target graphical.target
@@ -876,7 +876,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_runlevel6_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show runlevel6.target";
+$cmds{systemctl_show_runlevel6_target_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- runlevel6.target";
 $cmds{systemctl_show_runlevel6_target_el7}{out} = <<'EOF';
 Id=reboot.target
 Names=runlevel6.target reboot.target
@@ -943,7 +943,7 @@ LoadError= ""
 Transient=no
 EOF
 
-$cmds{systemctl_show_rc_local_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show rc-local.service";
+$cmds{systemctl_show_rc_local_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- rc-local.service";
 $cmds{systemctl_show_rc_local_service_el7}{out} = <<'EOF';
 Id=rc-local.service
 Names=rc-local.service
@@ -1111,7 +1111,7 @@ ExecMainCode=0
 ExecMainStatus=0
 EOF
 
-$cmds{systemctl_show_autovt_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show autovt.service";
+$cmds{systemctl_show_autovt_service_el7}{cmd} = "/usr/bin/systemctl --no-pager --all show -- autovt.service";
 $cmds{systemctl_show_autovt_service_el7}{out} = <<'EOF';
 Id=autovt.service
 Names=autovt.service

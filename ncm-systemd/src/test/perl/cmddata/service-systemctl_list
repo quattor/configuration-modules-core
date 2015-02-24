@@ -291,7 +291,7 @@ sysinit.target      loaded active active System Initialization
 timers.target       loaded active active Timers
 EOF
 
-$cmds{systemctl_list_dependencies_sshd_service}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies sshd.service";
+$cmds{systemctl_list_dependencies_sshd_service}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies -- sshd.service";
 $cmds{systemctl_list_dependencies_sshd_service}{out}=<<'EOF';
 sshd.service
 system.slice
@@ -358,14 +358,14 @@ timers.target
 systemd-tmpfiles-clean.timer
 EOF
 
-$cmds{systemctl_list_dependencies_sshd_service_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse sshd.service";
+$cmds{systemctl_list_dependencies_sshd_service_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse -- sshd.service";
 $cmds{systemctl_list_dependencies_sshd_service_reverse}{out}=<<'EOF';
 sshd.service
 multi-user.target
 graphical.target
 EOF
 
-$cmds{systemctl_list_dependencies_default_target}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies default.target";
+$cmds{systemctl_list_dependencies_default_target}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies -- default.target";
 $cmds{systemctl_list_dependencies_default_target}{out}=<<'EOF';
 default.target
 atd.service
@@ -465,13 +465,13 @@ getty@tty1.service
 remote-fs.target
 EOF
 
-$cmds{systemctl_list_dependencies_default_target_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse default.target";
+$cmds{systemctl_list_dependencies_default_target_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse -- default.target";
 $cmds{systemctl_list_dependencies_default_target_reverse}{out}=<<'EOF';
 default.target
 graphical.target
 EOF
 
-$cmds{systemctl_list_dependencies_multiuser_target}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies multi-user.target";
+$cmds{systemctl_list_dependencies_multiuser_target}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies -- multi-user.target";
 $cmds{systemctl_list_dependencies_multiuser_target}{out}=<<'EOF';
 multi-user.target
 atd.service
@@ -571,13 +571,13 @@ getty@tty1.service
 remote-fs.target
 EOF
 
-$cmds{systemctl_list_dependencies_multiuser_target_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse multi-user.target";
+$cmds{systemctl_list_dependencies_multiuser_target_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse -- multi-user.target";
 $cmds{systemctl_list_dependencies_multiuser_target_reverse}{out}=<<'EOF';
 multi-user.target
 graphical.target
 EOF
 
-$cmds{systemctl_list_dependencies_not_a_service_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse not.a.service";
+$cmds{systemctl_list_dependencies_not_a_service_reverse}{cmd}="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse -- not.a.service";
 $cmds{systemctl_list_dependencies_not_a_service_reverse}{ec}=1;
 $cmds{systemctl_list_dependencies_not_a_service_reverse}{out}=<<'EOF';
 EOF

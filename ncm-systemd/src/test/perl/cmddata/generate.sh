@@ -42,8 +42,8 @@ function add () {
 
 begin_load
 
-
-for type in target service; do 
+types="service target mount socket timer path swap automount slice scope snapshot"
+for type in $types; do
     for list in unit-files units; do
         cmd="/usr/bin/systemctl --all --no-pager --no-legend --full list-$list --type $type"
         name="${reason}_systemctl_list-${list}_${type}"
@@ -52,14 +52,40 @@ for type in target service; do
         add "$name" "$cmd" $? "$out"
 
         for unit in `echo "$out" |sed -e "s/\.$type\s\+.*$//;"`; do
-            name="${reason}_systemctl_show_${unit}_${type}_${list}"
+
             # These might not be unique wrt list-unit and list-unit-files
             # but should show same info
-            cmd="/usr/bin/systemctl --no-pager --all show $unit.$type"
-            echo "unit $unit name $name command $cmd"
 
+            name="${reason}_systemctl_show_${unit}_${type}_${list}"
+            cmd="/usr/bin/systemctl --no-pager --all show -- $unit.$type"
+            echo "unit $unit name $name command $cmd"
             out=`$cmd`
             add "$name" "$cmd" $? "$out"
+
+            name="${reason}_systemctl_list_dependencies_${unit}_${type}_${list}"
+            cmd="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies -- $unit.$type"
+            echo "unit $unit name $name command $cmd"
+            out=`$cmd`
+            add "$name" "$cmd" $? "$out"
+
+            name="${reason}_systemctl_list_dependencies_reverse_${unit}_${type}_${list}"
+            cmd="/usr/bin/systemctl --no-pager --no-legend --full --plain list-dependencies --reverse -- $unit.$type"
+            echo "unit $unit name $name command $cmd"
+            out=`$cmd`
+            add "$name" "$cmd" $? "$out"
+
+            name="${reason}_systemctl_is_enabled_${unit}_${type}_${list}"
+            cmd="/usr/bin/systemctl is-enabled -- $unit.$type"
+            echo "unit $unit name $name command $cmd"
+            out=`$cmd`
+            add "$name" "$cmd" $? "$out"
+
+            name="${reason}_systemctl_is_active_${unit}_${type}_${list}"
+            cmd="/usr/bin/systemctl is-active -- $unit.$type"
+            echo "unit $unit name $name command $cmd"
+            out=`$cmd`
+            add "$name" "$cmd" $? "$out"
+
         done            
     done
 done

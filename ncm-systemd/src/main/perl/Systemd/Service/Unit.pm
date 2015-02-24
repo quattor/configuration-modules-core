@@ -37,13 +37,33 @@ Readonly::Array my @TARGETS => qw($TARGET_DEFAULT
 
 Readonly our $TYPE_SERVICE => 'service';
 Readonly our $TYPE_TARGET  => 'target';
+Readonly our $TYPE_MOUNT  => 'mount';
+Readonly our $TYPE_SOCKET  => 'socket';
+Readonly our $TYPE_TIMER  => 'timer';
+Readonly our $TYPE_PATH  => 'path';
+Readonly our $TYPE_SWAP  => 'swap';
+Readonly our $TYPE_AUTOMOUNT  => 'automount';
+Readonly our $TYPE_SLICE  => 'slice';
+Readonly our $TYPE_SCOPE  => 'scope';
+Readonly our $TYPE_SNAPSHOT  => 'snapshot';
+
 Readonly our $TYPE_SYSV    => $TYPE_SERVICE;
 
 # These are default/fallback and supported types for get_type_cachename
 Readonly our $TYPE_DEFAULT => $TYPE_SERVICE;
-Readonly::Array my @TYPES_SUPPORTED => ($TYPE_SERVICE, $TYPE_TARGET);
+Readonly::Array my @TYPES_SUPPORTED => (
+    $TYPE_SERVICE, $TYPE_TARGET, $TYPE_MOUNT, 
+    $TYPE_SOCKET, $TYPE_TIMER, $TYPE_PATH,
+    $TYPE_SWAP, $TYPE_AUTOMOUNT, $TYPE_SLICE,
+    $TYPE_SCOPE, $TYPE_SNAPSHOT,
+);
 
-Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_SERVICE $TYPE_TARGET $TYPE_DEFAULT);
+Readonly::Array my @TYPES => qw($TYPE_SYSV $TYPE_DEFAULT
+    $TYPE_SERVICE $TYPE_TARGET $TYPE_MOUNT 
+    $TYPE_SOCKET $TYPE_TIMER $TYPE_PATH
+    $TYPE_SWAP $TYPE_AUTOMOUNT $TYPE_SLICE
+    $TYPE_SCOPE $TYPE_SNAPSHOT
+);
 
 # Allowed states: enabled, disabled, masked
 # Disabled does not imply OFF (can be started by other
@@ -165,7 +185,8 @@ determined via C<make_cache_alias>.
 All additional arguments are a list of C<units>
 that is passed to C<make_cache_alias>.
 
-This method also rebuilds the cache and alias map.
+This method initialises the cache and alias map if 
+empty and updates the cache and map.
 
 =cut
 
@@ -174,13 +195,20 @@ sub current_services
     my ($self, @units) = @_;
 
     # TODO: always update cache?
-    $self->init_cache($TYPE_SERVICE);
+    if (! defined($unit_cache->{$TYPE_SERVICE}) ||
+        ! defined($unit_alias->{$TYPE_SERVICE})) {
+        $self->init_cache($TYPE_SERVICE);
+    }
 
     $self->make_cache_alias($TYPE_SERVICE, @units);
 
     my %current;
 
-    while (my ($name,$data) = each %{$unit_cache->{$TYPE_SERVICE}}) {
+    # Dangerous to use unit_cache and 'each' here. 
+    # Lots of calls can lead to an update of the hash, 
+    # which results in undefined behaviour for 'each'
+    foreach my $name (sort keys %{$unit_cache->{$TYPE_SERVICE}}) {
+        my $data = $unit_cache->{$TYPE_SERVICE}->{$name};
         my $detail = {name => $name, type => $TYPE_SERVICE};
 
         # TODO: can we refine this somehow? Or does it make no sense.
@@ -199,7 +227,7 @@ sub current_services
             }
             next;
         }
-        
+
         $detail->{fullname} = $show->{Id};
 
         my $load = $show->{LoadState};
@@ -209,6 +237,7 @@ sub current_services
         $self->debug(1, "Found service unit $detail->{name} with ",
                        "LoadState $load ActiveState $active");
 
+        # Intentionally not using the full recursive list from get_wantedby method
         my $wanted = $show->{WantedBy};
         $detail->{targets} = [];
         if (defined($wanted)) {
@@ -224,14 +253,22 @@ sub current_services
             $self->verbose("No WantedBy defined for service unit $detail->{name}");
         }
 
-        # If a service is WantedBy / has a target, it is enabled.
-        # This is the only relevant difference between a sysv service
-        #   using the old chkconfig on and off
-        if(@{$detail->{targets}}) {
-            $detail->{state} = $STATE_ENABLED;
-        } else {
-            $detail->{state} = $STATE_DISABLED;
-        }
+        # This can return other states then the enabled/disabled/masked.
+        my ($ufstate, $derived) = $self->get_ufstate($detail->{fullname});
+        if(! $ufstate) {
+            $self->verbose("No ufstate could be determined. Using derived state $derived.");
+            $ufstate = $derived;
+        
+            if($ufstate) {
+                # Track that is a derived state
+                $detail->{derived} = 1;
+            } else {
+                $self->error("is_ufstate: unable to use ufstate.");
+                $ufstate = undef;
+            };
+        };
+
+        $detail->{state} = $ufstate;
 
         $self->debug(1, "current_services added unit file service $detail->{name}");
         $self->debug(2, "current_services added unit file ", $self->service_text($detail));
@@ -327,6 +364,52 @@ sub configured_services
     return \%services;
 }
 
+=pod
+
+=head2 get_aliases
+
+Given a arrayref of C<units>, return a hashref with key the unit (from the list) that is an 
+alias for another unit (not necessarily from the list); and the other unit's fullname 
+is the value.
+
+The C<unit_alias> cache is used for lookup.
+
+Supported options
+
+=over
+
+=item force
+
+The force flag is passed to the C<fill_cache> method
+
+=item type
+
+The type flag is passed to the C<get_type_cachename> method.
+
+=back
+
+=cut
+
+sub get_aliases
+{
+    my ($self, $units, %opts) = @_;
+    
+    my $res = {};
+
+    $self->fill_cache($opts{force}, @$units);
+
+    foreach my $unit (@$units) {
+        my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
+        
+        my $realname = $unit_alias->{$type}->{$cname};
+        if($realname ne $cname) {
+            $self->verbose("Unit $unit ($cname) is an alias for $realname");
+            $res->{$unit} = "$realname";
+        }
+    }
+    
+    return $res;
+}
 
 =pod
 
@@ -394,6 +477,43 @@ sub init_cache
 
 =pod
 
+=item get_type_cachename
+
+C<get_type_cachename> returns the type and cache name based on the
+C<unit> and optional C<type>.
+
+If the C<type> is not specified, it will be derived using the supported types.
+If the type can't be determined this way, the default type will be used.
+
+=cut
+
+sub get_type_cachename
+{
+    my ($self, $unit, $type) = @_;
+
+    my $treg = '\.(' . join('|', @TYPES_SUPPORTED) . ')$';
+    if ($type) {
+        $self->debug(1, "get_type_cachename: set type $type for unit $unit.");
+    } elsif ($unit =~ m/$treg/) {
+        $type = $1;
+        $self->debug(1, "get_type_cachename: found type $type based on unit $unit.");
+    } else {
+        $type = $TYPE_DEFAULT;
+        $self->verbose("get_type_cachename: could not determine type based on unit $unit ",
+                       "and pattern $treg. Using default type $type.");
+    }
+
+    # The cache unit name
+    my $cname = $unit;
+    my $reg = '\.'.$type.'$';
+    $cname =~ s/$reg//;
+
+    return $type, $cname;
+}
+
+
+=pod
+
 =item make_cache_alias
 
 (Re)generate the C<unit_cache> and C<unit_alias> map
@@ -434,11 +554,10 @@ sub make_cache_alias
     }
 
     # Unknown names, to be checked if aliases
-    my @unknown;
     my @units;
     if (@relevant_units) {
         foreach my $name (@relevant_units) {
-            # tmnptype should be equal too type
+            # tmptype should be equal too type
             # cname is the unit name in the cache
             my ($tmptype, $cname) = $self->get_type_cachename($name, $type);
             push(@units, $cname);
@@ -447,6 +566,7 @@ sub make_cache_alias
         @units = sort keys %{$unit_cache->{$type}};
     }
 
+    my @unknown;
     foreach my $name (@units) {
         my $data = $unit_cache->{$type}->{$name};
 
@@ -520,6 +640,7 @@ sub make_cache_alias
             next;
         }
 
+        # All Names, incl the unit itself
         foreach my $alias (@{$show->{Names}}) {
             if ($alias =~ m/$pattern/) {
                 $unit_alias->{$type}->{$1} = $id;
@@ -584,111 +705,38 @@ sub make_cache_alias
     return $unit_cache->{$type}, $unit_alias->{$type};
 }
 
-=pod
-
-=item wanted_by
-
-Return if C<service> is wanted by C<target>.
-
-Any unit can be passed as C<service> or C<target>; but in
-absence of a type specifier resp. C<.service> and C<.target> will
-be used.
-
-It uses the dependecy_cache for reverse dependencies
-
-=cut
-
-sub wanted_by
-{
-    my ($self, $service, $target) = @_;
-
-    if($service !~ m/\.\w+$/) {
-        $service .= ".$TYPE_SERVICE";
-    }
-
-    if($target !~ m/\.\w+$/) {
-        $target .= ".$TYPE_TARGET";
-    }
-
-    # Try lookup from reverse cache.
-    # If not found in cache, look it up via systemctl_list_deps
-    # with reverse enabled.
-    if(! defined $dependency_cache->{rev}->{$service}) {
-        $self->verbose("No cache for dependency for service $service and target $target.");
-        my $deps = systemctl_list_deps($self, $service, 1);
-        $dependency_cache->{rev}->{$service} = $deps;
-    } else {
-        $self->verbose("Dependency for service $service and target $target in cache.");
-    }
-
-    return $dependency_cache->{rev}->{$service}->{$target};
-
-}
 
 =pod
 
-=item get_type_cachename
+=item fill_cache
 
-C<get_type_cachename> returns the type and cache name based on the
-C<unit> and optional C<type>.
+Fill the unit_cache and unit_alias map for the C<units> provided.
+The type of the unit is derived using the C<get_type_cachename> method.
 
-If the C<type> is not specified, it will be derived using the supported types.
-If the type can't be determined this way, the default type will be used.
-
-=cut
-
-sub get_type_cachename
-{
-    my ($self, $unit, $type) = @_;
-
-    my $treg = '\.(' . join('|', @TYPES_SUPPORTED) . ')$';
-    if ($type) {
-        $self->debug(1, "get_type_cachename: set type $type for unit $unit.");
-    } elsif ($unit =~ m/$treg/) {
-        $type = $1;
-        $self->debug(1, "get_type_cachename: found type $type based on unit $unit.");
-    } else {
-        $type = $TYPE_DEFAULT;
-        $self->verbose("get_type_cachename: could not determine type based on unit $unit ",
-                       "and pattern $treg. Using default type $type.");
-    }
-
-    # The cache unit name
-    my $cname = $unit;
-    my $reg = '\.'.$type.'$';
-    $cname =~ s/$reg//;
-
-    return $type, $cname;
-}
-
-
-=pod
-
-=item update_cache
-
-Update the cache for the C<units> provided. The type of the unit is 
-derived using the C<get_type_cachename> method. 
-
-The cache is updated via the C<make_cache_alias> method.
+The cache is updated via the C<make_cache_alias> method if the unit
+is missing from the unit_alias map or if C<force> is true.
 
 =cut
 
-sub update_cache
+sub fill_cache
 {
-    my ($self, @units) = @_;
+    my ($self, $force, @units) = @_;
 
     my %update = map { $_ => [] } @TYPES_SUPPORTED;
 
     foreach my $unit (@units) {
         my ($type, $cachename) = $self->get_type_cachename($unit);
-        # use full name, not cachename (both should work though)
-        push(@{$update{$type}}, $unit);
+        # Only update the cache if force=1 or the unit is not in the unit_alias cache
+        if ($force || (! defined($unit_alias->{$type}->{$cachename}))) {
+            # use full name, not cachename (both should work though)
+            push(@{$update{$type}}, $unit);
+        };
     }
 
     foreach my $type (@TYPES_SUPPORTED) {
         my @type_units = @{$update{$type}};
-        if(@type_units) {
-            $self->verbose("update_cache: type $type units ", join(", ", @type_units));
+        if (@type_units) {
+            $self->verbose("fill_cache: type $type units ", join(", ", @type_units));
             $self->make_cache_alias($type, @type_units);
         }
     }
@@ -696,6 +744,177 @@ sub update_cache
     # for unittests only
     return \%update;
 }
+
+=pod
+
+=item get_unit_show
+
+Return the show C<attribute> for C<unit> from the
+unit_cache and unit_alias map.
+
+Supported options
+
+=over
+
+=item force
+
+Force cache refresh.
+
+=item 
+
+Specify the C<type> of the unit (passed to C<get_type_cachename>).
+
+=back
+
+=cut
+
+sub get_unit_show
+{
+    my ($self, $unit, $attribute, %opts) = @_;
+
+    my $force = exists($opts{force}) ? $opts{force} : 0;
+
+    my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
+
+    if ($force) {
+        $self->verbose("get_unit_show force updating the cache for ",
+                       "unit $unit and type $type.");
+        $self->make_cache_alias($type, $unit);
+    }
+
+    my $realname = $unit_alias->{$type}->{$cname};
+    if(! defined($realname)) {
+        $self->error("get_unit_show: no alias for unit $unit (cname $cname) defined. (Forgot to update cache?)");
+        return;
+    }
+    $self->debug(1, "get_unit_show found realname $realname for cname $cname");
+
+    my $unittxt = "unit $unit";
+    if ($unit ne "$cname.$type") {
+        $unittxt .= " cname $cname";
+    }
+    if ($realname ne $cname) {
+        $unittxt .= " realname $realname";
+    }
+
+    my $val = $unit_cache->{$type}->{$realname}->{show}->{$attribute};
+
+    $self->verbose("get_unit_show $unittxt attribute $attribute value ",
+                   defined($val) ? "$val" : "<undefined>");
+
+    return $val;
+}
+
+=pod
+
+=item get_wantedby
+
+Return a hashref of all units that "want" C<service>
+(hashref is used for easy lookup; the key is the full unit
+name, the value is a boolean).
+
+Any unit can be passed as C<service>; but in
+absence of a type specifier C<service> will be used.
+
+It uses the dependecy_cache for reverse dependencies
+
+Supported options
+
+=over
+
+=item force
+
+Force cache update.
+
+=item ignoreself
+
+By default, the reverse dependency list conatins the unit itself too.
+With C<ignoreself> true, the unit itself is not returned 
+(but stored in cache).
+
+=back
+
+=cut
+
+sub get_wantedby
+{
+    my ($self, $service, %opts) = @_;
+
+    my $force = exists($opts{force}) ? $opts{force} : 0;
+
+    if($service !~ m/\.\w+$/) {
+        $service .= ".$TYPE_SERVICE";
+    }
+
+    # Try lookup from reverse cache.
+    # If not found in cache, look it up via systemctl_list_deps
+    # with reverse enabled.
+    if($force || (! defined($dependency_cache->{rev}->{$service}))) {
+        $self->debug(1, "get_wantedby: force / no cache for dependency for service $service.");
+        my $deps = systemctl_list_deps($self, $service, 1);
+        if (! defined($deps)) {
+            # In case of failure.
+            $self->error("get_wantedby: systemctl_list_deps for unit $service and reverse=1 returned undef. ",
+                         "Returning empy hashref here, not storing it in cache.");
+            return {};
+        }
+
+        $dependency_cache->{rev}->{$service} = $deps;
+    } else {
+        $self->debug(1, "Dependency for service $service in cache.");
+    }
+
+    # Make copy (shallow is ok, values are 1s)
+    my $res = { %{$dependency_cache->{rev}->{$service}} };
+
+    if ($opts{ignoreself}) {
+        delete $res->{$service};
+    }
+
+    return $res;
+}
+
+=pod
+
+=item is_wantedby
+
+Return if C<service> is wanted by C<target>.
+
+Any unit can be passed as C<service> or C<target>; but in
+absence of a type specifier resp. C<service> and C<target> will
+be used.
+
+It uses the C<get_wantedby> method for the dependency lookup.
+
+Supported options
+
+=over
+
+=item force
+
+Force cache update (passed to C<get_wantedby>).
+
+=back
+
+=cut
+
+sub is_wantedby
+{
+    my ($self, $service, $target, %opts) = @_;
+
+    if($target !~ m/\.\w+$/) {
+        $target .= ".$TYPE_TARGET";
+    }
+
+    my $wantedby = $self->get_wantedby($service, force => $opts{force});
+
+    my $res = $wantedby->{$target};
+
+    $self->verbose("Service $service is ", $res ? "" : " not ", "wanted by target $target");
+
+    return $res;
+}
+
 
 =pod
 
@@ -707,20 +926,19 @@ The following options are supported
 
 =over
 
-=item force
-
-This is based on cached values, set C<force> to true to force a cache update
-(default false).
-
 =item sleeptime
 =item max
 
 Units that are 'reloading', 'activating' and 'deactivating' are refreshed with
 C<sleep> (default 1 sec) and C<max> number of tries (default 3). Until
 
+=item force
+
+Force cache refresh (passed to C<get_unit_show>).
+
 =item type
 
-Specify the C<type> of the unit (passed to C<get_type_cachename>).
+Specify the C<type> of the unit (passed to C<get_unit_show>).
 
 =back
 
@@ -730,22 +948,17 @@ sub is_active
 {
     my ($self, $unit, %opts) = @_;
 
-    my $force = exists($opts{force}) ? $opts{force} : 0;
     my $sleep = exists($opts{sleep}) ? $opts{sleep} : 1;
     my $max = exists($opts{max}) ? $opts{max} : 3;
 
-    $self->verbose("Running is_active (force=$force sleep=$sleep max=$max)");
+    $self->verbose("Running is_active (sleep=$sleep max=$max)");
 
-    my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
+    my $unittxt = "unit $unit";
 
-    if ($force) {
-        $self->verbose("is_active force updating the cache for the unit $unit.");
-        $self->make_cache_alias($type, $unit);
-    }
-
-    my $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
+    my $active = $self->get_unit_show($unit, 'ActiveState', 
+                                      force => $opts{force}, type => $opts{type});
     if (! defined($active)) {
-        $self->error("is_active no ActiveState for unit $unit (cname $cname) found.");
+        $self->error("is_active no ActiveState for $unittxt found.");
         return;
     }
 
@@ -756,13 +969,12 @@ sub is_active
 
     my $tries = 0;
     while ((grep {$_ eq $active} @inter)) {
-        my $msg = "the cache for the unit $unit due to intermittent state $active";
+        my $msg = "the cache for the $unittxt due to intermittent state $active";
         if ($tries < $max) {
             sleep($sleep);
-            $self->make_cache_alias($type, $unit);
-            $active = $unit_cache->{$type}->{$cname}->{show}->{ActiveState};
+            $active = $self->get_unit_show($unit, 'ActiveState', force => 1);
             if (! defined($active)) {
-                $self->error("is_active no ActiveState for unit $unit (cname $cname) found ($tries of max $max).");
+                $self->error("is_active no ActiveState for $unittxt found ($tries of max $max).");
                 return;
             }
             $self->verbose("is_active updating $msg. New state $active.");
@@ -782,7 +994,7 @@ sub is_active
     # Must be one of the final states now.
     my @final = qw(active inactive failed);
     if (grep {$_ eq $active} @final) {
-        my $msg = "is_active: active $active for unit $unit, is_active ";
+        my $msg = "is_active: active $active for $unittxt, is_active ";
         if ($active eq 'active') {
             $self->verbose("$msg true");
             return 1;
@@ -799,12 +1011,12 @@ sub is_active
 
 =pod
 
-=item is_ufstate
+=item get_ufstate
 
-C<is_ufstate> returns true or false if the
-UnitFile state of C<unit> matches the (simplified) C<state>.
+Return the state of the C<unit> using the UnitFileState and
+the derived state from the state of the WantedBy units.
 
-An error is logged if the unit can't be queried and undef returned.
+The returned state can be more then the usual supported states (e.g. static).
 
 The following options are supported
 
@@ -812,12 +1024,76 @@ The following options are supported
 
 =item force
 
-This is based on cached values, set C<force> to true to force a cache update
-(default false).
+Force cache refresh (passed to C<get_unit_show> and C<fill_cache>)
 
+=back
+
+=cut
+
+sub get_ufstate
+{
+    my ($self, $unit, %opts) = @_;
+
+    $self->verbose("get_ufstate for unit $unit");
+
+    my $ufstate = $self->get_unit_show($unit, 'UnitFileState', force => $opts{force});
+
+    # The derived state is based on the ufstate of any of the WantedBy units
+    # Using the recursive reverse dependecy list rather than
+    # walking the ->{show}->{WantedBy} attribute tree ourself.
+    # TODO: For now, it can only be STATE_ENABLED or STATE_DISABLED.
+
+    my $wantedby = $self->get_wantedby($unit, ignoreself => 1);
+
+    my $derived;
+    if ($wantedby) {
+        $self->fill_cache($opts{force}, keys %$wantedby);
+        foreach my $wunit (sort keys %$wantedby) {
+            my $wufstate = $self->get_unit_show($wunit, 'UnitFileState', force => $opts{force});
+            if (! defined($wufstate)) {
+                $self->verbose("Undefined UnitFileState for unit $wunit");
+                next;
+            } elsif ($wufstate eq $STATE_ENABLED) {
+                $derived = $STATE_ENABLED;
+                $self->verbose("get_ufstate: unit $unit found wantedby unit $wunit in state $STATE_ENABLED. ",
+                               "Setting derived state to $derived.");
+                # TODO: break or check all of them?
+            } else {
+                $self->verbose("get_ufstate: unit $unit found wantedby unit $wunit in state $wufstate.");
+            }
+        }
+
+        if (! defined($derived)) {
+            $derived = $STATE_DISABLED;
+            $self->verbose("get_ufstate: unit $unit found no wantedby units in state $STATE_ENABLED. ",
+                           "Setting derived state to $derived.");
+        }
+    } else {
+        $derived = $STATE_DISABLED;
+        $self->verbose("get_ufstate: unit $unit is not wanted by any other unit. ",
+                       "Derived state is $derived.");
+    }
+
+    return $ufstate, $derived;
+}
+
+=pod
+
+=item is_ufstate
+
+C<is_ufstate> returns true or false if the
+UnitFile state of C<unit> matches the (simplified) C<state>.
+
+An error is logged  and undef returned if the unit can't be queried.
+
+The following options are supported
+
+=over
+
+=item force
 =item type
 
-Specify the C<type> of the unit (passed to C<get_type_cachename>).
+Both C<force> and C<type> are passed to C<get_ufstate> method.
 
 =back
 
@@ -827,22 +1103,19 @@ sub is_ufstate
 {
     my ($self, $unit, $state, %opts) = @_;
 
-    my $force = exists($opts{force}) ? $opts{force} : 0;
+    $self->verbose("is_ufstate for unit $unit and state $state");
 
-    $self->verbose("is_ufstate for unit $unit and state $state (force=$force)");
+    my ($ufstate, $derived) = $self->get_ufstate($unit, type => $opts{type}, force => $opts{force});
 
-    my ($type, $cname) = $self->get_type_cachename($unit, $opts{type});
-
-    if ($force) {
-        $self->verbose("is_ufstate: force updating the cache for the unit $unit.");
-        $self->make_cache_alias($type, $unit);
-    }
-
-    my $ufstate = $unit_cache->{$type}->{$cname}->{show}->{UnitFileState};
-    if (! defined($ufstate)) {
-        $self->error("is_ufstate: no UnitFileState for unit $unit (cname $cname) found.");
-        return;
-    }
+    if(! $ufstate) {
+        $self->verbose("No ufstate could be determined. Using derived state $derived.");
+        $ufstate = $derived;
+        
+        if(! $ufstate) {
+            $self->error("is_ufstate: unable to use ufstate.");
+            return;
+        };
+    };
 
     # Possible UnitFileState values from systemd dbus interface
     # http://www.freedesktop.org/wiki/Software/systemd/dbus/

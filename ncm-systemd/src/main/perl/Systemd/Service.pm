@@ -11,7 +11,7 @@ use warnings;
 
 use parent qw(CAF::Object Exporter);
 
-use NCM::Component::Systemd::Service::Unit qw(:states);
+use NCM::Component::Systemd::Service::Unit qw(:states :types);
 use NCM::Component::Systemd::Service::Chkconfig;
 
 use LC::Exception qw (SUCCESS);
@@ -105,21 +105,7 @@ sub configure
 
     my $current = $self->gather_current_services(keys %$configured);
 
-    # actions to take
-    # TODO: how do we disable certain targets of particular service?
-    # TODO: what to do with unconfigured targets?
-
-    # masked:
-    #   mask, stop if running and startstop
-    #     first mask, then stop (e.g. autorestart services)
-    #     or first disable, then mask, then stop if running?
-    #   replaces /etc/systemd/system/$unit.$type with symlink to /dev/null
-    # disabled:
-    #   unmask?, disable, stop if running and startstop
-    #     unmask only if masked?
-    # enabled:
-    #   unmask, enable, start if not running and startstop
-    #     unmask only if masked?
+    $self->process($configured, $current);
 
     if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->error("Support for default unconfigured behaviour ",
@@ -310,6 +296,121 @@ sub gather_current_services
 
     return $services;
 }
+
+=pod
+
+=item process
+
+C<process> the C<configured> services and
+take required action and/or make configuration changes.
+It uses the C<current> services to make the required decisions.
+
+(Unconfigured services are not dealt with in this method).
+
+=cut
+
+sub process
+{
+    my ($self, $configured, $current) = @_;
+
+    # actions to take
+
+    # masked:
+    #   mask, stop if running and startstop
+    #     first mask, then stop (e.g. autorestart services)
+    #     or first disable, then mask, then stop if running?
+    #   replaces /etc/systemd/system/$unit.$type with symlink to /dev/null
+    #     TODO: check what happens when also /etc/systemd/system/$unit.$type.d/X.cfg exists
+    # disabled:
+    #   disable, stop if running and startstop
+    # enabled:
+    #   unmask, enable, start if not running and startstop
+    #     unmask only if masked?
+    #   check if targets are ok
+    #     TODO: how do we disable certain targets of particular service?
+    #     TODO: what to do with unconfigured targets?
+
+    # 0 means stop/should-not-be-running
+    # 1 means start/should-be-running
+    my $actmap = {
+        $STATE_ENABLED => 1,
+        $STATE_DISABLED => 0,
+        $STATE_MASKED => 0,
+    };
+    my $acts = {
+        0 => [],
+        1 => [],
+    };
+
+    my $states = {
+        $STATE_ENABLED => [],
+        $STATE_DISABLED => [],
+        $STATE_MASKED => [],
+    };
+
+    # Cache should be filled by the current_services call 
+    #   in gather_current_services method
+    my @configured = keys %$configured;
+    my $aliases = $self->{unit}->get_aliases(\@configured);
+
+    foreach my $unit (sort @configured) {
+        my $detail = $configured->{$unit};
+
+        my $realname = $aliases->{$unit};
+        if($realname) {
+            my $msg = "Configured unit $unit is an alias of";
+            if($configured->{$realname}) {
+                $self->error("$msg configured unit $realname. Skipping the alias configuration. ",
+                             "(This is a configuration issue.)");
+                next;
+            } else {
+                $self->debug("Configured unit $unit is an alias of non-configured unit $realname.");
+            }
+        }
+
+        my $state = $detail->{state};
+        my $type = $detail->{type};
+        my $fun = $detail->{fullname};
+        my $expected_act = $actmap->{$state};
+
+        my $cur = $current->{$unit};
+
+        my $addstate = 1;
+        my $addact = $detail->{startstop};
+
+        my $msg = '';
+        if ($cur) {
+            # only if state is not what you wanted
+            $addstate = ! $self->{unit}->is_ufstate($unit, $state, type => $type);
+
+            if ($addact) {
+                my $current_act = $self->{unit}->is_active($unit, type => $type);
+                $addact = $expected_act != $current_act;
+                $self->debug(1, "process: expected activation $expected_act current activation $current_act: ",
+                             "adding for (de)activation $addact");
+            }
+        } else {
+            # Forcing the state and action
+            $self->debug(1, "process: no current details found for unit $unit. Forcing state $state and (de)activation");
+            $msg .= "forced ";
+        }
+
+        if ($addstate) {
+            push(@{$states->{$state}}, $fun);
+            $msg .= "state $state";
+        }
+        if ($addact) {
+            push(@{$acts->{$expected_act}}, $fun);
+            $msg .= ($expected_act ? '' : 'de') . "activation";
+        }
+        $self->verbose($msg ? "process: unit $unit scheduled for $msg" :
+                              "process: nothing to do for unit $unit");
+    }
+
+    # For unittests
+    return $states, $acts;
+}
+
 
 =pod
 

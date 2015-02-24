@@ -27,14 +27,17 @@ use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET
     :types $DEFAULT_STARTSTOP
     :states $DEFAULT_STATE);
 is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL,
-           $TARGET_POWEROFF, $TARGET_REBOOT],
-          [qw(default rescue multi-user graphical poweroff reboot)],
+           $TARGET_POWEROFF, $TARGET_REBOOT, $TYPE_AUTOMOUNT, $TYPE_SLICE,
+           $TYPE_SCOPE, $TYPE_SNAPSHOT],
+          [qw(default rescue multi-user graphical poweroff reboot automount slice scope snapshot)],
           "exported TARGET names");
 is($DEFAULT_TARGET, $TARGET_MULTIUSER, "multiuser is default target");
 
-is_deeply([$TYPE_SERVICE, $TYPE_TARGET],
-          [qw(service target)],
-           "exported TYPES names");
+is_deeply([$TYPE_SERVICE, $TYPE_TARGET, $TYPE_MOUNT, 
+           $TYPE_SOCKET, $TYPE_TIMER, $TYPE_PATH, 
+           $TYPE_SWAP, 
+          ], [qw(service target mount socket timer path swap)],
+          "exported TYPES names");
 is($TYPE_SYSV, $TYPE_SERVICE, "pure SYSV services are mapped to service type");
 is($TYPE_DEFAULT, $TYPE_SERVICE, "default type is service type");
 
@@ -104,7 +107,7 @@ is_deeply($d_c, {
 
 head2 get_type_cachename
 
-Test gte_type_cachename
+Test get_type_cachename
 
 =cut
 
@@ -128,6 +131,34 @@ is_deeply([$unit->get_type_cachename("arbitrary.suffix", "arbitrarytype")],
           ["arbitrarytype", 'arbitrary.suffix'],
           "Get type and cachename for arbitrary.suffix and arbitrarytype");
 
+=pod
+
+=head2 make_cache_alias with units
+
+Test make_cache_alias with list of units.
+
+=cut
+
+# reset the cache
+$unit->init_cache();
+$cmp->{ERROR} = 0;
+
+# messagebus.servcice is an alias of dbus.service
+my ($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE, "messagebus.service");
+is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE and units messagebus.service');
+
+is($service_alias->{'messagebus'}, 'dbus', 'messagebus is an alias for dbus');
+
+is($service_alias->{'dbus'}, 'dbus', 'dbus is its own alias');
+ok(! $service_cache->{messagebus}->{show}, "no show details for alias messagebus");
+ok($service_cache->{dbus}->{show}, "show details fro dbus");
+
+
+# basic info from list-units / list-unit-files for all units
+# only show info for messagebus / dbus
+ok($service_cache->{'sshd'}, 'basic cache info for sshd service');
+ok(! defined $service_cache->{'sshd'}->{show}, 'no show cache info for sshd service');
+
 
 =pod
 
@@ -145,13 +176,13 @@ use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 # reset errors, $cmp is logger of $unit
 $cmp->{ERROR} = 0;
 
-my ($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE);
+($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE);
 
 is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE');
-is(scalar keys %$service_cache, 145,
-    'Found 145 non-alias services via make_cache_alias $TYPE_SERVICE');
-is(scalar keys %$service_alias, 144,
-    'Found 144 service aliases via make_cache_alias $TYPE_SERVICE');
+is(scalar keys %$service_cache, 146,
+    'Found 146 non-alias services via make_cache_alias $TYPE_SERVICE');
+is(scalar keys %$service_alias, 145,
+    'Found 145 service aliases via make_cache_alias $TYPE_SERVICE');
 
 # Tests for
 # sshd@ base instance service, different from sshd service
@@ -178,39 +209,23 @@ ok(! $service_cache->{'dbus-org.freedesktop.hostname1'},
 my ($target_cache, $target_alias) = $unit->make_cache_alias($TYPE_TARGET);
 
 is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_TARGET');
-is(scalar keys %$target_cache, 45,
-    'Found 45 non-alias targets via make_cache_alias $TYPE_TARGET');
-is(scalar keys %$target_alias, 54,
-    'Found 54 target aliases via make_cache_alias $TYPE_TARGET');
+is(scalar keys %$target_cache, 46,
+    'Found 46 non-alias targets via make_cache_alias $TYPE_TARGET');
+is(scalar keys %$target_alias, 55,
+    'Found 55 target aliases via make_cache_alias $TYPE_TARGET');
 
 =pod
 
-=head2 make_cache_alias with units
+=head2 get_aliases
 
-Test make_cache_alias with list of unites.
+Test get_aliases
 
 =cut
 
-# reset the cache
-$unit->init_cache();
-$cmp->{ERROR} = 0;
-
-# messagebus.servcice is an alias of dbus.service
-($service_cache, $service_alias) = $unit->make_cache_alias($TYPE_SERVICE, "messagebus.service");
-is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for $TYPE_SERVICE and units messagebus.service');
-
-is($service_alias->{'messagebus'}, 'dbus', 'messagebus is an alias for dbus');
-
-is($service_alias->{'dbus'}, 'dbus', 'dbus is its own alias');
-ok(! $service_cache->{messagebus}->{show}, "no show details for alias messagebus");
-ok($service_cache->{dbus}->{show}, "show details fro dbus");
-
-
-# basic info from list-units / list-unit-files for all units
-# only show info for messagebus / dbus
-ok($service_cache->{'sshd'}, 'basic cache info for sshd service');
-ok(! defined $service_cache->{'sshd'}->{show}, 'no show cache info for sshd service');
-
+my $aliases = $unit->get_aliases([qw(dbus.service messagebus network.service)]);
+is_deeply($aliases, {
+    messagebus => "dbus",
+}, "Found aliases");
 
 =pod
 
@@ -225,8 +240,8 @@ my $cus = $unit->current_services();
 
 is($cmp->{ERROR}, 0, 'No errors while processing current_services');
 
-is(scalar keys %$cus, 137,
-   'Found 137 non-alias services via current_services');
+is(scalar keys %$cus, 138,
+   'Found 138 non-alias services via current_services');
 
 $name = 'nrpe';
 $svc = $cus->{$name};
@@ -241,39 +256,70 @@ is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 $name = 'rc-local';
 $svc = $cus->{$name};
 is($svc->{name}, $name, "Service $name name matches");
-is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
+is($svc->{state}, 'static', "Service $name state static");
 is($svc->{type}, $TYPE_SERVICE, "Service $name type $TYPE_SERVICE");
 is($svc->{fullname}, "$name.$TYPE_SERVICE", "Fullname service $name type service is $name.service");
 ok($svc->{startstop}, "Service $name startstop true");
 is_deeply($svc->{targets}, ["multi-user"], "Service $name targets");
 
+# sysv service, no UnitFileState (no [Install]), derived state
+$name = 'network';
+$svc = $cus->{$name};
+is($svc->{name}, $name, "Service $name name matches");
+is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
+is($svc->{derived}, 1, "Service $name state enabled is derived");
+is($svc->{type}, $TYPE_SERVICE, "Service $name type $TYPE_SERVICE");
+is($svc->{fullname}, "$name.$TYPE_SERVICE", "Fullname service $name type service is $name.service");
+ok($svc->{startstop}, "Service $name startstop true");
+is_deeply($svc->{targets}, ["multi-user", "graphical"], "Service $name targets");
+
+
 =pod
 
-=head2 wanted_by
+=head2 get_wantedby
 
-Test wanted_by
+Test get_wantedby
 
 =cut
 
-set_output("systemctl_list_dependencies_sshd_service_reverse");
-set_output("systemctl_list_dependencies_multiuser_target_reverse");
-ok($unit->wanted_by("sshd", "multi-user"),
+is_deeply($unit->get_wantedby('xinetd'), {
+    'xinetd.service' => 1,
+    'multi-user.target' => 1,
+    'graphical.target' => 1,
+}, "xinetd wantedby");
+
+is_deeply($unit->get_wantedby('xinetd', ignoreself => 1), {
+    'multi-user.target' => 1,
+    'graphical.target' => 1,
+}, "xinetd wantedby with unit itself removed");
+
+=pod
+
+=head2 is_wantedby
+
+Test is_wantedby
+
+=cut
+
+ok($unit->is_wantedby("sshd", "multi-user"),
     "sshd.service wanted by multi-user.target (default unit types))");
-ok($unit->wanted_by("sshd.service", "multi-user.target"),
+ok($unit->is_wantedby("sshd.service", "multi-user.target"),
     "sshd.service wanted by multi-user.target");
-ok($unit->wanted_by("multi-user.target", "graphical.target"),
+ok($unit->is_wantedby("multi-user.target", "graphical.target"),
     "multi-user.target wanted by graphical.target");
 
 # reset errors, $cmp is logger of $unit
 $cmp->{ERROR} = 0;
-ok(! $unit->wanted_by("sshd.service", "not.a.target"),
+ok(! $unit->is_wantedby("sshd.service", "not.a.target"),
     "not.a.target not wanted by graphical.target");
 is($cmp->{ERROR}, 0, "No errors for existing service but unknown target");
 
 set_output("systemctl_list_dependencies_not_a_service_reverse");
-ok(! $unit->wanted_by("not.a.service", "not.a.target"),
+ok(! $unit->is_wantedby("not.a.service", "not.a.target"),
     "not.a.target not wanted by not.a.service");
-is($cmp->{ERROR}, 1, "Error logged for unknown service");
+# TODO: 2 errors are logged: one from systemctl and one from is_wantedby
+#   need to rethink the error logging
+is($cmp->{ERROR}, 2, "Error logged for unknown service");
 
 =pod
 
@@ -342,17 +388,60 @@ is_deeply($cos, {
 
 =pod
 
-=head2 update_cache
+=head2 fill_cache
 
-Test update_cache
+Test fill_cache
 
 =cut
 
-my $updated = $unit->update_cache("network.service", "multi-user.target", "ceph.service", "network.target");
+    $TYPE_SOCKET, $TYPE_TIMER, $TYPE_PATH,
+    $TYPE_SWAP, $TYPE_AUTOMOUNT, $TYPE_SLICE,
+    $TYPE_SCOPE, $TYPE_SNAPSHOT,
+
+my $updated = $unit->fill_cache(0, "network.service", "multi-user.target", "ceph.service", "network.target");
+is_deeply($updated, {
+    $TYPE_SERVICE => [],
+    $TYPE_TARGET => [],
+    $TYPE_MOUNT => [],
+    $TYPE_SOCKET => [],
+    $TYPE_TIMER => [],
+    $TYPE_PATH => [],
+    $TYPE_SWAP => [],
+    $TYPE_AUTOMOUNT => [],
+    $TYPE_SLICE => [],
+    $TYPE_SCOPE => [],
+    $TYPE_SNAPSHOT => [],
+}, "update_cache force=0 updated no services (they are all in cache already)");
+
+$updated = $unit->fill_cache(1, "network.service", "multi-user.target", "ceph.service", "network.target");
 is_deeply($updated, {
     $TYPE_SERVICE => ['network.service', 'ceph.service'],
     $TYPE_TARGET => ['multi-user.target', 'network.target'],
-}, "update_cache updated the correct services with their types");
+    $TYPE_MOUNT => [],
+    $TYPE_SOCKET => [],
+    $TYPE_TIMER => [],
+    $TYPE_PATH => [],
+    $TYPE_SWAP => [],
+    $TYPE_AUTOMOUNT => [],
+    $TYPE_SLICE => [],
+    $TYPE_SCOPE => [],
+    $TYPE_SNAPSHOT => [],
+}, "update_cache force=1 updated the correct services with their types");
+
+=pod
+
+=head2 get_unit_show
+
+Test get_unit_show
+
+=cut
+
+is($unit->get_unit_show('network.service', 'UnitFileState'),
+   '', 'get_unit_show network.service empty UnitFileState');
+is($unit->get_unit_show('network.service', 'ActiveState'),
+   'failed', 'get_unit_show network.service ActiveState');
+is_deeply($unit->get_unit_show('network.service', 'WantedBy'),
+   ['multi-user.target', 'graphical.target'], 'get_unit_show network.service WantedBy');
 
 =pod
 
@@ -415,7 +504,23 @@ set_desired_output($cmdline, $out);
 
 =pod
 
-=head is_ufstate
+=head2 get_ufstate
+
+Test get_ufstate
+
+=cut
+
+my ($ufstate, $derived) = $unit->get_ufstate('xinetd', type => 'service');
+is($ufstate, $STATE_ENABLED, 'get_ufstate xinetd UnitFileState is $STATE_ENABLED');
+is($derived, $STATE_ENABLED, 'get_ufstate xinetd derived state is $STATE_ENABLED');
+
+($ufstate, $derived) = $unit->get_ufstate('network.service');
+is($ufstate, '', 'get_ufstate network UnitFileState is empty string'); 
+is($derived, $STATE_ENABLED, 'get_ufstate network derived state is $STATE_ENABLED'); 
+
+=pod
+
+=head2 is_ufstate
 
 Test is_ufstate
 

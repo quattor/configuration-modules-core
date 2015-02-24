@@ -22,3 +22,15 @@ prefix "/software/components/systemd/service";
     "startstop", false,
     "targets", list("graphical"),
 );
+"dbus" = nlist(
+    "state", "enabled",
+    "startstop", true,
+    "targets", list("multi-user"),
+);
+"messagebus" = nlist(
+    "state", "disabled",
+    "startstop", true,
+    "targets", list("multi-user"),
+);
+
+

@@ -19,6 +19,10 @@ use Readonly;
 
 Readonly our $SYSTEMCTL => "/usr/bin/systemctl";
 
+#
+# Reminder: units can start with a '-', 
+#   so add '--' before processing the unit.
+#
 
 =pod
 
@@ -35,8 +39,8 @@ interaction via C<systemctl> command.
 
 C<logger> is a mandatory logger to pass.
 
-Run C<systemctl show> on single C<$name> and return parsed output.
-If C<$name> is undef, the manager itself is shown.
+Run C<systemctl show> on single C<$unit> and return parsed output.
+If C<$unit> is undef, the manager itself is shown.
 
 If succesful, returns a hashreference interpreting the C<key=value> output.
 Following keys have the value split on whitespace and a array reference 
@@ -58,13 +62,13 @@ Returns undef on failure.
 
 sub systemctl_show
 {
-    my ($logger, $name) = @_;
+    my ($logger, $unit) = @_;
     my $proc = CAF::Process->new([$SYSTEMCTL, "--no-pager", "--all", "show"],
                                   log => $logger,
                                   );
-    if (defined($name)) {
-        $proc->pushargs($name);
-        $logger->debug(1, "systemctl_show for name $name");
+    if (defined($unit)) {
+        $proc->pushargs('--', $unit);
+        $logger->debug(1, "systemctl_show for name $unit");
     } else {
         $logger->verbose("systemctl_show for manager itself, name undefined");
     }
@@ -146,7 +150,7 @@ If C<reverse> is set to true (default is false), it returns
  the revese dependencies (i.e. units with dependencies of 
  type Wants or Requires on the given unit).
 
-The keys are the unit names, values are 1. (A hash is used 
+The keys are the full unit names, values are 1. (A hash is used 
 to allow easy lookup, instead of a list).
 
 The flattening is done via the C<--plain> option of systemctl,
@@ -171,7 +175,7 @@ sub systemctl_list_deps
         $proc->pushargs("--reverse");
     };    
 
-    $proc->pushargs($unit);
+    $proc->pushargs('--', $unit);
 
     $logger->verbose("Looking for $deptxt of unit $unit.");
 

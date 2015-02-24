@@ -52,16 +52,16 @@ Start with prepainge for an impossible map
 
 =cut
 
-set_desired_output("/usr/bin/systemctl --no-pager --all show runlevel0.target","Id=poweroff.target");
+set_desired_output("/usr/bin/systemctl --no-pager --all show -- runlevel0.target","Id=poweroff.target");
 is(systemctl_show($cmp, "runlevel0.target")->{Id}, "poweroff.target", "target Id level 0 poweroff.target");
 
 # imaginary mapping to runlevel x1 - x5
 foreach my $lvl (1..5) {
-    set_desired_output("/usr/bin/systemctl --no-pager --all show runlevel$lvl.target","Id=x$lvl.target");
+    set_desired_output("/usr/bin/systemctl --no-pager --all show -- runlevel$lvl.target","Id=x$lvl.target");
     is(systemctl_show($cmp, "runlevel$lvl.target")->{Id}, "x$lvl.target", "target Id level $lvl x$lvl.target");
 }
 # broken runlevel
-set_desired_output("/usr/bin/systemctl --no-pager --all show runlevel6.target","Noid=false");
+set_desired_output("/usr/bin/systemctl --no-pager --all show -- runlevel6.target","Noid=false");
 ok(!defined(systemctl_show($cmp, "runlevel6.target")->{Id}), "target Id runlevel6 undefined");
 
 is_deeply($chk->generate_runlevel2target(), 
