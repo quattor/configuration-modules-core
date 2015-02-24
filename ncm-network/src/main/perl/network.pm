@@ -312,6 +312,23 @@ sub Configure {
                                 "brctl not found");
             }
         }
+        ### set OVS related variables
+        if ($net{$iface}{'devicetype'}) {
+            $text .= "DEVICETYPE=$net{$iface}{'devicetype'}\n";
+            if ($net{$iface}{'devicetype'} eq 'ovs') {
+                # Verify the type of the interface (should be related to OVS)
+                if (! exists($net{$iface}{'type'}) ) {
+                    $self->error ("Error: devicetype for device $iface is set to 'ovs' but ",
+                                  "the type is not defined (should be OVSBridge or OVSPort)");
+                } elsif ($net{$iface}{'type'} !~ /^(OVSBridge|OVSPort)$/) {
+                    $self->error ("Error: devicetype for device $iface is set to 'ovs' but ",
+                                  "the type is not correctly defined (should be OVSBridge or OVSPort)");
+                }
+                if ($net{$iface}{'ovs_bridge'}) {
+                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
+                }
+            }
+        }
 
         ## set the HWADDR
         ## what about bonding??

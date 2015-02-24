@@ -100,7 +100,7 @@ type structure_interface = {
     "driver"  ? string
     "bootproto" ? string
     "onboot" ? string
-    "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL)$')
+    "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVSBridge|OVSPort)$')
     "device"  ? string
     "master" ? string
     "mtu"       ? long
@@ -125,6 +125,9 @@ type structure_interface = {
     "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
     "delay" ? long # brctl setfd DELAY
     "bridging_opts" ? structure_bridging_options
+
+    "devicetype" ? string with match(SELF, '^(ovs)$')
+    "ovs_bridge" ? string with exists ("/system/network/interfaces/" + SELF)
 };
 
 
