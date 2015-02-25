@@ -126,8 +126,12 @@ type structure_interface = {
     "delay" ? long # brctl setfd DELAY
     "bridging_opts" ? structure_bridging_options
 
-    "devicetype" ? string with match(SELF, '^(ovs)$')
     "ovs_bridge" ? string with exists ("/system/network/interfaces/" + SELF)
+} with {
+    if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
+        error("An OVSBridge interface cannot have the ovs_bridge option defined");
+    };
+    true;
 };
 
 

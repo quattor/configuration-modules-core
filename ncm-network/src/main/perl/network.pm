@@ -302,6 +302,13 @@ sub Configure {
         ### set the networktype
         if ( $net{$iface}{'type'} ) {
             $text .= "TYPE=".$net{$iface}{'type'}."\n";
+            ### Set OVS related variables
+            if ($net{$iface}{'type'} =~ /^(OVSBridge|OVSPort)$/) {
+                $text .= "DEVICETYPE='ovs'\n";
+                if ($net{$iface}{'ovs_bridge'}) {
+                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
+                }
+            }
         } else {
             $text .= "TYPE=Ethernet\n";
         }
@@ -310,23 +317,6 @@ sub Configure {
             unless (-x "/usr/sbin/brctl") {
                 $self->error ("Error: bridge specified but ",
                                 "brctl not found");
-            }
-        }
-        ### set OVS related variables
-        if ($net{$iface}{'devicetype'}) {
-            $text .= "DEVICETYPE=$net{$iface}{'devicetype'}\n";
-            if ($net{$iface}{'devicetype'} eq 'ovs') {
-                # Verify the type of the interface (should be related to OVS)
-                if (! exists($net{$iface}{'type'}) ) {
-                    $self->error ("Error: devicetype for device $iface is set to 'ovs' but ",
-                                  "the type is not defined (should be OVSBridge or OVSPort)");
-                } elsif ($net{$iface}{'type'} !~ /^(OVSBridge|OVSPort)$/) {
-                    $self->error ("Error: devicetype for device $iface is set to 'ovs' but ",
-                                  "the type is not correctly defined (should be OVSBridge or OVSPort)");
-                }
-                if ($net{$iface}{'ovs_bridge'}) {
-                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
-                }
             }
         }
 
