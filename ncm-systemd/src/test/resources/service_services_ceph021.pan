@@ -1,6 +1,6 @@
 unique template service_services_ceph021;
 
-prefix "/software/components/systemd/service";
+prefix "/software/components/systemd/unit";
 
 "network" = nlist(
     "state", "enabled",

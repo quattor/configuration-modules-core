@@ -14,7 +14,7 @@ use parent qw(NCM::Component::Systemd::Service::Unit);
 use EDG::WP4::CCM::Element qw(unescape);
 
 use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET 
-    $TYPE_SYSV $DEFAULT_STARTSTOP $DEFAULT_STATE
+    $TYPE_SYSV $TYPE_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE
     :states);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
 use Readonly;
@@ -59,16 +59,16 @@ A logger instance (compatible with C<CAF::Object>).
 
 =back
 
-=item current_services
+=item current_units
 
-Return hash reference with current configured services 
+Return hash reference with current configured units 
 determined via C<chkconfig --list>.
 
 (No type to specify, C<sysv> type is forced).
 
 =cut
 
-sub current_services
+sub current_units
 {
     my $self = shift;
 
@@ -80,7 +80,7 @@ sub current_services
         )->output();
     my $ec = $?;
     if ($ec) {
-        $self->error("Cannot get list of current services from $CHKCONFIG: ec $ec ($data)");
+        $self->error("Cannot get list of current units from $CHKCONFIG: ec $ec ($data)");
         return;
     }
 
@@ -91,17 +91,21 @@ sub current_services
         next if ($line !~ m/^([\w\-]+)\s+((?:[0-6]:(?:on|off)(?:\s+|\s*$)){7})/);
 
         my ($servicename, $levels) = ($1, $2);
-        my $detail = {name => $servicename, type => $TYPE_SYSV, startstop => $DEFAULT_STARTSTOP};
+        my $detail = {
+            shortname => $servicename, 
+            type => $TYPE_SYSV, 
+            startstop => $DEFAULT_STARTSTOP
+        };
 
-        $detail->{fullname} = "$servicename.$TYPE_SYSV";
+        $detail->{name} = "$detail->{shortname}.$detail->{type}";
 
         if ($levels =~ m/[0-6]:on/) {
-            $self->debug(1, "Found 'on' states for service $detail->{name}");
+            $self->debug(1, "Found 'on' states for unit $detail->{name}");
             my $ontargets = $self->convert_runlevels(join('', $levels =~ /([0-6]):on/g));
             $detail->{state}   = $STATE_ENABLED;
             $detail->{targets} = $ontargets;
         } else {
-            $self->debug(1, "No 'on' states found for service $detail->{name}");
+            $self->debug(1, "No 'on' states found for unit $detail->{name}");
             # TODO include the runlevel 0,1 and 6 in the off-conversion?
             # if the state is off, targets don't really matter
             my $offtargets = $self->convert_runlevels(join('', $levels =~ /([2-5]):off/g));
@@ -109,10 +113,11 @@ sub current_services
             $detail->{targets} = $offtargets;
         }
 
-        $self->verbose("current_services added chkconfig service $detail->{name}");
-        $self->debug(1, "current_services added chkconfig ", $self->service_text($detail));
-        $current{$servicename} = $detail;
+        $self->verbose("current_units added chkconfig unit $detail->{name}");
+        $self->debug(1, "current_units added chkconfig ", $self->unit_text($detail));
+        $current{$detail->{name}} = $detail;
     }
+
     return \%current;
 }
 
@@ -130,7 +135,8 @@ sub current_target
 
     my $runlevel = $self->current_runlevel();
 
-    my $target = $DEFAULT_RUNLEVEL2TARGET[$runlevel];
+    my $targets = $self->convert_runlevels($runlevel);
+    my $target = @{$targets}[0];
 
     $self->verbose("Current target $target from current runlevel $runlevel");
 
@@ -151,7 +157,8 @@ sub default_target
 
     my $runlevel = $self->default_runlevel();
 
-    my $target = $DEFAULT_RUNLEVEL2TARGET[$runlevel];
+    my $targets = $self->convert_runlevels($runlevel);
+    my $target = @{$targets}[0];
 
     $self->verbose("Default target $target from default runlevel $runlevel");
 
@@ -160,11 +167,11 @@ sub default_target
 
 =pod
 
-=item configured_services
+=item configured_units
 
-C<configured_services> parses the C<tree> hash reference and builds up the
-services to be configured. It returns a hash reference with key the service name and 
-values the details of the service.
+C<configured_units> parses the C<tree> hash reference and builds up the
+units to be configured. It returns a hash reference with key the unit name and 
+values the details of the unit.
 
 (C<tree> is typically C<$config->getElement('/software/components/chkconfig/service')->getTree>.)
 
@@ -186,11 +193,11 @@ This method converts the legacy states as following
 
 =cut
 
-sub configured_services
+sub configured_units
 {
     my ($self, $tree) = @_;
 
-    my %services;
+    my %units;
 
     while (my ($service, $detail) = each %$tree) {
         # fix the details to reflect new schema
@@ -198,13 +205,14 @@ sub configured_services
         # all legacy types are assumed to be sysv services
         $detail->{type} = $TYPE_SYSV;
         
-        # set the name (not mandatory in new schema either)
-        $detail->{name} = unescape($service) if (! exists($detail->{name}));
+        # set the shortname based on configured name
+        $detail->{shortname} = $detail->{name} ? $detail->{name} : unescape($service);
 
-        $detail->{fullname} = "$detail->{name}.$TYPE_SYSV";
+        # Redefine the name to full unit name
+        $detail->{name} = "$detail->{shortname}.$detail->{type}";
 
         my $reset = delete $detail->{reset};
-        $self->verbose('Ignore the reset value $reset from service $detail->{name}') if defined($reset);
+        $self->verbose('Ignore the reset value $reset from unit $detail->{name}') if defined($reset);
         
         my $on = delete $detail->{on};
         my $off = delete $detail->{off};
@@ -239,7 +247,7 @@ sub configured_services
         } else {
             # how did we get here?
             $self->error("No valid combination of legacy chkconfig states del/off/on/add found.",
-                         "Skipping this service $detail->{name}.");
+                         "Skipping this unit $detail->{name}.");
             next;
         }
 
@@ -251,12 +259,12 @@ sub configured_services
         $detail->{startstop} = $DEFAULT_STARTSTOP if (! exists($detail->{startstop}));
 
         $self->verbose("Add legacy name $detail->{name} (service $service)");
-        $self->debug(1, "Add legacy ", $self->service_text($detail));
-        $services{$detail->{name}} = $detail;
+        $self->debug(1, "Add legacy ", $self->unit_text($detail));
+        $units{$detail->{name}} = $detail;
                 
     };
 
-    return \%services;    
+    return \%units;    
 
 }
 
@@ -304,7 +312,7 @@ sub generate_runlevel2target
             $self->warn("Unable to identify target for runlevel$lvl.target (Id $id).",
                 " Using default target $target for level $lvl.");
         }
-        push(@runlevel2target, $target);
+        push(@runlevel2target, "$target.$TYPE_TARGET");
     }
 
     return \@runlevel2target;
@@ -327,7 +335,7 @@ sub convert_runlevels
 
     if (!@runlevel2target) {
         $self->verbose("Creating runlevel2target cache");
-        $self->generate_runlevel2target;
+        $self->generate_runlevel2target();
         if (!@runlevel2target) {
             $self->error("Failed to generate runlevel2target cache");
             return;
@@ -349,12 +357,12 @@ sub convert_runlevels
             $self->warn(
                 "legacylevel set to $legacylevel, but not converted in new targets. Using default $DEFAULT_TARGET."
             );
-            push(@targets, $DEFAULT_TARGET);
+            push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
         }
         $self->verbose("Converted legacylevel '$legacylevel' in " . join(', ', @targets));
     } else {
         $self->verbose("legacylevel undefined, using default $DEFAULT_TARGET");
-        push(@targets, $DEFAULT_TARGET);
+        push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
     }
 
     return \@targets;

@@ -3,9 +3,10 @@ use warnings;
 use Test::More;
 use Test::Quattor;
 use NCM::Component::systemd;
-use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL 
+use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
+    :properties
     );
 
 use helper;
@@ -18,13 +19,37 @@ $CAF::Object::NoAction = 1;
 
 Test the C<Systemctl> module for systemd.
 
+=head2 exported constansts
+
+Test exported constants
+
+=cut
+
+is($SYSTEMCTL, "/usr/bin/systemctl", "SYSTEMCTL exported");
+
+my $all_props = [
+    $PROPERTY_ACTIVESTATE, $PROPERTY_AFTER, $PROPERTY_BEFORE,
+    $PROPERTY_CONFLICTS, $PROPERTY_ID, $PROPERTY_NAMES,
+    $PROPERTY_REQUIRES, $PROPERTY_UNITFILESTATE, $PROPERTY_WANTEDBY,
+    $PROPERTY_WANTS,
+];
+is_deeply($all_props,
+          [qw(ActiveState After Before Conflicts Id Names Requires UnitFileState WantedBy Wants)],
+          "exported properties");
+
+my @array_props = (
+    $PROPERTY_AFTER, $PROPERTY_BEFORE, $PROPERTY_CONFLICTS,
+    $PROPERTY_NAMES, $PROPERTY_REQUIRES, $PROPERTY_WANTEDBY,
+    $PROPERTY_WANTS,
+);
+
+=pod
+
 =head2 systemctl_show
 
 Test systemctl_show
 
 =cut
-
-is($SYSTEMCTL, "/usr/bin/systemctl", "SYSTEMCTL exported");
 
 my ($res, @names);
 
@@ -38,10 +63,9 @@ is(scalar keys %$res, 63, "Found 63 keys");
 is($res->{Id}, 'reboot.target', "Runlevel6 is reboot.target");
 
 # test the split in array ref
-my @isarray = qw(Names Requires Wants WantedBy Before After Conflicts);
 foreach my $k (keys %$res) {
     my $r = ref($res->{$k});
-    if (grep {$_ eq $k} @isarray) {
+    if (grep {$_ eq $k} @array_props) {
         is($r, 'ARRAY', "$k is converted to array reference");
     } else {
         ok(! $r,  "$k is not a reference");
@@ -49,7 +73,7 @@ foreach my $k (keys %$res) {
 }
 is_deeply($res->{Names}, ["runlevel6.target", "reboot.target"], "Runlevel6 names/aliases");
 
-=pod 
+=pod
 
 =head2 systemctl_list
 
@@ -60,17 +84,17 @@ Test private systemctl_list
 set_output("systemctl_list_unit_files_target");
 
 $res = NCM::Component::Systemd::Systemctl::systemctl_list(
-    $cmp, 
-    "unit-files", 
-    qr{^(?<fullname>(?<name>\S+)\.(?<type>\w+))\s+}, 
+    $cmp,
+    "unit-files",
+    qr{^(?<name>(?<shortname>\S+)\.(?<type>\w+))\s+},
     "target");
 is(scalar keys %$res, 54, "Found 54 unit-files for target");
-is_deeply($res->{basic}, 
-    {name => "basic", type => "target", fullname => "basic.target"} , 
+is_deeply($res->{'basic.target'},
+    {shortname => "basic", type => "target", name => "basic.target"} ,
     "Correct named groups assigned to basic.target");
 
 
-=pod 
+=pod
 
 =head2 systemctl_list_units
 
@@ -82,21 +106,21 @@ set_output("systemctl_list_units_target");
 $res = systemctl_list_units($cmp, "target");
 
 is(scalar keys %$res, 15, "Found 15 units for target");
-is_deeply($res->{'multi-user'}, 
-    {name => "multi-user", type => "target", fullname => "multi-user.target",
-     loaded => 'loaded', active => 'active', running => 'active',   
+is_deeply($res->{'multi-user.target'},
+    {shortname => "multi-user", type => "target", name => "multi-user.target",
+     loaded => 'loaded', active => 'active', running => 'active',
     } , "Correct named groups assigned to unit multi-user.target");
 
 set_output("systemctl_list_units_service");
 $res = systemctl_list_units($cmp, "service");
 
 is(scalar keys %$res, 52, "Found 52 units for service");
-is_deeply($res->{'rc-local'}, 
-    {name => "rc-local", type => "service", fullname => "rc-local.service",
-     loaded => 'loaded', active => 'failed', running => 'failed',   
+is_deeply($res->{'rc-local.service'},
+    {shortname => "rc-local", type => "service", name => "rc-local.service",
+     loaded => 'loaded', active => 'failed', running => 'failed',
     } , "Correct named groups assigned to unit rc-local.service");
 
-=pod 
+=pod
 
 =head2 systemctl_list_unit_files
 
@@ -108,8 +132,9 @@ set_output("systemctl_list_unit_files_target");
 $res = systemctl_list_unit_files($cmp, "target");
 
 is(scalar keys %$res, 54, "Found 54 unit-files for target");
-is_deeply($res->{runlevel5}, 
-    {name => "runlevel5", type => "target", fullname => "runlevel5.target", state => 'disabled'} , 
+is_deeply($res->{'runlevel5.target'},
+    {shortname => "runlevel5", type => "target", name => "runlevel5.target",
+     state => 'disabled'},
     "Correct named groups assigned to unit-file runlevel5.target");
 
 
@@ -117,8 +142,9 @@ set_output("systemctl_list_unit_files_service");
 $res = systemctl_list_unit_files($cmp, "service");
 
 is(scalar keys %$res, 154, "Found 154 unit-files for service");
-is_deeply($res->{'serial-getty@'}, 
-    {name => 'serial-getty@', type => 'service', fullname => 'serial-getty@.service', state => 'static'} , 
+is_deeply($res->{'serial-getty@.service'},
+    {shortname => 'serial-getty@', type => 'service', name => 'serial-getty@.service', 
+     state => 'static'},
     'Correct named groups assigned to unit-file serial-getty@.service');
 
 =pod
@@ -132,7 +158,7 @@ Test the systemctl_list_deps method
 my $unitname;
 
 set_output("systemctl_list_dependencies_sshd_service");
-$unitname="sshd.service";
+$unitname = "sshd.service";
 $res = systemctl_list_deps($cmp, $unitname);
 ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
 is(scalar keys %$res, 61, "Found 61 dependecies for unit $unitname");
@@ -143,14 +169,13 @@ for my $depname (@deps) {
     ok($res->{$depname}, "Unit $depname is in the list of dependencies for unit $unitname");
 }
 
-
 set_output("systemctl_list_dependencies_sshd_service_reverse");
 $res = systemctl_list_deps($cmp, $unitname, 1);
 ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependencies");
 is(scalar keys %$res, 3, "Found 3 reverse dependecies for unit $unitname");
 
 set_output("systemctl_list_dependencies_default_target");
-$unitname="default.target";
+$unitname = "default.target";
 $res = systemctl_list_deps($cmp, $unitname);
 ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
 is(scalar keys %$res, 95, "Found 95 dependecies for unit $unitname");
@@ -161,7 +186,7 @@ ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependenc
 is(scalar keys %$res, 2, "Found 2 reverse dependecies for unit $unitname");
 
 set_output("systemctl_list_dependencies_multiuser_target");
-$unitname="multi-user.target";
+$unitname = "multi-user.target";
 $res = systemctl_list_deps($cmp, $unitname);
 ok($res->{$unitname}, "Unit $unitname itself is in the list of dependencies for unit $unitname");
 is(scalar keys %$res, 95, "Found 95 dependecies for unit $unitname");
@@ -173,7 +198,7 @@ is(scalar keys %$res, 2, "Found 2 reverse dependecies for unit $unitname");
 
 done_testing();
 
-=pod 
+=pod
 
 =back
 

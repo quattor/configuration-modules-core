@@ -51,78 +51,78 @@ Test gather_configured_services
 
 =cut
 
-is_deeply($svc->gather_configured_services($cfg), {
-    test_on => {
-        name => "test_on",
+is_deeply($svc->gather_configured_units($cfg), {
+    'test_on.service' => {
+        name => "test_on.service",
         startstop => 1,
         state => $STATE_ENABLED,
-        targets => ['rescue', 'multi-user'],
+        targets => ['rescue.target', 'multi-user.target'],
         type => $TYPE_SYSV,
-        fullname => "test_on.$TYPE_SYSV",
+        shortname => "test_on",
     },
-    test_add => {
-        name => "test_add",
+    'test_add.service' => {
+        name => "test_add.service",
         startstop => 1,
         state => $STATE_DISABLED,
-        targets => ['multi-user'],
+        targets => ['multi-user.target'],
         type => $TYPE_SYSV,
-        fullname => "test_add.$TYPE_SYSV",
+        shortname => "test_add",
     },
-    othername => {
-        name => "othername",
+    'othername.service' => {
+        name => "othername.service",
         startstop => 1,
         state => $STATE_ENABLED,
-        targets => ['multi-user'],
+        targets => ['multi-user.target'],
         type => $TYPE_SYSV,
-        fullname => "othername.$TYPE_SYSV",
+        shortname => "othername",
     },
-    test2_on => {
-        name => 'test2_on',
+    'test2_on.service' => {
+        name => "test2_on.service",
         state => $STATE_ENABLED, 
-        targets => ["rescue", "multi-user"], 
+        targets => ["rescue.target", "multi-user.target"], 
         startstop => 1,
         type => $TYPE_SERVICE,
-        fullname => "test2_on.$TYPE_SERVICE",
+        shortname => "test2_on",
     },
-    test2_add => {
-        name => "test2_add",
+    'test2_add.target' => {
+        name => "test2_add.target",
         state => $STATE_DISABLED, 
-        targets => ["multi-user"], 
+        targets => ["multi-user.target"], 
         startstop => 1,
         type => $TYPE_TARGET,
-        fullname => "test2_add.$TYPE_TARGET",
+        shortname => "test2_add",
     },
-    othername2 => {
-        name => "othername2",
+    'othername2.service' => {
+        name => "othername2.service",
         state => $STATE_ENABLED, 
-        targets => ["multi-user"],
+        targets => ["multi-user.target"],
         startstop => 1,
         type => $TYPE_SERVICE,
-        fullname => "othername2.$TYPE_SERVICE",
+        shortname => "othername2",
     },
-    test_off => { # from ncm-systemd
-        name => "test_off",
+    'test_off.service' => { # from ncm-systemd
+        name => "test_off.service",
         state => $STATE_MASKED,
-        targets => ["rescue"],
+        targets => ["rescue.target"],
         startstop => 1,
         type => $TYPE_SERVICE,
-        fullname => "test_off.$TYPE_SERVICE",
+        shortname => "test_off",
     },
-    test_del => { # from ncm-systemd
-        name => "test_del",
+    'test_del.service' => { # from ncm-systemd
+        name => "test_del.service",
         state => $STATE_ENABLED, 
-        targets => ["rescue"], 
+        targets => ["rescue.target"], 
         startstop => 0,
         type => $TYPE_SERVICE,
-        fullname => "test_del.$TYPE_SERVICE",
+        shortname => "test_del",
     }, 
-}, "gathered configured services is a union of ncm-systemd and ncm-chkconfig services");
+}, "gathered configured units is a union of ncm-systemd and ncm-chkconfig units");
 
 =pod
 
-=head2 gather_current_services
+=head2 gather_current_units
 
-Test gather_current_services
+Test gather_current_units
 
 =cut
 
@@ -131,77 +131,77 @@ set_output("chkconfig_list_el7");
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 $cfg = get_config_for_profile('service_ceph021');
 
-my $configured = $svc->gather_configured_services($cfg);
-is_deeply($configured->{network}, { # sysv, on
-    name => "network",
+my $configured = $svc->gather_configured_units($cfg);
+is_deeply($configured->{'network.service'}, { # sysv, on
+    name => "network.service",
     startstop => 1,
     state => $STATE_ENABLED,
-    targets => ['multi-user', 'graphical'],
+    targets => ['multi-user.target', 'graphical.target'],
     type => $TYPE_SERVICE,
-    fullname => "network.$TYPE_SERVICE",
+    shortname => "network",
 }, "configured network service for ceph021");
 
-is_deeply($configured->{netconsole}, { # sysv, off
-    name => "netconsole",
+is_deeply($configured->{'netconsole.service'}, { # sysv, off
+    name => "netconsole.service",
     startstop => 1,
     state => $STATE_ENABLED,
-    targets => ['multi-user'],
+    targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
-    fullname => "netconsole.$TYPE_SERVICE",
+    shortname => "netconsole",
 }, "configured netconsole service for ceph021");
 
-is_deeply($configured->{cups}, { # systemd
-    name => "cups",
+is_deeply($configured->{'cups.service'}, { # systemd
+    name => "cups.service",
     startstop => 0,
     state => $STATE_DISABLED,
-    targets => ['graphical'],
+    targets => ['graphical.target'],
     type => $TYPE_SERVICE,
-    fullname => "cups.$TYPE_SERVICE",
+    shortname => "cups",
 }, "configured cups service for ceph021");
 
-is_deeply($configured->{rbdmap}, { # sysv, not in chkconfig
-    name => "rbdmap",
+is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
+    name => "rbdmap.service",
     startstop => 1,
     state => $STATE_ENABLED,
-    targets => ['multi-user'],
+    targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
-    fullname => "rbdmap.$TYPE_SERVICE",
+    shortname => "rbdmap",
 }, "configured rbdmap service for ceph021");
 
-my $current = $svc->gather_current_services(keys %$configured);     
+my $current = $svc->gather_current_units(keys %$configured);     
 
 # cdp-listend, ceph, cups, ncm-cdispd, netconsole, network
 # only one of them is from the systemd units (cups)
 # the others are from chkconfig --list
-is_deeply(scalar keys %$current, 8, "Got 8 current services");
+is_deeply(scalar keys %$current, 10, "Got 10 current units");
 
-is_deeply($current->{network}, { # sysv
-        name => "network",
+is_deeply($current->{'network.service'}, { # sysv
+        name => "network.service",
         startstop => 1,
         state => $STATE_ENABLED,
         derived => 1,
-        targets => ['multi-user', 'graphical'],
+        targets => ['multi-user.target', 'graphical.target'],
         type => $TYPE_SERVICE,
-        fullname => "network.$TYPE_SERVICE",
+        shortname => "network",
 }, "current network service for ceph021");
 
-is_deeply($current->{netconsole}, { # sysv
-        name => "netconsole",
+is_deeply($current->{'netconsole.service'}, { # sysv
+        name => "netconsole.service",
         startstop => 1,
         state => $STATE_DISABLED,
         derived => 1,
         targets => [],
         type => $TYPE_SERVICE,
-        fullname => "netconsole.$TYPE_SERVICE",
+        shortname => "netconsole",
 }, "current netconsole service for ceph021");
 
-is_deeply($current->{cups}, { # systemd
-        name => "cups",
+is_deeply($current->{'cups.service'}, { # systemd
+        name => "cups.service",
         startstop => 1,
         state => $STATE_ENABLED,
         targets => [],
         type => $TYPE_SERVICE,
-        fullname => "cups.$TYPE_SERVICE",
+        shortname => "cups",
 }, "current cups service for ceph021");
 
 =pod
@@ -219,18 +219,18 @@ my ($states, $acts) = $svc->process($configured, $current);
 is($cmp->{ERROR}, 1, "1 error raise due to 2 configured unit, one is alias of other.");
 
 # rbdmap is SYSV, unseen in chkconfig --list and startstop
-ok($configured->{rbdmap}->{startstop}, "rbdmap has startstop");
-is($configured->{rbdmap}->{state}, $STATE_ENABLED, "rbdmap should be enabled");
-is($current->{rbdmap}->{state}, $STATE_DISABLED, "rbdmap is disabled)");
+ok($configured->{'rbdmap.service'}->{startstop}, "rbdmap has startstop");
+is($configured->{'rbdmap.service'}->{state}, $STATE_ENABLED, "rbdmap should be enabled");
+is($current->{'rbdmap.service'}->{state}, $STATE_DISABLED, "rbdmap is disabled)");
 
 # cups state ok, no startstop
-ok(! $configured->{cups}->{startstop}, "cups has no startstop");
+ok(! $configured->{'cups.service'}->{startstop}, "cups has no startstop");
 
 # netconsole should be enabled and started
-is($configured->{netconsole}->{state}, $STATE_ENABLED, "netconsole should be enabled");
-ok($configured->{netconsole}->{startstop}, "netconsole has startstop");
-is($current->{netconsole}->{state}, $STATE_DISABLED, "netconsole is enabled");
-ok(! $svc->{unit}->is_active('netconsole', type => $TYPE_SERVICE), "notconsole is not active");
+is($configured->{'netconsole.service'}->{state}, $STATE_ENABLED, "netconsole should be enabled");
+ok($configured->{'netconsole.service'}->{startstop}, "netconsole has startstop");
+is($current->{'netconsole.service'}->{state}, $STATE_DISABLED, "netconsole is enabled");
+ok(! $svc->{unit}->is_active('netconsole.service'), "notconsole is not active");
 
 
 # processed in alphabetical order

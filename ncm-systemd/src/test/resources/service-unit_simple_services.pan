@@ -1,6 +1,6 @@
 unique template service-unit_simple_services;
 
-prefix "/software/components/systemd/service";
+prefix "/software/components/systemd/unit";
 
 "{test2_on}" = nlist("state", "enabled", "targets", list("rescue", "multi-user"), "startstop", true);
 "{test2_add}" = nlist("state", "disabled", "targets", list("multi-user"), "startstop", true, "type", "target");

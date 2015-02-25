@@ -47,14 +47,14 @@ our %EXPORT_TAGS = (
     unconfigured => \@UNCONFIGURED,
 );
 
-# The default w.r.t. handling unconfigured services.
+# The default w.r.t. handling unconfigured units.
 my $unconfigured_default = $UNCONFIGURED_IGNORE;
 
 =pod
 
 =head1 NAME
 
-NCM::Component::Systemd::Service handles the C<ncm-systemd> services.
+NCM::Component::Systemd::Service handles the C<ncm-systemd> units.
 
 =head2 Public methods
 
@@ -90,8 +90,8 @@ sub _initialize
 
 =item configure
 
-C<configure> gathered the to-be-configured services from the C<config> using the
-C<gather_services> method and then takes appropriate actions.
+C<configure> gathered the to-be-configured units from the C<config> using the
+C<gather_units> method and then takes appropriate actions.
 
 =cut
 
@@ -101,9 +101,9 @@ sub configure
 
     $self->set_unconfigured_default($config);
 
-    my $configured = $self->gather_configured_services($config);
+    my $configured = $self->gather_configured_units($config);
 
-    my $current = $self->gather_current_services(keys %$configured);
+    my $current = $self->gather_current_units(keys %$configured);
 
     $self->process($configured, $current);
 
@@ -125,7 +125,7 @@ sub configure
 
 =item set_unconfigured_default
 
-Set the default behaviour for unconfigured services from C<ncn-systemd>
+Set the default behaviour for unconfigured units from C<ncn-systemd>
 and legacy C<ncm-chkconfig>.
 
 =cut
@@ -180,19 +180,19 @@ sub set_unconfigured_default
 
 =pod
 
-=item gather_configured_services
+=item gather_configured_units
 
-Gather the list of all configured services from both C<ncm-systemd>
+Gather the list of all configured units from both C<ncm-systemd>
 and legacy C<ncm-chkconfig> location, and take appropriate actions.
 
-For any service defined in both C<ncm-systemd> and C<ncm-chkconfig> location,
+For any unit defined in both C<ncm-systemd> and C<ncm-chkconfig> location,
 the C<ncm-systemd> settings will be used.
 
-Returns a hash reference with key the service name and value the service detail.
+Returns a hash reference with key the unit name and value the unit detail.
 
 =cut
 
-sub gather_configured_services
+sub gather_configured_units
 {
     my ($self, $config) = @_;
 
@@ -202,7 +202,7 @@ sub gather_configured_services
     };
 
     my $unit = {
-        path => "$BASE/service",
+        path => "$BASE/unit",
         instance => $self->{unit},
     };
 
@@ -210,58 +210,58 @@ sub gather_configured_services
     my $pref = $unit;
     my $other = $chkconfig;
 
-    my $services = {};
+    my $units = {};
 
-    # Gather the other services first (if any)
+    # Gather the other units first (if any)
     if ($config->elementExists($other->{path})) {
         my $tree = $config->getElement($other->{path})->getTree();
-        $services = $other->{instance}->configured_services($tree);
+        $units = $other->{instance}->configured_units($tree);
     }
 
-    # Update with preferred services (if any)
+    # Update with preferred units (if any)
     if ($config->elementExists($pref->{path})) {
         my $tree = $config->getElement($pref->{path})->getTree();
-        my $new_services = $pref->{instance}->configured_services($tree);
-        while (my ($service, $detail) = each %$new_services) {
-            if ($services->{$service}) {
-                $self->info("Found configured service $service via preferred $pref->{path} ",
-                            "and non-preferred $other->{path}. Using preferred service details.");
+        my $new_units = $pref->{instance}->configured_units($tree);
+        while (my ($unit, $detail) = each %$new_units) {
+            if ($units->{$unit}) {
+                $self->info("Found configured unit $unit via preferred $pref->{path} ",
+                            "and non-preferred $other->{path}. Using preferred unit details.");
             }
-            $services->{$service} = $detail;
+            $units->{$unit} = $detail;
         }
     }
 
-    $self->verbose("Gathered ", scalar keys %$services, " configured services: ",
-                   join(", ", sort keys %$services));
+    $self->verbose("Gathered ", scalar keys %$units, " configured units: ",
+                   join(", ", sort keys %$units));
 
-    return $services;
+    return $units;
 }
 
 =pod
 
-=item gather_current_services
+=item gather_current_units
 
-Gather list of current services from both C<systemctl> and legacy C<chkconfig>
-using resp. C<unit> and C<chkconfig> C<current_services> methods.
+Gather list of current units from both C<systemctl> and legacy C<chkconfig>
+using resp. C<unit> and C<chkconfig> C<current_units> methods.
 
-All arguments form a list of C<relevant_services> that is used to run minimal set
+All arguments form a list of C<relevant_units> that is used to run minimal set
 of system commands (and only if C<unconfigured_default> is C<ignore>).
 
 =cut
 
-sub gather_current_services
+sub gather_current_units
 {
-    my ($self, @relevant_services) = @_;
+    my ($self, @relevant_units) = @_;
 
-    # Also include all unconfigured services in the queries.
+    # Also include all unconfigured units in the queries.
     if($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->verbose("Unconfigured default $unconfigured_default, ",
-                       "taking all possible services into account");
-        @relevant_services = undef;
+                       "taking all possible units into account");
+        @relevant_units = undef;
     } else {
         $self->verbose("Unconfigured default $unconfigured_default, ",
-                       "using ", scalar @relevant_services," relevant services: ",
-                       join(',',@relevant_services));
+                       "using ", scalar @relevant_units," relevant units: ",
+                       join(',',@relevant_units));
     }
 
     # A sysv service that is not listed in chkconfig --list
@@ -273,39 +273,39 @@ sub gather_current_services
 
     # How to join these:
     # TODO: re-verify (seems not to be the case?)
-    #   The only services that are not seen by systemctl are SYSV services that
+    #   The only units that are not seen by systemctl are SYSV services that
     #   are not started via systemd (not necessarily running).
     #   The 'chkconfig --list' is the only command not properly handled in EL7 systemd.
     # TODO: what if someone starts a SYSV service via /etc/init.d/myservice start?
     #   Does systemd see this? (and how would it do that?)
 
-    my $services = $self->{chkconfig}->current_services();
+    my $units = $self->{chkconfig}->current_units();
 
-    my $current_units = $self->{unit}->current_services(@relevant_services);
-    while (my ($service, $detail) = each %$current_units) {
-        if ($services->{$service}) {
+    my $current_units = $self->{unit}->current_units(@relevant_units);
+    while (my ($unit, $detail) = each %$current_units) {
+        if ($units->{$unit}) {
             # TODO: Do we compare them to see if both are the same details or simply trust Unit?
-            $self->info("Found configured service $service via Chkconfig and Unit. ",
-                        "Using Unit service details.");
+            $self->info("Found configured unit $unit via Chkconfig and Unit. ",
+                        "Using Unit unit details.");
         }
-        $services->{$service} = $detail;
+        $units->{$unit} = $detail;
     }
 
-    $self->verbose("Gathered ", scalar keys %$services, " current services: ",
-                   join(", ", sort keys %$services));
+    $self->verbose("Gathered ", scalar keys %$units, " current units: ",
+                   join(", ", sort keys %$units));
 
-    return $services;
+    return $units;
 }
 
 =pod
 
 =item process
 
-C<process> the C<configured> services and
+C<process> the C<configured> units and
 take required action and/or make configuration changes.
-It uses the C<current> services to make the required decisions.
+It uses the C<current> units to make the required decisions.
 
-(Unconfigured services are not dealt with in this method).
+(Unconfigured units are not dealt with in this method).
 
 =cut
 
@@ -317,7 +317,7 @@ sub process
 
     # masked:
     #   mask, stop if running and startstop
-    #     first mask, then stop (e.g. autorestart services)
+    #     first mask, then stop (e.g. autorestart units)
     #     or first disable, then mask, then stop if running?
     #   replaces /etc/systemd/system/$unit.$type with symlink to /dev/null
     #     TODO: check what happens when also /etc/systemd/system/$unit.$type.d/X.cfg exists
@@ -327,7 +327,7 @@ sub process
     #   unmask, enable, start if not running and startstop
     #     unmask only if masked?
     #   check if targets are ok
-    #     TODO: how do we disable certain targets of particular service?
+    #     TODO: how do we disable certain targets of particular unit?
     #     TODO: what to do with unconfigured targets?
 
     # 0 means stop/should-not-be-running
@@ -348,8 +348,8 @@ sub process
         $STATE_MASKED => [],
     };
 
-    # Cache should be filled by the current_services call 
-    #   in gather_current_services method
+    # Cache should be filled by the current_units call 
+    #   in gather_current_units method
     my @configured = keys %$configured;
     my $aliases = $self->{unit}->get_aliases(\@configured);
 
@@ -364,13 +364,12 @@ sub process
                              "(This is a configuration issue.)");
                 next;
             } else {
-                $self->debug("Configured unit $unit is an alias of non-configured unit $realname.");
+                $self->verbose("$msg non-configured unit $realname.");
+                $unit = $realname;
             }
         }
 
         my $state = $detail->{state};
-        my $type = $detail->{type};
-        my $fun = $detail->{fullname};
         my $expected_act = $actmap->{$state};
 
         my $cur = $current->{$unit};
@@ -381,10 +380,10 @@ sub process
         my $msg = '';
         if ($cur) {
             # only if state is not what you wanted
-            $addstate = ! $self->{unit}->is_ufstate($unit, $state, type => $type);
+            $addstate = ! $self->{unit}->is_ufstate($unit, $state);
 
             if ($addact) {
-                my $current_act = $self->{unit}->is_active($unit, type => $type);
+                my $current_act = $self->{unit}->is_active($unit);
                 $addact = $expected_act != $current_act;
                 $self->debug(1, "process: expected activation $expected_act current activation $current_act: ",
                              "adding for (de)activation $addact");
@@ -396,11 +395,11 @@ sub process
         }
 
         if ($addstate) {
-            push(@{$states->{$state}}, $fun);
+            push(@{$states->{$state}}, $unit);
             $msg .= "state $state";
         }
         if ($addact) {
-            push(@{$acts->{$expected_act}}, $fun);
+            push(@{$acts->{$expected_act}}, $unit);
             $msg .= ($expected_act ? '' : 'de') . "activation";
         }
         $self->verbose($msg ? "process: unit $unit scheduled for $msg" :
