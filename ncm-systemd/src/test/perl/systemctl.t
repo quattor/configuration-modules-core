@@ -6,6 +6,7 @@ use NCM::Component::systemd;
 use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
+    systemctl_command_units
     :properties
     );
 
@@ -143,7 +144,7 @@ $res = systemctl_list_unit_files($cmp, "service");
 
 is(scalar keys %$res, 154, "Found 154 unit-files for service");
 is_deeply($res->{'serial-getty@.service'},
-    {shortname => 'serial-getty@', type => 'service', name => 'serial-getty@.service', 
+    {shortname => 'serial-getty@', type => 'service', name => 'serial-getty@.service',
      state => 'static'},
     'Correct named groups assigned to unit-file serial-getty@.service');
 
@@ -195,6 +196,38 @@ set_output("systemctl_list_dependencies_multiuser_target_reverse");
 $res = systemctl_list_deps($cmp, $unitname, 1);
 ok($res->{$unitname}, "Unit $unitname itself is in the list of reverse dependencies");
 is(scalar keys %$res, 2, "Found 2 reverse dependecies for unit $unitname");
+
+
+=pod
+
+=head2 systemctl_command_units
+
+Test systemctl_command_units
+
+=cut
+
+my $cmd = "$SYSTEMCTL fake-command -- unit1.type unit2.type";
+my $out = "testok";
+set_command_status($cmd, 0);
+set_desired_output($cmd, $out);
+
+$cmp->{ERROR}= 0;
+my ($ec, $output) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit2.type');
+
+is($cmp->{ERROR}, 0, "No errors logged during systemctl_command_units $cmd");
+is($ec, 0, "systemctl_command_units finished with exitcode $ec");
+is($output, $out, "systemctl_command_units finished with output $out");
+
+$cmd .= " unit3.type";
+$out = "FAIL";
+set_command_status($cmd, 5);
+set_desired_output($cmd, $out);
+
+($ec, $output) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit2.type', 'unit3.type');
+
+is($cmp->{ERROR}, 1, "1 error logged during systemctl_command_units $cmd");
+is($ec, 5, "systemctl_command_units finished with exitcode $ec");
+is($output, $out, "systemctl_command_units finished with output $out");
 
 done_testing();
 

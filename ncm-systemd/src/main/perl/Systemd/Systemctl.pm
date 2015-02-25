@@ -45,6 +45,7 @@ our @EXPORT_OK = qw(
     systemctl_show
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
+    systemctl_command_units
 );
 
 push @EXPORT_OK, @PROPERTIES;
@@ -230,6 +231,44 @@ sub systemctl_list_deps
     };
 
     return $res;
+}
+
+=pod
+
+=item systemctl_command_units
+
+Run the systemctl C<command> for C<units>.
+
+An error is logged when the exitcode is non-zero.
+
+Returns exitcode and output.
+
+=cut
+
+sub systemctl_command_units
+{
+    my ($logger, $command, @units) = @_;
+
+    # TODO: any relevant options?
+    my $proc = CAF::Process->new(
+        [$SYSTEMCTL, $command],
+        log => $logger,
+        );
+
+    if (@units) {
+        $proc->pushargs('--', @units);
+    }
+
+    my $data = $proc->output();
+    my $ec = $?;
+
+    my $msg = "systemctl_command_units $proc returned ec $ec and output $data";
+    if ($ec) {
+        $logger->error($msg);
+    } else {
+        $logger->verbose($msg);
+    }
+    return $ec, $data;
 }
 
 =pod
