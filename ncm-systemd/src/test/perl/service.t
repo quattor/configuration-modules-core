@@ -4,10 +4,10 @@ use Test::More;
 use Test::Quattor qw(service_services service_ceph021);
 
 use helper;
-use NCM::Component::systemd;
 use NCM::Component::Systemd::Service qw($UNCONFIGURED_IGNORE); 
-
 use NCM::Component::Systemd::Service::Unit qw(:types :states);
+use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL); 
+use NCM::Component::systemd;
 
 $CAF::Object::NoAction = 1;
 
@@ -244,6 +244,51 @@ is_deeply($acts, {
     1 => ['netconsole.service', 'network.service', 'rbdmap.service'],
 }, "Activations to be made");
 
+=pod
+
+=head2 change
+
+Test change
+
+=cut
+
+$cmp->{ERROR} = 0;
+command_history_reset();
+
+$svc->change($states, $acts);
+
+is($cmp->{ERROR}, 0, "No error logger while applying the changes");
+
+ok(command_history_ok([
+    # 1st states, alpahbetically ordered
+    "$SYSTEMCTL disable -- cups.service",
+    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    # 2 activity
+    "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
+]), "expected commands for change");
+
+=pod
+
+=head2 configure
+
+Test configure
+
+=cut
+
+$cmp->{ERROR} = 0;
+command_history_reset();
+
+$svc->configure($cfg);
+
+is($cmp->{ERROR}, 2, "2 errors logger while configuring (see details above)");
+
+ok(command_history_ok([
+    # 1st states, alpahbetically ordered
+    "$SYSTEMCTL disable -- cups.service",
+    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    # 2 activity
+    "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
+]), "expected commands for change");
 
 
 done_testing();

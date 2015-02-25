@@ -11,8 +11,9 @@ use warnings;
 
 use parent qw(CAF::Object Exporter);
 
-use NCM::Component::Systemd::Service::Unit qw(:states :types);
 use NCM::Component::Systemd::Service::Chkconfig;
+use NCM::Component::Systemd::Service::Unit qw(:states :types);
+use NCM::Component::Systemd::Systemctl qw(systemctl_command_units);
 
 use LC::Exception qw (SUCCESS);
 
@@ -105,7 +106,9 @@ sub configure
 
     my $current = $self->gather_current_units(keys %$configured);
 
-    $self->process($configured, $current);
+    my @changes = $self->process($configured, $current);
+
+    $self->change(@changes);
 
     if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->error("Support for default unconfigured behaviour ",
@@ -302,12 +305,16 @@ sub gather_current_units
 =item process
 
 C<process> the C<configured> units and
-take required action and/or make configuration changes.
+retrun hash references with state and activation changes.
+
 It uses the C<current> units to make the required decisions.
 
 (Unconfigured units are not dealt with in this method).
 
 =cut
+
+# TODO: move to Unit?
+# TODO: handle targets (current code only deals with state and active)
 
 sub process
 {
@@ -337,6 +344,7 @@ sub process
         $STATE_DISABLED => 0,
         $STATE_MASKED => 0,
     };
+
     my $acts = {
         0 => [],
         1 => [],
@@ -406,8 +414,65 @@ sub process
                               "process: nothing to do for unit $unit");
     }
 
-    # For unittests
     return $states, $acts;
+};
+
+=pod
+
+=item change
+
+Actually make the changes as specified in 
+the hasrefs C<states> and C<acts> (which hold the 
+changes to be made to resp. the state and the activity
+of the units).
+
+=cut
+
+sub change
+{
+
+    my ($self, $states, $acts) = @_;
+
+    # Make changes
+    #  1st set the new state
+    #    to prevent autorestart units from restarting
+    #  2nd (de)activate
+
+    my $change_state = {
+        $STATE_ENABLED => 'enable',
+        $STATE_DISABLED => 'disable',
+        $STATE_MASKED => 'mask',
+    };
+
+    my $change_activation = {
+        0 => 'stop',
+        1 => 'start',
+    };
+
+    # TODO What order is best? enabled before disable?
+    foreach my $state (sort keys %$states) {
+        my @units = @{$states->{$state}};
+
+        # TODO: process units wrt dependencies?
+        if (@units) {
+            # TODO: trap exitcode and stop any further processing in case of error?
+            # CAF::Process logger is sufficient
+            systemctl_command_units($self, $change_state->{$state}, @units);
+        }
+    }
+
+    # TODO: same TODOs as with states
+    foreach my $act (sort keys %$acts) {
+        my @units = @{$acts->{$act}};
+
+        # TODO: process units wrt dependencies?
+        if (@units) {
+            # TODO: trap exitcode and stop any further processing in case of error?
+            # CAF::Process logger is sufficient
+            systemctl_command_units($self, $change_activation->{$act}, @units);
+        }
+    }
+
 }
 
 
