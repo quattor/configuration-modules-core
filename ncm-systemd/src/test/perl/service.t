@@ -4,9 +4,9 @@ use Test::More;
 use Test::Quattor qw(service_services service_ceph021);
 
 use helper;
-use NCM::Component::Systemd::Service qw($UNCONFIGURED_IGNORE); 
+use NCM::Component::Systemd::Service qw(:unconfigured);
 use NCM::Component::Systemd::Service::Unit qw(:types :states);
-use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL); 
+use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL);
 use NCM::Component::systemd;
 
 $CAF::Object::NoAction = 1;
@@ -25,12 +25,24 @@ Test C<NCM::Component::Systemd::Service> module for systemd.
 =cut
 
 my $svc = NCM::Component::Systemd::Service->new(log => $cmp);
-isa_ok($svc, "NCM::Component::Systemd::Service", 
+isa_ok($svc, "NCM::Component::Systemd::Service",
        "Created a NCM::Component::Systemd::Service instance");
 isa_ok($svc->{unit}, "NCM::Component::Systemd::Service::Unit",
        "Has a NCM::Component::Systemd::Service::Unit instance");
 isa_ok($svc->{chkconfig}, "NCM::Component::Systemd::Service::Chkconfig",
        "Has a NCM::Component::Systemd::Service::Chkconfig instance");
+
+=pod
+
+=head2 exported constants
+
+=cut
+
+is_deeply([$UNCONFIGURED_DISABLED, $UNCONFIGURED_ENABLED,
+           $UNCONFIGURED_IGNORE, $UNCONFIGURED_MASKED,
+          ],
+          [qw(disabled enabled ignore masked)],
+          "exported UNCONFIGURED states");
 
 =pod
 
@@ -41,7 +53,10 @@ Test set_unconfigured_default
 =cut
 
 # Only tests the systemd setting.
-is($svc->set_unconfigured_default($cfg), $UNCONFIGURED_IGNORE, "Set unconfigured to ignore");
+$cmp->{ERROR} = 0;
+is($svc->set_unconfigured_default($cfg), $UNCONFIGURED_IGNORE,
+    "Set unconfigured to ignore");
+is($cmp->{ERROR}, 0, "No errors logged");
 
 =pod
 
@@ -78,23 +93,23 @@ is_deeply($svc->gather_configured_units($cfg), {
     },
     'test2_on.service' => {
         name => "test2_on.service",
-        state => $STATE_ENABLED, 
-        targets => ["rescue.target", "multi-user.target"], 
+        state => $STATE_ENABLED,
+        targets => ["rescue.target", "multi-user.target"],
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "test2_on",
     },
     'test2_add.target' => {
         name => "test2_add.target",
-        state => $STATE_DISABLED, 
-        targets => ["multi-user.target"], 
+        state => $STATE_DISABLED,
+        targets => ["multi-user.target"],
         startstop => 1,
         type => $TYPE_TARGET,
         shortname => "test2_add",
     },
     'othername2.service' => {
         name => "othername2.service",
-        state => $STATE_ENABLED, 
+        state => $STATE_ENABLED,
         targets => ["multi-user.target"],
         startstop => 1,
         type => $TYPE_SERVICE,
@@ -110,12 +125,12 @@ is_deeply($svc->gather_configured_units($cfg), {
     },
     'test_del.service' => { # from ncm-systemd
         name => "test_del.service",
-        state => $STATE_ENABLED, 
-        targets => ["rescue.target"], 
+        state => $STATE_ENABLED,
+        targets => ["rescue.target"],
         startstop => 0,
         type => $TYPE_SERVICE,
         shortname => "test_del",
-    }, 
+    },
 }, "gathered configured units is a union of ncm-systemd and ncm-chkconfig units");
 
 =pod
@@ -168,7 +183,7 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
     shortname => "rbdmap",
 }, "configured rbdmap service for ceph021");
 
-my $current = $svc->gather_current_units(keys %$configured);     
+my $current = $svc->gather_current_units(keys %$configured);
 
 # cdp-listend, ceph, cups, ncm-cdispd, netconsole, network
 # only one of them is from the systemd units (cups)
@@ -280,7 +295,7 @@ command_history_reset();
 
 $svc->configure($cfg);
 
-is($cmp->{ERROR}, 2, "2 errors logger while configuring (see details above)");
+is($cmp->{ERROR}, 1, "1 error logged while configuring (due to configured alias)");
 
 ok(command_history_ok([
     # 1st states, alpahbetically ordered

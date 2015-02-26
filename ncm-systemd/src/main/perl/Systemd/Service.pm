@@ -33,13 +33,20 @@ Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
 Readonly my $BASE => "/software/components/${project.artifactId}";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
 
-Readonly our $UNCONFIGURED_IGNORE => 'ignore';
 Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;
 Readonly our $UNCONFIGURED_ENABLED => $STATE_ENABLED;
+Readonly our $UNCONFIGURED_IGNORE => 'ignore';
 Readonly our $UNCONFIGURED_MASKED => $STATE_MASKED;
 
-Readonly::Array my @UNCONFIGURED => qw($UNCONFIGURED_IGNORE
-    $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED $UNCONFIGURED_MASKED);
+Readonly::Array my @UNCONFIGURED => qw(
+    $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED
+    $UNCONFIGURED_IGNORE $UNCONFIGURED_MASKED
+    );
+
+Readonly::Array my @UNCONFIGURED_SUPPORTED => (
+    $UNCONFIGURED_DISABLED, $UNCONFIGURED_ENABLED,
+    $UNCONFIGURED_IGNORE, $UNCONFIGURED_MASKED,
+    );
 
 our @EXPORT_OK = qw();
 push @EXPORT_OK, @UNCONFIGURED;
@@ -159,21 +166,27 @@ sub set_unconfigured_default
         $found = $other;
     } else {
         # This should never happen since it's mandatory in ncm-systemd schema
-        $self->info("Default not defined for preferred $pref or other $other. Current value is $unconfigured_default");
+        $self->info("Default not defined for preferred $pref or other $other. ",
+                    "Current value is $unconfigured_default");
     }
 
-    my $val = $config->getElement($path->{$found})->getValue();
-    if ($found eq 'chkconfig') {
-        # configure the legacy value
-        $self->verbose("Converting legacy unconfigured_default value $val to ", $chkconfig_map->{$val});
-        $val = $chkconfig_map->{$val};
+    if ($found) {
+        my $val = $config->getElement($path->{$found})->getValue();
+        if ($found eq 'chkconfig') {
+            # configure the legacy value
+            $self->verbose("Converting legacy unconfigured_default ",
+                           "value $val to ", $chkconfig_map->{$val});
+            $val = $chkconfig_map->{$val};
+        }
+        $unconfigured_default = $val;
+        $self->verbose("Set unconfigured_default to $unconfigured_default ",
+                       "using $found path ", $path->{$found});
     }
-    $unconfigured_default = $val;
-    $self->verbose("Set unconfigured_default to $unconfigured_default using $found path ", $path->{$found});
 
-    if (! (grep {$_ eq $unconfigured_default} @UNCONFIGURED)) {
+    if (! (grep {$_ eq $unconfigured_default} @UNCONFIGURED_SUPPORTED)) {
         # Should be forced by schema (but now 2 schemas)
-        $self->error("Unssuported value $unconfigured_default; setting it to $UNCONFIGURED_IGNORE");
+        $self->error("Unsuported value $unconfigured_default; ",
+                     "setting it to $UNCONFIGURED_IGNORE.");
         $unconfigured_default = $UNCONFIGURED_IGNORE;
     }
 
@@ -356,7 +369,7 @@ sub process
         $STATE_MASKED => [],
     };
 
-    # Cache should be filled by the current_units call 
+    # Cache should be filled by the current_units call
     #   in gather_current_units method
     my @configured = keys %$configured;
     my $aliases = $self->{unit}->get_aliases(\@configured);
@@ -421,8 +434,8 @@ sub process
 
 =item change
 
-Actually make the changes as specified in 
-the hasrefs C<states> and C<acts> (which hold the 
+Actually make the changes as specified in
+the hasrefs C<states> and C<acts> (which hold the
 changes to be made to resp. the state and the activity
 of the units).
 
