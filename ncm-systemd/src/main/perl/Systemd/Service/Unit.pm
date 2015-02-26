@@ -422,7 +422,7 @@ sub configured_units
 
 =pod
 
-=head2 get_aliases
+=item get_aliases
 
 Given an arrayref of C<units>, return a hashref with key the unit (from the list)
 that is an alias for another unit (not necessarily from the list);

@@ -83,6 +83,7 @@ Following keys have the value split on whitespace and a array reference
 to the result as output
 
 =over
+
 =item Names
 =item Requires
 =item Wants
@@ -90,6 +91,7 @@ to the result as output
 =item Before
 =item After
 =item Conflicts
+
 =back
 
 Returns undef on failure.
