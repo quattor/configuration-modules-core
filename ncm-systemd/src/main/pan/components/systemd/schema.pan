@@ -21,10 +21,10 @@ type ${project.artifactId}_unit_type = {
     "state" : string = 'enabled' with match(SELF,"^(enabled|disabled|masked)$")
 };
 
-type component_${project.artifactId}_type = {
+type component_${project.artifactId} = {
     include structure_component
     # TODO: only ignore implemented so far. To add : disabled and/or masked
     "unconfigured" : string = 'ignore' with match (SELF, '^(ignore)$') # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
-    "unit" : ${project.artifactId}_unit_type{}
+    "unit" ? ${project.artifactId}_unit_type{}
 };
