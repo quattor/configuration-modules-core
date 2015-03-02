@@ -1,6 +1,5 @@
-Simple base test
+Simple test
 ---
-/etc/example/exampled.conf
 unordered
 nomultiline
 ---
