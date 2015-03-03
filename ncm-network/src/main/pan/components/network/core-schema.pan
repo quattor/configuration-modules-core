@@ -36,11 +36,7 @@ type structure_bonding_options = {
     "primary" ? string with exists("/system/network/interfaces/" + SELF)
     "lacp_rate" ? long(0..1)
 } with {
-    if ( SELF['mode'] == 4 ) {
-        if ( ! exists(SELF["lacp_rate"]) ) {
-            error("Bonding using LACP configured but no rate set.");
-        };
-    } else {
+    if ( SELF['mode'] != 4 ) {
         if ( ! exists(SELF["primary"]) ) {
             error("Bonding configured but no primary is defined.");
         };
