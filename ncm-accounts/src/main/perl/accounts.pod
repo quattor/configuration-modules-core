@@ -28,7 +28,7 @@ All these functions update a structure_accounts (return value may be assigned to
 Behaviour of these functions can be customized by definining some variables before
 calling them, mainly :
 
-=over 4
+=over
 
 =item ACCOUNTS_USER_HOME_ROOT
 
@@ -242,6 +242,7 @@ the accounts/groups that have to be preserved when 'remove_unknown' is true
 The effect of each possible value is
 
 =over
+
 =item system
 
 all accounts/groups in the system range (strictly below GID/UID_MIN as
@@ -291,9 +292,5 @@ ncm-accounts but by L<ncm-authconfig>.
 =head1 SEE ALSO
 
 L<ncm-authconfig>
-
-=head1 AUTHOR
-
-Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 =cut

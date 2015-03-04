@@ -15,6 +15,8 @@ The services file  is a local source of information  regarding  each  service  a
 
 =head1 SYNOPSIS
 
+=over
+
 =item Configure()
 
 Configure /etc/services entries
@@ -23,7 +25,11 @@ Configure /etc/services entries
 
 Not implemented
 
+=back
+
 =head1 RESOURCES
+
+=over
 
 =item /software/components/etcservices/active : boolean
 
@@ -36,6 +42,8 @@ The services file contains an entry for each  service.  Each entry has the form:
 service-name: This is the official Internet service name.
 port/protocol: This field is composed of the port number and protocol through  which  the service is provided.
 aliases: This is a list of alternate names by which the service might be requested.
+
+=back
  
 =head1 DEPENDENCIES
 
@@ -46,17 +54,5 @@ dns.
 =head2 Components to be run after:
 
 none.
-
-=head1 BUGS
-
-none known.
-
-=head1 AUTHOR
-
-Juan.Pelegrin <Juan.Pelegrin@cern.ch>
-
-=head1 SEE ALSO
-
-ncm-ncd(1)
 
 =cut
