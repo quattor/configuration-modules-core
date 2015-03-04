@@ -109,17 +109,18 @@ sub Configure {
     ### Collect ifconfig info
     ###
     my $ifconfig_out;
-    if(LC::Process::execute(['/sbin/ifconfig','-a'],
-                                "stdout" => \$ifconfig_out,
-                                "stderr" => "stdout"
-            ) ) {
-            ## euhm, yeah....
-    } else {
-        ## holy backporting batman. they finally kicked it out!
-        $self->error("Running \"/sbin/ifconfig -a\" failed: output $ifconfig_out.")
+    my $proc = CAF::Process->new(['/sbin/ifconfig','-a'],
+                                 stdout => \$ifconfig_out,
+                                 stderr => "stdout",
+                                 log => $self);
+    if(! $proc->execute() ) {
+        $ifconfig_out = "" if (! defined($ifconfig_out));
+
+        # holy backporting batman. they finally kicked it out!
+        $self->error("Running \"/sbin/ifconfig -a\" failed: output $ifconfig_out");
     }
 
-    my @ifconfig_devs = split(/\n\s*\n/,$ifconfig_out);
+    my @ifconfig_devs = split(/\n\s*\n/, $ifconfig_out);
 
     my $ifconfig_mac_regexp='^(\S+)\s+.*?HWaddr\s+([\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\3[\dA-Fa-f]{2}){4})\s+';
 
