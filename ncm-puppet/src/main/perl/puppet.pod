@@ -60,6 +60,8 @@ content of the file
 
 The default for "nodefiles" is one file quattor_default.pp with content "hiera_include('classes')".
 
+=back
+
 =head2 /software/components/${project.artifactId}/hieradata
 
 Data to be passed to the hiera config. Teh data will be written in /etc/puppet/hieradata/quattor.yaml. Note: the nlist keys will be unescaped by the component.
@@ -74,17 +76,6 @@ Named list of modules to be downloaded from the puppetlab forge. Each module has
 
 version of the module.
 
-= back
-= back 
-
-=head1 AUTHOR
-
-${author-info}
-
-=head1 TODO
-
-Better way to place the defaults on hieraconf parameter.
-
-Downloading files from other sources than PuppetLabs forge.
+=back 
 
 =cut
