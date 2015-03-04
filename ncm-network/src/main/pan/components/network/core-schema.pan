@@ -36,12 +36,13 @@ type structure_bonding_options = {
     "primary" ? string with exists("/system/network/interfaces/" + SELF)
     "lacp_rate" ? long(0..1)
 } with {
-    if ( SELF['mode'] != 4 ) {
+    if ( SELF['mode'] == 1 || SELF['mode'] == 5 || SELF['mode'] == 6 ) {
         if ( ! exists(SELF["primary"]) ) {
             error("Bonding configured but no primary is defined.");
         };
-        if ( ! exists(SELF["updelay"]) ) {
-            error("Bonding configured but no updelay is defined.");
+    } else {
+        if ( exists(SELF["primary"]) ) {
+            error("Primary is defined but this is not allowed with this bonding mode.");
         };
     };
     true;
