@@ -1,0 +1,10 @@
+Basic multiline test
+---
+/etc/example/exampled.conf
+---
+^name
+^\s{4}hosts
+^\s{4}port
+^\s{4}master
+^\s{4}description
+= ### COUNT 5

@@ -1,0 +1,11 @@
+name = {
+[% FILTER indent -%]
+hosts = [% hosts.join(',') %]
+port = [% port %]
+master = [% master ? "TRUE" : "FALSE" %]
+description = "[% description %]"
+[%     IF option.defined -%]
+option = "[% option %]"
+[%     END -%]
+[% END -%]
+}
