@@ -211,7 +211,17 @@ sub write_new_config {
 # file can be absolute or relative to working copy
 sub git_commit {
     my ($self, $work_tree, $file, $message) = @_;
-    my $gitr = Git::Repository->new( work_tree => $work_tree );
+    my $gitr = Git::Repository->new( 
+	work_tree => $work_tree, 
+    { 
+        env => {
+                GIT_COMMITTER_EMAIL => 'ceph@deployhost',
+                GIT_COMMITTER_NAME  => 'Ceph-deploy user',
+                GIT_AUTHOR_EMAIL => 'ceph@deployhost',
+                GIT_AUTHOR_NAME  => 'Ceph-deploy user',
+            },
+        }
+    );
     $gitr->run( add => $file );
     $gitr->run( commit => '-m', $message ) or return 0;    
     return 1;    
