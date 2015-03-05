@@ -54,10 +54,10 @@ sub get_quat_conf {
     my ($self, $quattor) = @_; 
     my $master = {} ;
     $self->debug(2, "Building information from quattor");
-    if ($quattor->{radosgws}) {
-        while (my ($hostname, $gtw) = each(%{$quattor->{radosgws}})) {
-            $master->{$hostname}->{radosgw} = $gtw; 
-            $master->{$hostname}->{fqdn} = $gtw->{fqdn};
+    if ($quattor->{radosgwh}) {
+        while (my ($hostname, $host) = each(%{$quattor->{radosgwh}})) {
+            $master->{$hostname}->{gtws} = $host->{gateways}; 
+            $master->{$hostname}->{fqdn} = $host->{fqdn};
             $master->{$hostname}->{config} = $quattor->{config};
         }  
     }
@@ -91,16 +91,18 @@ sub add_host {
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
-        $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $host->{radosgw} if ($host->{radosgw});
-        if ($host->{mon}) {
-            $self->add_mon($hostname, $host->{mon}, $structures) or return 0;
+        my @uniqs = ('mon', 'mds');
+        foreach my $dtype (@uniqs) {
+            if ($host->{$dtype}) {
+                $self->add_$dtype($hostname, $host->{$dtype}, $structures) or return 0;
+            }
         }
-        if ($host->{mds}) {
-            $self->add_mds($hostname, $host->{mds}, $structures) or return 0;
-        }
-        if ($host->{osds}){
-            while  (my ($osdkey, $osd) = each(%{$host->{osds}})) {
-                $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
+        my @multiples = ('osds', 'gtws');
+        foreach my $dstype (@multiples) {
+            if ($host->{$dstype}){
+                while  (my ($key, $daemon) = each(%{$host->{$dstype}})) {
+                    $self->add_$dstype($hostname, $key, $daemon, $structures) or return 0;
+                }
             }
         }
         $structures->{deployd}->{$hostname}->{fqdn} = $host->{fqdn};
@@ -118,6 +120,14 @@ sub add_osd {
         return 0;
     }
     $structures->{deployd}->{$hostname}->{osds}->{$osdkey} = $osd;
+    return 1;
+}
+
+# Configure a new rados gateway
+sub add_gtw {
+    my ($self, $hostname, $gwname, $gtw, $structures) = @_;
+    $self->debug(3, "Configuring new gateway $hostname");
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"}->{config} = $gtw->{config} if ($gtw->{config});
     return 1;
 }
 

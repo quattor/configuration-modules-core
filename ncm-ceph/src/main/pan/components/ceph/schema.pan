@@ -222,10 +222,16 @@ type ceph_cluster_config = {
 };
 
 @{ ceph rados gateway type 
-http://ceph.com/docs/master/radosgw/ @}
+http://ceph.com/docs/master/radosgw/ 
+@}
 type ceph_radosgw = {
+    'config' ? nlist
+};
+
+@{ ceph rados gateway host @}
+type ceph_radosgwh = {
     'fqdn'      : type_fqdn
-    'config'    : nlist
+    'gateways'  : ceph_radosgw{}
 };
 
 @{ function that checks that it is a valid algorithm. 
@@ -295,7 +301,7 @@ type ceph_cluster = {
     'osdhosts'                  : ceph_osd_host {}
     'monitors'                  : ceph_monitor {1..}
     'mdss'                      ? ceph_mds {}
-    'radosgws'                  ? ceph_radosgw {} # gateways are not being deployed yet, only the config
+    'radosgwh'                  ? ceph_radosgwh {} # gateways are not being deployed yet, only the config
     'deployhosts'               : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
     'crushmap'                  ? ceph_crushmap
 };
