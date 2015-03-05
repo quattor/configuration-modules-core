@@ -29,11 +29,23 @@ type structure_interface_alias = {
 # Describes the bonding options for configuring channel bonding on SL5
 # and similar.
 type structure_bonding_options = {
-    "mode" : long
+    "mode" : long(0..6)
     "miimon" : long
-    "updelay" : long
+    "updelay" ? long
     "downdelay" ? long
-    "primary" : string with exists("/system/network/interfaces/" + SELF)
+    "primary" ? string with exists("/system/network/interfaces/" + SELF)
+    "lacp_rate" ? long(0..1)
+} with {
+    if ( SELF['mode'] == 1 || SELF['mode'] == 5 || SELF['mode'] == 6 ) {
+        if ( ! exists(SELF["primary"]) ) {
+            error("Bonding configured but no primary is defined.");
+        };
+    } else {
+        if ( exists(SELF["primary"]) ) {
+            error("Primary is defined but this is not allowed with this bonding mode.");
+        };
+    };
+    true;
 };
 
 # describes the bridging options
