@@ -49,6 +49,14 @@ sub get_ceph_conf {
     return ($master, $mapping, $weights);
 }
 
+# helper sub to set quattor general and attr config in the hash tree
+sub set_host_attrs {
+    my ($self, $hosthash, $attr, $value, $fqdn, $config) = @_;
+    $hosthash->{$attr} = $value;
+    $hosthash->{fqdn} = $fqdn;
+    $hosthash->{config} = $config;
+}
+    
 # One big quattor tree on a host base
 sub get_quat_conf {
     my ($self, $quattor) = @_; 
@@ -56,27 +64,23 @@ sub get_quat_conf {
     $self->debug(2, "Building information from quattor");
     if ($quattor->{radosgwh}) {
         while (my ($hostname, $host) = each(%{$quattor->{radosgwh}})) {
-            $master->{$hostname}->{gtws} = $host->{gateways}; 
-            $master->{$hostname}->{fqdn} = $host->{fqdn};
-            $master->{$hostname}->{config} = $quattor->{config};
+            $self->set_host_attrs($master->{$hostname}, 'gtws', $host->{gateways}, 
+                $host->{fqdn}, $quattor->{config});
         }  
     }
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
-        $master->{$hostname}->{mon} = $mon; # Only one monitor
-        $master->{$hostname}->{fqdn} = $mon->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
+        $self->set_host_attrs($master->{$hostname}, 'mon', $mon, 
+            $mon->{fqdn}, $quattor->{config}); # Only one monitor
     }
     while (my ($hostname, $host) = each(%{$quattor->{osdhosts}})) {
-        $master->{$hostname}->{osds} = $self->structure_osds($hostname, $host);
-        $master->{$hostname}->{fqdn} = $host->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
-
+        my $osds = $self->structure_osds($hostname, $host);
+        $self->set_host_attrs($master->{$hostname}, 'osds', $osds, 
+            $host->{fqdn}, $quattor->{config});
     }
     while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
         $hostname =~ s/\..*//;;
-        $master->{$hostname}->{mds} = $mds; # Only one mds
-        $master->{$hostname}->{fqdn} = $mds->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
+        $self->set_host_attrs($master->{$hostname}, 'mds', $mds, 
+            $mds->{fqdn}, $quattor->{config}); # Only one mds
     }
     $self->debug(5, "Quattor hash:", Dumper($master));
     return $master;
@@ -260,11 +264,11 @@ sub compare_global {
 }
 
 # Compare radosgw config
-sub compare_radosgw {
-    my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
-    $self->debug(3, "Comparing radosgw section on $hostname");
-    $self->compare_config('radosgw', $hostname, $quat_config, $ceph_config);
-    $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $quat_config;
+sub compare_gtw {
+    my ($self, $hostname, $gwname, $quat_config, $ceph_config, $structures) = @_;
+    $self->debug(3, "Comparing radosgw section of gateway $gwname on $hostname");
+    $self->compare_config('radosgw', $gwname, $quat_config, $ceph_config);
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_config;
 }
 
 # Compare different sections of an existing host
@@ -278,11 +282,7 @@ sub compare_host {
         return 0; 
     } else {
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
-        if ($quat_host->{radosgw}) {
-            $self->compare_radosgw($hostname, $quat_host->{radosgw}->{config}, $ceph_host->{radosgw}->{config}, $structures);
-        } elsif ($ceph_host->{radosgw}) {
-            $self->info("radosgw config of $hostname not in quattor. Will get removed");
-        }
+        
         if ($quat_host->{mon} && $ceph_host->{mon}) {
             $self->compare_mon($hostname, $quat_host->{mon}, $ceph_host->{mon}, $structures) or return 0;
         } elsif ($quat_host->{mon}) {
@@ -297,20 +297,28 @@ sub compare_host {
         } elsif ($ceph_host->{mds}) {
             $structures->{destroy}->{$hostname}->{mds} = $ceph_host->{mds};
         }
-        if ($quat_host->{osds}) {
-            while  (my ($osdkey, $osd) = each(%{$quat_host->{osds}})) {
-                if (exists $ceph_host->{osds}->{$osdkey}) {
-                    $self->compare_osd($hostname, $osdkey, $osd,
-                        $ceph_host->{osds}->{$osdkey}, $structures) or return 0;
-                    delete $ceph_host->{osds}->{$osdkey};
-                } else {
-                    $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
+        my @multiples = ('osd', 'gtw');
+        foreach my $dtype (@multiples) {
+            my $dstype = $dtype . "s";
+            if ($quat_host->{$dstype}) {
+                while  (my ($key, $daemon) = each(%{$quat_host->{$dstype}})) {
+                    if (exists $ceph_host->{$dstype}->{$key}) {
+                        $self->compare_$dtype($hostname, $key, $daemon,
+                        $ceph_host->{$dstype}->{$key}, $structures) or return 0;
+                    delete $ceph_host->{$dstype}->{$key};
+                    } else {
+                        $self->add_$dtype($hostname, $key, $daemon, $structures) or return 0;
+                    }
                 }
             }
-        }
-        if ($ceph_host->{osds}) {
-            while  (my ($osdkey, $osd) = each(%{$ceph_host->{osds}})) {
-                $structures->{destroy}->{$hostname}->{osds}->{$osdkey} = $osd;
+            if ($ceph_host->{$dstype}) {
+                while  (my ($key, $daemon) = each(%{$ceph_host->{$dstype}})) {
+                    if ($dtype eq 'osd') { 
+                        $structures->{destroy}->{$hostname}->{$dstype}->{$key} = $daemon;
+                    } elsif ($dtype eq 'gtw') {
+                        $self->info("radosgw config of $key on $hostname not in quattor. Will get removed");   
+                    }
+                }
             }
         }
         $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
