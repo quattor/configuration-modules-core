@@ -3,7 +3,7 @@
                  "use_whitelist", "enable_amqp", "amqp_verbose", "amqp_metric_name_in_body",
                  "enable_manhole"] -%]
 [%- commalist = ["bind_patterns", "destinations"] -%]
-[%- pair.key.upper -%] =
+[%- pair.key FILTER upper -%] =
 [%-     SWITCH pair.key -%]
 [%-         CASE commalist -%]
  [%            pair.value.join(',') -%]
