@@ -261,18 +261,17 @@ sub getNamedRootDir {
     my $self = shift;
     my $named_root_dir = "";
 
-    my $fh = CAF::FileEditor->new($NAMED_SYSCONFIG_FILE, log => $self);
+    my $fh = CAF::FileReader->new($NAMED_SYSCONFIG_FILE, log => $self);
     unless ( defined($fh) ) {
         $self->debug(1,"$NAMED_SYSCONFIG_FILE not found, assume named is not chrooted");
         return "";
     }
-    $fh->cancel();
 
     $fh->seek_begin();
     while ( my $line = <$fh> ) {
         if ($line =~ /^\s*ROOTDIR\s*=\s*(.*)(\s+#.*)*$/) {
-            chomp($1);
             $named_root_dir = $1;
+            chomp($named_root_dir);
         }
     }
 
