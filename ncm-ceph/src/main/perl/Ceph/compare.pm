@@ -98,14 +98,15 @@ sub add_host {
         my @uniqs = ('mon', 'mds');
         foreach my $dtype (@uniqs) {
             if ($host->{$dtype}) {
-                $self->add_$dtype($hostname, $host->{$dtype}, $structures) or return 0;
+                $self->${"add_$dtype"}($hostname, $host->{$dtype}, $structures) or return 0;
             }
         }
         my @multiples = ('osds', 'gtws');
-        foreach my $dstype (@multiples) {
+        foreach my $dtype (@multiples) {
+            my $dstype = $dtype . "s";
             if ($host->{$dstype}){
                 while  (my ($key, $daemon) = each(%{$host->{$dstype}})) {
-                    $self->add_$dstype($hostname, $key, $daemon, $structures) or return 0;
+                    $self->${"add_$dtype"}($hostname, $key, $daemon, $structures) or return 0;
                 }
             }
         }
@@ -282,20 +283,18 @@ sub compare_host {
         return 0; 
     } else {
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
-        
-        if ($quat_host->{mon} && $ceph_host->{mon}) {
-            $self->compare_mon($hostname, $quat_host->{mon}, $ceph_host->{mon}, $structures) or return 0;
-        } elsif ($quat_host->{mon}) {
-            $self->add_mon($hostname, $quat_host->{mon}, $structures) or return 0;
-        } elsif ($ceph_host->{mon}) {
-            $structures->{destroy}->{$hostname}->{mon} = $ceph_host->{mon};
-        }
-        if ($quat_host->{mds} && $ceph_host->{mds}) {
-            $self->compare_mds($hostname, $quat_host->{mds}, $ceph_host->{mds}, $structures) or return 0;
-        } elsif ($quat_host->{mds}) {
-            $self->add_mds($hostname, $quat_host->{mds}, $structures) or return 0;
-        } elsif ($ceph_host->{mds}) {
-            $structures->{destroy}->{$hostname}->{mds} = $ceph_host->{mds};
+        my @uniques = ('mon', 'mds');
+        my %actions = (
+            'compare_mon' => $self->can('compare_mon')
+        );
+        foreach my $dtype (@uniques) {
+            if ($quat_host->{$dtype} && $ceph_host->{$dtype}) {
+                $actions{"compare_$dtype"}($hostname, $quat_host->{$dtype}, $ceph_host->{$dtype}, $structures) or return 0;
+            } elsif ($quat_host->{$dtype}) {
+                $self->${"add_$dtype"}($hostname, $quat_host->{$dtype}, $structures) or return 0;
+            } elsif ($ceph_host->{$dtype}) {
+                $structures->{destroy}->{$hostname}->{$dtype} = $ceph_host->{$dtype};
+            }
         }
         my @multiples = ('osd', 'gtw');
         foreach my $dtype (@multiples) {
@@ -303,11 +302,11 @@ sub compare_host {
             if ($quat_host->{$dstype}) {
                 while  (my ($key, $daemon) = each(%{$quat_host->{$dstype}})) {
                     if (exists $ceph_host->{$dstype}->{$key}) {
-                        $self->compare_$dtype($hostname, $key, $daemon,
+                         $actions{"compare_$dtype"}($hostname, $key, $daemon,
                         $ceph_host->{$dstype}->{$key}, $structures) or return 0;
                     delete $ceph_host->{$dstype}->{$key};
                     } else {
-                        $self->add_$dtype($hostname, $key, $daemon, $structures) or return 0;
+                        $self->${"add_$dtype"}($hostname, $key, $daemon, $structures) or return 0;
                     }
                 }
             }
@@ -316,7 +315,7 @@ sub compare_host {
                     if ($dtype eq 'osd') { 
                         $structures->{destroy}->{$hostname}->{$dstype}->{$key} = $daemon;
                     } elsif ($dtype eq 'gtw') {
-                        $self->info("radosgw config of $key on $hostname not in quattor. Will get removed");   
+                        $self->info("radosgw config of $key on $hostname not in quattor. Will be removed");   
                     }
                 }
             }
