@@ -143,7 +143,7 @@ sub add_osd {
 sub add_gtw {
     my ($self, $hostname, $gwname, $gtw, $structures) = @_;
     $self->debug(3, "Configuring new gateway $hostname");
-    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"}->{config} = $gtw->{config} if ($gtw->{config});
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $gtw->{config} if ($gtw->{config});
     return 1;
 }
 
@@ -277,10 +277,10 @@ sub compare_global {
 
 # Compare radosgw config
 sub compare_gtw {
-    my ($self, $hostname, $gwname, $quat_config, $ceph_config, $structures) = @_;
+    my ($self, $hostname, $gwname, $quat_gtw, $ceph_gtw, $structures) = @_;
     $self->debug(3, "Comparing radosgw section of gateway $gwname on $hostname");
-    $self->compare_config('radosgw', $gwname, $quat_config, $ceph_config);
-    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_config;
+    $self->compare_config('radosgw', $gwname, $quat_gtw->{config}, $ceph_gtw->{config});
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config} if ($quat_gtw->{config});;
 }
 
 # Compare different sections of an existing host

@@ -556,13 +556,14 @@ Readonly::Hash our %QUATMAPGW => (
        'fqdn' => 'ceph001.cubone.os',
        'up' => 1
      },
-     'radosgw' => {
-       'config' => {
-         'foo' => 'bar',
-         'host' => 'ceph001'
-       },
-       'fqdn' => 'ceph001.cubone.os'
-     }
+     'gtws' => {
+       'gateway' => {
+         'config' => {
+           'foo' => 'bar',
+           'host' => 'ceph001'
+         }
+       }
+     },
    }
 );
 Readonly::Hash our  %COMPARE1GW => (
