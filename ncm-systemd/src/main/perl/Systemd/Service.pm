@@ -30,7 +30,7 @@ Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
     sshd => 1,
 );
 
-Readonly my $BASE => "/software/components/${project.artifactId}";
+Readonly my $BASE => "/software/components/systemd";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
 
 Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;

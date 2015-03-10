@@ -106,9 +106,9 @@ sub systemctl_show
                                   );
     if (defined($unit)) {
         $proc->pushargs('--', $unit);
-        $logger->debug(1, "systemctl_show for name $unit");
+        $logger->debug(2, "systemctl_show for name $unit");
     } else {
-        $logger->verbose("systemctl_show for manager itself, name undefined");
+        $logger->debug(2, "systemctl_show for manager itself, name undefined");
     }
 
     my $output = $proc->output();
@@ -216,7 +216,7 @@ sub systemctl_list_deps
 
     $proc->pushargs('--', $unit);
 
-    $logger->verbose("Looking for $deptxt of unit $unit.");
+    $logger->debug(2, "Looking for $deptxt of unit $unit.");
 
     my $data = $proc->output();
     my $ec = $?;
@@ -268,7 +268,7 @@ sub systemctl_command_units
     if ($ec) {
         $logger->error($msg);
     } else {
-        $logger->verbose($msg);
+        $logger->debug(2, $msg);
     }
     return $ec, $data;
 }

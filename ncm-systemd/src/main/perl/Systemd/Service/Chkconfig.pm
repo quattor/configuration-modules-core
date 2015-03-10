@@ -113,11 +113,13 @@ sub current_units
             $detail->{targets} = $offtargets;
         }
 
-        $self->verbose("current_units added chkconfig unit $detail->{name}");
-        $self->debug(1, "current_units added chkconfig ", $self->unit_text($detail));
+        $self->debug(1, "current_units added chkconfig unit $detail->{name}");
+        $self->debug(2, "current_units added chkconfig ", $self->unit_text($detail));
         $current{$detail->{name}} = $detail;
     }
 
+    $self->debug(1, "current_units found ", scalar keys %current, " units:",
+                 join(",", sort keys %current));
     return \%current;
 }
 
@@ -251,19 +253,21 @@ sub configured_units
             next;
         }
 
-        $self->verbose("legacy chkconfig $chkstate set, state is now $state");
+        $self->debug(2, "legacy chkconfig $chkstate set, state is now $state");
 
         $detail->{state} = $state;
 
         # startstop mandatory
         $detail->{startstop} = $DEFAULT_STARTSTOP if (! exists($detail->{startstop}));
 
-        $self->verbose("Add legacy name $detail->{name} (service $service)");
-        $self->debug(1, "Add legacy ", $self->unit_text($detail));
+        $self->debug(1, "Add legacy name $detail->{name} (service $service)");
+        $self->debug(2, "Add legacy ", $self->unit_text($detail));
         $units{$detail->{name}} = $detail;
                 
     };
 
+    $self->debug(1, "configured_units found ", scalar keys %units, " units:",
+                 join(",", sort keys %units));
     return \%units;    
 
 }
@@ -300,11 +304,11 @@ sub generate_runlevel2target
         # Is it a target?
         if ($id && $id =~ m/^(.*)\.target$/) {
             if (!exists($targets{$1})) {
-                $self->verbose("Target $1 for level $lvl none of default targets");
+                $self->debug(1, "Target $1 for level $lvl none of default targets");
             } elsif (!($target eq $1)) {
-                $self->verbose("Target $1 for level $lvl different from default $target");
+                $self->debug(1, "Target $1 for level $lvl different from default $target");
             } else {
-                $self->verbose("Target $1 for level $lvl found.");
+                $self->debug(1, "Target $1 for level $lvl found.");
             }
             $target = $1;
         } else {
@@ -345,10 +349,14 @@ sub convert_runlevels
     # only keep the relevant ones
     my @targets;
     if (defined($legacylevel)) {
-        foreach my $lvl (0 .. 6) {
-            if ($legacylevel =~ m/$lvl/) {
-                my $target = $runlevel2target[$lvl];
-                push(@targets, $target) if (!grep {$_ eq $target} @targets);
+        if ($legacylevel eq "") {
+            push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
+        } else {
+            foreach my $lvl (0 .. 6) {
+                if ($legacylevel =~ m/$lvl/) {
+                    my $target = $runlevel2target[$lvl];
+                    push(@targets, $target) if (!grep {$_ eq $target} @targets);
+                }
             }
         }
 
@@ -359,9 +367,9 @@ sub convert_runlevels
             );
             push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
         }
-        $self->verbose("Converted legacylevel '$legacylevel' in " . join(', ', @targets));
+        $self->debug(1, "Converted legacylevel '$legacylevel' in " . join(', ', @targets));
     } else {
-        $self->verbose("legacylevel undefined, using default $DEFAULT_TARGET");
+        $self->debug(1, "legacylevel undefined, using default $DEFAULT_TARGET");
         push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
     }
 
@@ -416,7 +424,7 @@ sub current_runlevel
         my ($self, $cmd, $reg) = @_;
         my $proc = CAF::Process->new($cmd, log=>$self);
         if (! $proc->is_executable) {
-            $self->verbose("No runlevel via command $proc (not executable)");
+            $self->debug(1, "No runlevel via command $proc (not executable)");
             return;
         }
         
@@ -425,7 +433,7 @@ sub current_runlevel
         my $level;
         if ($line && $line =~ m/$reg/m) {
             $level = $1;
-            $self->info("Current runlevel from command $proc is $level");
+            $self->verbose("Current runlevel from command $proc is $level");
         } else {
             # happens at install time
             $self->warn("Cannot get runlevel from command $proc: $line (exitcode $ec).");  

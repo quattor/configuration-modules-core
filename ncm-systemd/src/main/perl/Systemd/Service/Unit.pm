@@ -262,7 +262,7 @@ sub current_units
                 $self->verbose("Base instance $name is not an actual runnable service. Skipping.");
             } elsif(@units) {
                 # Lots of units that have no show data, because they aren't queried all.
-                $self->verbose("Found name $name without any show data; ",
+                $self->debug(1, "Found name $name without any show data; ",
                                "only selected units were queried. Skipping.");
             } else {
                 $self->error("Found name $name without any show data. Skipping.");
@@ -310,6 +310,8 @@ sub current_units
         $current{$name} = $detail;
     }
 
+    $self->debug(1, "current_units found ", scalar keys %current, " units:",
+                 join(",", sort keys %current));
     return \%current;
 }
 
@@ -417,6 +419,8 @@ sub configured_units
     #   If on is defined, all other targets are off
     #   If off is defined, all others are on or also off? (2nd case: off means off everywhere)
 
+    $self->debug(1, "configured_units found ", scalar keys %units, " units:",
+                 join(",", sort keys %units));
     return \%units;
 }
 
@@ -452,8 +456,8 @@ sub get_aliases
 
     foreach my $unit (@$units) {
         my $realname = $unit_alias->{$unit};
-        if($realname ne $unit) {
-            $self->verbose("Unit $unit is an alias for $realname");
+        if($realname && $realname ne $unit) {
+            $self->debug(1, "Unit $unit is an alias for $realname");
             $res->{$unit} = $realname;
         }
     }
@@ -575,7 +579,7 @@ sub make_cache_alias
 {
     my ($self, @units) = @_;
 
-    $self->verbose("make_cache_alias started with ", scalar @units, " units");
+    $self->debug(1, "make_cache_alias started with ", scalar @units, " units");
 
     my $list_units = systemctl_list_units($self);
     my $list_unit_files = systemctl_list_unit_files($self);
@@ -617,7 +621,7 @@ sub make_cache_alias
                 if ($data->{unit}) {
                     $self->error("$msg should not be listed as a unit.");
                 } else {
-                    $self->verbose("$msg nothing to show");
+                    $self->debug(1, "$msg nothing to show");
                 }
 
                 next;
@@ -642,13 +646,12 @@ sub make_cache_alias
 
         if ($id ne $unit) {
             if ($show->{$PROPERTY_ID} =~ m/$pattern/) {
-                $self->verbose("Found id $id that doesn't match unit $unit. ",
-                               "Adding as unknown and skipping further handling.");
+                $self->debug(1, "Found id $id that doesn't match unit $unit. ",
+                             "Adding as unknown and skipping further handling.");
                 # in particular, no aliases are processed/followed
                 # not to risk anything being overwritten
 
                 # add the real name to the list of units to check
-                # TODO potential issue for infinite loop because the type is removed?
                 if(! grep {$id eq $_} @units) {
                     $self->verbose("Adding the id $id from unkown unit $unit to list of units");
                     push(@units, $id);
@@ -762,8 +765,8 @@ sub fill_cache
         };
     }
 
-    $self->verbose("fill_cache: update cache for units ", join(", ", @units),
-                   ": ", join(', ', @updates));
+    $self->debug(1, "fill_cache: update cache for units ", join(", ", @units),
+                 ": ", join(', ', @updates));
     $self->make_cache_alias(@updates) if (@updates);
 
     # for unittests only
@@ -797,7 +800,7 @@ sub get_unit_show
     my $force = exists($opts{force}) ? $opts{force} : 0;
 
     if ($force) {
-        $self->verbose("get_unit_show force updating the cache for unit $unit.");
+        $self->debug(1, "get_unit_show force updating the cache for unit $unit.");
         $self->make_cache_alias($unit);
     }
 
@@ -922,7 +925,7 @@ sub is_wantedby
 
     my $res = $wantedby->{$target};
 
-    $self->verbose("Unit $unit is ", $res ? "" : " not ", "wanted by target $target");
+    $self->debug(1, "Unit $unit is ", $res ? "" : " not ", "wanted by target $target");
 
     return $res;
 }
@@ -965,7 +968,7 @@ sub is_active
 
     my $unittxt = "unit $unit";
 
-    $self->verbose("is_active $unittxt (sleep=$sleep max=$max)");
+    $self->debug(1, "is_active $unittxt (sleep=$sleep max=$max)");
 
     my $active = $self->get_unit_show($unit, $PROPERTY_ACTIVESTATE, force => $opts{force});
     if (! defined($active)) {
@@ -1002,10 +1005,10 @@ sub is_active
     if (grep {$_ eq $active} @ACTIVES_FINAL) {
         my $msg = "is_active: active $active for $unittxt, is_active ";
         if ($active eq $ACTIVE_ACTIVE) {
-            $self->verbose("$msg true");
+            $self->debug(1, "$msg true");
             return 1;
         } else {
-            $self->verbose("$msg false");
+            $self->debug(1, "$msg false");
             return 0;
         }
     } else {
@@ -1063,11 +1066,11 @@ sub get_ufstate
                 next;
             } elsif ($wufstate eq $STATE_ENABLED) {
                 $derived = $STATE_ENABLED;
-                $self->verbose("get_ufstate: unit $unit found wantedby unit $wunit in state $STATE_ENABLED. ",
-                               "Setting derived state to $derived.");
+                $self->debug(1, "get_ufstate: unit $unit found wantedby unit $wunit in state $STATE_ENABLED. ",
+                             "Setting derived state to $derived.");
                 # TODO: break or check all of them?
             } else {
-                $self->verbose("get_ufstate: unit $unit found wantedby unit $wunit in state $wufstate.");
+                $self->debug(1, "get_ufstate: unit $unit found wantedby unit $wunit in state $wufstate.");
             }
         }
 
@@ -1110,7 +1113,7 @@ sub is_ufstate
 {
     my ($self, $unit, $state, %opts) = @_;
 
-    $self->verbose("is_ufstate for unit $unit and state $state");
+    $self->debug(1, "is_ufstate for unit $unit and state $state");
 
     my ($ufstate, $derived) = $self->get_ufstate($unit, force => $opts{force});
 
@@ -1126,7 +1129,7 @@ sub is_ufstate
 
     my $msg = "is_ufstate: unit $unit with $PROPERTY_UNITFILESTATE '$ufstate'";
     if ($state eq $ufstate) {
-        $self->verbose("$msg as wanted.");
+        $self->debug(1, "$msg as wanted.");
         return 1;
     }
 
@@ -1162,7 +1165,7 @@ sub is_ufstate
 
     # the rest
     else {
-        $self->verbose("$msg not the wanted state $state.");
+        $self->debug(1, "$msg not the wanted state $state.");
         return 0;
     }
 }
