@@ -32,4 +32,5 @@ my $cluster = $t->{clusters}->{ceph};
 
 my $master = $cmp->get_quat_conf($cluster);
 cmp_deeply($master, \%data::QUATMAP, 'Quattor config hash');
+
 done_testing();

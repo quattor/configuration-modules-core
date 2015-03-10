@@ -37,4 +37,5 @@ $cmp->use_cluster();
 $mockc->mock('test_host_connection', 0 );
 my $structures = $cmp->compare_conf($master, \%data::CEPHINGW, {}, {});
 cmp_deeply($structures->{configs}, \%data::COMPARE1GW, 'Action hash ok');
+
 done_testing();
