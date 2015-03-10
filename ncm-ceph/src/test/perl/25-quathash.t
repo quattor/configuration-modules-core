@@ -31,9 +31,5 @@ my $t = $cfg->getElement($cmp->prefix())->getTree();
 my $cluster = $t->{clusters}->{ceph};
 
 my $master = $cmp->get_quat_conf($cluster);
-diag "master";
-diag explain $master;
 cmp_deeply($master, \%data::QUATMAP, 'Quattor config hash');
-diag "quatmap";
-diag explain \%data::QUATMAP;
 done_testing();

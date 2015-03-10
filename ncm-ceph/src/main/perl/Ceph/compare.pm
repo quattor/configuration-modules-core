@@ -60,10 +60,12 @@ sub get_ceph_conf {
 
 # helper sub to set quattor general and attr config in the hash tree
 sub set_host_attrs {
-    my ($self, $hosthash, $attr, $value, $fqdn, $config) = @_;
+    my ($self, $master, $hostname, $attr, $value, $fqdn, $config) = @_;
+    my $hosthash = $master->{$hostname} ||= {};
     $hosthash->{$attr} = $value;
     $hosthash->{fqdn} = $fqdn;
     $hosthash->{config} = $config;
+    $master->{$hostname} = $hosthash;
 }
     
 # One big quattor tree on a host base
@@ -73,22 +75,22 @@ sub get_quat_conf {
     $self->debug(2, "Building information from quattor");
     if ($quattor->{radosgwh}) {
         while (my ($hostname, $host) = each(%{$quattor->{radosgwh}})) {
-            $self->set_host_attrs($master->{$hostname}, 'gtws', $host->{gateways}, 
+            $self->set_host_attrs($master, $hostname, 'gtws', $host->{gateways}, 
                 $host->{fqdn}, $quattor->{config});
         }  
     }
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
-        $self->set_host_attrs($master->{$hostname}, 'mon', $mon, 
+        $self->set_host_attrs($master, $hostname, 'mon', $mon, 
             $mon->{fqdn}, $quattor->{config}); # Only one monitor
     }
     while (my ($hostname, $host) = each(%{$quattor->{osdhosts}})) {
         my $osds = $self->structure_osds($hostname, $host);
-        $self->set_host_attrs($master->{$hostname}, 'osds', $osds, 
+        $self->set_host_attrs($master, $hostname, 'osds', $osds, 
             $host->{fqdn}, $quattor->{config});
     }
     while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
         $hostname =~ s/\..*//;;
-        $self->set_host_attrs($master->{$hostname}, 'mds', $mds, 
+        $self->set_host_attrs($master, $hostname, 'mds', $mds, 
             $mds->{fqdn}, $quattor->{config}); # Only one mds
     }
     $self->debug(5, "Quattor hash:", Dumper($master));
