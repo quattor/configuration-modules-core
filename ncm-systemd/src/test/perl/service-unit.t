@@ -180,7 +180,7 @@ $cmp->{ERROR} = 0;
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 
 # messagebus.servcice is an alias of dbus.service
-my ($cache, $alias) = $unit->make_cache_alias("messagebus.service");
+my ($cache, $alias) = $unit->make_cache_alias(["messagebus.service"]);
 is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for units messagebus.service');
 
 # basic info from list-units / list-unit-files for all units

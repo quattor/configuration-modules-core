@@ -235,16 +235,15 @@ sub unit_text
 Return hash reference with current units
 determined via C<make_cache_alias>.
 
-All additional arguments are a list of C<units>
-that is passed to C<make_cache_alias>.
+The array reference C<units> is passed to C<make_cache_alias>.
 
 =cut
 
 sub current_units
 {
-    my ($self, @units) = @_;
+    my ($self, $units) = @_;
 
-    $self->make_cache_alias(@units);
+    $self->make_cache_alias($units);
 
     my %current;
 
@@ -260,7 +259,7 @@ sub current_units
         if(! defined($show)) {
             if ($data->{baseinstance}) {
                 $self->verbose("Base instance $name is not an actual runnable service. Skipping.");
-            } elsif(@units) {
+            } elsif($units && @$units) {
                 # Lots of units that have no show data, because they aren't queried all.
                 $self->debug(1, "Found name $name without any show data; ",
                                "only selected units were queried. Skipping.");
@@ -564,7 +563,7 @@ sub get_type_shortname
 based on current units and unitfiles from the C<systemctl_list_units>
 and C<systemctl_list_unit_files> methods.
 
-Details for each unit from C<units> are also added.
+Details for each unit from arrayref C<units> are also added.
 If C<units> is empty/undef, all found units and unitfiles
 are.
 
@@ -577,9 +576,7 @@ Returns the generated cache and alias map for unittesting purposes.
 
 sub make_cache_alias
 {
-    my ($self, @units) = @_;
-
-    $self->debug(1, "make_cache_alias started with ", scalar @units, " units");
+    my ($self, $units) = @_;
 
     my $list_units = systemctl_list_units($self);
     my $list_unit_files = systemctl_list_unit_files($self);
@@ -592,9 +589,14 @@ sub make_cache_alias
         $unit_cache->{$unit}->{unit_file} = $data;
     }
 
-    if (! @units) {
+    my @units;
+    if ($units && @$units) {
+        @units = @$units;
+    } else {
         @units = sort keys %$unit_cache;
     }
+
+    $self->debug(1, "make_cache_alias with ", scalar @units, " units");
 
     my @unknown;
     foreach my $unit (@units) {
@@ -767,7 +769,7 @@ sub fill_cache
 
     $self->debug(1, "fill_cache: update cache for units ", join(", ", @units),
                  ": ", join(', ', @updates));
-    $self->make_cache_alias(@updates) if (@updates);
+    $self->make_cache_alias(\@updates) if (@updates);
 
     # for unittests only
     return \@updates;
@@ -801,7 +803,7 @@ sub get_unit_show
 
     if ($force) {
         $self->debug(1, "get_unit_show force updating the cache for unit $unit.");
-        $self->make_cache_alias($unit);
+        $self->make_cache_alias([$unit]);
     }
 
     my $realname = $unit_alias->{$unit};

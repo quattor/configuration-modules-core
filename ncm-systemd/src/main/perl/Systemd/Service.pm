@@ -111,7 +111,7 @@ sub configure
 
     my $configured = $self->gather_configured_units($config);
 
-    my $current = $self->gather_current_units(keys %$configured);
+    my $current = $self->gather_current_units($configured);
 
     my @changes = $self->process($configured, $current);
 
@@ -260,24 +260,27 @@ sub gather_configured_units
 Gather list of current units from both C<systemctl> and legacy C<chkconfig>
 using resp. C<unit> and C<chkconfig> C<current_units> methods.
 
-All arguments form a list of C<relevant_units> that is used to run minimal set
-of system commands (and only if C<unconfigured_default> is C<ignore>).
+The hashref C<relevant_units> is used to run minimal set
+of system commands where possible: e.g. if the hashref represents the
+configured units and if C<unconfigured_default> is C<ignore>, only gathered
+details for these units.
 
 =cut
 
 sub gather_current_units
 {
-    my ($self, @relevant_units) = @_;
+    my ($self, $relevant_units) = @_;
 
+    my @limit_units;
     # Also include all unconfigured units in the queries.
     if($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->verbose("Unconfigured default $unconfigured_default, ",
                        "taking all possible units into account");
-        @relevant_units = undef;
     } else {
+        @limit_units = keys %$relevant_units;
         $self->verbose("Unconfigured default $unconfigured_default, ",
-                       "using ", scalar @relevant_units," relevant units: ",
-                       join(',',@relevant_units));
+                       "using ", scalar @limit_units," limit units: ",
+                       join(',',@limit_units));
     }
 
     # A sysv service that is not listed in chkconfig --list
@@ -297,7 +300,7 @@ sub gather_current_units
 
     my $units = $self->{chkconfig}->current_units();
 
-    my $current_units = $self->{unit}->current_units(@relevant_units);
+    my $current_units = $self->{unit}->current_units(\@limit_units);
     while (my ($unit, $detail) = each %$current_units) {
         if ($units->{$unit}) {
             # TODO: Do we compare them to see if both are the same details or simply trust Unit?

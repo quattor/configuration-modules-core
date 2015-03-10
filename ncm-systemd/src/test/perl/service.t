@@ -183,7 +183,7 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
     shortname => "rbdmap",
 }, "configured rbdmap service for ceph021");
 
-my $current = $svc->gather_current_units(keys %$configured);
+my $current = $svc->gather_current_units($configured);
 
 # cdp-listend, ceph, cups, ncm-cdispd, netconsole, network
 # only one of them is from the systemd units (cups)
