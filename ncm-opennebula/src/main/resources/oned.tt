@@ -3,7 +3,7 @@
 [%- digits = ['monitoring_interval', 'monitoring_threads', 
               'port', 'vnc_base_port', 'network_size', 'session_expiration_time', 
               'default_umask'] -%]
-[%- oned_attr_list = ['vm_restricted_attr', 'inherit_datastore_attr'] -%]
+[%- oned_attr_list = ['vm_restricted_attr', 'inherit_datastore_attr', 'inherit_vnet_attr'] -%]
 [%- FOR pair IN oned.pairs -%]
 [%-    SWITCH pair.key -%]
 [%         CASE oned_section -%]              

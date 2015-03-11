@@ -16,6 +16,7 @@ multiline
 ^DEFAULT_UMASK\s?=\s*\d+\s*$
 ^IMAGE_RESTRICTED_ATTR\s?=\s?".+"\s*$
 ^INHERIT_DATASTORE_ATTR\s?=\s?".+"\s*$
+^INHERIT_VNET_ATTR\s?=\s?".+"\s*$
 ^LOG\s?=\s?\[$
 ^\s*debug_level\s?=\s*\d+,\s*$
 ^\s*system\s?=\s*".+"\s*$

@@ -207,7 +207,7 @@ type opennebula_oned = {
     "image_restricted_attr" : string = 'SOURCE'
     "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", 
                                                "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")
-    "inherit_vnet_attr" : string = 'VLAN_TAGGED_ID'
+    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
 };
 
 @{ 
