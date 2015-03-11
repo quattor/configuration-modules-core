@@ -235,15 +235,16 @@ sub unit_text
 Return hash reference with current units
 determined via C<make_cache_alias>.
 
-The array reference C<units> is passed to C<make_cache_alias>.
+The array references C<units> and C<possible_missing>
+are passed to C<make_cache_alias>.
 
 =cut
 
 sub current_units
 {
-    my ($self, $units) = @_;
+    my ($self, $units, $possible_missing) = @_;
 
-    $self->make_cache_alias($units);
+    $self->make_cache_alias($units, $possible_missing);
 
     my %current;
 
@@ -378,7 +379,7 @@ C<configured_units> parses the C<tree> hash reference and builds up the
 units to be configured. It returns a hash reference with key the unit name and
 values the details of the unit.
 
-Units with missing types are assumed to be TYPE_SERVICE; targets with 
+Units with missing types are assumed to be TYPE_SERVICE; targets with
 missing type are assumed to be TYPE_TARGET.
 
 (C<tree> is typically C<$config->getElement('/software/components/systemd/unit')->getTree>.)
@@ -462,6 +463,46 @@ sub get_aliases
     }
 
     return $res;
+}
+
+=pod
+
+=item possible_missing
+
+Given the hashref C<units> with key unit and value the unit's details,
+return a array ref with units that are "possible missing". Such units will
+cause an error to be logged if they are not found in the cache.
+
+Posible missing units are
+
+=over
+
+=item units in state masked (i.e. units that are not expected
+to be running anyway). Units in state disabled are not "possible missing"
+(they can be dependency for other units).
+
+=back
+
+=cut
+
+# TODO support/force this via attribute in the schema?
+
+sub possible_missing
+{
+    my ($self, $units) = @_;
+
+    my @p_m;
+    while (my ($unit, $detail) = each %$units) {
+        if ($detail->{state} eq $STATE_MASKED) {
+            $self->debug(1, "Unit $unit with state $STATE_MASKED added to possible missing");
+            push(@p_m, $unit) if (! grep { $_ eq $unit } @p_m);
+        }
+    }
+
+    $self->verbose("Found ", scalar @p_m, " possible missing units: ",
+                   join(",", @p_m));
+
+    return \@p_m;
 }
 
 =pod
@@ -570,13 +611,18 @@ are.
 If a unit is an alias of an other unit, it is added to the alias map.
 Each non-alias unit is also added as it's own alias.
 
+Units in the C<possible_missing> arrayref can be missing, and no error
+is logged if they are. For any other unit, an error is logged when
+neither the C<systemctl_list_units>
+and C<systemctl_list_unit_files> methods provide any information about it.
+
 Returns the generated cache and alias map for unittesting purposes.
 
 =cut
 
 sub make_cache_alias
 {
-    my ($self, $units) = @_;
+    my ($self, $units, $possible_missing) = @_;
 
     my $list_units = systemctl_list_units($self);
     my $list_unit_files = systemctl_list_unit_files($self);
@@ -603,8 +649,14 @@ sub make_cache_alias
         my $data = $unit_cache->{$unit};
 
         if (! defined($data)) {
+            my $log_method = "error";
+            if (grep {$_ eq $unit} @$possible_missing) {
+                $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
+                             "No error will be logged.");
+                $log_method = "verbose";
+            }
             # no entry in cache from units or unitfiles
-            $self->error("Trying to add details of unit $unit ",
+            $self->$log_method("Trying to add details of unit $unit ",
                          "but no entry in cache after adding all units and unitfiles. ",
                          "Ignoring this unit.");
             next;

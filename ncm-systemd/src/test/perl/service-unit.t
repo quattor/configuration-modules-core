@@ -578,4 +578,19 @@ is_deeply($cos->{'test_del.service'}, {
         shortname => "test_del",
 }, "configured_units set correct name and type for test_del.service");
 
+
+=pod
+
+=head2 possible_missing
+
+Test possible_missing
+
+=cut
+
+is($cos->{'test_off.service'}->{state}, $STATE_MASKED, "test_off.service is $STATE_MASKED (and should be possible missing)");
+my $pm = $unit->possible_missing($cos);
+is_deeply($pm, [qw(test_off.service)], "Found possible missing units");
+
+
+
 done_testing();
