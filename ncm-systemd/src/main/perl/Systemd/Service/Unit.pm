@@ -357,7 +357,7 @@ sub default_target
 
     my $default = "$TARGET_DEFAULT.target";
 
-    $self->fill_cache($opts{force}, $default);
+    $self->fill_cache([$default], force => $opts{force} ? 1 : 0);
 
     my $unit = $unit_alias->{$default};
 
@@ -434,6 +434,8 @@ and the other unit's name is the value.
 
 The C<unit_alias> cache is used for lookup.
 
+The C<possible_missing> arrayref is passed to the C<fill_cache> method
+
 Supported options
 
 =over
@@ -441,6 +443,10 @@ Supported options
 =item force
 
 The force flag is passed to the C<fill_cache> method
+
+=item possible_missing
+
+The C<possible_missing> arrayref is passed to C<make_cache_alias>.
 
 =back
 
@@ -452,7 +458,9 @@ sub get_aliases
 
     my $res = {};
 
-    $self->fill_cache($opts{force}, @$units);
+    $self->fill_cache($units, 
+                      force => $opts{force} ? 1 : 0, 
+                      possible_missing => $opts{possible_missing});
 
     foreach my $unit (@$units) {
         my $realname = $unit_alias->{$unit};
@@ -623,6 +631,8 @@ Returns the generated cache and alias map for unittesting purposes.
 sub make_cache_alias
 {
     my ($self, $units, $possible_missing) = @_;
+
+    $possible_missing ||= [];
 
     my $list_units = systemctl_list_units($self);
     my $list_unit_files = systemctl_list_unit_files($self);
@@ -800,28 +810,48 @@ sub make_cache_alias
 
 =item fill_cache
 
-Fill the unit_cache and unit_alias map for the C<units> provided.
+Fill the C<unit_cache> and C<unit_alias map> 
+for the arrayref C<units> provided.
 
 The cache is updated via the C<make_cache_alias> method if the unit
 is missing from the unit_alias map or if C<force> is true.
+
+Supported options
+
+=over
+
+=item force
+
+Force cache refresh.
+
+=item possible_missing
+
+The C<possible_missing> arrayref is passed to C<make_cache_alias>.
+
+=back
 
 =cut
 
 sub fill_cache
 {
-    my ($self, $force, @units) = @_;
+    my ($self, $units, %opts) = @_;
+
+    my $force =  $opts{force} ? 1 : 0;
+
+    $opts{possible_missing} ||= [];
 
     my @updates;
-    foreach my $unit (@units) {
+    foreach my $unit (@$units) {
         # Only update the cache if force=1 or the unit is not in the unit_alias cache
         if ($force || (! defined($unit_alias->{$unit}))) {
             push(@updates, $unit);
         };
     }
 
-    $self->debug(1, "fill_cache: update cache for units ", join(", ", @units),
-                 ": ", join(', ', @updates));
-    $self->make_cache_alias(\@updates) if (@updates);
+    $self->debug(1, "fill_cache: update cache for units ", join(", ", @$units),
+                 " with to be updated: ", join(', ', @updates),
+                 " and possible_missing ", join(', ', @{$opts{possible_missing}}));
+    $self->make_cache_alias(\@updates, $opts{possible_missing}) if (@updates);
 
     # for unittests only
     return \@updates;
@@ -843,6 +873,10 @@ Supported options
 
 Force cache refresh.
 
+=item possible_missing
+
+If true, this unit is "possible missing" (see C<make_cache_alias>)
+
 =back
 
 =cut
@@ -855,12 +889,17 @@ sub get_unit_show
 
     if ($force) {
         $self->debug(1, "get_unit_show force updating the cache for unit $unit.");
-        $self->make_cache_alias([$unit]);
+        $self->make_cache_alias([$unit], $opts{possible_missing} ? [$unit] : []);
     }
 
     my $realname = $unit_alias->{$unit};
     if(! $realname) {
-        $self->error("get_unit_show: no alias for unit $unit defined. (Forgot to update cache?)");
+        my $msg = "get_unit_show: no alias for unit $unit defined";
+        if ($opts{possible_missing}) {
+            $self->verbose("$msg and unit is possible missing.");
+        } else {
+            $self->error("$msg. (Forgot to update cache?)");
+        }
         return;
     }
     $self->debug(1, "get_unit_show found realname $realname for unit $unit");
@@ -1112,7 +1151,8 @@ sub get_ufstate
 
     my $derived;
     if ($wantedby) {
-        $self->fill_cache($opts{force}, keys %$wantedby);
+        my @units = keys %$wantedby;
+        $self->fill_cache(\@units, force => $opts{force} ? 1 : 0);
         foreach my $wunit (sort keys %$wantedby) {
             my $wufstate = $self->get_unit_show($wunit, $PROPERTY_UNITFILESTATE, force => $opts{force});
             if (! defined($wufstate)) {

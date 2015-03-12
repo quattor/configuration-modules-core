@@ -183,7 +183,29 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
     shortname => "rbdmap",
 }, "configured rbdmap service for ceph021");
 
+# not installed, and we don't want it running
+is_deeply($configured->{'missing_masked.service'}, { 
+    name => "missing_masked.service",
+    startstop => 1,
+    state => $STATE_MASKED,
+    targets => ['multi-user.target'],
+    type => $TYPE_SERVICE,
+    shortname => "missing_masked",
+}, "missing and masked ceph021");
+
+# not installed, but we want it disabled (should log error)
+is_deeply($configured->{'missing_disabled.service'}, { 
+    name => "missing_disabled.service",
+    startstop => 1,
+    state => $STATE_DISABLED,
+    targets => ['multi-user.target'],
+    type => $TYPE_SERVICE,
+    shortname => "missing_disabled",
+}, "missing and disabled ceph021");
+
+$cmp->{ERROR} = 0;
 my $current = $svc->gather_current_units($configured);
+is($cmp->{ERROR}, 1, "1 error logged (due to missing_disabled service)");
 
 # cdp-listend, ceph, cups, ncm-cdispd, netconsole, network
 # only one of them is from the systemd units (cups)
@@ -231,7 +253,7 @@ $cmp->{ERROR} = 0;
 
 my ($states, $acts) = $svc->process($configured, $current);
 
-is($cmp->{ERROR}, 1, "1 error raise due to 2 configured unit, one is alias of other.");
+is($cmp->{ERROR}, 2, "2 errors logged: 1 due to 2 configured unit, one is alias of other; the 2nd due to missing_disabled");
 
 # rbdmap is SYSV, unseen in chkconfig --list and startstop
 ok($configured->{'rbdmap.service'}->{startstop}, "rbdmap has startstop");
@@ -245,17 +267,17 @@ ok(! $configured->{'cups.service'}->{startstop}, "cups has no startstop");
 is($configured->{'netconsole.service'}->{state}, $STATE_ENABLED, "netconsole should be enabled");
 ok($configured->{'netconsole.service'}->{startstop}, "netconsole has startstop");
 is($current->{'netconsole.service'}->{state}, $STATE_DISABLED, "netconsole is enabled");
-ok(! $svc->{unit}->is_active('netconsole.service'), "notconsole is not active");
+ok(! $svc->{unit}->is_active('netconsole.service'), "netconsole is not active");
 
 
 # processed in alphabetical order
 is_deeply($states, {
     $STATE_ENABLED => ['netconsole.service', 'rbdmap.service',],
-    $STATE_DISABLED => ['cups.service'],
+    $STATE_DISABLED => ['cups.service', 'missing_disabled.service'],
     $STATE_MASKED => [],
 }, "State changes to be made");
 is_deeply($acts, {
-    0 => [],
+    0 => ['missing_disabled.service'],
     1 => ['netconsole.service', 'network.service', 'rbdmap.service'],
 }, "Activations to be made");
 
@@ -272,7 +294,7 @@ command_history_reset();
 
 $svc->change($states, $acts);
 
-is($cmp->{ERROR}, 0, "No error logger while applying the changes");
+is($cmp->{ERROR}, 0, "No error logged while applying the changes");
 
 ok(command_history_ok([
     # 1st states, alpahbetically ordered
@@ -295,7 +317,7 @@ command_history_reset();
 
 $svc->configure($cfg);
 
-is($cmp->{ERROR}, 1, "1 error logged while configuring (due to configured alias)");
+is($cmp->{ERROR}, 3, "3 error logged while configuring (1 due to configured alias; 2 due to missing_disabled (1 from make_cache_alias in get_current and 1 from get_aliases/fill_cache in process))");
 
 ok(command_history_ok([
     # 1st states, alpahbetically ordered

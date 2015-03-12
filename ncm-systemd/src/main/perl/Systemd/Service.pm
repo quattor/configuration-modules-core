@@ -272,15 +272,17 @@ sub gather_current_units
     my ($self, $relevant_units) = @_;
 
     my @limit_units;
+    my $possible_missing;
     # Also include all unconfigured units in the queries.
     if($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->verbose("Unconfigured default $unconfigured_default, ",
                        "taking all possible units into account");
     } else {
-        @limit_units = keys %$relevant_units;
+        @limit_units = sort keys %$relevant_units;
         $self->verbose("Unconfigured default $unconfigured_default, ",
                        "using ", scalar @limit_units," limit units: ",
                        join(',',@limit_units));
+        $possible_missing = $self->{unit}->possible_missing($relevant_units);
     }
 
     # A sysv service that is not listed in chkconfig --list
@@ -300,7 +302,7 @@ sub gather_current_units
 
     my $units = $self->{chkconfig}->current_units();
 
-    my $current_units = $self->{unit}->current_units(\@limit_units);
+    my $current_units = $self->{unit}->current_units(\@limit_units, $possible_missing);
     while (my ($unit, $detail) = each %$current_units) {
         if ($units->{$unit}) {
             # TODO: Do we compare them to see if both are the same details or simply trust Unit?
@@ -375,7 +377,11 @@ sub process
     # Cache should be filled by the current_units call
     #   in gather_current_units method
     my @configured = keys %$configured;
-    my $aliases = $self->{unit}->get_aliases(\@configured);
+
+    # Possible missing units shouldn't raise errors
+    my $possible_missing = $self->{unit}->possible_missing($configured);
+
+    my $aliases = $self->{unit}->get_aliases(\@configured, possible_missing => $possible_missing);
 
     foreach my $unit (sort @configured) {
         my $detail = $configured->{$unit};
@@ -408,14 +414,26 @@ sub process
 
             if ($addact) {
                 my $current_act = $self->{unit}->is_active($unit);
-                $addact = $expected_act != $current_act;
-                $self->debug(1, "process: expected activation $expected_act current activation $current_act: ",
-                             "adding for (de)activation $addact");
+                $addact = ! ($current_act && ($expected_act eq $current_act));
+                $self->debug(1, "process: expected activation $expected_act current activation ", 
+                             defined($current_act) ? $current_act : "<undef>",
+                             " : adding for (de)activation $addact");
             }
         } else {
-            # Forcing the state and action
-            $self->debug(1, "process: no current details found for unit $unit. Forcing state $state and (de)activation");
-            $msg .= "forced ";
+            my $nocur_msg = "process: no current details found for unit $unit";
+            if (grep {$_ eq $unit} @$possible_missing) {
+                # We can safely assume we didn't forget to update the cache, so there unit is not here.
+                # There's no point in triggering any action or state change.
+                $addstate = 0;
+                $addact = 0;
+                $self->debug(1, "$nocur_msg which is in possible_missing. ", 
+                             "Assuming it is truly missing and thus ",
+                             "not forcing state $state nor (de)activation.");
+            } else {
+                # Forcing the state and action
+                $self->debug(1, "$nocur_msg. Forcing state $state and (de)activation.");
+                $msg .= "forced ";
+            }
         }
 
         if ($addstate) {

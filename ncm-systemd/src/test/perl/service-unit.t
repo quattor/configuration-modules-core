@@ -180,8 +180,10 @@ $cmp->{ERROR} = 0;
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
 
 # messagebus.servcice is an alias of dbus.service
-my ($cache, $alias) = $unit->make_cache_alias(["messagebus.service"]);
-is($cmp->{ERROR}, 0, 'No errors while processing cache and alias for units messagebus.service');
+my ($cache, $alias) = $unit->make_cache_alias(["messagebus.service", "missing1.mount", "missing2.slice"], ["missing2.slice"]);
+is($cmp->{ERROR}, 1, '1 error while processing cache and alias (due to missing1.mount not a possible_missing unit');
+ok(! $cache->{'missing1.mount'}, "missing1.mount is missing");
+ok(! $cache->{'missing2.slice'}, "missing2.slice is missing");
 
 # basic info from list-units / list-unit-files for all units
 # only show info for messagebus / dbus
@@ -314,11 +316,11 @@ Test fill_cache
 
 =cut
 
-my $updated = $unit->fill_cache(0, "network.service", "multi-user.target", "ceph.service", "network.target");
+my $updated = $unit->fill_cache(["network.service", "multi-user.target", "ceph.service", "network.target"], force => 0);
 is_deeply($updated, [], 
           "fill_cache force=0 updated no services (they are all in cache already)");
 
-$updated = $unit->fill_cache(1, "network.service", "multi-user.target", "ceph.service", "network.target");
+$updated = $unit->fill_cache(["network.service", "multi-user.target", "ceph.service", "network.target"], force => 1);
 is_deeply($updated, 
           ["network.service", "multi-user.target", "ceph.service", "network.target"],
           "fill_cache force=1 updated the correct services with their types");
