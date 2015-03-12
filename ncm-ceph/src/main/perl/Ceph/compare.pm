@@ -112,7 +112,7 @@ sub add_host {
                 $ACTIONS{"add_$dtype"}($self, $hostname, $host->{$dtype}, $structures) or return 0;
             }
         }
-        my @multiples = ('osds', 'gtws');
+        my @multiples = ('osd', 'gtw');
         foreach my $dtype (@multiples) {
             my $dstype = $dtype . "s";
             if ($host->{$dstype}){
