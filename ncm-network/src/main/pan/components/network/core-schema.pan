@@ -35,6 +35,7 @@ type structure_bonding_options = {
     "downdelay" ? long
     "primary" ? string with exists("/system/network/interfaces/" + SELF)
     "lacp_rate" ? long(0..1)
+    "xmit_hash_policy" ? string with match (SELF, '^(0|1|2|layer(2|2\+3|3\+4))$')
 } with {
     if ( SELF['mode'] == 1 || SELF['mode'] == 5 || SELF['mode'] == 6 ) {
         if ( ! exists(SELF["primary"]) ) {
