@@ -1,4 +1,5 @@
 =encoding utf8
+
 # ${license-info}
 # ${developer-info}
 # ${author-info}
