@@ -6,6 +6,10 @@ declaration template components/${project.artifactId}/schema;
 
 include 'quattor/schema';
 
+type ${project.artifactId}_skip = {
+    "service" : boolean = false
+};
+
 # legacy conversion
 #   1 -> rescue
 #   234 -> multi-user
@@ -23,6 +27,7 @@ type ${project.artifactId}_unit_type = {
 
 type component_${project.artifactId} = {
     include structure_component
+    "skip" : ${project.artifactId}_skip
     # TODO: only ignore implemented so far. To add : disabled and/or masked
     "unconfigured" : string = 'ignore' with match (SELF, '^(ignore)$') # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
