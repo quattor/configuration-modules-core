@@ -113,6 +113,9 @@ sub current_units
             $detail->{targets} = $offtargets;
         }
 
+        # Does not make much sense for current units, since they are not missing.
+        $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
+
         $self->debug(1, "current_units added chkconfig unit $detail->{name}");
         $self->debug(2, "current_units added chkconfig ", $self->unit_text($detail));
         $current{$detail->{name}} = $detail;
@@ -256,6 +259,8 @@ sub configured_units
         $self->debug(2, "legacy chkconfig $chkstate set, state is now $state");
 
         $detail->{state} = $state;
+
+        $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
 
         # startstop mandatory
         $detail->{startstop} = $DEFAULT_STARTSTOP if (! exists($detail->{startstop}));

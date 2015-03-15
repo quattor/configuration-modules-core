@@ -200,7 +200,7 @@ sub unit_text
         return;
     }
 
-    my @attributes = qw(state startstop type shortname targets);
+    my @attributes = qw(state startstop type shortname targets possible_missing);
     my @attrtxt;
     foreach my $attr (@attributes) {
         my $val = $detail->{$attr};
@@ -304,6 +304,8 @@ sub current_units
         };
 
         $detail->{state} = $ufstate;
+        # Does not make much sense for current units, since they are not missing.
+        $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
 
         $self->debug(1, "current_services added unit file service $detail->{name}");
         $self->debug(2, "current_services added unit file ", $self->unit_text($detail));
@@ -409,6 +411,8 @@ sub configured_units
         }
         $detail->{targets} = \@targets;
 
+        $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
+
         $self->verbose("Add unit name $detail->{name} (unit $unit)");
         $self->debug(1, "Add ", $self->unit_text($detail));
 
@@ -478,22 +482,11 @@ sub get_aliases
 =item possible_missing
 
 Given the hashref C<units> with key unit and value the unit's details,
-return a array ref with units that are "possible missing". Such units will
-cause an error to be logged if they are not found in the cache.
-
-Posible missing units are
-
-=over
-
-=item units in state masked (i.e. units that are not expected
-to be running anyway). Units in state disabled are not "possible missing"
-(they can be dependency for other units).
-
-=back
+return a array ref with units that are "possible missing". 
+Such units will not cause an error to be logged if they are not 
+found in the cache during certain methods (e.g. C<make_cache_alias>).
 
 =cut
-
-# TODO support/force this via attribute in the schema?
 
 sub possible_missing
 {
@@ -501,10 +494,7 @@ sub possible_missing
 
     my @p_m;
     while (my ($unit, $detail) = each %$units) {
-        if ($detail->{state} eq $STATE_MASKED) {
-            $self->debug(1, "Unit $unit with state $STATE_MASKED added to possible missing");
-            push(@p_m, $unit) if (! grep { $_ eq $unit } @p_m);
-        }
+        push(@p_m, $unit) if ($detail->{possible_missing});
     }
 
     $self->verbose("Found ", scalar @p_m, " possible missing units: ",
@@ -520,6 +510,40 @@ sub possible_missing
 =head2 Private methods
 
 =over
+
+=item is_possible_missing
+
+Determine if C<unit> is C<possible_missing> 
+(see C<make_cache_alias>). (Returns 0 or 1).
+
+A unit is possible_missing if
+
+=over
+
+=item the unit is in state masked (i.e. unit that is not expected
+to be running anyway). Unit in state disabled is not "possible missing"
+(they can be dependency for other units).
+
+=back
+
+=cut
+
+
+sub is_possible_missing
+{
+    my ($self, $unit, $state) = @_;
+
+    if ($state eq $STATE_MASKED) {
+        $self->debug(1, "Unit $unit with state $STATE_MASKED is possible_missing");
+        return 1;
+    }
+
+    # Default
+    $self->debug(2, "Unit $unit is not possible_missing");
+    return 0;
+}
+
+=pod
 
 =item init_cache
 

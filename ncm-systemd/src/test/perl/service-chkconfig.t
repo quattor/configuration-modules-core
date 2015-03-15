@@ -236,6 +236,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['rescue.target', 'multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_on",
+        possible_missing => 0,
     },
     'test_add.service' => {
         name => "test_add.service",
@@ -244,6 +245,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_add",
+        possible_missing => 0,
     },
     'othername.service' => {
         name => "othername.service",
@@ -252,6 +254,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "othername",
+        possible_missing => 0,
     },
     'test_off.service' => {
         name => "test_off.service",
@@ -260,6 +263,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target', "graphical.target"],
         type => $TYPE_SYSV,
         shortname => "test_off",
+        possible_missing => 0,
     },
     'test_del.service' => {
         name => "test_del.service",
@@ -268,6 +272,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_del",
+        possible_missing => 1,
     },
 }, "Converted chkconfig services in new service details");
 

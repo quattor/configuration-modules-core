@@ -62,6 +62,19 @@ isa_ok($unit, "NCM::Component::Systemd::Service::Unit",
 
 =pod
 
+=head2 is_possible_missing
+
+Test is_possible_missing
+
+=cut
+
+is($unit->is_possible_missing("myunit", $STATE_MASKED), 1, "State masked is possible_missing");
+is($unit->is_possible_missing("myunit", $STATE_DISABLED), 0, "State disabled is not possible_missing");
+is($unit->is_possible_missing("myunit", "notastate"), 0, "Default is not possible_missing");
+
+
+=pod
+
 =head2 service_text
 
 Test the generating text message from service details
@@ -75,11 +88,12 @@ my $svc = {
     shortname => "test_del",
     startstop => 0,
     targets => ["rescue.target"],
+    possible_missing => 0,
 };
 
 $cmp->{ERROR} = 0;
 is($unit->unit_text($svc),
-   "unit test_del.service (state enabled startstop 0 type service shortname test_del targets rescue.target)",
+   "unit test_del.service (state enabled startstop 0 type service shortname test_del targets rescue.target possible_missing 0)",
    "unit_text generate string of unit details");
 
 ok(! $cmp->{ERROR}, "unit_text no error with correct unit");
@@ -87,18 +101,18 @@ ok(! $cmp->{ERROR}, "unit_text no error with correct unit");
 delete $svc->{name};
 ok(! defined($unit->unit_text($svc)), 
    "unit_text unit details with missing name attribute generates returns undef");
-is($cmp->{ERROR},1, "unit_text error with incorrect unit");
+is($cmp->{ERROR}, 1, "unit_text error with incorrect unit");
 
 $svc->{name} = "test_del.serviceX";
 ok(! defined($unit->unit_text($svc)), 
    "unit_text unit details with mismatch between name and fullname returns undef");
-is($cmp->{ERROR},2, "unit_text error with incorrect unit");
+is($cmp->{ERROR}, 2, "unit_text error with incorrect unit");
 
 $svc->{name} = "test_del.service";
 delete $svc->{startstop};
 # This generates text, but generates error
 is($unit->unit_text($svc),
-   "unit test_del.service (state enabled type service shortname test_del targets rescue.target)",
+   "unit test_del.service (state enabled type service shortname test_del targets rescue.target possible_missing 0)",
    "unit_text generate string of unit details");
 is($cmp->{ERROR}, 3, "unit_text error with incorrect unit");
 
@@ -542,6 +556,7 @@ is_deeply($cos->{'test2_on.service'}, {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "test2_on",
+        possible_missing => 0,
 }, "configured_units set correct name and type for test2_on.service");
 
 is_deeply($cos->{'test2_add.target'}, {
@@ -551,6 +566,7 @@ is_deeply($cos->{'test2_add.target'}, {
         startstop => 1,
         type => $TYPE_TARGET,
         shortname => "test2_add",
+        possible_missing => 0,
 }, "configured_units set correct name and type for test2_add.target");
 
 is_deeply($cos->{'othername2.service'}, {
@@ -560,6 +576,7 @@ is_deeply($cos->{'othername2.service'}, {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "othername2",
+        possible_missing => 0,
 }, "configured_units set correct name and type for othername2.service");
 
 is_deeply($cos->{'test_off.service'}, {
@@ -569,6 +586,7 @@ is_deeply($cos->{'test_off.service'}, {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "test_off",
+        possible_missing => 1,
 }, "configured_units set correct name and type for test_off.service");
 
 is_deeply($cos->{'test_del.service'}, {
@@ -578,6 +596,7 @@ is_deeply($cos->{'test_del.service'}, {
         startstop => 0,
         type => $TYPE_SERVICE,
         shortname => "test_del",
+        possible_missing => 0,
 }, "configured_units set correct name and type for test_del.service");
 
 

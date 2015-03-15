@@ -74,6 +74,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         targets => ['rescue.target', 'multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_on",
+        possible_missing => 0,
     },
     'test_add.service' => {
         name => "test_add.service",
@@ -82,6 +83,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_add",
+        possible_missing => 0,
     },
     'othername.service' => {
         name => "othername.service",
@@ -90,6 +92,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "othername",
+        possible_missing => 0,
     },
     'test2_on.service' => {
         name => "test2_on.service",
@@ -98,6 +101,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "test2_on",
+        possible_missing => 0,
     },
     'test2_add.target' => {
         name => "test2_add.target",
@@ -106,6 +110,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         startstop => 1,
         type => $TYPE_TARGET,
         shortname => "test2_add",
+        possible_missing => 0,
     },
     'othername2.service' => {
         name => "othername2.service",
@@ -114,6 +119,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "othername2",
+        possible_missing => 0,
     },
     'test_off.service' => { # from ncm-systemd
         name => "test_off.service",
@@ -122,6 +128,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         startstop => 1,
         type => $TYPE_SERVICE,
         shortname => "test_off",
+        possible_missing => 1,
     },
     'test_del.service' => { # from ncm-systemd
         name => "test_del.service",
@@ -130,6 +137,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         startstop => 0,
         type => $TYPE_SERVICE,
         shortname => "test_del",
+        possible_missing => 0,
     },
 }, "gathered configured units is a union of ncm-systemd and ncm-chkconfig units");
 
@@ -154,6 +162,7 @@ is_deeply($configured->{'network.service'}, { # sysv, on
     targets => ['multi-user.target', 'graphical.target'],
     type => $TYPE_SERVICE,
     shortname => "network",
+    possible_missing => 0,
 }, "configured network service for ceph021");
 
 is_deeply($configured->{'netconsole.service'}, { # sysv, off
@@ -163,6 +172,7 @@ is_deeply($configured->{'netconsole.service'}, { # sysv, off
     targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
     shortname => "netconsole",
+    possible_missing => 0,
 }, "configured netconsole service for ceph021");
 
 is_deeply($configured->{'cups.service'}, { # systemd
@@ -172,6 +182,7 @@ is_deeply($configured->{'cups.service'}, { # systemd
     targets => ['graphical.target'],
     type => $TYPE_SERVICE,
     shortname => "cups",
+    possible_missing => 0,
 }, "configured cups service for ceph021");
 
 is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
@@ -181,6 +192,7 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
     targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
     shortname => "rbdmap",
+    possible_missing => 0,
 }, "configured rbdmap service for ceph021");
 
 # not installed, and we don't want it running
@@ -191,6 +203,7 @@ is_deeply($configured->{'missing_masked.service'}, {
     targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
     shortname => "missing_masked",
+    possible_missing => 1,
 }, "missing and masked ceph021");
 
 # not installed, but we want it disabled (should log error)
@@ -201,6 +214,7 @@ is_deeply($configured->{'missing_disabled.service'}, {
     targets => ['multi-user.target'],
     type => $TYPE_SERVICE,
     shortname => "missing_disabled",
+    possible_missing => 0,
 }, "missing and disabled ceph021");
 
 $cmp->{ERROR} = 0;
@@ -220,6 +234,7 @@ is_deeply($current->{'network.service'}, { # sysv
         targets => ['multi-user.target', 'graphical.target'],
         type => $TYPE_SERVICE,
         shortname => "network",
+        possible_missing => 0,
 }, "current network service for ceph021");
 
 is_deeply($current->{'netconsole.service'}, { # sysv
@@ -230,6 +245,7 @@ is_deeply($current->{'netconsole.service'}, { # sysv
         targets => [],
         type => $TYPE_SERVICE,
         shortname => "netconsole",
+        possible_missing => 0,
 }, "current netconsole service for ceph021");
 
 is_deeply($current->{'cups.service'}, { # systemd
@@ -239,6 +255,7 @@ is_deeply($current->{'cups.service'}, { # systemd
         targets => [],
         type => $TYPE_SERVICE,
         shortname => "cups",
+        possible_missing => 0,
 }, "current cups service for ceph021");
 
 =pod
