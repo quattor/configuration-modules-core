@@ -43,6 +43,18 @@ my $chk = NCM::Component::Systemd::Service::Chkconfig->new(log => $cmp);
 isa_ok($chk, "NCM::Component::Systemd::Service::Chkconfig",
         "NCM::Component::Systemd::Service::Chkconfig instance created");
 
+=pod
+
+=head2 is_possible_missing
+
+Test is_possible_missing
+
+=cut
+
+is($chk->is_possible_missing("myunit", $STATE_DISABLED), 1, "State disabled is also possible_missing in chkconfig");
+is($chk->is_possible_missing("myunit", $STATE_MASKED), 1, "State masked is possible_missing (same as unit)");
+is($chk->is_possible_missing("myunit", "notastate"), 0, "Default is not possible_missing (same as unit)");
+
 =head2 generate_runlevel2target
 
 Test C<generate_runlevel2target> method.
@@ -153,6 +165,7 @@ is($svc->{state}, $STATE_ENABLED, "Service $name state enabled");
 is($svc->{type}, $TYPE_SYSV, "Service $name type TYPE_SYSV");
 is($svc->{shortname}, "network", "Shortname service $name type TYPE_SYSV is network");
 ok($svc->{startstop}, "Service $name startstop true");
+ok(! $svc->{possible_missing}, "Service $name not possible_missing");
 is_deeply($svc->{targets}, ["multi-user.$TYPE_TARGET", "graphical.$TYPE_TARGET"], "Service $name targets");
 
 $name = "netconsole.service";
@@ -162,6 +175,7 @@ is($svc->{state}, $STATE_DISABLED, "Service $name state disabled");
 is($svc->{type}, $TYPE_SYSV, "Service $name type TYPE_SYSV");
 is($svc->{shortname}, "netconsole", "Shortname service $name type TYPE_SYSV is netconsole");
 ok($svc->{startstop}, "Service $name startstop true");
+ok($svc->{possible_missing}, "Service $name possible_missing");
 is_deeply($svc->{targets}, ["multi-user.$TYPE_TARGET", "graphical.$TYPE_TARGET"], "Service $name targets");
 
 =pod
@@ -245,7 +259,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_add",
-        possible_missing => 0,
+        possible_missing => 1,
     },
     'othername.service' => {
         name => "othername.service",
@@ -263,7 +277,7 @@ is_deeply($chk->configured_units($tree), {
         targets => ['multi-user.target', "graphical.target"],
         type => $TYPE_SYSV,
         shortname => "test_off",
-        possible_missing => 0,
+        possible_missing => 1,
     },
     'test_del.service' => {
         name => "test_del.service",

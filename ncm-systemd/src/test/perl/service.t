@@ -83,7 +83,7 @@ is_deeply($svc->gather_configured_units($cfg), {
         targets => ['multi-user.target'],
         type => $TYPE_SYSV,
         shortname => "test_add",
-        possible_missing => 0,
+        possible_missing => 1,
     },
     'othername.service' => {
         name => "othername.service",
@@ -196,7 +196,7 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
 }, "configured rbdmap service for ceph021");
 
 # not installed, and we don't want it running
-is_deeply($configured->{'missing_masked.service'}, { 
+is_deeply($configured->{'missing_masked.service'}, {
     name => "missing_masked.service",
     startstop => 1,
     state => $STATE_MASKED,
@@ -207,7 +207,7 @@ is_deeply($configured->{'missing_masked.service'}, {
 }, "missing and masked ceph021");
 
 # not installed, but we want it disabled (should log error)
-is_deeply($configured->{'missing_disabled.service'}, { 
+is_deeply($configured->{'missing_disabled.service'}, {
     name => "missing_disabled.service",
     startstop => 1,
     state => $STATE_DISABLED,
@@ -216,6 +216,17 @@ is_deeply($configured->{'missing_disabled.service'}, {
     shortname => "missing_disabled",
     possible_missing => 0,
 }, "missing and disabled ceph021");
+
+# not installed, but we want it disabled (should log error)
+is_deeply($configured->{'missing_disabled_chkconfig.service'}, {
+    name => "missing_disabled_chkconfig.service",
+    startstop => 1,
+    state => $STATE_DISABLED,
+    targets => ['multi-user.target'],
+    type => $TYPE_SERVICE,
+    shortname => "missing_disabled_chkconfig",
+    possible_missing => 1,
+}, "missing and disabled chkconfig ceph021");
 
 $cmp->{ERROR} = 0;
 my $current = $svc->gather_current_units($configured);

@@ -13,7 +13,7 @@ use parent qw(NCM::Component::Systemd::Service::Unit);
 
 use EDG::WP4::CCM::Element qw(unescape);
 
-use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET 
+use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET
     $TYPE_SYSV $TYPE_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE
     :states);
 use NCM::Component::Systemd::Systemctl qw(systemctl_show);
@@ -31,7 +31,7 @@ Readonly::Array my @DEFAULT_RUNLEVEL2TARGET => (
 
 
 Readonly my $INITTAB => "/etc/inittab"; # meaningless in systemd
-Readonly my $DEFAULT_RUNLEVEL => 3; # If inittab has no default set 
+Readonly my $DEFAULT_RUNLEVEL => 3; # If inittab has no default set
 
 # Local cache of the mapping between runlevels and targets
 my @runlevel2target;
@@ -40,7 +40,7 @@ my @runlevel2target;
 
 =head1 NAME
 
-NCM::Component::Systemd::Service::Chkconfig is a class handling services 
+NCM::Component::Systemd::Service::Chkconfig is a class handling services
 that can be controlled via (older) C<ncm-chkconfig>.
 
 =head2 Public methods
@@ -61,7 +61,7 @@ A logger instance (compatible with C<CAF::Object>).
 
 =item current_units
 
-Return hash reference with current configured units 
+Return hash reference with current configured units
 determined via C<chkconfig --list>.
 
 (No type to specify, C<sysv> type is forced).
@@ -75,7 +75,7 @@ sub current_units
     my %current;
 
     my $data = CAF::Process->new(
-        [$CHKCONFIG, '--list'], 
+        [$CHKCONFIG, '--list'],
         log => $self,
         )->output();
     my $ec = $?;
@@ -92,8 +92,8 @@ sub current_units
 
         my ($servicename, $levels) = ($1, $2);
         my $detail = {
-            shortname => $servicename, 
-            type => $TYPE_SYSV, 
+            shortname => $servicename,
+            type => $TYPE_SYSV,
             startstop => $DEFAULT_STARTSTOP
         };
 
@@ -126,7 +126,7 @@ sub current_units
     return \%current;
 }
 
-=pod 
+=pod
 
 =item current_target
 
@@ -148,7 +148,7 @@ sub current_target
     return $target;
 }
 
-=pod 
+=pod
 
 =item default_target
 
@@ -175,7 +175,7 @@ sub default_target
 =item configured_units
 
 C<configured_units> parses the C<tree> hash reference and builds up the
-units to be configured. It returns a hash reference with key the unit name and 
+units to be configured. It returns a hash reference with key the unit name and
 values the details of the unit.
 
 (C<tree> is typically C<$config->getElement('/software/components/chkconfig/service')->getTree>.)
@@ -206,10 +206,10 @@ sub configured_units
 
     while (my ($service, $detail) = each %$tree) {
         # fix the details to reflect new schema
-        
+
         # all legacy types are assumed to be sysv services
         $detail->{type} = $TYPE_SYSV;
-        
+
         # set the shortname based on configured name
         $detail->{shortname} = $detail->{name} ? $detail->{name} : unescape($service);
 
@@ -218,7 +218,7 @@ sub configured_units
 
         my $reset = delete $detail->{reset};
         $self->verbose('Ignore the reset value $reset from unit $detail->{name}') if defined($reset);
-        
+
         my $on = delete $detail->{on};
         my $off = delete $detail->{off};
 
@@ -230,12 +230,12 @@ sub configured_units
             $leveltxt = $on;
         }
         $detail->{targets} = $self->convert_runlevels($leveltxt);
-        
+
         my $add = delete $detail->{add};
         my $del = delete $detail->{del};
         my $state = $DEFAULT_STATE;
         my $chkstate; # reporting only
-        
+
         if($del) {
             $state = $STATE_MASKED; # implies off, ignores on/add
             $chkstate = "del";
@@ -268,12 +268,12 @@ sub configured_units
         $self->debug(1, "Add legacy name $detail->{name} (service $service)");
         $self->debug(2, "Add legacy ", $self->unit_text($detail));
         $units{$detail->{name}} = $detail;
-                
+
     };
 
     $self->debug(1, "configured_units found ", scalar keys %units, " units:",
                  join(",", sort keys %units));
-    return \%units;    
+    return \%units;
 
 }
 
@@ -285,9 +285,43 @@ sub configured_units
 
 =over
 
+=item is_possible_missing
+
+Determine if C<unit> is C<possible_missing>
+(see C<make_cache_alias>). (Returns 0 or 1).
+
+A unit is possible_missing if
+
+=over
+
+=item the unit is in state masked or disabled
+(i.e. unit that is not expected to be running anyway).
+
+Other then pure systemd, chkconfig state off always implies
+that a disabled service unit is not running.
+
+=back
+
+=cut
+
+
+sub is_possible_missing
+{
+    my ($self, $unit, $state) = @_;
+
+    if ($state eq $STATE_DISABLED) {
+        $self->debug(1, "Unit $unit with state $STATE_DISABLED is possible_missing in chkconfig");
+        return 1;
+    }
+
+    return $self->SUPER::is_possible_missing($unit, $state);
+}
+
+=pod
+
 =item generate_runlevel2target
 
-Create, set and return the C<runlevel2target> map 
+Create, set and return the C<runlevel2target> map
 (will reset existing one, return is merely for testing).
 
 =cut
@@ -385,7 +419,7 @@ sub convert_runlevels
 
 =item default_runlevel
 
-C<default_runlevel> returns the default runlevel 
+C<default_runlevel> returns the default runlevel
 via the INITTAB file. If that fails, the default
 DEFAULT_RUNLEVEL is returned.
 
@@ -414,14 +448,14 @@ sub default_runlevel
 
 Return the current legacy runlevel.
 
-The rulevel is determined by trying (in order) 
-C</sbin/runlevel> or C<who -r>. If both fail, the 
-C<default_runlevel> method is called and its value 
+The rulevel is determined by trying (in order)
+C</sbin/runlevel> or C<who -r>. If both fail, the
+C<default_runlevel> method is called and its value
 is returned.
 
 =cut
 
-sub current_runlevel 
+sub current_runlevel
 {
     my $self = shift;
 
@@ -432,7 +466,7 @@ sub current_runlevel
             $self->debug(1, "No runlevel via command $proc (not executable)");
             return;
         }
-        
+
         my $line = $proc->output();
         my $ec = $?;
         my $level;
@@ -441,11 +475,11 @@ sub current_runlevel
             $self->verbose("Current runlevel from command $proc is $level");
         } else {
             # happens at install time
-            $self->warn("Cannot get runlevel from command $proc: $line (exitcode $ec).");  
+            $self->warn("Cannot get runlevel from command $proc: $line (exitcode $ec).");
         }
         return $level
     };
-    
+
     # output: N 5
     my $level = &$process($self, ["/sbin/runlevel"], qr{^\w+\s+(\d+)\s*$});
     return $level if (defined($level));
@@ -465,6 +499,6 @@ sub current_runlevel
 
 =back
 
-=cut 
+=cut
 
 1;
