@@ -8,3 +8,4 @@ prefix "/software/components/systemd/unit";
 
 prefix "/software/components/chkconfig/service";
 "{missing_disabled_chkconfig}" = nlist("off", "", "startstop", true);
+"{NetworkManager}" = nlist("off", "", "startstop", true);

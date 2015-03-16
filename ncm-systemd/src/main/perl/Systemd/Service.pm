@@ -414,7 +414,7 @@ sub process
 
             if ($addact) {
                 my $current_act = $self->{unit}->is_active($unit);
-                $addact = ! ($current_act && ($expected_act eq $current_act));
+                $addact = ! (defined($current_act) && ($expected_act eq $current_act));
                 $self->debug(1, "process: expected activation $expected_act current activation ", 
                              defined($current_act) ? $current_act : "<undef>",
                              " : adding for (de)activation $addact");

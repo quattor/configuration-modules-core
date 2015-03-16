@@ -1120,7 +1120,7 @@ sub is_active
 
     # Must be one of the final states now.
     if (grep {$_ eq $active} @ACTIVES_FINAL) {
-        my $msg = "is_active: active $active for $unittxt, is_active ";
+        my $msg = "is_active: active $active for $unittxt, is_active";
         if ($active eq $ACTIVE_ACTIVE) {
             $self->debug(1, "$msg true");
             return 1;

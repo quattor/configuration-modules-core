@@ -228,14 +228,25 @@ is_deeply($configured->{'missing_disabled_chkconfig.service'}, {
     possible_missing => 1,
 }, "missing and disabled chkconfig ceph021");
 
+# installed, disabled, and not active
+is_deeply($configured->{'NetworkManager.service'}, {
+    name => "NetworkManager.service",
+    startstop => 1,
+    state => $STATE_DISABLED,
+    targets => ['multi-user.target'],
+    type => $TYPE_SERVICE,
+    shortname => "NetworkManager",
+    possible_missing => 1, # this is a chkconfig one
+}, "NetworkManager chkconfig ceph021");
+
 $cmp->{ERROR} = 0;
 my $current = $svc->gather_current_units($configured);
 is($cmp->{ERROR}, 1, "1 error logged (due to missing_disabled service)");
 
-# cdp-listend, ceph, cups, ncm-cdispd, netconsole, network
-# only one of them is from the systemd units (cups)
+# cdp-listend, ceph, cups, ncm-cdispd, netconsole, network, NetworkManager
+# two of them is from the systemd units (cups,NetworkManager)
 # the others are from chkconfig --list
-is_deeply(scalar keys %$current, 10, "Got 10 current units");
+is_deeply(scalar keys %$current, 11, "Got 11 current units");
 
 is_deeply($current->{'network.service'}, { # sysv
         name => "network.service",
@@ -269,6 +280,17 @@ is_deeply($current->{'cups.service'}, { # systemd
         possible_missing => 0,
 }, "current cups service for ceph021");
 
+is_deeply($current->{'NetworkManager.service'}, { # systemd
+        name => "NetworkManager.service",
+        startstop => 1,
+        state => $STATE_DISABLED,
+        targets => [],
+        type => $TYPE_SERVICE,
+        shortname => "NetworkManager",
+        possible_missing => 0,
+        derived => 1, # from chkconfig config
+}, "current NetworkManager service for ceph021");
+
 =pod
 
 =head2 process
@@ -297,6 +319,11 @@ ok($configured->{'netconsole.service'}->{startstop}, "netconsole has startstop")
 is($current->{'netconsole.service'}->{state}, $STATE_DISABLED, "netconsole is enabled");
 ok(! $svc->{unit}->is_active('netconsole.service'), "netconsole is not active");
 
+# NetworkManager is disabled and not active. shouldn't do anything
+is($configured->{'NetworkManager.service'}->{state}, $STATE_DISABLED, "NetworkManager should be disabled");
+ok($configured->{'NetworkManager.service'}->{startstop}, "NetworkManager has startstop");
+is($current->{'NetworkManager.service'}->{state}, $STATE_DISABLED, "NetworkManager is disabled");
+ok(! $svc->{unit}->is_active('NetworkManager.service'), "NetworkManager is not active");
 
 # processed in alphabetical order
 is_deeply($states, {
