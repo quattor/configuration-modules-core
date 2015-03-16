@@ -23,16 +23,24 @@ use LC::File qw(directory_contents);
 
 no strict 'refs';
 
-foreach my $method (qw(alias options install remove)) {
+foreach my $method (qw(alias options install remove blacklist)) {
     *{__PACKAGE__ . "::process_$method"} = sub {
         my ($self, $t, $fh) = @_;
         foreach my $i (@{$t->{modules}}) {
             if (exists($i->{$method})) {
-                $self->verbose("Adding $method $i->{$method} for $i->{name}");
-                print $fh "$method $i->{$method} $i->{name}\n";
+                if ($method eq "alias") {
+                    $self->verbose("Adding: $method $i->{$method} $i->{name}");
+                    print $fh "$method $i->{$method} $i->{name}\n";
+                } elsif ($method eq "blacklist") {
+                    $self->verbose("Adding: $method $i->{name}");
+                    print $fh "$method $i->{name}\n";
+                } else {
+                    $self->verbose("Adding: $method $i->{name} $i->{$method}");
+                    print $fh "$method $i->{name} $i->{$method}\n";
+                }
             }
         }
-    };
+    }
 }
 
 use strict 'refs';
@@ -70,6 +78,7 @@ sub Configure
     $self->process_options($t, $fh);
     $self->process_install($t, $fh);
     $self->process_remove($t, $fh);
+    $self->process_blacklist($t, $fh);
 
     $self->mkinitrd($fh) if $fh->close();
     return 1;
