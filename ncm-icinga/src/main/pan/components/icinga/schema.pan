@@ -190,7 +190,7 @@ type structure_icinga_servicedependency = {
 # Contact definition
 type structure_icinga_contact = {
     "alias" : string
-    "contactgroups" : contactgroupstring []
+    "contactgroups" ? contactgroupstring []
     "host_notification_period" : timeperiodstring
     "service_notification_period" : timeperiodstring
     "host_notification_options" : host_notification_string []
