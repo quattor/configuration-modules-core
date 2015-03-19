@@ -404,6 +404,16 @@ sub Configure {
         $p->run();
         $self->error("Could not refresh cron by running \"svcadm refresh cron\"")
             if $?;
+    } else {
+    # For Linux: as a workarond for a RedHat 5 cron race condition bug: touch /etc/cron.d
+    #            when we are done generating the files. cron(8) will reload as a result
+        if ($NoAction) {
+            $self->info("Would have touched $linux_crondir to workaround a cron bug");
+        } else {
+            $self->debug(1,"Touching $linux_crondir to workaround a cron bug");
+            sleep 1;
+            utime(undef, undef, $linux_crondir);
+        }
     }
 
     return 1;
