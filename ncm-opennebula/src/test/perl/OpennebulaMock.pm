@@ -102,6 +102,7 @@ sub mock_rpc {
 our $opennebula = Test::MockModule->new('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
+# To test usage of TT files during regular component use.
 my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
