@@ -3,13 +3,10 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor qw(host);
-use NCM::Component::opennebula;
 use CAF::Object;
-use Test::MockModule;
-use CAF::FileWriter;
-use Data::Dumper;
 
 use OpennebulaMock;
+use NCM::Component::opennebula;
 use commandsMock;
 
 $CAF::Object::NoAction = 1;

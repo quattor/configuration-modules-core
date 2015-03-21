@@ -8,8 +8,6 @@ use Test::MockModule;
 use CAF::FileWriter;
 
 use OpennebulaMock;
-#use commandsMock;
-
 
 use NCM::Component::opennebula;
 

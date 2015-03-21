@@ -230,7 +230,7 @@ sub enable_ceph_node
     my ($self, $type, $host, $datastores) = @_;
     my ($secret, $uuid);
     foreach my $ceph (@$datastores) {
-        if ($ceph->{tm_mad} eq 'ceph') {
+        if (defined($ceph->{tm_mad}) && $ceph->{tm_mad} eq 'ceph') {
             if ($ceph->{ceph_user_key}) {
                 $self->verbose("Found Ceph user key.");
                 $secret = $ceph->{ceph_user_key};
