@@ -7,7 +7,7 @@
 <artifactId>openldap</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.2.0</version>
+  <version>15.2.1-SNAPSHOT</version>
 <name>OpenLDAP NCM component.</name>
 
   <parent>
