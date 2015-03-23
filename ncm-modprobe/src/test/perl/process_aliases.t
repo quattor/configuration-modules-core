@@ -9,9 +9,6 @@
 
 Test the C<process_alias> method.
 
-This method is identical to C<process_install>, C<process_options> and
-C<process_remove>.  It's enough to test this one.
-
 =cut
 
 use strict;
