@@ -15,7 +15,7 @@ type ${project.artifactId}_config =  {
      'mode' : long = 0644
      'owner' : string = 'root'
      'group' : string = 'root'
-     'daemon' ? string[]
+     'daemon' ? string[] with deprecated(0, "daemon property has been deprecated, daemons should be used instead")
      'daemons' ? caf_service_action{}
      'module' : string
      'backup' ? string
