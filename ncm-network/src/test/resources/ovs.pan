@@ -1,4 +1,4 @@
-object template bridge;
+object template ovs;
 
 "/system/network" = create("defaultnetwork");
 
