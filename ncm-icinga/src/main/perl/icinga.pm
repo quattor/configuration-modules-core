@@ -14,8 +14,10 @@
 
 package NCM::Component::icinga;
 
+use 5.10.1;
 use strict;
 use warnings;
+
 use NCM::Component;
 use EDG::WP4::CCM::Element qw (unescape);
 use Socket;

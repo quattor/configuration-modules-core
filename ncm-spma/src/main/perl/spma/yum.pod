@@ -170,18 +170,6 @@ F</etc/spma.conf>, F</var/lib/spma-target.cf>.
 
 This component honors the B<--noaction> mode.
 
-=head1 BUGS
-
-The typing of the CDB entries is yet to be done: for now, all of them are
-strings.
-
-=head1 AUTHOR
-
-Original author: German Cancio <German.Cancio@cern.ch>
-
-Author of the Yum-based package manager: Luis Fernando Muñoz Mejías
-
-
 =head1 SEE ALSO
 
 You must read this document to understand how to manage packages

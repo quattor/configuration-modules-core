@@ -26,10 +26,8 @@ type component_gpfs_base = {
     "useyum" : boolean = true
 };
 
-type component_gpfs_type = {
+type component_gpfs = {
     include structure_component
     "base" :  component_gpfs_base
     "cfg" :  component_gpfs_cfg
 };
-
-bind "/software/components/gpfs" = component_gpfs_type;

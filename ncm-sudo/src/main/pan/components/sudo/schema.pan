@@ -76,9 +76,9 @@ type structure_sudo_default_options = {
     "timestamp_timeout"     ? long
     "passwd_timeout"        ? long
     "umask"                 ? long
-    "mailsub"       ? string
-    "env_keep"       ? string
-    "env_delete"       ? string
+    "mailsub"               ? string
+    "env_keep"              ? string
+    "env_delete"            ? string
     "badpass_message"       ? string
     "timestampdir"          ? string
     "timestampowner"        ? string
@@ -114,14 +114,14 @@ type structure_sudo_defaults = {
 
 # Configuration for the sudoers.ldap
 type structure_sudo_ldap = {
-    "dn" : string
-    "objectClass" ? string[]
-    "sudoOption" ? structure_sudo_default_options
-    "description" : string
-    "sudoUser" : string[]
+    "dn"            : string
+    "objectClass"   ? string[]
+    "sudoOption"    ? structure_sudo_default_options
+    "description"   : string
+    "sudoUser"      : string[]
     "sudoRunAsUser" : string[] = list("ALL")
-    "sudoHost" : string[] = list("ALL")
-    "sudoCommand" : string[] = list("ALL")
+    "sudoHost"      : string[] = list("ALL")
+    "sudoCommand"   : string[] = list("ALL")
 };
 
 
@@ -137,7 +137,7 @@ type structure_component_sudo = {
     "run_as_aliases"        ?       type_user_alias {}
     "host_aliases"          ?       type_host_alias {}
     "cmd_aliases"           ?       type_cmd_alias  {}
-    "privilege_lines"       :       structure_privilege_line[]
+    "privilege_lines"       ?       structure_privilege_line[]
     "includes"              ?       string[]
     "includes_dirs"         ?       string[]
     "ldap"                  ?       structure_sudo_ldap
