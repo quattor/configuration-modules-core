@@ -5,6 +5,6 @@ include 'metaconfig/rpcidmapd/schema';
 bind "/software/components/metaconfig/services/{/etc/idmapd.conf}/contents" = rpcidmapd_config;
 
 prefix "/software/components/metaconfig/services/{/etc/idmapd.conf}";
-"daemon/0" = "rpcidmapd";
+"daemons/rpcidmapd" = "restart";
 "module" = "rpcidmapd/main";
 

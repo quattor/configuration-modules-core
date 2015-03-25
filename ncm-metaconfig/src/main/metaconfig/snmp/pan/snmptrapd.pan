@@ -9,4 +9,4 @@ prefix "/software/components/metaconfig/services/{/etc/snmp/snmptrapd.conf}";
 "group" = "root";
 "module" = "snmp/snmptrapd";
 "mode" = 0644;
-"daemon" = list('snmptrapd');
+"daemons/snmptrapd" = "restart";

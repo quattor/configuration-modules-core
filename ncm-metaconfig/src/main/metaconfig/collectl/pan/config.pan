@@ -5,7 +5,7 @@ include 'metaconfig/collectl/schema';
 bind "/software/components/metaconfig/services/{/etc/collectl.conf}/contents" = collectl_config;
 
 prefix "/software/components/metaconfig/services/{/etc/collectl.conf}";
-"daemon" = list("collectl");
+"daemons/collectl" = "restart";
 "module" = "collectl/main";
 
 prefix "/software/components/metaconfig/services/{/etc/collectl.conf}/contents/main";

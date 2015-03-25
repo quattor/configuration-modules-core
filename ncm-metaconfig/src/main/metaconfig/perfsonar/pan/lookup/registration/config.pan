@@ -9,4 +9,4 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registrat
 "module" = "general";
 "owner" = "root";
 "group" = "root";
-"daemon/0" = "ls_registration_daemon";
+"daemons/ls_registration_daemon" = "restart";

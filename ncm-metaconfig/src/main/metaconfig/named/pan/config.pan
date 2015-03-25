@@ -9,5 +9,5 @@ prefix  "/software/components/metaconfig/services/{/etc/named.conf}";
 "owner" = "root";
 "group" = "named";
 "module" = "named/named";
-"daemon/0" = "named";
+"daemons/named" = "restart";
 

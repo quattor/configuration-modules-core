@@ -9,4 +9,4 @@ prefix "/software/components/metaconfig/services/{/etc/snmp/snmpd.conf}";
 "group" = "root";
 "module" = "snmp/snmpd";
 "mode" = 0644;
-"daemon" = list('snmpd');
+"daemons/snmpd" = "restart";

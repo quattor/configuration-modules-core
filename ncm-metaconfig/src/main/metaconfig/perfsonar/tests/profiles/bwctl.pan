@@ -20,7 +20,7 @@ prefix "/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}/conte
     l = value("/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}");
     l["owner"] = "perfsonar";
     l["group"] = "perfsonar";
-    l["daemon"] = list("perfsonarbuoy_bw_master");
+    l["daemons"] = dict("perfsonarbuoy_bw_master", "restart");
     l;
 };
 

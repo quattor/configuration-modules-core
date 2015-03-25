@@ -8,7 +8,7 @@ prefix "/software/components/metaconfig/services/{/var/kerberos/krb5kdc/kdc.conf
 
 "mode" = 0600;
 "module" = "kerberos/kdc/config";
-"daemon/0" = "krb5kdc";
+"daemons/krb5kdc" = "restart";
 
 "contents/defaults" = nlist();
 

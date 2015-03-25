@@ -6,7 +6,7 @@ bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/con
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}";
 "module" = "httpd/generic_server";
-"daemon/0" = "httpd";
+"daemons/httpd" = "restart";
 
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';

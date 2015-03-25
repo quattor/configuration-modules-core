@@ -8,7 +8,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}";
 "mode" = 0644;
 "owner" = "root";
 "group" = "root";
-"daemon/0" = "nginx";
+"daemons/nginx" = "restart";
 "module" = "nginx/nginx";
 
 prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/contents";

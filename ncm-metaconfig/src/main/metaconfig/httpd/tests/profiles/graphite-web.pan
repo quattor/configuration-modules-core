@@ -6,7 +6,7 @@ bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.c
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}";
 "module" = "httpd/generic_server";
-"daemon/0" = "httpd";
+"daemons/httpd" = "restart";
 
 variable HTTPD_OS_FLAVOUR ?= 'el6';
 variable FULL_HOSTNAME = 'myhost.domain';

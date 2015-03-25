@@ -7,7 +7,7 @@ bind "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.co
 variable METACONFIG_LOGSTASH_VERSION ?= '1.2';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}";
-"daemon/0" = "logstash";
+"daemons/logstash" = "restart";
 "owner" = "root";
 "group" = "root";
 "mode" = 0644;

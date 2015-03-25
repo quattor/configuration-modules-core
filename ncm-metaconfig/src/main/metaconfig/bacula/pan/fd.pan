@@ -5,7 +5,7 @@ include 'metaconfig/bacula/schema';
 bind "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}/contents" = bacula_config;
 
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}";
-"daemon/0" = "bacula-fd";
+"daemons/bacula-fd" = "restart";
 "module" = "bacula/main";
 "mode" = 0640;
 
