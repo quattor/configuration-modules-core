@@ -12,8 +12,4 @@ ncm-${project.artifactId}: Configuration module for ONE
 Configuration module for ONE. Executes the required ssh commands
 to enable the hypervisors to be used by OpenNebula.
 
-=head1 AUTHOR
-
-${author-info}
-
 =cut

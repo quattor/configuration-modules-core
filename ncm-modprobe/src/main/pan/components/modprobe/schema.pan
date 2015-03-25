@@ -11,7 +11,8 @@ type module_type = {
     "alias"     ? string # alias for the loadable module"
     "options"   ? string # options for the loadable module"
     "install"   ? string # command to run when loading module"
-    "remove"    ? string # command to run when removing module "
+    "remove"    ? string # command to run when removing module"
+    "blacklist" ? string # ignored, only the name of the module is used"
 };
 
 type component_modprobe_type = {

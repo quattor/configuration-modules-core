@@ -23,7 +23,7 @@ contains three fields:
 =item C<main>
 
 An nlist with all the possible configuration values for
-C</etc/postfix/main.cf>. See L<main(5) for more details.
+C</etc/postfix/main.cf>. See L<main(5)> for more details.
 
 =item C<master>
 
@@ -76,6 +76,8 @@ of lookup tables is an nlist, in which the keys are the file names
 Currently, only LDAP lookups can be described, see
 L<http://www.postfix.org/LDAP_README.html>
 
+=back
+
 =head1 EXAMPLES
 
 =head2 Minimal configuration
@@ -102,8 +104,5 @@ And we can instruct Postfix to access this database:
     "query_filter" = "(an-ldap-filter)";
     "result_format" = "%s";
 
-=head1 AUTHOR
-
-${author-info}
 
 =cut

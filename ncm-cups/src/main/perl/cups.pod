@@ -1,21 +1,7 @@
-################################################################################
-# This is 'cups.pod', a ncm-cups's file
-################################################################################
-#
-# VERSION:    2.0.0, 12/03/10 16:19
-# AUTHOR:     Michel Jouvin <jouvin@lal.in2p3.fr>
-# MAINTAINER: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# LICENSE:    http://cern.ch/eu-datagrid/license.html
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
 
-=begin comment
-
-Be sure to put a blank line before and after every formatting command
-
-=end comment
 
 =head1 NAME
 
@@ -113,26 +99,6 @@ Define the server part of the printer URI.
 
 Use to build the printer URI.
 
-
-=head1 DEPENDENCIES
-
-None.
-
-=head1 BUGS
-
-None known.
-
-=head1 AUTHOR
-
-Michel Jouvin <jouvin@lal.in2p3.fr>
-
-=head1 MAINTAINER
-
-Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-
-=head1 VERSION
-
-2.0.0
 
 =head1 SEE ALSO
 
