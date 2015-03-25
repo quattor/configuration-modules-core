@@ -26,7 +26,7 @@ my $bfh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifc
 isa_ok($bfh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-br-ex file written");
 
 like($bfh, qr/TYPE=OVSBridge/m, "set type for the OVS bridge");
-like($bfh, qr/DEVICE_TYPE='ovs'/m, "set device_type as ovs");
+like($bfh, qr/DEVICETYPE='ovs'/m, "set device_type as ovs");
 like($bfh, qr/BOOTPROTO=static/m, "set bootproto for the OVS bridge");
 
 my $ifh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
