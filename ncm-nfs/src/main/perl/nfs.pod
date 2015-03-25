@@ -10,7 +10,7 @@ nfs: NCM component for NFS entries in /etc/exports and /etc/fstab
 =head1 DESCRIPTION
 
 The I<nfs> component manages entries for NFS in the /etc/exports 
-and the /etc/fstab files.
+and NFS/PanFS in the /etc/fstab files.
 
 =head1 RESOURCES
 
