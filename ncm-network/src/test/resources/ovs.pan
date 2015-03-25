@@ -10,8 +10,8 @@ object template bridge;
     "bootproto",    "static",
 );
 
-"/system/network/interfaces/eth0 = nlist(
-    "type" ,        "OVSPort";
-    "ovs_bridge",   "br-ex";
-    "bootproto",    "none";
+"/system/network/interfaces/eth0" = nlist(
+    "type" ,        "OVSPort",
+    "ovs_bridge",   "br-ex",
+    "bootproto",    "none",
 );
