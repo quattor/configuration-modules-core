@@ -1,0 +1,23 @@
+[%- lists = ['bridge_list', 'ceph_host'] -%]
+[%- integer = ['rbd_format'] -%]
+[%- booleans = ['datastore_capacity_check'] -%]
+[%- FOR pair IN datastore.pairs -%]
+[% # If we are installing a Ceph datastore we should remove
+   # ceph_user_key from ONE template to avoid any sec issue-%]
+[%      IF pair.key == 'ceph_user_key' -%]
+[%           -%]
+[%      ELSE -%]
+[%          pair.key.upper %] =
+[%-             SWITCH pair.key -%]
+[%                  CASE lists -%]
+ "[%                    pair.value.join(' ') %]"
+[%                  CASE booleans -%]
+ "[%                    pair.value ? "yes" : "no" %]"
+[%                  CASE integer -%]
+ [%                     pair.value %]
+[%                  CASE -%]
+ "[%                    pair.value %]"
+[%              END -%]
+[%      END -%]
+[%- END -%]
+QUATTOR = 1

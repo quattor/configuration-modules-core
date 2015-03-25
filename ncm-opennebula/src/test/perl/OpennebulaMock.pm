@@ -5,11 +5,18 @@ use Test::More;
 use Data::Dumper;
 use base 'Exporter';
 use XML::Simple;
+use Cwd;
 
 use rpcdata;
 
 our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 
+BEGIN {
+  *CORE::GLOBAL::getpwnam = sub { 
+        my @ids = qw(1 2 3 4);
+        return @ids;
+    };
+}
 
 my @rpc_history = ();
 my @rpc_history_full = ();
@@ -19,13 +26,17 @@ sub dlog {
     my ($type, @args) = @_;
     diag("[".uc($type)."] ".join(" ", @args));
 }
-our $nco = new Test::MockModule('NCM::Component::opennebula');
+our $nco = Test::MockModule->new('NCM::Component::opennebula');
 foreach my $type ("error", "info", "verbose", "debug", "warn") {
     $nco->mock( $type, sub { shift; dlog($type, @_); } );
 }
 
+foreach my $getnam ("getpwnam", "getgrnam") {
+    $nco->mock( $getnam, sub { return 1; } );
+}
+
 sub dump_rpc {
-    return Dumper(\@rpc_history);
+    return explain(\@rpc_history);
 }
 
 sub diag_rpc_history {
@@ -88,17 +99,16 @@ sub mock_rpc {
     }
 };
 
-our $opennebula = new Test::MockModule('Net::OpenNebula');
+our $opennebula = Test::MockModule->new('Net::OpenNebula');
 $opennebula->mock( '_rpc',  \&mock_rpc);
 
+# To test usage of TT files during regular component use.
 my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
     my $trd = &$init(@_);
-    my $inclpath = $ENV{QUATTOR_TEST_TEMPLATE_INCLUDE_PATH};
-    $trd->{includepath} = $inclpath if $inclpath;
+    $trd->{includepath} = getcwd()."/target/share/templates/quattor";
     return $trd;
 });
-
 
 1;

@@ -1,0 +1,4 @@
+[% FOR pair IN vnet.pairs -%]
+[%    pair.key.upper %] = "[% pair.value %]"
+[% END -%]
+QUATTOR = 1

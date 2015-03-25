@@ -3,16 +3,12 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor qw(datastore);
-use NCM::Component::opennebula;
 use CAF::Object;
-use Test::MockModule;
-use CAF::FileWriter;
-use Data::Dumper;
 
 use OpennebulaMock;
+use NCM::Component::opennebula;
 
 $CAF::Object::NoAction = 1;
-
 
 my $cmp = NCM::Component::opennebula->new("datastore");
 

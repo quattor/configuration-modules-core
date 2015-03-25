@@ -1,0 +1,38 @@
+[%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad', 'auth_mad'] -%]
+[%- booleans = ['datastore_capacity_check'] -%]
+[%- digits = ['monitoring_interval', 'monitoring_threads', 
+              'port', 'vnc_base_port', 'network_size', 'session_expiration_time', 
+              'default_umask'] -%]
+[%- oned_attr_list = ['vm_restricted_attr', 'inherit_datastore_attr'] -%]
+[%- FOR pair IN oned.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE oned_section -%]              
+[%             pair.key.upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+                                      data=oned.${pair.key} -%]
+[%         CASE 'im_mad' -%]
+[%-            FOREACH item IN oned.${pair.key}.pairs -%]
+[%                 pair.key.upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+                                          data=item.value name=item.key -%]
+[%             END -%]
+[%         CASE 'vm_mad' -%]
+[%-            FOREACH item IN oned.${pair.key}.pairs -%]
+[%                 pair.key.upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+                                          data=item.value name=item.key type=item.key -%]
+[%             END -%]
+[%         CASE 'tm_mad_conf' -%]
+[%-            FOREACH item IN oned.${pair.key} -%]
+[%                 pair.key.upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+                                          data=item -%]
+[%             END -%]
+[%         CASE oned_attr_list -%]
+[%-            FOREACH item IN oned.${pair.key} -%]
+[%                 pair.key.upper %] = "[% item %]"
+[%             END -%]
+[%         CASE booleans -%]
+[%             pair.key.upper %] = "[% pair.value ? "yes" : "no" %]"
+[%         CASE digits -%]
+[%             pair.key.upper %] = [% pair.value %]
+[%         CASE -%]
+[%             pair.key.upper %] = "[% pair.value %]"
+[%     END -%]
+[%- END -%]

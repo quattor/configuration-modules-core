@@ -1,0 +1,9 @@
+Opennebular ceph remote conf test
+---
+multiline
+---
+^CEPH_USER=.+
+^HOST=.+
+^POOL_NAME=.+
+^RBD_FORMAT=.+
+^STAGING_DIR=.+
