@@ -303,11 +303,21 @@ sub gather_current_units
     my $units = $self->{chkconfig}->current_units();
 
     my $current_units = $self->{unit}->current_units(\@limit_units, $possible_missing);
+
+    # It's normal that systemctl finds the chkconfig units;
+    # the other way around should not occur.
+    foreach my $unit (keys %$units) {
+        if (! $current_units->{$unit}) {
+            $self->warn("Found current unit $unit via Chkconfig but is not in Unit. ",
+                        "(This is unexpected, please notify the developers)");
+        }
+    }
+
     while (my ($unit, $detail) = each %$current_units) {
         if ($units->{$unit}) {
             # TODO: Do we compare them to see if both are the same details or simply trust Unit?
-            $self->info("Found configured unit $unit via Chkconfig and Unit. ",
-                        "Using Unit unit details.");
+            $self->verbose("Found current unit $unit via Chkconfig and Unit. ",
+                           "Using Unit unit details.");
         }
         $units->{$unit} = $detail;
     }
@@ -415,7 +425,7 @@ sub process
             if ($addact) {
                 my $current_act = $self->{unit}->is_active($unit);
                 $addact = ! (defined($current_act) && ($expected_act eq $current_act));
-                $self->debug(1, "process: expected activation $expected_act current activation ", 
+                $self->debug(1, "process: expected activation $expected_act current activation ",
                              defined($current_act) ? $current_act : "<undef>",
                              " : adding for (de)activation $addact");
             }
@@ -426,7 +436,7 @@ sub process
                 # There's no point in triggering any action or state change.
                 $addstate = 0;
                 $addact = 0;
-                $self->debug(1, "$nocur_msg which is in possible_missing. ", 
+                $self->debug(1, "$nocur_msg which is in possible_missing. ",
                              "Assuming it is truly missing and thus ",
                              "not forcing state $state nor (de)activation.");
             } else {
