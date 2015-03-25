@@ -31,17 +31,20 @@ is($SYSTEMCTL, "/usr/bin/systemctl", "SYSTEMCTL exported");
 my $all_props = [
     $PROPERTY_ACTIVESTATE, $PROPERTY_AFTER, $PROPERTY_BEFORE,
     $PROPERTY_CONFLICTS, $PROPERTY_ID, $PROPERTY_NAMES,
-    $PROPERTY_REQUIRES, $PROPERTY_UNITFILESTATE, $PROPERTY_WANTEDBY,
+    $PROPERTY_REQUIREDBY, $PROPERTY_REQUIRES,
+    $PROPERTY_TRIGGEREDBY, $PROPERTY_TRIGGERS,
+    $PROPERTY_UNITFILESTATE, $PROPERTY_WANTEDBY,
     $PROPERTY_WANTS,
 ];
 is_deeply($all_props,
-          [qw(ActiveState After Before Conflicts Id Names Requires UnitFileState WantedBy Wants)],
+          [qw(ActiveState After Before Conflicts Id Names RequiredBy Requires TriggeredBy Triggers UnitFileState WantedBy Wants)],
           "exported properties");
 
 my @array_props = (
     $PROPERTY_AFTER, $PROPERTY_BEFORE, $PROPERTY_CONFLICTS,
-    $PROPERTY_NAMES, $PROPERTY_REQUIRES, $PROPERTY_WANTEDBY,
-    $PROPERTY_WANTS,
+    $PROPERTY_NAMES, $PROPERTY_REQUIREDBY, $PROPERTY_REQUIRES,
+    $PROPERTY_TRIGGEREDBY, $PROPERTY_TRIGGERS,
+    $PROPERTY_WANTEDBY, $PROPERTY_WANTS,
 );
 
 =pod

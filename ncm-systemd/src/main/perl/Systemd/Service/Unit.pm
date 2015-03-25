@@ -968,7 +968,7 @@ Force cache update.
 
 =item ignoreself
 
-By default, the reverse dependency list conatins the unit itself too.
+By default, the reverse dependency list contains the unit itself too.
 With C<ignoreself> true, the unit itself is not returned
 (but still stored in cache).
 

@@ -21,7 +21,10 @@ Readonly our $PROPERTY_BEFORE => 'Before';
 Readonly our $PROPERTY_CONFLICTS => 'Conflicts';
 Readonly our $PROPERTY_ID => 'Id';
 Readonly our $PROPERTY_NAMES => 'Names';
+Readonly our $PROPERTY_REQUIREDBY => 'RequiredBy';
 Readonly our $PROPERTY_REQUIRES => 'Requires';
+Readonly our $PROPERTY_TRIGGEREDBY => 'TriggeredBy';
+Readonly our $PROPERTY_TRIGGERS => 'Triggers';
 Readonly our $PROPERTY_WANTEDBY => 'WantedBy';
 Readonly our $PROPERTY_WANTS => 'Wants';
 Readonly our $PROPERTY_UNITFILESTATE => 'UnitFileState';
@@ -29,15 +32,18 @@ Readonly our $PROPERTY_UNITFILESTATE => 'UnitFileState';
 Readonly::Array my @PROPERTIES => qw(
     $PROPERTY_ACTIVESTATE $PROPERTY_AFTER $PROPERTY_BEFORE
     $PROPERTY_CONFLICTS $PROPERTY_ID $PROPERTY_NAMES
-    $PROPERTY_REQUIRES $PROPERTY_UNITFILESTATE $PROPERTY_WANTEDBY
+    $PROPERTY_REQUIREDBY  $PROPERTY_REQUIRES
+    $PROPERTY_TRIGGEREDBY $PROPERTY_TRIGGERS
+    $PROPERTY_UNITFILESTATE $PROPERTY_WANTEDBY
     $PROPERTY_WANTS
 );
 
 # These properties are converted in an array reference with systemctl_show method
 Readonly::Array my @PROPERTIES_ARRAY => (
     $PROPERTY_AFTER, $PROPERTY_BEFORE, $PROPERTY_CONFLICTS,
-    $PROPERTY_NAMES, $PROPERTY_REQUIRES, $PROPERTY_WANTEDBY,
-    $PROPERTY_WANTS,
+    $PROPERTY_NAMES, $PROPERTY_REQUIRES, $PROPERTY_REQUIREDBY,
+    $PROPERTY_TRIGGEREDBY, $PROPERTY_TRIGGERS,
+    $PROPERTY_WANTEDBY, $PROPERTY_WANTS,
 );
 
 our @EXPORT_OK = qw(
@@ -84,13 +90,16 @@ to the result as output
 
 =over
 
-=item Names
-=item Requires
-=item Wants
-=item WantedBy
-=item Before
 =item After
+=item Before
 =item Conflicts
+=item Names
+=item RequiredBy
+=item Requires
+=item TriggeredBy
+=item Triggers
+=item WantedBy
+=item Wants
 
 =back
 
