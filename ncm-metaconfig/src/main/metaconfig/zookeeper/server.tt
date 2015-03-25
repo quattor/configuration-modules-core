@@ -1,0 +1,17 @@
+[%- booleans = ["leaderServes", "syncEnabled"] -%]
+[%- FOREACH pair IN main.pairs -%]
+[%      pair.key %]=
+[%-     SWITCH pair.key -%]
+[%-         CASE booleans -%]
+[%-             pair.value ? "yes" : "no" %]
+[%-         CASE -%]
+[%-             pair.value %]
+[%-     END %]
+[% END -%]
+
+
+[%- idx=0 -%]
+[%- FOREACH server IN servers -%]
+server.[% idx %]=[% server.hostname %]:[% server.port %]:[% server.leaderport %]
+[%     idx = idx + 1 -%]
+[%- END -%]

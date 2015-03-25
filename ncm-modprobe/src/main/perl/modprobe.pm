@@ -5,43 +5,45 @@
 #
 # NCM::modprobe - ncm modprobe configuration component
 #
-################################################################################
 
 package NCM::Component::modprobe;
 
-#
-# a few standard statements, mandatory for all components
-#
-
 use strict;
+use warnings;
+
 use NCM::Component;
 our @ISA = qw(NCM::Component);
-our $EC=LC::Exception::Context->new->will_store_all;
+our $EC  = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
-use NCM::Check;
 use EDG::WP4::CCM::Configuration;
 use CAF::Process;
 use CAF::FileWriter;
 use LC::File qw(directory_contents);
-use Fcntl qw(:seek);
-
 
 no strict 'refs';
 
-foreach my $method (qw(alias options install remove)) {
-    *{__PACKAGE__."::process_$method"} = sub {
+foreach my $method (qw(alias options install remove blacklist)) {
+    *{__PACKAGE__ . "::process_$method"} = sub {
         my ($self, $t, $fh) = @_;
         foreach my $i (@{$t->{modules}}) {
             if (exists($i->{$method})) {
-                $self->verbose("Adding $method $i->{$method} for $i->{name}");
-                print $fh "$method $i->{$method} $i->{name}\n";
+                if ($method eq "alias") {
+                    $self->verbose("Adding: $method $i->{$method} $i->{name}");
+                    print $fh "$method $i->{$method} $i->{name}\n";
+                } elsif ($method eq "blacklist") {
+                    $self->verbose("Adding: $method $i->{name}");
+                    print $fh "$method $i->{name}\n";
+                } else {
+                    $self->verbose("Adding: $method $i->{name} $i->{$method}");
+                    print $fh "$method $i->{name} $i->{$method}\n";
+                }
             }
         }
-    };
+    }
 }
 
 use strict 'refs';
-
 
 # Re-generates the initrds, if needed.
 sub mkinitrd
@@ -53,18 +55,17 @@ sub mkinitrd
     $dir = directory_contents("/boot");
 
     foreach my $i (@$dir) {
-	if ($i =~ m{^System\.map\-(2\.6\..*)$}) {
-	    my $rl = $1;
-	    CAF::Process->new(["mkinitrd", "-f", "/boot/initrd-$rl.img", $rl],
-			      log => $self)->run();
-	    $self->error("Unable to build the initrd for $rl") if $?;
-	}
+        if ($i =~ m{^System\.map\-(2\.6\..*)$}) {
+            my $rl = $1;
+            CAF::Process->new(["mkinitrd", "-f", "/boot/initrd-$rl.img", $rl], log => $self)->run();
+            $self->error("Unable to build the initrd for $rl") if $?;
+        }
     }
 }
 
-
-sub Configure {
-    my ($self,$config)=@_;
+sub Configure
+{
+    my ($self, $config) = @_;
 
     my $t = $config->getElement("/software/components/modprobe")->getTree();
 
@@ -77,6 +78,7 @@ sub Configure {
     $self->process_options($t, $fh);
     $self->process_install($t, $fh);
     $self->process_remove($t, $fh);
+    $self->process_blacklist($t, $fh);
 
     $self->mkinitrd($fh) if $fh->close();
     return 1;

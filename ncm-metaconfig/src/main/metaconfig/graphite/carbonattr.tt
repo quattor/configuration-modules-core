@@ -1,0 +1,14 @@
+[%- booleans = [ "enable_udp_listener", "use_insecure_unpickler", "use_flow_control", "log_updates",
+                 "whisper_autoflush", "whisper_sparse_create", "whisper_lock_writes", 
+                 "use_whitelist", "enable_amqp", "amqp_verbose", "amqp_metric_name_in_body",
+                 "enable_manhole"] -%]
+[%- commalist = ["bind_patterns", "destinations"] -%]
+[%- pair.key FILTER upper -%] =
+[%-     SWITCH pair.key -%]
+[%-         CASE commalist -%]
+ [%            pair.value.join(',') -%]
+[%-         CASE booleans -%]
+ [%              pair.value ? 'True' : 'False' -%]
+[%-         CASE -%]
+ [%             pair.value -%]
+[%-     END -%]

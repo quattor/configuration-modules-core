@@ -1,0 +1,25 @@
+# Description of group [% name %]
+<GROUP=[% name %]>
+
+DESCRIPTION [% desc.description %]
+GROUPTYPE   [% desc.type %]
+
+[%- IF desc.hauptnode -%]
+HAUPTNODE [% desc.hauptnode %]
+[% END -%]
+
+NODES [[ [% desc.nodes.join(' ') %] ]]
+
+[%- IF desc.include_senders %]
+INCLUDE_SENDERS [[ [% desc.include_senders.join(' ') %] ]]
+[% END -%]
+[%- IF desc.include_receivers %]
+INCLUDE_RECEIVERS [[ [% desc.include_receivers.join(' ') %] ]]
+[% END -%]
+[%- IF desc.senders %]
+SENDERS [[ [% desc.senders.join(' ') %] ]]
+[% END -%]
+[%- IF desc.receivers %]
+RECEIVERS [[ [% desc.receivers.join(' ') %] ]]
+[% END -%]
+</GROUP>

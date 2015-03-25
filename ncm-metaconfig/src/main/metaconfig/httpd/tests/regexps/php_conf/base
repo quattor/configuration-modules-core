@@ -1,0 +1,15 @@
+Base test for php.conf config
+---
+multiline
+/etc/httpd/conf.d/php.conf
+---
+^directoryindex index.php$
+^hostnamelookups off$
+^addtype text/html .php$
+^addhandler php5-script .php$
+^<ifmodule prefork.c>$
+^\s{8}loadmodule php5_module modules/libphp5.so$
+^</ifmodule>$
+^<ifmodule worker.c>$
+^\s{8}loadmodule php5_module modules/libphp5-zts.so$
+^</ifmodule>$

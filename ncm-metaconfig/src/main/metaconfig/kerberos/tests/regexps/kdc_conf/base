@@ -1,0 +1,15 @@
+Test kdc conf file
+---
+multiline
+/var/kerberos/krb5kdc/kdc.conf
+---
+^\[defaults\]$
+^kdc_ports = 88$
+^kdc_tcp_ports = 884$
+^\[realms\]$
+^MYREALM\s+=\s+\{$
+^\s{4}acl_file = /var/kerberos/krb5kdc/kadm5.acl$
+^\s{4}admin_keytab = /var/kerberos/krb5kdc/krb5kdc/kadm5.keytab$
+^\s{4}supported_enctypes = aes256-cts:normal aes128-cts:normal des3-hmac-sha1:normal$
+^\}$
+

@@ -126,7 +126,7 @@ Default : None
 If the 'timing' nlist is used to specify the time, it can contain any of the
 keys: 'minute', 'hour', 'day', 'month' and 'weekday'. An unspecified key will
 have a value of '*'. A further key of 'smear' can be used to specify (in
-seconds) a maximum interval for smearing the start time, which can be as much
+minutes) a maximum interval for smearing the start time, which can be as much
 as a day. When a smeared job is created, a random increment between zero and
 the smear time is applied to the start time of the job.  If the start time
 results in the job running on the following day, then all other fields (day,
@@ -165,7 +165,7 @@ Default : root
       "timing", nlist(
           "minute", "0",
           "hour", "1",
-          "smear", "180"),
+          "smear", 180),
       "command", "/bin/date")
     );
 

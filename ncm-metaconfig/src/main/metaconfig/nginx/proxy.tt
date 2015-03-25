@@ -1,0 +1,14 @@
+[% FOREACH h IN px.set_header.pairs %]
+proxy_set_header [% h.key %] [% h.value %];
+[%- END %]
+[% IF px.exists("redirect") %]
+proxy_redirect [% px.redirect %];
+[%- END %]
+proxy_pass [% px.pass %];
+proxy_cache [% px.exists("cache") ? px.cache.cache : "off" %];
+[% FOREACH v IN px.cache.valid %]
+proxy_cache_valid [% v.codes.join(" ") %] [% v.period %]m;
+[%- END %]
+[%- IF px.exists("next_upstream") %]
+proxy_next_upstream [% px.next_upstream %];
+[%- END -%]

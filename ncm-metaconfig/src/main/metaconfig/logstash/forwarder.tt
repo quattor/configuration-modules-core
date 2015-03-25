@@ -1,0 +1,49 @@
+[%# This should create valid JSON. -%]
+{
+[% FILTER indent -%]
+"network": {
+[%      FILTER indent -%]
+[%-         FOREACH pair IN network.pairs -%]
+"[% pair.key.replace('_', ' ') %]":
+[%-             SWITCH pair.key -%]
+[%-                 CASE "servers" -%]
+ [
+[%                      FILTER indent -%]
+[%                          servers = []; 
+                            FOREACH s IN pair.value;
+                                servers.push("\"${s.host}:${s.port}\"");
+                            END;
+                            servers.join(",\n")
+                            %]
+[%-                     END %]
+]
+[%-                 CASE "timeout" -%]
+ [% pair.value %]
+[%-                 CASE -%]
+ "[% pair.value %]"
+[%-             END -%]
+[%-             network.pairs.last.key == pair.key ? "" : "," %]
+[%         END -%]
+[%-      END -%]
+},
+"files": [
+[%      FILTER indent -%]
+[%-         FOREACH file IN files -%]
+{
+[%              FILTER indent -%]
+"paths": ["[%        file.paths.join("\",\n\"") %]"],
+"fields": {[%       fields = []; 
+                    FOREACH f IN file.fields.pairs;
+                        fields.push("\"${f.key}\": \"${f.value}\"");
+                    END;
+                    fields.join("\n");
+            %]
+}
+[%              END %]
+}
+[%-             files.last == file ? "" : "," %]
+[%-         END -%]
+[%-      END %]
+]
+[% END %]
+}

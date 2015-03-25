@@ -1,0 +1,16 @@
+Base test for config
+---
+multiline
+/etc/idmapd.conf
+---
+^\[General\]$
+^Domain=MyDomain$
+^\[Mapping\]$
+^Nobody-Group=nobody$
+^Nobody-User=nobody$
+^\[Translation\]$
+^Method=nsswitch$
+^\[Static\]$
+^user@firstrealm\s=\slocaluser$
+^otheruser@otherrealm\s=\ssamelocaluser$
+

@@ -1,0 +1,7 @@
+[% FOREACH acl IN acls %]
+[%    INCLUDE metaconfig/kerberos/kdc/principal.tt principal=acl.subject -%]
+ [% acl.permissions.join('') %]
+[%-    IF acl.exists('target') -%]
+ [%     INCLUDE metaconfig/kerberos/kdc/principal.tt principal=acl.target -%]
+[%-   END %]
+[% END %]

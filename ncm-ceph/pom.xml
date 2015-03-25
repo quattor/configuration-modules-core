@@ -6,13 +6,14 @@
   <artifactId>ceph</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>15.2.1-SNAPSHOT</version>
   <name>Configuration module for CEPH</name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.42</version>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -29,21 +30,9 @@
       <email>Kenneth.Waegeman@UGent.be</email>
     </developer>
   </developers>
-
-  <contributors>
-  </contributors>
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>rpm-maven-plugin</artifactId>
-          <configuration>
-            <requires>
-              <require>ceph</require>
-            </requires>
-          </configuration>
-        </plugin>       
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.4.3</version>
@@ -74,6 +63,9 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>rpm-maven-plugin</artifactId>
           <configuration>
+            <requires>
+              <require>ceph</require>
+            </requires>
             <mappings combine.children="append">
               <mapping>
                 <directory>/usr/share/templates/</directory>

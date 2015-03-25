@@ -1,0 +1,16 @@
+[%- IF ssl.exists("verify_client") %]
+[% IF ssl.verify_client == "require" %]
+ssl_verify_client on
+[%- ELSIF ssl.verify_client == "none" %]
+ssl_verify_client off
+[%- ELSE %]
+ssl_verify_client [% ssl.verify_client %]
+[%- END %];
+[% END -%]
+# Watch out!! This list is separated by whitespace!!
+ssl_protocols [% ssl.protocol.join(" ") %];
+ssl_certificate [% ssl.certificate %];
+ssl_client_certificate [% ssl.ca %];
+ssl_certificate_key [% ssl.key %];
+# Watch out!! This list is separated by colons!!
+ssl_ciphers [% ssl.ciphersuite.join(":") %];

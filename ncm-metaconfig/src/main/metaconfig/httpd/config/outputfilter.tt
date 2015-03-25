@@ -1,0 +1,5 @@
+[%- IF desc.exists('add') -%]
+[%-     FOREACH h IN desc.add -%]
+addoutputfilter [% h.name %] [% h.target.join(' ') %]
+[%      END -%]
+[%- END -%]

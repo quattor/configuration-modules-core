@@ -1,0 +1,5 @@
+[%- principal.primary -%]
+[%- IF principal.exists('instance') -%]
+/[% principal.instance -%]
+[%- END -%]
+@[% principal.realm -%]

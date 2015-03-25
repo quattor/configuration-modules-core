@@ -1,0 +1,7 @@
+[%- key %] => {
+[% FILTER indent -%]
+[%-     FOREACH p IN value -%]
+"[%         p.name %]" => "[% p.pattern %]"
+[%     END -%]
+[%- END %]
+}[%- -%]

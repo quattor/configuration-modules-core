@@ -1,0 +1,15 @@
+[%- booleans = ['hwtable_regex_match', queue_without_daemon, 'user_friendly_names',
+               'find_multipaths', 'detect_prio', 'retain_attached_hw_handler',
+               'fast_io_fail_tmo', 'flush_on_last_del']
+-%]
+[%- pair.key -%]
+[%- SWITCH pair.key -%]
+[%-     CASE ['path_selector'] -%]
+ [%         pair.value.join(' ') %]
+[%-     CASE ['features'] -%]
+ [%         pair.value.shift %] [% pair.value.shift.join(' ') %]
+[%-     CASE booleans -%]
+ [%         pair.value ? 'yes' : 'no' -%]
+[%-     CASE -%]
+ [%         pair.value -%]
+[%- END -%]

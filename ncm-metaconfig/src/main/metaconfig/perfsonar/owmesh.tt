@@ -1,0 +1,122 @@
+# Configuration file for Perfsonar BUOY daemons
+
+[% INCLUDE metaconfig/perfsonar/owmesh/header.tt %]
+##################
+#
+# POSSIBLE CHANGES
+#
+##################
+BWBinDir      [% bindir %]
+BWDataDir     [% bwctl.data_dir %]
+
+
+OWPBinDir     [% bindir %]
+OWPDataDir    [% owamp.data_dir %]
+OwampdVarDir  [% var_dir %]
+
+# If OWP/BW share directories - you can drop the prefix and only
+# specify the parameter once. (e.g. BinDir works for 'both'.)
+
+# user:group info
+UserName   [% user %]
+GroupName  [% group %]
+
+
+##################
+#
+# POSSIBLE CHANGES
+#
+##################
+
+# Central host config params
+OWPCentralHost [% owamp.central_host %]
+BWCentralHost  [% bwctl.central_host %]
+
+# If set, only allow contact from CONTACTADDRs defined for each node
+[% IF verify_peer_addr %]
+OWPVerifyPeerAddr
+BWVerifyPeerAddr
+[% ELSE %]
+!OWPVerifyPeerAddr
+!BWVerifyPeerAddr
+[% END %]
+
+# read timeout on file upload socket.
+OWPCentralHostTimeout   [% owamp.timeout %]
+BWCentralHostTimeout    [% bwctl.timeout %]
+
+# Directory on central server to stage data while parsing into db.
+OWPCentralDataDir   [% owamp.data_dir %]/upload
+BWCentralDataDir    [% bwctl.data_dir %]/upload
+
+OWPCentralArchDir   [% owamp.archive_dir %]
+BWCentralArchDir    [% bwctl.archive_dir %]
+
+ADDRTYPES   [[ [% addrtype.join(' ') %] ]]
+
+
+#################
+#
+# POSSIBLE CHANGE (DATABASE OPTIONS)
+#
+#################
+
+# CentralDBHost will default to 'localhost' if not set.  This can be used
+# to specify another host for mysql interaction. (not recommended)
+# CentralDBHost mysql.host.com
+CentralDBType     [% central_db_type %]
+CentralDBUser     [% central_db_user %]
+CentralDBPass     [% central_db_pass %]
+BWCentralDBName   [% bwctl.db %]
+OWPCentralDBName  [% owamp.db %]
+
+# add a read only user so that the cgis have minimum privileges
+
+# connect/write/read timeout for sending socket (Can be set on a
+# per-node bases if needed.)
+SendTimeout        [% send_timeout %]
+
+
+#######################################################################
+## BWCTL Iperf-TCP Test Definition
+#
+[% FOREACH test IN testspecs.pairs %]
+[% INCLUDE metaconfig/perfsonar/owmesh/testspec.tt name=test.key desc=test.value %]
+[% END %]
+#######################################################################
+# Host definitions, should equal the result of the hostname in `uname -a`, this
+#   is how the master will determine which machine is running a test.  Its a
+#   good idea to enter all machines that are involved in all tests here.
+#
+[% FOREACH node IN nodes.pairs %]
+[% INCLUDE metaconfig/perfsonar/owmesh/node.tt name=node.key desc=node.value %]
+[% END %]
+
+LOCALNODES [[ [% localnodes.join(' ') %] ]]
+
+[% FOREACH host IN hosts.pairs %]
+[% INCLUDE metaconfig/perfsonar/owmesh/host.tt name=host.key desc=host.value %]
+[% END %]
+
+# The next two are 'targets' of the test.  They are just running bwctl/owamp and
+#  do not need to be running a master collector (for star tests).  If we are
+#  running a mesh then we will need to run the collector/master.
+#
+
+#################
+#
+# MUST CHANGE
+#
+#################
+
+#######################################################################
+# Group Definitions
+[% FOREACH group IN groups.pairs %]
+[% INCLUDE metaconfig/perfsonar/owmesh/group.tt name=group.key desc=group.value %]
+[%END %]
+
+#######################################################################
+# Measurement Sets
+[% FOREACH ms IN measurementsets.pairs %]
+[% INCLUDE metaconfig/perfsonar/owmesh/measurementset.tt name=ms.key desc=ms.value %]
+[% END %]

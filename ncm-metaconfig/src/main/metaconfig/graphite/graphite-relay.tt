@@ -1,0 +1,7 @@
+relay.backends: [% relay.backends.join(" \\\n    ") %]
+[%- relay.delete('backends') -%]
+[%- FOREACH base IN ['hash', 'relay', 'overflow'] -%]
+[%-     FOREACH pair IN ${base}.pairs %]
+[%          base %].[% pair.key %]: [% pair.value %]
+[%-     END -%]
+[%- END %]

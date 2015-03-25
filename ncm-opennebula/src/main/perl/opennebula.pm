@@ -11,18 +11,20 @@ use NCM::Component;
 use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
+use CAF::TextRender;
 use Net::OpenNebula 0.300.0;
 use Data::Dumper;
 use Readonly;
 
 
-# TODO use constant from CAF::Render
-Readonly::Scalar my $TEMPLATEPATH => "/usr/share/templates/quattor";
+
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
+# Set OpenNebula RPC endpoint info
+# to connect to ONE API
 sub make_one 
 {
     my ($self, $rpc) = @_;
@@ -44,25 +46,26 @@ sub make_one
     return $one;
 }
 
-# TODO replace by CAF::Render
 # Detect and process ONE templates
-sub process_template 
+sub process_template
 {
     my ($self, $config, $type_name) = @_;
-    my $res;
     
-    my $type_rel = "metaconfig/opennebula/$type_name.tt";
-    my $tpl = Template->new(INCLUDE_PATH => $TEMPLATEPATH);
-    if (! $tpl->process($type_rel, { $type_name => $config }, \$res)) {
-        $self->error("TT processing of $type_rel failed: ",$tpl->error());
+    my $type_rel = "opennebula/$type_name.tt";
+    my $tpl = CAF::TextRender->new($type_rel,
+                                  { $type_name => $config },
+                                  log => $self,
+                                  );
+    if (!$tpl) {
+        $self->error("TT processing of $type_rel failed: $tpl->{fail}");
         return;
     }
-    return $res;
+    return $tpl;
 }
 
 # Create/update ONE resources
 # based on resource type
-sub create_or_update_something
+sub set_resource
 {
     my ($self, $one, $type, $data) = @_;
     
@@ -92,6 +95,7 @@ sub create_or_update_something
     return $new;
 }
 
+# Removes ONE resources
 sub remove_something
 {
     my ($self, $one, $type, $resources) = @_;
@@ -106,7 +110,10 @@ sub remove_something
 
         if ($quattor and !$oldresource->used() and !exists($rnames{$oldresource->name})) {
             $self->info("Removing old $type resource: ", $oldresource->name);
-            $oldresource->delete();
+            my $id = $oldresource->delete();
+            if (!$id) {
+                $self->error("Unable to remove old $type resource: ", $oldresource->name);
+            }
         } else {
             $self->warn("QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this $type resource: ", $oldresource->name);
@@ -115,6 +122,7 @@ sub remove_something
     return;
 }
 
+# Updates ONE resource templates
 sub update_something
 {
     my ($self, $one, $type, $name, $template) = @_;
@@ -141,7 +149,7 @@ sub detect_used_resource
     my $quattor;
     my $gmethod = "get_${type}s";
     my @existres = $one->$gmethod(qr{^$name$});
-    if (scalar @existres > 0) {
+    if (@existres) {
         $quattor = $self->check_quattor_tag($existres[0]);
     }
     if (!$quattor) {
@@ -149,7 +157,7 @@ sub detect_used_resource
                     "The Quattor flag is not set. ",
                     "We can't modify this resource.");
         return 1;
-    } elsif ($quattor) {
+    } elsif ($quattor == 1) {
         $self->verbose("Name : $name is already used by a $type resource. ",
                     "Quattor flag is set. ",
                     "We can modify and update this resource.");
@@ -178,7 +186,7 @@ sub detect_ceph_datastores
 sub create_resource_names_list
 {
     my ($self, $one, $type, $resources) = @_;
-    my ($name,@namelist, $template);
+    my ($name, @namelist, $template);
 
     foreach my $newresource (@$resources) {
         $template = $self->process_template($newresource, $type);
@@ -204,10 +212,12 @@ sub check_quattor_tag
     }
 }
 
+# This function configures Ceph client
+# It sets ceph key in each hypervisor.
 sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
-    my ($output, $cmd, $uuid, $secret);
+    my ($secret, $uuid);
     foreach my $ceph (@$datastores) {
         if ($ceph->{tm_mad} eq 'ceph') {
             if ($ceph->{ceph_user_key}) {
@@ -217,34 +227,53 @@ sub enable_ceph_node
                 $self->error("Ceph user key not found within Quattor template.");
                 return;
             }
-            # Add ceph keys as root
-            $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
-            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
-            if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
-                $uuid = $1;
-                if ($uuid eq $ceph->{ceph_secret}) {
-                $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
-                }
-                else {
-                    $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
-                    return;
-                }
-            } else {
-                $self->error("Required Ceph UUID not found for $type host $host.");
-                return;
-            }
-
-            $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
-            $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
-            if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
-                $self->info("New Ceph key include into libvirt list: ",$output);
-            } else {
-                $self->error("Error running virsh secret-set-value command: ", $output);
-                return;
-            }
+            $uuid = $self->set_ceph_secret($type, $host, $ceph);
+            return if !$uuid;
+            return if !$self->set_ceph_keys($host, $uuid, $secret);
         }
     }
     return 1;
+}
+
+# Sets Ceph secret
+# to be used by libvirt
+sub set_ceph_secret
+{
+    my ($self, $type, $host, $ceph) = @_;
+    my $uuid;
+    # Add ceph keys as root
+    my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
+    my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
+    if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
+        $uuid = $1;
+        if ($uuid eq $ceph->{ceph_secret}) {
+            $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+        } else {
+            $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
+            return;
+        }
+    } else {
+        $self->error("Required Ceph UUID not found for $type host $host.");
+        return;
+    }
+    return $uuid;
+}
+
+# Sets Ceph keys
+# to be used by libvirt
+sub set_ceph_keys
+{
+    my ($self, $host, $uuid, $secret) = @_;
+
+    my $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
+    my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
+    if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
+        $self->info("New Ceph key include into libvirt list: ", $output);
+    } else {
+        $self->error("Error running virsh secret-set-value command: ", $output);
+        return;
+    }
+    return $output;
 }
 
 # Execute ssh commands required by ONE
@@ -260,6 +289,9 @@ sub enable_node
     return 1;
 }
 
+# By default OpenNebula sets a random pass
+# for oneadmin user. This function sets the
+# new pass
 sub change_oneadmin_passwd
 {
     my ($self, $passwd) = @_;
@@ -298,11 +330,11 @@ sub manage_something
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources);
 
-    if (scalar @$resources > 0) {
+    if (@$resources) {
         $self->info("Creating new ${type}/s: ", scalar @$resources);
     }
     foreach my $newresource (@$resources) {
-        my $new = $self->create_or_update_something($one, $type, $newresource);
+        my $new = $self->set_resource($one, $type, $newresource);
     }
 }
 
@@ -327,7 +359,7 @@ sub manage_hosts
         }
     }
 
-    if (scalar @rmhosts > 0) {
+    if (@rmhosts) {
         $self->info("Removed $type hosts: ", join(',', @rmhosts));
     }
 
@@ -345,7 +377,7 @@ sub manage_hosts
             $self->error("Found more than one host $host. Only the first host will be modified.");
         }
         my $hostinstance = $hostinstances[0];
-        if ($self->test_host_connection($host)) {
+        if ($self->can_connect_to_host($host)) {
             my $output = $self->enable_node($one, $type, $host, $resources);
             if ($output) {
                 if ($hostinstance) {
@@ -359,36 +391,36 @@ sub manage_hosts
                     $self->info("Created new $type host $host.");
                 }
             } else {
-                if ($hostinstance) {
-                    # The current host is failing our tests
-                    $hostinstance->disable;
-                    $self->info("Disabled existing host $host");
-                } else {
-                    # The new host is reachable but it is failing our tests
-                    # Create and disable it
-                    $new = $one->create_host(%host_options);
-                    $new->disable;
-                    $self->info("Created and disabled new host $host");
-                }
+                $self->
+                disable_host($one, $type, $host, $hostinstance, %host_options);
             }
         } else {
-            $self->warn("Could not connect to $type host: $host.");
             push(@failedhost, $host);
-            if ($hostinstance) {
-                $hostinstance->disable;
-                $self->info("Disabled existing host $host");
-            } else {
-                $new = $one->create_host(%host_options);
-                $new->disable;
-                $self->info("Created and disabled new host $host");
-            }
+            $self->
+            disable_host($one, $type, $host, $hostinstance, %host_options);
         }
     }
 
     if (@failedhost) {
-        $self->error("Detected some error/s including these $type nodes: ", join(',', @failedhost));
+        $self->error("Detected some error/s including these $type nodes: ", join(', ', @failedhost));
     }
 
+}
+
+# Disables failing hyp
+sub disable_host
+{
+    my ($self, $one, $type, $host, $hostinstance, %host_options) = @_;
+
+    $self->warn("Could not connect to $type host: $host.");
+    if ($hostinstance) {
+        $hostinstance->disable;
+        $self->info("Disabled existing host $host");
+    } else {
+        my $new = $one->create_host(%host_options);
+        $new->disable;
+        $self->info("Created and disabled new host $host");
+    }
 }
 
 # Function to add/remove/update regular users
@@ -420,7 +452,7 @@ sub manage_users
         }
     }
 
-    if (scalar @rmusers > 0) {
+    if (@rmusers) {
         $self->info("Removed users: ", join(',', @rmusers));
     }
 
@@ -463,7 +495,7 @@ sub is_supported_one_version
     if ($res) {
         $self->verbose("Version $oneversion is ok.");
     } else {
-        $self->error("OpenNebula AII requires ONE v$MINIMAL_ONE_VERSION or higher (found $oneversion).");
+        $self->error("OpenNebula component requires ONE v$MINIMAL_ONE_VERSION or higher (found $oneversion).");
     }
     return $res;
 }
@@ -494,17 +526,14 @@ sub Configure
     # Check ONE RPC endpoint and OpenNebula version
     return 0 if !$self->is_supported_one_version($one);
 
-    # Add/remove VNETs
     $self->manage_something($one, "vnet", $tree->{vnets});
 
-    # Add/remove datastores
+    # For the moment only Ceph datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores});
 
-    # Add/remove KVM hosts
     my $hypervisor = "kvm";
     $self->manage_something($one, $hypervisor, $tree);
 
-    # Add/remove regular users
     $self->manage_something($one, "user", $tree->{users});
 
     return 1;

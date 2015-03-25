@@ -5,18 +5,134 @@
 
 =head1 NAME
 
-@COMP: NCM component to control the log rotate configuration
+ncm-altlogrotate: configuration module to control the log rotate configuration
 
 =head1 DESCRIPTION
 
 The I<altlogrotate> component manages the log rotate configuration files.
 
+It replaced the original I<logrotate> which is no longer available.
+
 =head1 RESOURCES
 
-=head2 /software/components/altlogrotate/entries
+=head2 C<< /software/components/altlogrotate/entries/ >>
+
+=over
+
+=item * C<< configFile : string >>
+
+Logrotate configuration file location, defaults to C<< /etc/logrotate.conf >>.
+
+=item * C<< configDir : string >>
+
+Logrotate entries directory path, defaults to C<< /etc/logrotate.d >>,
+entries will be written to individual config files under this path.
+
+=back
+
+
+=head2 C<< /software/components/altlogrotate/entries >>
 
 A named list containing logrotate structures.
 
-=head1 ALTLOGROTATE
+Follows the logrotate config format, so see C<< man 8 logrotate >> for a detailed explanation of all options.
+
+=over
+
+=item * C<< pattern ? string >>
+
+=item * C<< global ? boolean >>
+
+=item * C<< overwrite ? boolean >>
+
+=item * C<< include ? string >>
+
+=item * C<< compress ? boolean >>
+
+=item * C<< copy ? boolean >>
+
+=item * C<< copytruncate ? boolean >>
+
+=item * C<< delaycompress ? boolean >>
+
+=item * C<< ifempty ? boolean >>
+
+=item * C<< missingok ? boolean >>
+
+=item * C<< sharedscripts ? boolean >>
+
+=item * C<< dateext ? boolean >>
+
+=item * C<< compresscmd ? string >>
+
+=item * C<< uncompresscmd ? string >>
+
+=item * C<< compressext ? string >>
+
+=item * C<< compressoptions ? string >>
+
+=item * C<< create ? boolean >>
+
+=item * C<< createparams ? structure_altlogrotate_create_params >>
+
+C<< nlist >> with the following structure:
+
+=over
+
+=item * C<< mode : string >>
+
+Standard three character octal mode string.
+
+=item * C<< owner : string >>
+
+Username of owner
+
+=item * C<< group : string >>
+
+Group name of owner
+
+=back
+
+=item * C<< extension ? string >>
+
+=item * C<< mail ? type_email >>
+
+=item * C<< nomail ? boolean >>
+
+=item * C<< mailselect ? string >>
+
+=item * C<< olddir ? string >>
+
+=item * C<< noolddir ? boolean >>
+
+=item * C<< rotate ? long(0..) >>
+
+=item * C<< start ? long(0..) >>
+
+=item * C<< size ? string >>
+
+=item * C<< taboo_replace ? boolean >>
+
+=item * C<< tabooext ? string[]  >>
+
+=item * C<< frequency ? string >>
+
+=item * C<< scripts ? structure_altlogrotate_scripts >>
+
+C<< nlist >> with the following structure:
+
+=over
+
+=item * C<< prerotate ? string >>
+
+=item * C<< postrotate ? string >>
+
+=item * C<< firstaction ? string >>
+
+=item * C<< lastaction ? string >>
+
+=back
+
+=back
 
 =cut

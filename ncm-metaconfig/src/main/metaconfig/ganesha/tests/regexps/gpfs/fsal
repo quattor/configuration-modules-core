@@ -1,0 +1,7 @@
+Tests for fsal gpfs
+---
+multiline
+metaconfigservice=/etc/ganesha/ganesha.nfsd.conf
+---
+^FSAL {
+^\s{4}Max_FS_calls\s=\s0;

@@ -1,0 +1,10 @@
+[% FOREACH rule IN main %]
+[[% rule.name %]]
+[%      IF rule.default -%]
+default = True
+[%-      ELSE %]
+pattern = [% rule.pattern %]
+[%-     END %]
+destinations = [% rule.destinations.join(',') %]
+continue = [% rule.continue ? "True" : "False" %]
+[% END %]

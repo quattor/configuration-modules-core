@@ -7,13 +7,14 @@
 <artifactId>openldap</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>15.2.1-SNAPSHOT</version>
 <name>OpenLDAP NCM component.</name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.42</version>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -41,16 +42,5 @@
     </contributor>
   </contributors>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
+  
 </project>

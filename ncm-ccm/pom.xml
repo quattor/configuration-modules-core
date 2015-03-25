@@ -6,14 +6,15 @@
   <artifactId>ccm</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>15.2.1-SNAPSHOT</version>
   <name>ccm NCM component.</name>
 
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.42</version>
+    <relativePath />
   </parent>
 
   <licenses>

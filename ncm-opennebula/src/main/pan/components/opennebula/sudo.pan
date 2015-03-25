@@ -3,11 +3,15 @@
 # ${author-info}
 # ${build-info}
 
+@{
+sudo template sets the sudoers file.
+oneadmin user should be able to restart libvirt services
+and set virsh secret (Ceph) in each hypervisor.
+@}
 
 unique template components/${project.artifactId}/sudo;
 
 include 'components/sudo/config';
-
 
 "/software/components/sudo/privilege_lines" = {
      sudolist = list(

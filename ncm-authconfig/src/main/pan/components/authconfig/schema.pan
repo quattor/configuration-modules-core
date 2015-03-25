@@ -16,8 +16,8 @@ include {'components/${project.artifactId}/sssd-tls'};
 type yesnostring = string with match(SELF,"yes|no");
 
 type authconfig_pamadditions_line_type = {
-  "order"       : string with match(SELF,"first|last")
-  "entry"       : string
+  "order"       : string with match(SELF, 'first|last')
+  "entry"       : string with match(SELF, '\S+\.so')
 };
 
 type authconfig_pamadditions_type = {

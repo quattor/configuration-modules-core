@@ -1,0 +1,11 @@
+Base test for bwctld_conf
+---
+multiline
+/etc/bwctld/bwctld.conf
+---
+^allow_unsync\s+1$
+^control_timeout\s+7200$
+^group\s+bwctl$
+^iperf_port\s+5001$
+^nuttcp_port\s+5006$
+^user\s+bwctl$

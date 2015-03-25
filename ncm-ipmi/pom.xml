@@ -6,13 +6,14 @@
   <artifactId>ipmi</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>15.2.1-SNAPSHOT</version>
   <name>Used to manage trivial IPMI configuration</name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.42</version>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -29,16 +30,5 @@
       <email>philippo@lal.in2p3.fr</email>
     </developer>
   </developers>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
+  
 </project>
