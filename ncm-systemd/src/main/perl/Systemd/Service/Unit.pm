@@ -136,6 +136,11 @@ our %EXPORT_TAGS = (
     types   => \@TYPES,
 );
 
+# TODO add option or method to modify this default.
+# Boolean to indicate that a unit is considered active if there is
+# another unit that is active and triggers it.
+my $active_trigger_is_active = 1;
+
 # Cache of the unitfiles for service and target
 my $unit_cache = {};
 
@@ -462,8 +467,8 @@ sub get_aliases
 
     my $res = {};
 
-    $self->fill_cache($units, 
-                      force => $opts{force} ? 1 : 0, 
+    $self->fill_cache($units,
+                      force => $opts{force} ? 1 : 0,
                       possible_missing => $opts{possible_missing});
 
     foreach my $unit (@$units) {
@@ -482,8 +487,8 @@ sub get_aliases
 =item possible_missing
 
 Given the hashref C<units> with key unit and value the unit's details,
-return a array ref with units that are "possible missing". 
-Such units will not cause an error to be logged if they are not 
+return a array ref with units that are "possible missing".
+Such units will not cause an error to be logged if they are not
 found in the cache during certain methods (e.g. C<make_cache_alias>).
 
 =cut
@@ -513,7 +518,7 @@ sub possible_missing
 
 =item is_possible_missing
 
-Determine if C<unit> is C<possible_missing> 
+Determine if C<unit> is C<possible_missing>
 (see C<make_cache_alias>). (Returns 0 or 1).
 
 A unit is possible_missing if
@@ -834,7 +839,7 @@ sub make_cache_alias
 
 =item fill_cache
 
-Fill the C<unit_cache> and C<unit_alias map> 
+Fill the C<unit_cache> and C<unit_alias map>
 for the arrayref C<units> provided.
 
 The cache is updated via the C<make_cache_alias> method if the unit
@@ -941,8 +946,16 @@ sub get_unit_show
 
     my $val = $show->{$property};
 
-    $self->verbose("get_unit_show $unittxt property $property value ",
-                   defined($val) ? "$val" : "<undefined>");
+    my $msg;
+    if(ref($val) eq "ARRAY") {
+        $msg = join(',', @$val);
+    } elsif(defined($val)) {
+        $msg = "$val";
+    } else {
+        $msg = "<undefined>";
+    }
+
+    $self->verbose("get_unit_show $unittxt property $property value $msg.");
 
     return $val;
 }
@@ -991,7 +1004,7 @@ sub get_wantedby
         if (! defined($deps)) {
             # In case of failure.
             $self->error("get_wantedby: systemctl_list_deps for unit $unit and reverse=1 returned undef. ",
-                         "Returning empy hashref here, not storing it in cache.");
+                         "Returning empty hashref here, not storing it in cache.");
             return {};
         }
 
@@ -1115,6 +1128,29 @@ sub is_active
             }
             $self->verbose("is_active max tries $tries reached for updating $msg. ",
                            "Forced mapping to $active.");
+        }
+    }
+
+    # Always parse this, even if active_trigger_is_active is false,
+    # because you can get messages from systemctl like
+    #   Warning: Stopping X.service, but it can still be activated by:
+    #       X.socket
+    if ($active ne $ACTIVE_ACTIVE) {
+        # Look for any active TriggeredBy units
+        my $triggeredby = $self->get_unit_show($unit, $PROPERTY_TRIGGEREDBY, force => $opts{force});
+        foreach my $unit_that_triggers (@$triggeredby) {
+            if($self->is_active($unit_that_triggers, %opts)) {
+                my $msg = '';
+                if ($active_trigger_is_active) {
+                    $active = $ACTIVE_ACTIVE;
+                } else {
+                    $msg = "not ";
+                }
+                $self->verbose("is_active: unit $unit itself is not active (is $active), ",
+                               "but has active unit $unit_that_triggers that triggers it. ",
+                               "This unit is considered ${msg}active.");
+
+            }
         }
     }
 

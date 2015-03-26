@@ -377,9 +377,19 @@ $cmp->{ERROR} = 0;
 # active
 ok($unit->is_active('ncm-cdispd.service'),
    'is_active Active ncm-cdispd.service (SYSV) is active');
+
 # inactive
-ok(! $unit->is_active('cups.service'),
-   'is_active Inactive cups.service is not active');
+ok(! $unit->is_active('tmp.mount'),
+   'is_active Inactive tmp.mount is not active');
+
+# inactive but active trigger
+is($unit->get_unit_show('cups.service', 'ActiveState'),
+   'inactive',
+   'get_unit_show cups.service ActiveState'
+    );
+ok($unit->is_active('cups.service'),
+   'is_active Inactive cups.service has active trigger and is thus considered active');
+
 # failed
 ok(! $unit->is_active('rc-local.service'),
    'is_active Failed rc-local.service is not active');
