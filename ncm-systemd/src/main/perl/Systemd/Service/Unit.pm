@@ -1138,18 +1138,21 @@ sub is_active
     if ($active ne $ACTIVE_ACTIVE) {
         # Look for any active TriggeredBy units
         my $triggeredby = $self->get_unit_show($unit, $PROPERTY_TRIGGEREDBY, force => $opts{force});
-        foreach my $unit_that_triggers (@$triggeredby) {
-            if($self->is_active($unit_that_triggers, %opts)) {
-                my $msg = '';
-                if ($active_trigger_is_active) {
-                    $active = $ACTIVE_ACTIVE;
-                } else {
-                    $msg = "not ";
-                }
-                $self->verbose("is_active: unit $unit itself is not active (is $active), ",
-                               "but has active unit $unit_that_triggers that triggers it. ",
-                               "This unit is considered ${msg}active.");
+        if ($triggeredby && @$triggeredby) {
+            $self->fill_cache($triggeredby, force => $opts{force});
+            foreach my $unit_that_triggers (@$triggeredby) {
+                if($self->is_active($unit_that_triggers, %opts)) {
+                    my $msg = '';
+                    if ($active_trigger_is_active) {
+                        $active = $ACTIVE_ACTIVE;
+                    } else {
+                        $msg = "not ";
+                    }
+                    $self->verbose("is_active: unit $unit itself is not active (is $active), ",
+                                   "but has active unit $unit_that_triggers that triggers it. ",
+                                   "This unit is considered ${msg}active.");
 
+                }
             }
         }
     }
