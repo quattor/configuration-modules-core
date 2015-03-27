@@ -18,7 +18,11 @@ include 'components/sudo/config';
          "/sbin/service libvirtd restart",
          "/sbin/service libvirt-guests restart",
          '/usr/bin/virsh secret-set-value *',
-         '/usr/bin/virsh secret-define *'
+         '/usr/bin/virsh secret-define *',
+         '/usr/sbin/iptables',
+         '/usr/sbin/ebtables',
+         '/usr/bin/ovs-vsctl',
+         '/usr/bin/ovs-ofctl'
      );
      foreach (i; cmd; sudolist){
          nl = nlist("host", "ALL",

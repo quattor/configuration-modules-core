@@ -247,6 +247,8 @@ type component_opennebula = {
     'untouchables'  : opennebula_untouchables
     'oned'          : opennebula_oned
     'ssh_multiplex' : boolean = true
+    'host_ovs'      ? boolean
+    'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = nlist();
 

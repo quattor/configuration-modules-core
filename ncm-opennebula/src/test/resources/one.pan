@@ -75,4 +75,6 @@ prefix "/software/components/opennebula";
 );
 
 "ssh_multiplex" = true;
+"host_hyp" = "kvm";
+"host_ovs" = true;
 "tm_system_ds" = "ssh";

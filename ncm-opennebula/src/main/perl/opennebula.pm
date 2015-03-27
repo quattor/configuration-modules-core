@@ -361,11 +361,22 @@ sub manage_something
 sub manage_hosts
 {
     my ($self, $one, $type, $resources, %protected) = @_;
-    my $new;
+    my ($new, $vnm_mad);
     my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
     my %newhosts = map { $_ => 1 } @$hosts;
     my (@rmhosts, @failedhost);
+
+    if (exists($resources->{host_ovs}) and $resources->{host_ovs}) {
+        if ($type eq "kvm") {
+            $vnm_mad = "ovswitch";
+        } elsif ($type eq "xen") {
+            $vnm_mad = "ovswitch_brcompat";
+        }
+    } else {
+        $vnm_mad = "dummy";
+    }
+
     foreach my $t (@existhost) {
         # Remove the host only if there are no VMs running on it
         if (exists($protected{$t->name})) {
@@ -586,6 +597,8 @@ sub Configure
     my $tm_system_ds = $tree->{tm_system_ds};
     # untouchables resources
     my $untouchables = $tree->{untouchables};
+    # hypervisor type
+    my $hypervisor = $tree->{host_hyp};
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
@@ -617,7 +630,7 @@ sub Configure
         $self->info("Updated system datastore TM_MAD = $tm_system_ds");
     }
 
-    my $hypervisor = "kvm";
+    #my $hypervisor = "kvm";
     $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
 
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
