@@ -400,7 +400,7 @@ sub manage_hosts
             'name'    => $host, 
             'im_mad'  => $type, 
             'vmm_mad' => $type, 
-            'vnm_mad' => "dummy"
+            'vnm_mad' => $vnm_mad
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
