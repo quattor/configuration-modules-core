@@ -181,6 +181,9 @@ sub Configure {
                 ## add rest of ethtool opts
                 my $opts = $element->getTree();
                 $net{$ifacename}{$elementname}=$opts;
+            } elsif ($elementname =~ m/^ipv6addr_secondaries$/) {
+                my $opts = $element->getTree();
+                $net{$ifacename}{$elementname}=$opts;
             } else {
                 $net{$ifacename}{$elementname} = $element->getValue();
             }
@@ -402,6 +405,81 @@ sub Configure {
             $text .= "SLAVE=yes\n";
         }
 
+        # IPv6 additions
+        my $use_ipv6 = undef;
+
+        if (exists($net{$iface}{'ipv6addr'}) && $net{$iface}{'ipv6addr'}) {
+            $text .= "IPV6ADDR=".$net{$iface}{'ipv6addr'}."\n";
+            $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{'ipv6addr_secondaries'})) {
+            my $addrlist = "";
+            foreach my $addr (@{$net{$iface}{'ipv6addr_secondaries'}}) {
+                if ( $addrlist ne "" ) { $addrlist .= " "; }
+              $addrlist .= "$addr";
+            }
+            if ( $addrlist ne "" ) { $text .= "IPV6ADDR_SECONDARIES=\"".$addrlist."\"\n"; }
+            $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{ipv6_autoconf})) {
+            if ( $net{$iface}{ipv6_autoconf} eq "true") {
+                $text .= "IPV6_AUTOCONF=yes\n";
+                $use_ipv6 = 1;
+            } else {
+                $text .= "IPV6_AUTOCONF=no\n";
+                if ( ! $net{$iface}{'ipv6addr'}) {
+                    $self->warn("Disabled IPv6 autoconf but no address configured for $iface");
+                }
+            }
+        }
+        if (exists($net{$iface}{'ipv6_rtr'}) ) {
+          if ( $net{$iface}{'ipv6_rtr'} eq "true" ) {
+                $text .= "IPV6_ROUTER=yes\n";
+          } else {
+                $text .= "IPV6_ROUTER=no\n";
+          }
+          $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{'ipv6_mtu'}) && $net{$iface}{'ipv6_mtu'}) {
+            $text .= "IPV6_MTU=".$net{$iface}{'ipv6_mtu'}."\n";
+            $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{'ipv6_privacy'}) && $net{$iface}{'ipv6_privacy'}) {
+            $text .= "IPV6_PRIVACY=".$net{$iface}{'ipv6_privacy'}."\n";
+            $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{'ipv6_failure_fatal'}) ) {
+          if ( $net{$iface}{'ipv6_failure_fatal'} eq "true" ) {
+                $text .= "IPV6_FAILURE_FATAL=yes\n";
+          } else {
+                $text .= "IPV6_FAILURE_FATAL=no\n";
+          }
+          $use_ipv6 = 1;
+        }
+        if (exists($net{$iface}{'ipv4_failure_fatal'}) ) {
+          if ( $net{$iface}{'ipv4_failure_fatal'} eq "true" ) {
+                $text .= "IPV4_FAILURE_FATAL=yes\n";
+          } else {
+                $text .= "IPV4_FAILURE_FATAL=no\n";
+          }
+        }
+        if (exists($net{$iface}{ipv6init}) ) {
+          # ipv6_init overrides implicit IPv6 enable by config
+          if ( $net{$iface}{ipv6init} eq "true") {
+              $use_ipv6 = 1;
+            } else {
+              $use_ipv6 = 0;
+            }
+        }
+        if ( defined ( $use_ipv6 ) ) {
+            if ( $use_ipv6 ) {
+              $text .= "IPV6INIT=yes\n";
+          } else {
+              $text .= "IPV6INIT=no\n";
+          }
+        }
+        # IPv6 configuration now complete -------------------------
+
         # LINKDELAY
         if (exists($net{$iface}{linkdelay})) {
             $text .= "LINKDELAY=".$net{$iface}{linkdelay}."\n";
@@ -607,6 +685,32 @@ sub Configure {
         } else {
             $text .= "NM_CONTROLLED=no\n";
         }
+    }
+    # Enable and config IPv6 if either set explicitly or v6 config is present
+    # but note that the order of the v6 directive processing is important to
+    # make the 'default' enable do the right thing
+    if ($config->elementExists($path."/ipv6")) {
+        my $use_ipv6 = 0;
+        if ($config->elementExists($path."/ipv6/default_gateway")) {
+            $text .= "IPV6_DEFAULTGW=".$config->getValue($path."/ipv6/default_gateway")."\n";
+          $use_ipv6 = 1; # enable ipv6 for now
+        }
+        if ($config->elementExists($path."/ipv6/gatewaydev")) {
+            $text .= "IPV6_DEFAULTDEV=".$config->getValue($path."/ipv6/gatewaydev")."\n";
+          $use_ipv6 = 1; # enable ipv6 for now
+        }
+        if ($config->elementExists($path."/ipv6/enabled")) {
+            if ($config->getValue($path."/ipv6/enabled") eq "true") {
+                $use_ipv6 = 1;
+            } else {
+                $use_ipv6 = 0;
+            }
+        }
+      if ( $use_ipv6 ) {
+            $text .= "NETWORKING_IPV6=yes\n";
+      } else {
+            $text .= "NETWORKING_IPV6=no\n";
+      }
     }
 
     $exifiles{$file_name}=file_dump($file_name,$text,FAILED_SUFFIX);

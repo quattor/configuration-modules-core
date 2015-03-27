@@ -146,6 +146,17 @@ type structure_interface = {
     "ovs_tunnel_type" ? string with match(SELF, '^(gre|vxlan)$')
     "ovs_tunnel_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
     "ovs_patch_peer" ? string
+
+    "ipv6init" ? boolean
+    "ipv6addr" ? type_network_name
+    "ipv6addr_secondaries" ? type_network_name[]
+    "ipv6_rtr" ? boolean
+    "ipv6_mtu" ? long
+    "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
+    "ipv6_autoconf" ? boolean
+    "ipv6_failure_fatal" ? boolean
+    "ipv4_failure_fatal" ? boolean
+
 } with {
     if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
         error("An OVSBridge interface cannot have the ovs_bridge option defined");
@@ -181,6 +192,16 @@ type structure_interface = {
 
 type structure_router = string[];
 
+############################################################
+# IPv6 global settings
+#
+############################################################
+
+type structure_ipv6 = {
+    "enabled" ?  boolean
+    "default_gateway"  ? type_ip
+    "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
+};
 
 ############################################################
 #
@@ -202,4 +223,5 @@ type structure_network = {
     "allow_nm"         ? boolean
     "primary_ip"       ? string
     "routers"          ? structure_router{}
+    "ipv6"             ? structure_ipv6
 };
