@@ -396,7 +396,7 @@ sub Configure
             }
             $use_ipv6 = 1;
         }
-        if (defined($net{$iface}{'ipv6_mtu'}) && $net{$iface}{'ipv6_mtu'}) {
+        if (defined($net{$iface}{'ipv6_mtu'})) {
             $text .= "IPV6_MTU=".$net{$iface}{'ipv6_mtu'}."\n";
             $use_ipv6 = 1;
         }

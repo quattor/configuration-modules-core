@@ -153,7 +153,7 @@ type structure_interface = {
     "ipv4_failure_fatal" ? boolean
     "ipv6_autoconf" ? boolean
     "ipv6_failure_fatal" ? boolean
-    "ipv6_mtu" ? long
+    "ipv6_mtu" ? long(1..)
     "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
     "ipv6_rtr" ? boolean
     "ipv6addr" ? type_network_name
@@ -198,7 +198,7 @@ type structure_router = string[];
 type structure_ipv6 = {
     "enabled" ?  boolean
     "default_gateway"  ? type_ip
-    "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
+    "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF) # sets IPV6_DEFAULTDEV
 };
 
 @documentation{
