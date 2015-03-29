@@ -1,5 +1,11 @@
 object template ovs;
 
+include 'pan/types';
+include 'components/network/core-schema';
+
+bind "/system/network" = structure_network;
+
+
 "/system/network" = create("defaultnetwork");
 
 "/system/network/interfaces/br-ex" = nlist(

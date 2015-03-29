@@ -26,6 +26,8 @@ like($bfh, qr/^TYPE=OVSBridge$/m, "set type for the OVS bridge");
 like($bfh, qr/^DEVICETYPE='ovs'$/m, "set device_type as ovs");
 like($bfh, qr/^BOOTPROTO=static$/m, "set bootproto for the OVS bridge");
 
+unlike($bfh, qr/IPV6/, "No IPv6 config details");
+
 my $ifh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
 isa_ok($ifh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
 
@@ -33,5 +35,7 @@ like($ifh, qr/^TYPE=OVSPort$/m, "set type for the OVS port");
 like($ifh, qr/^DEVICETYPE='ovs'$/m, "set device_type as ovs");
 like($ifh, qr/^OVS_BRIDGE='br-ex'$/m, "set bridge for the OVS port");
 like($ifh, qr/^BOOTPROTO=none$/m, "set bootproto for the OVS port");
+
+unlike($ifh, qr/IPV6/, "No IPv6 config details");
 
 done_testing();
