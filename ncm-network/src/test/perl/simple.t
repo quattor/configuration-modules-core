@@ -2,12 +2,10 @@
 use strict;
 use warnings;
 use Test::More;
-use CAF::Object;
 use Test::Quattor qw(simple);
+
+use helper;
 use NCM::Component::network;
-
-
-$CAF::Object::NoAction = 1;
 
 =pod
 
