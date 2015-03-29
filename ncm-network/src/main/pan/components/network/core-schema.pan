@@ -153,7 +153,7 @@ type structure_interface = {
     "ipv4_failure_fatal" ? boolean
     "ipv6_autoconf" ? boolean
     "ipv6_failure_fatal" ? boolean
-    "ipv6_mtu" ? long(1..)
+    "ipv6_mtu" ? long(1280..65536)
     "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
     "ipv6_rtr" ? boolean
     "ipv6addr" ? type_network_name
