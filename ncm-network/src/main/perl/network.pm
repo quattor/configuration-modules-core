@@ -303,6 +303,31 @@ sub Configure {
         ### set the networktype
         if ( $net{$iface}{'type'} ) {
             $text .= "TYPE=".$net{$iface}{'type'}."\n";
+            ### Set OVS related variables
+            if ($net{$iface}{'type'} =~ /^OVS/) {
+                $text .= "DEVICETYPE='ovs'\n";
+                if ($net{$iface}{'ovs_bridge'}) {
+                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
+                }
+                if ($net{$iface}{'ovs_opts'}) {
+                    $text .= "OVS_OPTIONS='$net{$iface}{ovs_opts}'\n";
+                }
+                if ($net{$iface}{'ovs_extra'}) {
+                    $text .= "OVS_EXTRA='$net{$iface}{ovs_extra}'\n";
+                }
+                if ($net{$iface}{'bond_ifaces'}) {
+                    $text .= "BOND_IFACES=".join(' ',$net{$iface}{bond_ifaces})."\n";
+                }
+                if ($net{$iface}{'ovs_tunnel_type'}) {
+                    $text .= "OVS_TUNNEL_TYPE='$net{$iface}{ovs_tunnel_type}'\n";
+                }
+                if ($net{$iface}{'ovs_tunnel_opts'}) {
+                    $text .= "OVS_TUNNEL_OPTIONS='$net{$iface}{ovs_tunnel_opts}'\n";
+                }
+                if ($net{$iface}{'ovs_patch_peer'}) {
+                    $text .= "OVS_PATCH_PEER='$net{$iface}{ovs_patch_peer}'\n";
+                }
+            }
         } else {
             $text .= "TYPE=Ethernet\n";
         }

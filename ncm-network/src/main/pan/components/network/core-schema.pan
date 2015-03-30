@@ -113,7 +113,7 @@ type structure_interface = {
     "driver"  ? string
     "bootproto" ? string
     "onboot" ? string
-    "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL)$')
+    "type"    ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVSBridge|OVSPort|OVSIntPort|OVSBond|OVSTunnel|OVSPatchPort)$')
     "device"  ? string
     "master" ? string
     "mtu"       ? long
@@ -138,6 +138,38 @@ type structure_interface = {
     "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
     "delay" ? long # brctl setfd DELAY
     "bridging_opts" ? structure_bridging_options
+
+    "ovs_bridge" ? string with exists ("/system/network/interfaces/" + SELF)
+    "ovs_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
+    "ovs_extra" ? string
+    "bond_ifaces" ? string[]
+    "ovs_tunnel_type" ? string with match(SELF, '^(gre|vxlan)$')
+    "ovs_tunnel_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
+    "ovs_patch_peer" ? string
+} with {
+    if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
+        error("An OVSBridge interface cannot have the ovs_bridge option defined");
+    };
+    if ( exists(SELF['ovs_tunnel_type']) && (!exists(SELF['type']) || SELF['type'] != 'OVSTunnel')) {
+        error("ovs_tunnel_bridge is defined but the type of interface is not defined as OVSTunnel");
+    };
+    if ( exists(SELF['ovs_tunnel_opts']) && (!exists(SELF['type']) || SELF['type'] != 'OVSTunnel')) {
+        error("ovs_tunnel_opts is defined but the type of interface is not defined as OVSTunnel");
+    };
+    if ( exists(SELF['ovs_patch_peer']) && (!exists(SELF['type']) || SELF['type'] != 'OVSPatchPort')) {
+        error("ovs_patch_peer is defined but the type of interface is not defined as OVSPatchPort");
+    };
+    if ( exists(SELF['bond_ifaces']) ) {
+        if ( (!exists(SELF['type']) || SELF['type'] != 'bond_ifaces') ) {
+            error("bond_ifaces is defined but the type of interface is not defined as OVSBond");
+        };
+        foreach (i;iface;bond_ifaces) {
+             if ( !exists("/system/network/interfaces/" + iface) ) {
+                 error("The " + iface + " interface is used by bond_ifaces, but does not exist");
+             };
+        };
+    };
+    true;
 };
 
 
