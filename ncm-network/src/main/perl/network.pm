@@ -189,7 +189,7 @@ sub Configure
                 $net{$ifacename}{'set_hwaddr'} = 'false';
             }
         } else {
-            my $msg = "No value found for the hwaddr of interface ",
+            my $msg = "No value found for the hwaddr of interface ".
                       "$ifacename. Setting set_hwaddr to false.";
             if ($ifacename =~ m/^(bond|vlan|ib)/) {
                 my $hr_ifacename = $1;
@@ -216,20 +216,22 @@ sub Configure
     # devices. add regexp at will
     my $dev_regexp='-((eth|seth|em|bond|br|vlan|usb|ib|p\d+p)\d+(\.\d+)?)';
     # $1 is the device name
-    foreach my $file (grep(/$dev_regexp/,readdir(DIR))) {
+    foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
+        my $msg;
         if ( -l "$dir_pref/$file" ) {
             # keep the links separate
             $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
-            $self->debug(3, "Found ifcfg link $file in dir ".$dir_pref);
+            $msg = "link";
         } else {
             $exifiles{"$dir_pref/$file"} = -1;
-            $self->debug(3, "Found ifcfg file $file in dir ".$dir_pref);
+            $msg = "file";
             # backup all involved files
-            if ($file = ~m/([:A-Za-z0-9.-]*)/) {
-                my $untaint_file=$1;
+            if ($file =~ m/([:A-Za-z0-9.-]*)/) {
+                my $untaint_file = $1;
                 mk_bu("$dir_pref/$untaint_file");
             }
         }
+        $self->debug(3, "Found ifcfg file $msg in dir ".$dir_pref);
     }
     closedir(DIR);
 
@@ -680,7 +682,7 @@ sub Configure
             if ($exifiles{$file} != 0) {
                 $self->debug(3, "exifiles file $file with non-zero value found: ".$exifiles{$file});
                 $ifdown{$if} = 1;
-                # bonding: if you bring down a slave, allways bring
+                # bonding: if you bring down a slave, always bring
                 # down it's master
                 if (exists($net{$if}{'master'})) {
                     $ifdown{$net{$if}{'master'}} = 1;
