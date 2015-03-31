@@ -1,0 +1,21 @@
+[%- attr_string = ['instance', 'listen_addr', 'admin_addr', 'http_addr',
+             'spool_dir', 'log_level'] -%]
+[%- FOREACH attr IN attr_string -%]
+[%     attr %] = "[%- ${attr} -%]"
+[% END -%]
+init = [
+[%- FOREACH entry IN init %]
+[%     FILTER indent -%]
+[%-         IF entry.exists('addRoute');
+                INCLUDE 'metaconfig/carbon-relay-ng/addRoute.tt' data=entry.addRoute;
+            END -%]
+[%-         IF entry.exists('addBlack') -%]
+"addBlack [%- entry.addBlack.match -%]"
+[%-         END -%]
+,
+[%-     END -%]
+[%- END %]
+]
+[% IF instrumentation.defined;
+        INCLUDE 'metaconfig/carbon-relay-ng/instrumentation.tt' data=instrumentation;
+    END -%]
