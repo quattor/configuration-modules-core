@@ -170,17 +170,17 @@ sub generate_general_options {
         foreach my $b (BOOLEAN_OPTS) {
             if (defined $opts{$b}) {
                 if ($opts{$b}->getValue eq 'true') {
-                    $ln .= "$b\t";
+                    $ln .= "$b,";
                 } else {
-                    $ln .= "!$b\t";
+                    $ln .= "!$b,";
                 }
             }
         }
         foreach my $o (INT_OPTS, STRING_OPTS) {
-            $ln .= "$o=" . $opts{$o}->getValue . "\t"
+            $ln .= "$o=" . $opts{$o}->getValue . ","
             if defined $opts{$o};
         }
-        $ln =~ s{\t$}{};
+        $ln =~ s{[\s,]$}{};
         push (@$dfl, $ln);
     }
     return $dfl;
