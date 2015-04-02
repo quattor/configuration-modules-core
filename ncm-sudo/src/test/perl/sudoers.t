@@ -46,7 +46,7 @@ $aliases = { $USER => ["u"],
 	     $CMD => ["c"],
 	     $HOST => ["h"]
 	   };
-$opts = ["\to"];
+$opts = ["\t!insults,requiretty"];
 $lns = ["l"];
 $includes = ["i"];
 $includes_dirs = ["id"];
@@ -65,7 +65,7 @@ like($fh, qr{^Runas_Alias\s+r$}m, "Runas aliases generated");
 like($fh, qr{^Cmnd_Alias\s+c$}m, "Command aliases generated");
 like($fh, qr{^Host_Alias\s+h$}m, "Host aliases generated");
 like($fh, qr{^#include i$}m, "Include lines generated");
-like($fh, qr{^Defaults\s+o$}m, "Defaults lines generated");
+like($fh, qr{^Defaults\s+!insults,requiretty$}m, "Defaults lines generated");
 like($fh, qr{^l$}m, "Privilege lines generated");
 like($fh, qr{^#includedir id$}m, "Includedir lines generated");
 
