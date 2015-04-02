@@ -32,9 +32,9 @@ is($o->[1], '@h', "host defaults correctly processed");
 is($o->[2], ':u', "user defaults correctly processed");
 is($o->[3], '!c', 'command defaults correctly processed');
 is($o->[4], "", "No modifier leads to empty line heading");
-like($o->[5], qr{^\s*listpw\s*=\s*hello\s*$}, "String defaults correctly processed");
-like($o->[6], qr{^\s*loglinelen\s*=\s*5\s*$}, "Integer defaults correctly processed");
-like($o->[7], qr{^\s*!insults,requiretty,editor=vim\s*$}, "List with boolean and string defaults correctly processed");
+like($o->[5], qr{^\s+listpw\s*=\s*hello\s*$}, "String defaults correctly processed");
+like($o->[6], qr{^\s+loglinelen\s*=\s*5\s*$}, "Integer defaults correctly processed");
+like($o->[7], qr{^\s+!insults,requiretty,editor=vim\s*$}, "List with boolean and string defaults correctly processed");
 
 $cfg = get_config_for_profile('profile_empty');
 $o = $cmp->generate_general_options($cfg);
