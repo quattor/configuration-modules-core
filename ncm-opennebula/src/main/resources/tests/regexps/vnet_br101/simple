@@ -7,5 +7,4 @@ multiline
 ^GATEWAY\s?=\s?".+"\s*$
 ^NAME\s?=\s?".+"\s*$
 ^NETWORK_MASK\s?=\s?".+"\s*$
-^TYPE\s?=\s?".+"\s*$
 ^QUATTOR\s?=\s?\d+\s*$

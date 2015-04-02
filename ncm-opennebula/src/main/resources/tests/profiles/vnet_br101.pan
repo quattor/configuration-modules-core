@@ -8,7 +8,6 @@ bind "/metaconfig/contents/vnet" = opennebula_vnet;
 
 prefix "/metaconfig/contents/vnet";
 "name" = "node2.cubone.os";
-"type" = "FIXED";
 "bridge" = "br101";
 "gateway" = "10.141.10.250";
 "dns" = "10.141.10.250";

@@ -110,6 +110,22 @@ $cmds{rpc_create_newvnet2}{params} = [$data, -1];
 $cmds{rpc_create_newvnet2}{method} = "one.vn.allocate";
 $cmds{rpc_create_newvnet2}{out} = 88;
 
+$data = <<'EOF';
+BRIDGE = "br100"
+BRIDGE_OVS = "ovsbr0"
+DNS = "10.141.3.250"
+GATEWAY = "10.141.3.250"
+NAME = "pool.altaria.os"
+NETWORK_MASK = "255.255.0.0"
+TYPE = "IP4"
+VLAN = "YES"
+VLAN_ID = "0"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newvnet2}{params} = [$data, -1];
+$cmds{rpc_create_newvnet2}{method} = "one.vn.allocate";
+$cmds{rpc_create_newvnet2}{out} = 98;
+
 $cmds{rpc_delete_vnet}{params} = [68];
 $cmds{rpc_delete_vnet}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet}{out} = 68;
@@ -117,6 +133,10 @@ $cmds{rpc_delete_vnet}{out} = 68;
 $cmds{rpc_delete_vnet2}{params} = [88];
 $cmds{rpc_delete_vnet2}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet2}{out} = 88;
+
+$cmds{rpc_delete_vnet2}{params} = [98];
+$cmds{rpc_delete_vnet2}{method} = "one.vn.delete";
+$cmds{rpc_delete_vnet2}{out} = 98;
 
 $cmds{rpc_list_vnetspool}{params} = [-2, -1, -1];
 $cmds{rpc_list_vnetspool}{method} = "one.vnpool.info";

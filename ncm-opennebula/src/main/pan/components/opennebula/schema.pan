@@ -9,6 +9,7 @@ include 'quattor/schema';
 include 'pan/types';
 
 type uuid = string with match(SELF,'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
+type macaddr = string with match(SELF, '([0-9A-F]{2}[:-]){5}([0-9A-F]{2})');
 
 type directory = string with match(SELF,'[^/]+/?$');
 
@@ -133,6 +134,19 @@ type opennebula_ceph_datastore = {
     "rbd_format"                ? long(1..2)
 };
 
+@{ 
+type for vnet ars specific attributes. 
+type and size are mandatory 
+@}
+type opennebula_ar = {
+    "type"                      : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
+    "ip"                        ? type_ipv4
+    "size"                      : long (1..)
+    "mac"                       ? macaddr
+    "global_prefix"             ? string
+    "ula_prefix"                ? string
+};
+
 @{ type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph) @}
 type opennebula_datastore = {
     include opennebula_ceph_datastore
@@ -147,11 +161,14 @@ type opennebula_datastore = {
 
 type opennebula_vnet = {
     "name" : string
-    "type" : string  = 'FIXED'
     "bridge" : string
     "gateway" : type_ipv4
     "dns" : type_ipv4
     "network_mask" : type_ipv4
+    "bridge_ovs" ? string
+    "vlan" ? boolean
+    "vlan_id" ? long(0..4095)
+    "ar" ? opennebula_ar
 };
 
 type opennebula_user = {
