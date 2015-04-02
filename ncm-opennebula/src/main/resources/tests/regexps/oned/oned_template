@@ -57,7 +57,7 @@ multiline
 ^INHERIT_VNET_ATTR\s?=\s?"BRIDGE_OVS"$
 ^LOG\s?=\s?\[$
 ^\s{4}debug_level\s?=\s?3,$
-^\s{4}system\s?=\s?"file"$
+^\s{4}system\s?=\s?"syslog"$
 ^\]$
 ^MAC_PREFIX\s?=\s?"02:00"$
 ^MONITORING_INTERVAL\s?=\s?60$

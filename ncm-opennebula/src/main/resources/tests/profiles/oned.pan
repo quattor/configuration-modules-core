@@ -15,5 +15,9 @@ prefix "/metaconfig/contents/oned";
     "passwd", "my-fancy-pass",
     "db_name", "opennebula",
 );
+"log" = nlist(
+    "system", "syslog",
+    "debug_level", 3,
+);
 "default_device_prefix" = "vd";
 "onegate_endpoint" = "http://hyp004.cubone.os:5030";
