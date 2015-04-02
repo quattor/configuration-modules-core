@@ -168,17 +168,12 @@ sub generate_general_options {
         }
         my %opts = $def{PRIVILEGE_OPTS()}->getHash;
         foreach my $b (BOOLEAN_OPTS) {
-            if (defined $opts{$b}) {
-                if ($opts{$b}->getValue eq 'true') {
-                    $ln .= "$b,";
-                } else {
-                    $ln .= "!$b,";
-                }
-            }
+            $ln .= ($opts{$b}->getValue eq 'true' ? '' : '!' ). "$b,"
+                if (defined $opts{$b});
         }
         foreach my $o (INT_OPTS, STRING_OPTS) {
             $ln .= "$o=" . $opts{$o}->getValue . ","
-            if defined $opts{$o};
+                if defined $opts{$o};
         }
         $ln =~ s{[\s,]$}{};
         push (@$dfl, $ln);
