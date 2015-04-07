@@ -1,0 +1,7 @@
+[% FOREACH pair IN Host.pairs %]
+Host [% pair.key %]
+    [% FOREACH option IN pair.value.pairs %]
+        [%-option.key %] [% option.value %]
+    [% END -%]
+[% END -%]
+

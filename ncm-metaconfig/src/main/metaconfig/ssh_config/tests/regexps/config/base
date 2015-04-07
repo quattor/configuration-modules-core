@@ -1,5 +1,6 @@
 Base test for config
 ---
+/etc/ssh/ssh_config
 multiline
 ---
 $wontmatch^
