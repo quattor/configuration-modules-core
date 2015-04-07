@@ -90,7 +90,6 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
-TYPE = "FIXED"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet}{params} = [$data, -1];
@@ -103,7 +102,6 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.vsc"
 NETWORK_MASK = "255.255.0.0"
-TYPE = "FIXED"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet2}{params} = [$data, -1];
