@@ -101,7 +101,9 @@ type opennebula_tm_mad_conf = {
     "shared" : boolean = true
 } = nlist();
 
-@{ check if a specific type of datastore has the right attributes @}
+@documentation{ 
+check if a specific type of datastore has the right attributes
+}
 function is_consistent_datastore = {
     ds = ARGV[0];
     if (ds['ds_mad'] == 'ceph') {
@@ -121,10 +123,10 @@ function is_consistent_datastore = {
     return(true);
 };
 
-@{ 
+@documentation{ 
 type for ceph datastore specific attributes. 
 ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory 
-@}
+}
 type opennebula_ceph_datastore = {
     "ceph_host"                 ? string[]
     "ceph_secret"               ? uuid
@@ -134,10 +136,10 @@ type opennebula_ceph_datastore = {
     "rbd_format"                ? long(1..2)
 };
 
-@{ 
+@documentation{ 
 type for vnet ars specific attributes. 
 type and size are mandatory 
-@}
+}
 type opennebula_ar = {
     "type"                      : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
     "ip"                        ? type_ipv4
@@ -147,7 +149,9 @@ type opennebula_ar = {
     "ula_prefix"                ? string
 };
 
-@{ type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph) @}
+@documentation{ 
+type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph)
+}
 type opennebula_datastore = {
     include opennebula_ceph_datastore
     "name"                      : string
@@ -227,10 +231,10 @@ type opennebula_oned = {
     "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
 };
 
-@{ 
+@documentation{ 
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
-@}
+}
 type opennebula_rpc = {
     "port" : long(0..) = 2633
     "host" : string = 'localhost'
@@ -238,10 +242,10 @@ type opennebula_rpc = {
     "password" : string
 } = nlist();
 
-@{
+@documentation{
 Type that sets the OpenNebula
 untouchable resources
-@}
+}
 type opennebula_untouchables = {
     "datastores" ? string[]
     "vnets" ? string[]
@@ -250,10 +254,10 @@ type opennebula_untouchables = {
 };
 
 
-@{
+@documentation{
 Type to define ONE basic resources
 datastores, vnets, hosts names, etc
-@}
+}
 type component_opennebula = {
     include structure_component
     'datastores'    : opennebula_datastore[1..]
