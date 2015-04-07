@@ -28,15 +28,20 @@ use Storable qw(dclone);
 
 our $EC=LC::Exception::Context->new->will_store_all;
 Readonly::Hash my %ACTIONS => (
-            'compare_mon' => \&compare_mon,
-            'add_mon' => \&add_mon,
-            'compare_osd' => \&compare_osd,
-            'add_osd' => \&add_osd,
-            'compare_mds' => \&compare_mds,
-            'add_mds' => \&add_mds,
-            'compare_gtw' => \&compare_gtw,
-            'add_gtw' => \&add_gtw,
+    add => {
+        mon => \&add_mon,
+        osd => \&add_osd,
+        mds => \&add_mds,
+        gtw => \&add_gtw,
+    },
+    compare => {
+        mon => \&compare_mon,
+        osd => \&compare_osd,
+        mds => \&compare_mds,
+        gtw => \&compare_gtw,
+    }, 
 );
+
 # get hashes out of ceph and from the configfiles , make one structure of it
 sub get_ceph_conf {
     my ($self, $gvalues) = @_;
@@ -109,7 +114,7 @@ sub add_host {
         my @uniqs = qw(mon mds);
         foreach my $dtype (@uniqs) {
             if ($host->{$dtype}) {
-                $ACTIONS{"add_$dtype"}($self, $hostname, $host->{$dtype}, $structures) or return 0;
+                $ACTIONS{add}{$dtype}($self, $hostname, $host->{$dtype}, $structures) or return 0;
             }
         }
         my @multiples = qw(osd gtw);
@@ -117,7 +122,7 @@ sub add_host {
             my $dstype = $dtype . "s";
             if ($host->{$dstype}){
                 while  (my ($key, $daemon) = each(%{$host->{$dstype}})) {
-                    $ACTIONS{"add_$dtype"}($self, $hostname, $key, $daemon, $structures) or return 0;
+                    $ACTIONS{add}{$dtype}($self, $hostname, $key, $daemon, $structures) or return 0;
                 }
             }
         }
@@ -299,9 +304,9 @@ sub compare_host {
         foreach my $dtype (@uniqs) {
             my ($quat_dtype, $ceph_dtype) = ($quat_host->{$dtype}, $ceph_host->{$dtype});
             if ($quat_dtype && $ceph_dtype) {
-                $ACTIONS{"compare_$dtype"}($self, $hostname, $quat_dtype, $ceph_dtype, $structures) or return 0;
+                $ACTIONS{compare}{$dtype}($self, $hostname, $quat_dtype, $ceph_dtype, $structures) or return 0;
             } elsif ($quat_dtype) {
-                $ACTIONS{"add_$dtype"}($self, $hostname, $quat_dtype, $structures) or return 0;
+                $ACTIONS{add}{$dtype}($self, $hostname, $quat_dtype, $structures) or return 0;
             } elsif ($ceph_dtype) {
                 $structures->{destroy}->{$hostname}->{$dtype} = $ceph_dtype;
             }
@@ -312,11 +317,11 @@ sub compare_host {
             if ($quat_host->{$dstype}) {
                 while  (my ($key, $daemon) = each(%{$quat_host->{$dstype}})) {
                     if (exists $ceph_host->{$dstype}->{$key}) {
-                        $ACTIONS{"compare_$dtype"}($self, $hostname, $key, $daemon,
-                        $ceph_host->{$dstype}->{$key}, $structures) or return 0;
+                        $ACTIONS{compare}{$dtype}($self, $hostname, $key, $daemon,
+                            $ceph_host->{$dstype}->{$key}, $structures) or return 0;
                         delete $ceph_host->{$dstype}->{$key};
                     } else {
-                        $ACTIONS{"add_$dtype"}($self, $hostname, $key, $daemon, $structures) or return 0;
+                        $ACTIONS{add}{$dtype}($self, $hostname, $key, $daemon, $structures) or return 0;
                     }
                 }
             }
