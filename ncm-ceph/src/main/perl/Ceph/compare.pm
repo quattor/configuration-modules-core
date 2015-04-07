@@ -61,11 +61,11 @@ sub get_ceph_conf {
 # helper sub to set quattor general and attr config in the hash tree
 sub set_host_attrs {
     my ($self, $master, $hostname, $attr, $value, $fqdn, $config) = @_;
-    my $hosthash = $master->{$hostname} ||= {};
-    $hosthash->{$attr} = $value;
-    $hosthash->{fqdn} = $fqdn;
-    $hosthash->{config} = $config;
-    $master->{$hostname} = $hosthash;
+    my $hosthashref = $master->{$hostname} ||= {};
+    $hosthashref->{$attr} = $value;
+    $hosthashref->{fqdn} = $fqdn;
+    $hosthashref->{config} = $config;
+    $master->{$hostname} = $hosthashref;
 }
     
 # One big quattor tree on a host base
@@ -106,13 +106,13 @@ sub add_host {
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
-        my @uniqs = ('mon', 'mds');
+        my @uniqs = qw(mon mds);
         foreach my $dtype (@uniqs) {
             if ($host->{$dtype}) {
                 $ACTIONS{"add_$dtype"}($self, $hostname, $host->{$dtype}, $structures) or return 0;
             }
         }
-        my @multiples = ('osd', 'gtw');
+        my @multiples = qw(osd gtw);
         foreach my $dtype (@multiples) {
             my $dstype = $dtype . "s";
             if ($host->{$dstype}){
@@ -280,7 +280,8 @@ sub compare_gtw {
     my ($self, $hostname, $gwname, $quat_gtw, $ceph_gtw, $structures) = @_;
     $self->debug(3, "Comparing radosgw section of gateway $gwname on $hostname");
     $self->compare_config('radosgw', $gwname, $quat_gtw->{config}, $ceph_gtw->{config});
-    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config} if ($quat_gtw->{config});;
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config} 
+        if ($quat_gtw->{config});
 }
 
 # Compare different sections of an existing host
@@ -294,17 +295,18 @@ sub compare_host {
         return 0; 
     } else {
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
-        my @uniques = ('mon', 'mds');
-        foreach my $dtype (@uniques) {
-            if ($quat_host->{$dtype} && $ceph_host->{$dtype}) {
-                $ACTIONS{"compare_$dtype"}($self, $hostname, $quat_host->{$dtype}, $ceph_host->{$dtype}, $structures) or return 0;
-            } elsif ($quat_host->{$dtype}) {
-                $ACTIONS{"add_$dtype"}($self, $hostname, $quat_host->{$dtype}, $structures) or return 0;
-            } elsif ($ceph_host->{$dtype}) {
-                $structures->{destroy}->{$hostname}->{$dtype} = $ceph_host->{$dtype};
+        my @uniqs = qw(mon mds);
+        foreach my $dtype (@uniqs) {
+            my ($quat_dtype, $ceph_dtype) = ($quat_host->{$dtype}, $ceph_host->{$dtype});
+            if ($quat_dtype && $ceph_dtype) {
+                $ACTIONS{"compare_$dtype"}($self, $hostname, $quat_dtype, $ceph_dtype, $structures) or return 0;
+            } elsif ($quat_dtype) {
+                $ACTIONS{"add_$dtype"}($self, $hostname, $quat_dtype, $structures) or return 0;
+            } elsif ($ceph_dtype) {
+                $structures->{destroy}->{$hostname}->{$dtype} = $ceph_dtype;
             }
         }
-        my @multiples = ('osd', 'gtw');
+        my @multiples = qw(osd gtw);
         foreach my $dtype (@multiples) {
             my $dstype = $dtype . "s";
             if ($quat_host->{$dstype}) {
@@ -312,7 +314,7 @@ sub compare_host {
                     if (exists $ceph_host->{$dstype}->{$key}) {
                         $ACTIONS{"compare_$dtype"}($self, $hostname, $key, $daemon,
                         $ceph_host->{$dstype}->{$key}, $structures) or return 0;
-                    delete $ceph_host->{$dstype}->{$key};
+                        delete $ceph_host->{$dstype}->{$key};
                     } else {
                         $ACTIONS{"add_$dtype"}($self, $hostname, $key, $daemon, $structures) or return 0;
                     }

@@ -10,7 +10,7 @@ include { 'quattor/schema' };
 @documentation{ 
     desc = check that the ceph osd names are no ceph reserved paths 
     arg = ceph_component type
-@}
+}
 function valid_osd_names = {
     names = list();
     clusters = ARGV[0]['clusters'];
@@ -34,13 +34,11 @@ function valid_osd_names = {
 };
 
 @documentation{ 
-    desc = checks the ceph crushmap, this includes uniqueness of bucket and rule name,
-        recursive bucket typing, and rules using existing buckets
+    desc = checks the ceph crushmap, this includes uniqueness of bucket and rule name, recursive bucket typing, and rules using existing buckets
     arg = crushmap allowed bucket types
     arg = crushmap buckets definitions
     arg = rules to traverse crushmap
-    
-@}
+}
 function is_crushmap = {
     names = list();
     types = ARGV[0];
@@ -77,13 +75,12 @@ function is_crushmap = {
 };
 
 @documentation{ 
-    desc = check the bucket type recursively, this includes attribute type and value checking,
-        and the uniqueness of names
+    desc = check the bucket type recursively, this includes attribute type and value checking and the uniqueness of names
     arg = bucket to check
     arg = list of already parsed bucket names
     arg = accepted bucket types
     arg = 1 if bucket is top bucket, 0 otherwise
-@}
+}
 function is_bucket = {
     bucket = ARGV[0];
     names = ARGV[1];
@@ -163,19 +160,19 @@ function is_bucket = {
     true;
 };
 
-@documentation{ ceph daemon config parameters @}
+@documentation{ ceph daemon config parameters }
 type ceph_daemon_config = { 
     'osd_journal_size'  ? long(0..) 
     'osd_objectstore'   ? string
 };
 
-@documentation{ type for a generic ceph daemon @}
+@documentation{ type for a generic ceph daemon }
 type ceph_daemon = {
     'up'    : boolean = true
     'config'? ceph_daemon_config
 };
 
-@documentation{ ceph monitor-specific type @}
+@documentation{ ceph monitor-specific type }
 type ceph_monitor = {
     include ceph_daemon
     'fqdn'  : type_fqdn
@@ -188,7 +185,7 @@ This can be an absolute path or a relative one to /var/lib/ceph/osd/
 journal_path should be the path to a journal file
 This can be an absolute path or a relative one to /var/lib/ceph/log/
 With labels osds can be grouped. This should also be defined in root. 
-@}
+}
 type ceph_osd = {
     include ceph_daemon
     'in'            ? boolean = true
@@ -197,19 +194,19 @@ type ceph_osd = {
     'labels'        ? string[1..]
 };
 
-@documentation{ ceph osdhost-specific type @}
+@documentation{ ceph osdhost-specific type }
 type ceph_osd_host = {
     'fqdn'          : type_fqdn
     'osds'          : ceph_osd {}
 };
 
-@documentation{ ceph mds-specific type @}
+@documentation{ ceph mds-specific type }
 type ceph_mds = {
      include ceph_daemon
     'fqdn'  : type_fqdn
 };
 
-@documentation{ ceph cluster-wide config parameters @}
+@documentation{ ceph cluster-wide config parameters }
 type ceph_cluster_config = {
     'fsid'                      : string # Should be generated with uuidgen
     'filestore_xattr_use_omap'  : boolean = true
@@ -232,12 +229,12 @@ type ceph_cluster_config = {
 
 @documentation{ ceph rados gateway type 
 http://ceph.com/docs/master/radosgw/ 
-@}
+}
 type ceph_radosgw = {
     'config' ? nlist
 };
 
-@documentation{ ceph rados gateway host @}
+@documentation{ ceph rados gateway host }
 type ceph_radosgwh = {
     'fqdn'      : type_fqdn
     'gateways'  : ceph_radosgw{}
@@ -246,7 +243,7 @@ type ceph_radosgwh = {
 @documentation{ 
     desc = check it is a valid algorithm, also used in is_crushmap
     arg = bucket algoritm
-@}
+}
 function is_ceph_crushmap_bucket_alg = {
     if (!match(ARGV[0], '^(uniform|list|tree|straw)$')){
         error(ARGV[0] +  'is not a valid bucket algorithm');
@@ -255,7 +252,7 @@ function is_ceph_crushmap_bucket_alg = {
     true;
 };
     
-@documentation{ ceph crushmap bucket definition @}
+@documentation{ ceph crushmap bucket definition }
 type ceph_crushmap_bucket = {
     'name'          : string #Must be unique
     'type'          : string # Must be in ceph_crushmap types
@@ -268,21 +265,21 @@ type ceph_crushmap_bucket = {
     'buckets'       ? nlist[] # the idea: recursive buckets
 };
 
-@documentation{ ceph crushmap rule step @}
+@documentation{ ceph crushmap rule step }
 type ceph_crushmap_rule_choice = {
     'chtype'    : string with match(SELF, '^(choose firstn|chooseleaf firstn|choose indep)$')
     'number'    : long = 0
     'bktype'      : string 
 };
 
-@documentation{ ceph crushmap rule step @}
+@documentation{ ceph crushmap rule step }
 type ceph_crushmap_rule_step = {
     'take'       : string # Should be a valid bucket
     'set_chooseleaf_tries' ? long
     'choices'    : ceph_crushmap_rule_choice[1..]
 };
 
-@documentation{ ceph crushmap rule definition @}
+@documentation{ ceph crushmap rule definition }
 type ceph_crushmap_rule = {
     'name'              : string #Must be unique
     'type'              : string = 'replicated' with match(SELF, '^(replicated|erasure)$')
@@ -298,7 +295,7 @@ The crushmap defines some types of buckets,
 a hierarchical bucket structure,
 rules for traversing these buckets
 and tunables for magic numbers.
-@}
+}
 type ceph_crushmap = {
     'types'     : string [1..]
     'buckets'   : ceph_crushmap_bucket [1..]
@@ -306,7 +303,7 @@ type ceph_crushmap = {
     'tunables'  ? long{} 
 } with is_crushmap(SELF['types'], SELF['buckets'], SELF['rules']); 
 
-@documentation{ overarching ceph cluster type, with osds, mons and msds @}
+@documentation{ overarching ceph cluster type, with osds, mons and msds }
 type ceph_cluster = {
     'config'                    : ceph_cluster_config
     'osdhosts'                  : ceph_osd_host {}
@@ -317,7 +314,7 @@ type ceph_cluster = {
     'crushmap'                  ? ceph_crushmap
 };
 
-@documentation{ ceph clusters @}
+@documentation{ ceph clusters }
 type ${project.artifactId}_component = {
     include structure_component
     'clusters'         : ceph_cluster {}
