@@ -1,4 +1,4 @@
-Base test for ssh cient config
+Base test for ssh client config
 ---
 /etc/ssh/ssh_config
 ---
