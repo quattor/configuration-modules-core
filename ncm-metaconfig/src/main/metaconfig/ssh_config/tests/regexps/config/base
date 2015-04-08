@@ -1,7 +1,21 @@
 Base test for config
 ---
 /etc/ssh/ssh_config
-multiline
 ---
-$wontmatch^
+^AddressFamily
+^Ciphers
+^IdentityFile
+IdentityFile ### COUNT 3
+^Match
+^\s{4}BatchMode
+^\s{4}ForwardX11
+^\s{4}NumberOfPasswordPrompts
+^Host
+Host ### COUNT 4
+^\s{4}ProxyCommand
+^\s{4}User
+^\s{4}VerifyHostKeyDNS
+^\s{4}ForwardX11Trusted
+^\s{4}GSSAPIAuthentication
+^\s{4}SendEnv
 
