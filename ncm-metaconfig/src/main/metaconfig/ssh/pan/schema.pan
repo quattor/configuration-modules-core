@@ -1,4 +1,4 @@
-declaration template metaconfig/ssh_config/schema;
+declaration template metaconfig/ssh/schema;
 
 include 'pan/types';
 

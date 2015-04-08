@@ -1,6 +1,6 @@
 object template config;
 
-include 'metaconfig/ssh_config/config';
+include 'metaconfig/ssh/client_config';
 
 prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents";
 
