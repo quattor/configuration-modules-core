@@ -5,7 +5,7 @@
 
 declaration template components/ofed/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component' ;
 
 ## openib options (OPENIBOPTS)
 type component_ofed_openib_options = {
@@ -28,16 +28,21 @@ type component_ofed_openib_options = {
     # autotuning
     "run_sysctl" : boolean = true
     "run_affinity_tuner" : boolean = true
+    "run_mlnx_tune" : boolean = false
 
     # description
     "node_desc" ? string # eg will default to hostname -s
+    "node_desc_update_timeout" : long(0..) = 120
     "node_desc_time_before_update" : long(0..) = 10
+    "post_start_delay" : long(0..) = 0
 
 } = nlist();
 
 ## openib modules (OPENIBMODULES)
 type component_ofed_openib_modules = {
     "ucm" : boolean = false
+    "umad" : boolean = true
+    "uverbs" : boolean = true
 
     ## RDAM CM (connected mode and unreliable datagram)
     "rdma_cm" : boolean = true
