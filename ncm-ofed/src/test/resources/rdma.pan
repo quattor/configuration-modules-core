@@ -1,5 +1,7 @@
 object template rdma;
 
+include 'components/ofed/schema';
+
 prefix "/software/components/ofed/openib";
 
 "config" = "/etc/rdma/rdma.conf";
