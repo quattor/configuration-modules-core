@@ -1,6 +1,6 @@
 [% spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'UserKnownHostsFile' ] -%]
 [% commalist = ['Ciphers', 'HostbasedKeyTypes','HostKeyAlgorithms', 'KbdInteractiveDevices', 'KbdInteractiveDevices',
-    'MACs', 'PreferredAuthentications'] -%]
+    'MACs', 'PreferredAuthentications', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'KexAlgorithms'] -%]
 [% multilinelist = ['IdentityFile', 'RevokedHostKeys'] -%]
 [% booleans = ['BatchMode', 'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 
     'ClearAllForwardings', 'Compression', 'EnableSSHKeysign', 'ExitOnForwardFailure', 'ForwardAgent', 'ForwardX11', 

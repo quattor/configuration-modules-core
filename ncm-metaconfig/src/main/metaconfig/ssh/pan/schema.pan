@@ -37,7 +37,7 @@ type ssh_config_opts = {
     'FingerprintHash'  ? string with match (SELF, "^(md5|sha256)$")
     'ForwardAgent' ? boolean
     'ForwardX11' ? boolean
-    'ForwardX11Timeout' ? string
+    'ForwardX11Timeout' ? long(0..)
     'ForwardX11Trusted' ? boolean
     'GatewayPorts' ? boolean
     'GlobalKnownHostsFile' ? string[]
