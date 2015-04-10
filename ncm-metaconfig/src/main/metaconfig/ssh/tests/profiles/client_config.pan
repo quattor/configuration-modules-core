@@ -1,4 +1,4 @@
-object template config;
+object template client_config;
 
 include 'metaconfig/ssh/client_config';
 

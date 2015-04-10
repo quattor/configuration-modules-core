@@ -1,4 +1,4 @@
-object template allopts;
+object template client_allopts;
 
 include 'metaconfig/ssh/client_config';
 
