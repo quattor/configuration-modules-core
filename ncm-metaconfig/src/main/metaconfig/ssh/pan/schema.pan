@@ -3,7 +3,7 @@ declaration template metaconfig/ssh/schema;
 include 'pan/types';
 
 type ssh_ciphers = string with match (SELF, "^((blowfish|3des|aes128|aes192|aes256|cast128)-cbc|(aes128|aes192|aes256)-ctr|arcfour|arcfour(128|256)|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
-type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-rsa|ssh-dss|ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|ssh-rsa-cert-v01@openssh.com|ssh-dss-cert-v01@openssh.com|ecdsa-sha2-nistp256-cert-v01@openssh.com|ecdsa-sha2-nistp384-cert-v01@openssh.com|ecdsa-sha2-nistp521-cert-v01@openssh.com|ssh-rsa-cert-v00@openssh.com|ssh-dss-cert-v00@openssh.com|ssh-ed25519-cert-v01@openssh.com)$");
+type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
 type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
 type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|-exchange-sha256)|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org|gss-gex-sha1-|gss-group1-sha1-|gss-group14-sha1-)$");
 type ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
