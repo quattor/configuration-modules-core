@@ -2,11 +2,11 @@ declaration template metaconfig/ssh/schema;
 
 include 'pan/types';
 
-type ssh_ciphers = string with match (SELF, "^(3des-cbc|aes128-cbc|aes192-cbc|aes256-cbc|aes128-ctr|aes192-ctr|aes256-ctr|aes128-gcm@openssh.com|aes256-gcm@openssh.com|arcfour|arcfour128|arcfour256|blowfish-cbc|cast128-cbc|chacha20-poly1305@openssh.com)$"); 
+type ssh_ciphers = string with match (SELF, "^((blowfish|3des|aes128|aes192|aes256|cast128)-cbc|(aes128|aes192|aes256)-ctr|arcfour|arcfour(128|256)|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
 type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-rsa|ssh-dss|ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|ssh-rsa-cert-v01@openssh.com|ssh-dss-cert-v01@openssh.com|ecdsa-sha2-nistp256-cert-v01@openssh.com|ecdsa-sha2-nistp384-cert-v01@openssh.com|ecdsa-sha2-nistp521-cert-v01@openssh.com|ssh-rsa-cert-v00@openssh.com|ssh-dss-cert-v00@openssh.com|ssh-ed25519-cert-v01@openssh.com)$");
 type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
-type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group1-sha1|diffie-hellman-group14-sha1|diffie-hellman-group-exchange-sha1|diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp256|ecdh-sha2-nistp384|ecdh-sha2-nistp521|diffie-hellman-group1-sha1|curve25519-sha256@libssh.org|gss-gex-sha1-|gss-group1-sha1-|gss-group14-sha1-)$");
-type ssh_MACs = string with match(SELF, "^(hmac-sha1|hmac-sha1-96|hmac-sha2-256|hmac-sha2-512|hmac-md5|hmac-md5-96|hmac-ripemd160|hmac-ripemd160@openssh.com|umac-64@openssh.com|umac-128@openssh.com|hmac-sha1-etm@openssh.com|hmac-sha1-96-etm@openssh.com|hmac-sha2-256-etm@openssh.com|hmac-sha2-512-etm@openssh.com|hmac-md5-etm@openssh.com|hmac-md5-96-etm@openssh.com|hmac-ripemd160-etm@openssh.com|umac-64-etm@openssh.com|umac-128-etm@openssh.com)$");
+type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|-exchange-sha256)|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org|gss-gex-sha1-|gss-group1-sha1-|gss-group14-sha1-)$");
+type ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
 
 
 type ssh_config_opts = {
@@ -52,13 +52,13 @@ type ssh_config_opts = {
     'IdentitiesOnly' ? boolean
     'IdentityFile' ? string[]
     'IgnoreUnknown' ? string[]
-    'IPQoS' ? string with match (SELF, "^(af11|af12|af13|af21|af22|af23|af31|af32|af33|af41|af42|af43|cs0|cs1|cs2|cs3|cs4|cs5|cs6|cs7|ef|lowdelay|throughput|reliability)$")
+    'IPQoS' ? string with match (SELF, "^(af[1234][123]|cs[0-7]|ef|lowdelay|throughput|reliability)$")
     'KbdInteractiveAuthentication' ? boolean
     'KbdInteractiveDevices' ? ssh_kbdinteractivedevices[]
     'KexAlgorithms' ?  ssh_kexalgorithms[]
     'LocalCommand' ? string
     'LocalForward' ? string
-    'LogLevel' ? string with match (SELF, "^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG1|DEBUG2|DEBUG3)$")
+    'LogLevel' ? string with match (SELF, "^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG[123])$")
     'MACs'  ? ssh_MACs[]
     'NoHostAuthenticationForLocalhost' ? boolean
     'NumberOfPasswordPrompts' ? long(0..)
