@@ -302,7 +302,7 @@ type sssd_netgroup = {
 type sssd_autofs = {
     "map_object_class" : string = "automountMap"
     "map_name" : string = "ou"
-    "entry_object_class" : string = "automountMap"
+    "entry_object_class" : string = "automount"
     "entry_key" : string = "cn"
     "entry_value" : string = "automountInformation"
     "search_base" ? string
