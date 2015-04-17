@@ -448,6 +448,14 @@ Readonly::Hash our %QUATIN => (
      'mon' => {
        'fqdn' => 'ceph003.cubone.os',
        'up' => 1
+     },
+     'osds' => {
+       'ceph003:/var/lib/ceph/osd/sdc' => {
+         'fqdn' => 'ceph003.cubone.os',
+         'host' => 'ceph003',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       }
      }
    }
 );
@@ -556,13 +564,14 @@ Readonly::Hash our %QUATMAPGW => (
        'fqdn' => 'ceph001.cubone.os',
        'up' => 1
      },
-     'radosgw' => {
-       'config' => {
-         'foo' => 'bar',
-         'host' => 'ceph001'
-       },
-       'fqdn' => 'ceph001.cubone.os'
-     }
+     'gtws' => {
+       'gateway' => {
+         'config' => {
+           'foo' => 'bar',
+           'host' => 'ceph001'
+         }
+       }
+     },
    }
 );
 Readonly::Hash our  %COMPARE1GW => (
@@ -734,7 +743,15 @@ Readonly::Hash our %COMPARE1 => (
        'mon' => {
          'fqdn' => 'ceph003.cubone.os',
          'up' => 1
-       }
+       },
+       'osds' => {
+         'ceph003:/var/lib/ceph/osd/sdc' => {
+            'fqdn' => 'ceph003.cubone.os',
+            'host' => 'ceph003',
+            'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+            'osd_path' => '/var/lib/ceph/osd/sdc'
+            }
+        }
      }
    },
    'mapping' => {
@@ -823,6 +840,14 @@ Readonly::Hash our %COMPARE2 => (
        'mon' => {
          'fqdn' => 'ceph003.cubone.os',
          'up' => 1
+       },
+       'osds' => {
+         'ceph003:/var/lib/ceph/osd/sdc' => {
+           'fqdn' => 'ceph003.cubone.os',
+           'host' => 'ceph003',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'osd_path' => '/var/lib/ceph/osd/sdc'
+         }
        }
      }
    },
