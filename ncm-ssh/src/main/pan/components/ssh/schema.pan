@@ -38,6 +38,7 @@ type ssh_daemon_options_type = {
     "AllowTcpForwarding"                ? ssh_yesnostring
     "AllowUsers"                        ? string
     "AuthorizedKeysFile"                ? string
+    "AuthorizedKeysCommand"             ? string
     "Banner"                            ? string
     "ClientAliveCountMax"               ? long
     "ClientAliveInterval"               ? long
