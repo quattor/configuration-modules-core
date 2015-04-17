@@ -1,0 +1,3 @@
+[instrumentation]
+graphite_addr = "[%- data.graphite_addr -%]"
+graphite_interval = [%- data.graphite_interval -%]

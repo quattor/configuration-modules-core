@@ -1,0 +1,12 @@
+
+[% INCLUDE metaconfig/ssh/client_attrs.tt data=main -%]
+
+[% FOREACH mt IN Match -%]
+Match [% mt.matches.join(' ') %]
+[%     INCLUDE metaconfig/ssh/client_attrs.tt data=mt FILTER indent %]
+[% END -%]
+
+[% FOREACH hd IN Host -%]
+Host [% hd.hostnames.join(' ') %]
+[%     INCLUDE metaconfig/ssh/client_attrs.tt data=hd FILTER indent %]
+[% END -%]
