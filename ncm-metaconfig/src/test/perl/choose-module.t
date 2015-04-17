@@ -43,7 +43,7 @@ Invalid module names must be reported and return an error
 
 our $shouldnt_be_reached;
 
-my $srv = { module => 'a;d', owner => 'foo', group => 'bar' };
+my $srv = { module => 'a;d', owner => 'foo', group => 'bar', contents => {} };
 ok(!$cmp->handle_service("foo", $srv), "Invalid module name triggers an error");
 ok(!$@, "Not even attempted to load an invalid module");
 $srv->{module} = q{strict
