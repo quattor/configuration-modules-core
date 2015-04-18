@@ -205,6 +205,12 @@ sub print_database_class
         delete($tree->{suffix});
     }
 
+    if (exists($tree->{checkpoint})) {
+        my $s = join(" ", $tree->{checkpoint});
+        print $fh qq{checkpoint $s\n};
+        delete($tree->{checkpoint});
+    }
+
     if (exists($tree->{db_config})) {
         if (exists($tree->{directory})) {
             # deal with exit code? restart ldap when file changed?
@@ -433,7 +439,7 @@ sub legacy_setup
 
     $self->verbose("Running ", __PACKAGE__, " in legacy mode");
 
-    my ($database, $suffix, $rootdn, $rootpw, $directory, $loglevel,
+    my ($database, $suffix, $checkpoint, $rootdn, $rootpw, $directory, $loglevel,
         $argsfile, $pidfile, $base, $ldap_config);
 
 
@@ -447,6 +453,11 @@ sub legacy_setup
     if ($config->elementExists("$base/suffix")) {
         $suffix = $config->getValue("$base/suffix");
         print $fh "suffix $suffix\n";
+    }
+
+    if ($config->elementExists("$base/checkpoint")) {
+        my $checkpoint = join(" ", $config->getValue("$base/checkpoint"));
+        print $fh "checkpoint $checkpoint";
     }
 
     if ($config->elementExists("$base/rootdn")) {
