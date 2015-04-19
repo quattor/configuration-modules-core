@@ -11,7 +11,7 @@ use warnings;
 use base qw(NCM::Component);
 
 use LC::Exception;
-use CAF::TextRender;
+use EDG::WP4::CCM::TextRender;
 use CAF::Service;
 use EDG::WP4::CCM::Element qw(unescape);
 use Readonly;
@@ -98,11 +98,11 @@ sub handle_service
 
     $contents = $srv->{contents} if (! defined($contents));
 
-    my $trd = CAF::TextRender->new($srv->{module},
-                                   $contents,
-                                   log => $self,
-                                   eol => 0,
-                                   );
+    my $trd = EDG::WP4::CCM::TextRender->new($srv->{module},
+                                             $contents,
+                                             log => $self,
+                                             eol => 0,
+                                             );
 
     my %opts  = (log => $self,
                  mode => $srv->{mode},
