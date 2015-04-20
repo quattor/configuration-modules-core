@@ -7,7 +7,7 @@
 [%      IF pair.key == 'ceph_user_key' -%]
 [%           -%]
 [%      ELSE -%]
-[%          pair.key.upper %] =
+[%          pair.key FILTER upper %] =
 [%-             SWITCH pair.key -%]
 [%                  CASE lists -%]
  "[%                    pair.value.join(' ') %]"

@@ -3,12 +3,12 @@
 [% FOR pair IN vnet.pairs -%]
 [%-    SWITCH pair.key -%]
 [%         CASE booleans -%]
-[%             pair.key.upper %] = "[% pair.value ? "YES" : "NO" %]"
+[%             pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
 [%         CASE ar_section -%]
-[%             pair.key.upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+[%             pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
                                       data=vnet.${pair.key} -%]
 [%         CASE -%]
-[%             pair.key.upper %] = "[% pair.value %]"
+[%             pair.key FILTER upper %] = "[% pair.value %]"
 [%     END -%]
 [%- END -%]
 QUATTOR = 1
