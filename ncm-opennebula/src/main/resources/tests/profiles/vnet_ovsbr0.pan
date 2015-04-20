@@ -15,7 +15,7 @@ prefix "/metaconfig/contents/vnet";
 "network_mask" = "255.255.0.0";
 "vlan" = true;
 "vlan_id" = 0;
-"ar" = nlist(
+"ar" = dict(
     "type", "IP4",
     "ip", "10.141.14.100",
     "size", 29,

@@ -25,7 +25,7 @@ include 'components/sudo/config';
          '/usr/bin/ovs-ofctl',
      );
      foreach (i; cmd; sudolist){
-         nl = nlist("host", "ALL",
+         nl = dict("host", "ALL",
                     "options", "NOPASSWD:",
                     "run_as", "ALL",
                     "user", "oneadmin");

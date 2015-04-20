@@ -7,7 +7,7 @@ bind "/metaconfig/contents/oned" = opennebula_oned;
 "/metaconfig/module" = "oned";
 
 prefix "/metaconfig/contents/oned";
-"db" = nlist(
+"db" = dict(
     "backend", "mysql",
     "server", "localhost",
     "port", 0,
@@ -15,7 +15,7 @@ prefix "/metaconfig/contents/oned";
     "passwd", "my-fancy-pass",
     "db_name", "opennebula",
 );
-"log" = nlist(
+"log" = dict(
     "system", "syslog",
     "debug_level", 3,
 );
