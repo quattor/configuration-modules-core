@@ -9,7 +9,6 @@ include 'quattor/schema';
 include 'pan/types';
 
 type uuid = string with match(SELF,'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
-type macaddr = string with match(SELF, '([0-9A-F]{2}[:-]){5}([0-9A-F]{2})');
 
 type directory = string with match(SELF,'[^/]+/?$');
 
@@ -144,7 +143,7 @@ type opennebula_ar = {
     "type"                      : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
     "ip"                        ? type_ipv4
     "size"                      : long (1..)
-    "mac"                       ? macaddr
+    "mac"                       ? type_hwaddr
     "global_prefix"             ? string
     "ula_prefix"                ? string
 };
