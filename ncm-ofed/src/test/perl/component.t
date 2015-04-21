@@ -5,7 +5,7 @@ use Test::More;
 use CAF::Object;
 use Test::Quattor qw(rdma);
 use NCM::Component::ofed;
-
+use Test::Quattor::RegexpTest;
 
 $CAF::Object::NoAction = 1;
 
@@ -27,13 +27,17 @@ $fh = get_file("/etc/rdma/rdma.conf");
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter rdma.conf file written");
 
 # generic
-unlike($fh, qr/SRP_DAEMON_ENABLE_LOAD/m, "No suffix for options");
-like($fh, qr/SRP_DAEMON_ENABLE=(yes|no)/m, "Boolean options");
-like($fh, qr/IPOIB_MTU=\d+/m, "Non-boolean option for MTU");
-like($fh, qr/NODE_DESC=myname/m, "Non-boolean option node description");
+unlike($fh, qr/^SRP_DAEMON_ENABLE_LOAD/m, "No suffix for options");
+like($fh, qr/^SRP_DAEMON_ENABLE=(yes|no)/m, "Boolean options");
 
-like($fh, qr/MLX4_LOAD=(yes|no)/m, "Suffix for hardware, boolena value");
-like($fh, qr/RDMA_CM_LOAD=(yes|no)/m, "Suffix for modules, boolena value");
+like($fh, qr/^MLX4_LOAD=(yes|no)/m, "Suffix for hardware, boolean value");
+like($fh, qr/^RDMA_CM_LOAD=(yes|no)/m, "Suffix for modules, boolean value");
 
+# Test all values
+my $rt = Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/rdma_regextest',
+    text => "$fh",
+    );
+$rt->test();
 
 done_testing();
