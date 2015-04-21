@@ -8,8 +8,6 @@ declaration template components/opennebula/schema;
 include 'quattor/schema';
 include 'pan/types';
 
-type uuid = string with match(SELF,'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
-
 type directory = string with match(SELF,'[^/]+/?$');
 
 type opennebula_db = {
@@ -128,7 +126,7 @@ ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory
 }
 type opennebula_ceph_datastore = {
     "ceph_host"                 ? string[]
-    "ceph_secret"               ? uuid
+    "ceph_secret"               ? type_uuid
     "ceph_user"                 ? string
     "ceph_user_key"             ? string
     "pool_name"                 ? string
