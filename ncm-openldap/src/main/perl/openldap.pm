@@ -46,15 +46,14 @@ sub create_db_config_file
     my ($self, $directory, $tree) = @_;
     if ($self->_directory_exists($directory)) {
         my $contents = '';
-        my @keys = sort keys %$tree;
-        foreach my $k (@keys) {
+        foreach my $k ( sort keys %$tree) {
             my $v = $tree->{$k};
+
             $k = "set_$k" if (grep {$_ eq $k} DB_CONFIG_SET);
             $v = join(" ", @$v) if (ref($v) && ref($v) eq "ARRAY");
             $contents .= "$k $v\n";
         }
 
-        # try to write it
         my $fname = "$directory/DB_CONFIG";
         my $fh = CAF::FileWriter->new(
             $fname,
@@ -85,8 +84,8 @@ sub print_monitoring
     my ($self, $fh, $tree) = @_;
 
     # some default settings
-    if (exists($tree->{default}) && $tree->{default}) {
-        print $fh "\n", "monitoring on", "\n", "database monitor", "\n";
+    if ($tree->{default}) {
+        print $fh "\nmonitoring on\ndatabase monitor\n";
         delete($tree->{default});
     }
 }
@@ -98,11 +97,10 @@ sub print_overlay
 
     $self->verbose("Printing overlay information");
     my %overlay_boolean = (
-        "syncprov" => ["nopresent","reloadhint"]
+        "syncprov" => ["nopresent", "reloadhint"]
     );
 
-    my @keys = sort keys %$tree;
-    foreach my $k (@keys) {
+    foreach my $k (sort keys %$tree) {
         my $v = $tree->{$k};
         if (grep {$_ eq $k} @{$overlay_boolean{$overlay}}) {
             $v = $v ? "TRUE" : "FALSE";
@@ -147,8 +145,7 @@ sub print_replica_information
         delete($tree->{attrs});
     }
 
-    my @keys = sort keys %$tree;
-    foreach my $k (@keys) {
+    foreach my $k (sort keys %$tree) {
         my $v = $tree->{$k};
         $v = qq{"$v"} if $v =~ m{=};
         push(@flds, "$k=$v");
@@ -177,20 +174,20 @@ sub print_database_class
     }
 
     if (exists($tree->{restrict})) {
-        print $fh  join(" ", "restrict", @{$tree->{restrict}}), "\n";
+        print $fh join(" ", "restrict", @{$tree->{restrict}}), "\n";
         delete($tree->{restrict});
     }
 
     if (exists($tree->{index})) {
         foreach my $ind (@{$tree->{index}}) {
-            print $fh "index ",join(",",@{@$ind[0]})," ",join(",",@{@$ind[1]}),"\n";
+            print $fh "index ", join(",", @{@$ind[0]}),
+                      " ", join(",", @{@$ind[1]}), "\n";
         }
         delete($tree->{index});
     };
 
     if (exists($tree->{limits})) {
-        my @keys = sort keys %{$tree->{limits}};
-        foreach my $k (@keys) {
+        foreach my $k (sort keys %{$tree->{limits}}) {
             my $v = $tree->{limits}->{$k};
             print $fh "limits ", unescape($k);
             foreach my $i (qw(size time)) {
@@ -208,8 +205,7 @@ sub print_database_class
     }
 
     if (exists($tree->{backend_specific})) {
-        my @keys = sort keys %{$tree->{backend_specific}};
-        foreach my $k (@keys) {
+        foreach my $k (sort keys %{$tree->{backend_specific}}) {
             my $v = $tree->{backend_specific}->{$k};
             print $fh  join("\n", map("$k $_", @$v), "");
         }
@@ -236,10 +232,8 @@ sub print_database_class
         delete($tree->{db_config});
     }
 
-    my @keys = sort keys %$tree;
-    foreach my $k (@keys) {
-        my $v = $tree->{$k};
-        print $fh "$k $v\n" unless (grep {$_ eq $k} qw(syncrepl overlay updateref));
+    foreach my $k (sort keys %$tree) {
+        print $fh "$k $tree->{$k}\n" unless (grep {$_ eq $k} qw(syncrepl overlay updateref));
     }
 
     if (exists($tree->{syncrepl})) {
@@ -248,15 +242,13 @@ sub print_database_class
     }
 
     # updateref should be put after syncrepl
-    print $fh "updateref ".$tree->{updateref}."\n" if (exists($tree->{updateref}));
+    print $fh "updateref $tree->{updateref}\n" if (exists($tree->{updateref}));
 
     # overlays are last
     if (exists($tree->{overlay})) {
-        my @keys = sort keys %{$tree->{overlay}};
-        foreach my $overlay (@keys) {
-            my $overlaytree = $tree->{overlay}->{$overlay};
+        foreach my $overlay (sort keys %{$tree->{overlay}}) {
             print $fh "overlay $overlay\n";
-            $self->print_overlay($fh, $overlay, $overlaytree);
+            $self->print_overlay($fh, $overlay, $tree->{overlay}->{$overlay});
         }
         delete($tree->{overlay});
     }
@@ -275,9 +267,9 @@ sub print_global_options
         # what
         my $what;
         if (exists($access->{attrs})) {
-            $what="attrs=".join(',',@{$access->{attrs}});
+            $what = "attrs=".join(',', @{$access->{attrs}});
         } elsif (exists($access->{what})) {
-            $what=$access->{what};
+            $what = $access->{what};
         } else {
             $self->error("No valid 'what' section for access (supported are 'what' and 'attrs')");
         }
@@ -285,30 +277,27 @@ sub print_global_options
 
         # by
         foreach my $by (@{$access->{by}}) {
-            print $fh "\n".INDENTATION."by ".join(" ",@$by);
+            print $fh "\n" . INDENTATION . "by ".join(" ", @$by);
         }
         print $fh "\n";
     }
     delete($t->{access});
 
-    my @keys = sort keys %{$t->{tls}};
-    foreach my $name (@keys) {
-        my $value = $t->{tls}->{$name};
-        print $fh "TLS$name $value\n";
+    foreach my $name (sort keys %{$t->{tls}}) {
+        print $fh "TLS$name $t->{tls}->{$name}\n";
     }
 
     delete($t->{"tls"});
 
-    print $fh map("moduleload $_\n",
-                  @{$t->{"moduleload"}});
-    delete($t->{"moduleload"});
+    print $fh map("moduleload $_\n", @{$t->{moduleload}});
+    delete($t->{moduleload});
 
     print $fh map("authz-regexp $_->{match} $_->{replace}\n",
                   @{$t->{"authz-regexp"}});
     delete($t->{"authz-regexp"});
 
     foreach my $i (qw(gentlehup reverse-lookup)) {
-        print $fh "$i ", $t->{$i} ? "on":"off", "\n"
+        print $fh "$i ", $t->{$i} ? "on" : "off", "\n"
             if exists($t->{$i});
         delete($t->{$i});
     }
@@ -316,17 +305,14 @@ sub print_global_options
     foreach my $i (qw(attributetype ditcontentrule ldapsyntax objectclass)) {
         next unless exists($t->{$i});
         print $fh "$i ";
-        @keys = sort keys %{$t->{$i}};
-        foreach my $k (@keys) {
-            my $v = $t->{$i}->{$k};
-            print $fh " $k $v";
+        foreach my $k (sort keys %{$t->{$i}}) {
+            print $fh " $k $t->{$i}->{$k}";
         }
         print $fh "\n";
         delete($t->{$i});
     }
 
-    @keys = sort keys %$t;
-    foreach my $k (@keys) {
+    foreach my $k (sort keys %$t) {
         my $v = $t->{$k};
         if (!ref($v)) {
             print $fh "$k $v";
@@ -425,10 +411,10 @@ sub Configure
         foreach my $i (@{$t->{databases}}) {
             $self->print_database_class($fh, "database", $i);
         }
-        $self->print_monitoring($fh,$t->{monitoring}) if (exists($t->{monitoring}));
+        $self->print_monitoring($fh, $t->{monitoring}) if (exists($t->{monitoring}));
 
         # move conf_dir/slapd.d
-        if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
+        if ($t->{move_slapdd}) {
             $self->move_slapdd_dir(dirname($t->{conf_file})."/slapd.d");
         }
     } else {

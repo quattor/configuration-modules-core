@@ -72,5 +72,9 @@ slapd.conf settings
 ^    tls_reqcert=never$
 ^    type=refreshOnly$
 ^updateref ldaps://somewhere$
+^overlay syncprov$
+^syncprov-checkpoint 100 10$
+^syncprov-nopresent TRUE$
+^syncprov-sessionlog 100$
 ^monitoring on$
 ^database monitor$
