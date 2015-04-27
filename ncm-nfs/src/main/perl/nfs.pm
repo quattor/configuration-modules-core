@@ -114,7 +114,7 @@ sub Configure($$@) {
       $freq = 0 unless defined($freq);
       $passno = 0 unless defined($passno);
       
-      if ( ($fstype =~ /^nfs/) || (($fstype eq 'none') && ($opt eq 'bind')) ) {
+      if ( ($fstype =~ /^(nfs4?|panfs)$/) || (($fstype eq 'none') && ($opt eq 'bind')) ) {
         # It is an nfs entry, save the information.
         $oldnfs{$device} = {"device" => $device,
                             "mntpt" => $mntpt,

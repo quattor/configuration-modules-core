@@ -15,7 +15,7 @@ type structure_nfs_exports = {
 type structure_nfs_mounts = {
     'device'     : string
     'mountpoint' : string
-    'fstype'     : string with match(SELF, '^nfs|none$')
+    'fstype'     : string with match(SELF, '^(nfs4?|panfs|none)$')
     'options'    ? string
     'freq'       ? long(0..)
     'passno'     ? long(0..)
