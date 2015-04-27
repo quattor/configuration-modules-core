@@ -1,23 +1,18 @@
-################################################################################
-# This is 'openldap.pm', a ncm-openldap's file
-################################################################################
-#
-# VERSION:    1.0.0, 02/02/10 15:50
-# AUTHOR:     Daniel Jouvenot <jouvenot@lal.in2p3.fr>
-# MAINTAINER: Guillaume Philippon <philippo@lal.in2p3.fr>
-# LICENSE:    http://cern.ch/eu-datagrid/license.html
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
 
 package NCM::Component::openldap;
 
 use strict;
+use warnings;
+
 use NCM::Component;
+
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+
 use CAF::FileWriter;
 use CAF::Process;
 use File::Path;
@@ -26,12 +21,11 @@ use File::Copy;
 use EDG::WP4::CCM::Element qw(unescape);
 use Encode qw(encode_utf8);
 
-
 use constant SLAPTEST => qw(/usr/sbin/slaptest -v -u -f);
 use constant SLAPRESTART => qw(/sbin/service slapd restart);
 
 # fixed indentation for conf files
-use constant INDENTATION => "    ";
+use constant INDENTATION => " " x 4;
 
 use constant DB_CONFIG_SET => qw(
     cachesize
@@ -40,25 +34,36 @@ use constant DB_CONFIG_SET => qw(
     lg_max
 );
 
+# private method for unittesting
+sub _directory_exists
+{
+    my ($self, $directory) = @_;
+    return -d $directory;
+}
+
 sub create_db_config_file
 {
     my ($self, $directory, $tree) = @_;
-    if (-d $directory) {
-        my $contents='';
-        while (my ($k, $v) = each(%$tree)) {
-            $k="set_$k" if (grep $_ eq $k, DB_CONFIG_SET);
-            $v=join(" ",@$v) if (ref($v) eq "ARRAY");
-            $contents.="$k $v\n";
+    if ($self->_directory_exists($directory)) {
+        my $contents = '';
+        foreach my $k ( sort keys %$tree) {
+            my $v = $tree->{$k};
+
+            $k = "set_$k" if (grep {$_ eq $k} DB_CONFIG_SET);
+            $v = join(" ", @$v) if (ref($v) && ref($v) eq "ARRAY");
+            $contents .= "$k $v\n";
         }
 
-        # try to write it
         my $fname = "$directory/DB_CONFIG";
-        my $result = LC::Check::file( $fname,
-                                      contents => encode_utf8($contents),
-                                      owner       => 'ldap',
-                                      group       => 'ldap',
-                                      mode        => 0440,
-                                    );
+        my $fh = CAF::FileWriter->new(
+            $fname,
+            owner => 'ldap',
+            group => 'ldap',
+            mode => 0440,
+            );
+        print $fh encode_utf8($contents);
+
+        my $result = $fh->close();
         if ($result) {
             $self->info("DB_CONFIG updated (ldap not restarted).");
         } else {
@@ -67,7 +72,8 @@ sub create_db_config_file
             }
         }
     } else {
-        $self->error("Directory $directory not found. Unable to create DB_CONFIG file (expect lower performance)");
+        $self->error("Directory $directory not found. ",
+                     "Unable to create DB_CONFIG file (expect lower performance)");
     };
 };
 
@@ -76,9 +82,10 @@ sub create_db_config_file
 sub print_monitoring
 {
     my ($self, $fh, $tree) = @_;
+
     # some default settings
-    if (exists($tree->{default}) && $tree->{default}) {
-        print $fh "\n","monitoring on","\n","database monitor","\n";
+    if ($tree->{default}) {
+        print $fh "\nmonitoring on\ndatabase monitor\n";
         delete($tree->{default});
     }
 }
@@ -88,15 +95,17 @@ sub print_overlay
 {
     my ($self, $fh, $overlay, $tree) = @_;
 
+    $self->verbose("Printing overlay information");
     my %overlay_boolean = (
-        "syncprov" => ["nopresent","reloadhint"]
+        "syncprov" => ["nopresent", "reloadhint"]
     );
 
-    while (my ($k, $v) = each(%$tree)) {
-        if (grep $_ eq $k, @{$overlay_boolean{$overlay}}) {
+    foreach my $k (sort keys %$tree) {
+        my $v = $tree->{$k};
+        if (grep {$_ eq $k} @{$overlay_boolean{$overlay}}) {
             $v = $v ? "TRUE" : "FALSE";
-        } elsif (ref($v) eq "ARRAY") {
-            $v=join(" ",@$v);
+        } elsif (ref($v) && ref($v) eq "ARRAY") {
+            $v = join(" ", @$v);
         }
         print $fh "$overlay-$k $v\n";
     };
@@ -116,7 +125,7 @@ sub print_replica_information
     }
 
     if (exists($tree->{schemachecking})) {
-        push(@flds, "schemachecking=" . ($tree->{schemachecking}?"on":"off"));
+        push(@flds, "schemachecking=" . ($tree->{schemachecking} ? "on" : "off"));
         delete($tree->{schemachecking});
     }
 
@@ -128,6 +137,7 @@ sub print_replica_information
         push(@flds, $rt);
         delete($tree->{retry});
     }
+
     if (exists($tree->{attrs})) {
         my $rt = sprintf(qq{attrs="%s"},
                          join(",", @{$tree->{attrs}}));
@@ -135,12 +145,13 @@ sub print_replica_information
         delete($tree->{attrs});
     }
 
-    while (my ($k, $v) = each(%$tree)) {
-        $v=qq{"$v"} if $v =~ m{=};
+    foreach my $k (sort keys %$tree) {
+        my $v = $tree->{$k};
+        $v = qq{"$v"} if $v =~ m{=};
         push(@flds, "$k=$v");
     }
 
-    print $fh  join("\n".INDENTATION, @flds), "\n";
+    print $fh join("\n".INDENTATION, @flds), "\n";
 }
 
 # Prints a database or a backend section to $fh, based on the contents
@@ -154,7 +165,6 @@ sub print_database_class
     print $fh "$type $tree->{class}\n";
     delete($tree->{class});
 
-
     foreach my $i (qw(add_content_acl hidden lastmod mirrormode
               monitoring readonly)) {
         if (exists($tree->{$i})) {
@@ -164,21 +174,22 @@ sub print_database_class
     }
 
     if (exists($tree->{restrict})) {
-        print $fh  join(" ", "restrict", @{$tree->{restrict}}), "\n";
+        print $fh join(" ", "restrict", @{$tree->{restrict}}), "\n";
         delete($tree->{restrict});
     }
 
     if (exists($tree->{index})) {
         foreach my $ind (@{$tree->{index}}) {
-            print $fh "index ",join(",",@{@$ind[0]})," ",join(",",@{@$ind[1]}),"\n";
+            print $fh "index ", join(",", @{@$ind[0]}),
+                      " ", join(",", @{@$ind[1]}), "\n";
         }
         delete($tree->{index});
     };
 
-
     if (exists($tree->{limits})) {
-        while (my ($k, $v) = each(%{$tree->{limits}})) {
-            print $fh  "limits ", unescape($k);
+        foreach my $k (sort keys %{$tree->{limits}}) {
+            my $v = $tree->{limits}->{$k};
+            print $fh "limits ", unescape($k);
             foreach my $i (qw(size time)) {
                 foreach my $j (qw(soft hard)) {
                     if (exists($v->{$i}->{$j})) {
@@ -194,7 +205,8 @@ sub print_database_class
     }
 
     if (exists($tree->{backend_specific})) {
-        while (my ($k, $v) = each(%{$tree->{backend_specific}})) {
+        foreach my $k (sort keys %{$tree->{backend_specific}}) {
+            my $v = $tree->{backend_specific}->{$k};
             print $fh  join("\n", map("$k $_", @$v), "");
         }
         delete($tree->{backend_specific});
@@ -205,18 +217,23 @@ sub print_database_class
         delete($tree->{suffix});
     }
 
+    if (exists($tree->{checkpoint})) {
+        print $fh "checkpoint $tree->{checkpoint}->{size} $tree->{checkpoint}->{minutes}\n";
+        delete($tree->{checkpoint});
+    }
+
     if (exists($tree->{db_config})) {
         if (exists($tree->{directory})) {
             # deal with exit code? restart ldap when file changed?
-            $self->create_db_config_file($tree->{directory},$tree->{db_config});
+            $self->create_db_config_file($tree->{directory}, $tree->{db_config});
         } else {
             $self->error("db_config defined but not directory");
         }
         delete($tree->{db_config});
     }
 
-    while (my ($k, $v) = each(%$tree)) {
-        print $fh  "$k $v\n" unless (grep $_ eq $k, qw(syncrepl overlay updateref));
+    foreach my $k (sort keys %$tree) {
+        print $fh "$k $tree->{$k}\n" unless (grep {$_ eq $k} qw(syncrepl overlay updateref));
     }
 
     if (exists($tree->{syncrepl})) {
@@ -225,19 +242,18 @@ sub print_database_class
     }
 
     # updateref should be put after syncrepl
-    print $fh  "updateref ".$tree->{updateref}."\n" if (exists($tree->{updateref}));
+    print $fh "updateref $tree->{updateref}\n" if (exists($tree->{updateref}));
 
     # overlays are last
     if (exists($tree->{overlay})) {
-        while (my ($overlay, $overlaytree) = each(%{$tree->{overlay}})) {
+        foreach my $overlay (sort keys %{$tree->{overlay}}) {
             print $fh "overlay $overlay\n";
-            $self->print_overlay($fh, $overlay, $overlaytree);
+            $self->print_overlay($fh, $overlay, $tree->{overlay}->{$overlay});
         }
         delete($tree->{overlay});
     }
 
     print $fh "\n";
-
 }
 
 # Prints the global options for the slapd.conf file.
@@ -251,9 +267,9 @@ sub print_global_options
         # what
         my $what;
         if (exists($access->{attrs})) {
-            $what="attrs=".join(',',@{$access->{attrs}});
+            $what = "attrs=".join(',', @{$access->{attrs}});
         } elsif (exists($access->{what})) {
-            $what=$access->{what};
+            $what = $access->{what};
         } else {
             $self->error("No valid 'what' section for access (supported are 'what' and 'attrs')");
         }
@@ -261,30 +277,27 @@ sub print_global_options
 
         # by
         foreach my $by (@{$access->{by}}) {
-            print $fh "\n".INDENTATION."by ".join(" ",@$by);
+            print $fh "\n" . INDENTATION . "by ".join(" ", @$by);
         }
         print $fh "\n";
     }
     delete($t->{access});
 
-    while (my ($name, $value) = each(%{$t->{"tls"}})) {
-        print $fh "TLS$name $value\n";
+    foreach my $name (sort keys %{$t->{tls}}) {
+        print $fh "TLS$name $t->{tls}->{$name}\n";
     }
 
     delete($t->{"tls"});
 
-    print $fh map("moduleload $_\n",
-              @{$t->{"moduleload"}});
-    delete($t->{"moduleload"});
-
+    print $fh map("moduleload $_\n", @{$t->{moduleload}});
+    delete($t->{moduleload});
 
     print $fh map("authz-regexp $_->{match} $_->{replace}\n",
-          @{$t->{"authz-regexp"}});
+                  @{$t->{"authz-regexp"}});
     delete($t->{"authz-regexp"});
 
-
     foreach my $i (qw(gentlehup reverse-lookup)) {
-        print $fh "$i ", $t->{$i} ? "on":"off", "\n"
+        print $fh "$i ", $t->{$i} ? "on" : "off", "\n"
             if exists($t->{$i});
         delete($t->{$i});
     }
@@ -292,14 +305,15 @@ sub print_global_options
     foreach my $i (qw(attributetype ditcontentrule ldapsyntax objectclass)) {
         next unless exists($t->{$i});
         print $fh "$i ";
-        while (my ($k, $v) = each(%{$t->{$i}})) {
-            print $fh " $k $v";
+        foreach my $k (sort keys %{$t->{$i}}) {
+            print $fh " $k $t->{$i}->{$k}";
         }
         print $fh "\n";
         delete($t->{$i});
     }
 
-    while (my ($k, $v) = each(%$t)) {
+    foreach my $k (sort keys %$t) {
+        my $v = $t->{$k};
         if (!ref($v)) {
             print $fh "$k $v";
         } elsif (ref($v) eq 'ARRAY') {
@@ -356,12 +370,13 @@ sub restart_slapd
 # Move slapd.d dir (newer, unsupported configuration method)
 sub move_slapdd_dir
 {
-    my ($self,$slapdddir) = @_;
+    my ($self, $slapdddir) = @_;
 
     if ( -d $slapdddir ) {
         my $origsuff = "orig.".time();
         $self->info("Moving slapd.d dir $slapdddir to $slapdddir.$origsuff.");
-        move($slapdddir, "$slapdddir.$origsuff")  || $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
+        move($slapdddir, "$slapdddir.$origsuff")  ||
+            $self->error("Moving $slapdddir to $slapdddir.$origsuff failed: $!");
     } else {
         $self->debug(2, "Moving slapd.d dir $slapdddir: no such dir found.");
     }
@@ -396,10 +411,10 @@ sub Configure
         foreach my $i (@{$t->{databases}}) {
             $self->print_database_class($fh, "database", $i);
         }
-        $self->print_monitoring($fh,$t->{monitoring}) if (exists($t->{monitoring}));
+        $self->print_monitoring($fh, $t->{monitoring}) if (exists($t->{monitoring}));
 
         # move conf_dir/slapd.d
-        if (exists($t->{move_slapdd}) && $t->{move_slapdd}) {
+        if ($t->{move_slapdd}) {
             $self->move_slapdd_dir(dirname($t->{conf_file})."/slapd.d");
         }
     } else {
@@ -413,14 +428,18 @@ sub Configure
         $self->restart_slapd();
         return 1;
     } else {
-        $self->info("Restoring the old configuration file; invalid configuration file stored in $t->{conf_file}.invalid");
-        move($t->{conf_file}, "$t->{conf_file}.invalid") || $self->error("Moving $t->{conf_file} to $t->{conf_file}.invalid failed: $!");
-        if (-f "$t->{conf_file}$backupsuff") {
-            move("$t->{conf_file}$backupsuff", $t->{conf_file})  || $self->error("Moving $t->{conf_file}$backupsuff to $t->{conf_file} failed: $!");
-        } else {
-            $self->info("Restoring the old configuration file: no backup file $t->{conf_file}$backupsuff found");
-        }
+        $self->info("Restoring the old configuration file; ",
+                    "invalid configuration file stored in $t->{conf_file}.invalid");
+        move($t->{conf_file}, "$t->{conf_file}.invalid") ||
+            $self->error("Moving $t->{conf_file} to $t->{conf_file}.invalid failed: $!");
 
+        if (-f "$t->{conf_file}$backupsuff") {
+            move("$t->{conf_file}$backupsuff", $t->{conf_file})  ||
+                $self->error("Moving $t->{conf_file}$backupsuff to $t->{conf_file} failed: $!");
+        } else {
+            $self->info("Restoring the old configuration file: ",
+                        "no backup file $t->{conf_file}$backupsuff found");
+        }
     }
     return 0;
 }
@@ -435,8 +454,6 @@ sub legacy_setup
 
     my ($database, $suffix, $rootdn, $rootpw, $directory, $loglevel,
         $argsfile, $pidfile, $base, $ldap_config);
-
-
 
     # get values if elements exist
     if ($config->elementExists("$base/database")) {
