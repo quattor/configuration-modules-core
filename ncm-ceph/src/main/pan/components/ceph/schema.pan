@@ -268,7 +268,7 @@ type ceph_crushmap_bucket = {
 
 @documentation{ ceph crushmap rule step }
 type ceph_crushmap_rule_choice = {
-    'chtype'    : string with match(SELF, '^(choose firstn|chooseleaf firstn|choose indep)$')
+    'chtype'    : string with match(SELF, '^choose(leaf)? (firstn|indep)$')
     'number'    : long = 0
     'bktype'      : string 
 };
