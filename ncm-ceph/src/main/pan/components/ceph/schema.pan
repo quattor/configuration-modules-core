@@ -276,6 +276,7 @@ type ceph_crushmap_rule_choice = {
 @documentation{ ceph crushmap rule step }
 type ceph_crushmap_rule_step = {
     'take'       : string # Should be a valid bucket
+    'set_choose_tries' ? long
     'set_chooseleaf_tries' ? long
     'choices'    : ceph_crushmap_rule_choice[1..]
 };
