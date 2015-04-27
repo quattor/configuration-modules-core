@@ -36,7 +36,7 @@ function component_mysql_check_db_script = {
 
 type component_mysql_db_user = {
   'password'  : string with match(SELF, '^[^\\]+$')
-  'rights'    : string[]
+  'rights'    : string[] = list('ALL PRIVILEGES')
   'shortPwd'  : boolean = false
 };
 
