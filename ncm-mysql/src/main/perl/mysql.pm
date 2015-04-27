@@ -247,6 +247,8 @@ sub Configure {
       }
     }
 
+    $self->flushPrivileges($server);
+
     # Mark the server as enabled
     $servers->{$server_name}->{enabled} = 1;
     
@@ -316,10 +318,26 @@ sub Configure {
       }
     }
 
+    $self->flushPrivileges($server);
+
   }
 
 
   return 0;
+}
+
+
+# Flush privileges on a given server.
+#
+# Arguments :
+#  server : hash describing MySQL server to use (see schema)
+sub flushPrivileges() {
+  my ($self, $server) = @_;
+  # Ensure privileges are applied
+  my $status = $self->mysqlExecCmd($server,"FLUSH PRIVILEGES");
+  if ( $status ) {
+    $self->warn("Error flushing privileges");
+  }
 }
 
 
