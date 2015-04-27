@@ -2,12 +2,10 @@
 use strict;
 use warnings;
 use Test::More;
-use CAF::Object;
 use Test::Quattor qw(bridge);
+use helper;
 use NCM::Component::network;
 
-
-$CAF::Object::NoAction = 1;
 
 =pod
 
@@ -28,5 +26,7 @@ isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-br0 file w
 like($fh, qr/STP=on/m, "enable STP");
 like($fh, qr/DELAY=\d+/m, "set bridge delay");
 like($fh, qr/BRIDGING_OPTS='.*hairpin_mode=5.*'/m, "set bridge_opts");
+
+unlike($fh, qr/IPV6/, "No IPv6 config details");
 
 done_testing();

@@ -1,8 +1,7 @@
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(simple);
+use Test::Quattor qw(ipv6);
 
 use helper;
 use NCM::Component::network;
@@ -11,11 +10,11 @@ use NCM::Component::network;
 
 =head1 DESCRIPTION
 
-Test the C<Configure> method of the component for bridge configuration.
+Test the C<Configure> method of the component for ipv6 configuration.
 
 =cut
 
-my $cfg = get_config_for_profile('simple');
+my $cfg = get_config_for_profile('ipv6');
 my $cmp = NCM::Component::network->new('network');
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
@@ -30,21 +29,15 @@ like($fh, qr/^NETWORKING=yes$/m, "Enable networking");
 like($fh, qr/^HOSTNAME=somehost.test.domain$/m, "FQDN hostname"); 
 like($fh, qr/^GATEWAY=/m, "Set default gateway"); 
 
-unlike($fh, qr/IPV6/, "No IPv6 config details");
-
+like($fh, qr/^NETWORKING_IPV6=yes$/m, "Enable IPv6 networking");
+like($fh, qr/^IPV6_DEFAULTDEV=eth0$/m, "Set IPv6 defaultdev via ipv6/gatewaydev");
 
 $fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
 
-like($fh, qr/^ONBOOT=yes$/m, "enable interface at boot time");
-like($fh, qr/^NM_CONTROLLED=/m, "network manager option");
-like($fh, qr/^DEVICE=eth0$/m, "set device name");
-like($fh, qr/^TYPE=Ethernet$/m, "set type");
-like($fh, qr/^BOOTPROTO=static$/m, "statuc config");
-like($fh, qr/^IPADDR=/m, "fixed IPaddr");
-like($fh, qr/^NETMASK=/m, "fixed netmask");
-like($fh, qr/^BROADCAST=/m, "fixed broadcast");
-
-unlike($fh, qr/IPV6/, "No IPv6 config details");
+like($fh, qr/^IPV6ADDR=2001:678:123:e012::45\/64$/m, "set ipv6 addr");
+like($fh, qr/^IPV6ADDR_SECONDARIES='2001:678:123:e012::46\/64 2001:678:123:e012::47\/64'$/m, "set ipv6 addr");
+like($fh, qr/^IPV6_AUTOCONF=no$/m, "IPV6 autoconf disabled");
+like($fh, qr/^IPV6INIT=yes$/m, "IPv6 INIT (implicitly) enabled");
 
 done_testing();

@@ -3,9 +3,14 @@
 # ${author-info}
 # ${build-info}
 
+unique template components/${project.artifactId}/config;
+include 'components/${project.artifactId}/schema';
 
-unique template components/network/config;
+'/software/packages'=pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${RELEASE}','noarch');
 
-
-include { 'components/${project.artifactId}/config-common' };
-include { 'components/${project.artifactId}/config-rpm' };
+prefix '/software/components/${project.artifactId}';
+'dependencies/pre' ?= list('spma');
+'active' ?= true;
+'dispatch' ?= true;
+'version' = '${no-snapshot-version}';
+'register_change' = append("/system/network");

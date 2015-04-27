@@ -1,15 +1,6 @@
-################################################################################
-# This is 'network.pod', a ncm-network's file
-################################################################################
-#
-# VERSION:    1.2.10, 21/06/10 15:26
-# AUTHOR:     Stijn De Weirdt
-# MAINTAINER: Stijn De Weirdt
-# LICENSE:    http://cern.ch/eu-datagrid/license.html
-#
-################################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
+# ${license-info}
+# ${developer-info}
+# ${author-info}
 
 =head1 NAME
 
@@ -178,8 +169,23 @@ Use the C<< vlan[0-9]{0-4} >> interface devices and set the the explicit device 
 The VLAN ID is the number of the '.' in the device name. C< Physdev > is mandatory for C<< vlan[0-9]{0-4} >> device.
 An example:
 
-    "/system/network/interfaces/vlan0" = VLAN_NETWORK_PARAMS;
-    "/system/network/interfaces/vlan0/device" = "eth0.3";
-    "/system/network/interfaces/vlan0/physdev" = "eth0";
+    prefix "/system/network/interfaces";
+    "vlan0" = VLAN_NETWORK_PARAMS;
+    "vlan0/device" = "eth0.3";
+    "vlan0/physdev" = "eth0";
+
+=head1 IPv6 support
+
+An example:
+
+    prefix "/system/network";
+    "ipv6/enabled" = true;
+    "ipv6/default_gateway" = "2001:678:123:e030::1";
+    "interfaces/eth0/ipv6_autoconf" = false;
+    "interfaces/eth0/ipv6addr" = "2001:610:120:e030::49/64";
+    "interfaces/eth0/ipv6addr_secondaries" = list(
+        "2001:678:123:e030::20:30/64",
+        "2001:678:123:e030:172:10:20:30/64",
+        );
 
 =cut
