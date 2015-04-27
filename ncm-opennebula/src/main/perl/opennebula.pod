@@ -77,6 +77,28 @@ be described in this section.
 
 Set ssh multiplex options
 
+=item * host_hyp : string
+
+Set host hypervisor type
+
+=over 5
+
+=item * kvm
+
+Set KVM hypervisor
+
+=item * xen
+
+Set XEN hypervisor
+
+=back
+
+=item * host_ovs : boolean (optional)
+
+Includes the Open vSwitch network drives in your hypervisors. (OVS must be installed in each host)
+Open vSwitch replaces Linux bridges, Linux bridges must be disabled.
+More info: http://docs.opennebula.org/4.4/administration/networking/openvswitch.html
+
 =item * tm_system_ds : string (optional)
 
 Set system datastore TM_MAD value (shared by default). Valid values:

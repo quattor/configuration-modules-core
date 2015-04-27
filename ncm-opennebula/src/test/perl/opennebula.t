@@ -37,7 +37,7 @@ is($NCM::Component::opennebula::ONED_CONF_FILE, "/etc/one/oned.conf", "expected 
 
 my $fh = get_file($NCM::Component::opennebula::ONED_CONF_FILE);
 isa_ok($fh, "CAF::FileWriter", "oned.conf CAF::FileWriter instance");
-# only test one entry, the remainder is verified with teh TT unittests
+# only test one entry, the remainder is verified with the TT unittests
 like("$fh", qr{^DB\s?=\s?\[$}m, "oned.conf has expected content");
 
 done_testing();

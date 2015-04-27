@@ -8,8 +8,6 @@ declaration template components/opennebula/schema;
 include 'quattor/schema';
 include 'pan/types';
 
-type uuid = string with match(SELF,'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}');
-
 type directory = string with match(SELF,'[^/]+/?$');
 
 type opennebula_db = {
@@ -24,83 +22,85 @@ type opennebula_db = {
 type opennebula_log = {
     "system" : string = 'file' with match (SELF, '^(file|syslog)$')
     "debug_level" : long(0..3) = 3
-} = nlist();
+} = dict();
 
 type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
     "zone_id" : long = 0
     "master_oned" : string = ''
-} = nlist();
+} = dict();
 
 type opennebula_im = {
     "executable" : string = 'one_im_ssh'
     "arguments" : string
-} = nlist();
+} = dict();
 
 type opennebula_im_mad_collectd = {
     include opennebula_im
-} = nlist("executable", 'collectd', "arguments", '-p 4124 -f 5 -t 50 -i 20');
+} = dict("executable", 'collectd', "arguments", '-p 4124 -f 5 -t 50 -i 20');
 
 type opennebula_im_mad_kvm = {
     include opennebula_im
-} = nlist("arguments", '-r 3 -t 15 kvm');
+} = dict("arguments", '-r 3 -t 15 kvm');
 
 type opennebula_im_mad_xen = {
     include opennebula_im
-} = nlist("arguments", '-r 3 -t 15 xen4');
+} = dict("arguments", '-r 3 -t 15 xen4');
 
 type opennebula_im_mad = {
     "collectd" : opennebula_im_mad_collectd
     "kvm" : opennebula_im_mad_kvm
     "xen" : opennebula_im_mad_xen
-} = nlist();
+} = dict();
 
 type opennebula_vm = {
     "executable" : string = 'one_vmm_exec'
     "arguments" : string
     "default" : string
-} = nlist();
+} = dict();
 
 type opennebula_vm_mad_kvm = {
     include opennebula_vm
-} = nlist("arguments", '-t 15 -r 0 kvm', "default", 'vmm_exec/vmm_exec_kvm.conf');
+} = dict("arguments", '-t 15 -r 0 kvm', "default", 'vmm_exec/vmm_exec_kvm.conf');
 
 type opennebula_vm_mad_xen = {
     include opennebula_vm
-} = nlist("arguments", '-t 15 -r 0 xen4', "default", 'vmm_exec/vmm_exec_xen4.conf');
+} = dict("arguments", '-t 15 -r 0 xen4', "default", 'vmm_exec/vmm_exec_xen4.conf');
 
 type opennebula_vm_mad = {
     "kvm" : opennebula_vm_mad_kvm
     "xen" : opennebula_vm_mad_xen
-} = nlist();
+} = dict();
 
 type opennebula_tm_mad = {
     "executable" : string = 'one_tm'
     "arguments" : string = '-t 15 -d dummy,lvm,shared,fs_lvm,qcow2,ssh,vmfs,ceph'
-} = nlist();
+} = dict();
 
 type opennebula_datastore_mad = {
     "executable" : string = 'one_datastore'
     "arguments" : string  = '-t 15 -d dummy,fs,vmfs,lvm,ceph'
-} = nlist();
+} = dict();
 
 type opennebula_hm_mad = {
     "executable" : string = 'one_hm'
-} = nlist();
+} = dict();
 
 type opennebula_auth_mad = {
     "executable" : string = 'one_auth_mad'
     "authn" : string = 'ssh,x509,ldap,server_cipher,server_x509'
-} = nlist();
+} = dict();
 
 type opennebula_tm_mad_conf = {
     "name" : string = "dummy"
     "ln_target" : string = "NONE"
     "clone_target" : string = "SYSTEM"
     "shared" : boolean = true
-} = nlist();
+} = dict();
 
-@{ check if a specific type of datastore has the right attributes @}
+@documentation{ 
+check if a specific type of datastore has the right attributes
+}
 function is_consistent_datastore = {
     ds = ARGV[0];
     if (ds['ds_mad'] == 'ceph') {
@@ -120,20 +120,35 @@ function is_consistent_datastore = {
     return(true);
 };
 
-@{ 
+@documentation{ 
 type for ceph datastore specific attributes. 
 ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory 
-@}
+}
 type opennebula_ceph_datastore = {
     "ceph_host"                 ? string[]
-    "ceph_secret"               ? uuid
+    "ceph_secret"               ? type_uuid
     "ceph_user"                 ? string
     "ceph_user_key"             ? string
     "pool_name"                 ? string
     "rbd_format"                ? long(1..2)
 };
 
-@{ type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph) @}
+@documentation{ 
+type for vnet ars specific attributes. 
+type and size are mandatory 
+}
+type opennebula_ar = {
+    "type"                      : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
+    "ip"                        ? type_ipv4
+    "size"                      : long (1..)
+    "mac"                       ? type_hwaddr
+    "global_prefix"             ? string
+    "ula_prefix"                ? string
+};
+
+@documentation{ 
+type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph)
+}
 type opennebula_datastore = {
     include opennebula_ceph_datastore
     "name"                      : string
@@ -147,11 +162,14 @@ type opennebula_datastore = {
 
 type opennebula_vnet = {
     "name" : string
-    "type" : string  = 'FIXED'
     "bridge" : string
     "gateway" : type_ipv4
     "dns" : type_ipv4
     "network_mask" : type_ipv4
+    "bridge_ovs" ? string
+    "vlan" ? boolean
+    "vlan_id" ? long(0..4095)
+    "ar" ? opennebula_ar
 };
 
 type opennebula_user = {
@@ -194,37 +212,37 @@ type opennebula_oned = {
     "hm_mad" : opennebula_hm_mad
     "auth_mad" : opennebula_auth_mad
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
-        nlist(), 
-        nlist("name", "lvm", "clone_target", "SELF"), 
-        nlist("name", "shared"), 
-        nlist("name", "fs_lvm", "ln_target", "SYSTEM"), 
-        nlist("name", "qcow2"), 
-        nlist("name", "ssh", "ln_target", "SYSTEM", "shared", false), 
-        nlist("name", "vmfs"), 
-        nlist("name", "ceph", "clone_target", "SELF")
+        dict(), 
+        dict("name", "lvm", "clone_target", "SELF"), 
+        dict("name", "shared"), 
+        dict("name", "fs_lvm", "ln_target", "SYSTEM"), 
+        dict("name", "qcow2"), 
+        dict("name", "ssh", "ln_target", "SYSTEM", "shared", false), 
+        dict("name", "vmfs"), 
+        dict("name", "ceph", "clone_target", "SELF")
     )
     "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE")
     "image_restricted_attr" : string = 'SOURCE'
     "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", 
                                                "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")
-    "inherit_vnet_attr" : string = 'VLAN_TAGGED_ID'
+    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
 };
 
-@{ 
+@documentation{ 
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
-@}
+}
 type opennebula_rpc = {
     "port" : long(0..) = 2633
     "host" : string = 'localhost'
     "user" : string = 'oneadmin'
     "password" : string
-} = nlist();
+} = dict();
 
-@{
+@documentation{
 Type that sets the OpenNebula
 untouchable resources
-@}
+}
 type opennebula_untouchables = {
     "datastores" ? string[]
     "vnets" ? string[]
@@ -233,10 +251,10 @@ type opennebula_untouchables = {
 };
 
 
-@{
+@documentation{
 Type to define ONE basic resources
 datastores, vnets, hosts names, etc
-@}
+}
 type component_opennebula = {
     include structure_component
     'datastores'    : opennebula_datastore[1..]
@@ -247,6 +265,8 @@ type component_opennebula = {
     'untouchables'  : opennebula_untouchables
     'oned'          : opennebula_oned
     'ssh_multiplex' : boolean = true
+    'host_ovs'      ? boolean
+    'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
-} = nlist();
+} = dict();
 

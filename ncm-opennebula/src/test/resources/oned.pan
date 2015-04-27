@@ -1,7 +1,7 @@
 unique template oned;
 
 prefix "/software/components/opennebula/oned";
-"db" = nlist(
+"db" = dict(
     "backend", "mysql",
     "server", "localhost",
     "port", 0,
