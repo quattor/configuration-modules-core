@@ -245,7 +245,7 @@ type ceph_radosgwh = {
     arg = bucket algoritm
 }
 function is_ceph_crushmap_bucket_alg = {
-    if (!match(ARGV[0], '^(uniform|list|tree|straw)$')){
+    if (!match(ARGV[0], '^(uniform|list|tree|straw|straw2)$')){
         error(ARGV[0] +  'is not a valid bucket algorithm');
         return(false);
     };
