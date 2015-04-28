@@ -336,7 +336,7 @@ sub flushPrivileges() {
   # Ensure privileges are applied
   my $status = $self->mysqlExecCmd($server,"FLUSH PRIVILEGES");
   if ( $status ) {
-    $self->warn("Error flushing privileges");
+    $self->warn("Error flushing privileges on server $server->{host}");
   }
 }
 
