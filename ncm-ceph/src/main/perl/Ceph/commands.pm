@@ -151,6 +151,7 @@ sub run_ceph_deploy_command {
 # Accept and add unknown keys if wanted
 sub ssh_known_keys {
     my ($self, $host, $key_accept, $homedir) = @_; 
+    return 1 if !defined($key_accept);
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
         my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
