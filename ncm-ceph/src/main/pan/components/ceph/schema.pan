@@ -214,7 +214,7 @@ type ceph_cluster_config = {
     'cluster_network'           ? type_network_name
     'enable_experimental_unrecoverable_data_corrupting_features' ? string[1..]
     'filestore_xattr_use_omap'  : boolean = true
-    'fsid'                      : string # Should be generated with uuidgen
+    'fsid'                      : type_uuid # Should be generated with uuidgen
     'mon_cluster_log_to_syslog' : boolean = true
     'mon_initial_members'       : string [1..]
     'mon_osd_min_down_reporters' ? long(0..)
