@@ -80,6 +80,7 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 'rules/2/min_size' = 0;
 'rules/2/max_size' = 10;
 'rules/2/steps' = BASE_STEPS;
+'rules/2/steps/0/set_choose_tries' = 100;
 
 'buckets/0/name' = 'default';
 'buckets/0/type' = 'root';
