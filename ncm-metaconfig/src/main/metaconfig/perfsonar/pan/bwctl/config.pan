@@ -16,7 +16,7 @@ prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.conf}";
 "owner" = "root";
 "group" = "root";
 "module" = "general";
-"daemon/0" = "bwctld";
+"daemons/bwctld" = "restart";
 
 prefix "/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}";
 "module" = "general";
@@ -30,11 +30,11 @@ prefix "/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}";
     l = value("/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}");
     l["owner"] = "perfsonar";
     l["group"] = "perfsonar";
-    l["daemon"] = list("perfsonarbuoy_bw_master");
+    l["daemons"] = dict("perfsonarbuoy_bw_master", "restart");
     l;
 };
 
 prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}";
 "module" = "perfsonar/bwctl-limits";
-"daemon/0" = "bwctld";
+"daemons/bwctld" = "restart";
 

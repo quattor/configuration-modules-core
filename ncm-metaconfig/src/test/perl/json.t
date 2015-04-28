@@ -34,7 +34,7 @@ my $cfg = {
 				a => [0..3]
 				}
 			},
-	   daemon => ['httpd'],
+	   daemons => {'httpd' => 'restart'},
 	   module => "json",
 	  };
 

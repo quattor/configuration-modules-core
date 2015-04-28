@@ -6,7 +6,7 @@ bind "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_
 
 prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/daemon.conf}";
 
-"daemon/0" = "perfsonarbuoy_ma";
+"daemons/perfsonarbuoy_ma" = "restart";
 "owner" = "root";
 "group" = "root";
 "module" = "perfsonar/ma";

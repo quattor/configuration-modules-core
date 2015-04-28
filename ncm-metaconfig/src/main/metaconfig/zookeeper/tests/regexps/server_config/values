@@ -1,4 +1,4 @@
-Values test for zookeepr main server config
+Values test for zookeeper main server config
 ---
 multiline
 metaconfigservice=/etc/zookeeper/conf/zoo.cfg

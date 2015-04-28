@@ -5,7 +5,7 @@ include 'metaconfig/graphite/schema';
 bind "/software/components/metaconfig/services/{/etc/carbon/relay-rules.conf}/contents" = carbon_relay_relay_rules;
 
 prefix "/software/components/metaconfig/services/{/etc/carbon/relay-rules.conf}";
-"daemon/0" = "carbon-relay";
+"daemons/carbon-relay" = "restart";
 "module" = "graphite/relay-rules";
 "mode" = 0644;
 

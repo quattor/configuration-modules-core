@@ -6,9 +6,9 @@ bind "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_
 
 prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}";
 "module" = "perfsonar/owmesh";
-"daemon" = list(
-    "perfsonarbuoy_bw_master", 
-    "perfsonarbuoy_bw_collector",
-    "perfsonarbuoy_owp_master", 
-    "perfsonarbuoy_owp_collector"
-    );
+"daemons" = dict(
+    "perfsonarbuoy_bw_master", "restart",
+    "perfsonarbuoy_bw_collector", "restart",
+    "perfsonarbuoy_owp_master", "restart",
+    "perfsonarbuoy_owp_collector", "restart",
+);

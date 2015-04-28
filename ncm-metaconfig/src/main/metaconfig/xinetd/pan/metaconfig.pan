@@ -4,4 +4,4 @@ structure template metaconfig/xinetd/metaconfig;
 "group" = "root";
 "module" = "xinetd/main";
 "mode" = 0644;
-"daemon" = list('xinetd');
+"daemons/xinetd" = "restart";

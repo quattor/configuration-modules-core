@@ -6,5 +6,5 @@ bind "/software/components/metaconfig/services/{/etc/httpd/conf/httpd.conf}/cont
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf/httpd.conf}";
 "module" = "httpd/httpd_conf";
-"daemon/0" = "httpd";
+"daemons/httpd" = "restart";
 

@@ -1,4 +1,4 @@
-Base test for zookeepr main server config
+Base test for zookeeper main server config
 ---
 multiline
 metaconfigservice=/etc/zookeeper/conf/zoo.cfg

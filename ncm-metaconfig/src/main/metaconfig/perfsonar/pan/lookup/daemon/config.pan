@@ -9,5 +9,5 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/lookup_servi
 "module" = "perfsonar/lookup_service";
 "owner" = "root";
 "group" = "root";
-"daemon/0" = "lookup_service";
+"daemons/lookup_service" = "restart";
 "backup" = ".old";

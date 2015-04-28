@@ -55,15 +55,6 @@ for the daemon will be taken at most once.
 If multiple actions are to be taken for the same daemon, all actions
 will be taken (no attempt to optimize is made).
 
-=item * daemon ? string[]
-
-[Deprecated in favour of daemons]
-
-List of daemons to restart if the file changes.
-
-Even if multiple C<services> are associated to the same daemon, the
-daemon will be restarted at most once.
-
 =item * preamble ? string
 
 Text to place at start of file.
@@ -199,8 +190,8 @@ We'll define the permissions, who renders it and which daemons are associated to
     "owner" = "root";
     "group" = "root";
     "module" = "tiny";
-    "daemon/0" = "foo";
-    "daemon/1" = "bar";
+    "daemons/foo" = "restart";
+    "daemons/bar" = "reload";
 
 And we'll ensure the module that renders it is installed (Yum-based
 syntax here):
