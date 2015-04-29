@@ -257,12 +257,13 @@ sub Configure($$@) {
 
       foreach my $map (keys(%mount_points)) {
         my $map_attrs = $master_entry_attrs{$map};
+        my $map_type_prefix = $map_attrs->{type} eq 'direct' ? '' : $map_attrs->{type}.':';
         foreach my $mountp ( @{$mount_points{$map}} ) {
           $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
           $cnt += $self->updateMap($master_contents_ref,
                                    '^#?\s*('.$error_prefix.'\s*)?'.$mountp.'\s+.*',
-                                   '^'.$map_attrs->{prefix}.$mountp.'\s+'.$map_attrs->{type}.':'.$map.'\s+'.$map_attrs->{options}.'\s*$',
-                                   $map_attrs->{prefix}."$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options},
+                                   '^'.$map_attrs->{prefix}.$mountp.'\s+'.$map_type_prefix.$map.'\s+'.$map_attrs->{options}.'\s*$',
+                                   $map_attrs->{prefix}."$mountp\t$map_type_prefix$map\t".$map_attrs->{options},
                                   );
         }
       }
@@ -274,8 +275,9 @@ sub Configure($$@) {
       foreach my $map (keys(%mount_points)) {
         my $map_attrs = $master_entry_attrs{$map};
         foreach my $mountp ( @{$mount_points{$map}} ) {
+          my $map_type_prefix = $map_attrs->{type} eq 'direct' ? '' : $map_attrs->{type}.':';
           $master_contents .= $map_attrs->{prefix}.
-                                       "$mountp\t".$map_attrs->{type}.":$map\t".$map_attrs->{options}."\n";
+                                       "$mountp\t$map_type_prefix$map\t".$map_attrs->{options}."\n";
         }
       }
       $cnt += LC::Check::file("/etc/auto.master",
