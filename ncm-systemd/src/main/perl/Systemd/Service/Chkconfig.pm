@@ -77,6 +77,7 @@ sub current_units
     my $data = CAF::Process->new(
         [$CHKCONFIG, '--list'],
         log => $self,
+        keeps_state => 1,
         )->output();
     my $ec = $?;
     if ($ec) {
@@ -401,9 +402,8 @@ sub convert_runlevels
 
         # only for non-default/non-valid runlevels?
         if (!scalar @targets) {
-            $self->warn(
-                "legacylevel set to $legacylevel, but not converted in new targets. Using default $DEFAULT_TARGET."
-            );
+            $self->warn("legacylevel set to $legacylevel, but not converted in ",
+                        "new targets. Using default $DEFAULT_TARGET.");
             push(@targets, "$DEFAULT_TARGET.$TYPE_TARGET");
         }
         $self->debug(1, "Converted legacylevel '$legacylevel' in " . join(', ', @targets));
@@ -461,7 +461,7 @@ sub current_runlevel
 
     my $process = sub {
         my ($self, $cmd, $reg) = @_;
-        my $proc = CAF::Process->new($cmd, log=>$self);
+        my $proc = CAF::Process->new($cmd, log => $self, keeps_state => 1);
         if (! $proc->is_executable) {
             $self->debug(1, "No runlevel via command $proc (not executable)");
             return;

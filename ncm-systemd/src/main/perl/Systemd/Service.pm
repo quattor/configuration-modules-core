@@ -290,7 +290,7 @@ sub gather_current_units
     #   they do show up in list-units --all
     #     even when only chkconfig --add is used
     #   systemctl mask removes it from the output of chkconfig --list
-    #   systemctl umask restores it to last known state
+    #   systemctl unmask restores it to last known state
 
     # How to join these:
     # TODO: re-verify (seems not to be the case?)

@@ -112,6 +112,7 @@ sub systemctl_show
     my ($logger, $unit) = @_;
     my $proc = CAF::Process->new([$SYSTEMCTL, "--no-pager", "--all", "show"],
                                   log => $logger,
+                                  keeps_state => 1,
                                   );
     if (defined($unit)) {
         $proc->pushargs('--', $unit);
@@ -215,6 +216,7 @@ sub systemctl_list_deps
     my $proc = CAF::Process->new(
         [$SYSTEMCTL, '--no-pager', '--no-legend', '--full', '--plain', 'list-dependencies'],
         log => $logger,
+        keeps_state => 1,
         );
 
     my $deptxt = "dependencies";
@@ -256,6 +258,11 @@ Returns exitcode and output.
 
 =cut
 
+# C<keeps_state> is not set while running the actual command,
+# so nothing will be done here under C<NoAction>;
+# but you should use C<systemctl_show> and C<systemctl_list_deps>
+# to retrieve information about units.
+# TODO: Support whitelist of "safe" commands to run with keeps_state?
 sub systemctl_command_units
 {
     my ($logger, $command, @units) = @_;
@@ -316,6 +323,7 @@ sub systemctl_list
     my $proc = CAF::Process->new(
         [$SYSTEMCTL, '--all', '--no-pager', '--no-legend', '--full'],
         log => $logger,
+        keeps_state => 1,
         );
 
     if($spec =~ m/^([\w-]+)$/) {
