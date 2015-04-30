@@ -302,6 +302,13 @@ sub gather_current_units
 
     my $units = $self->{chkconfig}->current_units();
 
+    # Add all found chkconfig services to the limit_units
+    # (unless limit_units is undefined/empty, in which case all units are gathered)
+    if(@limit_units) {
+        foreach my $unit (sort keys %$units) {
+            push(@limit_units, $unit) if (! (grep {$_ eq $unit} @limit_units));
+        }
+    }
     my $current_units = $self->{unit}->current_units(\@limit_units, $possible_missing);
 
     # It's normal that systemctl finds the chkconfig units;
