@@ -119,11 +119,11 @@ sub config_hash {
                     $host->{config} = $cfg;    
                 } elsif ($name =~ m/^osd\.(\S+)/) {
                     my $loc = $mapping->{get_loc}->{$1};
-                    if (!$loc) {
-                        $self->error("Could not find location of $name on host $hostname");
-                        return ;
+                    if ($loc) {
+                        $host->{osds}->{$loc}->{config} = $cfg;
+                    } else {
+                        $self->warn("Could not find location of $name on host $hostname, removing from configfile");
                     }
-                    $host->{osds}->{$loc}->{config} = $cfg;
                 } elsif ($name =~ m{^mon(\.\S+)?}) { # Only one monitor per host..
                     $host->{mon}->{config} = $cfg;
                 } elsif ($name =~ m{^mds(\.\S+)?}) { # Only one mds per host..
