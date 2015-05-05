@@ -108,6 +108,7 @@
     <module>ncm-ceph</module>
     <module>ncm-nss</module>
     <module>ncm-opennebula</module>
+    <module>ncm-systemd</module>
   </modules>
 
   <build>
