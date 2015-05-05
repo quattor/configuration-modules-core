@@ -99,6 +99,15 @@ type opennebula_tm_mad_conf = {
 } = dict();
 
 @documentation{ 
+The following attributes define the default cost for Virtual Machines that don’t have a CPU or MEMORY cost.
+This is used by the oneshowback calculate method.
+}
+type opennebula_default_cost = {
+    "cpu_cost" : long = 0
+    "memory_cost" : long = 0
+} = dict();
+
+@documentation{ 
 check if a specific type of datastore has the right attributes
 }
 function is_consistent_datastore = {
@@ -189,10 +198,25 @@ type opennebula_remoteconf_ceph = {
 
 type opennebula_oned = {
     "db" : opennebula_db
-    "default_device_prefix" ? string = 'hd'
+    "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
     "onegate_endpoint" ? string
+    "manager_timer" ? long
     "monitoring_interval" : long = 60
     "monitoring_threads" : long = 50
+    "host_per_interval" ? long
+    "host_monitoring_expiration_time" ? long
+    "vm_individual_monitoring" ? boolean
+    "vm_per_interval" ? long
+    "vm_monitoring_expiration_time" ? long
+    "vm_submit_on_hold" ? boolean
+    "max_conn" ? long
+    "max_conn_backlog" ? long
+    "keepalive_timeout" ? long
+    "keepalive_max_conn" ? long
+    "timeout" ? long
+    "rpc_log" ? boolean
+    "message_size" ? long
+    "log_call_format" ? string
     "scripts_remote_dir" : directory = '/var/tmp/one'
     "log" : opennebula_log
     "federation" : opennebula_federation
@@ -200,9 +224,11 @@ type opennebula_oned = {
     "vnc_base_port" : long = 5900
     "network_size" : long = 254
     "mac_prefix" : string = '02:00'
+    "datastore_location" ? directory = '/var/lib/one/datastores'
+    "datastore_base_path" ? directory = '/var/lib/one/datastores'
     "datastore_capacity_check" : boolean = true
-    "default_image_type" : string = 'OS'
-    "default_cdrom_device_prefix" : string = 'hd'
+    "default_image_type" : string = 'OS' with match (SELF, '^(OS|CDROM|DATABLOCK)$')
+    "default_cdrom_device_prefix" : string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
     "session_expiration_time" : long = 900
     "default_umask" : long = 177
     "im_mad" : opennebula_im_mad
@@ -211,6 +237,7 @@ type opennebula_oned = {
     "datastore_mad" : opennebula_datastore_mad
     "hm_mad" : opennebula_hm_mad
     "auth_mad" : opennebula_auth_mad
+    "default_cost" : opennebula_default_cost
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
         dict(), 
         dict("name", "lvm", "clone_target", "SELF"), 
@@ -221,7 +248,11 @@ type opennebula_oned = {
         dict("name", "vmfs"), 
         dict("name", "ceph", "clone_target", "SELF")
     )
-    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE")
+    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE", 
+                                           "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE", 
+                                           "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC", 
+                                           "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC", 
+                                           "CPU_COST", "MEMORY_COST")
     "image_restricted_attr" : string = 'SOURCE'
     "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", 
                                                "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")

@@ -11,6 +11,10 @@ multiline
 ^\s*user\s?=\s*".+"\s*$
 ^\]$
 ^DEFAULT_CDROM_DEVICE_PREFIX\s?=\s?".+"\s*$
+^DEFAULT_COST\s?=\s?\[$
+^\s*cpu_cost\s?=\s*\d+,\s*$
+^\s*memory_cost\s?=\s*\d+\s*$
+^\]$
 ^DEFAULT_DEVICE_PREFIX\s?=\s?".+"\s*$
 ^DEFAULT_IMAGE_TYPE\s?=\s?".+"\s*$
 ^DEFAULT_UMASK\s?=\s*\d+\s*$

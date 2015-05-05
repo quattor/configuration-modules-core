@@ -1,4 +1,4 @@
-[%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad', 'auth_mad'] -%]
+[%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad', 'auth_mad', 'default_cost'] -%]
 [%- booleans = ['datastore_capacity_check'] -%]
 [%- digits = ['monitoring_interval', 'monitoring_threads', 
               'port', 'vnc_base_port', 'network_size', 'session_expiration_time', 
