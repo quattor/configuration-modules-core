@@ -1,0 +1,3 @@
+[% FOR pair IN one_auth.pairs -%]
+[%    pair.key %]:[% pair.value %]
+[% END -%]

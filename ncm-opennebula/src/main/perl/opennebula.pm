@@ -20,6 +20,7 @@ use Readonly;
 
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly::Scalar our $ONE_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
@@ -312,9 +313,11 @@ sub change_oneadmin_passwd
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor unable to modify current oneadmin passwd.");
+        return;
     } else {
         $self->info("Oneadmin passwd was set correctly.");
     }
+    $self->set_one_auth_file($passwd);
 }
 
 # Restart one service
@@ -539,6 +542,23 @@ sub set_oned_conf
         $self->restart_opennebula_service();
     }
     return 1;
+}
+
+# Set /var/lib/one/.one/one_auth file
+# used by oneadmin client tools
+sub set_one_auth_file
+{
+    my ($self, $data) = @_;
+    my %opts;
+
+    my $passwd = {oneadmin => $data};
+    my $trd = $self->process_template($passwd, "one_auth");
+    %opts = $self->set_oned_file_opts();
+    return if ! %opts;
+
+    my $fh = $trd->filewriter($ONE_AUTH_FILE, %opts);
+    die "Problem rendering $ONE_AUTH_FILE" if (!defined($fh));
+    $fh->close();
 }
 
 sub set_oned_file_opts

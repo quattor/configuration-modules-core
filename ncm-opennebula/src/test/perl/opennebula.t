@@ -40,4 +40,10 @@ isa_ok($fh, "CAF::FileWriter", "oned.conf CAF::FileWriter instance");
 # only test one entry, the remainder is verified with the TT unittests
 like("$fh", qr{^DB\s?=\s?\[$}m, "oned.conf has expected content");
 
+# one_auth file
+is($NCM::Component::opennebula::ONE_AUTH_FILE, "/var/lib/one/.one/one_auth", "expected one_auth filename");
+my $fhauth = get_file($NCM::Component::opennebula::ONE_AUTH_FILE);
+isa_ok($fhauth, "CAF::FileWriter", "one_auth CAF::FileWriter instance");
+like("$fhauth", qr{^oneadmin\:.+$}m, "one_auth has expected content");
+
 done_testing();
