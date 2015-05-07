@@ -3,7 +3,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>opennebula</artifactId>
   <packaging>pom</packaging>
-  <version>14.10.0-rc2-SNAPSHOT</version>
+  <version>15.4.0-rc1</version>
   <name>OpenNebula NCM component.</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
