@@ -42,7 +42,7 @@ type SOFTWARE_REPOSITORY = {
     "gpgcheck" : boolean = false
     "excludepkgs" ? string[]
     "includepkgs" ? string[]
-    "name" ? string with match(SELF, '^[\w-]+$') # "Repository name"
+    "name" ? string with match(SELF, '^[\w-.]+$') # "Repository name"
     "owner" ? string  # "Contact person (email)"
     "priority" ? long(1..99)
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
