@@ -20,7 +20,10 @@ use Readonly;
 
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
-Readonly::Scalar our $ONE_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly::Array our @SERVERADMIN_AUTH_FILE => ("sunstone_auth", "oneflow_auth",
+                                               "onegate_auth", "occi_auth", "ec2_auth");
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
@@ -306,18 +309,18 @@ sub enable_node
 # new pass
 sub change_oneadmin_passwd
 {
-    my ($self, $passwd) = @_;
+    my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
 
-    $cmd = [$passwd];
+    $cmd = [$user, $passwd];
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
-        $self->error("Quattor unable to modify current oneadmin passwd.");
+        $self->error("Quattor unable to modify current $user passwd.");
         return;
     } else {
-        $self->info("Oneadmin passwd was set correctly.");
+        $self->info("$user passwd was set correctly.");
     }
-    $self->set_one_auth_file($passwd);
+    $self->set_one_auth_file($user, $passwd);
 }
 
 # Restart one service
@@ -470,6 +473,9 @@ sub manage_users
 
     foreach my $user (@$users) {
         if ($user->{user}) {
+            if ($user->{user} eq "serveradmin" && exists $user->{password}) {
+                $self->change_oneadmin_passwd($user->{user}, $user->{password});
+            }
             push(@userlist, $user->{user});
         }
     }
@@ -548,17 +554,29 @@ sub set_oned_conf
 # used by oneadmin client tools
 sub set_one_auth_file
 {
-    my ($self, $data) = @_;
-    my %opts;
+    my ($self, $user, $data) = @_;
+    my ($fh, $auth_file, %opts);
 
-    my $passwd = {oneadmin => $data};
+    my $passwd = {$user => $data};
     my $trd = $self->process_template($passwd, "one_auth");
     %opts = $self->set_oned_file_opts();
     return if ! %opts;
 
-    my $fh = $trd->filewriter($ONE_AUTH_FILE, %opts);
-    die "Problem rendering $ONE_AUTH_FILE" if (!defined($fh));
-    $fh->close();
+    if ($user eq "oneadmin") {
+        $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
+        $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
+        die "Problem rendering $ONEADMIN_AUTH_FILE" if (!defined($fh));
+        $fh->close();
+    } elsif ($user eq "serveradmin") {
+        foreach my $service (@SERVERADMIN_AUTH_FILE) {
+            $auth_file = $SERVERADMIN_AUTH_DIR . $service;
+            $self->verbose("Writing $user auth file: $auth_file");
+            $fh = $trd->filewriter($auth_file, %opts);
+            die "Problem rendering $auth_file" if (!defined($fh));
+            $fh->close();
+        }
+    }
+
 }
 
 sub set_oned_file_opts
@@ -622,8 +640,13 @@ sub Configure
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
-        $self->change_oneadmin_passwd($tree->{rpc}->{password});
+        $self->change_oneadmin_passwd("oneadmin", $tree->{rpc}->{password});
     }
+
+    # TEST REMOVE
+    #if (exists $tree->{rpc}->{password}) {
+    #    $self->change_oneadmin_passwd("serveradmin", $tree->{rpc}->{password});
+    #}
 
     # Set oned.conf file
     if (exists $tree->{oned}) {

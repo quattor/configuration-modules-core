@@ -85,6 +85,10 @@ prefix "/software/components/opennebula";
         "password", "another_fancy_pass",
         "quattor", 1
     ),
+    dict(
+        "user", "serveradmin",
+        "password", "yet_another_fancy_pass",
+    ),
 );
 
 "hosts" = list(

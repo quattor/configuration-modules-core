@@ -183,8 +183,8 @@ type opennebula_vnet = {
 
 type opennebula_user = {
     "ssh_public_key" ? string
-    "user" ? string 
-    "password" ? string
+    "user" : string 
+    "password" : string
 };
 
 type opennebula_remoteconf_ceph = {
@@ -289,7 +289,7 @@ datastores, vnets, hosts names, etc
 type component_opennebula = {
     include structure_component
     'datastores'    : opennebula_datastore[1..]
-    'users'         : opennebula_user[]
+    'users'         ? opennebula_user[]
     'vnets'         : opennebula_vnet[]
     'hosts'         : string[]
     'rpc'           : opennebula_rpc
