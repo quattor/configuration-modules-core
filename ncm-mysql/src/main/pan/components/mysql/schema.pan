@@ -34,9 +34,11 @@ function component_mysql_check_db_script = {
   };
 };
 
+type component_mysql_user_right = string with match(SELF, '^(ALL( PRIVILEGES)?|ALTER( ROUTINE)?|CREATE( (ROUTINE|TEMPORARY TABLES|USER|VIEW))?|DELETE|DROP|EVENT|EXECUTE|FILE|GRANT OPTION|INDEX|INSERT|LOCK TABLES|PROCESS|REFERENCES|RELOAD|REPLICATION (CLIENT|SLAVE)|SELECT|SHOW (DATABASES|VIEW)|SHUTDOWN|SUPER|TRIGGER|UPDATE|USAGE)$');
+
 type component_mysql_db_user = {
-  'password'  : string
-  'rights'    : string[]
+  'password'  : string with match(SELF, '^[^\\]+$')
+  'rights'    : component_mysql_user_right[] = list('SELECT')
   'shortPwd'  : boolean = false
 };
 
