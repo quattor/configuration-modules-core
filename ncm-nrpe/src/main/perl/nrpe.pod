@@ -86,7 +86,7 @@ Whether or not allow weak random number generation.
 
 =item * C<< /software/components/nrpe/options/include : string [] >>
 
-List of external file names that should be included. 
+List of external file names that should be included.
 
 =item * C<< /software/components/nrpe/options/include_dir : string [] >>
 
