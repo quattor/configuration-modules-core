@@ -5,24 +5,24 @@
 
 declaration template components/authconfig/schema;
 
-include { 'quattor/schema' };
-include { 'pan/types' };
+include 'quattor/types/component';
+include 'pan/types';
 
-include {'components/${project.artifactId}/sssd-user'};
-include {'components/${project.artifactId}/sssd-sudo'};
-include {'components/${project.artifactId}/sssd-sasl'};
-include {'components/${project.artifactId}/sssd-tls'};
+include 'components/${project.artifactId}/sssd-user';
+include 'components/${project.artifactId}/sssd-sudo';
+include 'components/${project.artifactId}/sssd-sasl';
+include 'components/${project.artifactId}/sssd-tls';
 
-type yesnostring = string with match(SELF,"yes|no");
+type yesnostring = string with match(SELF, "yes|no");
 
 type authconfig_pamadditions_line_type = {
-  "order"       : string with match(SELF, 'first|last')
-  "entry"       : string with match(SELF, '\S+\.so')
+  "order"       : string with match(SELF, '^(first|last)$')
+  "entry"       : string with match(SELF, '\S+\.so$')
 };
 
 type authconfig_pamadditions_type = {
   "conffile"	: string = "/etc/pam.d/system_auth"
-  "section"     : string with match(SELF,"auth|account|password|session")
+  "section"     : string with match(SELF,"^(auth|account|password|session)$")
   "lines"       : authconfig_pamadditions_line_type[]
 };
 
@@ -459,8 +459,8 @@ type authconfig_sssd_domain  = {
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long = 0
     "pwd_expiration_warning" ? long
-
 };
+
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
@@ -469,8 +469,6 @@ type authconfig_method_sssd_type = {
     "pam" : sssd_pam
     "nss" : sssd_nss
 };
-
-
 
 type authconfig_method_type = {
   "files"	? authconfig_method_files_type
