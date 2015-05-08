@@ -10,6 +10,8 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 
+our $NoActionSupported = 1;
+
 use CAF::Process;
 use CAF::FileEditor;
 use CAF::FileWriter;
