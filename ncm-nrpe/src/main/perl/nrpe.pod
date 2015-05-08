@@ -11,7 +11,7 @@ way.
 
 =head1 COMPONENT STRUCTURE
 
-All fields are mandatory, unless it is explicitly stated:
+All fields are required (but most have sensible defaults unless otherwise stated).
 
 =over 4
 
@@ -44,6 +44,8 @@ Group the daemon will run as. For instance, 'nagios'.
 =item * C<< /software/components/nrpe/allowed_hosts : type_hostname[] >>
 
 List of hosts allowed to order the NRPE daemon to run commands.
+
+Must be specified, no default is provided.
 
 =item * C<< /software/components/nrpe/dont_blame_nrpe : boolean >>
 
@@ -79,6 +81,8 @@ Whether or not allow weak random number generation.
 Named list with the command lines to be run. It is indexed with the
 command identifiers. Check Nagios' documentation for more information
 on command definitions.
+
+Must be specified, no default is provided.
 
 =item * C<< /software/components/nrpe/include : string [] >>
 
