@@ -1,0 +1,13 @@
+Value based regexp test
+---
+//
+rendermodule=generic
+contentspath=/
+---
+^boolfalse = False$
+^booltrue = True$
+^colonlist = 1:2$
+^justastring = astring$
+^list = 1,2$
+exclude ### COUNT 0
+
