@@ -226,7 +226,7 @@ type ganesha_snmp_adm = {
 } = nlist();
 
 type ganesha_stat_exporter = {
-    "Access" : string = "localhost"
+    "Access" : string[] = list("localhost")
     "Port" : long = 10401
 } = nlist();
 
