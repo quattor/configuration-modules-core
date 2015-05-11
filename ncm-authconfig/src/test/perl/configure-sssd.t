@@ -22,22 +22,27 @@ use CAF::FileWriter;
 use CAF::Object;
 use Test::MockModule;
 use Readonly;
+use Test::Quattor::TextRender::Base;
 
 $CAF::Object::NoAction = 1;
+
+my $caf_trd = mock();
 
 my $close_return;
 
 Readonly my $SSSD_FILE => NCM::Component::authconfig::SSSD_FILE();
 Readonly my $RESTART_CMD => "/sbin/service sssd restart";
-Readonly my $TT_FILE => NCM::Component::authconfig::TT_FILE;
+Readonly my $SSSD_TT_MODULE => NCM::Component::authconfig::SSSD_TT_MODULE;
+
+is($SSSD_FILE, "/etc/sssd/sssd.conf", "Correct location of sssd.conf file");
+is($SSSD_TT_MODULE, "sssd", "Correct sssd TT module");
 
 my $mock = Test::MockModule->new("CAF::FileWriter");
 
 $mock->mock("close", sub {
-		my ($self) = @_;
-		return $close_return;
-	    });
-
+   my ($self) = @_;
+   return $close_return;
+   });
 
 my $cmp = NCM::Component::authconfig->new("authconfig");
 
@@ -51,8 +56,7 @@ The file is opened and the daemon is restarted.
 
 $close_return = 1;
 
-ok($cmp->configure_sssd({}, $SSSD_FILE, $TT_FILE),
-   "First call changes something");
+ok($cmp->configure_sssd({}), "First call changes something");
 
 my $fh = get_file($SSSD_FILE);
 
@@ -80,7 +84,7 @@ How the component handles its internal errors.
 
 set_command_status($RESTART_CMD, 1);
 
-$cmp->configure_sssd({}, $SSSD_FILE, $TT_FILE);
+$cmp->configure_sssd({});
 
 is($cmp->{ERROR}, 1, "Errors reported when the restart fails");
 
@@ -94,7 +98,8 @@ set_command_status($RESTART_CMD, 0);
 
 $close_return = 0;
 
-$cmp->configure_sssd({}, $SSSD_FILE, "8o76yo78tgog");
+# Barfs due to no hashref or element instance
+$cmp->configure_sssd(undef);
 
 is($cmp->{ERROR}, 2, "Error while rendering the template is reported");
 

@@ -2,28 +2,27 @@
 # ${developer-info}
 # ${author-info}
 
-#
-# authconfig - authconfig NCM component
-#
-################################################################################
-
 package NCM::Component::authconfig;
 
 use strict;
 use NCM::Component;
-use CAF::Process;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+
+our $NoActionSupported = 1;
+
+use CAF::Process;
 use CAF::FileEditor;
+use CAF::FileWriter;
+
+use EDG::WP4::CCM::TextRender;
+
 use File::Path;
 use Fcntl qw(:seek);
 
-
-use EDG::WP4::CCM::Element;
-
 use constant SSSD_FILE => '/etc/sssd/sssd.conf';
-use constant TT_FILE => 'authconfig/sssd.tt';
+use constant SSSD_TT_MODULE => 'sssd';
 use constant NSCD_LOCK => '/var/lock/subsys/nscd';
 
 # prevent authconfig from trying to launch in X11 mode
@@ -34,7 +33,7 @@ sub update_pam_file
     my ($self, $tree) = @_;
 
     my $fh = CAF::FileEditor->new($tree->{conffile},
-                                  log => $self, 
+                                  log => $self,
                                   backup => ".old");
 
     # regexp needs to match whole line
@@ -48,14 +47,14 @@ sub update_pam_file
     }
 
     foreach my $i (@{$tree->{lines}}) {
-        my @whence = $i->{order} eq 'first' ? 
+        my @whence = $i->{order} eq 'first' ?
         	@begin_whence : ENDING_OF_FILE;
 
         if ($i->{entry} =~ m{(\S+\.so)}) {
             my $module = $1;
             $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
                                       qr{^$tree->{section}\s+$i->{entry}$},
-                                      "$tree->{section} $i->{entry}\n", 
+                                      "$tree->{section} $i->{entry}\n",
                                       @whence);
         } else {
             $self->error("No '.so' module found in entry '$i->{entry}' (this is an error in the profile). Skipping.");
@@ -345,26 +344,33 @@ sub configure_nslcd
 
 sub configure_sssd
 {
-    my ($self, $config, $file, $tt) = @_;
+    my ($self, $config) = @_;
 
-    my $fh = CAF::FileWriter->new($file, log => $self, mode => 0600);
-    print $fh "\n";
-    my $ok = $self->template()->process($tt, $config, $fh);
-    if (!$ok) {
-        $self->error("Unable to render template ", TT_FILE, ": ",
-                     $self->template()->error());
-        $fh->cancel();
-    }
-    my $changed = $fh->close();
+    my $trd = EDG::WP4::CCM::TextRender->new(
+            SSSD_TT_MODULE,
+            $config,
+            relpath => 'authconfig',
+            log => $self,
+        );
 
-    if ($changed) {
-        CAF::Process->new([qw(/sbin/service sssd restart)],
-                          log => $self)->run();
-        if ($?) {
-            $self->error("Failed to restart SSSD");
+    # can't be empty string, is at least '[sssd]'
+    if ($trd) {
+        my $fh = $trd->filewriter(SSSD_FILE, log => $self, mode => 0600);
+        my $changed = $fh->close();
+
+        if ($changed) {
+            CAF::Process->new([qw(/sbin/service sssd restart)],
+                              log => $self)->run();
+            if ($?) {
+                $self->error("Failed to restart SSSD");
+            }
         }
+
+        return $changed;
+    } else {
+        $self->error("Unable to render template sssd: $trd->{fail}");
+        return;
     }
-    return $changed;
 }
 
 
@@ -429,8 +435,7 @@ sub Configure
     }
 
     if ($t->{method}->{sssd}->{enable}) {
-        $restart ||= $self->configure_sssd($t->{method}->{sssd},
-                                           SSSD_FILE, TT_FILE);
+        $restart ||= $self->configure_sssd($t->{method}->{sssd});
     }
 
     $self->build_pam_systemauth($t->{pamadditions});
