@@ -196,6 +196,10 @@ type opennebula_remoteconf_ceph = {
     "qemu_img_convert_args" ? string
 };
 
+@documentation{
+Type that sets the OpenNebula
+oned.conf file
+}
 type opennebula_oned = {
     "db" : opennebula_db
     "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
@@ -259,6 +263,55 @@ type opennebula_oned = {
     "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
 };
 
+
+type opennebula_instance_types = {
+    "name" : string
+    "cpu" : long(1..)
+    "vcpu" : long(1..)
+    "memory" : long
+    "description" ? string
+} = dict();
+
+
+@documentation{
+Type that sets the OpenNebula
+sunstone_server.conf file
+}
+type opennebula_sunstone = {
+    "tmpdir" : directory = '/var/tmp'
+    "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
+    "host" : type_ipv4 = '127.0.0.1'
+    "port" : long = 9869
+    "sessions" : string = 'memory' with match (SELF, '^(memory|memcache)$')
+    "memcache_host" : string = 'localhost'
+    "memcache_port" : long = 11211
+    "memcache_namespace" : string = 'opennebula.sunstone'
+    "debug_level" : long (0..3) = 3
+    "auth" : string = 'opennebula' with match (SELF, '^(sunstone|opennebula|x509)$')
+    "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
+    "encode_user_password" ? boolean
+    "vnc_proxy_port" : long = 29876
+    "vnc_proxy_support_wss" : string = 'no' with match (SELF, '^(no|yes|only)$')
+    "vnc_proxy_cert" : string = ''
+    "vnc_proxy_key" : string = ''
+    "vnc_proxy_ipv6" : boolean = false
+    "lang" : string = 'en_US'
+    "table_order" : string = 'desc' with match (SELF, '^(desc|asc)$')
+    "marketplace_username" ? string
+    "marketplace_password" ? string
+    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
+    "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
+    "instance_types" : opennebula_instance_types[] = list (
+        dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128, "description", "Very small instance for testing purposes"),
+        dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512, "description", "Small instance for testing multi-core applications"),
+        dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024, "description", "General purpose instance for low-load servers"),
+        dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048, "description", "General purpose instance for medium-load servers"),
+        dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096, "description", "General purpose instance for servers"),
+        dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192, "description", "General purpose instance for high-load servers"),
+    )
+    "routes" : string[] = list("oneflow", "vcenter", "support")
+};
+
 @documentation{ 
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
@@ -295,6 +348,7 @@ type component_opennebula = {
     'rpc'           : opennebula_rpc
     'untouchables'  : opennebula_untouchables
     'oned'          : opennebula_oned
+    'sunstone'      : opennebula_sunstone
     'ssh_multiplex' : boolean = true
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')

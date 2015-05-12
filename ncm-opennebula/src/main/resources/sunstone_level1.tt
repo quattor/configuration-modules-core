@@ -1,0 +1,7 @@
+
+[%     IF name.defined -%]
+- :name: [% name %]
+[%     END %]
+[%-    FOR pair IN data.pairs -%]
+:[%        pair.key %]: [% pair.value %]
+[%-    END -%]

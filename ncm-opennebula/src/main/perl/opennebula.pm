@@ -643,11 +643,6 @@ sub Configure
         $self->change_oneadmin_passwd("oneadmin", $tree->{rpc}->{password});
     }
 
-    # TEST REMOVE
-    #if (exists $tree->{rpc}->{password}) {
-    #    $self->change_oneadmin_passwd("serveradmin", $tree->{rpc}->{password});
-    #}
-
     # Set oned.conf file
     if (exists $tree->{oned}) {
         $self->set_oned_conf($tree->{oned});

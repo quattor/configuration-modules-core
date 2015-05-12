@@ -1,0 +1,18 @@
+[%- sunstone_section = ['instance_types'] -%]
+[%- booleans = ['encode_user_password', 'vnc_proxy_ipv6'] -%]
+[%- FOR pair IN sunstone.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE sunstone_section -%]              
+:[%             pair.key %]: [% INCLUDE 'opennebula/sunstone_level1.tt' 
+                                      data=sunstone.${pair.key} -%]
+[%         CASE 'routes' -%]
+                :routes:
+[%-             FOREACH item IN sunstone.${pair.key} -%]
+                    - [% item %]
+[%              END -%]
+[%         CASE booleans -%]
+:[%             pair.key %]: [% pair.value ? "true" : "false" %]
+[%         CASE -%]
+:[%             pair.key %]: [% pair.value %]
+[%     END -%]
+[%- END -%]
