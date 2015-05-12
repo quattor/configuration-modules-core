@@ -25,6 +25,10 @@ prefix "/software/components/opennebula/oned";
 "default_device_prefix" = "vd";
 "onegate_endpoint" = "http://hyp004.cubone.os:5030";
 
+prefix "/software/components/opennebula/sunstone";
+"host" = "0.0.0.0";
+"tmpdir" = "/tmp";
+
 prefix "/software/components/opennebula";
 
 "vnets" = list(

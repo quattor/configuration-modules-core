@@ -20,6 +20,7 @@ use Readonly;
 
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
 Readonly::Array our @SERVERADMIN_AUTH_FILE => ("sunstone_auth", "oneflow_auth",
@@ -326,8 +327,13 @@ sub change_oneadmin_passwd
 # Restart one service
 # after any conf change
 sub restart_opennebula_service {
-    my ($self) = @_;
-    my $srv = CAF::Service->new(['opennebula'], log => $self);
+    my ($self, $service) = @_;
+    my $srv;
+    if ($service eq "oned") {
+        $srv = CAF::Service->new(['opennebula'], log => $self);
+    } elsif ($service eq "sunstone") {
+        $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
+    }
     $srv->restart();
 }
 
@@ -524,28 +530,28 @@ sub manage_users
     }
 }
 
-# Set /etc/one/oned.conf file 
-# used by OpenNebula daemon
-# if oned.cond is changed 
+# Set opennebula conf files
+# used by OpenNebula daemons
+# if conf file is changed 
 # one service must be restarted afterwards
-sub set_oned_conf
+sub set_one_service_conf
 {
-    my ($self, $data) = @_;
+    my ($self, $data, $service, $config_file) = @_;
     my %opts;
-    my $oned_templ = $self->process_template($data, "oned");
+    my $oned_templ = $self->process_template($data, $service);
     %opts = $self->set_oned_file_opts();
     return if ! %opts;
-    my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
+    my $fh = $oned_templ->filewriter($config_file, %opts);
 
     if (!defined($fh)) {
-        $self->error("Failed to render $ONED_CONF_FILE (".$oned_templ->{fail}."). Skipping");
+        $self->error("Failed to render $config_file (".$oned_templ->{fail}."). Skipping");
         $fh->cancel();
         $fh->close();
         return;
     }
     
     if ($fh->close()) {
-        $self->restart_opennebula_service();
+        $self->restart_opennebula_service($service);
     }
     return 1;
 }
@@ -643,9 +649,14 @@ sub Configure
         $self->change_oneadmin_passwd("oneadmin", $tree->{rpc}->{password});
     }
 
-    # Set oned.conf file
+    # Set opennebula service
     if (exists $tree->{oned}) {
-        $self->set_oned_conf($tree->{oned});
+        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
+    }
+
+    # Set sunstone service
+    if (exists $tree->{sunstone}) {
+        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE);
     }
 
     # Configure ONE RPC connector
