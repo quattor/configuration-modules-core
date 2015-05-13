@@ -1,0 +1,59 @@
+OpenNebula sunstone_server full test
+---
+multiline
+---
+^:auth:\s{1}opennebula$
+^:core_auth:\s{1}cipher$
+^:debug_level:\s{1}3$
+^:host:\s{1}0.0.0.0$
+^:instance_types:$
+^\s{4}-\s{1}:cpu:\s{1}1$
+^\s{6}:description:\s{1}Very small instance for testing purposes$
+^\s{6}:memory:\s{1}128$
+^\s{6}:name:\s{1}small-x1$
+^\s{6}:vcpu:\s{1}1$
+^\s{4}-\s{1}:cpu:\s{1}2$
+^\s{6}:description:\s{1}Small instance for testing multi-core applications$
+^\s{6}:memory:\s{1}512$
+^\s{6}:name:\s{1}small-x2$
+^\s{6}:vcpu:\s{1}2$
+^\s{4}-\s{1}:cpu:\s{1}2$
+^\s{6}:description:\s{1}General purpose instance for low-load servers$
+^\s{6}:memory:\s{1}1024$
+^\s{6}:name:\s{1}medium-x2$
+^\s{6}:vcpu:\s{1}2$
+^\s{4}-\s{1}:cpu:\s{1}4$
+^\s{6}:description:\s{1}General purpose instance for medium-load servers$
+^\s{6}:memory:\s{1}2048$
+^\s{6}:name:\s{1}medium-x4$
+^\s{6}:vcpu:\s{1}4$
+^\s{4}-\s{1}:cpu:\s{1}4$
+^\s{6}:description:\s{1}General purpose instance for servers$
+^\s{6}:memory:\s{1}4096$
+^\s{6}:name:\s{1}large-x4$
+^\s{6}:vcpu:\s{1}4$
+^\s{4}-\s{1}:cpu:\s{1}8$
+^\s{6}:description:\s{1}General purpose instance for high-load servers$
+^\s{6}:memory:\s{1}8192$
+^\s{6}:name:\s{1}large-x8$
+^\s{6}:vcpu:\s{1}8$
+^:lang:\s{1}en_US$
+^:marketplace_url:\s{1}http:\/\/marketplace\.opennebula\.systems\/appliance$
+^:memcache_host:\s{1}localhost$
+^:memcache_namespace:\s{1}opennebula.sunstone$
+^:memcache_port:\s{1}11211$
+^:one_xmlrpc:\s{1}http:\/\/localhost:2633\/RPC2$
+^:oneflow_server:\s{1}http:\/\/localhost:2474\/$
+^:port:\s{1}9869$
+^:routes:$
+^\s{4}-\s{1}oneflow$
+^\s{4}-\s{1}vcenter$
+^\s{4}-\s{1}support$
+^:sessions:\s{1}memory$
+^:table_order:\s{1}desc$
+^:tmpdir:\s{1}\/tmp$
+^:vnc_proxy_cert:\s{1}$
+^:vnc_proxy_ipv6:\s{1}false$
+^:vnc_proxy_key:\s{1}$
+^:vnc_proxy_port:\s{1}29876$
+^:vnc_proxy_support_wss:\s{1}no$

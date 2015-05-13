@@ -55,4 +55,9 @@ foreach my $service (@NCM::Component::opennebula::SERVERADMIN_AUTH_FILE) {
     like("$fhserver", qr{^serveradmin\:.+$}m, "serveradmin $service file has expected content");
 }
 
+# suntone conf file
+my $sunstone = get_file($NCM::Component::opennebula::SUNSTONE_CONF_FILE);
+isa_ok($sunstone, "CAF::FileWriter", "sunstone-server.conf CAF::FileWriter instance");
+like("$sunstone", qr{^:host:\s{1}.+$}m, "sunstone-server.conf has expected content");
+
 done_testing();
