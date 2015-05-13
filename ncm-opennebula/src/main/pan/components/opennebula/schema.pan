@@ -125,6 +125,12 @@ function is_consistent_datastore = {
             };
         };
     };
+    if (ds['ds_mad'] == 'fs') {
+        if (ds['tm_mad'] != 'shared') {
+            error("for a fs datastore only 'shared' tm_mad is supported for the moment");
+            return(false);
+        };
+    };
     # Checks for other types can be added here
     return(true);
 };
@@ -156,7 +162,8 @@ type opennebula_ar = {
 };
 
 @documentation{ 
-type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph)
+type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph).
+shared DS is also supported
 }
 type opennebula_datastore = {
     include opennebula_ceph_datastore
@@ -164,8 +171,8 @@ type opennebula_datastore = {
     "bridge_list"               ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check"  : boolean = true
     "disk_type"                 : string = 'RBD'
-    "ds_mad"                    : string = 'ceph'
-    "tm_mad"                    : string = 'ceph'
+    "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
+    "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
     "type"                      : string = 'IMAGE_DS'
 } with is_consistent_datastore(SELF);
 
