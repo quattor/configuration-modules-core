@@ -19,9 +19,11 @@ Features that are implemented at this moment:
 
 =item * oned service configuration
 
+=item * Sunstone service configuration
+
 =item * Adding/removing VNETs
 
-=item * Adding/removing datastores (only CEPH datastores for the moment)
+=item * Adding/removing datastores (only Ceph and shared datastores for the moment)
 
 =item * Adding/removing hypervirsors 
 
@@ -52,7 +54,7 @@ To set up the initial cluster, some steps should be taken:
 
 =over 
 
-=item 1. First install the required gems as root in your OpenNebula server: /usr/share/one/install_gems
+=item 1. First install the required Ruby gems in your OpenNebula server. You can use OpenNebula installgems addon : https://github.com/OpenNebula/addon-installgems
 
 =item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster e.g. by distributing the public key(s) of the OpenNebula host over the cluster
 

@@ -23,7 +23,10 @@ rpc_history_reset;
 $cmp->manage_something($one, "datastore", $tree->{datastores});
 ok(rpc_history_ok(["one.datastorepool.info",
                    "one.datastore.info",
-                   "one.datastore.update"]),
+                   "one.datastore.update",
+                   "one.datastore.info",
+                   "one.datastore.allocate",
+                   "one.datastore.info"]),
                    "manage_something datastore rpc history ok");
 
 ok(!exists($cmp->{ERROR}), "No errors found during datastore management execution");

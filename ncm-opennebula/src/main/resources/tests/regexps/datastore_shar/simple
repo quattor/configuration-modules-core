@@ -1,0 +1,10 @@
+OpenNebula share datastore test
+---
+multiline
+---
+^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
+^DS_MAD\s?=\s?".+"\s*$
+^NAME\s?=\s?".+"\s*$
+^TM_MAD\s?=\s?".+"\s*$
+^TYPE\s?=\s?".+"\s*$
+^QUATTOR\s?=\s?\d+\s*$

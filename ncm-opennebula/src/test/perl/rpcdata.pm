@@ -222,9 +222,25 @@ $cmds{rpc_create_newdatastore}{params} = [$data, -1];
 $cmds{rpc_create_newdatastore}{method} = "one.datastore.allocate";
 $cmds{rpc_create_newdatastore}{out} = 102;
 
+$data = <<'EOF';
+DATASTORE_CAPACITY_CHECK = "yes"
+DS_MAD = "fs"
+NAME = "nfs"
+TM_MAD = "shared"
+TYPE = "IMAGE_DS"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newdatastore2}{params} = [$data, -1];
+$cmds{rpc_create_newdatastore2}{method} = "one.datastore.allocate";
+$cmds{rpc_create_newdatastore2}{out} = 103;
+
 $cmds{rpc_delete_datastore}{params} = [102];
 $cmds{rpc_delete_datastore}{method} = "one.datastore.delete";
 $cmds{rpc_delete_datastore}{out} = 102;
+
+$cmds{rpc_delete_datastore2}{params} = [103];
+$cmds{rpc_delete_datastore2}{method} = "one.datastore.delete";
+$cmds{rpc_delete_datastore2}{out} = 103;
 
 $cmds{rpc_list_datastorespool}{params} = [];
 $cmds{rpc_list_datastorespool}{method} = "one.datastorepool.info";
@@ -236,6 +252,12 @@ $cmds{rpc_list_datastore}{params} = [102];
 $cmds{rpc_list_datastore}{method} = "one.datastore.info";
 $cmds{rpc_list_datastore}{out} = <<'EOF';
 <DATASTORE><ID>102</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ceph.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[ceph]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TOTAL_MB>48645212</TOTAL_MB><FREE_MB>48476696</FREE_MB><USED_MB>168515</USED_MB><IMAGES><ID>30</ID><ID>37</ID></IMAGES><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><BRIDGE_LIST><![CDATA[one01.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph021.altaria.os ceph022.altaria.os ceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8271ce8a-385d-44d7-a228-c42de4259c5e]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MAD><![CDATA[ceph]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><POOL_NAME><![CDATA[one]]></POOL_NAME><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[ceph]]></TM_MAD></TEMPLATE></DATASTORE>
+EOF
+
+$cmds{rpc_list_datastore2}{params} = [103];
+$cmds{rpc_list_datastore2}{method} = "one.datastore.info";
+$cmds{rpc_list_datastore2}{out} = <<'EOF';
+<DATASTORE><ID>103</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>nfs</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[fs]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><TOTAL_MB>117416</TOTAL_MB><FREE_MB>104468</FREE_MB><USED_MB>6962</USED_MB><IMAGES/><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><CLONE_TARGET><![CDATA[SYSTEM]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[FILE]]></DISK_TYPE><DS_MAD><![CDATA[fs]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[IMAGE_DS]]></TYPE></TEMPLATE></DATASTORE>
 EOF
 
 $data = <<'EOF';

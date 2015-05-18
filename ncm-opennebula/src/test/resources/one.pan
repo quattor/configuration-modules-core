@@ -75,6 +75,13 @@ prefix "/software/components/opennebula";
         "pool_name", "one",
         "type", "IMAGE_DS"
     ),
+    dict(
+        "name", "nfs",
+        "datastore_capacity_check", true,
+        "ds_mad", "fs",
+        "tm_mad", "shared",
+        "type", "IMAGE_DS",
+    ),
 );
 
 "users" = list(
