@@ -539,7 +539,7 @@ sub set_one_service_conf
     my ($self, $data, $service, $config_file) = @_;
     my %opts;
     my $oned_templ = $self->process_template($data, $service);
-    %opts = $self->set_oned_file_opts();
+    %opts = $self->set_file_opts();
     return if ! %opts;
     my $fh = $oned_templ->filewriter($config_file, %opts);
 
@@ -556,7 +556,7 @@ sub set_one_service_conf
     return 1;
 }
 
-# Set /var/lib/one/.one/one_auth file
+# Set auth files
 # used by oneadmin client tools
 sub set_one_auth_file
 {
@@ -565,7 +565,7 @@ sub set_one_auth_file
 
     my $passwd = {$user => $data};
     my $trd = $self->process_template($passwd, "one_auth");
-    %opts = $self->set_oned_file_opts();
+    %opts = $self->set_file_opts();
     return if ! %opts;
 
     if ($user eq "oneadmin") {
@@ -585,7 +585,7 @@ sub set_one_auth_file
 
 }
 
-sub set_oned_file_opts
+sub set_file_opts
 {
     my ($self) = @_;
     my %opts;
