@@ -91,7 +91,7 @@ sub inject_realtime {
             my $keyvalue = "--$param=$changes->{$param}";
             #$self->info("injecting $keyvalue realtime on $host"); #FIXME this does not work anymore, see mailinglist
             my $inj = $self->run_ceph_command([@cmd, $keyvalue], 1);
-            $self->warn("$keyvalue need to be injected for all applicable daemons on $host:", $inj);
+            $self->warn("$keyvalue need to be injected for all applicable daemons on $host: ", $inj);
         } else {
             $self->warn("Non-injectable value $param changed");
         }

@@ -168,12 +168,14 @@ sub labelize_bucket {
         $lhash{buckets} = [];
         foreach my $bucket (@{$tbucket->{buckets}}) {
             if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
-                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label));
+                my $tmpb = $self->labelize_bucket($bucket, $label);
+                push(@{$lhash{buckets}}, $tmpb) if $tmpb;
             }        
         }
         if (!@{$lhash{buckets}}) {
             # check/eliminate empty buckets
-            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
+            $self->warn("Bucket $lhash{name} has no child buckets after labeling, deleting bucket");
+            return;
         }
     }
     delete $lhash{labels}; # Not needed anymore
