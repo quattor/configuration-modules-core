@@ -92,8 +92,8 @@ sub run_command {
 
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
-    my ($self, $command) = @_;
-    return $self->run_command([qw(/usr/bin/ceph -f json --cluster), $self->{cluster}, @$command]);
+    my ($self, $command, $dry) = @_;
+    return $self->run_command([qw(/usr/bin/ceph -f json --cluster), $self->{cluster}, @$command], $dry // 0);
 }
 
 sub run_daemon_command {
