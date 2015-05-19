@@ -13,6 +13,11 @@ include { 'quattor/schema' };
 }
 function valid_osd_names = {
     names = list();
+    if(!exists(ARGV[0]['clusters'])) {
+        #check if deployhost?
+        return(true);
+    };
+        
     clusters = ARGV[0]['clusters'];
     foreach (name;cluster;clusters) {
         append(names, name);
@@ -318,10 +323,19 @@ type ceph_cluster = {
     'crushmap'                  ? ceph_crushmap
 };
 
+@documentation{
+Experimental feature:
+For use with dedicated pan code that builds the cluster info from remote templates..
+}
+type ceph_localdaemons = {
+    'osds'  : ceph_osd {}
+};
+
 @documentation{ ceph clusters }
 type ${project.artifactId}_component = {
     include structure_component
-    'clusters'         : ceph_cluster {}
+    'clusters'         ? ceph_cluster {}
+    'localdaemons'     ? ceph_localdaemons #validation, but not used in component code
     'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
     'key_accept'       ? string with match(SELF, '^(first|always)$') # explicit accept host keys
