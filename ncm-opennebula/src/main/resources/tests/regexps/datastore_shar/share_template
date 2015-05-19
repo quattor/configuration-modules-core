@@ -1,6 +1,5 @@
 OpenNebula shared datastore full test
 ---
-multiline
 ---
 ^DATASTORE_CAPACITY_CHECK\s?=\s?"yes"\s*$
 ^DS_MAD\s?=\s?"fs"\s*$

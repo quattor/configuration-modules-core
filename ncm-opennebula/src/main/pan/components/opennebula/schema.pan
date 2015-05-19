@@ -99,7 +99,7 @@ type opennebula_tm_mad_conf = {
 } = dict();
 
 @documentation{ 
-The following attributes define the default cost for Virtual Machines that don’t have a CPU or MEMORY cost.
+The following attributes define the default cost for Virtual Machines that don't have a CPU or MEMORY cost.
 This is used by the oneshowback calculate method.
 }
 type opennebula_default_cost = {
@@ -355,7 +355,7 @@ type component_opennebula = {
     'rpc'           : opennebula_rpc
     'untouchables'  : opennebula_untouchables
     'oned'          : opennebula_oned
-    'sunstone'      : opennebula_sunstone
+    'sunstone'      ? opennebula_sunstone
     'ssh_multiplex' : boolean = true
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')

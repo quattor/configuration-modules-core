@@ -1,6 +1,5 @@
 OpenNebula sunstone_server full test
 ---
-multiline
 ---
 ^:auth:\s{1}opennebula$
 ^:core_auth:\s{1}cipher$

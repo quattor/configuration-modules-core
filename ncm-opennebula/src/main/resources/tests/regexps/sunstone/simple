@@ -1,6 +1,5 @@
 OpenNebula sunstone_server test
 ---
-multiline
 ---
 ^:auth:\s{1}.+$
 ^:core_auth:\s{1}.+$

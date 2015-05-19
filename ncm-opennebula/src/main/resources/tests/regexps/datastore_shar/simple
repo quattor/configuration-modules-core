@@ -1,6 +1,5 @@
 OpenNebula share datastore test
 ---
-multiline
 ---
 ^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
 ^DS_MAD\s?=\s?".+"\s*$

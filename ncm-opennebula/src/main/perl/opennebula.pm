@@ -23,8 +23,8 @@ Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
-Readonly::Array our @SERVERADMIN_AUTH_FILE => ("sunstone_auth", "oneflow_auth",
-                                               "onegate_auth", "occi_auth", "ec2_auth");
+Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
+                                                 onegate_auth occi_auth ec2_auth);
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
@@ -306,9 +306,9 @@ sub enable_node
 }
 
 # By default OpenNebula sets a random pass
-# for oneadmin user. This function sets the
-# new pass
-sub change_oneadmin_passwd
+# for internal users. This function sets the
+# new passwords
+sub change_opennebula_passwd
 {
     my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
@@ -480,7 +480,7 @@ sub manage_users
     foreach my $user (@$users) {
         if ($user->{user}) {
             if ($user->{user} eq "serveradmin" && exists $user->{password}) {
-                $self->change_oneadmin_passwd($user->{user}, $user->{password});
+                $self->change_opennebula_passwd($user->{user}, $user->{password});
             }
             push(@userlist, $user->{user});
         }
@@ -542,16 +542,28 @@ sub set_one_service_conf
     %opts = $self->set_file_opts();
     return if ! %opts;
     my $fh = $oned_templ->filewriter($config_file, %opts);
+    my $status = $self->is_conf_file_modified($fh, $config_file, $service, $oned_templ);
+
+    return $status;
+}
+
+# Checks conf file status
+sub is_conf_file_modified
+{
+    my ($self, $fh, $file, $service, $data) = @_;
 
     if (!defined($fh)) {
-        $self->error("Failed to render $config_file (".$oned_templ->{fail}."). Skipping");
+        if (defined($service) && defined($data)) {
+            $self->error("Failed to render $service file: $file (".$data->{fail}."). Skipping");
+        } else {
+            $self->error("Problem rendering $file");
+        }
         $fh->cancel();
         $fh->close();
         return;
     }
-    
     if ($fh->close()) {
-        $self->restart_opennebula_service($service);
+        $self->restart_opennebula_service($service) if (defined($service));
     }
     return 1;
 }
@@ -571,18 +583,17 @@ sub set_one_auth_file
     if ($user eq "oneadmin") {
         $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
         $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
-        die "Problem rendering $ONEADMIN_AUTH_FILE" if (!defined($fh));
-        $fh->close();
+        $self->is_conf_file_modified($fh, $ONEADMIN_AUTH_FILE);
     } elsif ($user eq "serveradmin") {
         foreach my $service (@SERVERADMIN_AUTH_FILE) {
             $auth_file = $SERVERADMIN_AUTH_DIR . $service;
             $self->verbose("Writing $user auth file: $auth_file");
             $fh = $trd->filewriter($auth_file, %opts);
-            die "Problem rendering $auth_file" if (!defined($fh));
-            $fh->close();
+            $self->is_conf_file_modified($fh, $auth_file);
         }
+    } else {
+        $self->error("Unsupported user: $user");
     }
-
 }
 
 sub set_file_opts
@@ -646,7 +657,7 @@ sub Configure
 
     # We must change oneadmin pass first
     if (exists $tree->{rpc}->{password}) {
-        $self->change_oneadmin_passwd("oneadmin", $tree->{rpc}->{password});
+        $self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
     }
 
     # Set opennebula service
@@ -671,7 +682,7 @@ sub Configure
 
     $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
-    # For the moment only Ceph datastores are configured
+    # For the moment only Ceph and shared datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
     # Update system datastore TM_MAD 
     if ($tm_system_ds) {
