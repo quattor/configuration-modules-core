@@ -1,6 +1,25 @@
 Base test for config
 ---
-multiline
+/opt/kibana/config/kibana.yml
 ---
-$wontmatch^
-
+^---$
+^bundled_plugin_ids:$
+^- plugins/dashboard/index$
+^- plugins/discover/index$
+^- plugins/doc/index$
+^- plugins/kibana/index$
+^- plugins/markdown_vis/index$
+^- plugins/metric_vis/index$
+^- plugins/settings/index$
+^- plugins/table_vis/index$
+^- plugins/vis_types/index$
+^- plugins/visualize/index$
+^default_app_id: discover$
+^elasticsearch_preserve_host: true$
+^elasticsearch_url: http://mysupersecret.host.domain:9200$
+^host: localhost$
+^kibana_index: .kibana$
+^port: 5601$
+^request_timeout: 300000$
+^shard_timeout: 0$
+^verify_ssl: true$
