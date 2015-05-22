@@ -56,6 +56,20 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 "received_from", "%{@source_host}",
                 ),
             )),
+        nlist("kv", nlist(
+            "default_keys", nlist(
+                "key1", "value1", 
+                "key2", "value2",
+                ),
+            "exclude_keys", list("key1e", "key2e"),
+            "include_keys", list("key1i", "key2i"),
+            "prefix", "myprefix",
+            "source", "mysource",
+            "target", "mytarget",
+            "trim", "mytrim",
+            "trimkey", "mytrimkey",
+            "value_split", "myvaluesplit",
+            )),
         nlist("date", nlist(
             "match", nlist(
                 "name", "syslog_timestamp", 
