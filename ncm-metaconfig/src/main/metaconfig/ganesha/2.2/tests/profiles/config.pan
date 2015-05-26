@@ -1,7 +1,7 @@
 object template config;
 
-
-include 'metaconfig/ganesha/config_v2';
+variable METACONFIG_GANESHA_VERSION = 'v2';
+include 'metaconfig/ganesha/config';
 
 prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/main/CACHEINODE"; 
  
