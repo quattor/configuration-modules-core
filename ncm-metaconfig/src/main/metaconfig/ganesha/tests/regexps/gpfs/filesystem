@@ -1,9 +1,0 @@
-Tests for filesystem gpfs
----
-multiline
-metaconfigservice=/etc/ganesha/ganesha.nfsd.conf
----
-^FileSystem {
-^\s{4}Umask\s=\s0000;
-^\s{4}umask\s=\s0;
-^\s{4}xattr_access_rights\s=\s0400;

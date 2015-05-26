@@ -1,0 +1,56 @@
+[%- booleans = ["Active_krb5", "Active_krb5", "Allow_Numeric_Owners", "auth_xdev_export", "Cache_FDs", 
+                "cansettime", "CLIENTIP", "Clustered", "COMPONENT", "delegations", "Delegations", 
+                "Disable_ACL", "DRC_Disabled", "DRC_TCP_Checksum", "DRC_UDP_Checksum", "Drop_Delay_Errors", 
+                "Drop_Inval_Errors", "Drop_IO_Errors", "Enable_Fast_Stats", "Enable_Handle_Mapping", 
+                "Enable_NLM", "Enable_RQUOTA", "EPOCH", "FILE_NAME", "FSAL_Grace", "fsal_trace", "FUNCTION_NAME", 
+                "Graceless", "HOSTNAME", "LEVEL", "LINE_NUM", "link_support", "Manage_Gids", "NFS_Commit", 
+                "NSM_Use_Caller_Name", "PID", "pnfs_file", "PrivilegedPort", "PROGNAME", "Retry_Readdir", 
+                "symlink_support", "THREAD_NAME", "UseCookieVerifier", "Use_Getattr_Directory_Invalidation", 
+                "UseGetpwnam", "Use_Privileged_Client_Port" ]
+-%]
+[%- comma_sep_list = ["Clients","Access_Type", "NFS_Protocols", "Protocols", "Transports", "SecType"]
+-%]
+[%- block_type = ["Components", "DataServer", "Format", "FSAL", "remote_server"]
+-%]
+[%- block_array = ["CLIENT", "Facility"]
+-%]
+[%- IF pair.key == 'pnfs' %]
+[%-     IF pair.value.keys.size -%]
+[%-         block_type = block_type.merge(['pnfs']); -%]
+[%-     ELSE -%]
+[%-         booleans = booleans.merge(['pnfs']); -%]
+[%-     END -%]
+[%- END -%]
+[%-   SWITCH pair.key -%]
+[%-     CASE block_type -%]
+[% pair.key %] {
+[%          FOREACH subpair IN pair.value.pairs -%] 
+[%-             INCLUDE "metaconfig/ganesha/2.2/attribute.tt" pair=subpair FILTER indent %]
+[%          END -%] 
+}
+[%-     CASE block_array -%]
+[%          FOREACH block IN pair.value -%]
+[%              pair.key %] { 
+[%              FOREACH subpair IN block.pairs -%] 
+[%-                 INCLUDE "metaconfig/ganesha/2.2/attribute.tt" pair=subpair FILTER indent %]
+[%              END -%] 
+}
+[%          END -%] 
+[%-     CASE -%]
+[%-         pair.key -%] =
+[%-         SWITCH pair.key -%]
+[%-             CASE [ "Filesystem_id" ] -%]
+ [%                 pair.value -%]
+[%-             CASE comma_sep_list -%]
+ [%                 pair.value.join(',') -%]
+[%-             CASE booleans -%]
+ [%                 pair.value ? 'TRUE' : 'FALSE' -%]
+[%-             CASE -%]
+[%-                 IF (pair.value.match('^(-?\d+)$')) -%]
+ [%                     pair.value -%]
+[%-                 ELSE -%]
+ "[%-                   pair.value -%]"
+[%-                 END -%]
+[%-         END -%]
+;
+[%-  END -%]
