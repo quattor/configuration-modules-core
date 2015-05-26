@@ -13,28 +13,26 @@ include { 'quattor/schema' };
 }
 function valid_osd_names = {
     names = list();
-    if(!exists(ARGV[0]['clusters'])) {
-        #check if deployhost?
-        return(true);
-    };
+    if(exists(ARGV[0]['clusters'])) {
         
-    clusters = ARGV[0]['clusters'];
-    foreach (name;cluster;clusters) {
-        append(names, name);
-    };
+        clusters = ARGV[0]['clusters'];
+        foreach (name;cluster;clusters) {
+            append(names, name);
+        };
 
-    foreach (name;cluster;clusters) {
-        foreach (host;hvals;clusters[name]['osdhosts']) {
-            foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
-                foreach (idex;clname;names) {
-                    if (match(osd,clname + '-\d+$')){
-                        error("Osd path: " + osd + " is a ceph-reserved path!"); 
-                        return(false);
+        foreach (name;cluster;clusters) {
+            foreach (host;hvals;clusters[name]['osdhosts']) {
+                foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
+                    foreach (idex;clname;names) {
+                        if (match(osd,clname + '-\d+$')){
+                            error("Osd path: " + osd + " is a ceph-reserved path!"); 
+                            return(false);
+                        };
                     };
                 };
             };
         };
-    };
+   };
    return(true);
 };
 
@@ -324,7 +322,7 @@ type ceph_cluster = {
 };
 
 @documentation{
-Experimental feature:
+Decentralized config feature:
 For use with dedicated pan code that builds the cluster info from remote templates..
 }
 type ceph_localdaemons = {
