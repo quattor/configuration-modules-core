@@ -407,6 +407,7 @@ type sssd_nss = {
     "filter_users" : string = "root"
     "filter_users_in_groups" : boolean = true
     "filter_groups" : string = "root"
+    "memcache_timeout" : long = 300
 };
 
 type authconfig_sssd_local = {

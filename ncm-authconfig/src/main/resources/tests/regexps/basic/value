@@ -27,6 +27,7 @@ contentspath=/software/components/authconfig/method/sssd
 ^filter_groups = root$
 ^filter_users = root$
 ^filter_users_in_groups = True$
+^memcache_timeout = 300$
 ^\[domain/test1\]$
 ^ldap_user_ad_account_expires = accountExpires$
 ^ldap_user_ad_user_account_control = userAccountControl$
