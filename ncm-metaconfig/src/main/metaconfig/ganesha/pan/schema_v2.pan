@@ -45,6 +45,12 @@ type ganesha_v2_cacheinode = {
     "Use_Getattr_Directory_Invalidation" ? boolean = false
 };
 
+@{ Ganesha Export FSAL PNFS subsection @}
+type ganesha_v2_export_FSAL_PNFS = {
+    "Stripe_Unit" : long(0..) = 8192
+    "pnfs_enabled" ? boolean = false
+};
+    
 @{ Ganesha Export FSAL subsection @}
 type ganesha_v2_export_FSAL = {
     "name" : string
@@ -58,9 +64,11 @@ type ganesha_v2_export_FSAL = {
     "volpath" ? string = "/"
     "volume" ? string  # Mandatory
     #FSAL_ZFS
-    "pool_path" ? string 
+    "zpool" : string = "tank"
     #FSAL_PT
     "pt_export_id" ? long = 1
+    #PNFS
+    "PNFS" ? ganesha_v2_export_FSAL_PNFS
 };
 
 type ganesha_v2_protocol = string with match(SELF, '^(3|4|NFS3|NFS4|V3|V4|NFSv4|NFSv4|9P)$');
@@ -74,6 +82,7 @@ type ganesha_v2_export_permissions = {
     "Anonymous_uid" ? long = -2
     "Delegations" ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
     "Disable_ACL" ? boolean = false
+    "DisableReaddirPlus" ? boolean = false
     "Manage_Gids" ? boolean = false
     "NFS_Commit" ? boolean = false
     "PrivilegedPort" ? boolean = false
@@ -82,6 +91,14 @@ type ganesha_v2_export_permissions = {
     "Squash" ? string = "root_squash" with match(SELF, 
         '^(root|root_squash|rootsquash|all|all_squash|allsquash|no_root_squash|none|noidsquash)$')
     "Transports" ? ganesha_v2_Transports[] = list('UDP', 'TCP')
+    "Trust_Readdir_Negative_Cache" ? boolean = false
+};
+
+@{ Ganesha ds section @}
+type ganesha_v2_ds = {
+    "name" ? string
+    "Number" ? long(0..) = 0
+    "FSAL" : ganesha_v2_export_FSAL
 };
 
 @{ Ganesha Export CLIENT subsection @}
@@ -290,7 +307,8 @@ type ganesha_v2_proxy = {
 @{ Ganesha GPFS section @}
 type ganesha_v2_GPFS = {
     include ganesha_v2_fsalsettings_all
-    "delegations" ? boolean = false
+    "Delegations" ? ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
+    "fsal_grace" ? boolean = false
     "fsal_trace" ? boolean = true
     "pnfs_file" ? boolean = false   
 };
@@ -304,15 +322,13 @@ type ganesha_v2_LUSTRE_PNFS_DataServer = {
  
 @{ Ganesha LUSTRE pnfs subsection @}
 type ganesha_v2_LUSTRE_PNFS = {
-    "DataServer" ? ganesha_v2_LUSTRE_PNFS_DataServer
-    "Stripe_Size" ? long(0..) = 65536
-    "Stripe_Width" ? long(0..128) = 8
+    "DataServer" ? ganesha_v2_LUSTRE_PNFS_DataServer[]
 };
 
 @{ Ganesha LUSTRE section @}
 type ganesha_v2_LUSTRE = {
     include ganesha_v2_fsalsettings
-    "pnfs" ? ganesha_v2_LUSTRE_PNFS
+    "PNFS" ? ganesha_v2_LUSTRE_PNFS
 };
 
 @{ Ganesha VFS section @}
