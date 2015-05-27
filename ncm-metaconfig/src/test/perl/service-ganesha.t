@@ -6,7 +6,7 @@ my $u = Test::Quattor::TextRender::Metaconfig->new(
         version => '1.5',
         )->test();
 
-$u = Test::Quattor::TextRender::Metaconfig->new(
+my $v = Test::Quattor::TextRender::Metaconfig->new(
         service => 'ganesha',
         version => '2.2',
         )->test();

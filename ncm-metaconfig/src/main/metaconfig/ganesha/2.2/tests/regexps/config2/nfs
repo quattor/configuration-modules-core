@@ -8,4 +8,4 @@ multiline
 ^\s{4}MNT_Port = 32767;$
 ^\s{4}NLM_Port = 32769;$
 ^\s{4}Nb_Worker = 512;$
-^NFS_CORE_PARAM \{\n(\s{4}.*\n)*\}$ ### COUNT 1
+^\}$

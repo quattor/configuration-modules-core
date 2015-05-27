@@ -1,4 +1,4 @@
-object template config;
+object template config2;
 
 variable METACONFIG_GANESHA_VERSION = 'v2';
 include 'metaconfig/ganesha/config';
@@ -21,4 +21,4 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf
 "RQOTA_Port" = null; # no rqouta on gpfs 
 "Clustered" = true; 
 
-include 'exports';
+include 'exports2';

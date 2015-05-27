@@ -1,4 +1,4 @@
-unique template exports;
+unique template exports2;
 
 prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/0";
 "Export_id" = 76 ;

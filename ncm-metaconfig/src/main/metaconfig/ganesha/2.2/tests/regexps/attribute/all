@@ -154,4 +154,4 @@ multiline
 ^\s{4}pnfs \{$
 ^\s{8}param = "value";$
 ^\s{8}pnfs = TRUE;$
-
+^\}$

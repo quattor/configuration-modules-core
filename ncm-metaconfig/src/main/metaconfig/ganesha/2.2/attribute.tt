@@ -15,7 +15,7 @@
 [%- block_array = ["CLIENT", "Facility"]
 -%]
 [%- IF pair.key == 'pnfs' %]
-[%-     IF pair.value.keys.size -%]
+[%-     IF CCM.is_hash(pair.value) -%]
 [%-         block_type = block_type.merge(['pnfs']); -%]
 [%-     ELSE -%]
 [%-         booleans = booleans.merge(['pnfs']); -%]

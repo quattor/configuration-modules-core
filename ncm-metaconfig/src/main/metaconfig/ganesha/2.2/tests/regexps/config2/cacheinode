@@ -11,4 +11,4 @@ multiline
 ^\s{4}FD_Limit_Percent = 90;$
 ^\s{4}LRU_Run_Interval = 90;$
 ^\s{4}Reaper_Work = 1500;$
-^CACHEINODE \{\n(\s{4}.*\n)*\}$ ### COUNT 1
+^\}$
