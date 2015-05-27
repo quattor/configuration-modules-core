@@ -307,7 +307,7 @@ type ganesha_v2_proxy = {
 @{ Ganesha GPFS section @}
 type ganesha_v2_GPFS = {
     include ganesha_v2_fsalsettings_all
-    "Delegations" ? ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
+    "Delegations" ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
     "fsal_grace" ? boolean = false
     "fsal_trace" ? boolean = true
     "pnfs_file" ? boolean = false   

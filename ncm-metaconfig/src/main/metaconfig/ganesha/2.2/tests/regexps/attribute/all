@@ -2,6 +2,12 @@ Tests for all attributes
 ---
 multiline
 ---
+^FSAL \{$
+^\s{4}PNFS \{$
+^\s{8}pnfs_enabled = TRUE;$
+^\s{4}\}$
+^\}$
+^test \{$
 ^\s{4}Access_Type = None;$
 ^\s{4}Active_krb5 = FALSE;$
 ^\s{4}Allow_Numeric_Owners = TRUE;$
@@ -36,6 +42,7 @@ multiline
 ^\s{4}Decoder_Fridge_Expiration_Delay = 600;$
 ^\s{4}Default_log_level = "EVENT";$
 ^\s{4}Delegations = FALSE;$
+^\s{4}DisableReaddirPlus = FALSE;$
 ^\s{4}Disable_ACL = FALSE;$
 ^\s{4}Dispatch_Max_Reqs = 5000;$
 ^\s{4}Dispatch_Max_Reqs_Xprt = 512;$
@@ -92,6 +99,7 @@ multiline
 ^\s{4}NParts = 7;$
 ^\s{4}NSM_Use_Caller_Name = FALSE;$
 ^\s{4}Nb_Worker = 16;$
+^\s{4}Number = 0;$
 ^\s{4}PID = TRUE;$
 ^\s{4}PROGNAME = TRUE;$
 ^\s{4}Plugins_Dir = "/usr/lib64/ganesha";$
@@ -116,10 +124,10 @@ multiline
 ^\s{4}Sec_Type = "krb5";$
 ^\s{4}Squash = "root_squash";$
 ^\s{4}Srv_Addr = "127.0.0.1";$
-^\s{4}Stripe_Size = 65536;$
-^\s{4}Stripe_Width = 8;$
+^\s{4}Stripe_Unit = 8192;$
 ^\s{4}THREAD_NAME = TRUE;$
 ^\s{4}Transports = UDP,TCP;$
+^\s{4}Trust_Readdir_Negative_Cache = FALSE;$
 ^\s{4}UseCookieVerifier = TRUE;$
 ^\s{4}Use_Getattr_Directory_Invalidation = FALSE;$
 ^\s{4}Use_Privileged_Client_Port = FALSE;$
@@ -133,8 +141,8 @@ multiline
 ^\s{4}auth_xdev_export = FALSE;$
 ^\s{4}cansettime = TRUE;$
 ^\s{4}date_format = "ganesha";$
-^\s{4}delegations = FALSE;$
 ^\s{4}enable = "idle";$
+^\s{4}fsal_grace = FALSE;$
 ^\s{4}fsal_trace = TRUE;$
 ^\s{4}glfs_log = "/tmp/gfapi.log";$
 ^\s{4}headers = "all";$
@@ -143,6 +151,7 @@ multiline
 ^\s{4}maxread = 67108864;$
 ^\s{4}maxwrite = 67108864;$
 ^\s{4}pnfs = FALSE;$
+^\s{4}pnfs_enabled = FALSE;$
 ^\s{4}pnfs_file = FALSE;$
 ^\s{4}pt_export_id = 1;$
 ^\s{4}symlink_support = TRUE;$
@@ -150,8 +159,6 @@ multiline
 ^\s{4}umask = 0;$
 ^\s{4}volpath = "/";$
 ^\s{4}xattr_access_rights = 0400;$
-^testpnfs \{$
-^\s{4}pnfs \{$
-^\s{8}param = "value";$
-^\s{8}pnfs = TRUE;$
+^\s{4}zpool = "tank";$
 ^\}$
+
