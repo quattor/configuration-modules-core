@@ -3,7 +3,7 @@ object template config2;
 variable METACONFIG_GANESHA_VERSION = 'v2';
 include 'metaconfig/ganesha/config';
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/main/CACHEINODE"; 
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/main/CACHEINODE"; 
  
 "Attr_Expiration_Time" = 120; 
  
@@ -14,7 +14,7 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf
 "FD_Limit_Percent" = 90; 
 "Reaper_Work" = 1500; 
  
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/main/NFS_CORE_PARAM"; 
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/main/NFS_CORE_PARAM"; 
 "Nb_Worker" = 128*4 ; 
 "MNT_Port" = 32767; 
 "NLM_Port" = 32769; 

@@ -1,6 +1,6 @@
 Tests for export config
 ---
-/etc/ganesha/ganesha.nfsd.conf
+/etc/ganesha/ganesha.conf
 ---
 ^EXPORT \{$
 ^\s{4}CLIENT \{ $

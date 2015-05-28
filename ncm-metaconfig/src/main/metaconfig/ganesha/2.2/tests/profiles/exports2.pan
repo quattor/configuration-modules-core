@@ -1,6 +1,6 @@
 unique template exports2;
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/0";
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/0";
 "Export_id" = 76 ;
 "Path" = "/gpfs/scratchtest/home/gent";
 "Pseudo" = "/user/home/gent";
@@ -11,15 +11,15 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf
 "NFS_Commit" = true;
 "FSAL" = dict("name", "GPFS");
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/0/CLIENT/0";
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/0/CLIENT/0";
 "Clients" = list("*.vsc");
 "Access_Type" = "RW";
 "Squash" = "root_squash";
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/0/CLIENT/1";
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/0/CLIENT/1";
 "Clients" = list("*.domain");
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/1";
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/1";
 "Export_id" = 77;
 "Path" = "/gpfs/scratchtest/data/gent";
 "Pseudo" = "/user/data/gent";
@@ -30,7 +30,7 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf
 "NFS_Commit" = true;
 "FSAL" = dict("name", "GPFS");
 
-prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/1/CLIENT/0";
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/1/CLIENT/0";
 "Clients" = list("*.vsc");
 "Access_Type" = "RW";
 "Squash" = "root_squash";

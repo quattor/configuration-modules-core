@@ -1,6 +1,6 @@
 Tests for nfs config
 ---
-/etc/ganesha/ganesha.nfsd.conf
+/etc/ganesha/ganesha.conf
 ---
 ^NFS_CORE_PARAM \{$
 ^\s{4}Clustered = TRUE;$

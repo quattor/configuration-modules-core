@@ -64,7 +64,7 @@ type ganesha_v2_export_FSAL = {
     "volpath" ? string = "/"
     "volume" ? string  # Mandatory
     #FSAL_ZFS
-    "zpool" : string = "tank"
+    "zpool" ? string = "tank"
     #FSAL_PT
     "pt_export_id" ? long = 1
     #PNFS

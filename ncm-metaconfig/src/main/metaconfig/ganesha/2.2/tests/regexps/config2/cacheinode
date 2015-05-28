@@ -1,6 +1,6 @@
 Tests for cacheinode config
 ---
-/etc/ganesha/ganesha.nfsd.conf
+/etc/ganesha/ganesha.conf
 ---
 ^CACHEINODE \{$
 ^\s{4}Attr_Expiration_Time = 120;$
