@@ -71,8 +71,8 @@ type ganesha_v2_export_FSAL = {
     "PNFS" ? ganesha_v2_export_FSAL_PNFS
 };
 
-type ganesha_v2_protocol = string with match(SELF, '^(3|4|NFS3|NFS4|V3|V4|NFSv4|NFSv4|9P)$');
-type ganesha_v2_SecType = string with match(SELF, '^(none|sys|krb5|krb5i|krb5p)$');
+type ganesha_v2_protocol = string with match(SELF, '^((NFS)?[vV]?[34]|9P)$');
+type ganesha_v2_SecType = string with match(SELF, '^(none|sys|krb5[ip]?)$');
 type ganesha_v2_Transports =string with match(SELF, '^(UDP|TCP)$');
 
 @{ Ganesha Export Permissions for EXPORT_DEFAULLTS, EXPORT and CLIENT sections @}
@@ -89,7 +89,7 @@ type ganesha_v2_export_permissions = {
     "Protocols" ? ganesha_v2_protocol[] = list('3', '4', '9P')
     "SecType" ? ganesha_v2_SecType[] = list('none', 'sys')
     "Squash" ? string = "root_squash" with match(SELF, 
-        '^(root|root_squash|rootsquash|all|all_squash|allsquash|no_root_squash|none|noidsquash)$')
+        '^((root|all)(_?squash)?|no_root_squash|none|noidsquash)$')
     "Transports" ? ganesha_v2_Transports[] = list('UDP', 'TCP')
     "Trust_Readdir_Negative_Cache" ? boolean = false
 };
@@ -276,7 +276,7 @@ type ganesha_v2_proxy_remote_server = {
     "RPC_Client_Timeout" ? long(0..) = 60
     "Remote_PrincipalName" ? string 
     "Retry_SleepTime" ? long(0..) = 10
-    "Sec_Type" ? string = 'krb5' with match(SELF,'^(krb5|krb5i|krb5p)$')
+    "Sec_Type" ? string = 'krb5' with match(SELF,'^krb5[ip]?$')
     "Srv_Addr" ? type_ip = "127.0.0.1"
     "Use_Privileged_Client_Port" ? boolean = false
 };
