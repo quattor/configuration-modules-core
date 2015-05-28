@@ -1,6 +1,5 @@
 Tests for all attributes
 ---
-multiline
 ---
 ^FSAL \{$
 ^\s{4}PNFS \{$

@@ -1,12 +1,10 @@
-[%- comma_sep_list = ["Clients","Access_Type", "NFS_Protocols", "Protocols", "Transports", "SecType"]
--%]
-[%- block_type = ["Components", "Format", "FSAL", "PNFS", "remote_server"]
--%]
-[%- block_array = ["CLIENT", "DataServer", "Facility"]
--%]
+[%- comma_sep_list = ["Clients","Access_Type", "NFS_Protocols", "Protocols", "Transports", "SecType"] -%]
+[%- block_type = ["Components", "Format", "FSAL", "PNFS", "remote_server"] -%]
+[%- block_array = ["CLIENT", "DataServer", "Facility"] -%]
+
 [%-   SWITCH pair.key -%]
 [%-     CASE block_type -%]
-[% pair.key %] {
+[%          pair.key %] {
 [%          FOREACH subpair IN pair.value.pairs -%] 
 [%-             INCLUDE "metaconfig/ganesha/2.2/attribute.tt" pair=subpair FILTER indent %]
 [%          END -%] 

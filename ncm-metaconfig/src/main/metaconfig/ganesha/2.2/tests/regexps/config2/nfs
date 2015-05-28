@@ -1,6 +1,5 @@
 Tests for nfs config
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^NFS_CORE_PARAM \{$

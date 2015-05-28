@@ -1,6 +1,5 @@
 Tests for export_client config
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^EXPORT_CLIENT {

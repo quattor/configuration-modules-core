@@ -1,6 +1,5 @@
 Tests for stat_exporter gpfs
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^STAT_EXPORTER {

@@ -1,6 +1,5 @@
 Tests for nfsv4 gpfs
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^NFSv4 {

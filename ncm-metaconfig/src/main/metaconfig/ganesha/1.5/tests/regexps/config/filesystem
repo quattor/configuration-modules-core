@@ -1,6 +1,5 @@
 Tests for filesystem config
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^FileSystem {

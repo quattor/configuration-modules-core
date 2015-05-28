@@ -1,6 +1,5 @@
 Tests for cacheinode config
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^CACHEINODE \{$

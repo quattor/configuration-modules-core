@@ -1,6 +1,5 @@
 Tests for cacheinode gpfs
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^CacheInode {

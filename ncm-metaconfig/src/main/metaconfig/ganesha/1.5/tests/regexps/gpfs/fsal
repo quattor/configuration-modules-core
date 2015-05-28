@@ -1,6 +1,5 @@
 Tests for fsal gpfs
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^FSAL {

@@ -1,6 +1,5 @@
 Tests for snmp_adm config
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^SNMP_ADM {

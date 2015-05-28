@@ -1,6 +1,5 @@
 Tests for nfs gpfs
 ---
-multiline
 /etc/ganesha/ganesha.nfsd.conf
 ---
 ^NFS_Core_Param {
