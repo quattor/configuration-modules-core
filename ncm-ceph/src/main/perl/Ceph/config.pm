@@ -89,11 +89,12 @@ sub inject_realtime {
         if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
             @cmd = ('tell',"*.$host",'injectargs','--');
             my $keyvalue = "--$param=$changes->{$param}";
-            #$self->info("injecting $keyvalue realtime on $host"); #FIXME this does not work anymore, see mailinglist
+            #$self->info("injecting $keyvalue realtime on $host"); # this does not work anymore, see mailinglist
             my $inj = $self->run_ceph_command([@cmd, $keyvalue], 1);
-            $self->warn("$keyvalue need to be injected for all applicable daemons on $host: ", $inj);
+            $self->warn("global setting $keyvalue changed on host $host. Affected daemons should be restarted, ",
+                "or the setting needs to be injected: ", $inj);
         } else {
-            $self->warn("Non-injectable value $param changed");
+            $self->warn("Non-injectable setting $param changed, affected daemons should be restarted");
         }
     }
     return 1;

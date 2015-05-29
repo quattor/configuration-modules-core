@@ -109,6 +109,9 @@ prefix '/software/components/ceph/clusters/ceph';
         d = nlist();
         foreach(odx;disk;CEPH_OSD_DISKS) {
             jdx= odx % length(CEPH_JOURNAL_DISKS); ## RR over journal disks
+            if (host == 'ceph003') {
+                jdx=0; # Empty bucket tst-1 on ceph003
+            };
             d[disk] = nlist(
                 'journal_path', format('/var/lib/ceph/log/%s/osd-%s/journal', CEPH_JOURNAL_DISKS[jdx], disk),
                 'crush_weight', CEPH_DEFAULT_OSD_WEIGHT,
