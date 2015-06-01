@@ -141,7 +141,7 @@ sub add_osd {
         if ($structures->{ok_osd_failures}){
             $structures->{ok_osd_failures}--;
             $osd->{crush_ignore} = 1;
-            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname.", 
+            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname. ", 
                 "$structures->{ok_osd_failures} more failures accepted");
             return 1;
         } else {
@@ -365,8 +365,8 @@ sub delete_host {
     
 # Compare per host - add, delete, modify 
 sub compare_conf {
-    my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
-
+    my ($self, $quat_conf, $ceph_conf_orig, $mapping, $gvalues) = @_;
+    my $ceph_conf =  dclone($ceph_conf_orig) if defined($ceph_conf_orig);
     my $structures = {
         configs  => {},
         deployd  => {},

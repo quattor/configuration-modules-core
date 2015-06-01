@@ -368,7 +368,7 @@ Readonly::Hash our %QUATMAP => (
      }
    }
 );
-Readonly::Hash our %QUATIN => (
+our %QUATIN = (
    'ceph001' => {
      'config' => {
        'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
@@ -861,7 +861,7 @@ Readonly::Hash our %COMPARE2 => (
        }
      }
    },
-   'gvalues' => {},
+   'gvalues' => {max_add_osd_failures_per_host => 1},
    'skip' => {},
    'mapping' => {
      'get_id' => {
