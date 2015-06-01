@@ -68,6 +68,12 @@ filter \{$
 ^\s{8}mutate \{$
 ^\s{12}remove_field => \[ "syslog_hostname", "syslog_message", "syslog_timestamp" \]$
 ^\s{8}\}$
+^\s{8}bytes2human \{$
+^\s{12}convert => \{$
+^\s{16}"field1" => "bytes"$
+^\s{16}"field2" => "bytes"$
+^\s{12}\}$
+^\s{8}\}$
 ^\s{4}\}$
 output \{$
 ^\s{4}elasticsearch \{$

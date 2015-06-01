@@ -137,6 +137,11 @@ type logstash_filter_grok = {
     "patterns_dir" ? string[]
 };
 
+type logstash_filter_bytes2human = {
+    include logstash_filter_plugin_common
+    "convert" : string{}
+};
+
 type logstash_filter_date = {
     include logstash_filter_plugin_common
     "match" : logstash_filter_name_patternlist
@@ -176,6 +181,7 @@ type logstash_filter_plugin = {
     "grep" ? logstash_filter_grep
     "mutate" ? logstash_filter_mutate
     "kv" ? logstash_filter_kv
+    "bytes2human" ? logstash_filter_bytes2human
 } with length(SELF) == 1;
 
 @{ Common output }

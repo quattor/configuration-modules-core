@@ -90,6 +90,12 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         nlist("mutate", nlist(
             "remove_field", list("syslog_hostname", "syslog_message", "syslog_timestamp"),
             )),
+        nlist("bytes2human", nlist(
+            "convert", nlist(
+                "field1", "bytes",
+                "field2", "bytes",
+                ),
+            )),
     ),
 ));
 
