@@ -6,7 +6,7 @@
   <artifactId>metaconfig</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.4.0-rc14-SNAPSHOT</version>
+  <version>15.4.0-rc14</version>
   <name>Configure services whose config format is standard, such as YAML or JSON.</name>
 
 
