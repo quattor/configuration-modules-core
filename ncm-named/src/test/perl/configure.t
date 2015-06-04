@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 14;
 use Test::NoWarnings;
 use Test::Quattor qw(client server);
 use NCM::Component::named;
@@ -211,19 +211,30 @@ $fh->close();
 
 # Server configuration
 
-$config = get_config_for_profile("server");
-set_file_contents($NAMED_SYSCONFIG_FILE, $NAMED_SYSCONFIG_CONTENTS_1);
 set_command_status("/sbin/chkconfig --list", "0");
+set_command_status("/sbin/chkconfig --list named", "0");
 my $named_root_dir = $cmp->getNamedRootDir();
 my $named_conf_file = $named_root_dir.$NAMED_CONFIG_FILE;
+
+# client/server with named.conf from other source
+# i.e. no config data set in profile (like this pure-client)
+$cmp->Configure($config);
+$fh = get_file($named_conf_file);
+ok(! defined($fh), "$named_conf_file not opened / modified with FileWriter for client");
+
+# actual server with named.conf under ncm-named control
+set_file_contents($NAMED_SYSCONFIG_FILE, $NAMED_SYSCONFIG_CONTENTS_1);
+$config = get_config_for_profile("server");
 $cmp->Configure($config);
 $fh = get_file($named_conf_file);
 ok(defined($fh), "$named_conf_file was opened");
-is("$fh",$NAMED_CONFIG_CONTENTS,"$named_conf_file has expected contents");
+# overwrites the external data
+is("$fh", $NAMED_CONFIG_CONTENTS, "$named_conf_file has expected contents");
 $fh->close();
 
 set_file_contents($NAMED_SYSCONFIG_FILE, $NAMED_SYSCONFIG_CONTENTS_2);
 set_command_status("/sbin/chkconfig --list", "0");
+set_command_status("/sbin/chkconfig --list named", "0");
 $named_root_dir = $cmp->getNamedRootDir();
 like($named_root_dir,qr{^/[-\w\./]+$},"Named chrooted");
 $named_conf_file = $named_root_dir.$NAMED_CONFIG_FILE;

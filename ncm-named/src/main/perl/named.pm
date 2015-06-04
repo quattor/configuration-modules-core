@@ -126,17 +126,10 @@ sub Configure {
     # Update named configuration file with configuration embedded in the configuration
     # or with the reference file, if one of them has been specified
 
-    my $server_changes;
     my $named_root_dir = $self->getNamedRootDir();
     my $named_config_file_path = $named_root_dir.$NAMED_CONFIG_FILE;
-    my $named_config_contents;
+    my ($named_config_contents, $server_changes);
 
-    $fh = CAF::FileWriter->new($named_config_file_path,
-                                   backup      => '.ncm-named',
-                                   owner       => 'root',
-                                   mode        => 0644,
-                                   log => $self,
-                                  );
     if ( $named_config->{serverConfig} ) {
         $self->info("Checking $NAMED_SERVICE configuration ($named_config_file_path)...");
         $named_config_contents = encode_utf8($named_config->{serverConfig});
@@ -147,15 +140,28 @@ sub Configure {
         $named_config_contents = $src_fh->stringify();
         $src_fh->close();
     }
-    print $fh $named_config_contents;
-    $update_disabled = $fh->noAction();
-    $server_changes = $fh->close();
-    unless ( defined($server_changes) || $update_disabled ) {
-        $self->error("error updating $named_config_file_path");
-        return;
+
+    if ($named_config_contents) {
+
+        $fh = CAF::FileWriter->new($named_config_file_path,
+                                   backup      => '.ncm-named',
+                                   owner       => 'root',
+                                   mode        => 0644,
+                                   log => $self,
+            );
+        print $fh $named_config_contents;
+        $update_disabled = $fh->noAction();
+        $server_changes = $fh->close();
+        unless ( defined($server_changes) || $update_disabled ) {
+            $self->error("error updating $named_config_file_path");
+            return;
+        }
+
+        $self->updateServiceState($NAMED_SERVICE,$server_enabled,$server_changes);
+    } else {
+        $self->verbose("No config contents for $NAMED_SERVICE configuration ($named_config_file_path)");
     }
 
-    $self->updateServiceState($NAMED_SERVICE,$server_enabled,$server_changes);
 }
 
 
