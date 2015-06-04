@@ -2,21 +2,11 @@
 # ${developer-info}
 # ${author-info}
 
-#######################################################################
-#
-# named NCM component
-#
-# NCM named configuration component
-#
-#
-# Copyright (c) 2003 Vladimir Bahyl, CERN and EU DataGrid.
-# For license conditions see http://www.eu-datagrid.org/license.html
-#
-#######################################################################
-
 package NCM::Component::named;
 
 use strict;
+use warnings;
+
 use NCM::Component;
 use vars qw(@ISA $EC);
 require Exporter;
@@ -76,7 +66,7 @@ sub Configure {
                                   log => $self,
                                  );
     if ( $named_config->{servers} || ($server_enabled && $named_config->{use_localhost}) ) {
-        $fh->remove_lines(q(^(?i)\s*nameserver\s+), 
+        $fh->remove_lines(q(^(?i)\s*nameserver\s+),
                           q(no good line));
         if ( $server_enabled && $named_config->{use_localhost} ) {
           print $fh "nameserver 127.0.0.1\t\t# added by Quattor\n";
@@ -84,7 +74,7 @@ sub Configure {
         for my $named_server (@{$named_config->{servers}}) {
           print $fh "nameserver $named_server\t\t# added by Quattor\n";
         }
-       
+
        if ( $named_config->{search} ) {
             $fh->add_or_replace_lines("^\\s*search\\s*.*",
                                       "^\\s*search\\s*@{$named_config->{search}}",
