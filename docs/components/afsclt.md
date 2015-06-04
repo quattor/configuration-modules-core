@@ -97,7 +97,7 @@ none.
 
 none.
 
-Jaroslaw Polok <>
+Jaroslaw Polok
 
 ### SEE ALSO
 

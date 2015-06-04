@@ -114,7 +114,7 @@ None.
 
 None known.
 
-Tim Bell <>
+Tim Bell
 
 ### SEE ALSO
 

@@ -26,7 +26,7 @@ none.
 
 none known.
 
-Stijn De Weirdt <>
+Stijn De Weirdt
 
 ### SEE ALSO
 

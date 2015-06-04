@@ -74,7 +74,7 @@ Selectively "unconfiguring" certain elements doesn't work, you should
 run the _unconfigure()_ method and re-_configure()_ with the new
 values afterwards.
 
-Jan Iven <>
+Jan Iven
 
 ### SEE ALSO
 

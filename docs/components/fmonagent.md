@@ -52,7 +52,7 @@ Requires lemon-agent rpm to be installed.
 
 none known.
 
-Miroslav Siket <>, Dennis Waldron <>
+Miroslav Siket, Dennis Waldron
 
 ### SEE ALSO
 

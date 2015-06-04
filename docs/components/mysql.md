@@ -56,9 +56,9 @@ None.
 
 None known.
 
-Michel Jouvin <>
+Michel Jouvin
 
-Michel Jouvin <>
+Michel Jouvin
 
 ### VERSION
 

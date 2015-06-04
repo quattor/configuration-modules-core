@@ -36,7 +36,7 @@ This component doesn't touch any file.
 
 None.
 
-Guillaume PHILIPPON <>
+Guillaume PHILIPPON
 
 ### SEE ALSO
 

@@ -44,7 +44,7 @@ none.
 
 none known.
 
-Ulrich Schwickerath <>
+Ulrich Schwickerath
 
 ### SEE ALSO
 

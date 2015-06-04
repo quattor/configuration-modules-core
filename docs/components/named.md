@@ -41,7 +41,7 @@ None.
 
 None known.
 
-Michel Jouvin <>
+Michel Jouvin
 
 ### SEE ALSO
 

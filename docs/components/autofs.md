@@ -138,9 +138,9 @@ None.
 
 None known.
 
-David Groep <>
+David Groep
 
-David Groep <>, Michel Jouvin <>
+David Groep, Michel Jouvin
 
 ### VERSION
 

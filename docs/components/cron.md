@@ -173,11 +173,11 @@ None.
 > Editing BETWEEN the tags will cause the edits to be overwritten the next time
 > ncm-cron runs.
 
-Charles Loomis <>
+Charles Loomis
 
 S
 
-Guillaume Philippon <>
+Guillaume Philippon
 
 Mark Wilson <Mark.Wilson@MorganStanley.com>
 
