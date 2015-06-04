@@ -39,7 +39,7 @@ named just like the tags for the appropriate Icinga object.
 
 - `/software/components/icinga/hostdependencies`
 
-    Host dependency defintions, indexed by __depended__ host name (this is,
+    Host dependency defintions, indexed by **depended** host name (this is,
     where the arrow ends in Icinga documentation).
 
     These settings are written in `/etc/icinga/objects/hostdependencies.cfg`

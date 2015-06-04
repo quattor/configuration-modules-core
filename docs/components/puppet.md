@@ -17,7 +17,7 @@ Other sectiond may be added
 
 Each item is a parameter in the '\[main\]' section of the puppet.conf file. Below the mandaroy parameters
 
-- `logdir` : 
+- `logdir` :
 
     Puppet log dir. Defaults to `/var/log/puppet.`
 
@@ -28,7 +28,7 @@ Each item is a parameter in the '\[main\]' section of the puppet.conf file. Belo
 #### `/software/components/puppet/hieraconf`
 
 Defines the configuration for hiera. Each item is a key definition in the `/etc/puppet/hiera.yaml` file. Here are the default values.
-The default is 
+The default is
 
     ---
     :backends:
@@ -49,25 +49,14 @@ The parameters of each item are.
 
     The default for "nodefiles" is one file quattor\_default.pp with content "hiera\_include('classes')".
 
-    #### `/software/components/puppet/hieradata`
+#### `/software/components/puppet/hieradata`
 
-    Data to be passed to the hiera config. Teh data will be written in `/etc/puppet/hieradata/quattor.yaml`. Note: the nlist keys will be unescaped by the component.
+Data to be passed to the hiera config. Teh data will be written in `/etc/puppet/hieradata/quattor.yaml`. Note: the nlist keys will be unescaped by the component.
 
-    #### `/software/components/puppet/modules`
+#### `/software/components/puppet/modules`
 
-    Named list of modules to be downloaded from the puppetlab forge. Each module has the following parameters
+Named list of modules to be downloaded from the puppetlab forge. Each module has the following parameters
 
-    - `version` ? string
+- `version` ? string
 
-        version of the module.
-
-        = back
-        = back 
-
-        
-
-        ### TODO
-
-        Better way to place the defaults on hieraconf parameter.
-
-        Downloading files from other sources than PuppetLabs forge.
+    version of the module.

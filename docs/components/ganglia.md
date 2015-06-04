@@ -11,7 +11,7 @@ ganglia
 #### `/software/components/ganglia`
 
 The configuration information for the component.  Each field should
-be described in this section. 
+be described in this section.
 
 \#
 \### Author(s): Guillaume PHILIPPON

@@ -6,7 +6,7 @@ NCM::nscd - NCM component to configure nscd
 
 - Configure()
 
-    Configures the name service caching daemon (nscd). See the `nscd.conf(5)` man page 
+    Configures the name service caching daemon (nscd). See the `nscd.conf(5)` man page
     or the CDB schema file for allowed options. Booleans have to be written as
     _yes_ or _no_ in the template, this is the way _nscd_ expects them.
 

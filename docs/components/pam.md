@@ -5,10 +5,10 @@ NCM::pam - NCM pam configuration component
 ### SYNOPSIS
 
     ### declare what pam modules are available.
-    "/software/components/pam/modules" = npush("krb5", 
-	nlist("path", "/lib/security/$ISA/pam_krb5.so"));
-    "/software/components/pam/modules" = npush("cracklib", 
-	nlist("path", "/lib/security/$ISA/pam_cracklib.so"));
+    "/software/components/pam/modules" = npush("krb5",
+           nlist("path", "/lib/security/$ISA/pam_krb5.so"));
+    "/software/components/pam/modules" = npush("cracklib",
+           nlist("path", "/lib/security/$ISA/pam_cracklib.so"));
 
     ### setup a service
     "/software/components/pam/services" = pam_add(
@@ -65,8 +65,8 @@ NCM::pam - NCM pam configuration component
     "system-auth" service can be listed with this value, which will allow
     other services to stack/include that service configuration, without
     requiring that this component take over management of the
-    "system-auth" component. __This functionality is not implemented at
-    this time__.
+    "system-auth" component. **This functionality is not implemented at
+    this time**.
 
     PAM config files for services which are not specified within this list
     will not be touched.
@@ -128,7 +128,7 @@ The component provides the following functions to assist in creating configurati
 
 - pam\_add\_access\_file(KEY, FILENAME, ALLOWPOS, ALLOWNEG)
 
-    This function should be applied to "/software/components/pam/access". 
+    This function should be applied to "/software/components/pam/access".
     See pam\_access(8) for more details. Example:
 
         "/software/components/pam/access" = pam_add_access_file("access",

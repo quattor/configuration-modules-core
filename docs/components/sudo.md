@@ -23,17 +23,17 @@ optional
     letters, numbers and underscores. All the letters must be
     capitals. I.E: the name must match `^[A-Z][A-Z0-9_]*$`
 
-    They can be preceeded by an '!', indicating the alias must __not__
+    They can be preceeded by an '!', indicating the alias must **not**
     match that name. The contents may be preceeded by an !, indicating
-    that item must __not__ be part of the alias.
+    that item must **not** be part of the alias.
 
     The contents of host aliases can be either host names, IP addresses or
     network specifications (IP/netmask).
 
     A valid example:
 
-    	"/software/components/sudo/user_aliases" = nlist ("FOO",
-    		list ("bar", "%wheel", "!root"));
+            "/software/components/sudo/user_aliases" = nlist ("FOO",
+                    list ("bar", "%wheel", "!root"));
 
 - `/software/components/sudo/privilege`\_lines : mandatory
 
@@ -65,27 +65,27 @@ user.
     atomic options are supported.
     Boolean, integer and string values are handled correctly.
 
-For a given setting, __at most__ one of `user`, `host` or `run_as`
+For a given setting, **at most** one of `user`, `host` or `run_as`
 must be set. It is a compile error to set two or more of these.
 
 For instance, this is valid:
 
-	"/software/components/sudo/sudo/general_options" =
-		list (
-		      nlist ("user", "foo",
-			     "options", nlist ("insults", true, "mailerpath", "/sbin/sendmail")
-			    );
-		     );
+        "/software/components/sudo/sudo/general_options" =
+                list (
+                      nlist ("user", "foo",
+                             "options", nlist ("insults", true, "mailerpath", "/sbin/sendmail")
+                            );
+                     );
 
 But this is not:
 
-	"/software/components/sudo/sudo/general_options" =
-		list (
-		      nlist ("user", "foo",
-			     "host", "localhost" ### Error: only one of user and host!
-			     "options", nlist ("insults", true)
-			    );
-		     );
+        "/software/components/sudo/sudo/general_options" =
+                list (
+                      nlist ("user", "foo",
+                             "host", "localhost" ### Error: only one of user and host!
+                             "options", nlist ("insults", true)
+                            );
+                     );
 
 #### The list of `options`
 
@@ -97,7 +97,7 @@ description.
 
 Each privilege line in a sudoers has the following format:
 
-	user	host = (run_as_user) OPTIONS: command
+        user    host = (run_as_user) OPTIONS: command
 
 And, as such, the type `structure privilege_line` has the following fields:
 
@@ -123,7 +123,7 @@ And, as such, the type `structure privilege_line` has the following fields:
 
     The command to be executed.
 
-Remember that the built-in alias __ALL__ is valid for users,
+Remember that the built-in alias **ALL** is valid for users,
 run\_as users, hosts and commands.
 
 ### INCLUDING OTHER FILES
@@ -136,15 +136,15 @@ list of files that should be included.
 
 Try the following settings:
 
-	"/software/components/sudo/general_options" =
-		nlist ("options", nlist ("insults", true));
-	"/software/components/sudo/user_aliases" =
-		nlist ("FOO", list ("127.0.0.1"));
-	"/software/components/sudo/privilege_lines" =
-		list (nlist ("user", "foo",
-			     "run_as", "ALL",
-			     "host", "ALL",
-			     "cmd", "ALL"));
+        "/software/components/sudo/general_options" =
+                nlist ("options", nlist ("insults", true));
+        "/software/components/sudo/user_aliases" =
+                nlist ("FOO", list ("127.0.0.1"));
+        "/software/components/sudo/privilege_lines" =
+                list (nlist ("user", "foo",
+                             "run_as", "ALL",
+                             "host", "ALL",
+                             "cmd", "ALL"));
 
 and see the resulting `/etc/sudoers` .
 

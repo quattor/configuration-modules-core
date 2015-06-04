@@ -8,7 +8,7 @@ The _filecopy_ component manages services which have
 configuration files that can be representated as strings in pan or built by copying
 a template already present on the machine (eg. provided by a RPM).  A "restart"
 command can be given which will be run whenever the configuration
-changes.  
+changes.
 
 Note: that this does not do any validation checking on the content of
 the service configuration.  If this is desired, a service-specific
@@ -24,7 +24,7 @@ component should be written.
 
 #### `/software/components/filecopy/forceRestart`: boolean (required)
 
-A boolean that defines if the restart command (if any defined) of the file(s) 
+A boolean that defines if the restart command (if any defined) of the file(s)
 must be executed even though the files were up-to-date (default behaviour is to execute the
 restart command only if file content, permissions or owner/group has been changed).
 
@@ -91,7 +91,7 @@ Default: none
 
 ##### forceRestart: boolean (required)
 
-A boolean that defines if the restart command (if any defined) 
+A boolean that defines if the restart command (if any defined)
 must be executed even though the file was up-to-date (default behaviour is to execute the
 restart command only if file content, permissions or owner/group has been changed).
 

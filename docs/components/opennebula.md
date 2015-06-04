@@ -4,7 +4,7 @@ ncm-opennebula: Configuration module for OpenNebula
 
 ### DESCRIPTION
 
-Configuration module for OpenNebula. 
+Configuration module for OpenNebula.
 
 ### IMPLEMENTED FEATURES
 
@@ -13,7 +13,7 @@ Features that are implemented at this moment:
 - oned service configuration
 - Adding/removing VNETs
 - Adding/removing datastores (only CEPH datastores for the moment)
-- Adding/removing hypervirsors 
+- Adding/removing hypervirsors
 - Adding/removing OpenNebula regular users
 
 OpenNebula installation is 100% automated. Therefore:
@@ -41,7 +41,7 @@ To set up the initial cluster, some steps should be taken:
 #### `/software/components/opennebula`
 
 The configuration information for the component.  Each field should
-be described in this section. 
+be described in this section.
 
 - ssh\_multiplex : boolean
 
@@ -75,7 +75,7 @@ be described in this section.
 
     - vmfs
 
-        A specialized version of the shared one to use the vmfs file system. 
+        A specialized version of the shared one to use the vmfs file system.
 
     - ssh
 
@@ -87,6 +87,6 @@ The component was tested with OpenNebula version 4.8 and 4.10
 
 Following package dependencies should be installed to run the component:
 
-- perl-Config-Tiny 
+- perl-Config-Tiny
 - perl-LC
 - perl-Net-OpenNebula >= 0.2.2 !

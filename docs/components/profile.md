@@ -24,9 +24,9 @@ environment variables will be defined before the paths.
     The base name of the default profile.d file to create.  This gives some
     flexibility on the order in which the profile script will be executed.
     (Normally executed in alphabetical order.)  The full filename will
-    have ".\[c\]sh" appended to it. 
+    have ".\[c\]sh" appended to it.
 
-- env 
+- env
 
     A hash containing the environment variables to define in the default script. The environment variable name is the key and the
     value is a string.
@@ -34,7 +34,7 @@ environment variables will be defined before the paths.
 - path
 
     A structure defining (optionally) paths to define in default script. It may contain prepend, append, and value
-    elements.  Each element is a list of strings. 
+    elements.  Each element is a list of strings.
 
     The prepended values will be prepended and the appended values
     appended to the current value of the path.  If the value is specified,
@@ -43,7 +43,7 @@ environment variables will be defined before the paths.
 
     Only the first occurrence of a particular path will be kept in the
     final definition.  Note that if the current path is used, there may
-    still be some duplicates coming from the current definition. 
+    still be some duplicates coming from the current definition.
 
 - scripts
 
@@ -62,7 +62,7 @@ environment variables will be defined before the paths.
 
     - flavorSuffix : boolean (required)
 
-        This property indicates whether to add a .sh or .csh suffix to the script path. If false, only one flavor must be 
+        This property indicates whether to add a .sh or .csh suffix to the script path. If false, only one flavor must be
         specified.
 
         Default : true

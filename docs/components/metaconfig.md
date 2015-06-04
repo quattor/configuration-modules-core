@@ -1,6 +1,25 @@
+\### #
+\### Software subject to following license(s):
+\###   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
+\###   Copyright (c) Responsible Organization
+\#
+
+\### #
+\### Current developer(s):
+\###   Luis Fernando Muñoz Mejías <Luis.Munoz@UGent.be>
+\#
+
+\### #
+\### Author(s): Luis Fernando Muñoz Mejías
+\#
+
+\### #
+\### metaconfig, 15.4.0, 1, 2015-06-03T15:22:54Z
+\#
+
 ### NAME
 
-ncm-metaconfig: Configure services whose config format can be 
+ncm-metaconfig: Configure services whose config format can be
 rendered via `CAF::TextRender`.
 
 ### DESCRIPTION
@@ -37,23 +56,14 @@ The configuration information for the component.  It is an nlist of
 
 - daemons ? caf\_service\_action{}
 
-    An nlist with foreach daemon the `CAF::Service` action to take 
+    An nlist with foreach daemon the `CAF::Service` action to take
     if the file changes.
 
-    Even if multiple `services` are associated to the same daemon, each action 
+    Even if multiple `services` are associated to the same daemon, each action
     for the daemon will be taken at most once.
 
     If multiple actions are to be taken for the same daemon, all actions
     will be taken (no attempt to optimize is made).
-
-- daemon ? string\[\]
-
-    \[Deprecated in favour of daemons\]
-
-    List of daemons to restart if the file changes.
-
-    Even if multiple `services` are associated to the same daemon, the
-    daemon will be restarted at most once.
 
 - preamble ? string
 
@@ -115,7 +125,7 @@ The following formats can be rendered via `CAF::TextRender`:
     Uses [Template::Toolkit](https://metacpan.org/pod/Template::Toolkit) for rendering configuration files in formats
     supplied by the user.
 
-    The name of the template is given by this field. It __must__ be a path
+    The name of the template is given by this field. It **must** be a path
     relative to `metaconfig/`, and the component actively sanitizes this
     field.
 
@@ -184,8 +194,8 @@ We'll define the permissions, who renders it and which daemons are associated to
     "owner" = "root";
     "group" = "root";
     "module" = "tiny";
-    "daemon/0" = "foo";
-    "daemon/1" = "bar";
+    "daemons/foo" = "restart";
+    "daemons/bar" = "reload";
 
 And we'll ensure the module that renders it is installed (Yum-based
 syntax here):
@@ -206,7 +216,7 @@ That's it!  When you deploy your configuration you should see your
 `/etc/foo.ini` in the correct location.
 
 \#
-\### Author(s): Luis Fernando MuÃ±oz MejÃ­as
+\### Author(s): Luis Fernando Muñoz Mejías
 \#
 
 ### TODO

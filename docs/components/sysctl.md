@@ -23,14 +23,23 @@ Default : false
 
 #### `/software/components/ncm`-sysctl/confFile : string (required)
 
-String defining sysctl configuration file.
+String defining sysctl configuration file. If this value contains a /
+character then it will be treated as an absolute path to a file which
+is modified in place, and a backup made.
+
+If the value does not contain a / then it will be treated as the name
+of a file to be created in `/etc/sysctl.d`. The existing contents of
+the file will be overwritten.
 
 Default : `/etc/sysctl.conf`
 
 #### `/software/components/ncm`-sysctl/variables : nlist (optional)
 
-A nlist of key/value defining sysctl variables. There is no check that the key matches a valid key, so be cautious
-to use appropriate variable names. Key name should be escaped if it begins by a non-alphabetic character.
+A nlist of key/value defining sysctl variables. There is no check that
+the key matches a valid key, so be cautious to use appropriate
+variable names. Key names must begin with a letter or an underscore.
+Values containing whitespace must include quotes, the component will
+not add them.
 
 Default : none.
 
@@ -50,7 +59,8 @@ None.
 
 ### BUGS
 
-None known.
+Key names must begin with a letter or underscore, there is no
+mechanism to represent keys that do not satisfy this requirement.
 
 Benjamin Chardi <Benjamin.Chardi.M>
 

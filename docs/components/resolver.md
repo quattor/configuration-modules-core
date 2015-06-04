@@ -30,7 +30,7 @@ NCM::resolver - NCM resolver configuration component
 - `/software/components/resolver/servers` : list
 
     list of server addresses or hostnames. If these are
-    hostnames, they will be resolved before the resolver 
+    hostnames, they will be resolved before the resolver
     configuration is modified.
 
 - `/software/components/resolver/dnscache` : boolean

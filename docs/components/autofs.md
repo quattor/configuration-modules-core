@@ -1,6 +1,6 @@
 ### NAME
 
-ncm-autofs: NCM component to manage autofs configuration. 
+ncm-autofs: NCM component to manage autofs configuration.
 
 ### DESCRIPTION
 
@@ -94,7 +94,6 @@ We will mount the NFS filesystem nfsserv.example.org:/data under `/tmp`\_mnt/nfs
     'options'='rw,noatime,hard';
 
 #### Scenario 2 : Configuration with nlist() usage
-    
 
     '/software/components/autofs' = nlist(
         'preserveMaster', false,
@@ -139,9 +138,9 @@ None.
 
 None known.
 
-David Groep <davidg@nikhef.nl>
+David Groep <>
 
-David Groep <davidg@nikhef.nl>, Michel Jouvin <>
+David Groep <>, Michel Jouvin <>
 
 ### VERSION
 
@@ -150,5 +149,3 @@ David Groep <davidg@nikhef.nl>, Michel Jouvin <>
 ### SEE ALSO
 
 ncm-ncd(1)
-
-

@@ -17,7 +17,7 @@ cdp-listend daemon.
 
 - `port ? type_port`
 
-    The port used by the daemon.  
+    The port used by the daemon.
 
 - `nch ? string`
 

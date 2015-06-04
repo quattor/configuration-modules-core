@@ -17,7 +17,7 @@ reload the new configuration by executing the following command:
 
 #### `/software/components/ssh/client` : nlist (optional)
 
-This nlist contains 2 option sets describing respectively options that must be defined 
+This nlist contains 2 option sets describing respectively options that must be defined
 an their values and options that must be commented out.
 
 ##### `/software/components/ssh/client/options` : nlist (optional)
@@ -33,7 +33,7 @@ See schema for allowed options.
 
 #### `/software/components/ssh/daemon` : nlist (optional)
 
-This nlist contains 2 option sets describing respectively options that must be defined 
+This nlist contains 2 option sets describing respectively options that must be defined
 an their values and options that must be commented out.
 
 ##### `/software/components/ssh/daemon/options` : nlist (optional)

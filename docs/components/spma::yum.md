@@ -47,16 +47,16 @@ Quattor, please check
 
 - `/software/components/spma/userpkgs`\_retry : boolean
 
-    Yum-based spma might get confused and fails when it tries 
-    to remove packages when `userpkgs` is `no` while installing 
-    new ones. Typically it will (try to) remove a 
-    leaf package, that is also to be installed as a dependency of a new 
+    Yum-based spma might get confused and fails when it tries
+    to remove packages when `userpkgs` is `no` while installing
+    new ones. Typically it will (try to) remove a
+    leaf package, that is also to be installed as a dependency of a new
     to-be-installed package.
 
-    With `userpkgs_retry` set to `true`, the package update process 
-    will be retried in case of failure in 2 steps, a first retry while 
-    preserving the installed packages, and if this retry was succesful, 
-    followed by a second retry where it will (try to) remove leaf packages 
+    With `userpkgs_retry` set to `true`, the package update process
+    will be retried in case of failure in 2 steps, a first retry while
+    preserving the installed packages, and if this retry was succesful,
+    followed by a second retry where it will (try to) remove leaf packages
     again.
 
 - `/software/components/spma/userprio` : string ("yes|no")
@@ -119,11 +119,11 @@ Quattor, please check
     Whether to actually run Yum operations that may install, remove or
     update packages.
 
-- `/software/components/spma/fullsearch`: boolean 
+- `/software/components/spma/fullsearch`: boolean
 
     Yum-based spma will try to verify that all version locked packages
-    can actually be found in the provided repositories. For packages 
-    that have versions with wildcards specified, a full (and possibly slow) 
+    can actually be found in the provided repositories. For packages
+    that have versions with wildcards specified, a full (and possibly slow)
     search of each pattern can be performed by setting `fullsearch` to true.
     By default, the fullsearch is not performed, and for any packages that have
     versions with wildcards, it is assumed that the repositories contain them.
@@ -150,16 +150,7 @@ other.
 
 ### NOTES
 
-This component honors the __\--noaction__ mode.
-
-### BUGS
-
-The typing of the CDB entries is yet to be done: for now, all of them are
-strings.
-
-Original author: German Cancio <German.C>
-
-Author of the Yum-based package manager: Luis Fernando Muñoz Mejías
+This component honors the **--noaction** mode.
 
 ### SEE ALSO
 

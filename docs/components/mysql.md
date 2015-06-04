@@ -1,5 +1,3 @@
-Be sure to put a blank line before and after every formatting command
-
 ### NAME
 
 mysql : NCM component to manage MySQL servers and databases
@@ -15,10 +13,10 @@ This component allows to manage configuration of MySQL servers and administer th
 Database options are under `/software/components/mysql/databases.` This resource is a nlist with one entry per database. Key is the
 database name, value is a nlist allowing to specify options described below.
 
-#### initScript : nlist (optional) 
+#### initScript : nlist (optional)
 
 This allows to specify a script to be executed at database creation time. This is a nlist that allows to specify either content
-of the MySQL script (key 'content') to execute or the path of a script name (key 'file') to execute. 
+of the MySQL script (key 'content') to execute or the path of a script name (key 'file') to execute.
 
 #### server : string (required)
 

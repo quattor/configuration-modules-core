@@ -8,7 +8,7 @@ This daemon collects performance information from various nodes and stores it in
 The configuration of gmetad is stored in the file `/etc/gmetad.conf`.
 
 The schema for this component are very similar to the options in the configuration file.
-More detailed information about the options can be found on the website (__SEE ALSO__).
+More detailed information about the options can be found on the website (**SEE ALSO**).
 
 - `/software/components/gmetad/data`\_source/\[srcindex\]/name : string
 
@@ -32,7 +32,7 @@ More detailed information about the options can be found on the website (__SEE A
 
 - `/software/components/gmetad/scalability` : string
 
-    Optional flag to enable or disable scalability mode. 
+    Optional flag to enable or disable scalability mode.
     Valid values are `on` and `off`.
 
 - `/software/components/gmetad/file` : string

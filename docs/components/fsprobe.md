@@ -10,14 +10,14 @@ Returns error in case of a failure.
 
 The fields are
 
-    logfile	File to log to : default `/var/log/fsprobe.log`
-    mailto	users to mail to when corruption detected
-    options	additional arguments for fsprobe
-    syslog	log to syslog
-    filesystems	file systems to monitor (regular expressions)
-    dir		directory within the file system to test to
+    logfile     File to log to : default `/var/log/fsprobe.log`
+    mailto      users to mail to when corruption detected
+    options     additional arguments for fsprobe
+    syslog      log to syslog
+    filesystems file systems to monitor (regular expressions)
+    dir         directory within the file system to test to
     mailsubject subject of mail
-    remotefs	allow probing of remote file systems.  Default is local only.
+    remotefs    allow probing of remote file systems.  Default is local only.
 
 For example,
 

@@ -6,13 +6,13 @@ NCM::chkconfig - NCM chkconfig component
 
 - Configure()
 
-    Updates runlevel information for system services by using __chkconfig__ that are
-    defined in `/software/components/chkconfig`/. 
+    Updates runlevel information for system services by using **chkconfig** that are
+    defined in `/software/components/chkconfig`/.
 
-    Also starts/stops those services that have option `startstop` set to true in 
-    and have one of the following options specified: 
-    `add` or `del` option is true, `on` or `off` option is specified either 
-    without specific runlevels, or with runlevel value that contains the current runlevel. 
+    Also starts/stops those services that have option `startstop` set to true in
+    and have one of the following options specified:
+    `add` or `del` option is true, `on` or `off` option is specified either
+    without specific runlevels, or with runlevel value that contains the current runlevel.
 
     The optional _default_ key decides what will happen with services that are not explicitly
     configured. Default is to ignore them, but a vakue of _off_ instead disables anything
@@ -40,18 +40,18 @@ NCM::chkconfig - NCM chkconfig component
 
     Sets the service <service> on/off on specified run levels. The run
     levels are specified as string of numbers, the same way as with
-    `chkconfig`\-command. If the string is empty, system default is taken
+    `chkconfig`-command. If the string is empty, system default is taken
     (see `man chkconfig(8)` for exact details).
 
 - `/software/components/chkconfig/service/<service>/name : string`
 
-    If set, the value is used as the name of the service instead of using the 
-    <service> path as a name. 
+    If set, the value is used as the name of the service instead of using the
+    <service> path as a name.
 
 - `/software/components/chkconfig/service/<service>/reset : string ("[0-7]*")`
 
-    Resets the service on defined run levels. Reset with no run levels specified 
-    affects every run level. 
+    Resets the service on defined run levels. Reset with no run levels specified
+    affects every run level.
 
 - `/software/components/chkconfig/service/<service>/add : boolean`
 
@@ -67,7 +67,7 @@ NCM::chkconfig - NCM chkconfig component
 - `/software/components/chkconfig/service/<service>/del : boolean`
 
     If the value is true, removes service from management by chkconfig, otherwise
-    the option is ignored. 
+    the option is ignored.
 
 - `/software/components/chkconfig/service/<service>/startstop : boolean`
 
@@ -94,7 +94,7 @@ The shorter way of writing this (assuming named is known to chkconfig):
 
 Disable and stop xinetd:
 
-    "/software/components/chkconfig/service/xinetd" = nlist("off", "", "startstop", true); 
+    "/software/components/chkconfig/service/xinetd" = nlist("off", "", "startstop", true);
 
 ### DEPENDENCIES
 
@@ -107,8 +107,8 @@ None.
     The component should better integrate with the standard boot sequence
     (not start services that will get started anyway later).
 
-- __reset__ behaviour should check against current config?
-- __startstop__ logic depends on init script, will mindlessly start some services despite them running already
+- **reset** behaviour should check against current config?
+- **startstop** logic depends on init script, will mindlessly start some services despite them running already
 
 Teemu Sidoroff <Teemu.S>
 

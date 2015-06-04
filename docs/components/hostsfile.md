@@ -14,7 +14,7 @@ NCM::hostsfile - NCM local hosts file configuration component
     completely replaced by the entry specified in the configuration (if takeover
     is true).
 
-    A comment '\### NCM' is added to each line so that any deletions will also be 
+    A comment '### NCM' is added to each line so that any deletions will also be
     cleaned up correctly.
 
     Returns error in case of a failure.
@@ -29,7 +29,7 @@ NCM::hostsfile - NCM local hosts file configuration component
 
     When specifying hosts within the entries nlist, if a hostname is not FQDN
     and there if there are no aliases defined, then an alias will be automatically
-    created using an FQDN formed by joining the shortname with 
+    created using an FQDN formed by joining the shortname with
     this domain.
 
 - _/software/components/hostsfile/file_
@@ -56,7 +56,7 @@ NCM::hostsfile - NCM local hosts file configuration component
 - _/software/components/hostsfile/takeover_
 
     A boolean. If false (the default), then pre-existing host lines in the file
-    which are not tagged with the "NCM" comment will be preserved. 
+    which are not tagged with the "NCM" comment will be preserved.
     If takeover is true,
     then pre-existing entries for hosts will be taken over and declared to be
     under NCM control.
@@ -91,17 +91,17 @@ to
 \### that require network functionality will fail.
 127.0.0.1               localhost.localdomain localhost
 137.138.45.75           lxfsec1604.cern.ch
-192.168.1.101   tsmstor601.cern.ch tsmstor601 \### NCM TSM DB disks
-192.168.1.101   tsmstor602.cern.ch tsmstor602 \### NCM TSM Staging disks
+192.168.1.101   tsmstor601.cern.ch tsmstor601 ### NCM TSM DB disks
+192.168.1.101   tsmstor602.cern.ch tsmstor602 ### NCM TSM Staging disks
 
-The syntax below is also possible 
+The syntax below is also possible
 
     "/software/components/hostsfile/entries/tsmstor603" = nlist(
         "ipaddr", "192.168.1.103",
         "comment", "TSM more disks"
     );
 
-or 
+or
 
     "/software/components/hostsfile/entries/tsmstor603/ipaddr" = "192.168.1.103";
     "/software/components/hostsfile/entries/tsmstor603/comment" = "Testing";

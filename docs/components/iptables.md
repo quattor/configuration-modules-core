@@ -5,7 +5,7 @@ iptables: Setup the IPTABLES firewall rules.
 ### DESCRIPTION
 
 The _IPTABLES_ component perform the setup of the
-__/etc/sysconfig/iptables__ configuration file and restarts the
+**/etc/sysconfig/iptables** configuration file and restarts the
 iptables service.
 
 ### SYNOPSIS
@@ -31,7 +31,7 @@ at https://twiki.cern.ch/twiki/bin/view/FIOgroup/Iptables.
 
     Duplicated entries in the component resource declaration are
     ignored. For each configured table, the chains are added to the
-    __/etc/sysconfig/iptable__ in order, the relative order among the rules
+    **/etc/sysconfig/iptable** in order, the relative order among the rules
     belonging to the same chain is preserved.
 
 - Unconfigure()
@@ -59,7 +59,7 @@ The _component\_iptables\_acls_ type is defined as:
     "epilogue"      ? string
     "ordered_rules" ? string with match (self, 'yes|no')
 
-The __"epilogue"__ parameter is the "COMMIT" command at the end of
+The **"epilogue"** parameter is the "COMMIT" command at the end of
 _IPTABLES_ table description. Presently, no check is performed upon
 the content of this parameter.
 
@@ -111,21 +111,21 @@ The _component\_iptables\_rule_ type is defined as:
     "log-tcp-options"   ? boolean
     "log-tcp-sequence"  ? boolean
     "log-ip-options"    ? boolean
-    "set-class"	    ? string
+    "set-class"       ? string
     "limit-burst"     ? number
     "length"          ? string
     "set"             ? boolean
     "rcheck"          ? boolean
     "seconds"         ? number
 
-The __"command"__ define the action to perform: "-A", "-D", "-I", "-N" or
+The **"command"** define the action to perform: "-A", "-D", "-I", "-N" or
 "-R", it defaults to "-A".
 
-The __"chain"__ define the chain: "input", "output" or "forward".
+The **"chain"** define the chain: "input", "output" or "forward".
 
-The __"protocol"__ define the packet protocol: "tcp", "udp" or "icmp".
+The **"protocol"** define the packet protocol: "tcp", "udp" or "icmp".
 
-The __"src\_addr"__ define the packet source address, it can be an IP
+The **"src\_addr"** define the packet source address, it can be an IP
 address, or a network in the form net/mask (CIDR notation or full mask), or a
 hostname (which will be resolved at configuration time, not at
 runtime) - all of which can be optionally prepended with "!" to negate
@@ -134,34 +134,34 @@ system for DDoS attacks it is worthwhile, for machines which are not
 being used as routers, to block packets which do not come from their
 IP address in the OUTPUT tables.
 
-The __"src\_port"__ define the packet source port, it may be an integer
+The **"src\_port"** define the packet source port, it may be an integer
 or a service name included in the `/etc/services` file. This parameter
-requires __"protocol"__ also be set.
+requires **"protocol"** also be set.
 
-The __"dst\_addr"__ define the packet destination address, it follow's the same
+The **"dst\_addr"** define the packet destination address, it follow's the same
 rules as the src\_addr parameter.
 
-The __"dst\_port"__ define the packet destination port, it follow's the same
-rules as the src\_port parameter. This parameter requires __"protocol"__ also be set.
+The **"dst\_port"** define the packet destination port, it follow's the same
+rules as the src\_port parameter. This parameter requires **"protocol"** also be set.
 
-The __"syn"__ define the TCP packet with the SYN bit set to one, it will be set
+The **"syn"** define the TCP packet with the SYN bit set to one, it will be set
 if the parameter is true.
 
-The __"match"__ define the match extension module for the packet.
+The **"match"** define the match extension module for the packet.
 
-The __"state"__ define the connection state.
+The **"state"** define the connection state.
 
-The __"limit"__ defines the limit for logging.
+The **"limit"** defines the limit for logging.
 
-The __"limit-burst"__ defines the number of instances per time step to record.
+The **"limit-burst"** defines the number of instances per time step to record.
 
-The __"icmp\_type"__ define the icmp type packet.
+The **"icmp\_type"** define the icmp type packet.
 
-The __"in\_interface"__ define the input interface for the packet.
+The **"in\_interface"** define the input interface for the packet.
 
-The __"out\_interface"__ define the output interface for the packet.
+The **"out\_interface"** define the output interface for the packet.
 
-The __"target"__ define the target for the packet: "log", "accept" or "drop".
+The **"target"** define the target for the packet: "log", "accept" or "drop".
 
 #### function add\_rule(<table>, <rule>)
 
@@ -198,7 +198,7 @@ may be rejected.
 
 ### SEE ALSO
 
-See in particular the __ncm-iptables__ HOWTO as found in
+See in particular the **ncm-iptables** HOWTO as found in
 `/usr/share/doc/ncm`-iptables-2.3.13/ncm-iptables-howto.html, which includes usage examples.
 
-__iptables__ man page
+**iptables** man page

@@ -4,6 +4,4 @@ ncm-ceph: Configuration module for CEPH
 
 ### DESCRIPTION
 
-Configuration module for CEPH
-
-
+Module to executes commands locally or remote with ssh (as ceph user).

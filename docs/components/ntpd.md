@@ -79,7 +79,7 @@ Does nothing.
     - mask:        ip address or hostname (optional)
 
         Address can be a address of a host or network and can be a valid host DNS name.
-        =item ignore:      boolean (Default to True)
+        &#x3d;item ignore:      boolean (Default to True)
 
     - kod:         boolean (optional)
     - limited:     boolean (optional)
@@ -300,11 +300,11 @@ Refer to man ntp\_misc for more details.
     use a different service name to represent ntpd.
 
     Example:
-    	\### solaris
+    	### solaris
     	"/software/components/ntpd/servicename" = "svc:/network/ntpd";
 
-    	### linux
-    	"/software/components/ntpd/servicename" = "ntpd";
+            ### linux
+            "/software/components/ntpd/servicename" = "ntpd";
 
     Default : "ntpd" (linux), "svc:/network/ntpd" (solaris)
 
@@ -336,7 +336,7 @@ none known.
 
 S
 
-- Thorsten Kleinwort <Thorsten.Kleinwort@cern.ch>
+- Thorsten Kleinwort <Thorsten.K>
 - John Monteiro <John.M>
 
 ### SEE ALSO

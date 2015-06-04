@@ -105,5 +105,5 @@ authconfig(1), `fs help`, iptables documentation
 
 \-head1 BUGS
 
-Previous versions insisted on configuring a PAM `account` entry, 
+Previous versions insisted on configuring a PAM `account` entry,
 this didn't really work for local accounts such as _root_...

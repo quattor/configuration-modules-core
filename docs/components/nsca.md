@@ -6,7 +6,7 @@ In Nagios terms, they are known as passive check results (i.e. not initated by N
 
 ### COMPONENT STRUCTURE
 
-This component can be used to configure an NSCA daemon and/or NSCA client. 
+This component can be used to configure an NSCA daemon and/or NSCA client.
 The daemon is only configured if its configuration exists under `/software/components/nsca/daemon`,
 the client part is configured if the configuration under `/software/components/nsca/send` is defined.
 
@@ -109,4 +109,4 @@ All fields are mandatory, unless it is explicitly stated:
 
 ### SEE ALSO
 
-http://nagios.sourceforge.net/docs/1\_0/addons.html\#nsca
+http://nagios.sourceforge.net/docs/1\_0/addons.html#nsca

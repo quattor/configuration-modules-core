@@ -6,7 +6,7 @@ NCM::Component::spma - Quattor's package manager
 
 The SPMA component passes off to different back-ends depending
 on the type of packaging system specified in
-__/software/components/spma/packager__.
+**/software/components/spma/packager**.
 
-See __NCM::Component::spma::yum__ for Yum and
-__NCM::Component::spma::ips__ for Solaris IPS.
+See **NCM::Component::spma::yum** for Yum and
+**NCM::Component::spma::ips** for Solaris IPS.

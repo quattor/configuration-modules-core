@@ -4,21 +4,21 @@ NCM::Component::spma::ips - NCM SPMA configuration component for IPS
 
 ### SYNOPSIS
 
-__Configure ()__
+**Configure ()**
 
 ### DESCRIPTION
 
-Invoked by __NCM::Component::spma__ via '__ncm-ncd -configure ncm-spma__' when
-__/software/components/spma/packager__ is __ips__.  Processes requests for
+Invoked by **NCM::Component::spma** via '**ncm-ncd -configure ncm-spma**' when
+**/software/components/spma/packager** is **ips**.  Processes requests for
 IPS packages to be added to a new Solaris boot environment and generates a
-command file that may be executed by __spma-run__.
+command file that may be executed by **spma-run**.
 
 This module is intended for package management with Quattor on Solaris 11
 or later.
 
 ### RESOURCES
 
-- __/software/catalogues__ ? nlist {}
+- **/software/catalogues** ? nlist {}
 
     A list of catalogues (package groups) to install.  The format is:
 
@@ -36,7 +36,7 @@ or later.
     Catalogues must be versioned and a host is progressed from one version
     of a build to another by shifting the catalogue version numbers.
 
-- __/software/requests__ ? nlist ()
+- **/software/requests** ? nlist ()
 
     A list of additional packages to install.  The format is:
 
@@ -51,86 +51,86 @@ or later.
     intended that the version number of packages that can be requested individually
     are defined by a catalogue (e.g. constrained by an incorporate dependency).
 
-- __/software/uninstall__ ? nlist ()
+- **/software/uninstall** ? nlist ()
 
     A list of packages to uninstall.  Packages in this list will not be installed,
-    and will be passed to the __pkg install__ command via the __\--reject__ option.
-    The format is the same as with __/software/requests__.
+    and will be passed to the **pkg install** command via the **--reject** option.
+    The format is the same as with **/software/requests**.
 
-- __/software/components/spma/packager__ ? string
+- **/software/components/spma/packager** ? string
 
-    Must contain '__ips__' to use this module.
+    Must contain '**ips**' to use this module.
 
-- __/software/components/spma/run__ ? string
+- **/software/components/spma/run** ? string
 
-    Set to __yes__ to allow this module to launch __spma-run --execute__ to make
-    immediate changes to the new boot environment.  If set to __no__ or omitted,
+    Set to **yes** to allow this module to launch **spma-run --execute** to make
+    immediate changes to the new boot environment.  If set to **no** or omitted,
     this module prepares and validates the changes only, but does not perform
     any updates, it will be the responsibility of an external process to launch
-    __spma-run --execute__ in this case.
+    **spma-run --execute** in this case.
 
-- __/software/components/spma/userpkgs__ ? string
+- **/software/components/spma/userpkgs** ? string
 
-    Set to __yes__ to allow user-installed packages.  If set to __no__ or omitted,
+    Set to **yes** to allow user-installed packages.  If set to **no** or omitted,
     then SPMA will find all leaf packages that have not been requested and
-    uninstall them via __\--reject__ arguments to __pkg install__.
+    uninstall them via **--reject** arguments to **pkg install**.
 
-- __/software/components/spma/pkgpaths__ : string \[\]
+- **/software/components/spma/pkgpaths** : string \[\]
 
     Contains a list of resource paths where catalogues and individual package
     requests are located.  Should be set to:
 
         list("/software/catalogues", "/software/requests");
 
-- __/software/components/spma/uninstpaths__ : string \[\]
+- **/software/components/spma/uninstpaths** : string \[\]
 
     Contains a list of resource paths where packages to uninstall are located.
     Should be set to:
 
         list("/software/uninstall");
 
-- __/software/components/spma/cmdfile__ : string
+- **/software/components/spma/cmdfile** : string
 
-    Where to save commands for the __spma-run__ script.  Default location
-    is __/var/tmp/spma-commands__.
+    Where to save commands for the **spma-run** script.  Default location
+    is **/var/tmp/spma-commands**.
 
-- __/software/components/spma/flagfile__ ? string
+- **/software/components/spma/flagfile** ? string
 
-    File to touch if __/software/components/spma/run__ is set to __no__ and this
+    File to touch if **/software/components/spma/run** is set to **no** and this
     module has determined that there is work to do, i.e. packages to install or
     to uninstall.  If the file exists after this module has completed, then
-    __spma-run --execute__ can be run to create a new BE and make package changes
+    **spma-run --execute** can be run to create a new BE and make package changes
     in that BE.
 
-- __/software/components/spma/ips/bename__ ? string
+- **/software/components/spma/ips/bename** ? string
 
-    Name of boot environment that __spma-run__ will use when making any
+    Name of boot environment that **spma-run** will use when making any
     changes to packages.  If a BE by that name already exists, then a
     unique number will be appended to the name.  Package changes will
-    be effected via '__pkg install --be-name__ _bename_'.
+    be effected via '**pkg install --be-name** _bename_'.
 
-    If this resource is missing then '__pkg install --require-new-be__' will be used
+    If this resource is missing then '**pkg install --require-new-be**' will be used
     instead, leaving Solaris to decide on the name of the new BE.
 
-- __/software/components/spma/ips/rejectidr__ : boolean
+- **/software/components/spma/ips/rejectidr** : boolean
 
-    Add a __\--reject__ option to the __pkg install__ command for every Solaris IDR
+    Add a **--reject** option to the **pkg install** command for every Solaris IDR
     installed that has not been explicitly requested.
 
-    Default is __true__.
+    Default is **true**.
 
-- __/software/components/spma/ips/freeze__ : boolean
+- **/software/components/spma/ips/freeze** : boolean
 
     Ignore frozen packages.  This will prevent SPMA from updating or uninstalling
     frozen packages.
 
-    Default is __true__.
+    Default is **true**.
 
 ### NOTES
 
 This module does not support making changes in the currently active boot
 environment.  The intention is that it is executed when a host is rebooted
-via a call to '__ncm-ncd -configure spma__' and then '__spma-run --execute__'
+via a call to '**ncm-ncd -configure spma**' and then '**spma-run --execute**'
 called immediately afterwards.  The system will then reboot into the
 newly created boot environment if any changes were made.
 
@@ -159,4 +159,4 @@ Author of the IPS-based package manager: Mark R. Bannister.
 
 ### SEE ALSO
 
-__ncm-ncd__(1), __panc__(5), __pkg__(5), __spma-run --man__, __pkgtree -h__.
+**ncm-ncd**(1), **panc**(5), **pkg**(5), **spma-run --man**, **pkgtree -h**.

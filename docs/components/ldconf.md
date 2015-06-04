@@ -14,8 +14,8 @@ this component.
 #### `/software/components/ldconf/conffile`
 
 The configuration file to manage.  Should be set to `/etc/ld.so`.conf
-unless your doing something unusual. 
+unless your doing something unusual.
 
 #### `/software/components/ldconf/paths`
 
-List of paths to ensure are in the ld.so.conf configuration file. 
+List of paths to ensure are in the ld.so.conf configuration file.

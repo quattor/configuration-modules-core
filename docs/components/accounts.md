@@ -78,7 +78,7 @@ It updates a structure\_accounts (return value may be assigned to "/software/com
 #### keep\_user\_group(user\_or\_group:string or list of string)
 
 This functions adds a user or group to the kept\_users or kept\_groups resources. The
-argument can be a string or list of strings. The return value can be assigned to 
+argument can be a string or list of strings. The return value can be assigned to
 `/software/components/accounts/kept`\_users or `/software/components/accounts/kept`\_groups.
 
 ### RESOURCES
@@ -127,7 +127,7 @@ mandatory. The available fields are:
 
     the shell for the user. If it is defined as an empty string, the current shell
     is preserved for an existing account (for a new account, it will remain undefined,
-    meaning that the default shell on the system will be used). 
+    meaning that the default shell on the system will be used).
 
     Defaults to `/bin/bash.`
 
@@ -212,10 +212,12 @@ default is false.  The root account can never be removed.
 #### `/software/components/accounts/preserved`\_accounts
 
 This property may have 3 values: 'none', 'system', 'dyn\_user\_group'. It controls
-the accounts/groups that have to be preserved when 'remove\_unknown' is true 
+the accounts/groups that have to be preserved when 'remove\_unknown' is true
 (it has no effect when remove\_unknown=false).
 
 The effect of each possible value is
+
+- system
 
     all accounts/groups in the system range (strictly below GID/UID\_MIN as
     defined in `/etc/login.defs`) are preserved even though they are not present
@@ -226,7 +228,7 @@ The effect of each possible value is
 
     all accounts/groups in the system range and in the
     range used for dynamic uid/gid allocation by useradd command, ie. all
-    accounts/groups with uid/gid less or equal to GID/UID\_MAX as defined in 
+    accounts/groups with uid/gid less or equal to GID/UID\_MAX as defined in
     `/etc/login.defs`, are preserved. The exact list of accounts preserved
     depends on UID/GID\_MAX value. It is possible to use login\_defs/uid\_max and
     login\_defs/gid\_max properties to control the preserved ranges. Not that
@@ -250,7 +252,7 @@ local group with the desired numerical ID is created.
 This group has the same name as the user ID. It will be removed on the
 next run of the component if `remove_unknown` is set to true. This is
 somewhat ugly, but doesn't affect the system behaviour at all, so it
-__won't__ be fixed.
+**won't** be fixed.
 
 #### nsswitch.conf status
 
@@ -262,5 +264,3 @@ ncm-accounts but by [ncm-authconfig](https://metacpan.org/pod/ncm-authconfig).
 ### SEE ALSO
 
 [ncm-authconfig](https://metacpan.org/pod/ncm-authconfig)
-
-Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.M>
