@@ -2,7 +2,7 @@ object template forwarder;
 
 include 'metaconfig/logstash/forwarder';
 
-prefix "/software/components/metaconfig/services/{/etc/logstash-forwarder}/contents";
+prefix "/software/components/metaconfig/services/{/etc/logstash-forwarder.conf}/contents";
 
 "network/servers/0" = nlist("host", "myhost", "port", 12345);
 "network/servers/1" = nlist("host", "myhost2", "port", 12346);
