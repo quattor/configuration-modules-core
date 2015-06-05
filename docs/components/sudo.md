@@ -9,14 +9,13 @@ common users' mistakes.
 
 On top, it provides the following fields:
 
-- `/software/components/sudo/general`\_options : optional
+- `/software/components/sudo/general_options` : optional
 
     It is a list of `structure_sudo_defaults` elements. It sets default
     behaviour either for users or hosts, or for the whole sudo
     application. This structure will be explained later.
 
-- "/software/components/sudo/<user|run\_as|host|cmd>\_aliases :
-optional
+- `/software/components/sudo/<user|run\_as|host|cmd>_aliases` : optional
 
     Named lists of lists of strings containing the alias information.  The
     name of each named list must start with a letter, and contain only
