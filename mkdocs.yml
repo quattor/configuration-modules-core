@@ -63,7 +63,7 @@ pages:
     - 'components/opennebula.md'
     - 'components/opennebula::commands.md'
     - 'components/openvpn.md'
-    - 'components/pam.md':
+    - 'components/pam.md'
     - 'components/pnp4nagios.md'
     - 'components/postfix.md'
     - 'components/postgresql.md'
