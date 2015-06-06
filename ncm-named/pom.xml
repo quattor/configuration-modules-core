@@ -30,6 +30,9 @@
       <name>Michel Jouvin</name>
       <email>jouvin@lal.in2p3.fr</email>
     </developer>
+    <developer>
+      <name>Vladimir Bahyl</name>
+    </developer>
   </developers>
 
 </project>
