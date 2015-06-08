@@ -322,6 +322,7 @@ sub change_opennebula_passwd
         $self->info("$user passwd was set correctly.");
     }
     $self->set_one_auth_file($user, $passwd);
+    return 1;
 }
 
 # Restart one service
@@ -655,11 +656,6 @@ sub Configure
     # hypervisor type
     my $hypervisor = $tree->{host_hyp};
 
-    # We must change oneadmin pass first
-    if (exists $tree->{rpc}->{password}) {
-        $self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
-    }
-
     # Set opennebula service
     if (exists $tree->{oned}) {
         $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
@@ -668,6 +664,11 @@ sub Configure
     # Set sunstone service
     if (exists $tree->{sunstone}) {
         $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE);
+    }
+
+    # Change oneadmin pass
+    if (exists $tree->{rpc}->{password}) {
+        return 0 if !$self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
     }
 
     # Configure ONE RPC connector
