@@ -578,7 +578,7 @@ sub set_one_auth_file
 
     my $passwd = {$user => $data};
     my $trd = $self->process_template($passwd, "one_auth");
-    %opts = $self->set_file_opts();
+    %opts = $self->set_file_opts(1);
     return if ! %opts;
 
     if ($user eq "oneadmin") {
@@ -597,13 +597,17 @@ sub set_one_auth_file
     }
 }
 
+# Set filewriter options
+# do not show logs if it contains passwds
 sub set_file_opts
 {
-    my ($self) = @_;
+    my ($self, $secret) = @_;
     my %opts;
     if ($ONEADMINUSR and $ONEADMINGRP) {
-        %opts = (log => $self,
-                 mode => 0600,
+        if (!$secret) {
+            %opts = (log => $self);
+        }
+        %opts = (mode => 0600,
                  backup => ".quattor.backup",
                  owner => $ONEADMINUSR,
                  group => $ONEADMINGRP);
