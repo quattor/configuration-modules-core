@@ -79,7 +79,7 @@ sub handle_config_file
                 my $escaped_val = $val;
                 $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
                 $fh->add_or_replace_lines(
-                    qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val},
+                    qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val\s*$},
                     "$comment$option $val\n",       ENDING_OF_FILE
                 );
             }
