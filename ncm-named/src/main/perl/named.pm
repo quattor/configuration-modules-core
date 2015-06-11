@@ -78,7 +78,7 @@ sub Configure {
        if ( $named_config->{search} ) {
             $fh->add_or_replace_lines("^\\s*search\\s*.*",
                                       "^\\s*search\\s*@{$named_config->{search}}",
-                                      "search @{$named_config->{search}}",
+                                      "search @{$named_config->{search}}\n",
                                       ENDING_OF_FILE,
                                      );
 	        }
