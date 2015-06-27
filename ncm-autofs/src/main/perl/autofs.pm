@@ -14,9 +14,13 @@ $EC=LC::Exception::Context->new->will_store_all;
 
 use File::Path;
 
+use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 use LC::Check;
+use Readonly;
+
+Readonly my $AUTO_MASTER => '/etc/auto.master';
 
 use EDG::WP4::CCM::Element qw(unescape);
 
@@ -58,11 +62,10 @@ sub updateMap($$$$$) {
 sub writeAutoMap($$@) {
     my ($self, $mapname, $entries, $preserve) = @_;
 
-    my $changes = 0;
     my %entry_attrs;
 
     if ( $entries ) {
-        for my $entry_e (keys(%{$entries})) {
+        for my $entry_e (sort keys %{$entries}) {
             my $entry_config = $entries->{$entry_e};
             my $entry = unescape($entry_e);
             # For backward compatibility, useless with escaped values
@@ -86,8 +89,10 @@ sub writeAutoMap($$@) {
     }
 
     # Update the map if preserve=true
+    my $changes = 0;
 
     if ( $preserve ) {
+        $self->debug(1, "Map $mapname entries preserved.");
         # No entries : if preserve is true, do not modify existing map, else erase its contents.
         unless ( %entry_attrs ) {
             # No changes
@@ -98,43 +103,54 @@ sub writeAutoMap($$@) {
         my $map_fh = CAF::FileEditor->new($mapname);
         my $map_contents_ref = $map_fh->string_ref();
 
-        foreach my $entry (keys(%entry_attrs)) {
+        foreach my $entry (sort keys %entry_attrs) {
             $self->debug(2,"Checking entry for mount point $entry...");
             my $entry_attrs = $entry_attrs{$entry};
             my $reentry = $entry;
             $reentry =~ s/\*/\\*/;
             $changes += $self->updateMap($map_contents_ref,
-                                         '^#?'.$reentry.'\s+.*',
-                                         '^'.$reentry.'\s+'.$entry_attrs{$entry}->{options}.'\s+'.$entry_attrs{$entry}->{location}.'$',
-                                         "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location},
+                                         '^#?' . $reentry . '\s+.*',
+                                         '^' . $reentry . '\s+' . $entry_attrs{$entry}->{options} . '\s+' . $entry_attrs{$entry}->{location} . '$',
+                                         "$entry\t" . $entry_attrs{$entry}->{options} . "\t" . $entry_attrs{$entry}->{location},
                 );
         }
         $map_fh->close();
 
         # Create/replace map
     } else {
+        $self->debug(1, "Map $mapname entries not preserved.");
         my $contents="# File managed by Quattor component ncm-autofs. DO NOT EDIT.\n\n";
-        foreach my $entry (keys(%entry_attrs)) {
-            $contents .= "$entry\t".$entry_attrs{$entry}->{options}."\t".$entry_attrs{$entry}->{location}."\n";
+        foreach my $entry (sort keys %entry_attrs) {
+            $contents .= "$entry\t" . $entry_attrs{$entry}->{options} . "\t".$entry_attrs{$entry}->{location} . "\n";
         }
-        $changes = LC::Check::file($mapname,
-                                   backup => ".ncm-autofs",
-                                   contents => $contents,
-                                   owner => "root",
-                                   group => "root",
-                                   mode => 0644
-            );
 
+        my $map_fh = CAF::FileWriter->new(
+            $mapname,
+            backup => ".ncm-autofs",
+            owner => "root",
+            group => "root",
+            mode => 0644
+        );
+        print $map_fh $contents;
+        $changes = $map_fh->close() || 0;
     }
 
     if ( $changes > 0 ) {
-        $self->debug(1,"Map $mapname modified, $changes updates");
+        $self->debug(1, "Map $mapname modified, $changes updates");
     }
 
     return $changes;
 }
 
-sub Configure($$@) {
+# wrapper around -e for unittesting
+sub _file_exists
+{
+    my ($self, $filename) = @_;
+    return -e $filename;
+}
+
+sub Configure($$@)
+{
 
     my ($self, $config) = @_;
 
@@ -153,20 +169,20 @@ sub Configure($$@) {
     # Load configuration into a perl hash
     my $autofs_config = $config->getElement($base)->getTree();
 
-    # Default is to preserve local edits to auto.aster
-    my $preserveMaster = $autofs_config->{preserveMaster} && (-e '/etc/auto.master');
-    if ( $preserveMaster ) {
-        $self->debug(1, "Flag set to preserve master map existing content");
-    };
+    # Default is to preserve local edits to $AUTO_MASTER
+    # TODO FileEditor can handle non-existing files; so this is not needed?
+    my $preserveMaster = $autofs_config->{preserveMaster} && $self->_file_exists($AUTO_MASTER);
+    $self->debug(1, "Flag set to ", $preserveMaster ? "" : "not " ,
+                 "preserve master map $AUTO_MASTER existing content");
 
     if ( $autofs_config->{maps} ) {
-        foreach my $map (keys(%{$autofs_config->{maps}})) {
+        foreach my $map (sort keys %{$autofs_config->{maps}}) {
             my @map_mpoints;
             my $map_config = $autofs_config->{maps}->{$map};
             $self->info("Checking map $map...");
 
             if ( $map_config->{mpaliases} ) {
-                $self->warn("Using depricated mpaliases (multiple mount) functionality for $map");
+                $self->warn("Using deprecated mpaliases (multiple mount) functionality for $map");
                 foreach my $mpalias (@{$map_config->{mpaliases}}) {
                     $self->debug(1,"Adding mount point alias $mpalias");
                     push @map_mpoints, $mpalias;
@@ -177,7 +193,7 @@ sub Configure($$@) {
             if ( $map_config->{mountpoint} ) {
                 push @map_mpoints, $map_config->{mountpoint};
             } elsif ( ! @map_mpoints ) {
-                push @map_mpoints, "/".$map;
+                push @map_mpoints, "/$map";
             }
 
             my $maptype = $map_config->{type};
@@ -185,17 +201,16 @@ sub Configure($$@) {
             # Normally already checked by the schema
             if ( $mapname ) {
                 if ( ($maptype eq 'file') and ($mapname !~ /^\//) ) {
-                    $self->error("Map file name for type file must be an absolute path ($mapname specified)");
+                    # TODO and return instead of continuing?
+                    $self->error("Map $map file name for type file must be an absolute path ($mapname specified)");
                 }
             } else {
                 foreach ( $maptype ) {
-                    # TODO stricter regexp
-                    /program/ and $mapname="/etc/auto.$map";
-                    /file/ and $mapname="/etc/auto.$map";
-                    /yp/   and $mapname="auto.$map";
+                    m/^(program|file)$/ and $mapname = "/etc/auto.$map";
+                    m/^yp$/ and $mapname = "auto.$map";
                 }
                 if ( ! $mapname ) {
-                    $self->error("Map $map file name undefined.");
+                    $self->error("Map $map file name undefined (type $maptype).");
                 }
             }
 
@@ -210,10 +225,10 @@ sub Configure($$@) {
 
             # Check if existing entries not defined in config must be preserved
             # Default : true for backward compatibility
-            my $preserve_entries = $map_config->{preserve} && (-e $mapname);
-            if ( $preserve_entries ) {
-                $self->debug(1,"Flag set to preserve map $map existing content");
-            }
+            # TODO FileEditor can handle non-existing files; so this is not needed?
+            my $preserve_entries = $map_config->{preserve} && $self->_file_exists($mapname);
+            $self->debug(1, "Flag set to ", $preserve_entries ? "" : "not " ,
+                         "preserve map $map existing content");
 
             if ( $map_config->{enabled} ) {
                 $master_entry_attrs{$mapname}->{prefix} = "";
@@ -245,18 +260,17 @@ sub Configure($$@) {
     }
 
     # Update auto.master if preserveMaster = true
-    $self->info("Checking /etc/auto.master...");
+    $self->info("Checking $AUTO_MASTER...");
     if ( $preserveMaster ) {
-        $self->debug(1,"Update will preserve existing entries not managed by ncm-autofs");
-        my $master_fh = CAF::FileEditor->new('/etc/auto.master');
+        $self->debug(1,"Update will preserve existing entries in $AUTO_MASTER not managed by ncm-autofs");
+        my $master_fh = CAF::FileEditor->new($AUTO_MASTER);
         my $master_contents_ref = $master_fh->string_ref();
 
-        # TODO use sorted keys for reproducability
-        foreach my $map (keys(%mount_points)) {
+        foreach my $map (sort keys %mount_points) {
             my $map_attrs = $master_entry_attrs{$map};
             my $map_type_prefix = $map_attrs->{type} eq 'direct' ? '' : $map_attrs->{type}.':';
             foreach my $mountp ( @{$mount_points{$map}} ) {
-                $self->debug(2,"Checking entry for mount point $mountp (map $map)...");
+                $self->debug(2, "Checking entry for mount point $mountp (map $map)...");
                 # TODO: replace with replace_lines ?
                 $cnt += $self->updateMap($master_contents_ref,
                                          '^#?\s*('.$error_prefix.'\s*)?'.$mountp.'\s+.*',
@@ -269,8 +283,9 @@ sub Configure($$@) {
 
     # Create/replace auto.master if preserveMaster is false (file managed exclusively by Quattor)
     } else {
+        $self->debug(1,"Update will not preserve existing entries in $AUTO_MASTER not managed by ncm-autofs");
         my $master_contents = "# File managed by Quattor component ncm-autofs. Do not edit.\n\n";
-        foreach my $map (keys(%mount_points)) {
+        foreach my $map (sort keys %mount_points) {
             my $map_attrs = $master_entry_attrs{$map};
             foreach my $mountp ( @{$mount_points{$map}} ) {
                 my $map_type_prefix = $map_attrs->{type} eq 'direct' ? '' : $map_attrs->{type}.':';
@@ -278,17 +293,18 @@ sub Configure($$@) {
                     "$mountp\t$map_type_prefix$map\t".$map_attrs->{options}."\n";
             }
         }
-        # TODO: CAF::FileWriter
-        $cnt += LC::Check::file("/etc/auto.master",
-                                backup => ".ncm-autofs",
-                                contents => $master_contents,
-                                owner => "root",
-                                group => "root",
-                                mode => 0644
-            );
+        my $master_fh = CAF::FileWriter->new(
+            $AUTO_MASTER,
+            backup => ".ncm-autofs",
+            owner => "root",
+            group => "root",
+            mode => 0644
+        );
+        print $master_fh $master_contents;
+        $cnt += $master_fh->close() || 0;
     }
 
-    #reload if changed the conf-file
+    # reload if changed the conf-file
     if($cnt) {
         $self->info("Checking if autofs is running");
         # TODO: CAF::Service
