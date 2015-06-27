@@ -2,17 +2,9 @@
 # ${developer-info}
 # ${author-info}
 
-############################################################
-#
-# type definition components/autofs
-#
-#
-#
-############################################################
-
 declaration template components/autofs/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
 
 type autofs_mapentry_type = {
   "options"     ? string
@@ -22,7 +14,7 @@ type autofs_mapentry_type = {
 type autofs_map_type = {
   "enabled"     : boolean = true
   "preserve"    : boolean = true # "Preserve existing entries not overwritten by config"
-  "type"        : string with match(SELF,"direct|file|program|yp|nisplus|hesiod|userdir|ldap")
+  "type"        : string with match(SELF,"^(direct|file|program|yp|nisplus|hesiod|userdir|ldap)$")
   "mapname"     : string
   "mountpoint"  ? string
   "mpaliases"   ? string[]
@@ -36,6 +28,5 @@ type component_autofs_type = {
   "maps"	       : autofs_map_type{}
 };
 
-bind "/software/components/autofs" = component_autofs_type;
 
 
