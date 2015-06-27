@@ -71,14 +71,12 @@ sub writeAutoMap($$@) {
             # For backward compatibility, useless with escaped values
             $entry =~ s/__wildcard/\*/;
 
-            $entry_attrs{$entry} = ();
-            $entry_attrs{$entry}->{options} = $entry_config->{options};
-
+            $entry_attrs{$entry} = {
+                location => $entry_config->{location},
+                options => $entry_config->{options} || "",
+            };
             # Ensure options start with a '-'
-            if ( (length($entry_attrs{$entry}->{options}) > 0) && ($entry_attrs{$entry}->{options} !~ /^-/) ) {
-                $entry_attrs{$entry}->{options} = '-' . $entry_attrs{$entry}->{options};
-            }
-            $entry_attrs{$entry}->{location} = $entry_config->{location};
+            $entry_attrs{$entry}->{options} =~ s/^(?!(?:-|$))/-/;
 
             # Just in case, mandatory in schema...
             unless ( $entry_attrs{$entry}->{location} ) {
@@ -214,14 +212,12 @@ sub Configure($$@)
                 }
             }
 
-            $master_entry_attrs{$mapname} = ();
-            $master_entry_attrs{$mapname}->{type} = $maptype;
-            $master_entry_attrs{$mapname}->{options} = $map_config->{options} || "";
+            $master_entry_attrs{$mapname} = {
+                type => $maptype,
+                options => $map_config->{options} || "",
+            };
             # Ensure options start with a '-'
-            # TODO: use $master_entry_attrs{$mapname}->{options} =~ s/^(?!(?:-|$))/-/;
-            if (  (length($master_entry_attrs{$mapname}->{options}) > 0) && ($master_entry_attrs{$mapname}->{options} !~ /^-/) ) {
-                $master_entry_attrs{$mapname}->{options} = '-' . $master_entry_attrs{$mapname}->{options};
-            }
+            $master_entry_attrs{$mapname}->{options} =~ s/^(?!(?:-|$))/-/;
 
             # Check if existing entries not defined in config must be preserved
             # Default : true for backward compatibility

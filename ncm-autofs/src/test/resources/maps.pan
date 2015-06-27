@@ -16,11 +16,11 @@ prefix "/software/components/autofs/maps/map1";
 );
 "entries/{/export/map1b}" = dict(
     "location", "myserver.mydomain:/export/path1b",
-    "options", "-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys",
+    "options", "fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys",
 );
 "mapname" = "/etc/auto.export_map1";
 "mountpoint" = "/mymounts/map1";
-"options" = "-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys";
+"options" = "fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys";
 "preserve" = false;
 "type" = "file";
 
