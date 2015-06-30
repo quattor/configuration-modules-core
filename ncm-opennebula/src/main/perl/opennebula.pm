@@ -57,14 +57,14 @@ sub make_one
 # Detect and process ONE templates
 sub process_template
 {
-    my ($self, $config, $type_name) = @_;
+    my ($self, $config, $type_name, $secret) = @_;
     
     my $type_rel = "$type_name.tt";
     my $tpl = CAF::TextRender->new(
         $type_name,
         { $type_name => $config },
         relpath => 'opennebula',
-        log => $self,
+        log => $secret ? undef : $self,
         );
     if (!$tpl) {
         $self->error("TT processing of $type_rel failed: $tpl->{fail}");
@@ -577,7 +577,7 @@ sub set_one_auth_file
     my ($fh, $auth_file, %opts);
 
     my $passwd = {$user => $data};
-    my $trd = $self->process_template($passwd, "one_auth");
+    my $trd = $self->process_template($passwd, "one_auth", 1);
     %opts = $self->set_file_opts(1);
     return if ! %opts;
 
