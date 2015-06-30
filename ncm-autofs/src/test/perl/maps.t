@@ -10,6 +10,8 @@ use Readonly;
 
 $CAF::Object::NoAction = 1;
 
+set_caf_file_close_diff(1);
+
 =pod
 
 =head1 DESCRIPTION
@@ -17,12 +19,6 @@ $CAF::Object::NoAction = 1;
 Test the C<Configure> method of the component.
 
 =cut
-
-my $mock = Test::MockModule->new('NCM::Component::autofs');
-$mock->mock('_file_exists', sub {
-    shift; my $fn = shift;
-    return $fn =~ m/\/etc\/auto\.(master|export_map2)/ 
-});
 
 Readonly my $MAP2 => <<EOF;
 # Test this
@@ -48,6 +44,8 @@ set_file_contents("/etc/auto.master", $MASTER);
 
 my $cfg = get_config_for_profile('maps');
 my $cmp = NCM::Component::autofs->new('maps');
+
+command_history_reset();
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
@@ -97,5 +95,19 @@ $rt = Test::Quattor::RegexpTest->new(
     );
 $rt->test();
 
+# test changes / restarts
+ok(command_history_ok([
+       '/sbin/service autofs status',
+       '/sbin/service autofs reload',
+]), "expected commands for change");
+
+# test rerun does not change anything
+command_history_reset();
+is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile (2nd run)");
+
+# commands are regexps in command_history_ok
+# what is being tested here is that there wasn't a single command executed with the word autofs in it
+ok(! command_history_ok(['autofs']),
+   "service autofs status not checked (no changes in 2nd run)");
 
 done_testing();

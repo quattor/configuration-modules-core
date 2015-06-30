@@ -59,7 +59,7 @@ sub _write_or_edit
     }
 
     my $changed = $fh->close() || 0;
-    $self->debug(1, "$msg $filename modified.") if $changed;
+    $self->debug(1, "$msg $filename ", $changed ? "" : "not ", "modified.");
 
     # TODO: Handle errors; in case of such error return -1
 
@@ -229,7 +229,6 @@ sub Configure
     }
 
     my $masterchanged = $self->_write_or_edit($AUTO_MASTER, $autofs_config->{preserveMaster}, "Master map", $masterdata);
-
     $cnt += $masterchanged;
 
     # reload if changed the conf-file
@@ -249,6 +248,8 @@ sub Configure
                 return;
             }
         }
+    } else {
+        $self->verbose("No changes detected in any of the config files; not reloading autofs.");
     }
 
     return 1;
