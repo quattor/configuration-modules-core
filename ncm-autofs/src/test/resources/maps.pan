@@ -48,3 +48,15 @@ prefix "/software/components/autofs/maps/map2";
 "options" = "-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys";
 "preserve" = true;
 "type" = "file";
+
+prefix "/software/components/autofs/conf/autofs";
+"timeout" = 300;
+"browse_mode" = false;
+
+prefix "/software/components/autofs/conf/amd";
+"dismount_interval" = 600;
+"autofs_use_lofs" = false;
+
+prefix "/software/components/autofs/conf/mountpoints";
+"{/some/mount1}/dismount_interval" = 1200;
+"{/some/mount2}/autofs_use_lofs" = true;

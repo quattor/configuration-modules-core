@@ -7,10 +7,13 @@ use NCM::Component::autofs;
 use Test::Quattor::RegexpTest;
 use Test::MockModule;
 use Readonly;
+use Test::Quattor::TextRender::Base;
 
 $CAF::Object::NoAction = 1;
 
 set_caf_file_close_diff(1);
+
+my $caf_trd = mock_textrender();
 
 =pod
 
@@ -65,8 +68,6 @@ $rt = Test::Quattor::RegexpTest->new(
     );
 $rt->test();
 
-
-
 $fh = get_file("/etc/auto.export_map2");
 # preserve is true here, so FileEditor expected
 isa_ok($fh, "CAF::FileEditor", "This is a CAF::FileEditor auto.export_map2 file written");
@@ -91,6 +92,20 @@ diag("auto.master:\n$fh");
 # Test all values
 $rt = Test::Quattor::RegexpTest->new(
     regexp => 'src/test/resources/auto_master',
+    text => "$fh",
+    );
+$rt->test();
+
+$fh = get_file("/etc/autofs.conf");
+# no preserve, so FileWriter expected
+isa_ok($fh, "CAF::FileWriter", "This is a CAF::FileWriter autofs.conf file written");
+# but FileEditor is a FileWriter too, so test something more (and there's no isa_notok)
+ok(! $fh->can('replace_lines'), "This is not a FileEditor");
+diag("autofs.conf:\n$fh");
+
+# Test all values
+$rt = Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/autofs_conf',
     text => "$fh",
     );
 $rt->test();

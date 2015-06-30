@@ -19,6 +19,7 @@ use LC::Check;
 use Readonly;
 
 Readonly my $AUTO_MASTER => '/etc/auto.master';
+Readonly my $AUTOFS_CONF => '/etc/autofs.conf';
 Readonly my $ERROR_PREFIX => "ERROR IN: ";
 
 use EDG::WP4::CCM::Element qw(unescape);
@@ -231,7 +232,28 @@ sub Configure
     my $masterchanged = $self->_write_or_edit($AUTO_MASTER, $autofs_config->{preserveMaster}, "Master map", $masterdata);
     $cnt += $masterchanged;
 
-    # reload if changed the conf-file
+    # autofs.conf; no preserve
+    if ($autofs_config->{conf}) {
+        my $autofs_conf = EDG::WP4::CCM::TextRender->new(
+            "autofs_conf.tt",
+            $config->getElement($self->prefix()."/conf"),
+            relpath => 'autofs',
+            log => $self,
+            element => { yesno => 1 },
+            );
+        if (!$autofs_conf) {
+            $self->error("TT processing of $AUTOFS_CONF failed: $autofs_conf->{fail}");
+        }
+        my $autofs_conf_fh = $autofs_conf->filewriter($AUTOFS_CONF);
+        my $autofs_conf_changed = $autofs_conf_fh->close();
+        $self->debug(1, "$AUTOFS_CONF ", $autofs_conf_changed ? "" : "not ", "modified.");
+        
+        $cnt += $autofs_conf_changed;
+    } else {
+        $self->debug(1, "Skipping $AUTOFS_CONF.");
+    }
+
+    # reload if any of the conf-files changed
     if($cnt) {
         $self->info("Checking if autofs is running");
         # TODO: CAF::Service
