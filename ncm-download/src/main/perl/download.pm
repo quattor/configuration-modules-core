@@ -121,6 +121,9 @@ sub Configure {
             $min_age = $inf->{files}->{$f}->{min_age};
         }
 
+	my $timeout = $inf->{files}->{$f}->{timeout};
+	$timeout = $inf->{timeout} unless defined($timeout);
+
         my $success = 0;
         if (@proxyhosts && $inf->{files}->{$f}->{proxy}) {
             my $attempts = scalar @proxyhosts;
@@ -133,7 +136,8 @@ sub Configure {
                 $success += $self->download(
                     file => $file,
                     href => $source,
-                    timeout => $inf->{timeout},
+                    timeout => $timeout,
+                    head_timeout => $inf->{head_timeout},
                     proxy => $proxy,
                     gssneg => $gss,
                     cacert => $inf->{files}->{$f}->{cacert},
@@ -216,7 +220,9 @@ sub get_head
     local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if (exists($opts{cacert}));
     local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if (exists($opts{capath}));
 
-    return LWP::UserAgent->new->head($source);
+    my $lwp = LWP::UserAgent->new;
+    $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
+    return $lwp->head($source);
 }
 
 sub download {
