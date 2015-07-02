@@ -355,3 +355,5 @@ sub Configure {
 
         return !$self->write_sudoers ($aliases, $opts, $lns, $incls, $incls_dirs);
 }
+
+1;
