@@ -1,0 +1,11 @@
+basic test
+---
+//software
+rendermodule=versionlock
+contentspath=/software
+quote=1
+---
+# Configuration file for the versionlock plugin
+
+follow_obsoletes=1
+versionlock.list=/etc/yum/pluginconf.d/versionlock.list
