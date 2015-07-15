@@ -1,0 +1,10 @@
+Default test (nothing configured)
+Intentionally uses /software/groups to mimic missing config
+---
+//software
+rendermodule=fastestmirror
+contentspath=/software/groups
+quote=1
+---
+\[main\]
+enabled=0

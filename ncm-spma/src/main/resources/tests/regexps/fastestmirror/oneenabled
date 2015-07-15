@@ -1,0 +1,7 @@
+only one enabled statement
+---
+//software
+rendermodule=fastestmirror
+contentspath=/software/components/spma/fastestmirror
+---
+^enabled= ### COUNT 1
