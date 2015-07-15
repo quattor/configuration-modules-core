@@ -31,6 +31,9 @@ use CAF::Object;
 use Set::Scalar;
 use Class::Inspector;
 use Carp qw(confess);
+use Test::Quattor::TextRender::Base;
+
+my $caf_trd = mock();
 
 Readonly my $UPDATE_PKGS => -1;
 Readonly my $GENERATE_REPOS => 3;
@@ -128,7 +131,7 @@ is(ref($args[2]), 'ARRAY',
    "A list of repositories is passed to generate_repos");
 is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to generate_repos");
-like($args[3], qr{spma/.*repo.*tt$},
+like($args[3], qr{^repository$},
      "Correct repository template passed");
 ok(!$args[4], "No proxy passed to generate_repos");
 

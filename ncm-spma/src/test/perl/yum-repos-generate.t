@@ -21,13 +21,14 @@ use Test::MockModule;
 use Readonly;
 use CAF::Object;
 use CAF::FileWriter;
+use Test::Quattor::TextRender::Base;
 
-
+my $caf_trd = mock();
 
 $CAF::Object::NoAction = 1;
 
 Readonly my $REPOS_DIR => "/etc/yum.repos.d";
-Readonly my $REPOS_TEMPLATE => "spma/repository.tt";
+Readonly my $REPOS_TEMPLATE => "repository";
 Readonly my $PROXY_HOST => "aproxy";
 Readonly my $PROXY_PORT => 9876;
 Readonly my $URL => "http://localhost.localdomain";
