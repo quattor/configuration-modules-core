@@ -63,7 +63,7 @@ type component_spma_type = {
     include component_spma_ips
     include component_spma_yum
     "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
-    "packager"      : string = "yum" with match (SELF, '^(yum|ips)$') # system packager to be used (yum,ips)
+    "packager"      : string = "yum" with match (SELF, '^(yum|ips|yum_ng)$') # system packager to be used (yum,ips)
     "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions
     "process_obsoletes" : boolean = false
     "cachedir"      ? string # SPMA cache directory
