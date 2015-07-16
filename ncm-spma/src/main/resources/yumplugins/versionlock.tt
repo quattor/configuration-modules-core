@@ -1,4 +1,1 @@
-# Configuration file for the versionlock plugin
-
-follow_obsoletes=1
-versionlock.list=/etc/yum/pluginconf.d/versionlock.list
+[% INCLUDE 'spma/yumplugins/generic.tt' listsep=',' section='main' %]

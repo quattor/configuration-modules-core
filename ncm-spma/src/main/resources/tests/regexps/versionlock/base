@@ -2,10 +2,9 @@ basic test
 ---
 //software
 rendermodule=yumplugins/versionlock
-contentspath=/software
-quote=1
+contentspath=/software/components/spma/plugins/versionlock
 ---
-# Configuration file for the versionlock plugin
-
-follow_obsoletes=1
-versionlock.list=/etc/yum/pluginconf.d/versionlock.list
+^\[main\]$
+^enabled=1$
+^follow_obsoletes=0$
+^locklist=/etc/yum/pluginconf.d/versionlock.list$
