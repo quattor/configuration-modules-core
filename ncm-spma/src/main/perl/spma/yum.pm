@@ -31,7 +31,8 @@ use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
-use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
+use constant YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
+use constant YUM_PACKAGE_LIST => YUM_PLUGIN_DIR . "/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
 use constant YUM_EXPIRE => qw(yum clean expire-cache);
 use constant YUM_PURGE_METADATA => qw(yum clean metadata);
@@ -194,7 +195,7 @@ sub execute_yum_command
     my ($self, $command, $why, $keeps_state, $stdin, $error_logger) = @_;
 
     $error_logger = "error" if (!($error_logger && $error_logger =~ m/^(error|warn|info|verbose)$/));
-    
+
     my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
@@ -208,7 +209,7 @@ sub execute_yum_command
 
     $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out") if(defined($out)); 
+    $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
         ($err && $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
@@ -342,7 +343,7 @@ sub apply_transaction
     my ($self, $tx, $tx_error_is_warn) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, 
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1,
                                         $tx, $tx_error_is_warn ? "warn" : "error");
     return defined($ok);
 }
@@ -381,15 +382,15 @@ sub prepare_lock_lists
     return ($locked, $toquery);
 }
 
-# generate a msg for logging purposes based on 
-# wanted_locked and not_matched (passed as ref here) 
-# The message can be long because it contains list of 
+# generate a msg for logging purposes based on
+# wanted_locked and not_matched (passed as ref here)
+# The message can be long because it contains list of
 # all packages and non-exact matched repoquery output
-# Lists are not comma separated so it can be copied 
+# Lists are not comma separated so it can be copied
 # and used on command line
 sub _make_msg_wanted_locked
-{ 
-    
+{
+
     my ($wanted_locked, $not_matched_ref) = @_;
 
     return sprintf(
@@ -404,17 +405,17 @@ sub _make_msg_wanted_locked
 # Returns whether the $locked string locks all the items in
 # $wanted_locked.  Warning: $wanted_locked will be modified!!
 # ($locked is output from REPOQUERY).
-# When C<fullsearch> is true, the result will be checked 
-# for with glob pattern matching to verify the requested packages 
+# When C<fullsearch> is true, the result will be checked
+# for with glob pattern matching to verify the requested packages
 # are in the $locked string. Otherwise, any requested package with
-# a wildcard will be assumed to have a match in the output. 
-# The main issue with fullsearch is that it is a possibly slow process. 
+# a wildcard will be assumed to have a match in the output.
+# The main issue with fullsearch is that it is a possibly slow process.
 sub locked_all_packages
 {
     my ($self, $wanted_locked, $locked, $fullsearch) = @_;
 
     my @not_matched;
-    
+
     # Process output and filter exact matches
     foreach my $pkgstr (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkgstr);
@@ -423,13 +424,13 @@ sub locked_all_packages
             $wanted_locked->delete($pkg);
         } else {
             # keep repoquery output of non-exact matched packages
-            # locked packages like kernel*-some.version will cause other 
-            # entries like kernel-devel in the repoquery output, which 
-            # will never match, so having packages in @not_locked. 
+            # locked packages like kernel*-some.version will cause other
+            # entries like kernel-devel in the repoquery output, which
+            # will never match, so having packages in @not_locked.
             push(@not_matched, $pkg) if $pkg;
         }
     }
-    
+
     # No wanted_locked packages left, everything matched
     if (! @$wanted_locked) {
         $self->verbose("All wanted_locked packages found (without any wildcard processing).");
@@ -438,18 +439,18 @@ sub locked_all_packages
 
     my $msg = _make_msg_wanted_locked($wanted_locked, \@not_matched);
     if ($fullsearch) {
-        # At this point, all remaining entries in the wanted_locked 
+        # At this point, all remaining entries in the wanted_locked
         # might have a wildcard in them.
         # Brute-force could possibly lead to a very slow worst case scenario
-        # 
-        # Issue: single wildcard might match multiple lines of output, 
+        #
+        # Issue: single wildcard might match multiple lines of output,
         #   so always process all output
         $self->verbose("Starting fullsearch on $msg.");
         foreach my $wl (@$wanted_locked) {
-            # (try to) match @not_matched 
-            # TODO: remove the matches? can we assume that every 
+            # (try to) match @not_matched
+            # TODO: remove the matches? can we assume that every
             #  match corresponds to exactly one wildcard? probably not.
-            #  e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5 
+            #  e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5
             #  would be left without (valid) match.
             #  -> current implementation does not remove the matches.
             $wanted_locked->delete($wl) if (grep(match_glob($wl, $_), @not_matched));
@@ -479,7 +480,7 @@ sub locked_all_packages
                     "(but be aware of potential speed impact: $msg).");
         return 1;
     }
-    
+
     # how do we get here?
     return 1;
 }
@@ -701,20 +702,20 @@ sub update_pkgs
 sub update_pkgs_retry
 {
     my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs, $fullsearch) = @_;
-    
-    # If an error is logged due to failed transaction, 
-    # it might be retried and might succeed, but ncm-ncd will not allow 
+
+    # If an error is logged due to failed transaction,
+    # it might be retried and might succeed, but ncm-ncd will not allow
     # any component that has spma as dependency (i.e. typically all others)
     # to run (becasue he initial attempt had an error)
     my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
 
-    # Introduce shortcut to call update_pkgs with the same except 2 arguments 
+    # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
         my ($allow_user_pkgs, $tx_error_is_warn) = @_;
-        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, 
+        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
                                   $purge, $tx_error_is_warn, $fullsearch);
     };
-    
+
     if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
         $self->verbose("update_pkgs ok");
     } else {
@@ -725,30 +726,30 @@ sub update_pkgs_retry
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
             $tx_error_is_warn = 0;
-            
-            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
+
+            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true");
             $allow_user_pkgs = 1;
             if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
-                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
+                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd");
                 $allow_user_pkgs = 0;
                 if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
-                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
+                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok.");
                 } else {
-                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed."); 
+                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed.");
                     return 0;
                 };
             } else {
-                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed."); 
+                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed.");
                 return 0;
             };
         } else {
-            # log failure, no retry enabled 
+            # log failure, no retry enabled
             # tx_error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
             return 0;
         }
     }
-    
+
     return 1;
 };
 
@@ -768,6 +769,55 @@ sub configure_yum
                   OBSOLETE . "\\s*=\\s*$obsolete",
                   "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
     $fh->close();
+}
+
+# Configure the yum plugins
+sub configure_plugins
+{
+    my ($self, $plugins) = @_;
+
+    # Sanity checks
+    # versionlock plugin: enable by default
+    if ($plugins->{versionlock}) {
+        # TODO: check and warn for disabled versionlock plugin?
+        # versionlock plugin: locklist is mandatory in schema
+        if ($plugins->{versionlock}->{locklist} ne YUM_PACKAGE_LIST) {
+            $self->warn("yum plugin versionlock plugin unsupported locklist $plugins->{versionlock}->{locklist}. ",
+                        "Forcing it to ".YUM_PACKAGE_LIST.".");
+            $plugins->{versionlock}->{locklist} = YUM_PACKAGE_LIST;
+        }
+    } else {
+        $self->verbose("yum plugin versionlock is not configured. Will be enabled.");
+        $plugins->{versionlock} = {
+            enabled => 1,
+            locklist => YUM_PACKAGE_LIST,
+        };
+    }
+
+    # fastestmirror plugin: disable by default
+    if (! $plugins->{fastestmirror}) {
+        $self->verbose("yum plugin fastestmirror is not configured. It will be disabled.");
+        $plugins->{fastestmirror}->{enabled} = 0;
+    }
+
+    my $changes = 0;
+    foreach my $plugin (sort keys %$plugins) {
+        $self->verbose("Going to configure plugin $plugin.");
+        my $trd = EDG::WP4::CCM::TextRender->new(
+            "yumplugins/$plugin",
+            $plugins->{$plugin},
+            relpath => 'spma',
+            log => $self);
+
+        # returns undef on render error, the error is logged
+        my $fh = $trd->filewriter(YUM_PLUGIN_DIR . "/$plugin.conf");
+
+        if(defined $fh) {
+            $changes += $fh->close() || 0; # handle undef
+        }
+    }
+
+    return $changes;
 }
 
 sub Configure
@@ -792,6 +842,13 @@ sub Configure
     } else {
         $groups = {};
     }
+
+    # TODO: is this fatal or not?
+    # TODO: should this also influence purge_caches?
+    #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
+    # always run it, even if no plugins configured (e.g. to disable fastest mirror)
+    $self->configure_plugins($t->{plugins});
+
     $self->initialize_repos_dir(REPOS_DIR) or return 0;
     $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
     $purge_caches = $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE,
@@ -800,7 +857,7 @@ sub Configure
     defined($purge_caches) or return 0;
     $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
 
-    $self->update_pkgs_retry($pkgs, $groups, $t->{run}, 
+    $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                              $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
                              $t->{fullsearch})
         or return 0;
