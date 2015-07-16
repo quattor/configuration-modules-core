@@ -86,7 +86,7 @@
                     <directory>src/main/resources</directory>
                     <filtering>true</filtering>
                     <includes>
-                      <include>*.tt</include>
+                      <include>**/*.tt</include>
                     </includes>
                   </resource>
                 </resources>

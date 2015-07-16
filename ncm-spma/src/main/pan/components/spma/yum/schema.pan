@@ -4,7 +4,7 @@
 
 declaration template components/spma/yum/schema;
 
-type component_spma_fastestmirror = {
+type spma_yum_plugin_fastestmirror = {
     'enabled' : boolean = false
     'verbose' : boolean = false
     'always_print_best_host' : boolean = true
@@ -16,8 +16,19 @@ type component_spma_fastestmirror = {
     'include_only' ? string[]
 };
 
+type spma_yum_plugin_versionlock = {
+    'enabled' : boolean = true
+    'locklist' : string = '/etc/yum/pluginconf.d/versionlock.list'
+    'follow_obsoletes' ? boolean
+};
+
+type spma_yum_plugins = {
+    "fastestmirror" ? spma_yum_plugin_fastestmirror
+    "versionlock" ? spma_yum_plugin_versionlock
+};
+
 type component_spma_yum = {
     "userpkgs_retry" : boolean = true
     "fullsearch" : boolean = false
-    "fastestmirror" ? component_spma_fastestmirror
+    "plugins" ? spma_yum_plugins
 };
