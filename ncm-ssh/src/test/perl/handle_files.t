@@ -23,7 +23,7 @@ $mock->mock("cancel", sub {
             });
 
 Readonly my $SSH_FILE => "target/test/sshd";
-Readonly my $SSH_CONTENTS => "Foo bar baz\n";
+Readonly my $SSH_CONTENTS => "Foo bar baz\nAllowGroups a b";
 
 my $fh = CAF::FileWriter->new($SSH_FILE);
 print $fh $SSH_CONTENTS;
@@ -47,7 +47,7 @@ my $cmp = NCM::Component::ssh->new('ssh');
 my $t = $cfg->getElement("/software/components/ssh/daemon")->getTree();
 $cmp->handle_config_file($SSH_FILE, 0600, $t);
 $fh = get_file($SSH_FILE);
-like($fh, qr{^AllowGroups\s+a b c$}m, "Multiword option accepted");
+like($fh, qr{^AllowGroups\s+a b c$}m, "Multiword option accepted and modified correctly");
 
 is(*$fh->{CANCELLED}, 1, "File with no validation is written");
 

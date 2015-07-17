@@ -34,6 +34,7 @@ type ssh_daemon_options_type = {
     include ssh_core_options_type
     "AFSTokenPassing"                   ? ssh_yesnostring
     "AcceptEnv"                         ? ssh_yesnostring
+    "AllowAgentForwarding"              ? ssh_yesnostring
     "AllowGroups"                       ? string
     "AllowTcpForwarding"                ? ssh_yesnostring
     "AllowUsers"                        ? string
@@ -50,6 +51,7 @@ type ssh_daemon_options_type = {
     "HPNBufferSize"                     ? long
     "IgnoreRhosts"                      ? ssh_yesnostring
     "IgnoreUserKnownHosts"              ? ssh_yesnostring
+    "KbdInteractiveAuthentication"      ? ssh_yesnostring
     "KerberosAuthentication"            ? ssh_yesnostring
     "KerberosGetAFSToken"               ? ssh_yesnostring
     "KerberosOrLocalPasswd"             ? ssh_yesnostring
