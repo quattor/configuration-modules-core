@@ -44,7 +44,9 @@ use constant {
     INCLUDES_DIRS    => PROFILE_BASE . "includes_dirs"
 };
 
-use constant VISUDO_CHECK => qw(/usr/sbin/visudo -c -f /proc/self/fd/0);
+use constant VISUDO_CHECK => qw(/usr/sbin/visudo -c -f);
+use constant VISUDO_STDIN_LINUX => '/proc/self/fd/0';
+use constant VISUDO_STDIN_SOLARIS => '-';
 
 # All possible "Default" options separated by type.
 use constant BOOLEAN_OPTS => qw(
@@ -197,8 +199,11 @@ sub generate_privilege_lines {
         my $ln = $info{PRIVILEGE_USER()}->getValue;
         $ln .= "\t" . $info{PRIVILEGE_HOST()}->getValue;
         $ln .= "= (". $info{PRIVILEGE_RUNAS()}->getValue . ")\t";
-        $ln .= $info{PRIVILEGE_OPTS()}->getValue . "\t"
-        if defined $info{PRIVILEGE_OPTS()};
+	if (defined($info{PRIVILEGE_OPTS()})) {
+		$ln .= $info{PRIVILEGE_OPTS()}->getValue;
+		$ln .= ':' if $ln !~ /:$/;
+		$ln .= "\t";
+	}
         $ln .= $info{PRIVILEGE_CMD()}->getValue;
         push (@$lns, $ln);
     }
@@ -210,6 +215,7 @@ sub generate_privilege_lines {
 sub is_valid_sudoers {
     my ($self, $fh) = @_;
     my ($err, $out);
+
     my $proc = CAF::Process->new (
         [VISUDO_CHECK],
         stdin => "$fh",
@@ -218,7 +224,12 @@ sub is_valid_sudoers {
         keeps_state => 1,
         log => $self
     );
-
+    if ($^O eq "solaris") {
+        $proc->pushargs(VISUDO_STDIN_SOLARIS);
+    } else {
+        $proc->pushargs(VISUDO_STDIN_LINUX);
+    }
+ 
     $proc->execute();
 
     if ($? || $out !~ m{parsed OK}) {
@@ -344,3 +355,5 @@ sub Configure {
 
         return !$self->write_sudoers ($aliases, $opts, $lns, $incls, $incls_dirs);
 }
+
+1;
