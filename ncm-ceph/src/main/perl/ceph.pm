@@ -160,7 +160,7 @@ sub check_versions {
     my $cversion = $self->run_ceph_command([qw(--version)]);
     my @vl = split(' ',$cversion);
     my $cephv = $vl[2];
-    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)]);
+    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)]) if $qdeploy;
     if ($deplv) {
         chomp($deplv);
     }
