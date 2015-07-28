@@ -52,7 +52,8 @@ sub Configure
     delete($t->{version});
 
     while (my ($k, $v) = each(%$t)) {
-        print $fh "$k $v\n";
+        my $value = ref($v) eq 'ARRAY' ? join(',', @$v) : $v;
+        print $fh "$k $value\n" if length($value);
     }
 
     if (_is_noquattor()) {
