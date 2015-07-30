@@ -5,12 +5,12 @@
 
 declaration template components/ssh/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
 
 type ssh_core_options_type = {
-    "AddressFamily"                     ? string with match (SELF, '^(any|inet|inet6)$')
+    "AddressFamily"                     ? string with match (SELF, '^(any|inet6?)$')
     "ChallengeResponseAuthentication"   ? ssh_yesnostring
     "Ciphers"                           ? string
     "Compression"                       ? string with match (SELF, '^(yes|delayed|no)$')
@@ -18,7 +18,7 @@ type ssh_core_options_type = {
     "GSSAPICleanupCredentials"          ? ssh_yesnostring
     "GatewayPorts"                      ? ssh_yesnostring
     "HostbasedAuthentication"           ? ssh_yesnostring
-    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG1|DEBUG2|DEBUG3)$')
+    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
     "MACs"                              ? string
     "PasswordAuthentication"            ? ssh_yesnostring
     "Protocol"                          ? string
@@ -76,7 +76,7 @@ type ssh_daemon_options_type = {
     "ShowPatchLevel"                    ? ssh_yesnostring
     "StrictModes"                       ? ssh_yesnostring
     "Subsystem"                         ? string
-    "SyslogFacility"                    ? string with match (SELF, '^(AUTH|AUTHPRIV|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL0|LOCAL1|LOCAL2|LOCAL3|LOCAL4|LOCAL5|LOCAL6|LOCAL7)$')
+    "SyslogFacility"                    ? string with match (SELF, '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
     "TcpRcvBuf"                         ? long
     "TcpRcvBufPoll"                     ? ssh_yesnostring
     "UseDNS"                            ? ssh_yesnostring
@@ -91,17 +91,17 @@ type ssh_daemon_options_type = {
 
 type ssh_client_options_type = {
     include ssh_core_options_type
+    "BatchMode"                         ? ssh_yesnostring
+    "ConnectTimeout"                    ? long
     "EnableSSHKeysign"                  ? ssh_yesnostring
     "ForwardAgent"                      ? ssh_yesnostring
     "ForwardX11"                        ? ssh_yesnostring
+    "GSSAPIDelegateCredentials"         ? ssh_yesnostring
     "Port"                              ? long
+    "PreferredAuthentications"          ? string with match(SELF, '^((gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)(,|$))+')
     "RhostsAuthentication"              ? ssh_yesnostring
     "StrictHostKeyChecking"             ? ssh_yesnostring
     "UsePrivilegedPort"                 ? ssh_yesnostring
-    "GSSAPIDelegateCredentials"         ? ssh_yesnostring
-    "BatchMode"                         ? ssh_yesnostring
-    "ConnectTimeout"                    ? long
-    "PreferredAuthentications"          ? string with match(SELF, '^((gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)(,|$))+')
 };
 
 type ssh_daemon_type = {
