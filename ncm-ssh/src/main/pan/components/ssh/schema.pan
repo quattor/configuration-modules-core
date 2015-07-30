@@ -101,6 +101,7 @@ type ssh_client_options_type = {
     "GSSAPIDelegateCredentials"         ? ssh_yesnostring
     "BatchMode"                         ? ssh_yesnostring
     "ConnectTimeout"                    ? long
+    "PreferredAuthentications"          ? string with match(SELF, '^((gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)(,|$))+')
 };
 
 type ssh_daemon_type = {
