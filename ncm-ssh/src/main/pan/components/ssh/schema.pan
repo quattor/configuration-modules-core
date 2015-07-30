@@ -5,7 +5,7 @@
 
 declaration template components/ssh/schema;
 
-include 'quattor/schema';
+include 'quattor/types/component';
 
 type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
 

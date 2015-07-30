@@ -1,5 +1,11 @@
 object template ssh_simple;
 
+# mock pkg_repl
+function pkg_repl = { null; };
+include 'components/ssh/config';
+# delete spma dependency (requires configured spma component otherwise)
+"/software/components/ssh/dependencies" = null;
+
 prefix "/software/components/ssh/daemon/options";
 
 "AllowGroups" = "a b c";
@@ -7,6 +13,6 @@ prefix "/software/components/ssh/daemon/options";
 
 prefix "/software/components/ssh/daemon/comment_options";
 
-"Foobar" = 1;
+"Banner" = "Foobar";
 
 "/software/components/ssh/client" = nlist();
