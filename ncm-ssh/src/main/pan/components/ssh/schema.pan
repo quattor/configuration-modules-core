@@ -9,6 +9,8 @@ include 'quattor/types/component';
 
 type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
 
+type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)$');
+
 type ssh_core_options_type = {
     "AddressFamily"                     ? string with match (SELF, '^(any|inet6?)$')
     "ChallengeResponseAuthentication"   ? ssh_yesnostring
@@ -98,7 +100,7 @@ type ssh_client_options_type = {
     "ForwardX11"                        ? ssh_yesnostring
     "GSSAPIDelegateCredentials"         ? ssh_yesnostring
     "Port"                              ? long
-    "PreferredAuthentications"          ? string with match(SELF, '^((gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)(,|$))+')
+    "PreferredAuthentications"          ? ssh_preferred_authentication[]
     "RhostsAuthentication"              ? ssh_yesnostring
     "StrictHostKeyChecking"             ? ssh_yesnostring
     "UsePrivilegedPort"                 ? ssh_yesnostring
