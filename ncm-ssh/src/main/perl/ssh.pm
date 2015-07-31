@@ -65,24 +65,30 @@ sub handle_config_file
     );
 
     foreach my $option_set (qw(comment_options options)) {
-        if ($cfg->{$option_set}) {
-            $self->debug(1, "Processing $option_set");
-            my $ssh_component_config = $cfg->{$option_set};
-            while (my ($option, $val) = each(%$ssh_component_config)) {
-                my $comment;
-                if ($option_set eq 'comment_options') {
-                    $comment = '#';
-                } else {
-                    $comment = '';
-                }
+        next if (! $cfg->{$option_set});
 
-                my $escaped_val = $val;
-                $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
-                $fh->add_or_replace_lines(
-                    qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val\s*$},
-                    "$comment$option $val\n",       ENDING_OF_FILE
+        $self->debug(1, "Processing $option_set");
+        my $comment = $option_set eq 'comment_options' ? '#' : '';
+        foreach my $option (sort keys %{$cfg->{$option_set}}) {
+            my $val = $cfg->{$option_set}->{$option};
+            my $ref = ref($val);
+            if($ref) {
+                if($ref eq 'ARRAY') {
+                    $val = join(',', @$val);
+                } else {
+                    $self->error("Unsupported value reference $ref for option $option.",
+                                 " (Possibly bug in profile/schema).");
+                    next;
+                }
+            };
+
+            my $escaped_val = $val;
+            $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
+            $fh->add_or_replace_lines(
+                qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val\s*$},
+                "$comment$option $val\n",
+                ENDING_OF_FILE
                 );
-            }
         }
     }
 

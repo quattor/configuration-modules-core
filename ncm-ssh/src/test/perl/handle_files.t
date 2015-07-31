@@ -23,6 +23,8 @@ $mock->mock("cancel", sub {
             });
 
 Readonly my $SSH_FILE => "target/test/sshd";
+Readonly my $SSH_FILE_CLIENT => "target/test/ssh_client";
+
 Readonly my $SSH_CONTENTS => "Foo bar baz\nAllowGroups a b";
 
 my $fh = CAF::FileWriter->new($SSH_FILE);
@@ -59,5 +61,12 @@ is(*$fh->{CANCELLED}, 1, "File with successful validation is written");
 $cmp->handle_config_file($SSH_FILE, 0600, $t, sub { return 0; });
 $fh = get_file($SSH_FILE);
 is(*$fh->{CANCELLED}, 2, "Invalid file is not written");
+
+# test the client file too
+$cmp->handle_config_file($SSH_FILE_CLIENT, 0644,
+                         $cfg->getElement("/software/components/ssh/client")->getTree());
+my $client = get_file($SSH_FILE_CLIENT);
+like("$client", qr{^Port 22222$}m, "Port number set");
+like("$client", qr{^PreferredAuthentications gssapi-with-mic,hostbased,publickey$}m, "PreferredAuthentications list set");
 
 done_testing();
