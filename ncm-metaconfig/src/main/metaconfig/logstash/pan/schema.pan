@@ -137,6 +137,11 @@ type logstash_filter_grok = {
     "patterns_dir" ? string[]
 };
 
+type logstash_filter_bytes2human = {
+    include logstash_filter_plugin_common
+    "convert" : string{}
+};
+
 type logstash_filter_date = {
     include logstash_filter_plugin_common
     "match" : logstash_filter_name_patternlist
@@ -157,11 +162,26 @@ type logstash_filter_mutate = {
     "exclude_tags" ? string[] # DEPRECATED, should be replaced by conditional block
 };
 
+type logstash_filter_kv = {
+    include logstash_filter_plugin_common
+    "default_keys" ? string{}
+    "exclude_keys" ? string[]
+    "include_keys" ? string[]
+    "prefix" ? string
+    "source" ? string
+    "target" ? string
+    "trim" ? string
+    "trimkey" ? string
+    "value_split" ? string
+};
+
 type logstash_filter_plugin = {
     "grok" ? logstash_filter_grok
     "date" ? logstash_filter_date
     "grep" ? logstash_filter_grep
     "mutate" ? logstash_filter_mutate
+    "kv" ? logstash_filter_kv
+    "bytes2human" ? logstash_filter_bytes2human
 } with length(SELF) == 1;
 
 @{ Common output }

@@ -41,6 +41,20 @@ filter \{$
 ^\s{16}"message" => "%\{RSYSLOGCUSTOM\}"$
 ^\s{12}}$
 ^\s{8}\}$
+^\s{8}kv \{$
+^\s{12}exclude_keys => \[ "key1e", "key2e" \]$
+^\s{12}include_keys => \[ "key1i", "key2i" \]$
+^\s{12}default_keys => \{$
+^\s{16}"key1" => "value1"$
+^\s{16}"key2" => "value2"$
+^\s{12}\}$
+^\s{12}prefix => "myprefix"$
+^\s{12}source => "mysource"$
+^\s{12}target => "mytarget"$
+^\s{12}trim => "mytrim"$
+^\s{12}trimkey => "mytrimkey"$
+^\s{12}value_split => "myvaluesplit"$
+^\s{8}\}$
 ^\s{8}date \{$
 ^\s{12}match => \[ "syslog_timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ" \]$
 ^\s{8}\}$
@@ -53,6 +67,12 @@ filter \{$
 ^\s{8}\}$
 ^\s{8}mutate \{$
 ^\s{12}remove_field => \[ "syslog_hostname", "syslog_message", "syslog_timestamp" \]$
+^\s{8}\}$
+^\s{8}bytes2human \{$
+^\s{12}convert => \{$
+^\s{16}"field1" => "bytes"$
+^\s{16}"field2" => "bytes"$
+^\s{12}\}$
 ^\s{8}\}$
 ^\s{4}\}$
 output \{$
