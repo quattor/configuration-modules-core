@@ -16,4 +16,4 @@ logging {
 
 [%- FOREACH i IN includes -%]
 include "[% i %]";
-[%- END %]
+[% END -%]

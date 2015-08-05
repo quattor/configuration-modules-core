@@ -64,4 +64,5 @@ multiline
 ^zone "10.10.in-addr.arpa" IN \{\s{4}$
 ^\s{4}file "hpcugent/bar/10.10.rev";$
 ^include "/etc/named.rfc1912.zones";$
+^include "/etc/another.conf";$
 

@@ -9,6 +9,7 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
     "file", "data/named.run");
 "logging/category" = nlist();
 "includes" = append("/etc/named.rfc1912.zones");
+"includes" = append("/etc/another.conf");
 
 "acls/clients" = list('127.0.0.1', '10.10.3.250', '10.10.10.250'); 
 "acls/vsc" = list("10.10.0.0/16", "10.20.0.0/16", "10.30.0.0/16");
