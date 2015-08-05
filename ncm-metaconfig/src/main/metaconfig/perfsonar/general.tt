@@ -1,0 +1,17 @@
+[%- # no data in schema 
+    data = data.defined ? data : CCM.contents -%]
+[%- FOREACH p IN data.pairs %]
+[%-      IF CCM.is_scalar(p.value) -%]
+[%          p.key %] [% p.value %]
+[%-      ELSIF CCM.is_list(p.value) -%]
+[%          FOREACH el IN p.value -%]
+[%-             IF CCM.is_scalar(el) -%]
+[%                  p.key %] [% el %]
+[%              ELSE -%]
+<[%                 p.key %]>
+[%                  INCLUDE 'metaconfig/perfsonar/general.tt' data=el FILTER indent %]
+</[%                p.key %]>
+[%              END -%]
+[%          END -%]
+[%-      END %]
+[% END -%]

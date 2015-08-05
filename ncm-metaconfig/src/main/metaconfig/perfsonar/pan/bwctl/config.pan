@@ -15,11 +15,11 @@ prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.conf}";
 "mode" = 0644;
 "owner" = "root";
 "group" = "root";
-"module" = "general";
+"module" = "perfsonar/general";
 "daemons/bwctld" = "restart";
 
 prefix "/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}";
-"module" = "general";
+"module" = "perfsonar/general";
 "owner" = "bwctl";
 "group" = "bwctl";
 
