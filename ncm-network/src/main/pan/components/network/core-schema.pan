@@ -18,7 +18,7 @@ type structure_interface_alias = {
     "ip"      ? type_ip
     "netmask" : type_ip
     "broadcast" ? type_ip
-    "fqdn"    ? string
+    "fqdn"    ? type_fqdn
 };
 
 @documentation{
