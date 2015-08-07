@@ -1,0 +1,3 @@
+[% FOREACH p IN CCM.contents.pairs -%]
+[% p.key %] = [% CCM.is_list(p.value) ? p.value.join(':') : p.value %]
+[% END -%]
