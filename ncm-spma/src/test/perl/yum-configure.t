@@ -33,7 +33,7 @@ use Class::Inspector;
 use Carp qw(confess);
 use Test::Quattor::TextRender::Base;
 
-my $caf_trd = mock();
+my $caf_trd = mock_textrender();
 
 # Index when yum method is called
 Readonly my $UPDATE_PKGS => -1;

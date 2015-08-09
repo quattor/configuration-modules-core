@@ -23,7 +23,7 @@ use CAF::Object;
 use CAF::FileWriter;
 use Test::Quattor::TextRender::Base;
 
-my $caf_trd = mock();
+my $caf_trd = mock_textrender();
 
 $CAF::Object::NoAction = 1;
 
