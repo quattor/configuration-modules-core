@@ -1,0 +1,22 @@
+Value test for repository 2
+---
+//software
+rendermodule=repository
+contentspath=/software/repositories/2
+---
+^# Basic Yum repository file. See the man pages for$
+^# NCM::Component::spma and yum.conf$
+^# for more details.$
+^\[two\]$
+^name=two$
+^baseurl=    https://super.secret/repo$
+^sslcacert=/etc/pki/CA/cert.pem$
+^sslclientkey=/etc/pki/key.pem$
+^sslclientcert=/etc/pki/cert/pem$
+^enabled=0$
+^metadata_expire=7d$
+^gpgcheck=0$
+^include=/etc/yum.repos.d/two.pkgs$
+^includepkgs=alot \*more\*$
+^exclude=$
+^skip_if_unavailable=0$
