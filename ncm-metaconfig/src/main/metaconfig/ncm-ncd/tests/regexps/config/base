@@ -1,0 +1,8 @@
+basic ncm-ncd config
+---
+/etc/ncm-ncd.conf
+---
+^check-noquattor = 1$
+^facility = local2$
+^include = /a:/b:/c$
+^state = /var/run/quattor-components$
