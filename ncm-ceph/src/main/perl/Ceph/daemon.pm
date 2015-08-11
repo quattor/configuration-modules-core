@@ -208,7 +208,7 @@ sub check_empty {
             return 0;
         }
     } else {
-        my $checkmntcmd = ['/usr/bin/findmnt', $loc ];
+        my $checkmntcmd = ['/bin/findmnt', $loc ];
         if (!$self->run_command_as_ceph_with_ssh($checkmntcmd, $host)) {
             $self->error("OSD path is not a mounted file system on $host:$loc");
             return 0;
