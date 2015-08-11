@@ -28,7 +28,7 @@ Readonly::Array my @VIRSH_COMMAND => qw(sudo /usr/bin/virsh);
 Readonly::Array my @SU_ONEADMIN_COMMAND => qw(su - oneadmin -c);
 Readonly::Array my @SSH_KEYGEN_COMMAND => qw(/usr/bin/ssh-keygen);
 Readonly::Array my @SSH_KEYSCAN_COMMAND => qw(/usr/bin/ssh-keyscan);
-Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd oneadmin);
+Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd);
 
 my $sshcmd=[];
 
@@ -54,12 +54,12 @@ sub run_command {
     $cmd->execute();
     if (!$secret) {
         $self->verbose("Output: $cmd_output") if $cmd_output;
-        if ($?) {
-            $self->error("Command failed: $cmd_err");
-            return;
-        } else {
-            $self->verbose("Stderr: $cmd_err") if defined($cmd_err);
-        }
+    }
+    if ($?) {
+        $self->error("Command failed: $cmd_err");
+        return;
+    } else {
+        $self->verbose("Stderr: $cmd_err") if defined($cmd_err);
     }
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
 }

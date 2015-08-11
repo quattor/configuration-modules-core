@@ -99,6 +99,15 @@ type opennebula_tm_mad_conf = {
 } = dict();
 
 @documentation{ 
+The following attributes define the default cost for Virtual Machines that don't have a CPU or MEMORY cost.
+This is used by the oneshowback calculate method.
+}
+type opennebula_default_cost = {
+    "cpu_cost" : long = 0
+    "memory_cost" : long = 0
+} = dict();
+
+@documentation{ 
 check if a specific type of datastore has the right attributes
 }
 function is_consistent_datastore = {
@@ -114,6 +123,12 @@ function is_consistent_datastore = {
                 error(format("Invalid ceph datastore! Expected '%s' ", attr));
                 return(false);
             };
+        };
+    };
+    if (ds['ds_mad'] == 'fs') {
+        if (ds['tm_mad'] != 'shared') {
+            error("for a fs datastore only 'shared' tm_mad is supported for the moment");
+            return(false);
         };
     };
     # Checks for other types can be added here
@@ -147,7 +162,8 @@ type opennebula_ar = {
 };
 
 @documentation{ 
-type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph)
+type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph).
+shared DS is also supported
 }
 type opennebula_datastore = {
     include opennebula_ceph_datastore
@@ -155,8 +171,8 @@ type opennebula_datastore = {
     "bridge_list"               ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check"  : boolean = true
     "disk_type"                 : string = 'RBD'
-    "ds_mad"                    : string = 'ceph'
-    "tm_mad"                    : string = 'ceph'
+    "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
+    "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
     "type"                      : string = 'IMAGE_DS'
 } with is_consistent_datastore(SELF);
 
@@ -174,8 +190,8 @@ type opennebula_vnet = {
 
 type opennebula_user = {
     "ssh_public_key" ? string
-    "user" ? string 
-    "password" ? string
+    "user" : string 
+    "password" : string
 };
 
 type opennebula_remoteconf_ceph = {
@@ -187,12 +203,31 @@ type opennebula_remoteconf_ceph = {
     "qemu_img_convert_args" ? string
 };
 
+@documentation{
+Type that sets the OpenNebula
+oned.conf file
+}
 type opennebula_oned = {
     "db" : opennebula_db
-    "default_device_prefix" ? string = 'hd'
+    "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
     "onegate_endpoint" ? string
+    "manager_timer" ? long
     "monitoring_interval" : long = 60
     "monitoring_threads" : long = 50
+    "host_per_interval" ? long
+    "host_monitoring_expiration_time" ? long
+    "vm_individual_monitoring" ? boolean
+    "vm_per_interval" ? long
+    "vm_monitoring_expiration_time" ? long
+    "vm_submit_on_hold" ? boolean
+    "max_conn" ? long
+    "max_conn_backlog" ? long
+    "keepalive_timeout" ? long
+    "keepalive_max_conn" ? long
+    "timeout" ? long
+    "rpc_log" ? boolean
+    "message_size" ? long
+    "log_call_format" ? string
     "scripts_remote_dir" : directory = '/var/tmp/one'
     "log" : opennebula_log
     "federation" : opennebula_federation
@@ -200,9 +235,11 @@ type opennebula_oned = {
     "vnc_base_port" : long = 5900
     "network_size" : long = 254
     "mac_prefix" : string = '02:00'
+    "datastore_location" ? directory = '/var/lib/one/datastores'
+    "datastore_base_path" ? directory = '/var/lib/one/datastores'
     "datastore_capacity_check" : boolean = true
-    "default_image_type" : string = 'OS'
-    "default_cdrom_device_prefix" : string = 'hd'
+    "default_image_type" : string = 'OS' with match (SELF, '^(OS|CDROM|DATABLOCK)$')
+    "default_cdrom_device_prefix" : string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
     "session_expiration_time" : long = 900
     "default_umask" : long = 177
     "im_mad" : opennebula_im_mad
@@ -211,6 +248,7 @@ type opennebula_oned = {
     "datastore_mad" : opennebula_datastore_mad
     "hm_mad" : opennebula_hm_mad
     "auth_mad" : opennebula_auth_mad
+    "default_cost" : opennebula_default_cost
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
         dict(), 
         dict("name", "lvm", "clone_target", "SELF"), 
@@ -221,11 +259,64 @@ type opennebula_oned = {
         dict("name", "vmfs"), 
         dict("name", "ceph", "clone_target", "SELF")
     )
-    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE")
+    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE", 
+                                           "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE", 
+                                           "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC", 
+                                           "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC", 
+                                           "CPU_COST", "MEMORY_COST")
     "image_restricted_attr" : string = 'SOURCE'
     "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", 
                                                "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")
     "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
+};
+
+
+type opennebula_instance_types = {
+    "name" : string
+    "cpu" : long(1..)
+    "vcpu" : long(1..)
+    "memory" : long
+    "description" ? string
+} = dict();
+
+
+@documentation{
+Type that sets the OpenNebula
+sunstone_server.conf file
+}
+type opennebula_sunstone = {
+    "tmpdir" : directory = '/var/tmp'
+    "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
+    "host" : type_ipv4 = '127.0.0.1'
+    "port" : long = 9869
+    "sessions" : string = 'memory' with match (SELF, '^(memory|memcache)$')
+    "memcache_host" : string = 'localhost'
+    "memcache_port" : long = 11211
+    "memcache_namespace" : string = 'opennebula.sunstone'
+    "debug_level" : long (0..3) = 3
+    "auth" : string = 'opennebula' with match (SELF, '^(sunstone|opennebula|x509)$')
+    "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
+    "encode_user_password" ? boolean
+    "vnc_proxy_port" : long = 29876
+    "vnc_proxy_support_wss" : string = 'no' with match (SELF, '^(no|yes|only)$')
+    "vnc_proxy_cert" : string = ''
+    "vnc_proxy_key" : string = ''
+    "vnc_proxy_ipv6" : boolean = false
+    "lang" : string = 'en_US'
+    "table_order" : string = 'desc' with match (SELF, '^(desc|asc)$')
+    "marketplace_username" ? string
+    "marketplace_password" ? string
+    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
+    "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
+    "instance_types" : opennebula_instance_types[] = list (
+        dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128, "description", "Very small instance for testing purposes"),
+        dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512, "description", "Small instance for testing multi-core applications"),
+        dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024, "description", "General purpose instance for low-load servers"),
+        dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048, "description", "General purpose instance for medium-load servers"),
+        dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096, "description", "General purpose instance for servers"),
+        dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192, "description", "General purpose instance for high-load servers"),
+    )
+    "routes" : string[] = list("oneflow", "vcenter", "support")
 };
 
 @documentation{ 
@@ -258,12 +349,13 @@ datastores, vnets, hosts names, etc
 type component_opennebula = {
     include structure_component
     'datastores'    : opennebula_datastore[1..]
-    'users'         : opennebula_user[]
+    'users'         ? opennebula_user[]
     'vnets'         : opennebula_vnet[]
     'hosts'         : string[]
     'rpc'           : opennebula_rpc
     'untouchables'  : opennebula_untouchables
     'oned'          : opennebula_oned
+    'sunstone'      ? opennebula_sunstone
     'ssh_multiplex' : boolean = true
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')

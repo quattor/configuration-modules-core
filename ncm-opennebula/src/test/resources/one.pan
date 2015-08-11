@@ -25,6 +25,10 @@ prefix "/software/components/opennebula/oned";
 "default_device_prefix" = "vd";
 "onegate_endpoint" = "http://hyp004.cubone.os:5030";
 
+prefix "/software/components/opennebula/sunstone";
+"host" = "0.0.0.0";
+"tmpdir" = "/tmp";
+
 prefix "/software/components/opennebula";
 
 "vnets" = list(
@@ -71,6 +75,13 @@ prefix "/software/components/opennebula";
         "pool_name", "one",
         "type", "IMAGE_DS"
     ),
+    dict(
+        "name", "nfs",
+        "datastore_capacity_check", true,
+        "ds_mad", "fs",
+        "tm_mad", "shared",
+        "type", "IMAGE_DS",
+    ),
 );
 
 "users" = list(
@@ -84,6 +95,10 @@ prefix "/software/components/opennebula";
         "user", "stdweird",
         "password", "another_fancy_pass",
         "quattor", 1
+    ),
+    dict(
+        "user", "serveradmin",
+        "password", "yet_another_fancy_pass",
     ),
 );
 

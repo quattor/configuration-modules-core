@@ -20,6 +20,11 @@ use Readonly;
 
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
+Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
+                                                 onegate_auth occi_auth ec2_auth);
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
@@ -52,14 +57,14 @@ sub make_one
 # Detect and process ONE templates
 sub process_template
 {
-    my ($self, $config, $type_name) = @_;
+    my ($self, $config, $type_name, $secret) = @_;
     
     my $type_rel = "$type_name.tt";
     my $tpl = CAF::TextRender->new(
         $type_name,
         { $type_name => $config },
         relpath => 'opennebula',
-        log => $self,
+        log => $secret ? undef : $self,
         );
     if (!$tpl) {
         $self->error("TT processing of $type_rel failed: $tpl->{fail}");
@@ -301,27 +306,35 @@ sub enable_node
 }
 
 # By default OpenNebula sets a random pass
-# for oneadmin user. This function sets the
-# new pass
-sub change_oneadmin_passwd
+# for internal users. This function sets the
+# new passwords
+sub change_opennebula_passwd
 {
-    my ($self, $passwd) = @_;
+    my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
 
-    $cmd = [$passwd];
+    $cmd = [$user, $passwd];
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
-        $self->error("Quattor unable to modify current oneadmin passwd.");
+        $self->error("Quattor unable to modify current $user passwd.");
+        return;
     } else {
-        $self->info("Oneadmin passwd was set correctly.");
+        $self->info("$user passwd was set correctly.");
     }
+    $self->set_one_auth_file($user, $passwd);
+    return 1;
 }
 
 # Restart one service
 # after any conf change
 sub restart_opennebula_service {
-    my ($self) = @_;
-    my $srv = CAF::Service->new(['opennebula'], log => $self);
+    my ($self, $service) = @_;
+    my $srv;
+    if ($service eq "oned") {
+        $srv = CAF::Service->new(['opennebula'], log => $self);
+    } elsif ($service eq "sunstone") {
+        $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
+    }
     $srv->restart();
 }
 
@@ -467,6 +480,9 @@ sub manage_users
 
     foreach my $user (@$users) {
         if ($user->{user}) {
+            if ($user->{user} eq "serveradmin" && exists $user->{password}) {
+                $self->change_opennebula_passwd($user->{user}, $user->{password});
+            }
             push(@userlist, $user->{user});
         }
     }
@@ -515,39 +531,83 @@ sub manage_users
     }
 }
 
-# Set /etc/one/oned.conf file 
-# used by OpenNebula daemon
-# if oned.cond is changed 
+# Set opennebula conf files
+# used by OpenNebula daemons
+# if conf file is changed 
 # one service must be restarted afterwards
-sub set_oned_conf
+sub set_one_service_conf
 {
-    my ($self, $data) = @_;
+    my ($self, $data, $service, $config_file) = @_;
     my %opts;
-    my $oned_templ = $self->process_template($data, "oned");
-    %opts = $self->set_oned_file_opts();
+    my $oned_templ = $self->process_template($data, $service);
+    %opts = $self->set_file_opts();
     return if ! %opts;
-    my $fh = $oned_templ->filewriter($ONED_CONF_FILE, %opts);
+    my $fh = $oned_templ->filewriter($config_file, %opts);
+    my $status = $self->is_conf_file_modified($fh, $config_file, $service, $oned_templ);
+
+    return $status;
+}
+
+# Checks conf file status
+sub is_conf_file_modified
+{
+    my ($self, $fh, $file, $service, $data) = @_;
 
     if (!defined($fh)) {
-        $self->error("Failed to render $ONED_CONF_FILE (".$oned_templ->{fail}."). Skipping");
+        if (defined($service) && defined($data)) {
+            $self->error("Failed to render $service file: $file (".$data->{fail}."). Skipping");
+        } else {
+            $self->error("Problem rendering $file");
+        }
         $fh->cancel();
         $fh->close();
         return;
     }
-    
     if ($fh->close()) {
-        $self->restart_opennebula_service();
+        $self->restart_opennebula_service($service) if (defined($service));
     }
     return 1;
 }
 
-sub set_oned_file_opts
+# Set auth files
+# used by oneadmin client tools
+sub set_one_auth_file
 {
-    my ($self) = @_;
+    my ($self, $user, $data) = @_;
+    my ($fh, $auth_file, %opts);
+
+    my $passwd = {$user => $data};
+    my $trd = $self->process_template($passwd, "one_auth", 1);
+    %opts = $self->set_file_opts(1);
+    return if ! %opts;
+
+    if ($user eq "oneadmin") {
+        $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
+        $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
+        $self->is_conf_file_modified($fh, $ONEADMIN_AUTH_FILE);
+    } elsif ($user eq "serveradmin") {
+        foreach my $service (@SERVERADMIN_AUTH_FILE) {
+            $auth_file = $SERVERADMIN_AUTH_DIR . $service;
+            $self->verbose("Writing $user auth file: $auth_file");
+            $fh = $trd->filewriter($auth_file, %opts);
+            $self->is_conf_file_modified($fh, $auth_file);
+        }
+    } else {
+        $self->error("Unsupported user: $user");
+    }
+}
+
+# Set filewriter options
+# do not show logs if it contains passwds
+sub set_file_opts
+{
+    my ($self, $secret) = @_;
     my %opts;
     if ($ONEADMINUSR and $ONEADMINGRP) {
-        %opts = (log => $self,
-                 mode => 0600,
+        if (!$secret) {
+            %opts = (log => $self);
+        }
+        %opts = (mode => 0600,
                  backup => ".quattor.backup",
                  owner => $ONEADMINUSR,
                  group => $ONEADMINGRP);
@@ -600,14 +660,19 @@ sub Configure
     # hypervisor type
     my $hypervisor = $tree->{host_hyp};
 
-    # We must change oneadmin pass first
-    if (exists $tree->{rpc}->{password}) {
-        $self->change_oneadmin_passwd($tree->{rpc}->{password});
+    # Set opennebula service
+    if (exists $tree->{oned}) {
+        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
     }
 
-    # Set oned.conf file
-    if (exists $tree->{oned}) {
-        $self->set_oned_conf($tree->{oned});
+    # Set sunstone service
+    if (exists $tree->{sunstone}) {
+        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE);
+    }
+
+    # Change oneadmin pass
+    if (exists $tree->{rpc}->{password}) {
+        return 0 if !$self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
     }
 
     # Configure ONE RPC connector
@@ -622,7 +687,7 @@ sub Configure
 
     $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
-    # For the moment only Ceph datastores are configured
+    # For the moment only Ceph and shared datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
     # Update system datastore TM_MAD 
     if ($tm_system_ds) {
