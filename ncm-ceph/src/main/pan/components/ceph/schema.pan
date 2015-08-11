@@ -164,48 +164,37 @@ function is_bucket = {
 
 @documentation{ ceph daemon config parameters }
 type ceph_daemon_config = { 
-    'osd_journal_size'  ? long(0..) 
-    'osd_objectstore'   ? string
 };
 
 @documentation{ type for a generic ceph daemon }
 type ceph_daemon = {
     'up'    : boolean = true
-    'config'? ceph_daemon_config
+};
+
+@documentation{ ceph monitor config }
+type ceph_mon_config = {
+    include ceph_daemon_config
 };
 
 @documentation{ ceph monitor-specific type }
 type ceph_monitor = {
     include ceph_daemon
     'fqdn'  : type_fqdn
+    'config' ? ceph_mon_config
 };
 
-@documentation{ 
-ceph osd-specific type 
-The key of the ceph_osd should be the path to the mounted disk. 
-This can be an absolute path or a relative one to /var/lib/ceph/osd/
-journal_path should be the path to a journal file
-This can be an absolute path or a relative one to /var/lib/ceph/log/
-With labels osds can be grouped. This should also be defined in root. 
-}
-type ceph_osd = {
-    include ceph_daemon
-    'in'            ? boolean = true
-    'journal_path'  ? string
-    'crush_weight'  : double(0..) = 1.0
-    'labels'        ? string[1..]
-};
+include 'components/ceph/schema-osd.pan';
 
-@documentation{ ceph osdhost-specific type }
-type ceph_osd_host = {
-    'fqdn'          : type_fqdn
-    'osds'          : ceph_osd {}
+@documentation{ ceph mds config }
+type ceph_mds_config = {
+    include ceph_daemon_config
 };
 
 @documentation{ ceph mds-specific type }
 type ceph_mds = {
      include ceph_daemon
     'fqdn'  : type_fqdn
+    'config' ? ceph_mds_config
 };
 
 @documentation{ ceph cluster-wide config parameters }
@@ -232,11 +221,26 @@ type ceph_cluster_config = {
     'public_network'            : type_network_name
 };
 
+@documentation{ ceph rados gateway config }
+type ceph_radosgw_config = {
+    include ceph_daemon_config
+    'host'      : string
+    'keyring'   : string
+    'rgw_socket_path' : string = ''
+    'log_file'  : string = '/var/log/radosgw/client.radosgw.gateway.log'
+    'rgw_frontends' : string = "\"civetweb port=8000\""
+    'rgw_print_continue' : boolean = false
+    'rgw_dns_name' : type_fqdn
+    'rgw_enable_ops_log' : boolean = true
+    'rgw_enable_usage_log' : boolean = true
+    'user' ? string
+};
+
 @documentation{ ceph rados gateway type 
 http://ceph.com/docs/master/radosgw/ 
 }
 type ceph_radosgw = {
-    'config' ? nlist
+    'config' ? ceph_radosgw_config
 };
 
 @documentation{ ceph rados gateway host }
