@@ -120,7 +120,7 @@ sub crush_merge {
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){ 
                         if ($osds->{$osd}->{crush_ignore}){
-                            $self->warn("Osd $osd on $name was set to ignore");
+                            $self->warn("OSD $osd on $name was set to ignore");
                             next;
                         }
                         my $osdname = $self->get_name_from_mapping($gvalues->{mapping},

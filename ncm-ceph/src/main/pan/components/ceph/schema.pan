@@ -12,28 +12,27 @@ include { 'quattor/schema' };
     arg = ceph_component type
 }
 function valid_osd_names = {
+    if(!exists(ARGV[0]['clusters'])) { return(true); };
     names = list();
-    if(exists(ARGV[0]['clusters'])) {
         
-        clusters = ARGV[0]['clusters'];
-        foreach (name;cluster;clusters) {
-            append(names, name);
-        };
+    clusters = ARGV[0]['clusters'];
+    foreach (name;cluster;clusters) {
+        append(names, name);
+    };
 
-        foreach (name;cluster;clusters) {
-            foreach (host;hvals;clusters[name]['osdhosts']) {
-                foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
-                    foreach (idex;clname;names) {
-                        if (match(osd,clname + '-\d+$')){
-                            error("Osd path: " + osd + " is a ceph-reserved path!"); 
-                            return(false);
-                        };
+    foreach (name;cluster;clusters) {
+        foreach (host;hvals;clusters[name]['osdhosts']) {
+            foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
+                foreach (idex;clname;names) {
+                    if (match(osd,clname + '-\d+$')){
+                        error("Osd path: " + osd + " is a ceph-reserved path!"); 
+                        return(false);
                     };
                 };
             };
         };
-   };
-   return(true);
+    };
+    return(true);
 };
 
 @documentation{ 
