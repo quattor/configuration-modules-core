@@ -1,6 +1,0 @@
-Tests for gpfs config
----
-multiline
-metaconfigservice=/etc/ganesha/ganesha.nfsd.conf
----
-^GPFS {

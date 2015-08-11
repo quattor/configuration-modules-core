@@ -1,0 +1,15 @@
+[% FOREACH section IN main %]
+[%      section.key %] {
+[%      FOREACH pair IN section.value.pairs -%]
+[%-         INCLUDE "metaconfig/ganesha/2.2/attribute.tt" FILTER indent %]
+[%      END -%]
+}
+[% END %]
+
+[%- FOREACH export IN exports %]
+EXPORT {
+[%      FOREACH pair IN export.pairs -%]
+[%-         INCLUDE "metaconfig/ganesha/2.2/attribute.tt" FILTER indent %]
+[%      END -%]
+}
+[% END %]

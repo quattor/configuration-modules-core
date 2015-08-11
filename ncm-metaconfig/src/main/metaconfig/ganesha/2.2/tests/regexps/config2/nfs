@@ -1,0 +1,10 @@
+Tests for nfs config
+---
+/etc/ganesha/ganesha.conf
+---
+^NFS_CORE_PARAM \{$
+^\s{4}Clustered = TRUE;$
+^\s{4}MNT_Port = 32767;$
+^\s{4}NLM_Port = 32769;$
+^\s{4}Nb_Worker = 512;$
+^\}$
