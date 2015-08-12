@@ -25,6 +25,7 @@ prefix "/software/components/authconfig/method/sssd";
 "nss/filter_groups" = "root";
 "nss/filter_users" = "root";
 "nss/filter_users_in_groups" = true;
+"nss/memcache_timeout" = 300;
 "nssonly" = false;
 "pam/debug_level" = 528;
 "pam/get_domains_timeout" = 60;
