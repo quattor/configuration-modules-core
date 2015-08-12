@@ -10,13 +10,34 @@ include 'pan/types';
 
 type directory = string with match(SELF,'[^/]+/?$');
 
+type opennebula_mysql_db = {
+    "server" ? string
+    "port" ? long(0..)
+    "user" ? string
+    "passwd" ? string
+    "db_name" ? string
+};
+
 type opennebula_db = {
-    "backend" : string 
-    "server" : string
-    "port" : long(0..)
-    "user" : string
-    "passwd" : string
-    "db_name" : string
+    include opennebula_mysql_db
+    "backend" : string with match(SELF, "^(mysql|sqlite)$")
+} with is_consistent_database(SELF);
+
+@documentation{ 
+check if a specific type of database has the right attributes
+}
+function is_consistent_database = {
+    db = ARGV[0];
+    if (db['backend'] == 'mysql') {
+        req = list('server', 'port', 'user', 'passwd', 'db_name');
+        foreach(idx; attr; req) {
+            if(!exists(db[attr])) {
+                error(format("Invalid mysql db! Expected '%s' ", attr));
+                return(false);
+            };
+        };
+    };
+    return(true);
 };
 
 type opennebula_log = {
