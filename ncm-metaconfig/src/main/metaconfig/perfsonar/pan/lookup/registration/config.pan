@@ -6,7 +6,7 @@ bind "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registratio
 
 prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registration_daemon/etc/ls_registration_daemon.conf}";
 
-"module" = "general";
+"module" = "perfsonar/general";
 "owner" = "root";
 "group" = "root";
 "daemons/ls_registration_daemon" = "restart";
