@@ -171,10 +171,10 @@ type ceph_daemon = {
     'up'    : boolean = true
 };
 
-include 'components/ceph/schema-mon.pan';
-include 'components/ceph/schema-osd.pan';
-include 'components/ceph/schema-mds.pan';
-include 'components/ceph/schema-rgw.pan';
+include 'components/ceph/schema-mon';
+include 'components/ceph/schema-osd';
+include 'components/ceph/schema-mds';
+include 'components/ceph/schema-rgw';
 
 @documentation{ ceph cluster-wide config parameters }
 type ceph_cluster_config = {
