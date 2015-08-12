@@ -138,7 +138,15 @@ sub add_osd {
     $self->debug(3, "Configuring new osd $osdkey on $hostname");
     if (!$self->prep_osd($osd)) {
         $self->error("osd $osdkey on $hostname could not be prepared. Osd directory not empty?"); 
-        return 0;
+        if ($structures->{ok_osd_failures}){
+            $structures->{ok_osd_failures}--;
+            $osd->{crush_ignore} = 1;
+            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname. ", 
+                "$structures->{ok_osd_failures} more failures accepted");
+            return 1;
+        } else {
+            return 0;
+        }
     }
     $structures->{deployd}->{$hostname}->{osds}->{$osdkey} = $osd;
     return 1;
@@ -299,6 +307,7 @@ sub compare_host {
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
         return 0; 
     } else {
+        $structures->{ok_osd_failures} = $structures->{gvalues}->{max_add_osd_failures_per_host};
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
         my @uniqs = qw(mon mds);
         foreach my $dtype (@uniqs) {
@@ -336,6 +345,7 @@ sub compare_host {
             }
         }
         $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
+        delete $structures->{ok_osd_failures};
     }
     return 1;
 }
@@ -355,8 +365,8 @@ sub delete_host {
     
 # Compare per host - add, delete, modify 
 sub compare_conf {
-    my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
-
+    my ($self, $quat_conf, $ceph_conf_orig, $mapping, $gvalues) = @_;
+    my $ceph_conf =  dclone($ceph_conf_orig) if defined($ceph_conf_orig);
     my $structures = {
         configs  => {},
         deployd  => {},

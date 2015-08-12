@@ -89,10 +89,11 @@ sub inject_realtime {
         if (!($param ~~ @NONINJECT)) { # Requires Perl > 5.10 !
             @cmd = ('tell',"*.$host",'injectargs','--');
             my $keyvalue = "--$param=$changes->{$param}";
-            $self->info("injecting $keyvalue realtime on $host");
-            $self->run_ceph_command([@cmd, $keyvalue]) or return 0;
+            my $inj = $self->run_ceph_command([@cmd, $keyvalue], 1);
+            $self->warn("global setting $keyvalue changed on host $host. Affected daemons should be restarted, ",
+                "or the setting needs to be injected: ", $inj);
         } else {
-            $self->warn("Non-injectable value $param changed");
+            $self->warn("Non-injectable setting $param changed, affected daemons should be restarted");
         }
     }
     return 1;
@@ -119,11 +120,11 @@ sub config_hash {
                     $host->{config} = $cfg;    
                 } elsif ($name =~ m/^osd\.(\S+)/) {
                     my $loc = $mapping->{get_loc}->{$1};
-                    if (!$loc) {
-                        $self->error("Could not find location of $name on host $hostname");
-                        return ;
+                    if ($loc) {
+                        $host->{osds}->{$loc}->{config} = $cfg;
+                    } else {
+                        $self->warn("Could not find location of $name on host $hostname, removing from configfile");
                     }
-                    $host->{osds}->{$loc}->{config} = $cfg;
                 } elsif ($name =~ m{^mon(\.\S+)?}) { # Only one monitor per host..
                     $host->{mon}->{config} = $cfg;
                 } elsif ($name =~ m{^mds(\.\S+)?}) { # Only one mds per host..

@@ -252,7 +252,8 @@ sub Configure {
             hostname => $hostname,
             is_deploy => $is_deploy,
             cephusr => $cephusr,
-            key_accept => $t->{key_accept} 
+            key_accept => $t->{key_accept}, 
+            max_add_osd_failures_per_host => $t->{max_add_osd_failures_per_host},
         }; 
         if ($is_deploy) {
             $self->do_configure($cluster, $gvalues) or return 0;

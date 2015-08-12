@@ -63,6 +63,7 @@ prefix '/software/components/ceph/clusters';
 );         
 
 '/software/components/ceph/ssh_multiplex' = true;
+'/software/components/ceph/max_add_osd_failures_per_host' = 1;
 '/system/network/hostname' = 'ceph003';
 '/system/network/domainname' = 'cubone.os';
 

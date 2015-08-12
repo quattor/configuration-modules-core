@@ -12,7 +12,9 @@ include { 'quattor/schema' };
     arg = ceph_component type
 }
 function valid_osd_names = {
+    if(!exists(ARGV[0]['clusters'])) { return(true); };
     names = list();
+        
     clusters = ARGV[0]['clusters'];
     foreach (name;cluster;clusters) {
         append(names, name);
@@ -30,7 +32,7 @@ function valid_osd_names = {
             };
         };
     };
-   return(true);
+    return(true);
 };
 
 @documentation{ 
@@ -318,14 +320,24 @@ type ceph_cluster = {
     'crushmap'                  ? ceph_crushmap
 };
 
+@documentation{
+Decentralized config feature:
+For use with dedicated pan code that builds the cluster info from remote templates.
+}
+type ceph_localdaemons = {
+    'osds'  : ceph_osd {}
+};
+
 @documentation{ ceph clusters }
 type ${project.artifactId}_component = {
     include structure_component
-    'clusters'         : ceph_cluster {}
+    'clusters'         ? ceph_cluster {}
+    'localdaemons'     ? ceph_localdaemons # validation, but not used in component code
     'ceph_version'     ? string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?')
     'deploy_version'   ? string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+')
     'key_accept'       ? string with match(SELF, '^(first|always)$') # explicit accept host keys
     'ssh_multiplex'    : boolean = true
+    'max_add_osd_failures_per_host' : long(0..) = 0
 } with valid_osd_names(SELF);
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

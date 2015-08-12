@@ -119,6 +119,10 @@ sub crush_merge {
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){ 
+                        if ($osds->{$osd}->{crush_ignore}){
+                            $self->warn("OSD $osd on $name was set to ignore");
+                            next;
+                        }
                         my $osdname = $self->get_name_from_mapping($gvalues->{mapping},
                             $name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
@@ -164,12 +168,14 @@ sub labelize_bucket {
         $lhash{buckets} = [];
         foreach my $bucket (@{$tbucket->{buckets}}) {
             if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
-                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label));
+                my $tmpb = $self->labelize_bucket($bucket, $label);
+                push(@{$lhash{buckets}}, $tmpb) if $tmpb;
             }        
         }
         if (!@{$lhash{buckets}}) {
             # check/eliminate empty buckets
-            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
+            $self->warn("Bucket $lhash{name} has no child buckets after labeling, deleting bucket");
+            return;
         }
     }
     delete $lhash{labels}; # Not needed anymore
