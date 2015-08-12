@@ -171,31 +171,10 @@ type ceph_daemon = {
     'up'    : boolean = true
 };
 
-@documentation{ ceph monitor config }
-type ceph_mon_config = {
-    include ceph_daemon_config
-};
-
-@documentation{ ceph monitor-specific type }
-type ceph_monitor = {
-    include ceph_daemon
-    'fqdn'  : type_fqdn
-    'config' ? ceph_mon_config
-};
-
+include 'components/ceph/schema-mon.pan';
 include 'components/ceph/schema-osd.pan';
-
-@documentation{ ceph mds config }
-type ceph_mds_config = {
-    include ceph_daemon_config
-};
-
-@documentation{ ceph mds-specific type }
-type ceph_mds = {
-     include ceph_daemon
-    'fqdn'  : type_fqdn
-    'config' ? ceph_mds_config
-};
+include 'components/ceph/schema-mds.pan';
+include 'components/ceph/schema-rgw.pan';
 
 @documentation{ ceph cluster-wide config parameters }
 type ceph_cluster_config = {
@@ -219,34 +198,6 @@ type ceph_cluster_config = {
     'osd_pool_default_pgp_num'  ? long(0..)
     'osd_pool_default_size'     : long(0..) = 3
     'public_network'            : type_network_name
-};
-
-@documentation{ ceph rados gateway config }
-type ceph_radosgw_config = {
-    include ceph_daemon_config
-    'host'      : string
-    'keyring'   : string
-    'rgw_socket_path' : string = ''
-    'log_file'  : string = '/var/log/radosgw/client.radosgw.gateway.log'
-    'rgw_frontends' : string = "\"civetweb port=8000\""
-    'rgw_print_continue' : boolean = false
-    'rgw_dns_name' : type_fqdn
-    'rgw_enable_ops_log' : boolean = true
-    'rgw_enable_usage_log' : boolean = true
-    'user' ? string
-};
-
-@documentation{ ceph rados gateway type 
-http://ceph.com/docs/master/radosgw/ 
-}
-type ceph_radosgw = {
-    'config' ? ceph_radosgw_config
-};
-
-@documentation{ ceph rados gateway host }
-type ceph_radosgwh = {
-    'fqdn'      : type_fqdn
-    'gateways'  : ceph_radosgw{}
 };
 
 @documentation{ 
