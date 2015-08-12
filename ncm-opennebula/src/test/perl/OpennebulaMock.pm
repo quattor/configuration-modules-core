@@ -107,7 +107,7 @@ my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
     my $trd = &$init(@_);
-    $trd->{includepath} = getcwd()."/target/share/templates/quattor";
+    $trd->{includepath} = [getcwd()."/target/share/templates/quattor"];
     return $trd;
 });
 

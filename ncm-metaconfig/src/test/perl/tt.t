@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::Quattor;
+use Test::Quattor::TextRender::Base;
 use NCM::Component::metaconfig;
 use CAF::Object;
 use Cwd;
@@ -19,7 +20,7 @@ my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {
     my $init = $mock->original("new");
     my $trd = &$init(@_);
-    $trd->{includepath} = getcwd()."/src/test/resources";
+    $trd->{includepath} = [getcwd()."/src/test/resources"];
     $trd->{relpath} = 'rendertest';
     return $trd;
 });

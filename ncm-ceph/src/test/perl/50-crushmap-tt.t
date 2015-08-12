@@ -40,7 +40,7 @@ my $trd = CAF::TextRender->new(
     'crush', 
     $crush, 
     relpath => 'ceph', 
-    includepath => getcwd() . "/target/share/templates/quattor" 
+    includepath => [getcwd() . "/target/share/templates/quattor"] 
 );
 ok($trd, "Template successfully rendered");
 my $str = $trd->get_text;
