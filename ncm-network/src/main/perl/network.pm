@@ -214,7 +214,7 @@ sub Configure
     opendir(DIR, $dir_pref);
     # here's the reason why it only verifies eth, bond, bridge, usb and vlan
     # devices. add regexp at will
-    my $dev_regexp='-((eth|seth|em|bond|br|vlan|usb|ib|p\d+p|en(o|(p\d+)?s))\d+(\.\d+)?|enx[[:xdigit:]]{12})';
+    my $dev_regexp='-((eth|seth|em|bond|br|vlan|usb|ib|p\d+p|en(o|(p\d+)?s))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
     # $1 is the device name
     foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
         my $msg;
