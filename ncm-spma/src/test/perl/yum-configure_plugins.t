@@ -23,7 +23,7 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 =cut
 
 $changes = $cmp->configure_plugins();
-is($changes, 2, "2 modified files when no plugins are passed");
+is($changes, 3, "3 modified files when no plugins are passed");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
@@ -36,6 +36,12 @@ isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/fastestmirror.conf is a CA
 $text = "$fh";
 $text =~ s/\s//g;
 is($text, '[main]enabled=0', "Expected text for default fastestmirror disabled");
+
+$fh = get_file('/etc/yum/pluginconf.d/priorities.conf');
+isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/priorities.conf is a CAF::FileWriter');
+$text = "$fh";
+$text =~ s/\s//g;
+is($text, '[main]enabled=1', "Expected text for default priorities enabled");
 
 
 =pod
@@ -51,9 +57,12 @@ $changes = $cmp->configure_plugins({
     },
     fastestmirror => {
         enabled => 1,
+    },
+    priorities => {
+        enabled => 0,
     }
 });
-is($changes, 2, "2 modified files with 2 plugins passed");
+is($changes, 3, "3 modified files with 2 plugins passed");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
@@ -69,6 +78,11 @@ $text =~ s/\s//g;
 is($text, '[main]enabled=1',
    "Expected text for fastestmirror enabled");
 
+$fh = get_file('/etc/yum/pluginconf.d/priorities.conf');
+isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/priorities.conf is a CAF::FileWriter');
+$text = "$fh";
+$text =~ s/\s//g;
+is($text, '[main]enabled=0', "Expected text for priorities disabled");
 
 
 done_testing();

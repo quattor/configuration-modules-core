@@ -800,6 +800,12 @@ sub configure_plugins
         $plugins->{fastestmirror}->{enabled} = 0;
     }
 
+    # priorities plugin: enable by default
+    if (! $plugins->{priorities}) {
+        $self->verbose("yum plugin priorities is not configured. It will be enabled.");
+        $plugins->{priorities}->{enabled} = 1;
+    }
+
     my $changes = 0;
     foreach my $plugin (sort keys %$plugins) {
         $self->verbose("Going to configure plugin $plugin.");
