@@ -214,9 +214,10 @@ sub unescape_keys {
 sub checkfile {
     my ($self, $file, $content) = @_;
  
-    my %opts  = ( log => $self);
+    my %opts = ( log => $self);
     my $fh = CAF::FileWriter->new($file, log => $self);
-    print  $fh $content;
+    print $fh $content;
+    $fh->close();
 
     return 0;
 }
