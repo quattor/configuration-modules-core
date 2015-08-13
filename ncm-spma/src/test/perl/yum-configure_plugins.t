@@ -7,6 +7,9 @@ use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::Quattor::TextRender::Base;
 
+use Readonly;
+Readonly my $YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
+
 $CAF::Object::NoAction = 1;
 set_caf_file_close_diff(1);
 
@@ -22,7 +25,7 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 
 =cut
 
-$changes = $cmp->configure_plugins();
+$changes = $cmp->configure_plugins($YUM_PLUGIN_DIR);
 is($changes, 3, "3 modified files when no plugins are passed");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
@@ -50,7 +53,7 @@ is($text, '[main]enabled=1', "Expected text for default priorities enabled");
 
 =cut
 
-$changes = $cmp->configure_plugins({
+$changes = $cmp->configure_plugins($YUM_PLUGIN_DIR, {
     versionlock => {
         enabled => 0,
         locklist => '/somewhere/else',

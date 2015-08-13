@@ -41,8 +41,8 @@ Readonly my $GENERATE_REPOS => 4;
 
 $SIG{__DIE__} = 'DEFAULT';
 
-
-my @funcs = grep(m{^[a-z]} && $_ ne 'unescape',
+# Don't set_true() the unescape and noaction_prefix methods
+my @funcs = grep(m{^[a-z]} && $_ !~ m/^(unescape|noaction_prefix)$/,
 		 @{Class::Inspector->functions("NCM::Component::spma::yum")});
 
 my $cmp = NCM::Component::spma::yum->new("spma");
@@ -50,6 +50,8 @@ my $mock = Test::MockObject::Extends->new($cmp);
 
 $mock->set_true(@funcs);
 
+# This does noet trigger the component NoAction,
+# so e.g. noaction_prefix will be triggered as during a normal run.
 $CAF::Object::NoAction = 1;
 
 

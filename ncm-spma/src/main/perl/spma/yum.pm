@@ -18,8 +18,9 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use LC::Exception qw(SUCCESS);
 use Set::Scalar;
-use File::Path qw(mkpath);
+use File::Path qw(mkpath rmtree);
 use Text::Glob qw(match_glob);
+use File::Temp qw(tempdir);
 
 use constant REPOS_DIR => "/etc/yum.repos.d";
 use constant REPOS_TEMPLATE => "repository";
@@ -49,6 +50,8 @@ use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
 use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
+
+use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 our $NoActionSupported = 1;
 
@@ -754,6 +757,43 @@ sub update_pkgs_retry
 };
 
 
+# Return the prefix to use for all configuration, plugin and repository paths.
+# When noaction is false, no prefix is used and empty string is returned.
+# If noaction is true, a temporary directory is created and the path returned.
+# In case of an error, an error is logged and undef is returned.
+sub noaction_prefix
+{
+    my ($self, $noaction) = @_;
+
+    my $tmppath;
+    if ($noaction) {
+        # Create temporary directory
+        $tmppath = tempdir(NOACTION_TEMPDIR_TEMPLATE);
+
+        # Set strict permissions
+        if (! chmod(0700, $tmppath)) {
+            $self->error("Failed to chmod 0700 tmp yum dir $tmppath: $!");
+            return;
+        }
+
+        # Make sure the returned path ends with a /
+        $tmppath .= "/" if ($tmppath !~ m/\/$/);
+
+        # TODO: Copy yum.conf, plugindirs and repodirs
+
+
+        $self->verbose("Created noaction prefix $tmppath.");
+
+        return $tmppath;
+    } else {
+        # Do nothing, return empty string is no noaction
+        $self->verbose("Nothing to do for noaction prefix.");
+        $tmppath = '' ;
+    }
+
+    return $tmppath;
+}
+
 # Set up a few things about Yum.conf. Somewhere in the future this may
 # have its own schema, or be delegated to some other component. To be
 # seen.
@@ -774,7 +814,7 @@ sub configure_yum
 # Configure the yum plugins
 sub configure_plugins
 {
-    my ($self, $plugins) = @_;
+    my ($self, $plugindir, $plugins) = @_;
 
     # Sanity checks
     # versionlock plugin: enable by default
@@ -816,7 +856,7 @@ sub configure_plugins
             log => $self);
 
         # returns undef on render error, the error is logged
-        my $fh = $trd->filewriter(YUM_PLUGIN_DIR . "/$plugin.conf");
+        my $fh = $trd->filewriter("$plugindir/$plugin.conf");
 
         if(defined $fh) {
             $changes += $fh->close() || 0; # handle undef
@@ -836,38 +876,54 @@ sub Configure
     local $ENV{LC_ALL} = 'C';
 
     my $purge_caches;
-    my $repos = $config->getElement(REPOS_TREE)->getTree();
+
     my $t = $config->getElement(CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
+
+    my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $pkgs = $config->getElement(PKGS_TREE)->getTree();
-    my $groups;
-    if ($config->elementExists(GROUPS_TREE)) {
-        $groups = $config->getElement(GROUPS_TREE)->getTree();
-    } else {
-        $groups = {};
-    }
+    my $groups = $config->elementExists(GROUPS_TREE) ?
+        $config->getElement(GROUPS_TREE)->getTree() : {};
+
+    # check if a temp location is required for NoAction support.
+    my $prefix = $self->noaction_prefix($NoAction);
+    return 0 if (! defined($prefix));
 
     # TODO: is this fatal or not?
     # TODO: should this also influence purge_caches?
     #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
     # always run it, even if no plugins configured (e.g. to disable fastest mirror)
-    $self->configure_plugins($t->{plugins});
+    $self->configure_plugins($prefix.YUM_PLUGIN_DIR, $t->{plugins});
 
-    $self->initialize_repos_dir(REPOS_DIR) or return 0;
-    $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
-    $purge_caches = $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE,
+    $self->initialize_repos_dir($prefix.REPOS_DIR) or return 0;
+    $self->cleanup_old_repos($prefix.REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
+    $purge_caches = $self->generate_repos($prefix.REPOS_DIR, $repos, REPOS_TEMPLATE,
                                           $t->{proxyhost}, $t->{proxytype},
                                           $t->{proxyport});
     defined($purge_caches) or return 0;
-    $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
+    $self->configure_yum($prefix.YUM_CONF_FILE, $t->{process_obsoletes});
 
-    $self->update_pkgs_retry($pkgs, $groups, $t->{run},
-                             $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
-                             $t->{fullsearch})
-        or return 0;
-    return 1;
+    my $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
+                                       $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
+                                       $t->{fullsearch});
+
+    my $ec = 1;
+
+    # Cleanup prefix in case of success.
+    # Leave in case of failure (to help debugging)
+    if ($res) {
+        if ($prefix) {
+            $self->info("Cleaning up NoAction prefixdir $prefix");
+            rmtree($prefix);
+        }
+    } else {
+        $self->info("Not cleaning up NoAction prefixdir $prefix") if $prefix;
+        $ec = 0;
+    }
+
+    return $ec;
 }
 
 1; # required for Perl modules
