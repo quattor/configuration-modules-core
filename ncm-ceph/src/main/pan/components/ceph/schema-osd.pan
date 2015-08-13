@@ -1,9 +1,17 @@
 declaration template components/${project.artifactId}/schema-osd;
 
+@documentation{ ceph osd configuration } 
 type ceph_osd_config = {
     include ceph_daemon_config
-    'osd_journal_size'  ? long(0..) 
-    'osd_objectstore'   ? string
+    'osd_deep_scrub_interval'   ? double(0..)
+    'osd_journal_size'          ? long(0..) 
+    'osd_max_scrubs'            ? long(0..)
+    'osd_objectstore'           ? string
+    'osd_scrub_begin_hour'      ? long(0..24)
+    'osd_scrub_end_hour'        ? long(0..24)
+    'osd_scrub_load_threshold'  ? double(0..)
+    'osd_scrub_min_interval'    ? double(0..)
+    'osd_scrub_max_interval'    ? double(0..)
 };
 
 @documentation{ 
