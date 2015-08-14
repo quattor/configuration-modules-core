@@ -50,7 +50,7 @@ sub update_pam_file
         my @whence = $i->{order} eq 'first' ?
         	@begin_whence : ENDING_OF_FILE;
 
-        if ($i->{entry} =~ m{(\S+\.so)}) {
+        if ($i->{entry} =~ m{(?:^|\s+)(\S+\.so)(?:\s|$)}) {
             my $module = $1;
             $fh->add_or_replace_lines(qr{^#?\s*$tree->{section}\s+\S+\s+$module},
                                       qr{^$tree->{section}\s+$i->{entry}$},
