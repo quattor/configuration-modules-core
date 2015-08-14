@@ -88,7 +88,6 @@
     <module>ncm-ntpd</module>
     <module>ncm-afsclt</module>
     <module>ncm-fmonagent</module>
-    <module>ncm-fsprobe</module>
     <module>ncm-gmetad</module>
     <module>ncm-modprobe</module>
     <module>ncm-named</module>
