@@ -17,7 +17,7 @@ type yesnostring = string with match(SELF, "yes|no");
 
 type authconfig_pamadditions_line_type = {
   "order"       : string with match(SELF, '^(first|last)$')
-  "entry"       : string with match(SELF, '\S+\.so$')
+  "entry"       : string with match(SELF, '^\s*(required|requisite|sufficient|optional|include|substack)\s+\S+\.so(\s|$)')
 };
 
 type authconfig_pamadditions_type = {

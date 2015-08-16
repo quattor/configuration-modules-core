@@ -16,11 +16,13 @@ Test the update_pam_file method
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor;
+use Test::Quattor qw(pamadditions);
 use NCM::Component::authconfig;
 use Readonly;
 use Cwd;
+use CAF::Object;
 
+$CAF::Object::NoAction = 1;
 
 Readonly my $PAM_FILE => getcwd()."/target/tmp/file.pam";
 Readonly my $NEW_ENTRY => 'required pam_access.so accessfile=/tmp/acc.conf';
@@ -152,6 +154,21 @@ is($cmp->{ERROR}, 1, "1 error");
 
 unlike("$fh", qr{NO MODULE}, "entry skipped");
 
+=pod
+
+=test2 Sample from template
+
+Test the sample from the config instance
+
+=cut
+
+# succesfully compiled template verifies the schema
+my $cfg = get_config_for_profile("pamadditions");
+$cmp->build_pam_systemauth($cfg->getElement('/software/components/authconfig/pamadditions')->getTree());
+$fh = get_file("/etc/pam.d/sshd");
+is("$fh",
+   "account required      pam_access.so accessfile=/etc/security/access_sshd.conf\n",
+   "added line to (empty) pam sshd config");
+
 
 done_testing();
-
