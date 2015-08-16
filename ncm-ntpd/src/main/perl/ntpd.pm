@@ -42,8 +42,7 @@ sub Configure {
 	# Getting the time servers from "/software/components/ntpd/servers"
 	# with IP address
 	#
-	my @ntp_servers;
-	my @client_networks;
+	my (@ntp_servers, @client_networks, @candidates);
 
 	if ($NoAction) {
 		$self->warn("Running Configure with NoAction set to $NoAction");
@@ -52,45 +51,41 @@ sub Configure {
 	my $cfg = $config->getElement($PATH)->getTree();
 
 	# look for legacy-style servers
-	if (exists $cfg->{servers} and ref($cfg->{servers}) eq 'ARRAY') {
-		foreach my $time_server (@{$cfg->{servers}}) {
-			my $ip = gethostbyname($time_server);
-			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
-				next;
-			}
-			$ip = inet_ntoa($ip);
-			push(@ntp_servers, {
-					server_address => $ip,
-					server_options => $cfg->{defaultoptions},
-				}
-			);
-			$self->debug(3, "found NTP server $ip (for $time_server)");
-		}
-	}
+    if ($cfg->{servers}) {
+        foreach my $time_server (@{$cfg->{servers}}) {
+            push(@candidates, [$time_server, $cfg->{defaultoptions}]);
+        }
+    }
 
 	# look for serverlist (with options)
-	if (exists $cfg->{serverlist} and ref($cfg->{serverlist}) eq 'ARRAY') {
-
-		# check if we have a list of nlists (with options)
+    if ($cfg->{serverlist}) {
 		foreach my $time_server_def (@{$cfg->{serverlist}}) {
-			my $time_server = $time_server_def->{server};
-			my $ip          = gethostbyname($time_server);
-			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
-				next;
-			}
-			$ip = inet_ntoa($ip);
-			push(@ntp_servers, {
-					server_address => $ip,
-					server_options => $time_server_def->{options} || $cfg->{defaultoptions},
-				}
-			);
-			$self->debug(3, "found NTP server $ip (for $time_server)");
-		}
-	}
+            push(@candidates, [
+                     $time_server_def->{server},
+                     $time_server_def->{options} || $cfg->{defaultoptions}
+                 ]);
+        }
+    }
 
-	unless (scalar @ntp_servers > 0) {
+    # @candidates is an array with each element an arrayref (timeserver, options)
+    foreach my $ts (@candidates) {
+        my $server = $ts->[0];
+        my $ip = gethostbyname($server);
+        if (!defined $ip) {
+            $self->warn("Unknown/unresolvable NTP server $server - ignoring!");
+            next;
+        }
+
+        $ip = inet_ntoa($ip);
+        push(@ntp_servers, {
+            server_address => $cfg->{useserverip} ? $ip : $server,
+            server_options => $ts->[1],
+             });
+
+        $self->debug(3, "found NTP server $ip (for $server)");
+    }
+
+	unless (@ntp_servers) {
 		$self->error("No (valid) ntp server(s) defined");
 		return 0;
 	}

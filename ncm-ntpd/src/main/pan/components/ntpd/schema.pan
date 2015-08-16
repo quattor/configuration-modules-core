@@ -130,6 +130,8 @@ type component_ntpd_type = extensible  {
     "controlkey"              ? long
     "driftfile"               ? string
     "includefile"             ? string
+    "useserverip"             ? boolean
+    "serverlist"              ? ntpd_server_definition[]
     "servers"                 ? type_hostname[]
     "defaultoptions"          ? ntpd_server_options
     "clientnetworks"          ? ntpd_clientnet_type[]
@@ -141,7 +143,6 @@ type component_ntpd_type = extensible  {
     "disable"                 ? ntpd_disable_options
     "enable"                  ? ntpd_enable_options
     "tinker"                  ? ntpd_tinker_options
-    "serverlist"              ? ntpd_server_definition[]
     "restrictdefault"         ? ntpd_restrict_default
     "broadcastdelay"          ? double
     "authenticate"            ? boolean

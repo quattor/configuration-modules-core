@@ -1,0 +1,17 @@
+simple_servlist ntpd.conf (with legacy mode useserverip=true)
+---
+---
+^# This file is under ncm-ntpd control.$
+^restrict default ignore$
+^# Servers$
+^server\s+127.0.0.1\s+$
+^restrict\s+127.0.0.1 mask 255.255.255.255 nomodify notrap noquery$
+^server\s+127.0.0.1\s+$
+^restrict 127.0.0.1 mask 255.255.255.255 nomodify notrap noquery$
+^server\s+127.0.0.1\s+$
+^restrict\s+127.0.0.1 mask 255.255.255.255 nomodify notrap noquery$
+^# add localhost in case of network outages$
+^fudge\s+127.127.1.0 stratum 10$
+^# Allow some debugging via ntpdc, but no modifications$
+^restrict 127.0.0.1 nomodify notrap$
+^restrict ::1 nomodify notrap$
