@@ -55,6 +55,9 @@ use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 our $NoActionSupported = 1;
 
+# private variable to hold active yum config file
+my $_active_yum_conf = YUM_CONF_FILE;
+
 # If user packages are not allowed, removes any repositories present
 # in the system that are not listed in $allowed_repos.
 sub cleanup_old_repos
@@ -173,6 +176,21 @@ sub generate_repos
     return $changes;
 }
 
+# Wrapper method to insert the yum configuration file to use
+# Takes an arrayref as it would be passed to CAF::Process, assuming
+# the first element is the executable
+sub _set_yum_config
+{
+    my ($cmd_ref) = @_;
+
+    my ($exe, @args) = @$cmd_ref;
+
+    my @new_cmd = ($exe, '-c', $_active_yum_conf);
+    push (@new_cmd, @args) if @args;
+
+    return \@new_cmd;
+}
+
 =pod
 
 =head2 C<execute_yum_command>
@@ -208,7 +226,7 @@ sub execute_yum_command
 
     $opts{stdin} = $stdin if defined($stdin);
 
-    my $cmd = CAF::Process->new($command, %opts);
+    my $cmd = CAF::Process->new(_set_yum_config($command), %opts);
 
     $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
@@ -513,7 +531,8 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(LEAF_PACKAGES, keeps_state => 1,
+    my $out = CAF::Process->new(_set_yum_config(LEAF_PACKAGES),
+                                keeps_state => 1,
                                 log => $self)->output();
 
     if ($?) {
@@ -809,6 +828,10 @@ sub configure_yum
                   OBSOLETE . "\\s*=\\s*$obsolete",
                   "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
     $fh->close();
+
+    # This is the active yum conf to use
+    $_active_yum_conf = $cfgfile;
+
 }
 
 # Configure the yum plugins

@@ -24,7 +24,9 @@ use Test::More;
 use NCM::Component::spma::yum;
 use Test::Quattor;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_EXPIRE);
+Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
+Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
+Readonly my $CMD => join(" ", @YE);
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 

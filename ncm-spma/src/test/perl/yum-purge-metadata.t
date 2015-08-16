@@ -24,7 +24,9 @@ use Test::More;
 use NCM::Component::spma::yum;
 use Test::Quattor;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_PURGE_METADATA);
+Readonly::Array my @PURGE_ORIG => NCM::Component::spma::yum::YUM_PURGE_METADATA();
+Readonly::Array my @PURGE => @{NCM::Component::spma::yum::_set_yum_config(\@PURGE_ORIG)};
+Readonly my $CMD => join(" ", @PURGE);
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 

@@ -30,7 +30,10 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use Set::Scalar;
 
-Readonly my $LEAVES => join(" ", @{NCM::Component::spma::yum::LEAF_PACKAGES()});
+
+Readonly::Array my @LP_ORIG => @{NCM::Component::spma::yum::LEAF_PACKAGES()};
+Readonly::Array my @LP => @{NCM::Component::spma::yum::_set_yum_config(\@LP_ORIG)};
+Readonly my $LEAVES => join(" ", @LP);
 
 =pod
 

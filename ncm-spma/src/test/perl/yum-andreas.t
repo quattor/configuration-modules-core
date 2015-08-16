@@ -29,13 +29,29 @@ use NCM::Component::spma::yum;
 use CAF::Object;
 use Readonly;
 
-Readonly my $RPMQ => join(" ", @{NCM::Component::spma::yum::RPM_QUERY()});
-Readonly my $DISTROSYNC => join(" ", NCM::Component::spma::yum::YUM_DISTRO_SYNC);
-Readonly my $YUMEXPIRE => join(" ", NCM::Component::spma::yum::YUM_EXPIRE);
-Readonly my $REPOQ => join(" ", NCM::Component::spma::yum::REPOQUERY,
-			   "ncm-cdp-1.0.4-1.noarch");
-Readonly my $YUMCT => join(" ", NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION);
-Readonly my $LEAF => join(" ", @{NCM::Component::spma::yum::LEAF_PACKAGES()});
+Readonly::Array my @RPM_QUERY_ORIG => @{NCM::Component::spma::yum::RPM_QUERY()};
+Readonly::Array my @RPM_QUERY => @{NCM::Component::spma::yum::_set_yum_config(\@RPM_QUERY_ORIG)};
+Readonly my $RPMQ => join(" ", @RPM_QUERY);
+
+Readonly::Array my @YDS_ORIG => NCM::Component::spma::yum::YUM_DISTRO_SYNC();
+Readonly::Array my @YDS => @{NCM::Component::spma::yum::_set_yum_config(\@YDS_ORIG)};
+Readonly my $DISTROSYNC => join(" ", @YDS);
+
+Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
+Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
+Readonly my $YUMEXPIRE => join(" ", @YE);
+
+Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY();
+Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
+Readonly my $REPOQ => join(" ", @REPOQUERY, "ncm-cdp-1.0.4-1.noarch");
+
+Readonly::Array my @YCT_ORIG => NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION();
+Readonly::Array my @YCT => @{NCM::Component::spma::yum::_set_yum_config(\@YCT_ORIG)};
+Readonly my $YUMCT => join(" ", @YCT);
+
+Readonly::Array my @LP_ORIG => @{NCM::Component::spma::yum::LEAF_PACKAGES()};
+Readonly::Array my @LP => @{NCM::Component::spma::yum::_set_yum_config(\@LP_ORIG)};
+Readonly my $LEAF => join(" ", @LP);
 
 set_desired_output($RPMQ, "ncm-cdp;noarch\n");
 set_desired_err($DISTROSYNC, "");

@@ -29,7 +29,9 @@ my $install = Set::Scalar->new('pkg;noarch');
 my $rm = Set::Scalar->new('dep;noarch', 'nodep;noarch');
 my $cmp = NCM::Component::spma::yum->new('spma');
 
-Readonly my $CMD => join(" ", NCM::Component::spma::yum::REPO_DEPS, 'pkg.noarch');
+Readonly::Array my @DEPS_ORIG => NCM::Component::spma::yum::REPO_DEPS();
+Readonly::Array my @DEPS => @{NCM::Component::spma::yum::_set_yum_config(\@DEPS_ORIG)};
+Readonly my $CMD => join(" ", @DEPS, 'pkg.noarch');
 
 set_desired_output($CMD, 'dep;noarch');
 set_desired_err($CMD, '');
