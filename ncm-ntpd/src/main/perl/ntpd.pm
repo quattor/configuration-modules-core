@@ -3,17 +3,10 @@
 # ${author-info}
 
 #
-# ${project.artifactId} - NCM ${project.artifactId} configuration component
-#
 # Configure the ntp time daemon
 #
-################################################################################
 
 package NCM::Component::${project.artifactId};
-
-#
-# a few standard statements, mandatory for all components
-#
 
 use strict;
 use warnings;

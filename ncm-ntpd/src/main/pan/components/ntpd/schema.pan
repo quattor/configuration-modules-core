@@ -5,7 +5,8 @@
 
 declaration template components/${project.artifactId}/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
+include 'pan/types';
 
 type ntpd_clientnet_type = {
     "net"  : type_ip # Network of this machines NTP clients
@@ -111,14 +112,14 @@ type ntpd_statistics = {
 };
 
 type ntpd_filegen_name = string
-    with match(SELF, 'clockstats|cryptostats|loopstats|peerstats|rawstats|sysstats');
+    with match(SELF, '^(clock|crypto|loop|peer|raw|sys)stats$');
 
 type ntpd_filegen = {
     "name"            : ntpd_filegen_name
     "file"            : string
-    "type"            ? string with match(SELF, 'none|pid|day|week|month|year|age')
-    "linkornolink"    ? string with match(SELF, 'link|nolink')
-    "enableordisable" ? string with match(SELF, 'enable|disable')
+    "type"            ? string with match(SELF, '^(none|pid|day|week|month|year|age)$')
+    "linkornolink"    ? string with match(SELF, '^(no)?link$')
+    "enableordisable" ? string with match(SELF, '^(en|dis)able$')
 };
 
 type component_ntpd_type = extensible  {
@@ -148,5 +149,3 @@ type component_ntpd_type = extensible  {
     "includelocalhost"        ? boolean = true
     "enablelocalhostdebug"    ? boolean = true
 };
-
-bind "/software/components/ntpd" = component_ntpd_type;
