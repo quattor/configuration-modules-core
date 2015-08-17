@@ -39,10 +39,8 @@ use constant YUM_EXPIRE => qw(yum clean expire-cache);
 use constant YUM_PURGE_METADATA => qw(yum clean metadata);
 use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
-use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => qw(yum-complete-transaction -y);
-use constant OBSOLETE => "obsoletes";
 use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
                              --qf %{NAME};%{ARCH});
 use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
@@ -52,6 +50,11 @@ use constant LARGE_INSTALL => 200;
 use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
 
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
+
+use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant YUM_CONF_OBSOLETES => "obsoletes";
+use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
+use constant YUM_CONF_REPOSDIR => 'reposdir';
 
 our $NoActionSupported = 1;
 
@@ -816,17 +819,29 @@ sub noaction_prefix
 # Set up a few things about Yum.conf. Somewhere in the future this may
 # have its own schema, or be delegated to some other component. To be
 # seen.
+# C<repodirs> is an arrayref of directories.
 sub configure_yum
 {
-    my ($self, $cfgfile, $obsolete) = @_;
+    my ($self, $cfgfile, $obsoletes, $plugindir, $repodirs) = @_;
+
     my $fh = CAF::FileEditor->new($cfgfile, log => $self);
 
-    $fh->add_or_replace_lines(CLEANUP_ON_REMOVE,
-                  CLEANUP_ON_REMOVE. q{\s*=\s*1},
-                  "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
-    $fh->add_or_replace_lines(OBSOLETE,
-                  OBSOLETE . "\\s*=\\s*$obsolete",
-                  "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
+    my $_add_or_replace = sub {
+        my ($fh, $name, $value) = @_;
+        my $valuereg= $value;
+        $valuereg =~ s/([.\$*?])/\\$1/g;
+        $fh->add_or_replace_lines($name,
+                                  $name. q{\s*=\s*}.$valuereg,
+                                  "\n$name=$value\n",
+                                  ENDING_OF_FILE);
+    };
+
+    $_add_or_replace->($fh, YUM_CONF_CLEANUP_ON_REMOVE, 1);
+    $_add_or_replace->($fh, YUM_CONF_OBSOLETES, $obsoletes);
+
+    $_add_or_replace->($fh, YUM_CONF_REPOSDIR, join(',', @$repodirs));
+    $_add_or_replace->($fh, YUM_CONF_PLUGINCONFPATH, $plugindir);
+
     $fh->close();
 
     # This is the active yum conf to use
@@ -918,15 +933,21 @@ sub Configure
     # TODO: should this also influence purge_caches?
     #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
     # always run it, even if no plugins configured (e.g. to disable fastest mirror)
-    $self->configure_plugins($prefix.YUM_PLUGIN_DIR, $t->{plugins});
+    my $plugindir = $prefix.YUM_PLUGIN_DIR;
+    $self->configure_plugins($plugindir, $t->{plugins});
 
-    $self->initialize_repos_dir($prefix.REPOS_DIR) or return 0;
-    $self->cleanup_old_repos($prefix.REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
-    $purge_caches = $self->generate_repos($prefix.REPOS_DIR, $repos, REPOS_TEMPLATE,
+    my $quattor_managed_reposdir = $prefix.REPOS_DIR;
+    $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
+    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
+    $purge_caches = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                           $t->{proxyhost}, $t->{proxytype},
                                           $t->{proxyport});
     defined($purge_caches) or return 0;
-    $self->configure_yum($prefix.YUM_CONF_FILE, $t->{process_obsoletes});
+    # by default, set the quattor managed repos dir
+    # TODO: for userpkgs, insert quattor unmanaged dir as first (so it takes priority)
+    # TODO: check that the first one wins
+    my $reposdir = [$quattor_managed_reposdir];
+    $self->configure_yum($prefix.YUM_CONF_FILE, $t->{process_obsoletes}, $plugindir, $reposdir);
 
     my $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                                        $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
