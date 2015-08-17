@@ -12,7 +12,7 @@ type component_ccm = {
     include structure_component
     'configFile'       : string = '/etc/ccm.conf'
     'profile'          : type_hostURI
-    'profile_failover' ? type_hostURI
+    'profile_failover' ? type_hostURI[]
     'context'          ? type_hostURI
     'debug'            : long(0..1) = 0
     'force'            : long(0..1) = 0
