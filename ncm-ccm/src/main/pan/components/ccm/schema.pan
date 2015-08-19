@@ -5,8 +5,8 @@
 
 declaration template components/ccm/schema;
 
-include {'quattor/schema'};
-include {'pan/types'};
+include 'quattor/types/component';
+include 'pan/types';
 
 type component_ccm = {
     include structure_component
@@ -33,5 +33,3 @@ type component_ccm = {
     'json_typed'       ? boolean
     'tabcompletion'    ? boolean
 };
-
-bind '/software/components/ccm' = component_ccm;
