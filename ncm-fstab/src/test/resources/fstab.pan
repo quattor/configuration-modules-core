@@ -2,6 +2,7 @@ object template fstab;
 
 prefix '/software/components/fstab';
 
-'static/mounts' = list('/', '/boot', '/usr');
-'keep/mounts' =  list('/', '/boot', '/home');
-'keep/fs_types' = list('gpfs', 'ceph');
+'protected/mounts' = list('/', '/home', '/boot');
+'protected_mounts' = list('/', '/old');
+'protected/filesystems' = list('gpfs', 'ceph');
+'protected/strict' = true;

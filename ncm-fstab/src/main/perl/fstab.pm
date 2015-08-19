@@ -38,7 +38,7 @@ sub update_entries
     while ($el->hasNextElement()) {
         my $el2 = $el->getNextElement();
         my $fs = NCM::Filesystem->new ($el2->getPath()->toString(), $config);
-        $self->debug (3, "Checking fstab entry at $fs->{mountpoint}");
+        $self->debug (4, "Update fstab entry at $fs->{mountpoint}");
         $fs->update_fstab($fstab, $protected);
         next if $fs->{type} eq 'swap';
         $mounts{$fs->{mountpoint}} = $fs;
@@ -47,27 +47,25 @@ sub update_entries
     return %mounts;
 }
 
-# build the protected hashes from the template
+# build the protected hash from the template
 sub protected_hash 
 {
     my ($self, $config) = @_;
 
-    my $tree = $config->getTree($self->prefix());
-    my $mounts_depr = $tree->{protected_mounts}; 
-    
-    my $protected = {};
+    my $mounts_depr = $config->getElement("/software/components/fstab/protected_mounts")->getTree();
+    my $protect = $config->getElement("/software/components/fstab/protected")->getTree();
 
-    foreach my $type ('keep', 'static'){
-        my $protect = $tree->{$type};
-        my $mountlist = ($type eq 'keep' && $mounts_depr) ? $mounts_depr : $protect->{mounts};
-        my %mounts = map { $_ => 1 } @$mountlist;
-        my %fs_types = map { $_ => 1 } @{$protect->{fs_types}};
-
-        $protected->{$type} = {
-            mounts => \%mounts,
-            fs_types => \%fs_types,
-        };
+    my %mounts = map { $_ => 1 } @$mounts_depr;
+    foreach my $mnt (@{$protect->{mounts}}) {
+        $mounts{$mnt} = 1;
     }
+    my %filesystems = map { $_ => 1 } @{$protect->{filesystems}};
+
+    my $protected = {
+        mounts => \%mounts,
+        filesystems => \%filesystems,
+        strict => $protect->{strict},
+    };
     return $protected;
 }
 
@@ -78,13 +76,11 @@ sub valid_mounts
 {
     my ($self, $protected, $fstab, %mounts) = @_;
 
-    # update mounts with protected mounts
     @mounts{ keys %{$protected->{mounts}} } = values %{$protected->{mounts}};
     my $txt = "$fstab";
     my $re = qr!^\s*([^#\s]\S+)\s+(\S+?)\/?\s+(\S+)\s!m;
     while ($txt =~m/$re/mg) {
-        # add mountpoint for protected fs_type
-        $mounts{$2} = 1 if ($protected->{fs_types}->{$3});
+        @mounts{$2} = 1 if ($protected->{filesystems}->{$3});
     }
     
     return %mounts;
@@ -161,8 +157,12 @@ sub Configure
 				      backup => '.old');
     my $protected = $self->protected_hash($config);
     my %mounts;
-    %mounts = $self->update_entries ($config, $fstab, $protected->{static});
-    %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
+    if ($protected->{strict}) {
+        %mounts = $self->update_entries ($config, $fstab, $protected);
+    } else {
+        %mounts = $self->update_entries ($config, $fstab);
+    }
+    %mounts = $self->valid_mounts($protected, $fstab, %mounts);
     $self->delete_outdated ($fstab, %mounts);
     if ($fstab->close()) {
     	$fstab = CAF::FileReader->new (NCM::Filesystem::FSTAB, log => $self);

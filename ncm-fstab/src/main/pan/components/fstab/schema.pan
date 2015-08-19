@@ -9,10 +9,8 @@ include {'quattor/blockdevices'};
 include {'quattor/filesystems'};
 
 @documentation{ 
-Protected mountpoints and filesystem types. 
-mounts is looked for on the second field of fstab, fs_file
-fs_types is looked for on the third field of fstab, fs_vfstype
-Default mounts is the same list as before in "protected_mounts"
+Protected mountpoints and filesystems. 
+If strict protected is true, it won't change an existing entry. Non-strict only keeps it from removal.
 }
 type fstab_protected_entries = {
     "mounts" : string[] = list (
@@ -22,22 +20,16 @@ type fstab_protected_entries = {
 	    "/media/floppy", "/mnt/floppy", "/media/cdrecorder", "/media/cdrom",
 	    "/mnt/cdrom", "/boot"
     )
-    "fs_types" ? string[]
+    "filesystems" ? string[]
+    "strict" : boolean = false
 };
 
-@documentation{
-fstab component structure
-keep entries are always kept, but can be changed
-static entries can not be changed, but can be deleted
-protected_mounts is still here for backwards compability, and is the same as keep/mounts
-}
 type structure_component_fstab = {
     include structure_component
-    "keep" : fstab_protected_entries = nlist()
-    "static" ? fstab_protected_entries
-    "protected_mounts" ? string[] with {
-        deprecated(0, "protected_mounts property has been deprecated, keep/mounts should be used instead"); 
-        true;
+    "protected" : fstab_protected_entries = nlist()
+    "protected_mounts" ? string[] with { 
+        deprecated(0, "protected_mounts property has been deprecated, protected/mounts should be used instead"); 
+        true; 
     }
 };
 
