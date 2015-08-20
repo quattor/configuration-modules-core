@@ -47,25 +47,31 @@ sub update_entries
     return %mounts;
 }
 
-# build the protected hash from the template
+# build the protected hashes from the template
 sub protected_hash 
 {
     my ($self, $config) = @_;
 
-    my $mounts_depr = $config->getElement("/software/components/fstab/protected_mounts")->getTree();
-    my $protect = $config->getElement("/software/components/fstab/protected")->getTree();
+    my $tree = $config->getTree($self->prefix());
+    my $mounts_depr = $tree->{protected_mounts}; 
+    
+    my $protected = {};
 
-    my %mounts = map { $_ => 1 } @$mounts_depr;
-    foreach my $mnt (@{$protect->{mounts}}) {
-        $mounts{$mnt} = 1;
+    foreach my $type ('keep', 'static'){
+        my $protect = $tree->{$type};
+        my %mounts=();
+        if($type eq 'keep' && $mounts_depr){
+            %mounts = map { $_ => 1 } @$mounts_depr;
+        } else {
+            %mounts = map { $_ => 1 } @{$protect->{mounts}};
+        }
+        my %filesystems = map { $_ => 1 } @{$protect->{filesystems}};
+
+        $protected->{$type} = {
+            mounts => \%mounts,
+            filesystems => \%filesystems,
+        };
     }
-    my %filesystems = map { $_ => 1 } @{$protect->{filesystems}};
-
-    my $protected = {
-        mounts => \%mounts,
-        filesystems => \%filesystems,
-        strict => $protect->{strict},
-    };
     return $protected;
 }
 
@@ -157,12 +163,8 @@ sub Configure
 				      backup => '.old');
     my $protected = $self->protected_hash($config);
     my %mounts;
-    if ($protected->{strict}) {
-        %mounts = $self->update_entries ($config, $fstab, $protected);
-    } else {
-        %mounts = $self->update_entries ($config, $fstab);
-    }
-    %mounts = $self->valid_mounts($protected, $fstab, %mounts);
+    %mounts = $self->update_entries ($config, $fstab, $protected->{static});
+    %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
     $self->delete_outdated ($fstab, %mounts);
     if ($fstab->close()) {
     	$fstab = CAF::FileReader->new (NCM::Filesystem::FSTAB, log => $self);
