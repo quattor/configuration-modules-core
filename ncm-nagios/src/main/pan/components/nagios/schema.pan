@@ -10,47 +10,47 @@ include {'quattor/schema'};
 # validation code easier. If you want hosts to inherit settings then use
 # Pan statements like create ("...") or value ("...")
 
-type hoststring =  string with exists ("/software/components/nagios/hosts/" + SELF) ||
+type nagios_hoststring =  string with exists ("/software/components/nagios/hosts/" + SELF) ||
 	SELF=="*";
 
-type hostgroupstring = string with exists ("/software/components/nagios/hostgroups/" + SELF) || SELF=="*";
+type nagios_hostgroupstring = string with exists ("/software/components/nagios/hostgroups/" + SELF) || SELF=="*";
 
-type commandstrings = string [] with exists ("/software/components/nagios/commands/" + SELF[0]);
+type nagios_commandstrings = string [] with exists ("/software/components/nagios/commands/" + SELF[0]);
 
-type timeperiodstring = string with exists ("/software/components/nagios/timeperiods/" + SELF) ||
+type nagios_timeperiodstring = string with exists ("/software/components/nagios/timeperiods/" + SELF) ||
 	SELF=="*";
 
-type contactgroupstring = string with exists ("/software/components/nagios/contactgroups/" + SELF) ||
+type nagios_contactgroupstring = string with exists ("/software/components/nagios/contactgroups/" + SELF) ||
 	SELF=="*";
 
-type contactstring = string with exists ("/software/components/nagios/contacts/" + SELF) ||
+type nagios_contactstring = string with exists ("/software/components/nagios/contacts/" + SELF) ||
 	SELF=="*";	
 
-type servicegroupstring = string with exists ("/software/components/nagios/servicegroups/" + SELF) ||
+type nagios_servicegroupstring = string with exists ("/software/components/nagios/servicegroups/" + SELF) ||
 	SELF=="*";
 
-type servicestring = string with exists ("/software/components/nagios/services/" + SELF) ||
+type nagios_servicestring = string with exists ("/software/components/nagios/services/" + SELF) ||
 	SELF=="*";
 
-type service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
-type host_notification_string = string with match (SELF, "^(d|u|r|f)$");
-type stalking_string = string with match (SELF, "^(o|w|u|c)$");
-type execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
-type notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+type nagios_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
+type nagios_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
+type nagios_stalking_string = string with match (SELF, "^(o|w|u|c)$");
+type nagios_execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+type nagios_notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
 
 type structure_nagios_host_generic = {
         "name" ? string # Used instead of alias when it s a template declaration
-        "check_command" : commandstrings
+        "check_command" : nagios_commandstrings
         "max_check_attempts" : long
         "check_interval" ? long
         "retry_interval" ? long
         "active_checks_enabled" ? boolean
         "passive_checks_enabled" ? boolean
-        "check_period" : timeperiodstring
+        "check_period" : nagios_timeperiodstring
         "obsess_over_host" ? boolean
         "check_freshness" ? boolean
         "freshness_threshold" ? long
-        "event_handler" ? commandstrings
+        "event_handler" ? nagios_commandstrings
         "event_handler_enabled" ? boolean
         "low_flap_threshold" ? long
         "high_flap_threshold" ? long
@@ -58,10 +58,10 @@ type structure_nagios_host_generic = {
         "process_perf_data" ? boolean
         "retain_status_information" ? boolean
         "retain_nonstatus_information" ? boolean
-        "contact_groups" : contactgroupstring[]
+        "contact_groups" : nagios_contactgroupstring[]
         "notification_interval" : long
-        "notification_period" : timeperiodstring
-        "notification_options" : host_notification_string []
+        "notification_period" : nagios_timeperiodstring
+        "notification_options" : nagios_host_notification_string []
         "notifications_enabled" ? boolean
         "stalking_options" ? string with match (SELF, "^(o|d|u)$")
         "register" : boolean = true
@@ -72,18 +72,18 @@ type structure_nagios_host = {
 	"alias" : string 
 	"use" ? string # Used to insert a template host declaration
 	"address" ? type_ip # If not present, gethostbyname will be used.
-	"parents" ? hoststring[]
-	"hostgroups" ? hostgroupstring[]
-	"check_command" : commandstrings
+	"parents" ? nagios_hoststring[]
+	"hostgroups" ? nagios_hostgroupstring[]
+	"check_command" : nagios_commandstrings
 	"max_check_attempts" : long
 	"check_interval" ? long
 	"active_checks_enabled" ? boolean
 	"passive_checks_enabled" ? boolean
-	"check_period" : timeperiodstring
+	"check_period" : nagios_timeperiodstring
 	"obsess_over_host" ? boolean
 	"check_freshness" ? boolean
 	"freshness_threshold" ? long
-	"event_handler" ? commandstrings
+	"event_handler" ? nagios_commandstrings
 	"event_handler_enabled" ? boolean
 	"low_flap_threshold" ? long
 	"high_flap_threshold" ? long
@@ -91,10 +91,10 @@ type structure_nagios_host = {
 	"process_perf_data" ? boolean
 	"retain_status_information" ? boolean
 	"retain_nonstatus_information" ? boolean
-	"contact_groups" : contactgroupstring[]
+	"contact_groups" : nagios_contactgroupstring[]
 	"notification_interval" : long
-	"notification_period" : timeperiodstring
-	"notification_options" : host_notification_string []
+	"notification_period" : nagios_timeperiodstring
+	"notification_options" : nagios_host_notification_string []
 	"notifications_enabled" ? boolean
 	"stalking_options" ? string with match (SELF, "^(o|d|u)$")
 	"register" : boolean = true
@@ -104,35 +104,35 @@ type structure_nagios_host = {
 # Hostgroup definition
 type structure_nagios_hostgroup = {
 	"alias"	: string
-	"members" ? hoststring[]
+	"members" ? nagios_hoststring[]
 };
 
 # Host dependency definition
 type structure_nagios_hostdependency = {
-	"dependent_host_name" : hoststring # Should be string[]?
-	"notification_failure_criteria" : host_notification_string[]
+	"dependent_host_name" : nagios_hoststring # Should be string[]?
+	"notification_failure_criteria" : nagios_host_notification_string[]
 };
 
 # Service definition
 type structure_nagios_service = {
 	"name"	? string # Used when it s a template declaration
-	"use" ? string # Used to include template 
-	"host_name" ? hoststring[]
-	"hostgroup_name" ? hostgroupstring[]
-	"servicegroups" ? servicegroupstring []
+	"use" ? string # Used to include template
+	"host_name" ? nagios_hoststring[]
+	"hostgroup_name" ? nagios_hostgroupstring[]
+	"servicegroups" ? nagios_servicegroupstring []
 	"is_volatile" ? boolean
-	"check_command" ? commandstrings
+	"check_command" ? nagios_commandstrings
 	"max_check_attempts" : long
 	"normal_check_interval" : long
 	"retry_check_interval" : long
 	"active_checks_enabled" ? boolean
 	"passive_checks_enabled" ? boolean
-	"check_period" ? timeperiodstring
+	"check_period" ? nagios_timeperiodstring
 	"parallelize_check" ? boolean                           # deprecated in Nagios 3
 	"obsess_over_service" ? boolean
 	"check_freshness" ? boolean
 	"freshness_threshold" ? long
-	"event_handler" ? commandstrings
+	"event_handler" ? nagios_commandstrings
 	"event_handler_enabled" ? boolean
 	"low_flap_threshold" ? long
 	"high_flap_threshold" ? long
@@ -141,11 +141,11 @@ type structure_nagios_service = {
 	"retain_status_information" ? boolean
 	"retain_nonstatus_information" ? boolean
 	"notification_interval" : long
-	"notification_period" : timeperiodstring
-	"notification_options" : service_notification_string []
+	"notification_period" : nagios_timeperiodstring
+	"notification_options" : nagios_service_notification_string []
 	"notifications_enabled" ? boolean
-	"contact_groups" : contactgroupstring[]
-	"stalking_options" ? stalking_string[]
+	"contact_groups" : nagios_contactgroupstring[]
+	"stalking_options" ? nagios_stalking_string[]
 	"register" : boolean = true
 	"failure_prediction_enabled" ? boolean
 	"action_url" ? string
@@ -154,8 +154,8 @@ type structure_nagios_service = {
 # Servicegroup definition:
 type structure_nagios_servicegroup = {
 	"alias"	: string
-	"members" ? servicestring []
-	"servicegroup_members" ? servicegroupstring[]
+	"members" ? nagios_servicestring []
+	"servicegroup_members" ? nagios_servicegroupstring[]
 	"notes" ? string
 	"notes_url" ? type_absoluteURI
 	"action_url" ? type_absoluteURI
@@ -163,28 +163,28 @@ type structure_nagios_servicegroup = {
 
 # Servicedependency definition:
 type structure_nagios_servicedependency = {
-	"dependent_host_name"	: hoststring[]
-	"dependent_hostgroup_name" ? hostgroupstring[]
-	"dependent_service_description" : servicestring
-	"host_name" ? hoststring
-	"hostgroup_name" ? hostgroupstring
+	"dependent_host_name"	: nagios_hoststring[]
+	"dependent_hostgroup_name" ? nagios_hostgroupstring[]
+	"dependent_service_description" : nagios_servicestring
+	"host_name" ? nagios_hoststring
+	"hostgroup_name" ? nagios_hostgroupstring
 	"service_description" : string
 	"inherits_parent" ? boolean
-	"execution_failure_criteria" ? execution_failure_string [] 
-	"notification_failure_criteria" ? notification_failure_string []
-	"dependency_period" ? timeperiodstring
+	"execution_failure_criteria" ? nagios_execution_failure_string []
+	"notification_failure_criteria" ? nagios_notification_failure_string []
+	"dependency_period" ? nagios_timeperiodstring
 } with has_host_or_hostgroup (SELF);;
 
 # Contact definition
 type structure_nagios_contact = {
 	"alias"	: string
-	"contactgroups" : contactgroupstring []
-	"host_notification_period" : timeperiodstring
-	"service_notification_period" : timeperiodstring
-	"host_notification_options" : host_notification_string []
-	"service_notification_options" : service_notification_string []
-	"host_notification_commands" : commandstrings []
-	"service_notification_commands" : commandstrings []
+	"contactgroups" : nagios_contactgroupstring []
+	"host_notification_period" : nagios_timeperiodstring
+	"service_notification_period" : nagios_timeperiodstring
+	"host_notification_options" : nagios_host_notification_string []
+	"service_notification_options" : nagios_service_notification_string []
+	"host_notification_commands" : nagios_commandstrings []
+	"service_notification_commands" : nagios_commandstrings []
 	"email" : string
 	"pager" : string
 };
@@ -192,31 +192,31 @@ type structure_nagios_contact = {
 # Contact group definition
 type structure_nagios_contactgroup = {
 	"alias" : string
-	"members" : contactstring[]
+	"members" : nagios_contactstring[]
 };
 
 # Time range definition
-type timerange = string with
+type nagios_timerange = string with
     match (SELF, "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$");
 
 # Time period definition
 type structure_nagios_timeperiod = {
 	"alias" ? string
-	"monday" ? timerange
-	"tuesday"	? timerange
-	"wednesday"	? timerange
-	"thursday"	? timerange
-	"friday"	? timerange
-	"saturday"	? timerange
-	"sunday"	? timerange
+	"monday" ? nagios_timerange
+	"tuesday"	? nagios_timerange
+	"wednesday"	? nagios_timerange
+	"thursday"	? nagios_timerange
+	"friday"	? nagios_timerange
+	"saturday"	? nagios_timerange
+	"sunday"	? nagios_timerange
 };
 
 # Extended information for services
 # Deprecated in Nagios 3
 type structure_nagios_serviceextinfo = {
-	"host_name" ? hoststring[]
+	"host_name" ? nagios_hoststring[]
 	"service_description" : string
-	"hostgroup_name" ? hostgroupstring[]	
+	"hostgroup_name" ? nagios_hostgroupstring[]
 	"notes" ? string
 	"notes_url" ? type_absoluteURI
 	"action_url" ? type_absoluteURI
@@ -315,8 +315,8 @@ type structure_nagios_nagios_cfg = {
 	"enable_notifications" : boolean = true
 	"enable_event_handlers" : boolean = true
 	"process_performance_data" : boolean = true
-	"service_perfdata_command" : commandstrings = list("process-service-perfdata")
-	"host_perfdata_command" : commandstrings = list("process-host-perfdata")
+	"service_perfdata_command" : nagios_commandstrings = list("process-service-perfdata")
+	"host_perfdata_command" : nagios_commandstrings = list("process-host-perfdata")
 	"host_perfdata_file" : string = "/var/log/nagios/host-perf.dat"
 	"service_perfdata_file" : string = "/var/log/nagios/service-perf.dat"
 	"host_perfdata_file_template" : string = "[HOSTPERFDATA]\t$TIMET$\t$HOSTNAME$\t$HOSTEXECUTIONTIME$\t$HOSTOUTPUT$\t$HOSTPERFDATA$"
@@ -325,8 +325,8 @@ type structure_nagios_nagios_cfg = {
 	"service_perfdata_file_mode" : string = "a"
 	"host_perfdata_file_processing_interval" : long = 0
 	"service_perfdata_file_processing_interval" : long = 0
-	"host_perfdata_file_processing_command" ? commandstrings
-	"service_perfdata_file_processing_command" ? commandstrings
+	"host_perfdata_file_processing_command" ? nagios_commandstrings
+	"service_perfdata_file_processing_command" ? nagios_commandstrings
 	"obsess_over_services" : boolean = false
 	"check_for_orphaned_services" : boolean = true
 	"check_service_freshness" : boolean = true
