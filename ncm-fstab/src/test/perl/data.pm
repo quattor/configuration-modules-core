@@ -18,9 +18,25 @@ use Readonly;
 
 
 Readonly::Hash our %PROTECTED => (
-    filesystems => { 'ceph' => 1, 'gpfs' => 1 },
-    mounts => { '/' => 1, '/boot' => 1, '/home' => 1, '/old' => 1 },
-    strict => 1,
+    'keep' => {
+      'filesystems' => {
+        'ceph' => 1,
+        'gpfs' => 1
+      },
+      'mounts' => {
+        '/' => 1,
+        '/boot' => 1,
+        '/home' => 1
+      }
+    },
+    'static' => {
+      'filesystems' => {},
+      'mounts' => {
+        '/' => 1,
+        '/boot' => 1,
+        '/usr' => 1
+      }
+    }
 );
 
 Readonly our $FSTAB_CONTENT => <<'EOF';
@@ -49,5 +65,4 @@ Readonly::Hash our  %MOUNTS => (
    '/cephfs' => 1,
    '/gpfs/fs1' => 1,
    '/home' => 1,
-   '/old' => 1
 );

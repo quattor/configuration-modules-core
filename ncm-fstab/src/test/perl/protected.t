@@ -19,7 +19,7 @@ use CAF::Object;
 use NCM::Component::fstab;
 use Test::Deep;
 use Test::More;
-use Test::Quattor qw(fstab);
+use Test::Quattor qw(fstab fstab_depr);
 
 use data;
 $CAF::Object::NoAction = 1;
@@ -33,7 +33,14 @@ my $fstab = CAF::FileEditor->new ("/etc/fstab" );
 
 set_file_contents('/etc/fstab', $data::FSTAB_CONTENT);
 my %mounts = ();
-%mounts = $cmp->valid_mounts($protected, $fstab, %mounts);
+%mounts = $cmp->valid_mounts($protected->{keep}, $fstab, %mounts);
 cmp_deeply(\%mounts, \%data::MOUNTS, 'valid mounts ok');
+
+$cfg = get_config_for_profile('fstab_depr');
+
+%mounts = ();
+$protected = $cmp->protected_hash($cfg);
+%mounts = $cmp->valid_mounts($protected->{keep}, $fstab, %mounts);
+cmp_deeply(\%mounts, \%data::MOUNTS, 'valid mounts (deprecated) ok');
 
 done_testing();
