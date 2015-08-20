@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(simple);
+use Test::Quattor qw(simple simple_realhostname);
 
 use helper;
 use NCM::Component::network;
@@ -46,5 +46,12 @@ like($fh, qr/^NETMASK=/m, "fixed netmask");
 like($fh, qr/^BROADCAST=/m, "fixed broadcast");
 
 unlike($fh, qr/IPV6/, "No IPv6 config details");
+
+# Check that realhostname is used correctly
+$cfg = get_config_for_profile('simple_realhostname');
+is($cmp->Configure($cfg), 1, "Component runs correctly with realhostname test profile");
+$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network").NCM::Component::network::FAILED_SUFFIX);
+
+like($fh, qr/^HOSTNAME=realhost.example.com$/m, "realhostname correctly used as hostname");
 
 done_testing();

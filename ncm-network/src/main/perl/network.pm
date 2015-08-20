@@ -579,7 +579,7 @@ sub Configure
     $text .= "NETWORKING=yes\n";
     # set hostname.
     if ($config->elementExists($path."/realhostname")) {
-        $text .= "HOSTNAME=".$config->getValue($path."/hostname")."\n";
+        $text .= "HOSTNAME=".$config->getValue($path."/realhostname")."\n";
     } else {
         $text .= "HOSTNAME=".$config->getValue($path."/hostname").".".$config->getValue($path."/domainname")."\n";
     }
