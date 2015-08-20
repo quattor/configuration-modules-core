@@ -4,7 +4,7 @@
 
 declaration template components/nagios/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 # Please note that the "use" directive is not supported in order to make
 # validation code easier. If you want hosts to inherit settings then use

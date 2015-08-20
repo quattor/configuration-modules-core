@@ -5,7 +5,7 @@
 
 declaration template components/icinga/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 # Please note that the "use" directive is not supported in order to make
 # validation code easier. If you want hosts to inherit settings then use
@@ -65,7 +65,7 @@ type structure_icinga_host_generic = {
     "notifications_enabled" ? boolean
     "stalking_options" ? string with match (SELF, "^(o|d|u)$")
     "register" : boolean = true
-} = nlist();
+} = dict();
 
 
 # Host definition.
@@ -111,19 +111,19 @@ type structure_icinga_host = {
     "_cpus" ? string
     "_enclosureip" ? string
     "_enclosureslot" ? long
-} = nlist();
+} = dict();
 
 # Hostgroup definition
 type structure_icinga_hostgroup = {
     "alias" : string
     "members" ? icinga_hoststring[]
-} = nlist();
+} = dict();
 
 # Host dependency definition
 type structure_icinga_hostdependency = {
     "dependent_host_name" : icinga_hoststring # Should be string[]?
     "notification_failure_criteria" : icinga_host_notification_string[]
-} = nlist();
+} = dict();
 
 # Service definition
 type structure_icinga_service = {
@@ -171,7 +171,7 @@ type structure_icinga_servicegroup = {
     "notes" ? string
     "notes_url" ? type_absoluteURI
     "action_url" ? type_absoluteURI
-} = nlist();
+} = dict();
 
 # Servicedependency definition:
 type structure_icinga_servicedependency = {
@@ -199,13 +199,13 @@ type structure_icinga_contact = {
     "service_notification_commands" : icinga_commandstrings []
     "email" : string
     "pager" ? string
-} = nlist();
+} = dict();
 
 # Contact group definition
 type structure_icinga_contactgroup = {
     "alias" : string
     "members" : icinga_contactstring[]
-} = nlist();
+} = dict();
 
 # Time range definition
 type icinga_timerange = string with
@@ -221,7 +221,7 @@ type structure_icinga_timeperiod = {
     "friday" ? icinga_timerange
     "saturday" ? icinga_timerange
     "sunday" ? icinga_timerange
-} = nlist();
+} = dict();
 
 # Extended information for services
 type structure_icinga_serviceextinfo = {
@@ -291,7 +291,7 @@ type structure_icinga_cgi_cfg = {
     "send_ack_notifications" ? boolean
     "set_expire_ack_by_default" ? boolean
     "standalone_installation" ? boolean
-} = nlist();
+} = dict();
 
 # General options
 type structure_icinga_icinga_cfg = {
@@ -438,7 +438,7 @@ type structure_icinga_icinga_cfg = {
     "syslog_local_facility" ? long
     "use_daemon_log" ? boolean
     "use_syslog_local_facility" ? boolean
-} = nlist();
+} = dict();
 
 type structure_icinga_service_list=structure_icinga_service[];
 
@@ -479,7 +479,7 @@ type structure_icinga_ido2db_cfg = {
     "max_logentries_age" ? long
     "max_notifications_age" ? long
     "socket_perm" ? string
-} = nlist();
+} = dict();
 
 # Everything that can be handled by this component
 type structure_component_icinga = {
