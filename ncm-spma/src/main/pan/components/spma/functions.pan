@@ -101,8 +101,10 @@ function resolve_pkg_rep = {
     arg = repository list
 }
 function purge_rep_list = {
-    foreach (i;rep;SELF) {
-        rep['contents'] = null;
+    if (is_defined(SELF)) {
+        foreach (i;rep;SELF) {
+            rep['contents'] = null;
+        };
     };
     SELF;
 };
