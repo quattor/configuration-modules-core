@@ -5,7 +5,8 @@
 
 declaration template components/icinga/schema;
 
-include 'quattor/schema';
+include 'quattor/types/component';
+include 'pan/types';
 
 # Please note that the "use" directive is not supported in order to make
 # validation code easier. If you want hosts to inherit settings then use
