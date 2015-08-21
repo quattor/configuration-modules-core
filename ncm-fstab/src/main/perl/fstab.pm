@@ -13,7 +13,7 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use NCM::Filesystem;
 use Fcntl qw(:seek);
-use LC::File;
+use LC::Check;
 
 use constant UMOUNT => "/bin/umount";
 use constant REMOUNT => qw(/bin/mount -o remount);
@@ -141,7 +141,7 @@ sub remount_everything
     while (my $f = <$fstab>) {
     	my $mount = $self->mount_from_entry($f);
     	$mount && $mount ne 'swap' or next;
-    	LC::File::makedir ($mount);
+    	LC::Check::directory ($mount);
     	if ($f !~ m{^\s*\S+\s+\S+\s+\S+\s+\S*\W+noauto\W+}) {
     	    CAF::Process->new ([REMOUNT, $mount], log => $self)->output();
     	    CAF::Process->new ([MOUNT, $mount], log => $self)->run() if $?;
