@@ -9,8 +9,11 @@ use warnings;
 
 use NCM::Component;
 use vars qw(@ISA $EC);
+
 @ISA = qw(NCM::Component);
 $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
+
 
 use CAF::FileWriter;
 use CAF::FileEditor;
@@ -257,7 +260,8 @@ sub Configure
     if($cnt) {
         $self->info("Checking if autofs is running");
         # TODO: CAF::Service
-        my $cmd = CAF::Process->new(['/sbin/service', 'autofs', 'status'], log => $self);
+        my $cmd = CAF::Process->new(['/sbin/service', 'autofs', 'status'],
+                                    log => $self, keeps_state => 1);
         my $output = $cmd->output();
         if ( $? ) {
             $self->info("autofs not running, skipping reload.");
