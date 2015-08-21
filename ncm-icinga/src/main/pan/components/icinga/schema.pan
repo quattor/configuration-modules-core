@@ -5,52 +5,53 @@
 
 declaration template components/icinga/schema;
 
-include {'quattor/schema'};
+include 'quattor/types/component';
+include 'pan/types';
 
 # Please note that the "use" directive is not supported in order to make
 # validation code easier. If you want hosts to inherit settings then use
 # Pan statements like create ("...") or value ("...")
 
-type hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
+type icinga_hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
     SELF=="*" || SELF == 'dummy';
 
-type hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF=="*";
+type icinga_hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF=="*";
 
-type commandstrings = string [] with exists ("/software/components/icinga/commands/" + SELF[0]);
+type icinga_commandstrings = string [] with exists ("/software/components/icinga/commands/" + SELF[0]);
 
-type timeperiodstring = string with exists ("/software/components/icinga/timeperiods/" + SELF) ||
+type icinga_timeperiodstring = string with exists ("/software/components/icinga/timeperiods/" + SELF) ||
     SELF=="*";
 
-type contactgroupstring = string with exists ("/software/components/icinga/contactgroups/" + SELF) ||
+type icinga_contactgroupstring = string with exists ("/software/components/icinga/contactgroups/" + SELF) ||
     SELF=="*";
 
-type contactstring = string with exists ("/software/components/icinga/contacts/" + SELF) ||
+type icinga_contactstring = string with exists ("/software/components/icinga/contacts/" + SELF) ||
     SELF=="*";
 
-type servicegroupstring = string with exists ("/software/components/icinga/servicegroups/" + SELF) ||
+type icinga_servicegroupstring = string with exists ("/software/components/icinga/servicegroups/" + SELF) ||
     SELF=="*";
 
-type servicestring = string with exists ("/software/components/icinga/services/" + SELF) ||
+type icinga_servicestring = string with exists ("/software/components/icinga/services/" + SELF) ||
     SELF=="*";
 
-type service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
-type host_notification_string = string with match (SELF, "^(d|u|r|f)$");
-type stalking_string = string with match (SELF, "^(o|w|u|c)$");
-type execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
-type notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+type icinga_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
+type icinga_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
+type icinga_stalking_string = string with match (SELF, "^(o|w|u|c)$");
+type icinga_execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+type icinga_notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
 
 type structure_icinga_host_generic = {
     "name" ? string # Used instead of alias when it s a template declaration
-    "check_command" : commandstrings
+    "check_command" : icinga_commandstrings
     "max_check_attempts" : long
     "check_interval" ? long
     "active_checks_enabled" ? boolean
     "passive_checks_enabled" ? boolean
-    "check_period" : timeperiodstring
+    "check_period" : icinga_timeperiodstring
     "obsess_over_host" ? boolean
     "check_freshness" ? boolean
     "freshness_threshold" ? long
-    "event_handler" ? commandstrings
+    "event_handler" ? icinga_commandstrings
     "event_handler_enabled" ? boolean
     "low_flap_threshold" ? long
     "high_flap_threshold" ? long
@@ -58,14 +59,14 @@ type structure_icinga_host_generic = {
     "process_perf_data" ? boolean
     "retain_status_information" ? boolean
     "retain_nonstatus_information" ? boolean
-    "contact_groups" : contactgroupstring[]
+    "contact_groups" : icinga_contactgroupstring[]
     "notification_interval" : long
-    "notification_period" : timeperiodstring
-    "notification_options" : host_notification_string []
+    "notification_period" : icinga_timeperiodstring
+    "notification_options" : icinga_host_notification_string []
     "notifications_enabled" ? boolean
     "stalking_options" ? string with match (SELF, "^(o|d|u)$")
     "register" : boolean = true
-} = nlist();
+} = dict();
 
 
 # Host definition.
@@ -73,18 +74,18 @@ type structure_icinga_host = {
     "alias" : string
     "use" ? string # Used to insert a template host declaration
     "address" ? type_ip # If not present, gethostbyname will be used.
-    "parents" ? hoststring[]
-    "hostgroups" ? hostgroupstring[]
-    "check_command" : commandstrings
+    "parents" ? icinga_hoststring[]
+    "hostgroups" ? icinga_hostgroupstring[]
+    "check_command" : icinga_commandstrings
     "max_check_attempts" : long
     "check_interval" ? long
     "active_checks_enabled" ? boolean
     "passive_checks_enabled" ? boolean
-    "check_period" : timeperiodstring
+    "check_period" : icinga_timeperiodstring
     "obsess_over_host" ? boolean
     "check_freshness" ? boolean
     "freshness_threshold" ? long
-    "event_handler" ? commandstrings
+    "event_handler" ? icinga_commandstrings
     "event_handler_enabled" ? boolean
     "low_flap_threshold" ? long
     "high_flap_threshold" ? long
@@ -93,10 +94,10 @@ type structure_icinga_host = {
     "failure_prediction_enabled" ? boolean = true
     "retain_status_information" ? boolean
     "retain_nonstatus_information" ? boolean
-    "contact_groups" : contactgroupstring[]
+    "contact_groups" : icinga_contactgroupstring[]
     "notification_interval" : long
-    "notification_period" : timeperiodstring
-    "notification_options" : host_notification_string []
+    "notification_period" : icinga_timeperiodstring
+    "notification_options" : icinga_host_notification_string []
     "notifications_enabled" ? boolean
     "stalking_options" ? string with match (SELF, "^(o|d|u)$")
     "register" : boolean = true
@@ -111,40 +112,40 @@ type structure_icinga_host = {
     "_cpus" ? string
     "_enclosureip" ? string
     "_enclosureslot" ? long
-} = nlist();
+} = dict();
 
 # Hostgroup definition
 type structure_icinga_hostgroup = {
     "alias" : string
-    "members" ? hoststring[]
-} = nlist();
+    "members" ? icinga_hoststring[]
+} = dict();
 
 # Host dependency definition
 type structure_icinga_hostdependency = {
-    "dependent_host_name" : hoststring # Should be string[]?
-    "notification_failure_criteria" : host_notification_string[]
-} = nlist();
+    "dependent_host_name" : icinga_hoststring # Should be string[]?
+    "notification_failure_criteria" : icinga_host_notification_string[]
+} = dict();
 
 # Service definition
 type structure_icinga_service = {
-    "name"  ? string # Used when it s a template declaration
+    "name" ? string # Used when it s a template declaration
     "use" ? string # Used to include template
-    "host_name" ? hoststring[]
-    "hostgroup_name" ? hostgroupstring[]
-    "servicegroups" ? servicegroupstring []
+    "host_name" ? icinga_hoststring[]
+    "hostgroup_name" ? icinga_hostgroupstring[]
+    "servicegroups" ? icinga_servicegroupstring []
     "is_volatile" ? boolean
-    "check_command" ? commandstrings
+    "check_command" ? icinga_commandstrings
     "max_check_attempts" : long
     "check_interval" : long
     "retry_interval" : long
     "active_checks_enabled" ? boolean
     "passive_checks_enabled" ? boolean
-    "check_period" ? timeperiodstring
+    "check_period" ? icinga_timeperiodstring
     "parallelize_check" ? boolean
     "obsess_over_service" ? boolean
     "check_freshness" ? boolean
     "freshness_threshold" ? long
-    "event_handler" ? commandstrings
+    "event_handler" ? icinga_commandstrings
     "event_handler_enabled" ? boolean
     "low_flap_threshold" ? long
     "high_flap_threshold" ? long
@@ -153,11 +154,11 @@ type structure_icinga_service = {
     "retain_status_information" ? boolean
     "retain_nonstatus_information" ? boolean
     "notification_interval" : long
-    "notification_period" : timeperiodstring
-    "notification_options" : service_notification_string []
+    "notification_period" : icinga_timeperiodstring
+    "notification_options" : icinga_service_notification_string []
     "notifications_enabled" ? boolean
-    "contact_groups" : contactgroupstring[]
-    "stalking_options" ? stalking_string[]
+    "contact_groups" : icinga_contactgroupstring[]
+    "stalking_options" ? icinga_stalking_string[]
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
@@ -166,68 +167,68 @@ type structure_icinga_service = {
 # Servicegroup definition:
 type structure_icinga_servicegroup = {
     "alias" : string
-    "members" ? servicestring []
-    "servicegroup_members" ? servicegroupstring[]
+    "members" ? icinga_servicestring []
+    "servicegroup_members" ? icinga_servicegroupstring[]
     "notes" ? string
     "notes_url" ? type_absoluteURI
     "action_url" ? type_absoluteURI
-} = nlist();
+} = dict();
 
 # Servicedependency definition:
 type structure_icinga_servicedependency = {
-    "dependent_host_name"   : hoststring[]
-    "dependent_hostgroup_name" ? hostgroupstring[]
-    "dependent_service_description" : servicestring
-    "host_name" ? hoststring
-    "hostgroup_name" ? hostgroupstring
+    "dependent_host_name" : icinga_hoststring[]
+    "dependent_hostgroup_name" ? icinga_hostgroupstring[]
+    "dependent_service_description" : icinga_servicestring
+    "host_name" ? icinga_hoststring
+    "hostgroup_name" ? icinga_hostgroupstring
     "service_description" : string
     "inherits_parent" ? boolean
-    "execution_failure_criteria" ? execution_failure_string []
-    "notification_failure_criteria" ? notification_failure_string []
-    "dependency_period" ? timeperiodstring
+    "execution_failure_criteria" ? icinga_execution_failure_string []
+    "notification_failure_criteria" ? icinga_notification_failure_string []
+    "dependency_period" ? icinga_timeperiodstring
 } with has_host_or_hostgroup (SELF);;
 
 # Contact definition
 type structure_icinga_contact = {
     "alias" : string
-    "contactgroups" ? contactgroupstring []
-    "host_notification_period" : timeperiodstring
-    "service_notification_period" : timeperiodstring
-    "host_notification_options" : host_notification_string []
-    "service_notification_options" : service_notification_string []
-    "host_notification_commands" : commandstrings []
-    "service_notification_commands" : commandstrings []
+    "contactgroups" ? icinga_contactgroupstring []
+    "host_notification_period" : icinga_timeperiodstring
+    "service_notification_period" : icinga_timeperiodstring
+    "host_notification_options" : icinga_host_notification_string []
+    "service_notification_options" : icinga_service_notification_string []
+    "host_notification_commands" : icinga_commandstrings []
+    "service_notification_commands" : icinga_commandstrings []
     "email" : string
     "pager" ? string
-} = nlist();
+} = dict();
 
 # Contact group definition
 type structure_icinga_contactgroup = {
     "alias" : string
-    "members" : contactstring[]
-} = nlist();
+    "members" : icinga_contactstring[]
+} = dict();
 
 # Time range definition
-type timerange = string with
+type icinga_timerange = string with
     match (SELF, "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$");
 
 # Time period definition
 type structure_icinga_timeperiod = {
     "alias" ? string
-    "monday" ? timerange
-    "tuesday"   ? timerange
-    "wednesday" ? timerange
-    "thursday"  ? timerange
-    "friday"    ? timerange
-    "saturday"  ? timerange
-    "sunday"    ? timerange
-} = nlist();
+    "monday" ? icinga_timerange
+    "tuesday" ? icinga_timerange
+    "wednesday" ? icinga_timerange
+    "thursday" ? icinga_timerange
+    "friday" ? icinga_timerange
+    "saturday" ? icinga_timerange
+    "sunday" ? icinga_timerange
+} = dict();
 
 # Extended information for services
 type structure_icinga_serviceextinfo = {
-    "host_name" ? hoststring[]
+    "host_name" ? icinga_hoststring[]
     "service_description" : string
-    "hostgroup_name" ? hostgroupstring[]
+    "hostgroup_name" ? icinga_hostgroupstring[]
     "notes" ? string
     "notes_url" ? type_absoluteURI
     "action_url" ? type_absoluteURI
@@ -237,21 +238,21 @@ type structure_icinga_serviceextinfo = {
 
 # CGI configuration
 type structure_icinga_cgi_cfg = {
-    "main_config_file"      : string = "/etc/icinga/icinga.cfg"
-    "physical_html_path"    : string = "/usr/share/icinga"
-    "url_html_path"         : string = "/icinga"
-    "url_stylesheets_path"  : string = "/icinga/stylesheets"
-    "http_charset"          : string = "utf-8"
-    "show_context_help"     : boolean = false
-    "highlight_table_rows"  : boolean = false
-    "use_pending_states"    : boolean = true
-    "use_logging"           : boolean = false
-    "cgi_log_file"          : string = "/var/log/icinga/gui/icinga-cgi.log"
+    "main_config_file" : string = "/etc/icinga/icinga.cfg"
+    "physical_html_path" : string = "/usr/share/icinga"
+    "url_html_path" : string = "/icinga"
+    "url_stylesheets_path" : string = "/icinga/stylesheets"
+    "http_charset" : string = "utf-8"
+    "show_context_help" : boolean = false
+    "highlight_table_rows" : boolean = false
+    "use_pending_states" : boolean = true
+    "use_logging" : boolean = false
+    "cgi_log_file" : string = "/var/log/icinga/gui/icinga-cgi.log"
     "cgi_log_rotation_method" : string = "d"
     "cgi_log_archive_path" : string = "/var/log/icinga/gui"
     "enforce_comments_on_actions" : boolean = false
     "first_day_of_week" : boolean = false
-    "use_authentication"    : boolean = true
+    "use_authentication" : boolean = true
     "use_ssl_authentication": boolean = false
     "authorized_for_system_information" : string = "icingaadmin"
     "authorized_for_configuration_information" : string = "icingaadmin"
@@ -262,24 +263,24 @@ type structure_icinga_cgi_cfg = {
     "authorized_for_all_host_commands" : string = "icingaadmin"
     "show_all_services_host_is_authorized_for": boolean = true
     "show_partial_hostgroups" : boolean = false
-    "statusmap_background_image"    ? string
-    "default_statusmap_layout"  : long = 5
-    "default_statuswrl_layout"  : long = 4
-    "statuswrl_include"         ? string
-    "ping_syntax"               : string = "/bin/ping -n -U -c 5 $HOSTADDRESS$"
-    "refresh_rate"              : long = 90
-    "escape_html_tags"          : boolean = true
-    "persistent_ack_comments"   : boolean = false
-    "action_url_target"         : string = "main"
-    "notes_url_target"          : string = "main"
-    "lock_author_names"         : boolean = true
+    "statusmap_background_image" ? string
+    "default_statusmap_layout" : long = 5
+    "default_statuswrl_layout" : long = 4
+    "statuswrl_include" ? string
+    "ping_syntax" : string = "/bin/ping -n -U -c 5 $HOSTADDRESS$"
+    "refresh_rate" : long = 90
+    "escape_html_tags" : boolean = true
+    "persistent_ack_comments" : boolean = false
+    "action_url_target" : string = "main"
+    "notes_url_target" : string = "main"
+    "lock_author_names" : boolean = true
     "default_downtime_duration" : long = 7200
     "status_show_long_plugin_output": boolean = false
     "tac_show_only_hard_state": boolean = false
     "suppress_maintenance_downtime" : boolean = false
-    "show_tac_header"           : boolean = true
-    "show_tac_header_pending"   : boolean = true
-    "tab_friendly_titles"       : boolean = true
+    "show_tac_header" : boolean = true
+    "show_tac_header_pending" : boolean = true
+    "tab_friendly_titles" : boolean = true
     "default_expiring_acknowledgement_duration" ? long
     "default_expiring_disabled_notifications_duration" ? long
     "display_status_totals" ? boolean
@@ -291,7 +292,7 @@ type structure_icinga_cgi_cfg = {
     "send_ack_notifications" ? boolean
     "set_expire_ack_by_default" ? boolean
     "standalone_installation" ? boolean
-} = nlist();
+} = dict();
 
 # General options
 type structure_icinga_icinga_cfg = {
@@ -355,8 +356,8 @@ type structure_icinga_icinga_cfg = {
     "enable_notifications" : boolean = true
     "enable_event_handlers" : boolean = true
     "process_performance_data" : boolean = true
-    "service_perfdata_command" : commandstrings = list("process-service-perfdata")
-    "host_perfdata_command" : commandstrings = list("process-host-perfdata")
+    "service_perfdata_command" : icinga_commandstrings = list("process-service-perfdata")
+    "host_perfdata_command" : icinga_commandstrings = list("process-host-perfdata")
     "host_perfdata_file" : string = "/var/icinga/host-perf.dat"
     "service_perfdata_file" : string = "/var/icinga/service-perf.dat"
     "host_perfdata_file_template" : string = "[HOSTPERFDATA]\t$TIMET$\t$HOSTNAME$\t$HOSTEXECUTIONTIME$\t$HOSTOUTPUT$\t$HOSTPERFDATA$"
@@ -365,8 +366,8 @@ type structure_icinga_icinga_cfg = {
     "service_perfdata_file_mode" : string = "a"
     "host_perfdata_file_processing_interval" : long = 0
     "service_perfdata_file_processing_interval" : long = 0
-    "host_perfdata_file_processing_command" ? commandstrings
-    "service_perfdata_file_processing_command" ? commandstrings
+    "host_perfdata_file_processing_command" ? icinga_commandstrings
+    "service_perfdata_file_processing_command" ? icinga_commandstrings
     "allow_empty_hostgroup_assignment" ? boolean
     "obsess_over_services" : boolean = false
     "check_for_orphaned_services" : boolean = true
@@ -438,7 +439,7 @@ type structure_icinga_icinga_cfg = {
     "syslog_local_facility" ? long
     "use_daemon_log" ? boolean
     "use_syslog_local_facility" ? boolean
-} = nlist();
+} = dict();
 
 type structure_icinga_service_list=structure_icinga_service[];
 
@@ -479,7 +480,7 @@ type structure_icinga_ido2db_cfg = {
     "max_logentries_age" ? long
     "max_notifications_age" ? long
     "socket_perm" ? string
-} = nlist();
+} = dict();
 
 # Everything that can be handled by this component
 type structure_component_icinga = {
