@@ -5,8 +5,8 @@
 
 declaration template components/ccm/schema;
 
-include {'quattor/schema'};
-include {'pan/types'};
+include 'quattor/types/component';
+include 'pan/types';
 
 type component_ccm = {
     include structure_component
@@ -31,6 +31,5 @@ type component_ccm = {
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")
     'json_typed'       ? boolean
+    'tabcompletion'    ? boolean
 };
-
-bind '/software/components/ccm' = component_ccm;
