@@ -369,13 +369,13 @@ datastores, vnets, hosts names, etc
 }
 type component_opennebula = {
     include structure_component
-    'datastores'    : opennebula_datastore[1..]
+    'datastores'    ? opennebula_datastore[1..]
     'users'         ? opennebula_user[]
-    'vnets'         : opennebula_vnet[]
-    'hosts'         : string[]
-    'rpc'           : opennebula_rpc
-    'untouchables'  : opennebula_untouchables
-    'oned'          : opennebula_oned
+    'vnets'         ? opennebula_vnet[]
+    'hosts'         ? string[]
+    'rpc'           ? opennebula_rpc
+    'untouchables'  ? opennebula_untouchables
+    'oned'          ? opennebula_oned
     'sunstone'      ? opennebula_sunstone
     'ssh_multiplex' : boolean = true
     'host_ovs'      ? boolean
