@@ -71,23 +71,40 @@ sub cleanup_old_repos
 
     return 1 if $allow_user_pkgs;
 
+    if ($NoAction) {
+        if($repo_dir =~ m/^NOACTION_TEMPDIR_PREFIX/) {
+            # This is ok
+            $self->verbose("Going to remove repositories from temporary NoAction",
+                           " repository directory $repo_dir.");
+        } else {
+            $self->error("Not going to going to cleanup repository files with NoAction",
+                         " with unexpected repository directory $repo_dir ",
+                         " (expected prefix ", NOACTION_TEMPDIR_PREFIX, ").",
+                         "Please report this issue to the developers,",
+                         " as this is most likely a bug in the code.");
+            # This is fatal
+            return 0;
+        }
+    }
+
     my $dir;
     if (!opendir($dir, $repo_dir)) {
         $self->error("Unable to read repositories in $repo_dir");
         return 0;
     }
-
     my $current = Set::Scalar->new(map(m{(.*)\.repo$}, readdir($dir)));
-
     closedir($dir);
+
     my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
+
     my $rm = $current-$allowed;
     foreach my $i (@$rm) {
         # We use $f here to make Devel::Cover happy
         my $f = "$repo_dir/$i.repo";
-        $self->verbose("Unlinking outdated repository $f");
+        my $msg = "outdated repository $i (file $f)";
+        $self->verbose("Unlinking $msg");
         if (!unlink($f)) {
-            $self->error("Unable to remove outdated repository $i: $!");
+            $self->error("Unable to remove $msg: $!");
             return 0;
         }
     }
