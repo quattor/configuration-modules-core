@@ -9,8 +9,9 @@ use warnings;
 use NCM::Component;
 use LC::Exception qw (throw_error);
 use CAF::Process;
-use CAF::FileWriter;
 use CAF::FileEditor;
+use CAF::FileReader;
+use CAF::FileWriter;
 use NCM::Filesystem;
 use Fcntl qw(:seek);
 use LC::Check;
@@ -30,7 +31,7 @@ sub update_entries
 
     my %mounts;
 
-    $self->verbose ("Updating /etc/fstab with new or modified contents");
+    $self->verbose ("Updating " . NCM::Filesystem::FSTAB . " with new or modified contents");
 
     my $el = $config->getElement ("/system/filesystems");
 
@@ -64,11 +65,11 @@ sub protected_hash
         } else {
             %mounts = map { $_ => 1 } @{$protect->{mounts}};
         }
-        my %filesystems = map { $_ => 1 } @{$protect->{filesystems}};
+        my %fs_types = map { $_ => 1 } @{$protect->{fs_types}};
 
         $protected->{$type} = {
             mounts => \%mounts,
-            filesystems => \%filesystems,
+            fs_types => \%fs_types,
         };
     }
     return $protected;
@@ -85,7 +86,7 @@ sub valid_mounts
     my $txt = "$fstab";
     my $re = qr!^\s*([^#\s]\S+)\s+(\S+?)\/?\s+(\S+)\s!m;
     while ($txt =~m/$re/mg) {
-        @mounts{$2} = 1 if ($protected->{filesystems}->{$3});
+        @mounts{$2} = 1 if ($protected->{fs_types}->{$3});
     }
     
     return %mounts;
@@ -158,7 +159,7 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    my $fstab = CAF::FileEditor->new ("/etc/fstab", log => $self,
+    my $fstab = CAF::FileEditor->new (NCM::Filesystem::FSTAB, log => $self,
 				      backup => '.old');
     my $protected = $self->protected_hash($config);
     my %mounts;
@@ -166,14 +167,14 @@ sub Configure
     %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
     $self->delete_outdated ($fstab, %mounts);
     if ($fstab->close()) {
-    	$fstab = CAF::FileEditor->new ("/etc/fstab", log => $self);
-    	$fstab->cancel();
+    	$fstab = CAF::FileReader->new (NCM::Filesystem::FSTAB, log => $self);
     	my $err = $self->remount_everything ($fstab);
     	if ($err) {
     	    $self->error ("Failed to mount some filesystems");
     	    return 0;
     	}
     }
+
     return 1;
 }
 
