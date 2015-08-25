@@ -4,4 +4,4 @@ prefix '/software/components/fstab';
 
 'static/mounts' = list('/', '/boot', '/usr');
 'keep/mounts' =  list('/', '/boot', '/home');
-'keep/filesystems' = list('gpfs', 'ceph');
+'keep/fs_types' = list('gpfs', 'ceph');

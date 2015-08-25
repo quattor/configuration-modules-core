@@ -33,6 +33,16 @@ object template configure;
             "size", 100,
             "type", "primary", # no defaults !
             ),
+        "sda5", nlist (
+            "holding_dev", "sda",
+            "size", 100,
+            "type", "primary", # no defaults !
+            ),
+        "sda6", nlist (
+            "holding_dev", "sda",
+            "size", 100,
+            "type", "primary", # no defaults !
+            ),
     ),
 );
 
@@ -70,10 +80,24 @@ object template configure;
     fs["type"] = "chokotoFS";
     append(fs);
 
+    fs=value("/system/filesystems/0");
+    fs["block_device"] = "partitions/sda5";
+    fs["mountpoint"] = "/home";
+    fs["type"] = "ext4";
+    fs["label"] = "HOME";
+    append(fs);
+
+    fs=value("/system/filesystems/0");
+    fs["block_device"] = "partitions/sda6";
+    fs["mountpoint"] = "/special";
+    fs["label"] = "BLT";
+    fs["type"] = "xfs";
+    append(fs);
 };
 
 prefix '/software/components/fstab';
 
-'static/mounts' = list('/', '/boot', '/usr');
-'keep/mounts' =  list('/', '/boot', '/sys');
-'keep/filesystems' = list('gpfs', 'ceph', 'swap');
+'static/fs_types' = list('xfs');
+'static/mounts' = list('/', '/boot', '/proc');
+'keep/mounts' =  list('/', '/boot', '/home', '/sys');
+'keep/fs_types' = list('gpfs', 'ceph', 'swap');

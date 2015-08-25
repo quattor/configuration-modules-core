@@ -65,11 +65,11 @@ sub protected_hash
         } else {
             %mounts = map { $_ => 1 } @{$protect->{mounts}};
         }
-        my %filesystems = map { $_ => 1 } @{$protect->{filesystems}};
+        my %fs_types = map { $_ => 1 } @{$protect->{fs_types}};
 
         $protected->{$type} = {
             mounts => \%mounts,
-            filesystems => \%filesystems,
+            fs_types => \%fs_types,
         };
     }
     return $protected;
@@ -86,7 +86,7 @@ sub valid_mounts
     my $txt = "$fstab";
     my $re = qr!^\s*([^#\s]\S+)\s+(\S+?)\/?\s+(\S+)\s!m;
     while ($txt =~m/$re/mg) {
-        @mounts{$2} = 1 if ($protected->{filesystems}->{$3});
+        @mounts{$2} = 1 if ($protected->{fs_types}->{$3});
     }
     
     return %mounts;
