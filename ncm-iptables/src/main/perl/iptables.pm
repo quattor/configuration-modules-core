@@ -18,7 +18,7 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use File::Copy;
-use File::Path;
+use File::Temp qw(tempfile);
 use LC::Process qw(run);
 use LC::Check;
 
@@ -852,15 +852,11 @@ sub Configure($$@) {
     ######################################################################
     # Create tmpdir if necessary
     ######################################################################
-    my $tmpdir = "/var/tmp/ncm/";
-    mkpath($tmpdir, 0, 0755 ) unless ( -e $tmpdir );
-    $self->error($@) and return 1 if $?;
-
-    ######################################################################
-    # Write changes to file
-    ######################################################################
-    my $iptc_temp = $tmpdir . "iptables.tmp";
-    unlink($iptc_temp);
+    my ($iptc_temp_fh, $iptc_temp);
+    eval {
+        ($iptc_temp_fh, $iptc_temp) = tempfile("ncm-iptables-XXXXX");
+    };
+    $self->error("failed to create temporary iptables file: $@") and return 1 if $@;
 
     &WriteFile($self, $iptc_temp, $iptables );
     if ($? > 0 ) {
@@ -903,7 +899,6 @@ sub Configure($$@) {
     } else {
 	$self->info("No change for /etc/sysconfig/iptables, not restarting service");
     }
-    unlink($iptc_temp);
     return;
 }
 
