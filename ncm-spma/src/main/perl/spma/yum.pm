@@ -910,7 +910,16 @@ sub _copy_files_and_dirs
             $self->error("Failed to create destdir $destdir (for data $data): ec $?");
             return;
         };
-        foreach my $filename (@files) {
+        foreach my $filename_taint (@files) {
+            my $filename;
+            # untainting check for newlines
+            if ($filename_taint =~ m/^(.+)$/) {
+                $filename = $1;
+            } else {
+                $self->error("Failed to untaint $filename_taint");
+                return;
+            }
+
             if(! ($filename && copy("$data/$filename", "$destdir/$filename"))) {
                 $self->error("Failed to copy $data/$filename to $destdir/$filename: $!");
                 return;
@@ -1041,6 +1050,11 @@ sub configure_plugins
             relpath => 'spma',
             log => $self);
 
+        if (! defined($trd->get_text())) {
+            $self->error ("Unable to generate yum plugin $plugin config: $trd->{fail}");
+            return;
+        };
+
         # returns undef on render error, the error is logged
         my $fh = $trd->filewriter("$plugindir/$plugin.conf");
 
@@ -1062,7 +1076,7 @@ sub Configure
     local $ENV{LANG} = 'C';
     local $ENV{LC_ALL} = 'C';
 
-    my $purge_caches;
+    my ($purge_caches, $res);
 
     my $t = $config->getElement(CMP_TREE)->getTree();
     # Convert these crappily-defined fields into real Perl booleans.
@@ -1091,15 +1105,20 @@ sub Configure
     #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
     # always run it, even if no plugins configured (e.g. to disable fastest mirror)
     my $plugindir = _prefix_noaction_prefix(YUM_PLUGIN_DIR);
-    $self->configure_plugins($plugindir, $t->{plugins});
+    $res = $self->configure_plugins($plugindir, $t->{plugins});
+    defined($res) or return 0;
+    $purge_caches = $res;
 
     my $quattor_managed_reposdir = _prefix_noaction_prefix(REPOS_DIR);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
     $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
-    $purge_caches = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
+    $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                           $t->{proxyhost}, $t->{proxytype},
                                           $t->{proxyport});
-    defined($purge_caches) or return 0;
+
+    defined($res) or return 0;
+    $purge_caches += $res;
+
     # by default, set the quattor managed repos dir
     # TODO: for userpkgs, insert quattor unmanaged dir as first (so it takes priority)
     # TODO: check that the first one wins
@@ -1107,7 +1126,7 @@ sub Configure
     $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
                          $t->{process_obsoletes}, $plugindir, $reposdir);
 
-    my $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
+    $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                                        $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
                                        $t->{fullsearch});
 
