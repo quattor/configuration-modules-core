@@ -2,8 +2,8 @@
 # NCM::Component::${project.artifactId} and yum.conf
 # for more details.
 
-[[%name%]]
-name=[%name%]
+[[% name %]]
+name=[% name %]
 baseurl=
 [%- FOREACH repo IN protocols -%]
 [%-   FILTER indent -%]
@@ -27,7 +27,7 @@ sslverify=[% repo.verify %]
 enabled=[% enabled %]
 metadata_expire=7d
 gpgcheck=[% gpgcheck %]
-include=/etc/yum.repos.d/[%name%].pkgs
+include=[% repos_dir ? repos_dir : "/etc/yum.repos.d" %]/[% name %].pkgs
 [% IF priority %]
 priority=[% priority %]
 [% END -%]

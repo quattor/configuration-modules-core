@@ -22,6 +22,7 @@ use File::Path qw(mkpath rmtree);
 use Text::Glob qw(match_glob);
 use File::Temp qw(tempdir);
 use File::Copy;
+use File::Basename;
 
 use constant REPOS_DIR => "/etc/yum.repos.d";
 use constant REPOS_TEMPLATE => "repository";
@@ -50,8 +51,7 @@ use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
 use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
 
-use constant NOACTION_TEMPDIR_PREFIX => "/tmp/spma-noaction-";
-use constant NOACTION_TEMPDIR_TEMPLATE => NOACTION_TEMPDIR_PREFIX."XXXXX";
+use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant YUM_CONF_OBSOLETES => "obsoletes";
@@ -60,8 +60,42 @@ use constant YUM_CONF_REPOSDIR => 'reposdir';
 
 our $NoActionSupported = 1;
 
-# private variable to hold active yum config file
-my $_active_yum_conf = YUM_CONF_FILE;
+# private variable to hold active noaction prefix
+my $_active_noaction_prefix = "";
+
+# set the active noaction prefix (method for unittesting)
+sub __set_active_noaction_prefix
+{
+    my ($self, $prefix) = @_;
+    $_active_noaction_prefix = $prefix;
+    $self->verbose("Active noaction prefix set $_active_noaction_prefix") if ! $prefix;
+}
+
+# Given filename under NoAction=0, return the filename with proper NoAction prefix
+sub _prefix_noaction_prefix
+{
+    my ($filename) = @_;
+    return "$_active_noaction_prefix$filename";
+}
+
+# Basic test method for _match_noaction_tempdir
+# Replaces X in the template with word regexp and see if it matches
+# name has to be in the noaction tempdir, not just a prefix
+sub __match_template_dir
+{
+    my ($self, $name, $template) = @_;
+    # X is template for letter+digit+_, so \w is ok
+    $template =~ s/X/\\w/g;
+    $template .= '/' if ($template !~ m/\/$/);
+    return $name =~ m/^$template/;
+}
+
+# Test if C<name> is under the NOACTION_TEMPDIR_TEMPLATE directory
+sub _match_noaction_tempdir
+{
+    my ($self, $name) = @_;
+    return $self->__match_template_dir($name, NOACTION_TEMPDIR_TEMPLATE);
+}
 
 # If user packages are not allowed, removes any repositories present
 # in the system that are not listed in $allowed_repos.
@@ -69,23 +103,24 @@ sub cleanup_old_repos
 {
     my ($self, $repo_dir, $allowed_repos, $allow_user_pkgs) = @_;
 
-    return 1 if $allow_user_pkgs;
-
     if ($NoAction) {
-        if($repo_dir =~ m/^NOACTION_TEMPDIR_PREFIX/) {
+        if($self->_match_noaction_tempdir($repo_dir)) {
             # This is ok
             $self->verbose("Going to remove repositories from temporary NoAction",
                            " repository directory $repo_dir.");
         } else {
             $self->error("Not going to going to cleanup repository files with NoAction",
                          " with unexpected repository directory $repo_dir ",
-                         " (expected prefix ", NOACTION_TEMPDIR_PREFIX, ").",
-                         "Please report this issue to the developers,",
+                         " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
+                         " Please report this issue to the developers,",
                          " as this is most likely a bug in the code.");
             # This is fatal
             return 0;
         }
     }
+
+    # Test this after the NoAction bit for unittesting
+    return 1 if $allow_user_pkgs;
 
     my $dir;
     if (!opendir($dir, $repo_dir)) {
@@ -168,6 +203,7 @@ sub generate_repos
     my $changes = 0;
 
     foreach my $repo (@$repos) {
+        $repo->{repos_dir} = $repos_dir;
         if (!exists($repo->{proxy}) && @px) {
             if ($type eq 'reverse') {
                 $repo->{protocols} = $self->generate_reverse_proxy_urls($repo->{protocols}, @px);
@@ -209,7 +245,7 @@ sub _set_yum_config
 
     my ($exe, @args) = @$cmd_ref;
 
-    my @new_cmd = ($exe, '-c', $_active_yum_conf);
+    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix(YUM_CONF_FILE));
     push (@new_cmd, @args) if @args;
 
     return \@new_cmd;
@@ -541,7 +577,8 @@ sub versionlock
     return 0 if !defined($out) || !$self->locked_all_packages($locked, $out, $fullsearch);
 
 
-    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
+    my $fh = CAF::FileWriter->new(_prefix_noaction_prefix(YUM_PACKAGE_LIST),
+                                  log => $self);
     print $fh "$out\n";
     $self->_override_noaction_fh($fh);
     $fh->close();
@@ -813,14 +850,14 @@ sub _override_noaction_fh
 
     if ($NoAction) {
         my $filename = *$fh->{filename};
-        if($filename =~ m/^NOACTION_TEMPDIR_PREFIX/) {
+        if($self->_match_noaction_tempdir($filename)) {
             $self->verbose("Overriding noaction on $filename: noaction is disabled.");
             *$fh->{options}->{noaction} = 0;
             return 1;
         } else {
             $self->error("Not going to override noaction on file $filename",
-                         " (expected prefix ", NOACTION_TEMPDIR_PREFIX, ").",
-                         "Please report this issue to the developers,",
+                         " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
+                         " Please report this issue to the developers,",
                          " as this is most likely a bug in the code.");
         }
     }
@@ -854,7 +891,8 @@ sub _copy_files_and_dirs
                 $self->error("Can't opendir $data: $!");
                 return;
             };
-            push(@files, readdir($dir));
+            # only copy files (and ignore e.g. . and ..)
+            push(@files, grep {-f "$data/$_" } readdir($dir));
             if (! closedir($dir)) {
                 $self->error("Can't closedir $data: $!");
                 return;
@@ -867,8 +905,9 @@ sub _copy_files_and_dirs
             return;
         }
 
-        if(! ($destdir && mkpath($destdir))) {
-            $self->error("Failed to create destdir $destdir (for data $data): $!");
+        # mkpath in scalar context returns number of diretcories actually created
+        if(! ($destdir && (-d $destdir || mkpath($destdir)))) {
+            $self->error("Failed to create destdir $destdir (for data $data): ec $?");
             return;
         };
         foreach my $filename (@files) {
@@ -911,12 +950,13 @@ sub noaction_prefix
 
         $self->verbose("Created noaction prefix $tmppath.");
 
-        return $tmppath;
     } else {
         # Do nothing, return empty string is no noaction
         $self->verbose("Nothing to do for noaction prefix.");
         $tmppath = '' ;
     }
+
+    $self->__set_active_noaction_prefix($tmppath);
 
     return $tmppath;
 }
@@ -950,9 +990,6 @@ sub configure_yum
     $self->_override_noaction_fh($fh);
     $fh->close();
 
-    # This is the active yum conf to use
-    $_active_yum_conf = $cfgfile;
-
 }
 
 # Configure the yum plugins
@@ -962,19 +999,20 @@ sub configure_plugins
 
     # Sanity checks
     # versionlock plugin: enable by default
+    my $packagelist = _prefix_noaction_prefix(YUM_PACKAGE_LIST);
     if ($plugins->{versionlock}) {
         # TODO: check and warn for disabled versionlock plugin?
         # versionlock plugin: locklist is mandatory in schema
-        if ($plugins->{versionlock}->{locklist} ne YUM_PACKAGE_LIST) {
+        if ($plugins->{versionlock}->{locklist} ne $packagelist) {
             $self->warn("yum plugin versionlock plugin unsupported locklist $plugins->{versionlock}->{locklist}. ",
-                        "Forcing it to ".YUM_PACKAGE_LIST.".");
-            $plugins->{versionlock}->{locklist} = YUM_PACKAGE_LIST;
+                        "Forcing it to $packagelist.");
+            $plugins->{versionlock}->{locklist} = $packagelist;
         }
     } else {
         $self->verbose("yum plugin versionlock is not configured. Will be enabled.");
         $plugins->{versionlock} = {
             enabled => 1,
-            locklist => YUM_PACKAGE_LIST,
+            locklist => $packagelist,
         };
     }
 
@@ -993,9 +1031,13 @@ sub configure_plugins
     my $changes = 0;
     foreach my $plugin (sort keys %$plugins) {
         $self->verbose("Going to configure plugin $plugin.");
+        my $plugin_config = $plugins->{$plugin};
+        # insert plugindir for TT purposes
+        $plugin_config->{"_plugindir"} = $plugindir;
+
         my $trd = EDG::WP4::CCM::TextRender->new(
             "yumplugins/$plugin",
-            $plugins->{$plugin},
+            $plugin_config,
             relpath => 'spma',
             log => $self);
 
@@ -1037,10 +1079,10 @@ sub Configure
 
     if (! defined($prefix)) {
         return 0;
-    } elsif ($NoAction && $prefix !~ m/^NOACTION_TEMPDIR_PREFIX/) {
+    } elsif ($NoAction && ! $self->_match_noaction_tempdir("$prefix/")) {
         # extra safety check
-        $self->error("Noaction prefix in NoAction has to start with ",
-                     NOACTION_TEMPDIR_PREFIX, " (prefix $prefix).");
+        $self->error("Noaction prefix in NoAction has to start with template ",
+                     NOACTION_TEMPDIR_TEMPLATE, " (prefix $prefix).");
         return 0;
     };
 
@@ -1048,10 +1090,10 @@ sub Configure
     # TODO: should this also influence purge_caches?
     #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
     # always run it, even if no plugins configured (e.g. to disable fastest mirror)
-    my $plugindir = $prefix.YUM_PLUGIN_DIR;
+    my $plugindir = _prefix_noaction_prefix(YUM_PLUGIN_DIR);
     $self->configure_plugins($plugindir, $t->{plugins});
 
-    my $quattor_managed_reposdir = $prefix.REPOS_DIR;
+    my $quattor_managed_reposdir = _prefix_noaction_prefix(REPOS_DIR);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
     $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
     $purge_caches = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
@@ -1062,7 +1104,8 @@ sub Configure
     # TODO: for userpkgs, insert quattor unmanaged dir as first (so it takes priority)
     # TODO: check that the first one wins
     my $reposdir = [$quattor_managed_reposdir];
-    $self->configure_yum($prefix.YUM_CONF_FILE, $t->{process_obsoletes}, $plugindir, $reposdir);
+    $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
+                         $t->{process_obsoletes}, $plugindir, $reposdir);
 
     my $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                                        $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
