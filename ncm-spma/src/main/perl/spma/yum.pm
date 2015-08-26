@@ -414,7 +414,8 @@ sub expire_yum_caches
 {
     my ($self) = @_;
 
-    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches"));
+    # this only affects the caches, can be safely expired/cleaned up
+    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches", 1));
 }
 
 # Actually calls yum to execute transaction $tx
@@ -705,8 +706,17 @@ sub complete_transaction
 {
     my ($self) = @_;
 
-    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+    if ($NoAction) {
+        # not completing outstanding transactions
+        # should be ok to ignore for queries (i.e. NoAction)
+        # TODO: check if there's a way to test if anything is outstanding,
+        # and only continue if all is fine
+        $self->verbose("Skipping complete_transaction in NoAction mode");
+        return 1;
+    } else {
+        return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
                                               "complete previous transactions"));
+    }
 }
 
 # Purges the Yum repository caches.  For now we only care about the
@@ -715,8 +725,10 @@ sub purge_yum_caches
 {
     my ($self) = @_;
 
+    # This only affects the caches, can be safely purged
     return defined($self->execute_yum_command([YUM_PURGE_METADATA],
-                                              "purge repository metadata"));
+                                              "purge repository metadata",
+                                              1));
 }
 
 # Runs yum distro-sync.  Before modifying the installed sets we must
