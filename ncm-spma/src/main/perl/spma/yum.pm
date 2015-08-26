@@ -399,6 +399,8 @@ sub solve_transaction {
     if ($run && !$NoAction) {
         push(@rs, "transaction run");
     } else {
+        $self->verbose("Resetting transaction with NoAction=1 (instead of running it)")
+            if ($NoAction);
         push(@rs, "transaction reset");
     }
     return join("\n", @rs, "");
@@ -815,7 +817,11 @@ sub update_pkgs_retry
     if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
         $self->verbose("update_pkgs ok");
     } else {
-        if ($allow_user_pkgs) {
+        if ($NoAction) {
+            # There's no point in retrying, each attemp will have the transaction reset instead of run.
+            $self->verbose("update_pkgs ended with NoAction=1");
+            return 1;
+        } elsif ($allow_user_pkgs) {
             # tx_error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=true");
             return 0;
@@ -1139,8 +1145,8 @@ sub Configure
                          $t->{process_obsoletes}, $plugindir, $reposdir);
 
     $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
-                                       $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
-                                       $t->{fullsearch});
+                                    $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
+                                    $t->{fullsearch});
 
     my $ec = 1;
 
