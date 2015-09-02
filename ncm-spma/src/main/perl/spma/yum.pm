@@ -886,7 +886,7 @@ sub _override_noaction_fh
 # preserving the directory tree structure.
 # e.g. /etc/yum.conf and prefix /tmp/mytemp will result in
 # /tmp/mytemp/etc/yum.conf.
-# return 1 in case of success, undf in case of failure. the method logs errors
+# return 1 in case of success, undef in case of failure. the method logs errors
 # TODO: replace by something else
 sub _copy_files_and_dirs
 {
@@ -897,7 +897,7 @@ sub _copy_files_and_dirs
 
         if (-f $data) {
             $destdir = $prefix."/".dirname($data);
-            # using basename is ok here since we tested if it is a directory
+            # using basename is ok here since we tested if it is a file
             push(@files, basename($data));
 
             # set $data to the directory
@@ -978,8 +978,8 @@ sub noaction_prefix
         $self->verbose("Created noaction prefix $tmppath.");
 
     } else {
-        # Do nothing, return empty string is no noaction
-        $self->verbose("Nothing to do for noaction prefix.");
+        # Do nothing, return empty string without noaction
+        $self->debug(1, "Nothing to do for noaction prefix.");
         $tmppath = '' ;
     }
 
@@ -1096,15 +1096,14 @@ sub Configure
 
     my ($purge_caches, $res);
 
-    my $t = $config->getElement(CMP_TREE)->getTree();
+    my $t = $config->getTree(CMP_TREE);
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
 
-    my $repos = $config->getElement(REPOS_TREE)->getTree();
-    my $pkgs = $config->getElement(PKGS_TREE)->getTree();
-    my $groups = $config->elementExists(GROUPS_TREE) ?
-        $config->getElement(GROUPS_TREE)->getTree() : {};
+    my $repos = $config->getTree(REPOS_TREE);
+    my $pkgs = $config->getTree(PKGS_TREE);
+    my $groups = $config->getTree(GROUPS_TREE) || {};
 
     # check if a temp location is required for NoAction support.
     my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, REPOS_DIR, YUM_CONF_FILE);
