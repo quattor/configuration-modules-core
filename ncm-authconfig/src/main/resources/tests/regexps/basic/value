@@ -91,6 +91,8 @@ contentspath=/software/components/authconfig/method/sssd
 ^ldap_search_timeout = 6$
 ^ldap_uri = ldaps://mymainserver.mydomain,ldaps://myothermainserver.mydomain$
 ^ldap_use_object_class = posixAccount$
+^simple_allow_groups = group1,group2$
+^access_provider = simple$
 ^account_cache_expiration = 0$
 ^auth_provider = ldap$
 ^cache_credentials = True$
@@ -108,4 +110,3 @@ contentspath=/software/components/authconfig/method/sssd
 ^proxy_fast_alias = False$
 ^re_expression = \(\?P<name>\[\^@\]\+\)@\?\(\?P<domain>\[\^@\]\*\$\)$
 ^subdomain_homedir = /home/%d/%u$
-
