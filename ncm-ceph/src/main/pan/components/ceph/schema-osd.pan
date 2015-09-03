@@ -1,6 +1,6 @@
 declaration template components/${project.artifactId}/schema-osd;
 
-@documentation{ ceph osd configuration } 
+@documentation{ configuration options for a ceph osd daemon } 
 type ceph_osd_config = {
     include ceph_daemon_config
     'osd_deep_scrub_interval'   ? double(0..)
@@ -31,7 +31,7 @@ type ceph_osd = {
     'labels'        ? string[1..]
 };
 
-@documentation{ ceph osdhost-specific type }
+@documentation{ ceph osdhost-specific type, defining all osds on a host }
 type ceph_osd_host = { 
     'fqdn'          : type_fqdn
     'osds'          : ceph_osd {}

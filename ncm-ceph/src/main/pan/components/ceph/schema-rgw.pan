@@ -2,7 +2,7 @@ declaration template components/${project.artifactId}/schema-rgw;
 
 type type_quoted_string = string with match(SELF, '^".*"$');
 
-@documentation{ ceph rados gateway config }
+@documentation{ configuration options for a ceph rados gateway instance }
 type ceph_radosgw_config = { 
     include ceph_daemon_config
     'host'      : string
@@ -24,7 +24,7 @@ type ceph_radosgw = {
     'config' ? ceph_radosgw_config
 };
 
-@documentation{ ceph rados gateway host }
+@documentation{ ceph rados gateway host, defining all gateways on a host }
 type ceph_radosgwh = {
     'fqdn'      : type_fqdn
     'gateways'  : ceph_radosgw{}

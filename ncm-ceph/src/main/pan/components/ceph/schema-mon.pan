@@ -1,6 +1,6 @@
 declaration template components/${project.artifactId}/schema-mon;
 
-@documentation{ ceph monitor config }
+@documentation{ configuration options for a ceph monitor daemon }
 type ceph_mon_config = { 
     include ceph_daemon_config
 };
