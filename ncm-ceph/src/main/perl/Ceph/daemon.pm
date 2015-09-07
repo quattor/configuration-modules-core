@@ -201,7 +201,7 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m{^/dev/}){
-        my $cmd = ['sudo', '/usr/bin/file', '-s', $loc];
+        my $cmd = ['sudo', '/usr/bin/file', '-sL', $loc];
         my $output = $self->run_command_as_ceph_with_ssh($cmd, $host) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
             $self->error("On host $host: $output", "Expected 'data'");

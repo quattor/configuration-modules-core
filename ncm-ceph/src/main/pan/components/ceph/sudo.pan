@@ -15,7 +15,7 @@ include 'components/sudo/config';
         "/usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))", 
         "/usr/bin/python -u -c import sys;exec(eval(sys.stdin.readline()))", 
         "/bin/mkdir",
-        "/usr/bin/file -s *"
+        "/usr/bin/file -sL *"
     );
     foreach (i; cmd; sudolist){
         nl = nlist("host", "ALL",
