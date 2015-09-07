@@ -164,49 +164,17 @@ function is_bucket = {
 
 @documentation{ ceph daemon config parameters }
 type ceph_daemon_config = { 
-    'osd_journal_size'  ? long(0..) 
-    'osd_objectstore'   ? string
 };
 
 @documentation{ type for a generic ceph daemon }
 type ceph_daemon = {
     'up'    : boolean = true
-    'config'? ceph_daemon_config
 };
 
-@documentation{ ceph monitor-specific type }
-type ceph_monitor = {
-    include ceph_daemon
-    'fqdn'  : type_fqdn
-};
-
-@documentation{ 
-ceph osd-specific type 
-The key of the ceph_osd should be the path to the mounted disk. 
-This can be an absolute path or a relative one to /var/lib/ceph/osd/
-journal_path should be the path to a journal file
-This can be an absolute path or a relative one to /var/lib/ceph/log/
-With labels osds can be grouped. This should also be defined in root. 
-}
-type ceph_osd = {
-    include ceph_daemon
-    'in'            ? boolean = true
-    'journal_path'  ? string
-    'crush_weight'  : double(0..) = 1.0
-    'labels'        ? string[1..]
-};
-
-@documentation{ ceph osdhost-specific type }
-type ceph_osd_host = {
-    'fqdn'          : type_fqdn
-    'osds'          : ceph_osd {}
-};
-
-@documentation{ ceph mds-specific type }
-type ceph_mds = {
-     include ceph_daemon
-    'fqdn'  : type_fqdn
-};
+include 'components/ceph/schema-mon';
+include 'components/ceph/schema-osd';
+include 'components/ceph/schema-mds';
+include 'components/ceph/schema-rgw';
 
 @documentation{ ceph cluster-wide config parameters }
 type ceph_cluster_config = {
@@ -230,19 +198,6 @@ type ceph_cluster_config = {
     'osd_pool_default_pgp_num'  ? long(0..)
     'osd_pool_default_size'     : long(0..) = 3
     'public_network'            : type_network_name
-};
-
-@documentation{ ceph rados gateway type 
-http://ceph.com/docs/master/radosgw/ 
-}
-type ceph_radosgw = {
-    'config' ? nlist
-};
-
-@documentation{ ceph rados gateway host }
-type ceph_radosgwh = {
-    'fqdn'      : type_fqdn
-    'gateways'  : ceph_radosgw{}
 };
 
 @documentation{ 
