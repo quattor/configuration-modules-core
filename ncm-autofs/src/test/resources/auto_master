@@ -1,0 +1,14 @@
+Test auto.master
+---
+---
+^# Sample auto.master file$
+^#$
+^/misc\s+/etc/auto.misc$
+^#$
+^/net\s+-hosts$
+^# Include /etc/auto.master.d/\*.autofs$
+^\+dir:/etc/auto.master.d$
+^#$
+^\+auto.master$
+^/mymounts/map1\tfile:/etc/auto.export_map1\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys$
+^/mymounts/map2\tfile:/etc/auto.export_map2\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys$

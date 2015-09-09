@@ -1,0 +1,17 @@
+Basic test for autofs.conf
+---
+//software
+rendermodule=autofs_conf
+contentspath=/software/components/autofs/conf
+element=yesno
+---
+^\[ autofs \]$
+^browse_mode = no$
+^timeout = 300$
+^\[ amd \]$
+^autofs_use_lofs = no$
+^dismount_interval = 600$
+^\[ /some/mount1 \]$
+^dismount_interval = 1200$
+^\[ /some/mount2 \]$
+^autofs_use_lofs = yes$

@@ -1,0 +1,5 @@
+[% INCLUDE 'autofs/autofs_conf_section.tt' name="autofs" data=autofs %]
+[% INCLUDE 'autofs/autofs_conf_section.tt' name="amd" data=amd %]
+[% FOREACH pair IN mountpoints.pairs -%]
+[%      INCLUDE 'autofs/autofs_conf_section.tt' name=CCM.unescape(pair.key) data=pair.value %]
+[% END -%]

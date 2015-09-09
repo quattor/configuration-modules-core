@@ -1,0 +1,6 @@
+Test export
+---
+---
+^# File managed by Quattor component ncm-autofs. Do not edit.$
+^/export/map1\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\tmyserver.mydomain:/export/path1$
+^/export/map1b\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\tmyserver.mydomain:/export/path1b$
