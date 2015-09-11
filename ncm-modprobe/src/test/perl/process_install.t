@@ -27,7 +27,7 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
-my $fh = CAF::FileWriter->new("/etc/modprobe.d");
+my $fh = CAF::FileWriter->new("target/modprobe_process_install");
 
 Readonly::Hash my %TREE => (modules => [
         {
@@ -45,3 +45,5 @@ $cmp->process_install(\%TREE, $fh);
 like($fh, qr{^install\s+module_name1\s+module_command$}m,
      "First install line rendered correctly");
 unlike($fh, qr{module_name2$}m, "Module without command not printed");
+
+$fh->close();

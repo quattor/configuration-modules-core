@@ -24,7 +24,7 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
-my $fh = CAF::FileWriter->new("/etc/modprobe.d");
+my $fh = CAF::FileWriter->new("target/modprobe_process_blacklist");
 
 Readonly::Hash my %TREE => (modules => [
         {
@@ -45,3 +45,5 @@ like($fh, qr{^blacklist\s+module_name1$}m,
 like($fh, qr{^blacklist\s+module_name2$}m,
      "Second blacklist line rendered correctly");
 unlike($fh, qr{module_string$}m, "Module string correctly ignored");
+
+$fh->close();
