@@ -4,7 +4,7 @@ Tests for export config
 ---
 ^EXPORT \{$
 ^\s{4}CLIENT \{ $
-^\s{8}Access_Type = RW;$
+^\s{8}Access_Type = "RW";$
 ^\s{8}Clients = \*.vsc;$
 ^\s{8}Squash = "root_squash";$
 ^\s{4}\}$
@@ -27,7 +27,7 @@ Tests for export config
 ^$
 ^EXPORT \{$
 ^\s{4}CLIENT \{ $
-^\s{8}Access_Type = RW;$
+^\s{8}Access_Type = "RW";$
 ^\s{8}Clients = \*.vsc;$
 ^\s{8}Squash = "root_squash";$
 ^\s{4}\}$

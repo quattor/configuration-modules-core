@@ -1,4 +1,4 @@
-[%- comma_sep_list = ["Clients","Access_Type", "NFS_Protocols", "Protocols", "Transports", "SecType"] -%]
+[%- comma_sep_list = ["Clients", "NFS_Protocols", "Protocols", "Transports", "SecType"] -%]
 [%- block_type = ["Components", "Format", "FSAL", "PNFS", "remote_server"] -%]
 [%- block_array = ["CLIENT", "DataServer", "Facility"] -%]
 

@@ -7,7 +7,7 @@ Tests for all attributes
 ^\s{4}\}$
 ^\}$
 ^test \{$
-^\s{4}Access_Type = None;$
+^\s{4}Access_Type = "None";$
 ^\s{4}Active_krb5 = FALSE;$
 ^\s{4}Allow_Numeric_Owners = TRUE;$
 ^\s{4}Anonymous_gid = -2;$
