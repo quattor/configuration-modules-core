@@ -17,7 +17,7 @@ Base test for config
 ^default_app_id: discover$
 ^elasticsearch_preserve_host: true$
 ^elasticsearch_url: http://mysupersecret.host.domain:9200$
-^host: localhost$
+^host: localhost.localdomain$
 ^kibana_index: .kibana$
 ^port: 5601$
 ^request_timeout: 300000$
