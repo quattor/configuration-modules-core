@@ -4,8 +4,8 @@ include 'metaconfig/logstash/forwarder';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash-forwarder.conf}/contents";
 
-"network/servers/0" = nlist("host", "myhost", "port", 12345);
-"network/servers/1" = nlist("host", "myhost2", "port", 12346);
+"network/servers/0" = nlist("host", "myhost.example.com", "port", 12345);
+"network/servers/1" = nlist("host", "myhost2.example.com", "port", 12346);
 "network/ssl_key" = "/my/key";
 "network/ssl_certificate" = "/my/cert";
 "network/ssl_ca" = "/my/ca";
