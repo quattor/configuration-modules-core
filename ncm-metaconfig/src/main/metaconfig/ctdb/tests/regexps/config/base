@@ -10,7 +10,7 @@ multiline
 ^CTDB_PUBLIC_ADDRESSES=/etc/ctdb/public_addresses$
 ^CTDB_RECOVERY_LOCK=/gpfs/scratchtest/home/ctdb/lock/file$
 ^CTDB_SYSLOG=yes$
-^NFS_HOSTNAME=storage2201$
+^NFS_HOSTNAME=storage2201.example.com$
 ^NFS_SERVER_MODE=ganesha$
 ^/usr/bin/waitforgpfs.sh /dev/scratchtest$
 ^ulimit -n 10000$
