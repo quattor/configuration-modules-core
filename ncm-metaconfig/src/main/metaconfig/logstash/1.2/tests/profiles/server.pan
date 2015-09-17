@@ -103,7 +103,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 "output" = nlist("plugins", list(nlist(
     "elasticsearch", nlist(
         "flush_size", 5000,
-        "bind_host", "localhost",
+        "bind_host", "localhost.localdomain",
         "workers", 4,
         "port", list(9300,9305), 
         ),
