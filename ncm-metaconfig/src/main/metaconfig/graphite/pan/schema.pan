@@ -44,9 +44,9 @@ type carbon_aggregator_aggregation_rules = {
 };
 
 type carbon_common = {
-    "line_receiver_interface" : type_fqdn = "0.0.0.0"
+    "line_receiver_interface" : type_hostname = "0.0.0.0"
 
-    "pickle_receiver_interface" : type_fqdn = "0.0.0.0"
+    "pickle_receiver_interface" : type_hostname = "0.0.0.0"
 
     "use_flow_control" : boolean = true
     "use_whitelist" ? boolean = false
@@ -76,7 +76,7 @@ type carbon_cache = {
     "max_creates_per_minute" : long(0..) = 200
 
     "enable_udp_listener" : boolean = false
-    "udp_receiver_interface" : type_fqdn = "0.0.0.0"
+    "udp_receiver_interface" : type_hostname = "0.0.0.0"
     "udp_receiver_port" : long(0..) = 2003
 
     "use_insecure_unpickler" : boolean = false
@@ -96,7 +96,7 @@ type carbon_cache = {
 
     "enable_amqp" ? boolean = false
     "amqp_verbose" ? boolean = false
-    "amqp_host" ? type_fqdn = "localhost"
+    "amqp_host" ? type_hostname = "localhost"
     "amqp_port" ? long(0..) = 5672
     "amqp_vhost" ? string = "/"
     "amqp_user" ? string = "guest"
@@ -105,7 +105,7 @@ type carbon_cache = {
     "amqp_metric_name_in_body" ? boolean = false
 
     "enable_manhole" ? boolean = false
-    "manhole_interface" ? type_fqdn = "127.0.0.1"
+    "manhole_interface" ? type_hostname = "127.0.0.1"
     "manhole_port" ? long(0..) = 7222
     "manhole_user" ? string = "admin"
     "manhole_public_key" ? string

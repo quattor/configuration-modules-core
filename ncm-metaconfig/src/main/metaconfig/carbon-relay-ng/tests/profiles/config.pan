@@ -6,7 +6,7 @@ prefix "/software/components/metaconfig/services/{/etc/carbon-relay-ng.ini}/cont
 'instance' = 'mydefault';
 'listen_addr' = "1.2.3.4:2003";
 'admin_addr' = "5.6.7.8:2004";
-'http_addr' = "localhost:8081";
+'http_addr' = "localhost.localdomain:8081";
 'spool_dir' = "/var/spool/carbon-relay-ng";
 'log_level' = "info";
 'instrumentation/graphite_addr' = "9.8.7.6:1234";

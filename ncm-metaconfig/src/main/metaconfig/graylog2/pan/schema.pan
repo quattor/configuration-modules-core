@@ -13,7 +13,7 @@ type graylog2 = {
     "mongodb_useauth" : boolean = false
     "mongodb_user" ? string
     "mongodb_password" ? string
-    "mongodb_host" : type_fqdn = 'localhost'
+    "mongodb_host" : type_fqdn = 'localhost.localdomain'
     'mongodb_replica_set' ? string
     "mongodb_database" : string = 'graylog2'
     "mongodb_port" : long = 27017

@@ -2,7 +2,7 @@ object template config;
 
 include 'metaconfig/ctdb/config';
 
-variable FULL_HOSTNAME = 'storage2201';
+variable FULL_HOSTNAME = 'storage2201.example.com';
 prefix "/software/components/metaconfig/services/{/etc/sysconfig/ctdb}/contents/service";
 
 "ctdb_debuglevel" = 2;

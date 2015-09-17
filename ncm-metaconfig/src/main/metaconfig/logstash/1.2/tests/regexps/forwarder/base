@@ -6,8 +6,8 @@ multiline
 ^\{$
 ^\s{4}"network": \{$
 ^\s{8}"servers": \[$
-^\s{12}"myhost:12345",$
-^\s{12}"myhost2:12346"$
+^\s{12}"myhost.example.com:12345",$
+^\s{12}"myhost2.example.com:12346"$
 ^\s{8}\],$
 ^\s{8}"ssl ca": "/my/ca",$
 ^\s{8}"ssl certificate": "/my/cert",$

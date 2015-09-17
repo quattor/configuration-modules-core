@@ -4,7 +4,7 @@ include 'pan/types';
 
 type kibana_service = {
     "port" : type_port = 5601
-    "host" : type_hostname = "localhost" # not insecure shipped default "0.0.0.0"
+    "host" : type_hostname = "localhost.localdomain" # not insecure shipped default "0.0.0.0"
     "elasticsearch_url" : type_absoluteURI = "http://localhost:9200"
     "elasticsearch_preserve_host" : boolean = true
     "kibana_index" : string = ".kibana"

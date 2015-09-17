@@ -78,7 +78,7 @@ type carbon_relay_ng_service = {
     'instance' : string = 'default'
     'listen_addr' : type_hostport = "0.0.0.0:2003"
     'admin_addr' : type_hostport = "0.0.0.0:2004"
-    'http_addr' : type_hostport = "localhost:8081"
+    'http_addr' : type_hostport = "localhost.localdomain:8081"
     'spool_dir' : string = "/var/spool/carbon-relay-ng"
     'log_level' : string = "notice" with match(SELF, '^(critical|error|warning|notice|info|debug)$')
     'init' : carbon_relay_ng_init[]
