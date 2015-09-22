@@ -1,11 +1,5 @@
 name = {
-[% FILTER indent -%]
-hosts = [% hosts.join(',') %]
-port = [% port %]
-master = [% master ? "TRUE" : "FALSE" %]
-description = "[% description %]"
-[%     IF option.defined -%]
-option = "[% option %]"
-[%     END -%]
-[% END -%]
+[%- FOREACH pair IN CCM.contents %]
+[%     INCLUDE metaconfig/example/element.tt key=pair.key value=pair.value FILTER indent %]
+[%- END %]
 }

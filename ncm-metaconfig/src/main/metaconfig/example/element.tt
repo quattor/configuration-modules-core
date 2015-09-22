@@ -1,0 +1,8 @@
+[% key %] = [% %]
+[%- IF CCM.is_list(value) -%]
+[%-      value.join(',') -%]
+[%- ELSIF value.is_boolean %]
+[%-      value ? "TRUE" : "FALSE" -%]
+[%- ELSE -%]
+[%-      value.is_string ? '"' _ value _ '"' : value -%]
+[%- END -%]
