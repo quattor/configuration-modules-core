@@ -1,1 +1,1 @@
-[% INCLUDE metaconfig/httpd/2.2/httpd_conf.tt %]
+[% INCLUDE 'metaconfig/httpd/2.2/httpd_conf.tt' %]

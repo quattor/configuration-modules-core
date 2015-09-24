@@ -1,6 +1,6 @@
-structure template 'metaconfig/httpd/types_composed';
+declaration template metaconfig/httpd/types_composed;
 
-type httpd_directory_base = {
+type httpd_directory = {
     include httpd_file
     "rewrite" ? httpd_rewrite
     "handler" ? httpd_handler
@@ -12,7 +12,6 @@ type httpd_directory_base = {
     "directoryindex" ? string[]
     "limitrequestbody" ? long(0..)
 };
-
 
 type httpd_vhost = {
     include httpd_shared

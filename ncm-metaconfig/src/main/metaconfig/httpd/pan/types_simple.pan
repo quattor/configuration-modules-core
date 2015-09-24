@@ -1,4 +1,4 @@
-structure template 'metaconfig/httpd/types_simple';
+declaration template metaconfig/httpd/types_simple;
 
 include 'pan/types';
 include 'components/accounts/functions';
