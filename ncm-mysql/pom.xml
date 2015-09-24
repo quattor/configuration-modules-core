@@ -6,7 +6,7 @@
   <artifactId>mysql</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.8.0-rc3</version>
+  <version>15.8.0-rc4-SNAPSHOT</version>
   <name>NCM component to manage MySQL servers and databases</name>
 
 
