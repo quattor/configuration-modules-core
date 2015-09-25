@@ -11,9 +11,13 @@ NCM::Component::spma - Quattor's package manager
 
 The SPMA component passes off to different back-ends depending
 on the type of packaging system specified in
-B</software/components/spma/packager>.
+B</software/components/spma/packager>. Optionally there can be
+invoked a different module than default one for a single
+packaging system once B</software/components/spma/suffix> with
+suffix name is defined.
 
-See B<NCM::Component::spma::yum> for Yum and
+See B<NCM::Component::spma::yum> for Yum (also 
+B<NCM::Component::spma::yumng optional module for Yum) and
 B<NCM::Component::spma::ips> for Solaris IPS.
 
 =cut
