@@ -27,6 +27,8 @@
   <properties>
     <spma.ips.author>Mark R. Bannister</spma.ips.author>
     <spma.ips.email>Mark.Bannister@morganstanley.com</spma.ips.email>
+    <spma.yum-ng.author>Jindrich Novy</spma.yum-ng.author>
+    <spma.yum-ng.email>jindrich.novy@morganstanley.com</spma.yum-ng.email>
   </properties>
   <contributors>
     <contributor>
