@@ -4,7 +4,7 @@
 
 template components/nagios/functions;
 
-function has_host_or_hostgroup = {
+function nagios_has_host_or_hostgroup = {
 	v = ARGV[0];
 	if (exists (v["host_name"]) || exists (v["hostgroup_name"])) {
 		return (true);

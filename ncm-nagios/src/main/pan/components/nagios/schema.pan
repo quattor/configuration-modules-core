@@ -150,7 +150,7 @@ type structure_nagios_service = {
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
-} with has_host_or_hostgroup (SELF);;
+} with nagios_has_host_or_hostgroup (SELF);;
 
 # Servicegroup definition:
 type structure_nagios_servicegroup = {
@@ -174,7 +174,7 @@ type structure_nagios_servicedependency = {
     "execution_failure_criteria" ? nagios_execution_failure_string []
     "notification_failure_criteria" ? nagios_notification_failure_string []
     "dependency_period" ? nagios_timeperiodstring
-} with has_host_or_hostgroup (SELF);;
+} with nagios_has_host_or_hostgroup (SELF);;
 
 # Contact definition
 type structure_nagios_contact = {
@@ -223,7 +223,7 @@ type structure_nagios_serviceextinfo = {
     "action_url" ? type_absoluteURI
     "icon_image" ? string
     "icon_image_alt" ? string
-} with has_host_or_hostgroup (SELF);
+} with nagios_has_host_or_hostgroup (SELF);
 
 # CGI configuration
 type structure_nagios_cgi_cfg = {
