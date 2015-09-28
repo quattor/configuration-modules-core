@@ -539,7 +539,7 @@ sub Configure
                 # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
                 # problem is, we want both
                 # adding symlinks however is not the best thing to do...
-                if ($net{$iface}{vlan} eq "true") {
+                if( exists($net{$iface}{vlan}) && ($net{$iface}{vlan} eq "true") ) {
                     my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
                     if ($file_name_sym ne $file_name) {
                         if(! -e $file_name_sym) {
