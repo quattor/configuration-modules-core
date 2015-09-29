@@ -162,7 +162,7 @@ type structure_icinga_service = {
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
-} with has_host_or_hostgroup (SELF);;
+} with icinga_has_host_or_hostgroup (SELF);;
 
 # Servicegroup definition:
 type structure_icinga_servicegroup = {
@@ -186,7 +186,7 @@ type structure_icinga_servicedependency = {
     "execution_failure_criteria" ? icinga_execution_failure_string []
     "notification_failure_criteria" ? icinga_notification_failure_string []
     "dependency_period" ? icinga_timeperiodstring
-} with has_host_or_hostgroup (SELF);;
+} with icinga_has_host_or_hostgroup (SELF);;
 
 # Contact definition
 type structure_icinga_contact = {
@@ -234,7 +234,7 @@ type structure_icinga_serviceextinfo = {
     "action_url" ? type_absoluteURI
     "icon_image" ? string
     "icon_image_alt" ? string
-} with has_host_or_hostgroup (SELF);
+} with icinga_has_host_or_hostgroup (SELF);
 
 # CGI configuration
 type structure_icinga_cgi_cfg = {
