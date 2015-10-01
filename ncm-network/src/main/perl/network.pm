@@ -94,7 +94,7 @@ sub Configure
                                  stdout => \$ifconfig_out,
                                  stderr => "stdout",
                                  log => $self);
-    if(! $proc->execute() ) {
+    if (! $proc->execute()) {
         $ifconfig_out = "" if (! defined($ifconfig_out));
 
         # holy backporting batman. they finally kicked it out!
@@ -445,7 +445,7 @@ sub Configure
         # set some bridge-releated parameters
         # bridge STP
         if (exists($net{$iface}{stp})) {
-            if($net{$iface}{stp}) {
+            if ($net{$iface}{stp}) {
                 $text .= "STP=on\n";
             } else {
                 $text .= "STP=off\n";
@@ -473,7 +473,7 @@ sub Configure
         # VLAN support
         # you do not need to set this for the VLAN device
         $net{$iface}{vlan} = "true" if ($iface =~ m/^vlan\d+/);
-        if( exists($net{$iface}{vlan}) ) {
+        if (exists($net{$iface}{vlan})) {
             if ($net{$iface}{vlan} eq "true") {
                 $text .= "VLAN=yes\n";
                 # is this really needed?
@@ -502,15 +502,15 @@ sub Configure
             $exifiles{$file_name} = 1;
             $text = "";
             foreach my $rt (sort keys %{$net{$iface}{route}}) {
-                if ( $net{$iface}{route}{$rt}{'address'}) {
+                if ($net{$iface}{route}{$rt}{'address'}) {
                     $text .= "ADDRESS$rt=" .
                         $net{$iface}{route}{$rt}{'address'}."\n";
                 }
-                if ( $net{$iface}{route}{$rt}{'gateway'}) {
+                if ($net{$iface}{route}{$rt}{'gateway'}) {
                     $text .= "GATEWAY$rt=" .
                         $net{$iface}{route}{$rt}{'gateway'}."\n";
                 }
-                if ( $net{$iface}{route}{$rt}{'netmask'}) {
+                if ($net{$iface}{route}{$rt}{'netmask'}) {
                     $text .= "NETMASK$rt="  .
                         $net{$iface}{route}{$rt}{'netmask'}."\n";
                 } else {
@@ -539,10 +539,10 @@ sub Configure
                 # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
                 # problem is, we want both
                 # adding symlinks however is not the best thing to do...
-                if( exists($net{$iface}{vlan}) && ($net{$iface}{vlan} eq "true") ) {
+                if (exists($net{$iface}{vlan}) && ($net{$iface}{vlan} eq "true")) {
                     my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
                     if ($file_name_sym ne $file_name) {
-                        if(! -e $file_name_sym) {
+                        if (! -e $file_name_sym) {
                             # this will create broken link, if $file_name is not yet existing
                             if (! -l $file_name_sym) {
                                 symlink($file_name,$file_name_sym) ||
@@ -553,13 +553,13 @@ sub Configure
                     };
                 };
                 $text = "DEVICE=$tmpdev\n";
-                if ( $net{$iface}{aliases}{$al}{'ip'}) {
+                if ($net{$iface}{aliases}{$al}{'ip'}) {
                     $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
                 }
-                if ( $net{$iface}{aliases}{$al}{'broadcast'}) {
+                if ($net{$iface}{aliases}{$al}{'broadcast'}) {
                     $text .= "BROADCAST=".$net{$iface}{aliases}{$al}{'broadcast'}."\n";
                 }
-                if ( $net{$iface}{aliases}{$al}{'netmask'}) {
+                if ($net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
                 $exifiles{$file_name} = file_dump($file_name,$text,FAILED_SUFFIX);
@@ -656,7 +656,7 @@ sub Configure
                 $use_ipv6 = 0;
             }
         }
-        if ( $use_ipv6 ) {
+        if ($use_ipv6) {
             $text .= "NETWORKING_IPV6=yes\n";
         } else {
             $text .= "NETWORKING_IPV6=no\n";
@@ -690,7 +690,7 @@ sub Configure
                     # here's the tricky part: see if it used to be a slave. the bond-master must be restarted for this.
                     my $sl = "";
                     my $ma = "";
-                    if ( -e $file) {
+                    if (-e $file) {
                         $self->debug(3, "reading ifcfg from the backup ", $self->gen_backup_filename($file));
                         my $fh = CAF::FileReader->new($self->gen_backup_filename($file), log => $self);
                         while (my $l = <$fh>) {
@@ -1091,7 +1091,7 @@ sub Configure
         # key ordering (important for autoneg/speed/duplex)
         my @optkeys;
         foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
-            push(@optkeys, $tmp) if(grep {$_ eq $tmp} sort(keys(%options)));
+            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
         };
         foreach my $tmp (sort keys %options) {
             push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
@@ -1149,7 +1149,7 @@ sub Configure
         # key ordering (important for autoneg/speed/duplex)
         my @optkeys;
         foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
-            push(@optkeys, $tmp) if(grep {$_ eq $tmp} sort(keys(%$opts)));
+            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
         };
         foreach my $tmp (sort keys %$opts) {
             push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
