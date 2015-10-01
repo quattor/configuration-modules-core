@@ -266,7 +266,7 @@ sub compare_config {
         }
     }
     if ($ceph_config && %{$ceph_config}) {
-        $self->warning("compare_config ".join(", ", keys %{$ceph_config})." for $type $key not in quattor, so removing");
+        $self->warn("compare_config ".join(", ", keys %{$ceph_config})." for $type $key not in quattor, so removing");
     }
     return $cfgchanges;
 }

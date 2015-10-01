@@ -1,0 +1,13 @@
+destroy and restart
+---
+---
+^\[DEBUG\] Destroying daemons$
+^\[INFO\] Ceph configfile on host ceph001 may be removed$
+^\[INFO\] Commands to be run manually:$
+^\[INFO\] su - ceph -c /usr/bin/ceph-deploy --cluster ceph mds destroy ceph001.cubone.os$
+^\[INFO\] su - ceph -c /usr/bin/ceph-deploy --cluster ceph osd destroy osd.0$
+^\[DEBUG\] restarting daemons$
+^\[INFO\] Commands to be run manually:$
+^\[INFO\] su - ceph -c ceph001 /sbin/service ceph restart mon$
+^\[INFO\] su - ceph -c ceph001 /sbin/service ceph stop osd.1$
+^\[INFO\] su - ceph -c ceph002 /sbin/service ceph start mds$
