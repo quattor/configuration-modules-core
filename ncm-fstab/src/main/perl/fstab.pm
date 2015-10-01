@@ -7,15 +7,18 @@ package NCM::Component::fstab;
 use strict;
 use warnings;
 use NCM::Component;
+use LC::Check;
 use LC::Exception qw (throw_error);
 use CAF::Process;
 use CAF::FileEditor;
 use CAF::FileReader;
 use CAF::FileWriter;
 use NCM::Filesystem;
+use NCM::Partition qw (partition_compare);
 use Fcntl qw(:seek);
-use LC::Check;
 
+use Cwd qw(abs_path);
+ 
 use constant UMOUNT => "/bin/umount";
 use constant REMOUNT => qw(/bin/mount -o remount);
 use constant MOUNT => qw(/bin/mount);
@@ -45,6 +48,17 @@ sub update_entries
     }
 
     return %mounts;
+}
+
+# Returns a hash with the mountpoints of the filesystems defined on
+# the profile as its keys, and the filesystem objects as its values.
+sub fshash
+{
+    my ($self, $fsl) = @_;
+    my %fsh;
+
+    $fsh{$_->{mountpoint}} = $_ foreach @$fsl;
+    return %fsh;
 }
 
 # build the protected hashes from the template
@@ -105,26 +119,34 @@ sub mount_from_entry
 # fstab.
 sub delete_outdated
 {
-    my ($self, $fstab, %mounts) = @_;
+    my ($self, $fstab, $mountsr, $remove) = @_;
 
     my @rm;
-
+    my %mounts = %$mountsr;
     seek($fstab, 0, SEEK_SET);
 
     while (my $f = <$fstab>) {
     	my $mount = $self->mount_from_entry($f) or next;
-    	if (!exists ($mounts{$mount})) {
+    	if (!exists ($mounts{$mount}) && !exists($mounts{abs_path($mount)})) {
     	    CAF::Process->new ([UMOUNT, $mount],
     			       log => $self)->run();
     	    push (@rm, $f);
-    	    $self->verbose ("Scheduling for removal: $mount");
+            $self->verbose ("Scheduling for removal of fstab: $mount");
+            $self->verbose ("Scheduling for removal filesystem $mount") if $remove;
     	}
     }
 
     foreach my $outdated (@rm) {
     	$self->info("Removing line $outdated");
     	$fstab->replace_lines (qr{$outdated}, qr{^$}, "");
+
+        if ($remove) {
+            $self->info("Removing filesystem for line  $outdated");
+            my $fsrm = NCM::Filesystem->new_from_fstab ($outdated);
+            $fsrm->remove_if_needed==0 or return 0;
+        }
     }
+    return 1;
 }
 
 # Remounts all the entries in the fstab, to ensure changes are
@@ -153,17 +175,67 @@ sub remount_everything
     return $rt;
 }
 
+sub create_blockdevices
+{
+    my ($self, $config, $fs) = @_;
+    # Partitions must be created first, see bug #26137
+    my $el = $config->getElement ("/system/blockdevices/partitions");
+    my @part = ();
+    $self->info ("Checking whether partitions need to be created");
+
+    while ($el && $el->hasNextElement) {
+        my $el2 = $el->getNextElement;
+        push (@part, NCM::Partition->new ($el2->getPath->toString, $config));
+    }
+    foreach (sort partition_compare @part) {
+        if ($_->create != 0) {
+            throw_error ("Couldn't create partition: " . $_->devpath);
+            return 0;
+        }
+    }
+    foreach (@$fs) {
+        if ($_->create_if_needed != 0) {
+            throw_error ("Failed to create filesystem:  $_->{mountpoint}");
+            return 0;
+        }
+    }
+    return 1;
+};
+
+
 sub Configure
 {
     my ($self, $config) = @_;
 
+    my $tree = $config->getTree($self->prefix());
+    my $create = $tree->{manage_blockdevs};
+
     my $fstab = CAF::FileEditor->new (NCM::Filesystem::FSTAB, log => $self,
 				      backup => '.old');
+
+    if ($create && $NoAction) {
+        $self->warn ("--noaction not supported. Leaving."); # Should be checked if is still true
+        return 1;
+    }
+
+    my $fs = [];
+    my $el = $config->getElement ("/system/filesystems");
+    while ($el->hasNextElement) {
+        my $el2 = $el->getNextElement;
+        push (@$fs, NCM::Filesystem->new ($el2->getPath->toString, $config));
+    }
+
     my $protected = $self->protected_hash($config);
-    my %mounts;
-    %mounts = $self->update_entries ($config, $fstab, $protected->{static});
+    my %mounts = $self->fshash ($fs);
     %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
-    $self->delete_outdated ($fstab, %mounts);
+
+    $self->delete_outdated ($fstab, \%mounts, $create) or return 0;
+    if ($create) {
+        $self->create_blockdevices ($config, $fs) or return 0;
+    }
+
+    $self->update_entries ($config, $fstab, $protected->{static});
+
     if ($fstab->close()) {
     	$fstab = CAF::FileReader->new (NCM::Filesystem::FSTAB, log => $self);
     	my $err = $self->remount_everything ($fstab);
