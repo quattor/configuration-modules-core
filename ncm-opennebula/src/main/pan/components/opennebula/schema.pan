@@ -340,6 +340,23 @@ type opennebula_sunstone = {
     "routes" : string[] = list("oneflow", "vcenter", "support")
 };
 
+@documentation{
+Type that sets the OpenNebula
+VMM kvmrc conf files
+}
+type opennebula_kvmrc = {
+    "lang" : string = 'C'
+    "libvirt_uri" : string = 'qemu:///system'
+    "qemu_protocol" : string = 'qemu+ssh' with match (SELF, '^(qemu\+ssh|qemu\+tcp)$')
+    "libvirt_keytab" ? string
+    "shutdown_timeout" : long = 300
+    "force_destroy" ? boolean
+    "cancel_no_acpi" ? boolean
+    "default_attach_cache" ? string with match (SELF, '^(default|none|writethrough|writeback|directsync|unsafe)$')
+    "migrate_options" ? string
+    "default_attach_discard" ? string with match (SELF, '^(ignore|off|unmap|on)$')
+};
+
 @documentation{ 
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
@@ -377,6 +394,7 @@ type component_opennebula = {
     'untouchables'  ? opennebula_untouchables
     'oned'          ? opennebula_oned
     'sunstone'      ? opennebula_sunstone
+    'kvmrc'         ? opennebula_kvmrc
     'ssh_multiplex' : boolean = true
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')

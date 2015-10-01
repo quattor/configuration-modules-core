@@ -1,0 +1,8 @@
+OpenNebula kvmrc full test
+---
+---
+^export\s{1}FORCE_DESTROY=yes$
+^export\s{1}LANG=C$
+^export\s{1}LIBVIRT_URI=qemu:///system$
+^export\s{1}QEMU_PROTOCOL=qemu\+tcp$
+^export\s{1}SHUTDOWN_TIMEOUT=300$

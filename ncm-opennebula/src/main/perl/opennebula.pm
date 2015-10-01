@@ -21,6 +21,7 @@ use Readonly;
 Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
+Readonly::Scalar our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
@@ -640,6 +641,11 @@ sub set_one_server
     }
     $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
+
+    # Set kvmrc conf
+    if (exists $tree->{kvmrc}) {
+        $self->set_one_service_conf($tree->{kvmrc}, "kvmrc", $KVMRC_CONF_FILE);
+    }
 
     return 1;
 }
