@@ -330,6 +330,19 @@ sub change_opennebula_passwd
     return 1;
 }
 
+# Sync hyps VMMs scripts
+sub sync_opennebula_hyps
+{
+    my ($self, $cmd) = @_;
+    my $output;
+
+    $output = $self->run_onehost_as_oneadmin_with_ssh($cmd, "localhost", 0);
+    if (!$output) {
+        $self->error("Quattor unable to execute onehost command.");
+    } else {
+        $self->info("OpenNebula hypervisors were synchronized correctly.");
+    }
+}
 # Restart one service
 # after any conf change
 sub restart_opennebula_service {
@@ -339,8 +352,11 @@ sub restart_opennebula_service {
         $srv = CAF::Service->new(['opennebula'], log => $self);
     } elsif ($service eq "sunstone") {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
+    } elsif ($service eq "kvmrc") {
+        $self->info("Updated $service file. onehost sync is required.");
+        $self->sync_opennebula_hyps("-f");
     }
-    $srv->restart();
+    $srv->restart() if defined($srv);
 }
 
 # Remove/add ONE resources
