@@ -12,13 +12,17 @@ use CAF::Process;
 use CAF::FileWriter;
 use LC::Exception;
 
+use File::Temp qw(tempdir);
+use File::Path qw(rmtree);
+
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch --cfgfile /proc/self/fd/0);
+use constant TEST_COMMAND => qw(/usr/sbin/ccm-fetch --cfgfile);
+use constant TEMPDIR_TEMPLATE => "/tmp/ncm-ccm-XXXXX";
 
 # simple private method to test NOQUATTOR (allows mocking)
 sub _is_noquattor
@@ -60,7 +64,7 @@ sub Configure
         # If there's no change, return without testing the current config.
         # If something changed in the content, an error is logged.
         #
-        # In any case, no new config is written (incl. any changes to the file 
+        # In any case, no new config is written (incl. any changes to the file
         # permisisons or ownership) and no profile fetched (e.g. for testing).
 
         $fh->cancel();
@@ -78,16 +82,37 @@ sub Configure
         my $test = CAF::Process->new(
             [TEST_COMMAND],
             log    => $self,
-            stdin  => "$fh",
             stderr => \$errs
         );
-        $test->execute();
-        if ($? != 0) {
-            $self->error("failed to ccm-fetch with new config: $errs");
+
+        my $tmppath = tempdir(TEMPDIR_TEMPLATE);
+        # Set strict permissions (can't have e.g. cache_path set to something else)
+        if (! chmod(0700, $tmppath)) {
+            $self->error("Failed to chmod 0700 tmpdir $tmppath: $!");
             $fh->cancel();
+        } else {
+            my $tmpfn = "$tmppath/$filename";
+            $self->verbose("Creating tmp configfile $tmpfn for testing.");
+            my $tmpfh = CAF::FileWriter->new($tmpfn);
+            print $tmpfh "$fh";
+            $tmpfh->close();
+
+            $test->pushargs($tmpfn);
+
+            $test->execute();
+            if ($? != 0) {
+                $self->error("failed to ccm-fetch with new config: $errs");
+                $fh->cancel();
+            }
+
+            if(rmtree($tmppath)) {
+                $self->verbose("Cleaning up tmpdir $tmppath");
+            } else {
+                $self->warn("Failed to cleanup tmpdir $tmppath: $!");
+            }
         }
     }
-    
+
     $fh->close();
     return 1;
 }
