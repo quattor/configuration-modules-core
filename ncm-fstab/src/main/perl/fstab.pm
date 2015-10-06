@@ -137,14 +137,14 @@ sub delete_outdated
     }
 
     foreach my $outdated (@rm) {
-    	$self->info("Removing line $outdated");
-    	$fstab->replace_lines (qr{$outdated}, qr{^$}, "");
-
         if ($remove) {
-            $self->info("Removing filesystem for line  $outdated");
             my $fsrm = NCM::Filesystem->new_from_fstab ($outdated);
+            $self->info("Removing filesystem for $fsrm->{mountpoint}");
             $fsrm->remove_if_needed==0 or return 0;
         }
+        $self->info("Removing line $outdated");
+        $fstab->replace_lines (qr{$outdated}, qr{^$}, "");
+
     }
     return 1;
 }
@@ -189,13 +189,13 @@ sub create_blockdevices
     }
     foreach (sort partition_compare @part) {
         if ($_->create != 0) {
-            throw_error ("Couldn't create partition: " . $_->devpath);
+            $self->error("Couldn't create partition: " . $_->devpath);
             return 0;
         }
     }
     foreach (@$fs) {
         if ($_->create_if_needed != 0) {
-            throw_error ("Failed to create filesystem:  $_->{mountpoint}");
+            $self->error("Failed to create filesystem:  $_->{mountpoint}");
             return 0;
         }
     }
@@ -208,12 +208,12 @@ sub Configure
     my ($self, $config) = @_;
 
     my $tree = $config->getTree($self->prefix());
-    my $create = $tree->{manage_blockdevs};
+    my $manage = $tree->{manage_blockdevs};
 
     my $fstab = CAF::FileEditor->new (NCM::Filesystem::FSTAB, log => $self,
 				      backup => '.old');
 
-    if ($create && $NoAction) {
+    if ($manage && $NoAction) {
         $self->warn ("--noaction not supported. Leaving."); # Should be checked if is still true
         return 1;
     }
@@ -229,8 +229,8 @@ sub Configure
     my %mounts = $self->fshash ($fs);
     %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
 
-    $self->delete_outdated ($fstab, \%mounts, $create) or return 0;
-    if ($create) {
+    $self->delete_outdated ($fstab, \%mounts, $manage) or return 0;
+    if ($manage) {
         $self->create_blockdevices ($config, $fs) or return 0;
     }
 
