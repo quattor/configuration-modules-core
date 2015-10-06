@@ -73,6 +73,10 @@ type httpd_global_system = {
 type httpd_ifmodule_parameters = {
     "name" : string
     "directories" ? httpd_directory[]
+    "type" ? httpd_type
+    "outputfilter" ? httpd_outputfilter
+    "log" ? httpd_log
+    "aliases" ? httpd_alias[]
     "modules" ? httpd_module[]
     "startservers" ? long
     "minspareservers" ? long
@@ -90,6 +94,8 @@ type httpd_ifmodule_parameters = {
     "davlockdb" ? string
 
     "mimemagicfile" ? string
+
+    "directoryindex" ? string[]
 };
 
 type httpd_ifmodule = {
@@ -100,9 +106,9 @@ type httpd_ifmodule = {
 # only for conf/httpd.conf
 type httpd_global = {
     include httpd_includes
-    "global" : httpd_global_system
-    "aliases" : httpd_alias[]
-    "modules" : httpd_module[]
+    "global" : httpd_global_system = nlist()
+    "aliases" ? httpd_alias[]
+    "modules" ? httpd_module[]
     "ifmodules" : httpd_ifmodule[]
     "directories" ? httpd_directory[]
     "files" ? httpd_file[]
