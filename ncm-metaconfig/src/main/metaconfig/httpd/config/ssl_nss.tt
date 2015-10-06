@@ -15,6 +15,8 @@
 [%-             ELSE -%]
  [%                 pair.value.join(':') %]
 [%-             END %]
+[%-         CASE "mutex" -%]
+[%              (_httpdversion.0 >=2 && _httpdversion.1 >=4) ? '' : ssl_nss %][% pair.key %] [% pair.value %]
 [%-         CASE "requiressl" -%]
 [%              ssl_nss %][% pair.key %]
 [%-         CASE list -%]

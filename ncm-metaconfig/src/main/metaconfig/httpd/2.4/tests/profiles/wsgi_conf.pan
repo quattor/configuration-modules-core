@@ -1,11 +1,11 @@
 object template wsgi_conf;
 
-include 'metaconfig/httpd/schema';
+include 'metaconfig/httpd/2.4/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents" = httpd_vhosts;
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}";
-"module" = "httpd/generic_server";
+"module" = "httpd/2.4/generic_server";
 "daemons/httpd" = "restart";
 
 variable FULL_HOSTNAME = 'myhost.domain';

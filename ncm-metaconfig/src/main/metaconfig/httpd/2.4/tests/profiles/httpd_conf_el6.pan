@@ -1,5 +1,7 @@
 object template httpd_conf_el6;
 
+variable METACONFIG_HTTPD_VERSION = '2.4';
+
 include 'metaconfig/httpd/httpd_conf';
 
 # add apache user and group

@@ -5,7 +5,7 @@ multiline
 ---
 ^loadmodule ssl_module modules/mod_ssl.so$
 ^sslcryptodevice builtin$
-^sslmutex default$
+^mutex default$
 ^sslpassphrasedialog builtin$
 ^sslrandomseed startup file:/dev/urandom 256$
 ^sslrandomseed connect builtin$

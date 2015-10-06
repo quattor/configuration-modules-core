@@ -1,11 +1,11 @@
 object template graphite-web;
 
-include 'metaconfig/httpd/schema';
+include 'metaconfig/httpd/2.4/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents" = httpd_vhosts;
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}";
-"module" = "httpd/generic_server";
+"module" = "httpd/2.4/generic_server";
 "daemons/httpd" = "restart";
 
 variable HTTPD_OS_FLAVOUR ?= 'el6';
