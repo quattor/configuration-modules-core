@@ -157,6 +157,22 @@ type httpd_acl = {
     "satisfy" ? string with match(SELF,"^(All|Any)$")
 };
 
+@documentation{
+    authz a.k.a. Require type. the keys are possible providers, each with their own syntax
+    
+}
+type httpd_authz = {
+    "all" ? string with match(SELF, '^(granted|denied)$')
+    "valid-user" ? string # value of string is ignored
+    "user" ? string[]
+    "group" ? string[]
+    "ip" ? type_network_name[]
+    "env" ? string[]
+    "method" ? string[]
+    "expr" ? string
+    "negate" ? boolean # not for each provider defined here
+};
+
 type httpd_limit_value = string with match(SELF, '^GET|POST|PUT|DELETE|CONNECT|OPTIONS|PATCH|PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK$');
 
 type httpd_limit_base = {

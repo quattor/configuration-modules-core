@@ -25,5 +25,16 @@ multiline
 ^\s{4}customlog logs/myhost.domain_443_request_log ssl_combined$
 ^\s{4}<directory /var/www/django/static>$
 ^\s{8}sslrequiressl$
+^\s{8}require not all granted$
+^\s{8}require not ip 1.2.3.4$
+^\s{8}require not negate 1$
+^\s{8}require all denied$
+^\s{8}require env VARX VARY$
+^\s{8}require expr some valid expression$
+^\s{8}require group group1 group2$
+^\s{8}require ip my.hostname.domain 4.5.6.7$
+^\s{8}require method m1 m2$
+^\s{8}require user user1 user2$
+^\s{8}require valid-user$
 ^\s{4}</directory>$
 ^</virtualhost>$

@@ -155,7 +155,8 @@ multiline
 ^\s{12}</directory>$
 ^\s{4}</ifmodule>$
 ^</ifmodule>$
-^include conf.d/\*.conf$
+^include conf.modules.d/\*.conf$
+^includeoptional conf.d/\*.conf$
 ^addhandler type-map var$
 ^loglevel warn$
 ^errorlog logs/error_log$

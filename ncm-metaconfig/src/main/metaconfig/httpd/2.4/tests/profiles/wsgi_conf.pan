@@ -16,9 +16,27 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/c
 
 "django" = create("struct/default_vhost");
 "django/directories" = {
-    l = nlist();
-    l["name"] =  "/var/www/django/static";
-    l["ssl"] = nlist("requiressl", true);
+    l = nlist(
+        "name", "/var/www/django/static",
+        "ssl", nlist("requiressl", true),
+        "authz", list(
+            nlist(
+                "negate", true,
+                "ip", list("1.2.3.4"),
+                "all", "granted",
+            ),
+            nlist(
+                "ip", list("my.hostname.domain", "4.5.6.7"),
+                "expr", "some valid expression",
+                "env", list("VARX", "VARY"),
+                "user", list("user1", "user2"),
+                "group", list("group1", "group2"),
+                "all", "denied",
+                "valid-user", "no reason",
+                "method", list("m1", "m2"),
+            ),
+        ),
+    );
     append(l);
 };
 

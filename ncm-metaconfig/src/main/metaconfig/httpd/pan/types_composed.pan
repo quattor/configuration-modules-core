@@ -99,13 +99,13 @@ type httpd_ifmodule = {
 
 # only for conf/httpd.conf
 type httpd_global = {
+    include httpd_includes
     "global" : httpd_global_system
     "aliases" : httpd_alias[]
     "modules" : httpd_module[]
     "ifmodules" : httpd_ifmodule[]
     "directories" ? httpd_directory[]
     "files" ? httpd_file[]
-    "includes" : string[] = list("conf.d/*.conf")
     "log" ? httpd_log
     "icon" ? httpd_icon
     "lang" ? httpd_lang

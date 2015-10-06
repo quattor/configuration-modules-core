@@ -14,5 +14,8 @@ type httpd_file = {
     "access" ? httpd_acl
 };
 
+type httpd_includes = {
+    "includes" : string[] = list("conf.d/*.conf")
+};
 
 include 'metaconfig/httpd/types_composed';
