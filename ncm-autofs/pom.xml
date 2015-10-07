@@ -6,7 +6,7 @@
   <artifactId>autofs</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.8.0-rc4-SNAPSHOT</version>
+  <version>15.8.0-rc4</version>
   <name>autofs NCM component.</name>
 
 
