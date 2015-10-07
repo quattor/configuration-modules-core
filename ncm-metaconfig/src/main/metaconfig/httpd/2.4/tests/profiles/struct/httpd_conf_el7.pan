@@ -112,3 +112,6 @@ structure template struct/httpd_conf_el7;
 
 "log/error" = "logs/error_log";
 "log/level" = "warn";
+
+"includes" = list("conf.modules.d/*.conf");
+"includesoptional" = list("conf.d/*.conf");

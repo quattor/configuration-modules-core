@@ -2,7 +2,7 @@ unique template metaconfig/httpd/httpd_conf;
 
 variable METACONFIG_HTTPD_VERSION ?= '2.2';
 
-include {format('metaconfig/httpd/%s/schema', METACONFIG_HTTPD_VERSION)};
+include 'metaconfig/httpd/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf/httpd.conf}/contents" = httpd_global;
 

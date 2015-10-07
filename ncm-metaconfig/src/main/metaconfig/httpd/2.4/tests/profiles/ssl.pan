@@ -1,6 +1,6 @@
 object template ssl;
 
-include 'metaconfig/httpd/2.4/schema';
+include 'metaconfig/httpd/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}/contents" = httpd_vhosts;
 

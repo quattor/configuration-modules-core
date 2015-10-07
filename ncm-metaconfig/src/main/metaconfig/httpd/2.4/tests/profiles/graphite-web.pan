@@ -1,6 +1,6 @@
 object template graphite-web;
 
-include 'metaconfig/httpd/2.4/schema';
+include 'metaconfig/httpd/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents" = httpd_vhosts;
 

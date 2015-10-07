@@ -1,6 +1,6 @@
 object template wsgi_conf;
 
-include 'metaconfig/httpd/2.4/schema';
+include 'metaconfig/httpd/schema';
 
 bind "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents" = httpd_vhosts;
 
