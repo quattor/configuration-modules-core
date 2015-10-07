@@ -1,17 +1,12 @@
-structure template struct/ssl_conf_el6;
+structure template struct/ssl_conf_el7;
 
-"modules" = append(nlist(
-    "name", "ssl_module", 
-    "path", "modules/mod_ssl.so"
-));
-    
 "listen" = list(
-    nlist("port", 443),
+    nlist("port", 443, "protocol", "https"),
 );
 "ssl" = nlist(
-    "passphrasedialog", "builtin",
+    "passphrasedialog", "exec:/usr/libexec/httpd-ssl-pass-dialog",
 
-    "sessioncache", "shmcb:/var/cache/mod_ssl/scache(512000)",
+    "sessioncache", "shmcb:/run/httpd/sslcache(512000)",
     "sessioncachetimeout", 300,
     
     "mutex", "default",
@@ -60,8 +55,7 @@ structure template struct/ssl_conf_el6;
         "options", list("+StdEnvVars"),
     ),
 ));
-"vhosts/base/env/if" = list(nlist(
-    "attribute", "User-Agent",
-    "regex", ".*MSIE.*",
-    "variables", list("nokeepalive", "ssl-unclean-shutdown", "downgrade-1.0", "force-response-1.0"),
+"vhosts/base/browsermatch" = list(nlist(
+    "match", ".*MSIE.*",
+    "names", list("nokeepalive", "ssl-unclean-shutdown", "downgrade-1.0", "force-response-1.0"),
 ));

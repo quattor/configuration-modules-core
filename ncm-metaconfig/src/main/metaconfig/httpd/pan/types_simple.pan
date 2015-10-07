@@ -88,11 +88,11 @@ type httpd_ssl_nss_shared = {
     "require" ? string
     "options" ? string[]
     "requiressl" ? boolean
+    "passphrasedialog" ? string with match(SELF,'^(builtin|(exec|file):/.*)$')
 };
 
 type httpd_nss_global = {
     include httpd_ssl_nss_shared
-    "passphrasedialog" ? string with match(SELF,'^(builtin|file:/.*)$')
     "sessioncachesize" ? long
     "session3cachetimeout" ? long
     "renegotiation" ? boolean
@@ -101,7 +101,6 @@ type httpd_nss_global = {
 
 type httpd_ssl_global = {
     include httpd_ssl_nss_shared
-    "passphrasedialog" ? string with match(SELF,'^(builtin)$')
     "sessioncache" ? string
     "mutex" ? string with match(SELF,'^(default)$')
     "cryptodevice" ? string[]

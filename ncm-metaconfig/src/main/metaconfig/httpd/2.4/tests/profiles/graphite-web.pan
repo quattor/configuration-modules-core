@@ -8,7 +8,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
 "module" = "httpd/2.4/generic_server";
 "daemons/httpd" = "restart";
 
-variable HTTPD_OS_FLAVOUR ?= 'el6';
+variable HTTPD_OS_FLAVOUR ?= 'el7';
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
 variable DB_IP = nlist(HOSTNAME, '1.2.3.4');

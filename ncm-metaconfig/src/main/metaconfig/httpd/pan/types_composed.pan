@@ -31,6 +31,7 @@ type httpd_vhost = {
     "env" ? httpd_env
     "rails" ? httpd_rails
     "proxies" ? httpd_proxy_directive[]
+    "browsermatch" ? httpd_browsermatch[]
 };
 
 # system wide settings

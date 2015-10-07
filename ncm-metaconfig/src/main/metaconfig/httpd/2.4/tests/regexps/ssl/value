@@ -3,15 +3,15 @@ Base test for ssl.conf EL6 config
 multiline
 /etc/httpd/conf.d/ssl.conf
 ---
-^loadmodule ssl_module modules/mod_ssl.so$
+^loadmodule ### COUNT 0
 ^sslcryptodevice builtin$
 ^mutex default$
-^sslpassphrasedialog builtin$
+^sslpassphrasedialog exec:/usr/libexec/httpd-ssl-pass-dialog$
 ^sslrandomseed startup file:/dev/urandom 256$
 ^sslrandomseed connect builtin$
-^sslsessioncache shmcb:/var/cache/mod_ssl/scache\(512000\)$
+^sslsessioncache shmcb:/run/httpd/sslcache\(512000\)$
 ^sslsessioncachetimeout 300$
-^listen 443 $
+^listen 443 https$
 ^<virtualhost\s+1.2.3.4:443>$
 ^\s{4}servername myhost.domain$
 ^\s{4}documentroot /var/www/cgi-bin$
@@ -23,11 +23,11 @@ multiline
 ^\s{4}sslengine on$
 ^\s{4}ssloptions \-OptRenegotiate \+StrictRequire \+StdEnvVars$
 ^\s{4}sslprotocol TLSv1$
-^\s{4}setenvif User-Agent "\.\*MSIE\.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
 ^\s{4}loglevel warn$
 ^\s{4}errorlog logs/ssl_error_log$
 ^\s{4}transferlog logs/ssl_access_log$
 ^\s{4}customlog logs/ssl_request_log "%t %h %\{SSL_PROTOCOL\}x %\{SSL_CIPHER\}x \\"%r\\" %b"$
+^\s{4}browsermatch ".\*MSIE.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
 ^\s{4}<directory /var/www/cgi-bin>$
 ^\s{8}ssloptions \+StdEnvVars$
 ^\s{4}</directory>$

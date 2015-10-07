@@ -15,13 +15,13 @@ multiline
 ^\s{4}sslengine on$
 ^\s{4}ssloptions -OptRenegotiate \+StrictRequire \+StdEnvVars$
 ^\s{4}sslprotocol TLSv1$
-^\s{4}setenvif User-Agent ".\*MSIE.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
 ^\s{4}alias /media/ /usr/lib/python2.6/site-packages/django/contrib/admin/media/$
 ^\s{4}wsgiscriptalias / /usr/share/graphite/graphite-web.wsgi$
 ^\s{4}wsgiimportscript /usr/share/graphite/graphite-web.wsgi process-group=%\{GLOBAL\} application-group=%\{GLOBAL\}$
 ^\s{4}loglevel info$
 ^\s{4}errorlog logs/graphite-web_error_log$
 ^\s{4}customlog logs/graphite-web_access_log combined$
+^\s{4}browsermatch ".\*MSIE.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
 ^\s{4}<directory /var/www/cgi-bin>$
 ^\s{8}ssloptions \+StdEnvVars$
 ^\s{4}</directory>$

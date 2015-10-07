@@ -14,7 +14,7 @@ variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
 
 
 
-"/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}/contents" = create("struct/ssl_conf_el6");
+"/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}/contents" = create("struct/ssl_conf_el7");
 
 
 
