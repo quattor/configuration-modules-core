@@ -481,7 +481,8 @@ sub manage_users
     foreach my $user (@$users) {
         if ($user->{user}) {
             if ($user->{user} eq "serveradmin" && exists $user->{password}) {
-                $self->change_opennebula_passwd($user->{user}, $user->{password});
+                my $pass_cipher = join(' ', '--driver server_cipher', $user->{password});
+                $self->change_opennebula_passwd($user->{user}, $pass_cipher);
             }
             push(@userlist, $user->{user});
         }
