@@ -313,7 +313,11 @@ sub change_opennebula_passwd
     my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
 
-    $cmd = [$user, $passwd];
+    if ($user eq "serveradmin") {
+        $cmd = [$user, join(' ', '--driver server_cipher', $passwd)];
+    } else {
+        $cmd = [$user, $passwd];
+    };
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor unable to modify current $user passwd.");
@@ -481,8 +485,7 @@ sub manage_users
     foreach my $user (@$users) {
         if ($user->{user}) {
             if ($user->{user} eq "serveradmin" && exists $user->{password}) {
-                my $pass_cipher = join(' ', '--driver server_cipher', $user->{password});
-                $self->change_opennebula_passwd($user->{user}, $pass_cipher);
+                $self->change_opennebula_passwd($user->{user}, $user->{password});
             }
             push(@userlist, $user->{user});
         }
