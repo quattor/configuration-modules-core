@@ -213,7 +213,7 @@ type structure_network = {
     "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
     "interfaces"       : structure_interface{}
     "nameserver"       ? type_ip[]
-    "nisdomain"        ? type_fqdn
+    "nisdomain"        ? string(1..64) with match(SELF, '^\S+$')
     "nozeroconf"       ? boolean
     "set_hwaddr"       ? boolean
     "nmcontrolled"     ? boolean
