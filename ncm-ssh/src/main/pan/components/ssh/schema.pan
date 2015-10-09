@@ -6,6 +6,7 @@
 declaration template components/ssh/schema;
 
 include 'quattor/types/component';
+include 'pan/types';
 
 type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
 
@@ -18,6 +19,7 @@ type ssh_core_options_type = {
     "Compression"                       ? string with match (SELF, '^(yes|delayed|no)$')
     "GSSAPIAuthentication"              ? ssh_yesnostring
     "GSSAPICleanupCredentials"          ? ssh_yesnostring
+    "GSSAPIKeyExchange"                 ? ssh_yesnostring
     "GatewayPorts"                      ? ssh_yesnostring
     "HostbasedAuthentication"           ? ssh_yesnostring
     "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
@@ -35,7 +37,8 @@ type ssh_core_options_type = {
 type ssh_daemon_options_type = {
     include ssh_core_options_type
     "AFSTokenPassing"                   ? ssh_yesnostring
-    "AcceptEnv"                         ? ssh_yesnostring
+    @{AcceptEnv, one per line}
+    "AcceptEnv"                         ? string[]
     "AllowAgentForwarding"              ? ssh_yesnostring
     "AllowGroups"                       ? string
     "AllowTcpForwarding"                ? ssh_yesnostring
@@ -48,7 +51,9 @@ type ssh_daemon_options_type = {
     "ClientAliveInterval"               ? long
     "DenyGroups"                        ? string
     "DenyUsers"                         ? string
-    "HostKey"                           ? string
+    "GSSAPIStrictAcceptorCheck"         ? ssh_yesnostring
+    @{HostKey, one per line}
+    "HostKey"                           ? string[]
     "HPNDisabled"                       ? ssh_yesnostring
     "HPNBufferSize"                     ? long
     "IgnoreRhosts"                      ? ssh_yesnostring
@@ -58,9 +63,11 @@ type ssh_daemon_options_type = {
     "KerberosGetAFSToken"               ? ssh_yesnostring
     "KerberosOrLocalPasswd"             ? ssh_yesnostring
     "KerberosTgtPassing"                ? ssh_yesnostring
+    "KerberosTicketAuthentication"      ? ssh_yesnostring
     "KerberosTicketCleanup"             ? ssh_yesnostring
     "KeyRegenerationInterval"           ? long
-    "ListenAddress"                     ? string
+    @{ListenAddress, one per line}
+    "ListenAddress"                     ? type_hostport[]
     "LoginGraceTime"                    ? long
     "MaxAuthTries"                      ? long
     "MaxStartups"                       ? long
@@ -109,11 +116,14 @@ type ssh_client_options_type = {
 type ssh_daemon_type = {
     "options" ? ssh_daemon_options_type
     "comment_options" ? ssh_daemon_options_type
+    "sshd_path" ? string
+    "config_path" ? string
 };
 
 type ssh_client_type = {
     "options" ? ssh_client_options_type
     "comment_options" ? ssh_client_options_type
+    "config_path" ? string
 };
 
 type component_ssh_type = {
