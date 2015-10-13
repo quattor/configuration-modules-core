@@ -6,6 +6,8 @@ unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
 
+bind "/software/components/${project.artifactId}" = component_pgsql;
+
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

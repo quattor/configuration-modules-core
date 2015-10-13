@@ -1,0 +1,14 @@
+[%- FOREACH pair IN CCM.contents.pairs %]
+[%      pair.key %] = [%- -%]
+[%-      IF CCM.is_scalar(pair.value) -%]
+[%-         IF pair.value.is_boolean -%]
+[%-              pair.value ? 'yes' : 'no' %]
+[%-         ELSIF pair.value.is_string -%]
+'[%              pair.value %]'
+[%-         ELSE -%]
+[%-             pair.value %]
+[%-         END -%]
+[%-      ELSIF CCM.is_list(pair.value) -%]
+'[%          pair.value.join(',') %]'
+[%-      END -%]
+[%- END -%]
