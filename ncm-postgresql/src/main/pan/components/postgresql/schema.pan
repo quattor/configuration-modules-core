@@ -2,25 +2,16 @@
 # ${developer-info}
 # ${author-info}
 
-############################################################
-#
-# type definition components/postgresql
-#
-#
-#
-#
-############################################################
-
-
 declaration template components/postgresql/schema;
 
-include {'quattor/schema'};
+include 'quattor/types/component';
 
 function pgsql_is_hba_db = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
-    if (match(ARGV[0],"all|sameuser|samerole|replication")) {
+
+    if (match(ARGV[0], "all|sameuser|samerole|replication")) {
         return(true);
     } else {
         return(exists("/software/components/postgresql/databases/" + ARGV[0]));
@@ -31,6 +22,7 @@ function pgsql_is_hba_address = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
+
     if (match(ARGV[0],"samehost|samenet")) {
         return(true);
     } else {
@@ -52,18 +44,17 @@ type pgsql_hba_user = string with match(SELF,'^(\+|@)?\w+$');
 
 
 type pgsql_hba = {
-    "host"  : string with match(SELF,"local|host|hostssl|hostnossl")
+    "host"  : string with match(SELF, "^(local|host|hostssl|hostnossl)$")
     "database" : pgsql_hba_database[]
     "user" : pgsql_hba_user[]
     "address" ? string with pgsql_is_hba_address(SELF)
-    "method" : string with match(SELF,"trust|reject|md5|password|gss|sspi|krb5|ident|peer|pam|ldap|radius|cert")
+    "method" : string with match(SELF, "^(trust|reject|md5|password|gss|sspi|krb5|ident|peer|pam|ldap|radius|cert)$")
     "options" ? string{}
 };
 
 
-## generated with config2schema
-## - changed listen_addresses to list
-
+# generated with config2schema
+# - changed listen_addresses to list
 type pgsql_mainconfig = {
     "data_directory"                     ? string     # "ConfigDir"
     "hba_file"                           ? string     # "ConfigDir/pg_hba.conf"
@@ -290,4 +281,3 @@ type component_pgsql = {
 };
 
 bind "/software/components/postgresql" = component_pgsql;
-
