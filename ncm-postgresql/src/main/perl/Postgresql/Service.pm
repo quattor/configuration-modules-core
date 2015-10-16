@@ -8,6 +8,7 @@ package NCM::Component::Postgresql::Service;
 use strict;
 use warnings;
 
+use CAF::Service qw(@FLAVOURS __make_method);
 use parent qw(CAF::Service);
 
 use Readonly;
@@ -18,7 +19,7 @@ sub _initialize {
     my ($self, %opts) = @_;
     my $suffix = delete $opts{suffix} || '';
 
-    $self->{$SERVICENAME} = "$SERVICENAME$suffix";
+    $self->{$SERVICENAME} = "$POSTGRESQL$suffix";
 
     return $self->SUPER::_initialize([$self->{$SERVICENAME}], %opts);
 }
@@ -26,8 +27,8 @@ sub _initialize {
 # TODO: status should check "only" postmaster process like the old code did?
 # TODO: what to do with exitcode?
 
-foreach my $action (qw(status initdb)) {
-    foreach my $flavour (FLAVOURS) {
+foreach my $method (qw(status initdb)) {
+    foreach my $flavour (@FLAVOURS) {
         no strict 'refs';
         *{"${method}_${flavour}"} = __make_method($method, $flavour);
         use strict 'refs';
@@ -41,32 +42,34 @@ foreach my $action (qw(status initdb)) {
 #   ok / notok: run method named ok when initial state == init, method named notok otherwise
 #     if ok or notok is undef: log verbose and return state == init
 #   end: expected end state 0 or 1, return succes if state == end after method; fail and log error otherwise
-# 
+#
 # init seems not needed, but is relevant when ok or notok or btoh are undef
 #    for undef ok, it means, all is as expected, nothing to do here
 #    not undef notok, it means if not even in this state, giving up
 sub _wrap_in_status
 {
-    my ($self, $ok, $notok, $end) = @_;
+    my ($self, $init, $ok, $notok, $end) = @_;
 
     my $state = $self->status() ? 1 : 0; # force to 0 /1
 
-    my $res = $state == $init;
+    my $res = ($state == $init) ? 1 : 0; # force to 0 /1
+
+    my $msg = "$self->{$SERVICENAME} status $state (expected initial $init)";
 
     my $method;
     if ($res && $ok) {
         $method = $ok;
-    } elsif ((! $res) && $notokmethod) {
+    } elsif ((! $res) && $notok) {
         $method = $notok;
     } else {
-        $self->verbose("$self->{$SERVICENAME} status $state, not doing anything, return $res.");
+        $self->verbose("$msg, not doing anything, return $res.");
         return $res;
     }
 
-    $self->verbose("$self->{$SERVICENAME} status $state, going to run $method.");
+    $self->verbose("$msg, going to run $method.");
     my $ec = $self->$method();
     $self->verbose("$self->{$SERVICENAME} ran $method (ec $ec).");
-    
+
     # stop failed because still running
     $state = $self->status() ? 1 : 0; # force to 0 /1
     $self->verbose("$self->{$SERVICENAME} end status $state.");
@@ -75,7 +78,7 @@ sub _wrap_in_status
     } else {
         my $endlogic = $end ? 'not ' : '';
         $self->error("$self->{$SERVICENAME} ${endlogic}running.");
-        return;
+        return 0;
     };
 }
 
@@ -84,7 +87,7 @@ sub _wrap_in_status
 sub status_start
 {
     my ($self) = @_;
-    return self->_wrap_in_status(1, undef, 'start', 1);
+    return $self->_wrap_in_status(1, undef, 'start', 1);
 }
 
 # status_stop: stop + _wrap_in_status, do nothing if not running
@@ -92,7 +95,7 @@ sub status_start
 sub status_stop
 {
     my ($self) = @_;
-    return self->_wrap_in_status(0, undef, 'stop', 0);
+    return $self->_wrap_in_status(0, undef, 'stop', 0);
 }
 
 # status_reload: _wrap_in_status, reload if running, start if not
@@ -100,7 +103,7 @@ sub status_stop
 sub status_reload
 {
     my ($self) = @_;
-    return self->_wrap_in_status(1, 'reload', 'start', 1);
+    return $self->_wrap_in_status(1, 'reload', 'start', 1);
 }
 
 # status_reload: _wrap_in_status, restart if running, start if not
@@ -108,7 +111,7 @@ sub status_reload
 sub status_restart
 {
     my ($self) = @_;
-    return self->_wrap_in_status(1, 'restart', 'start', 1);
+    return $self->_wrap_in_status(1, 'restart', 'start', 1);
 }
 
 # initdb: not running, initdb + start; force_restart, restart if running (no initdb), do nothing if running and not restart otherwise
@@ -135,10 +138,8 @@ sub status_initdb
     return $self->_wrap_in_status(0, 'initdb_start', 'restart', 1);
 }
 
-# Older code also had abs_start and abs_stop, which was start and stop 
+# Older code also had abs_start and abs_stop, which was start and stop
 # with yet another status check and error
 # is that necessary? maybe suppor tundef as endstate to not log error in regular status_start and status_stop?
 
 1;
-
-
