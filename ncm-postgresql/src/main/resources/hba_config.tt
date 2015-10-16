@@ -1,0 +1,3 @@
+[%- FOREACH rule IN CCM.contents.hba -%]
+[%- INCLUDE 'postgresql/hba_rule.tt' rule=rule %]
+[% END -%]

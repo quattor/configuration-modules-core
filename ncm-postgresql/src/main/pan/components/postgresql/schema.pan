@@ -44,7 +44,7 @@ type pgsql_hba_user = string with match(SELF,'^(\+|@)?\w+$');
 
 
 type pgsql_hba = {
-    "host"  : string with match(SELF, "^(local|host|hostssl|hostnossl)$")
+    "host"  : string with match(SELF, "^(local|host((no)?ssl)?)$")
     "database" : pgsql_hba_database[]
     "user" : pgsql_hba_user[]
     "address" ? string with pgsql_is_hba_address(SELF)

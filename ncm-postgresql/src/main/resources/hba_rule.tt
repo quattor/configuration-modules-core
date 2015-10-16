@@ -1,0 +1,4 @@
+[% rule.host %] [% rule.database.join(',') %] [% rule.user.join(',') %][%- rule.address.defined ? ' ' _ rule.address : '' -%] [% rule.method -%]
+[%- FOREACH pair IN rule.options.pairs -%]
+[%-     %] [% pair.key %]=[% pair.value %]
+[%- END -%]
