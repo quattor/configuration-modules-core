@@ -130,6 +130,8 @@ prefix "/metaconfig/contents/main/test";
 "RPC_Max_Connections" = 1024;
 "Rquota_Port" = 0;
 "Rquota_Program" = 100011;
+"Short_File_Handle" = false;
+"heartbeat_freq" = 1000;
 "Active_krb5" = false;
 "Credential_LifeTime" = 86400;
 "Enable_Handle_Mapping" = false;

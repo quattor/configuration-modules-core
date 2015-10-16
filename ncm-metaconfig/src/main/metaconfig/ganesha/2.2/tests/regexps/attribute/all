@@ -121,6 +121,7 @@ Tests for all attributes
 ^\s{4}Rquota_Program = 100011;$
 ^\s{4}SecType = none,sys;$
 ^\s{4}Sec_Type = "krb5";$
+^\s{4}Short_File_Handle = FALSE;$
 ^\s{4}Squash = "root_squash";$
 ^\s{4}Srv_Addr = "127.0.0.1";$
 ^\s{4}Stripe_Unit = 8192;$
@@ -145,6 +146,7 @@ Tests for all attributes
 ^\s{4}fsal_trace = TRUE;$
 ^\s{4}glfs_log = "/tmp/gfapi.log";$
 ^\s{4}headers = "all";$
+^\s{4}heartbeat_freq = 1000;$
 ^\s{4}link_support = TRUE;$
 ^\s{4}max_level = "FULL_DEBUG";$
 ^\s{4}maxread = 67108864;$
