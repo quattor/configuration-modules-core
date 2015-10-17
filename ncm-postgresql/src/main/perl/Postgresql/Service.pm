@@ -8,20 +8,32 @@ package NCM::Component::Postgresql::Service;
 use strict;
 use warnings;
 
+# This is just very convenient,
+# and makes sense since there's only one service
+use overload ('""' => '_stringify');
+
 use CAF::Service qw(@FLAVOURS __make_method);
-use parent qw(CAF::Service);
+use parent qw(CAF::Service Exporter);
+
+our @EXPORT_OK = qw($POSTGRESQL);
 
 use Readonly;
 Readonly my $SERVICENAME => 'SERVICENAME';
-Readonly my $POSTGRESQL => 'postgresql';
+Readonly our $POSTGRESQL => 'postgresql';
 
 sub _initialize {
     my ($self, %opts) = @_;
-    my $suffix = delete $opts{suffix} || '';
 
-    $self->{$SERVICENAME} = "$POSTGRESQL$suffix";
+    $self->{$SERVICENAME} = delete $opts{name} || $POSTGRESQL;
 
     return $self->SUPER::_initialize([$self->{$SERVICENAME}], %opts);
+}
+
+# The SERVICENAME
+sub _stringify
+{
+    my $self = shift;
+    return $self->{$SERVICENAME};
 }
 
 # TODO: status should check "only" postmaster process like the old code did?

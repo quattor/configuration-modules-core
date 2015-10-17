@@ -5,13 +5,14 @@ use Test::MockModule;
 use Test::Quattor;
 use Test::Quattor::Object;
 
+use NCM::Component::Postgresql::Service qw($POSTGRESQL);
 
 # service variant set to linux_sysv
 my $mock = Test::MockModule->new('NCM::Component::Postgresql::Service');
 
 my $obj = Test::Quattor::Object->new();
 
-my $servicename='postgresql1234';
+my $servicename = "$POSTGRESQL-9.2";
 
 =head1 _initialize
 
@@ -19,12 +20,16 @@ Test suffix, SERVICENAME attribute and services set
 
 =cut
 
-my $srv = NCM::Component::Postgresql::Service->new(suffix => '1234', log => $obj);
+is($POSTGRESQL, 'postgresql', 'exported POSTGRESQL default service name');
+
+my $srv = NCM::Component::Postgresql::Service->new(name => $servicename, log => $obj);
 isa_ok($srv, 'NCM::Component::Postgresql::Service',
        'is a NCM::Component::Postgresql::Service instance');
 isa_ok($srv, 'CAF::Service', 'is a CAF::Service subclass');
 is($srv->{SERVICENAME}, $servicename, 'SERVICENAME with suffix is set');
 is_deeply($srv->{services}, [$servicename], 'expected services set');
+
+is("$srv", $servicename, "stringification gives servicename");
 
 =head2 initdb and status
 
