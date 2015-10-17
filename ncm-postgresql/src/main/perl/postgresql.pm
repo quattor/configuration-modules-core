@@ -9,6 +9,8 @@ use warnings;
 
 use parent qw(NCM::Component);
 
+use NCM::Component::Postgresql::Service qw($POSTGRESQL);
+
 use LC::Exception;
 our $EC = LC::Exception::Context->new->will_store_all;
 
@@ -35,6 +37,12 @@ Readonly my $HBA_CONFIG_REL => $CONFIG_REL.'/hba';
 # v is some sort of context / content / key=value of each file
 # p is a per file detail (e.g. format)
 my (%v, %p);
+
+# only ncm-dcache code
+#   slurp
+#   case_insensitive (slurp -> capit)
+#   EQUAL_SPACE
+#   ALL_POOL
 
 =pod
 
@@ -107,12 +115,17 @@ sub create_postgresql_hbaconfig
     return $trd;
 }
 
+
 =item fetch
 
 Get C<$path> from C<$config>, if it does not exists, return C<$default>.
 If C<$default> is not defined, use empty string as default.
 
+If C<$path> is a relative path, it is assumed relative from C<$self->prefix>.
+
 =cut
+
+# TODO: move to NCM::Component? (with a better name)
 
 sub fetch
 {
@@ -120,6 +133,9 @@ sub fetch
 
     $default = '' if (! defined($default));
 
+    $path = $self->prefix."/$path" if ($path !~ m/^\//);
+
+    my $value;
     if ($config->elementExists($path)) {
         $value = $config->getValue($path);
     } else {
@@ -129,13 +145,171 @@ sub fetch
     return $value;
 }
 
-# only ncm-dcache code
-#   case_insensitive (slurp -> capit)
-#   EQUAL_SPACE
-#   ALL_POOL
+=item version
+
+Return arrayref with [major, minor, remainder] version information (from postmaster --version)
+
+=cut
+
+sub version
+{
+    my ($self, $pg_engine) = @_;
+
+    my $cmd="$pg_engine/postmaster --version";
+    my $out=`$cmd`;
+    if ($out) {
+        if ($out =~ m/(\d+)\.(\d+).(\d+)\s*$/) {
+        }
+    }
+    # warn if something goes wrong
+}
+
+=item initdb
+
+Initialise the database
+
+=cut
+
+sub initdb
+{
+
+    my ($self, $iam) = @_;
+
+    # check version
+    # if /usr/pgsql-9.2/bin/postgresql92-setup, exists, use it with initdb arg
+    # else, if > 8.2, try service initdb
+    # else, just start
+}
+
+# Return undef on fauilure, no errors
+
+sub prepare_service
+{
+    my ($self, $default, $name) = @_;
+
+    # query/set via NCM::Component::Systemd ?
+
+    # this is not a sysconfig file, it's in a subdir
+
+    $p{$name}{filename} = "/etc/sysconfig/pgsql/$name";
+    $p{$name}{mode} = "BASH_SOURCE";
+    $p{$name}{epilogue} = "if [ -f /etc/sysconfig/pgsql_shared ]\nthen\n  . /etc/sysconfig/pgsql_shared\nfi\n";
+
+    # fro units, it's like
+    # .include /lib/systemd/system/postgresql.service
+    # [Service]
+    # Environment=PGPORT=5433
+    # --> also requires restart/reload --> add to systemd
+
+    # this one comes with the installation
+    my $pg_etc_init_def = "/etc/init.d/$default";
+
+    if (! -e $pg_etc_init_def) {
+        $self->warn("Defautl service $default not found.",
+                     " Check your postgres installation.");
+        return;
+    }
+    if ($name ne $default) {
+        # this one comes with ncm-chkconfig
+        if (! -e "/etc/init.d/$name") {
+            $self->warn("Service $name not found.",
+                         " Should be configured via one of the service component.");
+            return;
+        }
+    }
+}
+
+=item whomai
+
+Return a hashref with configuration related data to indentify
+the service to use
+
+=over
+
+=item pg_engine
+
+Location and name of service
+
+=item service
+
+Service instance to use
+
+=item version
+
+Return value from C<version> method
+
+=item suffix
+
+Version related suffix (or empty string if none is required).
+E.g. '-9.2', part of e.g. default servicename, pg_engine, ...
+
+=item exesuffix
+
+Version related suffix for certain executables, like '92' in
+'postgresql92-setup'.
+
+=back
+
+Return hashref or undef on failure. No errors are logged
+
+=cut
+
+sub whoami
+{
+    my ($self, $config) = @_;
+
+    my $iam = {};
+
+    my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
+    $iam->{pg_engine} = $pg_engine;
+    $self->verbose("iam pg_engine $iam->{pg_engine}");
+
+    $iam->{version} = $self->version($pg_engine);
+    return if (! $iam->{version});
+
+    $self->verbose("iam version ", join(' . ', @{$iam->{version}}), '.');
+
+    my $pg_version = $self->fetch($config, "pg_version", "");
+    my $pg_version_suf = $pg_version ? "-$pg_version" : "";
+    $iam->{suffix} = $pg_version_suf;
+    $self->verbose("iam suffix $iam->{suffix}");
+
+    my $exesuffix_def = $pg_version;
+    $exesuffix_def =~ s/\.//g;
+    $iam->{exesuffix} = $self->fetch($config, "bin_version", $exesuffix_def);
+    $self->verbose("iam exesuffix $iam->{exesuffix}");
+
+    my $default_service = "$POSTGRESQL$iam->{suffix}";
+    my $service = $self->fetch($config, "pg_script_name", $default_service);
+
+    return if (! $self->prepare_service());
+
+    my $srv = NCM::Component::Postgresql::Service->new(name => $service, log => $self);
+    if ($srv) {
+        $self->verbose("iam service instance created for name $service");
+    } else {
+        $self->warn("Failed to create service instance with name $service");
+        return;
+    }
+
+    $iam->{service} = $srv;
+    $self->verbose("iam service $iam->{service}");
+
+    return $iam;
+}
 
 sub Configure {
     my ($self, $config) = @_;
+
+    my $iam = $self->whoami($config);
+    if (! $iam) {
+        $self->error('Failed to determine setup details. (See errors/warnings above).');
+        return 0;
+    };
+
+  ## proposed structure
+  ## first generate all config in a way that does not depend on running subsystem.
+  ## All start/stop/restart/reload of services can be flagged and dealt with later.
 
     my ($name, $real_exec, $serv, $sym, $link);
 
@@ -144,51 +318,9 @@ sub Configure {
         $p{$name}{changed} = 0;
     }
 
-    my $base = $self->prefix();
-
-    our $debug_print = "15";
-    $debug_print = $self->fetch($config, "$base/config/debug_print", $debug_print);
-    $self->info("Debug_print=$debug_print");
-
-    my $pg_version_suf = "-".$self->fetch($config, "$base/pg_version", "");
-    my $pg_engine = $self->fetch($config, "$base/pg_engine", "/usr/bin/");
-
-    my $shortname = $config->getValue("/system/network/hostname");
-    my $fqdn = "$shortname.".$config->getValue("/system/network/domainname");
-
-    # proposed structure
-    # first generate all config in a way that does not depend on running subsystem.
-    # All start/stop/restart/reload of services can be flagged and dealt with later.
-
-    my $pg_dir;
-    my $pg_data_dir_create = 0;
-
-    my $pg_etc_init_def = "/etc/init.d/postgresql".$pg_version_suf;
-    # this one comes with the installation
-    if (! -e $pg_etc_init_def) {
-        $self->error("$pg_etc_init_def not found. Check your postgres installation.");
-        return 1;
-    }
-
-    # set the startup script name
-    $name = "pg_script";
-    my $pg_script_name = $self->fetch($config, "$base/pg_script_name", "postgresql");
-    # when using a different name for startup script, it uses a similar called file in /etc/sysconfig/pgsql
-    # just symlinking for the moment
-    $p{$name}{service} = $pg_script_name;
-    # this one comes with ncm-chkconfig
-    if (! -e "/etc/init.d/$pg_script_name") {
-        $self->error("/etc/init.d/$pg_script_name not found. Should have been here with ncm-chkconfig.");
-        return 1;
-    }
-
-    $p{$name}{filename} = "/etc/sysconfig/pgsql/$pg_script_name";
-    $p{$name}{mode} = "BASH_SOURCE";
-    $p{$name}{epilogue} = "if [ -f /etc/sysconfig/pgsql_shared ]\nthen\n  . /etc/sysconfig/pgsql_shared\nfi\n";
-
-    $pg_dir = $self->fetch($config, "$base/pg_dir", "/var/lib/pgsql");
+    $pg_dir = $self->fetch($config, "pg_dir", "/var/lib/pgsql");
     $v{$name}{PGDATA} = "$pg_dir/data";
-    $v{$name}{PGPORT} = $self->fetch($config, "$base/pg_port", "5432");
+    $v{$name}{PGPORT} = $self->fetch($config, "pg_port", "5432");
     $v{$name}{PGLOG} = "$pg_dir/pgstartup.log";
     dump_it($name, "WRITE");
 
@@ -200,7 +332,7 @@ sub Configure {
     if ($config->elementExists($self->prefix().$MAIN_CONFIG_REL)) {
         $v{$name}{PURE_TEXT} = $self->create_postgresql_mainconfig($config);
     } else {
-        $v{$name}{PURE_TEXT} = $self->fetch($config, "$base/postgresql_conf");
+        $v{$name}{PURE_TEXT} = $self->fetch($config, "postgresql_conf");
     }
     # pg_hba.conf
     $name = "pg_hba";
@@ -210,7 +342,7 @@ sub Configure {
     if ($config->elementExists($self->prefix().$HBA_CONFIG_REL)) {
         $v{$name}{PURE_TEXT} = $self->create_postgresql_hbaconfig($config);
     } else {
-        $v{$name}{PURE_TEXT} = $self->fetch($config, "$base/pg_hba");
+        $v{$name}{PURE_TEXT} = $self->fetch($config, "pg_hba");
     }
 
     # we're going to use this file to check if one should run the "ALTER ROLE" commands.
@@ -218,7 +350,7 @@ sub Configure {
     # to protect the passwds, the file will contain md5 hashes of the psql commands
     $name = "pg_alter";
     $p{$name}{mode} = "MD5_HASH";
-    $p{$name}{filename} = "$pg_dir/data/pg_alter.ncm-$comp";
+    $p{$name}{filename} = "$pg_dir/data/pg_alter.ncm-".$self->name();
     $p{$name}{write_empty} = 0;
 
     # it's possible that $pg_dir/data doesn't yet exist.
@@ -238,18 +370,18 @@ sub Configure {
 #  starting part 2. dynamic config.
 #  includes all service checks and config changes that need running services.
     $self->verbose("Checking current status. Will be the same status after the component finishes.");
-    my $current_status = check_status($pg_script_name);
+    my $current_status = $iam->{service}->status();
     $self->verbose("Current status: $current_status.");
 
     $self->debug(2, "Starting some additional checks.");
     # other things that might go wrong. and need some rerunning of things:
     # aha, another one:
-    my $moved_suffix="-moved-for-postgres-by-ncm-$comp".`date +%Y%m%d-%H%M%S`;
+    my $moved_suffix="-moved-for-postgres-by-ncm-".$self->name().`date +%Y%m%d-%H%M%S`;
     chomp($moved_suffix);
     if ((-d "$pg_dir/data") && (! -f "$pg_dir/data/PG_VERSION")) {
           # ok, postgres will never like this
         # can't believe it will be running
-        stop_service($pg_script_name);
+        $iam->{service}->status_stop();
           # non-destructive mode on
           my $tmp_name_1="$pg_dir/data";
           if (move($tmp_name_1,$tmp_name_1."$moved_suffix")) {
@@ -270,8 +402,8 @@ sub Configure {
     $pgsql_restart=($p{pg_script}{changed} ||$p{pg_conf}{changed});
 
       if ($pgsql_restart) {
-          $self->info("Restarting $pg_script_name.");
-          stop_service($pg_script_name);
+          $self->info("Restarting $iam->{service}.");
+          $iam->{service}->status_stop();
           if ($pg_data_dir_create) {
               # create correct dir, which should now be created by the init script and restart
               # there are no backup files
@@ -297,24 +429,15 @@ sub Configure {
                         }
                         if ($doInitdb) {
                             # postgres 8.2+
-                            $self->info("Initdb $pg_script_name to trigger the initialisation (found release $1.$2.$3 > 8.2).");
-                            if (! forcerestartinitdb_service(1,$pg_script_name)) {
-                                # so the something during the start went wrong. stop component;
-                                $self->error("Something went very wrong during the initialisation of $pg_script_name. Exiting...");
-                                return 1;
-                            } else {
-                                stop_service($pg_script_name);
-                            }
+                            $self->info("Initdb $iam->{service} to trigger the initialisation (found release $1.$2.$3 > 8.2).");
+                            return 1 if (! $iam->{service}->forcerestartinitdb_service());
+
                         } else {
-                            $self->info("Starting $pg_script_name to trigger the initialisation (found release $1.$2.$3 < 8.2).");
-                            if (! forcerestart_service(1,$pg_script_name)) {
-                                # so the something during the start went wrong. stop component;
-                                $self->error("Something went very wrong during the initialisation of $pg_script_name. Exiting...");
-                                return 1;
-                            } else {
-                                stop_service($pg_script_name);
-                            }
+                            $self->info("Starting $iam->{service} to trigger the initialisation (found release $1.$2.$3 < 8.2).");
+                            return 1 if (! $iam->{service}->forcerestart_service());
                         };
+
+                        $iam->{service}->status_stop();
                     } else {
                         $self->error("Command \"$cmd\" returns \"$out\" but this script doesn't expect it. (If you think it's a bug, please conatct the maintainer of this component). Exiting...");
                         return 1;
@@ -333,7 +456,7 @@ sub Configure {
             $self->info("Config of $name changed. Writing...");
             dump_it($name,"WRITE");
         }
-        forcerestart_service(1,$pg_script_name);
+        $iam->{service}->forcerestart_service();
       }
     # do some additional checks:
     if (! -d "$pg_dir/data") {
@@ -343,10 +466,10 @@ sub Configure {
     }
     # so now it should be at least startable, but actually should be already running here...
     # maybe nothing changed, but postgres was down.
-    return 1 if (! abs_start_service($pg_script_name,"Going to start $pg_script_name, it's strange that is was down."));
+    return 1 if (! $iam->{service}->abs_start_service());
 
-      if ($pgsql_reload) {
-          $self->info("Reloading $pg_script_name.");
+    if ($pgsql_reload) {
+          $self->info("Reloading $iam->{service}.");
           $name="pg_hba";
         $self->debug(1, "p{$name}{changed}: ".$p{$name}{changed});
         if ($p{$name}{changed}) {
@@ -354,28 +477,23 @@ sub Configure {
             dump_it($name,"WRITE");
         }
 
-        if(! reload_service($pg_script_name)) {
-            # this should also not happen. looks like a bad hba.conf file
-            $self->error("$pg_script_name reload failed. Exiting...");
-            return 1;
-        }
-    }
+          return 1 if(! $iam->{service}->reload_service());
     # so now it actually should be already running here...
     # maybe reload did something stupid
-    return 1 if (! abs_start_service($pg_script_name,"Going to start $pg_script_name, it's strange that is was down after the reload."));
+          return 1 if (! $iam->{service}->abs_start_service());
 
     # so now we have a running postgres
 
     # run the alter command
-    if (check_status($pg_script_name)) {
+    if ($iam->{service}->status()) {
         # it should be here
-        if (! pg_alter("$base")) {
+        if (! pg_alter($self->prefix())) {
             $self->error("Something went wrong during the addition of roles and/or databases. This must be cleared first.");
             return 1;
         }
     }
     # can the alter script make postgres go down. probably not, anyway ...
-    return 1 if (! abs_start_service($pg_script_name,"Going to start $pg_script_name, it's strange that is was down after running pg_alter."));
+          return 1 if ($iam->{service}->abs_start_service());
 
 #############
 ############# safe to assume that postgres is up and running here
@@ -389,9 +507,9 @@ sub Configure {
     # set postgres status to what it was
     $self->verbose("Setting status to what it was before the component ran.");
     if ($current_status) {
-        abs_start_service($pg_script_name);
+        $iam->{service}->status_start();
     } else {
-        abs_stop_service($pg_script_name);
+        $iam->{service}->status_stop();
     }
 
 
@@ -405,6 +523,7 @@ sub Configure {
         my $method = shift || "i";
         my $level = shift || "5";
 
+        my $debug_print = 15;
         # force strings to numeric compare
         if ("$level" <= "$debug_print") {
             if ($method =~ m/^i/) {
@@ -473,169 +592,6 @@ sub Configure {
 
 
 ##########################################################################
-    sub slurp {
-##########################################################################
-        my $func = "slurp";
-        $self->debug(1, "$func: function called with arg: @_");
-
-        my $name=shift;
-        my $new_base=shift;
-        my $def_dir=shift;
-        my $mode=$p{$name}{mode};
-        $self->debug(1, "$func: Start with name=$name mode=$mode");
-
-        # ok, lets see what we have here
-        my @def_list=();
-        # if $new_base is of the format file://, use that one
-        if ($new_base =~ m/^file:\/\//) {
-            $new_base =~ s/^file:\/\///;
-            unshift @def_list, $new_base;
-            $new_base=0;
-        }
-
-        my $n=0;
-        # read all default files to be parsed BEFORE reading configured values
-        while ($new_base && $config->elementExists($new_base."_def/".$n)) {
-            my $tmp = $config->getValue($new_base."_def/".$n);
-            # if $tmp doesn't start with /, add $def_dir
-            if ($tmp !~ m/^\//) {
-                $tmp = "$def_dir/$tmp";
-            }
-            if (-f $tmp) {
-                unshift @def_list, $tmp;
-            } else {
-                $self->warn("$func: Default file $tmp from ".$new_base."_def/".$n." not found.");
-            }
-            $n++;
-        }
-
-        foreach my $tmp (@def_list) {
-            if ($mode =~ m/BASH_SOURCE/) {
-                # ok, for BASH_SOURCE we need to do some more or get a real parser somewhere.
-                # we make the assumption that the files can be sourced whithout problems whithout interlinked variables
-                # also that the variables passed through quattor-config contain no other variables
-
-                # in this run, values can be overwritten again by what's defined in the files. this is why the following needs to be run everytime
-                if ($new_base && $config->elementExists("$new_base")) {
-                    my $all = $config->getElement("$new_base");
-                    while ( $all->hasNextElement() ) {
-                        my $el = $all->getNextElement();
-                        my $el_name = $el->getName();
-                        my $el_val = $el->getValue();
-                        # overwrite defaults or add new values
-                        $v{$name}{$el_name}=$el_val;
-                    }
-                } else {
-                    $self->warn("$func: Nothing set for $new_base (1).") if ($new_base);
-                }
-
-                # snr all variables with values set in previous files/quattor config or leave them untouched.
-                my $tmp2=$tmp."-2";
-                open(FILE,$tmp) || $self->error("$func: Can't open $tmp: $!.","e",1);
-                open(OUT,"> $tmp2") || $self->error("$func: Can't open $tmp2 for writing: $!.","e",1);
-                while(<FILE>){
-                    # shouldn't we filter out comments and whitespace here? For speed...
-                    if (m/^\s*$/ || m/^\s*\#.*/) {
-                        # do nothing
-                    } else {
-                        # we're replacing all usage of $x and ${x} with the values defined
-                        for my $key (keys(%{$v{$name}})) {
-                            while (m/[^\\]?\$\{$key\}/) {
-                                s/([^\\]?)\$\{$key\}/$1$v{$name}{$key}/;
-                            }
-                            while (m/[^\\]?\$$key\W?/) {
-                                s/([^\\]?)\$$key(\W?)/$1$v{$name}{$key}$2/;
-                            }
-                        }
-                        print OUT;
-                    }
-                }
-                close(FILE);
-                close(OUT);
-
-                # to read config files that can be used to source the variables
-                # here's an original approach to extract the values ;)
-                my $exe="source $tmp2";
-                open(FILE, "/bin/bash 2>&1 -x -c \"$exe\" |") || $self->error("$func: /bin/bash 2>&1 -x -c \"$exe\" didn't run: $!");
-                my $now=0;
-                while (<FILE>){
-                    s/\+\+ //g;
-                    s/\+ //g;
-                    if ($now) {
-                        chomp;
-                        my $i=index($_,"=");
-                        my $k = substr($_,0,$i);
-                        $i++;
-                        my $va = substr($_,$i,length($_));
-                        # there's a difference between bash v2 and v3 when using +x and multiple lines.
-                        # v3 adds single quotes (which is the correct thing todo btw)
-                        # they need to be removed though
-                        if (($va =~ m/^'/) && ($va =~ m/^'/)) {
-                            # begin and end have a single quote. they can be removed
-                            # AND later replaced by double quotes because this output contains nothing that needs single quotes
-                            $va =~ s/^'//;
-                            $va =~ s/'$//;
-                        };
-                        $v{$name}{$k}=$va;
-                    }
-                    $now=1 if (m/^$exe/);
-                }
-                close FILE;
-                # small hack for export entries (as in pnfsSetup).
-                # when a "export a=b" is passed through this, it will make 2 entries
-                # one as "export a"="b" and one as "a"="b" and in that order.
-                # so for now, just remove the second one when we see the first one
-                for my $k (keys %{$v{$name}}) {
-                    if ($k =~ m/^export /) {
-                        $self->debug(2, "$func: export detected in key $k. trying to fix it...");
-                        $k =~ s/export //;
-                        delete $v{$name}{$k};
-                    }
-                }
-                unlink($tmp2) || $self->error("Can't unlink $tmp2: $!","e",1);
-            } elsif ($mode =~ m/PLAIN_TEXT/) {
-                # just read everything in one string
-                open(FILE,$tmp)|| $self->error("$func: Can't open $tmp: $!");
-                my $now="";
-                while (<FILE>){
-                    $now .= $_;
-                }
-                close FILE;
-                $v{$name}{"PURE_TEXT"}=$now;
-            } elsif ($mode =~ m/MD5_HASH/) {
-                # variables are read like "YY=ZZ"
-                open(FILE,$tmp)|| $self->error("$func: Can't open $tmp: $!");
-                while (<FILE>){
-                    if (! m/^#/){
-                        chomp;
-                        my @all=split(/=/,$_);
-                        my $k = $all[0];
-                        my $va = $all[1];
-                        $v{$name}{$k}=$va;
-                    }
-                }
-                close FILE;
-            } else {
-                $self->error("$func: Using mode $mode, but doesn't match.");
-            }
-        }
-        if ($new_base && $config->elementExists("$new_base")) {
-            my $all = $config->getElement("$new_base");
-            while ( $all->hasNextElement() ) {
-                my $el = $all->getNextElement();
-                my $el_name = $el->getName();
-                my $el_val = $el->getValue();
-                # overwrite defaults or add new values
-                $v{$name}{$el_name}=$el_val;
-            }
-        } else {
-            $self->warn("$func: Nothing set for $new_base (2).") if ($new_base);
-        }
-        $self->debug(1, "$func: Stop with name=$name");
-    }
-
-
-##########################################################################
     sub dump_it {
 ##########################################################################
         my $func = "dump_it";
@@ -659,7 +615,7 @@ sub Configure {
         }
         open(FILE,"> ".$file_name) || $self->error("Can't write to $file_name: $!");
         if ($mode !~ m/NO_COMMENT/) {
-            print FILE "## Generated by ncm-$comp\n## DO NOT EDIT\n";
+            print FILE "## Generated by ncm-".$self->comp()."\n## DO NOT EDIT\n";
         }
         if ($p{$name}{prologue}) {
             print FILE "\n".$p{$name}{prologue}."\n";

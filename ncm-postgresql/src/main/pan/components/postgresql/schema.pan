@@ -264,16 +264,16 @@ type pg_db = {
 };
 
 type structure_pgsql_comp_config = {
-	"debug_print" ? long
 	"hba" ? pgsql_hba[]
 	"main" ? pgsql_mainconfig
+	"debug_print" ? long with { deprecated(0, 'postgresql debug_print is not used anymore'); true;} # deprecated/unused
 };
 
 type component_pgsql = {
     include structure_component
 	include structure_component_dependency
 
-	"pg_script_name" ? string
+	"pg_script_name" ? string # the name of service to use
 	"pg_dir" ? string
 	"pg_port" ? string
 	"postgresql_conf" ? string
