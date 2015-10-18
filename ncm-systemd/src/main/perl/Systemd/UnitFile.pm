@@ -67,6 +67,10 @@ C<</etc/systemd/system/<unit>>>.
 
 Backup files and/or directories.
 
+=item custom
+
+A hashref with custom configuration data. See C<custom> method.
+
 =item log
 
 A logger instance (compatible with C<CAF::Object>).
@@ -84,9 +88,32 @@ sub _initialize
 
     $self->{force} = $opts{force} ? 1 : 0; # force 0 / 1
 
+    $self->{custom} = $opts{custom} if $opts{custom};
     $self->{log} = $opts{log} if $opts{log};
 
     return SUCCESS;
+}
+
+=item custom
+
+The C<custom> method prepares configuration data that is cannot be
+found in the profile.
+
+=over
+
+=item CPUAffinity
+
+C<CPUAffinity> list determined via
+      'HWLOC_HIDE_ERRORS=1 hwloc-calc --physical-output --intersect PU <location0> <location1>'
+      Allows to cpubind on numanodes (as we cannot trust logical CPU indices, which regular CPUAffinity requires)
+      Forces an empty list to reset any possible previously defined affinity.
+
+=back
+
+=cut
+
+sub custom
+{
 }
 
 =item write
@@ -106,6 +133,8 @@ sub write
     my ($self) = @_;
 
     my $changed;
+
+    # custom if custom
 
     # check paths
     # if force,
