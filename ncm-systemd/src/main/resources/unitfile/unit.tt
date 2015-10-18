@@ -1,0 +1,1 @@
+[% INCLUDE 'systemd/unitfile/section.tt' section='Unit' data=data list_of_lines=['AssertPathExists'] -%]

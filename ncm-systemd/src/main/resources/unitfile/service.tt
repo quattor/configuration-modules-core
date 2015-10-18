@@ -1,0 +1,2 @@
+[% INCLUDE 'systemd/unitfile/section.tt' section='Service' data=data
+    list_of_lines=['CPUAffinity', 'Environment', 'EnvironmentFile'] -%]
