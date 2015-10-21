@@ -122,7 +122,7 @@ type ${project.artifactId}_unitfile_config_service = {
 @documentation{
 Unit configuration sections
     includes, unit and install are type agnostic
-        unit and install are mandatory, but not enforced by schema (possible issues in case of config_force=true)
+        unit and install are mandatory, but not enforced by schema (possible issues in case of replace=true)
     the other attributes are only valid for a specific type
 }
 type ${project.artifactId}_unitfile_config = {
@@ -136,6 +136,8 @@ type ${project.artifactId}_unitfile_config = {
 
 @documentation{
 Custom unit configuration to allow inserting computed configuration data
+It overrides the data defined in the regular config schema,
+so do not forget to set those as well (can be dummy value).
 }
 type ${project.artifactId}_unitfile_custom = {
     @{CPUAffinity list determined via
@@ -153,8 +155,8 @@ type ${project.artifactId}_unitfile = {
     "config" ? ${project.artifactId}_unitfile_config
     @{custom unitfile configuration data}
     "custom" ? ${project.artifactId}_unitfile_custom
-    @{force unitfile configuration: if true, only the defined parameters will be used by the unit; anything else is ignored}
-    "force" : boolean = false
+    @{replaceunitfile configuration: if true, only the defined parameters will be used by the unit; anything else is ignored}
+    "replace" : boolean = false
     @{only use the unit parameters for unitfile configuration,
       ignore other defined here such as targets (but still allow e.g. values defined by legacy chkconfig)}
     "only" ? boolean

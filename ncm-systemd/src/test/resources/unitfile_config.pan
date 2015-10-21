@@ -15,12 +15,15 @@ prefix "/software/components/systemd/unit";
                 '/path/2',
                 ),
             ),
+        'service', nlist(
+            'CPUAffinity', list(list(), list(0,1)),
+            ),
         ),
     );
 
-"{force.service}/file" = nlist(
+"{replace.service}/file" = nlist(
     'only', true,
-    'force', true,
+    'replace', true,
     'config', nlist(
         'includes', list(
             '/unit/1',
