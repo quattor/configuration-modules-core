@@ -14,6 +14,8 @@ use parent qw(CAF::Object Exporter);
 use File::Path qw(rmtree mkpath);
 use File::Copy qw(move);
 
+use Scalar::Util qw(blessed);
+
 use LC::Exception qw (SUCCESS);
 use Readonly;
 
@@ -189,6 +191,12 @@ sub write
 {
     my ($self) = @_;
 
+    if (!(blessed($self->{config}) &&
+           $self->{config}->isa("EDG::WP4::CCM::Element"))) {
+        $self->error("config has to be an Element instance");
+        return;
+    }
+
     # custom values
     my $custom = $self->custom();
     return if (! defined($custom));
@@ -288,7 +296,7 @@ Run C<_hwloc_calc_cpus>, and returns in C<CPUAffinity> format with a reset
 sub _hwloc_calc_cpuaffinity
 {
     my ($self, $locations) = @_;
-    
+
     my $cpus = $self->_hwloc_calc_cpus($locations);
     return if(! defined($cpus));
 

@@ -208,6 +208,30 @@ Returns a hash reference with key the unit name and value the unit detail.
 
 =cut
 
+
+
+sub _get_tree
+{
+    my ($self, $config, $src) = @_;
+
+    return if (! $config->elementExists($src->{path}));
+
+    my $tree = $config->getElement($src->{path})->getTree();
+
+    if ($src->{type} eq 'unit') {
+        # for units, check for file/config, and replace the hashref tree
+        # with an element instance (it's what NCM::Component::Systemd::UnitFile needs)
+        foreach my $unit (sort keys %$tree) {
+            if(exists($tree->{$unit}->{file})) {
+                $self->verbose("_get_tree for unit $unit, replacing file/config with element instance");
+                $tree->{$unit}->{file}->{config} = $config->getElement("$src->{path}/$unit/file/config");
+            }
+        }
+    }
+
+    return $tree;
+}
+
 sub gather_configured_units
 {
     my ($self, $config) = @_;
@@ -215,11 +239,13 @@ sub gather_configured_units
     my $chkconfig = {
         path => "$LEGACY_BASE/service",
         instance => $self->{chkconfig},
+        type => 'chkconfig',
     };
 
     my $unit = {
         path => "$BASE/unit",
         instance => $self->{unit},
+        type => 'unit',
     };
 
     # TODO: add code to select which one is preferred.
@@ -229,14 +255,14 @@ sub gather_configured_units
     my $units = {};
 
     # Gather the other units first (if any)
-    if ($config->elementExists($other->{path})) {
-        my $tree = $config->getElement($other->{path})->getTree();
+    my $tree = $self->_get_tree($config, $other);
+    if ($tree) {
         $units = $other->{instance}->configured_units($tree);
     }
 
     # Update with preferred units (if any)
-    if ($config->elementExists($pref->{path})) {
-        my $tree = $config->getElement($pref->{path})->getTree();
+    $tree = $self->_get_tree($config, $pref);
+    if ($tree) {
         my $new_units = $pref->{instance}->configured_units($tree);
         while (my ($unit, $detail) = each %$new_units) {
             if ($units->{$unit}) {

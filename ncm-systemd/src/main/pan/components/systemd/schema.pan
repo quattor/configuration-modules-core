@@ -152,7 +152,7 @@ type ${project.artifactId}_unitfile_custom = {
 }
 type ${project.artifactId}_unitfile = {
     @{unitfile configuration data}
-    "config" ? ${project.artifactId}_unitfile_config
+    "config" : ${project.artifactId}_unitfile_config
     @{custom unitfile configuration data}
     "custom" ? ${project.artifactId}_unitfile_custom
     @{replaceunitfile configuration: if true, only the defined parameters will be used by the unit; anything else is ignored}
