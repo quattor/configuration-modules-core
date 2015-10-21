@@ -399,7 +399,9 @@ sub configured_units
 
     my %units;
 
-    while (my ($unit, $detail) = each %$tree) {
+    foreach my $unit (sort keys %$tree) {
+        my $detail = $tree->{$unit};
+
         # only set the name (not mandatory in new schema, to be added here)
         $detail->{name} = unescape($unit) if (! exists($detail->{name}));
 
@@ -498,8 +500,8 @@ sub possible_missing
     my ($self, $units) = @_;
 
     my @p_m;
-    while (my ($unit, $detail) = each %$units) {
-        push(@p_m, $unit) if ($detail->{possible_missing});
+    foreach my $unit (sort keys %$units) {
+        push(@p_m, $unit) if ($units->{$unit}->{possible_missing});
     }
 
     $self->verbose("Found ", scalar @p_m, " possible missing units: ",
@@ -667,11 +669,11 @@ sub make_cache_alias
     my $list_unit_files = systemctl_list_unit_files($self);
 
     # Join them, keep existing non-related data
-    while (my ($unit, $data) = each %$list_units) {
-        $unit_cache->{$unit}->{unit} = $data;
+    foreach my $unit (sort keys %$list_units) {
+        $unit_cache->{$unit}->{unit} = $list_units->{$unit};
     }
-    while (my ($unit, $data) = each %$list_unit_files) {
-        $unit_cache->{$unit}->{unit_file} = $data;
+    foreach my $unit (sort keys %$list_unit_files) {
+        $unit_cache->{$unit}->{unit_file} = $list_unit_files->{$unit};
     }
 
     my @units;
@@ -812,7 +814,8 @@ sub make_cache_alias
     }
 
     # Check if each alias' real name has an existing entry in cache
-    while (my ($alias, $realunit) = each %$unit_alias ) {
+    foreach my $alias (sort keys %$unit_alias) {
+        my $realunit = $unit_alias->{$alias};
         if($alias ne $realunit && $unit_cache->{$alias}) {
             # removing any aliases that somehow got in the unit_cache
             $self->debug(1, "Removing alias $alias of $realunit from cache");
