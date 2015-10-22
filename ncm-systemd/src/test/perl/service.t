@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::MockModule;
 use Test::Quattor qw(service_services service_ceph021);
 
 use helper;
@@ -66,7 +67,20 @@ Test gather_configured_services
 
 =cut
 
-is_deeply($svc->gather_configured_units($cfg), {
+my $mockuf = Test::MockModule->new('NCM::Component::Systemd::UnitFile');
+my @uf_write;
+$mockuf->mock("write", sub {
+    my $self = shift;
+    # also tested by the getTree call
+    isa_ok($self->{config}, 'EDG::WP4::CCM::Element',
+           "config on write for $self->{unit} is an Element instance");
+    push(@uf_write, [$self->{unit}, $self->{replace}, $self->{backup}, $self->{config}->getTree(), $self->{custom}]);
+    return 1;
+});
+
+my $gathered_configured_units = $svc->gather_configured_units($cfg);
+#diag explain $gathered_configured_units;
+is_deeply($gathered_configured_units, {
     'test_on.service' => {
         name => "test_on.service",
         startstop => 1,
@@ -140,6 +154,17 @@ is_deeply($svc->gather_configured_units($cfg), {
         possible_missing => 0,
     },
 }, "gathered configured units is a union of ncm-systemd and ncm-chkconfig units");
+
+# the configured othername2 is a renamed unit, this also shows that the unit->name is used for unitfilename
+is_deeply(\@uf_write, [
+              ['othername2.service', 1, '.old', {service => {some1 => "data1"}}, {a1 => 'b1'}],
+              ['test3_only.service', 0, '.old', {service => {some => "data"}}, {a => 'b'}],
+          ], "configured unitfiles initialized as expected");
+
+# the entries in uf_write show that these have a file/ subtree
+ok($gathered_configured_units->{$uf_write[0]->[0]}, "service with file/only=0 is added as configured unit");
+ok(! defined($gathered_configured_units->{$uf_write[0]->[1]}),
+   "service with file/only=1 is not added to the configured units");
 
 =pod
 

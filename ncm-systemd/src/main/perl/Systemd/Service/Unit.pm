@@ -13,6 +13,8 @@ use LC::Exception qw (SUCCESS);
 
 use parent qw(CAF::Object Exporter);
 use EDG::WP4::CCM::Element qw(unescape);
+
+use NCM::Component::Systemd::UnitFile;
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show
     systemctl_list_units systemctl_list_unit_files
@@ -389,7 +391,7 @@ values the details of the unit.
 Units with missing types are assumed to be TYPE_SERVICE; targets with
 missing type are assumed to be TYPE_TARGET.
 
-(C<tree> is typically C<$config->getElement('/software/components/systemd/unit')->getTree>.)
+(C<tree> is typcially obtained with the C<_getTree> method).
 
 =cut
 
@@ -419,6 +421,33 @@ sub configured_units
         $detail->{targets} = \@targets;
 
         $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
+
+        if($detail->{file}) {
+            # strip the unitfile details from further unit details
+            my $ufile = delete $detail->{file};
+
+            # configure the unitfile
+            my $uf = NCM::Component::Systemd::UnitFile->new(
+                $detail->{name},
+                $ufile->{config},
+                custom => $ufile->{custom},
+                backup => '.old',
+                replace => $ufile->{replace},
+                log => $self,
+                );
+
+            my $changed = $uf->write();
+            if (! defined($changed)) {
+                $self->error("Unitfile confiuration failed, skipping the unit ", $self->unit_text($detail));
+                next;
+            };
+
+            if($ufile->{only}) {
+                $self->info("Only unitfile configuration for ", $self->unit_text($detail));
+                next;
+            }
+
+        }
 
         $self->verbose("Add unit name $detail->{name} (unit $unit)");
         $self->debug(1, "Add ", $self->unit_text($detail));
@@ -1328,6 +1357,45 @@ sub is_ufstate
         $self->debug(1, "$msg not the wanted state $state.");
         return 0;
     }
+}
+
+=pod
+
+=back
+
+=head2 Private methods
+
+=over
+
+=item _getTree
+
+The C<getTree> method is similar to the regular
+L<EDG::WP4::CCM::Element::getTree>, except that
+it keeps the unitfile configuration as an Element instance
+(as required by L<NCM::Component::Systemd::UnitFile>).
+
+It takes as arguments a L<EDG::WP4::CCM::Configuration> instance
+C<$config> and a C<$path> to the root of the whole unit tree.
+
+=cut
+
+sub _getTree
+{
+    my ($self, $config, $path) = @_;
+
+    my $tree = $config->getTree($path);
+
+    # for units, check for file/config, and replace unitfile configuration hashref
+    # tree with an element instance (it's what UnitFile needs)
+
+    foreach my $unit (sort keys %$tree) {
+        if(exists($tree->{$unit}->{file})) {
+            $self->verbose("getTree for unit $unit, replacing file/config with element instance");
+            $tree->{$unit}->{file}->{config} = $config->getElement("$path/$unit/file/config");
+        }
+    }
+
+    return $tree;
 }
 
 =pod

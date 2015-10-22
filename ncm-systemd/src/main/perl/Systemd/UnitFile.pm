@@ -278,7 +278,7 @@ sub _prepare_path
         return if (! $self->_cleanup($unitfile));
 
         $filename = "$unitdir/$NOREPLACE_FILENAME";
-        if (! ($self->_directory_exists($unitdir) || mkpath($unitdir))) {
+        if (! ($self->_directory_exists($unitdir) || $self->_make_directory($unitdir))) {
             $self->error("Failed to create unitdir $unitdir: $!");
             return;
         }
@@ -350,6 +350,13 @@ sub _make_variables_custom {
 }
 
 # TODO: Move to CAF::AllTheMissingBitsThatLCProvides
+
+# make directory, mkdir -p style, simple mkpath wrapper
+sub _make_directory
+{
+    my ($self, $directory) = @_;
+    return mkpath($directory);
+}
 
 # -d, wrapped in method for unittesting
 # -d follows symlink, a broken symlink either exists with -l or not

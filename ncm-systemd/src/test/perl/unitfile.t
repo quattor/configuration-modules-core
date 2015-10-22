@@ -163,6 +163,11 @@ ok(! $ur->_directory_exists($basetestfile), "_directory_exists false on created 
 ok($ur->_exists($basetestfile), "_exists true on created file");
 ok($ur->_file_exists($basetestfile), "_file_exists true on created file");
 
+# add a/b/c to test mkdir -p behaviour
+rmtree if -d $basetest;
+ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
+ok($ur->_directory_exists("$basetest/a/b/c"), "_directory_exists true on _make_directory");
+
 =item _cleanup
 
 =cut

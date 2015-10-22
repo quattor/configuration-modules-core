@@ -208,25 +208,21 @@ Returns a hash reference with key the unit name and value the unit detail.
 
 =cut
 
-
-
+# small wrapper to get the configuration tree
+# returns undef if path doesn't exist
+# convert the tree for a unit in appropriate form for unitfile configuration
 sub _get_tree
 {
     my ($self, $config, $src) = @_;
 
     return if (! $config->elementExists($src->{path}));
 
-    my $tree = $config->getElement($src->{path})->getTree();
+    my $tree;
 
     if ($src->{type} eq 'unit') {
-        # for units, check for file/config, and replace the hashref tree
-        # with an element instance (it's what NCM::Component::Systemd::UnitFile needs)
-        foreach my $unit (sort keys %$tree) {
-            if(exists($tree->{$unit}->{file})) {
-                $self->verbose("_get_tree for unit $unit, replacing file/config with element instance");
-                $tree->{$unit}->{file}->{config} = $config->getElement("$src->{path}/$unit/file/config");
-            }
-        }
+        $tree = $src->{instance}->_getTree($config, $src->{path});
+    } else {
+        $tree = $config->getTree($src->{path});
     }
 
     return $tree;

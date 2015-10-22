@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor qw(service-unit_services);
+use Test::MockModule;
 
 use helper;
 use NCM::Component::systemd;
@@ -28,14 +29,14 @@ use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET
     :states $DEFAULT_STATE
 );
 is_deeply([$TARGET_DEFAULT, $TARGET_RESCUE, $TARGET_MULTIUSER, $TARGET_GRAPHICAL,
-           $TARGET_POWEROFF, $TARGET_REBOOT, 
+           $TARGET_POWEROFF, $TARGET_REBOOT,
           ],
           [qw(default rescue multi-user graphical poweroff reboot)],
           "exported TARGET names");
 is($DEFAULT_TARGET, $TARGET_MULTIUSER, "multiuser is default target");
 
-is_deeply([$TYPE_SERVICE, $TYPE_TARGET, $TYPE_MOUNT, 
-           $TYPE_SOCKET, $TYPE_TIMER, $TYPE_PATH, 
+is_deeply([$TYPE_SERVICE, $TYPE_TARGET, $TYPE_MOUNT,
+           $TYPE_SOCKET, $TYPE_TIMER, $TYPE_PATH,
            $TYPE_SWAP, $TYPE_AUTOMOUNT, $TYPE_SLICE,
            $TYPE_SCOPE, $TYPE_SNAPSHOT, $TYPE_DEVICE
           ], [qw(service target mount socket timer path swap automount slice scope snapshot device)],
@@ -99,12 +100,12 @@ is($unit->unit_text($svc),
 ok(! $cmp->{ERROR}, "unit_text no error with correct unit");
 
 delete $svc->{name};
-ok(! defined($unit->unit_text($svc)), 
+ok(! defined($unit->unit_text($svc)),
    "unit_text unit details with missing name attribute generates returns undef");
 is($cmp->{ERROR}, 1, "unit_text error with incorrect unit");
 
 $svc->{name} = "test_del.serviceX";
-ok(! defined($unit->unit_text($svc)), 
+ok(! defined($unit->unit_text($svc)),
    "unit_text unit details with mismatch between name and fullname returns undef");
 is($cmp->{ERROR}, 2, "unit_text error with incorrect unit");
 
@@ -331,11 +332,11 @@ Test fill_cache
 =cut
 
 my $updated = $unit->fill_cache(["network.service", "multi-user.target", "ceph.service", "network.target"], force => 0);
-is_deeply($updated, [], 
+is_deeply($updated, [],
           "fill_cache force=0 updated no services (they are all in cache already)");
 
 $updated = $unit->fill_cache(["network.service", "multi-user.target", "ceph.service", "network.target"], force => 1);
-is_deeply($updated, 
+is_deeply($updated,
           ["network.service", "multi-user.target", "ceph.service", "network.target"],
           "fill_cache force=1 updated the correct services with their types");
 
@@ -348,16 +349,16 @@ Test get_unit_show
 =cut
 
 is($unit->get_unit_show('network.service', 'UnitFileState'),
-   '', 
+   '',
    'get_unit_show network.service empty UnitFileState'
     );
 is($unit->get_unit_show('network.service', 'ActiveState'),
-   'failed', 
+   'failed',
    'get_unit_show network.service ActiveState'
     );
 is_deeply(
     $unit->get_unit_show('network.service', 'WantedBy'),
-    ['multi-user.target', 'graphical.target'], 
+    ['multi-user.target', 'graphical.target'],
     'get_unit_show network.service WantedBy'
     );
 
@@ -443,8 +444,8 @@ is($ufstate, $STATE_ENABLED, 'get_ufstate xinetd.service UnitFileState is $STATE
 is($derived, $STATE_ENABLED, 'get_ufstate xinetd.service derived state is $STATE_ENABLED');
 
 ($ufstate, $derived) = $unit->get_ufstate('network.service');
-is($ufstate, '', 'get_ufstate network.service UnitFileState is empty string'); 
-is($derived, $STATE_ENABLED, 'get_ufstate network.service derived state is $STATE_ENABLED'); 
+is($ufstate, '', 'get_ufstate network.service UnitFileState is empty string');
+is($derived, $STATE_ENABLED, 'get_ufstate network.service derived state is $STATE_ENABLED');
 
 =pod
 
@@ -556,8 +557,19 @@ Test configured services
 
 =cut
 
+my $mockuf = Test::MockModule->new('NCM::Component::Systemd::UnitFile');
+my @uf_write;
+$mockuf->mock("write", sub {
+    my $self = shift;
+    # also tested by the getTree call
+    isa_ok($self->{config}, 'EDG::WP4::CCM::Element',
+           "config on write for $self->{unit} is an Element instance");
+    push(@uf_write, [$self->{unit}, $self->{replace}, $self->{backup}, $self->{config}->getTree(), $self->{custom}]);
+    return 1;
+});
+
 my $cfg = get_config_for_profile('service-unit_services');
-my $tree = $cfg->getElement('/software/components/systemd/unit')->getTree();
+my $tree = $unit->_getTree($cfg, '/software/components/systemd/unit');
 my $cos = $unit->configured_units($tree);
 is_deeply($cos->{'test2_on.service'}, {
         name => 'test2_on.service',
@@ -609,6 +621,17 @@ is_deeply($cos->{'test_del.service'}, {
         possible_missing => 0,
 }, "configured_units set correct name and type for test_del.service");
 
+
+# the configured othername2 is a renamed unit, this also shows that the unit->name is used for unitfilename
+is_deeply(\@uf_write, [
+              ['othername2.service', 1, '.old', {service => {some1 => "data1"}}, {a1 => 'b1'}],
+              ['test3_only.service', 0, '.old', {service => {some => "data"}}, {a => 'b'}],
+          ], "configured unitfiles initialized as expected");
+
+# the entries in uf_write show that these have a file/ subtree
+ok($cos->{$uf_write[0]->[0]}, "service with file/only=0 is added as configured unit");
+ok(! defined($cos->{$uf_write[0]->[1]}),
+   "service with file/only=1 is not added to the configured units");
 
 =pod
 
