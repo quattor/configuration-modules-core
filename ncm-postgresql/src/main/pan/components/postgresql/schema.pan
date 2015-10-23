@@ -275,7 +275,7 @@ type component_pgsql = {
 
 	"pg_script_name" ? string # the name of service to use
 	"pg_dir" ? string
-	"pg_port" ? string
+	"pg_port" ? string with match(SELF, "^\d+$")
 	"postgresql_conf" ? string
 	"pg_hba" ? string
 	"roles" ? string{}
@@ -284,4 +284,19 @@ type component_pgsql = {
 	"config" ? structure_pgsql_comp_config
 	"pg_version" ? string
 	"pg_engine" ? string
+} with {
+    # handle legacy schema problems with port defined in 2 locations
+    pg_port = -1;
+    if (exists(SELF["pg_port"]) {
+        pg_port = to_long(SELF["pg_port"]);
+    }
+    port = -1;
+    if (exists(SELF["config"]["main"]["port"]) {
+        port = SELF["config"]["main"]["port"];
+    }
+    if (exists(SELF["config"]) && (pg_port != port)) {
+        error(format("Legacy pg_port %s and config/main/port must %s be the same", pg_port, port));
+    }
+
+    true;
 };

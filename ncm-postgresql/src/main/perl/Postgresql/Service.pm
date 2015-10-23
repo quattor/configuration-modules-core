@@ -21,6 +21,11 @@ use Readonly;
 Readonly my $SERVICENAME => 'SERVICENAME';
 Readonly our $POSTGRESQL => 'postgresql';
 
+Readonly my $SYSV_INITD => "/etc/init.d";
+
+Readonly my $SYSTEMD_LIB_SYSTEM => "/usr/lib/systemd/system";
+Readonly my $SYSTEMD_ETC_SYSTEM => "/etc/systemd/system";
+
 sub _initialize {
     my ($self, %opts) = @_;
 
@@ -150,8 +155,19 @@ sub status_initdb
     return $self->_wrap_in_status(0, 'initdb_start', 'restart', 1);
 }
 
-# Older code also had abs_start and abs_stop, which was start and stop
-# with yet another status check and error
-# is that necessary? maybe suppor tundef as endstate to not log error in regular status_start and status_stop?
+# Return filenames for default and name service
+sub installation_files_linux_sysv
+{
+    my ($self, $default) = @_;
+    return ("$SYSV_INITD/$default", "$SYSV_INITD/".$self->{$SERVICENAME});
+}
+
+# Return filenames for default and name service
+sub installation_files_linux_systemd
+{
+    my ($self, $default) = @_;
+    my $loc = ($self->{$SERVICENAME} eq $default) ? $SYSTEMD_LIB_SYSTEM : $SYSTEMD_ETC_SYSTEM;
+    return ("$SYSTEMD_LIB_SYSTEM/$default.service", "$loc/".$self->{$SERVICENAME}.".service");
+}
 
 1;

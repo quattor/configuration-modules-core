@@ -1,0 +1,7 @@
+# This is a sysconfig file to be placed in /etc/sysconfig/pgsql subdirectory
+if [ -f /etc/sysconfig/pgsql_shared ]; then
+    . /etc/sysconfig/pgsql_shared
+fi
+[% FOREACH pair IN CCM.contents.pairs -%]
+[%      pair.key FILTER upper %]="[% pair.value %]"
+[% END %]

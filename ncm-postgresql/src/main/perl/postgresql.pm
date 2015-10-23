@@ -16,6 +16,8 @@ our $EC = LC::Exception::Context->new->will_store_all;
 
 use EDG::WP4::CCM::Element;
 
+use POSIX qw(strftime);
+
 use File::Copy;
 use File::Path;
 use File::Compare;
@@ -26,13 +28,32 @@ use Digest::MD5 qw(md5_hex);
 
 use Readonly;
 
-Readonly my $MAIN_CONFIG_TT => 'main_config';
-Readonly my $HBA_CONFIG_TT => 'hba_config';
+Readonly my $SYSCONFIG_TT => 'sysconfig';
 
 # relative to self->prefix
 Readonly my $CONFIG_REL => '/config';
-Readonly my $MAIN_CONFIG_REL => $CONFIG_REL.'/main';
-Readonly my $HBA_CONFIG_REL => $CONFIG_REL.'/hba';
+
+# relative filename in PGDATA
+# legacy full text config relative to sefl->prefix
+Readonly::Hash my %MAIN_CONFIG => {
+    NAME => 'main',
+    TT => 'main_config',
+    CONFIG => $CONFIG_REL.'/main',
+    CONFIG_EL => $CONFIG_REL.'/main',
+    FILENAME => 'postgresql.conf',
+    TEXT => 'postgresql_conf',
+};
+Readonly::Hash my %HBA_CONFIG => {
+    NAME => 'hba',
+    TT => 'hba_config',
+    CONFIG => $CONFIG_REL.'/hba',
+    CONFIG_EL => $CONFIG_REL, # TT file expects this
+    FILENAME => 'pg_hba.conf',
+    TEXT => 'pg_hba',
+};
+
+Readonly my $DEFAULT_PORT => 5432;
+Readonly my $DEFAULT_BASEDIR => "/var/lib/pgsql";
 
 # v is some sort of context / content / key=value of each file
 # p is a per file detail (e.g. format)
@@ -54,67 +75,48 @@ The component to configure postgresql databases
 
 =over
 
-=item create_postgresql_mainconfig
+=item create_postgresql_config
 
-Create a TextRender instance with the main configuration data. Returns undef on failure.
-
-=cut
-
-sub create_postgresql_mainconfig
-{
-    my ($self, $config);
-
-    my $base = $self->prefix().$MAIN_CONFIG_REL;
-    if (! $config->elementExists($base)) {
-        $self->error("create_postgresql_mainconfig: main config $base not found.");
-        return;
-    };
-
-    my $trd = EDG::WP4::CCM::TextRender->new(
-        $MAIN_CONFIG_TT,
-        $config->getElement($base),
-        relpath => 'postgresql',
-        log => $self,
-        );
-    if(! $trd) {
-        $self->error("Failed to render main postgresql config: $trd->{fail}");
-        return;
-    }
-
-    return $trd;
-}
-
-=item create_postgresql_hbaconfig
-
-Create a TextRender instance with the hba configuration data. Returns undef on failure.
+Create main or hba config via textrender. Returns undef on failure, changed state otherwise.
+The C<data> hash is either C<%MAIN_CONFIG> or C<%HBA_CONFIG>.
 
 =cut
 
-sub create_postgresql_hbaconfig
+sub create_postgresql_config
 {
-    my ($self, $config);
+    my ($self, $config, $iam, %data);
 
-    my $base = $self->prefix().$HBA_CONFIG_REL;
-    if (! $config->elementExists($base)) {
-        $self->error("create_postgresql_mainconfig: hba config $base not found.");
+    my $fh;
+    my $filename = "$iam->{pg}->{data}/$data{FILENAME}";
+    # default empty string, so can be used as boolean
+    my $text = $self->fetch($config, $data{TEXT});
+
+    # new style precedes
+    if ($config->elementExists($self->prefix().$data{CONFIG})) {
+        $self->verbose("rendering $data{NAME} configuration data");
+        my $trd = EDG::WP4::CCM::TextRender->new(
+            $data{TT},
+            $config->getElement($self->prefix().$data{CONFIG_EL}),
+            relpath => 'postgresql',
+            log => $self,
+            );
+
+        $fh = $trd->filewriter($filename, log => $self);
+        if(! defined($fh)) {
+            $self->error("Failed to render $data{NAME} postgresql config: $trd->{fail}");
+            return;
+        }
+    } elsif ($text) {
+        $self->verbose("legacy full text $data{NAME} configuration data");
+        $fh = CAF::FileWriter->new(filename, log => $self);
+        print $fh $text;
+    } else {
+        $self->error("config path $base for $data{NAME} config not found.");
         return;
     };
 
-    # pass whole config, the TT file expects a hashref with element hba
-    my $trd = EDG::WP4::CCM::TextRender->new(
-        $MAIN_CONFIG_TT,
-        $config->getElement($self->prefix().$CONFIG_REL),
-        relpath => 'postgresql',
-        log => $self,
-        );
-    if(! $trd) {
-        $self->error("Failed to render main postgresql config: $trd->{fail}");
-        return;
-    }
-
-    return $trd;
+    return $fh->close() ? 1 : 0;
 }
-
 
 =item fetch
 
@@ -149,19 +151,27 @@ sub fetch
 
 Return arrayref with [major, minor, remainder] version information (from postmaster --version)
 
+Return undef in case of problem.
+
 =cut
 
 sub version
 {
     my ($self, $pg_engine) = @_;
 
-    my $cmd="$pg_engine/postmaster --version";
-    my $out=`$cmd`;
-    if ($out) {
-        if ($out =~ m/(\d+)\.(\d+).(\d+)\s*$/) {
-        }
+    my $proc = CAF::Process->new(
+        ["$pg_engine/postmaster", "--version"],
+        log => $self,
+        );
+    my $output = $proc->output();
+    
+    # e.g. 'postgres (PostgreSQL) 9.2.1'
+    if ($output && $output =~ m/\s(\d+)\.(\d+).(\d+)\s*$/) {
+        return [$1, $2, $3];
+    } else {
+        $self->warn("Failed to parse output from $proc: $output");
+        return;
     }
-    # warn if something goes wrong
 }
 
 =item initdb
@@ -175,243 +185,14 @@ sub initdb
 
     my ($self, $iam) = @_;
 
+    $self->info("Initdb, stopping $iam->{service}.");
+    $iam->{service}->status_stop();
+
     # check version
     # if /usr/pgsql-9.2/bin/postgresql92-setup, exists, use it with initdb arg
     # else, if > 8.2, try service initdb
     # else, just start
-}
 
-# Return undef on fauilure, no errors
-
-sub prepare_service
-{
-    my ($self, $default, $name) = @_;
-
-    # query/set via NCM::Component::Systemd ?
-
-    # this is not a sysconfig file, it's in a subdir
-
-    $p{$name}{filename} = "/etc/sysconfig/pgsql/$name";
-    $p{$name}{mode} = "BASH_SOURCE";
-    $p{$name}{epilogue} = "if [ -f /etc/sysconfig/pgsql_shared ]\nthen\n  . /etc/sysconfig/pgsql_shared\nfi\n";
-
-    # fro units, it's like
-    # .include /lib/systemd/system/postgresql.service
-    # [Service]
-    # Environment=PGPORT=5433
-    # --> also requires restart/reload --> add to systemd
-
-    # this one comes with the installation
-    my $pg_etc_init_def = "/etc/init.d/$default";
-
-    if (! -e $pg_etc_init_def) {
-        $self->warn("Defautl service $default not found.",
-                     " Check your postgres installation.");
-        return;
-    }
-    if ($name ne $default) {
-        # this one comes with ncm-chkconfig
-        if (! -e "/etc/init.d/$name") {
-            $self->warn("Service $name not found.",
-                         " Should be configured via one of the service component.");
-            return;
-        }
-    }
-}
-
-=item whomai
-
-Return a hashref with configuration related data to indentify
-the service to use
-
-=over
-
-=item pg_engine
-
-Location and name of service
-
-=item service
-
-Service instance to use
-
-=item version
-
-Return value from C<version> method
-
-=item suffix
-
-Version related suffix (or empty string if none is required).
-E.g. '-9.2', part of e.g. default servicename, pg_engine, ...
-
-=item exesuffix
-
-Version related suffix for certain executables, like '92' in
-'postgresql92-setup'.
-
-=back
-
-Return hashref or undef on failure. No errors are logged
-
-=cut
-
-sub whoami
-{
-    my ($self, $config) = @_;
-
-    my $iam = {};
-
-    my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
-    $iam->{pg_engine} = $pg_engine;
-    $self->verbose("iam pg_engine $iam->{pg_engine}");
-
-    $iam->{version} = $self->version($pg_engine);
-    return if (! $iam->{version});
-
-    $self->verbose("iam version ", join(' . ', @{$iam->{version}}), '.');
-
-    my $pg_version = $self->fetch($config, "pg_version", "");
-    my $pg_version_suf = $pg_version ? "-$pg_version" : "";
-    $iam->{suffix} = $pg_version_suf;
-    $self->verbose("iam suffix $iam->{suffix}");
-
-    my $exesuffix_def = $pg_version;
-    $exesuffix_def =~ s/\.//g;
-    $iam->{exesuffix} = $self->fetch($config, "bin_version", $exesuffix_def);
-    $self->verbose("iam exesuffix $iam->{exesuffix}");
-
-    my $default_service = "$POSTGRESQL$iam->{suffix}";
-    my $service = $self->fetch($config, "pg_script_name", $default_service);
-
-    return if (! $self->prepare_service());
-
-    my $srv = NCM::Component::Postgresql::Service->new(name => $service, log => $self);
-    if ($srv) {
-        $self->verbose("iam service instance created for name $service");
-    } else {
-        $self->warn("Failed to create service instance with name $service");
-        return;
-    }
-
-    $iam->{service} = $srv;
-    $self->verbose("iam service $iam->{service}");
-
-    return $iam;
-}
-
-sub Configure {
-    my ($self, $config) = @_;
-
-    my $iam = $self->whoami($config);
-    if (! $iam) {
-        $self->error('Failed to determine setup details. (See errors/warnings above).');
-        return 0;
-    };
-
-  ## proposed structure
-  ## first generate all config in a way that does not depend on running subsystem.
-  ## All start/stop/restart/reload of services can be flagged and dealt with later.
-
-    my ($name, $real_exec, $serv, $sym, $link);
-
-    my @all_names = ("pg_script", "pg_conf", "pg_hba", "pg_alter");
-    foreach $name (@all_names) {
-        $p{$name}{changed} = 0;
-    }
-
-    $pg_dir = $self->fetch($config, "pg_dir", "/var/lib/pgsql");
-    $v{$name}{PGDATA} = "$pg_dir/data";
-    $v{$name}{PGPORT} = $self->fetch($config, "pg_port", "5432");
-    $v{$name}{PGLOG} = "$pg_dir/pgstartup.log";
-    dump_it($name, "WRITE");
-
-    # postgresql.conf
-    $name="pg_conf";
-    $p{$name}{mode} = "PLAIN_TEXT";
-    $p{$name}{filename} = "$pg_dir/data/postgresql.conf";
-    $p{$name}{write_empty} = 0;
-    if ($config->elementExists($self->prefix().$MAIN_CONFIG_REL)) {
-        $v{$name}{PURE_TEXT} = $self->create_postgresql_mainconfig($config);
-    } else {
-        $v{$name}{PURE_TEXT} = $self->fetch($config, "postgresql_conf");
-    }
-    # pg_hba.conf
-    $name = "pg_hba";
-    $p{$name}{mode} = "PLAIN_TEXT";
-    $p{$name}{filename} = "$pg_dir/data/pg_hba.conf";
-    $p{$name}{write_empty} = 0;
-    if ($config->elementExists($self->prefix().$HBA_CONFIG_REL)) {
-        $v{$name}{PURE_TEXT} = $self->create_postgresql_hbaconfig($config);
-    } else {
-        $v{$name}{PURE_TEXT} = $self->fetch($config, "pg_hba");
-    }
-
-    # we're going to use this file to check if one should run the "ALTER ROLE" commands.
-    # if not, i think running pg_alter unnecessary might cause transfer errors.
-    # to protect the passwds, the file will contain md5 hashes of the psql commands
-    $name = "pg_alter";
-    $p{$name}{mode} = "MD5_HASH";
-    $p{$name}{filename} = "$pg_dir/data/pg_alter.ncm-".$self->name();
-    $p{$name}{write_empty} = 0;
-
-    # it's possible that $pg_dir/data doesn't yet exist.
-    # we assume this is only due to pre-init postgres
-    if ((! -d "$pg_dir/data") || (! -f "$pg_dir/data/PG_VERSION")) {
-        $pg_data_dir_create = 1;
-        $p{pg_conf}{changed} = 1;
-        $p{pg_hba}{changed} = 1;
-    } else {
-        # ok, we're gonna do dummy write here and real write later
-        dump_it("pg_conf");
-        dump_it("pg_hba");
-    }
-
-##################################################################################
-##################################################################################
-#  starting part 2. dynamic config.
-#  includes all service checks and config changes that need running services.
-    $self->verbose("Checking current status. Will be the same status after the component finishes.");
-    my $current_status = $iam->{service}->status();
-    $self->verbose("Current status: $current_status.");
-
-    $self->debug(2, "Starting some additional checks.");
-    # other things that might go wrong. and need some rerunning of things:
-    # aha, another one:
-    my $moved_suffix="-moved-for-postgres-by-ncm-".$self->name().`date +%Y%m%d-%H%M%S`;
-    chomp($moved_suffix);
-    if ((-d "$pg_dir/data") && (! -f "$pg_dir/data/PG_VERSION")) {
-          # ok, postgres will never like this
-        # can't believe it will be running
-        $iam->{service}->status_stop();
-          # non-destructive mode on
-          my $tmp_name_1="$pg_dir/data";
-          if (move($tmp_name_1,$tmp_name_1."$moved_suffix")) {
-              $self->info("Moved ".$tmp_name_1." to ".$tmp_name_1."$moved_suffix.");
-        } else {
-            # it will never work, but next time make sure all goes well
-            $self->error("Can't move ".$tmp_name_1." to ".$tmp_name_1."$moved_suffix. Please clean up.");
-            return 1;
-        }
-    }
-    $self->debug(2, "Starting real configuration.");
-###############################################################
-###############################################################
-    # remap flags to service calls
-    my ($pgsql_restart,$pgsql_reload);
-
-    $pgsql_reload = $p{pg_hba}{changed};
-    $pgsql_restart=($p{pg_script}{changed} ||$p{pg_conf}{changed});
-
-      if ($pgsql_restart) {
-          $self->info("Restarting $iam->{service}.");
-          $iam->{service}->status_stop();
-          if ($pg_data_dir_create) {
-              # create correct dir, which should now be created by the init script and restart
-              # there are no backup files
-              if (-d "$pg_dir/data") {
-                # you should never get here
-                $self->error("Directory $pg_dir/data exists but pg_data_dir_create is flagged?? Oops. Should not happen.");
-                return 1;
-            } else {
                 # determine initialisation
                 # starting from 8.2, initdb is a separate postgres call
                 # lets assume postmaster is there
@@ -449,6 +230,285 @@ sub Configure {
 
             }
           }
+}
+
+
+=item prepare_service
+
+Perform installation sanity check, and generates the
+pgsql sysconfig entry.
+
+Returns undef on failure, the changed state of the pgsql
+sysconfig file otherwise
+
+=cut
+
+# for units, you need a new unit with content like
+# ncm-systemd can do this for you (set replace = true)
+# .include /lib/systemd/system/postgresql.service
+# [Service]
+# Environment=PGPORT=5433
+
+sub prepare_service
+{
+    my ($self, $iam) = @_;
+
+    my ($svc_def_fn, $svc_fn) = $service->installation_files($iam->{defaultservice});
+
+    if (! -e $svc_def_fn) {
+        $self->error("Default service file $svc_def_fn for service $default not found.",
+                     " Check your postgres installation.");
+        return;
+    }
+
+    if (! -e $svc_fn) {
+        $self->error("Service file $svc_fn for service $name not found.",
+                    " Should be configured through one of the service components.");
+        return;
+    }
+
+    # this is not a file controllable with ncm-sysconfig, it's in a subdir
+    # the directory seems present even on linux_systemd (altough unused)
+    my $sysconfig_data;
+    foreach my $var (qw(dir log port)) {
+        $sysconfig_data->{"pg$var"} = $iam->{pg}->{$var};
+    }
+
+    my $sysconfig_fn = "/etc/sysconfig/pgsql/$name";
+    my $trd = EDG::WP4::CCM::TextRender->new(
+        $SYSCONFIG_TT,
+        $sysconfig_data,
+        relpath => 'postgresql',
+        log => $self,
+        );
+    my $fh = $trd->filewriter(
+        $sysconfig_fn,
+        log => $self,
+        );
+    if($fh) {
+        my $changed = $fh->close() ? 1 : 0; # force to 0/1
+        return $changed;
+    } else {
+        $self->error("Failed to render postgresql sysconfig $sysconfig_fn: $trd->{fail}");
+        return;
+    }
+}
+
+=item whomai
+
+Return a hashref with configuration related data to indentify
+the service to use
+
+=over
+
+=item pg_engine
+
+Location and name of service
+
+=item service
+
+Service instance to use
+
+=item version
+
+Return value from C<version> method
+
+=item pg
+
+A hashref with postgresql basic configuration data,
+required to start the database.
+
+=over
+
+=item dir
+
+The database base directory
+
+=item data
+
+The database 'data' subdirectory
+
+=item port
+
+The database port
+
+=item log
+
+The database startup log
+
+=back
+
+=item suffix
+
+Version related suffix (or empty string if none is required).
+E.g. '-9.2', part of e.g. default servicename, pg_engine, ...
+
+=item exesuffix
+
+Version related suffix for certain executables, like '92' in
+'postgresql92-setup'.
+
+=item defaultname
+
+The default service name
+
+=item servicename
+
+The actual servicename
+
+=item service
+
+The C<NCM::Component::Postgresql::Service> instance
+
+=back
+
+Return hashref or undef on failure. No errors are logged
+
+=cut
+
+sub whoami
+{
+    my ($self, $config) = @_;
+
+    my $iam = {};
+
+    my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
+    $iam->{pg_engine} = $pg_engine;
+    $self->verbose("iam pg_engine $iam->{pg_engine}");
+
+    $iam->{version} = $self->version($pg_engine);
+    return if (! $iam->{version});
+
+    $self->verbose("iam version ", join(' . ', @{$iam->{version}}), '.');
+
+    my $pg_dir = $self->fetch($config, "pg_dir", $DEFAULT_BASEDIR);
+    $iam->{pg} = {
+        dir => $pg_dir,
+        port => $self->fetch($config, "pg_port", $DEFAULT_PORT),
+        data => "$pg_dir/data",
+        log => "$pg_dir/pgstartup.log",
+    };
+
+    $self->verbose("iam pg dir $iam->{pg}->{dir} port $iam->{pg}->{port}",
+                   " data $iam->{pg}->{data} log $iam->{pg}->{log}");
+
+    my $pg_version = $self->fetch($config, "pg_version", "");
+    my $pg_version_suf = $pg_version ? "-$pg_version" : "";
+    $iam->{suffix} = $pg_version_suf;
+    $self->verbose("iam suffix $iam->{suffix}");
+
+    my $exesuffix_def = $pg_version;
+    $exesuffix_def =~ s/\.//g;
+    $iam->{exesuffix} = $self->fetch($config, "bin_version", $exesuffix_def);
+    $self->verbose("iam exesuffix $iam->{exesuffix}");
+
+    my $iam->{defaultname} = "$POSTGRESQL$iam->{suffix}";
+    my $iam->{servicename} = $self->fetch($config, "pg_script_name", $iam->{defaultname});
+
+    my $service = NCM::Component::Postgresql::Service->new(
+        name => $iam->{servicename},
+        log => $self,
+        );
+
+    if ($service) {
+        $self->verbose("iam service instance created for name $iam->{servicename}");
+        $iam->{service} = $service;
+    } else {
+        $self->warn("Failed to create service instance with name $iam->{servicename}");
+        return;
+    }
+
+    $self->verbose("iam service $iam->{service}");
+
+    return $iam;
+}
+
+=item sanity_check
+
+Run some additional sanity checks, return undef on failure.
+
+=cut
+
+sub sanity_check
+{ 
+    my ($self, $iam) = @_;
+
+    # some very nasty conditions once encountered
+    $self->debug(1, "Starting some additional checks.");
+    if ($self->_directory_exists($iam->{pg}->{data}) && (! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION"))) {
+        # ok, postgres will never like this
+        # can't believe it will be running, but just to be certain
+        $iam->{service}->status_stop();
+
+        # non-destructive mode: make a backup
+        my $moved_suffix = "-moved-for-postgres-by-ncm-" . $self->name() . "." . strftime('%Y%m%d-%H%M%S', localtime());
+        my $bck_data = "$iam->{pg}->{data}$moved_suffix";
+        if (move($iam->{pg}->{data}, $bck_data)) {
+            $self->warn("Moved $iam->{pg}->{data} to $bck_data.");
+        } else {
+            # it will never work, but next time make sure all goes well
+            $self->error("Can't move $iam->{pg}->{data} to $bck_data. Please clean up.");
+            return;
+        }
+    }
+
+    return SUCCESS;
+}
+
+=item start_postgres
+
+Try to start postgres service, the cautious way. Return undef on failure, SUCCESS otherwise.
+
+=cut
+
+sub start_postgres
+{
+
+    my ($self, $iam, $sysconfig_changed) = @_;
+
+    # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
+    # we assume this is only due to pre-init postgres
+    if(! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+        return 0 if(! $self->initdb($iam));
+    }
+
+    # only now we can generate the config files
+    # PGDATA might has to exist
+    my $main_changed = $self->create_postgresql_config($config, $iam, %MAIN_CONFIG);
+    return 0 if (! defined($main_changed));
+
+    my $hba_changed = $self->create_postgresql_config($config, $iam, %HBA_CONFIG);
+    return 0 if (! defined($hba_changed));
+
+
+    if ( (! -f "$pg_dir/data/PG_VERSION")) {
+        $pg_data_dir_create = 1;
+        $p{pg_conf}{changed} = 1;
+        $p{pg_hba}{changed} = 1;
+    } else {
+        # ok, we're gonna do dummy write here and real write later
+        dump_it("pg_conf");
+        dump_it("pg_hba");
+    }
+
+    $self->debug(1, "Starting real configuration.");
+    
+    my $reload = $hba_changed;
+    my $restart=($main_changed || $sysconfig_changed);
+
+
+
+
+##################################################################################
+##################################################################################
+#  starting part 2. dynamic config.
+#  includes all service checks and config changes that need running services.
+###############################################################
+###############################################################
+    # remap flags to service calls
+    my ($pgsql_restart,$pgsql_reload);
+
+      if ($pgsql_restart) {
 
           $name="pg_conf";
         $self->debug(1, "p{$name}{changed}: ".$p{$name}{changed});
@@ -481,8 +541,51 @@ sub Configure {
     # so now it actually should be already running here...
     # maybe reload did something stupid
           return 1 if (! $iam->{service}->abs_start_service());
+    }
+
+    return SUCCESS;
+}
+
+
+
+sub Configure {
+    my ($self, $config) = @_;
+
+    my $iam = $self->whoami($config);
+    if (! $iam) {
+        $self->error('Failed to determine setup details. (See errors/warnings above).');
+        return 0;
+    };
+
+    my $sysconfig_changed = $self->prepare_service($iam, $default_service);
+    return 0 if (! defined($sysconfig_changed));
+
+    # now that prepare_service ran, we can start checking the service
+
+    # get current state
+    $self->verbose("Checking current status. Will be the same status after the component finishes.");
+    my $current_status = $iam->{service}->status();
+    $self->verbose("Current status: $current_status.");
+    
+    # this might remove PGDATA
+    $return 0 if (! defined($self->sanity_check));
+
+    # try to (re)start postgres in state that is configured as intended
+    return 0 if(! defined($self->start_postgres($iam, $sysconfig_changed)));
 
     # so now we have a running postgres
+
+======================HERE
+
+    # we're going to use this file to check if one should run the "ALTER ROLE" commands.
+    # if not, i think running pg_alter unnecessary might cause transfer errors.
+    # to protect the passwds, the file will contain md5 hashes of the psql commands
+    $name = "pg_alter";
+    $p{$name}{mode} = "MD5_HASH";
+    $p{$name}{filename} = "$pg_dir/data/pg_alter.ncm-".$self->name();
+    $p{$name}{write_empty} = 0;
+
+
 
     # run the alter command
     if ($iam->{service}->status()) {
@@ -857,6 +960,37 @@ sub Configure {
     return 1;
 }
 
+=pod
+
+=back
+
+=head2 Private methods
+
+=over
+
+=item _file_exists
+
+Test if file exists
+
+=cut
+
+sub _file_exists
+{
+    my ($self, $filename) = @_;
+    return (-l $filename || -f $filename);
+}
+
+=item _directory_exists
+
+Test if directory exists
+
+=cut
+
+sub _directory_exists
+{
+    my ($self, $directory) = @_;
+    return -d $directory;
+}
 
 
 =pod

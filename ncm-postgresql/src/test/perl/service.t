@@ -162,4 +162,21 @@ ok(! $srv->initdb_start, "false initdb && start returned");
 is($initdb, 1, 'initdb called');
 is($start, 2, 'start called');
 
+
+#
+my $sysv_files = ["/etc/init.d/postgresql", "/etc/init.d/$servicename"];
+my @files = $srv->installation_files_linux_sysv("postgresql");
+is_deeply(\@files, $sysv_files,
+          "Generated correct service files for linux_sysv");
+
+my $sysd_files = ["/usr/lib/systemd/system/postgresql.service", "/etc/systemd/system/$servicename.service"];
+@files = $srv->installation_files_linux_systemd("postgresql");
+is_deeply(\@files, $sysd_files,
+          "Generated correct service files for linux_systemd");
+
+# autoload linux_sysv
+@files = $srv->installation_files("postgresql");
+is_deeply(\@files, $sysv_files,
+          "Generated correct service files for autoloaded linux_sysv");
+
 done_testing;

@@ -1,0 +1,12 @@
+Test sysconfig pgsql subdirectory
+---
+//
+rendermodule=sysconfig
+contentspath=/
+---
+^if \[ -f /etc/sysconfig/pgsql_shared \]; then$
+^\s{4}\. /etc/sysconfig/pgsql_shared$
+^fi$
+^A="1"$
+^PORT="2"$
+^SOMETHING="what ever"$
