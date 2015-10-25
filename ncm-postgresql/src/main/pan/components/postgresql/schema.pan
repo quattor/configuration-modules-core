@@ -6,7 +6,7 @@ declaration template components/postgresql/schema;
 
 include 'quattor/types/component';
 
-function pgsql_is_hba_db = {
+function postgresql_is_hba_db = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
@@ -18,7 +18,7 @@ function pgsql_is_hba_db = {
     };
 };
 
-function pgsql_is_hba_address = {
+function postgresql_is_hba_address = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
@@ -39,15 +39,15 @@ function pgsql_is_hba_address = {
 };
 
 
-type pgsql_hba_database = string with pgsql_is_hba_db(SELF);
-type pgsql_hba_user = string with match(SELF,'^(\+|@)?\w+$');
+type postgresql_hba_database = string with postgresql_is_hba_db(SELF);
+type postgresql_hba_user = string with match(SELF,'^(\+|@)?\w+$');
 
 
-type pgsql_hba = {
+type postgresql_hba = {
     "host"  : string with match(SELF, "^(local|host((no)?ssl)?)$")
-    "database" : pgsql_hba_database[]
-    "user" : pgsql_hba_user[]
-    "address" ? string with pgsql_is_hba_address(SELF)
+    "database" : postgresql_hba_database[]
+    "user" : postgresql_hba_user[]
+    "address" ? string with postgresql_is_hba_address(SELF)
     "method" : string with match(SELF, "^(trust|reject|md5|password|gss|sspi|krb5|ident|peer|pam|ldap|radius|cert)$")
     "options" ? string{}
 };
@@ -61,7 +61,7 @@ type pgsql_hba = {
         int     -> int
         string  -> 'string' (use double single quotes for a single quote in the string)
 }
-type pgsql_mainconfig = {
+type postgresql_mainconfig = {
     "archive_command"                    ? string     # ""
     "archive_mode"                       ? boolean    # false
     "archive_timeout"                    ? long       # 0
@@ -255,7 +255,7 @@ type pgsql_mainconfig = {
     "xmloption"                          ? string     # "content"
 };
 
-type pg_db = {
+type postgresql_db = {
 	"user" ? string
 	"installfile" ? string
 	"sql_user" ? string
@@ -263,40 +263,54 @@ type pg_db = {
 	"langfile" ? string
 };
 
-type structure_pgsql_comp_config = {
-	"hba" ? pgsql_hba[]
-	"main" ? pgsql_mainconfig
+type postgresql_config = {
+	"hba" ? postgresql_hba[]
+	"main" ? postgresql_mainconfig
 	"debug_print" ? long with { deprecated(0, 'postgresql debug_print is not used anymore'); true;} # deprecated/unused
 };
 
-type component_pgsql = {
+@documentation{
+    The raw ALTER ROLE sql (cannot contain a ';'; use ENCRYPTED PASSWORD instead)
+}
+type postgresql_role_sql = string with {
+    if(match(SELF, ';')) {
+        error('The role sql data cannot contain a ";" (use ENCRYPTED PASSWORD if your password has ";")');
+    };
+    # TODO: Force ENCRYPTED PASSWORD usage?
+
+    true;
+};
+
+type component_postgresql = {
     include structure_component
 	include structure_component_dependency
 
 	"pg_script_name" ? string # the name of service to use
 	"pg_dir" ? string
-	"pg_port" ? string with match(SELF, "^\d+$")
+	"pg_port" ? string with match(SELF, '^\d+$')
 	"postgresql_conf" ? string
 	"pg_hba" ? string
-	"roles" ? string{}
-	"databases" ? pg_db{}
+	"roles" ? postgresql_role_sql{}
+	"databases" ? postgresql_db{}
 	"commands" ? string{}
-	"config" ? structure_pgsql_comp_config
+	"config" ? postgresql_config
 	"pg_version" ? string
 	"pg_engine" ? string
 } with {
     # handle legacy schema problems with port defined in 2 locations
     pg_port = -1;
-    if (exists(SELF["pg_port"]) {
+    if (exists(SELF["pg_port"])) {
         pg_port = to_long(SELF["pg_port"]);
-    }
+    };
     port = -1;
-    if (exists(SELF["config"]["main"]["port"]) {
+
+    if (exists(SELF["config"]["main"]["port"])) {
         port = SELF["config"]["main"]["port"];
-    }
+    };
+
     if (exists(SELF["config"]) && (pg_port != port)) {
         error(format("Legacy pg_port %s and config/main/port must %s be the same", pg_port, port));
-    }
+    };
 
     true;
 };

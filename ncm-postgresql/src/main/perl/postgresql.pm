@@ -164,7 +164,7 @@ sub version
         log => $self,
         );
     my $output = $proc->output();
-    
+
     # e.g. 'postgres (PostgreSQL) 9.2.1'
     if ($output && $output =~ m/\s(\d+)\.(\d+).(\d+)\s*$/) {
         return [$1, $2, $3];
@@ -176,7 +176,9 @@ sub version
 
 =item initdb
 
-Initialise the database
+Initialise the database. End result is a stopped initialised database.
+
+Returns undef on failure.
 
 =cut
 
@@ -188,48 +190,35 @@ sub initdb
     $self->info("Initdb, stopping $iam->{service}.");
     $iam->{service}->status_stop();
 
-    # check version
-    # if /usr/pgsql-9.2/bin/postgresql92-setup, exists, use it with initdb arg
-    # else, if > 8.2, try service initdb
+    # if /usr/pgsql/bin/postgresql-setup, exists, use it with initdb arg
+    # else, if >= 8.2, try service postgresql initdb
     # else, just start
 
-                # determine initialisation
-                # starting from 8.2, initdb is a separate postgres call
-                # lets assume postmaster is there
-                my $cmd="$pg_engine/postmaster --version";
-                my $out=`$cmd`;
-                if ($out) {
-                    if ($out =~ m/(\d+)\.(\d+).(\d+)\s*$/) {
-                        my $doInitdb = 0;
-                        if (($1 > 8)){
-                            $doInitdb = 1;
-                        } elsif ($1 == 8) {
-                            if ($2 >= 2 ){
-                                $doInitdb = 1;
-                            }
-                        }
-                        if ($doInitdb) {
-                            # postgres 8.2+
-                            $self->info("Initdb $iam->{service} to trigger the initialisation (found release $1.$2.$3 > 8.2).");
-                            return 1 if (! $iam->{service}->forcerestartinitdb_service());
+    my $setup = "$iam->{pg}->{engine}/postgresql$iam->{pg}->{exesuffix}-setup";
+    my $is_recent_enough = (($iam->{version}->[0] > 8) ||
+                            (($iam->{version}->[0] == 8 ) && $iam->{version}->[1] >= 2));
+    $self->verbose("initdb with setup $setup and is_recent_enough $is_recent_enough");
+    if ($self->_file_exists($setup)) {
+        $self->verbose("initdb with setup $setup");
+        my $proc = CAF::Process->new([$setup, 'initdb'], log => $self);
+        my $output = $proc->output();
 
-                        } else {
-                            $self->info("Starting $iam->{service} to trigger the initialisation (found release $1.$2.$3 < 8.2).");
-                            return 1 if (! $iam->{service}->forcerestart_service());
-                        };
+        if ($?) {
+            $self->error("Failed to initialise the database with setup $setup.");
+            return;
+        }
+    } elsif ($is_recent_enough) {
+        $self->verbose("initdb without setup $setup, but with initdb service action");
+        return if (! $iam->{service}->initdb());
+    } else {
+        $self->verbose("initdb with old version. Just going to start and hope all will be ok.");
+        return if (! $iam->{service}->forcerestart_service());
+    }
 
-                        $iam->{service}->status_stop();
-                    } else {
-                        $self->error("Command \"$cmd\" returns \"$out\" but this script doesn't expect it. (If you think it's a bug, please conatct the maintainer of this component). Exiting...");
-                        return 1;
-                    };
-                } else {
-                    $self->error("Command \"$cmd\" returns nothing (Probably doesn't exist). Exiting...");
-                    return 1;
-                };
+    # initdb ends with stopped service (configuration still needs to happen)
+    return if(! $iam->{service}->status_stop());
 
-            }
-          }
+    return SUCCESS;
 }
 
 
@@ -248,6 +237,8 @@ sysconfig file otherwise
 # .include /lib/systemd/system/postgresql.service
 # [Service]
 # Environment=PGPORT=5433
+
+# TODO: how do we check this, esp PGDATA and PGPORT
 
 sub prepare_service
 {
@@ -301,10 +292,6 @@ the service to use
 
 =over
 
-=item pg_engine
-
-Location and name of service
-
 =item service
 
 Service instance to use
@@ -335,6 +322,10 @@ The database port
 =item log
 
 The database startup log
+
+=item engine
+
+Location of service binaries
 
 =back
 
@@ -373,7 +364,6 @@ sub whoami
     my $iam = {};
 
     my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
-    $iam->{pg_engine} = $pg_engine;
     $self->verbose("iam pg_engine $iam->{pg_engine}");
 
     $iam->{version} = $self->version($pg_engine);
@@ -383,10 +373,11 @@ sub whoami
 
     my $pg_dir = $self->fetch($config, "pg_dir", $DEFAULT_BASEDIR);
     $iam->{pg} = {
-        dir => $pg_dir,
-        port => $self->fetch($config, "pg_port", $DEFAULT_PORT),
         data => "$pg_dir/data",
+        dir => $pg_dir,
+        engine => $pg_engine,
         log => "$pg_dir/pgstartup.log",
+        port => $self->fetch($config, "pg_port", $DEFAULT_PORT),
     };
 
     $self->verbose("iam pg dir $iam->{pg}->{dir} port $iam->{pg}->{port}",
@@ -430,7 +421,7 @@ Run some additional sanity checks, return undef on failure.
 =cut
 
 sub sanity_check
-{ 
+{
     my ($self, $iam) = @_;
 
     # some very nasty conditions once encountered
@@ -457,7 +448,9 @@ sub sanity_check
 
 =item start_postgres
 
-Try to start postgres service, the cautious way. Return undef on failure, SUCCESS otherwise.
+Try to start postgres service, the cautious way.
+
+Return undef on failure, SUCCESS otherwise.
 
 =cut
 
@@ -469,79 +462,34 @@ sub start_postgres
     # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
     # we assume this is only due to pre-init postgres
     if(! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION")) {
-        return 0 if(! $self->initdb($iam));
+        return if(! $self->initdb($iam));
+        if(! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+            $self->error("Succesful initdb but PG_VERSION still missing.");
+            return;
+        }
     }
 
     # only now we can generate the config files
-    # PGDATA might has to exist
+    # PGDATA has to exist
     my $main_changed = $self->create_postgresql_config($config, $iam, %MAIN_CONFIG);
-    return 0 if (! defined($main_changed));
+    return if (! defined($main_changed));
 
     my $hba_changed = $self->create_postgresql_config($config, $iam, %HBA_CONFIG);
-    return 0 if (! defined($hba_changed));
+    return if (! defined($hba_changed));
 
-
-    if ( (! -f "$pg_dir/data/PG_VERSION")) {
-        $pg_data_dir_create = 1;
-        $p{pg_conf}{changed} = 1;
-        $p{pg_hba}{changed} = 1;
+    if ($hba_changed) {
+        $self->info("hba config changed, reloading");
+        return if (! $iam->{service}->status_reload());
+    } elsif ($main_changed || $sysconfig_changed) {
+        # most main params don't require a restart, but a few do.
+        $self->info("main config or sysconfig changed, restarting");
+        return if (! $iam->{service}->status_restart());
     } else {
-        # ok, we're gonna do dummy write here and real write later
-        dump_it("pg_conf");
-        dump_it("pg_hba");
+        $self->verbose("Nothing changed, nothing to do");
     }
 
-    $self->debug(1, "Starting real configuration.");
-    
-    my $reload = $hba_changed;
-    my $restart=($main_changed || $sysconfig_changed);
-
-
-
-
-##################################################################################
-##################################################################################
-#  starting part 2. dynamic config.
-#  includes all service checks and config changes that need running services.
-###############################################################
-###############################################################
-    # remap flags to service calls
-    my ($pgsql_restart,$pgsql_reload);
-
-      if ($pgsql_restart) {
-
-          $name="pg_conf";
-        $self->debug(1, "p{$name}{changed}: ".$p{$name}{changed});
-        if ($p{$name}{changed}) {
-            $self->info("Config of $name changed. Writing...");
-            dump_it($name,"WRITE");
-        }
-        $iam->{service}->forcerestart_service();
-      }
-    # do some additional checks:
-    if (! -d "$pg_dir/data") {
-        # you should really never get here
-        $self->error("Directory $pg_dir/data does not exist. Initialisation must have failed. (2)");
-        return 1;
-    }
-    # so now it should be at least startable, but actually should be already running here...
-    # maybe nothing changed, but postgres was down.
-    return 1 if (! $iam->{service}->abs_start_service());
-
-    if ($pgsql_reload) {
-          $self->info("Reloading $iam->{service}.");
-          $name="pg_hba";
-        $self->debug(1, "p{$name}{changed}: ".$p{$name}{changed});
-        if ($p{$name}{changed}) {
-            $self->info("Config of $name changed. Writing...");
-            dump_it($name,"WRITE");
-        }
-
-          return 1 if(! $iam->{service}->reload_service());
-    # so now it actually should be already running here...
-    # maybe reload did something stupid
-          return 1 if (! $iam->{service}->abs_start_service());
-    }
+    # start if not yet running
+    return if (! $iam->{service}->status_start());
 
     return SUCCESS;
 }
@@ -554,11 +502,11 @@ sub Configure {
     my $iam = $self->whoami($config);
     if (! $iam) {
         $self->error('Failed to determine setup details. (See errors/warnings above).');
-        return 0;
+        return 1;
     };
 
     my $sysconfig_changed = $self->prepare_service($iam, $default_service);
-    return 0 if (! defined($sysconfig_changed));
+    return 1 if (! defined($sysconfig_changed));
 
     # now that prepare_service ran, we can start checking the service
 
@@ -566,14 +514,35 @@ sub Configure {
     $self->verbose("Checking current status. Will be the same status after the component finishes.");
     my $current_status = $iam->{service}->status();
     $self->verbose("Current status: $current_status.");
-    
+
     # this might remove PGDATA
-    $return 0 if (! defined($self->sanity_check));
+    $return 1 if (! defined($self->sanity_check));
 
     # try to (re)start postgres in state that is configured as intended
-    return 0 if(! defined($self->start_postgres($iam, $sysconfig_changed)));
+    return 1 if(! defined($self->start_postgres($iam, $sysconfig_changed)));
 
     # so now we have a running postgres
+    # make some more database configurations
+    return 1 if (! defined($self->pg_alter($config, $iam)));
+
+    # set postgres status to what it was
+    $self->verbose("Setting status to what it was before the component ran: $current_status.");
+    if ($current_status) {
+        $iam->{service}->status_start();
+    } else {
+        $iam->{service}->status_stop();
+    }
+
+    return 1;
+}
+
+
+sub pg_alter
+{
+    my ($self, $config, $iam) = @_;
+
+    return SUCCESS;
+}
 
 ======================HERE
 
@@ -586,201 +555,15 @@ sub Configure {
     $p{$name}{write_empty} = 0;
 
 
-
-    # run the alter command
-    if ($iam->{service}->status()) {
-        # it should be here
-        if (! pg_alter($self->prefix())) {
-            $self->error("Something went wrong during the addition of roles and/or databases. This must be cleared first.");
-            return 1;
-        }
-    }
-    # can the alter script make postgres go down. probably not, anyway ...
-          return 1 if ($iam->{service}->abs_start_service());
-
-#############
-############# safe to assume that postgres is up and running here
-#############
-
-
-
-
-#######################################################################
-#######################################################################
-    # set postgres status to what it was
-    $self->verbose("Setting status to what it was before the component ran.");
-    if ($current_status) {
-        $iam->{service}->status_start();
-    } else {
-        $iam->{service}->status_stop();
-    }
-
-
-############################################
-## only subs now
-
-##########################################################################
-    sub pd {
-##########################################################################
-        my $text = shift;
-        my $method = shift || "i";
-        my $level = shift || "5";
-
-        my $debug_print = 15;
-        # force strings to numeric compare
-        if ("$level" <= "$debug_print") {
-            if ($method =~ m/^i/) {
-                $self->info($text);
-            } elsif ($method =~ m/^e/) {
-                $self->error($text);
-            } elsif ($method =~ m/^w/) {
-                $self->warn($text);
-            } else {
-                $self->error("Unknown method $method in pd. Text was $text");
-            }
-        }
-    }
-
-##########################################################################
-    sub sys2 {
-##########################################################################
-        # is a wrapper for system(). that's why it has these strange exitcodes
-        # >0 is failure (the numeric values are not the same as in eg bash)
-        # but it's the same as running with system($exec)
-        my $exitcode=1;
-        my @argg=@_;
-
-        my $exec=shift;
-        my $use_system = shift || "true";
-        # needs $use_system==0
-        my $return_both = shift || "false";
-        my $pd_val=5;
-        if ($return_both eq "nothing") {
-            $pd_val = "1000000";
-        }
-
-        my $func = "sys2";
-        pd("$func: function called with arg: @argg","i",$pd_val+5);
-
-        my $output ="";
-
-        if ($use_system eq "true") {
-            system($exec);
-            $exitcode=$?;
-            pd("$func:exec: $exec","i",$pd_val);
-            pd("$func:exitcode: $exitcode","i",$pd_val);
-        } else {
-            if (! open(FILE,$exec." 2>&1 |")){
-                pd("$func: exec=$exec: $!","e","i",$pd_val);
-            } else {
-                $output="";
-                pd("$func: Processing FILE now","i",$pd_val+13);
-                while(<FILE>) {
-                    pd("$func: Processing FILE now: $_",,"i",$pd_val+13);
-                    $output .= $_;
-                }
-                close(FILE);
-                $exitcode=$?;
-                pd("$func:exec: $exec","i",$pd_val);
-                pd("$func:output: ".$output,"i",$pd_val);
-                pd("$func:exitcode: $exitcode","i",$pd_val);
-            }
-        }
-        if ( ($use_system ne "true") && ($return_both eq "true")) {
-            return ($exitcode,$output);
-        } else {
-            return $exitcode;
-        }
-    }
-
-
-##########################################################################
-    sub dump_it {
-##########################################################################
-        my $func = "dump_it";
-        $self->debug(1, "$func: function called with arg: @_","i",10);
-        my $name = shift;
-        my $extra_mode = shift || "DUMMY_WRITE_SET";
-
-        my $file_name=$p{$name}{filename};
-        my $mode=$p{$name}{mode}."_".$extra_mode;
-
-        my $changed = 0;
-        my $suffix=".back";
-        $self->debug(1, "$func: Start with name=$name mode=$mode filename=$file_name");
-
-        my $backup_file = $file_name.$suffix;
-        my $backup_file_tmp = $backup_file.$suffix;
-        if (-e $file_name) {
-            copy($file_name, $backup_file_tmp) || $self->error("Can't create backup $backup_file_tmp: $!");
-        } else {
-            $self->verbose("Can't create backup $backup_file_tmp: no current version found");
-        }
-        open(FILE,"> ".$file_name) || $self->error("Can't write to $file_name: $!");
-        if ($mode !~ m/NO_COMMENT/) {
-            print FILE "## Generated by ncm-".$self->comp()."\n## DO NOT EDIT\n";
-        }
-        if ($p{$name}{prologue}) {
-            print FILE "\n".$p{$name}{prologue}."\n";
-        }
-        # ok, without the sort, you are garanteed to see some strange behaviour.
-        foreach my $k (sort keys(%{$v{$name}})) {
-            # ok, lets inplement some special values here:
-            if ((exists $p{$name}{write_empty}) && ($p{$name}{write_empty} == 0) && ( "X".$v{$name}{$k} eq "X")) {
-                # do nothing, print message
-                $self->warn("Nothing specified for $name and key $k. Not writing to $file_name.")
-            } elsif ($mode =~ m/PLAIN_TEXT/) {
-                print FILE $v{$name}{$k};
-        } elsif ($mode =~ m/BASH_SOURCE/)  {
-            # if there are spaces in the value, quote the whole line
-            # in principle for source it doesn't matter, but in this way individual values can be used as names etc
-            if ($v{$name}{$k} =~ m/ |=/) {
-                print FILE "$k=\"$v{$name}{$k}\"\n";
-            } else {
-                print FILE "$k=$v{$name}{$k}\n";
-            }
         } elsif ($mode =~ m/MD5_HASH/) {
             # what could possibly go wrong here?
             my $md5=md5_hex($v{$name}{$k});
             print FILE "$k=$md5\n";
-        }  else {
-               $self->error("Dump_it: Using mode $mode, but doesn't match.");
-           }
-        }
-        if ($p{$name}{epilogue}) {
-            print FILE "\n".$p{$name}{epilogue}."\n";
-        }
-        close(FILE);
-        # check for differences
-        # if the file doesn't exists, compare will exit with -1, so this also checks existence of file
-        if (compare($file_name,$backup_file_tmp) == 0) {
-            # they're equal, remove backup
-            unlink($backup_file_tmp) || $self->warn("Can't unlink ".$backup_file_tmp) ;
-        } else {
-            if (-e $backup_file_tmp) {
-                if ($mode =~ m/DUMMY_WRITE_SET/) {
-                    copy($backup_file_tmp, $file_name)  || $self->error("Can't move $backup_file_tmp to $file_name in mode $mode: $!");
-                } else {
-                    copy($backup_file_tmp, $backup_file) || $self->error("Can't create backup $backup_file: $!");
-                }
-            } else {
-                if ($mode =~ m/DUMMY_WRITE_SET/) {
-                    unlink($file_name) || $self->error("Can't unlink $file_name in mode $mode: $!");
-                }
-            }
-            # flag the change here, action to be taken later
-            $changed = 1;
-        }
 
-        if ($changed) {
-            $p{$name}{changed}=1;
-        } else {
-            $p{$name}{changed}=0;
-        }
-
-        $self->debug(1, "$func: Stop with name=$name changed=$changed");
-        return $changed;
-    }
+  # ## Generated by ncm-postgresql
+  # ## DO NOT EDIT
+  # gold=48401f21bddd6bce6ae6d00f0112be91
+  # vsc_accountpage_admin=3377bfb671f512a7e461c675fef0bd5f
 
 
 ##########################################################################
@@ -792,13 +575,6 @@ sub Configure {
         my $new_base = shift;
         my $name="pg_alter";
 
-        my $su;
-        # taken from the init.d/postgresql script: For SELinux we need to use 'runuser' not 'su'
-        if (-x "/sbin/runuser") {
-            $su="runuser";
-        } else {
-            $su="su";
-        }
         my $exitcode=1;
         # configure users/roles: list them with psql -t -c "SELECT rolname FROM pg_roles;"
         # a user is a role with the LOGIN attribute set
@@ -955,11 +731,6 @@ sub Configure {
     }
 
 
-
-### real end of configure
-    return 1;
-}
-
 =pod
 
 =back
@@ -974,6 +745,7 @@ Test if file exists
 
 =cut
 
+# TODO: move to CAF
 sub _file_exists
 {
     my ($self, $filename) = @_;
@@ -986,6 +758,7 @@ Test if directory exists
 
 =cut
 
+# TODO: move to CAF
 sub _directory_exists
 {
     my ($self, $directory) = @_;

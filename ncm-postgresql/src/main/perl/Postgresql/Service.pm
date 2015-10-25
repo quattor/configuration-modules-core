@@ -131,9 +131,6 @@ sub status_restart
     return $self->_wrap_in_status(1, 'restart', 'start', 1);
 }
 
-# initdb: not running, initdb + start; force_restart, restart if running (no initdb), do nothing if running and not restart otherwise
-# only forcerestart with initdb
-
 # initdb_start: run initdb, followed by start, return combined exitcodes
 sub initdb_start
 {
