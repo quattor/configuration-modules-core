@@ -2,7 +2,7 @@ object template hba_config;
 
 include 'components/postgresql/schema';
 
-bind "/hba" = pgsql_hba[];
+bind "/hba" = postgresql_hba[];
 
 # fake databases for pgsql_hba_database type check
 prefix "/software/components/postgresql/databases";

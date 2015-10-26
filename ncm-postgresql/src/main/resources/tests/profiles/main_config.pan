@@ -2,7 +2,7 @@ object template main_config;
 
 include 'components/postgresql/schema';
 
-bind "/config" = pgsql_mainconfig;
+bind "/config" = postgresql_mainconfig;
 
 prefix "/config";
 "archive_command" = "my archive command";
