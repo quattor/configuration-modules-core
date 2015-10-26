@@ -25,7 +25,7 @@ Readonly my $PROCESS_LOG_ENABLED => 'PROCESS_LOG_ENABLED';
 # set $PROCESS_LOG_ENABLED attribute to true (enable process logging)
 sub _initialize
 {
-    my ($self, $engine) = @_;
+    my ($self, $engine, %opts) = @_;
 
     # taken from the init.d/postgresql script
     # For SELinux we need to use 'runuser' not 'su'
@@ -34,6 +34,8 @@ sub _initialize
     $self->{engine} = $engine || '/no/engine/defined';
 
     $self->{$PROCESS_LOG_ENABLED} = 1;
+
+    $self->{log} = $opts{log} if exists($opts{log});
 
     return SUCCESS;
 }
@@ -44,9 +46,9 @@ sub run_postgres
 {
     my ($self, @args) = @_;
 
-    my $cmd = [$self->{su}, '-l', $POSTGRESQL_USER. '-c', join(' ', @args)];
+    my $cmd = [$self->{su}, '-l', $POSTGRESQL_USER, '-c', join(' ', @args)];
 
-    my $log = $self->{$PROCESS_LOG_ENABLED} ? $self : undef;
+    my $log = $self->{$PROCESS_LOG_ENABLED} ? $self->{log} : undef;
     my $proc = CAF::Process->new($cmd, log => $log);
     my $output = $proc->output();
 
@@ -72,7 +74,7 @@ sub run_psql
     my $sql = join(' ', @args);
     if ($sql =~ m/;/) {
         my $invalidmsg = "psql args cannot contain a ';'";
-        $invalidmsg .= "(sql: $sql)" if $self->{$PROCESS_LOG_ENABLED};
+        $invalidmsg .= " (sql: $sql)" if $self->{$PROCESS_LOG_ENABLED};
         $self->error($invalidmsg);
         return;
     };
@@ -84,7 +86,6 @@ sub run_psql
 
     return $self->run_postgres(@postgresargs);
 }
-
 
 # simple select: one column from one table
 # return array ref with all values. undef on failure
@@ -99,11 +100,12 @@ sub simple_select
     #   split on newlines
     #   output can have sort of indentation, remove them with map'ped search and replace
     #   as last, remove empty lines with grep
-    my @roles = grep {$_ =~ m/\S/} map {s/^\s+//; s/\s+$//; $_} split(/\n/, $output);
+    my @res = grep {$_ =~ m/\S/} map {s/^\s+//; s/\s+$//; $_} split(/\n/, $output);
 
-    $self->verbose("Found ", scalar @roles, "$column from $table: ",join(', ', @roles));
+    $self->verbose("Found ", scalar @res, "$column from $table: ",join(', ', @res))
+        if $self->{$PROCESS_LOG_ENABLED};
 
-    return \@roles;
+    return \@res;
 }
 
 # return arrayref with existing roles, undef in case of failure
@@ -147,7 +149,6 @@ sub alter_role
     }
 }
 
-
 # return arrayref with databases
 sub get_databases
 {
@@ -176,14 +177,13 @@ sub run_commands_from_file
 {
     my ($self, $database, $asuser, $filename) = @_;
 
-    if (! $self->_file_exists()) {
+    if (! $self->_file_exists($filename)) {
         $self->error("Cannot file filename $filename to run commands from");
         return;
     }
 
     return $self->run_postgres("$self->{engine}/psql", '-U', $asuser, '-f', $filename, $database);
 }
-
 
 # TODO should be moved to CAF
 # _file_exists
