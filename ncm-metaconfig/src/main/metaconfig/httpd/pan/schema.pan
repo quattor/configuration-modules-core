@@ -10,6 +10,24 @@ type httpd_cipherstring = string with match(SELF, "^(TLSv1|TLSv1.0|TLSv1.1|TLSv1
 type httpd_nss_protocol = string with match(SELF, "^(TLSv1.0|SSLv3|All)$");
 type httpd_nss_cipherstring = string with match(SELF, '^(\+|-)(rsa_3des_sha|rsa_des_56_sha|rsa_des_sha|rsa_null_md5|rsa_null_sha|rsa_rc2_40_md5|rsa_rc4_128_md5|rsa_rc4_128_sha|rsa_rc4_40_md5|rsa_rc4_56_sha|fortezza|fortezza_rc4_128_sha|fortezza_null|fips_des_sha|fips_3des_sha|rsa_aes_128_sha|rsa_aes_256_sha)$');
 
+@documentation{
+    Either all Options must start with + or -, or no Option may.
+}
+type httpd_option_plusminus_none = string[] with {
+    if(length(SELF) < 2) {
+        return(true);
+    };
+
+    plusminus = match(SELF[0], '^(\+|-)');
+    foreach(idx;opt;SELF) {
+        pm = match(opt, '^(\+|-)');
+        if (to_long(plusminus) != to_long(pm)) {
+            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s', opt, SELF[0]));
+        };
+    };
+    true;
+};
+
 type httpd_kerberos = {
     "keytab" : string # this becomes krb5keytab (but nlists can't start with digits)
     "methodnegotiate" : boolean
@@ -87,7 +105,7 @@ type httpd_ssl_nss_shared = {
     "randomseed" ? string[][]
     "verifyclient" ? string with match(SELF, "^(require|none|optional|optional_no_ca)$")
     "require" ? string
-    "options" ? string[]
+    "options" ? httpd_option_plusminus_none
     "requiressl" ? boolean
     "passphrasedialog" ? string with match(SELF,'^(builtin|(exec|file):/.*)$')
 };
@@ -159,7 +177,7 @@ type httpd_acl = {
 
 @documentation{
     authz a.k.a. Require type. the keys are possible providers, each with their own syntax
-    
+
 }
 type httpd_authz = {
     "all" ? string with match(SELF, '^(granted|denied)$')
@@ -237,7 +255,7 @@ type httpd_file = {
     "name" : string
     "regex" : boolean = false # name is regex (i.e. add ~)
     "quotes" : string = '"'
-    "options" ? string[] = list("-indexes")
+    "options" ? httpd_option_plusminus_none = list("-indexes")
     "enablesendfile" ? boolean
     "lang" ? httpd_lang
     "ssl" ? httpd_ssl_global
@@ -500,7 +518,7 @@ type httpd_global = {
     "outputfilter" ? httpd_outputfilter
     "listen" ? httpd_listen[]
     "includes" : string[] = list("conf.d/*.conf")
-    "includesoptional" ? string[] 
+    "includesoptional" ? string[]
 };
 
 # for conf.d/*.conf
