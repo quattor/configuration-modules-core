@@ -10,20 +10,15 @@ use warnings;
 use parent qw(NCM::Component);
 
 use NCM::Component::Postgresql::Service qw($POSTGRESQL);
+use NCM::Component::Postgresql::Commands;
 
-use LC::Exception;
+use LC::Exception qw(SUCCESS);
 our $EC = LC::Exception::Context->new->will_store_all;
 
 use EDG::WP4::CCM::Element;
 
 use POSIX qw(strftime);
 
-use File::Copy;
-use File::Path;
-use File::Compare;
-
-# for units etc
-use MIME::Base64;
 use Digest::MD5 qw(md5_hex);
 
 use Readonly;
@@ -43,6 +38,7 @@ Readonly::Hash my %MAIN_CONFIG => {
     FILENAME => 'postgresql.conf',
     TEXT => 'postgresql_conf',
 };
+
 Readonly::Hash my %HBA_CONFIG => {
     NAME => 'hba',
     TT => 'hba_config',
@@ -52,18 +48,15 @@ Readonly::Hash my %HBA_CONFIG => {
     TEXT => 'pg_hba',
 };
 
+Readonly::Hash my %PG_ALTER => {
+    NAME => 'pg_alter',
+    TT => 'pg_alter',
+    CONFIG => $CONFIG_REL.'/roles',
+    CONFIG_HASH => undef, # added in a copy later
+};
+
 Readonly my $DEFAULT_PORT => 5432;
 Readonly my $DEFAULT_BASEDIR => "/var/lib/pgsql";
-
-# v is some sort of context / content / key=value of each file
-# p is a per file detail (e.g. format)
-my (%v, %p);
-
-# only ncm-dcache code
-#   slurp
-#   case_insensitive (slurp -> capit)
-#   EQUAL_SPACE
-#   ALL_POOL
 
 =pod
 
@@ -78,7 +71,8 @@ The component to configure postgresql databases
 =item create_postgresql_config
 
 Create main or hba config via textrender. Returns undef on failure, changed state otherwise.
-The C<data> hash is either C<%MAIN_CONFIG> or C<%HBA_CONFIG>.
+The C<data> hash is either C<%MAIN_CONFIG> or C<%HBA_CONFIG>;
+or the pg_alter hashref (see C<pg_alter> method).
 
 =cut
 
@@ -94,9 +88,21 @@ sub create_postgresql_config
     # new style precedes
     if ($config->elementExists($self->prefix().$data{CONFIG})) {
         $self->verbose("rendering $data{NAME} configuration data");
+
+        my $configdata;
+        if($data{CONFIG_EL}) {
+            $configdata = $config->getElement($self->prefix().$data{CONFIG_EL});
+        } elsif ($data{CONFIG_HASH}) {
+            $configdata = $data{CONFIG_HASH};
+        } else {
+            $self->error('Cannot find configdata: CONFIG_EL and CONFIG_HASH are missing',
+                         ' (bug in component).');
+            return;
+        }
+
         my $trd = EDG::WP4::CCM::TextRender->new(
             $data{TT},
-            $config->getElement($self->prefix().$data{CONFIG_EL}),
+            $configdata,
             relpath => 'postgresql',
             log => $self,
             );
@@ -108,10 +114,10 @@ sub create_postgresql_config
         }
     } elsif ($text) {
         $self->verbose("legacy full text $data{NAME} configuration data");
-        $fh = CAF::FileWriter->new(filename, log => $self);
+        $fh = CAF::FileWriter->new($filename, log => $self);
         print $fh $text;
     } else {
-        $self->error("config path $base for $data{NAME} config not found.");
+        $self->error("No config paths found for $data{NAME} config.");
         return;
     };
 
@@ -169,7 +175,7 @@ sub version
     if ($output && $output =~ m/\s(\d+)\.(\d+).(\d+)\s*$/) {
         return [$1, $2, $3];
     } else {
-        $self->warn("Failed to parse output from $proc: $output");
+        $self->error("Failed to parse output from $proc: $output");
         return;
     }
 }
@@ -244,16 +250,16 @@ sub prepare_service
 {
     my ($self, $iam) = @_;
 
-    my ($svc_def_fn, $svc_fn) = $service->installation_files($iam->{defaultservice});
+    my ($svc_def_fn, $svc_fn) = $iam->{service}->installation_files($iam->{defaultservice});
 
     if (! -e $svc_def_fn) {
-        $self->error("Default service file $svc_def_fn for service $default not found.",
-                     " Check your postgres installation.");
+        $self->error("Default service file $svc_def_fn for service $iam->{defaultservice} not found.",
+                     " Check your postgres OS installation.");
         return;
     }
 
     if (! -e $svc_fn) {
-        $self->error("Service file $svc_fn for service $name not found.",
+        $self->error("Service file $svc_fn for service $iam->{servicename} not found.",
                     " Should be configured through one of the service components.");
         return;
     }
@@ -265,7 +271,7 @@ sub prepare_service
         $sysconfig_data->{"pg$var"} = $iam->{pg}->{$var};
     }
 
-    my $sysconfig_fn = "/etc/sysconfig/pgsql/$name";
+    my $sysconfig_fn = "/etc/sysconfig/pgsql/$iam->{servicename}";
     my $trd = EDG::WP4::CCM::TextRender->new(
         $SYSCONFIG_TT,
         $sysconfig_data,
@@ -351,6 +357,10 @@ The actual servicename
 
 The C<NCM::Component::Postgresql::Service> instance
 
+=item commands
+
+The C<NCM::Component::Postgresql::Commands> instance
+
 =back
 
 Return hashref or undef on failure. No errors are logged
@@ -393,8 +403,8 @@ sub whoami
     $iam->{exesuffix} = $self->fetch($config, "bin_version", $exesuffix_def);
     $self->verbose("iam exesuffix $iam->{exesuffix}");
 
-    my $iam->{defaultname} = "$POSTGRESQL$iam->{suffix}";
-    my $iam->{servicename} = $self->fetch($config, "pg_script_name", $iam->{defaultname});
+    $iam->{defaultname} = "$POSTGRESQL$iam->{suffix}";
+    $iam->{servicename} = $self->fetch($config, "pg_script_name", $iam->{defaultname});
 
     my $service = NCM::Component::Postgresql::Service->new(
         name => $iam->{servicename},
@@ -410,6 +420,12 @@ sub whoami
     }
 
     $self->verbose("iam service $iam->{service}");
+
+    $iam->{commands} = NCM::Component::Postgresql::Commands->new(
+        engine => $iam->{enigne},
+        log => $self,
+        );
+    $self->verbose("iam commands added with engine $iam->{engine}");
 
     return $iam;
 }
@@ -457,7 +473,7 @@ Return undef on failure, SUCCESS otherwise.
 sub start_postgres
 {
 
-    my ($self, $iam, $sysconfig_changed) = @_;
+    my ($self, $config, $iam, $sysconfig_changed) = @_;
 
     # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
     # we assume this is only due to pre-init postgres
@@ -495,6 +511,171 @@ sub start_postgres
 }
 
 
+=item pg_alter
+
+Process roles and databases. Returns undef on failure.
+
+The main purpose is to initialise postgresql.
+
+=cut
+
+sub pg_alter
+{
+    my ($self, $config, $iam) = @_;
+
+    my $roles_tree = $config->getTree($self->prefix."/roles");
+    if (defined($roles_tree)) {
+        return if(!defined($self->roles($config, $iam, $roles_tree)));
+    } else {
+        $self->verbose("No roles defined.");
+    }
+
+    my $dbs_tree = $config->getTree($self->prefix."/databases");
+    if (defined($dbs_tree)) {
+        return if(!defined($self->databases($iam, $dbs_tree)));
+    } else {
+        $self->verbose("No databases defined.");
+    }
+
+    return SUCCESS;
+}
+
+
+=item roles
+
+C<$roles_tree> is the roles configuration hashref (via C<config->getTree(prefix/roles)>).
+
+Roles and only added and modified, never removed.
+
+Return undef on failure.
+
+=cut
+
+sub roles
+{
+    my ($self, $config, $iam, $roles_tree) = @_;
+
+    # add any not-existing roles
+    my $current_roles = $iam->{commands}->get_roles();
+    return if (! defined($current_roles));
+
+    foreach my $role (sort keys %$roles_tree) {
+        if (grep {$_ eq $role} @$current_roles) {
+            $self->verbose("Role $role already exists.");
+            next;
+        };
+        $self->verbose("Creating role $role.");
+        return if(! defined($iam->{commands}->create_role($role)));
+
+        # Not assuming that the pg_alter file will be different,
+        # e.g. component ran previously
+        $self->verbose('Applying role attributes for new role $role.');
+        return if(! defined($iam->{commands}->alter_role($role, $roles_tree->{$role})));
+    }
+
+    # make a copy of the Readonly hash
+    my $pg_alter_data = {%PG_ALTER};
+    $pg_alter_data->{FILENAME} = "pg_alter.ncm-".$self->name();
+
+    # data is key=role, value = md5sum of role SQL
+    $pg_alter_data->{CONFIG_HASH} = map {$_ => md5_hex($roles_tree->{$_})} keys %$roles_tree;
+
+    my $changed = $self->create_postgresql_config($config, $iam, %$pg_alter_data);
+    return if(! defined($changed));
+
+    if($changed) {
+        foreach my $role (sort keys %$roles_tree) {
+            $self->verbose('(Re)applying role attributes for role $role.');
+            return if(! defined($iam->{commands}->alter_role($role, $roles_tree->{$role})));
+        }
+    } else {
+        $self->verbose('No roles changed');
+    }
+
+    return SUCCESS;
+}
+
+=item databases
+
+C<$dbs_tree> is the databases configuration hashref (via C<config->getTree(prefix/databases)>).
+
+Databases are only created, never modified or removed.
+
+Return undef on failure.
+
+Operation order is
+
+=over
+
+=item create database
+
+=item initialise with installfile
+
+=item create lang
+
+=item apply langfile (if lang defined)
+
+=back
+
+=cut
+
+sub databases
+{
+    my ($self, $iam, $dbs_tree) = @_;
+
+    my $current_dbs = $iam->{commands}->get_databases();
+    return if (! defined($current_dbs));
+
+    foreach my $db_name (sort keys %$dbs_tree) {
+        my $db = $dbs_tree->{$db_name};
+
+        if (grep {$_ eq $db_name} @$current_dbs) {
+            $self->verbose("Database $db_name already exists.");
+            next;
+        };
+
+        # user is now mandatory, didn't used to be
+        if(! $db->{user}) {
+            $self->error("No user defined in profile for database $db_name.");
+            return;
+        }
+
+        $self->info("Creating database $db_name and owner $db->{user}.");
+        return if(! defined($iam->{commands}->create_database($db_name, $db->{user})));
+
+        my $sql_user = $db->{sql_user} || $db->{user};
+
+        if ($db->{installfile}) {
+            $self->info("Initialising database $db_name with installfile $db->{installfile} as user $sql_user");
+            return if(! defined($iam->{commands}->run_commands_from_file($db_name, $sql_user, $db->{installfile})));
+        } else {
+            $self->verbose("No installfile for database $db_name");
+        }
+
+        if ($db->{lang}) {
+            $self->info("Creating lang $db->{lang} for database $db_name.");
+            return if(! defined($iam->{commands}->create_database_lang($db_name, $db->{lang})));
+
+            if ($db->{langfile}) {
+                $self->info("Applying langfile $db->{langfile} to database $db_name as user $sql_user");
+                return if(! defined($iam->{commands}->run_commands_from_file($db_name, $sql_user, $db->{langfile})));
+            } else {
+                $self->verbose("No langfile for database $db_name");
+            }
+        } else {
+            $self->verbose("No lang for database $db_name");
+        }
+
+    }
+
+    return SUCCESS;
+}
+
+=item Configure
+
+component Configure method
+
+=cut
 
 sub Configure {
     my ($self, $config) = @_;
@@ -502,11 +683,11 @@ sub Configure {
     my $iam = $self->whoami($config);
     if (! $iam) {
         $self->error('Failed to determine setup details. (See errors/warnings above).');
-        return 1;
+        return 0;
     };
 
-    my $sysconfig_changed = $self->prepare_service($iam, $default_service);
-    return 1 if (! defined($sysconfig_changed));
+    my $sysconfig_changed = $self->prepare_service($iam);
+    return 0 if (! defined($sysconfig_changed));
 
     # now that prepare_service ran, we can start checking the service
 
@@ -516,220 +697,23 @@ sub Configure {
     $self->verbose("Current status: $current_status.");
 
     # this might remove PGDATA
-    $return 1 if (! defined($self->sanity_check));
+    return 0 if (! defined($self->sanity_check));
 
     # try to (re)start postgres in state that is configured as intended
-    return 1 if(! defined($self->start_postgres($iam, $sysconfig_changed)));
+    return 0 if(! defined($self->start_postgres($config, $iam, $sysconfig_changed)));
 
     # so now we have a running postgres
     # make some more database configurations
-    return 1 if (! defined($self->pg_alter($config, $iam)));
+    return 0 if (! defined($self->pg_alter($config, $iam)));
 
     # set postgres status to what it was
-    $self->verbose("Setting status to what it was before the component ran: $current_status.");
-    if ($current_status) {
-        $iam->{service}->status_start();
-    } else {
-        $iam->{service}->status_stop();
-    }
+    my $method = "status_" . ($current_status ? "start" : "stop");
+    $self->verbose("Setting status to what it was before the component ran:",
+                   " $current_status using $method.");
+    return 0 if (! defined($iam->{service}->$method()));
 
     return 1;
 }
-
-
-sub pg_alter
-{
-    my ($self, $config, $iam) = @_;
-
-    return SUCCESS;
-}
-
-======================HERE
-
-    # we're going to use this file to check if one should run the "ALTER ROLE" commands.
-    # if not, i think running pg_alter unnecessary might cause transfer errors.
-    # to protect the passwds, the file will contain md5 hashes of the psql commands
-    $name = "pg_alter";
-    $p{$name}{mode} = "MD5_HASH";
-    $p{$name}{filename} = "$pg_dir/data/pg_alter.ncm-".$self->name();
-    $p{$name}{write_empty} = 0;
-
-
-        } elsif ($mode =~ m/MD5_HASH/) {
-            # what could possibly go wrong here?
-            my $md5=md5_hex($v{$name}{$k});
-            print FILE "$k=$md5\n";
-
-  # ## Generated by ncm-postgresql
-  # ## DO NOT EDIT
-  # gold=48401f21bddd6bce6ae6d00f0112be91
-  # vsc_accountpage_admin=3377bfb671f512a7e461c675fef0bd5f
-
-
-##########################################################################
-    sub pg_alter {
-##########################################################################
-        my $func = "pg_alter";
-        $self->debug(1, "$func: function called with arg: @_");
-
-        my $new_base = shift;
-        my $name="pg_alter";
-
-        my $exitcode=1;
-        # configure users/roles: list them with psql -t -c "SELECT rolname FROM pg_roles;"
-        # a user is a role with the LOGIN attribute set
-        my @all_roles=();
-        open(TEMP,"$su -l postgres -c \"psql -t -c \\\"SELECT rolname FROM pg_roles;\\\"\" |")||$self->error("$func: SELECT rolname FROM pg_roles failed: $!");
-        while(<TEMP>) {
-            chomp;
-            s/ //g;
-            push(@all_roles,$_);
-        }
-        close TEMP;
-        my ($exi,$real_exec);
-        my ($role,$rol,$r,$rol_opt);
-        if ($config->elementExists("$new_base/roles")) {
-            my $roles = $config->getElement("$new_base/roles");
-            while ($roles->hasNextElement() ) {
-                $role = $roles->getNextElement();
-                $rol = $role->getName();
-                # check if role exists, if not create it
-                $exi=0;
-                foreach $r (@all_roles) {
-                    if ($r eq $rol) { $exi=1;}
-                }
-                if (! $exi) {
-                    $self->verbose("$func: Role $rol does not exist. Creating...");
-                    $real_exec="$su -l postgres -c \"psql -c \\\"CREATE ROLE \\\\\\\"$rol\\\\\\\"\\\"\"";
-                    $self->error("$func: Executing $real_exec failed") if (sys2($real_exec));
-                }
-                # set defined attributes to role
-                $rol_opt = $role->getValue();
-                $v{$name}{$rol}=$rol_opt;
-            }
-        }
-
-        dump_it($name,"WRITE");
-        if ($p{$name}{changed}) {
-            # apparently something has changed.
-            $self->verbose("$func: Something changed to the roles attributes.");
-            foreach $rol (keys %{$v{$name}}) {
-                $self->verbose("$func: Role $rol: setting attributes...");
-                # run without logger!!
-                $real_exec="$su -l postgres -c \"psql -c \\\"ALTER ROLE \\\\\\\"$rol\\\\\\\" ".$v{$name}{$rol}.";\\\"\"";
-                # Passwds could be shown with this: $self->info("$real_exec");
-                if (sys2($real_exec,"false","nothing")) {
-                    $self->error("$func: Executing ALTER ROLE $rol failed (attributes not shown for passwd reasons)");
-                    $exitcode=0;
-                }
-            }
-        }
-
-        my ($database,$datab,$datab_user,$datab_el,$datab_elem,$datab_file,$datab_sql_user,$datab_lang,$datab_lang_file);
-        if ($config->elementExists("$new_base/databases")) {
-            my $databases = $config->getElement("$new_base/databases");
-            while ($databases->hasNextElement() ) {
-                $database = $databases->getNextElement();
-                $datab = $database->getName();
-                $datab_el = $config->getElement("$new_base/databases/".$datab);
-                $datab_file = "";
-                $datab_lang = "";
-                $datab_lang_file = "";
-                $datab_sql_user= "REALLY_NOBODY";
-                while ($datab_el->hasNextElement() ) {
-                    $datab_elem = $datab_el->getNextElement();
-                    $datab_user = $datab_elem->getValue() if ($datab_elem->getName() eq "user");
-                    $datab_sql_user = $datab_elem->getValue() if ($datab_elem->getName() eq "sql_user");
-                    $datab_file = $datab_elem->getValue() if ($datab_elem->getName() eq "installfile");
-                    $datab_lang = $datab_elem->getValue() if ($datab_elem->getName() eq "lang");
-                    $datab_lang_file = $datab_elem->getValue() if ($datab_elem->getName() eq "langfile");
-                }
-                $datab_sql_user = $datab_user if ($datab_sql_user eq "REALLY_NOBODY");
-                $exitcode = create_pgdb($datab,$datab_user,$datab_file,$datab_lang,$datab_lang_file,$datab_sql_user);
-            }
-        }
-        return $exitcode;
-    }
-
-##########################################################################
-    sub create_pgdb {
-##########################################################################
-        my $func = "create_pgdb";
-        $self->debug(1, "$func: function called with arg: @_");
-
-        my $datab = shift;
-        my $datab_user = shift;
-        my $datab_file = shift;
-        my $datab_lang = shift;
-        my $datab_lang_file = shift;
-        my $datab_run_sql_user = shift ||$datab_user;
-        my $exitcode = 1;
-
-        my $su;
-        # taken from the init.d/postgresql script: For SELinux we need to use 'runuser' not 'su'
-        if (-x "/sbin/runuser") {
-            $su="runuser";
-        } else {
-            $su="su";
-        }
-
-        # configure databases: list all databases with psql -t -c "SELECT datname FROM pg_database;"
-        my @all_databases=();
-        open(TEMP,"$su -l postgres -c \"psql -t -c \\\"SELECT datname FROM pg_database;\\\"\" |")||$self->error("$func: SELECT datname FROM pg_database failed: $!");
-        while(<TEMP>) {
-            chomp;
-            s/ //g;
-            push(@all_databases,$_);
-        }
-        close TEMP;
-
-        # check if database exists, if not create it
-        my $exi=0;
-        foreach my $d (@all_databases) {
-            $exi=1 if ($d eq $datab);
-        }
-        if (! $exi) {
-            $self->verbose("$func: Database $datab does not exist. Creating...");
-            my $real_exec="$su -l postgres -c \"psql -c \\\"CREATE DATABASE \\\\\\\"$datab\\\\\\\" OWNER \\\\\\\"$datab_user\\\\\\\";\\\"\"";
-            my ($exitcode,$output) = sys2($real_exec,"false","true");
-            if (! $exitcode) {
-                if (($datab_file ne "") && (-e $datab_file)) {
-                    $self->verbose("$func: Creating $datab: initialising with $datab_file.");
-                    $real_exec="$su -l postgres -c \"psql -U $datab_run_sql_user $datab -f $datab_file;\"";
-                    ($exitcode,$output) = sys2($real_exec,"false","true");
-                    if ($exitcode) {
-                        $self->error("$func: Executing $real_exec failed:\n$output");
-                        $exitcode=0;
-                    }
-                }
-                # check for db lang
-                if ($datab_lang ne "") {
-                    $self->verbose("$func: Creating $datab: setting lang $datab_lang.");
-                    $real_exec="$su -l postgres -c \"createlang $datab_lang $datab;\"";
-                    ($exitcode,$output) = sys2($real_exec,"false","true");
-                    if ($exitcode) {
-                        $self->error("$func: Executing $real_exec failed:\n$output");
-                        $exitcode=0;
-                    } else {
-                        # db lang init file
-                        if (($datab_lang_file ne "") && (-e $datab_lang_file)) {
-                            $self->verbose("$func: Creating $datab: initialising lang $datab_lang with $datab_lang_file.");
-                            $real_exec="$su -l postgres -c \"psql -U $datab_run_sql_user $datab -f $datab_file;\"";
-                            ($exitcode,$output) = sys2($real_exec,"false","true");
-                            if ($exitcode) {
-                                $self->error("$func: Executing $real_exec failed:\n$output");
-                                $exitcode=0;
-                            }
-                        }
-                    }
-                }
-            } else {
-                $self->error("$func: Executing $real_exec failed with:\n$output");
-            }
-        }
-        return $exitcode;
-    }
-
 
 =pod
 

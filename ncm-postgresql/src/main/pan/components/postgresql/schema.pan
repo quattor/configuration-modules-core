@@ -256,11 +256,16 @@ type postgresql_mainconfig = {
 };
 
 type postgresql_db = {
-	"user" ? string
+    @{this file is used to initialise the database (using the pgsql -f option)}
 	"installfile" ? string
-	"sql_user" ? string
+    @{sets the pg language for the db (using createlang), this runs after installfile. }
 	"lang" ? string
+    @{this file is used to add procedures in certain lang (using pgsql -f option), this runs after successful lang is added}
 	"langfile" ? string
+    @{apply the installfile with this user (if not defined, the owner is used)}
+	"sql_user" ? string
+    @{database owner}
+	"user" : string
 };
 
 type postgresql_config = {
@@ -285,17 +290,19 @@ type component_postgresql = {
     include structure_component
 	include structure_component_dependency
 
-	"pg_script_name" ? string # the name of service to use
-	"pg_dir" ? string
-	"pg_port" ? string with match(SELF, '^\d+$')
-	"postgresql_conf" ? string
-	"pg_hba" ? string
-	"roles" ? postgresql_role_sql{}
-	"databases" ? postgresql_db{}
-	"commands" ? string{}
+	"commands" ? string{} with {deprecated(0, 'commands is unsupported'); true;} # also in old version of the component
 	"config" ? postgresql_config
-	"pg_version" ? string
+    @{Databases are only added/created, never updated, modified or removed.}
+	"databases" ? postgresql_db{}
+	"pg_dir" ? string
 	"pg_engine" ? string
+	"pg_hba" ? string
+	"pg_port" ? string with match(SELF, '^\d+$')
+	"pg_script_name" ? string # the name of service to use
+	"pg_version" ? string
+	"postgresql_conf" ? string
+    @{role name with ROLE ALTER SQL command. Roles are only added and updated, never removed.}
+	"roles" ? postgresql_role_sql{}
 } with {
     # handle legacy schema problems with port defined in 2 locations
     pg_port = -1;

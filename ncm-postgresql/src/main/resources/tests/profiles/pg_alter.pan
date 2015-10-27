@@ -1,4 +1,4 @@
-object template pgalter;
+object template pg_alter;
 
 "/key" = "asdfassdfsfsd";
 "/otherrole" = "oiwerowero";
