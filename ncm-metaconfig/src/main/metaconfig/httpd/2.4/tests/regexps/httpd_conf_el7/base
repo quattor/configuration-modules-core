@@ -3,6 +3,7 @@ Base test for httpd config
 multiline
 /etc/httpd/conf/httpd.conf
 ---
+^include conf.modules.d/\*.conf$
 ^accessfilename .htaccess$
 ^adddefaultcharset UTF-8$
 ^enablemmap on$
@@ -70,7 +71,6 @@ multiline
 ^<ifmodule dir_module>$
 ^\s{8}directoryindex index.html$
 ^</ifmodule>$
-^include conf.modules.d/\*.conf$
-^includeoptional conf.d/\*.conf$
 ^loglevel warn$
 ^errorlog logs/error_log$
+^includeoptional conf.d/\*.conf$

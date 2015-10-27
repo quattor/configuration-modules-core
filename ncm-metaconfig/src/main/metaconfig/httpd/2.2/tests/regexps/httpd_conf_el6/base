@@ -3,6 +3,7 @@ Base test for httpd config
 multiline
 /etc/httpd/conf/httpd.conf
 ---
+^include conf.d/\*.conf$
 ^accessfilename .htaccess$
 ^adddefaultcharset UTF-8$
 ^directoryindex index.html index.html.var$
@@ -155,7 +156,6 @@ multiline
 ^\s{12}</directory>$
 ^\s{4}</ifmodule>$
 ^</ifmodule>$
-^include conf.d/\*.conf$
 ^addhandler type-map var$
 ^loglevel warn$
 ^errorlog logs/error_log$
