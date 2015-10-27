@@ -27,5 +27,3 @@ type ${project.artifactId}_component = {
     include structure_component
     'services' : ${project.artifactId}_config{}
 };
-
-bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;
