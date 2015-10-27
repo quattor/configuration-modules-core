@@ -6,7 +6,7 @@ unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
 
-bind "/software/components/${project.artifactId}" = component_pgsql;
+bind "/software/components/${project.artifactId}" = component_postgresql;
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
@@ -15,4 +15,4 @@ bind "/software/components/${project.artifactId}" = component_pgsql;
 prefix '/software/components/${project.artifactId}';
 'active' ?= true;
 'dispatch' ?= true;
-'dependencies/pre' ?= list("spma","chkconfig");
+'dependencies/pre' ?= list("spma");

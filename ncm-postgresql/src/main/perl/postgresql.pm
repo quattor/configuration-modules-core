@@ -250,15 +250,15 @@ sub prepare_service
 {
     my ($self, $iam) = @_;
 
-    my ($svc_def_fn, $svc_fn) = $iam->{service}->installation_files($iam->{defaultservice});
+    my ($svc_def_fn, $svc_fn) = $iam->{service}->installation_files($iam->{defaultname});
 
-    if (! -e $svc_def_fn) {
+    if (! $self->_file_exists($svc_def_fn)) {
         $self->error("Default service file $svc_def_fn for service $iam->{defaultservice} not found.",
                      " Check your postgres OS installation.");
         return;
     }
 
-    if (! -e $svc_fn) {
+    if (! $self->_file_exists($svc_fn)) {
         $self->error("Service file $svc_fn for service $iam->{servicename} not found.",
                     " Should be configured through one of the service components.");
         return;
@@ -267,7 +267,7 @@ sub prepare_service
     # this is not a file controllable with ncm-sysconfig, it's in a subdir
     # the directory seems present even on linux_systemd (altough unused)
     my $sysconfig_data;
-    foreach my $var (qw(dir log port)) {
+    foreach my $var (qw(data log port)) {
         $sysconfig_data->{"pg$var"} = $iam->{pg}->{$var};
     }
 
@@ -291,7 +291,7 @@ sub prepare_service
     }
 }
 
-=item whomai
+=item whoami
 
 Return a hashref with configuration related data to indentify
 the service to use
@@ -374,7 +374,6 @@ sub whoami
     my $iam = {};
 
     my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
-    $self->verbose("iam pg_engine $iam->{pg_engine}");
 
     $iam->{version} = $self->version($pg_engine);
     return if (! $iam->{version});
@@ -391,7 +390,8 @@ sub whoami
     };
 
     $self->verbose("iam pg dir $iam->{pg}->{dir} port $iam->{pg}->{port}",
-                   " data $iam->{pg}->{data} log $iam->{pg}->{log}");
+                   " data $iam->{pg}->{data} log $iam->{pg}->{log}",
+                   " engine $iam->{pg}->{engine}");
 
     my $pg_version = $self->fetch($config, "pg_version", "");
     my $pg_version_suf = $pg_version ? "-$pg_version" : "";
@@ -422,10 +422,10 @@ sub whoami
     $self->verbose("iam service $iam->{service}");
 
     $iam->{commands} = NCM::Component::Postgresql::Commands->new(
-        engine => $iam->{enigne},
+        $iam->{pg}->{engine},
         log => $self,
         );
-    $self->verbose("iam commands added with engine $iam->{engine}");
+    $self->verbose("iam commands added with engine $iam->{pg}->{engine}");
 
     return $iam;
 }

@@ -316,7 +316,7 @@ type component_postgresql = {
     };
 
     if (exists(SELF["config"]) && (pg_port != port)) {
-        error(format("Legacy pg_port %s and config/main/port must %s be the same", pg_port, port));
+        error(format("Legacy pg_port %s and config/main/port %s must be the same", pg_port, port));
     };
 
     true;
