@@ -129,11 +129,11 @@ like($logs[0], qr{^psql args cannot contain a ';'$},
 $cmds->{$PROCESS_LOG_ENABLED} = 1;
 
 
-# escaped ', added ;
-$test_cmd = "/bin/su -l postgres -c $engine/psql -t -c 'select \\'a\\' from b;'";
+# escaped ", added ;
+$test_cmd = "/bin/su -l postgres -c $engine/psql -t -c \"select \\\"a\\\" from b;\"";
 set_desired_output($test_cmd, 'psql ran fine');
 set_command_status($test_cmd, 0); # shell exitcode
-is($cmds->run_psql(qw(select 'a' from b)),
+is($cmds->run_psql(qw(select "a" from b)),
    'psql ran fine',
    'psql ran expected postgres command');
 
@@ -149,7 +149,7 @@ my $outputdata = <<EOF;
 
 EOF
 
-$test_cmd = "/bin/su -l postgres -c $engine/psql -t -c 'SELECT a FROM b;'";
+$test_cmd = "/bin/su -l postgres -c $engine/psql -t -c \"SELECT a FROM b;\"";
 set_desired_output($test_cmd, $outputdata);
 set_command_status($test_cmd, 0); # shell exitcode
 

@@ -18,8 +18,8 @@ our $EC = LC::Exception::Context->new->will_store_all;
 use EDG::WP4::CCM::Element;
 
 use POSIX qw(strftime);
-
 use Digest::MD5 qw(md5_hex);
+use File::Copy qw(move);
 
 use Readonly;
 
@@ -30,7 +30,7 @@ Readonly my $CONFIG_REL => '/config';
 
 # relative filename in PGDATA
 # legacy full text config relative to sefl->prefix
-Readonly::Hash my %MAIN_CONFIG => {
+Readonly::Hash our %MAIN_CONFIG => {
     NAME => 'main',
     TT => 'main_config',
     CONFIG => $CONFIG_REL.'/main',
@@ -39,7 +39,7 @@ Readonly::Hash my %MAIN_CONFIG => {
     TEXT => 'postgresql_conf',
 };
 
-Readonly::Hash my %HBA_CONFIG => {
+Readonly::Hash our %HBA_CONFIG => {
     NAME => 'hba',
     TT => 'hba_config',
     CONFIG => $CONFIG_REL.'/hba',
@@ -48,15 +48,20 @@ Readonly::Hash my %HBA_CONFIG => {
     TEXT => 'pg_hba',
 };
 
-Readonly::Hash my %PG_ALTER => {
+Readonly::Hash our %PG_ALTER => {
     NAME => 'pg_alter',
     TT => 'pg_alter',
-    CONFIG => $CONFIG_REL.'/roles',
-    CONFIG_HASH => undef, # added in a copy later
+    CONFIG => '/roles',
+    CONFIG_HASHREF => undef, # added in a copy later
 };
 
 Readonly my $DEFAULT_PORT => 5432;
 Readonly my $DEFAULT_BASEDIR => "/var/lib/pgsql";
+
+# TODO:
+#    - what does the pg_version do?
+#    - service status logs errors just because the service is not running
+#       - but for status, that's ok
 
 =pod
 
@@ -78,7 +83,7 @@ or the pg_alter hashref (see C<pg_alter> method).
 
 sub create_postgresql_config
 {
-    my ($self, $config, $iam, %data);
+    my ($self, $config, $iam, %data) = @_;
 
     my $fh;
     my $filename = "$iam->{pg}->{data}/$data{FILENAME}";
@@ -92,10 +97,10 @@ sub create_postgresql_config
         my $configdata;
         if($data{CONFIG_EL}) {
             $configdata = $config->getElement($self->prefix().$data{CONFIG_EL});
-        } elsif ($data{CONFIG_HASH}) {
-            $configdata = $data{CONFIG_HASH};
+        } elsif ($data{CONFIG_HASHREF}) {
+            $configdata = $data{CONFIG_HASHREF};
         } else {
-            $self->error('Cannot find configdata: CONFIG_EL and CONFIG_HASH are missing',
+            $self->error('Cannot find configdata: CONFIG_EL and CONFIG_HASHREF are missing',
                          ' (bug in component).');
             return;
         }
@@ -117,7 +122,7 @@ sub create_postgresql_config
         $fh = CAF::FileWriter->new($filename, log => $self);
         print $fh $text;
     } else {
-        $self->error("No config paths found for $data{NAME} config.");
+        $self->error("No config paths found for $data{NAME} config (CONFIG $data{CONFIG}) and empty text.");
         return;
     };
 
@@ -140,6 +145,8 @@ sub fetch
     my ($self, $config, $path, $default) = @_;
 
     $default = '' if (! defined($default));
+
+    return $default if(! defined($path));
 
     $path = $self->prefix."/$path" if ($path !~ m/^\//);
 
@@ -200,7 +207,7 @@ sub initdb
     # else, if >= 8.2, try service postgresql initdb
     # else, just start
 
-    my $setup = "$iam->{pg}->{engine}/postgresql$iam->{pg}->{exesuffix}-setup";
+    my $setup = "$iam->{pg}->{engine}/postgresql$iam->{exesuffix}-setup";
     my $is_recent_enough = (($iam->{version}->[0] > 8) ||
                             (($iam->{version}->[0] == 8 ) && $iam->{version}->[1] >= 2));
     $self->verbose("initdb with setup $setup and is_recent_enough $is_recent_enough");
@@ -218,7 +225,7 @@ sub initdb
         return if (! $iam->{service}->initdb());
     } else {
         $self->verbose("initdb with old version. Just going to start and hope all will be ok.");
-        return if (! $iam->{service}->forcerestart_service());
+        return if (! $iam->{service}->status_start());
     }
 
     # initdb ends with stopped service (configuration still needs to happen)
@@ -493,13 +500,14 @@ sub start_postgres
     my $hba_changed = $self->create_postgresql_config($config, $iam, %HBA_CONFIG);
     return if (! defined($hba_changed));
 
-    if ($hba_changed) {
-        $self->info("hba config changed, reloading");
-        return if (! $iam->{service}->status_reload());
-    } elsif ($main_changed || $sysconfig_changed) {
+    # restart conditions first (because restart also reloads)
+    if ($main_changed || $sysconfig_changed) {
         # most main params don't require a restart, but a few do.
         $self->info("main config or sysconfig changed, restarting");
         return if (! $iam->{service}->status_restart());
+    } elsif ($hba_changed) {
+        $self->info("hba config changed, reloading");
+        return if (! $iam->{service}->status_reload());
     } else {
         $self->verbose("Nothing changed, nothing to do");
     }
@@ -569,7 +577,7 @@ sub roles
 
         # Not assuming that the pg_alter file will be different,
         # e.g. component ran previously
-        $self->verbose('Applying role attributes for new role $role.');
+        $self->verbose("Applying role attributes for new role $role.");
         return if(! defined($iam->{commands}->alter_role($role, $roles_tree->{$role})));
     }
 
@@ -578,14 +586,14 @@ sub roles
     $pg_alter_data->{FILENAME} = "pg_alter.ncm-".$self->name();
 
     # data is key=role, value = md5sum of role SQL
-    $pg_alter_data->{CONFIG_HASH} = map {$_ => md5_hex($roles_tree->{$_})} keys %$roles_tree;
+    $pg_alter_data->{CONFIG_HASHREF} = { map {$_ => md5_hex($roles_tree->{$_})} keys %$roles_tree };
 
     my $changed = $self->create_postgresql_config($config, $iam, %$pg_alter_data);
     return if(! defined($changed));
 
     if($changed) {
         foreach my $role (sort keys %$roles_tree) {
-            $self->verbose('(Re)applying role attributes for role $role.');
+            $self->verbose("(Re)applying role attributes for role $role.");
             return if(! defined($iam->{commands}->alter_role($role, $roles_tree->{$role})));
         }
     } else {
@@ -697,7 +705,7 @@ sub Configure {
     $self->verbose("Current status: $current_status.");
 
     # this might remove PGDATA
-    return 0 if (! defined($self->sanity_check));
+    return 0 if (! defined($self->sanity_check($iam)));
 
     # try to (re)start postgres in state that is configured as intended
     return 0 if(! defined($self->start_postgres($config, $iam, $sysconfig_changed)));

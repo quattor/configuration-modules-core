@@ -58,6 +58,10 @@ is($cmp->fetch($cfg, "pg_engine", "somedefault"), $engine,
    "fetch returns value and not default when relative path is defined (relative to prefix)");
 
 
+is($cmp->fetch($cfg, undef, "somedefaultundef"), "somedefaultundef",
+   "fetch returns default when path is undefined");
+
+
 =head1 whoami
 
 =cut

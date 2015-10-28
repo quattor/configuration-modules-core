@@ -60,11 +60,11 @@ sub run_postgres
     return $res;
 }
 
-# return $su -l postgres -c "psql -t -c 'args'" CAF::Process instances
+# return $su -l postgres -c 'psql -t -c "arg"' CAF::Process instances
 # always -t
 # args are space joined and wrapped in single quotes
 # a ';' is added, none of @args can contain a ';'
-# single quotes in @args are escaped
+# double quotes in @args are escaped
 sub run_psql
 {
     my ($self, @args) = @_;
@@ -79,10 +79,10 @@ sub run_psql
         return;
     };
 
-    # escape single quotes
-    $sql =~ s/'/\\'/g;
+    # escape double quotes
+    $sql =~ s/"/\\"/g;
 
-    push(@postgresargs, "'$sql;'");
+    push(@postgresargs, "\"$sql;\"");
 
     return $self->run_postgres(@postgresargs);
 }
@@ -102,7 +102,7 @@ sub simple_select
     #   as last, remove empty lines with grep
     my @res = grep {$_ =~ m/\S/} map {s/^\s+//; s/\s+$//; $_} split(/\n/, $output);
 
-    $self->verbose("Found ", scalar @res, "$column from $table: ",join(', ', @res))
+    $self->verbose("Found ", scalar @res, " $column from $table: ",join(', ', @res))
         if $self->{$PROCESS_LOG_ENABLED};
 
     return \@res;
