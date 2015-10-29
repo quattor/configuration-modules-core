@@ -6,7 +6,7 @@
   <artifactId>iptables</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.8.0</version>
+  <version>15.8.1-SNAPSHOT</version>
   <name>Setup the IPTABLES firewall.</name>
 
 
