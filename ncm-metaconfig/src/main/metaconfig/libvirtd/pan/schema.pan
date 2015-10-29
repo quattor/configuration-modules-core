@@ -1,14 +1,12 @@
 declaration template metaconfig/libvirtd/schema;
 
-include 'quattor/schema';
-
 include 'pan/types';
 
 type structure_libvirtd_network = {
     'listen_tls' ? boolean = true # enabled by default
     'listen_tcp' ? boolean = false # disabled by default
-    'tls_port' ? string # port (16514) or service name
-    'tcp_port' ? string # port (16509) or service name
+    'tls_port' ? type_port # port (16514) or service name
+    'tcp_port' ? type_port # port (16509) or service name
     'listen_addr' ? type_hostname # IPv4/v6 or hostname
     'mdns_adv' ? boolean = true # enabled by default
     'mdns_name' ? string # default "Virtualization Host HOSTNAME"
@@ -72,8 +70,6 @@ type structure_libvirtd_audit = {
 };
 
 type structure_component_libvirtd = {
-    include structure_component
-    'libvirtd_config' : string = '/etc/libvirt/libvirtd.conf'
     'network' ? structure_libvirtd_network
     'socket' ? structure_libvirtd_socket
     'authn' ? structure_libvirtd_authn
@@ -85,5 +81,3 @@ type structure_component_libvirtd = {
     'audit' ? structure_libvirtd_audit
     'host_uuid' ? type_uuid
 };
-
-bind '/software/components/libvirtd' = structure_component_libvirtd;

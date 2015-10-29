@@ -1,0 +1,10 @@
+Base test for config
+---
+multiline
+/etc/libvirt/libvirtd.conf
+---
+^auth_tcp\s*=\s*".+"\s*$
+^auth_tls\s*=\s*".+"\s*$
+^sasl_allowed_username_list\s*=\s*\[".+",\s*".+"\]\s*$
+^listen_tcp\s*=\s*\d+\s*$
+^listen_tls\s*=\s*\d+\s*$

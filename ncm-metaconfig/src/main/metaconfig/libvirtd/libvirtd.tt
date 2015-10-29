@@ -1,18 +1,9 @@
-[%- libvirtd_section = ['access_drivers', 'tls_allowed_dn_list', 'sasl_allowed_username_list'] -%]
-[%- booleans = ['listen_tls', 'listen_tcp', 'mdns_adv', 'tls_no_sanity_certificate', 
-                'tls_no_verify_certificate', 'keepalive_required', 'audit_logging'] -%]
-[%- digits = ['max_clients', 'max_queued_clients', 'max_anonymous_clients', 'min_workers', 
-              'max_workers', 'prio_workers', 'max_requests', 'max_client_requests', 'log_level', 
-              'audit_level', 'keepalive_interval', 'keepalive_count'] -%]
-[% FOR pair IN libvirtd.pairs -%]
+[%- structure_libvirtd = ['network', 'socket', 'authn', 'tls', 'authz', 'processing', 'logging', 
+                          'keepalive', 'audit'] -%]
+[% FOR pair IN CCM.contents.pairs -%]
 [%-    SWITCH pair.key -%]
-[%         CASE 'libvirtd_section' -%]
-[%             pair.key %] = [% pair.key.join(',') %]
-[%         CASE 'libvirtd_config' -%]
-[%         CASE booleans -%]
-[%             pair.key %] = [% pair.value ? "1" : "0" %]
-[%         CASE digits -%]
-[%             pair.key %] = [% pair.value %]
+[%         CASE structure_libvirtd -%]
+[%             INCLUDE metaconfig/libvirtd/libvirtd_level1.tt data=CCM.contents.${pair.key} -%]
 [%         CASE -%]
 [%            pair.key %] = "[% pair.value %]"
 [%     END -%]
