@@ -9,10 +9,12 @@ prefix "/software/components/systemd/unit";
     'only', true,
     'config', nlist(
         'unit', nlist(
-            'AssertPathExists', list(
-                '', # reset
-                '/path/1',
-                '/path/2',
+            'Assert', nlist(
+                'PathExists', list(
+                    '', # reset
+                    '/path/1',
+                    '/path/2',
+                    ),
                 ),
             ),
         'service', nlist(

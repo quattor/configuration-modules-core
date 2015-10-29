@@ -27,6 +27,12 @@ type ${project.artifactId}_skip = {
     "service" : boolean = false
 };
 
+type ${project.artifactId}_unit_architecture = string with match(SELF, '^(native|x86(-64)?|ppc(64)?(-le)?|ia64|parisc(64)?|s390x?|sparc(64)?)|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$');
+
+type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|apparmor|ima|smack|audit)$');
+
+type ${project.artifactId}_unit_virtualization = string with match(SELF, '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$');
+
 # TODO: make this more finegrained, e.g. has to be existing unit; or check types
 type ${project.artifactId}_valid_unit = string;
 
@@ -35,15 +41,68 @@ type ${project.artifactId}_valid_unit = string;
 # and follow the link to the manual
 
 @documentation{
+    Condition/Assert entries in Unit section
+    All lists can start with empty string to reset previously defined values.
+}
+type ${project.artifactId}_unitfile_config_unit_condition = {
+    'ACPower' ? boolean
+    'Architecture' ? ${project.artifactId}_unit_architecture[]
+    'Capability' ? string[]
+    'DirectoryNotEmpty' ? string[]
+    'FileIsExecutable' ? string[]
+    'FileNotEmpty' ? string[]
+    'FirstBoot' ? boolean
+    'Host' ? string[] # TODO: make custom type for hostname or machineid
+    'KernelCommandLine' ? string[]
+    'NeedsUpdate' ? string with match(SELF, '^!?/(var|etc)')
+    'PathExistsGlob' ? string[]
+    'PathExists' ? string[]
+    'PathIsDirectory' ? string[]
+    'PathIsMountPoint' ? string[]
+    'PathIsReadWrite' ? string[]
+    'PathIsSymbolicLink' ? string[]
+    'Security' ? ${project.artifactId}_unit_security[]
+    'Virtualization' ? ${project.artifactId}_unit_virtualization[]
+};
+
+@documentation{
 the [Unit] section
 http://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BUnit%5D%20Section%20Options
 }
 type ${project.artifactId}_unitfile_config_unit = {
     'After' ? ${project.artifactId}_valid_unit[]
-    @{start with empty string to reset previously defined paths}
-    'AssertPathExists' ? string[]
+    'After' ? ${project.artifactId}_valid_unit[]
+    'AllowIsolate' ? boolean
+    'Assert' ? ${project.artifactId}_unitfile_config_unit_condition
+    'Before' ? ${project.artifactId}_valid_unit[]
+    'BindsTo' ? ${project.artifactId}_valid_unit[]
+    'Condition' ? ${project.artifactId}_unitfile_config_unit_condition
+    'Conflicts' ? ${project.artifactId}_valid_unit[]
+    'DefaultDependencies' ? boolean
     'Description' ? string
+    'Documentation' ? string
+    'IgnoreOnIsolate' ? boolean
+    'IgnoreOnSnapshot' ? boolean
+    'JobTimeoutAction' ? string
+    'JobTimeoutRebootArgument' ? string
+    'JobTimeoutSec' ? long(0..)
+    'JoinsNamespaceOf' ? ${project.artifactId}_valid_unit[]
+    'NetClass' ? string
+    'OnFailure' ? string[]
+    'OnFailureJobMode' ? string with match(SELF, '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$')
+    'PartOf' ? ${project.artifactId}_valid_unit[]
+    'PropagatesReloadTo' ? string[]
+    'RefuseManualStart' ? boolean
+    'RefuseManualStop' ? boolean
+    'ReloadPropagatedFrom' ? string[]
     'Requires' ? ${project.artifactId}_valid_unit[]
+    'RequiresMountsFor' ? string[]
+    'RequiresOverridable' ? ${project.artifactId}_valid_unit[]
+    'Requisite' ? ${project.artifactId}_valid_unit[]
+    'RequisiteOverridable' ? ${project.artifactId}_valid_unit[]
+    'SourcePath' ? string
+    'StopWhenUnneeded' ? boolean
+    'Wants' ? ${project.artifactId}_valid_unit[]
 };
 
 @documentation{

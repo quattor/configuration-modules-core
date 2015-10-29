@@ -10,10 +10,19 @@ bind "/unitfile" = systemd_unitfile_config[];
         '/unit/2',
         ),
     'unit', nlist(
-        'AssertPathExists', list(
-            '', # reset
-            '/path/1',
-            '/path/2',
+        'Assert', nlist(
+            'PathExists', list(
+                '', # reset
+                '/path/1',
+                '/path/2',
+                ),
+            ),
+        'Condition', nlist(
+            'PathExists', list(
+                '', # reset
+                '/path/C1',
+                '/path/C2',
+                ),
             ),
         'Description', 'my test',
         'Requires', list('unit1', 'unit2'),

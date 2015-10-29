@@ -19,3 +19,6 @@ contentspath=/unitfile/0
 ^AssertPathExists=$
 ^AssertPathExists=/path/1$
 ^AssertPathExists=/path/2$
+^ConditionPathExists=$
+^ConditionPathExists=/path/C1$
+^ConditionPathExists=/path/C2$
