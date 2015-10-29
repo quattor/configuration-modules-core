@@ -6,6 +6,9 @@ contentspath=/unitfile/0
 ---
 ^\.include /unit/1$
 ^\.include /unit/2$
+^\[Install\]$
+^WantedBy=1.service$
+^WantedBy=2.service$
 ^\[Service\]$
 ^CPUAffinity=$
 ^CPUAffinity=1 2 3 4$

@@ -110,11 +110,26 @@ the [Install] section
 http://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BInstall%5D%20Section%20Options
 }
 type ${project.artifactId}_unitfile_config_install = {
+    'Alias' ? string[]
+    'Also' ? ${project.artifactId}_valid_unit[]
+    'DefaultInstance' ? string
+    'RequiredBy' ? ${project.artifactId}_valid_unit[]
     'WantedBy' ? ${project.artifactId}_valid_unit[]
 };
 
 type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr =  string with match(SELF, '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$');
 
+@documentation{
+systemd.kill directives
+http://www.freedesktop.org/software/systemd/man/systemd.kill.html
+valid for [Service], [Socket], [Mount], or [Swap] sections
+}
+type ${project.artifactId}_unitfile_config_systemd_kill = {
+    'KillMode' ? string with match(SELF, '^(control-group|process|mixed|none)$')
+    'KillSignal' ? string with match(SELF, '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$')
+    'SendSIGHUP' ? boolean
+    'SendSIGKILL' ? boolean
+};
 
 @documentation{
 systemd.exec directives
@@ -122,34 +137,15 @@ http://www.freedesktop.org/software/systemd/man/systemd.exec.html
 valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_exec = {
-    'Nice' ? long(-20..19)
-    'PrivateTmp' ? boolean
-    'WorkingDirectory' ? string
-    'RootDirectory' ? string
-    'User' ? defined_user
-    'Group' ? defined_group
-    'SupplementaryGroups' ? defined_group[]
-    'OOMScoreAdjust' ? long(-1000..1000)
-    'IOSchedulingClass' ? string with match(SELF, '^([0-3]|none|realtime|best-effort|idle)$')
-    'IOSchedulingPriority' ? long(0..7) # 0 = highest
+    'CPUAffinity' ? long[][] # start with empty list to reset
     'CPUSchedulingPolicy' ? string with match(SELF, '^(other|batch|idle|fifo|rr)$')
     'CPUSchedulingPriority' ? long(1..99) # 99 = highest
     'CPUSchedulingResetOnFork' ? boolean
-    'CPUAffinity' ? long[][] # start with empty list to reset
-    'UMask' ? string # octal notation, e.g. 0022
     'Environment' ? string{}[] # start with empty list
     'EnvironmentFile' ? string[] # overrides variables defined in Environment
-    'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
-    'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
-    'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
-    'TTYPath' ? string
-    'TTYReset' ? boolean
-    'TTYVHangup' ? boolean
-    'TTYVTDisallocate' ? boolean
-    'SyslogIdentifier' ? string
-    'SyslogFacility' ? syslog_facility
-    'SyslogLevel' ? syslog_level
-    'SyslogLevelPrefix' ? boolean
+    'Group' ? defined_group
+    'IOSchedulingClass' ? string with match(SELF, '^([0-3]|none|realtime|best-effort|idle)$')
+    'IOSchedulingPriority' ? long(0..7) # 0 = highest
     'LimitAS' ? long(0..) # The maximum size of the process's virtual memory (address space) in bytes.
     'LimitCORE' ? long(0..) # Maximum size of a core file
     'LimitCPU' ? long(0..) # CPU time limit in seconds
@@ -166,6 +162,25 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'LimitRTTIME' ? long(0..) # Specifies a limit (in microseconds) on the amount of CPU time that a process scheduled under a real-time scheduling policy may consume without making a blocking system call.
     'LimitSIGPENDING' ? long(0..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
     'LimitSTACK' ? long(0..) # The maximum size of the process stack, in bytes.
+    'Nice' ? long(-20..19)
+    'OOMScoreAdjust' ? long(-1000..1000)
+    'PrivateTmp' ? boolean
+    'RootDirectory' ? string
+    'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
+    'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
+    'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
+    'SupplementaryGroups' ? defined_group[]
+    'SyslogFacility' ? syslog_facility
+    'SyslogIdentifier' ? string
+    'SyslogLevel' ? syslog_level
+    'SyslogLevelPrefix' ? boolean
+    'TTYPath' ? string
+    'TTYReset' ? boolean
+    'TTYVHangup' ? boolean
+    'TTYVTDisallocate' ? boolean
+    'UMask' ? string # octal notation, e.g. 0022
+    'User' ? defined_user
+    'WorkingDirectory' ? string
 };
 
 @documentation{
@@ -174,8 +189,38 @@ http://www.freedesktop.org/software/systemd/man/systemd.service.html
 }
 type ${project.artifactId}_unitfile_config_service = {
     include ${project.artifactId}_unitfile_config_systemd_exec
+    include ${project.artifactId}_unitfile_config_systemd_kill
+    'BusName' ? string
+    'BusPolicy' ? string[] with length(SELF) == 2 && match(SELF[1], '^(see|talk|own)$')
+    'ExecReload' ? string
     'ExecStart' ? string
-    'Type' ? string
+    'ExecStartPost' ? string
+    'ExecStartPre' ? string
+    'ExecStop' ? string
+    'ExecStopPost' ? string
+    'GuessMainPID' ? boolean
+    'NonBlocking' ? boolean
+    'NotifyAccess' ? string with match(SELF, '^(none|main|all)$')
+    'PIDFile' ? string with match(SELF, '^/')
+    'PermissionsStartOnly' ? boolean
+    'RemainAfterExit' ? boolean
+    'Restart' ? string with match(SELF, '^(no|on-(success|failure|abnormal|watchdog|abort)|always)$')
+    'RestartForceExitStatus' ? long[]
+    'RestartPreventExitStatus' ? long[]
+    'RestartSec' ? long(0..) # TODO default is 100ms, which can't be expressed like this
+    'RootDirectoryStartOnly' ? boolean
+    'Sockets' ? ${project.artifactId}_valid_unit[]
+    'SuccessExitStatus' ? long[]
+    'TimeoutSec' ? long(0..)
+    'TimeoutStartSec' ? long(0..)
+    'TimeoutStopSec' ? long(0..)
+    'Type' ? string with match(SELF, '^(simple|forking|oneshot|dbus|notify|idle)$')
+    'WatchdogSec' ? long(0..)
+} with {
+    if(exists(SELF['Type']) && (SELF['Type'] == 'dbus') && (! exists(SELF['BusName']))) {
+        error('BusName has to be specified with Type=dbus');
+    };
+    true;
 };
 
 @documentation{

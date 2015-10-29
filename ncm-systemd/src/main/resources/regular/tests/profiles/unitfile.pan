@@ -49,5 +49,7 @@ bind "/unitfile" = systemd_unitfile_config[];
         'TTYReset', true,
         'TTYVHangup', false,
         ),
+    'install', nlist(
+        'WantedBy', list('1.service', '2.service'),
+        ),
     );
-
