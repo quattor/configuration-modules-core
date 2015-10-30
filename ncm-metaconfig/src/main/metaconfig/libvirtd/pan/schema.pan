@@ -5,8 +5,8 @@ include 'pan/types';
 type structure_libvirtd_network = {
     'listen_tls' ? boolean = true # enabled by default
     'listen_tcp' ? boolean = false # disabled by default
-    'tls_port' ? type_port # port (16514) or service name
-    'tcp_port' ? type_port # port (16509) or service name
+    'tls_port' ? type_port = 16514 # port (16514) or service name
+    'tcp_port' ? type_port = 16509 # port (16509) or service name
     'listen_addr' ? type_hostname # IPv4/v6 or hostname
     'mdns_adv' ? boolean = true # enabled by default
     'mdns_name' ? string # default "Virtualization Host HOSTNAME"
@@ -69,6 +69,9 @@ type structure_libvirtd_audit = {
     'audit_logging' ? boolean
 };
 
+@documentation{
+libvirtd.conf settings
+}
 type structure_component_libvirtd = {
     'network' ? structure_libvirtd_network
     'socket' ? structure_libvirtd_socket
@@ -80,4 +83,27 @@ type structure_component_libvirtd = {
     'keepalive' ? structure_libvirtd_keepalive
     'audit' ? structure_libvirtd_audit
     'host_uuid' ? type_uuid
+};
+
+@documentation{
+sasl2 conf for libvirtd
+}
+type structure_sasl2 = {
+    'mech_list' ? string with match(SELF, 'digest-md5|gssapi')
+    'keytab' ? string = '/etc/libvirt/krb5.tab'
+    'sasldb_path' ? string = '/etc/libvirt/passwd.db'
+};
+
+@documentation{
+Override the default config file
+NOTE: This setting is no longer honoured if using
+systemd. Set '--config /etc/libvirt/libvirtd.conf'
+}
+type structure_sysconfig = {
+    'libvirtd_config' ? string = '/etc/libvirt/libvirtd.conf'
+    'libvirtd_args' ? string with match(SELF, '--listen')
+    'krb5_ktname' ? string = '/etc/libvirt/krb5.tab'
+    'qemu_audio_drv' ? string with match(SELF, 'sdl')
+    'sdl_audiodriver' ? string with match(SELF, 'pulse')
+    'libvirtd_nofiles_limit' ? long (1..)
 };

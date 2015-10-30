@@ -1,0 +1,8 @@
+Base test for sasl2
+---
+multiline
+/etc/sasl2/libvirt.conf
+---
+^keytab:\s.+\s*$
+^mech_list:\s.+\s*$
+^sasldb_path:\s.+\s*$
