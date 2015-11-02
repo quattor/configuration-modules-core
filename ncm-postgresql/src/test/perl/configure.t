@@ -5,6 +5,7 @@ use Test::MockModule;
 use Test::Quattor qw(configure);
 use CAF::Object;
 use NCM::Component::postgresql;
+use Digest::MD5 qw(md5_hex);
 
 use Test::Quattor::TextRender::Base;
 
@@ -20,9 +21,15 @@ my $cmp = NCM::Component::postgresql->new("postgresql");
 my $cfg = get_config_for_profile('configure');
 
 my $mock = Test::MockModule->new('NCM::Component::postgresql');
+my $mockc = Test::MockModule->new('NCM::Component::Postgresql::Commands');
 
 my $expected_fns = [qw(/not/a/file)];
 $mock->mock('_file_exists', sub {
+    shift;
+    my $filename = shift;
+    return grep {$_ eq $filename} @$expected_fns;
+});
+$mockc->mock('_file_exists', sub {
     shift;
     my $filename = shift;
     return grep {$_ eq $filename} @$expected_fns;
@@ -66,7 +73,6 @@ is_deeply({ %NCM::Component::postgresql::PG_ALTER }, {
 
 =cut
 
-diag explain $iam;
 my $fh;
 
 is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::MAIN_CONFIG),
@@ -131,6 +137,196 @@ ok(command_history_ok([
        qr{service myownpostgresql status},
 ]), "expected commands ran by initdb without setupfile and old service");
 
+=head1 start_postgres
 
+=cut
+
+# no PG_VERSION, initdb fails
+my $pg_version = "$iam->{pg}->{data}/PG_VERSION";
+my $files_checked = [];
+$mock->mock('_file_exists', sub { shift; push(@$files_checked, shift); return 0; });
+my $initdb = 0;
+# fail
+$mock->mock('initdb', sub {$initdb++; return 0});
+
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION doesn't exist and initdb fails");
+is($initdb, 1, 'initdb called');
+is_deeply($files_checked, [$pg_version], 'PG_VERSION tested once');
+
+# no PG_VERSION, initdb success
+$files_checked = [];
+$initdb = 0;
+$mock->mock('initdb', sub {$initdb++; return 1});
+
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION doesn't exist and initdb is success");
+is($initdb, 1, 'initdb called');
+is_deeply($files_checked, [$pg_version, $pg_version], 'PG_VERSION tested twice');
+
+# PG_VERSION exists, main_config fails
+my $create_config = [];
+my $config_res = {};
+$mock->mock('create_postgresql_config', sub {
+    shift; shift;shift,;
+    my %opts = @_;
+    push(@$create_config, $opts{NAME});
+    return $config_res->{$opts{NAME}};
+});
+$mock->mock('_file_exists', sub { shift; push(@$files_checked, shift); return 1; });
+
+$initdb = 0;
+$files_checked = [];
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION exists and main config fails");
+is($initdb, 0, 'initdb not called (PG_VERSION exists)');
+is_deeply($files_checked, [$pg_version], 'PG_VERSION tested once');
+is_deeply($create_config, ['main'], 'Create config main called');
+
+$create_config = [];
+$config_res = { main => 1 }; # main changed
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION exists, main changed and hba config fails");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called');
+
+#
+# main changed (and hba too)
+#
+$config_res = { main => 1, hba => 1 };
+
+# status is and stays down
+set_command_status('service myownpostgresql status', 1);
+$create_config = [];
+command_history_reset();
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION exists, sysconfig, main and hba changed and status stays down");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 2)');
+ok(command_history_ok([
+       qr{service myownpostgresql status},
+       qr{service myownpostgresql start},
+       qr{service myownpostgresql status},
+]), "expected commands ran by start_postgres with status down (service started)");
+
+set_command_status('service myownpostgresql status', 0);
+$create_config = [];
+command_history_reset();
+ok($cmp->start_postgres($cfg, $iam, 1),
+   "start_postgres returns success when PG_VERSION exists, sysconfig, main and hba changed and status up");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 3)');
+ok(command_history_ok([
+       qr{service myownpostgresql status},
+       qr{service myownpostgresql restart},
+       qr{service myownpostgresql status},
+]), "expected commands ran by start_postgres with status up (service restarted)");
+
+#
+# only hba changed
+#
+$config_res = { main => 0, hba => 1 };
+
+# status is and stays down
+set_command_status('service myownpostgresql status', 1);
+
+$create_config = [];
+command_history_reset();
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION exists, sysconfig and hba changed and status stays down");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 4)');
+ok(command_history_ok([
+       qr{service myownpostgresql status},
+       qr{service myownpostgresql start},
+       qr{service myownpostgresql status},
+]), "expected commands ran by start_postgres with status down (service started) pt 2");
+
+set_command_status('service myownpostgresql status', 0);
+$create_config = [];
+command_history_reset();
+# sysconfig changed
+ok($cmp->start_postgres($cfg, $iam, 1),
+   "start_postgres returns success when PG_VERSION exists, sysconfig and hba changed and status up");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 5)');
+ok(command_history_ok([
+       qr{service myownpostgresql status},
+       qr{service myownpostgresql restart},
+       qr{service myownpostgresql status},
+]), "expected commands ran by start_postgres with status up (service restarted, sysconfig changed)");
+
+
+$create_config = [];
+command_history_reset();
+# sysconfig changed
+ok($cmp->start_postgres($cfg, $iam, 0),
+   "start_postgres returns success when PG_VERSION exists, only hba changed and status up");
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 5)');
+ok(command_history_ok([
+       qr{service myownpostgresql status},
+       qr{service myownpostgresql reload},
+       qr{service myownpostgresql status},
+]), "expected commands ran by start_postgres with status up (service reloaded)");
+
+
+=head1 roles / databases / pg_alter
+
+=cut
+
+# add /bin/su is used as runuser is not in expected_files
+$expected_fns = [qw(/some/file1 /some/lang1)];
+
+# roles calls create_config for pgalter
+$mock->unmock('create_postgresql_config');
+set_desired_output('/bin/su -l postgres -c /usr/pgsql-9.2/bin/psql -t -c "SELECT rolname FROM pg_roles;"', 'otherrole');
+command_history_reset();
+my $rtree = $cfg->getTree('/software/components/postgresql/roles');
+ok($cmp->roles($cfg, $iam, $rtree), 'roles returned success');
+ok(command_history_ok([
+       qr{psql -t -c "SELECT rolname FROM pg_roles;"},
+       qr{psql -t -c "CREATE ROLE \\"myrole\\";"},
+       qr{psql -t -c "ALTER ROLE \\"myrole\\" SUPERPOWER;"},
+       qr{psql -t -c "ALTER ROLE \\"myrole\\" SUPERPOWER;"}, # a 2nd time (rerun all roles)
+       qr{psql -t -c "ALTER ROLE \\"otherrole\\" MORE SUPERPOWER;"}, # something changed to pgalter file rerun all roles
+]), 'roles triggered expected commands');
+ok(!command_history_ok([qr{CREATE ROLE.*otherrole}]), 'no commands with otherrole (already existed)');
+$fh = get_file($iam->{pg}->{data}."/pg_alter.ncm-postgresql");
+my $entry = "myrole=".md5_hex('SUPERPOWER')."\notherrole=".md5_hex('MORE SUPERPOWER');
+like("$fh", qr{$entry}, 'pg alter file has expected content');
+
+# databases
+set_desired_output('/bin/su -l postgres -c /usr/pgsql-9.2/bin/psql -t -c "SELECT datname FROM pg_database;"', 'db2');
+my $dtree = $cfg->getTree('/software/components/postgresql/databases');
+command_history_reset();
+ok($cmp->databases($iam, $dtree), 'databases returned success');
+ok(command_history_ok([
+       qr{psql -t -c "SELECT datname FROM pg_database;"},
+       qr{psql -t -c "CREATE DATABASE \\"db1\\" OWNER \\"theowner1\\";"},
+       qr{psql -U theuser1 -f /some/file1 db1},
+       qr{createlang db1 abc1},
+       qr{psql -U theuser1 -f /some/lang1 db1},
+]), 'databases triggered expected commands');
+ok(!command_history_ok([qr{db2}]), 'no commands with db2 (already existed)');
+
+
+# check if pg_alter calls roles and databases methods
+
+my $pgalter = [];
+
+$mock->mock('roles', sub {
+    my ($self, $config, $iam_t, $roles_tree) = @_;
+    is_deeply($config, $cfg, 'pg_alter passed config to roles');
+    is_deeply($iam_t, $iam, 'pg_alter passed iam to roles');
+    is_deeply($roles_tree, $rtree, 'pg_alter passed roles-getTree to roles');
+    push(@$pgalter, 'roles');
+    return(1);
+});
+
+$mock->mock('databases', sub {
+    my ($self, $iam_t, $dbs_tree) = @_;
+    is_deeply($iam_t, $iam, 'pg_alter passed iam to databases');
+    is_deeply($dbs_tree, $dtree, 'pg_alter passed databases-getTree to databases');
+    push(@$pgalter, 'databases');
+    return(1);
+});
+
+ok($cmp->pg_alter($cfg, $iam), 'pg_alter returns success');
+is_deeply($pgalter, [qw(roles databases)], 'pgalter called roles and databases');
 
 done_testing();

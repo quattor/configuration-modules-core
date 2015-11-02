@@ -455,7 +455,7 @@ sub sanity_check
         $iam->{service}->status_stop();
 
         # non-destructive mode: make a backup
-        my $moved_suffix = "-moved-for-postgres-by-ncm-" . $self->name() . "." . strftime('%Y%m%d-%H%M%S', localtime());
+        my $moved_suffix = "-moved-for-postgres-by-ncm-postgresql." . strftime('%Y%m%d-%H%M%S', localtime());
         my $bck_data = "$iam->{pg}->{data}$moved_suffix";
         if (move($iam->{pg}->{data}, $bck_data)) {
             $self->warn("Moved $iam->{pg}->{data} to $bck_data.");
@@ -583,7 +583,7 @@ sub roles
 
     # make a copy of the Readonly hash
     my $pg_alter_data = {%PG_ALTER};
-    $pg_alter_data->{FILENAME} = "pg_alter.ncm-".$self->name();
+    $pg_alter_data->{FILENAME} = "pg_alter.ncm-postgresql";
 
     # data is key=role, value = md5sum of role SQL
     $pg_alter_data->{CONFIG_HASHREF} = { map {$_ => md5_hex($roles_tree->{$_})} keys %$roles_tree };

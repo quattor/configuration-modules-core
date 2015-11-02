@@ -178,7 +178,7 @@ sub run_commands_from_file
     my ($self, $database, $asuser, $filename) = @_;
 
     if (! $self->_file_exists($filename)) {
-        $self->error("Cannot file filename $filename to run commands from");
+        $self->error("Cannot find filename $filename to run commands from");
         return;
     }
 
