@@ -2,7 +2,7 @@ declaration template metaconfig/libvirtd/schema;
 
 include 'pan/types';
 
-type structure_libvirtd_network = {
+type type_libvirtd_network = {
     'listen_tls' ? boolean = true # enabled by default
     'listen_tcp' ? boolean = false # disabled by default
     'tls_port' ? type_port = 16514 # port (16514) or service name
@@ -12,36 +12,64 @@ type structure_libvirtd_network = {
     'mdns_name' ? string # default "Virtualization Host HOSTNAME"
 };
 
-type structure_libvirtd_socket = {
+type type_libvirtd_socket = {
     'unix_sock_group' ? string # restricted to root by default
     'unix_sock_ro_perms' ? string # default allows any user
     'unix_sock_rw_perms' ? string 
     'unix_sock_dir' ? string # directory of created sockets
 };
 
-type structure_libvirtd_authn = {
-    'auth_unix_ro' ? string with match(SELF, 'none|sasl|polkit') # default anyone
-    'auth_unix_rw' ? string with match(SELF, 'none|sasl|polkit') # default polkit
-    'auth_tcp' ? string with match(SELF, 'none|sasl') # should be 'sasl' for production
-    'auth_tls' ? string with match(SELF, 'none|sasl') 
+@documentation{
+Defines a valid libvirt auth_unix
+}
+function is_auth_unix_libvirtd = {
+    auth_unix_libvirtd = ARGV[0];
+    if(match(auth_unix_libvirtd,'^(none|sasl|polkit)$')) return(true);
+    error("Bad auth_unix_libvirtd: " + auth_unix_libvirtd);
+    return(false);
+};
+
+type type_auth_unix_libvirtd = string with {
+    (is_auth_unix_libvirtd(SELF));
+};
+
+@documentation{
+Defines a valid libvirt auth
+}
+function is_auth_libvirtd = {
+    auth_libvirtd = ARGV[0];
+    if(match(auth_libvirtd,'^(none|sasl)$')) return(true);
+    error("Bad auth_libvirtd: " + auth_libvirtd);
+    return(false);
+};
+
+type type_auth_libvirtd = string with {
+    (is_auth_libvirtd(SELF));
+};
+
+type type_libvirtd_authn = {
+    'auth_unix_ro' ? type_auth_unix_libvirtd # default anyone
+    'auth_unix_rw' ? type_auth_unix_libvirtd # default polkit
+    'auth_tcp' ? type_auth_libvirtd # should be 'sasl' for production
+    'auth_tls' ? type_auth_libvirtd
     'access_drivers' ? string[]
 };
 
-type structure_libvirtd_tls = {
+type type_libvirtd_tls = {
     'key_file' ? string
     'cert_file' ? string
     'ca_file' ? string
     'crl_file' ? string
 };
 
-type structure_libvirtd_authz = {
+type type_libvirtd_authz = {
     'tls_no_verify_certificate' ? boolean # defaults to verification
     'tls_no_sanity_certificate' ? boolean
     'tls_allowed_dn_list' ? string[]
     'sasl_allowed_username_list' ? string[]
 };
 
-type structure_libvirtd_processing = {
+type type_libvirtd_processing = {
     'max_clients' ? long(1..)
     'min_workers' ? long(1..)
     'max_workers' ? long(1..)
@@ -52,19 +80,19 @@ type structure_libvirtd_processing = {
     'prio_workers' ? long(1..)
 };
 
-type structure_libvirtd_logging = {
+type type_libvirtd_logging = {
     'log_level' ? long(0..4) # 4=errors,3=warnings,2=info,1=debug,0=none
     'log_filters' ? string # see man for format
     'log_outputs' ? string # see man for format
 };
 
-type structure_libvirtd_keepalive = {
+type type_libvirtd_keepalive = {
     'keepalive_interval' ? long (1..)
     'keepalive_count' ? long (1..)
     'keepalive_required' ? boolean
 };
 
-type structure_libvirtd_audit = {
+type type_libvirtd_audit = {
     'audit_level' ? long (0..2)
     'audit_logging' ? boolean
 };
@@ -73,15 +101,16 @@ type structure_libvirtd_audit = {
 libvirtd.conf settings
 }
 type structure_component_libvirtd = {
-    'network' ? structure_libvirtd_network
-    'socket' ? structure_libvirtd_socket
-    'authn' ? structure_libvirtd_authn
-    'tls' ? structure_libvirtd_tls
-    'authz' ? structure_libvirtd_authz
-    'processing' ? structure_libvirtd_processing
-    'logging' ? structure_libvirtd_logging
-    'keepalive' ? structure_libvirtd_keepalive
-    'audit' ? structure_libvirtd_audit
+    include type_libvirtd_network
+    include type_libvirtd_socket
+    include type_libvirtd_authn
+    include type_libvirtd_tls
+    include type_libvirtd_authz
+    include type_libvirtd_processing
+    include type_libvirtd_logging
+    include type_libvirtd_keepalive
+    include type_libvirtd_audit
+    # standalone ones
     'host_uuid' ? type_uuid
 };
 
@@ -89,7 +118,7 @@ type structure_component_libvirtd = {
 sasl2 conf for libvirtd
 }
 type structure_sasl2 = {
-    'mech_list' ? string with match(SELF, 'digest-md5|gssapi')
+    'mech_list' ? string with match(SELF, '^(digest-md5|gssapi)$')
     'keytab' ? string = '/etc/libvirt/krb5.tab'
     'sasldb_path' ? string = '/etc/libvirt/passwd.db'
 };
@@ -101,9 +130,9 @@ systemd. Set '--config /etc/libvirt/libvirtd.conf'
 }
 type structure_sysconfig = {
     'libvirtd_config' ? string = '/etc/libvirt/libvirtd.conf'
-    'libvirtd_args' ? string with match(SELF, '--listen')
+    'libvirtd_args' ? string with match(SELF, '^(--listen)$')
     'krb5_ktname' ? string = '/etc/libvirt/krb5.tab'
-    'qemu_audio_drv' ? string with match(SELF, 'sdl')
-    'sdl_audiodriver' ? string with match(SELF, 'pulse')
+    'qemu_audio_drv' ? string with match(SELF, '^(sdl)$')
+    'sdl_audiodriver' ? string with match(SELF, '^(pulse)$')
     'libvirtd_nofiles_limit' ? long (1..)
 };
