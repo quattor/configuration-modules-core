@@ -19,33 +19,8 @@ type type_libvirtd_socket = {
     'unix_sock_dir' ? string # directory of created sockets
 };
 
-@documentation{
-Defines a valid libvirt auth_unix
-}
-function is_auth_unix_libvirtd = {
-    auth_unix_libvirtd = ARGV[0];
-    if(match(auth_unix_libvirtd,'^(none|sasl|polkit)$')) return(true);
-    error("Bad auth_unix_libvirtd: " + auth_unix_libvirtd);
-    return(false);
-};
-
-type type_auth_unix_libvirtd = string with {
-    (is_auth_unix_libvirtd(SELF));
-};
-
-@documentation{
-Defines a valid libvirt auth
-}
-function is_auth_libvirtd = {
-    auth_libvirtd = ARGV[0];
-    if(match(auth_libvirtd,'^(none|sasl)$')) return(true);
-    error("Bad auth_libvirtd: " + auth_libvirtd);
-    return(false);
-};
-
-type type_auth_libvirtd = string with {
-    (is_auth_libvirtd(SELF));
-};
+type type_auth_unix_libvirtd = string with match(SELF,'^(none|sasl|polkit)$');
+type type_auth_libvirtd = string with match(SELF,'^(none|sasl)$');
 
 type type_libvirtd_authn = {
     'auth_unix_ro' ? type_auth_unix_libvirtd # default anyone
