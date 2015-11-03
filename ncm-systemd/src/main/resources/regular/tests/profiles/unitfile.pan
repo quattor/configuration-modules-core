@@ -26,6 +26,8 @@ bind "/unitfile" = systemd_unitfile_config[];
             ),
         'Description', 'my test',
         'Requires', list('unit1', 'unit2'),
+        'After', list('unit0', 'unit01'),
+        'Before', list('unita', 'unitb'),
         ),
     'service', nlist(
         'CPUAffinity', list(

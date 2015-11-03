@@ -16,7 +16,7 @@
                     unitdata.${keyname} = p.value;
                 END;
             CASE;
-                unitdata.${pair.key} = pair.data;
+                unitdata.${pair.key} = pair.value;
         END;
     END;
 -%]

@@ -19,9 +19,16 @@ contentspath=/unitfile/0
 ^TTYReset=yes$
 ^TTYVHangup=no$
 ^\[Unit\]$
+^After=unit0$
+^After=unit01$
 ^AssertPathExists=$
 ^AssertPathExists=/path/1$
 ^AssertPathExists=/path/2$
+^Before=unita$
+^Before=unitb$
 ^ConditionPathExists=$
 ^ConditionPathExists=/path/C1$
 ^ConditionPathExists=/path/C2$
+^Description=my test$
+^Requires=unit1$
+^Requires=unit2$
