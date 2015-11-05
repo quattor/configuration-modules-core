@@ -3,7 +3,7 @@
 [%-         IF block == first -%]
 [%-              type = 'if' -%]
 [%-         ELSIF block == last -%]
-[%-              type = 'if' -%]
+[%-              type = 'else' -%]
 [%-         ELSE -%]
 [%-              type = 'else if' -%]
 [%-         END -%]

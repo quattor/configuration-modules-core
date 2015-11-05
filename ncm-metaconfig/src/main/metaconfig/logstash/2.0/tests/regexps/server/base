@@ -58,11 +58,12 @@ filter \{$
 ^\s{8}date \{$
 ^\s{12}match => \[ "syslog_timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ" \]$
 ^\s{8}\}$
-^\s{8}mutate \{$
-^\s{12}exclude_tags => \[ "_grokparsefailure" \]$
-^\s{12}replace => \{$
-^\s{16}"@source_host" => "%\{syslog_hostname\}"$
-^\s{16}"@message" => "%\{syslog_message\}"$
+^\s{8}if \('_grokparsefailure' not in \[tags\]\) \{$
+^\s{12}mutate \{$
+^\s{16}replace => \{$
+^\s{20}"@source_host" => "%\{syslog_hostname\}"$
+^\s{20}"@message" => "%\{syslog_message\}"$
+^\s{16}\}$
 ^\s{12}\}$
 ^\s{8}\}$
 ^\s{8}mutate \{$

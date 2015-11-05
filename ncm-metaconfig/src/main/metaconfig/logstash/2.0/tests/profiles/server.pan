@@ -79,7 +79,11 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 ),
             )),
         nlist("mutate", nlist(
-            "exclude_tags", list("_grokparsefailure"),
+            "_conditional", nlist('expr', list(nlist(
+                "left","'_grokparsefailure'",
+                "test", "not in",
+                "right", "[tags]",
+                ))),
             "replace", list(
                 nlist(
                     "name", "@source_host", 

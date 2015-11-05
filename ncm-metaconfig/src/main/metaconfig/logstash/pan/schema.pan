@@ -17,8 +17,27 @@ type logstash_ssl = {
     "ssl_verify" ? boolean
 };
 
+type logstash_conditional_expression = {
+    # [join] [[left] test] right (eg: and left > right; ! right;)
+    "join" ? string with match(SELF,'^(and|or|nand|xor)$')
+    "left" : string
+    "test" ? string with match(SELF,'^(==|!=|<|>|<=|>=|=~|!~|in|not in|!)$')
+    "right" ? string
+};
+
+# no nesting (yet)
+type logstash_conditional = {
+    # ifelseif: first one is 'if', rest is 'if else'
+    # ifelseifelse: first one is 'if', last is 'else', rest is 'if else'
+    "type" : string = 'if' with match(SELF, '^(if|if else|else|ifelseif|ifelseifelse)$')
+    "expr" : logstash_conditional_expression[]
+};
+
 @{ Common portion for all plugins }
 type logstash_plugin_common = {
+    @{using _conditional to avoid name clash with plugin option name.
+      The conditional is only for the single plugin and has to be type 'if' (the default).}
+    "_conditional" ? logstash_conditional with { if (SELF['type'] != 'if') {error('plugin _conditional has to be type if (the default)');}; true;}
 };
 
 # list not complete at all
@@ -131,7 +150,7 @@ type logstash_filter_grok = {
     include logstash_filter_plugin_common
     "match" ? logstash_name_pattern[]
     "break_on_match" : boolean = true
-    "drop_if_match" ? boolean 
+    "drop_if_match" ? boolean
     "keep_empty_captures" ? boolean
     "named_captures_only" : boolean = true
     "patterns_dir" ? string[]
@@ -159,7 +178,7 @@ type logstash_filter_mutate = {
     "replace" ? logstash_name_pattern[]
     "rename" ? string{}
     "split" ? string{}
-    "exclude_tags" ? string[] # DEPRECATED, should be replaced by conditional block
+    "exclude_tags" ? string[] with {deprecated(0, 'replace with _conditional e.g. <"tagname" not in [tags]> in 2.0'); true;}
 };
 
 type logstash_filter_kv = {
@@ -235,22 +254,6 @@ type logstash_output_plugin = {
     "elasticsearch" ? logstash_output_elasticsearch
 } with length(SELF) == 1;
 
-type logstash_conditional_expression = {
-    # [join] [[left] test] right (eg: and left > right; ! right;)
-    "join" ? string with match(SELF,'^(and|or|nand|xor)$')
-    "left" : string
-    "test" ? string with match(SELF,'^(==|!=|<|>|<=|>=|=~|!~|in|not in|!)$')
-    "right" ? string
-};
-
-# no nesting (yet)
-type logstash_conditional = {
-    # ifelseif: first one is 'if', rest is 'if else'
-    # ifelseifelse: first one is 'if', last is 'else', rest is 'if else'
-    "type" : string with match(SELF, '^(if|if else|else|ifelseif|ifelseifelse)$')
-    "expr" : logstash_conditional_expression[]
-};
-
 type logstash_input_conditional = {
     include logstash_conditional
     "plugins" ? logstash_input_plugin[]
@@ -268,17 +271,17 @@ type logstash_output_conditional = {
 
 type logstash_input = {
     "plugins" ? logstash_input_plugin[]
-    "conditionals" ? logstash_input_conditional[] 
+    "conditionals" ? logstash_input_conditional[]
 };
 
 type logstash_filter = {
     "plugins" ? logstash_filter_plugin[]
-    "conditionals" ? logstash_filter_conditional[] 
+    "conditionals" ? logstash_filter_conditional[]
 };
 
 type logstash_output = {
     "plugins" ? logstash_output_plugin[]
-    "conditionals" ? logstash_output_conditional[] 
+    "conditionals" ? logstash_output_conditional[]
 };
 
 @{ The configuration is made of input, filter and output section }
