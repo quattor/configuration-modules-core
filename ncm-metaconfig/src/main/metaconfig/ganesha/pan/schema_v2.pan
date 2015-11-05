@@ -257,6 +257,8 @@ type ganesha_v2_nfs_core_param = {
     "RPC_Max_Connections" ? long(0..) = 1024
     "Rquota_Port" ? long(0..) = 0
     "Rquota_Program" ? long(1..) = 100011
+    "Short_File_Handle" ? boolean = false
+    "heartbeat_freq" ? long(0..5000) = 1000
 };
 
 @{ Ganesha Proxy remote_server subsection @}
