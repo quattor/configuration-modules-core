@@ -102,7 +102,6 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 # reset the output, to remove the GELF output
 "output" = nlist("plugins", list(nlist(
     "elasticsearch", nlist(
-        "embedded", false,
         "flush_size", 5000,
         "bind_host", "localhost.localdomain",
         "workers", 4,

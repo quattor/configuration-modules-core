@@ -1,0 +1,7 @@
+[%- FOREACH name IN names -%]
+[%-     IF desc.exists(name) -%]
+[%-         typetempl = "metaconfig/logstash/config/types/${type}.tt" -%]
+[%-         key = (mapping.defined && mapping.exists(name)) ? mapping.${name} : name %]
+[%          INCLUDE $typetempl key=key value=desc.${name} %]
+[%-     END -%]
+[%- END -%]
