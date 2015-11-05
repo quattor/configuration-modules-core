@@ -6,5 +6,6 @@ bind "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}";
 "module" = "yaml";
-"mode" = 0644;
+"mode" = 0640;
+"group" = "elasticsearch";
 "daemons" = dict("elasticsearch", "restart");

@@ -45,11 +45,9 @@ type elasticsearch_indices = {
 };
 
 type elasticsearch_gw = {
-    "type" : string = "local"
-    "fs" ? string
     "recover_after_nodes" ? long
     "recover_after_time" ? long
-} with (SELF["type"] == "local" || (SELF["type"] == "fs" && exists(SELF["fs"])));
+};
 
 type elasticsearch_network = {
     "host" ? type_hostname
