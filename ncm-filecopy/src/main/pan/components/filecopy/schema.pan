@@ -38,7 +38,7 @@ type structure_filecopy = {
 
 type component_filecopy = {
     include structure_component
-    'services'    ? structure_filecopy{}
+    'services' ? structure_filecopy{} with valid_absolute_file_paths(SELF)
     'forceRestart' : boolean = false
 };
 
