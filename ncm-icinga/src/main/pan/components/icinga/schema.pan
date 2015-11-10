@@ -320,7 +320,7 @@ type structure_icinga_icinga_cfg = {
     "log_current_states" : boolean = true
     "log_external_commands" : boolean = true
     "log_passive_checks" : boolean = true
-    "log_external_commands_user" : boolean = false
+    "log_external_commands_user" ? boolean = false  with {deprecated(0, 'removed in recent versions of icinga 1.X'); true;}
     "log_long_plugin_output" : boolean = false
     "global_host_event_handler" ? string
     "service_inter_check_delay_method" : string = "s"
@@ -419,14 +419,15 @@ type structure_icinga_icinga_cfg = {
     "ochp_timeout" ? long
     "ochp_command" ? string
     "use_timezone" ? string
-    "broker_module" ? string[]
+    "broker_module" ? string[] with {deprecated(0, 'deprecated recent versions of icinga 1.X, use module instead'); true;}
+    "module" ? string[]
     "debug_file" ? string
     "debug_level" ? long
     "debug_verbosity" ? long (0..2)
     "max_debug_file_size" ? long
     "ocsp_command" ? string
     "check_result_path" : string = "/var/icinga/checkresults"
-    "event_profiling_enabled" : boolean = false
+    "event_profiling_enabled" ? boolean = false with {deprecated(0, 'removed in recent versions of icinga 1.X'); true;}
     "additional_freshness_latency" ? long
     "check_for_orphaned_hosts" ? boolean
     "check_result_reaper_frequency" ? long
