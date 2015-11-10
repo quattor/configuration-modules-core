@@ -508,6 +508,3 @@ type structure_component_icinga = {
     # Service escalations and dependencies are left for later
     # versions.
 };
-
-bind "/software/components/icinga" = structure_component_icinga;
-
