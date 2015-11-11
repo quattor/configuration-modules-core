@@ -9,7 +9,7 @@
 
 unique template components/${project.artifactId}/config;
 
-include {'components/pam/schema'};
+include 'components/pam/schema';
 
 # standard component settings
 "/software/components/pam/version"    = '${no-snapshot-version}';
@@ -18,19 +18,23 @@ include {'components/pam/schema'};
 "/software/components/pam/directory" ?= "/etc/pam.d";
 "/software/components/pam/acldir"    ?= "/etc/pam.acls";
 
-# Add rpm to profile
-include { 'components/${project.artifactId}/config-rpm' };
+"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 # standard functions
-include {'pan/functions'};
+include 'pan/functions';
 
 #
 # Definition of functions used to configure this component
 #
 
-#
-# takes (service, type, control, module, options?)
-#
+@documentation{
+  desc = add a line to pam configuration
+  arg = service
+  arg = pamtype
+  arg = control
+  arg = module
+  arg = options, can be hash or list
+}
 function pam_add = {
 	service = ARGV[0];
 	pamtype = ARGV[1];
@@ -54,11 +58,16 @@ function pam_add = {
 		ret[service][pamtype] = list();
 	};
 	tail = length(ret[service][pamtype]);
-        options = nlist();
-        if (exists(ARGV[4])) {
-                options = ARGV[4];
-        };
-	ret[service][pamtype][tail] = nlist("control", control, "module", module, "options", options);
+	options = nlist();
+	options_list = null;
+	if (exists(ARGV[4])) {
+		if (is_list(ARGV[4])) {
+			options_list = ARGV[4];
+		} else {
+			options = ARGV[4];
+		};
+	};
+	ret[service][pamtype][tail] = nlist("control", control, "module", module, "options", options, "options_list", options_list);
 
 	return (ret);
 };

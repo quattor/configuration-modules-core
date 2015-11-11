@@ -38,9 +38,10 @@ type component_listfile_acl = {
 };
 
 type component_pam_module_stack = {
-	"control" : string with match(SELF, "requisite|required|optional|sufficient")
+	"control" : string with match(SELF, '^(requisite|required|optional|sufficient|[^=]+=[^=]+(\s+[^=]+=[^=]+)*)$')
 	"module"  : string
 	"options" ? component_pam_options
+	"options_list" ? string[]
 	"allow"   ? component_listfile_acl
 	"deny"    ? component_listfile_acl
 };
