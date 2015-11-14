@@ -1,0 +1,10 @@
+[% FOREACH section IN CCM.contents.pairs %]
+[%      FOREACH p IN section.value.pairs -%]
+[%-          IF p.value.is_boolean;
+                value = p.value ? 'y' : 'n';
+            ELSE;
+                value = p.value;
+            END -%]
+[%          section.key %]:[% p.key %]=[% value %]
+[%      END -%]
+[% END %]
