@@ -61,6 +61,9 @@ my $unit = NCM::Component::Systemd::Service::Unit->new(log => $cmp);
 isa_ok($unit, "NCM::Component::Systemd::Service::Unit",
         "NCM::Component::Systemd::Service::Unit instance created");
 
+ok(get_command('/usr/bin/systemctl daemon-reload'), 'daemon-reload called upon init');
+
+
 =pod
 
 =head2 is_possible_missing

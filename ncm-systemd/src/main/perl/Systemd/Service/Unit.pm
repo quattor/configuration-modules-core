@@ -17,6 +17,7 @@ use EDG::WP4::CCM::Element qw(unescape);
 use NCM::Component::Systemd::UnitFile;
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show
+    systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     :properties
@@ -181,6 +182,9 @@ sub _initialize
     my ($self, %opts) = @_;
 
     $self->{log} = $opts{log} if $opts{log};
+
+    # Always daemon-reload on init, to make sure we are dealing with correct units
+    systemctl_daemon_reload($self);
 
     return SUCCESS;
 }
