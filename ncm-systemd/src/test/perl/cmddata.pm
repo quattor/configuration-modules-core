@@ -7,7 +7,7 @@
 
 =head1 cmddata module
 
-This module provides raw command data (output and exit code) and file content. 
+This module provides raw command data (output and exit code) and file content.
 
 =cut
 package cmddata;
@@ -33,7 +33,8 @@ sub _evalfn {
     die $@ if $@;
 }
 
-my @files = qw(service-systemctl_list service-systemctl_show 
+my @files = qw(service-systemctl_list service-systemctl_show
+               service-systemctl_daemon_reload
                service_systemctl_list_show_gen_full_el7_ceph021
                service-legacy);
 foreach my $file (@files) {

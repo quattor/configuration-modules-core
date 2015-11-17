@@ -12,7 +12,10 @@ use warnings;
 use parent qw(Exporter);
 use Readonly;
 
+use LC::Exception qw (SUCCESS);
+
 Readonly our $SYSTEMCTL => "/usr/bin/systemctl";
+Readonly my $DAEMON_RELOAD => 'daemon-reload';
 
 # Unit properties
 Readonly our $PROPERTY_ACTIVESTATE => 'ActiveState';
@@ -49,6 +52,7 @@ Readonly::Array my @PROPERTIES_ARRAY => (
 our @EXPORT_OK = qw(
     $SYSTEMCTL
     systemctl_show
+    systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     systemctl_command_units
@@ -145,6 +149,40 @@ sub systemctl_show
     }
 
     return $res;
+}
+
+=pod
+
+=item systemctl_daemon_reload
+
+C<logger> is a mandatory logger to pass.
+
+Reload systemd manager configuration (e.g. when units have been modified).
+
+Returns undef on failure, SUCCESS otherwise.
+
+=cut
+
+sub systemctl_daemon_reload
+{
+    my ($logger) = @_;
+
+    my $output = CAF::Process->new(
+        [$SYSTEMCTL, $DAEMON_RELOAD],
+        log => $logger,
+        )->output();
+
+    my $ec = $?;
+    if ($ec) {
+        $logger->error("$SYSTEMCTL $DAEMON_RELOAD failed ec $ec (output $output)");
+        return;
+    } elsif ($output) {
+        # Really odd
+        $logger->warn("$SYSTEMCTL $DAEMON_RELOAD returned output while success: $output.",
+                    " (This is unexpected, contact developers)");
+    }
+
+    return SUCCESS;
 }
 
 =pod

@@ -164,7 +164,7 @@ ok($ur->_exists($basetestfile), "_exists true on created file");
 ok($ur->_file_exists($basetestfile), "_file_exists true on created file");
 
 # add a/b/c to test mkdir -p behaviour
-rmtree if -d $basetest;
+rmtree($basetest) if -d $basetest;
 ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
 ok($ur->_directory_exists("$basetest/a/b/c"), "_directory_exists true on _make_directory");
 
@@ -272,6 +272,9 @@ is_deeply(\@args, ['/etc/systemd/system'], "_prepare_path called with system uni
 my $unitfilename = "$cleanupdir1/woohoo.service";
 $mockuf->mock('_prepare_path', sub {return $unitfilename;} );
 ok($ur->write(), "write returns changed status (and it's new, so changed)");
+
+ok(get_command('/usr/bin/systemctl daemon-reload'), 'daemon-reload called upon change');
+
 my $fh = get_file($unitfilename);
 isa_ok($fh, 'CAF::FileWriter', 'write sets a FileWriter instance');
 is(*$fh->{options}->{mode}, 0664, "correct mode set to FileWriter");

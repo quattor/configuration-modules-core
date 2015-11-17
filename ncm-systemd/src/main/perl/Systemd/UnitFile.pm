@@ -19,12 +19,11 @@ use Scalar::Util qw(blessed);
 use LC::Exception qw (SUCCESS);
 use Readonly;
 
-use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL);
+use NCM::Component::Systemd::Systemctl qw(systemctl_daemon_reload);
 
 Readonly my $UNITFILE_DIRECTORY => '/etc/systemd/system';
 Readonly my $NOREPLACE_FILENAME => 'quattor.conf';
 
-Readonly my $DAEMON_RELOAD => 'daemon-reload';
 Readonly my $UNITFILE_TT => 'unitfile';
 
 Readonly::Hash our %CUSTOM_ATTRIBUTES => {
@@ -233,10 +232,7 @@ sub write
     # if changed, reload daemon
     if($changed) {
         # can't do much with return value?
-        CAF::Process->new(
-            [$SYSTEMCTL, $DAEMON_RELOAD],
-            log => $self,
-            )->execute();
+        systemctl_daemon_reload($self);
     }
 
     return $changed;

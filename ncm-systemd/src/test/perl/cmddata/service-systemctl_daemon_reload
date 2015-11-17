@@ -1,0 +1,11 @@
+$cmds{systemctl_daemon_reload}{cmd}="/usr/bin/systemctl daemon-reload";
+$cmds{systemctl_daemon_reload}{ec}=0;
+$cmds{systemctl_daemon_reload}{out}= '';
+
+$cmds{systemctl_daemon_reload_output}{cmd}="/usr/bin/systemctl daemon-reload";
+$cmds{systemctl_daemon_reload_output}{ec}=0;
+$cmds{systemctl_daemon_reload_output}{out}= 'reload output';
+
+$cmds{systemctl_daemon_reload_fail}{cmd}="/usr/bin/systemctl daemon-reload";
+$cmds{systemctl_daemon_reload_fail}{ec}=1;
+$cmds{systemctl_daemon_reload_fail}{out}='';
