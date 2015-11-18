@@ -315,7 +315,7 @@ type opennebula_sunstone = {
     "memcache_port" : long = 11211
     "memcache_namespace" : string = 'opennebula.sunstone'
     "debug_level" : long (0..3) = 3
-    "auth" : string = 'opennebula' with match (SELF, '^(sunstone|opennebula|x509)$')
+    "auth" : string = 'opennebula' with match (SELF, '^(sunstone|opennebula|x509|remote)$')
     "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
     "encode_user_password" ? boolean
     "vnc_proxy_port" : long = 29876
