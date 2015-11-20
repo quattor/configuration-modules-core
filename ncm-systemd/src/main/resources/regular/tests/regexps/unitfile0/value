@@ -16,6 +16,8 @@ contentspath=/unitfile/0
 ^Environment="VAR2-1=val2-1" "VAR2-2=val2-2 val2-2b" $
 ^EnvironmentFile=/envfile/1$
 ^EnvironmentFile=/envfile/2$
+^LimitNPROC=100$
+^LimitSTACK=infinity$
 ^TTYReset=yes$
 ^TTYVHangup=no$
 ^\[Unit\]$

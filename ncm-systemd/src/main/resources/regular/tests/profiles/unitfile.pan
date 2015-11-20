@@ -50,6 +50,8 @@ bind "/unitfile" = systemd_unitfile_config[];
             ),
         'TTYReset', true,
         'TTYVHangup', false,
+        'LimitSTACK', -1,
+        'LimitNPROC', 100,
         ),
     'install', nlist(
         'WantedBy', list('1.service', '2.service'),

@@ -146,22 +146,22 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'Group' ? defined_group
     'IOSchedulingClass' ? string with match(SELF, '^([0-3]|none|realtime|best-effort|idle)$')
     'IOSchedulingPriority' ? long(0..7) # 0 = highest
-    'LimitAS' ? long(0..) # The maximum size of the process's virtual memory (address space) in bytes.
-    'LimitCORE' ? long(0..) # Maximum size of a core file
-    'LimitCPU' ? long(0..) # CPU time limit in seconds
-    'LimitDATA' ? long(0..) # he maximum size of the process's data segment (initialized data, uninitialized data, and heap)
-    'LimitFSIZE' ? long(0..) # The maximum size of files that the process may create
-    'LimitLOCKS' ? long(0..) # (Early Linux 2.4 only) A limit on the number of locks
-    'LimitMEMLOCK' ? long(0..) # The maximum number of bytes of memory that may be locked into RAM
-    'LimitMSGQUEUE' ? long(0..) # pecifies the limit on the number of bytes that can be allocated for POSIX message queues for the real user ID of the calling process.
+    'LimitAS' ? long(-1..) # The maximum size of the process's virtual memory (address space) in bytes.
+    'LimitCORE' ? long(-1..) # Maximum size of a core file
+    'LimitCPU' ? long(-1..) # CPU time limit in seconds
+    'LimitDATA' ? long(-1..) # he maximum size of the process's data segment (initialized data, uninitialized data, and heap)
+    'LimitFSIZE' ? long(-1..) # The maximum size of files that the process may create
+    'LimitLOCKS' ? long(-1..) # (Early Linux 2.4 only) A limit on the number of locks
+    'LimitMEMLOCK' ? long(-1..) # The maximum number of bytes of memory that may be locked into RAM
+    'LimitMSGQUEUE' ? long(-1..) # pecifies the limit on the number of bytes that can be allocated for POSIX message queues for the real user ID of the calling process.
     'LimitNICE' ? long(0..40) # Specifies a ceiling to which the process's nice value can be raised. The actual ceiling for the nice value is calculated as 20 - rlim_cur.
-    'LimitNOFILE' ? long(0..) # Specifies a value one greater than the maximum file descriptor number that can be opened by this process.
-    'LimitNPROC' ? long(0..) # The maximum number of processes (or, more precisely on Linux, threads) that can be created for the real user ID of the calling process.
-    'LimitRSS' ? long(0..) # Specifies the limit (in pages) of the process's resident set (the number of virtual pages resident in RAM).
-    'LimitRTPRIO' ? long(0..) # Specifies a ceiling on the real-time priority that may be set for this process
-    'LimitRTTIME' ? long(0..) # Specifies a limit (in microseconds) on the amount of CPU time that a process scheduled under a real-time scheduling policy may consume without making a blocking system call.
-    'LimitSIGPENDING' ? long(0..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
-    'LimitSTACK' ? long(0..) # The maximum size of the process stack, in bytes.
+    'LimitNOFILE' ? long(-1..) # Specifies a value one greater than the maximum file descriptor number that can be opened by this process.
+    'LimitNPROC' ? long(-1..) # The maximum number of processes (or, more precisely on Linux, threads) that can be created for the real user ID of the calling process.
+    'LimitRSS' ? long(-1..) # Specifies the limit (in pages) of the process's resident set (the number of virtual pages resident in RAM).
+    'LimitRTPRIO' ? long(-1..) # Specifies a ceiling on the real-time priority that may be set for this process
+    'LimitRTTIME' ? long(-1..) # Specifies a limit (in microseconds) on the amount of CPU time that a process scheduled under a real-time scheduling policy may consume without making a blocking system call.
+    'LimitSIGPENDING' ? long(-1..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
+    'LimitSTACK' ? long(-1..) # The maximum size of the process stack, in bytes.
     'Nice' ? long(-20..19)
     'OOMScoreAdjust' ? long(-1000..1000)
     'PrivateTmp' ? boolean
