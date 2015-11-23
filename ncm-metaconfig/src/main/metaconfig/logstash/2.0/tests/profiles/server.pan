@@ -111,6 +111,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "flush_size", 5000,
         "hosts", list("localhost.localdomain:9200"),
         "workers", 4,
+        "template_overwrite", true,
         ),
 )));
 

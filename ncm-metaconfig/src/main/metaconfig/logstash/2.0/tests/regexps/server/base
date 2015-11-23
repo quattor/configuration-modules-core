@@ -79,6 +79,7 @@ filter \{$
 output \{$
 ^\s{4}elasticsearch \{$
 ^\s{8}workers => 4$
+^\s{8}template_overwrite => true$
 ^\s{8}index => "logstash-%\{\+YYYY.MM.dd\}"$
 ^\s{8}document_type => "%\{@type\}"$
 ^\s{8}flush_size => 5000$

@@ -246,6 +246,7 @@ type logstash_output_elasticsearch = {
     "flush_size" : long = 5000
     "index_type" ? string = "%{@type}" with {deprecated(0, 'renamed to document_type in version 2.0'); true;}
     "document_type" : string = "%{@type}"
+    "template_overwrite" ? boolean
 };
 
 type logstash_output_plugin = {
