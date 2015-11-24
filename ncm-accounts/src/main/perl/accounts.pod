@@ -11,9 +11,9 @@ ncm-accounts: NCM component to manage the local accounts on the machine.
 
 The I<accounts> component manages the local accounts on a machine. LDAP
 authentication depends on the LDAP configuration, which is handled by
-L<ncm-authconfig>.
+L<authconfig|../authconfig/>.
 
-Shadowing of passwords is also controlled by L<ncm-authconfig>.
+Shadowing of passwords is also controlled by L<authconfig|../authconfig/>.
 
 =head1 FUNCTIONS
 
@@ -287,10 +287,10 @@ B<won't> be fixed.
 The component has been tested with C<files> as the primary source on
 /etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
 produce strange behaviour. These settings are not controlled by
-ncm-accounts but by L<ncm-authconfig>.
+ncm-accounts but by L<authconfig|../authconfig/>.
 
 =head1 SEE ALSO
 
-L<authconfig|http://quattor-core.readthedocs.org/en/14.10.0/components/authconfig/>
+L<authconfig|../authconfig/>
 
 =cut

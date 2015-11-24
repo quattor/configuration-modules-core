@@ -21,6 +21,6 @@ https://twiki.cern.ch/twiki/bin/view/FIOgroup/TsiCDBBlockDevices
 
 =head1 SEE ALSO
 
-L<ncm-filesystems>
+L<filesystems|../filesystems>
 
 =cut
