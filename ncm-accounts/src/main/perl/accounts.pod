@@ -90,7 +90,7 @@ It updates a structure_accounts (return value may be assigned to "/software/comp
 =head2 keep_user_group(user_or_group:string or list of string)
 
 This functions adds a user or group to the kept_users or kept_groups resources. The
-argument can be a string or list of strings. The return value can be assigned to 
+argument can be a string or list of strings. The return value can be assigned to
 /software/components/accounts/kept_users or /software/components/accounts/kept_groups.
 
 =head1 RESOURCES
@@ -141,7 +141,7 @@ be kept.
 
 the shell for the user. If it is defined as an empty string, the current shell
 is preserved for an existing account (for a new account, it will remain undefined,
-meaning that the default shell on the system will be used). 
+meaning that the default shell on the system will be used).
 
 Defaults to /bin/bash.
 
@@ -236,7 +236,7 @@ default is false.  The root account can never be removed.
 =head2 /software/components/accounts/preserved_accounts
 
 This property may have 3 values: 'none', 'system', 'dyn_user_group'. It controls
-the accounts/groups that have to be preserved when 'remove_unknown' is true 
+the accounts/groups that have to be preserved when 'remove_unknown' is true
 (it has no effect when remove_unknown=false).
 
 The effect of each possible value is
@@ -254,7 +254,7 @@ login_defs/gid_min properties to control the preserved ranges.
 
 all accounts/groups in the system range and in the
 range used for dynamic uid/gid allocation by useradd command, ie. all
-accounts/groups with uid/gid less or equal to GID/UID_MAX as defined in 
+accounts/groups with uid/gid less or equal to GID/UID_MAX as defined in
 /etc/login.defs, are preserved. The exact list of accounts preserved
 depends on UID/GID_MAX value. It is possible to use login_defs/uid_max and
 login_defs/gid_max properties to control the preserved ranges. Not that
@@ -291,6 +291,6 @@ ncm-accounts but by L<ncm-authconfig>.
 
 =head1 SEE ALSO
 
-L<ncm-authconfig>
+L<authconfig|http://quattor-core.readthedocs.org/en/14.10.0/components/authconfig/>
 
 =cut
