@@ -69,6 +69,13 @@ filter \{$
 ^\s{8}mutate \{$
 ^\s{12}remove_field => \[ "syslog_hostname", "syslog_message", "syslog_timestamp" \]$
 ^\s{8}\}$
+^\s{8}if \('_grokparsefailure' not in \[tags\] and \[jube_id\]\) \{$
+^\s{12}mutate \{$
+^\s{16}convert => \{$
+^\s{20}"success" => "boolean"$
+^\s{16}\}$
+^\s{12}\}$
+^\s{8}\}$
 ^\s{8}bytes2human \{$
 ^\s{12}convert => \{$
 ^\s{16}"field1" => "bytes"$

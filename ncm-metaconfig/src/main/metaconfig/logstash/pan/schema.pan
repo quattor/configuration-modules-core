@@ -175,6 +175,7 @@ type logstash_filter_grep = {
 
 type logstash_filter_mutate = {
     include logstash_filter_plugin_common
+    "convert" ? logstash_name_pattern[]
     "replace" ? logstash_name_pattern[]
     "rename" ? string{}
     "split" ? string{}

@@ -96,6 +96,23 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         nlist("mutate", nlist(
             "remove_field", list("syslog_hostname", "syslog_message", "syslog_timestamp"),
             )),
+        nlist("mutate", nlist(
+            "_conditional", nlist('expr', list(
+                nlist(
+                    "left", "'_grokparsefailure'",
+                    "test", "not in",
+                    "right", "[tags]",
+                ),
+                nlist(
+                    "join", "and",
+                    "left", "[jube_id]",
+                ))),
+            "convert", list(
+                nlist(
+                    "name", "success",
+                    "pattern", "boolean"
+                )
+            ))),
         nlist("bytes2human", nlist(
             "convert", nlist(
                 "field1", "bytes",
