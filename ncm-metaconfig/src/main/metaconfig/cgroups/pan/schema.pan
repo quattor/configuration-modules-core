@@ -15,15 +15,30 @@ type cgroups_cgrule_user = {
 };
 
 @{controllers from /proc/cgroups or named hierarchy}
-type cgroups_cgrule_controller = string with match(SELF, '^(\*|cpu(acct|set)?|memory|devices|freezer|net_cls|blkio|perf_event|net_prio|hugetlb|name=\S+)$'); 
+type cgroups_controller = string with match(SELF, '^(\*|cpu(acct|set)?|memory|ns|devices|freezer|net_cls|blkio|perf_event|net_prio|hugetlb|name=\S+)$'); 
 
 @{Type for a single cgrule. Contents should be a list of these.}
 type cgroups_cgrule = {
     'user' : cgroups_cgrule_user
     'process' ? string
-    'controllers' : cgroups_cgrule_controller[]
+    'controllers' : cgroups_controller[]
     'destination' : string with match(SELF, '^(?!/).') # relative path
 };
 
+type cgroups_cgconfig_mount = {
+    'controller' : cgroups_controller
+    'path' : string # TODO: relative path?
+};
+
+type cgroups_cgconfig_group = {
+    'name' : string
+};
+
+type cgroups_cgconfig_default = {
+};
+
 type cgroups_cgconfig_service = {
+    'mount' ? cgroups_cgconfig_mount[]
+    'group' ? cgroups_cgconfig_group{}
+    'default' ? cgroups_cgconfig_default
 };

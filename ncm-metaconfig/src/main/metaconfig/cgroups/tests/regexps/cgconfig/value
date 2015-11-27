@@ -1,0 +1,9 @@
+Test cgconfig.conf
+---
+/etc/cgconfig.conf
+---
+^mount \{$
+^\s{4}"name=abc" = a/b/c;$
+^\s{4}ns = ns/abc;$
+^\}$
+WONTMATCH

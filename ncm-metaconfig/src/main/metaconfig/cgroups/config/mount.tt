@@ -1,0 +1,3 @@
+[% FOREACH mount IN data -%]
+[%      mount.controller.match('^name=') ? '"' _ mount.controller _ '"' : mount.controller %] = [% mount.path %];
+[% END -%]
