@@ -2,8 +2,42 @@ Test cgconfig.conf
 ---
 /etc/cgconfig.conf
 ---
+^default \{$
+^\s{4}perm \{$
+^\s{8}admin \{$
+^\s{12}dperm = 077;$
+^\s{12}fperm = 077;$
+^\s{12}gid = group2;$
+^\s{12}uid = user2;$
+^\s{8}\}$
+^\s{8}task \{$
+^\s{12}fperm = 022;$
+^\s{12}gid = group1;$
+^\s{12}uid = user1;$
+^\s{8}\}$
+^\s{4}\}$
+^}$
+^group my/special \{$
+^\s{4}cpu \{$
+^\s{4}\}$
+^\s{4}cpuacct \{$
+^\s{8}cpu.shares = "100";$
+^\s{4}\}$
+^\s{4}perm \{$
+^\s{8}admin \{$
+^\s{12}dperm = 077;$
+^\s{12}fperm = 077;$
+^\s{12}gid = group4;$
+^\s{12}uid = user4;$
+^\s{8}\}$
+^\s{8}task \{$
+^\s{12}fperm = 022;$
+^\s{12}gid = group3;$
+^\s{12}uid = user3;$
+^\s{8}\}$
+^\s{4}\}$
+^\}$
 ^mount \{$
 ^\s{4}"name=abc" = a/b/c;$
 ^\s{4}ns = ns/abc;$
 ^\}$
-WONTMATCH

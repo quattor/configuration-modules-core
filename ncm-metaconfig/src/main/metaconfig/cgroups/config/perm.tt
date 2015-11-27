@@ -1,0 +1,13 @@
+perm {
+[% FILTER indent -%]
+[%      FOREACH pair IN data.pairs -%]
+[%          pair.key %] {
+[%          FILTER indent -%]
+[%              FOREACH perm IN pair.value.pairs -%]
+[%                  perm.key %] = [% perm.value %];
+[%              END -%]
+[%          END -%]
+}
+[%      END -%]
+[%- END -%]
+}
