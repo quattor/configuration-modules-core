@@ -2,7 +2,7 @@ unique template metaconfig/libvirtd/sasl2;
 
 include 'metaconfig/libvirtd/schema';
 
-bind "/software/components/metaconfig/services/{/etc/sasl2/libvirt.conf}/contents" = structure_sasl2;
+bind "/software/components/metaconfig/services/{/etc/sasl2/libvirt.conf}/contents" = service_sasl2;
 
 prefix "/software/components/metaconfig/services/{/etc/sasl2/libvirt.conf}";
 "mode" = 0644;

@@ -75,7 +75,7 @@ type type_libvirtd_audit = {
 @documentation{
 libvirtd.conf settings
 }
-type structure_component_libvirtd = {
+type service_libvirtd = {
     include type_libvirtd_network
     include type_libvirtd_socket
     include type_libvirtd_authn
@@ -92,7 +92,7 @@ type structure_component_libvirtd = {
 @documentation{
 sasl2 conf for libvirtd
 }
-type structure_sasl2 = {
+type service_sasl2 = {
     'mech_list' ? string with match(SELF, '^(digest-md5|gssapi)$')
     'keytab' ? string = '/etc/libvirt/krb5.tab'
     'sasldb_path' ? string = '/etc/libvirt/passwd.db'
@@ -103,7 +103,7 @@ Override the default config file
 NOTE: This setting is no longer honoured if using
 systemd. Set '--config /etc/libvirt/libvirtd.conf'
 }
-type structure_sysconfig = {
+type service_sysconfig_libvirtd = {
     'libvirtd_config' ? string = '/etc/libvirt/libvirtd.conf'
     'libvirtd_args' ? string with match(SELF, '^(--listen)$')
     'krb5_ktname' ? string = '/etc/libvirt/krb5.tab'
