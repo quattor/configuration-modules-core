@@ -29,7 +29,7 @@ Readonly::Array my @SU_ONEADMIN_COMMAND => qw(su - oneadmin -c);
 Readonly::Array my @SSH_KEYGEN_COMMAND => qw(/usr/bin/ssh-keygen);
 Readonly::Array my @SSH_KEYSCAN_COMMAND => qw(/usr/bin/ssh-keyscan);
 Readonly::Array my @ONEUSER_PASS_COMMAND => qw(/usr/bin/oneuser passwd);
-Readonly::Array my @ONEHOST_SYNC_COMMAND => qw(/usr/bin/onehost sync);
+Readonly::Array my @ONEHOST_SYNC_COMMAND => qw(/usr/bin/onehost sync -f);
 
 my $sshcmd=[];
 
@@ -81,9 +81,9 @@ sub run_oneuser_as_oneadmin_with_ssh {
 
 # Run onehost to sync hyps VMMs scripts
 sub run_onehost_as_oneadmin_with_ssh {
-    my ($self, $command, $host, $secret, $ssh_options) = @_;
+    my ($self, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
-    return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEHOST_SYNC_COMMAND, @$command], $secret);
+    return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEHOST_SYNC_COMMAND], $secret);
 }
 
 # Checks for shell escapes

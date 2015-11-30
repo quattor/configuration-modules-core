@@ -333,10 +333,10 @@ sub change_opennebula_passwd
 # Sync hyps VMMs scripts
 sub sync_opennebula_hyps
 {
-    my ($self, $cmd) = @_;
+    my ($self) = @_;
     my $output;
 
-    $output = $self->run_onehost_as_oneadmin_with_ssh($cmd, "localhost", 0);
+    $output = $self->run_onehost_as_oneadmin_with_ssh("localhost", 0);
     if (!$output) {
         $self->error("Quattor unable to execute onehost sync command as oneadmin.");
     } else {
@@ -354,7 +354,7 @@ sub restart_opennebula_service {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
     } elsif ($service eq "kvmrc") {
         $self->info("Updated $service file. onehost sync is required.");
-        $self->sync_opennebula_hyps("-f");
+        $self->sync_opennebula_hyps();
     }
     $srv->restart() if defined($srv);
 }
