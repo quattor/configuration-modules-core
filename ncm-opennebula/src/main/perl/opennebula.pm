@@ -338,7 +338,7 @@ sub sync_opennebula_hyps
 
     $output = $self->run_onehost_as_oneadmin_with_ssh($cmd, "localhost", 0);
     if (!$output) {
-        $self->error("Quattor unable to execute onehost command.");
+        $self->error("Quattor unable to execute onehost sync command as oneadmin.");
     } else {
         $self->info("OpenNebula hypervisors were synchronized correctly.");
     }
