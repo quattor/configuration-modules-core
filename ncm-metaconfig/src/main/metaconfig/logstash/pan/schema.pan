@@ -173,6 +173,12 @@ type logstash_filter_grep = {
     "negate" : boolean = false
 };
 
+type logstash_filter_drop = {
+    include logstash_filter_plugin_common
+    "percentage" ? long(0..100)
+    "periodic_flush" ? boolean
+};
+
 type logstash_filter_mutate = {
     include logstash_filter_plugin_common
     "convert" ? logstash_name_pattern[]
@@ -198,7 +204,8 @@ type logstash_filter_kv = {
 type logstash_filter_plugin = {
     "grok" ? logstash_filter_grok
     "date" ? logstash_filter_date
-    "grep" ? logstash_filter_grep
+    "grep" ? logstash_filter_grep with {deprecated(0, 'grep filter is removed from 2.0, use e.g. conditional drop'); true;}
+    "drop" ? logstash_filter_drop
     "mutate" ? logstash_filter_mutate
     "kv" ? logstash_filter_kv
     "bytes2human" ? logstash_filter_bytes2human

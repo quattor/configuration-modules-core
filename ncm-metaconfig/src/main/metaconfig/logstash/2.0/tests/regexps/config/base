@@ -36,6 +36,16 @@ filter \{$
 ^\s{16}"message" => "%\{GPFSLOG\}"$
 ^\s{12}\}$
 ^\s{8}\}$
+^\s{8}if \(\[sometag\] !~ '\^SOME_STRING'\) {
+^\s{12}drop \{$
+^\s{16}periodic_flush => true$
+^\s{16}percentage => 80$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}if \(\[someothertag\] =~ '\^SOME_OTHERSTRING'\) \{$
+^\s{12}drop \{$
+^\s{12}\}$
+^\s{8}\}$
 ^\s{8}date \{$
 ^\s{12}match => \[ "timestamp", "E MMM dd HH:mm:ss.SSS yyyy", "E MMM  d HH:mm:ss.SSS yyyy" \]$
 ^\s{8}\}$

@@ -95,6 +95,20 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             "patterns_dir", list("/usr/share/grok"),
             "add_field", nlist("program", "gpfs"),
             )),
+        nlist('drop', nlist(
+            "_conditional", nlist("expr", list(nlist(
+                "left", "[sometag]",
+                "test", "!~",
+                "right", "'^SOME_STRING'",
+                ))),
+            "percentage", 80,
+            "periodic_flush", true,
+            )),
+        nlist('drop', nlist("_conditional", nlist("expr", list(nlist(
+            "left", "[someothertag]",
+            "test", "=~",
+            "right", "'^SOME_OTHERSTRING'",
+            ))))),
         nlist("date", nlist(
             "match", nlist(
                 "name", "timestamp", 
