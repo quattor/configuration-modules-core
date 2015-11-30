@@ -162,7 +162,10 @@ sub ssh_known_keys {
             $cmd = ['/usr/bin/ssh-keyscan', $host];
             my $key = $self->run_command_as_ceph($cmd);
             my $fh = CAF::FileEditor->open("$cephusr->{homeDir}/.ssh/known_hosts",
-                                           log => $self, owner => $cephusr->{uid}, group => $cephusr->{gid} );
+                                            log => $self,
+                                            owner => $cephusr->{uid},
+                                            group => $cephusr->{gid},
+                                        );
             $fh->head_print($key);
             $fh->close();
         }
