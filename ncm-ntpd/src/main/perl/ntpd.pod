@@ -30,6 +30,8 @@ Does nothing.
 
 activates/deactivates the component.
 
+=item /software/components/ntpd/useserverip : resolve and use the time server(s) ip address in the config file(s)
+
 =item /software/components/ntpd/servers/ : list of time servers
 
 =item /software/components/ntpd/serverlist/ : list of { server=hostname, options=nlist() }

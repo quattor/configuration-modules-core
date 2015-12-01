@@ -2,10 +2,11 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(no_timeservers only_timeservers simple_serverlist disable_options);
+use Test::Quattor qw(no_timeservers only_timeservers only_timeservers_useserverip simple_serverlist disable_options);
 use NCM::Component::ntpd;
 use CAF::Object;
 use Test::MockModule;
+use Test::Quattor::RegexpTest;
 
 $CAF::Object::NoAction = 1;
 $NCM::Component::ntpd::NoAction = 1;
@@ -38,7 +39,22 @@ is( $cmp->Configure($cfg), 1, "Component runs correctly with only_timeservers pr
 
 my $fh = get_file($NCM::Component::ntpd::NTPDCONF);
 isa_ok($fh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
-like($fh, qr/^server\s*\b(?:\d{1,3}\.){3}\d{1,3}\b/m, "Has a timeserver in ntp config file");
+Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/regexps/only_timeservers',
+    text => "$fh",
+    )->test();
+
+# set useserverip
+$cfg = get_config_for_profile('only_timeservers_useserverip');
+is( $cmp->Configure($cfg), 1, "Component runs correctly with only_timeservers_useserverip profile" );
+$fh = get_file($NCM::Component::ntpd::NTPDCONF);
+isa_ok($fh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
+Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/regexps/only_timeservers_useserverip',
+    text => "$fh",
+    )->test();
+
+
 
 my $stfh = get_file($NCM::Component::ntpd::STEPTICKERS);
 isa_ok($stfh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
@@ -52,7 +68,6 @@ is( $cmp->Configure($cfg), 1, "Component runs correctly with simple_serverlist p
 
 $cmd = get_command("/sbin/service ntpd restart");
 ok( $cmd, "Daemon was restarted with simple_serverlist profile" );
-
 
 $cfg = get_config_for_profile('disable_options');
 is( $cmp->Configure($cfg), 1, "Component runs correctly with disable_options profile" );
