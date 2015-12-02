@@ -7,6 +7,9 @@ use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::Quattor::TextRender::Base;
 
+use Readonly;
+Readonly my $YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
+
 $CAF::Object::NoAction = 1;
 set_caf_file_close_diff(1);
 
@@ -22,8 +25,8 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 
 =cut
 
-$changes = $cmp->configure_plugins();
-is($changes, 2, "2 modified files when no plugins are passed");
+$changes = $cmp->configure_plugins($YUM_PLUGIN_DIR);
+is($changes, 3, "3 modified files when no plugins are passed");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
@@ -37,6 +40,12 @@ $text = "$fh";
 $text =~ s/\s//g;
 is($text, '[main]enabled=0', "Expected text for default fastestmirror disabled");
 
+$fh = get_file('/etc/yum/pluginconf.d/priorities.conf');
+isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/priorities.conf is a CAF::FileWriter');
+$text = "$fh";
+$text =~ s/\s//g;
+is($text, '[main]enabled=1', "Expected text for default priorities enabled");
+
 
 =pod
 
@@ -44,16 +53,19 @@ is($text, '[main]enabled=0', "Expected text for default fastestmirror disabled")
 
 =cut
 
-$changes = $cmp->configure_plugins({
+$changes = $cmp->configure_plugins($YUM_PLUGIN_DIR, {
     versionlock => {
         enabled => 0,
         locklist => '/somewhere/else',
     },
     fastestmirror => {
         enabled => 1,
+    },
+    priorities => {
+        enabled => 0,
     }
 });
-is($changes, 2, "2 modified files with 2 plugins passed");
+is($changes, 3, "3 modified files with 2 plugins passed");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
@@ -69,6 +81,11 @@ $text =~ s/\s//g;
 is($text, '[main]enabled=1',
    "Expected text for fastestmirror enabled");
 
+$fh = get_file('/etc/yum/pluginconf.d/priorities.conf');
+isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/priorities.conf is a CAF::FileWriter');
+$text = "$fh";
+$text =~ s/\s//g;
+is($text, '[main]enabled=0', "Expected text for priorities disabled");
 
 
 done_testing();

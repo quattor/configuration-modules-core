@@ -9,7 +9,7 @@ contentspath=/software/repositories/2
 ^# for more details.$
 ^\[two\]$
 ^name=two$
-^baseurl=    https://super.secret/repo$
+^baseurl=    https://secret.example.com/repo$
 ^sslcacert=/etc/pki/CA/cert.pem$
 ^sslclientkey=/etc/pki/key.pem$
 ^sslclientcert=/etc/pki/cert/pem$

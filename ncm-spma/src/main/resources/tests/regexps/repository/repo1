@@ -9,8 +9,8 @@ contentspath=/software/repositories/1
 ^# for more details.$
 ^\[one\]$
 ^name=one$
-^baseurl=    http://not.here/woohoo$
-^    http://not.here/either$
+^baseurl=    http://not.example.com/woohoo$
+^    http://not.example.com/either$
 ^enabled=0$
 ^metadata_expire=7d$
 ^gpgcheck=1$

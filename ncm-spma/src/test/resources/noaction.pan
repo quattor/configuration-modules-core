@@ -1,4 +1,4 @@
-object template valid_global;
+object template noaction;
 
 prefix "/software/packages";
 
@@ -17,4 +17,3 @@ prefix "/software/components/spma";
 "active" = true;
 "dispatch" = true;
 "userpkgs" = "no";
-"packager" = "yum";

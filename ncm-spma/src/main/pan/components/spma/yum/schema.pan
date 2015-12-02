@@ -22,9 +22,15 @@ type spma_yum_plugin_versionlock = {
     'follow_obsoletes' ? boolean
 };
 
+type spma_yum_plugin_priorities = {
+    'enabled' : boolean = true
+    'check_obsoletes' ? boolean
+};
+
 type spma_yum_plugins = {
     "fastestmirror" ? spma_yum_plugin_fastestmirror
     "versionlock" ? spma_yum_plugin_versionlock
+    "priorities" ? spma_yum_plugin_priorities
 };
 
 type component_spma_yum = {

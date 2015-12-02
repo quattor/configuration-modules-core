@@ -23,8 +23,13 @@ use Readonly;
 use Test::More;
 use NCM::Component::spma::yum;
 use Test::Quattor;
+use CAF::Object;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_EXPIRE);
+$CAF::Object::NoAction = 1;
+
+Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
+Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
+Readonly my $CMD => join(" ", @YE);
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
@@ -37,6 +42,8 @@ ok(!$cmp->{ERROR}, "No errors reported");
 my $cmd = get_command($CMD);
 ok($cmd, "Correct command called");
 is($cmd->{method}, "execute", "Correct method called");
+# test for 0, to make sure it's defined and set to 0
+is($cmd->{object}->{NoAction}, 0, "keeps_state set, NoAction set to 0");
 
 set_command_status($CMD, 1);
 ok(!$cmp->expire_yum_caches(), "Errors in cleanup detected");

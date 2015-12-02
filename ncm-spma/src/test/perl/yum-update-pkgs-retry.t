@@ -160,7 +160,8 @@ $called = 0;
 @args= ();
 $cmp->{ERROR} = 0;
 @update_pkgs_ec = qw(0 1 1);
-is($cmp->update_pkgs_retry("pkgs", "groups", "run", 0, "purge", 1, "fullsearch"), 1,
+my @upr_args = qw(pkgs groups run 0 purge 1 fullsearch);
+is($cmp->update_pkgs_retry(@upr_args), 1,
    "Call with userpkgs=false, retry=true and update_pkgs=fail/success/success returns success");
 is($called, 3, "Invocation makes 3 update_pkgs call (with update_pkgs=fail/success/success, retry=true, userpkgs=false)");
 ok ($args[0]->[5], "1st update_pkgs call has tx_error_is_warn=true");
@@ -185,6 +186,21 @@ In succesful retry, the 3 update_pkgs calls receive all expected arguments
 is_deeply($args[0], ["pkgs", "groups", "run", 0, "purge", 1, "fullsearch"], "1st update_pkgs expected args");
 is_deeply($args[1], ["pkgs", "groups", "run", 1, "purge", 0, "fullsearch"], "2nd update_pkgs expected args");
 is_deeply($args[2], ["pkgs", "groups", "run", 0, "purge", 0, "fullsearch"], "3rd update_pkgs expected args");
+
+=pod
+
+=head2 with NoAction, do not retry on failure
+
+=cut
+
+$NCM::Component::spma::yum::NoAction = 1;
+$called = 0;
+@args= ();
+$cmp->{ERROR} = 0;
+is($cmp->update_pkgs_retry(@upr_args), 1,
+   "Call with userpkgs=false, retry=true and update_pkgs=fail/success/success and NoAction set returns success");
+is($called, 1, "Update packages only called once with NoAction");
+is ($cmp->{ERROR}, 0, "No error logged by update_pkgs_retry with NoAction");
 
 
 done_testing();
