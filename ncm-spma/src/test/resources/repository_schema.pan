@@ -11,8 +11,8 @@ include "components/spma/schema";
 prefix "/software/repositories/0";
 
 "name" = "test-repository_v2.x";
-"owner" = "me@here.com";
+"owner" = "me@example.com";
 "protocols/0/name" = "http";
-"protocols/0/url" = "http://www.here.com";
+"protocols/0/url" = "http://www.example.com";
 
 

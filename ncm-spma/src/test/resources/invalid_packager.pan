@@ -7,9 +7,9 @@ prefix "/software/packages";
 prefix "/software/repositories/0";
 
 "name" = "sl620_x86_64";
-"owner" = "me@here.com";
+"owner" = "me@example.com";
 "protocols/0/name" = "http";
-"protocols/0/url" = "http://www.here.com";
+"protocols/0/url" = "http://www.example.com";
 
 prefix "/software/components/spma";
 
