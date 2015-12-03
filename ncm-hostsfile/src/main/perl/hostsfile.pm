@@ -218,7 +218,7 @@ sub Configure {
             if (exists $newncmhosts{$h}) {
                 $le = delete $newncmhosts{$h};
             } elsif (exists $ncmhosts{$h}) {
-                $le = delete $ncmhosts{$h};
+                next;
             } else {
                 $le = delete $non_ncm_hosts{$h};
             }
