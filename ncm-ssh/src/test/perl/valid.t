@@ -7,7 +7,7 @@ use CAF::Object;
 use NCM::Component::ssh;
 use Readonly;
 
-Readonly my $CMD => join(" ", NCM::Component::ssh::SSH_VALIDATE);
+my $cmd = join(" ", (NCM::Component::ssh::DEFAULT_SSHD_PATH, '-t', '-f', '/dev/stdin'));
 
 my $cmp = NCM::Component::ssh->new("ssh");
 
@@ -19,11 +19,11 @@ Test for the C<valid_ssh_file> predicate.
 
 =cut
 
-set_command_status($CMD, 0);
+set_command_status($cmd, 0);
 ok($cmp->valid_sshd_file("foo"), "Success upon valid file");
 
-set_command_status($CMD, 1);
-set_desired_err($CMD, "Error");
+set_command_status($cmd, 1);
+set_desired_err($cmd, "Error");
 ok(!$cmp->valid_sshd_file("foo"), "Invalid file is detected");
 
 done_testing();

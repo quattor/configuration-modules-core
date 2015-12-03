@@ -20,20 +20,25 @@ our $NoActionSupported = 1;
 
 use CAF::Process;
 use CAF::FileEditor;
-use constant SSHD_CONFIG  => "/etc/ssh/sshd_config";
-use constant SSH_CONFIG   => "/etc/ssh/ssh_config";
-use constant SSH_VALIDATE => qw(/usr/sbin/sshd -t -f /proc/self/fd/0);
+use constant DEFAULT_SSHD_CONFIG  => "/etc/ssh/sshd_config";
+use constant DEFAULT_SSHD_PATH    => "/usr/sbin/sshd";
+use constant DEFAULT_SSH_CONFIG   => "/etc/ssh/ssh_config";
+use constant SSHD_CONFIG_MULTILINE => qw(HostKey AcceptEnv ListenAddress);
 
 # Returns true if $file is a valid SSHD configuration file.
 sub valid_sshd_file
 {
-    my ($self, $file) = @_;
+    my ($self, $file, $cfg) = @_;
+
+    # Use /dev/stdin, instead of /proc/self/fd/0 (which is used in some other components).
+    # This is because /proc/self/fd/0 does not exist on Solaris. 
+    my $cmdline = [ $cfg->{sshd_path} || DEFAULT_SSHD_PATH, '-t', '-f', '/dev/stdin' ];
 
     my $cmd = CAF::Process->new(
-        [SSH_VALIDATE],
+        $cmdline,
         log         => $self,
-        stdin       => "$file",
         stderr      => \my $err,
+        stdin       => "$file",
         keeps_state => 1
     );
 
@@ -45,6 +50,15 @@ sub valid_sshd_file
     }
     $self->warn("Non-fatal issues in the configuration file: $err") if $err;
     return 1;
+}
+
+# escape values for the ssh config format.
+# adds \ before ?{}.()[]
+sub ssh_escape
+{
+    my ($self, $val) = @_;
+    $val =~ s{([?{}.()\[\]])}{\\$1}g;
+    return $val;
 }
 
 #
@@ -74,16 +88,23 @@ sub handle_config_file
             my $ref = ref($val);
             if($ref) {
                 if($ref eq 'ARRAY') {
+                    if (grep {$_ eq $option} SSHD_CONFIG_MULTILINE) {
+                        # remove any existing line for this option
+                        # then add the options back in at the end of the file
+                        $fh->remove_lines(qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^#});
+                        foreach my $multival (@$val) {
+                            print $fh "$option " . $self->ssh_escape($multival) . "\n";
+                        }
+                        next;        
+                    }
                     $val = join(',', @$val);
                 } else {
                     $self->error("Unsupported value reference $ref for option $option.",
                                  " (Possibly bug in profile/schema).");
                     next;
                 }
-            };
-
-            my $escaped_val = $val;
-            $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
+            }
+            my $escaped_val = $self->ssh_escape($val);
             $fh->add_or_replace_lines(
                 qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val\s*$},
                 "$comment$option $val\n",
@@ -92,7 +113,7 @@ sub handle_config_file
         }
     }
 
-    if ($validate && !$validate->($self, $fh)) {
+    if ($validate && !$validate->($self, $fh, $cfg)) {
         $fh->cancel();
     }
 
@@ -110,7 +131,10 @@ sub Configure
     my $ok         = 1;
 
     if ($ssh_config->{daemon}) {
-        if ($self->handle_config_file(SSHD_CONFIG, 0600, $ssh_config->{daemon}, \&valid_sshd_file))
+        if ($self->handle_config_file($ssh_config->{daemon}->{config_path} || DEFAULT_SSHD_CONFIG,
+                                      0600,
+                                      $ssh_config->{daemon},
+                                      \&valid_sshd_file))
         {
             CAF::Process->new([qw(/sbin/service sshd condrestart)], log => $self)->run();
             if ($?) {
@@ -121,7 +145,9 @@ sub Configure
     }
 
     if ($ssh_config->{client}) {
-        $self->handle_config_file(SSH_CONFIG, 0644, $ssh_config->{client});
+        $self->handle_config_file($ssh_config->{client}->{config_path} || DEFAULT_SSH_CONFIG,
+                                  0644,
+                                  $ssh_config->{client});
     }
     return $ok;
 }
