@@ -9,3 +9,4 @@ prefix "/software/components/ccm";
 "configFile" = "/etc/ccm.conf";
 "ca_file" = "/etc/sindes/ca/ca.crt";
 "version" = "1.2.3";
+"trust" = "user/component.something/other.else@MY.REALM";
