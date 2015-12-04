@@ -30,9 +30,16 @@ sub valid_sshd_file
 {
     my ($self, $file, $cfg) = @_;
 
+    my $sshd_bin = $cfg->{sshd_path} || DEFAULT_SSHD_PATH;
+    
+    if (defined($cfg->{always_validate}) && !$cfg->{always_validate} && ! -x $sshd_bin) {
+        $self->info("$sshd_bin doesn't exist with always_validate=0, skipping sshd config test.");
+        return 1;
+    }
+
     # Use /dev/stdin, instead of /proc/self/fd/0 (which is used in some other components).
     # This is because /proc/self/fd/0 does not exist on Solaris. 
-    my $cmdline = [ $cfg->{sshd_path} || DEFAULT_SSHD_PATH, '-t', '-f', '/dev/stdin' ];
+    my $cmdline = [ $sshd_bin, '-t', '-f', '/dev/stdin' ];
 
     my $cmd = CAF::Process->new(
         $cmdline,
