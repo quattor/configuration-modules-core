@@ -76,7 +76,7 @@ sub Configure {
                 # Assume "kinit" is in the PATH.
                 my $errs = "";
                 my $proc = CAF::Process->new(["kinit", "-k"], stderr => \$errs,
-                        log => $self);
+                        log => $self, keeps_state => 1);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     $self->error("could not get GSSAPI credentials: $errs");
