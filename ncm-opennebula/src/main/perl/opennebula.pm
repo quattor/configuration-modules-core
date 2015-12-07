@@ -313,7 +313,11 @@ sub change_opennebula_passwd
     my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
 
-    $cmd = [$user, $passwd];
+    if ($user eq "serveradmin") {
+        $cmd = [$user, join(' ', '--driver server_cipher', $passwd)];
+    } else {
+        $cmd = [$user, $passwd];
+    };
     $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
     if (!$output) {
         $self->error("Quattor unable to modify current $user passwd.");
@@ -597,6 +601,49 @@ sub set_one_auth_file
     }
 }
 
+# Configure OpenNebula server
+sub set_one_server
+{
+    my($self, $tree) = @_;
+    # Set ssh multiplex options
+    $self->set_ssh_command($tree->{ssh_multiplex});
+    # Set tm_system_ds if available
+    my $tm_system_ds = $tree->{tm_system_ds};
+    # untouchables resources
+    my $untouchables = $tree->{untouchables};
+    # hypervisor type
+    my $hypervisor = $tree->{host_hyp};
+
+    # Change oneadmin pass
+    if (exists $tree->{rpc}->{password}) {
+        return 0 if !$self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
+    }
+
+    # Configure ONE RPC connector
+    my $one = $self->make_one($tree->{rpc});
+    if (! $one ) {
+        $self->error("No ONE instance created.");
+        return 0;
+    };
+
+    # Check ONE RPC endpoint and OpenNebula version
+    return 0 if !$self->is_supported_one_version($one);
+
+    $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
+
+    # For the moment only Ceph and shared datastores are configured
+    $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
+    # Update system datastore TM_MAD
+    if ($tm_system_ds) {
+        $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
+        $self->info("Updated system datastore TM_MAD = $tm_system_ds");
+    }
+    $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
+    $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
+
+    return 1;
+}
+
 # Set filewriter options
 # do not show logs if it contains passwds
 sub set_file_opts
@@ -651,53 +698,29 @@ sub Configure
     # Define paths for convenience.
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
-    # Set ssh multiplex options
-    $self->set_ssh_command($tree->{ssh_multiplex});
-    # Set tm_system_ds if available
-    my $tm_system_ds = $tree->{tm_system_ds};
-    # untouchables resources
-    my $untouchables = $tree->{untouchables};
-    # hypervisor type
-    my $hypervisor = $tree->{host_hyp};
 
-    # Set opennebula service
+    # Set oned.conf
     if (exists $tree->{oned}) {
         $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
     }
 
-    # Set sunstone service
+    # Set Sunstone server
     if (exists $tree->{sunstone}) {
         $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE);
+        if (exists $tree->{users}) {
+            my $users = $tree->{users};
+            foreach my $user (@$users) {
+                if ($user->{user} eq "serveradmin" && exists $user->{password}) {
+                    $self->set_one_auth_file($user->{user}, $user->{password});
+                }
+            }
+        }
     }
 
-    # Change oneadmin pass
-    if (exists $tree->{rpc}->{password}) {
-        return 0 if !$self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
+    # Set OpenNebula server
+    if (exists $tree->{rpc}) {
+        return $self->set_one_server($tree);
     }
-
-    # Configure ONE RPC connector
-    my $one = $self->make_one($tree->{rpc});
-    if (! $one ) {
-        $self->error("No ONE instance created.");
-        return 0;
-    };
-
-    # Check ONE RPC endpoint and OpenNebula version
-    return 0 if !$self->is_supported_one_version($one);
-
-    $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
-
-    # For the moment only Ceph and shared datastores are configured
-    $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
-    # Update system datastore TM_MAD 
-    if ($tm_system_ds) {
-        $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
-        $self->info("Updated system datastore TM_MAD = $tm_system_ds");
-    }
-
-    $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
-
-    $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
 
     return 1;
 }
