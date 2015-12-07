@@ -1,5 +1,6 @@
 declaration template metaconfig/httpd/schema;
 
+
 include 'pan/types';
 include 'components/accounts/functions';
 
@@ -8,6 +9,24 @@ type httpd_cipherstring = string with match(SELF, "^(TLSv1|TLSv1.0|TLSv1.1|TLSv1
 
 type httpd_nss_protocol = string with match(SELF, "^(TLSv1.0|SSLv3|All)$");
 type httpd_nss_cipherstring = string with match(SELF, '^(\+|-)(rsa_3des_sha|rsa_des_56_sha|rsa_des_sha|rsa_null_md5|rsa_null_sha|rsa_rc2_40_md5|rsa_rc4_128_md5|rsa_rc4_128_sha|rsa_rc4_40_md5|rsa_rc4_56_sha|fortezza|fortezza_rc4_128_sha|fortezza_null|fips_des_sha|fips_3des_sha|rsa_aes_128_sha|rsa_aes_256_sha)$');
+
+@documentation{
+    Either all Options must start with + or -, or no Option may.
+}
+type httpd_option_plusminus_none = string[] with {
+    if(length(SELF) < 2) {
+        return(true);
+    };
+
+    plusminus = match(SELF[0], '^(\+|-)');
+    foreach(idx;opt;SELF) {
+        pm = match(opt, '^(\+|-)');
+        if (to_long(plusminus) != to_long(pm)) {
+            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s', opt, SELF[0]));
+        };
+    };
+    true;
+};
 
 type httpd_kerberos = {
     "keytab" : string # this becomes krb5keytab (but nlists can't start with digits)
@@ -86,13 +105,13 @@ type httpd_ssl_nss_shared = {
     "randomseed" ? string[][]
     "verifyclient" ? string with match(SELF, "^(require|none|optional|optional_no_ca)$")
     "require" ? string
-    "options" ? string[]
+    "options" ? httpd_option_plusminus_none
     "requiressl" ? boolean
+    "passphrasedialog" ? string with match(SELF,'^(builtin|(exec|file):/.*)$')
 };
 
 type httpd_nss_global = {
     include httpd_ssl_nss_shared
-    "passphrasedialog" ? string with match(SELF,'^(builtin|file:/.*)$')
     "sessioncachesize" ? long
     "session3cachetimeout" ? long
     "renegotiation" ? boolean
@@ -101,7 +120,6 @@ type httpd_nss_global = {
 
 type httpd_ssl_global = {
     include httpd_ssl_nss_shared
-    "passphrasedialog" ? string with match(SELF,'^(builtin)$')
     "sessioncache" ? string
     "mutex" ? string with match(SELF,'^(default)$')
     "cryptodevice" ? string[]
@@ -157,11 +175,29 @@ type httpd_acl = {
     "satisfy" ? string with match(SELF,"^(All|Any)$")
 };
 
+@documentation{
+    authz a.k.a. Require type. the keys are possible providers, each with their own syntax
+
+}
+type httpd_authz = {
+    "all" ? string with match(SELF, '^(granted|denied)$')
+    "valid-user" ? string # value of string is ignored
+    "user" ? string[]
+    "group" ? string[]
+    "ip" ? type_network_name[]
+    "env" ? string[]
+    "method" ? string[]
+    "expr" ? string
+    "negate" ? boolean # not for each provider defined here
+};
+
 type httpd_limit_value = string with match(SELF, '^GET|POST|PUT|DELETE|CONNECT|OPTIONS|PATCH|PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK$');
+
 type httpd_limit = {
     "name" : httpd_limit_value[]
     "except" : boolean = false
-    "access" ? httpd_acl
+    "access" ? httpd_acl # provided via mod_access_compat on 2.4
+    "authz" ? httpd_authz[] # 2.4 only
 };
 
 type httpd_proxy_passreverse = {
@@ -219,8 +255,7 @@ type httpd_file = {
     "name" : string
     "regex" : boolean = false # name is regex (i.e. add ~)
     "quotes" : string = '"'
-    "options" ? string[] = list("-indexes")
-    "access" ? httpd_acl
+    "options" ? httpd_option_plusminus_none = list("-indexes")
     "enablesendfile" ? boolean
     "lang" ? httpd_lang
     "ssl" ? httpd_ssl_global
@@ -228,6 +263,8 @@ type httpd_file = {
     "auth" ? httpd_auth
     "kerberos" ? httpd_kerberos
     "shibboleth" ? httpd_shibboleth
+    "access" ? httpd_acl # provided via mod_access_compat in 2.4
+    "authz" ? httpd_authz[] # 2.4 only
 };
 
 type httpd_rewrite_cond = {
@@ -348,6 +385,18 @@ type httpd_outputfilter = {
     "add" ? httpd_outputfilter_add[]
 };
 
+type httpd_perl_vhost = {
+    "modules" : string[]
+    "options" : string[] = list("+Parent")
+    "switches" ? string[]
+};
+
+type httpd_browsermatch = {
+    # -> browsermatch "match" names.join(' ')
+    "match" : string
+    "names" : string[]
+};
+
 type httpd_directory = {
     include httpd_file
     "rewrite" ? httpd_rewrite
@@ -359,12 +408,6 @@ type httpd_directory = {
     "proxy" ? httpd_proxy
     "directoryindex" ? string[]
     "limitrequestbody" ? long(0..)
-};
-
-type httpd_perl_vhost = {
-    "modules" : string[]
-    "options" : string[] = list("+Parent")
-    "switches" ? string[]
 };
 
 type httpd_vhost = {
@@ -385,6 +428,7 @@ type httpd_vhost = {
     "env" ? httpd_env
     "rails" ? httpd_rails
     "proxies" ? httpd_proxy_directive[]
+    "browsermatch" ? httpd_browsermatch[]
 };
 
 # system wide settings
@@ -427,6 +471,10 @@ type httpd_global_system = {
 type httpd_ifmodule_parameters = {
     "name" : string
     "directories" ? httpd_directory[]
+    "type" ? httpd_type
+    "outputfilter" ? httpd_outputfilter
+    "log" ? httpd_log
+    "aliases" ? httpd_alias[]
     "modules" ? httpd_module[]
     "startservers" ? long
     "minspareservers" ? long
@@ -444,6 +492,8 @@ type httpd_ifmodule_parameters = {
     "davlockdb" ? string
 
     "mimemagicfile" ? string
+
+    "directoryindex" ? string[]
 };
 
 type httpd_ifmodule = {
@@ -451,21 +501,14 @@ type httpd_ifmodule = {
     "ifmodules" ? httpd_ifmodule_parameters[] # only depth 1 ?
 };
 
-type httpd_browsermatch = {
-    # -> browsermatch "match" names.join(' ')
-    "match" : string
-    "names" : string[]
-};
-
 # only for conf/httpd.conf
 type httpd_global = {
-    "global" : httpd_global_system
-    "aliases" : httpd_alias[]
-    "modules" : httpd_module[]
+    "global" : httpd_global_system = nlist()
+    "aliases" ? httpd_alias[]
+    "modules" ? httpd_module[]
     "ifmodules" : httpd_ifmodule[]
     "directories" ? httpd_directory[]
     "files" ? httpd_file[]
-    "includes" : string[] = list("conf.d/*.conf")
     "log" ? httpd_log
     "icon" ? httpd_icon
     "lang" ? httpd_lang
@@ -474,6 +517,8 @@ type httpd_global = {
     "type" ? httpd_type
     "outputfilter" ? httpd_outputfilter
     "listen" ? httpd_listen[]
+    "includes" : string[] = list("conf.d/*.conf")
+    "includesoptional" ? string[]
 };
 
 # for conf.d/*.conf
