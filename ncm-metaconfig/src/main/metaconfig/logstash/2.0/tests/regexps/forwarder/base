@@ -1,0 +1,30 @@
+Base test for forwarder
+---
+multiline
+/etc/logstash-forwarder.conf
+---
+^\{$
+^\s{4}"network": \{$
+^\s{8}"servers": \[$
+^\s{12}"myhost.example.com:12345",$
+^\s{12}"myhost2.example.com:12346"$
+^\s{8}\],$
+^\s{8}"ssl ca": "/my/ca",$
+^\s{8}"ssl certificate": "/my/cert",$
+^\s{8}"ssl key": "/my/key",$
+^\s{8}"timeout": 15$
+^\s{4}\},$
+^\s{4}"files": \[$
+^\s{8}\{$
+^\s{12}"paths": \["/path/0/0",$
+^\s{12}"/path/0/1"\],$
+^\s{12}"fields": \{"type": "type0"$
+^\s{12}\}$
+^\s{8}\},\{$
+^\s{12}"paths": \["/path/1/0",$
+^\s{12}"/path/1/1"\],$
+^\s{12}"fields": \{"type": "type1"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{4}\]$
+^\}$

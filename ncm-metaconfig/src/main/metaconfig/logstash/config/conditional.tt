@@ -3,7 +3,7 @@
 [%-         IF block == first -%]
 [%-              type = 'if' -%]
 [%-         ELSIF block == last -%]
-[%-              type = 'if' -%]
+[%-              type = 'else' -%]
 [%-         ELSE -%]
 [%-              type = 'else if' -%]
 [%-         END -%]
@@ -18,6 +18,6 @@
 [%-          type = block.type -%]
 [%-     END -%]
 [%      type -%]
- [%    INCLUDE "metaconfig/logstash/1.2/expression.tt" desc=block.expr %] {
-[%      INCLUDE "metaconfig/logstash/1.2/plugins.tt" desc=block.plugins section=section FILTER indent %]
+ [%    INCLUDE "metaconfig/logstash/config/expression.tt" desc=block.expr %] {
+[%      INCLUDE "metaconfig/logstash/config/plugins.tt" desc=block.plugins section=section FILTER indent %]
 }

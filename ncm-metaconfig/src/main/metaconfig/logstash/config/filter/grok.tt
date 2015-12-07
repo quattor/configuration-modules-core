@@ -1,0 +1,5 @@
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="boolean" 
+            names=['break_on_match', 'drop_if_match', 
+                   'keep_empty_captures', 'named_captures_only'] -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="stringarray" names=['patterns_dir'] -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="name_pattern" names=['match'] -%]

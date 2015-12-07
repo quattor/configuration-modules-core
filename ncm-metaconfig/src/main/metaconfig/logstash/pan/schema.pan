@@ -17,8 +17,27 @@ type logstash_ssl = {
     "ssl_verify" ? boolean
 };
 
+type logstash_conditional_expression = {
+    # [join] [[left] test] right (eg: and left > right; ! right;)
+    "join" ? string with match(SELF,'^(and|or|nand|xor)$')
+    "left" : string
+    "test" ? string with match(SELF,'^(==|!=|<|>|<=|>=|=~|!~|in|not in|!)$')
+    "right" ? string
+};
+
+# no nesting (yet)
+type logstash_conditional = {
+    # ifelseif: first one is 'if', rest is 'if else'
+    # ifelseifelse: first one is 'if', last is 'else', rest is 'if else'
+    "type" : string = 'if' with match(SELF, '^(if|if else|else|ifelseif|ifelseifelse)$')
+    "expr" : logstash_conditional_expression[]
+};
+
 @{ Common portion for all plugins }
 type logstash_plugin_common = {
+    @{using _conditional to avoid name clash with plugin option name.
+      The conditional is only for the single plugin and has to be type 'if' (the default).}
+    "_conditional" ? logstash_conditional with { if (SELF['type'] != 'if') {error('plugin _conditional has to be type if (the default)');}; true;}
 };
 
 # list not complete at all
@@ -131,7 +150,7 @@ type logstash_filter_grok = {
     include logstash_filter_plugin_common
     "match" ? logstash_name_pattern[]
     "break_on_match" : boolean = true
-    "drop_if_match" ? boolean 
+    "drop_if_match" ? boolean
     "keep_empty_captures" ? boolean
     "named_captures_only" : boolean = true
     "patterns_dir" ? string[]
@@ -154,12 +173,19 @@ type logstash_filter_grep = {
     "negate" : boolean = false
 };
 
+type logstash_filter_drop = {
+    include logstash_filter_plugin_common
+    "percentage" ? long(0..100)
+    "periodic_flush" ? boolean
+};
+
 type logstash_filter_mutate = {
     include logstash_filter_plugin_common
+    "convert" ? logstash_name_pattern[]
     "replace" ? logstash_name_pattern[]
     "rename" ? string{}
     "split" ? string{}
-    "exclude_tags" ? string[] # DEPRECATED, should be replaced by conditional block
+    "exclude_tags" ? string[] with {deprecated(0, 'replace with _conditional e.g. <"tagname" not in [tags]> in 2.0'); true;}
 };
 
 type logstash_filter_kv = {
@@ -178,7 +204,8 @@ type logstash_filter_kv = {
 type logstash_filter_plugin = {
     "grok" ? logstash_filter_grok
     "date" ? logstash_filter_date
-    "grep" ? logstash_filter_grep
+    "grep" ? logstash_filter_grep with {deprecated(0, 'grep filter is removed from 2.0, use e.g. conditional drop'); true;}
+    "drop" ? logstash_filter_drop
     "mutate" ? logstash_filter_mutate
     "kv" ? logstash_filter_kv
     "bytes2human" ? logstash_filter_bytes2human
@@ -218,13 +245,16 @@ type logstash_output_stdout = {
 type logstash_output_elasticsearch = {
     include logstash_output_plugin_common
     "bind_host" ? type_hostname
-    "host" ? type_hostname
-    "port" ? logstash_port_range
-    "cluster" ? string
-    "embedded" : boolean = false
+    "hosts" ? type_hostport[]
+    "host" ? type_hostname with {deprecated(0, 'removed in version 2.0 (use hosts instead)'); true;}
+    "port" ? logstash_port_range with {deprecated(0, 'removed in version 2.0 (use hosts instead)'); true;}
+    "cluster" ? string with {deprecated(0, 'removed in version 2.0'); true;}
+    "embedded" ? boolean = false with {deprecated(0, 'removed in version 2.0'); true;}
     "index" : string = "logstash-%{+YYYY.MM.dd}"
     "flush_size" : long = 5000
-    "index_type" : string = "%{@type}"
+    "index_type" ? string = "%{@type}" with {deprecated(0, 'renamed to document_type in version 2.0'); true;}
+    "document_type" : string = "%{@type}"
+    "template_overwrite" ? boolean
 };
 
 type logstash_output_plugin = {
@@ -232,22 +262,6 @@ type logstash_output_plugin = {
     "stdout" ? logstash_output_stdout
     "elasticsearch" ? logstash_output_elasticsearch
 } with length(SELF) == 1;
-
-type logstash_conditional_expression = {
-    # [join] [[left] test] right (eg: and left > right; ! right;)
-    "join" ? string with match(SELF,'^(and|or|nand|xor)$')
-    "left" : string
-    "test" ? string with match(SELF,'^(==|!=|<|>|<=|>=|=~|!~|in|not in|!)$')
-    "right" ? string
-};
-
-# no nesting (yet)
-type logstash_conditional = {
-    # ifelseif: first one is 'if', rest is 'if else'
-    # ifelseifelse: first one is 'if', last is 'else', rest is 'if else'
-    "type" : string with match(SELF, '^(if|if else|else|ifelseif|ifelseifelse)$')
-    "expr" : logstash_conditional_expression[]
-};
 
 type logstash_input_conditional = {
     include logstash_conditional
@@ -266,17 +280,17 @@ type logstash_output_conditional = {
 
 type logstash_input = {
     "plugins" ? logstash_input_plugin[]
-    "conditionals" ? logstash_input_conditional[] 
+    "conditionals" ? logstash_input_conditional[]
 };
 
 type logstash_filter = {
     "plugins" ? logstash_filter_plugin[]
-    "conditionals" ? logstash_filter_conditional[] 
+    "conditionals" ? logstash_filter_conditional[]
 };
 
 type logstash_output = {
     "plugins" ? logstash_output_plugin[]
-    "conditionals" ? logstash_output_conditional[] 
+    "conditionals" ? logstash_output_conditional[]
 };
 
 @{ The configuration is made of input, filter and output section }

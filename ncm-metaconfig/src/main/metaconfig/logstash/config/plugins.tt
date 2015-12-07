@@ -1,0 +1,15 @@
+[%- FOREACH plugin IN desc -%]
+[%- # there should be only one plugin
+        FOREACH p IN plugin.pairs -%]
+[%-         IF (p.value.exists('_conditional')) %]
+[%              p.value._conditional.type %] ([% INCLUDE "metaconfig/logstash/config/expression.tt" desc=p.value._conditional.expr %]) {
+[%          END -%]
+[%          FILTER indent(p.value.exists('_conditional') ? '    ' : '') -%]
+[%              p.key %] {
+[%              INCLUDE "metaconfig/logstash/config/${section}/plugin.tt" desc=p.value FILTER indent %]
+[%              INCLUDE "metaconfig/logstash/config/${section}/${p.key}.tt" desc=p.value FILTER indent %]
+}
+[%          END -%]
+[%          p.value.exists('_conditional') ? '}' : '' %]
+[%     END -%]
+[%- END -%]

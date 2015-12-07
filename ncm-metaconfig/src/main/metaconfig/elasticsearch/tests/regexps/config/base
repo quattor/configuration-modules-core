@@ -5,9 +5,6 @@ Base test for config
 ^---$
 ^bootstrap:$
 ^  mlockall: true$
-^gateway:$
-^  fs: /var/lib/elasticsearch$
-^  type: fs$
 ^index:$
 ^  number_of_replicas: 1$
 ^  refresh: 10$

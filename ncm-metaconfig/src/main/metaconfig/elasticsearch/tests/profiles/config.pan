@@ -17,8 +17,6 @@ prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsear
 "index/queue_size" = 1000;
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents";
-"gateway/type" = "fs";
-"gateway/fs" = "/var/lib/elasticsearch";
 "index/refresh" = 10;
 "indices/memory/index_buffer_size" = "50%";
 "index/translog/flush_threshold_ops" = 100000;

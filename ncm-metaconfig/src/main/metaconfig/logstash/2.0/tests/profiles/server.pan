@@ -1,5 +1,7 @@
 object template server;
 
+final variable METACONFIG_LOGSTASH_VERSION = '2.0';
+
 include 'metaconfig/logstash/config';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents";
@@ -77,7 +79,11 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 ),
             )),
         nlist("mutate", nlist(
-            "exclude_tags", list("_grokparsefailure"),
+            "_conditional", nlist('expr', list(nlist(
+                "left","'_grokparsefailure'",
+                "test", "not in",
+                "right", "[tags]",
+                ))),
             "replace", list(
                 nlist(
                     "name", "@source_host", 
@@ -90,6 +96,23 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         nlist("mutate", nlist(
             "remove_field", list("syslog_hostname", "syslog_message", "syslog_timestamp"),
             )),
+        nlist("mutate", nlist(
+            "_conditional", nlist('expr', list(
+                nlist(
+                    "left", "'_grokparsefailure'",
+                    "test", "not in",
+                    "right", "[tags]",
+                ),
+                nlist(
+                    "join", "and",
+                    "left", "[jube_id]",
+                ))),
+            "convert", list(
+                nlist(
+                    "name", "success",
+                    "pattern", "boolean"
+                )
+            ))),
         nlist("bytes2human", nlist(
             "convert", nlist(
                 "field1", "bytes",
@@ -102,11 +125,10 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 # reset the output, to remove the GELF output
 "output" = nlist("plugins", list(nlist(
     "elasticsearch", nlist(
-        "embedded", false,
         "flush_size", 5000,
-        "bind_host", "localhost.localdomain",
+        "hosts", list("localhost.localdomain:9200"),
         "workers", 4,
-        "port", list(9300,9305), 
+        "template_overwrite", true,
         ),
 )));
 

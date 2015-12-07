@@ -1,0 +1,87 @@
+Base test for server config
+---
+multiline
+/etc/logstash/conf.d/logstash.conf
+---
+input \{$
+^\s{4}tcp \{$
+^\s{8}type => "syslog"$
+^\s{8}port => 514$
+^\s{4}\}$
+^\s{4}gelf \{$
+^\s{8}type => "remotegelf"$
+^\s{8}port => 12201$
+^\s{8}remap => true$
+^\s{4}\}$
+^\s{4}lumberjack \{$
+^\s{8}type => "lumberjack"$
+^\s{8}ssl_certificate => "/software/components/ccm/cert_file"$
+^\s{8}ssl_key => "/software/components/ccm/key_file"$
+^\s{8}port => 5043$
+^\s{4}\}$
+^\}$ ### COUNT 3
+filter \{$
+^\s{4}if \[type\] == 'remotegelf' \{$
+^\s{8}mutate \{$
+^\s{12}split => \{$
+^\s{16}"tags" => ", "$
+^\s{12}\}$
+^\s{8}\}$
+^\s{4}\}$
+^\s{4}else if \[type\] == 'syslog' \{$
+^\s{8}grok \{$
+^\s{12}add_field => \{$
+^\s{16}"received_at" => "%\{@timestamp\}"$
+^\s{16}"received_from" => "%\{@source_host\}"$
+^\s{12}\}$
+^\s{12}break_on_match => true$
+^\s{12}named_captures_only => true$
+^\s{12}patterns_dir => \[ "/usr/share/grok" \]$
+^\s{12}match => \{$
+^\s{16}"message" => "%\{RSYSLOGCUSTOM\}"$
+^\s{12}}$
+^\s{8}\}$
+^\s{8}kv \{$
+^\s{12}exclude_keys => \[ "key1e", "key2e" \]$
+^\s{12}include_keys => \[ "key1i", "key2i" \]$
+^\s{12}default_keys => \{$
+^\s{16}"key1" => "value1"$
+^\s{16}"key2" => "value2"$
+^\s{12}\}$
+^\s{12}prefix => "myprefix"$
+^\s{12}source => "mysource"$
+^\s{12}target => "mytarget"$
+^\s{12}trim => "mytrim"$
+^\s{12}trimkey => "mytrimkey"$
+^\s{12}value_split => "myvaluesplit"$
+^\s{8}\}$
+^\s{8}date \{$
+^\s{12}match => \[ "syslog_timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ" \]$
+^\s{8}\}$
+^\s{8}mutate \{$
+^\s{12}exclude_tags => \[ "_grokparsefailure" \]$
+^\s{12}replace => \{$
+^\s{16}"@source_host" => "%\{syslog_hostname\}"$
+^\s{16}"@message" => "%\{syslog_message\}"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}mutate \{$
+^\s{12}remove_field => \[ "syslog_hostname", "syslog_message", "syslog_timestamp" \]$
+^\s{8}\}$
+^\s{8}bytes2human \{$
+^\s{12}convert => \{$
+^\s{16}"field1" => "bytes"$
+^\s{16}"field2" => "bytes"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{4}\}$
+output \{$
+^\s{4}elasticsearch \{$
+^\s{8}workers => 4$
+^\s{8}embedded => false$
+^\s{8}bind_host => "localhost.localdomain"$
+^\s{8}index => "logstash-%\{\+YYYY.MM.dd\}"$
+^\s{8}index_type => "%\{@type\}"$
+^\s{8}port => "9300-9305"$
+^\s{8}flush_size => 5000$
+^\s{4}\}$

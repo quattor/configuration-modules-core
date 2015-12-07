@@ -1,0 +1,11 @@
+[%- IF (_logstashversion.0 >= 2);
+        mapping = { 'index_type' => 'document_type' };
+    ELSE;
+        mapping = { 'document_type' => 'index_type' };
+    END -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="boolean" names=['embedded', 'template_overwrite'] -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="string" 
+            names=['bind_host', 'cluster', 'index', 'index_type', 'document_type'] mapping=mapping -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="stringrange" names=['port'] -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="exact" names=['flush_size'] -%]
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="stringarray" names=['hosts'] -%]
