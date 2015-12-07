@@ -118,6 +118,8 @@ prefix "/software/components/authconfig/method/sssd/domains";
 "test1/proxy_fast_alias" = false;
 "test1/re_expression" = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)";
 "test1/subdomain_homedir" = "/home/%d/%u";
+"test1/access_provider" = "simple";
+"test1/simple/allow_groups" = list("group1","group2");
 
 
 
