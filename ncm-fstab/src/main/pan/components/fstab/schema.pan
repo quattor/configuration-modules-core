@@ -12,7 +12,8 @@ include {'quattor/filesystems'};
 Protected mountpoints and filesystem types. 
 mounts is looked for on the second field of fstab, fs_file
 fs_types is looked for on the third field of fstab, fs_vfstype
-Default mounts is the same list as before in "protected_mounts"
+Default content of mounts is the same content as from the now deprecated
+protected_mounts field in the structure_component_fstab type
 }
 type fstab_protected_entries = {
     "mounts" : string[] = list (
