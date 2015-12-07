@@ -1,0 +1,16 @@
+Cachefilesd config
+---
+/etc/cachefilesd.conf
+---
+^bcull 20%$
+^brun 10%$
+^bstop 30%$
+^culltable 14$
+^debug 4$
+^dir /my/path$
+^fcull 21%$
+^frun 11%$
+^fstop 31%$
+^nocull$
+^secctx special:label$
+^tag tag$
