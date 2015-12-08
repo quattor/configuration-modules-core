@@ -144,6 +144,10 @@ sub readfile
 my $basetest = 'target/test/unitfile';
 my $basetestfile = "$basetest/file";
 
+# Tests without NoAction
+$CAF::Object::NoAction = 0;
+
+
 rmtree if -d $basetest;
 ok(! $ur->_directory_exists($basetest), "_directory_exists false on missing directory");
 ok(! $ur->_file_exists($basetest), "_file_exists false on missing directory");
@@ -168,9 +172,21 @@ rmtree($basetest) if -d $basetest;
 ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
 ok($ur->_directory_exists("$basetest/a/b/c"), "_directory_exists true on _make_directory");
 
+# Tests with NoAction
+$CAF::Object::NoAction = 1;
+
+# add a/b/c to test mkdir -p behaviour
+rmtree($basetest) if -d $basetest;
+ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
+ok(! $ur->_directory_exists("$basetest/a/b/c"), "_directory_exists false on _make_directory with NoAction");
+
+
 =item _cleanup
 
 =cut
+
+# Tests without NoAction
+$CAF::Object::NoAction = 0;
 
 # test with dir and file, without backup
 my $cleanupdir1 = "$basetest/cleanup1";
@@ -204,10 +220,21 @@ ok(! $ur->_file_exists($cleanupfile1), "cleanup testfile does not exist anymore 
 ok($ur->_file_exists($cleanupfile1b), "cleanup backup testfile does exist w backup");
 is(readfile($cleanupfile1b), 'ok', 'backup cleanupfile has content of testfile, so this is the new backup file');
 
-ok($ur->_cleanup($cleanupdir1, '.old'), "cleanup directory, no backup ok");
+ok($ur->_cleanup($cleanupdir1, '.old'), "cleanup directory, w backup ok");
 ok(! $ur->_directory_exists($cleanupdir1), "cleanup testdir does not exist anymore w backup");
 ok($ur->_directory_exists("$cleanupdir1.old"), "cleanup backup testdir does exist w backup");
 is(readfile("$cleanupdir1.old/file.old"), 'ok', 'backup file in backup dir has content of testfile, that old testdir backup file');
+
+# Tests with NoAction
+$CAF::Object::NoAction = 1;
+rmtree($cleanupdir1) if -d $cleanupdir1;
+makefile($cleanupfile1);
+
+ok($ur->_cleanup($cleanupfile1, '.old'), "cleanup testfile, w backup ok and NoAction");
+ok($ur->_file_exists($cleanupfile1), "cleanup testfile still exists w backup and NoAction");
+
+ok($ur->_cleanup($cleanupdir1, '.old'), "cleanup directory, w backup ok and NoAction");
+ok($ur->_directory_exists($cleanupdir1), "cleanup testdir still exists w backup and NoAction");
 
 =item prepare_path
 
@@ -239,12 +266,16 @@ is_deeply(\@cleanup, ["$cleanupdir1/replace.service.d"],
 
 $cleanup_res = 1;
 @cleanup = ();
+# disable NoAction for a bit
+$CAF::Object::NoAction = 0;
 is($ur->_prepare_path($cleanupdir1), "$cleanupdir1/regular.service.d/quattor.conf",
    "_prepare_path returned non-replace filename on succesful cleanup (replace=0)");
 is_deeply(\@cleanup, ["$cleanupdir1/regular.service"],
           "_prepare_path called cleanup with dest unit file (replace=0) pt2");
 ok($ur->_directory_exists("$cleanupdir1/regular.service.d"),
    "directory for non-replace file exists");
+# reenable NoAction
+$CAF::Object::NoAction = 1;
 
 @cleanup = ();
 is($uf->_prepare_path($cleanupdir1), "$cleanupdir1/replace.service",

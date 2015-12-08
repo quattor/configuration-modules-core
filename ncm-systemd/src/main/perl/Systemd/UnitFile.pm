@@ -11,13 +11,14 @@ use warnings;
 
 use parent qw(CAF::Object Exporter);
 
-use File::Path qw(rmtree mkpath);
+use File::Path qw(rmtree);
 use File::Copy qw(move);
 
 use Scalar::Util qw(blessed);
 
 use LC::Exception qw (SUCCESS);
 use Readonly;
+use LC::Check;
 
 use NCM::Component::Systemd::Systemctl qw(systemctl_daemon_reload);
 
@@ -357,11 +358,11 @@ sub _make_variables_custom {
 
 # TODO: Move to CAF::AllTheMissingBitsThatLCProvides
 
-# make directory, mkdir -p style, simple mkpath wrapper
+# make directory, mkdir -p style, wrapper around LC::Check::directory
 sub _make_directory
 {
     my ($self, $directory) = @_;
-    return mkpath($directory);
+    return LC::Check::directory($directory, noaction => $CAF::Object::NoAction);
 }
 
 # -d, wrapped in method for unittesting
@@ -388,11 +389,11 @@ sub _exists
     return -e $path || -l $path;
 }
 
-# _unlink, remove with backup support
+# _cleanup, remove with backup support
 # works like LC::Check::_unlink, but has directory support
 # and no error throwing
 # returns SUCCESS on success, undef on failure, logs error
-# backup is backup from LC::Chekc::_unlink (and thus also CAF::File*)
+# backup is backup from LC::Check::_unlink (and thus also CAF::File*)
 # if backup is undefined, use self->{backup}
 # pass empty string to disable backup with self->{backup} defined
 # does not cleanup the backup of the original file,
@@ -432,13 +433,18 @@ sub _cleanup
         }
     }
 
-    if($CLEANUP_DISPATCH{$method}->(@args)) {
-        $self->verbose("_cleanup $method removed $dest");
+    if($CAF::Object::NoAction) {
+        $self->verbose("CAF::Object NoAction set, not going to $method with args ", join(',', @args));
         return SUCCESS;
     } else {
-        $self->error("_cleanup $method failed to remove $dest: $!");
-        return;
-    }
+        if($CLEANUP_DISPATCH{$method}->(@args)) {
+            $self->verbose("_cleanup $method removed $dest");
+            return SUCCESS;
+        } else {
+            $self->error("_cleanup $method failed to remove $dest: $!");
+            return;
+        }
+    };
 }
 
 =pod
