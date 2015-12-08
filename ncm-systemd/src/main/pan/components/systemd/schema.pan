@@ -9,7 +9,7 @@ include 'components/accounts/functions';
 
 # TODO: some generic types, candidates for template-library-core
 @documentation{
-    hwloc location, e.g. node:1 for NUMAnode 1
+    hwloc (Portable Hardware Locality, hwloc(7)) location, e.g. node:1 for NUMAnode 1
 }
 type hwloc_location = string with match(SELF, '^[\w:.]+$');
 

@@ -133,7 +133,7 @@ Following custom attributes are supported:
 
 =item CPUAffinity
 
-Obtain the C<systemd.exec> C<CPUAffinity> list determined via C<hwloc> locations.
+Obtain the C<systemd.exec> C<CPUAffinity> list determined via C<hwloc(7)> locations.
 
 Allows to e.g. cpubind on numanodes using the C<node:X> location
 
@@ -313,19 +313,29 @@ sub _hwloc_calc_cpus
 {
     my ($self, $locations) = @_;
 
-    local $ENV{HWLOC_HIDE_ERRORS};
-    $ENV{HWLOC_HIDE_ERRORS}=1;
-
     # pass a copy of the Readonly array, so we can extend it
     my $proc = CAF::Process->new([@HWLOC_CALC_CPUS], log => $self);
     $proc->pushargs(@$locations);
 
+    my @indices;
+    my @unexpected;
     my $output = $proc->output();
-    my @indices = grep { $_ =~ m/^\d+$/ } split(/,/, $output);
-    if (join(',', @indices) eq $output) {
+    foreach my $line (split("\n", $output)) {
+        if($line =~ m/^\d+(,\d+)*$/) {
+            @indices = split(/,/, $line);
+        } else {
+            push(@unexpected, $line) if $line;
+        }
+    }
+
+    if(@unexpected) {
+        $self->warn("Unexpected output from $proc: ", join("\n", @unexpected));
+    }
+
+    if (@indices) {
         return \@indices;
     } else {
-        $self->error("Unexpected output from $proc: $output");
+        $self->error("No indices from from $proc: $output");
         return;
     }
 }
