@@ -24,6 +24,8 @@ use File::Copy qw(move);
 
 use Readonly;
 
+our $NoActionSupported = 1;
+
 Readonly my $SYSCONFIG_TT => 'sysconfig';
 
 # relative to self->prefix
