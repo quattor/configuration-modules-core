@@ -40,16 +40,17 @@ sub _initialize
     return SUCCESS;
 }
 
-# return $su -l postgres -c 'args' CAF::Process output.
+# return $su -l postgres -c '@$args' CAF::Process output.
 # return undef on failure
+# supported opts: keeps_state
 sub run_postgres
 {
-    my ($self, @args) = @_;
+    my ($self, $args, %opts) = @_;
 
-    my $cmd = [$self->{su}, '-l', $POSTGRESQL_USER, '-c', join(' ', @args)];
+    my $cmd = [$self->{su}, '-l', $POSTGRESQL_USER, '-c', join(' ', @$args)];
 
     my $log = $self->{$PROCESS_LOG_ENABLED} ? $self->{log} : undef;
-    my $proc = CAF::Process->new($cmd, log => $log);
+    my $proc = CAF::Process->new($cmd, log => $log, keeps_state => $opts{keeps_state} ? 1 : 0);
     my $output = $proc->output();
 
     my $method = $? ? "error" : "verbose";
@@ -65,13 +66,14 @@ sub run_postgres
 # args are space joined and wrapped in single quotes
 # a ';' is added, none of @args can contain a ';'
 # double quotes in @args are escaped
+# opts passed on to run_postgres as is
 sub run_psql
 {
-    my ($self, @args) = @_;
+    my ($self, $args, %opts) = @_;
 
     my @postgresargs = ("$self->{engine}/psql", "-t", "-c");
 
-    my $sql = join(' ', @args);
+    my $sql = join(' ', @$args);
     if ($sql =~ m/;/) {
         my $invalidmsg = "psql args cannot contain a ';'";
         $invalidmsg .= " (sql: $sql)" if $self->{$PROCESS_LOG_ENABLED};
@@ -84,7 +86,7 @@ sub run_psql
 
     push(@postgresargs, "\"$sql;\"");
 
-    return $self->run_postgres(@postgresargs);
+    return $self->run_postgres(\@postgresargs, %opts);
 }
 
 # simple select: one column from one table
@@ -93,7 +95,7 @@ sub simple_select
 {
     my ($self, $column, $table) = @_;
 
-    my $output = $self->run_psql("SELECT", $column, "FROM", $table);
+    my $output = $self->run_psql(["SELECT", $column, "FROM", $table], keeps_state => 1);
     return if (! defined($output));
 
     # right-to-left:
@@ -121,7 +123,7 @@ sub create_role
 {
     my ($self, $role) = @_;
 
-    return $self->run_psql("CREATE", "ROLE", '"'.$role.'"');
+    return $self->run_psql(["CREATE", "ROLE", '"'.$role.'"']);
 }
 
 # alter role with sql
@@ -135,7 +137,7 @@ sub alter_role
     $self->{$PROCESS_LOG_ENABLED} = 0;
 
     # role in quotes
-    my $res = $self->run_psql('ALTER', 'ROLE', '"'.$role.'"', $sql);
+    my $res = $self->run_psql(['ALTER', 'ROLE', '"'.$role.'"', $sql]);
 
     # restore old proclog setting
     $self->{$PROCESS_LOG_ENABLED} = $oldproclog;
@@ -162,14 +164,14 @@ sub create_database
 {
     my ($self, $database, $owner) = @_;
 
-    return $self->run_psql("CREATE", "DATABASE", '"'.$database.'"', "OWNER", '"'.$owner.'"');
+    return $self->run_psql(["CREATE", "DATABASE", '"'.$database.'"', "OWNER", '"'.$owner.'"']);
 }
 
 # createlang for database
 sub create_database_lang
 {
     my ($self, $database, $lang) = @_;
-    return $self->run_postgres("$self->{engine}/createlang", $database, $lang);
+    return $self->run_postgres(["$self->{engine}/createlang", $database, $lang]);
 }
 
 # execute number of commands defined in file filename
@@ -182,7 +184,7 @@ sub run_commands_from_file
         return;
     }
 
-    return $self->run_postgres("$self->{engine}/psql", '-U', $asuser, '-f', $filename, $database);
+    return $self->run_postgres(["$self->{engine}/psql", '-U', $asuser, '-f', $filename, $database]);
 }
 
 # TODO should be moved to CAF

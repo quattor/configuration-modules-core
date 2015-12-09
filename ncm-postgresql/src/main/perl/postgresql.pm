@@ -175,6 +175,7 @@ sub version
     my $proc = CAF::Process->new(
         ["$pg_engine/postmaster", "--version"],
         log => $self,
+        keeps_state => 1,
         );
     my $output = $proc->output();
 

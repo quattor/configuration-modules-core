@@ -61,7 +61,7 @@ my @logs;
 set_desired_output($test_cmd, 'ran fine');
 set_command_status($test_cmd, 0); # shell exitcode
 $obj->loghist_reset();
-is($cmds->run_postgres('a', 'b', 'c'),
+is($cmds->run_postgres(['a', 'b', 'c']),
    'ran fine',
    'Command ran and expected output');
 
@@ -74,7 +74,7 @@ ok(! defined($obj->loghist_get('ERROR')), 'no error logged with test run_postgre
 $cmds->{$PROCESS_LOG_ENABLED} = 0;
 $obj->loghist_reset();
 set_desired_output($test_cmd, 'ran fine no logging');
-is($cmds->run_postgres('a', 'b', 'c'),
+is($cmds->run_postgres(['a', 'b', 'c']),
    'ran fine no logging',
    'Command ran and expected output (pt 2, log disabled)');
 ok(! defined($obj->loghist_get('VERBOSE')), 'no verbose message logged with test run_postgres (pt2, log disabled)');
@@ -86,7 +86,7 @@ $cmds->{$PROCESS_LOG_ENABLED} = 1;
 set_command_status($test_cmd, 1);
 $obj->loghist_reset();
 set_desired_output($test_cmd, 'failed to run');
-ok(! defined($cmds->run_postgres('a', 'b', 'c')),
+ok(! defined($cmds->run_postgres(['a', 'b', 'c'])),
    'Failed command returned undef');
 ok(! defined($obj->loghist_get('VERBOSE')), 'no verbose logged with failed test run_postgres');
 @logs = $obj->loghist_get('ERROR');
@@ -96,7 +96,7 @@ like($logs[0], qr{^Command /bin/su -l postgres -c a b c exitcode 1 output failed
 $cmds->{$PROCESS_LOG_ENABLED} = 0;
 $obj->loghist_reset();
 set_desired_output($test_cmd, 'failed to run no logging');
-ok(! defined($cmds->run_postgres('a', 'b', 'c')),
+ok(! defined($cmds->run_postgres(['a', 'b', 'c'])),
    'Failed command returned undef (pt 2, log disabled)');
 ok(! defined($obj->loghist_get('VERBOSE')),
    'no verbose message logged with test run_postgres (pt2, log disabled)');
@@ -111,7 +111,7 @@ $cmds->{$PROCESS_LOG_ENABLED} = 1;
 =cut
 
 $obj->loghist_reset();
-ok(! defined($cmds->run_psql(qw(select from something; and then some))),
+ok(! defined($cmds->run_psql([qw(select from something; and then some)])),
    'psql args with ; return undef');
 @logs = $obj->loghist_get('ERROR');
 like($logs[0], qr{^psql args cannot contain a ';' \(sql: select from something; and then some\)$},
@@ -120,7 +120,7 @@ like($logs[0], qr{^psql args cannot contain a ';' \(sql: select from something; 
 # no sql when logging disabled
 $cmds->{$PROCESS_LOG_ENABLED} = 0;
 $obj->loghist_reset();
-ok(! defined($cmds->run_psql(qw(select from something; and then some no logging))),
+ok(! defined($cmds->run_psql([qw(select from something; and then some no logging)])),
    'psql args with ; return undef no logging');
 @logs = $obj->loghist_get('ERROR');
 like($logs[0], qr{^psql args cannot contain a ';'$},
@@ -133,7 +133,7 @@ $cmds->{$PROCESS_LOG_ENABLED} = 1;
 $test_cmd = "/bin/su -l postgres -c $engine/psql -t -c \"select \\\"a\\\" from b;\"";
 set_desired_output($test_cmd, 'psql ran fine');
 set_command_status($test_cmd, 0); # shell exitcode
-is($cmds->run_psql(qw(select "a" from b)),
+is($cmds->run_psql([qw(select "a" from b)]),
    'psql ran fine',
    'psql ran expected postgres command');
 
@@ -164,7 +164,7 @@ is_deeply($cmds->simple_select('a', 'b'),
 my @pgargs;
 $mock->mock('run_postgres', sub {
     shift;
-    @pgargs = @_;
+    @pgargs = @{shift()};
     return 1;
 });
 my @psql;
@@ -173,7 +173,7 @@ my $psql_log_enabled;
 $mock->mock('run_psql', sub {
     my $self = shift;
     $psql_log_enabled = $self->{$PROCESS_LOG_ENABLED};
-    @psql = @_;
+    @psql = @{shift()};
     return $psql_res;
 });
 my @simpleselect;
