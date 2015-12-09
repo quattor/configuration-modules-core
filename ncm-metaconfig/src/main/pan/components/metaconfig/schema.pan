@@ -24,5 +24,5 @@ type ${project.artifactId}_config =  {
 
 type ${project.artifactId}_component = {
     include structure_component
-    'services' : ${project.artifactId}_config{}
+    'services' : ${project.artifactId}_config{} with valid_absolute_file_paths(SELF)
 };
