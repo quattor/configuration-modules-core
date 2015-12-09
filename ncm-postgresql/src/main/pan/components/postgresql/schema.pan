@@ -11,10 +11,10 @@ function postgresql_is_hba_db = {
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
 
-    if (match(ARGV[0], "all|sameuser|samerole|replication")) {
-        return(true);
+    if (match(ARGV[0], "^(all|sameuser|samerole|replication)$")) {
+        true;
     } else {
-        return(exists("/software/components/postgresql/databases/" + ARGV[0]));
+        exists("/software/components/postgresql/databases/" + ARGV[0]);
     };
 };
 
@@ -23,8 +23,8 @@ function postgresql_is_hba_address = {
     if (ARGC != 1 || !is_string(ARGV[0]))
         error("usage: is_asndate(string)");
 
-    if (match(ARGV[0],"samehost|samenet")) {
-        return(true);
+    if (match(ARGV[0],"^(samehost|samenet)$")) {
+        true;
     } else {
         # It can be a host name, or it is made up of an IP address and a CIDR mask that is
         # an integer (between 0 and 32 (IPv4) or 128 (IPv6) inclusive) that
@@ -33,8 +33,8 @@ function postgresql_is_hba_address = {
         # Alternatively, you can write an IP address and netmask in separate
         # columns to specify the set of hosts.
 
-        ## TODO!
-        return(true);
+        # TODO!
+        true;
     }
 };
 
