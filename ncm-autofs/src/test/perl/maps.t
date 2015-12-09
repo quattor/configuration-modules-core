@@ -121,8 +121,8 @@ command_history_reset();
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile (2nd run)");
 
 # commands are regexps in command_history_ok
-# what is being tested here is that there wasn't a single command executed with the word autofs in it
-ok(! command_history_ok(['autofs']),
+# what is being tested here is that there wasn't a single command executed with the words service.*autofs in it
+ok(! command_history_ok(['service.*autofs']),
    "service autofs status not checked (no changes in 2nd run)");
 
 done_testing();
