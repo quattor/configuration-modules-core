@@ -117,6 +117,8 @@ type ssh_daemon_type = {
     "options" ? ssh_daemon_options_type
     "comment_options" ? ssh_daemon_options_type
     "sshd_path" ? string
+    @{if false and sshd doesn't exist, skip config validation}
+    "always_validate" : boolean = true
     "config_path" ? string
 };
 
