@@ -14,6 +14,7 @@ use NCM::Component::Postgresql::Commands;
 
 use LC::Exception qw(SUCCESS);
 our $EC = LC::Exception::Context->new->will_store_all;
+use CAF::Object;
 
 use EDG::WP4::CCM::Element;
 
@@ -458,7 +459,9 @@ sub sanity_check
         # non-destructive mode: make a backup
         my $moved_suffix = "-moved-for-postgres-by-ncm-postgresql." . strftime('%Y%m%d-%H%M%S', localtime());
         my $bck_data = "$iam->{pg}->{data}$moved_suffix";
-        if (move($iam->{pg}->{data}, $bck_data)) {
+        if ($CAF::Object::NoAction) {
+            $self->info("NoAction: not moving $iam->{pg}->{data} to $bck_data.");
+        } elsif (move($iam->{pg}->{data}, $bck_data)) {
             $self->warn("Moved $iam->{pg}->{data} to $bck_data.");
         } else {
             # it will never work, but next time make sure all goes well
