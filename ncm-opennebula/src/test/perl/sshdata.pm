@@ -54,6 +54,15 @@ $ssh{opennebula_service_restart}{out} = <<'EOF';
 EOF
 $ssh{opennebula_service_restart}{exit} = 0;
 
+$ssh{ssh_onehost_service_sync}{command} = "su - oneadmin -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r localhost /usr/bin/onehost sync -f";
+$ssh{ssh_onehost_service_sync}{out} = <<'EOF';
+* Adding hyp101.altaria.os to upgrade
+* Adding hyp102.altaria.os to upgrade
+[========================================] 2/2 hyp102.altaria.os
+All hosts updated successfully.
+EOF
+$ssh{ssh_onehost_service_sync}{exit} = 0;
+
 $ssh{ssh_run_uname}{command} = "su - oneadmin -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r hyp104 uname";
 $ssh{ssh_run_uname}{out} = <<'EOF';
 hyp104

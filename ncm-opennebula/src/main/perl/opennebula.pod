@@ -31,6 +31,8 @@ Features that are implemented at this moment:
 
 =item * Updates OpenNebula *_auth files
 
+=item * Updates VMM kvmrc config file
+
 =back
 
 OpenNebula installation is 100% automated. Therefore:
@@ -103,7 +105,7 @@ Set XEN hypervisor
 
 Includes the Open vSwitch network drives in your hypervisors. (OVS must be installed in each host)
 Open vSwitch replaces Linux bridges, Linux bridges must be disabled.
-More info: http://docs.opennebula.org/4.4/administration/networking/openvswitch.html
+More info: http://docs.opennebula.org/4.14/administration/networking/openvswitch.html
 
 =item * tm_system_ds : string (optional)
 
@@ -130,7 +132,7 @@ Uses a local storage area from each host for the system datastore.
 
 =head1 DEPENDENCIES
 
-The component was tested with OpenNebula version 4.8 and 4.10
+The component was tested with OpenNebula version 4.8 and 4.1x
 
 Following package dependencies should be installed to run the component:
 

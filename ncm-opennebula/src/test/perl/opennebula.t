@@ -60,4 +60,9 @@ my $sunstone = get_file($NCM::Component::opennebula::SUNSTONE_CONF_FILE);
 isa_ok($sunstone, "CAF::FileWriter", "sunstone-server.conf CAF::FileWriter instance");
 like("$sunstone", qr{^:host:\s{1}.+$}m, "sunstone-server.conf has expected content");
 
+# kvmrc conf file
+my $kvmrc = get_file($NCM::Component::opennebula::KVMRC_CONF_FILE);
+isa_ok($kvmrc, "CAF::FileWriter", "kvmrc CAF::FileWriter instance");
+like("$kvmrc", qr{^export\s{1}FORCE_DESTROY=.+$}m, "kvmrc has expected content");
+
 done_testing();
