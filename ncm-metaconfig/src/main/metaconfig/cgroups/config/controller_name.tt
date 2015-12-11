@@ -1,0 +1,2 @@
+[%- controller = CCM.unescape(data) -%]
+[%- controller.match('^name=') ? '"' _ controller _ '"' : controller -%]

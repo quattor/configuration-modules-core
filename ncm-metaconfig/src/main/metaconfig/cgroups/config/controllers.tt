@@ -1,0 +1,9 @@
+[% FOREACH pair IN data.pairs -%]
+[% INCLUDE "metaconfig/cgroups/config/controller_name.tt" data=pair.key %] {
+[%      FOREACH perm IN pair.value.pairs -%]
+[%          FILTER indent -%]
+[%              perm.key %] = "[% perm.value %]";
+[%          END -%]
+[%      END -%]
+}
+[% END -%]

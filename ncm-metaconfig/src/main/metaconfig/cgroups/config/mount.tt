@@ -1,0 +1,3 @@
+[% FOREACH mount IN data.pairs -%]
+[% INCLUDE "metaconfig/cgroups/config/controller_name.tt" data=mount.key %] = [% mount.value %];
+[% END -%]

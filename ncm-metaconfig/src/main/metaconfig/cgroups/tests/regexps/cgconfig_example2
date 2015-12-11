@@ -1,0 +1,18 @@
+cgconfig.conf example2
+---
+/etc/cgconfig.conf
+---
+^group daemons \{$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "1000";$
+^\s{4}\}$
+^\}$
+^group test \{$
+^\s{4}"name=noctrl" \{$
+^\s{4}\}$
+^\}$
+^mount \{$
+^\s{4}cpu = /mnt/cgroups/cpu;$
+^\s{4}"name=noctrl" = /mnt/cgroups/noctrl;$
+^\s{4}"name=scheduler" = /mnt/cgroups/cpu;$
+^\}$
