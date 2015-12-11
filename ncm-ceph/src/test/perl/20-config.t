@@ -63,7 +63,8 @@ $cceph =  {
    'foo' => 'bar'
  };
 $output = $cmp->compare_config('cfg','key', $quath, $cceph);
-ok(!$output, 'ceph config has attributes not in quattor');
+ok($output, 'ceph config has attributes not in quattor');
+ok(!%{$output}, 'ceph config has attributes not in quattor');
 
 $cceph =  {
    'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4', #correct fsid

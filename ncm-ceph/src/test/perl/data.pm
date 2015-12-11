@@ -1007,6 +1007,9 @@ Readonly::Hash our %DESTROYD => (
            'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
          },
        },
+       'config' => {
+            'some' => 'value'
+       }, 
      }, 
 ); 
 Readonly::Hash our %RESTARTD => (

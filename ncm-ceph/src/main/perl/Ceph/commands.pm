@@ -150,7 +150,7 @@ sub run_ceph_deploy_command {
 
 # Accept and add unknown keys if wanted
 sub ssh_known_keys {
-    my ($self, $host, $key_accept, $homedir) = @_; 
+    my ($self, $host, $key_accept, $cephusr) = @_;
     return 1 if !defined($key_accept);
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
@@ -161,8 +161,11 @@ sub ssh_known_keys {
         if (!$lines) {
             $cmd = ['/usr/bin/ssh-keyscan', $host];
             my $key = $self->run_command_as_ceph($cmd);
-            my $fh = CAF::FileEditor->open("$homedir/.ssh/known_hosts",
-                                           log => $self);
+            my $fh = CAF::FileEditor->open("$cephusr->{homeDir}/.ssh/known_hosts",
+                                            log => $self,
+                                            owner => $cephusr->{uid},
+                                            group => $cephusr->{gid},
+                                        );
             $fh->head_print($key);
             $fh->close();
         }
@@ -178,7 +181,7 @@ sub ssh_known_keys {
 # check if host is reachable
 sub test_host_connection {
     my ($self, $host, $gvalues) = @_; 
-    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr}->{homeDir});
+    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr});
     return $self->run_command_as_ceph_with_ssh(['uname'], $host); 
 }
 

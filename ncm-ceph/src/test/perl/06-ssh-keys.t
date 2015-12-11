@@ -36,15 +36,15 @@ set_desired_output($keyfind, "I am a key, I am a key!\n");# key visible
 my $scancmd = 'su - ceph -c /usr/bin/ssh-keyscan ceph001.cubone.os';
 set_desired_output($scancmd, "I am the key, I am the key!\n");
 
-
-$cmp->ssh_known_keys($hostname, 'first', '/foo');
+my $cephusr = { homeDir => '/foo', uid => 1234, gid => 1234 };
+$cmp->ssh_known_keys($hostname, 'first', $cephusr);
 my $cmd = get_command($scancmd);
 ok(!defined($cmd), "key found, no key added");
 
 set_desired_output($keyfind, '');# no key
 set_file_contents("/foo/.ssh/known_hosts", 
     "The setting sun with the last light of Durins Day will shine upon the key-hole\n");
-$cmp->ssh_known_keys($hostname, 'first', '/foo');
+$cmp->ssh_known_keys($hostname, 'first', $cephusr);
 
 $cmd = get_command($scancmd);
 ok(defined($cmd), "add new key");
@@ -52,4 +52,7 @@ ok(defined($cmd), "add new key");
 my $fh = get_file("/foo/.ssh/known_hosts");
 is("$fh", "I am the key, I am the key!\nThe setting sun with the last light of Durins Day will shine upon the key-hole\n", 
     "The file has received the expected contents");
+is(*$fh->{options}->{owner}, '1234', "The file has the expected owner");
+is(*$fh->{options}->{group}, '1234', "The file has the expected group");
+
 done_testing();
