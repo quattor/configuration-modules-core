@@ -30,5 +30,9 @@
       <name>Jaroslaw Polok</name>
       <email>jaroslaw.polok@cern.ch</email>
     </developer>
+    <developer>
+      <name>Alan Fitton</name>
+      <email>Alan.Fitton@morganstanley.com</email>
+    </developer>
   </developers>
 </project>
