@@ -28,7 +28,7 @@ my $cmp = NCM::Component::useraccess->new("useraccess");
 
 my $u = { ssh_keys => [qw(key1 key2)] };
 
-my $fh = CAF::FileWriter->new("target/test/ssh_test");
+my $fh = CAF::FileWriter->new("target/test/ssh_keys_test_1");
 
 is($cmp->set_ssh_fromkeys("foo", $u, $fh), 0,
    "SSH from keys returns with no errors");
@@ -47,7 +47,7 @@ The method is successful, but the file is empty.
 
 $u->{ssh_keys} = [];
 
-$fh = CAF::FileWriter->new("target/test/ssh_url_test");
+$fh = CAF::FileWriter->new("target/test/ssh_keys_test_2");
 
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH with empty key list returns with no errors");

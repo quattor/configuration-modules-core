@@ -8,7 +8,6 @@ use File::Path qw(mkpath);
 use Cwd;
 use NCM::Component::useraccess;
 use CAF::Object;
-use CAF::FileWriter;
 use Class::Inspector;
 
 $CAF::Object::NoAction = 1;
