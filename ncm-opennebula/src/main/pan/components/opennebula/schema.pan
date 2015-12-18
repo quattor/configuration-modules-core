@@ -286,9 +286,10 @@ type opennebula_oned = {
                                            "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC", 
                                            "CPU_COST", "MEMORY_COST")
     "image_restricted_attr" : string = 'SOURCE'
-    "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", 
+    "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF", 
                                                "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")
-    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS")
+    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", 
+                                          "FILTER_MAC_SPOOFING", "MTU")
 };
 
 
