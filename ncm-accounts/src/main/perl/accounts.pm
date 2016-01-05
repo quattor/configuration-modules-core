@@ -14,7 +14,6 @@ use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
-use CAF::Object;
 use Fcntl qw(SEEK_SET);
 use File::Basename;
 use File::Path;
@@ -25,7 +24,6 @@ our @ISA = qw(NCM::Component);
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
-$CAF::Object::NoAction = 1;
 
 # UID for user structures, GID for group structures.
 use constant ID => 2;
@@ -392,10 +390,12 @@ sub apply_profile_groups
     my ($self, $system, $profile) = @_;
 
     while (my ($group, $cfg) = each(%$profile)) {
+      my $required_members = $cfg->{requiredMembers};
+      $required_members = [] unless $required_members;
       if (!exists($system->{groups}->{$group})) {
         $self->debug(2, "Scheduling addition of group $group");
         $system->{groups}->{$group} = { name => $group,
-                                        members => {map(($_ => 1), @{$cfg->{requiredMembers}})},
+                                        members => {map(($_ => 1), @$required_members)},
                                         gid => $cfg->{gid}};
       } else {
         if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
@@ -403,12 +403,12 @@ sub apply_profile_groups
           $system->{groups}->{$group}->{gid} = $cfg->{gid};
         }
         if ( $cfg->{replaceMembers} ) {
-          $self->debug(2,"Group $group: replacing existing member list");
+          $self->debug(2, "Group $group: replacing existing member list");
           $system->{groups}->{$group}->{members} = {};
         }
-        if ( $cfg->{requiredMembers} && @{$cfg->{requiredMembers}} ) {
-          $self->debug(3,"Group $group: adding required members (",join(',',@{$cfg->{requiredMembers}}),")");
-          foreach my $member (@{$cfg->{requiredMembers}}) {
+        if ( @$required_members ) {
+          $self->debug(3, "Group $group: adding required members (",join(',',@$required_members),")");
+          foreach my $member (@$required_members) {
             $system->{groups}->{$group}->{members}->{$member} = 1;
           }
         }

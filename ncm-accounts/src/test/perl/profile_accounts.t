@@ -6,6 +6,10 @@ use Test::More;
 use Test::Quattor qw(simpleaccounts poolaccounts requiredgroupmembers);
 use NCM::Component::accounts;
 use Readonly;
+use CAF::Object;
+
+$CAF::Object::NoAction = 1;
+
 
 =pod
 
