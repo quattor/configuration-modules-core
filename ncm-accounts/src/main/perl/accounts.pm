@@ -402,8 +402,16 @@ sub apply_profile_groups
           $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
           $system->{groups}->{$group}->{gid} = $cfg->{gid};
         }
-        # Reset member list to the required members
-        $system->{groups}->{$group}->{members} = {map(($_ => 1), @{$cfg->{requiredMembers}})};
+        if ( $cfg->{replaceMembers} ) {
+          $self->debug(2,"Group $group: replacing existing member list");
+          $system->{groups}->{$group}->{members} = {};
+        }
+        if ( $cfg->{requiredMembers} && @{$cfg->{requiredMembers}} ) {
+          $self->debug(3,"Group $group: adding required members (",join(',',@{$cfg->{requiredMembers}}),")");
+          foreach my $member (@{$cfg->{requiredMembers}}) {
+            $system->{groups}->{$group}->{members}->{$member} = 1;
+          }
+        }
       }
     }
 }

@@ -23,6 +23,7 @@ prefix "/software/components/accounts/groups/bar";
 "gid" = 101;
 "comment" = "group bar with required users foo and test";
 "requiredMembers" = list("foo","test"); 
+"replaceMembers" = true;
 
 # Group test: no explicit members, changed id compared
 # to original one.

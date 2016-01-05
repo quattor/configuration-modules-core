@@ -192,6 +192,14 @@ the optional gid number for the group
 An optional list of users that must be added as member of the group. The users don't have to be
 local users, defined in the configuration.
 
+=item replaceMembers (boolean)
+
+When true, current members of the group (if existing) are replaced by the groups defined in the
+configuration (coming from C<requiredMembers> and user groups). If false, groups from the
+configuration are merged with existing ones.
+
+D: false
+
 =back
 
 =head2 /software/components/accounts/login_defs

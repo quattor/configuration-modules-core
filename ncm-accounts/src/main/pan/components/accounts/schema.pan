@@ -41,6 +41,7 @@ type structure_groupinfo = {
     'comment'         ? string
     'gid'             : long(1..)
     'requiredMembers' ? string[]
+    'replaceMembers'  : boolean = false
 };
 
 type structure_login_defs = {
