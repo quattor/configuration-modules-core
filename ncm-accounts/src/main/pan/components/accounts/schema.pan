@@ -38,8 +38,9 @@ type structure_userinfo = {
 };
 
 type structure_groupinfo = {
-    'comment'    ? string
-    'gid'        : long(1..)
+    'comment'         ? string
+    'gid'             : long(1..)
+    'requiredMembers' ? string[]
 };
 
 type structure_login_defs = {

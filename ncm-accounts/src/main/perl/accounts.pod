@@ -187,6 +187,11 @@ ignored, but provided so gid doesn't have to be
 
 the optional gid number for the group
 
+=item requiredMembers
+
+An optional list of users that must be added as member of the group. The users don't have to be
+local users, defined in the configuration.
+
 =back
 
 =head2 /software/components/accounts/login_defs

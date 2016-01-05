@@ -14,6 +14,7 @@ use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
+use CAF::Object;
 use Fcntl qw(SEEK_SET);
 use File::Basename;
 use File::Path;
@@ -24,6 +25,7 @@ our @ISA = qw(NCM::Component);
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
+$CAF::Object::NoAction = 1;
 
 # UID for user structures, GID for group structures.
 use constant ID => 2;
@@ -393,11 +395,15 @@ sub apply_profile_groups
       if (!exists($system->{groups}->{$group})) {
         $self->debug(2, "Scheduling addition of group $group");
         $system->{groups}->{$group} = { name => $group,
-                                        members => {},
+                                        members => {map(($_ => 1), @{$cfg->{requiredMembers}})},
                                         gid => $cfg->{gid}};
-      } elsif ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
-        $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
-        $system->{groups}->{$group}->{gid} = $cfg->{gid};
+      } else {
+        if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
+          $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
+          $system->{groups}->{$group}->{gid} = $cfg->{gid};
+        }
+        # Reset member list to the required members
+        $system->{groups}->{$group}->{members} = {map(($_ => 1), @{$cfg->{requiredMembers}})};
       }
     }
 }

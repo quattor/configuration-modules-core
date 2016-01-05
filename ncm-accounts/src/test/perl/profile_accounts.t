@@ -3,8 +3,9 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(simpleaccounts poolaccounts);
+use Test::Quattor qw(simpleaccounts poolaccounts requiredgroupmembers);
 use NCM::Component::accounts;
+use Readonly;
 
 =pod
 
@@ -51,5 +52,31 @@ for my $i ($p->{poolStart}..$p->{poolStart}+$p->{poolSize}-1) {
        "Pool account has the correct home");
     is($a->{$an}->{name}, $an, "Pool account $an has the correct name");
 }
+
+=pod
+
+=head2 Group with required members
+
+A group with a required member not defined in the configuration
+
+=cut
+
+Readonly my $LOGIN_DEFS => '/etc/login.defs';
+Readonly my $PASSWD => '/etc/passwd';
+Readonly my $GROUP => '/etc/group';
+Readonly my $GROUP_INITIAL_CONTENTS => 'bar:x:101:unknown
+';
+Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo,test
+foo:x:100:bar,test
+';
+set_file_contents($LOGIN_DEFS,'');
+set_file_contents($PASSWD,'');
+set_file_contents($GROUP,$GROUP_INITIAL_CONTENTS);
+$cfg = get_config_for_profile("requiredgroupmembers");
+$a = $cmp->Configure($cfg);
+my $group_fh = get_file($GROUP);
+ok(defined($group_fh), "$GROUP successfully opened");
+is("$group_fh",$GROUP_EXPECTED_CONTENTS,"$GROUP has expected contents");
+
 
 done_testing();
