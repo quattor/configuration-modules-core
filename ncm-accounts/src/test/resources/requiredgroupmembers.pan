@@ -23,3 +23,16 @@ prefix "/software/components/accounts/groups/bar";
 "gid" = 101;
 "comment" = "group bar with required users foo and test";
 "requiredMembers" = list("foo","test"); 
+
+# Group test: no explicit members, changed id compared
+# to original one.
+prefix "/software/components/accounts/groups/test";
+"gid" = 50;
+"comment" = "group test with no explicit member (changed id)";
+
+# Group test2: no explicit members, changed id compared
+# to original one.
+prefix "/software/components/accounts/groups/test2";
+"gid" = 51;
+"comment" = "group test2 with a changed id and explicit members";
+"requiredMembers" = list("foo"); 

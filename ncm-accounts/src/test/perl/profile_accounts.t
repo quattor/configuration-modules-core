@@ -65,9 +65,12 @@ Readonly my $LOGIN_DEFS => '/etc/login.defs';
 Readonly my $PASSWD => '/etc/passwd';
 Readonly my $GROUP => '/etc/group';
 Readonly my $GROUP_INITIAL_CONTENTS => 'bar:x:101:unknown
+test:x:102:
 ';
 Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo,test
+test:x:50:
 foo:x:100:bar,test
+test2:x:51:foo
 ';
 set_file_contents($LOGIN_DEFS,'');
 set_file_contents($PASSWD,'');
