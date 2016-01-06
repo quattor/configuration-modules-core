@@ -1,6 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
 declaration template components/accounts/schema;
 
