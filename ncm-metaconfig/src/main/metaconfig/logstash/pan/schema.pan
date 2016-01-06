@@ -118,12 +118,20 @@ type logstash_input_lumberjack = {
     "ssl_key_passphrase" ? string
 };
 
+@{ beats input }
+type logstash_input_beats = {
+    include logstash_input_lumberjack
+    'ssl' ? boolean
+    'congestion_threshold' ? long(0..)
+};
+
 type logstash_input_plugin = {
     "file" ? logstash_input_file
     "gelf" ? logstash_input_gelf
     "tcp" ? logstash_input_tcp
     "udp" ? logstash_input_udp
     "lumberjack" ? logstash_input_lumberjack
+    "beats" ? logstash_input_beats
 } with length(SELF) == 1;
 
 
