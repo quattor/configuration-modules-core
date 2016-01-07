@@ -68,7 +68,7 @@ A group with a required member not defined in the configuration
 Readonly my $LOGIN_DEFS => '/etc/login.defs';
 Readonly my $PASSWD => '/etc/passwd';
 Readonly my $GROUP => '/etc/group';
-Readonly my $GROUP_INITIAL_CONTENTS => 'bar:x:101:unknown
+Readonly my $GROUP_INITIAL_CONTENTS => 'bar:x:101:baz
 test:x:102:
 ';
 Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo,test
