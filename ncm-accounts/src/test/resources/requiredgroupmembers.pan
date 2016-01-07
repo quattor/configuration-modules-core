@@ -18,12 +18,20 @@ prefix "/software/components/accounts/groups/foo";
 "requiredMembers" = list("bar"); 
 
 # Group bar: test also listed as a required member to
-# check absence of duplicates
+# check absence of duplicates, group member replaced
 prefix "/software/components/accounts/groups/bar";
 "gid" = 101;
 "comment" = "group bar with required users foo and test";
 "requiredMembers" = list("foo","test"); 
 "replaceMembers" = true;
+
+# Group bar: test also listed as a required member to
+# check absence of duplicates, group member replaced
+prefix "/software/components/accounts/groups/bar2";
+"gid" = 102;
+"comment" = "group bar with required users foo and test, (required members merged)";
+"requiredMembers" = list("foo","test"); 
+"replaceMembers" = false;
 
 # Group test: no explicit members, changed id compared
 # to original one.

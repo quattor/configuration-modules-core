@@ -69,13 +69,18 @@ Readonly my $LOGIN_DEFS => '/etc/login.defs';
 Readonly my $PASSWD => '/etc/passwd';
 Readonly my $GROUP => '/etc/group';
 Readonly my $GROUP_INITIAL_CONTENTS => 'bar:x:101:baz
-test:x:102:
+bar2:x:102:baz
+test:x:103:
 ';
+
+# Expected /etc/group with resetMembers=true for group bar
 Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo,test
+bar2:x:102:baz,foo,test
 test:x:50:
 foo:x:100:bar,test
 test2:x:51:foo
 ';
+
 set_file_contents($LOGIN_DEFS,'');
 set_file_contents($PASSWD,'');
 set_file_contents($GROUP,$GROUP_INITIAL_CONTENTS);
@@ -83,7 +88,7 @@ $cfg = get_config_for_profile("requiredgroupmembers");
 $a = $cmp->Configure($cfg);
 my $group_fh = get_file($GROUP);
 ok(defined($group_fh), "$GROUP successfully opened");
-is("$group_fh",$GROUP_EXPECTED_CONTENTS,"$GROUP has expected contents");
+is("$group_fh",$GROUP_EXPECTED_CONTENTS,"$GROUP has expected contents (replaceMembers=true)");
 
 
 done_testing();

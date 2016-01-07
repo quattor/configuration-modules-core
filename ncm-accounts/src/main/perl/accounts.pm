@@ -175,7 +175,7 @@ sub build_group_map
             %mb = map(($_ => 1), split(",", $flds[IDLIST]));
         }
         $h->{members} = \%mb;
-	$h->{ln} = $ln;
+        $h->{ln} = $ln;
         $rt{$h->{name}} = $h;
       }
       $ln++;
@@ -392,18 +392,14 @@ sub apply_profile_groups
     while (my ($group, $cfg) = each(%$profile)) {
       my $required_members = $cfg->{requiredMembers};
       $required_members = [] unless $required_members;
-      if (!exists($system->{groups}->{$group})) {
-        $self->debug(2, "Scheduling addition of group $group");
-        $system->{groups}->{$group} = { name => $group,
-                                        members => {map(($_ => 1), @$required_members)},
-                                        gid => $cfg->{gid}};
-      } else {
+      if ( exists($system->{groups}->{$group}) ) {
         if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
           $self->info("Changing gid of group $group to $cfg->{gid}");
           $system->{groups}->{$group}->{gid} = $cfg->{gid};
         }
         my @initial_members = keys(%{$system->{groups}->{$group}->{members}});
         if ( $cfg->{replaceMembers} ) {
+          $self->debug(2,"group $group keys: ".join(",",keys(%$cfg))."  replaceMembers=".$cfg->{replaceMembers}.")");
           $self->verbose("Group $group: replacing existing member list");
           $system->{groups}->{$group}->{members} = {};
         }
@@ -431,6 +427,12 @@ sub apply_profile_groups
         } else {
           $self->verbose("Group $group: no modification made to membership");
         }
+
+      } else {
+        $self->debug(2, "Scheduling addition of group $group");
+        $system->{groups}->{$group} = { name => $group,
+                                        members => {map(($_ => 1), @$required_members)},
+                                        gid => $cfg->{gid}};
       }
     }
 }
@@ -672,12 +674,12 @@ sub commit_groups
     $self->verbose("Preparing group file");
 
     foreach my $cfg (sort accounts_sort (values(%$groups))) {
-	@ln =  ($cfg->{name},
-		"x",
-		$cfg->{gid},
-		join(",", sort(keys(%{$cfg->{members}})))
-	       );
-	push(@group, join(":", @ln));
+      @ln =  ($cfg->{name},
+              "x",
+              $cfg->{gid},
+              join(",", sort(keys(%{$cfg->{members}})))
+             );
+      push(@group, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@group), " groups");
@@ -698,12 +700,12 @@ sub accounts_sort($$)
     my $cmp;
 
     if (exists($a->{ln}) && exists($b->{ln})) {
-	$cmp = $a->{ln} <=> $b->{ln};
-	return $cmp if $cmp;
+      $cmp = $a->{ln} <=> $b->{ln};
+      return $cmp if $cmp;
     } elsif (exists($a->{ln})) {
-	return -1;
+      return -1;
     } elsif (exists($b->{ln})) {
-	return 1;
+      return 1;
     }
     return $a->{name} cmp $b->{name};
 }
@@ -724,11 +726,11 @@ sub commit_accounts
       @ln =  ($cfg->{name},
               "x",
               $cfg->{uid},
-      	      $cfg->{main_group},
-      	      (exists($cfg->{comment}) ? $cfg->{comment} : ""),
-      	      (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
-      	      (exists($cfg->{shell}) ? $cfg->{shell} : "")
-      	     );
+              $cfg->{main_group},
+              (exists($cfg->{comment}) ? $cfg->{comment} : ""),
+              (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
+              (exists($cfg->{shell}) ? $cfg->{shell} : "")
+             );
       push(@passwd, join(":", @ln));
 
       @ln = ($cfg->{name},
@@ -772,7 +774,7 @@ sub sanitize_path
 
     if ($path !~ m{^(/[-\w\./]+)$}) {
         $self->error("Unsafe path: $path");
-        return;
+       return;
     }
     return $1;
 }
