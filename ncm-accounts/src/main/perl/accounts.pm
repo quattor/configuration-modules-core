@@ -402,12 +402,15 @@ sub apply_profile_groups
           $self->debug(2,"group $group keys: ".join(",",keys(%$cfg))."  replaceMembers=".$cfg->{replaceMembers}.")");
           $self->verbose("Group $group: replacing existing member list");
           $system->{groups}->{$group}->{members} = {};
+        } else {
+          $self->debug(2,"Group $group: initial member list=".join(",",@initial_members));
         }
         if ( @$required_members ) {
           $self->verbose("Group $group: adding required members (",join(',',@$required_members),")");
           foreach my $member (@$required_members) {
             $system->{groups}->{$group}->{members}->{$member} = 1;
           }
+          $self->debug(2,"Group $group: member list after adding required members=".join(",",keys(%{$system->{groups}->{$group}->{members}})));
         }
         # Log group membership modification, if any.
         # If existing list of group members has not been reset, it is identical if there is the
@@ -521,6 +524,7 @@ sub delete_unneeded_accounts
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
       foreach my $m (keys(%{$cfg->{members}})) {
         if (!exists($system->{passwd}->{$m})) {
+          $self->info("Removing undefined user $m from group $group (define it as a 'requiredMembers' to keep it)");
           delete($cfg->{members}->{$m});
         }
       }
