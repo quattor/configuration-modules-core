@@ -377,7 +377,7 @@ sub delete_groups
             exists($kept->{$group}) ||
             ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
            )) {
-        $self->debug(2, "Marking group $group for removal");
+        $self->info("Marking group $group for removal");
         delete($system->{groups}->{$group});
       }
     }
@@ -399,18 +399,37 @@ sub apply_profile_groups
                                         gid => $cfg->{gid}};
       } else {
         if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
-          $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
+          $self->info("Changing gid of group $group to $cfg->{gid}");
           $system->{groups}->{$group}->{gid} = $cfg->{gid};
         }
+        my @initial_members = keys(%{$system->{groups}->{$group}->{members}});
         if ( $cfg->{replaceMembers} ) {
-          $self->debug(2, "Group $group: replacing existing member list");
+          $self->verbose("Group $group: replacing existing member list");
           $system->{groups}->{$group}->{members} = {};
         }
         if ( @$required_members ) {
-          $self->debug(3, "Group $group: adding required members (",join(',',@$required_members),")");
+          $self->verbose("Group $group: adding required members (",join(',',@$required_members),")");
           foreach my $member (@$required_members) {
             $system->{groups}->{$group}->{members}->{$member} = 1;
           }
+        }
+        # Log group membership modification, if any.
+        # If existing list of group members has not been reset, it is identical if there is the
+        # same number of members.
+        if ( $cfg->{replaceMembers} || (scalar(keys(%{$system->{groups}->{$group}->{members}})) != scalar(@initial_members)) ) {
+          my @removed_members;
+          my $info_msg = "Group $group: member list modified";
+          foreach my $member (@initial_members) {
+            if ( !exists($system->{groups}->{$group}->{members}->{$member}) ) {
+              push @removed_members, $member;
+            }
+          }
+          if ( @removed_members ) {
+            $info_msg .= " (removed members=" . join(',',sort(@removed_members)) . ")";
+          }
+          $self->info($info_msg);
+        } else {
+          $self->verbose("Group $group: no modification made to membership");
         }
       }
     }
@@ -436,9 +455,10 @@ sub delete_account
     my ($self, $system, $account) = @_;
 
     foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
-      $self->debug(2, "Deleting account $account from group $i");
+      $self->debug(2, "Checking if account $account must be removed from group $i");
 
       if (exists($system->{groups}->{$i})) {
+        $self->verbose("Deleting account $account from group $i");
         delete($system->{groups}->{$i}->{members}->{$account});
       }
     }
@@ -453,7 +473,7 @@ sub add_account
     my ($self, $system, $name, $cfg) = @_;
 
     foreach my $i (@{$cfg->{groups}}) {
-      $self->debug(3, "Reviewing group $i for account $name");
+      $self->debug(2, "Reviewing group $i for account $name");
       if (exists($system->{groups}->{$i})) {
         $system->{groups}->{$i}->{members}->{$name} = 1;
         # Pool accounts share their group structure. If it has
@@ -490,7 +510,7 @@ sub delete_unneeded_accounts
             ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_gid_preserved}) ||
             ($account eq 'root')
            )) {
-        $self->debug(2, "Marking account $account for deletion");
+        $self->info("Marking account $account for deletion");
         $self->delete_account($system, $account);
       }
     }
