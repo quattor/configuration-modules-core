@@ -7,7 +7,7 @@
 
 =head1 NAME
 
-ncm-${project.artifactId}: Configure services whose config format can be 
+ncm-${project.artifactId}: Configure services whose config format can be
 rendered via C<CAF::TextRender>.
 
 =head1 DESCRIPTION
@@ -46,10 +46,10 @@ below.
 
 =item * daemons ? caf_service_action{}
 
-An nlist with foreach daemon the C<CAF::Service> action to take 
+An nlist with foreach daemon the C<CAF::Service> action to take
 if the file changes.
 
-Even if multiple C<services> are associated to the same daemon, each action 
+Even if multiple C<services> are associated to the same daemon, each action
 for the daemon will be taken at most once.
 
 If multiple actions are to be taken for the same daemon, all actions
@@ -72,6 +72,38 @@ A free-form structure describing the valid entries for the
 configuration file. It is recommended to define another type for each
 config file, and bind it to these contents, to get the best
 validation.
+
+=item * element
+
+Predefined conversions from L<EDG::WP4::CCM::TextRender>:
+
+=over
+
+=item yesno ? boolean
+
+Convert boolean to (lowercase) 'yes' and 'no'.
+
+=item YESNO ? boolean
+
+Convert boolean to (uppercase) 'YES' and 'NO'.
+
+=item truefalse ? boolean
+
+Convert boolean to (lowercase) 'true' and 'false'.
+
+=item TRUEFALSE ? boolean
+
+Convert boolean to (uppercase) 'TRUE' and 'FALSE'.
+
+=item doublequote ? boolean
+
+Convert string to doublequoted string.
+
+=item singlequote ? boolean
+
+Convert string to singlequoted string.
+
+=back
 
 =back
 
