@@ -46,7 +46,7 @@ change, then the volume will be remounted.
 
 "/software/components/nfs/exports" = list(
   nlist("path","/shared/path/",
-        "hosts",list("server*.example.org(no_root_squash)"))
+        "hosts",dict("server*.example.org","no_root_squash"))
 );
 
 # If the SE is exporting its disk, mount it on the worker nodes.
