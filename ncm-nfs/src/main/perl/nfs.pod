@@ -44,17 +44,21 @@ change, then the volume will be remounted.
 
 =head1 NFS
 
-"/software/components/nfs/exports" = list(
-  nlist("path","/shared/path/",
-        "hosts",dict("server*.example.org","no_root_squash"))
-);
+    "/software/components/nfs/exports" ?= list();
+    "/software/components/nfs/exports" = append(SELF, dict(
+        "path", "/shared/path/",
+        "hosts", dict(
+            "server*.example.org", "no_root_squash",
+        ),
+    ));
 
-# If the SE is exporting its disk, mount it on the worker nodes.
-"/software/components/nfs/mounts" = list(
-  nlist("device","foreign.example.org:/shared/path/",
-        "mountpoint","/mnt/foreign",
-        "fstype","nfs",
-        "options","rw")
-);
+    # If the SE is exporting its disk, mount it on the worker nodes.
+    "/software/components/nfs/mounts" ?= list();
+    "/software/components/nfs/mounts" = append(SELF, dict(
+        "device", "foreign.example.org:/shared/path/",
+        "mountpoint", "/mnt/foreign",
+        "fstype", "nfs",
+        "options", "rw",
+    ));
 
 =cut
