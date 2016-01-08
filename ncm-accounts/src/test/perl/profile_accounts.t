@@ -74,7 +74,7 @@ test:x:103:
 ';
 
 # Expected /etc/group with resetMembers=true for group bar
-Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo,test
+Readonly my $GROUP_EXPECTED_CONTENTS => 'bar:x:101:foo2,test
 bar2:x:102:baz,foo,test
 test:x:50:
 foo:x:100:bar,test
