@@ -517,6 +517,8 @@ sub delete_unneeded_accounts
 {
     my ($self, $system, $profile, $kept, $preserve_accounts) = @_;
 
+    $self->debug(1,"Checking accounts no longer needed...");
+
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
@@ -525,6 +527,12 @@ sub delete_unneeded_accounts
            )) {
         $self->info("Marking account $account for deletion");
         $self->delete_account($system, $account);
+      } elsif ( !exists($profile->{$account}) ) {
+        if ( exists($kept->{$account})  ) {
+          $self->debug(2,"Account $account prserved: not in the profile but part of the kept_users list");
+        } else {
+          $self->debug(2,"Account $account prserved: not in the profile but has a preserved UID");
+        }
       }
     }
     # Remove unneeded group members that may come from LDAP/NIS/other
