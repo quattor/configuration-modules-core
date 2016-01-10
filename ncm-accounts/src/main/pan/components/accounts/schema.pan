@@ -5,7 +5,7 @@
 
 declaration template components/accounts/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function has_unique_attr = {
     values = ARGV[0];

@@ -404,8 +404,11 @@ sub apply_profile_groups
           $system->{groups}->{$group}->{gid} = $cfg->{gid};
         }
         @initial_members = keys(%{$system->{groups}->{$group}->{members}});
+        # replaceMembers means that the group member list must be rebuilt from
+        # the Quattor configuration only, ignoring the current list retrieved
+        # from the /etc/group file.
         if ( $cfg->{replaceMembers} ) {
-          $self->verbose("Group $group: replacing existing member list");
+          $self->verbose("Group $group: resetting existing member list");
           $system->{groups}->{$group}->{members} = {};
         } else {
           $self->debug(2,"Group $group: initial member list=".join(",",@initial_members));
@@ -517,7 +520,7 @@ sub delete_unneeded_accounts
 {
     my ($self, $system, $profile, $kept, $preserve_accounts) = @_;
 
-    $self->debug(1,"Checking accounts no longer needed...");
+    $self->verbose("Removing accounts no longer needed...");
 
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
