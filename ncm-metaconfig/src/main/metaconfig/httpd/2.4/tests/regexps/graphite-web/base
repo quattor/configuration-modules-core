@@ -38,6 +38,11 @@ multiline
 ^\s{8}order allow,deny$
 ^\s{8}deny from all$
 ^\s{8}satisfy Any$
+^\s{8}gssapicredstore keytab:/etc/httpd.keytab$
+^\s{8}gssapicredstore ccache:FILE:/var/run/httpd/krb5ccache$
+^\s{8}gssapidelegccachedir /var/run/httpd/clientcaches$
+^\s{8}gssapisslonly on$
+^\s{8}gssapiuses4u2proxy on$
 ^\s{8}<limit PUT DELETE>$
 ^\s{12}order allow,deny$
 ^\s{12}deny from all$

@@ -28,6 +28,31 @@ type httpd_option_plusminus_none = string[] with {
     true;
 };
 
+type httpd_gssapi_credstore = string with match(SELF, '^((client_)?keytab|ccache:(FILE|DIR|KCM|KEYRING|MEMORY)):');
+
+type httpd_gssapi_allowed_mech = string with match(SELF, '^(krb5|iakerb|ntlmssp)');
+
+@documenation{
+    Configure mod_gssapi, the mod_krb_auth replacement
+    https://github.com/modauthgssapi/mod_auth_gssapi
+}
+type httpd_gssapi = {
+    'sslonly' ? boolean
+    'localname' ? boolean
+    'connectionbound' ? boolean
+    'signalpersistentauth' ? boolean
+    'usesessions' ? boolean
+    'sessionkey' ? string with match(SELF, '^key:')
+    'credstore' ? httpd_gssapi_credstore[]
+    'delegccachedir' ? string
+    'uses4u2proxy' ? boolean
+    'basicauth' ? boolean
+    'allowedmech' ? httpd_gssapi_allowed_mech[]
+    'basicauthmech' ? httpd_gssapi_allowed_mech[]
+    @{for json nameattribute, use empty string as value}
+    'nameattributes' ? string{}
+};
+
 type httpd_kerberos = {
     "keytab" : string # this becomes krb5keytab (but nlists can't start with digits)
     "methodnegotiate" : boolean
@@ -263,6 +288,7 @@ type httpd_file = {
     "auth" ? httpd_auth
     "kerberos" ? httpd_kerberos
     "shibboleth" ? httpd_shibboleth
+    "gssapi" ? httpd_gssapi
     "access" ? httpd_acl # provided via mod_access_compat in 2.4
     "authz" ? httpd_authz[] # 2.4 only
 };

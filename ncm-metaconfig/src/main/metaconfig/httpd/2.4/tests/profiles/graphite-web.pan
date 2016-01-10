@@ -15,13 +15,13 @@ variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
 
 "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents/vhosts/graphiteweb" = {
     base=create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
-    
+
     pubvhost=create('struct/public_vhost');
-    
+
     foreach(idx;val;list('certificatefile', 'certificatekeyfile', 'cacertificatefile')) {
         base['vhosts']['base']['ssl'][val] = pubvhost['ssl'][val];
-    };    
-    
+    };
+
     base['vhosts']['base'];
 };
 
@@ -38,7 +38,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
 "log/error" = "logs/graphite-web_error_log";
 "log/transfer" = null;
 "log/custom" = list(nlist(
-    "location", "logs/graphite-web_access_log", 
+    "location", "logs/graphite-web_access_log",
     "name", "combined"
 ));
 
@@ -52,7 +52,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
         "destination", "/usr/share/graphite/graphite-web.wsgi",
         "type", "wsgiscript",
         ));
-};    
+};
 
 
 "locations" = {
@@ -80,6 +80,19 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
             "access", nlist(
                 "order", list("allow", "deny"),
                 "deny", list("all"),
+                ),
+            ),
+        "gssapi", dict(
+            "sslonly", true,
+            "credstore", list(
+                "keytab:/etc/httpd.keytab",
+                "ccache:FILE:/var/run/httpd/krb5ccache",
+                ),
+            "delegccachedir", "/var/run/httpd/clientcaches",
+            "uses4u2proxy", true,
+            "nameattributes", dict(
+                "json", "",
+                "RADIUS_NAME", "urn:ietf:params:gss:radius-attribute_1",
                 ),
             ),
         ));
