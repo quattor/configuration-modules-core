@@ -130,12 +130,18 @@ type logstash_input_plugin = {
 @{ Base for all filters }
 type logstash_name_pattern = {
     "name" : string
-    "pattern": string
+    "pattern" : string
 };
 
+type logstash_name_patterns = {
+    "name" : string
+    "pattern" : string[]
+};
+
+@{A name_patternlist is rendered differently than a name_patterns}
 type logstash_filter_name_patternlist = {
     "name" : string
-    "pattern": string[]
+    "pattern" : string[]
 };
 
 type logstash_filter_plugin_common = {
@@ -148,7 +154,7 @@ type logstash_filter_plugin_common = {
 
 type logstash_filter_grok = {
     include logstash_filter_plugin_common
-    "match" ? logstash_name_pattern[]
+    "match" ? logstash_name_patterns[]
     "break_on_match" : boolean = true
     "drop_if_match" ? boolean
     "keep_empty_captures" ? boolean
