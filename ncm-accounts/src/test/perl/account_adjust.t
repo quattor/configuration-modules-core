@@ -2,7 +2,7 @@
 # -*- mode: cperl -*-
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 61;
 use Test::Quattor qw(users/nokept users/tochange users/adjust_accounts);
 use NCM::Component::accounts;
 use CAF::Reporter;
@@ -28,13 +28,15 @@ root:x:0:
 bin:x:1:bin,daemon
 daemon:x:2:bin,daemon,fubar
 foo:x:2:fubar
+gtest:x:1200:
 EOF
 
 use constant PASSWD_CONTENTS => <<EOF;
-root:x:uidforroot:groupforroot:comment for root:homeforroot:rootshell
-bin:x:uidforbin:groupforbin:comment for bin:homeforbin:binshell
-daemon:x:uidfordaemon:groupfordaemon:comment for daemon:homefordaemon:daemonshell
-fubar:x:uidforfubar:2:comment for fubar:homeforfubar:fubarshell
+root:x:0:0:comment for root:homeforroot:rootshell
+bin:x:1:1:comment for bin:homeforbin:binshell
+daemon:x:2:2:comment for daemon:homefordaemon:daemonshell
+fubar:x:3:2:comment for fubar:homeforfubar:fubarshell
+utest:x:1500:2:comment for utest:homeforutest:utestshell
 EOF
 
 use constant SHADOW_CONTENTS => <<EOF;
@@ -44,6 +46,18 @@ daemon:*:15209:0:99999:7:::
 EOF
 
 use constant LOGIN_DEFS => {};
+use constant LD_UID_GID_MAX => {uid_min => 2,
+                                uid_max => 1000,
+                                gid_min => 1,
+                                gid_max => 2000 };
+use constant LD_ALL_PRESERVED => {uid_min => 2,
+                                  uid_max => 2000,
+                                  gid_min => 1,
+                                  gid_max => 2000 };
+use constant LD_UID_GID_CONFUSION => {uid_min =>1,
+                                      uid_max => 2000,
+                                      gid_min => 2,
+                                      gid_max => 1000 };
 
 set_file_contents("/etc/passwd", PASSWD_CONTENTS);
 set_file_contents("/etc/group", GROUP_CONTENTS);
@@ -90,9 +104,9 @@ is(groups_in($sys), $g, "Removing a non-existing account doesn't affect any grou
 
 $cmp->delete_account($sys, "root");
 ok(!exists($sys->{passwd}->{root}), "groupless account removed");
-is(users_in($sys), 3,
+is(users_in($sys), 4,
    "Valid accounts preserved after removal of groupless account");
-is(groups_in($sys), 4,
+is(groups_in($sys), 5,
    "Groups not modified after removal of groupless account");
 
 =pod
@@ -107,7 +121,7 @@ foreach my $g (qw(bin daemon)) {
     ok(!exists($sys->{groups}->{$g}->{members}->{bin}),
        "Account bin successfully removed from group $g");
 }
-is(users_in($sys), 2, "Valid accounts have not been removed");
+is(users_in($sys), 3, "Valid accounts have not been removed");
 
 =pod
 
@@ -120,8 +134,8 @@ $cmp->delete_account($sys, "fubar");
 ok(!exists($sys->{passwd}->{fubar}), "Account successfully deleted");
 ok(!exists($sys->{groups}->{foo}), "Removed group is not resurrected by mistake");
 
-is(users_in($sys), 1, "All unneeded accounts have been removed");
-is(groups_in($sys), 3, "No groups are resurrected");
+is(users_in($sys), 2, "All unneeded accounts have been removed");
+is(groups_in($sys), 4, "No groups are resurrected");
 
 =cut
 
@@ -379,7 +393,7 @@ $sys = $cmp->build_system_map(LOGIN_DEFS,'none');
 
 =pod
 
-=item When C<remove_unknonw> is true
+=item When C<remove_unknonw> is true and preserved_accounts=none (or undef)
 
 Only root, accounts in the profile, or accounts in C<kept_users> list
 that already existed, must stay.
@@ -395,5 +409,48 @@ is(users_in($sys), users_in($t)+2,
    "Users not in the profile (except root or kept ones) are removed");
 ok(!exists($sys->{groups}->{daemon}->{members}->{fubar}),
    "Users coming from LDAP are removed from local groups if remove_unknown is true and they are not in the profile");
+
+
+=pod
+
+=item When C<remove_unknonw> is true and preserved_accounts=dyn_user_groups
+
+Only root, accounts in the profile,  accounts in C<kept_users> list
+that already existed, and accounts not in the profile but with a uid <= UID_MAX must stay.
+
+=cut
+
+$sys = $cmp->build_system_map(LD_UID_GID_MAX, 'dyn_user_group');
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1, 'dyn_user_group');
+is(users_in($sys), users_in($t)+4,
+   "Users not in the profile with non preserved UIDs removed");
+$sys = $cmp->build_system_map(LD_ALL_PRESERVED, 'dyn_user_group');
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1, 'dyn_user_group');
+is(users_in($sys), users_in($t)+5,
+   "All users with preserved UIDs");
+$sys = $cmp->build_system_map(LD_UID_GID_CONFUSION, 'dyn_user_group');
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1, 'dyn_user_group');
+is(users_in($sys), users_in($t)+5,
+   "Users not in the profile with non preserved UIDs removed, no UID_MAX/GID_MAX confusion");
+
+
+=pod
+
+=item When C<remove_unknonw> is true and preserved_accounts=system
+
+Only root, accounts in the profile,  accounts in C<kept_users> list
+that already existed, and accounts not in the profile but with a uid <= UID_MIN must stay.
+
+=cut
+
+$sys = $cmp->build_system_map(LD_UID_GID_MAX, 'system');
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1, 'system');
+is(users_in($sys), users_in($t)+3,
+   "Users not in the profile with non system UIDs removed");
+$sys = $cmp->build_system_map(LD_UID_GID_CONFUSION, 'system');
+$cmp->adjust_accounts($sys, $t->{users}, {daemon => 1}, 1, 'system');
+is(users_in($sys), users_in($t)+2,
+   "Users not in the profile with non system UIDs removed, no UID_MIN/GID_MIN confusion");
+
 
 done_testing();

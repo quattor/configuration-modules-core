@@ -520,7 +520,7 @@ sub delete_unneeded_accounts
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
-            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_gid_preserved}) ||
+            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_uid_preserved}) ||
             ($account eq 'root')
            )) {
         $self->info("Marking account $account for deletion");

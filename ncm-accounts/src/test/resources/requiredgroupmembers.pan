@@ -4,6 +4,10 @@ include 'components/accounts/schema';
 include 'components/accounts/sysgroups';
 include 'components/accounts/sysusers';
 
+prefix "/software/components/accounts";
+"remove_unknown" = true;
+"preserved_accounts" = "dyn_user_group";
+
 prefix "/software/components/accounts/users/test";
 
 "uid" = 1;
@@ -28,7 +32,7 @@ prefix "/software/components/accounts/groups/bar";
 
 # Group bar: test also listed as a required member to
 # check absence of duplicates (as bar is also one of the group defined
-# in user test), group members replaced.
+# in user test), group members not replaced.
 prefix "/software/components/accounts/groups/bar2";
 "gid" = 102;
 "comment" = "group bar with required users foo and test, (required members merged)";
