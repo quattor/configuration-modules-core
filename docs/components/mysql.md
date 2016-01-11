@@ -1,3 +1,5 @@
+Be sure to put a blank line before and after every formatting command
+
 ### NAME
 
 mysql : NCM component to manage MySQL servers and databases

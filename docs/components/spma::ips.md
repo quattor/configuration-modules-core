@@ -54,7 +54,7 @@ or later.
 - **/software/uninstall** ? nlist ()
 
     A list of packages to uninstall.  Packages in this list will not be installed,
-    and will be passed to the **pkg install** command via the **--reject** option.
+    and will be passed to the **pkg install** command via the **\--reject** option.
     The format is the same as with **/software/requests**.
 
 - **/software/components/spma/packager** ? string
@@ -73,7 +73,7 @@ or later.
 
     Set to **yes** to allow user-installed packages.  If set to **no** or omitted,
     then SPMA will find all leaf packages that have not been requested and
-    uninstall them via **--reject** arguments to **pkg install**.
+    uninstall them via **\--reject** arguments to **pkg install**.
 
 - **/software/components/spma/pkgpaths** : string \[\]
 
@@ -114,7 +114,7 @@ or later.
 
 - **/software/components/spma/ips/rejectidr** : boolean
 
-    Add a **--reject** option to the **pkg install** command for every Solaris IDR
+    Add a **\--reject** option to the **pkg install** command for every Solaris IDR
     installed that has not been explicitly requested.
 
     Default is **true**.

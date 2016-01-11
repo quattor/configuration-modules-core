@@ -66,7 +66,7 @@ always disabled.
     "/software/components/authconfig/method/ldap/enable" = false;
     "/software/components/authconfig/method/ldap/nssonly" = false;
     "/software/components/authconfig/method/ldap/conffile" = "/etc/ldap.conf";
-    "/software/components/authconfig/method/ldap/servers" = list ( "tbn06.nikhef.nl" , "hooimijt.nikhef.nl" );
+    "/software/components/authconfig/method/ldap/servers" = list ( "tbn06.nikhef.nl", "hooimijt.nikhef.nl" );
     "/software/components/authconfig/method/ldap/basedn" = "dc=farmnet,dc=nikhef,dc=nl";
     "/software/components/authconfig/method/ldap/tls/enable" = true;
     "/software/components/authconfig/method/ldap/binddn" = "cn=proxyuser,dc=example,dc=com";

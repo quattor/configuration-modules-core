@@ -111,7 +111,7 @@ The _component\_iptables\_rule_ type is defined as:
     "log-tcp-options"   ? boolean
     "log-tcp-sequence"  ? boolean
     "log-ip-options"    ? boolean
-    "set-class"       ? string
+    "set-class"        ? string
     "limit-burst"     ? number
     "length"          ? string
     "set"             ? boolean

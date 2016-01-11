@@ -19,6 +19,7 @@ Does nothing.
 
     activates/deactivates the component.
 
+- `/software/components/ntpd/useserverip` : resolve and use the time server(s) ip address in the config file(s)
 - `/software/components/ntpd/servers`/ : list of time servers
 - `/software/components/ntpd/serverlist`/ : list of { server=hostname, options=nlist() }
 
@@ -79,7 +80,7 @@ Does nothing.
     - mask:        ip address or hostname (optional)
 
         Address can be a address of a host or network and can be a valid host DNS name.
-        &#x3d;item ignore:      boolean (Default to True)
+        =item ignore:      boolean (Default to True)
 
     - kod:         boolean (optional)
     - limited:     boolean (optional)
@@ -300,11 +301,11 @@ Refer to man ntp\_misc for more details.
     use a different service name to represent ntpd.
 
     Example:
-    	### solaris
-    	"/software/components/ntpd/servicename" = "svc:/network/ntpd";
+        \### solaris
+        "/software/components/ntpd/servicename" = "svc:/network/ntpd";
 
-            ### linux
-            "/software/components/ntpd/servicename" = "ntpd";
+        ### linux
+        "/software/components/ntpd/servicename" = "ntpd";
 
     Default : "ntpd" (linux), "svc:/network/ntpd" (solaris)
 

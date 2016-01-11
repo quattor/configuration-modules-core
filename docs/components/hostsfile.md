@@ -14,7 +14,7 @@ NCM::hostsfile - NCM local hosts file configuration component
     completely replaced by the entry specified in the configuration (if takeover
     is true).
 
-    A comment '### NCM' is added to each line so that any deletions will also be
+    A comment '\### NCM' is added to each line so that any deletions will also be
     cleaned up correctly.
 
     Returns error in case of a failure.
@@ -91,8 +91,8 @@ to
 \### that require network functionality will fail.
 127.0.0.1               localhost.localdomain localhost
 137.138.45.75           lxfsec1604.cern.ch
-192.168.1.101   tsmstor601.cern.ch tsmstor601 ### NCM TSM DB disks
-192.168.1.101   tsmstor602.cern.ch tsmstor602 ### NCM TSM Staging disks
+192.168.1.101   tsmstor601.cern.ch tsmstor601 \### NCM TSM DB disks
+192.168.1.101   tsmstor602.cern.ch tsmstor602 \### NCM TSM Staging disks
 
 The syntax below is also possible
 

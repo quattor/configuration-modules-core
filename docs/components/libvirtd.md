@@ -31,7 +31,6 @@ This sections contains the networking parameters.
 
 This section contains the configuration for unix sockets.
 
--
 - unix\_sock\_group: restricted to root by default
 - unix\_sock\_ro\_perms: octal string, default allows any user
 - unix\_sock\_rw\_perms: octal string

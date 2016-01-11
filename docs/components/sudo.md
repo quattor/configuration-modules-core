@@ -9,13 +9,14 @@ common users' mistakes.
 
 On top, it provides the following fields:
 
-- `/software/components/sudo/general_options` : optional
+- `/software/components/sudo/general`\_options : optional
 
     It is a list of `structure_sudo_defaults` elements. It sets default
     behaviour either for users or hosts, or for the whole sudo
     application. This structure will be explained later.
 
-- `/software/components/sudo/<user|run\_as|host|cmd>_aliases` : optional
+- "/software/components/sudo/<user|run\_as|host|cmd>\_aliases :
+optional
 
     Named lists of lists of strings containing the alias information.  The
     name of each named list must start with a letter, and contain only
@@ -31,8 +32,8 @@ On top, it provides the following fields:
 
     A valid example:
 
-            "/software/components/sudo/user_aliases" = nlist ("FOO",
-                    list ("bar", "%wheel", "!root"));
+        "/software/components/sudo/user_aliases" = nlist ("FOO",
+            list ("bar", "%wheel", "!root"));
 
 - `/software/components/sudo/privilege`\_lines : mandatory
 
@@ -69,22 +70,22 @@ must be set. It is a compile error to set two or more of these.
 
 For instance, this is valid:
 
-        "/software/components/sudo/sudo/general_options" =
-                list (
-                      nlist ("user", "foo",
-                             "options", nlist ("insults", true, "mailerpath", "/sbin/sendmail")
-                            );
-                     );
+    "/software/components/sudo/sudo/general_options" =
+        list (
+              nlist ("user", "foo",
+                 "options", nlist ("insults", true, "mailerpath", "/sbin/sendmail")
+                );
+             );
 
 But this is not:
 
-        "/software/components/sudo/sudo/general_options" =
-                list (
-                      nlist ("user", "foo",
-                             "host", "localhost" ### Error: only one of user and host!
-                             "options", nlist ("insults", true)
-                            );
-                     );
+    "/software/components/sudo/sudo/general_options" =
+        list (
+              nlist ("user", "foo",
+                 "host", "localhost" ### Error: only one of user and host!
+                 "options", nlist ("insults", true)
+                );
+             );
 
 #### The list of `options`
 
@@ -96,7 +97,7 @@ description.
 
 Each privilege line in a sudoers has the following format:
 
-        user    host = (run_as_user) OPTIONS: command
+    user    host = (run_as_user) OPTIONS: command
 
 And, as such, the type `structure privilege_line` has the following fields:
 
@@ -135,15 +136,15 @@ list of files that should be included.
 
 Try the following settings:
 
-        "/software/components/sudo/general_options" =
-                nlist ("options", nlist ("insults", true));
-        "/software/components/sudo/user_aliases" =
-                nlist ("FOO", list ("127.0.0.1"));
-        "/software/components/sudo/privilege_lines" =
-                list (nlist ("user", "foo",
-                             "run_as", "ALL",
-                             "host", "ALL",
-                             "cmd", "ALL"));
+    "/software/components/sudo/general_options" =
+        nlist ("options", nlist ("insults", true));
+    "/software/components/sudo/user_aliases" =
+        nlist ("FOO", list ("127.0.0.1"));
+    "/software/components/sudo/privilege_lines" =
+        list (nlist ("user", "foo",
+                 "run_as", "ALL",
+                 "host", "ALL",
+                 "cmd", "ALL"));
 
 and see the resulting `/etc/sudoers` .
 

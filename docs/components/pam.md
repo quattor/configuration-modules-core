@@ -6,9 +6,9 @@ NCM::pam - NCM pam configuration component
 
     ### declare what pam modules are available.
     "/software/components/pam/modules" = npush("krb5",
-           nlist("path", "/lib/security/$ISA/pam_krb5.so"));
+    nlist("path", "/lib/security/$ISA/pam_krb5.so"));
     "/software/components/pam/modules" = npush("cracklib",
-           nlist("path", "/lib/security/$ISA/pam_cracklib.so"));
+    nlist("path", "/lib/security/$ISA/pam_cracklib.so"));
 
     ### setup a service
     "/software/components/pam/services" = pam_add(

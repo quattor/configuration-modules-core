@@ -11,10 +11,10 @@ NCM::fmonagent - NCM Lemon Monitoring Agent configuration component
     is defined in the CDB template as file and in case of split file as
     a directory where the following structure is expected:
 
-            top_dir/general.conf
-            top_dir/transport/
-            top_dir/metrics/
-            top_dir/sensors/
+        top_dir/general.conf
+        top_dir/transport/
+        top_dir/metrics/
+        top_dir/sensors/
 
     Component will try in this case to modify the top\_dir/general.conf,
     top\_dir/transport/udp.conf, top\_dir/metrics/default.conf and for each

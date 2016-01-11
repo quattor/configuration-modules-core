@@ -132,10 +132,10 @@ An user can be "plugged" into a role and thus, he will automatically
 get all the appropriate settings:
 
     "/software/components/useraccess/roles/myrole" = nlist (
-           "kerberos4", nlist (
-                   "realm", "UAM.ES",
-                   "principal", "me"
-           )
+    "kerberos4", nlist (
+        "realm", "UAM.ES",
+        "principal", "me"
+    )
     );
 
     "/software/components/useraccess/users/root/roles" = list ("myrole");
@@ -189,11 +189,11 @@ Let's say evil Mr Burns and his lackey, Smithers want to log into
 Homer's account:
 
     "/software/components/useraccess/users/homer/kerberos4" = list (nlist (
-                   "realm", "SPRINGFIELD.COM",
-                   "principal", "mrburns"),
-           nlist ("realm", "SPRINGFIELD.COM",
-                   "principal", "smithers",
-                   "instance", "lackey"));
+        "realm", "SPRINGFIELD.COM",
+        "principal", "mrburns"),
+    nlist ("realm", "SPRINGFIELD.COM",
+        "principal", "smithers",
+        "instance", "lackey"));
 
 And apply the same to Kerberos v5.
 
@@ -202,9 +202,9 @@ And apply the same to Kerberos v5.
 What do you think Sauron did?
 
     "/software/components/useraccess/roles/rings" = nlist (
-           "ssh_keys", list ("http://mordor.org/sauron.key",
-                   "http://mordor.org/badguy.key")
-           )
+    "ssh_keys", list ("http://mordor.org/sauron.key",
+        "http://mordor.org/badguy.key")
+    )
     );
 
     "/software/components/useraccess/users/three/roles" = list ("rings");
@@ -217,37 +217,37 @@ We all know how evil Mr Burns is. So, let's say he wants full control
 on the Simpson family. And Homer wants to spy women at home:
 
     "/software/components/useraccess/roles/badburns" = nlist (
-           "kerberos4", list (nlist (
-                   "realm", "SPRINGFIELD.COM",
-                   "principal", "mrburns")),
-           "kerberos5", list (nlist (
-                   "realm", "SPRINGFIELD.COM",
-                   "principal", "mrburns")
-                   )
+    "kerberos4", list (nlist (
+        "realm", "SPRINGFIELD.COM",
+        "principal", "mrburns")),
+    "kerberos5", list (nlist (
+        "realm", "SPRINGFIELD.COM",
+        "principal", "mrburns")
+        )
     );
 
     "/software/components/useraccess/roles/badhomer" = nlist (
-           "kerberos4", list (nlist (
-                   "realm", "SPRINGFIELD.COM",
-                   "principal", "homer",
-                   "instance", "another_silly_project")),
-           "acls", list ("system-auth") ### Woops! now Homer can't log-in!
-           );
+    "kerberos4", list (nlist (
+        "realm", "SPRINGFIELD.COM",
+        "principal", "homer",
+        "instance", "another_silly_project")),
+    "acls", list ("system-auth") ### Woops! now Homer can't log-in!
+    );
 
     "/software/components/@COMPS@/users/marge/roles" = list (
-           "badburns", "badhomer"
+    "badburns", "badhomer"
     );
 
     "/software/components/@COMPS@/users/bart/roles" = list (
-           "badburns",
+    "badburns",
     );
 
     "/software/components/@COMPS@/users/lisa/roles" = list (
-           "badburns", "badhomer"
+    "badburns", "badhomer"
     );
 
     "/software/components/@COMPS@/users/maggie/roles" = list (
-           "badburns", ### What's the baby's name? :P
+    "badburns", ### What's the baby's name? :P
     );
 
 Now, Mr Burns can log in as Homer, Marge, Bart, Lisa or Maggie using
@@ -261,7 +261,7 @@ can even log in (on PAM-controlled services).
 As simple as we'd expect:
 
     "/software/components/@COMPS@/roles/superrole/roles" = list (
-           "rolea", "roleb", "rolec"
+    "rolea", "roleb", "rolec"
     );
 
 Remember that all roles (rolea, roleb and rolec) must exist at
@@ -272,6 +272,6 @@ validation time!
 When you lock user accounts, it may not be enough to just lock them
 with `passwd -l`. Depending on how you configured SSH, a locked user
 may still be able to log-in with his public key. You can run `ncm-ncd
-\--unconfigure useraccess` to temporarily lock all accounts, before
+--unconfigure useraccess` to temporarily lock all accounts, before
 removing the user's entry from CDB. Or remove manually .k\*login and
 .ssh/authorized\_keys.

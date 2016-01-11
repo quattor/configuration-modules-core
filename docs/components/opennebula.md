@@ -11,10 +11,13 @@ Configuration module for OpenNebula.
 Features that are implemented at this moment:
 
 - oned service configuration
+- Sunstone service configuration
 - Adding/removing VNETs
-- Adding/removing datastores (only CEPH datastores for the moment)
+- Adding/removing datastores (only Ceph and shared datastores for the moment)
 - Adding/removing hypervirsors
 - Adding/removing OpenNebula regular users
+- Updates OpenNebula \*\_auth files
+- Updates VMM kvmrc config file
 
 OpenNebula installation is 100% automated. Therefore:
 
@@ -30,11 +33,12 @@ OpenNebula installation is 100% automated. Therefore:
 
 To set up the initial cluster, some steps should be taken:
 
-- 1. First install the required gems as root in your OpenNebula server: `/usr/share/one/install`\_gems
-- 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster e.g. by distributing the public key(s) of the OpenNebula host over the cluster
-- 3. Start OpenNebula services: ### for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done
-- 4. Run the component a first time
-- 5. The new oneadmin password will be available from `/var/lib/one`/.one/one\_auth.new file
+1. First install the required Ruby gems in your OpenNebula server. You can use OpenNebula installgems addon : https://github.com/OpenNebula/addon-installgems
+2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster e.g. by distributing the public key(s) of the OpenNebula host over the cluster
+3. Start OpenNebula services: \### for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done
+4. Run the component a first time
+5. The new oneadmin password will be available from `/var/lib/one`/.one/one\_auth file. The old auth files are stored with .quattor.backup extension.
+6. It is also possible to change sunstone service password, just include 'serveradmin' user and passwd within opennebula/users tree. In that case the component also updates the sunstone\_auth file.
 
 ### RESOURCES
 
@@ -63,7 +67,7 @@ be described in this section.
 
     Includes the Open vSwitch network drives in your hypervisors. (OVS must be installed in each host)
     Open vSwitch replaces Linux bridges, Linux bridges must be disabled.
-    More info: http://docs.opennebula.org/4.4/administration/networking/openvswitch.html
+    More info: http://docs.opennebula.org/4.14/administration/networking/openvswitch.html
 
 - tm\_system\_ds : string (optional)
 
@@ -83,7 +87,7 @@ be described in this section.
 
 ### DEPENDENCIES
 
-The component was tested with OpenNebula version 4.8 and 4.10
+The component was tested with OpenNebula version 4.8 and 4.1x
 
 Following package dependencies should be installed to run the component:
 

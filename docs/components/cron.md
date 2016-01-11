@@ -9,21 +9,21 @@ and the `/var/spool/cron/crontabs` directory on Solaris.
 
 #### Linux
 
-> Files managed by ncm-cron will have the ncm-cron.cron suffix.  Other files in
-> the directory are not affected by this component. The name of each file will be
-> taken from the nlist name.
+    Files managed by ncm-cron will have the ncm-cron.cron suffix.  Other files in
+    the directory are not affected by this component. The name of each file will be
+    taken from the nlist name.
 
 #### Solaris
 
-> Solaris uses an older version of cron that does not make use of a cron.d
-> directory for crontabs. Ncm-cron **shares** the crontab with each user. To make
-> this work ncm-cron uses the concept of separate file **sections** within the
-> crontab.  Each **section** is identified by the use of the tags NCM-CRON BEGIN:
-> and NCM-CRON END:. Entries either side of these section identifiers are not
-> modified.
->
-> Solaris **does** have a `/etc/cron.d` directory, however it uses this directory
-> for control files such as cron.allow and cron.deny.
+    Solaris uses an older version of cron that does not make use of a cron.d
+    directory for crontabs. Ncm-cron **shares** the crontab with each user. To make
+    this work ncm-cron uses the concept of separate file **sections** within the
+    crontab.  Each **section** is identified by the use of the tags NCM-CRON BEGIN:
+    and NCM-CRON END:. Entries either side of these section identifiers are not
+    modified.
+
+    Solaris **does** have a `/etc/cron.d` directory, however it uses this directory
+    for control files such as cron.allow and cron.deny.
 
 ### MAIN RESOURCES
 
@@ -162,16 +162,16 @@ None.
 
 #### Linux
 
-> None known.
+    None known.
 
 #### Solaris
 
-> Editing the NCM-CRON BEGIN: and/or the NCM-CRON END: tag within a crontab will
-> cause unpredictable behaviour. Possible behavours are duplicate entries or
-> entries being removed altogether.
->
-> Editing BETWEEN the tags will cause the edits to be overwritten the next time
-> ncm-cron runs.
+    Editing the NCM-CRON BEGIN: and/or the NCM-CRON END: tag within a crontab will
+    cause unpredictable behaviour. Possible behavours are duplicate entries or
+    entries being removed altogether.
+
+    Editing BETWEEN the tags will cause the edits to be overwritten the next time
+    ncm-cron runs.
 
 Charles Loomis
 
@@ -183,7 +183,7 @@ Mark Wilson <Mark.Wilson@MorganStanley.com>
 
 ### VERSION
 
-15.4.0
+15.12.0
 
 ### SEE ALSO
 

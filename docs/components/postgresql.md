@@ -1,3 +1,5 @@
+Be sure to put a blank line before and after every formatting command.
+
 ### NAME
 
 postgresql : NCM component to manage PostgreSQL configuration.
@@ -75,5 +77,3 @@ None.
 ### BUGS
 
 None known.
-
-

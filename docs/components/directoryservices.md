@@ -1,3 +1,5 @@
+Be sure to put a blank line before and after every formatting command
+
 ### NAME
 
 directoryservices : Directory Services NCM component.

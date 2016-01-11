@@ -40,7 +40,7 @@ NCM::chkconfig - NCM chkconfig component
 
     Sets the service <service> on/off on specified run levels. The run
     levels are specified as string of numbers, the same way as with
-    `chkconfig`-command. If the string is empty, system default is taken
+    `chkconfig`\-command. If the string is empty, system default is taken
     (see `man chkconfig(8)` for exact details).
 
 - `/software/components/chkconfig/service/<service>/name : string`

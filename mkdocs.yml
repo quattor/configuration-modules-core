@@ -30,7 +30,6 @@ pages:
     - 'components/filecopy.md'
     - 'components/filesystems.md'
     - 'components/fmonagent.md'
-    - 'components/fsprobe.md'
     - 'components/fstab.md'
     - 'components/ganglia.md'
     - 'components/gmetad.md'

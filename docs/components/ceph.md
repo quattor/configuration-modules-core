@@ -37,15 +37,15 @@ The implementation keeps safety as top priority. Therefore:
 
 To set up the initial cluster, some steps should be taken:
 
-- 1. First create a ceph user on all the hosts.
-- 2. The deployhost(s) should have passwordless ssh access to all the hosts of the cluster
+1. First create a ceph user on all the hosts.
+2. The deployhost(s) should have passwordless ssh access to all the hosts of the cluster
         e.g. by distributing the public key(s) of the ceph-deploy host(s) over the cluster hosts
             (As described in the ceph-deploy documentation:
                         http://ceph.com/docs/master/start/quick-start-preflight/)
-- 3. Run the component a first time.
+3. Run the component a first time.
             It shall fail, but you should get the initial command for your cluster
-- 4. Run this command
-- 5. Run the component again to start the configuration of the new cluster
+4. Run this command
+5. Run the component again to start the configuration of the new cluster
 
 ### RESOURCES
 

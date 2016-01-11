@@ -55,14 +55,14 @@ contains three fields:
 
     An optional structure describing additional Postfix databases (lookup
     tables in Postfix terminology). See
-    [http://www.postfix.org/DATABASE\_README.html](http://www.postfix.org/DATABASE_README.html) for more information.
+    [http://www.postfix.org/DATABASE_README.html](http://www.postfix.org/DATABASE_README.html) for more information.
 
     Each subtree is associated with a class of lookup tables. Each class
     of lookup tables is an nlist, in which the keys are the file names
     (relative to `/etc/postfix`) that configure the access to such a database.
 
     Currently, only LDAP lookups can be described, see
-    [http://www.postfix.org/LDAP\_README.html](http://www.postfix.org/LDAP_README.html)
+    [http://www.postfix.org/LDAP_README.html](http://www.postfix.org/LDAP_README.html)
 
 ### EXAMPLES
 

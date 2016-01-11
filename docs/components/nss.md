@@ -57,15 +57,15 @@ NCM::nss - NCM nsswitch component
 
     "/software/components/nss" = nlist(
        "build", nlist(
-           "db", nlist("script", "make -f `/usr/local/lib/dbfiles.mk` <DB>")
+      "db", nlist("script", "make -f `/usr/local/lib/dbfiles.mk` <DB>")
        ),
 
-       "database", nlist(
-           "hosts",    list("files", "nis", "dns"),
-           "passwd",   list("files", "db"),
-           "networks", list("nis", "files", "[NOTFOUND=return]"),
-       )
-     );
+      "database", nlist(
+          "hosts",    list("files", "nis", "dns"),
+          "passwd",   list("files", "db"),
+          "networks", list("nis", "files", "[NOTFOUND=return]"),
+      )
+    );
 
 ### FILES MODIFIED
 

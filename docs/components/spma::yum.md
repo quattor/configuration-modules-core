@@ -150,7 +150,7 @@ other.
 
 ### NOTES
 
-This component honors the **--noaction** mode.
+This component honors the **\--noaction** mode.
 
 ### SEE ALSO
 

@@ -114,19 +114,19 @@ none.
 
     "/software/components/download/active" = true;
     "/software/components/download" = nlist(
-          "server", "mydownloadserver.com",
-          "proto",  "http",
+    "server", "mydownloadserver.com",
+    "proto",  "http",
     );
     "/software/components/download/files" = npush(
-          escape("/etc/passwd"), nlist(
+    escape("/etc/passwd"), nlist(
                    "href", "https://secure.my.domain",
-                   "post", "/usr/local/mk_passwd"
+         "post", "/usr/local/mk_passwd"
                  ),
     );
     "/software/components/download/files" = npush(
-          escape("/usr/local/foo.txt"), nlist(
+    escape("/usr/local/foo.txt"), nlist(
                    "href", "file:///etc/foo.txt",
-                   "owner", "john",
+         "owner", "john",
                    "perm", "0400"
                  )
     );

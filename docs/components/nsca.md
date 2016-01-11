@@ -109,4 +109,4 @@ All fields are mandatory, unless it is explicitly stated:
 
 ### SEE ALSO
 
-http://nagios.sourceforge.net/docs/1\_0/addons.html#nsca
+http://nagios.sourceforge.net/docs/1\_0/addons.html\#nsca

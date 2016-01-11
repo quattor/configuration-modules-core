@@ -95,6 +95,7 @@ We will mount the NFS filesystem nfsserv.example.org:/data under `/tmp`\_mnt/nfs
 
 #### Scenario 2 : Configuration with nlist() usage
 
+
     '/software/components/autofs' = nlist(
         'preserveMaster', false,
 
