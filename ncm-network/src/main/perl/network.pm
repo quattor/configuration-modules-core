@@ -279,7 +279,7 @@ sub Configure
                     $text .= "OVS_OPTIONS='$net{$iface}{ovs_opts}'\n";
                 }
                 if ($net{$iface}{'ovs_extra'}) {
-                    $text .= "OVS_EXTRA='$net{$iface}{ovs_extra}'\n";
+                    $text .= "OVS_EXTRA=\"$net{$iface}{ovs_extra}\"\n";
                 }
                 if ($net{$iface}{'bond_ifaces'}) {
                     $text .= "BOND_IFACES='".join(' ',@{$net{$iface}{bond_ifaces}})."'\n";
