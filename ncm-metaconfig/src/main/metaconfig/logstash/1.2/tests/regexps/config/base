@@ -33,7 +33,7 @@ filter \{$
 ^\s{12}named_captures_only => true$
 ^\s{12}patterns_dir => \[ "/usr/share/grok" \]$
 ^\s{12}match => \{$
-^\s{16}"message" => "%\{GPFSLOG\}"$
+^\s{16}"message" => \["%\{GPFSLOG\}"\]$
 ^\s{12}\}$
 ^\s{8}\}$
 ^\s{8}date \{$

@@ -50,7 +50,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         nlist("grok", nlist(
             "match", list(nlist(
                 "name", "message", 
-                "pattern", "%{RSYSLOGCUSTOM}"
+                "pattern", list("%{RSYSLOGCUSTOM}", "%{OTHERPATTERN}"),
                 )),
             "patterns_dir", list("/usr/share/grok"),
             "add_field", nlist(
