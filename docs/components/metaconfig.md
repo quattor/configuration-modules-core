@@ -1,22 +1,3 @@
-\### \#
-\### Software subject to following license(s):
-\###   Apache 2 License (http://www.opensource.org/licenses/apache2.0)
-\###   Copyright (c) Responsible Organization
-\#
-
-\### \#
-\### Current developer(s):
-\###   Luis Fernando Muñoz Mejías <Luis.Munoz@UGent.be>
-\#
-
-\### \#
-\### Author(s): Luis Fernando Muñoz Mejías
-\#
-
-\### \#
-\### metaconfig, 15.12.0, 1, 20160111-1643
-\#
-
 ### NAME
 
 ncm-metaconfig: Configure services whose config format can be
@@ -216,7 +197,7 @@ That's it!  When you deploy your configuration you should see your
 `/etc/foo.ini` in the correct location.
 
 \#
-\### Author(s): Luis Fernando Muñoz Mejías
+\### Author(s): Luis Fernando Munoz Mejias
 \#
 
 ### TODO
