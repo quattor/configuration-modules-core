@@ -6,7 +6,7 @@
   <artifactId>interactivelimits</artifactId>
 
   <packaging>pom</packaging>
-  <version>15.12.0</version>
+  <version>15.12.1-SNAPSHOT</version>
   <name>NCM interactive limits configuration component</name>
 
 
