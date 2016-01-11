@@ -42,7 +42,7 @@ my $cmp = NCM::Component::useraccess->new("useraccess");
 
 my $u = { ssh_keys_urls => [set_user()] };
 
-my $fh = CAF::FileWriter->new("target/test/ssh_url_test");
+my $fh = CAF::FileWriter->new("target/test/ssh_url_test_1");
 
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH from URLs returns with no errors");
@@ -58,7 +58,7 @@ The method is successful, but the file is empty.
 
 $u->{ssh_keys_urls} = [];
 
-$fh = CAF::FileWriter->new("target/test/ssh_url_test");
+$fh = CAF::FileWriter->new("target/test/ssh_url_test_2");
 
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH with empty URL list returns with no errors");
@@ -101,5 +101,8 @@ now.
 is($cmp->set_ssh_fromurls("foo", $u), -1,
    "Invalid filehandle gets reported");
 is($cmp->{ERROR}, 2, "The filehandle error is reported");
+
+# close beofre DESTROY
+$fh->close();
 
 done_testing();
