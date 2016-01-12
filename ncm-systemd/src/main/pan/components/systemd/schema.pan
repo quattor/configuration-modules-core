@@ -7,7 +7,7 @@ declaration template components/${project.artifactId}/schema;
 include 'quattor/types/component';
 include 'components/accounts/functions';
 
-# TODO: some generic types, candidates for template-library-core
+# TODO: issue https://github.com/quattor/template-library-core/issues/97: some generic types, candidates for template-library-core
 @documentation{
     hwloc (Portable Hardware Locality, hwloc(7)) location, e.g. node:1 for NUMAnode 1
 }
@@ -33,7 +33,7 @@ type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|
 
 type ${project.artifactId}_unit_virtualization = string with match(SELF, '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$');
 
-# TODO: make this more finegrained, e.g. has to be existing unit; or check types
+# TODO: https://github.com/quattor/configuration-modules-core/issues/646: make this more finegrained, e.g. has to be existing unit; or check types
 type ${project.artifactId}_valid_unit = string;
 
 # adding new ones
