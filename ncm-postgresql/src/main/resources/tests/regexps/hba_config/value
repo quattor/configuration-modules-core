@@ -1,0 +1,9 @@
+Test postgresql hba config TT
+---
+//
+rendermodule=hba_config
+# pass path to tree that has element hba
+contentspath=/
+---
+^local db1,db2 me,@you password$
+^hostnossl db3,db4 \+me,everyone samehost trust opt1=value1 opt2=value2$
