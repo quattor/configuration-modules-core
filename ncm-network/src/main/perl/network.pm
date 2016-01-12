@@ -191,12 +191,14 @@ sub Configure
         } else {
             my $msg = "No value found for the hwaddr of interface ".
                       "$ifacename. Setting set_hwaddr to false.";
-            if ($ifacename =~ m/^(bond|vlan|ib)/) {
+            if ($ifacename =~ m/^(bond|vlan|ib|br)/) {
                 my $hr_ifacename = $1;
                 if ($hr_ifacename eq "bond") {
                     $hr_ifacename = "bonding";
                 } elsif ($hr_ifacename eq "ib") {
                     $hr_ifacename = "IPoIB";
+                } elsif ($hr_ifacename =~ m/^br/) {
+                    $hr_ifacename = "bridging";
                 }
                 $self->info("$msg. As it appears to be a $hr_ifacename ",
                             "interface, this very very probably not a problem. ",
