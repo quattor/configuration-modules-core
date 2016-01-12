@@ -21,7 +21,7 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 use File::Temp qw(tempdir);
-use CAF::Process qw(execute);
+use CAF::Process;
 use POSIX;
 use LWP::UserAgent;
 use HTTP::Request::Common;
