@@ -9,7 +9,7 @@ include 'quattor/types/component';
 function postgresql_is_hba_db = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
-        error("usage: is_asndate(string)");
+        error(format("usage: %s(string)", FUNCTION));
 
     if (match(ARGV[0], "^(all|sameuser|samerole|replication)$")) {
         true;
@@ -21,7 +21,7 @@ function postgresql_is_hba_db = {
 function postgresql_is_hba_address = {
     # Check cardinality and type of argument.
     if (ARGC != 1 || !is_string(ARGV[0]))
-        error("usage: is_asndate(string)");
+        error(format("usage: %s(string)", FUNCTION));
 
     if (match(ARGV[0],"^(samehost|samenet)$")) {
         true;
