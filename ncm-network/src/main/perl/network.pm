@@ -200,10 +200,7 @@ sub Configure
                 } elsif ($hr_ifacename =~ m/^br/) {
                     $hr_ifacename = "bridging";
                 }
-                $self->info("$msg. As it appears to be a $hr_ifacename ",
-                            "interface, this very very probably not a problem. ",
-                            "(Please contact the developers in case you ",
-                            "think it is.)");
+                $self->info("$msg. As it appears to be a $hr_ifacename interface, this is considered normal.");
             } else {
                 $self->warn($msg);
             };
