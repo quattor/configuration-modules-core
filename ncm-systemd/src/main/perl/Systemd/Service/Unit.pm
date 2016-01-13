@@ -721,19 +721,36 @@ sub make_cache_alias
     my @unknown;
     foreach my $unit (@units) {
         my $data = $unit_cache->{$unit};
+        my $show;
 
         if (! defined($data)) {
             my $log_method = "error";
+            my $continue;
             if (grep {$_ eq $unit} @$possible_missing) {
                 $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
                              "No error will be logged.");
                 $log_method = "verbose";
+            } else {
+                $show = systemctl_show($self, $unit);
+                if(defined($show->{$PROPERTY_ID})) {
+                    $self->debug(1, "Unit $unit not listed but has show data.");
+                    $log_method = "verbose";
+                    $continue = "Found unit via systemctl show.";
+                    # Insert unit in cache
+                    $unit_cache->{$unit}->{showonly} = 1;
+                    # Reassign $data
+                    $data = $unit_cache->{$unit};
+                } else {
+                    $self->debug(1, "Unit $unit not listed but and has no show data.");
+                }
             }
+
             # no entry in cache from units or unitfiles
             $self->$log_method("Trying to add details of unit $unit ",
                          "but no entry in cache after adding all units and unitfiles. ",
-                         "Ignoring this unit.");
-            next;
+                         $continue ? $continue : "Ignoring this unit.");
+
+            next if (! $continue);
         }
 
         # check for instances
@@ -761,7 +778,7 @@ sub make_cache_alias
             }
         }
 
-        my $show = systemctl_show($self, $unit);
+        $show = systemctl_show($self, $unit) if (! defined($show));
 
         if(!defined($show)) {
             $self->error("Found unit $unit but systemctl_show returned undef. ",
