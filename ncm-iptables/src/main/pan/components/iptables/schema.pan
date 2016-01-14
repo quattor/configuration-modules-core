@@ -71,7 +71,7 @@ type component_iptables_rule = {
     "seconds"           ? number
     "hitcount"          ? number
     "name"              ? string
-    "pkt-type"          ? string   
+    "pkt-type"          ? string
 
 };
 

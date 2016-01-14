@@ -120,7 +120,7 @@
 2007-03-06  Alasdair Earl
 	* Release 2.0.4
 	- addition of 'match pkt-type' where pkt-type maps to (unicast|broadcast|multicast)
-	
+
 2007-02-15  Michel Jouvin
 
 	* Release: 2.0.3
@@ -139,20 +139,20 @@
 2006-08-02 Alasdair Earl
 
 	* Release: 1.1.3
-        - Addition of -limit-burst and match limit. 
-	-  match limit allows the user to match against a limit in the same 
-	   way as against state or protocol, e.g. in profile: 
+        - Addition of -limit-burst and match limit.
+	-  match limit allows the user to match against a limit in the same
+	   way as against state or protocol, e.g. in profile:
 	   match, limit, limit, 3/s
-	- limit-burst allows a max number of records so that the logs 
+	- limit-burst allows a max number of records so that the logs
           don't get swamped.
 
 2006-03-27 Alasdair Earl
-	
+
         * Release: 1.1.2
         - removal of -d! and -s! / not_src_addr and not_dest_addr options
 	-d, -s, --in-interface, --out-interface can now take 0 or 1 ! at start
 	N.B. There must be a spance between the ! and ip addr/hostname (iptables req)
-	
+
 2005-12-03  Charles Loomis
 
         * Release: 1.1.1
@@ -162,19 +162,19 @@
 
         * Release 1.1.0
 	- fixes bug #13669 - cern chain
-	- allows users to define their own additional chains 
+	- allows users to define their own additional chains
 	  - chains which are not already defined will be automatically
 	  - users now have to be able to spell correctly
-	  - this does not work for default chains (input, output, 
+	  - this does not work for default chains (input, output,
             forward)
-	
+
 2005-08-19 Alasdair Earl
 
         * Release: 1.0.9
 
 	- Added the "all" option to -p (protocols)
-	- Added cern chain (hard coded - kludge I know ...) so that ports 
-	  can then jump to a list of ip ranges 
+	- Added cern chain (hard coded - kludge I know ...) so that ports
+	  can then jump to a list of ip ranges
 
 2005-08-10  David Groep, H1.57,+31 20 592 2179
 
@@ -201,7 +201,7 @@
 	* Release 1.0.3
 	- added log-prefix option N.B. user has to add quotes themself
         - added log-level option  => (debug|info|notice|warning|warn|err|error|crit|alert|emerg|panic)
-        - added log-tcp-options N.B does not need further options  
+        - added log-tcp-options N.B does not need further options
         - added log-ip-options  N.B does not need further options
 
 2005-03-22  Joao Martins <martinsj@lip.pt>

@@ -280,20 +280,20 @@ sub dns2ip ( $ ) {
     }
 
     ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
-    
+
     if ( !$hostname || $length != 4 || $addr eq "" ) {
 	# no longer insist that the hostname in the config is canonical,
         # i.e. perfectly matches the DNS result
 	$self->debug(2, "dns2ip-BAD: failed or weird gethostbyname");
 	return '';
     }
-    
+
     @addr = unpack ('C4', $addr);
     if ( scalar(@addr) != 4 ) {
 	$self->debug(2, "dns2ip-BAD: weird address format/length?");
 	return '';
     };
-    
+
     $name =  "@addr";
     $name =~ s/\s/\./g;
     $self->debug(2, "dns2ip-OK: resolved $name");
@@ -440,7 +440,7 @@ sub GetResource {
 
 	$entries->{$table}->{rules} = &GetPathEntries( "$path/$table/rules", $config );
 	next if $?;
-	
+
 RULE:	foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
     next if ( $name !~ /^\d+$/ );
     $rule    = &GetPathEntries( "$path/$table/rules/$name", $config );
@@ -469,7 +469,7 @@ RULE:	foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
     my $val = &regExp( @{$iptables_totality{$table}{commands}} );
 
     foreach $key (keys %{$rule}) {
-	
+
 	if ( defined $options_op{$key} && $options_op{$key} ne "" ) {
 	    my $opresult;
 	    $opresult = &{$options_op{$key}}($self, $rule->{$key});
