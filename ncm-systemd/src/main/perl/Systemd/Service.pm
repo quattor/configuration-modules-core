@@ -208,6 +208,26 @@ Returns a hash reference with key the unit name and value the unit detail.
 
 =cut
 
+# small wrapper to get the configuration tree
+# returns undef if path doesn't exist
+# convert the tree for a unit in appropriate form for unitfile configuration
+sub _get_tree
+{
+    my ($self, $config, $src) = @_;
+
+    return if (! $config->elementExists($src->{path}));
+
+    my $tree;
+
+    if ($src->{type} eq 'unit') {
+        $tree = $src->{instance}->_getTree($config, $src->{path});
+    } else {
+        $tree = $config->getTree($src->{path});
+    }
+
+    return $tree;
+}
+
 sub gather_configured_units
 {
     my ($self, $config) = @_;
@@ -215,11 +235,13 @@ sub gather_configured_units
     my $chkconfig = {
         path => "$LEGACY_BASE/service",
         instance => $self->{chkconfig},
+        type => 'chkconfig',
     };
 
     my $unit = {
         path => "$BASE/unit",
         instance => $self->{unit},
+        type => 'unit',
     };
 
     # TODO: add code to select which one is preferred.
@@ -229,14 +251,14 @@ sub gather_configured_units
     my $units = {};
 
     # Gather the other units first (if any)
-    if ($config->elementExists($other->{path})) {
-        my $tree = $config->getElement($other->{path})->getTree();
+    my $tree = $self->_get_tree($config, $other);
+    if ($tree) {
         $units = $other->{instance}->configured_units($tree);
     }
 
     # Update with preferred units (if any)
-    if ($config->elementExists($pref->{path})) {
-        my $tree = $config->getElement($pref->{path})->getTree();
+    $tree = $self->_get_tree($config, $pref);
+    if ($tree) {
         my $new_units = $pref->{instance}->configured_units($tree);
         while (my ($unit, $detail) = each %$new_units) {
             if ($units->{$unit}) {

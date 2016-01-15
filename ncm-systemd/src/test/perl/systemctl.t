@@ -4,6 +4,7 @@ use Test::More;
 use Test::Quattor;
 use NCM::Component::systemd;
 use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL
+    systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     systemctl_command_units
@@ -76,6 +77,35 @@ foreach my $k (keys %$res) {
     }
 }
 is_deeply($res->{Names}, ["runlevel6.target", "reboot.target"], "Runlevel6 names/aliases");
+
+
+=head2 systemctl_daemon_reload
+
+Test systemctl_daemon_reload
+
+=cut
+
+$cmp->{ERROR}= 0;
+$cmp->{WARN}= 0;
+
+# test normal: exitcode 0, no output
+set_output("systemctl_daemon_reload");
+ok(systemctl_daemon_reload($cmp), "daemon reload ok");
+is($cmp->{ERROR}, 0, 'No error logged during succesful daemon reload');
+is($cmp->{WARN}, 0, 'No warn logged during succesful daemon reload');
+
+# test exitcode 0, with output
+set_output("systemctl_daemon_reload_output");
+ok(systemctl_daemon_reload($cmp), "daemon reload ok with output");
+is($cmp->{ERROR}, 0, 'No error logged during succesful daemon reload with output');
+is($cmp->{WARN}, 1, 'warn logged during succesful daemon reload with output');
+
+# test exit 1
+$cmp->{WARN}= 0;
+set_output("systemctl_daemon_reload_fail");
+ok(! defined(systemctl_daemon_reload($cmp)), "daemon reload returns undef on failure");
+is($cmp->{ERROR}, 1, 'Error logged during failed daemon reload');
+is($cmp->{WARN}, 0, 'No warn logged during failed daemon reload');
 
 =pod
 

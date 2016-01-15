@@ -13,8 +13,11 @@ use LC::Exception qw (SUCCESS);
 
 use parent qw(CAF::Object Exporter);
 use EDG::WP4::CCM::Element qw(unescape);
+
+use NCM::Component::Systemd::UnitFile;
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show
+    systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     :properties
@@ -179,6 +182,9 @@ sub _initialize
     my ($self, %opts) = @_;
 
     $self->{log} = $opts{log} if $opts{log};
+
+    # Always daemon-reload on init, to make sure we are dealing with correct units
+    systemctl_daemon_reload($self);
 
     return SUCCESS;
 }
@@ -389,7 +395,7 @@ values the details of the unit.
 Units with missing types are assumed to be TYPE_SERVICE; targets with
 missing type are assumed to be TYPE_TARGET.
 
-(C<tree> is typically C<$config->getElement('/software/components/systemd/unit')->getTree>.)
+(C<tree> is typcially obtained with the C<_getTree> method).
 
 =cut
 
@@ -399,7 +405,9 @@ sub configured_units
 
     my %units;
 
-    while (my ($unit, $detail) = each %$tree) {
+    foreach my $unit (sort keys %$tree) {
+        my $detail = $tree->{$unit};
+
         # only set the name (not mandatory in new schema, to be added here)
         $detail->{name} = unescape($unit) if (! exists($detail->{name}));
 
@@ -417,6 +425,33 @@ sub configured_units
         $detail->{targets} = \@targets;
 
         $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
+
+        if($detail->{file}) {
+            # strip the unitfile details from further unit details
+            my $ufile = delete $detail->{file};
+
+            # configure the unitfile
+            my $uf = NCM::Component::Systemd::UnitFile->new(
+                $detail->{name},
+                $ufile->{config},
+                custom => $ufile->{custom},
+                backup => '.old',
+                replace => $ufile->{replace},
+                log => $self,
+                );
+
+            my $changed = $uf->write();
+            if (! defined($changed)) {
+                $self->error("Unitfile confiuration failed, skipping the unit ", $self->unit_text($detail));
+                next;
+            };
+
+            if($ufile->{only}) {
+                $self->info("Only unitfile configuration for ", $self->unit_text($detail));
+                next;
+            }
+
+        }
 
         $self->verbose("Add unit name $detail->{name} (unit $unit)");
         $self->debug(1, "Add ", $self->unit_text($detail));
@@ -498,8 +533,8 @@ sub possible_missing
     my ($self, $units) = @_;
 
     my @p_m;
-    while (my ($unit, $detail) = each %$units) {
-        push(@p_m, $unit) if ($detail->{possible_missing});
+    foreach my $unit (sort keys %$units) {
+        push(@p_m, $unit) if ($units->{$unit}->{possible_missing});
     }
 
     $self->verbose("Found ", scalar @p_m, " possible missing units: ",
@@ -667,11 +702,11 @@ sub make_cache_alias
     my $list_unit_files = systemctl_list_unit_files($self);
 
     # Join them, keep existing non-related data
-    while (my ($unit, $data) = each %$list_units) {
-        $unit_cache->{$unit}->{unit} = $data;
+    foreach my $unit (sort keys %$list_units) {
+        $unit_cache->{$unit}->{unit} = $list_units->{$unit};
     }
-    while (my ($unit, $data) = each %$list_unit_files) {
-        $unit_cache->{$unit}->{unit_file} = $data;
+    foreach my $unit (sort keys %$list_unit_files) {
+        $unit_cache->{$unit}->{unit_file} = $list_unit_files->{$unit};
     }
 
     my @units;
@@ -812,7 +847,8 @@ sub make_cache_alias
     }
 
     # Check if each alias' real name has an existing entry in cache
-    while (my ($alias, $realunit) = each %$unit_alias ) {
+    foreach my $alias (sort keys %$unit_alias) {
+        my $realunit = $unit_alias->{$alias};
         if($alias ne $realunit && $unit_cache->{$alias}) {
             # removing any aliases that somehow got in the unit_cache
             $self->debug(1, "Removing alias $alias of $realunit from cache");
@@ -1325,6 +1361,45 @@ sub is_ufstate
         $self->debug(1, "$msg not the wanted state $state.");
         return 0;
     }
+}
+
+=pod
+
+=back
+
+=head2 Private methods
+
+=over
+
+=item _getTree
+
+The C<getTree> method is similar to the regular
+L<EDG::WP4::CCM::Element::getTree>, except that
+it keeps the unitfile configuration as an Element instance
+(as required by L<NCM::Component::Systemd::UnitFile>).
+
+It takes as arguments a L<EDG::WP4::CCM::Configuration> instance
+C<$config> and a C<$path> to the root of the whole unit tree.
+
+=cut
+
+sub _getTree
+{
+    my ($self, $config, $path) = @_;
+
+    my $tree = $config->getTree($path);
+
+    # for units, check for file/config, and replace unitfile configuration hashref
+    # tree with an element instance (it's what UnitFile needs)
+
+    foreach my $unit (sort keys %$tree) {
+        if(exists($tree->{$unit}->{file})) {
+            $self->verbose("getTree for unit $unit, replacing file/config with element instance");
+            $tree->{$unit}->{file}->{config} = $config->getElement("$path/$unit/file/config");
+        }
+    }
+
+    return $tree;
 }
 
 =pod
