@@ -648,6 +648,64 @@ is($cos->{'test_off.service'}->{state}, $STATE_MASKED, "test_off.service is $STA
 my $pm = $unit->possible_missing($cos);
 is_deeply($pm, [qw(test_off.service)], "Found possible missing units");
 
+=pod
 
+=head2 make_cache_alias with units that are usable but not listed
+
+=cut
+
+# set command output for list-unit / list-unit-files to EL7 output of services only
+# the netconsole.service is not listed here
+$cmdshort = "systemctl_list_unit_files_service";
+$cmdline= $cmddata::cmds{$cmdshort}{cmd};
+$out=$cmddata::cmds{$cmdshort}{out};
+$cmdline =~ s/\s+--type.*$//;
+set_desired_output($cmdline, $out);
+
+$cmdshort = "systemctl_list_units_service";
+$cmdline= $cmddata::cmds{$cmdshort}{cmd};
+$out=$cmddata::cmds{$cmdshort}{out};
+$cmdline =~ s/\s+--type.*$//;
+set_desired_output($cmdline, $out);
+
+# netconsole.service has no show output
+set_desired_output("/usr/bin/systemctl --no-pager --all show -- netconsole.service", "");
+
+# reset the cache
+$unit->init_cache();
+$cmp->{ERROR} = 0;
+
+($cache, $alias) = $unit->make_cache_alias(['netconsole.service']);
+ok(! defined($cache->{'netconsole.service'}), "no cache after unknown service (not listed, no show)");
+is($cmp->{ERROR}, 1, "an error was reported when handling unknown service (not listed, no show)");
+
+# set as possible missing
+$unit->init_cache();
+$cmp->{ERROR} = 0;
+
+($cache, $alias) = $unit->make_cache_alias(['netconsole.service'], ['netconsole.service']);
+ok(! defined($cache->{'netconsole.service'}), "no cache after unknown service (not listed, no show, possible missing)");
+is($cmp->{ERROR}, 0, "no error was reported when handling unknown service (not listed, no show, possible missing)");
+
+# minimal show data
+my $netconsole_show = <<EOF;
+Id=netconsole.service
+Names=netconsole.service
+EOF
+
+# netconsole.service has show output
+set_desired_output("/usr/bin/systemctl --no-pager --all show -- netconsole.service", $netconsole_show);
+
+# reset the cache
+$unit->init_cache();
+$cmp->{ERROR} = 0;
+
+($cache, $alias) = $unit->make_cache_alias(['netconsole.service']);
+ok($cache->{'netconsole.service'}->{showonly}, 'showonly cache attribute set when handling unknown service (not listed, with show)');
+is_deeply($cache->{'netconsole.service'}->{show}, {
+    Id => 'netconsole.service',
+    Names => ['netconsole.service'],
+}, "cache after unknown service (not listed, with show)");
+is($cmp->{ERROR}, 0, "no error was reported when handling unknown service (not listed, with show)");
 
 done_testing();

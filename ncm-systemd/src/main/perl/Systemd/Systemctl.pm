@@ -137,7 +137,7 @@ sub systemctl_show
     # output is k=[v]
     # some keys will be split on whitespace
     #  - when extending this list, update the pod!
-    my $res={};
+    my $res = {};
     while($output =~ m/^([^=\s]+)\s*=(.*)?$/mg) {
         my ($k,$v) = ($1,"$2");
         if (grep {$_ eq $k} @PROPERTIES_ARRAY) {
