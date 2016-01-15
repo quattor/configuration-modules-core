@@ -110,7 +110,8 @@ my %options_ord = ( '-N'                  => 0,
                     '--limit-burst'       => 21,
                     '--to-destination'    => 22,
                     '--to-source'         => 22,
-                    '--to-ports'          => 22
+                    '--to-ports'          => 22,
+                    '--comment'           => 23,
     );
 
 # Translate resource names to iptables options.
@@ -175,6 +176,7 @@ my %options_tra = ( 'new_chain'          => '-N',
 		    'seconds'            => '--seconds',
 		    'hitcount'           => '--hitcount',
 		    'name'               => '--name',
+		    'comment'            => '--comment',
     );
 
 # Preliminary test on the resource and sysconfig file options.
@@ -233,6 +235,7 @@ my %options_arg = ( '-A'              => "", #defined as "($regexp_chains)" on a
 		    '--seconds'         => '\d+',
 		    '--hitcount'        => '\d+',
 		    '--name'            => '\S+',
+		    '--comment'         => '',
     );
 
 # Operations to perform on the resource options when read for the first time.

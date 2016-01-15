@@ -72,7 +72,7 @@ type component_iptables_rule = {
     "hitcount"          ? number
     "name"              ? string
     "pkt-type"          ? string
-
+    "comment"           ? string
 };
 
 type component_iptables_preamble = {
