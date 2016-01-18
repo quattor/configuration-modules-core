@@ -236,7 +236,7 @@ my %options_arg = (
     '--seconds'          => '\d+',
     '--hitcount'         => '\d+',
     '--name'             => '\S+',
-    '--comment'          => '',
+    '--comment'          => '\S+',
 );
 
 # Operations to perform on the resource options when read for the first time.

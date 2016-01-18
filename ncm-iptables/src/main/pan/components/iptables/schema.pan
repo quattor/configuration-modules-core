@@ -72,7 +72,7 @@ type component_iptables_rule = {
     "hitcount"          ? number
     "name"              ? string
     "pkt-type"          ? string
-    "comment"           ? string
+    "comment"           ? string with match(SELF, '^(?=\S).{1,256}(?<=\S)$')
 };
 
 type component_iptables_preamble = {
