@@ -6,7 +6,6 @@
 #
 # Managed files:
 #   /etc/sysconfig/iptables
-################################################################################
 
 package NCM::Component::iptables;
 
@@ -27,10 +26,7 @@ use EDG::WP4::CCM::Resource;
 
 $NCM::Component::iptables::NoActionSupported = 1;
 
-##########################################################################
 # Global variables
-##########################################################################
-
 Readonly::Scalar my $path_iptables => '/software/components/iptables';
 
 # hash of tables, chains & targets
@@ -52,13 +48,11 @@ my %iptables_totality => {
     },
 };
 
-##########################################################################
 sub regExp () {
     my $reg = "@_";
     $reg =~ s/\s/\|/g;
     return $reg;
 }
-##########################################################################
 
 # Right order for iptables options.
 Readonly::Hash my %options_ord => (
@@ -268,13 +262,11 @@ sub quote_string {
     return $text;
 }
 
-##########################################################################
 # dns2ip () Translate host name to ip address.
 #
 # SYNOPSYS: $ip dns2ip ( $name )
 #    INPUT: $name     - host name to translate;
 #   OUTPUT: $ip       - ip address.
-##########################################################################
 sub dns2ip ( $ ) {
     my ($self, $name) = @_;
     my ($hostname, $alias, $addrtype, $length, $addr);
@@ -327,13 +319,11 @@ sub dns2ip ( $ ) {
     }
 }
 
-##########################################################################
 # uppercase() Transform all lowercase text to uppercase.
 #
 # SYNOPSYS: $text uppercase ( $text )
 #    INPUT: $text     - text to transform;
 #   OUTPUT: $text     - text in uppercase.
-##########################################################################
 sub uppercase {
     my ($self, $text) = @_;
     return '' if (!defined $text);
@@ -341,7 +331,6 @@ sub uppercase {
     return $text;
 }
 
-##########################################################################
 # GetPathEntries() Get the entries of a resource path.
 #
 # SYNOPSYS: $entries GetPathEntries( $path, $config )
@@ -355,7 +344,6 @@ sub uppercase {
 #                     - 4 $config is not an object,
 #                     - 5 $path doesn't exist as a resource path,
 #                     - 6 $path has no entries.
-##########################################################################
 sub GetPathEntries {
     my ($path, $config) = @_;
     my ($content, $entry, $name, $value);
@@ -410,7 +398,6 @@ sub GetPathEntries {
     return $entries;
 }
 
-##########################################################################
 # GetResource() Get all the entries of a resource path.
 #
 # SYNOPSYS: %entries GetResource( $path, $config )
@@ -426,7 +413,6 @@ sub GetPathEntries {
 #                     - 6 $path has no entries,
 #                     - 7 resource have at least one bad rule.
 #   ASSUME: The rules content is valid.
-##########################################################################
 sub GetResource {
     my ($self, $path, $config) = @_;
     my ($entries, $table, $target, $rule, $name, $command, $key, $aux, $i);
@@ -532,7 +518,6 @@ sub GetResource {
     return $entries;
 }
 
-##########################################################################
 # sort_keys() Give a rule keys in the right order to print to the
 #             iptables configuration file.
 #
@@ -543,7 +528,6 @@ sub GetResource {
 #                     - 1 error.
 #      USE: %options_ord
 #   ASSUME: If rule is not empty then is well formed.
-##########################################################################
 sub sort_keys {
     my ($self,$rule) = @_;
     my ($i, $m, $purge, $swap, $reg);
@@ -596,7 +580,6 @@ sub sort_keys {
     return @keys;
 }
 
-##########################################################################
 # rule_options_translate() Translate the template options type to iptables
 #                          options style.
 #
@@ -606,7 +589,6 @@ sub sort_keys {
 #                     - 1 error.
 #      USE: %options_tra
 #   ASSUME: If rule is not empty then is well formed.
-##########################################################################
 sub rule_options_translate {
     my ($rule) = @_;
     my $key;
@@ -631,7 +613,6 @@ sub rule_options_translate {
     return $?;
 }
 
-##########################################################################
 # WriteFile() Create and fill a filename.
 #
 # SYNOPSYS: $? WriteFile ( $filename, $iptables )
@@ -644,7 +625,6 @@ sub rule_options_translate {
 #                     - 6 cannot open $filename for writing,
 #                     - 7 cannot close $filename.
 #   ASSUME: The component resource path is well formed.
-##########################################################################
 sub WriteFile {
     my ($self, $filename, $iptables) = @_;
     my ($table, $chain, $target, $rule, $name, $field, $line);
@@ -723,7 +703,6 @@ sub WriteFile {
     return $?;
 }
 
-##########################################################################
 # cmp_rules() Compare two iptables rules.
 #
 # SYNOPSYS: $? cmp_rules ( $rule1, $rule2 )
@@ -732,7 +711,6 @@ sub WriteFile {
 #   OUTPUT: $?        - 0 the rules are equal,
 #                     - 1 one, or the two rules, is empty or is not an
 #                         hash tables, or the rules are different.
-##########################################################################
 sub cmp_rules {
     my ($rule1, $rule2) = @_;
     my ($field);
@@ -775,7 +753,6 @@ sub cmp_rules {
     return $?;
 }
 
-##########################################################################
 # find_rule() Find a rule in a list of rules.
 #
 # SYNOPSYS: $? find_rule ( $rule1, $hash )
@@ -784,7 +761,6 @@ sub cmp_rules {
 #                       are on the forma (0,hash), (1,hash), ...;
 #   OUTPUT: $?        - 0 the rules was found,
 #                     - 1 the rule was not found.
-##########################################################################
 sub find_rule {
     my ($rule, $hash) = @_;
     my ($name);
