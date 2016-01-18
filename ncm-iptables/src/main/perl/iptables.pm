@@ -248,8 +248,19 @@ my %options_op  = (
     '-N' => \&uppercase,
     '-j' => \&uppercase,
     '-s' => \&dns2ip,
-    '-d' => \&dns2ip
+    '-d' => \&dns2ip,
+    '--comment' => \&quote_string,
 );
+
+sub quote_string {
+    my ($self, $text) = @_;
+    $text =~ s/^\s+|\s+$//g; # Strip leading and trailing whitespace
+    if ($text =~ /\s/) {
+        # Only quote if string still contains whitespace
+        $text = "\"$text\"";
+    }
+    return $text;
+}
 
 ##########################################################################
 # dns2ip () Translate host name to ip address.
