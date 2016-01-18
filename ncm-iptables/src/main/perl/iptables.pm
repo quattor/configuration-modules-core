@@ -817,6 +817,7 @@ sub find_rule {
 sub Configure($$@) {
     my ($self, $config) = @_;
     my $iptables;
+    local $@;
 
     # Get global components parameters
     $iptables = $self->GetResource($path_iptables, $config);
