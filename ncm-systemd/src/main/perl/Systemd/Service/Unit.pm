@@ -726,22 +726,23 @@ sub make_cache_alias
         if (! defined($data)) {
             my $log_method = "error";
             my $continue;
-            if (grep {$_ eq $unit} @$possible_missing) {
-                $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
-                             "No error will be logged.");
+
+            # Always try to get show information, even for possible missing units
+            $show = systemctl_show($self, $unit);
+            if(defined($show->{$PROPERTY_ID})) {
+                $self->debug(1, "Unit $unit not listed but has show data.");
                 $log_method = "verbose";
+                $continue = "Found unit via systemctl show.";
+                # Insert unit in cache
+                $unit_cache->{$unit}->{showonly} = 1;
+                # Reassign $data
+                $data = $unit_cache->{$unit};
             } else {
-                $show = systemctl_show($self, $unit);
-                if(defined($show->{$PROPERTY_ID})) {
-                    $self->debug(1, "Unit $unit not listed but has show data.");
+                $self->debug(1, "Unit $unit not listed and has no show data.");
+                if (grep {$_ eq $unit} @$possible_missing) {
+                    $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
+                                 "No error will be logged.");
                     $log_method = "verbose";
-                    $continue = "Found unit via systemctl show.";
-                    # Insert unit in cache
-                    $unit_cache->{$unit}->{showonly} = 1;
-                    # Reassign $data
-                    $data = $unit_cache->{$unit};
-                } else {
-                    $self->debug(1, "Unit $unit not listed but and has no show data.");
                 }
             }
 
