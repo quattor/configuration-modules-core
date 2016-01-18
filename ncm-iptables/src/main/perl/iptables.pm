@@ -20,6 +20,7 @@ use File::Copy;
 use File::Temp qw(tempfile);
 use LC::Process qw(run);
 use LC::Check;
+use Readonly;
 
 use EDG::WP4::CCM::Element;
 use EDG::WP4::CCM::Resource;
@@ -30,21 +31,26 @@ $NCM::Component::iptables::NoActionSupported = 1;
 # Global variables
 ##########################################################################
 
-my $path_iptables = '/software/components/iptables';
+Readonly::Scalar my $path_iptables => '/software/components/iptables';
 
-my %iptables_totality = (); # hash of tables, chains & targets
-
-@{$iptables_totality{filter}{chains}} = ('input','output','forward');
-@{$iptables_totality{filter}{targets}} = ('ordered','log','accept','reject', 'return', 'classify', 'ulog', 'drop');
-@{$iptables_totality{filter}{commands}} = ('-A', '-D', '-I', '-R', '-N');
-
-@{$iptables_totality{nat}{chains}} = ('prerouting', 'output', 'postrouting');
-@{$iptables_totality{nat}{targets}} = ('dnat', 'snat', 'masquerade', 'redirect', 'log');
-@{$iptables_totality{nat}{commands}} = ('-A', '-D', '-I', '-R', '-N');
-
-@{$iptables_totality{mangle}{chains}} = ('prerouting', 'input', 'output', 'forward', 'postrouting');
-@{$iptables_totality{mangle}{targets}} = ('tos', 'ttl', 'mark', 'netmap', 'classify', 'dscp', 'ecn', 'mark', 'same', 'tcpmss');
-@{$iptables_totality{mangle}{commands}} = ('-A', '-D', '-I', '-R', '-N');
+# hash of tables, chains & targets
+my %iptables_totality => {
+    'filter' => {
+        'chains' => ['input','output','forward'],
+        'targets' => ['ordered','log','accept','reject', 'return', 'classify', 'ulog', 'drop'],
+        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+    },
+    'nat' => {
+        'chains' => ['prerouting', 'output', 'postrouting'],
+        'targets' => ['dnat', 'snat', 'masquerade', 'redirect', 'log'],
+        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+    },
+    'mangle' => {
+        'chains' => ['prerouting', 'input', 'output', 'forward', 'postrouting'],
+        'targets' => ['tos', 'ttl', 'mark', 'netmap', 'classify', 'dscp', 'ecn', 'mark', 'same', 'tcpmss'],
+        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+    },
+};
 
 ##########################################################################
 sub regExp () {
@@ -55,7 +61,7 @@ sub regExp () {
 ##########################################################################
 
 # Right order for iptables options.
-my %options_ord = (
+Readonly::Hash my %options_ord => (
     '-N'                 => 0,
     '-A'                 => 0,
     '-D'                 => 0,
@@ -114,7 +120,7 @@ my %options_ord = (
 );
 
 # Translate resource names to iptables options.
-my %options_tra = (
+Readonly::Hash my %options_tra => (
     'new_chain'          => '-N',
     'append'             => '-A',
     'delete'             => '-D',
@@ -180,7 +186,7 @@ my %options_tra = (
 );
 
 # Preliminary test on the resource and sysconfig file options.
-my %options_arg = (
+Readonly::Hash my %options_arg => (
     '-A'                 => "", #defined as "($regexp_chains)" on a table by table basis
     '-D'                 => "",
     '-I'                 => "",
@@ -240,7 +246,7 @@ my %options_arg = (
 );
 
 # Operations to perform on the resource options when read for the first time.
-my %options_op  = (
+Readonly::Hash my %options_op  => (
     '-A' => \&uppercase,
     '-D' => \&uppercase,
     '-I' => \&uppercase,
