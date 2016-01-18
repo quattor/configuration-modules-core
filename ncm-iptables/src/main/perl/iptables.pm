@@ -241,12 +241,12 @@ my %options_arg = (
 
 # Operations to perform on the resource options when read for the first time.
 my %options_op  = (
-    '-A' => \&upercase,
-    '-D' => \&upercase,
-    '-I' => \&upercase,
-    '-R' => \&upercase,
-    '-N' => \&upercase,
-    '-j' => \&upercase,
+    '-A' => \&uppercase,
+    '-D' => \&uppercase,
+    '-I' => \&uppercase,
+    '-R' => \&uppercase,
+    '-N' => \&uppercase,
+    '-j' => \&uppercase,
     '-s' => \&dns2ip,
     '-d' => \&dns2ip
 );
@@ -311,13 +311,13 @@ sub dns2ip ( $ ) {
 }
 
 ##########################################################################
-# upercase() Transform all lowercase text to upercase.
+# uppercase() Transform all lowercase text to uppercase.
 #
 # SYNOPSYS: $text uppercase ( $text )
 #    INPUT: $text     - text to transform;
-#   OUTPUT: $text     - text in upercase.
+#   OUTPUT: $text     - text in uppercase.
 ##########################################################################
-sub upercase {
+sub uppercase {
     my ($self, $text) = @_;
     return '' if (!defined $text);
     $text =~ tr/a-z/A-Z/;
@@ -422,9 +422,9 @@ sub GetResource {
         next if (!defined $entries->{$table});
 
         #define the regular expressions for -N, -A etc based on the specific targets for table
-        my $tmp = &upercase($self, &regExp(@{$iptables_totality{$table}{chains}}));
+        my $tmp = &uppercase($self, &regExp(@{$iptables_totality{$table}{chains}}));
         $options_arg{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
-        $options_arg{'-j'} = &upercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
+        $options_arg{'-j'} = &uppercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
 
         $entries->{$table} = &GetPathEntries("$path/$table", $config);
         next if $?;
@@ -453,8 +453,8 @@ sub GetResource {
 
             if (defined $rule->{-j}) {
                 #check if exists
-                if (&upercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
-                    $iptables_totality{$table}{user_targets}{&upercase($self, $rule->{-j})} = 1;
+                if (&uppercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
+                    $iptables_totality{$table}{user_targets}{&uppercase($self, $rule->{-j})} = 1;
                 }
             }
 
