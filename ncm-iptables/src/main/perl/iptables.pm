@@ -376,12 +376,17 @@ sub GetPathEntries {
     }
 
     while ($content->hasNextElement()) {
-        $entry  = $content->getNextElement();
-        $name   = $entry->getName();
-        $value  = $entry->getValue();
-        $value  = '' if ( $entry->getType() == 33 );
-        $value  =~ s/^[\s\t]*|[\s\t]*$//g;
-        $value  =~ s/[\s\t]+/ /g;
+        $entry = $content->getNextElement();
+        $name = $entry->getName();
+        if ( $entry->getType() == 33 ) {
+            # Type 33 is boolean
+            # Boolean options are handled by this code as seperate options (e.g. syn/nosyn) with empty values which is just horrible
+            $value = ''
+        } else {
+            $entry->getValue();
+        }
+        $value =~ s/^\s*|\s*$//g;
+        $value =~ s/\s+/ /g;
 
         #this is a fix for the issue of values with the "command" key
         #no translation => iptables screwing up
