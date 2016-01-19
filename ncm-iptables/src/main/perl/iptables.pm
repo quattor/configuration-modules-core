@@ -348,6 +348,8 @@ sub GetPathEntries {
     my ($content, $entry, $name, $value);
     my $entries = {};
 
+    $self->debug(5, "Entering method GetPathEntries");
+
     # Check the input parameters.
     if (!defined $path || $path   eq "") {
         $? = 1;
@@ -421,6 +423,8 @@ sub GetResource {
     my ($self, $path, $config) = @_;
     my ($entries, $table, $target, $rule, $name, $command, $key, $aux, $i);
     my $target_exists = 0;
+
+    $self->debug(5, "Entering method GetResource");
 
     $entries = $self->GetPathEntries( $path, $config );
     return $entries if $?;
@@ -538,6 +542,8 @@ sub sort_keys {
     my ($i, $m, $purge, $swap, $reg);
     my (@keys, @ord);
 
+    $self->debug(5, "Entering method sort_keys");
+
     # Check parameters.
     if ($rule !~ /^HASH/) {
         $? = 1;
@@ -598,6 +604,8 @@ sub rule_options_translate {
     my ($self, $rule) = @_;
     my $key;
 
+    $self->debug(5, "Entering method rule_options_translate");
+
     # Check parameters.
     if ($rule !~ /^HASH/) {
         $? = 1;
@@ -635,6 +643,8 @@ sub WriteFile {
     my ($table, $chain, $target, $rule, $name, $field, $line);
     my (@names);
 
+    $self->debug(5, "Entering method WriteFile");
+
     # Check input parameters.
     if (!defined $filename || $filename eq "") {
         $? = 1;
@@ -651,17 +661,22 @@ sub WriteFile {
     # write our "tag" into it. Assist some poor admin in debugging..
     print FILE "# Firewall configuration written by ncm-iptables\n";
     print FILE "# Manual modifications will be overwritten on the next NCM run.\n";
+    $self->debug(5, "Wrote header tag to file");
 
     # Write new content to file.
     if ( defined $iptables && ref($iptables) =~ /^HASH/ ) {
+        $self->debug(5, "iterating over tables");
         foreach $table (keys %iptables_totality) {
+            $self->debug(5, "processing table $table");
             next if (!defined $iptables->{$table} || $iptables->{$table} eq "" || ref($iptables->{$table}) !~ /^HASH/);
             print FILE "*$table\n";
 
             if (defined $iptables->{$table}->{preamble} && ref($iptables->{$table}->{preamble}) =~ /^HASH/ ) {
                 my $preamble = $iptables->{$table}->{preamble};
+                $self->debug(5, "table has preamble $preamble");
 
                 foreach $chain (@{$iptables_totality{$table}{chains}}) {
+                    $self->debug(5, "processing chain $chain");
                     next if (!defined $preamble->{$chain} || $preamble->{$chain} eq "");
                     my $g = $chain;
                     $g =~ tr/a-z/A-Z/;
@@ -672,16 +687,18 @@ sub WriteFile {
             }
 
             foreach $target (sort keys %{$iptables_totality{$table}{user_targets}}){
+                $self->debug(5, "defining target $target");
                 print FILE "-N $target\n";
             }
 
             foreach $target (@{$iptables_totality{$table}{targets}}) {
-
+                $self->debug(5, "processing rules for target $target");
                 next if ( ! defined $iptables->{$table}->{rules}->{$target}         );
                 next if (   ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/ );
                 next if ( ! scalar(%{$iptables->{$table}->{rules}->{$target}})      );
 
                 foreach $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
+                    $self->debug(5, "processing rule $name for target $target");
                     next if ($name !~ /^\d+$/);
                     $rule = $iptables->{$table}->{rules}->{$target}->{$name};
                     $line = '';
@@ -720,6 +737,8 @@ sub cmp_rules {
     my ($self, $rule1, $rule2) = @_;
     my ($field);
     my (@fields1, @fields2);
+
+    $self->debug(5, "Entering method cmp_rules");
 
     # Check parameters.
     if (!defined $rule1 || ref($rule1) !~ /^HASH/) {
@@ -770,6 +789,8 @@ sub find_rule {
     my ($self, $rule, $hash) = @_;
     my ($name);
 
+    $self->debug(5, "Entering method find_rule");
+
     # Check parameters.
     if (!defined $rule || ref($rule) !~ /^HASH/) {
         $? = 1;
@@ -805,6 +826,8 @@ sub Configure {
     my ($self, $config) = @_;
     my $iptables;
     local $@;
+
+    $self->debug(5, "Entering method Configure");
 
     # Get global components parameters
     $iptables = $self->GetResource($path_iptables, $config);
