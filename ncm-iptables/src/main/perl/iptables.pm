@@ -325,9 +325,7 @@ sub dns2ip {
 #   OUTPUT: $text     - text in uppercase.
 sub uppercase {
     my ($self, $text) = @_;
-    return '' if (!defined $text);
-    $text =~ tr/a-z/A-Z/;
-    return $text;
+    return defined $text ? uc($text) : '';
 }
 
 # GetPathEntries() Get the entries of a resource path.
