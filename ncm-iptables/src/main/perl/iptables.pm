@@ -239,16 +239,16 @@ Readonly::Hash my %OPTION_VALIDATORS => (
 );
 
 # Operations to perform on the resource options when read for the first time.
-Readonly::Hash my %OPTION_MODIFIERS  => (
-    '-A' => \&uppercase,
-    '-D' => \&uppercase,
-    '-I' => \&uppercase,
-    '-R' => \&uppercase,
-    '-N' => \&uppercase,
-    '-j' => \&uppercase,
-    '-s' => \&dns2ip,
-    '-d' => \&dns2ip,
-    '--comment' => \&quote_string,
+Readonly::Hash my %OPTION_MODIFIERS => (
+    '-A' => 'uppercase',
+    '-D' => 'uppercase',
+    '-I' => 'uppercase',
+    '-R' => 'uppercase',
+    '-N' => 'uppercase',
+    '-j' => 'uppercase',
+    '-s' => 'dns2ip',
+    '-d' => 'dns2ip',
+    '--comment' => 'quote_string',
 );
 
 sub quote_string {
