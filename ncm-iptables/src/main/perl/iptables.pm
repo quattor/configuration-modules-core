@@ -47,7 +47,7 @@ my %iptables_totality => {
     },
 };
 
-sub regExp () {
+sub regExp {
     my $reg = "@_";
     $reg =~ s/\s/\|/g;
     return $reg;
@@ -266,7 +266,7 @@ sub quote_string {
 # SYNOPSYS: $ip dns2ip ( $name )
 #    INPUT: $name     - host name to translate;
 #   OUTPUT: $ip       - ip address.
-sub dns2ip ( $ ) {
+sub dns2ip {
     my ($self, $name) = @_;
     my ($hostname, $alias, $addrtype, $length, $addr);
     my @addr;
@@ -795,7 +795,7 @@ sub find_rule {
     return $?;
 }
 
-sub Configure($$@) {
+sub Configure {
     my ($self, $config) = @_;
     my $iptables;
     local $@;
