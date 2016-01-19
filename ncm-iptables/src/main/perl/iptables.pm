@@ -308,12 +308,11 @@ sub dns2ip {
         return '';
     };
 
-    $name = "@addr";
-    $name =~ s/\s/\./g;
+    $name = join('.', @addr);
     $self->debug(2, "dns2ip-OK: resolved $name");
 
     if ($isneg) {
-        return "! ".$name;
+        return "! $name";
     } else {
         return $name;
     }
