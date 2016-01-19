@@ -179,7 +179,7 @@ Readonly::Hash my %OPTION_MAPPINGS => (
 );
 
 # Preliminary test on the resource and sysconfig file options.
-Readonly::Hash my %OPTION_VALIDATORS => (
+my %OPTION_VALIDATORS = (
     '-A'                 => "", #defined as "($regexp_chains)" on a table by table basis
     '-D'                 => "",
     '-I'                 => "",
