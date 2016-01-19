@@ -29,23 +29,23 @@ Readonly::Scalar my $path_iptables => '/software/components/iptables';
 Readonly::Scalar my $CONFIG_IPTABLES => '/etc/sysconfig/iptables';
 
 # hash of tables, chains & targets
-my %iptables_totality => {
-    'filter' => {
-        'chains' => ['input','output','forward'],
-        'targets' => ['ordered','log','accept','reject', 'return', 'classify', 'ulog', 'drop'],
-        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+my %iptables_totality = (
+    filter => {
+        chains => ['input','output','forward'],
+        targets => ['ordered','log','accept','reject', 'return', 'classify', 'ulog', 'drop'],
+        commands => ['-A', '-D', '-I', '-R', '-N'],
     },
-    'nat' => {
-        'chains' => ['prerouting', 'output', 'postrouting'],
-        'targets' => ['dnat', 'snat', 'masquerade', 'redirect', 'log'],
-        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+    nat => {
+        chains => ['prerouting', 'output', 'postrouting'],
+        targets => ['dnat', 'snat', 'masquerade', 'redirect', 'log'],
+        commands => ['-A', '-D', '-I', '-R', '-N'],
     },
-    'mangle' => {
-        'chains' => ['prerouting', 'input', 'output', 'forward', 'postrouting'],
-        'targets' => ['tos', 'ttl', 'mark', 'netmap', 'classify', 'dscp', 'ecn', 'mark', 'same', 'tcpmss'],
-        'commands' => ['-A', '-D', '-I', '-R', '-N'],
+    mangle => {
+        chains => ['prerouting', 'input', 'output', 'forward', 'postrouting'],
+        targets => ['tos', 'ttl', 'mark', 'netmap', 'classify', 'dscp', 'ecn', 'mark', 'same', 'tcpmss'],
+        commands => ['-A', '-D', '-I', '-R', '-N'],
     },
-};
+);
 
 sub regExp {
     my ($self, $reg) = @_;
