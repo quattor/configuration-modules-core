@@ -48,7 +48,7 @@ my %iptables_totality => {
 };
 
 sub regExp {
-    my $reg = "@_";
+    my ($self, $reg) = @_;
     $reg =~ s/\s/\|/g;
     return $reg;
 }
@@ -344,7 +344,7 @@ sub uppercase {
 #                     - 5 $path doesn't exist as a resource path,
 #                     - 6 $path has no entries.
 sub GetPathEntries {
-    my ($path, $config) = @_;
+    my ($self, $path, $config) = @_;
     my ($content, $entry, $name, $value);
     my $entries = {};
 
@@ -422,35 +422,35 @@ sub GetResource {
     my ($entries, $table, $target, $rule, $name, $command, $key, $aux, $i);
     my $target_exists = 0;
 
-    $entries = &GetPathEntries( $path, $config );
+    $entries = $self->GetPathEntries( $path, $config );
     return $entries if $?;
 
     foreach $table (keys %iptables_totality) {
         next if (!defined $entries->{$table});
 
         #define the regular expressions for -N, -A etc based on the specific targets for table
-        my $tmp = &uppercase($self, &regExp(@{$iptables_totality{$table}{chains}}));
+        my $tmp = $self->uppercase($self->regExp(@{$iptables_totality{$table}{chains}}));
         $OPTION_VALIDATORS{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
-        $OPTION_VALIDATORS{'-j'} = &uppercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
+        $OPTION_VALIDATORS{'-j'} = $self->uppercase($self->regExp(@{$iptables_totality{$table}{targets}}));
 
-        $entries->{$table} = &GetPathEntries("$path/$table", $config);
+        $entries->{$table} = $self->GetPathEntries("$path/$table", $config);
         next if $?;
 
-        $entries->{$table}->{preamble} = &GetPathEntries("$path/$table/preamble", $config);
+        $entries->{$table}->{preamble} = $self->GetPathEntries("$path/$table/preamble", $config);
 
         my $cnt = {};
         foreach $target (@{$iptables_totality{$table}{targets}}) {
             $cnt->{$target} = 0;
         }
 
-        $entries->{$table}->{rules} = &GetPathEntries("$path/$table/rules", $config);
+        $entries->{$table}->{rules} = $self->GetPathEntries("$path/$table/rules", $config);
         next if $?;
 
         RULE: foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
             next if ($name !~ /^\d+$/);
-            $rule = &GetPathEntries( "$path/$table/rules/$name", $config );
+            $rule = $self->GetPathEntries( "$path/$table/rules/$name", $config );
             return if $?;
-            &rule_options_translate($rule);
+            $self->rule_options_translate($rule);
 
             if (!defined $rule->{chain}) {
                 $? = 7;
@@ -460,8 +460,8 @@ sub GetResource {
 
             if (defined $rule->{-j}) {
                 #check if exists
-                if (&uppercase($self, $rule->{-j}) !~ /$OPTION_VALIDATORS{'-j'}/) {
-                    $iptables_totality{$table}{user_targets}{&uppercase($self, $rule->{-j})} = 1;
+                if ($self->uppercase($rule->{-j}) !~ /$OPTION_VALIDATORS{'-j'}/) {
+                    $iptables_totality{$table}{user_targets}{$self->uppercase($rule->{-j})} = 1;
                 }
             }
 
@@ -470,12 +470,13 @@ sub GetResource {
             delete $rule->{command};
             delete $rule->{chain};
 
-            my $val = &regExp(@{$iptables_totality{$table}{commands}});
+            my $val = $self->regExp(@{$iptables_totality{$table}{commands}});
 
             foreach $key (keys %{$rule}) {
                 if (defined $OPTION_MODIFIERS{$key} && $OPTION_MODIFIERS{$key} ne "") {
                     my $opresult;
-                    $opresult = &{$OPTION_MODIFIERS{$key}}($self, $rule->{$key});
+                    my $modifier = $OPTION_MODIFIERS{$key};
+                    $opresult = $self->$modifier($rule->{$key});
                     if (!$opresult) {
                         $self->warn("failed to convert $key : ".$rule->{$key}." - IGNORING THIS RULE");
                         next RULE;
@@ -510,7 +511,7 @@ sub GetResource {
             }
 
             if ( defined $cnt->{$target} ) {
-                next if (!&find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}));
+                next if (!$self->find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}));
                 $entries->{$table}->{rules}->{$target}->{$cnt->{$target}} = $rule;
                 $cnt->{$target}++;
             }
@@ -533,7 +534,7 @@ sub GetResource {
 #      USE: %OPTION_SORT_ORDER
 #   ASSUME: If rule is not empty then is well formed.
 sub sort_keys {
-    my ($self,$rule) = @_;
+    my ($self, $rule) = @_;
     my ($i, $m, $purge, $swap, $reg);
     my (@keys, @ord);
 
@@ -594,7 +595,7 @@ sub sort_keys {
 #      USE: %OPTION_MAPPINGS
 #   ASSUME: If rule is not empty then is well formed.
 sub rule_options_translate {
-    my ($rule) = @_;
+    my ($self, $rule) = @_;
     my $key;
 
     # Check parameters.
@@ -684,7 +685,7 @@ sub WriteFile {
                     next if ($name !~ /^\d+$/);
                     $rule = $iptables->{$table}->{rules}->{$target}->{$name};
                     $line = '';
-                    foreach $field (&sort_keys($self,$rule)) {
+                    foreach $field ($self->sort_keys($rule)) {
                         $line .= ($line) ? " $field" : $field;
                         $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
                     }
@@ -716,7 +717,7 @@ sub WriteFile {
 #                     - 1 one, or the two rules, is empty or is not an
 #                         hash tables, or the rules are different.
 sub cmp_rules {
-    my ($rule1, $rule2) = @_;
+    my ($self, $rule1, $rule2) = @_;
     my ($field);
     my (@fields1, @fields2);
 
@@ -766,7 +767,7 @@ sub cmp_rules {
 #   OUTPUT: $?        - 0 the rules was found,
 #                     - 1 the rule was not found.
 sub find_rule {
-    my ($rule, $hash) = @_;
+    my ($self, $rule, $hash) = @_;
     my ($name);
 
     # Check parameters.
@@ -789,7 +790,7 @@ sub find_rule {
         next if ($name !~ /^\d+$/);
         next if (ref($hash->{$name}) !~ /^HASH/);
 
-        if (!&cmp_rules($rule, $hash->{$name}) && ! $?) {
+        if (!$self->cmp_rules($rule, $hash->{$name}) && ! $?) {
             $@ = "rule found on the list";
             return $?
         }
@@ -816,7 +817,7 @@ sub Configure {
     };
     $self->error("failed to create temporary iptables file: $@") and return 1 if $@;
 
-    &WriteFile($self, $iptc_temp, $iptables);
+    $self->WriteFile($iptc_temp, $iptables);
     if ($? > 0) {
         # bad - bail out
         $self->error($@);
