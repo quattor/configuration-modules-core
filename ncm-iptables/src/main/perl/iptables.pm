@@ -16,6 +16,7 @@ use File::Copy;
 use File::Temp qw(tempfile);
 use LC::Process qw(run);
 use LC::Check;
+use CAF::FileWriter;
 use Readonly;
 
 use EDG::WP4::CCM::Element;
@@ -652,14 +653,11 @@ sub WriteFile {
     }
 
     # Open the file.
-    unless (open(FILE, ">$filename")) {
-        $? = 6;
-        $@ = "cannot open $filename";
-        return $?;
-    }
+    my $fh = CAF::FileWriter->open($filename);
+
     # write our "tag" into it. Assist some poor admin in debugging..
-    print FILE "# Firewall configuration written by ncm-iptables\n";
-    print FILE "# Manual modifications will be overwritten on the next NCM run.\n";
+    print $fh "# Firewall configuration written by ncm-iptables\n";
+    print $fh "# Manual modifications will be overwritten on the next NCM run.\n";
     $self->debug(5, "Wrote header tag to file");
 
     # Write new content to file.
@@ -668,7 +666,7 @@ sub WriteFile {
         foreach $table (keys %iptables_totality) {
             $self->debug(5, "processing table $table");
             next if (!defined $iptables->{$table} || $iptables->{$table} eq "" || ref($iptables->{$table}) !~ /^HASH/);
-            print FILE "*$table\n";
+            print $fh "*$table\n";
 
             if (defined $iptables->{$table}->{preamble} && ref($iptables->{$table}->{preamble}) =~ /^HASH/ ) {
                 my $preamble = $iptables->{$table}->{preamble};
@@ -681,13 +679,13 @@ sub WriteFile {
                     $g =~ tr/a-z/A-Z/;
                     $preamble->{$chain} =~ s/^[\s\t]*|[\s\t]*$//g;
                     $preamble->{$chain} =~ s/[\s\t+]/ /g;
-                    print FILE ":$g $preamble->{$chain}\n";
+                    print $fh ":$g $preamble->{$chain}\n";
                 }
             }
 
             foreach $target (sort keys %{$iptables_totality{$table}{user_targets}}){
                 $self->debug(5, "defining target $target");
-                print FILE "-N $target\n";
+                print $fh "-N $target\n";
             }
 
             foreach $target (@{$iptables_totality{$table}{targets}}) {
@@ -705,19 +703,15 @@ sub WriteFile {
                         $line .= ($line) ? " $field" : $field;
                         $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
                     }
-                    print FILE "$line\n" if $line and $line !~ /^-N/;
+                    print $fh "$line\n" if $line and $line !~ /^-N/;
                 }
             }
-            print FILE "$iptables->{$table}->{epilogue}\n" if (defined $iptables->{$table}->{epilogue} && $iptables->{$table}->{epilogue} ne "");
+            print $fh "$iptables->{$table}->{epilogue}\n" if (defined $iptables->{$table}->{epilogue} && $iptables->{$table}->{epilogue} ne "");
         }
     }
 
     # Close the temporary file.
-    unless (close(FILE)) {
-        $? = 7;
-        $@ = "cannot close $filename";
-        return $?;
-    }
+    $fh->close();
 
     $? = 0;
     $@ = "modified $filename";
