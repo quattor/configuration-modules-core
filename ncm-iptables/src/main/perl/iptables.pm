@@ -54,7 +54,7 @@ sub regExp {
 }
 
 # Right order for iptables options.
-Readonly::Hash my %options_ord => (
+Readonly::Hash my %OPTION_SORT_ORDER => (
     '-N'                 => 0,
     '-A'                 => 0,
     '-D'                 => 0,
@@ -113,7 +113,7 @@ Readonly::Hash my %options_ord => (
 );
 
 # Translate resource names to iptables options.
-Readonly::Hash my %options_tra => (
+Readonly::Hash my %OPTION_MAPPINGS => (
     'new_chain'          => '-N',
     'append'             => '-A',
     'delete'             => '-D',
@@ -179,7 +179,7 @@ Readonly::Hash my %options_tra => (
 );
 
 # Preliminary test on the resource and sysconfig file options.
-Readonly::Hash my %options_arg => (
+Readonly::Hash my %OPTION_VALIDATORS => (
     '-A'                 => "", #defined as "($regexp_chains)" on a table by table basis
     '-D'                 => "",
     '-I'                 => "",
@@ -239,7 +239,7 @@ Readonly::Hash my %options_arg => (
 );
 
 # Operations to perform on the resource options when read for the first time.
-Readonly::Hash my %options_op  => (
+Readonly::Hash my %OPTION_MODIFIERS  => (
     '-A' => \&uppercase,
     '-D' => \&uppercase,
     '-I' => \&uppercase,
@@ -386,7 +386,7 @@ sub GetPathEntries {
         #this is a fix for the issue of values with the "command" key
         #no translation => iptables screwing up
         if ($name eq "command") {
-            $value = $options_tra{$value} if defined $options_tra{$value};
+            $value = $OPTION_MAPPINGS{$value} if defined $OPTION_MAPPINGS{$value};
         }
 
         $entries->{$name} = $value;
@@ -425,8 +425,8 @@ sub GetResource {
 
         #define the regular expressions for -N, -A etc based on the specific targets for table
         my $tmp = &uppercase($self, &regExp(@{$iptables_totality{$table}{chains}}));
-        $options_arg{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
-        $options_arg{'-j'} = &uppercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
+        $OPTION_VALIDATORS{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
+        $OPTION_VALIDATORS{'-j'} = &uppercase($self, &regExp(@{$iptables_totality{$table}{targets}}));
 
         $entries->{$table} = &GetPathEntries("$path/$table", $config);
         next if $?;
@@ -455,7 +455,7 @@ sub GetResource {
 
             if (defined $rule->{-j}) {
                 #check if exists
-                if (&uppercase($self, $rule->{-j}) !~ /$options_arg{'-j'}/) {
+                if (&uppercase($self, $rule->{-j}) !~ /$OPTION_VALIDATORS{'-j'}/) {
                     $iptables_totality{$table}{user_targets}{&uppercase($self, $rule->{-j})} = 1;
                 }
             }
@@ -468,9 +468,9 @@ sub GetResource {
             my $val = &regExp(@{$iptables_totality{$table}{commands}});
 
             foreach $key (keys %{$rule}) {
-                if (defined $options_op{$key} && $options_op{$key} ne "") {
+                if (defined $OPTION_MODIFIERS{$key} && $OPTION_MODIFIERS{$key} ne "") {
                     my $opresult;
-                    $opresult = &{$options_op{$key}}($self, $rule->{$key});
+                    $opresult = &{$OPTION_MODIFIERS{$key}}($self, $rule->{$key});
                     if (!$opresult) {
                         $self->warn("failed to convert $key : ".$rule->{$key}." - IGNORING THIS RULE");
                         next RULE;
@@ -480,8 +480,8 @@ sub GetResource {
                     }
                 }
 
-                if (defined $options_arg{$key} && $options_arg{$key} ne "") {
-                    $aux = $options_arg{$key};
+                if (defined $OPTION_VALIDATORS{$key} && $OPTION_VALIDATORS{$key} ne "") {
+                    $aux = $OPTION_VALIDATORS{$key};
                     if ($rule->{$key} !~ /^$aux$/ && $key =~ /^$val$/) {
                         my $skip = 0;
                         foreach (@{$iptables_totality{$table}{targets}}) {
@@ -525,7 +525,7 @@ sub GetResource {
 #   OUTPUT: @keys     - list of keys in the right order,
 #           $?        - 0 keys sorted,
 #                     - 1 error.
-#      USE: %options_ord
+#      USE: %OPTION_SORT_ORDER
 #   ASSUME: If rule is not empty then is well formed.
 sub sort_keys {
     my ($self,$rule) = @_;
@@ -555,16 +555,16 @@ sub sort_keys {
     while ($swap) {
         for($m=0, $swap=0; $m<$#keys; $m++) {
             for($i=$m+1; $i<=$#keys; $i++) {
-                $self->error("$keys[$i] is not a valid option\n") if ! exists $options_ord{$keys[$i]};
-                $self->error("$keys[$m] is not a valid option\n") if ! exists $options_ord{$keys[$m]};
+                $self->error("$keys[$i] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$i]};
+                $self->error("$keys[$m] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$m]};
 
                 #next
-                if (!exists $options_ord{$keys[$i]} || !exists $options_ord{$keys[$m]}) {
+                if (!exists $OPTION_SORT_ORDER{$keys[$i]} || !exists $OPTION_SORT_ORDER{$keys[$m]}) {
                     $? = 1;
                     $@ = "keys unsorted";
                     return @keys;
                 }
-                next if ($options_ord{$keys[$i]} >= $options_ord{$keys[$m]});
+                next if ($OPTION_SORT_ORDER{$keys[$i]} >= $OPTION_SORT_ORDER{$keys[$m]});
                 $reg = $keys[$i];
                 $keys[$i] = $keys[$m];
                 $keys[$m] = $reg;
@@ -586,7 +586,7 @@ sub sort_keys {
 #    INPUT: $rule     - pointer to an hash table describing the rule;
 #   OUTPUT: $?        - 0 options translated,
 #                     - 1 error.
-#      USE: %options_tra
+#      USE: %OPTION_MAPPINGS
 #   ASSUME: If rule is not empty then is well formed.
 sub rule_options_translate {
     my ($rule) = @_;
@@ -600,9 +600,9 @@ sub rule_options_translate {
     }
 
     foreach $key (keys %{$rule}) {
-        next if (! defined $options_tra{$key} || $options_tra{$key} eq "");
-        next if (defined $rule->{$options_tra{$key}});
-        $rule->{$options_tra{$key}} = $rule->{$key};
+        next if (! defined $OPTION_MAPPINGS{$key} || $OPTION_MAPPINGS{$key} eq "");
+        next if (defined $rule->{$OPTION_MAPPINGS{$key}});
+        $rule->{$OPTION_MAPPINGS{$key}} = $rule->{$key};
         delete $rule->{$key};
     }
 
@@ -681,7 +681,7 @@ sub WriteFile {
                     $line = '';
                     foreach $field (&sort_keys($self,$rule)) {
                         $line .= ($line) ? " $field" : $field;
-                        $line .= " $rule->{$field}" if $options_arg{$field};
+                        $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
                     }
                     print FILE "$line\n" if $line and $line !~ /^-N/;
                 }
