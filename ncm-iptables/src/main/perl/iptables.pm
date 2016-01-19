@@ -13,7 +13,6 @@ use vars qw(@ISA $EC);
 $EC=LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use File::Copy;
-use File::Temp qw(tempfile);
 use LC::Process qw(run);
 use LC::Check;
 use CAF::FileWriter;
@@ -650,7 +649,11 @@ sub WriteFile {
     }
 
     # Open the file.
-    my $fh = CAF::FileWriter->open($filename);
+    my $fh = CAF::FileWriter->open($filename, {
+            owner => 'root',
+            group => 'root',
+            mode => '0444',
+    });
 
     # write our "tag" into it. Assist some poor admin in debugging..
     print $fh "# Firewall configuration written by ncm-iptables\n";
@@ -707,12 +710,7 @@ sub WriteFile {
         }
     }
 
-    # Close the temporary file.
-    $fh->close();
-
-    $? = 0;
-    $@ = "modified $filename";
-    return $?;
+    return $fh->close();
 }
 
 # cmp_rules() Compare two iptables rules.
@@ -823,29 +821,8 @@ sub Configure {
     $iptables = $self->GetResource($path_iptables, $config);
     $self->error($@) and return 1 if $?;
 
-    # Create tmpdir if necessary
-    my ($iptc_temp_fh, $iptc_temp);
-    eval {
-        ($iptc_temp_fh, $iptc_temp) = tempfile("ncm-iptables-XXXXX");
-    };
-    $self->error("failed to create temporary iptables file: $@") and return 1 if $@;
-
-    $self->WriteFile($iptc_temp, $iptables);
-    if ($? > 0) {
-        # bad - bail out
-        $self->error($@);
-        return 1;
-    }
-    $self->debug(1,$@);
-
-    my $changes = 0;
-    $changes = LC::Check::file(
-        $CONFIG_IPTABLES,
-        owner => 'root',
-        group => 'root',
-        mode => '0444',
-        source => "$iptc_temp",
-    );
+    my $changes = $self->WriteFile($CONFIG_IPTABLES, $iptables);
+    $self->debug(5, "WriteFile returned $changes");
     if ($changes) {
         # Reload the service - file changed
         if ($NoAction) {
