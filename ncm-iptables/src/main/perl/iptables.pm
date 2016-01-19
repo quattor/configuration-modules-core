@@ -4,9 +4,6 @@
 #
 # iptables - Setup the IPTABLES firewall.
 #
-# Managed files:
-#   /etc/sysconfig/iptables
-
 package NCM::Component::iptables;
 
 use strict;
@@ -28,6 +25,8 @@ $NCM::Component::iptables::NoActionSupported = 1;
 
 # Global variables
 Readonly::Scalar my $path_iptables => '/software/components/iptables';
+
+Readonly::Scalar my $CONFIG_IPTABLES => '/etc/sysconfig/iptables';
 
 # hash of tables, chains & targets
 my %iptables_totality => {
@@ -822,7 +821,7 @@ sub Configure($$@) {
 
     my $changes = 0;
     $changes = LC::Check::file(
-        '/etc/sysconfig/iptables',
+        $CONFIG_IPTABLES,
         owner => 'root',
         group => 'root',
         mode => '0444',
@@ -845,7 +844,7 @@ sub Configure($$@) {
             }
         }
     } else {
-        $self->info("No change for /etc/sysconfig/iptables, not restarting service");
+        $self->info("No change for $CONFIG_IPTABLES, not restarting service");
     }
     return;
 }
