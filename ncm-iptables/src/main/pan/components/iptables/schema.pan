@@ -5,7 +5,7 @@
 
 declaration template components/iptables/schema;
 
-include { "quattor/schema" };
+include "quattor/schema";
 
 type component_iptables_rule = {
     "new_chain"          ? string
