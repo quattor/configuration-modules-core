@@ -268,15 +268,13 @@ sub quote_string {
 #   OUTPUT: $ip       - ip address.
 sub dns2ip {
     my ($self, $name) = @_;
-    my ($hostname, $alias, $addrtype, $length, $addr);
-    my @addr;
-    my $isneg = 0;
 
     if (!defined $name || $name eq "") {
         $self->debug(2, "dns2ip-BAD: empty name");
         return '';
     };
 
+    my $isneg = 0;
     if ($name =~ /^!\s*(.*)/) {
         $self->debug(3, "dns2ip-INFO: negative specification");
         $isneg = 1;
@@ -292,7 +290,7 @@ sub dns2ip {
         }
     }
 
-    ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
+    my ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
 
     if (!$hostname || $length != 4 || $addr eq "") {
         # no longer insist that the hostname in the config is canonical,
@@ -301,7 +299,7 @@ sub dns2ip {
         return '';
     }
 
-    @addr = unpack ('C4', $addr);
+    my @addr = unpack ('C4', $addr);
     if (scalar(@addr) != 4) {
         $self->debug(2, "dns2ip-BAD: weird address format/length?");
         return '';
@@ -342,7 +340,6 @@ sub uppercase {
 #                     - 6 $path has no entries.
 sub GetPathEntries {
     my ($self, $path, $config) = @_;
-    my ($content, $entry, $name, $value);
     my $entries = {};
 
     $self->debug(5, "Entering method GetPathEntries");
@@ -367,7 +364,7 @@ sub GetPathEntries {
     }
 
     # Get the perl object representing the resource path content.
-    $content = $config->getElement($path);
+    my $content = $config->getElement($path);
     unless (defined $content) {
         $? = 6;
         $@ = "cannot get resource path \"$path\"";
@@ -375,9 +372,9 @@ sub GetPathEntries {
     }
 
     while ($content->hasNextElement()) {
-        $entry = $content->getNextElement();
-        $name = $entry->getName();
-        $value = $entry->getValue();
+        my $entry = $content->getNextElement();
+        my $name = $entry->getName();
+        my $value = $entry->getValue();
         if ( $entry->getType() == 33 ) {
             # Type 33 is boolean
             # Boolean options are handled by this code as seperate options (e.g. syn/nosyn) with empty values which is just horrible
@@ -417,15 +414,13 @@ sub GetPathEntries {
 #   ASSUME: The rules content is valid.
 sub GetResource {
     my ($self, $path, $config) = @_;
-    my ($entries, $table, $target, $rule, $name, $command, $key, $aux, $i);
-    my $target_exists = 0;
 
     $self->debug(5, "Entering method GetResource");
 
-    $entries = $self->GetPathEntries( $path, $config );
+    my $entries = $self->GetPathEntries( $path, $config );
     return $entries if $?;
 
-    foreach $table (keys %iptables_totality) {
+    foreach my $table (keys %iptables_totality) {
         next if (!defined $entries->{$table});
 
         #define the regular expressions for -N, -A etc based on the specific targets for table
@@ -439,16 +434,16 @@ sub GetResource {
         $entries->{$table}->{preamble} = $self->GetPathEntries("$path/$table/preamble", $config);
 
         my $cnt = {};
-        foreach $target (@{$iptables_totality{$table}{targets}}) {
+        foreach my $target (@{$iptables_totality{$table}{targets}}) {
             $cnt->{$target} = 0;
         }
 
         $entries->{$table}->{rules} = $self->GetPathEntries("$path/$table/rules", $config);
         next if $?;
 
-        RULE: foreach $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
+        RULE: foreach my $name (sort { $a <=> $b } keys %{$entries->{$table}->{rules}}) {
             next if ($name !~ /^\d+$/);
-            $rule = $self->GetPathEntries( "$path/$table/rules/$name", $config );
+            my $rule = $self->GetPathEntries( "$path/$table/rules/$name", $config );
             return if $?;
             $self->rule_options_translate($rule);
 
@@ -472,7 +467,7 @@ sub GetResource {
 
             my $val = $self->regExp(@{$iptables_totality{$table}{commands}});
 
-            foreach $key (keys %{$rule}) {
+            foreach my $key (keys %{$rule}) {
                 if (defined $OPTION_MODIFIERS{$key} && $OPTION_MODIFIERS{$key} ne "") {
                     my $opresult;
                     my $modifier = $OPTION_MODIFIERS{$key};
@@ -487,11 +482,11 @@ sub GetResource {
                 }
 
                 if (defined $OPTION_VALIDATORS{$key} && $OPTION_VALIDATORS{$key} ne "") {
-                    $aux = $OPTION_VALIDATORS{$key};
+                    my $aux = $OPTION_VALIDATORS{$key};
                     if ($rule->{$key} !~ /^$aux$/ && $key =~ /^$val$/) {
                         my $skip = 0;
-                        foreach (@{$iptables_totality{$table}{targets}}) {
-                            $skip = 1 if $_ eq $rule->{$key};
+                        foreach my $target (@{$iptables_totality{$table}{targets}}) {
+                            $skip = 1 if $target eq $rule->{$key};
                         }
                         next if $skip;
                         push(@{$iptables_totality{$table}{targets}}, $rule->{$key});
@@ -500,11 +495,11 @@ sub GetResource {
                 }
             }
 
+            my $target;
             if (defined $rule->{'-j'}) {
                 $target = $rule->{'-j'};
                 $target =~ tr/A-Z/a-z/;
             }
-
 
             if (defined $entries->{$table}->{ordered_rules} && $entries->{$table}->{ordered_rules} eq "yes") {
                 $target = "ordered";
@@ -535,8 +530,6 @@ sub GetResource {
 #   ASSUME: If rule is not empty then is well formed.
 sub sort_keys {
     my ($self, $rule) = @_;
-    my ($i, $m, $purge, $swap, $reg);
-    my (@keys, @ord);
 
     $self->debug(5, "Entering method sort_keys");
 
@@ -547,11 +540,11 @@ sub sort_keys {
         return ();
     }
 
-    @keys = keys %{$rule};
+    my @keys = keys %{$rule};
 
-    $purge = 1;
+    my $purge = 1;
     WHILE: while ($purge) {
-        FOR: for ($i=0, $purge=0; $i<=$#keys; $i++) {
+        FOR: for (my $i=0, $purge=0; $i<=$#keys; $i++) {
             next if ($keys[$i] !~ /^(err|checked)$/);
             splice(@keys,$i,1);
             $purge = 1;
@@ -559,10 +552,10 @@ sub sort_keys {
         }
     }
 
-    $swap = 1;
+    my $swap = 1;
     while ($swap) {
-        for ($m=0, $swap=0; $m<$#keys; $m++) {
-            for ($i=$m+1; $i<=$#keys; $i++) {
+        for (my $m=0, $swap=0; $m<$#keys; $m++) {
+            for (my $i=$m+1; $i<=$#keys; $i++) {
                 $self->error("$keys[$i] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$i]};
                 $self->error("$keys[$m] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$m]};
 
@@ -573,7 +566,7 @@ sub sort_keys {
                     return @keys;
                 }
                 next if ($OPTION_SORT_ORDER{$keys[$i]} >= $OPTION_SORT_ORDER{$keys[$m]});
-                $reg = $keys[$i];
+                my $reg = $keys[$i];
                 $keys[$i] = $keys[$m];
                 $keys[$m] = $reg;
                 $swap++;
@@ -598,7 +591,6 @@ sub sort_keys {
 #   ASSUME: If rule is not empty then is well formed.
 sub rule_options_translate {
     my ($self, $rule) = @_;
-    my $key;
 
     $self->debug(5, "Entering method rule_options_translate");
 
@@ -609,7 +601,7 @@ sub rule_options_translate {
         return $?;
     }
 
-    foreach $key (keys %{$rule}) {
+    foreach my $key (keys %{$rule}) {
         next if (! defined $OPTION_MAPPINGS{$key} || $OPTION_MAPPINGS{$key} eq "");
         next if (defined $rule->{$OPTION_MAPPINGS{$key}});
         $rule->{$OPTION_MAPPINGS{$key}} = $rule->{$key};
@@ -636,8 +628,6 @@ sub rule_options_translate {
 #   ASSUME: The component resource path is well formed.
 sub WriteFile {
     my ($self, $filename, $iptables) = @_;
-    my ($table, $chain, $target, $rule, $name, $field, $line);
-    my (@names);
 
     $self->debug(5, "Entering method WriteFile");
 
@@ -663,7 +653,7 @@ sub WriteFile {
     # Write new content to file.
     if (defined $iptables && ref($iptables) =~ /^HASH/) {
         $self->debug(5, "iterating over tables");
-        foreach $table (keys %iptables_totality) {
+        foreach my $table (keys %iptables_totality) {
             $self->debug(5, "processing table $table");
             next if (!defined $iptables->{$table} || $iptables->{$table} eq "" || ref($iptables->{$table}) !~ /^HASH/);
             print $fh "*$table\n";
@@ -672,7 +662,7 @@ sub WriteFile {
                 my $preamble = $iptables->{$table}->{preamble};
                 $self->debug(5, "table has preamble $preamble");
 
-                foreach $chain (@{$iptables_totality{$table}{chains}}) {
+                foreach my $chain (@{$iptables_totality{$table}{chains}}) {
                     $self->debug(5, "processing chain $chain");
                     next if (!defined $preamble->{$chain} || $preamble->{$chain} eq "");
                     my $g = $chain;
@@ -683,23 +673,23 @@ sub WriteFile {
                 }
             }
 
-            foreach $target (sort keys %{$iptables_totality{$table}{user_targets}}){
+            foreach my $target (sort keys %{$iptables_totality{$table}{user_targets}}){
                 $self->debug(5, "defining target $target");
                 print $fh "-N $target\n";
             }
 
-            foreach $target (@{$iptables_totality{$table}{targets}}) {
+            foreach my $target (@{$iptables_totality{$table}{targets}}) {
                 $self->debug(5, "processing rules for target $target");
                 next if (!defined $iptables->{$table}->{rules}->{$target});
                 next if (ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/);
                 next if (!scalar(%{$iptables->{$table}->{rules}->{$target}}));
 
-                foreach $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
+                foreach my $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
                     $self->debug(5, "processing rule $name for target $target");
                     next if ($name !~ /^\d+$/);
-                    $rule = $iptables->{$table}->{rules}->{$target}->{$name};
-                    $line = '';
-                    foreach $field ($self->sort_keys($rule)) {
+                    my $rule = $iptables->{$table}->{rules}->{$target}->{$name};
+                    my $line = '';
+                    foreach my $field ($self->sort_keys($rule)) {
                         $line .= ($line) ? " $field" : $field;
                         $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
                     }
@@ -723,8 +713,6 @@ sub WriteFile {
 #                         hash tables, or the rules are different.
 sub cmp_rules {
     my ($self, $rule1, $rule2) = @_;
-    my ($field);
-    my (@fields1, @fields2);
 
     $self->debug(5, "Entering method cmp_rules");
 
@@ -743,8 +731,8 @@ sub cmp_rules {
     $? = 1;
     $@ = "rule is not in the list";
 
-    @fields1 = keys %{$rule1};
-    @fields2 = keys %{$rule2};
+    my @fields1 = keys %{$rule1};
+    my @fields2 = keys %{$rule2};
 
     return $? if (scalar(@fields1) <= 0 && scalar(@fields2) >  0);
     return $? if (scalar(@fields1) >  0 && scalar(@fields2) <= 0);
@@ -756,7 +744,7 @@ sub cmp_rules {
     }
     return $? if (scalar(@fields1) != scalar(@fields2));
 
-    foreach $field (@fields1) {
+    foreach my $field (@fields1) {
         return $? if (!defined $rule2->{$field} || $rule1->{$field} ne "$rule2->{$field}");
     }
 
@@ -775,7 +763,6 @@ sub cmp_rules {
 #                     - 1 the rule was not found.
 sub find_rule {
     my ($self, $rule, $hash) = @_;
-    my ($name);
 
     $self->debug(5, "Entering method find_rule");
 
@@ -795,7 +782,7 @@ sub find_rule {
         $@ = "hash list empty";
     }
 
-    foreach $name (keys %{$hash}) {
+    foreach my $name (keys %{$hash}) {
         next if ($name !~ /^\d+$/);
         next if (ref($hash->{$name}) !~ /^HASH/);
 
@@ -812,13 +799,12 @@ sub find_rule {
 
 sub Configure {
     my ($self, $config) = @_;
-    my $iptables;
     local $@;
 
     $self->debug(5, "Entering method Configure");
 
     # Get global components parameters
-    $iptables = $self->GetResource($path_iptables, $config);
+    my $iptables = $self->GetResource($path_iptables, $config);
     $self->error($@) and return 1 if $?;
 
     my $changes = $self->WriteFile($CONFIG_IPTABLES, $iptables);
