@@ -510,7 +510,7 @@ sub GetResource {
                 $target = "ordered";
             }
 
-            if ( defined $cnt->{$target} ) {
+            if (defined $cnt->{$target}) {
                 next if (!$self->find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}));
                 $entries->{$table}->{rules}->{$target}->{$cnt->{$target}} = $rule;
                 $cnt->{$target}++;
@@ -550,8 +550,8 @@ sub sort_keys {
     @keys = keys %{$rule};
 
     $purge = 1;
-    WHILE: while($purge) {
-        FOR: for($i=0, $purge=0; $i<=$#keys; $i++) {
+    WHILE: while ($purge) {
+        FOR: for ($i=0, $purge=0; $i<=$#keys; $i++) {
             next if ($keys[$i] !~ /^(err|checked)$/);
             splice(@keys,$i,1);
             $purge = 1;
@@ -561,8 +561,8 @@ sub sort_keys {
 
     $swap = 1;
     while ($swap) {
-        for($m=0, $swap=0; $m<$#keys; $m++) {
-            for($i=$m+1; $i<=$#keys; $i++) {
+        for ($m=0, $swap=0; $m<$#keys; $m++) {
+            for ($i=$m+1; $i<=$#keys; $i++) {
                 $self->error("$keys[$i] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$i]};
                 $self->error("$keys[$m] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$m]};
 
@@ -650,9 +650,9 @@ sub WriteFile {
 
     # Open the file.
     my $fh = CAF::FileWriter->open($filename, {
-            owner => 'root',
-            group => 'root',
-            mode => '0444',
+        owner => 'root',
+        group => 'root',
+        mode => '0444',
     });
 
     # write our "tag" into it. Assist some poor admin in debugging..
@@ -661,7 +661,7 @@ sub WriteFile {
     $self->debug(5, "Wrote header tag to file");
 
     # Write new content to file.
-    if ( defined $iptables && ref($iptables) =~ /^HASH/ ) {
+    if (defined $iptables && ref($iptables) =~ /^HASH/) {
         $self->debug(5, "iterating over tables");
         foreach $table (keys %iptables_totality) {
             $self->debug(5, "processing table $table");
@@ -690,9 +690,9 @@ sub WriteFile {
 
             foreach $target (@{$iptables_totality{$table}{targets}}) {
                 $self->debug(5, "processing rules for target $target");
-                next if ( ! defined $iptables->{$table}->{rules}->{$target}         );
-                next if (   ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/ );
-                next if ( ! scalar(%{$iptables->{$table}->{rules}->{$target}})      );
+                next if (!defined $iptables->{$table}->{rules}->{$target});
+                next if (ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/);
+                next if (!scalar(%{$iptables->{$table}->{rules}->{$target}}));
 
                 foreach $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
                     $self->debug(5, "processing rule $name for target $target");
