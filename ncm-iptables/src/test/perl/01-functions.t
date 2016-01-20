@@ -1,16 +1,27 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 15;
 use NCM::Component::iptables;
 
 my $cmp = NCM::Component::iptables->new('iptables');
 
-is($cmp->uppercase('abc'), 'ABC', 'function uppercase capitalises correctly');
-is($cmp->uppercase('123'), '123', 'function uppercase ignores numerals');
+is($cmp->uppercase('abc'), 'ABC', 'uppercase capitalises correctly');
+is($cmp->uppercase('123'), '123', 'uppercase ignores numerals');
 
-is($cmp->quote_string('word'), 'word', 'function quote_string does not quote a single word');
-is($cmp->quote_string('  whitespace    '), 'whitespace', 'function quote_string does not quote a single word surrounded by whitespace');
-is($cmp->quote_string('multiple words'), '"multiple words"', 'function quote_string quotes multiple words correctly');
-is($cmp->quote_string('   multiple  whitespaced  words   '), '"multiple  whitespaced  words"', 'function quote_string quotes multiple words surrounded by whitespace correctly');
+is($cmp->trim_whitespace(), '', 'trim_whitespace returns empty string when undef passed');
+is($cmp->trim_whitespace('     Hemispheres'), 'Hemispheres', 'trim_whitespace removes leading whitespace');
+is($cmp->trim_whitespace('Permanent Waves        '), 'Permanent Waves', 'trim_whitespace removes trailing whitespace');
+is($cmp->trim_whitespace('  Moving Pictures   '), 'Moving Pictures', 'trim_whitespace remove leading and trailing whitespace');
+
+is($cmp->collapse_whitespace(), '', 'collapse_whitespace returns empty string when undef passed');
+is($cmp->collapse_whitespace('Signals      '), 'Signals ', 'collapse_whitespace collapses leading whitespace');
+is($cmp->collapse_whitespace('Grace          Under    Pressure'), 'Grace Under Pressure', 'collapse_whitespace collapses inner whitespace');
+is($cmp->collapse_whitespace('        Power Windows'), ' Power Windows', 'collapse_whitespace collapses leading whitespace');
+is($cmp->collapse_whitespace("Hold\tYour\tFire"), 'Hold Your Fire', 'collapse_whitespace collapses tabs');
+
+is($cmp->quote_string('word'), 'word', 'quote_string does not quote a single word');
+is($cmp->quote_string('  whitespace    '), 'whitespace', 'quote_string does not quote a single word surrounded by whitespace');
+is($cmp->quote_string('multiple words'), '"multiple words"', 'quote_string quotes multiple words correctly');
+is($cmp->quote_string('   multiple  whitespaced  words   '), '"multiple  whitespaced  words"', 'quote_string quotes multiple words surrounded by whitespace correctly');
 
 done_testing();

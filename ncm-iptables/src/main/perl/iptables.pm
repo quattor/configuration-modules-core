@@ -251,9 +251,23 @@ Readonly::Hash my %OPTION_MODIFIERS => (
     '--comment' => 'quote_string',
 );
 
+sub trim_whitespace {
+    # Trim leading and trailing whitespace
+    my ($self, $text) = @_;
+    $text =~ s/^\s+|\s+$//g;
+    return defined $text ? $text : '';
+}
+
+sub collapse_whitespace {
+    # Collapse multiple whitespace characters into a single space
+    my ($self, $text) = @_;
+    $text =~ s/\s+/ /g;
+    return defined $text ? $text : '';
+}
+
 sub quote_string {
     my ($self, $text) = @_;
-    $text =~ s/^\s+|\s+$//g; # Strip leading and trailing whitespace
+    $text = $self->trim_whitespace($text);
     if ($text =~ /\s/) {
         # Only quote if string still contains whitespace
         $text = "\"$text\"";
@@ -380,8 +394,8 @@ sub GetPathEntries {
             # Boolean options are handled by this code as seperate options (e.g. syn/nosyn) with empty values which is just horrible
             $value = ''
         }
-        $value =~ s/^\s*|\s*$//g;
-        $value =~ s/\s+/ /g;
+        $value = $self->trim_whitespace($value);
+        $value = $self->collapse_whitespace($value);
 
         #this is a fix for the issue of values with the "command" key
         #no translation => iptables screwing up
@@ -667,8 +681,8 @@ sub WriteFile {
                     next if (!defined $preamble->{$chain} || $preamble->{$chain} eq "");
                     my $g = $chain;
                     $g =~ tr/a-z/A-Z/;
-                    $preamble->{$chain} =~ s/^[\s\t]*|[\s\t]*$//g;
-                    $preamble->{$chain} =~ s/[\s\t+]/ /g;
+                    $preamble->{$chain} = $self->trim_whitespace($preamble->{$chain});
+                    $preamble->{$chain} = $self->collapse_whitespace($preamble->{$chain});
                     print $fh ":$g $preamble->{$chain}\n";
                 }
             }
