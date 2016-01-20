@@ -653,11 +653,12 @@ sub WriteFile {
     }
 
     # Open the file.
-    my $fh = CAF::FileWriter->open($filename, {
+    my $fh = CAF::FileWriter->open(
+        $filename,
         owner => 'root',
         group => 'root',
         mode => '0444',
-    });
+    );
 
     # write our "tag" into it. Assist some poor admin in debugging..
     print $fh "# Firewall configuration written by ncm-iptables\n";
