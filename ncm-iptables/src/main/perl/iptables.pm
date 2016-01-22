@@ -53,63 +53,63 @@ sub regExp {
     return $reg;
 }
 
-# Right order for iptables options.
-Readonly::Hash my %OPTION_SORT_ORDER => (
-    '-N'                 => 0,
-    '-A'                 => 0,
-    '-D'                 => 0,
-    '-I'                 => 0,
-    '-R'                 => 0,
-    '-s'                 => 1,
-    '-d'                 => 2,
-    '-p'                 => 3,
-    '--in-interface'     => 6,
-    '--out-interface'    => 7,
-    '--match'            => 8,
-    '--fragment'         => 9,
-    '! --fragment'       => 9,
-    '--set'              => 9,
-    '--sport'            => 9,
-    '--dport'            => 9,
-    '--dports'           => 9,
-    '--sports'           => 9,
-    '--pkt-type'         => 9,
-    '--state'            => 9,
-    '--ctstate'          => 9,
-    '--ttl'              => 9,
-    '--tos'              => 9,
-    '--sid-owner'        => 9,
-    '--limit'            => 9,
-    '--rcheck'           => 10,
-    '--remove'           => 10,
-    '--rdest'            => 10,
-    '--rsource'          => 10,
-    '--rttl'             => 10,
-    '--update'           => 10,
-    '--seconds'          => 11,
-    '--hitcount'         => 11,
-    '--name'             => 11,
-    '--uid-owner'        => 11,
-    '--syn'              => 12,
-    '! --syn'            => 12,
-    '--icmp-type'        => 13,
-    '--tcp-flags'        => 13,
-    '--tcp-option'       => 13,
-    '--length'           => 13,
-    '-j'                 => 14,
-    '--log-prefix'       => 15,
-    '--log-tcp-sequence' => 16,
-    '--reject-with'      => 16,
-    '--set-class'        => 17,
-    '--log-level'        => 18,
-    '--log-tcp-options'  => 19,
-    '--log-ip-options'   => 20,
-    '--log-uid'          => 20,
-    '--limit-burst'      => 21,
-    '--to-destination'   => 22,
-    '--to-source'        => 22,
-    '--to-ports'         => 22,
-    '--comment'          => 23,
+# Define the correct order for iptables options sorted into
+Readonly::Array my @OPTION_SORT_ORDER => (
+    '-N',
+    '-A',
+    '-D',
+    '-I',
+    '-R',
+    '-s',
+    '-d',
+    '-p',
+    '--in-interface',
+    '--out-interface',
+    '--match',
+    '--fragment',
+    '! --fragment',
+    '--set',
+    '--sport',
+    '--dport',
+    '--dports',
+    '--sports',
+    '--pkt-type',
+    '--state',
+    '--ctstate',
+    '--ttl',
+    '--tos',
+    '--sid-owner',
+    '--limit',
+    '--rcheck',
+    '--remove',
+    '--rdest',
+    '--rsource',
+    '--rttl',
+    '--update',
+    '--seconds',
+    '--hitcount',
+    '--name',
+    '--uid-owner',
+    '--syn',
+    '! --syn',
+    '--icmp-type',
+    '--tcp-flags',
+    '--tcp-option',
+    '--length',
+    '-j',
+    '--log-prefix',
+    '--log-tcp-sequence',
+    '--reject-with',
+    '--set-class',
+    '--log-level',
+    '--log-tcp-options',
+    '--log-ip-options',
+    '--log-uid',
+    '--limit-burst',
+    '--to-destination',
+    '--to-source',
+    '--to-ports',
+    '--comment',
 );
 
 # Translate resource names to iptables options.
@@ -549,48 +549,19 @@ sub sort_keys {
 
     # Check parameters.
     if ($rule !~ /^HASH/) {
-        $? = 1;
-        $@ = "bad rule";
+        $self->error("Rule passed to sort_keys is not a hash");
         return ();
     }
 
-    my @keys = keys %{$rule};
-
-    my $purge = 1;
-    while ($purge) {
-        for (my $i=0, $purge=0; $i<=$#keys; $i++) {
-            next if ($keys[$i] !~ /^(err|checked)$/);
-            splice(@keys,$i,1);
-            $purge = 1;
-            last;
+    my @keys;
+    foreach my $option (@OPTION_SORT_ORDER) {
+        if (exists $rule->{$option}) {
+            $self->debug(9, "Found $option in rule");
+            push @keys, $option;
         }
     }
 
-    my $swap = 1;
-    while ($swap) {
-        for (my $m=0, $swap=0; $m<$#keys; $m++) {
-            for (my $i=$m+1; $i<=$#keys; $i++) {
-                $self->error("$keys[$i] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$i]};
-                $self->error("$keys[$m] is not a valid option\n") if ! exists $OPTION_SORT_ORDER{$keys[$m]};
-
-                #next
-                if (!exists $OPTION_SORT_ORDER{$keys[$i]} || !exists $OPTION_SORT_ORDER{$keys[$m]}) {
-                    $? = 1;
-                    $@ = "keys unsorted";
-                    return @keys;
-                }
-                next if ($OPTION_SORT_ORDER{$keys[$i]} >= $OPTION_SORT_ORDER{$keys[$m]});
-                my $reg = $keys[$i];
-                $keys[$i] = $keys[$m];
-                $keys[$m] = $reg;
-                $swap++;
-            }
-        }
-    }
-
-    $? = 0;
-    $@ = "keys sorted";
-
+    $self->debug(5, "Finished sorting keys");
     return @keys;
 }
 
