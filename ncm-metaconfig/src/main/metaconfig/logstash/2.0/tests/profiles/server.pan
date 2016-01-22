@@ -107,11 +107,8 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                     "join", "and",
                     "left", "[jube_id]",
                 ))),
-            "convert", list(
-                nlist(
-                    "name", "success",
-                    "pattern", "boolean"
-                )
+            "convert", dict(
+                "success", "boolean"
             ))),
         nlist("bytes2human", nlist(
             "convert", nlist(

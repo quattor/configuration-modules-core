@@ -185,9 +185,11 @@ type logstash_filter_drop = {
     "periodic_flush" ? boolean
 };
 
+type logstash_filter_mutate_convert = string with match(SELF, '^(integer|float|string|boolean)$');
+
 type logstash_filter_mutate = {
     include logstash_filter_plugin_common
-    "convert" ? logstash_name_pattern[]
+    "convert" ? logstash_filter_mutate_convert{}
     "replace" ? logstash_name_pattern[]
     "rename" ? string{}
     "split" ? string{}
