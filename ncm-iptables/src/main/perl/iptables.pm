@@ -557,12 +557,12 @@ sub sort_keys {
     my @keys = keys %{$rule};
 
     my $purge = 1;
-    WHILE: while ($purge) {
-        FOR: for (my $i=0, $purge=0; $i<=$#keys; $i++) {
+    while ($purge) {
+        for (my $i=0, $purge=0; $i<=$#keys; $i++) {
             next if ($keys[$i] !~ /^(err|checked)$/);
             splice(@keys,$i,1);
             $purge = 1;
-            last FOR;
+            last;
         }
     }
 
