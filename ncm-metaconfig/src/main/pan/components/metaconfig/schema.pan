@@ -11,9 +11,10 @@ include 'quattor/functions/validation';
 type ${project.artifactId}_extension = extensible {};
 
 @documentation{
-    Set CCM::TextRender element options
+    Convert value of certain types (e.g. boolean to string yes/no)
+    (using the CCM::TextRender element options)
 }
-type ${project.artifactId}_textrender_element_options = {
+type ${project.artifactId}_textrender_convert = {
     @{Convert boolean to (lowercase) 'yes' and 'no'.}
     'yesno' ? boolean
     @{Convert boolean to (uppercase) 'YES' and 'NO'.}
@@ -30,7 +31,7 @@ type ${project.artifactId}_textrender_element_options = {
     # Only one boolean conversion can be true
     boolean_conversion = list('yesno', 'YESNO', 'truefalse', 'TRUEFALSE');
     found = false;
-    foreach(idx;opt;boolean_conversion) {
+    foreach (idx; name; boolean_conversion) {
         if(exists(SELF[name]) && SELF[name]) {
             if(found) {
                 error('metaconfig element can only have one boolean conversion enabled, got '+to_string(SELF));
@@ -42,7 +43,7 @@ type ${project.artifactId}_textrender_element_options = {
     # Only one string conversion can be true
     string_conversion = list('singlequote', 'doublequote');
     found = false;
-    foreach(idx;opt;string_conversion) {
+    foreach (idx; name; string_conversion) {
         if(exists(SELF[name]) && SELF[name]) {
             if(found) {
                 error('metaconfig element can only have one string conversion enabled, got '+to_string(SELF));
@@ -64,7 +65,7 @@ type ${project.artifactId}_config =  {
     'backup' ? string
     'preamble' ? string
     'contents' : ${project.artifactId}_extension
-    'element' ? ${project.artifactId}_textrender_element_options
+    'convert' ? ${project.artifactId}_textrender_convert
 } = nlist();
 
 type ${project.artifactId}_component = {

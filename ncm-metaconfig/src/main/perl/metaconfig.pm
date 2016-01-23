@@ -102,7 +102,7 @@ sub handle_service
                                              $contents,
                                              log => $self,
                                              eol => 0,
-                                             element => $srv->{element},
+                                             element => $srv->{convert},
                                              );
 
     my %opts  = (log => $self,
