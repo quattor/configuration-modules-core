@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 16;
 use NCM::Component::iptables;
 
 my $cmp = NCM::Component::iptables->new('iptables');
@@ -23,5 +23,18 @@ is($cmp->quote_string('word'), 'word', 'quote_string does not quote a single wor
 is($cmp->quote_string('  whitespace    '), 'whitespace', 'quote_string does not quote a single word surrounded by whitespace');
 is($cmp->quote_string('multiple words'), '"multiple words"', 'quote_string quotes multiple words correctly');
 is($cmp->quote_string('   multiple  whitespaced  words   '), '"multiple  whitespaced  words"', 'quote_string quotes multiple words surrounded by whitespace correctly');
+
+# Test sort_keys method
+my $example_rule = {
+    '--comment' => 'Should be last',
+    '-j' => 'Should be middle',
+    '-A' => 'Should be first',
+};
+
+my @sorted = $cmp->sort_keys($example_rule);
+my @expected = ('-A', '-j', '--comment');
+
+is_deeply(\@sorted, \@expected, "sort_keys sorts example keys correctly");
+undef $example_rule, @sorted, @expected;
 
 done_testing();
