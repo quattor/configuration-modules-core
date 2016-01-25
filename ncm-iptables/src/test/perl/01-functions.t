@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 16;
+use Test::More tests => 17;
 use NCM::Component::iptables;
 
 my $cmp = NCM::Component::iptables->new('iptables');
@@ -36,5 +36,20 @@ my @expected = ('-A', '-j', '--comment');
 
 is_deeply(\@sorted, \@expected, "sort_keys sorts example keys correctly");
 undef $example_rule, @sorted, @expected;
+
+# Test rule_options_translate method
+my $translate_rule = {
+    'append' => 'abc',
+    'source' => 'def',
+    'jump' => 'ghi',
+};
+my $translate_expected = {
+    '-A' => 'abc',
+    '-s' => 'def',
+    '-j' => 'ghi',
+};
+$cmp->rule_options_translate($translate_rule);
+
+is_deeply($translate_rule, $translate_expected, 'rule_options_translate translates example correctly');
 
 done_testing();
