@@ -283,7 +283,7 @@ sub quote_string {
 sub dns2ip {
     my ($self, $name) = @_;
 
-    if (!defined $name || $name eq "") {
+    if (!$name) {
         $self->debug(2, "dns2ip-BAD: empty name");
         return '';
     };
@@ -359,12 +359,12 @@ sub GetPathEntries {
     $self->debug(5, "Entering method GetPathEntries");
 
     # Check the input parameters.
-    if (!defined $path || $path   eq "") {
+    if (!$path) {
         $? = 1;
         $@ = "resource path to query empty";
         return $entries;
     }
-    if (!defined $config || $config eq "") {
+    if (!$config) {
         $? = 3;
         $@ = "missing configuration object when getting resource path \"$path\"";
         return $entries;
@@ -482,7 +482,7 @@ sub GetResource {
             my $val = $self->regExp(@{$iptables_totality{$table}{commands}});
 
             foreach my $key (keys %{$rule}) {
-                if (defined $OPTION_MODIFIERS{$key} && $OPTION_MODIFIERS{$key} ne "") {
+                if ($OPTION_MODIFIERS{$key}) {
                     my $opresult;
                     my $modifier = $OPTION_MODIFIERS{$key};
                     $opresult = $self->$modifier($rule->{$key});
@@ -495,7 +495,7 @@ sub GetResource {
                     }
                 }
 
-                if (defined $OPTION_VALIDATORS{$key} && $OPTION_VALIDATORS{$key} ne "") {
+                if ($OPTION_VALIDATORS{$key}) {
                     my $aux = $OPTION_VALIDATORS{$key};
                     if ($rule->{$key} !~ /^$aux$/ && $key =~ /^$val$/) {
                         my $skip = 0;
@@ -587,7 +587,7 @@ sub rule_options_translate {
     }
 
     foreach my $key (keys %{$rule}) {
-        next if (! defined $OPTION_MAPPINGS{$key} || $OPTION_MAPPINGS{$key} eq "");
+        next if (!$OPTION_MAPPINGS{$key});
         next if (defined $rule->{$OPTION_MAPPINGS{$key}});
         $rule->{$OPTION_MAPPINGS{$key}} = $rule->{$key};
         delete $rule->{$key};
@@ -617,7 +617,7 @@ sub WriteFile {
     $self->debug(5, "Entering method WriteFile");
 
     # Check input parameters.
-    if (!defined $filename || $filename eq "") {
+    if (!$filename) {
         $? = 1;
         $@ = 'filename to write missing';
         return $?;
@@ -641,7 +641,7 @@ sub WriteFile {
         $self->debug(5, "iterating over tables");
         foreach my $table (keys %iptables_totality) {
             $self->debug(5, "processing table $table");
-            next if (!defined $iptables->{$table} || $iptables->{$table} eq "" || ref($iptables->{$table}) !~ /^HASH/);
+            next if (!$iptables->{$table} || ref($iptables->{$table}) !~ /^HASH/);
             print $fh "*$table\n";
 
             if (defined $iptables->{$table}->{preamble} && ref($iptables->{$table}->{preamble}) =~ /^HASH/ ) {
@@ -650,7 +650,7 @@ sub WriteFile {
 
                 foreach my $chain (@{$iptables_totality{$table}{chains}}) {
                     $self->debug(5, "processing chain $chain");
-                    next if (!defined $preamble->{$chain} || $preamble->{$chain} eq "");
+                    next if (!$preamble->{$chain});
                     my $g = $chain;
                     $g =~ tr/a-z/A-Z/;
                     $preamble->{$chain} = $self->trim_whitespace($preamble->{$chain});
