@@ -304,11 +304,7 @@ sub dns2ip
 
     if ($name =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d{1,2}){0,1}$|\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) { # optional netmask or CIDR postfix
         $self->debug(2, "dns2ip-OK: already numeric");
-        if ($isneg) {
-            return "! ".$name;
-        } else {
-            return $name;
-        }
+        return ($isneg ? '! ' : '').$name;
     }
 
     my ($hostname, $alias, $addrtype, $length, $addr) = gethostbyname($name);
@@ -328,12 +324,7 @@ sub dns2ip
 
     $name = join('.', @addr);
     $self->debug(2, "dns2ip-OK: resolved $name");
-
-    if ($isneg) {
-        return "! $name";
-    } else {
-        return $name;
-    }
+    return ($isneg ? '! ' : '').$name;
 }
 
 # uppercase() Transform all lowercase text to uppercase.
