@@ -475,7 +475,7 @@ sub GetResource
                 }
             }
 
-            $rule->{command}=$iptables_totality{$table}{commands}[0] if(!defined $rule->{command} || $rule->{command} eq "");
+            $rule->{command} = $iptables_totality{$table}{commands}[0] if(!$rule->{command});
             $rule->{$rule->{command}} = $rule->{chain};
             delete $rule->{command};
             delete $rule->{chain};
