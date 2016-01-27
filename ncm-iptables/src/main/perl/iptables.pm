@@ -617,9 +617,13 @@ sub WriteFile
 
     # Check input parameters.
     if (!$filename) {
-        $? = 1;
-        $@ = 'filename to write missing';
-        return $?;
+        $self->error('No filename passed to WriteFile');
+        return 0;
+    }
+
+    if (!$iptables) {
+        $self->error("No iptables rules passed to WriteFile");
+        return 0;
     }
 
     # Open the file.
@@ -636,53 +640,51 @@ sub WriteFile
     $self->debug(5, "Wrote header tag to file");
 
     # Write new content to file.
-    if (defined $iptables && ref($iptables) =~ /^HASH/) {
-        $self->debug(5, "iterating over tables");
-        foreach my $table (keys %iptables_totality) {
-            $self->debug(5, "processing table $table");
-            next if (!$iptables->{$table} || ref($iptables->{$table}) !~ /^HASH/);
-            print $fh "*$table\n";
+    $self->debug(5, "iterating over tables");
+    foreach my $table (keys %iptables_totality) {
+        $self->debug(5, "processing table $table");
+        next if (!$iptables->{$table} || ref($iptables->{$table}) !~ /^HASH/);
+        print $fh "*$table\n";
 
-            if (defined $iptables->{$table}->{preamble} && ref($iptables->{$table}->{preamble}) =~ /^HASH/ ) {
-                my $preamble = $iptables->{$table}->{preamble};
-                $self->debug(5, "table has preamble $preamble");
+        if (defined $iptables->{$table}->{preamble} && ref($iptables->{$table}->{preamble}) =~ /^HASH/ ) {
+            my $preamble = $iptables->{$table}->{preamble};
+            $self->debug(5, "table has preamble $preamble");
 
-                foreach my $chain (@{$iptables_totality{$table}{chains}}) {
-                    $self->debug(5, "processing chain $chain");
-                    next if (!$preamble->{$chain});
-                    my $g = $chain;
-                    $g =~ tr/a-z/A-Z/;
-                    $preamble->{$chain} = $self->trim_whitespace($preamble->{$chain});
-                    $preamble->{$chain} = $self->collapse_whitespace($preamble->{$chain});
-                    print $fh ":$g $preamble->{$chain}\n";
-                }
+            foreach my $chain (@{$iptables_totality{$table}{chains}}) {
+                $self->debug(5, "processing chain $chain");
+                next if (!$preamble->{$chain});
+                my $g = $chain;
+                $g =~ tr/a-z/A-Z/;
+                $preamble->{$chain} = $self->trim_whitespace($preamble->{$chain});
+                $preamble->{$chain} = $self->collapse_whitespace($preamble->{$chain});
+                print $fh ":$g $preamble->{$chain}\n";
             }
-
-            foreach my $target (sort keys %{$iptables_totality{$table}{user_targets}}){
-                $self->debug(5, "defining target $target");
-                print $fh "-N $target\n";
-            }
-
-            foreach my $target (@{$iptables_totality{$table}{targets}}) {
-                $self->debug(5, "processing rules for target $target");
-                next if (!defined $iptables->{$table}->{rules}->{$target});
-                next if (ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/);
-                next if (!scalar(%{$iptables->{$table}->{rules}->{$target}}));
-
-                foreach my $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
-                    $self->debug(5, "processing rule $name for target $target");
-                    next if ($name !~ /^\d+$/);
-                    my $rule = $iptables->{$table}->{rules}->{$target}->{$name};
-                    my $line = '';
-                    foreach my $field ($self->sort_keys($rule)) {
-                        $line .= ($line) ? " $field" : $field;
-                        $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
-                    }
-                    print $fh "$line\n" if $line and $line !~ /^-N/;
-                }
-            }
-            print $fh "$iptables->{$table}->{epilogue}\n" if (defined $iptables->{$table}->{epilogue} && $iptables->{$table}->{epilogue} ne "");
         }
+
+        foreach my $target (sort keys %{$iptables_totality{$table}{user_targets}}){
+            $self->debug(5, "defining target $target");
+            print $fh "-N $target\n";
+        }
+
+        foreach my $target (@{$iptables_totality{$table}{targets}}) {
+            $self->debug(5, "processing rules for target $target");
+            next if (!defined $iptables->{$table}->{rules}->{$target});
+            next if (ref($iptables->{$table}->{rules}->{$target}) !~ /^HASH/);
+            next if (!scalar(%{$iptables->{$table}->{rules}->{$target}}));
+
+            foreach my $name (sort { $a <=> $b; } keys %{$iptables->{$table}->{rules}->{$target}}) {
+                $self->debug(5, "processing rule $name for target $target");
+                next if ($name !~ /^\d+$/);
+                my $rule = $iptables->{$table}->{rules}->{$target}->{$name};
+                my $line = '';
+                foreach my $field ($self->sort_keys($rule)) {
+                    $line .= ($line) ? " $field" : $field;
+                    $line .= " $rule->{$field}" if $OPTION_VALIDATORS{$field};
+                }
+                print $fh "$line\n" if $line and $line !~ /^-N/;
+            }
+        }
+        print $fh "$iptables->{$table}->{epilogue}\n" if (defined $iptables->{$table}->{epilogue} && $iptables->{$table}->{epilogue} ne "");
     }
 
     return $fh->close();
