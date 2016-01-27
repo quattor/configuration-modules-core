@@ -512,8 +512,7 @@ sub GetResource
 
             my $target;
             if (defined $rule->{'-j'}) {
-                $target = $rule->{'-j'};
-                $target =~ tr/A-Z/a-z/;
+                $target = lc($rule->{'-j'});
             }
 
             if (defined $entries->{$table}->{ordered_rules} && $entries->{$table}->{ordered_rules} eq "yes") {
@@ -653,8 +652,7 @@ sub WriteFile
             foreach my $chain (@{$iptables_totality{$table}{chains}}) {
                 $self->debug(5, "processing chain $chain");
                 next if (!$preamble->{$chain});
-                my $g = $chain;
-                $g =~ tr/a-z/A-Z/;
+                my $g = uc($chain);
                 $preamble->{$chain} = $self->trim_whitespace($preamble->{$chain});
                 $preamble->{$chain} = $self->collapse_whitespace($preamble->{$chain});
                 print $fh ":$g $preamble->{$chain}\n";
