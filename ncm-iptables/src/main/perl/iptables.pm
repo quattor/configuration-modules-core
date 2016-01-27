@@ -10,7 +10,7 @@ use strict;
 use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+$EC = LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use File::Copy;
 use LC::Process qw(run);
