@@ -13,7 +13,7 @@ use vars qw(@ISA $EC);
 $EC = LC::Exception::Context->new->will_store_all;
 use NCM::Check;
 use File::Copy;
-use LC::Process qw(run);
+use CAF::Process;
 use LC::Check;
 use CAF::FileWriter;
 use Readonly;
@@ -798,20 +798,13 @@ sub Configure
     my $changes = $self->WriteFile($CONFIG_IPTABLES, $iptables);
     $self->debug(5, "WriteFile returned $changes");
     if ($changes) {
-        # Reload the service - file changed
-        if ($NoAction) {
-            $self->info("Would run \"/sbin/service iptables condrestart\"");
+        my $proc = CAF::Process->new([qw(/sbin/service iptables condrestart)], log=> $self);
+        my $ip_stdouterr = $proc->output();
+        if ($?) {
+            $self->error("command \"$proc\" failed:\n$ip_stdouterr");
         } else {
-            # allow no "dangling" file descriptors, this may be executing in a restricted targeted SELinux context
-            my $ip_stdouterr;
-            if (LC::Process::execute([qw(/sbin/service iptables condrestart)], "stdout" => \$ip_stdouterr, "stderr" => "stdout")) {
-                $self->info("ran \"/sbin/service iptables condrestart\"");
-                if($ip_stdouterr) {
-                    $self->info($ip_stdouterr);
-                }
-            } else {
-                $self->error("command \"/sbin/service iptables condrestart\" failed:\n$ip_stdouterr");
-            }
+            $self->info("ran command \"$proc\"");
+            $self->info($ip_stdouterr) if ($ip_stdouterr);
         }
     } else {
         $self->info("No change for $CONFIG_IPTABLES, not restarting service");
