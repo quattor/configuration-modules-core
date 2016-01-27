@@ -27,7 +27,6 @@ is("$fh", '# Firewall configuration written by ncm-iptables
 :INPUT DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]
--N ACCEPT
 -A INPUT -s 10.0.0.0/8 -j ACCEPT
 -A INPUT --match state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT --in-interface lo -j ACCEPT
