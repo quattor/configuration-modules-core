@@ -49,7 +49,8 @@ my %iptables_totality = (
 
 # Craft a regular expression from a list of options
 # by joining the list with the alternative operator
-sub regExp {
+sub regExp
+{
     my ($self, $reg) = @_;
     $reg =~ s/\s/\|/g;
     return $reg;
@@ -254,21 +255,24 @@ Readonly::Hash my %OPTION_MODIFIERS => (
 );
 
 # Trim leading and trailing whitespace from a string
-sub trim_whitespace {
+sub trim_whitespace
+{
     my ($self, $text) = @_;
     $text =~ s/^\s+|\s+$//g;
     return defined $text ? $text : '';
 }
 
 # Collapse repeated whitespace characters into single space characters
-sub collapse_whitespace {
+sub collapse_whitespace
+{
     my ($self, $text) = @_;
     $text =~ s/\s+/ /g;
     return defined $text ? $text : '';
 }
 
 # Wrap strings containing whitespace in quotation marks
-sub quote_string {
+sub quote_string
+{
     my ($self, $text) = @_;
     $text = $self->trim_whitespace($text);
     if ($text =~ /\s/) {
@@ -282,7 +286,8 @@ sub quote_string {
 # SYNOPSYS: $ip dns2ip ( $name )
 #    INPUT: $name     - host name to translate;
 #   OUTPUT: $ip       - ip address.
-sub dns2ip {
+sub dns2ip
+{
     my ($self, $name) = @_;
 
     if (!$name) {
@@ -336,7 +341,8 @@ sub dns2ip {
 # SYNOPSYS: $text uppercase ( $text )
 #    INPUT: $text     - text to transform;
 #   OUTPUT: $text     - text in uppercase.
-sub uppercase {
+sub uppercase
+{
     my ($self, $text) = @_;
     return defined $text ? uc($text) : '';
 }
@@ -354,7 +360,8 @@ sub uppercase {
 #                     - 4 $config is not an object,
 #                     - 5 $path doesn't exist as a resource path,
 #                     - 6 $path has no entries.
-sub GetPathEntries {
+sub GetPathEntries
+{
     my ($self, $path, $config) = @_;
     my $entries = {};
 
@@ -428,7 +435,8 @@ sub GetPathEntries {
 #                     - 6 $path has no entries,
 #                     - 7 resource have at least one bad rule.
 #   ASSUME: The rules content is valid.
-sub GetResource {
+sub GetResource
+{
     my ($self, $path, $config) = @_;
 
     $self->debug(5, "Entering method GetResource");
@@ -544,7 +552,8 @@ sub GetResource {
 #                     - 1 error.
 #      USE: %OPTION_SORT_ORDER
 #   ASSUME: If rule is not empty then is well formed.
-sub sort_keys {
+sub sort_keys
+{
     my ($self, $rule) = @_;
 
     $self->debug(5, "Entering method sort_keys");
@@ -576,7 +585,8 @@ sub sort_keys {
 #                     - 1 error.
 #      USE: %OPTION_MAPPINGS
 #   ASSUME: If rule is not empty then is well formed.
-sub rule_options_translate {
+sub rule_options_translate
+{
     my ($self, $rule) = @_;
 
     $self->debug(5, "Entering method rule_options_translate");
@@ -613,7 +623,8 @@ sub rule_options_translate {
 #                     - 6 cannot open $filename for writing,
 #                     - 7 cannot close $filename.
 #   ASSUME: The component resource path is well formed.
-sub WriteFile {
+sub WriteFile
+{
     my ($self, $filename, $iptables) = @_;
 
     $self->debug(5, "Entering method WriteFile");
@@ -699,7 +710,8 @@ sub WriteFile {
 #   OUTPUT: $?        - 0 the rules are equal,
 #                     - 1 one, or the two rules, is empty or is not an
 #                         hash tables, or the rules are different.
-sub cmp_rules {
+sub cmp_rules
+{
     my ($self, $rule1, $rule2) = @_;
 
     $self->debug(5, "Entering method cmp_rules");
@@ -749,7 +761,8 @@ sub cmp_rules {
 #                       are on the forma (0,hash), (1,hash), ...;
 #   OUTPUT: $?        - 0 the rules was found,
 #                     - 1 the rule was not found.
-sub find_rule {
+sub find_rule
+{
     my ($self, $rule, $hash) = @_;
 
     $self->debug(5, "Entering method find_rule");
@@ -785,7 +798,8 @@ sub find_rule {
     return $?;
 }
 
-sub Configure {
+sub Configure
+{
     my ($self, $config) = @_;
     local $@;
 
