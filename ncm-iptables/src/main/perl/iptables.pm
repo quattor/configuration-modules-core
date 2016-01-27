@@ -606,14 +606,9 @@ sub rule_options_translate
 #
 # SYNOPSYS: $? WriteFile ( $filename, $iptables )
 #    INPUT: $filename - full path to the filename;
-#           $path     - main component resource path,
-#           $config   - component object descriptor;
-#   OUTPUT: $?        - 0 $filename writed,
-#                     - 1 $filename is missing,
-#                     - 2 $path missing,
-#                     - 6 cannot open $filename for writing,
-#                     - 7 cannot close $filename.
-#   ASSUME: The component resource path is well formed.
+#           $iptables - hash of iptables rules;
+#   OUTPUT: $?        - 0 Not changes to $filename,
+#                     - > 0 $filename updated.
 sub WriteFile
 {
     my ($self, $filename, $iptables) = @_;
