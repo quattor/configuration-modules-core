@@ -31,8 +31,8 @@ Readonly::Scalar my $CONFIG_IPTABLES => '/etc/sysconfig/iptables';
 # hash of tables, chains & targets
 my %iptables_totality = (
     filter => {
-        chains => ['input','output','forward'],
-        targets => ['ordered','log','accept','reject', 'return', 'classify', 'ulog', 'drop'],
+        chains => ['input', 'output', 'forward'],
+        targets => ['ordered', 'log', 'accept', 'reject', 'return', 'classify', 'ulog', 'drop'],
         commands => ['-A', '-D', '-I', '-R', '-N'],
     },
     nat => {
@@ -521,7 +521,7 @@ sub GetResource
             }
 
             if (defined $cnt->{$target}) {
-                next if (!$self->find_rule($rule,$entries->{$table}->{rules}->{$target}->{$cnt->{$target}}));
+                next if (!$self->find_rule($rule, $entries->{$table}->{rules}->{$target}->{$cnt->{$target}}));
                 $entries->{$table}->{rules}->{$target}->{$cnt->{$target}} = $rule;
                 $cnt->{$target}++;
             }
