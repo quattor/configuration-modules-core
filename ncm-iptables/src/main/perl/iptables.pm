@@ -47,6 +47,8 @@ my %iptables_totality = (
     },
 );
 
+# Craft a regular expression from a list of options
+# by joining the list with the alternative operator
 sub regExp {
     my ($self, $reg) = @_;
     $reg =~ s/\s/\|/g;
@@ -251,25 +253,25 @@ Readonly::Hash my %OPTION_MODIFIERS => (
     '--comment' => 'quote_string',
 );
 
+# Trim leading and trailing whitespace from a string
 sub trim_whitespace {
-    # Trim leading and trailing whitespace
     my ($self, $text) = @_;
     $text =~ s/^\s+|\s+$//g;
     return defined $text ? $text : '';
 }
 
+# Collapse repeated whitespace characters into single space characters
 sub collapse_whitespace {
-    # Collapse multiple whitespace characters into a single space
     my ($self, $text) = @_;
     $text =~ s/\s+/ /g;
     return defined $text ? $text : '';
 }
 
+# Wrap strings containing whitespace in quotation marks
 sub quote_string {
     my ($self, $text) = @_;
     $text = $self->trim_whitespace($text);
     if ($text =~ /\s/) {
-        # Only quote if string still contains whitespace
         $text = "\"$text\"";
     }
     return $text;
