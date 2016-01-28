@@ -2,11 +2,10 @@
 # ${developer-info}
 # ${author-info}
 
-
 declaration template components/spma/schema;
 
 include 'quattor/schema';
-include 'components/spma/functions';
+include 'components/spma/functions-'+PACKAGER;
 include 'components/spma/ips/schema';
 include 'components/spma/yum/schema';
 
@@ -39,14 +38,16 @@ type SOFTWARE_REPOSITORY_PROTOCOL = {
 
 type SOFTWARE_REPOSITORY = {
     "enabled" : boolean = true
-    "gpgcheck" : boolean = false
+    "gpgcheck" : boolean = true
+    "mirrorlist" : boolean = false
     "excludepkgs" ? string[]
     "includepkgs" ? string[]
-    "name" ? string  # "Repository name"
+    "name" ? string with match(SELF, '^[\w-.]+$') # "Repository name"
     "owner" ? string  # "Contact person (email)"
     "priority" ? long(1..99)
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
     "proxy" ? string with SELF == '' || is_absoluteURI(SELF)
+    "disableproxy" ? boolean = false
     "skip_if_unavailable" : boolean = false
 };
 
@@ -54,16 +55,17 @@ type SOFTWARE_GROUP = {
     "default" : boolean = true
     "mandatory" : boolean = true
     "optional" : boolean = false
+    "names" : string[]
 };
 
-type boolean_yes_no = string with match (SELF, '^(yes|no)$'); 
+type boolean_yes_no = string with match (SELF, '^(yes|no)$');
 
 type component_spma_type = {
     include structure_component
     include component_spma_ips
     include component_spma_yum
     "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
-    "packager"      : string = "yum" with match (SELF, '^(yum|ips)$') # system packager to be used (yum,ips)
+    "packager"      : string = "yum" with match (SELF, '^(yum|ips|rpm)$') # system packager to be used (yum,ips,rpm)
     "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions
     "process_obsoletes" : boolean = false
     "cachedir"      ? string # SPMA cache directory
@@ -90,6 +92,6 @@ type component_spma_type = {
 };
 
 bind "/software/components/spma" = component_spma_type;
-bind "/software/groups" = SOFTWARE_GROUP{};
+bind "/software/groups" = SOFTWARE_GROUP;
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
 bind "/software/repositories" = SOFTWARE_REPOSITORY [];
