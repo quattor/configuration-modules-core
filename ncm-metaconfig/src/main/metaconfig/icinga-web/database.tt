@@ -1,0 +1,5 @@
+[% FOREACH pair IN data.pairs %]
+<database name="[% pair.value.dsn.database_name %]" class="[% pair.value.class %]">
+[%-     INCLUDE "metaconfig/icinga-web/dbelement.tt" data=pair.value -%]
+</database>
+[%- END %]
