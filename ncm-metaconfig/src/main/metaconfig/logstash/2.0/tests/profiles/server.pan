@@ -118,7 +118,19 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             "convert", dict(
                 "success", "boolean"
                 ),
+            )),
+        nlist("mutate", nlist(
             "add_field", nlist(
+                escape("[@metadata][target_index]"), "longterm-%{+YYYY.MM.dd}",
+                ),
+            )),
+        nlist("mutate", nlist(
+            "_conditional", nlist("expr", list(nlist(
+                "left", "[program]",
+                "test", "==",
+                "right", "\"jube\"",
+                ))),
+            "update", nlist(
                 escape("[@metadata][target_index]"), "longterm-%{+YYYY.Q}",
                 ),
             )),

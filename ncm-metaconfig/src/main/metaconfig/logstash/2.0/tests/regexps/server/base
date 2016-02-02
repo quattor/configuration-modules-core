@@ -79,11 +79,20 @@ filter \{$
 ^\s{8}\}$
 ^\s{8}if \('_grokparsefailure' not in \[tags\] and \[jube_id\]\) \{$
 ^\s{12}mutate \{$
-^\s{16}add_field => \{$
-^\s{20}"\[@metadata\]\[target_index\]" => "longterm-%\{\+YYYY\.Q\}"$
-^\s{16}\}$
 ^\s{16}convert => \{$
 ^\s{20}"success" => "boolean"$
+^\s{16}\}$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}mutate \{$
+^\s{12}add_field => \{$
+^\s{16}"\[@metadata\]\[target_index\]" => "longterm-%\{\+YYYY\.MM\.dd\}"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}if \(\[program\] == "jube"\) \{$
+^\s{12}mutate \{$
+^\s{16}update => \{$
+^\s{20}"\[@metadata\]\[target_index\]" => "longterm-%\{\+YYYY\.Q\}"$
 ^\s{16}\}$
 ^\s{12}\}$
 ^\s{8}\}$
