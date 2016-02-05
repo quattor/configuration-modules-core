@@ -4,6 +4,6 @@ use XML::Parser;
 
 my $u = Test::Quattor::TextRender::Metaconfig->new(
         service => 'icinga-web',
-        )->test();
+)->test();
 
 done_testing;
