@@ -17,3 +17,4 @@ prefix '/software/components/${project.artifactId}';
 'active' ?= true;
 'dispatch' ?= true;
 'dependencies/pre' ?= list('spma');
+'version' = '${no-snapshot-version}';
