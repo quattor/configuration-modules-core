@@ -14,4 +14,4 @@ prefix "/software/components/metaconfig/services/{/etc/snoopy.ini}/contents";
 'filter_chain' = append(dict(
     'filter', 'exclude_uid',
     'arguments', list('arg1', 'arg2'),
-    ));
+));
