@@ -24,3 +24,4 @@ prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsear
 "bootstrap/mlockall" = true;
 "network/host" = "myhost.mydomain";
 "node/name" = "myname";
+"discovery/zen/ping/unicast/hosts" = list('master1:1234', 'master2:5678');

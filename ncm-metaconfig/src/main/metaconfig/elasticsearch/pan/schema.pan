@@ -88,6 +88,28 @@ type elasticsearch_transport = {
     "host" ? type_hostname
 };
 
+type elasticsearch_discovery_zen_ping_unicast = {
+    "hosts" ? type_hostport[]
+};
+
+type elasticsearch_discovery_zen_ping = {
+    "unicast" ? elasticsearch_discovery_zen_ping_unicast
+};
+
+@documentation{
+    Control discovery process
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-discovery-zen.html
+}
+type elasticsearch_discovery_zen = {
+    "ping" ? elasticsearch_discovery_zen_ping
+    "ping_timeout" ? long(0..)
+    "join_timeout" ? long(0..)
+};
+
+type elasticsearch_discovery = {
+    "zen" ? elasticsearch_discovery_zen
+};
+
 type elasticsearch_service = {
     "node" ? elasticsearch_node
     "index" ? elasticsearch_index
@@ -99,4 +121,5 @@ type elasticsearch_service = {
     "bootstrap" ? elasticsearch_bootstrap
     "cluster" ? elasticsearch_cluster
     "transport" ? elasticsearch_transport
+    "discovery" ? elasticsearch_discovery
 };
