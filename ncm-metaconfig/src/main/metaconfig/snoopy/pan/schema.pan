@@ -20,6 +20,6 @@ type service_snoopy = {
     'output' ? snoopy_output
     'error_logging' ? boolean
     'syslog_facility' ? string with match(SELF, '^(LOG_)?(AUTH|AUTHPRIV|CRON|DAEMON|FTP|KERN|LOCAL[0-7]|LPR|MAIL|NEWS|SYSLOG|USER|UUCP)$')
-    'syslog_indent' ? string with (! match(SELF, '\s'))
+    'syslog_ident' ? string with (! match(SELF, '\s'))
     'syslog_level' ? string with match(SELF, '^(LOG_)?(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)$')
 };

@@ -8,6 +8,6 @@ Base test for config
 ^message_format = "\[abc %\{\}  eswefwerwer\]"$
 ^output = "socket:/some/path"$
 ^syslog_facility = "LOG_CRON"$
-^syslog_indent = "myname"$
+^syslog_ident = "myname"$
 ^syslog_level = "EMERG"$
 

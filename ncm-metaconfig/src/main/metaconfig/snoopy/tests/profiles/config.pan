@@ -7,7 +7,7 @@ prefix "/software/components/metaconfig/services/{/etc/snoopy.ini}/contents";
 'output' = 'socket:/some/path';
 'error_logging' = true;
 'syslog_facility' = 'LOG_CRON';
-'syslog_indent' = 'myname';
+'syslog_ident' = 'myname';
 'syslog_level' = 'EMERG';
 
 'filter_chain' = append(dict('filter', 'only_root'));
