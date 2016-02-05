@@ -4,7 +4,7 @@ include 'pan/types';
 
 type iw_caching_opts = {
     'enabled' : boolean
-    'driver' : string with match (SELF, "^(apc|memcache)$")
+    'driver' : string = 'apc' with match (SELF, "^(apc|memcache)$")
     'use_query_cache' : boolean
     'use_result_cache' ? boolean
     'result_cache_lifespan' ? long(0..) = 60
@@ -20,12 +20,12 @@ type icinga_database_dsn = {
 };
 
 type manager_attribute = {
-    'attr_model_loading' : string with match (SELF, "^(CONSERVATIVE|AGGRESSIVE)$")
+    'attr_model_loading' : string = 'CONSERVATIVE' with match (SELF, "^(CONSERVATIVE|AGGRESSIVE)$")
 };
 
 type icinga_database = {
     'dsn' : icinga_database_dsn
-    'charset' : string with match (SELF, "^(utf8)$")
+    'charset' : string ='utf8' with match (SELF, "^(utf8)$")
     'manager_attributes' : manager_attribute
     'caching' : iw_caching_opts
     'prefix' ? string
