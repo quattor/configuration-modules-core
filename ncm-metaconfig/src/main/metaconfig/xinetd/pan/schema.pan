@@ -19,8 +19,8 @@ type xinetd_options = {
 
     "socket_type" : string with match(SELF,'^(stream|dgram|raw|seqpacket)$')
     "user" : string = 'root'
-    "server" : string
-    "protocol" : string with match(SELF,'^(udp|tcp)$') # actually, anything in /etc/protocols
+    "server" ? string
+    "protocol" ? string with match(SELF,'^(udp|tcp)$') # actually, anything in /etc/protocols
     "server_args" ? string
     "group" ? string
     "instances" ? long(0..) # if not defined, it's UNLIMITED
