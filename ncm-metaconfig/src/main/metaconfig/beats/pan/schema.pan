@@ -2,6 +2,9 @@ declaration template metaconfig/beats/schema;
 
 include 'pan/types';
 
+@documentation{
+    TLS settings for logstash output
+}
 type beats_output_logstash_tls = {
     'certificate_authorities' ? string[]
     'certificate' ? string
@@ -11,12 +14,18 @@ type beats_output_logstash_tls = {
     'curve_types' ? string[]
 };
 
+@documentation{
+    TLS settings for elasticsearch output
+}
 type beats_output_elasticsearch_tls = {
     include beats_output_logstash_tls
     'min_version' ? string with match(SELF, '^\d+(\.\d+)+?$')
     'max_version' ? string with match(SELF, '^\d+(\.\d+)+?$')
 };
 
+@documentation{
+    elasticsearch as output
+}
 type beats_output_elasticsearch = {
     'hosts' ? type_hostport[]
     'protocol' ? string with match(SELF, '^https?$')
@@ -35,6 +44,9 @@ type beats_output_elasticsearch = {
     'tls' ? beats_output_elasticsearch_tls
 };
 
+@documentation{
+    logstash as output
+}
 type beats_output_logstash = {
     'hosts' ? type_hostport[]
     'worker' ? long(0..)
@@ -43,6 +55,9 @@ type beats_output_logstash = {
     'tls' ? beats_output_logstash_tls
 };
 
+@documentation{
+    file(s) as output
+}
 type beats_output_file = {
     'path' ? string
     'filename' ? string
@@ -50,10 +65,16 @@ type beats_output_file = {
     'number_of_files' ? long(0..)
 };
 
+@documentation{
+    console as output
+}
 type beats_output_console = {
     'pretty' ? boolean
 };
 
+@documentation{
+    Configure output (only one can be configured)
+}
 type beats_output = {
     'elasticsearch' ? beats_output_elasticsearch
     'logstash' ? beats_output_logstash
@@ -61,10 +82,17 @@ type beats_output = {
     'console' ? beats_output_console
 } with length(SELF) == 1;
 
+
+@documentation{
+    shipper geoip
+}
 type beats_shipper_geoip = {
     'paths' ? string[]
 };
 
+@documentation{
+    The shipper publishes the data
+}
 type beats_shipper = {
     'name' ? string
     'tags' ? string[]
@@ -74,8 +102,14 @@ type beats_shipper = {
     'geoip' ? beats_shipper_geoip
 };
 
+@documentation{
+    Enable debug output for the a (or all) component(s).
+}
 type beats_logging_selector = string with match(SELF, '^(beat|publish|service|\*)$');
 
+@documentation{
+    log to local files
+}
 type beats_logging_files = {
     'path' ? string
     'name' ? string
@@ -83,6 +117,9 @@ type beats_logging_files = {
     'keepfiles' ? long(0..)
 };
 
+@documentation{
+    Configure logging of beats itself.
+}
 type beats_logging = {
     'to_syslog' ? boolean
     'to_files' ? boolean
@@ -91,12 +128,18 @@ type beats_logging = {
     'level' ? string with match(SELF, '^(critical|error|warning|info|debug)$')
 };
 
+@documenation{
+    Shared components for each beats service
+}
 type beats_service = {
     'output' : beats_output
     'shipper' ? beats_shipper
     'logging' ? beats_logging
 };
 
+@documentation{
+    Handle logmessages spread over multiple lines
+}
 type beats_filebeat_prospector_multiline = {
     'pattern' ? string
     'negate' ? boolean
@@ -105,6 +148,9 @@ type beats_filebeat_prospector_multiline = {
     'timeout' ? long(0..)
 };
 
+@documentation{
+    Configure a prospector (source of certain class of data, can come multiple paths)
+}
 type beats_filebeat_prospector = {
     'paths' : string[]
     'encoding' ? string with match(SELF, '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
@@ -127,6 +173,9 @@ type beats_filebeat_prospector = {
     'force_close_files' ? boolean
 };
 
+@documentation{
+    Filebeat configuration
+}
 type beats_filebeat_filebeat = {
     'prospectors' : beats_filebeat_prospector[]
     'spool_size' ? long(0..)
@@ -135,11 +184,18 @@ type beats_filebeat_filebeat = {
     'config_dir' ? string
 };
 
+@documentation{
+    Filebeat service
+    (see https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-configuration-details.html)
+}
 type beats_filebeat_service = {
     include beats_service
     'filebeat' : beats_filebeat_filebeat
 };
 
+@documentation{
+    Topbeat input source(s)
+}
 type beats_topbeat_input_stats = {
     'system' ? boolean
     'proc' ? boolean
@@ -147,12 +203,19 @@ type beats_topbeat_input_stats = {
     'cpu_per_core' ? boolean
 };
 
+@documentation{
+    Topbeat configuration
+}
 type beats_topbeat_input = {
     'period' : long(0..) = 10
     'procs' ? string[]
     'stats' ? beats_topbeat_input_stats
 };
 
+@documentation{
+    Topbeat service
+    (see https://www.elastic.co/guide/en/beats/topbeat/current/topbeat-configuration-options.html)
+}
 type beats_topbeat_service = {
     include beats_service
     'input' : beats_topbeat_input
