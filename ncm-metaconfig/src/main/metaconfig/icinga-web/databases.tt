@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ae:configurations xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0" xmlns="http://agavi.org/agavi/config/parts/databases/1.0">
+    <ae:configuration>
+        <databases default="icinga_web">
+[%-         INCLUDE "metaconfig/icinga-web/database.tt" data=CCM.contents FILTER indent(3*4) -%]
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="/etc/icinga-web/conf.d/databases.xml#xpointer(databases/node())">
+                <xi:fallback></xi:fallback>
+            </xi:include>
+        </databases>
+    </ae:configuration>
+</ae:configurations>
