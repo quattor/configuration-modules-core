@@ -26,6 +26,14 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "ssl_key", "/software/components/ccm/key_file",
 )));
     
+"input/plugins" = append(nlist("beats", nlist(
+    "type", "beats",
+    "port", 5043,
+    "ssl_certificate", "/software/components/ccm/cert_file",
+    "ssl_key", "/software/components/ccm/key_file",
+    "ssl", true,
+    "congestion_threshold", 20,
+)));
     
 "filter/conditionals" = append(nlist(
     "type", "ifelseif",

@@ -1,0 +1,14 @@
+Topbeat basic value based test
+---
+/etc/topbeat/topbeat.yml
+---
+^---$
+^input:$
+^  period: 60$
+^  stats:$
+^    cpu_per_core: false$
+^output:$
+^  elasticsearch:$
+^    hosts:$
+^    - localhost:1234$
+^    - otherhost:5678$
