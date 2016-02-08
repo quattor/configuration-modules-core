@@ -1,10 +1,11 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
 declaration template components/accounts/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function has_unique_attr = {
     values = ARGV[0];
@@ -38,8 +39,10 @@ type structure_userinfo = {
 };
 
 type structure_groupinfo = {
-    'comment'    ? string
-    'gid'        : long(1..)
+    'comment'         ? string
+    'gid'             : long(1..)
+    'requiredMembers' ? string[]
+    'replaceMembers'  : boolean = false
 };
 
 type structure_login_defs = {
@@ -67,7 +70,7 @@ type component_accounts = {
     'groups'     ? structure_groupinfo{} with has_unique_attr(SELF, 'gid')
     'login_defs' ? structure_login_defs
     'remove_unknown' : boolean = false
-    # Really useful only if remove_uknown=true.
+    # Really useful only if remove_unknown=true.
     # If system, only accounts/groups in the system range are preserved.
     # If dyn_user_group, accounts/groups below or equal to UID/GID_MAX are preserved.
     'preserved_accounts' : string = 'dyn_user_group' with match(SELF,'none|system|dyn_user_group')
