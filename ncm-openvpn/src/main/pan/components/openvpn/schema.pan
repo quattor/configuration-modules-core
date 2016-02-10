@@ -72,6 +72,7 @@ type structure_component_openvpn_client = {
     "remote-random"     ? boolean = false
     "resolv-retry"      ? string
     "tls-client"        : boolean = false
+    "max-routes"        ? long(0..)
 };
 
 type structure_component_openvpn = {
