@@ -257,7 +257,7 @@ type httpd_proxy_directive = {
 
 type httpd_auth_require = {
     # require type who.join(' ')
-    "type" : string with match(SELF,'^(valid-user|user|group)$')
+    "type" : string with match(SELF, '^(valid-user|user|group|shibboleth)$')
     "who" ? string[]
 };
 
