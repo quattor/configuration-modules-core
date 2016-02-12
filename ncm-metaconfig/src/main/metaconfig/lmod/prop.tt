@@ -1,0 +1,33 @@
+[%- valid = {} -%]
+displayT = {
+[%- FOREACH display IN data.pairs %]
+[%     IF display.value.names.defined;
+            FOREACH n IN display.value.names;
+                valid.$n = 1;
+            END;
+            name = display.value.names.join(':');
+        ELSE;
+            name = display.key;
+            valid.$name = 1;
+        END; -%]
+[%-      FILTER indent -%]
+["[%        name %]"] = {
+[%         FILTER indent -%]
+short = "([%    display.value.short.join(',') %])",
+long = "([%     display.value.long.join(',') %])",
+[%              IF display.value.color.defined -%]
+color = "[%         display.value.color %]",
+[%-             END %]
+doc = "[%       display.value.doc %]",
+[%-         END %]
+},
+[%-     END %]
+[%- END %]
+},
+validT = {
+[%  FOREACH v IN valid.pairs %]
+[%      FILTER indent -%]
+[%          v.key %] = [% v.value %],
+[%-      END -%]
+[%-  END %]
+},

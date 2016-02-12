@@ -1,0 +1,3 @@
+[% FOREACH sc IN data.pairs -%]
+["[%    sc.key %]"] = [% sc.value %],
+[% END -%]
