@@ -443,6 +443,11 @@ Allows some debugging via ntpdc on localhost but with no modifications
 
 Default : true
 
+=item /software/components/ntpd/group : defined_group (optional)
+
+If the group is set, files are written with C<<root.<group>>> ownership
+and C<0640> permission.
+
 =back
 
 

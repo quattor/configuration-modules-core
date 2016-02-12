@@ -99,9 +99,21 @@ sub Configure {
 		}
 	}
 
+    my $fh_opts = {
+        log    => $self,
+		mode   => 0644,
+		backup => '.old',
+    };
+    if ($cfg->{group}) {
+        $self->verbose("group $cfg->{group} configured, restricting owner/group/mode");
+        $fh_opts->{owner} = 'root';
+        $fh_opts->{group} = $cfg->{group};
+        $fh_opts->{mode} = 0640;
+    }
+
 	# Declare the ntp servers in /etc/ntp.conf and /etc/ntp/step-tickers
-	my $ntpconf_changed = $self->write_ntpd_config($cfg, \@ntp_servers, \@client_networks);
-	my $ntpstep_changed = $self->write_ntpd_step_tickers($cfg, \@ntp_servers);
+	my $ntpconf_changed = $self->write_ntpd_config($cfg, \@ntp_servers, \@client_networks, $fh_opts);
+	my $ntpstep_changed = $self->write_ntpd_step_tickers($cfg, \@ntp_servers, $fh_opts);
 
 	# Restart the daemon if necessary.
 	if ( $self->needs_restarting($ntpconf_changed, $ntpstep_changed) ) {
@@ -114,14 +126,9 @@ sub Configure {
 }
 
 sub write_ntpd_step_tickers {
-	my ($self, $cfg, $ntp_servers) = @_;
+	my ($self, $cfg, $ntp_servers, $fh_opts) = @_;
 
-	my $stfh = CAF::FileWriter->new(
-		$STEPTICKERS,
-		log    => $self,
-		mode   => 0644,
-		backup => '.old',
-	);
+	my $stfh = CAF::FileWriter->new($STEPTICKERS, %$fh_opts);
 
 	if (@{$ntp_servers}) {
 		print $stfh map { $_->{server_address} . "\n" } @{$ntp_servers};
@@ -132,14 +139,9 @@ sub write_ntpd_step_tickers {
 
 
 sub write_ntpd_config {
-	my ($self, $cfg, $ntp_servers, $client_networks) = @_;
+	my ($self, $cfg, $ntp_servers, $client_networks, $fh_opts) = @_;
 
-	my $fh = CAF::FileWriter->new(
-		$NTPDCONF,
-		log    => $self,
-		mode   => 0644,
-		backup => '.old',
-	);
+	my $fh = CAF::FileWriter->new($NTPDCONF, %$fh_opts);
 
 	print $fh "# This file is under $COMPNAME control.\n";
 

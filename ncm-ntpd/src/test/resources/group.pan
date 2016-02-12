@@ -1,10 +1,8 @@
-object template disable_options;
+object template group;
 
 "/software/components/ntpd" = nlist();
 
 include 'base_serverlist_options';
 
 prefix "/software/components/ntpd";
-
-#disable monlist
-"disable/monitor" = true;
+"group" = 'ntp';

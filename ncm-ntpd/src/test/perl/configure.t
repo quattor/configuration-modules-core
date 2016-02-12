@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(no_timeservers only_timeservers only_timeservers_useserverip simple_serverlist disable_options);
+use Test::Quattor qw(no_timeservers only_timeservers only_timeservers_useserverip simple_serverlist disable_options group);
 use NCM::Component::ntpd;
 use CAF::Object;
 use Test::MockModule;
@@ -60,6 +60,15 @@ my $stfh = get_file($NCM::Component::ntpd::STEPTICKERS);
 isa_ok($stfh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
 like($stfh, qr{^\b(?:\d{1,3}\.){3}\d{1,3}\b}m, "Has a timeserver in ntp steptickers file");
 
+my $defopts = {
+   'backup' => '.old',
+   'mode' => 0644,
+   'noaction' => 1, # This is from running in unittest environment
+};
+is_deeply(*$fh->{options}, $defopts, 'ntp.conf has expected default mode setting without group defined');
+is_deeply(*$stfh->{options}, $defopts, 'steptickers has expected default mode setting without group defined');
+
+
 $cmd = get_command("/sbin/service ntpd restart");
 ok( $cmd, "Daemon was restarted with only_timeservers profile" );
 
@@ -76,10 +85,26 @@ $fh = get_file($NCM::Component::ntpd::NTPDCONF);
 isa_ok($fh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
 like($fh, qr/^disable\s+monitor/m, "Has monitor option disabled");
 
+# Test group restricted filepermissions
 
 $cmd = get_command("/sbin/service ntpd restart");
 ok( $cmd, "Daemon was restarted with simple_serverlist profile" );
 
+$cfg = get_config_for_profile('group');
+is( $cmp->Configure($cfg), 1, "Component runs correctly with group profile" );
 
+my $opts = {
+   'owner' => 'root',
+   'group' => 'ntp',
+   'backup' => '.old',
+   'mode' => 0640,
+   'noaction' => 1, # This is from running in unittest environment
+};
+
+$fh = get_file($NCM::Component::ntpd::NTPDCONF);
+is_deeply(*$fh->{options}, $opts, 'ntp.conf has expected owner/group/perm settings with group defined');
+
+$stfh = get_file($NCM::Component::ntpd::STEPTICKERS);
+is_deeply(*$stfh->{options}, $opts, 'steptickers has expected owner/group/perm settings with group defined');
 
 done_testing();
