@@ -1,8 +1,6 @@
 unique template only_timeservers_base;
 
-function pkg_repl = {return(null);};
-include 'components/ntpd/config';
-"/software/components/ntpd/dependencies/pre" = null;
+include 'mock_config';
 
 include 'base_servers';
 

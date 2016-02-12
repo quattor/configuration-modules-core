@@ -1,4 +1,5 @@
 object template no_timeservers;
 
-"/software/components/ntpd" = nlist();
+include 'mock_config';
 
+"/software/components/ntpd" = nlist();
