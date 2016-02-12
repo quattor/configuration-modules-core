@@ -201,6 +201,7 @@ type logstash_filter_mutate = {
     "replace" ? logstash_name_pattern[]
     "rename" ? string{}
     "split" ? string{}
+    "update" ? string{}
     "exclude_tags" ? string[] with {deprecated(0, 'replace with _conditional e.g. <"tagname" not in [tags]> in 2.0'); true;}
 };
 

@@ -13,7 +13,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 
 # gelf input
 "input/plugins" = append(nlist("gelf", nlist(
-    # type is/can be set in output gelf filter. 
+    # type is/can be set in output gelf filter.
     # this will not forcefully overwrtie in 1.2.2
     "type", "remotegelf",
     "port", 12201,
@@ -25,7 +25,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "ssl_certificate", "/software/components/ccm/cert_file",
     "ssl_key", "/software/components/ccm/key_file",
 )));
-    
+
 "input/plugins" = append(nlist("beats", nlist(
     "type", "beats",
     "port", 5043,
@@ -57,7 +57,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "plugins", list(
         nlist("grok", nlist(
             "match", list(nlist(
-                "name", "message", 
+                "name", "message",
                 "pattern", list("%{RSYSLOGCUSTOM}", "%{OTHERPATTERN}"),
                 )),
             "patterns_dir", list("/usr/share/grok"),
@@ -68,7 +68,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("kv", nlist(
             "default_keys", nlist(
-                "key1", "value1", 
+                "key1", "value1",
                 "key2", "value2",
                 ),
             "exclude_keys", list("key1e", "key2e"),
@@ -82,7 +82,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("date", nlist(
             "match", nlist(
-                "name", "syslog_timestamp", 
+                "name", "syslog_timestamp",
                 "pattern", list("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ"),
                 ),
             )),
@@ -94,10 +94,10 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 ))),
             "replace", list(
                 nlist(
-                    "name", "@source_host", 
+                    "name", "@source_host",
                     "pattern", "%{syslog_hostname}"),
                 nlist(
-                    "name", "@message", 
+                    "name", "@message",
                     "pattern", "%{syslog_message}"),
                 ),
             )),
@@ -117,7 +117,23 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 ))),
             "convert", dict(
                 "success", "boolean"
-            ))),
+                ),
+            )),
+        nlist("mutate", nlist(
+            "add_field", nlist(
+                escape("[@metadata][target_index]"), "longterm-%{+YYYY.MM.dd}",
+                ),
+            )),
+        nlist("mutate", nlist(
+            "_conditional", nlist("expr", list(nlist(
+                "left", "[program]",
+                "test", "==",
+                "right", "\"jube\"",
+                ))),
+            "update", nlist(
+                escape("[@metadata][target_index]"), "longterm-%{+YYYY.Q}",
+                ),
+            )),
         nlist("bytes2human", nlist(
             "convert", nlist(
                 "field1", "bytes",
@@ -136,4 +152,3 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "template_overwrite", true,
         ),
 )));
-

@@ -84,6 +84,18 @@ filter \{$
 ^\s{16}\}$
 ^\s{12}\}$
 ^\s{8}\}$
+^\s{8}mutate \{$
+^\s{12}add_field => \{$
+^\s{16}"\[@metadata\]\[target_index\]" => "longterm-%\{\+YYYY\.MM\.dd\}"$
+^\s{12}\}$
+^\s{8}\}$
+^\s{8}if \(\[program\] == "jube"\) \{$
+^\s{12}mutate \{$
+^\s{16}update => \{$
+^\s{20}"\[@metadata\]\[target_index\]" => "longterm-%\{\+YYYY\.Q\}"$
+^\s{16}\}$
+^\s{12}\}$
+^\s{8}\}$
 ^\s{8}bytes2human \{$
 ^\s{12}convert => \{$
 ^\s{16}"field1" => "bytes"$
