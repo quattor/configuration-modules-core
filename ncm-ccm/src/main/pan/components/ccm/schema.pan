@@ -7,6 +7,7 @@ declaration template components/ccm/schema;
 
 include 'quattor/types/component';
 include 'pan/types';
+include 'components/accounts/functions';
 
 @documentation {
     kerberos_principal_string is a string with format principal[/component1[/component2[...]]]@REALM
@@ -72,6 +73,7 @@ type component_ccm = {
     'key_file'         ? string
     'ca_file'          ? string
     'ca_dir'           ? string
+    'group_readable'   ? defined_group
     'world_readable'   : long(0..1) = 0
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")
@@ -79,4 +81,9 @@ type component_ccm = {
     'tabcompletion'    ? boolean
     'keep_old'         ? long(0..)
     'trust'            ? kerberos_principal_string
+} with {
+    if(is_defined(SELF['group_readable']) && SELF['world_readable'] == 1) {
+        error("Cannot set both group_readable and enable world_readable for ccm");
+    };
+    true;
 };

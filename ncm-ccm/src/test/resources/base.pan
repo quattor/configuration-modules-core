@@ -10,3 +10,7 @@ prefix "/software/components/ccm";
 "ca_file" = "/etc/sindes/ca/ca.crt";
 "version" = "1.2.3";
 "trust" = "user/component.something/other.else@MY.REALM";
+"group_readable" = "theadmins";
+
+# add theadmins dummy group
+"/software/components/accounts/groups/theadmins" = dict();
