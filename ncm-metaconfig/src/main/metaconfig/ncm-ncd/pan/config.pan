@@ -7,4 +7,3 @@ bind "/software/components/metaconfig/services/{/etc/ncm-ncd.conf}/contents" = n
 prefix "/software/components/metaconfig/services/{/etc/ncm-ncd.conf}";
 "module" = "ncm-ncd/main";
 "mode" = 0644;
-"daemons" = dict("ncm-ncd", "restart");
