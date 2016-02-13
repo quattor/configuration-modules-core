@@ -24,7 +24,7 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 my $mock = Test::MockModule->new("NCM::Component::spma::yum");
 
 foreach my $method (qw(complete_transaction expire_yum_caches versionlock
-		       distrosync apply_transaction)) {
+                       make_cache distrosync apply_transaction)) {
     $mock->mock($method, 1);
 }
 
