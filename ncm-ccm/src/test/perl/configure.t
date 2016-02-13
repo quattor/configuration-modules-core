@@ -7,16 +7,17 @@ use NCM::Component::ccm;
 use CAF::Object;
 use Test::MockModule;
 use CAF::FileWriter;
+use Test::Quattor::RegexpTest;
 
 
 my $ccmconf = "/etc/ccm.conf";
 my $mock = Test::MockModule->new("CAF::FileWriter");
 
 $mock->mock("cancel", sub {
-		my $self = shift;
-		*$self->{CANCELLED}++;
-		*$self->{save} = 0;
-	    });
+    my $self = shift;
+    *$self->{CANCELLED}++;
+    *$self->{save} = 0;
+});
 
 my $tmppath;
 my $mock_ccm = Test::MockModule->new("NCM::Component::ccm");
@@ -42,6 +43,13 @@ isa_ok($fh, "CAF::FileWriter", "A file was opened");
 
 like($fh, qr{(?:^\w+ [\w\-/\.]+$)+}m, "Lines are correctly printed");
 unlike($fh, qr{^(?:version|config)}m, "Unwanted fields are removed");
+
+diag "$fh";
+Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/regexps/ccm_conf',
+    text => "$fh",
+    )->test();
+
 
 my $tstcmd = get_command(join(" ", NCM::Component::ccm::TEST_COMMAND, "$tmppath/$ccmconf"));
 isa_ok($tstcmd->{object}, 'CAF::Process', "Test command found");
