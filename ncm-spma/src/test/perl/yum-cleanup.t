@@ -39,6 +39,11 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
+my $extra_opts = {
+    exclude => [qw(something else)],
+    retries => 100,
+};
+
 =pod
 
 =item * If they don't exist, it is appended.
@@ -46,12 +51,15 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 =cut
 
 set_file_contents($YUM_FILE, "a=1");
-$cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1 /dir/2)]);
+$cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1 /dir/2)], $extra_opts);
 my $fh = get_file($YUM_FILE);
 like("$fh", qr{a=1\n$COR=1}, "Correct expansion");
 like("$fh", qr{^$OBSOLETES=0$}m, "Obsoletes is expanded properly");
 like("$fh", qr{^$PLUGINCONFPATH=/my/pluginpath$}m, "Pluginconfpath is expanded properly");
 like("$fh", qr{^$REPOSDIR=/dir/1,/dir/2}m, "Reposdir is expanded properly");
+# extra_opts
+like("$fh", qr{^exclude=something else}m, "exclude is addedd properly (space separated)");
+like("$fh", qr{^retries=100}m, "reries is added");
 
 =pod
 

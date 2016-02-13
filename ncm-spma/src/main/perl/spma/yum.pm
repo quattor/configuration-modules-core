@@ -994,25 +994,39 @@ sub noaction_prefix
 # C<repodirs> is an arrayref of directories.
 sub configure_yum
 {
-    my ($self, $cfgfile, $obsoletes, $plugindir, $repodirs) = @_;
+    my ($self, $cfgfile, $obsoletes, $plugindir, $repodirs, $extra_opts) = @_;
 
     my $fh = CAF::FileEditor->new($cfgfile, log => $self);
 
     my $_add_or_replace = sub {
         my ($fh, $name, $value) = @_;
-        my $valuereg= $value;
+        my $valuereg = $value;
         $valuereg =~ s/([.\$*?])/\\$1/g;
-        $fh->add_or_replace_lines($name,
-                                  $name. q{\s*=\s*}.$valuereg,
-                                  "\n$name=$value\n",
-                                  ENDING_OF_FILE);
+        $fh->add_or_replace_lines(
+            $name,
+            $name. q{\s*=\s*}.$valuereg,
+            "\n$name=$value\n",
+            ENDING_OF_FILE
+        );
     };
 
-    $_add_or_replace->($fh, YUM_CONF_CLEANUP_ON_REMOVE, 1);
-    $_add_or_replace->($fh, YUM_CONF_OBSOLETES, $obsoletes);
+    # use CONSTANT() to get the value of the constant as key
+    my $yum_opts = {
+        YUM_CONF_CLEANUP_ON_REMOVE() => 1,
+        YUM_CONF_OBSOLETES() => $obsoletes,
+        YUM_CONF_REPOSDIR() => $repodirs,
+        YUM_CONF_PLUGINCONFPATH() => $plugindir,
+    };
 
-    $_add_or_replace->($fh, YUM_CONF_REPOSDIR, join(',', @$repodirs));
-    $_add_or_replace->($fh, YUM_CONF_PLUGINCONFPATH, $plugindir);
+    # Merge the options, yum_opts precede.
+    $extra_opts = {} if (! defined($extra_opts));
+    my %opts = (%$extra_opts, %$yum_opts);
+
+    foreach my $key (sort keys %opts) {
+        my $v = $opts{$key};
+        my $value = ref($v) eq 'ARRAY' ? join(($key eq 'exclude') ? ' ' : ',', @$v) : $v;
+        $_add_or_replace->($fh, $key, $value);
+    };
 
     $self->_override_noaction_fh($fh);
     $fh->close();
@@ -1141,7 +1155,7 @@ sub Configure
     # TODO: check that the first one wins
     my $reposdir = [$quattor_managed_reposdir];
     $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
-                         $t->{process_obsoletes}, $plugindir, $reposdir);
+                         $t->{process_obsoletes}, $plugindir, $reposdir, $t->{yumconf});
 
     $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                                     $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
