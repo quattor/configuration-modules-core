@@ -12,7 +12,7 @@ include 'components/accounts/config';
 variable CEPH_OLD_UID ?= true; # set to false for new clusters, especially infernalis and above
 variable CEPH_USER_ID = {
     if (CEPH_OLD_UID) {
-        deprecated(0, 'ceph user should get a new uid');
+        deprecated(0, 'ceph user should get a new uid. set final CEPH_OLD_UID = false');
         111;
     } else {
         167;
