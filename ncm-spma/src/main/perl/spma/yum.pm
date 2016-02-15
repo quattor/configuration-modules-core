@@ -768,17 +768,16 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch, $reuse_cache) = @_;
 
     $self->complete_transaction() or return 0;
 
-    if ($purge) {
-        $self->purge_yum_caches() or return 0;
-    } else {
-        $self->expire_yum_caches() or return 0;
-    }
+    if (! $reuse_cache) {
+        my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
+        $self->$clean_cache_method() or return 0;
 
-    $self->make_cache() or return 0;
+        $self->make_cache($purge) or return 0;
+    };
 
     $self->versionlock($pkgs, $fullsearch) or return 0;
 
@@ -829,12 +828,13 @@ sub update_pkgs_retry
 
     # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
-        my ($allow_user_pkgs, $tx_error_is_warn) = @_;
+        my ($allow_user_pkgs, $tx_error_is_warn, $reuse_cache) = @_;
         return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
-                                  $purge, $tx_error_is_warn, $fullsearch);
+                                  $purge, $tx_error_is_warn, $fullsearch, $reuse_cache);
     };
 
-    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+    # Only on the initial try, purge and recreate the cache
+    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 0)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($NoAction) {
@@ -851,10 +851,10 @@ sub update_pkgs_retry
 
             $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true");
             $allow_user_pkgs = 1;
-            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
                 $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd");
                 $allow_user_pkgs = 0;
-                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
                     $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok.");
                 } else {
                     $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed.");
