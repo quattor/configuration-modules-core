@@ -24,7 +24,8 @@ use File::Temp qw(tempdir);
 use File::Copy;
 use File::Basename;
 
-use constant REPOS_DIR => "/etc/yum.repos.d";
+use constant REPOS_DIR_DEFAULT => "/etc/yum.repos.d";
+use constant REPOS_DIR_QUATTOR => "/etc/yum.quattor.repos.d";
 use constant REPOS_TEMPLATE => "repository";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
@@ -1135,12 +1136,18 @@ sub Configure
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
 
+    # When userpkgs are allowed, there is no control over what is in the reposdir
+    # If they are not allowed, and retry is allowed, use a non-standard location
+    # to avoid any repositories getting added during the retries (e.g. from rpms).
+    my $main_repos_dir = ($NoAction || $t->{userpkgs} || (!$t->{userpkgs_retry})) ?
+                             REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
+
     my $repos = $config->getTree(REPOS_TREE);
     my $pkgs = $config->getTree(PKGS_TREE);
     my $groups = $config->getTree(GROUPS_TREE) || {};
 
     # check if a temp location is required for NoAction support.
-    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, REPOS_DIR, YUM_CONF_FILE);
+    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
 
     if (! defined($prefix)) {
         return 0;
@@ -1160,7 +1167,7 @@ sub Configure
     defined($res) or return 0;
     $purge_caches = $res;
 
-    my $quattor_managed_reposdir = _prefix_noaction_prefix(REPOS_DIR);
+    my $quattor_managed_reposdir = _prefix_noaction_prefix($main_repos_dir);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
     $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
