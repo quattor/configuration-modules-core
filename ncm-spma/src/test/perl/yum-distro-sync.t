@@ -31,7 +31,7 @@ set_desired_output($CMD, "distrosync");
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
-ok(grep {$_ eq '-C'} @YDS, 'distrosync command has cache enabled');
+ok(! grep {$_ eq '-C'} @YDS, 'distrosync command has cache disabled');
 
 =pod
 

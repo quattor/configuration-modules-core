@@ -51,8 +51,6 @@ use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
 
 # Must use cache (-C option)
-use constant YUM_CMD => qw(yum -C -y shell);
-use constant YUM_DISTRO_SYNC => qw(yum -C -y distro-sync);
 use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
 use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
 use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
@@ -64,6 +62,8 @@ use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugi
 use constant YUM_EXPIRE => qw(yum clean expire-cache);
 use constant YUM_PURGE_METADATA => qw(yum clean metadata);
 use constant YUM_MAKECACHE => qw(yum makecache);
+use constant YUM_CMD => qw(yum -y shell);
+use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
 our $NoActionSupported = 1;
 
