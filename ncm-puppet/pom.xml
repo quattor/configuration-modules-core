@@ -6,7 +6,7 @@
   <artifactId>puppet</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.2.0-rc1</version>
+  <version>16.2.0-rc2-SNAPSHOT</version>
   <name>quattor component for running puppet standalone</name>
 
   <parent>
