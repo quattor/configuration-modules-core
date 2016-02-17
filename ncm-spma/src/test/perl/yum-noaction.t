@@ -310,9 +310,9 @@ clean_requirements_on_remove=1
 
 obsoletes=1
 
-pluginconfpath=$tmppath/etc/yum/pluginconf.d
-
 reposdir=$tmppath/etc/yum.repos.d
+
+pluginconfpath=$tmppath/etc/yum/pluginconf.d
 EOF
 
 is(readfile("$tmppath/etc/yum.conf"), $generatedconf, "correctly generated text");
