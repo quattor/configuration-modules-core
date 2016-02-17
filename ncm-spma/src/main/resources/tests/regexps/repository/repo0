@@ -16,3 +16,8 @@ contentspath=/software/repositories/0
 ^enabled=1$
 ^gpgcheck=0$
 ^skip_if_unavailable=0$
+^repo_gpgcheck=0$
+^gpgcakey=file:///super/ca/key$
+^gpgkey=    file:///path/to/key$
+^    https://somewhere/very/very/far$
+^    ftp://because/ftp/and/security/go/well/together$

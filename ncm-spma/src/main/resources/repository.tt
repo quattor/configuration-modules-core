@@ -23,8 +23,17 @@ include=[% repos_dir ? repos_dir : "/etc/yum.repos.d" %]/[% name %].pkgs
 exclude=[% excludepkgs.join(' ') %]
 [% END %]
 [% FOREACH opt IN ['enabled', 'gpgcheck', 'priority', 'proxy',
-                    'includepkgs', 'skip_if_unavailable'] -%]
+                    'includepkgs', 'skip_if_unavailable',
+                    'repo_gpgcheck', 'gpgcakey'] -%]
 [%-     IF ${opt}.defined -%]
 [%          opt %]=[% CCM.is_list($opt) ? ${opt}.join(' ') : $opt %]
 [%     END -%]
 [%- END -%]
+[% IF gpgkey.defined -%]
+gpgkey=
+[%- FOREACH key IN gpgkey -%]
+[%-     FILTER indent -%]
+[%            key %]
+[%      END -%]
+[%- END -%]
+[% END %]
