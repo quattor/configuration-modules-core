@@ -33,8 +33,21 @@ type spma_yum_plugins = {
     "priorities" ? spma_yum_plugin_priorities
 };
 
+@documentation{
+    Main configuration options for yum.conf.
+    The cleanup_on_remove, obsoletes, reposdir and pluginpath are set internally.
+}
+type spma_yum_main_options = {
+    "exclude" ? string[]
+    "installonly_limit" ? long(0..) = 3
+    "keepcache" ? boolean
+    "retries" ? long(0..) = 10
+    "timeout" ? long(0..) = 30
+};
+
 type component_spma_yum = {
     "userpkgs_retry" : boolean = true
     "fullsearch" : boolean = false
     "plugins" ? spma_yum_plugins
+    "main_options" ? spma_yum_main_options
 };
