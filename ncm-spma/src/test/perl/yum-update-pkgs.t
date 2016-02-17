@@ -55,12 +55,11 @@ my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 
 
 foreach my $method (qw(installed_pkgs wanted_pkgs apply_transaction versionlock
-                       expire_yum_caches complete_transaction distrosync
-                       spare_dependencies expand_groups packages_to_remove
-                       purge_yum_caches make_cache
-                       solve_transaction)) {
-    $mock->mock($method, sub {
-        my $self = shift;
+		       expire_yum_caches complete_transaction distrosync
+		       spare_dependencies expand_groups packages_to_remove
+                       purge_yum_caches solve_transaction)) {
+    $mock->mock($method,  sub {
+		    my $self = shift;
 		    $self->{uc($method)}->{args} = \@_;
 		    $self->{uc($method)}->{called}++;
 		    return exists($self->{uc($method)}->{return}) ?
@@ -82,9 +81,9 @@ sub clear_mock_counters
 {
     my $cmp = shift;
     foreach my $m (qw(apply_transaction solve_transaction schedule versionlock
-                      expire_yum_caches complete_transaction distrosync
+		      expire_yum_caches complete_transaction distrosync
                       expand_groups wanted_pkgs installed_pkgs purge_yum_caches
-                      make_cache packages_to_remove)) {
+                      packages_to_remove)) {
 	$cmp->{uc($m)}->{called} = 0;
 	if ($m !~ m{pkgs$}) {
 	    $cmp->{uc($m)}->{return} = 1;
@@ -132,7 +131,6 @@ is($cmp->{VERSIONLOCK}->{called}, 1, "Versions are locked");
 is($cmp->{VERSIONLOCK}->{args}->[0], "pkgs",
    "Locked package versions with correct arguments");
 is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "Package cache is expired");
-is($cmp->{MAKE_CACHE}->{called}, 1, "Package cache is created");
 
 =pod
 
@@ -228,7 +226,7 @@ is($cmp->{SOLVE_TRANSACTION}->{called}, 0,
 
 =pod
 
-=item * Failure in C<expire_yum_caches> means make_cache is not called
+=item * Failure in C<expire_yum_caches> means versionlock is not called
 
 =cut
 
@@ -237,22 +235,9 @@ $cmp->{EXPIRE_YUM_CACHES}->{return} = 0;
 is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
    "Failure in versionlrmock is detected");
 is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "expire_yum_caches is actually called");
-is($cmp->{MAKE_CACHE}->{called}, 0,
-   "make_cache is not called if cache expiration fails");
-
-=pod
-
-=item * Failure in C<make_cache> means versionlock is not called
-
-=cut
-
-clear_mock_counters($cmp);
-$cmp->{MAKE_CACHE}->{return} = 0;
-is($cmp->update_pkgs("pkgs", "groups", "run", 0), 0,
-   "Failure in versionlrmock is detected");
-is($cmp->{MAKE_CACHE}->{called}, 1, "make_cache is actually called");
 is($cmp->{VERSIONLOCK}->{called}, 0,
-   "versionlock is not called if make_cache fails");
+   "versionlock is not called if cache expiration fails");
+
 
 =pod
 

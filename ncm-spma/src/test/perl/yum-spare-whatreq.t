@@ -35,8 +35,6 @@ Readonly::Array my @CMD => (
     join(" ", @WHATREQS, 'dep.noarch'),
     join(" ", @WHATREQS, 'nodep.noarch'));
 
-ok(grep {$_ eq '-C'} @WHATREQS, 'repoqeury command has cache enabled');
-
 set_desired_output($CMD[0], 'pkg;noarch');
 set_desired_err($CMD[0], '');
 set_desired_output($CMD[1], 'foo;noarch');
