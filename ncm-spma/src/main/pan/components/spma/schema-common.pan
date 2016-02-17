@@ -2,18 +2,13 @@
 # ${developer-info}
 # ${author-info}
 
-declaration template components/spma/schema;
+declaration template components/spma/schema-common;
 
 include 'quattor/types/component';
 include 'components/spma/functions';
-include 'components/spma/ips/schema';
-include 'components/spma/yum/schema';
 include 'components/spma/software';
 
 type component_spma_type = {
-    include structure_component
-    include component_spma_ips
-    include component_spma_yum
     "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
     "packager"      : string = "yum" with match (SELF, '^(yum|ips|rpm)$') # system packager to be used (yum,ips,rpm)
     "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions
@@ -41,7 +36,6 @@ type component_spma_type = {
     "verbose"       ? string with match (SELF, '^(0|1)$') # verbose (0,1)
 };
 
-bind "/software/components/spma" = component_spma_type;
-bind "/software/groups" = SOFTWARE_GROUP {};
+bind "/software/groups" = SOFTWARE_GROUP{};
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
 bind "/software/repositories" = SOFTWARE_REPOSITORY [];

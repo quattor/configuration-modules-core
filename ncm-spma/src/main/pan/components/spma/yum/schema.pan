@@ -4,6 +4,8 @@
 
 declaration template components/spma/yum/schema;
 
+include 'components/spma/schema-common';
+
 type spma_yum_plugin_fastestmirror = {
     'enabled' : boolean = false
     'verbose' : boolean = false
@@ -46,6 +48,8 @@ type spma_yum_main_options = {
 };
 
 type component_spma_yum = {
+    include structure_component
+    include component_spma_type
     "userpkgs_retry" : boolean = true
     "fullsearch" : boolean = false
     "excludes"      ? string[] # packages to be excluded from metadata
@@ -57,3 +61,5 @@ type component_spma_yum = {
     "plugins" ? spma_yum_plugins
     "main_options" ? spma_yum_main_options
 };
+
+bind "/software/components/spma" = component_spma_yum;

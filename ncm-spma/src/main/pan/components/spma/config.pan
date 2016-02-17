@@ -7,7 +7,7 @@ unique template components/${project.artifactId}/config;
 
 variable CONFIG_MODULES_CONFIG_SUFFIX ?= 'rpm';
 
-include { 'components/${project.artifactId}/schema' };
+include format('components/${project.artifactId}/%s/schema', CONFIG_MODULES_CONFIG_SUFFIX);
 include { 'components/${project.artifactId}/functions' };
 
 include { 'components/${project.artifactId}/config-common' };

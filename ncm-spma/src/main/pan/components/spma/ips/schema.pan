@@ -5,6 +5,8 @@
 
 declaration template components/spma/ips/schema;
 
+include 'components/spma/schema-common';
+
 type component_spma_ips_type = {
     "bename"        ? string         # BE name to use with IPS commands
     "rejectidr"     : boolean = true # Reject Solaris IDRs on upgrade?
@@ -13,5 +15,9 @@ type component_spma_ips_type = {
 };
 
 type component_spma_ips = {
+    include structure_component
+    include component_spma_type
     "ips"           ? component_spma_ips_type
 };
+
+bind "/software/components/spma" = component_spma_ips;
