@@ -6,7 +6,7 @@
   <artifactId>icinga</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.2.0-rc2-SNAPSHOT</version>
+  <version>16.2.0-rc2</version>
   <name>Icinga NCM component</name>
 
 
