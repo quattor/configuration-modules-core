@@ -21,5 +21,5 @@ prefix "/software/components/spma";
 "active" = true;
 "dispatch" = true;
 "userpkgs" = "no";
-"yumconf/exclude" = list("packagea", "pack*");
-"yumconf/retries" = 40;
+"main_options/exclude" = list("packagea", "pack*");
+"main_options/retries" = 40;

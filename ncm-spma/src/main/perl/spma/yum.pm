@@ -1175,7 +1175,7 @@ sub Configure
     # TODO: check that the first one wins
     my $reposdir = [$quattor_managed_reposdir];
     $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
-                         $t->{process_obsoletes}, $plugindir, $reposdir, $t->{yumconf});
+                         $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
 
     $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
                                     $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
