@@ -21,8 +21,11 @@ metadata_expire=[% metadata_expire.defined ? metadata_expire : '7d' %]
 include=[% repos_dir ? repos_dir : "/etc/yum.repos.d" %]/[% name %].pkgs
 [% IF excludepkgs.defined -%]
 exclude=[% excludepkgs.join(' ') %]
-[% END %]
-[% FOREACH opt IN ['enabled', 'gpgcheck', 'priority', 'proxy',
+[% END -%]
+[%- IF proxy.defined && proxy != '' -%]
+proxy=[% proxy %]
+[% END -%]
+[%- FOREACH opt IN ['enabled', 'gpgcheck', 'priority',
                     'includepkgs', 'skip_if_unavailable',
                     'repo_gpgcheck', 'gpgcakey'] -%]
 [%-     IF ${opt}.defined -%]

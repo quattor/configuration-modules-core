@@ -23,6 +23,7 @@ prefix "/software/repositories/0";
 "protocols/0/name" = "http";
 "protocols/0/url" = "http://some.example.com/repoone";
 "skip_if_unavailable" = false;
+"proxy" = ""; # this is valid according to the schema
 
 prefix "/software/repositories/1";
 "enabled" = false;
@@ -36,6 +37,7 @@ prefix "/software/repositories/1";
 "protocols/1/name" = "http";
 "protocols/1/url" = "http://not.example.com/either";
 "skip_if_unavailable" = true;
+"proxy" = "https://proxy/";
 
 prefix "/software/repositories/2";
 "enabled" = false;

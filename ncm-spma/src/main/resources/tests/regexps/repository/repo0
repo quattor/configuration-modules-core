@@ -13,6 +13,7 @@ contentspath=/software/repositories/0
 ^metadata_expire=7d$
 ^include=/etc/yum.repos.d/zero.pkgs$
 ^exclude=pkg1 \*pkg2\*$
+^proxy ### COUNT 0
 ^enabled=1$
 ^gpgcheck=0$
 ^skip_if_unavailable=0$

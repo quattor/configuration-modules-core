@@ -14,6 +14,7 @@ contentspath=/software/repositories/1
 ^metadata_expire=7d$
 ^include=/etc/yum.repos.d/one.pkgs$
 ^exclude=dont want$
+^proxy=https://proxy/$
 ^enabled=0$
 ^gpgcheck=1$
 ^skip_if_unavailable=1$
