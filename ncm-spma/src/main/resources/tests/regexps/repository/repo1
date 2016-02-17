@@ -11,10 +11,9 @@ contentspath=/software/repositories/1
 ^name=one$
 ^baseurl=    http://not.example.com/woohoo$
 ^    http://not.example.com/either$
-^enabled=0$
 ^metadata_expire=7d$
-^gpgcheck=1$
 ^include=/etc/yum.repos.d/one.pkgs$
-^includepkgs=$
 ^exclude=dont want$
+^enabled=0$
+^gpgcheck=1$
 ^skip_if_unavailable=1$
