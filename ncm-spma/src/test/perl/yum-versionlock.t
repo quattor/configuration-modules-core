@@ -29,8 +29,6 @@ Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY;
 Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
 Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
 
-ok(grep {$_ eq '-C'} @REPOQUERY, 'repoquery command has cache enabled');
-
 my $cmp = NCM::Component::spma::yum->new("spma");
 
 
