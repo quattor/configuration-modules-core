@@ -30,18 +30,26 @@ use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant GROUPS_TREE => "/software/groups";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
+use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
 use constant YUM_PACKAGE_LIST => YUM_PLUGIN_DIR . "/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
-
+use constant YUM_EXPIRE => qw(yum clean expire-cache);
+use constant YUM_PURGE_METADATA => qw(yum clean metadata);
+use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 use constant YUM_CONF_FILE => "/etc/yum.conf";
+use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => qw(yum-complete-transaction -y);
-
+use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
+                             --qf %{NAME};%{ARCH});
+use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
+                                 --qf %{NAME}\n%{NAME};%{ARCH});
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
+use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
 
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
@@ -49,21 +57,6 @@ use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant YUM_CONF_OBSOLETES => "obsoletes";
 use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
-
-# Must use cache (-C option)
-use constant YUM_CMD => qw(yum -C -y shell);
-use constant YUM_DISTRO_SYNC => qw(yum -C -y distro-sync);
-use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
-use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
-use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
-                             --qf %{NAME};%{ARCH});
-use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugins
-                                 --qf %{NAME}\n%{NAME};%{ARCH});
-
-# Do not use cache (no -C option)
-use constant YUM_EXPIRE => qw(yum clean expire-cache);
-use constant YUM_PURGE_METADATA => qw(yum clean metadata);
-use constant YUM_MAKECACHE => qw(yum makecache);
 
 our $NoActionSupported = 1;
 
@@ -740,17 +733,6 @@ sub purge_yum_caches
                                               1));
 }
 
-# Create the yum cache
-sub make_cache
-{
-    my ($self) = @_;
-
-    # This only affects the caches, can be safely created
-    return defined($self->execute_yum_command([YUM_MAKECACHE],
-                                              "create yum cache",
-                                              1));
-}
-
 # Runs yum distro-sync.  Before modifying the installed sets we must
 # align the system to the repositories.  Otherwise we'll get a lot of problems.
 sub distrosync
@@ -777,8 +759,6 @@ sub update_pkgs
     } else {
         $self->expire_yum_caches() or return 0;
     }
-
-    $self->make_cache() or return 0;
 
     $self->versionlock($pkgs, $fullsearch) or return 0;
 

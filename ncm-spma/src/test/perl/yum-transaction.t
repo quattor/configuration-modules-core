@@ -34,8 +34,6 @@ Readonly::Array my @YUM_CMD_ORIG => NCM::Component::spma::yum::YUM_CMD;
 Readonly::Array my @YUM_CMD => @{NCM::Component::spma::yum::_set_yum_config(\@YUM_CMD_ORIG)};
 Readonly my $YUM => join(" ", @YUM_CMD);
 
-ok(grep {$_ eq '-C'} @YUM_CMD, 'yum shell command has cache enabled');
-
 my $cmp = NCM::Component::spma::yum->new("spma");
 
 

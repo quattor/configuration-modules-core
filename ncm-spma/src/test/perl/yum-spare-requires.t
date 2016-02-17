@@ -33,8 +33,6 @@ Readonly::Array my @DEPS_ORIG => NCM::Component::spma::yum::REPO_DEPS();
 Readonly::Array my @DEPS => @{NCM::Component::spma::yum::_set_yum_config(\@DEPS_ORIG)};
 Readonly my $CMD => join(" ", @DEPS, 'pkg.noarch');
 
-ok(grep {$_ eq '-C'} @DEPS, 'repoqeury command has cache enabled');
-
 set_desired_output($CMD, 'dep;noarch');
 set_desired_err($CMD, '');
 
