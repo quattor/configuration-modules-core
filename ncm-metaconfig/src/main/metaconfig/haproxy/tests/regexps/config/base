@@ -1,0 +1,8 @@
+Base test for config
+---
+/etc/haproxy/haproxy.cfg
+nomultiline
+---
+chroot
+maxconn
+

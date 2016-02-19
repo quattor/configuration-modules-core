@@ -1,0 +1,67 @@
+global
+[% FOREACH log IN global.logs -%]
+    log /dev/log [% FOREACH item IN log.value -%] [% item %] [%- END -%]
+
+    [%- END -%]
+
+[% FOREACH option IN global.config -%]
+    [% option.key %] [% option.value %]
+
+    [%- END -%]
+
+    [% IF global.stats.defined %]
+    stats [% FOREACH option IN global.stats.pairs %] [% option.key %] [% option.value %] [%- END -%]
+    [%- END %]
+
+
+defaults
+[% FOREACH config IN defaults.config.pairs -%]
+    [% config.key %] [% config.value %]
+
+    [%- END -%]
+[% FOREACH option IN defaults.options.pairs -%]
+    option [% option.value %]
+
+    [%- END -%]
+[% FOREACH timeout IN defaults.timeouts.pairs -%]
+    timeout [% timeout.key %] [% timeout.value %]
+
+    [%- END -%]
+
+listen stats : [% stats.port %]
+    mode [% stats.mode %]
+[% FOREACH statoption IN stats.options.pairs -%]    
+    stats [% statoption.key %] [% statoption.value %]
+ 
+[%- END -%]
+
+[% FOREACH proxy IN proxys -%]
+listen  [% proxy.name %]
+[% FOREACH bind IN proxy.binds -%]
+    bind [% bind %] [% FOREACH option IN proxy.bindoptions -%] [% option.key %] [% option.value %] [%- END -%]
+
+[%- END -%]
+
+[% FOREACH config IN proxy.config.pairs -%]
+    [% config.key %] [% config.value %]
+
+    [%- END -%]
+[% FOREACH option IN proxy.options -%]
+    option [% option %]
+
+    [%- END -%]
+    default-server port [% proxy.port %] [% FOREACH option IN proxy.defaultoptions.pairs -%] [% option.key %] [% option.value %] [%- END -%]
+
+[% FOREACH server IN proxy.servers.pairs -%]
+    server [% server.key %] [% server.value %]:[% proxy.port %] [% FOREACH option IN proxy.serveroptions.pairs -%] [% option.key %] [% option.value %] [%- END -%] check
+
+    [%- END -%]
+[% IF proxy.timeouts.defined %]
+[% FOREACH timeout IN proxy.timeouts.pairs -%]
+    timeout [% timeout.key %] [% timeout.value %]
+
+    [%- END -%]
+[%- END %]
+
+[%- END -%]
+
