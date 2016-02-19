@@ -6,7 +6,7 @@
   <artifactId>nss</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.2.0-rc4-SNAPSHOT</version>
+  <version>16.2.0</version>
   <name>Manage /etc/nsswitch.conf</name>
 
   <parent>
