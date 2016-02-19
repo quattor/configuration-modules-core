@@ -372,7 +372,7 @@ sub Configure
     # Remove old (also possibly duplicated) GPG keys
     ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( ["rpm -e --allmatches gpg-pubkey"], "removing old GPG keys" );
     if ( $cmd_exit ) {
-        $self->warning("Failed to remove old GPG keys from rpmdb. None installed?");
+        $self->warn("Failed to remove old GPG keys from rpmdb. None installed?");
     }
     # Import GPG keys
     foreach my $file ( glob "/etc/pki/rpm-gpg/*" ) {
