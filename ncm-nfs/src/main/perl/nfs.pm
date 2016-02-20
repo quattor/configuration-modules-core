@@ -25,15 +25,17 @@ Readonly my $FSTAB => "/etc/fstab";
 # This is a function, not a method.
 sub compare_entries
 {
-
     my ($nref, $oref) = @_;
 
-    return 1 if ($nref->{device} ne $oref->{device});
-    return 1 if ($nref->{mntpt} ne $oref->{mntpt});
-    return 2 if ($nref->{fstype} ne $oref->{fstype});
-    return 2 if ($nref->{opt} ne $oref->{opt});
-    return 2 if ($nref->{freq} != $oref->{freq});
-    return 2 if ($nref->{passno} != $oref->{passno});
+    # Can numeric 'A != B' be different than 'A ne B' ?
+    my $ne = sub {
+        my $attr = shift;
+        return $nref->{$attr} ne $oref->{$attr};
+    };
+
+    return 1 if (&$ne('device') || &$ne('mntpt'));
+    return 2 if (&$ne('fstype') || &$ne('opt') ||
+                 &$ne('freq') || &$ne('passno'));
 
     # Got the end, so hashes must be equal.
     return 0;
