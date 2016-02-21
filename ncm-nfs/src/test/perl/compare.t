@@ -6,46 +6,55 @@ use NCM::Component::nfs;
 
 my $orig = {
     device => 'dev',
-    mntpt => 'mnt',
+    mountpoint => 'mnt',
     fstype => 'typ',
-    opt => 'options',
+    options => 'options',
     freq => 0,
     passno => 1,
 };
 
 my $new = { %$orig };
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   0, 'Comparing equal hashes returns 0');
+is(NCM::Component::nfs::mount_action_new_old($new, undef),
+   'mount', 'Comparing new vs undef returns mount');
+
+$new = { %$orig };
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'none', 'Comparing equal hashes returns none');
+
+$new = { %$orig };
+$new->{action} = 'dosomething';
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'none', 'Comparing hashes returns none is action attribute is different');
 
 $new = { %$orig };
 $new->{device} = 'otherdev';
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   1, 'Different devices returns 1');
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'umount/mount', 'Different devices returns umount/mount');
 
 $new = { %$orig };
-$new->{mntpt} = 'othermnt';
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   1, 'Different mntpt returns 1');
+$new->{mountpoint} = 'othermnt';
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'umount/mount', 'Different mntpt returns umount/mount');
 
 $new = { %$orig };
 $new->{fstype} = 'othertyp';
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   2, 'Different fstype returns 2');
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'remount', 'Different fstype returns remount');
 
 $new = { %$orig };
-$new->{opt} = 'otheroption';
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   2, 'Different opt returns 2');
+$new->{options} = 'otheroption';
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'remount', 'Different opt returns remount');
 
 $new = { %$orig };
 $new->{freq} = 100;
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   2, 'Different freq returns 2');
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'remount', 'Different freq returns remount');
 
 $new = { %$orig };
 $new->{passno} = 200;
-is(NCM::Component::nfs::compare_entries($orig, $new),
-   2, 'Different passno returns 2');
+is(NCM::Component::nfs::mount_action_new_old($new, $orig),
+   'remount', 'Different passno returns remount');
 
 
 done_testing;
