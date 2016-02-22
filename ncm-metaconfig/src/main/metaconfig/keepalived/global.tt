@@ -1,0 +1,3 @@
+[% FOREACH item IN global_defs.pairs -%]
+[%     item.key %] [% item.value -%]
+[% END %]

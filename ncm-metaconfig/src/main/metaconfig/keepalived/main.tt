@@ -1,0 +1,13 @@
+global_defs {
+[% INCLUDE 'metaconfig/keepalived/global.tt' FILTER indent -%]
+}
+[% FOREACH vrrp_script IN vrrp_scripts -%]
+vrrp_script [% vrrp_script.name %] {
+[% INCLUDE 'metaconfig/keepalived/vrrp_script.tt' FILTER indent -%] 
+}
+[% END %]
+[% FOREACH vrrp_instance IN vrrp_instances -%]
+vrrp_instance [% vrrp_instance.name %] {
+[%- INCLUDE 'metaconfig/keepalived/vrrp_instance.tt' FILTER indent -%]
+}
+[%- END %]

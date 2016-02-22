@@ -1,0 +1,3 @@
+[% FOREACH vip IN vrrp_instance.virtual_ipaddresses -%]
+[% vip.ipaddress %] dev [% vip.interface %]
+[% END -%]
