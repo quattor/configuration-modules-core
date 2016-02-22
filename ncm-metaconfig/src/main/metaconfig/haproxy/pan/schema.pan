@@ -6,7 +6,7 @@ include 'pan/types';
     list of syslog facilities
 }
 type haproxy_service_global_logs = {
-    '{/dev/log}' : string[] = list('local0','notice')
+    '{/dev/log}' : string[] = list('local0' , 'notice')
 };
 
 @documentation {
@@ -30,7 +30,7 @@ type haproxy_service_global_stats = {
 };
 
 @documentation {
-    
+    The global section 
 }
 type haproxy_service_global = {
     'logs' : haproxy_service_global_logs
@@ -60,7 +60,7 @@ type haproxy_service_timeouts = {
 };
 
 @documentation {
-
+    The Default Section
 }
 type haproxy_service_defaults = {
     'config' : haproxy_service_defaults_config
@@ -117,8 +117,6 @@ type haproxy_service_proxy_serveroptions = {
     'cookie' ? string
 };
 
-
-
 @documentation {
     configuration of a proxy
 }
@@ -135,7 +133,8 @@ type haproxy_service_proxy = {
 }; 
 
 @documentation {
-
+    haproxy config
+    see: http://www.haproxy.org/download/1.4/doc/configuration.txt
 }
 type haproxy_service = {
     'global' : haproxy_service_global

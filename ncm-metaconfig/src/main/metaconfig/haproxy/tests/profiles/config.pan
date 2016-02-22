@@ -24,27 +24,34 @@ prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}';
 'contents/defaults/timeouts/connect' = 3500;
 'contents/defaults/timeouts/client' = 10000;
 'contents/defaults/timeouts/server' = 10000;
-'contents/proxys/' = append(dict('name' , 'webserver',
-    'port' , 80,
-    'binds' , list('*:'+to_string(80)),
-    'config' , dict(
-        'mode' , 'http',
-        'capture','cookie vgnvisitor= len 32',
-        'cookie', 'SERVERID insert indirect nocache',
-        'rspidel', '^Set-cookie:\ IP=',
-        'balance' , 'source',),
-    'options' , list('tcpka','httplog','httpchk','forwardfor','httpclose'),
-    'defaultoptions',dict(
-        'inter', 2,
-        'downinter', 5,
-        'rise', 3,
-        'fall', 2,
-        'slowstart', 60,
-        'maxqueue', 128,
-        'weight', 100,),
-    'serveroptions',dict(
-       'cookie','control',
-    ),
-    'servers', dict('server1','192.168.0.11','server2','192.168.0.12'),)
+'contents/proxys/' = append(
+    dict('name' , 'webserver',
+        'port' , 80,
+        'binds' , list('*:'+to_string(80)),
+        'config' , dict(
+            'mode' , 'http',
+            'capture' , 'cookie vgnvisitor= len 32',
+            'cookie' , 'SERVERID insert indirect nocache',
+            'rspidel' , '^Set-cookie:\ IP=',
+            'balance' , 'source',
+        ),
+        'options' , list('tcpka','httplog','httpchk','forwardfor','httpclose'),
+        'defaultoptions' , dict(
+            'inter' , 2,
+            'downinter' , 5,
+            'rise' , 3,
+            'fall' , 2,
+            'slowstart' , 60,
+            'maxqueue' , 128,
+            'weight' , 100,
+        ),
+        'serveroptions' , dict(
+           'cookie' ,'control',
+        ),
+        'servers' , dict(
+            'server1' , '192.168.0.11',
+            'server2','192.168.0.12'
+        ),
+    )
 );
 

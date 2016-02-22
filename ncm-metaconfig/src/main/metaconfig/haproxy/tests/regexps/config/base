@@ -1,8 +1,44 @@
-Base test for config
+Test for config
 ---
 /etc/haproxy/haproxy.cfg
-nomultiline
 ---
-chroot
-maxconn
-
+global
+^\s{4}log /dev/log local0 notice
+^\s{4}chroot /var/lib/haproxy
+^\s{4}daemon
+^\s{4}group haproxy
+^\s{4}maxconn 4000
+^\s{4}pidfile /var/run/haproxy.pid
+^\s{4}tune.ssl.default-dh-param 2048
+^\s{4}user haproxy
+^\s{4}stats user haproxy
+defaults
+^\s{4}log global
+^\s{4}maxconn 4000
+^\s{4}retries 3
+^\s{4}timeout check 3500
+^\s{4}timeout client 10000
+^\s{4}timeout connect 3500
+^\s{4}timeout queue 3500
+^\s{4}timeout server 10000
+listen stats :
+^\s{4}mode http
+^\s{4}stats enabled
+^\s{4}stats hide-version
+^\s{4}stats refresh 5
+^\s{4}stats uri /
+listen  webserver
+^\s{4}bind \*:80
+^\s{4}balance source
+^\s{4}capture cookie vgnvisitor= len 32
+^\s{4}cookie SERVERID insert indirect nocache
+^\s{4}mode http
+^\s{4}rspidel \^Set-cookie:\\ IP=
+^\s{4}option tcpka
+^\s{4}option httplog
+^\s{4}option httpchk
+^\s{4}option forwardfor
+^\s{4}option httpclose
+^\s{4}default-server port 80
+^\s{4}server server1 192.168.0.11:80   check
+^\s{4}server server2 192.168.0.12:80   check

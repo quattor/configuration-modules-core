@@ -6,6 +6,6 @@ bind "/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}/conten
 
 prefix "/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}";
 "daemons" = dict(
-    "haproxy", "restart",
+    "haproxy" , "restart",
 );
 "module" = "haproxy/main";
