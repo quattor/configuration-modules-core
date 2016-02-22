@@ -457,8 +457,8 @@ sub Configure
         print $fh join ( "\n", @$locked_found );
         $fh->close();
         if ( $wanted_pkgs_locked->size != $locked_found->size ) {
-            $self->error( "Version-locked packages are missing from repositories - expected ", $wanted_pkgs_locked->size, ", available ", $locked_found->size );
-            $self->error( "Missing packages: ", $wanted_pkgs_locked - $locked_found_noepoch );
+            $self->error( "Version-locked packages are missing from repositories - expected ", $wanted_pkgs_locked->size, ", available ", $locked_found->size, "\n",
+                          "Missing packages: ", $wanted_pkgs_locked - $locked_found_noepoch );
             return 0;
         } else {
             $self->info("all version locked packages available in repositories");
@@ -736,7 +736,7 @@ sub Configure
         my $pre = $installed;
         ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum downgrade -q -y " . YUM_PLUGIN_OPTS . " " . join ( " ", sort @$to_sync ) ], "downgrading packages" );
         if ( $cmd_exit ) {
-            $self->error("Downgrade failed.");
+            $self->error("Error downgrading packages:\n$cmd_err");
             return 0;
         }
         $installed = $self->get_installed_rpms();
@@ -748,7 +748,7 @@ sub Configure
         $pre = $installed;
         ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum update -q -y " . YUM_PLUGIN_OPTS ], "updating packages" );
         if ( $cmd_exit ) {
-            $self->error("Upgrade failed.");
+            $self->error("Error updating packages:\n$cmd_err");
             return 0;
         }
         $installed = $self->get_installed_rpms();
@@ -767,7 +767,7 @@ sub Configure
         my $pre = $installed;
         ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum install -y " . YUM_PLUGIN_OPTS . " " . join( " ", sort @$will_install) ], "installing ".$will_install->size." package(s)" );
         if ( index($cmd_out, 'Complete!') == -1 ) {
-            $self->error("Error installing packages.");
+            $self->error("Error installing packages:\n$cmd_err");
             return 0;
         }
         $installed = $self->get_installed_rpms();
