@@ -14,8 +14,6 @@ variable BASE_STEPS = list(
     ),
 );
 
-
-
 prefix '/';
 'types' = list(
     nlist('type_id', 0, 'name', 'osd'),

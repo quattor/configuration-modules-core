@@ -458,7 +458,7 @@ sub write_crush {
     my $plainfile = "$crushdir/crushmap"; 
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
 
-    my $trd = CAF::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
+    my $trd = EDG::WP4::CCM::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
     
     if (!$trd) {
         $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD: ", $trd->{fail});
