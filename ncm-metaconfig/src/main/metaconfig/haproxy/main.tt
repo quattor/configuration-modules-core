@@ -6,6 +6,6 @@ defaults
 [% FOREACH proxy IN proxys -%]
 listen  [% proxy.name %]
 [% INCLUDE 'metaconfig/haproxy/proxy.tt' FILTER indent %]
-[%- END %]
+[% END %]
 
 
