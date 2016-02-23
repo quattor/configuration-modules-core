@@ -397,14 +397,12 @@ sub Configure
     return 1 if !defined($preinstalled);
 
     # Clean up YUM state - worth to be thorough there
-    ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( ["yum clean expire-cache " . YUM_PLUGIN_OPTS], "expiring YUM caches", 1 );
-    if ($cmd_exit) {
-        # Expiration of cache is not enough sometimes.
-        # https://bugzilla.redhat.com/show_bug.cgi?id=1151074
-        $self->execute_command( ["yum clean all " . YUM_PLUGIN_OPTS], "resetting hard YUM state", 1 );
+    # Expiration of cache is not enough sometimes.
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1151074
+    if ( $t->{run} ) {
+        $self->execute_command( ["yum clean all " . YUM_PLUGIN_OPTS], "resetting YUM state", 0 );
+        $self->execute_command( ["yum makecache " . YUM_PLUGIN_OPTS], "generating YUM cache", 0 );
     }
-
-    $self->execute_command( ["yum makecache " . YUM_PLUGIN_OPTS], "generating YUM cache", 1 );
 
     my @files = glob "{/tmp/*.yumtx,/var/lib/yum/transaction*}";
     foreach my $file (@files) {
@@ -670,14 +668,7 @@ sub Configure
     if ( !$to_remove->is_empty && !$t->{userpkgs} ) {
         # Remove only unknown RPMs without dependencies.
         # rpm doesn't understand epoch
-        for my $rpm (sort @$to_remove) {
-            my $rpm_noepoch = $rpm;
-            $rpm_noepoch =~ s/^.*://;
-            ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "rpm -e --nodeps $rpm_noepoch" ], "removing unknown $rpm_noepoch", 0, "/dev/null" );
-            if ( $cmd_exit ) {
-                $self->warn("Error removing unknown $rpm_noepoch.");
-            }
-        }
+        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$to_remove) ], 'attempting to remove: '.join (" ", sort @$to_remove));
         $installed = $self->get_installed_rpms();
         return 1 if !defined($installed);
         my $removed = $preinstalled - $installed;
@@ -803,7 +794,7 @@ sub Configure
 
     # Remove unwanted packages
     if ( !$will_remove->is_empty ) {
-        if ( !$t->{userpkgs} || (defined($t->{metadatapkgs}) && $t->{metadatapkgs}) ) {
+        if ( !$t->{userpkgs} ) {
             while ( defined( my $p = $will_remove->each ) ) {
                 if ( substr( $p, 0, 8 ) eq 'ncm-spma' ) {
                     $self->error("Attempting to remove ncm-spma! You seem to miss SELF from /software/packages = {}?");
@@ -811,14 +802,7 @@ sub Configure
                 }
             }
             my $pre = $installed;
-            for my $rpm (sort @$will_remove) {
-                my $rpm_noepoch = $rpm;
-                $rpm_noepoch =~ s/^.*://;
-                ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "rpm -e --nodeps $rpm_noepoch" ], "removing $rpm_noepoch", 0, "/dev/null" );
-                if ( $cmd_exit ) {
-                    $self->warn("RPM reported error removing $rpm_noepoch.");
-                }
-            }
+            ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$will_remove) ], 'attempting to remove: '.join (" ", sort @$will_remove));
             $installed = $self->get_installed_rpms();
             return 1 if !defined($installed);
             my $removed = $pre - $installed;
@@ -826,7 +810,7 @@ sub Configure
                 $self->info("removed " . $removed->size . " package(s): ", $removed);
             }
         } else {
-            $self->info( "userpkgs/metadatapkgs enabled, will not remove " . $will_remove->size . " user packages: ", join ( " ", sort @$will_remove ) );
+            $self->info( "userpkgs enabled, will not remove " . $will_remove->size . " user packages: ", join ( " ", sort @$will_remove ) );
         }
     } else {
         $self->info("nothing to remove");
