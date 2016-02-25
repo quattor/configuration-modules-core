@@ -368,7 +368,7 @@ sub Configure
         # Force a reload of the nfs daemon.
         $self->info("Forcing nfs reload");
         # report error on failure
-        CAF::Service->new("nfs", log => $self)->reload();
+        CAF::Service->new(["nfs"], log => $self)->reload();
     };
 
     return 1;
