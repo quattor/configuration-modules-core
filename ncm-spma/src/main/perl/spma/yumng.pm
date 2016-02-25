@@ -119,7 +119,7 @@ sub execute_yum_with_recovery
         } else {
             $cf = index($line, 'Error: ');
             my $pkg = $line;
-            if ( $cf != -1 && index($line, 'conflicts with') ) {        # handle package conflicts
+            if ( $cf != -1 && index($line, 'conflicts with') != -1 ) {        # handle package conflicts
                 $pkg =~ s,^.*Error: ,,;
                 $pkg =~ s,^.*Package: ,,;
                 $pkg =~ s, .*,,;
