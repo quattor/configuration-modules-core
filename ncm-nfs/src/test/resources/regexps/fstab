@@ -7,6 +7,7 @@ quote
 # Comment
 /dev00 /mntpt00       ext4                special,defaults                1
 /dev01 /mntpt01 ext3
+# Extra trailing comment
 /mydev0 /mount000 nfs defaults 0 0
 mydev1 /mount1 panfs super,awesome 5 100
 amydev2 /amount2 none bind 0 0
