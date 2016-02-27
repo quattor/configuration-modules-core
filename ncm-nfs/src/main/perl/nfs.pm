@@ -94,21 +94,22 @@ sub mount_action_new_old
 {
     my ($new, $old) = @_;
 
-    return $FSTAB_ACTION_MOUNT if (! $old);
+    my $action = $FSTAB_ACTION_REMOUNT;
 
-    # Can numeric 'A != B' be different than 'A ne B' ?
-    my $ne = sub {
-        my $attr = shift;
-        return $new->{$attr} ne $old->{$attr};
+    if ($old) {
+        my %changed = map { $_ => 1 } grep { $new->{$_} ne $old->{$_} } @FSTAB_LINE;
+
+        if (! %changed) {
+            $action = $FSTAB_ACTION_NONE;
+        } elsif ($changed{$FSTAB_DEVICE} || $changed{$FSTAB_MOUNTPOINT}) {
+            $action = $FSTAB_ACTION_UMOUNT_MOUNT;
+        };
+
+    } else {
+        $action = $FSTAB_ACTION_MOUNT;
     };
 
-    return $FSTAB_ACTION_UMOUNT_MOUNT if (&$ne($FSTAB_DEVICE) || &$ne($FSTAB_MOUNTPOINT));
-
-    return $FSTAB_ACTION_REMOUNT if (&$ne($FSTAB_FSTYPE) || &$ne($FSTAB_OPTIONS) ||
-                                     &$ne($FSTAB_FREQ) || &$ne($FSTAB_PASSNO));
-
-    # Got the end, so hashes must be equal.
-    return $FSTAB_ACTION_NONE;
+    return $action;
 }
 
 
