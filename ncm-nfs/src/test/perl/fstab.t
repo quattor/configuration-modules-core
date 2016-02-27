@@ -102,9 +102,8 @@ my $fs4 = {
 };
 
 
-# The map eats undef (so the comment lines do not show up in the @parsed)
 my @parsed = map {NCM::Component::nfs::parse_fstab_line($_)} split("\n", $fstab_txt);
-is_deeply(\@parsed, [$fs0, $fs1, $fs2, $fs3, $fs4],
+is_deeply(\@parsed, [undef, undef, $fs0, $fs1, $fs2, $fs3, $fs4, undef],
           "fstab lines parsed as expected (comments are not added)");
 
 =head2 fstab
