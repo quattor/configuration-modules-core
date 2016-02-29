@@ -17,6 +17,9 @@ is("$rs", q!define contactgroup {
 	bar	baz
 }
 !, "Contents properly written");
+$rs->close();
+
+
 $rs = $comp->print_other($t, "servicegroups");
 
 isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
@@ -27,3 +30,5 @@ is("$rs", q!define servicegroup {
 	bar	baz
 }
 !, "Contents properly written");
+
+$rs->close();

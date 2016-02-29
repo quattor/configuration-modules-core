@@ -33,3 +33,5 @@ $t = {"www.google.com" => $t->{ahost}};
 
 $rs = $comp->print_hosts($t);
 like("$rs", qr(address\s+\d+\.\d+\.\d+\.\d+), "IP address found for existing host");
+
+$rs->close();

@@ -20,9 +20,9 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
+use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
-use Test::Quattor;
 use Set::Scalar;
 
 my $install = Set::Scalar->new('pkg;noarch');

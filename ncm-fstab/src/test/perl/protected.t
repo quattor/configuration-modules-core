@@ -1,4 +1,3 @@
-# -*- mode: cperl -*-
 # ${license-info}
 # ${author-info}
 # ${build-info}
@@ -17,6 +16,7 @@ use Readonly;
 Readonly my $FSTAB => 'target/test/etc/fstab';
 BEGIN{
     # This only works because the constant of NCM::Filesystem is used in a ncm-fstab sub
+    use Test::Quattor;
     use NCM::Filesystem;
     undef &{NCM::Filesystem::FSTAB};
     *{NCM::Filesystem::FSTAB} =  sub () {$FSTAB} ;

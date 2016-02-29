@@ -21,8 +21,8 @@ to verify the contents of the pkg-publisher.conf file.
 use strict;
 use warnings;
 use Test::More tests => 4;
-use NCM::Component::spma::ips;
 use Test::Quattor;
+use NCM::Component::spma::ips;
 use Readonly;
 use File::Path;
 

@@ -44,4 +44,7 @@ like($fh, qr{^port\s*=\s*7777\s*$}m, "Correct port line");
 my $c = get_command("service cdp-listend restart");
 ok($c, "Daemon was restarted when there were changes");
 
+$cf_mock->unmock("close");
+$fh->close();
+
 done_testing();

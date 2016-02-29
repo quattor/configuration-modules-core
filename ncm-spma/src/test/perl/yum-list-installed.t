@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
+use Test::Quattor;
 use NCM::Component::spma::yum;
 
 

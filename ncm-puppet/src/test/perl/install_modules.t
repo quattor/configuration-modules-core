@@ -13,9 +13,9 @@ Tests that the install_modules function does its job properly. Three possible sc
 
 use strict;
 use warnings;
-use NCM::Component::puppet;
 use Test::More tests => 9;
 use Test::Quattor;
+use NCM::Component::puppet;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;

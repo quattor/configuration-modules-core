@@ -17,6 +17,7 @@ ensure they are there.
 use strict;
 use warnings;
 use Test::More tests => 1;
+use Test::Quattor;
 use NCM::Component::modprobe;
 
 my $cmp = NCM::Component::modprobe->new("modprobe");

@@ -26,3 +26,5 @@ like("$rs", qr(^\s*check_command\s+1!2$)m,           "Check command properly reg
 like("$rs", qr(^\s*event_handler\s+3!4$)m,           "Event handler properly registered");
 like("$rs", qr(^\s*event_handler_enabled\s+1$)m,     "Event handler is enabled");
 like("$rs", qr(^\s*foo\s+5,6$)m,                     "Random array field is properly displayed");
+
+$rs->close();

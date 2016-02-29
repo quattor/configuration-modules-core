@@ -20,8 +20,8 @@ verifies the output of the method.
 use strict;
 use warnings;
 use Test::More tests => 4;
-use NCM::Component::spma::ips;
 use Test::Quattor;
+use NCM::Component::spma::ips;
 use Readonly;
 
 Readonly my $PKG_LIST_V => join(" ",

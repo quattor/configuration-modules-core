@@ -21,6 +21,7 @@ the IDRs are correctly added to the supplied hash.
 use strict;
 use warnings;
 use Test::More tests => 3;
+use Test::Quattor;
 use NCM::Component::spma::ips;
 use Set::Scalar;
 
