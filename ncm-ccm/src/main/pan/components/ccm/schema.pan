@@ -36,7 +36,7 @@ type kerberos_principal_string = string with {
 
     realm = pc_r[len-1];
     # uppercase REALM
-    if (! match(realm, '^[A-Z][A-Z.-_]*$')) {
+    if (! match(realm, '^[a-zA-Z][a-zA-Z.-_]*$')) {
         error("Not a valid realm " + realm);
     };
 
