@@ -21,10 +21,6 @@ $mock->mock('_directory_exists', sub {return $dir_exists->{shift};});
 my $mkdir = [];
 $mock->mock('_make_directory', sub { shift; push(@$mkdir, shift)});
 
-my $cleanup = [];
-$mock->mock('_cleanup', sub { shift; push(@$cleanup, shift)});
-
-
 =head2 fstab_add_defaults
 
 =cut
@@ -203,7 +199,6 @@ $fh->close();
 $fh = undef;
 set_file_contents($fstab, $fstab_txt);
 command_history_reset();
-$cleanup = [];
 my ($fstab_changed_2, $action) = $cmp->process_mounts($tree);
 
 ok($fstab_changed_2, "process_mounts returns fstab_changed");
@@ -218,9 +213,6 @@ command_history_ok([
     qr{^mount -o remount /mount1$},
     qr{^mount /amount2$},
 ], "correct mount commands triggered in proper order");
-
-is_deeply($cleanup, [qw(/mountX)],
-          "cleanup of mountX as expected (non-configured but under control of ncm-nfs)");
 
 
 done_testing();

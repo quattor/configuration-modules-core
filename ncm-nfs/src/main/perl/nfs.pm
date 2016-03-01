@@ -60,13 +60,6 @@ Readonly::Array my @CMD_UMOUNT_LAZY => qw(umount -l);
 Readonly::Array my @CMD_MOUNT => qw(mount);
 Readonly::Array my @CMD_REMOUNT => qw(mount -o remount);
 
-Readonly::Hash my %CLEANUP_DISPATCH => {
-    move => \&move,
-    rmtree => \&rmtree,
-    unlink => sub { return unlink(shift); },
-};
-
-
 =head2 Functions
 
 =over
@@ -434,19 +427,7 @@ sub process_mounts
             ($new->{$device}->{$FSTAB_ACTION} eq $FSTAB_ACTION_UMOUNT_MOUNT) ) {
 
             $action_taken = 1;
-            if ($self->do_mount(\@CMD_UMOUNT_LAZY, $old->{$device})) {
-                # TODO: previous code always did his,
-                #       without recreating the mountpoint for UMOUNT_MOUNT devices
-                #       That was probably a bug
-                if (! defined($new->{$device})) {
-                # Try removing mount point, giving warning on error.
-                    my $mntpt = $old->{$device}->{$FSTAB_MOUNTPOINT};
-                    # Disable any backup
-                    if (! $self->_cleanup($mntpt, '')) {
-                        $self->warn("cannot delete mountpoint $mntpt: $!");
-                    }
-                }
-            }
+            $self->do_mount(\@CMD_UMOUNT_LAZY, $old->{$device});
         }
     }
 
@@ -524,63 +505,6 @@ sub _exists
     return -e $path || -l $path;
 }
 
-# _cleanup, remove with backup support
-# works like LC::Check::_unlink, but has directory support
-# and no error throwing
-# returns SUCCESS on success, undef on failure, logs error
-# backup is backup from LC::Check::_unlink (and thus also CAF::File*)
-# if backup is undefined, use self->{backup}
-# pass empty string to disable backup with self->{backup} defined
-# does not cleanup the backup of the original file,
-# FileWriter via TextRender can do that.
-sub _cleanup
-{
-    my ($self, $dest, $backup) = @_;
-
-    return SUCCESS if (! $self->_exists($dest));
-
-    $backup = $self->{backup} if (! defined($backup));
-
-    # old is the backup location or undef if no backup is defined
-    # (empty string as backup is not allowed, but 0 is)
-    # 'if ($old)' can safely be used to test if a backup is needed
-    my $old;
-    $old = $dest.$backup if (defined($backup) and $backup ne '');
-
-    # cleanup previous backup, no backup of previous backup!
-    my $method;
-    my @args = ($dest);
-    if($old) {
-        if (! $self->_cleanup($old, '')) {
-            $self->error("_cleanup of previous backup $old failed");
-            return;
-        };
-
-        # simply rename/move dest to backup
-        # works for files and directories
-        $method = 'move';
-        push(@args, $old);
-    } else {
-        if($self->_directory_exists($dest)) {
-            $method = 'rmtree';
-        } else {
-            $method = 'unlink';
-        }
-    }
-
-    if($CAF::Object::NoAction) {
-        $self->verbose("CAF::Object NoAction set, not going to $method with args ", join(',', @args));
-        return SUCCESS;
-    } else {
-        if($CLEANUP_DISPATCH{$method}->(@args)) {
-            $self->verbose("_cleanup $method removed $dest");
-            return SUCCESS;
-        } else {
-            $self->error("_cleanup $method failed to remove $dest: $!");
-            return;
-        }
-    };
-}
 
 =pod
 
