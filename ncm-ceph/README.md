@@ -6,7 +6,8 @@ NCM-ceph
 
 * Documentation of the CEPH component can be found in the component man page, or in the online quattor documentation.
 * The schema details are annotated in the schema file.
-* Example pan files are included in the template-library-examples repository and also in the test folders.
+* Example pan files are included in the template-library-examples repository (https://github.com/quattor/template-library-examples)
+and also in the test folders.
 
 # Points that need attention/improvement
 
