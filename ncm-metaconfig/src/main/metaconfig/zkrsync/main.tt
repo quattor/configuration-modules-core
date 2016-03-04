@@ -1,0 +1,13 @@
+[MAIN]
+[% FOR pair IN CCM.contents.pairs -%]
+[%      pair.key %]=
+[%-      IF pair.value.is_boolean -%]
+[%          pair.value ? "true" : "false" %]
+
+[%-      ELSIF CCM.is_list(pair.value) -%]
+[%          pair.value.join(',') %]
+
+[%-      ELSE -%]
+[%          pair.value %]
+[%       END -%]
+[%- END -%]
