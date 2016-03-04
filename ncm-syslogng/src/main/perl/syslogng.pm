@@ -136,14 +136,9 @@ sub print_log_flags
 {
 	my ($fh, $cfg) = @_;
 
-	return unless exists $cfg->{flags};
+    my @flags = grep {$cfg->{$_}} sort keys %$cfg; 
 
-	my @flags;
-	while (my ($k, $v) = each (%$cfg)) {
-		push (@flags, $k) if $v;
-	}
-
-	print $fh "flags(", join (",", @flags), ");\n";
+	print $fh "\tflags(", join (",", @flags), ");\n";
 }
 
 # Prints a log path
@@ -153,7 +148,7 @@ sub print_logpaths
 
 	foreach my $lg (@$cfg) {
 		print $fh "log {\n";
-		print_log_flags ($fh, $lg->{flags});
+		print_log_flags ($fh, $lg->{flags}) if exists($lg->{flags});
 		while (my ($k, $v) = each (%$lg)) {
 			next if $k eq 'flags';
 			$k =~ m{(.+)s};
