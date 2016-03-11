@@ -665,18 +665,6 @@ sub Configure
         }
     }
 
-    if ( !$to_remove->is_empty && !$t->{userpkgs} ) {
-        # Remove only unknown RPMs without dependencies.
-        # rpm doesn't understand epoch
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$to_remove) ], 'attempting to remove: '.join (" ", sort @$to_remove));
-        $installed = $self->get_installed_rpms();
-        return 1 if !defined($installed);
-        my $removed = $preinstalled - $installed;
-        if ( !$removed->is_empty ) {
-            $self->info("removed " . $removed->size . " unknown package(s): " . $removed );
-        }
-    }
-
     if ( !$t->{userpkgs} ) {
         # Attempt to remove packages present in repositories but not wanted by the result of test transaction.
         $preinstalled = $installed;
