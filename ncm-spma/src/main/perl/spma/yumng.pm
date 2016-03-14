@@ -644,30 +644,11 @@ sub Configure
         return 1;
     }
 
-    # Remove packages not present in metadata and not whitelisted ones.
     my $installed = $preinstalled;
-    my $to_remove = $preinstalled - $repoquery_list;
     my $whitelist = $t->{whitelist};
-    for my $rpm ( $to_remove->elements ) {
-        # Do not remove imported GPG keys.
-        if ( substr( $rpm, 0, 13 ) eq '0:gpg-pubkey-' ) {
-            $to_remove->delete($rpm);
-        }
-        # Do not remove whitelisted packages.
-        if ( defined($whitelist) ) {
-            for my $white_pkg (@$whitelist) {
-                my $rpm_noepoch = $rpm;
-                $rpm_noepoch =~ s/^.*://;
-                if ( index($rpm_noepoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_noepoch) ) {
-                    $to_remove->delete($rpm);
-                }
-            }
-        }
-    }
 
     if ( !$t->{userpkgs} ) {
-        # Attempt to remove packages present in repositories but not wanted by the result of test transaction.
-        $preinstalled = $installed;
+        # Attempt to remove packages not wanted by the result of test transaction.
         ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [RPM_QUERY_INSTALLED_NAMES_NOEPOCH], "getting list of installed package names without epoch", 1, "/dev/null", 1 );
         if ( $cmd_exit ) {
             $self->error("Error getting list of installed package names.");
@@ -676,6 +657,15 @@ sub Configure
         my $installed_names = Set::Scalar->new( split ( /\n/, $cmd_out ) );
         my $packages_to_remove = $installed_names - $to_install_names;
         $packages_to_remove->delete('gpg-pubkey');
+        if ( defined($whitelist) ) {
+            for my $rpm ( $packages_to_remove->elements ) {
+                for my $white_pkg (@$whitelist) {
+                    if ( index($rpm, $white_pkg) == 0 || match_glob($white_pkg, $rpm) ) {
+                        $packages_to_remove->delete($rpm);
+                    }
+                }
+            }
+        }
         if ( !$packages_to_remove->is_empty ) {
             ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$packages_to_remove) ], 'attempting to remove: '.join (" ", sort @$packages_to_remove));
             $installed = $self->get_installed_rpms();
