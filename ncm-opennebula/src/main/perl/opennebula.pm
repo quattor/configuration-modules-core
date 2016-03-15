@@ -171,7 +171,7 @@ sub update_vn_ar
         $data->{ar}->{ar_id} = "$arid";
         $template = $self->process_template($data, "vnet");
         $self->debug(1, "AR template to update from $vnetname: ", $template);
-        $arid = $t->updatear($template);
+        $arid = $t->updatear("$template");
         if (defined($arid)) {
             $self->info("Updated $vnetname AR id: ", $arid);
         } else {
