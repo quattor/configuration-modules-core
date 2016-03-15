@@ -1,0 +1,3 @@
+[%- FOR entry IN entries %]
+[%      entry.domain %]    [% entry.type %]    [% entry.item %]    [% entry.value %]
+[%- END -%]
