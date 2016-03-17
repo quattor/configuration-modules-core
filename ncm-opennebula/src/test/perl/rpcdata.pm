@@ -36,6 +36,14 @@ $cmds{rpc_create_newuser2}{params} = ["stdweird", "another_fancy_pass", "core"];
 $cmds{rpc_create_newuser2}{method} = "one.user.allocate";
 $cmds{rpc_create_newuser2}{out} = 4;
 
+$cmds{rpc_create_newuser3}{params} = ["vsc200", 'vsc200@HPC.UGENT.BE', "public"];
+$cmds{rpc_create_newuser3}{method} = "one.user.allocate";
+$cmds{rpc_create_newuser3}{out} = 5;
+
+$cmds{rpc_create_newuser4}{params} = ["vsc400", 'vsc400@HPC.UGENT.BE', "public"];
+$cmds{rpc_create_newuser4}{method} = "one.user.allocate";
+$cmds{rpc_create_newuser4}{out} = 6;
+
 $cmds{rpc_delete_user}{params} = [3];
 $cmds{rpc_delete_user}{method} = "one.user.delete";
 $cmds{rpc_delete_user}{out} = 3;
@@ -74,6 +82,18 @@ $cmds{rpc_list_user4}{out} = <<'EOF';
 <USER><ID>1</ID><GID>0</GID><GROUPS><ID>0</ID></GROUPS><GNAME>oneadmin</GNAME><NAME>serveradmin</NAME><PASSWORD>3f5013xxa0354dc79cd5c4998eec39b457595724</PASSWORD><AUTH_DRIVER>server_cipher</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><TOKEN_PASSWORD><![CDATA[205ca1e04934df2ac448b5e693f6aca567a5e450]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
 EOF
 
+$cmds{rpc_list_user5}{params} = [5];
+$cmds{rpc_list_user5}{method} = "one.user.info";
+$cmds{rpc_list_user5}{out} = <<'EOF';
+<USER><ID>5</ID><GID>1</GID><GROUPS><ID>1</ID></GROUPS><GNAME>users</GNAME><NAME>vsc200</NAME><PASSWORD>vsc200@HPC.UGENT.BE</PASSWORD><AUTH_DRIVER>public</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><TOKEN_PASSWORD><![CDATA[4a782c2aec2b95bf97701d4a57f7cc9032d7331b]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
+EOF
+
+$cmds{rpc_list_user6}{params} = [6];
+$cmds{rpc_list_user6}{method} = "one.user.info";
+$cmds{rpc_list_user6}{out} = <<'EOF';
+<USER><ID>6</ID><GID>1</GID><GROUPS><ID>1</ID></GROUPS><GNAME>users</GNAME><NAME>vsc400</NAME><PASSWORD>vsc400@HPC.UGENT.BE</PASSWORD><AUTH_DRIVER>public</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><TOKEN_PASSWORD><![CDATA[4a782c2aec2b95bf97701d4a57f7cc9032d7331b]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
+EOF
+
 $data = <<'EOF';
 SSH_PUBLIC_KEY = "ssh-dss AAAAB3NzaC1kc3MAAACBAOTAivURhUrg2Zh3DqgVd2ofRYKmXKjWDM4LITQJ/Tr6RBWhufdxmJos/w0BG9jFbPWbUyPn1mbRFx9/2JJjaspJMACiNsQV5KD2a2H/yWVBxNkWVUwmq36JNh0Tvx+ts9Awus9MtJIxUeFdvT433DePqRXx9EtX9WCJ1vMyhwcFAAAAFQDcuA4clpwjiL9E/2CfmTKHPCAxIQAAAIEAnCQBn1/tCoEzI50oKFyF5Lvum/TPxh6BugbOKu18Okvwf6/zpsiUTWhpxaa40S4FLzHFopTklTHoG3JaYHuksdP4ZZl1mPPFhCTk0uFsqfEVlK9El9sQak9vXPIi7Tw/dyylmRSq+3p5cmurjXSI93bJIRv7X4pcZlIAvHWtNAYAAACBAOCkwou/wYp5polMTqkFLx7dnNHG4Je9UC8Oqxn2Gq3uu088AsXwaVD9t8tTzXP1FSUlG0zfDU3BX18Ds11p57GZtBSECAkqH1Q6vMUiWcoIwj4hq+xNq3PFLmCG/QP+5Od5JvpbBKqX9frc1UvOJJ3OKSjgWMx6FfHr8PxqqACw lsimngar@OptiPlex-790"
 QUATTOR = 1
@@ -81,6 +101,18 @@ EOF
 $cmds{rpc_update_user}{params} = [3, $data, 1];
 $cmds{rpc_update_user}{method} = "one.user.update";
 $cmds{rpc_update_user}{out} = 3;
+
+$data = 'SSH_PUBLIC_KEY="ssh-rsa KvPM7szEutOPh+K3uVV0U3XVl/writethisisquiteboringXB6nCSyok0hokA+MhIuhCbGdBtOX1jkIj8kvqp guybrush@UGent.be
+"';
+$cmds{rpc_update2_user}{params} = [5, $data, 1];
+$cmds{rpc_update2_user}{method} = "one.user.update";
+$cmds{rpc_update2_user}{out} = 5;
+
+$data = 'SSH_PUBLIC_KEY="ssh-rsa KvIdontlikeunittestsPM7szEutOPh+K3uVV0U3XVl/XB6nCSyok0hokA+MhIuhCbGdBtOX1jkIj8kvqp mrguy@UGent.be
+"';
+$cmds{rpc_update3_user2}{params} = [6, $data, 1];
+$cmds{rpc_update3_user2}{method} = "one.user.update";
+$cmds{rpc_update3_user2}{out} = 6;
 
 # Manage VNETs
 
@@ -489,3 +521,26 @@ EOF
 $cmds{rpc_instantiate_template}{params} = [4, "node630.cubone.os", 1, $data];
 $cmds{rpc_instantiate_template}{method} = "one.template.instantiate";
 $cmds{rpc_instantiate_template}{out} = 60;
+
+# Manage groups
+
+$cmds{rpc_list_groupspool}{params} = [];
+$cmds{rpc_list_groupspool}{method} = "one.grouppool.info";
+$cmds{rpc_list_groupspool}{out} = <<'EOF';
+<GROUP_POOL><GROUP><ID>0</ID><NAME>oneadmin</NAME><TEMPLATE/><USERS><ID>0</ID><ID>1</ID></USERS><ADMINS/></GROUP><QUOTAS><ID>0</ID><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></QUOTAS><GROUP><ID>1</ID><NAME>users</NAME><TEMPLATE/><USERS><ID>2</ID><ID>3</ID></USERS><ADMINS/></GROUP><QUOTAS><ID>1</ID><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></QUOTAS><DEFAULT_GROUP_QUOTAS><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></DEFAULT_GROUP_QUOTAS></GROUP_POOL>
+EOF
+
+$cmds{rpc_create_newgroup}{params} = ["gvo01"];
+$cmds{rpc_create_newgroup}{method} = "one.group.allocate";
+$cmds{rpc_create_newgroup}{out} = 2;
+
+$cmds{rpc_list_group}{params} = [2];
+$cmds{rpc_list_group}{method} = "one.group.info";
+$cmds{rpc_list_group}{out} = <<'EOF';
+<GROUP><ID>2</ID><NAME>gvo01</NAME><TEMPLATE/><USERS><ID>5</ID><ID>6</ID></USERS><ADMINS/><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/><DEFAULT_GROUP_QUOTAS><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></DEFAULT_GROUP_QUOTAS></GROUP>
+EOF
+
+$data = 'DESCRIPTION="ccn"';
+$cmds{rpc_update_group}{params} = [2, $data, 1];
+$cmds{rpc_update_group}{method} = "one.group.update";
+$cmds{rpc_update_group}{out} = 2;
