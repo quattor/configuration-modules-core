@@ -108,6 +108,7 @@
     <module>ncm-nss</module>
     <module>ncm-opennebula</module>
     <module>ncm-systemd</module>
+    <module>ncm-freeipa</module>
   </modules>
 
   <build>
