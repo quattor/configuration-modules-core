@@ -13,8 +13,7 @@ L<NCM::Component::FreeIPA::Client>.
 
 =item add_host
 
-Add a host. If the host already exists, will try to modify any optional attributes.
-(It will not delete attributes).
+Add a host. If the host already exists, return undef.
 
 =over
 
@@ -30,13 +29,9 @@ Add a host. If the host already exists, will try to modify any optional attribut
 
 =over
 
-=item ip: IP to configure DNS entry
+=item ip_address: IP to configure DNS entry
 
-=item network: network to use when configuring DNS entry
-
-=item netmask: netmask to use when configuring DNS entry
-
-=item mac: macaddress
+=item macaddress: macaddress
 
 =back
 
@@ -48,9 +43,17 @@ sub add_host
 {
     my ($self, $fqdn, %opts) = @_;
 
-    my $host = $self->find_one("host", $fqdn);
-    if ($host) {
-    }
+    if ($self->find_one("host", $fqdn)) {
+        $self->debug("add_host: host $fqdn already exists");
+        return;
+    } else {
+        if ($self->api_host_add($fqdn, %opts)) {
+            return $self->{result};
+        } else {
+            $self->error("add_host failed for host $fqdn");
+            return;
+        };
+    };
 }
 
 =item disable_host
@@ -62,6 +65,40 @@ Disable a host with C<fqdn> hostname.
 sub disable_host
 {
     my ($self, $fqdn) = @_;
+
+    if ($self->find_one("host", $fqdn)) {
+        if ($self->api_host_disable($fqdn)) {
+            return $self->{result};
+        } else {
+            $self->error("disable_host failed for host $fqdn");
+            return;
+        };
+    } else {
+        $self->debug("disable_host: host $fqdn does not exist.");
+        return;
+    }
+}
+
+=item remove_host
+
+Remove the host C<fqdn>.
+
+=cut
+
+sub remove_host
+{
+    my ($self, $fqdn) = @_;
+
+    if($self->find_one("host", $fqdn)) {
+        if ($self->api_host_del($fqdn, updatedns => 1)) {
+            return $self->{result};
+        } else {
+            $self->error("remove_host failed for host $fqdn");
+            return;
+        };
+    } else {
+        $self->debug("remove_host: no host $fqdn");
+    }
 }
 
 =item host_passwd
@@ -75,12 +112,16 @@ sub host_passwd
 {
     my ($self, $fqdn) = @_;
 
-    if ($self->api_host_mod($fqdn, random => 1)) {
-        return $self->{result}->{randompassword};
+    if($self->find_one("host", $fqdn)) {
+        if ($self->api_host_mod($fqdn, random => 1)) {
+            return $self->{result}->{randompassword};
+        } else {
+            $self->error("host_passwd failed for host $fqdn");
+            return;
+        };
     } else {
-        $self->error("host_passwd failed");
-        return;
-    };
+        $self->debug("host_passwd: no host $fqdn");
+    }
 }
 
 =pod

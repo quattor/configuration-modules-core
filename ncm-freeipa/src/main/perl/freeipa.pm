@@ -9,6 +9,9 @@ use CAF::Reporter;
 our $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 
+# API logging from debuglevel 3
+Readonly my $DEBUGAPI_LVL => 3;
+
 =head2 server
 
 Configure server settings
@@ -25,7 +28,7 @@ sub server
     my $client = NCM::Component::FreeIPA::Client->new(
         $tree->{primary},
         log => $self,
-        debugapi => defined($dbglvl) && $dbglvl >= 3, # API logging from debuglevel 3
+        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LVL,
         );
     return if ! $client->{rc};
 
@@ -50,7 +53,6 @@ sub server
                 } else {
                     $self->verbose("Autoreverse is unable to determine the reverse for zone $name and subnet $subnet");
                 }
-
             };
             # Append the inaddr.arpa.
             $reverse .= '.in-addr.arpa.' if ($reverse !~ /\.$/);
@@ -58,7 +60,15 @@ sub server
         }
     };
 
+    my $hosts = $tree->{server}->{hosts};
+    if ($hosts) {
+        foreach my $fqdn (sort keys %$hosts) {
+            $client->add_host($fqdn, %{$hosts->{$fqdn}});
+        };
+    };
+
 }
+
 
 sub Configure
 {

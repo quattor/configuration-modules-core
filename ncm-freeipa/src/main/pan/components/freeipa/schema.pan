@@ -7,6 +7,15 @@ declaration template components/${project.artifactId}/schema;
 include 'pan/types';
 include 'quattor/types/component';
 
+@{ host configuration }
+type component_${project.artifactId}_host = {
+    @{host ip address (for DNS configuration only)}
+    'ip_address' ? type_ipv4
+    @{macaddress (for DHCP configuration only)}
+    # TODO: look for proper type
+    'macaddress' ? string
+};
+
 @{ DNS zone configuration }
 type component_${project.artifactId}_dns = {
     @{subnet to use, in A.B.C.D/MASK notation}
@@ -23,6 +32,8 @@ type component_${project.artifactId}_dns = {
 type component_${project.artifactId}_server = {
     @{subnet name with DNSzone information}
     'dns' ? component_${project.artifactId}_dns{}
+    @{hosts to add (not needed if installed via AII)}
+    'hosts' ? component_${project.artifactId}_host{}
 };
 
 type component_${project.artifactId} = {
