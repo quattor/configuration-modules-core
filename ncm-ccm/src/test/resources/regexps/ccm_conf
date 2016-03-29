@@ -8,10 +8,12 @@ base ccm.conf
 ^force 0$
 ^get_timeout 30$
 ^group_readable theadmins$
+^keytab /some/path/to/key.tab$
 ^lock_retries 3$
 ^lock_wait 30$
+^principal user/component.something/other.else@MY.REALM$
 ^profile https://my.server/myprofile$
 ^retrieve_retries 3$
 ^retrieve_wait 30$
-^trust user/component.something/other.else@MY.REALM$
+^trust user/component.something/other.else@MY.REALM,user2@OTHER.REALM$
 ^world_readable 0$

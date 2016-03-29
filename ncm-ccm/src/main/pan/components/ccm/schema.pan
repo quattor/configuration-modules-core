@@ -80,7 +80,9 @@ type component_ccm = {
     'json_typed'       ? boolean
     'tabcompletion'    ? boolean
     'keep_old'         ? long(0..)
-    'trust'            ? kerberos_principal_string
+    'trust'            ? kerberos_principal_string[]
+    'principal'        ? kerberos_principal_string
+    'keytab'           ? string
 } with {
     if(is_defined(SELF['group_readable']) && SELF['world_readable'] == 1) {
         error("Cannot set both group_readable and enable world_readable for ccm");
