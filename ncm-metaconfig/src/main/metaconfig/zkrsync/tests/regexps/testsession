@@ -5,6 +5,7 @@ Base test for zkrsync config
 ^\[MAIN\]$
 ^delete=false$
 ^domain=ugent.be$
+^dropcache=true$
 ^excl_usr=$
 ^excludere=\$\^$
 ^info=true$

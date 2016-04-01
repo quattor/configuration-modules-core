@@ -36,6 +36,7 @@ type zkrsync_config = {
     # client opts
     'verifypath' ? boolean = true
     'domain' ? string
+    'dropcache' ? boolean = false
     'verbose' ? boolean = false
     'info' ? boolean = false
     # destination opts

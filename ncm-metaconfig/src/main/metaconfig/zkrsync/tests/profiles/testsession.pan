@@ -14,4 +14,5 @@ prefix "/software/components/metaconfig/services/{/etc/zkrs/default.conf}/conten
 'delete'= false;
 'rsyncpath' = '/user/gent';
 'rsubpaths' = list('2_gent/test/1', '3_gent/test/2');
+'dropcache' = true;
 
