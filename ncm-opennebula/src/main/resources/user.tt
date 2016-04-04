@@ -5,6 +5,9 @@
 [%-             FOREACH item IN user.${pair.key} -%]
 [%                  item %]
 [%              END -%]"
+[%         CASE 'user' -%]
+[%             IF pair.value != 'oneadmin' -%]
+QUATTOR = 1
+[%             END -%]
 [%     END -%]
 [% END -%]
-QUATTOR = 1

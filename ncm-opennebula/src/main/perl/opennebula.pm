@@ -528,7 +528,10 @@ sub manage_users
         if ($user->{user}) {
             if ($user->{user} eq "serveradmin" && exists $user->{password}) {
                 $self->change_opennebula_passwd($user->{user}, $user->{password});
-            }
+            } elsif ($user->{user} eq "oneadmin" && exists $user->{ssh_public_key}) {
+                $template = $self->process_template($user, "user");
+                $new = $self->update_something($one, "user", $user->{user}, $template);
+            };
             push(@userlist, $user->{user});
         }
     }
@@ -561,7 +564,7 @@ sub manage_users
         } elsif ($user->{user} && $user->{password}) {
             $template = $self->process_template($user, "user");
             my $used = $self->detect_used_resource($one, "user", $user->{user});
-            if (!$used) {
+            if (!$used && $user->{password}) {
                 $self->info("Creating new user: ", $user->{user});
                 $one->create_user($user->{user}, $user->{password}, "core");
                 # Add Quattor flag
