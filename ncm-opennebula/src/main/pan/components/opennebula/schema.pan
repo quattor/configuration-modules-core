@@ -210,7 +210,7 @@ type opennebula_vnet = {
 };
 
 type opennebula_user = {
-    "ssh_public_key" ? string
+    "ssh_public_key" ? string[]
     "user" : string 
     "password" : string
 };

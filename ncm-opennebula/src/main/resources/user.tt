@@ -1,7 +1,10 @@
 [% FOR pair IN user.pairs -%]
 [%-    SWITCH pair.key -%]
 [%         CASE 'ssh_public_key' -%]
-[%             pair.key FILTER upper %] = "[% pair.value %]"
+[%             pair.key FILTER upper %] = "
+[%-             FOREACH item IN user.${pair.key} -%]
+[%                  item %]
+[%              END -%]"
 [%     END -%]
 [% END -%]
 QUATTOR = 1

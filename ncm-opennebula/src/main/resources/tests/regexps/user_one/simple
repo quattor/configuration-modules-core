@@ -2,5 +2,6 @@ Opennebula user test
 ---
 multiline
 ---
-^SSH_PUBLIC_KEY\s?=\s?".+"\s*$
+^SSH_PUBLIC_KEY\s?=\s?".+\s*$
+^\"$
 ^QUATTOR\s?=\s?\d+\s*$
