@@ -48,6 +48,7 @@ sub add_host
         return;
     } else {
         if ($self->api_host_add($fqdn, %opts)) {
+            $self->debug("add_host $fqdn");
             return $self->{result};
         } else {
             $self->error("add_host failed for host $fqdn");
@@ -68,6 +69,7 @@ sub disable_host
 
     if ($self->find_one("host", $fqdn)) {
         if ($self->api_host_disable($fqdn)) {
+            $self->debug("disable_host $fqdn");
             return $self->{result};
         } else {
             $self->error("disable_host failed for host $fqdn");
@@ -91,6 +93,7 @@ sub remove_host
 
     if($self->find_one("host", $fqdn)) {
         if ($self->api_host_del($fqdn, updatedns => 1)) {
+            $self->debug("remove_host $fqdn");
             return $self->{result};
         } else {
             $self->error("remove_host failed for host $fqdn");
@@ -114,6 +117,7 @@ sub host_passwd
 
     if($self->find_one("host", $fqdn)) {
         if ($self->api_host_mod($fqdn, random => 1)) {
+            $self->debug("host_passwd $fqdn");
             return $self->{result}->{randompassword};
         } else {
             $self->error("host_passwd failed for host $fqdn");

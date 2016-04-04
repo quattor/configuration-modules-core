@@ -1,0 +1,5 @@
+$cmds{find_abcd}{cmd}="dnszone_find .*idnsname=a.b.c.d.*";
+$cmds{find_abcd}{count}=0; # No existing ones
+    
+$cmds{add_abcd}{cmd}="dnszone_add a.b.c.d.*";
+$cmds{add_abcd}{result}={okunittest => 1};

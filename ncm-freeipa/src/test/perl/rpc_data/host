@@ -1,0 +1,14 @@
+$cmds{missing_host}{cmd}="host_find .*missing.domain.*";
+$cmds{missing_host}{count}=0;
+
+$cmds{add_missing_host}{cmd}="host_add .*missing.domain.*";
+$cmds{add_missing_host}{result}={okunittest => 1};
+
+$cmds{host_disable}{cmd}="host_disable host.domain";
+$cmds{host_disable}{result}={okunittest => 1};
+
+$cmds{host_remove}{cmd}="host_del host.domain";
+$cmds{host_remove}{result}={okunittest => 1};
+    
+$cmds{host_passwd}{cmd}="host_mod host.domain random=1,.*";
+$cmds{host_passwd}{result}={randompassword => 'supersecret'}

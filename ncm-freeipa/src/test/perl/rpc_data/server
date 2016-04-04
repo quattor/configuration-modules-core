@@ -1,0 +1,5 @@
+$cmds{no_dnszones}{cmd}="dnszone_find";
+$cmds{no_dnszones}{count}=0;
+
+$cmds{no_hosts}{cmd}="host_find";
+$cmds{no_hosts}{count}=0;

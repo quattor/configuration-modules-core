@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use mock_rpc;
+
 use Test::Quattor;
 use Test::More;
 

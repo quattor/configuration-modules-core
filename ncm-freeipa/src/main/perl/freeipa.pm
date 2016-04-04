@@ -4,13 +4,14 @@ use base qw(NCM::Component);
 use Readonly;
 use NCM::Component::FreeIPA::Client;
 
-use CAF::Reporter;
+use CAF::Object qw(SUCCESS);
+use CAF::Reporter 16.2.1;
 
 our $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 
 # API logging from debuglevel 3
-Readonly my $DEBUGAPI_LVL => 3;
+Readonly my $DEBUGAPI_LEVEL => 3;
 
 =head2 server
 
@@ -22,13 +23,13 @@ sub server
 {
     my ($self, $tree) = @_;
 
-    my $dbglvl = $self->{LOGGER}->_rep_setup()->{$CAF::Reporter::DEBUGLV};
+    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
 
     # Only allow kerberos for now
     my $client = NCM::Component::FreeIPA::Client->new(
         $tree->{primary},
         log => $self,
-        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LVL,
+        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
         );
     return if ! $client->{rc};
 
@@ -55,8 +56,10 @@ sub server
                 }
             };
             # Append the inaddr.arpa.
-            $reverse .= '.in-addr.arpa.' if ($reverse !~ /\.$/);
-            $client->add_dnszone($reverse) if $reverse;
+            if ($reverse) {
+                $reverse .= '.in-addr.arpa.' if ($reverse !~ /\.$/);
+                $client->add_dnszone($reverse) ;
+            };
         }
     };
 
@@ -67,6 +70,7 @@ sub server
         };
     };
 
+    return SUCCESS;
 }
 
 

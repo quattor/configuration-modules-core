@@ -28,11 +28,6 @@ Handle the actual initializtion of new. Return 1 on success, undef otherwise.
 An C<CAF::Reporter> instance that can be used for logging
 (it is converted in a logger appropriate for C<Net::FreeIPA>).
 
-=item dns
-
-IF C<dns> is true, all operations will update DNS information
-(where relevant).
-
 =back
 
 All other arguments and options are passed to L<Net::FreeIPA>
@@ -49,8 +44,6 @@ sub _initialize
         $opts{log} = NCM::Component::FreeIPA::Logger->new($opts{log});
     }
 
-    $self->{dns} = delete $opts{dns};
-    
     return $self->SUPER::_initialize($hostname, %opts);
 }
 
