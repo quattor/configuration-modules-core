@@ -222,7 +222,7 @@ sub Configure
     # Test if we are supposed to be running spma in package modification mode.
     if ( -e "/.spma-run" ) {
         if ( !unlink "/.spma-run" ) {
-            $self->error("unable to remove file /.spma-run: $!");
+            $self->error("Unable to remove file /.spma-run: $!");
         }
         $t->{run} = 1;
     }
@@ -234,10 +234,14 @@ sub Configure
     print $yum_conf_file "exclude=" . join ( " ", sort @$excludes );
     $yum_conf_file->close();
 
-    ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "rm -rf " . REPOS_DIR . "/*" ], "cleaning up old YUM repository definitions" );
-    if ( $cmd_exit ) {
-        $self->error("Removal of old repositories failed.");
-        return 0;
+    {
+        my @repos = glob "/etc/yum.repos.d/*.repo";
+        foreach my $repo (@repos) {
+            if ( !unlink $repo) {
+                $self->error("Unable to remove file $repo: $!");
+                return 0;
+            }
+        }
     }
 
     # Generate new installation repositories from host profile
