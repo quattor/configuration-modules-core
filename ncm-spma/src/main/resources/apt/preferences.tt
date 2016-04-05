@@ -1,0 +1,11 @@
+# Managed by ncm-spma apt
+
+[%- FILTER indent -%]
+[%-     FOREACH source IN sources -%]
+[%-         FOREACH protocol IN source.protocols -%]
+                Package: *
+                Pin: origin [% protocol.url %]
+                Pin-Priority: 1000
+[%-         END -%]
+[%-     END -%]
+[%- END -%]

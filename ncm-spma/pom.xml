@@ -73,6 +73,13 @@
         <role>author</role>
       </roles>
     </contributor>
+    <contributor>
+      <name>James Adams</name>
+      <email>james.adams@stfc.ac.uk</email>
+      <roles>
+        <role>author</role>
+      </roles>
+    </contributor>
   </contributors>
   <build>
     <pluginManagement>
@@ -217,6 +224,7 @@
                 <sources>
                   <source>
                     <excludes>
+                      <exclude>**/apt.pm</exclude>
                       <exclude>**/ips.pm</exclude>
                       <exclude>**/spma-run</exclude>
                     </excludes>
@@ -231,6 +239,7 @@
                 <sources>
                   <source>
                     <excludes>
+                      <exclude>**/*apt*</exclude>
                       <exclude>**/*ips*</exclude>
                       <!-- no - here, this is the pod of the package -->
                       <exclude>**/*spmarun*</exclude>
