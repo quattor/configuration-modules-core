@@ -23,8 +23,8 @@ reset_POST_history;
 # default single result is success, so the find_one finds one
 ok(! defined($c->add_dnszone("x.y.z")),
    "add_dnszone returns undef on existing zone");
-ok(! find_POST_history('dnszone_add.*x.y.z'),
-   'no dnszone_add for x.y.z');
+ok(POST_history_ok(["dnszone_add.*x.y.z"], ["dnszone_find.*x.y.z"]),
+   "add and no find called for dnszone x.y.z");
 
 =head2 add non-existing zone
 
@@ -33,8 +33,8 @@ ok(! find_POST_history('dnszone_add.*x.y.z'),
 reset_POST_history;
 is_deeply($c->add_dnszone("a.b.c.d"), {okunittest=>1},
           "Added dnszone a.b.c.d");
-ok(POST_history_ok(["dnszone_find.*a.b.c.d", "dnszone_add.*a.b.c.d"]),
-   "find and add called for dnszone a.b.c.d");
+ok(POST_history_ok(["dnszone_add.*a.b.c.d"], ["dnszone_find.*a.b.c.d"]),
+   "add and no find called for dnszone a.b.c.d");
 
 
 done_testing();

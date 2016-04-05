@@ -1,14 +1,17 @@
-$cmds{missing_host}{cmd}="host_find .*missing.domain.*";
-$cmds{missing_host}{count}=0;
+$cmds{add_already}{cmd}="0 host_add host.domain ";
+$cmds{add_already}{error}={name => 'DuplicateEntry'};
 
-$cmds{add_missing_host}{cmd}="host_add .*missing.domain.*";
+$cmds{add_missing_host}{cmd}="0 host_add .*missing.domain.*";
 $cmds{add_missing_host}{result}={okunittest => 1};
 
-$cmds{host_disable}{cmd}="host_disable host.domain";
+$cmds{host_disable}{cmd}="1 host_disable host.domain";
 $cmds{host_disable}{result}={okunittest => 1};
 
-$cmds{host_remove}{cmd}="host_del host.domain";
+$cmds{host_remove}{cmd}="1 host_del host.domain updatedns=1,.*";
 $cmds{host_remove}{result}={okunittest => 1};
     
-$cmds{host_passwd}{cmd}="host_mod host.domain random=1,.*";
-$cmds{host_passwd}{result}={randompassword => 'supersecret'}
+$cmds{host_passwd}{cmd}="1 host_mod host.domain random=1,.*";
+$cmds{host_passwd}{result}={randompassword => 'supersecret'};
+
+$cmds{mod_missing}{cmd}="1 host_mod missing.domain ";
+$cmds{mod_missing}{error}={name => 'NotFound'};

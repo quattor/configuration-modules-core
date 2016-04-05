@@ -33,7 +33,7 @@ ok($cmp->server($tree), 'server returns success');
 # 2: no autoreverse / reverse
 # 3: manual reverse
 my $total_zones = 3+2+3;
-is(scalar find_POST_history("dnszone_find"), $total_zones, "one dnszone_find per subnet to add");
+is(scalar find_POST_history("dnszone_find"), 0, "no dnszone_find");
 is(scalar find_POST_history("dnszone_add"), $total_zones, "one dnszone_add per subnet to add");
 ok(POST_history_ok([
    "dnszone_add subnet1.subdomain ",
@@ -49,7 +49,7 @@ ok(POST_history_ok([
 ]), "server dns POST");
 
 my $total_hosts = 3;
-is(scalar find_POST_history("host_find"), $total_hosts, "one host_find per host to add");
+is(scalar find_POST_history("host_find"), 0, "no host_find");
 is(scalar find_POST_history("host_add"), $total_hosts, "one host_add per host to add");
 ok(POST_history_ok([
    "host_add host1.subnet1.subdomain ",

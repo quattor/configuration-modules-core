@@ -25,7 +25,7 @@ Add a host. If the host already exists, return undef.
 
 =back
 
-=item Options
+=item Options (passed to C<Net::FreeIPA::API::api_add_host>).
 
 =over
 
@@ -43,18 +43,7 @@ sub add_host
 {
     my ($self, $fqdn, %opts) = @_;
 
-    if ($self->find_one("host", $fqdn)) {
-        $self->debug("add_host: host $fqdn already exists");
-        return;
-    } else {
-        if ($self->api_host_add($fqdn, %opts)) {
-            $self->debug("add_host $fqdn");
-            return $self->{result};
-        } else {
-            $self->error("add_host failed for host $fqdn");
-            return;
-        };
-    };
+    return $self->do_one('host', 'add', $fqdn, %opts);
 }
 
 =item disable_host
@@ -67,18 +56,7 @@ sub disable_host
 {
     my ($self, $fqdn) = @_;
 
-    if ($self->find_one("host", $fqdn)) {
-        if ($self->api_host_disable($fqdn)) {
-            $self->debug("disable_host $fqdn");
-            return $self->{result};
-        } else {
-            $self->error("disable_host failed for host $fqdn");
-            return;
-        };
-    } else {
-        $self->debug("disable_host: host $fqdn does not exist.");
-        return;
-    }
+    return $self->do_one('host', 'disable', $fqdn);
 }
 
 =item remove_host
@@ -91,17 +69,7 @@ sub remove_host
 {
     my ($self, $fqdn) = @_;
 
-    if($self->find_one("host", $fqdn)) {
-        if ($self->api_host_del($fqdn, updatedns => 1)) {
-            $self->debug("remove_host $fqdn");
-            return $self->{result};
-        } else {
-            $self->error("remove_host failed for host $fqdn");
-            return;
-        };
-    } else {
-        $self->debug("remove_host: no host $fqdn");
-    }
+    return $self->do_one('host', 'del', $fqdn, updatedns => 1);
 }
 
 =item host_passwd
@@ -115,17 +83,7 @@ sub host_passwd
 {
     my ($self, $fqdn) = @_;
 
-    if($self->find_one("host", $fqdn)) {
-        if ($self->api_host_mod($fqdn, random => 1)) {
-            $self->debug("host_passwd $fqdn");
-            return $self->{result}->{randompassword};
-        } else {
-            $self->error("host_passwd failed for host $fqdn");
-            return;
-        };
-    } else {
-        $self->debug("host_passwd: no host $fqdn");
-    }
+    return $self->do_one('host', 'mod', $fqdn, random => 1, __result_path => 'result/result/randompassword');
 }
 
 =pod

@@ -293,9 +293,11 @@ $rc->mock('POST', sub {
         my $result = $cmds{$short}{result};
         my $code = $cmds{$short}{code};
         my $count = $cmds{$short}{count};
+        my $error = $cmds{$short}{error};
 
         $self->{content}->{result}->{result} = $result if defined($result);
         $self->{content}->{result}->{count} = $count if defined($count);
+        $self->{content}->{error} = $error if defined($error);
         $self->{code} = $code if defined($code);
     } else {
         my $msg;

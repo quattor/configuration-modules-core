@@ -21,15 +21,8 @@ sub add_dnszone
 {
     my ($self, $name) = @_;
 
-    my $zone = $self->find_one("dnszone", $name);
-    if ($zone) {
-        $self->debug("Zone $name already exists.");
-    } else {
-        $self->debug("Adding dnszone $name");
-        return $self->api_dnszone_add($name) ? $self->{result} : undef;
-    }
-}
-
+    return $self->do_one('dnszone', 'add', $name);
+};
 
 =pod
 
