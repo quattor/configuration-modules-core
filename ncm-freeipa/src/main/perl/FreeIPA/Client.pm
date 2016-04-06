@@ -2,7 +2,8 @@
 
 use parent qw(Net::FreeIPA
               NCM::Component::FreeIPA::Host
-              NCM::Component::FreeIPA::DNS);
+              NCM::Component::FreeIPA::DNS
+              NCM::Component::FreeIPA::Service);
 
 use NCM::Component::FreeIPA::Logger;
 

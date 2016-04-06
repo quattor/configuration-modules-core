@@ -22,3 +22,7 @@ prefix "/software/components/freeipa/server/hosts";
     "ip_address", "10.11.13.1",
     "macaddress", "aa:bb:cc:dd:ee:ff",
     );
+
+prefix "/software/components/freeipa/server/services";
+"HTTP/hosts" = list("serv1", "serv2");
+"libvirt/hosts" = list("hyp1", "hyp3");

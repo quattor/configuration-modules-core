@@ -1,5 +1,2 @@
-$cmds{no_dnszones}{cmd}="dnszone_find";
-$cmds{no_dnszones}{count}=0;
-
-$cmds{no_hosts}{cmd}="host_find";
-$cmds{no_hosts}{count}=0;
+$cmds{some_hosts}{cmd}="host_find";
+$cmds{some_hosts}{result}=[{fqdn => ["serv10", "hyp100"]}, {fqdn => ["serv20", "hyp200"]}, {fqdn => ["serv30", "hyp300"]}];

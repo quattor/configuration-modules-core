@@ -7,6 +7,13 @@ declaration template components/${project.artifactId}/schema;
 include 'pan/types';
 include 'quattor/types/component';
 
+@{ service configuration }
+type component_${project.artifactId}_service = {
+    @{regular expressions to match known hosts; for each host, a service/host principal
+      will be added and the host is allowed to retrieve the keytab}
+    'hosts' ? string[]
+};
+
 @{ host configuration }
 type component_${project.artifactId}_host = {
     @{host ip address (for DNS configuration only)}
@@ -34,6 +41,8 @@ type component_${project.artifactId}_server = {
     'dns' ? component_${project.artifactId}_dns{}
     @{hosts to add (not needed if installed via AII)}
     'hosts' ? component_${project.artifactId}_host{}
+    @{services to add}
+    'services' ? component_${project.artifactId}_service{}
 };
 
 type component_${project.artifactId} = {

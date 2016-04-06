@@ -70,6 +70,28 @@ sub server
         };
     };
 
+    my $svcs = $tree->{server}->{services};
+    if ($svcs) {
+        my $res = $client->do_one('host', 'find', '');
+        # Flatten the results
+        my @known_hosts = map {@{$_->{fqdn}}} @$res;
+        $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
+
+        foreach my $svc (sort keys %$svcs) {
+            $self->verbose("Service $svc");
+            my $hosts = $svcs->{$svc}->{hosts};
+            if($hosts) {
+                $self->verbose("Service $svc ".(scalar @$hosts)." host patterns ", @$hosts);
+                foreach my $pat (@$hosts) {
+                    $self->verbose("Service $svc ".(scalar @$hosts)." host patterns $pat @known_hosts");
+                    foreach my $host (grep {/$pat/} @known_hosts) {
+                        $client->add_service_host($svc, $host);
+                    }
+                }
+            }
+        };
+    };
+
     return SUCCESS;
 }
 
