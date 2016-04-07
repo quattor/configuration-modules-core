@@ -59,15 +59,6 @@ sub valid_sshd_file
     return 1;
 }
 
-# escape values for the ssh config format.
-# adds \ before ?{}.()[]
-sub ssh_escape
-{
-    my ($self, $val) = @_;
-    $val =~ s{([?{}.()\[\]])}{\\$1}g;
-    return $val;
-}
-
 #
 # Process options for SSH daemon and client: processing is almost
 # identical for both.  Returns whether or not the file changed, so
@@ -100,7 +91,7 @@ sub handle_config_file
                         # then add the options back in at the end of the file
                         $fh->remove_lines(qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^#});
                         foreach my $multival (@$val) {
-                            print $fh "$option " . $self->ssh_escape($multival) . "\n";
+                            print $fh "$option $multival\n";
                         }
                         next;        
                     }
@@ -111,7 +102,8 @@ sub handle_config_file
                     next;
                 }
             }
-            my $escaped_val = $self->ssh_escape($val);
+            my $escaped_val = $val;
+            $escaped_val =~ s{([?{}.()\[\]])}{\\$1}g;
             $fh->add_or_replace_lines(
                 qr{(?i)^\W*$option(?:\s+\S+)+}, qr{^\s*$comment\s*$option\s+$escaped_val\s*$},
                 "$comment$option $val\n",
