@@ -191,6 +191,8 @@ The space after the method name is significant, it is used to determine the used
 
 =cut
 
+sub _format { my $value = shift; return ref($value) eq 'ARRAY' ? join(',', @$value) : $value; }
+    
 $rc->mock('POST', sub {
     my ($self, $url, $data) = @_;
 
@@ -207,10 +209,10 @@ $rc->mock('POST', sub {
 
     my $method = $data->{method} || $NOMETHOD;
     my ($args, $opts) = @{$data->{params} || [[], {}]};
-    my $args_txt = join(',', @$args);
+    my $args_txt = join(',', map {_format($_)} @$args);
     my $opts_txt = '';
     foreach my $key (sort keys %$opts) {
-        $opts_txt .= ",$key=".$opts->{$key};
+        $opts_txt .= ",$key="._format($opts->{$key});
     }
     $opts_txt =~ s/^,//;
 

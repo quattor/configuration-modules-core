@@ -7,6 +7,40 @@ declaration template components/${project.artifactId}/schema;
 include 'pan/types';
 include 'quattor/types/component';
 
+@{ group members configuration }
+type component_${project.artifactId}_member = {
+    @{(minimal) user group members}
+    'user' ? string[]
+};
+
+@{ group configuration }
+type component_${project.artifactId}_group = {
+    @{group ID number}
+    'gidnumber' : long(0..)
+    @{group members}
+    'members' ? component_${project.artifactId}_member
+};
+
+@{ service configuration }
+type component_${project.artifactId}_user = {
+    @{user ID number}
+    'uidnumber' : long(0..)
+    @{last name}
+    'sn' : string
+    @{first name}
+    'givenname' : string
+    @{group name (must be a configured group to retrieve the gid)}
+    'group' ? string with exists('/software/components/${project.artifactId}/server/groups/'+SELF)
+    @{homedirectory}
+    'homedirectory' ? string
+    @{gecos}
+    'gecos' ? string
+    @{loginshell}
+    'loginshell' ? absolute_file_path
+    @{list of publick ssh keys}
+    'ipasshpubkey' ? string[]
+};
+
 @{ service configuration }
 type component_${project.artifactId}_service = {
     @{regular expressions to match known hosts; for each host, a service/host principal
@@ -20,7 +54,7 @@ type component_${project.artifactId}_host = {
     'ip_address' ? type_ipv4
     @{macaddress (for DHCP configuration only)}
     # TODO: look for proper type
-    'macaddress' ? string
+    'macaddress' ? string[]
 };
 
 @{ DNS zone configuration }
@@ -43,6 +77,10 @@ type component_${project.artifactId}_server = {
     'hosts' ? component_${project.artifactId}_host{}
     @{services to add}
     'services' ? component_${project.artifactId}_service{}
+    @{users to add}
+    'users' ? component_${project.artifactId}_user{}
+    @{groups to add}
+    'groups' ? component_${project.artifactId}_group{}
 };
 
 type component_${project.artifactId} = {

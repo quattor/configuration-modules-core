@@ -4,11 +4,13 @@ use warnings;
 use mock_rpc qw(host);
 
 use Test::Quattor;
+use Test::Quattor::Object;
 use Test::More;
 
 use NCM::Component::FreeIPA::Client;
 
-my $c = NCM::Component::FreeIPA::Client->new("host.example.com");
+my $obj = Test::Quattor::Object->new();
+my $c = NCM::Component::FreeIPA::Client->new("host.example.com", log => $obj);
 
 isa_ok($c, 'NCM::Component::FreeIPA::Client',
        "NCM::Component::FreeIPA::Client instance returned");
@@ -32,7 +34,7 @@ ok(POST_history_ok(["host_add missing.domain version="],["host_find .*missing.do
    "host_add called for missing.domain, no ip/mac");
 
 reset_POST_history;
-is_deeply($c->add_host('missing.domain', ip_address => '1.2.3.4', macaddress => 'aa:bb:cc:dd:ee:ff'),
+is_deeply($c->add_host('missing.domain', ip_address => '1.2.3.4', macaddress => ['aa:bb:cc:dd:ee:ff']),
           {okunittest => 1},
           "missing.domain host added");
 ok(POST_history_ok(["host_add missing.domain ip_address=1.2.3.4,macaddress=aa:bb:cc:dd:ee:ff,version="]),

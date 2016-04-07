@@ -43,8 +43,8 @@ reset_POST_history;
 is_deeply($c->add_service_host('myservice', 'myhost.domain'), {okunittest => 2}, "add_service_host returns expected value");
 ok(POST_history_ok([
    "service_add myservice/myhost.domain",
-   "service_allow_create_keytab myservice/myhost.domain host=ARRAY.*", # the host list is not properly converted in the history
-   "service_allow_retrieve_keytab myservice/myhost.domain host=ARRAY.*",
+   "service_allow_create_keytab myservice/myhost.domain host=myhost.*",
+   "service_allow_retrieve_keytab myservice/myhost.domain host=myhost.*",
 ]), "service_add and service_allow_(create|retrieve)_keytab for host called");
 
 done_testing;

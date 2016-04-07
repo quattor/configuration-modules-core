@@ -25,7 +25,7 @@ Add a host. If the host already exists, return undef.
 
 =back
 
-=item Options (passed to C<Net::FreeIPA::API::api_add_host>).
+=item Options (passed to C<Net::FreeIPA::API::api_host_add>).
 
 =over
 
@@ -69,7 +69,7 @@ sub remove_host
 {
     my ($self, $fqdn) = @_;
 
-    return $self->do_one('host', 'del', $fqdn, updatedns => 1);
+    return $self->do_one('host', 'del', [$fqdn], updatedns => 1);
 }
 
 =item host_passwd

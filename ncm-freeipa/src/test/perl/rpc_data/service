@@ -4,5 +4,5 @@ $cmds{add_already}{error}={name => 'DuplicateEntry'};
 $cmds{add_missing}{cmd}="0 service_add .*missing.*";
 $cmds{add_missing}{result}={okunittest => 1};
 
-$cmds{add_myservice}{cmd}="1 service_allow_retrieve_keytab myservice/myhost.domain .*host=ARRAY.*";
+$cmds{add_myservice}{cmd}="1 service_allow_retrieve_keytab myservice/myhost.domain .*host=myhost.*";
 $cmds{add_myservice}{result}={okunittest => 2};

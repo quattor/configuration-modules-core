@@ -57,9 +57,9 @@ ok(POST_history_ok([
 
 my $total_services = 4;
 is(scalar find_POST_history('service_add \w+/\w+'), $total_services, "one service_add per service to add");
-is(scalar find_POST_history('service_allow_create_keytab \w+/\w+ host=ARRAY'), $total_services,
+is(scalar find_POST_history('service_allow_create_keytab \w+/\w+ host=(serv|hyp)\d+'), $total_services,
    "one service_allow_create_keytab per service to add");
-is(scalar find_POST_history('service_allow_retrieve_keytab \w+/\w+ host=ARRAY'), $total_services,
+is(scalar find_POST_history('service_allow_retrieve_keytab \w+/\w+ host=(serv|hyp)\d+'), $total_services,
    "one service_allow_retrieve_keytab per service to add");
 ok(POST_history_ok([
    "service_add HTTP/serv10 version",
@@ -76,5 +76,23 @@ ok(POST_history_ok([
    "service_allow_retrieve_keytab libvirt/hyp300 host=",
 ]), "server service POST");
 
+my $total_users = 2;
+my $total_groups = 2;
+my $total_groups_w_members = 2;
+is(scalar find_POST_history('group_add \w+'), $total_groups,
+   "one group_add per group to add");
+is(scalar find_POST_history('user_add \w+'), $total_users,
+   "one user_add per user to add");
+is(scalar find_POST_history('group_add_member \w+ user=\w+'), $total_groups_w_members,
+   "one group_add_member per group w members to add");
+
+ok(POST_history_ok([
+   "group_add mygroup1 gidnumber=123456,version",
+   "group_add mygroup2 gidnumber=234567,version",
+   "user_add user1 gidnumber=123456,givenname=first1,ipasshpubkey=abc,def,sn=last1,uidnumber=1245,version",
+   "user_add user2 givenname=first2,ipasshpubkey=xyz,loginshell=/bin/bash,sn=last2,uidnumber=2356,version",
+   "group_add_member mygroup1 user=a,b,c,version",
+   "group_add_member mygroup2 user=d,e,f,version",
+]), "server users/groups POST");
 
 done_testing();
