@@ -14,6 +14,6 @@ type limits_conf_entry = {
 
 @{ type for configuring the limits.conf file @}
 type limits_conf_file = {
-    'entries'           : limits_conf_entry[]
+    'entries' : limits_conf_entry[]
 };
 

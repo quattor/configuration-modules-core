@@ -2,7 +2,7 @@ object template config;
 
 include 'metaconfig/limits_conf/config';
 
-prefix "/software/components/metaconfig/services/{/etc/security/limits.d/99-quattor.conf}/contents";
+prefix "/software/components/metaconfig/services/{/etc/security/limits.d/91-quattor.conf}/contents";
 
 "entries/0" = dict('domain', 'ftp', 'type', 'hard', 'item', 'priority', 'value', 5);
 "entries/1" = dict('domain', 'student', 'type', 'soft', 'item', 'maxlogins', 'value', 1);
