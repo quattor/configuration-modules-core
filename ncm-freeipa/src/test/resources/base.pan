@@ -6,3 +6,7 @@ include 'components/freeipa/config';
 
 prefix "/software/components/freeipa";
 "primary" = "myhost.example.com";
+
+prefix "/system/network";
+"hostname" = "myhost";
+"domainname" = "example.com";

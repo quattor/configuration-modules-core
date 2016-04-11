@@ -1,17 +1,19 @@
 #${PMpre} NCM::Component::${project.artifactId}${PMpost}
-use base qw(NCM::Component);
+use base qw(NCM::Component CAF::Check);
 
 use Readonly;
 use NCM::Component::FreeIPA::Client;
 
 use CAF::Object qw(SUCCESS);
 use CAF::Reporter 16.2.1;
+use EDG::WP4::CCM::Element qw(unescape);
 
 our $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 
 # API logging from debuglevel 3
 Readonly my $DEBUGAPI_LEVEL => 3;
+Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 
 # Hold an instance of the client
 my $client;
@@ -149,6 +151,56 @@ sub server
 }
 
 
+sub service_keytab
+{
+    my ($self, $fqdn, $tree) = @_;
+
+    foreach my $fn (sort keys %{$tree->{keytabs}}) {
+        my $filename = unescape($fn);
+        my $serv = $tree->{keytabs}->{$fn};
+
+        if($self->file_exists($filename)) {
+            $self->verbose("Keytab $filename already exists");
+        } else {
+            my $principal = $serv->{service};
+            # Add fqdn as
+            $principal .= "/$fqdn" if ($principal !~ m{/});
+
+            # Retrieve keytab (what if already exists?)
+            my $proc = CAF::Process->new([@GET_KEYTAB,
+                                          '-s', $tree->{primary},
+                                          '-p', $principal,
+                                          '-k', $filename,
+                                         ], log => $self);
+            $proc->execute();
+            if ($?) {
+                $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc)");
+            } else {
+                $self->verbose("Successfully retrieved keytab $filename");
+            }
+        }
+
+        # Set permissions/ownership
+        my %opts = map {$_ => $serv->{$_}} qw(owner group mode);
+        $self->status($filename, %opts);
+    }
+
+    return SUCCESS;
+}
+
+sub client
+{
+    my ($self, $config, $tree) = @_;
+
+    my $network = $config->getTree('/system/network');
+    my $fqdn = "$network->{hostname}.$network->{domainname}";
+
+    $self->service_keytab($fqdn, $tree) if $tree->{keytabs};
+
+    return SUCCESS;
+}
+
+
 sub Configure
 {
 
@@ -157,6 +209,8 @@ sub Configure
     my $tree = $config->getTree($self->prefix());
 
     $self->server($tree) if $tree->{server};
+
+    $self->client($config, $tree);
 
     return 1;
 }

@@ -83,6 +83,18 @@ type component_${project.artifactId}_server = {
     'groups' ? component_${project.artifactId}_group{}
 };
 
+@{ keytab for service configuration }
+type component_${project.artifactId}_keytab = {
+    @{service to retrieve keytab for (the pricipal service/fqdn is used if no component is specified)}
+    'service' : string
+    @{mode/permissions}
+    'mode' : long = 0600
+    @{owner}
+    'owner' : string = 'root'
+    @{group}
+    'group' : string = 'root'
+};
+
 type component_${project.artifactId} = {
     include structure_component
     @{FreeIPA server that will be used for all API and for secondaries to replicate}
@@ -91,4 +103,6 @@ type component_${project.artifactId} = {
     'secondaries' ? type_hostname[]
     @{server configuration settings}
     'server' ? component_${project.artifactId}_server
+    @{keytabs to retrieve for services}
+    'keytabs' ? component_${project.artifactId}_keytab{}
 };
