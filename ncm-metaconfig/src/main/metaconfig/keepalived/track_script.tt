@@ -1,0 +1,3 @@
+[% FOREACH track_script IN vrrp_instance.track_scripts -%]
+[%     track_script %]
+[% END -%]

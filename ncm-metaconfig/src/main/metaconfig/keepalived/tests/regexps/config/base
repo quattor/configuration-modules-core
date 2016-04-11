@@ -1,0 +1,27 @@
+Test for config
+---
+/etc/keepalived/keepalived.conf
+unordered
+---
+^global_defs\s\{$
+^\s{4}router_id\s+vm1\s*$
+^\}$
+^vrrp_script haproxy\s\{\s*$
+^\s{4}script\s+"killall -0 haproxy"\s*$
+^\s{4}interval\s+2\s*$
+^\s{4}weight\s+2\s*$
+^\}\s*$
+^vrrp_instance Testing\s\{\s*$
+^\s{4}virtual_router_id\s+52\s*$
+^\s{4}advert_int\s+1\s*$
+^\s{4}priority\s+100\s*$
+^\s{4}state\s+BACKUP\s*$
+^\s{4}interface\s+eth0\s*$
+^\s{4}virtual_ipaddress\s+\{\s*$
+^\s{8}192\.168\.1\.20\s+dev\s+eth0\s*$
+^\s{4}\}\s*$
+^\s{4}track_script\s\{\s*$
+^\s{8}haproxy\s*$
+^\s{4}\}\s*$
+^\}\s*$
+

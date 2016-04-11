@@ -1,0 +1,9 @@
+[% FOREACH item IN vrrp_instance.config.pairs %]
+[%     item.key %] [% item.value %]
+[%- END %]
+virtual_ipaddress {
+[% INCLUDE 'metaconfig/keepalived/virtual_ipaddress.tt' FILTER indent -%]
+}
+track_script {
+[% INCLUDE 'metaconfig/keepalived/track_script.tt' FILTER indent -%]
+}
