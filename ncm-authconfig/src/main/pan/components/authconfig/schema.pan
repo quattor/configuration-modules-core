@@ -13,8 +13,6 @@ include 'components/${project.artifactId}/sssd-sudo';
 include 'components/${project.artifactId}/sssd-sasl';
 include 'components/${project.artifactId}/sssd-tls';
 
-type yesnostring = string with match(SELF, "yes|no");
-
 type authconfig_pamadditions_line_type = {
   "order"       : string with match(SELF, '^(first|last)$')
   "entry"       : string with match(SELF, '^\s*(required|requisite|sufficient|optional|include|substack)\s+\S+\.so(\s|$)')
@@ -111,7 +109,7 @@ type authconfig_method_ldap_type = {
   "nss_initgroups_ignoreusers"     ? string
   "debug"                          ? long
   "log_dir"                        ? string
-  "nss_paged_results"              : yesnostring = "yes"
+  "nss_paged_results"              : legacy_binary_affirmation_string = "yes"
   "pagesize"                       ? long
   "nss_connect_policy"             ? connect_policy = "oneshot"
 };

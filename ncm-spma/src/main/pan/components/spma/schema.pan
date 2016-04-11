@@ -11,8 +11,6 @@ include 'components/spma/ips/schema';
 include 'components/spma/yum/schema';
 include 'components/spma/software';
 
-type boolean_yes_no = string with match (SELF, '^(yes|no)$'); 
-
 type component_spma_type = {
     include structure_component
     include component_spma_ips
@@ -25,22 +23,22 @@ type component_spma_type = {
     "debug"         ? string with match (SELF, '^(0|1|2|3|4|5)$') # debug level (0-5)
     "flagfile"      ? string # touch this file if there is work to do (i.e. spma-run --execute)
     "headnode"      ? boolean # use head node
-    "localcache"    ? boolean_yes_no # Use SPMA package cache
-    "protectkernel" ? boolean_yes_no # Prevent currrent kernel from being removed
-    "proxy"         ? boolean_yes_no # Enable proxy
+    "localcache"    ? legacy_binary_affirmation_string # Use SPMA package cache
+    "protectkernel" ? legacy_binary_affirmation_string # Prevent currrent kernel from being removed
+    "proxy"         ? legacy_binary_affirmation_string # Enable proxy
     "proxyhost"     ? string # comma-separated list of proxy hosts
     "proxyport"     ? string # proxy port number
-    "proxyrandom"   ? boolean_yes_no # randomize proxyhost
+    "proxyrandom"   ? legacy_binary_affirmation_string # randomize proxyhost
     "proxytype"     ? string with match (SELF, '^(forward|reverse)$') # select proxy type, forward or reverse
-    "rpmexclusive"  ? boolean_yes_no # stop other processes using rpm db
-    "run"           ? boolean_yes_no # Run the SPMA after configuring it
+    "rpmexclusive"  ? legacy_binary_affirmation_string # stop other processes using rpm db
+    "run"           ? legacy_binary_affirmation_string # Run the SPMA after configuring it
     "tmpdir"        ? string # path to the temporary directory
     "trailprefix"   ? boolean # if no escape function, use underscore prefix
     "unescape"      ? boolean # use escape function
     "uninstpaths"   ? string[] # where to find uninstall definitions
-    "userpkgs"      ? boolean_yes_no # Allow user packages
-    "userprio"      ? boolean_yes_no # Priority to user packages
-    "usespmlist"    ? boolean_yes_no # Have SPMA controlling any packages
+    "userpkgs"      ? legacy_binary_affirmation_string # Allow user packages
+    "userprio"      ? legacy_binary_affirmation_string # Priority to user packages
+    "usespmlist"    ? legacy_binary_affirmation_string # Have SPMA controlling any packages
     "verbose"       ? string with match (SELF, '^(0|1)$') # verbose (0,1)
 };
 
