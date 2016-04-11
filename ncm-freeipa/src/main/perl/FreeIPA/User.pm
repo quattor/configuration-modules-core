@@ -77,7 +77,7 @@ sub remove_user
 {
     my ($self, $uid) = @_;
 
-    return $self->do_one('user', 'del', $uid, preserve => 1);
+    return $self->do_one('user', 'del', [$uid], preserve => 1);
 }
 
 =item user_passwd
