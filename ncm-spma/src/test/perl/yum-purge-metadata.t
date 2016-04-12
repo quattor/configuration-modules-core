@@ -21,8 +21,8 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma::yum;
 use Test::Quattor;
+use NCM::Component::spma::yum;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;

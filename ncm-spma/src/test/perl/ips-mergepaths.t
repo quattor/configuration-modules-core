@@ -21,8 +21,8 @@ verifies the output.
 use strict;
 use warnings;
 use Test::More tests => 8;
-use NCM::Component::spma::ips;
 use Test::Quattor qw(ips-core);
+use NCM::Component::spma::ips;
 
 use constant CMP_TREE => "/software/components/spma";
 

@@ -22,3 +22,5 @@ like("$rs", qr(^main_config_file=.*),
      "The main config file is printed");
 like("$rs", qr{^hello=1$}m, "Key hello got printed");
 like("$rs", qr{^world=2$}m, "Key world got printed");
+
+$rs->close();

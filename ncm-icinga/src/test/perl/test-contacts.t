@@ -32,3 +32,5 @@ like(
 );
 like("$rs", qr(^\s*foo\s+4,5$)m, "Random array field properly written");
 like("$rs", qr(^\s*bar\s+6$)m,   "Random scalar field properly written");
+
+$rs->close();

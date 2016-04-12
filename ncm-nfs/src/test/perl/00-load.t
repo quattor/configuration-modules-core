@@ -1,4 +1,3 @@
-# -*- mode: cperl -*-
 # ${license-info}
 # ${author-info}
 # ${build-info}
@@ -9,13 +8,11 @@
 
 Basic test that ensures that our module will load correctly.
 
-B<Do not disable this test>. And do not push anything to SF without
-having run, at least, this test.
-
 =cut
 
 use strict;
 use warnings;
 use Test::More tests => 1;
+use Test::Quattor;
 
 use_ok("NCM::Component::nfs");

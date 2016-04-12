@@ -12,5 +12,6 @@ my $rs = $comp->print_macros($t);
 
 isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
 is(*$rs->{filename}, NCM::Component::icinga::ICINGA_FILES->{macros}, "Correct file was opened");
-chomp($rs);
-is($rs, '$foo$=bar', 'File contents properly written');
+is("$rs", '$foo$=bar'."\n", 'File contents properly written');
+
+$rs->close();

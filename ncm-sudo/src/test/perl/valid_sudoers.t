@@ -1,10 +1,10 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
-# Don't use Test::Quattor here. We really need to run the visudo
+use Test::Quattor;
+# Don't mock CAF::Process here. We really need to run the visudo
 # command to ensure valid configurations get detected.
+$Test::Quattor::procs->unmock_all();
 use NCM::Component::sudo;
 
 use constant INVALID => "123445";

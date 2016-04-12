@@ -22,3 +22,5 @@ is(*$rs->{filename},
    NCM::Component::icinga::ICINGA_FILES->{servicedependencies},
     "Correct file was opened");
 like("$rs", qr(^\s*foo\s+1$)m, "Contents properly written");
+
+$rs->close();

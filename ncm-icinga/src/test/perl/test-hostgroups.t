@@ -23,3 +23,5 @@ like("$rs", qr(^\s*members\s+1,2,3$)m,        "All members registered");
 
 $rs = $comp->print_hostgroups($t, [1]);
 like("$rs", qr(^\s*members\s+2,3$)m, "Unwanted member ignored");
+
+$rs->close();

@@ -18,10 +18,10 @@ use strict;
 use warnings;
 use Test::More;
 use Test::MockModule;
+use Test::Quattor;
 use LC::File;
 use subs 'NCM::Component::modprobe::directory_contents';
 use NCM::Component::modprobe;
-use Test::Quattor;
 use CAF::FileWriter;
 use CAF::Object;
 

@@ -20,8 +20,8 @@ command outputs and then verifies the returned package set.
 use strict;
 use warnings;
 use Test::More tests => 3;
-use NCM::Component::spma::ips;
 use Test::Quattor;
+use NCM::Component::spma::ips;
 use Readonly;
 use File::Path;
 

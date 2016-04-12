@@ -27,3 +27,5 @@ is(
 );
 like("$rs", qr(^\s*foo\s+1$)m,   "Scalar contents properly written");
 like("$rs", qr(^\s*bar\s+3,4$)m, "List contents properly written");
+
+$rs->close();

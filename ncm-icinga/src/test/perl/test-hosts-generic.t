@@ -33,3 +33,5 @@ like("$rs", qr(^\s*event_handler\s+hello!world$)m, "Event handler properly regis
 like("$rs", qr(^\s*check_command\s+foo!bar!baz$)m, "Check command properly registered");
 like("$rs", qr(^\s*a\s+1$)m,                       "Random scalar key properly defined");
 like("$rs", qr(^\s*c\s+5,6,7$)m,                   "Random array key properly defined");
+
+$rs->close();

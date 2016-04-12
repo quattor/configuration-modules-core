@@ -21,6 +21,7 @@ verifies the output.
 use strict;
 use warnings;
 use Test::More tests => 2;
+use Test::Quattor;
 use NCM::Component::spma::ips;
 use Readonly;
 use Set::Scalar;

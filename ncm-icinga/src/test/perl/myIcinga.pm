@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use Test::Quattor;
+
 use CAF::Object;
 $CAF::Object::NoAction = 1;
 

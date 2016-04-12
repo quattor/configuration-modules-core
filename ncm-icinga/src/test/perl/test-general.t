@@ -148,3 +148,5 @@ my $c = $t->{hosts_generic};
 delete($t->{hosts_generic});
 $rs = $comp->print_general($t);
 unlike("$rs", qr{^cfg_file\s*=\s*$c$}m, "Non-existing files don't get printed");
+
+$rs->close();
