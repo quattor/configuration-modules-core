@@ -1,0 +1,6 @@
+Base test for config
+---
+/etc/sysconfig/ceph
+---
+^CEPH_AUTO_RESTART_ON_UPGRADE=no$
+^LD_PRELOAD=/usr/lib64/libjemalloc.so.1$
