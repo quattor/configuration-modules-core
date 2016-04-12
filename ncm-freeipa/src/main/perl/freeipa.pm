@@ -6,7 +6,9 @@ use NCM::Component::FreeIPA::Client;
 
 use CAF::Object qw(SUCCESS);
 use CAF::Reporter 16.2.1;
+use CAF::Kerberos;
 use EDG::WP4::CCM::Element qw(unescape);
+use File::Basename;
 
 our $EC=LC::Exception::Context->new->will_store_all;
 $NCM::Component::${project.artifactId}::NoActionSupported = 1;
@@ -159,6 +161,12 @@ sub service_keytab
         my $filename = unescape($fn);
         my $serv = $tree->{keytabs}->{$fn};
 
+        my $directory = dirname($filename);
+        if(! $self->directory_exists($directory)) {
+            $self->verbose("Creating directory $directory");
+            $self->directory($directory);
+        }
+
         if($self->file_exists($filename)) {
             $self->verbose("Keytab $filename already exists");
         } else {
@@ -172,11 +180,11 @@ sub service_keytab
                                           '-p', $principal,
                                           '-k', $filename,
                                          ], log => $self);
-            $proc->execute();
+            my $output = $proc->output();
             if ($?) {
-                $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc)");
+                $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc): $output");
             } else {
-                $self->verbose("Successfully retrieved keytab $filename");
+                $self->verbose("Successfully retrieved keytab $filename: $output");
             }
         }
 
@@ -190,10 +198,19 @@ sub service_keytab
 
 sub client
 {
-    my ($self, $config, $tree) = @_;
+    my ($self, $fqdn, $tree) = @_;
 
-    my $network = $config->getTree('/system/network');
-    my $fqdn = "$network->{hostname}.$network->{domainname}";
+    my $krb = CAF::Kerberos->new(
+        principal => "host/$fqdn",
+        keytab => '/etc/krb5.keytab',
+        log => $self,
+        );
+    return if(! defined($krb->get_context()));
+
+    # set environment to temporary credential cache
+    # temporary cache is cleaned-up during destroy of $krb
+    local %ENV;
+    $krb->update_env(\%ENV);
 
     $self->service_keytab($fqdn, $tree) if $tree->{keytabs};
 
@@ -206,11 +223,14 @@ sub Configure
 
     my ($self, $config) = @_;
 
+    my $network = $config->getTree('/system/network');
+    my $fqdn = "$network->{hostname}.$network->{domainname}";
+
     my $tree = $config->getTree($self->prefix());
 
     $self->server($tree) if $tree->{server};
 
-    $self->client($config, $tree);
+    $self->client($fqdn, $tree);
 
     return 1;
 }
