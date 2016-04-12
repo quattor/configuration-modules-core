@@ -7,6 +7,8 @@ declaration template components/spma/software;
 include 'pan/types';
 include 'components/spma/functions';
 
+type software_repository_url = string with match(SELF, '^(file|https?|ftp)://');
+
 type SOFTWARE_PACKAGE_REP = string with repository_exists(SELF, "/software/repositories");
 
 type SOFTWARE_PACKAGE = {
@@ -31,6 +33,9 @@ type SOFTWARE_REPOSITORY_PROTOCOL = {
 type SOFTWARE_REPOSITORY = {
     "enabled" : boolean = true
     "gpgcheck" : boolean = false
+    "repo_gpgcheck" ? boolean
+    "gpgkey" ? software_repository_url[]
+    "gpgcakey" ? software_repository_url
     "excludepkgs" ? string[]
     "includepkgs" ? string[]
     "name" ? string with match(SELF, '^[\w-.]+$') # "Repository name"
