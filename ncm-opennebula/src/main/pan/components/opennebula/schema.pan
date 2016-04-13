@@ -397,6 +397,7 @@ type component_opennebula = {
     'sunstone'      ? opennebula_sunstone
     'kvmrc'         ? opennebula_kvmrc
     'ssh_multiplex' : boolean = true
+    'cfg_group'     ? string
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")

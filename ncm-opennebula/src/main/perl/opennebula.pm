@@ -586,11 +586,12 @@ sub manage_users
 # one service must be restarted afterwards
 sub set_one_service_conf
 {
-    my ($self, $data, $service, $config_file) = @_;
+    my ($self, $data, $service, $config_file, $cfggrp) = @_;
     my %opts;
     my $oned_templ = $self->process_template($data, $service);
     %opts = $self->set_file_opts();
     return if ! %opts;
+    $opts{group} = $cfggrp if ($cfggrp);
     my $fh = $oned_templ->filewriter($config_file, %opts);
     my $status = $self->is_conf_file_modified($fh, $config_file, $service, $oned_templ);
 
@@ -622,13 +623,14 @@ sub is_conf_file_modified
 # used by oneadmin client tools
 sub set_one_auth_file
 {
-    my ($self, $user, $data) = @_;
+    my ($self, $user, $data, $cfggrp) = @_;
     my ($fh, $auth_file, %opts);
 
     my $passwd = {$user => $data};
     my $trd = $self->process_template($passwd, "one_auth", 1);
     %opts = $self->set_file_opts(1);
     return if ! %opts;
+    $opts{group} = $cfggrp if ($cfggrp);
 
     if ($user eq "oneadmin") {
         $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
@@ -644,6 +646,23 @@ sub set_one_auth_file
     } else {
         $self->error("Unsupported user: $user");
     }
+}
+
+# Change conf group if required
+sub set_config_group
+{
+    my($self, $tree) = @_;
+
+    if (exists $tree->{cfg_group}) {
+        if ((getpwnam($tree->{cfg_group}))[3]) {
+            my $newgrp = (getpwnam($tree->{cfg_group}))[3];
+            $self->info("Found group id $newgrp to set conf files as group:", $tree->{cfg_group});
+            return $newgrp;
+        } else {
+            $self->error("Not found group id for: ", $tree->{cfg_group});
+        };
+    };
+    return;
 }
 
 # Configure OpenNebula server
@@ -704,7 +723,7 @@ sub set_file_opts
         if (!$secret) {
             %opts = (log => $self);
         }
-        %opts = (mode => 0600,
+        %opts = (mode => 0640,
                  backup => ".quattor.backup",
                  owner => $ONEADMINUSR,
                  group => $ONEADMINGRP);
@@ -749,6 +768,7 @@ sub Configure
     my $base = "/software/components/opennebula";
     my $tree = $config->getElement($base)->getTree();
 
+    my $cfggrp = $self->set_config_group($tree);
     # Set oned.conf
     if (exists $tree->{oned}) {
         $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
@@ -756,12 +776,12 @@ sub Configure
 
     # Set Sunstone server
     if (exists $tree->{sunstone}) {
-        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE);
+        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp);
         if (exists $tree->{users}) {
             my $users = $tree->{users};
             foreach my $user (@$users) {
                 if ($user->{user} eq "serveradmin" && exists $user->{password}) {
-                    $self->set_one_auth_file($user->{user}, $user->{password});
+                    $self->set_one_auth_file($user->{user}, $user->{password}, $cfggrp);
                 }
             }
         }

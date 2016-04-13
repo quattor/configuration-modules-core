@@ -123,4 +123,4 @@ prefix "/software/components/opennebula";
 "host_hyp" = "kvm";
 "host_ovs" = true;
 "tm_system_ds" = "ssh";
-
+"cfg_group" = "apache";
