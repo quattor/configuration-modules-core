@@ -7,6 +7,7 @@ type ceph_osd_config = {
     'osd_journal_size'          ? long(0..) 
     'osd_max_scrubs'            ? long(0..)
     'osd_objectstore'           ? string
+    'osd_op_threads'            ? long(0..)
     'osd_scrub_begin_hour'      ? long(0..24)
     'osd_scrub_end_hour'        ? long(0..24)
     'osd_scrub_load_threshold'  ? double(0..)
