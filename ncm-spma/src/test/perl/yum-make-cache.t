@@ -1,4 +1,3 @@
-# -*- mode: cperl -*-
 # ${license-info}
 # ${author-info}
 # ${build-info}
@@ -7,8 +6,8 @@
 
 =head1 DESCRIPTION
 
-Tests for the C<expire_yum_caches> method.  This method cleans up all
-Yum caches before trying to modify the system.
+Tests for the C<make_cache> method.  This method creates
+the cache to be used by all other yum/repoquery commands.
 
 =head1 TESTS
 
@@ -21,24 +20,24 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use Test::Quattor;
 use NCM::Component::spma::yum;
+use Test::Quattor;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
-Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
-Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
-Readonly my $CMD => join(" ", @YE);
+Readonly::Array my @MC_ORIG => NCM::Component::spma::yum::YUM_MAKECACHE();
+Readonly::Array my @MC => @{NCM::Component::spma::yum::_set_yum_config(\@MC_ORIG)};
+Readonly my $CMD => join(" ", @MC);
 
-ok(! grep {$_ eq '-C'} @YE, 'yum expire command has cache disabled');
+ok(! grep {$_ eq '-C'} @MC, 'yum makecache command has cache disabled');
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");
 
-ok($cmp->expire_yum_caches(), "Successful execution detected");
+ok($cmp->make_cache(), "Successful execution detected");
 ok(!$cmp->{ERROR}, "No errors reported");
 
 my $cmd = get_command($CMD);
@@ -48,7 +47,7 @@ is($cmd->{method}, "execute", "Correct method called");
 is($cmd->{object}->{NoAction}, 0, "keeps_state set, NoAction set to 0");
 
 set_command_status($CMD, 1);
-ok(!$cmp->expire_yum_caches(), "Errors in cleanup detected");
+ok(!$cmp->make_cache(), "Errors in make_cache detected");
 is($cmp->{ERROR}, 1, "Errors reported");
 
 

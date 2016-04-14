@@ -41,6 +41,10 @@ Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
 Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
 Readonly my $YUMEXPIRE => join(" ", @YE);
 
+Readonly::Array my @MC_ORIG => NCM::Component::spma::yum::YUM_MAKECACHE();
+Readonly::Array my @MC => @{NCM::Component::spma::yum::_set_yum_config(\@MC_ORIG)};
+Readonly my $MAKECACHE => join(" ", @MC);
+
 Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY();
 Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
 Readonly my $REPOQ => join(" ", @REPOQUERY, "ncm-cdp-1.0.4-1.noarch");
@@ -58,6 +62,8 @@ set_desired_err($DISTROSYNC, "");
 set_desired_output($DISTROSYNC, "");
 set_desired_err($YUMEXPIRE, "");
 set_desired_output($YUMEXPIRE, "");
+set_desired_err($MAKECACHE, "");
+set_desired_output($MAKECACHE, "");
 set_desired_err($REPOQ, "");
 set_desired_output($REPOQ, "0:ncm-cdp-1.0.4-1.noarch\n");
 set_desired_err($YUMCT, "");

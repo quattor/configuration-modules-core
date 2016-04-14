@@ -24,32 +24,25 @@ use File::Temp qw(tempdir);
 use File::Copy;
 use File::Basename;
 
-use constant REPOS_DIR => "/etc/yum.repos.d";
+use constant REPOS_DIR_DEFAULT => "/etc/yum.repos.d";
+use constant REPOS_DIR_QUATTOR => "/etc/yum.quattor.repos.d";
 use constant REPOS_TEMPLATE => "repository";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant GROUPS_TREE => "/software/groups";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
-use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
 use constant YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
 use constant YUM_PACKAGE_LIST => YUM_PLUGIN_DIR . "/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
-use constant YUM_EXPIRE => qw(yum clean expire-cache);
-use constant YUM_PURGE_METADATA => qw(yum clean metadata);
-use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
+
 use constant YUM_CONF_FILE => "/etc/yum.conf";
-use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => qw(yum-complete-transaction -y);
-use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
-                             --qf %{NAME};%{ARCH});
-use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
-                                 --qf %{NAME}\n%{NAME};%{ARCH});
+
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
-use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
 
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
@@ -57,6 +50,21 @@ use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
 use constant YUM_CONF_OBSOLETES => "obsoletes";
 use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
+
+# Must use cache (-C option)
+use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
+use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
+use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
+                             --qf %{NAME};%{ARCH});
+use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugins
+                                 --qf %{NAME}\n%{NAME};%{ARCH});
+
+# Do not use cache (no -C option)
+use constant YUM_EXPIRE => qw(yum clean expire-cache);
+use constant YUM_PURGE_METADATA => qw(yum clean metadata);
+use constant YUM_MAKECACHE => qw(yum makecache);
+use constant YUM_CMD => qw(yum -y shell);
+use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
 our $NoActionSupported = 1;
 
@@ -733,6 +741,17 @@ sub purge_yum_caches
                                               1));
 }
 
+# Create the yum cache
+sub make_cache
+{
+    my ($self) = @_;
+
+    # This only affects the caches, can be safely created
+    return defined($self->execute_yum_command([YUM_MAKECACHE],
+                                              "create yum cache",
+                                              1));
+}
+
 # Runs yum distro-sync.  Before modifying the installed sets we must
 # align the system to the repositories.  Otherwise we'll get a lot of problems.
 sub distrosync
@@ -750,15 +769,16 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch, $reuse_cache) = @_;
 
     $self->complete_transaction() or return 0;
 
-    if ($purge) {
-        $self->purge_yum_caches() or return 0;
-    } else {
-        $self->expire_yum_caches() or return 0;
-    }
+    if (! $reuse_cache) {
+        my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
+        $self->$clean_cache_method() or return 0;
+
+        $self->make_cache($purge) or return 0;
+    };
 
     $self->versionlock($pkgs, $fullsearch) or return 0;
 
@@ -809,12 +829,13 @@ sub update_pkgs_retry
 
     # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
-        my ($allow_user_pkgs, $tx_error_is_warn) = @_;
+        my ($allow_user_pkgs, $tx_error_is_warn, $reuse_cache) = @_;
         return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
-                                  $purge, $tx_error_is_warn, $fullsearch);
+                                  $purge, $tx_error_is_warn, $fullsearch, $reuse_cache);
     };
 
-    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+    # Only on the initial try, purge and recreate the cache
+    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 0)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($NoAction) {
@@ -831,10 +852,10 @@ sub update_pkgs_retry
 
             $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true");
             $allow_user_pkgs = 1;
-            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
                 $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd");
                 $allow_user_pkgs = 0;
-                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
                     $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok.");
                 } else {
                     $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed.");
@@ -1115,12 +1136,18 @@ sub Configure
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
 
+    # When userpkgs are allowed, there is no control over what is in the reposdir
+    # If they are not allowed, and retry is allowed, use a non-standard location
+    # to avoid any repositories getting added during the retries (e.g. from rpms).
+    my $main_repos_dir = ($NoAction || $t->{userpkgs} || (!$t->{userpkgs_retry})) ?
+                             REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
+
     my $repos = $config->getTree(REPOS_TREE);
     my $pkgs = $config->getTree(PKGS_TREE);
     my $groups = $config->getTree(GROUPS_TREE) || {};
 
     # check if a temp location is required for NoAction support.
-    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, REPOS_DIR, YUM_CONF_FILE);
+    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
 
     if (! defined($prefix)) {
         return 0;
@@ -1140,7 +1167,7 @@ sub Configure
     defined($res) or return 0;
     $purge_caches = $res;
 
-    my $quattor_managed_reposdir = _prefix_noaction_prefix(REPOS_DIR);
+    my $quattor_managed_reposdir = _prefix_noaction_prefix($main_repos_dir);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
     $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
