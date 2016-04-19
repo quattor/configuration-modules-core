@@ -1,0 +1,9 @@
+Base test for limitsconfig
+---
+/etc/security/limits.d/91-quattor.conf
+---
+^ftp\s{4}hard\s{4}priority\s{4}5$
+^student\s{4}soft\s{4}maxlogins\s{4}1$
+^ceph\s{4}-\s{4}nproc\s{4}1048576$
+^ceph\s{4}-\s{4}nofile\s{4}1048576$
+
