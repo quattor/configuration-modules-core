@@ -354,6 +354,11 @@ sub process_link {
             return 0;
         }
 
+        if ( -l $link and readlink($link) eq $target ) {
+            $self->verbose("symlink $link already defined as $target nothing to do");
+            return 1;
+        }
+
         # 'replace' flag : define existing file type that can be replaced
 
         # First copy global defaults
