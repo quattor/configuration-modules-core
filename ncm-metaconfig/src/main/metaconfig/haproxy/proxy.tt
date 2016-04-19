@@ -12,8 +12,8 @@ default-server port [% proxy.port %] [% INCLUDE 'metaconfig/haproxy/hash_to_stri
 server [% server.key %] [% server.value %]:[% proxy.port %] [% INCLUDE 'metaconfig/haproxy/hash_to_string.tt' data=proxy.serveroptions %] check
 [% END %]
 [% IF proxy.timeouts.defined %]
-[% FOREACH timeout IN proxy.timeouts.pairs -%]
+[%     FOREACH timeout IN proxy.timeouts.pairs -%]
 timeout [% timeout.key %] [% timeout.value %]
-[% END %]
+[%     END %]
 [% END %]
 
