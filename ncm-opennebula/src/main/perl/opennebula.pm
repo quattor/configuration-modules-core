@@ -105,7 +105,7 @@ sub create_or_update_something
         $new = $one->$cmethod("$template");
     } elsif ($used == -1) {
         # resource is already there and we can modify it
-        $new = $self->update_something($one, $type, $name, "$template");
+        $new = $self->update_something($one, $type, $name, "$template", $data);
     }
     return $new;
 }
@@ -142,7 +142,7 @@ sub remove_something
 # Updates ONE resource templates
 sub update_something
 {
-    my ($self, $one, $type, $name, $template) = @_;
+    my ($self, $one, $type, $name, $template, $data) = @_;
     my $method = "get_${type}s";
     my $update;
     my @existres = $one->$method(qr{^$name$});
@@ -151,8 +151,33 @@ sub update_something
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
         $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
+        if ($type eq "vnet" && defined($data->{ar})) {
+            $self->update_vn_ar($one, $name, $template, $t, $data);
+        }
     }
     return $update;
+}
+
+# Update vnet ARs as well
+sub update_vn_ar
+{
+    my ($self, $one, $vnetname, $template, $t, $data) = @_;
+    my $arid;
+
+    my %ar_opts = ('template' => $template);
+    $arid = $t->get_ar_id(%ar_opts);
+    $self->debug(1, "Detected AR id to update: ", $arid);
+    if (defined($arid)) {
+        $data->{ar}->{ar_id} = "$arid";
+        $template = $self->process_template($data, "vnet");
+        $self->debug(1, "AR template to update from $vnetname: ", $template);
+        $arid = $t->updatear("$template");
+        if (defined($arid)) {
+            $self->info("Updated $vnetname AR id: ", $arid);
+        } else {
+            $self->error("Unable to update AR from vnet: $vnetname");
+        }
+    }
 }
 
 # Detects if the resource
