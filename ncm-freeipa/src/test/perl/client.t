@@ -5,7 +5,7 @@ use Test::More;
 use Test::Quattor qw(client);
 use Test::MockModule;
 
-my $mockc = Test::MockModule->new('CAF::Check');
+my $mockc = Test::MockModule->new('CAF::Path');
 my $status = [];
 $mockc->mock('status', sub {
     my ($self, $path, %opts) = @_;
@@ -50,7 +50,7 @@ ok(command_history_ok([
 is_deeply($status, [
     ['/etc/super1.keytab', {owner => 'root', group => 'root', mode => 0123}],
     ['/etc/super2.keytab', {owner => 'root', group => 'superpower', mode => 0600}],
-], 'CAF::Check status called in keytabs');
+], 'CAF::Path status called in keytabs');
 
 
 done_testing();

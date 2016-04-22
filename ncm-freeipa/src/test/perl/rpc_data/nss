@@ -1,0 +1,4 @@
+$cmds{request}{cmd}='cert_request path/to/csr principal=host/g.h.i.j@REALM.DOMAIN,version.*';
+$cmds{request}{result}={serial => 1234};
+$cmds{show}{cmd}='cert_show 1234 out=path/to/crt,version.*';
+$cmds{show}{result}={serial => 1234, dn => 'mydn'};

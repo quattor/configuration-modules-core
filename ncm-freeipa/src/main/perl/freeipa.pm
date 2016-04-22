@@ -1,5 +1,5 @@
 #${PMpre} NCM::Component::${project.artifactId}${PMpost}
-use base qw(NCM::Component CAF::Check);
+use base qw(NCM::Component CAF::Path);
 
 use Readonly;
 use NCM::Component::FreeIPA::Client;
@@ -193,6 +193,19 @@ sub service_keytab
         $self->status($filename, %opts);
     }
 
+    return SUCCESS;
+}
+
+
+sub certificate
+{
+    my ($self, $fqdn, $realm, $nssdb, $nssdb_group, $cacert, $nick, $cert, $key) = @_;
+
+}
+    
+sub certificates
+{
+    my ($self, $fqdn, $tree) = @_;
     return SUCCESS;
 }
 

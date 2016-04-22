@@ -1,0 +1,4 @@
+$cmds{request}{cmd}='cert_request /path/to/req.csr principal=host/myhost.mydomain@EXAMPLE.COM,version.*';
+$cmds{request}{result}={okunittest => 1};
+$cmds{show}{cmd}='cert_show 123 out=/path/to/cert.crt,version.*';
+$cmds{show}{result}={okunittest => 1};
