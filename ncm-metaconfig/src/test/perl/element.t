@@ -22,6 +22,6 @@ my $fh = get_file("/foo/bar");
 is("$fh", "boolean=1\nstring=mystring\n\n", "tiny with no element conversion as expected");
 
 my $fh2 = get_file("/foo/bar2");
-is("$fh2", "boolean=TRUE\nstring='mystring'\n\n", "tiny with element conversion as expected");
+is("$fh2", "boolean=TRUE\nlist='a','b'\nstring='mystring'\n\n", "tiny with element conversion as expected");
 
 done_testing();
