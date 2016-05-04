@@ -71,7 +71,6 @@ http://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BUnit%5D%20S
 }
 type ${project.artifactId}_unitfile_config_unit = {
     'After' ? ${project.artifactId}_valid_unit[]
-    'After' ? ${project.artifactId}_valid_unit[]
     'AllowIsolate' ? boolean
     'Assert' ? ${project.artifactId}_unitfile_config_unit_condition
     'Before' ? ${project.artifactId}_valid_unit[]

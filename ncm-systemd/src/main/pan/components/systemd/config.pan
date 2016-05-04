@@ -6,6 +6,8 @@
 unique template components/${project.artifactId}/config;
 include 'components/${project.artifactId}/schema';
 
+include 'components/${project.artifactId}/functions';
+
 bind '/software/components/${project.artifactId}' = component_${project.artifactId};
 
 '/software/packages' = pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${RELEASE}','noarch');

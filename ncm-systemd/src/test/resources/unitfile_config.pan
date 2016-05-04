@@ -1,6 +1,7 @@
 object template unitfile_config;
 
 include 'components/systemd/schema';
+include 'components/systemd/functions';
 
 bind "/software/components/systemd/unit" = systemd_unit_type{};
 
@@ -16,6 +17,8 @@ prefix "/software/components/systemd/unit";
                     '/path/2',
                     ),
                 ),
+            'RequiresMountsFor', list("/x/y/z"),
+            'After', list(systemd_make_mountunit("/g/h/i/")),
             ),
         'service', nlist(
             'CPUAffinity', list(list(), list(0,1)),
