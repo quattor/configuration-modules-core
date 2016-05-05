@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(base);
+use Test::Quattor qw(base_accounts base_no_ncm_accounts);
 use NCM::Component::ccm;
 use CAF::Object;
 use Test::MockModule;
@@ -27,13 +27,24 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ccm->new("ccm");
 
-=pod
+
+=head1
+
+Compilation of base_no_ncm_accounts implies that defined_group is ok to use
+
+The compilation already happens at import, just need to make sure it was imported
+
+=cut
+
+my $cfg = get_config_for_profile("base_no_ncm_accounts");
+is($cfg->getTree('/software/components/ccm/group_readable'), 'theadmins', 'group_readable without ncm-accounts');
+
 
 =head1 Tests for the CCM component
 
 =cut
 
-my $cfg = get_config_for_profile("base");
+$cfg = get_config_for_profile("base_accounts");
 
 $tmppath = "target/ncm-ccm-test1";
 $cmp->Configure($cfg);

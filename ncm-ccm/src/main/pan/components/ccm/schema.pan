@@ -7,7 +7,7 @@ declaration template components/ccm/schema;
 
 include 'quattor/types/component';
 include 'pan/types';
-include 'components/accounts/functions';
+include if_exists('components/accounts/functions');
 
 @documentation {
     kerberos_principal_string is a string with format principal[/component1[/component2[...]]]@REALM
@@ -52,7 +52,6 @@ type kerberos_principal_string = string with {
     true;
 };
 
-
 type component_ccm = {
     include structure_component
     'configFile'       : string = '/etc/ccm.conf'
@@ -72,7 +71,7 @@ type component_ccm = {
     'key_file'         ? string
     'ca_file'          ? string
     'ca_dir'           ? string
-    'group_readable'   ? defined_group
+    'group_readable'   ? string with if (path_exists('/software/components/accounts')) {is_user_or_group('group', SELF)} else {true}
     'world_readable'   : long(0..1) = 0
     'base_url'         ? type_absoluteURI
     'dbformat'         ? string with match(SELF, "^(DB_File|CDB_File|GDBM_File)$")

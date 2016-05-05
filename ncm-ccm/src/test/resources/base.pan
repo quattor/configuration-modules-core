@@ -1,4 +1,4 @@
-object template base;
+unique template base;
 
 function pkg_repl = { null; };
 include 'components/ccm/config';
@@ -13,6 +13,3 @@ prefix "/software/components/ccm";
 "group_readable" = "theadmins";
 "principal" = "user/component.something/other.else@MY.REALM";
 "keytab" = "/some/path/to/key.tab";
-
-# add theadmins dummy group
-"/software/components/accounts/groups/theadmins" = dict();
