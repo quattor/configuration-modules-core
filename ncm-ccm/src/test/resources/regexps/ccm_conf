@@ -15,5 +15,5 @@ base ccm.conf
 ^profile https://my.server/myprofile$
 ^retrieve_retries 3$
 ^retrieve_wait 30$
-^trust user/component.something/other.else@MY.REALM,user2@OTHER.REALM$
+^trust user/component.something/other.else@MY.REALM,user2@OTHER.REALM,host/all.lower.domain@all.lower.realm$
 ^world_readable 0$
