@@ -55,9 +55,10 @@ sub Configure
     delete($t->{configFile});
     delete($t->{version});
 
-    while (my ($k, $v) = each(%$t)) {
+    foreach my $key (sort keys %$t) {
+        my $v = $t->{$key};
         my $value = ref($v) eq 'ARRAY' ? join(',', @$v) : $v;
-        print $fh "$k $value\n" if length($value);
+        print $fh "$key $value\n" if length($value);
     }
 
     if (_is_noquattor()) {
