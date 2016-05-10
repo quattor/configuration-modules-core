@@ -306,7 +306,7 @@ sub Configure
     my @pkl_a;
 
     for my $name ( keys %$pkgs ) {
-        if ( !$found_spma && substr( unescape $name, 0, 8 ) eq 'ncm-spma' ) {
+        if ( !$found_spma && substr( (unescape $name), 0, 8 ) eq 'ncm-spma' ) {
             $found_spma = 1;
         }
         my $vra = $pkgs->{$name};
