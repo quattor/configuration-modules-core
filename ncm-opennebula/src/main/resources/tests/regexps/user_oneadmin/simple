@@ -1,0 +1,6 @@
+Opennebula user oneadmin test
+---
+multiline
+---
+^SSH_PUBLIC_KEY\s?=\s?".+\s*$
+^\"$
