@@ -1,0 +1,11 @@
+global
+[% INCLUDE 'metaconfig/haproxy/global.tt' FILTER indent %]
+defaults
+[% INCLUDE 'metaconfig/haproxy/defaults.tt' FILTER indent %]
+[% INCLUDE 'metaconfig/haproxy/stats.tt' %]
+[% FOREACH proxy IN proxys -%]
+listen  [% proxy.name %]
+[%     INCLUDE 'metaconfig/haproxy/proxy.tt' FILTER indent %]
+[% END %]
+
+

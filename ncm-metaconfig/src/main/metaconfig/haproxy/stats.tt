@@ -1,0 +1,8 @@
+listen stats : [% stats.port %]
+[% FILTER indent %]
+mode [% stats.mode %]
+[%     FOREACH statoption IN stats.options.pairs -%]
+stats [% statoption.key %] [% statoption.value %]
+[%     END %]
+[% END %]
+

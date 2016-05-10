@@ -1,0 +1,10 @@
+[% FOREACH log IN global.logs -%]
+log /dev/log [% log.value.join(' ') %]
+[% END %]
+[% FOREACH option IN global.config.pairs -%]
+[%     option.key %] [% option.value %]
+[% END %]
+[% IF global.stats.defined %]
+stats [% INCLUDE 'metaconfig/haproxy/hash_to_string.tt' data=global.stats %]
+[% END %]
+
