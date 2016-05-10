@@ -4,10 +4,10 @@ declaration template metaconfig/httpd/schema;
 include 'pan/types';
 include 'components/accounts/functions';
 
-type httpd_cipherstring = string with match(SELF, "^(TLSv1|TLSv1.0|TLSv1.1|TLSv1.2)$")
+type httpd_cipherstring = string with match(SELF, '^(TLSv1|TLSv1\.[012])$')
     || error("Use a modern cipher suite, for Pete's sake!");
 
-type httpd_nss_protocol = string with match(SELF, "^(TLSv1.0|SSLv3|All)$");
+type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3|All)$');
 type httpd_nss_cipherstring = string with match(SELF, '^(\+|-)(rsa_3des_sha|rsa_des_56_sha|rsa_des_sha|rsa_null_md5|rsa_null_sha|rsa_rc2_40_md5|rsa_rc4_128_md5|rsa_rc4_128_sha|rsa_rc4_40_md5|rsa_rc4_56_sha|fortezza|fortezza_rc4_128_sha|fortezza_null|fips_des_sha|fips_3des_sha|rsa_aes_128_sha|rsa_aes_256_sha)$');
 
 @documentation{
@@ -266,7 +266,8 @@ type httpd_name_virtual_host = {
     "port" ? type_port
 };
 
-type httpd_auth_type = string with match(SELF,"^(Basic|Kerberos|Shibboleth)$");
+type httpd_auth_type = string with match(SELF,"^(Basic|Kerberos|Shibboleth|GSSAPI)$");
+
 type httpd_auth = {
     "name": string
     "require" : httpd_auth_require = nlist('type','valid-user')
@@ -342,10 +343,19 @@ type httpd_listen = {
     "protocol" ? string
 };
 
+type httpd_passenger_vhost = {
+    "maxinstances" ? long
+    "maxinstancesperapp" ? long
+    "mininstances" ? long
+    "user" ? string
+    "group" ? string
+};
+
 type httpd_passenger = {
+    include httpd_passenger_vhost
     "ruby" : string = "/usr/bin/ruby"
     "root" : string = "/usr/share/rubygems/gems/passenger-latest"
-    "maxpoolsize" : long
+    "maxpoolsize" : long = 6
 };
 
 type httpd_rails = {
@@ -455,6 +465,7 @@ type httpd_vhost = {
     "rails" ? httpd_rails
     "proxies" ? httpd_proxy_directive[]
     "browsermatch" ? httpd_browsermatch[]
+    "passenger" ? httpd_passenger_vhost
 };
 
 # system wide settings

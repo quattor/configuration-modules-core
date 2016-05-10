@@ -1,0 +1,28 @@
+Base test for krb5_sunstone.conf config
+---
+/etc/httpd/conf.d/krb5_sunstone.conf
+---
+^<virtualhost    1.2.3.4:443>$
+^\s{4}servername myhost.domain:443$
+^\s{4}documentroot /usr/lib/one/sunstone/public$
+^\s{4}hostnamelookups on$
+^\s{4}nsscertificatedatabase /etc/httpd/alias$
+^\s{4}nssciphersuite \+rsa_rc4_128_md5,\+rsa_rc4_128_sha,\+rsa_3des_sha,-rsa_des_sha,-rsa_rc4_40_md5,-rsa_rc2_40_md5,-rsa_null_md5,-rsa_null_sha,\+fips_3des_sha,-fips_des_sha,-fortezza,-fortezza_rc4_128_sha,-fortezza_null,-rsa_des_56_sha,-rsa_rc4_56_sha,\+rsa_aes_128_sha,\+rsa_aes_256_sha\s+
+^\s{4}nssengine on$
+^\s{4}nssnickname "Server-Cert"$
+^\s{4}nssprotocol TLSv1.0,TLSv1.1,TLSv1.2$
+^\s{4}loglevel warn$
+^\s{4}errorlog logs/sunstone_error_log$
+^\s{4}transferlog logs/sunstone_access_log$
+^\s{4}customlog logs/sunstone_request_log ssl_combined$
+^\s{4}passengeruser oneadmin$
+^\s{4}<directory /usr/lib/one/sunstone/public>$
+^\s{8}options -MultiViews$
+^\s{8}allowoverride None$
+^\s{8}authname "Sunstone Kerberos Login"$
+^\s{8}require valid-user $
+^\s{8}authtype GSSAPI$
+^\s{8}gssapicredstore keytab:/etc/http.keytab$
+^\s{8}gssapisslonly on$
+^\s{4}</directory>$
+^</virtualhost>$
