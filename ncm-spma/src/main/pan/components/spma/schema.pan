@@ -55,7 +55,7 @@ type SOFTWARE_GROUP = {
     "default" : boolean = true
     "mandatory" : boolean = true
     "optional" : boolean = false
-    "names" : string[]
+    "names" ? string[]  # used by yumng only
 };
 
 type boolean_yes_no = string with match (SELF, '^(yes|no)$');
@@ -92,6 +92,6 @@ type component_spma_type = {
 };
 
 bind "/software/components/spma" = component_spma_type;
-bind "/software/groups" = SOFTWARE_GROUP;
+bind "/software/groups" = SOFTWARE_GROUP {};
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
 bind "/software/repositories" = SOFTWARE_REPOSITORY [];
