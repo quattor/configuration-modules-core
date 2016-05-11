@@ -368,7 +368,7 @@ Readonly::Hash our %QUATMAP => (
      }
    }
 );
-Readonly::Hash our %QUATIN => (
+our %QUATIN = (
    'ceph001' => {
      'config' => {
        'fsid' => 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
@@ -448,6 +448,14 @@ Readonly::Hash our %QUATIN => (
      'mon' => {
        'fqdn' => 'ceph003.cubone.os',
        'up' => 1
+     },
+     'osds' => {
+       'ceph003:/var/lib/ceph/osd/sdc' => {
+         'fqdn' => 'ceph003.cubone.os',
+         'host' => 'ceph003',
+         'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+         'osd_path' => '/var/lib/ceph/osd/sdc'
+       }
      }
    }
 );
@@ -556,13 +564,14 @@ Readonly::Hash our %QUATMAPGW => (
        'fqdn' => 'ceph001.cubone.os',
        'up' => 1
      },
-     'radosgw' => {
-       'config' => {
-         'foo' => 'bar',
-         'host' => 'ceph001'
-       },
-       'fqdn' => 'ceph001.cubone.os'
-     }
+     'gtws' => {
+       'gateway' => {
+         'config' => {
+           'foo' => 'bar',
+           'host' => 'ceph001'
+         }
+       }
+     },
    }
 );
 Readonly::Hash our  %COMPARE1GW => (
@@ -734,7 +743,15 @@ Readonly::Hash our %COMPARE1 => (
        'mon' => {
          'fqdn' => 'ceph003.cubone.os',
          'up' => 1
-       }
+       },
+       'osds' => {
+         'ceph003:/var/lib/ceph/osd/sdc' => {
+            'fqdn' => 'ceph003.cubone.os',
+            'host' => 'ceph003',
+            'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+            'osd_path' => '/var/lib/ceph/osd/sdc'
+            }
+        }
      }
    },
    'mapping' => {
@@ -823,6 +840,14 @@ Readonly::Hash our %COMPARE2 => (
        'mon' => {
          'fqdn' => 'ceph003.cubone.os',
          'up' => 1
+       },
+       'osds' => {
+         'ceph003:/var/lib/ceph/osd/sdc' => {
+           'fqdn' => 'ceph003.cubone.os',
+           'host' => 'ceph003',
+           'journal_path' => '/var/lib/ceph/log/sda4/osd-sdc/journal',
+           'osd_path' => '/var/lib/ceph/osd/sdc'
+         }
        }
      }
    },
@@ -836,7 +861,7 @@ Readonly::Hash our %COMPARE2 => (
        }
      }
    },
-   'gvalues' => {},
+   'gvalues' => {max_add_osd_failures_per_host => 1},
    'skip' => {},
    'mapping' => {
      'get_id' => {
@@ -982,6 +1007,9 @@ Readonly::Hash our %DESTROYD => (
            'uuid' => 'e2fa588a-8c6c-4874-b76d-597299ecdf72'
          },
        },
+       'config' => {
+            'some' => 'value'
+       }, 
      }, 
 ); 
 Readonly::Hash our %RESTARTD => (

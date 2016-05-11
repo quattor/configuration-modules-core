@@ -1,0 +1,8 @@
+destroy and restart
+---
+---
+^su - ceph -c /usr/bin/ceph-deploy --cluster ceph mds destroy ceph001.cubone.os$
+^su - ceph -c /usr/bin/ceph-deploy --cluster ceph osd destroy osd.0$
+^su - ceph -c ceph001 /sbin/service ceph restart mon$
+^su - ceph -c ceph001 /sbin/service ceph stop osd.1$
+^su - ceph -c ceph002 /sbin/service ceph start mds$

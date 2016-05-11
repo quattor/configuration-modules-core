@@ -1,0 +1,6 @@
+[%- FOREACH pair IN desc.pairs %]
+[%-      SWITCH pair.key -%]
+[%-          CASE -%]
+passenger[% pair.key %] [% pair.value %]
+[%      END -%]
+[%- END %]

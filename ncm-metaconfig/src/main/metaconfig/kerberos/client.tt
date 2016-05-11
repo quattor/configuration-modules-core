@@ -1,0 +1,25 @@
+[logging]
+[%- FOREACH l IN logging.pairs %]
+[% l.key %] = [% l.value %]
+[%- END %]
+
+[libdefaults]
+[%- FOREACH l IN libdefaults.pairs %]
+[% l.key %] = [% l.value %]
+[%- END %]
+
+[realms]
+[% FOREACH r IN realms.pairs %]
+[% r.key %] = {
+[%-    FILTER indent %]
+[%          FOREACH v IN r.value.pairs -%]
+[% v.key %] = [% v.value %]
+[%           END -%]
+[%    END -%]
+}
+[%- END %]
+
+[domain_realms]
+[% FOREACH r IN domain_realms.pairs %]
+.[% r.key %] = [% r.value %]
+[% END %]

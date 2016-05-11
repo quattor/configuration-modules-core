@@ -1,0 +1,15 @@
+listen [% srv.listen.addr %][% " default" IF srv.listen.default -%]
+ [% "ssl" IF srv.listen.ssl %];
+[% FOREACH i IN srv.includes %]
+include [% i %];
+[% END -%]
+server_name [% srv.name.join(" ") %];
+[% FOREACH e IN srv.error_page -%]
+error_page [% e.error_codes.join(" ") %] [% e.file %];
+[% END -%]
+[%- IF srv.ssl %]
+[%      INCLUDE metaconfig/nginx/ssl.tt ssl=srv.ssl %]
+[% END -%]
+[%- FOREACH l IN srv.location %]
+[%      INCLUDE metaconfig/nginx/location.tt location=l %]
+[% END -%]

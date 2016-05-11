@@ -47,7 +47,7 @@ my $cfg = {
        contents => {
            a => 1,
            b => 2,
-           section => { s => 1 } 
+           section => { s => 1 }
        },
        module => "tiny",
       };

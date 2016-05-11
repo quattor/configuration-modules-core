@@ -1,0 +1,3 @@
+[%- FOREACH pair IN CCM.contents.pairs %]
+[%      INCLUDE "systemd/unitfile/${pair.key}.tt" data=pair.value %]
+[%- END -%]

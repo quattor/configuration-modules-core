@@ -6,7 +6,7 @@
   <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
 
-  <version>14.10.0</version>
+  <version>16.2.1-SNAPSHOT</version>
 
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
@@ -88,7 +88,6 @@
     <module>ncm-ntpd</module>
     <module>ncm-afsclt</module>
     <module>ncm-fmonagent</module>
-    <module>ncm-fsprobe</module>
     <module>ncm-gmetad</module>
     <module>ncm-modprobe</module>
     <module>ncm-named</module>
@@ -106,6 +105,9 @@
     <module>ncm-cups</module>
     <module>ncm-puppet</module>
     <module>ncm-ceph</module>
+    <module>ncm-nss</module>
+    <module>ncm-opennebula</module>
+    <module>ncm-systemd</module>
   </modules>
 
   <build>
@@ -126,4 +128,3 @@
   </build>
 
 </project>
-

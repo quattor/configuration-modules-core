@@ -1,6 +1,7 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
+# ${build-info}
 
 ############################################################
 #
@@ -16,6 +17,7 @@ unique template components/accounts/sysusers;
     'daemon' ,'',
     'dhcpd', '',
     'dhcp', '',
+    'chrony', '',
     'adm' ,'',
     'lp' ,'',
     'sync' ,'',
@@ -43,6 +45,7 @@ unique template components/accounts/sysusers;
     'nscd' ,'',
     'sshd' ,'',
     'postfix' ,'',
+    'polkitd' ,'',
     'apache' ,'',
     'pcap' ,'',
     'mysql' ,'',
@@ -66,6 +69,7 @@ unique template components/accounts/sysusers;
     'hpglview' ,'',
     'sindes' ,'',
     'dialout','',
+    'ssh_keys','',
     'stap-server','',
     'amanda', '',
     'amandabackup', '',
@@ -73,6 +77,7 @@ unique template components/accounts/sysusers;
     'abrt','',
     'tss','',
     'ldap', '',
+    'libstoragemgmt', '',
     'nslcd', '',
     'oprofile', '',
     'pegasus', '',
@@ -81,6 +86,7 @@ unique template components/accounts/sysusers;
     'radiusd', '',
     'squid', '',
     'tomcat', '',
+    'unbound', '',
     'uuidd', '',
     'webalizer', '',
     'apacheds', '',

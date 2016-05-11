@@ -1,0 +1,101 @@
+Test default lmodrc file
+---
+/etc/lmodrc.lua
+---
+^propT = \{$
+^\s{4}arch = \{$
+^\s{8}displayT = \{$
+^\s{12}\["gpu:mic"\] = \{$
+^\s{16}short = "\(g,m\)",$
+^\s{16}long = "\(g,m\)",$
+^\s{16}color = "red",$
+^\s{16}doc = "built natively for MIC and GPU",$
+^\s{12}\},$
+^\s{12}\["gpu:mic:offload"\] = \{$
+^\s{16}short = "\(@\)",$
+^\s{16}long = "\(g,m,o\)",$
+^\s{16}color = "red",$
+^\s{16}doc = "built natively for MIC and GPU and offload to the MIC",$
+^\s{12}\},$
+^\s{12}\["gpu"\] = \{$
+^\s{16}short = "\(g\)",$
+^\s{16}long = "\(g\)",$
+^\s{16}color = "red",$
+^\s{16}doc = "built for GPU",$
+^\s{12}\},$
+^\s{12}\["mic"\] = \{$
+^\s{16}short = "\(m\)",$
+^\s{16}long = "\(m\)",$
+^\s{16}color = "blue",$
+^\s{16}doc = "built for host and native MIC",$
+^\s{12}\},$
+^\s{12}\["mic:offload"\] = \{$
+^\s{16}short = "\(\*\)",$
+^\s{16}long = "\(m,o\)",$
+^\s{16}color = "blue",$
+^\s{16}doc = "built for host, native MIC and offload to the MIC",$
+^\s{12}\},$
+^\s{12}\["offload"\] = \{$
+^\s{16}short = "\(o\)",$
+^\s{16}long = "\(o\)",$
+^\s{16}color = "blue",$
+^\s{16}doc = "built for offload to the MIC only",$
+^\s{12}\},$
+^\s{8}\},$
+^\s{8}validT = {$
+^\s{12}gpu = 1,$
+^\s{12}mic = 1,$
+^\s{12}offload = 1,$
+^\s{8}\},$
+^\s{4}\},$
+^\s{4}lmod = \{$
+^\s{8}displayT = \{$
+^\s{12}\["sticky"\] = \{$
+^\s{16}short = "\(S\)",$
+^\s{16}long = "\(S\)",$
+^\s{16}color = "red",$
+^\s{16}doc = "Module is Sticky, requires --force to unload or purge",$
+^\s{12}\},$
+^\s{8}},$
+^\s{8}validT = \{$
+^\s{12}sticky = 1,$
+^\s{8}\},$
+^\s{4}\},$
+^\s{4}state = \{$
+^\s{8}displayT = \{$
+^\s{12}\["experimental"\] = \{$
+^\s{16}short = "\(E\)",$
+^\s{16}long = "\(E\)",$
+^\s{16}color = "blue",$
+^\s{16}doc = "Experimental",$
+^\s{12}\},$
+^\s{12}\["obsolete"\] = \{$
+^\s{16}short = "\(O\)",$
+^\s{16}long = "\(O\)",$
+^\s{16}color = "red",$
+^\s{16}doc = "Obsolete",$
+^\s{12}\},$
+^\s{12}\["testing"\] = \{$
+^\s{16}short = "\(T\)",$
+^\s{16}long = "\(T\)",$
+^\s{16}color = "green",$
+^\s{16}doc = "Testing",$
+^\s{12}\},$
+^\s{8}\},$
+^\s{8}validT = \{$
+^\s{12}experimental = 1,$
+^\s{12}obsolete = 1,$
+^\s{12}testing = 1,$
+^\s{8}\},$
+^\s{4}\},$
+^\}$
+^scDescriptT = \{$
+^\s{4}\{$
+^\s{8}\["dir"\] = /some/dir0,$
+^\s{8}\["timestamp"\] = /some/path0,$
+^\s{4}\},$
+^\s{4}\{$
+^\s{8}\["dir"\] = /some/dir1,$
+^\s{8}\["timestamp"\] = /some/path1,$
+^\s{4}\},$
+^\}$

@@ -1,0 +1,76 @@
+Base test for httpd config
+---
+multiline
+/etc/httpd/conf/httpd.conf
+---
+^include conf.modules.d/\*.conf$
+^accessfilename .htaccess$
+^adddefaultcharset UTF-8$
+^enablemmap on$
+^enablesendfile on$
+^extendedstatus off$
+^group apache$
+^headername HEADER.html$
+^hostnamelookups off$
+^indexignore .\?\?\* \*~ \*\# HEADER\* README\* RCS CVS \*,v \*,t$
+^indexoptions FancyIndexing VersionSort NameWidth=\* HTMLTable Charset=UTF-8$
+^keepalive off$
+^keepalivetimeout 15$
+^maxkeepaliverequests 100$
+^pidfile run/httpd.pid$
+^readmename README.html$
+^serveradmin root@localhost$
+^serverroot "/etc/httpd"$
+^serversignature on$
+^servertokens OS$
+^timeout 60$
+^usecanonicalname off$
+^user apache$
+^<directory />$
+^\s{4}allowoverride None$
+^\s{4}require all denied$
+^</directory>$
+^<directory /var/www>$
+^\s{4}allowoverride None$
+^\s{4}require all granted$
+^</directory>$
+^<directory /var/www/html>$
+^\s{4}options Indexes FollowSymLinks$
+^\s{4}allowoverride None$
+^\s{4}require all granted$
+^</directory>$
+^<directory /var/www/cgi-bin>$
+^\s{4}options None$
+^\s{4}allowoverride None$
+^\s{4}require all granted$
+^</directory>$
+^<files \~ "\^\\\.ht">$
+^\s{4}require all denied$
+^</files>$
+^<ifmodule mime_magic_module>$
+^\s{8}mimemagicfile conf/magic$
+^</ifmodule>$
+^<ifmodule mime_module>$
+^\s{8}addoutputfilter INLCUDES .shtml$
+^\s{8}typesconfig /etc/mime.types$
+^\s{8}addtype application/x-compress .Z$
+^\s{8}addtype application/x-gzip .gz .tgz$
+^\s{8}addtype text/html .shtml$
+^</ifmodule>$
+^<ifmodule log_config_module>$
+^\s{4}<ifmodule logio_module>$
+^\s{8}logformat "%h %l %u %t \\"%r\\" %>s %b \\"%\{Referer\}i\\" \\"%\{User-Agent\}i\\" %I %O" combinedio$
+^\s{4}</ifmodule>$
+^\s{8}logformat "%h %l %u %t \\"%r\\" %>s %b \\"%\{Referer\}i\\" \\"%\{User-Agent\}i\\"" combined$
+^\s{8}logformat "%h %l %u %t \\"%r\\" %>s %b" common$
+^\s{8}customlog logs/access_log combined$
+^</ifmodule>$
+^<ifmodule alias_module>$
+^\s{8}scriptalias /cgi-bin/ /var/www/cgi-bin/$
+^</ifmodule>$
+^<ifmodule dir_module>$
+^\s{8}directoryindex index.html$
+^</ifmodule>$
+^loglevel warn$
+^errorlog logs/error_log$
+^includeoptional conf.d/\*.conf$

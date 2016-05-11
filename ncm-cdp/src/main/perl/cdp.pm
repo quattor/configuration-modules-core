@@ -17,6 +17,7 @@ local(*DTA);
 
 use constant BASE => "/software/components/cdp";
 
+our $NoActionSupported = 1;
 
 sub Configure
 {

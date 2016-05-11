@@ -1,0 +1,18 @@
+Opennebular vnet test
+---
+multiline
+---
+^AR\s?=\s?\[$
+^\s*ip\s?=\s*".+",\s*$
+^\s*size\s?=\s*".+",\s*$
+^\s*type\s?=\s*".+"\s*$
+^\]$
+^BRIDGE\s?=\s?".+"\s*$
+^BRIDGE_OVS\s?=\s?".+"\s*$
+^DNS\s?=\s?".+"\s*$
+^GATEWAY\s?=\s?".+"\s*$
+^NAME\s?=\s?".+"\s*$
+^NETWORK_MASK\s?=\s?".+"\s*$
+^VLAN\s?=\s?".+"\s*$
+^VLAN_ID\s?=\s?".+"\s*$
+^QUATTOR\s?=\s?\d+\s*$

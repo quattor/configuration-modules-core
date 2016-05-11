@@ -46,4 +46,6 @@ $h = $cmp->files($u, 0, 0, $HOME);
 is(scalar(keys(%{$h->{managed_credentials}})), 2,
    "Correct set of credentials to manage");
 
+$cmp->close_files($h);
+
 done_testing();

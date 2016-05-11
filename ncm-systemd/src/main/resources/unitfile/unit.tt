@@ -1,0 +1,23 @@
+[%- # add non-assert/condition entries here
+    list_of_lines = ['Before', 'After', 'Conflicts', 'PartOf', 'BindsTo', 'RequisiteOverridable', 'Requires', 'Wants', 'Requisite', 'RequisiteOverridable']; 
+    condition_assert_list_of_lines = ['Architecture', 'Capability', 'DirectoryNotEmpty', 'FileIsExecutable', 'FileNotEmpty', 'Host', 'KernelCommandLine', 'PathExistsGlob', 'PathExists', 'PathIsDirectory', 'PathIsMountPoint', 'PathIsReadWrite', 'PathIsSymbolicLink', 'Security', 'Virtualization'];
+    FOREACH n IN condition_assert_list_of_lines;
+        list_of_lines.push('Condition' _ n);
+        list_of_lines.push('Assert' _ n);
+    END;
+-%]
+[%- # build up the data to pass, generating the assert/condition entries
+    unitdata = {};
+    FOREACH pair IN data.pairs;
+        SWITCH pair.key;
+            CASE ['Assert', 'Condition'];
+                FOREACH p IN pair.value.pairs;
+                    keyname = pair.key _ p.key;
+                    unitdata.${keyname} = p.value;
+                END;
+            CASE;
+                unitdata.${pair.key} = pair.value;
+        END;
+    END;
+-%]
+[% INCLUDE 'systemd/unitfile/section.tt' section='Unit' data=unitdata list_of_lines=list_of_lines -%]

@@ -22,12 +22,16 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
 
-Readonly my $CMD => join(" ", NCM::Component::spma::yum::YUM_DISTRO_SYNC);
+Readonly::Array my @YDS_ORIG => NCM::Component::spma::yum::YUM_DISTRO_SYNC();
+Readonly::Array my @YDS => @{NCM::Component::spma::yum::_set_yum_config(\@YDS_ORIG)};
+Readonly my $CMD => join(" ", @YDS);
 
 set_desired_err($CMD, "");
 set_desired_output($CMD, "distrosync");
 
 my $cmp = NCM::Component::spma::yum->new("spma");
+
+ok(! grep {$_ eq '-C'} @YDS, 'distrosync command has cache disabled');
 
 =pod
 

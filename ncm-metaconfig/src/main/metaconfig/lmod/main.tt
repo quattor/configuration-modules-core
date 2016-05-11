@@ -1,0 +1,20 @@
+propT = {
+[%-  FOREACH prop IN prop.pairs %]
+[%      FILTER indent -%]
+[%          prop.key %] = {
+[%          INCLUDE 'metaconfig/lmod/prop.tt' data=prop.value FILTER indent -%]
+},
+[%       END -%]
+[%-  END %]
+}
+[% IF scDescript.defined %]
+scDescriptT = {
+[%      FOREACH scdescript IN scDescript -%]
+[%-         FILTER indent -%]
+{
+[%              INCLUDE 'metaconfig/lmod/scDescript.tt' data=scdescript FILTER indent -%]
+},
+[%          END -%]
+[%-      END %]
+}
+[% END -%]

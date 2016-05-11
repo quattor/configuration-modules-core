@@ -1,0 +1,11 @@
+[%- cull_opts = ['bcull', 'brun', 'bstop', 'fcull', 'frun', 'fstop'] -%]
+[%- FOREACH p IN CCM.contents.pairs -%]
+[%-      SWITCH p.key -%]
+[%-          CASE ['nocull'] -%]
+[%              p.value ? p.key : '' %]
+[%          CASE cull_opts -%]
+[%              p.key %] [% p.value %]%
+[%          CASE -%]
+[%              p.key %] [% p.value %]
+[%       END -%]
+[%- END %]

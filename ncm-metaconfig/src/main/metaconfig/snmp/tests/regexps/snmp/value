@@ -1,0 +1,7 @@
+Value test for snmp
+---
+multiline
+metaconfigservice=/etc/snmp/snmp.conf
+---
+^mibs\s+ALL$
+^mibdirs\s+/some/path:/usr/share/snmp/mibs$

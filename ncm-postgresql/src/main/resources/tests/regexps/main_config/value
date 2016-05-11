@@ -1,0 +1,17 @@
+Test postgresql main config TT
+---
+//
+rendermodule=main_config
+contentspath=/config
+---
+^archive_command = 'my archive command'$
+^archive_mode = yes$
+^archive_timeout = '10'$
+^listen_addresses = 'a,b,c'$
+^log_destination = 'stderr'$
+^log_directory = 'pg_log'$
+^log_filename = 'postgresql-%a.log'$
+^log_rotation_age = '1d'$
+^log_rotation_size = '0'$
+^log_truncate_on_rotation = yes$
+^logging_collector = yes$

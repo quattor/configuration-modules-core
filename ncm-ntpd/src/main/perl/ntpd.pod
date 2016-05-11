@@ -30,6 +30,8 @@ Does nothing.
 
 activates/deactivates the component.
 
+=item /software/components/ntpd/useserverip : resolve and use the time server(s) ip address in the config file(s)
+
 =item /software/components/ntpd/servers/ : list of time servers
 
 =item /software/components/ntpd/serverlist/ : list of { server=hostname, options=nlist() }
@@ -440,6 +442,11 @@ Default : true
 Allows some debugging via ntpdc on localhost but with no modifications
 
 Default : true
+
+=item /software/components/ntpd/group : defined_group (optional)
+
+If the group is set, files are written with C<<root.<group>>> ownership
+and C<0640> permission.
 
 =back
 

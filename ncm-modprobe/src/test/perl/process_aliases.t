@@ -9,9 +9,6 @@
 
 Test the C<process_alias> method.
 
-This method is identical to C<process_install>, C<process_options> and
-C<process_remove>.  It's enough to test this one.
-
 =cut
 
 use strict;
@@ -27,7 +24,7 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
-my $fh = CAF::FileWriter->new("/etc/modprobe.d");
+my $fh = CAF::FileWriter->new("target/modprobe_process_aliases");
 
 Readonly::Hash my %TREE => (modules => [
         {
@@ -45,3 +42,5 @@ $cmp->process_alias(\%TREE, $fh);
 like($fh, qr{^alias\s+module_alias1\s+module_name1$}m,
      "First alias line rendered correctly");
 unlike($fh, qr{module_name2$}m, "Module without aliases not printed");
+
+$fh->close();

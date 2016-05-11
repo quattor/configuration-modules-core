@@ -23,8 +23,4 @@ https://twiki.cern.ch/twiki/bin/view/FIOgroup/TsiCDBBlockDevices
 
 L<ncm-filesystems>
 
-=head1 AUTHOR
-
-Luis Fernando Muñoz Mejías, <Luis.Fernando.Munoz.Mejias@cern.ch>
-
 =cut

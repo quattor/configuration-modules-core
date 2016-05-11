@@ -28,11 +28,14 @@ my $cmp = NCM::Component::useraccess->new("useraccess");
 
 my $u = { ssh_keys => [qw(key1 key2)] };
 
-my $fh = CAF::FileWriter->new("target/test/ssh_test");
+my $fh = CAF::FileWriter->new("target/test/ssh_keys_test_1");
 
 is($cmp->set_ssh_fromkeys("foo", $u, $fh), 0,
    "SSH from keys returns with no errors");
 is("$fh", "key1\nkey2\n", "The SSH file has the correct contents");
+
+# cleanup fh
+$fh->close();
 
 =pod
 
@@ -44,7 +47,7 @@ The method is successful, but the file is empty.
 
 $u->{ssh_keys} = [];
 
-$fh = CAF::FileWriter->new("target/test/ssh_url_test");
+$fh = CAF::FileWriter->new("target/test/ssh_keys_test_2");
 
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH with empty key list returns with no errors");
@@ -62,6 +65,9 @@ is($cmp->set_ssh_fromurls("foo", {}, $fh), 0,
    "SSH with no key list returns with no errors");
 is("$fh", "", "The SSH file is empty when there is no URL list");
 ok(!$cmp->{ERROR}, "No errors when populated authorized_hosts so far");
+
+# cleanup fh
+$fh->close();
 
 =pod
 
@@ -88,3 +94,5 @@ is($cmp->set_ssh_fromkeys("foo", {}), 0,
    "Non-existing SSH keys list is handled correctly");
 
 done_testing();
+
+

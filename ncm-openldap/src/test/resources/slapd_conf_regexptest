@@ -1,0 +1,80 @@
+slapd.conf settings
+---
+---
+^include /etc/openldap/schema/core.schema$
+^include /etc/openldap/schema/cosine.schema$
+^include /etc/openldap/schema/inetorgperson.schema$
+^include /etc/openldap/schema/nis.schema$
+^include /etc/openldap/schema/more.schema$
+^include /etc/openldap/schema/isaidmore.schema$
+^include /etc/openldap/schema/ppolicy.schema$
+^access to attrs=UserPassword$
+^    by self read$
+^    by anonymous auth$
+^    by \* none$
+^access to attrs=objectClass,uid,uidNumber,gidNumber,cn,homeDirectory,loginShell,memberUid,entry,status$
+^    by dn.base="cn=repli,dc=b,dc=c" read$
+^    by dn.base="cn=user,dc=b,dc=c" read$
+^    by dn.base="cn=mail,dc=b,dc=c" read$
+^    by anonymous auth$
+^    by \* none$
+^access to attrs=mail$
+^    by dn.base="cn=mail,dc=b,dc=c" read$
+^    by anonymous auth$
+^    by \* none$
+^TLSCACertificateFile /etc/pki/CA/certs/ca.pem$
+^TLSCertificateFile /etc/pki/tls/certs/cert.pem$
+^TLSCertificateKeyFile /etc/pki/tls/private/key.key$
+^TLSCipherSuite TLSv1$
+^TLSVerifyClient hard$
+^moduleload ppolicy.la$
+^gentlehup off$
+^reverse-lookup off$
+^allow bind_v2$
+^argsfile /var/run/openldap/slapd.args$
+^localSSF 71$
+^loglevel 16640$
+^password-hash \{SSHA\}$
+^pidfile /var/run/openldap/slapd.pid$
+^threads 16$
+^tool-threads 1$
+^database bdb$
+^add_content_acl off$
+^hidden off$
+^lastmod on$
+^mirrormode off$
+^index entryCSN,entryUUID eq$
+^index objectClass eq,pres$
+^index uidNumber,gidNumber,loginShell eq,pres$
+^index ou,cn,mail,surname,givenname eq,pres,sub$
+^index uid,memberUid eq,pres,sub$
+^index nisMapName,nisMapEntry eq,pres,sub$
+^index uniqueMember eq$
+^limits a=b,c=d size.soft=unlimited$
+^suffix "dc=b,dc=c"$
+^checkpoint 1234 15$
+^directory /var/lib/ldap$
+^maxderefdepth 15$
+^rootdn cn=a,dc=b,dc=c$
+^rootpw \{SSHA\}yeahyeah$
+^syncrepl$
+^    schemachecking=off$
+^    retry="5 6 150 \+"$
+^    attrs="\*,\+"$
+^    binddn="cn=repli,dc=b,dc=c"$
+^    bindmethod=simple$
+^    credentials=supserscret$
+^    filter="\(institute=\*\)"$
+^    interval=00:00:00:01$
+^    provider=ldaps://somewherelese$
+^    rid=1$
+^    searchbase="dc=b,dc=c"$
+^    tls_reqcert=never$
+^    type=refreshOnly$
+^updateref ldaps://somewhere$
+^overlay syncprov$
+^syncprov-checkpoint 100 10$
+^syncprov-nopresent TRUE$
+^syncprov-sessionlog 100$
+^monitoring on$
+^database monitor$

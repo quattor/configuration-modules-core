@@ -27,6 +27,20 @@ use Socket;
 use Storable qw(dclone);
 
 our $EC=LC::Exception::Context->new->will_store_all;
+Readonly::Hash my %ACTIONS => (
+    add => {
+        mon => \&add_mon,
+        osd => \&add_osd,
+        mds => \&add_mds,
+        gtw => \&add_gtw,
+    },
+    compare => {
+        mon => \&compare_mon,
+        osd => \&compare_osd,
+        mds => \&compare_mds,
+        gtw => \&compare_gtw,
+    }, 
+);
 
 # get hashes out of ceph and from the configfiles , make one structure of it
 sub get_ceph_conf {
@@ -49,34 +63,40 @@ sub get_ceph_conf {
     return ($master, $mapping, $weights);
 }
 
+# helper sub to set quattor general and attr config in the hash tree
+sub set_host_attrs {
+    my ($self, $master, $hostname, $attr, $value, $fqdn, $config) = @_;
+    my $hosthashref = $master->{$hostname} ||= {};
+    $hosthashref->{$attr} = $value;
+    $hosthashref->{fqdn} = $fqdn;
+    $hosthashref->{config} = $config;
+    $master->{$hostname} = $hosthashref;
+}
+    
 # One big quattor tree on a host base
 sub get_quat_conf {
     my ($self, $quattor) = @_; 
     my $master = {} ;
     $self->debug(2, "Building information from quattor");
-    if ($quattor->{radosgws}) {
-        while (my ($hostname, $gtw) = each(%{$quattor->{radosgws}})) {
-            $master->{$hostname}->{radosgw} = $gtw; 
-            $master->{$hostname}->{fqdn} = $gtw->{fqdn};
-            $master->{$hostname}->{config} = $quattor->{config};
+    if ($quattor->{radosgwh}) {
+        while (my ($hostname, $host) = each(%{$quattor->{radosgwh}})) {
+            $self->set_host_attrs($master, $hostname, 'gtws', $host->{gateways}, 
+                $host->{fqdn}, $quattor->{config});
         }  
     }
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
-        $master->{$hostname}->{mon} = $mon; # Only one monitor
-        $master->{$hostname}->{fqdn} = $mon->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
+        $self->set_host_attrs($master, $hostname, 'mon', $mon, 
+            $mon->{fqdn}, $quattor->{config}); # Only one monitor
     }
     while (my ($hostname, $host) = each(%{$quattor->{osdhosts}})) {
-        $master->{$hostname}->{osds} = $self->structure_osds($hostname, $host);
-        $master->{$hostname}->{fqdn} = $host->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
-
+        my $osds = $self->structure_osds($hostname, $host);
+        $self->set_host_attrs($master, $hostname, 'osds', $osds, 
+            $host->{fqdn}, $quattor->{config});
     }
     while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
         $hostname =~ s/\..*//;;
-        $master->{$hostname}->{mds} = $mds; # Only one mds
-        $master->{$hostname}->{fqdn} = $mds->{fqdn};
-        $master->{$hostname}->{config} = $quattor->{config};
+        $self->set_host_attrs($master, $hostname, 'mds', $mds, 
+            $mds->{fqdn}, $quattor->{config}); # Only one mds
     }
     $self->debug(5, "Quattor hash:", Dumper($master));
     return $master;
@@ -91,16 +111,19 @@ sub add_host {
         $self->warn("Host $hostname should be added as new, but is not reachable, so it will be ignored");
     } else {
         $structures->{configs}->{$hostname}->{global} = $host->{config} if ($host->{config});
-        $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $host->{radosgw} if ($host->{radosgw});
-        if ($host->{mon}) {
-            $self->add_mon($hostname, $host->{mon}, $structures) or return 0;
+        my @uniqs = qw(mon mds);
+        foreach my $dtype (@uniqs) {
+            if ($host->{$dtype}) {
+                $ACTIONS{add}{$dtype}($self, $hostname, $host->{$dtype}, $structures) or return 0;
+            }
         }
-        if ($host->{mds}) {
-            $self->add_mds($hostname, $host->{mds}, $structures) or return 0;
-        }
-        if ($host->{osds}){
-            while  (my ($osdkey, $osd) = each(%{$host->{osds}})) {
-                $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
+        my @multiples = qw(osd gtw);
+        foreach my $dtype (@multiples) {
+            my $dstype = $dtype . "s";
+            if ($host->{$dstype}){
+                while  (my ($key, $daemon) = each(%{$host->{$dstype}})) {
+                    $ACTIONS{add}{$dtype}($self, $hostname, $key, $daemon, $structures) or return 0;
+                }
             }
         }
         $structures->{deployd}->{$hostname}->{fqdn} = $host->{fqdn};
@@ -115,9 +138,25 @@ sub add_osd {
     $self->debug(3, "Configuring new osd $osdkey on $hostname");
     if (!$self->prep_osd($osd)) {
         $self->error("osd $osdkey on $hostname could not be prepared. Osd directory not empty?"); 
-        return 0;
+        if ($structures->{ok_osd_failures}){
+            $structures->{ok_osd_failures}--;
+            $osd->{crush_ignore} = 1;
+            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname. ", 
+                "$structures->{ok_osd_failures} more failures accepted");
+            return 1;
+        } else {
+            return 0;
+        }
     }
     $structures->{deployd}->{$hostname}->{osds}->{$osdkey} = $osd;
+    return 1;
+}
+
+# Configure a new rados gateway
+sub add_gtw {
+    my ($self, $hostname, $gwname, $gtw, $structures) = @_;
+    $self->debug(3, "Configuring new gateway $hostname");
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $gtw->{config} if ($gtw->{config});
     return 1;
 }
 
@@ -227,8 +266,7 @@ sub compare_config {
         }
     }
     if ($ceph_config && %{$ceph_config}) {
-        $self->error("compare_config ".join(", ", keys %{$ceph_config})." for $type $key not in quattor");
-        return 0;
+        $self->warn("compare_config ".join(", ", keys %{$ceph_config})." for $type $key not in quattor, so removing");
     }
     return $cfgchanges;
 }
@@ -250,11 +288,12 @@ sub compare_global {
 }
 
 # Compare radosgw config
-sub compare_radosgw {
-    my ($self, $hostname, $quat_config, $ceph_config, $structures) = @_;
-    $self->debug(3, "Comparing radosgw section on $hostname");
-    $self->compare_config('radosgw', $hostname, $quat_config, $ceph_config);
-    $structures->{configs}->{$hostname}->{"client.radosgw.gateway"} = $quat_config;
+sub compare_gtw {
+    my ($self, $hostname, $gwname, $quat_gtw, $ceph_gtw, $structures) = @_;
+    $self->debug(3, "Comparing radosgw section of gateway $gwname on $hostname");
+    $self->compare_config('radosgw', $gwname, $quat_gtw->{config}, $ceph_gtw->{config});
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config} 
+        if ($quat_gtw->{config});
 }
 
 # Compare different sections of an existing host
@@ -267,43 +306,45 @@ sub compare_host {
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
         return 0; 
     } else {
+        $structures->{ok_osd_failures} = $structures->{gvalues}->{max_add_osd_failures_per_host};
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
-        if ($quat_host->{radosgw}) {
-            $self->compare_radosgw($hostname, $quat_host->{radosgw}->{config}, $ceph_host->{radosgw}->{config}, $structures);
-        } elsif ($ceph_host->{radosgw}) {
-            $self->info("radosgw config of $hostname not in quattor. Will get removed");
+        my @uniqs = qw(mon mds);
+        foreach my $dtype (@uniqs) {
+            my ($quat_dtype, $ceph_dtype) = ($quat_host->{$dtype}, $ceph_host->{$dtype});
+            if ($quat_dtype && $ceph_dtype) {
+                $ACTIONS{compare}{$dtype}($self, $hostname, $quat_dtype, $ceph_dtype, $structures) or return 0;
+            } elsif ($quat_dtype) {
+                $ACTIONS{add}{$dtype}($self, $hostname, $quat_dtype, $structures) or return 0;
+            } elsif ($ceph_dtype) {
+                $structures->{destroy}->{$hostname}->{$dtype} = $ceph_dtype;
+            }
         }
-        if ($quat_host->{mon} && $ceph_host->{mon}) {
-            $self->compare_mon($hostname, $quat_host->{mon}, $ceph_host->{mon}, $structures) or return 0;
-        } elsif ($quat_host->{mon}) {
-            $self->add_mon($hostname, $quat_host->{mon}, $structures) or return 0;
-        } elsif ($ceph_host->{mon}) {
-            $structures->{destroy}->{$hostname}->{mon} = $ceph_host->{mon};
-        }
-        if ($quat_host->{mds} && $ceph_host->{mds}) {
-            $self->compare_mds($hostname, $quat_host->{mds}, $ceph_host->{mds}, $structures) or return 0;
-        } elsif ($quat_host->{mds}) {
-            $self->add_mds($hostname, $quat_host->{mds}, $structures) or return 0;
-        } elsif ($ceph_host->{mds}) {
-            $structures->{destroy}->{$hostname}->{mds} = $ceph_host->{mds};
-        }
-        if ($quat_host->{osds}) {
-            while  (my ($osdkey, $osd) = each(%{$quat_host->{osds}})) {
-                if (exists $ceph_host->{osds}->{$osdkey}) {
-                    $self->compare_osd($hostname, $osdkey, $osd,
-                        $ceph_host->{osds}->{$osdkey}, $structures) or return 0;
-                    delete $ceph_host->{osds}->{$osdkey};
-                } else {
-                    $self->add_osd($hostname, $osdkey, $osd, $structures) or return 0;
+        my @multiples = qw(osd gtw);
+        foreach my $dtype (@multiples) {
+            my $dstype = $dtype . "s";
+            if ($quat_host->{$dstype}) {
+                while  (my ($key, $daemon) = each(%{$quat_host->{$dstype}})) {
+                    if (exists $ceph_host->{$dstype}->{$key}) {
+                        $ACTIONS{compare}{$dtype}($self, $hostname, $key, $daemon,
+                            $ceph_host->{$dstype}->{$key}, $structures) or return 0;
+                        delete $ceph_host->{$dstype}->{$key};
+                    } else {
+                        $ACTIONS{add}{$dtype}($self, $hostname, $key, $daemon, $structures) or return 0;
+                    }
+                }
+            }
+            if ($ceph_host->{$dstype}) {
+                while  (my ($key, $daemon) = each(%{$ceph_host->{$dstype}})) {
+                    if ($dtype eq 'osd') { 
+                        $structures->{destroy}->{$hostname}->{$dstype}->{$key} = $daemon;
+                    } elsif ($dtype eq 'gtw') {
+                        $self->info("radosgw config of $key on $hostname not in quattor. Will be removed");   
+                    }
                 }
             }
         }
-        if ($ceph_host->{osds}) {
-            while  (my ($osdkey, $osd) = each(%{$ceph_host->{osds}})) {
-                $structures->{destroy}->{$hostname}->{osds}->{$osdkey} = $osd;
-            }
-        }
         $structures->{deployd}->{$hostname}->{fqdn} = $quat_host->{fqdn};
+        delete $structures->{ok_osd_failures};
     }
     return 1;
 }
@@ -323,8 +364,8 @@ sub delete_host {
     
 # Compare per host - add, delete, modify 
 sub compare_conf {
-    my ($self, $quat_conf, $ceph_conf, $mapping, $gvalues) = @_;
-
+    my ($self, $quat_conf, $ceph_conf_orig, $mapping, $gvalues) = @_;
+    my $ceph_conf =  dclone($ceph_conf_orig) if defined($ceph_conf_orig);
     my $structures = {
         configs  => {},
         deployd  => {},

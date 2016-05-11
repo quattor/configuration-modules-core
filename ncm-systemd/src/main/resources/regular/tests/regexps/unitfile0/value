@@ -1,0 +1,36 @@
+Test uniffile configuration generation 0
+---
+//
+rendermodule=unitfile
+contentspath=/unitfile/0
+---
+^\.include /unit/1$
+^\.include /unit/2$
+^\[Install\]$
+^WantedBy=1.service$
+^WantedBy=2.service$
+^\[Service\]$
+^CPUAffinity=$
+^CPUAffinity=1 2 3 4$
+^Environment="VAR1-1=val1-1 val1-1b" "VAR1-2=val1-2" $
+^Environment="VAR2-1=val2-1" "VAR2-2=val2-2 val2-2b" $
+^EnvironmentFile=/envfile/1$
+^EnvironmentFile=/envfile/2$
+^LimitNPROC=100$
+^LimitSTACK=infinity$
+^TTYReset=yes$
+^TTYVHangup=no$
+^\[Unit\]$
+^After=unit0$
+^After=unit01$
+^AssertPathExists=$
+^AssertPathExists=/path/1$
+^AssertPathExists=/path/2$
+^Before=unita$
+^Before=unitb$
+^ConditionPathExists=$
+^ConditionPathExists=/path/C1$
+^ConditionPathExists=/path/C2$
+^Description=my test$
+^Requires=unit1$
+^Requires=unit2$

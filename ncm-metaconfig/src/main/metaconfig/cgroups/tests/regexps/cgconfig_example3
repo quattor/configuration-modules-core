@@ -1,0 +1,44 @@
+cgconfig.conf example3
+---
+/etc/cgconfig.conf
+---
+^group daemons/ftp \{$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "500";$
+^\s{4}\}$
+^\s{4}perm \{$
+^\s{8}admin \{$
+^\s{12}dperm = 755;$
+^\s{12}fperm = 700;$
+^\s{12}gid = root;$
+^\s{12}uid = root;$
+^\s{8}\}$
+^\s{8}task \{$
+^\s{12}fperm = 774;$
+^\s{12}gid = ftpmaster;$
+^\s{12}uid = root;$
+^\s{8}\}$
+^\s{4}\}$
+^\}$
+^group daemons/www \{$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "1000";$
+^\s{4}\}$
+^\s{4}perm \{$
+^\s{8}admin \{$
+^\s{12}dperm = 775;$
+^\s{12}fperm = 744;$
+^\s{12}gid = root;$
+^\s{12}uid = root;$
+^\s{8}\}$
+^\s{8}task \{$
+^\s{12}fperm = 770;$
+^\s{12}gid = webmaster;$
+^\s{12}uid = root;$
+^\s{8}\}$
+^\s{4}\}$
+^\}$
+^mount \{$
+^\s{4}cpu = /mnt/cgroups/cpu;$
+^\s{4}cpuacct = /mnt/cgroups/cpu;$
+^\}$

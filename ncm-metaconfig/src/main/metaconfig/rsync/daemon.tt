@@ -1,0 +1,7 @@
+log file = [% log %]
+syslog facility = [% facility %]
+
+[% FOREACH i IN sections.pairs -%]
+[[%     i.key %]]
+[%      INCLUDE 'metaconfig/rsync/section.tt' section=i.value FILTER indent %]
+[% END %]

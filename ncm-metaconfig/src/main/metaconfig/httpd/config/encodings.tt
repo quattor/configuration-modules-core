@@ -1,0 +1,3 @@
+[% FOREACH e IN desc -%]
+addencoding [% e.mime %] [% e.extensions.join(' ') %]
+[% END -%]

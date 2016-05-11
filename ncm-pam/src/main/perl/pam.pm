@@ -58,7 +58,7 @@ sub Configure {
               }
 
               my $modpath = $inf->{modules}->{$spec->{module}}->{path};
-              my $opts = "";
+              my $options_str = "";
 
               # See if we have any ACLs defined for pam_filelist, get those
               # installed before we change any pam definitions.
@@ -71,18 +71,19 @@ sub Configure {
                   }
               }
 
-              if (exists $spec->{options}) {
-                  my @o = ();
+              my @options = ();
+              if ($spec->{options}) {
                   foreach my $kv (sort keys %{$spec->{options}}) {
                       if ($config->getElement("$prefix/services/$service/$type/$pos/options/$kv")->isType(BOOLEAN)) {
-                          push(@o, $kv) if $spec->{options}->{$kv};
+                          push(@options, $kv) if $spec->{options}->{$kv};
                       } else {
-                          push(@o, "$kv=$spec->{options}->{$kv}");
+                          push(@options, "$kv=$spec->{options}->{$kv}");
                       }
                   }
-                  $opts = join(" ", @o);
               }
-              $body .= sprintf("%-11s %-13s %s %s\n", $type, $spec->{control}, $modpath, $opts);
+              push(@options, @{$spec->{options_list}}) if $spec->{options_list};
+              $options_str = join(" ", @options);
+              $body .= sprintf("%-11s %-13s %s %s\n", $type, $spec->{control}, $modpath, $options_str);
               $pos++;
           }
           $spacer = "\n";

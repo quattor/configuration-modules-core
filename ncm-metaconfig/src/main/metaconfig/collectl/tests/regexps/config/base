@@ -1,0 +1,12 @@
+Base tests for config
+---
+multiline
+metaconfigservice=/etc/collectl.conf
+---
+^DaemonCommands\s=\s-f /var/log/collectl -r00:00,7 -m -F60 -s\+YZ
+^IpmiCache\s=\s/var/run/collectl-ipmicache
+^IpmiTypes\s=\sfan,temp,current
+^Ipmitool\s=\s/usr/bin/ipmitool
+^OfedInfo\s=\s/usr/bin/ofed_info
+^PQuery\s=\s/usr/sbin/perfquery
+^Resize\s=\s/usr/bin/resize:/usr/X11R6/bin/resize

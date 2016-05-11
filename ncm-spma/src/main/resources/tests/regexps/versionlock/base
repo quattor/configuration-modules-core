@@ -1,0 +1,10 @@
+basic test
+---
+//software
+rendermodule=yumplugins/versionlock
+contentspath=/software/components/spma/plugins/versionlock
+---
+^\[main\]$
+^enabled=1$
+^follow_obsoletes=0$
+^locklist=/etc/yum/pluginconf.d/versionlock.list$

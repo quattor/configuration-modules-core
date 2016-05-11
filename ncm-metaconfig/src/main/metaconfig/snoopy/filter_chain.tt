@@ -1,0 +1,10 @@
+"[%- filters = [];
+    FOREACH filterdata IN data;
+        filter = [filterdata.filter];
+        IF filterdata.arguments.defined;
+            filter.push(filterdata.arguments.join(','));
+        END;
+        filters.push(filter.join(':'));        
+    END;
+    filters.join(';') -%]
+"[%- -%]

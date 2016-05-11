@@ -1,0 +1,13 @@
+Base test for config
+---
+/etc/snoopy.ini
+---
+^\[snoopy\]$
+^error_logging = yes$
+^filter_chain = "only_root;exclude_uid:arg1,arg2"$
+^message_format = "\[abc %\{\}  eswefwerwer\]"$
+^output = "socket:/some/path"$
+^syslog_facility = "LOG_CRON"$
+^syslog_ident = "myname"$
+^syslog_level = "EMERG"$
+

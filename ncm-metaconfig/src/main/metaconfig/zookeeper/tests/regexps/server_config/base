@@ -1,0 +1,12 @@
+Base test for zookeeper main server config
+---
+multiline
+metaconfigservice=/etc/zookeeper/conf/zoo.cfg
+---
+^clientPort=\d+$
+^dataDir=\S+$
+^initLimit=\d+$
+^syncLimit=\d+$
+^tickTime=\d+$
+^server\.\d+=host\d+\.domain:\d+:\d+$ ### COUNT 3
+

@@ -1,0 +1,8 @@
+Base test for perfsonar_bwctlrc
+---
+multiline
+/var/lib/perfsonar/.bwctlrc
+---
+^allow_unsync\s+1$
+^control_timeout\s+7200$
+^iperf_port\s+5001$

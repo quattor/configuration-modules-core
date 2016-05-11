@@ -3,12 +3,13 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>spma</artifactId>
   <packaging>pom</packaging>
-  <version>14.10.0</version>
+  <version>16.2.1-SNAPSHOT</version>
   <name>NCM SPMA configuration component</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.48</version>
+    <relativePath />
   </parent>
   <licenses>
     <license>
@@ -114,18 +115,12 @@
                     <directory>src/main/resources</directory>
                     <filtering>true</filtering>
                     <includes>
-                      <include>*.tt</include>
+                      <include>**/*.tt</include>
                     </includes>
                   </resource>
                 </resources>
               </configuration>
             </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <executions>
             <execution>
               <id>filter-spma-top-sources</id>
               <phase>process-sources</phase>

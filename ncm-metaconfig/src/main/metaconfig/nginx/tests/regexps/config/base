@@ -1,0 +1,55 @@
+Base test for config
+---
+multiline
+/etc/nginx/nginx.conf
+---
+^user\snginx;$
+^worker_processes\s4;$
+^error_log\s/var/log/nginx/error.log;$
+^pid\s/var/run/nginx.pid;$
+^events\s\{$
+^\s{4}worker_connections 1024;$
+^\s{4}use\sepoll;$
+^}$ ### COUNT 2
+^http\s{$ ### COUNT 1
+^\s{4}include /etc/nginx/mime.types;$
+^\s{4}default_type application/octet-stream;$
+^\s{4}log_format main '\$remote_addr \$host - \$remote_user \[\$time_local\] "\$request" '$
+^\s{20}'\$status \$body_bytes_sent "\$http_referer" '$
+^\s{20}'"\$http_user_agent" "\$http_x_forwarded_for"';$
+^\s{4}access_log /var/log/nginx/access.log main;$
+^\s{4}gzip on;$
+^\s{4}keepalive_timeout 65;$
+^\s{4}sendfile on;$
+^\s{4}upstream restricted-packages \{$
+^\s{8}server myserver.my.domain:443;$
+^\s{4}}$
+^\s{4}upstream secure {$
+^\s{8}server myserver.my.domain:446;$
+^\s{4}server \{$ ### COUNT 2
+^\s{8}listen myhost.my.domain:8443 ssl;$
+^\s{8}listen myhost.my.domain:443 ssl;$
+^\s{8}server_name myhost.my.domain;$
+^\s{8}ssl_verify_client off;$
+^\s{8}# Watch out!! This list is separated by whitespace!!$
+^\s{8}ssl_protocols TLSv1;$
+^\s{8}ssl_certificate /etc/mycert;$
+^\s{8}ssl_client_certificate /etc/myca;$
+^\s{8}ssl_certificate_key /etc/mykey;$
+^\s{8}# Watch out!! This list is separated by colons!!$
+^\s{8}ssl_ciphers TLSv1;$
+^\s{8}location ~ \^/\\d\+/\.\*repodata \{$
+^\s{12}proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;$ ### COUNT 7
+^\s{12}proxy_set_header X-Forwarded-Host \$host;$ ### COUNT 7
+^\s{12}proxy_set_header X-Forwarded-Proto https;$ ### COUNT 7
+^\s{12}proxy_set_header X-Real-IP \$remote_addr;$ ### COUNT 7
+^\s{12}proxy_pass https://restricted-packages;$ ### COUNT 6
+^\s{12}proxy_cache cache;$ ### COUNT 5
+^\s{12}proxy_cache_valid 200 202 302 1440m;$ ### COUNT 4
+^\s{12}proxy_cache_valid 404 5m;$ ### COUNT 5
+^\s{12}proxy_next_upstream off;$ ### COUNT 7
+^\s{8}\}$ ### COUNT 7
+^\s{8}location ~ repodata \{$
+^\s{12}proxy_cache off;$ ### COUNT 2
+^\s{8}location  / \{$
+

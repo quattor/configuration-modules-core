@@ -1,0 +1,22 @@
+[%- FOREACH zone IN desc %]
+zone "[% zone.name %]" [% zone.class %] {
+[%-     FILTER indent %]
+type [% zone.type %];
+file "[% zone.file %]";
+[%          FOREACH i IN ['transfers-in', 'transfers-out'] -%]
+[%-             IF zone.$i -%]
+[%                  i %] [% zone.$i %];
+[%-             END -%]
+[%-         END -%]
+[%-         IF zone.masters %]
+masters {
+[%-             FILTER indent -%]
+[%-                 FOREACH i IN zone.masters %]
+[%                      i %];
+[%-                 END -%]
+[%-             END %]
+};
+[%          END -%]
+[%-     END -%]
+};
+[% END -%]

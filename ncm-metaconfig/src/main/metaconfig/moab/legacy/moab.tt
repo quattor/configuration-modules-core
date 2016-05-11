@@ -1,0 +1,17 @@
+[% FOREACH section IN CCM.contents.pairs -%]
+[%-      IF section.key == 'include';
+            NEXT;
+         END -%]
+[%-      FOREACH pair IN section.value.pairs -%]
+[%-          IF CCM.is_list(pair.value) -%]
+[%-              FOREACH value IN pair.value -%]
+[%                  section.key FILTER upper %]CFG[[% pair.key %]] [% value %]
+[%              END %]
+[%          ELSE -%]
+[%              pair.key FILTER upper %] [% pair.value %]
+[%          END -%]
+[%-      END %]
+[% END %]
+[% FOREACH inc IN include -%]
+#INCLUDE [% inc %]
+[% END %]

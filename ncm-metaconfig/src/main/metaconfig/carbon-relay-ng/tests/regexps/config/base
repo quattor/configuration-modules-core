@@ -1,0 +1,19 @@
+Base test for config
+---
+/etc/carbon-relay-ng.ini
+---
+^instance = "mydefault"$
+^listen_addr = "1.2.3.4:2003"$
+^admin_addr = "5.6.7.8:2004"$
+^http_addr = "localhost.localdomain:8081"$
+^spool_dir = "/var/spool/carbon-relay-ng"$
+^log_level = "info"$
+^init = \[$
+^\s{4}"addBlack filter-out-all-metrics-matching-this-substring",$
+^\s{4}"addRoute sendAllMatch carbon-default  127.0.0.1:2005 pickle=false spool=true",$
+^\s{4}"addRoute sendAllMatch carbon-tagger sub==  127.0.0.1:2006",$
+^\s{4}"addRoute sendFirstMatch analytics regex=\(Err/s\|wait_time\|logger\)  graphite.prod:2003 pickle=true prefix=prod\. spool=true  graphite.staging:2003 pickle=true prefix=staging\. spool=true",$
+^\]$
+^\[instrumentation\]$
+^graphite_addr = "9.8.7.6:1234"$
+^graphite_interval = 1234$

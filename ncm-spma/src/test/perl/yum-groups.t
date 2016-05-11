@@ -18,15 +18,18 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma::yum;
 use Test::Quattor;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
-Readonly my $CMD => join(" ", (NCM::Component::spma::yum::REPOGROUP),
-                        "mandatory", "foo");
+Readonly::Array my @GROUP_ORIG => NCM::Component::spma::yum::REPOGROUP();
+Readonly::Array my @GROUP => @{NCM::Component::spma::yum::_set_yum_config(\@GROUP_ORIG)};
+Readonly my $CMD => join(" ", @GROUP, "mandatory", "foo");
+
+ok(grep {$_ eq '-C'} @GROUP, 'repoqeury command has cache enabled');
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 

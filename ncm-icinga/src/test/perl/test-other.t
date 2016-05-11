@@ -1,19 +1,8 @@
-#!/usr/bin/perl
 use strict;
 use warnings;
-use FindBin qw($Bin);
-use lib "$Bin";
 use Test::More tests => 6;
-use File::Find;
 
-use CAF::Application;
-our $this_app = new CAF::Application ('a', @ARGV);
-use Exporter;
-our @EXPORT = ($this_app);
-
-use NCM::Component::icinga;
-use CAF::Object;
-$CAF::Object::NoAction = 1;
+use myIcinga;
 
 my $comp = NCM::Component::icinga->new('icinga');
 
@@ -28,6 +17,9 @@ is("$rs", q!define contactgroup {
 	bar	baz
 }
 !, "Contents properly written");
+$rs->close();
+
+
 $rs = $comp->print_other($t, "servicegroups");
 
 isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
@@ -38,3 +30,5 @@ is("$rs", q!define servicegroup {
 	bar	baz
 }
 !, "Contents properly written");
+
+$rs->close();

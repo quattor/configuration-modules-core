@@ -1,0 +1,1 @@
+[% INCLUDE metaconfig/httpd/config/generic_server.tt _httpdversion=[2,2] %]

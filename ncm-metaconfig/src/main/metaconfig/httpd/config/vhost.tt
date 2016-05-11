@@ -1,0 +1,24 @@
+servername [% vhost.servername %]
+[% IF vhost.exists('documentroot') -%]
+documentroot [% vhost.documentroot %]
+[% END -%]
+hostnamelookups [% vhost.hostnamelookups ? "on" : "off" %]
+
+[%- to_process = ['ssl', 'nss', 'env', 'aliases', 'rewrite', 'perl', 'wsgi', 'log', 'rails', 'browsermatch'] -%] 
+[%- FOREACH p IN  to_process -%]
+[%-      IF vhost.exists(p) -%]
+[%          INCLUDE "metaconfig/httpd/config/${p}.tt" desc=vhost.$p %]
+[%      END -%]
+[%- END %]
+
+[%- to_process = {
+        'directories' = 'directory'
+        'files' = 'file'
+        'locations' = 'location'
+        'proxies' = 'proxy_directive'
+    } -%]
+[%- FOREACH pair IN to_process.pairs -%]
+[%      FOREACH p IN vhost.${pair.key} %]
+[%         INCLUDE "metaconfig/httpd/config/${pair.value}.tt" desc=p %]
+[%      END -%]
+[%- END %]

@@ -1,0 +1,23 @@
+[cache]
+[% FOREACH pair IN cache.pairs -%]
+[%-  INCLUDE metaconfig/graphite/carbonattr.tt %]
+[% END %]
+
+[% IF cache_instances -%]
+[%  FOREACH instpair IN cache_instances.pairs %]
+[cache:[% instpair.key %]]
+[%      FOREACH pair IN instpair.value.pairs -%]
+[%-          INCLUDE metaconfig/graphite/carbonattr.tt %]
+[%      END %]
+[%  END %]
+[%- END %]
+
+[relay]
+[% FOREACH pair IN relay.pairs -%]
+[%-  INCLUDE metaconfig/graphite/carbonattr.tt %]
+[% END %]
+
+[aggregator]
+[% FOREACH pair IN aggregator.pairs -%]
+[%-  INCLUDE metaconfig/graphite/carbonattr.tt %]
+[% END %]

@@ -1,0 +1,4 @@
+[% FOR pair IN CCM.contents.pairs -%]
+[%    pair.key %]: [% pair.value %]
+[% END -%]
+

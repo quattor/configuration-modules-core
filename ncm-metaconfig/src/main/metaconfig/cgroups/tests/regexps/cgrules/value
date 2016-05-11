@@ -1,0 +1,8 @@
+Test cgrules.conf
+---
+/etc/cgrules.conf
+---
+^woohoo cpu,cpuacct a/b/c$
+^@woohoogroup:sshd memory,devices a/b/d$
+^% \* a/b/e$
+^\* cpuset,name=xyz a/b/f$

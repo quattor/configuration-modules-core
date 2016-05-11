@@ -18,12 +18,12 @@ The following fields are provided:
 
 =item * /software/components/aiiserver/aii-shellfe
 
-Configures the aii-shellfe tool. See L<aii-shellfe(8)>, section
+Configures the aii-shellfe tool. See C<aii-shellfe(8)>, section
 OPTIONS for more information.
 
 =item * /software/components/aiiserver/aii-dhcp
 
-Configures the aii-dhcp legacy tool. See L<aii-dhcp(8)>, section
+Configures the aii-dhcp legacy tool. See C<aii-dhcp(8)>, section
 OPTIONS for more information.
 
 This components also uses configuration parameters related to https from L<ncm-ccm>: ca_dir, ca_file, cert_file, key_file.
@@ -32,6 +32,6 @@ This components also uses configuration parameters related to https from L<ncm-c
 
 =head1 SEE ALSO
 
-L<aii-shellfe(8)>, L<aii-dhcp(8)>, L<aii>, L<ncm-ccm>
+C<aii-shellfe(8)>, C<aii-dhcp(8)>, C<aii>, L<ccm|../ccm>
 
 =cut

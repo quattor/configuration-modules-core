@@ -1,0 +1,13 @@
+Tests for cacheinode config
+---
+/etc/ganesha/ganesha.conf
+---
+^CACHEINODE \{$
+^\s{4}Attr_Expiration_Time = 120;$
+^\s{4}Entries_HWMark = 1536000;$
+^\s{4}FD_HWMark_Percent = 60;$
+^\s{4}FD_LWMark_Percent = 20;$
+^\s{4}FD_Limit_Percent = 90;$
+^\s{4}LRU_Run_Interval = 90;$
+^\s{4}Reaper_Work = 1500;$
+^\}$

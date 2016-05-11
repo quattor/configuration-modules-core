@@ -1,0 +1,4 @@
+[%- # all Limit except NICE (schema doesn't allow NICE)
+    long_infinity = ['LimitAS', 'LimitCORE', 'LimitCPU', 'LimitDATA', 'LimitFSIZE', 'LimitLOCKS', 'LimitMEMLOCK', 'LimitMSGQUEUE', 'LimitNOFILE', 'LimitNPROC', 'LimitRSS', 'LimitRTPRIO', 'LimitRTTIME' 'LimitSIGPENDING', 'LimitSTACK'] -%]
+[% INCLUDE 'systemd/unitfile/section.tt' section='Service' data=data
+    list_of_lines=['CPUAffinity', 'Environment', 'EnvironmentFile'] -%]

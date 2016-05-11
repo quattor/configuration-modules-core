@@ -20,8 +20,8 @@ commands would have been executed as expected.
 use strict;
 use warnings;
 use Test::More tests => 12;
-use NCM::Component::spma::ips;
 use Test::Quattor qw(ips-core ips-run);
+use NCM::Component::spma::ips;
 use Readonly;
 
 use constant CMP_TREE => "/software/components/spma";

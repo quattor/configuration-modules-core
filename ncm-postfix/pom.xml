@@ -6,14 +6,15 @@
   <artifactId>postfix</artifactId>
 
   <packaging>pom</packaging>
-  <version>14.10.0</version>
+  <version>16.2.1-SNAPSHOT</version>
   <name>Postfix server configuration</name>
 
 
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.38</version>
+    <version>1.48</version>
+    <relativePath />
   </parent>
 
   <licenses>
@@ -35,37 +36,30 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.quattor.pan</groupId>
-          <artifactId>panc-maven-plugin</artifactId>
-          <version>9.0.0-RC3</version>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <configuration>
+            <mappings combine.children="append">
+	      <mapping>
+	        <directory>/usr/share/templates/</directory>
+		<filemode>644</filemode>
+		<username>root</username>
+		<groupname>root</groupname>
+		<sources>
+		  <source>
+		    <location>${project.build.directory}/share/templates/</location>
+		  </source>
+		</sources>
+		<directoryIncluded>false</directoryIncluded>
+              </mapping>
+	    </mappings>
+	  </configuration>
+          <!-- <executions> -->
+          <!--   <execution> -->
+          <!--     <id>build-rpm</id> -->
+          <!--   </execution> -->
+          <!-- </executions> -->
         </plugin>
-      <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-	<artifactId>rpm-maven-plugin</artifactId>
-	<configuration>
-	  <mappings combine.children="append">
-	    <mapping>
-	      <directory>/usr/share/templates/</directory>
-		  <filemode>644</filemode>
-		  <username>root</username>
-		  <groupname>root</groupname>
-		  <sources>
-		    <source>
-		      <location>${project.build.directory}/share/templates/</location>
-		    </source>
-		  </sources>
-		  <directoryIncluded>false</directoryIncluded>
-		</mapping>
-	      </mappings>
-	    </configuration>
-	<!-- <executions> -->
-	<!--   <execution> -->
-	<!--     <id>build-rpm</id> -->
-
-	<!--   </execution> -->
-	<!-- </executions> -->
-      </plugin>
-
       </plugins>
     </pluginManagement>
     <plugins>

@@ -28,7 +28,7 @@ All these functions update a structure_accounts (return value may be assigned to
 Behaviour of these functions can be customized by definining some variables before
 calling them, mainly :
 
-=over 4
+=over
 
 =item ACCOUNTS_USER_HOME_ROOT
 
@@ -187,6 +187,25 @@ ignored, but provided so gid doesn't have to be
 
 the optional gid number for the group
 
+=item requiredMembers
+
+An optional list of users that must be added as member of the group. The users don't have to be
+local users, defined in the configuration.
+
+Note 1: group members present in the F</etc/group> file but not defined in the current configuration 
+are removed by B<ncm-accounts> if they are not required members.
+
+Note 2: for users defined in the configuration the preferred way to add them to groups is by defining
+their C<groups> property.
+
+=item replaceMembers (boolean)
+
+When true, current members of the group (if existing) are replaced by the groups defined in the
+configuration (coming from C<requiredMembers> and user groups). If false, groups from the
+configuration are merged with existing ones.
+
+D: false
+
 =back
 
 =head2 /software/components/accounts/login_defs
@@ -242,6 +261,7 @@ the accounts/groups that have to be preserved when 'remove_unknown' is true
 The effect of each possible value is
 
 =over
+
 =item system
 
 all accounts/groups in the system range (strictly below GID/UID_MIN as
@@ -291,9 +311,5 @@ ncm-accounts but by L<ncm-authconfig>.
 =head1 SEE ALSO
 
 L<ncm-authconfig>
-
-=head1 AUTHOR
-
-Luis Fernando Muñoz Mejías <Luis.Fernando.Munoz.Mejias@cern.ch>
 
 =cut

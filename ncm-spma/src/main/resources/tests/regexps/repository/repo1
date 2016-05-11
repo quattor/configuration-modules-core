@@ -1,0 +1,20 @@
+Value test for repository 1
+---
+//software
+rendermodule=repository
+contentspath=/software/repositories/1
+---
+^# Basic Yum repository file. See the man pages for$
+^# NCM::Component::spma and yum.conf$
+^# for more details.$
+^\[one\]$
+^name=one$
+^baseurl=    http://not.example.com/woohoo$
+^    http://not.example.com/either$
+^metadata_expire=7d$
+^include=/etc/yum.repos.d/one.pkgs$
+^exclude=dont want$
+^proxy=https://proxy/$
+^enabled=0$
+^gpgcheck=1$
+^skip_if_unavailable=1$

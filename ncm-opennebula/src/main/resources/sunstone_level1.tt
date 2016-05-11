@@ -1,0 +1,5 @@
+[%-    FOR pair IN data.pairs -%]
+[%         FILTER indent -%]
+[%             data.pairs.first.key == pair.key ? "- " : "  " %]:[% pair.key %]: [% pair.value %]
+[%         END %]
+[%-    END -%]

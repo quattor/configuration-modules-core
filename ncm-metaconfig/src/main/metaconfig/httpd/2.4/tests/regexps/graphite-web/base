@@ -1,0 +1,51 @@
+Base test for graphite-web.conf config
+---
+multiline
+/etc/httpd/conf.d/graphite-web.conf
+---
+^listen 444\s*$
+^<virtualhost\s{4}1.2.3.4:444>$
+^\s{4}servername myhost.domain$
+^\s{4}documentroot /usr/share/graphite/webapp$
+^\s{4}hostnamelookups off$
+^\s{4}sslcacertificatefile /etc/pki/CA/certs/cachain.pem$
+^\s{4}sslcertificatefile /etc/pki/tls/certs/cert.pem$
+^\s{4}sslcertificatekeyfile /etc/pki/tls/private/key.pem$
+^\s{4}sslciphersuite TLSv1$
+^\s{4}sslengine on$
+^\s{4}ssloptions -OptRenegotiate \+StrictRequire \+StdEnvVars$
+^\s{4}sslprotocol TLSv1$
+^\s{4}alias /media/ /usr/lib/python2.6/site-packages/django/contrib/admin/media/$
+^\s{4}wsgiscriptalias / /usr/share/graphite/graphite-web.wsgi$
+^\s{4}wsgiimportscript /usr/share/graphite/graphite-web.wsgi process-group=%\{GLOBAL\} application-group=%\{GLOBAL\}$
+^\s{4}loglevel info$
+^\s{4}errorlog logs/graphite-web_error_log$
+^\s{4}customlog logs/graphite-web_access_log combined$
+^\s{4}browsermatch ".\*MSIE.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
+^\s{4}<directory /var/www/cgi-bin>$
+^\s{8}ssloptions \+StdEnvVars$
+^\s{4}</directory>$
+^\s{4}<files ~ "\\.\(cgi\|shtml\|phtml\|php3\?\)\$">$
+^\s{8}ssloptions \+StdEnvVars$
+^\s{4}</files>$
+^\s{4}<location /content/>$
+^\s{8}sethandler None$
+^\s{4}</location>$
+^\s{4}<location /media/>$
+^\s{8}sethandler None$
+^\s{4}</location>$
+^\s{4}<location />$
+^\s{8}order allow,deny$
+^\s{8}deny from all$
+^\s{8}satisfy Any$
+^\s{8}gssapicredstore keytab:/etc/httpd.keytab$
+^\s{8}gssapicredstore ccache:FILE:/var/run/httpd/krb5ccache$
+^\s{8}gssapidelegccachedir /var/run/httpd/clientcaches$
+^\s{8}gssapisslonly on$
+^\s{8}gssapiuses4u2proxy on$
+^\s{8}<limit PUT DELETE>$
+^\s{12}order allow,deny$
+^\s{12}deny from all$
+^\s{8}</limit>$
+^\s{4}</location>$
+^</virtualhost>$

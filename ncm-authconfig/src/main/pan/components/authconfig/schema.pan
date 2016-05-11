@@ -5,24 +5,22 @@
 
 declaration template components/authconfig/schema;
 
-include { 'quattor/schema' };
-include { 'pan/types' };
+include 'quattor/types/component';
+include 'pan/types';
 
-include {'components/${project.artifactId}/sssd-user'};
-include {'components/${project.artifactId}/sssd-sudo'};
-include {'components/${project.artifactId}/sssd-sasl'};
-include {'components/${project.artifactId}/sssd-tls'};
-
-type yesnostring = string with match(SELF,"yes|no");
+include 'components/${project.artifactId}/sssd-user';
+include 'components/${project.artifactId}/sssd-sudo';
+include 'components/${project.artifactId}/sssd-sasl';
+include 'components/${project.artifactId}/sssd-tls';
 
 type authconfig_pamadditions_line_type = {
-  "order"       : string with match(SELF,"first|last")
-  "entry"       : string
+  "order"       : string with match(SELF, '^(first|last)$')
+  "entry"       : string with match(SELF, '^\s*(required|requisite|sufficient|optional|include|substack)\s+\S+\.so(\s|$)')
 };
 
 type authconfig_pamadditions_type = {
   "conffile"	: string = "/etc/pam.d/system_auth"
-  "section"     : string with match(SELF,"auth|account|password|session")
+  "section"     : string with match(SELF,"^(auth|account|password|session)$")
   "lines"       : authconfig_pamadditions_line_type[]
 };
 
@@ -111,7 +109,7 @@ type authconfig_method_ldap_type = {
   "nss_initgroups_ignoreusers"     ? string
   "debug"                          ? long
   "log_dir"                        ? string
-  "nss_paged_results"              : yesnostring = "yes"
+  "nss_paged_results"              : legacy_binary_affirmation_string = "yes"
   "pagesize"                       ? long
   "nss_connect_policy"             ? connect_policy = "oneshot"
 };
@@ -302,7 +300,7 @@ type sssd_netgroup = {
 type sssd_autofs = {
     "map_object_class" : string = "automountMap"
     "map_name" : string = "ou"
-    "entry_object_class" : string = "automountMap"
+    "entry_object_class" : string = "automount"
     "entry_key" : string = "cn"
     "entry_value" : string = "automountInformation"
     "search_base" ? string
@@ -407,6 +405,7 @@ type sssd_nss = {
     "filter_users" : string = "root"
     "filter_users_in_groups" : boolean = true
     "filter_groups" : string = "root"
+    "memcache_timeout" : long = 300
 };
 
 type authconfig_sssd_local = {
@@ -459,8 +458,8 @@ type authconfig_sssd_domain  = {
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long = 0
     "pwd_expiration_warning" ? long
-
 };
+
 type authconfig_method_sssd_type = {
     include authconfig_method_generic_type
     "nssonly" : boolean = false
@@ -469,8 +468,6 @@ type authconfig_method_sssd_type = {
     "pam" : sssd_pam
     "nss" : sssd_nss
 };
-
-
 
 type authconfig_method_type = {
   "files"	? authconfig_method_files_type

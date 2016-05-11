@@ -1,0 +1,9 @@
+config for priorities plugin
+---
+//software
+rendermodule=yumplugins/priorities
+contentspath=/software/components/spma/plugins/priorities
+---
+^\[main\]$
+^check_obsoletes=1$
+^enabled=1$

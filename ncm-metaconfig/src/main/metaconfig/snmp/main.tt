@@ -1,0 +1,6 @@
+[% FOREACH pair IN main.pairs -%]
+[%-  SWITCH pair.key -%]
+[%-      CASE -%]
+[%          pair.key %] [% pair.value %]
+[%  END -%]
+[%- END %]

@@ -41,7 +41,7 @@ my $u = {
 my $cmp = NCM::Component::useraccess->new("useraccess");
 
 
-my $fh = CAF::FileWriter->new("target/test/ssh_test");
+my $fh = CAF::FileWriter->new("target/test/kerberos_1");
 my $fhs = {
 	   "kerberos4" => $fh,
 	  };
@@ -53,7 +53,7 @@ like("$fh", qr{^me\@RE.ALM$}m,
 like("$fh", qr{^somebody.inst\@RE.A.LM$}m,
      "Entry with isntance field correctly generated");
 
-$fh = CAF::FileWriter->new("target/test/ssh_url_test");
+$fh = CAF::FileWriter->new("target/test/kerberos_2");
 
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH with empty key list returns with no errors");
@@ -72,4 +72,8 @@ is($cmp->{ERROR}, 1, "Error is correctly reported");
 is($cmp->set_kerberos("foo", {}, {}), 0,
    "Non-existing Kerberos lists handled successfully");
 
+# close the filehandles before DESTROY
+$fh->close();
+
 done_testing();
+

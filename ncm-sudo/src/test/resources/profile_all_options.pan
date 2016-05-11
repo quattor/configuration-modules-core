@@ -14,4 +14,5 @@ prefix "/software/components/sudo";
 "general_options/5/options/listpw" = "hello";
 "general_options/6/options/loglinelen" = 5;
 "general_options/7/options/insults" = false;
-"general_options/8/options/requiretty" = true;
+"general_options/7/options/requiretty" = true;
+"general_options/7/options/editor" = "vim";

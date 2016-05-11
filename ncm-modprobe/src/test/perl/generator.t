@@ -17,8 +17,9 @@ ensure they are there.
 use strict;
 use warnings;
 use Test::More tests => 1;
+use Test::Quattor;
 use NCM::Component::modprobe;
 
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
-can_ok($cmp, qw(process_alias process_install process_options process_remove));
+can_ok($cmp, qw(process_alias process_install process_options process_remove process_blacklist));

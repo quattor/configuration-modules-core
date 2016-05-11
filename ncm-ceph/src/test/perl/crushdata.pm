@@ -285,7 +285,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -301,7 +301,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -317,7 +317,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -333,7 +333,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -349,7 +349,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -365,7 +365,7 @@ Readonly::Array our @RELBBUCKETS => (
              },
              {
                'labels' => [
-                 'tst-1'
+                 'tst-0'
                ],
                'name' => 'osd.0',
                'type' => 'osd',
@@ -501,6 +501,36 @@ Readonly::Array our @LBBUCKETS => (
              'name' => 'osd.0',
              'type' => 'osd',
              'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
+           },
+           {
+             'name' => 'osd.0',
+             'type' => 'osd',
+             'weight' => '1'
            }
          ],
          'name' => 'ceph003-tst-0',
@@ -584,42 +614,6 @@ Readonly::Array our @LBBUCKETS => (
            }
          ],
          'name' => 'ceph002-tst-1',
-         'type' => 'host'
-       },
-       {
-         'buckets' => [
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           },
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           },
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           },
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           },
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           },
-           {
-             'name' => 'osd.0',
-             'type' => 'osd',
-             'weight' => '1'
-           }
-         ],
-         'name' => 'ceph003-tst-1',
          'type' => 'host'
        }
      ],
@@ -1085,6 +1079,7 @@ Readonly::Hash our %QUATMAP => (
                'number'  => 0,
              }
            ],
+           'set_choose_tries', 100 ,
            'take' => 'default'
          }
        ]
@@ -1988,6 +1983,7 @@ Readonly::Hash our %CMPMAP => (
                'chtype' => 'chooseleaf firstn'
              }
            ],
+           'set_choose_tries', 100 ,
            'take' => 'default'
          }
        ]
@@ -2153,6 +2149,7 @@ rule rbd {
 	type replicated
 	min_size 0
 	max_size 10
+	step set_choose_tries 100
 	step take default
 	step chooseleaf firstn 0 type host
 	step emit

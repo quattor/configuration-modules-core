@@ -5,108 +5,125 @@
 
 declaration template components/ssh/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
+include 'pan/types';
 
-type ssh_yesnostring = string with match(SELF, "^(yes|no)$");
+type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)$');
 
 type ssh_core_options_type = {
-    "AddressFamily"                     ? string with match (SELF, '^(any|inet|inet6)$')
-    "ChallengeResponseAuthentication"   ? ssh_yesnostring
+    "AddressFamily"                     ? string with match (SELF, '^(any|inet6?)$')
+    "ChallengeResponseAuthentication"   ? legacy_binary_affirmation_string
     "Ciphers"                           ? string
     "Compression"                       ? string with match (SELF, '^(yes|delayed|no)$')
-    "GSSAPIAuthentication"              ? ssh_yesnostring
-    "GSSAPICleanupCredentials"          ? ssh_yesnostring
-    "GatewayPorts"                      ? ssh_yesnostring
-    "HostbasedAuthentication"           ? ssh_yesnostring
-    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG1|DEBUG2|DEBUG3)$')
+    "GSSAPIAuthentication"              ? legacy_binary_affirmation_string
+    "GSSAPICleanupCredentials"          ? legacy_binary_affirmation_string
+    "GSSAPIKeyExchange"                 ? legacy_binary_affirmation_string
+    "GatewayPorts"                      ? legacy_binary_affirmation_string
+    "HostbasedAuthentication"           ? legacy_binary_affirmation_string
+    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
     "MACs"                              ? string
-    "PasswordAuthentication"            ? ssh_yesnostring
+    "PasswordAuthentication"            ? legacy_binary_affirmation_string
     "Protocol"                          ? string
-    "PubkeyAuthentication"              ? ssh_yesnostring
-    "RSAAuthentication"                 ? ssh_yesnostring
-    "RhostsRSAAuthentication"           ? ssh_yesnostring
-    "SendEnv"                           ? ssh_yesnostring
-    "TCPKeepAlive"                      ? ssh_yesnostring
+    "PubkeyAuthentication"              ? legacy_binary_affirmation_string
+    "RSAAuthentication"                 ? legacy_binary_affirmation_string
+    "RhostsRSAAuthentication"           ? legacy_binary_affirmation_string
+    "SendEnv"                           ? legacy_binary_affirmation_string
+    "TCPKeepAlive"                      ? legacy_binary_affirmation_string
     "XAuthLocation"                     ? string
 };
 
 type ssh_daemon_options_type = {
     include ssh_core_options_type
-    "AFSTokenPassing"                   ? ssh_yesnostring
-    "AcceptEnv"                         ? ssh_yesnostring
+    "AFSTokenPassing"                   ? legacy_binary_affirmation_string
+    @{AcceptEnv, one per line}
+    "AcceptEnv"                         ? string[]
+    "AllowAgentForwarding"              ? legacy_binary_affirmation_string
     "AllowGroups"                       ? string
-    "AllowTcpForwarding"                ? ssh_yesnostring
+    "AllowTcpForwarding"                ? legacy_binary_affirmation_string
     "AllowUsers"                        ? string
     "AuthorizedKeysFile"                ? string
+    "AuthorizedKeysCommand"             ? string
+    "AuthorizedKeysCommandRunAs"        ? string
     "Banner"                            ? string
     "ClientAliveCountMax"               ? long
     "ClientAliveInterval"               ? long
     "DenyGroups"                        ? string
     "DenyUsers"                         ? string
-    "HostKey"                           ? string
-    "HPNDisabled"                       ? ssh_yesnostring
+    "GSSAPIStrictAcceptorCheck"         ? legacy_binary_affirmation_string
+    @{HostKey, one per line}
+    "HostKey"                           ? string[]
+    "HPNDisabled"                       ? legacy_binary_affirmation_string
     "HPNBufferSize"                     ? long
-    "IgnoreRhosts"                      ? ssh_yesnostring
-    "IgnoreUserKnownHosts"              ? ssh_yesnostring
-    "KerberosAuthentication"            ? ssh_yesnostring
-    "KerberosGetAFSToken"               ? ssh_yesnostring
-    "KerberosOrLocalPasswd"             ? ssh_yesnostring
-    "KerberosTgtPassing"                ? ssh_yesnostring
-    "KerberosTicketCleanup"             ? ssh_yesnostring
+    "IgnoreRhosts"                      ? legacy_binary_affirmation_string
+    "IgnoreUserKnownHosts"              ? legacy_binary_affirmation_string
+    "KbdInteractiveAuthentication"      ? legacy_binary_affirmation_string
+    "KerberosAuthentication"            ? legacy_binary_affirmation_string
+    "KerberosGetAFSToken"               ? legacy_binary_affirmation_string
+    "KerberosOrLocalPasswd"             ? legacy_binary_affirmation_string
+    "KerberosTgtPassing"                ? legacy_binary_affirmation_string
+    "KerberosTicketAuthentication"      ? legacy_binary_affirmation_string
+    "KerberosTicketCleanup"             ? legacy_binary_affirmation_string
     "KeyRegenerationInterval"           ? long
-    "ListenAddress"                     ? string
+    @{ListenAddress, one per line}
+    "ListenAddress"                     ? type_hostport[]
     "LoginGraceTime"                    ? long
     "MaxAuthTries"                      ? long
     "MaxStartups"                       ? long
-    "NoneEnabled"                       ? ssh_yesnostring
-    "PermitEmptyPasswords"              ? ssh_yesnostring
+    "NoneEnabled"                       ? legacy_binary_affirmation_string
+    "PermitEmptyPasswords"              ? legacy_binary_affirmation_string
     "PermitRootLogin"                   ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
     "PermitTunnel"                      ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
-    "PermitUserEnvironment"             ? ssh_yesnostring
+    "PermitUserEnvironment"             ? legacy_binary_affirmation_string
     "PidFile"                           ? string
     "Port"                              ? long
-    "PrintLastLog"                      ? ssh_yesnostring
-    "PrintMotd"                         ? ssh_yesnostring
-    "RhostsAuthentication"              ? ssh_yesnostring
+    "PrintLastLog"                      ? legacy_binary_affirmation_string
+    "PrintMotd"                         ? legacy_binary_affirmation_string
+    "RhostsAuthentication"              ? legacy_binary_affirmation_string
     "ServerKeyBits"                     ? long
-    "ShowPatchLevel"                    ? ssh_yesnostring
-    "StrictModes"                       ? ssh_yesnostring
+    "ShowPatchLevel"                    ? legacy_binary_affirmation_string
+    "StrictModes"                       ? legacy_binary_affirmation_string
     "Subsystem"                         ? string
-    "SyslogFacility"                    ? string with match (SELF, '^(AUTH|AUTHPRIV|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL0|LOCAL1|LOCAL2|LOCAL3|LOCAL4|LOCAL5|LOCAL6|LOCAL7)$')
+    "SyslogFacility"                    ? string with match (SELF, '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
     "TcpRcvBuf"                         ? long
-    "TcpRcvBufPoll"                     ? ssh_yesnostring
-    "UseDNS"                            ? ssh_yesnostring
-    "UseLogin"                          ? ssh_yesnostring
-    "UsePAM"                            ? ssh_yesnostring
-    "UsePrivilegeSeparation"            ? ssh_yesnostring
-    "VerifyReverseMapping"              ? ssh_yesnostring
+    "TcpRcvBufPoll"                     ? legacy_binary_affirmation_string
+    "UseDNS"                            ? legacy_binary_affirmation_string
+    "UseLogin"                          ? legacy_binary_affirmation_string
+    "UsePAM"                            ? legacy_binary_affirmation_string
+    "UsePrivilegeSeparation"            ? legacy_binary_affirmation_string
+    "VerifyReverseMapping"              ? legacy_binary_affirmation_string
     "X11DisplayOffset"                  ? long
-    "X11Forwarding"                     ? ssh_yesnostring
-    "X11UseLocalhost"                   ? ssh_yesnostring
+    "X11Forwarding"                     ? legacy_binary_affirmation_string
+    "X11UseLocalhost"                   ? legacy_binary_affirmation_string
 };
 
 type ssh_client_options_type = {
     include ssh_core_options_type
-    "EnableSSHKeysign"                  ? ssh_yesnostring
-    "ForwardAgent"                      ? ssh_yesnostring
-    "ForwardX11"                        ? ssh_yesnostring
-    "Port"                              ? long
-    "RhostsAuthentication"              ? ssh_yesnostring
-    "StrictHostKeyChecking"             ? ssh_yesnostring
-    "UsePrivilegedPort"                 ? ssh_yesnostring
-    "GSSAPIDelegateCredentials"         ? ssh_yesnostring
-    "BatchMode"                         ? ssh_yesnostring
+    "BatchMode"                         ? legacy_binary_affirmation_string
     "ConnectTimeout"                    ? long
+    "EnableSSHKeysign"                  ? legacy_binary_affirmation_string
+    "ForwardAgent"                      ? legacy_binary_affirmation_string
+    "ForwardX11"                        ? legacy_binary_affirmation_string
+    "GSSAPIDelegateCredentials"         ? legacy_binary_affirmation_string
+    "Port"                              ? long
+    "PreferredAuthentications"          ? ssh_preferred_authentication[]
+    "RhostsAuthentication"              ? legacy_binary_affirmation_string
+    "StrictHostKeyChecking"             ? legacy_binary_affirmation_string
+    "UsePrivilegedPort"                 ? legacy_binary_affirmation_string
 };
 
 type ssh_daemon_type = {
     "options" ? ssh_daemon_options_type
     "comment_options" ? ssh_daemon_options_type
+    "sshd_path" ? string
+    @{if false and sshd doesn't exist, skip config validation}
+    "always_validate" : boolean = true
+    "config_path" ? string
 };
 
 type ssh_client_type = {
     "options" ? ssh_client_options_type
     "comment_options" ? ssh_client_options_type
+    "config_path" ? string
 };
 
 type component_ssh_type = {

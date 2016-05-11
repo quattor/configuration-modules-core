@@ -1,0 +1,20 @@
+Value based regexp test
+---
+//desc
+rendermodule=domains/ldap
+contentspath=/
+---
+^ldap_user_shell = us$
+^ldap_group_name = gn$
+^ldap_default_bind_dn = db$
+^ldap_sasl_mech = sam$
+^ldap_krb5_keytab = kt$
+^ldap_tls_cacert = ca$
+^ldap_tls_cipher_suite = c1:c2$
+^ldap_tls_key = tk$
+^ldap_netgroup_member = nm$
+^ldap_autofs_map_name = am$
+^ldap_sudo_hostnames = sh$
+^ldap_sudorule_hostnames = sh$
+^ldap_uri = u1,u2$
+

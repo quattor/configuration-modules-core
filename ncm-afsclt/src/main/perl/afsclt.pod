@@ -50,10 +50,6 @@ make AFS client set the system time or not.
 
 various command-line options for the afsd daemon
 
-=item /software/components/afsclt/verbose : boolean
-
-lots of debugging output in the logs.
-
 =item /software/components/afsclt/cachesize : int
 
 desired AFS cache size on disk, in 1K blocks. The running AFS cache
@@ -70,42 +66,7 @@ A regularly-updated AFS CellServDB URL or filename (e.g. from AFS)
 that this component will copy to local disk. The local AFS client will
 get notified of any additions or changes within a cell.
 
-=item /software/components/afsclt/libpam : string
-
-Full path to PAM library to use for (Kerberos) authentication. The
-reason this is hooked here instead of in the Kerberos component is
-that a valid Kerberos config may be useful on a standalone
-(non-AFS-account) system, but as soon as AFS user accounts are present
-we absolutely need to properly configure authentication for
-them. Besides, this is historic - on Linux we used authconfig to set
-the Cell and the PAM config at the same time.
-
-Default is to use the pam_krb5 "flavour" of PAM. If you set this,
-please also set the PAM library options below.
-
-=item /software/components/afsclt/libpam_options_auth_auth : string
-
-=item /software/components/afsclt/libpam_options_auth_session : string
-
-=item /software/components/afsclt/libpam_options_auth_passwd : string
-
-=item /software/components/afsclt/libpam_options_auth : string
-
-Options for the PAM library for the "new session starts"
-case. C<.._auth> is the default for PAM blocks where nothing is
-configured explicitly.
-
-=item /software/components/afsclt/libpam_options_refresh: string
-
-Options for the PAM library for "old session should get refreshed" case, all PAM blocks.
-
 =back
-
-=head1 BUGS
-
-The "debug" and "suidcell" parameters are silently ignored for now.
-
-The component configures Kerberos authentication.
 
 =head1 DEPENDENCIES
 

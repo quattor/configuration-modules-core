@@ -81,7 +81,8 @@ sub Configure($$@) {
                 my $link_name = $link_options{name}->getValue();
 
                 if ( exists($links{$link_name}) ) {
-                    $self->warn("Duplicate link $link_name defined in profile. Replacing previous definition target ".$links{$link_name}{target});
+                    $self->warn("Duplicate link $link_name defined in profile. Replacing previous definition target ",
+                                $links{$link_name}{target}->getValue());
                 }
                 $links{$link_name} = \%link_options;
             }
@@ -351,6 +352,11 @@ sub process_link {
         } else {
             $self->error("Invalid character(s) in target $target.");
             return 0;
+        }
+
+        if ( -l $link and readlink($link) eq $target ) {
+            $self->verbose("symlink $link already defined as $target nothing to do");
+            return 1;
         }
 
         # 'replace' flag : define existing file type that can be replaced

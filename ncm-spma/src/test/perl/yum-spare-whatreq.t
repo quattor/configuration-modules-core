@@ -20,18 +20,22 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
+use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
-use Test::Quattor;
 use Set::Scalar;
 
 my $rm = Set::Scalar->new('dep;noarch', 'nodep;noarch');
 my $install = Set::Scalar->new('pkg;noarch');
 my $cmp = NCM::Component::spma::yum->new('spma');
 
+Readonly::Array my @WHATREQS_ORIG => NCM::Component::spma::yum::REPO_WHATREQS();
+Readonly::Array my @WHATREQS => @{NCM::Component::spma::yum::_set_yum_config(\@WHATREQS_ORIG)};
 Readonly::Array my @CMD => (
-    join(" ", NCM::Component::spma::yum::REPO_WHATREQS, 'dep.noarch'),
-    join(" ", NCM::Component::spma::yum::REPO_WHATREQS, 'nodep.noarch'));
+    join(" ", @WHATREQS, 'dep.noarch'),
+    join(" ", @WHATREQS, 'nodep.noarch'));
+
+ok(grep {$_ eq '-C'} @WHATREQS, 'repoqeury command has cache enabled');
 
 set_desired_output($CMD[0], 'pkg;noarch');
 set_desired_err($CMD[0], '');

@@ -1,0 +1,8 @@
+Test export map2
+---
+---
+^# Test this$
+^/export/map2\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\tmyserver.mydomain:/export/path2$
+^/export/map2b\s+-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\s+myserver.mydomain:/export/path2b$
+^/export/map2d\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\tmyserver.mydomain:/export/path2d$
+^/export/map2c\t-fstype=nfs4,nfsvers=4,minorversion=1,rw,soft,tcp,async,noatime,sec=sys\tmyserver.mydomain:/export/path2c$

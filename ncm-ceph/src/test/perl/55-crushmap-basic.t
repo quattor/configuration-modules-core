@@ -17,10 +17,13 @@ use warnings;
 use File::Temp qw(tempdir);
 use Test::More;
 use Test::Deep;
+use Test::MockModule;
 use Test::Quattor qw(basic_crushmap);
 use NCM::Component::ceph;
 use CAF::Object;
+use CAF::TextRender;
 use crushdata;
+use Cwd;
 use Readonly;
 use File::Touch;
 
@@ -54,11 +57,35 @@ cmp_deeply($chash, \%crushdata::CEPHMAP, 'hash from ceph built');
 $crush->{devices} = $chash->{devices}; # resolved on live system
 $cmp->cmp_crush($chash, $crush);
 cmp_deeply($crush, \%crushdata::CMPMAP, 'hash after compare and ids built');
-my $str = "# begin crush map\n";
-ok($cmp->template()->process('ceph/crush.tt', $crush, \$str),
-   "Template successfully rendered");
+
+Readonly my $INCLUDEPATH => [getcwd() . "/target/share/templates/quattor"] ;
+my $trd = CAF::TextRender->new(
+    'crush', 
+    $crush, 
+    relpath => 'ceph', 
+    includepath => $INCLUDEPATH,
+);
+my $str = $trd->get_text;
+
 # Full crushmap test, but device items not completely mocked (have all id 0)
 is($str,$crushdata::WRITEMAP, 'written crushmap ok');
-is($cmp->template()->error(), "", "No errors in rendering the template");
+ok(!$trd->{fail}, "No errors in rendering the template");
+
+my $tempdir = tempdir(CLEANUP => 1); 
+
+my $mock = Test::MockModule->new('CAF::TextRender');
+my $mockc = Test::MockModule->new('NCM::Component::Ceph::commands');
+
+
+$mock->mock('new', sub {
+    my $init = $mock->original("new");
+    my $trd = &$init(@_);
+    $trd->{includepath} = $INCLUDEPATH;
+    return $trd;
+});
+
+$mockc->mock('git_commit', 1);
+
+ok($cmp->write_crush($crush, $tempdir), "Generated crushmap");
 
 done_testing();

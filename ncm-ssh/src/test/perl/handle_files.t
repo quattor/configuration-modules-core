@@ -9,6 +9,8 @@ use Readonly;
 use CAF::FileWriter;
 use Test::MockModule;
 
+$CAF::Object::NoAction = 1;
+
 my $mock = Test::MockModule->new("CAF::FileWriter");
 
 # Mock the cancel method to know if it was actually called.  Since we
@@ -21,7 +23,9 @@ $mock->mock("cancel", sub {
             });
 
 Readonly my $SSH_FILE => "target/test/sshd";
-Readonly my $SSH_CONTENTS => "Foo bar baz\n";
+Readonly my $SSH_FILE_CLIENT => "target/test/ssh_client";
+
+Readonly my $SSH_CONTENTS => "Foo bar baz\nAllowGroups a b";
 
 my $fh = CAF::FileWriter->new($SSH_FILE);
 print $fh $SSH_CONTENTS;
@@ -39,15 +43,13 @@ basic tests to ensure we don't break the old behaviour.
 
 =cut
 
-$CAF::Object::NoAction = 1;
-
 my $cfg = get_config_for_profile('files');
 my $cmp = NCM::Component::ssh->new('ssh');
 
 my $t = $cfg->getElement("/software/components/ssh/daemon")->getTree();
 $cmp->handle_config_file($SSH_FILE, 0600, $t);
 $fh = get_file($SSH_FILE);
-like($fh, qr{^AllowGroups\s+a b c$}m, "Multiword option accepted");
+like($fh, qr{^AllowGroups\s+a b c$}m, "Multiword option accepted and modified correctly");
 
 is(*$fh->{CANCELLED}, 1, "File with no validation is written");
 
@@ -59,5 +61,12 @@ is(*$fh->{CANCELLED}, 1, "File with successful validation is written");
 $cmp->handle_config_file($SSH_FILE, 0600, $t, sub { return 0; });
 $fh = get_file($SSH_FILE);
 is(*$fh->{CANCELLED}, 2, "Invalid file is not written");
+
+# test the client file too
+$cmp->handle_config_file($SSH_FILE_CLIENT, 0644,
+                         $cfg->getElement("/software/components/ssh/client")->getTree());
+my $client = get_file($SSH_FILE_CLIENT);
+like("$client", qr{^Port 22222$}m, "Port number set");
+like("$client", qr{^PreferredAuthentications gssapi-with-mic,hostbased,publickey$}m, "PreferredAuthentications list set");
 
 done_testing();

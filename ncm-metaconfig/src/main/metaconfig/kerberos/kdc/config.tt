@@ -1,0 +1,14 @@
+[defaults]
+kdc_ports = [% defaults.ports %]
+kdc_tcp_ports = [% defaults.tcp_ports %]
+
+[realms]
+[% FOREACH realm IN realms.pairs %]
+[%      realm.key %] = {
+[%         FILTER indent -%]
+acl_file = [% realm.value.acl_file %]
+admin_keytab = [% realm.value.admin_keytab %]
+supported_enctypes = [% realm.value.supported_enctypes.join(' ') %]
+[%-         END %]
+}
+[% END %]

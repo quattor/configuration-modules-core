@@ -1,0 +1,7 @@
+Base test for network config
+---
+multiline
+metaconfigservice=/etc/udev/rules.d/09-network.rules
+---
+^SUBSYSTEM=="net",\s+ACTION=="add",\s+ATTR\{address\}=="(?:\S{2}:){5}\S{2}",\s+ATTR\{type\}=="1",\s+NAME="\S+"$ ### COUNT 2
+

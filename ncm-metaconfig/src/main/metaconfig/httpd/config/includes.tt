@@ -1,0 +1,3 @@
+[%- FOREACH incl IN desc -%] 
+include[% optional ? 'optional' : '' %] [% incl %]
+[% END -%]

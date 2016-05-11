@@ -1,0 +1,16 @@
+config for fastestmirror plugin
+---
+//software
+rendermodule=yumplugins/fastestmirror
+contentspath=/software/components/spma/plugins/fastestmirror
+---
+^\[main\]$
+^always_print_best_host=true$
+^enabled=1$
+^exclude=\*.something,more.more$
+^hostfilepath=timedhosts.txt$
+^include_only=me.too,even.more$
+^maxhostfileage=10$
+^maxthreads=15$
+^socket_timeout=3$
+^verbose=0$

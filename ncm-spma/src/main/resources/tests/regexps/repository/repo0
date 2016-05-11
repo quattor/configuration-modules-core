@@ -1,0 +1,24 @@
+Value test for repository 0
+---
+//software
+rendermodule=repository
+contentspath=/software/repositories/0
+---
+^# Basic Yum repository file. See the man pages for$
+^# NCM::Component::spma and yum.conf$
+^# for more details.$
+^\[zero\]$
+^name=zero$
+^baseurl=    http://some.example.com/repoone$
+^metadata_expire=7d$
+^include=/etc/yum.repos.d/zero.pkgs$
+^exclude=pkg1 \*pkg2\*$
+^proxy ### COUNT 0
+^enabled=1$
+^gpgcheck=0$
+^skip_if_unavailable=0$
+^repo_gpgcheck=0$
+^gpgcakey=file:///super/ca/key$
+^gpgkey=    file:///path/to/key$
+^    https://somewhere/very/very/far$
+^    ftp://because/ftp/and/security/go/well/together$

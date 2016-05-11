@@ -1,0 +1,4 @@
+[%# The contents is single attribuet rules with list of rules -%]
+[% FOREACH rule IN CCM.contents.rules %]
+[%      INCLUDE 'metaconfig/cgroups/rule/user.tt' user=rule.user %][% rule.process.defined ? ':' _ rule.process : '' %] [% rule.controllers.join(',') %] [% rule.destination %]
+[% END %]

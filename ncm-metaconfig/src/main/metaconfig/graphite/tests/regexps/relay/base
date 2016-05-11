@@ -1,0 +1,10 @@
+Base test for relay
+---
+multiline
+metaconfigservice=/etc/carbon/relay-rules.conf
+---
+^\[default\]
+^default\s=\sTrue
+^destinations\s=\s127.0.0.1:2004:a,127.0.0.1:2104:b
+^continue\s=\sFalse
+

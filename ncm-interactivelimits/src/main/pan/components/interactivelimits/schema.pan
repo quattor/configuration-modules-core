@@ -5,7 +5,7 @@
 
 declaration template components/interactivelimits/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_interactivelimits_type = {
     include structure_component

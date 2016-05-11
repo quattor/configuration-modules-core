@@ -1,0 +1,15 @@
+# ${license-info}
+# ${developer-info}
+# ${author-info}
+# ${build-info}
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for ONE
+
+=head1 DESCRIPTION
+
+Configuration module for ONE. Executes the required ssh commands
+to enable the hypervisors to be used by OpenNebula.
+
+=cut

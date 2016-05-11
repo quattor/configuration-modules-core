@@ -12,44 +12,98 @@ use NCM::Component;
 our $EC=LC::Exception::Context->new->will_store_all;
 our @ISA = qw(NCM::Component);
 use EDG::WP4::CCM::Element qw(unescape);
-
+use EDG::WP4::CCM::TextRender;
 use CAF::Process;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use LC::Exception qw(SUCCESS);
 use Set::Scalar;
-use File::Path qw(mkpath);
+use File::Path qw(mkpath rmtree);
 use Text::Glob qw(match_glob);
+use File::Temp qw(tempdir);
+use File::Copy;
+use File::Basename;
 
-use constant REPOS_DIR => "/etc/yum.repos.d";
-use constant REPOS_TEMPLATE => "spma/repository.tt";
+use constant REPOS_DIR_DEFAULT => "/etc/yum.repos.d";
+use constant REPOS_DIR_QUATTOR => "/etc/yum.quattor.repos.d";
+use constant REPOS_TEMPLATE => "repository";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant GROUPS_TREE => "/software/groups";
 use constant CMP_TREE => "/software/components/${project.artifactId}";
-use constant YUM_CMD => qw(yum -y shell);
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
-use constant YUM_PACKAGE_LIST => "/etc/yum/pluginconf.d/versionlock.list";
+use constant YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
+use constant YUM_PACKAGE_LIST => YUM_PLUGIN_DIR . "/versionlock.list";
 use constant LEAF_PACKAGES => [qw(package-cleanup --leaves --all --qf %{NAME};%{ARCH})];
-use constant YUM_EXPIRE => qw(yum clean expire-cache);
-use constant YUM_PURGE_METADATA => qw(yum clean metadata);
-use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
+
 use constant YUM_CONF_FILE => "/etc/yum.conf";
-use constant CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
-use constant REPOQUERY => qw(repoquery --show-duplicates --envra);
 use constant YUM_COMPLETE_TRANSACTION => qw(yum-complete-transaction -y);
-use constant OBSOLETE => "obsoletes";
-use constant REPO_DEPS => qw(repoquery --requires --resolve --plugins
-                             --qf %{NAME};%{ARCH});
-use constant REPO_WHATREQS => qw(repoquery --whatrequires --recursive --plugins
-                                 --qf %{NAME}\n%{NAME};%{ARCH});
+
 use constant SMALL_REMOVAL => 3;
 use constant LARGE_INSTALL => 200;
-use constant REPOGROUP => qw(repoquery -l -g --grouppkgs);
+
+use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
+
+use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant YUM_CONF_OBSOLETES => "obsoletes";
+use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
+use constant YUM_CONF_REPOSDIR => 'reposdir';
+
+# Must use cache (-C option)
+use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
+use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
+use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
+                             --qf %{NAME};%{ARCH});
+use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugins
+                                 --qf %{NAME}\n%{NAME};%{ARCH});
+
+# Do not use cache (no -C option)
+use constant YUM_EXPIRE => qw(yum clean expire-cache);
+use constant YUM_PURGE_METADATA => qw(yum clean metadata);
+use constant YUM_MAKECACHE => qw(yum makecache);
+use constant YUM_CMD => qw(yum -y shell);
+use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
 our $NoActionSupported = 1;
+
+# private variable to hold active noaction prefix
+my $_active_noaction_prefix = "";
+
+# set the active noaction prefix (method for unittesting)
+sub __set_active_noaction_prefix
+{
+    my ($self, $prefix) = @_;
+    $_active_noaction_prefix = $prefix;
+    $self->verbose("Active noaction prefix set $_active_noaction_prefix") if ! $prefix;
+}
+
+# Given filename under NoAction=0, return the filename with proper NoAction prefix
+sub _prefix_noaction_prefix
+{
+    my ($filename) = @_;
+    return "$_active_noaction_prefix$filename";
+}
+
+# Basic test method for _match_noaction_tempdir
+# Replaces X in the template with word regexp and see if it matches
+# name has to be in the noaction tempdir, not just a prefix
+sub __match_template_dir
+{
+    my ($self, $name, $template) = @_;
+    # X is template for letter+digit+_, so \w is ok
+    $template =~ s/X/\\w/g;
+    $template .= '/' if ($template !~ m/\/$/);
+    return $name =~ m/^$template/;
+}
+
+# Test if C<name> is under the NOACTION_TEMPDIR_TEMPLATE directory
+sub _match_noaction_tempdir
+{
+    my ($self, $name) = @_;
+    return $self->__match_template_dir($name, NOACTION_TEMPDIR_TEMPLATE);
+}
 
 # If user packages are not allowed, removes any repositories present
 # in the system that are not listed in $allowed_repos.
@@ -57,6 +111,23 @@ sub cleanup_old_repos
 {
     my ($self, $repo_dir, $allowed_repos, $allow_user_pkgs) = @_;
 
+    if ($NoAction) {
+        if($self->_match_noaction_tempdir($repo_dir)) {
+            # This is ok
+            $self->verbose("Going to remove repositories from temporary NoAction",
+                           " repository directory $repo_dir.");
+        } else {
+            $self->error("Not going to going to cleanup repository files with NoAction",
+                         " with unexpected repository directory $repo_dir ",
+                         " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
+                         " Please report this issue to the developers,",
+                         " as this is most likely a bug in the code.");
+            # This is fatal
+            return 0;
+        }
+    }
+
+    # Test this after the NoAction bit for unittesting
     return 1 if $allow_user_pkgs;
 
     my $dir;
@@ -64,18 +135,19 @@ sub cleanup_old_repos
         $self->error("Unable to read repositories in $repo_dir");
         return 0;
     }
-
     my $current = Set::Scalar->new(map(m{(.*)\.repo$}, readdir($dir)));
-
     closedir($dir);
+
     my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
+
     my $rm = $current-$allowed;
     foreach my $i (@$rm) {
         # We use $f here to make Devel::Cover happy
         my $f = "$repo_dir/$i.repo";
-        $self->verbose("Unlinking outdated repository $f");
+        my $msg = "outdated repository $i (file $f)";
+        $self->verbose("Unlinking $msg");
         if (!unlink($f)) {
-            $self->error("Unable to remove outdated repository $i: $!");
+            $self->error("Unable to remove $msg: $!");
             return 0;
         }
     }
@@ -104,11 +176,11 @@ sub generate_reverse_proxy_urls
 
     my @l;
     foreach my $pt (@$prots) {
-	foreach my $px (@proxies) {
+        foreach my $px (@proxies) {
             my $url = $pt->{url};
-	    $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
-	    push(@l, { url => $url });
-	}
+            $url =~ s{^(.*?):(/+)[^/]+}{$1:$2$px};
+            push(@l, { url => $url });
+        }
     }
     return \@l;
 }
@@ -139,10 +211,7 @@ sub generate_repos
     my $changes = 0;
 
     foreach my $repo (@$repos) {
-        my $prots = $repo->{protocols}->[0];
-        my $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.repo",
-                                      log => $self);
-        print $fh "# File generated by ", __PACKAGE__, ". Do not edit\n";
+        $repo->{repos_dir} = $repos_dir;
         if (!exists($repo->{proxy}) && @px) {
             if ($type eq 'reverse') {
                 $repo->{protocols} = $self->generate_reverse_proxy_urls($repo->{protocols}, @px);
@@ -150,21 +219,44 @@ sub generate_repos
                 $repo->{proxy} = $self->generate_forward_proxy_urls($repo->{protocols}, @px);
             }
         }
-        my $rs = $self->template()->process($template, $repo, $fh);
-        if (!$rs) {
-            $self->error ("Unable to generate repository $repo->{name}: ",
-                          $self->template()->error());
-            $fh->cancel();
-            return undef;
-        }
+
+        # No log instance passed, do all the logging ourself.
+        my $trd = EDG::WP4::CCM::TextRender->new($template, $repo, relpath => 'spma');
+        if (! defined($trd->get_text())) {
+            $self->error ("Unable to generate repository $repo->{name}: $trd->{fail}");
+            return;
+        };
+
+        my $fh = $trd->filewriter("$repos_dir/$repo->{name}.repo",
+                                  header => "# File generated by ", __PACKAGE__, ". Do not edit",
+                                  log => $self);
+        $self->_override_noaction_fh($fh);
         $changes += $fh->close() || 0; # handle undef
+
         $fh = CAF::FileWriter->new("$repos_dir/$repo->{name}.pkgs",
                                    log => $self);
+        # TODO. Also add "do not edit" ? Or switch to FileEditor?
         print $fh "# Additional configuration for $repo->{name}\n";
+        $self->_override_noaction_fh($fh);
         $fh->close();
     }
 
     return $changes;
+}
+
+# Wrapper method to insert the yum configuration file to use
+# Takes an arrayref as it would be passed to CAF::Process, assuming
+# the first element is the executable
+sub _set_yum_config
+{
+    my ($cmd_ref) = @_;
+
+    my ($exe, @args) = @$cmd_ref;
+
+    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix(YUM_CONF_FILE));
+    push (@new_cmd, @args) if @args;
+
+    return \@new_cmd;
 }
 
 =pod
@@ -192,21 +284,21 @@ sub execute_yum_command
     my ($self, $command, $why, $keeps_state, $stdin, $error_logger) = @_;
 
     $error_logger = "error" if (!($error_logger && $error_logger =~ m/^(error|warn|info|verbose)$/));
-    
+
     my (%opts, $out, $err, @missing);
 
     %opts = ( log => $self,
-	      stdout => \$out,
-	      stderr => \$err,
-	      keeps_state => $keeps_state);
+          stdout => \$out,
+          stderr => \$err,
+          keeps_state => $keeps_state);
 
     $opts{stdin} = $stdin if defined($stdin);
 
-    my $cmd = CAF::Process->new($command, %opts);
+    my $cmd = CAF::Process->new(_set_yum_config($command), %opts);
 
     $cmd->execute();
     $self->warn("$why produced warnings: $err") if $err;
-    $self->verbose("$why output: $out") if(defined($out)); 
+    $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
         ($err && $err =~ m{^(?:Error|Failed|
                       (?:Could \s+ not \s+ match)|
@@ -236,8 +328,8 @@ sub schedule
 
     my @ls;
     foreach my $pkg (@$target) {
-	push(@ls, $pkg);
-	$ls[-1] =~ s{;}{.};
+        push(@ls, $pkg);
+        $ls[-1] =~ s{;}{.};
     }
     return  sprintf("%s %s\n", $op, join(" ", @ls));
 }
@@ -248,11 +340,11 @@ sub installed_pkgs
     my $self = shift;
 
     my $cmd = CAF::Process->new(RPM_QUERY, keeps_state => 1,
-				log => $self);
+                log => $self);
 
     my $out = $cmd->output();
     if ($?) {
-	return undef;
+        return undef;
     }
     # We don't consider gpg-pubkeys, which won't come from any
     # downloaded RPM, anyways.
@@ -289,18 +381,18 @@ sub wanted_pkgs
     my @pkl;
 
     while (my ($pkg, $st) = each(%$pkgs)) {
-	my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
+        my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
         if (!$name) {
             $self->error("Invalid package name: ", unescape($pkg));
             return undef;
         }
-	if (%$st) {
-	    while (my ($ver, $archs) = each(%$st)) {
-		push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
-	    }
-	} else {
-	    push(@pkl, $name);
-	}
+        if (%$st) {
+            while (my ($ver, $archs) = each(%$st)) {
+                push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
+            }
+        } else {
+            push(@pkl, $name);
+        }
     }
     return Set::Scalar->new(@pkl);
 }
@@ -315,6 +407,8 @@ sub solve_transaction {
     if ($run && !$NoAction) {
         push(@rs, "transaction run");
     } else {
+        $self->verbose("Resetting transaction with NoAction=1 (instead of running it)")
+            if ($NoAction);
         push(@rs, "transaction reset");
     }
     return join("\n", @rs, "");
@@ -330,7 +424,8 @@ sub expire_yum_caches
 {
     my ($self) = @_;
 
-    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches"));
+    # this only affects the caches, can be safely expired/cleaned up
+    return defined($self->execute_yum_command([YUM_EXPIRE], "clean up caches", 1));
 }
 
 # Actually calls yum to execute transaction $tx
@@ -340,7 +435,7 @@ sub apply_transaction
     my ($self, $tx, $tx_error_is_warn) = @_;
 
     $self->debug(5, "Running transaction: $tx");
-    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1, 
+    my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1,
                                         $tx, $tx_error_is_warn ? "warn" : "error");
     return defined($ok);
 }
@@ -379,74 +474,94 @@ sub prepare_lock_lists
     return ($locked, $toquery);
 }
 
+# generate a msg for logging purposes based on
+# wanted_locked and not_matched (passed as ref here)
+# The message can be long because it contains list of
+# all packages and non-exact matched repoquery output
+# Lists are not comma separated so it can be copied
+# and used on command line
+sub _make_msg_wanted_locked
+{
+
+    my ($wanted_locked, $not_matched_ref) = @_;
+
+    return sprintf(
+        "%d wanted packages with wildcards: %s, ".
+        "%d non-exact matched packages from repoquery: %s",
+        $wanted_locked->size, join(" ", @$wanted_locked),
+        scalar @$not_matched_ref, join(" ", @$not_matched_ref)
+        );
+
+}
+
 # Returns whether the $locked string locks all the items in
 # $wanted_locked.  Warning: $wanted_locked will be modified!!
 # ($locked is output from REPOQUERY).
-# When C<fullsearch> is true, the result will be checked 
-# for with glob pattern matching to verify the requested packages 
+# When C<fullsearch> is true, the result will be checked
+# for with glob pattern matching to verify the requested packages
 # are in the $locked string. Otherwise, any requested package with
-# a wildcard will be assumed to have a match in the output. 
-# The main issue with fullsearch is that it is a possibly slow process. 
+# a wildcard will be assumed to have a match in the output.
+# The main issue with fullsearch is that it is a possibly slow process.
 sub locked_all_packages
 {
     my ($self, $wanted_locked, $locked, $fullsearch) = @_;
 
     my @not_matched;
-    
+
     # Process output and filter exact matches
     foreach my $pkgstr (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkgstr);
-        my $pkg=$envra[1];
+        my $pkg = $envra[1];
         if ($wanted_locked->has($pkg)) {
             $wanted_locked->delete($pkg);
         } else {
-            # keep repoquery output of noon-exact-matched packages
-            # locked packages like kernel*-some.version will cause other 
-            # entries like kernel-devel in the repoquery output, which 
-            # will never match, so having packages in @not_locked. 
+            # keep repoquery output of non-exact matched packages
+            # locked packages like kernel*-some.version will cause other
+            # entries like kernel-devel in the repoquery output, which
+            # will never match, so having packages in @not_locked.
             push(@not_matched, $pkg) if $pkg;
         }
     }
-    
+
     # No wanted_locked packages left, everything matched
     if (! @$wanted_locked) {
         $self->verbose("All wanted_locked packages found (without any wildcard processing).");
         return 1;
     }
 
+    my $msg = _make_msg_wanted_locked($wanted_locked, \@not_matched);
     if ($fullsearch) {
-        # At this point, all remaining entries in the wanted_locked 
+        # At this point, all remaining entries in the wanted_locked
         # might have a wildcard in them.
         # Brute-force could possibly lead to a very slow worst case scenario
-        # 
-        # Issue: single wildcard might match multiple lines of output, 
-        # so always process all output
-        $self->verbose("Starting fullsearch on ",
-                       $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " non-exact-matched packages from repoquery");
+        #
+        # Issue: single wildcard might match multiple lines of output,
+        #   so always process all output
+        $self->verbose("Starting fullsearch on $msg.");
         foreach my $wl (@$wanted_locked) {
-            # (try to) match @not_matched 
-            # TODO and remove the matches? can we assume that every 
-            # match corresponds to exactly one wildcard? probably not.
-            # e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5 
-            # would be left without (valid) match.
+            # (try to) match @not_matched
+            # TODO: remove the matches? can we assume that every
+            #  match corresponds to exactly one wildcard? probably not.
+            #  e.g. a-*5 will match a-6.5, but also a-devel-6.5; so a-devel-*5
+            #  would be left without (valid) match.
+            #  -> current implementation does not remove the matches.
             $wanted_locked->delete($wl) if (grep(match_glob($wl, $_), @not_matched));
         }
-        $self->verbose("Finished fullsearch with remaining ",
-                       $wanted_locked->size," wanted packages with wildcards, ",
-                       scalar @not_matched, " non-exact-matched packages from repoquery");
 
+        $msg = "wanted_locked packages found (with fullsearch wildcard processing)." .
+            "Finished fullsearch with " .
+            _make_msg_wanted_locked($wanted_locked, \@not_matched);
         if (@$wanted_locked) {
-            $self->error("Not all wanted_locked packages found (with fullsearch wildcard processing).");
+            $self->error("Not all $msg.");
             return 0;
         } else {
-            $self->verbose("All wanted_locked packages found (with fullsearch wildcard processing).");
+            $self->verbose("All $msg.");
             return 1;
         }
     } elsif (grep($_ !~ m{[*?]}, @$wanted_locked)) {
-        $self->error("Unable to lock: $wanted_locked. ",
+        $self->error("Unable to lock all packages. ",
                      "These packages with these versions don't seem to exist ",
-                     "in any configured repositories");
+                     "in any configured repositories. $msg.");
         return 0;
     } elsif (grep($_ =~ m{[*?]}, @$wanted_locked)) {
         # actually, only wildcards in the versions
@@ -454,15 +569,11 @@ sub locked_all_packages
                     "due to wildcard(s) in the names and/or versions, ",
                     "continuing as if all is fine. ",
                     "Turn on fullsearch option to resolve the wildcards ",
-                    "(but be aware of potential speed impact: ",
-                    $wanted_locked->size," wanted packages with wildcards, ",
-                    scalar @not_matched, " non-exact-matched packages from repoquery)");
+                    "(but be aware of potential speed impact: $msg).");
         return 1;
     }
-    
-    
+
     # how do we get here?
-    
     return 1;
 }
 
@@ -477,8 +588,10 @@ sub versionlock
     return 0 if !defined($out) || !$self->locked_all_packages($locked, $out, $fullsearch);
 
 
-    my $fh = CAF::FileWriter->new(YUM_PACKAGE_LIST, log => $self);
+    my $fh = CAF::FileWriter->new(_prefix_noaction_prefix(YUM_PACKAGE_LIST),
+                                  log => $self);
     print $fh "$out\n";
+    $self->_override_noaction_fh($fh);
     $fh->close();
     return 1;
 }
@@ -491,12 +604,13 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(LEAF_PACKAGES, keeps_state => 1,
+    my $out = CAF::Process->new(_set_yum_config(LEAF_PACKAGES),
+                                keeps_state => 1,
                                 log => $self)->output();
 
     if ($?) {
-	$self->error ("Unable to find leaf packages");
-	return;
+        $self->error ("Unable to find leaf packages");
+        return;
     }
 
     # The leaf set doesn't contain the header lines, which are just
@@ -525,16 +639,16 @@ sub spare_deps_whatreq
     my @to_rm;
 
     foreach my $pk (@$rm) {
-	my $arg = $pk;
-	$arg =~ s{;}{.};
-	my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
-						  "determine what requires $pk", 1);
-	return 0 if !defined($whatreqs);
-	foreach my $wr (split("\n", $whatreqs)) {
-	    if ($install->has($wr)) {
-		push(@to_rm, $pk);
-	    }
-	}
+        my $arg = $pk;
+        $arg =~ s{;}{.};
+        my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+                              "determine what requires $pk", 1);
+        return 0 if !defined($whatreqs);
+        foreach my $wr (split("\n", $whatreqs)) {
+            if ($install->has($wr)) {
+                push(@to_rm, $pk);
+            }
+        }
     }
 
     $rm->delete(@to_rm);
@@ -551,12 +665,12 @@ sub spare_deps_requires
     my (@pkgs);
 
     foreach my $pkg (@$install) {
-	$pkg =~ s{;}{.};
-	push(@pkgs, $pkg);
+        $pkg =~ s{;}{.};
+        push(@pkgs, $pkg);
     }
 
     my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
-					  "dependencies of install candidates", 1);
+                      "dependencies of install candidates", 1);
 
     return 0 if !defined $deps;
 
@@ -589,10 +703,10 @@ sub spare_dependencies
     # things.
     if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
         $self->debug(3, "Sparing dependencies in the whatreq path");
-	return $self->spare_deps_whatreq($rm, $install);
+        return $self->spare_deps_whatreq($rm, $install);
     } else {
         $self->debug(3, "Sparing dependencies in the requires path");
-	return $self->spare_deps_requires($rm, $install);
+        return $self->spare_deps_requires($rm, $install);
     }
 }
 
@@ -602,8 +716,17 @@ sub complete_transaction
 {
     my ($self) = @_;
 
-    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+    if ($NoAction) {
+        # not completing outstanding transactions
+        # should be ok to ignore for queries (i.e. NoAction)
+        # TODO: check if there's a way to test if anything is outstanding,
+        # and only continue if all is fine
+        $self->verbose("Skipping complete_transaction in NoAction mode");
+        return 1;
+    } else {
+        return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
                                               "complete previous transactions"));
+    }
 }
 
 # Purges the Yum repository caches.  For now we only care about the
@@ -612,8 +735,21 @@ sub purge_yum_caches
 {
     my ($self) = @_;
 
+    # This only affects the caches, can be safely purged
     return defined($self->execute_yum_command([YUM_PURGE_METADATA],
-                                              "purge repository metadata"));
+                                              "purge repository metadata",
+                                              1));
+}
+
+# Create the yum cache
+sub make_cache
+{
+    my ($self) = @_;
+
+    # This only affects the caches, can be safely created
+    return defined($self->execute_yum_command([YUM_MAKECACHE],
+                                              "create yum cache",
+                                              1));
 }
 
 # Runs yum distro-sync.  Before modifying the installed sets we must
@@ -623,8 +759,8 @@ sub distrosync
     my ($self, $run) = @_;
 
     if (!$run) {
-	$self->info("Skipping yum distro-sync");
-	return 1;
+        $self->info("Skipping yum distro-sync");
+        return 1;
     }
 
     return $self->execute_yum_command([YUM_DISTRO_SYNC], "synchronisation with upstream");
@@ -633,15 +769,16 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch, $reuse_cache) = @_;
 
     $self->complete_transaction() or return 0;
 
-    if ($purge) {
-        $self->purge_yum_caches() or return 0;
-    } else {
-        $self->expire_yum_caches() or return 0;
-    }
+    if (! $reuse_cache) {
+        my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
+        $self->$clean_cache_method() or return 0;
+
+        $self->make_cache($purge) or return 0;
+    };
 
     $self->versionlock($pkgs, $fullsearch) or return 0;
 
@@ -663,10 +800,10 @@ sub update_pkgs
     $to_install = $wanted-$installed;
 
     if (!$allow_user_pkgs) {
-	$to_rm = $self->packages_to_remove($wanted);
-	defined($to_rm) or return 0;
-	$self->spare_dependencies($to_rm, $to_install);
-	$tx = $self->schedule(REMOVE, $to_rm);
+        $to_rm = $self->packages_to_remove($wanted);
+        defined($to_rm) or return 0;
+        $self->spare_dependencies($to_rm, $to_install);
+        $tx = $self->schedule(REMOVE, $to_rm);
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
@@ -683,73 +820,304 @@ sub update_pkgs
 sub update_pkgs_retry
 {
     my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs, $fullsearch) = @_;
-    
-    # If an error is logged due to failed transaction, 
-    # it might be retried and might succeed, but ncm-ncd will not allow 
+
+    # If an error is logged due to failed transaction,
+    # it might be retried and might succeed, but ncm-ncd will not allow
     # any component that has spma as dependency (i.e. typically all others)
     # to run (becasue he initial attempt had an error)
     my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
 
-    # Introduce shortcut to call update_pkgs with the same except 2 arguments 
+    # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
-        my ($allow_user_pkgs, $tx_error_is_warn) = @_;
-        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs, 
-                                  $purge, $tx_error_is_warn, $fullsearch);
+        my ($allow_user_pkgs, $tx_error_is_warn, $reuse_cache) = @_;
+        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
+                                  $purge, $tx_error_is_warn, $fullsearch, $reuse_cache);
     };
-    
-    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
+
+    # Only on the initial try, purge and recreate the cache
+    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 0)) {
         $self->verbose("update_pkgs ok");
     } else {
-        if ($allow_user_pkgs) {
+        if ($NoAction) {
+            # There's no point in retrying, each attemp will have the transaction reset instead of run.
+            $self->verbose("update_pkgs ended with NoAction=1");
+            return 1;
+        } elsif ($allow_user_pkgs) {
             # tx_error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=true");
             return 0;
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
             $tx_error_is_warn = 0;
-            
-            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true"); 
+
+            $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true");
             $allow_user_pkgs = 1;
-            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
-                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd"); 
+            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
+                $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd");
                 $allow_user_pkgs = 0;
-                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn)) {
-                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok."); 
+                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
+                    $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok.");
                 } else {
-                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed."); 
+                    $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed.");
                     return 0;
                 };
             } else {
-                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed."); 
+                $self->error("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true failed.");
                 return 0;
             };
         } else {
-            # log failure, no retry enabled 
+            # log failure, no retry enabled
             # tx_error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
             return 0;
         }
     }
-    
+
     return 1;
 };
 
+# in NoAction mode, allow FileWriter/FileEditor to create/modify files
+# that are placed in the noaction prefix by disabling the noaction option
+# If a filehandle is passed that has no prefix as expected during NoAction,
+# an error is logged (and nothing is overridden).
+# Return 1 if noaction was disabled, undef if nothing was modified.
+# (For unittesting purposes, the FileWriter/Editor instance is updated)
+# TODO: move to CAF::FileWriter?
+sub _override_noaction_fh
+{
+    my ($self, $fh) = @_;
+
+    if ($NoAction) {
+        my $filename = *$fh->{filename};
+        if($self->_match_noaction_tempdir($filename)) {
+            $self->verbose("Overriding noaction on $filename: noaction is disabled.");
+            *$fh->{options}->{noaction} = 0;
+            return 1;
+        } else {
+            $self->error("Not going to override noaction on file $filename",
+                         " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
+                         " Please report this issue to the developers,",
+                         " as this is most likely a bug in the code.");
+        }
+    }
+    return;
+}
+
+# copy file(s) and (non-recursively) directories to prefix
+# preserving the directory tree structure.
+# e.g. /etc/yum.conf and prefix /tmp/mytemp will result in
+# /tmp/mytemp/etc/yum.conf.
+# return 1 in case of success, undef in case of failure. the method logs errors
+# TODO: replace by something else
+sub _copy_files_and_dirs
+{
+    my ($self, $prefix, @data) = @_;
+
+    foreach my $data (@data) {
+        my ($destdir, @files);
+
+        if (-f $data) {
+            $destdir = $prefix."/".dirname($data);
+            # using basename is ok here since we tested if it is a file
+            push(@files, basename($data));
+
+            # set $data to the directory
+            $data = dirname($data);
+        } elsif (-d $data) {
+            $destdir = "$prefix/$data";
+            my $dir;
+            if (! opendir($dir, $data)) {
+                $self->error("Can't opendir $data: $!");
+                return;
+            };
+            # only copy files (and ignore e.g. . and ..)
+            push(@files, grep {-f "$data/$_" } readdir($dir));
+            if (! closedir($dir)) {
+                $self->error("Can't closedir $data: $!");
+                return;
+            }
+        } elsif (! -e $data) {
+            $self->error("Can't copy non-existing $data.");
+            return;
+        } else {
+            $self->error("Don't know how to copy $data to the prefix $prefix.");
+            return;
+        }
+
+        # mkpath in scalar context returns number of diretcories actually created
+        if(! ($destdir && (-d $destdir || mkpath($destdir)))) {
+            $self->error("Failed to create destdir $destdir (for data $data): ec $?");
+            return;
+        };
+        foreach my $filename_taint (@files) {
+            my $filename;
+            # untainting check for newlines
+            if ($filename_taint =~ m/^(.+)$/) {
+                $filename = $1;
+            } else {
+                $self->error("Failed to untaint $filename_taint");
+                return;
+            }
+
+            if(! ($filename && copy("$data/$filename", "$destdir/$filename"))) {
+                $self->error("Failed to copy $data/$filename to $destdir/$filename: $!");
+                return;
+            };
+        }
+        $self->verbose("Copied files from $data to $destdir: ", join(",", @files));
+    }
+
+    return 1;
+}
+
+# Return the prefix to use for all configuration, plugin and repository paths.
+# When noaction is false, no prefix is used and empty string is returned.
+# If noaction is true, a temporary directory is created and the path returned.
+# In case of an error, an error is logged and undef is returned.
+# All other arguments are either files or directories that copied in the temporary
+# directory.
+sub noaction_prefix
+{
+    my ($self, $noaction, @data) = @_;
+
+    my $tmppath;
+    if ($noaction) {
+        # Create temporary directory
+        $tmppath = tempdir(NOACTION_TEMPDIR_TEMPLATE);
+
+        # Set strict permissions
+        if (! chmod(0700, $tmppath)) {
+            $self->error("Failed to chmod 0700 tmp yum dir $tmppath: $!");
+            return;
+        }
+
+        # Make sure the returned path ends with a /
+        $tmppath .= "/" if ($tmppath !~ m/\/$/);
+
+        return if (! $self->_copy_files_and_dirs($tmppath, @data));
+
+        $self->verbose("Created noaction prefix $tmppath.");
+
+    } else {
+        # Do nothing, return empty string without noaction
+        $self->debug(1, "Nothing to do for noaction prefix.");
+        $tmppath = '' ;
+    }
+
+    $self->__set_active_noaction_prefix($tmppath);
+
+    return $tmppath;
+}
 
 # Set up a few things about Yum.conf. Somewhere in the future this may
 # have its own schema, or be delegated to some other component. To be
 # seen.
+# C<repodirs> is an arrayref of directories.
 sub configure_yum
 {
-    my ($self, $cfgfile, $obsolete) = @_;
+    my ($self, $cfgfile, $obsoletes, $plugindir, $repodirs, $extra_opts) = @_;
+
     my $fh = CAF::FileEditor->new($cfgfile, log => $self);
 
-    $fh->add_or_replace_lines(CLEANUP_ON_REMOVE,
-			      CLEANUP_ON_REMOVE. q{\s*=\s*1},
-			      "\n" . CLEANUP_ON_REMOVE . "=1\n", ENDING_OF_FILE);
-    $fh->add_or_replace_lines(OBSOLETE,
-			      OBSOLETE . "\\s*=\\s*$obsolete",
-			      "\n".  OBSOLETE. "=$obsolete\n", ENDING_OF_FILE);
+    my $_add_or_replace = sub {
+        my ($fh, $name, $value) = @_;
+        my $valuereg = $value;
+        $valuereg =~ s/([.\$*?])/\\$1/g;
+        $fh->add_or_replace_lines(
+            $name,
+            $name. q{\s*=\s*}.$valuereg,
+            "\n$name=$value\n",
+            ENDING_OF_FILE
+        );
+    };
+
+    # use CONSTANT() to get the value of the constant as key
+    my $yum_opts = {
+        YUM_CONF_CLEANUP_ON_REMOVE() => 1,
+        YUM_CONF_OBSOLETES() => $obsoletes,
+        YUM_CONF_REPOSDIR() => $repodirs,
+        YUM_CONF_PLUGINCONFPATH() => $plugindir,
+    };
+
+    # Merge the options, yum_opts precede.
+    $extra_opts = {} if (! defined($extra_opts));
+    my %opts = (%$extra_opts, %$yum_opts);
+
+    foreach my $key (sort keys %opts) {
+        my $v = $opts{$key};
+        my $value = ref($v) eq 'ARRAY' ? join(($key eq 'exclude') ? ' ' : ',', @$v) : $v;
+        $_add_or_replace->($fh, $key, $value);
+    };
+
+    $self->_override_noaction_fh($fh);
     $fh->close();
+
+}
+
+# Configure the yum plugins
+sub configure_plugins
+{
+    my ($self, $plugindir, $plugins) = @_;
+
+    # Sanity checks
+    # versionlock plugin: enable by default
+    my $packagelist = _prefix_noaction_prefix(YUM_PACKAGE_LIST);
+    if ($plugins->{versionlock}) {
+        # TODO: check and warn for disabled versionlock plugin?
+        # versionlock plugin: locklist is mandatory in schema
+        if ($plugins->{versionlock}->{locklist} ne $packagelist) {
+            $self->warn("yum plugin versionlock plugin unsupported locklist $plugins->{versionlock}->{locklist}. ",
+                        "Forcing it to $packagelist.");
+            $plugins->{versionlock}->{locklist} = $packagelist;
+        }
+    } else {
+        $self->verbose("yum plugin versionlock is not configured. Will be enabled.");
+        $plugins->{versionlock} = {
+            enabled => 1,
+            locklist => $packagelist,
+        };
+    }
+
+    # fastestmirror plugin: disable by default
+    if (! $plugins->{fastestmirror}) {
+        $self->verbose("yum plugin fastestmirror is not configured. It will be disabled.");
+        $plugins->{fastestmirror}->{enabled} = 0;
+    }
+
+    # priorities plugin: enable by default
+    if (! $plugins->{priorities}) {
+        $self->verbose("yum plugin priorities is not configured. It will be enabled.");
+        $plugins->{priorities}->{enabled} = 1;
+    }
+
+    my $changes = 0;
+    foreach my $plugin (sort keys %$plugins) {
+        $self->verbose("Going to configure plugin $plugin.");
+        my $plugin_config = $plugins->{$plugin};
+        # insert plugindir for TT purposes
+        $plugin_config->{"_plugindir"} = $plugindir;
+
+        my $trd = EDG::WP4::CCM::TextRender->new(
+            "yumplugins/$plugin",
+            $plugin_config,
+            relpath => 'spma',
+            log => $self);
+
+        if (! defined($trd->get_text())) {
+            $self->error ("Unable to generate yum plugin $plugin config: $trd->{fail}");
+            return;
+        };
+
+        # returns undef on render error, the error is logged
+        my $fh = $trd->filewriter("$plugindir/$plugin.conf");
+
+        if(defined $fh) {
+            $self->_override_noaction_fh($fh);
+            $changes += $fh->close() || 0; # handle undef
+        }
+    }
+
+    return $changes;
 }
 
 sub Configure
@@ -761,32 +1129,84 @@ sub Configure
     local $ENV{LANG} = 'C';
     local $ENV{LC_ALL} = 'C';
 
-    my $purge_caches;
-    my $repos = $config->getElement(REPOS_TREE)->getTree();
-    my $t = $config->getElement(CMP_TREE)->getTree();
+    my ($purge_caches, $res);
+
+    my $t = $config->getTree(CMP_TREE);
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
-    my $pkgs = $config->getElement(PKGS_TREE)->getTree();
-    my $groups;
-    if ($config->elementExists(GROUPS_TREE)) {
-        $groups = $config->getElement(GROUPS_TREE)->getTree();
-    } else {
-        $groups = {};
-    }
-    $self->initialize_repos_dir(REPOS_DIR) or return 0;
-    $self->cleanup_old_repos(REPOS_DIR, $repos, $t->{userpkgs}) or return 0;
-    $purge_caches = $self->generate_repos(REPOS_DIR, $repos, REPOS_TEMPLATE,
+
+    # When userpkgs are allowed, there is no control over what is in the reposdir
+    # If they are not allowed, and retry is allowed, use a non-standard location
+    # to avoid any repositories getting added during the retries (e.g. from rpms).
+    my $main_repos_dir = ($NoAction || $t->{userpkgs} || (!$t->{userpkgs_retry})) ?
+                             REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
+
+    my $repos = $config->getTree(REPOS_TREE);
+    my $pkgs = $config->getTree(PKGS_TREE);
+    my $groups = $config->getTree(GROUPS_TREE) || {};
+
+    # check if a temp location is required for NoAction support.
+    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
+
+    if (! defined($prefix)) {
+        return 0;
+    } elsif ($NoAction && ! $self->_match_noaction_tempdir("$prefix/")) {
+        # extra safety check
+        $self->error("Noaction prefix in NoAction has to start with template ",
+                     NOACTION_TEMPDIR_TEMPLATE, " (prefix $prefix).");
+        return 0;
+    };
+
+    # TODO: is this fatal or not?
+    # TODO: should this also influence purge_caches?
+    #       (if it does, the "defined($purge_caches) or return 0;" test has to be modified)
+    # always run it, even if no plugins configured (e.g. to disable fastest mirror)
+    my $plugindir = _prefix_noaction_prefix(YUM_PLUGIN_DIR);
+    $res = $self->configure_plugins($plugindir, $t->{plugins});
+    defined($res) or return 0;
+    $purge_caches = $res;
+
+    my $quattor_managed_reposdir = _prefix_noaction_prefix($main_repos_dir);
+    $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
+    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
+    $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                           $t->{proxyhost}, $t->{proxytype},
                                           $t->{proxyport});
-    defined($purge_caches) or return 0;
-    $self->configure_yum(YUM_CONF_FILE, $t->{process_obsoletes});
 
-    $self->update_pkgs_retry($pkgs, $groups, $t->{run}, 
-                             $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
-                             $t->{fullsearch})
-        or return 0;
-    return 1;
+    defined($res) or return 0;
+    $purge_caches += $res;
+
+    # by default, set the quattor managed repos dir
+    # TODO: for userpkgs, insert quattor unmanaged dir as first (so it takes priority)
+    # TODO: check that the first one wins
+    my $reposdir = [$quattor_managed_reposdir];
+    $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
+                         $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
+
+    $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
+                                    $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
+                                    $t->{fullsearch});
+
+    my $ec = 1;
+
+    # Cleanup prefix in case of success.
+    # Leave in case of failure (to help debugging)
+    if ($res) {
+        if ($NoAction) {
+            if(rmtree($prefix)) {
+                $self->info("Cleaning up NoAction prefixdir $prefix");
+            } else {
+                $self->warn("Failed to cleanup NoAction prefixdir $prefix: $!");
+                # Not going to let spma fail for this.
+            };
+        }
+    } else {
+        $self->info("Not cleaning up NoAction prefixdir $prefix") if $prefix;
+        $ec = 0;
+    }
+
+    return $ec;
 }
 
 1; # required for Perl modules

@@ -1,0 +1,9 @@
+[% FOR pair IN CCM.contents.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE 'libvirtd_args' -%]
+[%             pair.key FILTER upper %]="[% pair.value %]"
+[%         CASE -%]
+[%             pair.key FILTER upper %]=[% pair.value %]
+[%     END -%]
+[% END -%]
+

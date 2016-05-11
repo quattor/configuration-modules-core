@@ -11,7 +11,7 @@ use warnings;
 use base qw(NCM::Component);
 
 use LC::Exception;
-use CAF::TextRender;
+use EDG::WP4::CCM::TextRender;
 use CAF::Service;
 use EDG::WP4::CCM::Element qw(unescape);
 use Readonly;
@@ -25,19 +25,19 @@ our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>, 
+# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>,
 # prepare the actions to be taken for this service/file.
 # Does not return anything.
 sub prepare_action
 {
     my ($self, $srv, $file, $actions) = @_;
 
-    # Not using a hash here to detect and support 
+    # Not using a hash here to detect and support
     # any overlap with legacy daemon-restart config
     my @daemon_action;
 
     my $msg = "for file $file";
-    
+
     if ($srv->{daemons}) {
         while (my ($daemon, $action) = each %{$srv->{daemons}}) {
             push(@daemon_action, $daemon, $action);
@@ -54,7 +54,7 @@ sub prepare_action
         }
     }
 
-    my @acts;    
+    my @acts;
     while(my ($daemon,$action) = splice(@daemon_action,0,2)) {
         if(exists($ALLOWED_ACTIONS{$action})) {
             $actions->{$action} ||= {};
@@ -63,10 +63,10 @@ sub prepare_action
         } else {
             $self->error("Not a CAF::Service allowed action ",
                          "$action for daemon $daemon $msg ",
-                         "in profile (component/schema mismatch?).");                
+                         "in profile (component/schema mismatch?).");
         }
     }
-    
+
     if (@acts) {
         $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $msg.");
     } else {
@@ -86,19 +86,24 @@ sub process_actions
     }
 }
 
-# Generate C<$file>, configuring C<$srv> using CAF::TextRender.
-# Also tracks the actions that need to be taken via the 
+# Generate C<$file>, configuring C<$srv> using CAF::TextRender with
+# contents C<$contents> (if C<$contents>  is not defined,
+# C<$srv->{contents}> is used).
+# Also tracks the actions that need to be taken via the
 # C<$actions> hash-reference.
 # Returns undef in case of rendering failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv, $actions) = @_;
+    my ($self, $file, $srv, $contents, $actions) = @_;
 
-    my $trd = CAF::TextRender->new($srv->{module},
-                                   $srv->{contents},
-                                   log => $self,
-                                   eol => 0,
-                                   );
+    $contents = $srv->{contents} if (! defined($contents));
+
+    my $trd = EDG::WP4::CCM::TextRender->new($srv->{module},
+                                             $contents,
+                                             log => $self,
+                                             eol => 0,
+                                             element => $srv->{convert},
+                                             );
 
     my %opts  = (log => $self,
                  mode => $srv->{mode},
@@ -110,10 +115,10 @@ sub handle_service
 
     # This in combination with eol=0 is what the original code does
     # TODO: switch to eol=1 and remove this footer?
-    $opts{footer} = "\n";  
+    $opts{footer} = "\n";
 
     my $fh = $trd->filewriter($file, %opts);
-    
+
     if (!defined($fh)) {
         $self->error("Failed to render $file (".$trd->{fail}."). Skipping");
         return;
@@ -132,9 +137,10 @@ sub Configure
     my $t = $config->getElement($PATH)->getTree();
 
     my $actions = {};
-    
-    while (my ($f, $c) = each(%{$t->{services}})) {
-        $self->handle_service(unescape($f), $c, $actions);
+
+    while (my ($f, $srvc) = each(%{$t->{services}})) {
+        my $cont_el = $config->getElement("$PATH/services/$f/contents");
+        $self->handle_service(unescape($f), $srvc, $cont_el, $actions);
     }
 
     $self->process_actions($actions);

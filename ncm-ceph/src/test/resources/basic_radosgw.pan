@@ -6,7 +6,6 @@ variable MONITOR1 =  nlist(
 );
 
 variable RADOSGW = nlist(
-    'fqdn', 'ceph001.cubone.os',
     'config', nlist(
         'host' , 'ceph001',
         'foo', 'bar',
@@ -24,8 +23,13 @@ prefix '/software/components/ceph/clusters';
     'monitors', nlist (
         'ceph001', MONITOR1,
     ),
-    'radosgws', nlist(
-        'ceph001', RADOSGW,
+    'radosgwh' , nlist(
+        'ceph001', nlist(
+            'fqdn', 'ceph001.cubone.os',
+            'gateways', nlist(
+                'gateway', RADOSGW,
+            ),
+        ),
     ),
     'deployhosts', nlist (
         'ceph002', 'ceph002.cubone.os'

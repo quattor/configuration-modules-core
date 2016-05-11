@@ -1,0 +1,14 @@
+Base test for config
+---
+multiline
+metaconfigservice=/etc/xinetd.d/time-stream
+---
+^service\stime$
+^{$
+^\s{4}cps\s=\s100 2$
+^\s{4}disable\s=\sno$
+^\s{4}per_source\s=\s11$
+^\s{4}socket_type\s=\sstream$
+^\s{4}user\s=\sroot$
+^\s{4}wait\s=\sno$
+^}$

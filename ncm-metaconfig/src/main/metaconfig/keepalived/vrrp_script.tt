@@ -1,0 +1,3 @@
+[% FOREACH option IN vrrp_script.pairs -%]
+[%     option.key %] [% option.value %]
+[% END -%]

@@ -33,13 +33,17 @@ if ($generate) {
     my $cfg = get_config_for_profile('labeled_crushmap');
     my $t = $cfg->getElement($cmp->prefix())->getTree();
     my $cluster = $t->{clusters}->{ceph};
+    my $mapping = {};
 
     my $crush = $cluster->{crushmap};
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
         $cmp->structure_osds($hostname, $host); # Is normally done in the daemon part
-}
+        while (my ($osdkey, $osd) = each(%{$host->{osds}})) {
+            $cmp->add_to_mapping($mapping, 'osd.0', $hostname, $osd->{osd_path});
+        }
+    }   
 
-    $cmp->crush_merge($crush->{buckets}, $cluster->{osdhosts}, []);
+    $cmp->crush_merge($crush->{buckets}, $cluster->{osdhosts}, [], { mapping => $mapping });
 
     diag explain $crush->{buckets};
 }

@@ -30,7 +30,11 @@ my $mock = Test::MockModule->new('NCM::Component::spma::yum');
 $CAF::Object::NoAction = 1;
 
 Readonly my $TX => "a transaction text";
-Readonly my $YUM => join(" ", NCM::Component::spma::yum::YUM_CMD);
+Readonly::Array my @YUM_CMD_ORIG => NCM::Component::spma::yum::YUM_CMD;
+Readonly::Array my @YUM_CMD => @{NCM::Component::spma::yum::_set_yum_config(\@YUM_CMD_ORIG)};
+Readonly my $YUM => join(" ", @YUM_CMD);
+
+ok(! grep {$_ eq '-C'} @YUM_CMD, 'yum shell command has cache disabled');
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 

@@ -1,0 +1,12 @@
+[%- key %] => {
+[% FILTER indent -%]
+[%-     FOREACH p IN value -%]
+"[%         p.name %]" => 
+[%-         IF CCM.is_list(p.pattern) -%]
+["[%            p.pattern.join('","') %]"]
+[%-         ELSE -%]
+"[%             p.pattern %]"
+[%-         END %]
+[%     END -%]
+[%- END %]
+}[%- -%]

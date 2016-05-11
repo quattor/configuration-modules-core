@@ -1,0 +1,7 @@
+only one enabled statement
+---
+//software
+rendermodule=yumplugins/fastestmirror
+contentspath=/software/components/spma/plugins/fastestmirror
+---
+^enabled= ### COUNT 1

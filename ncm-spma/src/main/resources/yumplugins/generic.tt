@@ -1,0 +1,12 @@
+[[% section %]]
+[% FOREACH pair IN CCM.contents.pairs -%]
+[%- # _plugindir is for conveninece only, not a real config name
+    NEXT IF pair.key == '_plugindir' -%]
+[%      pair.key %]=
+[%-     SWITCH pair.key -%]
+[%-         CASE boolean_true_false -%]
+[%-             pair.value ? 'true' : 'false' -%]
+[%-         CASE -%]
+[%-             CCM.is_list(pair.value) ? pair.value.join(listsep) : pair.value -%]
+[%-     END %]
+[% END -%]

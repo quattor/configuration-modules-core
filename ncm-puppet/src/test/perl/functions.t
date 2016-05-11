@@ -25,9 +25,9 @@ Tests the functionality of the lower function of the puppet component:
 
 use strict;
 use warnings;
-use NCM::Component::puppet;
 use Test::More tests => 4;
 use Test::Quattor;
+use NCM::Component::puppet;
 use Test::Deep;
 use CAF::Object;
 

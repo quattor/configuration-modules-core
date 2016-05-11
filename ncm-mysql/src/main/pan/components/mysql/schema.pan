@@ -34,9 +34,20 @@ function component_mysql_check_db_script = {
   };
 };
 
+# The function validating password imposes a non-empty string.
+function component_mysql_password_valid = {
+  if (  match(SELF, '^[^\\]+$') ) {
+    true;
+  } else {
+    false;
+  };
+};
+
+type component_mysql_user_right = string with match(SELF, '^(ALL( PRIVILEGES)?|ALTER( ROUTINE)?|CREATE( (ROUTINE|TEMPORARY TABLES|USER|VIEW))?|DELETE|DROP|EVENT|EXECUTE|FILE|GRANT OPTION|INDEX|INSERT|LOCK TABLES|PROCESS|REFERENCES|RELOAD|REPLICATION (CLIENT|SLAVE)|SELECT|SHOW (DATABASES|VIEW)|SHUTDOWN|SUPER|TRIGGER|UPDATE|USAGE)$');
+
 type component_mysql_db_user = {
-  'password'  : string
-  'rights'    : string[]
+  'password'  : string with (length(SELF) == 0) || component_mysql_password_valid(SELF)
+  'rights'    : component_mysql_user_right[] = list('SELECT')
   'shortPwd'  : boolean = false
 };
 
@@ -59,7 +70,7 @@ type component_mysql_db_options = {
 type component_mysql_server_options = {
   'host'      ? string
   'adminuser' : string
-  'adminpwd'  : string with length(SELF) > 0
+  'adminpwd'  : string with component_mysql_password_valid(SELF)
   'options'   ? string{}
   'users'     ? component_mysql_db_user{}
 };

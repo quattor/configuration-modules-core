@@ -92,8 +92,8 @@ sub run_command {
 
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
-    my ($self, $command) = @_;
-    return $self->run_command([qw(/usr/bin/ceph -f json --cluster), $self->{cluster}, @$command]);
+    my ($self, $command, $dry) = @_;
+    return $self->run_command([qw(/usr/bin/ceph -f json --cluster), $self->{cluster}, @$command], $dry // 0);
 }
 
 sub run_daemon_command {
@@ -150,7 +150,8 @@ sub run_ceph_deploy_command {
 
 # Accept and add unknown keys if wanted
 sub ssh_known_keys {
-    my ($self, $host, $key_accept, $homedir) = @_; 
+    my ($self, $host, $key_accept, $cephusr) = @_;
+    return 1 if !defined($key_accept);
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
         my $cmd = ['/usr/bin/ssh-keygen', '-F', $host];
@@ -160,10 +161,13 @@ sub ssh_known_keys {
         if (!$lines) {
             $cmd = ['/usr/bin/ssh-keyscan', $host];
             my $key = $self->run_command_as_ceph($cmd);
-            my $fh = CAF::FileEditor->open("$homedir/.ssh/known_hosts",
-                                           log => $self);
+            my $fh = CAF::FileEditor->open("$cephusr->{homeDir}/.ssh/known_hosts",
+                                            log => $self,
+                                            owner => $cephusr->{uid},
+                                            group => $cephusr->{gid},
+                                        );
             $fh->head_print($key);
-            $fh->close()
+            $fh->close();
         }
     } elsif ($key_accept eq 'always'){
         # SSH into machine with -o StrictHostKeyChecking=no
@@ -177,7 +181,7 @@ sub ssh_known_keys {
 # check if host is reachable
 sub test_host_connection {
     my ($self, $host, $gvalues) = @_; 
-    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{homedir});
+    $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr});
     return $self->run_command_as_ceph_with_ssh(['uname'], $host); 
 }
 
@@ -211,7 +215,17 @@ sub write_new_config {
 # file can be absolute or relative to working copy
 sub git_commit {
     my ($self, $work_tree, $file, $message) = @_;
-    my $gitr = Git::Repository->new( work_tree => $work_tree );
+    my $gitr = Git::Repository->new( 
+	work_tree => $work_tree, 
+    { 
+        env => {
+                GIT_COMMITTER_EMAIL => 'ceph@deployhost',
+                GIT_COMMITTER_NAME  => 'Ceph-deploy user',
+                GIT_AUTHOR_EMAIL => 'ceph@deployhost',
+                GIT_AUTHOR_NAME  => 'Ceph-deploy user',
+            },
+        }
+    );
     $gitr->run( add => $file );
     $gitr->run( commit => '-m', $message ) or return 0;    
     return 1;    

@@ -5,14 +5,12 @@
 
 declaration template components/spma/functions;
 
-variable DEF ?= '';
-
-############################################################
-#
-# Utility function to determine if a particular child element
-# exists.  Used in the checking of the repositories.
-#
-###################################################################
+# TODO: this is generic function, rename and move to template-libary-core
+@documentation{
+    desc = Utility function to determine if at least one particular child element exists.  (Used in the checking of the repositories.)
+    arg = name
+    arg = path to list of dicts with at least one key 'name'
+}
 function repository_exists = {
     name = ARGV[0];
     foreach (t;curr_item;value(ARGV[1])) {
@@ -22,19 +20,11 @@ function repository_exists = {
     return(false);
 };
 
-
-
-########################################################
-#
-# Automatically fill "repository" field for package list
-#
-# resolve_pkg_rep <repository list> [<pkg list>]
-#
-# When the second argument is specified, only the package
-# specified are resolved, if they exist in the configuration.
-#
-########################################################
-
+@documentation{
+    desc = Automatically fill "repository" field for package list
+    arg = repository list
+    arg = (optional) package list.  When specified, only the package(s) specified are resolved, if they exist in the configuration.
+}
 function resolve_pkg_rep = {
     error=0;
     errorstr="";
@@ -106,41 +96,26 @@ function resolve_pkg_rep = {
 };
 
 
-########################################################
-#
-# Remove not needed repository information
-#
-# purge_rep_list <repository list>
-#
-#
-############################
-
+@documentation{
+    desc = Remove unneeded repository information
+    arg = repository list
+}
 function purge_rep_list = {
-    foreach (i;rep;SELF) {
-        rep['contents'] = null;
+    if (is_defined(SELF)) {
+        foreach (i;rep;SELF) {
+            rep['contents'] = null;
+        };
     };
     SELF;
 };
 
 
-########################################################
-#
-# Remove package from list
-#
-# pkg_del <name> [version] [arch]
-#
-# If version is not specified (no argument provided) or is the empty string
-# then ALL existing versions are removed from the profile.
-#
-# If arch is not specified (no argument provided),
-# then ALL existing archs for the specified version are removed
-# from the profile.
-#
-# If the package is not part of the configuration, silently exit:
-# this is not considered as an error.
-#
-########################################
-
+@documentation{
+    desc = Remove package from list. If the package is not part of the configuration, silently exit: this is not considered as an error.
+    arg = name
+    arg = (optional) version. If version is not specified (no argument provided) or is the empty string then ALL existing versions are removed from the profile.
+    arg = (optional) arch. If arch is not specified (no argument provided), then ALL existing archs for the specified version are removed from the profile.
+}
 function pkg_del = {
     debug(format('%s: pkg_del: removing package %s',OBJECT,ARGV[0]));
 
@@ -222,25 +197,13 @@ function pkg_del = {
     SELF;
 };
 
-########################################################
-#
-# Replace package in the list
-#
-# pkg_repl <name> <new version> <arch> [<options>]
-#
-# In fact pkg_repl() is the real workhorse of pkg_add/pkg_del/pkg_repl/pkg_ronly.
-# Other functions are just wrappers of pkg_repl(). 'options' argument
-# is used to tailor this function behaviour for a particular purpose
-# and is normally used only by other pkg_xxx functions.
-#
-# if no version existed in the profile, the new version
-# is just added.
-#
-# See pkg_add for a detailed description of the other fields.
-# As in pkg_add, the "new version" and "arch" are optional.
-#
-########################################
-
+@documenation{
+    desc = Replace package in the list. If no version existed in the profile, the new version is just added. See pkg_add for a detailed description of name/verison/arch.
+    arg = name
+    arg = (optional) new version
+    arg = (optional) arch
+    arg = (optional) options. pkg_repl() is the real workhorse of pkg_add/pkg_del/pkg_repl/pkg_ronly. Other functions are just wrappers of pkg_repl(). 'options' argument is used to tailor this function behaviour for a particular purpose and is normally used only by other pkg_xxx functions.
+}
 function pkg_repl = {
     # SELF handles the current list of packages
     name = ARGV[0];
@@ -412,28 +375,21 @@ function pkg_repl = {
 };
 
 
-########################################################
-#
-# Add package to the package list
-#
-# pkg_add <name> [version] [arch]
-#
-# examples:
-#
-# add emacs-19.34.i386 to the profile
-# "/software/packages"=pkg_add("emacs","19.34","i386");
-#
-# add the most recent of emacs to the profile
-# "/software/packages"=pkg_add("emacs");
-#
-# Only the <name> is mandatory.
-#
-# If [version] or [arch] are not defined, YUM will determine what is
-# appropriate.
-#
-# pkg_add() is a wrapper of pkg_repl() that is the real workhorse.
-#
-########################################
+@documenation{
+    desc = Add package to the package list. If [version] or [arch] are not defined, packagemanager (e.g. YUM) will determine what is appropriate.
+    arg = name
+    arg = (optional) version
+    arg = (optional) arch
+}
+@use{
+examples:
+
+add emacs-19.34.i386 to the profile
+"/software/packages"=pkg_add("emacs","19.34","i386");
+
+add the most recent of emacs to the profile
+"/software/packages"=pkg_add("emacs");
+}
 function pkg_add = {
     debug(format('%s: pkg_add: adding package %s',OBJECT,ARGV[0]));
 
@@ -454,19 +410,12 @@ function pkg_add = {
     pkg_repl(ARGV[0], version, arch, list('addonly'));
 };
 
-########################################################
-#
-# Replace package in the list ONLY if present
-#
-# pkg_ronly <name> <new version> <arch>
-#
-# Same as pkg_repl() except that if no version existed in the profile,
-# NO new version is added. See pkg_repl() for argument documentation.
-#
-# This function is a wrapper of pkg_repl().
-#
-########################################
-
+@documentation{
+    desc = Replace package in the list ONLY if present. Same as pkg_repl() except that if no version existed in the profile, NO new version is added. See pkg_repl() for argument documentation.
+    arg = name
+    arg = (optional) version
+    arg = (optional) arch
+}
 function pkg_ronly = {
     debug(format('%s: pkg_ronly: replacing package %s if currently present',OBJECT,ARGV[0]));
 

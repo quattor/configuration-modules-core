@@ -1,0 +1,5 @@
+Tests for gpfs gpfs
+---
+/etc/ganesha/ganesha.nfsd.conf
+---
+^GPFS {

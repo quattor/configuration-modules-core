@@ -19,6 +19,7 @@ use strict;
 use base 'NCM::Component';
 
 our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 use LC::Check;
 use LC::File;
@@ -217,7 +218,7 @@ sub Configure {
             if (exists $newncmhosts{$h}) {
                 $le = delete $newncmhosts{$h};
             } elsif (exists $ncmhosts{$h}) {
-                $le = delete $ncmhosts{$h};
+                next;
             } else {
                 $le = delete $non_ncm_hosts{$h};
             }

@@ -1,0 +1,12 @@
+Test bacula fd FileDaemon
+---
+multiline
+metaconfigservice=/etc/bacula/bacula-fd.conf
+---
+^FileDaemon\s{
+^\s{4}FDport\s=\s9102
+^\s{4}Maximum Concurrent Jobs\s=\s20
+^\s{4}Maximum Network Buffer Size\s=\s262144
+^\s{4}Name\s=\smy.machine-fd
+^\s{4}Pid Directory\s=\s/var/run
+^\s{4}WorkingDirectory\s=\s/var/spool/bacula

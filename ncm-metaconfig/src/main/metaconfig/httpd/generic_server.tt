@@ -1,0 +1,1 @@
+[% INCLUDE 'metaconfig/httpd/2.2/generic_server.tt' %]

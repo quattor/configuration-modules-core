@@ -1,0 +1,2 @@
+[%- INCLUDE "metaconfig/logstash/config/type.tt" type="string"
+        names=['prefix', 'source', 'target', 'trim', 'trimkey', 'value_split'] -%]

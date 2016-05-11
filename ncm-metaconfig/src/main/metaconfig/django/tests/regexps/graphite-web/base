@@ -1,0 +1,9 @@
+Base test for config
+---
+multiline
+/opt/graphite/webapp/graphite/local_settings.py
+---
+^CYANITE_URLS = \('http://host:port',\)$
+^LIST2 = \('bla', 'bla', 'bla',\)$
+^STORAGE_FINDERS = \('cyanite.CyaniteFinder',\)$
+

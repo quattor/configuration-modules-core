@@ -24,7 +24,7 @@ use LC::Exception;
 use LC::Find;
 use LC::File qw(makedir);
 
-use CAF::FileWriter;
+use CAF::TextRender;
 use CAF::FileEditor;
 use CAF::Process;
 # taint-safe since 1.23;
@@ -39,7 +39,8 @@ use JSON::XS;
 use Readonly;
 use Socket;
 our $EC=LC::Exception::Context->new->will_store_all;
-Readonly my $CRUSH_TT_FILE => 'ceph/crush.tt';
+Readonly my $CRUSH_TT_REL => 'ceph';
+Readonly my $CRUSH_MOD => 'crush';
 
 # Get the osd name from the host and path
 sub get_osd_name {
@@ -118,6 +119,10 @@ sub crush_merge {
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
                     foreach my $osd (sort(keys %{$osds})){ 
+                        if ($osds->{$osd}->{crush_ignore}){
+                            $self->warn("OSD $osd on $name was set to ignore");
+                            next;
+                        }
                         my $osdname = $self->get_name_from_mapping($gvalues->{mapping},
                             $name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
@@ -163,12 +168,14 @@ sub labelize_bucket {
         $lhash{buckets} = [];
         foreach my $bucket (@{$tbucket->{buckets}}) {
             if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
-                push(@{$lhash{buckets}}, $self->labelize_bucket($bucket, $label));
+                my $tmpb = $self->labelize_bucket($bucket, $label);
+                push(@{$lhash{buckets}}, $tmpb) if $tmpb;
             }        
         }
         if (!@{$lhash{buckets}}) {
             # check/eliminate empty buckets
-            $self->warn("Bucket $lhash{name} has no child buckets after labeling");
+            $self->warn("Bucket $lhash{name} has no child buckets after labeling, deleting bucket");
+            return;
         }
     }
     delete $lhash{labels}; # Not needed anymore
@@ -449,15 +456,18 @@ sub write_crush {
     my ($self, $crush, $crushdir) = @_;
     # Use tt files
     my $plainfile = "$crushdir/crushmap"; 
-
-    my $fh = CAF::FileWriter->new($plainfile, log => $self);
-    
-    print $fh  "# begin crush map\n";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
-    my $ok = $self->template()->process($CRUSH_TT_FILE, $crush, $fh);
-    if (!$ok) {
-        $self->error("Unable to render template $CRUSH_TT_FILE : ",
-                     $self->template()->error());
+
+    my $trd = EDG::WP4::CCM::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
+    
+    if (!$trd) {
+        $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD: ", $trd->{fail});
+        return 0;
+    } 
+    my $fh = $trd->filewriter($plainfile);
+
+    if (!defined($fh)) {
+        $self->error("Unable to write crushmap file $plainfile.");
         $fh->cancel();
         $fh->close();
         return 0;

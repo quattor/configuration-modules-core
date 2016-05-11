@@ -18,15 +18,18 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use NCM::Component::spma::yum;
 use Test::Quattor;
+use NCM::Component::spma::yum;
 use CAF::Object;
 use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
-Readonly::Array my @REPOQUERY => NCM::Component::spma::yum::REPOQUERY;
+Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY;
+Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
 Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
+
+ok(grep {$_ eq '-C'} @REPOQUERY, 'repoquery command has cache enabled');
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 

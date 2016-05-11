@@ -7,6 +7,7 @@ use Test::Quattor;
 use NCM::Component::sudo;
 use CAF::Object;
 use File::Temp qw(tempfile);
+use File::Path qw(mkpath);
 $CAF::Object::NoAction = 1;
 
 =pod
@@ -45,7 +46,7 @@ $aliases = { $USER => ["u"],
 	     $CMD => ["c"],
 	     $HOST => ["h"]
 	   };
-$opts = ["\to"];
+$opts = ["\t!insults,requiretty"];
 $lns = ["l"];
 $includes = ["i"];
 $includes_dirs = ["id"];
@@ -59,12 +60,12 @@ is(*$fh->{options}->{mode}, 0440,
    "sudoers is created with the correct permissions");
 
 isa_ok($fh, "CAF::FileWriter", "A file was created");
-like($fh, qr{^User_Alias\s*u$}m, "User aliases generated");
-like($fh, qr{^Runas_Alias\s*r$}m, "Runas aliases generated");
-like($fh, qr{^Cmnd_Alias\s*c$}m, "Command aliases generated");
-like($fh, qr{^Host_Alias\s*h$}m, "Host aliases generated");
+like($fh, qr{^User_Alias\s+u$}m, "User aliases generated");
+like($fh, qr{^Runas_Alias\s+r$}m, "Runas aliases generated");
+like($fh, qr{^Cmnd_Alias\s+c$}m, "Command aliases generated");
+like($fh, qr{^Host_Alias\s+h$}m, "Host aliases generated");
 like($fh, qr{^#include i$}m, "Include lines generated");
-like($fh, qr{^Defaults\s*o$}m, "Defaults lines generated");
+like($fh, qr{^Defaults\s+!insults,requiretty$}m, "Defaults lines generated");
 like($fh, qr{^l$}m, "Privilege lines generated");
 like($fh, qr{^#includedir id$}m, "Includedir lines generated");
 
@@ -86,6 +87,7 @@ is($cmp->{ERROR}, 1, "Valid sudoers don't trigger any more errors");
 
 $fh = get_file("/etc/sudoers");
 
+mkpath("target/test") if ! -d "target/test";
 my ($tmp, $tmpname) = tempfile(DIR => "target/test");
 
 print $tmp "$fh";

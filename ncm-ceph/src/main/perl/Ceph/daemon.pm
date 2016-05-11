@@ -166,6 +166,12 @@ sub get_osd_location {
     }   
     
     my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/fsid"], $host);
+    if (!$ph_uuid) {
+        $self->error("Could not read uuid of osd.$osd. ",
+            "If this disk was replaced, please remove from ceph first to reinstall: ",
+            "ceph osd crush remove osd.$osd; ceph osd rm osd.$osd; ceph auth del osd.$osd;");
+        return ;
+    }
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
@@ -195,13 +201,18 @@ sub get_osd_location {
 sub check_empty {
     my ($self, $loc, $host) = @_;
     if ($loc =~ m{^/dev/}){
-        my $cmd = ['sudo', '/usr/bin/file', '-s', $loc];
+        my $cmd = ['sudo', '/usr/bin/file', '-sL', $loc];
         my $output = $self->run_command_as_ceph_with_ssh($cmd, $host) or return 0;
         if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
             $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
     } else {
+        my $checkmntcmd = ['/bin/findmnt', $loc ];
+        if (!$self->run_command_as_ceph_with_ssh($checkmntcmd, $host)) {
+            $self->error("OSD path is not a mounted file system on $host:$loc");
+            return 0;
+        } 
         my $mkdircmd = ['sudo', '/bin/mkdir', '-p', $loc];
         $self->run_command_as_ceph_with_ssh($mkdircmd, $host); 
         my $lscmd = [@LS_COMMAND, '-1', $loc];
@@ -432,15 +443,24 @@ sub destroy_daemons {
     my ($self, $destroyd, $mapping) = @_; 
     my @cmds = ();
     $self->debug(1, 'Destroying daemons');
-    while  (my ($hostname, $host) = each(%{$destroyd})) { 
-        while  (my ($type, $daemon) = each(%{$host})) {
+    foreach  my $hostname (sort(keys(%{$destroyd}))) { 
+        foreach  my $type (sort(keys(%{$destroyd->{$hostname}}))) {
+            my $daemon = $destroyd->{$hostname}->{$type};
             if ($type eq 'osds') {
-                while  (my ($osdloc, $osd) = each(%{$daemon})) {
-                    my $osdname = $self->get_name_from_mapping($mapping, $hostname, $osd->{osd_path}) or return 0;
+                foreach my $osdloc (sort(keys(%{$daemon}))) {
+                    my $osdname = $self->get_name_from_mapping($mapping, $hostname, $daemon->{$osdloc}->{osd_path}) or return 0;
                     push(@cmds, $self->destroy_daemon('osd', $osdname));
                 }
+            } elsif ($type eq 'gtws') {
+                foreach my $name (sort(keys(%{$daemon}))) {
+                    push(@cmds, $self->destroy_daemon('gtw', $name));
+                }
+            } elsif ($type ~~ ['mon', 'mds'] )  {
+                push(@cmds, $self->destroy_daemon($type, $daemon->{fqdn}));
+            } elsif ($type eq 'config') {
+                $self->info("Ceph configfile on host $hostname may be removed");
             } else {
-                push(@cmds, $self->destroy_daemon($type, $hostname));
+                $self->warn("Daemon of unrecognised type $type to be destroyed on host $hostname")
             }
         }
     }
@@ -455,9 +475,9 @@ sub restart_daemons {
     my ($self, $restartd) = @_;
     my @cmds = (); 
     $self->debug(1, 'restarting daemons');
-    while  (my ($hostname, $host) = each(%{$restartd})) { 
-        while  (my ($name, $action) = each(%{$host})) {
-            push(@cmds, $self->run_command_as_ceph_with_ssh([qw(/sbin/service ceph), $action, $name], $hostname, [],1)); 
+    foreach my $hostname (sort(keys(%{$restartd}))) { 
+        foreach my $name (sort(keys(%{$restartd->{$hostname}}))) {
+            push(@cmds, $self->run_command_as_ceph_with_ssh([qw(/sbin/service ceph), $restartd->{$hostname}->{$name}, $name], $hostname, [],1)); 
         }
     }
     if(@cmds){

@@ -1,0 +1,9 @@
+OpenNebula shared datastore full test
+---
+---
+^DATASTORE_CAPACITY_CHECK\s?=\s?"yes"\s*$
+^DS_MAD\s?=\s?"fs"\s*$
+^NAME\s?=\s?"nfs"\s*$
+^TM_MAD\s?=\s?"shared"\s*$
+^TYPE\s?=\s?"IMAGE_DS"\s*$
+^QUATTOR\s?=\s?1\s*$

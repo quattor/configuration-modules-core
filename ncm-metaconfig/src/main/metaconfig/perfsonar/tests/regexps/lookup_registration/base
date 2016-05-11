@@ -1,0 +1,24 @@
+Base test for lookup_registration
+---
+multiline
+/opt/perfsonar_ps/ls_registration_daemon/etc/ls_registration_daemon.conf
+---
+^allow_internal_addresses\s0$
+^check_interval\s60$
+^ls_instance\shttp://localhost:9995/perfsonar_PS/services/hLS$
+^ls_interval\s6$
+^require_site_location\s1$
+^require_site_name\s1$
+^<site>$
+^\s{4}address\smy.host.domain$
+^\s{4}is_local\s1$
+^\s{4}<service>$
+^\s{8}type\sbwctl$
+^\s{4}</service>$
+^\s{4}<service>$
+^\s{8}type\sowamp$
+^\s{4}</service>$
+^\s{4}site_location\sHERE$
+^\s{4}site_name\sMYSITE$
+^\s{4}site_project\sMYSITE$
+^</site>$

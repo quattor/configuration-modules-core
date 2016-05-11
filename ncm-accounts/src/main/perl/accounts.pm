@@ -101,6 +101,11 @@ use constant ACCOUNT_EXPIRATION_DEF => "";
 # Default groups for the root account.
 use constant ROOT_DEFAULT_GROUPS => qw(root adm bin daemon sys disk);
 
+# Value to distinguish between standard group members and required group members
+# Value 0 is reserved and must not be used.
+use constant GROUP_STANDARD_MEMBER => 1;
+use constant GROUP_REQUIRED_MEMBER => 2;
+
 use constant SKELDIR => "/etc/skel";
 
 # Full path to nscd binary
@@ -172,10 +177,10 @@ sub build_group_map
         $h->{gid} = $flds[ID];
         my %mb;
         if ($flds[IDLIST]) {
-            %mb = map(($_ => 1), split(",", $flds[IDLIST]));
+            %mb = map(($_ => GROUP_STANDARD_MEMBER), split(",", $flds[IDLIST]));
         }
         $h->{members} = \%mb;
-	$h->{ln} = $ln;
+        $h->{ln} = $ln;
         $rt{$h->{name}} = $h;
       }
       $ln++;
@@ -377,7 +382,7 @@ sub delete_groups
             exists($kept->{$group}) ||
             ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
            )) {
-        $self->debug(2, "Marking group $group for removal");
+        $self->info("Marking group $group for removal");
         delete($system->{groups}->{$group});
       }
     }
@@ -390,14 +395,58 @@ sub apply_profile_groups
     my ($self, $system, $profile) = @_;
 
     while (my ($group, $cfg) = each(%$profile)) {
-      if (!exists($system->{groups}->{$group})) {
+      my $required_members = $cfg->{requiredMembers};
+      $required_members = [] unless $required_members;
+      my @initial_members;
+      if ( exists($system->{groups}->{$group}) ) {
+        if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
+          $self->info("Changing gid of group $group to $cfg->{gid}");
+          $system->{groups}->{$group}->{gid} = $cfg->{gid};
+        }
+        @initial_members = keys(%{$system->{groups}->{$group}->{members}});
+        # replaceMembers means that the group member list must be rebuilt from
+        # the Quattor configuration only, ignoring the current list retrieved
+        # from the /etc/group file.
+        if ( $cfg->{replaceMembers} ) {
+          $self->verbose("Group $group: resetting existing member list");
+          $system->{groups}->{$group}->{members} = {};
+        } else {
+          $self->debug(2,"Group $group: initial member list=".join(",",@initial_members));
+        }
+      } else {
         $self->debug(2, "Scheduling addition of group $group");
         $system->{groups}->{$group} = { name => $group,
-                                        members => {},
+                                        members => {map(($_ => 1), @$required_members)},
                                         gid => $cfg->{gid}};
-      } elsif ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
-        $self->debug(2, "Changing gid of group $group to $cfg->{gid}");
-        $system->{groups}->{$group}->{gid} = $cfg->{gid};
+      }
+
+      # Process required members and flag them so that they are not removed if they
+      # correspond to users not defined in the configuration.
+      if ( @$required_members ) {
+        $self->verbose("Group $group: adding required members (",join(',',@$required_members),")");
+        foreach my $member (@$required_members) {
+          $system->{groups}->{$group}->{members}->{$member} = GROUP_REQUIRED_MEMBER;
+        }
+        $self->debug(2,"Group $group: member list after adding required members=".join(",",keys(%{$system->{groups}->{$group}->{members}})));
+      }
+
+      # Log group membership modification, if any.
+      # If existing list of group members has not been reset, it is identical if there is the
+      # same number of members.
+      if ( $cfg->{replaceMembers} || (scalar(keys(%{$system->{groups}->{$group}->{members}})) != scalar(@initial_members)) ) {
+        my @removed_members;
+        my $info_msg = "Group $group: member list modified";
+        foreach my $member (@initial_members) {
+          if ( !exists($system->{groups}->{$group}->{members}->{$member}) ) {
+            push @removed_members, $member;
+          }
+        }
+        if ( @removed_members ) {
+          $info_msg .= " (removed members=" . join(',',sort(@removed_members)) . ")";
+        }
+        $self->info($info_msg);
+      } else {
+        $self->verbose("Group $group: no modification made to membership");
       }
     }
 }
@@ -422,9 +471,10 @@ sub delete_account
     my ($self, $system, $account) = @_;
 
     foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
-      $self->debug(2, "Deleting account $account from group $i");
+      $self->debug(2, "Checking if account $account must be removed from group $i");
 
       if (exists($system->{groups}->{$i})) {
+        $self->verbose("Deleting account $account from group $i");
         delete($system->{groups}->{$i}->{members}->{$account});
       }
     }
@@ -439,9 +489,9 @@ sub add_account
     my ($self, $system, $name, $cfg) = @_;
 
     foreach my $i (@{$cfg->{groups}}) {
-      $self->debug(3, "Reviewing group $i for account $name");
+      $self->debug(2, "Reviewing group $i for account $name");
       if (exists($system->{groups}->{$i})) {
-        $system->{groups}->{$i}->{members}->{$name} = 1;
+        $system->{groups}->{$i}->{members}->{$name} = GROUP_STANDARD_MEMBER;
         # Pool accounts share their group structure. If it has
         # already been changed, we need to do no more.
       } elsif ($i !~ m{^\d+$}) {
@@ -470,21 +520,30 @@ sub delete_unneeded_accounts
 {
     my ($self, $system, $profile, $kept, $preserve_accounts) = @_;
 
+    $self->verbose("Removing accounts no longer needed...");
+
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
       if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
-            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_gid_preserved}) ||
+            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_uid_preserved}) ||
             ($account eq 'root')
            )) {
-        $self->debug(2, "Marking account $account for deletion");
+        $self->info("Marking account $account for deletion");
         $self->delete_account($system, $account);
+      } elsif ( !exists($profile->{$account}) ) {
+        if ( exists($kept->{$account})  ) {
+          $self->debug(2,"Account $account prserved: not in the profile but part of the kept_users list");
+        } else {
+          $self->debug(2,"Account $account prserved: not in the profile but has a preserved UID");
+        }
       }
     }
     # Remove unneeded group members that may come from LDAP/NIS/other
     # sources.
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
       foreach my $m (keys(%{$cfg->{members}})) {
-        if (!exists($system->{passwd}->{$m})) {
+        if (!exists($system->{passwd}->{$m}) && ($cfg->{members}->{$m} != GROUP_REQUIRED_MEMBER)) {
+          $self->info("Removing undefined user $m from group $group (define it as a 'requiredMembers' to keep it)");
           delete($cfg->{members}->{$m});
         }
       }
@@ -638,12 +697,12 @@ sub commit_groups
     $self->verbose("Preparing group file");
 
     foreach my $cfg (sort accounts_sort (values(%$groups))) {
-	@ln =  ($cfg->{name},
-		"x",
-		$cfg->{gid},
-		join(",", sort(keys(%{$cfg->{members}})))
-	       );
-	push(@group, join(":", @ln));
+      @ln =  ($cfg->{name},
+              "x",
+              $cfg->{gid},
+              join(",", sort(keys(%{$cfg->{members}})))
+             );
+      push(@group, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@group), " groups");
@@ -664,12 +723,12 @@ sub accounts_sort($$)
     my $cmp;
 
     if (exists($a->{ln}) && exists($b->{ln})) {
-	$cmp = $a->{ln} <=> $b->{ln};
-	return $cmp if $cmp;
+      $cmp = $a->{ln} <=> $b->{ln};
+      return $cmp if $cmp;
     } elsif (exists($a->{ln})) {
-	return -1;
+      return -1;
     } elsif (exists($b->{ln})) {
-	return 1;
+      return 1;
     }
     return $a->{name} cmp $b->{name};
 }
@@ -690,11 +749,11 @@ sub commit_accounts
       @ln =  ($cfg->{name},
               "x",
               $cfg->{uid},
-      	      $cfg->{main_group},
-      	      (exists($cfg->{comment}) ? $cfg->{comment} : ""),
-      	      (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
-      	      (exists($cfg->{shell}) ? $cfg->{shell} : "")
-      	     );
+              $cfg->{main_group},
+              (exists($cfg->{comment}) ? $cfg->{comment} : ""),
+              (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
+              (exists($cfg->{shell}) ? $cfg->{shell} : "")
+             );
       push(@passwd, join(":", @ln));
 
       @ln = ($cfg->{name},
@@ -738,7 +797,7 @@ sub sanitize_path
 
     if ($path !~ m{^(/[-\w\./]+)$}) {
         $self->error("Unsafe path: $path");
-        return;
+       return;
     }
     return $1;
 }

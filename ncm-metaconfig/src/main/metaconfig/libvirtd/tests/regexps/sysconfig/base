@@ -1,0 +1,9 @@
+Base test for sysconfig libvirtd
+---
+multiline
+/etc/sysconfig/libvirtd
+---
+^KRB5_KTNAME=.+\s*$
+^LIBVIRTD_ARGS=".+"\s*$
+^LIBVIRTD_CONFIG=.+\s*$
+^LIBVIRTD_NOFILES_LIMIT=\d+\s*$

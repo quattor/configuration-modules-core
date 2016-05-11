@@ -1,0 +1,3 @@
+[% INCLUDE 'spma/yumplugins/generic.tt' listsep=',' boolean_true_false=['always_print_best_host'] section='main' %]
+[% # is enabled (or whole configuration) is missing, disable this plugin 
+    CCM.contents.enabled.defined ? '' : 'enabled=0' %]

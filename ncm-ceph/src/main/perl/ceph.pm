@@ -70,7 +70,7 @@ sub cluster_exists_check {
     my $okhost;
     foreach my $host (@{$hosts}) {
         if ($key_accept) {
-            $self->ssh_known_keys($host, $key_accept, $cephusr->{homeDir});
+            $self->ssh_known_keys($host, $key_accept, $cephusr);
         }
         if ($self->run_ceph_deploy_command([qw(gatherkeys), $host])) {
             $ok = 1;
@@ -160,7 +160,7 @@ sub check_versions {
     my $cversion = $self->run_ceph_command([qw(--version)]);
     my @vl = split(' ',$cversion);
     my $cephv = $vl[2];
-    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)]);
+    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)]) if $qdeploy;
     if ($deplv) {
         chomp($deplv);
     }
@@ -252,7 +252,8 @@ sub Configure {
             hostname => $hostname,
             is_deploy => $is_deploy,
             cephusr => $cephusr,
-            key_accept => $t->{key_accept} 
+            key_accept => $t->{key_accept}, 
+            max_add_osd_failures_per_host => $t->{max_add_osd_failures_per_host},
         }; 
         if ($is_deploy) {
             $self->do_configure($cluster, $gvalues) or return 0;

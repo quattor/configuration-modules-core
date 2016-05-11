@@ -1,0 +1,40 @@
+Base test for wsgi.conf config
+---
+multiline
+/etc/httpd/conf.d/wsgi.conf
+---
+^hostnamelookups off$
+^wsgipythonpath /var/www/django$
+^<virtualhost\s{4}1.2.3.4:443>$
+^\s{4}servername myhost.domain$
+^\s{4}documentroot /var/www/https$
+^\s{4}hostnamelookups off$
+^\s{4}sslcacertificatefile /etc/ca_file$
+^\s{4}sslcertificatefile /etc/cert_file$
+^\s{4}sslcertificatekeyfile /etc/key_file$
+^\s{4}sslciphersuite TLSv1$
+^\s{4}sslengine on$
+^\s{4}ssloptions -OptRenegotiate \+StrictRequire \+StdEnvVars$
+^\s{4}sslprotocol TLSv1$
+^\s{4}alias /django/static/ /var/www/django/static/$
+^\s{4}wsgiscriptalias /django /var/www/django/wsgi.py$
+^\s{4}wsgipassauthorization on$
+^\s{4}loglevel warn$
+^\s{4}errorlog logs/myhost.domain_443_error_log$
+^\s{4}transferlog logs/myhost.domain_443_access_log$
+^\s{4}customlog logs/myhost.domain_443_request_log ssl_combined$
+^\s{4}<directory /var/www/django/static>$
+^\s{8}sslrequiressl$
+^\s{8}require not all granted$
+^\s{8}require not ip 1.2.3.4$
+^\s{8}require not negate 1$
+^\s{8}require all denied$
+^\s{8}require env VARX VARY$
+^\s{8}require expr some valid expression$
+^\s{8}require group group1 group2$
+^\s{8}require ip my.hostname.domain 4.5.6.7$
+^\s{8}require method m1 m2$
+^\s{8}require user user1 user2$
+^\s{8}require valid-user$
+^\s{4}</directory>$
+^</virtualhost>$

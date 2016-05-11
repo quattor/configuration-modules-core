@@ -3,17 +3,10 @@
 # ${author-info}
 
 #
-# ${project.artifactId} - NCM ${project.artifactId} configuration component
-#
 # Configure the ntp time daemon
 #
-################################################################################
 
 package NCM::Component::${project.artifactId};
-
-#
-# a few standard statements, mandatory for all components
-#
 
 use strict;
 use warnings;
@@ -49,8 +42,7 @@ sub Configure {
 	# Getting the time servers from "/software/components/ntpd/servers"
 	# with IP address
 	#
-	my @ntp_servers;
-	my @client_networks;
+	my (@ntp_servers, @client_networks, @candidates);
 
 	if ($NoAction) {
 		$self->warn("Running Configure with NoAction set to $NoAction");
@@ -59,45 +51,41 @@ sub Configure {
 	my $cfg = $config->getElement($PATH)->getTree();
 
 	# look for legacy-style servers
-	if (exists $cfg->{servers} and ref($cfg->{servers}) eq 'ARRAY') {
-		foreach my $time_server (@{$cfg->{servers}}) {
-			my $ip = gethostbyname($time_server);
-			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
-				next;
-			}
-			$ip = inet_ntoa($ip);
-			push(@ntp_servers, {
-					server_address => $ip,
-					server_options => $cfg->{defaultoptions},
-				}
-			);
-			$self->debug(3, "found NTP server $ip (for $time_server)");
-		}
-	}
+    if ($cfg->{servers}) {
+        foreach my $time_server (@{$cfg->{servers}}) {
+            push(@candidates, [$time_server, $cfg->{defaultoptions}]);
+        }
+    }
 
 	# look for serverlist (with options)
-	if (exists $cfg->{serverlist} and ref($cfg->{serverlist}) eq 'ARRAY') {
-
-		# check if we have a list of nlists (with options)
+    if ($cfg->{serverlist}) {
 		foreach my $time_server_def (@{$cfg->{serverlist}}) {
-			my $time_server = $time_server_def->{server};
-			my $ip          = gethostbyname($time_server);
-			if (!defined $ip) {
-				$self->warn("Unknown/unresolvable NTP server $time_server - ignoring!");
-				next;
-			}
-			$ip = inet_ntoa($ip);
-			push(@ntp_servers, {
-					server_address => $ip,
-					server_options => $time_server_def->{options} || $cfg->{defaultoptions},
-				}
-			);
-			$self->debug(3, "found NTP server $ip (for $time_server)");
-		}
-	}
+            push(@candidates, [
+                     $time_server_def->{server},
+                     $time_server_def->{options} || $cfg->{defaultoptions}
+                 ]);
+        }
+    }
 
-	unless (scalar @ntp_servers > 0) {
+    # @candidates is an array with each element an arrayref (timeserver, options)
+    foreach my $ts (@candidates) {
+        my $server = $ts->[0];
+        my $ip = gethostbyname($server);
+        if (!defined $ip) {
+            $self->warn("Unknown/unresolvable NTP server $server - ignoring!");
+            next;
+        }
+
+        $ip = inet_ntoa($ip);
+        push(@ntp_servers, {
+            server_address => $cfg->{useserverip} ? $ip : $server,
+            server_options => $ts->[1],
+             });
+
+        $self->debug(3, "found NTP server $ip (for $server)");
+    }
+
+	unless (@ntp_servers) {
 		$self->error("No (valid) ntp server(s) defined");
 		return 0;
 	}
@@ -111,9 +99,21 @@ sub Configure {
 		}
 	}
 
+    my $fh_opts = {
+        log    => $self,
+		mode   => 0644,
+		backup => '.old',
+    };
+    if ($cfg->{group}) {
+        $self->verbose("group $cfg->{group} configured, restricting owner/group/mode");
+        $fh_opts->{owner} = 'root';
+        $fh_opts->{group} = $cfg->{group};
+        $fh_opts->{mode} = 0640;
+    }
+
 	# Declare the ntp servers in /etc/ntp.conf and /etc/ntp/step-tickers
-	my $ntpconf_changed = $self->write_ntpd_config($cfg, \@ntp_servers, \@client_networks);
-	my $ntpstep_changed = $self->write_ntpd_step_tickers($cfg, \@ntp_servers);
+	my $ntpconf_changed = $self->write_ntpd_config($cfg, \@ntp_servers, \@client_networks, $fh_opts);
+	my $ntpstep_changed = $self->write_ntpd_step_tickers($cfg, \@ntp_servers, $fh_opts);
 
 	# Restart the daemon if necessary.
 	if ( $self->needs_restarting($ntpconf_changed, $ntpstep_changed) ) {
@@ -126,14 +126,9 @@ sub Configure {
 }
 
 sub write_ntpd_step_tickers {
-	my ($self, $cfg, $ntp_servers) = @_;
+	my ($self, $cfg, $ntp_servers, $fh_opts) = @_;
 
-	my $stfh = CAF::FileWriter->new(
-		$STEPTICKERS,
-		log    => $self,
-		mode   => 0644,
-		backup => '.old',
-	);
+	my $stfh = CAF::FileWriter->new($STEPTICKERS, %$fh_opts);
 
 	if (@{$ntp_servers}) {
 		print $stfh map { $_->{server_address} . "\n" } @{$ntp_servers};
@@ -144,14 +139,9 @@ sub write_ntpd_step_tickers {
 
 
 sub write_ntpd_config {
-	my ($self, $cfg, $ntp_servers, $client_networks) = @_;
+	my ($self, $cfg, $ntp_servers, $client_networks, $fh_opts) = @_;
 
-	my $fh = CAF::FileWriter->new(
-		$NTPDCONF,
-		log    => $self,
-		mode   => 0644,
-		backup => '.old',
-	);
+	my $fh = CAF::FileWriter->new($NTPDCONF, %$fh_opts);
 
 	print $fh "# This file is under $COMPNAME control.\n";
 

@@ -1,0 +1,37 @@
+[%- comma_sep_list = ["Clients", "NFS_Protocols", "Protocols", "Transports", "SecType"] -%]
+[%- block_type = ["Components", "Format", "FSAL", "PNFS", "remote_server"] -%]
+[%- block_array = ["CLIENT", "DataServer", "Facility"] -%]
+
+[%-   SWITCH pair.key -%]
+[%-     CASE block_type -%]
+[%          pair.key %] {
+[%          FOREACH subpair IN pair.value.pairs -%] 
+[%-             INCLUDE "metaconfig/ganesha/2.2/attribute.tt" pair=subpair FILTER indent %]
+[%          END -%] 
+}
+[%-     CASE block_array -%]
+[%          FOREACH block IN pair.value -%]
+[%              pair.key %] { 
+[%              FOREACH subpair IN block.pairs -%] 
+[%-                 INCLUDE "metaconfig/ganesha/2.2/attribute.tt" pair=subpair FILTER indent %]
+[%              END -%] 
+}
+[%          END -%] 
+[%-     CASE -%]
+[%-         pair.key -%] =
+[%-         SWITCH pair.key -%]
+[%-             CASE [ "Filesystem_id" ] -%]
+ [%                 pair.value -%]
+[%-             CASE comma_sep_list -%]
+ [%                 pair.value.join(',') -%]
+[%-             CASE -%]
+[%-                 IF (pair.value.is_boolean) -%]
+ [%                     pair.value ? 'TRUE' : 'FALSE' -%]
+[%-                 ELSIF (pair.value.match('^(-?\d+)$')) -%]
+ [%                     pair.value -%]
+[%-                 ELSE -%]
+ "[%-                   pair.value -%]"
+[%-                 END -%]
+[%-         END -%]
+;
+[%-  END -%]

@@ -40,6 +40,7 @@ type component_download_file = {
     "capath"  ? string
     "cert" ? string
     "key" ? string
+    "timeout" ? long # seconds, overrides setting in component
 };
 
 type component_download_type = extensible {
@@ -48,6 +49,8 @@ type component_download_type = extensible {
     "proto"  ? string with match(SELF, "https?")
     "files"  ? component_download_file{}
     "proxyhosts" ? string[]
+    "head_timeout" ? long # seconds, timeout for HEAD requests which checks for changes
+    "timeout" ? long # seconds, total timeout for fetch of file, can be overridden per file
 };
 
 bind "/software/components/download" = component_download_type;

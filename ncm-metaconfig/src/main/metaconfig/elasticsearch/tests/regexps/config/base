@@ -1,0 +1,34 @@
+Base test for config
+---
+/etc/elasticsearch/elasticsearch.yml
+---
+^---$
+^bootstrap:$
+^  mlockall: true$
+^index:$
+^  number_of_replicas: 1$
+^  refresh: 10$
+^  translog:$
+^    flush_threshold_ops: 100000$
+^indices:$
+^  memory:$
+^    index_buffer_size: 50%$
+^monitor.jvm:$
+^  enabled: false$
+^network:$
+^  host: myhost.mydomain$
+^node:$
+^  name: myname$
+^threadpool:$
+^  bulk:$
+^    queue_size: 500$
+^    size: 2$
+^    type: fixed$
+^  index:$
+^    queue_size: 1000$
+^    size: 8$
+^    type: fixed$
+^  search:$
+^    queue_size: 500$
+^    size: 2$
+^    type: fixed$

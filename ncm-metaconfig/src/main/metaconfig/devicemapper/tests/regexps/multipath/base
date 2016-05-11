@@ -1,0 +1,24 @@
+Base test for config
+---
+multiline
+/etc/multipath.conf
+---
+^defaults \{$
+^\s{4}detect_prio yes$
+^\s{4}failback immediate$
+^\s{4}features 1 queue_if_no_path$
+^\s{4}path_checker hp_sw$
+^\s{4}path_grouping_policy group_by_prio$
+^\s{4}path_selector round-robin 0$
+^\s{4}prio hp_sw$
+^\s{4}user_friendly_names yes$
+^\}$ ### COUNT 2
+^multipaths \{$
+^\s{4}multipath \{$ ### COUNT 3
+^\s{8}alias p21as1ScrD$
+^\s{8}wwid 3600c0ff00012c51bacb68a4e01000000$
+^\s{4}\}$ ### COUNT 3
+^\s{8}alias p21as1ScrM$
+^\s{8}wwid 3600c0ff00012c51b92b68a4e01000000$
+^\s{8}alias p21as1SofD$
+^\s{8}wwid 3600c0ff00012c51b9eb68a4e01000000$

@@ -45,6 +45,9 @@ use constant GPFSRPMS => qw(
                             ^gpfs.gplbin-\d\S+$
                             ^gpfs.gui$
                             ^gpfs.msg.en_US$
+                            ^gpfs.ext$
+                            ^gpfs.gskit$
+                            ^gpfs.hadoop-connector$
                            );
 
 my $compname = "NCM-gpfs";

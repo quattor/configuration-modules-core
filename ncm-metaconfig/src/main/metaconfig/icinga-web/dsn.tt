@@ -1,0 +1,1 @@
+[%- data.protocol %]://[%- data.username -%]:[%- data.password -%]@[%- data.hostname %]:[%- data.port %]/[%- data.database_name -%]

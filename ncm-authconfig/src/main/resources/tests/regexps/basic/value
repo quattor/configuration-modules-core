@@ -1,0 +1,112 @@
+Value based regexp test
+---
+//software
+rendermodule=sssd
+contentspath=/software/components/authconfig/method/sssd
+---
+^\[sssd\]$
+^domains = test1$
+^config_file_version = 2$
+^debug_level = 528$
+^reconnection_retries = 3$
+^services = nss,pam$
+^try_inotify = True$
+^\[pam\]$
+^debug_level = 528$
+^get_domains_timeout = 60$
+^offline_credentials_expiration = 0$
+^offline_failed_login_attempts = 0$
+^offline_failed_login_delay = 5$
+^pam_id_timeout = 5$
+^pam_pwd_expiration_warning = 0$
+^pam_verbosity = 1$
+^\[nss\]$
+^debug_level = 528$
+^entry_negative_timeout = 15$
+^enum_cache_timeout = 120$
+^filter_groups = root$
+^filter_users = root$
+^filter_users_in_groups = True$
+^memcache_timeout = 300$
+^\[domain/test1\]$
+^ldap_user_ad_account_expires = accountExpires$
+^ldap_user_ad_user_account_control = userAccountControl$
+^ldap_user_authorized_host = host$
+^ldap_user_authorized_service = authorizedService$
+^ldap_user_fullname = cn$
+^ldap_user_gecos = gecos$
+^ldap_user_gid_number = gidNumber$
+^ldap_user_home_directory = homeDirectory$
+^ldap_user_krb_last_pwd_change = krbLastPwdChange$
+^ldap_user_krb_password_expiration = krbPasswordExpiration$
+^ldap_user_member_of = memberOf$
+^ldap_user_modify_timestamp = modifyTimestamp$
+^ldap_user_nds_login_allowed_time_map = loginAllowedTimeMap$
+^ldap_user_nds_login_disabled = loginDisabled$
+^ldap_user_nds_login_expiration_time = loginDisabled$
+^ldap_user_principal = krbPrincipalName$
+^ldap_user_shadow_expire = shadowExpire$
+^ldap_user_shadow_inactive = shadowInactive$
+^ldap_user_shadow_last_change = shadowLastChange$
+^ldap_user_shadow_max = shadowMax$
+^ldap_user_shadow_min = shadowMin$
+^ldap_user_shadow_warning = shadowWarning$
+^ldap_user_shell = loginShell$
+^ldap_user_uid_number = uidNumber$
+^ldap_user_uuid = nsUniqueId$
+^ldap_group_gid_number = gidNumber$
+^ldap_group_member = memberuid$
+^ldap_group_modify_timestamp = modifyTimestamp$
+^ldap_group_name = cn$
+^ldap_group_nesting_level = 2$
+^ldap_group_object_class = posixGroup$
+^ldap_group_uuid = nsUniqueId$
+^ldap_default_authtok = awesome$
+^ldap_default_authtok_type = password$
+^ldap_default_bind_dn = cn=user,dc=domain,dc=whatever$
+^ldap_tls_cacert = /etc/pki/ca.pem$
+^ldap_tls_cert = /etc/pki/client_cert.pem$
+^ldap_tls_cipher_suite = TLSv1$
+^ldap_tls_key = /etc/pki/client_key.pem$
+^ldap_tls_reqcert = hard$
+^ldap_access_order = filter$
+^ldap_backup_uri = ldaps://myserver.mydomain,ldaps://myotherserver.mydomain$
+^ldap_connection_expire_timeout = 900$
+^ldap_deref = never$
+^ldap_disable_paging = False$
+^ldap_enumeration_refresh_timeout = 300$
+^ldap_enumeration_search_timeout = 60$
+^ldap_force_upper_case_realm = False$
+^ldap_id_mapping = False$
+^ldap_id_use_start_tls = False$
+^ldap_network_timeout = 6$
+^ldap_ns_account_lock = nsAccountLock$
+^ldap_opt_timeout = 6$
+^ldap_page_size = 1000$
+^ldap_purge_cache_timeout = 10800$
+^ldap_pwd_policy = none$
+^ldap_referrals = True$
+^ldap_schema = rfc2307$
+^ldap_search_base = dc=domain,dc=wahtever$
+^ldap_search_timeout = 6$
+^ldap_uri = ldaps://mymainserver.mydomain,ldaps://myothermainserver.mydomain$
+^ldap_use_object_class = posixAccount$
+^simple_allow_groups = group1,group2$
+^access_provider = simple$
+^account_cache_expiration = 0$
+^auth_provider = ldap$
+^cache_credentials = True$
+^case_sensitive = True$
+^debug_level = 528$
+^dns_resolver_timeout = 5$
+^entry_cache_timeout = 21600$
+^enumerate = True$
+^force_timeout = 60$
+^full_name_format = %1\$s@%2\$s$
+^id_provider = ldap$
+^lookup_family_order = ipv4_first$
+^max_id = 123456$
+^min_id = 234567$
+^proxy_fast_alias = False$
+^re_expression = \(\?P<name>\[\^@\]\+\)@\?\(\?P<domain>\[\^@\]\*\$\)$
+^subdomain_homedir = /home/%d/%u$

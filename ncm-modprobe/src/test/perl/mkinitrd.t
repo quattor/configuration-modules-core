@@ -18,10 +18,10 @@ use strict;
 use warnings;
 use Test::More;
 use Test::MockModule;
+use Test::Quattor;
 use LC::File;
 use subs 'NCM::Component::modprobe::directory_contents';
 use NCM::Component::modprobe;
-use Test::Quattor;
 use CAF::FileWriter;
 use CAF::Object;
 
@@ -30,8 +30,7 @@ use constant MKINITRD => "mkinitrd -f /boot/initrd-2.6.35.img 2.6.35";
 
 my $mock = Test::MockModule->new('NCM::Component::modprobe');
 
-$mock->mock('directory_contents', [qw(foo System.map-2.6.35)]);
-
+$mock->mock('directory_contents', sub ($) {return [qw(foo System.map-2.6.35)]});
 
 $CAF::Object::NoAction = 1;
 

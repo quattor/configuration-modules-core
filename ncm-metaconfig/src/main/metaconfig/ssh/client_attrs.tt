@@ -1,0 +1,30 @@
+[% spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'UserKnownHostsFile' ] -%]
+[% commalist = ['Ciphers', 'HostbasedKeyTypes','HostKeyAlgorithms', 'KbdInteractiveDevices', 'KbdInteractiveDevices',
+    'MACs', 'PreferredAuthentications', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'KexAlgorithms',
+    ] -%]
+[% multilinelist = ['IdentityFile', 'RevokedHostKeys'] -%]
+[% booleans = ['BatchMode', 'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 
+    'ClearAllForwardings', 'Compression', 'EnableSSHKeysign', 'ExitOnForwardFailure', 'ForwardAgent', 'ForwardX11', 
+    'ForwardX11Trusted', 'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials', 'HashKnownHosts', 
+    'HostbasedAuthentication', 'IdentitiesOnly', 'KbdInteractiveAuthentication', 'NoHostAuthenticationForLocalhost', 
+    'PasswordAuthentication', 'PermitLocalCommand', 'ProxyUseFdpass', 'PubkeyAuthentication', 'RhostsRSAAuthentication', 
+    'RSAAuthentication', 'StreamLocalBindUnlink', 'TCPKeepAlive', 'UsePrivilegedPort', 'VisualHostKey',
+    ] -%]
+
+[%- FOREACH pair IN data.pairs -%]
+[%     NEXT IF pair.key == 'hostnames' || pair.key == 'matches' -%] 
+[%     SWITCH pair.key -%]
+[%         CASE booleans -%]
+[%             pair.key %] [% pair.value ? 'Yes' : 'No' %]
+[%         CASE spacelist -%]
+[%             pair.key %] [% pair.value.join(' ') %]
+[%         CASE commalist -%]
+[%             pair.key %] [% pair.value.join(',') %]
+[%         CASE multilinelist -%]
+[%             FOREACH line IN pair.value -%]
+[%                 pair.key %] [% line %]
+[%             END -%]
+[%         CASE -%]
+[%             pair.key %] [% pair.value %]
+[%     END -%]
+[% END -%]

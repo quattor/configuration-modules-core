@@ -1,0 +1,1 @@
+[% INCLUDE 'spma/yumplugins/generic.tt' section='main' %]

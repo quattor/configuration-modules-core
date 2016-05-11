@@ -1,0 +1,47 @@
+Tests for export config
+---
+/etc/ganesha/ganesha.conf
+---
+^EXPORT \{$
+^\s{4}CLIENT \{ $
+^\s{8}Access_Type = "RW";$
+^\s{8}Clients = \*.vsc;$
+^\s{8}Squash = "root_squash";$
+^\s{4}\}$
+^\s{4}CLIENT \{ $
+^\s{8}Clients = \*.domain;$
+^\s{4}\}$
+^$
+^\s{4}Export_id = 76;$
+^\s{4}FSAL \{$
+^\s{8}name = "GPFS";$
+^\s{4}\}$
+^\s{4}Filesystem_id = 192.168;$
+^\s{4}NFS_Commit = TRUE;$
+^\s{4}Path = "/gpfs/scratchtest/home/gent";$
+^\s{4}Protocols = 4;$
+^\s{4}Pseudo = "/user/home/gent";$
+^\s{4}Tag = "home";$
+^\s{4}Transports = TCP;$
+^\}$
+^$
+^EXPORT \{$
+^\s{4}CLIENT \{ $
+^\s{8}Access_Type = "RW";$
+^\s{8}Clients = \*.vsc;$
+^\s{8}Squash = "root_squash";$
+^\s{4}\}$
+^$
+^\s{4}Export_id = 77;$
+^\s{4}FSAL \{$
+^\s{8}name = "GPFS";$
+^\s{4}\}$
+^\s{4}Filesystem_id = 192.168;$
+^\s{4}NFS_Commit = TRUE;$
+^\s{4}Path = "/gpfs/scratchtest/data/gent";$
+^\s{4}Protocols = 4;$
+^\s{4}Pseudo = "/user/data/gent";$
+^\s{4}Tag = "data";$
+^\s{4}Transports = TCP;$
+^\}$
+

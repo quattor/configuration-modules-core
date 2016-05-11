@@ -31,14 +31,18 @@ use CAF::Object;
 use Set::Scalar;
 use Class::Inspector;
 use Carp qw(confess);
+use Test::Quattor::TextRender::Base;
 
+my $caf_trd = mock_textrender();
+
+# Index when yum method is called
 Readonly my $UPDATE_PKGS => -1;
-Readonly my $GENERATE_REPOS => 3;
+Readonly my $GENERATE_REPOS => 4;
 
 $SIG{__DIE__} = 'DEFAULT';
 
-
-my @funcs = grep(m{^[a-z]} && $_ ne 'unescape',
+# Don't set_true() the unescape and noaction_prefix methods
+my @funcs = grep(m{^[a-z]} && $_ !~ m/^(unescape|noaction_prefix)$/,
 		 @{Class::Inspector->functions("NCM::Component::spma::yum")});
 
 my $cmp = NCM::Component::spma::yum->new("spma");
@@ -46,6 +50,8 @@ my $mock = Test::MockObject::Extends->new($cmp);
 
 $mock->set_true(@funcs);
 
+# This does noet trigger the component NoAction,
+# so e.g. noaction_prefix will be triggered as during a normal run.
 $CAF::Object::NoAction = 1;
 
 
@@ -89,6 +95,14 @@ while (my ($name, $args) = $mock->next_call()) {
     $calls{$name} = $args;
 }
 
+=over
+
+=item * C<configure_plugins>
+
+=cut
+
+ok(defined($calls{configure_plugins}),
+   "configure_plugins called, t->{plugins} are passed (undef since not defined)");
 
 =over
 
@@ -128,7 +142,7 @@ is(ref($args[2]), 'ARRAY',
    "A list of repositories is passed to generate_repos");
 is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to generate_repos");
-like($args[3], qr{spma/.*repo.*tt$},
+like($args[3], qr{^repository$},
      "Correct repository template passed");
 ok(!$args[4], "No proxy passed to generate_repos");
 
@@ -224,7 +238,7 @@ foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
     $mock->clear();
     $mock->set_false($f);
     is($cmp->Configure($cfg), 0, "Failure in $f is propagated");
-    ok(!$mock->called('update_pkgs_retry'));
+    ok(!$mock->called('update_pkgs_retry'), "update_pkgs_retry not called for $f");
     $mock->set_true($f);
 }
 

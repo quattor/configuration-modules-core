@@ -1,0 +1,23 @@
+Base test for config 2.3 (tests empty newline at end)
+---
+/etc/ptpd2.conf
+---
+^clock:drift_file=/var/log/ptpd2_kernelclock.drift$
+^clock:drift_handling=file$
+^global:log_file=/var/log/ptpd2.log$
+^global:log_file_max_files=5$
+^global:log_file_max_size=5000$
+^global:log_status=y$
+^global:statistics_update_interval=5$
+^ptpengine:calibration_delay=5$
+^ptpengine:delay_outlier_filter_enable=y$
+^ptpengine:domain=0$
+^ptpengine:interface=eth0$
+^ptpengine:ip_dscp=46$
+^ptpengine:ip_mode=multicast$
+^ptpengine:panic_mode=y$
+^ptpengine:panic_mode_duration=10$
+^ptpengine:preset=slaveonly$
+^ptpengine:sync_outlier_filter_enable=y$
+^ptpengine:use_libpcap=n$
+^$

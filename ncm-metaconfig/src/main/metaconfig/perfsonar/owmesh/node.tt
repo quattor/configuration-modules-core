@@ -1,0 +1,8 @@
+# Node specification for [%name%]
+<NODE=[% name %]>
+LONGNAME [% desc.longname %]
+CONTACTADDR [% desc.contact_addr %]
+[% FOREACH addr IN desc.test_addr.pairs %]
+[% addr.key %]ADDR     [% addr.value %]
+[% END %]
+</NODE>
