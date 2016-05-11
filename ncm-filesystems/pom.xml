@@ -7,7 +7,7 @@
 
   <packaging>pom</packaging>
   <version>16.2.1-SNAPSHOT</version>
-  <name>NCM component.for creating filesystems (and its associated block devices) on the fly.</name>
+  <name>NCM component for creating filesystems (and block devices)</name>
 
 
   <parent>
