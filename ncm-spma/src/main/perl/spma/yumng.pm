@@ -234,7 +234,7 @@ sub Configure
     print $yum_conf_file "exclude=" . join ( " ", sort @$excludes );
     $yum_conf_file->close();
 
-    {
+    if (!$NoAction) {
         my @repos = glob "/etc/yum.repos.d/*.repo";
         foreach my $repo (@repos) {
             if ( !unlink $repo) {
