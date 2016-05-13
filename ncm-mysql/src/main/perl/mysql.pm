@@ -23,8 +23,6 @@ use Encode qw(encode_utf8);
 
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
-local(*DTA);
-
 # Define paths for convenience.
 my $base = "/software/components/mysql";
 
