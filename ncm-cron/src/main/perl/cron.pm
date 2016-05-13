@@ -26,8 +26,6 @@ use English;
 
 $NCM::Component::cron::NoActionSupported = 1;
 
-local(*DTA);
-
 use constant CRON_LOGFILE_SUBDIR => "/var/log/";
 
 my $linux_crondir = "/etc/cron.d";
