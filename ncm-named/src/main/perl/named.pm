@@ -24,8 +24,6 @@ use CAF::Service;
 
 our $NoActionSupported = 1;
 
-local(*DTA);
-
 # To ease testing
 our @EXPORT = qw($NAMED_CONFIG_FILE $NAMED_SYSCONFIG_FILE $RESOLVER_CONF_FILE);
 
