@@ -23,8 +23,6 @@ use Encode qw(encode_utf8);
 use LC::File;
 use CAF::Process;
 
-local (*DTA);
-
 sub Configure
 {
     my ( $self, $config ) = @_;
