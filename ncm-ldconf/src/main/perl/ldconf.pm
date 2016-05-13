@@ -18,8 +18,6 @@ use EDG::WP4::CCM::Element;
 
 use File::Basename;
 
-local(*DTA);
-
 my $ldconfig_config_dir = '/etc/ld.so.conf.d';
 my $ldconf_config_file = 'ncm-ldconf.conf';
 
