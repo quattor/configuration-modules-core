@@ -7,6 +7,7 @@ package NCM::Component::${project.artifactId};
 
 use strict;
 use warnings;
+
 use NCM::Component;
 use vars qw(@ISA $EC);
 use base qw(NCM::Component);
@@ -43,19 +44,19 @@ sub Configure
     my ($self, $config) = @_;
 
     my $confighash = $config->getElement($self->prefix)->getTree();
-    
+
     $self->tiny($confighash->{puppetconf},$PUPPET_CONFIG_FILE);
-    
+
     $self->yaml($confighash->{hieraconf},$HIERA_CONFIG_FILE);
-    
-    $self->install_modules($confighash->{modules}) if(defined($confighash->{modules})); 
-    
+
+    $self->install_modules($confighash->{modules}) if(defined($confighash->{modules}));
+
     $self->yaml($confighash->{hieradata},$HIERA_DATA_FILE) if(defined($confighash->{hieradata}));
-    
+
     $self->nodefiles($confighash->{nodefiles});
-    
+
     $self->apply($confighash->{nodefiles});
-    
+
     return 0;
 }
 
@@ -63,14 +64,15 @@ sub Configure
 # arguments:
 # $cfg: ref to the nodefiles nlist in the profile data structure
 #
-sub nodefiles {
+sub nodefiles
+{
     my ($self, $cfg) = @_;
- 
+
     foreach my $file (sort keys %{$cfg}){
-	if($cfg->{$file}->{contents}){
-	    my $path=$NODEFILES_PATH."/".unescape($file);
-	    $self->checkfile($path,$cfg->{$file}->{contents});
-	}	
+        if($cfg->{$file}->{contents}){
+            my $path=$NODEFILES_PATH."/".unescape($file);
+            $self->checkfile($path,$cfg->{$file}->{contents});
+        }
     }
     return 0;
 }
@@ -79,22 +81,23 @@ sub nodefiles {
 # arguments:
 # $cfg: ref to the nodefiles nlist in the profile data structure
 #
-sub apply {
+sub apply
+{
     my ($self, $cfg) = @_;
 
     foreach my $file (sort keys %{$cfg}){
 
         my $out=CAF::Process->new([@APPLY,$PUPPET_LOGS,$NODEFILES_PATH."/".unescape($file)], log => $self)->output();
         my $exit_code=$?>>8;
-	
-	if (($exit_code != 0)&&($exit_code != 2)) {
-	    $self->error("Apply command failed with code $exit_code. See $PUPPET_LOGS.\n");
-	} else {
-	    if($exit_code == 2){
-		$self->info("Puppet apply performed some actions. See  $PUPPET_LOGS.\n");
-	    }
-	    $self->debug(1,"Apply command successfully executed. See  $PUPPET_LOGS.\n");
-	}
+
+        if (($exit_code != 0)&&($exit_code != 2)) {
+            $self->error("Apply command failed with code $exit_code. See $PUPPET_LOGS.\n");
+        } else {
+            if ($exit_code == 2) {
+                $self->info("Puppet apply performed some actions. See  $PUPPET_LOGS.\n");
+            }
+            $self->debug(1,"Apply command successfully executed. See  $PUPPET_LOGS.\n");
+        }
     }
 }
 
@@ -102,7 +105,8 @@ sub apply {
 # arguments:
 # $cfg: ref to modules nlist in the profile data structure
 #
-sub install_modules {
+sub install_modules
+{
     my ($self, $cfg) = @_;
 
     foreach my $mod (sort keys %{$cfg}){
@@ -111,7 +115,7 @@ sub install_modules {
         if(defined($cfg->{$mod}->{version})){
             my $version="--version=".$cfg->{$mod}->{version};
             @args=($module,$version);
-        }else{
+        } else {
             @args=($module);
         }
 
@@ -126,7 +130,7 @@ sub install_modules {
             }else{
                 $self->error("Both Upgrade and Install command failed on module $module. Output: $out\n");
             }
-        }else{
+        } else {
             $self->debug(1,"Module upgrade command successfully executed. Output: $out\n");
         }
     }
@@ -138,7 +142,8 @@ sub install_modules {
 # $cfg: ref to the hash with the configuration parameters and values
 # $file: file location
 #
-sub tiny {
+sub tiny
+{
     my ($self, $cfg, $file) = @_;
 
     my $c = Config::Tiny->new();
@@ -152,8 +157,8 @@ sub tiny {
     }
 
     $self->checkfile($file,$c->write_string());
-    
-    return 0;    
+
+    return 0;
 }
 
 # Create a YAML file based on a hash
@@ -161,10 +166,11 @@ sub tiny {
 # $cfg: ref to the hash with the configuration parameters and values
 # $file: file location
 #
-sub yaml {
+sub yaml
+{
     my ($self, $cfg, $file) = @_;
 
-    $self->checkfile($file,YAML::XS::Dump($self->unescape_keys($cfg)));    
+    $self->checkfile($file,YAML::XS::Dump($self->unescape_keys($cfg)));
 
     return 0;
 }
@@ -174,33 +180,34 @@ sub yaml {
 # arguments:
 # $cfg: reference to the data structure
 #
-sub unescape_keys {
+sub unescape_keys
+{
     my ($self, $cfg) = @_;
-    
+
     my $res;
 
     if(ref($cfg) eq ref({})){
-	$res={};
+        $res={};
 
-	while (my ($k, $v) = each(%$cfg)) {
-	
-	    if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
-		$res->{unescape($k)}= $self->unescape_keys($v);
-	    }else{
-		$res->{unescape($k)}=$v;
-	    }
-	}
-    }else{
-	$res=[];
+        while (my ($k, $v) = each(%$cfg)) {
 
-	foreach my $v (@$cfg) {
-	
-	    if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
-		push @$res, $self->unescape_keys($v);
-	    }else{
-		push @$res, $v;
-	    }
-	}
+            if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
+                $res->{unescape($k)}= $self->unescape_keys($v);
+            }else{
+                $res->{unescape($k)}=$v;
+            }
+        }
+    } else {
+        $res=[];
+
+        foreach my $v (@$cfg) {
+
+            if((ref($v) eq ref({}))||(ref($v) eq ref([]))){
+                push @$res, $self->unescape_keys($v);
+            }else{
+                push @$res, $v;
+            }
+        }
     }
 
     return $res;
@@ -211,9 +218,10 @@ sub unescape_keys {
 # $file: file location
 # $content: content string
 #
-sub checkfile {
+sub checkfile
+{
     my ($self, $file, $content) = @_;
- 
+
     my %opts = ( log => $self);
     my $fh = CAF::FileWriter->new($file, log => $self);
     print $fh $content;
