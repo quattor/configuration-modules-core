@@ -21,8 +21,6 @@ use LC::Check;
 use File::Path;
 use File::Basename;
 
-local(*DTA);
-
 
 sub Configure
 {
