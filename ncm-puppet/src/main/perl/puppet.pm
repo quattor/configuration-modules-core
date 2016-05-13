@@ -36,9 +36,6 @@ Readonly::Scalar my $HIERA_DATA_FILE => '/etc/puppet/hieradata/quattor.yaml';
 Readonly::Scalar my $PUPPET_LOGS => '/var/log/puppet/log';
 
 
-
-local (*DTA);
-
 sub Configure
 {
     my ($self, $config) = @_;
