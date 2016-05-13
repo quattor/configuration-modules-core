@@ -47,8 +47,6 @@ use CAF::Process;
 
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
-local (*DTA);
-
 # Define paths for convenience.
 my $base = "/software/components/cups";
 
