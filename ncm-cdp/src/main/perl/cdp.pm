@@ -15,8 +15,6 @@ use CAF::Service;
 use File::Path;
 use File::Basename;
 
-local(*DTA);
-
 use constant BASE => "/software/components/cdp";
 
 our $NoActionSupported = 1;
