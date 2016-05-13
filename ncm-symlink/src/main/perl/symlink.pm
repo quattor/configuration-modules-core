@@ -20,8 +20,6 @@ use File::Copy;
 use File::Basename;
 use File::stat;
 
-local(*DTA);
-
 my %context_vars;
 my $exists_def = 0;
 my %replace_opts_def = (
