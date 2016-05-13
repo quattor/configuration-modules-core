@@ -27,8 +27,6 @@ Readonly my $ERROR_PREFIX => "ERROR IN: ";
 
 use EDG::WP4::CCM::Element qw(unescape);
 
-local(*DTA);
-
 # convenience method to handle file creation or editing
 # $data is an array ref of array refs with [linere, goodre, linecontent]
 # (no newline is added to linecontent)
