@@ -237,7 +237,7 @@ sub Configure
     if (!$NoAction) {
         my @repos = glob "/etc/yum.repos.d/*.repo";
         foreach my $repo (@repos) {
-            if ( !unlink $repo) {
+            if ( !unlink $repo ) {
                 $self->error("Unable to remove file $repo: $!");
                 return 0;
             }
