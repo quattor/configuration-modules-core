@@ -17,8 +17,6 @@ use File::Copy;
 
 use EDG::WP4::CCM::Element;
 
-local(*DTA);
-
 sub Configure
 {
 
