@@ -21,11 +21,8 @@ use LC::Check;
 
 use Encode qw(encode_utf8);
 
-local(*DTA);
-
 use constant IPMI_EXEC => "/usr/bin/ipmitool";
 use constant BASEPATH => "/software/components/ipmi/";
-
 
 use EDG::WP4::CCM::Element;
 
