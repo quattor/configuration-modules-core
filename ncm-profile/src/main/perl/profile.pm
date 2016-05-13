@@ -22,9 +22,6 @@ use File::Basename;
 use LC::Check;
 use Encode qw(encode_utf8);
 
-local(*DTA);
-
-
 sub Configure
 {
 
