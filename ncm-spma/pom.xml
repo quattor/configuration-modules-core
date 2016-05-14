@@ -176,13 +176,41 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>rpm-maven-plugin</artifactId>
           <configuration>
-            <autoRequires>false</autoRequires>
-            <mappings combine.children="append">
+            <requires>
+              <require>yum &gt;= 3.2.29</require>
+              <require>yum-utils &gt;= 1.1.30</require>
+              <require>yum-versionlock</require>
+              <require>yum-priorities</require>
+            </requires>
+            <mappings>
+              <!-- this is overlay for build-profile -->
+              <mapping>
+                <sources>
+                  <source>
+                    <excludes>
+                      <exclude>**/ips.pm</exclude>
+                      <exclude>**/spma-run</exclude>
+                    </excludes>
+                  </source>
+                </sources>
+              </mapping>
+              <mapping>
+              </mapping>
+              <mapping>
+              </mapping>
+              <mapping>
+                <sources>
+                  <source>
+                    <excludes>
+                      <exclude>**/*ips*</exclude>
+                      <!-- no - here, this is the pod of the package -->
+                      <exclude>**/*spmarun*</exclude>
+                    </excludes>
+                  </source>
+                </sources>
+              </mapping>
               <mapping>
                 <directory>/usr/share/templates/</directory>
-                <filemode>644</filemode>
-                <username>root</username>
-                <groupname>root</groupname>
                 <sources>
                   <source>
                     <location>${project.build.directory}/share/templates/</location>
@@ -191,24 +219,6 @@
                 <directoryIncluded>false</directoryIncluded>
               </mapping>
             </mappings>
-            <requires>
-              <require>yum &gt;= 3.2.29</require>
-              <require>yum-utils &gt;= 1.1.30</require>
-              <require>yum-versionlock</require>
-              <require>yum-priorities</require>
-              <require>perl(CAF::FileEditor)</require>
-              <require>perl(CAF::FileWriter)</require>
-              <require>perl(CAF::Process)</require>
-              <require>perl(EDG::WP4::CCM::Element)</require>
-              <require>perl(File::Path)</require>
-              <require>perl(LC::Exception)</require>
-              <require>perl(NCM::Component)</require>
-              <require>perl(Set::Scalar)</require>
-              <require>perl(Text::Glob)</require>
-              <require>perl(constant)</require>
-              <require>perl(strict)</require>
-              <require>perl(warnings)</require>
-            </requires>
           </configuration>
         </plugin>
       </plugins>
