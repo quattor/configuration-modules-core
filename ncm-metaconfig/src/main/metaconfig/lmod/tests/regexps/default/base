@@ -91,11 +91,11 @@ Test default lmodrc file
 ^\}$
 ^scDescriptT = \{$
 ^\s{4}\{$
-^\s{8}\["dir"\] = /some/dir0,$
-^\s{8}\["timestamp"\] = /some/path0,$
+^\s{8}\["dir"\] = "/some/dir0",$
+^\s{8}\["timestamp"\] = "/some/path0",$
 ^\s{4}\},$
 ^\s{4}\{$
-^\s{8}\["dir"\] = /some/dir1,$
-^\s{8}\["timestamp"\] = /some/path1,$
+^\s{8}\["dir"\] = "/some/dir1",$
+^\s{8}\["timestamp"\] = "/some/path1",$
 ^\s{4}\},$
 ^\}$
