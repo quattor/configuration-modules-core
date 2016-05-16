@@ -5,6 +5,8 @@
 package NCM::Component::cdp;
 
 use strict;
+use warnings;
+
 use base 'NCM::Component';
 our $EC=LC::Exception::Context->new->will_store_all;
 use CAF::FileWriter;
@@ -12,8 +14,6 @@ use CAF::Service;
 
 use File::Path;
 use File::Basename;
-
-local(*DTA);
 
 use constant BASE => "/software/components/cdp";
 

@@ -3,14 +3,11 @@
 # ${author-info}
 
 
-#######################################################################
-#  /etc/hosts.allow
-#  /etc/hosts.deny
-#######################################################################
-
 package NCM::Component::hostsaccess;
 
 use strict;
+use warnings;
+
 use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
@@ -20,14 +17,9 @@ use File::Copy;
 
 use EDG::WP4::CCM::Element;
 
+sub Configure
+{
 
-local(*DTA);
-
-
-##########################################################################
-sub Configure($$@) {
-##########################################################################
-    
     my ($self, $config) = @_;
 
     my $base = "/software/components/hostsaccess";
@@ -36,15 +28,15 @@ sub Configure($$@) {
     # Pull out the configuration for "allowed" hosts.
     my $contents = "# Created by ncm-hostsaccess on $date\n";
     if ($config->elementExists("$base/allow")) {
-	my $allowed = $config->getElement("$base/allow");
-	
-	# Loop through all of the entries creating the necessary content. 
-	while ($allowed->hasNextElement()) {
-	    my %entry = $allowed->getNextElement()->getHash();
-	    my $daemon = $entry{'daemon'}->getValue();
-	    my $host = $entry{'host'}->getValue();
-	    $contents .= "$daemon : $host\n";
-	}
+        my $allowed = $config->getElement("$base/allow");
+
+        # Loop through all of the entries creating the necessary content.
+        while ($allowed->hasNextElement()) {
+            my %entry = $allowed->getNextElement()->getHash();
+            my $daemon = $entry{'daemon'}->getValue();
+            my $host = $entry{'host'}->getValue();
+            $contents .= "$daemon : $host\n";
+        }
     }
 
     # Write the /etc/hosts.allow file.
@@ -56,15 +48,15 @@ sub Configure($$@) {
     # Pull out the configuration for "denied" hosts.
     $contents = "# Created by ncm-hostsaccess on $date\n";
     if ($config->elementExists("$base/deny")) {
-	my $denied = $config->getElement("$base/deny");
-	
-	# Loop through all of the entries creating the necessary content. 
-	while ($denied->hasNextElement()) {
-	    my %entry = $denied->getNextElement()->getHash();
-	    my $daemon = $entry{'daemon'}->getValue();
-	    my $host = $entry{'host'}->getValue();
-	    $contents .= "$daemon : $host\n";
-	}
+        my $denied = $config->getElement("$base/deny");
+
+        # Loop through all of the entries creating the necessary content.
+        while ($denied->hasNextElement()) {
+            my %entry = $denied->getNextElement()->getHash();
+            my $daemon = $entry{'daemon'}->getValue();
+            my $host = $entry{'host'}->getValue();
+            $contents .= "$daemon : $host\n";
+        }
     }
 
     # Write the /etc/hosts.allow file.

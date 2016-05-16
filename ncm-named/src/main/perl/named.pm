@@ -24,10 +24,8 @@ use CAF::Service;
 
 our $NoActionSupported = 1;
 
-local(*DTA);
-
 # To ease testing
-our @EXPORT = qw( $NAMED_CONFIG_FILE $NAMED_SYSCONFIG_FILE $RESOLVER_CONF_FILE);
+our @EXPORT = qw($NAMED_CONFIG_FILE $NAMED_SYSCONFIG_FILE $RESOLVER_CONF_FILE);
 
 # Define paths for convenience.
 Readonly our $NAMED_CONFIG_FILE => '/etc/named.conf';
@@ -37,10 +35,10 @@ Readonly our $RESOLVER_CONF_FILE => '/etc/resolv.conf';
 Readonly my $NAMED_SERVICE => "named";
 
 
-##########################################################################
-sub Configure {
-##########################################################################
-    my ($self,$config)=@_;
+sub Configure
+{
+
+    my ($self, $config) = @_;
 
     # Get config into a perl Hash
     my $named_config = $config->getElement($self->prefix())->getTree();
@@ -69,19 +67,19 @@ sub Configure {
         $fh->remove_lines(q(^(?i)\s*nameserver\s+),
                           q(no good line));
         if ( $server_enabled && $named_config->{use_localhost} ) {
-          print $fh "nameserver 127.0.0.1\t\t# added by Quattor\n";
+            print $fh "nameserver 127.0.0.1\t\t# added by Quattor\n";
         }
         for my $named_server (@{$named_config->{servers}}) {
-          print $fh "nameserver $named_server\t\t# added by Quattor\n";
+            print $fh "nameserver $named_server\t\t# added by Quattor\n";
         }
 
-       if ( $named_config->{search} ) {
+        if ( $named_config->{search} ) {
             $fh->add_or_replace_lines("^\\s*search\\s*.*",
                                       "^\\s*search\\s*@{$named_config->{search}}",
                                       "search @{$named_config->{search}}\n",
                                       ENDING_OF_FILE,
                                      );
-	        }
+        }
     }
 
     # options
@@ -132,7 +130,6 @@ sub Configure {
     }
 
     if ($named_config_contents) {
-
         $fh = CAF::FileWriter->new($named_config_file_path,
                                    backup      => '.ncm-named',
                                    owner       => 'root',
@@ -155,7 +152,6 @@ sub Configure {
 }
 
 
-##########################################################################
 # This function is used to update permanent and live state of the named
 # service. It accepts 3 arguments:
 #   - service_name: the name of the service
@@ -166,8 +162,8 @@ sub Configure {
 #
 # FIXME: to be replaced by CAF::Service when/if a similar method is provided.
 #
-sub updateServiceState {
-##########################################################################
+sub updateServiceState
+{
 
     my ($self, $service_name, $service_enabled, $config_changes) = @_;
     unless ( $service_name ) {
@@ -211,11 +207,11 @@ sub updateServiceState {
     my $action;
     if ( defined($service_enabled) ) {
         if ( $service_enabled ) {
-          if ( ! $named_started ) {
-              $action = 'start';
-          } elsif ( $config_changes ) {
-              $action = 'restart';
-          }
+            if ( ! $named_started ) {
+                $action = 'start';
+            } elsif ( $config_changes ) {
+                $action = 'restart';
+            }
         } else {
             if ( $named_started ) {
                 $action = 'stop';
@@ -237,12 +233,10 @@ sub updateServiceState {
         $self->debug(1,"No need to start/stop/restart service $service_name");
     }
 
-
     return;
 }
 
 
-##########################################################################
 # Retrieve named root dir (used when named is chrooted) from sysconfig file
 # and check that it is a valid path, as defined by ROOTDIR variable.
 # If the sysconfig file is not present or the ROOTDIR variable is not
@@ -251,8 +245,8 @@ sub updateServiceState {
 #
 # Return value : named root dir if defined or the empty string
 #
-sub getNamedRootDir {
-###########################################################################
+sub getNamedRootDir
+{
 
     my $self = shift;
     my $named_root_dir = "";
