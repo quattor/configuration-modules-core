@@ -12,7 +12,7 @@ include "components/dirperm/schema";
 
 prefix '/software/components/${project.artifactId}';
 
-'dependencies/pre' ?= list('spma');
+'dependencies/pre' ?= list('spma', 'accounts');
 'register_change' ?= list('/system/filesystems');
 'version' = '${no-snapshot-version}';
 'active' ?= true;
