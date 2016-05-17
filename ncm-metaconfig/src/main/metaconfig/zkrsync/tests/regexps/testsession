@@ -1,0 +1,15 @@
+Base test for zkrsync config
+---
+/etc/zkrs/default.conf
+---
+^\[MAIN\]$
+^delete=false$
+^domain=ugent.be$
+^dropcache=true$
+^excl_usr=$
+^excludere=\$\^$
+^info=true$
+^rsubpaths=2_gent/test/1,3_gent/test/2$
+^rsyncpath=/user/gent$
+^servers=mds01.gent:2181,mds02.gent:2181,mds03.gent:2181$
+^source=true$

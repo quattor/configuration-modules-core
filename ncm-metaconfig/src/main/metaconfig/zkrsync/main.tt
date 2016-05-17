@@ -1,0 +1,4 @@
+[MAIN]
+[% FOR pair IN CCM.contents.pairs -%]
+[%      pair.key %]=[% INCLUDE 'metaconfig/zkrsync/value.tt' data=pair.value %]
+[% END %]
