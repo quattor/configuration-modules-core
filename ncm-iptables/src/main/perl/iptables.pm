@@ -557,7 +557,7 @@ sub sort_keys
     my @keys;
     foreach my $option (@OPTION_SORT_ORDER) {
         if (exists $rule->{$option}) {
-            $self->debug(9, "Found $option in rule");
+            $self->debug(5, "Found $option in rule");
             push @keys, $option;
         }
     }
