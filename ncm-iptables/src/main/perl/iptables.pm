@@ -52,7 +52,9 @@ my %iptables_totality = (
 sub regExp
 {
     my ($self, $reg) = @_;
-    $reg =~ s/\s/\|/g;
+    $self->debug(5, 'regExp - called with ' . $reg);
+    $reg = join('|', @$reg);
+    $self->debug(5, 'regExp - made ' . $reg);
     return $reg;
 }
 
@@ -439,9 +441,9 @@ sub GetResource
         next if (!defined $entries->{$table});
 
         #define the regular expressions for -N, -A etc based on the specific targets for table
-        my $tmp = $self->uppercase($self->regExp(@{$iptables_totality{$table}{chains}}));
+        my $tmp = $self->uppercase($self->regExp(\@{$iptables_totality{$table}{chains}}));
         $OPTION_VALIDATORS{$_} = $tmp foreach (@{$iptables_totality{$table}{commands}});
-        $OPTION_VALIDATORS{'-j'} = $self->uppercase($self->regExp(@{$iptables_totality{$table}{targets}}));
+        $OPTION_VALIDATORS{'-j'} = $self->uppercase($self->regExp(\@{$iptables_totality{$table}{targets}}));
 
         $entries->{$table} = $self->GetPathEntries("$path/$table", $config);
         next if $?;
@@ -472,6 +474,7 @@ sub GetResource
                 #check if exists
                 if ($self->uppercase($rule->{-j}) !~ /$OPTION_VALIDATORS{'-j'}/) {
                     $iptables_totality{$table}{user_targets}{$self->uppercase($rule->{-j})} = 1;
+                    $self->debug(5, 'Defined "' . $rule->{-j} . '" as a user target');
                 }
             }
 
@@ -480,7 +483,7 @@ sub GetResource
             delete $rule->{command};
             delete $rule->{chain};
 
-            my $val = $self->regExp(@{$iptables_totality{$table}{commands}});
+            my $val = $self->regExp(\@{$iptables_totality{$table}{commands}});
 
             foreach my $key (keys %{$rule}) {
                 if ($OPTION_MODIFIERS{$key}) {
