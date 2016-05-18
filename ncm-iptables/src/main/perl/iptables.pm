@@ -7,14 +7,10 @@
 package NCM::Component::iptables;
 
 use strict;
-use NCM::Component;
+use base qw(NCM::Component);
 use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC = LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-use File::Copy;
+our $EC=LC::Exception::Context->new->will_store_all;
 use CAF::Process;
-use LC::Check;
 use CAF::FileWriter;
 use Readonly;
 
