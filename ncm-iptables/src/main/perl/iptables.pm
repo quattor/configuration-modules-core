@@ -802,8 +802,7 @@ sub Configure
         if ($?) {
             $self->error("command \"$proc\" failed:\n$ip_stdouterr");
         } else {
-            $self->info("ran command \"$proc\"");
-            $self->info($ip_stdouterr) if ($ip_stdouterr);
+            $self->info("ran command \"$proc\"", $ip_stdouterr ? $ip_stdouterr : '');
         }
     } else {
         $self->info("No change for $CONFIG_IPTABLES, not restarting service");
