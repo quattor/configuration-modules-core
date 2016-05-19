@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More tests => 17;
+use Test::Quattor;
 use NCM::Component::iptables;
 
 my $cmp = NCM::Component::iptables->new('iptables');

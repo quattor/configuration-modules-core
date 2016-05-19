@@ -2,10 +2,10 @@
 # -*- mode: cperl -*-
 use strict;
 use warnings;
+use Test::Quattor qw(basic comment);
 use NCM::Component::iptables;
 use Test::More;
 use CAF::Object;
-use Test::Quattor qw(basic comment);
 
 $CAF::Object::NoAction = 1;
 $NCM::Component::iptables::NoAction = 1;
