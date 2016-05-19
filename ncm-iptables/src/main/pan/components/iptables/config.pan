@@ -5,7 +5,7 @@
 
 unique template components/${project.artifactId}/config;
 
-include { "components/${project.artifactId}/schema" };
+include "components/${project.artifactId}/schema";
 
 # Package to install.
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

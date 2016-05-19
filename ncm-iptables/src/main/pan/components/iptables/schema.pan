@@ -5,7 +5,7 @@
 
 declaration template components/iptables/schema;
 
-include { "quattor/schema" };
+include "quattor/schema";
 
 type component_iptables_rule = {
     "new_chain"          ? string
@@ -13,21 +13,21 @@ type component_iptables_rule = {
     "delete"             ? string
     "insert"             ? string
     "replace"            ? string
-    "target"             ? string
+    "target"             ? string with {deprecated(0, 'Duplicate parameter target is deprecated, use jump instead'); true;}
     "jump"               ? string
-    "src_addr"           ? string
-    "src"                ? string
+    "src_addr"           ? string with {deprecated(0, 'Duplicate parameter src_addr is deprecated, use source instead'); true;}
+    "src"                ? string with {deprecated(0, 'Duplicate parameter src is deprecated, use source instead'); true;}
     "source"             ? string
     "src_port"           ? string
     "src_ports"          ? string
-    "dst_addr"           ? string
-    "dst"                ? string
+    "dst_addr"           ? string with {deprecated(0, 'Duplicate parameter dst_addr is deprecated, use destination instead'); true;}
+    "dst"                ? string with {deprecated(0, 'Duplicate parameter dst is deprecated, use destination instead'); true;}
     "destination"        ? string
     "dst_port"           ? string
     "dst_ports"          ? string
-    "in_interface"       ? string
+    "in_interface"       ? string with {deprecated(0, 'Duplicate parameter in_interface is deprecated, use in-interface instead'); true;}
     "in-interface"       ? string
-    "out_interface"      ? string
+    "out_interface"      ? string with {deprecated(0, 'Duplicate parameter out_interface is deprecated, use out-interface instead'); true;}
     "out-interface"      ? string
     "match"              ? string
     "state"              ? string
@@ -71,8 +71,8 @@ type component_iptables_rule = {
     "seconds"           ? number
     "hitcount"          ? number
     "name"              ? string
-    "pkt-type"          ? string   
-
+    "pkt-type"          ? string
+    "comment"           ? string with match(SELF, '^(?=\S).{1,256}(?<=\S)$')
 };
 
 type component_iptables_preamble = {
