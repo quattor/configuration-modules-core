@@ -1,0 +1,1 @@
+[%- INCLUDE "metaconfig/cgroups/config/group.tt" -%]

@@ -39,3 +39,9 @@ prefix "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/
 "admin/gid" = "group4";
 "admin/fperm" = "077";
 "admin/dperm" = "077";
+
+prefix "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/contents/template/{my/users/%u}/controllers";
+"memory" = dict();
+"cpu" = dict(
+    "cpu.shares", "250",
+);

@@ -78,5 +78,6 @@ type cgroups_cgconfig_default = {
 type cgroups_cgconfig_service = {
     'mount' ? cgroups_cgconfig_mount
     'group' ? cgroups_cgconfig_group{}
+    'template' ? cgroups_cgconfig_group{}
     'default' ? cgroups_cgconfig_default
 };
