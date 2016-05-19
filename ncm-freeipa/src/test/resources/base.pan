@@ -5,6 +5,7 @@ include 'components/freeipa/config';
 "/software/components/freeipa/dependencies/pre" = null;
 
 prefix "/software/components/freeipa";
+"realm" = "MY.REALM";
 "primary" = "myhost.example.com";
 
 prefix "/system/network";

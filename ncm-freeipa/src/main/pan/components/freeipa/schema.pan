@@ -83,10 +83,8 @@ type component_${project.artifactId}_server = {
     'groups' ? component_${project.artifactId}_group{}
 };
 
-@{ keytab for service configuration }
-type component_${project.artifactId}_keytab = {
-    @{service to retrieve keytab for (the pricipal service/fqdn is used if no component is specified)}
-    'service' : string
+@{ permission / ownership for keytabs and certificates }
+type component_${project.artifactId}_permission = {
     @{mode/permissions}
     'mode' : long = 0600
     @{owner}
@@ -95,8 +93,31 @@ type component_${project.artifactId}_keytab = {
     'group' : string = 'root'
 };
 
+@{ keytab for service configuration }
+type component_${project.artifactId}_keytab = {
+    include component_${project.artifactId}_permission
+    @{service to retrieve keytab for (the pricipal service/fqdn is used if no component is specified)}
+    'service' : string
+};
+
+@{ certificate to request/retrieve. cert and/or key can be optionally extracted from NSSDB.
+   permissions are set on both cert and key, with certmode for the certificate
+}
+type component_${project.artifactId}_certificate = {
+    include component_${project.artifactId}_permission
+    @{ certificate location to extract }
+    'cert' ? string
+    @{ certificate mode/permissions }
+    'certmode' : long = 0644
+    @{ (private) key location to extract }
+    'key' ? string
+};
+
+# TODO: use common realm type
 type component_${project.artifactId} = {
     include structure_component
+    @{realm}
+    'realm' : string with match(SELF, '^[a-zA-Z][\w.-]*$')
     @{FreeIPA server that will be used for all API and for secondaries to replicate}
     'primary' : type_hostname
     @{list of secondary servers to replicate}
@@ -105,4 +126,6 @@ type component_${project.artifactId} = {
     'server' ? component_${project.artifactId}_server
     @{keytabs to retrieve for services}
     'keytabs' ? component_${project.artifactId}_keytab{}
+    @{certificates to request/retrieve (key is the NSSDB nick}
+    'certificates' ? component_${project.artifactId}_certificate{}
 };

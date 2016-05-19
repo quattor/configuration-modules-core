@@ -192,21 +192,31 @@ sub has_cert
 {
     my ($self, $nick) = @_;
 
-    return $self->_certutil('-L', '-n', $nick);
+    # It's quite OK that this command fails
+    my $oldfail = $self->{fail};
+    my $res = $self->_certutil('-L', '-n', $nick);
+    $self->{fail} = $oldfail;
+    return $res;
 }
 
 =item get_cert
 
-Extract the certificate from NSSDB for C<nick> to file C<cert>.
+Extract the certificate from NSSDB for C<nick> to file C<cert>
+with owner/group/mode options..
 
 =cut
 
 sub get_cert
 {
-    my ($self, $nick, $cert) = @_;
+    my ($self, $nick, $cert, %opts) = @_;
 
     # -a for ASCII
-    return $self->_certutil('-L', '-n', $nick, '-a', '-o', $cert);
+    if ($self->_certutil('-L', '-n', $nick, '-a', '-o', $cert) &&
+        $self->status($cert, %opts)) {
+        return SUCCESS;
+    } else {
+        return;
+    };
 };
 
 # Wrapper to read random C<bytes> from /dev/urandom
@@ -215,14 +225,20 @@ sub get_cert
 # Returns (temp) filename with random data.
 sub _mk_random_data
 {
-    my ($self, $bytes) = @_;
+    my ($self, $bytes, $suff) = @_;
 
-    $bytes = 4 * 1024 if ! defined($bytes);
+    $bytes = $DEFAULT_CSR_BITS if ! defined($bytes);
+
+    $suff = 'no_dn' if ! defined($suff);
 
     my $sysrw = sub {
         my ($mode, $file, $data) = @_;
 
         my $is_read = $mode eq 'read';
+
+        if ($CAF::Object::NoAction) {
+            return -1;
+        }
 
         my ($fh, $err);
         if (open($fh, $is_read ? '<' : '>', $file)) {
@@ -239,8 +255,7 @@ sub _mk_random_data
         };
 
         if ($err) {
-            $self->error($err);
-            return;
+            return $self->fail($err);
         } else {
             return $data;
         };
@@ -248,7 +263,7 @@ sub _mk_random_data
 
     my $randomdata = &$sysrw('read', $DEV_RANDOM);
     if ($randomdata) {
-        my $filename = "$self->{workdir}/random.data";
+        my $filename = "$self->{workdir}/random_$suff.data";
         if (&$sysrw('write', $filename, $randomdata)) {
             return $filename;
         }
@@ -258,24 +273,34 @@ sub _mk_random_data
 
 =item make_cert_request
 
-Make a certificate request for C<fqdn>, return filename of the CSR.
-(Used DN is C<<CN=<fqdn>,O=<realm>>>).
+Make a certificate request for C<fqdn> and optional C<dn>,
+return filename of the CSR.
+(Used DN is C<<[DN=<dn>,]CN=<fqdn>,O=<realm>>>).
 
 =cut
 
 sub make_cert_request
 {
-    my ($self, $fqdn) = @_;
+    my ($self, $fqdn, $dn) = @_;
 
-    my $random_data_file = $self->_mk_random_data();
+    my $suff;
+    if (defined($dn)) {
+        $suff = "$dn";
+        $dn = "DN=$dn,";
+    } else {
+        $suff = "__no_dn";
+        $dn = '';
+    };
+
+    my $random_data_file = $self->_mk_random_data($DEFAULT_CSR_BITS, $suff);
     return if ! $random_data_file;
 
-    my $csr_filename = "$self->{workdir}/cert_$fqdn.csr";
+    my $csr_filename = "$self->{workdir}/cert_${fqdn}_$suff.csr";
 
     # cleanup of random.data done by cleanup of workdir
     return $csr_filename if $self->_certutil(
         '-R', '-g', $self->{csr_bits},
-        '-s', "CN=$fqdn,O=$self->{realm}",
+        '-s', "${dn}CN=$fqdn,O=$self->{realm}",
         '-z', $random_data_file,
         '-a', '-o', $csr_filename,
         );
@@ -308,16 +333,16 @@ sub ipa_request_cert
         if ($serial) {
             my $cert = $ipa->get_cert($serial, $crt);
             if ($cert) {
-                $self->verbose("Retrieved certificate $cert->{dn} with serial $cert->{serial}");
-                $res = 1;
+                $self->verbose("Retrieved certificate $cert->{dn} with serial $cert->{serial} to $crt");
+                $res = SUCCESS;
             } else {
-                $self->error("Failed to get certificate with serial $serial");
+                $self->fail("Failed to get certificate with serial $serial to $crt");
             }
         } else {
-            $self->error("Failed to get serial from request (csr $csr and principal $principal)");
+            $self->fail("Failed to get serial from request (csr $csr and principal $principal)");
         }
     } else {
-        $self->error("Failed to request certificate using csr $csr and principal $principal");
+        $self->fail("Failed to request certificate using csr $csr and principal $principal");
     }
 
     return $res;
@@ -361,6 +386,20 @@ sub get_privkey
     return SUCCESS;
 }
 
+=item get_cert_or_key
+
+Given C<type>, retrieve the cert of private key
+from certificate with nick C<nick> and
+save it in the file C<fn> with owner/group/mode options.
+
+=cut
+
+sub get_cert_or_key
+{
+    my $self = shift;
+    my $type = shift;
+    return $type eq 'cert' ? $self->get_cert(@_) : $self->get_privkey(@_);
+}
 
 # Convenience wrapper around certutil tool
 # Return 1 on success
@@ -377,7 +416,7 @@ sub _certutil
     my $output = $proc->output();
     chomp($output);
 
-    if($?) {
+    if ($?) {
         return $self->fail("$proc failed: $output");
     } else {
         return SUCCESS;

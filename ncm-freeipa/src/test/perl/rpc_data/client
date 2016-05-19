@@ -1,0 +1,4 @@
+$cmds{request}{cmd}='cert_request /tmp/quattor_nss-XXXX/cert_myhost.example.com_nick1.csr principal=host/myhost.example.com@MY.REALM,version.*';
+$cmds{request}{result}={serial => 1234};
+$cmds{show}{cmd}='cert_show 1234 out=/tmp/quattor_nss-XXXX/init_nss_nick1.crt,version.*';
+$cmds{show}{result}={serial => 1234, dn => 'mydn'};

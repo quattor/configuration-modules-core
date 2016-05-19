@@ -3,6 +3,7 @@ use base qw(NCM::Component CAF::Path);
 
 use Readonly;
 use NCM::Component::FreeIPA::Client;
+use NCM::Component::FreeIPA::NSS;
 
 use CAF::Object qw(SUCCESS);
 use CAF::Reporter 16.2.1;
@@ -17,8 +18,13 @@ $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 Readonly my $DEBUGAPI_LEVEL => 3;
 Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 
+Readonly my $NSSDB => '/etc/nssdb.quattor';
+
 # Hold an instance of the client
 my $client;
+
+# Current host FQDN
+my $fqdn;
 
 sub dns
 {
@@ -58,8 +64,8 @@ sub hosts
 {
     my ($self, $hosts) = @_;
 
-    foreach my $fqdn (sort keys %$hosts) {
-        $client->add_host($fqdn, %{$hosts->{$fqdn}});
+    foreach my $hn (sort keys %$hosts) {
+        $client->add_host($hn, %{$hosts->{$hn}});
     };
 
     return SUCCESS;
@@ -131,16 +137,6 @@ sub server
 {
     my ($self, $tree) = @_;
 
-    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
-
-    # Only allow kerberos for now
-    $client = NCM::Component::FreeIPA::Client->new(
-        $tree->{primary},
-        log => $self,
-        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
-        );
-    return if ! $client->{rc};
-
     return if ! $self->dns($tree->{server}->{dns});
 
     return if ! $self->hosts($tree->{server}->{hosts});
@@ -155,7 +151,7 @@ sub server
 
 sub service_keytab
 {
-    my ($self, $fqdn, $tree) = @_;
+    my ($self, $tree) = @_;
 
     foreach my $fn (sort keys %{$tree->{keytabs}}) {
         my $filename = unescape($fn);
@@ -196,22 +192,80 @@ sub service_keytab
     return SUCCESS;
 }
 
-
-sub certificate
-{
-    my ($self, $fqdn, $realm, $nssdb, $nssdb_group, $cacert, $nick, $cert, $key) = @_;
-
-}
-    
 sub certificates
 {
-    my ($self, $fqdn, $tree) = @_;
-    return SUCCESS;
+    my ($self, $tree) = @_;
+
+    # One NSSDB for all?
+    my $nss = NCM::Component::FreeIPA::NSS->new(
+        $NSSDB,
+        realm => $tree->{realm},
+        log => $self,
+        );
+
+    if($nss->setup()) {
+        # TODO: do we always need to readd it?
+        if ($nss->add_cert_ca()) {
+            $self->verbose("CA cert added");
+        } else {
+            $self->error("Failed to add CA cert: $nss->{fail}");
+            return;
+        };
+
+        foreach my $nick (sort keys %{$tree->{certificates}}) {
+            # How do we renew the certificates?
+            my $cert = $tree->{certificates}->{$nick};
+            if ($nss->has_cert($nick)) {
+                $self->verbose("Found certificate for nick $nick");
+            } else {
+                my $initcrt = "$nss->{workdir}/init_nss_$nick.crt";
+                my $msg = "Initial NSS certificate for nick $nick (temp $initcrt)";
+                # Make request csr
+                my $csr = $nss->make_cert_request($fqdn, $nick);
+                if ($csr &&
+                    $nss->ipa_request_cert($csr, $initcrt, $fqdn, $client) && # Get cert via IPA
+                    $nss->add_cert($nick, $initcrt) # Add to NSSDB
+                    ) {
+                    $self->verbose("$msg added");
+                } else {
+                    $self->error("$msg failed: $nss->{fail}");
+                    return;
+                };
+            }
+
+            foreach my $type (qw(cert key)) {
+                my $fn = $cert->{$type};
+                next if ! defined($fn);
+
+                my $modeattr = ($type eq 'cert' ? $type : '').'mode';
+                my %opts = map {$_ => $cert->{$_}} (qw(owner group));
+                $opts{mode} = $cert->{$modeattr} if defined($cert->{$modeattr});
+
+                my $msg = "$type file $fn for nick $nick";
+                if ($self->file_exists($fn)) {
+                    $self->verbose("Found existing $msg");
+                } else {
+                    # Extract with get_cert
+                    if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
+                        $self->verbose("Extracted $msg");
+                    } else {
+                        $self->error("Failed to extract $msg: $nss->{fail}");
+                        return;
+                    }
+                }
+            }
+        }
+        return SUCCESS;
+    } else {
+        $self->error("NSSDB setup failed: $nss->{fail}");
+    }
+
+    return;
 }
 
 sub client
 {
-    my ($self, $fqdn, $tree) = @_;
+    my ($self, $tree) = @_;
 
     my $krb = CAF::Kerberos->new(
         principal => "host/$fqdn",
@@ -225,25 +279,56 @@ sub client
     local %ENV;
     $krb->update_env(\%ENV);
 
-    $self->service_keytab($fqdn, $tree) if $tree->{keytabs};
+    $self->service_keytab($tree) if $tree->{keytabs};
+    $self->certificates($tree) if $tree->{certificates};
 
     return SUCCESS;
 }
 
+# ugly, but convenient: set class-variable fqdn
+sub set_fqdn
+{
+    my ($self, $config) = @_;
+    my $network = $config->getTree('/system/network');
+    $fqdn = "$network->{hostname}.$network->{domainname}";
+    return $fqdn;
+}
+
+# ugly, but convenient: set class-variable IPA client instance
+sub set_ipa_client
+{
+    my ($self, $primary) = @_;
+
+    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
+
+    # Only allow kerberos for now
+    $client = NCM::Component::FreeIPA::Client->new(
+        $primary,
+        log => $self,
+        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
+        );
+
+    return $client;
+}
 
 sub Configure
 {
 
     my ($self, $config) = @_;
 
-    my $network = $config->getTree('/system/network');
-    my $fqdn = "$network->{hostname}.$network->{domainname}";
+    $self->set_fqdn();
 
     my $tree = $config->getTree($self->prefix());
 
-    $self->server($tree) if $tree->{server};
+    $self->set_ipa_client($tree->{primary});
 
-    $self->client($fqdn, $tree);
+    if ($client->{rc}) {
+        $self->server($tree) if $tree->{server};
+
+        $self->client($tree);
+    } else {
+        $self->error("Failed to obtain FreeIPA Client: $client->{fail}");
+    };
 
     return 1;
 }

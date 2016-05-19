@@ -17,6 +17,7 @@ my $tree;
 =cut
 
 $tree = {primary => 'some.host'};
+$cmp->set_ipa_client($tree->{primary});
 ok($cmp->server($tree), 'server returns success with empty configtree');
 
 =head2 actual test
@@ -24,6 +25,7 @@ ok($cmp->server($tree), 'server returns success with empty configtree');
 =cut
 
 $tree = $cfg->getTree($cmp->prefix());
+$cmp->set_ipa_client($tree->{primary});
 
 reset_POST_history;
 ok($cmp->server($tree), 'server returns success');

@@ -84,11 +84,11 @@ ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -n mynick -a -o path/t
 
 $n->{workdir} = "target/test/randomdata";
 mkpath($n->{workdir});
-my $fn = "$n->{workdir}/random.data";
+my $fn = "$n->{workdir}/random_mynick.data";
 my $nrbytes = 1234;
 ok(! -f $fn, "random.data file does not exist before mk_random_data");
-is($n->_mk_random_data($nrbytes), $fn, "_mk_random_data return filename after succesful write");
-ok(-f $fn, "random.data file exists after mk_random_data");
+is($n->_mk_random_data($nrbytes, 'mynick'), $fn, "_mk_random_data return filename after succesful write");
+ok(-f $fn, "random_mynick.data file exists after mk_random_data");
 my ($fh, $data);
 open($fh, '<', $fn);
 # make sure we try to read more than what we expect
@@ -98,8 +98,8 @@ close($fh);
 unlink($fn);
 
 ok(! -f $fn, "randomdata does not exist before make_cert_request");
-is($n->make_cert_request("a.b.c.d"), "$n->{workdir}/cert_a.b.c.d.csr", "make_cert_request returns csr filename");
-ok(get_command('/usr/bin/certutil -d target/test/nssdb -R -g 4096 -s CN=a.b.c.d,O=REALM.DOMAIN -z target/test/randomdata/random.data -a -o target/test/randomdata/cert_a.b.c.d.csr'),
+is($n->make_cert_request("a.b.c.d", "mynick"), "$n->{workdir}/cert_a.b.c.d_mynick.csr", "make_cert_request returns csr filename");
+ok(get_command('/usr/bin/certutil -d target/test/nssdb -R -g 4096 -s DN=mynick,CN=a.b.c.d,O=REALM.DOMAIN -z target/test/randomdata/random_mynick.data -a -o target/test/randomdata/cert_a.b.c.d_mynick.csr'),
    "get_cert_request expected certutil command");
 ok(-f $fn, "randomdata exists after make_cert_request (via mk_random_data)");
 
