@@ -1,6 +1,6 @@
-cgconfig.conf example2
+cgconfig.d/quattor.conf example2
 ---
-/etc/cgconfig.conf
+/etc/cgconfig.d/quattor.conf
 ---
 ^group daemons \{$
 ^\s{4}cpu \{$

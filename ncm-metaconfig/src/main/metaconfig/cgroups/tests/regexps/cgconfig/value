@@ -1,6 +1,6 @@
-Test cgconfig.conf
+Test cgconfig.d/quattor.conf
 ---
-/etc/cgconfig.conf
+/etc/cgconfig.d/quattor.conf
 ---
 ^default \{$
 ^\s{4}perm \{$

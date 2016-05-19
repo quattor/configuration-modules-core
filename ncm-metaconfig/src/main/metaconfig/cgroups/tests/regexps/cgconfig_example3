@@ -1,6 +1,6 @@
-cgconfig.conf example3
+cgconfig.d/quattor.conf example3
 ---
-/etc/cgconfig.conf
+/etc/cgconfig.d/quattor.conf
 ---
 ^group daemons/ftp \{$
 ^\s{4}cpu \{$
