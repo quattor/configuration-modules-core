@@ -5,6 +5,8 @@
 
 unique template components/${project.artifactId}/config-ips;
 
+'/software/groups/names' ?= list();
+
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 

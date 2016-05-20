@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 declaration template components/spma/schema;
 
 include 'quattor/types/component';
@@ -16,7 +15,7 @@ type component_spma_type = {
     include component_spma_ips
     include component_spma_yum
     "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
-    "packager"      : string = "yum" with match (SELF, '^(yum|ips)$') # system packager to be used (yum,ips)
+    "packager"      : string = "yum" with match (SELF, '^(yum|ips|rpm)$') # system packager to be used (yum,ips,rpm)
     "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions
     "process_obsoletes" : boolean = false
     "cachedir"      ? string # SPMA cache directory
@@ -43,6 +42,6 @@ type component_spma_type = {
 };
 
 bind "/software/components/spma" = component_spma_type;
-bind "/software/groups" = SOFTWARE_GROUP{};
+bind "/software/groups" = SOFTWARE_GROUP {};
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
 bind "/software/repositories" = SOFTWARE_REPOSITORY [];

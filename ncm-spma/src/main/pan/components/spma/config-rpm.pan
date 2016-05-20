@@ -2,12 +2,11 @@
 # ${developer-info}
 # ${author-info}
 
-
 unique template components/spma/config-rpm;
 
 # Prefix for packages/groups
 prefix '/software';
-'groups' ?= nlist();
+'groups/names' ?= list();
 # Package to install
 'packages' = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

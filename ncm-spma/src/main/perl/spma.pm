@@ -47,6 +47,9 @@ sub call_entry_point
     }
 
     my $submod = "NCM::Component::spma::$packager";
+    if (defined($t->{suffix})) {
+        $submod .= $t->{suffix};
+    }
     eval "use $submod";
     if ($@) {
         $self->error("Failed to load $submod: $@");
