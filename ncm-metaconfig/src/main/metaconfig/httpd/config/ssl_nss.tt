@@ -1,7 +1,7 @@
-[%- booleans = ['engine', 
+[%- booleans = ['engine',
                 'renegotiation', 'requiresafenegotiation', 'ocsp',
                 ] -%]
-[%- list = ["protocol", "options"] -%]
+[%- list = ["options"] -%]
 [%- colon_list = ["ciphersuite"] -%]
 [%- list_of_val = ["cryptodevice"] -%]
 [%- list_of_list = ["randomseed"] -%]
@@ -9,12 +9,9 @@
 [%- FOREACH pair IN desc.pairs %]
 [%-     SWITCH pair.key -%]
 [%-         CASE "ciphersuite" -%]
-[%              ssl_nss %][% pair.key %]
-[%-             IF ssl_nss == 'nss' -%]
- [%                 pair.value.join(',') %]
-[%-             ELSE -%]
- [%                 pair.value.join(':') %]
-[%-             END %]
+[%              ssl_nss %][% pair.key %] [% pair.value.join(ssl_nss == 'nss' ? ',' : ':') %]
+[%-         CASE "protocol" -%]
+[%              ssl_nss %][% pair.key %] [% pair.value.join(ssl_nss == 'nss' ? ',' : ' ') %]
 [%-         CASE "mutex" -%]
 [%              (_httpdversion.0 >=2 && _httpdversion.1 >=4) ? '' : ssl_nss %][% pair.key %] [% pair.value %]
 [%-         CASE "requiressl" -%]

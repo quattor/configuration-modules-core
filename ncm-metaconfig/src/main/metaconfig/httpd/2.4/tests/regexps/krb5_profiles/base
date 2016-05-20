@@ -1,0 +1,32 @@
+Base test for krb5_profiles.conf config
+---
+/etc/httpd/conf.d/krb5_profiles.conf
+---
+^addencoding x-gzip .gz .tgz$
+^listen 1.2.3.4:444 $
+^<virtualhost    1.2.3.4:444>$
+^\s{4}servername myhost.domain:444$
+^\s{4}documentroot /var/www/https$
+^\s{4}hostnamelookups on$
+^\s{4}nsscertificatedatabase /etc/httpd/alias$
+^\s{4}nssciphersuite \+rsa_rc4_128_md5,\+rsa_rc4_128_sha,\+rsa_3des_sha,-rsa_des_sha,-rsa_rc4_40_md5,-rsa_rc2_40_md5,-rsa_null_md5,-rsa_null_sha,\+fips_3des_sha,-fips_des_sha,-fortezza,-fortezza_rc4_128_sha,-fortezza_null,-rsa_des_56_sha,-rsa_rc4_56_sha,\+rsa_aes_128_sha,\+rsa_aes_256_sha\s+
+^\s{4}nssengine on$
+^\s{4}nssnickname "Server-Cert"$
+^\s{4}nssprotocol TLSv1.0,TLSv1.1,TLSv1.2$
+^\s{4}rewriteengine on$
+^\s{4}rewritemap ACLmap txt:/var/www/acl/ACLmap.txt $
+^\s{4}loglevel warn$
+^\s{4}errorlog logs/profiles_error_log$
+^\s{4}transferlog logs/profiles_access_log$
+^\s{4}customlog logs/profiles_request_log ssl_combined$
+^\s{4}<directory /var/www/https/profiles>$
+^\s{8}authname "Quattor Kerberos Login"$
+^\s{8}require valid-user $
+^\s{8}authtype GSSAPI$
+^\s{8}gssapicredstore keytab:/etc/httpd/conf/ipa.keytab$
+^\s{8}gssapisslonly on$
+^\s{8}rewritecond \$\{ACLmap:%\{REMOTE_HOST\}\|NO\} NO$
+^\s{8}rewritecond %\{REMOTE_USER\} \^host/\(\.\+\)@YOUR\.REALM\$$
+^\s{8}rewriterule \^\(\.\*/\)\?\.\*\\\.\(xml\|json\)\(\\\.gz\)\?\$ \$1%1\.\$2\$3 \[L\]$
+^\s{4}</directory>$
+^</virtualhost>$

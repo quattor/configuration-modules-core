@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(simpleaccounts poolaccounts requiredgroupmembers);
+use Test::Quattor qw(simpleaccounts requiredgroupmembers poolaccounts);
 use NCM::Component::accounts;
 use Readonly;
 use CAF::Object;
@@ -110,5 +110,7 @@ my $passwd_fh = get_file($PASSWD);
 ok(defined($passwd_fh), "$PASSWD successfully opened");
 is("$passwd_fh",$PASSWD_EXPECTED_CONTENTS,"$PASSWD has expected contents with group required members");
 
+$group_fh->close();
+$passwd_fh->close();
 
 done_testing();

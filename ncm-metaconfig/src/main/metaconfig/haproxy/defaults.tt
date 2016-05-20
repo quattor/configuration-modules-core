@@ -1,0 +1,10 @@
+[% FOREACH config IN defaults.config.pairs -%]
+[%     config.key %] [% config.value %]
+[% END %]
+[% FOREACH option IN defaults.options.pairs -%]
+option [% option.key %] [% option.value %]
+[% END %]
+[% FOREACH timeout IN defaults.timeouts.pairs -%]
+timeout [% timeout.key %] [% timeout.value %]
+[% END %]
+

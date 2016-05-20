@@ -30,6 +30,8 @@
 package NCM::Component::cups;
 
 use strict;
+use warnings;
+
 use NCM::Component;
 
 our @ISA = qw(NCM::Component);
@@ -45,8 +47,6 @@ use CAF::Process;
 
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
-local (*DTA);
-
 # Define paths for convenience.
 my $base = "/software/components/cups";
 
@@ -55,9 +55,9 @@ my $cupsd_startup_script = "/etc/rc.d/init.d/cups";
 # Support for CUPS options has been designed to be flexible and allow easy
 # addition of new options.
 # It is provided by the 3 next hashes :
-#	- %supported_options : list the supported options and the roles that use them
-#	- %config_files : describe the configuration file corresponding to each role
-#	- %services : list the daemons used by each role
+#    - %supported_options : list the supported options and the roles that use them
+#    - %config_files : describe the configuration file corresponding to each role
+#    - %services : list the daemons used by each role
 #
 # Normally adding support for a new option requires only to add it in the
 # %supported_options hash, with the format described below (don't forget to
@@ -109,7 +109,7 @@ my %printer_options_supported = (
 
 my $config_bck_ext = ".old";    # Replaced version extension
 
-#my $config_prod_ext = ".new";		# For testing purpose only
+#my $config_prod_ext = ".new";        # For testing purpose only
 my $config_prod_ext = "";       # Must be empty except for testing purpose
 
 my @enable_actions = ( "disable", "enable" );    # For debugging messages
@@ -128,9 +128,8 @@ my $lpadmin_cmd;
 my $true  = "true";
 my $false = "false";
 
-##########################################################################
+
 sub Configure
-##########################################################################
 {
     my ( $self, $config ) = @_;
 
@@ -143,43 +142,43 @@ sub Configure
 
     # Check that CUPS commands are available.
     for my $cmd (@accept_cmd) {
-      if ( -x $cmd ) {
-        $accept_cmd = $cmd;
-      }
+        if ( -x $cmd ) {
+            $accept_cmd = $cmd;
+        }
     }
     unless ( $accept_cmd ) {
-      $self->error("CUPS 'accept' command not found.");
-      return 1;
+        $self->error("CUPS 'accept' command not found.");
+        return 1;
     }
 
     for my $cmd (@disable_cmd) {
-      if ( -x $cmd ) {
-        $disable_cmd = $cmd;
-      }
+        if ( -x $cmd ) {
+            $disable_cmd = $cmd;
+        }
     }
     unless ( $disable_cmd ) {
-      $self->error("CUPS 'disable' command not found.");
-      return 1;
+        $self->error("CUPS 'disable' command not found.");
+        return 1;
     }
 
     for my $cmd (@enable_cmd) {
-      if ( -x $cmd ) {
-        $enable_cmd = $cmd;
-      }
+        if ( -x $cmd ) {
+            $enable_cmd = $cmd;
+        }
     }
     unless ( $enable_cmd ) {
-      $self->error("CUPS 'enable' command not found.");
-      return 1;
+        $self->error("CUPS 'enable' command not found.");
+        return 1;
     }
 
     for my $cmd (@lpadmin_cmd) {
-      if ( -x $cmd ) {
-        $lpadmin_cmd = $cmd;
-      }
+        if ( -x $cmd ) {
+            $lpadmin_cmd = $cmd;
+        }
     }
     unless ( $lpadmin_cmd ) {
-      $self->error("CUPS 'lpadmin' command not found.");
-      return 1;
+        $self->error("CUPS 'lpadmin' command not found.");
+        return 1;
     }
 
     # Check if named server must be enabled
@@ -196,67 +195,67 @@ sub Configure
 
     # Retrieve and process CUPS options
     if ( $cups_config->{options} ) {
-      for my $option_name (keys(%{$cups_config->{options}})) {
-          $self->debug( 1, "Processing cups option '$option_name'" );
-          if ( !exists( $supported_options{$option_name} ) ) {
-              $self->warn("Internal error : unsupported option '$option_name'");
-              next;    # Log a warning but continue processing
-          }
+        for my $option_name (keys(%{$cups_config->{options}})) {
+            $self->debug( 1, "Processing cups option '$option_name'" );
+            if ( !exists( $supported_options{$option_name} ) ) {
+                $self->warn("Internal error : unsupported option '$option_name'");
+                next;    # Log a warning but continue processing
+            }
 
-          # Get option value and and if option is 'ServerName', do some specific
-          # processing to determine if this machine need to run the server
-          my $option_value = $cups_config->{options}->{$option_name};
-          if ( $option_name eq "ServerName" ) {
-              ( my $host, my $domain ) = split /\./, $option_value, 2;
-              unless ( $domain || ( $host eq "localhost" ) ) {
-                  $self->warn("Server name not fully qualified. Adding domain $domain");
-                  $option_value = $this_host_full;
-              }
+            # Get option value and and if option is 'ServerName', do some specific
+            # processing to determine if this machine need to run the server
+            my $option_value = $cups_config->{options}->{$option_name};
+            if ( $option_name eq "ServerName" ) {
+                ( my $host, my $domain ) = split /\./, $option_value, 2;
+                unless ( $domain || ( $host eq "localhost" ) ) {
+                    $self->warn("Server name not fully qualified. Adding domain $domain");
+                    $option_value = $this_host_full;
+                }
 
-              # If server=localhost, better to use real name in configuration file
-              if ( $option_value eq "localhost" ) {
-                  $option_value = $this_host_full;
-              }
-              if ( !defined($server_enabled) ) {
-                  if ( $option_value eq $this_host_full ) {
-                      $server_enabled = 1;
-                  } else {
-                      $server_enabled = 0;
-                  }
-              } else {
-                  if ( $server_enabled && $option_value ne $this_host_full ) {
-                      $self->warn("Current host defined as a CUPS server but client configured to use $host");
-                  }
-              }
-          }
+                # If server=localhost, better to use real name in configuration file
+                if ( $option_value eq "localhost" ) {
+                    $option_value = $this_host_full;
+                }
+                if ( !defined($server_enabled) ) {
+                    if ( $option_value eq $this_host_full ) {
+                        $server_enabled = 1;
+                    } else {
+                        $server_enabled = 0;
+                    }
+                } else {
+                    if ( $server_enabled && $option_value ne $this_host_full ) {
+                        $self->warn("Current host defined as a CUPS server but client configured to use $host");
+                    }
+                }
+            }
 
-          # $option_roles is a list of roles separated by ','
-          # If $option_value is empty, treat as a request to comment out the line
-          # if present (to use cups default).
-          # If the $option_value is made only of spaces, it is interpreted as a
-          # null value
-          my $option_roles = $supported_options{$option_name};
-          my @option_roles = split /\s*,\s*/, $option_roles;
-          for my $option_role (@option_roles) {
-              if ($option_value) {
-                  if ( $option_value =~ /^\s+$/ ) {
-                      $option_value = '';
-                  }
+            # $option_roles is a list of roles separated by ','
+            # If $option_value is empty, treat as a request to comment out the line
+            # if present (to use cups default).
+            # If the $option_value is made only of spaces, it is interpreted as a
+            # null value
+            my $option_roles = $supported_options{$option_name};
+            my @option_roles = split /\s*,\s*/, $option_roles;
+            for my $option_role (@option_roles) {
+                if ($option_value) {
+                    if ( $option_value =~ /^\s+$/ ) {
+                        $option_value = '';
+                    }
 
-                  # If CUPS server is current host, use 127.0.0.1 for the client
-                  if (   ( $option_role eq "client" )
-                      && ( $option_name  eq "ServerName" )
-                      && ( $option_value eq $this_host_full ) )
-                  {
-                      $self->addConfigEntry( $option_role, $option_name, "127.0.0.1" );
-                  } else {
-                      $self->addConfigEntry( $option_role, $option_name, $option_value );
-                  }
-              } else {
-                  $self->removeConfigEntry( $option_role, $option_name );
-              }
-          }
-      }
+                    # If CUPS server is current host, use 127.0.0.1 for the client
+                    if (   ( $option_role eq "client" )
+                           && ( $option_name  eq "ServerName" )
+                           && ( $option_value eq $this_host_full ) )
+                    {
+                        $self->addConfigEntry( $option_role, $option_name, "127.0.0.1" );
+                    } else {
+                        $self->addConfigEntry( $option_role, $option_name, $option_value );
+                    }
+                } else {
+                    $self->removeConfigEntry( $option_role, $option_name );
+                }
+            }
+        }
     } else {
         $self->debug( 1, "No option defined" );
     }
@@ -292,8 +291,7 @@ sub Configure
             return 1;
         }
 
-    }
-    else {
+    } else {
         if ($server_enabled) {
             $self->error("$services{server} startup script doesn't exist");
             return 0;
@@ -328,27 +326,27 @@ sub Configure
         # FIXME: To be removed.
         my $cups_printers_config;
         if ( ref($cups_config->{printers}) eq 'HASH' ) {
-          $cups_printers_config = $cups_config->{printers};
+            $cups_printers_config = $cups_config->{printers};
         } elsif ( ref($cups_config->{printers}) eq 'ARRAY' ) {
-          $self->debug(1,'Legacy schema used, converting printer list to a hash');
-          $cups_printers_config = {};
-          my $entry_num = 0;
-          for my $printer_config (@{$cups_config->{printers}}) {
-            $entry_num++;
-            my $printer = $printer_config->{name};
-            unless ( $printer ) {
-              $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
-              next;
+            $self->debug(1,'Legacy schema used, converting printer list to a hash');
+            $cups_printers_config = {};
+            my $entry_num = 0;
+            for my $printer_config (@{$cups_config->{printers}}) {
+                $entry_num++;
+                my $printer = $printer_config->{name};
+                unless ( $printer ) {
+                    $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
+                    next;
+                }
+                delete $printer_config->{name};
+                $cups_printers_config->{$printer} =  $printer_config;
             }
-            delete $printer_config->{name};
-            $cups_printers_config->{$printer} =  $printer_config;
-          }
         }
 
         $self->debug(1,"Number of printers defined in the configuration: ".scalar(keys(%{$cups_printers_config})));
 
         for my $printer (keys(%{$cups_printers_config})) {
-            $self->debug(1,"Processing printer $printer...");
+            $self->debug(1, "Processing printer $printer...");
 
             my $printer_options_str = '';
 
@@ -407,8 +405,8 @@ sub Configure
         }
 
         if (   $default_printer
-            && exists( $cups_printers_config->{$default_printer} )
-            && !$cups_printers_config->{$default_printer}->{delete} )
+               && exists( $cups_printers_config->{$default_printer} )
+               && !$cups_printers_config->{$default_printer}->{delete} )
         {
             if ( $self->printerDefault($default_printer) ) {
                 $self->warn("Error defining printer $default_printer as the default printer");
@@ -426,14 +424,14 @@ sub Configure
 # Add a printer or modify its configuration.
 #
 # Arguments :
-#	printer : default printer name
-#	options : printer options
+#    printer : default printer name
+#    options : printer options
 #
 # Returned value :
-#	0 : success
-#	1 : failure
+#    0 : success
+#    1 : failure
 
-sub printerAdd()
+sub printerAdd
 {
     my $function_name = "printerAdd";
     my $self          = shift;
@@ -453,7 +451,7 @@ sub printerAdd()
     my $error_msg = $cmd->output();
     my $status = $?;
     if ( $status ) {
-      $self->debug(1, "$function_name : error adding printer '$printer': $error_msg");
+        $self->debug(1, "$function_name : error adding printer '$printer': $error_msg");
     }
 
     return $status;
@@ -462,13 +460,13 @@ sub printerAdd()
 # Delete a printer. If the printer doesn't exist, return success.
 #
 # Arguments :
-#	printer : default printer name
+#    printer : default printer name
 #
 # Returned value :
-#	0 : success
-#	1 : failure
+#    0 : success
+#    1 : failure
 
-sub printerDelete()
+sub printerDelete
 {
     my $function_name = "printerDelete";
     my $self          = shift;
@@ -492,14 +490,14 @@ sub printerDelete()
 # Enable+Accept/Disable a printer.
 #
 # Arguments :
-#	printer : default printer name
-#	enable flag : if true, enable, else disable (optional, D: enable)
+#    printer : default printer name
+#    enable flag : if true, enable, else disable (optional, D: enable)
 #
 # Returned value :
-#	0 : success
-#	1 : failure
+#    0 : success
+#    1 : failure
 
-sub printerEnable()
+sub printerEnable
 {
     my $function_name = "printerEnable";
     my $self          = shift;
@@ -531,13 +529,13 @@ sub printerEnable()
 # Define a printer as the default printer.
 #
 # Arguments :
-#	printer : default printer name
+#    printer : default printer name
 #
 # Returned value :
-#	0 : success
-#	1 : failure
+#    0 : success
+#    1 : failure
 
-sub printerDefault()
+sub printerDefault
 {
     my $function_name = "printerDefault";
     my $self          = shift;
@@ -558,15 +556,15 @@ sub printerDefault()
 # the keyword value.
 #
 # Arguments :
-#	Role type : client or server
-#	Keyword : configuration line keyword
-#	Value : keyword value (can be empty but must be present)
+#    Role type : client or server
+#    Keyword : configuration line keyword
+#    Value : keyword value (can be empty but must be present)
 #
 # Return value :
 #       0 : success
-#	> 0 : failure
+#    > 0 : failure
 
-sub addConfigEntry()
+sub addConfigEntry
 {
     my $function_name = "addConfigEntry";
     my $self          = shift;
@@ -600,14 +598,14 @@ sub addConfigEntry()
 # is undef
 #
 # Arguments :
-#	Role type : client or server
-#	Keyword : configuration line keyword
+#    Role type : client or server
+#    Keyword : configuration line keyword
 #
 # Return value :
 #       0 : success
-#	> 0 : failure
+#    > 0 : failure
 
-sub removeConfigEntry()
+sub removeConfigEntry
 {
     my $function_name = "removeConfigEntry";
     my $self          = shift;
@@ -633,12 +631,12 @@ sub removeConfigEntry()
 # Return config file entries for one specific role (server, client)...
 #
 # Arguments :
-#	Role type : client or server
+#    Role type : client or server
 #
 # Return value :
-#	Hash containing configuration entries or undef
+#    Hash containing configuration entries or undef
 
-sub getConfigEntries()
+sub getConfigEntries
 {
     my $function_name = "getConfigEntries";
     my $self          = shift;
@@ -659,14 +657,14 @@ sub getConfigEntries()
 # according to the current state of the service and the action requested.
 #
 # Argument :
-#	Service : service name (must match a service in /etc/rc.d/init.d)
-#	Action : action to perform on the service
+#    Service : service name (must match a service in /etc/rc.d/init.d)
+#    Action : action to perform on the service
 #
 # Return value :
 #       0 : success
-#	> 0 : failure
+#    > 0 : failure
 
-sub serviceControl ()
+sub serviceControl
 {
     my $function_name = "serviceControl";
     my $self          = shift;
@@ -754,7 +752,7 @@ sub serviceControl ()
 # Return value :
 #       list pointer or undef
 
-sub createRulesMatchesList ()
+sub createRulesMatchesList
 {
     my $function_name = "createRulesMatchesList";
     my $self          = shift;
@@ -784,7 +782,7 @@ sub createRulesMatchesList ()
 # Return value :
 #       list pointer or undef
 
-sub getRuleMatches ()
+sub getRuleMatches
 {
     my $function_name = "getRuleMatches";
     my $self          = shift;
@@ -806,9 +804,9 @@ sub getRuleMatches ()
 #
 # Return value :
 #       0 : success
-#	> 0 : failure
+#    > 0 : failure
 
-sub addInRulesMatchesList ()
+sub addInRulesMatchesList
 {
     my $function_name = "addInRulesMatchesList";
     my $self          = shift;
@@ -839,10 +837,10 @@ sub addInRulesMatchesList ()
 #        entry_num : rule match number
 #
 # Return value :
-#	0 : failure
-#	>0 : line number
+#    0 : failure
+#    >0 : line number
 
-sub getRulesMatchesLineNum ()
+sub getRulesMatchesLineNum
 {
     my $function_name = "getRulesMatchesLineNum";
     my $self          = shift;
@@ -875,7 +873,7 @@ sub getRulesMatchesLineNum ()
 # Return value :
 #       new contents or 0 in case of error
 
-sub buildConfigContents ()
+sub buildConfigContents
 {
     my $function_name = "buildConfigContents";
     my $self          = shift;
@@ -1000,8 +998,7 @@ sub buildConfigContents ()
             if ( defined($config_value) ) {
                 push @newcontents, $config_line;
                 $self->debug( 1, "$function_name : configuration line added" );
-            }
-            else {
+            } else {
                 $self->debug( 1, "$function_name : commented out line ignored (keyword=$keyword)" );
             }
         }
@@ -1021,10 +1018,10 @@ sub buildConfigContents ()
 #       role : role a configuration file must be build for
 #
 # Returned value :
-#	0 : success, no update
-#	>0 : success, number of changes
-#	<0 : error
-sub updateConfigFile ()
+#    0 : success, no update
+#    >0 : success, number of changes
+#    <0 : error
+sub updateConfigFile
 {
     my $function_name = "updateConfigFile";
     my $self          = shift;

@@ -1,15 +1,12 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-# ${build-info}
-
-#######################################################################
-#                 /etc/cron.conf
-#######################################################################
 
 package NCM::Component::cron;
 
 use strict;
+use warnings;
+
 use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
@@ -29,8 +26,6 @@ use English;
 
 $NCM::Component::cron::NoActionSupported = 1;
 
-local(*DTA);
-
 use constant CRON_LOGFILE_SUBDIR => "/var/log/";
 
 my $linux_crondir = "/etc/cron.d";
@@ -47,9 +42,9 @@ my $cron_log_extension = $cron_entry_extension_prefix . ".log";
 my $cron_entry_regexp = $cron_entry_extension;
 $cron_entry_regexp =~ s/\./\\./g;
 
-##########################################################################
-sub Configure {
-##########################################################################
+
+sub Configure
+{
 
     my ($self, $config) = @_;
 
@@ -220,11 +215,13 @@ sub Configure {
                     $self->error("timing for $name is smeared by more than a day; skipping");
                 }
                 if ($timing->{minute} !~ /^\d+$/) {
-                    $self->error("timing for $name is smeared and so the minutes field must be specified exactly (not '$timing->{minute}') in order to determine the possible start time of the smear; skipping");
+                    $self->error("timing for $name is smeared and so the minutes field must be specified exactly ",
+                                 "(not '$timing->{minute}') in order to determine the possible start time of the smear; skipping");
                     next;
                 }
                 if ($timing->{hour} !~ /^\d+$/ && $smear > 60) {
-                    $self->error("timing for $name is smeared by more than an hour, and so the hours specification must be specified exactly (not '$timing->{hour}'); skipping");
+                    $self->error("timing for $name is smeared by more than an hour, and so the hours specification must be ",
+                                 "specified exactly (not '$timing->{hour}'); skipping");
                     next;
                 }
                 $smear = int(rand($smear));
@@ -241,7 +238,7 @@ sub Configure {
                     addtime($timing->{month}, $dayoverflow, 1, 12);
                 $self->info("smeared $name by $smear");
             }
-        $frequency = "$timing->{minute} $timing->{hour} $timing->{day} $timing->{month} $timing->{weekday}";
+            $frequency = "$timing->{minute} $timing->{hour} $timing->{day} $timing->{month} $timing->{weekday}";
         } else {
             if (!exists($entry->{frequency}) ||
                 !$entry->{frequency} ||
@@ -405,8 +402,8 @@ sub Configure {
         $self->error("Could not refresh cron by running \"svcadm refresh cron\"")
             if $?;
     } else {
-    # For Linux: as a workarond for a RedHat 5 cron race condition bug: touch /etc/cron.d
-    #            when we are done generating the files. cron(8) will reload as a result
+        # For Linux: as a workarond for a RedHat 5 cron race condition bug: touch /etc/cron.d
+        #            when we are done generating the files. cron(8) will reload as a result
         if ($NoAction) {
             $self->info("Would have touched $linux_crondir to workaround a cron bug");
         } else {
@@ -419,7 +416,8 @@ sub Configure {
     return 1;
 }  # of Configure()
 
-sub Unconfigure {
+sub Unconfigure
+{
     my ($self, $config) = @_;
 
     my %solCronFiles = $self->cleanCrontabs("Unconfigure");

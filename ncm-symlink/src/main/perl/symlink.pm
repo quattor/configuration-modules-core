@@ -2,18 +2,11 @@
 # ${developer-info}
 # ${author-info}
 
-#######################################################################
-#
-# NCM component for symlink daemon
-#
-#
-# ** Generated file : do not edit **
-#
-#######################################################################
-
 package NCM::Component::symlink;
 
 use strict;
+use warnings;
+
 use NCM::Component;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
@@ -26,8 +19,6 @@ use File::Path;
 use File::Copy;
 use File::Basename;
 use File::stat;
-
-local(*DTA);
 
 my %context_vars;
 my $exists_def = 0;
@@ -47,10 +38,9 @@ my $true = 1;
 my $false = 0;
 my $ambiguous = -1;    # Special value to indicate that this is neither true, nor false...
 
-##########################################################################
-sub Configure($$@) {
-##########################################################################
 
+sub Configure
+{
     my ($self, $config) = @_;
     my $base = $self->prefix();
 
@@ -100,7 +90,8 @@ sub Configure($$@) {
 
 # The C<expand_cmds> function interprets all substrings that start and end with
 # C<@@> as a command, and expands the C<value> with the respecitive output.
-sub expand_cmds {
+sub expand_cmds
+{
 
     my ($self, $value) = @_;
     my @toks = split /@@/, $value;
@@ -125,7 +116,8 @@ sub expand_cmds {
 # The C<expand_vars> function interprets all substrings that start with C<{> and end with
 # C<}> as a variable in the global C<context_vars> environment, and expands the C<value>
 # with the resp value.
-sub expand_vars {
+sub expand_vars
+{
 
     my ($self, $value) = @_;
     (my $newval, my @toks) = split /\{/, $value;
@@ -148,7 +140,8 @@ sub expand_vars {
 
 # Ambigous argument value causes a specific value to be returned, interpreted
 # as true. Used by some specific options like replace.
-sub getPanBoolean {
+sub getPanBoolean
+{
 
     my ($self, $value) = @_;
 
@@ -163,7 +156,8 @@ sub getPanBoolean {
 }
 
 
-sub process_vars {
+sub process_vars
+{
 
     my ($self, $href) = @_;
     my %record = %$href;
@@ -198,7 +192,8 @@ sub process_vars {
 }
 
 
-sub process_global_options {
+sub process_global_options
+{
 
     my ($self, $config) = @_;
     my $base = $self->prefix();
@@ -253,7 +248,8 @@ sub process_global_options {
                         if ( $opt_enabled != $true ) {
                             $replace_bck_ext_def{$key} = $opt_saved_ext;
                         }
-                        $self->debug(1, "global option for $key replacement enabled, ".(defined($replace_bck_ext_def{$key})?"bck ext=".$replace_bck_ext_def{$key}:"no backup"));
+                        $self->debug(1, "global option for $key replacement enabled, ",
+                                     (defined($replace_bck_ext_def{$key}) ? "bck ext=".$replace_bck_ext_def{$key} : "no backup"));
                     }
                 }
             } else {
@@ -264,7 +260,8 @@ sub process_global_options {
                         if ( $opt_enabled != $true ) {
                             $replace_bck_ext_def{$opt} = $opt_saved_ext;
                         }
-                        $self->debug(1,"global option for $opt replacement enabled, ".(defined($replace_bck_ext_def{$opt})?"bck ext=".$replace_bck_ext_def{$opt}:"no backup"));
+                        $self->debug(1, "global option for $opt replacement enabled, ",
+                                     (defined($replace_bck_ext_def{$opt}) ? "bck ext=".$replace_bck_ext_def{$opt} : "no backup"));
                         # If directory replacement is enabled, enable also empty
                         # directory replacement
                         if ( $opt eq "dir" ) {
@@ -272,7 +269,8 @@ sub process_global_options {
                             if ( ! defined($replace_bck_ext_def{dirempty}) ) {
                                 $replace_bck_ext_def{dirempty} = $replace_bck_ext_def{$opt};
                             }
-                            $self->debug(1,"global option for dirempty replacement enabled, ".(defined($replace_bck_ext_def{dirempty})?"bck ext=".$replace_bck_ext_def{dirempty}:"no backup"));
+                            $self->debug(1, "global option for dirempty replacement enabled, ",
+                                         (defined($replace_bck_ext_def{dirempty}) ? "bck ext=".$replace_bck_ext_def{dirempty} : "no backup"));
                         }
                     } else {
                         # If empty directory replacement is disabled, disable also non empty
@@ -293,7 +291,8 @@ sub process_global_options {
 }
 
 
-sub process_link {
+sub process_link
+{
 
     my ($self, $link, $href) = @_;
     my %record = %$href;
@@ -398,7 +397,8 @@ sub process_link {
                             } else {
                                 $replace_bck_ext{$key} = $replace_bck_ext_def{$key};
                             }
-                            $self->debug(1,"replacement for $key enabled, ".(defined($replace_bck_ext{$key})?"bck ext=".$replace_bck_ext{$key}:"no backup"));
+                            $self->debug(1,"replacement for $key enabled, ",
+                                         (defined($replace_bck_ext{$key}) ? "bck ext=".$replace_bck_ext{$key} : "no backup"));
                         }
                     }
                 } else {
@@ -416,7 +416,8 @@ sub process_link {
                             } else {
                                 $replace_bck_ext{$opt} = $replace_bck_ext_def{$opt};
                             }
-                            $self->debug(1,"replacement for $opt enabled, ".(defined($replace_bck_ext{$opt})?"bck ext=".$replace_bck_ext{$opt}:"no backup"));
+                            $self->debug(1,"replacement for $opt enabled, ",
+                                         (defined($replace_bck_ext{$opt}) ? "bck ext=".$replace_bck_ext{$opt} : "no backup"));
                             # If directory replacement is enabled, enable also empty
                             # directory replacement
                             if ( $opt eq "dir" ) {
@@ -424,7 +425,8 @@ sub process_link {
                                 if ( ! defined($replace_bck_ext{dirempty}) ) {
                                     $replace_bck_ext{dirempty} = $replace_bck_ext{$opt};
                                 }
-                                $self->debug(1,"global option for dirempty replacement enabled, ".(defined($replace_bck_ext_def{dirempty})?"bck ext=".$replace_bck_ext_def{dirempty}:"no backup"));
+                                $self->debug(1,"global option for dirempty replacement enabled, ",
+                                             (defined($replace_bck_ext_def{dirempty}) ? "bck ext=".$replace_bck_ext_def{dirempty} : "no backup"));
                             }
                         } else {
                             # If empty directory replacement is disabled, disable also non empty
