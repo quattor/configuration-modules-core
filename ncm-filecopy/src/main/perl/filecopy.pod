@@ -116,7 +116,7 @@ Default: false
 =head3 scenario 2 : Create a script and execute it
 
  prefix '/software/components/filecopy/services/{/tmp/test.sh}';
- 'config' = '#!/bin/bash\n echo Hello World';
+ 'config' = "#!/bin/bash\n echo Hello World";
  'restart' = '/tmp/test.sh';
  'owner'='root:root';
  'perms'='0755';
