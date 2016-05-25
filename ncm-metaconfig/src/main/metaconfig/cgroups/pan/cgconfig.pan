@@ -8,4 +8,7 @@ bind "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/co
 prefix  "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}";
 "mode" = 0644;
 "module" = "cgroups/cgconfig";
-"daemons" = dict("cgconfig", "restart");
+"daemons" = dict(
+    "cgconfig", "restart",
+    "cgred", "restart",
+);
