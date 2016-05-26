@@ -18,7 +18,6 @@ use EDG::WP4::CCM::Element;
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 use NCM::Check;
 
-use File::Compare;
 use File::Copy;
 use Net::Ping;
 use Data::Dumper;
@@ -985,7 +984,7 @@ sub Configure
         # writes some text to file, but with backup etc etc it also
         # checks between new and old and return if they are changed
         # or not
-        my $func="file_dump";
+        my $func = "file_dump";
 
         my $file = shift || $self->error("$func: No filename.");
         my $text = shift || $self->error("$func: No text.");
@@ -995,32 +994,42 @@ sub Configure
         my $backup_file = $self->gen_backup_filename($file);
 
         if (-e $backup_file.$failed) {
-            $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
+            $self->debug(3, "$func: file exits, unlink $backup_file$failed");
             unlink($backup_file.$failed) ||
-                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
+                $self->warn("$func: Can't unlink $backup_file$failed ($!)");
         }
 
-        $self->debug(3,"$func: writing ".$backup_file.$failed);
-        my $fh = CAF::FileWriter->new($backup_file.$failed, log=>$self);
-        print $fh $text;
-        $fh->close();
-
-        if (compare($file,$backup_file.$failed) == 0) {
-            # they're equal, remove backup files
-            $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file.$failed);
-            unlink($backup_file) ||
-                $self->warn("$func: Can't unlink ".$backup_file." ($!)") ;
-            unlink($backup_file.$failed) ||
-                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
-            return 0;
+        my $fh;
+        if (-e $file) {
+            $self->debug(3, "$func: writing $backup_file$failed with current $file content");
+            my $orig = CAF::FileReader->new($self->gen_backup_filename($file), log => $self);
+            $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
+            print $fh "$orig";
+            $fh->close();
         } else {
+            $self->debug(3, "$func: no current $file");
+        };
+
+        $self->debug(3, "$func: writing $backup_file$failed");
+        $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
+        print $fh $text;
+
+        if ($fh->close()) {
             if (-e $file) {
-                $self->info("$func: file ".$file." has newer version.");
+                $self->info("$func: file $file has newer version.");
                 return 1;
             } else {
-                $self->info("$func: file ".$file." is new.");
+                $self->info("$func: file $file is new.");
                 return 2;
             }
+        } else {
+            # they're equal, remove backup files
+            $self->debug(3, "$func: removing equal files $backup_file and $backup_file$failed");
+            unlink($backup_file) ||
+                $self->warn("$func: Can't unlink $backup_file ($!)") ;
+            unlink($backup_file.$failed) ||
+                $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+            return 0;
         };
     }
 
