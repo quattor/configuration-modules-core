@@ -968,14 +968,17 @@ sub Configure
             $p->{port_num} = getservbyname($pro, "tcp");
         }
 
+        my $ec;
         if ($p->ping($host)) {
             $self->info("$func: OK: network up");
-            return 1;
+            $ec = 1;
         } else {
             $self->warn("$func: FAILED: network down");
-            return 0;
+            $ec = 0;
         }
         $p->close();
+
+        return $ec;
     }
 
     sub file_dump {
