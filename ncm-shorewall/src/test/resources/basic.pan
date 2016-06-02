@@ -1,5 +1,10 @@
 object template basic;
 
+function pkg_repl = { null; };
+include 'components/shorewall/config';
+# remove the dependencies
+'/software/components/shorewall/dependencies' = null;
+
 prefix "/software/components/shorewall";
 
 "interfaces/0/zone" = "z1";
