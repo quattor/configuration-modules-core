@@ -7,6 +7,26 @@ declaration template components/shorewall/schema;
 include 'quattor/types/component';
 
 # Keep this list in sync with list from TT file
+@{a tcinterfaces entry: interface type inbw outbw}
+type component_shorewall_tcinterfaces = {
+    "interface" : string
+    "type" ? string with match(SELF, '^(in|ex)ternal$')
+    "inbw" ? string
+    "outbw" ? string
+};
+
+# Keep this list in sync with list from TT file
+@{a tcpri entry: band proto port address interface helper}
+type component_shorewall_tcpri = {
+    "band" : long(1..3)
+    "proto" ? string[]
+    "port" ? long[]
+    "address" ? string
+    "interface" ? string
+    "helper" ? string
+};
+
+# Keep this list in sync with list from TT file
 @{a zones entry: zone[:parent] type options inoptions outoptions}
 type component_shorewall_zones = {
     "zone" : string
@@ -188,6 +208,8 @@ type component_shorewall_shorewall = {
 
 type component_shorewall = {
     include structure_component
+    @{showrewall.conf configuration}
+    "shorewall" : component_shorewall_shorewall
     @{zones configuration}
     "zones" : component_shorewall_zones[]
     @{interfaces configuration}
@@ -196,6 +218,8 @@ type component_shorewall = {
     "policy" : component_shorewall_policy[]
     @{rules configuration}
     "rules" : component_shorewall_rules[]
-    @{showrewall.conf configuration}
-    "shorewall" : component_shorewall_shorewall
+    @{tcinterfaces configuration}
+    "tcinterfaces" ? component_shorewall_tcinterfaces[]
+    @{tcpri configuration}
+    "tcpri" ? component_shorewall_tcpri[]
 };

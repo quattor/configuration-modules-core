@@ -25,3 +25,8 @@ prefix "/software/components/shorewall";
 "rules/0/dstport/0" = "23";
 
 "shorewall" = nlist();
+
+"tcinterfaces/0/interface" = "eth0";
+
+"tcpri/0/band" = 3;
+"tcpri/0/address" = "1.2.3.4/32";

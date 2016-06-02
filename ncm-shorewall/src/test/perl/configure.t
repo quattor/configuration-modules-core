@@ -29,6 +29,12 @@ command_history_reset();
 ok($cmp->Configure($cfg), "Configure returns success");
 ok(!exists($cmp->{ERROR}), "Configure succeeds w/o ERROR");
 
+foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfaces)) {
+    my $fh = get_file("/etc/shorewall/$fn");
+    ok($fh, "filename $fn generated");
+};
+
+
 ok(command_history_ok([
        '/sbin/shorewall try /etc/shorewall',
        '/usr/sbin/ccm-fetch',
