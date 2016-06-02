@@ -1,0 +1,12 @@
+shorewall.conf
+---
+//
+rendermodule=shorewall
+contentspath=/config
+---
+^BASIC_FILTERS=No$
+^BLACKLIST=RELATED,UNTRACKED$
+^IP_FORWARDING=On$
+^MACLIST_TTL=7$
+^STARTUP_ENABLED=Yes$
+^TC_ENABLED=Simple$

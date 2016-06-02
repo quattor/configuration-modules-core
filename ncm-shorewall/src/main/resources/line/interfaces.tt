@@ -1,0 +1,4 @@
+[%-  CCM.is_list(el) ? el.join(',') : el -%]
+[%-  IF col == 'interface' && line.exists('port') -%]
+:[%-    line.port -%]
+[%-  END -%]

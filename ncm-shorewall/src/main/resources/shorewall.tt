@@ -1,0 +1,8 @@
+[% FOREACH pair IN CCM.contents %]
+[%      pair.key FILTER upper %]=
+[%-     IF pair.value.is_boolean -%]
+[%-         pair.value ? 'Yes' : 'No' -%]
+[%-     ELSE -%]
+[%-         CCM.is_list(pair.value) ? pair.value.join(',') : pair.value  -%]
+[%-     END -%]
+[% END %]
