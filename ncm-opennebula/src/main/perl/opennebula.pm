@@ -13,7 +13,7 @@ use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
 use CAF::Service;
-use Net::OpenNebula 0.300.0;
+use Net::OpenNebula 0.307.0;
 use Data::Dumper;
 use Readonly;
 
