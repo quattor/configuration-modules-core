@@ -23,8 +23,13 @@ rpc_history_reset;
 $cmp->manage_something($one, "user", $tree->{users});
 #diag_rpc_history;
 ok(rpc_history_ok(["one.userpool.info",
+                   "one.user.update",
+                   "one.userpool.info",
+                   "one.user.update",
+                   "one.userpool.info",
+                   "one.user.allocate",
                    "one.user.info",
-                   "one.user.update"]),
+                   "one.userpool.info"]),
                    "manage_something users rpc history ok");
 ok(!exists($cmp->{ERROR}), "No errors found during user management execution");
 
