@@ -113,6 +113,10 @@ sub Configure {
             my $nscdrestart = CAF::Process->new(
                 ['service', 'nscd', 'condrestart'], log => $self);
             $nscdrestart->execute();
+	    # wait for nscd to restart before returning in case
+	    # another component in the same ncm-ncd run depends on
+	    # any changed config
+	    sleep 2;
         } else {
             $self->warn("Unrecognised platform, $^O, not restarting nscd");
         }
