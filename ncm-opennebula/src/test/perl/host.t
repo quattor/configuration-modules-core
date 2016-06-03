@@ -27,11 +27,11 @@ rpc_history_reset;
 $cmp->manage_something($one, "kvm", $tree);
 #diag_rpc_history;
 ok(rpc_history_ok(["one.hostpool.info",
-                   "one.host.info",
                    "one.host.enable",
                    "one.datastorepool.info",
-                   "one.datastore.info",
-                   "one.host.allocate"]),
+                   "one.host.allocate",
+                   "one.host.info",
+                   "one.hostpool.info"]),
                    "manage_something host kvm history ok");
 ok(!exists($cmp->{ERROR}), "No errors found during host management execution");
 
