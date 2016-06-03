@@ -1,5 +1,5 @@
-[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost'] -%]
-[%- booleans = ['shared'] -%]
+[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost', 'disk_cost', 'start'] -%]
+[%- booleans = ['shared', 'persistent_only', 'keep_snapshots', 'ds_migrate', 'public'] -%]
 [
 [% FILTER indent -%]
 [%     IF name.defined -%]

@@ -1,9 +1,13 @@
-[%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad', 'auth_mad', 'default_cost'] -%]
+[%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad', 
+                    'auth_mad', 'default_cost', 'vnc_ports', 'vlan_ids', 'vxlan_ids', 
+                    'market_mad'] -%]
 [%- booleans = ['datastore_capacity_check'] -%]
 [%- digits = ['monitoring_interval', 'monitoring_threads', 
               'port', 'vnc_base_port', 'network_size', 'session_expiration_time', 
               'default_umask'] -%]
-[%- oned_attr_list = ['vm_restricted_attr', 'inherit_datastore_attr', 'inherit_vnet_attr'] -%]
+[%- oned_attr_list = ['vm_restricted_attr', 'inherit_datastore_attr', 'inherit_vnet_attr', 
+                      'image_restricted_attr', 'vnet_restricted_attr', 'inherit_image_attr'] -%]
+[%- mad_conf_section = ['tm_mad_conf', 'ds_mad_conf', 'market_mad_conf'] -%]
 [%- FOR pair IN oned.pairs -%]
 [%-    SWITCH pair.key -%]
 [%         CASE oned_section -%]              
@@ -19,7 +23,7 @@
 [%                 pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
                                           data=item.value name=item.key type=item.key -%]
 [%             END -%]
-[%         CASE 'tm_mad_conf' -%]
+[%         CASE mad_conf_section -%]
 [%-            FOREACH item IN oned.${pair.key} -%]
 [%                 pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
                                           data=item -%]

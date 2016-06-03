@@ -54,6 +54,7 @@ type opennebula_federation = {
 type opennebula_im = {
     "executable" : string = 'one_im_ssh'
     "arguments" : string
+    "sunstone_name" ? string
 } = dict();
 
 type opennebula_im_mad_collectd = {
@@ -62,27 +63,33 @@ type opennebula_im_mad_collectd = {
 
 type opennebula_im_mad_kvm = {
     include opennebula_im
-} = dict("arguments", '-r 3 -t 15 kvm');
+} = dict("arguments", '-r 3 -t 15 kvm', "sunstone_name", 'KVM');
 
 type opennebula_im_mad_xen = {
     include opennebula_im
-} = dict("arguments", '-r 3 -t 15 xen4');
+} = dict("arguments", '-r 3 -t 15 xen4', "sunstone_name", 'XEN');
 
 type opennebula_im_mad = {
     "collectd" : opennebula_im_mad_collectd
     "kvm" : opennebula_im_mad_kvm
-    "xen" : opennebula_im_mad_xen
+    "xen" ? opennebula_im_mad_xen
 } = dict();
 
 type opennebula_vm = {
     "executable" : string = 'one_vmm_exec'
     "arguments" : string
     "default" : string
+    "sunstone_name" : string
+    "imported_vms_actions" : string = "terminate, terminate-hard, hold, release, \
+suspend, resume, delete, reboot, reboot-hard, resched, \
+unresched, disk-attach, disk-detach, nic-attach, nic-detach, \
+snap-create, snap-delete"
+    "keep_snapshots" : boolean = false
 } = dict();
 
 type opennebula_vm_mad_kvm = {
     include opennebula_vm
-} = dict("arguments", '-t 15 -r 0 kvm', "default", 'vmm_exec/vmm_exec_kvm.conf');
+} = dict("arguments", '-t 15 -r 0 kvm', "default", 'vmm_exec/vmm_exec_kvm.conf', "sunstone_name", 'KVM');
 
 type opennebula_vm_mad_xen = {
     include opennebula_vm
@@ -90,12 +97,12 @@ type opennebula_vm_mad_xen = {
 
 type opennebula_vm_mad = {
     "kvm" : opennebula_vm_mad_kvm
-    "xen" : opennebula_vm_mad_xen
+    "xen" ? opennebula_vm_mad_xen
 } = dict();
 
 type opennebula_tm_mad = {
     "executable" : string = 'one_tm'
-    "arguments" : string = '-t 15 -d dummy,lvm,shared,fs_lvm,qcow2,ssh,vmfs,ceph'
+    "arguments" : string = '-t 15 -d dummy,lvm,shared,fs_lvm,qcow2,ssh,ceph,dev,vcenter,iscsi_libvirt'
 } = dict();
 
 type opennebula_datastore_mad = {
@@ -117,16 +124,98 @@ type opennebula_tm_mad_conf = {
     "ln_target" : string = "NONE"
     "clone_target" : string = "SYSTEM"
     "shared" : boolean = true
+    "ds_migrate" ? boolean
+} = dict();
+
+@documentation{
+The  configuration for each driver is defined in DS_MAD_CONF.
+These values are used when creating a new datastore and should not be modified
+since they define the datastore behavior.
+name: name of the transfer driver, listed in the -d option of the DS_MAD section.
+required_attrs: comma separated list of required attributes in the DS template.
+persistent_only: specifies whether the datastore can only manage persistent images.
+}
+type opennebula_ds_mad_conf = {
+    "name" : string = "dummy"
+    "required_attrs" : string = ""
+    "persistent_only" : boolean = false
+    "marketplace_actions" ? string
+} = dict();
+
+@documentation{
+The  configuration for each driver is defined in MARKET_MAD_CONF.
+These values are used when creating a new marketplaces and should not be modified
+since they define the marketplace behavior.
+name: name of the market driver.
+required_attrs: comma separated list of required attributes in the Market template
+app_actions: List of actions allowed for a MarketPlaceApp
+    - monitor The apps of the marketplace will be monitored
+    - create, the app in the marketplace
+    - delete, the app from the marketplace
+public: set to yes for external marketplaces.
+A public marketplace can be removed even if it has registered apps.
+}
+type opennebula_market_mad_conf = {
+    "name" : string = "one"
+    "required_attrs" : string = ""
+    "app_actions" : string = "monitor"
+    "public" ? boolean
 } = dict();
 
 @documentation{ 
-The following attributes define the default cost for Virtual Machines that don't have a CPU or MEMORY cost.
+The following attributes define the default cost for Virtual Machines that don't have 
+a CPU, MEMORY or DISK cost.
 This is used by the oneshowback calculate method.
 }
 type opennebula_default_cost = {
     "cpu_cost" : long = 0
     "memory_cost" : long = 0
+    "disk_cost" : long = 0
 } = dict();
+
+@documentation{
+VNC_BASE_PORT is deprecated since OpenNebula 5.0
+}
+type opennebula_vnc_ports = {
+    "start" : long = 5900
+    "reserved" ? long
+} = dict();
+
+@documentation{
+LAN ID pool for the automatic VLAN_ID assignment.
+This pool is for 802.1Q networks (Open vSwitch and 802.1Q drivers).
+The driver will try first to allocate VLAN_IDS[START] + VNET_ID
+    start: First VLAN_ID to use
+    reserved: Comma separated list of VLAN_IDs
+}
+type opennebula_vlan_ids = {
+    "start" : long = 2
+    "reserved" ? long
+} = dict();
+
+@documentation{
+Automatic VXLAN Network ID (VNI) assignment. 
+This is used or vxlan networks.
+    start: First VNI to use
+    NOTE: reserved is not supported by this pool
+}
+type opennebula_vxlan_ids = {
+    "start" : long = 2
+} = dict();
+
+@documentation{
+Drivers to manage different marketplaces, specialized for the storage backend.
+executable: path of the transfer driver executable, can be an absolute path or
+relative to $ONE_LOCATION/lib/mads (or /usr/lib/one/mads/ if OpenNebula was 
+installed in /).
+arguments : for the driver executable
+    -t number of threads, i.e. number of repo operations at the same time.
+    -m marketplace mads separated by commas.
+}
+type opennebula_market_mad = {
+    "executable" : string = 'one_market'
+    "arguments" : string = '-t 15 -m http,s3,one'
+    } = dict();
 
 @documentation{ 
 check if a specific type of datastore has the right attributes
@@ -230,7 +319,7 @@ oned.conf file
 }
 type opennebula_oned = {
     "db" : opennebula_db
-    "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
+    "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|vd)$')
     "onegate_endpoint" ? string
     "manager_timer" ? long
     "monitoring_interval" : long = 60
@@ -260,7 +349,7 @@ type opennebula_oned = {
     "datastore_base_path" ? directory = '/var/lib/one/datastores'
     "datastore_capacity_check" : boolean = true
     "default_image_type" : string = 'OS' with match (SELF, '^(OS|CDROM|DATABLOCK)$')
-    "default_cdrom_device_prefix" : string = 'hd' with match (SELF, '^(hd|sd|xvd|vd)$')
+    "default_cdrom_device_prefix" : string = 'hd' with match (SELF, '^(hd|sd|vd)$')
     "session_expiration_time" : long = 900
     "default_umask" : long = 177
     "im_mad" : opennebula_im_mad
@@ -269,25 +358,59 @@ type opennebula_oned = {
     "datastore_mad" : opennebula_datastore_mad
     "hm_mad" : opennebula_hm_mad
     "auth_mad" : opennebula_auth_mad
+    "market_mad" : opennebula_market_mad
     "default_cost" : opennebula_default_cost
+    "listen_address" : type_ipv4 = '0.0.0.0'
+    "vnc_ports" : opennebula_vnc_ports
+    "vlan_ids" : opennebula_vlan_ids
+    "vxlan_ids" : opennebula_vxlan_ids
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
-        dict(), 
+        dict("ds_migrate", true), 
         dict("name", "lvm", "clone_target", "SELF"), 
-        dict("name", "shared"), 
+        dict("name", "shared", "ds_migrate", true), 
         dict("name", "fs_lvm", "ln_target", "SYSTEM"), 
         dict("name", "qcow2"), 
-        dict("name", "ssh", "ln_target", "SYSTEM", "shared", false), 
+        dict("name", "ssh", "ln_target", "SYSTEM", "shared", false, "ds_migrate", true), 
         dict("name", "vmfs"), 
-        dict("name", "ceph", "clone_target", "SELF")
+        dict("name", "ceph", "clone_target", "SELF", "ds_migrate", false),
+        dict("name", "iscsi_libvirt", "clone_target", "SELF", "ds_migrate", false),
+        dict("name", "dev", "clone_target", "NONE"),
+        dict("name", "vcenter", "clone_target", "NONE"),
+    )
+    "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
+        dict(),
+        dict("name", "ceph", "required_attrs", "DISK_TYPE,BRIDGE_LIST,CEPH_HOST,CEPH_USER,CEPH_SECRET",
+             "marketplace_actions", "export"),
+        dict("name", "dev", "required_attrs", "DISK_TYPE",
+             "persistent_only", true),
+        dict("name", "iscsi_libvirt", "required_attrs", "DISK_TYPE,ISCSI_HOST",
+             "persistent_only", true),
+        dict("name", "fs", "marketplace_actions", "export"),
+        dict("name", "lvm", "required_attrs", "DISK_TYPE,BRIDGE_LIST"),
+        dict("name", "vcenter", "required_attrs", "VCENTER_CLUSTER", "persistent_only", true,
+             "marketplace_actions", "export"),
+    )
+    "market_mad_conf" : opennebula_market_mad_conf[] = list(
+        dict("public", true),
+        dict("name", "http", "required_attrs", "BASE_URL,PUBLIC_DIR", "app_actions", "create, delete, monitor"),
+        dict("name", "s3", "required_attrs", "ACCESS_KEY_ID,SECRET_ACCESS_KEY,REGION,BUCKET",
+             "app_actions", "create, delete, monitor"),
     )
     "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE", 
                                            "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE", 
                                            "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC", 
                                            "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC", 
-                                           "CPU_COST", "MEMORY_COST")
+                                           "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST", 
+                                           "PCI", "USER_INPUTS")
     "image_restricted_attr" : string = 'SOURCE'
+    "vnet_restricted_attr" : string[] = list("VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD", 
+                                             "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE")
     "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF", 
-                                               "RBD_FORMAT", "GLUSTER_HOST", "GLUSTER_VOLUME")
+                                               "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE", 
+                                               "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME", 
+                                               "DISK_TYPE", "ADAPTER_TYPE")
+    "inherit_image_attr" : string[] = list("ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN", 
+                                           "DISK_TYPE", "ADAPTER_TYPE")
     "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", 
                                           "FILTER_MAC_SPOOFING", "MTU")
 };
