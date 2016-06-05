@@ -3,6 +3,7 @@ use warnings;
 
 BEGIN {
     *CORE::GLOBAL::sleep = sub {};
+    *CORE::GLOBAL::time = sub { return 12345678;};
 }
 
 use Test::More;
@@ -32,12 +33,14 @@ ok(!exists($cmp->{ERROR}), "Configure succeeds w/o ERROR");
 foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfaces)) {
     my $fh = get_file("/etc/shorewall/$fn");
     ok($fh, "filename $fn generated");
+    is(*$fh->{options}->{backup}, '.quattor.12345678', "TextRender filewriter with timestamped backup used");
+    is(*$fh->{options}->{mode}, 0600, "TextRender filewriter with 0600 mode used");
 };
 
 
 ok(command_history_ok([
-       '/sbin/shorewall try /etc/shorewall',
-       '/usr/sbin/ccm-fetch',
+   '/sbin/shorewall try /etc/shorewall',
+   '/usr/sbin/ccm-fetch',
 ]), "shorewall try and ccm-fetch called after changes");
 
 command_history_reset();

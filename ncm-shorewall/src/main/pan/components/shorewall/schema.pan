@@ -209,15 +209,15 @@ type component_shorewall_shorewall = {
 type component_shorewall = {
     include structure_component
     @{showrewall.conf configuration}
-    "shorewall" : component_shorewall_shorewall
+    "shorewall" ? component_shorewall_shorewall
     @{zones configuration}
-    "zones" : component_shorewall_zones[]
+    "zones" ? component_shorewall_zones[]
     @{interfaces configuration}
-    "interfaces" : component_shorewall_interfaces[]
+    "interfaces" ? component_shorewall_interfaces[]
     @{ configuration}
-    "policy" : component_shorewall_policy[]
+    "policy" ? component_shorewall_policy[]
     @{rules configuration}
-    "rules" : component_shorewall_rules[]
+    "rules" ? component_shorewall_rules[]
     @{tcinterfaces configuration}
     "tcinterfaces" ? component_shorewall_tcinterfaces[]
     @{tcpri configuration}
