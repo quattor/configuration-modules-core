@@ -18,6 +18,7 @@ Readonly::Array my @SUPPORTED => qw(shorewall rules zones interfaces policy tcin
 Readonly my $CONFIG_DIR => "/etc/shorewall";
 Readonly my $BACKUP_SUFFIX => '.quattor.';
 Readonly my $FAILED_SUFFIX => '.failed.';
+Readonly my $SHOREWALL_CHECK => ['/sbin/shorewall', 'check', $CONFIG_DIR];
 Readonly my $SHOREWALL_TRY => ['/sbin/shorewall', 'try', $CONFIG_DIR];
 Readonly my $CCM_FETCH => [qw(/usr/sbin/ccm-fetch)];
 
@@ -85,11 +86,12 @@ sub rollback
         }
     }
 
-    return if $fail;
-
-    return if ! $self->try_rollback();
-
-    return SUCCESS;
+    # No arguments required for try_rollback this time, not going to trigger another rollback
+    if ($fail || ! $self->try_rollback()) {
+        return;
+    } else {
+        return SUCCESS;
+    };
 }
 
 # use shorewall try (check exit code)
@@ -109,22 +111,31 @@ sub try_rollback
         $self->verbose("No changed config files passed, going to try the current existing files");
     }
 
-    my $output = CAF::Process->new($SHOREWALL_TRY, log => $self)->output();
-    if ($?) {
-        $self->error("shorewall try failed (ec $?): $output");
-        $self->rollback($ts, @changed) if @changed;
-        return;
+    my ($ec, $output);
+    $output = CAF::Process->new($SHOREWALL_CHECK, log => $self)->output();
+    if ($? || $output =~ m/^\s*ERROR/m) {
+        $self->error("shorewall check failed (ec $?): $output");
     } else {
-        # Let network recover
-        sleep 15;
-        $output = CAF::Process->new($CCM_FETCH, log => $self)->output();
-        if ($?) {
-            $self->error("ccm-fetch failed (ec $?): $output");
-            $self->rollback($ts, @changed) if @changed;
-            return;
+        $output = CAF::Process->new($SHOREWALL_TRY, log => $self)->output();
+        if ($? || $output =~ m/^\s*ERROR/m) {
+            $self->error("shorewall try failed (ec $?): $output");
+        } else {
+            # Let network recover
+            sleep 15;
+            $output = CAF::Process->new($CCM_FETCH, log => $self)->output();
+            if ($?) {
+                $self->error("ccm-fetch failed (ec $?): $output");
+            } else {
+                $self->verbose("shorewall succesfully checked/tried");
+                $ec = SUCCESS;
+            }
         }
     }
-    return SUCCESS;
+
+    # Do not return the rollback return value
+    $self->rollback($ts, @changed) if (! $ec) && @changed;
+
+    return $ec;
 }
 
 sub Configure

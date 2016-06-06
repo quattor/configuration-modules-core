@@ -36,8 +36,10 @@ ok($cmp->Configure($cfg), "Configure returns success");
 is($cmp->{ERROR}, 2, "Configure has ERRORs");
 
 ok(command_history_ok([
+   '/sbin/shorewall check /etc/shorewall',
    '/sbin/shorewall try /etc/shorewall',
    '/usr/sbin/ccm-fetch',
+   '/sbin/shorewall check /etc/shorewall',
    '/sbin/shorewall try /etc/shorewall',
    '/usr/sbin/ccm-fetch',
 ]), "shorewall try and ccm-fetch called 2 after changes");
