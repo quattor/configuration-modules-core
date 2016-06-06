@@ -524,5 +524,6 @@ type component_opennebula = {
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
+    'v5_config'  ? boolean # Sets the new OpenNebula v5.0 configuration
 } = dict();
 

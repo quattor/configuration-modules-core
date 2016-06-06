@@ -124,3 +124,4 @@ prefix "/software/components/opennebula";
 "host_ovs" = true;
 "tm_system_ds" = "ssh";
 "cfg_group" = "apache";
+"v5_config" = true;

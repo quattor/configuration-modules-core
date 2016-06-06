@@ -112,6 +112,10 @@ Includes the Open vSwitch network drives in your hypervisors. (OVS must be insta
 Open vSwitch replaces Linux bridges, Linux bridges must be disabled.
 More info: http://docs.opennebula.org/4.14/administration/networking/openvswitch.html
 
+=item * v5_config : boolean (optional)
+
+Enable this option only for OpenNebula >= 4.90.0. It sets the new oned configuration to monitor shared datastores.
+
 =item * tm_system_ds : string (optional)
 
 Set system datastore TM_MAD value (shared by default). Valid values:
@@ -137,7 +141,7 @@ Uses a local storage area from each host for the system datastore.
 
 =head1 DEPENDENCIES
 
-The component was tested with OpenNebula version 4.8 and 4.1x
+The component was tested with OpenNebula version 4.1x and 5.0
 
 Following package dependencies should be installed to run the component:
 

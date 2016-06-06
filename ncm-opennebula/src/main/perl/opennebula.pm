@@ -586,8 +586,13 @@ sub manage_users
 # one service must be restarted afterwards
 sub set_one_service_conf
 {
-    my ($self, $data, $service, $config_file, $cfggrp) = @_;
+    my ($self, $data, $service, $config_file, $cfggrp, $cfgv) = @_;
     my %opts;
+    if ($cfgv and $service eq 'oned') {
+        $self->info("Found OpenNebula >= 5.0 configuration flag");
+        my $newdata = "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+        $data->{datastore_mad}->{arguments} = $newdata;
+    };
     my $oned_templ = $self->process_template($data, $service);
     %opts = $self->set_file_opts();
     return if ! %opts;
@@ -769,14 +774,15 @@ sub Configure
     my $tree = $config->getElement($base)->getTree();
 
     my $cfggrp = $self->set_config_group($tree);
+    my $cfgv = $tree->{v5_config};
     # Set oned.conf
     if (exists $tree->{oned}) {
-        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
+        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE, undef, $cfgv);
     }
 
     # Set Sunstone server
     if (exists $tree->{sunstone}) {
-        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp);
+        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp, $cfgv);
         if (exists $tree->{users}) {
             my $users = $tree->{users};
             foreach my $user (@$users) {
