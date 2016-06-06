@@ -9,7 +9,7 @@ prefix '/config/0';
 "dstport/0" = "8";
 "dstport/1" = "9";
 "proto" = "icmp";
-"src/zone" = "ext";
+# default src zone=all
 "user" = "myuser";
 "group" = "mygroup";
 

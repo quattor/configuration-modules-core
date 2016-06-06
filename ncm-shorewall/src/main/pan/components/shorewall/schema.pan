@@ -60,21 +60,21 @@ type component_shorewall_policy = {
 };
 
 # Keep this list in sync with list from TT file
-@{a rules src or dst entry: zone[:interface][:address]}
+@{a rules src or dst entry: zone[:interface][:address] (default: all zones)}
 type component_shorewall_rules_srcdst = {
     @{zone entry, all[+-]/any, the firewall itself ($FW) or none}
-    "zone" : string
+    "zone" : string = 'all'
     "interface" ? string
     @{address is an (mac)addres/range combo, e.g. ~00-A0-C9-15-39-78,155.186.235.0/24!155.186.235.16/28}
     "address" ? string[]
-};
+} = dict();
 
 # Keep this list in sync with list from TT file
 @{a rules entry: action src dst proto dstport srcport origdst rate user[:group] mark connlimit time headers switch helper}
 type component_shorewall_rules = {
     "action" : string
-    "src" ? component_shorewall_rules_srcdst
-    "dst" ? component_shorewall_rules_srcdst
+    "src" : component_shorewall_rules_srcdst
+    "dst" : component_shorewall_rules_srcdst
     "proto" ? string
     "dstport" ? string[]
     "srcport" ? string[]
