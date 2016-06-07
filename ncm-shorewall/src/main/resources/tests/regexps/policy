@@ -4,6 +4,6 @@ policy
 rendermodule=policy
 contentspath=/config
 ---
-^fw\tall\tACCEPT\t-\t-\t-\t$
-^int\tall\tACCEPT\t-\tabc:123\t-\t$
-^all\tall\tREJECT\tinfo\t-\talot\t$
+^fw\tall\tACCEPT$
+^int\tall\tACCEPT\t-\tabc:123$
+^all\tall\tREJECT\tinfo\t-\talot$

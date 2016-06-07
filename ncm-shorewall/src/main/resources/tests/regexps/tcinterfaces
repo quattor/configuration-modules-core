@@ -4,5 +4,5 @@ tcinterfaces
 rendermodule=tcinterfaces
 contentspath=/config
 ---
-^em1\t-\t-\t-\t$
-^em2\tinternal\t123mb\t456mb\t$
+^em1$
+^em2\tinternal\t123mb\t456mb$

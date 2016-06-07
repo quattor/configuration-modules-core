@@ -4,6 +4,6 @@ tcpri
 rendermodule=tcpri
 contentspath=/config
 ---
-^3\t-\t-\t1.2.3.4/5\t-\t-\t$
-^1\ticmp\t8\t-\t-\t-\t$
-^1\tudp,tcp\t53\t-\t-\t-\t$
+^3\t-\t-\t1.2.3.4/5$
+^1\ticmp\t8$
+^1\tudp,tcp\t53$
