@@ -34,10 +34,9 @@ include { 'quattor/schema' };
 
 type component_resolver_type = {
     include structure_component
-    'servers' : string[]
-    'search'  ? string[]
+    'servers' : type_ip[..3]
+    'search'  ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
     'dnscache' : boolean = false
 };
 
 bind "/software/components/resolver" = component_resolver_type;
-
