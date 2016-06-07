@@ -31,9 +31,9 @@ type component_named = {
     "configfile"    ? string
     "use_localhost" : boolean = true
     "start"         ? boolean
-    "servers"       ? string[]
+    "servers"       ? type_ip[..3]
     "options"       ? string[]
-    "search"        ? type_fqdn[]
+    "search"        ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
 } with component_named_valid(SELF);
 
 bind "/software/components/named" = component_named;
