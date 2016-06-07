@@ -40,4 +40,3 @@ type component_resolver_type = {
 };
 
 bind "/software/components/resolver" = component_resolver_type;
-

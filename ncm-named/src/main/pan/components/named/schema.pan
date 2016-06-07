@@ -17,11 +17,11 @@ function component_named_valid = {
   if ( ARGC != 1 ) {
     error(function_name+': this function requires 1 argument');
   };
-  
+
   if ( exists(SELF['serverConfig']) && exists(SELF['configfile']) ) {
     error(function_name+": properties 'serverConfig' and 'configfile' are mutually exclusive.");
   };
-  
+
   true;
 };
 
