@@ -247,7 +247,7 @@ function is_consistent_datastore = {
 
 @documentation{ 
 type for ceph datastore specific attributes. 
-ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory 
+ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory
 }
 type opennebula_ceph_datastore = {
     "ceph_host"                 ? string[]
@@ -524,6 +524,6 @@ type component_opennebula = {
     'host_ovs'      ? boolean
     'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
-    'v5_config'  ? boolean # Sets the new OpenNebula v5.0 configuration
+    'v5_config'     ? boolean
 } = dict();
 
