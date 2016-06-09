@@ -8,6 +8,7 @@ use Test::Quattor::TextRender::Metaconfig;
 
 my $u = Test::Quattor::TextRender::Metaconfig->new(
         service => 'opennebula',
-        )->test();
+        usett => 0,
+    )->test();
 
 done_testing;
