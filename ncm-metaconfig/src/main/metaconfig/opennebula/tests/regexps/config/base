@@ -1,0 +1,11 @@
+Base test for config
+---
+multiline
+/etc/aii/opennebula.conf
+---
+^\[.+\]$
+^host\=.+$
+^name\=.+$
+^password\=.+$
+^port\=\d+$
+^user\=.+$
