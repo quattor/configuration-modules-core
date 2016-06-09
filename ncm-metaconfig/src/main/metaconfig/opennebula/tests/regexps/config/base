@@ -5,7 +5,7 @@ multiline
 ---
 ^\[.+\]$
 ^host\=.+$
-^name\=.+$
 ^password\=.+$
+^pattern\=.+$
 ^port\=\d+$
 ^user\=.+$

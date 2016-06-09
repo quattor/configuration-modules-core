@@ -1,6 +1,0 @@
-[%- FOREACH section IN sections -%]
-[[%    section.name %]]
-[%     FOREACH data IN section.pairs -%]
-[%         data.key %]=[%  data.value %]
-[%    END %]
-[% END %]

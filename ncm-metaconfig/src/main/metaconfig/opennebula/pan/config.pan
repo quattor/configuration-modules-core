@@ -8,4 +8,4 @@ prefix "/software/components/metaconfig/services/{/etc/aii/opennebula.conf}";
 "mode" = 0600;
 "owner" = "root";
 "group" = "root";
-"module" = "opennebula/aii";
+"module" = "tiny";
