@@ -191,13 +191,13 @@ sub Configure
         } else {
             my $msg = "No value found for the hwaddr of interface ".
                       "$ifacename. Setting set_hwaddr to false.";
-            if ($ifacename =~ m/^(bond|vlan|ib|br)/) {
+            if ($ifacename =~ m/^(bond|vlan|ib|br|ovirtmgmt)/) {
                 my $hr_ifacename = $1;
                 if ($hr_ifacename eq "bond") {
                     $hr_ifacename = "bonding";
                 } elsif ($hr_ifacename eq "ib") {
                     $hr_ifacename = "IPoIB";
-                } elsif ($hr_ifacename =~ m/^br/) {
+                } elsif ($hr_ifacename =~ m/^(br|ovirtmgmt)/) {
                     $hr_ifacename = "bridging";
                 }
                 $self->info("$msg. As it appears to be a $hr_ifacename interface, this is considered normal.");
@@ -213,7 +213,7 @@ sub Configure
     opendir(DIR, $dir_pref);
     # here's the reason why it only verifies eth, bond, bridge, usb and vlan
     # devices. add regexp at will
-    my $dev_regexp='-((eth|seth|em|bond|br|vlan|usb|ib|p\d+p|en(o|(p\d+)?s))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
+    my $dev_regexp='-((eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(o|(p\d+)?s))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
     # $1 is the device name
     foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
         my $msg;
