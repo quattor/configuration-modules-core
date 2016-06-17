@@ -85,8 +85,8 @@ sub Configure
     # options
     if ( $named_config->{options} ) {
         $fh->add_or_replace_lines("^\\s*options\\s*.*",
-                                  "^\\s*options\\s*$named_config->{options}",
-                                  "options $named_config->{options}",
+                                  "^\\s*options\\s*@{$named_config->{options}}",
+                                  "options @{$named_config->{options}}\n",
                                   ENDING_OF_FILE,
                                  );
     }

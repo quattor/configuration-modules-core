@@ -11,4 +11,5 @@ prefix '/software/components/named';
 'servers/1' = '134.158.88.147';
 'use_localhost' = true;
 'version' = '14.6.0';
-
+'options/0' = 'timeout:2';
+'options/1' = 'debug';
