@@ -23,7 +23,7 @@ type SOFTWARE_REPOSITORY_PACKAGE = {
 
 type SOFTWARE_REPOSITORY_PROTOCOL = {
     "name" : string  # "Protocol name"
-    "url" : string  # "URL for the given protocol"
+    "url" : software_repository_url  # "URL for the given protocol"
     "cacert" ? string  # Path to CA certificate
     "clientcert" ? string # Path to client certificate
     "clientkey" ? string # Path to client key
