@@ -36,7 +36,7 @@ sub prepare_action
     # any overlap with legacy daemon-restart config
     my @daemon_action;
 
-    my $msg = "for file $file";
+    my $file_msg = "for file $file";
 
     if ($srv->{daemons}) {
         while (my ($daemon, $action) = each %{$srv->{daemons}}) {
@@ -45,10 +45,10 @@ sub prepare_action
     }
 
     if ($srv->{daemon}) {
-        $self->verbose("Deprecated daemon(s) restart via daemon field $msg.");
+        $self->verbose("Deprecated daemon(s) restart via daemon field $file_msg.");
         foreach my $daemon (@{$srv->{daemon}}) {
             if ($srv->{daemons}->{$daemon}) {
-                $self->verbose('Daemon $daemon also defined in daemons field $msg. Adding restart action anyway.');
+                $self->verbose("Daemon $daemon also defined in daemons field $file_msg. Adding restart action anyway.");
             }
             push(@daemon_action, $daemon, 'restart');
         }
@@ -62,15 +62,15 @@ sub prepare_action
             push(@acts, "$daemon:$action");
         } else {
             $self->error("Not a CAF::Service allowed action ",
-                         "$action for daemon $daemon $msg ",
+                         "$action for daemon $daemon $file_msg ",
                          "in profile (component/schema mismatch?).");
         }
     }
 
     if (@acts) {
-        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $msg.");
+        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $file_msg.");
     } else {
-        $self->verbose("No daemon/action scheduled $msg.");
+        $self->verbose("No daemon/action scheduled $file_msg.");
     }
 }
 
@@ -80,6 +80,7 @@ sub process_actions
 {
     my ($self, $actions) = @_;
     while (my ($action, $ds) = each(%$actions)) {
+        $self->info("Executing action $action on services: ",join(',',keys(%$ds)));
         my $srv = CAF::Service->new([keys(%$ds)], log => $self);
         # CAF::Service does all the logging we need
         $srv->$action();
@@ -124,7 +125,12 @@ sub handle_service
         return;
     }
 
-    $self->prepare_action($srv, $file, $actions) if ($fh->close());
+    if($fh->close()) {
+        $self->info("File $file updated");
+        $self->prepare_action($srv, $file, $actions);
+    } else {
+        $self->verbose("File $file up-to-date");
+    };
 
     return 1;
 }

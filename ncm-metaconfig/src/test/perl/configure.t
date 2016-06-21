@@ -11,6 +11,7 @@ use CAF::Object;
 use JSON::XS;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 

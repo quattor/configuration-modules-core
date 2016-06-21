@@ -15,6 +15,7 @@ use Template;
 use Readonly;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 my $mock = Test::MockModule->new('CAF::TextRender');
 $mock->mock('new', sub {

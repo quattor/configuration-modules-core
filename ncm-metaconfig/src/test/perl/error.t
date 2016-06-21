@@ -8,6 +8,7 @@ use NCM::Component::metaconfig;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 
 =pod

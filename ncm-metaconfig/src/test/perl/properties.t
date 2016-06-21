@@ -10,6 +10,7 @@ use CAF::Object;
 use Config::Properties;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 =pod
 
