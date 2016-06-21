@@ -1,0 +1,20 @@
+Test for basic NRPE config
+---
+/etc/nagios/nrpe.cfg
+---
+^command_timeout=60$
+^connection_timeout=300$
+^debug=0$
+^dont_blame_nrpe=0$
+^log_facility=daemon$
+^nrpe_group=nagios$
+^nrpe_user=nagios$
+^pid_file=/var/run/nrpe.pid$
+^server_port=5666$
+^allowed_hosts=a,b$
+^command\[cmd\]=foobar$
+^command\[mycmd\]=morefoobar$
+^include=/foo/0$
+^include=/foo/1$
+^include_dir=/bar-0$
+^include_dir=/bar-1$
