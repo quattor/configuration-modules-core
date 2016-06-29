@@ -13,3 +13,4 @@ Base test for zkrsync config
 ^rsyncpath=/user/gent$
 ^servers=mds01.gent:2181,mds02.gent:2181,mds03.gent:2181$
 ^source=true$
+^timeout=600$

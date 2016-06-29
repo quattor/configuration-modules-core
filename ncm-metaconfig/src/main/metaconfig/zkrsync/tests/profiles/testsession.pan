@@ -12,6 +12,7 @@ prefix "/software/components/metaconfig/services/{/etc/zkrs/default.conf}/conten
 'excl_usr' = '';
 'info' = true;
 'delete'= false;
+'timeout' = 600;
 'rsyncpath' = '/user/gent';
 'rsubpaths' = list('2_gent/test/1', '3_gent/test/2');
 'dropcache' = true;

@@ -33,6 +33,7 @@ type zkrsync_config = {
     'delete' ? boolean = false
     'checksum' ? boolean = false
     'hardlinks' ? boolean = false
+    'timeout' ? long(0..)
     # client opts
     'verifypath' ? boolean = true
     'domain' ? string
