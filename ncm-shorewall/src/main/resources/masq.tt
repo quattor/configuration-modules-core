@@ -1,0 +1,2 @@
+[% INCLUDE 'shorewall/walk.tt' _type='masq' _cols=['dest', 'source', 'address', 'proto', 'port', 'ipsec',
+                                                   'mark', 'user', 'switch', 'origdest', 'probability'] %]

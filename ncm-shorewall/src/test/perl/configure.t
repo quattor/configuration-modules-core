@@ -30,7 +30,7 @@ command_history_reset();
 ok($cmp->Configure($cfg), "Configure returns success");
 ok(!exists($cmp->{ERROR}), "Configure succeeds w/o ERROR");
 
-foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfaces)) {
+foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfaces masq)) {
     my $fh = get_file("/etc/shorewall/$fn");
     ok($fh, "filename $fn generated");
     is(*$fh->{options}->{backup}, '.quattor.12345678', "TextRender filewriter with timestamped backup used");

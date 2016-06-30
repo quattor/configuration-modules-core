@@ -6,6 +6,23 @@ declaration template components/shorewall/schema;
 
 include 'quattor/types/component';
 
+
+# Keep this list in sync with list from TT file
+@{a masq entry: dest source address proto port ipsec mark user switch origdest probability}
+type component_shorewall_masq = {
+    "dest" ? string[]
+    "source" ? string
+    "address" ? string[]
+    "proto" ? string
+    "port" ? string[]
+    "ipsec" ? string[]
+    "mark" ? string
+    "user" ? string
+    "switch" ? string
+    "origdest" ? string
+    "probability" ? double(0..1)
+};
+
 # Keep this list in sync with list from TT file
 @{a tcinterfaces entry: interface type inbw outbw}
 type component_shorewall_tcinterfaces = {
@@ -222,4 +239,6 @@ type component_shorewall = {
     "tcinterfaces" ? component_shorewall_tcinterfaces[]
     @{tcpri configuration}
     "tcpri" ? component_shorewall_tcpri[]
+    @{masq configuration}
+    "masq" ? component_shorewall_masq[]
 };

@@ -13,7 +13,7 @@ use EDG::WP4::CCM::TextRender;
 use Readonly;
 
 # shorewall is shorewall.conf
-Readonly::Array my @SUPPORTED => qw(shorewall rules zones interfaces policy tcinterfaces tcpri);
+Readonly::Array my @SUPPORTED => qw(shorewall rules zones interfaces policy tcinterfaces tcpri masq);
 
 Readonly my $CONFIG_DIR => "/etc/shorewall";
 Readonly my $BACKUP_SUFFIX => '.quattor.';

@@ -30,3 +30,6 @@ prefix "/software/components/shorewall";
 
 "tcpri/0/band" = 3;
 "tcpri/0/address" = "1.2.3.4/32";
+
+"masq/0/dest" = list('eth0');
+"masq/0/source" = 'eth1';
