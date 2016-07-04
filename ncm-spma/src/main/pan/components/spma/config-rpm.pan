@@ -6,7 +6,8 @@ unique template components/spma/config-rpm;
 
 # Prefix for packages/groups
 prefix '/software';
-'groups/names' ?= list();
+'groups' ?= dict();
+'groups/yumng/names' ?= list();
 # Package to install
 'packages' = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
