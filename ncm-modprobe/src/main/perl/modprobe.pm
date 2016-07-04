@@ -20,8 +20,10 @@ use EDG::WP4::CCM::Configuration;
 use CAF::Process;
 use CAF::FileWriter;
 use LC::File qw(directory_contents);
+use Readonly;
 
 no strict 'refs';
+Readonly my $DEFAULT_MODPROBE_CONF => "/etc/modprobe.d/quattor.conf";
 
 foreach my $method (qw(alias options install remove blacklist)) {
     *{__PACKAGE__ . "::process_$method"} = sub {
@@ -55,9 +57,11 @@ sub mkinitrd
     $dir = directory_contents("/boot");
 
     foreach my $i (@$dir) {
-        if ($i =~ m{^System\.map\-(2\.6\..*)$}) {
+        if ($i =~ m{^System\.map\-(.*)$}) {
             my $rl = $1;
-            CAF::Process->new(["mkinitrd", "-f", "/boot/initrd-$rl.img", $rl], log => $self)->run();
+            my $target = "/boot/initrd-$rl.img";
+            $target = "/boot/initramfs-$rl.img" if -f "/boot/initramfs-$rl.img";
+            CAF::Process->new(["mkinitrd", "-f", $target, $rl], log => $self)->run();
             $self->error("Unable to build the initrd for $rl") if $?;
         }
     }
@@ -72,7 +76,7 @@ sub Configure
     # Do not create a backup file as module-init-tools up to and including RH6
     # does not check the file extension, and would happily process the backup
     # file
-    my $fh = CAF::FileWriter->new($t->{file}, log => $self);
+    my $fh = CAF::FileWriter->new($t->{file} || $DEFAULT_MODPROBE_CONF, log => $self);
 
     $self->process_alias($t, $fh);
     $self->process_options($t, $fh);
