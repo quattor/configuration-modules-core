@@ -88,9 +88,10 @@ use constant INT_OPTS => qw(
     umask
 );
 use constant STRING_OPTS => qw(
-    badpass_message
+    mailsub
     env_keep
     env_delete
+    badpass_message
     timestampdir
     timestampowner
     passprompt
@@ -106,6 +107,7 @@ use constant STRING_OPTS => qw(
     exempt_group
     verifypw
     listpw
+    secure_path
 );
 
 # generate_aliases method
