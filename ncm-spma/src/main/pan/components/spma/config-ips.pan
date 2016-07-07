@@ -5,8 +5,6 @@
 
 unique template components/${project.artifactId}/config-ips;
 
-'/software/groups/names' ?= list();
-
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 
@@ -20,4 +18,3 @@ prefix '/software/components/${project.artifactId}';
                          '/software/requests',
                          '/software/uninstall');
 'flagfile' = '/var/tmp/spma-run-flag';
-

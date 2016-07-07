@@ -50,4 +50,5 @@ type SOFTWARE_GROUP = {
     "default" : boolean = true
     "mandatory" : boolean = true
     "optional" : boolean = false
+    "names" ? string[]  # used by yumng only
 };
