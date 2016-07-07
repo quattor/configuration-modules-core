@@ -40,6 +40,7 @@ type zkrsync_config = {
     'dropcache' ? boolean = false
     'verbose' ? boolean = false
     'info' ? boolean = false
+    'daemon' ? boolean = false
     # destination opts
     'startport' ? long = 4444
 } with zkrsync_has_one_role(SELF);
