@@ -4,3 +4,6 @@ target/
 junit_output.xml
 .prove
 cover_db
+
+# PyCharm IDE
+.idea/
