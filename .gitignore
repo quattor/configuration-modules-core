@@ -7,3 +7,6 @@ cover_db
 
 # PyCharm IDE
 .idea/
+
+# Eclipse IDE
+.project
