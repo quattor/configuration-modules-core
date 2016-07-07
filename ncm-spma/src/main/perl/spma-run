@@ -108,7 +108,7 @@ sub lock
 {
     my $self = shift;
 
-    $self->{LOCK} = CAF::Lock->new('/var/lock/quattor/spma-run');
+    $self->{LOCK} = CAF::Lock->new('/var/lock/quattor/spma-run', log => $self);
 
     my $lock_flag = FORCE_IF_STALE;
     $lock_flag = FORCE_ALWAYS if $self->option("forcelock");
