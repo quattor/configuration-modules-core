@@ -1,5 +1,5 @@
-# Postfix master file. Generated automatically. DO NOT EDIT!!
-# See man master for all details about this file.
+# Postfix main file. Generated automatically. DO NOT EDIT!!
+# See man postconf for all details about this file.
 # The template has been semi-automatically generated from the component's schema.
 
 [%- IF _2bounce_notice_recipient.defined %]
