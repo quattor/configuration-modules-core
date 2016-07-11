@@ -6,8 +6,8 @@
   <artifactId>freeipa</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.2.1-SNAPSHOT</version>
-  <name>NCM component for FreeIPA support</name>
+  <version>16.6.0-rc5-SNAPSHOT</version>
+  <name>NCM component for FreeIPA</name>
 
   <parent>
     <groupId>org.quattor.maven</groupId>

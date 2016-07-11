@@ -21,21 +21,22 @@ Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 Readonly my $NSSDB => '/etc/nssdb.quattor';
 
 # Hold an instance of the client
-my $client;
+my $_client;
 
 # Current host FQDN
-my $fqdn;
+my $_fqdn;
 
+# server config
 sub dns
 {
     my ($self, $dns) = @_;
 
     foreach my $name (sort keys %$dns) {
         # Add the name
-        $client->add_dnszone($name);
+        $_client->add_dnszone($name);
         # If subnet, add it
         my $subnet = $dns->{$name}->{subnet};
-        $client->add_dnszone($subnet) if $subnet;
+        $_client->add_dnszone($subnet) if $subnet;
 
         my $reverse = $dns->{$name}->{reverse};
         # If reverse, add it
@@ -53,30 +54,31 @@ sub dns
         # Append the inaddr.arpa.
         if ($reverse) {
             $reverse .= '.in-addr.arpa.' if ($reverse !~ /\.$/);
-            $client->add_dnszone($reverse) ;
+            $_client->add_dnszone($reverse) ;
         };
     }
 
     return SUCCESS;
 }
 
+# server config
 sub hosts
 {
     my ($self, $hosts) = @_;
 
     foreach my $hn (sort keys %$hosts) {
-        $client->add_host($hn, %{$hosts->{$hn}});
+        $_client->add_host($hn, %{$hosts->{$hn}});
     };
 
     return SUCCESS;
 }
 
-
+# server config
 sub services
 {
     my ($self, $svcs) = @_;
 
-    my $res = $client->do_one('host', 'find', '');
+    my $res = $_client->do_one('host', 'find', '');
     # Flatten the results
     my @known_hosts = map {@{$_->{fqdn}}} @$res;
     $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
@@ -89,7 +91,7 @@ sub services
             foreach my $pat (@$hosts) {
                 $self->verbose("Service $svc ".(scalar @$hosts)." host patterns $pat @known_hosts");
                 foreach my $host (grep {/$pat/} @known_hosts) {
-                    $client->add_service_host($svc, $host);
+                    $_client->add_service_host($svc, $host);
                 }
             }
         }
@@ -98,7 +100,7 @@ sub services
     return SUCCESS;
 }
 
-
+# server config
 sub users_groups
 {
     my ($self, $users, $groups) = @_;
@@ -107,7 +109,7 @@ sub users_groups
     foreach my $group (sort keys %$groups) {
         my %opts = %{$groups->{$group}};
         delete $opts{members};
-        $client->add_group($group, %opts);
+        $_client->add_group($group, %opts);
     }
 
     # Add users, do group->gidnumber translation
@@ -115,13 +117,13 @@ sub users_groups
         my %opts = %{$users->{$user}};
         my $group = delete $opts{group};
         $opts{gidnumber} = $groups->{$group}->{gidnumber} if $group;
-        $client->add_user($user, %opts);
+        $_client->add_user($user, %opts);
     }
 
     # Add group members
     foreach my $group (sort keys %$groups) {
         my $members = $groups->{$group}->{members};
-        $client->add_group_member($group, %$members) if $members;
+        $_client->add_group_member($group, %$members) if $members;
     }
 
     return SUCCESS;
@@ -149,6 +151,7 @@ sub server
 }
 
 
+# client config
 sub service_keytab
 {
     my ($self, $tree) = @_;
@@ -168,7 +171,7 @@ sub service_keytab
         } else {
             my $principal = $serv->{service};
             # Add fqdn as
-            $principal .= "/$fqdn" if ($principal !~ m{/});
+            $principal .= "/$_fqdn" if ($principal !~ m{/});
 
             # Retrieve keytab (what if already exists?)
             my $proc = CAF::Process->new([@GET_KEYTAB,
@@ -192,6 +195,7 @@ sub service_keytab
     return SUCCESS;
 }
 
+# client config
 sub certificates
 {
     my ($self, $tree) = @_;
@@ -221,9 +225,9 @@ sub certificates
                 my $initcrt = "$nss->{workdir}/init_nss_$nick.crt";
                 my $msg = "Initial NSS certificate for nick $nick (temp $initcrt)";
                 # Make request csr
-                my $csr = $nss->make_cert_request($fqdn, $nick);
+                my $csr = $nss->make_cert_request($_fqdn, $nick);
                 if ($csr &&
-                    $nss->ipa_request_cert($csr, $initcrt, $fqdn, $client) && # Get cert via IPA
+                    $nss->ipa_request_cert($csr, $initcrt, $_fqdn, $_client) && # Get cert via IPA
                     $nss->add_cert($nick, $initcrt) # Add to NSSDB
                     ) {
                     $self->verbose("$msg added");
@@ -263,12 +267,18 @@ sub certificates
     return;
 }
 
+=head2 server
+
+Configure server settings
+
+=cut
+
 sub client
 {
     my ($self, $tree) = @_;
 
     my $krb = CAF::Kerberos->new(
-        principal => "host/$fqdn",
+        principal => "host/$_fqdn",
         keytab => '/etc/krb5.keytab',
         log => $self,
         );
@@ -285,13 +295,23 @@ sub client
     return SUCCESS;
 }
 
-# ugly, but convenient: set class-variable fqdn
+# ugly, but convenient: set class-variable _fqdn though named options
+#    config: from a configuration instance (and /system/network)
+#    fqdn: set this as fqdn
 sub set_fqdn
 {
-    my ($self, $config) = @_;
-    my $network = $config->getTree('/system/network');
-    $fqdn = "$network->{hostname}.$network->{domainname}";
-    return $fqdn;
+    my ($self, %opts) = @_;
+
+    if ($opts{fqdn}) {
+        $_fqdn = $opts{fqdn};
+    } elsif ($opts{config}) {
+        my $config = $opts{config};
+
+        my $network = $config->getTree('/system/network');
+        $_fqdn = "$network->{hostname}.$network->{domainname}";
+    }
+
+    return $_fqdn;
 }
 
 # ugly, but convenient: set class-variable IPA client instance
@@ -302,13 +322,33 @@ sub set_ipa_client
     my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
 
     # Only allow kerberos for now
-    $client = NCM::Component::FreeIPA::Client->new(
+    $_client = NCM::Component::FreeIPA::Client->new(
         $primary,
         log => $self,
         debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
         );
 
-    return $client;
+    return $_client;
+}
+
+# Perform relevant part in separate method, so we can subclass this component
+# in a standalone bootstrap module
+sub _configure
+{
+    my ($self, $tree) = @_;
+
+    $self->set_ipa_client($tree->{primary});
+
+    if ($_client->{rc}) {
+        $self->server($tree) if $tree->{server};
+
+        $self->client($tree);
+
+        return SUCCESS;
+    } else {
+        $self->error("Failed to obtain FreeIPA Client: $_client->{error}");
+    };
+
 }
 
 sub Configure
@@ -316,19 +356,11 @@ sub Configure
 
     my ($self, $config) = @_;
 
-    $self->set_fqdn();
+    $self->set_fqdn(config => $config);
 
     my $tree = $config->getTree($self->prefix());
 
-    $self->set_ipa_client($tree->{primary});
-
-    if ($client->{rc}) {
-        $self->server($tree) if $tree->{server};
-
-        $self->client($tree);
-    } else {
-        $self->error("Failed to obtain FreeIPA Client: $client->{fail}");
-    };
+    $self->_configure($tree);
 
     return 1;
 }

@@ -25,7 +25,7 @@ my $cfg = get_config_for_profile("client");
 
 =cut
 
-my $fqdn = $cmp->set_fqdn($cfg);
+my $fqdn = $cmp->set_fqdn(config => $cfg);
 my $tree = $cfg->getTree($cmp->prefix());
 my $ipa = $cmp->set_ipa_client($tree->{primary});
 
