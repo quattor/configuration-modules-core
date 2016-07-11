@@ -5,7 +5,7 @@
 
 declaration template components/postfix/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
 
 @{
     Types of lookup tables (databases) Postfix is capable to handle.
@@ -635,5 +635,3 @@ type postfix_component = {
     @{ Definition of Postfix databases }
     'databases' ? postfix_databases
 };
-
-bind '/software/components/postfix' = postfix_component;
