@@ -2,14 +2,14 @@
 use strict;
 use warnings;
 use CAF::Object;
-use FindBin qw($Bin);
-use lib $Bin;
 use Test::Quattor qw(profile1 profile_with_ldap);
 use NCM::Component::postfix;
 use Test::More; # skip_all => "No tests for now";
 use CAF::Object;
 
+use Test::Quattor::TextRender::Base;
 $CAF::Object::NoAction = 1;
+my $caf_trd = mock_textrender();
 
 my $cmp = NCM::Component::postfix->new('postfix');
 

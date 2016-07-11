@@ -2,16 +2,13 @@
 use strict;
 use warnings;
 use CAF::Object;
-use FindBin qw($Bin);
-use lib $Bin;
 use Test::Quattor;
 use NCM::Component::postfix;
 use Test::More tests => 5;
-use CAF::Object;
 
-no strict 'refs';
-
+use Test::Quattor::TextRender::Base;
 $CAF::Object::NoAction = 1;
+my $caf_trd = mock_textrender();
 
 my $cmp = NCM::Component::postfix->new('postfix');
 
@@ -50,8 +47,8 @@ my $master = [ {
 
 
 my $rs = $cmp->handle_config_file({master => $master},
-				   { file => "/etc/postfix/master.cf",
-				     template => "postfix/master.tt" });
+                                  { file => "/etc/postfix/master.cf",
+                                    template => "master.tt" });
 
 ok($rs, "Successfully handled the master config file");
 
