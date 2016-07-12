@@ -6,6 +6,13 @@ declaration template components/spma/yumng/schema;
 
 include 'components/spma/schema-common';
 
+type SOFTWARE_GROUP = {
+    "default" : boolean = true
+    "mandatory" : boolean = true
+    "optional" : boolean = false
+    "names" : string[]
+};
+
 type spma_yum_plugin_fastestmirror = {
     'enabled' : boolean = false
     'verbose' : boolean = false
@@ -63,3 +70,4 @@ type component_spma_yum = {
 };
 
 bind "/software/components/spma" = component_spma_yum;
+bind "/software/groups" = SOFTWARE_GROUP{};

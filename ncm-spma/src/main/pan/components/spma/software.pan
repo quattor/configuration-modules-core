@@ -45,10 +45,3 @@ type SOFTWARE_REPOSITORY = {
     "proxy" ? string with SELF == '' || is_absoluteURI(SELF)
     "skip_if_unavailable" : boolean = false
 };
-
-type SOFTWARE_GROUP = {
-    "default" : boolean = true
-    "mandatory" : boolean = true
-    "optional" : boolean = false
-    "names" ? string[]  # used by yumng only
-};

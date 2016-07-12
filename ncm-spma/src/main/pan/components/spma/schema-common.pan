@@ -36,6 +36,5 @@ type component_spma_type = {
     "verbose"       ? string with match (SELF, '^(0|1)$') # verbose (0,1)
 };
 
-bind "/software/groups" = SOFTWARE_GROUP{};
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
 bind "/software/repositories" = SOFTWARE_REPOSITORY [];
