@@ -2,7 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
-declaration template components/spma/schema-common;
+declaration template components/spma/schema;
 
 include 'quattor/types/component';
 include 'components/spma/functions';

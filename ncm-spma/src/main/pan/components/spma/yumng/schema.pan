@@ -4,7 +4,7 @@
 
 declaration template components/spma/yumng/schema;
 
-include 'components/spma/schema-common';
+include 'components/spma/schema';
 
 type SOFTWARE_GROUP = {
     "default" : boolean = true

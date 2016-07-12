@@ -5,7 +5,7 @@
 
 declaration template components/spma/ips/schema;
 
-include 'components/spma/schema-common';
+include 'components/spma/schema';
 
 type component_spma_ips_type = {
     "bename"        ? string         # BE name to use with IPS commands
