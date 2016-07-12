@@ -14,6 +14,9 @@ prefix '/software';
 prefix '/software/components/${project.artifactId}';
 
 'packager' = 'yum';
-'register_change' ?= list("/software/groups",
-                          "/software/packages",
-                          "/software/repositories");
+
+'register_change' ?= list(
+    "/software/groups",
+    "/software/packages",
+    "/software/repositories",
+);
