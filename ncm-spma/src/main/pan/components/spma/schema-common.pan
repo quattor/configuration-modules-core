@@ -8,7 +8,7 @@ include 'quattor/types/component';
 include 'components/spma/functions';
 include 'components/spma/software';
 
-type component_spma_type = {
+type component_spma_common = {
     "cmdfile"       : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
     "packager"      : string = "yum" with match (SELF, '^(yum|ips|rpm)$') # system packager to be used (yum,ips,rpm)
     "pkgpaths"      : string[] = list("/software/packages") # where to find package definitions

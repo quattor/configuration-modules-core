@@ -16,7 +16,7 @@ type component_spma_ips_type = {
 
 type component_spma_ips = {
     include structure_component
-    include component_spma_type
+    include component_spma_common
     "ips"           ? component_spma_ips_type
 };
 

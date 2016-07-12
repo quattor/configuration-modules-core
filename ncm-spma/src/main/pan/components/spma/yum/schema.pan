@@ -55,7 +55,7 @@ type spma_yum_main_options = {
 
 type component_spma_yum = {
     include structure_component
-    include component_spma_type
+    include component_spma_common
     "userpkgs_retry" : boolean = true
     "fullsearch" : boolean = false
     "excludes"      ? string[] # packages to be excluded from metadata
