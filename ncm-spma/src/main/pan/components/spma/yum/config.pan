@@ -2,7 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
-unique template components/spma/config-yum;
+unique template components/spma/yum/config;
 
 # Prefix for packages/groups
 prefix '/software';

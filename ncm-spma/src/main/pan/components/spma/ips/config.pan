@@ -3,7 +3,7 @@
 # ${author-info}
 # ${build-info}
 
-unique template components/${project.artifactId}/config-ips;
+unique template components/${project.artifactId}/ips/config;
 
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';

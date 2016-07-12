@@ -2,7 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
-unique template components/spma/config-yumng;
+unique template components/spma/yumng/config;
 
 # Prefix for packages/groups
 prefix '/software';
