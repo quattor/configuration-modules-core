@@ -5,7 +5,7 @@
 
 unique template components/${project.artifactId}/config;
 
-variable SPMA_BACKEND ?= 'rpm';
+variable SPMA_BACKEND ?= 'yum';
 
 include format('components/${project.artifactId}/%s/schema', SPMA_BACKEND);
 include 'components/${project.artifactId}/functions';
