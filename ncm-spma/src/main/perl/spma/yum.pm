@@ -363,11 +363,19 @@ sub expand_groups
 
     my $pkgs = Set::Scalar->new();
 
-    while (my ($group, $types) = each(%$groups)) {
+    while (my ($group_e, $types) = each(%$groups)) {
+        # A group can contain spaces and thus is escaped
+        my $group = unescape($group_e);
+        $self->debug(2, "Getting packages for group '$group'");
         my $what = join(",", grep($types->{$_}, keys(%$types)));
         my $lst = $self->execute_yum_command([REPOGROUP, $what, $group],
-                                             "Group expansion", 1)
-            or return undef;
+                                             "Group expansion", 1);
+        # If a group doesn't exist, the repoquery command returns an empty string
+        # with a success exit code.
+        unless ( $lst ) {
+          $self->error("Error during group '$group' expansion (group probably doesn't exist)");
+          return undef;
+        }
         $pkgs->insert(split(/\n/, $lst));
     }
     return $pkgs;
