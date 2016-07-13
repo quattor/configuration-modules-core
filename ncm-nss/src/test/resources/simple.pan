@@ -1,8 +1,9 @@
 object template simple;
 
-#function pkg_repl = { null; };
-#include 'components/nss/config';
-#"/software/components/nss/dependencies/pre" = null;
+# mock pkg_repl
+function pkg_repl = { null; };
+include 'components/nss/config';
+"/software/components/nss/dependencies/pre" = null;
 
 prefix "/software/components/nss";
 "databases/passwd" = list("files", "ldap");

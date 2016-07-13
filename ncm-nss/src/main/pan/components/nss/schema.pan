@@ -8,7 +8,7 @@
 
 declaration template components/${project.artifactId}/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
 
 type component_nss_build = {
     "script" : string
