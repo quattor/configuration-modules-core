@@ -6,7 +6,7 @@
   <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
 
-  <version>16.6.0-rc4-SNAPSHOT</version>
+  <version>16.6.0-rc4</version>
 
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of

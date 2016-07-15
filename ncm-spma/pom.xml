@@ -3,7 +3,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>spma</artifactId>
   <packaging>pom</packaging>
-  <version>16.6.0-rc4-SNAPSHOT</version>
+  <version>16.6.0-rc4</version>
   <name>NCM SPMA configuration component</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
