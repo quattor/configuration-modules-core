@@ -106,9 +106,8 @@ sub Configure_Cache {
         $self->warn("Cannot determine current AFS cache size, changing only config file");
     }
 
-    my $afs_cacheinfo_fh = CAF::FileEditor->new( $AFS_CACHEINFO, log => $self ); # TODO use FileReader
-    $afs_cacheinfo_fh->cancel();
-    if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+)$; ) {
+    my $afs_cacheinfo_fh = CAF::FileReader->new( $AFS_CACHEINFO, log => $self );
+    if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+|AUTOMATIC)$; ) {
         $file_afsmount   = $1;
         $file_cachemount = $2;
         $file_cache      = $3;
@@ -119,21 +118,24 @@ sub Configure_Cache {
     }
     $afs_cacheinfo_fh->close();
 
-    # sanity check - don't allow cachesize bigger than 95% of a partition size
-    $proc = CAF::Process->new( [ "df", "-k", $file_cachemount ], log => $self, keeps_state => 1 );
-    foreach my $line ( split ( "\n", $proc->output() ) ) {
-        if ($line =~ m{^.*?\s+(\d+)\s+\d+\s+\d+\s+\d+%\s+(.*)}) {
-            my $disk_cachesize = $1;
-            my $mount          = $2;
-            if ( $mount eq $file_cachemount && $new_cache > 0.95 * $disk_cachesize ) {
-                $self->error("Cache size ($disk_cachesize) on $mount cannot exceed 95% of its partition size. Not changing.");
-                return 1;
+    unless ( $new_cache eq "AUTOMATIC" ) {
+        # sanity check - don't allow cachesize bigger than 95% of a partition size
+        $proc = CAF::Process->new( [ "df", "-k", $file_cachemount ], log => $self, keeps_state => 1 );
+        foreach my $line ( split ( "\n", $proc->output() ) ) {
+            if ($line =~ m{^.*?\s+(\d+)\s+\d+\s+\d+\s+\d+%\s+(.*)}) {
+                my $disk_cachesize = $1;
+                my $mount          = $2;
+                if ( $mount eq $file_cachemount && $new_cache > 0.95 * $disk_cachesize ) {
+                    $self->error("Cache size ($disk_cachesize) on $mount cannot exceed 95% of its partition size. Not changing.");
+                    return 1;
+                }
             }
         }
     }
 
     # adjust stored cache size (gets overwritten on restart for OpenAFS-1.4)
-    if ( $new_cache != $file_cache ) {
+    # Force string interpolation of cache size as it can be AUTOMATIC
+    if ( "$new_cache" ne "$file_cache" ) {
         my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
         print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
         if ( $afs_cacheinfo_fh->close() ) {
