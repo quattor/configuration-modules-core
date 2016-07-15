@@ -25,6 +25,9 @@ Readonly my $THESECELLS    => '/usr/vice/etc/TheseCells';
 Readonly my $AFSD_ARGS     => '/etc/afsd.args';
 Readonly my $PREFIX        => '/software/components/afsclt';
 
+Readonly my $AFS_MOUNTPOINT_DEF => '/afs';
+
+
 sub Configure {
     my ( $self, $config ) = @_;
     $self->Configure_Cell($config);
@@ -85,12 +88,19 @@ sub Configure_Cache {
     my $new_cache       = 0;     # in 1k blocks.
     my $file_afsmount   = '';
 
-    if ( $config->elementExists("$PREFIX/cachesize") ) {
-        $new_cache = $config->getValue("$PREFIX/cachesize");    #new cache size
-    }
-    else {
-        $self->info("Cannot get CDB $PREFIX/cachesize - not setting cache size");
+    my $afs_config = $config->getElement($PREFIX)->getTree();
+
+    if ( defined($afs_config->{cachesize}) ) {
+        $new_cache = $afs_config->{cachesize}
+    } else {
+        $self->info("$PREFIX/cachesize not setting cache size");
         return 1;
+    }
+
+    if ( defined($afs_config->{cachemount}) ) {
+        $file_cachemount = $afs_config->{cachemount};    # mount point for AFS cache partition
+    } else {
+        $self->debug(1, "No explicit cache mount point defined in the configuration: will use currently defined one, if any");
     }
 
     my $proc = CAF::Process->new( [ "fs", "getcacheparms" ], log => $self, keeps_state => 1 );
@@ -107,18 +117,18 @@ sub Configure_Cache {
     }
 
     my $afs_cacheinfo_fh = CAF::FileReader->new( $AFS_CACHEINFO, log => $self );
+    $self->debug(2, "$AFS_CACHEINFO current contents: >>>$afs_cacheinfo_fh<<<");
     if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+|AUTOMATIC)$; ) {
-        $file_afsmount   = $1;
-        $file_cachemount = $2;
+        $file_afsmount   = $1 if $file_afsmount eq "";
+        $file_cachemount = $2 if $file_cachemount eq "";
         $file_cache      = $3;
-    }
-    else {
+    } elsif ( "$afs_cacheinfo_fh" ne "" ) {
         $self->error("Cannot parse stored AFS cache mount or size from $AFS_CACHEINFO");
         return 1;
     }
     $afs_cacheinfo_fh->close();
 
-    unless ( $new_cache eq "AUTOMATIC" ) {
+    if ( $new_cache ne "AUTOMATIC" ) {
         # sanity check - don't allow cachesize bigger than 95% of a partition size
         $proc = CAF::Process->new( [ "df", "-k", $file_cachemount ], log => $self, keeps_state => 1 );
         foreach my $line ( split ( "\n", $proc->output() ) ) {
@@ -135,6 +145,7 @@ sub Configure_Cache {
 
     # adjust stored cache size (gets overwritten on restart for OpenAFS-1.4)
     # Force string interpolation of cache size as it can be AUTOMATIC
+    $file_afsmount = $AFS_MOUNTPOINT_DEF if $file_afsmount eq "";
     if ( "$new_cache" ne "$file_cache" ) {
         my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
         print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
