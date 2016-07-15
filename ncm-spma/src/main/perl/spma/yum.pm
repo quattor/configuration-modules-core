@@ -363,10 +363,11 @@ sub expand_groups
 
     my $pkgs = Set::Scalar->new();
 
-    while (my ($group_e, $types) = each(%$groups)) {
+    foreach my $group_e (sort(keys(%$groups))) {
         # A group can contain spaces and thus is escaped
         my $group = unescape($group_e);
         $self->debug(2, "Getting packages for group '$group'");
+        my $types = $groups->{$group_e};
         my $what = join(",", grep($types->{$_}, keys(%$types)));
         my $lst = $self->execute_yum_command([REPOGROUP, $what, $group],
                                              "Group expansion", 1);
