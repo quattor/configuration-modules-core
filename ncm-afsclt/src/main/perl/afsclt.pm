@@ -103,6 +103,12 @@ sub Configure_Cache {
         $self->debug(1, "No explicit cache mount point defined in the configuration: will use currently defined one, if any");
     }
 
+    if ( defined($afs_config->{afs_mount}) ) {
+        $file_afsmount = $afs_config->{afs_mount};    # AFS mount point
+    } else {
+        $self->debug(1, "No explicit AFS mount point defined in the configuration");
+    }
+
     my $proc = CAF::Process->new( [ "fs", "getcacheparms" ], log => $self, keeps_state => 1 );
     my $output = $proc->output();
     if ( !( $? >> 8 ) && $output =~ /AFS using \d+ of the cache's available (\d+) (\w+) byte blocks/ ) {
@@ -145,7 +151,10 @@ sub Configure_Cache {
 
     # adjust stored cache size (gets overwritten on restart for OpenAFS-1.4)
     # Force string interpolation of cache size as it can be AUTOMATIC
-    $file_afsmount = $AFS_MOUNTPOINT_DEF if $file_afsmount eq "";
+    if ( $file_afsmount eq "" ) {
+        $self->debug(1, "AFS mount point not defined: using default ($AFS_MOUNTPOINT_DEF)");
+        $file_afsmount = $AFS_MOUNTPOINT_DEF;
+    }
     if ( "$new_cache" ne "$file_cache" ) {
         my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
         print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
