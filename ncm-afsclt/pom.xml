@@ -34,5 +34,9 @@
       <name>Alan Fitton</name>
       <email>Alan.Fitton@morganstanley.com</email>
     </developer>
+    <developer>
+      <name>Michel Jouvin</name>
+      <email>jouvin@lal.in2p3.fr</email>
+    </developer>
   </developers>
 </project>
