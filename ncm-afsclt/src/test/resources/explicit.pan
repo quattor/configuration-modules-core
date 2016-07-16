@@ -17,4 +17,4 @@ prefix '/software/components/afsclt';
 'dispatch' = true;
 'enabled' = 'yes';
 'thiscell' = 'in2p3.fr';
-
+'thesecells' = list('cern.ch', 'morganstanley.com');
