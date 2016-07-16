@@ -5,7 +5,7 @@
 
 declaration template components/afsclt/schema;
 
-include 'quattor/schema';
+include 'quattor/types/component';
 
 type component_afsclt_entry = {
    include structure_component
