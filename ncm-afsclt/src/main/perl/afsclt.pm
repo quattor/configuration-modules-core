@@ -65,16 +65,13 @@ sub Configure_TheseCells {
         if ( $thesecells_fh->close() ) {
             $self->info("Configured cell list for authentication $THESECELLS");
         }
-    }
-    elsif ( -f $THESECELLS ) {
+    } elsif ( -f $THESECELLS ) {
         if ($NoAction) {
             $self->info("Would remove $THESECELLS");
-        }
-        else {
+        } else {
             if ( unlink($THESECELLS) ) {
                 $self->info("Removed cell list for authentication $THESECELLS");
-            }
-            else {
+            } else {
                 $self->error("Could not remove $THESECELLS: $!");
             }
         }
@@ -189,13 +186,11 @@ sub Configure_CellServDB {
         $master_cellservdb = $config->getValue("$PREFIX/cellservdb");
         if ( $master_cellservdb =~ m/^\/\w/i ) {    # non-URI -> file
             $master_cellservdb = "file://" . $master_cellservdb;
-        }
-        elsif ( $master_cellservdb !~ m/^(ftp|http|file)/i ) {    # known URIs
+        } elsif ( $master_cellservdb !~ m/^(ftp|http|file)/i ) {    # known URIs
             $self->error("Don't know how to handle URI: $master_cellservdb, giving up");
             return 1;
         }
-    }
-    else {
+    } else {
         return 0;
     }
 
@@ -229,8 +224,7 @@ sub update_afs_cells ( $$ ) {
         if ($line =~ /^>(.\S+)/) {
             $cell = $1;
             $ipaddrs{$cell} = [];
-        }
-        elsif ($line =~ /^(\S+)\s+\#\s*\S+/) {
+        } elsif ($line =~ /^(\S+)\s+\#\s*\S+/) {
             # new entry
             push ( @{ $ipaddrs{$cell} }, $1 );
         }
