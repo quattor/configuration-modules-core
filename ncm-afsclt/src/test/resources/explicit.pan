@@ -10,6 +10,7 @@ prefix '/software/components/afsclt';
 # remove the dependencies that cannot be validated successfully
 'dependencies' = null;
 
+'afsd_args' = nlist('files', '100', 'daemons', '2');
 'afs_mount' = '/afsmnt';
 'cachemount' = '/var/afs/cache';
 'cachesize' = '1422000';

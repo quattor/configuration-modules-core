@@ -10,6 +10,7 @@ prefix '/software/components/afsclt';
 # remove the dependencies that cannot be validated successfully
 'dependencies' = null;
 
+'afsd_args' = nlist();
 'cachesize' = 'AUTOMATIC';
 'cellservdb' = 'http://grand.central.org/dl/cellservdb/CellServDB';
 'dispatch' = true;
