@@ -51,6 +51,8 @@ sub Configure_Cell {
     if ( $thiscell_fh->close() ) {
         $self->info("Updated thiscell to $afscell");
     }
+
+    return 0;
 }
 
 sub Configure_TheseCells {
@@ -77,6 +79,8 @@ sub Configure_TheseCells {
             }
         }
     }
+
+    return 0;
 }
 
 sub Configure_Cache {
@@ -174,6 +178,8 @@ sub Configure_Cache {
             $self->info("Changed running AFS cache $run_cache -> $new_cache (1K blocks)");
         }
     }
+
+    return 0;
 }
 
 sub Configure_CellServDB {
@@ -284,6 +290,8 @@ sub update_afs_cells ( $$ ) {
     else {
         $self->info("Nothing to do for AFS cell information");
     }
+
+    return 0;
 }
 
 sub Configure_Afsd_Args {
@@ -299,6 +307,8 @@ sub Configure_Afsd_Args {
             $self->info("Updated afsd.args");
         }
     }
+
+    return 0;
 }
 
 1;    #required for Perl modules
