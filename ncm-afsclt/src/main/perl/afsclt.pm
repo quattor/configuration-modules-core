@@ -131,6 +131,8 @@ sub Configure_Cache {
     } elsif ( "$afs_cacheinfo_fh" ne "" ) {
         $self->error("Cannot parse stored AFS cache mount or size from $AFS_CACHEINFO");
         return 1;
+    } else {
+        $self->debug(1, "No existing cacheinfo file found");
     }
     $afs_cacheinfo_fh->close();
 
@@ -149,18 +151,16 @@ sub Configure_Cache {
         }
     }
 
-    # adjust stored cache size (gets overwritten on restart for OpenAFS-1.4)
+    # Adjust cacheinfo file if needed.
     # Force string interpolation of cache size as it can be AUTOMATIC
     if ( $file_afsmount eq "" ) {
         $self->debug(1, "AFS mount point not defined: using default ($AFS_MOUNTPOINT_DEF)");
         $file_afsmount = $AFS_MOUNTPOINT_DEF;
     }
-    if ( "$new_cache" ne "$file_cache" ) {
-        my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
-        print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
-        if ( $afs_cacheinfo_fh->close() ) {
-            $self->info("Changed AFS cache config file $AFS_CACHEINFO: $file_cachemount $run_cache -> $new_cache (1K blocks)");
-        }
+    my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
+    print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
+    if ( $afs_cacheinfo_fh->close() ) {
+        $self->info("Changed AFS cache config ($AFS_CACHEINFO). New cache size (1K blocks): $new_cache (current: $run_cache)");
     }
 
     # adjust online (in-kernel) value

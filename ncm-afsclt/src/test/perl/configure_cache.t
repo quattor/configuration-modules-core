@@ -6,7 +6,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 20;
 use Test::NoWarnings;
 use Test::Quattor qw(automatic automatic_nocachemount explicit);
 use NCM::Component::afsclt;
@@ -98,6 +98,10 @@ execute_standard_test($CACHEINFO_FILE, $CACHEINFO_AUTOMATIC, $config_automatic, 
 set_file_contents($CACHEINFO_FILE,$CACHEINFO_AUTOMATIC);
 execute_standard_test($CACHEINFO_FILE, $CACHEINFO_EXPLICIT_MOUNT, $config_explicit, "initially AUTOMATIC");
 
+
+# Initial cacheinfo size ok but cache mount point changed
+set_file_contents($CACHEINFO_FILE,$CACHEINFO_EXPLICIT_SIZE);
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_EXPLICIT_MOUNT, $config_explicit, "cache mount point changed");
 
 Test::NoWarnings::had_no_warnings();
 
