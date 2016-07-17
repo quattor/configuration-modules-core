@@ -48,10 +48,10 @@ sub Configure_Cell {
     }
 
     my $thiscell_fh = CAF::FileWriter->new( $THISCELL, log => $self );
-    print $thiscell_fh $config->{thiscell}."\n";
+    print $thiscell_fh "$config->{thiscell}\n";
 
     if ( $thiscell_fh->close() ) {
-        $self->info("Updated thiscell to ".$config->{thiscell});
+        $self->info("Updated thiscell to $config->{thiscell}");
     }
 
     return 0;
@@ -292,7 +292,7 @@ sub Configure_Afsd_Args {
     if ( defined($config->{afsd_args}) ) {
         my $fh = CAF::FileWriter->new( $AFSD_ARGS, log => $self, backup => ".old" );
         foreach my $key (sort keys %{$config->{afsd_args}}) {
-            print $fh "$key:" . $config->{afsd_args}->{$key} . "\n";
+            print $fh "$key:$config->{afsd_args}->{$key}\n";
         }
         if ( $fh->close() ) {
             $self->info("Updated afsd.args");
