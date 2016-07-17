@@ -206,9 +206,8 @@ sub Configure_CellServDB {
     if ($cellservdb_fh->close()) {
         $self->info("Updated CellServDB");
     }
-    $self->update_afs_cells();
 
-    return 1;
+    return $self->update_afs_cells();
 }
 
 # update the list of known AFS cells and run "fs newcell" when needed
