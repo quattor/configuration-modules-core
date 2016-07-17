@@ -23,9 +23,9 @@ Tests for AFS client cache configuration
 =cut
 
 Readonly my $CACHEINFO_FILE => '/usr/vice/etc/cacheinfo';
-Readonly my $CACHEINFO_AUTOMACTIC => '/afs:/afscache:AUTOMATIC
+Readonly my $CACHEINFO_AUTOMATIC => '/afs:/afscache:AUTOMATIC
 ';
-Readonly my $CACHEINFO_AUTOMACTIC_2 => '/afs::AUTOMATIC
+Readonly my $CACHEINFO_AUTOMATIC_2 => '/afs::AUTOMATIC
 ';
 Readonly my $CACHEINFO_EXPLICIT_SIZE => '/afs:/afscache:1422000
 ';
@@ -36,6 +36,8 @@ Readonly my $FS_GETPARAMS_OUTPUT_1 => "AFS using 1229334 of the cache's availabl
 
 Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
 
+my $comp;
+
 
 sub get_config_tree {
     my $profile = shift;
@@ -45,18 +47,31 @@ sub get_config_tree {
 }
 
 
+# Standard test:
+#    - Execute configuration method
+#    - Check that the configuration file exists
+#    - Open it
+#    - Check its contents against a reference contents
+sub execute_standard_test {
+    my ($file, $expected_contents, $config, $msg) = @_;
+
+    my $status = $comp->Configure_Cache($config);
+    ok(!$status, "Configure_Cache returned no explicit error");
+    my $fh = get_file($file);
+    ok(defined($fh), $file." was opened ($msg)");
+    is("$fh", $expected_contents, $file." has expected contents ($msg)");
+    $fh->close();
+}
+
+
 #############
 # Main code #
 #############
 
-
-my $fh;
-my $status;
-
 $CAF::Object::NoAction = 1;
 set_caf_file_close_diff(1);
 
-my $comp = NCM::Component::afsclt->new('afsclt');
+$comp = NCM::Component::afsclt->new('afsclt');
 
 my $config_automatic = get_config_tree("automatic");
 my $config_no_cachemount = get_config_tree("automatic_nocachemount");
@@ -65,49 +80,23 @@ my $config_explicit = get_config_tree("explicit");
 set_desired_output($FS_GETPARAMS_CMD, $FS_GETPARAMS_OUTPUT_1);
 
 # cacheinfo doesn't exist
-$status = $comp->Configure_Cache($config_automatic);
-ok(!$status, "Configure_Cache returned no explicit error");
-$fh = get_file($CACHEINFO_FILE);
-ok(defined($fh), $CACHEINFO_FILE." was opened");
-is("$fh", $CACHEINFO_AUTOMACTIC, $CACHEINFO_FILE." (initially not existing) has expected contents");
-$fh->close();
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_AUTOMATIC, $config_automatic, "initially not existing");
 
 # Initial cacheinfo file empty and cache mount point undefined
 set_file_contents($CACHEINFO_FILE,"");
-$status = $comp->Configure_Cache($config_no_cachemount);
-ok(!$status, "Configure_Cache returned no explicit error");
-$fh = get_file($CACHEINFO_FILE);
-ok(defined($fh), $CACHEINFO_FILE." was opened");
-is("$fh", $CACHEINFO_AUTOMACTIC_2, $CACHEINFO_FILE." (cache mount undefined) has expected contents");
-$fh->close();
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_AUTOMATIC_2, $config_no_cachemount, "cache mount undefined");
 
 # Initial cacheinfo is the expected cacheinfo (size=AUTOMATIC)
-set_file_contents($CACHEINFO_FILE,$CACHEINFO_AUTOMACTIC);
-$status = $comp->Configure_Cache($config_automatic);
-ok(!$status, "Configure_Cache returned no explicit error");
-$fh = get_file($CACHEINFO_FILE);
-ok(defined($fh), $CACHEINFO_FILE." was opened");
-is("$fh", $CACHEINFO_AUTOMACTIC, $CACHEINFO_FILE." (initially expected) has expected contents");
-$fh->close();
+set_file_contents($CACHEINFO_FILE,$CACHEINFO_AUTOMATIC);
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_AUTOMATIC, $config_automatic, "initial contents ok");
 
 # Initial cacheinfo file with explicit size, expected AUTOMATIC
 set_file_contents($CACHEINFO_FILE,$CACHEINFO_EXPLICIT_SIZE);
-$status = $comp->Configure_Cache($config_automatic);
-ok(!$status, "Configure_Cache returned no explicit error");
-$fh = get_file($CACHEINFO_FILE);
-ok(defined($fh), $CACHEINFO_FILE." was opened");
-is("$fh", $CACHEINFO_AUTOMACTIC, $CACHEINFO_FILE." (initially explicit size) has expected contents");
-$fh->close();
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_AUTOMATIC, $config_automatic, "initially explicit size");
 
 # Initial cacheinfo file  with size=AUTOMATIC, expected explicit size
-set_file_contents($CACHEINFO_FILE,$CACHEINFO_AUTOMACTIC);
-$status = $comp->Configure_Cache($config_explicit);
-ok(!$status, "Configure_Cache returned no explicit error");
-$fh = get_file($CACHEINFO_FILE);
-ok(defined($fh), $CACHEINFO_FILE." was opened");
-is("$fh", $CACHEINFO_EXPLICIT_MOUNT, $CACHEINFO_FILE." (initially AUTOMATIC) has expected contents");
-$fh->close();
-
+set_file_contents($CACHEINFO_FILE,$CACHEINFO_AUTOMATIC);
+execute_standard_test($CACHEINFO_FILE, $CACHEINFO_EXPLICIT_MOUNT, $config_explicit, "initially AUTOMATIC");
 
 
 Test::NoWarnings::had_no_warnings();
