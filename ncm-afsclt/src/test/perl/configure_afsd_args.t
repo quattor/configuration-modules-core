@@ -27,6 +27,17 @@ Readonly my $AFSD_ARGS_EXPECTED => 'daemons:2
 files:100
 ';
 
+Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
+
+
+sub get_config_tree {
+    my $profile = shift;
+
+    my $config = get_config_for_profile($profile);
+    return $config->getElement($CONFIG_PREFIX)->getTree();
+}
+
+
 #############
 # Main code #
 #############
@@ -40,9 +51,9 @@ set_caf_file_close_diff(1);
 
 my $comp = NCM::Component::afsclt->new('afsclt');
 
-my $config_afsd_args = get_config_for_profile("explicit");
-my $config_empty_afsd_args = get_config_for_profile("automatic_nocachemount");
-my $config_no_afsd_args = get_config_for_profile("automatic");
+my $config_afsd_args = get_config_tree("explicit");
+my $config_empty_afsd_args = get_config_tree("automatic_nocachemount");
+my $config_no_afsd_args = get_config_tree("automatic");
 
 # Initial afsd.args doesn't exist
 $status = $comp->Configure_Afsd_Args($config_afsd_args);

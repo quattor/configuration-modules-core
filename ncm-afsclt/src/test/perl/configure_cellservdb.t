@@ -24,6 +24,17 @@ Tests for AFS CellServDB configuration
 
 Readonly my $CELLSERVDB_FILE => '/usr/vice/etc/CellServDB';
 
+Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
+
+
+sub get_config_tree {
+    my $profile = shift;
+
+    my $config = get_config_for_profile($profile);
+    return $config->getElement($CONFIG_PREFIX)->getTree();
+}
+
+
 sub Check_CellServDB {
     my $msg = shift;
 
@@ -53,7 +64,7 @@ set_caf_file_close_diff(1);
 
 my $comp = NCM::Component::afsclt->new('afsclt');
 
-my $config = get_config_for_profile("explicit");
+my $config = get_config_tree("explicit");
 
 # Initial CellServDB doesn't exist
 $status = $comp->Configure_CellServDB($config);

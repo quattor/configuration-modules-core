@@ -26,6 +26,17 @@ Readonly my $THESECELLS_FILE => '/usr/vice/etc/TheseCells';
 Readonly my $THESECELLS_EXPECTED => 'cern.ch morganstanley.com
 ';
 
+Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
+
+
+sub get_config_tree {
+    my $profile = shift;
+
+    my $config = get_config_for_profile($profile);
+    return $config->getElement($CONFIG_PREFIX)->getTree();
+}
+
+
 #############
 # Main code #
 #############
@@ -39,8 +50,8 @@ set_caf_file_close_diff(1);
 
 my $comp = NCM::Component::afsclt->new('afsclt');
 
-my $config_thesecells = get_config_for_profile("explicit");
-my $config_no_thesecells = get_config_for_profile("automatic");
+my $config_thesecells = get_config_tree("explicit");
+my $config_no_thesecells = get_config_tree("automatic");
 
 # Initial TheseCells doesn't exist
 $status = $comp->Configure_TheseCells($config_thesecells);

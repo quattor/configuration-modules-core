@@ -30,26 +30,28 @@ Readonly my $AFS_MOUNTPOINT_DEF => '/afs';
 
 sub Configure {
     my ( $self, $config ) = @_;
-    $self->Configure_Cell($config);
-    $self->Configure_TheseCells($config);
-    $self->Configure_Cache($config);
-    $self->Configure_CellServDB($config);
-    $self->Configure_Afsd_Args($config);
+
+    my $afsclt_config = $config->getElement($PREFIX)->getTree();
+
+    $self->Configure_Cell($afsclt_config);
+    $self->Configure_TheseCells($afsclt_config);
+    $self->Configure_Cache($afsclt_config);
+    $self->Configure_CellServDB($afsclt_config);
+    $self->Configure_Afsd_Args($afsclt_config);
 }
 
 sub Configure_Cell {
     my ( $self, $config ) = @_;
-    unless ( $config->elementExists("$PREFIX/thiscell") ) {
-        $self->error("Cannot get $PREFIX/thiscell (required in profile)");
+    unless ( defined($config->{thiscell}) ) {
+        $self->error("$PREFIX/thiscell missing in the configuration");
         return 1;
     }
 
-    my $afscell = $config->getValue("$PREFIX/thiscell");
     my $thiscell_fh = CAF::FileWriter->new( $THISCELL, log => $self );
-    print $thiscell_fh "$afscell\n";
+    print $thiscell_fh $config->{thiscell}."\n";
 
     if ( $thiscell_fh->close() ) {
-        $self->info("Updated thiscell to $afscell");
+        $self->info("Updated thiscell to ".$config->{thiscell});
     }
 
     return 0;
@@ -58,10 +60,9 @@ sub Configure_Cell {
 sub Configure_TheseCells {
     my ( $self, $config ) = @_;
 
-    if ( $config->elementExists("$PREFIX/thesecells") ) {
-        my $cells = $config->getElement("$PREFIX/thesecells")->getTree();
+    if ( defined($config->{thesecells}) ) {
         my $thesecells_fh = CAF::FileWriter->new( $THESECELLS, log => $self );
-        print $thesecells_fh join ( " ", @$cells ) . "\n";
+        print $thesecells_fh join ( " ", @{$config->{thesecells}} ) . "\n";
         if ( $thesecells_fh->close() ) {
             $self->info("Configured cell list for authentication $THESECELLS");
         }
@@ -89,23 +90,21 @@ sub Configure_Cache {
     my $new_cache       = 0;     # in 1k blocks.
     my $file_afsmount   = '';
 
-    my $afs_config = $config->getElement($PREFIX)->getTree();
-
-    if ( defined($afs_config->{cachesize}) ) {
-        $new_cache = $afs_config->{cachesize}
+    if ( defined($config->{cachesize}) ) {
+        $new_cache = $config->{cachesize}
     } else {
-        $self->info("$PREFIX/cachesize not setting cache size");
+        $self->info("$PREFIX/cachesize undefined: not setting cache size");
         return 1;
     }
 
-    if ( defined($afs_config->{cachemount}) ) {
-        $file_cachemount = $afs_config->{cachemount};    # mount point for AFS cache partition
+    if ( defined($config->{cachemount}) ) {
+        $file_cachemount = $config->{cachemount};    # mount point for AFS cache partition
     } else {
         $self->debug(1, "No explicit cache mount point defined in the configuration: will use currently defined one, if any");
     }
 
-    if ( defined($afs_config->{afs_mount}) ) {
-        $file_afsmount = $afs_config->{afs_mount};    # AFS mount point
+    if ( defined($config->{afs_mount}) ) {
+        $file_afsmount = $config->{afs_mount};    # AFS mount point
     } else {
         $self->debug(1, "No explicit AFS mount point defined in the configuration");
     }
@@ -182,12 +181,12 @@ sub Configure_Cache {
 sub Configure_CellServDB {
     my ( $self, $config ) = @_;
     my $master_cellservdb;
-    if ( $config->elementExists("$PREFIX/cellservdb") ) {
-        $master_cellservdb = $config->getValue("$PREFIX/cellservdb");
+    if ( defined($config->{cellservdb}) ) {
+        $master_cellservdb = $config->{cellservdb};
         if ( $master_cellservdb =~ m/^\/\w/i ) {    # non-URI -> file
             $master_cellservdb = "file://" . $master_cellservdb;
         } elsif ( $master_cellservdb !~ m/^(ftp|http|file)/i ) {    # known URIs
-            $self->error("Don't know how to handle URI: $master_cellservdb, giving up");
+            $self->error("Unsupported protocol to access master CellServDB ($master_cellservdb), giving up");
             return 1;
         }
     } else {
@@ -290,11 +289,10 @@ sub update_afs_cells ( $$ ) {
 sub Configure_Afsd_Args {
     my ( $self, $config ) = @_;
 
-    if ( $config->elementExists("$PREFIX/afsd_args") ) {
-        my $args = $config->getElement("$PREFIX/afsd_args")->getTree();
+    if ( defined($config->{afsd_args}) ) {
         my $fh = CAF::FileWriter->new( $AFSD_ARGS, log => $self, backup => ".old" );
-        foreach my $key (sort keys %$args) {
-            print $fh "$key:" . $args->{$key} . "\n";
+        foreach my $key (sort keys %{$config->{afsd_args}}) {
+            print $fh "$key:" . $config->{afsd_args}->{$key} . "\n";
         }
         if ( $fh->close() ) {
             $self->info("Updated afsd.args");

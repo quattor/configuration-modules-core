@@ -34,6 +34,17 @@ Readonly my $CACHEINFO_EXPLICIT_MOUNT => '/afsmnt:/var/afs/cache:1422000
 Readonly my $FS_GETPARAMS_CMD => 'fs getcacheparms';
 Readonly my $FS_GETPARAMS_OUTPUT_1 => "AFS using 1229334 of the cache's available 1422000 1K byte blocks.";
 
+Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
+
+
+sub get_config_tree {
+    my $profile = shift;
+
+    my $config = get_config_for_profile($profile);
+    return $config->getElement($CONFIG_PREFIX)->getTree();
+}
+
+
 #############
 # Main code #
 #############
@@ -47,9 +58,9 @@ set_caf_file_close_diff(1);
 
 my $comp = NCM::Component::afsclt->new('afsclt');
 
-my $config_automatic = get_config_for_profile("automatic");
-my $config_no_cachemount = get_config_for_profile("automatic_nocachemount");
-my $config_explicit = get_config_for_profile("explicit");
+my $config_automatic = get_config_tree("automatic");
+my $config_no_cachemount = get_config_tree("automatic_nocachemount");
+my $config_explicit = get_config_tree("explicit");
 
 set_desired_output($FS_GETPARAMS_CMD, $FS_GETPARAMS_OUTPUT_1);
 

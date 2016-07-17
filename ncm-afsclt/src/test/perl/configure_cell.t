@@ -26,6 +26,17 @@ Readonly my $THISCELL_FILE => '/usr/vice/etc/ThisCell';
 Readonly my $THISCELL_EXPECTED => 'in2p3.fr
 ';
 
+Readonly my $CONFIG_PREFIX => '/software/components/afsclt';
+
+
+sub get_config_tree {
+    my $profile = shift;
+
+    my $config = get_config_for_profile($profile);
+    return $config->getElement($CONFIG_PREFIX)->getTree();
+}
+
+
 #############
 # Main code #
 #############
@@ -39,7 +50,7 @@ set_caf_file_close_diff(1);
 
 my $comp = NCM::Component::afsclt->new('afsclt');
 
-my $config_explicit = get_config_for_profile("explicit");
+my $config_explicit = get_config_tree("explicit");
 
 # Initial ThisCell file empty
 set_file_contents($THISCELL_FILE,"");
