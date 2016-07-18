@@ -1,8 +1,8 @@
-#${PMpre} NCM::Component::FreeIPA::Bootstrap${PMpost}
+#${PMpre} NCM::Component::FreeIPA::CLI${PMpost}
 
 use parent qw(CAF::Application NCM::Component::freeipa CAF::Reporter CAF::Object Exporter);
 
-our @EXPORT = qw(main);
+our @EXPORT = qw(install);
 
 use CAF::Object qw(SUCCESS);
 use CAF::Process;
@@ -16,26 +16,26 @@ Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --preserve
 
 =pod
 
-=head1 Bootstrap FreeIPA
+=head1 CLI FreeIPA
 
-Module to use to bootstrap FreeIPA
+Module to use as CLI to FreeIPA
 
 =head1 DESCRIPTION
 
-Module to use to bootstrap FreeIPA, e.g. when initialising on existing host
+Module to use as CLI to FreeIPA, e.g. when initialising on existing host
 or during kickstart.
 
 Runs with default debug level 5.
 
 Example command (one line)
 
-    PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::Bootstrap -w -e main --
+    PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install --
         --realm MY.REALM --primary primary.example.com --otp abcdef123456
         --domain example.com --short thishost
 
 =cut
 
-sub main
+sub install
 {
 
     # fix umask
@@ -47,13 +47,13 @@ sub main
 
     my $ec = 1; # Failure
     my $name = $0 || 'bootstrap';
-    if (my $app = NCM::Component::FreeIPA::Bootstrap->new($name, '--debug', 5, @ARGV)) {
-        $app->info("Bootstrap started with name $name and args @ARGV");
+    if (my $app = NCM::Component::FreeIPA::CLI->new($name, '--debug', 5, @ARGV)) {
+        $app->info("CLI started with name $name and args @ARGV");
         my $prim = $app->option('primary');
         my $realm = $app->option('realm');
         my $domain = $app->option('domain');
 
-        if ($app->join_ipa($prim ,$realm, $app->option('otp'), $domain)) {
+        if ($app->ipa_install($prim ,$realm, $app->option('otp'), $domain)) {
             if($app->minimal_component($app->option('short').".$domain", $prim, $realm)) {
                 $app->info("bootstrap success");
                 $ec = 0;
@@ -65,7 +65,7 @@ sub main
         };
 
     } else {
-        print "[ERROR] failed to initialise NCM::Component::FreeIPA::Bootstrap with name $name and args @ARGV\n";
+        print "[ERROR] failed to initialise NCM::Component::FreeIPA::CLI with name $name and args @ARGV\n";
     }
 
 
@@ -161,7 +161,8 @@ sub post_time
 
 }
 
-sub join_ipa
+# TODO: ipa-join is enough?
+sub ipa_install
 {
     my ($self, $primary, $realm, $otp, $domain, %opts) = @_;
 

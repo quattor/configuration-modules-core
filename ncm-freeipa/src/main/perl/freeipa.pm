@@ -331,6 +331,14 @@ sub set_ipa_client
     return $_client;
 }
 
+# Return IPA client class variable (for subclassing)
+sub get_ipa_client
+{
+    my ($self) = @_;
+
+    return $_client;
+}
+
 # Perform relevant part in separate method, so we can subclass this component
 # in a standalone bootstrap module
 sub _configure
