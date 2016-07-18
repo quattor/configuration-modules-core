@@ -27,20 +27,24 @@ my $cfg = get_config_for_profile("client");
 
 my $fqdn = $cmp->set_fqdn(config => $cfg);
 my $tree = $cfg->getTree($cmp->prefix());
-my $ipa = $cmp->set_ipa_client($tree->{primary});
+my $ipa;
 
 $context = undef;
-ok(! defined($cmp->client($tree)), "client returns undef if CAF::Kerberos get_context fails");
+
+$ipa = $cmp->set_ipa_client($tree->{primary});
+ok(! defined($ipa), "set_ipa_client returns undef if CAF::Kerberos get_context fails");
 is_deeply($krb5->{ticket}, {keytab => '/etc/krb5.keytab'}, "Kerberos using correct ticket");
 is_deeply($krb5->{principal}, {primary => 'host', instances => [$fqdn]}, "Kerberos using correct principal");
 
 $context = 1;
+
 
 # nick1 is not yet known
 set_command_status('/usr/bin/certutil -d /etc/nssdb.quattor -L -n nick1', 1);
 
 command_history_reset;
 
+$ipa = $cmp->set_ipa_client($tree->{primary});
 ok($cmp->client($tree), "client returns success");
 ok(command_history_ok([
     "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab",

@@ -8,8 +8,15 @@ use Test::MockModule;
 
 use NCM::Component::freeipa;
 
+my $mockk = Test::MockModule->new('CAF::Kerberos');
+my $krb5;
+my $context = 1;
+$mockk->mock('get_context', sub {$krb5 = shift; return $context});
+
+
 my $cmp = NCM::Component::freeipa->new("freeipa");
 my $cfg = get_config_for_profile("server");
+my $fqdn = $cmp->set_fqdn(config => $cfg);
 my $tree;
 
 =head2 Simple test

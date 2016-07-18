@@ -12,7 +12,9 @@ use Readonly;
 Readonly::Array my @TIME_SERVICES => qw(ntpd chronyd ptpd ptpd2);
 Readonly::Array my @NTPDATE_SYNC => qw(/usr/sbin/ntpdate -U ntp -b -v);
 
-Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --preserve-sssd --no-sudo --no-sshd --no-ssh --no-ntp);
+Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended);
+Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp);
+
 
 =pod
 
@@ -128,6 +130,7 @@ sub _initialize {
 # (even if --no-ntp is used)
 # Prepare the time before running ipa-client-install
 # Requires ntpdate and ntpd installed (can be removed again)
+# This does not seem necessary anymore?
 sub pre_time
 {
     my ($self, $ntpserver) = @_;
@@ -170,13 +173,16 @@ sub ipa_install
     my ($self, $primary, $realm, $otp, $domain, %opts) = @_;
 
     my $ec = SUCCESS;
+    $self->debug(1, "begin ipa_install with primary $primary realm $realm");
 
-    $self->pre_time($opts{ntpserver});
+
+    #$self->pre_time($opts{ntpserver});
 
     # It is ok to log this, the password is an OTP
     # TODO: set expiration window on password or cron job to reset password
     my $cmd = [
         @IPA_INSTALL,
+        map {"--no-$_"} @IPA_INSTALL_NOS,
         '--server', $primary,
         '--realm', $realm,
         '--password', $otp,
@@ -191,8 +197,9 @@ sub ipa_install
         $self->info("ipa-install success: $output");
     }
 
-    $self->post_time();
+    #$self->post_time();
 
+    $self->debug(1, "end ipa_install with ec $ec");
     return $ec;
 }
 
@@ -201,6 +208,8 @@ sub ipa_install
 sub minimal_component
 {
     my ($self, $fqdn, $primary, $realm) = @_;
+
+    $self->debug(1, "begin minimal_component with primary $primary realm $realm");
 
     # Set class variable
     $self->set_fqdn(fqdn => $fqdn);
@@ -212,9 +221,11 @@ sub minimal_component
         realm => $realm,
     };
 
-    $self->_configure($tree);
+    my $ec = $self->_configure($tree);
 
-    return 1;
+    $self->debug(1, "end minimal_component_install with ec $ec");
+
+    return $ec;
 }
 
 1;

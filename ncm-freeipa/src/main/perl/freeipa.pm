@@ -277,18 +277,6 @@ sub client
 {
     my ($self, $tree) = @_;
 
-    my $krb = CAF::Kerberos->new(
-        principal => "host/$_fqdn",
-        keytab => '/etc/krb5.keytab',
-        log => $self,
-        );
-    return if(! defined($krb->get_context()));
-
-    # set environment to temporary credential cache
-    # temporary cache is cleaned-up during destroy of $krb
-    local %ENV;
-    $krb->update_env(\%ENV);
-
     $self->service_keytab($tree) if $tree->{keytabs};
     $self->certificates($tree) if $tree->{certificates};
 
@@ -317,9 +305,23 @@ sub set_fqdn
 # ugly, but convenient: set class-variable IPA client instance
 sub set_ipa_client
 {
-    my ($self, $primary) = @_;
+    my ($self, $primary, $principal) = @_;
+
+    $principal = "host/$_fqdn" if ! defined($principal);
 
     my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
+
+    my $krb = CAF::Kerberos->new(
+        principal => $principal,
+        keytab => '/etc/krb5.keytab',
+        log => $self,
+        );
+    return if(! defined($krb->get_context()));
+
+    # set environment to temporary credential cache
+    # temporary cache is cleaned-up during destroy of $krb
+    local %ENV;
+    $krb->update_env(\%ENV);
 
     # Only allow kerberos for now
     $_client = NCM::Component::FreeIPA::Client->new(
@@ -345,7 +347,9 @@ sub _configure
 {
     my ($self, $tree) = @_;
 
-    $self->set_ipa_client($tree->{primary});
+    my $principal;
+    $principal = $tree->{server}->{principal} if $tree->{server};
+    $self->set_ipa_client($tree->{primary}, $principal);
 
     if ($_client->{rc}) {
         $self->server($tree) if $tree->{server};
@@ -356,7 +360,6 @@ sub _configure
     } else {
         $self->error("Failed to obtain FreeIPA Client: $_client->{error}");
     };
-
 }
 
 sub Configure

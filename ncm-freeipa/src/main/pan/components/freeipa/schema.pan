@@ -71,6 +71,8 @@ type component_${project.artifactId}_dns = {
 
 @{ Server configuration }
 type component_${project.artifactId}_server = {
+    @{principal to use to perform server changes}
+    'principal' : string = 'admin'
     @{subnet name with DNSzone information}
     'dns' ? component_${project.artifactId}_dns{}
     @{hosts to add (not needed if installed via AII)}
