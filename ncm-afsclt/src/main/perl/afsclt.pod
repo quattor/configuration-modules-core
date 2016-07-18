@@ -17,16 +17,7 @@ NCM::afsclt - NCM AFS client configuration component
 
 =item Configure()
 
-Sets ThisCell and enables AFS authentication (via authconfig) and a
-few options in /etc/sysconfig/afs. Configures /etc/sysconfig/iptables
-for the AFS client callback port.
-
-=item Unconfigure()
-
-/etc/sysconfig/afs: reset to defaults
-iptables: remove the AFS ports
-authconfig: no action
-CellServDB: no action
+Configure the cell, the AFS cacheinfo file and the afsd daemon.
 
 =back
 
@@ -34,25 +25,21 @@ CellServDB: no action
 
 =over
 
-=item /software/components/afsclt/active : boolean
-
-activates/deactivates the component.
-
-=item /software/components/afsclt/thiscell : string
-
-local AFS cell for this machine
-
-=item /software/components/afsclt/settime : boolean
-
-make AFS client set the system time or not.
-
-=item /software/components/afsclt/options : nlist
+=item /software/components/afsclt/afsd_args : nlist (optional)
 
 various command-line options for the afsd daemon
 
-=item /software/components/afsclt/cachesize : int
+=item /software/components/afsclt/afs_mount : string (optional)
 
-desired AFS cache size on disk, in 1K blocks. The running AFS cache
+AFS mount point. If not defined, C</afs> is used.
+
+=item /software/components/afsclt/cachemount : string (optional)
+
+AFS cache mount point. No default.
+
+=item /software/components/afsclt/cachesize : string (optional)
+
+desired AFS cache size on disk, in 1K blocks, or C<AUTOMATIC>. The running AFS cache
 will get adjusted online, and $afs_cacheinfo will be changed if
 required. Please note that an available (mounted) AFS cache partition
 has precedence over this value, i.e. you cannot force a lower usage of
@@ -60,11 +47,27 @@ the cache partition. For Linux machines, a cache partition will use
 CACHESIZE=AUTOMATIC, for other OSes, a hardcoded fill rate of 85% is
 used.
 
-=item /software/components/afsclt/cellservdb : string
+=item /software/components/afsclt/cellservdb : string (optional)
 
 A regularly-updated AFS CellServDB URL or filename (e.g. from AFS)
 that this component will copy to local disk. The local AFS client will
 get notified of any additions or changes within a cell.
+
+=item /software/components/afsclt/enabled : C<yes> or C<no> (required)
+
+Whether the AFS client should be enabled or not. No default.
+
+=item /software/components/afsclt/settime : boolean (optional)
+
+make AFS client set the system time or not.
+
+=item /software/components/afsclt/thiscell : string (required)
+
+local AFS cell for this machine. No default.
+
+=item /software/components/afsclt/thesecells : list of string (optional)
+
+List of AFS cells to authenticate to. No default.
 
 =back
 

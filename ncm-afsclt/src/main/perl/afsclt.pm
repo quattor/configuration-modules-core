@@ -25,55 +25,60 @@ Readonly my $THESECELLS    => '/usr/vice/etc/TheseCells';
 Readonly my $AFSD_ARGS     => '/etc/afsd.args';
 Readonly my $PREFIX        => '/software/components/afsclt';
 
+Readonly my $AFS_MOUNTPOINT_DEF => '/afs';
+
+
 sub Configure {
     my ( $self, $config ) = @_;
-    $self->Configure_Cell($config);
-    $self->Configure_TheseCells($config);
-    $self->Configure_Cache($config);
-    $self->Configure_CellServDB($config);
-    $self->Configure_Afsd_Args($config);
+
+    my $afsclt_config = $config->getElement($PREFIX)->getTree();
+
+    $self->Configure_Cell($afsclt_config);
+    $self->Configure_TheseCells($afsclt_config);
+    $self->Configure_Cache($afsclt_config);
+    $self->Configure_CellServDB($afsclt_config);
+    $self->Configure_Afsd_Args($afsclt_config);
 }
 
 sub Configure_Cell {
     my ( $self, $config ) = @_;
-    unless ( $config->elementExists("$PREFIX/thiscell") ) {
-        $self->error("Cannot get $PREFIX/thiscell (required in profile)");
+    unless ( defined($config->{thiscell}) ) {
+        $self->error("$PREFIX/thiscell missing in the configuration");
         return 1;
     }
 
-    my $afscell = $config->getValue("$PREFIX/thiscell");
     my $thiscell_fh = CAF::FileWriter->new( $THISCELL, log => $self );
-    print $thiscell_fh "$afscell\n";
+    print $thiscell_fh "$config->{thiscell}\n";
 
     if ( $thiscell_fh->close() ) {
-        $self->info("Updated thiscell to $afscell");
+        $self->info("Updated thiscell to $config->{thiscell}");
     }
+
+    return 0;
 }
 
 sub Configure_TheseCells {
     my ( $self, $config ) = @_;
 
-    if ( $config->elementExists("$PREFIX/thesecells") ) {
-        my $cells = $config->getElement("$PREFIX/thesecells")->getTree();
+    if ( defined($config->{thesecells}) ) {
         my $thesecells_fh = CAF::FileWriter->new( $THESECELLS, log => $self );
-        print $thesecells_fh join ( " ", @$cells ) . "\n";
+        print $thesecells_fh join ( " ", @{$config->{thesecells}} ) . "\n";
         if ( $thesecells_fh->close() ) {
             $self->info("Configured cell list for authentication $THESECELLS");
         }
-    }
-    elsif ( -f $THESECELLS ) {
+    } elsif ( -f $THESECELLS ) {
         if ($NoAction) {
             $self->info("Would remove $THESECELLS");
-        }
-        else {
+        } else {
             if ( unlink($THESECELLS) ) {
                 $self->info("Removed cell list for authentication $THESECELLS");
-            }
-            else {
+            } else {
                 $self->error("Could not remove $THESECELLS: $!");
             }
         }
     }
+
+    return 0;
 }
 
 sub Configure_Cache {
@@ -85,12 +90,23 @@ sub Configure_Cache {
     my $new_cache       = 0;     # in 1k blocks.
     my $file_afsmount   = '';
 
-    if ( $config->elementExists("$PREFIX/cachesize") ) {
-        $new_cache = $config->getValue("$PREFIX/cachesize");    #new cache size
-    }
-    else {
-        $self->info("Cannot get CDB $PREFIX/cachesize - not setting cache size");
+    if ( defined($config->{cachesize}) ) {
+        $new_cache = $config->{cachesize}
+    } else {
+        $self->info("$PREFIX/cachesize undefined: not setting cache size");
         return 1;
+    }
+
+    if ( defined($config->{cachemount}) ) {
+        $file_cachemount = $config->{cachemount};    # mount point for AFS cache partition
+    } else {
+        $self->debug(1, "No explicit cache mount point defined in the configuration: will use currently defined one, if any");
+    }
+
+    if ( defined($config->{afs_mount}) ) {
+        $file_afsmount = $config->{afs_mount};    # AFS mount point
+    } else {
+        $self->debug(1, "No explicit AFS mount point defined in the configuration");
     }
 
     my $proc = CAF::Process->new( [ "fs", "getcacheparms" ], log => $self, keeps_state => 1 );
@@ -106,39 +122,45 @@ sub Configure_Cache {
         $self->warn("Cannot determine current AFS cache size, changing only config file");
     }
 
-    my $afs_cacheinfo_fh = CAF::FileEditor->new( $AFS_CACHEINFO, log => $self ); # TODO use FileReader
-    $afs_cacheinfo_fh->cancel();
-    if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+)$; ) {
-        $file_afsmount   = $1;
-        $file_cachemount = $2;
+    my $afs_cacheinfo_fh = CAF::FileReader->new( $AFS_CACHEINFO, log => $self );
+    $self->debug(2, "$AFS_CACHEINFO current contents: >>>$afs_cacheinfo_fh<<<");
+    if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+|AUTOMATIC)$; ) {
+        $file_afsmount   = $1 if $file_afsmount eq "";
+        $file_cachemount = $2 if $file_cachemount eq "";
         $file_cache      = $3;
-    }
-    else {
+    } elsif ( "$afs_cacheinfo_fh" ne "" ) {
         $self->error("Cannot parse stored AFS cache mount or size from $AFS_CACHEINFO");
         return 1;
+    } else {
+        $self->debug(1, "No existing cacheinfo file found");
     }
     $afs_cacheinfo_fh->close();
 
-    # sanity check - don't allow cachesize bigger than 95% of a partition size
-    $proc = CAF::Process->new( [ "df", "-k", $file_cachemount ], log => $self, keeps_state => 1 );
-    foreach my $line ( split ( "\n", $proc->output() ) ) {
-        if ($line =~ m{^.*?\s+(\d+)\s+\d+\s+\d+\s+\d+%\s+(.*)}) {
-            my $disk_cachesize = $1;
-            my $mount          = $2;
-            if ( $mount eq $file_cachemount && $new_cache > 0.95 * $disk_cachesize ) {
-                $self->error("Cache size ($disk_cachesize) on $mount cannot exceed 95% of its partition size. Not changing.");
-                return 1;
+    if ( $new_cache ne "AUTOMATIC" ) {
+        # sanity check - don't allow cachesize bigger than 95% of a partition size
+        $proc = CAF::Process->new( [ "df", "-k", $file_cachemount ], log => $self, keeps_state => 1 );
+        foreach my $line ( split ( "\n", $proc->output() ) ) {
+            if ($line =~ m{^.*?\s+(\d+)\s+\d+\s+\d+\s+\d+%\s+(.*)}) {
+                my $disk_cachesize = $1;
+                my $mount          = $2;
+                if ( $mount eq $file_cachemount && $new_cache > 0.95 * $disk_cachesize ) {
+                    $self->error("Cache size ($disk_cachesize) on $mount cannot exceed 95% of its partition size. Not changing.");
+                    return 1;
+                }
             }
         }
     }
 
-    # adjust stored cache size (gets overwritten on restart for OpenAFS-1.4)
-    if ( $new_cache != $file_cache ) {
-        my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
-        print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
-        if ( $afs_cacheinfo_fh->close() ) {
-            $self->info("Changed AFS cache config file $AFS_CACHEINFO: $file_cachemount $run_cache -> $new_cache (1K blocks)");
-        }
+    # Adjust cacheinfo file if needed.
+    # Force string interpolation of cache size as it can be AUTOMATIC
+    if ( $file_afsmount eq "" ) {
+        $self->debug(1, "AFS mount point not defined: using default ($AFS_MOUNTPOINT_DEF)");
+        $file_afsmount = $AFS_MOUNTPOINT_DEF;
+    }
+    my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
+    print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
+    if ( $afs_cacheinfo_fh->close() ) {
+        $self->info("Changed AFS cache config ($AFS_CACHEINFO). New cache size (1K blocks): $new_cache (current: $run_cache)");
     }
 
     # adjust online (in-kernel) value
@@ -152,22 +174,22 @@ sub Configure_Cache {
             $self->info("Changed running AFS cache $run_cache -> $new_cache (1K blocks)");
         }
     }
+
+    return 0;
 }
 
 sub Configure_CellServDB {
     my ( $self, $config ) = @_;
     my $master_cellservdb;
-    if ( $config->elementExists("$PREFIX/cellservdb") ) {
-        $master_cellservdb = $config->getValue("$PREFIX/cellservdb");
+    if ( defined($config->{cellservdb}) ) {
+        $master_cellservdb = $config->{cellservdb};
         if ( $master_cellservdb =~ m/^\/\w/i ) {    # non-URI -> file
             $master_cellservdb = "file://" . $master_cellservdb;
-        }
-        elsif ( $master_cellservdb !~ m/^(ftp|http|file)/i ) {    # known URIs
-            $self->error("Don't know how to handle URI: $master_cellservdb, giving up");
+        } elsif ( $master_cellservdb !~ m/^(ftp|http|file)/i ) {    # known URIs
+            $self->error("Unsupported protocol to access master CellServDB ($master_cellservdb), giving up");
             return 1;
         }
-    }
-    else {
+    } else {
         return 0;
     }
 
@@ -183,9 +205,8 @@ sub Configure_CellServDB {
     if ($cellservdb_fh->close()) {
         $self->info("Updated CellServDB");
     }
-    $self->update_afs_cells();
 
-    return 1;
+    return $self->update_afs_cells();
 }
 
 # update the list of known AFS cells and run "fs newcell" when needed
@@ -201,8 +222,7 @@ sub update_afs_cells ( $$ ) {
         if ($line =~ /^>(.\S+)/) {
             $cell = $1;
             $ipaddrs{$cell} = [];
-        }
-        elsif ($line =~ /^(\S+)\s+\#\s*\S+/) {
+        } elsif ($line =~ /^(\S+)\s+\#\s*\S+/) {
             # new entry
             push ( @{ $ipaddrs{$cell} }, $1 );
         }
@@ -262,21 +282,24 @@ sub update_afs_cells ( $$ ) {
     else {
         $self->info("Nothing to do for AFS cell information");
     }
+
+    return 0;
 }
 
 sub Configure_Afsd_Args {
     my ( $self, $config ) = @_;
 
-    if ( $config->elementExists("$PREFIX/afsd_args") ) {
-        my $args = $config->getElement("$PREFIX/afsd_args")->getTree();
+    if ( defined($config->{afsd_args}) ) {
         my $fh = CAF::FileWriter->new( $AFSD_ARGS, log => $self, backup => ".old" );
-        foreach my $key (sort keys %$args) {
-            print $fh "$key:" . $args->{$key} . "\n";
+        foreach my $key (sort keys %{$config->{afsd_args}}) {
+            print $fh "$key:$config->{afsd_args}->{$key}\n";
         }
         if ( $fh->close() ) {
             $self->info("Updated afsd.args");
         }
     }
+
+    return 0;
 }
 
 1;    #required for Perl modules
