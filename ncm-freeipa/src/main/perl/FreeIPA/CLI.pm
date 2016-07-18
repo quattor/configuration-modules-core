@@ -48,14 +48,14 @@ sub install
     my $ec = 1; # Failure
     my $name = $0 || 'bootstrap';
     if (my $app = NCM::Component::FreeIPA::CLI->new($name, '--debug', 5, @ARGV)) {
-        $app->info("CLI started with name $name and args @ARGV");
+        $app->info("CLI install started with name $name and args @ARGV");
         my $prim = $app->option('primary');
         my $realm = $app->option('realm');
         my $domain = $app->option('domain');
 
         if ($app->ipa_install($prim ,$realm, $app->option('otp'), $domain)) {
             if($app->minimal_component($app->option('short').".$domain", $prim, $realm)) {
-                $app->info("bootstrap success");
+                $app->info("install success");
                 $ec = 0;
             } else {
                 $app->error("minimal_component failed");
@@ -65,7 +65,7 @@ sub install
         };
 
     } else {
-        print "[ERROR] failed to initialise NCM::Component::FreeIPA::CLI with name $name and args @ARGV\n";
+        print "[ERROR] install failed to initialise NCM::Component::FreeIPA::CLI with name $name and args @ARGV\n";
     }
 
 
@@ -94,6 +94,9 @@ sub app_options {
          { NAME    => 'short=s',
            HELP    => 'short hostname (fqdn without domain)' },
 
+         { NAME    => 'logfile=s',
+           HELP    => 'Logfile',
+           DEFAULT => '/var/log/ncm-freeipa-CLI.log' },
         );
 
     return(\@array);

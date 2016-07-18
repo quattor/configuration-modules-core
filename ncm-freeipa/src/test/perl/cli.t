@@ -10,7 +10,10 @@ $CAF::Object::NoAction = 1;
 
 use NCM::Component::FreeIPA::CLI;
 
-my @args = qw(--realm MY.REALM --primary primary.example.com --otp abcdef123456 --domain example.com --short thishost --debug 5);
+mkdir 'target/test';
+mkdir 'target/test/cli';
+
+my @args = qw(--realm MY.REALM --primary primary.example.com --otp abcdef123456 --domain example.com --short thishost --debug 5 --logfile target/test/cli/cli.log);
 my $cli = NCM::Component::FreeIPA::CLI->new('this script', @args);
 
 foreach my $class (qw(NCM::Component::FreeIPA::CLI CAF::Application NCM::Component::freeipa CAF::Reporter)) {
