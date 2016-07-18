@@ -1,6 +1,6 @@
 #${PMpre} NCM::Component::FreeIPA::Cert${PMpost}
 
-use Readonly;
+use CAF::FileReader;
 
 =head1 NAME
 
@@ -21,7 +21,28 @@ sub request_cert
 {
     my ($self, $csr, $principal) = @_;
 
-    return $self->do_one('cert', 'request', $csr, principal => $principal);
+    # Strip leading/trailing garbage
+    my $reg = qr{^(-----BEGIN (?:NEW )?CERTIFICATE REQUEST-----.*-----END (?:NEW )?CERTIFICATE REQUEST-----)$}ms;
+
+    # Extract the cert request
+    # No CAF::Reporter instance around?
+    my %opts;
+    if ($self->{log} && $self->{log}->{reporter}) {
+        $opts{log} = $self->{log}->{reporter};
+    }
+
+    my $fh = CAF::FileReader->new($csr, %opts);
+    if ($fh) {
+        # Strip leading/trailing garbage
+        if ("$fh" =~ m/$reg/) {
+            return $self->do_one('cert', 'request', $1, principal => $principal);
+        } else {
+            $self->error("Read CSR file $csr with unexpected content (pattern to match $reg): $fh");
+        }
+    } else {
+        $self->error("Failed to read CSR file $csr");
+    }
+    return;
 };
 
 =item get_cert
@@ -34,7 +55,21 @@ sub get_cert
 {
     my ($self, $serial, $crt) = @_;
 
-    return $self->do_one('cert', 'show', $serial, out => $crt);
+    my $cert = $self->do_one('cert', 'show', $serial);
+
+    if ($crt && $cert) {
+        # Extract the cert request
+        # No CAF::Reporter instance around?
+        my %opts;
+        if ($self->{log} && $self->{log}->{reporter}) {
+            $opts{log} = $self->{log}->{reporter};
+        }
+        my $fh = CAF::FileWriter->new($crt, %opts);
+        print $fh "$cert->{certificate}\n";
+        $fh->close();
+    }
+
+    return $cert;
 }
 
 =pod

@@ -12,8 +12,8 @@ use Readonly;
 Readonly::Array my @TIME_SERVICES => qw(ntpd chronyd ptpd ptpd2);
 Readonly::Array my @NTPDATE_SYNC => qw(/usr/sbin/ntpdate -U ntp -b -v);
 
-Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended);
-Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp);
+Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --debug --noac);
+Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp nisdomain);
 
 
 =pod
@@ -35,6 +35,11 @@ Example command (one line)
         --realm MY.REALM --primary primary.example.com --otp abcdef123456
         --domain example.com --short thishost
 
+=head1 DEPENDENCIES
+
+    Rpms:
+        nss_ldap ipa-client ncm-freeipa
+        nss-tools openssl
 =cut
 
 sub install
@@ -119,6 +124,10 @@ sub _initialize {
         return;
     }
 
+    # Set reporter log instance attributes for both CAF and Component
+    $self->{log} = $self;
+    $self->{LOGGER} = $self->{log};
+
     # start using log file (could be done later on instead)
     $self->set_report_logfile($self->{'LOG'});
 
@@ -182,11 +191,11 @@ sub ipa_install
     # TODO: set expiration window on password or cron job to reset password
     my $cmd = [
         @IPA_INSTALL,
-        map {"--no-$_"} @IPA_INSTALL_NOS,
         '--server', $primary,
         '--realm', $realm,
         '--password', $otp,
         '--domain', $domain,
+        map {"--no-$_"} @IPA_INSTALL_NOS, # Nothing after this, will all be map'ped
         ];
 
     my $output = CAF::Process->new($cmd, log => $self)->output();
@@ -216,9 +225,21 @@ sub minimal_component
 
     # No keytabs, use host keytab for ccm-fetch?
     # Retrieve the certificate from the host keytab
+    my $quattor_cert = {
+        owner => 'root',
+        group => 'root',
+        mode => 0400,
+        key => '/etc/pki/tls/private/quattor.key',
+        certmode => 0444,
+        cert => '/etc/pki/tls/certs/quattor.pem',
+    };
+
     my $tree = {
         primary => $primary,
         realm => $realm,
+        certificates => {
+            quattor => $quattor_cert,
+        },
     };
 
     my $ec = $self->_configure($tree);

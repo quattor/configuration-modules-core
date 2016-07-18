@@ -3,8 +3,11 @@ use warnings;
 
 use mock_rpc qw(cert);
 
+use CAF::Object;
 use Test::Quattor;
 use Test::More;
+
+$CAF::Object::NoAction = 1;
 
 use NCM::Component::FreeIPA::Client;
 
@@ -19,10 +22,25 @@ isa_ok($c, 'NCM::Component::FreeIPA::Cert',
 
 =cut
 
+# Not a valid csr, but 2 different start/stop for regexp test
+my $CSRDATA = <<EOF;
+
+garbage
+
+-----BEGIN NEW CERTIFICATE REQUEST-----
+CSRREQUEST
+-----END CERTIFICATE REQUEST-----
+
+    more garbage
+
+EOF
+
+set_file_contents('/path/to/req.csr', $CSRDATA);
+
 reset_POST_history;
 is_deeply($c->request_cert("/path/to/req.csr", 'host/myhost.mydomain@EXAMPLE.COM'),
           {okunittest=>1}, "Made cert request");
-ok(POST_history_ok(['cert_request /path/to/req.csr principal=host/myhost.mydomain@EXAMPLE.COM,version']),
+ok(POST_history_ok(['cert_request -----BEGIN NEW CERTIFICATE REQUEST-----\nCSRREQUEST\n-----END CERTIFICATE REQUEST----- principal=host/myhost.mydomain@EXAMPLE.COM,version']),
    "certificate request made");
 
 =head2 show
@@ -31,10 +49,12 @@ ok(POST_history_ok(['cert_request /path/to/req.csr principal=host/myhost.mydomai
 
 reset_POST_history;
 is_deeply($c->get_cert(123, '/path/to/cert.crt'),
-          {okunittest=>1}, "Get certificate");
-ok(POST_history_ok(['cert_show 123 out=/path/to/cert.crt,version']),
+          {certificate => 'CERTDATA'}, "Get certificate");
+ok(POST_history_ok(['cert_show 123 version']),
    "get_cert is certificate show made");
 
+my $fh = get_file('/path/to/cert.crt');
+is("$fh", "CERTDATA\n", "get_cert writes file");
 
 
 done_testing();

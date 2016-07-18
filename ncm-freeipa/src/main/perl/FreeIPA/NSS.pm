@@ -275,7 +275,7 @@ sub _mk_random_data
 
 Make a certificate request for C<fqdn> and optional C<dn>,
 return filename of the CSR.
-(Used DN is C<<[DN=<dn>,]CN=<fqdn>,O=<realm>>>).
+(Used DN is C<<CN=<fqdn>,O=<realm>>>).
 
 =cut
 
@@ -286,10 +286,8 @@ sub make_cert_request
     my $suff;
     if (defined($dn)) {
         $suff = "$dn";
-        $dn = "DN=$dn,";
     } else {
         $suff = "__no_dn";
-        $dn = '';
     };
 
     my $random_data_file = $self->_mk_random_data($DEFAULT_CSR_BITS, $suff);
@@ -300,7 +298,7 @@ sub make_cert_request
     # cleanup of random.data done by cleanup of workdir
     return $csr_filename if $self->_certutil(
         '-R', '-g', $self->{csr_bits},
-        '-s', "${dn}CN=$fqdn,O=$self->{realm}",
+        '-s', "CN=$fqdn,O=$self->{realm}",
         '-z', $random_data_file,
         '-a', '-o', $csr_filename,
         );
@@ -328,12 +326,12 @@ sub ipa_request_cert
     my $principal = "host/$fqdn\@$self->{realm}";
     my $req = $ipa->request_cert($csr, $principal);
     if ($req) {
-        my $serial = $req->{serial};
+        my $serial = $req->{serial_number};
 
         if ($serial) {
             my $cert = $ipa->get_cert($serial, $crt);
             if ($cert) {
-                $self->verbose("Retrieved certificate $cert->{dn} with serial $cert->{serial} to $crt");
+                $self->verbose("Retrieved certificate $cert->{certificate} with serial $cert->{serial_number} to $crt");
                 $res = SUCCESS;
             } else {
                 $self->fail("Failed to get certificate with serial $serial to $crt");
