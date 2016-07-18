@@ -79,6 +79,7 @@ use constant BOOLEAN_OPTS => qw(
     stay_setuid
     env_reset
     use_loginclass
+    visiblepw
 );
 use constant INT_OPTS => qw(
     passwd_tries
