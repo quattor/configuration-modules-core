@@ -157,7 +157,7 @@ sub Configure_Cache {
         $self->debug(1, "AFS mount point not defined: using default ($AFS_MOUNTPOINT_DEF)");
         $file_afsmount = $AFS_MOUNTPOINT_DEF;
     }
-    my $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
+    $afs_cacheinfo_fh = CAF::FileWriter->new( $AFS_CACHEINFO, log => $self );
     print $afs_cacheinfo_fh "$file_afsmount:$file_cachemount:$new_cache\n";
     if ( $afs_cacheinfo_fh->close() ) {
         $self->info("Changed AFS cache config ($AFS_CACHEINFO). New cache size (1K blocks): $new_cache (current: $run_cache)");
