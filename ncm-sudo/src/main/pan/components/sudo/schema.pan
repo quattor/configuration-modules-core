@@ -71,6 +71,7 @@ type structure_sudo_default_options = {
     "stay_setuid"           ? boolean
     "env_reset"             ? boolean
     "use_loginclass"        ? boolean
+    "visiblepw"             ? boolean
     "passwd_tries"          ? long
     "loglinelen"            ? long
     "timestamp_timeout"     ? long
