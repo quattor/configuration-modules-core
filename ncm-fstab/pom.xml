@@ -6,7 +6,7 @@
   <artifactId>fstab</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.6.0-rc6</version>
+  <version>16.6.0-rc7-SNAPSHOT</version>
   <name>NCM component.for manipulating the fstab and updating the mount points</name>
 
 
