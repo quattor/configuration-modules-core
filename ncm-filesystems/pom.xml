@@ -6,7 +6,7 @@
   <artifactId>filesystems</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.6.0-rc6-SNAPSHOT</version>
+  <version>16.6.0-rc6</version>
   <name>NCM component for creating filesystems (and block devices)</name>
 
 

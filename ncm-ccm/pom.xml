@@ -6,7 +6,7 @@
   <artifactId>ccm</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.6.0-rc6-SNAPSHOT</version>
+  <version>16.6.0-rc6</version>
   <name>ccm NCM component.</name>
 
 
