@@ -20,6 +20,27 @@ Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 
 Readonly my $NSSDB => '/etc/nssdb.quattor';
 
+# packages to install with yum for dependencies
+Readonly::Array our @CLI_YUM_PACKAGES => qw(
+    ncm-freeipa-${no-snapshot-version}-${RELEASE}
+    nss_ldap
+    ipa-client
+    nss-tools
+    openssl
+);
+
+# Fixed settings for he "quattor" host certificate
+# Retrieve the certificate from the host keytab
+Readonly my %QUATTOR_CERTIFICATE => {
+    owner => 'root',
+    group => 'root',
+    mode => 0400,
+    key => '/etc/pki/tls/private/quattor.key',
+    certmode => 0444,
+    cert => '/etc/pki/tls/certs/quattor.pem',
+};
+
+
 # Hold an instance of the client
 my $_client;
 
@@ -278,6 +299,12 @@ sub client
     my ($self, $tree) = @_;
 
     $self->service_keytab($tree) if $tree->{keytabs};
+
+    if ($tree->{quattorcert}) {
+        $self->verbose("Add quattor certificate (and key) in $QUATTOR_CERTIFICATE{certificate}");
+        $tree->{certificates}->{quattor} = \%QUATTOR_CERTIFICATE;
+    };
+
     $self->certificates($tree) if $tree->{certificates};
 
     return SUCCESS;
@@ -303,10 +330,13 @@ sub set_fqdn
 }
 
 # ugly, but convenient: set class-variable IPA client instance
+# tree is the config hashref, requires at least a primary key
 sub set_ipa_client
 {
-    my ($self, $primary, $principal) = @_;
+    my ($self, $tree) = @_;
 
+    my $principal;
+    $principal = $tree->{server}->{principal} if $tree->{server};
     $principal = "host/$_fqdn" if ! defined($principal);
 
     my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
@@ -325,7 +355,7 @@ sub set_ipa_client
 
     # Only allow kerberos for now
     $_client = NCM::Component::FreeIPA::Client->new(
-        $primary,
+        $tree->{primary},
         log => $self,
         debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
         );
@@ -347,9 +377,7 @@ sub _configure
 {
     my ($self, $tree) = @_;
 
-    my $principal;
-    $principal = $tree->{server}->{principal} if $tree->{server};
-    $self->set_ipa_client($tree->{primary}, $principal);
+    $self->set_ipa_client($tree);
 
     if ($_client->{rc}) {
         $self->server($tree) if $tree->{server};
@@ -375,5 +403,79 @@ sub Configure
 
     return 1;
 }
+
+
+# AII post_reboot hook
+# TODO: requesting a OTP, to be used withing max window seconds
+sub post_reboot
+{
+    my ($self, $config, $path) = @_;
+
+    $self->set_fqdn(config => $config);
+    my $tree = $config->getTree($self->prefix());
+
+    $self->set_ipa_client($tree);
+
+    my $hook = $config->getTree($path);
+
+    my $network = $config->getTree('/system/network');
+
+    # Add host (should be ok if already exists)
+    $_client->add_host($_fqdn, %{$tree->{host}});
+
+    # Mod host to get OTP (should give an error if not allowed)
+    my $otp = $_client->host_passwd($_fqdn);
+    if ($otp) {
+        my $yum_packages = join(" ", @CLI_YUM_PACKAGES);
+
+        my $domain = $tree->{domain} || $network->{domainname};
+
+        # Is optional, but we use the template value; not the CLI default
+        my $quattorcert = $tree->{quattorcert} ? 1 : 0;
+
+        print <<EOF;
+# freeipa KS post_reboot
+echo "begin freeipa post_reboot"
+
+yum -c /tmp/aii/yum/yum.conf -y install $yum_packages
+
+PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm $tree->{realm} --primary $tree->{primary} --otp $otp --domain $domain --fqdn $_fqdn --quattorcert $quattorcert
+
+echo "end freeipa post_reboot"
+
+EOF
+
+    } else {
+        $self->error("freeipa post_reboot: no OTP for $_fqdn");
+    }
+
+    return 1;
+}
+
+# AII remove hook
+sub remove
+{
+    my ($self, $config, $path) = @_;
+
+    $self->set_fqdn(config => $config);
+    my $tree = $config->getTree($self->prefix());
+
+    $self->set_ipa_client($tree);
+
+    my $hook = $config->getTree($path);
+
+    if ($hook->{remove}) {
+        $self->debug(1, "freeipa remove hook: remove host $_fqdn");
+        $_client->remove_host($_fqdn);
+    } elsif ($hook->{disable}) {
+        $self->debug(1, "freeipa remove hook: disable host $_fqdn");
+        $_client->disable_host($_fqdn);
+    } else {
+        $self->debug(1, "freeipa remove hook: nothing to do for $_fqdn");
+    }
+
+    return 1;
+}
+
 
 1; #required for Perl modules

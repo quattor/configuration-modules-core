@@ -88,7 +88,7 @@ type component_${project.artifactId}_server = {
 @{ permission / ownership for keytabs and certificates }
 type component_${project.artifactId}_permission = {
     @{mode/permissions}
-    'mode' : long = 0600
+    'mode' : long = 0400
     @{owner}
     'owner' : string = 'root'
     @{group}
@@ -110,7 +110,7 @@ type component_${project.artifactId}_certificate = {
     @{ certificate location to extract }
     'cert' ? string
     @{ certificate mode/permissions }
-    'certmode' : long = 0644
+    'certmode' : long = 0444
     @{ (private) key location to extract }
     'key' ? string
 };
@@ -124,10 +124,16 @@ type component_${project.artifactId} = {
     'primary' : type_hostname
     @{list of secondary servers to replicate}
     'secondaries' ? type_hostname[]
+    @{FreeIPA domain name (defaults to /system/network/domainname value if not specified)}
+    'domain' ? type_hostname
     @{server configuration settings}
     'server' ? component_${project.artifactId}_server
     @{keytabs to retrieve for services}
     'keytabs' ? component_${project.artifactId}_keytab{}
     @{certificates to request/retrieve (key is the NSSDB nick}
     'certificates' ? component_${project.artifactId}_certificate{}
+    @{Generate the quattor certificate (certificate and key for host in fixed location)}
+    'quattorcert' ? boolean
+    @{Host options}
+    'host' ? component_${project.artifactId}_host
 };

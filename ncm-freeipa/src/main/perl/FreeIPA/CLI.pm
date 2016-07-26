@@ -15,7 +15,6 @@ Readonly::Array my @NTPDATE_SYNC => qw(/usr/sbin/ntpdate -U ntp -b -v);
 Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --debug --noac);
 Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp nisdomain);
 
-
 =pod
 
 =head1 CLI FreeIPA
@@ -33,13 +32,8 @@ Example command (one line)
 
     PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install --
         --realm MY.REALM --primary primary.example.com --otp abcdef123456
-        --domain example.com --short thishost
+        --domain example.com --fqdn thishost.sub.example.com
 
-=head1 DEPENDENCIES
-
-    Rpms:
-        nss_ldap ipa-client ncm-freeipa
-        nss-tools openssl
 =cut
 
 sub install
@@ -53,15 +47,18 @@ sub install
     autoflush STDERR 1;
 
     my $ec = 1; # Failure
-    my $name = $0 || 'bootstrap';
+
+    my $name = 'install';
+    my $msg = "with name $name and args @ARGV";
+
     if (my $app = NCM::Component::FreeIPA::CLI->new($name, '--debug', 5, @ARGV)) {
-        $app->info("CLI install started with name $name and args @ARGV");
+        $app->info("CLI install started $msg");
         my $prim = $app->option('primary');
         my $realm = $app->option('realm');
         my $domain = $app->option('domain');
 
         if ($app->ipa_install($prim ,$realm, $app->option('otp'), $domain)) {
-            if($app->minimal_component($app->option('short').".$domain", $prim, $realm)) {
+            if($app->minimal_component($app->option('fqdn'), $prim, $realm, )) {
                 $app->info("install success");
                 $ec = 0;
             } else {
@@ -72,7 +69,7 @@ sub install
         };
 
     } else {
-        print "[ERROR] install failed to initialise NCM::Component::FreeIPA::CLI with name $name and args @ARGV\n";
+        print "[ERROR] install failed to initialise NCM::Component::FreeIPA::CLI $msg\n";
     }
 
 
@@ -98,8 +95,12 @@ sub app_options {
          { NAME    => 'domain=s',
            HELP    => 'domain name' },
 
-         { NAME    => 'short=s',
-           HELP    => 'short hostname (fqdn without domain)' },
+         { NAME    => 'fqdn=s',
+           HELP    => 'FQDN hostname' },
+
+         { NAME    => 'quattorcert=s',
+           HELP    => 'Generate quattor certificate for host',
+           DEFAULT => 1 },
 
          { NAME    => 'logfile=s',
            HELP    => 'Logfile',
@@ -216,30 +217,17 @@ sub ipa_install
 # TODO: handle errors like ncm-ncd (i.e. logged error is failure).
 sub minimal_component
 {
-    my ($self, $fqdn, $primary, $realm) = @_;
+    my ($self, $fqdn, $primary, $realm, $quattorcert) = @_;
 
-    $self->debug(1, "begin minimal_component with primary $primary realm $realm");
+    $self->debug(1, "begin minimal_component with primary $primary realm $realm quattorcert $quattorcert");
 
     # Set class variable
     $self->set_fqdn(fqdn => $fqdn);
 
-    # No keytabs, use host keytab for ccm-fetch?
-    # Retrieve the certificate from the host keytab
-    my $quattor_cert = {
-        owner => 'root',
-        group => 'root',
-        mode => 0400,
-        key => '/etc/pki/tls/private/quattor.key',
-        certmode => 0444,
-        cert => '/etc/pki/tls/certs/quattor.pem',
-    };
-
     my $tree = {
         primary => $primary,
         realm => $realm,
-        certificates => {
-            quattor => $quattor_cert,
-        },
+        quattorcert => $quattorcert,
     };
 
     my $ec = $self->_configure($tree);

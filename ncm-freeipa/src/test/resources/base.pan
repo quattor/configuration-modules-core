@@ -7,7 +7,12 @@ include 'components/freeipa/config';
 prefix "/software/components/freeipa";
 "realm" = "MY.REALM";
 "primary" = "myhost.example.com";
+"domain" = 'com';
+"quattorcert" = true;
+"host/ip_address" = "1.2.3.4";
+"host/macaddress" = list("aa:bb:cc:dd:ee:ff");
 
+    
 prefix "/system/network";
 "hostname" = "myhost";
 "domainname" = "example.com";

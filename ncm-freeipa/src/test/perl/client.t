@@ -31,7 +31,7 @@ my $ipa;
 
 $context = undef;
 
-$ipa = $cmp->set_ipa_client($tree->{primary});
+$ipa = $cmp->set_ipa_client($tree);
 ok(! defined($ipa), "set_ipa_client returns undef if CAF::Kerberos get_context fails");
 is_deeply($krb5->{ticket}, {keytab => '/etc/krb5.keytab'}, "Kerberos using correct ticket");
 is_deeply($krb5->{principal}, {primary => 'host', instances => [$fqdn]}, "Kerberos using correct principal");
@@ -46,7 +46,7 @@ set_command_status('/usr/bin/certutil -d /etc/nssdb.quattor -L -n nick1', 1);
 
 command_history_reset;
 
-$ipa = $cmp->set_ipa_client($tree->{primary});
+$ipa = $cmp->set_ipa_client($tree);
 ok($cmp->client($tree), "client returns success");
 ok(command_history_ok([
     "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab",
@@ -69,9 +69,11 @@ diag explain $Test::Quattor::caf_path->{status};
 
 is_deeply($Test::Quattor::caf_path->{status}, [
     [['/etc/super1.keytab'], {owner => 'root', group => 'root', mode => 0123}],
-    [['/etc/super2.keytab'], {owner => 'root', group => 'superpower', mode => 0600}],
-    [['/path/to/cert'], {owner => 'root', group => 'root', mode => 0644}], # default perm
-    [['/path/to/key'], {owner => 'root', group => 'root', mode => 0600}], # default perm
+    [['/etc/super2.keytab'], {owner => 'root', group => 'superpower', mode => 0400}],
+    [['/path/to/cert'], {owner => 'root', group => 'root', mode => 0444}], # default perm
+    [['/path/to/key'], {owner => 'root', group => 'root', mode => 0400}], # default perm
+    [['/etc/pki/tls/certs/quattor.pem'], {owner => 'root', group => 'root', mode => 0444}], # quattorcert cert
+    [['/etc/pki/tls/private/quattor.key'], {owner => 'root', group => 'root', mode => 0400}], # quattorcert key
 ], 'CAF::Path status called in keytabs');
 
 done_testing();

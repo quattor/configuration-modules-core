@@ -5,6 +5,10 @@ use mock_rpc qw(nss);
 
 use Test::Quattor;
 use Test::More;
+use CAF::Object;
+
+$CAF::Object::NoAction = 1;
+
 
 use File::Path qw(mkpath);
 
@@ -82,6 +86,8 @@ ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -n mynick -a -o path/t
 
 =cut
 
+$CAF::Object::NoAction = 0;
+
 $n->{workdir} = "target/test/randomdata";
 mkpath($n->{workdir});
 my $fn = "$n->{workdir}/random_mynick.data";
@@ -102,6 +108,8 @@ is($n->make_cert_request("a.b.c.d", "mynick"), "$n->{workdir}/cert_a.b.c.d_mynic
 ok(get_command('/usr/bin/certutil -d target/test/nssdb -R -g 4096 -s CN=a.b.c.d,O=REALM.DOMAIN -z target/test/randomdata/random_mynick.data -a -o target/test/randomdata/cert_a.b.c.d_mynick.csr'),
    "get_cert_request expected certutil command");
 ok(-f $fn, "randomdata exists after make_cert_request (via mk_random_data)");
+
+$CAF::Object::NoAction = 1;
 
 =head2 ipa_request_cert
 
