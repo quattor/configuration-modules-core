@@ -4,6 +4,7 @@
 
 declaration template components/spma/schema;
 
+include 'pan/legacy';
 include 'quattor/types/component';
 include 'components/spma/functions';
 include 'components/spma/software';
