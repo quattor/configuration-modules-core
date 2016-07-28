@@ -18,7 +18,6 @@ use EDG::WP4::CCM::Element;
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 use NCM::Check;
 
-use File::Compare;
 use File::Copy;
 use Net::Ping;
 use Data::Dumper;
@@ -73,6 +72,59 @@ sub gen_backup_filename
     $back =~ s/\//_/g;
     my $backup_file = "$back_dir/$back";
     return $backup_file;
+}
+
+# writes some text to file, but with backup etc etc it also
+# checks between new and old and return if they are changed
+# or not
+sub file_dump
+{
+    my $func = "file_dump";
+
+    my ($self, $file, $text, $failed) = @_;
+
+    # check for subdirectories?
+    my $backup_file = $self->gen_backup_filename($file);
+
+    if (-e $backup_file.$failed) {
+        $self->debug(3, "$func: file exits, unlink $backup_file$failed");
+        unlink($backup_file.$failed) ||
+            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+    }
+
+    my $fh;
+    if (-e $file) {
+        $self->debug(3, "$func: writing $backup_file$failed with current $file content");
+        my $orig = CAF::FileReader->new($file, log => $self);
+        $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
+        print $fh "$orig";
+        $fh->close();
+    } else {
+        $self->debug(3, "$func: no current $file");
+    };
+
+    $self->debug(3, "$func: writing $backup_file$failed");
+    $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
+    print $fh $text;
+
+    my $ec = 0;
+    if ($fh->close()) {
+        if (-e $file) {
+            $self->info("$func: file $file has newer version.");
+            $ec = 1;
+        } else {
+            $self->info("$func: file $file is new.");
+            $ec = 2;
+        }
+    } else {
+        # they're equal, remove backup files
+        $self->debug(3, "$func: removing equal files $backup_file and $backup_file$failed");
+        unlink($backup_file) ||
+            $self->warn("$func: Can't unlink $backup_file ($!)") ;
+        unlink($backup_file.$failed) ||
+            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+    };
+    return $ec;
 }
 
 
@@ -491,7 +543,7 @@ sub Configure
         }
 
         # write iface ifcfg- file text
-        $exifiles{$file_name} = file_dump($file_name,$text,FAILED_SUFFIX);
+        $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
         $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
         # route config, interface based.
@@ -516,7 +568,7 @@ sub Configure
                     $text .= "NETMASK".$rt."=255.255.255.255\n";
                 }
             };
-            $exifiles{$file_name} = file_dump($file_name,$text,FAILED_SUFFIX);
+            $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
             $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
@@ -561,7 +613,7 @@ sub Configure
                 if ($net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
-                $exifiles{$file_name} = file_dump($file_name,$text,FAILED_SUFFIX);
+                $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
                 $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
@@ -662,7 +714,7 @@ sub Configure
         }
     }
 
-    $exifiles{$file_name} = file_dump($file_name,$text,FAILED_SUFFIX);
+    $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
     $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
 
 
@@ -968,57 +1020,17 @@ sub Configure
             $p->{port_num} = getservbyname($pro, "tcp");
         }
 
+        my $ec;
         if ($p->ping($host)) {
             $self->info("$func: OK: network up");
-            return 1;
+            $ec = 1;
         } else {
             $self->warn("$func: FAILED: network down");
-            return 0;
+            $ec = 0;
         }
         $p->close();
-    }
 
-    sub file_dump {
-        # writes some text to file, but with backup etc etc it also
-        # checks between new and old and return if they are changed
-        # or not
-        my $func="file_dump";
-
-        my $file = shift || $self->error("$func: No filename.");
-        my $text = shift || $self->error("$func: No text.");
-        my $failed = shift || $self->error("$func: No failed suffix.");
-
-        # check for subdirectories?
-        my $backup_file = $self->gen_backup_filename($file);
-
-        if (-e $backup_file.$failed) {
-            $self->debug(3,"$func: file exits, unlink ".$backup_file.$failed);
-            unlink($backup_file.$failed) ||
-                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
-        }
-
-        $self->debug(3,"$func: writing ".$backup_file.$failed);
-        my $fh = CAF::FileWriter->new($backup_file.$failed, log=>$self);
-        print $fh $text;
-        $fh->close();
-
-        if (compare($file,$backup_file.$failed) == 0) {
-            # they're equal, remove backup files
-            $self->debug(3,"$func: removing equal files ".$backup_file." and ".$backup_file.$failed);
-            unlink($backup_file) ||
-                $self->warn("$func: Can't unlink ".$backup_file." ($!)") ;
-            unlink($backup_file.$failed) ||
-                $self->warn("$func: Can't unlink ".$backup_file.$failed." ($!)");
-            return 0;
-        } else {
-            if (-e $file) {
-                $self->info("$func: file ".$file." has newer version.");
-                return 1;
-            } else {
-                $self->info("$func: file ".$file." is new.");
-                return 2;
-            }
-        };
+        return $ec;
     }
 
     sub runrun {
