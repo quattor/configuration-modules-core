@@ -1,0 +1,17 @@
+Test ldap
+---
+//software
+rendermodule=ldap
+contentspath=/software/components/postfix/databases/ldap/ldap-aliases.cf
+---
+^# Postfix LDAP configuration file. Generated automatically. DO NOT EDIT!!$
+^# See man master for all details about this file.$
+^# The template has been semi-automatically generated from the component's schema.$
+^server_host = my.host.example.com$
+^search_base = base$
+^query_filter = filter$
+^result_format = format$
+^result_attribute = maildrop$
+^scope = sub$
+^version = 2$
+^debuglevel = 0$

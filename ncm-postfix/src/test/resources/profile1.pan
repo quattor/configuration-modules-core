@@ -1,5 +1,11 @@
 object template profile1;
 
+function pkg_repl = { null; };
+include 'components/postfix/config';
+# remove the dependencies
+'/software/components/postfix/dependencies' = null;
+
+
 prefix "/software/components/postfix/master/0";
 
 "name" = "foo";

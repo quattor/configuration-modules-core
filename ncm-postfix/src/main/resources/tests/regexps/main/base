@@ -1,0 +1,21 @@
+Test main
+---
+//software
+rendermodule=main
+contentspath=/software/components/postfix/main
+---
+^# Postfix main file. Generated automatically. DO NOT EDIT!!$
+^# See man postconf for all details about this file.$
+^# The template has been semi-automatically generated from the component's schema.$
+^alias_maps = hash:/etc/aliases,ldap:/etc/postfix/ldap-aliases.cf,$
+^default_privs = nobody$
+^inet_interfaces = 127.0.0.1, hostname.example.com$
+^masquerade_classes = envelope_sender, header_sender$
+^masquerade_domains = example.com$
+^masquerade_exceptions = root$
+^mydestination =     \$myhostname, localhost.\$mydomain$
+^mydomain = example.com$
+^myhostname = hostname.example.com$
+^myorigin = example.com$
+^relayhost = smtp.relay.example.com$
+^unknown_local_recipient_reject_code = 450$

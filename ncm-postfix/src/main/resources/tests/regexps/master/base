@@ -1,0 +1,13 @@
+Test master
+---
+//software
+rendermodule=master
+contentspath=/software/components/postfix
+---
+^# File generated with the Template Toolkit. Do not edit.$
+^# ==========================================================================$
+^# service type  private unpriv  chroot  wakeup  maxproc command \+ args$
+^#               \(yes\)   \(yes\)   \(yes\)   \(never\) \(100\)$
+^# ==========================================================================$
+^foo hello        y        y        y    100 20 Hello, world$
+^bar world        n        n        n    100 20 World, hello$
