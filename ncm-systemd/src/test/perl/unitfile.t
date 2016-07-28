@@ -314,6 +314,8 @@ is(*$fh->{options}->{backup}, '.veryold', 'backup settings passed');
 diag "$fh";
 like("$fh", qr{CPUAffinity=0 1 2 12 13 14 6 7 8 18 19 20}m, "Custom CPUAffinity set");
 
+like("$fh", qr{^After=g-h-i.mount$}m, "systemd_make_mountunit function ok");
+
 # test non-config element
 my $orig_config = $ur->{config};
 $ur->{config} = {a => 1};
