@@ -80,11 +80,25 @@ type opennebula_vm = {
     "arguments" : string
     "default" : string
     "sunstone_name" : string
-    "imported_vms_actions" : string[] = list('terminate', 'terminate-hard', 'hold', 'release',
-                                             'suspend', 'resume', 'delete', 'reboot', 'reboot-hard',
-                                             'resched', 'unresched', 'disk-attach', 'disk-detach',
-                                             'nic-attach', 'nic-detach',
-                                             'snap-create', 'snap-delete')
+    "imported_vms_actions" : string[] = list(
+        'terminate',
+        'terminate-hard',
+        'hold',
+        'release',
+        'suspend',
+        'resume',
+        'delete',
+        'reboot',
+        'reboot-hard',
+        'resched',
+        'unresched',
+        'disk-attach',
+        'disk-detach',
+        'nic-attach',
+        'nic-detach',
+        'snap-create',
+        'snap-delete',
+    )
     "keep_snapshots" : boolean = false
 } = dict();
 
