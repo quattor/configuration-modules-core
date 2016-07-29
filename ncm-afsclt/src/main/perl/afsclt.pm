@@ -122,7 +122,8 @@ sub Configure_Cache {
         $self->warn("Cannot determine current AFS cache size, changing only config file");
     }
 
-    my $afs_cacheinfo_fh = CAF::FileReader->new( $AFS_CACHEINFO, log => $self );
+    my $afs_cacheinfo_fh = CAF::FileEditor->new( $AFS_CACHEINFO, log => $self );
+    $afs_cacheinfo_fh->cancel();
     $self->debug(2, "$AFS_CACHEINFO current contents: >>>$afs_cacheinfo_fh<<<");
     if ( "$afs_cacheinfo_fh" =~ m;^([^:]+):([^:]+):(\d+|AUTOMATIC)$; ) {
         $file_afsmount   = $1 if $file_afsmount eq "";
