@@ -244,7 +244,7 @@ The current managed entries are
 
 =over
 
-=item devices with filesystems C<nfs>, C<nfs4> or C<panfs>.
+=item devices with filesystems C<nfs>, C<nfs4>, C<panfs> or C<cephfs>.
 
 =item bind mounts (filesystem C<none> and mount option C<bind>)
 
@@ -285,7 +285,7 @@ sub fstab
     my $fh = CAF::FileWriter->new($FSTAB, backup => ".old", log => $self);
 
     # Keep updated with filter below
-    my $mngd_by = "nfs/nfs4/panfs filesystems and bind mounts";
+    my $mngd_by = "nfs/nfs4/panfs/cephfs filesystems and bind mounts";
 
     # Collect information for fstab file.
     print $fh "# File edited by ncm-nfs\n";
@@ -298,7 +298,7 @@ sub fstab
         # line does not end in newline (see split above)
         my $fstab = parse_fstab_line($line);
         if ($fstab) {
-            if ( ($fstab->{$FSTAB_FSTYPE} =~ m/^(nfs4?|panfs)$/) ||
+            if ( ($fstab->{$FSTAB_FSTYPE} =~ m/^(nfs4?|(pan|ceph)fs)$/) ||
                  (($fstab->{$FSTAB_FSTYPE} eq 'none') && ($fstab->{$FSTAB_OPTIONS} eq 'bind')) ) {
                 # It is an ncm-nfs managed entry, save the information.
                 $old{$fstab->{$FSTAB_DEVICE}} = $fstab;
