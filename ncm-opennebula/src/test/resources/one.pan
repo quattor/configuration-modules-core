@@ -59,6 +59,7 @@ prefix "/software/components/opennebula";
         "network_mask", "255.255.0.0",
         "vlan", true,
         "vlan_id", 0,
+        "vn_mad", "ovswitch",
         "ar", dict(
                     "type", "IP4",
                     "ip", "10.141.14.100",

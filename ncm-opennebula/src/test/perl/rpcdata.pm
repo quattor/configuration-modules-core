@@ -132,6 +132,7 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet}{params} = [$data, -1];
@@ -144,6 +145,7 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.vsc"
 NETWORK_MASK = "255.255.0.0"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet2}{params} = [$data, -1];
@@ -164,6 +166,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet3}{params} = [$data, -1];
@@ -225,6 +228,7 @@ GATEWAY = "10.141.3.250"
 NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
 TYPE = "FIXED"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnet}{params} = [68, $data, 1];
@@ -245,6 +249,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnet2}{params} = [98, $data, 1];
@@ -279,6 +284,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnetar}{params} = [98, $data];

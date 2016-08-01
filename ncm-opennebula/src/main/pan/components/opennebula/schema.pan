@@ -310,7 +310,7 @@ type opennebula_datastore = {
 type opennebula_vnet = {
     "name" : string
     "bridge" : string
-    "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswtich|vxlan|vcenter|dummy)$')
+    "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
     "gateway" ? type_ipv4
     "gateway6" ? type_network_name
     "dns" ? type_ipv4
