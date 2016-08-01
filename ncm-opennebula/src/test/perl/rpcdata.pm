@@ -366,19 +366,19 @@ $cmds{rpc_update_datastore}{out} = 102;
 
 # Manage hosts
 
-$cmds{rpc_create_newhost}{params} = ["hyp101", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost}{params} = ["hyp101", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost}{out} = 1;
 
-$cmds{rpc_create_newhost2}{params} = ["hyp102", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost2}{params} = ["hyp102", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost2}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost2}{out} = 167;
 
-$cmds{rpc_create_newhost3}{params} = ["hyp103", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost3}{params} = ["hyp103", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost3}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost3}{out} = 168;
 
-$cmds{rpc_create_newhost4}{params} = ["hyp104", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost4}{params} = ["hyp104", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost4}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost4}{out} = 169;
 
