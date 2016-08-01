@@ -40,6 +40,9 @@ Readonly my %QUATTOR_CERTIFICATE => {
     cert => '/etc/pki/tls/certs/quattor.pem',
 };
 
+Readonly my $IPA_ROLE_CLIENT => 'client';
+Readonly my $IPA_ROLE_SERVER => 'server';
+Readonly my $IPA_ROLE_AII => 'aii';
 
 # Hold an instance of the client
 my $_client;
@@ -99,10 +102,13 @@ sub services
 {
     my ($self, $svcs) = @_;
 
-    my $res = $_client->do_one('host', 'find', '');
-    # Flatten the results
-    my @known_hosts = map {@{$_->{fqdn}}} @$res;
-    $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
+    my @known_hosts;
+    if ($svcs) {
+        my $res = $_client->do_one('host', 'find', '');
+        # Flatten the results
+        @known_hosts = map {@{$_->{fqdn}}} @$res;
+        $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
+    }
 
     foreach my $svc (sort keys %$svcs) {
         $self->verbose("Service $svc");
@@ -333,20 +339,34 @@ sub set_fqdn
 # tree is the config hashref, requires at least a primary key
 sub set_ipa_client
 {
-    my ($self, $tree) = @_;
+    my ($self, $tree, %opts) = @_;
 
-    my $principal;
-    $principal = $tree->{server}->{principal} if $tree->{server};
-    $principal = "host/$_fqdn" if ! defined($principal);
+    # Default principal / keytab; suffcient for (default) client
+    my $principal = "host/$_fqdn";
+    my $keytab = '/etc/krb5.keytab';
+
+    my $role = $opts{role};
+    if ($role) {
+        my $role_principal = $tree->{principals} && $tree->{principals}->{$role};
+        if ($role_principal) {
+            $principal = $role_principal->{principal};
+            $keytab = $role_principal->{keytab};
+            $self->verbose("IPA client with role $role principal $principal keytab $keytab");
+        } elsif ($opts{role} eq $IPA_ROLE_CLIENT) {
+            $self->verbose("IPA client with role $role and default principal $principal keytab $keytab");
+        } else {
+            return $self->fail("IPA client with role $role but no principal/keytab specified");
+        };
+    };
 
     my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
 
     my $krb = CAF::Kerberos->new(
         principal => $principal,
-        keytab => '/etc/krb5.keytab',
+        keytab => $keytab,
         log => $self,
         );
-    return if(! defined($krb->get_context()));
+    return if(! defined($krb->get_context(usecred => 1)));
 
     # set environment to temporary credential cache
     # temporary cache is cleaned-up during destroy of $krb
@@ -377,7 +397,9 @@ sub _configure
 {
     my ($self, $tree) = @_;
 
-    $self->set_ipa_client($tree);
+    my $role = $tree->{server} ? $IPA_ROLE_SERVER : $IPA_ROLE_CLIENT;
+
+    $self->set_ipa_client($tree, role => $role);
 
     if ($_client->{rc}) {
         $self->server($tree) if $tree->{server};
@@ -414,7 +436,7 @@ sub post_reboot
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
-    $self->set_ipa_client($tree);
+    $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
 
@@ -460,7 +482,7 @@ sub remove
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
-    $self->set_ipa_client($tree);
+    $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
 

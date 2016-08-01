@@ -11,7 +11,9 @@ prefix "/software/components/freeipa";
 "quattorcert" = true;
 "host/ip_address" = "1.2.3.4";
 "host/macaddress" = list("aa:bb:cc:dd:ee:ff");
-
+"principals/aii/principal" = "quattor-aii";
+"principals/aii/keytab" = "/etc/quattor-aii.keytab";
+    
     
 prefix "/system/network";
 "hostname" = "myhost";

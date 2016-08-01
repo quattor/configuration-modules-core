@@ -71,8 +71,6 @@ type component_${project.artifactId}_dns = {
 
 @{ Server configuration }
 type component_${project.artifactId}_server = {
-    @{principal to use to perform server changes}
-    'principal' : string = 'admin'
     @{subnet name with DNSzone information}
     'dns' ? component_${project.artifactId}_dns{}
     @{hosts to add (not needed if installed via AII)}
@@ -115,6 +113,15 @@ type component_${project.artifactId}_certificate = {
     'key' ? string
 };
 
+
+@{Principal and keytab for role}
+type component_${project.artifactId}_principal = {
+    @{principal to use}
+    'principal' : string
+    @{keytab to use to retrieve credentials}
+    'keytab' : string
+};
+
 # TODO: use common realm type
 type component_${project.artifactId} = {
     include structure_component
@@ -136,4 +143,13 @@ type component_${project.artifactId} = {
     'quattorcert' ? boolean
     @{Host options}
     'host' ? component_${project.artifactId}_host
+    @{Principal/keytab pairs for client,server or aii roles (default client role with host/fqdn princiapl and /etc/krb5.keytab keytab)}
+    'principals' ? component_${project.artifactId}_principal{} with {
+        foreach (k;v;SELF) {
+            if (!match(k, '^(client|server|aii)$')) {
+                error(format("Unsupported principal %s (must be one of client, server or aii)", k));
+            };
+        };
+        true;
+    }
 };
