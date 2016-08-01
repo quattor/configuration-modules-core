@@ -47,6 +47,9 @@ Readonly my $IPA_ROLE_AII => 'aii';
 # Hold an instance of the client
 my $_client;
 
+# Hold a Kerberos instance
+my $_krb;
+
 # Current host FQDN
 my $_fqdn;
 
@@ -199,6 +202,11 @@ sub service_keytab
             my $principal = $serv->{service};
             # Add fqdn as
             $principal .= "/$_fqdn" if ($principal !~ m{/});
+
+            # set environment to temporary credential cache
+            # temporary cache is cleaned-up during destroy of $krb
+            local %ENV;
+            $_krb->update_env(\%ENV);
 
             # Retrieve keytab (what if already exists?)
             my $proc = CAF::Process->new([@GET_KEYTAB,
@@ -361,17 +369,17 @@ sub set_ipa_client
 
     my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
 
-    my $krb = CAF::Kerberos->new(
+    $_krb = CAF::Kerberos->new(
         principal => $principal,
         keytab => $keytab,
         log => $self,
         );
-    return if(! defined($krb->get_context(usecred => 1)));
+    return if(! defined($_krb->get_context(usecred => 1)));
 
     # set environment to temporary credential cache
     # temporary cache is cleaned-up during destroy of $krb
     local %ENV;
-    $krb->update_env(\%ENV);
+    $_krb->update_env(\%ENV);
 
     # Only allow kerberos for now
     $_client = NCM::Component::FreeIPA::Client->new(
