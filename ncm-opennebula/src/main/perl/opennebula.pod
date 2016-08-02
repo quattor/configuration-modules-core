@@ -29,6 +29,10 @@ Features that are implemented at this moment:
 
 =item * Adding/removing OpenNebula regular users
 
+=item * Adding/removing OpenNebula groups
+
+=item * Assign OpenNebula users to primary groups
+
 =item * Updates OpenNebula *_auth files
 
 =item * Updates VMM kvmrc config file

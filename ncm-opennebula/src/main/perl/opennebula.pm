@@ -621,9 +621,10 @@ sub manage_users_groups
             my $used = $self->detect_used_resource($one, $type, $account->{$type});
             if (!$used) {
                 $self->info("Creating new $type: ", $account->{$type});
-                if ($account->{password}) {
+                if (exists $account->{password}) {
                     # Create new user
                     $one->$createmethod($account->{$type}, $account->{password}, "core");
+                    $self->change_user_group($one, $account) if (exists $account->{group});
                 } else {
                     # Create new group
                     $one->$createmethod($account->{$type});
@@ -634,11 +635,53 @@ sub manage_users_groups
                 # User/group is already there and we can modify it
                 $self->info("Updating $type with a new template: ", $account->{$type});
                 $new = $self->update_something($one, $type, $account->{$type}, $template);
+                if ((exists $account->{group}) and ($type eq "user")) {
+                    $self->change_user_group($one, $account);
+                };
             }
         } else {
             $self->error("No $type name or password info available:", $account->{$type});
         }
     }
+}
+
+# Set user primary group
+sub change_user_group
+{
+    my ($self, $one, $user) = @_;
+    
+    my $name = $user->{user};
+    $self->info("User: $name must belong to this primary group: ", $user->{group});
+    my $group_id = $self->get_resource_id($one, "group", $user->{group});
+
+    if (defined($group_id)) {
+        my @users = $one->get_users(qr{^$name$});
+        $self->warn("Detected administration group change for regular user: $name") if ($group_id == 0);
+        foreach my $t (@users) {
+            my $out = $t->chgrp($group_id);
+            if ($out) {
+                $self->info("Changed user: $name primary group to: ", $user->{group});
+            } else {
+                $self->error("Not able to change user: $name group to: ", $user->{group});
+            };
+        }
+    } else {
+        $self->error("Requested OpenNebula group for user $name does not exist: ", $user->{group});
+    };
+}
+
+# Return resource ids
+sub get_resource_id
+{
+    my ($self, $one, $type, $name) = @_;
+    my $getmethod = "get_${type}s";
+
+    my @existres = $one->$getmethod(qr{^$name$});
+    foreach my $t (@existres) {
+        $self->verbose("Detected $type id: ", $t->id);
+        return $t->id;
+    }
+    return;
 }
 
 # Set opennebula conf files
