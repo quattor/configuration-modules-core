@@ -443,7 +443,7 @@ sub manage_something
     my ($self, $one, $type, $resources, $untouchables) = @_;
     my %protected = map { $_ => 1 } @$untouchables;
     if (!$resources) {
-        $self->error("No $type resources found.");
+        $self->info("No $type resources found.");
         return;
     } else {
         $self->verbose("Managing $type resources.");
@@ -452,8 +452,8 @@ sub manage_something
     if (($type eq "kvm") or ($type eq "xen")) {
         $self->manage_hosts($one, $type, $resources, %protected);
         return;
-    } elsif ($type eq "user") {
-        $self->manage_users($one, $resources, %protected);
+    } elsif (($type eq "user") or ($type eq "group")) {
+        $self->manage_users_groups($one, $type, $resources, %protected);
         return;
     }
 
@@ -632,6 +632,78 @@ sub manage_users
     }
 }
 
+# Function to add/remove/update regular users/groups
+# and assign users to groups
+# only if the user/group has the Quattor flag set
+sub manage_users_groups
+{
+    my ($self, $one, $type, $data, %protected) = @_;
+    my ($new, $template, @rmdata, @datalist);
+    my $getmethod = "get_${type}s";
+    my $createmethod = "create_${type}";
+
+    foreach my $account (@$data) {
+        if ($account->{$type}) {
+            if ($account->{$type} eq "serveradmin" && exists $account->{password}) {
+                $self->change_opennebula_passwd($account->{$type}, $account->{password});
+            } elsif ($account->{$type} eq "oneadmin" && exists $account->{ssh_public_key}) {
+                $template = $self->process_template($account, $type);
+                $new = $self->update_something($one, $type, $account->{$type}, $template);
+            };
+            push(@datalist, $account->{$type});
+        }
+    }
+
+    my @exitsdata = $one->$getmethod();
+    my %newaccounts = map { $_ => 1 } @datalist;
+
+    foreach my $t (@exitsdata) {
+        # Remove the user/group only if the QUATTOR flag is set
+        my $quattor = $self->check_quattor_tag($t,1);
+        if (exists($protected{$t->name})) {
+            $self->info("This $type is protected and can not be removed: ", $t->name);
+        } elsif (exists($newaccounts{$t->name})) {
+            $self->verbose("$type required by Quattor. We can't remove it: ", $t->name);
+        } elsif (!$quattor) {
+            $self->warn("QUATTOR flag not found. We can't remove this $type: ", $t->name);
+        } else {
+            push(@rmdata, $t->name);
+            $t->delete();
+        }
+    }
+
+    if (@rmdata) {
+        $self->info("Removed $type/s: ", join(',', @rmdata));
+    }
+
+    foreach my $account (@$data) {
+        if (exists($protected{$account->{$type}})) {
+            $self->info("This $type is protected and can not be created/updated: ", $account->{$type});
+        } elsif ($account->{$type}) {
+            $template = $self->process_template($account, $type);
+            my $used = $self->detect_used_resource($one, $type, $account->{$type});
+            if (!$used) {
+                $self->info("Creating new $type: ", $account->{$type});
+                if ($account->{password}) {
+                    # Create new user
+                    $one->$createmethod($account->{$type}, $account->{password}, "core");
+                } else {
+                    # Create new group
+                    $one->$createmethod($account->{$type});
+                };
+                # Add Quattor flag
+                $new = $self->update_something($one, $type, $account->{$type}, $template);
+            } elsif ($used == -1) {
+                # User/group is already there and we can modify it
+                $self->info("Updating $type with a new template: ", $account->{$type});
+                $new = $self->update_something($one, $type, $account->{$type}, $template);
+            }
+        } else {
+            $self->error("No $type name or password info available:", $account->{$type});
+        }
+    }
+}
+
 # Set opennebula conf files
 # used by OpenNebula daemons
 # if conf file is changed 
@@ -760,6 +832,8 @@ sub set_one_server
         $self->info("Updated system datastore TM_MAD = $tm_system_ds");
     }
     $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
+    # Manage groups first
+    $self->manage_something($one, "group", $tree->{groups}, $untouchables->{groups});
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
 
     # Set kvmrc conf

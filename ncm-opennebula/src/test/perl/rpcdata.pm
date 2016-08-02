@@ -597,7 +597,10 @@ $cmds{rpc_list_group}{out} = <<'EOF';
 <GROUP><ID>2</ID><NAME>gvo01</NAME><TEMPLATE/><USERS><ID>5</ID><ID>6</ID></USERS><ADMINS/><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/><DEFAULT_GROUP_QUOTAS><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></DEFAULT_GROUP_QUOTAS></GROUP>
 EOF
 
-$data = 'DESCRIPTION="ccn"';
+$data = <<'EOF';
+DESCRIPTION = "gvo01 group managed by quattor"
+QUATTOR = 1
+EOF
 $cmds{rpc_update_group}{params} = [2, $data, 1];
 $cmds{rpc_update_group}{method} = "one.group.update";
 $cmds{rpc_update_group}{out} = 2;
