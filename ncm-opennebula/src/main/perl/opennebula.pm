@@ -569,69 +569,6 @@ sub disable_host
     }
 }
 
-# Function to add/remove/update regular users
-# only if the user has the Quattor flag set
-sub manage_users
-{
-    my ($self, $one, $users, %protected) = @_;
-    my ($new, $template, @rmusers, @userlist);
-
-    foreach my $user (@$users) {
-        if ($user->{user}) {
-            if ($user->{user} eq "serveradmin" && exists $user->{password}) {
-                $self->change_opennebula_passwd($user->{user}, $user->{password});
-            } elsif ($user->{user} eq "oneadmin" && exists $user->{ssh_public_key}) {
-                $template = $self->process_template($user, "user");
-                $new = $self->update_something($one, "user", $user->{user}, $template);
-            };
-            push(@userlist, $user->{user});
-        }
-    }
-
-    my @exitsuser = $one->get_users();
-    my %newusers = map { $_ => 1 } @userlist;
-
-    foreach my $t (@exitsuser) {
-        # Remove the user only if the QUATTOR flag is set
-        my $quattor = $self->check_quattor_tag($t,1);
-        if (exists($protected{$t->name})) {
-            $self->info("This user is protected and can not be removed: ", $t->name);
-        } elsif (exists($newusers{$t->name})) {
-            $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
-        } elsif (!$quattor) {
-            $self->debug(1, "QUATTOR flag not found. We can't remove this user: ", $t->name);
-        } else {
-            push(@rmusers, $t->name);
-            $t->delete();
-        }
-    }
-
-    if (@rmusers) {
-        $self->info("Removed users: ", join(',', @rmusers));
-    }
-
-    foreach my $user (@$users) {
-        if (exists($protected{$user->{user}})) {
-            $self->info("This user is protected and can not be created/updated: ", $user->{user});
-        } elsif ($user->{user} && $user->{password}) {
-            $template = $self->process_template($user, "user");
-            my $used = $self->detect_used_resource($one, "user", $user->{user});
-            if (!$used && $user->{password}) {
-                $self->info("Creating new user: ", $user->{user});
-                $one->create_user($user->{user}, $user->{password}, "core");
-                # Add Quattor flag
-                $new = $self->update_something($one, "user", $user->{user}, $template);
-            } elsif ($used == -1) {
-                # User is already there and we can modify it
-                $self->info("Updating user with a new template: ", $user->{user});
-                $new = $self->update_something($one, "user", $user->{user}, $template);
-            }
-        } else {
-            $self->warn("No user name or password info available:", $user->{user});
-        }
-    }
-}
-
 # Function to add/remove/update regular users/groups
 # and assign users to groups
 # only if the user/group has the Quattor flag set
