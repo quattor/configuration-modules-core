@@ -135,6 +135,9 @@ Readonly my $IPA_ROLE_CLIENT => 'client';
 Readonly my $IPA_ROLE_SERVER => 'server';
 Readonly my $IPA_ROLE_AII => 'aii';
 
+# Filename that indicates if FreeIPA was already initialised
+Readonly my $IPA_FILE_INITIALISED => '/etc/ipa/ca.crt';
+
 # Hold an instance of the client
 my $_client;
 
@@ -309,7 +312,7 @@ sub service_keytab
             if ($?) {
                 $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc): $output");
             } else {
-                $self->verbose("Successfully retrieved keytab $filename: $output");
+                $self->info("Successfully retrieved keytab $filename: $output");
             }
         }
 
@@ -356,7 +359,7 @@ sub certificates
                     $nss->ipa_request_cert($csr, $initcrt, $_fqdn, $_client) && # Get cert via IPA
                     $nss->add_cert($nick, $initcrt) # Add to NSSDB
                     ) {
-                    $self->verbose("$msg added");
+                    $self->info("$msg added");
                 } else {
                     $self->error("$msg failed: $nss->{fail}");
                     return;
@@ -377,7 +380,7 @@ sub certificates
                 } else {
                     # Extract with get_cert
                     if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
-                        $self->verbose("Extracted $msg");
+                        $self->info("Extracted $msg");
                     } else {
                         $self->error("Failed to extract $msg: $nss->{fail}");
                         return;
@@ -406,7 +409,7 @@ sub client
     $self->service_keytab($tree) if $tree->{keytabs};
 
     if ($tree->{quattorcert}) {
-        $self->verbose("Add quattor certificate (and key) in $QUATTOR_CERTIFICATE{certificate}");
+        $self->verbose("Add quattor certificate (and key) in $QUATTOR_CERTIFICATE{cert}");
         $tree->{certificates}->{quattor} = \%QUATTOR_CERTIFICATE;
     };
 
@@ -436,7 +439,7 @@ sub set_fqdn
 
 # ugly, but convenient: set class-variable IPA client instance
 # tree is the config hashref, requires at least a primary key
-sub set_ipa_client
+sub _set_ipa_client
 {
     my ($self, $tree, %opts) = @_;
 
@@ -458,28 +461,48 @@ sub set_ipa_client
         };
     };
 
-    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
-
+    $self->debug(1, "Creating Kerberos instance");
     $_krb = CAF::Kerberos->new(
         principal => $principal,
         keytab => $keytab,
         log => $self,
         );
-    return if(! defined($_krb->get_context(usecred => 1)));
+    return $self->fail("Failed to get kerberos context: $_krb->{fail}") if(! defined($_krb->get_context(usecred => 1)));
 
     # set environment to temporary credential cache
     # temporary cache is cleaned-up during destroy of $krb
     local %ENV;
     $_krb->update_env(\%ENV);
 
+    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
+
     # Only allow kerberos for now
+    $self->debug(1, "Creating FreeIPA::Client instance");
     $_client = NCM::Component::FreeIPA::Client->new(
         $tree->{primary},
         log => $self,
-        debugapi => defined($dbglvl) && $dbglvl >= $DEBUGAPI_LEVEL,
+        debugapi => $dbglvl >= $DEBUGAPI_LEVEL,
         );
 
     return $_client;
+}
+
+# wrap around _set_ipa_client with error reporting
+# sets the $_client variable
+# Returns $_client on success, undef otherwise
+sub set_ipa_client
+{
+    my $self = shift;
+
+    $self->_set_ipa_client(@_);
+
+    if ($_client && $_client->{rc}) {
+        return $_client;
+    } else {
+        my $msg = $_client ? $_client->{error} : "client undefined: $self->{fail}";
+        $self->error("Failed to obtain FreeIPA Client: $msg");
+        return;
+    };
 }
 
 # Return IPA client class variable (for subclassing)
@@ -498,18 +521,50 @@ sub _configure
 
     my $role = $tree->{server} ? $IPA_ROLE_SERVER : $IPA_ROLE_CLIENT;
 
-    $self->set_ipa_client($tree, role => $role);
+    return if ! $self->set_ipa_client($tree, role => $role);
 
-    if ($_client->{rc}) {
-        $self->server($tree) if $tree->{server};
+    $self->server($tree) if $tree->{server};
 
-        $self->client($tree);
+    $self->client($tree);
 
-        return SUCCESS;
-    } else {
-        $self->error("Failed to obtain FreeIPA Client: $_client->{error}");
-    };
+    return SUCCESS;
 }
+
+# Generates the commandline (for a yum based system) to initialize a IPA system
+sub _manual_initialisation
+{
+    my ($self, $config, %opts) = @_;
+
+    my $tree = $config->getTree($self->prefix());
+    my $network = $config->getTree('/system/network');
+
+    my $yum_packages = join(" ", );
+
+    my $domain = $tree->{domain} || $network->{domainname};
+
+    # Is optional, but we use the template value; not the CLI default
+    my $quattorcert = $tree->{quattorcert} ? 1 : 0;
+
+    my @yum = qw(yum -y install);
+    push(@yum, @CLI_YUM_PACKAGES);
+    push(@yum, qw(-c /tmp/aii/yum/yum.conf)) if $opts{aii};
+
+    my @cli = qw(PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install --);
+    push(@cli,
+         '--realm', $tree->{realm},
+         '--primary', $tree->{primary},
+         '--domain', $domain,
+         '--fqdn', $_fqdn,
+         '--quattorcert', $quattorcert,
+         '--otp', ($opts{otp} ? $opts{otp} : 'one_time_password_from_ipa_host-mod_--random'),
+        );
+
+    my @cmds;
+    push(@cmds, join(" ", @yum), join(" ", @cli));
+
+    return join("\n", @cmds);
+}
+
 
 sub Configure
 {
@@ -518,9 +573,15 @@ sub Configure
 
     $self->set_fqdn(config => $config);
 
-    my $tree = $config->getTree($self->prefix());
+    if ($self->file_exists($IPA_FILE_INITIALISED)) {
 
-    $self->_configure($tree);
+        my $tree = $config->getTree($self->prefix());
+
+        $self->_configure($tree);
+    } else {
+        my $installcmd = $self->_manual_initialisation($config);
+        $self->error("FreeIPA not initialised ($IPA_FILE_INITIALISED is missing). Initialise with\n$installcmd.");
+    };
 
     return 1;
 }
@@ -535,11 +596,9 @@ sub post_reboot
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
-    $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
+    return if ! $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
-
-    my $network = $config->getTree('/system/network');
 
     # Add host (should be ok if already exists)
     $_client->add_host($_fqdn, %{$tree->{host}});
@@ -547,25 +606,9 @@ sub post_reboot
     # Mod host to get OTP (should give an error if not allowed)
     my $otp = $_client->host_passwd($_fqdn);
     if ($otp) {
-        my $yum_packages = join(" ", @CLI_YUM_PACKAGES);
-
-        my $domain = $tree->{domain} || $network->{domainname};
-
-        # Is optional, but we use the template value; not the CLI default
-        my $quattorcert = $tree->{quattorcert} ? 1 : 0;
-
-        print <<EOF;
-# freeipa KS post_reboot
-echo "begin freeipa post_reboot"
-
-yum -c /tmp/aii/yum/yum.conf -y install $yum_packages
-
-PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm $tree->{realm} --primary $tree->{primary} --otp $otp --domain $domain --fqdn $_fqdn --quattorcert $quattorcert
-
-echo "end freeipa post_reboot"
-
-EOF
-
+        my $installcmd = $self->_manual_initialisation($config, aii => 1, otp => $otp);
+        my $msg = "# freeipa KS post_reboot\necho 'begin freeipa post_reboot'\n\n$installcmd\n\necho 'end freeipa post_reboot'\n";
+        print $msg;
     } else {
         $self->error("freeipa post_reboot: no OTP for $_fqdn");
     }
@@ -581,7 +624,7 @@ sub remove
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
-    $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
+    return if ! $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
 

@@ -58,9 +58,9 @@ ok(POST_history_ok([
    ]), "host_add / host_mod called");
 
 
-like($fh, qr(^yum -c /tmp/aii/yum/yum.conf -y install ncm-freeipa-\d+.\d+.\d+-\S* nss_ldap ipa-client nss-tools openssl$)m,
+like($fh, qr(^yum -y install ncm-freeipa-\d+.\d+.\d+-\S* nss_ldap ipa-client nss-tools openssl -c /tmp/aii/yum/yum.conf$)m,
      "install freeipa component and CLI dependencies in post_reboot");
-like($fh, qr(^PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm MY.REALM --primary myhost.example.com --otp supersecretOTP --domain com --fqdn myhost.example.com --quattorcert 1$)m,
+like($fh, qr(^PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm MY.REALM --primary myhost.example.com --domain com --fqdn myhost.example.com --quattorcert 1 --otp supersecretOTP$)m,
      "CLI called as expected");
 
 # close the selected FH and reset STDOUT
