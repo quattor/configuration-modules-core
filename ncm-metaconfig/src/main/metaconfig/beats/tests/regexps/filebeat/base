@@ -16,9 +16,10 @@ Filebeat basic value based test
 ^    - /path/1b$
 ^    - /path/2b/\*$
 ^output:$
+^  console:$
+^    pretty: true$
 ^  logstash:$
 ^    hosts:$
 ^    - localhost:1234$
 ^    - otherhost:5678$
 ^    loadbalance: true$
-

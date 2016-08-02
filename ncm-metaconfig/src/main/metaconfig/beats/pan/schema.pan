@@ -80,7 +80,9 @@ type beats_output = {
     'logstash' ? beats_output_logstash
     'file' ? beats_output_file
     'console' ? beats_output_console
-} with length(SELF) == 1;
+} with {
+    length(SELF) >= 1 || error('At least one beat output must be specified');
+};
 
 
 @documentation{

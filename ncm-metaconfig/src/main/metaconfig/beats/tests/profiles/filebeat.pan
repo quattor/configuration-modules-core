@@ -17,3 +17,5 @@ prefix "/software/components/metaconfig/services/{/etc/filebeat/filebeat.yml}/co
 "hosts" = list('localhost:1234', 'otherhost:5678');
 "loadbalance" = true;
 
+prefix "/software/components/metaconfig/services/{/etc/filebeat/filebeat.yml}/contents/output/console";
+"pretty" = true;
