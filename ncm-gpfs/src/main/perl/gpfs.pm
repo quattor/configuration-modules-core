@@ -78,13 +78,9 @@ sub Configure {
     my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     my $basiccfg = GPFSCONFIGDIR . "/.quattorbasiccfg";
     if (! -f $baseinstalled) {
-        $self->remove_existing_rpms($config) || return 1;
+        my ($rc, $pkgs) = $self->remove_existing_rpms($config);
+        return 1 if !$rc;
         $self->install_base_rpms($config) || return 1;
-        ## update?
-        ## no!
-        ## - stop here
-        ## - next run should trigger spma which will
-        ##   update to the correct rpms
 
         ## write the $baseinstalled file
         ## - set the date
@@ -94,6 +90,8 @@ sub Configure {
                                       );
         print $tmpfh $date;
         $tmpfh->close();
+        # reinstall the updated packages, since spma will not always be triggered to run.
+        $self->reinstall_update_rpms($config, $pkgs);
     }
 
     ## get gpfs config file if not found
@@ -268,6 +266,31 @@ sub runcurl {
     return $output || 1;
 };
 
+sub reinstall_update_rpms {
+    my ($self, $config, $rpms) = @_;
+    my $ret = 1;
+    my $useyum =  $config->getValue("$mypath/base/useyum");
+    my @reinrpms = @$rpms;
+
+    if (@reinrpms) {
+        if ($useyum) {
+            # for dependencies
+            $ret = $self->runyum($config, "install", @reinrpms);
+        } else {
+            $ret = $self->runrpm($config, "-i", @reinrpms);
+        };
+        if($ret) {
+            $self->info("Rpms reinstalled");
+        } else {
+            $self->error("Reinstalling rpms failed");
+        }
+    } else {
+        $self->info("No rpms to be reinstalled.")
+    }
+
+    return $ret;
+};
+
 
 sub remove_existing_rpms {
     my ($self, $config) = @_;
@@ -292,18 +315,23 @@ sub remove_existing_rpms {
     };
 
     $self->stopgpfs(1);
-    if (scalar @removerpms) {
+    if (@removerpms) {
         if ($useyum) {
             # for dependencies
-            $self->runyum($config, "remove", @removerpms) || return;
+            $ret = $self->runyum($config, "remove", @removerpms);
         } else {
-            $self->runrpm($config, "-e", @removerpms) || return;
+            $ret = $self->runrpm($config, "-e", @removerpms);
         };
+        if($ret) {
+            $self->info("Rpms removed");
+        } else {
+            $self->error("Removing rpms failed");
+        }
     } else {
         $self->info("No rpms to be removed.")
     }
-
-    return $ret;
+    
+    return ($ret, \@removerpms);
 };
 
 sub install_base_rpms {
