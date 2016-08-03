@@ -65,7 +65,7 @@ type component_${project.artifactId}_dns = {
     @{reverse zone (.in-addr.arpa. is added)}
     # TODO do we have a type for a apartial IP
     'reverse' ? string
-    @{autoreverse determines rev from netmask, overridden by rev}
+    @{autoreverse determines rev from netmask, overridden by rev (only supports 8-bit masks for now)}
     'autoreverse' : boolean = true
 };
 
@@ -100,8 +100,11 @@ type component_${project.artifactId}_keytab = {
     'service' : string
 };
 
-@{ certificate to request/retrieve. cert and/or key can be optionally extracted from NSSDB.
-   permissions are set on both cert and key, with certmode for the certificate
+@{
+   Certificate to request/retrieve. cert and/or key can be optionally extracted from NSSDB.
+   Permissions are set on both cert and key, with certmode for the certificate.
+   The nick is an alias for DN, and is unique (adding a 2nd nick for same, existing DN will result in
+   adding a new entry with already existing nick).
 }
 type component_${project.artifactId}_certificate = {
     include component_${project.artifactId}_permission
@@ -137,10 +140,11 @@ type component_${project.artifactId} = {
     'server' ? component_${project.artifactId}_server
     @{keytabs to retrieve for services}
     'keytabs' ? component_${project.artifactId}_keytab{}
-    @{certificates to request/retrieve (key is the NSSDB nick}
+    @{certificates to request/retrieve (key is the NSSDB nick, and is unique per DN)}
     'certificates' ? component_${project.artifactId}_certificate{}
-    @{Generate the quattor certificate (certificate and key for host in fixed location)}
-    'quattorcert' ? boolean
+    @{Generate the host certificate in /etc/ipa/quattor/certs/host.pem and key /etc/ipa/quattor/keys/host.key.
+      The nick host is used (and any setting under certificates using that nick are preserved)}
+    'hostcert' ? boolean
     @{Host options}
     'host' ? component_${project.artifactId}_host
     @{Principal/keytab pairs for client,server or aii roles (default client role with host/fqdn princiapl and /etc/krb5.keytab keytab)}

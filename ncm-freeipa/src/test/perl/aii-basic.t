@@ -60,7 +60,7 @@ ok(POST_history_ok([
 
 like($fh, qr(^yum -y install ncm-freeipa-\d+.\d+.\d+-\S* nss_ldap ipa-client nss-tools openssl -c /tmp/aii/yum/yum.conf$)m,
      "install freeipa component and CLI dependencies in post_reboot");
-like($fh, qr(^PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm MY.REALM --primary myhost.example.com --domain com --fqdn myhost.example.com --quattorcert 1 --otp supersecretOTP$)m,
+like($fh, qr(^PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install -- --realm MY.REALM --primary myhost.example.com --domain com --fqdn myhost.example.com --hostcert 1 --otp supersecretOTP$)m,
      "CLI called as expected");
 
 # close the selected FH and reset STDOUT

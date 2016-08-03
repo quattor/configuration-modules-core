@@ -18,6 +18,13 @@ $mockk->mock('get_context', sub {$krb5 = shift; return $context});
 
 use NCM::Component::freeipa;
 
+=head2 constants
+
+=cut
+
+is($NCM::Component::freeipa::IPA_QUATTOR_BASEDIR, "/etc/ipa/quattor", "basedir for ncm-freeipa / quattor");
+
+
 my $cmp = NCM::Component::freeipa->new("freeipa");
 my $cfg = get_config_for_profile("client");
 
@@ -38,11 +45,11 @@ is_deeply($krb5->{principal}, {primary => 'host', instances => [$fqdn]}, "Kerber
 
 $context = 1;
 
-set_file_contents('/tmp/quattor_nss-XXXX/cert_myhost.example.com_nick1.csr',
+set_file_contents('/tmp/quattor_nss-XXXX/cert_myhost.example.com_anick1.csr',
                   "-----BEGIN CERTIFICATE REQUEST-----\nCSRDATA\n-----END CERTIFICATE REQUEST-----");
 
-# nick1 is not yet known
-set_command_status('/usr/bin/certutil -d /etc/nssdb.quattor -L -n nick1', 1);
+# anick1 is not yet known
+set_command_status('/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1', 1);
 
 command_history_reset;
 
@@ -51,18 +58,18 @@ ok($cmp->client($tree), "client returns success");
 ok(command_history_ok([
     "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab",
     "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice2/myhost.example.com -k /etc/super2.keytab",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -N -f /dev/null",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -A -n MY.REALM IPA CA -t CT,, -a -i /etc/ipa/ca.crt",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -L -n nick1",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -R -g 4096 -s CN=myhost.example.com,O=MY.REALM -z /tmp/quattor_nss-XXXX/random_nick1.data -a -o /tmp/quattor_nss-XXXX/cert_myhost.example.com_nick1.csr",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -A -n nick1 -t u,u,u -a -i /tmp/quattor_nss-XXXX/init_nss_nick1.crt",
-    "/usr/bin/certutil -d /etc/nssdb.quattor -L -n nick1 -a -o /path/to/cert",
-    "/usr/bin/pk12util -o /tmp/quattor_nss-XXXX/p12keys/key.p12 -n nick1 -d /etc/nssdb.quattor -W ",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -N -f /dev/null",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -A -n MY.REALM IPA CA -t CT,, -a -i /etc/ipa/ca.crt",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -R -g 4096 -s CN=myhost.example.com,O=MY.REALM -z /tmp/quattor_nss-XXXX/random_anick1.data -a -o /tmp/quattor_nss-XXXX/cert_myhost.example.com_anick1.csr",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -A -n anick1 -t u,u,u -a -i /tmp/quattor_nss-XXXX/init_nss_anick1.crt",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1 -a -o /path/to/cert",
+    "/usr/bin/pk12util -o /tmp/quattor_nss-XXXX/p12keys/key.p12 -n anick1 -d /etc/ipa/quattor/nssdb -W ",
     "/usr/bin/openssl pkcs12 -in /tmp/quattor_nss-XXXX/p12keys/key.p12 -out /path/to/key -nodes -password pass:",
 ]), "ipa-getkeytab and nss commands called");
 
 
-my $fh = get_file('/tmp/quattor_nss-XXXX/init_nss_nick1.crt');
+my $fh = get_file('/tmp/quattor_nss-XXXX/init_nss_anick1.crt');
 is("$fh", "CRTDATA\n", "certificate file with correct content");
 
 diag explain $Test::Quattor::caf_path->{status};
@@ -72,8 +79,8 @@ is_deeply($Test::Quattor::caf_path->{status}, [
     [['/etc/super2.keytab'], {owner => 'root', group => 'superpower', mode => 0400}],
     [['/path/to/cert'], {owner => 'root', group => 'root', mode => 0444}], # default perm
     [['/path/to/key'], {owner => 'root', group => 'root', mode => 0400}], # default perm
-    [['/etc/pki/tls/certs/quattor.pem'], {owner => 'root', group => 'root', mode => 0444}], # quattorcert cert
-    [['/etc/pki/tls/private/quattor.key'], {owner => 'root', group => 'root', mode => 0400}], # quattorcert key
+    [['/etc/ipa/quattor/certs/host.pem'], {owner => 'root', group => 'superpowerssss', mode => 0444}], # hostcert cert
+    [['/etc/ipa/quattor/keys/host.key'], {owner => 'root', group => 'superpowerssss', mode => 0400}], # hostcert key
 ], 'CAF::Path status called in keytabs');
 
 done_testing();

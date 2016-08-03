@@ -109,8 +109,6 @@ $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 Readonly my $DEBUGAPI_LEVEL => 3;
 Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 
-Readonly my $NSSDB => '/etc/nssdb.quattor';
-
 # packages to install with yum for dependencies
 Readonly::Array our @CLI_YUM_PACKAGES => qw(
     ncm-freeipa-${no-snapshot-version}-${RELEASE}
@@ -120,15 +118,21 @@ Readonly::Array our @CLI_YUM_PACKAGES => qw(
     openssl
 );
 
-# Fixed settings for he "quattor" host certificate
-# Retrieve the certificate from the host keytab
-Readonly my %QUATTOR_CERTIFICATE => {
+Readonly my $IPA_BASEDIR => '/etc/ipa';
+Readonly our $IPA_QUATTOR_BASEDIR => "$IPA_BASEDIR/quattor";
+
+Readonly my $NSSDB => "$IPA_QUATTOR_BASEDIR/nssdb";
+
+# Fixed settings for the host certificate
+# Retrieve the certificate for the host DN
+Readonly my $HOST_CERTIFICATE_NICK => 'host';
+Readonly my %HOST_CERTIFICATE => {
     owner => 'root',
     group => 'root',
     mode => 0400,
-    key => '/etc/pki/tls/private/quattor.key',
+    key => "$IPA_QUATTOR_BASEDIR/keys/host.key",
     certmode => 0444,
-    cert => '/etc/pki/tls/certs/quattor.pem',
+    cert => "$IPA_QUATTOR_BASEDIR/certs/host.pem",
 };
 
 Readonly my $IPA_ROLE_CLIENT => 'client';
@@ -136,7 +140,7 @@ Readonly my $IPA_ROLE_SERVER => 'server';
 Readonly my $IPA_ROLE_AII => 'aii';
 
 # Filename that indicates if FreeIPA was already initialised
-Readonly my $IPA_FILE_INITIALISED => '/etc/ipa/ca.crt';
+Readonly my $IPA_FILE_INITIALISED => "$IPA_BASEDIR/ca.crt";
 
 # Hold an instance of the client
 my $_client;
@@ -408,9 +412,14 @@ sub client
 
     $self->service_keytab($tree) if $tree->{keytabs};
 
-    if ($tree->{quattorcert}) {
-        $self->verbose("Add quattor certificate (and key) in $QUATTOR_CERTIFICATE{cert}");
-        $tree->{certificates}->{quattor} = \%QUATTOR_CERTIFICATE;
+    if ($tree->{hostcert}) {
+        # add it, preserve existing host settings
+        $self->verbose("Add host certificate configuration with nick $HOST_CERTIFICATE_NICK (cert file $HOST_CERTIFICATE{cert})");
+        $tree->{certificates}->{$HOST_CERTIFICATE_NICK} = {} if ! $tree->{certificates}->{$HOST_CERTIFICATE_NICK};
+        my $hcert = $tree->{certificates}->{$HOST_CERTIFICATE_NICK};
+        foreach my $k (sort keys %HOST_CERTIFICATE) {
+            $hcert->{$k} = $HOST_CERTIFICATE{$k} if ! defined($hcert->{$k});
+        };
     };
 
     $self->certificates($tree) if $tree->{certificates};
@@ -543,7 +552,7 @@ sub _manual_initialisation
     my $domain = $tree->{domain} || $network->{domainname};
 
     # Is optional, but we use the template value; not the CLI default
-    my $quattorcert = $tree->{quattorcert} ? 1 : 0;
+    my $hostcert = $tree->{hostcert} ? 1 : 0;
 
     my @yum = qw(yum -y install);
     push(@yum, @CLI_YUM_PACKAGES);
@@ -555,7 +564,7 @@ sub _manual_initialisation
          '--primary', $tree->{primary},
          '--domain', $domain,
          '--fqdn', $_fqdn,
-         '--quattorcert', $quattorcert,
+         '--hostcert', $hostcert,
          '--otp', ($opts{otp} ? $opts{otp} : 'one_time_password_from_ipa_host-mod_--random'),
         );
 

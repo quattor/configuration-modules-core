@@ -9,6 +9,10 @@ prefix "/software/components/freeipa/keytabs/{/etc/super2.keytab}";
 "service" = "someservice2";
 "group" = "superpower";
 
-prefix "/software/components/freeipa/certificates/nick1";
+prefix "/software/components/freeipa/certificates/anick1";
 "cert" = "/path/to/cert";
 "key" = "/path/to/key";
+
+# test overwriting quattorcert host nick settings
+prefix "/software/components/freeipa/certificates/host";
+"group" = "superpowerssss";

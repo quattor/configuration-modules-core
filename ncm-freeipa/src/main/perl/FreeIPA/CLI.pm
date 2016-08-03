@@ -2,6 +2,8 @@
 
 use parent qw(CAF::Application NCM::Component::freeipa CAF::Reporter CAF::Object Exporter);
 
+use NCM::Component::freeipa;
+
 our @EXPORT = qw(install);
 
 use CAF::Object qw(SUCCESS);
@@ -58,7 +60,7 @@ sub install
         my $domain = $app->option('domain');
 
         if ($app->ipa_install($prim ,$realm, $app->option('otp'), $domain)) {
-            if($app->minimal_component($app->option('fqdn'), $prim, $realm, )) {
+            if($app->minimal_component($app->option('fqdn'), $prim, $realm, $app->option('hostcert'))) {
                 $app->info("install success");
                 $ec = 0;
             } else {
@@ -98,8 +100,8 @@ sub app_options {
          { NAME    => 'fqdn=s',
            HELP    => 'FQDN hostname' },
 
-         { NAME    => 'quattorcert=s',
-           HELP    => 'Generate quattor certificate for host',
+         { NAME    => 'hostcert=s',
+           HELP    => "Generate host certificate and key in $NCM::Component::freeipa::IPA_QUATTOR_BASEDIR",
            DEFAULT => 1 },
 
          { NAME    => 'logfile=s',
@@ -217,9 +219,9 @@ sub ipa_install
 # TODO: handle errors like ncm-ncd (i.e. logged error is failure).
 sub minimal_component
 {
-    my ($self, $fqdn, $primary, $realm, $quattorcert) = @_;
+    my ($self, $fqdn, $primary, $realm, $hostcert) = @_;
 
-    $self->debug(1, "begin minimal_component with primary $primary realm $realm quattorcert $quattorcert");
+    $self->debug(1, "begin minimal_component with primary $primary realm $realm hostcert $hostcert");
 
     # Set class variable
     $self->set_fqdn(fqdn => $fqdn);
@@ -227,7 +229,7 @@ sub minimal_component
     my $tree = {
         primary => $primary,
         realm => $realm,
-        quattorcert => $quattorcert,
+        hostcert => $hostcert,
     };
 
     my $ec = $self->_configure($tree);
