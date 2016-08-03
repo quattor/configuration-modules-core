@@ -2,9 +2,8 @@
 
 use parent qw(CAF::Object CAF::Path);
 use CAF::Object qw(SUCCESS);
-
 use CAF::Process;
-
+use File::Basename qw(dirname);
 use Readonly;
 
 # Both from nss-tools
@@ -210,11 +209,16 @@ sub get_cert
 {
     my ($self, $nick, $cert, %opts) = @_;
 
+    if (! $self->directory(dirname($cert), mode => 0755)) {
+        return $self->fail("Failed to create dirname for cert $cert: $self->{fail}");
+    };
+
     # -a for ASCII
     if ($self->_certutil('-L', '-n', $nick, '-a', '-o', $cert) &&
         $self->status($cert, %opts)) {
         return SUCCESS;
     } else {
+        $self->error("Failed to create dirname for cert $cert: $self->{fail}");
         return;
     };
 };
@@ -357,6 +361,10 @@ sub get_privkey
 {
     my ($self, $nick, $key, %opts) = @_;
 
+    if (! $self->directory(dirname($key), mode => 0755)) {
+        return $self->fail("Failed to create dirname for key $key: $self->{fail}");
+    };
+
     my $p12dir = "$self->{workdir}/p12keys";
     return if ! $self->directory($p12dir, mode => 0700);
 
@@ -366,6 +374,7 @@ sub get_privkey
         log => $self,
         )->output();
     if ($?) {
+        $self->cleanup($p12dir);
         chomp($out);
         return $self->fail("Failed to extract p12key $p12key: $out");
     } else {
@@ -373,8 +382,11 @@ sub get_privkey
             [$OPENSSL, 'pkcs12', '-in', $p12key, '-out', $key, '-nodes', '-password', 'pass:'],
             log => $self,
             )->output();
+        my $ec = $?;
+
         $self->cleanup($p12dir);
-        if ($?) {
+
+        if ($ec) {
             chomp($out);
             return $self->fail("Failed to create key $key from p12key $p12key: $out");
         } else {

@@ -78,9 +78,13 @@ ok($n->has_cert("mynick"), "has_cert ok");
 ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -n mynick"),
    "has_cert expected certutil command");
 
+reset_caf_path();
 ok($n->get_cert("mynick", "path/to/cert_out"), "get_cert ok");
 ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -n mynick -a -o path/to/cert_out"),
    "get_cert expected certutil command");
+is_deeply($Test::Quattor::caf_path->{directory}, [
+              [["path/to"], {mode => 0755}],
+          ], "directory called for cert basedir");
 
 =head2 _mk_random_data / make_cert_request
 
@@ -137,8 +141,9 @@ ok(get_command('/usr/bin/pk12util -o target/test/randomdata/p12keys/key.p12 -n m
 ok(get_command('/usr/bin/openssl pkcs12 -in target/test/randomdata/p12keys/key.p12 -out path/to/key -nodes -password pass:'),
    "openssl command called");
 is_deeply($Test::Quattor::caf_path->{directory}, [
+              [["path/to"], {mode => 0755}],
               [["$n->{workdir}/p12keys"], {mode => 0700}],
-          ], "directory called for p12keys with 0700 mode");
+          ], "directory called for key basedir and p12keys with 0700 mode");
 is_deeply($Test::Quattor::caf_path->{status}, [
               [["path/to/key"], {user => 'myuser1'}],
           ], "status called on key with user");
