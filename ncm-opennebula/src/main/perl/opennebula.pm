@@ -29,6 +29,7 @@ Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
 Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+Readonly::Scalar my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -590,8 +591,7 @@ sub set_one_service_conf
     my %opts;
     if ($cfgv and $service eq 'oned') {
         $self->info("Found OpenNebula >= 5.0 configuration flag");
-        my $newdata = "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
-        $data->{datastore_mad}->{arguments} = $newdata;
+        $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
     };
     my $oned_templ = $self->process_template($data, $service);
     %opts = $self->set_file_opts();
