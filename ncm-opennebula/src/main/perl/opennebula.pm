@@ -30,6 +30,7 @@ Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 Readonly::Scalar my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph);
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -60,7 +61,8 @@ sub make_one
 sub process_template
 {
     my ($self, $config, $type_name, $secret) = @_;
-    
+
+    my %fw_types = map { $_ => 1 } @FILEWRITER_TEMPLATES;
     my $type_rel = "$type_name.tt";
     my $tpl = CAF::TextRender->new(
         $type_name,
@@ -72,7 +74,12 @@ sub process_template
         $self->error("TT processing of $type_rel failed: $tpl->{fail}");
         return;
     }
-    return $tpl;
+
+    if(exists($fw_types{$type_name})) {
+        return $tpl;
+    } else {
+        return "$tpl";
+    };
 }
 
 # Create/update ONE resources
@@ -106,7 +113,7 @@ sub create_or_update_something
         $new = $one->$cmethod("$template");
     } elsif ($used == -1) {
         # resource is already there and we can modify it
-        $new = $self->update_something($one, $type, $name, "$template", $data);
+        $new = $self->update_something($one, $type, $name, $template, $data);
     }
     return $new;
 }
@@ -172,7 +179,7 @@ sub update_vn_ar
         $data->{ar}->{ar_id} = "$arid";
         $template = $self->process_template($data, "vnet");
         $self->debug(1, "AR template to update from $vnetname: ", $template);
-        $arid = $t->updatear("$template");
+        $arid = $t->updatear($template);
         if (defined($arid)) {
             $self->info("Updated $vnetname AR id: ", $arid);
         } else {
