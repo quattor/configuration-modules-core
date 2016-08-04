@@ -133,7 +133,7 @@ sub remove_something
                 $self->error("Unable to remove old $type resource: ", $oldresource->name);
             }
         } else {
-            $self->warn("QUATTOR flag not found or the resource is still used. ",
+            $self->debug(1, "QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this $type resource: ", $oldresource->name);
         };
     }
