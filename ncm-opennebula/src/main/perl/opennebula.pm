@@ -555,7 +555,7 @@ sub manage_users
         } elsif (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
-            $self->warn("QUATTOR flag not found. We can't remove this user: ", $t->name);
+            $self->debug(1, "QUATTOR flag not found. We can't remove this user: ", $t->name);
         } else {
             push(@rmusers, $t->name);
             $t->delete();
