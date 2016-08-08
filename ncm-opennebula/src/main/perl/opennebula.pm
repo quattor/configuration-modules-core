@@ -12,6 +12,7 @@ use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
+use CAF::FileReader;
 use CAF::Service;
 use Config::Tiny;
 use Net::OpenNebula 0.307.0;
@@ -64,19 +65,30 @@ sub make_one
 sub detect_opennebula_version
 {
     my ($self) = @_;
+
     my $fh = CAF::FileReader->new($OPENNEBULA_VERSION_FILE, log => $self);
     if (! "$fh") {
         $self->error("Not found OpenNebula version file: $OPENNEBULA_VERSION_FILE");
         return;
     };
-    chomp $fh;
 
-    my $version = version->new("$fh");
+    my $version;
+    my $msg = '';
+    if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+)?$)/m ) {
+        local $@;
+        eval {
+            $version = version->new($1);
+        };
+        $msg = "$@";
+    } else {
+        $msg = "No match for version regexp";
+    }
+
     if ($version) {
         $self->verbose("OpenNebula $OPENNEBULA_VERSION_FILE file has version $version.");
         return $version;
     } else {
-    $self->error("No valid version available from $OPENNEBULA_VERSION_FILE file.");
+        $self->error("No valid version available from $OPENNEBULA_VERSION_FILE file. $msg");
         return;
     };
 }
