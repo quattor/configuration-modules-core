@@ -19,7 +19,7 @@ my %default_protected_services = (
 );
 
 Readonly my $CHKCONFIG_CMD => "/sbin/chkconfig";
-Readonly my $SERVICE_CMD   = "/sbin/service";
+Readonly my $SERVICE_CMD => "/sbin/service";
 Readonly my $RUNLEVEL_CMD => "/sbin/runlevel";
 Readonly my $WHO_CMD => "/usr/bin/who";
 
@@ -274,7 +274,7 @@ sub service_filter
         $service = $line->[1];
         $action = $line->[2];
 
-        my $current_state = CAF::Process->new([$SERVICE_CMD, $service, 'status'], log => $self)->output();
+        my $current_state = CAF::Process->new([$SERVICE_CMD, $service, 'status'], log => $self, keeps_state => 1)->output();
 
         if ($action eq 'start' && $current_state =~ /is running/s ) {
             $self->debug(2,"$service already running, no need to '$action'");
@@ -374,7 +374,7 @@ sub getcurrentrunlevel
 
     my $level = 3;
     if (-x $RUNLEVEL_CMD) {
-        my $line = CAF::Process->new([$RUNLEVEL_CMD], log => $self)->output();
+        my $line = CAF::Process->new([$RUNLEVEL_CMD], log => $self, keeps_state => 1)->output();
         chomp($line);
         # N 5
         if ($line && $line =~ /\w+\s+(\d+)/) {
@@ -385,7 +385,7 @@ sub getcurrentrunlevel
             $level=undef;
         }
     } elsif (-x $WHO_CMD) {
-        my $line = CAF::Process->new([$WHO_CMD, "-r"],log => $self)->output();
+        my $line = CAF::Process->new([$WHO_CMD, "-r"],log => $self, keeps_state => 1)->output();
         chomp($line);
         #          run-level 5  Feb 19 16:08                   last=S
         if ($line && $line =~ /run-level\s+(\d+)\s/) {
@@ -408,7 +408,7 @@ sub get_current_services_hash
     my $self = shift;
 
     my %current;
-    my $data = CAF::Process->new([$CHKCONFIG_CMD, '--list'], log => $self)->output();
+    my $data = CAF::Process->new([$CHKCONFIG_CMD, '--list'], log => $self, keeps_state => 1)->output();
 
     if ($?) {
         $self->error("Cannot get list of current services from $CHKCONFIG_CMD --list: $!");
