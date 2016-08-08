@@ -146,13 +146,13 @@ type opennebula_tm_mad_conf = {
 The  configuration for each driver is defined in DS_MAD_CONF.
 These values are used when creating a new datastore and should not be modified
 since they define the datastore behavior.
-name: name of the transfer driver, listed in the -d option of the DS_MAD section.
-required_attrs: comma separated list of required attributes in the DS template.
-persistent_only: specifies whether the datastore can only manage persistent images.
 }
 type opennebula_ds_mad_conf = {
+    @{name of the transfer driver, listed in the -d option of the DS_MAD section}
     "name" : string = "dummy"
+    @{comma separated list of required attributes in the DS template}
     "required_attrs" : string = ""
+    @{specifies whether the datastore can only manage persistent images}
     "persistent_only" : boolean = false
     "marketplace_actions" ? string
 } = dict();
@@ -161,19 +161,20 @@ type opennebula_ds_mad_conf = {
 The  configuration for each driver is defined in MARKET_MAD_CONF.
 These values are used when creating a new marketplaces and should not be modified
 since they define the marketplace behavior.
-name: name of the market driver.
-required_attrs: comma separated list of required attributes in the Market template
-app_actions: List of actions allowed for a MarketPlaceApp
-    - monitor The apps of the marketplace will be monitored
-    - create, the app in the marketplace
-    - delete, the app from the marketplace
-public: set to yes for external marketplaces.
 A public marketplace can be removed even if it has registered apps.
 }
 type opennebula_market_mad_conf = {
+    @{name of the market driver}
     "name" : string = "one"
+    @{comma separated list of required attributes in the Market template}
     "required_attrs" : string = ""
+    @{list of actions allowed for a MarketPlaceApp.
+        monitor: the apps of the marketplace will be monitored.
+        create: the app in the marketplace.
+        deleete: the app from the marketplace.
+    }
     "app_actions" : string = "monitor"
+    @{set to TRUE for external marketplaces}
     "public" ? boolean
 } = dict();
 
@@ -200,10 +201,9 @@ type opennebula_vnc_ports = {
 LAN ID pool for the automatic VLAN_ID assignment.
 This pool is for 802.1Q networks (Open vSwitch and 802.1Q drivers).
 The driver will try first to allocate VLAN_IDS[START] + VNET_ID
-    start: First VLAN_ID to use
-    reserved: Comma separated list of VLAN_IDs
 }
 type opennebula_vlan_ids = {
+    @{first VLAN_ID to use}
     "start" : long = 2
     "reserved" ? long
 } = dict();
@@ -211,26 +211,28 @@ type opennebula_vlan_ids = {
 @documentation{
 Automatic VXLAN Network ID (VNI) assignment. 
 This is used or vxlan networks.
-    start: First VNI to use
-    NOTE: reserved is not supported by this pool
+NOTE: reserved is not supported by this pool
 }
 type opennebula_vxlan_ids = {
+    @{first VNI (Virtual Network ID) to use}
     "start" : long = 2
 } = dict();
 
 @documentation{
 Drivers to manage different marketplaces, specialized for the storage backend.
-executable: path of the transfer driver executable, can be an absolute path or
-relative to $ONE_LOCATION/lib/mads (or /usr/lib/one/mads/ if OpenNebula was 
-installed in /).
-arguments : for the driver executable
-    -t number of threads, i.e. number of repo operations at the same time.
-    -m marketplace mads separated by commas.
 }
 type opennebula_market_mad = {
+    @{path of the transfer driver executable, can be an absolute path or
+    relative to $ONE_LOCATION/lib/mads (or /usr/lib/one/mads/ if OpenNebula was 
+    installed in /)
+    }
     "executable" : string = 'one_market'
+    @{arguments for the driver executable:
+        -t number of threads, i.e. number of repo operations at the same time
+        -m marketplace mads separated by commas
+    }
     "arguments" : string = '-t 15 -m http,s3,one'
-    } = dict();
+} = dict();
 
 @documentation{ 
 check if a specific type of datastore has the right attributes

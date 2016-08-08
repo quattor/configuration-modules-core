@@ -13,6 +13,7 @@ use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
 use CAF::Service;
+use Config::Tiny;
 use Net::OpenNebula 0.307.0;
 use Data::Dumper;
 use Readonly;
@@ -31,6 +32,7 @@ Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 Readonly::Scalar my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
 Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph);
+Readonly my $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -55,6 +57,28 @@ sub make_one
         fail_on_rpc_fail => 0,
     );
     return $one;
+}
+
+# Detect OpenNebula version
+# through opennebula-server probe files
+sub detect_opennebula_version
+{
+    my ($self) = @_;
+    my $fh = CAF::FileReader->new($OPENNEBULA_VERSION_FILE, log => $self);
+    if (! "$fh") {
+        $self->error("Not found OpenNebula version file: $OPENNEBULA_VERSION_FILE");
+        return;
+    };
+    chomp $fh;
+
+    my $version = version->new("$fh");
+    if ($version) {
+        $self->verbose("OpenNebula $OPENNEBULA_VERSION_FILE file has version $version.");
+        return $version;
+    } else {
+    $self->error("No valid version available from $OPENNEBULA_VERSION_FILE file.");
+        return;
+    };
 }
 
 # Detect and process ONE templates
@@ -596,7 +620,7 @@ sub set_one_service_conf
 {
     my ($self, $data, $service, $config_file, $cfggrp, $cfgv) = @_;
     my %opts;
-    if ($cfgv and $service eq 'oned') {
+    if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
         $self->info("Found OpenNebula >= 5.0 configuration flag");
         $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
     };
@@ -781,7 +805,7 @@ sub Configure
     my $tree = $config->getElement($base)->getTree();
 
     my $cfggrp = $self->set_config_group($tree);
-    my $cfgv = $tree->{v5_config};
+    my $cfgv = $self->detect_opennebula_version;
     # Set oned.conf
     if (exists $tree->{oned}) {
         $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE, undef, $cfgv);
