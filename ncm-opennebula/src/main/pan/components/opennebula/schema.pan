@@ -145,13 +145,13 @@ type opennebula_tm_mad_conf = {
 @documentation{
 The  configuration for each driver is defined in DS_MAD_CONF.
 These values are used when creating a new datastore and should not be modified
-since they define the datastore behavior.
+since they defined the datastore behavior.
 }
 type opennebula_ds_mad_conf = {
     @{name of the transfer driver, listed in the -d option of the DS_MAD section}
     "name" : string = "dummy"
     @{comma separated list of required attributes in the DS template}
-    "required_attrs" : string = ""
+    "required_attrs" : string[] = list('')
     @{specifies whether the datastore can only manage persistent images}
     "persistent_only" : boolean = false
     "marketplace_actions" ? string
@@ -159,7 +159,7 @@ type opennebula_ds_mad_conf = {
 
 @documentation{
 The  configuration for each driver is defined in MARKET_MAD_CONF.
-These values are used when creating a new marketplaces and should not be modified
+These values are used when creating a new marketplace and should not be modified
 since they define the marketplace behavior.
 A public marketplace can be removed even if it has registered apps.
 }
@@ -167,13 +167,13 @@ type opennebula_market_mad_conf = {
     @{name of the market driver}
     "name" : string = "one"
     @{comma separated list of required attributes in the Market template}
-    "required_attrs" : string = ""
+    "required_attrs" : string[] = list('')
     @{list of actions allowed for a MarketPlaceApp.
         monitor: the apps of the marketplace will be monitored.
         create: the app in the marketplace.
-        deleete: the app from the marketplace.
+        delete: the app from the marketplace.
     }
-    "app_actions" : string = "monitor"
+    "app_actions" : string[] = list('monitor')
     @{set to TRUE for external marketplaces}
     "public" ? boolean
 } = dict();
@@ -396,22 +396,22 @@ type opennebula_oned = {
     )
     "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
         dict(),
-        dict("name", "ceph", "required_attrs", "DISK_TYPE,BRIDGE_LIST,CEPH_HOST,CEPH_USER,CEPH_SECRET",
+        dict("name", "ceph", "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST', 'CEPH_HOST', 'CEPH_USER', 'CEPH_SECRET'),
              "marketplace_actions", "export"),
-        dict("name", "dev", "required_attrs", "DISK_TYPE",
+        dict("name", "dev", "required_attrs", list('DISK_TYPE'),
              "persistent_only", true),
-        dict("name", "iscsi_libvirt", "required_attrs", "DISK_TYPE,ISCSI_HOST",
+        dict("name", "iscsi_libvirt", "required_attrs", list('DISK_TYPE', 'ISCSI_HOST'),
              "persistent_only", true),
         dict("name", "fs", "marketplace_actions", "export"),
-        dict("name", "lvm", "required_attrs", "DISK_TYPE,BRIDGE_LIST"),
-        dict("name", "vcenter", "required_attrs", "VCENTER_CLUSTER", "persistent_only", true,
+        dict("name", "lvm", "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST')),
+        dict("name", "vcenter", "required_attrs", list('VCENTER_CLUSTER'), "persistent_only", true,
              "marketplace_actions", "export"),
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
         dict("public", true),
-        dict("name", "http", "required_attrs", "BASE_URL,PUBLIC_DIR", "app_actions", "create, delete, monitor"),
-        dict("name", "s3", "required_attrs", "ACCESS_KEY_ID,SECRET_ACCESS_KEY,REGION,BUCKET",
-             "app_actions", "create, delete, monitor"),
+        dict("name", "http", "required_attrs", list('BASE_URL', 'PUBLIC_DIR'), "app_actions", list('create', 'delete', 'monitor')),
+        dict("name", "s3", "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
+             "app_actions", list('create', 'delete', 'monitor')),
     )
     "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE", 
                                            "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE", 

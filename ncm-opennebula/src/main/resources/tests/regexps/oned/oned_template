@@ -37,7 +37,7 @@ multiline
 ^\s{4}marketplace_actions\s?=\s?"export",$
 ^\s{4}name\s?=\s?"ceph",$
 ^\s{4}persistent_only\s?=\s?"no",$
-^\s{4}required_attrs\s?=\s?"DISK_TYPE,BRIDGE_LIST,CEPH_HOST,CEPH_USER,CEPH_SECRET"$
+^\s{4}required_attrs\s?=\s?"DISK_TYPE, BRIDGE_LIST, CEPH_HOST, CEPH_USER, CEPH_SECRET"$
 ^\]$
 ^DS_MAD_CONF\s?=\s?\[$
 ^\s{4}name\s?=\s?"dev",$
@@ -47,7 +47,7 @@ multiline
 ^DS_MAD_CONF\s?=\s?\[$
 ^\s{4}name\s?=\s?"iscsi_libvirt",$
 ^\s{4}persistent_only\s?=\s?"yes",$
-^\s{4}required_attrs\s?=\s?"DISK_TYPE,ISCSI_HOST"$
+^\s{4}required_attrs\s?=\s?"DISK_TYPE, ISCSI_HOST"$
 ^\]$
 ^DS_MAD_CONF\s?=\s?\[$
 ^\s{4}marketplace_actions\s?=\s?"export",$
@@ -58,7 +58,7 @@ multiline
 ^DS_MAD_CONF\s?=\s?\[$
 ^\s{4}name\s?=\s?"lvm",$
 ^\s{4}persistent_only\s?=\s?"no",$
-^\s{4}required_attrs\s?=\s?"DISK_TYPE,BRIDGE_LIST"$
+^\s{4}required_attrs\s?=\s?"DISK_TYPE, BRIDGE_LIST"$
 ^\]$
 ^DS_MAD_CONF\s?=\s?\[$
 ^\s{4}marketplace_actions\s?=\s?"export",$
@@ -129,12 +129,12 @@ multiline
 ^MARKET_MAD_CONF\s?=\s?\[$
 ^\s{4}app_actions\s?=\s?"create, delete, monitor",$
 ^\s{4}name\s?=\s?"http",$
-^\s{4}required_attrs\s?=\s?"BASE_URL,PUBLIC_DIR"$
+^\s{4}required_attrs\s?=\s?"BASE_URL, PUBLIC_DIR"$
 ^\]$
 ^MARKET_MAD_CONF\s?=\s?\[$
 ^\s{4}app_actions\s?=\s?"create, delete, monitor",$
 ^\s{4}name\s?=\s?"s3",$
-^\s{4}required_attrs\s?=\s?"ACCESS_KEY_ID,SECRET_ACCESS_KEY,REGION,BUCKET"$
+^\s{4}required_attrs\s?=\s?"ACCESS_KEY_ID, SECRET_ACCESS_KEY, REGION, BUCKET"$
 ^\]$
 ^MONITORING_INTERVAL\s?=\s?60$
 ^MONITORING_THREADS\s?=\s?50$
