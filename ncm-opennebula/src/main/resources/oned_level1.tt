@@ -1,5 +1,6 @@
-[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost'] -%]
-[%- booleans = ['shared'] -%]
+[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost', 'disk_cost', 'start'] -%]
+[%- booleans = ['shared', 'persistent_only', 'keep_snapshots', 'ds_migrate', 'public'] -%]
+[%- comma_list_attrs = ['imported_vms_actions', 'required_attrs', 'app_actions'] -%]
 [
 [% FILTER indent -%]
 [%     IF name.defined -%]
@@ -15,6 +16,8 @@ type = "[% type %]",
  [%                pair.value %]
 [%-            CASE booleans -%]
  "[%               pair.value ? "yes" : "no" %]"
+[%-            CASE comma_list_attrs -%]
+ "[%            pair.value.join(', ') -%]"
 [%-            CASE -%]
  "[%               pair.value %]"
 [%-        END %]

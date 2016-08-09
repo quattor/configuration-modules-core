@@ -17,6 +17,9 @@ is($NCM::Component::opennebula::ONEADMINGRP, 4, "One admin group id");
 
 $CAF::Object::NoAction = 1;
 
+# Set OpenNebula file version
+set_file_contents("/var/lib/one/remotes/VERSION", "5.0.0");
+
 my $cmp = NCM::Component::opennebula->new("opennebula");
 
 my $cfg = get_config_for_profile("opennebula");

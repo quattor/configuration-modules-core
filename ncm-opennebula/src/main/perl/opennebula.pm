@@ -12,23 +12,33 @@ use base qw(NCM::Component NCM::Component::OpenNebula::commands);
 use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
+use CAF::FileReader;
 use CAF::Service;
-use Net::OpenNebula 0.307.0;
+use Config::Tiny;
+use Net::OpenNebula 0.308.0;
 use Data::Dumper;
 use Readonly;
 
 
-Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
-Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
-Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
-Readonly::Scalar our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
-Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
-Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
+Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
+Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
+Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+Readonly my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+Readonly my $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
-Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
-Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
-Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+
+# Required by process_template to detect 
+# if it should return a text template or
+# CAF::FileWriter instance
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph);
+
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -55,11 +65,48 @@ sub make_one
     return $one;
 }
 
+# Detect OpenNebula version
+# through opennebula-server probe files
+# the value gathered from the file must be untaint
+sub detect_opennebula_version
+{
+    my ($self) = @_;
+
+    my $fh = CAF::FileReader->new($OPENNEBULA_VERSION_FILE, log => $self);
+    if (! "$fh") {
+        $self->error("Not found OpenNebula version file: $OPENNEBULA_VERSION_FILE");
+        return;
+    };
+
+    my $version;
+    my $msg = '';
+    # untaint value
+    if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+)?$)/m ) {
+        local $@;
+        eval {
+            $version = version->new($1);
+        };
+        $msg = "$@";
+    } else {
+        $msg = "No match for version regexp";
+    }
+
+    if ($version) {
+        $self->verbose("OpenNebula $OPENNEBULA_VERSION_FILE file has version $version.");
+        return $version;
+    } else {
+        $self->error("No valid version available from $OPENNEBULA_VERSION_FILE file. $msg");
+        return;
+    };
+}
+
 # Detect and process ONE templates
+# It could return CAF::TextRender instance
+# or a plain text template for ONE RPC
 sub process_template
 {
     my ($self, $config, $type_name, $secret) = @_;
-    
+
     my $type_rel = "$type_name.tt";
     my $tpl = CAF::TextRender->new(
         $type_name,
@@ -71,7 +118,12 @@ sub process_template
         $self->error("TT processing of $type_rel failed: $tpl->{fail}");
         return;
     }
-    return $tpl;
+
+    if (grep { $type_name eq $_ } @FILEWRITER_TEMPLATES) {
+        return $tpl;
+    } else {
+        return "$tpl";
+    };
 }
 
 # Create/update ONE resources
@@ -105,7 +157,7 @@ sub create_or_update_something
         $new = $one->$cmethod("$template");
     } elsif ($used == -1) {
         # resource is already there and we can modify it
-        $new = $self->update_something($one, $type, $name, "$template", $data);
+        $new = $self->update_something($one, $type, $name, $template, $data);
     }
     return $new;
 }
@@ -132,7 +184,7 @@ sub remove_something
                 $self->error("Unable to remove old $type resource: ", $oldresource->name);
             }
         } else {
-            $self->warn("QUATTOR flag not found or the resource is still used. ",
+            $self->debug(1, "QUATTOR flag not found or the resource is still used. ",
                         "We can't remove this $type resource: ", $oldresource->name);
         };
     }
@@ -171,7 +223,7 @@ sub update_vn_ar
         $data->{ar}->{ar_id} = "$arid";
         $template = $self->process_template($data, "vnet");
         $self->debug(1, "AR template to update from $vnetname: ", $template);
-        $arid = $t->updatear("$template");
+        $arid = $t->updatear($template);
         if (defined($arid)) {
             $self->info("Updated $vnetname AR id: ", $arid);
         } else {
@@ -547,7 +599,7 @@ sub manage_users
         } elsif (exists($newusers{$t->name})) {
             $self->verbose("User required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
-            $self->warn("QUATTOR flag not found. We can't remove this user: ", $t->name);
+            $self->debug(1, "QUATTOR flag not found. We can't remove this user: ", $t->name);
         } else {
             push(@rmusers, $t->name);
             $t->delete();
@@ -575,7 +627,7 @@ sub manage_users
                 $new = $self->update_something($one, "user", $user->{user}, $template);
             }
         } else {
-            $self->error("No user name or password info available:", $user->{user});
+            $self->warn("No user name or password info available:", $user->{user});
         }
     }
 }
@@ -588,6 +640,11 @@ sub set_one_service_conf
 {
     my ($self, $data, $service, $config_file, $cfggrp) = @_;
     my %opts;
+    my $cfgv = $self->detect_opennebula_version;
+    if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
+        $self->verbose("Found OpenNebula >= 5.0 configuration flag");
+        $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
+    };
     my $oned_templ = $self->process_template($data, $service);
     %opts = $self->set_file_opts();
     return if ! %opts;

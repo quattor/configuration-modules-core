@@ -137,7 +137,7 @@ Uses a local storage area from each host for the system datastore.
 
 =head1 DEPENDENCIES
 
-The component was tested with OpenNebula version 4.8 and 4.1x
+The component was tested with OpenNebula version 4.1x and 5.0
 
 Following package dependencies should be installed to run the component:
 

@@ -6,6 +6,7 @@ use Data::Dumper;
 use base 'Exporter';
 use XML::Simple;
 use Cwd;
+use version;
 
 use rpcdata;
 
