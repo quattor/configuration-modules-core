@@ -628,7 +628,7 @@ sub manage_users
                 $new = $self->update_something($one, "user", $user->{user}, $template);
             }
         } else {
-            $self->error("No user name or password info available:", $user->{user});
+            $self->warn("No user name or password info available:", $user->{user});
         }
     }
 }
