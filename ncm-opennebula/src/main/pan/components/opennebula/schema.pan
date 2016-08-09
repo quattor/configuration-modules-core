@@ -191,11 +191,15 @@ type opennebula_default_cost = {
 
 @documentation{
 VNC_BASE_PORT is deprecated since OpenNebula 5.0
+OpenNebula will automatically assign start + vmid,
+allowing to generate different ports for VMs so they do not collide.
 }
 type opennebula_vnc_ports = {
+    @{VNC port pool for automatic VNC port assignment,
+    if possible the port will be set to START + VMID}
     "start" : long = 5900
     "reserved" ? long
-} = dict();
+} = dict() with {deprecated(0, "VNC_BASE_PORT is deprecated since OpenNebula 5.0"); true;};
 
 @documentation{
 LAN ID pool for the automatic VLAN_ID assignment.

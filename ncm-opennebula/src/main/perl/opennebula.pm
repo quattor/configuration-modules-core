@@ -20,20 +20,25 @@ use Data::Dumper;
 use Readonly;
 
 
-Readonly::Scalar my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
-Readonly::Scalar our $ONED_CONF_FILE => "/etc/one/oned.conf";
-Readonly::Scalar our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
-Readonly::Scalar our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
-Readonly::Scalar our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
-Readonly::Scalar our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
+Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
+Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
+Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+Readonly my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+Readonly my $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
-Readonly::Scalar my $MINIMAL_ONE_VERSION => version->new("4.8.0");
-Readonly::Scalar our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
-Readonly::Scalar our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
-Readonly::Scalar my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+
+# Required by process_template to detect 
+# if it should return a text template or
+# CAF::FileWriter instance
 Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph);
-Readonly my $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
+
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
@@ -62,6 +67,7 @@ sub make_one
 
 # Detect OpenNebula version
 # through opennebula-server probe files
+# the value gathered from the file must be untaint
 sub detect_opennebula_version
 {
     my ($self) = @_;
@@ -74,6 +80,7 @@ sub detect_opennebula_version
 
     my $version;
     my $msg = '';
+    # untaint value
     if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+)?$)/m ) {
         local $@;
         eval {
@@ -94,6 +101,8 @@ sub detect_opennebula_version
 }
 
 # Detect and process ONE templates
+# It could return CAF::TextRender instance
+# or a plain text template for ONE RPC
 sub process_template
 {
     my ($self, $config, $type_name, $secret) = @_;
@@ -630,8 +639,9 @@ sub manage_users
 # one service must be restarted afterwards
 sub set_one_service_conf
 {
-    my ($self, $data, $service, $config_file, $cfggrp, $cfgv) = @_;
+    my ($self, $data, $service, $config_file, $cfggrp) = @_;
     my %opts;
+    my $cfgv = $self->detect_opennebula_version;
     if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
         $self->info("Found OpenNebula >= 5.0 configuration flag");
         $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
@@ -817,15 +827,14 @@ sub Configure
     my $tree = $config->getElement($base)->getTree();
 
     my $cfggrp = $self->set_config_group($tree);
-    my $cfgv = $self->detect_opennebula_version;
     # Set oned.conf
     if (exists $tree->{oned}) {
-        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE, undef, $cfgv);
+        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE, undef);
     }
 
     # Set Sunstone server
     if (exists $tree->{sunstone}) {
-        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp, $cfgv);
+        $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp);
         if (exists $tree->{users}) {
             my $users = $tree->{users};
             foreach my $user (@$users) {

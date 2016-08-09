@@ -36,9 +36,6 @@ foreach my $getnam ("getpwnam", "getgrnam") {
     $nco->mock( $getnam, sub { return 1; } );
 }
 
-$nco->mock('detect_opennebula_version', sub { return version->new("5.0.0"); } );
-
-
 sub dump_rpc {
     return explain(\@rpc_history);
 }
