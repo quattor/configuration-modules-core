@@ -1,88 +1,70 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMpre} NCM::Component::download${PMpost}
 
-#
-# download - Morgan Stanley ncm-download component
-#
-# Download files during configuration (e.g. via web)
-#
-###############################################################################
+use parent qw(NCM::Component CAF::Path);
 
-package NCM::Component::download;
+our $EC = LC::Exception::Context->new->will_store_all;
 
-#
-# a few standard statements, mandatory for all components
-#
-
-use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
 use File::Temp qw(tempdir);
 use CAF::Process;
 use POSIX;
 use LWP::UserAgent;
 use HTTP::Request::Common;
+use EDG::WP4::CCM::Element qw(unescape);
+use CAF::Object;
 
 $NCM::Component::download::NoActionSupported = 1;
 
 # Just in case...
 $ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
 
-sub prefix {
-    my ($self) = @_;
-    return "/software/components/download";
+sub get_gss_token
+{
+    my $self = shift;
+
+    my $cached_gss = tempdir("ncm-download-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+    $self->debug(1, "storing kerberos credentials in $cached_gss");
+    $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
+    # Assume "kinit" is in the PATH.
+    my $errs = "";
+    my $proc = CAF::Process->new(["kinit", "-k"],
+                                 stderr => \$errs,
+                                 log => $self,
+                                 keeps_state => 1);
+    $proc->execute();
+    if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
+        $self->error("could not get GSSAPI credentials: $errs");
+        return;
+    }
+    return $cached_gss;
 }
 
+sub Configure
+{
+    my ($self, $config)=@_;
 
-##########################################################################
-sub Configure {
-##########################################################################
-    my ($self,$config)=@_;
+    my $tree = $config->getTree($self->prefix);
 
-    my $prefix = $self->prefix;
+    my $defserver = $tree->{server} || "";
+    my $defproto = $tree->{proto} || "";
 
-    if (!$config->elementExists("$prefix")) {
-        return 0;
-    }
+    my @proxyhosts = @{$tree->{proxyhosts} || []};
 
-    my $inf = $config->getElement("$prefix")->getTree;
-    my $defserver = "";
-    if (exists $inf->{server}) {
-        $defserver = $inf->{server};
-    }
-    my $defproto = "";
-    if (exists $inf->{proto}) {
-        $defproto = $inf->{proto};
-    }
+    my $cached_gss;
 
-    my @proxyhosts = ();
-    if (exists $inf->{proxyhosts} && ref($inf->{proxyhosts}) eq 'ARRAY') {
-        @proxyhosts = @{$inf->{proxyhosts}};
-    }
+    foreach my $esc_fn (sort keys %{$tree->{files}}) {
+        my $fn = unescape($esc_fn);
+        my $file = $tree->{files}->{$esc_fn};
 
-    my $cached_gss = undef;
-    foreach my $f (keys %{$inf->{files}}) {
-        my $file = $self->unescape($f);
-        my $source = $inf->{files}->{$f}->{href};
-        my $gss = 0;
-        if (exists $inf->{files}->{$f}->{gssapi} && $inf->{files}->{$f}->{gssapi}) {
+        my $source = $file->{href};
+
+        # Holds basedir of token file
+        my $gss;
+        if ($file->{gssapi}) {
             if (!$cached_gss) {
-                $cached_gss = tempdir("ncm-download-XXXXXX", TMPDIR => 1, CLEANUP => 1);
-                $self->debug(1, "storing kerberos credentials in $cached_gss");
-                $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
-                # Assume "kinit" is in the PATH.
-                my $errs = "";
-                my $proc = CAF::Process->new(["kinit", "-k"], stderr => \$errs,
-                        log => $self, keeps_state => 1);
-                $proc->execute();
-                if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
-                    $self->error("could not get GSSAPI credentials: $errs");
-                    return 0;
-                }
-            }
+                $cached_gss = $self->get_gss_token();
+                # Already reports error
+                return 0 if ! $cached_gss;
+            };
             $gss = $cached_gss;
         }
 
@@ -92,40 +74,48 @@ sub Configure {
                 $source = "/$source";
             }
             if ($source !~ m{^//}) {
-                my $server = $defserver;
-                if (exists $inf->{files}->{$f}->{server}) {
-                    $server = $inf->{files}->{$f}->{server};
-                }
-                if (!$server) {
-                    $self->error("$file requested but no server, ignoring");
+                my $server = exists($file->{server}) ? $file->{server} : $defserver;
+
+                if (! $server) {
+                    # TODO: ignoring with an error?
+                    #       better would be to force this being non-empty via schema
+                    #       (eg no empty server attribute; or no empty server without default server specified),
+                    #       and not support ignoring files with error reported
+                    $self->error("$fn requested but no server, ignoring");
                     next;
                 }
                 $source = "//$server$source";
             }
+
             if ($source =~ m{^//}) {
                 # server specified, but no proto
-                my $proto = $defproto;
-                if (exists $inf->{files}->{$f}->{proto}) {
-                    $proto = $inf->{files}->{$f}->{proto};
-                }
+                my $proto = exists($file->{proto}) ? $file->{proto} : $defproto;
                 if (!$proto) {
-                    $self->error("$file requested but no proto, ignoring");
+                    # TODO: ignoring with error?
+                    $self->error("$fn requested but no proto, ignoring");
                     next;
                 }
                 $source = "$proto:$source";
             }
         }
 
-        my $min_age = 0;
-        if (exists $inf->{files}->{$f}->{min_age}) {
-            $min_age = $inf->{files}->{$f}->{min_age};
-        }
+        my $min_age = $file->{min_age} || 0;
 
-	my $timeout = $inf->{files}->{$f}->{timeout};
-	$timeout = $inf->{timeout} unless defined($timeout);
+        # TODO: tree->{timeout} can be undef; default via schema?
+        my $timeout = defined($file->{timeout}) ? $file->{timeout} : $tree->{timeout};
+
+        my %opts = (
+            href => $source,
+            gssneg => $gss,
+            cacert => $file->{cacert},
+            capath => $file->{capath},
+            cert => $file->{cert},
+            key =>  $file->{key},
+            min_age => $min_age,
+        );
 
         my $success = 0;
-        if (@proxyhosts && $inf->{files}->{$f}->{proxy}) {
+        if (@proxyhosts && $file->{proxy}) {
             my $attempts = scalar @proxyhosts;
             while ($attempts--) {
                 # take the head off the list and rotate to the end...
@@ -133,18 +123,11 @@ sub Configure {
                 # proxy - once we've found one that works, we'll keep using it.
                 my $proxy = shift @proxyhosts;
                 $self->debug(3, "Trying proxy $proxy");
-                $success += $self->download(
-                    file => $file,
-                    href => $source,
-                    timeout => $timeout,
-                    head_timeout => $inf->{head_timeout},
-                    proxy => $proxy,
-                    gssneg => $gss,
-                    cacert => $inf->{files}->{$f}->{cacert},
-                    capath => $inf->{files}->{$f}->{capath},
-                    cert => $inf->{files}->{$f}->{cert},
-                    key =>  $inf->{files}->{$f}->{key},
-                    min_age => $min_age);
+                $success += $self->download($fn,
+                                            timeout => $timeout,
+                                            head_timeout => $tree->{head_timeout},
+                                            proxy => $proxy,
+                                            %opts);
                 if ($success) {
                     @proxyhosts = ($proxy, @proxyhosts);
                     last;
@@ -157,51 +140,40 @@ sub Configure {
             }
         }
         if (!$success) {
-            if (!$self->download(
-                    file => $file,
-                    href => $source,
-                    timeout => $inf->{timeout},
-                    gssneg => $gss,
-                    cacert => $inf->{files}->{$f}->{cacert},
-                    capath => $inf->{files}->{$f}->{capath},
-                    cert => $inf->{files}->{$f}->{cert},
-                    key =>  $inf->{files}->{$f}->{key},
-                    min_age => $min_age)) {
+            if (!$self->download($fn, timeout => $tree->{timeout}, %opts)) {
                 $self->error("failed to retrieve $source, skipping");
                 next;
             }
         }
-        my @opts = ();
-        if (exists $inf->{files}->{$f}->{perm}) {
-            push(@opts, 'mode' => $inf->{files}->{$f}->{perm});
-        }
-        if (exists $inf->{files}->{$f}->{owner}) {
-            push(@opts, 'owner' => $inf->{files}->{$f}->{owner});
-        }
-        if (exists $inf->{files}->{$f}->{group}) {
-            push(@opts, 'group' => $inf->{files}->{$f}->{group});
-        }
-        if (@opts) {
-            my $r = LC::Check::status($file, @opts);
+
+        my %perms = map {$_ => $file->{$_}} grep {defined $file->{$_}} qw(owner group);
+        $perms{mode} = $file->{perm} if defined($file->{perm});
+
+        if (%perms) {
+            my $msg = "$fn to ".join(" ", map{"$_=".$perms{$_}} sort keys %perms);
+            # TODO use CAF::Path, this is not noaction safe
+            my $r = LC::Check::status($fn, %perms);
             # $r == 0 means there was no change
             if ($r > 0) {
-                $self->log("updated $file to ", join(' ', @opts));
+                $self->info("updated $msg");
             } elsif ($r < 0) {
-                $self->error("failed to update perms/ownership of $file to ". join(' ', @opts));
+                $self->error("failed to update perms/ownership of $msg");
             }
         }
 
-        my $cmd = $inf->{files}->{$f}->{post};
+        my $cmd = $file->{post};
         if ($cmd) {
             my $errs = "";
-            my $proc = CAF::Process->new([ $cmd, $file], stderr => \$errs,
+            my $proc = CAF::Process->new([$cmd, $fn],
+                                         stderr => \$errs,
                                          log => $self);
             $proc->execute();
             if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
-                $self->error("post-process of $file gave errors: $errs");
+                $self->error("post-process $cmd of $fn gave errors: $errs");
             }
         }
-        $self->info("successfully processed file $file");
+
+        $self->info("successfully processed file $fn");
     }
     return 0;
 }
@@ -209,7 +181,7 @@ sub Configure {
 sub get_head
 {
     my ($self, $source, %opts) = @_;
-    
+
     # LWP should use Net::SSL (provided with Crypt::SSLeay)
     # and Net::SSL doesn't support hostname verify
     local $ENV{'PERL_NET_HTTPS_SSL_SOCKET_CLASS'} = 'Net::SSL';
@@ -226,22 +198,18 @@ sub get_head
 }
 
 sub download {
-    my ($self, %opts) = @_;
-    my ($file, $source, $timeout, $proxy, $gssneg, $min_age,
-    $cacert, $capath, $cert, $key);
+    my ($self, $fn, %opts) = @_;
+
+    my ($source, $timeout, $proxy, $gssneg, $min_age);
     $source  = $opts{href};
     $timeout = $opts{timeout};
     $proxy   = $opts{proxy} || "";
     $gssneg  = $opts{gssneg} || 0;
     $min_age = $opts{min_age} || 0;
-    $cacert  = $opts{cacert};
-    $capath  = $opts{capath};
-    $key     = $opts{key};
-    $cert    = $opts{cert};
 
-    $self->debug(1, "Processing file $opts{file} from $source");
+    $self->debug(1, "Processing file $fn from $source");
 
-    my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $opts{file});
+    my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $fn);
 
     if ($proxy) {
         $source =~ s{^([a-z]+)://([^/]+)/}{$1://$proxy/};
@@ -257,34 +225,21 @@ sub download {
         push @cmd, qw(--negotiate -u x:x);
     }
 
-    if ($key) {
-        push @cmd, ("--key", $key);
-    }
 
-    if ($cacert) {
-        push @cmd, ("--cacert", $cacert);
-    }
-
-    if ($capath) {
-        push @cmd, ("--capath", $capath);
-    }
-
-    if ($cert) {
-        push @cmd, ("--cert", $cert);
-    }
+    push(@cmd, map {("--$_", $opts{$_})} grep {$opts{$_}} qw(key cacert capath cert));
 
     push @cmd, $source;
 
     # Get timestamp of any existing file, defaulting to zero if the
     # file doesn't exist
     my $timestamp_existing = 0;
-    if (-e $opts{file}) {
-        $timestamp_existing  = (stat($opts{file}))[9];
+    if (-e $fn) {
+        $timestamp_existing  = (stat($fn))[9];
     }
 
     # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
     my $timestamp_threshold = (time() - ($min_age * 60));
-    my $timestamp_remote    = $self->get_head($source, %opts)->headers->last_modified(); # :D>;
+    my $timestamp_remote = $self->get_head($source, %opts)->headers->last_modified();
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
@@ -292,29 +247,26 @@ sub download {
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     # Only warn as there may be attempts from multiple proxies.
-                    $self->warn("curl failed (". ($?>>8) ."): $errs\nCommand = ". join(' ', @cmd));
+                    $self->warn("curl failed (". ($?>>8) ."): $errs\nCommand = $proc");
                     return 0; # Curl barfed, so we return.
                 } else {
-                    if ($NoAction) {
-                        $self->debug(1, "We have sucessfully pretended to download a new copy of the file");
+                    if ($CAF::Object::NoAction) {
+                        $self->debug(1, "We have sucessfully pretended to download a new copy of the file $fn");
                     } else {
-                        $self->debug(1, "We seem to have sucessfully downloaded a new copy of the file");
+                        $self->debug(1, "We seem to have sucessfully downloaded a new copy of the file $fn");
                     }
                     return 1;
                 }
-            }
-            else {
+            } else {
                 $self->debug(1, "Remote file is newer than acceptable ",
-                    "threshold, or in the future, nothing downloaded");
+                             "threshold, or in the future; nothing downloaded");
                 return 1;
             }
-        }
-        else {
+        } else {
             $self->debug(1, "Remote file is not newer than existing local copy, nothing downloaded");
             return 1;
         }
-    }
-    else {
+    } else {
         $self->debug(1, "Unable to obtain timestamp of remote file, nothing downloaded");
         return 0; # fail
     }

@@ -9,6 +9,7 @@ include 'quattor/types/component';
 
 type component_download_file = {
     "href"    : string
+    @{command (no options) to run after download, the filename is added as first and (only) argument}
     "post"    ? string
     "proxy"   : boolean = true
     "gssapi"  ? boolean
