@@ -12,7 +12,7 @@ use LWP::UserAgent;
 use LWP::Authen::Negotiate;
 
 use EDG::WP4::CCM::Element qw(unescape);
-use CAF::Object;
+use CAF::Object qw(SUCCESS);
 
 $NCM::Component::download::NoActionSupported = 1;
 
@@ -62,113 +62,34 @@ sub Configure
     my $defserver = $tree->{server} || "";
     my $defproto = $tree->{proto} || "";
 
-    my @proxyhosts = @{$tree->{proxyhosts} || []};
+    my $proxyhosts = $tree->{proxyhosts} || [];
 
     foreach my $esc_fn (sort keys %{$tree->{files}}) {
         my $fn = unescape($esc_fn);
         my $file = $tree->{files}->{$esc_fn};
 
-        my $source = $file->{href};
+        # Sanitize file details
+        $file->{server} = $defserver if ! exists($file->{server});
+        $file->{proto} = $defproto if ! exists($file->{proto});
 
-        my $gss;
-        if ($file->{gssapi}) {
-            $gss = $self->get_gss_token();
-            return 0 if ! $gss;
-        }
-
-        if ($source !~ m{^[a-z]+://.*}) {
-            # an incomplete URL... let's add defaults
-            if ($source !~ m{^/}) {
-                $source = "/$source";
-            }
-            if ($source !~ m{^//}) {
-                my $server = exists($file->{server}) ? $file->{server} : $defserver;
-
-                if (! $server) {
-                    # TODO: ignoring with an error?
-                    #       better would be to force this being non-empty via schema
-                    #       (eg no empty server attribute; or no empty server without default server specified),
-                    #       and not support ignoring files with error reported
-                    $self->error("$fn requested but no server, ignoring");
-                    next;
-                }
-                $source = "//$server$source";
-            }
-
-            if ($source =~ m{^//}) {
-                # server specified, but no proto
-                my $proto = exists($file->{proto}) ? $file->{proto} : $defproto;
-                if (!$proto) {
-                    # TODO: ignoring with error?
-                    $self->error("$fn requested but no proto, ignoring");
-                    next;
-                }
-                $source = "$proto:$source";
-            }
-        }
-
-        my $min_age = $file->{min_age} || 0;
+        $file->{min_age} = 0 if ! $file->{min_age};
 
         # TODO: tree->{timeout} can be undef; default via schema?
-        my $timeout = defined($file->{timeout}) ? $file->{timeout} : $tree->{timeout};
+        $file->{timeout} = $tree->{timeout} if ! exists($file->{timeout});
+        # TODO: there's no per-file setting yet?
+        $file->{head_timeout} = $tree->{head_timeout};
 
-        my %opts = (
-            href => $source,
-            gssneg => $gss,
-            cacert => $file->{cacert},
-            capath => $file->{capath},
-            cert => $file->{cert},
-            key =>  $file->{key},
-            min_age => $min_age,
-        );
-
-        my $success = 0;
-        if (@proxyhosts && $file->{proxy}) {
-            my $attempts = scalar @proxyhosts;
-            while ($attempts--) {
-                # take the head off the list and rotate to the end...
-                # we do this in order to avoid continually trying a dead
-                # proxy - once we've found one that works, we'll keep using it.
-                my $proxy = shift @proxyhosts;
-                $self->debug(3, "Trying proxy $proxy");
-                $success += $self->download($fn,
-                                            timeout => $timeout,
-                                            head_timeout => $tree->{head_timeout},
-                                            proxy => $proxy,
-                                            %opts);
-                if ($success) {
-                    @proxyhosts = ($proxy, @proxyhosts);
-                    last;
-                } else {
-                    @proxyhosts = (@proxyhosts, $proxy);
-                }
-            }
-            if (!$success) {
-                $self->warn("failed to retrieve $source from any proxies, using original");
-            }
-        }
-        if (!$success) {
-            if (!$self->download($fn, timeout => $tree->{timeout}, %opts)) {
-                $self->error("failed to retrieve $source, skipping");
-                next;
-            }
+        if ($file->{gssapi}) {
+            $file->{gss_ccache} = $self->get_gss_token();
+            # immediate failure
+            return 0 if ! $file->{gss_ccache};
         }
 
-        my %perms = map {$_ => $file->{$_}} grep {defined $file->{$_}} qw(owner group);
-        $perms{mode} = $file->{perm} if defined($file->{perm});
 
-        if (%perms) {
-            my $msg = "$fn to ".join(" ", map{"$_=".$perms{$_}} sort keys %perms);
-            # TODO use CAF::Path, this is not noaction safe
-            my $r = LC::Check::status($fn, %perms);
-            # $r == 0 means there was no change
-            if ($r > 0) {
-                $self->info("updated $msg");
-            } elsif ($r < 0) {
-                $self->error("failed to update perms/ownership of $msg");
-            }
-        }
+        # download
+        next if ! $self->download($fn, $file, $proxyhosts);
 
+        # post-processing
         my $cmd = $file->{post};
         if ($cmd) {
             my $errs = "";
@@ -183,10 +104,125 @@ sub Configure
 
         $self->info("successfully processed file $fn");
     }
-    return 0;
+
+    return 1;
 }
 
-sub get_head
+
+# download: highlevel method, actual transfer code is in retrieve method
+# fn is the destination filename to download to
+# file is a hashref with download details
+# proxyhosts is a array with proxy hosts (the arrayref might be modified)
+sub download
+{
+    my ($self, $fn, $file, $proxyhosts) = @_;
+
+    # Sanitize source
+    my $source = $file->{href};
+    if ($source !~ m{^[a-z]+://.*}) {
+        # an incomplete URL... let's add defaults
+        if ($source !~ m{^/}) {
+            $source = "/$source";
+        }
+
+        if ($source !~ m{^//}) {
+            if ($file->{server}) {
+                $source = "//$file->{server}$source";
+            } else {
+                # TODO: ignoring with an error?
+                #       better would be to force this being non-empty via schema
+                #       (eg no empty server attribute; or no empty server without default server specified),
+                #       and not support ignoring files with error reported
+                $self->error("$fn requested but no server, ignoring");
+                return;
+            }
+        }
+
+        if ($source =~ m{^//}) {
+            # server specified, but no proto
+            if ($file->{proto}) {
+                $source = "$file->{proto}:$source";
+            } else {
+                # TODO: ignoring with error?
+                $self->error("$fn requested but no proto, ignoring");
+                return;
+            }
+        }
+    }
+
+    my %opts = (
+        href => $source,
+        gss_ccache => $file->{gss_ccache},
+        cacert => $file->{cacert},
+        capath => $file->{capath},
+        cert => $file->{cert},
+        key =>  $file->{key},
+        min_age => $file->{min_age},
+        # TODO: head_timeout used to be only per file for proxies, and per component for non-proxy
+        head_timeout => $file->{head_timeout},
+        # TODO: timeout used to be only per file for proxies, and not at all for non-proxy
+        timeout => $file->{timeout},
+        );
+
+    my $success = 0;
+    if (@$proxyhosts && $file->{proxy}) {
+        my $attempts = scalar @$proxyhosts;
+        while ($attempts--) {
+            # take the head off the list and rotate to the end...
+            # we do this in order to avoid continually trying a dead
+            # proxy - once we've found one that works, we'll keep using it.
+            my $proxy = shift @$proxyhosts;
+            $self->debug(3, "Trying proxy $proxy for source $source and filename $fn");
+            $success += $self->retrieve(
+                $fn,
+                proxy => $proxy,
+                %opts);
+
+            if ($success) {
+                $proxyhosts = [$proxy, @$proxyhosts];
+                last;
+            } else {
+                $proxyhosts = [@$proxyhosts, $proxy];
+            }
+        }
+
+        if (!$success) {
+            $self->warn("failed to retrieve $source to $fn from any proxies (",
+                        join(',', @$proxyhosts), "), using original");
+        }
+    }
+
+    if (!$success) {
+        if (!$self->retrieve($fn, %opts)) {
+            $self->error("failed to retrieve $source to $fn, skipping");
+            return;
+        }
+    }
+
+    my %perms = map {$_ => $file->{$_}} grep {defined $file->{$_}} qw(owner group);
+    $perms{mode} = $file->{perm} if defined($file->{perm});
+
+    if (%perms) {
+        my $msg = "$fn to ".join(" ", map{"$_=".$perms{$_}} sort keys %perms);
+        # TODO use CAF::Path, this is not noaction safe
+        my $r = LC::Check::status($fn, %perms);
+        # $r == 0 means there was no change
+        if ($r > 0) {
+            $self->info("updated $msg");
+        } elsif ($r < 0) {
+            # TODO: returning failure here. this did not used to be the case
+            $self->error("failed to update perms/ownership of $msg");
+            return;
+        }
+    }
+
+    $self->verbose("Succesful download of file $fn");
+
+    return SUCCESS;
+}
+
+
+sub get_remote_timestamp
 {
     my ($self, $source, %opts) = @_;
 
@@ -201,14 +237,18 @@ sub get_head
     local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if $opts{capath};
 
     # Required for LWP::Authen::Negotiate
-    local $ENV{KRB5CCNAME} = $opts{gssneg} if $opts{gssneg};
+    local $ENV{KRB5CCNAME} = $opts{gss_ccache} if $opts{gss_ccache};
 
     my $lwp = LWP::UserAgent->new;
     $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
-    return $lwp->head($source);
+    my $head = $lwp->head($source);
+
+    return $head->headers->last_modified();
 }
 
-sub download
+
+# Single attempt, actual transfer
+sub retrieve
 {
     my ($self, $fn, %opts) = @_;
 
@@ -216,11 +256,11 @@ sub download
     my $timeout = $opts{timeout};
     my $proxy   = $opts{proxy} || "";
 
-    my $gssneg  = $opts{gssneg};
+    my $gss_ccache  = $opts{gss_ccache};
 
     my $min_age = $opts{min_age} || 0;
 
-    $self->debug(1, "Processing file $fn from $source");
+    $self->debug(1, "Retrieving file $fn from $source");
 
     my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $fn);
 
@@ -232,14 +272,16 @@ sub download
         push @cmd, ("-m", $timeout);
     }
 
-    if ($gssneg) {
+    if ($gss_ccache) {
         # If negotiate extension is required, then we'll
         # enable it and put in a dummy username/password.
-        local $ENV{KRB5CCNAME} = $gssneg;
+        local $ENV{KRB5CCNAME} = $gss_ccache;
         push @cmd, qw(--negotiate -u x:x);
     }
 
-    push(@cmd, map {("--$_", $opts{$_})} grep {$opts{$_}} qw(key cacert capath cert));
+    foreach my $key (qw(key cacert capath cert)) {
+        push(@cmd, "--$key", $opts{$key}) if $opts{$key};
+    }
 
     push @cmd, $source;
 
@@ -252,7 +294,7 @@ sub download
 
     # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
     my $timestamp_threshold = (time() - ($min_age * 60));
-    my $timestamp_remote = $self->get_head($source, %opts)->headers->last_modified();
+    my $timestamp_remote = $self->get_remote_timestamp($source, %opts);
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
@@ -264,23 +306,23 @@ sub download
                     return 0; # Curl barfed, so we return.
                 } else {
                     if ($CAF::Object::NoAction) {
-                        $self->debug(1, "We have sucessfully pretended to download a new copy of the file $fn");
+                        $self->debug(1, "We have sucessfully pretended to retrieve a new copy of the file $fn");
                     } else {
-                        $self->debug(1, "We seem to have sucessfully downloaded a new copy of the file $fn");
+                        $self->debug(1, "We seem to have sucessfully retrieved a new copy of the file $fn");
                     }
                     return 1;
                 }
             } else {
                 $self->debug(1, "Remote file is newer than acceptable ",
-                             "threshold, or in the future; nothing downloaded");
+                             "threshold, or in the future; nothing retrieved");
                 return 1;
             }
         } else {
-            $self->debug(1, "Remote file is not newer than existing local copy, nothing downloaded");
+            $self->debug(1, "Remote file is not newer than existing local copy, nothing retrieved");
             return 1;
         }
     } else {
-        $self->debug(1, "Unable to obtain timestamp of remote file, nothing downloaded");
+        $self->debug(1, "Unable to obtain timestamp of remote file, nothing retrieved");
         return 0; # fail
     }
 }

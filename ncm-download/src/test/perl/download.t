@@ -51,7 +51,7 @@ my %opts = (href => sprintf("file://%s/target/test/source", getcwd()),
             timeout => 1,
             min_age => 60);
 
-is($cmp->download($FILE, %opts), 1, "Invocation with a too recent file succeeds");
+is($cmp->retrieve($FILE, %opts), 1, "Invocation with a too recent file succeeds");
 
 my $cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $FILE -m $opts{timeout} $opts{href}");
 
@@ -67,7 +67,7 @@ ok(!$cmd, "curl is not called if the remote file is too recent");
 
 $opts{min_age} = 0;
 
-is($cmp->download($FILE, %opts), 1, "Basic invocation succeeds");
+is($cmp->retrieve($FILE, %opts), 1, "Basic retrieve invocation succeeds");
 
 $cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $FILE -m $opts{timeout} $opts{href}");
 
@@ -85,6 +85,6 @@ ok($cmd, "Curl command called as expected");
 
 $opts{href} .= "kljhljhlujh8hp9";
 
-is($cmp->download($FILE, %opts), 0, "Download of non-existing files fails");
+is($cmp->retrieve($FILE, %opts), 0, "Retrieve of non-existing files fails");
 
 done_testing();
