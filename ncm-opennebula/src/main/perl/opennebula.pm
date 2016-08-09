@@ -15,7 +15,7 @@ use CAF::TextRender;
 use CAF::FileReader;
 use CAF::Service;
 use Config::Tiny;
-use Net::OpenNebula 0.307.0;
+use Net::OpenNebula 0.308.0;
 use Data::Dumper;
 use Readonly;
 
