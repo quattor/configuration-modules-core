@@ -107,7 +107,6 @@ sub process_template
 {
     my ($self, $config, $type_name, $secret) = @_;
 
-    my %fw_types = map { $_ => 1 } @FILEWRITER_TEMPLATES;
     my $type_rel = "$type_name.tt";
     my $tpl = CAF::TextRender->new(
         $type_name,
@@ -120,7 +119,7 @@ sub process_template
         return;
     }
 
-    if(exists($fw_types{$type_name})) {
+    if (grep { $type_name eq $_ } @FILEWRITER_TEMPLATES) {
         return $tpl;
     } else {
         return "$tpl";
@@ -643,7 +642,7 @@ sub set_one_service_conf
     my %opts;
     my $cfgv = $self->detect_opennebula_version;
     if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
-        $self->info("Found OpenNebula >= 5.0 configuration flag");
+        $self->verbose("Found OpenNebula >= 5.0 configuration flag");
         $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
     };
     my $oned_templ = $self->process_template($data, $service);
@@ -829,7 +828,7 @@ sub Configure
     my $cfggrp = $self->set_config_group($tree);
     # Set oned.conf
     if (exists $tree->{oned}) {
-        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE, undef);
+        $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
     }
 
     # Set Sunstone server
