@@ -777,7 +777,7 @@ sub set_config_group
 # Configure OpenNebula server
 sub set_one_server
 {
-    my($self, $tree, $cfgv) = @_;
+    my($self, $tree) = @_;
     # Set ssh multiplex options
     $self->set_ssh_command($tree->{ssh_multiplex});
     # Set tm_system_ds if available
@@ -900,7 +900,7 @@ sub Configure
 
     # Set OpenNebula server
     if (exists $tree->{rpc}) {
-        return $self->set_one_server($tree, $cfgv);
+        return $self->set_one_server($tree);
     }
 
     return 1;
