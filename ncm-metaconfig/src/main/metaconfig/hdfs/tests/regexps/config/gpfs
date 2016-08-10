@@ -1,0 +1,7 @@
+Base test for gpfs config
+---
+multiline
+/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml
+---
+$wontmatch^
+

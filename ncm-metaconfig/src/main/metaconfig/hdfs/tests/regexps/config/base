@@ -1,6 +1,0 @@
-Base test for config
----
-multiline
----
-$wontmatch^
-
