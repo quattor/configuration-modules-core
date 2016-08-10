@@ -305,7 +305,7 @@ type opennebula_datastore = {
     "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
     "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
     "type"                      : string = 'IMAGE_DS'
-} with is_consistent_datastore(SELF);
+} = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
     "name" : string
@@ -323,7 +323,7 @@ type opennebula_vnet = {
     "vlan" ? boolean
     "vlan_id" ? long(0..4095)
     "ar" ? opennebula_ar
-};
+} = dict();
 
 @documentation{
 Set OpenNebula regular users and their primary groups.
@@ -334,7 +334,7 @@ type opennebula_user = {
     "user" : string 
     "password" ? string
     "group" ? string
-};
+} = dict();
 
 @documentation{
 Set a group name and an optional decription
