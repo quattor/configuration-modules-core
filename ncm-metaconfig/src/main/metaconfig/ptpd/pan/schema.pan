@@ -67,6 +67,10 @@ type ptpd_service_clock = {
     @{store observed drift in a file}
     'drift_handling' ? string = 'file' with match(SELF, '^(file)$')
     'drift_file' ? string = '/var/log/ptpd2_kernelclock.drift'
+    @{step clock on startup only if offset more than 1 second, ignoring panic mode and no_reset}
+    'step_startup' ? boolean = false
+    @{attempt setting the RTC when stepping clock}
+    'set_rtc_on_step' ? boolean = false
 };
 
 type ptpd_service = {
