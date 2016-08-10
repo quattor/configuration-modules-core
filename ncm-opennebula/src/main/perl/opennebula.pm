@@ -26,6 +26,9 @@ Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly my $ONEADMIN_USER => "oneadmin";
+Readonly my $SERVERADMIN_USER => "serveradmin";
+Readonly my $CORE_AUTH_DRIVER => "core";
 Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
@@ -391,7 +394,7 @@ sub change_opennebula_passwd
     my ($self, $user, $passwd) = @_;
     my ($output, $cmd);
 
-    if ($user eq "serveradmin") {
+    if ($user eq $SERVERADMIN_USER) {
         $cmd = [$user, join(' ', '--driver server_cipher', $passwd)];
     } else {
         $cmd = [$user, $passwd];
@@ -581,9 +584,9 @@ sub manage_users_groups
 
     foreach my $account (@$data) {
         if ($account->{$type}) {
-            if ($account->{$type} eq "serveradmin" && exists $account->{password}) {
+            if ($account->{$type} eq $SERVERADMIN_USER && exists $account->{password}) {
                 $self->change_opennebula_passwd($account->{$type}, $account->{password});
-            } elsif ($account->{$type} eq "oneadmin" && exists $account->{ssh_public_key}) {
+            } elsif ($account->{$type} eq $ONEADMIN_USER && exists $account->{ssh_public_key}) {
                 $template = $self->process_template($account, $type);
                 $new = $self->update_something($one, $type, $account->{$type}, $template);
             };
@@ -591,10 +594,10 @@ sub manage_users_groups
         }
     }
 
-    my @exitsdata = $one->$getmethod();
+    my @existsdata = $one->$getmethod();
     my %newaccounts = map { $_ => 1 } @datalist;
 
-    foreach my $t (@exitsdata) {
+    foreach my $t (@existsdata) {
         # Remove the user/group only if the QUATTOR flag is set
         my $quattor = $self->check_quattor_tag($t,1);
         if (exists($protected{$t->name})) {
@@ -602,7 +605,7 @@ sub manage_users_groups
         } elsif (exists($newaccounts{$t->name})) {
             $self->verbose("$type required by Quattor. We can't remove it: ", $t->name);
         } elsif (!$quattor) {
-            $self->warn("QUATTOR flag not found. We can't remove this $type: ", $t->name);
+            $self->verbose("QUATTOR flag not found. We can't remove this $type: ", $t->name);
         } else {
             push(@rmdata, $t->name);
             $t->delete();
@@ -610,7 +613,7 @@ sub manage_users_groups
     }
 
     if (@rmdata) {
-        $self->info("Removed $type/s: ", join(',', @rmdata));
+        $self->info("Removed ${type}s: ", join(',', @rmdata));
     }
 
     foreach my $account (@$data) {
@@ -623,7 +626,7 @@ sub manage_users_groups
                 $self->info("Creating new $type: ", $account->{$type});
                 if (exists $account->{password}) {
                     # Create new user
-                    $one->$createmethod($account->{$type}, $account->{password}, "core");
+                    $one->$createmethod($account->{$type}, $account->{password}, $CORE_AUTH_DRIVER);
                     $self->change_user_group($one, $account) if (exists $account->{group});
                 } else {
                     # Create new group
@@ -657,9 +660,9 @@ sub change_user_group
     if (defined($group_id)) {
         my @users = $one->get_users(qr{^$name$});
         $self->warn("Detected administration group change for regular user: $name") if ($group_id == 0);
-        foreach my $t (@users) {
-            my $out = $t->chgrp($group_id);
-            if ($out) {
+        foreach my $usr (@users) {
+            my $out = $usr->chgrp($group_id);
+            if (defined($out)) {
                 $self->info("Changed user: $name primary group to: ", $user->{group});
             } else {
                 $self->error("Not able to change user: $name group to: ", $user->{group});
@@ -677,9 +680,9 @@ sub get_resource_id
     my $getmethod = "get_${type}s";
 
     my @existres = $one->$getmethod(qr{^$name$});
-    foreach my $t (@existres) {
-        $self->verbose("Detected $type id: ", $t->id);
-        return $t->id;
+    foreach my $resource (@existres) {
+        $self->verbose("Detected $type id: ", $resource->id);
+        return $resource->id;
     }
     return;
 }
@@ -741,11 +744,11 @@ sub set_one_auth_file
     return if ! %opts;
     $opts{group} = $cfggrp if ($cfggrp);
 
-    if ($user eq "oneadmin") {
+    if ($user eq $ONEADMIN_USER) {
         $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
         $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
         $self->is_conf_file_modified($fh, $ONEADMIN_AUTH_FILE);
-    } elsif ($user eq "serveradmin") {
+    } elsif ($user eq $SERVERADMIN_USER) {
         foreach my $service (@SERVERADMIN_AUTH_FILE) {
             $auth_file = $SERVERADMIN_AUTH_DIR . $service;
             $self->verbose("Writing $user auth file: $auth_file");
@@ -789,7 +792,7 @@ sub set_one_server
 
     # Change oneadmin pass
     if (exists $tree->{rpc}->{password}) {
-        return 0 if !$self->change_opennebula_passwd("oneadmin", $tree->{rpc}->{password});
+        return 0 if !$self->change_opennebula_passwd($ONEADMIN_USER, $tree->{rpc}->{password});
     }
 
     # Configure ONE RPC connector
@@ -891,7 +894,7 @@ sub Configure
         if (exists $tree->{users}) {
             my $users = $tree->{users};
             foreach my $user (@$users) {
-                if ($user->{user} eq "serveradmin" && exists $user->{password}) {
+                if ($user->{user} eq $SERVERADMIN_USER && exists $user->{password}) {
                     $self->set_one_auth_file($user->{user}, $user->{password}, $cfggrp);
                 }
             }

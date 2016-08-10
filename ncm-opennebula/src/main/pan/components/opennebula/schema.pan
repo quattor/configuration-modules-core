@@ -326,9 +326,8 @@ type opennebula_vnet = {
 };
 
 @documentation{
-Set OpenNebula regular users
-and their primary groups.
-By default new users are assigned to users group.
+Set OpenNebula regular users and their primary groups.
+By default new users are assigned to the users group.
 }
 type opennebula_user = {
     "ssh_public_key" ? string[]
