@@ -1,9 +1,9 @@
 <configuration>
 [% FOREACH pair IN CCM.contents.pairs %]
-  <property>
-    <name>gpfs.[% pair.key %]</name>
-    <value>[% pair.value %]</value>
-  </property>
+    <property>
+        <name>gpfs.[% pair.key %]</name>
+        <value>[% pair.value %]</value>
+    </property>
 [% END %]
 </configuration>
 

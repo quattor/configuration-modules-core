@@ -1,8 +1,7 @@
 <configuration>
-[% cfgpath = [] %]
 [% FOREACH pair IN CCM.contents.pairs %]
 [%-     IF CCM.is_hash(pair.value) -%]
-[%-         INCLUDE property.tt data=pair.value cfgpath=cfgpath.merge(pair.key) -%]
+[%-         INCLUDE metaconfig/hdfs/property.tt data=pair.value cfgpath=[pair.key] FILTER indent -%]
 [%      END %]
 [%  END %]
 </configuration>

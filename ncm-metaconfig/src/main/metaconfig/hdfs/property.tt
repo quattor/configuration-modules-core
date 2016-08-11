@@ -1,17 +1,16 @@
 [% FOREACH pair IN data.pairs %]
-[%-     IF CCM.is_hash(pair.value) -%]
-[%-         INCLUDE property.tt data=pair.value cfgpath=cfgpath.merge(pair.key) -%]
-[%      ELSE  %]
+[%-     IF pair.key == 'defaultFS' or ! CCM.is_hash(pair.value) -%]
 <property>
-    <name>[% pair.key %] </name>
+    <name>[% cfgpath.join('.') -%].[% pair.key %]</name>
     <value>
 [%-         IF pair.key == 'defaultFS' -%]
-[%-             format -%]://[%- host -%]:[%- port -%]
-[%-         ELSE   -%]
-[%-              pair.value %]
-[%-          END -%]
-[%-      END -%]
+[%-             pair.value.format -%]://[%- pair.value.host -%]:[%- pair.value.port -%]
+[%-          ELSE  -%]
+[%-             pair.value -%]
+[%-         END -%]
+</value>
 </property>
+[%      ELSE  %]
+[%-         INCLUDE metaconfig/hdfs/property.tt data=pair.value cfgpath.push(pair.key) -%]
+[%-     END -%]
 [%-  END %]
-
-
