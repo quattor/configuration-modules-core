@@ -35,37 +35,34 @@ prefix "/software/components/opennebula/kvmrc";
 
 prefix "/software/components/opennebula";
 
-"vnets" = list(
-    dict(
-        "name", "altaria.os",
-        "bridge", "br100",
-        "gateway", "10.141.3.250",
-        "dns", "10.141.3.250",
-        "network_mask", "255.255.0.0"
-    ),
-    dict(
-        "name", "altaria.vsc",
-        "bridge", "br101",
-        "gateway", "10.141.3.250",
-        "dns", "10.141.3.250",
-        "network_mask", "255.255.0.0"
-    ),
-    dict(
-        "name", "pool.altaria.os",
-        "bridge", "br100",
-        "bridge_ovs", "ovsbr0",
-        "gateway", "10.141.3.250",
-        "dns", "10.141.3.250",
-        "network_mask", "255.255.0.0",
-        "vlan", true,
-        "vlan_id", 0,
-        "vn_mad", "ovswitch",
-        "ar", dict(
+"vnets" = dict(
+    "altaria.os", dict(
+            "bridge", "br100",
+            "gateway", "10.141.3.250",
+            "dns", "10.141.3.250",
+            "network_mask", "255.255.0.0"
+        ),
+    "altaria.vsc", dict(
+            "bridge", "br101",
+            "gateway", "10.141.3.250",
+            "dns", "10.141.3.250",
+            "network_mask", "255.255.0.0"
+        ),
+    "pool.altaria.os", dict(
+            "bridge", "br100",
+            "bridge_ovs", "ovsbr0",
+            "gateway", "10.141.3.250",
+            "dns", "10.141.3.250",
+            "network_mask", "255.255.0.0",
+            "vlan", true,
+            "vlan_id", 0,
+            "vn_mad", "ovswitch",
+            "ar", dict(
                     "type", "IP4",
                     "ip", "10.141.14.100",
                     "size", 29
+            ),
         ),
-    ),
 );
 
 "datastores" = list(

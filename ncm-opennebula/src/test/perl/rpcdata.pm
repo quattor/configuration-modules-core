@@ -131,10 +131,10 @@ $cmds{rpc_update_user3}{out} = 0;
 # Manage VNETs
 
 $data = <<'EOF';
+NAME = "altaria.os"
 BRIDGE = "br100"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VN_MAD = "dummy"
 QUATTOR = 1
@@ -144,10 +144,10 @@ $cmds{rpc_create_newvnet}{method} = "one.vn.allocate";
 $cmds{rpc_create_newvnet}{out} = 68;
 
 $data = <<'EOF';
+NAME = "altaria.vsc"
 BRIDGE = "br101"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "altaria.vsc"
 NETWORK_MASK = "255.255.0.0"
 VN_MAD = "dummy"
 QUATTOR = 1
@@ -157,6 +157,7 @@ $cmds{rpc_create_newvnet2}{method} = "one.vn.allocate";
 $cmds{rpc_create_newvnet2}{out} = 88;
 
 $data = <<'EOF';
+NAME = "pool.altaria.os"
 AR = [
     ip = "10.141.14.100",
     size = "29",
@@ -166,7 +167,6 @@ BRIDGE = "br100"
 BRIDGE_OVS = "ovsbr0"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
@@ -226,10 +226,10 @@ $cmds{rpc_list_vnet4}{out} = <<'EOF';
 EOF
 
 $data = <<'EOF';
+NAME = "altaria.os"
 BRIDGE = "br100"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
 TYPE = "FIXED"
 VN_MAD = "dummy"
@@ -240,6 +240,7 @@ $cmds{rpc_update_vnet}{method} = "one.vn.update";
 $cmds{rpc_update_vnet}{out} = 68;
 
 $data = <<'EOF';
+NAME = "pool.altaria.os"
 AR = [
     ip = "10.141.14.100",
     size = "29",
@@ -249,7 +250,6 @@ BRIDGE = "br100"
 BRIDGE_OVS = "ovsbr0"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
@@ -274,6 +274,7 @@ $cmds{rpc_create_newvnet_lease}{out} = 68;
 
 
 $data = <<'EOF';
+NAME = "pool.altaria.os"
 AR = [
     ar_id = "0",
     ip = "10.141.14.100",
@@ -284,7 +285,6 @@ BRIDGE = "br100"
 BRIDGE_OVS = "ovsbr0"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
-NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"

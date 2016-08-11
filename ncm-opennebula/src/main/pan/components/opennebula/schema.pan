@@ -308,7 +308,6 @@ type opennebula_datastore = {
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
-    "name" : string
     "bridge" : string
     "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
     "gateway" ? type_ipv4
@@ -555,7 +554,7 @@ type component_opennebula = {
     'datastores'    ? opennebula_datastore[1..]
     'groups'        ? opennebula_group[]
     'users'         ? opennebula_user[]
-    'vnets'         ? opennebula_vnet[]
+    'vnets'         ? opennebula_vnet{}
     'hosts'         ? string[]
     'rpc'           ? opennebula_rpc
     'untouchables'  ? opennebula_untouchables

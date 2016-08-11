@@ -285,6 +285,8 @@ sub create_resource_names_list
     my ($self, $one, $type, $resources) = @_;
     my ($name, @namelist, $template);
 
+    # REMOVE THIS
+    if ($type ne "vnet") {
     foreach my $newresource (@$resources) {
         $template = $self->process_template($newresource, $type);
         if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
@@ -292,6 +294,14 @@ sub create_resource_names_list
             push(@namelist, $name);
         }
     }
+    } else {
+        # REMOVE THIS
+        $self->info("HERE THIS IS A VNET DICT");
+        foreach my $newresource (sort keys %{$resources}) {
+            $self->info("HERE FOUND VNET NAME: $newresource");
+            $self->info("HERE FOUND VNET DATA: $newresource", Dumper($resources->{$newresource}));
+        };
+    };
     return @namelist;
 }
 
