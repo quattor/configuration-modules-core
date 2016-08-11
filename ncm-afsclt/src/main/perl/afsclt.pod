@@ -2,11 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-################################################################################
-
-
-
 =head1 NAME
 
 NCM::afsclt - NCM AFS client configuration component
@@ -25,80 +20,50 @@ Configure the cell, the AFS cacheinfo file and the afsd daemon.
 
 =over
 
-=item /software/components/afsclt/afsd_args : nlist (optional)
+=item C<< /software/components/afsclt/afsd_args >> : nlist (optional)
 
 various command-line options for the afsd daemon
 
-=item /software/components/afsclt/afs_mount : string (optional)
+=item C<< /software/components/afsclt/afs_mount >> : string (optional)
 
 AFS mount point. If not defined, C</afs> is used.
 
-=item /software/components/afsclt/cachemount : string (optional)
+=item C<< /software/components/afsclt/cachemount >> : string (optional)
 
 AFS cache mount point. No default.
 
-=item /software/components/afsclt/cachesize : string (optional)
+=item C<< /software/components/afsclt/cachesize >> : string (optional)
 
-desired AFS cache size on disk, in 1K blocks, or C<AUTOMATIC>. The running AFS cache
-will get adjusted online, and $afs_cacheinfo will be changed if
+desired AFS cache size on disk, in 1K blocks, or C<< AUTOMATIC >>. The running AFS cache
+will get adjusted online, and C<< $afs_cacheinfo >> will be changed if
 required. Please note that an available (mounted) AFS cache partition
 has precedence over this value, i.e. you cannot force a lower usage of
 the cache partition. For Linux machines, a cache partition will use
-CACHESIZE=AUTOMATIC, for other OSes, a hardcoded fill rate of 85% is
+C<< CACHESIZE=AUTOMATIC >>, for other OSes, a hardcoded fill rate of 85% is
 used.
 
-=item /software/components/afsclt/cellservdb : string (optional)
+=item C<< /software/components/afsclt/cellservdb >> : string (optional)
 
 A regularly-updated AFS CellServDB URL or filename (e.g. from AFS)
 that this component will copy to local disk. The local AFS client will
 get notified of any additions or changes within a cell.
 
-=item /software/components/afsclt/enabled : C<yes> or C<no> (required)
+=item C<< /software/components/afsclt/enabled >> : C<yes> or C<no> (required)
 
 Whether the AFS client should be enabled or not. No default.
 
-=item /software/components/afsclt/settime : boolean (optional)
+=item C<< /software/components/afsclt/settime >> : boolean (optional)
 
 make AFS client set the system time or not.
 
-=item /software/components/afsclt/thiscell : string (required)
+=item C<< /software/components/afsclt/thiscell >> : string (required)
 
 local AFS cell for this machine. No default.
 
-=item /software/components/afsclt/thesecells : list of string (optional)
+=item C<< /software/components/afsclt/thesecells >> : list of string (optional)
 
 List of AFS cells to authenticate to. No default.
 
 =back
 
-=head1 DEPENDENCIES
-
-=head2 Components to be run before:
-
-none.
-
-=head2 Components to be run after:
-
-none.
-
-=head1 AUTHOR
-
-Jaroslaw Polok <jaroslaw.polok@cern.ch>
-
-=head1 SEE ALSO
-
-authconfig(1), C<fs help>, iptables documentation
-
--head1 BUGS
-
-Previous versions insisted on configuring a PAM C<account> entry, 
-this didn't really work for local accounts such as I<root>...
-
 =cut
-
-
-1; #required for Perl modules
-
-### Local Variables: ///
-### mode: perl ///
-### End: ///
