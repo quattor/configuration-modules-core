@@ -94,6 +94,10 @@ $cmds{rpc_list_user6}{out} = <<'EOF';
 <USER><ID>6</ID><GID>1</GID><GROUPS><ID>1</ID></GROUPS><GNAME>users</GNAME><NAME>vsc400</NAME><PASSWORD>vsc400@HPC.UGENT.BE</PASSWORD><AUTH_DRIVER>public</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><TOKEN_PASSWORD><![CDATA[4a782c2aec2b95bf97701d4a57f7cc9032d7331b]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
 EOF
 
+$cmds{rpc_chgrp_user}{params} = [3, 0];
+$cmds{rpc_chgrp_user}{method} = "one.user.chgrp";
+$cmds{rpc_chgrp_user}{out} = 3;
+
 $data = <<'EOF';
 SSH_PUBLIC_KEY = "ssh-dss AAAAB3NzaC1kc3MAAACBAOTAivURhUrg2Zh3DqgVd2ofRYKmXKjWDM4LITQJ/Tr6RBWhufdxmJos/w0BG9jFbPWbUyPn1mbRFx9/2JJjaspJMACiNsQV5KD2a2H/yWVBxNkWVUwmq36JNh0Tvx+ts9Awus9MtJIxUeFdvT433DePqRXx9EtX9WCJ1vMyhwcFAAAAFQDcuA4clpwjiL9E/2CfmTKHPCAxIQAAAIEAnCQBn1/tCoEzI50oKFyF5Lvum/TPxh6BugbOKu18Okvwf6/zpsiUTWhpxaa40S4FLzHFopTklTHoG3JaYHuksdP4ZZl1mPPFhCTk0uFsqfEVlK9El9sQak9vXPIi7Tw/dyylmRSq+3p5cmurjXSI93bJIRv7X4pcZlIAvHWtNAYAAACBAOCkwou/wYp5polMTqkFLx7dnNHG4Je9UC8Oqxn2Gq3uu088AsXwaVD9t8tTzXP1FSUlG0zfDU3BX18Ds11p57GZtBSECAkqH1Q6vMUiWcoIwj4hq+xNq3PFLmCG/QP+5Od5JvpbBKqX9frc1UvOJJ3OKSjgWMx6FfHr8PxqqACw lsimngar@OptiPlex-790
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI4gvhOpwKbukZP/Tht/GmKcRCBHGn8JadVlgb9U6O/EP/hR1KLDbKY7KVjVOlUcvfawn44SIGsmKCzehYJV2s/XU1QSaaLrjB7n+vfOyj1C3EgzfZcMOHvL51xPuSgIoKd9oER/63B/pUV/BEZK5LEC06O1LgAjwLy2DrHNN3cQdnTbxQ4vM5ggDb/BC+DyRYlN5NG74VFguVQmoqMPA8FYXBvT/bBvIAZFw7piZIQFd6C803dtG6xwgo2yNXp hello@mylaptop
@@ -132,6 +136,7 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet}{params} = [$data, -1];
@@ -144,6 +149,7 @@ DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
 NAME = "altaria.vsc"
 NETWORK_MASK = "255.255.0.0"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet2}{params} = [$data, -1];
@@ -164,6 +170,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_newvnet3}{params} = [$data, -1];
@@ -225,6 +232,7 @@ GATEWAY = "10.141.3.250"
 NAME = "altaria.os"
 NETWORK_MASK = "255.255.0.0"
 TYPE = "FIXED"
+VN_MAD = "dummy"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnet}{params} = [68, $data, 1];
@@ -245,6 +253,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnet2}{params} = [98, $data, 1];
@@ -279,6 +288,7 @@ NAME = "pool.altaria.os"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
+VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_vnetar}{params} = [98, $data];
@@ -360,19 +370,19 @@ $cmds{rpc_update_datastore}{out} = 102;
 
 # Manage hosts
 
-$cmds{rpc_create_newhost}{params} = ["hyp101", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost}{params} = ["hyp101", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost}{out} = 1;
 
-$cmds{rpc_create_newhost2}{params} = ["hyp102", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost2}{params} = ["hyp102", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost2}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost2}{out} = 167;
 
-$cmds{rpc_create_newhost3}{params} = ["hyp103", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost3}{params} = ["hyp103", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost3}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost3}{out} = 168;
 
-$cmds{rpc_create_newhost4}{params} = ["hyp104", "kvm", "kvm", "ovswitch", -1];
+$cmds{rpc_create_newhost4}{params} = ["hyp104", "kvm", "kvm", -1];
 $cmds{rpc_create_newhost4}{method} = "one.host.allocate";
 $cmds{rpc_create_newhost4}{out} = 169;
 
@@ -591,7 +601,16 @@ $cmds{rpc_list_group}{out} = <<'EOF';
 <GROUP><ID>2</ID><NAME>gvo01</NAME><TEMPLATE/><USERS><ID>5</ID><ID>6</ID></USERS><ADMINS/><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/><DEFAULT_GROUP_QUOTAS><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></DEFAULT_GROUP_QUOTAS></GROUP>
 EOF
 
-$data = 'DESCRIPTION="ccn"';
+$cmds{rpc_list_group2}{params} = [0];
+$cmds{rpc_list_group2}{method} = "one.group.info";
+$cmds{rpc_list_group2}{out} = <<'EOF';
+<GROUP><ID>0</ID><NAME>oneadmin</NAME><TEMPLATE/><USERS><ID>0</ID><ID>1</ID></USERS><ADMINS/><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/><DEFAULT_GROUP_QUOTAS><DATASTORE_QUOTA/><NETWORK_QUOTA/><VM_QUOTA/><IMAGE_QUOTA/></DEFAULT_GROUP_QUOTAS></GROUP>
+EOF
+
+$data = <<'EOF';
+DESCRIPTION = "gvo01 group managed by quattor"
+QUATTOR = 1
+EOF
 $cmds{rpc_update_group}{params} = [2, $data, 1];
 $cmds{rpc_update_group}{method} = "one.group.update";
 $cmds{rpc_update_group}{out} = 2;

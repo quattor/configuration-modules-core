@@ -1,0 +1,10 @@
+[% FOR pair IN group.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE 'description' -%]
+[%             pair.key FILTER upper %] = "[% pair.value %]"
+[%         CASE 'group' -%]
+[%             IF pair.value != 'oneadmin' -%]
+QUATTOR = 1
+[%             END -%]
+[%     END -%]
+[% END -%]

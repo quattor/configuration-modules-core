@@ -42,12 +42,14 @@ my $fh = get_file($NCM::Component::opennebula::ONED_CONF_FILE);
 isa_ok($fh, "CAF::FileWriter", "oned.conf CAF::FileWriter instance");
 # only test one entry, the remainder is verified with the TT unittests
 like("$fh", qr{^DB\s?=\s?\[$}m, "oned.conf has expected content");
+$fh->close();
 
 # one_auth file
 is($NCM::Component::opennebula::ONEADMIN_AUTH_FILE, "/var/lib/one/.one/one_auth", "expected one_auth filename");
 my $fhauth = get_file($NCM::Component::opennebula::ONEADMIN_AUTH_FILE);
 isa_ok($fhauth, "CAF::FileWriter", "one_auth CAF::FileWriter instance");
 like("$fhauth", qr{^oneadmin\:.+$}m, "one_auth has expected content");
+$fhauth->close();
 
 # serveradmin files
 is($NCM::Component::opennebula::SERVERADMIN_AUTH_DIR, "/var/lib/one/.one/", "expected serveradmin auth directory");
@@ -56,16 +58,19 @@ foreach my $service (@NCM::Component::opennebula::SERVERADMIN_AUTH_FILE) {
     my $fhserver = get_file($auth_file);
     isa_ok($fhserver, "CAF::FileWriter", "serveradmin $service auth CAF::FileWriter instance");
     like("$fhserver", qr{^serveradmin\:.+$}m, "serveradmin $service file has expected content");
+    $fhserver->close();
 }
 
 # suntone conf file
 my $sunstone = get_file($NCM::Component::opennebula::SUNSTONE_CONF_FILE);
 isa_ok($sunstone, "CAF::FileWriter", "sunstone-server.conf CAF::FileWriter instance");
 like("$sunstone", qr{^:host:\s{1}.+$}m, "sunstone-server.conf has expected content");
+$sunstone->close();
 
 # kvmrc conf file
 my $kvmrc = get_file($NCM::Component::opennebula::KVMRC_CONF_FILE);
 isa_ok($kvmrc, "CAF::FileWriter", "kvmrc CAF::FileWriter instance");
 like("$kvmrc", qr{^export\s{1}FORCE_DESTROY=.+$}m, "kvmrc has expected content");
+$kvmrc->close();
 
 done_testing();

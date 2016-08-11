@@ -15,4 +15,5 @@ multiline
 ^NETWORK_MASK\s?=\s?".+"\s*$
 ^VLAN\s?=\s?".+"\s*$
 ^VLAN_ID\s?=\s?".+"\s*$
+^VN_MAD\s?=\s?".+"\s*$
 ^QUATTOR\s?=\s?\d+\s*$

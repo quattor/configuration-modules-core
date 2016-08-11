@@ -1,4 +1,4 @@
-[%- booleans = ['vlan'] -%]
+[%- booleans = ['vlan', 'context_force_ipv4'] -%]
 [%- ar_section = ['ar'] -%]
 [% FOR pair IN vnet.pairs -%]
 [%-    SWITCH pair.key -%]

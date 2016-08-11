@@ -305,24 +305,43 @@ type opennebula_datastore = {
     "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
     "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
     "type"                      : string = 'IMAGE_DS'
-} with is_consistent_datastore(SELF);
+} = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
     "name" : string
     "bridge" : string
-    "gateway" : type_ipv4
-    "dns" : type_ipv4
-    "network_mask" : type_ipv4
+    "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
+    "gateway" ? type_ipv4
+    "gateway6" ? type_network_name
+    "dns" ? type_ipv4
+    "network_mask" ? type_ipv4
+    "network_address" ? type_ipv4
+    "guest_mtu" ? long
+    "context_force_ipv4" ? boolean
+    "search_domain" ? string
     "bridge_ovs" ? string
     "vlan" ? boolean
     "vlan_id" ? long(0..4095)
     "ar" ? opennebula_ar
-};
+} = dict();
 
+@documentation{
+Set OpenNebula regular users and their primary groups.
+By default new users are assigned to the users group.
+}
 type opennebula_user = {
     "ssh_public_key" ? string[]
     "user" : string 
     "password" ? string
+    "group" ? string
+};
+
+@documentation{
+Set a group name and an optional decription
+}
+type opennebula_group = {
+    "group" : string
+    "description" ? string
 };
 
 type opennebula_remoteconf_ceph = {
@@ -521,6 +540,7 @@ type opennebula_untouchables = {
     "datastores" ? string[]
     "vnets" ? string[]
     "users" ? string[]
+    "groups" ? string[]
     "hosts" ? string[]
 };
 
@@ -532,6 +552,7 @@ datastores, vnets, hosts names, etc
 type component_opennebula = {
     include structure_component
     'datastores'    ? opennebula_datastore[1..]
+    'groups'        ? opennebula_group[]
     'users'         ? opennebula_user[]
     'vnets'         ? opennebula_vnet[]
     'hosts'         ? string[]
