@@ -32,36 +32,36 @@ calling them, mainly :
 
 =item ACCOUNTS_USER_HOME_ROOT
 
-defines default root for home directory (D: /home)
+defines default root for home directory (Default: C<< /home >>)
 
 =item ACCOUNTS_USER_CREATE_HOME
 
-defines if home directory must be created by default (D : true)
+defines if home directory must be created by default (Default: C<< true >>)
 
 =item ACCOUNTS_USER_AUTOGROUP
 
 defines if a group must be defined with the same name as the user, if no group
-has been explicitly specified (D: true).
+has been explicitly specified (Default: C<< true >>).
 
 =item ACCOUNTS_USER_CHECK_GROUP
 
 defines if the default group must be created if it doesn't exist, with a gid
-equals to uid (D: true)
+equals to uid (Default: C<< true >>)
 
 =item ACCOUNTS_USER_COMMENT
 
-defines a default value for user comment (D: "Created by ncm-accounts")
+defines a default value for user comment (Default: C<< Created by ncm-accounts >>)
 
 =item ACCOUNTS_GROUP_COMMENT
 
-defines a default value for group comment (D: "Created by ncm-accounts")
+defines a default value for group comment (Default: C<< Created by ncm-accounts >>)
 
 =back
 
 =head2 create_accounts_from_db(userList:nlist, users:list:optional, accountType:optional)
 
 This function creates users or groups from a nlist containing user or group characteristics.
-It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >>).
 
 User/group characteristics must be provided as structure_userinfo/structure_groupinfo.
 
@@ -77,7 +77,7 @@ To create groups, set third parameter (accountType) to 1.
 
 This function creates a group, applying some defaults defined by variables and checking
 information consistency.
-It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >>).
 
 
 
@@ -85,21 +85,21 @@ It updates a structure_accounts (return value may be assigned to "/software/comp
 
 This function creates a user, applying some defaults defined by variables and checking
  information consistency (e.g. group existence).
-It updates a structure_accounts (return value may be assigned to "/software/components/accounts").
+It updates a structure_accounts (return value may be assigned to Default: C<< /software/components/accounts >>).
 
 =head2 keep_user_group(user_or_group:string or list of string)
 
 This functions adds a user or group to the kept_users or kept_groups resources. The
 argument can be a string or list of strings. The return value can be assigned to 
-/software/components/accounts/kept_users or /software/components/accounts/kept_groups.
+C<< /software/components/accounts/kept_users >> or C<< /software/components/accounts/kept_groups >>.
 
 =head1 RESOURCES
 
-=head2 /software/components/accounts/rootpwd
+=head2 C<< /software/components/accounts/rootpwd >>
 
 The crypted root password for the machine.
 
-=head2 /software/components/accounts/users
+=head2 C<< /software/components/accounts/users >>
 
 An nlist of users to configure on the node.  The key is the account
 name (or base name for pool accounts). The numerical UID is
@@ -172,7 +172,7 @@ will create three accounts atlas0 atlas1 atlas2.
 
 =back
 
-=head2 /software/components/accounts/groups
+=head2 C<< /software/components/accounts/groups >>
 
 An nlist of groups to configure on the node.  The key is the group
 name.  At least one field must be specified.
@@ -208,7 +208,7 @@ D: false
 
 =back
 
-=head2 /software/components/accounts/login_defs
+=head2 C<< /software/components/accounts/login_defs >>
 
 A nlist of values to be set in /etc/login.defs. NOTE: This
 configuration file is specific to RedHat-like systems; setting will be
@@ -247,18 +247,18 @@ If useradd should create home directories for users by default
 
 =back
 
-=head2 /software/components/accounts/remove_unknown
+=head2 C<< /software/components/accounts/remove_unknown >>
 
 Flag to indicate whether unknown accounts should be deleted.  The
 default is false.  The root account can never be removed.
 
-=head2 /software/components/accounts/preserved_accounts
+=head2 C<< /software/components/accounts/preserved_accounts >>
 
 This property may have 3 values: 'none', 'system', 'dyn_user_group'. It controls
-the accounts/groups that have to be preserved when 'remove_unknown' is true 
-(it has no effect when remove_unknown=false).
+the accounts/groups that have to be preserved when C<< remove_unknown >> is true 
+(it has no effect when C<< remove_unknown=false >>).
 
-The effect of each possible value is
+The effect of each possible value is:
 
 =over
 
@@ -277,8 +277,8 @@ accounts/groups with uid/gid less or equal to GID/UID_MAX as defined in
 /etc/login.defs, are preserved. The exact list of accounts preserved
 depends on UID/GID_MAX value. It is possible to use login_defs/uid_max and
 login_defs/gid_max properties to control the preserved ranges. Not that
-remove_unknown=true with preserved_accounts=dyn_user_group and UID/GID_MAX
-set to the highest possible IDs is equivalent to remove_unknown=false.
+C<< remove_unknown=true >> with preserved_accounts=dyn_user_group and UID/GID_MAX
+set to the highest possible IDs is equivalent to C<< remove_unknown=false >>.
 
 =item none
 
@@ -287,7 +287,7 @@ removed from the system (except root).
 
 =back
 
-Default: dyn_user_group
+B< Default: > C<< dyn_user_group >>
 
 =head1 LIMITATIONS
 
@@ -297,7 +297,7 @@ When a local user has to belong to a group defined only on LDAP, a
 local group with the desired numerical ID is created.
 
 This group has the same name as the user ID. It will be removed on the
-next run of the component if C<remove_unknown> is set to true. This is
+next run of the component if C<< remove_unknown >> is set to true. This is
 somewhat ugly, but doesn't affect the system behaviour at all, so it
 B<won't> be fixed.
 
@@ -307,9 +307,5 @@ The component has been tested with C<files> as the primary source on
 /etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
 produce strange behaviour. These settings are not controlled by
 ncm-accounts but by L<ncm-authconfig>.
-
-=head1 SEE ALSO
-
-L<ncm-authconfig>
 
 =cut
