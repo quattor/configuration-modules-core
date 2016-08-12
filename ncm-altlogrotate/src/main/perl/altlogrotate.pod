@@ -5,12 +5,11 @@
 
 =head1 NAME
 
-ncm-altlogrotate: configuration module to control the log rotate configuration
+ncm-altlogrotate: configuration module to control the log rotate configuration.
 
 =head1 DESCRIPTION
 
 The I<altlogrotate> component manages the log rotate configuration files.
-
 It replaced the original I<logrotate> which is no longer available.
 
 =head1 RESOURCES
