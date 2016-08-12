@@ -16,16 +16,26 @@ use CAF::Object;
 
 $NCM::Component::download::NoActionSupported = 1;
 
-# Just in case...
-$ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
+# Hold the credential cache location / KRB5CCNAME value
+my $_gss_tmpdir;
+my $_cached_gss;
 
 sub get_gss_token
 {
     my $self = shift;
 
-    my $cached_gss = tempdir("ncm-download-XXXXXX", TMPDIR => 1, CLEANUP => 1);
-    $self->debug(1, "storing kerberos credentials in $cached_gss");
-    $ENV{KRB5CCNAME} = "FILE:$cached_gss/host.tkt";
+    # Return module wide cache value
+    return $_cached_gss if $_cached_gss;
+
+    $_gss_tmpdir = tempdir("ncm-download-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+    $self->debug(1, "storing kerberos credentials in $_gss_tmpdir");
+
+    my $ccache = "FILE:$_gss_tmpdir/host.tkt";
+    local $ENV{KRB5CCNAME} = $ccache;
+
+    # Just in case...
+    local $ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
+
     # Assume "kinit" is in the PATH.
     my $errs = "";
     my $proc = CAF::Process->new(["kinit", "-k"],
@@ -37,7 +47,10 @@ sub get_gss_token
         $self->error("could not get GSSAPI credentials: $errs");
         return;
     }
-    return $cached_gss;
+
+    # Only set it now
+    $_cached_gss = $ccache;
+    return $_cached_gss;
 }
 
 sub Configure
@@ -51,23 +64,16 @@ sub Configure
 
     my @proxyhosts = @{$tree->{proxyhosts} || []};
 
-    my $cached_gss;
-
     foreach my $esc_fn (sort keys %{$tree->{files}}) {
         my $fn = unescape($esc_fn);
         my $file = $tree->{files}->{$esc_fn};
 
         my $source = $file->{href};
 
-        # Holds basedir of token file
         my $gss;
         if ($file->{gssapi}) {
-            if (!$cached_gss) {
-                $cached_gss = $self->get_gss_token();
-                # Already reports error
-                return 0 if ! $cached_gss;
-            };
-            $gss = $cached_gss;
+            $gss = $self->get_gss_token();
+            return 0 if ! $gss;
         }
 
         if ($source !~ m{^[a-z]+://.*}) {
@@ -189,25 +195,30 @@ sub get_head
     local $ENV{'PERL_NET_HTTPS_SSL_SOCKET_CLASS'} = 'Net::SSL';
     local $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
 
-    local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if exists($opts{cert});
-    local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if (exists($opts{key}));
-    local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if (exists($opts{cacert}));
-    local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if (exists($opts{capath}));
+    local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if $opts{cert};
+    local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if $opts{key};
+    local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if $opts{cacert};
+    local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if $opts{capath};
+
+    # Required for LWP::Authen::Negotiate
+    local $ENV{KRB5CCNAME} = $opts{gssneg} if $opts{gssneg};
 
     my $lwp = LWP::UserAgent->new;
     $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
     return $lwp->head($source);
 }
 
-sub download {
+sub download
+{
     my ($self, $fn, %opts) = @_;
 
-    my ($source, $timeout, $proxy, $gssneg, $min_age);
-    $source  = $opts{href};
-    $timeout = $opts{timeout};
-    $proxy   = $opts{proxy} || "";
-    $gssneg  = $opts{gssneg} || 0;
-    $min_age = $opts{min_age} || 0;
+    my $source  = $opts{href};
+    my $timeout = $opts{timeout};
+    my $proxy   = $opts{proxy} || "";
+
+    my $gssneg  = $opts{gssneg};
+
+    my $min_age = $opts{min_age} || 0;
 
     $self->debug(1, "Processing file $fn from $source");
 
@@ -223,10 +234,10 @@ sub download {
 
     if ($gssneg) {
         # If negotiate extension is required, then we'll
-        # enabled and put in a dummy username/password.
+        # enable it and put in a dummy username/password.
+        local $ENV{KRB5CCNAME} = $gssneg;
         push @cmd, qw(--negotiate -u x:x);
     }
-
 
     push(@cmd, map {("--$_", $opts{$_})} grep {$opts{$_}} qw(key cacert capath cert));
 
