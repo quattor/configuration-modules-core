@@ -7,8 +7,10 @@ our $EC = LC::Exception::Context->new->will_store_all;
 use File::Temp qw(tempdir);
 use CAF::Process;
 use POSIX;
+
 use LWP::UserAgent;
-use HTTP::Request::Common;
+use LWP::Authen::Negotiate;
+
 use EDG::WP4::CCM::Element qw(unescape);
 use CAF::Object;
 
