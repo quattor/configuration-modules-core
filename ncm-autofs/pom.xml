@@ -30,6 +30,10 @@
       <name>David Groep</name>
       <email>davidg@nikhef.nl</email>
     </developer>
+    <developer>
+      <name>Michel Jouvin</name>
+      <email>jouvin@lal.in2p3.fr</email>
+    </developer>
   </developers>
 
   <build>
