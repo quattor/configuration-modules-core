@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 =pod
 
 =head1 DESCRIPTION
@@ -16,22 +15,16 @@ The following fields are provided:
 
 =over 4
 
-=item * /software/components/aiiserver/aii-shellfe
+=item * C<< /software/components/aiiserver/aii-shellfe >>
 
-Configures the aii-shellfe tool. See C<aii-shellfe(8)>, section
-OPTIONS for more information.
+Configures the aii-shellfe tool. See the schema for more information.
 
-=item * /software/components/aiiserver/aii-dhcp
+=item * C<< /software/components/aiiserver/aii-dhcp >>
 
-Configures the aii-dhcp legacy tool. See C<aii-dhcp(8)>, section
-OPTIONS for more information.
+Configures the aii-dhcp legacy tool. See the schema for more information.
 
 This components also uses configuration parameters related to https from L<ncm-ccm>: ca_dir, ca_file, cert_file, key_file.
 
 =back
-
-=head1 SEE ALSO
-
-C<aii-shellfe(8)>, C<aii-dhcp(8)>, C<aii>, L<ccm|../ccm>
 
 =cut
