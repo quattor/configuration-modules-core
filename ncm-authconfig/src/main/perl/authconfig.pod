@@ -5,50 +5,50 @@
 
 =head1 NAME
 
-authconfig: NCM component to manage system authentication services
+authconfig: NCM component to manage system authentication services.
 
 =head1 DESCRIPTION
 
 The I<authconfig> component manages the system authentication methods
-on RedHat systems using the "authconfig" command.  In addition, is can
+on RedHat systems using the C<< authconfig >> command.  In addition, it can
 set additional operational parameters for LDAP authentication by
 modifying the /etc/ldap.conf (SL5) or the /etc/nslcd.conf (SL6) files
 directly.  It will also enable/disable NSCD support on the client.
 
 =head1 RESOURCES
 
-=head2 /software/components/authconfig/safemode
+=over
+
+=item * C<< /software/components/authconfig/safemode >>
 
 When set to true, no actual configuration will change.
 Default: false.
 
-=head2 /software/components/authconfig/usecache
+=item * C<< /software/components/authconfig/usecache >>
 
-Enable or disable nscd operation
+Enable or disable nscd operation.
 
-=head2 /software/components/authconfig/usemd5
+=item * C<< /software/components/authconfig/usemd5 >>
 
-Enable the use of MD5 hashed password
+Enable the use of MD5 hashed password.
 
-=head2 /software/components/authconfig/useshadow
+=item * C<< /software/components/authconfig/useshadow >>
 
-Enable the use of shadow password files
+Enable the use of shadow password files.
 
-=head2 /software/components/authconfig/method
+=item * C<< /software/components/authconfig/method >>
 
 Named list (nlist) of authentication methods to enable. Supported
 methods are: files, ldap, nis, krb5, smb, hesiod and afs.
 Note that "afs" is only supported on the CERN-modified version of
 authconfig. Also, "files" cannot be disabled.
 
-=head2 /software/components/authconfig/method/{}/enable
+=item * C<< /software/components/authconfig/method/{}/enable >>
 
-Enable of disable this method. Unlisted methods are 
+Enable of disable this method. Unlisted methods are
 always disabled.
 
-=head1 SEE ALSO
-
-L<https://twiki.cern.ch/twiki/bin/view/ELFms/ELFmsZuul>
+=back
 
 =head1 EXAMPLE
 
