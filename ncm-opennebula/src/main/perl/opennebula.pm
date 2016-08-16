@@ -136,6 +136,10 @@ sub create_or_update_something
     my ($self, $one, $type, $data, %protected) = @_;
     
     my $template = $self->process_template($data, $type);
+    # CHANGE THIS
+    if ($type eq "vnet") {
+        $self->verbose("HERE Found template VNET to UPDATE: $template");
+    };
     my ($name, $new);
     if (!$template) {
         $self->error("No template data found for $type.");
@@ -206,7 +210,7 @@ sub update_something
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
         $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
-        if ($type eq "vnet" && defined($data->{ar})) {
+        if ($type eq "vnet" && defined($data->{$name}->{ar})) {
             $self->update_vn_ar($one, $name, $template, $t, $data);
         }
     }
@@ -223,7 +227,7 @@ sub update_vn_ar
     $arid = $t->get_ar_id(%ar_opts);
     $self->debug(1, "Detected AR id to update: ", $arid);
     if (defined($arid)) {
-        $data->{ar}->{ar_id} = "$arid";
+        $data->{$vnetname}->{ar}->{ar_id} = "$arid";
         $template = $self->process_template($data, "vnet");
         $self->debug(1, "AR template to update from $vnetname: ", $template);
         $arid = $t->updatear($template);
@@ -295,11 +299,15 @@ sub create_resource_names_list
         }
     }
     } else {
-        # REMOVE THIS
-        $self->info("HERE THIS IS A VNET DICT");
+        # CHANGE THIS
         foreach my $newresource (sort keys %{$resources}) {
-            $self->info("HERE FOUND VNET NAME: $newresource");
-            $self->info("HERE FOUND VNET DATA: $newresource", Dumper($resources->{$newresource}));
+            my %temp;
+            $temp{$newresource}->{$newresource} = $resources->{$newresource};
+            $template = $self->process_template($temp{$newresource}, $type);
+            if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
+                $name = $1;
+                push(@namelist, $name);
+            };
         };
     };
     return @namelist;
@@ -473,12 +481,24 @@ sub manage_something
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources, %protected);
 
-    if (@$resources) {
-        $self->info("Creating new ${type}/s: ", scalar @$resources);
-    }
-    foreach my $newresource (@$resources) {
-        my $new = $self->create_or_update_something($one, $type, $newresource, %protected);
-    }
+    # CHANGE THIS!!!
+    if ($type ne "vnet") {
+        if (@$resources) {
+            $self->info("Creating new ${type}s: ", scalar @$resources);
+        };
+        foreach my $newresource (@$resources) {
+            my $new = $self->create_or_update_something($one, $type, $newresource, %protected);
+        };
+    } else {
+        $self->info("Creating new ${type}s: ", join(', ', keys %{$resources}));
+        # REMOVE THIS
+        foreach my $newresource (sort keys %{$resources}) {
+            my %temp;
+            $temp{$newresource}->{$newresource} = $resources->{$newresource};
+            #$self->info("HERE FOUND EXTRA:", Dumper($temp{$newresource}));
+            my $new = $self->create_or_update_something($one, $type, $temp{$newresource}, %protected);
+        };
+    };
 }
 
 # Function to add/remove Xen or KVM hyp hosts
