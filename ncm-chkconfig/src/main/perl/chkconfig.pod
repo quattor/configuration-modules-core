@@ -14,12 +14,12 @@ NCM::chkconfig - NCM chkconfig component
 =item Configure()
 
 Updates runlevel information for system services by using B<chkconfig> that are
-defined in /software/components/chkconfig/. 
+defined in /software/components/chkconfig/.
 
-Also starts/stops those services that have option C<startstop> set to true in 
-and have one of the following options specified: 
-C<add> or C<del> option is true, C<on> or C<off> option is specified either 
-without specific runlevels, or with runlevel value that contains the current runlevel. 
+Also starts/stops those services that have option C<startstop> set to true in
+and have one of the following options specified:
+C<add> or C<del> option is true, C<on> or C<off> option is specified either
+without specific runlevels, or with runlevel value that contains the current runlevel.
 
 The optional I<default> key decides what will happen with services that are not explicitly
 configured. Default is to ignore them, but a vakue of I<off> instead disables anything
@@ -57,13 +57,13 @@ C<chkconfig>-command. If the string is empty, system default is taken
 
 =item C<< /software/components/chkconfig/service/<service>/name : string >>
 
-If set, the value is used as the name of the service instead of using the 
-<service> path as a name. 
+If set, the value is used as the name of the service instead of using the
+I<service> path as a name.
 
 =item C<< /software/components/chkconfig/service/<service>/reset : string ("[0-7]*") >>
 
-Resets the service on defined run levels. Reset with no run levels specified 
-affects every run level. 
+Resets the service on defined run levels. Reset with no run levels specified
+affects every run level.
 
 =item C<< /software/components/chkconfig/service/<service>/add : boolean >>
 
@@ -79,8 +79,7 @@ and protect from any manual changes of runlevels by /sbin/chkconfig.
 =item C<< /software/components/chkconfig/service/<service>/del : boolean >>
 
 If the value is true, removes service from management by chkconfig, otherwise
-the option is ignored. 
-
+the option is ignored.
 
 =item C<< /software/components/chkconfig/service/<service>/startstop : boolean >>
 
@@ -96,47 +95,20 @@ reporting current state.
 
 The following example will start named on system default runlevels:
 
-    include { 'components/chkconfig/config' };
+    include 'components/chkconfig/config';
     "/software/components/chkconfig/service/named/add" = true;
     "/software/components/chkconfig/service/named/on" = "";
     "/software/components/chkconfig/service/named/startstop" = true;
 
 The shorter way of writing this (assuming named is known to chkconfig):
 
-    include { 'components/chkconfig/config' };
+    include 'components/chkconfig/config';
     "/software/components/chkconfig/service/named" =
          nlist("on","","startstop",true);
 
 
 Disable and stop xinetd:
 
-    "/software/components/chkconfig/service/xinetd" = nlist("off", "", "startstop", true); 
-
-=head1 DEPENDENCIES
-
-None.
-
-=head1 BUGS
-
-=over
-
-=item L<https://savannah.cern.ch/bugs/?45924>
-
-The component should better integrate with the standard boot sequence
-(not start services that will get started anyway later).
-
-=item B<reset> behaviour should check against current config?
-
-=item B<startstop> logic depends on init script, will mindlessly start some services despite them running already
-
-=back
-
-=head1 AUTHOR
-
-Teemu Sidoroff <Teemu.Sidoroff@cern.ch>
-
-=head1 SEE ALSO
-
-ncm-ncd(1), chkconfig(8), http://cern.ch/quattor
+    "/software/components/chkconfig/service/xinetd" = nlist("off", "", "startstop", true);
 
 =cut
