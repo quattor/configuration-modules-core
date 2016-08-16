@@ -22,6 +22,9 @@ filesystem. Blockdevices with no filesystems associated will not be
 created. If you want any such device, create a filesystem with
 C<< "type"="none" >> and C<< "mount"=false >>.
 
+B<Note:> It will also remove filesystems and blockdevices that are not listed
+on the profile (or have been removed).
+
 =head2 Examples
 
 We will define a software RAID 1 composed of three disks, one volume
