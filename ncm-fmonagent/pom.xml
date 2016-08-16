@@ -28,6 +28,10 @@
   <developers>
     <developer>
       <name>Miroslav Siket</name>
+      <email>miroslav.siket@cern.ch</email>
+    </developer>
+    <developer>
+      <name>Dennis Waldron</name>
       <email>dennis.waldron@cern.ch</email>
     </developer>
   </developers>
