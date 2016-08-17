@@ -330,18 +330,16 @@ By default new users are assigned to the users group.
 }
 type opennebula_user = {
     "ssh_public_key" ? string[]
-    "user" : string 
     "password" ? string
     "group" ? string
-};
+} = dict();
 
 @documentation{
 Set a group name and an optional decription
 }
 type opennebula_group = {
-    "group" : string
     "description" ? string
-};
+} = dict();
 
 type opennebula_remoteconf_ceph = {
     "pool_name" : string
@@ -552,8 +550,8 @@ datastores, vnets, hosts names, etc
 type component_opennebula = {
     include structure_component
     'datastores'    ? opennebula_datastore[1..]
-    'groups'        ? opennebula_group[]
-    'users'         ? opennebula_user[]
+    'groups'        ? opennebula_group{}
+    'users'         ? opennebula_user{}
     'vnets'         ? opennebula_vnet{}
     'hosts'         ? string[]
     'rpc'           ? opennebula_rpc
