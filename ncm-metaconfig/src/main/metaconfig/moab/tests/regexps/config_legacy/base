@@ -2,6 +2,11 @@ Base test for config
 ---
 /opt/moab/etc/moab.cfg
 ---
+^FSDECAY 0.9$
+^FSDEPTH 4$
+^FSGROUPWEIGHT 20$
+^FSINTERVAL 168:00:00$
+^FSPOLICY DEDICATEDPS$
 ^GROUPCFG\[DEFAULT\] FSTARGET=5 PLIST=DEFAULT$
 ^IDCFG\[globfs\] SERVER=file:///opt/moab/etc/gfs.dat REFRESHPERIOD=hour$
 ^ADMIN1 root$
@@ -25,11 +30,8 @@ Base test for config
 ^SPOOLDIR /var/spool/moab/spool$
 ^STATDIR /var/spool/moab/stats$
 ^NODECFG\[DEFAULT\] FEATURES\+=ecryptid1,ecryptid2,ecryptid3$
-^FSDECAY 0.90$
-^FSDEPTH 4$
-^FSGROUPWEIGHT 20$
-^FSINTERVAL 168:00:00$
-^FSPOLICY DEDICATEDPS$
+^BACKFILLPOLICY FIRSTFIT$
+^ENABLENEGJOBPRIORITY 0$
 ^FSWEIGHT 1$
 ^QUEUETIMEWEIGHT 0$
 ^XFACTORWEIGHT 10$
