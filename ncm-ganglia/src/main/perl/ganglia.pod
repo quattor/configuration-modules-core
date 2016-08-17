@@ -18,8 +18,4 @@ ganglia
 The configuration information for the component.  Each field should
 be described in this section. 
 
-=head1 AUTHOR
-
-${author-info}
-
 =cut
