@@ -1,6 +1,6 @@
 unique template metaconfig/cgroups/cgrules;
 
-@{cgrules are applied via cgrulesengd}
+@{cgrules are applied via cgred service}
 variable CGROUPS_CGRULESENGD ?= true;
 
 include 'metaconfig/cgroups/schema';
@@ -14,7 +14,7 @@ prefix  "/software/components/metaconfig/services/{/etc/cgrules.conf}";
 # rules can also be used by pam module, in which case the cgrulesengd shouldn't be used
 "daemons" = {
     if (CGROUPS_CGRULESENGD) {
-        SELF["cgrulesengd"] = "restart";
+        SELF["cgred"] = "restart";
     };
     SELF;
 };

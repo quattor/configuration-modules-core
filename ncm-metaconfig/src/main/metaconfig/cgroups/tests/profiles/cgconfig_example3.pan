@@ -8,11 +8,11 @@ prefix '/software/components/accounts';
 
 include 'metaconfig/cgroups/cgconfig';
 
-prefix "/software/components/metaconfig/services/{/etc/cgconfig.conf}/contents";
+prefix "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/contents";
 "mount/cpuacct" = '/mnt/cgroups/cpu';
 "mount/cpu" = '/mnt/cgroups/cpu';
 
-prefix "/software/components/metaconfig/services/{/etc/cgconfig.conf}/contents/group/{daemons/www}";
+prefix "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/contents/group/{daemons/www}";
 "controllers/cpu/cpu.shares" = '1000';
 "perm/task" = dict(
     'uid', 'root',
@@ -26,7 +26,7 @@ prefix "/software/components/metaconfig/services/{/etc/cgconfig.conf}/contents/g
     "fperm", "744",
 );
 
-prefix "/software/components/metaconfig/services/{/etc/cgconfig.conf}/contents/group/{daemons/ftp}";
+prefix "/software/components/metaconfig/services/{/etc/cgconfig.d/quattor.conf}/contents/group/{daemons/ftp}";
 "controllers/cpu/cpu.shares" = '500';
 "perm/task" = dict(
     'uid', 'root',

@@ -1,6 +1,6 @@
 [% FOREACH pair IN CCM.contents.pairs -%]
 [%      SWITCH pair.key %]
-[%-         CASE ['group'] -%]
+[%-         CASE ['group', 'template'] -%]
 [%-             FOREACH group IN pair.value.pairs %]
 [%                  pair.key %] [% CCM.unescape(group.key) %] {
 [%                  INCLUDE "metaconfig/cgroups/config/${pair.key}.tt" data=group.value FILTER indent -%]

@@ -1,6 +1,6 @@
-Test cgconfig.conf
+Test cgconfig.d/quattor.conf
 ---
-/etc/cgconfig.conf
+/etc/cgconfig.d/quattor.conf
 ---
 ^default \{$
 ^\s{4}perm \{$
@@ -40,4 +40,11 @@ Test cgconfig.conf
 ^mount \{$
 ^\s{4}"name=abc" = a/b/c;$
 ^\s{4}ns = ns/abc;$
+^\}$
+^template my/users/%u \{$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "250";$
+^\s{4}\}$
+^\s{4}memory \{$
+^\s{4}\}$
 ^\}$
