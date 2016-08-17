@@ -129,6 +129,15 @@ sub process_template
     };
 }
 
+# Get complete resource list
+# and split each one in different templates
+sub get_templates
+{
+    my ($self, $one, $type, $data) = @_;
+
+
+}
+
 # Create/update ONE resources
 # based on resource type
 sub create_or_update_something
@@ -172,7 +181,7 @@ sub remove_something
     my ($self, $one, $type, $resources, %protected) = @_;
     my $method = "get_${type}s";
     my @existres = $one->$method();
-    my @namelist = $self->create_resource_names_list($one, $type, $resources);
+    my @namelist = $self->create_resource_names_list($resources);
     my %rnames = map { $_ => 1 } @namelist;
 
     foreach my $oldresource (@existres) {
@@ -282,29 +291,11 @@ sub detect_ceph_datastores
 
 sub create_resource_names_list
 {
-    my ($self, $one, $type, $resources) = @_;
-    my ($name, @namelist, $template);
+    my ($self, $resources) = @_;
+    my @namelist;
 
-    # REMOVE THIS
-    if ($type ne "vnet") {
-    foreach my $newresource (@$resources) {
-        $template = $self->process_template($newresource, $type);
-        if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
-            $name = $1;
-            push(@namelist, $name);
-        }
-    }
-    } else {
-        # CHANGE THIS
-        foreach my $newresource (sort keys %{$resources}) {
-            my %temp;
-            $temp{$newresource}->{$newresource} = $resources->{$newresource};
-            $template = $self->process_template($temp{$newresource}, $type);
-            if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
-                $name = $1;
-                push(@namelist, $name);
-            };
-        };
+    foreach my $resourcename (sort keys %{$resources}) {
+        push(@namelist, $resourcename);
     };
     return @namelist;
 }
@@ -329,16 +320,16 @@ sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
     my ($secret, $uuid);
-    foreach my $ceph (@$datastores) {
-        if (defined($ceph->{tm_mad}) && $ceph->{tm_mad} eq 'ceph') {
-            if ($ceph->{ceph_user_key}) {
+    foreach my $ceph (sort keys %{$datastores}) {
+        if ($datastores->{$ceph}->{tm_mad} eq 'ceph') {
+            if ($datastores->{$ceph}->{ceph_user_key}) {
                 $self->verbose("Found Ceph user key.");
-                $secret = $ceph->{ceph_user_key};
+                $secret = $datastores->{$ceph}->{ceph_user_key};
             } else {
                 $self->error("Ceph user key not found within Quattor template.");
                 return;
             }
-            $uuid = $self->set_ceph_secret($type, $host, $ceph);
+            $uuid = $self->set_ceph_secret($type, $host, $datastores->{$ceph}->{ceph_secret});
             return if !$uuid;
             return if !$self->set_ceph_keys($host, $uuid, $secret);
         }
@@ -350,14 +341,14 @@ sub enable_ceph_node
 # to be used by libvirt
 sub set_ceph_secret
 {
-    my ($self, $type, $host, $ceph) = @_;
+    my ($self, $type, $host, $ceph_secret) = @_;
     my $uuid;
     # Add ceph keys as root
     my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
     my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
     if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
         $uuid = $1;
-        if ($uuid eq $ceph->{ceph_secret}) {
+        if ($uuid eq $ceph_secret) {
             $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
         } else {
             $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
@@ -477,22 +468,11 @@ sub manage_something
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources, %protected);
 
-    # CHANGE THIS!!!
-    if ($type ne "vnet") {
-        if (@$resources) {
-            $self->info("Creating new ${type}s: ", scalar @$resources);
-        };
-        foreach my $newresource (@$resources) {
-            my $new = $self->create_or_update_something($one, $type, $newresource, %protected);
-        };
-    } else {
-        $self->info("Creating new ${type}s: ", join(', ', keys %{$resources}));
-        # REMOVE THIS
-        foreach my $newresource (sort keys %{$resources}) {
-            my %temp;
-            $temp{$newresource}->{$newresource} = $resources->{$newresource};
-            my $new = $self->create_or_update_something($one, $type, $temp{$newresource}, %protected);
-        };
+    $self->info("Creating new ${type}s: ", join(', ', keys %{$resources}));
+    foreach my $newresource (sort keys %{$resources}) {
+        my %temp;
+        $temp{$newresource}->{$newresource} = $resources->{$newresource};
+        my $new = $self->create_or_update_something($one, $type, $temp{$newresource}, %protected);
     };
 }
 
@@ -608,12 +588,10 @@ sub manage_users_groups
     my $createmethod = "create_${type}";
     my %temp;
 
-    # CHANGE THIS
     foreach my $account (sort keys %{$data}) {
             if ($account eq $SERVERADMIN_USER && exists $data->{$account}->{password}) {
                 $self->change_opennebula_passwd($account, $data->{$account}->{password});
             } elsif ($account eq $ONEADMIN_USER && exists $data->{$account}->{ssh_public_key}) {
-                # CHANGE THIS
                 $temp{$account}->{$account} = $data->{$account};
                 $template = $self->process_template($temp{$account}, $type);
                 $new = $self->update_something($one, $type, $account, $template);
@@ -643,15 +621,12 @@ sub manage_users_groups
         $self->info("Removed ${type}s: ", join(',', @rmdata));
     }
 
-    #foreach my $account (@$data) {
     foreach my $account (sort keys %{$data}) {
         if (exists($protected{$account})) {
             $self->info("This $type is protected and can not be created/updated: ", $account);
         } else {
-            # CHANGE THIS
             $temp{$account}->{$account} = $data->{$account};
             $template = $self->process_template($temp{$account}, $type);
-            #$template = $self->process_template($account, $type);
             my $used = $self->detect_used_resource($one, $type, $account);
             if (!$used) {
                 $self->info("Creating new $type: ", $account);

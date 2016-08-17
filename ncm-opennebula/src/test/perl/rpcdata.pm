@@ -298,6 +298,7 @@ $cmds{rpc_update_vnetar}{out} = 98;
 # Manage Datastores
 
 $data = <<'EOF';
+NAME = "ceph"
 BRIDGE_LIST = "hyp004.cubone.os"
 CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
 CEPH_SECRET = "35b161e7-a3bc-440f-b007-cb98ac042646"
@@ -305,7 +306,6 @@ CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
 DISK_TYPE = "RBD"
 DS_MAD = "ceph"
-NAME = "ceph"
 POOL_NAME = "one"
 TM_MAD = "ceph"
 TYPE = "IMAGE_DS"
@@ -316,9 +316,9 @@ $cmds{rpc_create_newdatastore}{method} = "one.datastore.allocate";
 $cmds{rpc_create_newdatastore}{out} = 102;
 
 $data = <<'EOF';
+NAME = "nfs"
 DATASTORE_CAPACITY_CHECK = "yes"
 DS_MAD = "fs"
-NAME = "nfs"
 TM_MAD = "shared"
 TYPE = "IMAGE_DS"
 QUATTOR = 1
@@ -354,12 +354,12 @@ $cmds{rpc_list_datastore2}{out} = <<'EOF';
 EOF
 
 $data = <<'EOF';
+NAME = "ceph.altaria"
 BRIDGE_LIST = "hyp004.cubone.os"
 CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
 CEPH_SECRET = "35b161e7-a3bc-440f-b007-cb98ac042646"
 CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
-NAME = "ceph.altaria"
 POOL_NAME = "one"
 TYPE = "IMAGE_DS"
 QUATTOR = 1

@@ -298,7 +298,6 @@ shared DS is also supported
 }
 type opennebula_datastore = {
     include opennebula_ceph_datastore
-    "name"                      : string
     "bridge_list"               ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check"  : boolean = true
     "disk_type"                 : string = 'RBD'
@@ -549,7 +548,7 @@ datastores, vnets, hosts names, etc
 }
 type component_opennebula = {
     include structure_component
-    'datastores'    ? opennebula_datastore[1..]
+    'datastores'    ? opennebula_datastore{}
     'groups'        ? opennebula_group{}
     'users'         ? opennebula_user{}
     'vnets'         ? opennebula_vnet{}

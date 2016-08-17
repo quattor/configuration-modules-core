@@ -65,25 +65,23 @@ prefix "/software/components/opennebula";
         ),
 );
 
-"datastores" = list(
-    dict(
-        "name", "ceph.altaria",
-        "bridge_list", list("hyp004.cubone.os"),
-        "ceph_host", list("ceph001.cubone.os","ceph002.cubone.os","ceph003.cubone.os"),
-        "ceph_secret", "8371ae8a-386d-44d7-a228-c42de4259c6e",
-        "ceph_user", "libvirt",
-        "datastore_capacity_check", true,
-        "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
-        "pool_name", "one",
-        "type", "IMAGE_DS"
-    ),
-    dict(
-        "name", "nfs",
-        "datastore_capacity_check", true,
-        "ds_mad", "fs",
-        "tm_mad", "shared",
-        "type", "IMAGE_DS",
-    ),
+"datastores" = dict(
+        "ceph.altaria", dict(
+            "bridge_list", list("hyp004.cubone.os"),
+            "ceph_host", list("ceph001.cubone.os","ceph002.cubone.os","ceph003.cubone.os"),
+            "ceph_secret", "8371ae8a-386d-44d7-a228-c42de4259c6e",
+            "ceph_user", "libvirt",
+            "datastore_capacity_check", true,
+            "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
+            "pool_name", "one",
+            "type", "IMAGE_DS"
+        ),
+        "nfs", dict(
+            "datastore_capacity_check", true,
+            "ds_mad", "fs",
+            "tm_mad", "shared",
+            "type", "IMAGE_DS",
+        ),
 );
 
 "groups" = dict(
