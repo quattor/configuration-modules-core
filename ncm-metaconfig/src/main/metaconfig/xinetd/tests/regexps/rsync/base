@@ -1,0 +1,16 @@
+Base test for config
+---
+multiline
+metaconfigservice=/etc/xinetd.d/rsync
+---
+^service\srsync$
+^{$
+^\s{4}cps\s=\s100 2$
+^\s{4}disable\s=\sno$
+^\s{4}per_source\s=\s11$
+^\s{4}server\s=\s/usr/bin/rsync$
+^\s{4}server_args\s=\s--daemon$
+^\s{4}socket_type\s=\sstream$
+^\s{4}user\s=\sroot$
+^\s{4}wait\s=\sno$
+^}$
