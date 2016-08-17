@@ -206,13 +206,13 @@ is($fstab_changed_2, $fstab_changed,
    "process_mounts returns fstab_changed from fstab method");
 ok($action, "process_mounts returns action_taken");
 
-command_history_ok([
+ok(command_history_ok([
     qr{^umount -l /mountX$},
     qr{^umount -l /mount0$},
     qr{^mount /mount000$},
     qr{^mount -o remount /mount1$},
     qr{^mount /amount2$},
-], "correct mount commands triggered in proper order");
+]), "correct mount commands triggered in proper order");
 
 
 done_testing();

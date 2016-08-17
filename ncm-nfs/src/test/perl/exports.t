@@ -31,7 +31,7 @@ $cfg = get_config_for_profile('exports');
 $tree = $cfg->getTree($cmp->prefix());
 diag explain $tree;
 is($cmp->exports($tree), 1, "exports file changed (exports)");
-my $fh = get_file('/etc/exports');
+$fh = get_file('/etc/exports');
 
 diag "exports ", "$fh";
 Test::Quattor::RegexpTest->new(
