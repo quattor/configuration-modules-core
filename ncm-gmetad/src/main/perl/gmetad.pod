@@ -9,90 +9,85 @@ This daemon collects performance information from various nodes and stores it in
 
 =head2 GMETAD
 
-The configuration of gmetad is stored in the file /etc/gmetad.conf.
+The configuration of gmetad is stored in the file C<< /etc/gmetad.conf >>.
 
-The schema for this component are very similar to the options in the configuration file.
-More detailed information about the options can be found on the website (B<SEE ALSO>).
+The schema for this component is very similar to the options in the configuration file.
 
 =over 4
 
-=item * /software/components/gmetad/data_source/[srcindex]/name : string
+=item * C<< /software/components/gmetad/data_source/[srcindex]/name >> : string
 
 Name of the data source.
 
-=item * /software/components/gmetad/data_source/[srcindex]/polling_interval : long(1..)
+=item * C<< /software/components/gmetad/data_source/[srcindex]/polling_interval >> : long(1..)
 
 Optional polling interval for the data source, in seconds.
 
-=item * /software/components/gmetad/data_source/[srcindex]/host/[hostindex]/address : type_hostname
+=item * C<< /software/components/gmetad/data_source/[srcindex]/host/[hostindex]/address >> : type_hostname
 
 Host name or IP address per machine serving the data source.
 
-=item * /software/components/gmetad/data_source/[srcindex]/host/[hostindex]/port : type_port
+=item * C<< /software/components/gmetad/data_source/[srcindex]/host/[hostindex]/port >> : type_port
 
-Optional port for per machine serving the data source.
+Optional port per machine serving the data source.
 
-=item * /software/components/gmetad/debug_level : long(0..)
+=item * C<< /software/components/gmetad/debug_level >> : long(0..)
 
 Optional level of debug output for the daemon.
 
-=item * /software/components/gmetad/scalability : string
+=item * C<< /software/components/gmetad/scalability >> : string
 
 Optional flag to enable or disable scalability mode. 
 Valid values are C<on> and C<off>.
 
-=item * /software/components/gmetad/file : string
+=item * C<< /software/components/gmetad/file >> : string
 
 Mandatory field specifying the location of the the configuration file.
-For Ganglia 3.0, this should be /etc/gmetad.conf
-and for Ganglia 3.1, it should be /etc/ganglia/gmetad.conf.
+For Ganglia 3.0, this should be C<< /etc/gmetad.conf >>
+and for Ganglia 3.1, it should be C<< /etc/ganglia/gmetad.conf >>.
 
-=item * /software/components/gmetad/gridname : string
+=item * C<< /software/components/gmetad/gridname >> : string
 
 Optional name of the grid.
 
-=item * /software/components/gmetad/authority : type_absoluteURI
+=item * C<< /software/components/gmetad/authority >> : type_absoluteURI
 
 Optional authority URL for this grid.
 
-=item * /software/components/gmetad/trusted_hosts : type_hostname[]
+=item * C<< /software/components/gmetad/trusted_hosts >> : type_hostname[]
 
 Optional list of trusted hosts.
 
-=item * /software/components/gmetad/all_trusted : string
+=item * C<< /software/components/gmetad/all_trusted >> : string
 
 Optional field to enable trust of all hosts.
 Valid values are C<on> and C<off>.
 
-=item * /software/components/gmetad/setuid : string
+=item * C<< /software/components/gmetad/setuid >> : string
 
 Optional flag to control setuid mode of the daemon.
 Valid values are C<on> and C<off>.
 
-=item * /software/components/gmetad/setuid_username : string
+=item * C<< /software/components/gmetad/setuid_username >> : string
 
 Optional name of the user account running the daemon.
 
-=item * /software/components/gmetad/xml_port : type_port
+=item * C<< /software/components/gmetad/xml_port >> : type_port
 
-Optional port gmetad will answer requests for XML.
+Optional port on which gmetad will answer requests for XML.
 
-=item * /software/components/gmetad/interactive_port : type_port
+=item * C<< /software/components/gmetad/interactive_port >> : type_port
 
-Optional port gmetad will answer queries for XML.
+Optional port on which gmetad will answer queries for XML.
 
-=item * /software/components/gmetad/server_threads : long(1..)
+=item * C<< /software/components/gmetad/server_threads >> : long(1..)
 
 Optional number of threads answering XML requests.
 
-=item * /software/components/gmetad/rrd_rootdir : string
+=item * C<< /software/components/gmetad/rrd_rootdir >> : string
 
 Optional directory where gmetad stores its RRD databases.
 
 =back
-
-=head1 SEE ALSO
-
-http://ganglia.wiki.sourceforge.net/
 
 =cut
