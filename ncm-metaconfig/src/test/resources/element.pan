@@ -18,3 +18,7 @@ prefix "/software/components/metaconfig/services/{/foo/bar}";
 prefix "/software/components/metaconfig/services/{/foo/bar2}";
 "convert/TRUEFALSE" = true;
 "convert/singlequote" = true;
+
+"convert/joincomma" = true;
+# string elements will be single-quoted before the join
+"contents/list" = list("a","b");
