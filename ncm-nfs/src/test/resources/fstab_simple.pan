@@ -21,3 +21,8 @@ prefix "/software/components/nfs/mounts/2";
 "fstype" = "none";
 "options" = "bind";
 
+prefix "/software/components/nfs/mounts/3";
+"device" = "mydev3";
+"mountpoint" = "/mount3";
+"fstype" = "cephfs";
+"options" = "name=user,secretfile=/etc/ceph/secret";

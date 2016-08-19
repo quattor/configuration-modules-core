@@ -159,14 +159,25 @@ my $nfs2 = {
     action => 'mount',
 };
 
+my $nfs3 = {
+    device => "mydev3",
+    mountpoint => "/mount3",
+    fstype => "cephfs",
+    options => "name=user,secretfile=/etc/ceph/secret",
+    freq => 0,
+    passno => 0,
+    action => 'mount',
+};
+
+
 is(NCM::Component::nfs::mount_action_new_old($nfs0, $fs2),
    'umount/mount', 'Different mountpoint returns umount/mount');
 
-is_deeply($new, { '/mydev0' => $nfs0, mydev1 => $nfs1, amydev2 => $nfs2 },
+is_deeply($new, { '/mydev0' => $nfs0, mydev1 => $nfs1, amydev2 => $nfs2, mydev3 => $nfs3 },
           "new hashref as expected");
-is_deeply($new_order, [qw(/mydev0 mydev1 amydev2)], "new order as expected");
+is_deeply($new_order, [qw(/mydev0 mydev1 amydev2 mydev3)], "new order as expected");
 
-is_deeply($mkdir, [qw(/mount000 /mount1 /amount2)], "fstab triggered _make_directory (no directories existed)");
+is_deeply($mkdir, [qw(/mount000 /mount1 /amount2 /mount3)], "fstab triggered _make_directory (no directories existed)");
 
 
 =head2 do_mount
