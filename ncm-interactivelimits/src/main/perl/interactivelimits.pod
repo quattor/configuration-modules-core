@@ -13,15 +13,11 @@ NCM::interactivelimits - NCM interactivelimits configuration component
 
 =item Configure()
 
-Updates the /etc/security/limits.conf - file with system limits
+Updates the C<< /etc/security/limits.conf >> file with system limits
 for interactive users.
-This file is read by /lib/security/pam_limits.so and the values
+This file is read by C<< /lib/security/pam_limits.so >> and the values
 defined there are respected.
 Returns error in case of failure.
-
-=item Unconfigure()
-
-not available.
 
 =back
 
@@ -29,13 +25,13 @@ not available.
 
 =over
 
-=item /software/components/interactivelimits/active : boolean
+=item * C<< /software/components/interactivelimits/active >> : boolean
 
 Activates/deactivates the component.
 
-=item /software/components/interactivelimits/values : list
+=item * C<< /software/components/interactivelimits/values >> : list
 
-Defines all values that should be configured in /etc/security/limits.conf.
+Defines all values that should be configured in C<< /etc/security/limits.conf >>.
 
 Example of such a definition from a node profile:
 
@@ -47,21 +43,5 @@ Example of such a definition from a node profile:
   );
 
 =back
-
-=head1 DEPENDENCIES
-
-None.
-
-=head1 BUGS
-
-None known.
-
-=head1 AUTHOR
-
-Vladimir Bahyl <Vladimir.Bahyl@cern.ch>
-
-=head1 SEE ALSO
-
-pam(8), ncm-ncd(1)
 
 =cut
