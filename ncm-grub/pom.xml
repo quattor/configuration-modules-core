@@ -26,6 +26,10 @@
   </licenses>
 
   <developers>
+    <developer>
+      <name>Stephen Childs</name>
+      <email>Stephen.Childs@cs.tcd.ie</email>
+    </developer>
   </developers>
 
   <contributors>
