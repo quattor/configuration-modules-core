@@ -9,15 +9,15 @@
 
 unique template components/${project.artifactId}/config;
 
-include { 'components/${project.artifactId}/schema' };
+include 'components/${project.artifactId}/schema';
 
-include { 'pan/functions' };
+include 'pan/functions';
 
 # Package to install.
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 # standard component settings
-"/software/components/${project.artifactId}/active"   ?=  true ;
-"/software/components/${project.artifactId}/dispatch" ?=  false ;
-"/software/components/${project.artifactId}/version"   = "${project.version}";
-
+prefix '/software/components/${project.artifactId}';
+'active' ?= true;
+'dispatch' ?= true;
+'version' = "${no-snapshot-version}";
