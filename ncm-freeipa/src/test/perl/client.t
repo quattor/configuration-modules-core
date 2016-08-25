@@ -14,7 +14,11 @@ $CAF::Object::NoAction = 1;
 my $mockk = Test::MockModule->new('CAF::Kerberos');
 my $krb5;
 my $context;
-$mockk->mock('get_context', sub {$krb5 = shift; return $context});
+$mockk->mock('get_context', sub {
+    $krb5 = shift;
+    $krb5->{fail} = 'mocked failed context' if ! $context;
+    return $context
+});
 
 use NCM::Component::freeipa;
 
@@ -38,6 +42,7 @@ my $ipa;
 
 $context = undef;
 
+$cmp->set_fqdn(config => $cfg);
 $ipa = $cmp->set_ipa_client($tree);
 ok(! defined($ipa), "set_ipa_client returns undef if CAF::Kerberos get_context fails");
 is_deeply($krb5->{ticket}, {keytab => '/etc/krb5.keytab'}, "Kerberos using correct ticket");
@@ -52,6 +57,7 @@ set_file_contents('/tmp/quattor_nss-XXXX/cert_myhost.example.com_anick1.csr',
 set_command_status('/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1', 1);
 
 command_history_reset;
+reset_caf_path;
 
 $ipa = $cmp->set_ipa_client($tree);
 ok($cmp->client($tree), "client returns success");
@@ -82,5 +88,16 @@ is_deeply($Test::Quattor::caf_path->{status}, [
     [['/etc/ipa/quattor/certs/host.pem'], {owner => 'root', group => 'superpowerssss', mode => 0444}], # hostcert cert
     [['/etc/ipa/quattor/keys/host.key'], {owner => 'root', group => 'superpowerssss', mode => 0400}], # hostcert key
 ], 'CAF::Path status called in keytabs');
+
+diag explain $Test::Quattor::caf_path->{directory};
+
+foreach my $dir (@{$Test::Quattor::caf_path->{directory}}) {
+    if ($dir->[0]->[0] eq '/etc/ipa/quattor/nssdb') {
+        is_deeply($dir,
+                  [['/etc/ipa/quattor/nssdb'], {'group' => 'somegroup', 'mode' => 0400, 'owner' => 'root'}],
+                  "nssdb dir created with proper permissions");
+        last;
+    }
+}
 
 done_testing();

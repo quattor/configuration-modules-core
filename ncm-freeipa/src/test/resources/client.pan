@@ -2,6 +2,9 @@ object template client;
 
 include 'base';
 
+prefix "/software/components/freeipa/nss";
+"group" = "somegroup";
+
 prefix "/software/components/freeipa/keytabs/{/etc/super1.keytab}";
 "service" = "someservice1";
 "mode" = 0123;

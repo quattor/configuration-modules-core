@@ -334,11 +334,14 @@ sub certificates
     my ($self, $tree) = @_;
 
     # One NSSDB for all?
-    my $nss = NCM::Component::FreeIPA::NSS->new(
-        $NSSDB,
+    my %opts = (
         realm => $tree->{realm},
         log => $self,
-        );
+        # Keep this last
+        %{$tree->{nss} || {}}
+    );
+
+    my $nss = NCM::Component::FreeIPA::NSS->new($NSSDB, %opts);
 
     if($nss->setup()) {
         # TODO: do we always need to readd it?

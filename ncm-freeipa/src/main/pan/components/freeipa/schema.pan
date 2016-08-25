@@ -125,6 +125,12 @@ type component_${project.artifactId}_principal = {
     'keytab' : string
 };
 
+@{NSS db options}
+type component_${project.artifactId}_nss = {
+    include component_${project.artifactId}_permission
+};
+
+
 # TODO: use common realm type
 type component_${project.artifactId} = {
     include structure_component
@@ -145,6 +151,8 @@ type component_${project.artifactId} = {
     @{Generate the host certificate in /etc/ipa/quattor/certs/host.pem and key /etc/ipa/quattor/keys/host.key.
       The nick host is used (and any setting under certificates using that nick are preserved)}
     'hostcert' ? boolean
+    @{NSSDB options}
+    'nss' ? component_${project.artifactId}_nss
     @{Host options}
     'host' ? component_${project.artifactId}_host
     @{Principal/keytab pairs for client,server or aii roles (default client role with host/fqdn princiapl and /etc/krb5.keytab keytab)}
