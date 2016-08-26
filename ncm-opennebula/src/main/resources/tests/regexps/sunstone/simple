@@ -4,6 +4,7 @@ OpenNebula sunstone_server test
 ^:auth:\s{1}.+$
 ^:core_auth:\s{1}.+$
 ^:debug_level:\s{1}\d+$
+^:env:\s{1}.+$
 ^:host:\s{1}.+$
 ^:instance_types:$
 ^\s{4}-\s{1}:cpu:\s{1}\d+$

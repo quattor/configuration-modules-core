@@ -470,6 +470,7 @@ Type that sets the OpenNebula
 sunstone_server.conf file
 }
 type opennebula_sunstone = {
+    "env" : string = 'prod' with match (SELF, '^(prod|dev)$')
     "tmpdir" : directory = '/var/tmp'
     "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
     "host" : type_ipv4 = '127.0.0.1'
