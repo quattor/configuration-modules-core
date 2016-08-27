@@ -4,25 +4,13 @@
 
 declaration template quattor/aii/freeipa/schema;
 
-final variable FREEIPA_AII_MODULE_NAME = 'freeipa';
+final variable FREEIPA_AII_MODULE_NAME = 'NCM::Component::freeipa';
 
 @documentation{
 a function to validate all freeipa hooks
 example usage:
     bind "/system/aii/hooks" = dict with validate_aii_freeipa_hooks('post_reboot')
 }
-function which_hook_is_next = {
-    if (ARGC != 1) {
-        error(format("%s: requires only one argument", FUNCTION));
-    };
-    if (exists(to_string(ARGV[0]))) {
-        hooks = value(to_string(ARGV[0]));
-        length(hooks);
-    } else {
-        0;
-    };
-};
-
 function validate_aii_freeipa_hooks = {
     if (ARGC != 1) {
         error(format("%s: requires only one argument", FUNCTION));
@@ -58,8 +46,6 @@ function validate_aii_freeipa_hooks = {
 type aii_freeipa = {
 	"module"   : string with SELF == FREEIPA_AII_MODULE_NAME
 
-    @{DNS is controlled by FreeIPA (to register the host ip)}
-    "dns" : boolean = false
     @{remove the host on AII removal (precedes disable)}
     "remove" : boolean = false
     @{disable the host on AII removal}

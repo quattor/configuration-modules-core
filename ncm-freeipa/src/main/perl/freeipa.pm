@@ -149,6 +149,7 @@ my $_client;
 my $_krb;
 
 # Current host FQDN
+# Warning: This is not config-safe (e.g. in AII), (re)set upon each API call
 my $_fqdn;
 
 # server config
