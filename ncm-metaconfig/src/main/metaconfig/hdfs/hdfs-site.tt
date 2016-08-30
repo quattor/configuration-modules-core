@@ -1,8 +1,0 @@
-<configuration>
-[% FOREACH pair IN CCM.contents.pairs %]
-[%-     IF CCM.is_hash(pair.value) -%]
-[%-         INCLUDE metaconfig/hdfs/property.tt data=pair.value cfgpath=['dfs', pair.key] FILTER indent -%]
-[%-      END -%]
-[%  END %]
-</configuration>
-
