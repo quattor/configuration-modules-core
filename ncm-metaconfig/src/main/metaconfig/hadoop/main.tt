@@ -1,0 +1,4 @@
+<configuration>
+[%    INCLUDE metaconfig/hadoop/property.tt data=CCM.contents cfgpath=[] FILTER indent %]
+</configuration>
+

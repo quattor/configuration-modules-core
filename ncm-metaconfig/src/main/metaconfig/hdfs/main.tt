@@ -1,4 +1,0 @@
-<configuration>
-[%    INCLUDE metaconfig/hdfs/property.tt data=CCM.contents cfgpath=[] FILTER indent %]
-</configuration>
-

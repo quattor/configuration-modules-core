@@ -1,22 +1,22 @@
 object template config;
 
-include 'metaconfig/hdfs/config';
+include 'metaconfig/hadoop/config';
 
 
-bind "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/core-site.xml}/contents" = hdfs_core_site;
-bind "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/hdfs-site.xml}/contents/dfs" = hdfs_hdfs_site;
+bind "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/core-site.xml}/contents" = hadoop_core_site;
+bind "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/hdfs-site.xml}/contents/dfs" = hadoop_hdfs_site;
 #bind "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/slaves}/contents" = type_hdfs_slaves;
 
 prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/hdfs-site.xml}";
-"module" = "hdfs/main";
+"module" = "hadoop/main";
 prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/core-site.xml}";
-"module" = "hdfs/main";
+"module" = "hadoop/main";
 #prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/slaves}";
 
-bind "/software/components/metaconfig/services/{/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml}/contents/gpfs" = hdfs_gpfs_site;
+bind "/software/components/metaconfig/services/{/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml}/contents/gpfs" = hadoop_gpfs_site;
 
 prefix "/software/components/metaconfig/services/{/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml}";
-"module" = "hdfs/main";
+"module" = "hadoop/main";
 
 
 prefix "/software/components/metaconfig/services/{/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml}/contents/gpfs";

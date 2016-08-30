@@ -16,7 +16,7 @@
 [%-         END %]
 </property>
 [%-      ELSE  -%]
-[%-         INCLUDE metaconfig/hdfs/property.tt data=pair.value cfgpath=pathtmp -%]
+[%-         INCLUDE metaconfig/hadoop/property.tt data=pair.value cfgpath=pathtmp -%]
 [%-     END -%]
 [%-  END -%]
 
