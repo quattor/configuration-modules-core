@@ -18,6 +18,10 @@ type hadoop_core_site = {
  
 type hadoop_hdfs_site_datanode = {
     'handler.count' ? long
+    'address' ? type_hostport = '0.0.0.0:50010'
+    'ipc.address' ? type_hostport = '0.0.0.0:50020'
+    'http.address' ? type_hostport = '0.0.0.0:50075'
+    'https.address' ? type_hostport = '0.0.0.0:50475'
     'max.transfer.threads' ? long
 };
 

@@ -36,8 +36,13 @@ prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/core-
 
 prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/hdfs-site.xml}/contents/dfs";
 
-'datanode/handler.count' = 40;
-'datanode/max.transfer.threads' = 8192;
 'namenode/handler.count' = 400;
+prefix "/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/hdfs-site.xml}/contents/dfs/datanode";
+'handler.count' = 40;
+'max.transfer.threads' = 8192;
+'address'  = 'localhost:50010';
+'ipc.address' ='localhost:50020';
+'http.address' = 'localhost:50075';
+'https.address' = 'localhost:50475';
 
 #"/software/components/metaconfig/services/{/etc/hadoop/conf.quattor/slaves}/contents" = list('localhost', 'remotehost');
