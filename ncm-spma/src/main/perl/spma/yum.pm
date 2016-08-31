@@ -432,11 +432,11 @@ sub expire_yum_caches
 sub apply_transaction
 {
 
-    my ($self, $tx, $tx_error_is_warn) = @_;
+    my ($self, $tx, $error_is_warn) = @_;
 
     $self->debug(5, "Running transaction: $tx");
     my $ok = $self->execute_yum_command([YUM_CMD], "running transaction", 1,
-                                        $tx, $tx_error_is_warn ? "warn" : "error");
+                                        $tx, $error_is_warn ? "warn" : "error");
     return defined($ok);
 }
 
@@ -634,7 +634,7 @@ sub packages_to_remove
 # match in $install, it removes the $rm entry.
 sub spare_deps_whatreq
 {
-    my ($self, $rm, $install) = @_;
+    my ($self, $rm, $install, $error_is_warn) = @_;
 
     my @to_rm;
 
@@ -642,7 +642,8 @@ sub spare_deps_whatreq
         my $arg = $pk;
         $arg =~ s{;}{.};
         my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
-                              "determine what requires $pk", 1);
+                                                  "determine what requires $pk", 1,
+                                                  undef, $error_is_warn ? "warn" : "error");
         return 0 if !defined($whatreqs);
         foreach my $wr (split("\n", $whatreqs)) {
             if ($install->has($wr)) {
@@ -660,7 +661,7 @@ sub spare_deps_whatreq
 # removes them from $rm.
 sub spare_deps_requires
 {
-    my ($self, $rm, $install) = @_;
+    my ($self, $rm, $install, $error_is_warn) = @_;
 
     my (@pkgs);
 
@@ -670,7 +671,8 @@ sub spare_deps_requires
     }
 
     my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
-                      "dependencies of install candidates", 1);
+                                          "dependencies of install candidates", 1,
+                                          undef, $error_is_warn ? "warn" : "error");
 
     return 0 if !defined $deps;
 
@@ -693,7 +695,7 @@ sub spare_deps_requires
 # almost nothing to remove and a lot of new things to add.
 sub spare_dependencies
 {
-    my ($self, $rm, $install) = @_;
+    my ($self, $rm, $install, $error_is_warn) = @_;
 
     return 1 if (!$rm || !$install);
 
@@ -703,10 +705,10 @@ sub spare_dependencies
     # things.
     if (scalar(@$rm) < SMALL_REMOVAL && scalar(@$install) > LARGE_INSTALL) {
         $self->debug(3, "Sparing dependencies in the whatreq path");
-        return $self->spare_deps_whatreq($rm, $install);
+        return $self->spare_deps_whatreq($rm, $install, $error_is_warn);
     } else {
         $self->debug(3, "Sparing dependencies in the requires path");
-        return $self->spare_deps_requires($rm, $install);
+        return $self->spare_deps_requires($rm, $install, $error_is_warn);
     }
 }
 
@@ -769,7 +771,7 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $tx_error_is_warn, $fullsearch, $reuse_cache) = @_;
+    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $error_is_warn, $fullsearch, $reuse_cache) = @_;
 
     $self->complete_transaction() or return 0;
 
@@ -802,7 +804,7 @@ sub update_pkgs
     if (!$allow_user_pkgs) {
         $to_rm = $self->packages_to_remove($wanted);
         defined($to_rm) or return 0;
-        $self->spare_dependencies($to_rm, $to_install);
+        $self->spare_dependencies($to_rm, $to_install, $error_is_warn);
         $tx = $self->schedule(REMOVE, $to_rm);
     }
 
@@ -810,7 +812,7 @@ sub update_pkgs
 
     if ($tx) {
         $tx .= $self->solve_transaction($run);
-        $self->apply_transaction($tx, $tx_error_is_warn) or return 0;
+        $self->apply_transaction($tx, $error_is_warn) or return 0;
     }
 
     return 1;
@@ -821,21 +823,21 @@ sub update_pkgs_retry
 {
     my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs, $fullsearch) = @_;
 
-    # If an error is logged due to failed transaction,
+    # If an error is logged due to failed transaction (or spare dependencies),
     # it might be retried and might succeed, but ncm-ncd will not allow
     # any component that has spma as dependency (i.e. typically all others)
     # to run (becasue he initial attempt had an error)
-    my $tx_error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
+    my $error_is_warn = $retry_if_not_allow_user_pkgs && ! $allow_user_pkgs;
 
     # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
-        my ($allow_user_pkgs, $tx_error_is_warn, $reuse_cache) = @_;
+        my ($allow_user_pkgs, $error_is_warn, $reuse_cache) = @_;
         return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
-                                  $purge, $tx_error_is_warn, $fullsearch, $reuse_cache);
+                                  $purge, $error_is_warn, $fullsearch, $reuse_cache);
     };
 
     # Only on the initial try, purge and recreate the cache
-    if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 0)) {
+    if(&$update_pkgs($allow_user_pkgs, $error_is_warn, 0)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($NoAction) {
@@ -843,19 +845,19 @@ sub update_pkgs_retry
             $self->verbose("update_pkgs ended with NoAction=1");
             return 1;
         } elsif ($allow_user_pkgs) {
-            # tx_error_is_warn = 0 in this case, error is already logged
+            # error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=true");
             return 0;
         } elsif ($retry_if_not_allow_user_pkgs) {
             # all tx failures are errors here
-            $tx_error_is_warn = 0;
+            $error_is_warn = 0;
 
             $self->verbose("userpkgs_retry: 1st update_pkgs failed, going to retry with forced userpkgs=true");
             $allow_user_pkgs = 1;
-            if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
+            if(&$update_pkgs($allow_user_pkgs, $error_is_warn, 1)) {
                 $self->verbose("userpkgs_retry: 2nd update_pkgs with forced userpkgs=true ok, trying 3rd");
                 $allow_user_pkgs = 0;
-                if(&$update_pkgs($allow_user_pkgs, $tx_error_is_warn, 1)) {
+                if(&$update_pkgs($allow_user_pkgs, $error_is_warn, 1)) {
                     $self->verbose("userpkgs_retry: 3rd update_pkgs with userpkgs=false ok.");
                 } else {
                     $self->error("userpkgs_retry: 3rd update_pkgs with userpkgs=false failed.");
@@ -867,7 +869,7 @@ sub update_pkgs_retry
             };
         } else {
             # log failure, no retry enabled
-            # tx_error_is_warn = 0 in this case, error is already logged
+            # error_is_warn = 0 in this case, error is already logged
             $self->verbose("update_pkgs failed, userpkgs=false, no retry enabled");
             return 0;
         }
