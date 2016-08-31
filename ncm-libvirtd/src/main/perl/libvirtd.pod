@@ -50,8 +50,6 @@ This section contains the configuration for unix sockets.
 
 =over 4
 
-=item * 
-
 =item * unix_sock_group: restricted to root by default
 
 =item * unix_sock_ro_perms: octal string, default allows any user
@@ -68,13 +66,13 @@ This section contains the authentication parameters.
 
 =over 4
 
-=item * auth_unix_ro: 'none|sasl|polkit', default anyone
+=item * auth_unix_ro: C<< 'none|sasl|polkit' >>, default anyone
 
-=item * auth_unix_rw: 'none|sasl|polkit', default polkit
+=item * auth_unix_rw: C<< 'none|sasl|polkit' >>, default polkit
 
-=item * auth_tcp' ? 'none|sasl', should be 'sasl' for production
+=item * auth_tcp' ? C<< 'none|sasl' >>, should be 'sasl' for production
 
-=item * auth_tls' ? 'none|sasl'
+=item * auth_tls' ? C<< 'none|sasl' >>
 
 =back
 
