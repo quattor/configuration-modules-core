@@ -2,13 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
-=begin comment
-
-Be sure to put a blank line before and after every formatting command
-
-=end comment
-
 =head1 NAME
 
 mysql : NCM component to manage MySQL servers and databases
@@ -17,21 +10,19 @@ mysql : NCM component to manage MySQL servers and databases
 
 This component allows to manage configuration of MySQL servers and administer the databases.
 
-=head1 Server Options
-
 =head1 Database Options
 
-Database options are under /software/components/mysql/databases. This resource is a nlist with one entry per database. Key is the
+Database options are under C<< /software/components/mysql/databases >>. This resource is a nlist with one entry per database. Key is the
 database name, value is a nlist allowing to specify options described below.
 
-=head2 initScript : nlist (optional) 
+=head2 initScript : nlist (optional)
 
 This allows to specify a script to be executed at database creation time. This is a nlist that allows to specify either content
-of the MySQL script (key 'content') to execute or the path of a script name (key 'file') to execute. 
+of the MySQL script (key C<'content'>) to execute or the path of a script name (key C<'file'>) to execute.
 
 =head2 server : string (required)
 
-Name of the server hosting the database. This name must match one entries in /software/components/mysql/servers (see above).
+Name of the server hosting the database. This name must match one entries in C<< /software/components/mysql/servers >> (see schema).
 
 Default : none.
 
@@ -41,14 +32,14 @@ When true, the initialization script (initScript) is executed only if the databa
 
 =head2 tableOptions: nlist of nlist (optional)
 
-This resource allows to modify table characteristics. All parameters to the ALTER TABLE command are allowed.
+This resource allows to modify table characteristics. All parameters to the C<< ALTER TABLE >> command are allowed.
 The key is the name of the table, the value is a nlist where the key is the parameter name and the value is parameter
 value if any, else an empty string.
 
 =head2 users : nlist (optional)
 
 List of MySQL users to create and MySQL privileges they have on the database. This is a nlist. Key is the escaped userid, in
-user@host format without any quotes. If not @host is present, it defaults to current host.
+C<< user@host >> format without any quotes. If no C<< @host >> is present, it defaults to current host.
 
 Value is a nlist with the following possible keys :
 
@@ -62,32 +53,7 @@ Value is a nlist with the following possible keys :
 
 =head1 serviceName option
 
-Name of the mysql service. Valid values are 'mysql', 'mysqld' and 'mariadb'. Defaults to 'mysqld'.
-
-=head1 DEPENDENCIES
-
-None.
-
-=head1 BUGS
-
-None known.
-
-=head1 AUTHOR
-
-Michel Jouvin <jouvin@lal.in2p3.fr>
-
-=head1 MAINTAINER
-
-Michel Jouvin <jouvin@lal.in2p3.fr>
-
-=head1 VERSION
-
-1.4.0
-
-=head1 SEE ALSO
-
-ncm-ncd(1)
-
+Name of the mysql service. Valid values are C<'mysql'>, C<'mysqld'> and C<'mariadb'>. Defaults to C<'mysqld'>.
 
 =cut
 
