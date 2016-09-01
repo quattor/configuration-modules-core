@@ -15,7 +15,7 @@ type type_libvirtd_network = {
 type type_libvirtd_socket = {
     'unix_sock_group' ? string # restricted to root by default
     'unix_sock_ro_perms' ? string # default allows any user
-    'unix_sock_rw_perms' ? string 
+    'unix_sock_rw_perms' ? string
     'unix_sock_dir' ? string # directory of created sockets
 };
 
@@ -94,10 +94,10 @@ type type_qemu_spice = {
 };
 
 type type_qemu_remote = {
-    'remote_display_port_min' ? long
-    'remote_display_port_max' ? long
-    'remote_websocket_port_min' ? long
-    'remote_websocket_port_max' ? long
+    'remote_display_port_min' ? long(5900..65535)
+    'remote_display_port_max' ? long(5900..65535)
+    'remote_websocket_port_min' ? long(5700..65535)
+    'remote_websocket_port_max' ? long(5700..65535)
 };
 
 type type_qemu_security = {
@@ -175,7 +175,7 @@ type service_qemu = {
     'auto_dump_bypass_cache' ? boolean
     'auto_start_bypass_cache' ? boolean
     'hugetlbfs_mount' ? string[]
-    'bridge_helper' ? string
+    'bridge_helper' ? string with match(SELF, '^/')
     'clear_emulator_capabilities' ? boolean
     'set_process_name' ? boolean
     'max_processes' ? boolean
