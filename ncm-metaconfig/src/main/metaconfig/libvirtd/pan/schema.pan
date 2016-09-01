@@ -111,10 +111,19 @@ type type_qemu_cgroup = {
     'cgroup_device_acl' ? string[]
 };
 
+function is_image_format = {
+    image_format = ARGV[0];
+    if(match(image_format, '^(raw|lzop|gzip|bzip2|xz)$')) return(true);
+    error("Bad image format: " + image_format);
+    return(false);
+};
+
+type type_image_format = string with is_image_format(SELF);
+
 type type_qemu_image_format = {
-    'save_image_format' ? string with match(SELF, '^(raw|lzop|gzip|bzip2|xz)$')
-    'dump_image_format' ? string with match(SELF, '^(raw|lzop|gzip|bzip2|xz)$')
-    'snapshot_image_format' ? string with match(SELF, '^(raw|lzop|gzip|bzip2|xz)$')
+    'save_image_format' ? type_image_format
+    'dump_image_format' ? type_image_format
+    'snapshot_image_format' ? type_image_format
 };
 
 type type_qemu_keepalive = {
