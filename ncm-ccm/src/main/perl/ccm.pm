@@ -10,6 +10,7 @@ use base qw(NCM::Component);
 use vars qw(@ISA $EC);
 use CAF::Process;
 use CAF::FileWriter;
+use CAF::FileReader;
 use LC::Exception;
 
 use File::Temp qw(tempdir);
