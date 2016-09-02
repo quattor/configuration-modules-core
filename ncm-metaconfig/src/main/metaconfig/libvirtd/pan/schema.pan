@@ -15,7 +15,7 @@ type type_libvirtd_network = {
 type type_libvirtd_socket = {
     'unix_sock_group' ? string # restricted to root by default
     'unix_sock_ro_perms' ? string # default allows any user
-    'unix_sock_rw_perms' ? string 
+    'unix_sock_rw_perms' ? string
     'unix_sock_dir' ? string # directory of created sockets
 };
 
@@ -72,6 +72,72 @@ type type_libvirtd_audit = {
     'audit_logging' ? boolean
 };
 
+type type_qemu_vnc = {
+    'vnc_listen' ? type_ip
+    'vnc_auto_unix_socket' ? boolean
+    'vnc_tls' ? boolean
+    'vnc_tls_x509_cert_dir' ? string
+    'vnc_tls_x509_verify' ? boolean
+    'vnc_password' ? string
+    'vnc_sasl' ? boolean
+    'vnc_sasl_dir' ? string
+    'vnc_allow_host_audio' ? boolean
+};
+
+type type_qemu_spice = {
+    'spice_listen' ? type_ip
+    'spice_tls' ? boolean
+    'spice_tls_x509_cert_dir' ? string
+    'spice_password' ? string
+    'spice_sasl' ? boolean
+    'spice_sasl_dir' ? string
+};
+
+type type_qemu_remote = {
+    'remote_display_port_min' ? long(5900..65535)
+    'remote_display_port_max' ? long(5900..65535)
+    'remote_websocket_port_min' ? long(5700..65535)
+    'remote_websocket_port_max' ? long(5700..65535)
+};
+
+type type_qemu_security = {
+    'security_driver' ? string with match(SELF, '^(none|selinux|apparmor)$')
+    'security_default_confined' ? boolean
+    'security_require_confined' ? boolean
+};
+
+type type_qemu_cgroup = {
+    'cgroup_controllers' ? string[]
+    'cgroup_device_acl' ? string[]
+};
+
+function is_image_format = {
+    image_format = ARGV[0];
+    if(match(image_format, '^(raw|lzop|gzip|bzip2|xz)$')) return(true);
+    error("Bad image format: " + image_format);
+    false;
+};
+
+type type_image_format = string with is_image_format(SELF);
+
+type type_qemu_image_format = {
+    'save_image_format' ? type_image_format
+    'dump_image_format' ? type_image_format
+    'snapshot_image_format' ? type_image_format
+};
+
+type type_qemu_keepalive = {
+    'keepalive_interval' ? long
+    'keepalive_count' ? long
+};
+
+type type_qemu_migration = {
+    'migration_address' ? type_ip
+    'migration_host' ? type_hostname
+    'migration_port_min' ? long(1..65535)
+    'migration_port_max' ? long(1..65535)
+};
+
 @documentation{
 libvirtd.conf settings
 }
@@ -96,6 +162,41 @@ type service_sasl2 = {
     'mech_list' ? string with match(SELF, '^(digest-md5|gssapi)$')
     'keytab' ? string = '/etc/libvirt/krb5.tab'
     'sasldb_path' ? string = '/etc/libvirt/passwd.db'
+};
+
+@documentation{
+QEMU conf for libvirtd
+}
+type service_qemu = {
+    include type_qemu_vnc
+    include type_qemu_spice
+    include type_qemu_remote
+    include type_qemu_security
+    include type_qemu_cgroup
+    include type_qemu_image_format
+    include type_qemu_keepalive
+    include type_qemu_migration
+    'user' ? string
+    'group' ? string
+    'dynamic_ownership' ? boolean
+    'nographics_allow_host_audio' ? boolean
+    'auto_dump_path' ? string
+    'auto_dump_bypass_cache' ? boolean
+    'auto_start_bypass_cache' ? boolean
+    'hugetlbfs_mount' ? string[]
+    'bridge_helper' ? string with match(SELF, '^/')
+    'clear_emulator_capabilities' ? boolean
+    'set_process_name' ? boolean
+    'max_processes' ? boolean
+    'max_files' ? boolean
+    'mac_filter' ? boolean
+    'relaxed_acs_check' ? boolean
+    'allow_disk_format_probing' ? boolean
+    'lock_manager' ? string with match(SELF, '^(lockd|sanlock)$')
+    'max_queued' ? long (0..)
+    'seccomp_sandbox' ? string
+    'log_timestamp' ? boolean
+    'nvram' ? string[]
 };
 
 @documentation{
