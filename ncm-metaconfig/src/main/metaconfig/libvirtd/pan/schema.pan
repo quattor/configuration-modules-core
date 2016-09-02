@@ -115,7 +115,7 @@ function is_image_format = {
     image_format = ARGV[0];
     if(match(image_format, '^(raw|lzop|gzip|bzip2|xz)$')) return(true);
     error("Bad image format: " + image_format);
-    return(false);
+    false;
 };
 
 type type_image_format = string with is_image_format(SELF);
