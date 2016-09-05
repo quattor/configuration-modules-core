@@ -9,51 +9,37 @@ NCM::named - NCM named configuration component
 
 =head1 DESCRIPTION
 
-NCM component allowing to copy the named server configuration (/etc/named.conf) file from a reference location and/or configure the resolver configuration file (/etc/resolv.conf).
+NCM component allowing to copy the named server configuration (C<< /etc/named.conf >>) file from a reference location and/or configure the resolver configuration file (C<< /etc/resolv.conf >>).
 
 If named is started on the machine, localhost (127.0.0.1) is added as the first server in resolver configuration file.
 
-
 =head1 RESOURCES
 
-=head2 /software/components/named/start : boolean (optional)
+=over
+
+=item * C<< /software/components/named/start >>: boolean (optional)
 
 Enable/Start or Disable/Stop named server. If undefined, nothing is done.
 
-=head2 /software/components/named/configfile : string (optional)
+=item * C<< /software/components/named/configfile >>: string (optional)
 
-Reference file location for named configuration file. Existing (/etc/named.conf), if any, will be replaced.
+Reference file location for named configuration file. Existing (C<< /etc/named.conf >>), if any, will be replaced.
 'configfile' is mutually exclusive with 'serverConfig'.
 
-=head2 /software/components/named/serverConfig : string (optional)
+=item * C<< /software/components/named/serverConfig >>: string (optional)
 
-Content of named configuration file (/etc/named.conf). 'serverConfig' is mutually exclusive with 'configfile'.
+Content of named configuration file (C<< /etc/named.conf >>). 'serverConfig' is mutually exclusive with 'configfile'.
 
+=item * C<< /software/components/named/servers >>: list of hosts
 
-=head2 /software/components/named/servers : list of hosts
+Ordered list of named servers to use in (C<< /etc/resolv.conf >>). If named server is started, localhost (127.0.0.1) will be added first.
 
-Ordered list of named servers to use in (/etc/resolv.conf). If named server is started, localhost (127.0.0.1) will be added first.
+=item * C<< /software/components/named/options >>: list of options
 
-=head2 /software/components/named/options : list of options
+Ordered list of named options to use in (C<< /etc/resolv.conf >>).
 
-Ordered list of named options to use in (/etc/resolv.conf).
+C<< /etc/resolv.conf >> is updated: everything except 'nameserver' lines are preserved. All the 'nameserver' lines are replaced by information in this option, if present.
 
-/etc/resolv.conf is updated : everything except 'nameserver' lines are preserved. All the 'nameserver' lines are replaced by information in this option, if present.
-
-=head1 DEPENDENCIES
-
-None.
-
-=head1 BUGS
-
-None known.
-
-=head1 AUTHOR
-
-Michel Jouvin <jouvin@lal.in2p3.fr>
-
-=head1 SEE ALSO
-
-ncm-ncd(1), named(8)
+=back
 
 =cut
