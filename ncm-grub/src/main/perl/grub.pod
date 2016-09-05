@@ -115,6 +115,37 @@ Optionally set an initial ramdisk image to be loaded when booting.
 
 The title string that will be used to describe this entry in C<grub.conf>.
 
+=item * C<< /software/components/grub/password/enabled >> ? string
+
+Sets if a password should be enabled in grub.conf. If this is false, 
+any existing password will be removed. If this is not defined, the component
+will not add or remove a password, leaving any existing one untouched.
+
+=item * C<< /software/components/grub/password/option >> : string
+
+An --option used with the password line in grub.conf. This is typically
+used to set the hashing algorithm for the password. "encrypted" means the
+password can be hashed with (more secure than MD5) SHA-256 or SHA-512.
+"md5" for an MD5 hashed password. Plaintext is not supported.
+
+=item * C<< /software/components/grub/password >> ? string
+
+Mutually exclusive with the file option. A crypted password for grub.conf.
+
+=item * C<< /software/components/grub/file >> ? string
+
+Mutually exclusive with the password option. The path to a file on the host
+where the password can be read from. May be useful if it is undesirable to put
+(even crypted) profiles into the profile.
+
+The file will be scanned for a line where the first field (colon seperated)
+matches the file_user option, and the second field will be used as the parameter.
+
+=item * C<< /software/components/grub/file_user >> : string
+
+See description of the file option. The user (first field) to be picked from
+a password field.
+
 =item * C<< /hardware/console >> ? string
 
 The console settings may be defined here.
