@@ -1,9 +1,6 @@
-=encoding utf8
-
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-# ${build-info}
 
 =head1 NAME
 
@@ -35,16 +32,16 @@ File owner. Defaults to root.
 
 File group. Defaults to root.
 
-=item * backup ? string
+=item * C<backup> ? string
 
 Extension for the file's backup.
 
-=item * module : string
+=item * C<module> : string
 
 Module to render the configuration file. See L<CONFIGURATION MODULES>
 below.
 
-=item * daemons ? caf_service_action{}
+=item * C<daemons> ? C<caf_service_action{}>
 
 An nlist with foreach daemon the C<CAF::Service> action to take
 if the file changes.
@@ -55,7 +52,7 @@ for the daemon will be taken at most once.
 If multiple actions are to be taken for the same daemon, all actions
 will be taken (no attempt to optimize is made).
 
-=item * preamble ? string
+=item * C<preamble> ? string
 
 Text to place at start of file.
 
@@ -66,40 +63,40 @@ it uses will generate them. The preamble attribute will be written out
 verbatim, before the contents is generated. No comment character is added,
 the user must specify this as part of the preamble string.
 
-=item * contents
+=item * C<contents>
 
 A free-form structure describing the valid entries for the
 configuration file. It is recommended to define another type for each
 config file, and bind it to these contents, to get the best
 validation.
 
-=item * element
+=item * C<element>
 
-Predefined conversions from L<EDG::WP4::CCM::TextRender>:
+Predefined conversions from C<< EDG::WP4::CCM::TextRender >>:
 
 =over
 
-=item yesno ? boolean
+=item C<yesno> ? boolean
 
 Convert boolean to (lowercase) 'yes' and 'no'.
 
-=item YESNO ? boolean
+=item C<YESNO> ? boolean
 
 Convert boolean to (uppercase) 'YES' and 'NO'.
 
-=item truefalse ? boolean
+=item C<truefalse> ? boolean
 
 Convert boolean to (lowercase) 'true' and 'false'.
 
-=item TRUEFALSE ? boolean
+=item C<TRUEFALSE> ? boolean
 
 Convert boolean to (uppercase) 'TRUE' and 'FALSE'.
 
-=item doublequote ? boolean
+=item C<doublequote> ? boolean
 
 Convert string to doublequoted string.
 
-=item singlequote ? boolean
+=item C<singlequote> ? boolean
 
 Convert string to singlequoted string.
 
@@ -242,16 +239,5 @@ And now, we only have to specify the contents:
 
 That's it!  When you deploy your configuration you should see your
 /etc/foo.ini in the correct location.
-
-=head1 AUTHOR
-
-${author-info}
-
-=head1 TODO
-
-Anyone knows of a good Apache config renderer for Perl??
-
-A better way for deriving the name of the template from the file name
-would be appreciated.
 
 =cut
