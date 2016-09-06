@@ -6,7 +6,7 @@
   <artifactId>fmonagent</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.6.1-SNAPSHOT</version>
+  <version>16.8.0-rc1</version>
   <name>NCM fmonagent configuration component</name>
 
 
