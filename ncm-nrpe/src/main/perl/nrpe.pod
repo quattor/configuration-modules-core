@@ -64,7 +64,7 @@ allowed for security reasons.
 =item * C<< /software/components/nrpe/options/command_prefix ? string >>
 
 Optional prefix for every single command to be run. For instance,
-"/usr/bin/sudo"
+C<< /usr/bin/sudo >>.
 
 Optional field.
 
@@ -93,9 +93,5 @@ List of external file names that should be included.
 List of directory names that should be included.
 
 =back
-
-=head1 SEE ALSO
-
-http://nagios.sourceforge.net/docs/3_0/toc.html
 
 =cut
