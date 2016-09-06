@@ -1,0 +1,15 @@
+OpenNebula oneflow_server full test
+---
+---
+^:action_number:\s{1}1$
+^:action_period:\s{1}60$
+^:core_auth:\s{1}cipher$
+^:debug_level:\s{1}2$
+^:default_cooldown:\s{1}300$
+^:host:\s{1}0.0.0.0$
+^:lcm_interval:\s{1}60$
+^:one_xmlrpc:\s{1}http:\/\/localhost:2633\/RPC2$
+^:port:\s{1}2474$
+^:shutdown_action:\s{1}\'terminate-hard\'$
+^:vm_name_template:\s{1}\'\$ROLE\_NAME\_\$VM\_NUMBER\_\(service\_\$SERVICE\_ID\)\'$
+

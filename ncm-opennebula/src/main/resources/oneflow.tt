@@ -1,0 +1,9 @@
+[%- singlequotes = ['vm_name_template', 'shutdown_action'] -%]
+[%- FOR pair IN oneflow.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE singlequotes -%]
+:[%            pair.key %]: '[% pair.value %]'
+[%         CASE -%]
+:[%            pair.key %]: [% pair.value %]
+[%     END -%]
+[%- END -%]

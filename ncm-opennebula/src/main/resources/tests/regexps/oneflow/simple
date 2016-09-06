@@ -1,0 +1,15 @@
+OpenNebula oneflow_server test
+---
+---
+^:action_number:\s{1}\d+$
+^:action_period:\s{1}\d+$
+^:core_auth:\s{1}.+$
+^:debug_level:\s{1}\d+$
+^:default_cooldown:\s{1}\d+$
+^:host:\s{1}.+$
+^:lcm_interval:\s{1}\d+$
+^:one_xmlrpc:\s{1}.+$
+^:port:\s{1}\d+$
+^:shutdown_action:\s{1}.+$
+^:vm_name_template:\s{1}.+$
+
