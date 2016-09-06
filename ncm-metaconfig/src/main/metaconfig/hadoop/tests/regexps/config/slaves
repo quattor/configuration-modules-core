@@ -1,0 +1,8 @@
+Base test for slaves file
+---
+multiline
+/etc/hadoop/conf.quattor/slaves
+---
+^localhost$
+^remotehost$
+
