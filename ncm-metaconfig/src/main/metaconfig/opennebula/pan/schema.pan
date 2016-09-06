@@ -4,7 +4,8 @@ include 'pan/types';
 
 @documentation{
 aii/opennebula.conf sections.
-url: RPC endpoint type absoluteURI as example "https://localhost:2366"
+url: OpenNebula RPC endpoint type absoluteURI as example:
+     "url" = "https://localhost:2366/RPC2"
 pattern: a valid regular expression to match a VM fqdn.
 If the VM fqdn match the pattern the aii will use this section
 instead of [VM_DOMAIN].
@@ -16,7 +17,7 @@ type aii_section = {
     "password" : string
     "user" ? string
     "pattern" ? string
-    "url" ? type_absoluteURI
+    "url" ? type_absoluteURI with match (SELF, "^http.+/RPC2$")
 } = dict();
 
 @documentation{
