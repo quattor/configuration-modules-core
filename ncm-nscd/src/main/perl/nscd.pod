@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-NCM::nscd - NCM component to configure nscd
+NCM::nscd - NCM component to configure nscd.
 
 =head1 SYNOPSIS
 
@@ -21,15 +21,6 @@ I<yes> or I<no> in the template, this is the way I<nscd> expects them.
 =head1 FILES
 
 modifies C</etc/nscd.conf> and a temporary file in C</etc>.
-
-
-=head1 AUTHOR
-
-Jan.Iven@cern.ch
-
-=head1 SEE ALSO
-
-nscd(8), nscd.conf(5)
 
 =cut
 
