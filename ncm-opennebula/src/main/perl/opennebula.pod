@@ -9,7 +9,7 @@ ncm-${project.artifactId}: Configuration module for OpenNebula
 
 =head1 DESCRIPTION
 
-Configuration module for OpenNebula. 
+Configuration module for OpenNebula.
 
 =head1 IMPLEMENTED FEATURES
 
@@ -25,7 +25,7 @@ Features that are implemented at this moment:
 
 =item * Adding/removing datastores (only Ceph and shared datastores for the moment)
 
-=item * Adding/removing hypervirsors 
+=item * Adding/removing hypervirsors
 
 =item * Adding/removing OpenNebula regular users
 
@@ -33,7 +33,7 @@ Features that are implemented at this moment:
 
 =item * Assign OpenNebula users to primary groups
 
-=item * Updates OpenNebula *_auth files
+=item * Updates OpenNebula C<< *_auth >> files
 
 =item * Updates VMM kvmrc config file
 
@@ -43,36 +43,44 @@ OpenNebula installation is 100% automated. Therefore:
 
 =over
 
-=item * All the new OpenNebula templates created by the component will include a QUATTOR flag
+=item * All the new OpenNebula templates created by the component will include a QUATTOR flag.
 
-=item * The component only will modify/remove resources with the QUATTOR flag set, otherwise the resource is ignored
+=item * The component only will modify/remove resources with the QUATTOR flag set, otherwise the resource is ignored.
 
-=item * If the component finds any issue during hypervisor host configuration then the node is included within OpenNebula infrastructure but as disabled host
+=item * If the component finds any issue during hypervisor host configuration then the node is included within OpenNebula infrastructure but as disabled host.
 
 =back
 
 =head1 INITIAL CREATION
 
-- The schema details are annotated in the schema file.
+=over
 
-- Example pan files are included in the examples folder and also in the test folders.
+=item The schema details are annotated in the schema file.
 
+=item Example pan files are included in the examples folder and also in the test folders.
+
+=back
 
 To set up the initial cluster, some steps should be taken:
 
-=over 
+=over
 
-=item 1. First install the required Ruby gems in your OpenNebula server. You can use OpenNebula installgems addon : https://github.com/OpenNebula/addon-installgems
+=item 1. First install the required Ruby gems in your OpenNebula server.
+You can use OpenNebula installgems addon : L<https://github.com/OpenNebula/addon-installgems>.
 
-=item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster e.g. by distributing the public key(s) of the OpenNebula host over the cluster
+=item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the hypervisor hosts of the cluster.
+ e.g. by distributing the public key(s) of the OpenNebula host over the cluster.
 
-=item 3. Start OpenNebula services: # for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done
+=item 3. Start OpenNebula services: C<< # for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done >>
 
-=item 4. Run the component a first time
+=item 4. Run the component a first time.
 
-=item 5. The new oneadmin password will be available from /var/lib/one/.one/one_auth file. The old auth files are stored with .quattor.backup extension.
+=item 5. The new oneadmin password will be available from C<< /var/lib/one/.one/one_auth >> file.
+The old auth files are stored with .quattor.backup extension.
 
-=item 6. It is also possible to change sunstone service password, just include 'serveradmin' user and passwd within opennebula/users tree. In that case the component also updates the sunstone_auth file.
+=item 6. It is also possible to change sunstone service password, just include
+'serveradmin' user and passwd within opennebula/users tree.
+In that case the component also updates the C<< sunstone_auth >> file.
 
 =back
 
@@ -81,7 +89,7 @@ To set up the initial cluster, some steps should be taken:
 =head2 /software/components/${project.artifactId}
 
 The configuration information for the component.  Each field should
-be described in this section. 
+be described in this section.
 
 =over 4
 
@@ -114,7 +122,7 @@ Set XEN hypervisor
 
 Includes the Open vSwitch network drives in your hypervisors. (OVS must be installed in each host)
 Open vSwitch replaces Linux bridges, Linux bridges must be disabled.
-More info: http://docs.opennebula.org/4.14/administration/networking/openvswitch.html
+More info: L<http://docs.opennebula.org/4.14/administration/networking/openvswitch.html>
 
 =item * tm_system_ds : string (optional)
 
@@ -128,7 +136,7 @@ The storage area for the system datastore is a shared directory across the hosts
 
 =item * vmfs
 
-A specialized version of the shared one to use the vmfs file system. 
+A specialized version of the shared one to use the vmfs file system.
 
 =item * ssh
 
@@ -141,22 +149,18 @@ Uses a local storage area from each host for the system datastore.
 
 =head1 DEPENDENCIES
 
-The component was tested with OpenNebula version 4.1x and 5.0
+The component was tested with OpenNebula version 4.1x and 5.0.
 
 Following package dependencies should be installed to run the component:
 
 =over
 
-=item * perl-Config-Tiny 
+=item * perl-Config-Tiny
 
 =item * perl-LC
 
 =item * perl-Net-OpenNebula >= 0.2.2 !
 
 =back
-
-=head1 AUTHOR
-
-${author-info}
 
 =cut
