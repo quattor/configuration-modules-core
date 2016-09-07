@@ -2,42 +2,49 @@
 # ${developer-info}
 # ${author-info}
 
-
 =pod
 
 =head1 DESCRIPTION
 
-This component configures the nagios/icinga addon, pnp4nagios
+This component configures the nagios/icinga addon, pnp4nagios.
 
 =head1 FILES
 
-This component touches the following files: 
-/etc/pnp4nagios/npcd.cfg
-/etc/pnp4nagios/config.php
-/etc/pnp4nagios/nagios.cfg
-/etc/pnp4nagios/process_perfdata.cfg
+This component touches the following files:
+
+=over
+
+=item C<< /etc/pnp4nagios/npcd.cfg >>
+
+=item C<< /etc/pnp4nagios/config.php >>
+
+=item C<< /etc/pnp4nagios/nagios.cfg >>
+
+=item C<< /etc/pnp4nagios/process_perfdata.cfg >>
+
+=back
 
 =head1 STRUCTURE
 
 These are the top-level fields provided by the component. For
-information on any of these fields' structure, please look pnp4nagios
-documentation. 
+information on any of these fields' structure, please look at the pnp4nagios
+documentation.
 
 =over 4
 
-=item * /software/components/pnp4nagios/npcd
+=item * C<< /software/components/pnp4nagios/npcd >>
 
 Named list of npcd configuration options.
 
-=item * /software/components/pnp4nagios/php
+=item * C<< /software/components/pnp4nagios/php >>
 
 Named list of php configuration options.
 
-=item * /software/components/pnp4nagios/nagios
+=item * C<< /software/components/pnp4nagios/nagios >>
 
 Named list of nagios configuration options.
 
-=item * /software/components/pnp4nagios/perfata
+=item * C<< /software/components/pnp4nagios/perfata >>
 
 Named list of perfdata configuration options.
 
