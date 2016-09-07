@@ -7,13 +7,9 @@
 
 ncm-postfix: Postfix server configuration
 
-=head1 DESCRIPTION
-
-postfix
-
 =head1 RESOURCES
 
-=head2 /software/components/postfix
+=head2 C<< /software/components/postfix >>
 
 The configuration information for the component. This structure
 contains three fields:
@@ -23,12 +19,12 @@ contains three fields:
 =item C<main>
 
 An nlist with all the possible configuration values for
-C</etc/postfix/main.cf>. See L<main(5)> for more details.
+C</etc/postfix/main.cf>.
 
 =item C<master>
 
-A list with all entries for C</etc/postfix/master.cf>. See
-L<master(5)> for all the details. For each line, we have to provide:
+A list with all entries for C</etc/postfix/master.cf>.
+For each line, we have to provide:
 
 =over
 
@@ -36,7 +32,7 @@ L<master(5)> for all the details. For each line, we have to provide:
 
 Name of the entry (first field in the line).
 
-=item C<type> :  string
+=item C<type> : string
 
 Type of service/socket for this entry.
 
@@ -71,7 +67,7 @@ L<http://www.postfix.org/DATABASE_README.html> for more information.
 
 Each subtree is associated with a class of lookup tables. Each class
 of lookup tables is an nlist, in which the keys are the file names
-(relative to /etc/postfix) that configure the access to such a database.
+(relative to C<< /etc/postfix >>) that configure the access to such a database.
 
 Currently, only LDAP lookups can be described, see
 L<http://www.postfix.org/LDAP_README.html>
@@ -84,25 +80,24 @@ L<http://www.postfix.org/LDAP_README.html>
 
 An empty nlist is valid for C<main.cf>:
 
-    "/software/components/postfix/main" = nlist();
+  "/software/components/postfix/main" = nlist();
 
 =head2 Storing aliases in LDAP
 
 Declaring an alias database stored in an LDAP server can be achieved as follows:
 
-    "/software/components/postfix/main/alias_maps" = append(
-        nlist(
-           "type", "ldap",
-           "name", "/etc/postfix/ldap-aliases.cf"));
+  "/software/components/postfix/main/alias_maps" = append(
+    nlist(
+      "type", "ldap",
+      "name", "/etc/postfix/ldap-aliases.cf"));
 
 And we can instruct Postfix to access this database:
 
-    prefix "/software/components/postfix/databases/ldap/ldap-aliases.cf";
+  prefix "/software/components/postfix/databases/ldap/ldap-aliases.cf";
 
-    "server_host" = "foo.bar.com";
-    "search_base" = "OU=foo,CN=bar";
-    "query_filter" = "(an-ldap-filter)";
-    "result_format" = "%s";
-
+  "server_host" = "foo.bar.com";
+  "search_base" = "OU=foo,CN=bar";
+  "query_filter" = "(an-ldap-filter)";
+  "result_format" = "%s";
 
 =cut
