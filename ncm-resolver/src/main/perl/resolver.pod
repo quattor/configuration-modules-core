@@ -2,32 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the EU DataGrid Software License.  You should
-# have received a copy of the license with this program, and the license
-# is published at http://eu-datagrid.web.cern.ch/eu-datagrid/license.html.
-#
-# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
-# CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
-#
-# THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE AND ANY WARRANTY OF NON-INFRINGEMENT, ARE
-# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THIS
-# SOFTWARE MAY BE REDISTRIBUTED TO OTHERS ONLY BY EFFECTIVELY USING
-# THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
-# TERMS THAT MAY APPLY.
-################################################################################
-
 =head1 NAME
 
 NCM::resolver - NCM resolver configuration component
@@ -42,12 +16,6 @@ Sets up the resolv.conf (and optionally the dnscache configuration).
 If dnscache is used, then dnscache will be restarted on any change.
 If DNS resolution fails after making the change, then resolv.conf
 is left in it's previous state.
-Returns
-error in case of failure.
-
-=item Unconfigure()
-
-not available.
 
 =back
 
@@ -55,27 +23,27 @@ not available.
 
 =over
 
-=item /software/components/resolver/active : boolean
+=item * C<< /software/components/resolver/active >> : boolean
 
 activates/deactivates the component.
 
-=item /software/componens/resolver/search : list
+=item * C<< /software/componens/resolver/search >> : list
 
 A list of strings to use for the resolver search path.
 
-=item /software/components/resolver/servers : list
+=item * C<< /software/components/resolver/servers >> : list
 
 list of server addresses or hostnames. If these are
 hostnames, they will be resolved before the resolver 
 configuration is modified.
 
-=item /software/components/resolver/dnscache : boolean
+=item * C<< /software/components/resolver/dnscache >> : boolean
 
 If true, then configure dnscache with the server list
 and point resolv.conf at the localhost. This will
 cause dnscache to be restarted. This implies that
-the dnscache package is available on the machine:
-this component does not enforce that.
+the dnscache package is available on the machine, 
+but this component does not enforce that.
 
 =back
 
@@ -85,36 +53,18 @@ The component resolver modifies the following files:
 
 =over
 
-=item /etc/resolv.conf
+=item C<< /etc/resolv.conf >>
 
-=item /var/spool/dnscache/servers/@
+=item C<< /var/spool/dnscache/servers/@ >>
 
 =back
 
-=head1 DEPENDENCIES
-
-=head2 Components to be run before:
-
-none.
-
-=head2 Components to be run after:
-
-none.
-
 =head1 EXAMPLES
 
-"/software/components/resolver/active" = true;
-"/software/components/resolver/search" = list("ms.com");
-"/software/components/resolver/servers" = list("server1.ms.com");
-"/software/components/resolver/dnscache" = true;
-
-=head1 BUGS
-
-none known.
-
-=head1 SEE ALSO
-
-ncm-ncd(1)
+  "/software/components/resolver/active" = true;
+  "/software/components/resolver/search" = list("ms.com");
+  "/software/components/resolver/servers" = list("server1.ms.com");
+  "/software/components/resolver/dnscache" = true;
 
 =cut
 
