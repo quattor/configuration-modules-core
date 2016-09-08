@@ -37,7 +37,9 @@ use constant TMP_DOWNLOAD => '/tmp/ncm-gpfs-download';
 use constant GPFSBIN => '/usr/lpp/mmfs/bin';
 use constant GPFSCONFIGDIR => '/var/mmfs';
 use constant GPFSCONFIG => '/var/mmfs/gen/mmsdrfs';
+use constant GPFSKEYDATA => '/var/mmfs/ssl/stage/genkeyData1';
 use constant GPFSNODECONFIG => '/var/mmfs/gen/mmfsNodeData';
+use constant GPFSRESTORE => 'mmsdrrestore';
 use constant GPFSRPMS => qw(
                             ^gpfs.base$
                             ^gpfs.docs$
@@ -434,6 +436,27 @@ sub get_cfg {
     }
     $gpfsconfigfh->close();
     $gpfsnodeconfigfh->close();
+
+    if ($tr->{keyData}) {
+        my $keydata = $tr->{keyData};
+        my $keyoutput = $self->runcurl($config, $tmp, $keydata);
+        return 0 if (! $keyoutput);
+ 
+        my $gpfskeyfh = CAF::FileWriter->open(GPFSKEYDATA,
+                                           backup => ".old",
+                                           log => $self);
+        print $gpfskeyfh $keyoutput;
+
+        if ("$gpfskeyfh" !~ m/^clusterName/) {
+            $self->error('Invalid genKeyData file found');
+            $gpfskeyfh->cancel();
+            return 1;
+        }
+
+        $gpfskeyfh->close();
+        $self->rungpfs(1, GPFSRESTORE) if $tr->{sdrrestore}; 
+    }
+    return 1;
 };
 
 # Required for end of module
