@@ -6,7 +6,7 @@
   <artifactId>ntpd</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.8.0-rc3</version>
+  <version>16.8.0-rc4-SNAPSHOT</version>
   <name>NCM ntpd configuration component</name>
 
 
