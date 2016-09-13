@@ -6,7 +6,7 @@
   <artifactId>libvirtd</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.8.0-rc3-SNAPSHOT</version>
+  <version>16.8.0-rc3</version>
   <name>libvirtd configuration</name>
 
   <parent>
