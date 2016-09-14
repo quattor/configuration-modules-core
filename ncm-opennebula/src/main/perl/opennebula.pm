@@ -129,15 +129,6 @@ sub process_template
     };
 }
 
-# Get complete resource list
-# and split each one in different templates
-sub get_templates
-{
-    my ($self, $one, $type, $data) = @_;
-
-
-}
-
 # Create/update ONE resources
 # based on resource type
 sub create_or_update_something
