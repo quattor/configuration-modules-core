@@ -8,7 +8,8 @@ BEGIN {
 
 use Test::More;
 use Test::MockModule;
-use Test::Quattor qw(basic);
+# sysconfig is added here to test valid template
+use Test::Quattor qw(basic sysconfig);
 use NCM::Component::shorewall;
 use CAF::Object;
 

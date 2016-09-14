@@ -242,3 +242,11 @@ type component_shorewall = {
     @{masq configuration}
     "masq" ? component_shorewall_masq[]
 };
+
+@{metaconfig schema for shorewall 5.x sysconfig (you cannot set RESTARTOPTIONS)}
+type shorewall_sysconfig = {
+    'OPTIONS' ? string
+    'STARTOPTIONS' : string = "/etc/shorewall"
+    'RELOADOPTIONS' : string = "/etc/shorewall"
+    'STOPOPTIONS' ? string
+} = dict();
