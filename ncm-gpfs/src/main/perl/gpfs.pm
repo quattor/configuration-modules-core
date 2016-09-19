@@ -47,6 +47,7 @@ use constant GPFSRPMS => qw(
                             ^gpfs.msg.en_US$
                             ^gpfs.ext$
                             ^gpfs.gskit$
+                            ^gpfs.hdfs-protocol$
                             ^gpfs.hadoop-connector$
                            );
 
