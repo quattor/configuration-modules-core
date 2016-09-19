@@ -1,0 +1,8 @@
+[% FILTER indent -%]
+[%     IF data.type.defined -%]
+<virtualport type='[% data.type %]'/>
+[%     END -%]
+<mac address='[% data.mac %]'/>
+<source bridge='[% data.bridge %]'/>
+<model type='virtio'/>
+[% END -%]

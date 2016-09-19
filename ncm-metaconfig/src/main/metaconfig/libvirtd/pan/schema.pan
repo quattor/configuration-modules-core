@@ -113,20 +113,28 @@ type service_sysconfig_libvirtd = {
 };
 
 
-type type_kvmvm_network {
+type type_kvmvm_network = {
     'bridge' : string
     'mac' : type_hwaddr
-    'type' ? string = 'bridge' with match (SELF, '^(bridge|openvswitch)$')
+    'type' ? string with match (SELF, '^openvswitch$')
 } = dict();
 
-type type_kvmvm_ceph_storage {
+type type_kvmvm_rbd = {
+    'name' : string
+    'ceph_hosts' : type_fqdn[]
+} = dict();
+
+type type_kvmvm_ceph_disk = {
     'uuid' : type_uuid
+    'rbd' : type_kvmvm_rbd
+    'dev' : string with match (SELF, '^(vd[a-z]|hd[a-z])$')
+    'cache' : string = 'none' with match (SELF, '^(none|writethrough|writeback|unsafe)$')
 } = dict();
 
 type type_kvmvm_devices = {
-    'network' ? type_kvmvm_network
-    'storage' ? type_kvmvm_ceph_storage
-} = dict();
+    'network' ? type_kvmvm_network[]
+    'ceph_disk' ? type_kvmvm_ceph_disk[]
+};
 
 @documentation{
 KVM libvirt template to be instantiated
