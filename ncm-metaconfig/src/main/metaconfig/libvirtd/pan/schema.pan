@@ -15,7 +15,7 @@ type type_libvirtd_network = {
 type type_libvirtd_socket = {
     'unix_sock_group' ? string # restricted to root by default
     'unix_sock_ro_perms' ? string # default allows any user
-    'unix_sock_rw_perms' ? string 
+    'unix_sock_rw_perms' ? string
     'unix_sock_dir' ? string # directory of created sockets
 };
 
@@ -110,4 +110,31 @@ type service_sysconfig_libvirtd = {
     'qemu_audio_drv' ? string with match(SELF, '^(sdl)$')
     'sdl_audiodriver' ? string with match(SELF, '^(pulse)$')
     'libvirtd_nofiles_limit' ? long (1..)
+};
+
+
+type type_kvmvm_network {
+    'bridge' : string
+    'mac' : type_hwaddr
+    'type' ? string = 'bridge' with match (SELF, '^(bridge|openvswitch)$')
+} = dict();
+
+type type_kvmvm_ceph_storage {
+    'uuid' : type_uuid
+} = dict();
+
+type type_kvmvm_devices = {
+    'network' ? type_kvmvm_network
+    'storage' ? type_kvmvm_ceph_storage
+} = dict();
+
+@documentation{
+KVM libvirt template to be instantiated
+during hypervisor boot time
+}
+type service_kvmvm = {
+    'name' : type_fqdn
+    'memory' ? long
+    'cpus' ? long(1..)
+    'devices' ? type_kvmvm_devices
 };

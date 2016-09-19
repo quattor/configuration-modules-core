@@ -1,0 +1,6 @@
+Base test for sysconfig libvirtd
+---
+multiline
+/etc/libvirt/qemu/autostart/vm.xml
+---
+^<domain\stype=\'kvm\'\sxmlns:qemu=\'http:\/\/libvirt.org\/schemas\/domain\/qemu\/1.0\'>$

@@ -1,0 +1,30 @@
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+[% FOR pair IN CCM.contents.pairs %]
+[%-    SWITCH pair.key -%]
+[%         CASE 'name' -%]
+<name>[% pair.value %]</name>
+[%         CASE 'cpus' -%]
+[%         cputune = pair.value * 1024 -%]
+<cputune><shares>[% cputune %]</shares></cputune>
+<vcpu>[% pair.value %]</vcpu>
+<cpu mode='host-passthrough' match='exact'>
+<topology sockets='1' cores='[% pair.value %]' threads='1'/>
+</cpu>
+[%         CASE 'memory' -%]
+[%         memory = pair.value * 1024 -%]
+<memory>[% memory %]</memory>
+<devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+[%     END -%]
+[% END -%]
+    <graphics type='vnc' listen='0.0.0.0' port='5900'/>
+</devices>
+    <features>
+        <acpi/>
+    </features>
+    <os>
+        <type arch='x86_64'>hvm</type>
+        <boot dev='network'/>
+        <boot dev='hd'/>
+    </os>
+</domain>
