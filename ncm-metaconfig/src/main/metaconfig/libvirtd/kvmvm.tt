@@ -12,7 +12,6 @@
 <devices>
 [%     FILTER indent -%]
 <emulator>/usr/libexec/qemu-kvm</emulator>
-<graphics type='vnc' listen='0.0.0.0' port='5900'/>
 [%         FOREACH item IN CCM.contents.devices.pairs -%]
 [%-            SWITCH item.key -%]
 [%                 CASE 'network' -%]
@@ -27,6 +26,8 @@
 [%                         INCLUDE 'metaconfig/libvirtd/ceph_level1.tt' data=disk -%]
 </disk>
 [%                     END -%]
+[%                 CASE 'graphics' -%]
+<graphics type='[% item.value.type %]' listen='[% item.value.listen %]' port='[% item.value.port %]'/>
 [%             END -%]
 [%         END -%]
 [%     END -%]

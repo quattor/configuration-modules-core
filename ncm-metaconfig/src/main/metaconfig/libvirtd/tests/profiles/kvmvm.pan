@@ -36,3 +36,8 @@ prefix "/software/components/metaconfig/services/{/etc/libvirt/qemu/vm.xml}/cont
         ),
     ),
 );
+"devices/graphics" = dict(
+    "type", "spice",
+    "listen", "0.0.0.0",
+    "port", 5901,
+);

@@ -149,11 +149,26 @@ type type_kvmvm_ceph_disk = {
 } = dict();
 
 @documentation{
+A graphics device allows for graphical interaction with the guest OS.
+A guest will typically have either a framebuffer or a text console configured to
+allow interaction with the admin.
+}
+type type_kvmvm_graphics = {
+    @{The graphics element that should be started}
+    'type' : string = 'vnc' with match (SELF, '^(vnc|spice|sdl@rdp|desktop)$')
+    @{listen address to get access to the display server}
+    'listen' : type_ip = '0.0.0.0'
+    @{port used by the display server}
+    'port' : long(5900..) = 5900
+} = dict();
+
+@documentation{
 libvirt devices section
 }
 type type_kvmvm_devices = {
     'network' ? type_kvmvm_network[]
     'ceph_disk' ? type_kvmvm_ceph_disk[]
+    'graphics' : type_kvmvm_graphics
 };
 
 @documentation{
