@@ -2,7 +2,7 @@ object template kvmvm;
 
 include 'metaconfig/libvirtd/kvmvm';
 
-prefix "/software/components/metaconfig/services/{/etc/libvirt/qemu/autostart/vm.xml}/contents";
+prefix "/software/components/metaconfig/services/{/etc/libvirt/qemu/vm.xml}/contents";
 "name" = "myhost.example.com";
 "memory" = 1024;
 "cpus" = 2;
