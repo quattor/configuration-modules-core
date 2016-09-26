@@ -262,6 +262,7 @@ sub retrieve
 
     $self->debug(1, "Retrieving file $fn from $source");
 
+    local $ENV{KRB5CCNAME};
     my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $fn);
 
     if ($proxy) {
@@ -275,7 +276,7 @@ sub retrieve
     if ($gss_ccache) {
         # If negotiate extension is required, then we'll
         # enable it and put in a dummy username/password.
-        local $ENV{KRB5CCNAME} = $gss_ccache;
+        $ENV{KRB5CCNAME} = $gss_ccache;
         push @cmd, qw(--negotiate -u x:x);
     }
 
