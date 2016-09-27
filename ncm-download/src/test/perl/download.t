@@ -96,25 +96,29 @@ is($cmp->retrieve($FILE, %opts), 0, "Retrieve of non-existing files fails");
 $mock->mock('get_remote_timestamp', sub { return time() - 120; } );
 
 # broken proxy fails
-set_command_status('/usr/bin/curl -s -R -f --create-dirs -o /a/b/c https://broken/something', 1);
+set_command_status('/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://broken/something1', 1);
 
 command_history_reset();
 ok($cmp->Configure($cfg), "configure ok");
 
 ok(command_history_ok([
     # try proxy, broken fails, then, working
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c https://broken/something',
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c https://working/something',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://broken/something1',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://working/something1',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c2 https://working/something2',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c3 https://working/something3',
     # start with trying working proxy
     '/usr/bin/curl -s -R -f --create-dirs -o /a/b/d abc://working/something/else',
     # no proxy, with postprocess
     '/usr/bin/curl -s -R -f --create-dirs -o /a/b/e def://ok/something/entirely/different',
     'postprocess /a/b/e',
+], [
+    # working2 proxy should not be used
+    'https://working2/',
 ]), "curl called as expected");
 
-# Requires build-tools 1.50
-#is(scalar(grep {m/curl.*?broken/} @Test::Quattor::command_history),
-#   1, 'broken proxy only tried once');
+is(scalar(grep {m/curl.*?broken/} @Test::Quattor::command_history),
+   1, 'broken proxy only tried once');
 
 
 done_testing();

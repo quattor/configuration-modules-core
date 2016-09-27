@@ -12,12 +12,20 @@ include 'components/download/config';
 prefix "/software/components/download";
 "server" = "default.server";
 "proto" = "https";
-"proxyhosts" = list('broken', 'working');
+"proxyhosts" = list('broken', 'working', 'working2');
 
 prefix "/software/components/download/files";
-"{/a/b/c}" = dict(
+"{/a/b/c1}" = dict(
     "proxy", true,
-    "href" ,"something",
+    "href" ,"something1",
+    );
+"{/a/b/c2}" = dict(
+    "proxy", true,
+    "href" ,"something2",
+    );
+"{/a/b/c3}" = dict(
+    "proxy", true,
+    "href" ,"something3",
     );
 "{/a/b/d}" = dict(
     "proxy", true,

@@ -179,10 +179,12 @@ sub download
                 %opts);
 
             if ($success) {
+                # add succesful proxy at begin
                 unshift @$proxyhosts, $proxy;
                 last;
             } else {
-		push @$proxyhosts, $proxy;
+                # add failed proxy at the back
+                push @$proxyhosts, $proxy;
             }
         }
 
