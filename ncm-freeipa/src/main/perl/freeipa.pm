@@ -52,7 +52,11 @@ it resets the admin password).
 
 =head2 AII
 
-First we need to add a user with appropriate priviliges
+The AII hooks act on behalf of the host it is going to setup, so
+any of those principals cannot be used. Instead we use a fixed
+AII principal and keytab.
+
+First we need to add a user with appropriate privileges
     kinit admin
 
     uidadmin=`ipa user-show admin |grep UID: |sed "s/UID://;s/ //g;"`
@@ -68,23 +72,28 @@ First we need to add a user with appropriate priviliges
     ipa role-add-privilege "Quattor AII" --privileges="Host Administrators"
     ipa role-add-member --users=quattor-aii "Quattor AII"
 
-On the AII host do (assuming the host is already added to IPA)
+On the AII host (assuming the host is already added to IPA)
     kinit admin
     ipa-getkeytab -p quattor-aii -k /etc/quattor-aii.keytab -s ipaserver.example.com
     kdestroy
 
-And in the templates use
+
+(If you have granted the host principal the rights to retrieve the quattor-aii keytab,
+you can add in the template of the AII host
     prefix "/software/components/freeipa/principals/aii";
     "principal" = "quattor-aii";
     "keytab" = "/etc/quattor-aii.keytab";
+)
 
 =head2 Missing
 
 =over
 
-=item role / priviliges
+=item role / privileges
 
 =item retrieve use keytabs
+
+=item AII principal/keytab via config file
 
 =back
 
@@ -138,6 +147,10 @@ Readonly my %HOST_CERTIFICATE => {
 Readonly my $IPA_ROLE_CLIENT => 'client';
 Readonly my $IPA_ROLE_SERVER => 'server';
 Readonly my $IPA_ROLE_AII => 'aii';
+
+# TODO: configure via configfile
+Readonly my $IPA_DEFAULT_AII_PRINCIPAL => 'quattor-aii';
+Readonly my $IPA_DEFAULT_AII_KEYTAB => '/etc/quattor-aii.keytab';
 
 # Filename that indicates if FreeIPA was already initialised
 Readonly my $IPA_FILE_INITIALISED => "$IPA_BASEDIR/ca.crt";
@@ -463,11 +476,17 @@ sub _set_ipa_client
     my $role = $opts{role};
     if ($role) {
         my $role_principal = $tree->{principals} && $tree->{principals}->{$role};
-        if ($role_principal) {
+        if ($role eq $IPA_ROLE_AII) {
+            # AII acts on behalf of a host, but is run by admin on teh AII host.
+            # For now, hardcoded. Could be made configurable via config file
+            $principal = $IPA_DEFAULT_AII_PRINCIPAL;
+            $keytab = $IPA_DEFAULT_AII_KEYTAB;
+            $self->verbose("AII role $IPA_ROLE_AII using predefined principal $principal keytab $keytab")
+        } elsif ($role_principal) {
             $principal = $role_principal->{principal};
             $keytab = $role_principal->{keytab};
             $self->verbose("IPA client with role $role principal $principal keytab $keytab");
-        } elsif ($opts{role} eq $IPA_ROLE_CLIENT) {
+        } elsif ($role eq $IPA_ROLE_CLIENT) {
             $self->verbose("IPA client with role $role and default principal $principal keytab $keytab");
         } else {
             return $self->fail("IPA client with role $role but no principal/keytab specified");
@@ -609,6 +628,7 @@ sub post_reboot
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
+    # This is a hook, use AII role
     return if ! $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
@@ -637,6 +657,7 @@ sub remove
     $self->set_fqdn(config => $config);
     my $tree = $config->getTree($self->prefix());
 
+    # This is a hook, use AII role
     return if ! $self->set_ipa_client($tree, role => $IPA_ROLE_AII);
 
     my $hook = $config->getTree($path);
