@@ -179,10 +179,10 @@ sub download
                 %opts);
 
             if ($success) {
-                $proxyhosts = [$proxy, @$proxyhosts];
+                unshift @$proxyhosts, $proxy;
                 last;
             } else {
-                $proxyhosts = [@$proxyhosts, $proxy];
+		push @$proxyhosts, $proxy;
             }
         }
 
