@@ -17,7 +17,7 @@ bind "/system/aii/hooks" = dict with validate_aii_freeipa_hooks('post_reboot');
 
 "/system/aii/hooks/remove/" = append(dict(
     'module', FREEIPA_AII_MODULE_NAME,
-    'delete', FREEIPA_AII_REMOVE,
+    'remove', FREEIPA_AII_REMOVE,
     'disable', FREEIPA_AII_DISABLE,
     ));
 
