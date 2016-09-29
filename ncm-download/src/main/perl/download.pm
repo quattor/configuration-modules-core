@@ -245,7 +245,13 @@ sub get_remote_timestamp
     $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
     my $head = $lwp->head($source);
 
-    return $head->headers->last_modified();
+    if ($head->is_success()) {
+        return $head->headers->last_modified();
+    } else {
+        # Status line starts with code
+        $self->debug(1, "head for $source failed with ", $head->status_line());
+        return;
+    }
 }
 
 
