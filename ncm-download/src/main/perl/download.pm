@@ -7,8 +7,49 @@ our $EC = LC::Exception::Context->new->will_store_all;
 use File::Temp qw(tempdir);
 use CAF::Process;
 use POSIX;
+use Readonly;
 
-use LWP::UserAgent;
+# Lexical scope for Readonly set in BEGIN{}
+my ($HTTPS_CLASS_NET_SSL, $HTTPS_CLASS_IO_SOCKET_SSL, $LWP_MINIMAL, $LWP_CURRENT);
+# Keep track of default class from BEGIN
+my $_default_https_class;
+
+# Although reset by ComponentProxy, let's be polite
+local %ENV;
+
+BEGIN {
+    Readonly $HTTPS_CLASS_NET_SSL => 'Net::SSL';
+    Readonly $HTTPS_CLASS_IO_SOCKET_SSL => 'IO::Socket::SSL';
+
+    # From the el6 perl-libwww-perl changelog:
+    #   Implement hostname verification that is disabled by default. You can install
+    #   IO::Socket::SSL Perl module and set PERL_LWP_SSL_VERIFY_HOSTNAME=1
+    #   enviroment variable (or modify your application to set ssl_opts option
+    #   correctly) to enable the verification.
+    # So this version supports ssl_opts and supports verify_hostname for IO::Socket::SSL
+    Readonly $LWP_MINIMAL => version->new('5.833');
+
+    # This does not load Net::HTTPS by itself
+    use LWP::UserAgent;
+    $_default_https_class = $HTTPS_CLASS_NET_SSL;
+    my $vtxt = $LWP::UserAgent::VERSION;
+    if ($vtxt =~ m/(\d+\.\d+)/) {
+
+        Readonly $LWP_CURRENT => version->new($1);
+
+        if ($LWP_CURRENT >= $LWP_MINIMAL) {
+            # Use system defaults
+            $_default_https_class = undef;
+        }
+    }
+
+    # This doesn't do anything on EL5?
+    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = $_default_https_class;
+}
+
+# Keep this outside the BEGIN{} block
+use Net::HTTPS;
+
 use LWP::Authen::Negotiate;
 
 use EDG::WP4::CCM::Element qw(unescape);
@@ -19,6 +60,126 @@ $NCM::Component::download::NoActionSupported = 1;
 # Hold the credential cache location / KRB5CCNAME value
 my $_gss_tmpdir;
 my $_cached_gss;
+
+# TODO: Move this together with the BEGIN{} elsewhere, e.g. CAF::Download or CCM::Fetch::Download
+
+=pod
+
+=head1 FUNCTIONS
+
+=over
+
+=item _lwp_ua
+
+Initialise LWP::UserAgent and run C<method> with arrayref C<args>.
+Best-effort to handle ssl setup, Net::SSL vs IO::Socket::SSL
+and verify_hostname.
+
+Returns the result of the method or undef.
+
+Options
+
+=over
+
+=item cacert: the CA file
+
+=item cadir: the CA path
+
+=item cert: the client certificate filename
+
+=item key: the client certificate private key filename
+
+=item gss_ccache: the C<KRB5CCNAME> environment variable
+
+=item timeout: set timeout (if defined)
+
+=back
+
+=cut
+
+
+sub _lwp_ua
+{
+    my ($self, $method, $args, %opts) = @_;
+
+    # This is a mess.
+
+    # Set this again; very old Net::HTTPS (like in EL5) does not set the class
+    # on the initial import in the BEGIN{} section
+    $ENV{PERL_NET_HTTPS_SSL_SOCKET_CLASS} = $_default_https_class;
+
+    my $https_class = $Net::HTTPS::SSL_SOCKET_CLASS;
+    if ($_default_https_class && $https_class ne $_default_https_class) {
+        # E.g. when LWP was already used by previous component
+        # No idea how to properly change/force it to the class we expect
+        $self->verbose("Unexpected Net::HTTPS SSL_SOCKET_CLASS: found $https_class, expected $_default_https_class");
+    } else {
+        $self->debug(3, "Using Net::HTTPS SSL_SOCKET_CLASS $https_class");
+    }
+
+    my %lwp_opts;
+
+    # Disable by default, for legacy reasons and because
+    # Net::SSL does not support it (even in el7)
+    my $verify_hostname = 0;
+
+    if (!defined($LWP_CURRENT)) {
+        $self->verbose("Invalid LWP::UserAgent version $LWP::UserAgent::VERSION found. Assuming very ancient system");
+    } elsif ($LWP_CURRENT >= $LWP_MINIMAL) {
+        $self->debug(3, "Using LWP::UserAgent version $LWP_CURRENT");
+        if ($https_class eq $HTTPS_CLASS_IO_SOCKET_SSL) {
+            $self->debug(2, "LWP::UserAgent is recent enough to support verify_hostname for $HTTPS_CLASS_IO_SOCKET_SSL");
+            $verify_hostname = 1;
+        };
+
+        my $ssl_opts = {
+            verify_hostname => $verify_hostname,
+        };
+
+        $ssl_opts->{SSL_ca_file} = $opts{cacert} if $opts{cacert};
+        $ssl_opts->{SSL_ca_path} = $opts{cadir} if $opts{cadir};
+        $ssl_opts->{SSL_cert_file} = $opts{cert} if $opts{cert};
+        $ssl_opts->{SSL_key_file} = $opts{key} if $opts{key};
+
+        $self->debug(3, "Using LWP::UserAgent ssl_opts ", join(" ", map {"$_: ".$ssl_opts->{$_}} sort keys %$ssl_opts));
+        $lwp_opts{ssl_opts} = $ssl_opts;
+    }
+
+    # ssl_opts override any environment vars; but just in case
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = $verify_hostname;
+
+    if ($https_class eq $HTTPS_CLASS_NET_SSL) {
+        # Probably not needed anymore in recent version,
+        # they are set via ssl_opts
+        # But this just in case (e.g. EL5)
+        $ENV{HTTPS_CERT_FILE} = $opts{cert} if $opts{cert};
+        $ENV{HTTPS_KEY_FILE} = $opts{key} if $opts{key};
+
+        # What do these do in EL5?
+        $ENV{HTTPS_CA_FILE} = $opts{cacert} if $opts{cacert};
+        $ENV{HTTPS_CA_DIR} = $opts{capath} if $opts{capath};
+    } elsif ($https_class eq $HTTPS_CLASS_IO_SOCKET_SSL) {
+        # nothing needed?
+        # one could try to set the IO::Socket::SSL::set_ctx_defaults
+        # see http://stackoverflow.com/questions/74358/how-can-i-get-lwp-to-validate-ssl-server-certificates#5329129
+        # but el6 changelog says this is not necessary
+    } else {
+        # This is not supported
+        $self->error("Unsupported Net::HTTPS SSL_SOCKET_CLASS $https_class");
+        return;
+    }
+
+    # Required for LWP::Authen::Negotiate
+    $ENV{KRB5CCNAME} = $opts{gss_ccache} if $opts{gss_ccache};
+
+    my $lwp = LWP::UserAgent->new(%lwp_opts);
+    $lwp->timeout($opts{timeout}) if (defined($opts{timeout}));
+
+    my $res = $lwp->$method(@$args);
+
+    return $res;
+}
+
 
 sub get_gss_token
 {
@@ -31,10 +192,11 @@ sub get_gss_token
     $self->debug(1, "storing kerberos credentials in $_gss_tmpdir");
 
     my $ccache = "FILE:$_gss_tmpdir/host.tkt";
-    local $ENV{KRB5CCNAME} = $ccache;
+    $ENV{KRB5CCNAME} = $ccache;
 
     # Just in case...
-    local $ENV{PATH} = "$ENV{PATH}:/usr/kerberos/bin";
+    my $krb_bin = "/usr/kerberos/bin";
+    $ENV{PATH} = "$ENV{PATH}:$krb_bin" if -d $krb_bin;
 
     # Assume "kinit" is in the PATH.
     my $errs = "";
@@ -228,32 +390,19 @@ sub get_remote_timestamp
 {
     my ($self, $source, %opts) = @_;
 
-    # LWP should use Net::SSL (provided with Crypt::SSLeay)
-    # and Net::SSL doesn't support hostname verify
-    local $ENV{'PERL_NET_HTTPS_SSL_SOCKET_CLASS'} = 'Net::SSL';
-    local $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+    $opts{timeout} = $opts{head_timeout} if defined($opts{head_timeout});
 
-    local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if $opts{cert};
-    local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if $opts{key};
-    local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if $opts{cacert};
-    local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if $opts{capath};
-
-    # Required for LWP::Authen::Negotiate
-    local $ENV{KRB5CCNAME} = $opts{gss_ccache} if $opts{gss_ccache};
-
-    my $lwp = LWP::UserAgent->new;
-    $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
-    my $head = $lwp->head($source);
-
-    if ($head->is_success()) {
-        return $head->headers->last_modified();
+    my $head = $self->_lwp_ua('head', [$source], %opts);
+    if ($head && $head->is_success()) {
+        my $mtime = $head->headers->last_modified();
+        $self->debug(3, "head for $source was success, returning last_modified $mtime");
+        return $mtime;
     } else {
         # Status line starts with code
         $self->debug(1, "head for $source failed with ", $head->status_line());
         return;
     }
 }
-
 
 # Single attempt, actual transfer
 sub retrieve
@@ -270,7 +419,6 @@ sub retrieve
 
     $self->debug(1, "Retrieving file $fn from $source");
 
-    local $ENV{KRB5CCNAME};
     my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $fn);
 
     if ($proxy) {
@@ -335,5 +483,11 @@ sub retrieve
         return 0; # fail
     }
 }
+
+=pod
+
+=back
+
+=cut
 
 1; #required for Perl modules
