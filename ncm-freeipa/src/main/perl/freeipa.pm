@@ -121,7 +121,7 @@ Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 # packages to install with yum for dependencies
 Readonly::Array our @CLI_YUM_PACKAGES => qw(
     ncm-freeipa
-    nss_ldap
+    nss-pam-ldapd
     ipa-client
     nss-tools
     openssl
