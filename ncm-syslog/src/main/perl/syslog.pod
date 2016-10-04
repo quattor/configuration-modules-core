@@ -7,63 +7,32 @@
 
 NCM::syslog - adding entries and editing /etc/syslog.conf
 
-=head1 SYNOPSIS
-
-=over
-
-=item Configure()
-
-=item Unconfigure()
-
-=back
-
 =head1 RESOURCES
 
 =over
 
-=item /software/components/syslog/active : boolean
+=item * C<< /software/components/syslog/active >> : boolean
 
-activates/deactivates the component.
+Activates/deactivates the component.
 
-=item /software/components/syslog/fullcontrol : boolean
+=item * C<< /software/components/syslog/fullcontrol >> : boolean
 
-determines whether component has full control over /etc/syslog.conf, eventually erasing
-entries from other sources, or whether entries from other sources are kept
+Determines whether component has full control over C<< /etc/syslog.conf >>,
+eventually erasing entries from other sources, or whether entries
+from other sources are kept.
 
-=item /software/components/syslog/syslogdoptions : string
+=item * C<< /software/components/syslog/syslogdoptions >> : string
 
-Options for syslogd (/etc/sysconfig/syslog)
+Options for syslogd C<< /etc/sysconfig/syslog >>
 
-=item /software/components/syslog/syslogdoptions : string
+=item * C<< /software/components/syslog/syslogdoptions >> : string
 
-Options for the klogd (/etc/sysconfig/syslog)
+Options for the klogd C<< /etc/sysconfig/syslog >>
 
-=item /software/components/syslog/config/
+=item * C<< /software/components/syslog/config/ >>
 
-The configuration items 
+The configuration items.
 
 =back
-
-=head1 DEPENDENCIES
-
-=head2 Components to be run before:
-
-none.
-
-=head2 Components to be run after:
-
-none.
-
-=head1 BUGS
-
-none known.
-
-=head1 AUTHOR
-
-Ulrich Schwickerath <ulrich.schwickerath@cern.ch>
-
-=head1 SEE ALSO
-
-ncm-ncd(1), sysklogd(8)
 
 =cut
