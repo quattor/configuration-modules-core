@@ -11,7 +11,7 @@ This component configures syslog-ng, an alternative logging facility
 to Scientific Linux' sysklogd. If you want to configure sysklogd, use
 ncm-syslog instead of this component.
 
-The component's structure matches rather closely syslog-ng.conf file format.
+The component's structure matches rather closely C<< syslog-ng.conf >> file format.
 
 =head1 STRUCTURE
 
@@ -22,16 +22,16 @@ booleans.
 
 =over 4
 
-=item * /software/components/syslogng/sources : source{}
+=item * C<< /software/components/syslogng/sources >> : C<< source{} >>
 
 Named list of C<source> structures, indexed by C<source> name.
 
-=item * /software/components/syslogng/destinations : destination{}
+=item * C<< /software/components/syslogng/destinations >> : C<< destination{} >>
 
 Named list of C<destination> structures, indexed by C<destination>
 name.
 
-=item * /software/components/syslogng/filters ? filter{}
+=item * C<< /software/components/syslogng/filters >> ? C<< filter{} >>
 
 Named list of C<filter> structures, indexed by C<filter> name. Rules
 inside a filter are combined by an OR operator. If you want AND
@@ -41,16 +41,16 @@ An additional field to the standard syslog-ng's usual filter
 capabilities is added: C<exclude_filters>. This links to an already
 defined filter, but it will be included in current one, NEGATED.
 
-=item * /software/components/syslogng/log_rules : log_rule[]
+=item * C<< /software/components/syslogng/log_rules : log_rule[] >>
 
 List of C<log_rule> structures.
 
 =back
 
-=head2 Defining a log path
+=head2 Defining a log path:
 
 Log paths are defined on
-C</software/components/syslogng/log_rules>. Their structure is as
+C<< /software/components/syslogng/log_rules >>. Their structure is as
 follows:
 
 =over 4
@@ -58,27 +58,22 @@ follows:
 =item * sources : string[]
 
 List of sources on this path. Each member of this list is a source
-name, and must exist on C</software/components/syslogng/sources>.
+name, and must exist on C<< /software/components/syslogng/sources >>.
 
 =item * destinations : string[]
 
 List of destinations on this path. Each member of this list must exist
-on C</software/components/syslogng/destinations>.
+on C<< /software/components/syslogng/destinations >>.
 
 =item * filters ? string[]
 
 List of filters to be applied on this path. Each member of this list
-must exist on C</software/components/syslogng/destinations>.
+must exist on C<< /software/components/syslogng/destinations >>.
 
 =item * flags ? flag_structure
 
 Flags to be applied on this log rule.
 
 =back
-
-=head1 SEE ALSO
-
-http://www.balabit.com/dl/html/syslog-ng-admin-guide_en.html/bk01-toc.html,
-L<syslog-ng(8)> L<syslog-ng.conf(5)>
 
 =cut
