@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 =begin comment
 
 Be sure to put a blank line before and after every formatting command
@@ -15,104 +14,131 @@ symlink : symlink NCM component.
 
 =head1 DESCRIPTION
 
-Object to create/delete symbolic links. When creating symlinks, target existence can be checked. And clobbering can be disabled. Also, target definition can be simplified by
-the use of contextual variables and command outputs.
-
+Object to create/delete symbolic links. When creating symlinks, target existence
+can be checked. And clobbering can be disabled. Also, target definition
+can be simplified by the use of contextual variables and command outputs.
 
 =head1 RESOURCES
 
-=head2 /software/components/symlink/links
+=over
+
+=item * C<< /software/components/symlink/links >>
 
 A list of symbolic links to create or delete.  Each entry
-must be of the structure_symlink_entry type which has the following
-fields: 
+must be of the C<< structure_symlink_entry >> type which has the following
+fields:
 
 =over
 
-=item *
+=item * C<< name >> : symbolic link name (path).
 
-C<name>: symbolic link name (path).
+=item * C<< target >> : link target path.
 
-=item *
+The target path can be built using a command output with the command string
+(can include valid command options) to execute between a pair of C<< @@ >>
+or a contextual variable using the syntax C<< {variable} >>
+(variables are defined in C<< /software/components/symlinks/context >>).
+Unless the shell command between C<< @@ >> must be reevaluated for each link,
+it is better to associate the shell command with a contextual variable and
+use the variable in the target definition, as a contextual variable is evaluated once (global).
 
-C<target>: link target path. The target path can be built using a command output with the command string (can include valid command options)
-to execute between a pair of C<@@> or a contextual variable using the syntax
-C<{variable}> (variables are defined in C</software/components/symlinks/context>). Unless the shell command between C<@@> must be reevaluated for each link, it is better 
-to associate the shell command
-with a contextual variable and use the variable in the target definition, as a contextual variable is evaluated once (global). 
+=item * C<< delete >> : (boolean)
 
-=item *
+Delete the symlink (not its target) rather than creating it. C<< target >>
+can be ommitted in this case and if present, it is not checked to be this
+value before deletion. If C<< exists >> is true, raise an error, if the
+link is not found else just silently ignore it.
 
-C<delete>: (boolean) delete the symlink (not its target) rather than creating it. C<target> can be ommitted in this case and if present, it is not checked to be this value before
-deletion. If C<exists> is true, raise an error, if the link is not found else just silently ignore it.
+=item * C<< exists >> : (boolean)
 
-=item *
+Check that the target exists when creating it or check that the symlink
+name exists when deleting it.
 
-C<exists>: (boolean) check that the target exists when creating it or check that the symlink name exists when deleting it.
+=item * C<< replace >> : (nlist)
 
-=item *
-
-C<replace>: (nlist) option used to specify the action to take when an object with the same name as the symlink already exists, depending on the object type. 
+Option used to specify the action to take when an object with the same
+name as the symlink already exists, depending on the object type.
 Possible actions are: do not define the symlink, replace the
-object by the symlink or define the symlink after renaming the object. The nlist keys and values can be:
+object by the symlink or define the symlink after renaming the object.
+The nlist keys and values can be:
 
 =over
 
-=item *
+=item * B< key >:
 
-key: the existing object type. Valid values are: C<all>, C<dir>, C<dirempty>, C<file>, C<link>, C<none>.  C<dirempty> means an empty directory only, C<dir> means any directory.
-C<all> and C<none> are mutually exclusive but can be combined with other object types to define the extension to use when renaming a given object type or to prevent/enable replacement for a specific object type. 
+The existing object type. Valid values are: C<all>, C<dir>, C<dirempty>,
+C<file>, C<link>, C<none>.  C<dirempty> means an empty directory only,
+C<dir> means any directory. C<all> and C<none> are mutually exclusive
+but can be combined with other object types to define the extension
+to use when renaming a given object type or to prevent/enable replacement
+for a specific object type.
 
-=item *
+=item * B< value >:
 
-value: action applying to the object type. Can be C<yes> (replacement of the object by the symlink allowed), C<no> (replacement of the object by the symlink disabled) or any other
-string. In this latter case, replacement of the object by the symlink is enabled after renaming the object by appending the string to its name. The value can also be empty: see
-below. Note that non empty directories are B<always> renamed before defining the symlink (a default extension, C<.ncm-symlink_saved>, is used).
+Action applying to the object type. Can be C<yes> (replacement of the object
+by the symlink allowed), C<no> (replacement of the object by the symlink
+disabled) or any other string. In this latter case, replacement of the object
+by the symlink is enabled after renaming the object by appending the string
+to its name. The value can also be empty: see below. Note that non empty
+directories are B<always> renamed before defining the symlink
+(a default extension, C<< .ncm-symlink_saved >>, is used).
 
 =back
 
 =back
 
-C<replace> option allows a lot of flexibility in specifying what should be done in case of conflict with an existing object. It implements the following advanced features:
+C<replace> option allows a lot of flexibility in specifying what should
+be done in case of conflict with an existing object. It implements the
+following advanced features:
 
 =over
 
-=item *
+=item * C<< none=extension >>
 
-C<none=extension> can be used to establish a default rename extension without actually enabling replacement for a particular type. This extension 
-will be used with object types for which replacement is enabled with C<yes> rather than an extension.
+Can be used to establish a default rename extension without actually enabling
+replacement for a particular type. This extension will be used with object
+types for which replacement is enabled with C<yes> rather than an extension.
 
-=item *
+=item * C<< Action >>
 
-Action can be empty. If a default rename extension was defined with C<none=extension>, the object will be renamed before defining the symlink. Else it is interpreted as C<yes>.
+Can be empty. If a default rename extension was defined with C<< none=extension >>,
+the object will be renamed before defining the symlink. Else it is interpreted as C<yes>.
 
 =back
 
-=head2 /software/components/symlink/context
+=item * C<< /software/components/symlink/context >>
 
-A list of contextual variables to use in target definitions.  Each entry is a key/value pair with the variable name
-as the key. The value can contain a command output, as link target definition: see C<target> description above.
+A list of contextual variables to use in target definitions. Each entry is
+a key/value pair with the variable name as the key. The value can contain
+a command output, as link target definition: see C<< target >> description above.
 Contextual variables are global. They are evaluated once, before starting to define
 symlinks.
 
 
-=head2 /software/components/symlink/options
+=item * C<< /software/components/symlink/options >>
 
-A list of global options used as default for all links creation/deletion. Supported options are the same as options supported in the link definition (see above), 
-with the exception of C<delete>.
+A list of global options used as default for all links creation/deletion.
+Supported options are the same as options supported in the link definition
+(see above), with the exception of C<delete>.
+
+=back
 
 =head1 EXAMPLES
 
-    # Define global variable osdir so that it can be use to define symlink targets
-    "/software/components/symlink/context" = {
-      append(nlist(
-               "name",    "ostype",
-               "value",   "@@uname@@",
-      ));
-    };
-  
-    # Various symlink definition examples
-    "/software/components/symlink/links" = {
+=over
+
+=item Define global variable osdir so that it can be use to define symlink targets
+
+  "/software/components/symlink/context" = {
+    append(nlist(
+             "name",    "ostype",
+             "value",   "@@uname@@",
+    ));
+  };
+
+=item Various symlink definition examples
+
+  "/software/components/symlink/links" = {
 
       # Define /usr/bin/tcsh only if /bin/tcsh exists
       append(nlist(
@@ -151,7 +177,7 @@ with the exception of C<delete>.
                "replace",  nlist("all", "yes"),
       ));
 
-      # Define symlink /etc/pine.conf, replacing an existing file or symlink 
+      # Define symlink /etc/pine.conf, replacing an existing file or symlink
       # by the new symlink, after renaming it using extension .saved
       append(nlist(
                "name", "/etc/pine.conf",
@@ -162,20 +188,20 @@ with the exception of C<delete>.
       # Define /htdocs as a link only if /htdocs doesn't exist or already
       # exists as a symlink (actual target not checked)
       append(nlist(
-               "name", "/htdocs",
-               "target", HTTPD_HTDOCS_DIR,
-               "replace",  nlist("all","no","link", "yes")
+          "name", "/htdocs",
+          "target", HTTPD_HTDOCS_DIR,
+          "replace",  nlist("all","no","link", "yes")
       ));
 
+  # End of symlink definitions
+  };
 
-    # End of symlink definitions
-    };
+=item Define options to enable replacement of empty directories and links,
+with empty directories renamed adding C<.saved> to their name before defining the symlink.
 
-    # Define options to enable replacement of empty directories and links,
-    # with empty directories renamed adding C<.saved> to their name before
-    # defining the symlink.
-    "/software/components/symlink/options/replace/dirempty" = ".saved"; 
-    "/software/components/symlink/options/replace/link" = "yes";
+  "/software/components/symlink/options/replace/dirempty" = ".saved";
+  "/software/components/symlink/options/replace/link" = "yes";
 
- 
+=back
+
 =cut
