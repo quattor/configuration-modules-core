@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 =head1 NAME
 
 NCM::sendmail - NCM Sendmail configuration component
@@ -15,49 +14,32 @@ NCM::sendmail - NCM Sendmail configuration component
 
 =over 4
 
-=item -
+=item * Set From header masquerading in sendmail.
+i.e. change the From field C<< "username@localhost.localdomain" >> to C<< "username@mail.cern.ch" >>.
+Use the following input C<< /software/components/sendmail/userdomain >>
 
-Set From header masquerading in sendmail.
-i.e. change the From field "username@localhost.localdomain" to "username@mail.cern.ch".
-Use the following input C</software/components/sendmail/userdomain>
+=item * Set Return-Path masquerading in sendmail.
+i.e. change the Return-Path header C<< "username@localhost.localdomain" >>
+to C<< "username@mail.cern.ch" >>.
 
-=item -
+=item * Set the outgoing mail server ("smarthost") in sendmail.
+Use the following input C<< /software/components/sendmail/smarthost >>
 
-Set Return-Path masquerading in sendmail.
-i.e. change the Return-Path header "username@localhost.localdomain" to "username@mail.cern.ch".
+=item * Allow external SMTP connections. By default sendmail will listen only to the loopback interface.
 
-=item -
-
-Set the outgoing mail server ("smarthost") in sendmail.
-Use the following input C</software/components/sendmail/smarthost>
-
-=item -
-
-Allow external SMTP connections. By default sendmail will listen only to the loopback interface.
-
-=item -
-
-Sets up "relay" for all unqualified names, except either for the list in
-C</software/components/sendmail/localusers> or, if that list hasn't been configured,
-for a (guessed) list of accounts that
+=item * Sets up "relay" for all unqualified names, except either for the list in
+C<< /software/components/sendmail/localusers >> or, if that list hasn't been configured,
+for a (guessed) list of accounts that:
 
 =over 6
 
-=item *
+=item * have an existing home directory
 
-have an existing home directory
+=item * do B<not> have an AFS home directory (C<< /afs/... >>)
 
-=item *
+=item * do not already have an alias definition in C<< /etc/mail/aliases.db >>.
 
-do B<not> have an AFS home directory (C</afs/...>)
-
-=item *
-
-do not already have an alias definition in /etc/mail/aliases.db.
-
-=item *
-
-whose I<uid> indicates that this is not a system account (information from C</etc/login.defs>)
+=item * whose I<uid> indicates that this is not a system account (information from C<< /etc/login.defs >>)
 
 =back
 
@@ -67,21 +49,24 @@ being appended to the user's local mailbox
 (e.g. I</var/spool/mail/username>).
 
 To turn off the "guessing" mechanism, you will have to configure at
-least one account in C</software/components/sendmail/localusers>,
+least one account in C<< /software/components/sendmail/localusers >>,
 C<root> is a good candidate.
-
 
 =back
 
 =item Unconfigure()
 
-=item - Reset From header masquerading in sendmail.
+=over 4
 
-=item - Reset Return-Path header masquerading in sendmail.
+=item * Reset From header masquerading in sendmail.
 
-=item - Reset outgoing mail server in sendmail.
+=item * Reset Return-Path header masquerading in sendmail.
 
-=item - Reset relay all unqualified names in sendmail.
+=item * Reset outgoing mail server in sendmail.
+
+=item * Reset relay all unqualified names in sendmail.
+
+=back
 
 =back
 
@@ -89,21 +74,11 @@ C<root> is a good candidate.
 
 =over 4
 
-=item /etc/mail/sendmail.mc : sendmail macro configuration file
+=item C<< /etc/mail/sendmail.mc >> : sendmail macro configuration file
 
-=item /etc/mail/semdmail.cf : sendmail configuration file
+=item C<< /etc/mail/sendmail.cf >> : sendmail configuration file
 
 =back
-
-=head1 DEPENDENCIES
-
-=head2 Components to be run before:
-
-none.
-
-=head2 Components to be run after:
-
-none.
 
 =head1 BUGS
 
@@ -114,17 +89,4 @@ Selectively "unconfiguring" certain elements doesn't work, you should
 run the I<unconfigure()> method and re-I<configure()> with the new
 values afterwards.
 
-=head1 AUTHOR
-
-Jan Iven <jan.iven@cern.ch>
-
-=head1 SEE ALSO
-
-ncm-ncd(1), sendmail(8)
-
 =cut
-
-
-### Local Variables: ///
-### mode: perl ///
-### End: ///
