@@ -78,6 +78,7 @@ type component_ccm = {
     'json_typed'       ? boolean
     'tabcompletion'    ? boolean
     'keep_old'         ? long(0..)
+    'purge_time'       ? long(0..)
     'trust'            ? kerberos_principal_string[]
     'principal'        ? kerberos_principal_string
     'keytab'           ? string
