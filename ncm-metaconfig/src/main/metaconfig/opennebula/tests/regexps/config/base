@@ -1,0 +1,10 @@
+Base test for config
+---
+multiline
+/etc/aii/opennebula.conf
+---
+^\[.+\]$
+^password\=.+$
+^pattern\=.+$
+^url\=.+$
+^user\=.+$

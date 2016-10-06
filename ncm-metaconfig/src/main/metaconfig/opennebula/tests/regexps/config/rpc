@@ -1,0 +1,13 @@
+RPC full test for config
+---
+multiline
+/etc/aii/opennebula.conf
+---
+^\[cluster\.com\]$
+^password=a\_good\_pass\_here$
+^pattern=node0\\d\+\.cluster\.com$
+^url=https://my\.example\.com/RPC2$
+^user=serveradmin2$
+^\[rpc\]$
+^password=mypassword$
+^url=http://myhost:2366/RPC2$
