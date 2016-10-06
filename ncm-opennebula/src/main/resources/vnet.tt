@@ -1,14 +1,17 @@
 [%- booleans = ['vlan', 'context_force_ipv4'] -%]
 [%- ar_section = ['ar'] -%]
-[% FOR pair IN vnet.pairs -%]
-[%-    SWITCH pair.key -%]
-[%         CASE booleans -%]
-[%             pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
-[%         CASE ar_section -%]
-[%             pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
-                                      data=vnet.${pair.key} -%]
-[%         CASE -%]
-[%             pair.key FILTER upper %] = "[% pair.value %]"
-[%     END -%]
+[% FOR pool IN vnet.pairs -%]
+NAME = "[% pool.key %]"
+[%    FOR pair IN pool.value.pairs %]
+[%-       SWITCH pair.key -%]
+[%            CASE booleans -%]
+[%                pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
+[%            CASE ar_section -%]
+[%                pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+                                      data=pair.value -%]
+[%            CASE -%]
+[%                pair.key FILTER upper %] = "[% pair.value %]"
+[%        END -%]
+[%-    END %]
 [%- END -%]
 QUATTOR = 1

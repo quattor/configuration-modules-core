@@ -298,7 +298,6 @@ shared DS is also supported
 }
 type opennebula_datastore = {
     include opennebula_ceph_datastore
-    "name"                      : string
     "bridge_list"               ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check"  : boolean = true
     "disk_type"                 : string = 'RBD'
@@ -308,7 +307,6 @@ type opennebula_datastore = {
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
-    "name" : string
     "bridge" : string
     "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
     "gateway" ? type_ipv4
@@ -331,18 +329,16 @@ By default new users are assigned to the users group.
 }
 type opennebula_user = {
     "ssh_public_key" ? string[]
-    "user" : string 
     "password" ? string
     "group" ? string
-};
+} = dict();
 
 @documentation{
 Set a group name and an optional decription
 }
 type opennebula_group = {
-    "group" : string
     "description" ? string
-};
+} = dict();
 
 type opennebula_remoteconf_ceph = {
     "pool_name" : string
@@ -552,10 +548,10 @@ datastores, vnets, hosts names, etc
 }
 type component_opennebula = {
     include structure_component
-    'datastores'    ? opennebula_datastore[1..]
-    'groups'        ? opennebula_group[]
-    'users'         ? opennebula_user[]
-    'vnets'         ? opennebula_vnet[]
+    'datastores'    ? opennebula_datastore{}
+    'groups'        ? opennebula_group{}
+    'users'         ? opennebula_user{}
+    'vnets'         ? opennebula_vnet{}
     'hosts'         ? string[]
     'rpc'           ? opennebula_rpc
     'untouchables'  ? opennebula_untouchables

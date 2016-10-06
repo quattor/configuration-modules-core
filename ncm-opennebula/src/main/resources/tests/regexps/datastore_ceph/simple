@@ -2,6 +2,7 @@ OpenNebula ceph datastore test
 ---
 multiline
 ---
+^NAME\s?=\s?".+"\s*$
 ^BRIDGE_LIST\s?=\s?".+"\s*$
 ^CEPH_HOST\s?=\s?".+"\s*$
 ^CEPH_SECRET\s?=\s?".+"\s*$
@@ -9,7 +10,6 @@ multiline
 ^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
 ^DISK_TYPE\s?=\s?".+"\s*$
 ^DS_MAD\s?=\s?".+"\s*$
-^NAME\s?=\s?".+"\s*$
 ^POOL_NAME\s?=\s?".+"\s*$
 ^RBD_FORMAT\s?=\s?\d+\s*$
 ^TM_MAD\s?=\s?".+"\s*$

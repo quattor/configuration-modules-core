@@ -172,7 +172,7 @@ sub remove_something
     my ($self, $one, $type, $resources, %protected) = @_;
     my $method = "get_${type}s";
     my @existres = $one->$method();
-    my @namelist = $self->create_resource_names_list($one, $type, $resources);
+    my @namelist = $self->create_resource_names_list($resources);
     my %rnames = map { $_ => 1 } @namelist;
 
     foreach my $oldresource (@existres) {
@@ -206,7 +206,7 @@ sub update_something
         $self->info("Updating old $type Quattor resource with a new template: ", $name);
         $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
-        if ($type eq "vnet" && defined($data->{ar})) {
+        if ($type eq "vnet" && defined($data->{$name}->{ar})) {
             $self->update_vn_ar($one, $name, $template, $t, $data);
         }
     }
@@ -223,7 +223,7 @@ sub update_vn_ar
     $arid = $t->get_ar_id(%ar_opts);
     $self->debug(1, "Detected AR id to update: ", $arid);
     if (defined($arid)) {
-        $data->{ar}->{ar_id} = "$arid";
+        $data->{$vnetname}->{ar}->{ar_id} = "$arid";
         $template = $self->process_template($data, "vnet");
         $self->debug(1, "AR template to update from $vnetname: ", $template);
         $arid = $t->updatear($template);
@@ -282,16 +282,12 @@ sub detect_ceph_datastores
 
 sub create_resource_names_list
 {
-    my ($self, $one, $type, $resources) = @_;
-    my ($name, @namelist, $template);
+    my ($self, $resources) = @_;
+    my @namelist;
 
-    foreach my $newresource (@$resources) {
-        $template = $self->process_template($newresource, $type);
-        if ($template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m) {
-            $name = $1;
-            push(@namelist, $name);
-        }
-    }
+    foreach my $resourcename (sort keys %{$resources}) {
+        push(@namelist, $resourcename);
+    };
     return @namelist;
 }
 
@@ -315,16 +311,16 @@ sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
     my ($secret, $uuid);
-    foreach my $ceph (@$datastores) {
-        if (defined($ceph->{tm_mad}) && $ceph->{tm_mad} eq 'ceph') {
-            if ($ceph->{ceph_user_key}) {
+    foreach my $ceph (sort keys %{$datastores}) {
+        if ($datastores->{$ceph}->{tm_mad} eq 'ceph') {
+            if ($datastores->{$ceph}->{ceph_user_key}) {
                 $self->verbose("Found Ceph user key.");
-                $secret = $ceph->{ceph_user_key};
+                $secret = $datastores->{$ceph}->{ceph_user_key};
             } else {
                 $self->error("Ceph user key not found within Quattor template.");
                 return;
             }
-            $uuid = $self->set_ceph_secret($type, $host, $ceph);
+            $uuid = $self->set_ceph_secret($type, $host, $datastores->{$ceph}->{ceph_secret});
             return if !$uuid;
             return if !$self->set_ceph_keys($host, $uuid, $secret);
         }
@@ -336,14 +332,14 @@ sub enable_ceph_node
 # to be used by libvirt
 sub set_ceph_secret
 {
-    my ($self, $type, $host, $ceph) = @_;
+    my ($self, $type, $host, $ceph_secret) = @_;
     my $uuid;
     # Add ceph keys as root
     my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
     my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
     if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
         $uuid = $1;
-        if ($uuid eq $ceph->{ceph_secret}) {
+        if ($uuid eq $ceph_secret) {
             $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
         } else {
             $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
@@ -463,12 +459,12 @@ sub manage_something
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources, %protected);
 
-    if (@$resources) {
-        $self->info("Creating new ${type}/s: ", scalar @$resources);
-    }
-    foreach my $newresource (@$resources) {
-        my $new = $self->create_or_update_something($one, $type, $newresource, %protected);
-    }
+    $self->info("Creating new ${type}s: ", join(', ', keys %{$resources}));
+    foreach my $newresource (sort keys %{$resources}) {
+        my %temp;
+        $temp{$newresource}->{$newresource} = $resources->{$newresource};
+        my $new = $self->create_or_update_something($one, $type, $temp{$newresource}, %protected);
+    };
 }
 
 # Function to add/remove Xen or KVM hyp hosts
@@ -581,17 +577,17 @@ sub manage_users_groups
     my ($new, $template, @rmdata, @datalist);
     my $getmethod = "get_${type}s";
     my $createmethod = "create_${type}";
+    my %temp;
 
-    foreach my $account (@$data) {
-        if ($account->{$type}) {
-            if ($account->{$type} eq $SERVERADMIN_USER && exists $account->{password}) {
-                $self->change_opennebula_passwd($account->{$type}, $account->{password});
-            } elsif ($account->{$type} eq $ONEADMIN_USER && exists $account->{ssh_public_key}) {
-                $template = $self->process_template($account, $type);
-                $new = $self->update_something($one, $type, $account->{$type}, $template);
+    foreach my $account (sort keys %{$data}) {
+            if ($account eq $SERVERADMIN_USER && exists $data->{$account}->{password}) {
+                $self->change_opennebula_passwd($account, $data->{$account}->{password});
+            } elsif ($account eq $ONEADMIN_USER && exists $data->{$account}->{ssh_public_key}) {
+                $temp{$account}->{$account} = $data->{$account};
+                $template = $self->process_template($temp{$account}, $type);
+                $new = $self->update_something($one, $type, $account, $template);
             };
-            push(@datalist, $account->{$type});
-        }
+            push(@datalist, $account);
     }
 
     my @existsdata = $one->$getmethod();
@@ -616,34 +612,33 @@ sub manage_users_groups
         $self->info("Removed ${type}s: ", join(',', @rmdata));
     }
 
-    foreach my $account (@$data) {
-        if (exists($protected{$account->{$type}})) {
-            $self->info("This $type is protected and can not be created/updated: ", $account->{$type});
-        } elsif ($account->{$type}) {
-            $template = $self->process_template($account, $type);
-            my $used = $self->detect_used_resource($one, $type, $account->{$type});
+    foreach my $account (sort keys %{$data}) {
+        if (exists($protected{$account})) {
+            $self->info("This $type is protected and can not be created/updated: ", $account);
+        } else {
+            $temp{$account}->{$account} = $data->{$account};
+            $template = $self->process_template($temp{$account}, $type);
+            my $used = $self->detect_used_resource($one, $type, $account);
             if (!$used) {
-                $self->info("Creating new $type: ", $account->{$type});
-                if (exists $account->{password}) {
+                $self->info("Creating new $type: ", $account);
+                if (exists $data->{$account}->{password}) {
                     # Create new user
-                    $one->$createmethod($account->{$type}, $account->{password}, $CORE_AUTH_DRIVER);
-                    $self->change_user_group($one, $account) if (exists $account->{group});
+                    $one->$createmethod($account, $data->{$account}->{password}, $CORE_AUTH_DRIVER);
+                    $self->change_user_group($one, $account, $data->{$account}->{group}) if (exists $data->{$account}->{group});
                 } else {
                     # Create new group
-                    $one->$createmethod($account->{$type});
+                    $one->$createmethod($account);
                 };
                 # Add Quattor flag
-                $new = $self->update_something($one, $type, $account->{$type}, $template);
+                $new = $self->update_something($one, $type, $account, $template);
             } elsif ($used == -1) {
                 # User/group is already there and we can modify it
-                $self->info("Updating $type with a new template: ", $account->{$type});
-                $new = $self->update_something($one, $type, $account->{$type}, $template);
-                if ((exists $account->{group}) and ($type eq "user")) {
-                    $self->change_user_group($one, $account);
+                $self->info("Updating $type with a new template: ", $account);
+                $new = $self->update_something($one, $type, $account, $template);
+                if ((exists $data->{$account}->{group}) and ($type eq "user")) {
+                    $self->change_user_group($one, $account, $data->{$account}->{group});
                 };
             }
-        } else {
-            $self->error("No $type name or password info available:", $account->{$type});
         }
     }
 }
@@ -651,11 +646,10 @@ sub manage_users_groups
 # Set user primary group
 sub change_user_group
 {
-    my ($self, $one, $user) = @_;
-    
-    my $name = $user->{user};
-    $self->info("User: $name must belong to this primary group: ", $user->{group});
-    my $group_id = $self->get_resource_id($one, "group", $user->{group});
+    my ($self, $one, $name, $group) = @_;
+
+    $self->info("User: $name must belong to this primary group: ", $group);
+    my $group_id = $self->get_resource_id($one, "group", $group);
 
     if (defined($group_id)) {
         my @users = $one->get_users(qr{^$name$});
@@ -663,13 +657,13 @@ sub change_user_group
         foreach my $usr (@users) {
             my $out = $usr->chgrp($group_id);
             if (defined($out)) {
-                $self->info("Changed user: $name primary group to: ", $user->{group});
+                $self->info("Changed user: $name primary group to: ", $group);
             } else {
-                $self->error("Not able to change user: $name group to: ", $user->{group});
+                $self->error("Not able to change user: $name group to: ", $group);
             };
         }
     } else {
-        $self->error("Requested OpenNebula group for user $name does not exist: ", $user->{group});
+        $self->error("Requested OpenNebula group for user $name does not exist: ", $group);
     };
 }
 
@@ -893,9 +887,9 @@ sub Configure
         $self->set_one_service_conf($tree->{sunstone}, "sunstone", $SUNSTONE_CONF_FILE, $cfggrp);
         if (exists $tree->{users}) {
             my $users = $tree->{users};
-            foreach my $user (@$users) {
-                if ($user->{user} eq $SERVERADMIN_USER && exists $user->{password}) {
-                    $self->set_one_auth_file($user->{user}, $user->{password}, $cfggrp);
+            foreach my $user (sort keys %{$users}) {
+                if ($user eq $SERVERADMIN_USER && exists $users->{$user}->{password}) {
+                    $self->set_one_auth_file($user, $users->{$user}->{password}, $cfggrp);
                 }
             }
         }
