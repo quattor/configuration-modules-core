@@ -2,17 +2,25 @@
 
 object template https;
 
-prefix '/software/components/aiiserver';
-'active' = true;
-'aii-dhcp/dhcpconf' = '/dhcp/conf/quattor/dhcpd.conf.aii';
-'aii-dhcp/restartcmd' = '/dhcp/scripts/dhcp_rebuild_db';
-'aii-shellfe/cdburl' = 'http://quattor.web.lal.in2p3.fr/profiles';
-'aii-shellfe/nbpdir' = '/tftpboot/quattor/pxelinux.cfg';
-'aii-shellfe/osinstalldir' = '/www/quattor/ks';
-'aii-shellfe/profile_format' = 'json';
-'aii-shellfe/use_fqdn' = true;
-'dependencies/pre/0' = 'spma';
-'dispatch' = true;
+function pkg_repl = { null; };
+
+include 'components/aiiserver/config';
+
+'/software/components/aiiserver/dependencies' = null;
+
+
+prefix '/software/components/aiiserver/aii-dhcp';
+'dhcpconf' = '/dhcp/conf/quattor/dhcpd.conf.aii';
+'restartcmd' = '/dhcp/scripts/dhcp_rebuild_db';
+
+prefix '/software/components/aiiserver/aii-shellfe';
+'cdburl' = 'http://quattor.web.lal.in2p3.fr/profiles';
+'nbpdir' = '/tftpboot/quattor/pxelinux.cfg';
+'osinstalldir' = '/www/quattor/ks';
+'profile_format' = 'json';
+'use_fqdn' = true;
+'ca_dir' = '/etc/aii/iwin';
+
 
 prefix '/software/components/ccm';
 'ca_dir' = '/etc/grid-security/certificates';
