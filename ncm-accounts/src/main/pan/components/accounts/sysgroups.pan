@@ -94,4 +94,8 @@ unique template components/accounts/sysgroups;
     'cimsrvr', '',
     'vboxusers', '',
     'apacheds', '',
+    'mongod' , '',
+    'mongodb' , '',
+    'rabbitmq' , '',
+    'memcached' , '',
    );
