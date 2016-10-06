@@ -5,9 +5,9 @@
 [%- pair.key -%]
 [%- SWITCH pair.key -%]
 [%-     CASE ['path_selector'] -%]
- [%         pair.value.join(' ') %]
+ "[%         pair.value.join(' ') %]"
 [%-     CASE ['features'] -%]
- [%         pair.value.shift %] [% pair.value.shift.join(' ') %]
+ "[%         pair.value.shift %] [% pair.value.shift.join(' ') %]"
 [%-     CASE booleans -%]
  [%         pair.value ? 'yes' : 'no' -%]
 [%-     CASE -%]
