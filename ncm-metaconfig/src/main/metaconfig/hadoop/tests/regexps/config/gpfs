@@ -1,0 +1,24 @@
+Base test for gpfss-site config
+---
+multiline
+/usr/lpp/mmfs/hadoop/etc/hadoop/gpfs-site.xml
+---
+^<configuration>$
+^\s{4}<property>$
+^\s{8}<name>gpfs.data.dir</name>$
+^\s{8}<value>hadoop_data</value>$
+^\s{4}</property>$
+^\s{4}<property>$
+^\s{8}<name>gpfs.mnt.dir</name>$
+^\s{8}<value>/gpfs/test</value>$
+^\s{4}</property>$
+^\s{4}<property>$
+^\s{8}<name>gpfs.replica.enforced</name>$
+^\s{8}<value>gpfs</value>$
+^\s{4}</property>$
+^\s{4}<property>$
+^\s{8}<name>gpfs.storage.type</name>$
+^\s{8}<value>shared</value>$
+^\s{4}</property>$
+^</configuration>$
+

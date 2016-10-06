@@ -1,0 +1,22 @@
+[%- FOREACH pair IN data.pairs -%]
+[%-      pathtmp=cfgpath.merge([pair.key]) -%]
+[%-     IF pair.key == 'defaultFS' or ! CCM.is_hash(pair.value) %]
+<property>
+[%          FILTER indent -%]
+<name>[%        pathtmp.join('.') -%]</name>
+<value>
+[%-             IF pair.key == 'defaultFS' -%]
+[%-                 pair.value.format -%]://[%- pair.value.host -%]:[%- pair.value.port -%]
+[%-             ELSIF pair.value.is_boolean -%]
+[%-                 pair.value ? 'true' : 'false' -%]
+[%-             ELSE  -%]
+[%-                 pair.value -%]
+[%-             END -%]
+</value>
+[%-         END %]
+</property>
+[%-      ELSE  -%]
+[%-         INCLUDE metaconfig/hadoop/property.tt data=pair.value cfgpath=pathtmp -%]
+[%-     END -%]
+[%-  END -%]
+

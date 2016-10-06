@@ -1,0 +1,12 @@
+Base test for core-site config
+---
+multiline
+/etc/hadoop/conf.quattor/core-site.xml
+---
+^<configuration>$
+^\s{4}<property>$
+^\s{8}<name>fs.defaultFS</name>$
+^\s{8}<value>hdfs://storage2204.shuppet.os:9000</value>$
+^\s{4}</property>$
+^</configuration>$
+
