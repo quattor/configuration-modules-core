@@ -665,9 +665,5 @@ Default log file.
 
 =back
 
-=head1 SEE ALSO
-
-B<ncm-ncd>(1), B<ncm-spma>(1), B<ncm-query>(1).
-
 =cut
 
