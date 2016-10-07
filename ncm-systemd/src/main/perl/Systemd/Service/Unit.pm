@@ -1392,11 +1392,11 @@ sub is_ufstate
 =item _getTree
 
 The C<getTree> method is similar to the regular
-L<EDG::WP4::CCM::Element::getTree>, except that
+B<EDG::WP4::CCM::Element::getTree>, except that
 it keeps the unitfile configuration as an Element instance
-(as required by L<NCM::Component::Systemd::UnitFile>).
+(as required by B<NCM::Component::Systemd::UnitFile>).
 
-It takes as arguments a L<EDG::WP4::CCM::Configuration> instance
+It takes as arguments a B<EDG::WP4::CCM::Configuration> instance
 C<$config> and a C<$path> to the root of the whole unit tree.
 
 =cut
