@@ -31,7 +31,7 @@ my $path;
 
 $path = "/system/aii/hooks/remove/0";
 reset_POST_history;
-ok($aii->remove($cfg, $path), 'aii remove ok');
+ok($aii->aii_remove($cfg, $path), 'aii remove ok');
 ok(POST_history_ok([
        "host_disable myhost.example.com version",
    ]), "host_disable called");
@@ -49,7 +49,7 @@ my $fh = CAF::FileWriter->new("target/test/ks");
 select($fh);
 
 reset_POST_history;
-ok($aii->post_reboot($cfg, $path), 'aii post_reboot ok');
+ok($aii->aii_post_reboot($cfg, $path), 'aii post_reboot ok');
 
 # Correct host add / host-mod command
 ok(POST_history_ok([

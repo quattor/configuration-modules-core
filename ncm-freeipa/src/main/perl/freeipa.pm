@@ -621,7 +621,7 @@ sub Configure
 
 # AII post_reboot hook
 # TODO: requesting a OTP, to be used withing max window seconds
-sub post_reboot
+sub aii_post_reboot
 {
     my ($self, $config, $path) = @_;
 
@@ -650,7 +650,7 @@ sub post_reboot
 }
 
 # AII remove hook
-sub remove
+sub aii_remove
 {
     my ($self, $config, $path) = @_;
 
