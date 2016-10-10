@@ -5,10 +5,10 @@
 <target dev='[% data.dev %]'/>
 <driver name='qemu' type='raw' cache='[% data.cache %]'/>
 <source protocol='rbd' name='[% data.rbd.name %]'>
-[%   FOREACH item IN data.rbd.ceph_hosts -%]
-[%       FILTER indent -%]
+[%     FOREACH item IN data.rbd.ceph_hosts -%]
+[%         FILTER indent -%]
 <host name='[% item %]'/>
-[%       END -%]
-[%   END -%]
+[%         END -%]
+[%     END -%]
 </source>
 [% END -%]

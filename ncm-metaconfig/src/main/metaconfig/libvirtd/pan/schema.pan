@@ -124,7 +124,7 @@ type type_kvmvm_network = {
 
 type type_kvmvm_rbd = {
     @{name of the block device available from the storage pool.
-     it should incldue the relative path to the storage pool, as example:
+     it should include the relative path to the storage pool, as example:
      "one/disk1.vda"}
     'name' : string
     @{list of Ceph monitors}
@@ -136,7 +136,7 @@ Parameters required to use a Ceph storage backend
 }
 type type_kvmvm_ceph_disk = {
     @{uuid of the libvird secret generated from Ceph secret.xml file
-     more info: http://docs.ceph.com/docs/hammer/rbd/libvirt/
+     more info: http://docs.ceph.com/docs/master/rbd/libvirt/
      }
     'uuid' : type_uuid
     @{protocol attributes required by Ceph rados block device}
