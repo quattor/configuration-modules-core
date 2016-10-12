@@ -16,6 +16,7 @@ type component_cdp = {
     'fetch'        ? string
     'fetch_offset' ? long(0..)
     'fetch_smear'  ? long(0..)
+    'hostname'     ? type_hostname
 };
 
 bind '/software/components/cdp' = component_cdp;
