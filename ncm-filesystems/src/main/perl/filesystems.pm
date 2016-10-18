@@ -79,7 +79,7 @@ sub free_space
 		next if(exists $fsh{$mount} || exists $ph{$mount}
 			    || exists($ph{abs_path($mount)}));
 		$self->verbose("Removing filesystem $mount");
-		my $f = NCM::Filesystem->new_from_fstab ($l);
+		my $f = NCM::Filesystem->new_from_fstab ($l, log => $self);
 		$f->remove_if_needed==0 or return -1;
 
 	}
@@ -100,7 +100,7 @@ sub Configure
 	my $el = $config->getElement ("/system/filesystems");
 	while ($el->hasNextElement) {
 		my $el2 = $el->getNextElement;
-		push (@fs, NCM::Filesystem->new ($el2->getPath->toString, $config));
+		push (@fs, NCM::Filesystem->new ($el2->getPath->toString, $config, log => $self));
 	}
 	my %protected = protected_hash ($config);
 	$self->free_space ($config, \%protected, @fs)==0 or return 0;
@@ -111,7 +111,7 @@ sub Configure
 	
 	while ($el && $el->hasNextElement) {
 		my $el2 = $el->getNextElement;
-		push (@part, NCM::Partition->new ($el2->getPath->toString, $config));
+		push (@part, NCM::Partition->new ($el2->getPath->toString, $config, log => $self));
 	}
 	foreach (sort partition_compare @part) {
 		if ($_->create != 0) {
