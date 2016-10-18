@@ -38,7 +38,7 @@ sub update_entries
 
     while ($el->hasNextElement()) {
         my $el2 = $el->getNextElement();
-        my $fs = NCM::Filesystem->new ($el2->getPath()->toString(), $config);
+        my $fs = NCM::Filesystem->new ($el2->getPath()->toString(), $config, log => $self);
         $self->debug (3, "Checking fstab entry at $fs->{mountpoint}");
         $fs->update_fstab($fstab, $protected);
         next if $fs->{type} eq 'swap';
