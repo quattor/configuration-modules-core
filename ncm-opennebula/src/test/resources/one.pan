@@ -29,6 +29,11 @@ prefix "/software/components/opennebula/sunstone";
 "host" = "0.0.0.0";
 "tmpdir" = "/tmp";
 
+prefix "/software/components/opennebula/oneflow";
+"host" = "0.0.0.0";
+"lcm_interval" = 60;
+"shutdown_action" = "terminate-hard";
+
 prefix "/software/components/opennebula/kvmrc";
 "qemu_protocol" = "qemu+tcp";
 "force_destroy" = true;

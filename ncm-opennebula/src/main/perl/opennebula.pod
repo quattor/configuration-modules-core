@@ -21,6 +21,8 @@ Features that are implemented at this moment:
 
 =item * Sunstone service configuration
 
+=item * OneFlow service configuration
+
 =item * Adding/removing VNETs
 
 =item * Adding/removing datastores (only Ceph and shared datastores for the moment)

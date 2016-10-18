@@ -67,6 +67,12 @@ isa_ok($sunstone, "CAF::FileWriter", "sunstone-server.conf CAF::FileWriter insta
 like("$sunstone", qr{^:host:\s{1}.+$}m, "sunstone-server.conf has expected content");
 $sunstone->close();
 
+# oneflow conf file
+my $oneflow = get_file($NCM::Component::opennebula::ONEFLOW_CONF_FILE);
+isa_ok($oneflow, "CAF::FileWriter", "oneflow-server.conf CAF::FileWriter instance");
+like("$oneflow", qr{^:shutdown_action:\s{1}.+$}m, "oneflow-server.conf has expected content");
+$oneflow->close();
+
 # kvmrc conf file
 my $kvmrc = get_file($NCM::Component::opennebula::KVMRC_CONF_FILE);
 isa_ok($kvmrc, "CAF::FileWriter", "kvmrc CAF::FileWriter instance");

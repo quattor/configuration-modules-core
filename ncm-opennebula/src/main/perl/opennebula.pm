@@ -23,6 +23,7 @@ use Readonly;
 Readonly my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
+Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
@@ -40,7 +41,7 @@ Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
 # Required by process_template to detect 
 # if it should return a text template or
 # CAF::FileWriter instance
-Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph);
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph oneflow);
 
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -428,6 +429,8 @@ sub restart_opennebula_service {
         $srv = CAF::Service->new(['opennebula'], log => $self);
     } elsif ($service eq "sunstone") {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
+    } elsif ($service eq "oneflow") {
+        $srv = CAF::Service->new(['opennebula-flow'], log => $self);
     } elsif ($service eq "kvmrc") {
         $self->info("Updated $service file. onehost sync is required.");
         $self->sync_opennebula_hyps();
@@ -894,6 +897,11 @@ sub Configure
             }
         }
     }
+
+    # Set OneFlow server
+    if (exists $tree->{oneflow}) {
+        $self->set_one_service_conf($tree->{oneflow}, "oneflow", $ONEFLOW_CONF_FILE);
+    };
 
     # Set OpenNebula server
     if (exists $tree->{rpc}) {
