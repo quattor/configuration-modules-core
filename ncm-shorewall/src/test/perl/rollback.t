@@ -27,7 +27,7 @@ my $cmp = NCM::Component::shorewall->new('shorewall');
 my $cfg = get_config_for_profile('rollback');
 
 # fake failing ccm-fetch
-set_command_status('/usr/sbin/ccm-fetch', 1);
+set_command_status('ccm-fetch', 1);
 # set contents to trigger move of backup
 set_file_contents('/etc/shorewall/policy', 'whatever');
 
@@ -36,12 +36,12 @@ ok($cmp->Configure($cfg), "Configure returns success");
 is($cmp->{ERROR}, 2, "Configure has ERRORs");
 
 ok(command_history_ok([
-   '/sbin/shorewall check /etc/shorewall',
-   '/sbin/shorewall try /etc/shorewall',
-   '/usr/sbin/ccm-fetch',
-   '/sbin/shorewall check /etc/shorewall',
-   '/sbin/shorewall try /etc/shorewall',
-   '/usr/sbin/ccm-fetch',
+   '^shorewall check /etc/shorewall',
+   '^shorewall try /etc/shorewall',
+   '^ccm-fetch',
+   '^shorewall check /etc/shorewall',
+   '^shorewall try /etc/shorewall',
+   '^ccm-fetch',
 ]), "shorewall try and ccm-fetch called 2 after changes");
 
 

@@ -18,9 +18,9 @@ Readonly::Array my @SUPPORTED => qw(shorewall rules zones interfaces policy tcin
 Readonly my $CONFIG_DIR => "/etc/shorewall";
 Readonly my $BACKUP_SUFFIX => '.quattor.';
 Readonly my $FAILED_SUFFIX => '.failed.';
-Readonly my $SHOREWALL_CHECK => ['/sbin/shorewall', 'check', $CONFIG_DIR];
-Readonly my $SHOREWALL_TRY => ['/sbin/shorewall', 'try', $CONFIG_DIR];
-Readonly my $CCM_FETCH => [qw(/usr/sbin/ccm-fetch)];
+Readonly my $SHOREWALL_CHECK => ['shorewall', 'check', $CONFIG_DIR];
+Readonly my $SHOREWALL_TRY => ['shorewall', 'try', $CONFIG_DIR];
+Readonly my $CCM_FETCH => [qw(ccm-fetch)];
 
 # Generate new config files, keep backups
 # Return undef on failure, the filename if file was modified, or 0 otherwise.

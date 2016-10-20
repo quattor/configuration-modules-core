@@ -40,9 +40,9 @@ foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfac
 
 
 ok(command_history_ok([
-   '/sbin/shorewall check /etc/shorewall',
-   '/sbin/shorewall try /etc/shorewall',
-   '/usr/sbin/ccm-fetch',
+   '^shorewall check /etc/shorewall',
+   '^shorewall try /etc/shorewall',
+   '^ccm-fetch',
 ]), "shorewall try and ccm-fetch called after changes");
 
 command_history_reset();
