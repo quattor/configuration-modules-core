@@ -1,0 +1,22 @@
+Base test for config
+---
+multiline
+/etc/singularity/singularity.conf
+---
+^allow\spid\sns\s=\syes\s*$
+^allow\ssetuid\s=\syes\s*$
+^bind\spath\s=\s/my/scratch\s*$
+^bind\spath\s=\s/etc/singularity/default-nsswitch.conf:/etc/nsswitch.conf\s*$
+^config\sgroup\s=\syes\s*$
+^config\spasswd\s=\syes\s*$
+^config\sresolv\_conf\s=\syes\s*$
+^container\sdir\s=\s/var/singularity/mnt\s*$
+^enable\soverlay\s=\syes\s*$
+^mount\sdev\s=\syes\s*$
+^mount\shome\s=\syes\s*$
+^mount\shostfs\s=\sno\s*$
+^mount\sproc\s=\syes\s*$
+^mount\sslave\s=\syes\s*$
+^mount\ssys\s=\syes\s*$
+^mount\stmp\s=\syes\s*$
+^user\sbind\scontrol\s=\syes\s*$
