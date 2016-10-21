@@ -1,0 +1,48 @@
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+[% FILTER indent -%]
+<name>[% CCM.contents.name %]</name>
+<cputune><shares>[% CCM.contents.cpus * 1024 %]</shares></cputune>
+<vcpu>[% CCM.contents.cpus %]</vcpu>
+<cpu mode='host-passthrough' match='exact'>
+[%     FILTER indent -%]
+<topology sockets='1' cores='[% CCM.contents.cpus %]' threads='1'/>
+[%     END -%]
+</cpu>
+<memory>[% CCM.contents.memory * 1024 %]</memory>
+<devices>
+[%     FILTER indent -%]
+<emulator>/usr/libexec/qemu-kvm</emulator>
+[%         FOREACH item IN CCM.contents.devices.pairs -%]
+[%-            SWITCH item.key -%]
+[%                 CASE 'network' -%]
+[%                     FOREACH network IN item.value -%]
+<interface type='bridge'>
+[%                         INCLUDE 'metaconfig/libvirtd/net_level1.tt' data=network -%]
+</interface>
+[%                     END -%]
+[%                 CASE 'ceph_disk' -%]
+[%                     FOREACH disk IN item.value -%]
+<disk type='network' device='disk'>
+[%                         INCLUDE 'metaconfig/libvirtd/ceph_level1.tt' data=disk -%]
+</disk>
+[%                     END -%]
+[%                 CASE 'graphics' -%]
+<graphics type='[% item.value.type %]' listen='[% item.value.listen %]' port='[% item.value.port %]'/>
+[%             END -%]
+[%         END -%]
+[%     END -%]
+</devices>
+<features>
+[%     FILTER indent -%]
+<acpi/>
+[%     END -%]
+</features>
+<os>
+[%     FILTER indent -%]
+<type arch='x86_64'>hvm</type>
+<boot dev='network'/>
+<boot dev='hd'/>
+[%     END -%]
+</os>
+[% END -%]
+</domain>
