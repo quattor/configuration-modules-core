@@ -16,6 +16,9 @@ type basic_ssl = {
     "require" ? string
 };
 
+@{
+    SSL nginx configuration
+}
 type httpd_ssl = {
     include basic_ssl
     "active" : boolean = true
@@ -23,6 +26,9 @@ type httpd_ssl = {
     "protocol" : cipherstring[] = list("TLSv1")
     "certificate" : string
     "key" : string
+    @{ca sets ssl_client_certificate which specifies a file with trusted
+    CA certificates in the PEM format used to verify client certificates and OCSP
+    responses if ssl_stapling is enabled}
     "ca"  ? string
     "certificate_chain_file" ? string
     "revocation_file" ? string
@@ -137,4 +143,3 @@ type type_nginx = {
     "global" : nginx_global
     "http" : nginx_http[]
 };
-
