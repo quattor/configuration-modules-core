@@ -16,28 +16,37 @@ type columnspec = {
 	"width" : long
 };
 
-type backupstring = string with exists ("/software/components/amandaserver/backups/"
-					+ SELF) ||
-                               error ("No backups with name " + SELF);
- 
-type tapetypestring = string with exists ("/software/components/amandaserver/backups/config/tapetypes/"
-					+ SELF) ||
-                               error ("No tapetype with name " + SELF);
-                               
-type dumptypestring = string with exists ("/software/components/amandaserver/backups/config/dumptypes/"
-					+ SELF) ||
-                               error ("No dumptype with name " + SELF);
-                             
-type interfacestring = string with exists ("/software/components/amandaserver/backups/config/interfaces/"
-					+ SELF) ||
-                               error ("No interfaces with name " + SELF);
-                               
-type booleanstring = string with match (SELF, '^(yes|y|true|t|on|no|n|false|f|off)$');
+type backupstring = string with exists(
+    "/software/components/amandaserver/backups/" + SELF
+) || error ("No backups with name " + SELF);
 
-type sizestring = string with match (SELF, '^(\-*\d+\s+(?i)(b|byte|bytes|k|kb|kbyte|kbytes|kilobyte|kilobytes|m|mb|meg|mbyte|mbytes|megabyte|megabytes|g|gb|gbyte|gbytes|gigabyte|gigabytes))$');
-             
-type speedstring = string with match (SELF, '^(\-*\d+\s+(?i)(bps|kps|kbps|mps mbps))$');
-                  
+type tapetypestring = string with exists(
+    "/software/components/amandaserver/backups/config/tapetypes/" + SELF
+) || error ("No tapetype with name " + SELF);
+
+type dumptypestring = string with exists(
+    "/software/components/amandaserver/backups/config/dumptypes/" + SELF
+) || error ("No dumptype with name " + SELF);
+
+type interfacestring = string with exists(
+    "/software/components/amandaserver/backups/config/interfaces/" + SELF
+) || error ("No interfaces with name " + SELF);
+
+type booleanstring = string with match(
+    SELF,
+    '^(yes|y|true|t|on|no|n|false|f|off)$'
+);
+
+type sizestring = string with match(
+    SELF,
+    '^(\-*\d+\s+(?i)(b|byte|bytes|k|kb|kbyte|kbytes|kilobyte|kilobytes|m|mb|meg|mbyte|mbytes|megabyte|megabytes|g|gb|gbyte|gbytes|gigabyte|gigabytes))$'
+);
+
+type speedstring = string with match(
+    SELF,
+    '^(\-*\d+\s+(?i)(bps|kps|kbps|mps mbps))$'
+);
+
 # General options
 type structure_amandaserver_general = {
 	"org" ? string
@@ -67,7 +76,7 @@ type structure_amandaserver_general = {
 	"bumpsize" ? sizestring
 	"bumpmult" ? double
 	"bumpdays" ? long
-	"disklist" ? string 
+	"disklist" ? string
 	"infofile" ? string
 	"logdir" ? string
 	"indexdir" ? string
@@ -78,7 +87,7 @@ type structure_amandaserver_general = {
 	"amrecover_do_fsf" ? booleanstring
 	"amrecover_check_label" ? booleanstring
 	"amrecover_changer" ? string
-	"columnspec" ? columnspec[] 
+	"columnspec" ? columnspec[]
 	"includefile" ? string
 };
 
@@ -158,7 +167,7 @@ type structure_amandaserver_config = {
 	"tapetypes" : structure_amandaserver_tapetype[]
 	"dumptypes" : structure_amandaserver_dumptype[]
 	"interfaces" : structure_amandaserver_interface[]
-};	
+};
 
 # Definition for a disk
 type structure_amandaserver_disk = {
