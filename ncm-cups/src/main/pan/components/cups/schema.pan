@@ -22,7 +22,7 @@ type component_cups_printer = {
 
 
 type component_cups_options = {
-    "AutoPurgeJobs"         ? string with match (SELF, "yes|no")
+    "AutoPurgeJobs"         ? legacy_binary_affirmation_string
     "Classification"        ? string
     "ClassifyOverride"      ? string with match (SELF, "on|off")
     "DataDir"               ? string
@@ -32,8 +32,8 @@ type component_cups_options = {
     "LogLevel"              ? string with match (SELF,"debug2|debug|info|warn|error|none")
     "MaxCopies"             ? long
     "MaxLogSize"            ? long
-    "PreserveJobHistory"    ? string with match (SELF, "yes|no")
-    "PreserveJobFiles"      ? string with match (SELF, "yes|no")
+    "PreserveJobHistory"    ? legacy_binary_affirmation_string
+    "PreserveJobFiles"      ? legacy_binary_affirmation_string
     "Printcap"              ? string
     "ServerAdmin"           ? string
     "ServerName"            ? string

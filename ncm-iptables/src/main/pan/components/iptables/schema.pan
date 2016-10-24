@@ -87,7 +87,7 @@ type component_iptables_acls = {
     "preamble"          ? component_iptables_preamble
     "rules"             ? component_iptables_rule[]
     "epilogue"          ? string
-    "ordered_rules"     ? string with match (SELF, 'yes|no')
+    "ordered_rules"     ? legacy_binary_affirmation_string
 };
 
 type component_iptables = {
