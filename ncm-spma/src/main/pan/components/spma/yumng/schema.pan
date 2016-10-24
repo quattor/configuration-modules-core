@@ -10,7 +10,7 @@ type SOFTWARE_GROUP = {
     "default" : boolean = true
     "mandatory" : boolean = true
     "optional" : boolean = false
-    "names" : string[]
+    "names" : string[] = list()
 };
 
 type spma_yum_plugin_fastestmirror = {
