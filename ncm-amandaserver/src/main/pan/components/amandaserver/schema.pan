@@ -4,7 +4,7 @@
 
 declaration template components/amandaserver/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 # Convenience type definitions
 
