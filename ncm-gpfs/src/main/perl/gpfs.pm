@@ -441,7 +441,7 @@ sub get_cfg {
         my $keydata = $tr->{keyData};
         my $keyoutput = $self->runcurl($config, $tmp, $keydata);
         return 0 if (! $keyoutput);
- 
+
         my $gpfskeyfh = CAF::FileWriter->open(GPFSKEYDATA,
                                            backup => ".old",
                                            log => $self);
@@ -454,8 +454,10 @@ sub get_cfg {
         }
 
         $gpfskeyfh->close();
-        $self->rungpfs(1, GPFSRESTORE) if $tr->{sdrrestore}; 
     }
+
+    $self->rungpfs(1, GPFSRESTORE) if $tr->{sdrrestore};
+
     return 1;
 };
 
