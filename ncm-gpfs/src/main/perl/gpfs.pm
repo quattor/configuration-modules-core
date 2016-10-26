@@ -417,7 +417,7 @@ sub get_cfg {
 
         # there should be only one...
         if ($line =~ m/$regexp/) {
-            if (length("$gpfsnodeconfigfh") > 0) {
+            if ("$gpfsnodeconfigfh") {
                 $self->error('Ignoring another node match for ',
                              'regexp $regexp found: $line.');
             } else {
@@ -434,6 +434,14 @@ sub get_cfg {
         $gpfsnodeconfigfh->cancel();
         return 1;
     }
+
+    if (! "$gpfsnodeconfigfh") {
+        $self->error("Empty node config file found with regex $regexp and gpfsconfig gpfsconfigfh");
+        $gpfsconfigfh->cancel();
+        $gpfsnodeconfigfh->cancel();
+        return 1;
+    }
+
     $gpfsconfigfh->close();
     $gpfsnodeconfigfh->close();
 
