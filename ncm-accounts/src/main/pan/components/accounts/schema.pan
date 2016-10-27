@@ -54,7 +54,7 @@ type structure_login_defs = {
     'pass_min_days' ? long(1..)
     'pass_min_len' ? long(1..)
     'pass_warn_age' ? long(1..)
-    'create_home' ? string with match (SELF,'yes|no')
+    'create_home' ? legacy_binary_affirmation_string
     'mail_dir' ? string
     'umask' ? string
     'userdel_cmd' ? string
