@@ -6,7 +6,7 @@
   <artifactId>hostsaccess</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.8.1-SNAPSHOT</version>
+  <version>16.10.0-rc1</version>
   <name>NCM component for hosts.allow and host.deny</name>
 
 
