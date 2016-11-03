@@ -6,7 +6,7 @@
   <artifactId>named</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.10.0-rc1</version>
+  <version>16.10.0-rc2-SNAPSHOT</version>
   <name>NCM named configuration component</name>
 
 
