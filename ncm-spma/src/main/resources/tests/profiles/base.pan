@@ -1,6 +1,6 @@
 unique template base;
 
-include "components/spma/schema";
+include "components/spma/yum/schema";
 
 '/software/components/spma' = dict();
 '/software/packages' = dict();

@@ -96,10 +96,6 @@ upon successful completion.
 
 String to be put in quattor_os_file upon successful SPMA completion.
 
-=item * C<< /software/components/spma/suffix >> : string
-
-Optional module suffix for packaging system SPMA module.
-
 =item * C<< /software/components/spma/userprio >> : string ("yes|no")
 
 Obsoleted and ignored.
