@@ -1,0 +1,22 @@
+[% FOREACH pair IN desc.pairs %]
+[%-     IF CCM.is_hash(pair.value) -%]
+[%-         INCLUDE 'authconfig/domains/ipa.tt' ipaprefix=pair.key desc=pair.value %]
+[%-     ELSE -%]
+[%-         prefix = ipaprefix.defined ? ipaprefix : 'ipa';
+            IF prefix == 'search_base';
+                ipaname = 'ipa_' _ pair.key _ '_' _ prefix;
+            ELSE;
+                ipaname = prefix _ '_' _ pair.key;
+            END -%]
+[%-         ipaname %] = [% -%]
+[%-         IF CCM.is_scalar(pair.value) -%]
+[%-              IF pair.value.is_boolean -%]
+[%-                 pair.value ? 'true' : 'false' -%]
+[%-             ELSE -%]
+[%-                  pair.value -%]
+[%-             END -%]
+[%-         ELSIF CCM.is_list(pair.value) -%]
+[%              pair.value.join(',') -%]
+[%-         END %]
+[%     END -%]
+[%- END -%]

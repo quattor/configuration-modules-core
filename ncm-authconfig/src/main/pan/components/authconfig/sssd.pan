@@ -9,11 +9,12 @@ include 'components/authconfig/sssd/sudo';
 include 'components/authconfig/sssd/sasl';
 include 'components/authconfig/sssd/tls';
 include 'components/authconfig/sssd/ldap';
+include 'components/authconfig/sssd/ipa';
 
 @{
     Valid SSSD providers.  For now we only implement ldap, simple and local
 }
-type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit)$");
+type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit|ipa)$");
 
 
 @{
@@ -76,6 +77,7 @@ type authconfig_sssd_local = {
 
 type authconfig_sssd_domain  = {
     "ldap" ? authconfig_sssd_ldap
+    "ipa" ? authconfig_sssd_ipa
     "simple" ? authconfig_sssd_simple
     "local" ? authconfig_sssd_local
     "access_provider" ? sssd_provider_string

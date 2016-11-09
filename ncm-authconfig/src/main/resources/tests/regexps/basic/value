@@ -5,7 +5,7 @@ rendermodule=sssd
 contentspath=/software/components/authconfig/method/sssd
 ---
 ^\[sssd\]$
-^domains = test1$
+^domains = test1,test2$
 ^config_file_version = 2$
 ^debug_level = 528$
 ^reconnection_retries = 3$
@@ -110,3 +110,17 @@ contentspath=/software/components/authconfig/method/sssd
 ^proxy_fast_alias = False$
 ^re_expression = \(\?P<name>\[\^@\]\+\)@\?\(\?P<domain>\[\^@\]\*\$\)$
 ^subdomain_homedir = /home/%d/%u$
+^\[domain/test2\]$
+^ipa_backup_server = h3.mydomain.org,h4.mydomain.org$
+^ipa_domain = MY.DOMAIN$
+^dyndns_iface = em1,em2$
+^dyndns_ttl = 123$
+^dyndns_update = false$
+^ipa_enable_dns_sites = true$
+^krb5_canonicalize = false$
+^krb5_realm = MY.REALM$
+^krb5_validate = true$
+^ipa_hbac_search_base = abc$
+^ipa_host_search_base = def$
+^ipa_server = h1.mydomain.org,h2.mydomain.org$
+^auth_provider = ipa$
