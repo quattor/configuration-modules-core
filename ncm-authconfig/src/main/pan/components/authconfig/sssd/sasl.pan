@@ -12,7 +12,7 @@
 
 }
 
-declaration template components/authconfig/sssd-sasl;
+declaration template components/authconfig/sssd/sasl;
 
 type sssd_sasl = {
     "mech" ? string

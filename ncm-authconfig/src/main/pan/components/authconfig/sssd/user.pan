@@ -9,7 +9,7 @@
     Fields in these data types match the ldap_user_* and ldap_group_* fields in
 }
 
-declaration template components/authconfig/sssd-user;
+declaration template components/authconfig/sssd/user;
 
 type sssd_user = {
     "uid_number" : string = "uidNumber"
