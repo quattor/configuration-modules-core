@@ -33,7 +33,7 @@ set_file_contents('/etc/shorewall/policy', 'whatever');
 
 command_history_reset();
 ok($cmp->Configure($cfg), "Configure returns success");
-is($cmp->{ERROR}, 2, "Configure has ERRORs");
+is($cmp->{ERROR}, 3, "Configure has ERRORs");
 
 ok(command_history_ok([
    '^shorewall check /etc/shorewall',

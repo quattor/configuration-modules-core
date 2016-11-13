@@ -225,7 +225,7 @@ type component_shorewall_shorewall = {
 
 type component_shorewall = {
     include structure_component
-    @{showrewall.conf configuration}
+    @{shorewall.conf configuration}
     "shorewall" ? component_shorewall_shorewall
     @{zones configuration}
     "zones" ? component_shorewall_zones[]

@@ -13,7 +13,10 @@ use EDG::WP4::CCM::TextRender;
 use Readonly;
 
 # shorewall is shorewall.conf
-Readonly::Array my @SUPPORTED => qw(shorewall rules zones interfaces policy tcinterfaces tcpri masq);
+Readonly::Array my @SUPPORTED => qw(shorewall
+    rules zones interfaces policy
+    tcinterfaces tcpri masq
+);
 
 Readonly my $CONFIG_DIR => "/etc/shorewall";
 Readonly my $BACKUP_SUFFIX => '.quattor.';
@@ -26,21 +29,21 @@ Readonly my $CCM_FETCH => [qw(ccm-fetch)];
 # Return undef on failure, the filename if file was modified, or 0 otherwise.
 sub make_config
 {
-    my ($self, $feat, $config, $ts) = @_;
+    my ($self, $feature, $config, $ts) = @_;
 
-    my $filename = "$CONFIG_DIR/$feat";
-    $filename .= '.conf' if $feat eq 'shorewall';
+    my $filename = "$CONFIG_DIR/$feature";
+    $filename .= '.conf' if $feature eq 'shorewall';
 
     my $trd = EDG::WP4::CCM::TextRender->new(
-        $feat,
-        $config->getElement($self->prefix()."/$feat"),
+        $feature,
+        $config->getElement($self->prefix()."/$feature"),
         relpath => 'shorewall',
         log => $self,
         );
 
     my $fh = $trd->filewriter($filename, log => $self, mode => 0600, backup => $BACKUP_SUFFIX.$ts);
     if(! defined($fh)) {
-        $self->error("Failed to render $feat shorewall config: $trd->{fail}");
+        $self->error("Failed to render $feature shorewall config: $trd->{fail}");
         return;
     }
 
@@ -86,30 +89,30 @@ sub rollback
         }
     }
 
-    # No arguments required for try_rollback this time, not going to trigger another rollback
-    if ($fail || ! $self->try_rollback()) {
+    if ($fail) {
+        $self->error("Something went wrong during file rollback.");
         return;
     } else {
-        return SUCCESS;
+        $self->verbose("Going to try the rolled-back files.");
+        if ($self->apply_config()) {
+            $self->error("Successfully applied the rolled-back files.");
+            return SUCCESS;
+        } else {
+            $self->error("Something went wrong when applying the rolled-back files.");
+            return;
+        }
     };
 }
 
 # use shorewall try (check exit code)
-#   on fail, rollback backups, and re-try (or restart)?
+#   on fail, return undef
 #   on success, check ccm-fetch
-#      on fail, rollback backups, and re-try (or restart)?
-# even if changed list is empty, shorewall try and ccm-fetch are called
-#   This is useful for rollback method to make the rolled-back files active.
-#   But do not call this in Configure if you know nothing was modified.
-sub try_rollback
+#      on fail, return undef
+#      on success, return SUCCESS
+# shorewall try and ccm-fetch are always called
+sub apply_config
 {
-    my ($self, $ts, @changed) = @_;
-
-    if (@changed) {
-        $self->verbose("Changed config files: ", join(', ', @changed));
-    } else {
-        $self->verbose("No changed config files passed, going to try the current existing files");
-    }
+    my ($self) = @_;
 
     my ($ec, $output);
     $output = CAF::Process->new($SHOREWALL_CHECK, log => $self)->output();
@@ -132,9 +135,6 @@ sub try_rollback
         }
     }
 
-    # Do not return the rollback return value
-    $self->rollback($ts, @changed) if (! $ec) && @changed;
-
     return $ec;
 }
 
@@ -150,15 +150,18 @@ sub Configure
     # List of filenames that were changed.
     # These are the files that have to be rolled-back in case of failure
     my @changed;
-    foreach my $feat (@SUPPORTED) {
-        if ($tree->{$feat}) {
-            my $res = $self->make_config($feat, $config, $ts);
+    foreach my $feature (@SUPPORTED) {
+        if ($tree->{$feature}) {
+            my $res = $self->make_config($feature, $config, $ts);
             push(@changed, $res) if $res;
         }
     }
 
     if (@changed) {
-        $self->try_rollback($ts, @changed);
+        $self->verbose("Changed config files: ", join(', ', @changed));
+        if (! $self->apply_config()) {
+            $self->rollback($ts, @changed);
+        }
     } else {
         $self->verbose("No files were changed");
     }
