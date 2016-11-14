@@ -88,6 +88,17 @@ C<logger> is a mandatory logger to pass.
 Run C<systemctl show> on single C<$unit> and return parsed output.
 If C<$unit> is undef, the manager itself is shown.
 
+Optional arguments:
+
+=over
+
+=item no_error
+
+Report a failure with C<systemctl show> with C<verbose> level.
+If nothing is specified, an C<error> is reported.
+
+=back
+
 If succesful, returns a hashreference interpreting the C<key=value> output.
 Following keys have the value split on whitespace and a array reference
 to the result as output
@@ -113,7 +124,7 @@ Returns undef on failure.
 
 sub systemctl_show
 {
-    my ($logger, $unit) = @_;
+    my ($logger, $unit, %opts) = @_;
     my $proc = CAF::Process->new([$SYSTEMCTL, "--no-pager", "--all", "show"],
                                   log => $logger,
                                   keeps_state => 1,
@@ -127,10 +138,13 @@ sub systemctl_show
 
     my $output = $proc->output();
     my $ec = $?;
-    if($ec) {
+    if ($ec) {
         my $msg = "systemctl show failed (cmd $proc; ec $ec)";
         $msg .= " with output $output" if (defined($output));
-        $logger->error($msg);
+
+        my $reporter = $opts{no_error} ? 'verbose' : 'error';
+
+        $logger->$reporter($msg);
         return;
     }
 

@@ -720,6 +720,7 @@ sub make_cache_alias
 
     my @unknown;
     foreach my $unit (@units) {
+        my $is_possible_missing = (grep {$_ eq $unit} @$possible_missing) ? 1 : 0;
         my $data = $unit_cache->{$unit};
         my $show;
 
@@ -728,7 +729,7 @@ sub make_cache_alias
             my $continue;
 
             # Always try to get show information, even for possible missing units
-            $show = systemctl_show($self, $unit);
+            $show = systemctl_show($self, $unit, no_error => $is_possible_missing);
             if(defined($show->{$PROPERTY_ID})) {
                 $self->debug(1, "Unit $unit not listed but has show data.");
                 $log_method = "verbose";
@@ -739,7 +740,7 @@ sub make_cache_alias
                 $data = $unit_cache->{$unit};
             } else {
                 $self->debug(1, "Unit $unit not listed and has no show data.");
-                if (grep {$_ eq $unit} @$possible_missing) {
+                if ($is_possible_missing) {
                     $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
                                  "No error will be logged.");
                     $log_method = "verbose";
@@ -779,11 +780,23 @@ sub make_cache_alias
             }
         }
 
-        $show = systemctl_show($self, $unit) if (! defined($show));
+        $show = systemctl_show($self, $unit, no_error => $is_possible_missing) if (! defined($show));
 
         if(!defined($show)) {
-            $self->error("Found unit $unit but systemctl_show returned undef. ",
-                         "Skipping this unit");
+            my $log_method = 'error';
+            my $msg = '';
+
+            my $data_unit = $data->{unit};
+            if ($is_possible_missing &&
+                $data_unit->{loaded} && $data_unit->{loaded} eq 'not-found' &&
+                $data_unit->{active} && $data_unit->{active} eq $ACTIVE_INACTIVE &&
+                $data_unit->{running} && $data_unit->{running} eq 'dead') {
+                # It's safe to skip this unit without error
+                $log_method = 'verbose';
+                $msg = " and unit is not-found/$ACTIVE_INACTIVE/dead"
+            };
+            $self->$log_method("Found unit $unit but systemctl_show returned undef$msg. ",
+                               "Skipping this unit");
             next;
         };
 
