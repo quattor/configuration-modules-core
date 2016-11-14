@@ -177,6 +177,13 @@ Test gather_current_units
 # this is from ceph021
 set_output("chkconfig_list_el7");
 use cmddata::service_systemctl_list_show_gen_full_el7_ceph021_load;
+
+# set cups masked: bad ufstate and masked is-enabled
+$cmddata::cmds{'gen_full_el7_ceph021_systemctl_is_enabled_cups.service_unit-files'}{out} = "masked\n";
+$cmddata::cmds{'gen_full_el7_ceph021_systemctl_show_cups.service_unit-files'}{out} =~ s/^UnitFileState=.*$/UnitFileState=bad/m;
+set_output('gen_full_el7_ceph021_systemctl_show_cups.service_unit-files');
+set_output('gen_full_el7_ceph021_systemctl_is_enabled_cups.service_unit-files');
+
 $cfg = get_config_for_profile('service_ceph021');
 
 my $configured = $svc->gather_configured_units($cfg);
@@ -298,11 +305,11 @@ is_deeply($current->{'netconsole.service'}, { # sysv
 is_deeply($current->{'cups.service'}, { # systemd
         name => "cups.service",
         startstop => 1,
-        state => $STATE_ENABLED,
+        state => $STATE_MASKED,
         targets => [],
         type => $TYPE_SERVICE,
         shortname => "cups",
-        possible_missing => 0,
+        possible_missing => 1,
 }, "current cups service for ceph021");
 
 is_deeply($current->{'NetworkManager.service'}, { # systemd
@@ -328,7 +335,7 @@ $cmp->{ERROR} = 0;
 
 my ($states, $acts) = $svc->process($configured, $current);
 
-is($cmp->{ERROR}, 2, "2 errors logged: 1 due to 2 configured unit, one is alias of other; the 2nd due to missing_disabled");
+is($cmp->{ERROR}, 3, "3 errors logged: 1 due to 2 configured unit, one is alias of other; the 2nd/3rd due to missing_disabled");
 
 # rbdmap is SYSV, unseen in chkconfig --list and startstop
 ok($configured->{'rbdmap.service'}->{startstop}, "rbdmap has startstop");
@@ -355,6 +362,7 @@ is_deeply($states, {
     $STATE_ENABLED => ['netconsole.service', 'rbdmap.service',],
     $STATE_DISABLED => ['cups.service', 'missing_disabled.service'],
     $STATE_MASKED => [],
+    'unmask' => ['cups.service'],
 }, "State changes to be made");
 is_deeply($acts, {
     0 => ['missing_disabled.service'],
@@ -377,10 +385,12 @@ $svc->change($states, $acts);
 is($cmp->{ERROR}, 0, "No error logged while applying the changes");
 
 ok(command_history_ok([
-    # 1st states, alpahbetically ordered
-    "$SYSTEMCTL disable -- cups.service",
+    # 1st states, unmask first
+    "$SYSTEMCTL unmask -- cups.service",
+    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
     "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
     # 2 activity
+    "$SYSTEMCTL stop -- missing_disabled.service",
     "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
 ]), "expected commands for change");
 
@@ -397,13 +407,15 @@ command_history_reset();
 
 $svc->configure($cfg);
 
-is($cmp->{ERROR}, 3, "3 error logged while configuring (1 due to configured alias; 2 due to missing_disabled (1 from make_cache_alias in get_current and 1 from get_aliases/fill_cache in process))");
+is($cmp->{ERROR}, 4, "4 errors logged while configuring (1 due to configured alias; 3 due to missing_disabled (make_cache_alias in get_current;get_aliases/fill_cache in process;is_ufstate/get_unit_show in process))");
 
 ok(command_history_ok([
-    # 1st states, alpahbetically ordered
-    "$SYSTEMCTL disable -- cups.service",
+    # 1st states
+    "$SYSTEMCTL unmask -- cups.service",
+    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
     "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
     # 2 activity
+    "$SYSTEMCTL stop -- missing_disabled.service",
     "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
 ]), "expected commands for change");
 

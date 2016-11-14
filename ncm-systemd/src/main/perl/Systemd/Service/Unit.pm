@@ -20,6 +20,7 @@ use NCM::Component::Systemd::Systemctl qw(
     systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
+    systemctl_is_enabled
     :properties
     );
 
@@ -82,6 +83,8 @@ Readonly::Array my @TYPES => qw($DEFAULT_TYPE
 Readonly our $STATE_DISABLED => "disabled";
 Readonly our $STATE_ENABLED => "enabled";
 Readonly our $STATE_MASKED => "masked";
+
+Readonly my $UFSTATE_BAD => 'bad';
 
 Readonly::Array my @STATES => qw($STATE_ENABLED $STATE_DISABLED $STATE_MASKED);
 
@@ -895,7 +898,7 @@ sub make_cache_alias
 
     $self->verbose("make_cache_alias completed with ",
         scalar keys %$unit_cache, " cached units ",
-        scalar keys %$unit_alias, " alias units ",
+        scalar keys %$unit_alias, " alias units"
         );
     # For unittesting purposes
     return $unit_cache, $unit_alias;
@@ -1271,6 +1274,17 @@ sub get_ufstate
     $self->verbose("get_ufstate for unit $unit");
 
     my $ufstate = $self->get_unit_show($unit, $PROPERTY_UNITFILESTATE, force => $opts{force});
+
+    if ($ufstate && $ufstate eq $UFSTATE_BAD) {
+        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE $UFSTATE_BAD";
+        my $is_enabled = systemctl_is_enabled($self, $unit);
+        if ($is_enabled) {
+            $self->verbose("$msg is-enabled $is_enabled");
+            $ufstate = $is_enabled;
+        } else {
+            $self->verbose("$msg is-enabled failed");
+        }
+    }
 
     # The derived state is based on the ufstate of any of the $PROPERTY_WANTEDBY units
     # Using the recursive reverse dependecy list rather than

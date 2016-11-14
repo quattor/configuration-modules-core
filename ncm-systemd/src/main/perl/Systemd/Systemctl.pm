@@ -55,7 +55,7 @@ our @EXPORT_OK = qw(
     systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
-    systemctl_command_units
+    systemctl_command_units systemctl_is_enabled
 );
 
 push @EXPORT_OK, @PROPERTIES;
@@ -340,6 +340,51 @@ sub systemctl_command_units
     }
     return $ec, $data;
 }
+
+=pod
+
+=item systemctl_is_enabled
+
+Run C<systemctl is-enabled> for C<unit>.
+
+Returns output without trailing newlines on success.
+An error is logged and undef returned when the exitcode is non-zero.
+
+=cut
+
+sub systemctl_is_enabled
+{
+    my ($logger, $unit) = @_;
+
+    # Gather stderr separately (e.g. to handle legacy services)
+    my ($stdout, $stderr) = ('', '');
+    my $proc = CAF::Process->new(
+        [$SYSTEMCTL, 'is-enabled', '--', $unit],
+        log => $logger,
+        keeps_state => 1,
+        stdout => \$stdout,
+        stderr => \$stderr,
+        );
+
+    $proc->execute();
+    chomp($stdout);
+    chomp($stderr);
+
+    my $ec = $?;
+
+    my $msg = "systemctl_command_units $proc returned ec $ec and stdout $stdout stderr $stderr";
+    # Do not test on $ec; if unit is disabled, it is-enabled also returns ec > 0
+    # If there's a real issue, like unknown unit, there is no stdout.
+    if ($stdout) {
+        $logger->debug(2, $msg);
+        return $stdout;
+    } else {
+        $logger->error($msg);
+        return;
+    }
+}
+
+
 
 =pod
 

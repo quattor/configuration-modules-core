@@ -8,6 +8,7 @@ use NCM::Component::Systemd::Systemctl qw(systemctl_show $SYSTEMCTL
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     systemctl_command_units
+    systemctl_is_enabled
     :properties
     );
 
@@ -262,10 +263,43 @@ is($cmp->{ERROR}, 1, "1 error logged during systemctl_command_units $cmd");
 is($ec, 5, "systemctl_command_units finished with exitcode $ec");
 is($output, $out, "systemctl_command_units finished with output $out");
 
-done_testing();
+=pod
+
+=head2 systemctl_is_enabled
+
+Test systemctl_is_enabled
+
+=cut
+
+$cmd = "$SYSTEMCTL is-enabled -- unit1.type";
+$out = "isenabled";
+my $err = "some err data";
+set_command_status($cmd, 0);
+# with newline
+set_desired_output($cmd, "$out\n");
+set_desired_err($cmd, $err);
+
+$cmp->{ERROR} = 0;
+is(systemctl_is_enabled($cmp, 'unit1.type'), $out,
+   "is_enabled returns (chomped) stdout, no stderr");
+
+is($cmp->{ERROR}, 0, "No errors logged during systemctl_is_enabled $cmd");
+
+$cmd = "$SYSTEMCTL is-enabled -- unit3.type";
+# empty stdout is actual error condition
+$out = "";
+set_command_status($cmd, 5);
+set_desired_output($cmd, "$out\n");
+
+ok(! defined(systemctl_is_enabled($cmp, 'unit3.type')),
+   "systemctl_is_enabled returns undef on failure");
+
+is($cmp->{ERROR}, 1, "1 error logged during systemctl_is_enabled $cmd");
 
 =pod
 
 =back
 
 =cut
+
+done_testing();
