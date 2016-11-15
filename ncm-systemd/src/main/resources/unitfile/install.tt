@@ -1,2 +1,2 @@
-[% INCLUDE 'systemd/unitfile/section.tt' section='Install' data=data
+[%- INCLUDE 'systemd/unitfile/section.tt' section='Install' data=data
     list_of_lines=['WantedBy', 'RequiredBy'] -%]
