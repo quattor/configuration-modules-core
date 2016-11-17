@@ -6,7 +6,7 @@
   <artifactId>dirperm</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.10.0-rc2</version>
+  <version>16.10.0-rc3-SNAPSHOT</version>
   <name>dirperm NCM component.</name>
 
 
