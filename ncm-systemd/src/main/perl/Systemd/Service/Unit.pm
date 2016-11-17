@@ -20,6 +20,7 @@ use NCM::Component::Systemd::Systemctl qw(
     systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
+    systemctl_is_enabled
     :properties
     );
 
@@ -82,6 +83,8 @@ Readonly::Array my @TYPES => qw($DEFAULT_TYPE
 Readonly our $STATE_DISABLED => "disabled";
 Readonly our $STATE_ENABLED => "enabled";
 Readonly our $STATE_MASKED => "masked";
+
+Readonly my $UFSTATE_BAD => 'bad';
 
 Readonly::Array my @STATES => qw($STATE_ENABLED $STATE_DISABLED $STATE_MASKED);
 
@@ -720,6 +723,7 @@ sub make_cache_alias
 
     my @unknown;
     foreach my $unit (@units) {
+        my $is_possible_missing = (grep {$_ eq $unit} @$possible_missing) ? 1 : 0;
         my $data = $unit_cache->{$unit};
         my $show;
 
@@ -728,7 +732,7 @@ sub make_cache_alias
             my $continue;
 
             # Always try to get show information, even for possible missing units
-            $show = systemctl_show($self, $unit);
+            $show = systemctl_show($self, $unit, no_error => $is_possible_missing);
             if(defined($show->{$PROPERTY_ID})) {
                 $self->debug(1, "Unit $unit not listed but has show data.");
                 $log_method = "verbose";
@@ -739,7 +743,7 @@ sub make_cache_alias
                 $data = $unit_cache->{$unit};
             } else {
                 $self->debug(1, "Unit $unit not listed and has no show data.");
-                if (grep {$_ eq $unit} @$possible_missing) {
+                if ($is_possible_missing) {
                     $self->debug(1, "Unit $unit is in possible_missing (and not found). ",
                                  "No error will be logged.");
                     $log_method = "verbose";
@@ -779,11 +783,23 @@ sub make_cache_alias
             }
         }
 
-        $show = systemctl_show($self, $unit) if (! defined($show));
+        $show = systemctl_show($self, $unit, no_error => $is_possible_missing) if (! defined($show));
 
         if(!defined($show)) {
-            $self->error("Found unit $unit but systemctl_show returned undef. ",
-                         "Skipping this unit");
+            my $log_method = 'error';
+            my $msg = '';
+
+            my $data_unit = $data->{unit};
+            if ($is_possible_missing &&
+                $data_unit->{loaded} && $data_unit->{loaded} eq 'not-found' &&
+                $data_unit->{active} && $data_unit->{active} eq $ACTIVE_INACTIVE &&
+                $data_unit->{running} && $data_unit->{running} eq 'dead') {
+                # It's safe to skip this unit without error
+                $log_method = 'verbose';
+                $msg = " and unit is not-found/$ACTIVE_INACTIVE/dead"
+            };
+            $self->$log_method("Found unit $unit but systemctl_show returned undef$msg. ",
+                               "Skipping this unit");
             next;
         };
 
@@ -882,7 +898,7 @@ sub make_cache_alias
 
     $self->verbose("make_cache_alias completed with ",
         scalar keys %$unit_cache, " cached units ",
-        scalar keys %$unit_alias, " alias units ",
+        scalar keys %$unit_alias, " alias units"
         );
     # For unittesting purposes
     return $unit_cache, $unit_alias;
@@ -1258,6 +1274,17 @@ sub get_ufstate
     $self->verbose("get_ufstate for unit $unit");
 
     my $ufstate = $self->get_unit_show($unit, $PROPERTY_UNITFILESTATE, force => $opts{force});
+
+    if ($ufstate && $ufstate eq $UFSTATE_BAD) {
+        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE $UFSTATE_BAD";
+        my $is_enabled = systemctl_is_enabled($self, $unit);
+        if ($is_enabled) {
+            $self->verbose("$msg is-enabled $is_enabled");
+            $ufstate = $is_enabled;
+        } else {
+            $self->verbose("$msg is-enabled failed");
+        }
+    }
 
     # The derived state is based on the ufstate of any of the $PROPERTY_WANTEDBY units
     # Using the recursive reverse dependecy list rather than

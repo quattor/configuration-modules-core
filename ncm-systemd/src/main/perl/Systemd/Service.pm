@@ -38,6 +38,8 @@ Readonly our $UNCONFIGURED_ENABLED => $STATE_ENABLED;
 Readonly our $UNCONFIGURED_IGNORE => 'ignore';
 Readonly our $UNCONFIGURED_MASKED => $STATE_MASKED;
 
+Readonly my $UNMASK => 'unmask';
+
 Readonly::Array my @UNCONFIGURED => qw(
     $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED
     $UNCONFIGURED_IGNORE $UNCONFIGURED_MASKED
@@ -113,9 +115,9 @@ sub configure
 
     my $current = $self->gather_current_units($configured);
 
-    my @changes = $self->process($configured, $current);
+    my ($states, $acts) = $self->process($configured, $current);
 
-    $self->change(@changes);
+    $self->change($states, $acts);
 
     if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
         $self->error("Support for default unconfigured behaviour ",
@@ -411,11 +413,12 @@ sub process
         $STATE_ENABLED => [],
         $STATE_DISABLED => [],
         $STATE_MASKED => [],
+        $UNMASK => [],
     };
 
     # Cache should be filled by the current_units call
     #   in gather_current_units method
-    my @configured = keys %$configured;
+    my @configured = sort keys %$configured;
 
     # Possible missing units shouldn't raise errors
     my $possible_missing = $self->{unit}->possible_missing($configured);
@@ -426,7 +429,7 @@ sub process
         my $detail = $configured->{$unit};
 
         my $realname = $aliases->{$unit};
-        if($realname) {
+        if ($realname) {
             my $msg = "Configured unit $unit is an alias of";
             if($configured->{$realname}) {
                 $self->error("$msg configured unit $realname. Skipping the alias configuration. ",
@@ -478,6 +481,11 @@ sub process
         if ($addstate) {
             push(@{$states->{$state}}, $unit);
             $msg .= "state $state";
+            # masked units have to be unmasked before state change
+            if ($self->{unit}->is_ufstate($unit, $STATE_MASKED)) {
+                push(@{$states->{$UNMASK}}, $unit);
+                $msg .= " (requires $UNMASK)";
+            };
         }
         if ($addact) {
             push(@{$acts->{$expected_act}}, $unit);
@@ -487,7 +495,7 @@ sub process
                               "process: nothing to do for unit $unit");
     }
 
-    return $states, $acts;
+    return ($states, $acts);
 };
 
 =pod
@@ -495,7 +503,7 @@ sub process
 =item change
 
 Actually make the changes as specified in
-the hasrefs C<states> and C<acts> (which hold the
+the hashrefs C<states> and C<acts> (which hold the
 changes to be made to resp. the state and the activity
 of the units).
 
@@ -515,6 +523,7 @@ sub change
         $STATE_ENABLED => 'enable',
         $STATE_DISABLED => 'disable',
         $STATE_MASKED => 'mask',
+        $UNMASK => $UNMASK,
     };
 
     my $change_activation = {
@@ -522,8 +531,9 @@ sub change
         1 => 'start',
     };
 
-    # TODO What order is best? enabled before disable?
-    foreach my $state (sort keys %$states) {
+    # TODO What order is best? enable before disable?
+    # Unmask before enable/disable a previously masked unit
+    foreach my $state (($UNMASK, $STATE_MASKED, $STATE_DISABLED, $STATE_ENABLED)) {
         my @units = @{$states->{$state}};
 
         # TODO: process units wrt dependencies?
