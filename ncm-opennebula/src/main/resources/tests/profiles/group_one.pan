@@ -8,3 +8,4 @@ bind "/metaconfig/contents/group/gvo01" = opennebula_group;
 
 prefix "/metaconfig/contents/group/gvo01";
 "description" = "gvo01 group managed by quattor";
+"labels" = list("quattor", "quattor/VO");

@@ -39,6 +39,8 @@ Features that are implemented at this moment:
 
 =item * Updates VMM kvmrc config file
 
+=item * Cloud resource labels (OpenNebula >= 5.x)
+
 =back
 
 OpenNebula installation is 100% automated. Therefore:

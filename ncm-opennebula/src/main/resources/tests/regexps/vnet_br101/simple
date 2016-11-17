@@ -6,6 +6,7 @@ multiline
 ^BRIDGE\s?=\s?".+"\s*$
 ^DNS\s?=\s?".+"\s*$
 ^GATEWAY\s?=\s?".+"\s*$
+^LABELS\s?=\s?"quattor,quattor/public"$
 ^NETWORK_MASK\s?=\s?".+"\s*$
 ^VN_MAD\s?=\s?".+"\s*$
 ^QUATTOR\s?=\s?\d+\s*$

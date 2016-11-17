@@ -1,7 +1,7 @@
 Opennebula test user forbidden
 ---
+multiline
 negate
-caseinsensitive
 unordered
 ---
 PASSWORD

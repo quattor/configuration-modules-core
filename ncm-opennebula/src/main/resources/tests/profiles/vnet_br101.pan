@@ -11,3 +11,4 @@ prefix "/metaconfig/contents/vnet/node2.cubone.os";
 "gateway" = "10.141.10.250";
 "dns" = "10.141.10.250";
 "network_mask" = "255.255.0.0";
+"labels" = list("quattor", "quattor/public");

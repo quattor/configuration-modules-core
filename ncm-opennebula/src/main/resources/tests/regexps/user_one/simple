@@ -2,6 +2,7 @@ Opennebula user test
 ---
 multiline
 ---
+^LABELS\s?=\s?".+"$
 ^SSH_PUBLIC_KEY\s?=\s?"ssh.+\s*$
 ^ssh.+\s*$
 ^\"$

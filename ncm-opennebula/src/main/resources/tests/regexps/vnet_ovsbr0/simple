@@ -12,6 +12,7 @@ multiline
 ^BRIDGE_OVS\s?=\s?".+"\s*$
 ^DNS\s?=\s?".+"\s*$
 ^GATEWAY\s?=\s?".+"\s*$
+^LABELS\s?=\s?"quattor,quattor/vlans"$
 ^NETWORK_MASK\s?=\s?".+"\s*$
 ^VLAN\s?=\s?".+"\s*$
 ^VLAN_ID\s?=\s?".+"\s*$

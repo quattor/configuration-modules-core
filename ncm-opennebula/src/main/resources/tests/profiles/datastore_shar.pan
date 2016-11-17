@@ -11,3 +11,4 @@ prefix "/metaconfig/contents/datastore/nfs";
 "type" = "IMAGE_DS";
 "ds_mad" = "fs";
 "tm_mad" = "shared";
+"labels" = list("quattor", "quattor/nfs");

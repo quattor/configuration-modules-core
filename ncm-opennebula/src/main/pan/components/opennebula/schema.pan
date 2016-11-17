@@ -304,6 +304,10 @@ type opennebula_datastore = {
     "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
     "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
     "type"                      : string = 'IMAGE_DS'
+    @{datastore labels is a list of strings to group the datastores under a given name and filter them 
+    in the admin and cloud views. It is also possible to include in the list 
+    sub-labels using a common slash: list("Name", "Name/SubName")}
+    "labels" ? string[]
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
@@ -321,6 +325,10 @@ type opennebula_vnet = {
     "vlan" ? boolean
     "vlan_id" ? long(0..4095)
     "ar" ? opennebula_ar
+    @{vnet labels is a list of strings to group the vnets under a given name and filter them 
+    in the admin and cloud views. It is also possible to include in the list 
+    sub-labels using a common slash: list("Name", "Name/SubName")}
+    "labels" ? string[]
 } = dict();
 
 @documentation{
@@ -331,6 +339,10 @@ type opennebula_user = {
     "ssh_public_key" ? string[]
     "password" ? string
     "group" ? string
+    @{user labels is a list of strings to group the users under a given name and filter them 
+    in the admin and cloud views. It is also possible to include in the list 
+    sub-labels using a common slash: list("Name", "Name/SubName")}
+    "labels" ? string[]
 } = dict();
 
 @documentation{
@@ -338,6 +350,7 @@ Set a group name and an optional decription
 }
 type opennebula_group = {
     "description" ? string
+    "labels" ? string[]
 } = dict();
 
 type opennebula_remoteconf_ceph = {

@@ -9,6 +9,8 @@ NAME = "[% pool.key %]"
 [%            CASE ar_section -%]
 [%                pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
                                       data=pair.value -%]
+[%            CASE 'labels' -%]
+[%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
 [%            CASE -%]
 [%                pair.key FILTER upper %] = "[% pair.value %]"
 [%        END -%]
