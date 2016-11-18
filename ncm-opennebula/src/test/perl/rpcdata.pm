@@ -421,6 +421,18 @@ $cmds{rpc_enable_host3}{params} = [168, 0];
 $cmds{rpc_enable_host3}{method} = "one.host.enable";
 $cmds{rpc_enable_host3}{out} = 168;
 
+$cmds{rpc_status_host}{params} = [1, 1];
+$cmds{rpc_status_host}{method} = "one.host.status";
+$cmds{rpc_status_host}{out} = 1;
+
+$cmds{rpc_status_host2}{params} = [167, 1];
+$cmds{rpc_status_host2}{method} = "one.host.status";
+$cmds{rpc_status_host2}{out} = 167;
+
+$cmds{rpc_status_host3}{params} = [168, 1];
+$cmds{rpc_status_host3}{method} = "one.host.status";
+$cmds{rpc_status_host3}{out} = 168;
+
 $cmds{rpc_list_hostspool}{params} = [];
 $cmds{rpc_list_hostspool}{method} = "one.hostpool.info";
 $cmds{rpc_list_hostspool}{out} = <<'EOF';
