@@ -907,7 +907,6 @@ sub Configure
         } else {
             $self->error("Restoring old config failed.");
         }
-        $self->info("Some more debug info");
         $self->info("Result of test_network_ping: ".test_network_ping());
         $self->info("Initial setup\n$init_config");
         $self->info("Setup after failure\n$failure_config");
