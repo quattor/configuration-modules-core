@@ -6,7 +6,7 @@
   <artifactId>gmetad</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.10.0-rc3</version>
+  <version>16.10.0-rc4-SNAPSHOT</version>
   <name>Component configuring the Ganglia gmetad</name>
 
 
