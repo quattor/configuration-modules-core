@@ -24,6 +24,5 @@ prefix '/software/components/aiiserver/aii-shellfe';
 
 prefix '/software/components/ccm';
 'ca_dir' = '/etc/grid-security/certificates';
-'ca_file' = 'CERN-TCA.pem';
 'cert_file' = 'my-host-cern.pem';
 'key_file' = 'my-host-key.pem';

@@ -43,7 +43,7 @@ sub Configure
     my $tree = $config->getTree($self->prefix());
     my $ccm_tree = $config->getTree($CCMPATH);
 
-    my $ccm_props = { map {$_ => $ccm_tree->{$_}} @CCM_IMPORTED_PROPERTIES };
+    my $ccm_props = { map {$_ => $ccm_tree->{$_}} grep {exists($ccm_tree->{$_})} @CCM_IMPORTED_PROPERTIES };
     my $shellfe = {%$ccm_props, %{$tree->{"aii-shellfe"}}};
 
     $self->make_config($AII_SHELLFE, $shellfe);
