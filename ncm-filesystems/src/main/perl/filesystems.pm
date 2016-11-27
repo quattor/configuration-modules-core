@@ -1,33 +1,15 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMpre} NCM::Component::filesystems${PMpost}
 
-# File: filesystems.pm
-# Implementation of ncm-filesystems
-# Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.0.1 : 03/03/11 19:03
-#  ** Generated file : do not edit **
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
-
-package NCM::Component::filesystems;
-
-use strict;
-use warnings;
-use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
 use LC::Exception qw (throw_error);
-use LC::Process qw (execute output);
+use LC::Process qw (output);
 use Cwd qw(abs_path);
-use NCM::BlockdevFactory qw (build);
 use NCM::Filesystem;
 use NCM::Partition qw (partition_compare);
+use CAF::Object;
+
 use constant PROTECTED_PATH => "/software/components/fstab/protected_mounts";
 
-our @ISA = qw (NCM::Component);
+use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
 # Returns a hash with the canonical paths to the protected mountpoints
@@ -92,7 +74,7 @@ sub Configure
 
 	my @fs = ();
 
-	if ($NoAction) {
+	if ($CAF::Object::NoAction) {
 		$self->warn ("--noaction not supported. Leaving.");
 		return 1;
 	}
@@ -108,7 +90,7 @@ sub Configure
 	$el = $config->getElement ("/system/blockdevices/partitions");
 	my @part = ();
 	$self->info ("Checking whether partitions need to be created");
-	
+
 	while ($el && $el->hasNextElement) {
 		my $el2 = $el->getNextElement;
 		push (@part, NCM::Partition->new ($el2->getPath->toString, $config, log => $self));
