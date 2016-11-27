@@ -1,30 +1,20 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMpre} NCM::Component::useraccess${PMpost}
 
-package NCM::Component::useraccess;
-
-use strict;
-use warnings;
-use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
-use DirHandle;
-use LC::Process qw (execute);
-use LC::Exception qw (throw_error);
 # Might handle the requests in parallel, but this is simpler.
 use LWP::UserAgent;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use File::stat;
+use CAF::Object;
+use DirHandle;
 
-our @ISA = qw (NCM::Component);
+
+use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 use constant MASK   => 077;
 
-use constant PATH	=> "/software/components/useraccess/";
 use constant KRB4	=> "kerberos4";
 use constant KRB5	=> "kerberos5";
 use constant ACLS	=> "acls";
@@ -38,7 +28,6 @@ use constant ACLSERVICES => "acl_services";
 use constant K4LOGIN	=> '.klogin';
 use constant K5LOGIN	=> '.k5login';
 use constant SSH_DIR	=> '.ssh';
-
 
 use constant SSH_AUTH	=> SSH_DIR . '/authorized_keys';
 
@@ -78,8 +67,6 @@ use constant PAM_DIR	=> "/etc/pam.d";
 
 use constant ROLEPATH => '/software/components/useraccess/roles/';
 
-our $NoActionSupported = 1;
-
 # Returns the interesting information from a user. Wrapper for Perl's
 # getpwnam.
 #
@@ -99,19 +86,19 @@ sub getpwnam
 
 #
 # C<directory_verify_owner> verifies the owner of directory C<dir> has expected C<uid>.
-# If not, make the directory owner and also set C<gid> 
+# If not, make the directory owner and also set C<gid>
 # and permission C<perm>.
-# It does not check the gid nor the permissions of an existing directory, those can 
+# It does not check the gid nor the permissions of an existing directory, those can
 # be user controlled.
 # If the directory does not exist, create it with these settings.
 #
 sub directory_verify_owner
 {
     my ($self, $dir, $uid, $gid, $perm) = @_;
-    
+
     if (! -d $dir) {
         $self->verbose("No such directory $dir, creating it with $uid/$gid/$perm");
-        if ($NoAction) {
+        if ($CAF::Object::NoAction) {
             $self->debug(1, "NoAction: mkdir($dir, $perm) and chown($uid, $gid, $dir) not called");
         } else {
             mkdir($dir, $perm) || $self->warn("Failed to mkdir $dir with perm $perm: $!");
@@ -121,7 +108,7 @@ sub directory_verify_owner
         my $stat = stat($dir);
         if ($stat->uid != $uid) {
             $self->verbose("Found directory $dir owned by $stat->uid, setting it to expected $uid/$gid/$perm");
-            if ($NoAction) {
+            if ($CAF::Object::NoAction) {
                 $self->debug(1, "NoAction: chown($uid, $gid, $dir) and chmod ($perm, $dir) not called");
             } else {
                 chown($uid, $gid, $dir) || $self->warn("Failed to chown dir $dir with uid/gid $uid/$gid: $!");
@@ -372,7 +359,7 @@ sub Configure
 
     my ($self, $config) = @_;
 
-    my $t = $config->getElement(PATH)->getTree();
+    my $t = $config->getElement($self->prefix())->getTree();
 
     my $uhash = $t->{USERS()};
     my $rlhash = $t->{ROLES()};
