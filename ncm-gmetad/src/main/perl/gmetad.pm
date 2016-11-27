@@ -1,45 +1,34 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMpre} NCM::Component::gmetad${PMpost}
 
+use CAF::FileWriter;
+use CAF::Service;
 
-package NCM::Component::gmetad;
+use parent qw(NCM::Component);
 
-use strict;
-use warnings;
-use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
-use LC::Process qw (execute);
-use LC::Exception qw (throw_error);
-
-our @ISA = qw (NCM::Component);
+our $NoActionSupported = 1;
 our $EC = LC::Exception::Context->new->will_store_all;
 
-use constant GMETAD_PATH => '/software/components/gmetad';
-
-
-
-sub print_host {
-    my ($self, $fh,  $cfg) = @_;
+sub print_host
+{
+    my ($self, $fh, $cfg) = @_;
 
     for my $i ( @{$cfg} ) {
-        $fh->print(" $i->{address}");
-        $fh->print(":$i->{port}") if ( $i->{port} );
+        print $fh " $i->{address}";
+        print $fh ":$i->{port}" if ( $i->{port} );
     }
 }
 
-sub print_data_source {
-    my ($self, $fh,  $cfg) = @_;
+sub print_data_source
+{
+    my ($self, $fh, $cfg) = @_;
 
     for my $i ( @{$cfg} ) {
-        $fh->print("data_source \"$i->{name}\" ");
-        $fh->print("$i->{polling_interval} ") if ( $i->{polling_interval} );
+        print $fh "data_source \"$i->{name}\" ";
+        print $fh "$i->{polling_interval} " if ( $i->{polling_interval} );
 
-        print_host($self, $fh, $i->{host});
+        $self->print_host($fh, $i->{host});
 
-        $fh->print("\n");
+        print $fh "\n";
     }
 }
 
@@ -48,49 +37,43 @@ sub Configure
     my ($self, $config) = @_;
 
     # daemon configuration
-    if ( $config->elementExists(GMETAD_PATH) ) {
-        my $st = $config->getElement(GMETAD_PATH)->getTree;
-
+    my $st = $config->getTree($self->prefix());
+    if ( defined($st) ) {
         # Location of the configuration file
         my $cfgfile = $st->{file};
-        my $fh = FileHandle->new ($cfgfile, 'w');
-        unless ($fh) {
-            throw_error ("Couldn't open " . $cfgfile);
-            return 0;
-        }
+        my $fh = CAF::FileWriter->new ($cfgfile, mode => 0644, log => $self);
 
-        $fh->print ("# ".$cfgfile."\n# written by ncm-gmetad. Do not edit!\n");
+        print $fh "# $cfgfile\n# written by ncm-gmetad. Do not edit!\n";
 
         # data sources
-        print_data_source($self, $fh,  $st->{data_source});
+        $self->print_data_source($fh,  $st->{data_source});
 
         # daemon configuration
-        $fh->print("debug_level $st->{debug_level}\n") if ( $st->{debug_level} );
-        $fh->print("scalability $st->{scalability}\n") if ( $st->{scalability} );
-        $fh->print("gridname \"$st->{gridname}\"\n") if ( $st->{gridname} );
-        $fh->print("authority \"$st->{authority}\"\n") if ( $st->{authority} );
+        print $fh "debug_level $st->{debug_level}\n" if ( $st->{debug_level} );
+        print $fh "scalability $st->{scalability}\n" if ( $st->{scalability} );
+        print $fh "gridname \"$st->{gridname}\"\n" if ( $st->{gridname} );
+        print $fh "authority \"$st->{authority}\"\n" if ( $st->{authority} );
 
-        $fh->print("all_trusted $st->{all_trusted}\n") if ( $st->{all_trusted} );
+        print $fh "all_trusted $st->{all_trusted}\n" if ( $st->{all_trusted} );
         if ( $st->{trusted_hosts} ) {
-            $fh->print("trusted_hosts ");
+            print $fh "trusted_hosts ";
             for my $i ( @{$st->{trusted_hosts}} ) {
-                $fh->print("$i ");
+                print $fh "$i ";
             }
-            $fh->print("\n");
+            print $fh "\n";
         }
 
-        $fh->print("setuid $st->{setuid}\n") if ( $st->{setuid} );
-        $fh->print("setuid_username \"$st->{setuid_username}\"\n") if ( $st->{setuid_username} );
-        $fh->print("xml_port $st->{xml_port}\n") if ( $st->{xml_port} );
-        $fh->print("interactive_port $st->{interactive_port}\n") if ( $st->{interactive_port} );
-        $fh->print("server_threads $st->{server_threads}\n") if ( $st->{server_threads} );
-        $fh->print("rrd_rootdir \"$st->{rrd_rootdir}\"\n") if ( $st->{rrd_rootdir} );
+        print $fh "setuid $st->{setuid}\n" if ( $st->{setuid} );
+        print $fh "setuid_username \"$st->{setuid_username}\"\n" if ( $st->{setuid_username} );
+        print $fh "xml_port $st->{xml_port}\n" if ( $st->{xml_port} );
+        print $fh "interactive_port $st->{interactive_port}\n" if ( $st->{interactive_port} );
+        print $fh "server_threads $st->{server_threads}\n" if ( $st->{server_threads} );
+        print $fh "rrd_rootdir \"$st->{rrd_rootdir}\"\n" if ( $st->{rrd_rootdir} );
 
-        chmod (0644, $cfgfile);
-
-        execute (["/etc/init.d/gmetad", "restart"]);
+        if ($fh->close()) {
+            CAF::Service->new(['gmetad'], log => $self)->restart()
+        };
     }
-
 
     return 1;
 }
