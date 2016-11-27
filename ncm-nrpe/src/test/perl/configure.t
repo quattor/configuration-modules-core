@@ -7,6 +7,7 @@ use NCM::Component::nrpe;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 my $cmp = NCM::Component::nrpe->new('nrpe');
 
@@ -35,8 +36,13 @@ like($fh, qr{^include_dir=bar$}m, "include_dir lines printed correctly");
 
 like($fh, qr{^_42=42$}m, "Ordinary lines printed correctly");
 
-set_command_status("/sbin/service nrpe restart", 1);
+# Set failing restart
+set_command_status("service nrpe restart", 1);
+is($cmp->Configure($cfg), 1, "No failure reported, restart no called (no changes in file)");
 
+
+# reset contents, to trigger a failing restart
+set_file_contents('/etc/nagios/nrpe.cfg', '#empty');
 is($cmp->Configure($cfg), 0, "Failure in restart is notified");
 is($cmp->{ERROR}, 1, "Error is reported");
 
