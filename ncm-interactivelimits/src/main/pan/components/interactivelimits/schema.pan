@@ -10,7 +10,7 @@ include 'quattor/schema';
 type component_interactivelimits_type = {
     include structure_component
     # arrays of array like this [<domain> <type> <item> <value>]
-    "values" : list
+    "values" : string[][]
 };
 
 bind "/software/components/interactivelimits" = component_interactivelimits_type;
