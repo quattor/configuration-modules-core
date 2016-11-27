@@ -5,12 +5,10 @@
 
 declaration template components/interactivelimits/schema;
 
-include 'quattor/schema';
+include 'quattor/types/component';
 
 type component_interactivelimits_type = {
     include structure_component
     # arrays of array like this [<domain> <type> <item> <value>]
     "values" : string[][]
 };
-
-bind "/software/components/interactivelimits" = component_interactivelimits_type;

@@ -58,8 +58,8 @@ sub Configure
         # add_or_replace_lines does a seek to begin first
         $fh->add_or_replace_lines(
             '#*\s*'.$domainre.'\s+'.$typere.'\s+'.$itemre.'\s+\S+',
-            '\s*'.$domainre.'\s+'.$typere.'\s+'.$itemre.'\s+'.$valuere,
-            sprintf("%-20s %-10s %-15s %s", $domain, $type, $item, $value),
+            '^\s*'.$domainre.'\s+'.$typere.'\s+'.$itemre.'\s+'.$valuere,
+            sprintf("%-20s %-10s %-15s %s\n", $domain, $type, $item, $value),
             SEEK_END, 0, # add at the end
             );
     }
