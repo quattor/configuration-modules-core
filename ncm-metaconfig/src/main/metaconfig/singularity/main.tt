@@ -1,0 +1,1 @@
+[%- current=[]; INCLUDE 'metaconfig/singularity/singularity.tt' data=CCM.contents path=current -%]
