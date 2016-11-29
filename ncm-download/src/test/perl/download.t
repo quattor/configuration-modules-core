@@ -51,10 +51,15 @@ Nothing is done
 my %opts = (href => sprintf("file://%s/target/test/source", getcwd()),
             timeout => 1,
             min_age => 60);
+my $tmpfile = $cmp->_tempfile($FILE);
+is ($tmpfile, 'target/test/.file.part', "temporary file named as expected");
 
+my (%file_moves, %file_cleanups);
+$mock->mock('move', sub { $file_moves{$_[1]}->{$_[2]}++; return 1; });
+$mock->mock('cleanup', sub { $file_cleanups{$_[1]}++; return 1; });
 is($cmp->retrieve($FILE, %opts), 1, "Invocation with a too recent file succeeds");
 
-my $cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $FILE -m $opts{timeout} $opts{href}");
+my $cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $tmpfile -m $opts{timeout} $opts{href}");
 
 ok(!$cmd, "curl is not called if the remote file is too recent");
 
@@ -70,9 +75,11 @@ $opts{min_age} = 0;
 
 is($cmp->retrieve($FILE, %opts), 1, "Basic retrieve invocation succeeds");
 
-$cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $FILE -m $opts{timeout} $opts{href}");
+$cmd = get_command("/usr/bin/curl -s -R -f --create-dirs -o $tmpfile -m $opts{timeout} $opts{href}");
 
 ok($cmd, "Curl command called as expected");
+is($file_moves{$tmpfile}->{$FILE}, 1, "temporary file moved to real file");
+is($file_cleanups{$tmpfile}, 1, "temporary file cleaned up");
 
 =pod
 
@@ -96,21 +103,21 @@ is($cmp->retrieve($FILE, %opts), 0, "Retrieve of non-existing files fails");
 $mock->mock('get_remote_timestamp', sub { return time() - 120; } );
 
 # broken proxy fails
-set_command_status('/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://broken/something1', 1);
+set_command_status('/usr/bin/curl -s -R -f --create-dirs -o /a/b/.c1.part https://broken/something1', 1);
 
 command_history_reset();
 ok($cmp->Configure($cfg), "configure ok");
 
 ok(command_history_ok([
     # try proxy, broken fails, then, working
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://broken/something1',
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c1 https://working/something1',
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c2 https://working/something2',
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/c3 https://working/something3',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.c1.part https://broken/something1',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.c1.part https://working/something1',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.c2.part https://working/something2',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.c3.part https://working/something3',
     # start with trying working proxy
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/d abc://working/something/else',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.d.part abc://working/something/else',
     # no proxy, with postprocess
-    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/e def://ok/something/entirely/different',
+    '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.e.part def://ok/something/entirely/different',
     'postprocess /a/b/e',
 ], [
     # working2 proxy should not be used
