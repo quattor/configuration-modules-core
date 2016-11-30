@@ -27,7 +27,8 @@ rpc_history_reset;
 $cmp->manage_something($one, "kvm", $tree);
 #diag_rpc_history;
 ok(rpc_history_ok(["one.hostpool.info",
-                   "one.host.enable",
+                   "one.host.status",
+                   "one.hostpool.info",
                    "one.datastorepool.info",
                    "one.host.allocate",
                    "one.host.info",

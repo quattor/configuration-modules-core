@@ -4,6 +4,7 @@ OpenNebula share datastore test
 ^NAME\s?=\s?".+"\s*$
 ^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
 ^DS_MAD\s?=\s?".+"\s*$
+^LABELS\s?=\s?".+"$
 ^TM_MAD\s?=\s?".+"\s*$
 ^TYPE\s?=\s?".+"\s*$
 ^QUATTOR\s?=\s?\d+\s*$

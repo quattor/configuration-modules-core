@@ -3,6 +3,8 @@
 [%-        SWITCH pair.key -%]
 [%             CASE 'description' -%]
 [%                 pair.key FILTER upper %] = "[% pair.value %]"
+[%             CASE 'labels' -%]
+[%                 pair.key FILTER upper %] = "[% pair.value.join(',') %]"
 [%         END -%]
 [%     END -%]
 [%     IF pool.key != 'oneadmin' -%]

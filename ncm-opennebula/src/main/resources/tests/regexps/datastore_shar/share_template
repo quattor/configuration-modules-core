@@ -4,6 +4,7 @@ OpenNebula shared datastore full test
 ^NAME\s?=\s?"nfs"\s*$
 ^DATASTORE_CAPACITY_CHECK\s?=\s?"yes"\s*$
 ^DS_MAD\s?=\s?"fs"\s*$
+^LABELS\s?=\s?"quattor,quattor/nfs"$
 ^TM_MAD\s?=\s?"shared"\s*$
 ^TYPE\s?=\s?"IMAGE_DS"\s*$
 ^QUATTOR\s?=\s?1\s*$

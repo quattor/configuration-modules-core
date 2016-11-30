@@ -16,3 +16,4 @@ prefix "/metaconfig/contents/datastore/ceph";
 "pool_name" = "one";
 "type" = "IMAGE_DS";
 "rbd_format" = 2;
+"labels" = list("quattor", "quattor/ceph");

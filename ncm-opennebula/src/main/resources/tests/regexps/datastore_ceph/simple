@@ -10,6 +10,7 @@ multiline
 ^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
 ^DISK_TYPE\s?=\s?".+"\s*$
 ^DS_MAD\s?=\s?".+"\s*$
+^LABELS\s?=\s?"quattor,quattor/ceph"$
 ^POOL_NAME\s?=\s?".+"\s*$
 ^RBD_FORMAT\s?=\s?\d+\s*$
 ^TM_MAD\s?=\s?".+"\s*$

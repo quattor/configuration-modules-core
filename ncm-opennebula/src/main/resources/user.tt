@@ -6,6 +6,8 @@
 [%-                 FOREACH item IN pair.value -%]
 [%                      item %]
 [%                  END -%]"
+[%             CASE 'labels' -%]
+[%                 pair.key FILTER upper %] = "[% pair.value.join(',') %]"
 [%         END -%]
 [%-    END -%]
 [%     IF pool.key != 'oneadmin' -%]

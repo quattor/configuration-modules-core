@@ -45,13 +45,15 @@ prefix "/software/components/opennebula";
             "bridge", "br100",
             "gateway", "10.141.3.250",
             "dns", "10.141.3.250",
-            "network_mask", "255.255.0.0"
+            "network_mask", "255.255.0.0",
+            "labels", list("quattor", "quattor/private"),
         ),
     "altaria.vsc", dict(
             "bridge", "br101",
             "gateway", "10.141.3.250",
             "dns", "10.141.3.250",
-            "network_mask", "255.255.0.0"
+            "network_mask", "255.255.0.0",
+            "labels", list("quattor", "quattor/public"),
         ),
     "pool.altaria.os", dict(
             "bridge", "br100",
@@ -67,6 +69,7 @@ prefix "/software/components/opennebula";
                     "ip", "10.141.14.100",
                     "size", 29
             ),
+            "labels", list("quattor", "quattor/vlans"),
         ),
 );
 
@@ -79,19 +82,22 @@ prefix "/software/components/opennebula";
             "datastore_capacity_check", true,
             "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
             "pool_name", "one",
-            "type", "IMAGE_DS"
+            "type", "IMAGE_DS",
+            "labels", list("quattor", "quattor/ceph"),
         ),
         "nfs", dict(
             "datastore_capacity_check", true,
             "ds_mad", "fs",
             "tm_mad", "shared",
             "type", "IMAGE_DS",
+            "labels", list("quattor", "quattor/nfs"),
         ),
 );
 
 "groups" = dict(
         "gvo01", dict(
             "description", "gvo01 group managed by quattor",
+            "labels", list("quattor", "quattor/VO"),
         ),
 );
 
@@ -103,6 +109,7 @@ prefix "/software/components/opennebula";
                 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI4gvhOpwKbukZP/Tht/GmKcRCBHGn8JadVlgb9U6O/EP/hR1KLDbKY7KVjVOlUcvfawn44SIGsmKCzehYJV2s/XU1QSaaLrjB7n+vfOyj1C3EgzfZcMOHvL51xPuSgIoKd9oER/63B/pUV/BEZK5LEC06O1LgAjwLy2DrHNN3cQdnTbxQ4vM5ggDb/BC+DyRYlN5NG74VFguVQmoqMPA8FYXBvT/bBvIAZFw7piZIQFd6C803dtG6xwgo2yNXp hello@mylaptop'
             ),
             "group", "oneadmin",
+            "labels", list("quattor", "quattor/localuser"),
         ),
         "stdweird", dict(
             "password", "another_fancy_pass",

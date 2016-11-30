@@ -20,3 +20,4 @@ prefix "/metaconfig/contents/vnet/node3.cubone.os";
     "ip", "10.141.14.100",
     "size", 29,
 );
+"labels" = list("quattor", "quattor/vlans");

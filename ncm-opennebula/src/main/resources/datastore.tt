@@ -17,6 +17,8 @@ NAME = "[% pool.key %]"
  "[%                      pair.value ? "yes" : "no" %]"
 [%                    CASE integer -%]
  [%                       pair.value %]
+[%                    CASE 'labels' -%]
+ "[%                      pair.value.join(',') %]"
 [%                    CASE -%]
  "[%                      pair.value %]"
 [%                END -%]

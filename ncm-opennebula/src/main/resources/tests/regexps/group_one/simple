@@ -3,4 +3,5 @@ Opennebula group test
 multiline
 ---
 ^DESCRIPTION\s?=\s?".+"$
+^LABELS\s?=\s?".+"$
 ^QUATTOR\s?=\s?\d+\s*$

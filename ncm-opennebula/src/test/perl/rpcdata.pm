@@ -99,6 +99,7 @@ $cmds{rpc_chgrp_user}{method} = "one.user.chgrp";
 $cmds{rpc_chgrp_user}{out} = 3;
 
 $data = <<'EOF';
+LABELS = "quattor,quattor/localuser"
 SSH_PUBLIC_KEY = "ssh-dss AAAAB3NzaC1kc3MAAACBAOTAivURhUrg2Zh3DqgVd2ofRYKmXKjWDM4LITQJ/Tr6RBWhufdxmJos/w0BG9jFbPWbUyPn1mbRFx9/2JJjaspJMACiNsQV5KD2a2H/yWVBxNkWVUwmq36JNh0Tvx+ts9Awus9MtJIxUeFdvT433DePqRXx9EtX9WCJ1vMyhwcFAAAAFQDcuA4clpwjiL9E/2CfmTKHPCAxIQAAAIEAnCQBn1/tCoEzI50oKFyF5Lvum/TPxh6BugbOKu18Okvwf6/zpsiUTWhpxaa40S4FLzHFopTklTHoG3JaYHuksdP4ZZl1mPPFhCTk0uFsqfEVlK9El9sQak9vXPIi7Tw/dyylmRSq+3p5cmurjXSI93bJIRv7X4pcZlIAvHWtNAYAAACBAOCkwou/wYp5polMTqkFLx7dnNHG4Je9UC8Oqxn2Gq3uu088AsXwaVD9t8tTzXP1FSUlG0zfDU3BX18Ds11p57GZtBSECAkqH1Q6vMUiWcoIwj4hq+xNq3PFLmCG/QP+5Od5JvpbBKqX9frc1UvOJJ3OKSjgWMx6FfHr8PxqqACw lsimngar@OptiPlex-790
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI4gvhOpwKbukZP/Tht/GmKcRCBHGn8JadVlgb9U6O/EP/hR1KLDbKY7KVjVOlUcvfawn44SIGsmKCzehYJV2s/XU1QSaaLrjB7n+vfOyj1C3EgzfZcMOHvL51xPuSgIoKd9oER/63B/pUV/BEZK5LEC06O1LgAjwLy2DrHNN3cQdnTbxQ4vM5ggDb/BC+DyRYlN5NG74VFguVQmoqMPA8FYXBvT/bBvIAZFw7piZIQFd6C803dtG6xwgo2yNXp hello@mylaptop
 "
@@ -135,6 +136,7 @@ NAME = "altaria.os"
 BRIDGE = "br100"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
+LABELS = "quattor,quattor/private"
 NETWORK_MASK = "255.255.0.0"
 VN_MAD = "dummy"
 QUATTOR = 1
@@ -148,6 +150,7 @@ NAME = "altaria.vsc"
 BRIDGE = "br101"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
+LABELS = "quattor,quattor/public"
 NETWORK_MASK = "255.255.0.0"
 VN_MAD = "dummy"
 QUATTOR = 1
@@ -167,6 +170,7 @@ BRIDGE = "br100"
 BRIDGE_OVS = "ovsbr0"
 DNS = "10.141.3.250"
 GATEWAY = "10.141.3.250"
+LABELS = "quattor,quattor/vlans"
 NETWORK_MASK = "255.255.0.0"
 VLAN = "YES"
 VLAN_ID = "0"
@@ -306,6 +310,7 @@ CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
 DISK_TYPE = "RBD"
 DS_MAD = "ceph"
+LABELS = "quattor,quattor/ceph"
 POOL_NAME = "one"
 TM_MAD = "ceph"
 TYPE = "IMAGE_DS"
@@ -319,6 +324,7 @@ $data = <<'EOF';
 NAME = "nfs"
 DATASTORE_CAPACITY_CHECK = "yes"
 DS_MAD = "fs"
+LABELS = "quattor,quattor/nfs"
 TM_MAD = "shared"
 TYPE = "IMAGE_DS"
 QUATTOR = 1
@@ -360,6 +366,7 @@ CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
 CEPH_SECRET = "35b161e7-a3bc-440f-b007-cb98ac042646"
 CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
+LABELS = "quattor,quattor/ceph"
 POOL_NAME = "one"
 TYPE = "IMAGE_DS"
 QUATTOR = 1
@@ -413,6 +420,18 @@ $cmds{rpc_enable_host2}{out} = 167;
 $cmds{rpc_enable_host3}{params} = [168, 0];
 $cmds{rpc_enable_host3}{method} = "one.host.enable";
 $cmds{rpc_enable_host3}{out} = 168;
+
+$cmds{rpc_status_host}{params} = [1, 1];
+$cmds{rpc_status_host}{method} = "one.host.status";
+$cmds{rpc_status_host}{out} = 1;
+
+$cmds{rpc_status_host2}{params} = [167, 1];
+$cmds{rpc_status_host2}{method} = "one.host.status";
+$cmds{rpc_status_host2}{out} = 167;
+
+$cmds{rpc_status_host3}{params} = [168, 1];
+$cmds{rpc_status_host3}{method} = "one.host.status";
+$cmds{rpc_status_host3}{out} = 168;
 
 $cmds{rpc_list_hostspool}{params} = [];
 $cmds{rpc_list_hostspool}{method} = "one.hostpool.info";
@@ -609,6 +628,7 @@ EOF
 
 $data = <<'EOF';
 DESCRIPTION = "gvo01 group managed by quattor"
+LABELS = "quattor,quattor/VO"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_group}{params} = [2, $data, 1];
