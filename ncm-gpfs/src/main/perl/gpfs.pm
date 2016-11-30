@@ -452,6 +452,7 @@ sub get_cfg {
 
         my $gpfskeyfh = CAF::FileWriter->open(GPFSKEYDATA,
                                            backup => ".old",
+                                           mode => 0600,
                                            log => $self);
         print $gpfskeyfh $keyoutput;
 

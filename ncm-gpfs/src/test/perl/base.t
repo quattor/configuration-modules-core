@@ -49,6 +49,7 @@ ok(get_command($mmsdrfs_cmd), 'mmsdrfs file fetched');
 ok(get_command($keyData_cmd), 'keydata file fetched');
 
 my $keyData_fh = get_file("/var/mmfs/ssl/stage/genkeyData1");
+is(*$keyData_fh->{options}->{mode}, 0600, "File has correct permissions");
 is("$keyData_fh", $keyData, 'keydata file ok');
 
 done_testing();
