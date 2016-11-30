@@ -436,7 +436,7 @@ sub get_cfg {
     }
 
     if (! "$gpfsnodeconfigfh") {
-        $self->error("Empty node config file found with regex $regexp and gpfsconfig gpfsconfigfh");
+        $self->error("Empty node config file found with regex $regexp and gpfsconfig $gpfsconfigfh");
         $gpfsconfigfh->cancel();
         $gpfsnodeconfigfh->cancel();
         return 1;

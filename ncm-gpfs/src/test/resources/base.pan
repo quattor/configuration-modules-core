@@ -18,7 +18,7 @@ prefix '/software/components/gpfs';
     "useyum", true
 );
 "cfg" = dict(
-    "sdrrestore", false,
+    "sdrrestore", true,
     "subnet", "test.gent.vsc",
     "url", "https://test.ugent.be:446/test/mmsdrfs",
     'keyData', "https://test.ugent.be:446/test/keydata2",
