@@ -310,8 +310,10 @@ sub remove_existing_rpms {
         } else {
             $self->error("Not removing unknown found rpm that matched gpfs.*:",
                          " $found (full: $foundfullname). \n");
-            $ok = 0;
+            $ok = 0; 
         };
+        # No need to remove other packages since we will stop after anyway
+        return 0 if !$ok;
     };
 
     $self->stopgpfs(1);
