@@ -5,6 +5,7 @@ use parent qw(NCM::Component CAF::Path);
 our $EC = LC::Exception::Context->new->will_store_all;
 
 use File::Temp qw(tempdir);
+use File::Basename;
 use CAF::Process;
 use POSIX;
 
@@ -248,11 +249,30 @@ sub get_remote_timestamp
     return $head->headers->last_modified();
 }
 
+sub _cleanup_tmpfile
+{
+    my ($self, $tmpfn) = @_;
+    if (!defined($self->cleanup($tmpfn))) {
+        $self->error("Unable to delete temporary file $tmpfn: $self->{fail}");
+        return;
+    }
+    return 1;
+}
+
+# the temporary file is created in the same directory that the real file should
+# be in, with a dot prefix and .part suffix, so CAF::Path::move can move into
+# place atomically (because it is on the same filesystem).
+sub _tempfile
+{
+    my ($self, $fn) = @_;
+    return dirname($fn) . "/." . basename($fn) . ".part";
+}
 
 # Single attempt, actual transfer
 sub retrieve
 {
     my ($self, $fn, %opts) = @_;
+    my $tmpfn = $self->_tempfile($fn);
 
     my $source  = $opts{href};
     my $timeout = $opts{timeout};
@@ -265,7 +285,7 @@ sub retrieve
     $self->debug(1, "Retrieving file $fn from $source");
 
     local $ENV{KRB5CCNAME};
-    my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $fn);
+    my @cmd = (qw(/usr/bin/curl -s -R -f --create-dirs -o), $tmpfn);
 
     if ($proxy) {
         $source =~ s{^([a-z]+)://([^/]+)/}{$1://$proxy/};
@@ -291,7 +311,7 @@ sub retrieve
     # Get timestamp of any existing file, defaulting to zero if the
     # file doesn't exist
     my $timestamp_existing = 0;
-    if (-e $fn) {
+    if ($self->file_exists($fn)) {
         $timestamp_existing  = (stat($fn))[9];
     }
 
@@ -301,19 +321,31 @@ sub retrieve
     if ($timestamp_remote) {
         if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
+                $self->_cleanup_tmpfile($tmpfn);
                 my $proc = CAF::Process->new(\@cmd, stderr => \my $errs, log => $self);
                 $proc->execute();
                 if (!POSIX::WIFEXITED($?) || POSIX::WEXITSTATUS($?) != 0) {
                     # Only warn as there may be attempts from multiple proxies.
                     $self->warn("curl failed (". ($?>>8) ."): $errs\nCommand = $proc");
+                    $self->_cleanup_tmpfile($tmpfn);
                     return 0; # Curl barfed, so we return.
                 } else {
                     if ($CAF::Object::NoAction) {
                         $self->debug(1, "We have sucessfully pretended to retrieve a new copy of the file $fn");
                     } else {
-                        $self->debug(1, "We seem to have sucessfully retrieved a new copy of the file $fn");
+                        $self->debug(1, "We seem to have sucessfully retrieved a new copy of the file $fn to $tmpfn");
                     }
-                    return 1;
+                    # CAF::Path::move uses File::Copy::move which uses rename()
+                    # if on the same filesystem. It should be (see _tempfile()).
+                    # This should ensure an existing download is replaced atomically.
+                    if ($self->move($tmpfn, $fn)) {
+                        $self->debug(1, "Succesfully renamed temporary file $tmpfn to $fn");
+                        return 1;
+                    } else {
+                        $self->error("Unable to rename temporary file $tmpfn to $fn: $self->{fail}");
+                        $self->_cleanup_tmpfile($tmpfn);
+                    }
+                    return 0;
                 }
             } else {
                 $self->debug(1, "Remote file is newer than acceptable ",
