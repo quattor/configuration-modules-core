@@ -23,7 +23,7 @@ Configures the aii-shellfe tool. See the schema for more information.
 
 Configures the aii-dhcp legacy tool. See the schema for more information.
 
-This components also uses configuration parameters related to https from L<ncm-ccm>: ca_dir, ca_file, cert_file, key_file.
+This components also uses configuration parameters related to https from C<< ncm-ccm >>: ca_dir, ca_file, cert_file, key_file.
 
 =back
 
