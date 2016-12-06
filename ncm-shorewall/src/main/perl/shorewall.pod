@@ -2,7 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-
 =head1 NAME
 
 NCM::shorewall - NCM shorewall configuration component
@@ -15,35 +14,16 @@ NCM::shorewall - NCM shorewall configuration component
 
 This component configures Shorewall.
 
-=item  /software/components/shorewall/rules
+=over
 
-=item  /software/components/shorewall/interfaces
+=item * /software/components/shorewall/rules
 
-=item  /software/components/shorewall/zones
+=item * /software/components/shorewall/interfaces
 
+=item * /software/components/shorewall/zones
 
 =back
 
-=head1 DEPENDENCIES
-
-=head2 Components to be run before:
-
-none.
-
-=head2 Components to be run after:
-
-none.
-
-=head1 BUGS
-
-none known.
-
-=head1 AUTHOR
-
-Stijn De Weirdt <stijn.dweirdt@ugent.be>
-
-=head1 SEE ALSO
-
-ncm-ncd(1), shorewall(1)
+=back
 
 =cut
