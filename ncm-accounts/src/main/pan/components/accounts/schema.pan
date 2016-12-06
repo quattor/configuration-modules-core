@@ -22,6 +22,21 @@ function has_unique_attr = {
     true;
 };
 
+function has_unique_attr = {
+    values = ARGV[0];
+    attr = ARGV[1];
+    cattrs = list();
+
+    foreach(ni;el;values) {
+        if(index(el[attr], cattrs) != -1) {
+            error(format("Duplicate attr %s : %s ", attr, el[attr]));
+            return(false);
+        } else {
+            append(cattrs, el[attr]);
+        };
+    };
+};
+
 type structure_userinfo = {
     'comment'    ? string
     'homeDir'    ? string
