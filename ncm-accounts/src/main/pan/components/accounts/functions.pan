@@ -267,3 +267,21 @@ function keep_user_group = {
 
     SELF;
 };
+
+
+#
+# test if user or group is defined in either users/groups or kept_users/groups
+# first argument is the name, 2nd argument type (user or group)
+#
+function is_user_or_group = {
+    if (( ARGC != 2) || ! is_string(ARGV[0]) || ! (ARGV[1] == 'user'|ARGV[1] == 'group')) {
+        error("is_user_or_group expects 2 arguments : first the name as a string; 2nd the type (user or group)");
+    };
+    path = format("/software/components/accounts/%ss/%s", ARGV[1], ARGV[0]);
+    keptpath=format("/software/components/accounts/kept_%ss/%s", ARGV[1], ARGV[0]);
+    return exists(path) || exists(keptpath);
+};
+
+# type to be used in schema of other components
+type defined_user = string with is_user_or_group(SELF, "user");
+type defined_group = string with is_user_or_group(SELF, "group");
