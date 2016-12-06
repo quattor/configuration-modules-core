@@ -11,9 +11,9 @@ ncm-accounts: NCM component to manage the local accounts on the machine.
 
 The I<accounts> component manages the local accounts on a machine. LDAP
 authentication depends on the LDAP configuration, which is handled by
-L<ncm-authconfig>.
+C<< ncm-authconfig >>.
 
-Shadowing of passwords is also controlled by L<ncm-authconfig>.
+Shadowing of passwords is also controlled by C<< ncm-authconfig >>.
 
 =head1 FUNCTIONS
 
@@ -219,11 +219,11 @@ settings such as:
 
 =item uid_min, uid_max
 
-Min/max values for automatic uid selection in useradd
+Min/max values for automatic uid selection in useradd.
 
 =item gid_min, gid_max
 
-Min/max values for automatic gid selection in groupadd
+Min/max values for automatic gid selection in groupadd.
 
 =item pass_max_days
 
@@ -243,7 +243,7 @@ Number of days warning given before a password expires.
 
 =item create_home
 
-If useradd should create home directories for users by default
+If useradd should create home directories for users by default.
 
 =back
 
@@ -303,9 +303,9 @@ B<won't> be fixed.
 
 =head2 nsswitch.conf status
 
-The component has been tested with C<files> as the primary source on
-/etc/nsswitch.conf for I<group> and I<passwd>. Different settings may
+The component has been tested with C<< files >> as the primary source on
+C<< /etc/nsswitch.conf >> for C<< group >> and C<< passwd >>. Different settings may
 produce strange behaviour. These settings are not controlled by
-ncm-accounts but by L<ncm-authconfig>.
+ncm-accounts but by C<< ncm-authconfig >>.
 
 =cut
