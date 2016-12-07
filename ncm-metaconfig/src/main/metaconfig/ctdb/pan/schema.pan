@@ -2,24 +2,10 @@ declaration template metaconfig/ctdb/schema;
 
 include 'pan/types';
 
-
-@{ Checks for a valid network device @}
-function is_interface_device = {
-    if (exists(format("/system/network/interfaces/", ARGV[0]))) {
-        return(true);
-    };
-    foreach(ifc;attr;value('/system/network/interfaces')) {
-        if (attr['device'] == ARGV[0]){
-            return(true);
-        };
-    };
-    return(false);
-};
-
 @{ type for a ctdb public address @}
 type ctdb_public_address = {
     'network_name'          : type_network_name
-    'network_interface'    : string with is_interface_device(SELF)
+    'network_interface'    : valid_interface
 };
 
 type ctdb_public_addresses = ctdb_public_address[];
@@ -41,4 +27,3 @@ type ctdb_service = {
     'nfs_server_mode'           ? string
     'prologue'                  ? string    
 };
-
