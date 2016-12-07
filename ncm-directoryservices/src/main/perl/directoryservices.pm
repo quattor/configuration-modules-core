@@ -24,6 +24,7 @@ use LC::Check;
 use CAF::Process;
 use Proc::Killall; # From Proc::ProcessTable
 use EDG::WP4::CCM::Element qw(STRING LONG DOUBLE BOOLEAN LIST NLIST);
+use EDG::WP4::CCM::Path qw(unescape);
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
@@ -161,7 +162,7 @@ sub element_to_plist {
             my $el = $obj->getNextElement();
             my $name = $el->getName;
             if ($name =~ /^_(.*)/) {
-                $name = $self->unescape($1);
+                $name = unescape($1);
             }
             $ret .= "<key>$name</key>" . $self->element_to_plist($el);
         }
