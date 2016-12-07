@@ -9,8 +9,7 @@ use File::Basename;
 use CAF::Process;
 use POSIX;
 
-use LWP::UserAgent;
-use LWP::Authen::Negotiate;
+use CAF::Download::LWP;
 
 use EDG::WP4::CCM::Element qw(unescape);
 use CAF::Object qw(SUCCESS);
@@ -229,22 +228,15 @@ sub get_remote_timestamp
 {
     my ($self, $source, %opts) = @_;
 
-    # LWP should use Net::SSL (provided with Crypt::SSLeay)
-    # and Net::SSL doesn't support hostname verify
-    local $ENV{'PERL_NET_HTTPS_SSL_SOCKET_CLASS'} = 'Net::SSL';
-    local $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+    my $lwp = CAF::Download::LWP->new(log => $self);
+    my %lwp_opts;
+    foreach my $name (qw(cert key cacert capath)) {
+        $lwp_opts{$name} = $opts{$name} if $opts{$name};
+    }
+    $lwp_opts{timeout} = $opts{head_timeout} if (defined($opts{head_timeout}));
+    $lwp_opts{ccache} = $opts{gss_ccache} if ($opts{gss_ccache});
 
-    local $ENV{'HTTPS_CERT_FILE'} = $opts{cert} if $opts{cert};
-    local $ENV{'HTTPS_KEY_FILE'} = $opts{key} if $opts{key};
-    local $ENV{'HTTPS_CA_FILE'} = $opts{cacert} if $opts{cacert};
-    local $ENV{'HTTPS_CA_DIR'} = $opts{capath} if $opts{capath};
-
-    # Required for LWP::Authen::Negotiate
-    local $ENV{KRB5CCNAME} = $opts{gss_ccache} if $opts{gss_ccache};
-
-    my $lwp = LWP::UserAgent->new;
-    $lwp->timeout($opts{head_timeout}) if (defined($opts{head_timeout}));
-    my $head = $lwp->head($source);
+    my $head = $lwp->_do_ua('head', [$source], %lwp_opts);
 
     if ($head->is_success()) {
         return $head->headers->last_modified();
