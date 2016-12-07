@@ -1,6 +1,10 @@
 object template basic;
 
-include 'components/authconfig/schema';
+function pkg_repl = { null; };
+include 'components/authconfig/config';
+'/software/components/authconfig/dependencies' = null;
+
+"/system/network/interfaces" = dict('em1', true, 'em2', true);
 
 prefix "/software/components/authconfig";
 # test case_sensitive
@@ -121,5 +125,20 @@ prefix "/software/components/authconfig/method/sssd/domains";
 "test1/access_provider" = "simple";
 "test1/simple/allow_groups" = list("group1","group2");
 
+# IPA
+"test2/auth_provider" = "ipa";
+"test2/ipa/krb5/validate" = true;
+"test2/ipa/krb5/realm" = "MY.REALM";
+"test2/ipa/krb5/canonicalize"  = false;
 
+"test2/ipa/dyndns/update" = false;
+"test2/ipa/dyndns/ttl" = 123;
+"test2/ipa/dyndns/iface" = list("em1", "em2");
 
+"test2/ipa/search_base/hbac" = "abc";
+"test2/ipa/search_base/host" = "def";
+
+"test2/ipa/domain" = "MY.DOMAIN";
+"test2/ipa/server" = list("h1.mydomain.org", "h2.mydomain.org");
+"test2/ipa/backup_server"  = list("h3.mydomain.org", "h4.mydomain.org");
+"test2/ipa/enable_dns_sites" = true;

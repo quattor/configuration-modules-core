@@ -8,7 +8,9 @@ unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
 
-'/software/packages'=pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${RELEASE}','noarch');
+bind "/software/components/authconfig" = component_authconfig_type;
+
+'/software/packages' = pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${RELEASE}', 'noarch');
 
 prefix '/software/components/${project.artifactId}';
 'dependencies/pre' ?= list ('spma');
@@ -30,5 +32,3 @@ prefix '/software/components/${project.artifactId}';
 	    "descrypt";
     };
 };
-
-

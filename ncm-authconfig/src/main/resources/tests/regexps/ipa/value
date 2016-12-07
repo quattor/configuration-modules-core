@@ -1,0 +1,18 @@
+Value based regexp test
+---
+//desc
+rendermodule=domains/ipa
+contentspath=/
+---
+^ipa_backup_server = h3,h4$
+^ipa_domain = MY.DOMAIN$
+^dyndns_iface = em1,em2$
+^dyndns_ttl = 123$
+^dyndns_update = false$
+^ipa_enable_dns_sites = true$
+^krb5_canonicalize = false$
+^krb5_realm = MY.REALM$
+^krb5_validate = true$
+^ipa_hbac_search_base = abc$
+^ipa_host_search_base = def$
+^ipa_server = h1,h2$

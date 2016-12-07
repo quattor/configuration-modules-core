@@ -11,7 +11,7 @@
     sssd-ldap man page.
 }
 
-declaration template components/authconfig/sssd-tls;
+declaration template components/authconfig/sssd/tls;
 
 type ldap_req_checks = string with match(SELF, "^(never|allow|try|demand|hard)$") ||
     error ("LDAP certificate requests must be valid acording to ssd-ldap: " + SELF);

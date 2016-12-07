@@ -10,7 +10,7 @@
     ldap_sudo_* fields of the sssd-ldap man page.
 }
 
-declaration template components/authconfig/sssd-sudo;
+declaration template components/authconfig/sssd/sudo;
 
 type sssd_sudorule = {
     "object_class" : string = "sudoRole"
