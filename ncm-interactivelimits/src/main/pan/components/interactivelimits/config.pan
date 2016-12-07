@@ -6,6 +6,9 @@
 unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
+
+bind "/software/components/interactivelimits" = component_interactivelimits_type;
+
 include 'pan/functions';
 
 # Package to install.

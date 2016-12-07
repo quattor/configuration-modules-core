@@ -1,44 +1,26 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMpre} NCM::Component::syslogng${PMpost}
 
-# File: syslogng.pm
-# Implementation of ncm-syslogng
-# Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.1.0 : 27/01/09 21:39
-# Read carefully http://www.balabit.com/dl/html/syslog-ng-admin-guide_en.html/bk01-toc.html before using this component.
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
-
-package NCM::Component::syslogng;
-
-use strict;
-use warnings;
-use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
-use LC::Process qw (execute);
+use CAF::FileWriter;
+use CAF::Service;
 
 use constant PATH	=> '/software/components/syslogng/';
 use constant SYSLOGFILE	=> '/etc/syslog-ng/syslog-ng.conf';
 use constant SYSLOG_PIDFILE => '/var/run/syslogd.pid';
-use constant SYSLOG_RELOAD => qw (/sbin/service syslog-ng reload);
-use constant SYSLOG_START => qw (/sbin/service syslog-ng start);
 
 use constant TYPES => {
-		       files	=> 'file',
-		       pipes	=> 'pipe',
-		       unixdgram=> 'unix-dgram',
-		       unixstream=>'unix-stream',
-		       udp	=> 'udp',
-		       tcp	=> 'tcp',
-		       internal => 'internal'
-		      };
+    files	=> 'file',
+    pipes	=> 'pipe',
+    unixdgram=> 'unix-dgram',
+    unixstream=>'unix-stream',
+    udp	=> 'udp',
+    tcp	=> 'tcp',
+    internal => 'internal'
+};
 
-our @ISA = qw (NCM::Component);
+use parent qw(NCM::Component);
+
 our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 # Prints syslog-ng global options.
 sub print_opts
@@ -136,7 +118,7 @@ sub print_log_flags
 {
 	my ($fh, $cfg) = @_;
 
-    my @flags = grep {$cfg->{$_}} sort keys %$cfg; 
+    my @flags = grep {$cfg->{$_}} sort keys %$cfg;
 
 	print $fh "\tflags(", join (",", @flags), ");\n";
 }
@@ -161,31 +143,29 @@ sub print_logpaths
 	}
 }
 
-# Reloads syslog-ng daemon, if it is running.
-sub syslog_reload
-{
-	if (-f SYSLOG_PIDFILE) {
-		execute ([SYSLOG_RELOAD]);
-	} else {
-		execute ([SYSLOG_START]);
-	}
-}
-
 sub Configure
 {
 	my ($self, $config) = @_;
 
 	my $t = $config->getElement (PATH)->getTree;
 
-	my $fh = FileHandle->new (SYSLOGFILE, "w");
+	my $fh = CAF::FileWriter->new (SYSLOGFILE, log => $self);
 
 	print_opts ($fh, $t->{options});
 	print_srcs ($fh, $t->{sources});
 	print_dsts ($fh, $t->{destinations});
 	print_filters ($fh, $t->{filters});
 	print_logpaths ($fh, $t->{log_rules});
-	$fh->close;
-	syslog_reload;
+
+    if ($fh->close()) {
+        my $srv = CAF::Service->new(['syslog-ng'], log => $self);
+        if (-f NAGIOS_PID_FILE) {
+            $srv->reload();
+        } else {
+            $srv->start();
+        }
+    }
+
 	return 1;
 }
 

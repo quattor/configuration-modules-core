@@ -1,169 +1,154 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::libvirtd;
-
-use strict;
-use warnings;
-use NCM::Component;
-use EDG::WP4::CCM::Property;
-use NCM::Check;
-use FileHandle;
-use File::Basename;
+#${PMpre} NCM::Component::libvirtd${PMpost}
 
 use CAF::FileWriter;
-use CAF::Process;
-use LC::File qw (makedir);
-
-our $VERSION = q{${project.version}};
+use CAF::Service;
 
 use Readonly;
+
 Readonly::Scalar my $SPACE => q{ };
-Readonly::Scalar my $PATH => '/software/components/libvirtd';
 Readonly::Scalar my $COMPONENT_NAME => 'libvirtd';
-Readonly::Scalar my $RESTART => '/etc/init.d/libvirtd restart';
 
-use base qw (NCM::Component);
+use parent qw (NCM::Component);
 
+our $NoActionSupported = 1;
 our $EC = LC::Exception::Context->new->will_store_all;
 
 # If the value isn't listed in unquoted hash, quote it.
-sub quoteValue {
+sub quoteValue
+{
     my ($k, $v) = @_;
 
     my %unquoted = (
-	'listen_tls' => 1,
-	'listen_tcp' => 1,
-	'mdns_adv' => 1,
-	'tls_no_verify_certificate' => 1,
-	'max_clients' => 1,
-	'min_workers' => 1,
-	'max_workers' => 1,
-	'max_requests' => 1,
-	'max_client_requests' => 1,
-	'log_level' => 1
-	);
+        'listen_tls' => 1,
+        'listen_tcp' => 1,
+        'mdns_adv' => 1,
+        'tls_no_verify_certificate' => 1,
+        'max_clients' => 1,
+        'min_workers' => 1,
+        'max_workers' => 1,
+        'max_requests' => 1,
+        'max_client_requests' => 1,
+        'log_level' => 1
+    );
 
     return (($unquoted{$k}) ? $v :  q{"} . $v . q{"});
 }
 
 # Write out hash as sequence of key/value pairs.
-sub writeKeyValuePairs {
+sub writeKeyValuePairs
+{
     my ($href) = @_;
 
     my $contents = q{};
 
     if ($href) {
-	my %pairs = %{$href};
-	my @entries;
-	foreach my $k (sort keys %pairs) {
-	    my $v = quoteValue($k, $pairs{$k});
-	    push @entries, "$k=$v";
-	}
-	
-	$contents .= join("\n", @entries) . "\n";
+        my %pairs = %{$href};
+        my @entries;
+        foreach my $k (sort keys %pairs) {
+            my $v = quoteValue($k, $pairs{$k});
+            push @entries, "$k=$v";
+        }
+
+        $contents .= join("\n", @entries) . "\n";
     }
 
     return $contents;
 }
 
 # Write out the authorization parameters.
-sub writeAuthz {
+sub writeAuthz
+{
     my ($href) = @_;
 
     my $contents = q{};
 
     if ($href) {
-	
-	my (%pairs) = %{$href};
 
-	my $k = 'tls_no_verify_certificate';
-	my $v = $pairs{$k};
-	if (defined($v)) {
-	    $contents .= "$k=" . quoteValue($k, $v) . "\n";
-	}
+        my (%pairs) = %{$href};
 
-	$k = 'tls_allowed_dn_list';
-	my $aref = $pairs{$k};
-	if ($aref) {
-	    my @entries = @{$aref};
-	    my $s = join($SPACE, @entries);
-	    $contents .= "$k=\"" . $s . "\"\n";
-	}
+        my $k = 'tls_no_verify_certificate';
+        my $v = $pairs{$k};
+        if (defined($v)) {
+            $contents .= "$k=" . quoteValue($k, $v) . "\n";
+        }
 
-	$k = 'sasl_allowed_username_list';
-	$aref = $pairs{$k};
-	if ($aref) {
-	    my @entries = @{$aref};
-	    my $s = join($SPACE, @entries);
-	    $contents .= "$k=\"" . $s . "\"\n";
-	}
+        $k = 'tls_allowed_dn_list';
+        my $aref = $pairs{$k};
+        if ($aref) {
+            my @entries = @{$aref};
+            my $s = join($SPACE, @entries);
+            $contents .= "$k=\"" . $s . "\"\n";
+        }
+
+        $k = 'sasl_allowed_username_list';
+        $aref = $pairs{$k};
+        if ($aref) {
+            my @entries = @{$aref};
+            my $s = join($SPACE, @entries);
+            $contents .= "$k=\"" . $s . "\"\n";
+        }
     }
 
     return $contents;
 }
 
 # Write out the logging parameters.
-sub writeLogging {
+sub writeLogging
+{
     my ($href) = @_;
 
     my $contents = q{};
 
     if ($href) {
-	my (%pairs) = %{$href};
+        my (%pairs) = %{$href};
 
-	my $k = 'log_level';
-	my $v = $pairs{$k};
-	if (defined($v)) {
-	    $contents .= "$k=" . quoteValue($k, $v) . "\n";
-	}
-	
-	$k = 'log_filter';
-	my $aref = $pairs{$k};
-	if ($aref) {
-	    my @entries = @{$aref};
-	    my $s = join($SPACE, @entries);
-	    $contents .= "$k=\"" . $s . "\"\n";
-	}
+        my $k = 'log_level';
+        my $v = $pairs{$k};
+        if (defined($v)) {
+            $contents .= "$k=" . quoteValue($k, $v) . "\n";
+        }
 
-	$k = 'log_outputs';
-	$aref = $pairs{$k};
-	if ($aref) {
-	    my @entries = @{$aref};
-	    my $s = join($SPACE, @entries);
-	    $contents .= "$k=\"" . $s . "\"\n";
-	}
+        $k = 'log_filter';
+        my $aref = $pairs{$k};
+        if ($aref) {
+            my @entries = @{$aref};
+            my $s = join($SPACE, @entries);
+            $contents .= "$k=\"" . $s . "\"\n";
+        }
+
+        $k = 'log_outputs';
+        $aref = $pairs{$k};
+        if ($aref) {
+            my @entries = @{$aref};
+            my $s = join($SPACE, @entries);
+            $contents .= "$k=\"" . $s . "\"\n";
+        }
     }
 
     return $contents;
 }
 
 # Restart the process.
-sub restartDaemon {
+sub restartDaemon
+{
     my ($self) = @_;
-    CAF::Process->new([$RESTART], log => $self)->run();
+    CAF::Service->new(['libvirtd'], log => $self)->restart();
     return;
 }
 
-sub Configure {
+sub Configure
+{
     my ($self, $config) = @_;
 
-    my $t = $config->getElement($PATH)->getTree;
+    my $t = $config->getTree($self->prefix());
 
     # First retrieve the configuration file location.
     my $libvirtd_config = $t->{'libvirtd_config'};
-    my $config_dir = basename($libvirtd_config);
-    if (!makedir($config_dir, oct(755))) {
-        $self->error("Failed to create configuration directory: $config_dir");
-        return;
-    }
 
     # Accumulate the configuration in a string.
-    my $contents = 
-        "#\n". 
-        "# autogenerated by $COMPONENT_NAME configuration module\n" . 
+    my $contents =
+        "#\n".
+        "# autogenerated by $COMPONENT_NAME configuration module\n" .
         "#\n";
 
     my $href;
@@ -196,7 +181,7 @@ sub Configure {
 
     # If configuration has changed restart the service.
     if ($config_changed) {
-	restartDaemon($self);
+        $self->restartDaemon();
     }
 
     return 1;
