@@ -161,6 +161,11 @@ type httpd_ssl_global = {
     "carevocationpath" ? string
 
     "verifydepth" ? long
+
+    "usestapling" ? string with match(SELF,'^(on|off)$')
+    "staplingrespondertimeout" ? long
+    "staplingreturnrespondererrors" ? string with match(SELF,'^(on|off)$')
+    "staplingcache" ? string with match(SELF,'^shmcb:/var/run/ocsp\([0-9]+\)$')
 };
 
 type httpd_ssl_nss_vhost = {
@@ -190,6 +195,7 @@ type httpd_ssl_vhost = {
     include httpd_ssl_nss_vhost
     "protocol" : httpd_sslprotocol[] = list("TLSv1")
     "ciphersuite" : httpd_ciphersuite[] = list("TLSv1")
+    "honorcipherorder" ?  string with match(SELF, '^(on|off)$')
 };
 
 type httpd_directory_allowoverride = string with match(SELF,'^(All|None|Options|FileInfo|AuthConfig|Limit)$');
