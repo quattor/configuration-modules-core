@@ -1,0 +1,9 @@
+zones
+---
+//
+rendermodule=zones
+contentspath=/config
+---
+^fw$
+^ext\tipv4$
+^ext2:a,b\t-\top1,op2\tiop1,iop2\toop1,oop2$

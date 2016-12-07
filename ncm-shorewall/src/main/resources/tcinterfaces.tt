@@ -1,0 +1,1 @@
+[% INCLUDE 'shorewall/walk.tt' _type='tcinterfaces' _cols=['interface', 'type', 'inbw', 'outbw'] %]

@@ -1,0 +1,1 @@
+[% INCLUDE 'shorewall/walk.tt' _type='rules' _cols=['action', 'src', 'dst', 'proto', 'dstport', 'srcport', 'origdst', 'rate', 'user', 'mark', 'connlimit', 'time', 'headers', 'switch', 'helper'] %]

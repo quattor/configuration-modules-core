@@ -1,5 +1,10 @@
 object template basic;
 
+function pkg_repl = { null; };
+include 'components/shorewall/config';
+# remove the dependencies
+'/software/components/shorewall/dependencies' = null;
+
 prefix "/software/components/shorewall";
 
 "interfaces/0/zone" = "z1";
@@ -20,3 +25,11 @@ prefix "/software/components/shorewall";
 "rules/0/dstport/0" = "23";
 
 "shorewall" = nlist();
+
+"tcinterfaces/0/interface" = "eth0";
+
+"tcpri/0/band" = 3;
+"tcpri/0/address" = "1.2.3.4/32";
+
+"masq/0/dest" = list('eth0');
+"masq/0/source" = 'eth1';

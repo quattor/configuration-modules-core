@@ -1,0 +1,4 @@
+[%-  CCM.is_list(el) ? el.join(',') : el -%]
+[%-  IF col == 'zone' && line.exists('parent') -%]
+:[%-    line.parent.join(',') -%]
+[%-  END -%]

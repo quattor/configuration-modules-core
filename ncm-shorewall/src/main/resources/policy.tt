@@ -1,0 +1,1 @@
+[% INCLUDE 'shorewall/walk.tt' _type='policy' _cols=['src', 'dst', 'policy', 'loglevel', 'burst', 'connlimit'] %]

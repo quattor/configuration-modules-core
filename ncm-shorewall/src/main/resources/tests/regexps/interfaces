@@ -1,0 +1,8 @@
+interfaces
+---
+//
+rendermodule=interfaces
+contentspath=/config
+---
+^int\tem1\tdetect,somethingelse\tarp_filter,moreoptions$
+^int\tem1:123$

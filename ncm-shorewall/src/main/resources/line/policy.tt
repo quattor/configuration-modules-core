@@ -1,0 +1,8 @@
+[%- SWITCH col -%]
+[%-      CASE 'burst' -%]
+[%-         el -%][% line.exists('limit') ? ':' _ line.limit : '' -%]
+[%-      CASE 'policy' -%]
+[%-         el FILTER upper -%]
+[%-      CASE -%]
+[%-         CCM.is_list(el) ? el.join(',') : el -%]
+[%- END -%]

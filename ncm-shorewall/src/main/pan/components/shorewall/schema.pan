@@ -2,34 +2,70 @@
 # ${developer-info}
 # ${author-info}
 
-
 declaration template components/shorewall/schema;
 
-include { 'quattor/schema' };
+include 'quattor/types/component';
 
-type component_shorewall_zones_zone = string;
-type component_shorewall_zones_option = string with match(SELF,'');
 
+# Keep this list in sync with list from TT file
+@{a masq entry: dest source address proto port ipsec mark user switch origdest probability}
+type component_shorewall_masq = {
+    "dest" ? string[]
+    "source" ? string
+    "address" ? string[]
+    "proto" ? string
+    "port" ? string[]
+    "ipsec" ? string[]
+    "mark" ? string
+    "user" ? string
+    "switch" ? string
+    "origdest" ? string
+    "probability" ? double(0..1)
+};
+
+# Keep this list in sync with list from TT file
+@{a tcinterfaces entry: interface type inbw outbw}
+type component_shorewall_tcinterfaces = {
+    "interface" : string
+    "type" ? string with match(SELF, '^(in|ex)ternal$')
+    "inbw" ? string
+    "outbw" ? string
+};
+
+# Keep this list in sync with list from TT file
+@{a tcpri entry: band proto port address interface helper}
+type component_shorewall_tcpri = {
+    "band" : long(1..3)
+    "proto" ? string[]
+    "port" ? long[]
+    "address" ? string
+    "interface" ? string
+    "helper" ? string
+};
+
+# Keep this list in sync with list from TT file
+@{a zones entry: zone[:parent] type options inoptions outoptions}
 type component_shorewall_zones = {
     "zone" : string
-    "parent" ? component_shorewall_zones_zone[] 
-    "type" : string with match(SELF, '(ipv4|ipsec|firewall|bport|-)')
-    "options" ? component_shorewall_zones_option[] 
-    "inoptions" ? component_shorewall_zones_option[] 
-    "outoptions" ? component_shorewall_zones_option[]
+    "parent" ? string[]
+    "type" ? string with match(SELF, '(ipv4|ipsec|firewall|bport|vserver|loopback|local)')
+    "options" ? string[]
+    "inoptions" ? string[]
+    "outoptions" ? string[]
 };
 
-type component_shorewall_interfaces_interface = string;
-
+# Keep this list in sync with list from TT file
+@{an interfaces entry: zone interface[:port] broadcast options}
 type component_shorewall_interfaces = {
-    "zone" : component_shorewall_zones_zone 
-    "interface" : component_shorewall_interfaces_interface
+    "zone" : string
+    "interface" : string
     "port" ? long(0..)
     "broadcast" ? string[]
-    'options' ? string[] 
+    'options' ? string[]
 };
 
-
+# Keep this list in sync with list from TT file
+@{a policy entry: src dst policy loglevel burst[:limit] connlimit}
 type component_shorewall_policy = {
     "src" : string
     "dst" : string
@@ -40,135 +76,177 @@ type component_shorewall_policy = {
     "connlimit" ? string
 };
 
-
-type component_shorewall_rules_action = string;
-
+# Keep this list in sync with list from TT file
+@{a rules src or dst entry: zone[:interface][:address] (default: all zones)}
 type component_shorewall_rules_srcdst = {
-    ## zone: {zone|{all|any}[+][-]} $FW none
-    "zone" : string 
+    @{zone entry, all[+-]/any, the firewall itself ($FW) or none}
+    "zone" : string = 'all'
     "interface" ? string
-    ## this is an (mac)addres/range combo
-    ## eg ~00-A0-C9-15-39-78,155.186.235.0/24!155.186.235.16/28
+    @{address is an (mac)addres/range combo, e.g. ~00-A0-C9-15-39-78,155.186.235.0/24!155.186.235.16/28}
     "address" ? string[]
-};
+} = dict();
 
+# Keep this list in sync with list from TT file
+@{a rules entry: action src dst proto dstport srcport origdst rate user[:group] mark connlimit time headers switch helper}
 type component_shorewall_rules = {
-    "action" : component_shorewall_rules_action
-    "src" ? component_shorewall_rules_srcdst
-    "dst" ? component_shorewall_rules_srcdst
-    "proto" ? string 
-    "dstport" ? string[] 
-    "srcport" ? string[] 
-    "origdst" ? string[] 
-    "rate" ? string[] 
+    "action" : string
+    "src" : component_shorewall_rules_srcdst
+    "dst" : component_shorewall_rules_srcdst
+    "proto" ? string
+    "dstport" ? string[]
+    "srcport" ? string[]
+    "origdst" ? string[]
+    "rate" ? string[]
     "user" ? string
     "group" ? string
-    "mark" ? string 
-    "connlimit" ? string 
-    "time" ? string 
+    "mark" ? string
+    "connlimit" ? string
+    "time" ? string
+    "headers" ? string
+    "switch" ? string
+    "helper" ? string
 };
 
+type component_shorewall_shorewall_blacklist = string with match(SELF, '^(ALL|NEW|ESTABLISHED|RELATED|INVALID|UNTRACKED)$');
 
+@{shorewall.conf options. only configured options are written to the configfile}
 type component_shorewall_shorewall = {
-    "startup_enabled" : boolean
-    "log_martians" ? boolean
-    "clear_tc" ? boolean
-    "adminisabsentminded" ? boolean
-    "blacklistnewonly" ? boolean
-    "pkttype" ? boolean
-    "expand_policies" ? boolean
-    "delete_then_add" ? boolean
-    "auto_comment" ? boolean
-    "mangle_enabled" ? boolean
-    "restore_default_route" ? boolean
+    "accept_default" ? string
     "accounting" ? boolean
-    "dynamic_blacklist" ? boolean
-    "exportmodules" ? boolean
-    
-    "logtagonly" ? boolean
+    "accounting_table" ? string with match(SELF, '^(filter|mangle)$')
     "add_ip_aliases" ? boolean
     "add_snat_aliases" ? boolean
-    "retain_aliases" ? boolean
-    "tc_expert" ? boolean
-    "mark_in_forward_chain" ? boolean
+    "adminisabsentminded" ? boolean
+    "arptables" ? string
+    "auto_comment" ? boolean with {deprecated(0, 'shorewall auto_comment is deprecated, use autocomment instead'); true;}
+    "autocomment" ? boolean
+    "autohelpers" ? boolean
+    "automake" ? boolean
+    "basic_filters" ? boolean
+    "blacklist" ? component_shorewall_shorewall_blacklist[]
+    "blacklist_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT))$')
+    "blacklist_loglevel" ? string
+    "blacklistnewonly" ? boolean with {deprecated(0, 'shorewall blacklistnewonly is deprecated, use blacklist instead'); true;}
+    "chain_scripts" ? boolean
     "clampmss" ? boolean
-    "route_filter" ? boolean
+    "clear_tc" ? boolean
+    "complete" ? boolean
+    "config_path" ? string
+    "defer_dns_resolution" ? boolean
+    "delete_then_add" ? boolean
     "detect_dnat_ipaddrs" ? boolean
     "disable_ipv6" ? boolean
+    "dont_load" ? string[]
+    "drop_default" ? string
+    "dynamic_blacklist" ? boolean
     "dynamic_zones" ? boolean
-    "null_route_rfc1918" ? boolean
-    "save_ipsets" ? boolean
-    "mapoldactions" ? boolean
-    "fastaccept" ? boolean
-    "implicit_continue" ? boolean
-    "high_route_marks" ? boolean
+    "expand_policies" ? boolean
+    "exportmodules" ? boolean
     "exportparams" ? boolean
-    "keep_rt_tables" ? boolean
-    "multicast" ? boolean
-    "use_default_rt" ? boolean
-    "automake" ? boolean
-    "wide_tc_marks" ? boolean
-    "track_providers" ? boolean
-    "optimize_accounting" ? boolean
-    "load_helpers_only" ? boolean
-    "require_interface" ? boolean
-    "complete" ? boolean
-
-    ## string/no boolean
+    "fastaccept" ? boolean
+    "forward_clear_mark" ? boolean
+    "geoipdir" ? string
+    "helpers" ? string[]
+    "high_route_marks" ? boolean
+    "ignoreunknownvariables" ? boolean
+    "implicit_continue" ? boolean
+    "inline_matches" ? boolean
+    "invalid_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT)|CONTINUE)$')
+    "invalid_log_level" ? string
+    "ip" ? string
     "ip_forwarding" ? string with match(SELF,"(On|Off|Keep)")
-    "verbosity" ? string
+    "ipsecfile" ? string with match(SELF, '^zones$')
+    "ipset" ? string
+    "ipset_warnings" ? boolean
+    "iptables" ? string
+    "keep_rt_tables" ? boolean
+    "legacy_faststart" ? boolean
+    "load_helpers_only" ? boolean
+    "lockfile" ? string
+    "log_backend" ? string with match(SELF, '^(U?LOG|netlink)$')
+    "logallnew" ? string
     "logfile" ? string
-    "startup_log" ? string
-    "log_verbosity" ? string
     "logformat" ? string
     "loglimit" ? string
-    "logallnew" ? string
-    "blacklist_loglevel" ? string
+    "log_martians" ? string with match(SELF, '^(Yes|No|Keep)$')
+    "logtagonly" ? boolean
+    "log_verbosity" ? string
+    "maclist_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT)|ACCEPT)$')
     "maclist_log_level" ? string
-    "tcp_flags_log_level" ? string
-    "smurf_log_level" ? string
-    "iptables" ? string
-    "ip" ? string
-    "tc" ? string
-    "ipset" ? string
-    "perl" ? string
-    "path" ? string
-    "shorewall_shell" ? string
-    "subsyslock" ? string
+    "maclist_table" ? string with match(SELF, '^(filter|mangle)$')
+    "maclist_ttl" ? long(0..)
+    "mask_bits" ? long(0..)
+    "mangle_enabled" ? boolean
+    "mapoldactions" ? boolean
+    "mark_in_forward_chain" ? boolean
     "modulesdir" ? string
-    "config_path" ? string
-    "restorefile" ? string
-    "ipsecfile" ? string
-    "lockfile" ? string
-    "drop_default" ? string
-    "reject_default" ? string
-    "accept_default" ? string
-    "queue_default" ? string
-    "nfqueue_default" ? string
-    "rsh_command" ? string
-    "rcp_command" ? string
-    "tc_enabled" ? string
-    "tc_priomap" ? string
-    "mutex_timeout" ? string
     "module_suffix" ? string
-    "maclist_table" ? string
-    "maclist_ttl" ? string
+    "multicast" ? boolean
+    "mutex_timeout" ? long(0..)
+    "nfqueue_default" ? string
+    "null_route_rfc1918" ? boolean
+    "optimize_accounting" ? boolean
     "optimize" ? string
-    "dont_load" ? string
-    "zone2zone" ? string
-    "forward_clear_mark" ? string
-    "blacklist_disposition" ? string
-    "maclist_disposition" ? string
+    "path" ? string
+    "perl" ? string
+    "pkttype" ? boolean
+    "queue_default" ? string
+    "rcp_command" ? string
+    "reject_default" ? string
+    "require_interface" ? boolean
+    "restore_default_route" ? boolean
+    "restorefile" ? string
+    "retain_aliases" ? boolean
+    "route_filter" ? string with match(SELF, '^(Yes|No|Keep)$')
+    "rsh_command" ? string
+    "save_ipsets" ? boolean
+    "shorewall_shell" ? string
+    "smurf_log_level" ? string
+    "startup_enabled" : boolean = true
+    "startup_log" ? string
+    "subsyslock" ? string
+    "tc_bits" ? long(0..)
+    "tc_enabled" ? string with match(SELF, '^(Yes|No|Internal|Simple|Shared)$')
+    "tc_expert" ? boolean
     "tcp_flags_disposition" ? string
+    "tcp_flags_log_level" ? string
+    "tc_priomap" ? string
+    "tc" ? string
+    "track_providers" ? boolean
+    "track_rules" ? boolean
+    "use_default_rt" ? boolean
+    "use_physical_names" ? boolean
+    "use_rt_names" ? boolean
+    "verbosity" ? long(0..2)
+    "wide_tc_marks" ? boolean
+    "workarounds" ? boolean
+    "zone2zone" ? string
 };
 
-type component_shorewall_type = {
+type component_shorewall = {
     include structure_component
-    "zones" : component_shorewall_zones[]
-    "interfaces" : component_shorewall_interfaces[]
-    "policy" : component_shorewall_policy[]
-    "rules" : component_shorewall_rules[]
-    "shorewall" : component_shorewall_shorewall
+    @{shorewall.conf configuration}
+    "shorewall" ? component_shorewall_shorewall
+    @{zones configuration}
+    "zones" ? component_shorewall_zones[]
+    @{interfaces configuration}
+    "interfaces" ? component_shorewall_interfaces[]
+    @{ configuration}
+    "policy" ? component_shorewall_policy[]
+    @{rules configuration}
+    "rules" ? component_shorewall_rules[]
+    @{tcinterfaces configuration}
+    "tcinterfaces" ? component_shorewall_tcinterfaces[]
+    @{tcpri configuration}
+    "tcpri" ? component_shorewall_tcpri[]
+    @{masq configuration}
+    "masq" ? component_shorewall_masq[]
 };
 
-bind "/software/components/shorewall" = component_shorewall_type;
+@{metaconfig schema for shorewall 5.x sysconfig (you cannot set RESTARTOPTIONS)}
+type shorewall_sysconfig = {
+    'OPTIONS' ? string
+    'STARTOPTIONS' : string = "/etc/shorewall"
+    'RELOADOPTIONS' : string = "/etc/shorewall"
+    'STOPOPTIONS' ? string
+} = dict();

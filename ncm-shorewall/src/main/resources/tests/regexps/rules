@@ -1,0 +1,8 @@
+rules
+---
+//
+rendermodule=rules
+contentspath=/config
+---
+^ACCEPT\tall\tfw\ticmp\t8,9\t-\t-\t-\tmyuser:mygroup$
+^ACCEPT\text:etx1:1.2.3.4/16,5.6.7.8/32\tfw\ttcp\t22$

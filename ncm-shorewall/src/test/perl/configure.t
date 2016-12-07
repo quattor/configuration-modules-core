@@ -1,45 +1,54 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
+
+BEGIN {
+    *CORE::GLOBAL::sleep = sub {};
+    *CORE::GLOBAL::time = sub { return 12345678;};
+}
+
 use Test::More;
 use Test::MockModule;
-use subs qw(LC::File::file_contents LC::Check::file LC::File::move);
-use Test::Quattor qw(basic);
+# sysconfig is added here to test valid template
+use Test::Quattor qw(basic sysconfig);
 use NCM::Component::shorewall;
-
 use CAF::Object;
+
+use Test::Quattor::TextRender::Base;
 
 $CAF::Object::NoAction = 1;
 
+my $caf_trd = mock_textrender();
 
-my $check = Test::MockModule->new("LC::Check");
+# service variant set to linux_sysv
 
-$check->mock('file', 1);
-
-my $file = Test::MockModule->new("LC::File");
-
-$file->mock("move", 1);
-$file->mock("file_contents", "some_contents");
-
-=pod
-
-
-=head1 DESCRIPTION
-
-Tests for the C<configure> method of C<NCM::Component::shorewall>
-
-Basic test to help the refactoring of the component.
-
-=cut
+set_caf_file_close_diff(1);
 
 my $cmp = NCM::Component::shorewall->new('shorewall');
 
-
 my $cfg = get_config_for_profile('basic');
 
-$cmp->Configure($cfg);
-ok(!exists($cmp->{ERROR}), "Configure succeeds");
+command_history_reset();
+ok($cmp->Configure($cfg), "Configure returns success");
+ok(!exists($cmp->{ERROR}), "Configure succeeds w/o ERROR");
 
+foreach my $fn (qw(shorewall.conf zones rules policy interfaces tcpri tcinterfaces masq)) {
+    my $fh = get_file("/etc/shorewall/$fn");
+    ok($fh, "filename $fn generated");
+    is(*$fh->{options}->{backup}, '.quattor.12345678', "TextRender filewriter with timestamped backup used");
+    is(*$fh->{options}->{mode}, 0600, "TextRender filewriter with 0600 mode used");
+};
+
+
+ok(command_history_ok([
+   '^shorewall check /etc/shorewall',
+   '^shorewall try /etc/shorewall',
+   '^ccm-fetch',
+]), "shorewall try and ccm-fetch called after changes");
+
+command_history_reset();
+ok($cmp->Configure($cfg), "Configure returns success on rerun");
+ok(!exists($cmp->{ERROR}), "Configure succeeds w/o ERROR on rerun");
+ok(command_history_ok(undef, [qr{sbin/(shorewall|ccm-fetch) try}]),
+   "shorewall try and ccm-fetch called not called after rerun (nothing changed)");
 
 done_testing();

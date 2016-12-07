@@ -1,0 +1,9 @@
+masq
+---
+//
+rendermodule=masq
+contentspath=/config
+---
+^out1,out2\teth0$
+^-\teth1$
+^-\t-\t-\t-\t-\t-\t-\t-\t-\t-\t0\.1$

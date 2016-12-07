@@ -1,0 +1,26 @@
+[%- template = "shorewall/line/${_type}.tt" -%]
+[%- FOREACH line IN CCM.contents %]
+[% #    Determine the last key with a value defined
+        _last_col = _cols.first;
+        FOREACH col IN _cols.reverse;
+            IF line.exists(col);
+                _last_col = col;
+                BREAK;
+            END;
+        END;
+        -%]
+[%-      FOREACH col IN _cols -%]
+[%-         IF line.exists(col) -%]
+[%-             INCLUDE $template col=col el=line.${col} line=line -%]
+[%-             IF col == _last_col -%]
+[%-# Stop to generate any further (empty) columns.
+   # For backwards compatible behaviour
+   # newer attributes would otherwise generate 'too many columns' error
+                     BREAK -%]
+[%-             END -%]
+[%-         ELSE -%]
+[%-             '-' -%]
+[%-         END -%]
+[%-         "\t" -%]
+[%-     END -%]
+[% END %]

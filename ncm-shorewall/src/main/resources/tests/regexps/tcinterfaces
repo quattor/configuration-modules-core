@@ -1,0 +1,8 @@
+tcinterfaces
+---
+//
+rendermodule=tcinterfaces
+contentspath=/config
+---
+^em1$
+^em2\tinternal\t123mb\t456mb$

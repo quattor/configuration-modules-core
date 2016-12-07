@@ -1,0 +1,1 @@
+[% INCLUDE 'shorewall/walk.tt' _type='zones' _cols=['zone', 'type', 'options', 'inoptions', 'outoptions'] %]
