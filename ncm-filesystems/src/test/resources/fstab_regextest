@@ -1,0 +1,16 @@
+fstab regextest
+---
+---
+^/dev/mapper/vg_sl65-lv_root\s+/\s+ext4\s+defaults\s+1\s+1\s*[^/]*$
+^UUID=f6452f58-99b1-41fe-9840-f688157171f8\s+/boot\s+ext4\s+noauto\s+1\s+2\s*[^/]*$
+^/dev/mapper/vg_sl65-lv_swap\s+swap\s+swap\s+defaults\s+0\s+0\s*[^/]*$
+^sysfs\s+/sys\s+sysfs\s+defaults\s+0\s+0\s*[^/]*$
+^/dev/gpfsfs\s+/gpfs/fs1\s+gpfs\s+defaults\s+0\s+0\s*[^/]*$
+^10.10.10.10:6789:/\s+/cephfs\s+ceph\s+name=admin\s+0\s+0\s*[^/]*$
+^LABEL=HOME\s+/home\s+ext4\s+auto\s+0\s+0\s*[^/]*$
+^/dev/sda6\s+/special\s+xfs\s+defaults\s+0\s+0\s*[^/]*$
+^/dev/sda3\s+/new\s+ext4\s+auto\s+0\s+0\s*[^/]*$
+^LABEL=FRIETJES\s+/food\s+chokotoFS\s+auto\s+0\s+0\s*[^/]*$
+^proc\s+ ### COUNT 0
+^devpts\s+ ### COUNT 0
+^tmpfs\s+ ### COUNT 0

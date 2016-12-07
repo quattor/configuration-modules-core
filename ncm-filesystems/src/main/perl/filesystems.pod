@@ -16,6 +16,8 @@ from C<< /etc/fstab >>, using ncm-fstab.
 The component doesn't provide any special resources at the moment. It
 just watches for changes on C<< /system/filesystems >> and C<< /system/blockdevices >>
 and creates new filesystems, if needed.
+You can also use ncm-filesystems to replace ncm-fstab :
+If C<< manage_blockdevs >> is set to false, only the ncm-fstab code will run.
 
 A blockdevice is useful only for its ability to hold a
 filesystem. Blockdevices with no filesystems associated will not be
