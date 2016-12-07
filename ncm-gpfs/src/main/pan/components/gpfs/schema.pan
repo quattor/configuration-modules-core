@@ -9,6 +9,8 @@ include { 'quattor/schema' };
 
 type component_gpfs_cfg = {
     "url"  : string
+    "keyData"  ? string
+    "sdrrestore" : boolean = false
     "subnet" : string
     ## "useproxy" ? boolean = false
     "usecurl" ? boolean = true
