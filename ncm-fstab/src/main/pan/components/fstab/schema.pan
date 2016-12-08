@@ -28,12 +28,14 @@ type fstab_protected_entries = {
 
 @documentation{
 fstab component structure
+set manage_blockdevs if filesystems has to be created or removed if needed
 keep entries are always kept, but can be changed
 static entries can not be changed, but can be deleted
 protected_mounts is still here for backwards compability, and is the same as keep/mounts
 }
 type structure_component_fstab = {
     include structure_component
+    "manage_blockdevs" ? boolean = false
     "keep" : fstab_protected_entries = nlist()
     "static" ? fstab_protected_entries
     "protected_mounts" ? string[] with {

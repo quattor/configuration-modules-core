@@ -1,3 +1,4 @@
+# -*- mode: cperl -*-
 # ${license-info}
 # ${author-info}
 # ${build-info}
@@ -17,12 +18,10 @@ Readonly my $FSTAB => 'target/test/etc/fstab';
 
 BEGIN{
     # This only works because the constant of NCM::Filesystem is used in a ncm-fstab sub
-    use Test::Quattor;
     use NCM::Filesystem;
     undef &{NCM::Filesystem::FSTAB};
     *{NCM::Filesystem::FSTAB} =  sub () {$FSTAB} ;
 }
-
 use CAF::FileEditor;
 use CAF::Object;
 use File::Basename;
@@ -30,9 +29,9 @@ use File::Path qw(mkpath);
 use LC::Check;
 use NCM::Component::fstab;
 use Test::Deep;
-use Test::MockModule;
 use Test::More;
-use Test::Quattor qw(configure);
+use Test::MockModule;
+use Test::Quattor qw(configure_create);
 use Test::Quattor::RegexpTest;
 use data;
 
@@ -42,7 +41,7 @@ mkpath dirname $FSTAB;
 $CAF::Object::NoAction = 1;
 $LC::Check::NoAction = 1;
 set_caf_file_close_diff(1);
-my $cfg = get_config_for_profile('configure');
+my $cfg = get_config_for_profile('configure_create');
 my $cmp = NCM::Component::fstab->new('fstab');
 use NCM::Blockdevices;
 $NCM::Blockdevices::this_app = $cmp;
@@ -50,28 +49,31 @@ $NCM::Blockdevices::this_app = $cmp;
 my $mock = Test::MockModule->new('NCM::Filesystem');
 my $mockp = Test::MockModule->new('NCM::Partition');
 
-my $managed = 0;
+my $created_fs = [];
+my $created_part = [];
+my $removed_fs = [];
 $mock->mock('create_if_needed', sub {
     my ($self) = @_;
     diag "create_if_needed ran on $self->{mountpoint}";
-    $managed = 1;
-    return;
+    push (@$created_fs, $self->{mountpoint});
+    return 0;
     }
 );
 
 $mock->mock('remove_if_needed', sub {
     my ($self) = @_;
     diag "remove_if_needed ran on $self->{mountpoint}";
-    $managed = 1;
-    return;
+    push (@$removed_fs, $self->{mountpoint});
+
+    return 0;
     }
 );
 
 $mockp->mock('create', sub {
     my ($self) = @_;
-    diag "create ran on $self->{devname}";
-    $managed = 1;
-    return;
+    diag "create is ran on $self->{devname}";
+    push (@$created_part, $self->{devname});
+    return 0;
     }
 );
 
@@ -80,6 +82,10 @@ set_file_contents($FSTAB, $data::FSTAB_CONTENT);
 # Test all values
 $cmp->Configure($cfg);
 my $fh = get_file($FSTAB);
+
+cmp_deeply($created_part, \@data::PARTS_CREATE, "Partition create called");
+cmp_deeply($created_fs, \@data::FS_CREATE, "fs create_if_needed called");
+cmp_deeply($removed_fs, \@data::FS_REMOVE, "fs remove_if_needed called");
 
 my $rt = Test::Quattor::RegexpTest->new(
     regexp => 'src/test/resources/fstab_regextest',
@@ -91,7 +97,7 @@ my $cmd = get_command("/bin/mount -o remount /");
 ok(defined($cmd), "remount / was invoked");
 $cmd=get_command("/bin/mount -o remount /boot");
 ok(!defined($cmd), "remount /boot was not invoked");
-is($managed, 0, "Nothing is created or removed on fs or partition level");
+
 
 done_testing();
 

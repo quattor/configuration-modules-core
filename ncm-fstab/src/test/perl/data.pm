@@ -68,3 +68,26 @@ Readonly::Hash our  %MOUNTS => (
    '/gpfs/fs1' => 1,
    '/home' => 1,
 );
+
+Readonly::Array our @PARTS_CREATE => (
+    'sda1',
+    'sda2',
+    'sda3',
+    'sda4',
+    'sda5',
+    'sda6'
+);
+
+Readonly::Array our @FS_CREATE => (
+    '/boot',
+    '/',
+    '/new',
+    '/food',
+    '/home',
+    '/special'
+);
+Readonly::Array our @FS_REMOVE => (
+    '/dev/shm',
+    '/dev/pts',
+    '/proc'
+);
