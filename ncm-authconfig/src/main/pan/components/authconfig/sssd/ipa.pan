@@ -19,16 +19,13 @@ type authconfig_sssd_ipa_krb5 = {
     'confd_path' ? absolute_file_path
 };
 
-# TODO: use valid_interface type from core templates once https://github.com/quattor/template-library-core/issues/130 is fixed
-type ipa_valid_interface = string with exists ("/system/network/interfaces/" + SELF);
-
 @{
     dyndns settings for the IPA access provider
 }
 type authconfig_sssd_ipa_dyndns = {
     'update' ? boolean
     'ttl' ? long(0..)
-    'iface' ? ipa_valid_interface[]
+    'iface' ? valid_interface[]
     'refresh_interval' ? long(0..)
     'update_ptr' ? boolean
     'force_tcp' ? boolean
