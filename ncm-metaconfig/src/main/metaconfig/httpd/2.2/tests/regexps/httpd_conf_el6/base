@@ -22,8 +22,8 @@ multiline
 ^readmename README.html$
 ^serveradmin root@localhost$
 ^serverroot "/etc/httpd"$
-^serversignature on$
-^servertokens OS$
+^serversignature off$
+^servertokens Prod$
 ^timeout 60$
 ^usecanonicalname off$
 ^user apache$

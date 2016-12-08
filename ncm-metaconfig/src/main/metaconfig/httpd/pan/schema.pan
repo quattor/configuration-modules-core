@@ -4,7 +4,10 @@ declaration template metaconfig/httpd/schema;
 include 'pan/types';
 include 'components/accounts/functions';
 
-type httpd_cipherstring = string with match(SELF, '^(TLSv1|TLSv1\.[012])$')
+type httpd_sslprotocol = string with match(SELF, '^\+?(TLSv1|TLSv1\.[012])$')
+    || error("Use a modern cipher protocol, for Pete's sake!");
+
+type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA))$')
     || error("Use a modern cipher suite, for Pete's sake!");
 
 type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3|All)$');
@@ -158,6 +161,11 @@ type httpd_ssl_global = {
     "carevocationpath" ? string
 
     "verifydepth" ? long
+
+    "usestapling" ? string with match(SELF,'^(on|off)$')
+    "staplingrespondertimeout" ? long
+    "staplingreturnrespondererrors" ? string with match(SELF,'^(on|off)$')
+    "staplingcache" ? string with match(SELF,'^shmcb:/var/run/ocsp\([0-9]+\)$')
 };
 
 type httpd_ssl_nss_vhost = {
@@ -185,8 +193,9 @@ type httpd_nss_vhost = {
 type httpd_ssl_vhost = {
     include httpd_ssl_global
     include httpd_ssl_nss_vhost
-    "protocol" : httpd_cipherstring[] = list("TLSv1")
-    "ciphersuite" : httpd_cipherstring[] = list("TLSv1")
+    "protocol" : httpd_sslprotocol[] = list("TLSv1")
+    "ciphersuite" : httpd_ciphersuite[] = list("TLSv1")
+    "honorcipherorder" ?  string with match(SELF, '^(on|off)$')
 };
 
 type httpd_directory_allowoverride = string with match(SELF,'^(All|None|Options|FileInfo|AuthConfig|Limit)$');
@@ -479,7 +488,7 @@ type httpd_global_shared = {
 # server specific system wide only
 type httpd_global_system = {
     include httpd_global_shared
-    "servertokens" : string = "OS"
+    "servertokens" : string = "Prod"
     "serverroot" : string = "/etc/httpd"
     "pidfile" : string = "run/httpd.pid"
     "timeout" : long = 60
@@ -494,7 +503,7 @@ type httpd_global_system = {
     "accessfilename" : string = ".htaccess"
     "enablemmap" : boolean = true
     "enablesendfile" : boolean = true
-    "serversignature" : boolean = true
+    "serversignature" : boolean = false
     "indexoptions" : string[] = list("FancyIndexing", "VersionSort", "NameWidth=*", "HTMLTable", "Charset=UTF-8")
     "indexignore" : string[] = list(".??*", "*~", "*#", "HEADER*", "README*", "RCS", "CVS", "*,v", "*,t")
     "readmename" : string = "README.html"
