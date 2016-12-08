@@ -2,6 +2,21 @@
 # ${developer-info}
 # ${author-info}
 
+=pod
+
+=head1 NAME
+
+The I<ccm> component manages the configuration file
+for CCM.
+
+=head1 DESCRIPTION
+
+The I<ccm> component manages the configuration file for the CCM
+daemon.  This is usually the /etc/ccm.conf file. See the ccm-fetch
+manpage for more details.
+
+=cut
+
 package NCM::Component::ccm;
 
 use strict;
