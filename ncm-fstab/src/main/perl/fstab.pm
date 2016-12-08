@@ -51,9 +51,8 @@ sub update_entries
 # build the protected hashes from the template
 sub protected_hash 
 {
-    my ($self, $config) = @_;
+    my ($self, $tree) = @_;
 
-    my $tree = $config->getTree($self->prefix());
     my $mounts_depr = $tree->{protected_mounts}; 
     
     my $protected = {};
@@ -158,9 +157,10 @@ sub Configure
 {
     my ($self, $config) = @_;
 
+    my $tree = $config->getTree($self->prefix());
     my $fstab = CAF::FileEditor->new (NCM::Filesystem::FSTAB, log => $self,
 				      backup => '.old');
-    my $protected = $self->protected_hash($config);
+    my $protected = $self->protected_hash($tree);
     my %mounts;
     %mounts = $self->update_entries ($config, $fstab, $protected->{static});
     %mounts = $self->valid_mounts($protected->{keep}, $fstab, %mounts);
