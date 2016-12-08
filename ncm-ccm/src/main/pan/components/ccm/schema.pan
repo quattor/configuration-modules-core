@@ -58,7 +58,7 @@ type component_ccm = {
     'configFile'       : string = '/etc/ccm.conf'
     @{The URL for the machine's profile. You can use either the http or https protocols (the file protocol is also possible eg. for tests). (see ccm-fetch manpage)}
     'profile'          : type_hostURI
-    @{profile failover URL in case the above is not working. (see ccm-fetch manpage)}
+    @{list of profile failover URL(s) in case the above is not working. (see ccm-fetch manpage)}
     'profile_failover' ? type_hostURI[]
     @{Turn on debugging. Defaults to 0.}
     'debug'            : long(0..1) = 0
