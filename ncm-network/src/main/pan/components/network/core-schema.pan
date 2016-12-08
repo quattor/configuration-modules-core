@@ -29,7 +29,7 @@ type structure_bonding_options = {
     "miimon" : long
     "updelay" ? long
     "downdelay" ? long
-    "primary" ? string with exists("/system/network/interfaces/" + SELF)
+    "primary" ? valid_interface
     "lacp_rate" ? long(0..1)
     "xmit_hash_policy" ? string with match (SELF, '^(0|1|2|layer(2|2\+3|3\+4))$')
 } with {
@@ -124,14 +124,14 @@ type structure_interface = {
     "route"   ? structure_route[]
     "aliases" ? structure_interface_alias{}
     "set_hwaddr" ? boolean
-    "bridge"    ? string with exists ("/system/network/interfaces/" + SELF)
+    "bridge"    ? valid_interface
     "bonding_opts" ? structure_bonding_options
     "offload"   ? structure_ethtool_offload
     "ring"      ? structure_ethtool_ring
     "ethtool"   ? structure_ethtool
 
     "vlan" ? boolean
-    "physdev"    ? string with exists ("/system/network/interfaces/" + SELF)
+    "physdev"    ? valid_interface
 
     "fqdn" ? string
     "network_environment" ? string
@@ -144,7 +144,7 @@ type structure_interface = {
     "bridging_opts" ? structure_bridging_options
 
     "bond_ifaces" ? string[]
-    "ovs_bridge" ? string with exists ("/system/network/interfaces/" + SELF)
+    "ovs_bridge" ? valid_interface
     "ovs_extra" ? string
     "ovs_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
     "ovs_patch_peer" ? string
@@ -199,7 +199,7 @@ type structure_router = string[];
 type structure_ipv6 = {
     "enabled" ?  boolean
     "default_gateway"  ? type_ip
-    "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF) # sets IPV6_DEFAULTDEV
+    "gatewaydev"       ? valid_interface # sets IPV6_DEFAULTDEV
 };
 
 @documentation{
@@ -210,7 +210,7 @@ type structure_network = {
     "hostname"         : type_shorthostname
     "realhostname"     ? type_fqdn
     "default_gateway"  ? type_ip
-    "gatewaydev"       ? string with exists ("/system/network/interfaces/" + SELF)
+    "gatewaydev"       ? valid_interface
     "interfaces"       : structure_interface{}
     "nameserver"       ? type_ip[]
     "nisdomain"        ? string(1..64) with match(SELF, '^\S+$')
