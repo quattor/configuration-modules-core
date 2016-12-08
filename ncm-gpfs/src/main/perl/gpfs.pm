@@ -51,6 +51,7 @@ use constant GPFSRPMS => qw(
                             ^gpfs.gskit$
                             ^gpfs.hdfs-protocol$
                             ^gpfs.hadoop-connector$
+                            ^gpfs.smb$
                            );
 
 my $compname = "NCM-gpfs";
@@ -78,13 +79,9 @@ sub Configure {
     my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     my $basiccfg = GPFSCONFIGDIR . "/.quattorbasiccfg";
     if (! -f $baseinstalled) {
-        $self->remove_existing_rpms($config) || return 1;
+        my ($ok, $pkgs) = $self->remove_existing_rpms($config);
+        return 1 if !$ok;
         $self->install_base_rpms($config) || return 1;
-        ## update?
-        ## no!
-        ## - stop here
-        ## - next run should trigger spma which will
-        ##   update to the correct rpms
 
         ## write the $baseinstalled file
         ## - set the date
@@ -94,6 +91,8 @@ sub Configure {
                                       );
         print $tmpfh $date;
         $tmpfh->close();
+        # reinstall the updated packages, since spma will not always be triggered to run.
+        $self->reinstall_update_rpms($config, $pkgs);
     }
 
     ## get gpfs config file if not found
@@ -268,10 +267,34 @@ sub runcurl {
     return $output || 1;
 };
 
+sub reinstall_update_rpms {
+    my ($self, $config, $rpms) = @_;
+    my $ok = 1;
+    my $useyum =  $config->getValue("$mypath/base/useyum");
+
+    if (@$rpms) {
+        if ($useyum) {
+            # for dependencies
+            $ok = $self->runyum($config, "install", @$rpms);
+        } else {
+            $ok = $self->runrpm($config, "-i", @$rpms);
+        };
+        if($ok) {
+            $self->info("Rpms reinstalled");
+        } else {
+            $self->error("Reinstalling rpms failed");
+        }
+    } else {
+        $self->info("No rpms to be reinstalled.")
+    }
+
+    return $ok;
+};
+
 
 sub remove_existing_rpms {
     my ($self, $config) = @_;
-    my $ret = 1;
+    my $ok = 1;
     my $allrpms = $self->runrpm($config, "-q", "-a", "gpfs.*",
                          "--qf", "%{NAME} %{NAME}-%{VERSION}-%{RELEASE}\\n");
     return if (!$allrpms);
@@ -287,23 +310,30 @@ sub remove_existing_rpms {
         } else {
             $self->error("Not removing unknown found rpm that matched gpfs.*:",
                          " $found (full: $foundfullname). \n");
-            $ret = 0;
+            $ok = 0; 
         };
+        # No need to remove other packages since we will stop after anyway
+        return 0 if !$ok;
     };
 
     $self->stopgpfs(1);
-    if (scalar @removerpms) {
+    if (@removerpms) {
         if ($useyum) {
             # for dependencies
-            $self->runyum($config, "remove", @removerpms) || return;
+            $ok = $self->runyum($config, "remove", @removerpms);
         } else {
-            $self->runrpm($config, "-e", @removerpms) || return;
+            $ok = $self->runrpm($config, "-e", @removerpms);
         };
+        if($ok) {
+            $self->info("Rpms removed");
+        } else {
+            $self->error("Removing rpms failed");
+        }
     } else {
         $self->info("No rpms to be removed.")
     }
-
-    return $ret;
+    
+    return ($ok, \@removerpms);
 };
 
 sub install_base_rpms {
