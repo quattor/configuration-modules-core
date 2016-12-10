@@ -1,0 +1,2 @@
+$cmds{some_hosts}{cmd}="host_find";
+$cmds{some_hosts}{result}=[{fqdn => ["serv10", "hyp100"]}, {fqdn => ["serv20", "hyp200"]}, {fqdn => ["serv30", "hyp300"]}];

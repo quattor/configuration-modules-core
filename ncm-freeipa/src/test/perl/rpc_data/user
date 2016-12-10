@@ -1,0 +1,17 @@
+$cmds{add_already}{cmd}="0 user_add user1 givenname=first,sn=last,version=.*";
+$cmds{add_already}{error}={name => 'DuplicateEntry'};
+
+$cmds{add_missing_user}{cmd}="0 user_add missing1 givenname=first,sn=last,version=.*";
+$cmds{add_missing_user}{result}={okunittest => 1};
+
+$cmds{user_disable}{cmd}="1 user_disable user1";
+$cmds{user_disable}{result}={okunittest => 1};
+
+$cmds{user_remove}{cmd}="1 user_del user1 ";
+$cmds{user_remove}{result}={okunittest => 1};
+
+$cmds{user_passwd}{cmd}="1 user_mod user1 random=1,.*";
+$cmds{user_passwd}{result}={randompassword => 'supersecret'};
+
+$cmds{mod_missing}{cmd}="1 user_mod missing1 ";
+$cmds{mod_missing}{error}={name => 'NotFound'};
