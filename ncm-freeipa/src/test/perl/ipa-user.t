@@ -76,4 +76,6 @@ ok(POST_history_ok(["user_del user1 preserve=1,version="]),
    "user_del called for user1");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

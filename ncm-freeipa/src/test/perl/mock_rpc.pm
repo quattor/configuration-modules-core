@@ -192,7 +192,7 @@ The space after the method name is significant, it is used to determine the used
 =cut
 
 sub _format { my $value = shift; return ref($value) eq 'ARRAY' ? join(',', @$value) : $value; }
-    
+
 $rc->mock('POST', sub {
     my ($self, $url, $data) = @_;
 

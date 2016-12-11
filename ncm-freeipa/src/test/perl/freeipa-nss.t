@@ -148,4 +148,6 @@ is_deeply($Test::Quattor::caf_path->{status}, [
               [["path/to/key"], {user => 'myuser1'}],
           ], "status called on key with user");
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

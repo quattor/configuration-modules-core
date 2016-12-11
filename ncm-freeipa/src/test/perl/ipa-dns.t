@@ -37,4 +37,6 @@ ok(POST_history_ok(["dnszone_add.*a.b.c.d"], ["dnszone_find.*a.b.c.d"]),
    "add and no find called for dnszone a.b.c.d");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

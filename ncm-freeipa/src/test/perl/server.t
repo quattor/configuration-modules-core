@@ -104,4 +104,6 @@ ok(POST_history_ok([
    "group_add_member mygroup2 user=d,e,f,version",
 ]), "server users/groups POST");
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

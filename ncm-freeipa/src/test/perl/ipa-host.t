@@ -76,4 +76,6 @@ ok(POST_history_ok(["host_del host.domain updatedns=1,version="]),
    "host_del called for host.domain");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();
