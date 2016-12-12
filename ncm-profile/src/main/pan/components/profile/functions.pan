@@ -1,8 +1,6 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
-
 declaration template components/profile/functions;
 
 # Function to add an environment variable to a script
@@ -21,53 +19,54 @@ declaration template components/profile/functions;
 #
 
 function component_profile_add_env = {
-  function_name = 'component_profile_add_env';
-  if ( (ARGC < 2) || (ARGC > 3) ) {
-      error(function_name+': invalid number of arguments. Must be 2 or 3.');
-  };
-  if ( ARGC == 2 ) {
-    if ( is_nlist(ARGV[1]) ) {
-      env_list = ARGV[1];
-    } else {
-      error(function_name+': with 2 arguments, second argument must be a nlist.');
+    function_name = 'component_profile_add_env';
+    if ( (ARGC < 2) || (ARGC > 3) ) {
+        error(function_name+': invalid number of arguments. Must be 2 or 3.');
     };
-  } else {
-    env_list = nlist(ARGV[1], ARGV[2]);
-  };
-
-  toks = matches(ARGV[0], '^(.*)\.(c?sh)$');
-  if ( length(toks) == 3 ) {
-    script_name = escape(toks[1]);
-    SELF['scripts'][script_name]['flavors'] = list(toks[2]);
-  } else {
-    script_name = escape(ARGV[0]);
-  };
-
-  foreach (var_name;var_value;env_list) {
-    var_value_str = '';
-    if ( is_string(var_value) ) {
-      var_value_str = var_value;
-    } else if ( is_long(var_value) || is_boolean(var_value) ) {
-      var_value_str = to_string(var_value);
-    } else if ( is_list(var_value) ) {
-      foreach (j;val;var_value) {
-        if ( !is_string(val) ) {
-          error(function_name+': variable '+var_name+' value is a list whose elements are not string');
+    if ( ARGC == 2 ) {
+        if ( is_nlist(ARGV[1]) ) {
+            env_list = ARGV[1];
+        } else {
+            error(function_name+': with 2 arguments, second argument must be a nlist.');
         };
-        if ( length(var_value_str) > 0 ) {
-          var_value_str = var_value_str + ':';
-        };
-        var_value_str = var_value_str + val;
-      };
     } else {
-      error(function_name+': variable '+var_name+' value has an unsupported type (must be string, long, boolean or list of string');
+        env_list = nlist(ARGV[1], ARGV[2]);
     };
-    SELF['scripts'][script_name]['env'][var_name] = var_value_str;
-  };
 
-  return(SELF);
+
+    toks = matches(ARGV[0], '^(.*)\.(c?sh)$');
+    if ( length(toks) == 3 ) {
+        script_name = escape(toks[1]);
+        SELF['scripts'][script_name]['flavors'] = list(toks[2]);
+    } else {
+        script_name = escape(ARGV[0]);
+    };
+
+
+    foreach (var_name;var_value;env_list) {
+        var_value_str = '';
+        if ( is_string(var_value) ) {
+            var_value_str = var_value;
+        } else if ( is_long(var_value) || is_boolean(var_value) ) {
+            var_value_str = to_string(var_value);
+        } else if ( is_list(var_value) ) {
+            foreach (j;val;var_value) {
+                if ( !is_string(val) ) {
+                    error(function_name+': variable '+var_name+' value is a list whose elements are not string');
+                };
+                if ( length(var_value_str) > 0 ) {
+                    var_value_str = var_value_str + ':';
+                };
+                var_value_str = var_value_str + val;
+            };
+        } else {
+            error(function_name+': variable '+var_name+' value has an unsupported type (must be string, long, boolean or list of string');
+        };
+        SELF['scripts'][script_name]['env'][var_name] = var_value_str;
+    };
+
+    return(SELF);
 };
-
 
 # Function to add a path variable to a script
 #    'software/components/profile' = component_profile_add_path(script_name, path_name, path_value [, value_type]);
@@ -88,37 +87,36 @@ function component_profile_add_env = {
 # If the path variable element already exists, its value is updated.
 
 function component_profile_add_path = {
-  function_name = 'component_profile_add_path';
-  if ( (ARGC < 3) || (ARGC > 4) ) {
-      error(function_name+': invalid number of arguments. Must be 3 or 4.');
-  };
-  if ( ARGC == 4 ) {
-    value_type = ARGV[3];
-  } else {
-    value_type = 'value';
-  };
-  if ( !match(value_type, 'value|append|prepend') ) {
-    error("'value_type' argument must be 'value', 'prepend' or 'append'");
-  };
+    function_name = 'component_profile_add_path';
+    if ( (ARGC < 3) || (ARGC > 4) ) {
+            error(function_name+': invalid number of arguments. Must be 3 or 4.');
+    };
+    if ( ARGC == 4 ) {
+        value_type = ARGV[3];
+    } else {
+        value_type = 'value';
+    };
+    if ( !match(value_type, 'value|append|prepend') ) {
+        error("'value_type' argument must be 'value', 'prepend' or 'append'");
+    };
 
-  toks = matches(ARGV[0], '^(.*)\.(c?sh)$');
-  if ( length(toks) == 3 ) {
-    script_name = escape(toks[1]);
-    SELF['scripts'][script_name]['flavors'] = list(toks[2]);
-  } else {
-    script_name = escape(ARGV[0]);
-  };
 
-  if ( is_string(ARGV[2]) ) {
-    var_value = list(ARGV[2]);
-  } else if ( is_list(ARGV[2]) ) {
-    var_value = ARGV[2];
-  } else {
-    error(function_name+': variable '+var_name+' value has an unsupported type (must be string, or a list of string');
-  };
-  SELF['scripts'][script_name]['path'][ARGV[1]][value_type] = var_value;
+    toks = matches(ARGV[0], '^(.*)\.(c?sh)$');
+    if ( length(toks) == 3 ) {
+        script_name = escape(toks[1]);
+        SELF['scripts'][script_name]['flavors'] = list(toks[2]);
+    } else {
+        script_name = escape(ARGV[0]);
+    };
 
-  return(SELF);
+    if ( is_string(ARGV[2]) ) {
+        var_value = list(ARGV[2]);
+    } else if ( is_list(ARGV[2]) ) {
+        var_value = ARGV[2];
+    } else {
+        error(function_name+': variable '+var_name+' value has an unsupported type (must be string, or a list of string');
+    };
+    SELF['scripts'][script_name]['path'][ARGV[1]][value_type] = var_value;
+
+    return(SELF);
 };
-
-

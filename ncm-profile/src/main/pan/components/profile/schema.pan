@@ -8,26 +8,26 @@ declaration template components/profile/schema;
 include { 'quattor/schema' };
 
 function component_profile_script_valid = {
-  if ( exists(SELF['flavors']) && is_defined(SELF['flavors']) ) {
-    if ( is_list(SELF['flavors']) ) {
-      foreach (i;flavor;SELF['flavors']) {
-        if ( !match(flavor, 'csh|sh') ) {
-          error("Invalid script flavor '"+flavor+"'. Must be 'csh' or 'sh'");
-          return(false);
+    if ( exists(SELF['flavors']) && is_defined(SELF['flavors']) ) {
+        if ( is_list(SELF['flavors']) ) {
+            foreach (i;flavor;SELF['flavors']) {
+                if ( !match(flavor, 'csh|sh') ) {
+                    error("Invalid script flavor '"+flavor+"'. Must be 'csh' or 'sh'");
+                    return(false);
+                };
+            };
+        } else {
+            error("Script 'flavors' must a list");
+            return(false);
         };
-      };
-    } else {
-      error("Script 'flavors' must a list");
-      return(false);
     };
-  };
 
-  # When no suffix is appended to base name, restrict to one flavor
-  if ( !SELF['flavorSuffix'] && (length(SELF['flavors']) > 1) ) {
-    error("Only one flavor is allowed when flavorSuffix is false");
-  };
+    # When no suffix is appended to base name, restrict to one flavor
+    if ( !SELF['flavorSuffix'] && (length(SELF['flavors']) > 1) ) {
+        error("Only one flavor is allowed when flavorSuffix is false");
+    };
 
-  return(true);
+    return(true);
 };
 
 type structure_profile_path = {
@@ -52,5 +52,3 @@ type component_profile = {
 };
 
 bind '/software/components/profile' = component_profile;
-
-
