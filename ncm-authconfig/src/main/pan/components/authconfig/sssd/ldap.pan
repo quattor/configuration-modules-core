@@ -30,9 +30,9 @@ type sssd_chpass = {
 };
 
 type sssd_ldap_defaults = {
-    "bind_dn" ?  string
+    "bind_dn" ? string
     "authtok_type" : ldap_authok = "password"
-    "authtok" ?  string
+    "authtok" ? string
 };
 
 @{
@@ -87,25 +87,25 @@ type authconfig_sssd_ldap = {
     "tls" ? sssd_tls
     "netgroup" ? sssd_netgroup
     "autofs" ? sssd_autofs
-    "uri" :  type_absoluteURI[]
-    "backup_uri" ?  type_absoluteURI[]
-    "search_base" ?  string
+    "uri" : type_absoluteURI[]
+    "backup_uri" ? type_absoluteURI[]
+    "search_base" ? string
     "schema" : ldap_schema = "rfc2307"
     "service" ? sssd_ldap_service
 
-    "krb5_backup_server" ?  string
-    "krb5_canonicalize" ?  boolean
-    "krb5_realm" ?  string[]
-    "krb5_server" ?  string
+    "krb5_backup_server" ? string
+    "krb5_canonicalize" ? boolean
+    "krb5_realm" ? string[]
+    "krb5_server" ? string
     "access_filter" ? string
     "access_order" : ldap_order = "filter"
-    "connection_expire_timeout" :  long = 900
+    "connection_expire_timeout" : long = 900
     "deref" : ldap_deref = "never"
     "deref" ? string
-    "deref_threshold" ?  long
-    "disable_paging" :  boolean = false
-    "dns_service_name" ?  string
-    "entry_usn" ?  string[]
+    "deref_threshold" ? long
+    "disable_paging" : boolean = false
+    "dns_service_name" ? string
+    "entry_usn" ? string[]
     "enumeration_refresh_timeout" : long = 300
     "enumeration_search_timeout" : long = 60
     "force_upper_case_realm" : boolean = false
@@ -115,12 +115,12 @@ type authconfig_sssd_ldap = {
     "network_timeout" : long = 6
     "ns_account_lock" : string = "nsAccountLock"
     "offline_timeout" ? long
-    "opt_timeout" :  long = 6
-    "page_size" :  long = 1000
+    "opt_timeout" : long = 6
+    "page_size" : long = 1000
     "purge_cache_timeout" : long = 10800
     "pwd_policy" : string = "none"
-    "referrals" :  boolean = true
-    "rootdse_last_usn" ?  string
+    "referrals" : boolean = true
+    "rootdse_last_usn" ? string
     "search_timeout" : long = 6
     "use_object_class" : string = "posixAccount"
     "account_expire_policy" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
