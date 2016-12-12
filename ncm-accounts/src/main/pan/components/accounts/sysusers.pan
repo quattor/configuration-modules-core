@@ -90,8 +90,8 @@ unique template components/accounts/sysusers;
     'uuidd', '',
     'webalizer', '',
     'apacheds', '',
-    'mongod' , '',
-    'mongodb' , '',
-    'rabbitmq' , '',
-    'memcached' , '',
-   );
+    'mongod', '',
+    'mongodb', '',
+    'rabbitmq', '',
+    'memcached', '',
+);
