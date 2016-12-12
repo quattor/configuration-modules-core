@@ -14,7 +14,7 @@
 
 object template profile_chii;
 
-"/system/network/hostname"                  = "chii";
+"/system/network/hostname" = "chii";
 variable HOSTNAME = value ( "/system/network/hostname");
 # Base configuration for every test.
 include clusters/testing/testbase;
@@ -22,52 +22,53 @@ include clusters/testing/testbase;
 include components/useraccess/config;
 
 
-"/software/components/useraccess/users/root" = nlist (
-    "kerberos4", list (
-        nlist (
+"/software/components/useraccess/users/root" = nlist(
+    "kerberos4", list(
+        nlist(
             "realm", "CERN.CH",
             "principal", "munoz",
-            ),
-        nlist (
+        ),
+        nlist(
             "realm", "CERN.CH",
             "principal", "mejias"
-            )
         ),
+    ),
     "kerberos5", list (
         nlist (
             "realm", "CERN.CH",
             "principal", "munoz"
-            )
         ),
+    ),
     "ssh_keys_urls", list("http://uraha/keys/mejias.key"),
     "ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv"),
-    );
+);
 
-"/software/components/useraccess/roles/base" = nlist (
-    "kerberos4", list (
-        nlist (
+"/software/components/useraccess/roles/base" = nlist(
+    "kerberos4", list(
+        nlist(
             "realm", "CERN.CH",
             "principal", "munoz",
-            )
         ),
-    "kerberos5", list (
-        nlist (
+    ),
+    "kerberos5", list(
+        nlist(
             "realm", "CERN.CH",
             "principal", "munoz"
-            )
         ),
+    ),
     "ssh_keys_urls", list("http://uraha/keys/mejias.key"),
     "ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv")
-    );
+);
 
-"/software/components/useraccess/roles/extra" = nlist (
-    "kerberos4", list (nlist (
-                   "realm", "CERN.CH",
-                   "principal", "mejias"
-                   )
-        )
-    );
+"/software/components/useraccess/roles/extra" = nlist(
+    "kerberos4", list(
+        nlist(
+            "realm", "CERN.CH",
+            "principal", "mejias"
+        ),
+    ),
+);
 
-"/software/components/useraccess/users/mejias/roles" = list (
+"/software/components/useraccess/users/mejias/roles" = list(
     "base", "extra"
-    );
+);
