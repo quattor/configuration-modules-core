@@ -36,9 +36,9 @@ type mcx_computer = {
 };
 
 type component_mcx = {
-	include structure_component
-        "node"      : string = "MCX"
-        "computer"  ? mcx_computer
+    include structure_component
+        "node" : string = "MCX"
+        "computer" ? mcx_computer
 };
 
 bind "/software/components/mcx" = component_mcx;
