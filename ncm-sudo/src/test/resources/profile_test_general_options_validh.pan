@@ -8,23 +8,23 @@ include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
 "/software/components/sudo/privilege_lines" = list (
-	nlist ( "user",		"mejias",
-		"run_as",	"munoz",
-		"host",		"localhost",
-		"cmd",		"/bin/ls",
-		"options",	"NOPASSWD"
-		)
-	);
+    nlist ( "user", "mejias",
+        "run_as", "munoz",
+        "host", "localhost",
+        "cmd", "/bin/ls",
+        "options", "NOPASSWD"
+        )
+    );
 
 "/software/components/sudo/user_aliases" = nlist (
-	"FOO", list ("bar")
-	);
+    "FOO", list ("bar")
+    );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;
 
 "/software/components/sudo/general_options/" = list (
-	nlist (
-		"host", "192.168.0.1",
-		"options", nlist ("insults", true)
-		)
-	);
+    nlist (
+        "host", "192.168.0.1",
+        "options", nlist ("insults", true)
+        )
+    );

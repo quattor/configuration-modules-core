@@ -6,15 +6,15 @@ include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
 "/software/components/sudo/privilege_lines" = list (
-	nlist ( "user",		"ALL",
-		"run_as",	"ALL",
-		"host",		"ALL",
-		"cmd",		"ALL"
-		)
-	);
+    nlist ( "user", "ALL",
+        "run_as", "ALL",
+        "host", "ALL",
+        "cmd", "ALL"
+        )
+    );
 
 "/software/components/sudo/run_as_aliases" = nlist (
-	"foo", list ("bar")
-	);
+    "foo", list ("bar")
+    );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;
