@@ -5,7 +5,7 @@ object template configure;
 "/system/network/domainname" = 'y';
 
 "/hardware/harddisks/sda" = nlist(
-    "capacity", 4000, 
+    "capacity", 4000,
 );
 
 "/system/blockdevices" = nlist (
@@ -60,7 +60,7 @@ object template configure;
         )
 );
 
-"/system/filesystems" = { 
+"/system/filesystems" = {
     # always make a copy
 
     fs=value("/system/filesystems/0");
