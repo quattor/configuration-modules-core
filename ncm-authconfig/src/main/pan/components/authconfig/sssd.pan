@@ -65,14 +65,14 @@ type sssd_nss = {
 };
 
 type authconfig_sssd_local = {
-       "default_shell" : string = "/bin/bash"
-       "base_directory" : string = "/home"
-       "create_homedir" : boolean = true
-       "remove_homedir" : boolean = true
-       "homedir_umask" : long = 077
-       "skel_dir" : string = "/etc/skel"
-       "mail_dir" : string = "/var/mail"
-       "userdel_cmd" ? string
+    "default_shell" : string = "/bin/bash"
+    "base_directory" : string = "/home"
+    "create_homedir" : boolean = true
+    "remove_homedir" : boolean = true
+    "homedir_umask" : long = 077
+    "skel_dir" : string = "/etc/skel"
+    "mail_dir" : string = "/var/mail"
+    "userdel_cmd" ? string
 };
 
 type authconfig_sssd_domain  = {
