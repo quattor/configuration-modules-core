@@ -30,61 +30,61 @@ function resolve_pkg_rep = {
     errorstr="";
     function_name='resolve_pkg_rep2';
     if ( ARGC >= 1 ) {
-      rep_list = ARGV[0];
+        rep_list = ARGV[0];
     } else {
-      error(function_name+': missing required first argument (repository list)');
+        error(function_name+': missing required first argument (repository list)');
     };
     if ( ARGC >= 2 ) {
-      pkg_list = list();
-      foreach (i;name;ARGV[1]) {
-        pkg_list[length(pkg_list)] = escape(name);
-      };
+        pkg_list = list();
+        foreach (i;name;ARGV[1]) {
+            pkg_list[length(pkg_list)] = escape(name);
+        };
     } else {
-      pkg_list = list();
-      foreach (name;pkg_list_name;SELF) {
-        pkg_list[length(pkg_list)] = name;
-      };
+        pkg_list = list();
+        foreach (name;pkg_list_name;SELF) {
+            pkg_list[length(pkg_list)] = name;
+        };
     };
     debug("Assigning repositories to packages...");
 
     foreach (dummy;name;pkg_list) {
         # Ignore a non existent package: this happens when a list of package to resolve is
         # given explicitly. It is not a requirement that the package must exist.
-        if ( is_defined(SELF[name]) ) {
-          pkg_list_name = SELF[name];
-          foreach (version;pkg_list_name_version;pkg_list_name) {
-            if (exists(pkg_list_name_version['repository'])) {
-                rep_mask = pkg_list_name_version['repository'];
-                pkg_list_name_version['repository'] = undef;
-            } else {
-                rep_mask = '';
-            };
-            #debug(format('%s: resolving repository for package %s version %s (params=%s)',OBJECT,name,unescape(version),to_string(pkg_list_name_version)));
-            foreach (arch;i;pkg_list_name_version['arch']) {
-                rep_mask = i;
+        if (is_defined(SELF[name])) {
+            pkg_list_name = SELF[name];
+            foreach (version;pkg_list_name_version;pkg_list_name) {
+                if (exists(pkg_list_name_version['repository'])) {
+                    rep_mask = pkg_list_name_version['repository'];
+                    pkg_list_name_version['repository'] = undef;
+                } else {
+                    rep_mask = '';
+                };
+                #debug(format('%s: resolving repository for package %s version %s (params=%s)', OBJECT, name, unescape(version), to_string(pkg_list_name_version)));
+                foreach (arch;i;pkg_list_name_version['arch']) {
+                    rep_mask = i;
 
-                debug ("Resolving repository for package >>" + unescape(name) + "<< version >>" + unescape(version) + "<< arch >>" + arch + "<<");
-                id = escape(unescape(name) + "-" + unescape(version) + "-" + arch);
+                    debug("Resolving repository for package >>" + unescape(name) + "<< version >>" + unescape(version) + "<< arch >>" + arch + "<<");
+                    id = escape(unescape(name) + "-" + unescape(version) + "-" + arch);
 
-                rep_found = false;
-                in_list = first(rep_list, t, curr_rep);
-                while ( in_list && ! rep_found) {
-                    if(match(curr_rep["name"], rep_mask) && exists(curr_rep["contents"][id])) {
-                        debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
-                        rep_found = true;
-                        SELF[name][version]['arch'][arch] = curr_rep['name'];
-                    } else {
-                        debug("Package "+unescape(id)+" not found in repository "+curr_rep["name"]);
-                        in_list = next(rep_list, t, curr_rep);
+                    rep_found = false;
+                    in_list = first(rep_list, t, curr_rep);
+                    while ( in_list && ! rep_found) {
+                        if(match(curr_rep["name"], rep_mask) && exists(curr_rep["contents"][id])) {
+                            debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
+                            rep_found = true;
+                            SELF[name][version]['arch'][arch] = curr_rep['name'];
+                        } else {
+                            debug("Package "+unescape(id)+" not found in repository "+curr_rep["name"]);
+                            in_list = next(rep_list, t, curr_rep);
+                        };
+                    };
+
+                    if (! rep_found ) {
+                        errorstr = format("%s\nname: %s version: %s arch: %s", errorstr, unescape(name), unescape(version), arch);
+                        error=error+1;
                     };
                 };
-
-                if( ! rep_found ) {
-                    errorstr = format("%s\nname: %s version: %s arch: %s", errorstr, unescape(name), unescape(version), arch);
-                    error=error+1;
-                };
             };
-          };
         };
     };
 
@@ -235,7 +235,7 @@ function pkg_repl = {
             } else {
                 version = ARGV[1];
                 if ( (ARGC >= 3) && (ARGV[2] != '') ) {
-                  arch = ARGV[2];
+                    arch = ARGV[2];
                 };
             };
         };
@@ -257,7 +257,7 @@ function pkg_repl = {
         if ( is_defined(SELF[e_name]) && is_defined(arch) ) {
             foreach (v;params;SELF[e_name]) {
                 if ( is_defined(params['arch'][arch]) ) {
-                     arch_found = true;
+                    arch_found = true;
                 };
             };
         };
@@ -272,11 +272,11 @@ function pkg_repl = {
         # It is considered an error if the package is already part of the configuration, except
         # if this is the same version (allows to add another arch).
         if ( (index('addonly', options) < 0) ||
-             (is_defined(version) && is_defined(SELF[e_name][escape(version)]))) {
+            (is_defined(version) && is_defined(SELF[e_name][escape(version)]))) {
             package_params = SELF[e_name];
         } else {
-            if ( length(SELF[e_name]) == 0 ) {
-              existing_versions = undef;
+            if (length(SELF[e_name]) == 0 ) {
+                existing_versions = undef;
             } else if ( length(SELF[e_name]) == 1 ) {
                 first(SELF[e_name], k, v);
                 existing_versions = unescape(k);
@@ -311,20 +311,20 @@ function pkg_repl = {
             debug(format('%s: arch_params=%s, arch selected=%s', OBJECT, to_string(arch_params), to_string(arch)));
             # If arch is unspecified, remove any explicit arch else add specified arch
             if ( is_defined(arch) ) {
-               if ( !is_defined(arch_params) ) {
-                 arch_params = nlist();
-               };
-               arch_params[arch] = '';
+                if (!is_defined(arch_params) ) {
+                    arch_params = nlist();
+                };
+                arch_params[arch] = '';
             } else {
                 arch_params = nlist();
             };
         } else {
             SELF[e_name][version_e] = nlist();
             if ( is_defined(arch) ) {
-               if ( !is_defined(arch_params) ) {
-                 arch_params = nlist();
-               };
-               arch_params[arch] = '';
+                if ( !is_defined(arch_params) ) {
+                    arch_params = nlist();
+                };
+                arch_params[arch] = '';
             } else {
                 arch_params = nlist();
             };
