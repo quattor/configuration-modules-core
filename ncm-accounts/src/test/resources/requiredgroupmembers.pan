@@ -19,7 +19,7 @@ prefix "/software/components/accounts/users/test";
 prefix "/software/components/accounts/groups/foo";
 "gid" = 100;
 "comment" = "group foo with required user bar";
-"requiredMembers" = list("bar"); 
+"requiredMembers" = list("bar");
 
 # Group bar: test also listed as a required member to
 # check absence of duplicates, group member replaced.
@@ -27,7 +27,7 @@ prefix "/software/components/accounts/groups/foo";
 prefix "/software/components/accounts/groups/bar";
 "gid" = 101;
 "comment" = "group bar with required users foo and test";
-"requiredMembers" = list("foo2","test"); 
+"requiredMembers" = list("foo2", "test");
 "replaceMembers" = true;
 
 # Group bar: test also listed as a required member to
@@ -36,7 +36,7 @@ prefix "/software/components/accounts/groups/bar";
 prefix "/software/components/accounts/groups/bar2";
 "gid" = 102;
 "comment" = "group bar with required users foo and test, (required members merged)";
-"requiredMembers" = list("foo","test"); 
+"requiredMembers" = list("foo", "test");
 "replaceMembers" = false;
 
 # Group test: no explicit members, changed id compared
@@ -50,4 +50,4 @@ prefix "/software/components/accounts/groups/test";
 prefix "/software/components/accounts/groups/test2";
 "gid" = 51;
 "comment" = "group test2 with a changed id and explicit members";
-"requiredMembers" = list("foo"); 
+"requiredMembers" = list("foo");
