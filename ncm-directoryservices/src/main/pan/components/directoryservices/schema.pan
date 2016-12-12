@@ -19,9 +19,9 @@ type directoryservices_ldap_entry = extensible {
 };
 
 type component_directoryservices = {
-	include structure_component
-        "search"  : list
-        "ldapv3"  ? directoryservices_ldap_entry{}
+    include structure_component
+        "search" : list
+        "ldapv3" ? directoryservices_ldap_entry{}
 };
 
 bind "/software/components/directoryservices" = component_directoryservices;
