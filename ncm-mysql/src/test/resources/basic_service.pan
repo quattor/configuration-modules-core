@@ -10,7 +10,7 @@ prefix "/software/components/mysql/servers/one";
 prefix "/software/components/mysql/databases/opennebula";
 "server" = "one";
 "users/oneadmin/password" = 'p4ss';
-"users/oneadmin/rights" = list("ALL PRIVILEGES"); 
+"users/oneadmin/rights" = list("ALL PRIVILEGES");
 "createDb" = false;
 "initScript/file" = "/dev/null";
 
