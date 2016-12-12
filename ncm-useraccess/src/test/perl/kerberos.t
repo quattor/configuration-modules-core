@@ -53,8 +53,10 @@ like("$fh", qr{^me\@RE.ALM$}m,
 like("$fh", qr{^somebody.inst\@RE.A.LM$}m,
      "Entry with isntance field correctly generated");
 
-$fh = CAF::FileWriter->new("target/test/kerberos_2");
+# close the filehandles before DESTROY (there's a reference kept in $fhs)
+$fh->close();
 
+$fh = CAF::FileWriter->new("target/test/kerberos_2");
 is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH with empty key list returns with no errors");
 is("$fh", "", "The SSH file is empty when the key list is empty");
