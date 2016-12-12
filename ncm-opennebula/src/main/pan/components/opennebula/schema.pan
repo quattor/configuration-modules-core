@@ -8,7 +8,7 @@ declaration template components/opennebula/schema;
 include 'quattor/schema';
 include 'pan/types';
 
-type directory = string with match(SELF,'[^/]+/?$');
+type directory = string with match(SELF, '[^/]+/?$');
 
 type opennebula_mysql_db = {
     "server" ? string
@@ -23,7 +23,7 @@ type opennebula_db = {
     "backend" : string with match(SELF, "^(mysql|sqlite)$")
 } with is_consistent_database(SELF);
 
-@documentation{ 
+@documentation{
 check if a specific type of database has the right attributes
 }
 function is_consistent_database = {
@@ -178,8 +178,8 @@ type opennebula_market_mad_conf = {
     "public" ? boolean
 } = dict();
 
-@documentation{ 
-The following attributes define the default cost for Virtual Machines that don't have 
+@documentation{
+The following attributes define the default cost for Virtual Machines that don't have
 a CPU, MEMORY or DISK cost.
 This is used by the oneshowback calculate method.
 }
@@ -213,7 +213,7 @@ type opennebula_vlan_ids = {
 } = dict();
 
 @documentation{
-Automatic VXLAN Network ID (VNI) assignment. 
+Automatic VXLAN Network ID (VNI) assignment.
 This is used or vxlan networks.
 NOTE: reserved is not supported by this pool
 }
@@ -227,7 +227,7 @@ Drivers to manage different marketplaces, specialized for the storage backend.
 }
 type opennebula_market_mad = {
     @{path of the transfer driver executable, can be an absolute path or
-    relative to $ONE_LOCATION/lib/mads (or /usr/lib/one/mads/ if OpenNebula was 
+    relative to $ONE_LOCATION/lib/mads (or /usr/lib/one/mads/ if OpenNebula was
     installed in /)
     }
     "executable" : string = 'one_market'
@@ -238,7 +238,7 @@ type opennebula_market_mad = {
     "arguments" : string = '-t 15 -m http,s3,one'
 } = dict();
 
-@documentation{ 
+@documentation{
 check if a specific type of datastore has the right attributes
 }
 function is_consistent_datastore = {
@@ -266,46 +266,46 @@ function is_consistent_datastore = {
     return(true);
 };
 
-@documentation{ 
-type for ceph datastore specific attributes. 
+@documentation{
+type for ceph datastore specific attributes.
 ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory
 }
 type opennebula_ceph_datastore = {
-    "ceph_host"                 ? string[]
-    "ceph_secret"               ? type_uuid
-    "ceph_user"                 ? string
-    "ceph_user_key"             ? string
-    "pool_name"                 ? string
-    "rbd_format"                ? long(1..2)
+    "ceph_host" ? string[]
+    "ceph_secret" ? type_uuid
+    "ceph_user" ? string
+    "ceph_user_key" ? string
+    "pool_name" ? string
+    "rbd_format" ? long(1..2)
 };
 
-@documentation{ 
-type for vnet ars specific attributes. 
-type and size are mandatory 
+@documentation{
+type for vnet ars specific attributes.
+type and size are mandatory
 }
 type opennebula_ar = {
-    "type"                      : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
-    "ip"                        ? type_ipv4
-    "size"                      : long (1..)
-    "mac"                       ? type_hwaddr
-    "global_prefix"             ? string
-    "ula_prefix"                ? string
+    "type" : string with match(SELF, "^(IP4|IP6|IP4_6|ETHER)$")
+    "ip" ? type_ipv4
+    "size" : long (1..)
+    "mac" ? type_hwaddr
+    "global_prefix" ? string
+    "ula_prefix" ? string
 };
 
-@documentation{ 
+@documentation{
 type for an opennebula datastore. Defaults to a ceph datastore (ds_mad is ceph).
 shared DS is also supported
 }
 type opennebula_datastore = {
     include opennebula_ceph_datastore
-    "bridge_list"               ? string[]  # mandatory for ceph ds, lvm ds, ..
-    "datastore_capacity_check"  : boolean = true
-    "disk_type"                 : string = 'RBD'
-    "ds_mad"                    : string = 'ceph' with match (SELF, '^(fs|ceph)$')
-    "tm_mad"                    : string = 'ceph' with match (SELF, '^(shared|ceph)$')
-    "type"                      : string = 'IMAGE_DS'
-    @{datastore labels is a list of strings to group the datastores under a given name and filter them 
-    in the admin and cloud views. It is also possible to include in the list 
+    "bridge_list" ? string[]  # mandatory for ceph ds, lvm ds, ..
+    "datastore_capacity_check" : boolean = true
+    "disk_type" : string = 'RBD'
+    "ds_mad" : string = 'ceph' with match (SELF, '^(fs|ceph)$')
+    "tm_mad" : string = 'ceph' with match (SELF, '^(shared|ceph)$')
+    "type" : string = 'IMAGE_DS'
+    @{datastore labels is a list of strings to group the datastores under a given name and filter them
+    in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
 } = dict() with is_consistent_datastore(SELF);
@@ -325,8 +325,8 @@ type opennebula_vnet = {
     "vlan" ? boolean
     "vlan_id" ? long(0..4095)
     "ar" ? opennebula_ar
-    @{vnet labels is a list of strings to group the vnets under a given name and filter them 
-    in the admin and cloud views. It is also possible to include in the list 
+    @{vnet labels is a list of strings to group the vnets under a given name and filter them
+    in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
 } = dict();
@@ -339,8 +339,8 @@ type opennebula_user = {
     "ssh_public_key" ? string[]
     "password" ? string
     "group" ? string
-    @{user labels is a list of strings to group the users under a given name and filter them 
-    in the admin and cloud views. It is also possible to include in the list 
+    @{user labels is a list of strings to group the users under a given name and filter them
+    in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
 } = dict();
@@ -414,13 +414,13 @@ type opennebula_oned = {
     "vlan_ids" : opennebula_vlan_ids
     "vxlan_ids" : opennebula_vxlan_ids
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
-        dict("ds_migrate", true), 
-        dict("name", "lvm", "clone_target", "SELF"), 
-        dict("name", "shared", "ds_migrate", true), 
-        dict("name", "fs_lvm", "ln_target", "SYSTEM"), 
-        dict("name", "qcow2"), 
-        dict("name", "ssh", "ln_target", "SYSTEM", "shared", false, "ds_migrate", true), 
-        dict("name", "vmfs"), 
+        dict("ds_migrate", true),
+        dict("name", "lvm", "clone_target", "SELF"),
+        dict("name", "shared", "ds_migrate", true),
+        dict("name", "fs_lvm", "ln_target", "SYSTEM"),
+        dict("name", "qcow2"),
+        dict("name", "ssh", "ln_target", "SYSTEM", "shared", false, "ds_migrate", true),
+        dict("name", "vmfs"),
         dict("name", "ceph", "clone_target", "SELF", "ds_migrate", false),
         dict("name", "iscsi_libvirt", "clone_target", "SELF", "ds_migrate", false),
         dict("name", "dev", "clone_target", "NONE"),
@@ -445,22 +445,22 @@ type opennebula_oned = {
         dict("name", "s3", "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
              "app_actions", list('create', 'delete', 'monitor')),
     )
-    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE", 
-                                           "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE", 
-                                           "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC", 
-                                           "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC", 
-                                           "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST", 
+    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE",
+                                           "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE",
+                                           "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC",
+                                           "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC",
+                                           "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST",
                                            "PCI", "USER_INPUTS")
     "image_restricted_attr" : string = 'SOURCE'
-    "vnet_restricted_attr" : string[] = list("VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD", 
+    "vnet_restricted_attr" : string[] = list("VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD",
                                              "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE")
-    "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF", 
-                                               "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE", 
-                                               "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME", 
+    "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF",
+                                               "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
+                                               "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME",
                                                "DISK_TYPE", "ADAPTER_TYPE")
-    "inherit_image_attr" : string[] = list("ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN", 
+    "inherit_image_attr" : string[] = list("ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN",
                                            "DISK_TYPE", "ADAPTER_TYPE")
-    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", 
+    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING",
                                           "FILTER_MAC_SPOOFING", "MTU")
 };
 
@@ -473,8 +473,8 @@ type opennebula_instance_types = {
     "description" ? string
 } = dict();
 
-@documentation{ 
-type for opennebula service common RPC attributes. 
+@documentation{
+type for opennebula service common RPC attributes.
 }
 type opennebula_rpc_service = {
     @{OpenNebula daemon RPC contact information}
@@ -538,7 +538,7 @@ type opennebula_oneflow = {
     "default_cooldown" : long = 300
     @{default shutdown action
     terminate : OpenNebula >= 5.0.0
-    shutdown  : OpenNebula < 5.0.0
+    shutdown : OpenNebula < 5.0.0
     }
     "shutdown_action" : string = 'terminate' with match (SELF, '^(shutdown|shutdown-hard|terminate|terminate-hard)$')
     @{default numner of virtual machines that will receive the given call in each interval
@@ -556,7 +556,7 @@ type opennebula_oneflow = {
     @{log debug level
         0 = ERROR
         1 = WARNING
-        2 = INFO 
+        2 = INFO
         3 = DEBUG
     }
     "debug_level" : long(0..3) = 2
@@ -579,7 +579,7 @@ type opennebula_kvmrc = {
     "default_attach_discard" ? string with match (SELF, '^(ignore|off|unmap|on)$')
 };
 
-@documentation{ 
+@documentation{
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
 }
@@ -609,21 +609,21 @@ datastores, vnets, hosts names, etc
 }
 type component_opennebula = {
     include structure_component
-    'datastores'    ? opennebula_datastore{}
-    'groups'        ? opennebula_group{}
-    'users'         ? opennebula_user{}
-    'vnets'         ? opennebula_vnet{}
-    'hosts'         ? string[]
-    'rpc'           ? opennebula_rpc
-    'untouchables'  ? opennebula_untouchables
-    'oned'          ? opennebula_oned
-    'sunstone'      ? opennebula_sunstone
-    'oneflow'       ? opennebula_oneflow
-    'kvmrc'         ? opennebula_kvmrc
+    'datastores' ? opennebula_datastore{}
+    'groups' ? opennebula_group{}
+    'users' ? opennebula_user{}
+    'vnets' ? opennebula_vnet{}
+    'hosts' ? string[]
+    'rpc' ? opennebula_rpc
+    'untouchables' ? opennebula_untouchables
+    'oned' ? opennebula_oned
+    'sunstone' ? opennebula_sunstone
+    'oneflow' ? opennebula_oneflow
+    'kvmrc' ? opennebula_kvmrc
     'ssh_multiplex' : boolean = true
-    'cfg_group'     ? string
-    'host_ovs'      ? boolean
-    'host_hyp'      : string = 'kvm' with match (SELF, '^(kvm|xen)$')
-    'tm_system_ds'  ? string with match(SELF, "^(shared|ssh|vmfs)$")
+    'cfg_group' ? string
+    'host_ovs' ? boolean
+    'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
+    'tm_system_ds' ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = dict();
 
