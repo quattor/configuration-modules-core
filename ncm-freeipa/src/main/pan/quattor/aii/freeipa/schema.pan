@@ -44,7 +44,7 @@ function validate_aii_freeipa_hooks = {
 
 # TODO: not used; wait till we can use type tests
 type aii_freeipa = {
-	"module"   : string with SELF == FREEIPA_AII_MODULE_NAME
+    "module" : string with SELF == FREEIPA_AII_MODULE_NAME
 
     @{remove the host on AII removal (precedes disable)}
     "remove" : boolean = false
