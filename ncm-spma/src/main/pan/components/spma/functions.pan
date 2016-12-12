@@ -67,15 +67,15 @@ function resolve_pkg_rep = {
                 id = escape(unescape(name) + "-" + unescape(version) + "-" + arch);
 
                 rep_found = false;
-                in_list = first(rep_list,t,curr_rep);
+                in_list = first(rep_list, t, curr_rep);
                 while ( in_list && ! rep_found) {
-                    if(match(curr_rep["name"],rep_mask) && exists(curr_rep["contents"][id])) {
+                    if(match(curr_rep["name"], rep_mask) && exists(curr_rep["contents"][id])) {
                         debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
                         rep_found = true;
                         SELF[name][version]['arch'][arch] = curr_rep['name'];
                     } else {
                         debug("Package "+unescape(id)+" not found in repository "+curr_rep["name"]);
-                        in_list = next(rep_list,t,curr_rep);
+                        in_list = next(rep_list, t, curr_rep);
                     };
                 };
 
@@ -117,7 +117,7 @@ function purge_rep_list = {
     arg = (optional) arch. If arch is not specified (no argument provided), then ALL existing archs for the specified version are removed from the profile.
 }
 function pkg_del = {
-    debug(format('%s: pkg_del: removing package %s',OBJECT,ARGV[0]));
+    debug(format('%s: pkg_del: removing package %s', OBJECT, ARGV[0]));
 
     # SELF handles the current list of packages
     name = ARGV[0];
@@ -130,7 +130,7 @@ function pkg_del = {
 
     version = undef;
     arch = undef;
-        
+
     if ( ARGC > 1) {
         if ( ARGV[1] != '' ) {
             version = ARGV[1];
@@ -147,24 +147,24 @@ function pkg_del = {
                 if ( is_defined(arch) ) {
                     if ( is_defined(SELF[e_name][e_version]['arch'][arch]) ) {
                         if ( length(SELF[e_name][e_version]['arch']) == 1 ) {
-                            debug(format('%s: deleting package %s version %s: %s is the only arch, deleting version',OBJECT,ARGV[0],version,arch));
+                            debug(format('%s: deleting package %s version %s: %s is the only arch, deleting version', OBJECT, ARGV[0], version, arch));
                             SELF[e_name][e_version] = null;
                         } else {
                             SELF[e_name][e_version]['arch'][arch] = null;
                         };
                     } else {
-                        debug(format('%s: package %s version %s arch %s not part of the configuration, nothing done',OBJECT,ARGV[0],version,arch));
+                        debug(format('%s: package %s version %s arch %s not part of the configuration, nothing done', OBJECT, ARGV[0], version, arch));
                     };
                 } else {
-                    debug(format('%s: deleting package %s version %s (all archs)',OBJECT,ARGV[0],version));
+                    debug(format('%s: deleting package %s version %s (all archs)', OBJECT, ARGV[0], version));
                     SELF[e_name][e_version] = null;
                 };
                 if ( length(SELF[e_name]) == 0 ) {
-                    debug(format('%s: no version left for package %s: deleting it',OBJECT,ARGV[0]));
+                    debug(format('%s: no version left for package %s: deleting it', OBJECT, ARGV[0]));
                     SELF[e_name] = null;
                 };
             } else {
-                debug(format('%s: package %s version %s not part of the configuration, nothing done',OBJECT,ARGV[0],version));
+                debug(format('%s: package %s version %s not part of the configuration, nothing done', OBJECT, ARGV[0], version));
             };
         } else {
             # if all versions with a specific arch must be deleted,loop over all existing versions.
@@ -186,12 +186,12 @@ function pkg_del = {
                     SELF[e_name][v] = null;
                 };
             } else {
-                debug(format('%s: deleting package %s (all versions/archs)',OBJECT,ARGV[0]));
+                debug(format('%s: deleting package %s (all versions/archs)', OBJECT, ARGV[0]));
                 SELF[e_name] = null;
             };
         };
     } else {
-        debug(format('%s: package %s not part of the configuration, nothing done',OBJECT,ARGV[0]));
+        debug(format('%s: package %s not part of the configuration, nothing done', OBJECT, ARGV[0]));
     };
 
     SELF;
@@ -216,7 +216,7 @@ function pkg_repl = {
 
     version = undef;
     arch = undef;
-        
+
     # Use default value only if version is specified as an empty string.
     # In this case, raise an error if there is no default version defined.
     if ( ARGC > 1 ) {
@@ -230,7 +230,7 @@ function pkg_repl = {
                         arch = package_default[u_name][1];
                     };
                 } else {
-                    error(format('No default version defined for package %s',ARGV[0]));
+                    error(format('No default version defined for package %s', ARGV[0]));
                 };
             } else {
                 version = ARGV[1];
@@ -247,12 +247,12 @@ function pkg_repl = {
         options = list();
     };
 
-    debug(format('%s: pkg_repl: processing package %s (version %s, arch %s, options %s)',OBJECT,ARGV[0],to_string(version),to_string(arch),to_string(options)));
-    
+    debug(format('%s: pkg_repl: processing package %s (version %s, arch %s, options %s)', OBJECT, ARGV[0], to_string(version), to_string(arch), to_string(options)));
+
     # mustexist option means the package must be replaced only if it is already part of the configuration (pkg_ronly).
     # If it is not part of the configuration, do nothing (but don't raise an error).
     # When a specific arch is request, the existing package must match the arch.
-    if ( index('mustexist',options) >= 0 ) {
+    if ( index('mustexist', options) >= 0 ) {
         arch_found = false;
         if ( is_defined(SELF[e_name]) && is_defined(arch) ) {
             foreach (v;params;SELF[e_name]) {
@@ -262,7 +262,7 @@ function pkg_repl = {
             };
         };
         if ( !is_defined(SELF[e_name]) || !arch_found ) {
-            debug(format('%s: package %s not part of the configuration, not replacing it',OBJECT,ARGV[0]));
+            debug(format('%s: package %s not part of the configuration, not replacing it', OBJECT, ARGV[0]));
             return(SELF);
         };
     };
@@ -271,14 +271,14 @@ function pkg_repl = {
         # addonly option means the package must not be part of the configuration to be added (pkg_add).
         # It is considered an error if the package is already part of the configuration, except
         # if this is the same version (allows to add another arch).
-        if ( (index('addonly',options) < 0) || 
+        if ( (index('addonly', options) < 0) ||
              (is_defined(version) && is_defined(SELF[e_name][escape(version)]))) {
             package_params = SELF[e_name];
         } else {
             if ( length(SELF[e_name]) == 0 ) {
               existing_versions = undef;
             } else if ( length(SELF[e_name]) == 1 ) {
-                first(SELF[e_name],k,v);
+                first(SELF[e_name], k, v);
                 existing_versions = unescape(k);
             # Several versions of the package can be present if the version is not the same
             # for all archs. This happens in particular when building the profile and every
@@ -289,17 +289,17 @@ function pkg_repl = {
                     existing_versions[length(existing_versions)] = unescape(k);
                 };
             };
-            error(format('Package %s is already part of the profile (existing version=%s, requested version=%s)',ARGV[0],to_string(existing_versions),to_string(version)));
+            error(format('Package %s is already part of the profile (existing version=%s, requested version=%s)', ARGV[0], to_string(existing_versions), to_string(version)));
         };
     } else {
         package_params = undef;
         SELF[e_name] = nlist();
     };
-    
+
     if ( is_defined(version) ) {
         # Check if the version is already part of the package and in this case, only add a new arch if needed.
         # Else replace existing version.
-        # FIXME : should probably replace only a version/arch combination... but this could lead to different versions for 
+        # FIXME : should probably replace only a version/arch combination... but this could lead to different versions for
         # different arch and will probably not work... Could also upgrade version for all archs already defined?
         version_e = escape(version);
         if ( is_defined(package_params[version_e]) ) {
@@ -308,7 +308,7 @@ function pkg_repl = {
             } else {
                 arch_params = undef;
             };
-            debug(format('%s: arch_params=%s, arch selected=%s',OBJECT,to_string(arch_params),to_string(arch)));
+            debug(format('%s: arch_params=%s, arch selected=%s', OBJECT, to_string(arch_params), to_string(arch)));
             # If arch is unspecified, remove any explicit arch else add specified arch
             if ( is_defined(arch) ) {
                if ( !is_defined(arch_params) ) {
@@ -328,7 +328,7 @@ function pkg_repl = {
             } else {
                 arch_params = nlist();
             };
-            debug(format('%s: adding package %s version %s arch_params=%s',OBJECT,ARGV[0],version,to_string(arch_params)));
+            debug(format('%s: adding package %s version %s arch_params=%s', OBJECT, ARGV[0], version, to_string(arch_params)));
         };
         # Remove previous versions defined if no arch left and add new one.
         # Nothing impose that the version is the same for all archs (may happen at least
@@ -356,7 +356,7 @@ function pkg_repl = {
         };
         if ( !is_defined(SELF[e_name][version_e]) ) {
             SELF[e_name] = nlist(version_e, nlist());
-        };  
+        };
         if ( length(arch_params) > 0 ) {
             SELF[e_name][version_e]['arch'] = arch_params;
         } else {
@@ -365,12 +365,12 @@ function pkg_repl = {
     } else {
         # Refuse to replace an explicit version by an undefined version
         if ( is_defined(package_params) && (length(package_params) > 0) ) {
-            error(format('Attempt to unlock version of package %s (version %s)',ARGV[0],unescape(key(package_params,0))));
+            error(format('Attempt to unlock version of package %s (version %s)', ARGV[0], unescape(key(package_params, 0))));
         };
-        debug(format('%s: adding package %s (no version/arch specified)',OBJECT,ARGV[0]));
+        debug(format('%s: adding package %s (no version/arch specified)', OBJECT, ARGV[0]));
         SELF[e_name] = nlist();
     };
-    
+
     SELF;
 };
 
@@ -391,7 +391,7 @@ add the most recent of emacs to the profile
 "/software/packages"=pkg_add("emacs");
 }
 function pkg_add = {
-    debug(format('%s: pkg_add: adding package %s',OBJECT,ARGV[0]));
+    debug(format('%s: pkg_add: adding package %s', OBJECT, ARGV[0]));
 
     version = undef;
     arch = undef;
@@ -417,7 +417,7 @@ function pkg_add = {
     arg = (optional) arch
 }
 function pkg_ronly = {
-    debug(format('%s: pkg_ronly: replacing package %s if currently present',OBJECT,ARGV[0]));
+    debug(format('%s: pkg_ronly: replacing package %s if currently present', OBJECT, ARGV[0]));
 
     version = undef;
     arch = undef;
