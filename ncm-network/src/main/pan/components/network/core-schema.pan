@@ -179,9 +179,9 @@ type structure_interface = {
             error("bond_ifaces is defined but the type of interface is not defined as OVSBond");
         };
         foreach (i;iface;bond_ifaces) {
-             if ( !exists("/system/network/interfaces/" + iface) ) {
-                 error("The " + iface + " interface is used by bond_ifaces, but does not exist");
-             };
+            if ( !exists("/system/network/interfaces/" + iface) ) {
+                error("The " + iface + " interface is used by bond_ifaces, but does not exist");
+            };
         };
     };
     true;
