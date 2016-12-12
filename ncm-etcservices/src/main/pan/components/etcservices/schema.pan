@@ -10,8 +10,8 @@ declaration template components/etcservices/schema;
 include {'quattor/schema'};
 
 type component_etcservices_type = {
-	include structure_component
-	"entries" : string []
+    include structure_component
+    "entries" : string []
 };
 
 bind "/software/components/etcservices" = component_etcservices_type;
