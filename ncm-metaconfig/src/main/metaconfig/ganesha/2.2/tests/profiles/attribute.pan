@@ -118,7 +118,7 @@ prefix "/metaconfig/contents/main/test";
 "MaxRPCSendBufferSize" = 1048576;
 "NFS_Port" = 2049;
 "NFS_Program" = 100003;
-"NFS_Protocols" = list(3,4);
+"NFS_Protocols" = list(3, 4);
 "NLM_Port" = 0;
 "NLM_Program" = 100021;
 "NSM_Use_Caller_Name" = false;
@@ -165,4 +165,4 @@ prefix "/metaconfig/contents/main/test";
 "DS_Port" = 3260;
 
 prefix "/metaconfig/contents/main/FSAL";
-"PNFS/pnfs_enabled" = true; 
+"PNFS/pnfs_enabled" = true;

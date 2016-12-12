@@ -11,7 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
 "includes" = append("/etc/named.rfc1912.zones");
 "includes" = append("/etc/another.conf");
 
-"acls/clients" = list('127.0.0.1', '10.10.3.250', '10.10.10.250'); 
+"acls/clients" = list('127.0.0.1', '10.10.3.250', '10.10.10.250');
 "acls/vsc" = list("10.10.0.0/16", "10.20.0.0/16", "10.30.0.0/16");
 "acls/os" = list("10.148.0.0/16", "10.143.0.0/16", "10.141.0.0/16");
 
@@ -47,9 +47,9 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents/opti
 "allow-transfer" = list();
 "dnssec-lookaside" = "auto";
 "blackhole" = list();
-"notify-source/0/port" = 53; 
-"transfer-source/0/port" = 53; 
-"query-source/0/port" = 53; 
+"notify-source/0/port" = 53;
+"transfer-source/0/port" = 53;
+"query-source/0/port" = 53;
 "forward" = "only";
 "forwarders" = list('127.0.0.1', '10.10.3.250', '10.10.10.250');
 "allow-query" = list("clients");

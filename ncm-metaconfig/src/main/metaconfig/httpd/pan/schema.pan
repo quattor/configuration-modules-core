@@ -135,7 +135,7 @@ type httpd_ssl_nss_shared = {
     "require" ? string
     "options" ? httpd_option_plusminus_none
     "requiressl" ? boolean
-    "passphrasedialog" ? string with match(SELF,'^(builtin|(exec|file):/.*)$')
+    "passphrasedialog" ? string with match(SELF, '^(builtin|(exec|file):/.*)$')
 };
 
 type httpd_nss_global = {
@@ -149,7 +149,7 @@ type httpd_nss_global = {
 type httpd_ssl_global = {
     include httpd_ssl_nss_shared
     "sessioncache" ? string
-    "mutex" ? string with match(SELF,'^(default)$')
+    "mutex" ? string with match(SELF, '^(default)$')
     "cryptodevice" ? string[]
 
     "certificatefile" ? string
@@ -162,10 +162,10 @@ type httpd_ssl_global = {
 
     "verifydepth" ? long
 
-    "usestapling" ? string with match(SELF,'^(on|off)$')
+    "usestapling" ? string with match(SELF, '^(on|off)$')
     "staplingrespondertimeout" ? long
-    "staplingreturnrespondererrors" ? string with match(SELF,'^(on|off)$')
-    "staplingcache" ? string with match(SELF,'^shmcb:/var/run/ocsp\([0-9]+\)$')
+    "staplingreturnrespondererrors" ? string with match(SELF, '^(on|off)$')
+    "staplingcache" ? string with match(SELF, '^shmcb:/var/run/ocsp\([0-9]+\)$')
 };
 
 type httpd_ssl_nss_vhost = {
@@ -195,10 +195,10 @@ type httpd_ssl_vhost = {
     include httpd_ssl_nss_vhost
     "protocol" : httpd_sslprotocol[] = list("TLSv1")
     "ciphersuite" : httpd_ciphersuite[] = list("TLSv1")
-    "honorcipherorder" ?  string with match(SELF, '^(on|off)$')
+    "honorcipherorder" ? string with match(SELF, '^(on|off)$')
 };
 
-type httpd_directory_allowoverride = string with match(SELF,'^(All|None|Options|FileInfo|AuthConfig|Limit)$');
+type httpd_directory_allowoverride = string with match(SELF, '^(All|None|Options|FileInfo|AuthConfig|Limit)$');
 type httpd_acl_order = string with match(SELF, "^(allow|deny)$");
 
 type httpd_acl = {
@@ -206,7 +206,7 @@ type httpd_acl = {
     "allow" ? type_network_name[]
     "deny" ? type_network_name[]
     "allowoverride" ? httpd_directory_allowoverride[]
-    "satisfy" ? string with match(SELF,"^(All|Any)$")
+    "satisfy" ? string with match(SELF, "^(All|Any)$")
 };
 
 @documentation{
@@ -275,14 +275,14 @@ type httpd_name_virtual_host = {
     "port" ? type_port
 };
 
-type httpd_auth_type = string with match(SELF,"^(Basic|Kerberos|Shibboleth|GSSAPI)$");
+type httpd_auth_type = string with match(SELF, "^(Basic|Kerberos|Shibboleth|GSSAPI)$");
 
 type httpd_auth = {
     "name": string
-    "require" : httpd_auth_require = nlist('type','valid-user')
+    "require" : httpd_auth_require = nlist('type', 'valid-user')
     "userfile" ? string
     "groupfile" ? string
-    "basicprovider" ? string with match(SELF,"^(file)$")
+    "basicprovider" ? string with match(SELF, "^(file)$")
     "type" : httpd_auth_type = "Basic"
 };
 
@@ -321,7 +321,7 @@ type httpd_rewrite_map = {
     "source" : string
 };
 
-type httpd_rewrite_option = string with match(SELF,'^(Inherit|InheritBefore|AllowNoSlash|AllowAnyURI|MergeBase)$');
+type httpd_rewrite_option = string with match(SELF, '^(Inherit|InheritBefore|AllowNoSlash|AllowAnyURI|MergeBase)$');
 
 type httpd_rewrite = {
     "engine" : boolean = true
@@ -343,7 +343,7 @@ type httpd_wsgi_iportscript = {
 
 type httpd_wsgi_vhost = {
     "importscript" ? httpd_wsgi_iportscript
-    "passauthorization" ?  string with match(SELF, '^(on|off)$')
+    "passauthorization" ? string with match(SELF, '^(on|off)$')
 };
 
 type httpd_listen = {
@@ -387,7 +387,7 @@ type httpd_encoding = {
 type httpd_alias = {
     "url" : string
     "destination" : string
-    "type" : string = "" with match(SELF,'^(|script|wsgiscript)$')
+    "type" : string = "" with match(SELF, '^(|script|wsgiscript)$')
 };
 
 type httpd_module_name = string with match(SELF, '^[.\-/\w]+$');
@@ -533,7 +533,7 @@ type httpd_ifmodule_parameters = {
     "maxsparethreads" ? long
     "threadsperchild" ? long
 
-    "userdir" ? string with match(SELF,"^(disabled|public_html)$")
+    "userdir" ? string with match(SELF, "^(disabled|public_html)$")
 
     "davlockdb" ? string
 

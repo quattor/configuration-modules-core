@@ -75,7 +75,7 @@ type elasticsearch_threadpool = {
     "search" : elasticsearch_thread_search
     "index" : elasticsearch_thread_search
     "get" ? elasticsearch_thread_search
-    "bulk"  ? elasticsearch_thread_search
+    "bulk" ? elasticsearch_thread_search
     "warmer" ? elasticsearch_thread_search
     "refresh" ? elasticsearch_thread_search
 };

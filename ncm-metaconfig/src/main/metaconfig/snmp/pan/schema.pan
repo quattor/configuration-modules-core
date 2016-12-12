@@ -8,7 +8,7 @@ type snmp_snmp_client_behaviour = {
     "defDomain" ? string # application domain
     "defTarget" ? string # application domain target
     "defaultPort" ? long(0..)
-    "defVersion" ? string with match(SELF,'^(1|2c|3)$')
+    "defVersion" ? string with match(SELF, '^(1|2c|3)$')
     "defCommunity" ? string
     "alias" ? string # NAME DEFINITION
     "dumpPacket" ? boolean # yes
@@ -25,12 +25,12 @@ type snmp_snmp_client_behaviour = {
 
 type snmp_snmp_snmpv3_settings = {
     "defSecurityName" ? string
-    "defSecurityLevel" ? string with match(SELF,'^(noAuthNoPriv|authNoPriv|authPriv)$')
+    "defSecurityLevel" ? string with match(SELF, '^(noAuthNoPriv|authNoPriv|authPriv)$')
     "defPassphrase" ? string
     "defAuthPassphrase" ? string
     "defPrivPassphrase" ? string
-    "defAuthType" ? string with match(SELF,'^(MD5|SHA)$')
-    "defPrivType" ? string with match(SELF,'^(DES|AES)$')
+    "defAuthType" ? string with match(SELF, '^(MD5|SHA)$')
+    "defPrivType" ? string with match(SELF, '^(DES|AES)$')
     "defContext" ? string
     "defSecurityModel" ? string
     "defAuthMasterKey" ? string # 0xHEXSTRING
@@ -89,9 +89,9 @@ type snmp_snmp_conf_main = {
 type snmp_snmp_conf = {
     "main" ? snmp_snmp_conf_main
     "mibdirs" ? string[] # DIRLIST
-    "mibdirsprefix" ? string with match(SELF,'^(\+|-)$')
+    "mibdirsprefix" ? string with match(SELF, '^(\+|-)$')
     "mibs" ? string[] # MIBLIST
-    "mibsprefix" ? string with match(SELF,'^(\+|-)$')
+    "mibsprefix" ? string with match(SELF, '^(\+|-)$')
 };
 
 type snmp_snmpd_agent_behaviour = {
@@ -128,7 +128,7 @@ type snmp_snmpd_access_control = {
     "access" ? string # GROUP  CONTEXT  {any|v1|v2c|usm|tsm|ksm} LEVEL PREFX READ WRITE
     "authcommunity" ? string # TYPES  COMMUNITY   [SOURCE [OID | -V VIEW [CONTEXT]]]
     "authuser" ? string # TYPES [-s MODEL] USER  [LEVEL [OID | -V VIEW [CONTEXT]]]
-    "authgroup"  ? string # TYPES [-s MODEL] GROUP [LEVEL [OID | -V VIEW [CONTEXT]]]
+    "authgroup" ? string # TYPES [-s MODEL] GROUP [LEVEL [OID | -V VIEW [CONTEXT]]]
     "authaccess" ? string # TYPES [-s MODEL] GROUP VIEW [LEVEL [CONTEXT]]
     "setaccess" ? string # GROUP CONTEXT MODEL LEVEL PREFIX VIEW TYPES
 };

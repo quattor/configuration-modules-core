@@ -20,14 +20,14 @@ structure template struct/php_conf;
     nlist(
         "name", "prefork.c",
         "modules", list(nlist(
-            "name", "php5_module", 
+            "name", "php5_module",
             "path", "modules/libphp5.so",
             )),
         ),
     nlist(
         "name", "worker.c",
         "modules", list(nlist(
-            "name", "php5_module", 
+            "name", "php5_module",
             "path", "modules/libphp5-zts.so",
             )),
         ),

@@ -13,11 +13,11 @@ prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/co
 "Name" = "standard";
 "messagedestinations" = list(
         nlist("destination", "director",
-              "address", format("%s-dir",BACULA_DIRECTOR_SHORT),
+              "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
               "types", list("all", "!skipped", "!restored")),
         );
 
-        
+
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/contents/main/Autochanger/0";
 "Changer_Command" = '';
 "Changer_Device" = '/dev/null';

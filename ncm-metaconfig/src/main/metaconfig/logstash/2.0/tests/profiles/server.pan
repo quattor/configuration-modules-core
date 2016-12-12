@@ -34,7 +34,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "ssl", true,
     "congestion_threshold", 20,
 )));
-    
+
 "filter/conditionals" = append(nlist(
     "type", "ifelseif",
     "expr", list(nlist(
@@ -88,7 +88,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("mutate", nlist(
             "_conditional", nlist('expr', list(nlist(
-                "left","'_grokparsefailure'",
+                "left", "'_grokparsefailure'",
                 "test", "not in",
                 "right", "[tags]",
                 ))),

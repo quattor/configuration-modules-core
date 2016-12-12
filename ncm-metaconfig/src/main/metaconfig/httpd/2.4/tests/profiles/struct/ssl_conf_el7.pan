@@ -8,9 +8,9 @@ structure template struct/ssl_conf_el7;
 
     "sessioncache", "shmcb:/run/httpd/sslcache(512000)",
     "sessioncachetimeout", 300,
-    
+
     "mutex", "default",
-    
+
     "randomseed", list(
         list("startup", "file:/dev/urandom", "256"),
         list("connect", "builtin"),
@@ -35,7 +35,7 @@ structure template struct/ssl_conf_el7;
 
 
 "vhosts/base/ssl/engine" = true;
-# list("all", "-SSLv2") not allowed 
+# list("all", "-SSLv2") not allowed
 "vhosts/base/ssl/protocol" =  list("TLSv1");
 # list("ALL", "!ADH", "!EXPORT", "!SSLv2", "RC4", "RSA", "+HIGH", "+MEDIUM", "+LOW")
 "vhosts/base/ssl/ciphersuite" = list("TLSv1");

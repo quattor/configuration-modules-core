@@ -35,7 +35,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     append(s);
 
     # add 2nd one
-    append(s); 
+    append(s);
     SELF;
 };
 

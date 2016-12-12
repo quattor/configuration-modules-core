@@ -13,7 +13,7 @@ type perfsonarbuoy = {
     "metadata_db_type" : string = "file"
     "owmesh" : string =  "/opt/perfsonar_ps/perfsonarbuoy_ma/etc"
     "service_accesspoint" : type_absoluteURI = "http://localhost:8085/perfsonar_PS/services/pSB"
-    "service_description"  : string
+    "service_description" : string
     "service_name" : string = "perfSONARBUOY MA"
     "service_type" : string = "MA"
 };
