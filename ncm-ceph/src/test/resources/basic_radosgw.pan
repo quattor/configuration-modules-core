@@ -35,11 +35,11 @@ prefix '/software/components/ceph/clusters';
         'ceph002', 'ceph002.cubone.os'
     )
 
-);         
+);
 
 '/system/network/hostname' = 'ceph002';
 '/system/network/domainname' = 'cubone.os';
 
-'/software/components/accounts/users/ceph' = 
+'/software/components/accounts/users/ceph' =
     nlist('homeDir', '/tmp', 'gid', '111' );
 '/software/components/accounts/groups/ceph' = nlist('gid', '111');
