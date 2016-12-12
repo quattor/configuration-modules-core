@@ -8,9 +8,9 @@ prefix "/software/components/accounts/groups";
 "sindes/gid" = 480;
 
 "/software/components/accounts/users/apache" = nlist(
-  "uid", 48,
-  "groups", list("apache", "icingacmd", "icinga"),
-  "comment","apache",
-  "shell", "/sbin/nologin",
-  "homeDir", "/var/www"
+    "uid", 48,
+    "groups", list("apache", "icingacmd", "icinga"),
+    "comment", "apache",
+    "shell", "/sbin/nologin",
+    "homeDir", "/var/www",
 );

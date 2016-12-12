@@ -13,10 +13,12 @@ prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}/co
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}/contents/main/Messages/0";
 "Name" = "standard";
 "messagedestinations" = list(
-        nlist("destination", "director",
-              "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
-              "types", list("all", "!skipped", "!restored")),
-        );
+    nlist(
+        "destination", "director",
+        "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
+        "types", list("all", "!skipped", "!restored"),
+    ),
+);
 
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}/contents/main/FileDaemon/0";
 "Name" = format("%s-fd", FULL_HOSTNAME);

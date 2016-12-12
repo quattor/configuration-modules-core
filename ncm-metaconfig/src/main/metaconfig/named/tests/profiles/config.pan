@@ -21,21 +21,25 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
     "type", "master",
     "file", "hpcugent/foo/drbd.zone"
 );
-"zones/1" = nlist("name", "slave1",
-                   "type", "slave",
-                   "file", "slaves/slave1.zone",
-                   "masters", list("172.31.244.251", "172.31.244.250"));
+"zones/1" = nlist(
+    "name", "slave1",
+    "type", "slave",
+    "file", "slaves/slave1.zone",
+    "masters", list("172.31.244.251", "172.31.244.250"),
+);
 
-"zones/2" = nlist("name", "slave2.in-addr.arpa",
-                   "type", "slave",
-                   "file", "slaves/slave2.zone",
-                   "masters", list("172.31.244.251", "172.31.244.250"));
+"zones/2" = nlist(
+    "name", "slave2.in-addr.arpa",
+    "type", "slave",
+    "file", "slaves/slave2.zone",
+    "masters", list("172.31.244.251", "172.31.244.250"),
+);
 
 "zones/3" = nlist(
     "name", "10.10.in-addr.arpa",
     "class", "IN",
     "type", "master",
-    "file", "hpcugent/bar/10.10.rev"
+    "file", "hpcugent/bar/10.10.rev",
 );
 
 prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents/options";
@@ -55,5 +59,3 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents/opti
 "allow-query" = list("clients");
 "max-cache-size" = 4*1024*1024 ;
 "empty-zones-enable" = true;
-
-

@@ -357,7 +357,7 @@ structure template struct/httpd_conf_el6;
         "name", "ssl_combined",
         "expr", '%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b',
         ),
- );
+);
 "log/custom" = list(
     nlist(
         "name", "combined",
@@ -516,8 +516,10 @@ structure template struct/httpd_conf_el6;
 );
 
 
-"lang/priority" = list("en", "ca", "cs", "da", "de", "el", "eo", "es", "et", "fr", "he", "hr", "it",
-                  "ja", "ko", "ltz", "nl", "nn", "no", "pl", "pt", "pt-BR", "ru", "sv", "zh-CN", "zh-TW");
+"lang/priority" = list(
+    "en", "ca", "cs", "da", "de", "el", "eo", "es", "et", "fr", "he", "hr", "it",
+    "ja", "ko", "ltz", "nl", "nn", "no", "pl", "pt", "pt-BR", "ru", "sv", "zh-CN", "zh-TW",
+);
 "lang/forcepriority" = list("Prefer", "Fallback");
 "lang/add" = list(
     nlist(
@@ -625,4 +627,3 @@ structure template struct/httpd_conf_el6;
         "names", list(".zh-tw"),
         ),
 );
-

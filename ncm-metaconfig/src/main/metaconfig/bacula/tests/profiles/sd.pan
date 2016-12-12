@@ -12,10 +12,12 @@ prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/co
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/contents/main/Messages/0";
 "Name" = "standard";
 "messagedestinations" = list(
-        nlist("destination", "director",
-              "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
-              "types", list("all", "!skipped", "!restored")),
-        );
+    nlist(
+        "destination", "director",
+        "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
+        "types", list("all", "!skipped", "!restored"),
+    ),
+);
 
 
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/contents/main/Autochanger/0";
@@ -55,4 +57,3 @@ prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/co
 'Media_Type' = 'DumpDisk1';
 'Name' = 'vDrive-1-0';
 'Random_Access' = true;
-
