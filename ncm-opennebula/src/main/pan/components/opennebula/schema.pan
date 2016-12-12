@@ -428,40 +428,69 @@ type opennebula_oned = {
     )
     "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
         dict(),
-        dict("name", "ceph", "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST', 'CEPH_HOST', 'CEPH_USER', 'CEPH_SECRET'),
-             "marketplace_actions", "export"),
-        dict("name", "dev", "required_attrs", list('DISK_TYPE'),
-             "persistent_only", true),
-        dict("name", "iscsi_libvirt", "required_attrs", list('DISK_TYPE', 'ISCSI_HOST'),
-             "persistent_only", true),
-        dict("name", "fs", "marketplace_actions", "export"),
-        dict("name", "lvm", "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST')),
-        dict("name", "vcenter", "required_attrs", list('VCENTER_CLUSTER'), "persistent_only", true,
-             "marketplace_actions", "export"),
+        dict(
+            "name", "ceph",
+            "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST', 'CEPH_HOST', 'CEPH_USER', 'CEPH_SECRET'),
+            "marketplace_actions", "export",
+        ),
+        dict(
+            "name", "dev",
+            "required_attrs", list('DISK_TYPE'),
+            "persistent_only", true,
+        ),
+        dict(
+            "name", "iscsi_libvirt",
+            "required_attrs", list('DISK_TYPE', 'ISCSI_HOST'),
+            "persistent_only", true,
+        ),
+        dict(
+            "name", "fs",
+            "marketplace_actions", "export",
+        ),
+        dict(
+            "name", "lvm",
+            "required_attrs", list('DISK_TYPE', 'BRIDGE_LIST'),
+        ),
+        dict(
+            "name", "vcenter",
+            "required_attrs", list('VCENTER_CLUSTER'),
+            "persistent_only", true,
+            "marketplace_actions", "export",
+        ),
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
         dict("public", true),
         dict("name", "http", "required_attrs", list('BASE_URL', 'PUBLIC_DIR'), "app_actions", list('create', 'delete', 'monitor')),
-        dict("name", "s3", "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
-             "app_actions", list('create', 'delete', 'monitor')),
+        dict(
+            "name", "s3",
+            "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
+            "app_actions", list('create', 'delete', 'monitor'),
+        ),
     )
-    "vm_restricted_attr" : string[] = list("CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE",
-                                           "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE",
-                                           "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC",
-                                           "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC",
-                                           "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST",
-                                           "PCI", "USER_INPUTS")
+    "vm_restricted_attr" : string[] = list(
+        "CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE",
+        "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE",
+        "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC",
+        "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC",
+        "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST",
+        "PCI", "USER_INPUTS",
+    )
     "image_restricted_attr" : string = 'SOURCE'
-    "vnet_restricted_attr" : string[] = list("VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD",
-                                             "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE")
-    "inherit_datastore_attr" : string[] = list("CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF",
-                                               "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
-                                               "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME",
-                                               "DISK_TYPE", "ADAPTER_TYPE")
-    "inherit_image_attr" : string[] = list("ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN",
-                                           "DISK_TYPE", "ADAPTER_TYPE")
-    "inherit_vnet_attr" : string[] = list("VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING",
-                                          "FILTER_MAC_SPOOFING", "MTU")
+    "vnet_restricted_attr" : string[] = list(
+        "VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD", "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE",
+    )
+    "inherit_datastore_attr" : string[] = list(
+        "CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF",
+        "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
+        "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME",
+        "DISK_TYPE", "ADAPTER_TYPE",
+    )
+    "inherit_image_attr" : string[] = list(
+        "ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN", "DISK_TYPE", "ADAPTER_TYPE",
+    )
+    "inherit_vnet_attr" : string[] = list(
+        "VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", "FILTER_MAC_SPOOFING", "MTU",
+    )
 };
 
 
@@ -626,4 +655,3 @@ type component_opennebula = {
     'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     'tm_system_ds' ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = dict();
-
