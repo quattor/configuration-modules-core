@@ -16,11 +16,11 @@ include {'quattor/schema'};
 }
 
 type type_grub_password = {
-    "option"        : string with match (SELF, "^(md5|encrypted)$")
-    "password"      ? string
-    "enabled"       ? boolean
-    "file"          ? string
-    "file_user"     : string = "root"
+    "option" : string with match (SELF, "^(md5|encrypted)$")
+    "password" ? string
+    "enabled" ? boolean
+    "file" ? string
+    "file_user" : string = "root"
 } with {
     if (is_defined(SELF["enabled"]) && SELF["enabled"]
         && !is_defined(SELF["file"]) && !is_defined(SELF["password"])) {
@@ -30,21 +30,21 @@ type type_grub_password = {
 };
 
 type type_kernel = {
-    "kernelpath"    : string
-    "kernelargs"    ? string
-    "multiboot"     ? string
-    "mbargs"        ? string
-    "initrd"        ? string
-    "title"         ? string
-    "fullcontrol"   ? boolean
+    "kernelpath" : string
+    "kernelargs" ? string
+    "multiboot" ? string
+    "mbargs" ? string
+    "initrd" ? string
+    "title" ? string
+    "fullcontrol" ? boolean
 };
 
 type component_grub_type = {
     include structure_component
-    "prefix"    ?      string
-    "args"      ?    string
-    "kernels"   ?    type_kernel[]
-    "password"  ?    type_grub_password
+    "prefix" ? string
+    "args" ? string
+    "kernels" ? type_kernel[]
+    "password" ? type_grub_password
 };
 
 
