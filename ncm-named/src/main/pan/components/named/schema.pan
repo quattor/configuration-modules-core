@@ -13,16 +13,16 @@ declaration template components/named/schema;
 include { 'quattor/schema' };
 
 function component_named_valid = {
-  function_name = 'component_named_valid';
-  if ( ARGC != 1 ) {
-    error(function_name+': this function requires 1 argument');
-  };
+    function_name = 'component_named_valid';
+    if ( ARGC != 1 ) {
+        error(function_name+': this function requires 1 argument');
+    };
 
-  if ( exists(SELF['serverConfig']) && exists(SELF['configfile']) ) {
-    error(function_name+": properties 'serverConfig' and 'configfile' are mutually exclusive.");
-  };
+    if ( exists(SELF['serverConfig']) && exists(SELF['configfile']) ) {
+        error(function_name+": properties 'serverConfig' and 'configfile' are mutually exclusive.");
+    };
 
-  true;
+    true;
 };
 
 type component_named = {
