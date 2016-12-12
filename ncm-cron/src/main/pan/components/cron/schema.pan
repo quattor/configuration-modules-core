@@ -10,14 +10,14 @@ include { 'quattor/schema' };
 
 # Function to check that other log properties are not present if disabled=yes
 function structure_cron_log_valid = {
-  if ( is_defined(SELF['disabled']) && SELF['disabled'] ) {
-    if ( is_defined(SELF['name']) ||
-         is_defined(SELF['owner']) ||
-         is_defined(SELF['mode']) ) {
-           error('cron log file properties are present despite log file creation has been disabled.');
-         };
-  };
-  true;
+    if ( is_defined(SELF['disabled']) && SELF['disabled'] ) {
+        if ( is_defined(SELF['name']) ||
+            is_defined(SELF['owner']) ||
+            is_defined(SELF['mode']) ) {
+                error('cron log file properties are present despite log file creation has been disabled.');
+        };
+    };
+    true;
 };
 
 type structure_cron_syslog = {
@@ -54,12 +54,13 @@ type structure_cron = {
     'env' ? string{}
     'log' ? structure_cron_log
     'syslog' ? structure_cron_syslog
-} with { if(exists(SELF['log']) && exists(SELF['syslog'])) {
-            error("At most one of log or syslog can be defined");
-         } else {
-            true;
-         }
-       };
+} with {
+    if(exists(SELF['log']) && exists(SELF['syslog'])) {
+        error("At most one of log or syslog can be defined");
+    } else {
+        true;
+    }
+};
 
 type component_cron = {
     include structure_component
@@ -71,5 +72,3 @@ type component_cron = {
 };
 
 bind '/software/components/cron' = component_cron;
-
-
