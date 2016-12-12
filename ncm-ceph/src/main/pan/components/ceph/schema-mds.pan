@@ -11,8 +11,7 @@ type ceph_mds_config = {
 
 @documentation{ ceph mds-specific type }
 type ceph_mds = {
-     include ceph_daemon
+    include ceph_daemon
     'fqdn' : type_fqdn
     'config' ? ceph_mds_config
 };
-
