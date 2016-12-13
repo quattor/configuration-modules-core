@@ -4,7 +4,7 @@
 
 declaration template components/gmond/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type structure_component_gmond_acl_access = {
     "ip" : type_ip
