@@ -10,7 +10,7 @@
 
 declaration template components/named/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function component_named_valid = {
     function_name = 'component_named_valid';
