@@ -6,7 +6,7 @@
 ################################################################################
 
 unique template components/etcservices/config-rpm;
-include {'components/etcservices/schema'};
+include 'components/etcservices/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
