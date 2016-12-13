@@ -15,7 +15,7 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/con
 "Reaper_Work" = 1500;
 
 prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/main/NFS_CORE_PARAM";
-"Nb_Worker" = 128*4 ;
+"Nb_Worker" = 128*4;
 "MNT_Port" = 32767;
 "NLM_Port" = 32769;
 "RQOTA_Port" = null; # no rqouta on gpfs

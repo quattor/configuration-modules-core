@@ -57,5 +57,5 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents/opti
 "forward" = "only";
 "forwarders" = list('127.0.0.1', '10.10.3.250', '10.10.10.250');
 "allow-query" = list("clients");
-"max-cache-size" = 4*1024*1024 ;
+"max-cache-size" = 4*1024*1024;
 "empty-zones-enable" = true;
