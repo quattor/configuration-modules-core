@@ -7,7 +7,7 @@ include 'components/authconfig/config';
 prefix "/software/components/authconfig/pamadditions/system";
 "conffile" = "/etc/pam.d/sshd";
 "section" = "account";
-"lines" = append(nlist(
+"lines" = append(dict(
     "order", "first",
     "entry", "required      pam_access.so accessfile=/etc/security/access_sshd.conf",
 ));
