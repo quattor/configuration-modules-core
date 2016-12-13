@@ -17,7 +17,7 @@ include 'quattor/schema';
 type component_hostsfile_type = {
     include structure_component
     "file" ? string        # File to store in.  Default is /etc/hosts
-    "entries" : nlist
+    "entries" : dict
     "takeover" : boolean = false
 };
 
