@@ -5,7 +5,7 @@
 
 declaration template components/profile/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function component_profile_script_valid = {
     if ( exists(SELF['flavors']) && is_defined(SELF['flavors']) ) {
