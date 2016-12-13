@@ -5,7 +5,7 @@
 
 declaration template components/network/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 
 type component_network_type = {
