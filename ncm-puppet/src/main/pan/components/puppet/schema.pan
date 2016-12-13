@@ -5,7 +5,7 @@
 
 declaration template components/${project.artifactId}/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type ${project.artifactId}_module = {
     "version" ? string
