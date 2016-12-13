@@ -3,13 +3,29 @@
 # ${author-info}
 # ${build-info}
 
+=head1 NAME
 
-# This component needs a 'oneadmin' user. 
-# The user should be able to run these commands with sudo without password:
-# /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
-# /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
+ncm-${project.artifactId}: Configuration module for ONE
 
-package NCM::Component::OpenNebula::commands;
+=head1 DESCRIPTION
+
+Configuration module for ONE. Executes the required ssh commands
+to enable the hypervisors to be used by OpenNebula.
+
+This component needs a 'oneadmin' user. 
+The user should be able to run these commands with sudo without password:
+
+=over
+
+=item - virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
+
+=item - virsh secret-set-value --secret $uuid --base64 $secret
+
+=back
+
+=cut
+
+#package NCM::Component::OpenNebula::commands;
 
 use strict;
 use warnings;
