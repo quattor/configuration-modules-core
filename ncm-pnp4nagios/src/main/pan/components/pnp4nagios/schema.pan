@@ -4,7 +4,7 @@
 
 declaration template components/pnp4nagios/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type pnp4nagios_php_view_type = {
     'title' : string

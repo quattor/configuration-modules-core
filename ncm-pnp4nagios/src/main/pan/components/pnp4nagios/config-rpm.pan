@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/pnp4nagios/config-rpm;
-include {'components/pnp4nagios/schema'};
+include 'components/pnp4nagios/schema';
 
 
 # Package to install
