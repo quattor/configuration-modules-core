@@ -7,11 +7,11 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
 "addrtype" = list("MYSITE", "OS");
 "bwctl" = BW_DEFS;
 "owamp" = OWAMP_DEFS;
-"nodes" = nlist(
-    "my.host.domain", nlist(
+"nodes" = dict(
+    "my.host.domain", dict(
         "longname", "longname",
         "contact_addr", "1.2.3.5",
-        "test_addr", nlist(
+        "test_addr", dict(
             "MYSITE", "1.2.3.5",
             "OS", "1.2.3.4",
             ),
@@ -29,7 +29,7 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
 };
 
 "groups" = {
-    l = nlist(
+    l = dict(
         "description", "Group for nodes",
         "type", "MESH"
         );
@@ -45,30 +45,30 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
     SELF;
 };
 
-"testspecs/BWTCP_4HR" = nlist(
+"testspecs/BWTCP_4HR" = dict(
     "description", "4 Hour TCP Throughput (iperf)",
     "tool", "bwctl/iperf",
-    "bw", nlist(
+    "bw", dict(
         "interval", 120,
         "start_alpha", 30,
         "duration", 25,
         "report_interval", 2
         ));
 
-"testspecs/LAT_1MIN" = nlist(
+"testspecs/LAT_1MIN" = dict(
     "description", "One-way latency",
     "tool", "powstream",
-    "owamp", nlist()
+    "owamp", dict()
     );
 
-"measurementsets/test_bwtcp4" = nlist(
+"measurementsets/test_bwtcp4" = dict(
     "description", "Mesh testing - 4-hour TCP throughput (iperf)",
     "addr_type", "MYSITE",
     "group", "mysite",
     "testspec", "BWTCP_4HR",
 );
 
-"measurementsets/test_lat4" = nlist(
+"measurementsets/test_lat4" = dict(
     "description", "Mesh testing - 1-minute latency - VSC interface",
     "addr_type", "MYSITE",
     "group", "mysite",

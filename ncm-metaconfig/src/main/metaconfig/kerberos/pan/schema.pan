@@ -34,7 +34,7 @@ type krb5_conf_file = {
 type kdc_defaults = {
     "ports" : type_port = 88
     "tcp_ports" : type_port = 884
-} = nlist();
+} = dict();
 
 type kdc_realm = {
     "acl_file" : string = "/var/kerberos/krb5kdc/kadm5.acl"

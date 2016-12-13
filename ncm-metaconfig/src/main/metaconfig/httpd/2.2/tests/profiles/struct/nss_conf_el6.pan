@@ -1,24 +1,24 @@
 structure template struct/nss_conf_el6;
 
-"modules" = append(nlist(
+"modules" = append(dict(
     "name", "nss_module",
     "path", "modules/libmodnss.so"));
 
-"listen" = append(nlist(
+"listen" = append(dict(
     "port", 8443));
 
 "type/add" = list(
-    nlist(
+    dict(
         "name", "application/x-x509-ca-cert",
         "target", list(".crt"),
         ),
-    nlist(
+    dict(
         "name", "application/x-pkcs7-crl",
         "target", list(".crl"),
         ),
 );
 
-"nss" = nlist(
+"nss" = dict(
     "passphrasedialog", "builtin",
     "passphrasehelper", "/usr/sbin/nss_pcache",
 
@@ -48,16 +48,16 @@ structure template struct/nss_conf_el6;
 "vhosts/base/nss/certificatedatabase" = "/etc/httpd/alias";
 
 
-"vhosts/base/files" = list(nlist(
+"vhosts/base/files" = list(dict(
     "regex", true,
     "name", '\.(cgi|shtml|phtml|php3?)$',
-    "nss", nlist(
+    "nss", dict(
         "options", list("+StdEnvVars"),
     ),
 ));
-"vhosts/base/directories" = list(nlist(
+"vhosts/base/directories" = list(dict(
     "name", "/var/www/cgi-bin",
-    "nss", nlist(
+    "nss", dict(
         "options", list("+StdEnvVars"),
     ),
 ));

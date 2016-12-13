@@ -3,14 +3,14 @@ unique template base-client;
 "/metaconfig/module" = "kerberos/client";
 
 prefix "/metaconfig/contents";
-"logging" = nlist();
+"logging" = dict();
 "libdefaults/default_realm" = 'KDC.REALM';
-"realms" = nlist(
-    'KDC.REALM', nlist(
+"realms" = dict(
+    'KDC.REALM', dict(
         "kdc", 'KDC.SERVER',
         "admin_server", 'KDC.SERVER'
         ));
-"domain_realms" = nlist('DEFAULT_DOMAIN', 'KDC.REALM');
+"domain_realms" = dict('DEFAULT_DOMAIN', 'KDC.REALM');
 
 # verify schema
 include 'metaconfig/kerberos/schema';

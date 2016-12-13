@@ -9,7 +9,7 @@ prefix "/software/components/metaconfig/services/{/etc/carbon/aggregation-rules.
 "mode" = 0644;
 
 prefix "/software/components/metaconfig/services/{/etc/carbon/aggregation-rules.conf}/contents";
-"main/0" = nlist(
+"main/0" = dict(
     "output", "<env>.applications.<app>.all.requests",
     "frequency", "60",
     "method", "avg",

@@ -1,14 +1,14 @@
 structure template struct/ssl_conf_el6;
 
-"modules" = append(nlist(
+"modules" = append(dict(
     "name", "ssl_module",
     "path", "modules/mod_ssl.so"
 ));
 
 "listen" = list(
-    nlist("port", 443),
+    dict("port", 443),
 );
-"ssl" = nlist(
+"ssl" = dict(
     "passphrasedialog", "builtin",
 
     "sessioncache", "shmcb:/var/cache/mod_ssl/scache(512000)",
@@ -32,7 +32,7 @@ structure template struct/ssl_conf_el6;
 "vhosts/base/log/transfer" = "logs/ssl_access_log";
 "vhosts/base/log/level" = "warn";
 "vhosts/base/log/custom" = list(
-    nlist(
+    dict(
         "location", "logs/ssl_request_log",
         "name", '"%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"',
     ),
@@ -47,20 +47,20 @@ structure template struct/ssl_conf_el6;
 "vhosts/base/ssl/certificatefile" = "/etc/pki/tls/certs/localhost.crt";
 "vhosts/base/ssl/certificatekeyfile" = "/etc/pki/tls/private/localhost.key";
 
-"vhosts/base/files" = list(nlist(
+"vhosts/base/files" = list(dict(
     "regex", true,
     "name", '\.(cgi|shtml|phtml|php3?)$',
-    "ssl", nlist(
+    "ssl", dict(
         "options", list("+StdEnvVars"),
     ),
 ));
-"vhosts/base/directories" = list(nlist(
+"vhosts/base/directories" = list(dict(
     "name", "/var/www/cgi-bin",
-    "ssl", nlist(
+    "ssl", dict(
         "options", list("+StdEnvVars"),
     ),
 ));
-"vhosts/base/env/if" = list(nlist(
+"vhosts/base/env/if" = list(dict(
     "attribute", "User-Agent",
     "regex", ".*MSIE.*",
     "variables", list("nokeepalive", "ssl-unclean-shutdown", "downgrade-1.0", "force-response-1.0"),

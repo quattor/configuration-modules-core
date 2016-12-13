@@ -4,10 +4,10 @@ include 'metaconfig/named/config';
 
 prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
 
-"logging/channels/default_debug" = nlist (
+"logging/channels/default_debug" = dict (
     "severity", "dynamic",
     "file", "data/named.run");
-"logging/category" = nlist();
+"logging/category" = dict();
 "includes" = append("/etc/named.rfc1912.zones");
 "includes" = append("/etc/another.conf");
 
@@ -15,27 +15,27 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
 "acls/vsc" = list("10.10.0.0/16", "10.20.0.0/16", "10.30.0.0/16");
 "acls/os" = list("10.148.0.0/16", "10.143.0.0/16", "10.141.0.0/16");
 
-"zones/0" = nlist(
+"zones/0" = dict(
     "name", "drbd",
     "class", "IN",
     "type", "master",
     "file", "hpcugent/foo/drbd.zone"
 );
-"zones/1" = nlist(
+"zones/1" = dict(
     "name", "slave1",
     "type", "slave",
     "file", "slaves/slave1.zone",
     "masters", list("172.31.244.251", "172.31.244.250"),
 );
 
-"zones/2" = nlist(
+"zones/2" = dict(
     "name", "slave2.in-addr.arpa",
     "type", "slave",
     "file", "slaves/slave2.zone",
     "masters", list("172.31.244.251", "172.31.244.250"),
 );
 
-"zones/3" = nlist(
+"zones/3" = dict(
     "name", "10.10.in-addr.arpa",
     "class", "IN",
     "type", "master",

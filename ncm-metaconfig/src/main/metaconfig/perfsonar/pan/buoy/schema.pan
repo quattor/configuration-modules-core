@@ -4,7 +4,7 @@ declaration template metaconfig/perfsonar/buoy/schema;
 
 include 'pan/types';
 
-final variable BW_DEFS = nlist(
+final variable BW_DEFS = dict(
     "data_dir",
     "/var/lib/perfsonar/perfsonarbuoy_ma/bwctl",
     "central_host", "magikarp.cubone.gent.vsc:8570",
@@ -14,7 +14,7 @@ final variable BW_DEFS = nlist(
     "db", "bwctl",
     );
 
-final variable OWAMP_DEFS = nlist(
+final variable OWAMP_DEFS = dict(
     "data_dir",
     "/var/lib/perfsonar/perfsonarbuoy_ma/owamp",
     "central_host", "magikarp.cubone.gent.vsc:8569",

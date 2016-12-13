@@ -25,14 +25,14 @@ prefix "/software/components/metaconfig/services/{/var/lib/bwctl/.bwctlrc}/conte
 };
 
 prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/contents";
-"limit/root" = nlist(
+"limit/root" = dict(
     "bandwidth", 1000,
     "duration", 60,
     "allow_udp", true,
     "allow_tcp", true,
     "allow_open_mode", true
     );
-"limit/jail" = nlist(
+"limit/jail" = dict(
     "bandwidth", 1,
     "duration", 1,
     "allow_udp", false,
@@ -40,11 +40,11 @@ prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/con
     "allow_open_mode", false,
     "parent", "root"
     );
-"limit/firstlimit" = nlist(
+"limit/firstlimit" = dict(
     "parent", "root",
     "bandwidth", 900
     );
-"limit/otherlimit" = nlist(
+"limit/otherlimit" = dict(
     "parent", "root",
     "bandwidth", 1000
     );

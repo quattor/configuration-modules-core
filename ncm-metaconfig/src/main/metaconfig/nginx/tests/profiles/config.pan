@@ -8,7 +8,7 @@ variable FULL_HOSTNAME = 'myhost.my.domain';;
 prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/contents/http/0";
 
 "server" = {
-    s = nlist();
+    s = dict();
     s["name"] = list(FULL_HOSTNAME);
 
     s["listen"]["addr"] = format("%s:8443", FULL_HOSTNAME);
@@ -44,7 +44,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
 "upstream/restricted-packages/host/0" = format("%s:443", SERVER);
 
 "server/1/location" = {
-    l = nlist();
+    l = dict();
     l["name"] = "/(secure|share)";
     l["proxy"] = create("location");
     l["proxy"]["pass"] = "https://secure";

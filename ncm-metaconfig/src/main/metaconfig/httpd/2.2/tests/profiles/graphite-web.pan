@@ -11,7 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
 variable HTTPD_OS_FLAVOUR ?= 'el6';
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
-variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
+variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents/vhosts/graphiteweb" = {
     base=create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
@@ -26,7 +26,7 @@ variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
 };
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents";
-"listen" = append(nlist("port", 444));
+"listen" = append(dict("port", 444));
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents/vhosts/graphiteweb";
 "ip/0" = DB_IP[HOSTNAME];
@@ -37,17 +37,17 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
 "log/level" = "info";
 "log/error" = "logs/graphite-web_error_log";
 "log/transfer" = null;
-"log/custom" = list(nlist(
+"log/custom" = list(dict(
     "location", "logs/graphite-web_access_log",
     "name", "combined"
 ));
 
 "aliases" = {
-    append(nlist(
+    append(dict(
         "url", "/media/",
         "destination", "/usr/lib/python2.6/site-packages/django/contrib/admin/media/",
         ));
-    append(nlist(
+    append(dict(
         "url", "/",
         "destination", "/usr/share/graphite/graphite-web.wsgi",
         "type", "wsgiscript",
@@ -56,28 +56,28 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
 
 
 "locations" = {
-    append(nlist(
+    append(dict(
         "name", "/content/",
-        "handler", nlist(
+        "handler", dict(
             "set", "None",
             ),
         ));
-    append(nlist(
+    append(dict(
         "name", "/media/",
-        "handler", nlist(
+        "handler", dict(
             "set", "None",
             ),
         ));
-    append(nlist(
+    append(dict(
         "name", "/",
-        "access", nlist( # by default, block all
+        "access", dict( # by default, block all
             "deny", list("all"),
             "satisfy", "Any",
             "order", list("allow", "deny"),
             ),
-        "limit", nlist( # do not allow PUT and DELETE of ES data via kibana interface
+        "limit", dict( # do not allow PUT and DELETE of ES data via kibana interface
             "name", list("PUT", "DELETE"),
-            "access", nlist(
+            "access", dict(
                 "order", list("allow", "deny"),
                 "deny", list("all"),
                 ),
@@ -85,7 +85,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
         ));
 };
 
-"wsgi/importscript" = nlist(
+"wsgi/importscript" = dict(
     "path", "/usr/share/graphite/graphite-web.wsgi",
     "process", "%{GLOBAL}",
     "application", "%{GLOBAL}",
