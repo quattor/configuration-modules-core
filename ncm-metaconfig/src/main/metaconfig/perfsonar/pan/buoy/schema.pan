@@ -77,9 +77,9 @@ type buoy_node = {
 
 type buoy_nodehash = buoy_node{} with {
     foreach(nodename; n; SELF) {
-    	if (!is_fqdn(nodename)) {
-    	    error ("Keys for node hash must be FQDNs: " + SELF);
-    	};
+        if (!is_fqdn(nodename)) {
+            error ("Keys for node hash must be FQDNs: " + SELF);
+        };
     };
     true;
 };

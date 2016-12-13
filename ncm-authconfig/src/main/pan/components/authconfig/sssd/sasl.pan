@@ -19,11 +19,11 @@ type sssd_sasl = {
     "authid" ? string
     "realm" ? string
     "canonicalize" ? boolean
-    "minssf" ?  long
+    "minssf" ? long
 };
 
 type sssd_krb5 = {
     "keytab" ? string
     "init_creds" ? boolean
-    "ticket_lifetime" ?  long
+    "ticket_lifetime" ? long
 };

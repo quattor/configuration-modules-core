@@ -1,10 +1,10 @@
 structure template struct/ssl_conf_el6;
 
 "modules" = append(nlist(
-    "name", "ssl_module", 
+    "name", "ssl_module",
     "path", "modules/mod_ssl.so"
 ));
-    
+
 "listen" = list(
     nlist("port", 443),
 );
@@ -13,9 +13,9 @@ structure template struct/ssl_conf_el6;
 
     "sessioncache", "shmcb:/var/cache/mod_ssl/scache(512000)",
     "sessioncachetimeout", 300,
-    
+
     "mutex", "default",
-    
+
     "randomseed", list(
         list("startup", "file:/dev/urandom", "256"),
         list("connect", "builtin"),
@@ -40,7 +40,7 @@ structure template struct/ssl_conf_el6;
 
 
 "vhosts/base/ssl/engine" = true;
-# list("all", "-SSLv2") not allowed 
+# list("all", "-SSLv2") not allowed
 "vhosts/base/ssl/protocol" =  list("TLSv1");
 # list("ALL", "!ADH", "!EXPORT", "!SSLv2", "RC4", "RSA", "+HIGH", "+MEDIUM", "+LOW")
 "vhosts/base/ssl/ciphersuite" = list("TLSv1");

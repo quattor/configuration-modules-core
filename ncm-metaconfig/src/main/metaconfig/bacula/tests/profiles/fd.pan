@@ -4,7 +4,7 @@ include 'metaconfig/bacula/fd';
 
 variable BACULA_DIRECTOR_SHORT = 'director-short-fd';
 variable FULL_HOSTNAME = 'my.machine';
- 
+
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-fd.conf}/contents/main/Director/0";
 "Name" = format("%s-dir", BACULA_DIRECTOR_SHORT);
 "Password" = '@/etc/bacula/pw';

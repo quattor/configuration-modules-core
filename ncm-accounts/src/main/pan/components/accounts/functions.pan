@@ -146,7 +146,7 @@ function create_user = {
                 if ( groupname == username &&
                      exists(user_params['uid']) &&
                      !exists(user_params['poolStart']) ) {
-                    accounts = create_group(groupname,nlist('gid',user_params['uid']));
+                    accounts = create_group(groupname, nlist('gid', user_params['uid']));
                 } else {
                     if  (ACCOUNTS_IGNORE_MISSING_GROUPS) {
                         delete(user_params['groups'][i]);
@@ -216,19 +216,19 @@ function create_accounts_from_db = {
                 error(function_name + ': ' + accountname + ' not found in ' + accountType + ' list');
             };
             if ( accountType == 'user' ) {
-                accounts = create_user(accountname,accounts_db[accountname]);
+                accounts = create_user(accountname, accounts_db[accountname]);
             } else {
-                accounts = create_group(accountname,accounts_db[accountname]);
+                accounts = create_group(accountname, accounts_db[accountname]);
             };
-       	    ok = next(account_list, i, accountname);
+               ok = next(account_list, i, accountname);
         };
     } else {
         ok = first(accounts_db, accountname, account_params);
         while (ok) {
             if ( accountType == 'user' ) {
-                accounts = create_user(accountname,accounts_db[accountname]);
+                accounts = create_user(accountname, accounts_db[accountname]);
             } else {
-                accounts = create_group(accountname,accounts_db[accountname]);
+                accounts = create_group(accountname, accounts_db[accountname]);
             };
             ok = next(accounts_db, accountname, account_params);
         };

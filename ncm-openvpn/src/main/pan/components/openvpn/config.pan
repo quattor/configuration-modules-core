@@ -6,7 +6,7 @@ unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
 bind "/software/components/${project.artifactId}" = structure_component_openvpn;
-   
+
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
 'active' ?= true;

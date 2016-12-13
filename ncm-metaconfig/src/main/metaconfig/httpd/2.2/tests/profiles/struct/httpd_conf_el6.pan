@@ -324,7 +324,7 @@ structure template struct/httpd_conf_el6;
                     ),
                 "outputfilter", nlist(
                     "add", list(nlist(
-                        "name", "Includes", 
+                        "name", "Includes",
                         "target", list("html")
                         )),
                     ),
@@ -348,10 +348,10 @@ structure template struct/httpd_conf_el6;
     nlist(
         "name", "referer",
         "expr", '%{Referer}i -> %U',
-        ), 
+        ),
     nlist(
         "name", "agent",
-        "expr", '%{User-agent}i', 
+        "expr", '%{User-agent}i',
         ),
     nlist(
         "name", "ssl_combined",
@@ -365,7 +365,7 @@ structure template struct/httpd_conf_el6;
         ),
 );
 
-"global/directoryindex" = list("index.html","index.html.var");
+"global/directoryindex" = list("index.html", "index.html.var");
 
 
 "type/config" = "/etc/mime.types";
@@ -516,7 +516,7 @@ structure template struct/httpd_conf_el6;
 );
 
 
-"lang/priority" = list("en", "ca", "cs", "da", "de", "el", "eo", "es", "et", "fr", "he", "hr", "it", 
+"lang/priority" = list("en", "ca", "cs", "da", "de", "el", "eo", "es", "et", "fr", "he", "hr", "it",
                   "ja", "ko", "ltz", "nl", "nn", "no", "pl", "pt", "pt-BR", "ru", "sv", "zh-CN", "zh-TW");
 "lang/forcepriority" = list("Prefer", "Fallback");
 "lang/add" = list(

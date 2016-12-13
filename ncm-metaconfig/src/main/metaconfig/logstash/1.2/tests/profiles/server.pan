@@ -11,7 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 
 # gelf input
 "input/plugins" = append(nlist("gelf", nlist(
-    # type is/can be set in output gelf filter. 
+    # type is/can be set in output gelf filter.
     # this will not forcefully overwrtie in 1.2.2
     "type", "remotegelf",
     "port", 12201,
@@ -23,8 +23,8 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "ssl_certificate", "/software/components/ccm/cert_file",
     "ssl_key", "/software/components/ccm/key_file",
 )));
-    
-    
+
+
 "filter/conditionals" = append(nlist(
     "type", "ifelseif",
     "expr", list(nlist(
@@ -47,7 +47,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "plugins", list(
         nlist("grok", nlist(
             "match", list(nlist(
-                "name", "message", 
+                "name", "message",
                 "pattern", list("%{RSYSLOGCUSTOM}"),
                 )),
             "patterns_dir", list("/usr/share/grok"),
@@ -58,7 +58,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("kv", nlist(
             "default_keys", nlist(
-                "key1", "value1", 
+                "key1", "value1",
                 "key2", "value2",
                 ),
             "exclude_keys", list("key1e", "key2e"),
@@ -72,7 +72,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("date", nlist(
             "match", nlist(
-                "name", "syslog_timestamp", 
+                "name", "syslog_timestamp",
                 "pattern", list("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ"),
                 ),
             )),
@@ -80,10 +80,10 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             "exclude_tags", list("_grokparsefailure"),
             "replace", list(
                 nlist(
-                    "name", "@source_host", 
+                    "name", "@source_host",
                     "pattern", "%{syslog_hostname}"),
                 nlist(
-                    "name", "@message", 
+                    "name", "@message",
                     "pattern", "%{syslog_message}"),
                 ),
             )),
@@ -106,7 +106,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "flush_size", 5000,
         "bind_host", "localhost.localdomain",
         "workers", 4,
-        "port", list(9300,9305), 
+        "port", list(9300, 9305),
         ),
 )));
 

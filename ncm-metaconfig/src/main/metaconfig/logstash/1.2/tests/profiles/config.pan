@@ -50,7 +50,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/input";
 "plugins" = append(nlist("gelf", nlist(
-    # type is/can be set in output gelf filter. 
+    # type is/can be set in output gelf filter.
     # this will not forcefully overwrtie in 1.2.2
     "type", "remotegelf",
     "port", 12201,
@@ -60,7 +60,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 "plugins" = append(nlist("file", nlist(
     "path", list("/var/adm/ras/mmfs.log.latest"),
     "type", "gpfs",
-    "tags", list("gpfs","storage"),
+    "tags", list("gpfs", "storage"),
 )));
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/filter";
@@ -87,7 +87,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "plugins", list(
         nlist("grok", nlist(
             "match", list(nlist(
-                "name", "message", 
+                "name", "message",
                 "pattern", list("%{GPFSLOG}"),
                 )),
             "patterns_dir", list("/usr/share/grok"),
@@ -95,7 +95,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             )),
         nlist("date", nlist(
             "match", nlist(
-                "name", "timestamp", 
+                "name", "timestamp",
                 "pattern", list("E MMM dd HH:mm:ss.SSS yyyy", "E MMM  d HH:mm:ss.SSS yyyy"),
                 ),
             )),

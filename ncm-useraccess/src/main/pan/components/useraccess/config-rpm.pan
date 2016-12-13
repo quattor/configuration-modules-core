@@ -11,11 +11,11 @@ include {'components/useraccess/schema'};
 
  # This component should be run after ncm-accounts, if present.
 "/software/components/useraccess/dependencies/pre" = {
-	if (exists ("/software/components/accounts")) {
-		return (list("accounts"));
-	} else {
-		return (list("spma"));
-	};
+    if (exists ("/software/components/accounts")) {
+        return (list("accounts"));
+    } else {
+        return (list("spma"));
+    };
 };
 "/software/components/useraccess/active" ?= true;
 "/software/components/useraccess/dispatch" ?= true;

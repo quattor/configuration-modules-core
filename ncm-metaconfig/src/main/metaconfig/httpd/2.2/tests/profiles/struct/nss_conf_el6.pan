@@ -25,10 +25,10 @@ structure template struct/nss_conf_el6;
     "sessioncachesize", 10000,
     "sessioncachetimeout", 100,
     "session3cachetimeout", 86400,
-    
+
     "renegotiation", false,
     "requiresafenegotiation", false,
-    
+
 );
 
 "vhosts/base" = create("struct/default_vhost",
@@ -46,8 +46,8 @@ structure template struct/nss_conf_el6;
 "vhosts/base/nss/protocol" =  list("TLSv1.0");
 "vhosts/base/nss/ciphersuite" = list('+rsa_3des_sha', '-rsa_des_56_sha', '+rsa_des_sha', '-rsa_null_md5', '-rsa_null_sha', '-rsa_rc2_40_md5', '+rsa_rc4_128_md5', '-rsa_rc4_128_sha', '-rsa_rc4_40_md5', '-rsa_rc4_56_sha', '-fortezza', '-fortezza_rc4_128_sha', '-fortezza_null', '-fips_des_sha', '+fips_3des_sha', '-rsa_aes_128_sha', '-rsa_aes_256_sha');
 "vhosts/base/nss/certificatedatabase" = "/etc/httpd/alias";
-   
-   
+
+
 "vhosts/base/files" = list(nlist(
     "regex", true,
     "name", '\.(cgi|shtml|phtml|php3?)$',

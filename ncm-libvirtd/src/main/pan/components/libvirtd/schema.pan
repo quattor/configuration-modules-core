@@ -22,7 +22,7 @@ type structure_libvirtd_network = {
 type structure_libvirtd_socket = {
     'unix_sock_group' ? string # restricted to root by default
     'unix_sock_ro_perms' ? string # default allows any user
-    'unix_sock_rw_perms' ? string 
+    'unix_sock_rw_perms' ? string
     'unix_sock_dir' ? string # directory of created sockets
 };
 
@@ -30,7 +30,7 @@ type structure_libvirtd_authn = {
     'auth_unix_ro' ? string with match(SELF, 'none|sasl|polkit') # default anyone
     'auth_unix_rw' ? string with match(SELF, 'none|sasl|polkit') # default polkit
     'auth_tcp' ? string with match(SELF, 'none|sasl') # should be 'sasl' for production
-    'auth_tls' ? string with match(SELF, 'none|sasl') 
+    'auth_tls' ? string with match(SELF, 'none|sasl')
 };
 
 type structure_libvirtd_tls = {

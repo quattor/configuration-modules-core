@@ -15,7 +15,7 @@ include { 'components/fmonagent/schema' };
 '/software/components/fmonagent/version' ?= '${no-snapshot-version}';
 
 "/software/components/fmonagent/dependencies/pre" ?= list("spma");
-"/software/components/fmonagent/active" 		?= true;
-"/software/components/fmonagent/dispatch" 		?= true;
-"/software/components/fmonagent/register_change" 	?= list("/system/monitoring");
+"/software/components/fmonagent/active"         ?= true;
+"/software/components/fmonagent/dispatch"         ?= true;
+"/software/components/fmonagent/register_change"     ?= list("/system/monitoring");
 

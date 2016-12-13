@@ -35,7 +35,7 @@ type sssd_global = {
     "config_file_version" : long = 2
     "services" : sssd_service[]
     "reconnection_retries" : long = 3
-    "re_expression" ?  string
+    "re_expression" ? string
     "full_name_format" ? string
     "try_inotify" : boolean = true
     "krb5_rcache_dir" ? string

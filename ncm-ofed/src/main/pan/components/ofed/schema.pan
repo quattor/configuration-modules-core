@@ -49,8 +49,8 @@ type component_ofed_openib_modules = {
     "rdma_ucm" : boolean = true
 
     ## IPoIB
-    "ipoib"  : boolean = true
-    "e_ipoib"  : boolean = false
+    "ipoib" : boolean = true
+    "e_ipoib" : boolean = false
 
     ## SDP (Socket Direct Protocol)
     "sdp" : boolean = false

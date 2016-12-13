@@ -10,10 +10,10 @@ prefix "/software/components/systemd/unit";
     );
 
 # redefine old ones / these have the same name
-"{test_off}" = nlist("state", "masked","targets", list("rescue"), "startstop", true);
+"{test_off}" = nlist("state", "masked", "targets", list("rescue"), "startstop", true);
 "{test_del}" = nlist("state", "enabled", "targets", list("rescue"), "startstop", false);
 
 "{test3_only}" = nlist(
-    "state", "enabled", "targets", list("multi-user"), "startstop", true, 
+    "state", "enabled", "targets", list("multi-user"), "startstop", true,
     "file", nlist("only", true, "replace", false, "custom", nlist("a", "b"), "config", nlist("service", nlist("some", "data"))),
     );

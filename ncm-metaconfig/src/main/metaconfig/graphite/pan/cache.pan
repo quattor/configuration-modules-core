@@ -22,5 +22,3 @@ prefix "/software/components/metaconfig/services/{/etc/carbon/storage-schemas.co
     "pattern" , ".*",
     "retentions", list("60s:7d", "1h:90d"),
     );
-
-    

@@ -6,8 +6,8 @@ object template labeled_crushmap;
 '/system/network/domainname' = 'cubone.os';
 
 variable CEPH_HOSTS = list('ceph001', 'ceph002', 'ceph003');
-variable CEPH_OSD_DISKS = list('sdc','sdd','sde','sdf','sdg','sdh','sdi','sdj','sdk','sdl','sdm','sdn');
-variable CEPH_JOURNAL_DISKS = list('sda4','sdb');
+variable CEPH_OSD_DISKS = list('sdc', 'sdd', 'sde', 'sdf', 'sdg', 'sdh', 'sdi', 'sdj', 'sdk', 'sdl', 'sdm', 'sdn');
+variable CEPH_JOURNAL_DISKS = list('sda4', 'sdb');
 variable CEPH_DEFAULT_OSD_WEIGHT = 1.0;
 
 variable MDSS = nlist (
@@ -39,7 +39,7 @@ variable CONFIG = nlist (
     'osd_pool_default_size', 3,
     'osd_pool_default_min_size', 2,
     'osd_pool_default_pg_num', 400,
-    'osd_pool_default_pgp_num', 400, 
+    'osd_pool_default_pgp_num', 400,
 );
 
 prefix '/software/components/ceph';
@@ -49,7 +49,7 @@ prefix '/software/components/ceph';
 
 variable BASE_STEPS = list(
     nlist(
-        'take', 'default', 
+        'take', 'default',
         'choices', list(
         nlist(
             'chtype', 'chooseleaf firstn',
@@ -62,7 +62,7 @@ variable BASE_STEPS = list(
 
 prefix "/software/components/ceph/clusters/ceph/crushmap/";
 
-'types' = list('osd','host','root');
+'types' = list('osd', 'host', 'root');
 
 'rules/0/name' = 'data';
 'rules/0/type' = 'replicated';
@@ -75,7 +75,7 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 'rules/1/min_size' = 0;
 'rules/1/max_size' = 10;
 'rules/1/steps' = BASE_STEPS;
-        
+
 'rules/2/name' = 'rbd';
 'rules/2/type' = 'replicated';
 'rules/2/min_size' = 0;
@@ -104,7 +104,7 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 prefix '/software/components/ceph/clusters/ceph';
 'config' = CONFIG;
 'osdhosts' = {
-    t=nlist();    
+    t=nlist();
     foreach(idx;host;CEPH_HOSTS) {
         d = nlist();
         foreach(odx;disk;CEPH_OSD_DISKS) {
@@ -134,4 +134,4 @@ prefix '/software/components/ceph/clusters/ceph';
 );
 'deployhosts' = nlist (
     'ceph001', 'ceph001.cubone.os',
-);  
+);

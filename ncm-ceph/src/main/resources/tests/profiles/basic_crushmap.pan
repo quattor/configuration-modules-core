@@ -2,7 +2,7 @@ object template basic_crushmap;
 
 variable BASE_STEPS = list(
     nlist(
-        'take', 'default', 
+        'take', 'default',
         'set_chooseleaf_tries', 5,
         'choices', list(
         nlist(
@@ -40,7 +40,7 @@ prefix '/';
 'buckets/0/id' = 0;
 'buckets/0/weight' = 174.5;
 'buckets/0/items' = list(
-    nlist('name', 'ceph001', 'weight', 70), 
+    nlist('name', 'ceph001', 'weight', 70),
     nlist('name', 'ceph002', 'weight', 70)
 );
 

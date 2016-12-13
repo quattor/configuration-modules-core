@@ -8,8 +8,8 @@ declaration template components/gpfs/schema;
 include { 'quattor/schema' };
 
 type component_gpfs_cfg = {
-    "url"  : string
-    "keyData"  ? string
+    "url" : string
+    "keyData" ? string
     "sdrrestore" : boolean = false
     "subnet" : string
     ## "useproxy" ? boolean = false
@@ -20,7 +20,7 @@ type component_gpfs_cfg = {
 
 type component_gpfs_base = {
     "rpms" : string[]
-    "baseurl"  : string
+    "baseurl" : string
     "useproxy" ? boolean = false
     "usecurl" ? boolean = false
     "useccmcertwithcurl" ? boolean = false
@@ -30,6 +30,6 @@ type component_gpfs_base = {
 
 type component_gpfs = {
     include structure_component
-    "base" :  component_gpfs_base
-    "cfg" :  component_gpfs_cfg
+    "base" : component_gpfs_base
+    "cfg" : component_gpfs_cfg
 };

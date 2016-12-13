@@ -9,14 +9,14 @@ include { 'quattor/schema' };
 
 type component_cdp = {
     include structure_component
-    'configFile'   : string = '/etc/cdp-listend.conf'
-    'port'         ? type_port
-    'nch'          ? string
-    'nch_smear'    ? long(0..)
-    'fetch'        ? string
+    'configFile' : string = '/etc/cdp-listend.conf'
+    'port' ? type_port
+    'nch' ? string
+    'nch_smear' ? long(0..)
+    'fetch' ? string
     'fetch_offset' ? long(0..)
-    'fetch_smear'  ? long(0..)
-    'hostname'     ? type_hostname
+    'fetch_smear' ? long(0..)
+    'hostname' ? type_hostname
 };
 
 bind '/software/components/cdp' = component_cdp;

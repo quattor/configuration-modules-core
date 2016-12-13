@@ -6,7 +6,7 @@ type udev_interfaces = nlist with {
         mac_path = format("%s/hwaddr", intf_path);
         if (! (exists(intf_path) && exists(mac_path) && value(mac_path) == macaddr)) {
             return(false);
-        }; 
+        };
     };
     return(true);
 };

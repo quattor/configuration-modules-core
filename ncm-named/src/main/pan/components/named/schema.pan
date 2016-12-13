@@ -27,13 +27,13 @@ function component_named_valid = {
 
 type component_named = {
     include structure_component
-    "serverConfig"  ? string
-    "configfile"    ? string
+    "serverConfig" ? string
+    "configfile" ? string
     "use_localhost" : boolean = true
-    "start"         ? boolean
-    "servers"       ? type_ip[..3]
-    "options"       ? string[]
-    "search"        ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
+    "start" ? boolean
+    "servers" ? type_ip[..3]
+    "options" ? string[]
+    "search" ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
 } with component_named_valid(SELF);
 
 bind "/software/components/named" = component_named;

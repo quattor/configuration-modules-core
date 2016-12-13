@@ -12,13 +12,13 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
         "longname", "longname",
         "contact_addr", "1.2.3.5",
         "test_addr", nlist(
-            "MYSITE","1.2.3.5",
-            "OS","1.2.3.4",
+            "MYSITE", "1.2.3.5",
+            "OS", "1.2.3.4",
             ),
     )
 );
 
-                
+
 "localnodes" = list("my.host.domain");
 
 "hosts" = {

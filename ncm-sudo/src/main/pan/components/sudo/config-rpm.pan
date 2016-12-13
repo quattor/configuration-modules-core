@@ -12,11 +12,11 @@ include {'components/sudo/functions'};
 
  # This component should be run after ncm-accounts, if present.
 "/software/components/sudo/dependencies/pre" = {
-	if (exists ("/software/components/accounts")) {
-		return (list("accounts"));
-	} else {
-		return (list("spma"));
-	};
+    if (exists ("/software/components/accounts")) {
+        return (list("accounts"));
+    } else {
+        return (list("spma"));
+    };
 };
 "/software/components/sudo/active" ?= true;
 "/software/components/sudo/dispatch" ?= true;

@@ -29,7 +29,7 @@ type httpd_ssl = {
     @{ca sets ssl_client_certificate which specifies a file with trusted
     CA certificates in the PEM format used to verify client certificates and OCSP
     responses if ssl_stapling is enabled}
-    "ca"  ? string
+    "ca" ? string
     "certificate_chain_file" ? string
     "revocation_file" ? string
 };
@@ -47,7 +47,7 @@ type nginx_global = {
 }
 type nginx_cache_path = {
     "path" : string
-    "levels" : long(1..2)[] = list(1,2)
+    "levels" : long(1..2)[] = list(1, 2)
     # Sizes in MBs to keep things readable
     "keys_zone" : long{}
     "max_size" ? long

@@ -7,16 +7,16 @@ include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
 "/software/components/sudo/privilege_lines" = list (
-	nlist ( "user",		"mejias",
-		"run_as",	"munoz",
-		"host",		"localhost",
-		"cmd",		"/bin/ls",
-		"options",	"PASSWD"
-		)
-	);
+    nlist ( "user", "mejias",
+        "run_as", "munoz",
+        "host", "localhost",
+        "cmd", "/bin/ls",
+        "options", "PASSWD"
+        )
+    );
 
 "/software/components/sudo/user_aliases" = nlist (
-	"FOO", list ("bar")
-	);
+    "FOO", list ("bar")
+    );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;

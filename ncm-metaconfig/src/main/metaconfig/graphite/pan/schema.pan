@@ -35,7 +35,7 @@ type carbon_aggregation_rule = {
     #   output_template (frequency) = method input_pattern
     "output" : string
     "frequency" : string
-    "method" : string with match(SELF,"^(sum|avg)$")
+    "method" : string with match(SELF, "^(sum|avg)$")
     "input" : string
 };
 
@@ -88,7 +88,7 @@ type carbon_cache = {
 
     # eg list("sales.#", "servers.linux.#", "#.utilization")
     # or all list("#")
-    "bind_patterns" ? string[] 
+    "bind_patterns" ? string[]
 
     "whisper_autoflush" : boolean = false
     "whisper_sparse_create" ? boolean = false
@@ -109,7 +109,7 @@ type carbon_cache = {
     "manhole_port" ? long(0..) = 7222
     "manhole_user" ? string = "admin"
     "manhole_public_key" ? string
-    
+
 } = nlist();
 
 type carbon_relay = {
@@ -117,7 +117,7 @@ type carbon_relay = {
     "line_receiver_port" : long(0..) = 2013
     "pickle_receiver_port" : long(0..) = 2014
 
-    "relay_method" : string = "rules" with match(SELF,"^(consistent-hashing|rules)$")
+    "relay_method" : string = "rules" with match(SELF, "^(consistent-hashing|rules)$")
 
     "replication_factor" : long(0..) = 1
 
@@ -147,7 +147,7 @@ type carbon_aggregator = {
 } = nlist();
 
 type carbon_config = {
-    "cache" : carbon_cache 
+    "cache" : carbon_cache
     "cache_instances" ? carbon_cache{}
     "relay" : carbon_relay
     "aggregator" : carbon_aggregator

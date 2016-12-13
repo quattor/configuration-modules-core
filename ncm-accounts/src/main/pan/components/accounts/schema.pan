@@ -23,26 +23,26 @@ function has_unique_attr = {
 };
 
 type structure_userinfo = {
-    'comment'    ? string
-    'homeDir'    ? string
+    'comment' ? string
+    'homeDir' ? string
     'createHome' ? boolean
     'createKeys' ? boolean
-    'groups'     : string[]
-    'password'   ? string
-    'shell'      : string = '/bin/bash'
-    'uid'        : long(0..)
-    'poolStart'  ? long(0..)
+    'groups' : string[]
+    'password' ? string
+    'shell' : string = '/bin/bash'
+    'uid' : long(0..)
+    'poolStart' ? long(0..)
     'poolDigits' ? long(1..)
-    'poolSize'   ? long(0..)
-    'info'       ? string{}
-    'ldap'	 ? boolean
+    'poolSize' ? long(0..)
+    'info' ? string{}
+    'ldap' ? boolean
 };
 
 type structure_groupinfo = {
-    'comment'         ? string
-    'gid'             : long(1..)
+    'comment' ? string
+    'gid' : long(1..)
     'requiredMembers' ? string[]
-    'replaceMembers'  : boolean = false
+    'replaceMembers' : boolean = false
 };
 
 type structure_login_defs = {
@@ -63,20 +63,20 @@ type structure_login_defs = {
 
 type component_accounts = {
     include structure_component
-    'rootpwd'    ? string
-    'rootshell'  ? string
-    'shadowpwd'  ? boolean
-    'users'      ? structure_userinfo{} with has_unique_attr(SELF, 'uid')
-    'groups'     ? structure_groupinfo{} with has_unique_attr(SELF, 'gid')
+    'rootpwd' ? string
+    'rootshell' ? string
+    'shadowpwd' ? boolean
+    'users' ? structure_userinfo{} with has_unique_attr(SELF, 'uid')
+    'groups' ? structure_groupinfo{} with has_unique_attr(SELF, 'gid')
     'login_defs' ? structure_login_defs
     'remove_unknown' : boolean = false
     # Really useful only if remove_unknown=true.
     # If system, only accounts/groups in the system range are preserved.
     # If dyn_user_group, accounts/groups below or equal to UID/GID_MAX are preserved.
-    'preserved_accounts' : string = 'dyn_user_group' with match(SELF,'none|system|dyn_user_group')
+    'preserved_accounts' : string = 'dyn_user_group' with match(SELF, 'none|system|dyn_user_group')
     'kept_users' : string{}
     'kept_groups' : string{}
-    'ldap'       ? boolean
+    'ldap' ? boolean
 };
 
 bind '/software/components/accounts' = component_accounts;

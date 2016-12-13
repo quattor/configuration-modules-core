@@ -19,19 +19,19 @@ include components/useraccess/config;
 
 
 "/software/components/useraccess/users/root" = nlist (
-	"kerberos4", list (
-		nlist (
-			"realm", "CERN.CH",
-			"principal", "munoz",
-			)
-		),
-	"kerberos5", list (
-		nlist (
-			"realm", "CERN.CH",
-			"principal", "munoz"
-			)
-		),
-	"ssh_keys_urls", list("http://uraha/keys/mejias.key"),
-	"ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv")
-	);
+    "kerberos4", list (
+        nlist (
+            "realm", "CERN.CH",
+            "principal", "munoz",
+            )
+        ),
+    "kerberos5", list (
+        nlist (
+            "realm", "CERN.CH",
+            "principal", "munoz"
+            )
+        ),
+    "ssh_keys_urls", list("http://uraha/keys/mejias.key"),
+    "ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv")
+    );
 

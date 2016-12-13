@@ -9,7 +9,7 @@ include { 'quattor/schema' };
 
 
 type component_network_type = {
-	include structure_component
+    include structure_component
 };
 
 

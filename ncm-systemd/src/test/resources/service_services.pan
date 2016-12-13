@@ -1,6 +1,6 @@
 object template service_services;
 
-"/software/components/systemd/unconfigured" = 'ignore'; 
+"/software/components/systemd/unconfigured" = 'ignore';
 
 include 'service-unit_simple_services';
 

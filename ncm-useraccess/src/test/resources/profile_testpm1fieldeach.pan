@@ -8,12 +8,12 @@ include pro_declaration_functions_useraccess;
 
 
 "/software/components/useraccess/users/munoz" = nlist ("ssh_keys_urls", list ("file:///afs/cern.ch/project/core/conf/ssh/cvs_root.key"),
-							     "kerberos4", list (nlist ("realm", "cern.ch",
-										       "principal", "bar")),
-							     "kerberos5", list (nlist ("realm", "cern.ch",
-										       "principal", "bar",
-										       "instance", "dontknow")),
-							     "acls", list ("sshd"));
+                                 "kerberos4", list (nlist ("realm", "cern.ch",
+                                               "principal", "bar")),
+                                 "kerberos5", list (nlist ("realm", "cern.ch",
+                                               "principal", "bar",
+                                               "instance", "dontknow")),
+                                 "acls", list ("sshd"));
 "/software/components/useraccess/active" = true
 ;
 "/software/components/useraccess/dispatch" = true;

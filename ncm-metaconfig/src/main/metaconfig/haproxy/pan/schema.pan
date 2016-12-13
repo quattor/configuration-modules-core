@@ -30,7 +30,7 @@ type haproxy_service_global_stats = {
 };
 
 @documentation {
-    The global section 
+    The global section
 }
 type haproxy_service_global = {
     'logs' : haproxy_service_global_logs
@@ -129,8 +129,8 @@ type haproxy_service_proxy = {
     'defaultoptions' : haproxy_service_proxy_defaultoptions
     'servers' : dict
     'serveroptions' ? haproxy_service_proxy_serveroptions
-    'timeouts' ? haproxy_service_timeouts 
-}; 
+    'timeouts' ? haproxy_service_timeouts
+};
 
 @documentation {
     haproxy config
