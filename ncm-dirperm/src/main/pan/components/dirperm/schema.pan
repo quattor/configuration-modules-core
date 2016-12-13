@@ -5,7 +5,7 @@
 
 declaration template components/dirperm/schema;
 
-include { "quattor/schema" };
+include "quattor/schema";
 
 function dirperm_permissions_valid = {
     if ( ARGC != 1 ) {
