@@ -7,7 +7,7 @@
 
 declaration template components/fmonagent/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_fmonagent = {
     include structure_component
