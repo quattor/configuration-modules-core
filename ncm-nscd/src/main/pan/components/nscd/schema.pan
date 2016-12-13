@@ -5,7 +5,7 @@
 
 declaration template components/nscd/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type componend_nscd_service_type = {
     "enable-cache" ? legacy_binary_affirmation_string
