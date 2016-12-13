@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/syslogng/config-rpm;
-include {'components/syslogng/schema'};
+include 'components/syslogng/schema';
 
 
 # Package to install

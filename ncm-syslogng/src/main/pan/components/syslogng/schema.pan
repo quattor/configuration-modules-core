@@ -4,7 +4,7 @@
 
 declaration template components/syslogng/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 # Convenience definitions
 type filterstring = string with
