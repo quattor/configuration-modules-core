@@ -34,7 +34,7 @@ protected_mounts is still here for backwards compability, and is the same as kee
 }
 type structure_component_fstab = {
     include structure_component
-    "keep" : fstab_protected_entries = nlist()
+    "keep" : fstab_protected_entries = dict()
     "static" ? fstab_protected_entries
     "protected_mounts" ? string[] with {
         deprecated(0, "protected_mounts property has been deprecated, keep/mounts should be used instead");

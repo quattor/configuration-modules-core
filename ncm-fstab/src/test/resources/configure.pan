@@ -4,41 +4,41 @@ object template configure;
 "/system/network/hostname" = 'x';
 "/system/network/domainname" = 'y';
 
-"/hardware/harddisks/sda" = nlist(
+"/hardware/harddisks/sda" = dict(
     "capacity", 4000,
 );
 
-"/system/blockdevices" = nlist (
-    "physical_devs", nlist (
-        "sda", nlist ("label", "gpt")
+"/system/blockdevices" = dict (
+    "physical_devs", dict (
+        "sda", dict ("label", "gpt")
         ),
-    "partitions", nlist (
-        "sda1", nlist (
+    "partitions", dict (
+        "sda1", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda2", nlist (
+        "sda2", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda3", nlist (
+        "sda3", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda4", nlist (
+        "sda4", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda5", nlist (
+        "sda5", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda6", nlist (
+        "sda6", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
@@ -47,7 +47,7 @@ object template configure;
 );
 
 "/system/filesystems" = list (
-    nlist (
+    dict (
         "mount", true,
         "mountpoint", "/boot",
         "preserve", true,
