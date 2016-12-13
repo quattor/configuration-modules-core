@@ -3,7 +3,7 @@
 # ${author-info}
 
 unique template components/useraccess/config-rpm;
-include {'components/useraccess/schema'};
+include 'components/useraccess/schema';
 
 # Package to install:
 # Package to install

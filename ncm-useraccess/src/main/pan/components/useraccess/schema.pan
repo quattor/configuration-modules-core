@@ -7,7 +7,7 @@
 
 declaration template components/useraccess/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type useraccess_pointer = string with exists ("/software/components/useraccess/roles/"
     + SELF);
