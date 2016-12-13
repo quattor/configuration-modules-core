@@ -4,7 +4,7 @@
 
 declaration template components/nsca/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type structure_component_nsca_daemon = {
     "pid_file" : string = "/var/run/nsca.pid"
