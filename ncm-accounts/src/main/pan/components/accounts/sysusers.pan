@@ -12,7 +12,7 @@
 
 unique template components/accounts/sysusers;
 
-'/software/components/accounts/kept_users' ?= nlist(
+'/software/components/accounts/kept_users' ?= dict(
     'bin', '',
     'daemon', '',
     'dhcpd', '',

@@ -10,7 +10,7 @@ include 'quattor/schema';
 function has_unique_attr = {
     values = ARGV[0];
     attr = ARGV[1];
-    seen_attrs = nlist();
+    seen_attrs = dict();
 
     foreach(ni;el;values) {
         if( exists(seen_attrs[format('x%s', el[attr])])) {
