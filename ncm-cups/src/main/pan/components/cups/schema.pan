@@ -4,7 +4,7 @@
 
 declaration template components/cups/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type component_cups_printer = {
     "server" ? string
