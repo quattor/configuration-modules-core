@@ -106,12 +106,12 @@ type globals_client_ganglia = {
 
 type client_ganglia = {
     'config_file' : string = '/etc/ganglia/gmond.conf'
-    'globals' : globals_client_ganglia = nlist()
-    'cluster' : cluster_client_ganglia = nlist()
-    'host' : host_client_ganglia = nlist()
-    'udp_send_channel' : udp_send_channel_client_ganglia = nlist()
-    'udp_recv_channel' : udp_recv_channel_client_ganglia = nlist()
-    'tcp_accept_channel' : udp_accept_channel_client_ganglia = nlist()
+    'globals' : globals_client_ganglia = dict()
+    'cluster' : cluster_client_ganglia = dict()
+    'host' : host_client_ganglia = dict()
+    'udp_send_channel' : udp_send_channel_client_ganglia = dict()
+    'udp_recv_channel' : udp_recv_channel_client_ganglia = dict()
+    'tcp_accept_channel' : udp_accept_channel_client_ganglia = dict()
     'modules' ? modules_client_ganglia[]
     'includes' ? string[]
     'collection_groups' : collection_groups_client_ganglia[] = list()
