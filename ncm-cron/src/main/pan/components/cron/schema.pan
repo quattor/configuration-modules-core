@@ -6,7 +6,7 @@
 
 declaration template components/cron/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 # Function to check that other log properties are not present if disabled=yes
 function structure_cron_log_valid = {
