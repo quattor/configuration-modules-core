@@ -10,7 +10,7 @@
 
 declaration template components/ganglia/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type daemon_ganglia = {
     'config_file' : string = '/etc/ganglia/gmetad.conf'

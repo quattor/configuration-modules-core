@@ -5,5 +5,5 @@
 
 unique template components/ganglia/config;
 
-include { 'components/${project.artifactId}/config-common' };
-include { 'components/ganglia/config-rpm' };
+include 'components/${project.artifactId}/config-common';
+include 'components/ganglia/config-rpm';
