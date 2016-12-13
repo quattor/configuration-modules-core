@@ -10,7 +10,7 @@
 
 declaration template components/sysctl/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_sysctl_structure = {
     include structure_component

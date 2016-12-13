@@ -4,7 +4,7 @@
 
 unique template components/sysctl/config;
 
-include { 'components/sysctl/schema' };
+include 'components/sysctl/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
