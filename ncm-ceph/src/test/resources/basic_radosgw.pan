@@ -1,37 +1,37 @@
 object template basic_radosgw;
 
-variable MONITOR1 =  nlist(
+variable MONITOR1 =  dict(
     'fqdn', 'ceph001.cubone.os',
     'up', true,
 );
 
-variable RADOSGW = nlist(
-    'config', nlist(
+variable RADOSGW = dict(
+    'config', dict(
         'host' , 'ceph001',
         'foo', 'bar',
     )
 );
-variable CONFIG = nlist (
+variable CONFIG = dict (
     'fsid' , 'a94f9906-ff68-487d-8193-23ad04c1b5c4',
     'mon_initial_members', list ('ceph001', 'ceph002', 'ceph003')
 );
 
 prefix '/software/components/ceph/clusters';
 
-'ceph' = nlist (
+'ceph' = dict (
     'config', CONFIG,
-    'monitors', nlist (
+    'monitors', dict (
         'ceph001', MONITOR1,
     ),
-    'radosgwh' , nlist(
-        'ceph001', nlist(
+    'radosgwh' , dict(
+        'ceph001', dict(
             'fqdn', 'ceph001.cubone.os',
-            'gateways', nlist(
+            'gateways', dict(
                 'gateway', RADOSGW,
             ),
         ),
     ),
-    'deployhosts', nlist (
+    'deployhosts', dict (
         'ceph002', 'ceph002.cubone.os'
     )
 
@@ -41,5 +41,5 @@ prefix '/software/components/ceph/clusters';
 '/system/network/domainname' = 'cubone.os';
 
 '/software/components/accounts/users/ceph' =
-    nlist('homeDir', '/tmp', 'gid', '111' );
-'/software/components/accounts/groups/ceph' = nlist('gid', '111');
+    dict('homeDir', '/tmp', 'gid', '111' );
+'/software/components/accounts/groups/ceph' = dict('gid', '111');

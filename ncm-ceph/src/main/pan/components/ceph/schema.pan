@@ -88,8 +88,8 @@ function is_bucket = {
     names = ARGV[1];
     types = ARGV[2];
     top = ARGV[3];
-    if(!is_nlist(bucket)) {
-        error("Invalid bucket! Bucket should be an nlist.");
+    if(!is_dict(bucket)) {
+        error("Invalid bucket! Bucket should be an dict.");
         return(false);
     };
     if(!exists(bucket['name']) || !is_string(bucket['name']) ) {
@@ -225,7 +225,7 @@ type ceph_crushmap_bucket = {
     'defaultalg' : string = 'straw' with is_ceph_crushmap_bucket_alg(SELF)
     'defaulthash' : long = 0
     'labels' ? string[1..] # divide hierarchy on a osd label base
-    'buckets' ? nlist[] # the idea: recursive buckets
+    'buckets' ? dict[] # the idea: recursive buckets
 };
 
 @documentation{ ceph crushmap rule step }
