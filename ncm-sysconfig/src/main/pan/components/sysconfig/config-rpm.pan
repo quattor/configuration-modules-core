@@ -4,7 +4,7 @@
 
 
 unique template components/sysconfig/config-rpm;
-include { 'components/sysconfig/schema' };
+include 'components/sysconfig/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
