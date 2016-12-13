@@ -5,7 +5,7 @@ unique template cron_syslog-common;
 # testing easier if there is a different file for each test, hence using a
 # different user name.
 
-"/software/components/cron/entries" = append(SELF, nlist(
+"/software/components/cron/entries" = append(SELF, dict(
     "name", "test_default_log",
     "user", "root",
     "frequency", "1 2 3 4 5",
@@ -16,10 +16,10 @@ unique template cron_syslog-common;
 # If smear is 0 the smear code isn't used, so we have to leave room for
 # something to be smeared. Hence set the minutes to zero but everything else
 # to maximum.
-"/software/components/cron/entries" = append(SELF, nlist(
+"/software/components/cron/entries" = append(SELF, dict(
     "name", "test_smear_max_items",
     "user", "lp",
-    "timing", nlist(
+    "timing", dict(
         "minute", "0",
         "hour", "23",
         "day", "31",
@@ -30,18 +30,18 @@ unique template cron_syslog-common;
     "command", "smeared command",
 ));
 
-"/software/components/cron/entries" = append(SELF, nlist(
+"/software/components/cron/entries" = append(SELF, dict(
     "name", "test_nolog",
     "user", "bin",
-    "log", nlist("disabled", true),
+    "log", dict("disabled", true),
     "frequency", "* * * * *",
     "command", "some command",
 ));
 
-"/software/components/cron/entries" = append(SELF, nlist(
+"/software/components/cron/entries" = append(SELF, dict(
     "name", "test_syslog",
     "user", "nobody",
-    "syslog", nlist(
+    "syslog", dict(
         'facility', 'user',
         'level', 'notice'
     ),
