@@ -13,7 +13,7 @@
 
 declaration template components/directoryservices/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type directoryservices_ldap_entry = extensible {
 };
