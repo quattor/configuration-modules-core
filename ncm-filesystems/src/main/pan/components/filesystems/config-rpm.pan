@@ -4,9 +4,9 @@
 
 unique template components/filesystems/config-rpm;
 
-include {'components/filesystems/schema'};
+include 'components/filesystems/schema';
 
-include {'components/fstab/config'};
+include 'components/fstab/config';
 
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 

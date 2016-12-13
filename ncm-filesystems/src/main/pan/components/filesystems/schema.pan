@@ -4,9 +4,9 @@
 
 declaration template components/filesystems/schema;
 
-include {'quattor/schema'};
-include {'quattor/blockdevices'};
-include {'quattor/filesystems'};
+include 'quattor/schema';
+include 'quattor/blockdevices';
+include 'quattor/filesystems';
 
 type structure_component_filesystems = {
     include structure_component
