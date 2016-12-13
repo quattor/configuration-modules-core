@@ -1,6 +1,6 @@
 object template group;
 
-"/software/components/ntpd" = nlist();
+"/software/components/ntpd" = dict();
 
 include 'base_serverlist_options';
 

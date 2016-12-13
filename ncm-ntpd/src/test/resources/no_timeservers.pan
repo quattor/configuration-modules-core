@@ -2,4 +2,4 @@ object template no_timeservers;
 
 include 'mock_config';
 
-"/software/components/ntpd" = nlist();
+"/software/components/ntpd" = dict();
