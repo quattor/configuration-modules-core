@@ -7,29 +7,29 @@ include pro_declaration_component_useraccess;
 include pro_declaration_functions_useraccess;
 
 
-"/software/components/useraccess/users/foo" = nlist(
+"/software/components/useraccess/users/foo" = dict(
     "ssh_keys_urls", list(
         "http://www.cern.ch/foo",
         "http://www.uam.es/bar",
     ),
     "kerberos4", list(
-        nlist(
+        dict(
             "realm", "cern.ch",
             "principal", "bar",
         ),
-        nlist(
+        dict(
             "realm", "uam.es",
             "principal", "me",
             "instance", "whocares",
         ),
     ),
     "kerberos5", list(
-        nlist(
+        dict(
             "realm", "cern.ch",
             "principal", "bar",
             "instance", "dontknow",
         ),
-        nlist(
+        dict(
             "realm", "uam.es",
             "principal", "shutup",
         ),
