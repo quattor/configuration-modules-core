@@ -29,25 +29,25 @@ prefix "/software/catalogues";
 # Grouping package versions constrained by local-incorporation
 #
 prefix "/software/requests";
-"{pkg:/local/group/system/solaris-large-server}" = nlist();
-"{pkg:/local/group/aquilon/core-os}" = nlist();
+"{pkg:/local/group/system/solaris-large-server}" = dict();
+"{pkg:/local/group/aquilon/core-os}" = dict();
 
 #
 # Packages we do NOT want
 #
 prefix "/software/uninstall";
 
-"{pkg:/system/fault-management/smtp-notify}" = nlist();
-"{pkg:/service/network/smtp/sendmail}" = nlist();
-"{pkg:/system/management/ocm}" = nlist();
-"{pkg:/library/print/cups-libs}" = nlist();
-"{pkg:/library/desktop/gtk2/gtk-backend-cups}" = nlist();
-"{pkg:/print/cups}" = nlist();
-"{pkg:/print/cups/hal-cups-utils}" = nlist();
-"{pkg:/print/cups/filter/foomatic-db}" = nlist();
-"{pkg:/print/cups/filter/foomatic-db-engine}" = nlist();
-"{pkg:/print/filter/a2ps}" = nlist();
-"{pkg:/print/filter/hplip}" = nlist();
-"{pkg:/print/lp/filter/foomatic-rip}" = nlist();
-"{pkg:/system/network/ppp}" = nlist();
-"{pkg:/system/network/ppp/tunnel}" = nlist();
+"{pkg:/system/fault-management/smtp-notify}" = dict();
+"{pkg:/service/network/smtp/sendmail}" = dict();
+"{pkg:/system/management/ocm}" = dict();
+"{pkg:/library/print/cups-libs}" = dict();
+"{pkg:/library/desktop/gtk2/gtk-backend-cups}" = dict();
+"{pkg:/print/cups}" = dict();
+"{pkg:/print/cups/hal-cups-utils}" = dict();
+"{pkg:/print/cups/filter/foomatic-db}" = dict();
+"{pkg:/print/cups/filter/foomatic-db-engine}" = dict();
+"{pkg:/print/filter/a2ps}" = dict();
+"{pkg:/print/filter/hplip}" = dict();
+"{pkg:/print/lp/filter/foomatic-rip}" = dict();
+"{pkg:/system/network/ppp}" = dict();
+"{pkg:/system/network/ppp/tunnel}" = dict();

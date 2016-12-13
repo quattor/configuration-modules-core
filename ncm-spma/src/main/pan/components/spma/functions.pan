@@ -293,7 +293,7 @@ function pkg_repl = {
         };
     } else {
         package_params = undef;
-        SELF[e_name] = nlist();
+        SELF[e_name] = dict();
     };
 
     if ( is_defined(version) ) {
@@ -312,21 +312,21 @@ function pkg_repl = {
             # If arch is unspecified, remove any explicit arch else add specified arch
             if ( is_defined(arch) ) {
                 if (!is_defined(arch_params) ) {
-                    arch_params = nlist();
+                    arch_params = dict();
                 };
                 arch_params[arch] = '';
             } else {
-                arch_params = nlist();
+                arch_params = dict();
             };
         } else {
-            SELF[e_name][version_e] = nlist();
+            SELF[e_name][version_e] = dict();
             if ( is_defined(arch) ) {
                 if ( !is_defined(arch_params) ) {
-                    arch_params = nlist();
+                    arch_params = dict();
                 };
                 arch_params[arch] = '';
             } else {
-                arch_params = nlist();
+                arch_params = dict();
             };
             debug(format('%s: adding package %s version %s arch_params=%s', OBJECT, ARGV[0], version, to_string(arch_params)));
         };
@@ -355,7 +355,7 @@ function pkg_repl = {
             };
         };
         if ( !is_defined(SELF[e_name][version_e]) ) {
-            SELF[e_name] = nlist(version_e, nlist());
+            SELF[e_name] = dict(version_e, dict());
         };
         if ( length(arch_params) > 0 ) {
             SELF[e_name][version_e]['arch'] = arch_params;
@@ -368,7 +368,7 @@ function pkg_repl = {
             error(format('Attempt to unlock version of package %s (version %s)', ARGV[0], unescape(key(package_params, 0))));
         };
         debug(format('%s: adding package %s (no version/arch specified)', OBJECT, ARGV[0]));
-        SELF[e_name] = nlist();
+        SELF[e_name] = dict();
     };
 
     SELF;
