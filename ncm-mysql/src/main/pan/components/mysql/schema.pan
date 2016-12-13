@@ -8,7 +8,7 @@
 declaration template components/mysql/schema;
 
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 
 function component_mysql_valid = {
