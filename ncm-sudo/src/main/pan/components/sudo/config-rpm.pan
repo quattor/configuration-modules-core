@@ -3,8 +3,8 @@
 # ${author-info}
 
 unique template components/sudo/config-rpm;
-include {'components/sudo/schema'};
-include {'components/sudo/functions'};
+include 'components/sudo/schema';
+include 'components/sudo/functions';
 
 # Package to install:
 # Package to install

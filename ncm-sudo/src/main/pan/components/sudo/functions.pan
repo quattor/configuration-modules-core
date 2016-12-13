@@ -4,8 +4,8 @@
 
 declaration template components/sudo/functions;
 
-include {'quattor/schema'};
-include {'components/sudo/schema'};
+include 'quattor/schema';
+include 'components/sudo/schema';
 
 # Checks all the alias names in an alias list are valid.
 # It aborts the compilation if there is an invalid alias name.
