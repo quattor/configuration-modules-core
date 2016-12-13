@@ -10,7 +10,7 @@
 ############################################################
 
 unique template components/sendmail/config-rpm;
-include { 'components/sendmail/schema' };
+include 'components/sendmail/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

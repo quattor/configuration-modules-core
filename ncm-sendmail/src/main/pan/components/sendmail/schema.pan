@@ -10,7 +10,7 @@
 
 declaration template components/sendmail/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 
 type component_sendmail = {
