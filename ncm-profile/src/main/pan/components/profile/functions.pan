@@ -8,7 +8,7 @@ declaration template components/profile/functions;
 # or
 #    'software/components/profile' = component_profile_add_env(script_name, env_list);
 #
-# In the second form, env_list is a nlist of string : key is the variable name, value is the variable value (may be
+# In the second form, env_list is a dict of string : key is the variable name, value is the variable value (may be
 # a string, long, boolean or list of string).
 #
 # 'script_name' is parsed and if it ends with extension '.sh' or '.csh', extension is removed and
@@ -24,13 +24,13 @@ function component_profile_add_env = {
         error(function_name+': invalid number of arguments. Must be 2 or 3.');
     };
     if ( ARGC == 2 ) {
-        if ( is_nlist(ARGV[1]) ) {
+        if ( is_dict(ARGV[1]) ) {
             env_list = ARGV[1];
         } else {
-            error(function_name+': with 2 arguments, second argument must be a nlist.');
+            error(function_name+': with 2 arguments, second argument must be a dict.');
         };
     } else {
-        env_list = nlist(ARGV[1], ARGV[2]);
+        env_list = dict(ARGV[1], ARGV[2]);
     };
 
 
