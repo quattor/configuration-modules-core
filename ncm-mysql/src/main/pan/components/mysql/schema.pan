@@ -74,7 +74,7 @@ type component_mysql_db_options = {
     'initScript' ? component_mysql_db_script
     'initOnce' : boolean = false
     'createDb' : boolean = true
-    # tableOptions is a nlist of table where value is a nlist of parameter/value pairs.
+    # tableOptions is a dict of table where value is a dict of parameter/value pairs.
     # If the parameter contains spaces, it must be escaped.
     'tableOptions' ? string{}{}
 };
