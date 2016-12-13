@@ -13,7 +13,7 @@
 
 declaration template components/symlink/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type structure_symlink_replace_option_entry = {
     "all" ? string
