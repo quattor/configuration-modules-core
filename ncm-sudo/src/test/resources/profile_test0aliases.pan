@@ -3,7 +3,7 @@
 object template profile_test0aliases;
 
 "/software/components/sudo/privilege_lines" = list (
-    nlist ( "user", "ALL",
+    dict ( "user", "ALL",
         "run_as", "ALL",
         "host", "ALL",
         "cmd", "ALL"

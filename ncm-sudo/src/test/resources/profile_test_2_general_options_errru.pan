@@ -9,7 +9,7 @@ include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
 "/software/components/sudo/privilege_lines" = list(
-    nlist(
+    dict(
         "user", "mejias",
         "run_as", "munoz",
         "host", "localhost",
@@ -18,7 +18,7 @@ include pro_declaration_functions_sudo;
     )
 );
 
-"/software/components/sudo/user_aliases" = nlist(
+"/software/components/sudo/user_aliases" = dict(
     "FOO", list(
         "bar",
     ),
@@ -27,16 +27,16 @@ include pro_declaration_functions_sudo;
 "/software/components/sudo/dispatch" = true;
 
 "/software/components/sudo/general_options/" = list(
-    nlist(
+    dict(
         "user", "mejias",
-        "options", nlist(
+        "options", dict(
             "insults", true,
         ),
     ),
-    nlist(
+    dict(
         "user", "munoz",
         "host", "192.168.0.1",
-        "options", nlist(
+        "options", dict(
             "insults", true,
         ),
     ),
