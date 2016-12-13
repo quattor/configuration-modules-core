@@ -3,7 +3,7 @@
 # ${author-info}
 declaration template components/filecopy/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function component_filecopy_valid = {
     function_name = 'component_filecopy_valid';

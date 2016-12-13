@@ -4,7 +4,7 @@
 
 
 unique template components/filecopy/config-rpm;
-include { 'components/filecopy/schema' };
+include 'components/filecopy/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
