@@ -226,8 +226,12 @@ sub set_file_opts
     }
 }
 
+=item set_one_server
 
-# Configure OpenNebula server
+Configures OpenNebula server.
+
+=cut
+
 sub set_one_server
 {
     my($self, $tree) = @_;
