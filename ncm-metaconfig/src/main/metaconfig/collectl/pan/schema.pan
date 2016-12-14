@@ -65,4 +65,4 @@ type collectl_main = {
 
 type collectl_config = {
     "main" : collectl_main
-} = nlist();
+} = dict();

@@ -86,7 +86,7 @@ type structure_component_gmond_module = {
     "language" ? string
     "path" ? string
     "params" ? string
-    "param" ? nlist
+    "param" ? dict
 };
 
 type structure_component_gmond = {

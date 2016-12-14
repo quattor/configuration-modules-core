@@ -6,6 +6,6 @@ structure template struct/kerberos_location;
 
 "auth/name" = "Kerberos Login";
 "auth/type" = "Kerberos";
-"auth/require" = nlist("type", "valid-user");
+"auth/require" = dict("type", "valid-user");
 
 "ssl/requiressl" = true;

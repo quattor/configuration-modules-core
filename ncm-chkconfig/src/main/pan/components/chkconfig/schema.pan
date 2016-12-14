@@ -10,8 +10,8 @@ function chkconfig_allow_combinations = {
     # Check if certain combinations of service_types are allowed
     # Return true if they are allowed, throws an error otherwise
 
-    if ( ARGC != 1 || ! is_nlist(ARGV[0]) ) {
-        error('chkconfig_allow_combinations requires 1 nlist as argument');
+    if ( ARGC != 1 || ! is_dict(ARGV[0]) ) {
+        error('chkconfig_allow_combinations requires 1 dict as argument');
     };
     service = ARGV[0];
 
@@ -20,7 +20,7 @@ function chkconfig_allow_combinations = {
     # dangerous.
     # Others combinations are still allowed (eg combining del and off,
     # where del will be preferred)
-    svt_map = nlist(
+    svt_map = dict(
         'del', list("add", "on", "reset"),
         'off', list("on", "reset"),
         'on', list("reset"),

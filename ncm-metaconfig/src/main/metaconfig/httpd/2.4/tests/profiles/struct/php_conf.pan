@@ -3,30 +3,30 @@ structure template struct/php_conf;
 "global/directoryindex" = list("index.php");
 
 "type/add" = list(
-    nlist(
+    dict(
         "name", "text/html",
         "target", list(".php"),
     ),
 );
 
 "handler/add" = list(
-    nlist(
+    dict(
         "name", "php5-script",
         "target", list(".php"),
     ),
 );
 
 "ifmodules" = list(
-    nlist(
+    dict(
         "name", "prefork.c",
-        "modules", list(nlist(
+        "modules", list(dict(
             "name", "php5_module",
             "path", "modules/libphp5.so",
             )),
         ),
-    nlist(
+    dict(
         "name", "worker.c",
-        "modules", list(nlist(
+        "modules", list(dict(
             "name", "php5_module",
             "path", "modules/libphp5-zts.so",
             )),

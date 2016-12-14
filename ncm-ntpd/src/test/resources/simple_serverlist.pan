@@ -1,6 +1,6 @@
 object template simple_serverlist;
 
-"/software/components/ntpd" = nlist();
+"/software/components/ntpd" = dict();
 
 include 'base_serverlist_options';
 
@@ -22,16 +22,16 @@ prefix "/software/components/ntpd";
 #filegen peerstats file peerstats type day enable
 
 "statsdir"="/var/log/ntpstats";
-"statistics" = nlist();
+"statistics" = dict();
 "statistics/loopstats" = true;
 "statistics/peerstats" = true;
 "filegen" = list();
-"filegen/0" = nlist();
+"filegen/0" = dict();
 "filegen/0/name" = "loopstats";
 "filegen/0/file" = "loopstats";
 "filegen/0/type" = "day";
 "filegen/0/enableordisable" = "enable";
-"filegen/1" = nlist();
+"filegen/1" = dict();
 "filegen/1/name" = "peerstats";
 "filegen/1/file" = "peerstats";
 "filegen/1/type" = "day";
@@ -42,5 +42,5 @@ prefix "/software/components/ntpd";
 #disable ntp
 "disable/ntp" = true;
 
-#disable monlist
+#disable modict
 "disable/monitor" = true;

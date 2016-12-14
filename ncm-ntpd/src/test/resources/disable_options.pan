@@ -1,10 +1,10 @@
 object template disable_options;
 
-"/software/components/ntpd" = nlist();
+"/software/components/ntpd" = dict();
 
 include 'base_serverlist_options';
 
 prefix "/software/components/ntpd";
 
-#disable monlist
+#disable modict
 "disable/monitor" = true;

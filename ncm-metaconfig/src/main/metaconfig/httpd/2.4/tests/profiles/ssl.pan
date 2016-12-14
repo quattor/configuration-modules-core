@@ -10,7 +10,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}";
 
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
-variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
+variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 
 

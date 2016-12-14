@@ -2,32 +2,32 @@ unique template service_services_ceph021;
 
 prefix "/software/components/systemd/unit";
 
-"network" = nlist(
+"network" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user", "graphical"),
     );
-"netconsole" = nlist(
+"netconsole" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user"),
     );
-"rbdmap" = nlist(
+"rbdmap" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user"),
     );
-"cups" = nlist(
+"cups" = dict(
     "state", "disabled",
     "startstop", false,
     "targets", list("graphical"),
 );
-"dbus" = nlist(
+"dbus" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user"),
 );
-"messagebus" = nlist(
+"messagebus" = dict(
     "state", "disabled",
     "startstop", true,
     "targets", list("multi-user"),

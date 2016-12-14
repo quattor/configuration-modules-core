@@ -7,14 +7,14 @@ prefix "/software/components/postgresql";
 "config/main/archive_command" = "main archive";
 "roles/myrole" = "SUPERPOWER";
 "roles/otherrole" = "MORE SUPERPOWER";
-"databases/db1" = nlist(
+"databases/db1" = dict(
     "installfile", "/some/file1",
     "lang", "abc1",
     "langfile", "/some/lang1",
     "sql_user", "theuser1",
     "user", "theowner1",
 );
-"databases/db2" = nlist(
+"databases/db2" = dict(
     "installfile", "/some/file2",
     "lang", "abc2",
     "langfile", "/some/lang2",

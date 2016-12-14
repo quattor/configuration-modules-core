@@ -18,7 +18,7 @@ include 'components/sudo/config';
         "/usr/bin/file -sL *"
     );
     foreach (i; cmd; sudolist){
-        nl = nlist(
+        nl = dict(
             "host", "ALL",
             "options", "NOPASSWD:",
             "run_as", "ALL",

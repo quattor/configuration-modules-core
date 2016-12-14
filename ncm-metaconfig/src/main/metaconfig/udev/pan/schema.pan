@@ -1,6 +1,6 @@
 declaration template metaconfig/udev/schema;
 
-type udev_interfaces = nlist with {
+type udev_interfaces = dict with {
     foreach(intf;macaddr;SELF) {
         intf_path = format("/hardware/cards/nic/%s", intf);
         mac_path = format("%s/hwaddr", intf_path);

@@ -6,7 +6,7 @@ object template profile_testempty;
 include pro_declaration_component_useraccess;
 include pro_declaration_functions_useraccess;
 
-"/software/components/useraccess/users/foo" = nlist(
+"/software/components/useraccess/users/foo" = dict(
     "ssh_keys_urls", list (),
     "kerberos4", list (),
     "kerberos5", list (),

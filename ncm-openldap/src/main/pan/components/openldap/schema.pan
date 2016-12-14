@@ -21,7 +21,7 @@ function openldap_loglevels_to_long = {
 
     default = 'stats';
 
-    the_map = nlist(
+    the_map = dict(
         "any", -1, # log all
         "nologging", 0, # (has no official naming) absolutely no logging (none just means very very high loglevel)
         "trace", 1, # trace function calls

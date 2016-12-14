@@ -7,18 +7,18 @@ include pro_declaration_component_useraccess;
 include pro_declaration_functions_useraccess;
 
 
-"/software/components/useraccess/users/munoz" = nlist(
+"/software/components/useraccess/users/munoz" = dict(
     "ssh_keys_urls", list(
         "http://www.cern.ch/foo",
     ),
     "kerberos4", list(
-        nlist(
+        dict(
             "realm", "cern.ch",
             "principal", "bar"
         ),
     ),
     "kerberos5", list(
-        nlist(
+        dict(
             "realm", "cern.ch",
             "principal", "bar",
             "instance", "dontknow",

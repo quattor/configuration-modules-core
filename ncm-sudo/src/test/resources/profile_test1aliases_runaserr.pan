@@ -6,14 +6,14 @@ include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
 "/software/components/sudo/privilege_lines" = list (
-    nlist ( "user", "ALL",
+    dict ( "user", "ALL",
         "run_as", "ALL",
         "host", "ALL",
         "cmd", "ALL"
         )
     );
 
-"/software/components/sudo/run_as_aliases" = nlist (
+"/software/components/sudo/run_as_aliases" = dict (
     "foo", list ("bar")
     );
 "/software/components/sudo/active" = true;

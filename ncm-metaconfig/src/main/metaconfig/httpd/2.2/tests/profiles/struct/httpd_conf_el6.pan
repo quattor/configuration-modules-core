@@ -1,58 +1,58 @@
 structure template struct/httpd_conf_el6;
 
 "aliases" = list(
-    nlist(
+    dict(
         "url", "/icons/",
         "destination", "/var/www/icons/",
         ),
-    nlist(
+    dict(
         "url", "/cgi-bin/",
         "destination", "/var/www/cgi-bin/",
         "type", "script",
         ),
-    nlist(
+    dict(
         "url", "/error/",
         "destination", "/var/www/error/",
         ),
 );
 
 "directories" = list(
-    nlist(
+    dict(
         "name", "/",
         "options", list("FollowSymLinks"),
-        "access", nlist(
+        "access", dict(
             "allowoverride", list("None")),
         ),
-    nlist(
+    dict(
         "name", "/var/www/html",
         "options", list("Indexes", "FollowSymLinks"),
-        "access", nlist(
+        "access", dict(
             "order", list("allow", "deny"),
             "allow", list("all"),
             "allowoverride", list("None")),
         ),
-    nlist(
+    dict(
         "name", "/var/www/icons",
         "options", list("Indexes", "MultiViews", "FollowSymLinks"),
-        "access", nlist(
+        "access", dict(
             "order", list("allow", "deny"),
             "allow", list("all"),
             "allowoverride", list("None")),
         ),
-    nlist(
+    dict(
         "name", "/var/www/cgi-bin",
         "options", list("None"),
-        "access", nlist(
+        "access", dict(
             "order", list("allow", "deny"),
             "allow", list("all"),
             "allowoverride", list("None")),
         ),
 );
 "files" = list(
-    nlist(
+    dict(
         "name", '^\.ht',
         "regex", true,
-        "access", nlist(
+        "access", dict(
             "order", list("allow", "deny"),
             "deny", list("all"),
             "satisfy", "All"),
@@ -60,217 +60,217 @@ structure template struct/httpd_conf_el6;
 );
 
 "browsermatch" = list(
-    nlist(
+    dict(
         "match", 'Mozilla/2',
         "names", list("nokeepalive"),
         ),
-    nlist(
+    dict(
         "match", 'MSIE 4\.0b2;',
         "names", list("nokeepalive", "downgrade-1.0", "force-response-1.0"),
         ),
-    nlist(
+    dict(
         "match", 'RealPlayer 4\.0',
         "names", list("force-response-1.0"),
         ),
-    nlist(
+    dict(
         "match", 'Java/1\.0',
         "names", list("force-response-1.0"),
         ),
-    nlist(
+    dict(
         "match", 'JDK/1\.0',
         "names", list("force-response-1.0"),
         ),
-    nlist(
+    dict(
         "match", 'Microsoft Data Access Internet Publishing Provider',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", 'MS FrontPage',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", '^WebDrive',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", '^WebDAVFS/1.[0123]',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", '^gnome-vfs/1.0',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", '^XML Spy',
         "names", list("redirect-carefully"),
         ),
-    nlist(
+    dict(
         "match", '^Dreamweaver-WebDAV-SCM1',
         "names", list("redirect-carefully"),
         ),
 );
 
 "modules" = {
-    append(nlist(
+    append(dict(
         "name", "auth_basic_module",
         "path", "modules/mod_auth_basic.so"));
-    append(nlist(
+    append(dict(
         "name", "auth_digest_module",
         "path", "modules/mod_auth_digest.so"));
-    append(nlist(
+    append(dict(
         "name", "authn_file_module",
         "path", "modules/mod_authn_file.so"));
-    append(nlist(
+    append(dict(
         "name", "authn_alias_module",
         "path", "modules/mod_authn_alias.so"));
-    append(nlist(
+    append(dict(
         "name", "authn_anon_module",
         "path", "modules/mod_authn_anon.so"));
-    append(nlist(
+    append(dict(
         "name", "authn_dbm_module",
         "path", "modules/mod_authn_dbm.so"));
-    append(nlist(
+    append(dict(
         "name", "authn_default_module",
         "path", "modules/mod_authn_default.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_host_module",
         "path", "modules/mod_authz_host.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_user_module",
         "path", "modules/mod_authz_user.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_owner_module",
         "path", "modules/mod_authz_owner.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_groupfile_module",
         "path", "modules/mod_authz_groupfile.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_dbm_module",
         "path", "modules/mod_authz_dbm.so"));
-    append(nlist(
+    append(dict(
         "name", "authz_default_module",
         "path", "modules/mod_authz_default.so"));
-    append(nlist(
+    append(dict(
         "name", "ldap_module",
         "path", "modules/mod_ldap.so"));
-    append(nlist(
+    append(dict(
         "name", "authnz_ldap_module",
         "path", "modules/mod_authnz_ldap.so"));
-    append(nlist(
+    append(dict(
         "name", "include_module",
         "path", "modules/mod_include.so"));
-    append(nlist(
+    append(dict(
         "name", "log_config_module",
         "path", "modules/mod_log_config.so"));
-    append(nlist(
+    append(dict(
         "name", "logio_module",
         "path", "modules/mod_logio.so"));
-    append(nlist(
+    append(dict(
         "name", "env_module",
         "path", "modules/mod_env.so"));
-    append(nlist(
+    append(dict(
         "name", "ext_filter_module",
         "path", "modules/mod_ext_filter.so"));
-    append(nlist(
+    append(dict(
         "name", "mime_magic_module",
         "path", "modules/mod_mime_magic.so"));
-    append(nlist(
+    append(dict(
         "name", "expires_module",
         "path", "modules/mod_expires.so"));
-    append(nlist(
+    append(dict(
         "name", "deflate_module",
         "path", "modules/mod_deflate.so"));
-    append(nlist(
+    append(dict(
         "name", "headers_module",
         "path", "modules/mod_headers.so"));
-    append(nlist(
+    append(dict(
         "name", "usertrack_module",
         "path", "modules/mod_usertrack.so"));
-    append(nlist(
+    append(dict(
         "name", "setenvif_module",
         "path", "modules/mod_setenvif.so"));
-    append(nlist(
+    append(dict(
         "name", "mime_module",
         "path", "modules/mod_mime.so"));
-    append(nlist(
+    append(dict(
         "name", "dav_module",
         "path", "modules/mod_dav.so"));
-    append(nlist(
+    append(dict(
         "name", "status_module",
         "path", "modules/mod_status.so"));
-    append(nlist(
+    append(dict(
         "name", "autoindex_module",
         "path", "modules/mod_autoindex.so"));
-    append(nlist(
+    append(dict(
         "name", "info_module",
         "path", "modules/mod_info.so"));
-    append(nlist(
+    append(dict(
         "name", "dav_fs_module",
         "path", "modules/mod_dav_fs.so"));
-    append(nlist(
+    append(dict(
         "name", "vhost_alias_module",
         "path", "modules/mod_vhost_alias.so"));
-    append(nlist(
+    append(dict(
         "name", "negotiation_module",
         "path", "modules/mod_negotiation.so"));
-    append(nlist(
+    append(dict(
         "name", "dir_module",
         "path", "modules/mod_dir.so"));
-    append(nlist(
+    append(dict(
         "name", "actions_module",
         "path", "modules/mod_actions.so"));
-    append(nlist(
+    append(dict(
         "name", "speling_module",
         "path", "modules/mod_speling.so"));
-    append(nlist(
+    append(dict(
         "name", "userdir_module",
         "path", "modules/mod_userdir.so"));
-    append(nlist(
+    append(dict(
         "name", "alias_module",
         "path", "modules/mod_alias.so"));
-    append(nlist(
+    append(dict(
         "name", "substitute_module",
         "path", "modules/mod_substitute.so"));
-    append(nlist(
+    append(dict(
         "name", "rewrite_module",
         "path", "modules/mod_rewrite.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_module",
         "path", "modules/mod_proxy.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_balancer_module",
         "path", "modules/mod_proxy_balancer.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_ftp_module",
         "path", "modules/mod_proxy_ftp.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_http_module",
         "path", "modules/mod_proxy_http.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_ajp_module",
         "path", "modules/mod_proxy_ajp.so"));
-    append(nlist(
+    append(dict(
         "name", "proxy_connect_module",
         "path", "modules/mod_proxy_connect.so"));
-    append(nlist(
+    append(dict(
         "name", "cache_module",
         "path", "modules/mod_cache.so"));
-    append(nlist(
+    append(dict(
         "name", "suexec_module",
         "path", "modules/mod_suexec.so"));
-    append(nlist(
+    append(dict(
         "name", "disk_cache_module",
         "path", "modules/mod_disk_cache.so"));
-    append(nlist(
+    append(dict(
         "name", "cgi_module",
         "path", "modules/mod_cgi.so"));
-    append(nlist(
+    append(dict(
         "name", "version_module",
         "path", "modules/mod_version.so"));
 };
 
 "ifmodules" = list(
-    nlist(
+    dict(
         "name", "prefork.c",
         "startservers", 8,
         "minspareservers", 5,
@@ -279,7 +279,7 @@ structure template struct/httpd_conf_el6;
         "maxclients", 256,
         "maxrequestsperchild", 4000,
         ),
-    nlist(
+    dict(
         "name", "worker.c",
         "startservers", 4,
         "maxclients", 300,
@@ -288,42 +288,42 @@ structure template struct/httpd_conf_el6;
         "threadsperchild", 25,
         "maxrequestsperchild", 0,
         ),
-    nlist(
+    dict(
         "name", "mod_userdir.c",
         "userdir", "disabled",
         ),
-    nlist(
+    dict(
         "name", "mod_mime_magic.c",
         "mimemagicfile", "conf/magic",
         ),
-    nlist(
+    dict(
         "name", "mod_dav_fs.c",
         "davlockdb", "/var/lib/dav/lockdb",
         ),
-    nlist(
+    dict(
         "name", "mod_negotiation.c",
-        "ifmodules" , list(nlist(
+        "ifmodules" , list(dict(
             "name", "mod_include.c",
-            "directories", list(nlist(
+            "directories", list(dict(
                 "name", "/var/www/error",
                 "options", list("IncludesNoExec"),
-                "access", nlist(
+                "access", dict(
                     "order", list("allow", "deny"),
                     "allow", list("all"),
                     "allowoverride", list("None")
                     ),
-                "lang", nlist(
+                "lang", dict(
                     "priority", list("en", "es", "de", "fr"),
                     "forcepriority", list("Prefer", "Fallback"),
                     ),
-                "handler", nlist(
-                    "add", list(nlist(
+                "handler", dict(
+                    "add", list(dict(
                         "name", "type-map",
                         "target", list("var"),
                         )),
                     ),
-                "outputfilter", nlist(
-                    "add", list(nlist(
+                "outputfilter", dict(
+                    "add", list(dict(
                         "name", "Includes",
                         "target", list("html")
                         )),
@@ -337,29 +337,29 @@ structure template struct/httpd_conf_el6;
 "log/error" = "logs/error_log";
 "log/level" = "warn";
 "log/format" = list(
-    nlist(
+    dict(
         "name", "combined",
         "expr", '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"',
         ),
-    nlist(
+    dict(
         "name", "common",
         "expr", '%h %l %u %t \"%r\" %>s %b',
         ),
-    nlist(
+    dict(
         "name", "referer",
         "expr", '%{Referer}i -> %U',
         ),
-    nlist(
+    dict(
         "name", "agent",
         "expr", '%{User-agent}i',
         ),
-    nlist(
+    dict(
         "name", "ssl_combined",
         "expr", '%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b',
         ),
 );
 "log/custom" = list(
-    nlist(
+    dict(
         "name", "combined",
         "location", "logs/access_log",
         ),
@@ -371,37 +371,37 @@ structure template struct/httpd_conf_el6;
 "type/config" = "/etc/mime.types";
 "type/default" = "text/plain";
 "type/add" = list(
-    nlist(
+    dict(
         "name", "application/x-compress",
         "target", list(".Z"),
         ),
-    nlist(
+    dict(
         "name", "application/x-gzip",
         "target", list(".gz", ".tgz"),
         ),
-    nlist(
+    dict(
         "name", "application/x-x509-ca-cert",
         "target", list(".crt"),
         ),
-    nlist(
+    dict(
         "name", "application/x-pkcs7-crl",
         "target", list(".crl"),
         ),
-    nlist(
+    dict(
         "name", "text/html",
         "target", list(".shtml"),
         ),
 );
 
 "handler/add" = list(
-    nlist(
+    dict(
         "name", "type-map",
         "target", list("var"),
         ),
 );
 
 "outputfilter/add" = list(
-    nlist(
+    dict(
         "name", "INCLUDES",
         "target", list(".shtml"),
         ),
@@ -409,107 +409,107 @@ structure template struct/httpd_conf_el6;
 
 "icon/default" = "/icons/unknown.gif";
 "icon/addbyencoding" = list(
-    nlist(
+    dict(
         "icon", "(CMP,/icons/compressed.gif)",
         "names", list("x-compress x-gzip")
         ),
 );
 "icon/addbytype" = list(
-    nlist(
+    dict(
         "icon", "(TXT,/icons/text.gif)",
         "names", list("text/*"),
         ),
-    nlist(
+    dict(
         "icon", "(IMG,/icons/image2.gif)",
         "names", list("image/*"),
         ),
-    nlist(
+    dict(
         "icon", "(SND,/icons/sound2.gif)",
         "names", list("audio/*"),
         ),
-    nlist(
+    dict(
         "icon", "(VID,/icons/movie.gif)",
         "names", list("video/*"),
         ),
 );
 "icon/add" = list(
-    nlist(
+    dict(
         "icon", "/icons/binary.gif",
         "names", list(".bin", ".exe"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/binhex.gif",
         "names", list(".hqx"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/tar.gif",
         "names", list(".tar"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/world2.gif",
         "names", list(".wrl", ".wrl.gz", ".vrml", ".vrm", ".iv"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/compressed.gif",
         "names", list(".Z", ".z", ".tgz", ".gz", ".zip"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/a.gif",
         "names", list(".ps", ".ai", ".eps"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/layout.gif",
         "names", list(".html", ".shtml", ".htm", ".pdf"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/text.gif",
         "names", list(".txt"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/c.gif",
         "names", list(".c"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/p.gif",
         "names", list(".pl", ".py"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/f.gif",
         "names", list(".for"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/dvi.gif",
         "names", list(".dvi"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/uuencoded.gif",
         "names", list(".uu"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/script.gif",
         "names", list(".conf", ".sh", ".shar", ".csh", ".ksh", ".tcl"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/tex.gif",
         "names", list(".tex"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/bomb.gif",
         "names", list("core"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/back.gif",
         "names", list(".."),
         ),
-    nlist(
+    dict(
         "icon", "/icons/hand.right.gif",
         "names", list("README"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/folder.gif",
         "names", list("^^DIRECTORY^^"),
         ),
-    nlist(
+    dict(
         "icon", "/icons/blank.gif",
         "names", list("^^BLANKICON^^"),
         ),
@@ -522,107 +522,107 @@ structure template struct/httpd_conf_el6;
 );
 "lang/forcepriority" = list("Prefer", "Fallback");
 "lang/add" = list(
-    nlist(
+    dict(
         "lang", "ca",
         "names", list(".ca"),
         ),
-    nlist(
+    dict(
         "lang", "cs",
         "names", list(".cz", ".cs"),
         ),
-    nlist(
+    dict(
         "lang", "da",
         "names", list(".dk"),
         ),
-    nlist(
+    dict(
         "lang", "de",
         "names", list(".de"),
         ),
-    nlist(
+    dict(
         "lang", "el",
         "names", list(".el"),
         ),
-    nlist(
+    dict(
         "lang", "en",
         "names", list(".en"),
         ),
-    nlist(
+    dict(
         "lang", "eo",
         "names", list(".eo"),
         ),
-    nlist(
+    dict(
         "lang", "es",
         "names", list(".es"),
         ),
-    nlist(
+    dict(
         "lang", "et",
         "names", list(".et"),
         ),
-    nlist(
+    dict(
         "lang", "fr",
         "names", list(".fr"),
         ),
-    nlist(
+    dict(
         "lang", "he",
         "names", list(".he"),
         ),
-    nlist(
+    dict(
         "lang", "hr",
         "names", list(".hr"),
         ),
-    nlist(
+    dict(
         "lang", "it",
         "names", list(".it"),
         ),
-    nlist(
+    dict(
         "lang", "ja",
         "names", list(".ja"),
         ),
-    nlist(
+    dict(
         "lang", "ko",
         "names", list(".ko"),
         ),
-    nlist(
+    dict(
         "lang", "ltz",
         "names", list(".ltz"),
         ),
-    nlist(
+    dict(
         "lang", "nl",
         "names", list(".nl"),
         ),
-    nlist(
+    dict(
         "lang", "nn",
         "names", list(".nn"),
         ),
-    nlist(
+    dict(
         "lang", "no",
         "names", list(".no"),
         ),
-    nlist(
+    dict(
         "lang", "pl",
         "names", list(".po"),
         ),
-    nlist(
+    dict(
         "lang", "pt",
         "names", list(".pt"),
         ),
-    nlist(
+    dict(
         "lang", "pt-BR",
         "names", list(".pt-br"),
         ),
-    nlist(
+    dict(
         "lang", "ru",
         "names", list(".ru"),
         ),
-    nlist(
+    dict(
         "lang", "sv",
         "names", list(".sv"),
         ),
-    nlist(
+    dict(
         "lang", "zh-CN",
         "names", list(".zh-cn"),
         ),
-    nlist(
+    dict(
         "lang", "zh-TW",
         "names", list(".zh-tw"),
         ),

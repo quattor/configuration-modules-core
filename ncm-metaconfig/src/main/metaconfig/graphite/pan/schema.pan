@@ -110,7 +110,7 @@ type carbon_cache = {
     "manhole_user" ? string = "admin"
     "manhole_public_key" ? string
 
-} = nlist();
+} = dict();
 
 type carbon_relay = {
     include carbon_common
@@ -128,7 +128,7 @@ type carbon_relay = {
     "max_datapoints_per_message" : long(0..) = 500
     "max_queue_size" : long(0..) = 10000
 
-} = nlist();
+} = dict();
 
 type carbon_aggregator = {
     include carbon_common
@@ -144,12 +144,12 @@ type carbon_aggregator = {
     "max_queue_size" : long(0..) = 10000
     "max_datapoints_per_message" : long(0..) = 500
     "max_aggregation_intervals" : long(0..) = 5
-} = nlist();
+} = dict();
 
 type carbon_config = {
     "cache" : carbon_cache
     "cache_instances" ? carbon_cache{}
     "relay" : carbon_relay
     "aggregator" : carbon_aggregator
-} = nlist();
+} = dict();
 

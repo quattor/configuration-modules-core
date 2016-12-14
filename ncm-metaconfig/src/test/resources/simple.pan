@@ -7,4 +7,4 @@ prefix "/software/components/metaconfig/services/{/foo/bar}";
 "group" = 'root';
 "module" = "json";
 "daemons/foo" = "restart";
-"contents" = nlist("foo", "bar");
+"contents" = dict("foo", "bar");

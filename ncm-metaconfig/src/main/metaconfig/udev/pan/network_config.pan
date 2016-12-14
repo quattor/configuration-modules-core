@@ -12,7 +12,7 @@ prefix "/software/components/metaconfig/services/{/etc/udev/rules.d/09-network.r
 bind "/software/components/metaconfig/services/{/etc/udev/rules.d/09-network.rules}/contents/interfaces" = udev_interfaces;
 
 function udev_all_interfaces = {
-    t=nlist();
+    t=dict();
     foreach (iface; v; value("/hardware/cards/nic")) {
         t[iface] = v["hwaddr"];
     };

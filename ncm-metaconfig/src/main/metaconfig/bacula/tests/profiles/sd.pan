@@ -12,7 +12,7 @@ prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/co
 prefix "/software/components/metaconfig/services/{/etc/bacula/bacula-sd.conf}/contents/main/Messages/0";
 "Name" = "standard";
 "messagedestinations" = list(
-    nlist(
+    dict(
         "destination", "director",
         "address", format("%s-dir", BACULA_DIRECTOR_SHORT),
         "types", list("all", "!skipped", "!restored"),

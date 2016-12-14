@@ -57,7 +57,7 @@ type httpd_gssapi = {
 };
 
 type httpd_kerberos = {
-    "keytab" : string # this becomes krb5keytab (but nlists can't start with digits)
+    "keytab" : string # this becomes krb5keytab (but dicts can't start with digits)
     "methodnegotiate" : boolean
     "methodk5passwd" : boolean
     "servicename" : string
@@ -279,7 +279,7 @@ type httpd_auth_type = string with match(SELF, "^(Basic|Kerberos|Shibboleth|GSSA
 
 type httpd_auth = {
     "name": string
-    "require" : httpd_auth_require = nlist('type', 'valid-user')
+    "require" : httpd_auth_require = dict('type', 'valid-user')
     "userfile" ? string
     "groupfile" ? string
     "basicprovider" ? string with match(SELF, "^(file)$")
@@ -549,7 +549,7 @@ type httpd_ifmodule = {
 
 # only for conf/httpd.conf
 type httpd_global = {
-    "global" : httpd_global_system = nlist()
+    "global" : httpd_global_system = dict()
     "aliases" ? httpd_alias[]
     "modules" ? httpd_module[]
     "ifmodules" : httpd_ifmodule[]

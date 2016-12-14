@@ -12,7 +12,7 @@ prefix "/software/components/metaconfig/services/{/etc/carbon/relay-rules.conf}"
 prefix "/software/components/metaconfig/services/{/etc/carbon/relay-rules.conf}/contents";
 
 # needs at least one default entry
-"main/0" = nlist(
+"main/0" = dict(
     "name","default",
     "default", true, # only for default rule!
     "pattern", ".*", # not used when default is true!

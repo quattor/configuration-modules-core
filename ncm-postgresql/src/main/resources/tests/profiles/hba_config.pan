@@ -6,10 +6,10 @@ bind "/hba" = postgresql_hba[];
 
 # fake databases for pgsql_hba_database type check
 prefix "/software/components/postgresql/databases";
-"db1" = nlist();
-"db2" = nlist();
-"db3" = nlist();
-"db4" = nlist();
+"db1" = dict();
+"db2" = dict();
+"db3" = dict();
+"db4" = dict();
 
 prefix "/hba/0";
 "host" = "local";

@@ -1,3 +1,3 @@
 object template icinga_simple;
 
-"/software/components/icinga/servicegroups" = nlist();
+"/software/components/icinga/servicegroups" = dict();

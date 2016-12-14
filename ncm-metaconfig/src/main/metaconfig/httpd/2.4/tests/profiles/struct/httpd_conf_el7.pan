@@ -1,112 +1,112 @@
 structure template struct/httpd_conf_el7;
 
 "directories" = list(
-    nlist(
+    dict(
         "name", "/",
-        "access", nlist("allowoverride", list("None")),
-        "authz", list(nlist("all", "denied")),
+        "access", dict("allowoverride", list("None")),
+        "authz", list(dict("all", "denied")),
         ),
-    nlist(
+    dict(
         "name", "/var/www",
-        "access", nlist("allowoverride", list("None")),
-        "authz", list(nlist("all", "granted")),
+        "access", dict("allowoverride", list("None")),
+        "authz", list(dict("all", "granted")),
         ),
-    nlist(
+    dict(
         "name", "/var/www/html",
         "options", list("Indexes", "FollowSymLinks"),
-        "access", nlist("allowoverride", list("None")),
-        "authz", list(nlist("all", "granted")),
+        "access", dict("allowoverride", list("None")),
+        "authz", list(dict("all", "granted")),
         ),
-    nlist(
+    dict(
         "name", "/var/www/cgi-bin",
         "options", list("None"),
-        "access", nlist("allowoverride", list("None")),
-        "authz", list(nlist("all", "granted")),
+        "access", dict("allowoverride", list("None")),
+        "authz", list(dict("all", "granted")),
         ),
 );
 
 
 "ifmodules" = list(
-    nlist(
+    dict(
         "name", "mime_magic_module",
         "mimemagicfile", "conf/magic",
         ),
-    nlist(
+    dict(
         "name", "mime_module",
-        "type", nlist(
+        "type", dict(
             "config", "/etc/mime.types",
             "add", list(
-                nlist(
+                dict(
                     "name", "application/x-compress",
                     "target", list('.Z'),
                     ),
-                nlist(
+                dict(
                     "name", "application/x-gzip",
                     "target", list('.gz', '.tgz'),
                     ),
-                nlist(
+                dict(
                     "name", "text/html",
                     "target", list('.shtml'),
                     ),
                 ),
             ),
-        "outputfilter", nlist(
+        "outputfilter", dict(
             "add", list(
-                nlist(
+                dict(
                     "name", "INLCUDES",
                     "target", list(".shtml"),
                     ),
                 ),
             ),
         ),
-    nlist(
+    dict(
         "name", "log_config_module",
-        "ifmodules" , list(nlist(
+        "ifmodules" , list(dict(
             "name", "logio_module",
-            "log", nlist(
-                "format", list(nlist(
+            "log", dict(
+                "format", list(dict(
                     "name", "combinedio",
                     "expr", '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O',
                     )),
                 ),
             )),
-        "log", nlist(
+        "log", dict(
             "format", list(
-                nlist(
+                dict(
                     "name", "combined",
                     "expr", '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"',
                     ),
-                nlist(
+                dict(
                     "name", "common",
                     "expr", '%h %l %u %t \"%r\" %>s %b',
                     ),
                 ),
-            "custom", list(nlist(
+            "custom", list(dict(
                 "name", "combined",
                 "location", "logs/access_log",
                 )),
             ),
         ),
 
-    nlist(
+    dict(
         "name", "alias_module",
-        "aliases", list(nlist(
+        "aliases", list(dict(
             "url", "/cgi-bin/",
             "destination", "/var/www/cgi-bin/",
             "type", "script",
             )),
         ),
-    nlist(
+    dict(
         "name", "dir_module",
         "directoryindex", list("index.html"),
         ),
 );
 
 "files" = list(
-    nlist(
+    dict(
         "name", '^\.ht',
         "regex", true,
-        "authz", list(nlist("all", "denied")),
+        "authz", list(dict("all", "denied")),
         ),
 );
 

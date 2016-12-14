@@ -6,44 +6,44 @@ include 'metaconfig/logstash/config';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/output";
 
-"plugins" = append(nlist(
-    "gelf", nlist(
-        "custom_fields", nlist("type", "remotegelf"),
+"plugins" = append(dict(
+    "gelf", dict(
+        "custom_fields", dict("type", "remotegelf"),
         "host", "remotehost.domain",
         "sender", "myhost.domain",
         ),
     ),
 );
 
-"conditionals" = append(nlist(
+"conditionals" = append(dict(
     "type", "ifelseif",
-    "expr", list(nlist(
+    "expr", list(dict(
         "left", "[type]",
         "test", "==",
         "right", "'httpd'",
         )),
-    "plugins", list(nlist("gelf", nlist(
+    "plugins", list(dict("gelf", dict(
         "port", 12201,
         "sender", 'myhost.domain',
         "ship_metadata", true,
         "host", 'remotehost.domain',
-        "custom_fields", nlist("type", "remotegelf"),
+        "custom_fields", dict("type", "remotegelf"),
         "level", list("info"),
         ))),
 ));
 
-"conditionals" = append(nlist(
+"conditionals" = append(dict(
     "type", "ifelseif",
-    "expr", list(nlist(
+    "expr", list(dict(
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
         )),
-    "plugins", list(nlist("gelf", nlist(
+    "plugins", list(dict("gelf", dict(
         "port", 12201,
         "ship_metadata", true,
         "host", 'remotehost.domain',
-        "custom_fields", nlist("type", "remotegelf"),
+        "custom_fields", dict("type", "remotegelf"),
         "level", list("%{level}"),
         "facility", "%{facility}",
         ))),
@@ -51,7 +51,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/input";
-"plugins" = append(nlist("gelf", nlist(
+"plugins" = append(dict("gelf", dict(
     # type is/can be set in output gelf filter.
     # this will not forcefully overwrtie in 1.2.2
     "type", "remotegelf",
@@ -59,44 +59,44 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 )));
 
 
-"plugins" = append(nlist("file", nlist(
+"plugins" = append(dict("file", dict(
     "path", list("/var/adm/ras/mmfs.log.latest"),
     "type", "gpfs",
     "tags", list("gpfs", "storage"),
 )));
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/filter";
-"conditionals" = append(nlist(
+"conditionals" = append(dict(
     "type", "ifelseif",
-    "expr", list(nlist(
+    "expr", list(dict(
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
         )),
-    "plugins", list(nlist("mutate", nlist(
-        "split", nlist("tags", ", "),
+    "plugins", list(dict("mutate", dict(
+        "split", dict("tags", ", "),
     ))),
 ));
 
 
-"conditionals" = append(nlist(
+"conditionals" = append(dict(
     "type", "ifelseif",
-    "expr", list(nlist(
+    "expr", list(dict(
         "left", "[type]",
         "test", "==",
         "right", "'gpfs'",
         )),
     "plugins", list(
-        nlist("grok", nlist(
-            "match", list(nlist(
+        dict("grok", dict(
+            "match", list(dict(
                 "name", "message",
                 "pattern", list("%{GPFSLOG}"),
                 )),
             "patterns_dir", list("/usr/share/grok"),
-            "add_field", nlist("program", "gpfs"),
+            "add_field", dict("program", "gpfs"),
             )),
-        nlist('drop', nlist(
-            "_conditional", nlist("expr", list(nlist(
+        dict('drop', dict(
+            "_conditional", dict("expr", list(dict(
                 "left", "[sometag]",
                 "test", "!~",
                 "right", "'^SOME_STRING'",
@@ -104,13 +104,13 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             "percentage", 80,
             "periodic_flush", true,
             )),
-        nlist('drop', nlist("_conditional", nlist("expr", list(nlist(
+        dict('drop', dict("_conditional", dict("expr", list(dict(
             "left", "[someothertag]",
             "test", "=~",
             "right", "'^SOME_OTHERSTRING'",
             ))))),
-        nlist("date", nlist(
-            "match", nlist(
+        dict("date", dict(
+            "match", dict(
                 "name", "timestamp",
                 "pattern", list("E MMM dd HH:mm:ss.SSS yyyy", "E MMM  d HH:mm:ss.SSS yyyy"),
                 ),

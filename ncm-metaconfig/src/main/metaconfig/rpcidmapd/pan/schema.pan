@@ -12,13 +12,13 @@ type rpcidmapd_general_config = {
 type rpcidmapd_mapping_config = {
     "Nobody-User" : string = "nobody"
     "Nobody-Group" : string = "nobody"
-} = nlist();
+} = dict();
 
 
 type rpcidmapd_translation_config = {
     "Method" : string = "nsswitch" with match(SELF, "^(nsswitch|umich_ldap|static)$")
     "GSS-Methods" ? string[]
-} = nlist();
+} = dict();
 
 type rpcidmapd_umich_schema_config = {
     "LDAP_server" : type_fqdn # the.ldap.server
@@ -44,7 +44,7 @@ type rpcidmapd_config = {
     "General" : rpcidmapd_general_config
     "Mapping" : rpcidmapd_mapping_config
     "Translation" : rpcidmapd_translation_config
-    "Static" ? string{}{} # nlist of nlists: 1st key = REALM, 2nd key someuser, value = localuser, converted in someuser@REALM = localuser
+    "Static" ? string{}{} # dict of dicts: 1st key = REALM, 2nd key someuser, value = localuser, converted in someuser@REALM = localuser
     "UMICH_SCHEMA" ? rpcidmapd_umich_schema_config
 };
 

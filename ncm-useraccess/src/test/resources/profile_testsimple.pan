@@ -18,15 +18,15 @@ include clusters/testing/testbase;
 include components/useraccess/config;
 
 
-"/software/components/useraccess/users/root" = nlist (
+"/software/components/useraccess/users/root" = dict (
     "kerberos4", list (
-        nlist (
+        dict (
             "realm", "CERN.CH",
             "principal", "munoz",
             )
         ),
     "kerberos5", list (
-        nlist (
+        dict (
             "realm", "CERN.CH",
             "principal", "munoz"
             )

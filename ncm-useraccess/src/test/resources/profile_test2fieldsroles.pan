@@ -22,19 +22,19 @@ include clusters/testing/testbase;
 include components/useraccess/config;
 
 
-"/software/components/useraccess/users/root" = nlist(
+"/software/components/useraccess/users/root" = dict(
     "kerberos4", list(
-        nlist(
+        dict(
             "realm", "CERN.CH",
             "principal", "munoz",
         ),
-        nlist(
+        dict(
             "realm", "CERN.CH",
             "principal", "mejias"
         ),
     ),
     "kerberos5", list (
-        nlist (
+        dict (
             "realm", "CERN.CH",
             "principal", "munoz"
         ),
@@ -43,15 +43,15 @@ include components/useraccess/config;
     "ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv"),
 );
 
-"/software/components/useraccess/roles/base" = nlist(
+"/software/components/useraccess/roles/base" = dict(
     "kerberos4", list(
-        nlist(
+        dict(
             "realm", "CERN.CH",
             "principal", "munoz",
         ),
     ),
     "kerberos5", list(
-        nlist(
+        dict(
             "realm", "CERN.CH",
             "principal", "munoz"
         ),
@@ -60,9 +60,9 @@ include components/useraccess/config;
     "ssh_keys", list ("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5Px4X4NN/U/0kGwlV8GrPeQK6T9jo7BfpTGLTAshleb/NbyhFJXLiGf+hFsWtXSxXjiDFZPEAXNQc1+JKp6dmURIp+o+BPhqz49GgM+2qZ+OqxxPdxhtqhTIUclKNjDZxzRNuTBCLGM+/K4Ws5PaVkpwvefU3LcjdV2Y3ThiOJ8= root@uraha.air.tv")
 );
 
-"/software/components/useraccess/roles/extra" = nlist(
+"/software/components/useraccess/roles/extra" = dict(
     "kerberos4", list(
-        nlist(
+        dict(
             "realm", "CERN.CH",
             "principal", "mejias"
         ),
