@@ -8,7 +8,7 @@ use parent qw(Net::FreeIPA
               NCM::Component::FreeIPA::Cert
               NCM::Component::FreeIPA::Service);
 
-use Net::FreeIPA 3.0.1;
+use Net::FreeIPA 3.0.2;
 
 use NCM::Component::FreeIPA::Logger;
 
