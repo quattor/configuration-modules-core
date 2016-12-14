@@ -100,4 +100,6 @@ foreach my $dir (@{$Test::Quattor::caf_path->{directory}}) {
     }
 }
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

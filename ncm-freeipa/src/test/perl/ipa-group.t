@@ -47,4 +47,6 @@ ok(POST_history_ok(["group_add_member missing user=a,b,c,vers"]),
    "added group members to group missing");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

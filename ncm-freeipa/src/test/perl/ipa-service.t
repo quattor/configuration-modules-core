@@ -47,4 +47,6 @@ ok(POST_history_ok([
    "service_allow_retrieve_keytab myservice/myhost.domain host=myhost.*",
 ]), "service_add and service_allow_(create|retrieve)_keytab for host called");
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing;

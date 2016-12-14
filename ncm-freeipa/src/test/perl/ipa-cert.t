@@ -57,4 +57,6 @@ my $fh = get_file('/path/to/cert.crt');
 is("$fh", "CERTDATA\n", "get_cert writes file");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

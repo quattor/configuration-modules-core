@@ -66,4 +66,6 @@ like($fh, qr(^PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e i
 # close the selected FH and reset STDOUT
 NCM::Component::ks::ksclose;
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();

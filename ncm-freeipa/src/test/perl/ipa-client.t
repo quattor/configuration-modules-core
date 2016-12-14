@@ -14,4 +14,6 @@ isa_ok($c, 'NCM::Component::FreeIPA::Client', "NCM::Component::FreeIPA::Client i
 isa_ok($c, 'Net::FreeIPA', "NCM::Component::FreeIPA::Client is a Net::FreeIPA instance");
 
 
+# unmock JSON::XS for Cover
+$mock_rpc::json->unmock_all();
 done_testing();
