@@ -1,8 +1,19 @@
 
+use version;
 use NCM::Component::OpenNebula::commands;
 use CAF::Service;
 use CAF::FileReader;
-use version;
+use Readonly;
+
+Readonly our $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
+Readonly our $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
+Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
+Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
+Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+
+Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
+                                                 onegate_auth occi_auth ec2_auth);
 
 =head1 NAME
 

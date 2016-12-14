@@ -197,16 +197,8 @@ Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
-Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
-Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
-Readonly our $ONEADMIN_USER => "oneadmin";
 Readonly our $SERVERADMIN_USER => "serveradmin";
-Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
-Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
-Readonly our $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
-Readonly our $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
-Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
-                                                 onegate_auth occi_auth ec2_auth);
+Readonly our $ONEADMIN_USER => "oneadmin";
 
 ## AII
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
@@ -239,7 +231,7 @@ sub make_one
         return;
     }
 
-    $self->verbose("Connecting to host $rpc->{host}:$rpc->{port} as user $rpc->{user} (with password) $ONEADMINUSR");
+    $self->verbose("Connecting to host $rpc->{host}:$rpc->{port} as user $rpc->{user} (with password)");
 
     $rpc->{url} = $rpc->{url} || "http://$rpc->{host}:$rpc->{port}/RPC2";
 
