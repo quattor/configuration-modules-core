@@ -227,6 +227,56 @@ sub set_file_opts
 }
 
 
+# Configure OpenNebula server
+sub set_one_server
+{
+    my($self, $tree) = @_;
+    # Set ssh multiplex options
+    $self->set_ssh_command($tree->{ssh_multiplex});
+    # Set tm_system_ds if available
+    my $tm_system_ds = $tree->{tm_system_ds};
+    # untouchables resources
+    my $untouchables = $tree->{untouchables};
+    # hypervisor type
+    my $hypervisor = $tree->{host_hyp};
+
+    # Change oneadmin pass
+    if (exists $tree->{rpc}->{password}) {
+        return 0 if !$self->change_opennebula_passwd($ONEADMIN_USER, $tree->{rpc}->{password});
+    }
+
+    # Configure ONE RPC connector
+    my $one = $self->make_one($tree->{rpc});
+    if (! $one ) {
+        $self->error("No ONE instance created.");
+        return 0;
+    };
+
+    # Check ONE RPC endpoint and OpenNebula version
+    return 0 if !$self->is_supported_one_version($one);
+
+    $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
+
+    # For the moment only Ceph and shared datastores are configured
+    $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
+    # Update system datastore TM_MAD
+    if ($tm_system_ds) {
+        $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
+        $self->info("Updated system datastore TM_MAD = $tm_system_ds");
+    }
+    $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
+    # Manage groups first
+    $self->manage_something($one, "group", $tree->{groups}, $untouchables->{groups});
+    $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
+
+    # Set kvmrc conf
+    if (exists $tree->{kvmrc}) {
+        $self->set_one_service_conf($tree->{kvmrc}, "kvmrc", $KVMRC_CONF_FILE);
+    }
+
+    return 1;
+}
+
 =pod
 
 =back
