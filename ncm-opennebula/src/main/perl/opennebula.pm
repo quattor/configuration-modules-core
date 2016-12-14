@@ -178,6 +178,7 @@ use base qw(NCM::Component);
 use NCM::Component;
 use NCM::Component::OpenNebula::commands;
 use NCM::Component::OpenNebula::Host;
+use NCM::Component::OpenNebula::Server;
 use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
@@ -189,22 +190,21 @@ use Data::Dumper;
 use Readonly;
 use 5.010;
 
-
-Readonly my $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
+Readonly my $CORE_AUTH_DRIVER => "core";
+Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
-Readonly my $ONEADMIN_USER => "oneadmin";
-Readonly my $SERVERADMIN_USER => "serveradmin";
-Readonly my $CORE_AUTH_DRIVER => "core";
-Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly our $ONEADMIN_USER => "oneadmin";
+Readonly our $SERVERADMIN_USER => "serveradmin";
 Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
-Readonly my $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
-Readonly my $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
+Readonly our $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
+Readonly our $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
 
@@ -251,41 +251,6 @@ sub make_one
         fail_on_rpc_fail => 0,
     );
     return $one;
-}
-
-# Detect OpenNebula version
-# through opennebula-server probe files
-# the value gathered from the file must be untaint
-sub detect_opennebula_version
-{
-    my ($self) = @_;
-
-    my $fh = CAF::FileReader->new($OPENNEBULA_VERSION_FILE, log => $self);
-    if (! "$fh") {
-        $self->error("Not found OpenNebula version file: $OPENNEBULA_VERSION_FILE");
-        return;
-    };
-
-    my $version;
-    my $msg = '';
-    # untaint value
-    if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+)?$)/m ) {
-        local $@;
-        eval {
-            $version = version->new($1);
-        };
-        $msg = "$@";
-    } else {
-        $msg = "No match for version regexp";
-    }
-
-    if ($version) {
-        $self->verbose("OpenNebula $OPENNEBULA_VERSION_FILE file has version $version.");
-        return $version;
-    } else {
-        $self->error("No valid version available from $OPENNEBULA_VERSION_FILE file. $msg");
-        return;
-    };
 }
 
 # Detect and process ONE templates
@@ -505,48 +470,6 @@ sub check_quattor_tag
     }
 }
 
-# By default OpenNebula sets a random pass
-# for internal users. This function sets the
-# new passwords
-sub change_opennebula_passwd
-{
-    my ($self, $user, $passwd) = @_;
-    my ($output, $cmd);
-
-    if ($user eq $SERVERADMIN_USER) {
-        $cmd = [$user, join(' ', '--driver server_cipher', $passwd)];
-    } else {
-        $cmd = [$user, $passwd];
-    };
-    $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
-    if (!$output) {
-        $self->error("Quattor unable to modify current $user passwd.");
-        return;
-    } else {
-        $self->info("$user passwd was set correctly.");
-    }
-    $self->set_one_auth_file($user, $passwd);
-    return 1;
-}
-
-# Restart one service
-# after any conf change
-sub restart_opennebula_service {
-    my ($self, $service) = @_;
-    my $srv;
-    if ($service eq "oned") {
-        $srv = CAF::Service->new(['opennebula'], log => $self);
-    } elsif ($service eq "sunstone") {
-        $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
-    } elsif ($service eq "oneflow") {
-        $srv = CAF::Service->new(['opennebula-flow'], log => $self);
-    } elsif ($service eq "kvmrc") {
-        $self->info("Updated $service file. onehost sync is required.");
-        $self->sync_opennebula_hyps();
-    }
-    $srv->restart() if defined($srv);
-}
-
 # Remove/add ONE resources
 # based on resource type
 sub manage_something
@@ -692,79 +615,6 @@ sub get_resource_id
     return;
 }
 
-# Set opennebula conf files
-# used by OpenNebula daemons
-# if conf file is changed 
-# one service must be restarted afterwards
-sub set_one_service_conf
-{
-    my ($self, $data, $service, $config_file, $cfggrp) = @_;
-    my %opts;
-    my $cfgv = $self->detect_opennebula_version;
-    if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
-        $self->verbose("Found OpenNebula >= 5.0 configuration flag");
-        $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
-    };
-    my $oned_templ = $self->process_template($data, $service);
-    %opts = $self->set_file_opts();
-    return if ! %opts;
-    $opts{group} = $cfggrp if ($cfggrp);
-    my $fh = $oned_templ->filewriter($config_file, %opts);
-    my $status = $self->is_conf_file_modified($fh, $config_file, $service, $oned_templ);
-
-    return $status;
-}
-
-# Checks conf file status
-sub is_conf_file_modified
-{
-    my ($self, $fh, $file, $service, $data) = @_;
-
-    if (!defined($fh)) {
-        if (defined($service) && defined($data)) {
-            $self->error("Failed to render $service file: $file (".$data->{fail}."). Skipping");
-        } else {
-            $self->error("Problem rendering $file");
-        }
-        $fh->cancel();
-        $fh->close();
-        return;
-    }
-    if ($fh->close()) {
-        $self->restart_opennebula_service($service) if (defined($service));
-    }
-    return 1;
-}
-
-# Set auth files
-# used by oneadmin client tools
-sub set_one_auth_file
-{
-    my ($self, $user, $data, $cfggrp) = @_;
-    my ($fh, $auth_file, %opts);
-
-    my $passwd = {$user => $data};
-    my $trd = $self->process_template($passwd, "one_auth", 1);
-    %opts = $self->set_file_opts(1);
-    return if ! %opts;
-    $opts{group} = $cfggrp if ($cfggrp);
-
-    if ($user eq $ONEADMIN_USER) {
-        $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
-        $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
-        $self->is_conf_file_modified($fh, $ONEADMIN_AUTH_FILE);
-    } elsif ($user eq $SERVERADMIN_USER) {
-        foreach my $service (@SERVERADMIN_AUTH_FILE) {
-            $auth_file = $SERVERADMIN_AUTH_DIR . $service;
-            $self->verbose("Writing $user auth file: $auth_file");
-            $fh = $trd->filewriter($auth_file, %opts);
-            $self->is_conf_file_modified($fh, $auth_file);
-        }
-    } else {
-        $self->error("Unsupported user: $user");
-    }
-}
-
 # Change conf group if required
 sub set_config_group
 {
@@ -832,27 +682,6 @@ sub set_one_server
     return 1;
 }
 
-# Set filewriter options
-# do not show logs if it contains passwds
-sub set_file_opts
-{
-    my ($self, $secret) = @_;
-    my %opts;
-    if ($ONEADMINUSR and $ONEADMINGRP) {
-        if (!$secret) {
-            %opts = (log => $self);
-        }
-        %opts = (mode => 0640,
-                 backup => ".quattor.backup",
-                 owner => $ONEADMINUSR,
-                 group => $ONEADMINGRP);
-        $self->verbose("Found oneadmin user id ($ONEADMINUSR) and group id ($ONEADMINGRP).");
-        return %opts;
-    } else {
-        $self->error("User or group oneadmin does not exist.");
-        return;
-    }
-}
 
 # Check ONE endpoint and detects ONE version
 # returns false if ONE version is not supported by AII

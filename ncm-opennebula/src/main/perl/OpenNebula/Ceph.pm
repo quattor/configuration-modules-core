@@ -1,3 +1,6 @@
+
+use NCM::Component::OpenNebula::commands;
+
 =head1 NAME
 
 NCM::Component::OpenNebula::Ceph adds C<Ceph> backend support to
@@ -13,9 +16,6 @@ Configures C<Ceph> client and
 it sets the C<Ceph> key in each host.
 
 =cut
-
-use NCM::Component::OpenNebula::commands;
-
 
 sub enable_ceph_node
 {

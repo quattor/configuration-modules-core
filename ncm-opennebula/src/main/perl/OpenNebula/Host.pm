@@ -1,3 +1,7 @@
+
+use NCM::Component::OpenNebula::commands;
+use NCM::Component::OpenNebula::Ceph;
+
 =head1 NAME
 
 NCM::Component::OpenNebula::Host adds C<KVM> hosts support to
@@ -12,9 +16,6 @@ L<NCM::Component::OpenNebula>.
 Adds or removes C<Xen> or C<KVM> hosts.
 
 =cut
-
-use NCM::Component::OpenNebula::commands;
-use NCM::Component::OpenNebula::Ceph;
 
 sub manage_hosts
 {

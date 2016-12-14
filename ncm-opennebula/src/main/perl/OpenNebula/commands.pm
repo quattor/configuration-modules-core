@@ -1,32 +1,3 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-=head1 NAME
-
-ncm-${project.artifactId}: Configuration module for ONE
-
-=head1 DESCRIPTION
-
-Configuration module for ONE. Executes the required ssh commands
-to enable the hypervisors to be used by OpenNebula.
-
-This component needs a 'oneadmin' user. 
-The user should be able to run these commands with sudo without password:
-
-=over
-
-=item - virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
-
-=item - virsh secret-set-value --secret $uuid --base64 $secret
-
-=back
-
-=cut
-
-#package NCM::Component::OpenNebula::commands;
-
 use strict;
 use warnings;
 use LC::Exception;
@@ -49,6 +20,27 @@ Readonly::Array my @ONEHOST_SYNC_COMMAND => qw(/usr/bin/onehost sync -f);
 
 my $sshcmd=[];
 
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for ONE
+
+=head1 DESCRIPTION
+
+Configuration module for ONE. Executes the required ssh commands
+to enable the hypervisors to be used by OpenNebula.
+
+This component needs a 'oneadmin' user. 
+The user should be able to run these commands with sudo without password:
+
+=over
+
+=item - virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
+
+=item - virsh secret-set-value --secret $uuid --base64 $secret
+
+=back
+
+=cut
 
 # Sub to set $sshcmd
 sub set_ssh_command
