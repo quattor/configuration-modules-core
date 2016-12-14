@@ -7,7 +7,7 @@
 
 declaration template components/sudo/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 function is_host_sudo = {
     if (ARGC != 1 || !is_string (ARGV[0])) {

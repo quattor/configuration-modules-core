@@ -4,9 +4,9 @@
 
 declaration template components/fstab/schema;
 
-include {'quattor/schema'};
-include {'quattor/blockdevices'};
-include {'quattor/filesystems'};
+include 'quattor/schema';
+include 'quattor/blockdevices';
+include 'quattor/filesystems';
 
 @documentation{
 Protected mountpoints and filesystem types.

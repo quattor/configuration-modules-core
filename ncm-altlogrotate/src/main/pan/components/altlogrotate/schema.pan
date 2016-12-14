@@ -5,8 +5,8 @@
 
 declaration template components/altlogrotate/schema;
 
-include { 'quattor/schema' };
-include { 'pan/types' };
+include 'quattor/schema';
+include 'pan/types';
 
 type structure_altlogrotate_scripts = {
     'prerotate' ? string

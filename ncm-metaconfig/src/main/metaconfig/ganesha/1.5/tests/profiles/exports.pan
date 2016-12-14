@@ -1,7 +1,7 @@
 unique template exports;
 
 prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf}/contents/exports/0";
-"Export_Id" = 76 ;
+"Export_Id" = 76;
 "Path" = "/some/path";
 "Pseudo" = "/some/pseudo/path";
 "NFS_Protocols" = list(4);

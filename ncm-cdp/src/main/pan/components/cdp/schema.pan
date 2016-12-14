@@ -5,7 +5,7 @@
 
 declaration template components/cdp/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_cdp = {
     include structure_component

@@ -7,13 +7,26 @@ include pro_declaration_component_useraccess;
 include pro_declaration_functions_useraccess;
 
 
-"/software/components/useraccess/users/foo" = nlist ("ssh_keys_urls", list ("http://www.cern.ch/foo"),
-                           "kerberos4", list (nlist ("realm", "cern.ch",
-                                     "principal", "bar")),
-                           "kerberos5", list (nlist ("realm", "cern.ch",
-                                     "principal", "bar",
-                                     "instance", "dontknow")),
-                           "acls", list ("mail"));
-"/software/components/useraccess/active" = true
-;
+"/software/components/useraccess/users/foo" = nlist(
+    "ssh_keys_urls", list(
+        "http://www.cern.ch/foo",
+    ),
+    "kerberos4", list(
+        nlist(
+            "realm", "cern.ch",
+            "principal", "bar",
+        ),
+    ),
+    "kerberos5", list(
+        nlist(
+            "realm", "cern.ch",
+            "principal", "bar",
+            "instance", "dontknow",
+        ),
+    ),
+    "acls", list(
+        "mail",
+    ),
+);
+"/software/components/useraccess/active" = true;
 "/software/components/useraccess/dispatch" = true;

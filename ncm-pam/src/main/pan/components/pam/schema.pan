@@ -27,7 +27,7 @@
 
 declaration template components/pam/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_pam_options = extensible {
 };

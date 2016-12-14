@@ -4,8 +4,8 @@
 
 declaration template components/sudo/functions;
 
-include {'quattor/schema'};
-include {'components/sudo/schema'};
+include 'quattor/schema';
+include 'components/sudo/schema';
 
 # Checks all the alias names in an alias list are valid.
 # It aborts the compilation if there is an invalid alias name.
@@ -13,24 +13,23 @@ include {'components/sudo/schema'};
 # the name of the alias list.
 # TO BE CALLED ONLY FROM is_structure_sudo_component!!
 function check_aliases_list = {
-
     if (!exists(ARGV[0][ARGV[1]])) {
         return (true);
     };
     ls = ARGV[0][ARGV[1]];
     ok = first (ls, aliasname, aliascnt);
     while (ok) {
-        if (!match (aliasname, "^[A-Z][A-Z0-9_]*$")) {
-            error ("Wrong alias name: " + aliasname +
-                   "\nAn alias name must be made of " +
-                   "capitals, numbers and underscores " +
-                   "and start with a capital. " +
-                   "Only ASCII characters are allowed.");
-        };
+        if (!match (aliasname, "^[A-Z][A-Z0-9_]*$")) error(
+            "Wrong alias name: " + aliasname +
+            "\nAn alias name must be made of " +
+            "capitals, numbers and underscores " +
+            "and start with a capital. " +
+            "Only ASCII characters are allowed."
+        );
         if (aliasname == "ALL") {
-            error ("ALL alias is a reserved keyword");
+            error("ALL alias is a reserved keyword");
         };
-        ok = next (ls, aliasname, aliascnt);
+        ok = next(ls, aliasname, aliascnt);
     };
 };
 
@@ -47,10 +46,10 @@ function check_default_options_list = {
     ok = first (ls, opt, v);
     while (ok) {
         if ((exists (v["user"]) && (exists (v["run_as"]) ||
-                          exists (v["host"]))) ||
+            exists (v["host"]))) ||
             (exists (v["run_as"]) && exists (v["host"]))) {
             error ("Only one of user, run_as or host may be " +
-                   "specified for default options");
+                "specified for default options");
         };
         ok = next (ls, opt, v);
     };

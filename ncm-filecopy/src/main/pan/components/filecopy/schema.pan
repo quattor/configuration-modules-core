@@ -1,25 +1,23 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-
-
 declaration template components/filecopy/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 function component_filecopy_valid = {
-  function_name = 'component_filecopy_valid';
-  if ( ARGC != 1 ) {
-    error(function_name+': this function requires 1 argument');
-  };
+    function_name = 'component_filecopy_valid';
+    if ( ARGC != 1 ) {
+        error(function_name+': this function requires 1 argument');
+    };
 
-  if ( !is_defined(SELF['config']) && !is_defined(SELF['source']) ) {
-    error("ncm-filecopy requires either 'config' or 'source' property to be present.");
-  } else if ( is_defined(SELF['config']) && is_defined(SELF['source']) ) {
-    error("ncm-filecopy: 'config' and 'source' properties are mutually exclusive.");
-  };
+    if ( !is_defined(SELF['config']) && !is_defined(SELF['source']) ) {
+        error("ncm-filecopy requires either 'config' or 'source' property to be present.");
+    } else if ( is_defined(SELF['config']) && is_defined(SELF['source']) ) {
+        error("ncm-filecopy: 'config' and 'source' properties are mutually exclusive.");
+    };
 
-  true;
+    true;
 };
 
 # source and config are mutually exclusive, one is required.
@@ -43,5 +41,3 @@ type component_filecopy = {
 };
 
 bind '/software/components/filecopy' = component_filecopy;
-
-

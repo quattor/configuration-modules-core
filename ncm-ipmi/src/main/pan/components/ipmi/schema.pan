@@ -5,7 +5,7 @@
 
 declaration template components/ipmi/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type structure_users = {
     "login" : string

@@ -5,7 +5,7 @@
 
 declaration template components/ofed/schema;
 
-include 'quattor/types/component' ;
+include 'quattor/types/component';
 
 ## openib options (OPENIBOPTS)
 type component_ofed_openib_options = {

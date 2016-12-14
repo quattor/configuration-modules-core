@@ -4,7 +4,7 @@
 
 declaration template components/nrpe/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type component_nrpe_options = {
     'log_facility' : string = 'daemon'

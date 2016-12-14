@@ -5,9 +5,9 @@
 
 declaration template components/libvirtd/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
-include {'pan/types'};
+include 'pan/types';
 
 type structure_libvirtd_network = {
     'listen_tls' ? long(0..1) # enabled by default

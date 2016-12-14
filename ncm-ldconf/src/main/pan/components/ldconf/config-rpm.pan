@@ -4,7 +4,7 @@
 
 
 unique template components/ldconf/config-rpm;
-include {'components/ldconf/schema'};
+include 'components/ldconf/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

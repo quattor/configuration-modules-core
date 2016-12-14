@@ -5,7 +5,7 @@
 
 declaration template components/grub/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 @{
  the crypted password can be supplied either in the password field

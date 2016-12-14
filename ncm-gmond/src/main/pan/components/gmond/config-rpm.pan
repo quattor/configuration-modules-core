@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/gmond/config-rpm;
-include {'components/gmond/schema'};
+include 'components/gmond/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

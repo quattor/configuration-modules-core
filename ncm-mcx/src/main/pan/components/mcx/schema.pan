@@ -13,7 +13,7 @@
 
 declaration template components/mcx/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 # To support:
 #        "mcx_application_data", nlist(

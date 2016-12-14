@@ -7,7 +7,7 @@
 
 declaration template components/etcservices/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type component_etcservices_type = {
     include structure_component

@@ -4,7 +4,7 @@
 
 declaration template components/gmetad/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type structure_component_gmetad_data_source_host = {
     "address" : type_hostname

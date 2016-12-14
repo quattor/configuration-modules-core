@@ -12,8 +12,8 @@ include 'quattor/types/component';
 }
 type postfix_lookup_type_string = string with
     match (SELF, "^(btree|cdb|cidr|dbm|environ|fail|hash|internal|ldap" +
-       "|memcache|mysql|netinfo|nis|nisplus|pcre|pgsql|proxy|regexp" +
-       "|sdbm|socketmap|sqlite|static|tcp|texthash|unix)$") ||
+        "|memcache|mysql|netinfo|nis|nisplus|pcre|pgsql|proxy|regexp" +
+        "|sdbm|socketmap|sqlite|static|tcp|texthash|unix)$") ||
     error ("Wrong Postfix lookup type. See http://www.postfix.org/DATABASE_README.html for details");
 
 @{

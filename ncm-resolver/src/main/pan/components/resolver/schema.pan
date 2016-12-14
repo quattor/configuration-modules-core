@@ -30,7 +30,7 @@
 
 declaration template components/resolver/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_resolver_type = {
     include structure_component

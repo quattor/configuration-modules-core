@@ -5,7 +5,7 @@
 
 declaration template components/syslog/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 type component_selector_type = {
     "facility" : string with match (SELF, '\*|auth|authpriv|cron|daemon|kern|lpr|mail|mark|news|security|syslog|user|uucp|local[0-7]')

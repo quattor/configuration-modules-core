@@ -38,17 +38,17 @@ function chkconfig_allow_combinations = {
 };
 
 type service_type = {
-  "name" ? string
-  "add" ? boolean
-  "del" ? boolean
-  "on" ? string
-  "off" ? string
-  "reset" ? string
-  "startstop" ? boolean
+    "name" ? string
+    "add" ? boolean
+    "del" ? boolean
+    "on" ? string
+    "off" ? string
+    "reset" ? string
+    "startstop" ? boolean
 } with chkconfig_allow_combinations(SELF);
 
 type component_chkconfig_type = {
-  include structure_component
-  "service" : service_type{}
-  "default" ? string with match (SELF, '^(ignore|off)$')
+    include structure_component
+    "service" : service_type{}
+    "default" ? string with match (SELF, '^(ignore|off)$')
 };

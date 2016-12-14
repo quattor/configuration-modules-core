@@ -23,7 +23,7 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
 
 "hosts" = {
     foreach (name; desc; value("/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents/nodes")) {
-       SELF[name]["node"] = name;
+        SELF[name]["node"] = name;
     };
     SELF;
 };

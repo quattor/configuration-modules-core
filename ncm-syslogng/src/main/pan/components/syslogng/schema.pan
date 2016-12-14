@@ -4,18 +4,15 @@
 
 declaration template components/syslogng/schema;
 
-include {'quattor/schema'};
+include 'quattor/schema';
 
 # Convenience definitions
-type filterstring = string with exists ("/software/components/syslogng/filters/"
-                    + SELF) ||
-                               error ("No filters with name " + SELF);
-type srcstring = string with exists ("/software/components/syslogng/sources/"
-                     + SELF) ||
-                               error ("No sources with name " + SELF);
-type dststring = string with exists ("/software/components/syslogng/destinations/"
-                    + SELF) ||
-                               error ("No destinations with name " + SELF);
+type filterstring = string with
+    exists("/software/components/syslogng/filters/" + SELF) || error("No filters with name " + SELF);
+type srcstring = string with
+    exists ("/software/components/syslogng/sources/" + SELF) || error ("No sources with name " + SELF);
+type dststring = string with
+    exists ("/software/components/syslogng/destinations/" + SELF) || error ("No destinations with name " + SELF);
 
 type prioritystring = string with match (SELF, "^(emerg|alert|crit|err|warning|notice|info|debug)$");
 
@@ -265,4 +262,3 @@ type structure_component_syslogng = {
 };
 
 bind "/software/components/syslogng" = structure_component_syslogng;
-

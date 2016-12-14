@@ -5,7 +5,7 @@
 
 declaration template components/gpfs/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_gpfs_cfg = {
     "url" : string

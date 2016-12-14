@@ -5,7 +5,7 @@
 
 declaration template components/${project.artifactId}/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 @documentation{
     desc = check that the ceph osd names are no ceph reserved paths

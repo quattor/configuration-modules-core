@@ -18,13 +18,14 @@ include 'components/sudo/config';
         "/usr/bin/file -sL *"
     );
     foreach (i; cmd; sudolist){
-        nl = nlist("host", "ALL",
-                   "options", "NOPASSWD:",
-                   "run_as", "ALL",
-                   "user", "ceph");
+        nl = nlist(
+            "host", "ALL",
+            "options", "NOPASSWD:",
+            "run_as", "ALL",
+            "user", "ceph",
+        );
         nl["cmd"] = cmd;
         append(nl);
     };
     SELF;
 };
-

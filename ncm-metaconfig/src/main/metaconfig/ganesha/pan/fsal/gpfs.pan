@@ -21,7 +21,7 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.nfsd.conf
 "CacheInode_GC_Policy/FD_Limit_Percent" = 90;
 "CacheInode_GC_Policy/Reaper_Work" = 15000;
 
-"NFS_Core_Param/Nb_Worker" = 128*GANESHA_GPFS_MULTIPLIER ;
+"NFS_Core_Param/Nb_Worker" = 128*GANESHA_GPFS_MULTIPLIER;
 "NFS_Core_Param/MNT_Port" = 32767;
 "NFS_Core_Param/NLM_Port" = 32769;
 "NFS_Core_Param/RQOTA_Port" = null; # no rqouta on gpfs

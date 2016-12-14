@@ -9,8 +9,8 @@
 #
 ################################################################################
 unique template components/nagios/config-rpm;
-include {'components/nagios/functions'};
-include {'components/nagios/schema'};
+include 'components/nagios/functions';
+include 'components/nagios/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

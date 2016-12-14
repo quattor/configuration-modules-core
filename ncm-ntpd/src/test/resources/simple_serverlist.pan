@@ -2,7 +2,7 @@ object template simple_serverlist;
 
 "/software/components/ntpd" = nlist();
 
-include { 'base_serverlist_options' };
+include 'base_serverlist_options';
 
 prefix "/software/components/ntpd";
 

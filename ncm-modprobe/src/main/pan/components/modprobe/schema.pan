@@ -4,7 +4,7 @@
 
 
 declaration template components/modprobe/schema;
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type module_type = {
     "name" : string # name of the loadable modules"
