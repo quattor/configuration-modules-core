@@ -11,6 +11,7 @@ Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";
 Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
 Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
+Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);

@@ -1,5 +1,8 @@
 
 use NCM::Component::OpenNebula::commands;
+use Readonly;
+
+Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 
 =head1 NAME
 

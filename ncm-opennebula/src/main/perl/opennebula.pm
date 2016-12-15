@@ -193,11 +193,9 @@ use 5.010;
 
 Readonly my $CORE_AUTH_DRIVER => "core";
 Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
-Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
-Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $SERVERADMIN_USER => "serveradmin";
 Readonly our $ONEADMIN_USER => "oneadmin";
 
