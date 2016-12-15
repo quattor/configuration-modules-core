@@ -6,7 +6,7 @@
   <artifactId>iptables</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.12.0-rc2</version>
+  <version>16.12.0-rc3-SNAPSHOT</version>
   <name>Setup the IPTABLES firewall.</name>
 
 
