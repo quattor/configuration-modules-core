@@ -229,7 +229,7 @@ sub set_file_opts
 
 =item set_one_server
 
-Configures OpenNebula server.
+Configures C<OpenNebula> server.
 
 =cut
 
@@ -280,6 +280,28 @@ sub set_one_server
     }
 
     return 1;
+}
+
+=item set_config_group
+
+Sets C<OpenNebula> configuration file group.
+
+=cut
+
+sub set_config_group
+{
+    my($self, $tree) = @_;
+
+    if (exists $tree->{cfg_group}) {
+        if ((getpwnam($tree->{cfg_group}))[3]) {
+            my $newgrp = (getpwnam($tree->{cfg_group}))[3];
+            $self->info("Found group id $newgrp to set conf files as group:", $tree->{cfg_group});
+            return $newgrp;
+        } else {
+            $self->error("Not found group id for: ", $tree->{cfg_group});
+        };
+    };
+    return;
 }
 
 =pod

@@ -180,6 +180,7 @@ use NCM::Component::OpenNebula::commands;
 use NCM::Component::OpenNebula::Host;
 use NCM::Component::OpenNebula::Server;
 use NCM::Component::OpenNebula::Account;
+use NCM::Component::OpenNebula::Network;
 use vars qw(@ISA $EC);
 use LC::Exception;
 use CAF::TextRender;
@@ -384,28 +385,6 @@ sub update_something
     return $update;
 }
 
-# Update vnet ARs as well
-sub update_vn_ar
-{
-    my ($self, $one, $vnetname, $template, $t, $data) = @_;
-    my $arid;
-
-    my %ar_opts = ('template' => $template);
-    $arid = $t->get_ar_id(%ar_opts);
-    $self->debug(1, "Detected AR id to update: ", $arid);
-    if (defined($arid)) {
-        $data->{$vnetname}->{ar}->{ar_id} = "$arid";
-        $template = $self->process_template($data, "vnet");
-        $self->debug(1, "AR template to update from $vnetname: ", $template);
-        $arid = $t->updatear($template);
-        if (defined($arid)) {
-            $self->info("Updated $vnetname AR id: ", $arid);
-        } else {
-            $self->error("Unable to update AR from vnet: $vnetname");
-        }
-    }
-}
-
 # Detects if the resource
 # is already there and if quattor flag is present
 # return undef: resource not used yet
@@ -507,24 +486,6 @@ sub get_resource_id
     }
     return;
 }
-
-# Change conf group if required
-sub set_config_group
-{
-    my($self, $tree) = @_;
-
-    if (exists $tree->{cfg_group}) {
-        if ((getpwnam($tree->{cfg_group}))[3]) {
-            my $newgrp = (getpwnam($tree->{cfg_group}))[3];
-            $self->info("Found group id $newgrp to set conf files as group:", $tree->{cfg_group});
-            return $newgrp;
-        } else {
-            $self->error("Not found group id for: ", $tree->{cfg_group});
-        };
-    };
-    return;
-}
-
 
 # Check ONE endpoint and detects ONE version
 # returns false if ONE version is not supported by AII
