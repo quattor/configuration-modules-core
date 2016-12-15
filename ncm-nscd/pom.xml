@@ -6,7 +6,7 @@
   <artifactId>nscd</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.12.0-rc2-SNAPSHOT</version>
+  <version>16.12.0-rc2</version>
   <name>NCM component to configure nscd</name>
 
 
