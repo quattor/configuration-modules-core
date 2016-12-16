@@ -190,7 +190,7 @@ use Config::Tiny;
 use Net::OpenNebula 0.309.0;
 use Data::Dumper;
 use Readonly;
-use 5.010;
+use 5.10.1;
 
 Readonly my $CORE_AUTH_DRIVER => "core";
 Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
@@ -285,21 +285,8 @@ sub process_template_aii
         $self->verbose("BOOT section set to support OpenNebula versions < 5.0.0");
         $tree->{system}->{opennebula}->{boot} = $BOOT_V4;
     };
-
-    my $tpl = CAF::TextRender->new(
-        $tt_name,
-        $tree,
-        relpath => 'aii-opennebula',
-        log => $main::this_app,
-        );
-    if (!$tpl) {
-        $self->error("TT processing of $tt_name failed.", $tpl->{fail});
-        return;
-    }
-    return "$tpl";
+    return $self->process_template($tree, $tt_name);
 }
-
-
 
 # Create/update ONE resources
 # based on resource type
@@ -647,7 +634,7 @@ sub get_fqdn
 sub get_images
 {
     my ($self, $config) = @_;
-    my $all_images = $self->process_template($config, "imagetemplate");
+    my $all_images = $self->process_template_aii($config, "imagetemplate");
     my %res;
 
     my @tmp = split(qr{^DATASTORE\s+=\s+(?:"|')(\S+)(?:"|')\s*$}m, $all_images);
@@ -673,7 +660,7 @@ sub get_images
 sub get_vnetars
 {
     my ($self, $config) = @_;
-    my $all_ars = $self->process_template($config, "network_ar");
+    my $all_ars = $self->process_template_aii($config, "network_ar");
     my %res;
 
     my @tmp = split(qr{^NETWORK\s+=\s+(?:"|')(\S+)(?:"|')\s*$}m, $all_ars);
@@ -699,7 +686,7 @@ sub get_vmtemplate
     my ($self, $config, $oneversion) = @_;
     my ($vmtemplatename, $quattor);
 
-    my $vm_template = $self->process_template($config, "vmtemplate", $oneversion);
+    my $vm_template = $self->process_template_aii($config, "vmtemplate", $oneversion);
     $vmtemplatename = $1 if ($vm_template =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m);
     $quattor = $1 if ($vm_template =~ m/^QUATTOR\s+=\s+(.*?)\s*$/m);
 
