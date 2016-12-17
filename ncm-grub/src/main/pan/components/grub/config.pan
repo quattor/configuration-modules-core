@@ -7,6 +7,8 @@ unique template components/${project.artifactId}/config;
 
 include 'components/${project.artifactId}/schema';
 
+bind "/software/components/grub" = component_grub_type;
+
 # Package to install.
 '/software/packages' = pkg_repl('ncm-${project.artifactId}', '${no-snapshot-version}-${rpm.release}', 'noarch');
 
@@ -19,4 +21,3 @@ prefix '/software/components/${project.artifactId}';
 'dependencies/pre' = append('spma');
 # Do not register for changes to /system/kernel/version as it is optional
 'register_change' = append('/system/kernel');
-

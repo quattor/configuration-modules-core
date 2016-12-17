@@ -2,10 +2,10 @@
 # ${developer-info}
 # ${author-info}
 
-
 declaration template components/grub/schema;
 
-include 'quattor/schema';
+include 'quattor/types/component';
+include 'pan/types';
 
 @{
  the crypted password can be supplied either in the password field
@@ -47,6 +47,4 @@ type component_grub_type = {
     "password" ? type_grub_password
 };
 
-
-bind "/software/components/grub" = component_grub_type;
 
