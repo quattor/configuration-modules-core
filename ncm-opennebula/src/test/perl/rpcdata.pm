@@ -313,7 +313,7 @@ AR = [
 EOF
 $cmds{rpc_create_vnet_ar1}{params} = [2, $data];
 $cmds{rpc_create_vnet_ar1}{method} = "one.vn.add_ar";
-$cmds{rpc_create_vnet_ar1}{out} = 2;
+$cmds{rpc_create_vnet_ar1}{out} = 0;
 
 $data = <<'EOF';
 
@@ -329,7 +329,7 @@ AR = [
 EOF
 $cmds{rpc_update_vnet_ar1}{params} = [2, $data];
 $cmds{rpc_update_vnet_ar1}{method} = "one.vn.update_ar";
-$cmds{rpc_update_vnet_ar1}{out} = 2;
+$cmds{rpc_update_vnet_ar1}{out} = 0;
 
 
 $data = <<'EOF';
@@ -346,6 +346,7 @@ EOF
 $cmds{rpc_create_vnet_ar2}{params} = [0, $data];
 $cmds{rpc_create_vnet_ar2}{method} = "one.vn.add_ar";
 $cmds{rpc_create_vnet_ar2}{out} = 0;
+
 
 $data = <<'EOF';
 
@@ -388,6 +389,20 @@ $cmds{rpc_update_vnet_ar3}{out} = 0;
 $cmds{rpc_remove_vnet_ar3}{params} = [0, 0];
 $cmds{rpc_remove_vnet_ar3}{method} = "one.vn.rm_ar";
 $cmds{rpc_remove_vnet_ar3}{out} = 0;
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "10.141.8.31",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar3}{params} = [0, $data];
+$cmds{rpc_create_vnet_ar3}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar3}{out} = 0;
 
 $data = <<'EOF';
 
