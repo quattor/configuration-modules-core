@@ -405,13 +405,9 @@ is replaced by C<cons> (when defined).
 
 =cut
 
-# TODO: configuring multiboot kernel using non-multiboot grubby is not safe under grub2
-#       but how old must that grubby be? and does such OS support grub2?
-#       Centos 5.11 has grubby 5.1.19.6 and supports multiboot
-
 sub kernel
 {
-    my ($self, $kernel, $prefix, $cons, $mbsupport) = @_;
+    my ($self, $kernel, $prefix, $cons) = @_;
 
     if (!$kernel->{kernelpath}) {
         # check is not really needed, this is mandatory in schema
@@ -470,47 +466,18 @@ sub kernel
 
         # installing multiboot loader
         if ($kernel->{multiboot}) {
-            if ($mbsupport) {
-                $self->verbose("Adding kernel using native grubby multiboot support");
-                $proc->pushargs("--add-multiboot", $fullmbpath, @mboptions);
-            } else {
-                $self->info("This version of grubby doesn't support multiboot");
-                # No further grubby proc here
-                $proc = undef;
-
-                # in this case, we write out the whole entry ourselves
-                # as it is easier than working around grubby
-
-                # append this entry to grub.conf
-                my $fh = CAF::FileEditor->new($GRUB_CONF, log => $self);
-                $fh->seek_end();
-                print $fh "title $title\n";
-                print $fh "\tkernel $mbpath $mbargs\n";
-                print $fh "\tmodule $path $args\n";
-                print $fh "\tmodule $initrd\n" if ($initrd);
-                $self->verbose("Generated grub entry ourselves for title $title");
-                $fh->close();
-            }
+            $self->verbose("Adding multiboot kernel $fullmbpath");
+            $proc->pushargs("--add-multiboot", $fullmbpath, @mboptions);
         } else {
             $self->info("Adding new standard kernel");
         }
-    } else {    # updating existing kernel entry
+    } else {
         $self->info("Updating installed kernel $path");
-        # no initrd?
+        $proc->pushargs("--update-kernel", $fullpath, @options);
+
         if ($kernel->{multiboot}) {
-            if ($mbsupport) {
-                $self->verbose("Updating kernel using native grubby multiboot support");
-                $proc->pushargs("--add-multiboot", $fullmbpath,
-                                "--update-kernel", $fullpath,
-                                @options);
-            } else {
-                $self->warn("Updating multiboot kernel using non-multiboot grubby: check results");
-                $proc->pushargs("--update-kernel", $fullmbpath);
-            }
-            $proc->pushargs(@mboptions);
-        } else {
-            $self->verbose("Updating standard kernel $path");
-            $proc->pushargs("--update-kernel", $fullpath, @options);
+            $self->verbose("Updating multiboot kernel $fullmbpath");
+            $proc->pushargs("--add-multiboot", $fullmbpath, @mboptions);
         }
     }
 
@@ -642,20 +609,13 @@ sub Configure
 
     my $cons = $self->grub_conf($config);
 
-    # check to see whether grubby has native support for configuring
-    # multiboot kernels
-    my $pattern = 'grubby:\s*bad\s+argument\s+--add-multiboot:\s*missing argument';
-    my $mbsupport = $self->grubby(['--add-multiboot'], keeps_state => 1) =~ m/$pattern/;
-    $self->verbose("This version of grubby has ", ($mbsupport ? "" : "no "),
-                   "support for multiboot kernels");
-
     # List with candidate multiboot kernel(s) that could be the default kernel
     my @multiboot_default;
     # Process all configured kernels
     foreach my $kernel (@{$tree->{kernels}}) {
         my $path = "$prefix$kernel->{kernelpath}";
         push (@multiboot_default, $path) if ($kernel->{multiboot} && $path eq $default);
-        $self->kernel($kernel, $prefix, $cons, $mbsupport);
+        $self->kernel($kernel, $prefix, $cons);
     }
 
     # handle the default kernel as defined in /system/kernel/version
