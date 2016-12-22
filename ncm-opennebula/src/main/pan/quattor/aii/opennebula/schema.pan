@@ -2,7 +2,7 @@ declaration template quattor/aii/opennebula/schema;
 
 include 'pan/types';
 
-final variable OPENNEBULA_AII_MODULE_NAME = 'NCM::Component::opennebula';
+variable OPENNEBULA_AII_MODULE_NAME = 'opennebula';
 
 ## a function to validate all aii_opennebula hooks
 
@@ -163,12 +163,33 @@ type opennebula_vmtemplate_pci = {
     "class" ? long
 };
 
+@documentation{
+Type that sets placement constraints and preferences for the VM, valid for all hypervisors
+More info: http://docs.opennebula.org/5.0/operation/references/template.html#placement-section
+}
+type opennebula_placements = {
+    @{Boolean expression that rules out provisioning hosts from list of machines
+    suitable to run this VM.}
+    "sched_requirements" ? string
+    @{This field sets which attribute will be used to sort the suitable hosts for this VM.
+    Basically, it defines which hosts are more suitable than others.}
+    "sched_rank" ? string
+    @{Boolean expression that rules out entries from the pool of datastores suitable
+    to run this VM.}
+    "sched_ds_requirements" ? string
+    @{States which attribute will be used to sort the suitable datastores for this VM.
+    Basically, it defines which datastores are more suitable than others.}
+    "sched_ds_rank" ? string
+};
+
 type opennebula_vmtemplate = {
     "vnet"      : opennebula_vmtemplate_vnet
     "datastore" : opennebula_vmtemplate_datastore
     "ignoremac" ? opennebula_ignoremac
     "graphics"  : string = 'VNC' with match (SELF, '^(VNC|SDL|SPICE)$')
     "diskcache" ? string with match(SELF, '^(default|none|writethrough|writeback|directsync|unsafe)$')
+    @{specific image mapping driver. qcow2 is not supported by Ceph storage backends}
+    "diskdriver" ? string with match(SELF, '^(raw|qcow2)$')
     "permissions" ? opennebula_permissions
     "pci" ? opennebula_vmtemplate_pci[]
     @{labels is a list of strings to group the VMs under a given name and filter them 
@@ -177,4 +198,5 @@ type opennebula_vmtemplate = {
     This feature is available since OpenNebula 5.x, below this version the change 
     does not take effect.}
     "labels" ? string[]
+    "placements" ? opennebula_placements
 } = dict();

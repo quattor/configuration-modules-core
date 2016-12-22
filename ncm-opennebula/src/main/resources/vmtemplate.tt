@@ -16,7 +16,7 @@
 [%- FOR pair IN system.opennebula.vnet.pairs %]
 NIC = [
 [%  FILTER indent -%]
-[%    INCLUDE 'aii-opennebula/network_level1.tt' 
+[%    INCLUDE 'opennebula/network_level1.tt' 
                data=pair -%]
 MODEL = "virtio",
 NETWORK = "[% system.opennebula.vnet.${pair.key} %]",
@@ -74,14 +74,14 @@ TYPE = "kvm"
 ]
 [%- FOREACH item IN system.opennebula.pci %]
 PCI = [
-[%    INCLUDE 'aii-opennebula/pci_level1.tt' data=item FILTER indent -%]
+[%    INCLUDE 'opennebula/pci_level1.tt' data=item FILTER indent -%]
 ]
 [%- END %]
 [%- FOR device IN hardware.cards.pairs %]
 [%-     FOR pair IN device.value.pairs %]
 [%-         IF pair.value.pci.defined %]
 PCI = [
-[%              INCLUDE 'aii-opennebula/pci_level1.tt' data=pair.value.pci FILTER indent -%]
+[%              INCLUDE 'opennebula/pci_level1.tt' data=pair.value.pci FILTER indent -%]
 ]
 [%-         END %]
 [%-     END %]

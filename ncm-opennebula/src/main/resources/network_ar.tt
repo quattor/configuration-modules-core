@@ -5,7 +5,7 @@
 AR = [
 [%      FILTER indent -%]
 TYPE = "IP4",
-[%    INCLUDE 'aii-opennebula/network_level1.tt' 
+[%    INCLUDE 'opennebula/network_level1.tt' 
                data=pair -%]
 QUATTOR = "1",
 HOSTNAME = "[% fqdn %]",

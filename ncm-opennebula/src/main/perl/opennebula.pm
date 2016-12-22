@@ -186,6 +186,7 @@ use LC::Exception;
 use CAF::TextRender;
 use CAF::FileReader;
 use CAF::Service;
+use Set::Scalar;
 use Config::Tiny;
 use Net::OpenNebula 0.309.0;
 use Data::Dumper;
@@ -285,7 +286,19 @@ sub process_template_aii
         $self->verbose("BOOT section set to support OpenNebula versions < 5.0.0");
         $tree->{system}->{opennebula}->{boot} = $BOOT_V4;
     };
-    return $self->process_template($tree, $tt_name);
+
+    # TBD process_template refactoring
+    my $tpl = CAF::TextRender->new(
+        $tt_name,
+        $tree,
+        relpath => 'opennebula',
+        log => $self,
+        );
+    if (!$tpl) {
+        $self->error("TT processing of $tt_name failed.", $tpl->{fail});
+        return;
+    }
+    return "$tpl";
 }
 
 # Create/update ONE resources

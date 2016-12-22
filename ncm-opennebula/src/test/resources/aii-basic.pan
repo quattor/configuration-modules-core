@@ -3,17 +3,17 @@ object template aii-basic;
 include 'vm';
 
 prefix "/system/aii/hooks";
-"configure/0" = nlist(
+"configure/0" = dict(
     "image", true,
     "template", true,
 );
 
-"install/0" = nlist(
+"install/0" = dict(
     "vm", true,
     "onhold", true,
 );
 
-"remove/0" = nlist(
+"remove/0" = dict(
     "vm", true,
     "image", true,
     "template", true,
