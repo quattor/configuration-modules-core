@@ -51,7 +51,7 @@ ok(rpc_history_ok(["one.vnpool.info",
 diag("Check AR remove");
 rpc_history_reset;
 $aii->remove_and_create_vn_ars($one, \%networks, 1);
-diag_rpc_history;
+#diag_rpc_history;
 ok(rpc_history_ok(["one.vnpool.info",
                    "one.vn.rm_ar",
                    "one.vnpool.info"]),

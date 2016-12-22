@@ -46,6 +46,7 @@ ok(rpc_history_ok(["one.vmpool.info",
                    "one.imagepool.info",
                    "one.vnpool.info",
                    "one.vn.info",
+                   "one.vn.rm_ar",
                    "one.vnpool.info"]),
                    "remove rpc history ok");
 # test configure
