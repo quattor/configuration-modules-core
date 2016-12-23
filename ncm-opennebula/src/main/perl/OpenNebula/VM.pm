@@ -37,8 +37,8 @@ sub get_vmtemplate
 =item remove_or_create_vm_template
 
 Creates or removes C<VM> templates
-$createvmtemplate flag forces to create
-$remove flag forces to remove.
+C<$createvmtemplate> flag forces to create
+C<$remove> flag forces to remove.
 
 =cut
 
