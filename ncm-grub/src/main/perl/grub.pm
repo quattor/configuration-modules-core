@@ -36,8 +36,60 @@ The I<grub> component manages the configuration of grub.
 Most of the configuration is handled via the C<grubby> tool
 (which supports grub2).
 
-Some configuration however is done by modifying the grub configfile
+Some configuration like serial console settings and password
+however is done by modifying the grub configfile
 directly, which might not be safe under grub2.
+
+=head1 RESOURCES
+
+Besides C<< /software/component/grub >>, following resources are used:
+
+=over
+
+=item C<< /system/kernel/version >> for setting the default kernel
+
+=item C<< /hardware/console/serial >> for serial console configuration
+
+=back
+
+=head1 EXAMPLES
+
+=over
+
+=item A standard SL4 kernel with initrd image to be loaded.
+
+  "/software/components/grub/kernels/0" =
+        nlist("kernelpath", "/vmlinuz-2.6.9-22.0.1.EL",
+              "kernelargs", "ro root=LABEL=/",
+              "title", "Scientific Linux 4.2 / 2.6.9",
+              "initrd", "/initrd-2.6.9-22.0.1.EL.img"
+  );
+
+This configuration produces the following entry in grub.conf (via grubby):
+
+  title Scientific Linux 4.2 / 2.6.9
+        kernel /vmlinuz-2.6.9-22.0.1.EL ro root=LABEL=/
+        initrd /initrd-2.6.9-22.0.1.EL.img
+
+=item A Xen 3 hypervisor with Linux 2.6 domain 0 kernel and initrd (via grubby).
+
+  "/software/components/grub/kernels/1" =
+        nlist("multiboot", "/xen-3.0.2-2.gz",
+              "mbargs", "dom0_mem=400000",
+              "title", "Xen 3 / XenLinux 2.6.16",
+              "kernelpath", "/vmlinuz-2.6.16-xen3_86.1_rhel4.1",
+              "kernelargs", "max_loop=128 root=/dev/hda2 ro",
+              "initrd", "/initrd-2.6.16-xen3_86.1_rhel4.1"
+  );
+
+Produces the following entry in grub.conf:
+
+  title Xen 3 / XenLinux 2.6.16
+        kernel /xen-3.0.2-2.gz dom0_mem=400000 addthis
+        module /vmlinuz-2.6.16-xen3_86.1_rhel4.1 max_loop=128 root=/dev/hda2 ro
+        module /initrd-2.6.16-xen3_86.1_rhel4.1
+
+=back
 
 =head2 Methods
 
@@ -496,8 +548,6 @@ Configure kernel commandline options of default kernel
 
 =cut
 
-# TODO: no search and replace for console settings like kernel method?
-
 sub default_options
 {
     my ($self, $tree, $default) = @_;
@@ -563,6 +613,26 @@ sub default_options
     return SUCCESS;
 }
 
+=item Configure
+
+Updates the grub.conf configuration file using grubby according to a
+list of kernels described in the profile.
+
+Sets the default kernel to that specified in C<< /system/kernel/version >>.
+
+Supports
+
+=over
+
+=item serial console configuration specified in C<< /hardware/console/serial >>.
+
+=item multiboot loaders (most commonly used for configuration of Xen systems).
+
+=back
+
+Returns error in case of failure.
+
+=cut
 
 sub Configure
 {
@@ -635,6 +705,7 @@ sub Configure
     }
 
     # if we get here, default is the current default kernel
+    # TODO: no search and replace for console settings like kernel method? i.e. pass $cons
     $self->default_options($tree, $default);
 
     return SUCCESS;
