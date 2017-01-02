@@ -1,5 +1,47 @@
 #${PMpre} NCM::Component::download${PMpost}
 
+=head1 DESCRIPTION
+
+Downloads files onto the local machine during the configuration,
+and optionally post-processes the files.
+
+The download is achieved by invoking C<curl>,
+so any URLs acceptable to C<curl> (and C<LWP::UserAgent>)
+(including local C<file://> URLs) are allowed.
+
+A file is only downloaded if following conditions are met:
+
+=over
+
+=item The timestamp of the source can be retrieved
+
+=item The timestamp of the source is more recent than
+the current file (if such file exists);
+unless the C<allow_older> attribute is set.
+
+=item The remote timestamp is not too recent.
+
+=back
+
+=head1 EXAMPLES
+
+    "/software/components/download" = dict(
+        "server", "mydownloadserver.com",
+        "proto",  "http",
+    );
+    prefix "/software/components/download/files";
+    "{/etc/passwd}" = dict(
+        "href", "https://secure.my.domain",
+        "post", "/usr/local/mk_passwd",
+    );
+    "{/usr/local/foo.txt}" = dict(
+        "href", "file:///etc/foo.txt",
+        "owner", "john",
+        "perm", "0400",
+    );
+
+=cut
+
 use parent qw(NCM::Component CAF::Path);
 
 our $EC = LC::Exception::Context->new->will_store_all;
