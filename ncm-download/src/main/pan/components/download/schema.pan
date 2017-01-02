@@ -24,6 +24,8 @@ type component_download_file = {
     "key" ? string
     @{seconds, overrides setting in component}
     "timeout" ? long
+    @{allow older remote file}
+    "allow_older" ? boolean
 };
 
 type component_download_type = extensible {

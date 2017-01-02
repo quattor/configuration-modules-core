@@ -162,6 +162,7 @@ sub download
         head_timeout => $file->{head_timeout},
         # TODO: timeout used to be only per file for proxies, and not at all for non-proxy
         timeout => $file->{timeout},
+        allow_older => $file->{allow_older},
         );
 
     my $success = 0;
@@ -310,14 +311,23 @@ sub retrieve
     # file doesn't exist
     my $timestamp_existing = 0;
     if ($self->file_exists($fn)) {
-        $timestamp_existing  = (stat($fn))[9];
+        $timestamp_existing = (stat($fn))[9];
     }
 
     # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
     my $timestamp_threshold = (time() - ($min_age * 60));
     my $timestamp_remote = $self->get_remote_timestamp($source, %opts);
     if ($timestamp_remote) {
-        if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
+        my ($timecheck, $timecheck_msg);
+        # If local file doesn't exist, this still works
+        if ($opts{allow_older}) {
+            $timecheck = $timestamp_remote != $timestamp_existing;
+            $timecheck_msg = 'has same timestamp';
+        } else {
+            $timecheck = $timestamp_remote > $timestamp_existing;
+            $timecheck_msg = 'is not newer';
+        };
+        if ($timecheck) {
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
                 $self->_cleanup_tmpfile($tmpfn);
                 my $proc = CAF::Process->new(\@cmd, stderr => \my $errs, log => $self);
@@ -351,7 +361,7 @@ sub retrieve
                 return 1;
             }
         } else {
-            $self->debug(1, "Remote file is not newer than existing local copy, nothing retrieved");
+            $self->debug(1, "Remote file $timecheck_msg than existing local copy, nothing retrieved");
             return 1;
         }
     } else {
