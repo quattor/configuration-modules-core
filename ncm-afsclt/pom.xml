@@ -6,7 +6,7 @@
   <artifactId>afsclt</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.12.0-rc3</version>
+  <version>16.12.0-rc4-SNAPSHOT</version>
   <name>NCM AFS client configuration component</name>
 
 
