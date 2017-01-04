@@ -6,7 +6,7 @@
   <artifactId>hostsfile</artifactId>
 
   <packaging>pom</packaging>
-  <version>16.12.0</version>
+  <version>16.12.1-SNAPSHOT</version>
   <name>/etc/hosts management for local hosts entries</name>
 
 
