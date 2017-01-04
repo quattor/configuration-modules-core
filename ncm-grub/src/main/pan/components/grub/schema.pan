@@ -41,6 +41,9 @@ type type_grub_password = {
         && !is_defined(SELF["file"]) && !is_defined(SELF["password"])) {
             error("specify either a hashed password or file to retrieve it from.");
     };
+    if (is_defined(SELF["file"]) && is_defined(SELF["password"])) {
+        error("specify either a hashed password or file to retrieve it from, not both.");
+    };
     true;
 };
 
