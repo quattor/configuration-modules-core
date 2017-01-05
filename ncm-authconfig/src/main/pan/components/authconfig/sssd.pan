@@ -104,6 +104,7 @@ type authconfig_sssd_domain  = {
     "min_id" : long = 1
     "max_id" : long = 0
     "enumerate" : boolean = false
+    "timeout" : long = 10
     "force_timeout" : long = 60
     "entry_cache_timeout" : long = 5400
     "entry_cache_user_timeout" ? long
