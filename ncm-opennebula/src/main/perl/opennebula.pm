@@ -10,9 +10,17 @@ ncm-${project.artifactId}: Configuration module for OpenNebula
 
 =head1 DESCRIPTION
 
-Configuration module for OpenNebula.
+ncm-opennebula provides support for OpenNebula configuration for:
 
-=head1 IMPLEMENTED FEATURES
+=over
+
+=item server: setup OpenNebula server and hypervisors
+
+=item AII: add VM management support with OpenNebula
+
+=back
+
+=head2 server
 
 Features that are implemented at this moment:
 
@@ -56,7 +64,7 @@ OpenNebula installation is 100% automated. Therefore:
 
 =back
 
-=head1 INITIAL CREATION
+=head3 INITIAL CREATION
 
 =over
 
@@ -89,9 +97,9 @@ In that case the component also updates the C<< sunstone_auth >> file.
 
 =back
 
-=head1 RESOURCES
+=head3 RESOURCES
 
-=head2 /software/components/${project.artifactId}
+=head4 /software/components/${project.artifactId}
 
 The configuration information for the component.  Each field should
 be described in this section.
@@ -151,6 +159,137 @@ Uses a local storage area from each host for the system datastore.
 
 =back
 
+=head2 AII
+
+This document describes AII's OpenNebula hook.
+
+=head3 SYNOPSIS
+
+This AII hook generates the required resources and templates to instantiate/create/remove VMs within an OpenNebula infrastructure.
+
+=head3 RESOURCES
+
+=head4 AII setup
+
+Set OpenNebula endpoints RPC connector /etc/aii/opennebula.conf
+
+It must include at least one RPC endpoint and password.
+
+To set an https endpoint for example you can use:
+ url=https://host.example.com:2633
+
+By default ONE AII uses oneadmin user and port 2633.
+
+It is also possible to set a different endpoint for each VM domain or use a fqdn pattern
+as example:
+
+    [rpc]
+    password=
+    url=https://localhost/RPC2
+
+    [example.com]
+    password=
+    user=
+
+    [myhosts]
+    pattern=myhos\d+.example.com
+    password=
+    url=http://example.com:2633/RPC2
+
+=head4 configure
+
+Generates VM images, generates/updates VM templates and AR Virtual Networks. 
+Modify your machine template to:
+
+=over 4
+
+=item * Rename hdx/sdx device disks by vdx to use virtio module
+
+=item * Create or include a new pan file to:
+
+=over 5
+
+=item * Include 'metaconfig/opennebula/schema'
+
+=item * Set the OpenNebula opennebula/datastore name for each vdx
+
+=item * Set the VNETs opennebula/vnet (bridges) required by each VM network interface
+
+=item * (Optional) Set /system/opennebula/ignoremac tree to avoid to include MAC values within AR/VM templates
+
+=item * (Optional) Set /system/opennebula/graphics to export VM graphical display (VNC is used by default)
+
+=item * (Optional) Set /system/opennebula/labels list to include OpenNebula search labels
+
+=item * (Optional) Set /system/opennebula/pci list values to enable PCI Passthrough
+
+=over 6
+
+=item * PCI Passthrough section is also generated based on hardware/cards/<card_type>/<interface>/pci values
+
+=back
+
+=item * (Optional) Set /system/opennebula/diskcache to select the cache mechanism for your disks. (by default is set to none)
+
+=item * (Optional) Set OPENNEBULA_AII_REPLACE_MAC and MAC_PREFIX variables to replace VM MACs to use OpenNebula style
+
+=back
+
+=item * enable acpid service
+
+=back
+
+The next paths are relative to /system/aii/hooks/configure
+
+=over 4
+
+=item * image : boolean
+
+Create VM images. Note: VM images are not updated, if you want to resize or modify an available image from scratch use remove hook first.
+
+=item * template : boolean
+
+Create VM template.
+
+=back
+
+=head4 install
+
+Instantiates the required VM. 
+The next paths are relative to /system/aii/hooks/install
+
+=over 4
+
+=item * vm : boolean
+
+The new VM is instantiated after resources creation
+
+=item * onhold : boolean
+
+The VM is instantiated but onhold status instead of running
+
+=back
+
+=head4 remove
+
+Removes the VM resources (template/images/network). 
+All these paths are relative to /system/aii/hooks/remove
+
+=over 4
+
+=item * vm : boolean
+
+Stop running VM
+
+=item * image : boolean
+
+Remove image/s
+
+=item * template : boolean
+
+Remove VM templates
+
+=back
 
 =head1 DEPENDENCIES
 
@@ -160,16 +299,23 @@ Following package dependencies should be installed to run the component:
 
 =over
 
+=item * aii-ks
+
 =item * perl-Config-Tiny
 
 =item * perl-LC
+
+=item * perl-CAF
+
+=item * perl-Set-Scalar
 
 =item * perl-Net-OpenNebula >= 0.2.2 !
 
 =back
 
-=cut
+=head1 METHODS
 
+=cut
 
 use strict;
 use warnings;
@@ -220,8 +366,12 @@ Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remo
 
 our $EC=LC::Exception::Context->new->will_store_all;
 
-# Set OpenNebula RPC endpoint info
-# to connect to ONE API
+=head2 make_one
+
+Sets C<OpenNebula> C<RPC> endpoint info to connect to ONE API.
+
+=cut
+
 sub make_one 
 {
     my ($self, $rpc) = @_;
@@ -245,9 +395,13 @@ sub make_one
     return $one;
 }
 
-# Detect and process ONE templates
-# It could return CAF::TextRender instance
-# or a plain text template for ONE RPC
+=head2 process_template
+
+Detect and process ONE templates.
+It could return a C<CAF::TextRender> instance or a plain text template for ONE C<RPC>.
+
+=cut
+
 sub process_template
 {
     my ($self, $config, $type_name, $secret) = @_;
@@ -300,8 +454,12 @@ sub process_template_aii
     return "$tpl";
 }
 
-# Create/update ONE resources
-# based on resource type
+=head2 create_or_update_something
+
+Creates/updates ONE resources based on resource type.
+
+=cut
+
 sub create_or_update_something
 {
     my ($self, $one, $type, $data, %protected) = @_;
@@ -336,8 +494,12 @@ sub create_or_update_something
     return $new;
 }
 
+=head2 remove_something
 
-# Removes ONE resources
+Removes C<OpenNebula> resources.
+
+=cut
+
 sub remove_something
 {
     my ($self, $one, $type, $resources, %protected) = @_;
@@ -365,7 +527,14 @@ sub remove_something
     return;
 }
 
-# Updates ONE resource templates
+
+
+=head2 update_something
+
+Updates C<OpenNebula> resource templates.
+
+=cut
+
 sub update_something
 {
     my ($self, $one, $type, $name, $template, $data) = @_;
@@ -384,11 +553,23 @@ sub update_something
     return $update;
 }
 
-# Detects if the resource
-# is already there and if quattor flag is present
-# return undef: resource not used yet
-# return 1: resource already used without Quattor flag
-# return -1: resource already used with Quattor flag set
+
+=head2 detect_used_resource
+
+Detects if the resource is already there and if quattor flag is present.
+
+=over
+
+=item Returns undef: resource not used yet.
+
+=item Returns 1: resource already used without Quattor flag.
+
+=item Returns -1: resource already used with Quattor flag set
+
+=back
+
+=cut
+
 sub detect_used_resource
 {
     my ($self, $one, $type, $name) = @_;
@@ -486,8 +667,13 @@ sub get_resource_id
     return;
 }
 
-# Check ONE endpoint and detects ONE version
-# returns false if ONE version is not supported by AII
+=head2 is_supported_one_version
+
+Checks ONE and detects ONE version.
+Returns false if ONE version is not supported.
+
+=cut
+
 sub is_supported_one_version
 {
     my ($self, $one) = @_;
@@ -511,7 +697,13 @@ sub is_supported_one_version
     return;
 }
 
-# Configure basic ONE resources
+
+=head2 Configure
+
+Configure basic OpenNebula server resources.
+
+=cut
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -552,15 +744,13 @@ sub Configure
     return 1;
 }
 
+=head2 read_one_aii_conf
 
-#### AII section
+Reads a config file in C<.ini> style with a minimal RPC endpoint setup.
+Returns an OpenNebula instance afterwards.
 
-# reads a config file in .ini style with a minimal 
-# RPC endpoint setup
-#   [rpc]
-#   url=http://example.com:2633/RPC2
-#   password=secret
-# returns an OpenNebula instance afterwards
+=cut
+
 sub read_one_aii_conf
 {
     my ($self, $data) = @_;
@@ -666,9 +856,22 @@ sub is_timeout
     }
 }
 
-# Detects if the resource is already there
-# return undef: resource not used yet
-# return 1: resource already used
+
+
+=head2 is_one_resource_available
+
+Detects if the resource is already there:
+
+=over
+
+=item Returns undef: resource not used yet.
+
+=item Returns 1: resource already used.
+
+=back
+
+=cut
+
 sub is_one_resource_available
 {
     my ($self, $one, $type, $name) = @_;
@@ -681,8 +884,13 @@ sub is_one_resource_available
     return;
 }
 
-# Performs Quattor post_reboot
-# ACPID service is mandatory for ONE VMs
+=head2 aii_post_reboot
+
+Performs Quattor C<post_reboot>.
+C<ACPID> service is mandatory for ONE VMs.
+
+=cut
+
 sub aii_post_reboot
 {
     my ($self, $config, $path) = @_;
@@ -694,11 +902,24 @@ service acpid start
 EOF
 }
 
-# Based on Quattor template this function:
-# Stop running VM if necessary
-# creates/updates VM templates
-# creates new VM image for each $harddisks
-# creates new vnet ars if required
+=head2 aii_configure
+
+Based on Quattor template this method:
+
+=over
+
+=item Stops running VM if necessary.
+
+=item Creates/updates VM templates.
+
+=item Creates new VM image for each C<$harddisks>.
+
+=item Creates new C<VNET> C<ARs> if required.
+
+=back
+
+=cut
+
 sub aii_configure
 {
     my ($self, $config, $path) = @_;
@@ -732,9 +953,20 @@ sub aii_configure
     my $vmtemplate = $self->remove_or_create_vm_template($one, $fqdn, $createvmtemplate, $vmtemplatetxt, $permissions);
 }
 
-# Based on Quattor template this function:
-# stop current running VM
-# instantiates the new VM
+=head2 aii_install
+
+Based on Quattor template this method:
+
+=over
+
+=item Stops current running VM.
+
+=item Instantiates the new VM.
+
+=back
+
+=cut
+
 sub aii_install
 {
     my ($self, $config, $path) = @_;
@@ -803,11 +1035,24 @@ sub aii_install
     }
 }
 
-# Performs VM remove wich depending on the booleans
-# Stops running VM
-# Removes VM template
-# Removes VM image for each $harddisks
-# Removes vnet ars
+=head2 aii_remove
+
+=over
+
+=item Performs VM remove wich depending on the booleans.
+
+=item Stops running VM.
+
+=item Removes VM template.
+
+=item Removes VM image for each C<$harddisks>.
+
+=item Removes vnet C<ARs>.
+
+=back
+
+=cut
+
 sub aii_remove
 {
     my ($self, $config, $path) = @_;

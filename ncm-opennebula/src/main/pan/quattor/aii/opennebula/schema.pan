@@ -2,7 +2,7 @@ declaration template quattor/aii/opennebula/schema;
 
 include 'pan/types';
 
-variable OPENNEBULA_AII_MODULE_NAME = 'opennebula';
+variable OPENNEBULA_AII_MODULE_NAME = 'NCM::Component::opennebula';
 
 ## a function to validate all aii_opennebula hooks
 
