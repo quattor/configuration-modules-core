@@ -202,8 +202,6 @@ Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 Readonly our $SERVERADMIN_USER => "serveradmin";
 Readonly our $ONEADMIN_USER => "oneadmin";
-
-## AII
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
 Readonly my $HOSTNAME => "/system/network/hostname";
 Readonly my $DOMAINNAME => "/system/network/domainname";
@@ -211,7 +209,6 @@ Readonly my $MAXITER => 20;
 Readonly my $TIMEOUT => 30;
 Readonly my $ONE_DEFAULT_URL => 'http://localhost:2633/RPC2';
 Readonly my $ONE_DEFAULT_PORT => 2633;
-Readonly my $ONE_DEFAULT_USER => "oneadmin";
 Readonly my $BOOT_V4 => [qw(network hd)];
 Readonly my $BOOT_V5 => [qw(nic0 disk0)];
 
@@ -598,7 +595,7 @@ sub read_one_aii_conf
     my $port = $config->{$rpc}->{port};
     my $host = $config->{$rpc}->{host};
     $config->{$rpc}->{url} //= $ONE_DEFAULT_URL;
-    $config->{$rpc}->{user} //= $ONE_DEFAULT_USER;
+    $config->{$rpc}->{user} //= $ONEADMIN_USER;
 
     # Keep backwards compatibility
     if ($host) {
