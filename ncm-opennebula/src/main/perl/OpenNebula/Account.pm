@@ -118,6 +118,61 @@ sub change_user_group
     };
 }
 
+=item get_permissions
+
+Gets current resource permissions.
+
+=cut
+
+sub get_permissions
+{
+    my ($self, $config) = @_;
+
+    my $tree = $config->getElement('/system/opennebula')->getTree();
+    if ($tree->{permissions}) {
+        my $perm = $tree->{permissions};
+        $self->info("Found new resources permissions: ");
+        $self->info("Owner: ", $perm->{owner}) if $perm->{owner};
+        $self->info("Group: ", $perm->{group}) if $perm->{group};
+        $self->info("Mode: ", $perm->{mode}) if $perm->{mode};
+        return $perm;
+    };
+    return;
+}
+
+=item change_permissions
+
+Changes resource permissions.
+
+=cut
+
+sub change_permissions
+{
+    my ($self, $one, $type, $resource, $permissions) = @_;
+    my ($method, $id, $instance, $out);
+    my %chown = (one => $one);
+    my $mode = $permissions->{mode};
+
+    if(defined($mode)) {
+        $out = $resource->chmod($mode);
+        if ($out) {
+            $self->info("Changed $type mode id $out to: $mode");
+        } else {
+            $self->error("Not able to change $type mode to: $mode");
+        };
+    };
+    $chown{uid} = defined($permissions->{owner}) ? $permissions->{owner} : -1;
+    $chown{gid} = defined($permissions->{group}) ? $permissions->{group} : -1;
+
+    my $msg = "user:group $chown{uid}:$chown{gid} for: " . $resource->name;
+    $out = $resource->chown(%chown);
+    if ($out) {
+        $self->info("Changed $type $msg");
+    } else {
+        $self->error("Not able to change $type $msg");
+    };
+}
+
 =pod
 
 =back
