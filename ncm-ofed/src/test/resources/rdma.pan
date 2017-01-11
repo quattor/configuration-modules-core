@@ -1,6 +1,9 @@
 object template rdma;
 
-include 'components/ofed/schema';
+function pkg_repl = { null; };
+include 'components/ofed/config';
+"/software/components/ofed/dependencies/pre" = null;
+
 
 prefix "/software/components/ofed/openib";
 
@@ -8,10 +11,11 @@ prefix "/software/components/ofed/openib";
 
 "options/srp_daemon_enable" = true;
 
-"options/ipoib_mtu" =123;
+"options/ipoib_mtu" = 123;
 "options/node_desc" = "myname";
 
 
 "modules/rdma_cm" = true;
 
 "hardware/mlx4" = false;
+"hardware/mlx5" = true;
