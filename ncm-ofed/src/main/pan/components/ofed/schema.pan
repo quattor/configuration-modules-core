@@ -36,6 +36,7 @@ type component_ofed_openib_options = {
     "node_desc_time_before_update" : long(0..) = 10
     "post_start_delay" : long(0..) = 0
 
+    "cx3_eth_only" : boolean = false
 } = dict();
 
 ## openib modules (OPENIBMODULES)
@@ -68,6 +69,7 @@ type component_ofed_openib_modules = {
 
     "mlx4_vnic" : boolean = false
     "mlx4_fc" : boolean = false
+    "mlx4_en" : boolean = false
 } = dict();
 
 ## openib modules (OPENIBHARDWARE)
@@ -91,6 +93,7 @@ type component_ofed_openib_hardware = {
 
     ## Chelsio T3
     "cxgb3" : boolean = false
+    "cxgb4" : boolean = false
     ## NetEffect
     "nes" : boolean = false
 } = dict();
