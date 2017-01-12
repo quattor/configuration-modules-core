@@ -11,7 +11,7 @@ use POSIX;
 
 use CAF::Download::LWP;
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 use CAF::Object qw(SUCCESS);
 
 $NCM::Component::download::NoActionSupported = 1;
