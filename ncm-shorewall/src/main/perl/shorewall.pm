@@ -16,6 +16,7 @@ use Readonly;
 Readonly::Array my @SUPPORTED => qw(shorewall
     rules zones interfaces policy
     tcinterfaces tcpri masq
+    stoppedrules
 );
 
 Readonly my $CONFIG_DIR => "/etc/shorewall";

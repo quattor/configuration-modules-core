@@ -1,0 +1,1 @@
+[% INCLUDE 'shorewall/walk.tt' _type='stoppedrules' _cols=['action', 'src', 'dst', 'proto', 'dport', 'sport'] %]

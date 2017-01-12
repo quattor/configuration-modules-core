@@ -46,7 +46,7 @@ type component_shorewall_tcpri = {
 # Keep this list in sync with list from TT file
 @{a zones entry: zone[:parent] type options inoptions outoptions}
 type component_shorewall_zones = {
-    "zone" : string
+    "zone" : string(1..5)
     "parent" ? string[]
     "type" ? string with match(SELF, '(ipv4|ipsec|firewall|bport|vserver|loopback|local)')
     "options" ? string[]
@@ -74,6 +74,18 @@ type component_shorewall_policy = {
     "burst" ? string
     "limit" ? string
     "connlimit" ? string
+};
+
+
+# Keep this list in sync with list from TT file
+@{a stoppedrules entry: action src dst proto dport sport}
+type component_shorewall_stoppedrules = {
+    "action" ? string with match(SELF, '^(ACCEPT|NOTRACK|DROP)$')
+    "src" ? string[]
+    "dst" ? string[]
+    "proto" ? string[]
+    "dport" ? long(0..)[]
+    "sport" ? long(0..)[]
 };
 
 # Keep this list in sync with list from TT file
@@ -241,6 +253,8 @@ type component_shorewall = {
     "tcpri" ? component_shorewall_tcpri[]
     @{masq configuration}
     "masq" ? component_shorewall_masq[]
+    @{rules to use when shorewall is stopped}
+    "stoppedrules" ? component_shorewall_stoppedrules[]
 };
 
 @{metaconfig schema for shorewall 5.x sysconfig (you cannot set RESTARTOPTIONS)}
