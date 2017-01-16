@@ -7,16 +7,6 @@ declaration template components/spma/yumng/schema;
 include 'components/spma/schema';
 include 'components/spma/schema-common-yum';
 
-type SOFTWARE_GROUP = {
-    "default" : boolean = true
-    "mandatory" : boolean = true
-    "optional" : boolean = false
-    "names" : string[] = list() with {
-        if (length(SELF) > 0) deprecated(0, 'Support for YUM groups will be removed in a future release.');
-        true;
-    }
-};
-
 type component_spma_yumng = {
     include structure_component
     include component_spma_common
@@ -29,4 +19,3 @@ type component_spma_yumng = {
 };
 
 bind "/software/components/spma" = component_spma_yumng;
-bind "/software/groups" = SOFTWARE_GROUP;
