@@ -4,6 +4,7 @@ multiline
 /etc/aii/opennebula.conf
 ---
 ^\[.+\]$
+^ca\=.+$
 ^password\=.+$
 ^pattern\=.+$
 ^url\=.+$
