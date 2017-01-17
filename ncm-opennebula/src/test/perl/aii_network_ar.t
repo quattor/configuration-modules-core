@@ -14,7 +14,7 @@ use OpennebulaMock;
 use NCM::Component::opennebula;
 
 my $cfg = get_config_for_profile('aii_network_ar');
-my $opennebulaaii = new Test::MockModule('NCM::Component::opennebula');
+my $opennebulaaii = new Test::MockModule('NCM::Component::OpenNebula::AII');
 $opennebulaaii->mock('read_one_aii_conf', Net::OpenNebula->new(url  => "http://localhost/RPC2",
                                                       user => "oneadmin",));
 
@@ -44,7 +44,6 @@ $aii->remove_and_create_vn_ars($one, \%networks, 0);
 #diag_rpc_history;
 ok(rpc_history_ok(["one.vnpool.info",
                    "one.vn.info",
-                   "one.vn.add_ar",
                    "one.vnpool.info"]),
                    "remove_and_create_vn_ars install rpc history ok");
 

@@ -1,14 +1,14 @@
 #${PMpre} NCM::Component::OpenNebula::Ceph${PMpost}
 
-use NCM::Component::OpenNebula::Commands;
 use Readonly;
+use Data::Dumper;
 
 Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 
 =head1 NAME
 
-NCM::Component::OpenNebula::Ceph adds C<Ceph> backend support to
-L<NCM::Component::OpenNebula:Host>.
+C<NCM::Component::OpenNebula::Ceph> adds C<Ceph> backend support to
+L<NCM::Component::OpenNebula::Host>.
 
 =head2 Public methods
 
@@ -17,26 +17,33 @@ L<NCM::Component::OpenNebula:Host>.
 =item enable_ceph_node
 
 Configures C<Ceph> client and
-it sets the C<Ceph> key in each host.
+set the C<Ceph> key in each host.
 
 =cut
 
 sub enable_ceph_node
 {
     my ($self, $type, $host, $datastores) = @_;
-    my ($secret, $uuid);
-    foreach my $ceph (sort keys %{$datastores}) {
+
+    foreach my $ceph (sort keys %$datastores) {
         if ($datastores->{$ceph}->{tm_mad} eq 'ceph') {
+            my $secret;
             if ($datastores->{$ceph}->{ceph_user_key}) {
-                $self->verbose("Found Ceph user key.");
+                $self->verbose("Found Ceph user key in $ceph datastore");
                 $secret = $datastores->{$ceph}->{ceph_user_key};
             } else {
-                $self->error("Ceph user key not found within Quattor template.");
+                $self->error("Ceph user key not found within $ceph datastore.");
                 return;
             }
-            $uuid = $self->set_ceph_secret($type, $host, $datastores->{$ceph}->{ceph_secret});
-            return if !$uuid;
-            return if !$self->set_ceph_keys($host, $uuid, $secret);
+            my $uuid = $self->set_ceph_secret($type, $host, $datastores->{$ceph}->{ceph_secret});
+            if (!$uuid) {
+                $self->error("Not able to set libvirt uuid for $ceph datastore");
+                return;
+            }
+            if (!$self->set_ceph_keys($host, $uuid, $secret)) {
+                $self->error("Not able to set ceph libvirt key for $ceph datastore");
+                return;
+            }
         }
     }
     return 1;
@@ -44,35 +51,34 @@ sub enable_ceph_node
 
 =item set_ceph_secret
 
-Sets the C<Ceph> secret to be used by libvirt.
+Sets the C<Ceph> secret to be used by C<libvirt>.
 
 =cut
 
 sub set_ceph_secret
 {
     my ($self, $type, $host, $ceph_secret) = @_;
-    my $uuid;
+
     # Add ceph keys as root
     my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
     my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host);
+    my $uuid;
     if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
-        $uuid = $1;
-        if ($uuid eq $ceph_secret) {
-            $self->verbose("Found Ceph uuid: $uuid to be used by $type host $host.");
+        if ($1 eq $ceph_secret) {
+            $uuid = $1;
+            $self->verbose("Found Ceph uuid $uuid to be used by $type host $host in $CEPHSECRETFILE.");
         } else {
             $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
-            return;
         }
     } else {
         $self->error("Required Ceph UUID not found for $type host $host.");
-        return;
     }
     return $uuid;
 }
 
 =item set_ceph_keys
 
-Sets the C<Ceph> keys to be used by libvirt.
+Sets the C<Ceph> keys to be used by C<libvirt>.
 
 =cut
 
@@ -83,12 +89,12 @@ sub set_ceph_keys
     my $cmd = ['secret-set-value', '--secret', $uuid, '--base64', $secret];
     my $output = $self->run_virsh_as_oneadmin_with_ssh($cmd, $host, 1);
     if ($output =~ m/^[sS]ecret\s+value\s+set$/m) {
-        $self->info("New Ceph key include into libvirt list: ", $output);
+        $self->info("New Ceph key include into libvirt $host uuid $uuid list: ", $output);
     } else {
-        $self->error("Error running virsh secret-set-value command: ", $output);
+        $self->error("Error running virsh secret-set-value command for $host uuid $uuid: ", $output);
         return;
     }
-    return $output;
+    return 1;
 }
 
 =item detect_ceph_datastores
@@ -108,7 +114,7 @@ sub detect_ceph_datastores
             return 1;
         }
     }
-    $self->info("No Ceph datastores available at this moment.");
+    $self->verbose("No Ceph datastores were found");
     return;
 }
 

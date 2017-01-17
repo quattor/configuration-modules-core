@@ -72,8 +72,8 @@ prefix "/hardware";
 "location" = "cubone hyp";
 "model" = "KVM Virtual Machine";
 "ram" = list (
-    dict ("size", 2048,),
-    dict ("size", 2048,),
+    dict ("size", 2048),
+    dict ("size", 2048),
 );
 "serialnumber" = "kvm/QUATTOR_IMAGE001";
 

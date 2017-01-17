@@ -23,7 +23,7 @@ Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
 
 =head1 NAME
 
-NCM::Component::OpenNebula::Server adds C<OpenNebula> service configuration 
+C<NCM::Component::OpenNebula::Server> adds C<OpenNebula> service configuration 
 support to L<NCM::Component::OpenNebula>.
 
 =head2 Public methods
@@ -48,7 +48,7 @@ sub restart_opennebula_service {
         $srv = CAF::Service->new(['opennebula-flow'], log => $self);
     } elsif ($service eq "kvmrc") {
         $self->info("Updated $service file. onehost sync is required.");
-        $self->sync_opennebula_hyps();
+        $self->sync_opennebula_hosts();
     }
     $srv->restart() if defined($srv);
 }
@@ -101,19 +101,19 @@ Sets a new C<OpenNebula> service password.
 sub change_opennebula_passwd
 {
     my ($self, $user, $passwd) = @_;
-    my ($output, $cmd);
 
+    my $cmd;
     if ($user eq $SERVERADMIN_USER) {
         $cmd = [$user, join(' ', '--driver server_cipher', $passwd)];
     } else {
         $cmd = [$user, $passwd];
     };
-    $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
-    if (!$output) {
+    my $output = $self->run_oneuser_as_oneadmin_with_ssh($cmd, "localhost", 1);
+    if ($output) {
+        $self->info("$user passwd was set correctly.");
+    } else {
         $self->error("Quattor unable to modify current $user passwd.");
         return;
-    } else {
-        $self->info("$user passwd was set correctly.");
     }
     $self->set_one_auth_file($user, $passwd);
     return 1;
@@ -130,14 +130,14 @@ service must be restarted afterwards.
 sub set_one_service_conf
 {
     my ($self, $data, $service, $config_file, $cfggrp) = @_;
-    my %opts;
+
     my $cfgv = $self->detect_opennebula_version;
     if ($cfgv >= version->new("5.0.0") and $service eq 'oned') {
         $self->verbose("Found OpenNebula >= 5.0 configuration flag");
         $data->{datastore_mad}->{arguments} = $ONED_DATASTORE_MAD;
     };
     my $oned_templ = $self->process_template($data, $service);
-    %opts = $self->set_file_opts();
+    my %opts = $self->set_file_opts();
     return if ! %opts;
     $opts{group} = $cfggrp if ($cfggrp);
     my $fh = $oned_templ->filewriter($config_file, %opts);
@@ -182,24 +182,22 @@ C<oneadmin> client tools.
 sub set_one_auth_file
 {
     my ($self, $user, $data, $cfggrp) = @_;
-    my ($fh, $auth_file, %opts);
 
     my $passwd = {$user => $data};
     my $trd = $self->process_template($passwd, "one_auth", 1);
-    %opts = $self->set_file_opts(1);
+    my %opts = $self->set_file_opts(1);
     return if ! %opts;
     $opts{group} = $cfggrp if ($cfggrp);
-
     if ($user eq $ONEADMIN_USER) {
         $self->verbose("Writing $user auth file: $ONEADMIN_AUTH_FILE");
-        $fh = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
-        $self->is_conf_file_modified($fh, $ONEADMIN_AUTH_FILE);
+        my $fhone = $trd->filewriter($ONEADMIN_AUTH_FILE, %opts);
+        $self->is_conf_file_modified($fhone, $ONEADMIN_AUTH_FILE);
     } elsif ($user eq $SERVERADMIN_USER) {
         foreach my $service (@SERVERADMIN_AUTH_FILE) {
-            $auth_file = $SERVERADMIN_AUTH_DIR . $service;
+            my $auth_file = $SERVERADMIN_AUTH_DIR . $service;
             $self->verbose("Writing $user auth file: $auth_file");
-            $fh = $trd->filewriter($auth_file, %opts);
-            $self->is_conf_file_modified($fh, $auth_file);
+            my $fhserver = $trd->filewriter($auth_file, %opts);
+            $self->is_conf_file_modified($fhserver, $auth_file);
         }
     } else {
         $self->error("Unsupported user: $user");
@@ -217,19 +215,18 @@ sub set_file_opts
     my ($self, $secret) = @_;
     my %opts;
     if ($ONEADMINUSR and $ONEADMINGRP) {
-        if (!$secret) {
-            %opts = (log => $self);
-        }
-        %opts = (mode => 0640,
-                 backup => ".quattor.backup",
-                 owner => $ONEADMINUSR,
-                 group => $ONEADMINGRP);
+        %opts = (
+            mode => 0640,
+            backup => ".quattor.backup",
+            owner => $ONEADMINUSR,
+            group => $ONEADMINGRP
+        );
+        $opts{log} = $self if !$secret;
         $self->verbose("Found oneadmin user id ($ONEADMINUSR) and group id ($ONEADMINGRP).");
-        return %opts;
     } else {
         $self->error("User or group oneadmin does not exist.");
-        return;
     }
+    return %opts;
 }
 
 =item set_one_server
@@ -245,12 +242,12 @@ sub set_one_server
     $self->set_ssh_command($tree->{ssh_multiplex});
     # Set tm_system_ds if available
     my $tm_system_ds = $tree->{tm_system_ds};
-    # untouchables resources
+    # untouchable resources
     my $untouchables = $tree->{untouchables};
-    # hypervisor type
-    my $hypervisor = $tree->{host_hyp};
+    # host type
+    my $host = $tree->{host_hyp};
 
-    # Change oneadmin pass
+    # Change oneadmin password
     if (exists $tree->{rpc}->{password}) {
         return 0 if !$self->change_opennebula_passwd($ONEADMIN_USER, $tree->{rpc}->{password});
     }
@@ -272,9 +269,9 @@ sub set_one_server
     # Update system datastore TM_MAD
     if ($tm_system_ds) {
         $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
-        $self->info("Updated system datastore TM_MAD = $tm_system_ds");
+        $self->verbose("Updated system datastore TM_MAD = $tm_system_ds");
     }
-    $self->manage_something($one, $hypervisor, $tree, $untouchables->{hosts});
+    $self->manage_something($one, $host, $tree, $untouchables->{hosts});
     # Manage groups first
     $self->manage_something($one, "group", $tree->{groups}, $untouchables->{groups});
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});
@@ -300,7 +297,7 @@ sub set_config_group
     if (exists $tree->{cfg_group}) {
         if ((getpwnam($tree->{cfg_group}))[3]) {
             my $newgrp = (getpwnam($tree->{cfg_group}))[3];
-            $self->info("Found group id $newgrp to set conf files as group:", $tree->{cfg_group});
+            $self->verbose("Found group id $newgrp to set conf files as group:", $tree->{cfg_group});
             return $newgrp;
         } else {
             $self->error("Not found group id for: ", $tree->{cfg_group});

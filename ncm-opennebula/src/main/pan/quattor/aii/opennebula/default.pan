@@ -3,14 +3,14 @@ unique template quattor/aii/opennebula/default;
 include 'quattor/aii/opennebula/schema';
 include 'quattor/aii/opennebula/functions';
 
-#  null values are set by schema defaults
+# do not overwrite/remove templates by default
 variable OPENNEBULA_AII_FORCE ?= null; 
 variable OPENNEBULA_AII_ONHOLD ?= null;
 variable OPENNEBULA_AII_FORCE_REMOVE ?= false;
 
 variable MAC_PREFIX ?= '02:00';
 
-"/system/aii/hooks/configure/" = append(SELF, dict(
+"/system/aii/hooks/configure" = append(dict(
     'module', OPENNEBULA_AII_MODULE_NAME,
     "image", OPENNEBULA_AII_FORCE,
     "template", OPENNEBULA_AII_FORCE,
@@ -18,7 +18,7 @@ variable MAC_PREFIX ?= '02:00';
 
 bind "/system/aii/hooks" = dict with validate_aii_opennebula_hooks('configure');
 
-"/system/aii/hooks/install/" = append(SELF, dict(
+"/system/aii/hooks/install" = append(dict(
     'module', OPENNEBULA_AII_MODULE_NAME,
     "vm", OPENNEBULA_AII_FORCE,
     "onhold", OPENNEBULA_AII_ONHOLD,
@@ -26,8 +26,7 @@ bind "/system/aii/hooks" = dict with validate_aii_opennebula_hooks('configure');
 
 bind "/system/aii/hooks" = dict with validate_aii_opennebula_hooks('install');
 
-# last is not so important here
-"/system/aii/hooks/remove/" = append(SELF, dict(
+"/system/aii/hooks/remove" = append(dict(
     'module', OPENNEBULA_AII_MODULE_NAME,
     "image", OPENNEBULA_AII_FORCE_REMOVE,
     "template", OPENNEBULA_AII_FORCE_REMOVE,
@@ -36,9 +35,7 @@ bind "/system/aii/hooks" = dict with validate_aii_opennebula_hooks('install');
 
 bind "/system/aii/hooks" = dict with validate_aii_opennebula_hooks('remove');
 
-
-# Enable ACPI daemon
-"/system/aii/hooks/post_reboot/" = append(SELF, dict(
+"/system/aii/hooks/post_reboot" = append(dict(
     'module', OPENNEBULA_AII_MODULE_NAME,
 ));
 

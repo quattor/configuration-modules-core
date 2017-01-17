@@ -22,21 +22,21 @@ my $sshcmd=[];
 
 =head1 NAME
 
-NCM::Component::OpenNebula::Commands Configuration module for ONE
+C<NCM::Component::OpenNebula::Commands> Configuration module for ONE
 
 =head1 DESCRIPTION
 
-Configuration module for ONE. Executes the required ssh commands
-to enable the hypervisors to be used by OpenNebula.
+Configuration module for OpenNebula. Executes the required ssh commands
+to enable the hosts to be used by the cloud server.
 
 This component needs a 'oneadmin' user. 
 The user should be able to run these commands with sudo without password:
 
 =over
 
-=item - virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
+=item C<virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml>
 
-=item - virsh secret-set-value --secret $uuid --base64 $secret
+=item C<virsh secret-set-value --secret $uuid --base64 $secret>
 
 =back
 
@@ -63,6 +63,7 @@ sub set_ssh_command
 =item run_command
 
 Executes a command and return the output.
+Returns sdout and stderr array.
 
 =cut
 
@@ -87,7 +88,7 @@ sub run_command {
 
 =item run_virsh_as_oneadmin_with_ssh
 
-Executes a command prefixed with virsh and returns the output.
+Executes a command prefixed with C<virsh> and returns the output.
 
 =cut
 
@@ -111,7 +112,7 @@ sub run_oneuser_as_oneadmin_with_ssh {
 
 =item run_onehost_as_oneadmin_with_ssh
 
-Executes C<onehost> command to sync hyps VMMs scripts.
+Executes C<onehost> command to sync hosts VMMs scripts.
 
 =cut
 
@@ -194,7 +195,7 @@ sub ssh_known_keys {
 
 =item can_connect_to_host
 
-Checks if the hypervisor is reachable or not.
+Checks if the host is reachable or not.
 
 =cut
 

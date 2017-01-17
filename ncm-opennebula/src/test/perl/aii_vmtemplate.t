@@ -15,7 +15,7 @@ use OpennebulaMock;
 use NCM::Component::opennebula;
 
 my $cfg = get_config_for_profile('aii_vmtemplate');
-my $opennebulaaii = new Test::MockModule('NCM::Component::opennebula');
+my $opennebulaaii = new Test::MockModule('NCM::Component::OpenNebula::AII');
 $opennebulaaii->mock('read_one_aii_conf', Net::OpenNebula->new(url  => "http://localhost/RPC2",
                                                       user => "oneadmin",));
 

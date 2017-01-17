@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-NCM::Component::OpenNebula::Image adds C<OpenNebula> C<VM> images 
+C<NCM::Component::OpenNebula::Image> adds C<OpenNebula> C<VM> images 
 support to L<NCM::Component::OpenNebula>.
 
 =head2 Public methods
@@ -11,7 +11,7 @@ support to L<NCM::Component::OpenNebula>.
 
 =item get_images
 
-Gets the image template from C<tt> file
+Gets the image template from C<TT> file
 and gathers the image names (C<<fqdn>_<vdx>>)
 and datastore names to store the new images.
 
@@ -25,11 +25,10 @@ sub get_images
 
     my @tmp = split(qr{^DATASTORE\s+=\s+(?:"|')(\S+)(?:"|')\s*$}m, $all_images);
 
-    while (my ($image,$datastore) = splice(@tmp, 0, 2)) {
+    while (my ($image, $datastore) = splice(@tmp, 0, 2)) {
         my $imagename = $1 if ($image =~ m/^NAME\s+=\s+(?:"|')(.*?)(?:"|')\s*$/m);
         if ($datastore && $imagename) {
-            $self->verbose("Detected imagename $imagename",
-                                    " with datastore $datastore");
+            $self->verbose("Detected imagename $imagename with datastore $datastore");
             $res{$imagename}{image} = $image;
             $res{$imagename}{datastore} = $datastore;
             $self->debug(3, "This is image template $imagename: $image");
@@ -52,11 +51,11 @@ Also it removes images if the remove flag is set.
 sub remove_or_create_vm_images
 {
     my ($self, $one, $createimage, $imagesref, $permissions, $remove) = @_;
-    my (@rimages, @nimages, @qimages, $newimage, $count);
+    my (@rimages, @nimages, @qimages);
 
-    foreach my $imagename (sort keys %{$imagesref}) {
+    foreach my $imagename (sort keys %$imagesref) {
         my $imagedata = $imagesref->{$imagename};
-        $self->info ("Checking ONE image: $imagename");
+        $self->info ("Checking image: $imagename");
         push(@qimages, $imagename);
         if ($remove) {
             $self->remove_vm_images($one, $imagename, \@rimages);
@@ -68,11 +67,13 @@ sub remove_or_create_vm_images
     if ($remove) {
         my $diff = $self->check_vm_images_list(\@rimages, \@qimages);
         if ($diff) {
+            # if diff some of the requested images were not removed
             $self->error("Removing these VM images: ", join(', ', @qimages));
         }
     } else {
         my $diff = $self->check_vm_images_list(\@nimages, \@qimages);
         if ($diff) {
+             # if diff some of the requested images were not created
             $self->error("Creating these VM images: ", join(', ', @qimages));
         }
     }
@@ -91,17 +92,17 @@ sub create_vm_images
     my $newimage;
     if ($self->is_one_resource_available($one, "image", $imagename)) {
         $self->warn("Image: $imagename is already available from OpenNebula. ",
-                              "Please remove this image first if you want to generate a new one from scratch.");
+                    "Please remove this image first if you want to generate a new one from scratch.");
         return;
     } else {
-            $newimage = $one->create_image($imagedata->{image}, $imagedata->{datastore});
+        $newimage = $one->create_image($imagedata->{image}, $imagedata->{datastore});
     }
     if ($newimage) {
         $self->info("Created new VM image ID: ", $newimage->id);
         if ($permissions) {
             $self->change_permissions($one, "image", $newimage, $permissions);
         };
-        push(@{$ref_nimages}, $imagename);
+        push(@$ref_nimages, $imagename);
     } else {
         $self->error("VM image: $imagename is not available");
     }
@@ -110,6 +111,7 @@ sub create_vm_images
 =item remove_vm_images
 
 Removes C<VM> images.
+Updates C<$ref_rimages> to track the removed images.
 
 =cut
 
@@ -117,12 +119,11 @@ sub remove_vm_images
 {
     my ($self, $one, $imagename, $ref_rimages) = @_;
 
-    my @existimage = $one->get_images(qr{^$imagename$});
-    foreach my $t (@existimage) {
-        if ($t->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
+    foreach my $img ($one->get_images(qr{^$imagename$})) {
+        if ($img->{extended_data}->{TEMPLATE}->[0]->{QUATTOR}->[0]) {
             # It's safe, we can remove the image
             $self->info("Removing VM image: $imagename");
-            my $id = $t->delete();
+            my $id = $img->delete();
             $self->is_timeout($one, "image", $imagename);
 
             if ($id) {
@@ -147,9 +148,9 @@ sub check_vm_images_list
 {
     my ($self, $myimages, $qimages) = @_;
 
-    my $a = Set::Scalar->new(@{$qimages});
-    my $b = Set::Scalar->new(@{$myimages});
-    return $a->symmetric_difference($b);
+    my $required = Set::Scalar->new(@{$qimages});
+    my $current = Set::Scalar->new(@{$myimages});
+    return $required->symmetric_difference($current);
 }
 
 

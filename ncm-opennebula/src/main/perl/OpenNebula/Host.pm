@@ -1,11 +1,8 @@
 #${PMpre} NCM::Component::OpenNebula::Host${PMpost}
 
-use NCM::Component::OpenNebula::Commands;
-use NCM::Component::OpenNebula::Ceph;
-
 =head1 NAME
 
-NCM::Component::OpenNebula::Host adds C<KVM> hosts support to
+C<NCM::Component::OpenNebula::Host> adds C<KVM> hosts support to
 L<NCM::Component::OpenNebula>.
 
 =head2 Public methods
@@ -32,22 +29,24 @@ sub manage_hosts
             $vnm_mad = "ovswitch";
         } elsif ($type eq "xen") {
             $vnm_mad = "ovswitch_brcompat";
+        } else {
+            $self->error("Host type $type is not supported by Open vSwitch VNM_MAD.");
         }
     } else {
         $vnm_mad = "dummy";
     }
 
-    foreach my $t (@existhost) {
+    foreach my $host (@existhost) {
         # Remove the host only if there are no VMs running on it
-        if (exists($protected{$t->name})) {
-            $self->info("This resource $type is protected and can not be removed: ", $t->name);
-        } elsif (exists($newhosts{$t->name})) {
-            $self->debug(1, "We can't remove this $type host. Is required by Quattor: ", $t->name);
-        } elsif ($t->used()) {
-            $self->debug(1, "We can't remove this $type host. There are still running VMs: ", $t->name);
+        if (exists($protected{$host->name})) {
+            $self->info("This resource $type is protected and cannot be removed: ", $host->name);
+        } elsif (exists($newhosts{$host->name})) {
+            $self->debug(1, "We cannot remove this $type host. Is required by Quattor: ", $host->name);
+        } elsif ($host->used()) {
+            $self->debug(1, "We cannot remove this $type host. There are still running VMs: ", $host->name);
         } else {
-            push(@rmhosts, $t->name);
-            $t->delete();
+            push(@rmhosts, $host->name);
+            $host->delete();
         }
     }
 
@@ -70,14 +69,17 @@ sub manage_hosts
         }
         my $hostinstance = $hostinstances[0];
         if (exists($protected{$host})) {
-            $self->info("This resource $type is protected and can not be created/updated: $host");
+            $self->info("This resource $type is protected and cannot be created/updated: $host");
         } elsif ($self->can_connect_to_host($host)) {
-            my $output = $self->enable_node($one, $type, $host, $resources);
-            if ($output) {
+            if ($self->enable_node($one, $type, $host, $resources)) {
                 if ($hostinstance) {
                     # The host is already available and OK
-                    $hostinstance->enable if !$hostinstance->is_enabled;
-                    $self->info("Enabled existing host $host");
+                    if (!$hostinstance->is_enabled) {
+                        $hostinstance->enable;
+                        $self->info("Enabled existing host $host");
+                    } else {
+                        $self->verbose("Host $host is already enabled");
+                    };
                 } else {
                     # The host is not available yet from ONE framework
                     # and it is running correctly
@@ -86,18 +88,16 @@ sub manage_hosts
                     $self->info("Created new $type host $host.");
                 }
             } else {
-                $self->
-                disable_host($one, $type, $host, $hostinstance, %host_options);
+                $self->disable_host($one, $type, $host, $hostinstance, %host_options);
             }
         } else {
             push(@failedhost, $host);
-            $self->
-            disable_host($one, $type, $host, $hostinstance, %host_options);
+            $self->disable_host($one, $type, $host, $hostinstance, %host_options);
         }
     }
 
     if (@failedhost) {
-        $self->error("Detected some error/s including these $type nodes: ", join(', ', @failedhost));
+        $self->error("Detected some error/s including these $type hosts: ", join(', ', @failedhost));
     }
 
 }
@@ -105,6 +105,9 @@ sub manage_hosts
 =item disable_host
 
 Disables failing OpenNebula C<host>.
+This method is called when the C<host> is not reachable from the C<OpenNebula> server.
+Always displays a warning message.
+In that case the C<host> is disabled in the scheduler.
 
 =cut
 
@@ -123,28 +126,26 @@ sub disable_host
     }
 }
 
-=item sync_opennebula_hyps
+=item sync_opennebula_hosts
 
-Syncronise hosts C<VMM> scripts.
+Synchronise hosts C<VMM> scripts.
 
 =cut
 
-sub sync_opennebula_hyps
+sub sync_opennebula_hosts
 {
     my ($self) = @_;
-    my $output;
 
-    $output = $self->run_onehost_as_oneadmin_with_ssh("localhost", 0);
-    if (!$output) {
-        $self->error("Quattor unable to execute onehost sync command as oneadmin.");
+    if ($self->run_onehost_as_oneadmin_with_ssh("localhost", 0)) {
+        $self->error("Failed to synchronise opennebula hosts.");
     } else {
-        $self->info("OpenNebula hypervisors were synchronized correctly.");
+        $self->verbose("opennebula hosts were synchronised correctly.");
     }
 }
 
 =item enable_node
 
-Executest ssh commands required by OpenNebula
+Execute ssh commands required by OpenNebula
 also it configures C<Ceph> client if necessary.
 
 =cut
@@ -152,11 +153,14 @@ also it configures C<Ceph> client if necessary.
 sub enable_node
 {
     my ($self, $one, $type, $host, $resources) = @_;
-    my ($output, $cmd, $uuid, $secret);
+
     # Check if we are using Ceph datastores
     if ($self->detect_ceph_datastores($one)) {
         return $self->enable_ceph_node($type, $host, $resources->{datastores});
     }
+    # We didn't found a Ceph host configuration
+    # no extra tests are required at this point
+    # host is ready to be used by the component
     return 1;
 }
 

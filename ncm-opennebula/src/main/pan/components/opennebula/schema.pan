@@ -199,7 +199,7 @@ type opennebula_vnc_ports = {
     if possible the port will be set to START + VMID}
     "start" : long(5900..65535) = 5900
     "reserved" ? long
-} = dict() with {deprecated(0, "VNC_BASE_PORT is deprecated since OpenNebula 5.0"); true;};
+} = dict() with {deprecated(0, "VNC_BASE_PORT is deprecated since OpenNebula 5.0"); true; };
 
 @documentation{
 LAN ID pool for the automatic VLAN_ID assignment.
@@ -460,7 +460,11 @@ type opennebula_oned = {
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
         dict("public", true),
-        dict("name", "http", "required_attrs", list('BASE_URL', 'PUBLIC_DIR'), "app_actions", list('create', 'delete', 'monitor')),
+        dict(
+            "name", "http",
+            "required_attrs", list('BASE_URL', 'PUBLIC_DIR'),
+            "app_actions", list('create', 'delete', 'monitor'),
+        ),
         dict(
             "name", "s3",
             "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
@@ -541,12 +545,18 @@ type opennebula_sunstone = {
     "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
     "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
     "instance_types" : opennebula_instance_types[] = list (
-        dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128, "description", "Very small instance for testing purposes"),
-        dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512, "description", "Small instance for testing multi-core applications"),
-        dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024, "description", "General purpose instance for low-load servers"),
-        dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048, "description", "General purpose instance for medium-load servers"),
-        dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096, "description", "General purpose instance for servers"),
-        dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192, "description", "General purpose instance for high-load servers"),
+        dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128,
+                "description", "Very small instance for testing purposes"),
+        dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512,
+                "description", "Small instance for testing multi-core applications"),
+        dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024,
+                "description", "General purpose instance for low-load servers"),
+        dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048,
+                "description", "General purpose instance for medium-load servers"),
+        dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096,
+                "description", "General purpose instance for servers"),
+        dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192,
+                "description", "General purpose instance for high-load servers"),
     )
     "routes" : string[] = list("oneflow", "vcenter", "support")
 };
@@ -649,9 +659,21 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    @{set ssh host multiplex options}
     'ssh_multiplex' : boolean = true
+    @{in some cases (such a Sunstone standalone configuration with apache), 
+    some OpenNebula configuration files should be accessible by a different group (as apache).
+    This variable sets the group name to change these files permissions.}
     'cfg_group' ? string
+    @{includes the Open vSwitch network drives in your hosts. (OVS must be installed in each host).
+    This option is not longer used by ONE >= 5.x versions.}
     'host_ovs' ? boolean
+    @{set OpenNebula hosts type}
     'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
+    @{set system Datastore TM_MAD value.
+        shared: The storage area for the system datastore is a shared directory across the hosts.
+        vmfs: A specialized version of the shared one to use the vmfs file system.
+        ssh: Uses a local storage area from each host for the system datastore.
+    }
     'tm_system_ds' ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = dict();

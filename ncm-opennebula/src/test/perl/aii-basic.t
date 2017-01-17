@@ -15,11 +15,10 @@ use NCM::Component::opennebula;
 
 $CAF::Object::NoAction = 1;
 
-my $opennebulaaii = new Test::MockModule('NCM::Component::opennebula');
+my $opennebulaaii = new Test::MockModule('NCM::Component::OpenNebula::AII');
 
 $opennebulaaii->mock('read_one_aii_conf', Net::OpenNebula->new(url  => "http://localhost/RPC2",
                                                       user => "oneadmin",));
-$opennebulaaii->mock('opennebula_aii_vminstantiate', undef);
 $opennebulaaii->mock('is_timeout', undef);
 
 
@@ -66,7 +65,6 @@ ok(rpc_history_ok(["one.imagepool.info",
                    "one.image.chown",
                    "one.vnpool.info",
                    "one.vn.info",
-                   "one.vn.add_ar",
                    "one.vnpool.info",
                    "one.templatepool.info",
                    "one.template.update",
