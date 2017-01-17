@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-package NCM::Component::opennebula;
+#${PMpre} NCM::Component::${project.artifactId}${PMpost}
 
 =head1 NAME
 
@@ -317,20 +313,25 @@ Following package dependencies should be installed to run the component:
 
 =cut
 
-use strict;
-use warnings;
-use version;
-use base qw(NCM::Component);
-use NCM::Component;
-use NCM::Component::OpenNebula::commands;
+use parent qw(NCM::Component
+              NCM::Component::OpenNebula::Commands
+              NCM::Component::OpenNebula::Host
+              NCM::Component::OpenNebula::Ceph
+              NCM::Component::OpenNebula::Server
+              NCM::Component::OpenNebula::Account
+              NCM::Component::OpenNebula::Network
+              NCM::Component::OpenNebula::VM
+              NCM::Component::OpenNebula::Image
+              );
+use NCM::Component::OpenNebula::Commands;
 use NCM::Component::OpenNebula::Host;
-use NCM::Component::OpenNebula::Server;
+use NCM::Component::OpenNebula::Ceph;
+use NCM::Component::OpenNebula::Server qw($SERVERADMIN_USER $ONEADMIN_USER);
 use NCM::Component::OpenNebula::Account;
 use NCM::Component::OpenNebula::Network;
 use NCM::Component::OpenNebula::VM;
 use NCM::Component::OpenNebula::Image;
-use vars qw(@ISA $EC);
-use LC::Exception;
+
 use CAF::TextRender;
 use CAF::FileReader;
 use CAF::Service;
@@ -341,13 +342,11 @@ use Data::Dumper;
 use Readonly;
 use 5.10.1;
 
-Readonly my $CORE_AUTH_DRIVER => "core";
 Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
-Readonly our $SERVERADMIN_USER => "serveradmin";
-Readonly our $ONEADMIN_USER => "oneadmin";
+
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
 Readonly my $HOSTNAME => "/system/network/hostname";
 Readonly my $DOMAINNAME => "/system/network/domainname";

@@ -1,5 +1,6 @@
+#${PMpre} NCM::Component::OpenNebula::Host${PMpost}
 
-use NCM::Component::OpenNebula::commands;
+use NCM::Component::OpenNebula::Commands;
 use NCM::Component::OpenNebula::Ceph;
 
 =head1 NAME

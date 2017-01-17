@@ -1,4 +1,9 @@
-use NCM::Component::OpenNebula::Server;
+#${PMpre} NCM::Component::OpenNebula::Account${PMpost}
+
+use NCM::Component::OpenNebula::Server qw($SERVERADMIN_USER $ONEADMIN_USER);
+use Readonly;
+
+Readonly my $CORE_AUTH_DRIVER => "core";
 
 =head1 NAME
 
@@ -16,6 +21,7 @@ Add/remove/update regular users/groups and assign users to groups
 only if the user/group has the Quattor flag set.
 
 =cut
+
 
 sub manage_users_groups
 {

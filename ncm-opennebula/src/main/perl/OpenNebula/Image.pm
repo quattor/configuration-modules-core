@@ -1,3 +1,5 @@
+#${PMpre} NCM::Component::OpenNebula::Image${PMpost}
+
 =head1 NAME
 
 NCM::Component::OpenNebula::Image adds C<OpenNebula> C<VM> images 

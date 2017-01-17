@@ -1,5 +1,5 @@
-use strict;
-use warnings;
+#${PMpre} NCM::Component::OpenNebula::Commands${PMpost}
+
 use LC::Exception;
 use LC::Find;
 use CAF::FileWriter;
@@ -22,7 +22,7 @@ my $sshcmd=[];
 
 =head1 NAME
 
-NCM::Component::OpenNebula::commands Configuration module for ONE
+NCM::Component::OpenNebula::Commands Configuration module for ONE
 
 =head1 DESCRIPTION
 

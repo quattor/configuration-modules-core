@@ -1,10 +1,15 @@
+#${PMpre} NCM::Component::OpenNebula::Server${PMpost}
 
-use version;
-use NCM::Component::OpenNebula::commands;
+use parent qw(Exporter);
+use NCM::Component::OpenNebula::Commands;
 use CAF::Service;
 use CAF::FileReader;
 use Readonly;
 
+our @EXPORT_OK = qw($SERVERADMIN_USER $ONEADMIN_USER);
+
+Readonly our $SERVERADMIN_USER => "serveradmin";
+Readonly our $ONEADMIN_USER => "oneadmin";
 Readonly our $OPENNEBULA_VERSION_FILE => "/var/lib/one/remotes/VERSION";
 Readonly our $ONED_DATASTORE_MAD => "-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm";
 Readonly our $ONEADMIN_AUTH_FILE => "/var/lib/one/.one/one_auth";

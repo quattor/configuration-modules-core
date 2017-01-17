@@ -1,3 +1,5 @@
+#${PMpre} NCM::Component::OpenNebula::VM${PMpost}
+
 =head1 NAME
 
 NCM::Component::OpenNebula::VM adds C<OpenNebula> C<VMs> 

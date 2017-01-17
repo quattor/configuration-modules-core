@@ -1,5 +1,6 @@
+#${PMpre} NCM::Component::OpenNebula::Ceph${PMpost}
 
-use NCM::Component::OpenNebula::commands;
+use NCM::Component::OpenNebula::Commands;
 use Readonly;
 
 Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
