@@ -1,0 +1,10 @@
+Basic value test
+---
+/etc/example/exampled.conf
+---
+^name\s=\s\{
+^\s{4}hosts\s=\sserver1,server2$
+^\s{4}port\s=\s800$
+^\s{4}master\s=\sFALSE$
+^\s{4}description\s=\s"My example"$
+^}$
