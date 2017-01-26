@@ -1,0 +1,5 @@
+name = {
+[%- FOREACH pair IN CCM.contents %]
+[%     INCLUDE metaconfig/example/element.tt key=pair.key value=pair.value FILTER indent %]
+[%- END %]
+}
