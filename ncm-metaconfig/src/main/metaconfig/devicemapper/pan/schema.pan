@@ -29,7 +29,7 @@ type multipath_types_devices_only = {
     'getuid_callout' ? string # default /lib/udev/scsi_id --whitelisted --device=/dev/%n
     'path_checker' ? string with match(SELF, '^(readsector0|tur|emc_clariion|hp_sw|rdac|directio)$') # detemine path state, default readsector0
     'features' ? multipath_defaults_features
-    'fast_io_fail_tmo' ? boolean # default false
+    'fast_io_fail_tmo' ? string with match(SELF, '^(off)$') || to_long(SELF) > 0  # default timeout in seconds determined by OS
     'dev_loss_tmo' ? long(0..)
     'retain_attached_hw_handler' ? boolean # default false
     'detect_prio' ? boolean # default false
@@ -44,7 +44,7 @@ type multipath_multipaths = {
 
 type multipath_device_blacklist = {
     "vendor" : string
-    "product" : string
+    "product" ? string
 };
 
 type multipath_device = {
