@@ -13,7 +13,7 @@ C<NCM::Component::syslog> configures entries in /etc/(r)syslog.conf
 use parent qw(NCM::Component);
 
 use CAF::FileWriter;
-use CAF::FileEditor;
+use CAF::FileEditor 16.12.1;
 use CAF::Service;
 use Readonly;
 
@@ -44,12 +44,14 @@ sub sysconfig
     foreach my $key (qw(syslogd klogd)) {
         my $options = $tree->{"${key}options"};
         next if ! defined($options);
+        # wrap in double quotes is whitespace is present and no quotes yet
+        $options = '"'.$options.'"' if ($options =~ m/\s/ && $options !~ m/^['"]/);
 
         my $cfgkey = uc($key).'_OPTIONS';
         $fh->add_or_replace_sysconfig_lines($cfgkey, $options);
     }
 
-    return $fh->close();
+    return $fh->close() ? 1 : 0;
 };
 
 =item render
@@ -92,7 +94,7 @@ sub render
         print $fh "\t$rule->{action}\n";
     }
 
-    return $fh->close();
+    return $fh->close() ? 1 : 0;
 }
 
 =item edit
@@ -124,7 +126,7 @@ sub edit
     foreach my $line (split(/\n/, "$fhr")) {
         if ($line =~ m/# ncm-syslog/) {
             # (r)syslog directives
-            $line = ~s/\s*# ncm-syslog.*//;
+            $line =~ s/\s*# ncm-syslog.*//;
             $directive_found{$line}=1;
         } else {
             # no newlines
@@ -179,7 +181,7 @@ sub edit
                 my $mpriority = $priority eq '*' ? '\*' : $priority;
 
                 # the facility may alreay start at column1, so cannot use "^[^#]" to veto comments
-                if (grep { /^.*${facility}\..*\s+${action}/ } @syslogcontents) {
+                if (grep { /^.*${mfacility}\..*\s+${action}/ } @syslogcontents) {
                     $self->debug(2, "facility $facility already uses action $action");
                     # this facility used this action already, but is the priority correct?
                     if ( ! map { /^.*${mfacility}\.${mpriority}.*${action}/ } @syslogcontents ){
@@ -200,8 +202,9 @@ sub edit
     }
 
     print $fh join("\n", @syslogcontents);
+    print $fh "\n";
 
-    return $fh->close();
+    return $fh->close() ? 1 : 0;
 }
 
 
@@ -229,7 +232,7 @@ sub Configure
     $changes += $self->sysconfig($tree, $sysconfig);
 
     if ($changes) {
-        CAF::Service->([$type], log => $self)->restart();
+        CAF::Service->new([$type], log => $self)->restart();
     }
 
     return;
