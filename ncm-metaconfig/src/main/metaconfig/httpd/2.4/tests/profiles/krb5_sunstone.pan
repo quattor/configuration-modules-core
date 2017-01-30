@@ -10,7 +10,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunston
 
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
-variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
+variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 variable KRB5_REALM ?= 'YOUR.REALM';
 variable KRB5_QUATTOR_SERVICE ?= 'host';
@@ -47,7 +47,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunston
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunstone.conf}/contents/vhosts/sunstone/directories/0";
 "name" = SUNSTONE_PUBLIC_DIR;
-'auth/require' = nlist("type", "valid-user");
+'auth/require' = dict("type", "valid-user");
 'auth/name' = "Sunstone Kerberos Login";
 'auth/type' = "GSSAPI";
 'gssapi/sslonly' = true;

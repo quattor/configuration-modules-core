@@ -5,7 +5,7 @@ variable METACONFIG_HTTPD_VERSION = '2.4';
 include 'metaconfig/httpd/httpd_conf';
 
 # add apache user and group
-include 'apache'; 
+include 'apache';
 
 variable HTTPD_OS_FLAVOUR ?= 'el7';
 

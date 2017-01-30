@@ -6,32 +6,32 @@ object template labeled_crushmap;
 '/system/network/domainname' = 'cubone.os';
 
 variable CEPH_HOSTS = list('ceph001', 'ceph002', 'ceph003');
-variable CEPH_OSD_DISKS = list('sdc','sdd','sde','sdf','sdg','sdh','sdi','sdj','sdk','sdl','sdm','sdn');
-variable CEPH_JOURNAL_DISKS = list('sda4','sdb');
+variable CEPH_OSD_DISKS = list('sdc', 'sdd', 'sde', 'sdf', 'sdg', 'sdh', 'sdi', 'sdj', 'sdk', 'sdl', 'sdm', 'sdn');
+variable CEPH_JOURNAL_DISKS = list('sda4', 'sdb');
 variable CEPH_DEFAULT_OSD_WEIGHT = 1.0;
 
-variable MDSS = nlist (
-    'ceph001.cubone.os', nlist(
+variable MDSS = dict (
+    'ceph001.cubone.os', dict(
         'fqdn', 'ceph001.cubone.os',
         ),
-    'ceph002.cubone.os', nlist(
+    'ceph002.cubone.os', dict(
         'fqdn', 'ceph002.cubone.os',
     )
 );
-variable MONITOR1 =  nlist(
+variable MONITOR1 =  dict(
     'up', true,
     'fqdn', 'ceph001.cubone.os',
 );
-variable MONITOR2 =  nlist(
+variable MONITOR2 =  dict(
     'up', true,
     'fqdn', 'ceph002.cubone.os',
 );
-variable MONITOR3 =  nlist(
+variable MONITOR3 =  dict(
     'up', false,
     'fqdn', 'ceph003.cubone.os',
 );
 
-variable CONFIG = nlist (
+variable CONFIG = dict (
     'fsid' , '82766e04-585b-49a6-a0ac-c13d9ffd0a7d',
     'mon_initial_members', list ('ceph001', 'ceph002', 'ceph003'),
     'public_network', '10.141.8.0/20',
@@ -39,7 +39,7 @@ variable CONFIG = nlist (
     'osd_pool_default_size', 3,
     'osd_pool_default_min_size', 2,
     'osd_pool_default_pg_num', 400,
-    'osd_pool_default_pgp_num', 400, 
+    'osd_pool_default_pgp_num', 400,
 );
 
 prefix '/software/components/ceph';
@@ -48,10 +48,10 @@ prefix '/software/components/ceph';
 
 
 variable BASE_STEPS = list(
-    nlist(
-        'take', 'default', 
+    dict(
+        'take', 'default',
         'choices', list(
-        nlist(
+        dict(
             'chtype', 'chooseleaf firstn',
             'bktype', 'host',
             'number', 0,
@@ -62,7 +62,7 @@ variable BASE_STEPS = list(
 
 prefix "/software/components/ceph/clusters/ceph/crushmap/";
 
-'types' = list('osd','host','root');
+'types' = list('osd', 'host', 'root');
 
 'rules/0/name' = 'data';
 'rules/0/type' = 'replicated';
@@ -75,7 +75,7 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 'rules/1/min_size' = 0;
 'rules/1/max_size' = 10;
 'rules/1/steps' = BASE_STEPS;
-        
+
 'rules/2/name' = 'rbd';
 'rules/2/type' = 'replicated';
 'rules/2/min_size' = 0;
@@ -88,15 +88,15 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 'buckets/0/defaulthash' = 0;
 'buckets/0/labels' = list('tst-0', 'tst-1');
 'buckets/0/buckets' = list(
-    nlist(
+    dict(
         'name', 'ceph001',
         'type', 'host',
     ),
-    nlist(
+    dict(
         'name', 'ceph002',
         'type', 'host',
     ),
-    nlist(
+    dict(
         'name', 'ceph003',
         'type', 'host',
     ),
@@ -104,21 +104,21 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 prefix '/software/components/ceph/clusters/ceph';
 'config' = CONFIG;
 'osdhosts' = {
-    t=nlist();    
+    t=dict();
     foreach(idx;host;CEPH_HOSTS) {
-        d = nlist();
+        d = dict();
         foreach(odx;disk;CEPH_OSD_DISKS) {
             jdx= odx % length(CEPH_JOURNAL_DISKS); ## RR over journal disks
             if (host == 'ceph003') {
                 jdx=0; # Empty bucket tst-1 on ceph003
             };
-            d[disk] = nlist(
+            d[disk] = dict(
                 'journal_path', format('/var/lib/ceph/log/%s/osd-%s/journal', CEPH_JOURNAL_DISKS[jdx], disk),
                 'crush_weight', CEPH_DEFAULT_OSD_WEIGHT,
                 'labels', list(format('tst-%s', jdx))
             );
         };
-        t[host] = nlist(
+        t[host] = dict(
             'fqdn', format('%s.%s', host, value('/system/network/domainname')),
             'osds', d
         );
@@ -127,11 +127,11 @@ prefix '/software/components/ceph/clusters/ceph';
 };
 
 'mdss' = MDSS;
-'monitors' = nlist (
+'monitors' = dict (
     'ceph001', MONITOR1,
     'ceph002', MONITOR2,
     'ceph003', MONITOR3
 );
-'deployhosts' = nlist (
+'deployhosts' = dict (
     'ceph001', 'ceph001.cubone.os',
-);  
+);

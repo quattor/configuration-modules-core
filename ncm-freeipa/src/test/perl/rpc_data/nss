@@ -1,0 +1,4 @@
+$cmds{request}{cmd}='cert_request -----BEGIN CERTIFICATE REQUEST-----\nCSRDATA\n-----END CERTIFICATE REQUEST----- principal=host/g.h.i.j@REALM.DOMAIN,version.*';
+$cmds{request}{result}={serial_number => 1234};
+$cmds{show}{cmd}='cert_show 1234 version.*';
+$cmds{show}{result}={serial_number => 1234, certificate => 'CERTDATA'};

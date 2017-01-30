@@ -25,7 +25,7 @@ type kibana_service = {
 
     "shard_timeout" : long(0..) = 0 # 0 means disable
 
-    "startup_timeout" ?  long(0..) = 5000
+    "startup_timeout" ? long(0..) = 5000
 
     "verify_ssl" : boolean = true
 

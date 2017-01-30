@@ -8,4 +8,4 @@ prefix "/software/components/accounts";
 
 "remove_unknown" = true;
 
-"kept_groups" = nlist("g1", "");
+"kept_groups" = dict("g1", "");

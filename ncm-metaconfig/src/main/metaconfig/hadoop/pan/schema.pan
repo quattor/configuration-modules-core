@@ -18,7 +18,7 @@ type hadoop_core_site_fs = {
 type hadoop_core_site = {
     'fs' : hadoop_core_site_fs
 };
- 
+
 @{ datanode settings of the hdfs-site.xml hadoop file @}
 type hadoop_hdfs_site_datanode = {
     'handler.count' ? long

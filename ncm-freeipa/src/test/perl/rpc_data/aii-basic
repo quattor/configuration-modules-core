@@ -1,0 +1,6 @@
+$cmds{disable}{cmd}='host_disable myhost.example.com version.*';
+$cmds{disable}{result}={okunittest => 1};
+$cmds{add}{cmd}='host_add myhost.example.com ip_address=1.2.3.4,macaddress=aa:bb:cc:dd:ee:ff,version.*';
+$cmds{add}{result}={okunittest => 1};
+$cmds{passwd}{cmd}='host_mod myhost.example.com random=1,version.*';
+$cmds{passwd}{result}={randompassword => 'supersecretOTP'};

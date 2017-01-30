@@ -24,7 +24,7 @@ prefix "/software/components/shorewall";
 "rules/0/dst/address/0" = "5.6.7.8";
 "rules/0/dstport/0" = "23";
 
-"shorewall" = nlist();
+"shorewall" = dict();
 
 "tcinterfaces/0/interface" = "eth0";
 

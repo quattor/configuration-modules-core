@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/nsca/config-rpm;
-include {'components/nsca/schema'};
+include 'components/nsca/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

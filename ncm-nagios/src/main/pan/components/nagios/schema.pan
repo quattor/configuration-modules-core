@@ -397,7 +397,7 @@ type structure_component_nagios = {
     "general" : structure_nagios_nagios_cfg
     "cgi" ? structure_nagios_cgi_cfg
     "serviceextinfo" ? structure_nagios_serviceextinfo []
-    "servicedependencies" ?  structure_nagios_servicedependency []
+    "servicedependencies" ? structure_nagios_servicedependency []
     "timeperiods" : structure_nagios_timeperiod {}
     "contacts" : structure_nagios_contact {}
     "contactgroups" : structure_nagios_contactgroup {}

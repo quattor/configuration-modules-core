@@ -26,7 +26,7 @@ type ncm_ncd = {
     'post-hook' ? string
     'post-hook-timeout' ? long(0..)
     'pre-hook' ? string
-    'pre-hook-timeout' ?  long(0..)
+    'pre-hook-timeout' ? long(0..)
     'retries' ? long(0..)
     'skip' ? boolean
     'state' : string = "/var/run/quattor-components"

@@ -83,7 +83,7 @@ type ${project.artifactId}_config =  {
     'preamble' ? string
     'contents' : ${project.artifactId}_extension
     'convert' ? ${project.artifactId}_textrender_convert
-} = nlist();
+} = dict();
 
 type ${project.artifactId}_component = {
     include structure_component

@@ -146,8 +146,8 @@ type logstash_name_patterns = {
     "pattern" : string[]
 };
 
-@{A name_patternlist is rendered differently than a name_patterns}
-type logstash_filter_name_patternlist = {
+@{A name_patterdict is rendered differently than a name_patterns}
+type logstash_filter_name_patterdict = {
     "name" : string
     "pattern" : string[]
 };
@@ -177,7 +177,7 @@ type logstash_filter_bytes2human = {
 
 type logstash_filter_date = {
     include logstash_filter_plugin_common
-    "match" : logstash_filter_name_patternlist
+    "match" : logstash_filter_name_patterdict
 };
 
 type logstash_filter_grep = {

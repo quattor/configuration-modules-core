@@ -17,7 +17,7 @@ type ganesha_export_client = {
     "Access" ? string[]
     "Access_Type" ? string # eg rw
     "Squash" ? string # eg root_squash;
-} = nlist();
+} = dict();
 
 type ganesha_export = {
     include ganesha_export_client
@@ -63,11 +63,11 @@ type ganesha_export = {
     "Use_FSAL_UP" : boolean = true
     "FSAL_UP_Type" : string with SELF == "DUMB"
     "FSAL_UP_Timeout" ? long(0..) = 30
-} = nlist();
+} = dict();
 
 type ganesha_fsal = {
     "Max_FS_calls" : long(0..) = 0  # maximum number of simultaneous calls to the filesystem. ( 0 = no limit ).
-} = nlist();
+} = dict();
 
 type ganesha_filesystem = {
     "MaxRead" ? long(0..) = 1048576 # Max read size from FS
@@ -83,16 +83,16 @@ type ganesha_filesystem = {
 
     "auth_xdev_export" ? boolean = false # This indicates whether it is allowed to cross a junction in a "LookupPath" (used for export entries).
 
-} = nlist();
+} = dict();
 
 type ganesha_GPFS = {
   # no GPFS specific options
-} = nlist();
+} = dict();
 
 type ganesha_cacheinode_hash = {
     "Index_Size" ? long(0..) = 37 # Size of the array used in the hash (must be a prime number for algorithm efficiency)
     "Alphabet_Length" ? long(0..) = 10 # Number of signs in the alphabet used to write the keys
-} = nlist();
+} = dict();
 
 type ganesha_cacheinode = {
     # all expiration: -1 = Never
@@ -103,7 +103,7 @@ type ganesha_cacheinode = {
     "Use_Test_Access" ? long(0..) = 1 # This flag tells if 'access' operation are to be performed explicitely on the FileSystem or only on cached attributes information
     "Use_Getattr_Directory_Invalidation" : long(0..) = 0 # Use getattr as for directory invalidation
     "Use_FSAL_Hash" ? long(0..) = 1 # Do we rely on FSAL to hash handle or not?
-} = nlist();
+} = dict();
 
 type ganesha_cacheinode_gc_policy = {
     "Entries_HWMark" ? long(0..) = 100000 # High water mark for cache entries
@@ -122,11 +122,11 @@ type ganesha_cacheinode_gc_policy = {
     "Required_Progress" ? long(0..) = 5 # Percentage of progress toward the high water mark required in in a pass through the thread when in extremis.
 
     "Futility_Count" ? long(0..) = 8 # Number of failures to approach the high watermark before we disable caching, when in extremis.
-} = nlist();
+} = dict();
 
 type ganesha_nfsworker_param = {
     "Nb_Before_GC" : long(0..) = 50 # Number of job before GC on the worker's job pool size
-} = nlist();
+} = dict();
 
 type ganesha_nfs_core_param = {
     "Nb_Worker" ? long(0..) = 16 # Number of worker threads to be used
@@ -198,18 +198,18 @@ type ganesha_nfs_core_param = {
     "MaxRPCSendBufferSize" ? long(0..) = 32768 # The size of each RPC send buffer in bytes and effectively the maximum send size.
     "MaxRPCRecvBufferSize" ? long(0..) = 32768 # The size of each RPC receive buffer in bytes and effectively the maximum receive size.
     "NFS_Protocols" ? ganesha_nfs_protocol[] = list(3,4) # List of NFS Protocol Versions that should be supported
-} = nlist();
+} = dict();
 
 type ganesha_nfs_dupreq_hash = {
     "Index_Size" : long(0..) = 17 # Size of the array used in the hash (must be a prime number for algorithm efficiency)
     "Alphabet_Length" : long(0..) = 10 # Number of signs in the alphabet used to write the keys
-} = nlist();
+} = dict();
 
 type ganesha_nfs_ip_name = {
     "Index_Size" : long(0..) = 17 # Size of the array used in the hash (must be a prime number for algorithm efficiency)
     "Alphabet_Length" : long(0..) = 10 # Number of signs in the alphabet used to write the keys
     "Expiration_Time" : long(0..) = 3600 # Expiration time for this cache
-} = nlist();
+} = dict();
 
 type ganesha_snmp_adm = {
     "snmp_agentx_socket" : string = "tcp:localhost:761"
@@ -223,30 +223,30 @@ type ganesha_snmp_adm = {
     "export_nfs_calls_detail" : boolean = false
     "export_cache_inode_calls_detail" ? boolean = false
     "export_fsal_calls_detail" : boolean = false
-} = nlist();
+} = dict();
 
 type ganesha_stat_exporter = {
     "Access" : string[] = list("localhost")
     "Port" : long = 10401
-} = nlist();
+} = dict();
 
 type ganesha_nfsv4 = {
     "Lease_Lifetime" : long(0..) = 90 # Lifetime for NFSv4 Leases Grace period is tied to Lease, but has a maximum value of 60
     "FH_Expire" : boolean = false # Are we using volatile fh ?
     "Returns_ERR_FH_EXPIRED" : boolean = true # Should we return NFS4ERR_FH_EXPIRED if a FH is expired ?
-} = nlist();
+} = dict();
 
 type ganesha_nfsv4_client_cache = {
     "Index_Size" : long (0..) = 17 # Size of the array used in the hash (must be a prime number for algorithm efficiency)
     "Alphabet_Length" : long(0..) = 10 # Number of signs in the alphabet used to write the keys
-} = nlist();
+} = dict();
 
 
 type ganesha_nfs_krb5 = {
     "PrincipalName" ? string = 'nfs' # Principal to be used Default is nfs
     "KeytabPath" ? string = '/etc/krb5.keytab' # Keytab Path Default is /etc/krb5.keytab
     "Active_krb5" ? boolean = true  # TRUE = krb5 support enabled Default is TRUE
-} = nlist();
+} = dict();
 
 type ganesha_main = {
     "FSAL" : ganesha_fsal
@@ -264,10 +264,10 @@ type ganesha_main = {
     "CacheInode_GC_Policy" : ganesha_cacheinode_gc_policy
     "NFS_Worker_Param" : ganesha_nfsworker_param
     "NFS_Core_Param" : ganesha_nfs_core_param
-} = nlist();
+} = dict();
 
 type ganesha_config = {
     "includes" ? string[] # list with filesnames to include
     "exports" : ganesha_export[]
     "main" : ganesha_main
-} = nlist();
+} = dict();

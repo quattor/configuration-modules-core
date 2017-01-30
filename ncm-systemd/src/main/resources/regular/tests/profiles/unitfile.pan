@@ -4,20 +4,20 @@ include 'components/systemd/schema';
 
 bind "/unitfile" = systemd_unitfile_config[];
 
-"/unitfile/0" = nlist(
+"/unitfile/0" = dict(
     'includes', list(
         '/unit/1',
         '/unit/2',
         ),
-    'unit', nlist(
-        'Assert', nlist(
+    'unit', dict(
+        'Assert', dict(
             'PathExists', list(
                 '', # reset
                 '/path/1',
                 '/path/2',
                 ),
             ),
-        'Condition', nlist(
+        'Condition', dict(
             'PathExists', list(
                 '', # reset
                 '/path/C1',
@@ -29,17 +29,17 @@ bind "/unitfile" = systemd_unitfile_config[];
         'After', list('unit0', 'unit01'),
         'Before', list('unita', 'unitb'),
         ),
-    'service', nlist(
+    'service', dict(
         'CPUAffinity', list(
             list(), # reset
             list(1, 2, 3, 4),
         ),
         'Environment', list(
-            nlist(
+            dict(
                 'VAR1-1', 'val1-1 val1-1b',
                 'VAR1-2', 'val1-2',
                 ),
-            nlist(
+            dict(
                 'VAR2-1', 'val2-1',
                 'VAR2-2', 'val2-2 val2-2b',
                 ),
@@ -53,7 +53,7 @@ bind "/unitfile" = systemd_unitfile_config[];
         'LimitSTACK', -1,
         'LimitNPROC', 100,
         ),
-    'install', nlist(
+    'install', dict(
         'WantedBy', list('1.service', '2.service'),
         ),
     );

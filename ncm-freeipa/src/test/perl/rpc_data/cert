@@ -1,0 +1,4 @@
+$cmds{request}{cmd}='cert_request -----BEGIN NEW CERTIFICATE REQUEST-----\nCSRREQUEST\n-----END CERTIFICATE REQUEST----- principal=host/myhost.mydomain@EXAMPLE.COM,version.*';
+$cmds{request}{result}={okunittest => 1};
+$cmds{show}{cmd}='cert_show 123 version.*';
+$cmds{show}{result}={certificate => 'CERTDATA'};

@@ -12,8 +12,8 @@ type ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|
 type ssh_config_opts = {
     'AddressFamily' ? string with match (SELF, "^(any|inet|inet6)$")
     'BatchMode' ? boolean
-    'BindAddress' ? string 
-    'CanonicalDomains' ? string[] 
+    'BindAddress' ? string
+    'CanonicalDomains' ? string[]
     'CanonicalizeFallbackLocal' ? boolean
     'CanonicalizeHostname' ? string with match (SELF, "^(yes|no|always)$")
     'CanonicalizeMaxDots' ? long(0..)
@@ -34,7 +34,7 @@ type ssh_config_opts = {
     'EnableSSHKeysign' ? boolean
     'EscapeChar' ? string
     'ExitOnForwardFailure' ? boolean
-    'FingerprintHash'  ? string with match (SELF, "^(md5|sha256)$")
+    'FingerprintHash' ? string with match (SELF, "^(md5|sha256)$")
     'ForwardAgent' ? boolean
     'ForwardX11' ? boolean
     'ForwardX11Timeout' ? long(0..)
@@ -46,7 +46,7 @@ type ssh_config_opts = {
     'HashKnownHosts' ? boolean
     'HostbasedAuthentication' ? boolean
     'HostbasedKeyTypes' ? string[]
-    'HostKeyAlgorithms' ? ssh_hostkeyalgorithms[] 
+    'HostKeyAlgorithms' ? ssh_hostkeyalgorithms[]
     'HostKeyAlias' ? string
     'HostName' ? string
     'IdentitiesOnly' ? boolean
@@ -55,11 +55,11 @@ type ssh_config_opts = {
     'IPQoS' ? string with match (SELF, "^(af[1234][123]|cs[0-7]|ef|lowdelay|throughput|reliability)$")
     'KbdInteractiveAuthentication' ? boolean
     'KbdInteractiveDevices' ? ssh_kbdinteractivedevices[]
-    'KexAlgorithms' ?  ssh_kexalgorithms[]
+    'KexAlgorithms' ? ssh_kexalgorithms[]
     'LocalCommand' ? string
     'LocalForward' ? string
     'LogLevel' ? string with match (SELF, "^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG[123])$")
-    'MACs'  ? ssh_MACs[]
+    'MACs' ? ssh_MACs[]
     'NoHostAuthenticationForLocalhost' ? boolean
     'NumberOfPasswordPrompts' ? long(0..)
     'PasswordAuthentication' ? boolean
@@ -92,17 +92,17 @@ type ssh_config_opts = {
     'UserKnownHostsFile' ? string[]
     'VerifyHostKeyDNS' ? string with match (SELF, "^(yes|no|ask)$")
     'VisualHostKey' ? boolean
-    'XAuthLocation' ? string 
+    'XAuthLocation' ? string
 };
 
 type ssh_config_host = {
-    "hostnames" : string[] 
+    "hostnames" : string[]
     include ssh_config_opts
 
 };
 
 type ssh_config_match = {
-    "matches" : string[] 
+    "matches" : string[]
     include ssh_config_opts
 
 };

@@ -21,9 +21,9 @@ variable CEPH_USER_ID = {
 
 prefix '/software/components/accounts';
 
-"groups/ceph" = nlist("gid", CEPH_USER_ID);
+"groups/ceph" = dict("gid", CEPH_USER_ID);
 
-"users/ceph" = nlist(
+"users/ceph" = dict(
     "uid", CEPH_USER_ID,
     "groups", list("ceph"),
     "comment","ceph",

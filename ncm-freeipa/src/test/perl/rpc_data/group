@@ -1,0 +1,8 @@
+$cmds{add_existing}{cmd}="group_add existing version.*";
+$cmds{add_existing}{error}={name => 'DuplicateEntry'};
+
+$cmds{add_missing}{cmd}="group_add missing version.*";
+$cmds{add_missing}{result}={okunittest => 1};
+
+$cmds{add_missing_members}{cmd}="group_add_member missing user=a,b,c,version=.*";
+$cmds{add_missing_members}{result}={okunittest => 1};

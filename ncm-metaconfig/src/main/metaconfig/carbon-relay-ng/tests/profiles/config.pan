@@ -19,7 +19,7 @@ prefix "/software/components/metaconfig/services/{/etc/carbon-relay-ng.ini}/cont
     'dest', list(dict(
         'addr', '127.0.0.1:2005',
         'opts', dict(
-            'spool', true, 
+            'spool', true,
             'pickle', false,
             ),
         )),
@@ -31,7 +31,7 @@ prefix "/software/components/metaconfig/services/{/etc/carbon-relay-ng.ini}/cont
         'sub', '=',
         ),
     'dest', list(dict(
-        'addr','127.0.0.1:2006',
+        'addr', '127.0.0.1:2006',
         )),
     );
 'init/3/addRoute' = dict(

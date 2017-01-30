@@ -10,15 +10,15 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}";
 
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
-variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
+variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents/vhosts";
 
 "django" = create("struct/default_vhost");
 "django/directories" = {
-    l = nlist();
+    l = dict();
     l["name"] =  "/var/www/django/static";
-    l["ssl"] = nlist("requiressl", true);
+    l["ssl"] = dict("requiressl", true);
     append(l);
 };
 

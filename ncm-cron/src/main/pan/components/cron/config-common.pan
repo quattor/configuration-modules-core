@@ -5,7 +5,7 @@
 
 unique template components/${project.artifactId}/config-common;
 
-include { 'components/${project.artifactId}/schema' };
+include 'components/${project.artifactId}/schema';
 
 # Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';

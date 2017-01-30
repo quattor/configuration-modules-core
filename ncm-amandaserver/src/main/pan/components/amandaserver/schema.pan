@@ -56,8 +56,8 @@ type structure_amandaserver_general = {
     "tapecycle" ? long # Number of tapes
     "dumpuser" ? string
     "printer" ? string
-    "tapedev" ?  string
-    "rawtapedev" ?  string
+    "tapedev" ? string
+    "rawtapedev" ? string
     "tpchanger" ? string
     "changerdev" ? string
     "changerfile" ? string
@@ -104,7 +104,7 @@ type structure_amandaserver_dumptype_conf = {
     "auth" ? string
     "comment" ? string
     "comprate" ? double[]
-    "compress" ? string with match (SELF,'^((client|server|none)( \w+)?)$')
+    "compress" ? string with match (SELF, '^((client|server|none)( \w+)?)$')
     "dumpcycle" ? long # In days
     "exclude" ? string with match (SELF, '^((list|file)( .+)?)$')
     "holdingdisk" ? booleanstring

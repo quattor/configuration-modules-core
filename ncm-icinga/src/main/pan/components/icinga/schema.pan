@@ -496,7 +496,7 @@ type structure_component_icinga = {
     "general" : structure_icinga_icinga_cfg
     "cgi" : structure_icinga_cgi_cfg
     "serviceextinfo" ? structure_icinga_serviceextinfo []
-    "servicedependencies" ?  structure_icinga_servicedependency []
+    "servicedependencies" ? structure_icinga_servicedependency []
     "timeperiods" : structure_icinga_timeperiod {}
     "contacts" : structure_icinga_contact {}
     "contactgroups" : structure_icinga_contactgroup {}

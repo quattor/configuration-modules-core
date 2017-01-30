@@ -7,7 +7,7 @@ type zookeeper_main = {
     "tickTime" : long = 2000
     "dataDir" : string
     "clientPort" : long = 2181
-    
+
     # regular
     "dataLogDir" ? string
     "globalOutstandingLimit" ? long
@@ -22,18 +22,18 @@ type zookeeper_main = {
     "autopurge.snapRetainCount" ? long
     "autopurge.purgeInterval" ? long
     "syncEnabled" ? boolean
-    
+
     # cluster/ensemble
     "initLimit" : long = 10
     "syncLimit" : long = 5
     "electionAlg" ? long
     "leaderServes" ? boolean
-}; 
+};
 
 type zookeeper_servers = {
     "hostname" : type_network_name
     "port" : long = 2888
-    "leaderport" : long = 3888 
+    "leaderport" : long = 3888
 };
 
 type zookeeper_server_config = {

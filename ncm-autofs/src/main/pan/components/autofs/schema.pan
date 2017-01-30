@@ -35,20 +35,20 @@ type autofs_conf = {
 
 type autofs_mapentry_type = {
     # TODO add new options like nfs options dict instead of random string
-    "options"     ? string
-    "location"    : string
+    "options" ? string
+    "location" : string
 };
 
 type autofs_map_type = {
-    "enabled"     : boolean = true
-    "preserve"    : boolean = true # "Preserve existing entries not overwritten by config"
-    "type"        : string with match(SELF,"^(direct|file|program|yp|nisplus|hesiod|userdir|ldap)$")
-    "mapname"     : string
-    "mountpoint"  ? string
-    "mpaliases"   ? string[] # mount point aliases (deprecated) # TODO add deprecation warning?
+    "enabled" : boolean = true
+    "preserve" : boolean = true # "Preserve existing entries not overwritten by config"
+    "type" : string with match(SELF, "^(direct|file|program|yp|nisplus|hesiod|userdir|ldap)$")
+    "mapname" : string
+    "mountpoint" ? string
+    "mpaliases" ? string[] # mount point aliases (deprecated) # TODO add deprecation warning?
     # TODO add new options like nfs options dict instead of random string
-    "options"     ? string
-    "entries"	? autofs_mapentry_type{}
+    "options" ? string
+    "entries" ? autofs_mapentry_type{}
 };
 
 type component_autofs_type = {

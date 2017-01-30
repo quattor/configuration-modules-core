@@ -30,12 +30,12 @@
 
 declaration template components/resolver/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 type component_resolver_type = {
     include structure_component
     'servers' : type_ip[..3]
-    'search'  ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
+    'search' ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
     'dnscache' : boolean = false
 };
 

@@ -1,0 +1,5 @@
+$cmds{add_xyz}{cmd}="dnszone_add x.y.z.*";
+$cmds{add_xyz}{error}={name => 'DuplicateEntry'};
+
+$cmds{add_abcd}{cmd}="dnszone_add a.b.c.d.*";
+$cmds{add_abcd}{result}={okunittest => 1};

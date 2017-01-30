@@ -5,7 +5,7 @@
 
 unique template components/ganglia/config-common;
 
-include { 'components/ganglia/schema' };
+include 'components/ganglia/schema';
 
 # Set prefix to root of component configuration.
 prefix '/software/components/ganglia';

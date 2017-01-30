@@ -9,7 +9,7 @@ prefix "/software/components/metaconfig/services/{/etc/multipath.conf}/contents/
 'path_grouping_policy' = 'group_by_prio';
 'failback' = 'immediate';
 'detect_prio' = true;
-'path_selector' = list('round-robin', 0); 
+'path_selector' = list('round-robin', 0);
 'features' = list(1, list('queue_if_no_path'));
 
 prefix "/software/components/metaconfig/services/{/etc/multipath.conf}/contents";

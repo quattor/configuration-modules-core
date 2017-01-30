@@ -8,7 +8,7 @@ bind "/system/network" = structure_network;
 
 "/system/network" = create("defaultnetwork");
 
-"/system/network/interfaces/br-ex" = nlist(
+"/system/network/interfaces/br-ex" = dict(
     "broadcast",    "4.3.2.255",
     "ip",           "4.3.2.1",
     "netmask",      "255.255.255.0",
@@ -16,7 +16,7 @@ bind "/system/network" = structure_network;
     "bootproto",    "static",
 );
 
-"/system/network/interfaces/eth0" = nlist(
+"/system/network/interfaces/eth0" = dict(
     "type" ,        "OVSPort",
     "ovs_bridge",   "br-ex",
     "bootproto",    "none",

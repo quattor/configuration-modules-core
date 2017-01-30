@@ -4,7 +4,7 @@
 
 
 unique template components/cdp/config-rpm;
-include { 'components/cdp/schema' };
+include 'components/cdp/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

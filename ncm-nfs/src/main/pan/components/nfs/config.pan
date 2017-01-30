@@ -8,7 +8,7 @@ unique template components/${project.artifactId}/config;
 include 'components/${project.artifactId}/schema';
 
 bind '/software/components/nfs' = component_nfs;
-    
+
 prefix '/software/components/${project.artifactId}';
 'active' ?= true;
 'dispatch' ?= true;

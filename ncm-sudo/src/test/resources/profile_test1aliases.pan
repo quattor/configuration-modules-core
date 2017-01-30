@@ -4,15 +4,15 @@ object template profile_test1aliases;
 
 
 "/software/components/sudo/privilege_lines" = list (
-	nlist ( "user",		"ALL",
-		"run_as",	"ALL",
-		"host",		"ALL",
-		"cmd",		"ALL"
-		)
-	);
+    dict ( "user", "ALL",
+        "run_as", "ALL",
+        "host", "ALL",
+        "cmd", "ALL"
+        )
+    );
 
-"/software/components/sudo/user_aliases" = nlist (
-	"FOO", list ("bar")
-	);
+"/software/components/sudo/user_aliases" = dict (
+    "FOO", list ("bar")
+    );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;

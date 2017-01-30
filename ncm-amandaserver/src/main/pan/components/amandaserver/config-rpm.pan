@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/amandaserver/config-rpm;
-include {'components/amandaserver/schema'};
+include 'components/amandaserver/schema';
 
 
 # Package to install

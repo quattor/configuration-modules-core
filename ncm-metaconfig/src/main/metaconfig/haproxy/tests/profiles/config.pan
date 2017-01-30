@@ -45,8 +45,8 @@ prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}';
             'maxqueue' , 128,
             'weight' , 100,
         ),
-        'serveroptions' , dict(
-           'cookie' ,'control',
+        'serveroptions', dict(
+            'cookie', 'control',
         ),
         'servers' , dict(
             'server1' , '192.168.0.11',
@@ -54,4 +54,3 @@ prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}';
         ),
     )
 );
-

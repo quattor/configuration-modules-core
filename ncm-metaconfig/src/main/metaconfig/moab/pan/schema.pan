@@ -46,10 +46,10 @@ type moab_service_legacy = {
     'id' ? string[]{}
     'user' ? string[]{}
     'group' ? string[]{}
-    'node'  ? string[]{}
+    'node' ? string[]{}
     'account' ? string[]{}
-    'class'  ? string[]{}
-    'qos'  ? string[]{}
+    'class' ? string[]{}
+    'qos' ? string[]{}
     'main' : string{}
     'priority' ? moab_priority_configuration
     'fairshare' ? moab_fairshare_configuration

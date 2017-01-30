@@ -6,7 +6,7 @@ type syslogprot_string = string with match (SELF, "tcp|udp");
 
 type graylog2 = {
     "syslog_listen_port" : long = 514
-    "syslog_protocol" :  syslogprot_string = 'udp'
+    "syslog_protocol" : syslogprot_string = 'udp'
     "elasticsearch_url" : type_absoluteURI = 'http://localhost:9200/'
     "elasticsearch_index_name" : string = 'graylog2'
     "force_syslog_rdns" : boolean = false

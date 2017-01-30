@@ -6,13 +6,13 @@
 ################################################################################
 
 unique template components/etcservices/config-rpm;
-include {'components/etcservices/schema'};
+include 'components/etcservices/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
- 
+
 "/software/components/etcservices/dependencies/pre" ?= list("spma");
 "/software/components/etcservices/active" ?= true;
 "/software/components/etcservices/dispatch" ?= true;
- 
+

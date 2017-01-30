@@ -16,7 +16,7 @@ type lmod_scdescript = {
     "timestamp" : string
     "dir" : string
 };
-    
+
 type lmod_service = {
     "prop" : lmod_prop{}{}
     "scDescript" ? lmod_scdescript[]

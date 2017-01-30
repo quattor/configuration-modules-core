@@ -35,9 +35,11 @@ function is_user_or_group = {
         names = ARGV;
         idx = 1; # skip first idx=0
     } else {
-        error("2nd argument is either a list (list of names) or "+
-              "a string (2nd and other arguments as list of names), "+
-              " got "+to_string(ARGV));
+        error(
+            "2nd argument is either a list (list of names) or " +
+            "a string (2nd and other arguments as list of names), " +
+            " got "+to_string(ARGV)
+        );
     };
     pref = "/software/components/accounts";
 
@@ -69,8 +71,8 @@ type defined_group = string with is_user_or_group("group", SELF);
 function create_group = {
     function_name = 'create_group';
 
-    if ( ARGC != 2 || ! is_nlist(ARGV[1]) ) {
-        error(function_name + ' requires 2 argument (string,nlist)');
+    if ( ARGC != 2 || ! is_dict(ARGV[1]) ) {
+        error(function_name + ' requires 2 argument (string,dict)');
     };
     groupname = ARGV[0];
     group_params = ARGV[1];
@@ -102,8 +104,8 @@ function create_group = {
 function create_user = {
     function_name = 'create_user';
 
-    if ( ARGC != 2 || ! is_nlist(ARGV[1]) ) {
-        error(function_name + ' requires 2 argument (string,nlist)');
+    if ( ARGC != 2 || ! is_dict(ARGV[1]) ) {
+        error(function_name + ' requires 2 argument (string,dict)');
     };
     username = ARGV[0];
     user_params = ARGV[1];
@@ -114,15 +116,15 @@ function create_user = {
     accounts = SELF;
 
     if ( !exists(user_params['homeDir']) &&
-         exists(ACCOUNTS_USER_HOME_ROOT) &&
-         is_defined(username) ) {
-        user_params['homeDir'] = ACCOUNTS_USER_HOME_ROOT + '/' + username;
+        exists(ACCOUNTS_USER_HOME_ROOT) &&
+        is_defined(username) ) {
+            user_params['homeDir'] = ACCOUNTS_USER_HOME_ROOT + '/' + username;
     };
 
     if ( !exists(user_params['createHome']) &&
-          exists(ACCOUNTS_USER_CREATE_HOME) &&
-          exists(user_params['homeDir']) ) {
-        user_params['createHome'] = ACCOUNTS_USER_CREATE_HOME;
+        exists(ACCOUNTS_USER_CREATE_HOME) &&
+        exists(user_params['homeDir']) ) {
+            user_params['createHome'] = ACCOUNTS_USER_CREATE_HOME;
     };
 
     if ( !exists(user_params['password']) && exists(ACCOUNTS_USER_PWD) ) {
@@ -144,11 +146,11 @@ function create_user = {
         while (ok) {
             if ( !exists(accounts['groups'][groupname]) ) {
                 if ( groupname == username &&
-                     exists(user_params['uid']) &&
-                     !exists(user_params['poolStart']) ) {
-                    accounts = create_group(groupname,nlist('gid',user_params['uid']));
+                    exists(user_params['uid']) &&
+                    !exists(user_params['poolStart']) ) {
+                        accounts = create_group(groupname, dict('gid', user_params['uid']));
                 } else {
-                    if  (ACCOUNTS_IGNORE_MISSING_GROUPS) {
+                    if (ACCOUNTS_IGNORE_MISSING_GROUPS) {
                         delete(user_params['groups'][i]);
                     } else {
                         error(function_name + " : group \"" + groupname + "\" doesn't exist");
@@ -165,13 +167,13 @@ function create_user = {
 };
 
 
-# create_accounts_from_db(userList:nlist,
+# create_accounts_from_db(userList:dict,
 #                      users:list:optional,
 #                      accountType:optional)
 #
 # Return Value : structure_accounts
 #
-# Function to create users or groups from a nlist containing user or group characteristics.
+# Function to create users or groups from a dict containing user or group characteristics.
 # User/group characteristics must be provided as structure_userinfo/structure_groupinfo.
 #
 # Second parameter, if presents, gives the list of users to create from user_list.
@@ -183,8 +185,8 @@ function create_user = {
 
 function create_accounts_from_db = {
     function_name = 'create_accounts';
-    if ( ARGC < 1 || ARGC > 3 || ! is_nlist(ARGV[0]) ) {
-        error(function_name + ' requires at least 1 argument (nlist)');
+    if ( ARGC < 1 || ARGC > 3 || ! is_dict(ARGV[0]) ) {
+        error(function_name + ' requires at least 1 argument (dict)');
     };
     accounts_db = ARGV[0];
 
@@ -198,9 +200,9 @@ function create_accounts_from_db = {
     };
 
     if ( ARGC >=3 && (ARGV[2] == 1) ) {
-       accountType = 'group';
+        accountType = 'group';
     } else {
-       accountType = 'user';
+        accountType = 'user';
     };
 
     if ( !exists(SELF) ) {
@@ -216,19 +218,19 @@ function create_accounts_from_db = {
                 error(function_name + ': ' + accountname + ' not found in ' + accountType + ' list');
             };
             if ( accountType == 'user' ) {
-                accounts = create_user(accountname,accounts_db[accountname]);
+                accounts = create_user(accountname, accounts_db[accountname]);
             } else {
-                accounts = create_group(accountname,accounts_db[accountname]);
+                accounts = create_group(accountname, accounts_db[accountname]);
             };
-       	    ok = next(account_list, i, accountname);
+                ok = next(account_list, i, accountname);
         };
     } else {
         ok = first(accounts_db, accountname, account_params);
         while (ok) {
             if ( accountType == 'user' ) {
-                accounts = create_user(accountname,accounts_db[accountname]);
+                accounts = create_user(accountname, accounts_db[accountname]);
             } else {
-                accounts = create_group(accountname,accounts_db[accountname]);
+                accounts = create_group(accountname, accounts_db[accountname]);
             };
             ok = next(accounts_db, accountname, account_params);
         };
@@ -256,13 +258,13 @@ function keep_user_group = {
     };
 
     if ( is_string(ARGV[0]) ) {
-      tmp = ARGV[0];
-      ARGV[0] = undef;
-      ARGV[0] = list(tmp);
+        tmp = ARGV[0];
+        ARGV[0] = undef;
+        ARGV[0] = list(tmp);
     };
 
     foreach (i;v;ARGV[0]) {
-      SELF[v] = '';
+        SELF[v] = '';
     };
 
     SELF;

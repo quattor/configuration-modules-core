@@ -6,11 +6,11 @@ include 'components/systemd/functions';
 bind "/software/components/systemd/unit" = systemd_unit_type{};
 
 prefix "/software/components/systemd/unit";
-"{regular.service}/file" = nlist(
+"{regular.service}/file" = dict(
     'only', true,
-    'config', nlist(
-        'unit', nlist(
-            'Assert', nlist(
+    'config', dict(
+        'unit', dict(
+            'Assert', dict(
                 'PathExists', list(
                     '', # reset
                     '/path/1',
@@ -20,16 +20,16 @@ prefix "/software/components/systemd/unit";
             'RequiresMountsFor', list("/x/y/z"),
             'After', list(systemd_make_mountunit("/g/h/i/")),
             ),
-        'service', nlist(
+        'service', dict(
             'CPUAffinity', list(list(), list(0,1)),
             ),
         ),
     );
 
-"{replace.service}/file" = nlist(
+"{replace.service}/file" = dict(
     'only', true,
     'replace', true,
-    'config', nlist(
+    'config', dict(
         'includes', list(
             '/unit/1',
             '/unit/2',

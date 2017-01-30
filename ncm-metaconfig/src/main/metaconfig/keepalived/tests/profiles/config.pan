@@ -30,4 +30,4 @@ prefix '/software/components/metaconfig/services/{/etc/keepalived/keepalived.con
         ),
         'track_scripts' , list('haproxy'),
     )
-); 
+);

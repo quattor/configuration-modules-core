@@ -4,11 +4,11 @@ include 'metaconfig/kerberos/krb5_conf';
 
 prefix "/software/components/metaconfig/services/{/etc/krb5.conf}/contents";
 
-"logging" = nlist();
+"logging" = dict();
 "libdefaults/default_realm" = 'KDC.REALM';
-"realms" = nlist(
-    'KDC.REALM', nlist(
+"realms" = dict(
+    'KDC.REALM', dict(
         "kdc", 'KDC.SERVER',
         "admin_server", 'KDC.SERVER'
         ));
-"domain_realms" = nlist('DEFAULT_DOMAIN', 'KDC.REALM');
+"domain_realms" = dict('DEFAULT_DOMAIN', 'KDC.REALM');

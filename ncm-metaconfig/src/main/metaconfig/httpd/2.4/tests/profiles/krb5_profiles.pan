@@ -10,7 +10,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_profile
 
 variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
-variable DB_IP = nlist(HOSTNAME, '1.2.3.4');
+variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 final variable QUATTOR_SERVER_PROFILE_PORT ?= 444;
 variable KRB5_REALM ?= 'YOUR.REALM';
@@ -66,7 +66,7 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_profile
 'rewrite/rules/0/regexp' = '^(.*/)?.*\.(xml|json)(\.gz)?$';
 'rewrite/rules/0/destination' = '$1%1.$2$3';
 'rewrite/rules/0/flags/0' = "L";
-'auth/require' = nlist("type", "valid-user");
+'auth/require' = dict("type", "valid-user");
 'auth/name' = "Quattor Kerberos Login";
 'auth/type' = "GSSAPI";
 'gssapi/sslonly' = true;

@@ -13,13 +13,13 @@
 
 declaration template components/mcx/schema;
 
-include { 'quattor/schema' };
+include 'quattor/schema';
 
 # To support:
-#        "mcx_application_data", nlist(
-#            "com.apple.loginwindow", nlist(
-#                    "RetriesUntilHint", nlist("state", "always", "value", 0),
-#                    ("com.apple.login.mcx.DisableAutoLoginClient", nlist("state", "always", value, 1))
+#        "mcx_application_data", dict(
+#            "com.apple.loginwindow", dict(
+#                    "RetriesUntilHint", dict("state", "always", "value", 0),
+#                    ("com.apple.login.mcx.DisableAutoLoginClient", dict("state", "always", value, 1))
 #            )
 
 type mcx_entry = extensible {
@@ -36,9 +36,9 @@ type mcx_computer = {
 };
 
 type component_mcx = {
-	include structure_component
-        "node"      : string = "MCX"
-        "computer"  ? mcx_computer
+    include structure_component
+        "node" : string = "MCX"
+        "computer" ? mcx_computer
 };
 
 bind "/software/components/mcx" = component_mcx;

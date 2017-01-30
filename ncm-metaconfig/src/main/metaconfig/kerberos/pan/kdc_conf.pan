@@ -10,7 +10,7 @@ prefix "/software/components/metaconfig/services/{/var/kerberos/krb5kdc/kdc.conf
 "module" = "kerberos/kdc/config";
 "daemons/krb5kdc" = "restart";
 
-"contents/defaults" = nlist();
+"contents/defaults" = dict();
 
 
 

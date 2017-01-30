@@ -16,7 +16,7 @@ function zkrsync_has_one_role = {
 type zkrsync_config = {
     # zk opts
     'servers' : type_hostport[]
-    'user' ? string 
+    'user' ? string
     'passwd' ? string
     # Role opts, exactly one of both
     'destination' ? boolean

@@ -1,7 +1,7 @@
 unique template exports2;
 
 prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents/exports/0";
-"Export_id" = 76 ;
+"Export_id" = 76;
 "Path" = "/gpfs/scratchtest/home/gent";
 "Pseudo" = "/user/home/gent";
 "Protocols" = list('4');

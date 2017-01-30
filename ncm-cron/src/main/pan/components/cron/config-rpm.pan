@@ -4,7 +4,7 @@
 
 
 unique template components/cron/config-rpm;
-include { 'components/cron/schema' };
+include 'components/cron/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

@@ -7,10 +7,10 @@ prefix "/software/components/accounts/groups";
 "icinga/gid" = 500;
 "sindes/gid" = 480;
 
-"/software/components/accounts/users/apache" = nlist(
-  "uid", 48,
-  "groups", list("apache", "icingacmd", "icinga"),
-  "comment","apache",
-  "shell", "/sbin/nologin",
-  "homeDir", "/var/www"
+"/software/components/accounts/users/apache" = dict(
+    "uid", 48,
+    "groups", list("apache", "icingacmd", "icinga"),
+    "comment", "apache",
+    "shell", "/sbin/nologin",
+    "homeDir", "/var/www",
 );

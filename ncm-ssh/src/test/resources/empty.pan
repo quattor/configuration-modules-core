@@ -1,3 +1,3 @@
 object template empty;
 
-"/software/components/ssh" = nlist();
+"/software/components/ssh" = dict();

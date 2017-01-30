@@ -9,7 +9,7 @@
 #
 ################################################################################
 unique template components/nrpe/config-rpm;
-include {'components/nrpe/schema'};
+include 'components/nrpe/schema';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

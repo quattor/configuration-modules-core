@@ -21,7 +21,7 @@ function openldap_loglevels_to_long = {
 
     default = 'stats';
 
-    the_map = nlist(
+    the_map = dict(
         "any", -1, # log all
         "nologging", 0, # (has no official naming) absolutely no logging (none just means very very high loglevel)
         "trace", 1, # trace function calls
@@ -70,25 +70,25 @@ type long_pow2 = long with (SELF==1||SELF==2||SELF==4||SELF==8||
      Possible acceptable values
 }
 type ldap_hash = string with match(SELF, '\{(S?(SHA|MD5))\}') ||
-     error ("Only secure hashes are accepted here: {SSHA, SHA, SMD5, MD5}");
+    error ("Only secure hashes are accepted here: {SSHA, SHA, SMD5, MD5}");
 
 type ldap_sizelimit = {
-     "soft" ? long
-     "hard" ? long
+    "soft" ? long
+    "hard" ? long
 } with exists(SELF["soft"]) || exists(SELF["hard"]) ||
-     error("Either 'soft' or 'hard' limits must be supplied");
+    error("Either 'soft' or 'hard' limits must be supplied");
 
 type ldap_buffer_size = {
-     "listener" ? type_absoluteURI
-     "read" ? long
-     "write" ? long
+    "listener" ? type_absoluteURI
+    "read" ? long
+    "write" ? long
 } with exists(SELF["read"]) || exists(SELF["write"]) ||
-     error("Either 'read' or 'write' limits must be supplied");
+    error("Either 'read' or 'write' limits must be supplied");
 
 type ldap_access_item = {
-     "who" ? string
-     "access" ? string
-     "control" ? string
+    "who" ? string
+    "access" ? string
+    "control" ? string
 };
 
 type ldap_access = {
@@ -103,23 +103,23 @@ type ldap_access = {
 };
 
 type auth_regexp = {
-     "match" : string
-     "replace" : string
+    "match" : string
+    "replace" : string
 };
 
 type ldap_syntax = string{};
 
 type tls_options = {
-     "CipherSuite"          : string = "HIGH"
-     "CACertificateFile"    ? string
-     "CACertificatePath"    ? string
-     "CertificateFile"      ? string
-     "CertificateKeyFile"   ? string
-     "DHParamFile"          ? string
-     "RandFile"             ? string
-     "VerifyClient"         ? string with match(SELF, "^(never|allow|try|hard|demand|true)$")
-     "CRLCheck"             ? string with match(SELF, "^(none|peer|all)$")
-     "CRLFile"              ? string
+    "CipherSuite" : string = "HIGH"
+    "CACertificateFile" ? string
+    "CACertificatePath" ? string
+    "CertificateFile" ? string
+    "CertificateKeyFile" ? string
+    "DHParamFile" ? string
+    "RandFile" ? string
+    "VerifyClient" ? string with match(SELF, "^(never|allow|try|hard|demand|true)$")
+    "CRLCheck" ? string with match(SELF, "^(none|peer|all)$")
+    "CRLFile" ? string
 };
 
 type ldap_checkpoint = {
@@ -128,7 +128,7 @@ type ldap_checkpoint = {
 };
 
 type ldap_global = {
-    "access"                    : ldap_access[] = list()
+    "access" : ldap_access[] = list()
     "allow" ? string[]
     "argsfile" ? string
     "attributeoptions" ? string[]
@@ -151,7 +151,7 @@ type ldap_global = {
     "localSSF" : long = 71
     "logfile" ? string
     "loglevel" ? long
-    "moduleload"                ? string[]
+    "moduleload" ? string[]
     "modulepath" ? string
     "objectclass" ? ldap_syntax{}
     "password-hash" : ldap_hash = "{SSHA}"
@@ -174,152 +174,148 @@ type ldap_global = {
     "sortvals" ? string[]
     "tcp-buffer" ? ldap_buffer_size
     "threads" : long(2..) = 16
-    "tls"                       ? tls_options
+    "tls" ? tls_options
     "timelimit" ? long
     "tool-threads" : long = 1
-    "writetimeout"              ? long
+    "writetimeout" ? long
 };
 
 
 type ldap_database_string = string with
-     match(SELF, "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|" +
-	             "monitor|null|passwd|perl|relay|shell|sql)$") ||
-     error("Unknown LDAP database type. " +
-	       "Check sladpd.conf man page");
+    match(SELF, "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|monitor|null|passwd|perl|relay|shell|sql)$") ||
+        error("Unknown LDAP database type. Check sladpd.conf man page");
 
 type ldap_ops = string with
-     match(SELF, '^(add|bind|compare|delete|modify|rename|search|read|write|'+
-	             '(extended=\w+)|rename)$');
+    match(SELF, '^(add|bind|compare|delete|modify|rename|search|read|write|(extended=\w+)|rename)$');
 
 type ldap_replica_retries = {
-     "interval" : string
-     "retries" : long
+    "interval" : string
+    "retries" : long
 };
 
 type ldap_replica_cfg = {
-     "rid" : long(0..999)
-     "provider" : type_absoluteURI
-     "searchbase" : string
-     "type" ? string with match(SELF, "^(refreshOnly|refreshAndPersist)$")
-     "interval" ? string
-     "retry" ? ldap_replica_retries[]
-     "scope" ? string with match(SELF, "^(sub|one|base|subord)$")
-     "attrs" ? string[]
-     "attrsonly" ? boolean
-     "sizelimit" ? long
-     "timelimit" ? long
-     "schemachecking" : boolean = false
-     "network-timeout" ? long
-     "timeout" ? long
-     "bindmethod" ? string with match(SELF, "^(simple|sasl)$")
-     "binddn" ? string
-     "saslmech" ? string
-     "authcid" ? string
-     "authzid" ? string
-     "credentials" ? string
-     "realm" ? string
-     "secprops" ? string
-     "keepalive" ? string
-     "starttls" ? string with match(SELF, "^(yes|critical)$")
-     "tls_cert" ? string
-     "tls_key" ? string
-     "tls_cacert" ? string
-     "tls_cacertdir" ? string
-     "tls_reqcert" ? string with match(SELF, "^(never|allow|try|demand)$")
-     "tls_ciphersuite" ? string
-     "tls_crlcheck" ? string with match(SELF, "^(none|peer|all)$")
-     "suffixmassage" ? string
-     "logbase" ? string
-     "logfilter" ? string
-     "syncdata" ? string with match(SELF, "^(default|accesslog|changelog)$")
-     "filter" ? string
+    "rid" : long(0..999)
+    "provider" : type_absoluteURI
+    "searchbase" : string
+    "type" ? string with match(SELF, "^(refreshOnly|refreshAndPersist)$")
+    "interval" ? string
+    "retry" ? ldap_replica_retries[]
+    "scope" ? string with match(SELF, "^(sub|one|base|subord)$")
+    "attrs" ? string[]
+    "attrsonly" ? boolean
+    "sizelimit" ? long
+    "timelimit" ? long
+    "schemachecking" : boolean = false
+    "network-timeout" ? long
+    "timeout" ? long
+    "bindmethod" ? string with match(SELF, "^(simple|sasl)$")
+    "binddn" ? string
+    "saslmech" ? string
+    "authcid" ? string
+    "authzid" ? string
+    "credentials" ? string
+    "realm" ? string
+    "secprops" ? string
+    "keepalive" ? string
+    "starttls" ? string with match(SELF, "^(yes|critical)$")
+    "tls_cert" ? string
+    "tls_key" ? string
+    "tls_cacert" ? string
+    "tls_cacertdir" ? string
+    "tls_reqcert" ? string with match(SELF, "^(never|allow|try|demand)$")
+    "tls_ciphersuite" ? string
+    "tls_crlcheck" ? string with match(SELF, "^(none|peer|all)$")
+    "suffixmassage" ? string
+    "logbase" ? string
+    "logfilter" ? string
+    "syncdata" ? string with match(SELF, "^(default|accesslog|changelog)$")
+    "filter" ? string
 };
 
 
 # overlay Replication (SyncProvider)
 type ldap_overlay_syncprov = {
     # use a list for checkpoint: first val is ops, second value is minutes
-    "checkpoint"            ? long[] with (length(SELF) == 2)
-    "sessionlog"            ? long
-    "nopresent"             ? boolean
-    "reloadhint"            ? boolean
+    "checkpoint" ? long[] with (length(SELF) == 2)
+    "sessionlog" ? long
+    "nopresent" ? boolean
+    "reloadhint" ? boolean
 };
 
 type type_ldap_overlay = {
-     "syncprov"     ? ldap_overlay_syncprov
+    "syncprov" ? ldap_overlay_syncprov
 };
 
 type type_db_config = {
     # set_cachesize 0 268435456 1 (one 0.25 GB cache)
-    "cachesize"     ? long[] with (length(SELF) == 3) # = list(0,268435456,1)
+    "cachesize" ? long[] with (length(SELF) == 3) # = list(0,268435456,1)
     # set_lg_regionmax 262144
-    "lg_regionmax"  ? long = 262144
+    "lg_regionmax" ? long = 262144
     # set_lg_bsize 2097152
-    "lg_bsize"      ? long = 2097152
+    "lg_bsize" ? long = 2097152
     # set_lg_max 10485760
-    "lg_max"        ? long = 10485760
+    "lg_max" ? long = 10485760
 };
 
 type ldap_database_limits = {
-     "size" ? ldap_sizelimit
-     "time" ? ldap_sizelimit
+    "size" ? ldap_sizelimit
+    "time" ? ldap_sizelimit
 };
 
 type ldap_monitoring = {
-    "default"   ? boolean = true
+    "default" ? boolean = true
 };
 
 type ldap_database = {
-     "class" : ldap_database_string
-     "add_content_acl" : boolean = false
-     "checkpoint" ? ldap_checkpoint
-     "db_config"        ? type_db_config
-     "directory"        ? string
-     "extra_attrs" ? string[]
-     # eg list(list(list("entryCSN","entryUUID"),list("eq")))
-     "index"            ? string[][][]
-     "hidden" : boolean = false
-     "lastmod" : boolean = true
-     "limits" ? ldap_database_limits{}
-     "maxderefdepth" : long = 15
-     "mirrormode" ? boolean # don't set it (not setting it is not equal to false or true)
-     "monitoring" ? boolean
-     "overlay"          ? type_ldap_overlay
-     "readonly" ? boolean = false
-     "restrict" ? ldap_ops[]
-     "rootdn" ? string
-     "rootpw" ? string
-     "suffix" ? string
-     "subordinate" ? boolean
-     "sync_use_subentry" ? boolean
-     "syncrepl" ? ldap_replica_cfg
-     "updatedn" ? string
-     "updateref" ? type_absoluteURI
-     "backend_specific" ? string[]{}
+    "class" : ldap_database_string
+    "add_content_acl" : boolean = false
+    "checkpoint" ? ldap_checkpoint
+    "db_config" ? type_db_config
+    "directory" ? string
+    "extra_attrs" ? string[]
+    # eg list(list(list("entryCSN", "entryUUID"), list("eq")))
+    "index" ? string[][][]
+    "hidden" : boolean = false
+    "lastmod" : boolean = true
+    "limits" ? ldap_database_limits{}
+    "maxderefdepth" : long = 15
+    "mirrormode" ? boolean # don't set it (not setting it is not equal to false or true)
+    "monitoring" ? boolean
+    "overlay" ? type_ldap_overlay
+    "readonly" ? boolean = false
+    "restrict" ? ldap_ops[]
+    "rootdn" ? string
+    "rootpw" ? string
+    "suffix" ? string
+    "subordinate" ? boolean
+    "sync_use_subentry" ? boolean
+    "syncrepl" ? ldap_replica_cfg
+    "updatedn" ? string
+    "updateref" ? type_absoluteURI
+    "backend_specific" ? string[]{}
 };
 
 type component_openldap = {
-	include structure_component
-	'conf_file'		: string = "/etc/openldap/slapd.conf"
-	'include_schema'	: string[]
-	'loglevel' 		? long(0..)
-	'pidfile' 		? string
-	'argsfile' 		? string
-	'database'		: string
-	'suffix'		: string
-	'rootdn'		: string
-	'rootpw'		: string
-	'directory'		: string
-	'index'			? string[]
-	'global'   ? ldap_global
-	'backends'	? ldap_database[]
-	'databases'	? ldap_database[]
-	'monitoring' ? ldap_monitoring
-	# move the /etc/openldap/slapd.d dir (this  
-	#  configuration method takes preferences over the  
-	#  slapd.conf file, but it is not supported by the component)
-	'move_slapdd' ? boolean = true  
+    include structure_component
+    'conf_file' : string = "/etc/openldap/slapd.conf"
+    'include_schema' : string[]
+    'loglevel' ? long(0..)
+    'pidfile' ? string
+    'argsfile' ? string
+    'database' : string
+    'suffix' : string
+    'rootdn' : string
+    'rootpw' : string
+    'directory' : string
+    'index' ? string[]
+    'global' ? ldap_global
+    'backends' ? ldap_database[]
+    'databases' ? ldap_database[]
+    'monitoring' ? ldap_monitoring
+    # move the /etc/openldap/slapd.d dir (this
+    #  configuration method takes preferences over the
+    #  slapd.conf file, but it is not supported by the component)
+    'move_slapdd' ? boolean = true
 };
 
 bind '/software/components/openldap' = component_openldap;
-

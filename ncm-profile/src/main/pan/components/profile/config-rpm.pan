@@ -4,8 +4,8 @@
 
 
 unique template components/profile/config-rpm;
-include { 'components/profile/schema' };
-include { 'components/profile/functions' };
+include 'components/profile/schema';
+include 'components/profile/functions';
 
 # Package to install
 "/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");

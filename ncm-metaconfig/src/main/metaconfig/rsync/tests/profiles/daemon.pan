@@ -11,7 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/rsyncd.conf}/contents";
 
 "log" = "/var/log/rsyncd";
 "facility" = "daemon";
-"sections/serv1" = nlist(
+"sections/serv1" = dict(
     "comment", "serv1 comment",
     "lock_file", "/var/lock/serv1",
     "auth_users", list("serv1user"),
@@ -19,7 +19,7 @@ prefix "/software/components/metaconfig/services/{/etc/rsyncd.conf}/contents";
     "path", "/var/spool/serv1/rsync",
     "hosts_allow", RSYNCD_HOSTS_ALLOW,
 );
-"sections/serv2" = nlist(
+"sections/serv2" = dict(
     "comment", "serv2 other comment",
     "lock_file", "/var/lock/serv2.lock",
     "auth_users", list("userserv2"),

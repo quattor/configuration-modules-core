@@ -75,7 +75,7 @@ type elasticsearch_threadpool = {
     "search" : elasticsearch_thread_search
     "index" : elasticsearch_thread_search
     "get" ? elasticsearch_thread_search
-    "bulk"  ? elasticsearch_thread_search
+    "bulk" ? elasticsearch_thread_search
     "warmer" ? elasticsearch_thread_search
     "refresh" ? elasticsearch_thread_search
 };
@@ -115,8 +115,8 @@ type elasticsearch_service = {
     "index" ? elasticsearch_index
     "gateway" ? elasticsearch_gw
     "indices" ? elasticsearch_indices
-    "network" : elasticsearch_network = nlist("host", "localhost")
-    "monitor.jvm" : elasticsearch_monitoring = nlist()
+    "network" : elasticsearch_network = dict("host", "localhost")
+    "monitor.jvm" : elasticsearch_monitoring = dict()
     "threadpool" ? elasticsearch_threadpool
     "bootstrap" ? elasticsearch_bootstrap
     "cluster" ? elasticsearch_cluster

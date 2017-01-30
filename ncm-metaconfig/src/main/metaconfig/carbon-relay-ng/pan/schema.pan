@@ -23,7 +23,7 @@ type carbon_relay_ng_addroute_opts = {
 
 @documentation{
     route destination options
-    the route options and 
+    the route options and
     flush=int          flush interval in ms
     reconn=int         reconnection interval in ms
     pickle=true,false  pickle output format instead of the default text protocol

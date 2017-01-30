@@ -8,7 +8,7 @@ type ls_gls = {
     "ls_registration_interval" ? long(0..)
     "maintenance_interval" : long(0..) =  120
     "metadata_db_file" : string = "glsstore.dbxml"
-    "metadata_summary_db_file"  : string = "glsstore-summary.dbxml"
+    "metadata_summary_db_file" : string = "glsstore-summary.dbxml"
     "metadata_db_name" : string = "/var/lib/perfsonar/lookup_service/xmldb"
     "service_accesspoint" : type_URI = "http://localhost:9995/perfsonar_PS/services/hLS"
     "service_description" : string
@@ -37,7 +37,7 @@ type ls_daemon = {
     "root_hints_url" ? type_URI = "http://www.perfsonar.net/gls.root.hints"
     "root_hints_file" ? string = "/var/lib/perfsonar/lookup_service/hls.root.hints"
     "reaper_interval" : long(0..) = 20
-    "max_worker_lifetime" :  long(0..) = 300
+    "max_worker_lifetime" : long(0..) = 300
     "max_worker_processes" : long(0..) = 30
     "pid_dir" : string = "/var/run"
     "pid_file" : string = "lookup_service.pid"

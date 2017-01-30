@@ -10,7 +10,7 @@ include 'components/${project.artifactId}/schema';
 
 bind "/software/components/authconfig" = component_authconfig_type;
 
-'/software/packages' = pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${RELEASE}', 'noarch');
+'/software/packages' = pkg_repl('ncm-${project.artifactId}', '${no-snapshot-version}-${RELEASE}', 'noarch');
 
 prefix '/software/components/${project.artifactId}';
 'dependencies/pre' ?= list ('spma');
@@ -27,8 +27,8 @@ prefix '/software/components/${project.artifactId}';
     if (value("/software/components/${project.artifactId}/usemd5")) {
         "md5";
     } else {
-	    # Fall back to the most stupid option you can even imagine.
-	    # But it is portable. Huh.
-	    "descrypt";
+        # Fall back to the most stupid option you can even imagine.
+        # But it is portable. Huh.
+        "descrypt";
     };
 };

@@ -13,4 +13,4 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}";
 
 prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/contents";
 "http/0/includes/0" = "/etc/nginx/mime.types";
-"global" = nlist();
+"global" = dict();

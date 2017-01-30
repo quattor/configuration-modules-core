@@ -1,7 +1,7 @@
 unique template fstab_simple;
 
 include 'base';
-    
+
 prefix "/software/components/nfs/mounts/0";
 "device" = "/mydev0";
 "mountpoint" = "/mount000";

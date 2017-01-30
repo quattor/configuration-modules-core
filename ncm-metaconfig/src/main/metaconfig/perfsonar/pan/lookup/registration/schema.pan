@@ -12,7 +12,7 @@ type ls_reg_site = {
     "site_location" : string
     "is_local" : boolean = true
     "site_project" : string[]
-    "address" :  type_fqdn
+    "address" : type_fqdn
     "service" : ls_service[]
 };
 

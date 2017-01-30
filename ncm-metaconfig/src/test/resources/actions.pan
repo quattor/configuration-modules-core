@@ -6,7 +6,7 @@ prefix "/software/components/metaconfig/services/{/foo/bar}";
 "owner" = 'root';
 "group" = 'root';
 "module" = "json";
-"contents" = nlist("foo", "bar");
+"contents" = dict("foo", "bar");
 
 prefix "/software/components/metaconfig/services/{/foo/bar2}";
 
@@ -14,4 +14,4 @@ prefix "/software/components/metaconfig/services/{/foo/bar2}";
 "owner" = 'root';
 "group" = 'root';
 "module" = "json";
-"contents" = nlist("foo", "bar");
+"contents" = dict("foo", "bar");
