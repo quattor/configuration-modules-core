@@ -56,26 +56,26 @@ type legacy_ssh_kexalgorithm = string with {
 };
 
 type ssh_core_options_type = {
-    "AddressFamily"                     ? string with match (SELF, '^(any|inet6?)$')
-    "ChallengeResponseAuthentication"   ? legacy_binary_affirmation_string
-    "Ciphers"                           ? legacy_ssh_ciphers
-    "Compression"                       ? string with match (SELF, '^(yes|delayed|no)$')
-    "GSSAPIAuthentication"              ? legacy_binary_affirmation_string
-    "GSSAPICleanupCredentials"          ? legacy_binary_affirmation_string
-    "GSSAPIKeyExchange"                 ? legacy_binary_affirmation_string
-    "GatewayPorts"                      ? legacy_binary_affirmation_string
-    "HostbasedAuthentication"           ? legacy_binary_affirmation_string
-    "LogLevel"                          ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
-    "MACs"                              ? legacy_ssh_MACs
-    "PasswordAuthentication"            ? legacy_binary_affirmation_string
-    "Protocol"                          ? string
-    "PubkeyAuthentication"              ? legacy_binary_affirmation_string
-    "RSAAuthentication"                 ? legacy_binary_affirmation_string
-    "RhostsRSAAuthentication"           ? legacy_binary_affirmation_string
-    "SendEnv"                           ? legacy_binary_affirmation_string
-    "TCPKeepAlive"                      ? legacy_binary_affirmation_string
-    "XAuthLocation"                     ? string
-    "KexAlgorithms"						? ssh_kexalgorithms[]
+    "AddressFamily" ? string with match (SELF, '^(any|inet6?)$')
+    "ChallengeResponseAuthentication" ? legacy_binary_affirmation_string
+    "Ciphers" ? legacy_ssh_ciphers
+    "Compression" ? string with match (SELF, '^(yes|delayed|no)$')
+    "GSSAPIAuthentication" ? legacy_binary_affirmation_string
+    "GSSAPICleanupCredentials" ? legacy_binary_affirmation_string
+    "GSSAPIKeyExchange" ? legacy_binary_affirmation_string
+    "GatewayPorts" ? legacy_binary_affirmation_string
+    "HostbasedAuthentication" ? legacy_binary_affirmation_string
+    "LogLevel" ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
+    "MACs" ? legacy_ssh_MACs
+    "PasswordAuthentication" ? legacy_binary_affirmation_string
+    "Protocol" ? string
+    "PubkeyAuthentication" ? legacy_binary_affirmation_string
+    "RSAAuthentication" ? legacy_binary_affirmation_string
+    "RhostsRSAAuthentication" ? legacy_binary_affirmation_string
+    "SendEnv" ? legacy_binary_affirmation_string
+    "TCPKeepAlive" ? legacy_binary_affirmation_string
+    "XAuthLocation" ? string
+    "KexAlgorithms" ? ssh_kexalgorithms[]
 };
 
 type ssh_daemon_options_type = {
