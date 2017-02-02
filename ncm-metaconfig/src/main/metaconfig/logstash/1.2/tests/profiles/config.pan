@@ -1,5 +1,6 @@
 object template config;
 
+variable METACONFIG_LOGSTASH_VERSION = '1.2';
 include 'metaconfig/logstash/config';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/output";

@@ -1,0 +1,5 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact"
+    names=["close_older","discover_interval","ignore_older","max_open_files","sincedb_write_interval","stat_interval"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string"
+    names=["delimiter","sincedb_path","start_position"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray" names=["exclude","path"] -%]
