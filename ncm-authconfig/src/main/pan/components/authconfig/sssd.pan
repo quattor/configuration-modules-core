@@ -113,6 +113,7 @@ type authconfig_sssd_domain  = {
     "entry_cache_service_timeout" ? long
     "entry_cache_sudo_timeout" ? long
     "entry_cache_autofs_timeout" ? long
+    "refresh_expired_interval" ? long
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long = 0
     "pwd_expiration_warning" ? long
