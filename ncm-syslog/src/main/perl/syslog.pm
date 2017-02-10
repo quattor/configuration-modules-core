@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::syslog${PMpost}
+#${PMcomponent}
 
 =head1 NAME
 
@@ -184,14 +184,24 @@ sub edit
                 if (grep { /^.*${mfacility}\..*\s+${action}/ } @syslogcontents) {
                     $self->debug(2, "facility $facility already uses action $action");
                     # this facility used this action already, but is the priority correct?
-                    if ( ! map { /^.*${mfacility}\.${mpriority}.*${action}/ } @syslogcontents ){
+                    if ( ! grep { /^.*${mfacility}\.${mpriority}.*${action}/ } @syslogcontents ){
                         $self->debug(2, "have to fix priority for facility $facility");
-                        map { s/${mfacility}\.[\w\*]+/${facility}\.${priority}/ if /^[^#].*$action/ } @syslogcontents;
+                        my @newsyslogcontents;
+                        foreach my $line (@syslogcontents) {
+                            $line =~ s/${mfacility}\.[\w\*]+/${facility}\.${priority}/ if $line =~ m/^[^#].*$action/;
+                            push(@newsyslogcontents, $line);
+                        };
+                        @syslogcontents = @newsyslogcontents;
                     }
                 } else {
                     $self->debug(2, "facility $facility is not yet using action $action");
                     # this facility has not yet used this action, simply add it to this action
-                    map { s/\s*${action}/;${facility}\.${priority}\t${action}/ unless /^#/ } @syslogcontents;
+                    my @newsyslogcontents;
+                    foreach my $line (@syslogcontents) {
+                        $line =~ s/\s*${action}/;${facility}\.${priority}\t${action}/ unless $line =~ m/^#/;
+                        push(@newsyslogcontents, $line);
+                    };
+                    @syslogcontents = @newsyslogcontents;
                 }
             } else {
                 $self->debug(2, "action $action is not yet known");

@@ -1,9 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-
-declaration template components/syslog/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
@@ -21,7 +16,7 @@ type component_syslog_legacy_rule = {
     "comment" ? string # only for fullcontrol, wrapped in ^\n# .. \n$ if needed
 };
 
-type component_syslog_entries = {
+type ${project.artifactId}_component = {
     include structure_component
     "config" : component_syslog_legacy_rule[]
     "directives" ? string[]
