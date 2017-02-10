@@ -1,12 +1,8 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor; # qw(root/basic);
+use Test::Quattor;
 use NCM::Component::accounts;
-
-*srt = \&NCM::Component::accounts::accounts_sort;
 
 =pod
 
@@ -39,6 +35,14 @@ When possible, accounts should be printed in the same order as they
 were in the system. Some broken software relies on this.
 
 =cut
+
+sub srt
+{
+    # The sort magic variables $a and $b are package globals
+    ($NCM::Component::accounts::a, $NCM::Component::accounts::b) = @_;
+    return NCM::Component::accounts::accounts_sort();
+}
+
 
 my $s = srt({name => 'a'}, {name => 'b'});
 is($s, ('a' cmp 'b'), "Unnumbered accounts are compared by name");

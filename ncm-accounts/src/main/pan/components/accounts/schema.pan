@@ -1,19 +1,15 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+${componentschema}
 
-declaration template components/accounts/schema;
-
-include 'quattor/schema';
+include 'quattor/types/component';
+include 'pan/legacy';
 
 function has_unique_attr = {
     values = ARGV[0];
     attr = ARGV[1];
     seen_attrs = dict();
 
-    foreach(ni;el;values) {
-        if( exists(seen_attrs[format('x%s', el[attr])])) {
+    foreach(ni; el; values) {
+        if(exists(seen_attrs[format('x%s', el[attr])])) {
             error(format("Duplicate attr %s : %s ", attr, el[attr]));
         } else {
             seen_attrs[format('x%s', el[attr])] = 1;
@@ -61,7 +57,7 @@ type structure_login_defs = {
     'usergroups_enab' ? boolean
 };
 
-type component_accounts = {
+type ${project.artifactId}_component = {
     include structure_component
     'rootpwd' ? string
     'rootshell' ? string
@@ -78,5 +74,3 @@ type component_accounts = {
     'kept_groups' : string{}
     'ldap' ? boolean
 };
-
-bind '/software/components/accounts' = component_accounts;
