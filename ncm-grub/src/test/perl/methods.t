@@ -31,6 +31,8 @@ is_deeply([$cmp->grubby_args_options("a -b c", 1)],
 =cut
 
 Readonly my $GRUBCFGFN => '/boot/grub/grub.conf';
+Readonly my $GRUB2USERCFGFN => '/boot/grub2/user.cfg';
+
 Readonly my $GRUBCFG => <<'EOF';
 # some header
 #
@@ -39,6 +41,10 @@ blah blah
 
 title abc
 
+EOF
+
+Readonly my $GRUB2USERCFG => <<'EOF';
+GRUB2_PASSWORD=1234
 EOF
 
 Readonly my $NEWGRUBCFG => <<'EOF';
@@ -58,10 +64,19 @@ set_file_contents($GRUBCFGFN, "$GRUBCFG");
 
 my $passwdcfg = get_config_for_profile("password");
 
+$NCM::Component::grub::GRUB_MAJOR = 2;
+
+$cmp->grub_conf($passwdcfg);
+my $grubfh = get_file($GRUB2USERCFGFN);
+isa_ok($grubfh, 'CAF::FileEditor', 'grub2 user.cfg is an editor instance');
+is("$grubfh", $GRUB2USERCFG, "grub2 user.cfg edited as expected");
+
+$NCM::Component::grub::GRUB_MAJOR = 1;
+
 is($cmp->grub_conf($passwdcfg),
    "console=ttyS0,5678n8",
    "grub_conf returns console kernel parameters (if any)");
-my $grubfh = get_file($GRUBCFGFN);
+$grubfh = get_file($GRUBCFGFN);
 isa_ok($grubfh, 'CAF::FileEditor', "grub config file is an editor instance");
 
 is("$grubfh", "$NEWGRUBCFG", "grub cfg edited as expected");

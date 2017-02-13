@@ -1,6 +1,6 @@
 #${PMpre} NCM::Component::grub${PMpost}
 
-use Fcntl qw(SEEK_SET);
+use Fcntl qw(SEEK_SET SEEK_END);
 use CAF::Object qw(SUCCESS);
 use CAF::FileEditor;
 use CAF::FileWriter;
@@ -14,6 +14,8 @@ our $NoActionSupported = 1;
 Readonly my $PATH_KERNEL_VERSION => '/system/kernel/version';
 Readonly my $PATH_CONSOLE_SERIAL => '/hardware/console/serial';
 Readonly my $GRUB_CONF           => '/boot/grub/grub.conf';
+Readonly my $GRUB2_DIR           => '/boot/grub2';
+Readonly my $GRUB2_USER_CFG      => "$GRUB2_DIR/user.cfg";
 Readonly my $GRUBBY              => '/sbin/grubby';
 Readonly my $PREFIX              => '/boot';
 Readonly::Hash my %SERIAL_CONSOLE_DEFAULTS => {
@@ -22,6 +24,8 @@ Readonly::Hash my %SERIAL_CONSOLE_DEFAULTS => {
     word => 8,
     parity => "n",
 };
+
+our $GRUB_MAJOR = -d $GRUB2_DIR ? 2 : 1;
 
 =pod
 
@@ -191,11 +195,25 @@ sub password
     my $val = $tree->{option} ? "--$tree->{option} " : "";
     $val .= $password;
 
-    $grub_fh->add_or_replace_lines(qr/^password\s+/,
-                                   qr/^password $val$/,
-                                   "password $val\n",
-                                   $self->main_section_offset($grub_fh),
-                                   );
+    if ( $GRUB_MAJOR == 2 ) {
+        my $usercfg_fh = CAF::FileEditor->new( $GRUB2_USER_CFG,
+            owner => "root",
+            group => "root",
+            mode  => 0400,
+            log   => $self );
+        
+        $usercfg_fh->add_or_replace_lines(qr/^GRUB2_PASSWORD=/, qr/^GRUB2_PASSWORD=$password$/, "GRUB2_PASSWORD=$password\n", SEEK_END);
+        $usercfg_fh->close();
+    } else {
+        my $val = $tree->{option} ? "--$tree->{option} " : "";
+        $val .= $password;
+
+        $grub_fh->add_or_replace_lines(qr/^password\s+/,
+                                  qr/^password $val$/,
+                                  "password $val\n",
+                                  $self->main_section_offset($grub_fh),
+                                  SEEK_END);
+    }
 
     return SUCCESS;
 }
@@ -233,13 +251,13 @@ sub serial_console
                                        qr/^serial $serial$/,
                                        "serial $serial\n",
                                        $self->main_section_offset($grub_fh),
-                                       );
+                                       SEEK_END);
 
         $grub_fh->add_or_replace_lines(qr/^terminal\s*/,
                                        qr/^terminal $terminal$/,
                                        "terminal $terminal\n",
                                        $self->main_section_offset($grub_fh),
-                                       );
+                                       SEEK_END);
     } else {
         $self->verbose('No serial console to configure');
         $cons = '';
