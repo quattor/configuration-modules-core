@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::ofed${PMpost}
+#${PMcomponent}
 
 =head1 NAME
 
@@ -27,7 +27,7 @@ sub Configure
                                              relpath => 'ofed',
                                              log => $self);
 
-    my $cfg_fh = $cfg_trd->filewriter($cfg_fn, log => $self, backup => ".old", mode => 0644);
+    my $cfg_fh = $cfg_trd->filewriter($cfg_fn, log => $self, backup => ".old", mode => oct(644));
     if(! defined($cfg_fh)) {
         $self->error("Failed to render $cfg_fn: $cfg_trd->{fail}");
     } else {

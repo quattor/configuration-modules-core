@@ -1,40 +1,42 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-
-declaration template components/ofed/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
 @documentation{openib options}
 type component_ofed_openib_options = {
+    @{Start HCA driver upon boot}
     "onboot" : boolean = true
 
-    @{MAD datagrams priority}
+    @{MAD datagrams thread priority}
     "renice_ib_mad" : boolean = false
 
-    @{disable for large clusters}
+    @{disable CM for IPoIB for large clusters}
     "set_ipoib_cm" : boolean = true
-    "set_ipoib_channels" : boolean = false
+    "set_ipoib_channels" : boolean = false # deprecated in MLNX OFED 3.4
     @{IPoIB MTU setting for CM}
-    "ipoib_mtu" : long = 32 * 1024
+    "ipoib_mtu" : long(0..65536) = 32 * 1024 # deprecated in MLNX OFED 3.4
 
     @{SRP High Availability}
     "srpha_enable" : boolean = false
     "srp_daemon_enable" : boolean = false
 
-    @{autotuning}
+    @{sysctl tuning}
     "run_sysctl" : boolean = true
+    @{affinity tuning}
     "run_affinity_tuner" : boolean = true
+    @{Enable MLNX autotuning}
     "run_mlnx_tune" : boolean = false
 
     @{node description}
     "node_desc" ? string # eg will default to hostname -s
+    @{Max time in seconds to wait for node's hostname to be set}
     "node_desc_update_timeout" : long(0..) = 120
+    @{Wait (in sec) before node description update}
     "node_desc_time_before_update" : long(0..) = 10
+    @{Seconds to sleep after openibd start finished and before releasing the shell}
     "post_start_delay" : long(0..) = 0
 
+    @{ConnectX-3 ethernet only}
     "cx3_eth_only" : boolean = false
 } = dict();
 
@@ -44,8 +46,9 @@ type component_ofed_openib_modules = {
     "umad" : boolean = true
     "uverbs" : boolean = true
 
-    @{RDMA modes (connected mode and unreliable datagram)}
+    @{RDMA CM (connected mode) mode}
     "rdma_cm" : boolean = true
+    @{RDMA UD (unreliable datagram) mode}
     "rdma_ucm" : boolean = true
 
     @{IPoIB}
@@ -66,24 +69,29 @@ type component_ofed_openib_modules = {
     @{ISCSI RDMA}
     "iser" : boolean = false
 
-    "mlx4_vnic" : boolean = false
-    "mlx4_fc" : boolean = false
-    "mlx4_en" : boolean = false
+    @{Mellanox ConnectX-3 Virtual NICs}
+    "mlx4_vnic" : boolean = false # deprecated in MLNX OFED 3.4
+    @{Mellanox ConnectX-3 FibreChannel over Ethernet}
+    "mlx4_fc" : boolean = false # deprecated in MLNX OFED 3.4
+    @{Mellanox ConnectX-3 Ethernet}
+    "mlx4_en" : boolean = false # deprecated in MLNX OFED 3.4
 } = dict();
 
 @documentation{openib hardware modules to load}
 type component_ofed_openib_hardware = {
     @{Mellanox Inifinihost III}
     "mthca" : boolean = false
-    @{Mellanox ConnectX}
+    @{Mellanox ConnectX-2/3}
     "mlx4" : boolean = false
+    @{Mellanox ConnectX-4/5 / ConnectIB}
     "mlx5" : boolean = false
 
     @{Mellanox ethernet-only}
     "mlx_en" : boolean = false
 
-    @{Qlogic}
+    @{Legacy Qlogic IB}
     "ipath" : boolean = false
+    @{Qlogic/Intel TrueScale IB}
     "qib" : boolean = false
 
     @{Qlogic ethernet}
@@ -108,7 +116,7 @@ type component_ofed_openib = {
     "hardware" : component_ofed_openib_hardware
 } = dict() with {
     enabled = false;
-    foreach(hw;en;SELF['hardware']) {
+    foreach(hw; en; SELF['hardware']) {
         if (en) {
             enabled = true;
         };
@@ -119,7 +127,7 @@ type component_ofed_openib = {
     true;
 };
 
-type component_ofed_type = {
+type ${project.artifactId}_component = {
     include structure_component
     "openib" : component_ofed_openib
 };
