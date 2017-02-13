@@ -18,6 +18,8 @@ type aii_section = {
     "user" ? string
     "pattern" ? string
     "url" ? type_absoluteURI with match (SELF, "^http.+/RPC2$")
+    @{set CA certificate location for SSL connections}
+    "ca" ? string
 } = dict();
 
 @documentation{
