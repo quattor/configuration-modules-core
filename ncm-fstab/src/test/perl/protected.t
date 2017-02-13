@@ -38,8 +38,8 @@ use data;
 $CAF::Object::NoAction = 1;
 my $cfg = get_config_for_profile('fstab');
 my $cmp = NCM::Component::fstab->new('fstab');
-
-my $protected = $cmp->protected_hash($cfg);
+my $tree = $cfg->getTree($cmp->prefix());
+my $protected = $cmp->protected_hash($tree);
 cmp_deeply($protected, \%data::PROTECTED, 'protected hash ok');
 
 my $fstab = CAF::FileEditor->new ($FSTAB);
@@ -50,9 +50,9 @@ my %mounts = ();
 cmp_deeply(\%mounts, \%data::MOUNTS, 'valid mounts ok');
 
 $cfg = get_config_for_profile('fstab_depr');
-
+$tree = $cfg->getTree($cmp->prefix());
 %mounts = ();
-$protected = $cmp->protected_hash($cfg);
+$protected = $cmp->protected_hash($tree);
 %mounts = $cmp->valid_mounts($protected->{keep}, $fstab, %mounts);
 cmp_deeply(\%mounts, \%data::MOUNTS, 'valid mounts (deprecated) ok');
 
