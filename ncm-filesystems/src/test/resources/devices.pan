@@ -4,41 +4,41 @@ unique template devices;
 "/system/network/hostname" = 'x';
 "/system/network/domainname" = 'y';
 
-"/hardware/harddisks/sda" = nlist(
+"/hardware/harddisks/sda" = dict(
     "capacity", 4000, 
 );
 
-"/system/blockdevices" = nlist (
-    "physical_devs", nlist (
-        "sda", nlist ("label", "gpt")
+"/system/blockdevices" = dict (
+    "physical_devs", dict (
+        "sda", dict ("label", "gpt")
         ),
-    "partitions", nlist (
-        "sda1", nlist (
+    "partitions", dict (
+        "sda1", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda2", nlist (
+        "sda2", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda3", nlist (
+        "sda3", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda4", nlist (
+        "sda4", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda5", nlist (
+        "sda5", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
             ),
-        "sda6", nlist (
+        "sda6", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
@@ -47,7 +47,7 @@ unique template devices;
 );
 
 "/system/filesystems" = list (
-    nlist (
+    dict (
         "mount", true,
         "mountpoint", "/boot",
         "preserve", true,
@@ -63,31 +63,31 @@ unique template devices;
 "/system/filesystems" = { 
     # always make a copy
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda2";
     fs["mountpoint"] = "/";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda3";
     fs["mountpoint"] = "/new";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda4";
     fs["mountpoint"] = "/food";
     fs["label"] = "FRIETJES";
     fs["type"] = "chokotoFS";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda5";
     fs["mountpoint"] = "/home";
     fs["type"] = "ext4";
     fs["label"] = "HOME";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda6";
     fs["mountpoint"] = "/special";
     fs["label"] = "BLT";
