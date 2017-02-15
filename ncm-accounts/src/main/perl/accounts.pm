@@ -1,16 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-package NCM::Component::accounts;
-
-use strict;
-use warnings;
-
-use NCM::Component;
+#${PMpre} NCM::Component::${project.artifactId}${PMpost}
 
 use LC::Exception;
-use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
@@ -20,7 +10,8 @@ use File::Path;
 use LC::Find;
 use LC::File qw(copy makedir);
 
-our @ISA = qw(NCM::Component);
+use parent qw(NCM::Component);
+
 our $EC=LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
@@ -55,13 +46,13 @@ use constant LOGINDEFS_FILE => "/etc/login.defs";
 # must have a value defined here. These values are not used to update /etc/login.defs.
 # The key MUST match the login.defs parameter name.
 use constant LOGINDEFS_DEFAULTS => {
-        GID_MIN => 100,
-        GID_MAX => 65535,
-        UID_MIN => 100,
-        UID_MAX => 65535,
-        PASS_MIN_DAYS => 0,
-        PASS_MAX_DAYS => 99999,
-        PASS_WARN_AGE => 7,
+    GID_MIN => 100,
+    GID_MAX => 65535,
+    UID_MIN => 100,
+    UID_MAX => 65535,
+    PASS_MIN_DAYS => 0,
+    PASS_MAX_DAYS => 99999,
+    PASS_WARN_AGE => 7,
 };
 
 # Mapping between configuration schema and /etc/login.defs keywords.
@@ -69,19 +60,19 @@ use constant LOGINDEFS_DEFAULTS => {
 # through this component.  Key is a configuration property, value is
 # the matching login.defs keyword.
 use constant LOGINDEFS_MAPPING => {
-        create_home => 'CREATE_HOME',
-        gid_max => 'GID_MAX',
-        gid_min => 'GID_MIN',
-        mail_dir => 'MAIL_DIR',
-        pass_max_days => 'PASS_MAX_DAYS',
-        pass_min_days => 'PASS_MIN_DAYS',
-        pass_min_len => 'PASS_MIN_LEN',
-        pass_warn_age => 'PASS_WARN_AGE',
-        uid_max => 'UID_MAX',
-        uid_min => 'UID_MIN',
-        umask => 'UMASK',
-        userdel_cmd => 'USERDEL_CMD',
-        usergroups_enab => 'USERGROUP_ENAB',
+    create_home => 'CREATE_HOME',
+    gid_max => 'GID_MAX',
+    gid_min => 'GID_MIN',
+    mail_dir => 'MAIL_DIR',
+    pass_max_days => 'PASS_MAX_DAYS',
+    pass_min_days => 'PASS_MIN_DAYS',
+    pass_min_len => 'PASS_MIN_LEN',
+    pass_warn_age => 'PASS_WARN_AGE',
+    uid_max => 'UID_MAX',
+    uid_min => 'UID_MIN',
+    umask => 'UMASK',
+    userdel_cmd => 'USERDEL_CMD',
+    usergroups_enab => 'USERGROUP_ENAB',
 };
 
 # Symbolic names for shadow fields
@@ -121,25 +112,25 @@ sub compute_desired_accounts
 
     $self->verbose("Preparing map of desired accounts in the system");
     while (my ($k, $v) = each(%$profile)) {
-      if (exists($v->{poolSize})) {
-        foreach my $i (0..$v->{poolSize}-1) {
-          my $account = sprintf("%s%0$v->{poolDigits}d", $k,
-          $v->{poolStart}+$i);
-          while (my ($l, $m) = each(%$v)) {
-            $ds->{$account}->{$l} = $m;
-          }
-          $ds->{$account}->{uid} = $v->{uid}+$i;
-          $ds->{$account}->{name} = $account;
-          if ($v->{homeDir}) {
-            my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
-                                $v->{poolStart}+$i);
-            $ds->{$account}->{homeDir} = $home;
-          }
+        if (exists($v->{poolSize})) {
+            foreach my $i (0..$v->{poolSize}-1) {
+                my $account = sprintf("%s%0$v->{poolDigits}d", $k,
+                                      $v->{poolStart}+$i);
+                while (my ($l, $m) = each(%$v)) {
+                    $ds->{$account}->{$l} = $m;
+                }
+                $ds->{$account}->{uid} = $v->{uid}+$i;
+                $ds->{$account}->{name} = $account;
+                if ($v->{homeDir}) {
+                    my $home =  sprintf("%s%0$v->{poolDigits}d", $v->{homeDir},
+                                        $v->{poolStart}+$i);
+                    $ds->{$account}->{homeDir} = $home;
+                }
+            }
+        } else {
+            $ds->{$k} = $v;
+            $ds->{$k}->{name} = $k;
         }
-      } else {
-        $ds->{$k} = $v;
-        $ds->{$k}->{name} = $k;
-      }
     }
 
     return $ds;
@@ -160,30 +151,30 @@ sub build_group_map
 
     my $ln = 1;
     while (my $l = <$fh>) {
-      chomp($l);
-      next unless $l;
-      $self->debug(2, "Read group line $l");
-      my @flds = split(":", $l);
-      my $h = { name => $flds[NAME] };
-      next unless $h->{name};
-      if ( $h->{name} =~ /^\+/ ) {
-        # Lines starting with a '+' are special lines to refer to NIS netgroup or LDAP groups
-        # that can be used in passwd or shadow files. But they are invalid in group file.
-        # It happens that some sites tend to add the same line in group file as in passwd file:
-        # To avoid errors in the component, just discard those lines.
-        $self->warn("line $ln in ".GROUP_FILE." is starting by '+': it'll be ignored as it is invalid.");
-        next;
-      } else {
-        $h->{gid} = $flds[ID];
-        my %mb;
-        if ($flds[IDLIST]) {
-            %mb = map(($_ => GROUP_STANDARD_MEMBER), split(",", $flds[IDLIST]));
+        chomp($l);
+        next unless $l;
+        $self->debug(2, "Read group line $l");
+        my @flds = split(":", $l);
+        my $h = { name => $flds[NAME] };
+        next unless $h->{name};
+        if ( $h->{name} =~ /^\+/ ) {
+            # Lines starting with a '+' are special lines to refer to NIS netgroup or LDAP groups
+            # that can be used in passwd or shadow files. But they are invalid in group file.
+            # It happens that some sites tend to add the same line in group file as in passwd file:
+            # To avoid errors in the component, just discard those lines.
+            $self->warn("line $ln in ".GROUP_FILE." is starting by '+': it'll be ignored as it is invalid.");
+            next;
+        } else {
+            $h->{gid} = $flds[ID];
+            my %mb;
+            if ($flds[IDLIST]) {
+                %mb = map(($_ => GROUP_STANDARD_MEMBER), split(",", $flds[IDLIST]));
+            }
+            $h->{members} = \%mb;
+            $h->{ln} = $ln;
+            $rt{$h->{name}} = $h;
         }
-        $h->{members} = \%mb;
-        $h->{ln} = $ln;
-        $rt{$h->{name}} = $h;
-      }
-      $ln++;
+        $ln++;
     }
 
     return \%rt;
@@ -206,31 +197,31 @@ sub build_passwd_map
 
     $ln = 0;
     while (my $l = <$fh>) {
-      chomp($l);
-      next unless $l;
-      $self->debug(2, "Read line $l");
-      my @flds = split(":", $l);
-      my $h = { name => $flds[NAME] };
-      next unless $h->{name};
-      if ( $h->{name} =~ /^\+/ ) {
-        # Lines starting with a '+' are special lines to refer to NIS
-        # netgroup or LDAP groups.  Keep them unchanged. They will be
-        # appended at the end of the passwd file.
-        push(@{$rt{_passwd_special_lines_}}, $l);
-      } else {
-        $h->{uid} = $flds[ID];
-        $h->{main_group} = $flds[IDLIST];
-        $h->{homeDir} = $flds[HOME] || "";
-        $h->{shell} = $flds[SHELL] || "";
-        $h->{comment} = $flds[GCOS] || "";
-        $h->{ln} = ++$ln;
-        $rt{$h->{name}} = $h;
-      }
+        chomp($l);
+        next unless $l;
+        $self->debug(2, "Read line $l");
+        my @flds = split(":", $l);
+        my $h = { name => $flds[NAME] };
+        next unless $h->{name};
+        if ( $h->{name} =~ /^\+/ ) {
+            # Lines starting with a '+' are special lines to refer to NIS
+            # netgroup or LDAP groups.  Keep them unchanged. They will be
+            # appended at the end of the passwd file.
+            push(@{$rt{_passwd_special_lines_}}, $l);
+        } else {
+            $h->{uid} = $flds[ID];
+            $h->{main_group} = $flds[IDLIST];
+            $h->{homeDir} = $flds[HOME] || "";
+            $h->{shell} = $flds[SHELL] || "";
+            $h->{comment} = $flds[GCOS] || "";
+            $h->{ln} = ++$ln;
+            $rt{$h->{name}} = $h;
+        }
     }
     while (my ($group, $st) = each(%$groups)) {
-      foreach my $acc (keys(%{$st->{members}})) {
-          push(@{$rt{$acc}->{groups}}, $group) if exists($rt{$acc});
-      }
+        foreach my $acc (keys(%{$st->{members}})) {
+            push(@{$rt{$acc}->{groups}}, $group) if exists($rt{$acc});
+        }
     }
 
     return \%rt;
@@ -250,37 +241,37 @@ sub build_login_defs_map
 
     $ln = 0;
     while (my $l = <$fh>) {
-      chomp($l);
-      next unless $l;
-      $l =~ s/^\s+//;
-      next if ( $l =~ /^#/);
-      $self->debug(2, "Read line $l");
-      my @flds = split(/\s+/, $l);
-      $rt{$flds[0]} = $flds[1];
+        chomp($l);
+        next unless $l;
+        $l =~ s/^\s+//;
+        next if ( $l =~ /^#/);
+        $self->debug(2, "Read line $l");
+        my @flds = split(/\s+/, $l);
+        $rt{$flds[0]} = $flds[1];
     }
 
     while (my ($p,$v) = each(%{$login_defs}) ) {
-      if ( exists(LOGINDEFS_MAPPING->{$p}) ) {
-          my $k = LOGINDEFS_MAPPING->{$p};
-          $rt{$k} = $v;
-        $fh->add_or_replace_lines(qr/^\s*$k\s+/,
-                                  qr/^\s*$k\s+$v\s*$/,
-                                  "$k\t$v\n",
-                                  ENDING_OF_FILE,
-                                 );
-        $self->debug(1, LOGINDEFS_FILE.": $k.set to $v");
-      } else {
-        $self->warn("No ".LOGINDEFS_FILE." matching keyword defined for login_defs/$p property (internal inconsistency)")
-      }
+        if ( exists(LOGINDEFS_MAPPING->{$p}) ) {
+            my $k = LOGINDEFS_MAPPING->{$p};
+            $rt{$k} = $v;
+            $fh->add_or_replace_lines(qr/^\s*$k\s+/,
+                                      qr/^\s*$k\s+$v\s*$/,
+                                      "$k\t$v\n",
+                                      ENDING_OF_FILE,
+                );
+            $self->debug(1, LOGINDEFS_FILE.": $k.set to $v");
+        } else {
+            $self->warn("No ".LOGINDEFS_FILE." matching keyword defined for login_defs/$p property (internal inconsistency)")
+        }
     }
 
     # Define default value for missing parameters used by this component.
     # Do not update /etc/login.defs with these internal default values.
     while (my ($k,$v) = each(%{LOGINDEFS_DEFAULTS()})) {
-      if ( !exists($rt{$k}) ) {
-        $self->warn($k." not defined in ".LOGINDEFS_FILE.". Using default value (".$v.")");
-        $rt{$k} = $v;
-      }
+        if ( !exists($rt{$k}) ) {
+            $self->warn($k." not defined in ".LOGINDEFS_FILE.". Using default value (".$v.")");
+            $rt{$k} = $v;
+        }
     }
 
     # Define the maximum uid/gid to be preserved according to
@@ -288,11 +279,11 @@ sub build_login_defs_map
     #  - system: system range only must be preserved
     #  - dyn_user_group: up to GID/UID_MAX (included) must be preserved
     if ( $preserved_accounts eq 'system' ) {
-      $rt{max_uid_preserved} = $rt{UID_MIN} - 1;
-      $rt{max_gid_preserved} = $rt{GID_MIN} - 1;
+        $rt{max_uid_preserved} = $rt{UID_MIN} - 1;
+        $rt{max_gid_preserved} = $rt{GID_MIN} - 1;
     } elsif ( $preserved_accounts eq 'dyn_user_group' ) {
-      $rt{max_uid_preserved} = $rt{UID_MAX};
-      $rt{max_gid_preserved} = $rt{GID_MAX};
+        $rt{max_uid_preserved} = $rt{UID_MAX};
+        $rt{max_gid_preserved} = $rt{GID_MAX};
     }
 
     $fh->close();
@@ -378,13 +369,13 @@ sub delete_groups
     my ($self, $system, $profile, $kept, $preserve_groups) = @_;
 
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
-      if (!(exists($profile->{$group}) ||
-            exists($kept->{$group}) ||
-            ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
-           )) {
-        $self->info("Marking group $group for removal");
-        delete($system->{groups}->{$group});
-      }
+        if (!(exists($profile->{$group}) ||
+              exists($kept->{$group}) ||
+              ($preserve_groups) && ($cfg->{gid} <= $system->{logindefs}->{max_gid_preserved})
+            )) {
+            $self->info("Marking group $group for removal");
+            delete($system->{groups}->{$group});
+        }
     }
 }
 
@@ -395,59 +386,59 @@ sub apply_profile_groups
     my ($self, $system, $profile) = @_;
 
     while (my ($group, $cfg) = each(%$profile)) {
-      my $required_members = $cfg->{requiredMembers};
-      $required_members = [] unless $required_members;
-      my @initial_members;
-      if ( exists($system->{groups}->{$group}) ) {
-        if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
-          $self->info("Changing gid of group $group to $cfg->{gid}");
-          $system->{groups}->{$group}->{gid} = $cfg->{gid};
-        }
-        @initial_members = keys(%{$system->{groups}->{$group}->{members}});
-        # replaceMembers means that the group member list must be rebuilt from
-        # the Quattor configuration only, ignoring the current list retrieved
-        # from the /etc/group file.
-        if ( $cfg->{replaceMembers} ) {
-          $self->verbose("Group $group: resetting existing member list");
-          $system->{groups}->{$group}->{members} = {};
+        my $required_members = $cfg->{requiredMembers};
+        $required_members = [] unless $required_members;
+        my @initial_members;
+        if ( exists($system->{groups}->{$group}) ) {
+            if ($system->{groups}->{$group}->{gid} != $cfg->{gid}) {
+                $self->info("Changing gid of group $group to $cfg->{gid}");
+                $system->{groups}->{$group}->{gid} = $cfg->{gid};
+            }
+            @initial_members = keys(%{$system->{groups}->{$group}->{members}});
+            # replaceMembers means that the group member list must be rebuilt from
+            # the Quattor configuration only, ignoring the current list retrieved
+            # from the /etc/group file.
+            if ( $cfg->{replaceMembers} ) {
+                $self->verbose("Group $group: resetting existing member list");
+                $system->{groups}->{$group}->{members} = {};
+            } else {
+                $self->debug(2,"Group $group: initial member list=".join(",",@initial_members));
+            }
         } else {
-          $self->debug(2,"Group $group: initial member list=".join(",",@initial_members));
+            $self->debug(2, "Scheduling addition of group $group");
+            $system->{groups}->{$group} = { name => $group,
+                                            members => {map(($_ => 1), @$required_members)},
+                                            gid => $cfg->{gid}};
         }
-      } else {
-        $self->debug(2, "Scheduling addition of group $group");
-        $system->{groups}->{$group} = { name => $group,
-                                        members => {map(($_ => 1), @$required_members)},
-                                        gid => $cfg->{gid}};
-      }
 
-      # Process required members and flag them so that they are not removed if they
-      # correspond to users not defined in the configuration.
-      if ( @$required_members ) {
-        $self->verbose("Group $group: adding required members (",join(',',@$required_members),")");
-        foreach my $member (@$required_members) {
-          $system->{groups}->{$group}->{members}->{$member} = GROUP_REQUIRED_MEMBER;
+        # Process required members and flag them so that they are not removed if they
+        # correspond to users not defined in the configuration.
+        if ( @$required_members ) {
+            $self->verbose("Group $group: adding required members (",join(',',@$required_members),")");
+            foreach my $member (@$required_members) {
+                $system->{groups}->{$group}->{members}->{$member} = GROUP_REQUIRED_MEMBER;
+            }
+            $self->debug(2,"Group $group: member list after adding required members=".join(",",keys(%{$system->{groups}->{$group}->{members}})));
         }
-        $self->debug(2,"Group $group: member list after adding required members=".join(",",keys(%{$system->{groups}->{$group}->{members}})));
-      }
 
-      # Log group membership modification, if any.
-      # If existing list of group members has not been reset, it is identical if there is the
-      # same number of members.
-      if ( $cfg->{replaceMembers} || (scalar(keys(%{$system->{groups}->{$group}->{members}})) != scalar(@initial_members)) ) {
-        my @removed_members;
-        my $info_msg = "Group $group: member list modified";
-        foreach my $member (@initial_members) {
-          if ( !exists($system->{groups}->{$group}->{members}->{$member}) ) {
-            push @removed_members, $member;
-          }
+        # Log group membership modification, if any.
+        # If existing list of group members has not been reset, it is identical if there is the
+        # same number of members.
+        if ( $cfg->{replaceMembers} || (scalar(keys(%{$system->{groups}->{$group}->{members}})) != scalar(@initial_members)) ) {
+            my @removed_members;
+            my $info_msg = "Group $group: member list modified";
+            foreach my $member (@initial_members) {
+                if ( !exists($system->{groups}->{$group}->{members}->{$member}) ) {
+                    push @removed_members, $member;
+                }
+            }
+            if ( @removed_members ) {
+                $info_msg .= " (removed members=" . join(',',sort(@removed_members)) . ")";
+            }
+            $self->info($info_msg);
+        } else {
+            $self->verbose("Group $group: no modification made to membership");
         }
-        if ( @removed_members ) {
-          $info_msg .= " (removed members=" . join(',',sort(@removed_members)) . ")";
-        }
-        $self->info($info_msg);
-      } else {
-        $self->verbose("Group $group: no modification made to membership");
-      }
     }
 }
 
@@ -471,12 +462,12 @@ sub delete_account
     my ($self, $system, $account) = @_;
 
     foreach my $i (@{$system->{passwd}->{$account}->{groups}}) {
-      $self->debug(2, "Checking if account $account must be removed from group $i");
+        $self->debug(2, "Checking if account $account must be removed from group $i");
 
-      if (exists($system->{groups}->{$i})) {
-        $self->verbose("Deleting account $account from group $i");
-        delete($system->{groups}->{$i}->{members}->{$account});
-      }
+        if (exists($system->{groups}->{$i})) {
+            $self->verbose("Deleting account $account from group $i");
+            delete($system->{groups}->{$i}->{members}->{$account});
+        }
     }
 
     delete($system->{passwd}->{$account});
@@ -489,28 +480,28 @@ sub add_account
     my ($self, $system, $name, $cfg) = @_;
 
     foreach my $i (@{$cfg->{groups}}) {
-      $self->debug(2, "Reviewing group $i for account $name");
-      if (exists($system->{groups}->{$i})) {
-        $system->{groups}->{$i}->{members}->{$name} = GROUP_STANDARD_MEMBER;
-        # Pool accounts share their group structure. If it has
-        # already been changed, we need to do no more.
-      } elsif ($i !~ m{^\d+$}) {
-        $self->debug(2, "Account $name assigned to non-local group $i");
-        my @g = getgrnam($i);
-        if (@g) {
-          $i = $g[ID];
-          $self->debug(2, "Account $name resolved in group $i")
-        } else {
-          $self->error("Not found group $i for account $name. Skipping");
-          return;
+        $self->debug(2, "Reviewing group $i for account $name");
+        if (exists($system->{groups}->{$i})) {
+            $system->{groups}->{$i}->{members}->{$name} = GROUP_STANDARD_MEMBER;
+            # Pool accounts share their group structure. If it has
+            # already been changed, we need to do no more.
+        } elsif ($i !~ m{^\d+$}) {
+            $self->debug(2, "Account $name assigned to non-local group $i");
+            my @g = getgrnam($i);
+            if (@g) {
+                $i = $g[ID];
+                $self->debug(2, "Account $name resolved in group $i")
+            } else {
+                $self->error("Not found group $i for account $name. Skipping");
+                return;
+            }
         }
-      }
     }
 
     if ($cfg->{groups}->[0] =~ m{^\d+$}) {
-      $cfg->{main_group} = $cfg->{groups}->[0];
+        $cfg->{main_group} = $cfg->{groups}->[0];
     } else {
-      $cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
+        $cfg->{main_group} = $system->{groups}->{$cfg->{groups}->[0]}->{gid};
     }
     $cfg->{password} ||= "!";
     $system->{passwd}->{$name} = $cfg;
@@ -523,30 +514,30 @@ sub delete_unneeded_accounts
     $self->verbose("Removing accounts no longer needed...");
 
     while (my ($account, $cfg) = each(%{$system->{passwd}})) {
-      if (!(exists($profile->{$account}) ||
+        if (!(exists($profile->{$account}) ||
             exists($kept->{$account}) ||
-            ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_uid_preserved}) ||
-            ($account eq 'root')
-           )) {
-        $self->info("Marking account $account for deletion");
-        $self->delete_account($system, $account);
-      } elsif ( !exists($profile->{$account}) ) {
-        if ( exists($kept->{$account})  ) {
-          $self->debug(2,"Account $account prserved: not in the profile but part of the kept_users list");
-        } else {
-          $self->debug(2,"Account $account prserved: not in the profile but has a preserved UID");
+              ($preserve_accounts) && ($cfg->{uid} <= $system->{logindefs}->{max_uid_preserved}) ||
+              ($account eq 'root')
+            )) {
+            $self->info("Marking account $account for deletion");
+            $self->delete_account($system, $account);
+        } elsif ( !exists($profile->{$account}) ) {
+            if ( exists($kept->{$account})  ) {
+                $self->debug(2,"Account $account prserved: not in the profile but part of the kept_users list");
+            } else {
+                $self->debug(2,"Account $account prserved: not in the profile but has a preserved UID");
+            }
         }
-      }
     }
     # Remove unneeded group members that may come from LDAP/NIS/other
     # sources.
     while (my ($group, $cfg) = each(%{$system->{groups}})) {
-      foreach my $m (keys(%{$cfg->{members}})) {
-        if (!exists($system->{passwd}->{$m}) && ($cfg->{members}->{$m} != GROUP_REQUIRED_MEMBER)) {
-          $self->info("Removing undefined user $m from group $group (define it as a 'requiredMembers' to keep it)");
-          delete($cfg->{members}->{$m});
+        foreach my $m (keys(%{$cfg->{members}})) {
+            if (!exists($system->{passwd}->{$m}) && ($cfg->{members}->{$m} != GROUP_REQUIRED_MEMBER)) {
+                $self->info("Removing undefined user $m from group $group (define it as a 'requiredMembers' to keep it)");
+                delete($cfg->{members}->{$m});
+            }
         }
-      }
     }
 }
 
@@ -562,15 +553,15 @@ sub add_profile_accounts
         # Inherit from the existing account everything not specified in the profile.
         # This includes all the information in /etc/shadow for the account, including the password.
         while (my ($param,$v) = each(%{$system->{passwd}->{$account}})) {
-          if (!exists($cfg->{$param})) {
-            $self->debug(1, "Account $account inherits '$param' from the system");
-            $cfg->{$param} = $v;
-          }
+            if (!exists($cfg->{$param})) {
+                $self->debug(1, "Account $account inherits '$param' from the system");
+                $cfg->{$param} = $v;
+            }
         }
         # Also inherit the existing shell if it is an empty string in the profile.
         if (!$cfg->{shell}) {
-          $self->debug(2, "Account $account: current shell preserved");
-          $cfg->{shell} = $system->{passwd}->{$account}->{shell};
+            $self->debug(2, "Account $account: current shell preserved");
+            $cfg->{shell} = $system->{passwd}->{$account}->{shell};
         }
         $self->delete_account($system, $account);
       }
@@ -589,7 +580,7 @@ sub adjust_accounts
     $self->verbose("Adjusting accounts");
 
     $self->delete_unneeded_accounts($system, $profile, $kept, $preserve_accounts)
-      if $remove_unknown;
+        if $remove_unknown;
 
     $self->add_profile_accounts($system, $profile);
 
@@ -604,28 +595,28 @@ sub compute_root_user
     my $g = $system->{passwd}->{root}->{groups};
 
     if (!$g || !@$g) {
-      $self->warn ("No groups found for root in the system. ",
-                   "Assigning default ones: ",
-                   join(", ", ROOT_DEFAULT_GROUPS));
-      $g = [ROOT_DEFAULT_GROUPS];
+        $self->warn ("No groups found for root in the system. ",
+                     "Assigning default ones: ",
+                     join(", ", ROOT_DEFAULT_GROUPS));
+        $g = [ROOT_DEFAULT_GROUPS];
     } else {
-      my @f = grep($_ ne "root", @$g);
-      $g = [ "root", @f];
+        my @f = grep($_ ne "root", @$g);
+        $g = [ "root", @f];
     }
 
     my $u = {uid => 0,
              groups => $g,
              password => ($tree->{rootpwd}
-                         || $system->{passwd}->{root}->{password}
-                         || '!'),
+                          || $system->{passwd}->{root}->{password}
+                          || '!'),
              shell => $tree->{rootshell} ||
-                      $system->{passwd}->{root}->{shell} || "/bin/bash",
+                 $system->{passwd}->{root}->{shell} || "/bin/bash",
              homeDir => "/root",
              main_group => 0,
              comment => "root",
              name => 'root',
              ln => $system->{passwd}->{root}->{ln}
-            };
+    };
     return $u;
 }
 
@@ -639,14 +630,14 @@ sub groups_are_consistent
 
     $self->verbose("Checking for groups consistency");
     while (my ($group, $st) = each(%$groups)) {
-      $self->debug(2, "Checking for consistency of group $group");
-      if (exists($ids{$st->{gid}})) {
-        $self->error("Collision found between groups $group and ",
-                     $ids{$st->{gid}}, " for id $st->{gid}");
-        $ok = 0;
-      } else {
-        $ids{$st->{gid}} = $group;
-      }
+        $self->debug(2, "Checking for consistency of group $group");
+        if (exists($ids{$st->{gid}})) {
+            $self->error("Collision found between groups $group and ",
+                         $ids{$st->{gid}}, " for id $st->{gid}");
+            $ok = 0;
+        } else {
+            $ids{$st->{gid}} = $group;
+        }
     }
     return $ok;
 }
@@ -663,14 +654,14 @@ sub accounts_are_consistent
     my %ids;
 
     while (my ($account, $st) = each(%$accounts)) {
-      $self->debug(2, "Checking for consistency of account $account");
-      if (exists($ids{$st->{uid}})) {
-        $self->error("Collision found between accounts $account and ",
-                     "$ids{$st->{uid}} for id $st->{uid}");
-        $ok = 0;
-      } else {
-        $ids{$st->{uid}} = $account;
-      }
+        $self->debug(2, "Checking for consistency of account $account");
+        if (exists($ids{$st->{uid}})) {
+            $self->error("Collision found between accounts $account and ",
+                         "$ids{$st->{uid}} for id $st->{uid}");
+            $ok = 0;
+        } else {
+            $ids{$st->{uid}} = $account;
+        }
     }
     return $ok;
 }
@@ -684,7 +675,7 @@ sub is_consistent
 
     $self->verbose("Checking for system consistency");
     return  $self->groups_are_consistent($system->{groups}) &&
-            $self->accounts_are_consistent($system->{passwd});
+        $self->accounts_are_consistent($system->{passwd});
 }
 
 # Commits the group configuration.
@@ -696,13 +687,13 @@ sub commit_groups
 
     $self->verbose("Preparing group file");
 
-    foreach my $cfg (sort accounts_sort (values(%$groups))) {
-      @ln =  ($cfg->{name},
-              "x",
-              $cfg->{gid},
-              join(",", sort(keys(%{$cfg->{members}})))
-             );
-      push(@group, join(":", @ln));
+    foreach my $cfg (sort { accounts_sort() } values(%$groups)) {
+        @ln =  ($cfg->{name},
+                "x",
+                $cfg->{gid},
+                join(",", sort(keys(%{$cfg->{members}})))
+            );
+        push(@group, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@group), " groups");
@@ -716,19 +707,16 @@ sub commit_groups
 }
 
 # Compares two account structures, as they're going to be sorted.
-sub accounts_sort($$)
+# Use this as a sort subroutine; $a and $b are package globals
+sub accounts_sort
 {
-    my ($a, $b) = @_;
-
-    my $cmp;
-
     if (exists($a->{ln}) && exists($b->{ln})) {
-      $cmp = $a->{ln} <=> $b->{ln};
-      return $cmp if $cmp;
+        my $cmp = $a->{ln} <=> $b->{ln};
+        return $cmp if $cmp;
     } elsif (exists($a->{ln})) {
-      return -1;
+        return -1;
     } elsif (exists($b->{ln})) {
-      return 1;
+        return 1;
     }
     return $a->{name} cmp $b->{name};
 }
@@ -745,28 +733,28 @@ sub commit_accounts
 
     my (@passwd, @shadow, @ln, $fh);
 
-    foreach my $cfg (sort accounts_sort (values(%$accounts))) {
-      @ln =  ($cfg->{name},
-              "x",
-              $cfg->{uid},
-              $cfg->{main_group},
-              (exists($cfg->{comment}) ? $cfg->{comment} : ""),
-              (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
-              (exists($cfg->{shell}) ? $cfg->{shell} : "")
-             );
-      push(@passwd, join(":", @ln));
-
-      @ln = ($cfg->{name},
-             (defined($cfg->{password}) ? $cfg->{password} : "*"),
-             (defined($cfg->{pass_last_change}) ? $cfg->{pass_last_change} : PASS_LAST_CHANGE_DEF),
-             (defined($cfg->{pass_min_days}) ? $cfg->{pass_min_days} : $login_defs->{PASS_MIN_DAYS}),
-             (defined($cfg->{pass_max_days}) ? $cfg->{pass_max_days} : $login_defs->{PASS_MAX_DAYS}),
-             (defined($cfg->{pass_warn_age}) ? $cfg->{pass_warn_age} : $login_defs->{PASS_WARN_AGE}),
-             (defined($cfg->{inactive}) ? $cfg->{inactive} : ACCOUNT_INACTIVE_DEF),
-             (defined($cfg->{expiration}) ? $cfg->{expiration} : ACCOUNT_EXPIRATION_DEF),
-             ""
+    foreach my $cfg (sort { accounts_sort() } values(%$accounts)) {
+        @ln =  ($cfg->{name},
+                "x",
+                $cfg->{uid},
+                $cfg->{main_group},
+                (exists($cfg->{comment}) ? $cfg->{comment} : ""),
+                (exists($cfg->{homeDir}) ? $cfg->{homeDir} : ""),
+                (exists($cfg->{shell}) ? $cfg->{shell} : "")
             );
-      push(@shadow, join(":", @ln));
+        push(@passwd, join(":", @ln));
+
+        @ln = ($cfg->{name},
+               (defined($cfg->{password}) ? $cfg->{password} : "*"),
+               (defined($cfg->{pass_last_change}) ? $cfg->{pass_last_change} : PASS_LAST_CHANGE_DEF),
+               (defined($cfg->{pass_min_days}) ? $cfg->{pass_min_days} : $login_defs->{PASS_MIN_DAYS}),
+               (defined($cfg->{pass_max_days}) ? $cfg->{pass_max_days} : $login_defs->{PASS_MAX_DAYS}),
+               (defined($cfg->{pass_warn_age}) ? $cfg->{pass_warn_age} : $login_defs->{PASS_WARN_AGE}),
+               (defined($cfg->{inactive}) ? $cfg->{inactive} : ACCOUNT_INACTIVE_DEF),
+               (defined($cfg->{expiration}) ? $cfg->{expiration} : ACCOUNT_EXPIRATION_DEF),
+               ""
+            );
+        push(@shadow, join(":", @ln));
     }
 
     $self->info("Committing ", scalar(@passwd), " accounts");
@@ -782,7 +770,7 @@ sub commit_accounts
     push(@shadow, @{$special_lines->{shadow}});
     $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
                                backup => ".old",
-                               mode => 0400);
+                               mode => oct(400));
     print $fh join("\n", @shadow, "");
     $fh->close();
 
@@ -797,7 +785,7 @@ sub sanitize_path
 
     if ($path !~ m{^(/[-\w\./]+)$}) {
         $self->error("Unsafe path: $path");
-       return;
+        return;
     }
     return $1;
 }
@@ -815,20 +803,20 @@ sub create_home
 
     $dir = $self->sanitize_path($cfg->{homeDir}) or return;
     if ($cfg->{uid} !~ m{^(\d+)$}) {
-      $self->error("Wrong uid for $account, not creating its home dir");
-      return;
+        $self->error("Wrong uid for $account, not creating its home dir");
+        return;
     }
     $uid = $1;
 
     if ($cfg->{main_group} !~ m{^(\d+)$}) {
-      $self->error("Wrong group for $account, not creating its home dir");
-      return;
+        $self->error("Wrong group for $account, not creating its home dir");
+        return;
     }
     $gid = $1;
     # Parent directories, if created, need to be readable by the new
     # user. The next step ensures the home directory is readable only
     # by the owner.
-    if (!makedir($dir, 0755)) {
+    if (!makedir($dir, oct(755))) {
         $self->error("Failed to create home directory: $dir ",
                      "for account $account");
         return;
@@ -850,7 +838,7 @@ sub create_home
             if (! -e $f) {
                 if (-d $src) {
                     $self->verbose("Creating directory $f for $src");
-                    if (!makedir($f, 0700)) {
+                    if (!makedir($f, oct(700))) {
                         $self->error("Couldn't create directory $f");
                         return;
                     }
@@ -860,7 +848,7 @@ sub create_home
             }
             chown($uid, $gid, $f);
         }
-      );
+        );
 
     $find->find(SKELDIR);
     chown($uid, $gid, $dir);
@@ -873,9 +861,9 @@ sub build_home_dirs
     my ($self, $accounts) = @_;
 
     while (my ($account, $cfg) = each(%$accounts)) {
-      if ($cfg->{createHome} && ! -d $cfg->{homeDir}) {
-          $self->create_home($account, $cfg);
-      }
+        if ($cfg->{createHome} && ! -d $cfg->{homeDir}) {
+            $self->create_home($account, $cfg);
+        }
     }
 }
 
@@ -930,15 +918,15 @@ sub Configure
     my $t = $config->getElement(PATH)->getTree();
     my $preserve_accounts = 0;
     if ( $t->{preserved_accounts} ne 'none' ) {
-      $preserve_accounts = 1;
+        $preserve_accounts = 1;
     }
 
     my $system = $self->build_system_map($t->{login_defs},$t->{preserved_accounts});
 
     if ($t->{users}) {
-          $t->{users} = $self->compute_desired_accounts($t->{users});
+        $t->{users} = $self->compute_desired_accounts($t->{users});
     } else {
-          $t->{users} = {};
+        $t->{users} = {};
     }
     $t->{users}->{root} = $self->compute_root_user($system, $t);
 
