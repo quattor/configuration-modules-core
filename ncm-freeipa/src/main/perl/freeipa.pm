@@ -68,6 +68,7 @@ First we need to add a user with appropriate privileges
     kinit quattor-aii
     kdestroy
 
+    kinit admin
     ipa role-add "Quattor AII"
     ipa role-add-privilege "Quattor AII" --privileges="Host Administrators"
     ipa role-add-member --users=quattor-aii "Quattor AII"
