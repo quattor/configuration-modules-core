@@ -159,11 +159,11 @@ multiline
 ^addhandler type-map var$
 ^loglevel warn$
 ^errorlog logs/error_log$
-^logformat "%h %l %u %t \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-Agent}i\\"" combined$
+^logformat "%h %l %u %t \\"%r\\" %>s %b \\"%\{Referer}i\\" \\"%\{User-Agent}i\\"" combined$
 ^logformat "%h %l %u %t \\"%r\\" %>s %b" common$
-^logformat "%{Referer}i -> %U" referer$
-^logformat "%{User-agent}i" agent$
-^logformat "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \\"%r\\" %b" ssl_combined$
+^logformat "%\{Referer}i -> %U" referer$
+^logformat "%\{User-agent}i" agent$
+^logformat "%t %h %\{SSL_PROTOCOL}x %\{SSL_CIPHER}x \\"%r\\" %b" ssl_combined$
 ^customlog logs/access_log combined$
 ^addlanguage ca .ca$
 ^addlanguage cs .cz .cs$

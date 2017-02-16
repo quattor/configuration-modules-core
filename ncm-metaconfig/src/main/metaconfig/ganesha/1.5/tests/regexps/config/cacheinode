@@ -2,7 +2,7 @@ Tests for cacheinode config
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^CacheInode {
+^CacheInode \{
 ^\s{4}Use_Getattr_Directory_Invalidation\s=\s0;
-^CacheInode_GC_Policy {
-^CacheInode_Hash {
+^CacheInode_GC_Policy \{
+^CacheInode_Hash \{

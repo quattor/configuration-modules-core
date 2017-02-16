@@ -2,7 +2,7 @@ Tests for export gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^EXPORT {
+^EXPORT \{
 ^\s{4}Anonymous_gid\s=\s-2;
 ^\s{4}Anonymous_uid\s=\s-2;
 ^\s{4}Cache_Data\s=\sFALSE;

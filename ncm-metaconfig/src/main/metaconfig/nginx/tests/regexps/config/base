@@ -11,7 +11,7 @@ multiline
 ^\s{4}worker_connections 1024;$
 ^\s{4}use\sepoll;$
 ^}$ ### COUNT 2
-^http\s{$ ### COUNT 1
+^http\s\{$ ### COUNT 1
 ^\s{4}include /etc/nginx/mime.types;$
 ^\s{4}default_type application/octet-stream;$
 ^\s{4}log_format main '\$remote_addr \$host - \$remote_user \[\$time_local\] "\$request" '$
@@ -24,7 +24,7 @@ multiline
 ^\s{4}upstream restricted-packages \{$
 ^\s{8}server myserver.my.domain:443;$
 ^\s{4}}$
-^\s{4}upstream secure {$
+^\s{4}upstream secure \{$
 ^\s{8}server myserver.my.domain:446;$
 ^\s{4}server \{$ ### COUNT 2
 ^\s{8}listen myhost.my.domain:8443 ssl;$

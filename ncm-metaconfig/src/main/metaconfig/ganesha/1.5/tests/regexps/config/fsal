@@ -2,5 +2,5 @@ Tests for fsal config
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^FSAL {
+^FSAL \{
 ^\s{4}Max_FS_calls\s=\s0;
