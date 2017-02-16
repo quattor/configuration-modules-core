@@ -1,0 +1,9 @@
+stopppedrules
+---
+//
+rendermodule=stoppedrules
+contentspath=/config
+---
+^ACCEPT\tsource,s2\tdestination,d2\tp1,p2\t1,2\t11,12$
+^-\t-\t-\t-\t-\t31$
+^-\t-\tabc$

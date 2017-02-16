@@ -46,7 +46,7 @@ type component_shorewall_tcpri = {
 # Keep this list in sync with list from TT file
 @{a zones entry: zone[:parent] type options inoptions outoptions}
 type component_shorewall_zones = {
-    "zone" : string
+    "zone" : string(1..5)
     "parent" ? string[]
     "type" ? string with match(SELF, '(ipv4|ipsec|firewall|bport|vserver|loopback|local)')
     "options" ? string[]
@@ -74,6 +74,18 @@ type component_shorewall_policy = {
     "burst" ? string
     "limit" ? string
     "connlimit" ? string
+};
+
+
+# Keep this list in sync with list from TT file
+@{a stoppedrules entry: action src dst proto dport sport}
+type component_shorewall_stoppedrules = {
+    "action" ? string with match(SELF, '^(ACCEPT|NOTRACK|DROP)$')
+    "src" ? string[]
+    "dst" ? string[]
+    "proto" ? string[]
+    "dport" ? long(0..)[]
+    "sport" ? long(0..)[]
 };
 
 # Keep this list in sync with list from TT file
@@ -107,7 +119,8 @@ type component_shorewall_rules = {
     "helper" ? string
 };
 
-type component_shorewall_shorewall_blacklist = string with match(SELF, '^(ALL|NEW|ESTABLISHED|RELATED|INVALID|UNTRACKED)$');
+type component_shorewall_shorewall_blacklist = string with
+    match(SELF, '^(ALL|NEW|ESTABLISHED|RELATED|INVALID|UNTRACKED)$');
 
 @{shorewall.conf options. only configured options are written to the configfile}
 type component_shorewall_shorewall = {
@@ -118,7 +131,7 @@ type component_shorewall_shorewall = {
     "add_snat_aliases" ? boolean
     "adminisabsentminded" ? boolean
     "arptables" ? string
-    "auto_comment" ? boolean with {deprecated(0, 'shorewall auto_comment is deprecated, use autocomment instead'); true;}
+    "auto_comment" ? boolean with {deprecated(0, 'shorewall auto_comment deprecated by autocomment'); true;}
     "autocomment" ? boolean
     "autohelpers" ? boolean
     "automake" ? boolean
@@ -126,7 +139,7 @@ type component_shorewall_shorewall = {
     "blacklist" ? component_shorewall_shorewall_blacklist[]
     "blacklist_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT))$')
     "blacklist_loglevel" ? string
-    "blacklistnewonly" ? boolean with {deprecated(0, 'shorewall blacklistnewonly is deprecated, use blacklist instead'); true;}
+    "blacklistnewonly" ? boolean with {deprecated(0, 'shorewall blacklistnewonly deprecated by blacklist'); true;}
     "chain_scripts" ? boolean
     "clampmss" ? boolean
     "clear_tc" ? boolean
@@ -154,7 +167,7 @@ type component_shorewall_shorewall = {
     "invalid_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT)|CONTINUE)$')
     "invalid_log_level" ? string
     "ip" ? string
-    "ip_forwarding" ? string with match(SELF,"(On|Off|Keep)")
+    "ip_forwarding" ? string with match(SELF, "(On|Off|Keep)")
     "ipsecfile" ? string with match(SELF, '^zones$')
     "ipset" ? string
     "ipset_warnings" ? boolean
@@ -241,6 +254,8 @@ type component_shorewall = {
     "tcpri" ? component_shorewall_tcpri[]
     @{masq configuration}
     "masq" ? component_shorewall_masq[]
+    @{rules to use when shorewall is stopped}
+    "stoppedrules" ? component_shorewall_stoppedrules[]
 };
 
 @{metaconfig schema for shorewall 5.x sysconfig (you cannot set RESTARTOPTIONS)}
