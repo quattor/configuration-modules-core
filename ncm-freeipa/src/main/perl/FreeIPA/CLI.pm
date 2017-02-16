@@ -8,6 +8,7 @@ our @EXPORT = qw(install);
 
 use CAF::Object qw(SUCCESS);
 use CAF::Process;
+use Net::DNS;
 
 use Readonly;
 
@@ -16,6 +17,11 @@ Readonly::Array my @NTPDATE_SYNC => qw(/usr/sbin/ntpdate -U ntp -b -v);
 
 Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --debug --noac);
 Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp nisdomain);
+
+# Location based discovery
+# http://www.freeipa.org/page/V4/DNS_Location_Mechanism
+Readonly my $LOCATION_SRV_RECORD => '_ldap._tcp';
+
 
 =pod
 
@@ -179,6 +185,37 @@ sub post_time
 
 }
 
+# Does we support location based discovery?
+# Check the domain for SRV _ldap._tcp records
+# and verify the primary is one of the targets
+# Return SUCCESS on success, undef otherwise
+sub location_based_discovery
+{
+    my ($self, $domain, $primary) = @_;
+
+    my $res = Net::DNS::Resolver->new;
+    my $srv = "$LOCATION_SRV_RECORD.$domain";
+    my $query = $res->query($srv, "SRV");
+
+    my $msg;
+    if ($query) {
+        my @targets = map {lc($_->target)} ($query->answer);
+        $msg = "primary $primary not in targets from SRV $srv: ".join(',', @targets);
+        if (grep {lc($primary) eq $_} @targets) {
+            $msg =~ s/not in/in/;
+            $self->verbose($msg);
+            return SUCCESS;
+        }
+    } else {
+        $msg = "SRV $srv query failed: ", $res->errorstring;
+    }
+
+    # Failure if you get here
+    $self->error($msg);
+    return;
+}
+
+
 # TODO: ipa-join is enough?
 sub ipa_install
 {
@@ -194,12 +231,20 @@ sub ipa_install
     # TODO: set expiration window on password or cron job to reset password
     my $cmd = [
         @IPA_INSTALL,
-        '--server', $primary,
         '--realm', $realm,
-        '--password', $otp,
         '--domain', $domain,
+        '--password', $otp,
         map {"--no-$_"} @IPA_INSTALL_NOS, # Nothing after this, will all be map'ped
         ];
+
+    if ($self->location_based_discovery($domain, $primary)) {
+        $self->info("Found primary $primary in $LOCATION_SRV_RECORD.$domain SRV records. ",
+                    "Not configuring the server (using --server $primary option)");
+    } else {
+        $self->warn("Primary $primary not found in $LOCATION_SRV_RECORD.$domain SRV records. ",
+                    "Configuring the server (using --server $primary option) might affect HA behaviour");
+        push(@$cmd, '--server', $primary);
+    };
 
     my $output = CAF::Process->new($cmd, log => $self)->output();
     if ($?) {
