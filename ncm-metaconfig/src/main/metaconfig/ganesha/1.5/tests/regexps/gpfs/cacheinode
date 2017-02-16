@@ -2,12 +2,12 @@ Tests for cacheinode gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^CacheInode {
+^CacheInode \{
 ^\s{4}Attr_Expiration_Time\s=\s120;
 ^\s{4}Directory_Expiration_Time\s=\s120;
 ^\s{4}Symlink_Expiration_Time\s=\s120;
 ^\s{4}Use_Getattr_Directory_Invalidation\s=\s0;
-^CacheInode_GC_Policy {
+^CacheInode_GC_Policy \{
 ^\s{4}Entries_HWMark\s=\s1536000;
 ^\s{4}Entries_LWMark\s=\s1024000;
 ^\s{4}FD_HWMark_Percent\s=\s60;
@@ -15,4 +15,4 @@ Tests for cacheinode gpfs
 ^\s{4}FD_Limit_Percent\s=\s90;
 ^\s{4}LRU_Run_Interval\s=\s90;
 ^\s{4}Reaper_Work\s=\s15000;
-^CacheInode_Hash {
+^CacheInode_Hash \{

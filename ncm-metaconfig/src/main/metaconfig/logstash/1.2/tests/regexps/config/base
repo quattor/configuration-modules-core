@@ -4,7 +4,7 @@ multiline
 /etc/logstash/conf.d/logstash.conf
 ---
 ^input \{$
-^\s{4}gelf {$
+^\s{4}gelf \{$
 ^\s{8}type => "remotegelf"$
 ^\s{8}port => 12201$
 ^\s{8}remap => true$

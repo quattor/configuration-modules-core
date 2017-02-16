@@ -2,10 +2,10 @@ Tests for nfsv4 gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^NFSv4 {
+^NFSv4 \{
 ^\s{4}FH_Expire\s=\sFALSE;
 ^\s{4}Lease_Lifetime\s=\s90;
 ^\s{4}Returns_ERR_FH_EXPIRED\s=\sTRUE;
-^NFSv4_ClientId_Cache {
+^NFSv4_ClientId_Cache \{
 ^\s{4}Alphabet_Length\s=\s10;
 ^\s{4}Index_Size\s=\s17;

@@ -3,5 +3,5 @@ Test bacula sd Messages
 multiline
 metaconfigservice=/etc/bacula/bacula-sd.conf
 ---
-^Messages\s{
+^Messages\s\{
 ^\s{4}director\s=\sdirector-short-sd-dir\s=\sall,\s!skipped,\s!restored

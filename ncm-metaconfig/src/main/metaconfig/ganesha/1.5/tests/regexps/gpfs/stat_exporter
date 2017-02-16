@@ -2,6 +2,6 @@ Tests for stat_exporter gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^STAT_EXPORTER {
+^STAT_EXPORTER \{
 ^\s{4}Access\s=\s"localhost";
 ^\s{4}Port\s=\s10401;

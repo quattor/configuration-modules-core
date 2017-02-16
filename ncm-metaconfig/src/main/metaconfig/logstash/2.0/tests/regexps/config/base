@@ -4,7 +4,7 @@ multiline
 /etc/logstash/conf.d/logstash.conf
 ---
 ^input \{$
-^\s{4}gelf {$
+^\s{4}gelf \{$
 ^\s{8}type => "remotegelf"$
 ^\s{8}port => 12201$
 ^\s{8}remap => true$
@@ -36,7 +36,7 @@ filter \{$
 ^\s{16}"message" => \["%\{GPFSLOG\}"\]$
 ^\s{12}\}$
 ^\s{8}\}$
-^\s{8}if \(\[sometag\] !~ '\^SOME_STRING'\) {
+^\s{8}if \(\[sometag\] !~ '\^SOME_STRING'\) \{
 ^\s{12}drop \{$
 ^\s{16}periodic_flush => true$
 ^\s{16}percentage => 80$

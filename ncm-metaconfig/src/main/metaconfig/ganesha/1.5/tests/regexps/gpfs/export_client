@@ -2,7 +2,7 @@ Tests for export_client gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^EXPORT_CLIENT {
+^EXPORT_CLIENT \{
 ^\s{4}Path\s=\s"/some/path";
 ^\s{4}Access\s=\s"\*.sub.domain";
 ^\s{4}Access_Type\s=\s"rw";
