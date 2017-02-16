@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::grub${PMpost}
+#${PMcomponent}
 
 use Fcntl qw(SEEK_SET SEEK_END);
 use CAF::Object qw(SUCCESS);
@@ -199,9 +199,9 @@ sub password
         my $usercfg_fh = CAF::FileEditor->new( $GRUB2_USER_CFG,
             owner => "root",
             group => "root",
-            mode  => 0400,
+            mode  => oct(400),
             log   => $self );
-        
+
         $usercfg_fh->add_or_replace_lines(qr/^GRUB2_PASSWORD=/, qr/^GRUB2_PASSWORD=$password$/, "GRUB2_PASSWORD=$password\n", SEEK_END);
         $usercfg_fh->close();
     } else {
@@ -299,7 +299,7 @@ sub grub_conf
     my $grub_fh = CAF::FileEditor->new($GRUB_CONF,
                                        owner => "root",
                                        group => "root",
-                                       mode  => 0400,
+                                       mode  => oct(400),
                                        log   => $self);
 
     if (!"$grub_fh") {
