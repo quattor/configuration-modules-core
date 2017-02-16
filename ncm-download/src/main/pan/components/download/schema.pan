@@ -1,9 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-declaration template components/download/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
@@ -48,7 +43,7 @@ type component_download_file = {
     "allow_older" ? boolean
 };
 
-type component_download_type = extensible {
+type download_component = extensible {
     include structure_component
     @{The default server hostname to use for any sources which
       do not specify the source.}

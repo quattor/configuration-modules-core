@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::download${PMpost}
+#${PMcomponent}
 
 =head1 DESCRIPTION
 
