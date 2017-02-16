@@ -91,7 +91,9 @@ sub setup_nssdb
 
     my $msg = "nssdb directory $self->{nssdb}";
 
-    my $initdb = ! $self->directory_exists($self->{nssdb});
+    # No directory of no .db files
+    my $initdb = ! $self->directory_exists($self->{nssdb}) ||
+                 ! scalar glob("$self->{nssdb}/*.db");
 
     if ($self->directory($self->{nssdb}, %{$self->{perms}})) {
         if ($initdb) {
