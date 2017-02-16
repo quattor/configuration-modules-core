@@ -104,7 +104,7 @@ sub setup_nssdb
             }
         }
 
-        foreach my $dbfile (glob("$self->{nssdb}/*.db") ) {
+        foreach my $dbfile (glob("$self->{nssdb}/*.db")) {
             $self->status($dbfile, %{$self->{perms}});
         }
 
@@ -132,7 +132,7 @@ sub setup
 {
     my ($self) = @_;
 
-    $self->{workdir} = $self->directory("/tmp/quattor_nss-XXXX", mode => 0700, temp => 1);
+    $self->{workdir} = $self->directory("/tmp/quattor_nss-XXXX", mode => oct(700), temp => 1);
     if (! $self->{workdir}) {
         return $self->fail("Failed to setup temp NSS workdir: $self->{fail}");
     };
@@ -211,7 +211,7 @@ sub get_cert
 {
     my ($self, $nick, $cert, %opts) = @_;
 
-    if (! $self->directory(dirname($cert), mode => 0755)) {
+    if (! $self->directory(dirname($cert), mode => oct(755))) {
         return $self->fail("Failed to create dirname for cert $cert: $self->{fail}");
     };
 
@@ -363,12 +363,12 @@ sub get_privkey
 {
     my ($self, $nick, $key, %opts) = @_;
 
-    if (! $self->directory(dirname($key), mode => 0755)) {
+    if (! $self->directory(dirname($key), mode => oct(755))) {
         return $self->fail("Failed to create dirname for key $key: $self->{fail}");
     };
 
     my $p12dir = "$self->{workdir}/p12keys";
-    return if ! $self->directory($p12dir, mode => 0700);
+    return if ! $self->directory($p12dir, mode => oct(700));
 
     my $p12key = "$p12dir/key.p12";
     my $out = CAF::Process->new(

@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/${project.artifactId}/schema;
+${componentschema}
 
 include 'pan/types';
 include 'quattor/types/component';
@@ -132,7 +128,7 @@ type component_${project.artifactId}_nss = {
 
 
 # TODO: use common realm type
-type component_${project.artifactId} = {
+type ${project.artifactId}_component = {
     include structure_component
     @{realm}
     'realm' : string with match(SELF, '^[a-zA-Z][\w.-]*$')
@@ -157,7 +153,7 @@ type component_${project.artifactId} = {
     'host' ? component_${project.artifactId}_host
     @{Principal/keytab pairs for client,server or aii roles (default client role with host/fqdn princiapl and /etc/krb5.keytab keytab)}
     'principals' ? component_${project.artifactId}_principal{} with {
-        foreach (k;v;SELF) {
+        foreach (k; v; SELF) {
             if (!match(k, '^(client|server|aii)$')) {
                 error(format("Unsupported principal %s (must be one of client, server or aii)", k));
             };

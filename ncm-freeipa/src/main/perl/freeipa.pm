@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::${project.artifactId}${PMpost}
+#${PMcomponent}
 use base qw(NCM::Component CAF::Path);
 
 =head1 DESCRIPTION
@@ -138,9 +138,9 @@ Readonly my $HOST_CERTIFICATE_NICK => 'host';
 Readonly my %HOST_CERTIFICATE => {
     owner => 'root',
     group => 'root',
-    mode => 0400,
+    mode => oct(400),
     key => "$IPA_QUATTOR_BASEDIR/keys/host.key",
-    certmode => 0444,
+    certmode => oct(444),
     cert => "$IPA_QUATTOR_BASEDIR/certs/host.pem",
 };
 
