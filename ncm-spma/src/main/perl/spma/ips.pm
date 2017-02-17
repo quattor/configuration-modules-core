@@ -76,7 +76,7 @@ sub load_installed_set
     my ($self) = @_;
     my $set = Set::Scalar->new();
 
-    my $proc = CAF::Process->new(PKG_LIST, log => $self);
+    my $proc = CAF::Process->new(PKG_LIST, log => $self, keeps_state => 1);
     my @output = split /\n/, $proc->output();
     die "cannot get list of packages" if $?;
     for my $line (@output) {
@@ -108,7 +108,7 @@ sub frozen_ips
     my ($self) = @_;
 
     my %hash;
-    my $proc = CAF::Process->new(PKG_LIST_V, log => $self);
+    my $proc = CAF::Process->new(PKG_LIST_V, log => $self, keeps_state => 1);
     my $out = $proc->output();
 
     my @output;
@@ -151,7 +151,7 @@ sub image_create
     # N.B. this is incomplete as it only copies the publisher URI
     # and does not currently take account of other publisher properties
     #
-    my $proc = CAF::Process->new(PKG_PUBLISHER, log => $self);
+    my $proc = CAF::Process->new(PKG_PUBLISHER, log => $self, keeps_state => 1);
     my $out = $proc->output();
     die "cannot get publishers" if $?;
 
@@ -203,7 +203,7 @@ sub image_create
         # that can be used for package operations
         #
         my $cmd = PKG_IMAGE_CREATE;
-        my $proc = CAF::Process->new($cmd, log => $self);
+        my $proc = CAF::Process->new($cmd, log => $self, keeps_state => 1);
         $proc->pushargs($newdir);
         $proc->run();
         die "failed to create image" if $?;
@@ -213,7 +213,7 @@ sub image_create
         # file earlier
         #
         for $cmd (@pubcmds) {
-            $proc = CAF::Process->new($cmd, log => $self);
+            $proc = CAF::Process->new($cmd, log => $self, keeps_state => 1);
             $proc->run();
             die "failed to set publisher in image directory: '" .
                 join(" ", @$cmd) . "' failed" if $?;
@@ -364,7 +364,7 @@ sub run_pkg_command
     #   (4 for /usr/bin/pkg, 1 for /usr/bin/spma-run)
     #
     my ($self, $cmd, $log, $exit_void) = @_;
-    my $proc = CAF::Process->new($cmd, log => $self);
+    my $proc = CAF::Process->new($cmd, log => $self, keeps_state => 1);
     my $output = $proc->output();
     $output = "" unless defined($output);
 
