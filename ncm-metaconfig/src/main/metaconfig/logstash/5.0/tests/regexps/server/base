@@ -100,7 +100,6 @@ multiline
 ^\}$
 ^output \{$
 ^\s{4}elasticsearch \{$
-^\s{8}mapping = \{ 'index_type' => 'document_type' \};$
 ^\s{8}template_overwrite => true$
 ^\s{8}document_type => "%\{@type\}"$
 ^\s{8}index => "%\{\[@metadata\]\[target_index\]\}"$

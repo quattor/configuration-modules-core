@@ -1,8 +1,4 @@
-[%- IF (_logstashversion.0 >= 2);
-        mapping = { 'index_type' => 'document_type' };
-    ELSE;
-        mapping = { 'document_type' => 'index_type' };
-    END -%]
+[%- mapping = { 'index_type' => 'document_type' }; -%]
 [%- INCLUDE "metaconfig/logstash/2.0/config/type.tt" type="boolean" names=['embedded', 'template_overwrite'] -%]
 [%- INCLUDE "metaconfig/logstash/2.0/config/type.tt" type="string" 
             names=['bind_host', 'cluster', 'index', 'index_type', 'document_type'] mapping=mapping -%]

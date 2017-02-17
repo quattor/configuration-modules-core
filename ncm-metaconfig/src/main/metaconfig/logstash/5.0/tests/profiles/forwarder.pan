@@ -1,5 +1,7 @@
 object template forwarder;
 
+variable METACONFIG_LOGSTASH_VERSION = '5.0';
+
 include 'metaconfig/logstash/forwarder';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash-forwarder.conf}/contents";

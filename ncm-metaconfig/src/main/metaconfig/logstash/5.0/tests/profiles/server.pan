@@ -1,13 +1,13 @@
 object template server;
 
-variable METACONFIG_LOGSTASH_VERSION ?= '5.0';
-variable SYSLOG_RELAY_PORT ?= 5678;
-variable BEAT_RELAY_PORT ?= 26001;
-variable CERT_PKCS8_PASSPHRASE ?= 'DUMMY';
+variable METACONFIG_LOGSTASH_VERSION = '5.0';
+variable SYSLOG_RELAY_PORT = 5678;
+variable BEAT_RELAY_PORT = 26001;
+variable CERT_PKCS8_PASSPHRASE = 'DUMMY';
 
 include 'metaconfig/logstash/config';
 
-variable SYSLOG_GROK_PATTERNS ?= {
+variable SYSLOG_GROK_PATTERNS = {
     # keep this list in sync with logstash-patterns rpm
     patterns = list('ssh', 'modulecmd', 'lmod', 'nfs', 'ceph', 'opennebula', 'jube', 'keyvalue', 'quattor', 'snoopy');
     foreach(idx; pattern; patterns) {
