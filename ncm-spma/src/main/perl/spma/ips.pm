@@ -393,7 +393,11 @@ sub run_pkg_command
     if ($do_err) {
         $self->error($output);
         die "$$cmd[0] $sdesc";
-    } elsif ($log) {
+    }
+
+    $self->verbose($output);
+
+    if ($log) {
         $self->log($output);
     }
     $self->log("$$cmd[0] $sdesc") if ! $do_err;
