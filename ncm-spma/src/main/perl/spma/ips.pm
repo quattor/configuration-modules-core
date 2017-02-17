@@ -167,7 +167,7 @@ sub image_create
         my ($publisher, $sticky, $syspub, $enabled, $type,
             $status, $uri, $proxy) = split;
 
-        next unless $enabled eq 'true' and defined($uri);
+        next unless $enabled eq 'true' and $type eq 'origin' and defined($uri);
 
         my $cmd = PKG_SET_PUBLISHER;
         my @cmd = @$cmd;
