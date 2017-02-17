@@ -22,9 +22,14 @@ prefix '/software/components/${project.artifactId}';
     '/software/uninstall',
 );
 
+'whitepaths' = list(
+    '/software/whitelist',
+);
+
 'register_change' = list(
     '/software/catalogues',
     '/software/requests',
+    '/software/whitelist',
     '/software/uninstall',
 );
 
