@@ -330,9 +330,6 @@ sub Configure
     my $tree_sources = $config->getTree($TREE_SOURCES);
     my $tree_pkgs = $config->getTree($TREE_PKGS);
     my $tree_component = $config->getTree($self->prefix());
-    # Convert these crappily-defined fields into real Perl booleans.
-    $tree_component->{run} = $tree_component->{run} eq 'yes';
-    $tree_component->{userpkgs} = ($tree_component->{userpkgs} || "no") eq 'yes';
 
     $self->configure_apt($tree_component) or return 0;
 

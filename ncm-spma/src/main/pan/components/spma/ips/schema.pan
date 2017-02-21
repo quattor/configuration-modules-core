@@ -23,6 +23,10 @@ type component_spma_ips = {
     include structure_component
     include component_spma_common
     "ips" ? component_spma_ips_type
+    @{ Run the SPMA after configuring it }
+    "run" ? legacy_binary_affirmation_string
+    @{ Allow user installed (i.e. unmanaged) packages to be present on the system }
+    "userpkgs" ? legacy_binary_affirmation_string
 };
 
 bind "/software/components/spma" = component_spma_ips;
