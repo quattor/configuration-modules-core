@@ -48,7 +48,6 @@ my $sourcefiles;
 
 
 $mock->mock('_glob', sub {
-    print $sourcefiles, "\n";
     return @$sourcefiles;
 });
 
