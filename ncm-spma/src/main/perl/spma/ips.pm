@@ -126,8 +126,8 @@ sub frozen_ips
 
 #
 # Take array of package names / versions, i.e. output of pkg_keys(),
-# and return a hash containing just those packages that are currently
-# installed on the system at the given version number
+# by reference and return a hash containing just those packages that are
+# currently installed on the system at the given version number
 #
 sub get_exact_pkgs
 {
@@ -443,7 +443,7 @@ sub run_pkg_command
 
 #
 # Get pkg@ver keys from hash where ver is actually the value.
-# Can be given an existing array to amend.
+# Can be given an existing array, by reference, to amend.
 #
 sub pkg_keys
 {
