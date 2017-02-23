@@ -1,4 +1,46 @@
-#${PMpre} NCM::Component::download${PMpost}
+#${PMcomponent}
+
+=head1 DESCRIPTION
+
+Downloads files onto the local machine during the configuration,
+and optionally post-processes the files.
+
+The download is achieved by invoking C<curl>,
+so any URLs acceptable to C<curl> (and C<LWP::UserAgent>)
+(including local C<file://> URLs) are allowed.
+
+A file is only downloaded if following conditions are met:
+
+=over
+
+=item The timestamp of the source can be retrieved
+
+=item The timestamp of the source is more recent than
+the current file (if such file exists);
+unless the C<allow_older> attribute is set.
+
+=item The remote timestamp is not too recent.
+
+=back
+
+=head1 EXAMPLES
+
+    "/software/components/download" = dict(
+        "server", "mydownloadserver.com",
+        "proto",  "http",
+    );
+    prefix "/software/components/download/files";
+    "{/etc/passwd}" = dict(
+        "href", "https://secure.my.domain",
+        "post", "/usr/local/mk_passwd",
+    );
+    "{/usr/local/foo.txt}" = dict(
+        "href", "file:///etc/foo.txt",
+        "owner", "john",
+        "perm", "0400",
+    );
+
+=cut
 
 use parent qw(NCM::Component CAF::Path);
 
@@ -162,6 +204,7 @@ sub download
         head_timeout => $file->{head_timeout},
         # TODO: timeout used to be only per file for proxies, and not at all for non-proxy
         timeout => $file->{timeout},
+        allow_older => $file->{allow_older},
         );
 
     my $success = 0;
@@ -310,14 +353,23 @@ sub retrieve
     # file doesn't exist
     my $timestamp_existing = 0;
     if ($self->file_exists($fn)) {
-        $timestamp_existing  = (stat($fn))[9];
+        $timestamp_existing = (stat($fn))[9];
     }
 
     # Turn minutes into seconds and calculate the threshold that the remote timestamp must be below
     my $timestamp_threshold = (time() - ($min_age * 60));
     my $timestamp_remote = $self->get_remote_timestamp($source, %opts);
     if ($timestamp_remote) {
-        if ($timestamp_remote > $timestamp_existing) { # If local file doesn't exist, this still works
+        my ($timecheck, $timecheck_msg);
+        # If local file doesn't exist, this still works
+        if ($opts{allow_older}) {
+            $timecheck = $timestamp_remote != $timestamp_existing;
+            $timecheck_msg = 'has same timestamp';
+        } else {
+            $timecheck = $timestamp_remote > $timestamp_existing;
+            $timecheck_msg = 'is not newer';
+        };
+        if ($timecheck) {
             if ($timestamp_remote <= $timestamp_threshold) { # Also prevents future files
                 $self->_cleanup_tmpfile($tmpfn);
                 my $proc = CAF::Process->new(\@cmd, stderr => \my $errs, log => $self);
@@ -351,7 +403,7 @@ sub retrieve
                 return 1;
             }
         } else {
-            $self->debug(1, "Remote file is not newer than existing local copy, nothing retrieved");
+            $self->debug(1, "Remote file $timecheck_msg than existing local copy, nothing retrieved");
             return 1;
         }
     } else {
