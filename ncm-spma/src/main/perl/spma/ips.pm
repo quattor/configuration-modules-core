@@ -466,11 +466,18 @@ sub pkg_keys
 #
 sub pkg_has_exact_install
 {
+    my $self = shift;
     my $stderr;
     my $proc = CAF::Process->new(PKG_HELP, stderr => \$stderr,
                                  keeps_state => 1);
     $proc->execute();
-    return scalar(grep /exact-install/, split('\n', $stderr));
+    my $result = scalar(grep /exact-install/, split('\n', $stderr));
+    if ($result == 0) {
+        $self->info("This system does not have pkg exact-install");
+    } else {
+        $self->info("This system has pkg exact-install");
+    }
+    return $result;
 }
 
 #
@@ -501,21 +508,28 @@ sub update_ips
     }
 
     my $exact_install;
-    unless ($allow_user_pkgs or scalar(%$uninst)) {
-        #
-        # Determine whether this version of Solaris is new enough to support
-        # the pkg exact-install command, which speeds this process up
-        #
-        $exact_install = $self->pkg_has_exact_install();
-    } else {
+    if ($allow_user_pkgs) {
         #
         # If we are allowing user packages, we will not use pkg exact-install
+        #
+        $exact_install = 0;
+        $self->info("Allowing user packages, will not use pkg exact-install");
+    } elsif (scalar(%$uninst)) {
         #
         # If there are packages on the uninstall list, then we cannot
         # use pkg exact-install even if it is available, because it will
         # do the wrong thing and remove orphan dependencies as well
         #
         $exact_install = 0;
+        $self->info("Packages found on uninstall list, will not use " .
+                    "pkg exact-install which would also remove orphan " .
+                    "dependencies");
+    } else {
+        #
+        # Determine whether this version of Solaris is new enough to support
+        # the pkg exact-install command, which speeds this process up
+        #
+        $exact_install = $self->pkg_has_exact_install();
     }
 
     #
