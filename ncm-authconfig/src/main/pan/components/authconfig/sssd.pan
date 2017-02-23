@@ -31,7 +31,7 @@ type authconfig_sssd_simple = {
 type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
 
 type sssd_global = {
-    "debug_level" : long = 0x0210
+    "debug_level" : long = 0x01F0
     "config_file_version" : long = 2
     "services" : sssd_service[]
     "reconnection_retries" : long = 3
@@ -43,7 +43,7 @@ type sssd_global = {
 };
 
 type sssd_pam = {
-    "debug_level" : long = 0x0210
+    "debug_level" : long = 0x01F0
     "offline_credentials_expiration" : long = 0
     "offline_failed_login_attempts" : long = 0
     "offline_failed_login_delay" : long =  5
@@ -54,7 +54,7 @@ type sssd_pam = {
 };
 
 type sssd_nss = {
-    "debug_level" : long = 0x0210
+    "debug_level" : long = 0x01F0
     "enum_cache_timeout" : long = 120
     "entry_cache_nowait_percentage" ? long
     "entry_negative_timeout" : long = 15
@@ -84,7 +84,7 @@ type authconfig_sssd_domain  = {
     "id_provider" ? sssd_provider_string
     "auth_provider" ? sssd_provider_string
     "chpass_provider" ? sssd_provider_string
-    "debug_level" : long = 0x0210
+    "debug_level" : long = 0x01F0
     "sudo_provider" ? string
     "selinux_provider" ? string
     "subdomains_provider" ? string
@@ -104,6 +104,7 @@ type authconfig_sssd_domain  = {
     "min_id" : long = 1
     "max_id" : long = 0
     "enumerate" : boolean = false
+    "timeout" : long = 10
     "force_timeout" : long = 60
     "entry_cache_timeout" : long = 5400
     "entry_cache_user_timeout" ? long
@@ -112,6 +113,7 @@ type authconfig_sssd_domain  = {
     "entry_cache_service_timeout" ? long
     "entry_cache_sudo_timeout" ? long
     "entry_cache_autofs_timeout" ? long
+    "refresh_expired_interval" ? long
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long = 0
     "pwd_expiration_warning" ? long
