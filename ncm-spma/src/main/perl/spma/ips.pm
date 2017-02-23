@@ -467,7 +467,8 @@ sub pkg_keys
 sub pkg_has_exact_install
 {
     my $stderr;
-    my $proc = CAF::Process->new(PKG_HELP, stderr => \$stderr);
+    my $proc = CAF::Process->new(PKG_HELP, stderr => \$stderr,
+                                 keeps_state => 1);
     $proc->execute();
     return scalar(grep /exact-install/, split('\n', $stderr));
 }
