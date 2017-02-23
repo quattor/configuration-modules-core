@@ -10,10 +10,14 @@ type multipath_defaults_features = list with length(SELF) == 2 && is_long(SELF[0
     SELF[0] == length(SELF[1]) && match(SELF[1][0], '^(queue_if_no_path|no_partitions)$');
 
 type multipath_types_shared = {
-    'path_grouping_policy' ? string with match(SELF, '^(failover|multibus|group_by_serial|group_by_prio|group_by_node_name)$') # default multibus
-    'path_selector' ? multipath_defaults_path_selector  # The default path selector algorithm
-    'prio' ? string with match(SELF, '^(const|emc|alua|tpg_pref|ontap|rdac|hp_sw|hds)$') # how to get default path prio, default const
-    'failback' ? string with match(SELF, '^(immediate|manual|followover)$') || to_long(SELF) > 0 # how to manage path group failback, default manual
+    'path_grouping_policy' ? string with match(SELF,
+        '^(failover|multibus|group_by_serial|group_by_prio|group_by_node_name)$')
+    @{ The default path selector algorithm }
+    'path_selector' ? multipath_defaults_path_selector
+    @{ how to get default path prio, default const }
+    'prio' ? string with match(SELF, '^(const|emc|alua|tpg_pref|ontap|rdac|hp_sw|hds)$')
+    @{ how to manage path group failback, default manual }
+    'failback' ? string with match(SELF, '^(immediate|manual|followover)$') || to_long(SELF) > 0
     'rr_min_io' ? long(0..) # default 1000
     'rr_min_io_rq' ? long(0..) # default 1
     'rr_weight' ? string
@@ -27,9 +31,11 @@ type multipath_types_multipaths_only = {
 
 type multipath_types_devices_only = {
     'getuid_callout' ? string # default /lib/udev/scsi_id --whitelisted --device=/dev/%n
-    'path_checker' ? string with match(SELF, '^(readsector0|tur|emc_clariion|hp_sw|rdac|directio)$') # detemine path state, default readsector0
+    @{ detemine path state, default readsector0 }
+    'path_checker' ? string with match(SELF, '^(readsector0|tur|emc_clariion|hp_sw|rdac|directio)$')
     'features' ? multipath_defaults_features
-    'fast_io_fail_tmo' ? boolean # default false
+    @{ default timeout in seconds determined by OS}
+    'fast_io_fail_tmo' ? string with match(SELF, '^(off)$') || to_long(SELF) > 0
     'dev_loss_tmo' ? long(0..)
     'retain_attached_hw_handler' ? boolean # default false
     'detect_prio' ? boolean # default false
@@ -44,7 +50,7 @@ type multipath_multipaths = {
 
 type multipath_device_blacklist = {
     "vendor" : string
-    "product" : string
+    "product" ? string
 };
 
 type multipath_device = {
@@ -69,7 +75,8 @@ type multipath_defaults = {
 
     'polling_interval' ? long(0..) # path check polling interval (default 5)
     'udev_dir' ? string # default /dev
-    'multipath_dir' ? string #  directory where the dynamic shared objects are stored; default is system dependent, commonly /lib/multipath
+    @{ directory where the dynamic shared objects are stored; default is system dependent, commonly /lib/multipath }
+    'multipath_dir' ? string
     'find_multipaths' ? boolean # default false
     'verbosity' ? long(0..6) # default 2
     'user_friendly_names' ? boolean # default false
