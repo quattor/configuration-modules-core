@@ -379,6 +379,7 @@ sub merge_pkg_paths
 
 #
 # Runs pkg or spma-run command and interprets exit status.
+# Note that this is only suitable for commands that do not change state.
 #
 sub run_pkg_command
 {
