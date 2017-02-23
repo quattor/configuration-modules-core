@@ -9,9 +9,14 @@ include 'components/spma/schema';
 
 type component_spma_ips_type = {
     "bename" ? string         # BE name to use with IPS commands
-    "rejectidr" : boolean = true # Reject Solaris IDRs on upgrade?
+    "cachedir" ? string # SPMA cache directory
+    "cmdfile" : string = "/var/tmp/spma-commands" # where to save commands for spma-run script
+    "flagfile" ? string # touch this file if there is work to do (i.e. spma-run --execute)
     "freeze" : boolean = true # Ignore frozen packages?
     "imagedir" ? string         # Override temporary image directory
+    "pkgpaths" : string[] = list("/software/packages") # where to find package definitions
+    "rejectidr" : boolean = true # Reject Solaris IDRs on upgrade?
+    "uninstpaths" ? string[] # where to find uninstall definitions
 };
 
 type component_spma_ips = {
