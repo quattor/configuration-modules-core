@@ -4,7 +4,7 @@ use LC::Exception qw (throw_error);
 use LC::Process qw (output);
 use Cwd qw(abs_path);
 use NCM::Filesystem;
-use NCM::Partition qw (partition_compare);
+use NCM::Partition 16.12.1 qw (partition_sort);
 use CAF::Object;
 
 use constant PROTECTED_PATH => "/software/components/fstab/protected_mounts";
@@ -95,7 +95,7 @@ sub Configure
 		my $el2 = $el->getNextElement;
 		push (@part, NCM::Partition->new ($el2->getPath->toString, $config, log => $self));
 	}
-	foreach (sort partition_compare @part) {
+	foreach (partition_sort(@part)) {
 		if ($_->create != 0) {
 			throw_error ("Couldn't create partition: " . $_->devpath);
 			return 0;
