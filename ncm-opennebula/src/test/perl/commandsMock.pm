@@ -25,7 +25,7 @@ sub mock_run_command {
     }
 };
 
-our $onecmd = Test::MockModule->new('NCM::Component::OpenNebula::commands');
+our $onecmd = Test::MockModule->new('NCM::Component::OpenNebula::Commands');
 $onecmd->mock( 'run_command',  \&mock_run_command);
 
 1;

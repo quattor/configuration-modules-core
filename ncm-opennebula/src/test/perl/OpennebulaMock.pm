@@ -12,6 +12,7 @@ use rpcdata;
 
 our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 
+
 BEGIN {
   *CORE::GLOBAL::getpwnam = sub { 
         my @ids = qw(1 2 3 4);
@@ -39,6 +40,11 @@ foreach my $getnam ("getpwnam", "getgrnam") {
 sub dump_rpc {
     return explain(\@rpc_history);
 }
+
+# or
+#sub dump_rpc {
+#    return Dumper(\@rpc_history);
+#}
 
 sub diag_rpc_history {
     diag("DEBUG rpc_history ".join(", ", @rpc_history));

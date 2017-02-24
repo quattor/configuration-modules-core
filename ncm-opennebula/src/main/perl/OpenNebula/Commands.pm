@@ -1,18 +1,5 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+#${PMpre} NCM::Component::OpenNebula::Commands${PMpost}
 
-
-# This component needs a 'oneadmin' user. 
-# The user should be able to run these commands with sudo without password:
-# /usr/bin/virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml
-# /usr/bin/virsh secret-set-value --secret $uuid --base64 $secret
-
-package NCM::Component::OpenNebula::commands;
-
-use strict;
-use warnings;
 use LC::Exception;
 use LC::Find;
 use CAF::FileWriter;
@@ -33,8 +20,36 @@ Readonly::Array my @ONEHOST_SYNC_COMMAND => qw(/usr/bin/onehost sync -f);
 
 my $sshcmd=[];
 
+=head1 NAME
 
-# Sub to set $sshcmd
+C<NCM::Component::OpenNebula::Commands> Configuration module for ONE
+
+=head1 DESCRIPTION
+
+Configuration module for OpenNebula. Executes the required ssh commands
+to enable the hosts to be used by the cloud server.
+
+This component needs a 'oneadmin' user. 
+The user should be able to run these commands with sudo without password:
+
+=over
+
+=item C<virsh secret-define --file /var/lib/one/templates/secret/secret_ceph.xml>
+
+=item C<virsh secret-set-value --secret $uuid --base64 $secret>
+
+=back
+
+=head2 Public methods
+
+=over
+
+=item set_ssh_command
+
+Sets C<$sshcmd>.
+
+=cut
+
 sub set_ssh_command
 {
     my ($self, $usemultiplex) = @_;
@@ -45,7 +60,13 @@ sub set_ssh_command
     }
 }
 
-# Run a command and return the output
+=item run_command
+
+Executes a command and return the output.
+Returns sdout and stderr array.
+
+=cut
+
 sub run_command {
     my ($self, $command, $secret) = @_;
     my ($cmd_output, $cmd_err, $cmd);
@@ -65,28 +86,48 @@ sub run_command {
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
 }
 
-# Run a command prefixed with virsh and return the output
+=item run_virsh_as_oneadmin_with_ssh
+
+Executes a command prefixed with C<virsh> and returns the output.
+
+=cut
+
 sub run_virsh_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @VIRSH_COMMAND, @$command], $secret);
 }
 
-# Run oneuser and return the output
+=item run_oneuser_as_oneadmin_with_ssh
+
+Executes C<oneuser> command and returns the output.
+
+=cut
+
 sub run_oneuser_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEUSER_PASS_COMMAND, @$command], $secret);
 }
 
-# Run onehost to sync hyps VMMs scripts
+=item run_onehost_as_oneadmin_with_ssh
+
+Executes C<onehost> command to sync hosts VMMs scripts.
+
+=cut
+
 sub run_onehost_as_oneadmin_with_ssh {
     my ($self, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @ONEHOST_SYNC_COMMAND], $secret);
 }
 
-# Checks for shell escapes
+=item has_shell_escapes
+
+Checks for shell escapes.
+
+=cut
+
 sub has_shell_escapes {
     my ($self, $cmd) = @_;
     if (grep(m{[;&>|"']}, @$cmd) ) {
@@ -97,7 +138,12 @@ sub has_shell_escapes {
     return 1;
 }
 
-# Runs a command as the oneadmin user
+=item run_command_as_oneadmin
+
+Executes a command as C<oneadmin> user.
+
+=cut
+
 sub run_command_as_oneadmin {
     my ($self, $command, $secret) = @_;
     
@@ -106,14 +152,24 @@ sub run_command_as_oneadmin {
     return $self->run_command([@SU_ONEADMIN_COMMAND, @$command], $secret);
 }
 
-# Runs a command as oneadmin over ssh, optionally with options
+=item run_command_as_oneadmin_with_ssh
+
+Executes a command as C<oneadmin> over ssh, optionally with options.
+
+=cut
+
 sub run_command_as_oneadmin_with_ssh {
     my ($self, $command, $host, $secret, $ssh_options) = @_;
     $ssh_options = [] if (! defined($ssh_options));
     return $self->run_command_as_oneadmin([@$sshcmd, @$ssh_options, $host, @$command], $secret);
 }
 
-# Accept and add unknown keys if wanted
+=item ssh_known_keys
+
+Accepts and adds unknown keys if wanted.
+
+=cut
+
 sub ssh_known_keys {
     my ($self, $host, $key_accept, $homedir) = @_; 
     if ($key_accept eq 'first'){
@@ -137,11 +193,22 @@ sub ssh_known_keys {
     }   
 }
 
-# check if host is reachable
+=item can_connect_to_host
+
+Checks if the host is reachable or not.
+
+=cut
+
 sub can_connect_to_host {
     my ($self, $host) = @_;
     $self->ssh_known_keys($host, 'always', '~');
     return $self->run_command_as_oneadmin_with_ssh(['uname'], $host);
 }
+
+=pod
+
+=back
+
+=cut
 
 1;

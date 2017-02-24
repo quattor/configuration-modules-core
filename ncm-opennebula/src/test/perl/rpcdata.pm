@@ -196,7 +196,7 @@ $cmds{rpc_delete_vnet3}{out} = 98;
 $cmds{rpc_list_vnetspool}{params} = [-2, -1, -1];
 $cmds{rpc_list_vnetspool}{method} = "one.vnpool.info";
 $cmds{rpc_list_vnetspool}{out} = <<'EOF';
-<VNET_POOL><VNET><ID>68</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TYPE>1</TYPE><BRIDGE>br100</BRIDGE><VLAN>0</VLAN><PHYDEV/><VLAN_ID/><GLOBAL_PREFIX/><SITE_PREFIX/><TOTAL_LEASES>1</TOTAL_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[NO]]></VLAN><VLAN_ID><![CDATA[]]></VLAN_ID></TEMPLATE></VNET><VNET><ID>98</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>pool.altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>br100</BRIDGE><VLAN>1</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><BRIDGE_OVS><![CDATA[ovsbr0]]></BRIDGE_OVS><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[0]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.141.14.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[29]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET></VNET_POOL>
+<VNET_POOL><VNET><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TYPE>1</TYPE><BRIDGE>br100</BRIDGE><VLAN>0</VLAN><PHYDEV/><VLAN_ID/><GLOBAL_PREFIX/><SITE_PREFIX/><TOTAL_LEASES>1</TOTAL_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[NO]]></VLAN><VLAN_ID><![CDATA[]]></VLAN_ID></TEMPLATE></VNET><AR_POOL><AR><ALLOCATED><![CDATA[068719476737]]></ALLOCATED><AR_ID><![CDATA[0]]></AR_ID><GLOBAL_PREFIX/><HOSTNAME><![CDATA[node630.cubone.os]]></HOSTNAME><IP><![CDATA[10.141.8.30]]></IP><MAC><![CDATA[AA:00:00:80:01:00]]></MAC><QUATTOR><![CDATA[1]]></QUATTOR><SIZE><![CDATA[1]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><ULA_PREFIX/></AR></AR_POOL><VNET><ID>98</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>pool.altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>br100</BRIDGE><VLAN>1</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><BRIDGE_OVS><![CDATA[ovsbr0]]></BRIDGE_OVS><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[0]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.141.14.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[29]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET></VNET_POOL>
 EOF
 
 $cmds{rpc_list_vnetspool2}{params} = [];
@@ -220,7 +220,7 @@ EOF
 $cmds{rpc_list_vnet3}{params} = [0];
 $cmds{rpc_list_vnet3}{method} = "one.vn.info";
 $cmds{rpc_list_vnet3}{out} = <<'EOF';
-<VNET><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>altaria.vsc</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TYPE>1</TYPE><BRIDGE>br101</BRIDGE><VLAN>0</VLAN><PHYDEV/><VLAN_ID/><GLOBAL_PREFIX/><SITE_PREFIX/><TOTAL_LEASES>1</TOTAL_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[NO]]></VLAN><VLAN_ID><![CDATA[]]></VLAN_ID></TEMPLATE><LEASES><LEASE><MAC>02:00:0a:8d:08:1e</MAC><IP>10.141.8.30</IP><IP6_LINK>fe80::400:aff:fe8d:81e</IP6_LINK><USED>1</USED><VID>55</VID></LEASE></LEASES></VNET>
+<VNET><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>br100</BRIDGE><VLAN>0</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID/><USED_LEASES>1</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NAME><![CDATA[altaria.os]]></NAME><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><TYPE><![CDATA[FIXED]]></TYPE><VLAN><![CDATA[NO]]></VLAN><VLAN_ID><![CDATA[]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><GLOBAL_PREFIX><![CDATA[]]></GLOBAL_PREFIX><HOSTNAME><![CDATA[node630.cubone.os]]></HOSTNAME><IP><![CDATA[10.141.8.30]]></IP><MAC><![CDATA[AA:00:00:80:01:00]]></MAC><QUATTOR><![CDATA[1]]></QUATTOR><SIZE><![CDATA[1]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><ULA_PREFIX><![CDATA[]]></ULA_PREFIX><USED_LEASES>1</USED_LEASES><LEASES><LEASE><IP><![CDATA[10.141.8.30]]></IP><MAC><![CDATA[AA:00:00:80:01:00]]></MAC><VM><![CDATA[1]]></VM></LEASE></LEASES></AR></AR_POOL></VNET>
 EOF
 
 $cmds{rpc_list_vnet4}{params} = [98];
@@ -295,9 +295,135 @@ VLAN_ID = "0"
 VN_MAD = "ovswitch"
 QUATTOR = 1
 EOF
-$cmds{rpc_update_vnetar}{params} = [98, $data];
-$cmds{rpc_update_vnetar}{method} = "one.vn.update_ar";
-$cmds{rpc_update_vnetar}{out} = 98;
+$cmds{rpc_update_vnet_ar}{params} = [98, $data];
+$cmds{rpc_update_vnet_ar}{method} = "one.vn.update_ar";
+$cmds{rpc_update_vnet_ar}{out} = 98;
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "172.24.8.30",
+    MAC = "AA:00:00:80:01:01",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar1}{params} = [2, $data];
+$cmds{rpc_create_vnet_ar1}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar1}{out} = 0;
+
+$data = <<'EOF';
+
+AR = [
+    AR_ID = "0",
+    TYPE = "IP4",
+    IP = "172.24.8.30",
+    MAC = "AA:00:00:80:01:01",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_update_vnet_ar1}{params} = [2, $data];
+$cmds{rpc_update_vnet_ar1}{method} = "one.vn.update_ar";
+$cmds{rpc_update_vnet_ar1}{out} = 0;
+
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "10.141.8.30",
+    MAC = "AA:00:00:80:01:00",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar2}{params} = [0, $data];
+$cmds{rpc_create_vnet_ar2}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar2}{out} = 0;
+
+
+$data = <<'EOF';
+
+AR = [
+    AR_ID = "0",
+    TYPE = "IP4",
+    IP = "10.141.8.30",
+    MAC = "AA:00:00:80:01:00",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_update_vnet_ar2}{params} = [0, $data];
+$cmds{rpc_update_vnet_ar2}{method} = "one.vn.update_ar";
+$cmds{rpc_update_vnet_ar2}{out} = 0;
+
+$cmds{rpc_remove_vnet_ar2}{params} = [0, 0];
+$cmds{rpc_remove_vnet_ar2}{method} = "one.vn.rm_ar";
+$cmds{rpc_remove_vnet_ar2}{out} = 0;
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "10.141.8.31",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar3}{params} = [0, $data];
+$cmds{rpc_create_vnet_ar3}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar3}{out} = 0;
+
+$cmds{rpc_update_vnet_ar3}{params} = [0, $data];
+$cmds{rpc_update_vnet_ar3}{method} = "one.vn.update_ar";
+$cmds{rpc_update_vnet_ar3}{out} = 0;
+
+$cmds{rpc_remove_vnet_ar3}{params} = [0, 0];
+$cmds{rpc_remove_vnet_ar3}{method} = "one.vn.rm_ar";
+$cmds{rpc_remove_vnet_ar3}{out} = 0;
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "10.141.8.31",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar3}{params} = [0, $data];
+$cmds{rpc_create_vnet_ar3}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar3}{out} = 0;
+
+$data = <<'EOF';
+
+AR = [
+    TYPE = "IP4",
+    IP = "10.141.8.32",
+    QUATTOR = "1",
+    HOSTNAME = "node630.cubone.os",
+    SIZE = "1"
+]
+EOF
+$cmds{rpc_create_vnet_ar4}{params} = [0, $data];
+$cmds{rpc_create_vnet_ar4}{method} = "one.vn.add_ar";
+$cmds{rpc_create_vnet_ar4}{out} = 0;
+
+$cmds{rpc_update_vnet_ar4}{params} = [0, $data];
+$cmds{rpc_update_vnet_ar4}{method} = "one.vn.update_ar";
+$cmds{rpc_update_vnet_ar4}{out} = 0;
+
+$cmds{rpc_remove_vnet_ar4}{params} = [0, 0];
+$cmds{rpc_remove_vnet_ar4}{method} = "one.vn.rm_ar";
+$cmds{rpc_remove_vnet_ar4}{out} = 0;
 
 # Manage Datastores
 
@@ -469,34 +595,50 @@ EOF
 $cmds{rpc_list_vmspool}{params} = [-2, -1, -1, -1];
 $cmds{rpc_list_vmspool}{method} = "one.vmpool.info";
 $cmds{rpc_list_vmspool}{out} = <<'EOF';
-<VM_POOL><VM><ID>60</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux-60</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><LAST_POLL>1410855058</LAST_POLL><STATE>3</STATE><LCM_STATE>3</LCM_STATE><RESCHED>0</RESCHED><STIME>1410854434</STIME><ETIME>0</ETIME><DEPLOY_ID>one-60</DEPLOY_ID><MEMORY>524288</MEMORY><CPU>3</CPU><NET_TX>0</NET_TX><NET_RX>0</NET_RX><TEMPLATE><AUTOMATIC_REQUIREMENTS><![CDATA[!(PUBLIC_CLOUD=YES)]]></AUTOMATIC_REQUIREMENTS><CONTEXT><DISK_ID><![CDATA[1]]></DISK_ID><NETWORK><![CDATA[YES]]></NETWORK><TARGET><![CDATA[hdb]]></TARGET></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[none]]></CACHE><CEPH_HOST><![CDATA[ceph021.altaria.osceph022.altaria.osceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8271ce8a-385d-44d7-a228-c42de4259c5e]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE><![CDATA[YES]]></CLONE><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE><![CDATA[ceph.altaria]]></DATASTORE><DATASTORE_ID><![CDATA[105]]></DATASTORE_ID><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><DISK_ID><![CDATA[0]]></DISK_ID><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_ID><![CDATA[43]]></IMAGE_ID><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME><LN_TARGET><![CDATA[NONE]]></LN_TARGET><READONLY><![CDATA[NO]]></READONLY><SAVE><![CDATA[NO]]></SAVE><SIZE><![CDATA[40]]></SIZE><SOURCE><![CDATA[one/one-43]]></SOURCE><TARGET><![CDATA[hda]]></TARGET><TM_MAD><![CDATA[ceph]]></TM_MAD><TYPE><![CDATA[RBD]]></TYPE></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><PORT><![CDATA[5960]]></PORT><TYPE><![CDATA[VNC]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><TEMPLATE_ID><![CDATA[4]]></TEMPLATE_ID><VMID><![CDATA[60]]></VMID></TEMPLATE><USER_TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><SCHED_MESSAGE><![CDATA[TueSep1610:04:002014:NosystemdatastoresfoundtorunVMs]]></SCHED_MESSAGE></USER_TEMPLATE><HISTORY_RECORDS><HISTORY><OID>60</OID><SEQ>0</SEQ><HOSTNAME>hyp101</HOSTNAME><HID>190</HID><CID>-1</CID><STIME>1410854670</STIME><ETIME>0</ETIME><VMMMAD>kvm</VMMMAD><VNMMAD>dummy</VNMMAD><TMMAD>shared</TMMAD><DS_LOCATION>/var/lib/one//datastores</DS_LOCATION><DS_ID>106</DS_ID><PSTIME>1410854670</PSTIME><PETIME>1410854671</PETIME><RSTIME>1410854671</RSTIME><RETIME>0</RETIME><ESTIME>0</ESTIME><EETIME>0</EETIME><REASON>0</REASON><ACTION>0</ACTION></HISTORY></HISTORY_RECORDS></VM></VM_POOL>
+<VM_POOL><VM><ID>60</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux-60</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><LAST_POLL>1410855058</LAST_POLL><STATE>3</STATE><LCM_STATE>3</LCM_STATE><RESCHED>0</RESCHED><STIME>1410854434</STIME><ETIME>0</ETIME><DEPLOY_ID>one-60</DEPLOY_ID><MEMORY>524288</MEMORY><CPU>3</CPU><NET_TX>0</NET_TX><NET_RX>0</NET_RX><TEMPLATE><AUTOMATIC_REQUIREMENTS><![CDATA[!(PUBLIC_CLOUD=YES)]]></AUTOMATIC_REQUIREMENTS><CONTEXT><DISK_ID><![CDATA[1]]></DISK_ID><NETWORK><![CDATA[YES]]></NETWORK><TARGET><![CDATA[hdb]]></TARGET></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[default]]></CACHE><CEPH_HOST><![CDATA[ceph021.altaria.osceph022.altaria.osceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8271ce8a-385d-44d7-a228-c42de4259c5e]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE><![CDATA[YES]]></CLONE><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE><![CDATA[ceph.altaria]]></DATASTORE><DATASTORE_ID><![CDATA[105]]></DATASTORE_ID><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><DISK_ID><![CDATA[0]]></DISK_ID><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_ID><![CDATA[43]]></IMAGE_ID><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME><LN_TARGET><![CDATA[NONE]]></LN_TARGET><READONLY><![CDATA[NO]]></READONLY><SAVE><![CDATA[NO]]></SAVE><SIZE><![CDATA[40]]></SIZE><SOURCE><![CDATA[one/one-43]]></SOURCE><TARGET><![CDATA[hda]]></TARGET><TM_MAD><![CDATA[ceph]]></TM_MAD><TYPE><![CDATA[RBD]]></TYPE></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><PORT><![CDATA[5960]]></PORT><TYPE><![CDATA[SPICE]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><TEMPLATE_ID><![CDATA[4]]></TEMPLATE_ID><VMID><![CDATA[60]]></VMID></TEMPLATE><USER_TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><SCHED_MESSAGE><![CDATA[TueSep1610:04:002014:NosystemdatastoresfoundtorunVMs]]></SCHED_MESSAGE></USER_TEMPLATE><HISTORY_RECORDS><HISTORY><OID>60</OID><SEQ>0</SEQ><HOSTNAME>hyp101</HOSTNAME><HID>190</HID><CID>-1</CID><STIME>1410854670</STIME><ETIME>0</ETIME><VMMMAD>kvm</VMMMAD><VNMMAD>dummy</VNMMAD><TMMAD>shared</TMMAD><DS_LOCATION>/var/lib/one//datastores</DS_LOCATION><DS_ID>106</DS_ID><PSTIME>1410854670</PSTIME><PETIME>1410854671</PETIME><RSTIME>1410854671</RSTIME><RETIME>0</RETIME><ESTIME>0</ESTIME><EETIME>0</EETIME><REASON>0</REASON><ACTION>0</ACTION></HISTORY></HISTORY_RECORDS></VM></VM_POOL>
 EOF
 
 $cmds{rpc_list_vm}{params} = [60];
 $cmds{rpc_list_vm}{method} = "one.vm.info";
 $cmds{rpc_list_vm}{out} = <<'EOF';
-<VM><ID>60</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux-60</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><LAST_POLL>1410855578</LAST_POLL><STATE>3</STATE><LCM_STATE>3</LCM_STATE><RESCHED>0</RESCHED><STIME>1410854434</STIME><ETIME>0</ETIME><DEPLOY_ID>one-60</DEPLOY_ID><MEMORY>524288</MEMORY><CPU>2</CPU><NET_TX>0</NET_TX><NET_RX>0</NET_RX><TEMPLATE><AUTOMATIC_REQUIREMENTS><![CDATA[!(PUBLIC_CLOUD=YES)]]></AUTOMATIC_REQUIREMENTS><CONTEXT><DISK_ID><![CDATA[1]]></DISK_ID><NETWORK><![CDATA[YES]]></NETWORK><TARGET><![CDATA[hdb]]></TARGET></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[none]]></CACHE><CEPH_HOST><![CDATA[ceph021.altaria.osceph022.altaria.osceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8271ce8a-385d-44d7-a228-c42de4259c5e]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE><![CDATA[YES]]></CLONE><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE><![CDATA[ceph.altaria]]></DATASTORE><DATASTORE_ID><![CDATA[105]]></DATASTORE_ID><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><DISK_ID><![CDATA[0]]></DISK_ID><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_ID><![CDATA[43]]></IMAGE_ID><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME><LN_TARGET><![CDATA[NONE]]></LN_TARGET><READONLY><![CDATA[NO]]></READONLY><SAVE><![CDATA[NO]]></SAVE><SIZE><![CDATA[40]]></SIZE><SOURCE><![CDATA[one/one-43]]></SOURCE><TARGET><![CDATA[hda]]></TARGET><TM_MAD><![CDATA[ceph]]></TM_MAD><TYPE><![CDATA[RBD]]></TYPE></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><PORT><![CDATA[5960]]></PORT><TYPE><![CDATA[VNC]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><TEMPLATE_ID><![CDATA[4]]></TEMPLATE_ID><VMID><![CDATA[60]]></VMID></TEMPLATE><USER_TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><SCHED_MESSAGE><![CDATA[TueSep1610:04:002014:NosystemdatastoresfoundtorunVMs]]></SCHED_MESSAGE></USER_TEMPLATE><HISTORY_RECORDS><HISTORY><OID>60</OID><SEQ>0</SEQ><HOSTNAME>hyp101</HOSTNAME><HID>190</HID><CID>-1</CID><STIME>1410854670</STIME><ETIME>0</ETIME><VMMMAD>kvm</VMMMAD><VNMMAD>dummy</VNMMAD><TMMAD>shared</TMMAD><DS_LOCATION>/var/lib/one//datastores</DS_LOCATION><DS_ID>106</DS_ID><PSTIME>1410854670</PSTIME><PETIME>1410854671</PETIME><RSTIME>1410854671</RSTIME><RETIME>0</RETIME><ESTIME>0</ESTIME><EETIME>0</EETIME><REASON>0</REASON><ACTION>0</ACTION></HISTORY></HISTORY_RECORDS></VM>
+<VM><ID>60</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux-60</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><LAST_POLL>1410855578</LAST_POLL><STATE>3</STATE><LCM_STATE>3</LCM_STATE><RESCHED>0</RESCHED><STIME>1410854434</STIME><ETIME>0</ETIME><DEPLOY_ID>one-60</DEPLOY_ID><MEMORY>524288</MEMORY><CPU>2</CPU><NET_TX>0</NET_TX><NET_RX>0</NET_RX><TEMPLATE><AUTOMATIC_REQUIREMENTS><![CDATA[!(PUBLIC_CLOUD=YES)]]></AUTOMATIC_REQUIREMENTS><CONTEXT><DISK_ID><![CDATA[1]]></DISK_ID><NETWORK><![CDATA[YES]]></NETWORK><TARGET><![CDATA[hdb]]></TARGET></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[default]]></CACHE><CEPH_HOST><![CDATA[ceph021.altaria.osceph022.altaria.osceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8271ce8a-385d-44d7-a228-c42de4259c5e]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE><![CDATA[YES]]></CLONE><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE><![CDATA[ceph.altaria]]></DATASTORE><DATASTORE_ID><![CDATA[105]]></DATASTORE_ID><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><DISK_ID><![CDATA[0]]></DISK_ID><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_ID><![CDATA[43]]></IMAGE_ID><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME><LN_TARGET><![CDATA[NONE]]></LN_TARGET><READONLY><![CDATA[NO]]></READONLY><SAVE><![CDATA[NO]]></SAVE><SIZE><![CDATA[40]]></SIZE><SOURCE><![CDATA[one/one-43]]></SOURCE><TARGET><![CDATA[hda]]></TARGET><TM_MAD><![CDATA[ceph]]></TM_MAD><TYPE><![CDATA[RBD]]></TYPE></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><PORT><![CDATA[5960]]></PORT><TYPE><![CDATA[SPICE]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><TEMPLATE_ID><![CDATA[4]]></TEMPLATE_ID><VMID><![CDATA[60]]></VMID></TEMPLATE><USER_TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><SCHED_MESSAGE><![CDATA[TueSep1610:04:002014:NosystemdatastoresfoundtorunVMs]]></SCHED_MESSAGE></USER_TEMPLATE><HISTORY_RECORDS><HISTORY><OID>60</OID><SEQ>0</SEQ><HOSTNAME>hyp101</HOSTNAME><HID>190</HID><CID>-1</CID><STIME>1410854670</STIME><ETIME>0</ETIME><VMMMAD>kvm</VMMMAD><VNMMAD>dummy</VNMMAD><TMMAD>shared</TMMAD><DS_LOCATION>/var/lib/one//datastores</DS_LOCATION><DS_ID>106</DS_ID><PSTIME>1410854670</PSTIME><PETIME>1410854671</PETIME><RSTIME>1410854671</RSTIME><RETIME>0</RETIME><ESTIME>0</ESTIME><EETIME>0</EETIME><REASON>0</REASON><ACTION>0</ACTION></HISTORY></HISTORY_RECORDS></VM>
 EOF
+
+$cmds{rpc_chown_vm}{params} = [60, 3, 1];
+$cmds{rpc_chown_vm}{method} = "one.vm.chown";
+$cmds{rpc_chown_vm}{out} = 60;
+
+$cmds{rpc_chmod_vm}{params} = [60, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+$cmds{rpc_chmod_vm}{method} = "one.vm.chmod";
+$cmds{rpc_chmod_vm}{out} = 60;
 
 # Manage images
 
 $cmds{rpc_list_imagespool}{params} = [-2, -1, -1];
 $cmds{rpc_list_imagespool}{method} = "one.imagepool.info";
 $cmds{rpc_list_imagespool}{out} = <<'EOF';
-<IMAGE_POOL><IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ttylinux-kvm_file0</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>2</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE></IMAGE_POOL>
+<IMAGE_POOL><IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os_vda</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>1</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE></IMAGE_POOL>
 EOF
 
 $cmds{rpc_list_image}{params} = [43];
 $cmds{rpc_list_image}{method} = "one.image.info";
 $cmds{rpc_list_image}{out} = <<'EOF';
-<IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ttylinux-kvm_file0</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>2</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE>
+<IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os_vda</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>1</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE>
 EOF
 
 $cmds{rpc_list_image2}{params} = [44];
 $cmds{rpc_list_image2}{method} = "one.image.info";
 $cmds{rpc_list_image2}{out} = <<'EOF';
-<IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os_vdb</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>2</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE>
+<IMAGE><ID>43</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os_vdb</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><PERSISTENT>0</PERSISTENT><REGTIME>1410854276</REGTIME><SOURCE><![CDATA[one/one-43]]></SOURCE><PATH><![CDATA[http://marketplace.c12g.com/appliance/4fc76a938fb81d3517000003/download/0]]></PATH><FSTYPE><![CDATA[]]></FSTYPE><SIZE>40</SIZE><STATE>1</STATE><RUNNING_VMS>1</RUNNING_VMS><CLONING_OPS>0</CLONING_OPS><CLONING_ID>-1</CLONING_ID><DATASTORE_ID>105</DATASTORE_ID><DATASTORE>ceph.altaria</DATASTORE><VMS><ID>60</ID></VMS><CLONES/><TEMPLATE><DEV_PREFIX><![CDATA[vd]]></DEV_PREFIX><FROM_APP><![CDATA[4fc76a938fb81d3517000003]]></FROM_APP><FROM_APP_FILE><![CDATA[0]]></FROM_APP_FILE><FROM_APP_NAME><![CDATA[ttylinux-kvm]]></FROM_APP_NAME><MD5><![CDATA[04c7d00e88fa66d9aaa34d9cf8ad6aaa]]></MD5><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></IMAGE>
 EOF
+
+$cmds{rpc_remove_image}{params} = [43];
+$cmds{rpc_remove_image}{method} = "one.image.delete";
+$cmds{rpc_remove_image}{out} = 43;
+
+$cmds{rpc_remove_image2}{params} = [44];
+$cmds{rpc_remove_image2}{method} = "one.image.delete";
+$cmds{rpc_remove_image2}{out} = 44;
 
 $data = <<'EOF';
 
@@ -507,6 +649,10 @@ NAME = "node630.cubone.os_vda"
 TARGET = "vda"
 SIZE = 20480
 DESCRIPTION = "QUATTOR image for node630.cubone.os: vda"
+LABELS = "quattor,quattor/CE"
+DRIVER = "raw"
+FSTYPE = "raw"
+QUATTOR = 1
 EOF
 $cmds{rpc_create_image}{params} = [$data, 102];
 $cmds{rpc_create_image}{method} = "one.image.allocate";
@@ -521,24 +667,43 @@ NAME = "node630.cubone.os_vdb"
 TARGET = "vdb"
 SIZE = 10480
 DESCRIPTION = "QUATTOR image for node630.cubone.os: vdb"
+LABELS = "quattor,quattor/CE"
+DRIVER = "raw"
+FSTYPE = "raw"
+QUATTOR = 1
 EOF
 $cmds{rpc_create_image2}{params} = [$data, 102];
 $cmds{rpc_create_image2}{method} = "one.image.allocate";
 $cmds{rpc_create_image2}{out} = 44;
 
+$cmds{rpc_chown_image}{params} = [43, 3, 1];
+$cmds{rpc_chown_image}{method} = "one.image.chown";
+$cmds{rpc_chown_image}{out} = 43;
+
+$cmds{rpc_chown_image2}{params} = [44, 3, 1];
+$cmds{rpc_chown_image2}{method} = "one.image.chown";
+$cmds{rpc_chown_image2}{out} = 44;
+
+$cmds{rpc_chmod_image}{params} = [43, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+$cmds{rpc_chmod_image}{method} = "one.image.chmod";
+$cmds{rpc_chmod_image}{out} = 43;
+
+$cmds{rpc_chmod_image2}{params} = [44, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+$cmds{rpc_chmod_image2}{method} = "one.image.chmod";
+$cmds{rpc_chmod_image2}{out} = 44;
 
 # Manage VM templates
 
 $cmds{rpc_list_templatespool}{params} = [-2, -1, -1];
 $cmds{rpc_list_templatespool}{method} = "one.templatepool.info";
 $cmds{rpc_list_templatespool}{out} = <<'EOF';
-<VMTEMPLATE_POOL><VMTEMPLATE><ID>4</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><REGTIME>1405587240</REGTIME><TEMPLATE><CONTEXT><NETWORK><![CDATA[YES]]></NETWORK><SSH_PUBLIC_KEY><![CDATA[$USER[SSH_PUBLIC_KEY]]]></SSH_PUBLIC_KEY></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[none]]></CACHE><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><TYPE><![CDATA[VNC]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VMTEMPLATE></VMTEMPLATE_POOL>
+<VMTEMPLATE_POOL><VMTEMPLATE><ID>4</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><REGTIME>1405587240</REGTIME><TEMPLATE><CONTEXT><NETWORK><![CDATA[YES]]></NETWORK><SSH_PUBLIC_KEY><![CDATA[$USER[SSH_PUBLIC_KEY]]]></SSH_PUBLIC_KEY></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[default]]></CACHE><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><TYPE><![CDATA[SPICE]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VMTEMPLATE></VMTEMPLATE_POOL>
 EOF
 
 $cmds{rpc_list_template}{params} = [4];
 $cmds{rpc_list_template}{method} = "one.template.info";
 $cmds{rpc_list_template}{out} = <<'EOF';
-<VMTEMPLATE><ID>4</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>testttylinux</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><REGTIME>1405587240</REGTIME><TEMPLATE><CONTEXT><NETWORK><![CDATA[YES]]></NETWORK><SSH_PUBLIC_KEY><![CDATA[$USER[SSH_PUBLIC_KEY]]]></SSH_PUBLIC_KEY></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[none]]></CACHE><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><TYPE><![CDATA[VNC]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VMTEMPLATE>
+<VMTEMPLATE><ID>4</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>node630.cubone.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><REGTIME>1405587240</REGTIME><TEMPLATE><CONTEXT><NETWORK><![CDATA[YES]]></NETWORK><SSH_PUBLIC_KEY><![CDATA[$USER[SSH_PUBLIC_KEY]]]></SSH_PUBLIC_KEY></CONTEXT><CPU><![CDATA[1]]></CPU><DISK><CACHE><![CDATA[default]]></CACHE><DEV_PREFIX><![CDATA[hd]]></DEV_PREFIX><IMAGE><![CDATA[ttylinux-kvm_file0]]></IMAGE><IMAGE_UNAME><![CDATA[oneadmin]]></IMAGE_UNAME></DISK><GRAPHICS><LISTEN><![CDATA[0.0.0.0]]></LISTEN><TYPE><![CDATA[SPICE]]></TYPE></GRAPHICS><MEMORY><![CDATA[512]]></MEMORY><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VMTEMPLATE>
 EOF
 
 $data = <<'EOF';
@@ -557,6 +722,18 @@ NIC = [
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"
 ]
+NIC = [
+    IP = "172.24.8.31",
+    MODEL = "virtio",
+    NETWORK = "altaria.vsc",
+    NETWORK_UNAME = "oneadmin"
+]
+NIC = [
+    IP = "172.24.8.32",
+    MODEL = "virtio",
+    NETWORK = "altaria.vsc",
+    NETWORK_UNAME = "oneadmin"
+]
 NAME = "node630.cubone.os"
 CONTEXT = [
     NETWORK = "YES",
@@ -564,43 +741,83 @@ CONTEXT = [
     TOKEN = "YES"
 ]
 CPU = "4"
-VCPU = "4"
 DESCRIPTION = "KVM Virtual Machine node630.cubone.os"
 DISK = [
     IMAGE = "node630.cubone.os_vda",
     TARGET = "vda",
     DEV_PREFIX = "vd",
-    IMAGE_UNAME = "oneadmin"
+    CACHE = "default",
+    IMAGE_UNAME = "lsimngar"
 ]
 DISK = [
     IMAGE = "node630.cubone.os_vdb",
     TARGET = "vdb",
     DEV_PREFIX = "vd",
-    IMAGE_UNAME = "oneadmin"
+    CACHE = "default",
+    IMAGE_UNAME = "lsimngar"
 ]
 GRAPHICS = [
     LISTEN = "0.0.0.0",
-    TYPE = "VNC"
+    RANDOM_PASSWD = "YES",
+    TYPE = "SPICE"
 ]
 MEMORY = "4096"
 OS = [
-    BOOT = "network,hd"
+    BOOT = "nic0,disk0"
 ]
 RAW = [
-    DATA = "<cpu mode='host-passthrough'/>",
+    DATA = "<vcpu>4</vcpu><cpu mode='host-passthrough'>
+    <topology sockets='2' cores='2' threads='1'/></cpu>
+    <devices><video><model type='qxl'/></video></devices>",
     TYPE = "kvm"
 ]
+PCI = [
+    CLASS = "0403",
+    DEVICE = "0a0c",
+    VENDOR = "8086"
+]
+PCI = [
+    CLASS = "0c06",
+    DEVICE = "1002",
+    VENDOR = "15b3"
+]
+PCI = [
+    CLASS = "0300",
+    DEVICE = "1616",
+    VENDOR = "8086"
+]
+LABELS = "quattor,quattor/CE"
+SCHED_DS_RANK = "FREE_MB"
+SCHED_DS_REQUIREMENTS = "NAME=GoldenCephDS"
+SCHED_RANK = "FREE_CPU"
+SCHED_REQUIREMENTS = "CPUSPEED > 1000"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_template}{params} = [$data];
 $cmds{rpc_create_template}{method} = "one.template.allocate";
 $cmds{rpc_create_template}{out} = 4;
 
+$cmds{rpc_update_template}{params} = [4, $data, 0];
+$cmds{rpc_update_template}{method} = "one.template.update";
+$cmds{rpc_update_template}{out} = 4;
+
+$cmds{rpc_chown_template}{params} = [4, 3, 1];
+$cmds{rpc_chown_template}{method} = "one.template.chown";
+$cmds{rpc_chown_template}{out} = 4;
+
 $data = <<'EOF';
 EOF
 $cmds{rpc_instantiate_template}{params} = [4, "node630.cubone.os", 1, $data];
 $cmds{rpc_instantiate_template}{method} = "one.template.instantiate";
 $cmds{rpc_instantiate_template}{out} = 60;
+
+$cmds{rpc_chmod_template}{params} = [4, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+$cmds{rpc_chmod_template}{method} = "one.template.chmod";
+$cmds{rpc_chmod_template}{out} = 4;
+
+$cmds{rpc_remove_template}{params} = [4];
+$cmds{rpc_remove_template}{method} = "one.template.delete";
+$cmds{rpc_remove_template}{out} = 4;
 
 # Manage groups
 
