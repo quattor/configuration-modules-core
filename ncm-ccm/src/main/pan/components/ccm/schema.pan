@@ -1,9 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-
-declaration template components/ccm/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'pan/types';
@@ -52,11 +47,12 @@ type kerberos_principal_string = string with {
     true;
 };
 
-type component_ccm = {
+type ccm_component = {
     include structure_component
     @{The location of the configuration file. Normally this should not be changed. Defaults to `/etc/ccm.conf`.}
     'configFile' : string = '/etc/ccm.conf'
-    @{The URL for the machine's profile. You can use either the http or https protocols (the file protocol is also possible eg. for tests). (see ccm-fetch manpage)}
+    @{The URL for the machine's profile. You can use either the http or https protocols
+      (the file protocol is also possible eg. for tests). (see ccm-fetch manpage)}
     'profile' : type_hostURI
     @{list of profile failover URL(s) in case the above is not working. (see ccm-fetch manpage)}
     'profile_failover' ? type_hostURI[]
@@ -84,8 +80,14 @@ type component_ccm = {
     'ca_file' ? string
     @{The directory containing accepted CA certificates when using the https protocol.}
     'ca_dir' ? string
-    @{Wether the profiles should be group-readable (value is the groupname). There is no default, and it is not allowed to set both C<group_readable> and enable C<world_readable>.}
-    'group_readable' ? string with if (path_exists('/software/components/accounts')) {is_user_or_group('group', SELF)} else {true}
+    @{Whether the profiles should be group-readable (value is the groupname).
+      There is no default, and it is not allowed to set both C<group_readable> and enable C<world_readable>.}
+    'group_readable' ? string with {
+        if (path_exists('/software/components/accounts')) {
+            is_user_or_group('group', SELF)
+        } else {
+            true;
+        }}
     @{Whether the profiles should be world-readable. Defaults to 0. }
     'world_readable' : long(0..1) = 0
     @{If `profile` is not a URL, a profile url will be calculated from `base_url` and the local hostname.}
