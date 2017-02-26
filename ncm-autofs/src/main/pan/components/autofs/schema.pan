@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/autofs/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
@@ -35,28 +31,42 @@ type autofs_conf = {
 
 type autofs_mapentry_type = {
     # TODO add new options like nfs options dict instead of random string
+    @{Specific mount options to be used with this entry.}
     "options" ? string
+    @{NFS server name/path associated with this entry.}
     "location" : string
 };
 
 type autofs_map_type = {
+    @{If false, ignore entries for this map (no change made).}
     "enabled" : boolean = true
-    "preserve" : boolean = true # "Preserve existing entries not overwritten by config"
+    @{This flag indicated if local changes to the map must be
+      preserved (true) or not (false).}
+    "preserve" : boolean = true
+    @{Map type. Supported types are : direct, file, program, yp, nisplus, hesiod, userdir and ldap.
+      Only direct, file and program map contents can be managed by this component.}
     "type" : string with match(SELF, "^(direct|file|program|yp|nisplus|hesiod|userdir|ldap)$")
+    @{Map name. If not defined, a default name is build (/etc/auto suffixed by map entry name).}
     "mapname" : string
+    @{Mount point associated with this map.}
     "mountpoint" ? string
-    "mpaliases" ? string[] # mount point aliases (deprecated) # TODO add deprecation warning?
+    @{mount point aliases (deprecated)}
+    "mpaliases" ? string[] with {deprecated(0, 'mountpoint aliases is deprecated'); true; }
     # TODO add new options like nfs options dict instead of random string
+    @{Mount options to be used with this map.}
     "options" ? string
+    @{One entry per filesystem to mount. The key is used to build the mount point. The actual
+    mount point depends on map type.}
     "entries" ? autofs_mapentry_type{}
 };
 
-type component_autofs_type = {
+type autofs_component = {
     include structure_component
-    "preserveMaster" : boolean = true # "Preserve local changes to master map"
+    @{This flag indicated if local changes to master map
+      must be preserved (true) or not (false).}
+    "preserveMaster" : boolean = true
+    @{This resource contains one entry per autofs map to manage. The dict key is
+    mainly an internal name but it will be used to build the default map name.}
     "maps" : autofs_map_type{}
     "conf" ? autofs_conf
 };
-
-
-

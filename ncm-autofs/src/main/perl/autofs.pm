@@ -1,19 +1,63 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::autofs;
+=head1 NAME
 
-use strict;
-use warnings;
+C<ncm-autofs>: NCM component to manage autofs configuration.
 
-use NCM::Component;
-use vars qw(@ISA $EC);
+=head1 DESCRIPTION
 
-@ISA = qw(NCM::Component);
-$EC = LC::Exception::Context->new->will_store_all;
+The I<autofs> component manages autofs master map and generated maps. It allows
+both exclusive management by the component or preservation of local changes.
+
+=head1 EXAMPLES
+
+=head2 Scenario 1 : Configure a NFS mountpoint
+
+We will mount the NFS filesystem nfsserv.example.org: C<< /data >> under C<< /tmp_mnt/nfsdata >>
+
+   prefix '/software/components/autofs/maps/data';
+   'entries/nfsdata/location' = 'nfsserv.example.org:/data';
+   'mapname' = '/etc/auto.nfsdata';
+   'mountpoint' = '/tmp_mnt';
+   'options' = 'rw,noatime,hard';
+
+=head2 Scenario 2 : Configuration with dict() usage
+
+    prefix '/software/components/autofs';
+    'preserveMaster' = false;
+
+    prefix '/software/components/autofs/maps/misc';
+    'enabled' = true;
+    'preserve' = false;
+    'mapname' = '/etc/auto.misc';
+    'type' = 'file';
+    'mountpoint' = '/misc';
+    'entries' = dict(
+        'kickstart', dict(
+            'location', 'misc.example.com:/misc'
+        )
+    );
+
+    prefix '/software/components/autofs/maps/garden';
+    'enabled' = true;
+    'preserve' = false;
+    'mapname' = '/etc/auto.garden';
+    'type' = 'file';
+    'options' = '';
+    'mountpoint' = '/home/garden';
+    'entries' = dict(
+        escape('*'), dict(
+            'options', '-rw,intr,rsize=8192,wsize=8192,actimeo=60,addr=10.21.12.10',
+            'location', 'crown-city.albion.net:/home/garden/&'
+        )
+    );
+
+=cut
+
+use parent qw(NCM::Component);
+
+our $EC = LC::Exception::Context->new->will_store_all;
 our $NoActionSupported = 1;
-
 
 use CAF::FileWriter;
 use CAF::FileEditor;
@@ -25,7 +69,7 @@ Readonly my $AUTO_MASTER => '/etc/auto.master';
 Readonly my $AUTOFS_CONF => '/etc/autofs.conf';
 Readonly my $ERROR_PREFIX => "ERROR IN: ";
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 
 # convenience method to handle file creation or editing
 # $data is an array ref of array refs with [linere, goodre, linecontent]
@@ -40,7 +84,7 @@ sub _write_or_edit
         backup => ".ncm-autofs", # backups with edit too
         owner => "root",
         group => "root",
-        mode => 0644,
+        mode => oct(644),
     };
 
     $self->debug(1, "$msg $filename ", $edit ? "" : "not ", "preserved.");
@@ -195,7 +239,7 @@ sub Configure
                         $mapname,
                         owner => "root",
                         group => "root",
-                        mode => 0755,
+                        mode => oct(755),
                         );
 
                     # TODO: check for changes?
@@ -248,7 +292,7 @@ sub Configure
         my $autofs_conf_fh = $autofs_conf->filewriter($AUTOFS_CONF);
         my $autofs_conf_changed = $autofs_conf_fh->close();
         $self->debug(1, "$AUTOFS_CONF ", $autofs_conf_changed ? "" : "not ", "modified.");
-        
+
         $cnt += $autofs_conf_changed;
     } else {
         $self->debug(1, "Skipping $AUTOFS_CONF.");
