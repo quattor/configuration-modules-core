@@ -1,5 +1,9 @@
 object template base;
 
+function pkg_repl = { null; };
+include 'components/cdp/config';
+'/software/components/cdp/dependencies' = null;
+
 prefix "/software/components/cdp";
 
 "configFile" = "/etc/cdp-listend.conf";

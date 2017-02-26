@@ -8,14 +8,8 @@ use CAF::Object;
 use Test::MockModule;
 use CAF::FileWriter;
 
-my $cf_mock = Test::MockModule->new("CAF::FileWriter");
-
-$cf_mock->mock("close", sub {
-        diag("closing");
-        return 1;
-    });
-
 $CAF::Object::NoAction = 1;
+set_caf_file_close_diff(1);
 
 my $cmp = NCM::Component::cdp->new("cdp");
 
@@ -44,7 +38,6 @@ like($fh, qr{^port\s*=\s*7777\s*$}m, "Correct port line");
 my $c = get_command("service cdp-listend restart");
 ok($c, "Daemon was restarted when there were changes");
 
-$cf_mock->unmock("close");
 $fh->close();
 
 done_testing();
