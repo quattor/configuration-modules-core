@@ -31,7 +31,7 @@ my $caf_trd = mock_textrender();
 my $close_return;
 
 Readonly my $SSSD_FILE => NCM::Component::authconfig::SSSD_FILE();
-Readonly my $RESTART_CMD => "/sbin/service sssd restart";
+Readonly my $RESTART_CMD => "service sssd restart";
 Readonly my $SSSD_TT_MODULE => NCM::Component::authconfig::SSSD_TT_MODULE;
 
 is($SSSD_FILE, "/etc/sssd/sssd.conf", "Correct location of sssd.conf file");
@@ -86,7 +86,8 @@ set_command_status($RESTART_CMD, 1);
 
 $cmp->configure_sssd({});
 
-is($cmp->{ERROR}, 1, "Errors reported when the restart fails");
+# one error from CAF::Service; one reported error on failure
+is($cmp->{ERROR}, 2, "Errors reported when the restart fails");
 
 set_command_status($RESTART_CMD, 0);
 
@@ -101,6 +102,6 @@ $close_return = 0;
 # Barfs due to no hashref or element instance
 $cmp->configure_sssd(undef);
 
-is($cmp->{ERROR}, 2, "Error while rendering the template is reported");
+is($cmp->{ERROR}, 3, "Error while rendering the template is reported");
 
 done_testing();

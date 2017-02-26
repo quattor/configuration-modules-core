@@ -1,12 +1,10 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-declaration template components/authconfig/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'pan/types';
 
 type authconfig_method_generic_type = {
+    @{Enable this method. Unlisted methods are always disabled.}
     "enable" : boolean = false
 };
 
@@ -68,7 +66,7 @@ type authconfig_nss_override_attribute_value = {
     "gidNumber" ? long
 };
 
-type connect_policy = string with (SELF=="oneshot" || SELF=="persistent");
+type connect_policy = string with match(SELF, "^(oneshot|persistent)$");
 
 type authconfig_method_ldap_type = {
     include authconfig_method_generic_type
@@ -138,7 +136,7 @@ type authconfig_method_files_type = {
     include authconfig_method_generic_type
 };
 
-# LDAP attributes, as per RFC 2307
+@{LDAP attributes, as per RFC 2307}
 type authconfig_nslcd_map_attributes = {
     "uid" ? string
     "gid" ? string
@@ -246,15 +244,23 @@ type authconfig_method_type = {
 
 type hash_string = string with match(SELF, "^(descrypt|md5|sha256|sha512)$");
 
-type component_authconfig_type = {
+type authconfig_component = {
     include structure_component
+    @{When set to true, no actual configuration will change. Default: false.}
     "safemode" : boolean = false
     "passalgorithm" : hash_string = "md5"
+    @{Enable the use of shadow password files.}
     "useshadow" ? boolean
+    @{Enable or disable nscd operation.}
     "usecache" ? boolean
     "enableforcelegacy" : boolean = false
     "startstop" ? boolean
+    @{Enable the use of MD5 hashed password.}
     "usemd5" : boolean
+    @{dict of authentication methods to enable. Supported
+    methods are: files, ldap, nis, krb5, smb, hesiod, afs, nslcd and sssd.
+    Note that "afs" is only supported on the CERN-modified version of
+    authconfig. Also, "files" cannot be disabled.}
     "method" ? authconfig_method_type
     "pamadditions" ? authconfig_pamadditions_type{}
 };
