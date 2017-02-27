@@ -7,7 +7,14 @@ use Test::Quattor qw(rdma);
 use NCM::Component::ofed;
 use Test::Quattor::RegexpTest;
 
+use Test::Quattor::TextRender::Base;
+
 $CAF::Object::NoAction = 1;
+
+my $caf_trd = mock_textrender();
+
+set_caf_file_close_diff(1);
+
 
 =pod
 
@@ -33,6 +40,7 @@ like($fh, qr/^SRP_DAEMON_ENABLE=(yes|no)/m, "Boolean options");
 like($fh, qr/^MLX4_LOAD=(yes|no)/m, "Suffix for hardware, boolean value");
 like($fh, qr/^RDMA_CM_LOAD=(yes|no)/m, "Suffix for modules, boolean value");
 
+diag "$fh";
 # Test all values
 my $rt = Test::Quattor::RegexpTest->new(
     regexp => 'src/test/resources/rdma_regextest',

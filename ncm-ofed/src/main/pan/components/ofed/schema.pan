@@ -1,115 +1,133 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-
-declaration template components/ofed/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
-## openib options (OPENIBOPTS)
+@documentation{openib options}
 type component_ofed_openib_options = {
+    @{Start HCA driver upon boot}
     "onboot" : boolean = true
 
-    ## MAD datagrams priority
+    @{MAD datagrams thread priority}
     "renice_ib_mad" : boolean = false
 
-    ## disable for large clusters
+    @{disable CM for IPoIB for large clusters}
     "set_ipoib_cm" : boolean = true
-    "set_ipoib_channels" : boolean = false
+    "set_ipoib_channels" : boolean = false # deprecated in MLNX OFED 3.4
+    @{IPoIB MTU setting for CM}
+    "ipoib_mtu" : long(0..65536) = 32 * 1024 # deprecated in MLNX OFED 3.4
 
-    ## SRP High Availability
+    @{SRP High Availability}
     "srpha_enable" : boolean = false
     "srp_daemon_enable" : boolean = false
 
-    ## IPoIB MTU setting
-    "ipoib_mtu" : long = 32*1024
-
-    # autotuning
+    @{sysctl tuning}
     "run_sysctl" : boolean = true
+    @{affinity tuning}
     "run_affinity_tuner" : boolean = true
+    @{Enable MLNX autotuning}
     "run_mlnx_tune" : boolean = false
 
-    # description
+    @{node description}
     "node_desc" ? string # eg will default to hostname -s
+    @{Max time in seconds to wait for node's hostname to be set}
     "node_desc_update_timeout" : long(0..) = 120
+    @{Wait (in sec) before node description update}
     "node_desc_time_before_update" : long(0..) = 10
+    @{Seconds to sleep after openibd start finished and before releasing the shell}
     "post_start_delay" : long(0..) = 0
 
+    @{ConnectX-3 ethernet only}
+    "cx3_eth_only" : boolean = false
 } = dict();
 
-## openib modules (OPENIBMODULES)
+@{openib modules to load}
 type component_ofed_openib_modules = {
     "ucm" : boolean = false
     "umad" : boolean = true
     "uverbs" : boolean = true
 
-    ## RDAM CM (connected mode and unreliable datagram)
+    @{RDMA CM (connected mode) mode}
     "rdma_cm" : boolean = true
+    @{RDMA UD (unreliable datagram) mode}
     "rdma_ucm" : boolean = true
 
-    ## IPoIB
+    @{IPoIB}
     "ipoib" : boolean = true
     "e_ipoib" : boolean = false
 
-    ## SDP (Socket Direct Protocol)
+    @{SDP (Socket Direct Protocol)}
     "sdp" : boolean = false
 
-    ## SRP SCSI RDMA Protocol
+    @{SRP SCSI RDMA Protocol}
     "srp" : boolean = false
-    ## SRP Target
+    @{SRP Target}
     "srpt" : boolean = false
 
-    ## Reliable datagram socket
+    @{Reliable datagram socket}
     "rds" : boolean = false
 
-    ## ISCSI RDMA
+    @{ISCSI RDMA}
     "iser" : boolean = false
 
-    "mlx4_vnic" : boolean = false
-    "mlx4_fc" : boolean = false
+    @{Mellanox ConnectX-3 Virtual NICs}
+    "mlx4_vnic" : boolean = false # deprecated in MLNX OFED 3.4
+    @{Mellanox ConnectX-3 FibreChannel over Ethernet}
+    "mlx4_fc" : boolean = false # deprecated in MLNX OFED 3.4
+    @{Mellanox ConnectX-3 Ethernet}
+    "mlx4_en" : boolean = false # deprecated in MLNX OFED 3.4
 } = dict();
 
-## openib modules (OPENIBHARDWARE)
+@documentation{openib hardware modules to load}
 type component_ofed_openib_hardware = {
-    ## Mellanox
-    ## Inifinihost III
+    @{Mellanox Inifinihost III}
     "mthca" : boolean = false
-    ## Connectx et al
+    @{Mellanox ConnectX-2/3}
     "mlx4" : boolean = false
+    @{Mellanox ConnectX-4/5 / ConnectIB}
     "mlx5" : boolean = false
 
-    ## Mellanox ethernet
+    @{Mellanox ethernet-only}
     "mlx_en" : boolean = false
 
-    ## Qlogic
+    @{Legacy Qlogic IB}
     "ipath" : boolean = false
+    @{Qlogic/Intel TrueScale IB}
     "qib" : boolean = false
 
-    ## Qlogic ethernet
+    @{Qlogic ethernet}
     "qlgc_vnic" : boolean = false
 
-    ## Chelsio T3
+    @{Chelsio T3/T4}
     "cxgb3" : boolean = false
-    ## NetEffect
+    "cxgb4" : boolean = false
+
+    @{NetEffect}
     "nes" : boolean = false
 } = dict();
 
 
 type component_ofed_openib = {
-    ## OPENIBCFG
+    @{location of openibd config file}
     "config" : string = "/etc/infiniband/openib.conf"
 
     "options" : component_ofed_openib_options
     "modules" : component_ofed_openib_modules
 
-    ## at least one needs to be on
     "hardware" : component_ofed_openib_hardware
-} = dict();
+} = dict() with {
+    enabled = false;
+    foreach(hw; en; SELF['hardware']) {
+        if (en) {
+            enabled = true;
+        };
+    };
+    if (! enabled) {
+        error('At least one openib hardware module must be enabled');
+    };
+    true;
+};
 
-type component_ofed_type = {
+type ${project.artifactId}_component = {
     include structure_component
     "openib" : component_ofed_openib
 };
-
-bind "/software/components/ofed" = component_ofed_type;
