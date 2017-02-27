@@ -41,5 +41,7 @@ type component_mcx = {
         "computer" ? mcx_computer
 };
 
-bind "/software/components/mcx" = component_mcx;
-
+bind "/software/components/mcx" = component_mcx with {
+    deprecated(1, 'The mcx component is deprecated and will be removed in a future release.');
+    true;
+};
