@@ -30,10 +30,6 @@ It will also enable/disable NSCD support on the client.
     prefix "/software/components/authconfig/method/files";
     "enable" = true;
 
-    prefix "/software/components/authconfig/method/afs";
-    "enable" = true;
-    "cell" = "cern.ch";
-
     prefix "/software/components/authconfig/method/ldap";
     "enable" = false;
     "nssonly" = false;

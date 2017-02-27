@@ -21,11 +21,6 @@ type authconfig_pamadditions_type = {
     "lines" : authconfig_pamadditions_line_type[]
 };
 
-type authconfig_method_afs_type = {
-    include authconfig_method_generic_type
-    "cell" : type_fqdn
-};
-
 type authconfig_method_ldap_tls_type = {
     "enable" : boolean = false
     "peercheck" : boolean = false
@@ -237,7 +232,6 @@ type authconfig_method_type = {
     "krb5" ? authconfig_method_krb5_type
     "smb" ? authconfig_method_smb_type
     "hesiod" ? authconfig_method_hesiod_type
-    "afs" ? authconfig_method_afs_type
     "nslcd" ? authconfig_method_nslcd_type
     "sssd" ? authconfig_method_sssd_type
 };
@@ -258,9 +252,8 @@ type authconfig_component = {
     @{Enable the use of MD5 hashed password.}
     "usemd5" : boolean
     @{dict of authentication methods to enable. Supported
-    methods are: files, ldap, nis, krb5, smb, hesiod, afs, nslcd and sssd.
-    Note that "afs" is only supported on the CERN-modified version of
-    authconfig. Also, "files" cannot be disabled.}
+    methods are: files, ldap, nis, krb5, smb, hesiod, nslcd and sssd.
+    The "files" method cannot be disabled.}
     "method" ? authconfig_method_type
     "pamadditions" ? authconfig_pamadditions_type{}
 };
