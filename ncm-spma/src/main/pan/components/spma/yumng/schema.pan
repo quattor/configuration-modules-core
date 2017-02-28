@@ -10,7 +10,10 @@ type SOFTWARE_GROUP = {
     "default" : boolean = true
     "mandatory" : boolean = true
     "optional" : boolean = false
-    "names" : string[] = list()
+    "names" : string[] = list() with {
+        if (length(SELF) > 0) deprecated(0, 'Support for YUM groups will be removed in a future release.');
+        true;
+    }
 };
 
 type spma_yum_plugin_fastestmirror = {
