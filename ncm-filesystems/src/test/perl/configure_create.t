@@ -12,6 +12,11 @@ Tests for adding, changing and deleting entries in /etc/fstab and mounting
 =cut
 
 use strict;
+
+BEGIN {
+    unshift(@INC, '../ncm-fstab/target/lib/perl');
+}
+
 use warnings;
 use Readonly;
 Readonly my $FSTAB => 'target/test/etc/fstab';

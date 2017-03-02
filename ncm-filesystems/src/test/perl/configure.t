@@ -16,6 +16,8 @@ use Readonly;
 Readonly my $FSTAB => 'target/test/etc/fstab';
 
 BEGIN{
+    unshift(@INC, '../ncm-fstab/target/lib/perl');
+
     # This only works because the constant of NCM::Filesystem is used in a ncm-fstab sub
     use Test::Quattor;
     use NCM::Filesystem;
