@@ -3,7 +3,7 @@
 =head1 NAME
 
 C<NCM::Component::OpenNebula::Host> adds C<KVM> hosts support to
-L<NCM::Component::OpenNebula>.
+C<NCM::Component::OpenNebula>.
 
 =head2 Public methods
 

@@ -3,7 +3,7 @@
 =head1 NAME
 
 C<NCM::Component::OpenNebula::Image> adds C<OpenNebula> C<VM> images 
-support to L<NCM::Component::OpenNebula>.
+support to C<NCM::Component::OpenNebula>.
 
 =head2 Public methods
 

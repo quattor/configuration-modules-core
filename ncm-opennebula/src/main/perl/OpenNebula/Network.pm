@@ -3,7 +3,7 @@
 =head1 NAME
 
 C<NCM::Component::OpenNebula::Network> adds C<OpenNebula> C<VirtualNetwork> 
-configuration support to L<NCM::Component::opennebula>.
+configuration support to C<NCM::Component::opennebula>.
 
 =head2 Public methods
 

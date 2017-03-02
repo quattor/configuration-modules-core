@@ -3,7 +3,7 @@
 =head1 NAME
 
 C<NCM::Component::OpenNebula::VM> adds C<OpenNebula> C<VMs> 
-manage support to L<NCM::Component::OpenNebula>.
+manage support to C<NCM::Component::OpenNebula>.
 
 =head2 Public methods
 
