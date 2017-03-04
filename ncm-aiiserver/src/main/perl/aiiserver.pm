@@ -1,4 +1,16 @@
-#${PMpre} NCM::Component::${project.artifactId}${PMpost}
+#${PMcomponent}
+
+=head1 DESCRIPTION
+
+The I<aiiserver> component manages the configuration of an AII
+(Automated Installation Infrastructure) server.
+
+=head1 RESOURCES
+
+This components also uses configuration parameters related to https
+from C<< ncm-ccm >>: ca_dir, ca_file, cert_file, key_file.
+
+=cut
 
 use parent qw(NCM::Component);
 use CAF::FileWriter;
@@ -47,7 +59,6 @@ sub Configure
     my $shellfe = {%$ccm_props, %{$tree->{"aii-shellfe"}}};
 
     $self->make_config($AII_SHELLFE, $shellfe);
-
 
     # aii-dhcp configuration file
     $self->make_config($AII_DHCP, $tree->{"aii-dhcp"} || {});

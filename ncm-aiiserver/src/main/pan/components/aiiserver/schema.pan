@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/${project.artifactId}/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'pan/types';
@@ -33,8 +29,10 @@ type structure_aiidhcp = {
     "norestart" ? boolean
 };
 
-type structure_component_aiiserver = {
+type aiiserver_component = {
     include structure_component
+    @{Configures the aii-shellfe tool.}
     "aii-shellfe" : structure_aiishellfe
+    @{Configures AII::DHCP and the aii-dhcp legacy tool.}
     "aii-dhcp" : structure_aiidhcp
 };
