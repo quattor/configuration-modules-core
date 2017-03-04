@@ -4,27 +4,27 @@ include 'quattor/types/component';
 include 'pan/types';
 
 type structure_aiishellfe = {
-    "cachedir" ? string
-    'ca_dir' ? string
+    "cachedir" ? absolute_file_path
+    'ca_dir' ? absolute_file_path
     'ca_file' ? string
     "cdburl" : type_absoluteURI
     'cert_file' ? string
     'key_file' ? string
-    "lockdir" ? string
+    "lockdir" ? absolute_file_path
     "logfile" ? string
     "nbpdir" ? string
     "noaction" ? boolean
     "nodhcp" ? boolean
     "nonbp" ? boolean
     "noosinstall" ? boolean
-    "osinstalldir" ? string
+    "osinstalldir" ? absolute_file_path
     "profile_format" : string = "xml"
     "profile_prefix" ? string
     "use_fqdn" : boolean = true
 };
 
 type structure_aiidhcp = {
-    "dhcpconf" : string = "/etc/dhcpd.conf"
+    "dhcpconf" : absolute_file_path = "/etc/dhcpd.conf"
     "restartcmd" ? string
     "norestart" ? boolean
 };
