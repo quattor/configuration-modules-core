@@ -3,7 +3,7 @@
 =head1 NAME
 
 C<NCM::Component::OpenNebula::Network> adds C<OpenNebula> C<VirtualNetwork> 
-configuration support to C<NCM::Component::opennebula>.
+configuration support to L<NCM::Component::opennebula>.
 
 =head2 Public methods
 
@@ -173,11 +173,9 @@ sub remove_vn_ars
         } else {
              $self->error("Unable to remove AR id: $arid from vnet: $vnet");
         }
-    } elsif ($arinfo) {
-        $self->error("Unable to remove AR. QUATTOR flag not found within AR: $arinfo");
     } else {
         $self->warn(1, "Unable to remove AR. ",
-            "AR template is not available from vnet: $vnet: ", $ardata->{ar});
+            "AR is not available or QUATTOR flag si not set vnet: $vnet: ", $ardata->{ar});
     }
 }
 
