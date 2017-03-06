@@ -38,6 +38,9 @@ prefix "/software/components/opennebula/kvmrc";
 "qemu_protocol" = "qemu+tcp";
 "force_destroy" = true;
 
+prefix "/software/components/opennebula/vnm_conf";
+"arp_cache_poisoning" = false;
+
 prefix "/software/components/opennebula";
 
 "vnets" = dict(

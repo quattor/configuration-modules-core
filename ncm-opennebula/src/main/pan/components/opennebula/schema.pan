@@ -619,6 +619,24 @@ type opennebula_kvmrc = {
 };
 
 @documentation{
+Type that sets the OpenNebula
+VNM network configuration file on the nodes
+}
+type opennebula_vnm_conf = {
+    @{set to true to check that no other vlans are connected to the bridge.
+     Works with 802.1Q and VXLAN.}
+    "validate_vlan_id" : boolean = false
+    @{enable ARP Cache Poisoning Prevention Rules for Open vSwitch.}
+    "arp_cache_poisoning" : boolean = true
+    @{base multicast address for each VLAN. The mc address is :vxlan_mc + :vlan_id.
+    Used by VXLAN.}
+    "vxlan_mc" : type_ipv4 = '239.0.0.0'
+    @{Time To Live (TTL) should be > 1 in routed multicast networks (IGMP).
+    Used by VXLAN.}
+    "vxlan_ttl" : long = 16
+};
+
+@documentation{
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
 }
@@ -659,6 +677,8 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    @{set vnm remote configuration}
+    'vnm_conf' ? opennebula_vnm_conf
     @{set ssh host multiplex options}
     'ssh_multiplex' : boolean = true
     @{in some cases (such a Sunstone standalone configuration with apache), 

@@ -44,6 +44,8 @@ Features that are implemented at this moment:
 
 =item * Updates VMM kvmrc config file
 
+=item * Updates VNM OpenNebulaNetwork config file
+
 =item * Cloud resource labels (OpenNebula >= 5.x)
 
 =back
@@ -127,7 +129,7 @@ Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 # Required by process_template to detect 
 # if it should return a text template or
 # CAF::FileWriter instance
-Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph oneflow);
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
 
 
 our $EC=LC::Exception::Context->new->will_store_all;
