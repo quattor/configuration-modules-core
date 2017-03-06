@@ -620,7 +620,7 @@ type opennebula_kvmrc = {
 
 @documentation{
 Type that sets the OpenNebula
-VNM network configuration file on the nodes
+VNM (Virtual Network Manager) configuration file on the nodes
 }
 type opennebula_vnm_conf = {
     @{set to true to check that no other vlans are connected to the bridge.

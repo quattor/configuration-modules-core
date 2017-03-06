@@ -175,7 +175,7 @@ sub remove_vn_ars
         }
     } else {
         $self->warn(1, "Unable to remove AR. ",
-            "AR is not available or QUATTOR flag si not set vnet: $vnet: ", $ardata->{ar});
+            "AR is not available or QUATTOR flag is not set vnet: $vnet: ", $ardata->{ar});
     }
 }
 
