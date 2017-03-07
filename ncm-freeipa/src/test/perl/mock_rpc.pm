@@ -191,7 +191,21 @@ The space after the method name is significant, it is used to determine the used
 
 =cut
 
-sub _format { my $value = shift; return ref($value) eq 'ARRAY' ? join(',', @$value) : $value; }
+# Force booleans to 1/0; prevent mixed string prettification between
+# JSON::PP (0/1) and JSON::XS (true/false)
+sub _format
+{
+    my $value = shift;
+    my $txt;
+    if(ref($value) eq 'ARRAY') {
+        $txt = join(',', @$value);
+    } elsif(JSON::XS::is_bool($value)) {
+        $txt = $value ? 1 : 0;
+    } else {
+        $txt = $value;
+    }
+    return $txt;
+}
 
 $rc->mock('POST', sub {
     my ($self, $url, $data) = @_;
