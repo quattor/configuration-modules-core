@@ -12,6 +12,11 @@ Basic test that ensures that our module will load correctly.
 
 use strict;
 use warnings;
+
+BEGIN {
+    unshift(@INC, '../ncm-fstab/target/lib/perl');
+}
+
 use Test::More tests => 1;
 use Test::Quattor;
 

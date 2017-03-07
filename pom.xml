@@ -44,7 +44,6 @@
     <module>ncm-directoryservices</module>
     <module>ncm-etcservices</module>
     <module>ncm-nagios</module>
-    <module>ncm-filesystems</module>
     <module>ncm-hostsfile</module>
     <module>ncm-ssh</module>
     <module>ncm-download</module>
@@ -68,6 +67,7 @@
     <module>ncm-mysql</module>
     <module>ncm-ldconf</module>
     <module>ncm-fstab</module>
+    <module>ncm-filesystems</module>
     <module>ncm-syslogng</module>
     <module>ncm-syslog</module>
     <module>ncm-shorewall</module>
