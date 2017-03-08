@@ -44,7 +44,7 @@ my $cmp = NCM::Component::network->new('network');
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
-my $bfh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-br-ex").NCM::Component::network::FAILED_SUFFIX);
+my $bfh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-br-ex").$NCM::Component::network::FAILED_SUFFIX);
 isa_ok($bfh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-br-ex file written");
 
 like($bfh, qr/^TYPE=OVSBridge$/m, "set type for the OVS bridge");
@@ -55,7 +55,7 @@ unlike($bfh, qr/IPV6/, "No IPv6 config details");
 
 is("$bfh", $BR, "exact br config");
 
-my $ifh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
+my $ifh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").$NCM::Component::network::FAILED_SUFFIX);
 isa_ok($ifh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
 
 like($ifh, qr/^TYPE=OVSPort$/m, "set type for the OVS port");
