@@ -1,5 +1,9 @@
 template simple_base_profile;
 
+function pkg_repl = { null; };
+include 'components/network/config';
+'/software/components/network/dependencies' = null;
+
 include 'pan/types';
 include 'components/network/core-schema';
 
