@@ -87,41 +87,52 @@ use CAF::FileWriter;
 use Fcntl qw(SEEK_SET);
 
 use POSIX qw(WIFEXITED WEXITSTATUS);
+use Readonly;
 
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
 
 # ethtool opts that have to be ordered
-my %ethtool_option_order = (
+Readonly::Hash my %ETHTOOL_OPTION_ORDER => {
     "ethtool" => ["autoneg", "speed", "duplex"]
-);
+};
 
-my %ethtool_option_map = (
-    "offload" => {
-        "tso" => "tcp segmentation offload",
-        "tx"  => "tx-checksumming",
-        "rx"  => "rx-checksumming",
-        "ufo" => "udp fragmentation offload",
-        "gso" => "generic segmentation offload",
-        "gro" => "generic-receive-offload",
-        "sg"  => "scatter-gather",
-        },
-    "ring"    => {
-        "tx"  => "TX",
-        "rx"  => "RX",
-        },
-    "ethtool" => {
-        "wol" => "Wake-on",
-        "autoneg" => "Advertised auto-negotiation",
-        "speed" => "Speed",
-        "duplex" => "Duplex",
-        },
-    );
+Readonly::Hash my %ETHTOOL_OPTION_MAP => {
+    offload => {
+        tso => "tcp segmentation offload",
+        tx  => "tx-checksumming",
+        rx  => "rx-checksumming",
+        ufo => "udp fragmentation offload",
+        gso => "generic segmentation offload",
+        gro => "generic-receive-offload",
+        sg  => "scatter-gather",
+    },
 
-my $ethtoolcmd = "/usr/sbin/ethtool";
+    ring    => {
+        tx  => "TX",
+        rx  => "RX",
+    },
+    ethtool => {
+        wol => "Wake-on",
+        autoneg => "Advertised auto-negotiation",
+        speed => "Speed",
+        duplex => "Duplex",
+    },
+};
 
-use constant FAILED_SUFFIX => '-failed';
 
+Readonly my $ETHTOOLCMD => '/usr/sbin/ethtool';
+Readonly my $BRIDGECMD => '/usr/sbin/brctl';
+Readonly my $IFCONFIGCMD => '/sbin/ifconfig';
+Readonly my $ROUTECMD => '/sbin/route';
+
+Readonly our $FAILED_SUFFIX => '-failed';
+
+Readonly my $BASE_PATH => '/system/network';
+
+# Regexp for the supported ifcfg-<device> devices.
+# $1 must match the device name
+Readonly our $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?';
 
 # Get current ethtool options for the given section
 sub ethtool_get_current
@@ -134,7 +145,7 @@ sub ethtool_get_current
 
     my ($out, $err);
     # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
-    if (CAF::Process->new([$ethtoolcmd, $showoption || (), $ethname],
+    if (CAF::Process->new([$ETHTOOLCMD, $showoption || (), $ethname],
                           "stdout" => \$out,
                           "stderr" => \$err
         )->execute() ) {
@@ -143,11 +154,11 @@ sub ethtool_get_current
                 my $k = $1;
                 my $v = $2;
                 # speed setting
-                $v = $1 if ($k eq $ethtool_option_map{ethtool}{speed} && $v =~ m/^(\d+)/);
+                $v = $1 if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{speed} && $v =~ m/^(\d+)/);
                 # Duplex setting
-                $v =~ tr/A-Z/a-z/ if ($k eq $ethtool_option_map{ethtool}{duplex});
+                $v =~ tr/A-Z/a-z/ if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{duplex});
                 # auotneg setting
-                if ($k eq $ethtool_option_map{ethtool}{autoneg}) {
+                if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{autoneg}) {
                     $v = "off";
                     $v = "on" if ($v =~ m/(Y|y)es/);
                 }
@@ -156,7 +167,7 @@ sub ethtool_get_current
             }
         }
     } else {
-        $self->error("ethtool_get_current: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
+        $self->error("ethtool_get_current: cmd \"$ETHTOOLCMD $showoption $ethname\" failed.",
                      " (output: $out, stderr: $err)");
     }
     return %current;
@@ -274,16 +285,16 @@ sub get_current_config
     my $output = "$fh";
 
     $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
-    $output .= $self->runrun(["/sbin/ifconfig"]);
-    $output .= $self->runrun([qw(/sbin/route -n)]);
+    # TODO: replace, see issue #1066
+    $output .= $self->runrun([$IFCONFIGCMD]);
+    $output .= $self->runrun([$ROUTECMD, '-n']);
 
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
-    my $brexe = "/usr/sbin/brctl";
-    if (-x $brexe) {
-        $output .= $self->runrun([$brexe, "show"]);
+    if (-x $BRIDGECMD) {
+        $output .= $self->runrun([$BRIDGECMD, "show"]);
     } else {
-        $output .= "Missing $brexe executable.\n";
+        $output .= "Missing $BRIDGECMD executable.\n";
     };
 
     return $output;
@@ -293,7 +304,6 @@ sub ethtool_set_options
 {
     my ($self, $ethname, $sectionname, $optionref) = @_;
     my %options = %$optionref;
-    my $cmd;
 
     # get current values into %current
     my %current = $self->ethtool_get_current($ethname, $sectionname);
@@ -302,7 +312,7 @@ sub ethtool_set_options
 
     # key ordering (important for autoneg/speed/duplex)
     my @optkeys;
-    foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
+    foreach my $tmp (@{$ETHTOOL_OPTION_ORDER{$sectionname}}) {
         push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
     };
     foreach my $tmp (sort keys %options) {
@@ -315,8 +325,8 @@ sub ethtool_set_options
         my $currentv;
         if (exists($current{$k})) {
             $currentv = $current{$k};
-        } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
-            $currentv = $current{$ethtool_option_map{$sectionname}{$k}};
+        } elsif ($current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}}) {
+            $currentv = $current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}};
         } else {
             $self->info("ethtool_set_options: Skipping setting for ",
                         "$ethname/$sectionname/$k to $v as not in ethtool");
@@ -337,31 +347,28 @@ sub ethtool_set_options
     my $setoption = "--$sectionname";
     $setoption = "--set-$sectionname" if ($sectionname eq "ring");
     $setoption = "--change" if ($sectionname eq "ethtool");
-    $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
+    $self->runrun([$ETHTOOLCMD, $setoption, $ethname, @opts])
 }
 
 sub ethtool_options
 {
-    my ($self, $el) = @_;
-    my $opts = $el->getTree();
-    my $st = "ETHTOOL_OPTS=";
+    my ($self, $opts) = @_;
 
     # key ordering (important for autoneg/speed/duplex)
     my @optkeys;
-    foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
+    foreach my $tmp (@{$ETHTOOL_OPTION_ORDER{ethtool}}) {
         push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
     };
     foreach my $tmp (sort keys %$opts) {
         push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
     };
 
-
     my @op;
     foreach my $k (@optkeys) {
         push(@op, "$k $opts->{$k}");
     }
 
-    return "$st'" . join(' ', @op) . "'\n";
+    return "ETHTOOL_OPTS='" . join(' ', @op) . "'\n";
 }
 
 
@@ -397,23 +404,15 @@ sub make_key_equal_value_string
     return uc($variablename) . "='" . join(' ', @op) . "'\n";
 }
 
-
-sub Configure
+# Create a mapping of MAC addresses to device names
+# Returns hashref with key found MAC and value interface name
+# issue #1066: should also support ip; so no more dependency on ifconfig
+sub make_mac2dev
 {
-    my ($self, $config) = @_;
-
-    my $base_path = '/system/network';
-    # keep a hash of all files and links.
-    our (%exifiles, %exilinks);
-
-    my ($path, $file_name, $text);
-
-    # current setup, will be printed in case of major failure
-    my $init_config = $self->get_current_config();
-
+    my ($self) = @_;
     # Collect ifconfig info
     my $ifconfig_out;
-    my $proc = CAF::Process->new(['/sbin/ifconfig','-a'],
+    my $proc = CAF::Process->new([$IFCONFIGCMD,'-a'],
                                  stdout => \$ifconfig_out,
                                  stderr => "stdout",
                                  log => $self);
@@ -421,24 +420,40 @@ sub Configure
         $ifconfig_out = "" if (! defined($ifconfig_out));
 
         # holy backporting batman. they finally kicked it out!
-        $self->error("Running \"/sbin/ifconfig -a\" failed: output $ifconfig_out");
+        $self->error("Running \"$IFCONFIGCMD -a\" failed: output $ifconfig_out");
     }
 
     my @ifconfig_devs = split(/\n\s*\n/, $ifconfig_out);
 
     my $ifconfig_mac_regexp = '^(\S+)\s+.*?HWaddr\s+([\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\3[\dA-Fa-f]{2}){4})\s+';
 
-    my (%dev2mac, %mac2dev);
+    my %mac2dev;
     foreach my $tmp_dev (@ifconfig_devs) {
         $tmp_dev =~ s/\n/ /g;
         if ($tmp_dev =~ m/$ifconfig_mac_regexp/) {
-            $dev2mac{$1} = $2;
             $mac2dev{$2} = $1;
         }
     }
+    return \%mac2dev
+}
+
+sub Configure
+{
+    my ($self, $config) = @_;
+
+    # keep a hash of all files and links.
+    my (%exifiles, %exilinks);
+
+    my ($path, $file_name, $text);
+
+    # current setup, will be printed in case of major failure
+    my $init_config = $self->get_current_config();
+
+
+    my $mac2dev = $self->make_mac2dev();
 
     # component wide set_hwaddr setting
-    $path = $base_path;
+    $path = $BASE_PATH;
     my $set_hwaddr_default = 0;
     if ($config->elementExists($path."/set_hwaddr")) {
         if ($config->getValue($path."/set_hwaddr") eq "true") {
@@ -447,7 +462,7 @@ sub Configure
     }
 
     # read interface config in hash
-    $path = $base_path.'/interfaces';
+    $path = $BASE_PATH.'/interfaces';
     my (%net, $element, $elementname, $el, $elnr, $l, $ln, $mtu, %ethtoolconfig);
     my $net = $config->getElement($path);
     while ($net->hasNextElement()) {
@@ -477,9 +492,9 @@ sub Configure
                 }
             } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
                 $net{$ifacename}{$elementname} = $self->make_key_equal_value_string($elementname, $element);
-            } elsif (defined($ethtool_option_map{$elementname})) {
+            } elsif (defined($ETHTOOL_OPTION_MAP{$elementname})) {
                 # set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
-                $net{$ifacename}{$elementname."_opts"} = $self->ethtool_options($element) if ($elementname eq "ethtool");
+                $net{$ifacename}{$elementname."_opts"} = $self->ethtool_options($element->getTree()) if ($elementname eq "ethtool");
                 # add rest of ethtool opts
                 my $opts = $element->getTree();
                 $net{$ifacename}{$elementname} = $opts;
@@ -534,11 +549,8 @@ sub Configure
     # read current config
     my $dir_pref = "/etc/sysconfig/network-scripts";
     opendir(my $DIR, $dir_pref);
-    # here's the reason why it only verifies eth, bond, bridge, usb and vlan
-    # devices. add regexp at will
-    my $dev_regexp='-((eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(o|(p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
     # $1 is the device name
-    foreach my $file (grep(/$dev_regexp/, readdir($DIR))) {
+    foreach my $file (grep(m/$DEVICE_REGEXP/, readdir($DIR))) {
         my $msg;
         if ( -l "$dir_pref/$file" ) {
             # keep the links separate
@@ -814,7 +826,7 @@ sub Configure
         }
 
         # write iface ifcfg- file text
-        $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+        $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
         $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
 
         # route config, interface based.
@@ -839,7 +851,7 @@ sub Configure
                     $text .= "NETMASK".$rt."=255.255.255.255\n";
                 }
             };
-            $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+            $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
             $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
@@ -884,7 +896,7 @@ sub Configure
                 if ($net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
-                $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+                $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
                 $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
             }
         }
@@ -893,7 +905,7 @@ sub Configure
 
     # /etc/sysconfig/network
     # assuming that NETWORKING=yes
-    $path = $base_path;
+    $path = $BASE_PATH;
     $file_name = "/etc/sysconfig/network";
     $self->mk_bu($file_name);
     $exifiles{$file_name} = -1;
@@ -985,7 +997,7 @@ sub Configure
         }
     }
 
-    $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+    $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
     $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
 
 
@@ -998,7 +1010,7 @@ sub Configure
     # If you need this, buy more network adapters ;)
     my (%ifdown, %ifup);
     foreach my $file (sort keys %exifiles) {
-        if ($file =~ m/$dev_regexp/) {
+        if ($file =~ m/$DEVICE_REGEXP/) {
             my $if = $1;
             # ifdown: all devices that have files with non-zero status
             if ($exifiles{$file} != 0) {
@@ -1023,11 +1035,11 @@ sub Configure
                     }
                     $ifdown{$ma} = 1 if (($sl eq "yes") && ($ma =~ m/bond/));
                 } elsif (exists($net{$if}{'set_hwaddr'})
-                        && $net{$if}{'set_hwaddr'} eq 'true') {
+                         && $net{$if}{'set_hwaddr'} eq 'true') {
                     # to use HWADDR
                     # stop the interface with this macaddress (if any)
-                    if (exists($mac2dev{$net{$if}{'hwaddr'}})) {
-                        $ifdown{$mac2dev{$net{$if}{'hwaddr'}}} = 1;
+                    if (exists($mac2dev->{$net{$if}{'hwaddr'}})) {
+                        $ifdown{$mac2dev->{$net{$if}{'hwaddr'}}} = 1;
                     }
                 }
             }
@@ -1052,7 +1064,7 @@ sub Configure
 
     # Do ethtool processing for offload, ring and others
     foreach my $iface (sort keys %net) {
-        foreach my $sectionname (sort keys %ethtool_option_map) {
+        foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
             $self->ethtool_set_options($iface, $sectionname, $net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
         };
     };
@@ -1088,9 +1100,9 @@ sub Configure
     # replace modified/new files
     foreach my $file (sort keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) ||
+            copy($self->gen_backup_filename($file).$FAILED_SUFFIX,$file) ||
                 $self->error("replace modified/new files: can't copy ",
-                             $self->gen_backup_filename($file).FAILED_SUFFIX,
+                             $self->gen_backup_filename($file).$FAILED_SUFFIX,
                              " to $file. ($!)");
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
@@ -1123,10 +1135,10 @@ sub Configure
                                     $self->gen_backup_filename($file),
                                     " ($!)") ;
                 }
-                if (-e $self->gen_backup_filename($file).FAILED_SUFFIX) {
-                    unlink($self->gen_backup_filename($file).FAILED_SUFFIX) ||
+                if (-e $self->gen_backup_filename($file).$FAILED_SUFFIX) {
+                    unlink($self->gen_backup_filename($file).$FAILED_SUFFIX) ||
                         $self->warn("cleanup backups: can't unlink ",
-                                    $self->gen_backup_filename($file).FAILED_SUFFIX,
+                                    $self->gen_backup_filename($file).$FAILED_SUFFIX,
                                     " ($!)");
                 }
             }
@@ -1135,7 +1147,7 @@ sub Configure
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     $self->gen_backup_filename(" "), "with suffix ", FAILED_SUFFIX,
+                     $self->gen_backup_filename(" "), "with suffix ", $FAILED_SUFFIX,
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         # if not, revert and pray now done with a pure network

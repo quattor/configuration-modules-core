@@ -35,7 +35,7 @@ my $cmp = NCM::Component::network->new('network');
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
-my $fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-br0").NCM::Component::network::FAILED_SUFFIX);
+my $fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-br0").$NCM::Component::network::FAILED_SUFFIX);
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-br0 file written");
 
 like($fh, qr/STP=on/m, "enable STP");
