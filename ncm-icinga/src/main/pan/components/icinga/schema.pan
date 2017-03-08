@@ -13,26 +13,27 @@ include 'pan/types';
 # Pan statements like create ("...") or value ("...")
 
 type icinga_hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
-    SELF=="*" || SELF == 'dummy';
+    SELF == "*" || SELF == 'dummy';
 
-type icinga_hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF=="*";
+type icinga_hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) ||
+    SELF == "*";
 
 type icinga_commandstrings = string [] with exists ("/software/components/icinga/commands/" + SELF[0]);
 
 type icinga_timeperiodstring = string with exists ("/software/components/icinga/timeperiods/" + SELF) ||
-    SELF=="*";
+    SELF == "*";
 
 type icinga_contactgroupstring = string with exists ("/software/components/icinga/contactgroups/" + SELF) ||
-    SELF=="*";
+    SELF == "*";
 
 type icinga_contactstring = string with exists ("/software/components/icinga/contacts/" + SELF) ||
-    SELF=="*";
+    SELF == "*";
 
 type icinga_servicegroupstring = string with exists ("/software/components/icinga/servicegroups/" + SELF) ||
-    SELF=="*";
+    SELF == "*";
 
 type icinga_servicestring = string with exists ("/software/components/icinga/services/" + SELF) ||
-    SELF=="*";
+    SELF == "*";
 
 type icinga_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
 type icinga_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
@@ -162,7 +163,7 @@ type structure_icinga_service = {
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
-} with icinga_has_host_or_hostgroup (SELF);;
+} with icinga_has_host_or_hostgroup (SELF);
 
 # Servicegroup definition:
 type structure_icinga_servicegroup = {
@@ -186,7 +187,7 @@ type structure_icinga_servicedependency = {
     "execution_failure_criteria" ? icinga_execution_failure_string []
     "notification_failure_criteria" ? icinga_notification_failure_string []
     "dependency_period" ? icinga_timeperiodstring
-} with icinga_has_host_or_hostgroup (SELF);;
+} with icinga_has_host_or_hostgroup (SELF);
 
 # Contact definition
 type structure_icinga_contact = {
@@ -320,7 +321,8 @@ type structure_icinga_icinga_cfg = {
     "log_current_states" : boolean = true
     "log_external_commands" : boolean = true
     "log_passive_checks" : boolean = true
-    "log_external_commands_user" ? boolean = false  with {deprecated(0, 'removed in recent versions of icinga 1.X'); true;}
+    "log_external_commands_user" ? boolean = false with {
+                deprecated(0, 'removed in recent versions of icinga 1.X'); true; }
     "log_long_plugin_output" : boolean = false
     "global_host_event_handler" ? string
     "service_inter_check_delay_method" : string = "s"
@@ -419,7 +421,8 @@ type structure_icinga_icinga_cfg = {
     "ochp_timeout" ? long
     "ochp_command" ? string
     "use_timezone" ? string
-    "broker_module" ? string[] with {deprecated(0, 'deprecated recent versions of icinga 1.X, use module instead'); true;}
+    "broker_module" ? string[] with {
+            deprecated(0, 'deprecated recent versions of icinga 1.X, use module instead'); true; }
     "module" ? string[]
     "debug_file" ? string
     "debug_level" ? long
@@ -427,7 +430,7 @@ type structure_icinga_icinga_cfg = {
     "max_debug_file_size" ? long
     "ocsp_command" ? string
     "check_result_path" : string = "/var/icinga/checkresults"
-    "event_profiling_enabled" ? boolean = false with {deprecated(0, 'removed in recent versions of icinga 1.X'); true;}
+    "event_profiling_enabled" ? boolean = false with {deprecated(0, 'removed in recent versions of icinga 1.X'); true; }
     "additional_freshness_latency" ? long
     "check_for_orphaned_hosts" ? boolean
     "check_result_reaper_frequency" ? long
@@ -442,7 +445,7 @@ type structure_icinga_icinga_cfg = {
     "use_syslog_local_facility" ? boolean
 } = dict();
 
-type structure_icinga_service_list=structure_icinga_service[];
+type structure_icinga_service_list = structure_icinga_service[];
 
 type structure_icinga_ido2db_cfg = {
     "lock_file" : string = "/var/icinga/ido2db.lock"
@@ -491,7 +494,7 @@ type structure_component_icinga = {
     "hosts_generic" ? structure_icinga_host_generic {}
     "hostgroups" ? structure_icinga_hostgroup {}
     "hostdependencies" ? structure_icinga_hostdependency {}
-    "services" : structure_icinga_service_list {}
+    "services" : structure_icinga_service_list {} with icinga_check_service_name(SELF)
     "servicegroups" ? structure_icinga_servicegroup {}
     "general" : structure_icinga_icinga_cfg
     "cgi" : structure_icinga_cgi_cfg
