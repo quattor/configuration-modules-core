@@ -1,16 +1,7 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+${componentschema}
 
-declaration template components/network/schema;
+include 'quattor/types/component';
 
-include 'quattor/schema';
-
-
-type component_network_type = {
+type network_component = {
     include structure_component
 };
-
-
-bind "/software/components/network" = component_network_type;

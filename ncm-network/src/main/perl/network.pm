@@ -1,31 +1,92 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::network;
+=head1 NAME
 
-#
-# a few standard statements, mandatory for all components
-#
+network: Configure Network Settings
 
-use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+=head1 DESCRIPTION
 
-use EDG::WP4::CCM::Element;
+The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
+and the various files in C<< /etc/sysconfig/network-scripts >>.
+
+For restarting, a sleep value of 15 is used to make sure the restarted network
+is fully restarted (routing may need some time to come up completely).
+
+Because of this, adding/changing may cause some slowdown.
+
+New/changed settings are first tested by probing the CDB server on the port
+where the profile should be found. If this fails, the previous settings are reused.
+
+=head1 EXAMPLES
+
+=head2 CHANNEL BONDING
+
+To enable channel bonding with quattor using devices eth0 and eth1 to form bond0, proceed as follows:
+
+    include 'components/network/config';
+    prefix "/system/network/interfaces";
+    "eth0/bootproto" = "none";
+    "eth0/master" = "bond0";
+
+    "eth1/bootproto" = "none";
+    "eth1/master" = "bond0";
+
+    "bond0" = NETWORK_PARAMS;
+    "bond0/driver" = "bonding";
+    "bond0/bonding_opts/mode" = 6;
+    "bond0/bonding_opts/miimon" = 100;
+
+    include 'components/modprobe/config';
+    "/software/components/modprobe/modules" = append(dict("name", "bonding", "alias", "bond0"));
+
+    "/software/components/network/dependencies/pre" = append("modprobe");
+
+(see C<< <kernel>/Documentation/networking/bonding.txt >> for more info on the driver options)
+
+
+=head2 VLAN support
+
+Use the C<< vlan[0-9]{0-4} >> interface devices and set the explicit device name and physdev.
+The VLAN ID is the number of the '.' in the device name.
+C< physdev > is mandatory for C<< vlan[0-9]{0-4} >> device.
+
+An example:
+
+    prefix "/system/network/interfaces";
+    "vlan0" = VLAN_NETWORK_PARAMS;
+    "vlan0/device" = "eth0.3";
+    "vlan0/physdev" = "eth0";
+
+=head2 IPv6 support
+
+An example:
+
+    prefix "/system/network";
+    "ipv6/enabled" = true;
+    "ipv6/default_gateway" = "2001:678:123:e030::1";
+    "interfaces/eth0/ipv6_autoconf" = false;
+    "interfaces/eth0/ipv6addr" = "2001:610:120:e030::49/64";
+    "interfaces/eth0/ipv6addr_secondaries" = list(
+        "2001:678:123:e030::20:30/64",
+        "2001:678:123:e030:172:10:20:30/64",
+        );
+
+=cut
+
+use parent qw(NCM::Component);
+
+our $EC = LC::Exception::Context->new->will_store_all;
+
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
-use NCM::Check;
 
 use File::Copy;
 use Net::Ping;
-use Data::Dumper;
+
 use CAF::Process;
 use CAF::FileReader;
 use CAF::FileWriter;
 use Fcntl qw(SEEK_SET);
-use LC::File;
+
 use POSIX qw(WIFEXITED WEXITSTATUS);
 
 # Ethtool formats query information differently from set parameters so
@@ -177,10 +238,10 @@ sub Configure
 
     # read interface config in hash
     $path = $base_path.'/interfaces';
-    my ($iface, %net, $element, $elementname, $el, $elnr, $l, $ln, $mtu, %ethtoolconfig);
+    my (%net, $element, $elementname, $el, $elnr, $l, $ln, $mtu, %ethtoolconfig);
     my $net = $config->getElement($path);
     while ($net->hasNextElement()) {
-        $iface = $net->getNextElement();
+        my $iface = $net->getNextElement();
         my $ifacename = $iface->getName();
         # collect /system settings
         while ($iface->hasNextElement()) {
@@ -262,12 +323,12 @@ sub Configure
 
     # read current config
     my $dir_pref="/etc/sysconfig/network-scripts";
-    opendir(DIR, $dir_pref);
+    opendir(my $DIR, $dir_pref);
     # here's the reason why it only verifies eth, bond, bridge, usb and vlan
     # devices. add regexp at will
     my $dev_regexp='-((eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(o|(p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
     # $1 is the device name
-    foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
+    foreach my $file (grep(/$dev_regexp/, readdir($DIR))) {
         my $msg;
         if ( -l "$dir_pref/$file" ) {
             # keep the links separate
@@ -284,13 +345,13 @@ sub Configure
         }
         $self->debug(3, "Found ifcfg file $msg in dir ".$dir_pref);
     }
-    closedir(DIR);
+    closedir($DIR);
 
     # this is the gateway that will be used in case the default_gateway is not set
     my ($first_gateway, $first_gateway_int);
 
     # generate new files
-    foreach $iface ( keys %net ) {
+    foreach my $iface (sort keys %net) {
         # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
         my $file_name = "$dir_pref/ifcfg-$iface";
         $exifiles{$file_name} = 1;
@@ -584,7 +645,7 @@ sub Configure
                     $tmpdev = $iface.':'.$al;
                 };
                 # this is the only way it will work for VLANs
-                # if vlan device is vlanX and teh DEVICE is eg ethY.Z
+                # if vlan device is vlanX and the DEVICE is eg ethY.Z
                 #   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
                 # otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
                 # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
@@ -780,7 +841,7 @@ sub Configure
     }
 
     # Do ethtool processing for offload, ring and others
-    foreach my $iface ( keys %net ) {
+    foreach my $iface (sort keys %net) {
         foreach my $sectionname (keys %ethtool_option_map) {
             ethtoolSetOptions($iface,$sectionname,$net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
         };
@@ -926,7 +987,7 @@ sub Configure
 
     # remove all unresolved links
     # final cleanup
-    for my $link (keys %exilinks) {
+    for my $link (sort keys %exilinks) {
         unlink($link) if (! -e $link);
     };
 
