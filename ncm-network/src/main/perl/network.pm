@@ -80,7 +80,6 @@ our $EC = LC::Exception::Context->new->will_store_all;
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 
 use File::Copy;
-use Net::Ping;
 
 use CAF::Process;
 use CAF::FileReader;
@@ -123,13 +122,53 @@ my $ethtoolcmd = "/usr/sbin/ethtool";
 
 use constant FAILED_SUFFIX => '-failed';
 
+
+# Get current ethtool options for the given section
+sub ethtool_get_current
+{
+    my ($self, $ethname, $sectionname) = @_;
+    my %current;
+
+    my $showoption = "--show-$sectionname";
+    $showoption = "" if ($sectionname eq "ethtool");
+
+    my ($out, $err);
+    # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
+    if (CAF::Process->new([$ethtoolcmd, $showoption || (), $ethname],
+                          "stdout" => \$out,
+                          "stderr" => \$err
+        )->execute() ) {
+        foreach my $line (split('\n', $out)) {
+            if ($line =~ m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
+                my $k = $1;
+                my $v = $2;
+                # speed setting
+                $v = $1 if ($k eq $ethtool_option_map{ethtool}{speed} && $v =~ m/^(\d+)/);
+                # Duplex setting
+                $v =~ tr/A-Z/a-z/ if ($k eq $ethtool_option_map{ethtool}{duplex});
+                # auotneg setting
+                if ($k eq $ethtool_option_map{ethtool}{autoneg}) {
+                    $v = "off";
+                    $v = "on" if ($v =~ m/(Y|y)es/);
+                }
+
+                $current{$k} = $v;
+            }
+        }
+    } else {
+        $self->error("ethtool_get_current: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
+                     " (output: $out, stderr: $err)");
+    }
+    return %current;
+}
+
 # gen_backup_filename: returns backup filename for given file
 sub gen_backup_filename
 {
     my ($self, $file) = @_;
-    my $back_dir="/tmp";
+    my $back_dir = "/tmp";
 
-    my $back="$file";
+    my $back = "$file";
     $back =~ s/\//_/g;
     my $backup_file = "$back_dir/$back";
     return $backup_file;
@@ -189,9 +228,180 @@ sub file_dump
 }
 
 
+sub mk_bu
+{
+    my ($self, $file) = @_;
+    my $func = "mk_bu";
+
+    $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
+    copy($file, $self->gen_backup_filename($file)) ||
+        $self->error("$func: Can't create backup of $file to ",
+                     $self->gen_backup_filename($file), " ($!)");
+}
+
+sub test_network_ccm_fetch
+{
+    my ($self) = @_;
+
+    # only download file, don't really ccm-fetch!!
+    my $func = "test_network_ccm_fetch";
+    # sometimes it's possible that routing is a bit behind, so set this variable to some larger value
+    my $sleep_time = 15;
+    sleep($sleep_time);
+    # it should be in $PATH
+    $self->info("$func: trying ccm-fetch");
+    # no runrun, as it would trigger error (and dependency failure)
+    my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
+    my $exitcode = $?;
+    if ($exitcode == 0) {
+        $self->info("$func: OK: network up");
+        return 1;
+    } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
+        $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
+        return test_network_ping();
+    } else {
+        $self->warn("$func: FAILED: network down");
+        return 0;
+    }
+}
+
+sub get_current_config
+{
+    my ($self) = @_;
+
+    my $fh = CAF::FileReader->new("/etc/sysconfig/network",
+                                  log => $self);
+    my $output = "$fh";
+
+    $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
+    $output .= $self->runrun(["/sbin/ifconfig"]);
+    $output .= $self->runrun([qw(/sbin/route -n)]);
+
+    # when brctl is missing, this would generate an error.
+    # but it is harmless to skip the show command.
+    my $brexe = "/usr/sbin/brctl";
+    if (-x $brexe) {
+        $output .= $self->runrun([$brexe, "show"]);
+    } else {
+        $output .= "Missing $brexe executable.\n";
+    };
+
+    return $output;
+}
+
+sub ethtool_set_options
+{
+    my ($self, $ethname, $sectionname, $optionref) = @_;
+    my %options = %$optionref;
+    my $cmd;
+
+    # get current values into %current
+    my %current = $self->ethtool_get_current($ethname, $sectionname);
+
+    # Loop over template settings and check that they are known but different
+
+    # key ordering (important for autoneg/speed/duplex)
+    my @optkeys;
+    foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
+        push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
+    };
+    foreach my $tmp (sort keys %options) {
+        push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
+    };
+
+    my @opts;
+    foreach my $k (@optkeys) {
+        my $v = $options{$k};
+        my $currentv;
+        if (exists($current{$k})) {
+            $currentv = $current{$k};
+        } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
+            $currentv = $current{$ethtool_option_map{$sectionname}{$k}};
+        } else {
+            $self->info("ethtool_set_options: Skipping setting for ",
+                        "$ethname/$sectionname/$k to $v as not in ethtool");
+            next;
+        }
+
+        # Is the value different between template and the machine
+        if ($currentv eq $v) {
+            $self->verbose("ethtool_set_options: value for $ethname/$sectionname/$k is already set to $v");
+        } else {
+            push(@opts, $k, $v);
+        }
+    }
+
+    # nothing to do?
+    return if (! @opts);
+
+    my $setoption = "--$sectionname";
+    $setoption = "--set-$sectionname" if ($sectionname eq "ring");
+    $setoption = "--change" if ($sectionname eq "ethtool");
+    $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
+}
+
+sub ethtool_options
+{
+    my ($self, $el) = @_;
+    my $opts = $el->getTree();
+    my $st = "ETHTOOL_OPTS=";
+
+    # key ordering (important for autoneg/speed/duplex)
+    my @optkeys;
+    foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
+        push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
+    };
+    foreach my $tmp (sort keys %$opts) {
+        push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
+    };
+
+
+    my @op;
+    foreach my $k (@optkeys) {
+        push(@op, "$k $opts->{$k}");
+    }
+
+    return "$st'" . join(' ', @op) . "'\n";
+}
+
+
+sub runrun
+{
+    my ($self, @cmds) = @_;
+    return if (!@cmds);
+
+    my @output;
+
+    foreach my $cmd (@cmds) {
+        push(@output, CAF::Process->new($cmd, log => $self)->output());
+        if ($?) {
+            $self->error("Error output: $output[-1]");
+        }
+    }
+
+    return join("", @output);
+}
+
+
+# Creates a string defining the bonding/bridging or ethtool options.
+sub make_key_equal_value_string
+{
+    my ($self, $variablename, $el) = @_;
+    my $opts = $el->getTree();
+    my @op;
+
+    foreach my $k (sort keys %$opts) {
+        push(@op, "$k=$opts->{$k}");
+    }
+
+    return uc($variablename) . "='" . join(' ', @op) . "'\n";
+}
+
+
 sub Configure
 {
-    our ($self, $config)=@_;
+    my ($self, $config) = @_;
+
     my $base_path = '/system/network';
     # keep a hash of all files and links.
     our (%exifiles, %exilinks);
@@ -199,7 +409,7 @@ sub Configure
     my ($path, $file_name, $text);
 
     # current setup, will be printed in case of major failure
-    my $init_config = get_current_config();
+    my $init_config = $self->get_current_config();
 
     # Collect ifconfig info
     my $ifconfig_out;
@@ -266,10 +476,10 @@ sub Configure
                     $net{$ifacename}{$elementname}{$elnr} = \%tmp_el;
                 }
             } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
-                $net{$ifacename}{$elementname} = make_key_equal_value_string($elementname, $element);
+                $net{$ifacename}{$elementname} = $self->make_key_equal_value_string($elementname, $element);
             } elsif (defined($ethtool_option_map{$elementname})) {
                 # set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
-                $net{$ifacename}{$elementname."_opts"} = ethtool_options($element) if ($elementname eq "ethtool");
+                $net{$ifacename}{$elementname."_opts"} = $self->ethtool_options($element) if ($elementname eq "ethtool");
                 # add rest of ethtool opts
                 my $opts = $element->getTree();
                 $net{$ifacename}{$elementname} = $opts;
@@ -282,7 +492,7 @@ sub Configure
         }
 
         # collect /hardware info
-        my $hw_path= "/hardware/cards/nic/".$ifacename;
+        my $hw_path = "/hardware/cards/nic/".$ifacename;
 
         # CERN nic = list patch
         if (! $config->elementExists($hw_path)) {
@@ -322,7 +532,7 @@ sub Configure
     }
 
     # read current config
-    my $dir_pref="/etc/sysconfig/network-scripts";
+    my $dir_pref = "/etc/sysconfig/network-scripts";
     opendir(my $DIR, $dir_pref);
     # here's the reason why it only verifies eth, bond, bridge, usb and vlan
     # devices. add regexp at will
@@ -340,7 +550,7 @@ sub Configure
             # backup all involved files
             if ($file =~ m/([:A-Za-z0-9.-]*)/) {
                 my $untaint_file = $1;
-                mk_bu("$dir_pref/$untaint_file");
+                $self->mk_bu("$dir_pref/$untaint_file");
             }
         }
         $self->debug(3, "Found ifcfg file $msg in dir ".$dir_pref);
@@ -448,7 +658,7 @@ sub Configure
         if ( $net{$iface}{'bootproto'} ) {
             $bootproto=$net{$iface}{'bootproto'};
         } else {
-            $bootproto="static";
+            $bootproto = "static";
         }
         $text .= "BOOTPROTO=".$bootproto."\n";
 
@@ -635,7 +845,7 @@ sub Configure
         # set up aliases for interfaces
         # on file per alias
         if (exists($net{$iface}{aliases})) {
-            foreach my $al (keys %{$net{$iface}{aliases}}) {
+            foreach my $al (sort keys %{$net{$iface}{aliases}}) {
                 $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
                 $exifiles{$file_name} = 1;
                 my $tmpdev;
@@ -683,10 +893,10 @@ sub Configure
 
     # /etc/sysconfig/network
     # assuming that NETWORKING=yes
-    $path=$base_path;
+    $path = $base_path;
     $file_name = "/etc/sysconfig/network";
-    mk_bu($file_name);
-    $exifiles{$file_name}=-1;
+    $self->mk_bu($file_name);
+    $exifiles{$file_name} = -1;
     $text = "";
     $text .= "NETWORKING=yes\n";
     # set hostname.
@@ -787,7 +997,7 @@ sub Configure
     # I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
     # If you need this, buy more network adapters ;)
     my (%ifdown, %ifup);
-    foreach my $file (keys %exifiles) {
+    foreach my $file (sort keys %exifiles) {
         if ($file =~ m/$dev_regexp/) {
             my $if = $1;
             # ifdown: all devices that have files with non-zero status
@@ -832,7 +1042,7 @@ sub Configure
             return 1;
         }
     }
-    foreach my $if (keys %ifdown) {
+    foreach my $if (sort keys %ifdown) {
         # ifup: all devices that are in ifdown and have a 0 or 1
         # status for ifcfg-[dev]
         $ifup{$if} = 1 if ($exifiles{"$dir_pref/ifcfg-$if"} != -1);
@@ -842,8 +1052,8 @@ sub Configure
 
     # Do ethtool processing for offload, ring and others
     foreach my $iface (sort keys %net) {
-        foreach my $sectionname (keys %ethtool_option_map) {
-            ethtoolSetOptions($iface,$sectionname,$net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
+        foreach my $sectionname (sort keys %ethtool_option_map) {
+            $self->ethtool_set_options($iface, $sectionname, $net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
         };
     };
 
@@ -855,8 +1065,8 @@ sub Configure
         # warning: this can cause troubles with the recovery to previous state in case of failure
         # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
         # (or better yet, post ncm-spma)
-        push(@disablenm_cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
-        push(@disablenm_cmds,["/sbin/service NetworkManager stop"]);
+        push(@disablenm_cmds, ["/sbin/chkconfig --level 2345 NetworkManager off"]);
+        push(@disablenm_cmds, ["/sbin/service NetworkManager stop"]);
         $self->runrun(@disablenm_cmds);
     };
 
@@ -876,7 +1086,7 @@ sub Configure
     }
     $self->runrun(@cmds);
     # replace modified/new files
-    foreach my $file (keys %exifiles) {
+    foreach my $file (sort keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
             copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) ||
                 $self->error("replace modified/new files: can't copy ",
@@ -886,6 +1096,7 @@ sub Configure
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
     }
+
     # ifup OR network start
     if (($exifiles{"/etc/sysconfig/network"} == 1) ||
         ($exifiles{"/etc/sysconfig/network"} == 2)) {
@@ -901,9 +1112,9 @@ sub Configure
     }
     $self->runrun(@cmds);
     # test network
-    if (test_network()) {
+    if ($self->test_network_ccm_fetch()) {
         # if ok, clean up backups
-        foreach my $file (keys %exifiles) {
+        foreach my $file (sort keys %exifiles) {
             # don't clean up files that are not changed
             if ($exifiles{$file} != 0) {
                 if (-e $self->gen_backup_filename($file)) {
@@ -924,19 +1135,19 @@ sub Configure
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     $self->gen_backup_filename(" "), "with suffix ",FAILED_SUFFIX,
+                     $self->gen_backup_filename(" "), "with suffix ", FAILED_SUFFIX,
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         # if not, revert and pray now done with a pure network
         # stop/start it's the only thing that should always work.
 
         # current config. useful for debugging
-        my $failure_config=get_current_config();
+        my $failure_config = $self->get_current_config();
 
         $self->runrun([qw(/sbin/service network stop)]);
 
         # revert to original files
-        foreach my $file (keys %exifiles) {
+        foreach my $file (sort keys %exifiles) {
             if ($exifiles{$file} == 2) {
                 $self->info("RECOVER: Removing new file $file.");
                 if (-e $file) {
@@ -971,7 +1182,7 @@ sub Configure
         $self->info("Result of test_network_ping: ".test_network_ping());
         $self->info("Initial setup\n$init_config");
         $self->info("Setup after failure\n$failure_config");
-        $self->info("Current setup\n".get_current_config());
+        $self->info("Current setup\n".$self->get_current_config());
 
         if (! $nw_test) {
             $self->info("The profile of this machine could not be ",
@@ -991,254 +1202,8 @@ sub Configure
         unlink($link) if (! -e $link);
     };
 
-    # end of Configure
-
-    sub mk_bu {
-        my $func="mk_bu";
-        ## makes backup of file
-        my $file = shift || $self->error("$func: No file given.");
-
-        $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
-        copy($file, $self->gen_backup_filename($file)) ||
-            $self->error("$func: Can't create backup of $file to ",
-                         $self->gen_backup_filename($file), " ($!)");
-    }
-
-    sub test_network {
-        #return test_network_ping();
-        return test_network_ccm_fetch();
-    }
-
-    sub test_network_ccm_fetch {
-        # only download file, don't really ccm-fetch!!
-        my $func = "test_network_ccm_fetch";
-        # sometimes it's possible that routing is a bit behind, so set this variable to some larger value
-        my $sleep_time = 15;
-        sleep($sleep_time);
-        # it should be in $PATH
-        $self->info("$func: trying ccm-fetch");
-        # no runrun, as it would trigger error (and dependency failure)
-        my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
-        my $exitcode=$?;
-        if ($exitcode == 0) {
-            $self->info("$func: OK: network up");
-            return 1;
-        } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
-            $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
-            return test_network_ping();
-        } else {
-            $self->warn("$func: FAILED: network down");
-            return 0;
-        }
-    }
-
-    sub get_current_config {
-        my $output;
-        my $fh = CAF::FileReader->new("/etc/sysconfig/network",
-                                      log => $self);
-        $output = "$fh";
-
-        $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
-        $output .= $self->runrun(["/sbin/ifconfig"]);
-        $output .= $self->runrun([qw(/sbin/route -n)]);
-
-        # when brctl is missing, this would generate an error.
-        # but it is harmless to skip the show command.
-        my $brexe = "/usr/sbin/brctl";
-        if (-x $brexe) {
-            $output .= $self->runrun([$brexe, "show"]);
-        } else {
-            $output .= "Missing $brexe executable.\n";
-        };
-
-        return $output;
-    }
-
-    sub test_network_ping {
-        my $func = "test_network_ping";
-
-        # sometimes it's possible that routing is a bit behind, so
-        # set this variable to some larger value
-        my $sleep_time = 15;
-        # set port number of CDB server that should be reachable
-        # (like http or https)
-        my $profile = $config->getValue("/software/components/ccm/profile");
-        my $pro = $profile;
-        $pro =~ s/:\/\/.+//;
-        my $host = $profile;
-        $host =~ s/.+:\/\///;
-        $host =~ s/\/.+//;
-        sleep($sleep_time);
-        my $p = Net::Ping->new("tcp");
-
-        # check for portnumber in host
-        if ($host =~ m/:(\d+)/) {
-            $p->{port_num} = $1;
-            $host =~ s/:(\d+)//;
-        } else {
-            # get it by service if not explicitly defined
-            $p->{port_num} = getservbyname($pro, "tcp");
-        }
-
-        my $ec;
-        if ($p->ping($host)) {
-            $self->info("$func: OK: network up");
-            $ec = 1;
-        } else {
-            $self->warn("$func: FAILED: network down");
-            $ec = 0;
-        }
-        $p->close();
-
-        return $ec;
-    }
-
-    sub runrun {
-        my ($self, @cmds) = @_;
-        return if (!@cmds);
-
-        my @output;
-
-        foreach my $i (@cmds) {
-            push(@output, CAF::Process->new($i, log => $self)->output());
-            if ($?) {
-                $self->error("Error output: $output[-1]");
-           }
-        }
-
-        return join("", @output);
-    }
-
-
-    # Get current ethtool options for the given section
-    sub ethtoolGetCurrent {
-        my ($ethname,$sectionname)=@_;
-        my %current;
-
-        my $showoption="--show-$sectionname";
-        $showoption="" if ($sectionname eq "ethtool");
-
-        my ($out,$err);
-        # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
-        if (CAF::Process->new([$ethtoolcmd, $showoption || (), $ethname],
-                              "stdout" => \$out,
-                              "stderr" => \$err
-            )->execute() ) {
-            foreach (split('\n', $out)) {
-                if (m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
-                    my $k = $1;
-                    my $v = $2;
-                    # speed setting
-                    $v = $1 if ($k eq $ethtool_option_map{ethtool}{speed} && $v =~ m/^(\d+)/);
-                    # Duplex setting
-                    $v =~ tr/A-Z/a-z/ if ($k eq $ethtool_option_map{ethtool}{duplex});
-                    # auotneg setting
-                    if ($k eq $ethtool_option_map{ethtool}{autoneg}) {
-                        $v = "off";
-                        $v = "on" if ($v =~ m/(Y|y)es/);
-                    }
-
-                    $current{$k} = $v;
-                }
-            }
-        } else {
-            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
-                         " (output: $out, stderr: $err)");
-        }
-        return %current;
-    }
-
-
-    sub ethtoolSetOptions {
-        my ($ethname,$sectionname,$optionref)=@_;
-        my %options = %$optionref;
-        my $cmd;
-
-        # get current values into %current
-        my %current = ethtoolGetCurrent($ethname,$sectionname);
-
-        # Loop over template settings and check that they are known but different
-
-        # key ordering (important for autoneg/speed/duplex)
-        my @optkeys;
-        foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
-            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
-        };
-        foreach my $tmp (sort keys %options) {
-            push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-        };
-
-        my @opts;
-        for my $k (@optkeys) {
-            my $v = $options{$k};
-            my $currentv;
-            if (exists($current{$k})) {
-                $currentv = $current{$k};
-            } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
-                $currentv = $current{$ethtool_option_map{$sectionname}{$k}};
-            } else {
-                $self->info("ethtoolSetOptions: Skipping setting for ",
-                            "$ethname/$sectionname/$k to $v as not in ethtool");
-                next;
-            }
-
-            # Is the value different between template and the machine
-            if ($currentv eq $v) {
-                $self->verbose("ethtoolSetOptions: Value for $ethname/$sectionname/$k is already set to $v");
-            } else {
-                push(@opts, $k, $v);
-            }
-        }
-
-        ## nothing to do?
-        return if (! @opts);
-
-        my $setoption = "--$sectionname";
-        $setoption = "--set-$sectionname" if ($sectionname eq "ring");
-        $setoption = "--change" if ($sectionname eq "ethtool");
-        $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
-    }
-
-    # Creates a string defining the bonding/bridging or ethtool options.
-    sub make_key_equal_value_string {
-        my ($variablename, $el) = @_;
-        my $opts = $el->getTree();
-        my @op;
-
-        while (my ($k, $v) = each(%$opts)) {
-            push(@op, "$k=$v");
-        }
-
-        return uc($variablename) . "='" . join(' ', @op) . "'\n";
-    }
-
-    sub ethtool_options {
-        my ($el) = @_;
-        my $opts = $el->getTree();
-        my $st = "ETHTOOL_OPTS=";
-
-        # key ordering (important for autoneg/speed/duplex)
-        my @optkeys;
-        foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
-            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
-        };
-        foreach my $tmp (sort keys %$opts) {
-            push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-        };
-
-
-        my @op;
-        foreach my $k (@optkeys) {
-            my $v = ${$opts}{$k};
-            push(@op, "$k $v");
-        }
-
-        return "$st'" . join(' ', @op) . "'\n";
-    }
-
-
-    # real end of Configure
     return 1;
 }
+
 
 1;
