@@ -94,7 +94,7 @@ use Readonly;
 
 # ethtool opts that have to be ordered
 Readonly::Hash my %ETHTOOL_OPTION_ORDER => {
-    "ethtool" => ["autoneg", "speed", "duplex"]
+    ethtool => ["autoneg", "speed", "duplex"]
 };
 
 Readonly::Hash my %ETHTOOL_OPTION_MAP => {
@@ -128,7 +128,8 @@ Readonly my $ROUTECMD => '/sbin/route';
 
 Readonly our $FAILED_SUFFIX => '-failed';
 
-Readonly my $BASE_PATH => '/system/network';
+Readonly my $NETWORK_PATH => '/system/network';
+Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
 # Regexp for the supported ifcfg-<device> devices.
 # $1 must match the device name
@@ -190,9 +191,9 @@ sub gen_backup_filename
 # or not
 sub file_dump
 {
-    my $func = "file_dump";
-
     my ($self, $file, $text, $failed) = @_;
+
+    my $func = "file_dump";
 
     # check for subdirectories?
     my $backup_file = $self->gen_backup_filename($file);
@@ -300,28 +301,35 @@ sub get_current_config
     return $output;
 }
 
+# Given ethtool section options hashref, return ordered
+# list of keys.
+# Option ordering is important for autoneg/speed/duplex
+sub order_ethtool_options
+{
+    my ($self, $section, $options) = @_;
+
+    # Add options from preordered section
+    my @keys = grep {exists($options->{$_})} @{$ETHTOOL_OPTION_ORDER{$section}};
+
+    # Add remaining keys alphabetically
+    foreach my $key (sort keys %$options) {
+        push(@keys, $key) if (!(grep {$_ eq $key} @keys));
+    };
+
+    return @keys;
+}
+
 sub ethtool_set_options
 {
-    my ($self, $ethname, $sectionname, $optionref) = @_;
-    my %options = %$optionref;
+    my ($self, $ethname, $sectionname, $options) = @_;
 
     # get current values into %current
     my %current = $self->ethtool_get_current($ethname, $sectionname);
 
     # Loop over template settings and check that they are known but different
-
-    # key ordering (important for autoneg/speed/duplex)
-    my @optkeys;
-    foreach my $tmp (@{$ETHTOOL_OPTION_ORDER{$sectionname}}) {
-        push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
-    };
-    foreach my $tmp (sort keys %options) {
-        push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-    };
-
     my @opts;
-    foreach my $k (@optkeys) {
-        my $v = $options{$k};
+    foreach my $k (order_ethtool_options($sectionname, $options)) {
+        my $v = $options->{$k};
         my $currentv;
         if (exists($current{$k})) {
             $currentv = $current{$k};
@@ -350,22 +358,14 @@ sub ethtool_set_options
     $self->runrun([$ETHTOOLCMD, $setoption, $ethname, @opts])
 }
 
+# Create ifcfg ETHTOOL_OPTS entry from hashref $options (incl newline)
 sub ethtool_options
 {
-    my ($self, $opts) = @_;
-
-    # key ordering (important for autoneg/speed/duplex)
-    my @optkeys;
-    foreach my $tmp (@{$ETHTOOL_OPTION_ORDER{ethtool}}) {
-        push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
-    };
-    foreach my $tmp (sort keys %$opts) {
-        push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-    };
+    my ($self, $options) = @_;
 
     my @op;
-    foreach my $k (@optkeys) {
-        push(@op, "$k $opts->{$k}");
+    foreach my $k (order_ethtool_options('ethtool', $options)) {
+        push(@op, "$k $options->{$k}");
     }
 
     return "ETHTOOL_OPTS='" . join(' ', @op) . "'\n";
@@ -390,18 +390,17 @@ sub runrun
 }
 
 
-# Creates a string defining the bonding/bridging or ethtool options.
+# Creates a string defining with uppercase variablename
+# and single-quoted space seperated sorted key=value list from hashref opts
+# incl newline at the end
+# Used for bonding/bridging
 sub make_key_equal_value_string
 {
-    my ($self, $variablename, $el) = @_;
-    my $opts = $el->getTree();
-    my @op;
+    my ($self, $variablename, $opts) = @_;
 
-    foreach my $k (sort keys %$opts) {
-        push(@op, "$k=$opts->{$k}");
-    }
+    my @kvlist = map {"$_=$opts->{$_}"} sort keys %$opts;
 
-    return uc($variablename) . "='" . join(' ', @op) . "'\n";
+    return uc($variablename) . "='" . join(' ', @kvlist) . "'\n";
 }
 
 # Create a mapping of MAC addresses to device names
@@ -412,7 +411,7 @@ sub make_mac2dev
     my ($self) = @_;
     # Collect ifconfig info
     my $ifconfig_out;
-    my $proc = CAF::Process->new([$IFCONFIGCMD,'-a'],
+    my $proc = CAF::Process->new([$IFCONFIGCMD, '-a'],
                                  stdout => \$ifconfig_out,
                                  stderr => "stdout",
                                  log => $self);
@@ -434,117 +433,114 @@ sub make_mac2dev
             $mac2dev{$2} = $1;
         }
     }
-    return \%mac2dev
+    return \%mac2dev;
 }
+
+# Gather network interface data
+# Takes the /system/network data and makes some (minor) modifications to it.
+# Returns nwtree with modifications, not a copy.
+sub process_network
+{
+    my ($self, $config) = @_;
+
+    # Use another copy of network tree.
+    # It will be modified, so do not pass nwtree from Configure
+    my $nwtree = $config->getTree($NETWORK_PATH);
+    my $nics = $config->getTree($HARDWARE_PATH);
+
+    # Mapping for interface without hwaddr, value is human readable type
+    my $hr_map = {
+        bond => 'bonding',
+        vlan => 'VLAN',
+        ib => 'IPoIB',
+        br => 'bridge',
+        ovirtmgmt => 'virt bridge',
+    };
+    # Pattern to match interface name to hr_map. $1 is the key
+    my $hr_pattern = '^('.join('|', keys %$hr_map).')';
+
+    # read and modify interface config in hash
+    foreach my $ifname (sort keys %{$nwtree->{interfaces}}) {
+        my $iface = $nwtree->{interfaces}->{$ifname};
+
+        # handle aliases name: substitute the name for the key
+        $iface->{aliases} ||= {};
+        foreach my $name (sort keys %{$iface->{aliases}}) {
+            my $alias = $iface->{aliases}->{$name};
+            my $new_name = delete $alias->{name};
+            if (defined($new_name)) {
+                $self->debug(1, "Replaced alias $name with alias name $new_name for interface $ifname");
+                $iface->{aliases}->{$new_name} = $alias;
+                delete $iface->{aliases}->{$name};
+            }
+        }
+
+        # bonding/bridging options
+        foreach my $attr (qw(bonding_opts brigding_opts)) {
+            $iface->{$attr} = $self->make_key_equal_value_string($attr, $iface->{$attr});
+            $self->debug(1, "Replaced $attr with $iface->{$attr} for interface $ifname");
+        }
+
+        # add ethtool options preparsed. These will be set in ifcfg- config
+        # some are needed on boot (like autoneg/speed/duplex)
+        if (exists($iface->{ethtool})) {
+            $iface->{ethtool_opts} = $self->ethtool_options($iface->{ethtool});
+            $self->debug(1, "Added ethtool_opts $iface->{ethtool_opts} for interface $ifname");
+        }
+
+        # Handle hardware address
+        my $nicname = $ifname;
+
+        # TODO: can we get rid of this?
+        if (! exists($nics->{nicname}) and $ifname =~ m/^eth(\d+)/) {
+            # Try CERN nic as list
+            if (exists($nics->{1})) {
+                $nicname = $1 ;
+                $self->verbose("No nic found for $ifname, using nic-as-list name $nicname");
+            };
+        };
+
+        my $nic = $nics->{$nicname} || {};
+        my $mac = $nic->{hwaddr};
+
+        my $no_hw_msg = "interface $ifname. Setting set_hwaddr to false.";
+        if ($mac) {
+            # check MAC address. or can we trust type definitions?
+            if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
+                $iface->{hwaddr} = $mac;
+            } else {
+                $self->error("Found invalid configured hwaddr $mac for $no_hw_msg",
+                             "(Please contact the developers in case you think it is a valid MAC address).");
+                $iface->{set_hwaddr} = 0;
+            }
+        } else {
+            $iface->{set_hwaddr} = 0;
+            my $msg = "No value found for the hwaddr of $no_hw_msg";
+            if ($ifname =~ m/$hr_pattern/) {
+                $self->verbose("$msg This is considered normal for a $hrmap->{$1}.");
+            } else {
+                $self->warn($msg);
+            }
+        }
+    }
+
+    return $nwtree;
+}
+
 
 sub Configure
 {
     my ($self, $config) = @_;
 
-    # keep a hash of all files and links.
-    my (%exifiles, %exilinks);
-
-    my ($path, $file_name, $text);
-
     # current setup, will be printed in case of major failure
     my $init_config = $self->get_current_config();
 
-
     my $mac2dev = $self->make_mac2dev();
 
-    # component wide set_hwaddr setting
-    $path = $BASE_PATH;
-    my $set_hwaddr_default = 0;
-    if ($config->elementExists($path."/set_hwaddr")) {
-        if ($config->getValue($path."/set_hwaddr") eq "true") {
-            $set_hwaddr_default = 1;
-        }
-    }
+    my $net = $self->process_network($config);
 
-    # read interface config in hash
-    $path = $BASE_PATH.'/interfaces';
-    my (%net, $element, $elementname, $el, $elnr, $l, $ln, $mtu, %ethtoolconfig);
-    my $net = $config->getElement($path);
-    while ($net->hasNextElement()) {
-        my $iface = $net->getNextElement();
-        my $ifacename = $iface->getName();
-        # collect /system settings
-        while ($iface->hasNextElement()) {
-            $element = $iface->getNextElement();
-            $elementname = $element->getName();
-            if ($elementname =~ m/route|aliases/) {
-                while ($element->hasNextElement()) {
-                    $el = $element->getNextElement();
-                    ## number of route OR name of alias
-                    $elnr = $el->getName();
-                    my %tmp_el;
-                    while ($el->hasNextElement()) {
-                        $l = $el->getNextElement();
-                        $ln = $l->getName();
-                        $tmp_el{$ln} = $l->getValue();
-                    }
-                    if ($elementname =~ m/aliases/) {
-                        # overwrite the alias name
-                        $elnr = $tmp_el{name} if (exists($tmp_el{name}));
-                        delete $tmp_el{name};
-                    }
-                    $net{$ifacename}{$elementname}{$elnr} = \%tmp_el;
-                }
-            } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
-                $net{$ifacename}{$elementname} = $self->make_key_equal_value_string($elementname, $element);
-            } elsif (defined($ETHTOOL_OPTION_MAP{$elementname})) {
-                # set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
-                $net{$ifacename}{$elementname."_opts"} = $self->ethtool_options($element->getTree()) if ($elementname eq "ethtool");
-                # add rest of ethtool opts
-                my $opts = $element->getTree();
-                $net{$ifacename}{$elementname} = $opts;
-            } elsif ($elementname =~ m/^ipv6addr_secondaries$/) {
-                my $opts = $element->getTree();
-                $net{$ifacename}{$elementname} = $opts;
-            } else {
-                $net{$ifacename}{$elementname} = $element->getValue();
-            }
-        }
-
-        # collect /hardware info
-        my $hw_path = "/hardware/cards/nic/".$ifacename;
-
-        # CERN nic = list patch
-        if (! $config->elementExists($hw_path)) {
-            $hw_path = "/hardware/cards/nic/".$1 if ($ifacename =~ m/^eth(\d+)/);
-        };
-        my $hwaddr_path = $hw_path."/hwaddr";
-
-        if ($config->elementExists($hwaddr_path)) {
-            my $mac = $config->getValue($hwaddr_path);
-            # check MAC address? can we trust type definitions?
-            if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
-                $net{$ifacename}{'hwaddr'} = $mac;
-            } else {
-                $self->error("The configured hwaddr $mac for interface $ifacename ",
-                             "didn't pass the regexp. Setting set_hwaddr to false. ",
-                             "(Please contact the developers in case you think it is a valid MAC address).");
-                $net{$ifacename}{'set_hwaddr'} = 'false';
-            }
-        } else {
-            my $msg = "No value found for the hwaddr of interface ".
-                      "$ifacename. Setting set_hwaddr to false.";
-            if ($ifacename =~ m/^(bond|vlan|ib|br|ovirtmgmt)/) {
-                my $hr_ifacename = $1;
-                if ($hr_ifacename eq "bond") {
-                    $hr_ifacename = "bonding";
-                } elsif ($hr_ifacename eq "ib") {
-                    $hr_ifacename = "IPoIB";
-                } elsif ($hr_ifacename =~ m/^(br|ovirtmgmt)/) {
-                    $hr_ifacename = "bridging";
-                }
-                $self->info("$msg. As it appears to be a $hr_ifacename interface, this is considered normal.");
-            } else {
-                $self->warn($msg);
-            };
-            $net{$ifacename}{'set_hwaddr'} = 'false';
-        }
-    }
+    # keep a hash of all files and links.
+    my (%exifiles, %exilinks);
 
     # read current config
     my $dir_pref = "/etc/sysconfig/network-scripts";
@@ -573,7 +569,7 @@ sub Configure
     my ($first_gateway, $first_gateway_int);
 
     # generate new files
-    foreach my $iface (sort keys %net) {
+    foreach my $iface (sort keys %$net) {
         # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
         my $file_name = "$dir_pref/ifcfg-$iface";
         $exifiles{$file_name} = 1;
@@ -835,6 +831,7 @@ sub Configure
             $file_name = "$dir_pref/route-$iface";
             $exifiles{$file_name} = 1;
             $text = "";
+            route is now an arrayref!
             foreach my $rt (sort keys %{$net{$iface}{route}}) {
                 if ($net{$iface}{route}{$rt}{'address'}) {
                     $text .= "ADDRESS$rt=" .
@@ -856,6 +853,7 @@ sub Configure
         }
         # set up aliases for interfaces
         # on file per alias
+        can be undef, not using exists for creation of net -> || {}
         if (exists($net{$iface}{aliases})) {
             foreach my $al (sort keys %{$net{$iface}{aliases}}) {
                 $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
@@ -905,7 +903,7 @@ sub Configure
 
     # /etc/sysconfig/network
     # assuming that NETWORKING=yes
-    $path = $BASE_PATH;
+    $path = $NETWORK_PATH;
     $file_name = "/etc/sysconfig/network";
     $self->mk_bu($file_name);
     $exifiles{$file_name} = -1;
