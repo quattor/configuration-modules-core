@@ -120,8 +120,8 @@ type structure_interface = {
     "netmask" ? type_ip
     "broadcast" ? type_ip
     "driver" ? string
-    "bootproto" ? string
-    "onboot" ? string
+    "bootproto" ? string # TODO: only allow match(SELF, '^(static|bootp|dhcp)')
+    "onboot" ? string # TODO: only allow match(SELF, '^(yes|no)$')
     "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
     "device" ? string
     "master" ? string
@@ -143,7 +143,10 @@ type structure_interface = {
     "ring" ? structure_ethtool_ring
     "ethtool" ? structure_ethtool
 
+    @{Is a VLAN device. If the device name starts with vlan, this is always true.}
     "vlan" ? boolean
+    @{If the device name starts with vlan, this has to be set.
+      It is set (but ignored by ifup) if it the device is not named vlan}
     "physdev" ? valid_interface
 
     "fqdn" ? string
