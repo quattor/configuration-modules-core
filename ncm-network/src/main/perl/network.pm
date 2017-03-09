@@ -590,19 +590,13 @@ sub Configure
     # keep a hash of all files and links.
     my ($exifiles, $exilinks) = $self->gather_existsing();
 
-    # this is the gateway that will be used in case the default_gateway is not set
-    my ($first_gateway, $first_gateway_int);
-
     # generate new files
     foreach my $iface (sort keys %$net) {
         # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
         my $file_name = "$dir_pref/ifcfg-$iface";
         $exifiles->{$file_name} = $UPDATED;
         $text = "";
-        if ((! $first_gateway) && $net{$iface}{gateway}) {
-            $first_gateway = $net{$iface}{gateway};
-            $first_gateway_int = $iface;
-        }
+
         if ($net{$iface}{onboot}) {
             $text .= "ONBOOT=".$net{$iface}{onboot}."\n";
         } else {
@@ -953,16 +947,26 @@ sub Configure
         }
     }
 
+    # this is the gateway that will be used in case the default_gateway is not set
+    my $first_gateway;
+    foreach my $iface (sort keys %$net) {
+        if ($net->{$iface}->{gateway}) {
+            $first_gateway = [$net->{$iface}->{gateway}, $iface];
+            $self->verbose("Found first gateway $first_gateway->[0] on interface $first_gateway->[1]");
+            last;
+        }
+    };
+
     my $nogw_msg = "No default gateway defined in /system/network/default_gateway";
     if ($config->elementExists($path."/default_gateway")) {
         $text .= "GATEWAY=".$config->getValue($path."/default_gateway")."\n";
     } elsif ($missing_default_gateway_autoguess) {
-        if ($first_gateway eq '') {
-            $self->warn("$nogw_msg AND no interface found with a gateway configured.");
+        if ($first_gateway) {
+            $self->info("$nogw_msg Going to use the gateway $first_gateway->[0] ",
+                        "configured for device $first_gateway->[1].");
+            $text .= "GATEWAY=$first_gateway->[0]\n";
         } else {
-            $self->info("$nogw_msg Going to use the gateway $first_gateway ",
-                        "configured for device $first_gateway_int.");
-            $text .= "GATEWAY=$first_gateway\n";
+            $self->warn("$nogw_msg AND no interface found with a gateway configured.");
         }
     } else {
         $self->warn($nogw_msg);
