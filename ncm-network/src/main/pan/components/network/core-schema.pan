@@ -106,8 +106,8 @@ type structure_ethtool_wol = string with match (SELF, '^(p|u|m|b|a|g|s|d)+$');
 }
 type structure_ethtool = {
     "wol" ? structure_ethtool_wol
-    "autoneg" ? string with match (SELF, '^on|off$')
-    "duplex" ? string with match (SELF, '^half|full$')
+    "autoneg" ? string with match (SELF, '^(on|off)$')
+    "duplex" ? string with match (SELF, '^(half|full)$')
     "speed" ? long
 };
 
@@ -138,6 +138,7 @@ type structure_interface = {
     "set_hwaddr" ? boolean
     "bridge" ? valid_interface
     "bonding_opts" ? structure_bonding_options
+
     "offload" ? structure_ethtool_offload
     "ring" ? structure_ethtool_ring
     "ethtool" ? structure_ethtool
