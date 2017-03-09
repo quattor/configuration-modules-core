@@ -135,6 +135,13 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 # $1 must match the device name
 Readonly our $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?';
 
+Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
+
+Readonly my $HAS_BACKUP => -1;
+Readonly my $NOCHANGES => 0;
+Readonly my $UPDATED => 1;
+Readonly my $NEW => 2;
+
 # Get current ethtool options for the given section
 sub ethtool_get_current
 {
@@ -219,14 +226,14 @@ sub file_dump
     $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
     print $fh $text;
 
-    my $ec = 0;
+    my $filestatus = $NOCHANGES;
     if ($fh->close()) {
         if (-e $file) {
             $self->info("$func: file $file has newer version.");
-            $ec = 1;
+            $filestatus = $UPDATED;
         } else {
             $self->info("$func: file $file is new.");
-            $ec = 2;
+            $filestatus = $NEW;
         }
     } else {
         # they're equal, remove backup files
@@ -236,7 +243,8 @@ sub file_dump
         unlink($backup_file.$failed) ||
             $self->warn("$func: Can't unlink $backup_file$failed ($!)");
     };
-    return $ec;
+
+    return $filestatus;
 }
 
 
@@ -527,6 +535,46 @@ sub process_network
     return $nwtree;
 }
 
+# Look for existing interface configuration files (and links)
+# Return hashref for files and links, with key the absolute filepath.
+sub gather_existing
+{
+    my ($self) = @_;
+
+    my (%exifiles, %exilinks);
+
+    # read current config
+    opendir(my $dir, $IFCFG_DIR);
+
+    # $1 is the device name
+    foreach my $filename (grep {m/$DEVICE_REGEXP/} readdir($dir)) {
+        if ($filename =~ m/^([:\w.-]+)$/) {
+            $filename = $1; # untaint
+        } else {
+            $self->warn("Cannot untaint filename $IFCFG_DIR/$filename. Skipping");
+            next;
+        }
+
+        my $file = "$IFCFG_DIR/$filename";
+
+        my $msg;
+        if ( -l $file ) {
+            # keep the links separate
+            # TODO: value not used?
+            $exilinks{$file} = readlink($file);
+            $msg = "link (to target $exilinks{$file})";
+        } else {
+            $exifiles{$file} = $HAS_BACKUP;
+            $msg = "file";
+            $self->mk_bu($file);
+        }
+        $self->debug(3, "Found ifcfg $msg $file");
+    }
+    closedir($dir);
+
+    return (\%exifiles, \%exilinks);
+}
+
 
 sub Configure
 {
@@ -540,30 +588,7 @@ sub Configure
     my $net = $self->process_network($config);
 
     # keep a hash of all files and links.
-    my (%exifiles, %exilinks);
-
-    # read current config
-    my $dir_pref = "/etc/sysconfig/network-scripts";
-    opendir(my $DIR, $dir_pref);
-    # $1 is the device name
-    foreach my $file (grep(m/$DEVICE_REGEXP/, readdir($DIR))) {
-        my $msg;
-        if ( -l "$dir_pref/$file" ) {
-            # keep the links separate
-            $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
-            $msg = "link";
-        } else {
-            $exifiles{"$dir_pref/$file"} = -1;
-            $msg = "file";
-            # backup all involved files
-            if ($file =~ m/([:A-Za-z0-9.-]*)/) {
-                my $untaint_file = $1;
-                $self->mk_bu("$dir_pref/$untaint_file");
-            }
-        }
-        $self->debug(3, "Found ifcfg file $msg in dir ".$dir_pref);
-    }
-    closedir($DIR);
+    my ($exifiles, $exilinks) = $self->gather_existsing();
 
     # this is the gateway that will be used in case the default_gateway is not set
     my ($first_gateway, $first_gateway_int);
@@ -572,7 +597,7 @@ sub Configure
     foreach my $iface (sort keys %$net) {
         # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
         my $file_name = "$dir_pref/ifcfg-$iface";
-        $exifiles{$file_name} = 1;
+        $exifiles->{$file_name} = $UPDATED;
         $text = "";
         if ((! $first_gateway) && $net{$iface}{gateway}) {
             $first_gateway = $net{$iface}{gateway};
@@ -629,9 +654,9 @@ sub Configure
         }
         if ($net{$iface}{bridge}) {
             $text .= "BRIDGE='$net{$iface}{bridge}'\n";
-            unless (-x "/usr/sbin/brctl") {
+            unless (-x $BRIDGECMD) {
                 $self->error ("Error: bridge specified but ",
-                                "brctl not found");
+                                "$BRIDGECMD not found");
             }
         }
 
@@ -822,14 +847,14 @@ sub Configure
         }
 
         # write iface ifcfg- file text
-        $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-        $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
+        $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+        $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
 
         # route config, interface based.
         # hey, where are the static routes?
         if (exists($net{$iface}{route})) {
             $file_name = "$dir_pref/route-$iface";
-            $exifiles{$file_name} = 1;
+            $exifiles->{$file_name} = $UPDATED;
             $text = "";
             route is now an arrayref!
             foreach my $rt (sort keys %{$net{$iface}{route}}) {
@@ -848,8 +873,8 @@ sub Configure
                     $text .= "NETMASK".$rt."=255.255.255.255\n";
                 }
             };
-            $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-            $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+            $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
         }
         # set up aliases for interfaces
         # on file per alias
@@ -857,7 +882,7 @@ sub Configure
         if (exists($net{$iface}{aliases})) {
             foreach my $al (sort keys %{$net{$iface}{aliases}}) {
                 $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
-                $exifiles{$file_name} = 1;
+                $exifiles->{$file_name} = $UPDATED;
                 my $tmpdev;
                 if ($net{$iface}{'device'}) {
                     $tmpdev = $net{$iface}{'device'}.':'.$al;
@@ -894,8 +919,8 @@ sub Configure
                 if ($net{$iface}{aliases}{$al}{'netmask'}) {
                     $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
                 }
-                $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-                $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
+                $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+                $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
             }
         }
 
@@ -906,7 +931,7 @@ sub Configure
     $path = $NETWORK_PATH;
     $file_name = "/etc/sysconfig/network";
     $self->mk_bu($file_name);
-    $exifiles{$file_name} = -1;
+    $exifiles->{$file_name} = $HAS_BACKUP;
     $text = "";
     $text .= "NETWORKING=yes\n";
     # set hostname.
@@ -995,8 +1020,8 @@ sub Configure
         }
     }
 
-    $exifiles{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-    $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
+    $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+    $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
 
 
     # we now have a list with files and values.
@@ -1011,8 +1036,8 @@ sub Configure
         if ($file =~ m/$DEVICE_REGEXP/) {
             my $if = $1;
             # ifdown: all devices that have files with non-zero status
-            if ($exifiles{$file} != 0) {
-                $self->debug(3, "exifiles file $file with non-zero value found: ".$exifiles{$file});
+            if ($exifiles->{$file} != $NOCHANGES) {
+                $self->debug(3, "exifiles file $file with non-zero value found: $exifiles->{$file}");
                 $ifdown{$if} = 1;
                 # bonding: if you bring down a slave, always bring
                 # down it's master
@@ -1055,7 +1080,7 @@ sub Configure
     foreach my $if (sort keys %ifdown) {
         # ifup: all devices that are in ifdown and have a 0 or 1
         # status for ifcfg-[dev]
-        $ifup{$if} = 1 if ($exifiles{"$dir_pref/ifcfg-$if"} != -1);
+        $ifup{$if} = 1 if ($exifiles->{"$dir_pref/ifcfg-$if"} != $HAS_BACKUP);
         # bonding devices: don't bring the slaves up, only the master
         delete $ifup{$if} if (exists($net{$if}{'master'}));
     }
@@ -1085,7 +1110,7 @@ sub Configure
     # network status is tested separately
     my @cmds = ();
     # ifdown dev OR network stop
-    if ($exifiles{"/etc/sysconfig/network"} == 1) {
+    if ($exifiles->{"/etc/sysconfig/network"} == $UPDATED) {
         @cmds = [qw(/sbin/service network stop)];
     } else {
         foreach my $if (sort keys %ifdown) {
@@ -1097,19 +1122,19 @@ sub Configure
     $self->runrun(@cmds);
     # replace modified/new files
     foreach my $file (sort keys %exifiles) {
-        if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy($self->gen_backup_filename($file).$FAILED_SUFFIX,$file) ||
+        if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
+            copy($self->gen_backup_filename($file).$FAILED_SUFFIX, $file) ||
                 $self->error("replace modified/new files: can't copy ",
                              $self->gen_backup_filename($file).$FAILED_SUFFIX,
                              " to $file. ($!)");
-        } elsif ($exifiles{$file} == -1) {
+        } elsif ($exifiles->{$file} == $HAS_BACKUP) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
         }
     }
 
     # ifup OR network start
-    if (($exifiles{"/etc/sysconfig/network"} == 1) ||
-        ($exifiles{"/etc/sysconfig/network"} == 2)) {
+    if (($exifiles->{"/etc/sysconfig/network"} == $UPDATED) ||
+        ($exifiles->{"/etc/sysconfig/network"} == $NEW)) {
         @cmds = [qw(/sbin/service network start)];
     } else {
         @cmds = ();
@@ -1121,12 +1146,13 @@ sub Configure
         }
     }
     $self->runrun(@cmds);
+
     # test network
     if ($self->test_network_ccm_fetch()) {
         # if ok, clean up backups
         foreach my $file (sort keys %exifiles) {
             # don't clean up files that are not changed
-            if ($exifiles{$file} != 0) {
+            if ($exifiles->{$file} != $NOCHANGES) {
                 if (-e $self->gen_backup_filename($file)) {
                     unlink($self->gen_backup_filename($file)) ||
                         $self->warn("cleanup backups: can't unlink ",
@@ -1158,19 +1184,19 @@ sub Configure
 
         # revert to original files
         foreach my $file (sort keys %exifiles) {
-            if ($exifiles{$file} == 2) {
+            if ($exifiles->{$file} == $NEW) {
                 $self->info("RECOVER: Removing new file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
                 }
-            } elsif ($exifiles{$file} == 1) {
+            } elsif ($exifiles->{$file} == $UPDATED) {
                 $self->info("RECOVER: Replacing newer file $file.");
                 if (-e $file) {
                     unlink($file) || $self->error("Can't unlink $file.") ;
                 }
                 copy($self->gen_backup_filename($file),$file) ||
                     $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
-            } elsif ($exifiles{$file} == -1) {
+            } elsif ($exifiles->{$file} == $HAS_BACKUP) {
                 $self->info("RECOVER: Restoring file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
