@@ -366,17 +366,16 @@ sub ethtool_set_options
     $self->runrun([$ETHTOOLCMD, $setoption, $ethname, @opts])
 }
 
-# Create ifcfg ETHTOOL_OPTS entry from hashref $options (incl newline)
+# Create ifcfg ETHTOOL_OPTS entry as arrayref from hashref $options
 sub ethtool_options
 {
     my ($self, $options) = @_;
 
-    my @op;
+    my @eth_opts;
     foreach my $k (order_ethtool_options('ethtool', $options)) {
-        push(@op, "$k $options->{$k}");
+        push(@eth_opts, $k, $options->{$k});
     }
-
-    return "ETHTOOL_OPTS='" . join(' ', @op) . "'\n";
+    return \@eth_opts;
 }
 
 
@@ -397,19 +396,6 @@ sub runrun
     return join("", @output);
 }
 
-
-# Creates a string defining with uppercase variablename
-# and single-quoted space seperated sorted key=value list from hashref opts
-# incl newline at the end
-# Used for bonding/bridging
-sub make_key_equal_value_string
-{
-    my ($self, $variablename, $opts) = @_;
-
-    my @kvlist = map {"$_=$opts->{$_}"} sort keys %$opts;
-
-    return uc($variablename) . "='" . join(' ', @kvlist) . "'\n";
-}
 
 # Create a mapping of MAC addresses to device names
 # Returns hashref with key found MAC and value interface name
@@ -456,6 +442,9 @@ sub process_network
     my $nwtree = $config->getTree($NETWORK_PATH);
     my $nics = $config->getTree($HARDWARE_PATH);
 
+    my $set_hwaddr_default = $nwtree->{set_hwaddr} ? 1 : 0;
+    $self->verbose("Set hwaddr default $set_hwaddr_default");
+
     # Mapping for interface without hwaddr, value is human readable type
     my $hr_map = {
         bond => 'bonding',
@@ -465,7 +454,7 @@ sub process_network
         ovirtmgmt => 'virt bridge',
     };
     # Pattern to match interface name to hr_map. $1 is the key
-    my $hr_pattern = '^('.join('|', keys %$hr_map).')';
+    my $hr_pattern = '^('.join('|', sort keys %$hr_map).')';
 
     # read and modify interface config in hash
     foreach my $ifname (sort keys %{$nwtree->{interfaces}}) {
@@ -485,15 +474,16 @@ sub process_network
 
         # bonding/bridging options
         foreach my $attr (qw(bonding_opts brigding_opts)) {
-            $iface->{$attr} = $self->make_key_equal_value_string($attr, $iface->{$attr});
-            $self->debug(1, "Replaced $attr with $iface->{$attr} for interface $ifname");
+            my $opts = $iface->{$attr};
+            $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
+            $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
         }
 
         # add ethtool options preparsed. These will be set in ifcfg- config
         # some are needed on boot (like autoneg/speed/duplex)
         if (exists($iface->{ethtool})) {
             $iface->{ethtool_opts} = $self->ethtool_options($iface->{ethtool});
-            $self->debug(1, "Added ethtool_opts $iface->{ethtool_opts} for interface $ifname");
+            $self->debug(1, "Added ethtool_opts with ", join(' ', @{$iface->{ethtool}}), " for interface $ifname");
         }
 
         # Handle hardware address
@@ -508,8 +498,12 @@ sub process_network
             };
         };
 
+
+        # Each iface must have set_hwaddr attribute
+        # If set_hwaddr is true, hwaddr must be set
         my $nic = $nics->{$nicname} || {};
         my $mac = $nic->{hwaddr};
+        $iface->{set_hwaddr} = $set_hwaddr_default if !exists($iface->{set_hwaddr});
 
         my $no_hw_msg = "interface $ifname. Setting set_hwaddr to false.";
         if ($mac) {
@@ -523,12 +517,24 @@ sub process_network
             }
         } else {
             $iface->{set_hwaddr} = 0;
+
             my $msg = "No value found for the hwaddr of $no_hw_msg";
             if ($ifname =~ m/$hr_pattern/) {
-                $self->verbose("$msg This is considered normal for a $hrmap->{$1}.");
+                $self->verbose("$msg This is considered normal for a $hr_map->{$1}.");
             } else {
                 $self->warn($msg);
             }
+        }
+
+        # set vlan flag for the VLAN device
+        if ($ifname =~ m/^vlan\d+/) {
+            $iface->{vlan} = 1 ;
+            $self->verbose("$ifname is a VLAN device");
+        }
+        # interfaces named vlan need the physdev set
+        # and pointing to an existing interface
+        if ($ifname =~ m/^vlan\d+/ && ! $iface->{physdev}) {
+            $self->error("vlan device $ifname (with vlan[0-9]{0-9} naming convention) needs physdev set.");
         }
     }
 
@@ -576,6 +582,213 @@ sub gather_existing
 }
 
 
+# ifcfg are bash script that are sourced
+# simple form: KEY=$href->{$key} (no newline)
+# if value/default is arrayref, it is joined to string
+# options:
+#    def: default value
+#    var: variable name to use instead of key (will be uc'ed)
+#    bool: yesno/onoff : value (and default) are booleans, need to be converted to yesno
+#    quote: boolean quote the value in singlequotes
+#    join: if value is arrayref, use separator to join (default is ' ')
+# returns empty string is neither value or default exist
+sub _make_ifcfg_line
+{
+    my ($href, $key, %opts) = @_;
+
+    my $var = $opts{var} || $key;
+    my $value = defined($href->{$key}) ? $href->{$key} : $opts{def};
+    my $quote = $opts{quote} ? "'" : '';
+    my $sep = defined($opts{join}) ? $opts{join} : ' ';
+
+    if (defined($value)) {
+        if ($opts{bool}) {
+            $value = $value ? 'yes' : 'no' if ($opts{bool} eq 'yesno');
+            $value = $value ? 'on' : 'off' if ($opts{bool} eq 'onoff');
+        } elsif (ref($value) eq 'ARRAY') {
+            $value = join($sep, @$value);
+        }
+        return uc($var)."=$quote$value$quote";
+    } else{
+        return ''; # return string
+    };
+
+}
+
+# return anonymous sub that calls
+# _make_ifcfg_line with first arg $href
+# and appends result it not empty string to arrayref
+# and returns value
+sub _make_make_ifcfg_line
+{
+    my ($href, $aref) = @_;
+    return sub {
+        my $res = _make_ifcfg_line($href, @_);
+        if (defined($aref) and $res ne '') {
+            push(@$aref, $res);
+        };
+        return $res;
+    };
+}
+
+# Return ifcfg content
+sub make_ifcfg
+{
+    my ($self, $ifacename, $iface) = @_;
+
+    my @text;
+    my $makeline = _make_make_ifcfg_line($iface, \@text);
+
+    # onboot is a string?
+    &$makeline('onboot', def => 'yes');
+
+    &$makeline('nmcontrolled', var => 'nm_controlled', bool => 'yesno', def => 0, quote => 1);
+
+    &$makeline('device', def => $ifacename);
+
+    &$makeline('type', def => 'Ethernet');
+
+    if ( ($iface->{type} || '') =~ m/^OVS/) {
+        # Set OVS related variables
+        push(@text, "DEVICETYPE='ovs'");
+
+        foreach my $attr (qw(ovs_bridge ovs_opts ovs_extra bond_ifaces
+                          ovs_tunnel_type ovs_tunnel_opts ovs_patch_peer)) {
+            &$makeline($attr, quote => 1);
+        }
+    }
+
+    &$makeline('bridge', quote => 1);
+    if ($iface->{bridge} && (! -x $BRIDGECMD)) {
+        $self->error ("Error: bridge specified but $BRIDGECMD not found");
+    }
+
+    # set the HWADDR
+    &$makeline('hwaddr') if $iface->{set_hwaddr};
+
+    &$makeline('mtu');
+
+    # set the bootprotocol
+    &$makeline('bootproto', def => 'static');
+
+    my $bootproto = $iface->{bootproto} || 'static';
+    if ($bootproto eq 'static') {
+        foreach my $attr (qw(ip netmask broadcast)) {
+            if ($iface->{$attr}) {
+                &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
+            } else {
+                $self->error("Using static bootproto for $ifacename and no $attr configured");
+            }
+        }
+    } elsif (($bootproto eq "none") && $iface->{master}) {
+        # set bonding master
+        &$makeline('master');
+        push(@text, "SLAVE=yes");
+    }
+
+    # IPv6 additions
+    my $use_ipv6;
+
+    if ($iface->{ipv6addr}) {
+        &$makeline('ipv6addr');
+        $use_ipv6 = 1;
+    }
+    if ($iface->{ipv6addr_secondaries}) {
+        &$makeline('ipv6addr_secondaries', quote => 1);
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_autoconf})) {
+        &$makeline('ipv6_auotconf', bool => 'yesno');
+        if($iface->{ipv6_autoconf}) {
+            $use_ipv6 = 1;
+        } else {
+            $self->warn("Disabled IPv6 autoconf but no ipv6 address configured for $ifacename.")
+                if (!$iface->{ipv6addr});
+        }
+    }
+
+    if (defined($iface->{ipv6_rtr}) ) {
+        &$makeline('ipv6_rtr', bool => 'yesno');
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_mtu})) {
+        &$makeline('ipv6_mtu');
+        $use_ipv6 = 1;
+    }
+
+    if ($iface->{ipv6_privacy}) {
+        &$makeline('ipv6_privacy');
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_failure_fatal}) ) {
+        &$makeline('ipv6_failure_fatal', bool => 'yesno');
+        $use_ipv6 = 1;
+    }
+    if (defined($iface->{ipv4_failure_fatal}) ) {
+        &$makeline('ipv4_failure_fatal', bool => 'yesno');
+    }
+
+    # when both are undef, nothing is added
+    &$makeline('ipv6init', def => $use_ipv6, bool => 'yesno');
+
+    &$makeline('linkdelay');
+
+    # set some bridge-releated parameters
+    # bridge STP
+    &$makeline('stp', bool => 'onoff');
+    # bridge DELAY
+    &$makeline('delay');
+
+    # add generated options strings
+    foreach my $attr (qw(bonding_opts bridging_opts ethtool_opts)) {
+        &$makeline($attr, quote => 1);
+    };
+
+    # VLAN support
+    &$makeline('vlan', bool => 'yesno');
+
+    push(@text, "ISALIAS=no") if ($iface->{vlan});
+
+    &$makeline('physdev');
+
+    return \@text;
+}
+
+# Return ifcfg route content
+sub make_ifcfg_route
+{
+    my ($self, $routes) = @_;
+
+    my @text;
+    foreach my $idx (0 .. scalar(@$routes) -1) {
+        my $makeline = _make_make_ifcfg_line($routes->[$idx], \@text);
+        foreach my $attr (qw(address gateway netmask)) {
+            &$makeline($attr, var => "$attr$idx", def => ($attr eq 'netmask') ? '255.255.255.255' : undef);
+        }
+    }
+
+    return \@text;
+}
+
+# Return ifcfg alias content
+sub make_ifcfg_alias
+{
+    my ($self, $device, $alias) = @_;
+
+    my @text = ("DEVICE=$device");
+
+    my $makeline = _make_make_ifcfg_line($alias, \@text);
+    foreach my $attr (qw(ip broadcast netmask)) {
+        &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
+    }
+
+    return \@text;
+}
+
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -592,332 +805,53 @@ sub Configure
 
     # generate new files
     foreach my $iface (sort keys %$net) {
-        # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
-        my $file_name = "$dir_pref/ifcfg-$iface";
-        $exifiles->{$file_name} = $UPDATED;
-        $text = "";
-
-        if ($net{$iface}{onboot}) {
-            $text .= "ONBOOT=".$net{$iface}{onboot}."\n";
-        } else {
-            # default: assuming that ONBOOT=yes
-            $text .= "ONBOOT=yes\n";
-        }
-        if (exists($net{$iface}{nmcontrolled}) && $net{$iface}{nmcontrolled}) {
-            $text .= "NM_CONTROLLED='".$net{$iface}{nmcontrolled}."'\n";
-        } else {
-            # default: assuming that ONBOOT=yes
-            $text .= "NM_CONTROLLED='no'\n";
-        }
-        # first check the device
-        if ($net{$iface}{'device'}) {
-            $text .= "DEVICE=".$net{$iface}{'device'}."\n";
-        } else {
-            $text .= "DEVICE=".$iface."\n";
-        }
-        # set the networktype
-        if ($net{$iface}{'type'}) {
-            $text .= "TYPE=".$net{$iface}{'type'}."\n";
-            # Set OVS related variables
-            if ($net{$iface}{'type'} =~ /^OVS/) {
-                $text .= "DEVICETYPE='ovs'\n";
-                if ($net{$iface}{'ovs_bridge'}) {
-                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
-                }
-                if ($net{$iface}{'ovs_opts'}) {
-                    $text .= "OVS_OPTIONS='$net{$iface}{ovs_opts}'\n";
-                }
-                if ($net{$iface}{'ovs_extra'}) {
-                    $text .= "OVS_EXTRA=\"$net{$iface}{ovs_extra}\"\n";
-                }
-                if ($net{$iface}{'bond_ifaces'}) {
-                    $text .= "BOND_IFACES='".join(' ',@{$net{$iface}{bond_ifaces}})."'\n";
-                }
-                if ($net{$iface}{'ovs_tunnel_type'}) {
-                    $text .= "OVS_TUNNEL_TYPE='$net{$iface}{ovs_tunnel_type}'\n";
-                }
-                if ($net{$iface}{'ovs_tunnel_opts'}) {
-                    $text .= "OVS_TUNNEL_OPTIONS='$net{$iface}{ovs_tunnel_opts}'\n";
-                }
-                if ($net{$iface}{'ovs_patch_peer'}) {
-                    $text .= "OVS_PATCH_PEER='$net{$iface}{ovs_patch_peer}'\n";
-                }
-            }
-        } else {
-            $text .= "TYPE=Ethernet\n";
-        }
-        if ($net{$iface}{bridge}) {
-            $text .= "BRIDGE='$net{$iface}{bridge}'\n";
-            unless (-x $BRIDGECMD) {
-                $self->error ("Error: bridge specified but ",
-                                "$BRIDGECMD not found");
-            }
-        }
-
-        # set the HWADDR
-        # what about bonding??
-        my $set_hwaddr = 0;
-        if ( exists($net{$iface}{'set_hwaddr'}) ) {
-            if ( $net{$iface}{'set_hwaddr'} eq 'true') {
-                $set_hwaddr = 1;
-            }
-        } else {
-            $set_hwaddr = $set_hwaddr_default;
-        }
-
-        if ($set_hwaddr) {
-            if (exists($net{$iface}{'hwaddr'})) {
-                $text .= "HWADDR=".$net{$iface}{'hwaddr'}."\n";
-            } else {
-                # huh?
-                $self->error("set_hwaddr is true and no hwaddr defined for device $iface.",
-                             " Bug in component. Please contact the developers.");
-            }
-        }
-
-        # set the networktype
-        if ( $net{$iface}{'mtu'} ) {
-            $text .= "MTU=".$net{$iface}{'mtu'}."\n";
-        }
-
-        # set the bootprotocol
-        my $bootproto;
-        if ( $net{$iface}{'bootproto'} ) {
-            $bootproto=$net{$iface}{'bootproto'};
-        } else {
-            $bootproto = "static";
-        }
-        $text .= "BOOTPROTO=".$bootproto."\n";
-
-        if ($bootproto eq "static") {
-            # set ipaddr
-            if ($net{$iface}{'ip'}) {
-                $text .= "IPADDR=".$net{$iface}{'ip'}."\n";
-            } else {
-                $self->error("Using static bootproto and no ",
-                             "ipaddress configured for $iface");
-            }
-            # set netmask
-            if ($net{$iface}{'netmask'}) {
-                $text .= "NETMASK=".$net{$iface}{'netmask'}."\n";
-            } else {
-                $self->error("Using static bootproto and no netmask ",
-                             "configured for $iface");
-            }
-            # set broadcast
-            if ($net{$iface}{'broadcast'}) {
-                $text .= "BROADCAST=".$net{$iface}{'broadcast'}."\n";
-            } else {
-                $self->warn("Using static bootproto and no broadcast ",
-                            "configured for $iface");
-            }
-        } elsif (($bootproto eq "none") && $net{$iface}{'master'}) {
-            # set bonding master
-            $text .= "MASTER=".$net{$iface}{'master'}."\n";
-            $text .= "SLAVE=yes\n";
-        }
-
-        # IPv6 additions
-        my $use_ipv6;
-
-        if ($net{$iface}{'ipv6addr'}) {
-            $text .= "IPV6ADDR=".$net{$iface}{'ipv6addr'}."\n";
-            $use_ipv6 = 1;
-        }
-        if ($net{$iface}{'ipv6addr_secondaries'} && @{$net{$iface}{'ipv6addr_secondaries'}}) {
-            $text .= "IPV6ADDR_SECONDARIES='".join(' ', @{$net{$iface}{'ipv6addr_secondaries'}})."'\n";
-            $use_ipv6 = 1;
-        }
-        if (exists($net{$iface}{ipv6_autoconf})) {
-            if ( $net{$iface}{ipv6_autoconf} eq "true") {
-                $text .= "IPV6_AUTOCONF=yes\n";
-                $use_ipv6 = 1;
-            } else {
-                $text .= "IPV6_AUTOCONF=no\n";
-                if ( ! $net{$iface}{'ipv6addr'}) {
-                    $self->warn("Disabled IPv6 autoconf but no address configured for $iface.");
-                }
-            }
-        }
-        if (defined($net{$iface}{'ipv6_rtr'}) ) {
-            if ( $net{$iface}{'ipv6_rtr'} eq "true" ) {
-                $text .= "IPV6_ROUTER=yes\n";
-            } else {
-                $text .= "IPV6_ROUTER=no\n";
-            }
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_mtu'})) {
-            $text .= "IPV6_MTU=".$net{$iface}{'ipv6_mtu'}."\n";
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_privacy'}) && $net{$iface}{'ipv6_privacy'}) {
-            $text .= "IPV6_PRIVACY=".$net{$iface}{'ipv6_privacy'}."\n";
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_failure_fatal'}) ) {
-            if ( $net{$iface}{'ipv6_failure_fatal'} eq "true" ) {
-                $text .= "IPV6_FAILURE_FATAL=yes\n";
-            } else {
-                $text .= "IPV6_FAILURE_FATAL=no\n";
-            }
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv4_failure_fatal'}) ) {
-            if ( $net{$iface}{'ipv4_failure_fatal'} eq "true" ) {
-                $text .= "IPV4_FAILURE_FATAL=yes\n";
-            } else {
-                $text .= "IPV4_FAILURE_FATAL=no\n";
-            }
-        }
-        if (defined($net{$iface}{ipv6init}) ) {
-            # ipv6_init overrides implicit IPv6 enable by config
-            if ( $net{$iface}{ipv6init} eq "true") {
-                $use_ipv6 = 1;
-            } else {
-                $use_ipv6 = 0;
-            }
-        }
-        if ( defined ( $use_ipv6 ) ) {
-            if ( $use_ipv6 ) {
-                $text .= "IPV6INIT=yes\n";
-            } else {
-                $text .= "IPV6INIT=no\n";
-            }
-        }
-
-        # LINKDELAY
-        if (exists($net{$iface}{linkdelay})) {
-            $text .= "LINKDELAY=".$net{$iface}{linkdelay}."\n";
-        }
-
-        # set some bridge-releated parameters
-        # bridge STP
-        if (exists($net{$iface}{stp})) {
-            if ($net{$iface}{stp}) {
-                $text .= "STP=on\n";
-            } else {
-                $text .= "STP=off\n";
-            }
-        }
-        # bridge DELAY
-        if (exists($net{$iface}{delay})) {
-            $text .= "DELAY=".$net{$iface}{delay}."\n";
-        }
-
-        # add generated options strings
-        if (exists($net{$iface}{bonding_opts})) {
-            $text .= $net{$iface}{bonding_opts};
-        }
-
-        if (exists($net{$iface}{bridging_opts})) {
-            $text .= $net{$iface}{bridging_opts};
-        }
-
-        if (exists($net{$iface}{ethtool_opts})) {
-            $text .= $net{$iface}{ethtool_opts};
-        }
-
-
-        # VLAN support
-        # you do not need to set this for the VLAN device
-        $net{$iface}{vlan} = "true" if ($iface =~ m/^vlan\d+/);
-        if (exists($net{$iface}{vlan})) {
-            if ($net{$iface}{vlan} eq "true") {
-                $text .= "VLAN=yes\n";
-                # is this really needed?
-                $text .= "ISALIAS=no\n";
-            } else {
-                $text .= "VLAN=no\n";
-            }
-        }
-        # interfaces named vlan need the physdev set and pointing to an existing interface
-        if ($iface =~ m/^vlan\d+/) {
-            if (exists($net{$iface}{physdev})) {
-                $text .= "PHYSDEV=".$net{$iface}{physdev}."\n";
-            } else {
-                $self->error("vlan device with vlan[0-9]{0-9} naming convention need physdev set.");
-            }
-        }
+        my $text = $self->make_ifcfg($iface, $net->{$iface});
 
         # write iface ifcfg- file text
+        # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
+        my $file_name = "$IFCFG_DIR/ifcfg-$iface";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
         $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
 
         # route config, interface based.
-        # hey, where are the static routes?
-        if (exists($net{$iface}{route})) {
-            $file_name = "$dir_pref/route-$iface";
-            $exifiles->{$file_name} = $UPDATED;
-            $text = "";
-            route is now an arrayref!
-            foreach my $rt (sort keys %{$net{$iface}{route}}) {
-                if ($net{$iface}{route}{$rt}{'address'}) {
-                    $text .= "ADDRESS$rt=" .
-                        $net{$iface}{route}{$rt}{'address'}."\n";
-                }
-                if ($net{$iface}{route}{$rt}{'gateway'}) {
-                    $text .= "GATEWAY$rt=" .
-                        $net{$iface}{route}{$rt}{'gateway'}."\n";
-                }
-                if ($net{$iface}{route}{$rt}{'netmask'}) {
-                    $text .= "NETMASK$rt="  .
-                        $net{$iface}{route}{$rt}{'netmask'}."\n";
-                } else {
-                    $text .= "NETMASK".$rt."=255.255.255.255\n";
-                }
-            };
+        # TODO: hey, where are the (global) static routes?
+        my $routes = $iface->{route};
+        if (defined($routes)) {
+            my $text = $self->make_ifcfg_route($routes);
+
+            $file_name = "$IFCFG_DIR/route-$iface";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
             $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
         }
-        # set up aliases for interfaces
-        # on file per alias
-        can be undef, not using exists for creation of net -> || {}
-        if (exists($net{$iface}{aliases})) {
-            foreach my $al (sort keys %{$net{$iface}{aliases}}) {
-                $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
-                $exifiles->{$file_name} = $UPDATED;
-                my $tmpdev;
-                if ($net{$iface}{'device'}) {
-                    $tmpdev = $net{$iface}{'device'}.':'.$al;
-                } else {
-                    $tmpdev = $iface.':'.$al;
-                };
-                # this is the only way it will work for VLANs
-                # if vlan device is vlanX and the DEVICE is eg ethY.Z
-                #   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
-                # otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
-                # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
-                # problem is, we want both
-                # adding symlinks however is not the best thing to do...
-                if (exists($net{$iface}{vlan}) && ($net{$iface}{vlan} eq "true")) {
-                    my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
-                    if ($file_name_sym ne $file_name) {
-                        if (! -e $file_name_sym) {
-                            # this will create broken link, if $file_name is not yet existing
-                            if (! -l $file_name_sym) {
-                                symlink($file_name,$file_name_sym) ||
-                                    $self->error("Failed to create symlink ",
-                                                 "from $file_name to $file_name_sym ($!)");
-                            };
-                        };
-                    };
-                };
-                $text = "DEVICE=$tmpdev\n";
-                if ($net{$iface}{aliases}{$al}{'ip'}) {
-                    $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
-                }
-                if ($net{$iface}{aliases}{$al}{'broadcast'}) {
-                    $text .= "BROADCAST=".$net{$iface}{aliases}{$al}{'broadcast'}."\n";
-                }
-                if ($net{$iface}{aliases}{$al}{'netmask'}) {
-                    $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
-                }
-                $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-                $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
-            }
-        }
 
+        # set up aliases for interfaces
+        # one file per alias
+        foreach my $al (sort keys %{$iface->{aliases} || {}}) {
+            my $al_dev = ($iface->{device} || $iface) . ":$al";
+            my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
+
+            $file_name = "$IFCFG_DIR/ifcfg-$iface:$al";
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+            $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+
+            # This is the only way it will work for VLANs
+            # If vlan device is vlanX and the DEVICE is eg ethY.Z
+            # you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
+            # Otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
+            # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
+            # Problem is, we want both
+            # Adding symlinks however is not the best thing to do.
+
+            my $file_name_sym = "$IFCFG_DIR/ifcfg-$al_dev";
+            if ($iface->{vlan} &&
+                $file_name_sym ne $file_name &&
+                ! -e $file_name_sym &&
+                ! -l $file_name_sym) { # TODO: should check target with readlink
+                # this will create broken link, if $file_name is not yet existing
+                symlink($file_name, $file_name_sym) ||
+                    $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
+            };
+        }
     }
 
     # /etc/sysconfig/network
@@ -1028,7 +962,7 @@ sub Configure
     $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
 
 
-    # we now have a list with files and values.
+    # we now have a map with files and values.
     # for general network: separate?
     # for devices: create list of affected devices
 
@@ -1036,7 +970,7 @@ sub Configure
     # I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
     # If you need this, buy more network adapters ;)
     my (%ifdown, %ifup);
-    foreach my $file (sort keys %exifiles) {
+    foreach my $file (sort keys %$exifiles) {
         if ($file =~ m/$DEVICE_REGEXP/) {
             my $if = $1;
             # ifdown: all devices that have files with non-zero status
@@ -1084,7 +1018,7 @@ sub Configure
     foreach my $if (sort keys %ifdown) {
         # ifup: all devices that are in ifdown and have a 0 or 1
         # status for ifcfg-[dev]
-        $ifup{$if} = 1 if ($exifiles->{"$dir_pref/ifcfg-$if"} != $HAS_BACKUP);
+        $ifup{$if} = 1 if ($exifiles->{"$IFCFG_DIR/ifcfg-$if"} != $HAS_BACKUP);
         # bonding devices: don't bring the slaves up, only the master
         delete $ifup{$if} if (exists($net{$if}{'master'}));
     }
@@ -1125,7 +1059,7 @@ sub Configure
     }
     $self->runrun(@cmds);
     # replace modified/new files
-    foreach my $file (sort keys %exifiles) {
+    foreach my $file (sort keys %$exifiles) {
         if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
             copy($self->gen_backup_filename($file).$FAILED_SUFFIX, $file) ||
                 $self->error("replace modified/new files: can't copy ",
@@ -1154,7 +1088,7 @@ sub Configure
     # test network
     if ($self->test_network_ccm_fetch()) {
         # if ok, clean up backups
-        foreach my $file (sort keys %exifiles) {
+        foreach my $file (sort keys %$exifiles) {
             # don't clean up files that are not changed
             if ($exifiles->{$file} != $NOCHANGES) {
                 if (-e $self->gen_backup_filename($file)) {
@@ -1187,7 +1121,7 @@ sub Configure
         $self->runrun([qw(/sbin/service network stop)]);
 
         # revert to original files
-        foreach my $file (sort keys %exifiles) {
+        foreach my $file (sort keys %$exifiles) {
             if ($exifiles->{$file} == $NEW) {
                 $self->info("RECOVER: Removing new file $file.");
                 if (-e $file) {
@@ -1238,7 +1172,7 @@ sub Configure
 
     # remove all unresolved links
     # final cleanup
-    for my $link (sort keys %exilinks) {
+    for my $link (sort keys %$exilinks) {
         unlink($link) if (! -e $link);
     };
 
