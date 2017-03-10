@@ -136,6 +136,7 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 Readonly our $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?';
 
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
+Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
 Readonly my $HAS_BACKUP => -1;
 Readonly my $NOCHANGES => 0;
@@ -289,11 +290,10 @@ sub get_current_config
 {
     my ($self) = @_;
 
-    my $fh = CAF::FileReader->new("/etc/sysconfig/network",
-                                  log => $self);
-    my $output = "$fh";
+    my $fh = CAF::FileReader->new($NETWORKCFG, log => $self);
+    my $output = "$NETWORKCFG\n$fh";
 
-    $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
+    $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
     # TODO: replace, see issue #1066
     $output .= $self->runrun([$IFCONFIGCMD]);
     $output .= $self->runrun([$ROUTECMD, '-n']);
@@ -788,6 +788,81 @@ sub make_ifcfg_alias
     return \@text;
 }
 
+# /etc/sysconfig/network
+sub make_network_cfg
+{
+    my ($self, $nwtree, $net) = @_;
+
+    # assuming that NETWORKING=yes
+    my @text = ("NETWORKING=yes");
+
+    # set hostname
+    push(@text, 'HOSTNAME='.($nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}"));
+
+    # default gateway. why is this optional?
+    #
+    # what happens if no default_gateway is defined?
+    # search for first defined gateway and use it.
+    # here's the flag: default true
+    my $guess_dgw = defined($nwtree->{guess_default_gateway}) ? $nwtree->{guess_default_gateway} : 1;
+
+    my $nodgw_msg = "No default gateway configured";
+    my $dgw = $nwtree->{default_gateway};
+    if ($guess_dgw) {
+        # this is the gateway that will be used in case the default_gateway is not set
+        my $first_gateway;
+        foreach my $iface (sort keys %$net) {
+            if ($net->{$iface}->{gateway}) {
+                $dgw = $net->{$iface}->{gateway};
+                $self->info("$nodgw_msg. Found first gateway $dgw on interface $iface");
+                last;
+            }
+        };
+        # Set add the end, no conditional needed
+        $nodgw_msg .= " and no interface found with a gateway configured.";
+    }
+
+    if ($dgw) {
+        push(@text, "GATEWAY=$dgw");
+    } else {
+        $self->warn($nodgw_msg);
+    }
+
+    my $makeline = _make_make_ifcfg_line($nwtree, \@text);
+
+    &$makeline('nisdomain');
+
+    &$makeline('nozeroconf', bool => 'yesno');
+
+    &$makeline('gatewaydev');
+
+    &$makeline('nmcontrolled', var => 'nm_controlled', nbool => 'yesno');
+
+    # Enable and config IPv6 if either set explicitly or v6 config is present
+    # but note that the order of the v6 directive processing is important to
+    # make the 'default' enable do the right thing
+    my $ipv6 = $nwtree->{ipv6};
+    if ($ipv6) {
+        # No ipv6 makeline (yet), all different variable names etc
+        my $use_ipv6 = 0;
+
+        if ($ipv6->{default_gateway}) {
+            push(@text, "IPV6_DEFAULTGW=$ipv6->{default_gateway}");
+            $use_ipv6 = 1; # enable ipv6 for now
+        }
+        if ($ipv6->{gatewaydev}) {
+            push(@text, "IPV6_DEFAULTDEV=$ipv6->{gatewaydev}");
+            $use_ipv6 = 1; # enable ipv6 for now
+        }
+
+        if (defined($ipv6->{enabled})) {
+            $use_ipv6 = $ipv6->{enabled};
+        }
+        push(@text, "NETWORKING_IPV6=".($use_ipv6 ? "yes" : "no"));
+    }
+
+    return \@text;
+}
 
 sub Configure
 {
@@ -803,12 +878,21 @@ sub Configure
     # keep a hash of all files and links.
     my ($exifiles, $exilinks) = $self->gather_existsing();
 
-    # generate new files
+    my $nwtree = $config->getTree($NETWORK_PATH);
+
+    # main network config
+    my $text = make_network_cfg($nwtree, $net);
+    $file_name = $NETWORKCFG;
+    $self->mk_bu($file_name);
+    $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
+    $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+
+    # ifcfg- / route- files
     foreach my $iface (sort keys %$net) {
         my $text = $self->make_ifcfg($iface, $net->{$iface});
 
         # write iface ifcfg- file text
-        # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
+        # /etc/sysconfig/network-scripts/ifcfg-[dev][i]
         my $file_name = "$IFCFG_DIR/ifcfg-$iface";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
         $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
@@ -854,113 +938,6 @@ sub Configure
         }
     }
 
-    # /etc/sysconfig/network
-    # assuming that NETWORKING=yes
-    $path = $NETWORK_PATH;
-    $file_name = "/etc/sysconfig/network";
-    $self->mk_bu($file_name);
-    $exifiles->{$file_name} = $HAS_BACKUP;
-    $text = "";
-    $text .= "NETWORKING=yes\n";
-    # set hostname.
-    if ($config->elementExists($path."/realhostname")) {
-        $text .= "HOSTNAME=".$config->getValue($path."/realhostname")."\n";
-    } else {
-        $text .= "HOSTNAME=".$config->getValue($path."/hostname").".".$config->getValue($path."/domainname")."\n";
-    }
-    # default gateway. why is this optional?
-    #
-    # what happens if no default_gateway is defined?
-    # search for first defined gateway and use it.
-    # here's the flag: default true
-    #
-    my $missing_default_gateway_autoguess = 1;
-    if ($config->elementExists($path."/guess_default_gateway")) {
-        if ($config->getValue($path."/guess_default_gateway") eq "false") {
-            $missing_default_gateway_autoguess = 0;
-        }
-    }
-
-    # this is the gateway that will be used in case the default_gateway is not set
-    my $first_gateway;
-    foreach my $iface (sort keys %$net) {
-        if ($net->{$iface}->{gateway}) {
-            $first_gateway = [$net->{$iface}->{gateway}, $iface];
-            $self->verbose("Found first gateway $first_gateway->[0] on interface $first_gateway->[1]");
-            last;
-        }
-    };
-
-    my $nogw_msg = "No default gateway defined in /system/network/default_gateway";
-    if ($config->elementExists($path."/default_gateway")) {
-        $text .= "GATEWAY=".$config->getValue($path."/default_gateway")."\n";
-    } elsif ($missing_default_gateway_autoguess) {
-        if ($first_gateway) {
-            $self->info("$nogw_msg Going to use the gateway $first_gateway->[0] ",
-                        "configured for device $first_gateway->[1].");
-            $text .= "GATEWAY=$first_gateway->[0]\n";
-        } else {
-            $self->warn("$nogw_msg AND no interface found with a gateway configured.");
-        }
-    } else {
-        $self->warn($nogw_msg);
-    }
-
-    # nisdomain
-    if ($config->elementExists($path."/nisdomain")) {
-        $text .= "NISDOMAIN=".$config->getValue($path."/nisdomain")."\n";
-    }
-    # nozeroconf
-    if ($config->elementExists($path."/nozeroconf")) {
-        if ($config->getValue($path."/nozeroconf") eq "true") {
-            $text .= "NOZEROCONF=yes\n";
-        } else {
-            $text .= "NOZEROCONF=no\n";
-        }
-    }
-    # gatewaydev
-    if ($config->elementExists($path."/gatewaydev")) {
-        $text .= "GATEWAYDEV=".$config->getValue($path."/gatewaydev")."\n";
-    }
-    # nmcontrolled
-    if ($config->elementExists($path."/nmcontrolled")) {
-        if ($config->getValue($path."/nmcontrolled") eq "true") {
-            $text .= "NM_CONTROLLED=yes\n";
-        } else {
-            $text .= "NM_CONTROLLED=no\n";
-        }
-    }
-
-    # Enable and config IPv6 if either set explicitly or v6 config is present
-    # but note that the order of the v6 directive processing is important to
-    # make the 'default' enable do the right thing
-    if ($config->elementExists("$path/ipv6")) {
-        my $use_ipv6 = 0;
-        if ($config->elementExists("$path/ipv6/default_gateway")) {
-            $text .= "IPV6_DEFAULTGW=".$config->getValue("$path/ipv6/default_gateway")."\n";
-            $use_ipv6 = 1; # enable ipv6 for now
-        }
-        if ($config->elementExists("$path/ipv6/gatewaydev")) {
-            $text .= "IPV6_DEFAULTDEV=".$config->getValue("$path/ipv6/gatewaydev")."\n";
-            $use_ipv6 = 1; # enable ipv6 for now
-        }
-        if ($config->elementExists("$path/ipv6/enabled")) {
-            if ($config->getValue("$path/ipv6/enabled") eq "true") {
-                $use_ipv6 = 1;
-            } else {
-                $use_ipv6 = 0;
-            }
-        }
-        if ($use_ipv6) {
-            $text .= "NETWORKING_IPV6=yes\n";
-        } else {
-            $text .= "NETWORKING_IPV6=no\n";
-        }
-    }
-
-    $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-    $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
-
 
     # we now have a map with files and values.
     # for general network: separate?
@@ -1004,7 +981,7 @@ sub Configure
                     }
                 }
             }
-        } elsif ($file eq "/etc/sysconfig/network") {
+        } elsif ($file eq $NETWORKCFG) {
             # nothing needed
         } else {
             $self->error("Filename $file found that doesn't match  the ",
@@ -1023,6 +1000,25 @@ sub Configure
         delete $ifup{$if} if (exists($net{$if}{'master'}));
     }
 
+
+    #
+    # Action starts here
+    #
+    # allow NetworkMnager to run or not?
+    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
+        # no checking, forcefully stopping NetworkManager
+        # warning: this can cause troubles with the recovery to previous state in case of failure
+        # it's always better to disable the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
+        # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it of
+        my @disablenm_cmds = ();
+
+        push(@disablenm_cmds, ["/sbin/chkconfig --level 2345 NetworkManager off"]);
+        # TODO: switch to CAF::Service
+        push(@disablenm_cmds, ["/sbin/service NetworkManager stop"]);
+        $self->runrun(@disablenm_cmds);
+    };
+
+
     # Do ethtool processing for offload, ring and others
     foreach my $iface (sort keys %net) {
         foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
@@ -1030,25 +1026,12 @@ sub Configure
         };
     };
 
-    my @disablenm_cmds = ();
-
-    ## allow NetworkMnager to run or not?
-    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
-        # no checking, forcefully stopping NetworkManager
-        # warning: this can cause troubles with the recovery to previous state in case of failure
-        # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
-        # (or better yet, post ncm-spma)
-        push(@disablenm_cmds, ["/sbin/chkconfig --level 2345 NetworkManager off"]);
-        push(@disablenm_cmds, ["/sbin/service NetworkManager stop"]);
-        $self->runrun(@disablenm_cmds);
-    };
-
     # restart network
     # capturing system output/exit-status here is not useful.
     # network status is tested separately
     my @cmds = ();
     # ifdown dev OR network stop
-    if ($exifiles->{"/etc/sysconfig/network"} == $UPDATED) {
+    if ($exifiles->{$NETWORKCFG} == $UPDATED) {
         @cmds = [qw(/sbin/service network stop)];
     } else {
         foreach my $if (sort keys %ifdown) {
@@ -1071,8 +1054,8 @@ sub Configure
     }
 
     # ifup OR network start
-    if (($exifiles->{"/etc/sysconfig/network"} == $UPDATED) ||
-        ($exifiles->{"/etc/sysconfig/network"} == $NEW)) {
+    if (($exifiles->{$NETWORKCFG} == $UPDATED) ||
+        ($exifiles->{$NETWORKCFG} == $NEW)) {
         @cmds = [qw(/sbin/service network start)];
     } else {
         @cmds = ();
