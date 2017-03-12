@@ -126,7 +126,8 @@ Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IFCONFIGCMD => '/sbin/ifconfig';
 Readonly my $ROUTECMD => '/sbin/route';
 
-Readonly our $FAILED_SUFFIX => '-failed';
+Readonly my $FAILED_SUFFIX => '-failed';
+Readonly my $BACKUP_DIR => "/tmp";
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -138,7 +139,7 @@ Readonly our $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
-Readonly my $HAS_BACKUP => -1;
+Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
 Readonly my $NEW => 2;
@@ -182,82 +183,95 @@ sub ethtool_get_current
     return %current;
 }
 
-# gen_backup_filename: returns backup filename for given file
-sub gen_backup_filename
+# backup_filename: returns backup filename for given file
+sub backup_filename
 {
     my ($self, $file) = @_;
-    my $back_dir = "/tmp";
 
     my $back = "$file";
     $back =~ s/\//_/g;
-    my $backup_file = "$back_dir/$back";
-    return $backup_file;
+
+    return "$BACKUP_DIR/$back";
 }
 
-# writes some text to file, but with backup etc etc it also
-# checks between new and old and return if they are changed
-# or not
+# Generate the filename to hold the test configuration data
+# If this file still exists after the component runs, it means
+# that the changes did not lead to a working network config, and
+# thus this file has the failed (new/updated) configuration;
+# hence the FAILED suffix in the name.
+sub testcfg_filename
+{
+    my ($self, $file) = @_;
+    return $self->backup_filename($file) . $FAILED_SUFFIX;
+}
+
+# Make copy of original file (if exists) for testing (name from testcfg_filename).
+# (This is not the backup created by mk_bu; and this method makes not backup).
+# Then write text to this testcfg.
+# Return the filestate of the copy (new/updated/nochanges)
+# The original file is not modified at all.
+# If there were no changes, the backup and the testcfg are removed.
 sub file_dump
 {
-    my ($self, $file, $text, $failed) = @_;
+    my ($self, $file, $text) = @_;
 
     my $func = "file_dump";
 
-    # check for subdirectories?
-    my $backup_file = $self->gen_backup_filename($file);
+    my $testcfg = $self->testcfg_filename($file);
 
-    if (-e $backup_file.$failed) {
-        $self->debug(3, "$func: file exits, unlink $backup_file$failed");
-        unlink($backup_file.$failed) ||
-            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+    if (-e $testcfg) {
+        $self->debug(3, "$func: file exits, unlink old testcfg $testcfg");
+        unlink($testcfg) ||
+            $self->warn("$func: Can't unlink old testcfg $testcfg ($!)");
     }
 
     my $fh;
     if (-e $file) {
-        $self->debug(3, "$func: writing $backup_file$failed with current $file content");
-        my $orig = CAF::FileReader->new($file, log => $self);
-        $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
-        print $fh "$orig";
-        $fh->close();
+        $self->debug(3, "$func: copying current $file to testcfg $testcfg");
+        $self->mk_bu($file, $testcfg);
     } else {
-        $self->debug(3, "$func: no current $file");
+        $self->debug(3, "$func: no current $file, no testcfg coopy");
     };
 
-    $self->debug(3, "$func: writing $backup_file$failed");
-    $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
+    $self->debug(3, "$func: writing testcfg $testcfg");
+    $fh = CAF::FileWriter->new($testcfg, log => $self, keeps_state => 1);
     print $fh $text;
 
-    my $filestatus = $NOCHANGES;
+    # Use 'scheduled' in messages to indicate that this method
+    # does not make modifications to the file.
+    my $filestatus;
     if ($fh->close()) {
         if (-e $file) {
-            $self->info("$func: file $file has newer version.");
+            $self->info("$func: file $file has newer version scheduled.");
             $filestatus = $UPDATED;
         } else {
-            $self->info("$func: file $file is new.");
+            $self->info("$func: new file $file scheduled.");
             $filestatus = $NEW;
         }
     } else {
+        $filestatus = $NOCHANGES;
+        $self->verbose("$func: no changes scheduled for file $file.");
+
         # they're equal, remove backup files
-        $self->debug(3, "$func: removing equal files $backup_file and $backup_file$failed");
-        unlink($backup_file) ||
-            $self->warn("$func: Can't unlink $backup_file ($!)") ;
-        unlink($backup_file.$failed) ||
-            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+        my $backup = $self->backup_filename($file);
+        $self->debug(3, "$func: removing equal files $backup and $testcfg");
+        unlink($backup) || $self->warn("$func: Can't unlink backup $backup ($!)");
+        unlink($testcfg) || $self->warn("$func: Can't unlink testcfg $testcfg ($!)");
     };
 
     return $filestatus;
 }
 
-
+# Make a backup of the file using copy to dest
+# Use backup_filename as default dest.
 sub mk_bu
 {
-    my ($self, $file) = @_;
+    my ($self, $file, $dest) = @_;
     my $func = "mk_bu";
 
-    $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
-    copy($file, $self->gen_backup_filename($file)) ||
-        $self->error("$func: Can't create backup of $file to ",
-                     $self->gen_backup_filename($file), " ($!)");
+    $dest = $self->backup_filename($file) if ! defined($dest);
+    $self->debug(3,"$func: create backup of $file to $dest");
+    copy($file, $dest) || $self->error("$func: Can't create backup of $file to $dest ($!)");
 }
 
 sub test_network_ccm_fetch
@@ -286,6 +300,8 @@ sub test_network_ccm_fetch
     }
 }
 
+# Gather current network configuration using available tools
+# Is gathered for debugging in case of failure.
 sub get_current_config
 {
     my ($self) = @_;
@@ -327,6 +343,7 @@ sub order_ethtool_options
     return @keys;
 }
 
+# Set ethtool options outside changes to the ifcfg files
 sub ethtool_set_options
 {
     my ($self, $ethname, $sectionname, $options) = @_;
@@ -360,9 +377,15 @@ sub ethtool_set_options
     # nothing to do?
     return if (! @opts);
 
-    my $setoption = "--$sectionname";
-    $setoption = "--set-$sectionname" if ($sectionname eq "ring");
-    $setoption = "--change" if ($sectionname eq "ethtool");
+    my $setoption;
+    if ($sectionname eq "ring") {
+        $setoption = "--set-$sectionname";
+    } elsif ($sectionname eq "ethtool") {
+        $setoption = "--change";
+    } else {
+        $setoption = "--$sectionname";
+    };
+
     $self->runrun([$ETHTOOLCMD, $setoption, $ethname, @opts])
 }
 
@@ -378,7 +401,7 @@ sub ethtool_options
     return \@eth_opts;
 }
 
-
+# Run list of arrayref commands
 sub runrun
 {
     my ($self, @cmds) = @_;
@@ -541,8 +564,9 @@ sub process_network
     return $nwtree;
 }
 
-# Look for existing interface configuration files (and links)
-# Return hashref for files and links, with key the absolute filepath.
+# Look for existing interface configuration files (and symlinks)
+# Return hashref for files and links, with key the absolute filepath
+# and value REMOVE status for files and target for symlinks.
 sub gather_existing
 {
     my ($self) = @_;
@@ -570,7 +594,9 @@ sub gather_existing
             $exilinks{$file} = readlink($file);
             $msg = "link (to target $exilinks{$file})";
         } else {
-            $exifiles{$file} = $HAS_BACKUP;
+            # Flag all found files for removal at this stage
+            # and make a backup.
+            $exifiles{$file} = $REMOVE;
             $msg = "file";
             $self->mk_bu($file);
         }
@@ -788,7 +814,7 @@ sub make_ifcfg_alias
     return \@text;
 }
 
-# /etc/sysconfig/network
+# Return /etc/sysconfig/network content
 sub make_network_cfg
 {
     my ($self, $nwtree, $net) = @_;
@@ -864,14 +890,110 @@ sub make_network_cfg
     return \@text;
 }
 
+# Build and return ifdown hashref: key is the interface name,
+# value boolean to stop interface (but is ignored in rest of code).
+# Returns undef in case of severe issue
+# No actual ifdown is executed (see usage of `will` in messages).
+sub make_ifdown
+{
+    my ($self, $exifiles, $net) = @_;
+
+    my $mac2dev = $self->make_mac2dev();
+
+    my %ifdown;
+    foreach my $file (sort keys %$exifiles) {
+        next if ($file eq $NETWORKCFG);
+
+        if ($file =~ m/$DEVICE_REGEXP/) {
+            my $iface = $1;
+
+            # ifdown: all devices that have files with non-zero status
+            if ($exifiles->{$file} == $NOCHANGES) {
+                $self->verbose("No changes for interface $iface (cfg file $file)");
+            } else {
+                $self->verbose("Will ifdown $iface due to changes in $file (state $exifiles->{$file})");
+                # TODO: ifdown new devices? better safe than sorry?
+                $ifdown{$iface} = 1;
+
+                # bonding: if you bring down a slave, always bring down it's master
+                if ($net->{$iface}->{master}) {
+                    my $master = $net->{$iface}->{master};
+                    $self->verbose("Changes to slave $iface will force ifdown of master $master.");
+                    $ifdown{$master} = 1;
+                } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && -e $file) {
+                    # here's the tricky part: see if it used to be a slave.
+                    # the bond-master must be restarted if a device was removed from the bond.
+                    # TODO: why read from backup?
+                    $self->debug(3, "reading ifcfg from the backup ", $self->backup_filename($file));
+                    my $fh = CAF::FileReader->new($self->backup_filename($file), log => $self);
+                    my ($slave, $master);
+                    $slave = $1 if ($fh =~ m/^SLAVE\s*=\s*(\w+)\s*$/m);
+                    $master = $1 if ($fh =~ m/^MASTER\s*=\s*(\w+)\s*$/m);
+                    $fh->close();
+
+                    # SLAVE=yes is the logic used in ifup
+                    if ($slave && $slave eq "yes" &&
+                        $master && $master =~ m/^bond/) {
+                        $ifdown{$master} = 1;
+                        $self->verbose("Changes to previous slave $iface will force ifdown of master $master.");
+                    }
+                } elsif ($net->{$iface}->{master}) {
+                    # to use HWADDR, stop the interface with this macaddress (if any)
+                    my $dev = $mac2dev->{$net->{$iface}->{hwaddr} || 'not a mac'};
+                    if ($dev) {
+                        $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
+                                       "has same MAC as interface $iface which is now a master.");
+                        $ifdown{$dev} = 1;
+                    }
+                }
+            }
+        } else {
+            $self->error("Filename $file found that doesn't match the device ",
+                         "regexp. Must be an error in ncm-network.");
+            return;
+        }
+    }
+
+    return \%ifdown;
+}
+
+# Build and return ifup hashref: key is the interface name,
+# value boolean to start interface (but is ignored in rest of code).
+# No actual ifup is executed (see usage of `will` in messages).
+sub make_ifup
+{
+    my ($self, $exifiles, $net, $ifdown);
+
+    my %ifup;
+    foreach my $iface (sort keys %$ifdown) {
+        # ifup: all devices that are in ifdown
+        # and have state other than REMOVE
+        # e.g. master with NOCHANGES state can be added here
+        # when a slave had modifications
+        if ($exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
+            $self->verbose("Not starting $iface scheduled for removal");
+        } else {
+            if ($net->{$iface}->{master}) {
+                # bonding devices: don't bring the slaves up, only the master
+                $self->verbose("Found SLAVE interface $iface in ifdown map, ",
+                               "not starting it with ifup; is left for master $net->{$iface}->{master}.");
+            } else {
+                $self->verbose("Will start $iface with ifup");
+                $ifup{$iface} = 1;
+            }
+        }
+    }
+
+    return \%ifup;
+}
+
+
 sub Configure
 {
     my ($self, $config) = @_;
 
     # current setup, will be printed in case of major failure
     my $init_config = $self->get_current_config();
-
-    my $mac2dev = $self->make_mac2dev();
 
     my $net = $self->process_network($config);
 
@@ -882,10 +1004,9 @@ sub Configure
 
     # main network config
     my $text = make_network_cfg($nwtree, $net);
-    $file_name = $NETWORKCFG;
-    $self->mk_bu($file_name);
-    $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-    $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+
+    $self->mk_bu($NETWORKCFG);
+    $exifiles->{$NETWORKCFG} = $self->file_dump($$NETWORKCFG, $text);
 
     # ifcfg- / route- files
     foreach my $iface (sort keys %$net) {
@@ -894,8 +1015,7 @@ sub Configure
         # write iface ifcfg- file text
         # /etc/sysconfig/network-scripts/ifcfg-[dev][i]
         my $file_name = "$IFCFG_DIR/ifcfg-$iface";
-        $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-        $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+        $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
         # route config, interface based.
         # TODO: hey, where are the (global) static routes?
@@ -904,8 +1024,7 @@ sub Configure
             my $text = $self->make_ifcfg_route($routes);
 
             $file_name = "$IFCFG_DIR/route-$iface";
-            $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-            $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text);
         }
 
         # set up aliases for interfaces
@@ -915,8 +1034,7 @@ sub Configure
             my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
 
             $file_name = "$IFCFG_DIR/ifcfg-$iface:$al";
-            $exifiles->{$file_name} = $self->file_dump($file_name, $text, $FAILED_SUFFIX);
-            $self->debug(3, "exifiles $file_name has value $exifiles->{$file_name}");
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
             # This is the only way it will work for VLANs
             # If vlan device is vlanX and the DEVICE is eg ethY.Z
@@ -939,67 +1057,30 @@ sub Configure
     }
 
 
-    # we now have a map with files and values.
-    # for general network: separate?
-    # for devices: create list of affected devices
+    # We now have a map with files and values.
+    # Changes to the general network config file are handled separately.
+    # For devices: we will create a list of affected devices
 
-    # For now, the order of vlans is not changed and left completely to the network scripts
-    # I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
+    # Since there's per interface reload, interface changes will be applied via ifdown/ifup.
+    # This is very coarse, but reimplementing the ifup/ifdown logic is highly non-trivial.
+    # ifdown: all interfaces that will be stopped
+    # ifup: all interfaces that will be (re)started
+
+    # For now, the order of vlans is not changed and
+    # left completely up to the network scripts.
+    # There's 0 (zero) intention to support things like vlans on bonding slaves,
+    # aliases on bonded vlans ...
     # If you need this, buy more network adapters ;)
-    my (%ifdown, %ifup);
-    foreach my $file (sort keys %$exifiles) {
-        if ($file =~ m/$DEVICE_REGEXP/) {
-            my $if = $1;
-            # ifdown: all devices that have files with non-zero status
-            if ($exifiles->{$file} != $NOCHANGES) {
-                $self->debug(3, "exifiles file $file with non-zero value found: $exifiles->{$file}");
-                $ifdown{$if} = 1;
-                # bonding: if you bring down a slave, always bring
-                # down it's master
-                if (exists($net{$if}{'master'})) {
-                    $ifdown{$net{$if}{'master'}} = 1;
-                } elsif ($file =~ m/ifcfg-$if/) {
-                    # here's the tricky part: see if it used to be a slave. the bond-master must be restarted for this.
-                    my $sl = "";
-                    my $ma = "";
-                    if (-e $file) {
-                        $self->debug(3, "reading ifcfg from the backup ", $self->gen_backup_filename($file));
-                        my $fh = CAF::FileReader->new($self->gen_backup_filename($file), log => $self);
-                        while (my $l = <$fh>) {
-                            $sl = $1 if ($l =~ m/SLAVE=(\w+)/);
-                            $ma = $1 if ($l =~ m/MASTER=(\w+)/);
-                        }
-                        $fh->close();
-                    }
-                    $ifdown{$ma} = 1 if (($sl eq "yes") && ($ma =~ m/bond/));
-                } elsif (exists($net{$if}{'set_hwaddr'})
-                         && $net{$if}{'set_hwaddr'} eq 'true') {
-                    # to use HWADDR
-                    # stop the interface with this macaddress (if any)
-                    if (exists($mac2dev->{$net{$if}{'hwaddr'}})) {
-                        $ifdown{$mac2dev->{$net{$if}{'hwaddr'}}} = 1;
-                    }
-                }
-            }
-        } elsif ($file eq $NETWORKCFG) {
-            # nothing needed
-        } else {
-            $self->error("Filename $file found that doesn't match  the ",
-                         "regexp. Must be an error in ncm-network. ",
-                         "Exiting.");
-            # We can safely exit here, since no files have been
-            # modified yet.
-            return 1;
-        }
-    }
-    foreach my $if (sort keys %ifdown) {
-        # ifup: all devices that are in ifdown and have a 0 or 1
-        # status for ifcfg-[dev]
-        $ifup{$if} = 1 if ($exifiles->{"$IFCFG_DIR/ifcfg-$if"} != $HAS_BACKUP);
-        # bonding devices: don't bring the slaves up, only the master
-        delete $ifup{$if} if (exists($net{$if}{'master'}));
+
+    my $ifdown = $self->make_ifdown($exifiles, $net);
+    if (! defined($ifdown)) {
+        # file_dump does not modify the original files.
+        # It's safe to exit the component here.
+        # Error reported in make_ifdown
+        return;
     }
 
+    my $ifup = $self->make_ifup($exifiles, $net, $ifdown);
 
     #
     # Action starts here
@@ -1020,36 +1101,46 @@ sub Configure
 
 
     # Do ethtool processing for offload, ring and others
-    foreach my $iface (sort keys %net) {
+    # TODO: why do that here? should be done after any restarting of devices or whole network?
+    foreach my $iface (sort keys %$net) {
         foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
-            $self->ethtool_set_options($iface, $sectionname, $net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
+            $self->ethtool_set_options($iface, $sectionname, $net->{$iface}->{$sectionname})
+                if ($net->{$iface}->{$sectionname});
         };
     };
 
     # restart network
     # capturing system output/exit-status here is not useful.
     # network status is tested separately
+    # flow:
+    #   1. stop everythig using old config
+    #   2. replace updated/new config; remove REMOVE
+    #   3. (re)start things
+
     my @cmds = ();
+
     # ifdown dev OR network stop
     if ($exifiles->{$NETWORKCFG} == $UPDATED) {
         @cmds = [qw(/sbin/service network stop)];
     } else {
-        foreach my $if (sort keys %ifdown) {
+        foreach my $iface (sort keys %$ifdown) {
             # how do we actually know that the device was up?
             # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifdown", $if]);
+            push(@cmds, ["/sbin/ifdown", $iface]);
         }
     }
     $self->runrun(@cmds);
-    # replace modified/new files
+
+    # replace UPDATED/NEW files, remove REMOVE files
     foreach my $file (sort keys %$exifiles) {
         if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
-            copy($self->gen_backup_filename($file).$FAILED_SUFFIX, $file) ||
+            copy($self->testcfg_filename($file), $file) ||
                 $self->error("replace modified/new files: can't copy ",
-                             $self->gen_backup_filename($file).$FAILED_SUFFIX,
-                             " to $file. ($!)");
-        } elsif ($exifiles->{$file} == $HAS_BACKUP) {
+                             $self->testcfg_filename($file), " to $file. ($!)");
+        } elsif ($exifiles->{$file} == $REMOVE) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
+        } else {
+            $self->verbose("Skipping file $file with status $exifiles->{$file}.");
         }
     }
 
@@ -1059,11 +1150,11 @@ sub Configure
         @cmds = [qw(/sbin/service network start)];
     } else {
         @cmds = ();
-        foreach my $if (sort keys %ifup) {
+        foreach my $iface (sort keys %$ifup) {
             # how do we actually know that the device was up?
             # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifup", $if, "boot"]);
-            push(@cmds, [qw(sleep 10)]) if ($if =~ m/bond/);
+            push(@cmds, ["/sbin/ifup", $iface, "boot"]);
+            push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
         }
     }
     $self->runrun(@cmds);
@@ -1074,16 +1165,16 @@ sub Configure
         foreach my $file (sort keys %$exifiles) {
             # don't clean up files that are not changed
             if ($exifiles->{$file} != $NOCHANGES) {
-                if (-e $self->gen_backup_filename($file)) {
-                    unlink($self->gen_backup_filename($file)) ||
+                if (-e $self->backup_filename($file)) {
+                    unlink($self->backup_filename($file)) ||
                         $self->warn("cleanup backups: can't unlink ",
-                                    $self->gen_backup_filename($file),
+                                    $self->backup_filename($file),
                                     " ($!)") ;
                 }
-                if (-e $self->gen_backup_filename($file).$FAILED_SUFFIX) {
-                    unlink($self->gen_backup_filename($file).$FAILED_SUFFIX) ||
+                if (-e $self->testcfg_filename($file)) {
+                    unlink($self->testcfg_filename($file)) ||
                         $self->warn("cleanup backups: can't unlink ",
-                                    $self->gen_backup_filename($file).$FAILED_SUFFIX,
+                                    $self->testcfg_filename($file),
                                     " ($!)");
                 }
             }
@@ -1092,7 +1183,7 @@ sub Configure
         $self->error("Network restart failed. ",
                      "Reverting back to original config. ",
                      "Failed modified configfiles can be found in ",
-                     $self->gen_backup_filename(" "), "with suffix ", $FAILED_SUFFIX,
+                     "$BACKUP_DIR with suffix $FAILED_SUFFIX. ",
                      "(If there aren't any, it means only some devices ",
                      "were removed.)");
         # if not, revert and pray now done with a pure network
@@ -1115,15 +1206,15 @@ sub Configure
                 if (-e $file) {
                     unlink($file) || $self->error("Can't unlink $file.") ;
                 }
-                copy($self->gen_backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
-            } elsif ($exifiles->{$file} == $HAS_BACKUP) {
+                copy($self->backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->backup_filename($file)." to $file.");
+            } elsif ($exifiles->{$file} == $REMOVE) {
                 $self->info("RECOVER: Restoring file $file.");
                 if (-e $file) {
                     unlink($file) || $self->warn("Can't unlink ".$file) ;
                 }
-                copy($self->gen_backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
+                copy($self->backup_filename($file),$file) ||
+                    $self->error("Can't copy ".$self->backup_filename($file)." to $file.");
             }
         }
         # ifup OR network start
@@ -1153,8 +1244,7 @@ sub Configure
         };
     }
 
-    # remove all unresolved links
-    # final cleanup
+    # remove all broken links
     for my $link (sort keys %$exilinks) {
         unlink($link) if (! -e $link);
     };
