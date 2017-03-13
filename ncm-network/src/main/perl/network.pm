@@ -344,12 +344,12 @@ sub order_ethtool_options
 }
 
 # Set ethtool options outside changes to the ifcfg files
-sub ethtool_set_options
+sub ethtool_set_iface_options
 {
-    my ($self, $ethname, $sectionname, $options) = @_;
+    my ($self, $iface, $sectionname, $options) = @_;
 
     # get current values into %current
-    my %current = $self->ethtool_get_current($ethname, $sectionname);
+    my %current = $self->ethtool_get_current($iface, $sectionname);
 
     # Loop over template settings and check that they are known but different
     my @opts;
@@ -362,13 +362,13 @@ sub ethtool_set_options
             $currentv = $current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}};
         } else {
             $self->info("ethtool_set_options: Skipping setting for ",
-                        "$ethname/$sectionname/$k to $v as not in ethtool");
+                        "$iface/$sectionname/$k to $v as not in ethtool");
             next;
         }
 
         # Is the value different between template and the machine
         if ($currentv eq $v) {
-            $self->verbose("ethtool_set_options: value for $ethname/$sectionname/$k is already set to $v");
+            $self->verbose("ethtool_set_options: value for $iface/$sectionname/$k is already set to $v");
         } else {
             push(@opts, $k, $v);
         }
@@ -386,8 +386,21 @@ sub ethtool_set_options
         $setoption = "--$sectionname";
     };
 
-    $self->runrun([$ETHTOOLCMD, $setoption, $ethname, @opts])
+    $self->runrun([$ETHTOOLCMD, $setoption, $iface, @opts])
 }
+
+# ethtool processing for offload, ring and others of all interfaces
+sub ethtool_set_options
+{
+    my ($self, $net) = @_;
+    foreach my $iface (sort keys %$net) {
+        foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
+            $self->ethtool_set_iface_options($iface, $sectionname, $net->{$iface}->{$sectionname})
+                if ($net->{$iface}->{$sectionname});
+        };
+    };
+}
+
 
 # Create ifcfg ETHTOOL_OPTS entry as arrayref from hashref $options
 sub ethtool_options
@@ -1120,14 +1133,8 @@ sub Configure
 
     $self->disable_networkmanager($nwtree->{allow_nm});
 
-    # Do ethtool processing for offload, ring and others
     # TODO: why do that here? should be done after any restarting of devices or whole network?
-    foreach my $iface (sort keys %$net) {
-        foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
-            $self->ethtool_set_options($iface, $sectionname, $net->{$iface}->{$sectionname})
-                if ($net->{$iface}->{$sectionname});
-        };
-    };
+    $self->ethtool_set_options($net);
 
     # restart network
     # capturing system output/exit-status here is not useful.
