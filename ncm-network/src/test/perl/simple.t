@@ -42,7 +42,7 @@ is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 # generic
 my $fh;
 
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network").$NCM::Component::network::FAILED_SUFFIX);
+$fh = get_file($cmp->testcfg_filename("/etc/sysconfig/network"));
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network file written");
 
 like($fh, qr/^NETWORKING=yes$/m, "Enable networking"); 
@@ -54,7 +54,7 @@ unlike($fh, qr/IPV6/, "No IPv6 config details");
 is("$fh", $NETWORK, "Exact network config");
 
 
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").$NCM::Component::network::FAILED_SUFFIX);
+$fh = get_file($cmp->testcfg_filename("/etc/sysconfig/network-scripts/ifcfg-eth0"));
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
 
 like($fh, qr/^ONBOOT=yes$/m, "enable interface at boot time");
@@ -74,7 +74,7 @@ is("$fh", $ETH0, "Exact network config");
 # Check that realhostname is used correctly
 $cfg = get_config_for_profile('simple_realhostname');
 is($cmp->Configure($cfg), 1, "Component runs correctly with realhostname test profile");
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network").$NCM::Component::network::FAILED_SUFFIX);
+$fh = get_file($cmp->testcfg_filename("/etc/sysconfig/network"));
 
 like($fh, qr/^HOSTNAME=realhost.example.com$/m, "realhostname correctly used as hostname");
 

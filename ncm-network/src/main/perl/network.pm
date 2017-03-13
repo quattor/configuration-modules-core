@@ -260,7 +260,7 @@ sub file_dump
 
     $self->debug(3, "$func: writing testcfg $testcfg");
     $fh = CAF::FileWriter->new($testcfg, log => $self, keeps_state => 1);
-    print $fh $text;
+    print $fh join("\n", @$text, ''); # add trailing newline
 
     # Use 'scheduled' in messages to indicate that this method
     # does not make modifications to the file.
@@ -382,7 +382,7 @@ sub ethtool_set_iface_options
         } elsif ($current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}}) {
             $currentv = $current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}};
         } else {
-            $self->info("ethtool_set_options: Skipping setting for ",
+            $self->info("ethtool_set_iface_options: Skipping setting for ",
                         "$iface/$sectionname/$k to $v as not in ethtool");
             next;
         }
@@ -413,11 +413,11 @@ sub ethtool_set_iface_options
 # ethtool processing for offload, ring and others of all interfaces
 sub ethtool_set_options
 {
-    my ($self, $net) = @_;
-    foreach my $iface (sort keys %$net) {
+    my ($self, $ifaces) = @_;
+    foreach my $iface (sort keys %$ifaces) {
         foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
-            $self->ethtool_set_iface_options($iface, $sectionname, $net->{$iface}->{$sectionname})
-                if ($net->{$iface}->{$sectionname});
+            $self->ethtool_set_iface_options($iface, $sectionname, $ifaces->{$iface}->{$sectionname})
+                if ($ifaces->{$iface}->{$sectionname});
         };
     };
 }
@@ -541,10 +541,14 @@ sub process_network
         }
 
         # bonding/bridging options
-        foreach my $attr (qw(bonding_opts brigding_opts)) {
+        foreach my $attr (qw(bonding_opts bridging_opts)) {
             my $opts = $iface->{$attr};
-            $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
-            $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
+            if (defined($opts) && keys %$opts) {
+                $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
+                use Test::More;
+                diag "$ifname $attr ",explain $iface->{$attr};
+                $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
+            }
         }
 
         # add ethtool options preparsed. These will be set in ifcfg- config
@@ -666,6 +670,8 @@ sub gather_existing
 sub _make_ifcfg_line
 {
     my ($href, $key, %opts) = @_;
+    use Test::More;
+    diag 'href ',explain $href, " key $key opts ",explain \%opts;
 
     my $var = $opts{var} || $key;
     my $value = defined($href->{$key}) ? $href->{$key} : $opts{def};
@@ -770,7 +776,7 @@ sub make_ifcfg
     }
 
     if (defined($iface->{ipv6_autoconf})) {
-        &$makeline('ipv6_auotconf', bool => 'yesno');
+        &$makeline('ipv6_autoconf', bool => 'yesno');
         if($iface->{ipv6_autoconf}) {
             $use_ipv6 = 1;
         } else {
@@ -882,9 +888,9 @@ sub make_network_cfg
     if (! defined($dgw) && $guess_dgw) {
         # this is the gateway that will be used in case the default_gateway is not set
         my $first_gateway;
-        foreach my $iface (sort keys %$net) {
-            if ($net->{$iface}->{gateway}) {
-                $dgw = $net->{$iface}->{gateway};
+        foreach my $iface (sort keys %{$net->{interfaces}}) {
+            if ($net->{interfaces}->{$iface}->{gateway}) {
+                $dgw = $net->{interfaces}->{$iface}->{gateway};
                 $self->info("$nodgw_msg. Found first gateway $dgw on interface $iface");
                 last;
             }
@@ -941,7 +947,7 @@ sub make_network_cfg
 # No actual ifdown is executed (see usage of `will` in messages).
 sub make_ifdown
 {
-    my ($self, $exifiles, $net) = @_;
+    my ($self, $exifiles, $ifaces) = @_;
 
     my $mac2dev = $self->make_mac2dev();
 
@@ -961,8 +967,8 @@ sub make_ifdown
                 $ifdown{$iface} = 1;
 
                 # bonding: if you bring down a slave, always bring down it's master
-                if ($net->{$iface}->{master}) {
-                    my $master = $net->{$iface}->{master};
+                if ($ifaces->{$iface}->{master}) {
+                    my $master = $ifaces->{$iface}->{master};
                     $self->verbose("Changes to slave $iface will force ifdown of master $master.");
                     $ifdown{$master} = 1;
                 } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && -e $file) {
@@ -982,9 +988,9 @@ sub make_ifdown
                         $ifdown{$master} = 1;
                         $self->verbose("Changes to previous slave $iface will force ifdown of master $master.");
                     }
-                } elsif ($net->{$iface}->{master}) {
+                } elsif ($ifaces->{$iface}->{master}) {
                     # to use HWADDR, stop the interface with this macaddress (if any)
-                    my $dev = $mac2dev->{$net->{$iface}->{hwaddr} || 'not a mac'};
+                    my $dev = $mac2dev->{$ifaces->{$iface}->{hwaddr} || 'not a mac'};
                     if ($dev) {
                         $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
                                        "has same MAC as interface $iface which is now a master.");
@@ -1007,7 +1013,7 @@ sub make_ifdown
 # No actual ifup is executed (see usage of `will` in messages).
 sub make_ifup
 {
-    my ($self, $exifiles, $net, $ifdown);
+    my ($self, $exifiles, $ifaces, $ifdown);
 
     my %ifup;
     foreach my $iface (sort keys %$ifdown) {
@@ -1018,10 +1024,10 @@ sub make_ifup
         if ($exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
         } else {
-            if ($net->{$iface}->{master}) {
+            if ($ifaces->{$iface}->{master}) {
                 # bonding devices: don't bring the slaves up, only the master
                 $self->verbose("Found SLAVE interface $iface in ifdown map, ",
-                               "not starting it with ifup; is left for master $net->{$iface}->{master}.");
+                               "not starting it with ifup; is left for master $ifaces->{$iface}->{master}.");
             } else {
                 $self->verbose("Will start $iface with ifup");
                 $ifup{$iface} = 1;
@@ -1243,23 +1249,26 @@ sub Configure
     my $init_config = $self->get_current_config();
 
     my $net = $self->process_network($config);
+    my $ifaces = $net->{interfaces};
 
     # keep a hash of all files and links.
-    my ($exifiles, $exilinks) = $self->gather_existsing();
+    my ($exifiles, $exilinks) = $self->gather_existing();
 
     my $nwtree = $config->getTree($NETWORK_PATH);
 
     # main network config
-    my $text = make_network_cfg($nwtree, $net);
-
     $self->mk_bu($NETWORKCFG);
-    $exifiles->{$NETWORKCFG} = $self->file_dump($$NETWORKCFG, $text);
+    my $text = make_network_cfg($nwtree, $net);
+    $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
 
     # ifcfg- / route- files
-    foreach my $iface (sort keys %$net) {
-        my $text = $self->make_ifcfg($iface, $net->{$iface});
+    use Test::More;
+    diag 'net ',explain $net;
+    foreach my $ifacename (sort keys %$ifaces) {
+        my $iface = $ifaces->{$ifacename};
+        my $text = $self->make_ifcfg($ifacename, $iface);
 
-        my $file_name = "$IFCFG_DIR/ifcfg-$iface";
+        my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
         # route config, interface based.
@@ -1268,17 +1277,17 @@ sub Configure
         if (defined($routes)) {
             my $text = $self->make_ifcfg_route($routes);
 
-            my $file_name = "$IFCFG_DIR/route-$iface";
+            my $file_name = "$IFCFG_DIR/route-$ifacename";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
         }
 
         # set up aliases for interfaces
         # one file per alias
         foreach my $al (sort keys %{$iface->{aliases} || {}}) {
-            my $al_dev = ($iface->{device} || $iface) . ":$al";
+            my $al_dev = ($iface->{device} || $ifacename) . ":$al";
             my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
 
-            my $file_name = "$IFCFG_DIR/ifcfg-$iface:$al";
+            my $file_name = "$IFCFG_DIR/ifcfg-$ifacename:$al";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
             # This is the only way it will work for VLANs
@@ -1317,7 +1326,7 @@ sub Configure
     # aliases on bonded vlans ...
     # If you need this, buy more network adapters ;)
 
-    my $ifdown = $self->make_ifdown($exifiles, $net);
+    my $ifdown = $self->make_ifdown($exifiles, $ifaces);
     if (! defined($ifdown)) {
         # file_dump does not modify the original files.
         # It's safe to exit the component here.
@@ -1325,7 +1334,7 @@ sub Configure
         return;
     }
 
-    my $ifup = $self->make_ifup($exifiles, $net, $ifdown);
+    my $ifup = $self->make_ifup($exifiles, $ifaces, $ifdown);
 
     #
     # Action starts here
@@ -1334,7 +1343,7 @@ sub Configure
     $self->disable_networkmanager($nwtree->{allow_nm});
 
     # TODO: why do that here? should be done after any restarting of devices or whole network?
-    $self->ethtool_set_options($net);
+    $self->ethtool_set_options($ifaces);
 
     # restart network
     # capturing system output/exit-status here is not useful.
