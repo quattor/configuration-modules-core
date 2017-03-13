@@ -1032,6 +1032,81 @@ sub disable_networkmanager
     };
 };
 
+# network stop OR ifdown
+sub stop
+{
+    my ($self, $exifiles, $ifdown, $nwsrv) = @_;
+
+    my @ifaces = sort keys %$ifdown;
+
+    if ($exifiles->{$NETWORKCFG} == $UPDATED) {
+        $self->verbose("$NETWORKCFG UPDATED, stopping network");
+        $nwsrv->stop();
+    } elsif (@ifaces) {
+        my @cmds;
+        foreach my $iface (@ifaces) {
+            # how do we actually know that the device was up?
+            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
+            push(@cmds, ["/sbin/ifdown", $iface]);
+        }
+        $self->verbose("Stopping interfaces ",join(', ', @ifaces));
+        $self->runrun(@cmds);
+    } else {
+        $self->verbose('Nothing to stop');
+    }
+}
+
+# Copy test configurations to correct location
+# Remove configuration files that is scheduled for removal
+sub deploy_config
+{
+    my ($self, $exifiles) = @_;
+
+    # replace UPDATED/NEW files, remove REMOVE files
+    foreach my $file (sort keys %$exifiles) {
+        if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
+            my $testcfg = $self->testcfg_filename($file);
+            my $msg = "copy UPDATED/NEW testcfg $testcfg to config $file";
+            if (copy($testcfg, $file)) {
+                $self->verbose($msg);
+            } else {
+                $self->error("$msg failed: $!");
+            }
+        } elsif ($exifiles->{$file} == $REMOVE) {
+            my $msg = "REMOVE config $file";
+            if(unlink($file)) {
+                $self->verbose($msg);
+            } else {
+                $self->error("$msg failed. ($!)");
+            };
+        } else {
+            $self->verbose("Nothing to do for config $file with status $exifiles->{$file}.");
+        }
+    }
+}
+
+# network start or ifup
+sub start
+{
+    my ($self, $exifiles, $ifup, $nwsrv) = @_;
+
+    my @ifaces = sort keys %$ifup;
+    if (($exifiles->{$NETWORKCFG} == $UPDATED) ||
+        ($exifiles->{$NETWORKCFG} == $NEW)) {
+        $self->verbose("$NETWORKCFG UPDATED/NEW, starting network");
+        $nwsrv->start();
+    } elsif (@ifaces) {
+        my @cmds;
+        foreach my $iface (@ifaces) {
+            push(@cmds, ["/sbin/ifup", $iface, "boot"]);
+            push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
+        }
+        $self->verbose("Starting interfaces ",join(', ', @ifaces));
+        $self->runrun(@cmds);
+    } else {
+        $self->verbose('Nothing to start');
+    }
+}
 
 sub Configure
 {
@@ -1057,8 +1132,6 @@ sub Configure
     foreach my $iface (sort keys %$net) {
         my $text = $self->make_ifcfg($iface, $net->{$iface});
 
-        # write iface ifcfg- file text
-        # /etc/sysconfig/network-scripts/ifcfg-[dev][i]
         my $file_name = "$IFCFG_DIR/ifcfg-$iface";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
@@ -1068,7 +1141,7 @@ sub Configure
         if (defined($routes)) {
             my $text = $self->make_ifcfg_route($routes);
 
-            $file_name = "$IFCFG_DIR/route-$iface";
+            my $file_name = "$IFCFG_DIR/route-$iface";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
         }
 
@@ -1078,7 +1151,7 @@ sub Configure
             my $al_dev = ($iface->{device} || $iface) . ":$al";
             my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
 
-            $file_name = "$IFCFG_DIR/ifcfg-$iface:$al";
+            my $file_name = "$IFCFG_DIR/ifcfg-$iface:$al";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
             # This is the only way it will work for VLANs
@@ -1143,48 +1216,14 @@ sub Configure
     #   1. stop everythig using old config
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
+    my $nwsrv = CAF::Service->new(['network'], log => $self);
 
-    my @cmds = ();
+    $self->stop($exifiles, $ifdown, $nwsrv);
 
-    # ifdown dev OR network stop
-    if ($exifiles->{$NETWORKCFG} == $UPDATED) {
-        @cmds = [qw(/sbin/service network stop)];
-    } else {
-        foreach my $iface (sort keys %$ifdown) {
-            # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifdown", $iface]);
-        }
-    }
-    $self->runrun(@cmds);
+    $self->deploy_config($exifiles);
 
-    # replace UPDATED/NEW files, remove REMOVE files
-    foreach my $file (sort keys %$exifiles) {
-        if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
-            copy($self->testcfg_filename($file), $file) ||
-                $self->error("replace modified/new files: can't copy ",
-                             $self->testcfg_filename($file), " to $file. ($!)");
-        } elsif ($exifiles->{$file} == $REMOVE) {
-            unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
-        } else {
-            $self->verbose("Skipping file $file with status $exifiles->{$file}.");
-        }
-    }
+    $self->start($exifiles, $ifup, $nwsrv);
 
-    # ifup OR network start
-    if (($exifiles->{$NETWORKCFG} == $UPDATED) ||
-        ($exifiles->{$NETWORKCFG} == $NEW)) {
-        @cmds = [qw(/sbin/service network start)];
-    } else {
-        @cmds = ();
-        foreach my $iface (sort keys %$ifup) {
-            # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifup", $iface, "boot"]);
-            push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
-        }
-    }
-    $self->runrun(@cmds);
 
     # test network
     if ($self->test_network_ccm_fetch()) {
