@@ -107,7 +107,6 @@ Readonly::Hash my %ETHTOOL_OPTION_MAP => {
         gro => "generic-receive-offload",
         sg  => "scatter-gather",
     },
-
     ring    => {
         tx  => "TX",
         rx  => "RX",
@@ -205,6 +204,32 @@ sub testcfg_filename
     return $self->backup_filename($file) . $FAILED_SUFFIX;
 }
 
+# Given file, cleanup the backup and test config
+# Returns nothing
+sub cleanup_backup_test
+{
+    my ($self, $file) = @_;
+
+    my $backupcfg = $self->backup_filename($file);
+    if (-e $backupcfg) {
+        if (unlink($backupcfg)) {
+            $self->verbose("cleanup backup config $backupcfg");
+        } else {
+            $self->warn("cleanup: can't unlink backup config $backupcfg ($!)")
+        }
+    }
+
+    my $testcfg = $self->testcfg_filename($file);
+    if (-e $testcfg) {
+        if (unlink($testcfg)) {
+            $self->verbose("cleanup test config $testcfg");
+        } else {
+            $self->warn("cleanup: can't unlink test config $testcfg ($!)")
+        }
+    }
+};
+
+
 # Make copy of original file (if exists) for testing (name from testcfg_filename).
 # (This is not the backup created by mk_bu; and this method makes not backup).
 # Then write text to this testcfg.
@@ -250,13 +275,9 @@ sub file_dump
         }
     } else {
         $filestatus = $NOCHANGES;
-        $self->verbose("$func: no changes scheduled for file $file.");
-
         # they're equal, remove backup files
-        my $backup = $self->backup_filename($file);
-        $self->debug(3, "$func: removing equal files $backup and $testcfg");
-        unlink($backup) || $self->warn("$func: Can't unlink backup $backup ($!)");
-        unlink($testcfg) || $self->warn("$func: Can't unlink testcfg $testcfg ($!)");
+        $self->verbose("$func: no changes scheduled for file $file. Cleaning up.");
+        $self->cleanup_backup_test($file);
     };
 
     return $filestatus;
@@ -1033,14 +1054,17 @@ sub disable_networkmanager
 };
 
 # network stop OR ifdown
+# Returns if something was done or not
 sub stop
 {
     my ($self, $exifiles, $ifdown, $nwsrv) = @_;
 
     my @ifaces = sort keys %$ifdown;
 
+    my $action;
     if ($exifiles->{$NETWORKCFG} == $UPDATED) {
         $self->verbose("$NETWORKCFG UPDATED, stopping network");
+        $action = 1;
         $nwsrv->stop();
     } elsif (@ifaces) {
         my @cmds;
@@ -1050,19 +1074,25 @@ sub stop
             push(@cmds, ["/sbin/ifdown", $iface]);
         }
         $self->verbose("Stopping interfaces ",join(', ', @ifaces));
+        $action = 1;
         $self->runrun(@cmds);
     } else {
         $self->verbose('Nothing to stop');
+        $action = 0;
     }
+
+    return $action;
 }
 
 # Copy test configurations to correct location
 # Remove configuration files that is scheduled for removal
+# Returns if something was done or not
 sub deploy_config
 {
     my ($self, $exifiles) = @_;
 
     # replace UPDATED/NEW files, remove REMOVE files
+    my $action = 0;
     foreach my $file (sort keys %$exifiles) {
         if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
             my $testcfg = $self->testcfg_filename($file);
@@ -1072,6 +1102,7 @@ sub deploy_config
             } else {
                 $self->error("$msg failed: $!");
             }
+            $action = 1;
         } elsif ($exifiles->{$file} == $REMOVE) {
             my $msg = "REMOVE config $file";
             if(unlink($file)) {
@@ -1079,21 +1110,28 @@ sub deploy_config
             } else {
                 $self->error("$msg failed. ($!)");
             };
+            $action = 1;
         } else {
             $self->verbose("Nothing to do for config $file with status $exifiles->{$file}.");
         }
     }
+
+    return $action;
 }
 
 # network start or ifup
+# Returns if something was done or not
 sub start
 {
     my ($self, $exifiles, $ifup, $nwsrv) = @_;
 
     my @ifaces = sort keys %$ifup;
+
+    my $action;
     if (($exifiles->{$NETWORKCFG} == $UPDATED) ||
         ($exifiles->{$NETWORKCFG} == $NEW)) {
         $self->verbose("$NETWORKCFG UPDATED/NEW, starting network");
+        $action = 1;
         $nwsrv->start();
     } elsif (@ifaces) {
         my @cmds;
@@ -1102,10 +1140,14 @@ sub start
             push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
         }
         $self->verbose("Starting interfaces ",join(', ', @ifaces));
+        $action = 1;
         $self->runrun(@cmds);
     } else {
         $self->verbose('Nothing to start');
+        $action = 0;
     }
+
+    return $action;
 }
 
 sub Configure
@@ -1218,33 +1260,39 @@ sub Configure
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['network'], log => $self);
 
-    $self->stop($exifiles, $ifdown, $nwsrv);
+    my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
 
-    $self->deploy_config($exifiles);
+    my $config_changed = $self->deploy_config($exifiles);
 
-    $self->start($exifiles, $ifup, $nwsrv);
+    $stopstart += $self->start($exifiles, $ifup, $nwsrv);
 
+    # sanity check
+    if ($config_changed) {
+        if ($stopstart) {
+            $self->debug(1, "Configuration changed and something was stopped and/or started");
+        } else {
+            $self->error("Configuration changed and nothing was stopped and/or started");
+            # force a test
+            $stopstart = 1;
+        }
+    } else {
+        if ($stopstart) {
+            $self->error("Configuration not changed and something was stopped and/or started");
+        } else {
+            $self->debug(1, "Configuration not changed and nothing was stopped and/or started");
+        }
+    };
 
     # test network
-    if ($self->test_network_ccm_fetch()) {
-        # if ok, clean up backups
-        foreach my $file (sort keys %$exifiles) {
-            # don't clean up files that are not changed
-            # TODO: euhm, why not? they are already cleaned up?
-            if ($exifiles->{$file} != $NOCHANGES) {
-                if (-e $self->backup_filename($file)) {
-                    unlink($self->backup_filename($file)) ||
-                        $self->warn("cleanup backups: can't unlink ",
-                                    $self->backup_filename($file),
-                                    " ($!)") ;
-                }
-                if (-e $self->testcfg_filename($file)) {
-                    unlink($self->testcfg_filename($file)) ||
-                        $self->warn("cleanup backups: can't unlink ",
-                                    $self->testcfg_filename($file),
-                                    " ($!)");
-                }
-            }
+    if (! $stopstart) {
+        $self->verbose("Nothing was stopped and/or started, no need to retest network");
+    } elsif ($self->test_network_ccm_fetch()) {
+        # it's ok, clean up backups
+        my @files = sort keys %$exifiles;
+        $self->verbose("Network ok after test, cleaning up leftover backup and test config files ",
+                       join(', ', @files));
+        foreach my $file (@files) {
+            $self->cleanup_backup_test($file);
         }
     } else {
         $self->error("Network restart failed. ",
