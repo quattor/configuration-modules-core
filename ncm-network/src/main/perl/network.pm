@@ -1150,6 +1150,91 @@ sub start
     return $action;
 }
 
+# Recover failed network changes
+sub recover
+{
+    my ($self, $exifiles, $nwsrv, $init_config) = @_;
+
+    $self->error("Network restart failed. Reverting back to original config. ",
+                 "Failed modified configfiles can be found in ",
+                 "$BACKUP_DIR with suffix $FAILED_SUFFIX. ",
+                 "(If there aren't any, it means only some devices were removed.)");
+
+    # stop/recover/start whole network is the only thing that should always work.
+    # Not trying to minimise the impact
+
+    # current config. useful for debugging
+    my $failure_config = $self->get_current_config();
+
+    $self->verbose("RECOVER: stop network");
+    $nwsrv->stop();
+
+    my $unlink = sub {
+        my $file = shift;
+        if (-e $file) {
+            if(unlink($file)) {
+                $self->debug(1, "RECOVER: unlinked failed orig $file") ;
+            } else {
+                $self->error("RECOVER: Can't unlink failed orig $file ($!)") ;
+            };
+        }
+    };
+
+    my $recover = sub {
+        my $file = shift;
+        my $backup = $self->backup_filename($file);
+        &$unlink($file);
+        if(copy($backup, $file)) {
+            $self->debug(1, "RECOVER: copied backup $backup to orig $file");
+        } else {
+            $self->error("RECOVER: Can't copy backup $backup to orig $file.");
+        };
+    };
+
+
+    # revert to original files
+    foreach my $file (sort keys %$exifiles) {
+        if ($exifiles->{$file} == $NEW) {
+            $self->info("RECOVER: Removing new file $file.");
+            &$unlink($file);
+        } elsif ($exifiles->{$file} == $UPDATED) {
+            $self->info("RECOVER: Replacing newer file $file.");
+            &$recover($file);
+        } elsif ($exifiles->{$file} == $REMOVE) {
+            $self->info("RECOVER: Restoring file $file.");
+            &$recover($file);
+        }
+    }
+
+    # network start
+    $self->verbose("RECOVER: start network");
+    $nwsrv->start();
+
+    # test it again
+    my $nw_test = $self->test_network_ccm_fetch();
+    if ($nw_test) {
+        $self->info("Old network config restored.");
+    } else {
+        $self->error("Restoring old config failed.");
+    }
+
+    $self->info("Initial setup\n$init_config");
+    $self->info("Setup after failure\n$failure_config");
+    $self->info("Current setup\n".$self->get_current_config());
+
+    if (! $nw_test) {
+        $self->info("The profile of this machine could not be ",
+                    "retrieved using standard mechanism ccm-fetch. ",
+                    "Since this should be the original configuration, ",
+                    "there's either a bug in ncm-network or your profile ",
+                    "server is/was not reachable. Run \"ccm-fetch\" ",
+                    "and then \"ncm-ncd --co network\" to find out more. ",
+                    "If you think there's a bug in this component, ",
+                    "please let us know.")
+    };
+}
+
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -1295,75 +1380,21 @@ sub Configure
             $self->cleanup_backup_test($file);
         }
     } else {
-        $self->error("Network restart failed. ",
-                     "Reverting back to original config. ",
-                     "Failed modified configfiles can be found in ",
-                     "$BACKUP_DIR with suffix $FAILED_SUFFIX. ",
-                     "(If there aren't any, it means only some devices ",
-                     "were removed.)");
-        # if not, revert and pray now done with a pure network
-        # stop/start it's the only thing that should always work.
-
-        # current config. useful for debugging
-        my $failure_config = $self->get_current_config();
-
-        $self->runrun([qw(/sbin/service network stop)]);
-
-        # revert to original files
-        foreach my $file (sort keys %$exifiles) {
-            if ($exifiles->{$file} == $NEW) {
-                $self->info("RECOVER: Removing new file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->warn("Can't unlink ".$file) ;
-                }
-            } elsif ($exifiles->{$file} == $UPDATED) {
-                $self->info("RECOVER: Replacing newer file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->error("Can't unlink $file.") ;
-                }
-                copy($self->backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->backup_filename($file)." to $file.");
-            } elsif ($exifiles->{$file} == $REMOVE) {
-                $self->info("RECOVER: Restoring file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->warn("Can't unlink ".$file) ;
-                }
-                copy($self->backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->backup_filename($file)." to $file.");
-            }
-        }
-        # ifup OR network start
-        $self->runrun([qw(/sbin/service network start)]);
-
-        # test it again
-        my $nw_test = $self->test_network_ccm_fetch();
-        if ($nw_test) {
-            $self->info("Old network config restored.");
-        } else {
-            $self->error("Restoring old config failed.");
-        }
-
-        $self->info("Initial setup\n$init_config");
-        $self->info("Setup after failure\n$failure_config");
-        $self->info("Current setup\n".$self->get_current_config());
-
-        if (! $nw_test) {
-            $self->info("The profile of this machine could not be ",
-                "retrieved using standard mechanism ccm-fetch. ",
-                "Since this should be the original configuration, ",
-                "there's either a bug in ncm-network or your profile ",
-                "server is/was not reachable. Run \"ccm-fetch\" ",
-                "and then \"ncm-ncd --co network\" to find out more. ",
-                "If you think there's a bug in this component, ",
-                "please let us know.")
-        };
+        $self->recover($exifiles, $nwsrv, $init_config);
     }
 
     # remove all broken links
     # TODO: why is there no try/recover for the symlinks?
-    for my $link (sort keys %$exilinks) {
-        unlink($link) if (! -e $link);
+    foreach my $link (sort keys %$exilinks) {
+        if (! -e $link) {
+            if (unlink($link)) {
+                $self->debug(1, "Succesfully cleaned up broken symlink $link");
+            } else {
+                $self->error("Failed to unlink broken symlink $link: $!");
+            };
+        }
     };
+
 
     return 1;
 }
