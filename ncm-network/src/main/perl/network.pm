@@ -401,18 +401,29 @@ sub ethtool_options
     return \@eth_opts;
 }
 
-# Run list of arrayref commands
+# Run list of arrayref of commands (via CAF::Process) or
+# CAF::Service instances with 2nd element the method to run.
+# CAF::Service instances are expected to be initialised with logger.
+# Failing command has error reported; failing CAF::Service assumes
+# to log its own error.
+# Returns joined output of all processes.
+# If a CAF::Service instance is passed, its output is not added / returned.
 sub runrun
 {
     my ($self, @cmds) = @_;
-    return if (!@cmds);
 
     my @output;
-
     foreach my $cmd (@cmds) {
-        push(@output, CAF::Process->new($cmd, log => $self)->output());
-        if ($?) {
-            $self->error("Error output: $output[-1]");
+        if (ref($cmd->[0]) eq 'CAF::Service') {
+            my $srv = $cmd->[0];
+            my $action = $cmd->[1];
+            $srv->$action();
+        } else {
+            my $proc = CAF::Process->new($cmd, log => $self);
+            push(@output, $proc->output());
+            if ($?) {
+                $self->error("Error '$proc' output: $output[-1]");
+            }
         }
     }
 
@@ -987,6 +998,27 @@ sub make_ifup
     return \%ifup;
 }
 
+# If allow is defined and false, disable and stop NetworkManager
+sub disable_networkmanager
+{
+    my ($self, $allow) = @_;
+
+    # allow NetworkMnager to run or not?
+    if (defined($allow) && !$allow) {
+        # no checking, forcefully stopping NetworkManager
+        # warning: this can cause troubles with the recovery to previous state in case of failure
+        # it's always better to disable the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
+        my @disablenm_cmds;
+
+        # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it off
+        push(@disablenm_cmds, [qw(/sbin/chkconfig --level 2345 NetworkManager off)]);
+
+        push(@disablenm_cmds, [CAF::Service->new(["NetworkManager"], log => $self), "stop"]);
+
+        $self->runrun(@disablenm_cmds);
+    };
+};
+
 
 sub Configure
 {
@@ -1085,20 +1117,8 @@ sub Configure
     #
     # Action starts here
     #
-    # allow NetworkMnager to run or not?
-    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
-        # no checking, forcefully stopping NetworkManager
-        # warning: this can cause troubles with the recovery to previous state in case of failure
-        # it's always better to disable the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
-        # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it of
-        my @disablenm_cmds = ();
 
-        push(@disablenm_cmds, ["/sbin/chkconfig --level 2345 NetworkManager off"]);
-        # TODO: switch to CAF::Service
-        push(@disablenm_cmds, ["/sbin/service NetworkManager stop"]);
-        $self->runrun(@disablenm_cmds);
-    };
-
+    $self->disable_networkmanager($nwtree->{allow_nm});
 
     # Do ethtool processing for offload, ring and others
     # TODO: why do that here? should be done after any restarting of devices or whole network?
@@ -1164,6 +1184,7 @@ sub Configure
         # if ok, clean up backups
         foreach my $file (sort keys %$exifiles) {
             # don't clean up files that are not changed
+            # TODO: euhm, why not? they are already cleaned up?
             if ($exifiles->{$file} != $NOCHANGES) {
                 if (-e $self->backup_filename($file)) {
                     unlink($self->backup_filename($file)) ||
@@ -1221,13 +1242,13 @@ sub Configure
         $self->runrun([qw(/sbin/service network start)]);
 
         # test it again
-        my $nw_test = test_network();
+        my $nw_test = $self->test_network_ccm_fetch();
         if ($nw_test) {
             $self->info("Old network config restored.");
         } else {
             $self->error("Restoring old config failed.");
         }
-        $self->info("Result of test_network_ping: ".test_network_ping());
+
         $self->info("Initial setup\n$init_config");
         $self->info("Setup after failure\n$failure_config");
         $self->info("Current setup\n".$self->get_current_config());
@@ -1245,6 +1266,7 @@ sub Configure
     }
 
     # remove all broken links
+    # TODO: why is there no try/recover for the symlinks?
     for my $link (sort keys %$exilinks) {
         unlink($link) if (! -e $link);
     };
