@@ -309,12 +309,25 @@ sub service_keytab
             $self->directory($directory);
         }
 
-        if($self->file_exists($filename)) {
+        my $principal = $serv->{service};
+        # Add fqdn when hostname is missing
+        $principal .= "/$_fqdn" if ($principal !~ m{/});
+
+        my $has_keytab = $_client->service_has_keytab($principal);
+
+        if($self->file_exists($filename) && $has_keytab) {
             $self->verbose("Keytab $filename already exists");
         } else {
-            my $principal = $serv->{service};
-            # Add fqdn as
-            $principal .= "/$_fqdn" if ($principal !~ m{/});
+            my $args = [@GET_KEYTAB,
+                        '-s', $tree->{primary},
+                        '-p', $principal,
+                        '-k', $filename];
+
+            if ($has_keytab) {
+                $self->verbose("A keytab for principal $principal exists elsewhere, retrieving a copy");
+                # without -r, a new keytab will be created, rendering any other copies useless
+                push(@$args, '-r');
+            }
 
             # set environment to temporary credential cache
             # temporary cache is cleaned-up during destroy of $krb
@@ -322,11 +335,7 @@ sub service_keytab
             $_krb->update_env(\%ENV);
 
             # Retrieve keytab (what if already exists?)
-            my $proc = CAF::Process->new([@GET_KEYTAB,
-                                          '-s', $tree->{primary},
-                                          '-p', $principal,
-                                          '-k', $filename,
-                                         ], log => $self);
+            my $proc = CAF::Process->new($args, log => $self);
             my $output = $proc->output();
             if ($?) {
                 $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc): $output");

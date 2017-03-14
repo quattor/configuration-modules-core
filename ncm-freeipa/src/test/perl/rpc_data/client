@@ -1,4 +1,8 @@
 $cmds{request}{cmd}='cert_request -----BEGIN CERTIFICATE REQUEST-----\nCSRDATA\n-----END CERTIFICATE REQUEST----- principal=host/myhost.example.com@MY.REALM,version.*';
 $cmds{request}{result}={serial_number => 1234};
-$cmds{show}{cmd}='cert_show 1234 version.*';
-$cmds{show}{result}={serial_number => 1234, certificate => 'CRTDATA'};
+$cmds{showcert}{cmd}='cert_show 1234 version.*';
+$cmds{showcert}{result}={serial_number => 1234, certificate => 'CRTDATA'};
+$cmds{showserv1}{cmd}='service_show someservice1/myhost.example.com version.*';
+$cmds{showserv1}{result}={has_keytab => 1};
+$cmds{showserv2}{cmd}='service_show someservice2/myhost.example.com version.*';
+$cmds{showserv2}{result}={has_keytab => 0};

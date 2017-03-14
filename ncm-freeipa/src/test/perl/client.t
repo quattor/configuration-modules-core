@@ -62,8 +62,8 @@ reset_caf_path;
 $ipa = $cmp->set_ipa_client($tree);
 ok($cmp->client($tree), "client returns success");
 ok(command_history_ok([
-    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab",
-    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice2/myhost.example.com -k /etc/super2.keytab",
+    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab -r\$",
+    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice2/myhost.example.com -k /etc/super2.keytab\$",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -N -f /dev/null",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -A -n MY.REALM IPA CA -t CT,, -a -i /etc/ipa/ca.crt",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1",
