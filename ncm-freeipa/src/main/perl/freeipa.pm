@@ -379,8 +379,8 @@ sub certificates
         foreach my $nick (sort keys %{$tree->{certificates}}) {
             # How do we renew the certificates?
             my $cert = $tree->{certificates}->{$nick};
-            if ($nss->has_cert($nick)) {
-                $self->verbose("Found certificate for nick $nick");
+            if ($nss->has_cert($nick, $_client)) {
+                $self->verbose("Found NSS certificate for nick $nick");
             } else {
                 my $initcrt = "$nss->{workdir}/init_nss_$nick.crt";
                 my $msg = "Initial NSS certificate for nick $nick (temp $initcrt)";
@@ -406,16 +406,18 @@ sub certificates
                 $opts{mode} = $cert->{$modeattr} if defined($cert->{$modeattr});
 
                 my $msg = "$type file $fn for nick $nick";
+
                 if ($self->file_exists($fn)) {
-                    $self->verbose("Found existing $msg");
+                    # To hard to reverify key/cert; this is local anyway
+                    $self->verbose("Found existing $msg; reextracting it from NSS anyway");
+                }
+                
+                # Extract with get_cert
+                if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
+                    $self->info("Extracted $msg");
                 } else {
-                    # Extract with get_cert
-                    if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
-                        $self->info("Extracted $msg");
-                    } else {
-                        $self->error("Failed to extract $msg: $nss->{fail}");
-                        return;
-                    }
+                    $self->error("Failed to extract $msg: $nss->{fail}");
+                    return;
                 }
             }
         }
