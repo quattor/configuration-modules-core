@@ -133,7 +133,26 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
 # Regexp for the supported ifcfg-<device> devices.
 # $1 must match the device name
-Readonly my $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?(?::\w+)?$';
+Readonly my $DEVICE_REGEXP => qr{
+    - # separator from e.g. ifcfg or route
+    ( # start devicename group $1
+        (?:
+            eth|seth|em|
+            bond|br|ovirtmgmt|
+            vlan|usb|
+            ib|
+            p\d+p|
+            en(?:
+                o| # onboard
+                (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
+            )
+         )\d+| # mandatory numbering
+         enx[[:xdigit:]]{12} # enx MAC address
+    )
+    (?:\.\d+)? # optional VLAN
+    (?::\w+)? # optional alias
+    $
+}x;
 
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
