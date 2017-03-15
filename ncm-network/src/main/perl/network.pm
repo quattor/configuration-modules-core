@@ -133,7 +133,7 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
 # Regexp for the supported ifcfg-<device> devices.
 # $1 must match the device name
-Readonly our $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?';
+Readonly my $DEVICE_REGEXP => '-((?:eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(?:o|(?:p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(?:\.\d+)?(?::\w+)?$';
 
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
@@ -142,6 +142,23 @@ Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
 Readonly my $NEW => 2;
+
+
+# Giveb the configuration ifcfg filename,
+# Determine if this is a valid interface for ncm-network to manage,
+# Return interface name when valid, undef otherwise.
+sub is_valid_interface
+{
+    my ($self, $filename) = @_;
+
+    # Very primitive, based on regex only
+    # Not even the full filename (eg ifcfg) or anything
+    if ($filename =~ m/$DEVICE_REGEXP/) {
+        return $1;
+    } else {
+        return;
+    };
+}
 
 # Get current ethtool options for the given section
 sub ethtool_get_current
@@ -625,8 +642,7 @@ sub gather_existing
     # read current config
     opendir(my $dir, $IFCFG_DIR);
 
-    # $1 is the device name
-    foreach my $filename (grep {m/$DEVICE_REGEXP/} readdir($dir)) {
+    foreach my $filename (grep {$self->is_valid_interface($_)} readdir($dir)) {
         if ($filename =~ m/^([:\w.-]+)$/) {
             $filename = $1; # untaint
         } else {
@@ -955,8 +971,8 @@ sub make_ifdown
     foreach my $file (sort keys %$exifiles) {
         next if ($file eq $NETWORKCFG);
 
-        if ($file =~ m/$DEVICE_REGEXP/) {
-            my $iface = $1;
+        my $iface = $self->is_valid_interface($file);
+        if ($iface) {
 
             # ifdown: all devices that have files with non-zero status
             if ($exifiles->{$file} == $NOCHANGES) {
