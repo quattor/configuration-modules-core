@@ -3,8 +3,6 @@
 # ${author-info}
 # ${build-info}
 
-=pod
-
 =head1 DESCRIPTION
 
 Tests for the C<update_pkgs_retry> method.
@@ -41,8 +39,6 @@ $mock->mock("update_pkgs",  sub {
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
-=pod
-
 =head2 Update success
 
 First call returns success
@@ -61,8 +57,6 @@ ok (! $args[0]->[5], "1st (and only) update_pkgs call has tx_error_is_warn=false
 ok (! $args[0]->[7], "1st update_pkgs call does not reuse cache");
 is ($cmp->{ERROR}, 0, "No errors logged");
 
-=pod
-
 =head2 Update fails, no retry
 
 First call returns fail, no retry allowed
@@ -79,8 +73,6 @@ is($called, 1, "Basic invocation makes 1 update_pkgs call (with update_pkgs=fail
 ok (! $args[0]->[5], "1st (and only) update_pkgs call has tx_error_is_warn=false");
 ok (! $args[0]->[7], "1st update_pkgs call does not reuse cache");
 is ($cmp->{ERROR}, 0, "No errors logged by update_pkgs_retry (expect something else to log them)");
-
-=pod
 
 =head2 Update fails, userpaks and retry allowed
 
@@ -99,14 +91,12 @@ ok(! $args[0]->[5], "1st (and only) update_pkgs call has tx_error_is_warn=false"
 ok (! $args[0]->[7], "1st update_pkgs call does not reuse cache");
 is ($cmp->{ERROR}, 0, "No errors logged by update_pkgs_retry (expect something else to log them)");
 
-=pod
 
 =head2 Update fails twice
 
 update_pkgs fails 2 times (2nd failure with user pakgs allowed)
 
 =cut
-
 
 $called = 0;
 @args= ();
@@ -127,8 +117,6 @@ ok ($args[1]->[7], "2nd update_pkgs call reuses cache");
 
 is ($cmp->{ERROR}, 1, "1 error logged by update_pkgs_retry");
 
-
-=pod
 
 =head2 Update fails with userpakages not allowed
 
@@ -155,8 +143,6 @@ ok (! $args[2]->[5], "3rd update_pkgs call has tx_error_is_warn=false");
 ok ($args[2]->[7], "3rd update_pkgs call reuses cache");
 
 is ($cmp->{ERROR}, 1, "1 error logged by update_pkgs_retry");
-
-=pod
 
 =head2 Succesful retry
 
@@ -185,8 +171,6 @@ ok ($args[2]->[7], "3rd update_pkgs call reuses cache");
 
 is ($cmp->{ERROR}, 0, "No error logged by update_pkgs_retry");
 
-=pod
-
 =head2 Test all expected arguments are passed
 
 In succesful retry, the 3 update_pkgs calls receive all expected arguments
@@ -199,7 +183,6 @@ is_deeply($args[0], ["pkgs", "groups", "run", 0, "purge", 1, "fullsearch", 0], "
 is_deeply($args[1], ["pkgs", "groups", "run", 1, "purge", 0, "fullsearch", 1], "2nd update_pkgs expected args");
 is_deeply($args[2], ["pkgs", "groups", "run", 0, "purge", 0, "fullsearch", 1], "3rd update_pkgs expected args");
 
-=pod
 
 =head2 with NoAction, do not retry on failure
 
@@ -216,9 +199,3 @@ is ($cmp->{ERROR}, 0, "No error logged by update_pkgs_retry with NoAction");
 
 
 done_testing();
-
-=pod
-
-=back
-
-=cut

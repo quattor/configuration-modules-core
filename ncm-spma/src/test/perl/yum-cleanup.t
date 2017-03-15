@@ -3,8 +3,6 @@
 # ${author-info}
 # ${build-info}
 
-=pod
-
 =head1 DESCRIPTION
 
 Tests for the C<configure_yum> method.  This method modifies the
@@ -44,8 +42,6 @@ my $extra_opts = {
     retries => 100,
 };
 
-=pod
-
 =item * If they don't exist, it is appended.
 
 =cut
@@ -61,8 +57,6 @@ like("$fh", qr{^$REPOSDIR=/dir/1,/dir/2}m, "Reposdir is expanded properly");
 like("$fh", qr{^exclude=something else}m, "exclude is addedd properly (space separated)");
 like("$fh", qr{^retries=100}m, "reries is added");
 
-=pod
-
 =item * If it exists but has wrong value, it is modified
 
 =cut
@@ -71,8 +65,6 @@ set_file_contents($YUM_FILE, "$COR=fubar");
 $cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1 /dir/2)]);
 $fh = get_file($YUM_FILE);
 like("$fh", qr{^$COR=1$}m, "Correct substitution");
-
-=pod
 
 =item * If it exists and is correct, nothing happens
 
@@ -84,8 +76,6 @@ $fh = get_file($YUM_FILE);
 is("$fh",
    "$COR=1\n$OBSOLETES=0\n$PLUGINCONFPATH=/my/pluginpath\n$REPOSDIR=/dir/1,/dir/2\nsomething=else",
    "The method is idempotent");
-
-=pod
 
 =item * Handle special characters
 
@@ -101,3 +91,5 @@ is("$fh",
 
 
 done_testing();
+
+=back
