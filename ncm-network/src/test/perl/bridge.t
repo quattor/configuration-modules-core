@@ -6,6 +6,21 @@ use Test::Quattor qw(bridge);
 use helper;
 use NCM::Component::network;
 
+use Readonly;
+
+Readonly my $BR0 => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=br0
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=4.3.2.1
+NETMASK=255.255.255.0
+BROADCAST=4.3.2.255
+STP=on
+DELAY=5
+BRIDGING_OPTS='hairpin_mode=5'
+EOF
 
 =pod
 
@@ -28,5 +43,7 @@ like($fh, qr/DELAY=\d+/m, "set bridge delay");
 like($fh, qr/BRIDGING_OPTS='.*hairpin_mode=5.*'/m, "set bridge_opts");
 
 unlike($fh, qr/IPV6/, "No IPv6 config details");
+
+is("$fh", $BR0, "exact bridge config");
 
 done_testing();
