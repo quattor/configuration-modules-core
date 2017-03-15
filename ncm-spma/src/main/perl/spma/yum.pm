@@ -109,7 +109,7 @@ sub _match_noaction_tempdir
 # in the system that are not listed in $allowed_repos.
 sub cleanup_old_repos
 {
-    my ($self, $repo_dir, $allowed_repos, $allow_user_pkgs) = @_;
+    my ($self, $repo_dir, $allowed_repos, $allow_user_repos) = @_;
 
     if ($NoAction) {
         if($self->_match_noaction_tempdir($repo_dir)) {
@@ -128,7 +128,7 @@ sub cleanup_old_repos
     }
 
     # Test this after the NoAction bit for unittesting
-    return 1 if $allow_user_pkgs;
+    return 1 if $allow_user_repos;
 
     my $dir;
     if (!opendir($dir, $repo_dir)) {
@@ -1138,11 +1138,11 @@ sub Configure
     $t->{run} = $t->{run} eq 'yes';
     $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
 
-    # When userpkgs are allowed, there is no control over what is in the reposdir
-    # If they are not allowed, and retry is allowed, use a non-standard location
-    # to avoid any repositories getting added during the retries (e.g. from rpms).
-    my $main_repos_dir = ($NoAction || $t->{userpkgs} || (!$t->{userpkgs_retry})) ?
-                             REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
+    # When userrepos are allowed, there is no control over what is in the reposdir
+    # If they are not allowed, use a non-standard location to avoid any repositories
+    # getting added during the retries (e.g. from rpms).
+    my $main_repos_dir = ($NoAction || $t->{userrepos}) ? REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
+    $self->debug(5, "Using '$main_repos_dir' as yum repository directory");
 
     my $repos = $config->getTree(REPOS_TREE);
     my $pkgs = $config->getTree(PKGS_TREE);
@@ -1171,7 +1171,7 @@ sub Configure
 
     my $quattor_managed_reposdir = _prefix_noaction_prefix($main_repos_dir);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
-    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
+    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userrepos}) or return 0;
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                           $t->{proxyhost}, $t->{proxytype},
                                           $t->{proxyport});

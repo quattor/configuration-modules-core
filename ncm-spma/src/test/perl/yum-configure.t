@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
+use Test::Quattor qw(simple with_proxy without_spma with_pkgs with_repos);
 use NCM::Component::spma::yum;
 use Test::MockObject::Extends;
 use CAF::Object;
@@ -102,7 +102,7 @@ ok(defined($calls{configure_plugins}),
 
 =cut
 
-is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d",
+is($calls{initialize_repos_dir}->[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory initialized");
 
 =item * C<cleanup_old_repos>
@@ -111,7 +111,7 @@ is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d",
 
 @args = @{$calls{cleanup_old_repos}};
 
-is($args[1], "/etc/yum.repos.d",
+is($args[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory to be cleaned up");
 is(ref($args[2]), 'ARRAY',
    'A list with repositories is passed to clean up non-existing repos');
@@ -124,7 +124,7 @@ ok(!$args[3], "No user repositories allowed");
 =cut
 
 @args = @{$calls{generate_repos}};
-is($args[1], "/etc/yum.repos.d",
+is($args[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory to be initialised");
 is(ref($args[2]), 'ARRAY',
    "A list of repositories is passed to generate_repos");
@@ -173,7 +173,7 @@ ok(!$args[3], "No run is correctly passed to update_pkgs_retry");
 
 =head2 User packages allowed
 
-They show up in C<cleanup_old_repos> and C<update_pkgs_retry>
+They show up in C<update_pkgs_retry>
 
 =cut
 
@@ -184,7 +184,7 @@ $mock->clear();
 $cmp->Configure($cfg);
 
 while (my ($n, $a) = $mock->next_call()) {
-    if ($n eq 'update_pkgs_retry' || $n eq 'cleanup_old_repos') {
+    if ($n eq 'update_pkgs_retry') {
 	ok($a->[3], "User packages are passed correctly to $name");
     }
 }
@@ -232,10 +232,36 @@ $mock->mock('generate_repos', sub {
 		    return 1;
 	    });
 
+=back
+
+=head2 User packages allowed
+
+They show up in C<cleanup_old_repos>
+
+=cut
+
+$cfg = get_config_for_profile("with_repos");
+
+$mock->clear();
+
+$cmp->Configure($cfg);
+
+while (my ($name, $args) = $mock->next_call()) {
+    $calls{$name} = $args;
+}
+
+=over
+
+=item * C<initialize_repos_dir>
+
+=cut
+
+is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d", "Correct Yum repository directory initialized with userrepos set");
+
+
 done_testing();
 
 __END__
-
 
 =back
 
