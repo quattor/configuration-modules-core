@@ -2,6 +2,9 @@
 
 declaration template components/network/core-schema;
 
+include 'pan/types';
+include 'quattor/functions/network';
+
 @documentation{
     Route
 }
@@ -178,10 +181,20 @@ type structure_interface = {
         if ( (!exists(SELF['type']) || SELF['type'] != 'bond_ifaces') ) {
             error("bond_ifaces is defined but the type of interface is not defined as OVSBond");
         };
-        foreach (i;iface;bond_ifaces) {
+        foreach (i; iface; bond_ifaces) {
             if ( !exists("/system/network/interfaces/" + iface) ) {
                 error("The " + iface + " interface is used by bond_ifaces, but does not exist");
             };
+        };
+    };
+    if (exists(SELF['ip']) && exists(SELF['netmask'])) {
+        if (exists(SELF['gateway']) && ! ip_in_network(SELF['gateway'], SELF['ip'], SELF['netmask'])) {
+            error(format('networkinterface has gateway %s not reachable from ip %s with netmask %s',
+                            SELF['gateway'], SELF['ip'], SELF['netmask']));
+        };
+        if (exists(SELF['broadcast']) && ! ip_in_network(SELF['broadcast'], SELF['ip'], SELF['netmask'])) {
+            error(format('networkinterface has broadcast %s not reachable from ip %s with netmask %s',
+                            SELF['broadcast'], SELF['ip'], SELF['netmask']));
         };
     };
     true;
@@ -221,4 +234,19 @@ type structure_network = {
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
+} with {
+    if (exists(SELF['default_gateway'])) {
+        reachable = false;
+        # is there any interface that can reach it?
+        foreach (name; data; SELF['interfaces']) {
+            if (exists(data['ip']) && exists(data['netmask']) &&
+                ip_in_network(SELF['default_gateway'], data['ip'], data['netmask'])) {
+                reachable = true;
+            };
+        };
+        if (!reachable) {
+            error("No interface with ip/mask found to reach default gateway");
+        };
+    };
+    true;
 };
