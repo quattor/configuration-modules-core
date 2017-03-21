@@ -7,6 +7,25 @@ use Test::Quattor qw(simple simple_realhostname);
 use helper;
 use NCM::Component::network;
 
+use Readonly;
+
+Readonly my $NETWORK => <<EOF;
+NETWORKING=yes
+HOSTNAME=somehost.test.domain
+GATEWAY=4.3.2.254
+EOF
+
+Readonly my $ETH0 => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=eth0
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=4.3.2.1
+NETMASK=255.255.255.0
+BROADCAST=4.3.2.255
+EOF
+
 =pod
 
 =head1 DESCRIPTION
@@ -32,6 +51,8 @@ like($fh, qr/^GATEWAY=/m, "Set default gateway");
 
 unlike($fh, qr/IPV6/, "No IPv6 config details");
 
+is("$fh", $NETWORK, "Exact network config");
+
 
 $fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
 isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
@@ -46,6 +67,9 @@ like($fh, qr/^NETMASK=/m, "fixed netmask");
 like($fh, qr/^BROADCAST=/m, "fixed broadcast");
 
 unlike($fh, qr/IPV6/, "No IPv6 config details");
+
+is("$fh", $ETH0, "Exact network config");
+
 
 # Check that realhostname is used correctly
 $cfg = get_config_for_profile('simple_realhostname');
