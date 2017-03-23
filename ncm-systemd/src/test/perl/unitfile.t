@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-use EDG::WP4::CCM::Element qw(escape);
+use EDG::WP4::CCM::Path qw(escape);
 use Test::Quattor qw(unitfile_config);
 use NCM::Component::systemd;
 use NCM::Component::Systemd::UnitFile;

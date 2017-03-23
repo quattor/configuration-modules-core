@@ -11,7 +11,7 @@ use warnings;
 
 use parent qw(NCM::Component::Systemd::Service::Unit);
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 
 use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET
     $TYPE_SYSV $TYPE_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE

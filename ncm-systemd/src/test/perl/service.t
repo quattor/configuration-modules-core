@@ -72,7 +72,7 @@ my @uf_write;
 $mockuf->mock("write", sub {
     my $self = shift;
     # also tested by the getTree call
-    isa_ok($self->{config}, 'EDG::WP4::CCM::Element',
+    isa_ok($self->{config}, 'EDG::WP4::CCM::CacheManager::Element',
            "config on write for $self->{unit} is an Element instance");
     push(@uf_write, [$self->{unit}, $self->{replace}, $self->{backup}, $self->{config}->getTree(), $self->{custom}]);
     return 1;

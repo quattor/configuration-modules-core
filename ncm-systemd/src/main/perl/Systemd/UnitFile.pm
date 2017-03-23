@@ -20,6 +20,7 @@ use LC::Exception qw (SUCCESS);
 use Readonly;
 use LC::Check;
 
+use EDG::WP4::CCM::TextRender 17.2.1;
 use NCM::Component::Systemd::Systemctl qw(systemctl_daemon_reload);
 
 Readonly my $UNITFILE_DIRECTORY => '/etc/systemd/system';
@@ -61,7 +62,7 @@ The unit (full C<name.type>).
 
 =item config
 
-A C<EDG::WP4::CCM::Element> instance with the unitfile configuration.
+A C<EDG::WP4::CCM::CacheManager::Element> instance with the unitfile configuration.
 
 (An element instance is required becasue the rendering of
 the configuration is pan-basetype sensistive).
@@ -192,7 +193,7 @@ sub write
     my ($self) = @_;
 
     if (!(blessed($self->{config}) &&
-           $self->{config}->isa("EDG::WP4::CCM::Element"))) {
+           $self->{config}->isa("EDG::WP4::CCM::CacheManager::Element"))) {
         $self->error("config has to be an Element instance");
         return;
     }

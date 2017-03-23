@@ -14,9 +14,6 @@ use CAF::Process;
 use CAF::FileWriter;
 use Readonly;
 
-use EDG::WP4::CCM::Element;
-use EDG::WP4::CCM::Resource;
-
 $NCM::Component::iptables::NoActionSupported = 1;
 
 # Global variables
