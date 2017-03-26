@@ -73,18 +73,19 @@ An example:
 
 =cut
 
-use parent qw(NCM::Component);
+use parent qw(NCM::Component CAF::Path);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 
-use File::Copy;
+use Net::Ping;
 
 use CAF::Process;
+use CAF::Service;
 use CAF::FileReader;
-use CAF::FileWriter;
-use Fcntl qw(SEEK_SET);
+use CAF::FileEditor;
+use CAF::FileWriter 17.2.1;
 
 use POSIX qw(WIFEXITED WEXITSTATUS);
 use Readonly;
@@ -125,9 +126,6 @@ Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IFCONFIGCMD => '/sbin/ifconfig';
 Readonly my $ROUTECMD => '/sbin/route';
 
-Readonly my $FAILED_SUFFIX => '-failed';
-Readonly my $BACKUP_DIR => "/tmp";
-
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
@@ -157,6 +155,9 @@ Readonly my $DEVICE_REGEXP => qr{
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
+Readonly my $FAILED_SUFFIX => '-failed';
+Readonly my $BACKUP_DIR => "$IFCFG_DIR/.quattorbackup";
+
 Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
@@ -185,30 +186,29 @@ sub ethtool_get_current
     my ($self, $ethname, $sectionname) = @_;
     my %current;
 
-    my $showoption = "--show-$sectionname";
-    $showoption = "" if ($sectionname eq "ethtool");
+    my $showoption = $sectionname eq "ethtool" ? "" : "--show-$sectionname";
 
     my ($out, $err);
     # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
     if (CAF::Process->new([$ETHTOOLCMD, $showoption || (), $ethname],
-                          "stdout" => \$out,
-                          "stderr" => \$err
+                          stdout => \$out,
+                          stderr => \$err,
+                          keeps_state => 1,
+                          log => $self,
         )->execute() ) {
         foreach my $line (split('\n', $out)) {
             if ($line =~ m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
-                my $k = $1;
-                my $v = $2;
+                my ($key, $val) = ($1, $2);
                 # speed setting
-                $v = $1 if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{speed} && $v =~ m/^(\d+)/);
+                $val = $1 if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{speed} && $val =~ m/^(\d+)/);
                 # Duplex setting
-                $v =~ tr/A-Z/a-z/ if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{duplex});
+                $val =~ tr/A-Z/a-z/ if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{duplex});
                 # auotneg setting
-                if ($k eq $ETHTOOL_OPTION_MAP{ethtool}{autoneg}) {
-                    $v = "off";
-                    $v = "on" if ($v =~ m/(Y|y)es/);
+                if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{autoneg}) {
+                    $val = ($val =~ m/(Y|y)es/) ? "on" : "off";
                 }
 
-                $current{$k} = $v;
+                $current{$key} = $val;
             }
         }
     } else {
@@ -232,7 +232,7 @@ sub backup_filename
 # Generate the filename to hold the test configuration data
 # If this file still exists after the component runs, it means
 # that the changes did not lead to a working network config, and
-# thus this file has the failed (new/updated) configuration;
+# thus this file has the (new/updated but) failed configuration;
 # hence the FAILED suffix in the name.
 sub testcfg_filename
 {
@@ -246,30 +246,20 @@ sub cleanup_backup_test
 {
     my ($self, $file) = @_;
 
-    my $backupcfg = $self->backup_filename($file);
-    if (-e $backupcfg) {
-        if (unlink($backupcfg)) {
-            $self->verbose("cleanup backup config $backupcfg");
-        } else {
-            $self->warn("cleanup: can't unlink backup config $backupcfg ($!)")
-        }
-    }
-
-    my $testcfg = $self->testcfg_filename($file);
-    if (-e $testcfg) {
-        if (unlink($testcfg)) {
-            $self->verbose("cleanup test config $testcfg");
-        } else {
-            $self->warn("cleanup: can't unlink test config $testcfg ($!)")
+    foreach my $type (qw(backup testcfg)) {
+        my $method = $type."_filename";
+        my $filename = $self->$method($file);
+        # no keeps_state, under NoAction keep the backup and more importantly the testcfg
+        if (! defined($self->cleanup($filename))) {
+            $self->warn("Failed to cleanup $type config file $filename: $self->{fail}");
         }
     }
 };
 
 
 # Make copy of original file (if exists) for testing (name from testcfg_filename).
-# (This is not the backup created by mk_bu; and this method makes not backup).
-# Then write text to this testcfg.
-# Return the filestate of the copy (new/updated/nochanges)
+# using FileEditor source options and then write text to this testcfg.
+# Return the filestate of this copy (new/updated/nochanges)
 # The original file is not modified at all.
 # If there were no changes, the backup and the testcfg are removed.
 sub file_dump
@@ -280,29 +270,26 @@ sub file_dump
 
     my $testcfg = $self->testcfg_filename($file);
 
-    if (-e $testcfg) {
-        $self->debug(3, "$func: file exits, unlink old testcfg $testcfg");
-        unlink($testcfg) ||
-            $self->warn("$func: Can't unlink old testcfg $testcfg ($!)");
+    if (! defined($self->cleanup($testcfg, undef, keeps_state => 1))) {
+        $self->warn("Failed to cleanup testcfg $testcfg before file_dump: $self->{fail}");
     }
 
-    my $fh;
-    if (-e $file) {
-        $self->debug(3, "$func: copying current $file to testcfg $testcfg");
-        $self->mk_bu($file, $testcfg);
-    } else {
-        $self->debug(3, "$func: no current $file, no testcfg coopy");
-    };
+    # No need for copy, use Editor with source and close it for copy
+    my $fh = CAF::FileEditor->new($testcfg, log => $self, keeps_state => 1, source => $file);
+    $fh->close(); # is always changed
 
-    $self->debug(3, "$func: writing testcfg $testcfg");
-    $fh = CAF::FileWriter->new($testcfg, log => $self, keeps_state => 1);
+    # open it again and seek_begin; keep the original_content
+    $fh->reopen();
+    # go to the beginning; this is mix of FileEditor and FileWriter
+    $fh->seek_begin();
+
     print $fh join("\n", @$text, ''); # add trailing newline
 
     # Use 'scheduled' in messages to indicate that this method
     # does not make modifications to the file.
     my $filestatus;
     if ($fh->close()) {
-        if (-e $file) {
+        if ($self->file_exists($file)) {
             $self->info("$func: file $file has newer version scheduled.");
             $filestatus = $UPDATED;
         } else {
@@ -319,38 +306,92 @@ sub file_dump
     return $filestatus;
 }
 
-# Make a backup of the file using copy to dest
-# Use backup_filename as default dest.
+# Make a backup of the file
+# Backup in same filesystem, so we can hardlink to create the backup.
+# Assumes $NETWORKCFG is in same filesystem
 sub mk_bu
 {
-    my ($self, $file, $dest) = @_;
-    my $func = "mk_bu";
+    my ($self, $file) = @_;
 
-    $dest = $self->backup_filename($file) if ! defined($dest);
-    $self->debug(3,"$func: create backup of $file to $dest");
-    copy($file, $dest) || $self->error("$func: Can't create backup of $file to $dest ($!)");
+    my $dest = $self->backup_filename($file);
+    if ($self->hardlink($file, $dest, keeps_state => 1)) {
+        $self->verbose("Created backup $dest for $file");
+        return 1;
+    } else {
+        $self->error("Failed to create backup $dest for $file: $self->{fail}");
+        return;
+    }
 }
 
+sub test_network_ping
+{
+    my ($self, $profile) = @_;
+
+    my $func = "test_network_ping";
+    if (! $profile) {
+        $self->warn("$func: no profile, unable to verify network");
+        return;
+    }
+
+    # sometimes it's possible that routing is a bit behind, so
+    # set this variable to some larger value
+    my $sleep_time = 15;
+    sleep($sleep_time) if ! $self->noAction();
+
+    # set port number of CDB server that should be reachable
+    # (like http or https)
+    my $proto = $profile;
+    $proto =~ s/:\/\/.+//;
+    my $host = $profile;
+    $host =~ s/.+:\/\///;
+    $host =~ s/\/.+//;
+
+    my $ping = Net::Ping->new("tcp");
+
+    # check for portnumber in host
+    if ($host =~ m/:(\d+)/) {
+        $ping->{port_num} = $1;
+        $host =~ s/:(\d+)//;
+    } else {
+        # get it by service if not explicitly defined
+        $ping->{port_num} = getservbyname($proto, "tcp");
+    }
+
+    my $ec;
+    if ($ping->ping($host)) {
+        $self->verbose("$func: OK: network up");
+        $ec = 1;
+    } else {
+        $self->warn("$func: FAILED: network down");
+        $ec = 0;
+    }
+    $ping->close();
+
+    return $ec;
+}
+
+# Test network by downloading latest profile.
 sub test_network_ccm_fetch
 {
-    my ($self) = @_;
+    my ($self, $profile) = @_;
 
     # only download file, don't really ccm-fetch!!
     my $func = "test_network_ccm_fetch";
     # sometimes it's possible that routing is a bit behind, so set this variable to some larger value
     my $sleep_time = 15;
-    sleep($sleep_time);
-    # it should be in $PATH
-    $self->info("$func: trying ccm-fetch");
+    sleep($sleep_time) if ! $self->noAction();
+
+    # ccm-fetch should be in $PATH
+    $self->verbose("$func: trying ccm-fetch");
     # no runrun, as it would trigger error (and dependency failure)
     my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
     my $exitcode = $?;
     if ($exitcode == 0) {
-        $self->info("$func: OK: network up");
+        $self->verbose("$func: OK: network up");
         return 1;
     } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
         $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
-        return test_network_ping();
+        return $self->test_network_ping($profile);
     } else {
         $self->warn("$func: FAILED: network down");
         return 0;
@@ -465,8 +506,8 @@ sub ethtool_options
     my ($self, $options) = @_;
 
     my @eth_opts;
-    foreach my $k (order_ethtool_options('ethtool', $options)) {
-        push(@eth_opts, $k, $options->{$k});
+    foreach my $key (order_ethtool_options('ethtool', $options)) {
+        push(@eth_opts, $key, $options->{$key});
     }
     return \@eth_opts;
 }
@@ -512,7 +553,8 @@ sub make_mac2dev
     my $proc = CAF::Process->new([$IFCONFIGCMD, '-a'],
                                  stdout => \$ifconfig_out,
                                  stderr => "stdout",
-                                 log => $self);
+                                 log => $self,
+                                 keeps_state => 1);
     if (! $proc->execute()) {
         $ifconfig_out = "" if (! defined($ifconfig_out));
 
@@ -581,8 +623,6 @@ sub process_network
             my $opts = $iface->{$attr};
             if (defined($opts) && keys %$opts) {
                 $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
-                use Test::More;
-                diag "$ifname $attr ",explain $iface->{$attr};
                 $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
             }
         }
@@ -659,9 +699,8 @@ sub gather_existing
     my (%exifiles, %exilinks);
 
     # read current config
-    opendir(my $dir, $IFCFG_DIR);
-
-    foreach my $filename (grep {$self->is_valid_interface($_)} readdir($dir)) {
+    my $files = $self->listdir($IFCFG_DIR, test => sub { return $self->is_valid_interface($_[0]); });
+    foreach my $filename (@$files) {
         if ($filename =~ m/^([:\w.-]+)$/) {
             $filename = $1; # untaint
         } else {
@@ -672,7 +711,7 @@ sub gather_existing
         my $file = "$IFCFG_DIR/$filename";
 
         my $msg;
-        if ( -l $file ) {
+        if ($self->is_symlink($file)) {
             # keep the links separate
             # TODO: value not used?
             $exilinks{$file} = readlink($file);
@@ -682,11 +721,10 @@ sub gather_existing
             # and make a backup.
             $exifiles{$file} = $REMOVE;
             $msg = "file";
-            $self->mk_bu($file);
+            return (undef, undef) if ! defined($self->mk_bu($file));
         }
         $self->debug(3, "Found ifcfg $msg $file");
     }
-    closedir($dir);
 
     return (\%exifiles, \%exilinks);
 }
@@ -705,8 +743,6 @@ sub gather_existing
 sub _make_ifcfg_line
 {
     my ($href, $key, %opts) = @_;
-    use Test::More;
-    diag 'href ',explain $href, " key $key opts ",explain \%opts;
 
     my $var = $opts{var} || $key;
     my $value = defined($href->{$key}) ? $href->{$key} : $opts{def};
@@ -1135,23 +1171,26 @@ sub deploy_config
     # replace UPDATED/NEW files, remove REMOVE files
     my $action = 0;
     foreach my $file (sort keys %$exifiles) {
-        if (($exifiles->{$file} == $UPDATED) || ($exifiles->{$file} == $NEW)) {
-            my $testcfg = $self->testcfg_filename($file);
-            my $msg = "copy UPDATED/NEW testcfg $testcfg to config $file";
-            if (copy($testcfg, $file)) {
-                $self->verbose($msg);
-            } else {
-                $self->error("$msg failed: $!");
-            }
-            $action = 1;
-        } elsif ($exifiles->{$file} == $REMOVE) {
+        my $state = $exifiles->{$file};
+        if (($state == $REMOVE) || ($state == $UPDATED) || ($state == $NEW)) {
             my $msg = "REMOVE config $file";
-            if(unlink($file)) {
+            if($self->cleanup($file)) {
                 $self->verbose($msg);
             } else {
-                $self->error("$msg failed. ($!)");
+                $self->error("$msg failed. ($self->{fail})");
             };
             $action = 1;
+
+            # set new config file from testcfg
+            if (($state == $UPDATED) || ($state == $NEW)) {
+                my $testcfg = $self->testcfg_filename($file);
+                my $msg = "hardlink UPDATED/NEW testcfg $testcfg to config $file";
+                if ($self->hardlink($testcfg, $file)) {
+                    $self->verbose($msg);
+                } else {
+                    $self->error("$msg failed: $self->{fail}");
+                }
+            }
         } else {
             $self->verbose("Nothing to do for config $file with status $exifiles->{$file}.");
         }
@@ -1194,7 +1233,7 @@ sub start
 # Recover failed network changes
 sub recover
 {
-    my ($self, $exifiles, $nwsrv, $init_config) = @_;
+    my ($self, $exifiles, $nwsrv, $init_config, $profile) = @_;
 
     $self->error("Network restart failed. Reverting back to original config. ",
                  "Failed modified configfiles can be found in ",
@@ -1212,11 +1251,11 @@ sub recover
 
     my $unlink = sub {
         my $file = shift;
-        if (-e $file) {
-            if(unlink($file)) {
+        if ($self->any_exists($file)) {
+            if($self->cleanup($file)) {
                 $self->debug(1, "RECOVER: unlinked failed orig $file") ;
             } else {
-                $self->error("RECOVER: Can't unlink failed orig $file ($!)") ;
+                $self->error("RECOVER: Can't unlink failed orig $file ($self->{fail})") ;
             };
         }
     };
@@ -1225,10 +1264,10 @@ sub recover
         my $file = shift;
         my $backup = $self->backup_filename($file);
         &$unlink($file);
-        if(copy($backup, $file)) {
-            $self->debug(1, "RECOVER: copied backup $backup to orig $file");
+        if($self->hardlink($backup, $file)) {
+            $self->debug(1, "RECOVER: hardlink backup $backup to orig $file");
         } else {
-            $self->error("RECOVER: Can't copy backup $backup to orig $file.");
+            $self->error("RECOVER: Can't hardlink backup $backup to orig $file ($self->{fail})");
         };
     };
 
@@ -1252,7 +1291,7 @@ sub recover
     $nwsrv->start();
 
     # test it again
-    my $nw_test = $self->test_network_ccm_fetch();
+    my $nw_test = $self->test_network_ccm_fetch($profile);
     if ($nw_test) {
         $self->info("Old network config restored.");
     } else {
@@ -1276,9 +1315,30 @@ sub recover
 }
 
 
+# Create new backupdir
+# Returns 1 on success, undef on failure (and reports error).
+sub init_backupdir
+{
+    my $self = shift;
+
+    if (!defined($self->cleanup($BACKUP_DIR, undef, keeps_state => 1))) {
+        $self->error("Failed to cleanup previous backup directory $BACKUP_DIR: $self->{fail}");
+        return;
+    }
+    if (!defined($self->directory($BACKUP_DIR, mode => oct(700), keeps_state => 1))) {
+        $self->error("Failed to create backup directory $BACKUP_DIR: $self->{fail}");
+        return;
+    }
+
+    return 1;
+}
+
+
 sub Configure
 {
     my ($self, $config) = @_;
+
+    return if ! defined($self->init_backupdir());
 
     # current setup, will be printed in case of major failure
     my $init_config = $self->get_current_config();
@@ -1287,18 +1347,18 @@ sub Configure
     my $ifaces = $net->{interfaces};
 
     # keep a hash of all files and links.
+    # makes a backup of all files
     my ($exifiles, $exilinks) = $self->gather_existing();
+    return if ! defined($exifiles);
 
     my $nwtree = $config->getTree($NETWORK_PATH);
 
     # main network config
-    $self->mk_bu($NETWORKCFG);
-    my $text = make_network_cfg($nwtree, $net);
+    return if ! defined($self->mk_bu($NETWORKCFG));
+    my $text = $self->make_network_cfg($nwtree, $net);
     $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
 
     # ifcfg- / route- files
-    use Test::More;
-    diag 'net ',explain $net;
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
         my $text = $self->make_ifcfg($ifacename, $iface);
@@ -1336,10 +1396,9 @@ sub Configure
             my $file_name_sym = "$IFCFG_DIR/ifcfg-$al_dev";
             if ($iface->{vlan} &&
                 $file_name_sym ne $file_name &&
-                ! -e $file_name_sym &&
-                ! -l $file_name_sym) { # TODO: should check target with readlink
+                ! $self->any_exists($file_name_sym)) { # TODO: should check target with readlink
                 # this will create broken link, if $file_name is not yet existing
-                symlink($file_name, $file_name_sym) ||
+                $self->symlink($file_name, $file_name_sym) ||
                     $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
             };
         }
@@ -1413,9 +1472,12 @@ sub Configure
     };
 
     # test network
+    my $ccm_tree = $config->getTree("/software/components/ccm");
+    my $profile = $ccm_tree && $ccm_tree->{profile};
+
     if (! $stopstart) {
         $self->verbose("Nothing was stopped and/or started, no need to retest network");
-    } elsif ($self->test_network_ccm_fetch()) {
+    } elsif ($self->test_network_ccm_fetch($profile)) {
         # it's ok, clean up backups
         my @files = sort keys %$exifiles;
         $self->verbose("Network ok after test, cleaning up leftover backup and test config files ",
@@ -1424,21 +1486,20 @@ sub Configure
             $self->cleanup_backup_test($file);
         }
     } else {
-        $self->recover($exifiles, $nwsrv, $init_config);
+        $self->recover($exifiles, $nwsrv, $init_config, $profile);
     }
 
-    # remove all broken links
+    # remove all broken links: use file_exists
     # TODO: why is there no try/recover for the symlinks?
     foreach my $link (sort keys %$exilinks) {
-        if (! -e $link) {
-            if (unlink($link)) {
+        if (! $self->file_exists($link)) {
+            if ($self->cleanup($link)) {
                 $self->debug(1, "Succesfully cleaned up broken symlink $link");
             } else {
-                $self->error("Failed to unlink broken symlink $link: $!");
+                $self->error("Failed to unlink broken symlink $link: $self->{fail}");
             };
         }
     };
-
 
     return 1;
 }
