@@ -465,8 +465,14 @@ type structure_icinga_ido2db_cfg = {
     "max_hostchecks_age" : long = 1440
     "max_eventhandlers_age" : long = 10080
     "max_externalcommands_age" : long = 10080
-    "clean_realtime_tables_on_core_startup" : boolean = true
-    "clean_config_tables_on_core_startup" : boolean = true
+    "clean_realtime_tables_on_core_startup" ? boolean = true with {
+        deprecated(0, 'removed in recent versions of idoutils 1.13.X');
+        true;
+    }
+    "clean_config_tables_on_core_startup" ? boolean = true with {
+        deprecated(0, 'removed in recent versions of idoutils 1.13.X');
+        true;
+    }
     "trim_db_interval" : long = 3600
     "housekeeping_thread_startup_delay" : long = 300
     "debug_level" : long = 0
