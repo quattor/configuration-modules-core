@@ -1,29 +1,40 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::cdp;
+=head1 NAME
 
-use strict;
-use warnings;
+The I<cdp> component manages the configuration file
+C<< /etc/cdp-listend.conf. >>
 
-use base 'NCM::Component';
-our $EC=LC::Exception::Context->new->will_store_all;
+=head1 DESCRIPTION
+
+The I<cdp> component manages the configuration file for the
+cdp-listend daemon.
+
+=head1 EXAMPLES
+
+    include 'components/cdp/config';
+    prefix "/software/components/cdp";
+    "fetch" = "/usr/sbin/ccm-fetch";
+    "fetch_smear" = 30;
+
+=cut
+
+use parent qw(NCM::Component);
+
+our $EC = LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
+
 use CAF::FileWriter;
 use CAF::Service;
 
 use File::Path;
 use File::Basename;
 
-use constant BASE => "/software/components/cdp";
-
-our $NoActionSupported = 1;
-
 sub Configure
 {
     my ($self, $config) = @_;
 
-    my $t = $config->getElement(BASE)->getTree();
+    my $t = $config->getTree($self->prefix());
 
     my $fh = CAF::FileWriter->new($t->{configFile}, log => $self);
 
@@ -37,7 +48,7 @@ sub Configure
         print $fh "$k = $t->{$k}\n";
     }
 
-    if($fh->close()) {
+    if ($fh->close()) {
         my $srv = CAF::Service->new(['cdp-listend'], log => $self);
         $srv->restart();
     }
@@ -45,4 +56,4 @@ sub Configure
     return 1;
 }
 
-1;      # Required for PERL modules
+1;
