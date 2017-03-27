@@ -86,7 +86,10 @@ type postgresql_mainconfig = {
     "bytea_output" ? string     # "hex"
     "check_function_bodies" ? boolean    # true
     "checkpoint_completion_target" ? string     # 0.5
-    "checkpoint_segments" ? long       # 3
+    "checkpoint_segments" ? long with {
+        deprecated(0, 'checkpoint_segments is deprecated since Postgres version 9.5.');
+        true;
+    } # 3
     "checkpoint_timeout" ? string     # 5min
     "checkpoint_warning" ? string     # 30s
     "client_encoding" ? string     # sql_ascii
@@ -271,7 +274,10 @@ type postgresql_db = {
 type postgresql_config = {
     "hba" ? postgresql_hba[]
     "main" ? postgresql_mainconfig
-    "debug_print" ? long with { deprecated(0, 'postgresql debug_print is not used anymore'); true;} # deprecated/unused
+    "debug_print" ? long with {
+        deprecated(0, 'postgresql debug_print is not used anymore');
+        true;
+    } # deprecated/unused
 };
 
 @documentation{
@@ -290,7 +296,10 @@ type component_postgresql = {
     include structure_component
     include structure_component_dependency
 
-    "commands" ? string{} with {deprecated(0, 'commands is unsupported'); true;} # also in old version of the component
+    "commands" ? string{} with {
+        deprecated(0, 'commands is unsupported');
+        true;
+    } # also in old version of the component
     "config" ? postgresql_config
     @{Databases are only added/created, never updated, modified or removed.}
     "databases" ? postgresql_db{}
