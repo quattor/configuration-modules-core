@@ -24,5 +24,7 @@ type component_directoryservices = {
         "ldapv3" ? directoryservices_ldap_entry{}
 };
 
-bind "/software/components/directoryservices" = component_directoryservices;
-
+bind "/software/components/directoryservices" = component_directoryservices with {
+    deprecated(1, 'The directoryservices component is deprecated and will be removed in a future release.');
+    true;
+};
