@@ -11,5 +11,18 @@ function icinga_has_host_or_hostgroup = {
         return (true);
     };
     error ("At least one of host_name or hostgroup_name must be defined");
-    return (false);
+};
+
+@documentation{
+    desc = Check if a list of service names does not contain illegal characters.
+    arg = List of service names.
+}
+function icinga_check_service_name = {
+    v = ARGV[0];
+    foreach(key; val; v) {
+        if (! match (unescape(key), '^[\w. -]+$')) {
+            error(format('Icinga service name "%s" contains invalid characters.', unescape(key)));
+        };
+    };
+    true;
 };
