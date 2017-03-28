@@ -68,6 +68,7 @@ $cmp->update_pam_file({
     conffile => $PAM_FILE,
     section => 'account',
     lines => [{
+        order => 'last',
         entry => $NEW_ENTRY,
     }]
 });

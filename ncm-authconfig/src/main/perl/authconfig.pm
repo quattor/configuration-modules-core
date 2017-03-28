@@ -1,18 +1,103 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::authconfig;
+=head1 NAME
 
-use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+C<ncm-authconfig>: NCM component to manage system authentication services.
+
+=head1 DESCRIPTION
+
+The I<authconfig> component manages the system authentication methods
+on RedHat systems using the C<< authconfig >> command.  In addition, it can
+set additional operational parameters for LDAP authentication by
+modifying the C</etc/ldap.conf> (SL5), the C</etc/nslcd.conf> (SL6)
+or C</etc/sssd/sssd.conf> (EL6/7) files directly.
+It will also enable/disable NSCD support on the client.
+
+=head1 EXAMPLE
+
+    include "components/authconfig/config";
+
+    prefix "/software/components/authconfig";
+    "active" = true;
+
+    "safemode" = false;
+
+    "usemd5" = true;
+    "useshadow" = true;
+    "usecache" = true;
+    "startstop" = true;
+
+    prefix "/software/components/authconfig/method/files";
+    "enable" = true;
+
+    prefix "/software/components/authconfig/method/ldap";
+    "enable" = false;
+    "nssonly" = false;
+    "conffile" = "/etc/ldap.conf";
+    "servers" = list ("tbn06.nikhef.nl", "hooimijt.nikhef.nl");
+    "basedn" = "dc=farmnet,dc=nikhef,dc=nl";
+    "tls/enable" = true;
+    "binddn" = "cn=proxyuser,dc=example,dc=com";
+    "bindpw" = "secret";
+    "rootbinddn" = "cn=manager,dc=example,dc=com";
+    "port" = 389;
+    "timeouts/idle" = 3600;
+    "timeouts/bind" = 30;
+    "timeouts/search" = 30;
+    "pam_filter" = "|(gid=1012)(gid=1013)";
+    "pam_login_attribute" = "uid";
+    "pam_groupdn" = "cn=SystemAdministrators,ou=DirectoryGroups,dc=farmnet,dc=nikhef,dc=nl";
+    "pam_member_attribute" = "uniquemember";
+    "tls/peercheck" = "yes";
+
+    "tls/cacertfile" = undef;
+    "tls/cacertdir" = undef;
+    "tls/ciphers" = undef;
+
+    "nss_base_passwd" = "OU=Users,OU=Organic Units,DC=cern,DC=ch";
+    "nss_base_group" = "OU=SLC,OU=Workgroups,DC=cern,DC=ch";
+    "bind_policy" = "soft";
+    "nss_map_objectclass/posixAccount" = "user";
+    "nss_map_objectclass/shadowAccount" = "user";
+    "nss_map_objectclass/posixGroup" = "group";
+    "nss_map_attribute/uid" = "sAMAccountName";
+    "nss_map_attribute/homeDirectory" = "unixHomeDirectory";
+    "nss_map_attribute/uniqueMember" = "member";
+    "pam_login_attribute" = "sAMAccountName";
+    "ssl" = "start_tls";
+
+    "pam_min_uid" = "0"; # NOT IMPLEMENTED #
+    "pam_max_uid" = "0";# NOT IMPLEMENTED #
+
+    prefix "/software/components/authconfig/method/nis";
+    "enable" = false;
+    "domain" = "nikhef.nl";
+    "servers" = list ( "ajax.nikhef.nl" );
+
+    prefix "/software/components/authconfig/method/krb5";
+    "enable" = false;
+    "kdcs" = list ( "kdc.nikhef.nl" );
+    "adminserver" = list ( "krbadmin.nikhef.nl" );
+    "realm" = "NIKHEF.NL";
+
+    prefix "/software/components/authconfig/method/smb";
+    "enable" = false;
+    "workgroup" = "NIKHEF";
+    "servers" = list ( "paling.nikhef.nl" );
+
+    prefix "/software/components/authconfig/method/hesiod";
+    "enable" = false;
+    "lhs" = "lefthanded";
+    "rhs" = "righthanded";
+=cut
+
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
 use CAF::Process;
+use CAF::Service;
 use CAF::FileEditor;
 use CAF::FileWriter;
 
@@ -206,7 +291,6 @@ sub authconfig
                 stderr => \$stderr,
                 timeout => 60);
 
-
     foreach my $i (qw(shadow cache)) {
         $cmd->pushargs($t->{"use$i"} ? "--enable$i" : "--disable$i");
     }
@@ -220,7 +304,7 @@ sub authconfig
             $method = "enable_$method";
             $self->$method($v, $cmd);
         } else {
-                $self->disable_method($method, $cmd)
+            $self->disable_method($method, $cmd)
         }
     }
     $cmd->setopts(timeout => 60,
@@ -247,7 +331,7 @@ sub configure_ldap
     my $fh = CAF::FileWriter->new($tree->{conffile},
                   group => 28,
                   log => $self,
-                  mode => 0644,
+                  mode => oct(644),
                   backup => ".old");
     delete($tree->{conffile});
     # These fields have different
@@ -296,7 +380,7 @@ sub configure_nslcd
     my ($self, $tree) = @_;
 
     my $fh = CAF::FileWriter->new("/etc/nslcd.conf",
-                  mode => 0600,
+                  mode => oct(600),
                   log => $self);
     my ($changed, $proc);
 
@@ -333,9 +417,8 @@ sub configure_nslcd
     }
 
     if ($changed = $fh->close()) {
-        CAF::Process->new([qw(/sbin/service nslcd restart)],
-                  log => $self)->run();
-        if ($?) {
+        my $srv = CAF::Service->new([qw(nslcd)], log => $self);
+        if (!$srv->restart()) {
             $self->error("Failed to restart nslcd");
         }
     }
@@ -347,21 +430,20 @@ sub configure_sssd
     my ($self, $config) = @_;
 
     my $trd = EDG::WP4::CCM::TextRender->new(
-            SSSD_TT_MODULE,
-            $config,
-            relpath => 'authconfig',
-            log => $self,
+        SSSD_TT_MODULE,
+        $config,
+        relpath => 'authconfig',
+        log => $self,
         );
 
     # can't be empty string, is at least '[sssd]'
     if ($trd) {
-        my $fh = $trd->filewriter(SSSD_FILE, log => $self, mode => 0600);
+        my $fh = $trd->filewriter(SSSD_FILE, log => $self, mode => oct(600));
         my $changed = $fh->close();
 
         if ($changed) {
-            CAF::Process->new([qw(/sbin/service sssd restart)],
-                              log => $self)->run();
-            if ($?) {
+            my $srv = CAF::Service->new([qw(sssd)], log => $self);
+            if (!$srv->restart()) {
                 $self->error("Failed to restart SSSD");
             }
         }
@@ -384,27 +466,24 @@ sub restart_nscd
 
     # try a restart first. This is more reliable, as a stop/start
     # may fail to remove /var/lock/subsys/nscd
-    my $cmd = CAF::Process->new([qw(service nscd restart)], log => $self,
-                                timeout => 30)->execute();
+    my $nscd = CAF::Service->new([qw(nscd)], log => $self, timeout => 30);
 
-    if ($?) {
-        $cmd = CAF::Process->new([qw(service nscd stop)], log => $self,
-                                timeout => 30)->execute();
+    if (!$nscd->restart()) {
+        $nscd->stop();
+
         sleep(1);
-        $cmd = CAF::Process->new([qw(killall nscd)], log => $self,
-                                timeout => 30)->execute();
+        CAF::Process->new([qw(killall nscd)], log => $self)->execute();
+
         sleep(2);
         unlink(NSCD_LOCK) if -e NSCD_LOCK;
-        $cmd = CAF::Process->new([qw(service nscd start)],
-                                log => $self,
-                                timeout => 30)->execute();
 
+        $nscd->start();
     }
 
     sleep(1);
     $? = 0;
-    $cmd = CAF::Process->new([qw(nscd -i passwd)],
-                             log => $self)->run();
+
+    CAF::Process->new([qw(nscd -i passwd)], log => $self)->run();
 
     if ($?) {
         $self->error("Failed to restart NSCD");
@@ -416,30 +495,31 @@ sub Configure
 {
     my ($self, $config) = @_;
 
-    my $t = $config->getElement("/software/components/authconfig")->getTree();
-    my $cache = $t->{usecache};
-    my $restart;
+    my $tree = $config->getTree($self->prefix());
 
     # authconfig basic configuration
-    $self->authconfig($t);
+    $self->authconfig($tree);
+
+    my $restart;
 
     # On SL5 this configures LDAP authentication. On other versions
     # this probably doesn't hurt anyways.
-    if ($t->{method}->{ldap}->{enable}) {
-        $restart = $self->configure_ldap($t->{method}->{ldap});
+    if ($tree->{method}->{ldap}->{enable}) {
+        $restart = $self->configure_ldap($tree->{method}->{ldap});
     }
 
     # This configures LDAP authentication on SL6.
-    if ($t->{method}->{nslcd}->{enable}) {
-        $restart ||= $self->configure_nslcd($t->{method}->{nslcd});
+    if ($tree->{method}->{nslcd}->{enable}) {
+        $restart ||= $self->configure_nslcd($tree->{method}->{nslcd});
     }
 
-    if ($t->{method}->{sssd}->{enable}) {
-        $restart ||= $self->configure_sssd($t->{method}->{sssd});
+    if ($tree->{method}->{sssd}->{enable}) {
+        $restart ||= $self->configure_sssd($tree->{method}->{sssd});
     }
 
-    $self->build_pam_systemauth($t->{pamadditions});
+    $self->build_pam_systemauth($tree->{pamadditions});
 
+    my $cache = $tree->{usecache};
     $self->restart_nscd() if $cache && $restart;
 
     return 1;
