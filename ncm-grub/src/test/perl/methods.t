@@ -220,6 +220,48 @@ ok(command_history_ok([
   '/sbin/grubby --add-kernel /boot/vmlinuz-1.2.3 --title superkernel --args a c e f console=myconsole --remove-args b d --initrd /boot/some/file --add-multiboot /boot/dunno --mbargs mba mbc --remove-mbargs mbb',
 ]), 'grubby commands from kernel settings add');
 
+
+=head1 default_info
+
+=cut
+
+my $info_kernel = '/boot/vmlinuz-1.2.3-4.56';
+my $info = <<"EOF";
+index=0
+kernel=$info_kernel
+args="ro rhgb"
+root=UUID=hihi-haha
+initrd=/boot/initramfs-1.2.3-4.56.img
+title=CentOS Linux (1.2.3-4.56) 7 (Core)
+index=1
+kernel=$info_kernel
+args="ro rhgb somethingelse"
+root=UUID=hihi-haha
+initrd=/boot/initramfs-1.2.3-4.56.img
+title=CentOS Linux (1.2.3-4.56) 7 (Core) with debugging
+EOF
+
+set_desired_output("/sbin/grubby --info $info_kernel", $info);
+command_history_reset();
+my $res = $cmp->get_info($info_kernel);
+diag explain $res;
+is_deeply($res, [{
+    args => '"ro rhgb"',
+    index => 0,
+    initrd => '/boot/initramfs-1.2.3-4.56.img',
+    kernel => $info_kernel,
+    root => 'UUID=hihi-haha',
+    title => 'CentOS Linux (1.2.3-4.56) 7 (Core)',
+    }, {
+    args => '"ro rhgb somethingelse"',
+    index => 1,
+    initrd => '/boot/initramfs-1.2.3-4.56.img',
+    kernel => $info_kernel,
+    root => 'UUID=hihi-haha',
+    title => 'CentOS Linux (1.2.3-4.56) 7 (Core) with debugging',
+    }], "return info arrayref");
+ok(command_history_ok(["/sbin/grubby --info $info_kernel"]), "get_info uses grubby --info");
+
 =head1 default_options
 
 =cut
@@ -229,19 +271,20 @@ command_history_reset();
 # no --info call
 ok($cmp->default_options({args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
 ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c --remove-args b',
-], ['info']), 'grubby commands from default options non-fullcontrol');
+]), 'grubby commands from default options non-fullcontrol');
 
 command_history_reset();
 # fullcontrol, existing options will not match;
 # but there are current args to remove first
 # settings args with a - with fullcontrol is pointless; all current args are removed first
-set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4', "blablah\nargs=\"something special\"\n");
+set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4', "blablah\nargs=\"something special\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
 ok($cmp->default_options({fullcontrol => 1, args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
 ok(command_history_ok([
    '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c --remove-args b',
-]), 'grubby commands from default options non-fullcontrol');
+]), 'grubby commands from default options fullcontrol');
 
 done_testing;

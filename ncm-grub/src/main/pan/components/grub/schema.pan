@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/grub/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'pan/types';
@@ -67,7 +63,7 @@ type type_kernel = {
     "title" ? string
 };
 
-type component_grub_type = {
+type grub_component = {
     include structure_component
     @{Prefix where kernels are found. Component defaults to /boot.}
     "prefix" ? string
