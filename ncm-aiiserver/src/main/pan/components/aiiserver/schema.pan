@@ -9,10 +9,13 @@ type structure_aiishellfe = {
     'ca_file' ? string
     "cdburl" : type_absoluteURI
     'cert_file' ? string
+    'grub2_efi_kernel_root' ? string
+    'grub2_efi_linux_cmd' ? string
     'key_file' ? string
     "lockdir" ? string
     "logfile" ? string
     "nbpdir" ? string
+    "nbpdir_grub2" ? string
     "noaction" ? boolean
     "nodhcp" ? boolean
     "nonbp" ? boolean
