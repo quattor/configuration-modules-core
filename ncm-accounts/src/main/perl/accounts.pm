@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::${project.artifactId}${PMpost}
+#${PMcomponent}
 
 use LC::Exception;
 use CAF::FileWriter;
