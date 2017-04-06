@@ -62,7 +62,7 @@ ok(! defined($fh), "testcfg network/ifcfg-eth0 was cleaned up");
 is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact network config");
 
 ok(command_history_ok([
-    '/sbin/ifconfig -a',
+    'ip addr show',
     'service network stop',
     'service network start',
     'ccm-fetch',
@@ -72,7 +72,7 @@ command_history_reset();
 
 is($cmp->Configure($cfg), 1, "Component runs correctly 2nd time with same test profile");
 ok(command_history_ok([
-    '/sbin/ifconfig -a',
+    'ip addr show',
 ], [
     'service network stop',
     'service network start',
