@@ -109,7 +109,7 @@ use NCM::Component::FreeIPA::NSS;
 use CAF::Object qw(SUCCESS);
 use CAF::Reporter 16.2.1;
 use CAF::Kerberos;
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 use File::Basename;
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -220,7 +220,7 @@ sub services
 
     my @known_hosts;
     if ($svcs) {
-        my $res = $_client->do_one('host', 'find', '');
+        my $res = $_client->do_one('host', 'find', '', sizelimit => 0);
         # Flatten the results
         @known_hosts = map {@{$_->{fqdn}}} @$res;
         $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
@@ -411,7 +411,7 @@ sub certificates
                     # To hard to reverify key/cert; this is local anyway
                     $self->verbose("Found existing $msg; reextracting it from NSS anyway");
                 }
-                
+
                 # Extract with get_cert
                 if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
                     $self->info("Extracted $msg");
