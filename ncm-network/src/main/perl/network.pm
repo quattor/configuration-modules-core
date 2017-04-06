@@ -123,8 +123,8 @@ Readonly::Hash my %ETHTOOL_OPTION_MAP => {
 
 Readonly my $ETHTOOLCMD => '/usr/sbin/ethtool';
 Readonly my $BRIDGECMD => '/usr/sbin/brctl';
-Readonly my $IFCONFIGCMD => '/sbin/ifconfig';
-Readonly my $ROUTECMD => '/sbin/route';
+Readonly my $IPADDR => [qw(ip addr show)];
+Readonly my $IPROUTE => [qw(ip route show)];
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -409,8 +409,8 @@ sub get_current_config
 
     $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
     # TODO: replace, see issue #1066
-    $output .= $self->runrun([$IFCONFIGCMD]);
-    $output .= $self->runrun([$ROUTECMD, '-n']);
+    $output .= $self->runrun($IPADDR);
+    $output .= $self->runrun($IPROUTE);
 
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
@@ -542,38 +542,43 @@ sub runrun
 }
 
 
-# Create a mapping of MAC addresses to device names
-# Returns hashref with key found MAC and value interface name
-# issue #1066: should also support ip; so no more dependency on ifconfig
-sub make_mac2dev
+# Create a mapping of device names to MAC address
+# Returns hashref with key found device name and value MAC
+# same MAC can be used by several devices
+sub make_dev2mac
 {
     my ($self) = @_;
+
     # Collect ifconfig info
-    my $ifconfig_out;
-    my $proc = CAF::Process->new([$IFCONFIGCMD, '-a'],
-                                 stdout => \$ifconfig_out,
+    my $out;
+    my $proc = CAF::Process->new($IPADDR,
+                                 stdout => \$out,
                                  stderr => "stdout",
                                  log => $self,
                                  keeps_state => 1);
     if (! $proc->execute()) {
-        $ifconfig_out = "" if (! defined($ifconfig_out));
-
-        # holy backporting batman. they finally kicked it out!
-        $self->error("Running \"$IFCONFIGCMD -a\" failed: output $ifconfig_out");
+        $out = "" if (! defined($out));
+        $self->error("Running \"$proc\" failed: output $out");
     }
 
-    my @ifconfig_devs = split(/\n\s*\n/, $ifconfig_out);
+    # each new device starts at begin of line
+    #   all its properties have indentation
+    # one dev per line afterwards
+    $out =~ s/\s*\n[ \t]+/ /g;
 
-    my $ifconfig_mac_regexp = '^(\S+)\s+.*?HWaddr\s+([\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\3[\dA-Fa-f]{2}){4})\s+';
+    # this does not handle inifiband MACs yet
+    my $mac_regexp = qr{^\d+:\s* # start with numbering
+                        ([^:\s@]+)(?:@[^:\s]+)?:  # the device; the vlans have vlan@dev format, ignore the @dev
+                        \s.*?\s
+                        link/ether\s+ # only ether for now
+                        ([\da-f]{2}([:-])[\da-f]{2}(\3[\da-f]{2}){4}) # mac address, case insensitive search
+                        \s}xi;
 
-    my %mac2dev;
-    foreach my $tmp_dev (@ifconfig_devs) {
-        $tmp_dev =~ s/\n/ /g;
-        if ($tmp_dev =~ m/$ifconfig_mac_regexp/) {
-            $mac2dev{$2} = $1;
-        }
+    my %dev2mac;
+    foreach my $tmp_dev (split(/\n/, $out)) {
+        $dev2mac{$1} = lc($2) if ($tmp_dev =~ m/$mac_regexp/);
     }
-    return \%mac2dev;
+    return \%dev2mac;
 }
 
 # Gather network interface data
@@ -656,7 +661,7 @@ sub process_network
         my $no_hw_msg = "interface $ifname. Setting set_hwaddr to false.";
         if ($mac) {
             # check MAC address. or can we trust type definitions?
-            if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
+            if ($mac =~ m/^[\da-f]{2}([:-])[\da-f]{2}(\1[\da-f]{2}){4}$/i) {
                 $iface->{hwaddr} = $mac;
             } else {
                 $self->error("Found invalid configured hwaddr $mac for $no_hw_msg",
@@ -1020,7 +1025,7 @@ sub make_ifdown
 {
     my ($self, $exifiles, $ifaces) = @_;
 
-    my $mac2dev = $self->make_mac2dev();
+    my $dev2mac = $self->make_dev2mac();
 
     my %ifdown;
     foreach my $file (sort keys %$exifiles) {
@@ -1061,11 +1066,13 @@ sub make_ifdown
                     }
                 } elsif ($ifaces->{$iface}->{master}) {
                     # to use HWADDR, stop the interface with this macaddress (if any)
-                    my $dev = $mac2dev->{$ifaces->{$iface}->{hwaddr} || 'not a mac'};
-                    if ($dev) {
-                        $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
-                                       "has same MAC as interface $iface which is now a master.");
-                        $ifdown{$dev} = 1;
+                    my $mac = lc($ifaces->{$iface}->{hwaddr} || 'not a mac');
+                    foreach my $dev (sort keys %$dev2mac) {
+                        if ($dev2mac->{$dev} eq $mac) {
+                            $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
+                                           "has same MAC as interface $iface which is now a master.");
+                            $ifdown{$dev} = 1;
+                        }
                     }
                 }
             }
