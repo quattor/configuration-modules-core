@@ -60,24 +60,31 @@ are defined by a catalogue (e.g. constrained by an incorporate dependency).
 =item * C<< /software/uninstall >> ? nlist ()
 
 A list of packages to uninstall. Packages in this list will not be installed,
-and will be passed to the C<< pkg install >> command via the C<< --reject >> option.
-The format is the same as with C<< /software/requests >>.
+and if found on the system will be removed. The format is the same as with
+C<< /software/requests >>.
+
+=item * C<< /software/whitelist >> ? nlist ()
+
+A list of packages to whitelist. Packages in this list are permitted on the
+system even if they have not been explicitly requested and even if
+C<< userpkgs >> is set to C<< no >>. The format is the same as with
+C<< /software/requests >>.
 
 =item * C<< /software/components/spma/packager >> ? string
 
-Must contain 'B<ips>' to use this module.
+Must contain C<< ips >> to use this module.
 
 =item * C<< /software/components/spma/run >> ? string
 
-Set to B<yes> to allow this module to launch C<< spma-run --execute >> to make
-immediate changes to the new boot environment. If set to B<no> or omitted,
+Set to C<< yes >> to allow this module to launch C<< spma-run --execute >> to make
+immediate changes to the new boot environment. If set to C<< no >> or omitted,
 this module prepares and validates the changes only, but does not perform
 any updates, it will be the responsibility of an external process to launch
 C<< spma-run --execute >> in this case.
 
 =item * C<< /software/components/spma/userpkgs >> ? string
 
-Set to B<yes> to allow user-installed packages. If set to B<no> or omitted,
+Set to C<< yes >> to allow user-installed packages. If set to C<< no >> or omitted,
 then SPMA will find all leaf packages that have not been requested and
 uninstall them via C<< --reject >> arguments to C<< pkg install >>.
 
@@ -95,6 +102,13 @@ Should be set to:
 
   list("/software/uninstall");
 
+=item * C<< /software/components/spma/whitepaths >> : string []
+
+Contains a list of resource paths where packages to whitelist are located.
+Should be set to:
+
+  list("/software/whitelist");
+
 =item * C<< /software/components/spma/cmdfile >> : string
 
 Where to save commands for the C<< spma-run >> script. Default location
@@ -102,7 +116,7 @@ is C<< /var/tmp/spma-commands >>.
 
 =item * C<< /software/components/spma/flagfile >> ? string
 
-File to touch if C<< /software/components/spma/run >> is set to B<no> and this
+File to touch if C<< /software/components/spma/run >> is set to C<< no >> and this
 module has determined that there is work to do, i.e. packages to install or
 to uninstall. If the file exists after this module has completed, then
 C<< spma-run --execute >> can be run to create a new BE and make package changes
@@ -123,14 +137,14 @@ instead, leaving Solaris to decide on the name of the new BE.
 Add a C<< --reject >> option to the C<< pkg install >> command for every Solaris IDR
 installed that has not been explicitly requested.
 
-Default is B<true>.
+Default is C<< true >>.
 
 =item * C<< /software/components/spma/ips/freeze >> : boolean
 
 Ignore frozen packages. This will prevent SPMA from updating or uninstalling
 frozen packages.
 
-Default is B<true>.
+Default is C<< true >>.
 
 =back
 
@@ -156,6 +170,7 @@ Solaris:
   "packager" = "ips";
   "pkgpaths" = list("/software/catalogues", "/software/requests");
   "uninstpaths" = list("/software/uninstall");
+  "whitepaths" = list("/software/whitelist");
   "register_change" = list("/software/catalogues",
                            "/software/requests",
                            "/software/uninstall");

@@ -31,6 +31,7 @@ type component_spma_common = {
     "trailprefix" ? boolean # if no escape function, use underscore prefix
     "unescape" ? boolean # use escape function
     "uninstpaths" ? string[] # where to find uninstall definitions
+    "whitepaths" ? string[] # where to find whitelist definitions
     "userpkgs" ? legacy_binary_affirmation_string # Allow user packages
     "userprio" ? legacy_binary_affirmation_string # Priority to user packages
     "usespmlist" ? legacy_binary_affirmation_string # Have SPMA controlling any packages
