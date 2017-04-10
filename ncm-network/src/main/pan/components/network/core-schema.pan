@@ -6,12 +6,64 @@ include 'pan/types';
 include 'quattor/functions/network';
 
 @documentation{
-    Route
+    Add route (IPv4 of IPv6)
+    Presence of ':' in any of the values indicates this is IPv6 related.
 }
 type structure_route = {
+    @{The ADDRESS in ADDRESS/PREFIX via GATEWAY}
     "address" ? type_ip
-    "netmask" ? type_ip
+    @{The PREFIX in ADDRESS/PREFIX via GATEWAY}
+    "prefix"  ? long
+    @{The GATEWAY in ADDRESS/PREFIX via GATEWAY}
     "gateway" ? type_ip
+    @{alternative notation for prefix (cannot be combined with prefix)}
+    "netmask" ? type_ip
+    @{route add command options to use (cannot be combined with other options)}
+    "command" ? string with !match(SELF, '[;]')
+} with {
+    if (exists(SELF['command'])) {
+        if (length(SELF) != 1)
+            error("Cannot use command and any of the other attributes as route");
+    } else {
+        if (!exists(SELF['address']))
+            error("Address is mandatory for route (in absence of command)");
+        if (exists(SELF['prefix']) && exists(SELF['netmask']))
+            error("Use either prefix or netmask as route");
+    };
+
+    if (exists(SELF['prefix'])) {
+        pref = SELF['prefix'];
+        ipv6 = false;
+        foreach (k; v; SELF) {
+            if (match(to_string(v), ':')) {
+                ipv6 = true;
+            };
+        };
+        if (ipv6) {
+            if (!is_ipv6_prefix_length(pref)) {
+                error(format("Prefix %s is not a valid IPv6 prefix", pref));
+            };
+        } else {
+            if (!is_ipv4_prefix_length(pref)) {
+                error(format("Prefix %s is not a valid IPv4 prefix", pref));
+            };
+        };
+    };
+
+    true;
+};
+
+@documentation{
+    Add rule (IPv4 of IPv6)
+    Presence of ':' in any of the values indicates this is IPv6 related.
+}
+type structure_rule = {
+    @{rule add options to use (cannot be combined with other options)}
+    "command" ? string with !match(SELF, '[;]')
+} with {
+    if (exists(SELF['command']) && length(SELF) != 1)
+        error("Cannot use command and any of the other attributes as route");
+    true;
 };
 
 @documentation{
@@ -127,9 +179,15 @@ type structure_interface = {
     "master" ? string
     "mtu" ? long
     @{Routes for this interface.
-      These values are used to generate the /etc/sysconfig/network-scripts/route-<interface> files
-      as used by ifup-routes when using ncm-network.}
+      These values are used to generate the /etc/sysconfig/network-scripts/route[6]-<interface> files
+      as used by ifup-routes when using ncm-network.
+      This allows for mixed IPv4 and IPv6 configuration}
     "route" ? structure_route[]
+    @{Rules for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/rule[6]-<interface> files
+      as used by ifup-routes when using ncm-network.
+      This allows for mixed IPv4 and IPv6 configuration}
+    "rule" ? structure_rule[]
     @{Aliases for this interface.
       These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface>:<key> files
       as used by ifup-aliases when using ncm-network.}
