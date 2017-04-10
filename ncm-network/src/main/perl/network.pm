@@ -850,6 +850,8 @@ sub make_ifcfg
         push(@text, "SLAVE=yes");
     }
 
+    &$makeline('defroute', bool => 'yesno');
+
     # IPv6 additions
     my $use_ipv6;
 
@@ -886,6 +888,8 @@ sub make_ifcfg
         &$makeline('ipv6_privacy');
         $use_ipv6 = 1;
     }
+
+    &$makeline('ipv6_defroute', bool => 'yesno', def => $iface->{defroute});
 
     if (defined($iface->{ipv6_failure_fatal}) ) {
         &$makeline('ipv6_failure_fatal', bool => 'yesno');
@@ -938,6 +942,7 @@ sub make_ifcfg_route4_legacy
 }
 
 # Return ifcfg route content in ip format
+# device must be device, not name of interface on system
 sub make_ifcfg_ip_route
 {
     my ($self, $flavour, $device, $routes) = @_;
@@ -965,6 +970,7 @@ sub make_ifcfg_ip_route
 
 # Return ifcfg rule content in ip format
 # Very simple atm, only command supported.
+# device must be device, not name of interface on system
 sub make_ifcfg_ip_rule
 {
     my ($self, $flavour, $device, $rules) = @_;
@@ -1435,7 +1441,8 @@ sub Configure
             if (defined($iface->{$flavour})) {
                 my $method = "make_ifcfg_ip_$flavour";
                 $method =~ s/6$//;
-                my $text = $self->$method($flavour, $ifacename, $iface->{$flavour});
+                # pass device, not system interface name
+                my $text = $self->$method($flavour, $iface->{device} || $ifacename, $iface->{$flavour});
 
                 my $file_name = "$IFCFG_DIR/$flavour-$ifacename";
                 $exifiles->{$file_name} = $self->file_dump($file_name, $text);

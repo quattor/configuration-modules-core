@@ -21,3 +21,11 @@ prefix "/system/network/interfaces/eth0";
 "/system/network/interfaces/eth1" = create("defaultinterface");
 prefix "/system/network/interfaces/eth1";
 "route/0" = dict("address", "1.2.3.4");
+"defroute" = false;
+
+# test route on vlan
+"/system/network/interfaces/vlan0" = create("defaultinterface");
+prefix "/system/network/interfaces/vlan0";
+"device" = "eth0.123";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");

@@ -211,6 +211,8 @@ type structure_interface = {
     "network_environment" ? string
     "network_type" ? string
     "nmcontrolled" ? boolean
+    @{Set DEFROUTE, is the default for ipv6_defroute}
+    "defroute" ? boolean
 
     "linkdelay" ? long # LINKDELAY
     "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
@@ -231,6 +233,8 @@ type structure_interface = {
     "ipv6_mtu" ? long(1280..65536)
     "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
     "ipv6_rtr" ? boolean
+    @{Set IPV6_DEFROUTE, defaults to defroute value}
+    "ipv6_defroute" ? boolean
     "ipv6addr" ? type_network_name
     "ipv6addr_secondaries" ? type_network_name[]
     "ipv6init" ? boolean

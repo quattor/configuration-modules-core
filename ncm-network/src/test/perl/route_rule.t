@@ -38,6 +38,22 @@ BOOTPROTO=static
 IPADDR=4.3.2.1
 NETMASK=255.255.255.0
 BROADCAST=4.3.2.255
+DEFROUTE=no
+IPV6_DEFROUTE=no
+EOF
+
+Readonly my $VLAN0 => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=eth0.123
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=4.3.2.1
+NETMASK=255.255.255.0
+BROADCAST=4.3.2.255
+VLAN=yes
+ISALIAS=no
+PHYSDEV=eth0
 EOF
 
 Readonly my $ETH0_ROUTE => <<EOF;
@@ -74,6 +90,9 @@ Readonly my $ETH1_ROUTE => <<EOF;
 1.2.3.4/32 dev eth1
 EOF
 
+Readonly my $VLAN0_ROUTE => <<EOF;
+1.2.3.4/32 dev eth0.123
+EOF
 
 # File must exist, set with correct content
 set_file_contents("/etc/sysconfig/network", $NETWORK);
@@ -93,10 +112,15 @@ is(get_file_contents("/etc/sysconfig/network-scripts/rule6-eth0"), $ETH0_RULE6, 
 
 is(get_file_contents("/etc/sysconfig/network-scripts/route-eth1"), $ETH1_ROUTE, "Exact route config eth1");
 
+is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-vlan0"), $VLAN0, "Exact vlan0 config");
+is(get_file_contents("/etc/sysconfig/network-scripts/route-vlan0"), $VLAN0_ROUTE, "Exact route config vlan0");
+
 ok(command_history_ok([
     'ip addr show',
     '/sbin/ifdown eth0',
+    '/sbin/ifdown vlan0',
     '/sbin/ifup eth0 boot',
+    '/sbin/ifup vlan0 boot',
     'ccm-fetch',
 ], [
     'service network stop',
