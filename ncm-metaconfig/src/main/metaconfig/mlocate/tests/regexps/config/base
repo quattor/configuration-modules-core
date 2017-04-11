@@ -1,0 +1,8 @@
+Base test for config
+---
+/etc/updatedb.conf
+---
+^PRUNE_BIND_MOUNTS=1$
+^PRUNEFS="xfs afs"$
+^PRUNENAMES="tmpfs"$
+^PRUNEPATHS="/gpfs /tmp"$
