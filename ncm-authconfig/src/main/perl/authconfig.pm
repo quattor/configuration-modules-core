@@ -99,7 +99,7 @@ our $NoActionSupported = 1;
 use CAF::Process;
 use CAF::Service;
 use CAF::FileEditor;
-use CAF::FileWriter;
+use CAF::FileWriter 17.2.1;
 
 use EDG::WP4::CCM::TextRender;
 
@@ -438,7 +438,7 @@ sub configure_sssd
 
     # can't be empty string, is at least '[sssd]'
     if ($trd) {
-        my $fh = $trd->filewriter(SSSD_FILE, log => $self, mode => oct(600));
+        my $fh = $trd->filewriter(SSSD_FILE, log => $self, mode => oct(600), sensitive => 1);
         my $changed = $fh->close();
 
         if ($changed) {
