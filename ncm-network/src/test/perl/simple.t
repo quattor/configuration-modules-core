@@ -1,10 +1,14 @@
 # -*- mode: cperl -*-
 use strict;
 use warnings;
+
+BEGIN {
+    *CORE::GLOBAL::sleep = sub {};
+}
+
 use Test::More;
 use Test::Quattor qw(simple simple_realhostname);
 
-use helper;
 use NCM::Component::network;
 
 use Readonly;
@@ -34,6 +38,9 @@ Test the C<Configure> method of the component for bridge configuration.
 
 =cut
 
+# File must exist
+set_file_contents("/etc/sysconfig/network", 'x' x 1000);
+
 my $cfg = get_config_for_profile('simple');
 my $cmp = NCM::Component::network->new('network');
 
@@ -42,40 +49,42 @@ is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 # generic
 my $fh;
 
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network").NCM::Component::network::FAILED_SUFFIX);
-isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network file written");
+$fh = get_file($cmp->testcfg_filename("/etc/sysconfig/network"));
+ok(! defined($fh), "testcfg network file was cleaned up");
 
-like($fh, qr/^NETWORKING=yes$/m, "Enable networking"); 
-like($fh, qr/^HOSTNAME=somehost.test.domain$/m, "FQDN hostname"); 
-like($fh, qr/^GATEWAY=/m, "Set default gateway"); 
-
-unlike($fh, qr/IPV6/, "No IPv6 config details");
-
-is("$fh", $NETWORK, "Exact network config");
+# on success, this is hardlink of a cleaned up testcfg; can't use get_file
+is(get_file_contents("/etc/sysconfig/network"), $NETWORK, "Exact network config");
 
 
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network-scripts/ifcfg-eth0").NCM::Component::network::FAILED_SUFFIX);
-isa_ok($fh,"CAF::FileWriter","This is a CAF::FileWriter network/ifcfg-eth0 file written");
+$fh = get_file($cmp->testcfg_filename("/etc/sysconfig/network-scripts/ifcfg-eth0"));
+ok(! defined($fh), "testcfg network/ifcfg-eth0 was cleaned up");
 
-like($fh, qr/^ONBOOT=yes$/m, "enable interface at boot time");
-like($fh, qr/^NM_CONTROLLED=/m, "network manager option");
-like($fh, qr/^DEVICE=eth0$/m, "set device name");
-like($fh, qr/^TYPE=Ethernet$/m, "set type");
-like($fh, qr/^BOOTPROTO=static$/m, "statuc config");
-like($fh, qr/^IPADDR=/m, "fixed IPaddr");
-like($fh, qr/^NETMASK=/m, "fixed netmask");
-like($fh, qr/^BROADCAST=/m, "fixed broadcast");
+is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact network config");
 
-unlike($fh, qr/IPV6/, "No IPv6 config details");
+ok(command_history_ok([
+    '/sbin/ifconfig -a',
+    'service network stop',
+    'service network start',
+    'ccm-fetch',
+]), "network stop/start called on network config change");
 
-is("$fh", $ETH0, "Exact network config");
+command_history_reset();
+
+is($cmp->Configure($cfg), 1, "Component runs correctly 2nd time with same test profile");
+ok(command_history_ok([
+    '/sbin/ifconfig -a',
+], [
+    'service network stop',
+    'service network start',
+    'ccm-fetch',
+]), "network stop/start not called with same config");
 
 
 # Check that realhostname is used correctly
 $cfg = get_config_for_profile('simple_realhostname');
 is($cmp->Configure($cfg), 1, "Component runs correctly with realhostname test profile");
-$fh = get_file($cmp->gen_backup_filename("/etc/sysconfig/network").NCM::Component::network::FAILED_SUFFIX);
-
-like($fh, qr/^HOSTNAME=realhost.example.com$/m, "realhostname correctly used as hostname");
+like(get_file_contents("/etc/sysconfig/network"),
+     qr/^HOSTNAME=realhost.example.com$/m,
+     "realhostname correctly used as hostname");
 
 done_testing();
