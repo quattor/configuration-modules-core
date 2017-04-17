@@ -14,10 +14,9 @@ use Readonly;
 
 Readonly my $OPENIB_CONF_TT => 'openib_conf';
 
-sub Configure
+sub openib
 {
-
-    my ($self, $config)=@_;
+    my ($self, $config) = @_;
 
     # write the openib config file (mandatory in schema)
     my $cfg_fn = $config->getValue($self->prefix() . "/openib/config");
@@ -37,6 +36,14 @@ sub Configure
             # CAF::Service->new(['openibd'], log => $self)->restart();
         }
     }
+}
+
+sub Configure
+{
+
+    my ($self, $config) = @_;
+
+    $self->openib($config);
 
     # TODO: opensm support
 
