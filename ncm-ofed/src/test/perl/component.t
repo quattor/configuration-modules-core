@@ -48,4 +48,9 @@ my $rt = Test::Quattor::RegexpTest->new(
     );
 $rt->test();
 
+$fh = get_file("/etc/opensm/partitions.conf");
+is("$fh", "default=0x7fff : ALL;\n", "partitions.conf created");
+ok(command_history_ok(['service opensmd restart']),
+   "change in partitions.conf triggered restart in opensmd");
+
 done_testing();

@@ -106,6 +106,7 @@ type component_ofed_openib_hardware = {
 } = dict();
 
 
+@documentation{openib configuration}
 type component_ofed_openib = {
     @{location of openibd config file}
     "config" : string = "/etc/infiniband/openib.conf"
@@ -127,7 +128,39 @@ type component_ofed_openib = {
     true;
 };
 
+type component_ofed_partition_property = {
+    @{Port GUID}
+    'guid' : string with match(SELF, '^(ALL(_(SWITCHES|V?CAS|ROUTERS))?|SELF|0x[0-9a-fA-F]{1,10})$')
+    'membership' ? string with match(SELF, '^(limited|full|both)$')
+};
+
+@documentation{
+    Partition entry
+}
+type component_ofed_partition = {
+    @{partition key (aka PKey); default is 32767/0x7fff.
+      (partition keys are unique; first name is used by OpenSM for same keys)}
+    'key' : long(0..32767) = 32767
+    @{support IPoiB in this partition}
+    'ipoib' ? boolean
+    @{Rate: e.g. 3 (10Gbps), 4 (20Gbps),...}
+    'rate' ? long(0..8)
+    @{MTU: e.g. 4 (2048 bytes), 5 (4096 bytes)}
+    'mtu' ? long(0..5)
+    @{Partition properties}
+    'properties' : component_ofed_partition_property[]
+};
+
+@{Subnet manager configuration}
+type component_ofed_opensm = {
+    @{daemons to restart on configuration changes}
+    "daemons" : string[] = list('opensmd')
+    @{SM partitions configuration. Dict key is the partition name}
+    "partitions" ? component_ofed_partition{}
+};
+
 type ${project.artifactId}_component = {
     include structure_component
     "openib" : component_ofed_openib
+    "opensm" ? component_ofed_opensm
 };

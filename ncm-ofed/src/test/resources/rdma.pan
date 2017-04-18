@@ -19,3 +19,6 @@ prefix "/software/components/ofed/openib";
 
 "hardware/mlx4" = false;
 "hardware/mlx5" = true;
+
+prefix "/software/components/ofed/opensm";
+"partitions/default/properties/0/guid" = 'ALL';
