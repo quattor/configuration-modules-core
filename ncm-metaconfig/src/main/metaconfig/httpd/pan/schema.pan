@@ -7,7 +7,7 @@ include 'components/accounts/functions';
 type httpd_sslprotocol = string with match(SELF, '^\+?(TLSv1|TLSv1\.[012])$')
     || error("Use a modern cipher protocol, for Pete's sake!");
 
-type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA))$')
+type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA|SEED|CAMELLIA))$')
     || error("Use a modern cipher suite, for Pete's sake!");
 
 type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3|All)$');
