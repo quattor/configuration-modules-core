@@ -1,1183 +1,1515 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::network;
+=head1 NAME
 
-#
-# a few standard statements, mandatory for all components
-#
+network: Configure Network Settings
 
-use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+=head1 DESCRIPTION
 
-use EDG::WP4::CCM::Element;
+The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
+and the various files in C<< /etc/sysconfig/network-scripts >>.
+
+For restarting, a sleep value of 15 is used to make sure the restarted network
+is fully restarted (routing may need some time to come up completely).
+
+Because of this, adding/changing may cause some slowdown.
+
+New/changed settings are first tested by probing the CDB server on the port
+where the profile should be found. If this fails, the previous settings are reused.
+
+=head1 EXAMPLES
+
+=head2 CHANNEL BONDING
+
+To enable channel bonding with quattor using devices eth0 and eth1 to form bond0, proceed as follows:
+
+    include 'components/network/config';
+    prefix "/system/network/interfaces";
+    "eth0/bootproto" = "none";
+    "eth0/master" = "bond0";
+
+    "eth1/bootproto" = "none";
+    "eth1/master" = "bond0";
+
+    "bond0" = NETWORK_PARAMS;
+    "bond0/driver" = "bonding";
+    "bond0/bonding_opts/mode" = 6;
+    "bond0/bonding_opts/miimon" = 100;
+
+    include 'components/modprobe/config';
+    "/software/components/modprobe/modules" = append(dict("name", "bonding", "alias", "bond0"));
+
+    "/software/components/network/dependencies/pre" = append("modprobe");
+
+(see C<< <kernel>/Documentation/networking/bonding.txt >> for more info on the driver options)
+
+
+=head2 VLAN support
+
+Use the C<< vlan[0-9]{0-4} >> interface devices and set the explicit device name and physdev.
+The VLAN ID is the number of the '.' in the device name.
+C< physdev > is mandatory for C<< vlan[0-9]{0-4} >> device.
+
+An example:
+
+    prefix "/system/network/interfaces";
+    "vlan0" = VLAN_NETWORK_PARAMS;
+    "vlan0/device" = "eth0.3";
+    "vlan0/physdev" = "eth0";
+
+=head2 IPv6 support
+
+An example:
+
+    prefix "/system/network";
+    "ipv6/enabled" = true;
+    "ipv6/default_gateway" = "2001:678:123:e030::1";
+    "interfaces/eth0/ipv6_autoconf" = false;
+    "interfaces/eth0/ipv6addr" = "2001:610:120:e030::49/64";
+    "interfaces/eth0/ipv6addr_secondaries" = list(
+        "2001:678:123:e030::20:30/64",
+        "2001:678:123:e030:172:10:20:30/64",
+        );
+
+=cut
+
+use parent qw(NCM::Component CAF::Path);
+
+our $EC = LC::Exception::Context->new->will_store_all;
+
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
-use NCM::Check;
 
-use File::Copy;
 use Net::Ping;
-use Data::Dumper;
+
 use CAF::Process;
+use CAF::Service;
 use CAF::FileReader;
-use CAF::FileWriter;
-use Fcntl qw(SEEK_SET);
-use LC::File;
+use CAF::FileEditor;
+use CAF::FileWriter 17.2.1;
+
 use POSIX qw(WIFEXITED WEXITSTATUS);
+use Readonly;
 
 # Ethtool formats query information differently from set parameters so
 # we have to convert the queries to see if the value is already set correctly
 
 # ethtool opts that have to be ordered
-my %ethtool_option_order = (
-    "ethtool" => ["autoneg", "speed", "duplex"]
-);
+Readonly::Hash my %ETHTOOL_OPTION_ORDER => {
+    ethtool => ["autoneg", "speed", "duplex"]
+};
 
-my %ethtool_option_map = (
-    "offload" => {
-        "tso" => "tcp segmentation offload",
-        "tx"  => "tx-checksumming",
-        "rx"  => "rx-checksumming",
-        "ufo" => "udp fragmentation offload",
-        "gso" => "generic segmentation offload",
-        "gro" => "generic-receive-offload",
-        "sg"  => "scatter-gather",
-        },
-    "ring"    => {
-        "tx"  => "TX",
-        "rx"  => "RX",
-        },
-    "ethtool" => {
-        "wol" => "Wake-on",
-        "autoneg" => "Advertised auto-negotiation",
-        "speed" => "Speed",
-        "duplex" => "Duplex",
-        },
-    );
+Readonly::Hash my %ETHTOOL_OPTION_MAP => {
+    offload => {
+        tso => "tcp segmentation offload",
+        tx  => "tx-checksumming",
+        rx  => "rx-checksumming",
+        ufo => "udp fragmentation offload",
+        gso => "generic segmentation offload",
+        gro => "generic-receive-offload",
+        sg  => "scatter-gather",
+    },
+    ring    => {
+        tx  => "TX",
+        rx  => "RX",
+    },
+    ethtool => {
+        wol => "Wake-on",
+        autoneg => "Advertised auto-negotiation",
+        speed => "Speed",
+        duplex => "Duplex",
+    },
+};
 
-my $ethtoolcmd = "/usr/sbin/ethtool";
 
-use constant FAILED_SUFFIX => '-failed';
+Readonly my $ETHTOOLCMD => '/usr/sbin/ethtool';
+Readonly my $BRIDGECMD => '/usr/sbin/brctl';
+Readonly my $IPADDR => [qw(ip addr show)];
+Readonly my $IPROUTE => [qw(ip route show)];
 
-# gen_backup_filename: returns backup filename for given file
-sub gen_backup_filename
+Readonly my $NETWORK_PATH => '/system/network';
+Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
+
+# Regexp for the supported ifcfg-<device> devices.
+# $1 must match the device name
+Readonly my $DEVICE_REGEXP => qr{
+    - # separator from e.g. ifcfg or route
+    ( # start devicename group $1
+        (?:
+            eth|seth|em|
+            bond|br|ovirtmgmt|
+            vlan|usb|
+            ib|
+            p\d+p|
+            en(?:
+                o| # onboard
+                (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
+            )
+         )\d+| # mandatory numbering
+         enx[[:xdigit:]]{12} # enx MAC address
+    )
+    (?:\.\d+)? # optional VLAN
+    (?::\w+)? # optional alias
+    $
+}x;
+
+Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
+Readonly my $NETWORKCFG => "/etc/sysconfig/network";
+
+Readonly my $FAILED_SUFFIX => '-failed';
+Readonly my $BACKUP_DIR => "$IFCFG_DIR/.quattorbackup";
+
+Readonly my $REMOVE => -1;
+Readonly my $NOCHANGES => 0;
+Readonly my $UPDATED => 1;
+Readonly my $NEW => 2;
+
+
+# Giveb the configuration ifcfg filename,
+# Determine if this is a valid interface for ncm-network to manage,
+# Return interface name when valid, undef otherwise.
+sub is_valid_interface
 {
-    my ($self, $file) = @_;
-    my $back_dir="/tmp";
+    my ($self, $filename) = @_;
 
-    my $back="$file";
-    $back =~ s/\//_/g;
-    my $backup_file = "$back_dir/$back";
-    return $backup_file;
+    # Very primitive, based on regex only
+    # Not even the full filename (eg ifcfg) or anything
+    if ($filename =~ m/$DEVICE_REGEXP/) {
+        return $1;
+    } else {
+        return;
+    };
 }
 
-# writes some text to file, but with backup etc etc it also
-# checks between new and old and return if they are changed
-# or not
-sub file_dump
+# Get current ethtool options for the given section
+sub ethtool_get_current
 {
-    my $func = "file_dump";
+    my ($self, $ethname, $sectionname) = @_;
+    my %current;
 
-    my ($self, $file, $text, $failed) = @_;
+    my $showoption = $sectionname eq "ethtool" ? "" : "--show-$sectionname";
 
-    # check for subdirectories?
-    my $backup_file = $self->gen_backup_filename($file);
+    my ($out, $err);
+    # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
+    if (CAF::Process->new([$ETHTOOLCMD, $showoption || (), $ethname],
+                          stdout => \$out,
+                          stderr => \$err,
+                          keeps_state => 1,
+                          log => $self,
+        )->execute() ) {
+        foreach my $line (split('\n', $out)) {
+            if ($line =~ m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
+                my ($key, $val) = ($1, $2);
+                # speed setting
+                $val = $1 if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{speed} && $val =~ m/^(\d+)/);
+                # Duplex setting
+                $val =~ tr/A-Z/a-z/ if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{duplex});
+                # auotneg setting
+                if ($key eq $ETHTOOL_OPTION_MAP{ethtool}{autoneg}) {
+                    $val = ($val =~ m/(Y|y)es/) ? "on" : "off";
+                }
 
-    if (-e $backup_file.$failed) {
-        $self->debug(3, "$func: file exits, unlink $backup_file$failed");
-        unlink($backup_file.$failed) ||
-            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
-    }
-
-    my $fh;
-    if (-e $file) {
-        $self->debug(3, "$func: writing $backup_file$failed with current $file content");
-        my $orig = CAF::FileReader->new($file, log => $self);
-        $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
-        print $fh "$orig";
-        $fh->close();
-    } else {
-        $self->debug(3, "$func: no current $file");
-    };
-
-    $self->debug(3, "$func: writing $backup_file$failed");
-    $fh = CAF::FileWriter->new($backup_file.$failed, log => $self);
-    print $fh $text;
-
-    my $ec = 0;
-    if ($fh->close()) {
-        if (-e $file) {
-            $self->info("$func: file $file has newer version.");
-            $ec = 1;
-        } else {
-            $self->info("$func: file $file is new.");
-            $ec = 2;
+                $current{$key} = $val;
+            }
         }
     } else {
+        $self->error("ethtool_get_current: cmd \"$ETHTOOLCMD $showoption $ethname\" failed.",
+                     " (output: $out, stderr: $err)");
+    }
+    return %current;
+}
+
+# backup_filename: returns backup filename for given file
+sub backup_filename
+{
+    my ($self, $file) = @_;
+
+    my $back = "$file";
+    $back =~ s/\//_/g;
+
+    return "$BACKUP_DIR/$back";
+}
+
+# Generate the filename to hold the test configuration data
+# If this file still exists after the component runs, it means
+# that the changes did not lead to a working network config, and
+# thus this file has the (new/updated but) failed configuration;
+# hence the FAILED suffix in the name.
+sub testcfg_filename
+{
+    my ($self, $file) = @_;
+    return $self->backup_filename($file) . $FAILED_SUFFIX;
+}
+
+# Given file, cleanup the backup and test config
+# Returns nothing
+sub cleanup_backup_test
+{
+    my ($self, $file) = @_;
+
+    foreach my $type (qw(backup testcfg)) {
+        my $method = $type."_filename";
+        my $filename = $self->$method($file);
+        # no keeps_state, under NoAction keep the backup and more importantly the testcfg
+        if (! defined($self->cleanup($filename))) {
+            $self->warn("Failed to cleanup $type config file $filename: $self->{fail}");
+        }
+    }
+};
+
+
+# Make copy of original file (if exists) for testing (name from testcfg_filename).
+# using FileEditor source options and then write text to this testcfg.
+# Return the filestate of this copy (new/updated/nochanges)
+# The original file is not modified at all.
+# If there were no changes, the backup and the testcfg are removed.
+sub file_dump
+{
+    my ($self, $file, $text) = @_;
+
+    my $func = "file_dump";
+
+    my $testcfg = $self->testcfg_filename($file);
+
+    if (! defined($self->cleanup($testcfg, undef, keeps_state => 1))) {
+        $self->warn("Failed to cleanup testcfg $testcfg before file_dump: $self->{fail}");
+    }
+
+    # No need for copy, use Editor with source and close it for copy
+    my $fh = CAF::FileEditor->new($testcfg, log => $self, keeps_state => 1, source => $file);
+    $fh->close(); # is always changed
+
+    # open it again and seek_begin; keep the original_content
+    $fh->reopen();
+    # go to the beginning; this is mix of FileEditor and FileWriter
+    $fh->seek_begin();
+
+    print $fh join("\n", @$text, ''); # add trailing newline
+
+    # Use 'scheduled' in messages to indicate that this method
+    # does not make modifications to the file.
+    my $filestatus;
+    if ($fh->close()) {
+        if ($self->file_exists($file)) {
+            $self->info("$func: file $file has newer version scheduled.");
+            $filestatus = $UPDATED;
+        } else {
+            $self->info("$func: new file $file scheduled.");
+            $filestatus = $NEW;
+        }
+    } else {
+        $filestatus = $NOCHANGES;
         # they're equal, remove backup files
-        $self->debug(3, "$func: removing equal files $backup_file and $backup_file$failed");
-        unlink($backup_file) ||
-            $self->warn("$func: Can't unlink $backup_file ($!)") ;
-        unlink($backup_file.$failed) ||
-            $self->warn("$func: Can't unlink $backup_file$failed ($!)");
+        $self->verbose("$func: no changes scheduled for file $file. Cleaning up.");
+        $self->cleanup_backup_test($file);
     };
+
+    return $filestatus;
+}
+
+# Make a backup of the file
+# Backup in same filesystem, so we can hardlink to create the backup.
+# Assumes $NETWORKCFG is in same filesystem
+sub mk_bu
+{
+    my ($self, $file) = @_;
+
+    my $dest = $self->backup_filename($file);
+    if ($self->hardlink($file, $dest, keeps_state => 1)) {
+        $self->verbose("Created backup $dest for $file");
+        return 1;
+    } else {
+        $self->error("Failed to create backup $dest for $file: $self->{fail}");
+        return;
+    }
+}
+
+sub test_network_ping
+{
+    my ($self, $profile) = @_;
+
+    my $func = "test_network_ping";
+    if (! $profile) {
+        $self->warn("$func: no profile, unable to verify network");
+        return;
+    }
+
+    # sometimes it's possible that routing is a bit behind, so
+    # set this variable to some larger value
+    my $sleep_time = 15;
+    sleep($sleep_time) if ! $self->noAction();
+
+    # set port number of CDB server that should be reachable
+    # (like http or https)
+    my $proto = $profile;
+    $proto =~ s/:\/\/.+//;
+    my $host = $profile;
+    $host =~ s/.+:\/\///;
+    $host =~ s/\/.+//;
+
+    my $ping = Net::Ping->new("tcp");
+
+    # check for portnumber in host
+    if ($host =~ m/:(\d+)/) {
+        $ping->{port_num} = $1;
+        $host =~ s/:(\d+)//;
+    } else {
+        # get it by service if not explicitly defined
+        $ping->{port_num} = getservbyname($proto, "tcp");
+    }
+
+    my $ec;
+    if ($ping->ping($host)) {
+        $self->verbose("$func: OK: network up");
+        $ec = 1;
+    } else {
+        $self->warn("$func: FAILED: network down");
+        $ec = 0;
+    }
+    $ping->close();
+
     return $ec;
 }
 
-
-sub Configure
+# Test network by downloading latest profile.
+sub test_network_ccm_fetch
 {
-    our ($self, $config)=@_;
-    my $base_path = '/system/network';
-    # keep a hash of all files and links.
-    our (%exifiles, %exilinks);
+    my ($self, $profile) = @_;
 
-    my ($path, $file_name, $text);
+    # only download file, don't really ccm-fetch!!
+    my $func = "test_network_ccm_fetch";
+    # sometimes it's possible that routing is a bit behind, so set this variable to some larger value
+    my $sleep_time = 15;
+    sleep($sleep_time) if ! $self->noAction();
 
-    # current setup, will be printed in case of major failure
-    my $init_config = get_current_config();
+    # ccm-fetch should be in $PATH
+    $self->verbose("$func: trying ccm-fetch");
+    # no runrun, as it would trigger error (and dependency failure)
+    my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
+    my $exitcode = $?;
+    if ($exitcode == 0) {
+        $self->verbose("$func: OK: network up");
+        return 1;
+    } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
+        $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
+        return $self->test_network_ping($profile);
+    } else {
+        $self->warn("$func: FAILED: network down");
+        return 0;
+    }
+}
+
+# Gather current network configuration using available tools
+# Is gathered for debugging in case of failure.
+sub get_current_config
+{
+    my ($self) = @_;
+
+    my $fh = CAF::FileReader->new($NETWORKCFG, log => $self);
+    my $output = "$NETWORKCFG\n$fh";
+
+    $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
+    # TODO: replace, see issue #1066
+    $output .= $self->runrun($IPADDR);
+    $output .= $self->runrun($IPROUTE);
+
+    # when brctl is missing, this would generate an error.
+    # but it is harmless to skip the show command.
+    if (-x $BRIDGECMD) {
+        $output .= $self->runrun([$BRIDGECMD, "show"]);
+    } else {
+        $output .= "Missing $BRIDGECMD executable.\n";
+    };
+
+    return $output;
+}
+
+# Given ethtool section options hashref, return ordered
+# list of keys.
+# Option ordering is important for autoneg/speed/duplex
+sub order_ethtool_options
+{
+    my ($self, $section, $options) = @_;
+
+    # Add options from preordered section
+    my @keys = grep {exists($options->{$_})} @{$ETHTOOL_OPTION_ORDER{$section}};
+
+    # Add remaining keys alphabetically
+    foreach my $key (sort keys %$options) {
+        push(@keys, $key) if (!(grep {$_ eq $key} @keys));
+    };
+
+    return @keys;
+}
+
+# Set ethtool options outside changes to the ifcfg files
+sub ethtool_set_iface_options
+{
+    my ($self, $iface, $sectionname, $options) = @_;
+
+    # get current values into %current
+    my %current = $self->ethtool_get_current($iface, $sectionname);
+
+    # Loop over template settings and check that they are known but different
+    my @opts;
+    foreach my $k (order_ethtool_options($sectionname, $options)) {
+        my $v = $options->{$k};
+        my $currentv;
+        if (exists($current{$k})) {
+            $currentv = $current{$k};
+        } elsif ($current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}}) {
+            $currentv = $current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}};
+        } else {
+            $self->info("ethtool_set_iface_options: Skipping setting for ",
+                        "$iface/$sectionname/$k to $v as not in ethtool");
+            next;
+        }
+
+        # Is the value different between template and the machine
+        if ($currentv eq $v) {
+            $self->verbose("ethtool_set_options: value for $iface/$sectionname/$k is already set to $v");
+        } else {
+            push(@opts, $k, $v);
+        }
+    }
+
+    # nothing to do?
+    return if (! @opts);
+
+    my $setoption;
+    if ($sectionname eq "ring") {
+        $setoption = "--set-$sectionname";
+    } elsif ($sectionname eq "ethtool") {
+        $setoption = "--change";
+    } else {
+        $setoption = "--$sectionname";
+    };
+
+    $self->runrun([$ETHTOOLCMD, $setoption, $iface, @opts])
+}
+
+# ethtool processing for offload, ring and others of all interfaces
+sub ethtool_set_options
+{
+    my ($self, $ifaces) = @_;
+    foreach my $iface (sort keys %$ifaces) {
+        foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
+            $self->ethtool_set_iface_options($iface, $sectionname, $ifaces->{$iface}->{$sectionname})
+                if ($ifaces->{$iface}->{$sectionname});
+        };
+    };
+}
+
+
+# Create ifcfg ETHTOOL_OPTS entry as arrayref from hashref $options
+sub ethtool_options
+{
+    my ($self, $options) = @_;
+
+    my @eth_opts;
+    foreach my $key (order_ethtool_options('ethtool', $options)) {
+        push(@eth_opts, $key, $options->{$key});
+    }
+    return \@eth_opts;
+}
+
+# Run list of arrayref of commands (via CAF::Process) or
+# CAF::Service instances with 2nd element the method to run.
+# CAF::Service instances are expected to be initialised with logger.
+# Failing command has error reported; failing CAF::Service assumes
+# to log its own error.
+# Returns joined output of all processes.
+# If a CAF::Service instance is passed, its output is not added / returned.
+sub runrun
+{
+    my ($self, @cmds) = @_;
+
+    my @output;
+    foreach my $cmd (@cmds) {
+        if (ref($cmd->[0]) eq 'CAF::Service') {
+            my $srv = $cmd->[0];
+            my $action = $cmd->[1];
+            $srv->$action();
+        } else {
+            my $proc = CAF::Process->new($cmd, log => $self);
+            push(@output, $proc->output());
+            if ($?) {
+                $self->error("Error '$proc' output: $output[-1]");
+            }
+        }
+    }
+
+    return join("", @output);
+}
+
+
+# Create a mapping of device names to MAC address
+# Returns hashref with key found device name and value MAC
+# same MAC can be used by several devices
+sub make_dev2mac
+{
+    my ($self) = @_;
 
     # Collect ifconfig info
-    my $ifconfig_out;
-    my $proc = CAF::Process->new(['/sbin/ifconfig','-a'],
-                                 stdout => \$ifconfig_out,
+    my $out;
+    my $proc = CAF::Process->new($IPADDR,
+                                 stdout => \$out,
                                  stderr => "stdout",
-                                 log => $self);
+                                 log => $self,
+                                 keeps_state => 1);
     if (! $proc->execute()) {
-        $ifconfig_out = "" if (! defined($ifconfig_out));
-
-        # holy backporting batman. they finally kicked it out!
-        $self->error("Running \"/sbin/ifconfig -a\" failed: output $ifconfig_out");
+        $out = "" if (! defined($out));
+        $self->error("Running \"$proc\" failed: output $out");
     }
 
-    my @ifconfig_devs = split(/\n\s*\n/, $ifconfig_out);
+    # each new device starts at begin of line
+    #   all its properties have indentation
+    # one dev per line afterwards
+    $out =~ s/\s*\n[ \t]+/ /g;
 
-    my $ifconfig_mac_regexp = '^(\S+)\s+.*?HWaddr\s+([\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\3[\dA-Fa-f]{2}){4})\s+';
+    # this does not handle inifiband MACs yet
+    my $mac_regexp = qr{^\d+:\s* # start with numbering
+                        ([^:\s@]+)(?:@[^:\s]+)?:  # the device; the vlans have vlan@dev format, ignore the @dev
+                        \s.*?\s
+                        link/ether\s+ # only ether for now
+                        ([\da-f]{2}([:-])[\da-f]{2}(\3[\da-f]{2}){4}) # mac address, case insensitive search
+                        \s}xi;
 
-    my (%dev2mac, %mac2dev);
-    foreach my $tmp_dev (@ifconfig_devs) {
-        $tmp_dev =~ s/\n/ /g;
-        if ($tmp_dev =~ m/$ifconfig_mac_regexp/) {
-            $dev2mac{$1} = $2;
-            $mac2dev{$2} = $1;
-        }
+    my %dev2mac;
+    foreach my $tmp_dev (split(/\n/, $out)) {
+        $dev2mac{$1} = lc($2) if ($tmp_dev =~ m/$mac_regexp/);
     }
+    return \%dev2mac;
+}
 
-    # component wide set_hwaddr setting
-    $path = $base_path;
-    my $set_hwaddr_default = 0;
-    if ($config->elementExists($path."/set_hwaddr")) {
-        if ($config->getValue($path."/set_hwaddr") eq "true") {
-            $set_hwaddr_default = 1;
-        }
-    }
+# Gather network interface data
+# Takes the /system/network data and makes some (minor) modifications to it.
+# Returns nwtree with modifications, not a copy.
+sub process_network
+{
+    my ($self, $config) = @_;
 
-    # read interface config in hash
-    $path = $base_path.'/interfaces';
-    my ($iface, %net, $element, $elementname, $el, $elnr, $l, $ln, $mtu, %ethtoolconfig);
-    my $net = $config->getElement($path);
-    while ($net->hasNextElement()) {
-        $iface = $net->getNextElement();
-        my $ifacename = $iface->getName();
-        # collect /system settings
-        while ($iface->hasNextElement()) {
-            $element = $iface->getNextElement();
-            $elementname = $element->getName();
-            if ($elementname =~ m/route|aliases/) {
-                while ($element->hasNextElement()) {
-                    $el = $element->getNextElement();
-                    ## number of route OR name of alias
-                    $elnr = $el->getName();
-                    my %tmp_el;
-                    while ($el->hasNextElement()) {
-                        $l = $el->getNextElement();
-                        $ln = $l->getName();
-                        $tmp_el{$ln} = $l->getValue();
-                    }
-                    if ($elementname =~ m/aliases/) {
-                        # overwrite the alias name
-                        $elnr = $tmp_el{name} if (exists($tmp_el{name}));
-                        delete $tmp_el{name};
-                    }
-                    $net{$ifacename}{$elementname}{$elnr} = \%tmp_el;
-                }
-            } elsif ($elementname =~ m/^(bonding|bridging)_opts$/) {
-                $net{$ifacename}{$elementname} = make_key_equal_value_string($elementname, $element);
-            } elsif (defined($ethtool_option_map{$elementname})) {
-                # set ethtool opts in ifcfg config (some are needed on boot (like autoneg/speed/duplex))
-                $net{$ifacename}{$elementname."_opts"} = ethtool_options($element) if ($elementname eq "ethtool");
-                # add rest of ethtool opts
-                my $opts = $element->getTree();
-                $net{$ifacename}{$elementname} = $opts;
-            } elsif ($elementname =~ m/^ipv6addr_secondaries$/) {
-                my $opts = $element->getTree();
-                $net{$ifacename}{$elementname} = $opts;
-            } else {
-                $net{$ifacename}{$elementname} = $element->getValue();
+    # Use another copy of network tree.
+    # It will be modified, so do not pass nwtree from Configure
+    my $nwtree = $config->getTree($NETWORK_PATH);
+    my $nics = $config->getTree($HARDWARE_PATH);
+
+    my $set_hwaddr_default = $nwtree->{set_hwaddr} ? 1 : 0;
+    $self->verbose("Set hwaddr default $set_hwaddr_default");
+
+    # Mapping for interface without hwaddr, value is human readable type
+    my $hr_map = {
+        bond => 'bonding',
+        vlan => 'VLAN',
+        ib => 'IPoIB',
+        br => 'bridge',
+        ovirtmgmt => 'virt bridge',
+    };
+    # Pattern to match interface name to hr_map. $1 is the key
+    my $hr_pattern = '^('.join('|', sort keys %$hr_map).')';
+
+    # read and modify interface config in hash
+    foreach my $ifname (sort keys %{$nwtree->{interfaces}}) {
+        my $iface = $nwtree->{interfaces}->{$ifname};
+
+        # handle aliases name: substitute the name for the key
+        $iface->{aliases} ||= {};
+        foreach my $name (sort keys %{$iface->{aliases}}) {
+            my $alias = $iface->{aliases}->{$name};
+            my $new_name = delete $alias->{name};
+            if (defined($new_name)) {
+                $self->debug(1, "Replaced alias $name with alias name $new_name for interface $ifname");
+                $iface->{aliases}->{$new_name} = $alias;
+                delete $iface->{aliases}->{$name};
             }
         }
 
-        # collect /hardware info
-        my $hw_path= "/hardware/cards/nic/".$ifacename;
+        # bonding/bridging options
+        foreach my $attr (qw(bonding_opts bridging_opts)) {
+            my $opts = $iface->{$attr};
+            if (defined($opts) && keys %$opts) {
+                $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
+                $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
+            }
+        }
 
-        # CERN nic = list patch
-        if (! $config->elementExists($hw_path)) {
-            $hw_path = "/hardware/cards/nic/".$1 if ($ifacename =~ m/^eth(\d+)/);
+        # add ethtool options preparsed. These will be set in ifcfg- config
+        # some are needed on boot (like autoneg/speed/duplex)
+        if (exists($iface->{ethtool})) {
+            $iface->{ethtool_opts} = $self->ethtool_options($iface->{ethtool});
+            $self->debug(1, "Added ethtool_opts with ", join(' ', @{$iface->{ethtool}}), " for interface $ifname");
+        }
+
+        # Handle hardware address
+        my $nicname = $ifname;
+
+        # TODO: can we get rid of this?
+        if (! exists($nics->{nicname}) and $ifname =~ m/^eth(\d+)/) {
+            # Try CERN nic as list
+            if (exists($nics->{1})) {
+                $nicname = $1 ;
+                $self->verbose("No nic found for $ifname, using nic-as-list name $nicname");
+            };
         };
-        my $hwaddr_path = $hw_path."/hwaddr";
 
-        if ($config->elementExists($hwaddr_path)) {
-            my $mac = $config->getValue($hwaddr_path);
-            # check MAC address? can we trust type definitions?
-            if ($mac =~ m/^[\dA-Fa-f]{2}([:-])[\dA-Fa-f]{2}(\1[\dA-Fa-f]{2}){4}$/) {
-                $net{$ifacename}{'hwaddr'} = $mac;
+
+        # Each iface has set_hwaddr
+        # If set_hwaddr is true, hwaddr must be set
+        my $nic = $nics->{$nicname} || {};
+        my $mac = $nic->{hwaddr};
+        $iface->{set_hwaddr} = $set_hwaddr_default;
+
+        my $no_hw_msg = "interface $ifname. Setting set_hwaddr to false.";
+        if ($mac) {
+            # check MAC address. or can we trust type definitions?
+            if ($mac =~ m/^[\da-f]{2}([:-])[\da-f]{2}(\1[\da-f]{2}){4}$/i) {
+                $iface->{hwaddr} = $mac;
             } else {
-                $self->error("The configured hwaddr $mac for interface $ifacename ",
-                             "didn't pass the regexp. Setting set_hwaddr to false. ",
+                $self->error("Found invalid configured hwaddr $mac for $no_hw_msg",
                              "(Please contact the developers in case you think it is a valid MAC address).");
-                $net{$ifacename}{'set_hwaddr'} = 'false';
+                $iface->{set_hwaddr} = 0;
             }
         } else {
-            my $msg = "No value found for the hwaddr of interface ".
-                      "$ifacename. Setting set_hwaddr to false.";
-            if ($ifacename =~ m/^(bond|vlan|ib|br|ovirtmgmt)/) {
-                my $hr_ifacename = $1;
-                if ($hr_ifacename eq "bond") {
-                    $hr_ifacename = "bonding";
-                } elsif ($hr_ifacename eq "ib") {
-                    $hr_ifacename = "IPoIB";
-                } elsif ($hr_ifacename =~ m/^(br|ovirtmgmt)/) {
-                    $hr_ifacename = "bridging";
-                }
-                $self->info("$msg. As it appears to be a $hr_ifacename interface, this is considered normal.");
+            $iface->{set_hwaddr} = 0;
+
+            my $msg = "No value found for the hwaddr of $no_hw_msg";
+            if ($ifname =~ m/$hr_pattern/) {
+                $self->verbose("$msg This is considered normal for a $hr_map->{$1}.");
             } else {
                 $self->warn($msg);
-            };
-            $net{$ifacename}{'set_hwaddr'} = 'false';
+            }
+        }
+
+        # set vlan flag for the VLAN device
+        if ($ifname =~ m/^vlan\d+/) {
+            $iface->{vlan} = 1 ;
+            $self->verbose("$ifname is a VLAN device");
+        }
+        # interfaces named vlan need the physdev set
+        # and pointing to an existing interface
+        if ($ifname =~ m/^vlan\d+/ && ! $iface->{physdev}) {
+            $self->error("vlan device $ifname (with vlan[0-9]{0-9} naming convention) needs physdev set.");
         }
     }
+
+    return $nwtree;
+}
+
+# Look for existing interface configuration files (and symlinks)
+# Return hashref for files and links, with key the absolute filepath
+# and value REMOVE status for files and target for symlinks.
+sub gather_existing
+{
+    my ($self) = @_;
+
+    my (%exifiles, %exilinks);
 
     # read current config
-    my $dir_pref="/etc/sysconfig/network-scripts";
-    opendir(DIR, $dir_pref);
-    # here's the reason why it only verifies eth, bond, bridge, usb and vlan
-    # devices. add regexp at will
-    my $dev_regexp='-((eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(o|(p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
-    # $1 is the device name
-    foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
+    my $files = $self->listdir($IFCFG_DIR, test => sub { return $self->is_valid_interface($_[0]); });
+    foreach my $filename (@$files) {
+        if ($filename =~ m/^([:\w.-]+)$/) {
+            $filename = $1; # untaint
+        } else {
+            $self->warn("Cannot untaint filename $IFCFG_DIR/$filename. Skipping");
+            next;
+        }
+
+        my $file = "$IFCFG_DIR/$filename";
+
         my $msg;
-        if ( -l "$dir_pref/$file" ) {
+        if ($self->is_symlink($file)) {
             # keep the links separate
-            $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
-            $msg = "link";
+            # TODO: value not used?
+            $exilinks{$file} = readlink($file);
+            $msg = "link (to target $exilinks{$file})";
         } else {
-            $exifiles{"$dir_pref/$file"} = -1;
+            # Flag all found files for removal at this stage
+            # and make a backup.
+            $exifiles{$file} = $REMOVE;
             $msg = "file";
-            # backup all involved files
-            if ($file =~ m/([:A-Za-z0-9.-]*)/) {
-                my $untaint_file = $1;
-                mk_bu("$dir_pref/$untaint_file");
-            }
+            return (undef, undef) if ! defined($self->mk_bu($file));
         }
-        $self->debug(3, "Found ifcfg file $msg in dir ".$dir_pref);
-    }
-    closedir(DIR);
-
-    # this is the gateway that will be used in case the default_gateway is not set
-    my ($first_gateway, $first_gateway_int);
-
-    # generate new files
-    foreach $iface ( keys %net ) {
-        # /etc/sysconfig/networking-scripts/ifcfg-[dev][i]
-        my $file_name = "$dir_pref/ifcfg-$iface";
-        $exifiles{$file_name} = 1;
-        $text = "";
-        if ((! $first_gateway) && $net{$iface}{gateway}) {
-            $first_gateway = $net{$iface}{gateway};
-            $first_gateway_int = $iface;
-        }
-        if ($net{$iface}{onboot}) {
-            $text .= "ONBOOT=".$net{$iface}{onboot}."\n";
-        } else {
-            # default: assuming that ONBOOT=yes
-            $text .= "ONBOOT=yes\n";
-        }
-        if (exists($net{$iface}{nmcontrolled}) && $net{$iface}{nmcontrolled}) {
-            $text .= "NM_CONTROLLED='".$net{$iface}{nmcontrolled}."'\n";
-        } else {
-            # default: assuming that ONBOOT=yes
-            $text .= "NM_CONTROLLED='no'\n";
-        }
-        # first check the device
-        if ($net{$iface}{'device'}) {
-            $text .= "DEVICE=".$net{$iface}{'device'}."\n";
-        } else {
-            $text .= "DEVICE=".$iface."\n";
-        }
-        # set the networktype
-        if ($net{$iface}{'type'}) {
-            $text .= "TYPE=".$net{$iface}{'type'}."\n";
-            # Set OVS related variables
-            if ($net{$iface}{'type'} =~ /^OVS/) {
-                $text .= "DEVICETYPE='ovs'\n";
-                if ($net{$iface}{'ovs_bridge'}) {
-                    $text .= "OVS_BRIDGE='$net{$iface}{ovs_bridge}'\n";
-                }
-                if ($net{$iface}{'ovs_opts'}) {
-                    $text .= "OVS_OPTIONS='$net{$iface}{ovs_opts}'\n";
-                }
-                if ($net{$iface}{'ovs_extra'}) {
-                    $text .= "OVS_EXTRA=\"$net{$iface}{ovs_extra}\"\n";
-                }
-                if ($net{$iface}{'bond_ifaces'}) {
-                    $text .= "BOND_IFACES='".join(' ',@{$net{$iface}{bond_ifaces}})."'\n";
-                }
-                if ($net{$iface}{'ovs_tunnel_type'}) {
-                    $text .= "OVS_TUNNEL_TYPE='$net{$iface}{ovs_tunnel_type}'\n";
-                }
-                if ($net{$iface}{'ovs_tunnel_opts'}) {
-                    $text .= "OVS_TUNNEL_OPTIONS='$net{$iface}{ovs_tunnel_opts}'\n";
-                }
-                if ($net{$iface}{'ovs_patch_peer'}) {
-                    $text .= "OVS_PATCH_PEER='$net{$iface}{ovs_patch_peer}'\n";
-                }
-            }
-        } else {
-            $text .= "TYPE=Ethernet\n";
-        }
-        if ($net{$iface}{bridge}) {
-            $text .= "BRIDGE='$net{$iface}{bridge}'\n";
-            unless (-x "/usr/sbin/brctl") {
-                $self->error ("Error: bridge specified but ",
-                                "brctl not found");
-            }
-        }
-
-        # set the HWADDR
-        # what about bonding??
-        my $set_hwaddr = 0;
-        if ( exists($net{$iface}{'set_hwaddr'}) ) {
-            if ( $net{$iface}{'set_hwaddr'} eq 'true') {
-                $set_hwaddr = 1;
-            }
-        } else {
-            $set_hwaddr = $set_hwaddr_default;
-        }
-
-        if ($set_hwaddr) {
-            if (exists($net{$iface}{'hwaddr'})) {
-                $text .= "HWADDR=".$net{$iface}{'hwaddr'}."\n";
-            } else {
-                # huh?
-                $self->error("set_hwaddr is true and no hwaddr defined for device $iface.",
-                             " Bug in component. Please contact the developers.");
-            }
-        }
-
-        # set the networktype
-        if ( $net{$iface}{'mtu'} ) {
-            $text .= "MTU=".$net{$iface}{'mtu'}."\n";
-        }
-
-        # set the bootprotocol
-        my $bootproto;
-        if ( $net{$iface}{'bootproto'} ) {
-            $bootproto=$net{$iface}{'bootproto'};
-        } else {
-            $bootproto="static";
-        }
-        $text .= "BOOTPROTO=".$bootproto."\n";
-
-        if ($bootproto eq "static") {
-            # set ipaddr
-            if ($net{$iface}{'ip'}) {
-                $text .= "IPADDR=".$net{$iface}{'ip'}."\n";
-            } else {
-                $self->error("Using static bootproto and no ",
-                             "ipaddress configured for $iface");
-            }
-            # set netmask
-            if ($net{$iface}{'netmask'}) {
-                $text .= "NETMASK=".$net{$iface}{'netmask'}."\n";
-            } else {
-                $self->error("Using static bootproto and no netmask ",
-                             "configured for $iface");
-            }
-            # set broadcast
-            if ($net{$iface}{'broadcast'}) {
-                $text .= "BROADCAST=".$net{$iface}{'broadcast'}."\n";
-            } else {
-                $self->warn("Using static bootproto and no broadcast ",
-                            "configured for $iface");
-            }
-        } elsif (($bootproto eq "none") && $net{$iface}{'master'}) {
-            # set bonding master
-            $text .= "MASTER=".$net{$iface}{'master'}."\n";
-            $text .= "SLAVE=yes\n";
-        }
-
-        # IPv6 additions
-        my $use_ipv6;
-
-        if ($net{$iface}{'ipv6addr'}) {
-            $text .= "IPV6ADDR=".$net{$iface}{'ipv6addr'}."\n";
-            $use_ipv6 = 1;
-        }
-        if ($net{$iface}{'ipv6addr_secondaries'} && @{$net{$iface}{'ipv6addr_secondaries'}}) {
-            $text .= "IPV6ADDR_SECONDARIES='".join(' ', @{$net{$iface}{'ipv6addr_secondaries'}})."'\n";
-            $use_ipv6 = 1;
-        }
-        if (exists($net{$iface}{ipv6_autoconf})) {
-            if ( $net{$iface}{ipv6_autoconf} eq "true") {
-                $text .= "IPV6_AUTOCONF=yes\n";
-                $use_ipv6 = 1;
-            } else {
-                $text .= "IPV6_AUTOCONF=no\n";
-                if ( ! $net{$iface}{'ipv6addr'}) {
-                    $self->warn("Disabled IPv6 autoconf but no address configured for $iface.");
-                }
-            }
-        }
-        if (defined($net{$iface}{'ipv6_rtr'}) ) {
-            if ( $net{$iface}{'ipv6_rtr'} eq "true" ) {
-                $text .= "IPV6_ROUTER=yes\n";
-            } else {
-                $text .= "IPV6_ROUTER=no\n";
-            }
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_mtu'})) {
-            $text .= "IPV6_MTU=".$net{$iface}{'ipv6_mtu'}."\n";
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_privacy'}) && $net{$iface}{'ipv6_privacy'}) {
-            $text .= "IPV6_PRIVACY=".$net{$iface}{'ipv6_privacy'}."\n";
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv6_failure_fatal'}) ) {
-            if ( $net{$iface}{'ipv6_failure_fatal'} eq "true" ) {
-                $text .= "IPV6_FAILURE_FATAL=yes\n";
-            } else {
-                $text .= "IPV6_FAILURE_FATAL=no\n";
-            }
-            $use_ipv6 = 1;
-        }
-        if (defined($net{$iface}{'ipv4_failure_fatal'}) ) {
-            if ( $net{$iface}{'ipv4_failure_fatal'} eq "true" ) {
-                $text .= "IPV4_FAILURE_FATAL=yes\n";
-            } else {
-                $text .= "IPV4_FAILURE_FATAL=no\n";
-            }
-        }
-        if (defined($net{$iface}{ipv6init}) ) {
-            # ipv6_init overrides implicit IPv6 enable by config
-            if ( $net{$iface}{ipv6init} eq "true") {
-                $use_ipv6 = 1;
-            } else {
-                $use_ipv6 = 0;
-            }
-        }
-        if ( defined ( $use_ipv6 ) ) {
-            if ( $use_ipv6 ) {
-                $text .= "IPV6INIT=yes\n";
-            } else {
-                $text .= "IPV6INIT=no\n";
-            }
-        }
-
-        # LINKDELAY
-        if (exists($net{$iface}{linkdelay})) {
-            $text .= "LINKDELAY=".$net{$iface}{linkdelay}."\n";
-        }
-
-        # set some bridge-releated parameters
-        # bridge STP
-        if (exists($net{$iface}{stp})) {
-            if ($net{$iface}{stp}) {
-                $text .= "STP=on\n";
-            } else {
-                $text .= "STP=off\n";
-            }
-        }
-        # bridge DELAY
-        if (exists($net{$iface}{delay})) {
-            $text .= "DELAY=".$net{$iface}{delay}."\n";
-        }
-
-        # add generated options strings
-        if (exists($net{$iface}{bonding_opts})) {
-            $text .= $net{$iface}{bonding_opts};
-        }
-
-        if (exists($net{$iface}{bridging_opts})) {
-            $text .= $net{$iface}{bridging_opts};
-        }
-
-        if (exists($net{$iface}{ethtool_opts})) {
-            $text .= $net{$iface}{ethtool_opts};
-        }
-
-
-        # VLAN support
-        # you do not need to set this for the VLAN device
-        $net{$iface}{vlan} = "true" if ($iface =~ m/^vlan\d+/);
-        if (exists($net{$iface}{vlan})) {
-            if ($net{$iface}{vlan} eq "true") {
-                $text .= "VLAN=yes\n";
-                # is this really needed?
-                $text .= "ISALIAS=no\n";
-            } else {
-                $text .= "VLAN=no\n";
-            }
-        }
-        # interfaces named vlan need the physdev set and pointing to an existing interface
-        if ($iface =~ m/^vlan\d+/) {
-            if (exists($net{$iface}{physdev})) {
-                $text .= "PHYSDEV=".$net{$iface}{physdev}."\n";
-            } else {
-                $self->error("vlan device with vlan[0-9]{0-9} naming convention need physdev set.");
-            }
-        }
-
-        # write iface ifcfg- file text
-        $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
-        $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
-
-        # route config, interface based.
-        # hey, where are the static routes?
-        if (exists($net{$iface}{route})) {
-            $file_name = "$dir_pref/route-$iface";
-            $exifiles{$file_name} = 1;
-            $text = "";
-            foreach my $rt (sort keys %{$net{$iface}{route}}) {
-                if ($net{$iface}{route}{$rt}{'address'}) {
-                    $text .= "ADDRESS$rt=" .
-                        $net{$iface}{route}{$rt}{'address'}."\n";
-                }
-                if ($net{$iface}{route}{$rt}{'gateway'}) {
-                    $text .= "GATEWAY$rt=" .
-                        $net{$iface}{route}{$rt}{'gateway'}."\n";
-                }
-                if ($net{$iface}{route}{$rt}{'netmask'}) {
-                    $text .= "NETMASK$rt="  .
-                        $net{$iface}{route}{$rt}{'netmask'}."\n";
-                } else {
-                    $text .= "NETMASK".$rt."=255.255.255.255\n";
-                }
-            };
-            $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
-            $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
-        }
-        # set up aliases for interfaces
-        # on file per alias
-        if (exists($net{$iface}{aliases})) {
-            foreach my $al (keys %{$net{$iface}{aliases}}) {
-                $file_name = "$dir_pref/ifcfg-".$iface.":".$al;
-                $exifiles{$file_name} = 1;
-                my $tmpdev;
-                if ($net{$iface}{'device'}) {
-                    $tmpdev = $net{$iface}{'device'}.':'.$al;
-                } else {
-                    $tmpdev = $iface.':'.$al;
-                };
-                # this is the only way it will work for VLANs
-                # if vlan device is vlanX and teh DEVICE is eg ethY.Z
-                #   you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
-                # otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
-                # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
-                # problem is, we want both
-                # adding symlinks however is not the best thing to do...
-                if (exists($net{$iface}{vlan}) && ($net{$iface}{vlan} eq "true")) {
-                    my $file_name_sym = "$dir_pref/ifcfg-$tmpdev";
-                    if ($file_name_sym ne $file_name) {
-                        if (! -e $file_name_sym) {
-                            # this will create broken link, if $file_name is not yet existing
-                            if (! -l $file_name_sym) {
-                                symlink($file_name,$file_name_sym) ||
-                                    $self->error("Failed to create symlink ",
-                                                 "from $file_name to $file_name_sym ($!)");
-                            };
-                        };
-                    };
-                };
-                $text = "DEVICE=$tmpdev\n";
-                if ($net{$iface}{aliases}{$al}{'ip'}) {
-                    $text .= "IPADDR=".$net{$iface}{aliases}{$al}{'ip'}."\n";
-                }
-                if ($net{$iface}{aliases}{$al}{'broadcast'}) {
-                    $text .= "BROADCAST=".$net{$iface}{aliases}{$al}{'broadcast'}."\n";
-                }
-                if ($net{$iface}{aliases}{$al}{'netmask'}) {
-                    $text .= "NETMASK=".$net{$iface}{aliases}{$al}{'netmask'}."\n";
-                }
-                $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
-                $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
-            }
-        }
-
+        $self->debug(3, "Found ifcfg $msg $file");
     }
 
-    # /etc/sysconfig/network
+    return (\%exifiles, \%exilinks);
+}
+
+
+# ifcfg are bash script that are sourced
+# simple form: KEY=$href->{$key} (no newline)
+# if value/default is arrayref, it is joined to string
+# options:
+#    def: default value
+#    var: variable name to use instead of key (will be uc'ed)
+#    bool: yesno/onoff : value (and default) are booleans, need to be converted to yesno
+#    quote: boolean quote the value in singlequotes
+#    join: if value is arrayref, use separator to join (default is ' ')
+# returns empty string is neither value or default exist
+sub _make_ifcfg_line
+{
+    my ($href, $key, %opts) = @_;
+
+    my $var = $opts{var} || $key;
+    my $value = defined($href->{$key}) ? $href->{$key} : $opts{def};
+    my $quote = $opts{quote} ? "'" : '';
+    my $sep = defined($opts{join}) ? $opts{join} : ' ';
+
+    if (defined($value)) {
+        if ($opts{bool}) {
+            $value = $value ? 'yes' : 'no' if ($opts{bool} eq 'yesno');
+            $value = $value ? 'on' : 'off' if ($opts{bool} eq 'onoff');
+        } elsif (ref($value) eq 'ARRAY') {
+            $value = join($sep, @$value);
+        }
+        return uc($var)."=$quote$value$quote";
+    } else{
+        return ''; # return string
+    };
+
+}
+
+# return anonymous sub that calls
+# _make_ifcfg_line with first arg $href
+# and appends result it not empty string to arrayref
+# and returns value
+sub _make_make_ifcfg_line
+{
+    my ($href, $aref) = @_;
+    return sub {
+        my $res = _make_ifcfg_line($href, @_);
+        if (defined($aref) and $res ne '') {
+            push(@$aref, $res);
+        };
+        return $res;
+    };
+}
+
+# Return ifcfg content
+sub make_ifcfg
+{
+    my ($self, $ifacename, $iface) = @_;
+
+    my @text;
+    my $makeline = _make_make_ifcfg_line($iface, \@text);
+
+    # onboot is a string?
+    &$makeline('onboot', def => 'yes');
+
+    &$makeline('nmcontrolled', var => 'nm_controlled', bool => 'yesno', def => 0, quote => 1);
+
+    &$makeline('device', def => $ifacename);
+
+    &$makeline('type', def => 'Ethernet');
+
+    if ( ($iface->{type} || '') =~ m/^OVS/) {
+        # Set OVS related variables
+        push(@text, "DEVICETYPE='ovs'");
+
+        foreach my $attr (qw(ovs_bridge ovs_opts ovs_extra bond_ifaces
+                          ovs_tunnel_type ovs_tunnel_opts ovs_patch_peer)) {
+            &$makeline($attr, quote => 1);
+        }
+    }
+
+    &$makeline('bridge', quote => 1);
+    if ($iface->{bridge} && (! -x $BRIDGECMD)) {
+        $self->error ("Error: bridge specified but $BRIDGECMD not found");
+    }
+
+    # set the HWADDR
+    &$makeline('hwaddr') if $iface->{set_hwaddr};
+
+    &$makeline('mtu');
+
+    # set the bootprotocol
+    &$makeline('bootproto', def => 'static');
+
+    my $bootproto = $iface->{bootproto} || 'static';
+    if ($bootproto eq 'static') {
+        foreach my $attr (qw(ip netmask broadcast)) {
+            if ($iface->{$attr}) {
+                &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
+            } else {
+                $self->error("Using static bootproto for $ifacename and no $attr configured");
+            }
+        }
+    } elsif (($bootproto eq "none") && $iface->{master}) {
+        # set bonding master
+        &$makeline('master');
+        push(@text, "SLAVE=yes");
+    }
+
+    # IPv6 additions
+    my $use_ipv6;
+
+    if ($iface->{ipv6addr}) {
+        &$makeline('ipv6addr');
+        $use_ipv6 = 1;
+    }
+    if ($iface->{ipv6addr_secondaries}) {
+        &$makeline('ipv6addr_secondaries', quote => 1);
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_autoconf})) {
+        &$makeline('ipv6_autoconf', bool => 'yesno');
+        if($iface->{ipv6_autoconf}) {
+            $use_ipv6 = 1;
+        } else {
+            $self->warn("Disabled IPv6 autoconf but no ipv6 address configured for $ifacename.")
+                if (!$iface->{ipv6addr});
+        }
+    }
+
+    if (defined($iface->{ipv6_rtr}) ) {
+        &$makeline('ipv6_rtr', bool => 'yesno');
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_mtu})) {
+        &$makeline('ipv6_mtu');
+        $use_ipv6 = 1;
+    }
+
+    if ($iface->{ipv6_privacy}) {
+        &$makeline('ipv6_privacy');
+        $use_ipv6 = 1;
+    }
+
+    if (defined($iface->{ipv6_failure_fatal}) ) {
+        &$makeline('ipv6_failure_fatal', bool => 'yesno');
+        $use_ipv6 = 1;
+    }
+    if (defined($iface->{ipv4_failure_fatal}) ) {
+        &$makeline('ipv4_failure_fatal', bool => 'yesno');
+    }
+
+    # when both are undef, nothing is added
+    &$makeline('ipv6init', def => $use_ipv6, bool => 'yesno');
+
+    &$makeline('linkdelay');
+
+    # set some bridge-releated parameters
+    # bridge STP
+    &$makeline('stp', bool => 'onoff');
+    # bridge DELAY
+    &$makeline('delay');
+
+    # add generated options strings
+    foreach my $attr (qw(bonding_opts bridging_opts ethtool_opts)) {
+        &$makeline($attr, quote => 1);
+    };
+
+    # VLAN support
+    &$makeline('vlan', bool => 'yesno');
+
+    push(@text, "ISALIAS=no") if ($iface->{vlan});
+
+    &$makeline('physdev');
+
+    return \@text;
+}
+
+# Return ifcfg route content
+sub make_ifcfg_route
+{
+    my ($self, $routes) = @_;
+
+    my @text;
+    foreach my $idx (0 .. scalar(@$routes) -1) {
+        my $makeline = _make_make_ifcfg_line($routes->[$idx], \@text);
+        foreach my $attr (qw(address gateway netmask)) {
+            &$makeline($attr, var => "$attr$idx", def => ($attr eq 'netmask') ? '255.255.255.255' : undef);
+        }
+    }
+
+    return \@text;
+}
+
+# Return ifcfg alias content
+sub make_ifcfg_alias
+{
+    my ($self, $device, $alias) = @_;
+
+    my @text = ("DEVICE=$device");
+
+    my $makeline = _make_make_ifcfg_line($alias, \@text);
+    foreach my $attr (qw(ip broadcast netmask)) {
+        &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
+    }
+
+    return \@text;
+}
+
+# Return /etc/sysconfig/network content
+sub make_network_cfg
+{
+    my ($self, $nwtree, $net) = @_;
+
     # assuming that NETWORKING=yes
-    $path=$base_path;
-    $file_name = "/etc/sysconfig/network";
-    mk_bu($file_name);
-    $exifiles{$file_name}=-1;
-    $text = "";
-    $text .= "NETWORKING=yes\n";
-    # set hostname.
-    if ($config->elementExists($path."/realhostname")) {
-        $text .= "HOSTNAME=".$config->getValue($path."/realhostname")."\n";
-    } else {
-        $text .= "HOSTNAME=".$config->getValue($path."/hostname").".".$config->getValue($path."/domainname")."\n";
-    }
+    my @text = ("NETWORKING=yes");
+
+    # set hostname
+    push(@text, 'HOSTNAME='.($nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}"));
+
     # default gateway. why is this optional?
     #
     # what happens if no default_gateway is defined?
     # search for first defined gateway and use it.
     # here's the flag: default true
-    #
-    my $missing_default_gateway_autoguess = 1;
-    if ($config->elementExists($path."/guess_default_gateway")) {
-        if ($config->getValue($path."/guess_default_gateway") eq "false") {
-            $missing_default_gateway_autoguess = 0;
-        }
+    my $guess_dgw = defined($nwtree->{guess_default_gateway}) ? $nwtree->{guess_default_gateway} : 1;
+
+    my $nodgw_msg = "No default gateway configured";
+    my $dgw = $nwtree->{default_gateway};
+    if ($guess_dgw) {
+        # this is the gateway that will be used in case the default_gateway is not set
+        my $first_gateway;
+        foreach my $iface (sort keys %{$net->{interfaces}}) {
+            if ($net->{interfaces}->{$iface}->{gateway}) {
+                $dgw = $net->{interfaces}->{$iface}->{gateway};
+                $self->info("$nodgw_msg. Found first gateway $dgw on interface $iface");
+                last;
+            }
+        };
+        # Set add the end, no conditional needed
+        $nodgw_msg .= " and no interface found with a gateway configured.";
     }
 
-    my $nogw_msg = "No default gateway defined in /system/network/default_gateway";
-    if ($config->elementExists($path."/default_gateway")) {
-        $text .= "GATEWAY=".$config->getValue($path."/default_gateway")."\n";
-    } elsif ($missing_default_gateway_autoguess) {
-        if ($first_gateway eq '') {
-            $self->warn("$nogw_msg AND no interface found with a gateway configured.");
-        } else {
-            $self->info("$nogw_msg Going to use the gateway $first_gateway ",
-                        "configured for device $first_gateway_int.");
-            $text .= "GATEWAY=$first_gateway\n";
-        }
+    if ($dgw) {
+        push(@text, "GATEWAY=$dgw");
     } else {
-        $self->warn($nogw_msg);
+        $self->warn($nodgw_msg);
     }
 
-    # nisdomain
-    if ($config->elementExists($path."/nisdomain")) {
-        $text .= "NISDOMAIN=".$config->getValue($path."/nisdomain")."\n";
-    }
-    # nozeroconf
-    if ($config->elementExists($path."/nozeroconf")) {
-        if ($config->getValue($path."/nozeroconf") eq "true") {
-            $text .= "NOZEROCONF=yes\n";
-        } else {
-            $text .= "NOZEROCONF=no\n";
-        }
-    }
-    # gatewaydev
-    if ($config->elementExists($path."/gatewaydev")) {
-        $text .= "GATEWAYDEV=".$config->getValue($path."/gatewaydev")."\n";
-    }
-    # nmcontrolled
-    if ($config->elementExists($path."/nmcontrolled")) {
-        if ($config->getValue($path."/nmcontrolled") eq "true") {
-            $text .= "NM_CONTROLLED=yes\n";
-        } else {
-            $text .= "NM_CONTROLLED=no\n";
-        }
-    }
+    my $makeline = _make_make_ifcfg_line($nwtree, \@text);
+
+    &$makeline('nisdomain');
+
+    &$makeline('nozeroconf', bool => 'yesno');
+
+    &$makeline('gatewaydev');
+
+    &$makeline('nmcontrolled', var => 'nm_controlled', nbool => 'yesno');
 
     # Enable and config IPv6 if either set explicitly or v6 config is present
     # but note that the order of the v6 directive processing is important to
     # make the 'default' enable do the right thing
-    if ($config->elementExists("$path/ipv6")) {
+    my $ipv6 = $nwtree->{ipv6};
+    if ($ipv6) {
+        # No ipv6 makeline (yet), all different variable names etc
         my $use_ipv6 = 0;
-        if ($config->elementExists("$path/ipv6/default_gateway")) {
-            $text .= "IPV6_DEFAULTGW=".$config->getValue("$path/ipv6/default_gateway")."\n";
+
+        if ($ipv6->{default_gateway}) {
+            push(@text, "IPV6_DEFAULTGW=$ipv6->{default_gateway}");
             $use_ipv6 = 1; # enable ipv6 for now
         }
-        if ($config->elementExists("$path/ipv6/gatewaydev")) {
-            $text .= "IPV6_DEFAULTDEV=".$config->getValue("$path/ipv6/gatewaydev")."\n";
+        if ($ipv6->{gatewaydev}) {
+            push(@text, "IPV6_DEFAULTDEV=$ipv6->{gatewaydev}");
             $use_ipv6 = 1; # enable ipv6 for now
         }
-        if ($config->elementExists("$path/ipv6/enabled")) {
-            if ($config->getValue("$path/ipv6/enabled") eq "true") {
-                $use_ipv6 = 1;
-            } else {
-                $use_ipv6 = 0;
-            }
+
+        if (defined($ipv6->{enabled})) {
+            $use_ipv6 = $ipv6->{enabled};
         }
-        if ($use_ipv6) {
-            $text .= "NETWORKING_IPV6=yes\n";
-        } else {
-            $text .= "NETWORKING_IPV6=no\n";
-        }
+        push(@text, "NETWORKING_IPV6=".($use_ipv6 ? "yes" : "no"));
     }
 
-    $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
-    $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
+    return \@text;
+}
 
+# Build and return ifdown hashref: key is the interface name,
+# value boolean to stop interface (but is ignored in rest of code).
+# Returns undef in case of severe issue
+# No actual ifdown is executed (see usage of `will` in messages).
+sub make_ifdown
+{
+    my ($self, $exifiles, $ifaces) = @_;
 
-    # we now have a list with files and values.
-    # for general network: separate?
-    # for devices: create list of affected devices
+    my $dev2mac = $self->make_dev2mac();
 
-    # For now, the order of vlans is not changed and left completely to the network scripts
-    # I have 0 (zero) intention to support in this component things like vlans on bonding slaves, aliases on bonded vlans
-    # If you need this, buy more network adapters ;)
-    my (%ifdown, %ifup);
-    foreach my $file (keys %exifiles) {
-        if ($file =~ m/$dev_regexp/) {
-            my $if = $1;
+    my %ifdown;
+    foreach my $file (sort keys %$exifiles) {
+        next if ($file eq $NETWORKCFG);
+
+        my $iface = $self->is_valid_interface($file);
+        if ($iface) {
+
             # ifdown: all devices that have files with non-zero status
-            if ($exifiles{$file} != 0) {
-                $self->debug(3, "exifiles file $file with non-zero value found: ".$exifiles{$file});
-                $ifdown{$if} = 1;
-                # bonding: if you bring down a slave, always bring
-                # down it's master
-                if (exists($net{$if}{'master'})) {
-                    $ifdown{$net{$if}{'master'}} = 1;
-                } elsif ($file =~ m/ifcfg-$if/) {
-                    # here's the tricky part: see if it used to be a slave. the bond-master must be restarted for this.
-                    my $sl = "";
-                    my $ma = "";
-                    if (-e $file) {
-                        $self->debug(3, "reading ifcfg from the backup ", $self->gen_backup_filename($file));
-                        my $fh = CAF::FileReader->new($self->gen_backup_filename($file), log => $self);
-                        while (my $l = <$fh>) {
-                            $sl = $1 if ($l =~ m/SLAVE=(\w+)/);
-                            $ma = $1 if ($l =~ m/MASTER=(\w+)/);
-                        }
-                        $fh->close();
+            if ($exifiles->{$file} == $NOCHANGES) {
+                $self->verbose("No changes for interface $iface (cfg file $file)");
+            } else {
+                $self->verbose("Will ifdown $iface due to changes in $file (state $exifiles->{$file})");
+                # TODO: ifdown new devices? better safe than sorry?
+                $ifdown{$iface} = 1;
+
+                # bonding: if you bring down a slave, always bring down it's master
+                if ($ifaces->{$iface}->{master}) {
+                    my $master = $ifaces->{$iface}->{master};
+                    $self->verbose("Changes to slave $iface will force ifdown of master $master.");
+                    $ifdown{$master} = 1;
+                } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && -e $file) {
+                    # here's the tricky part: see if it used to be a slave.
+                    # the bond-master must be restarted if a device was removed from the bond.
+                    # TODO: why read from backup?
+                    $self->debug(3, "reading ifcfg from the backup ", $self->backup_filename($file));
+                    my $fh = CAF::FileReader->new($self->backup_filename($file), log => $self);
+                    my ($slave, $master);
+                    $slave = $1 if ($fh =~ m/^SLAVE\s*=\s*(\w+)\s*$/m);
+                    $master = $1 if ($fh =~ m/^MASTER\s*=\s*(\w+)\s*$/m);
+                    $fh->close();
+
+                    # SLAVE=yes is the logic used in ifup
+                    if ($slave && $slave eq "yes" &&
+                        $master && $master =~ m/^bond/) {
+                        $ifdown{$master} = 1;
+                        $self->verbose("Changes to previous slave $iface will force ifdown of master $master.");
                     }
-                    $ifdown{$ma} = 1 if (($sl eq "yes") && ($ma =~ m/bond/));
-                } elsif (exists($net{$if}{'set_hwaddr'})
-                        && $net{$if}{'set_hwaddr'} eq 'true') {
-                    # to use HWADDR
-                    # stop the interface with this macaddress (if any)
-                    if (exists($mac2dev{$net{$if}{'hwaddr'}})) {
-                        $ifdown{$mac2dev{$net{$if}{'hwaddr'}}} = 1;
+                } elsif ($ifaces->{$iface}->{master}) {
+                    # to use HWADDR, stop the interface with this macaddress (if any)
+                    my $mac = lc($ifaces->{$iface}->{hwaddr} || 'not a mac');
+                    foreach my $dev (sort keys %$dev2mac) {
+                        if ($dev2mac->{$dev} eq $mac) {
+                            $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
+                                           "has same MAC as interface $iface which is now a master.");
+                            $ifdown{$dev} = 1;
+                        }
                     }
                 }
             }
-        } elsif ($file eq "/etc/sysconfig/network") {
-            # nothing needed
         } else {
-            $self->error("Filename $file found that doesn't match  the ",
-                         "regexp. Must be an error in ncm-network. ",
-                         "Exiting.");
-            # We can safely exit here, since no files have been
-            # modified yet.
-            return 1;
+            $self->error("Filename $file found that doesn't match the device ",
+                         "regexp. Must be an error in ncm-network.");
+            return;
         }
     }
-    foreach my $if (keys %ifdown) {
-        # ifup: all devices that are in ifdown and have a 0 or 1
-        # status for ifcfg-[dev]
-        $ifup{$if} = 1 if ($exifiles{"$dir_pref/ifcfg-$if"} != -1);
-        # bonding devices: don't bring the slaves up, only the master
-        delete $ifup{$if} if (exists($net{$if}{'master'}));
+
+    return \%ifdown;
+}
+
+# Build and return ifup hashref: key is the interface name,
+# value boolean to start interface (but is ignored in rest of code).
+# No actual ifup is executed (see usage of `will` in messages).
+sub make_ifup
+{
+    my ($self, $exifiles, $ifaces, $ifdown);
+
+    my %ifup;
+    foreach my $iface (sort keys %$ifdown) {
+        # ifup: all devices that are in ifdown
+        # and have state other than REMOVE
+        # e.g. master with NOCHANGES state can be added here
+        # when a slave had modifications
+        if ($exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
+            $self->verbose("Not starting $iface scheduled for removal");
+        } else {
+            if ($ifaces->{$iface}->{master}) {
+                # bonding devices: don't bring the slaves up, only the master
+                $self->verbose("Found SLAVE interface $iface in ifdown map, ",
+                               "not starting it with ifup; is left for master $ifaces->{$iface}->{master}.");
+            } else {
+                $self->verbose("Will start $iface with ifup");
+                $ifup{$iface} = 1;
+            }
+        }
     }
 
-    # Do ethtool processing for offload, ring and others
-    foreach my $iface ( keys %net ) {
-        foreach my $sectionname (keys %ethtool_option_map) {
-            ethtoolSetOptions($iface,$sectionname,$net{$iface}{$sectionname}) if ($net{$iface}{$sectionname});
+    return \%ifup;
+}
+
+# If allow is defined and false, disable and stop NetworkManager
+sub disable_networkmanager
+{
+    my ($self, $allow) = @_;
+
+    # allow NetworkMnager to run or not?
+    if (defined($allow) && !$allow) {
+        # no checking, forcefully stopping NetworkManager
+        # warning: this can cause troubles with the recovery to previous state in case of failure
+        # it's always better to disable the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
+        my @disablenm_cmds;
+
+        # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it off
+        push(@disablenm_cmds, [qw(/sbin/chkconfig --level 2345 NetworkManager off)]);
+
+        push(@disablenm_cmds, [CAF::Service->new(["NetworkManager"], log => $self), "stop"]);
+
+        $self->runrun(@disablenm_cmds);
+    };
+};
+
+# network stop OR ifdown
+# Returns if something was done or not
+sub stop
+{
+    my ($self, $exifiles, $ifdown, $nwsrv) = @_;
+
+    my @ifaces = sort keys %$ifdown;
+
+    my $action;
+    if ($exifiles->{$NETWORKCFG} == $UPDATED) {
+        $self->verbose("$NETWORKCFG UPDATED, stopping network");
+        $action = 1;
+        $nwsrv->stop();
+    } elsif (@ifaces) {
+        my @cmds;
+        foreach my $iface (@ifaces) {
+            # how do we actually know that the device was up?
+            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
+            push(@cmds, ["/sbin/ifdown", $iface]);
+        }
+        $self->verbose("Stopping interfaces ",join(', ', @ifaces));
+        $action = 1;
+        $self->runrun(@cmds);
+    } else {
+        $self->verbose('Nothing to stop');
+        $action = 0;
+    }
+
+    return $action;
+}
+
+# Copy test configurations to correct location
+# Remove configuration files that is scheduled for removal
+# Returns if something was done or not
+sub deploy_config
+{
+    my ($self, $exifiles) = @_;
+
+    # replace UPDATED/NEW files, remove REMOVE files
+    my $action = 0;
+    foreach my $file (sort keys %$exifiles) {
+        my $state = $exifiles->{$file};
+        if (($state == $REMOVE) || ($state == $UPDATED) || ($state == $NEW)) {
+            my $msg = "REMOVE config $file";
+            if($self->cleanup($file)) {
+                $self->verbose($msg);
+            } else {
+                $self->error("$msg failed. ($self->{fail})");
+            };
+            $action = 1;
+
+            # set new config file from testcfg
+            if (($state == $UPDATED) || ($state == $NEW)) {
+                my $testcfg = $self->testcfg_filename($file);
+                my $msg = "hardlink UPDATED/NEW testcfg $testcfg to config $file";
+                if ($self->hardlink($testcfg, $file)) {
+                    $self->verbose($msg);
+                } else {
+                    $self->error("$msg failed: $self->{fail}");
+                }
+            }
+        } else {
+            $self->verbose("Nothing to do for config $file with status $exifiles->{$file}.");
+        }
+    }
+
+    return $action;
+}
+
+# network start or ifup
+# Returns if something was done or not
+sub start
+{
+    my ($self, $exifiles, $ifup, $nwsrv) = @_;
+
+    my @ifaces = sort keys %$ifup;
+
+    my $action;
+    if (($exifiles->{$NETWORKCFG} == $UPDATED) ||
+        ($exifiles->{$NETWORKCFG} == $NEW)) {
+        $self->verbose("$NETWORKCFG UPDATED/NEW, starting network");
+        $action = 1;
+        $nwsrv->start();
+    } elsif (@ifaces) {
+        my @cmds;
+        foreach my $iface (@ifaces) {
+            push(@cmds, ["/sbin/ifup", $iface, "boot"]);
+            push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
+        }
+        $self->verbose("Starting interfaces ",join(', ', @ifaces));
+        $action = 1;
+        $self->runrun(@cmds);
+    } else {
+        $self->verbose('Nothing to start');
+        $action = 0;
+    }
+
+    return $action;
+}
+
+# Recover failed network changes
+sub recover
+{
+    my ($self, $exifiles, $nwsrv, $init_config, $profile) = @_;
+
+    $self->error("Network restart failed. Reverting back to original config. ",
+                 "Failed modified configfiles can be found in ",
+                 "$BACKUP_DIR with suffix $FAILED_SUFFIX. ",
+                 "(If there aren't any, it means only some devices were removed.)");
+
+    # stop/recover/start whole network is the only thing that should always work.
+    # Not trying to minimise the impact
+
+    # current config. useful for debugging
+    my $failure_config = $self->get_current_config();
+
+    $self->verbose("RECOVER: stop network");
+    $nwsrv->stop();
+
+    my $unlink = sub {
+        my $file = shift;
+        if ($self->any_exists($file)) {
+            if($self->cleanup($file)) {
+                $self->debug(1, "RECOVER: unlinked failed orig $file") ;
+            } else {
+                $self->error("RECOVER: Can't unlink failed orig $file ($self->{fail})") ;
+            };
+        }
+    };
+
+    my $recover = sub {
+        my $file = shift;
+        my $backup = $self->backup_filename($file);
+        &$unlink($file);
+        if($self->hardlink($backup, $file)) {
+            $self->debug(1, "RECOVER: hardlink backup $backup to orig $file");
+        } else {
+            $self->error("RECOVER: Can't hardlink backup $backup to orig $file ($self->{fail})");
         };
     };
 
-    my @disablenm_cmds = ();
 
-    ## allow NetworkMnager to run or not?
-    if ($config->elementExists($path."/allow_nm") && $config->getValue($path."/allow_nm") ne "true") {
-        # no checking, forcefully stopping NetworkManager
-        # warning: this can cause troubles with the recovery to previous state in case of failure
-        # it's always better to disbale the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
-        # (or better yet, post ncm-spma)
-        push(@disablenm_cmds,["/sbin/chkconfig --level 2345 NetworkManager off"]);
-        push(@disablenm_cmds,["/sbin/service NetworkManager stop"]);
-        $self->runrun(@disablenm_cmds);
+    # revert to original files
+    foreach my $file (sort keys %$exifiles) {
+        if ($exifiles->{$file} == $NEW) {
+            $self->info("RECOVER: Removing new file $file.");
+            &$unlink($file);
+        } elsif ($exifiles->{$file} == $UPDATED) {
+            $self->info("RECOVER: Replacing newer file $file.");
+            &$recover($file);
+        } elsif ($exifiles->{$file} == $REMOVE) {
+            $self->info("RECOVER: Restoring file $file.");
+            &$recover($file);
+        }
+    }
+
+    # network start
+    $self->verbose("RECOVER: start network");
+    $nwsrv->start();
+
+    # test it again
+    my $nw_test = $self->test_network_ccm_fetch($profile);
+    if ($nw_test) {
+        $self->info("Old network config restored.");
+    } else {
+        $self->error("Restoring old config failed.");
+    }
+
+    $self->info("Initial setup\n$init_config");
+    $self->info("Setup after failure\n$failure_config");
+    $self->info("Current setup\n".$self->get_current_config());
+
+    if (! $nw_test) {
+        $self->info("The profile of this machine could not be ",
+                    "retrieved using standard mechanism ccm-fetch. ",
+                    "Since this should be the original configuration, ",
+                    "there's either a bug in ncm-network or your profile ",
+                    "server is/was not reachable. Run \"ccm-fetch\" ",
+                    "and then \"ncm-ncd --co network\" to find out more. ",
+                    "If you think there's a bug in this component, ",
+                    "please let us know.")
     };
+}
+
+
+# Create new backupdir
+# Returns 1 on success, undef on failure (and reports error).
+sub init_backupdir
+{
+    my $self = shift;
+
+    if (!defined($self->cleanup($BACKUP_DIR, undef, keeps_state => 1))) {
+        $self->error("Failed to cleanup previous backup directory $BACKUP_DIR: $self->{fail}");
+        return;
+    }
+    if (!defined($self->directory($BACKUP_DIR, mode => oct(700), keeps_state => 1))) {
+        $self->error("Failed to create backup directory $BACKUP_DIR: $self->{fail}");
+        return;
+    }
+
+    return 1;
+}
+
+
+sub Configure
+{
+    my ($self, $config) = @_;
+
+    return if ! defined($self->init_backupdir());
+
+    # current setup, will be printed in case of major failure
+    my $init_config = $self->get_current_config();
+
+    my $net = $self->process_network($config);
+    my $ifaces = $net->{interfaces};
+
+    # keep a hash of all files and links.
+    # makes a backup of all files
+    my ($exifiles, $exilinks) = $self->gather_existing();
+    return if ! defined($exifiles);
+
+    my $nwtree = $config->getTree($NETWORK_PATH);
+
+    # main network config
+    return if ! defined($self->mk_bu($NETWORKCFG));
+    my $text = $self->make_network_cfg($nwtree, $net);
+    $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
+
+    # ifcfg- / route- files
+    foreach my $ifacename (sort keys %$ifaces) {
+        my $iface = $ifaces->{$ifacename};
+        my $text = $self->make_ifcfg($ifacename, $iface);
+
+        my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
+        $exifiles->{$file_name} = $self->file_dump($file_name, $text);
+
+        # route config, interface based.
+        # TODO: hey, where are the (global) static routes?
+        my $routes = $iface->{route};
+        if (defined($routes)) {
+            my $text = $self->make_ifcfg_route($routes);
+
+            my $file_name = "$IFCFG_DIR/route-$ifacename";
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text);
+        }
+
+        # set up aliases for interfaces
+        # one file per alias
+        foreach my $al (sort keys %{$iface->{aliases} || {}}) {
+            my $al_dev = ($iface->{device} || $ifacename) . ":$al";
+            my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
+
+            my $file_name = "$IFCFG_DIR/ifcfg-$ifacename:$al";
+            $exifiles->{$file_name} = $self->file_dump($file_name, $text);
+
+            # This is the only way it will work for VLANs
+            # If vlan device is vlanX and the DEVICE is eg ethY.Z
+            # you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
+            # Otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
+            # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
+            # Problem is, we want both
+            # Adding symlinks however is not the best thing to do.
+
+            my $file_name_sym = "$IFCFG_DIR/ifcfg-$al_dev";
+            if ($iface->{vlan} &&
+                $file_name_sym ne $file_name &&
+                ! $self->any_exists($file_name_sym)) { # TODO: should check target with readlink
+                # this will create broken link, if $file_name is not yet existing
+                $self->symlink($file_name, $file_name_sym) ||
+                    $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
+            };
+        }
+    }
+
+
+    # We now have a map with files and values.
+    # Changes to the general network config file are handled separately.
+    # For devices: we will create a list of affected devices
+
+    # Since there's per interface reload, interface changes will be applied via ifdown/ifup.
+    # This is very coarse, but reimplementing the ifup/ifdown logic is highly non-trivial.
+    # ifdown: all interfaces that will be stopped
+    # ifup: all interfaces that will be (re)started
+
+    # For now, the order of vlans is not changed and
+    # left completely up to the network scripts.
+    # There's 0 (zero) intention to support things like vlans on bonding slaves,
+    # aliases on bonded vlans ...
+    # If you need this, buy more network adapters ;)
+
+    my $ifdown = $self->make_ifdown($exifiles, $ifaces);
+    if (! defined($ifdown)) {
+        # file_dump does not modify the original files.
+        # It's safe to exit the component here.
+        # Error reported in make_ifdown
+        return;
+    }
+
+    my $ifup = $self->make_ifup($exifiles, $ifaces, $ifdown);
+
+    #
+    # Action starts here
+    #
+
+    $self->disable_networkmanager($nwtree->{allow_nm});
+
+    # TODO: why do that here? should be done after any restarting of devices or whole network?
+    $self->ethtool_set_options($ifaces);
 
     # restart network
     # capturing system output/exit-status here is not useful.
     # network status is tested separately
-    my @cmds = ();
-    # ifdown dev OR network stop
-    if ($exifiles{"/etc/sysconfig/network"} == 1) {
-        @cmds = [qw(/sbin/service network stop)];
-    } else {
-        foreach my $if (sort keys %ifdown) {
-            # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifdown", $if]);
-        }
-    }
-    $self->runrun(@cmds);
-    # replace modified/new files
-    foreach my $file (keys %exifiles) {
-        if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
-            copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) ||
-                $self->error("replace modified/new files: can't copy ",
-                             $self->gen_backup_filename($file).FAILED_SUFFIX,
-                             " to $file. ($!)");
-        } elsif ($exifiles{$file} == -1) {
-            unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
-        }
-    }
-    # ifup OR network start
-    if (($exifiles{"/etc/sysconfig/network"} == 1) ||
-        ($exifiles{"/etc/sysconfig/network"} == 2)) {
-        @cmds = [qw(/sbin/service network start)];
-    } else {
-        @cmds = ();
-        foreach my $if (sort keys %ifup) {
-            # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifup", $if, "boot"]);
-            push(@cmds, [qw(sleep 10)]) if ($if =~ m/bond/);
-        }
-    }
-    $self->runrun(@cmds);
-    # test network
-    if (test_network()) {
-        # if ok, clean up backups
-        foreach my $file (keys %exifiles) {
-            # don't clean up files that are not changed
-            if ($exifiles{$file} != 0) {
-                if (-e $self->gen_backup_filename($file)) {
-                    unlink($self->gen_backup_filename($file)) ||
-                        $self->warn("cleanup backups: can't unlink ",
-                                    $self->gen_backup_filename($file),
-                                    " ($!)") ;
-                }
-                if (-e $self->gen_backup_filename($file).FAILED_SUFFIX) {
-                    unlink($self->gen_backup_filename($file).FAILED_SUFFIX) ||
-                        $self->warn("cleanup backups: can't unlink ",
-                                    $self->gen_backup_filename($file).FAILED_SUFFIX,
-                                    " ($!)");
-                }
-            }
-        }
-    } else {
-        $self->error("Network restart failed. ",
-                     "Reverting back to original config. ",
-                     "Failed modified configfiles can be found in ",
-                     $self->gen_backup_filename(" "), "with suffix ",FAILED_SUFFIX,
-                     "(If there aren't any, it means only some devices ",
-                     "were removed.)");
-        # if not, revert and pray now done with a pure network
-        # stop/start it's the only thing that should always work.
+    # flow:
+    #   1. stop everythig using old config
+    #   2. replace updated/new config; remove REMOVE
+    #   3. (re)start things
+    my $nwsrv = CAF::Service->new(['network'], log => $self);
 
-        # current config. useful for debugging
-        my $failure_config=get_current_config();
+    my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
 
-        $self->runrun([qw(/sbin/service network stop)]);
+    my $config_changed = $self->deploy_config($exifiles);
 
-        # revert to original files
-        foreach my $file (keys %exifiles) {
-            if ($exifiles{$file} == 2) {
-                $self->info("RECOVER: Removing new file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->warn("Can't unlink ".$file) ;
-                }
-            } elsif ($exifiles{$file} == 1) {
-                $self->info("RECOVER: Replacing newer file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->error("Can't unlink $file.") ;
-                }
-                copy($self->gen_backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
-            } elsif ($exifiles{$file} == -1) {
-                $self->info("RECOVER: Restoring file $file.");
-                if (-e $file) {
-                    unlink($file) || $self->warn("Can't unlink ".$file) ;
-                }
-                copy($self->gen_backup_filename($file),$file) ||
-                    $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
-            }
-        }
-        # ifup OR network start
-        $self->runrun([qw(/sbin/service network start)]);
+    $stopstart += $self->start($exifiles, $ifup, $nwsrv);
 
-        # test it again
-        my $nw_test = test_network();
-        if ($nw_test) {
-            $self->info("Old network config restored.");
+    # sanity check
+    if ($config_changed) {
+        if ($stopstart) {
+            $self->debug(1, "Configuration changed and something was stopped and/or started");
         } else {
-            $self->error("Restoring old config failed.");
+            $self->error("Configuration changed and nothing was stopped and/or started");
+            # force a test
+            $stopstart = 1;
         }
-        $self->info("Result of test_network_ping: ".test_network_ping());
-        $self->info("Initial setup\n$init_config");
-        $self->info("Setup after failure\n$failure_config");
-        $self->info("Current setup\n".get_current_config());
-
-        if (! $nw_test) {
-            $self->info("The profile of this machine could not be ",
-                "retrieved using standard mechanism ccm-fetch. ",
-                "Since this should be the original configuration, ",
-                "there's either a bug in ncm-network or your profile ",
-                "server is/was not reachable. Run \"ccm-fetch\" ",
-                "and then \"ncm-ncd --co network\" to find out more. ",
-                "If you think there's a bug in this component, ",
-                "please let us know.")
-        };
-    }
-
-    # remove all unresolved links
-    # final cleanup
-    for my $link (keys %exilinks) {
-        unlink($link) if (! -e $link);
+    } else {
+        if ($stopstart) {
+            $self->error("Configuration not changed and something was stopped and/or started");
+        } else {
+            $self->debug(1, "Configuration not changed and nothing was stopped and/or started");
+        }
     };
 
-    # end of Configure
+    # test network
+    my $ccm_tree = $config->getTree("/software/components/ccm");
+    my $profile = $ccm_tree && $ccm_tree->{profile};
 
-    sub mk_bu {
-        my $func="mk_bu";
-        ## makes backup of file
-        my $file = shift || $self->error("$func: No file given.");
-
-        $self->debug(3,"$func: create backup of $file to ".$self->gen_backup_filename($file));
-        copy($file, $self->gen_backup_filename($file)) ||
-            $self->error("$func: Can't create backup of $file to ",
-                         $self->gen_backup_filename($file), " ($!)");
-    }
-
-    sub test_network {
-        #return test_network_ping();
-        return test_network_ccm_fetch();
-    }
-
-    sub test_network_ccm_fetch {
-        # only download file, don't really ccm-fetch!!
-        my $func = "test_network_ccm_fetch";
-        # sometimes it's possible that routing is a bit behind, so set this variable to some larger value
-        my $sleep_time = 15;
-        sleep($sleep_time);
-        # it should be in $PATH
-        $self->info("$func: trying ccm-fetch");
-        # no runrun, as it would trigger error (and dependency failure)
-        my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
-        my $exitcode=$?;
-        if ($exitcode == 0) {
-            $self->info("$func: OK: network up");
-            return 1;
-        } elsif (WIFEXITED($exitcode) && WEXITSTATUS($exitcode) == NOQUATTOR_EXITCODE) {
-            $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
-            return test_network_ping();
-        } else {
-            $self->warn("$func: FAILED: network down");
-            return 0;
+    if (! $stopstart) {
+        $self->verbose("Nothing was stopped and/or started, no need to retest network");
+    } elsif ($self->test_network_ccm_fetch($profile)) {
+        # it's ok, clean up backups
+        my @files = sort keys %$exifiles;
+        $self->verbose("Network ok after test, cleaning up leftover backup and test config files ",
+                       join(', ', @files));
+        foreach my $file (@files) {
+            $self->cleanup_backup_test($file);
         }
+    } else {
+        $self->recover($exifiles, $nwsrv, $init_config, $profile);
     }
 
-    sub get_current_config {
-        my $output;
-        my $fh = CAF::FileReader->new("/etc/sysconfig/network",
-                                      log => $self);
-        $output = "$fh";
-
-        $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
-        $output .= $self->runrun(["/sbin/ifconfig"]);
-        $output .= $self->runrun([qw(/sbin/route -n)]);
-
-        # when brctl is missing, this would generate an error.
-        # but it is harmless to skip the show command.
-        my $brexe = "/usr/sbin/brctl";
-        if (-x $brexe) {
-            $output .= $self->runrun([$brexe, "show"]);
-        } else {
-            $output .= "Missing $brexe executable.\n";
-        };
-
-        return $output;
-    }
-
-    sub test_network_ping {
-        my $func = "test_network_ping";
-
-        # sometimes it's possible that routing is a bit behind, so
-        # set this variable to some larger value
-        my $sleep_time = 15;
-        # set port number of CDB server that should be reachable
-        # (like http or https)
-        my $profile = $config->getValue("/software/components/ccm/profile");
-        my $pro = $profile;
-        $pro =~ s/:\/\/.+//;
-        my $host = $profile;
-        $host =~ s/.+:\/\///;
-        $host =~ s/\/.+//;
-        sleep($sleep_time);
-        my $p = Net::Ping->new("tcp");
-
-        # check for portnumber in host
-        if ($host =~ m/:(\d+)/) {
-            $p->{port_num} = $1;
-            $host =~ s/:(\d+)//;
-        } else {
-            # get it by service if not explicitly defined
-            $p->{port_num} = getservbyname($pro, "tcp");
-        }
-
-        my $ec;
-        if ($p->ping($host)) {
-            $self->info("$func: OK: network up");
-            $ec = 1;
-        } else {
-            $self->warn("$func: FAILED: network down");
-            $ec = 0;
-        }
-        $p->close();
-
-        return $ec;
-    }
-
-    sub runrun {
-        my ($self, @cmds) = @_;
-        return if (!@cmds);
-
-        my @output;
-
-        foreach my $i (@cmds) {
-            push(@output, CAF::Process->new($i, log => $self)->output());
-            if ($?) {
-                $self->error("Error output: $output[-1]");
-           }
-        }
-
-        return join("", @output);
-    }
-
-
-    # Get current ethtool options for the given section
-    sub ethtoolGetCurrent {
-        my ($ethname,$sectionname)=@_;
-        my %current;
-
-        my $showoption="--show-$sectionname";
-        $showoption="" if ($sectionname eq "ethtool");
-
-        my ($out,$err);
-        # Skip empty showoption when calling ethtool (bug reported by D.Dykstra)
-        if (CAF::Process->new([$ethtoolcmd, $showoption || (), $ethname],
-                              "stdout" => \$out,
-                              "stderr" => \$err
-            )->execute() ) {
-            foreach (split('\n', $out)) {
-                if (m/^\s*(\S.*?)\s*:\s*(\S.*?)\s*$/) {
-                    my $k = $1;
-                    my $v = $2;
-                    # speed setting
-                    $v = $1 if ($k eq $ethtool_option_map{ethtool}{speed} && $v =~ m/^(\d+)/);
-                    # Duplex setting
-                    $v =~ tr/A-Z/a-z/ if ($k eq $ethtool_option_map{ethtool}{duplex});
-                    # auotneg setting
-                    if ($k eq $ethtool_option_map{ethtool}{autoneg}) {
-                        $v = "off";
-                        $v = "on" if ($v =~ m/(Y|y)es/);
-                    }
-
-                    $current{$k} = $v;
-                }
-            }
-        } else {
-            $self->error("ethtoolGetCurrent: cmd \"$ethtoolcmd $showoption $ethname\" failed.",
-                         " (output: $out, stderr: $err)");
-        }
-        return %current;
-    }
-
-
-    sub ethtoolSetOptions {
-        my ($ethname,$sectionname,$optionref)=@_;
-        my %options = %$optionref;
-        my $cmd;
-
-        # get current values into %current
-        my %current = ethtoolGetCurrent($ethname,$sectionname);
-
-        # Loop over template settings and check that they are known but different
-
-        # key ordering (important for autoneg/speed/duplex)
-        my @optkeys;
-        foreach my $tmp (@{$ethtool_option_order{$sectionname}}) {
-            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%options)));
-        };
-        foreach my $tmp (sort keys %options) {
-            push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-        };
-
-        my @opts;
-        for my $k (@optkeys) {
-            my $v = $options{$k};
-            my $currentv;
-            if (exists($current{$k})) {
-                $currentv = $current{$k};
-            } elsif ($current{$ethtool_option_map{$sectionname}{$k}}) {
-                $currentv = $current{$ethtool_option_map{$sectionname}{$k}};
+    # remove all broken links: use file_exists
+    # TODO: why is there no try/recover for the symlinks?
+    foreach my $link (sort keys %$exilinks) {
+        if (! $self->file_exists($link)) {
+            if ($self->cleanup($link)) {
+                $self->debug(1, "Succesfully cleaned up broken symlink $link");
             } else {
-                $self->info("ethtoolSetOptions: Skipping setting for ",
-                            "$ethname/$sectionname/$k to $v as not in ethtool");
-                next;
-            }
-
-            # Is the value different between template and the machine
-            if ($currentv eq $v) {
-                $self->verbose("ethtoolSetOptions: Value for $ethname/$sectionname/$k is already set to $v");
-            } else {
-                push(@opts, $k, $v);
-            }
+                $self->error("Failed to unlink broken symlink $link: $self->{fail}");
+            };
         }
+    };
 
-        ## nothing to do?
-        return if (! @opts);
-
-        my $setoption = "--$sectionname";
-        $setoption = "--set-$sectionname" if ($sectionname eq "ring");
-        $setoption = "--change" if ($sectionname eq "ethtool");
-        $self->runrun([$ethtoolcmd, $setoption, $ethname, @opts])
-    }
-
-    # Creates a string defining the bonding/bridging or ethtool options.
-    sub make_key_equal_value_string {
-        my ($variablename, $el) = @_;
-        my $opts = $el->getTree();
-        my @op;
-
-        while (my ($k, $v) = each(%$opts)) {
-            push(@op, "$k=$v");
-        }
-
-        return uc($variablename) . "='" . join(' ', @op) . "'\n";
-    }
-
-    sub ethtool_options {
-        my ($el) = @_;
-        my $opts = $el->getTree();
-        my $st = "ETHTOOL_OPTS=";
-
-        # key ordering (important for autoneg/speed/duplex)
-        my @optkeys;
-        foreach my $tmp (@{$ethtool_option_order{ethtool}}) {
-            push(@optkeys, $tmp) if (grep {$_ eq $tmp} sort(keys(%$opts)));
-        };
-        foreach my $tmp (sort keys %$opts) {
-            push(@optkeys, $tmp) if (!(grep {$_ eq $tmp} @optkeys));
-        };
-
-
-        my @op;
-        foreach my $k (@optkeys) {
-            my $v = ${$opts}{$k};
-            push(@op, "$k $v");
-        }
-
-        return "$st'" . join(' ', @op) . "'\n";
-    }
-
-
-    # real end of Configure
     return 1;
 }
+
 
 1;

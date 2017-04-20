@@ -67,14 +67,16 @@ type structure_bridging_options = {
     interface ethtool offload
 }
 type structure_ethtool_offload = {
-    "rx" ? string with match (SELF, '^on|off$')
-    "tx" ? string with match (SELF, '^on|off$')
-    "tso" ? string with match (SELF, '^on|off$')
-    "gro" ? string with match (SELF, '^on|off$')
+    "rx" ? string with match (SELF, '^(on|off)$')
+    "tx" ? string with match (SELF, '^(on|off)$')
+    @{Set the TCP segment offload parameter to "off" or "on"}
+    "tso" ? string with match (SELF, '^(on|off)$')
+    "gro" ? string with match (SELF, '^(on|off)$')
 };
 
 @documentation{
-    interface ethtool ring
+    Set the ethernet transmit or receive buffer ring counts.
+    See ethtool --show-ring for the values.
 }
 type structure_ethtool_ring = {
     "rx" ? long
@@ -86,7 +88,7 @@ type structure_ethtool_ring = {
 @documentation{
     ethtool wol p|u|m|b|a|g|s|d...
     from the man page
-        Sets Wake-on-LAN options.  Not all devices support this.  The argument to this option is  a  string
+        Sets Wake-on-LAN options.  Not all devices support this.  The argument to this option is a string
         of characters specifying which options to enable.
             p  Wake on phy activity
             u  Wake on unicast messages
@@ -97,15 +99,15 @@ type structure_ethtool_ring = {
             s  Enable SecureOn(tm) password for MagicPacket(tm)
             d  Disable (wake on nothing).  This option clears all previous option
 }
-type structure_ethtool_wol = string with match (SELF, '^p|u|m|b|a|g|s|d$');
+type structure_ethtool_wol = string with match (SELF, '^[pumbagsd]+$');
 
 @documentation{
     ethtool
 }
 type structure_ethtool = {
     "wol" ? structure_ethtool_wol
-    "autoneg" ? string with match (SELF, '^on|off$')
-    "duplex" ? string with match (SELF, '^half|full$')
+    "autoneg" ? string with match (SELF, '^(on|off)$')
+    "duplex" ? string with match (SELF, '^(half|full)$')
     "speed" ? long
 };
 
@@ -118,22 +120,33 @@ type structure_interface = {
     "netmask" ? type_ip
     "broadcast" ? type_ip
     "driver" ? string
-    "bootproto" ? string
-    "onboot" ? string
+    "bootproto" ? string # TODO: only allow match(SELF, '^(static|bootp|dhcp)')
+    "onboot" ? string # TODO: only allow match(SELF, '^(yes|no)$')
     "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
     "device" ? string
     "master" ? string
     "mtu" ? long
+    @{Routes for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/route-<interface> files
+      as used by ifup-routes when using ncm-network.}
     "route" ? structure_route[]
+    @{Aliases for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface>:<key> files
+      as used by ifup-aliases when using ncm-network.}
     "aliases" ? structure_interface_alias{}
+    @{Explicitly set the MAC address. The MAC address is taken from /hardware/cards/nic/<interface>/hwaddr.}
     "set_hwaddr" ? boolean
     "bridge" ? valid_interface
     "bonding_opts" ? structure_bonding_options
+
     "offload" ? structure_ethtool_offload
     "ring" ? structure_ethtool_ring
     "ethtool" ? structure_ethtool
 
+    @{Is a VLAN device. If the device name starts with vlan, this is always true.}
     "vlan" ? boolean
+    @{If the device name starts with vlan, this has to be set.
+      It is set (but ignored by ifup) if it the device is not named vlan}
     "physdev" ? valid_interface
 
     "fqdn" ? string
@@ -216,18 +229,31 @@ type structure_ipv6 = {
 };
 
 @documentation{
-    network
+    Host network configuration
+
+    These values are used to generate /etc/sysconfig/network
+    when using ncm-network (unless specified otherwise).
 }
 type structure_network = {
     "domainname" : type_fqdn
     "hostname" : type_shorthostname
     "realhostname" ? type_fqdn
     "default_gateway" ? type_ip
+    @{When default_gateway is not set, the component will try to guess the default
+      gateway using the first configured gateway set on an interface.
+      The default is true for backward compatible behaviour.}
+    "guess_default_gateway" ? boolean
     "gatewaydev" ? valid_interface
+    @{Per interface network settings.
+      These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface> files
+      when using ncm-network.}
     "interfaces" : structure_interface{}
     "nameserver" ? type_ip[]
     "nisdomain" ? string(1..64) with match(SELF, '^\S+$')
+    @{Setting nozeroconf to true stops an interface from being assigned an automatic address in the 169.254.0.0 subnet.}
     "nozeroconf" ? boolean
+    @{The default behaviour for all interfaces wrt setting the MAC address (see interface set_hwaddr attribute).
+      The component default is false.}
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
