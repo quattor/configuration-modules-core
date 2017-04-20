@@ -15,7 +15,7 @@ my $basedir = "/etc/sysconfig/network-scripts/";
 my @valid_ifs = qw(eth0 seth1 em2
     bond3 br4 ovirtmgmt5
     vlan6 usb7 ib8 p9p10
-    eno11 ens12 ens13f14 ens15d16 ens17f18d19
+    eno11 eno11d123 ens12 ens13f14 ens15d16 ens17f18d19
     enp22s23 enp24s25f26 enp27s28d29 enp30s31f32d33
     enxAABBCCDDEEFF);
 

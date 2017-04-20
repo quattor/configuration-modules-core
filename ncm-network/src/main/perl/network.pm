@@ -142,7 +142,7 @@ Readonly my $DEVICE_REGEXP => qr{
             ib|
             p\d+p|
             en(?:
-                o| # onboard
+                o(?:\d+d)?| # onboard
                 (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
             )
          )\d+| # mandatory numbering
