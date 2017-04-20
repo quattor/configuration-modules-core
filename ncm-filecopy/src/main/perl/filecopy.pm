@@ -27,11 +27,8 @@ sub Configure
 {
     my ( $self, $config ) = @_;
 
-    # Define path for convenience.
-    my $base = "/software/components/filecopy";
-
     # Retrieve component configuration
-    my $confighash = $config->getElement($base)->getTree();
+    my $confighash = $config->getTree($self->prefix());
     my $files = $confighash->{services};
 
     # Determine first if there is anything to do.
