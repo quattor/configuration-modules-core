@@ -61,4 +61,6 @@ ok(!defined($ifh), "testcfg network/ifcfg-eth0 cleaned up");
 
 is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "exact eth0 config");
 
+ok(command_history_ok(['service openvswitch start']), 'Configure tried to start openvswitch');
+
 done_testing();

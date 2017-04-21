@@ -126,6 +126,7 @@ Readonly my $ETHTOOLCMD => '/usr/sbin/ethtool';
 Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IPADDR => [qw(ip addr show)];
 Readonly my $IPROUTE => [qw(ip route show)];
+Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -409,7 +410,7 @@ sub get_current_config
     my $output = "$NETWORKCFG\n$fh";
 
     $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
-    # TODO: replace, see issue #1066
+
     $output .= $self->runrun($IPADDR);
     $output .= $self->runrun($IPROUTE);
 
@@ -419,6 +420,12 @@ sub get_current_config
         $output .= $self->runrun([$BRIDGECMD, "show"]);
     } else {
         $output .= "Missing $BRIDGECMD executable.\n";
+    };
+
+    if (-x $OVS_VCMD) {
+        $output .= $self->runrun([$OVS_VCMD, "show"]);
+    } else {
+        $output .= "Missing $OVS_VCMD executable.\n";
     };
 
     return $output;
@@ -1197,6 +1204,27 @@ sub disable_networkmanager
     };
 };
 
+# If any of the interfaces to start has on OVS type
+# (try to) start openvswitch service.
+sub start_openvswitch
+{
+    my ($self, $ifaces, $ifup) = @_;
+
+    my $start;
+    use Test::More;
+    diag explain $ifup, explain $ifaces;
+    foreach my $intf (sort keys %$ifup) {
+        if (($ifaces->{$intf}->{type} || '') =~ m/^OVS/) {
+            $start = 1;
+        }
+    }
+
+    if ($start) {
+        # use runrun. failure to start is an actual issue
+        $self->runrun([CAF::Service->new(["openvswitch"], log => $self), "start"]);
+    }
+}
+
 # network stop OR ifdown
 # Returns if something was done or not
 sub stop
@@ -1523,6 +1551,8 @@ sub Configure
     #
 
     $self->disable_networkmanager($nwtree->{allow_nm});
+
+    $self->start_openvswitch($ifaces, $ifup);
 
     # TODO: why do that here? should be done after any restarting of devices or whole network?
     $self->ethtool_set_options($ifaces);
