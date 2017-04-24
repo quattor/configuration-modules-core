@@ -18,5 +18,7 @@ bind "/system/network" = structure_network;
 "/system/network/interfaces/eth0" = dict(
     "type", "OVSPort",
     "ovs_bridge", "br100",
+    "ovs_opts", "tag=50",
+    "ovs_extra", "whatever",
     "bootproto", "none",
 );

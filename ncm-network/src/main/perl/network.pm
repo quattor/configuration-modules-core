@@ -761,6 +761,7 @@ sub gather_existing
 #    var: variable name to use instead of key (will be uc'ed)
 #    bool: yesno/onoff : value (and default) are booleans, need to be converted to yesno
 #    quote: boolean quote the value in singlequotes
+#    quoteval: string to use for quoting (still requires quote=>1 for actual quoting)
 #    join: if value is arrayref, use separator to join (default is ' ')
 # returns empty string is neither value or default exist
 sub _make_ifcfg_line
@@ -769,7 +770,8 @@ sub _make_ifcfg_line
 
     my $var = $opts{var} || $key;
     my $value = defined($href->{$key}) ? $href->{$key} : $opts{def};
-    my $quote = $opts{quote} ? "'" : '';
+    my $quoteval = $opts{quoteval} ? $opts{quoteval} : "'";
+    my $quote = $opts{quote} ? $quoteval : '';
     my $sep = defined($opts{join}) ? $opts{join} : ' ';
 
     if (defined($value)) {
@@ -825,7 +827,12 @@ sub make_ifcfg
 
         foreach my $attr (qw(ovs_bridge ovs_opts ovs_extra bond_ifaces
                           ovs_tunnel_type ovs_tunnel_opts ovs_patch_peer)) {
-            &$makeline($attr, quote => 1);
+            my $var = $attr;
+            $var =~ s/_opts$/_options/;
+            # legacy: ovs_extra has double quoted string for variable interpolation
+            #         but it was not a good idea, because the order of the variables is pretty random
+            my $quoteval = $attr eq 'ovs_extra' ? '"' : undef;
+            &$makeline($attr, var => $var, quote => 1, quoteval => $quoteval);
         }
     }
 
