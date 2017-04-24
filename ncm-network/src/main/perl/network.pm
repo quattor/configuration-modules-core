@@ -127,6 +127,7 @@ Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IPADDR => [qw(ip addr show)];
 Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
+Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -167,6 +168,14 @@ Readonly my $NEW => 2;
 # changes to file, but same config (eg for new file formats)
 Readonly my $KEEPS_STATE => 3;
 
+
+# wrapper around -x for easy unittesting
+# is not part of CAF::Path
+sub _is_executable
+{
+    my ($self, $fn) = @_;
+    return -x $fn;
+}
 
 # Given the configuration ifcfg/route[6]/rule[6] filename,
 # Determine if this is a valid interface for ncm-network to manage,
@@ -416,13 +425,13 @@ sub get_current_config
 
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
-    if (-x $BRIDGECMD) {
+    if ($self->_is_executable($BRIDGECMD)) {
         $output .= $self->runrun([$BRIDGECMD, "show"]);
     } else {
         $output .= "Missing $BRIDGECMD executable.\n";
     };
 
-    if (-x $OVS_VCMD) {
+    if ($self->_is_executable($OVS_VCMD)) {
         $output .= $self->runrun([$OVS_VCMD, "show"]);
     } else {
         $output .= "Missing $OVS_VCMD executable.\n";
@@ -837,7 +846,7 @@ sub make_ifcfg
     }
 
     &$makeline('bridge', quote => 1);
-    if ($iface->{bridge} && (! -x $BRIDGECMD)) {
+    if ($iface->{bridge} && (! $self->_is_executable($BRIDGECMD))) {
         $self->error ("Error: bridge specified but $BRIDGECMD not found");
     }
 
@@ -1017,13 +1026,13 @@ sub make_ifcfg_alias
 # Return /etc/sysconfig/network content
 sub make_network_cfg
 {
-    my ($self, $nwtree, $net) = @_;
+    my ($self, $nwtree, $net, $hostname) = @_;
 
     # assuming that NETWORKING=yes
     my @text = ("NETWORKING=yes");
 
     # set hostname
-    push(@text, 'HOSTNAME='.($nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}"));
+    push(@text, "HOSTNAME=$hostname") if defined($hostname);
 
     # default gateway. why is this optional?
     #
@@ -1218,8 +1227,6 @@ sub start_openvswitch
     my ($self, $ifaces, $ifup) = @_;
 
     my $start;
-    use Test::More;
-    diag explain $ifup, explain $ifaces;
     foreach my $intf (sort keys %$ifup) {
         if (($ifaces->{$intf}->{type} || '') =~ m/^OVS/) {
             $start = 1;
@@ -1231,6 +1238,19 @@ sub start_openvswitch
         $self->runrun([CAF::Service->new(["openvswitch"], log => $self), "start"]);
     }
 }
+
+# set the hostname
+# hostname is set in the main network config
+# but could also be configured in other ways
+sub set_hostname
+{
+    my ($self, $hostname) = @_;
+
+    if ($self->_is_executable($HOSTNAME_CMD)) {
+        $self->runrun([$HOSTNAME_CMD, 'set-hostname', $hostname, "--static"]);
+    };
+}
+
 
 # network stop OR ifdown
 # Returns if something was done or not
@@ -1438,6 +1458,18 @@ sub init_backupdir
     return 1;
 }
 
+# Given filename and legacy text reference, check if present content matches
+# the genertaed legacy text. If so, set the state of the file to KEEPS_STATE
+sub legacy_keeps_state
+{
+    my ($self, $filename, $legacy_text_ref, $exifiles) = @_;
+    my $fh = CAF::FileReader->new($filename, log => $self);
+    if (join("\n", @$legacy_text_ref, '') eq "$fh") {
+        $self->verbose("File $filename will get new content, but due to difference from legacy format. KEEPS_STATE $KEEPS_STATE set");
+        $exifiles->{$filename} = $KEEPS_STATE;
+    };
+}
+
 
 sub Configure
 {
@@ -1460,8 +1492,22 @@ sub Configure
 
     # main network config
     return if ! defined($self->mk_bu($NETWORKCFG));
-    my $text = $self->make_network_cfg($nwtree, $net);
+
+    my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
+
+    my $use_hostnamectl = $self->_is_executable($HOSTNAME_CMD);
+    # if hostnamectl exists, do not set it via the network config file
+    # systemd rpm --script can remove it anyway
+    my $nwcfg_hostname = $use_hostnamectl ? undef : $hostname;
+
+    my $text = $self->make_network_cfg($nwtree, $net, $nwcfg_hostname);
     $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
+
+    if ($exifiles->{$NETWORKCFG} == $UPDATED && $use_hostnamectl) {
+        # Network config was updated, check if it was due to removal of HOSTNAME
+        # when hostnamectl is present.
+        $self->legacy_keeps_state($NETWORKCFG, $self->make_network_cfg($nwtree, $net, $hostname), $exifiles);
+    };
 
     # ifcfg- / route[6]- files
     foreach my $ifacename (sort keys %$ifaces) {
@@ -1490,12 +1536,7 @@ sub Configure
             # IPv4 route data was modified.
             # Check if it was due to conversion of legacy format or
             #   if there were actual changes in the config (or both)
-            my $legacy_text_ref = $self->make_ifcfg_route4_legacy($iface->{route});
-            my $fh = CAF::FileReader->new($file_name, log => $self);
-            if (join("\n", @$legacy_text_ref, '') eq "$fh") {
-                $self->verbose("File $file_name will get new content, but due to difference from legacy format");
-                $exifiles->{$file_name} = $KEEPS_STATE;
-            };
+            $self->legacy_keeps_state($file_name, $self->make_ifcfg_route4_legacy($iface->{route}), $exifiles);
         }
 
 
@@ -1561,6 +1602,8 @@ sub Configure
 
     $self->start_openvswitch($ifaces, $ifup);
 
+    $self->set_hostname($hostname);
+
     # TODO: why do that here? should be done after any restarting of devices or whole network?
     $self->ethtool_set_options($ifaces);
 
@@ -1600,18 +1643,26 @@ sub Configure
     my $ccm_tree = $config->getTree("/software/components/ccm");
     my $profile = $ccm_tree && $ccm_tree->{profile};
 
+    my $cleanup;
     if (! $stopstart) {
         $self->verbose("Nothing was stopped and/or started, no need to retest network");
+        $cleanup = 1; # eg from KEEPS_STATE
     } elsif ($self->test_network_ccm_fetch($profile)) {
+        $self->verbose("Network ok after test");
+        $cleanup = 1;
+    } else {
+        $self->recover($exifiles, $nwsrv, $init_config, $profile);
+        $cleanup = 0; # for debugging afterwards
+    }
+
+    if ($cleanup) {
         # it's ok, clean up backups
         my @files = sort keys %$exifiles;
-        $self->verbose("Network ok after test, cleaning up leftover backup and test config files for ",
+        $self->verbose("Cleaning up leftover backup and test config files for ",
                        join(', ', @files));
         foreach my $file (@files) {
             $self->cleanup_backup_test($file);
         }
-    } else {
-        $self->recover($exifiles, $nwsrv, $init_config, $profile);
     }
 
     # remove all broken links: use file_exists

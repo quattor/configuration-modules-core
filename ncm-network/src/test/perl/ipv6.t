@@ -9,6 +9,10 @@ use Test::More;
 use Test::Quattor qw(ipv6);
 
 use NCM::Component::network;
+use Test::MockModule;
+my $mock = Test::MockModule->new('NCM::Component::network');
+my %executables;
+$mock->mock('_is_executable', sub {diag "executables $_[1] ",explain \%executables;return $executables{$_[1]};});
 
 use Readonly;
 
