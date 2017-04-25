@@ -20,11 +20,10 @@
 [%- ldapkrb5 = ['krb5_backup_server', 'krb5_canonicalize', 'krb5_realm', 'krb5_server'] -%]
 [%- FOREACH name IN ldapkrb5 -%]
 [%-     IF desc.exists(name) -%]
-[%          name %] =
-[%-         SWITCH name -%]
+[%          name %] = [% SWITCH name -%]
 [%-             CASE ['krb5_canonicalize'] -%]
 [%-                 desc.$name ? 'True' : 'False' %]
-[%-             CASE -%]
+[%              CASE -%]
 [%-                 desc.$name %]
 [%          END -%]
 [%      END -%]
