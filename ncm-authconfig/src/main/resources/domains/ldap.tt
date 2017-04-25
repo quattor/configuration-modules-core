@@ -24,7 +24,7 @@
 [%-         SWITCH name -%]
 [%-             CASE ['krb5_canonicalize'] -%]
 [%-                 desc.$name ? 'True' : 'False' %]
-[%-             CASE -%]
+[%             CASE -%]
 [%-                 desc.$name %]
 [%          END -%]
 [%      END -%]
