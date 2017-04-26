@@ -17,4 +17,6 @@ contentspath=/
 ^ldap_sudo_hostnames = sh$
 ^ldap_sudorule_hostnames = sh$
 ^ldap_uri = u1,u2$
-
+^ldap_user_object_class= user$
+^ldap_krb5_canonicalize= True$
+^ldap_krb5_realm= realm$
