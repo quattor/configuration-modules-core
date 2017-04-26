@@ -49,12 +49,12 @@ sub update_entries
 }
 
 # build the protected hashes from the template
-sub protected_hash 
+sub protected_hash
 {
     my ($self, $tree) = @_;
 
-    my $mounts_depr = $tree->{protected_mounts}; 
-    
+    my $mounts_depr = $tree->{protected_mounts};
+
     my $protected = {};
 
     foreach my $type ('keep', 'static'){
@@ -86,7 +86,7 @@ sub valid_mounts
         # add mountpoint for protected fs_type
         $mounts{$2} = 1 if ($protected->{fs_types}->{$3});
     }
-    
+
     return %mounts;
 }
 

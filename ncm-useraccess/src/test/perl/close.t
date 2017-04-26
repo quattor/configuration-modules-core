@@ -10,20 +10,16 @@ use NCM::Component::useraccess;
 use CAF::Object;
 use CAF::FileWriter;
 use Readonly;
+use Test::MockModule;
 
 Readonly my $TESTDIR => "target/test";
 
-$CAF::Object::NoAction = 1;
-
-no warnings 'redefine';
-
-*CAF::FileWriter::cancel = sub {
+my $mock = Test::MockModule->new("CAF::FileWriter");
+$mock->mock("cancel", sub {
     my $self = shift;
-    *$self->{CANCELLED}++;
-    *$self->{save} = 0;
-};
-
-use warnings 'redefine';
+    *$self->{CANCELLED}++ if ref($self) ne 'CAF::FileReader';
+    return $mock->original('cancel')->($self, @_);
+});
 
 
 =pod
@@ -58,13 +54,11 @@ ok(-f "$TESTDIR/foo", "Managed file with contents is initially created");
 
 $cmp->close_files($f);
 
-# All files have been cancelled at creation time because of
-# NoAction. A second call can only happen inside close_files.
 ok(! -f "$TESTDIR/bar", "Empty managed file is removed");
-is(*{$f->{b}}->{CANCELLED}, 2, "Empty managed file is cancelled");
-is(*{$f->{c}}->{CANCELLED}, 2,
+is(*{$f->{b}}->{CANCELLED}, 1, "Empty managed file is cancelled");
+is(*{$f->{c}}->{CANCELLED}, 1,
    "File for ummanaged credentials is cancelled");
-is(*{$f->{a}}->{CANCELLED}, 1, "Managed file is not cancelled");
+ok(!defined(*{$f->{a}}->{CANCELLED}), "Managed file is not cancelled");
 ok(-f "$TESTDIR/foo", "Managed file with contents is not removed");
 
 done_testing();

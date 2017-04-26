@@ -28,19 +28,19 @@ use CAF::Object;
 use File::Basename;
 use File::Path qw(mkpath);
 use LC::Check;
-use NCM::Component::fstab;
 use Test::Deep;
 use Test::More;
 use Test::Quattor qw(configure);
 use Test::Quattor::RegexpTest;
+use NCM::Component::fstab;
 use data;
 
 is(NCM::Filesystem::FSTAB, $FSTAB);
 mkpath dirname $FSTAB;
 
-$CAF::Object::NoAction = 1;
+# for LC::Check::directory
 $LC::Check::NoAction = 1;
-set_caf_file_close_diff(1);
+
 my $cfg = get_config_for_profile('configure');
 my $cmp = NCM::Component::fstab->new('fstab');
 use NCM::Blockdevices;
@@ -55,7 +55,7 @@ my $fh = get_file($FSTAB);
 my $rt = Test::Quattor::RegexpTest->new(
     regexp => 'src/test/resources/fstab_regextest',
     text => "$fh",
-    );  
+    );
 $rt->test();
 
 my $cmd = get_command("/bin/mount -o remount /");
@@ -65,4 +65,3 @@ ok(!defined($cmd), "remount /boot was not invoked");
 
 
 done_testing();
-

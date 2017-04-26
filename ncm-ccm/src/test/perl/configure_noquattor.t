@@ -10,18 +10,16 @@ use CAF::FileWriter;
 
 my $mock = Test::MockModule->new("CAF::FileWriter");
 
+my $cancelled = 0;
 $mock->mock("cancel", sub {
-		my $self = shift;
-		*$self->{CANCELLED}++;
-		*$self->{save} = 0;
-	    });
+    $cancelled++ if ref($_[0]) ne 'CAF::FileReader';
+    return $mock->original('cancel')->(@_);
+});
 
 my $mock_ccm = Test::MockModule->new("NCM::Component::ccm");
 
 # test presence of NOQUATTOR file: return true
 $mock_ccm->mock("_is_noquattor", 1);
-
-$CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::ccm->new("ccm");
 
@@ -29,20 +27,19 @@ my $cmp = NCM::Component::ccm->new("ccm");
 
 =head1 Tests for the CCM component with NOQUATTOR set
 
-
 =cut
 
 my $cfg = get_config_for_profile("base_noquattor");
 
+$cancelled = 0;
 $cmp->Configure($cfg);
 my $fh = get_file("/etc/ccm.conf_noquattor");
 isa_ok($fh, "CAF::FileWriter", "A file was opened");
 
-# first test: no file present (will use generated content to test 
+# first test: no file present (will use generated content to test
 # if file is present).
 
-# counter is 2 because cancel is called once in the mocked CAF::FileWriter close
-is(*$fh->{CANCELLED}, 2, "File contents are cancelled with NOQUATTOR");
+is($cancelled, 1, "File contents are cancelled with NOQUATTOR");
 
 is($cmp->{ERROR}, 1, "Error raised because content changed and NOQUATTOR set");
 
@@ -56,12 +53,14 @@ set_file_contents("/etc/ccm.conf_noquattor", "$fh");
 # destroy the 1st FileWriter instance
 $fh = undef;
 
+$cancelled = 0;
+$cmp->{ERROR} = 0;
 $cmp->Configure($cfg);
 my $fh2 = get_file("/etc/ccm.conf_noquattor");
 isa_ok($fh2, "CAF::FileWriter", "A file was opened");
 
-is(*$fh2->{CANCELLED}, 2, "File contents are cancelled with NOQUATTOR");
-is($cmp->{ERROR}, 1, "No error raised because content did not change and NOQUATTOR set");
+is($cancelled, 1, "File contents are cancelled with NOQUATTOR");
+is($cmp->{ERROR}, 0, "No error raised because content did not change and NOQUATTOR set");
 
 # ccm-fetch is used as a regexp by command_history_ok, no need for exact command
 ok(! command_history_ok(["ccm-fetch"]), "ccm-fetch was not called at any point");
