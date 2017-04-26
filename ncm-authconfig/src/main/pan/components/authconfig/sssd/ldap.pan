@@ -95,7 +95,7 @@ type authconfig_sssd_ldap = {
 
     "krb5_backup_server" ? string
     "krb5_canonicalize" ? boolean
-    "krb5_realm" ? string[]
+    "krb5_realm" ? string
     "krb5_server" ? string
     "access_filter" ? string
     "access_order" : ldap_order = "filter"
