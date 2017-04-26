@@ -15,5 +15,7 @@ prefix "/desc";
 "tls/cacert" = 'ca';
 "tls/cipher_suite" = list("c1", "c2");
 "user/shell" = "us";
-"uri" = list("u1","u2");
-"user/object_class"="user"
+"uri" = list("u1", "u2");
+"user/object_class" = "user";
+"krb5_canonicalize" = "true";
+"krb5_realm" = "realm";
