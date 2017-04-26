@@ -77,8 +77,8 @@ sub get_files
 sub clean_up
 {
     my ($cmdfile, $flagfile) = @_;
-    unlink($cmdfile) if -e $cmdfile;
-    unlink($flagfile) if -e $flagfile;
+    remove_any($cmdfile);
+    remove_any($flagfile);
 }
 
 my $cmp = NCM::Component::spma::ips->new("spma");
@@ -98,7 +98,7 @@ ok(defined(get_command($SPMA_RUN_NOACTION)), "spma-run --noaction was invoked");
 set_desired_output($PKG_AVOID, "system/network/ppp (group dependency of 'group/system/solaris-large-server')");
 is($cmp->Configure($config), 1, "Configuration succeeds with pkg avoid");
 ok(defined(get_command($PKG_AVOID)), "pkg avoid command was invoked");
-ok(-e $flagfile, "Flag file $flagfile should exist");
+ok(defined(get_file($flagfile)), "Flag file $flagfile should exist");
 
 clean_up($cmdfile, $flagfile);
 
@@ -111,6 +111,6 @@ is($cmp->Configure($config), 1, "Run configuration succeeds");
 ok(defined(get_command($BEADM_LIST)), "beadm list command was invoked");
 ok(defined(get_command($PKG_LIST)), "pkg list command was invoked");
 ok(defined(get_command($SPMA_RUN_EXECUTE)), "spma-run --execute was invoked");
-ok(! -e $flagfile, "Flag file $flagfile should not exist");
+ok(!defined(get_file($flagfile)), "Flag file $flagfile should not exist");
 
 clean_up($cmdfile, $flagfile);
