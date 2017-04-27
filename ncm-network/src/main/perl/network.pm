@@ -1135,7 +1135,27 @@ sub make_ifdown
                     my $master = $ifaces->{$iface}->{master};
                     $self->verbose("Changes to slave $iface will force ifdown of master $master.");
                     $ifdown{$master} = 1;
-                } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && -e $file) {
+
+                    # to use HWADDR, stop the interface with this macaddress (if any)
+                    my $mac = lc($ifaces->{$iface}->{hwaddr} || 'not a mac');
+                    foreach my $dev (sort keys %$dev2mac) {
+                        if ($dev2mac->{$dev} eq $mac) {
+                            $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
+                                           "has same MAC as interface $iface which is now a master.");
+                            $ifdown{$dev} = 1;
+                        }
+                    }
+                } elsif (($ifaces->{$iface}->{type} || 'Ethernet') =~ m/(ovs)?bridge/i) {
+                    # If this is a bridge (or OVSBridge), also stop the attached devices
+                    # Those will be readded on device start (starting the bridge does not attach those)
+                    foreach my $attached (sort keys %$ifaces) {
+                        my $bridge = $ifaces->{$attached}->{bridge} || $ifaces->{$attached}->{ovs_bridge} || '';
+                        if ($bridge eq $iface) {
+                            $self->verbose("Changes to bridge $iface force ifdown of attached device $attached");
+                            $ifdown{$attached} = 1;
+                        }
+                    }
+                } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && $self->any_exists($file)) {
                     # here's the tricky part: see if it used to be a slave.
                     # the bond-master must be restarted if a device was removed from the bond.
                     # TODO: why read from backup?
@@ -1151,16 +1171,6 @@ sub make_ifdown
                         $master && $master =~ m/^bond/) {
                         $ifdown{$master} = 1;
                         $self->verbose("Changes to previous slave $iface will force ifdown of master $master.");
-                    }
-                } elsif ($ifaces->{$iface}->{master}) {
-                    # to use HWADDR, stop the interface with this macaddress (if any)
-                    my $mac = lc($ifaces->{$iface}->{hwaddr} || 'not a mac');
-                    foreach my $dev (sort keys %$dev2mac) {
-                        if ($dev2mac->{$dev} eq $mac) {
-                            $self->verbose("Will force ifdown of $dev; old configured/active interface $dev ",
-                                           "has same MAC as interface $iface which is now a master.");
-                            $ifdown{$dev} = 1;
-                        }
                     }
                 }
             }
