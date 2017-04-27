@@ -418,20 +418,25 @@ sub get_current_config
     my $fh = CAF::FileReader->new($NETWORKCFG, log => $self);
     my $output = "$NETWORKCFG\n$fh";
 
+    $output .= "\nls -lrt $IFCFG_DIR\n";
     $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
 
+    $output .= "\n@$IPADDR\n";
     $output .= $self->runrun($IPADDR);
+    $output .= "\n@$IPROUTE\n";
     $output .= $self->runrun($IPROUTE);
 
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
     if ($self->_is_executable($BRIDGECMD)) {
+        $output .= "\n$BRIDGECMD show\n";
         $output .= $self->runrun([$BRIDGECMD, "show"]);
     } else {
         $output .= "Missing $BRIDGECMD executable.\n";
     };
 
     if ($self->_is_executable($OVS_VCMD)) {
+        $output .= "\n$OVS_VCMD show\n";
         $output .= $self->runrun([$OVS_VCMD, "show"]);
     } else {
         $output .= "Missing $OVS_VCMD executable.\n";
