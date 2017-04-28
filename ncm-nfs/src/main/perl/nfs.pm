@@ -181,6 +181,11 @@ sub exports
 {
     my ($self, $tree) = @_;
 
+    # Take the original size of the exports file
+    my $backupsize = -s $EXPORTS;
+    # Initialise the flag for whether only comments are being added
+    my $onlycommentsadded = 0;
+    
     my $fh = CAF::FileWriter->new($EXPORTS, backup => ".old", log => $self);
 
     # Do not include timestamp, otherwise file changes every run
@@ -216,11 +221,19 @@ sub exports
     } else {
         $self->verbose("No exports defined");
         print $fh "# No exports defined\n";
+        if (defined($backupsize) && $backupsize == 0) {
+            $onlycommentsadded = 1;
+        }
     }
 
     my $result = $fh->close();
     if ($result) {
-        $self->info("$EXPORTS created/updated");
+        if (! $onlycommentsadded) {
+            $self->info("$EXPORTS created/updated");
+        } else {
+            $self->verbose("$EXPORTS unmodified");
+            $result = 0;
+        }
     } else {
         $self->verbose("$EXPORTS unmodified");
     }
