@@ -1,0 +1,9 @@
+Basic negate test
+---
+/etc/example/exampled.conf
+negate
+---
+^hosts
+^port
+^master
+^description
