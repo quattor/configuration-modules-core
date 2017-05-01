@@ -12,6 +12,7 @@
 declaration template components/authconfig/sssd/user;
 
 type sssd_user = {
+    "object_class" : string = "posixAccount"
     "uid_number" : string = "uidNumber"
     "gid_number" : string = "gidNumber"
     "gecos" : string = "gecos"
