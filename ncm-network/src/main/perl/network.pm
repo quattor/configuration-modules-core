@@ -140,7 +140,7 @@ Readonly my $DEVICE_REGEXP => qr{
         (?:
             eth|seth|em|
             bond|br|ovirtmgmt|
-            vlan|usb|
+            vlan|usb|vxlan|
             ib|
             p\d+p|
             en(?:
@@ -622,6 +622,7 @@ sub process_network
     my $hr_map = {
         bond => 'bonding',
         vlan => 'VLAN',
+        vxlan => 'VXLAN tunnel',
         ib => 'IPoIB',
         br => 'bridge',
         ovirtmgmt => 'virt bridge',
@@ -702,13 +703,14 @@ sub process_network
         }
 
         # set vlan flag for the VLAN device
-        if ($ifname =~ m/^vlan\d+/) {
-            $iface->{vlan} = 1 ;
+        if ($ifname =~ m/^vlan\d+/ && ! exists($self->{vlan})) {
+            $iface->{vlan} = 1;
             $self->verbose("$ifname is a VLAN device");
         }
+
         # interfaces named vlan need the physdev set
         # and pointing to an existing interface
-        if ($ifname =~ m/^vlan\d+/ && ! $iface->{physdev}) {
+        if ($self->{vlan} && ! $iface->{physdev}) {
             $self->error("vlan device $ifname (with vlan[0-9]{0-9} naming convention) needs physdev set.");
         }
 
@@ -949,6 +951,34 @@ sub make_ifcfg
     push(@text, "ISALIAS=no") if ($iface->{vlan});
 
     &$makeline('physdev');
+
+    my $vxlan = $iface->{plugin}->{vxlan};
+    if ($vxlan) {
+        if (!defined($vxlan->{vni})) {
+            my $device = $iface->{device} || $ifacename;
+            if ($device =~ /^vxlan(\d+)/) {
+                $vxlan->{vni} = $1;
+            } else {
+                $self->error("No VNI for vxlan plugin from devicename $device for $ifacename");
+            }
+        };
+
+        push(@text, "VXLAN=yes");
+
+        my $vxlanml = _make_make_ifcfg_line($vxlan, \@text);
+        &$vxlanml('vni');
+
+        &$vxlanml('group', var => 'group_ipaddr');
+        # set remote and local ip addr twice
+        &$vxlanml('remote', var => 'remote_ipaddr');
+        &$vxlanml('remote', var => 'peer_outer_ipaddr');
+
+        &$vxlanml('local', var => 'local_ipaddr');
+        &$vxlanml('local', var => 'my_outer_ipaddr');
+
+        &$vxlanml('dstport');
+        &$vxlanml('gbp', bool => 'yesno');
+    };
 
     return \@text;
 }

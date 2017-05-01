@@ -164,6 +164,40 @@ type structure_ethtool = {
 };
 
 @documentation{
+    interface plugin for vxlan support via initscripts-vxlan
+}
+type structure_interface_plugin_vxlan = {
+    @{VXLAN Network Identifier (or VXLAN Segment ID); derived from devicename vxlan[0-9] if not defined}
+    'vni' ? long(0..16777216)
+    @{multicast ip to join}
+    'group' ? type_ip
+    @{destination IP address to use in outgoing packets}
+    'remote' ? type_ip
+    @{source IP address to use in outgoing packets}
+    'local' ? type_ip
+    @{UDP destination port}
+    'dstport' ? long(2..65535)
+    @{Group Policy extension}
+    'gbp' ? boolean
+} with {
+    if (exists(SELF['group']) && exists(SELF['remote'])) {
+        error('Cannot define both group and remote for vxlan');
+    };
+    if (!exists(SELF['group']) && !exists(SELF['remote'])) {
+        error('Must define either group or remote for vxlan');
+    };
+    true;
+};
+
+@documentation{
+    interface plugin via custom ifup/down[-pre]-local hooks
+}
+type structure_interface_plugin = {
+    @{VXLAN support via initscripts-vxlan}
+    "vxlan" ? structure_interface_plugin_vxlan
+};
+
+@documentation{
     interface
 }
 type structure_interface = {
@@ -239,6 +273,7 @@ type structure_interface = {
     "ipv6addr_secondaries" ? type_network_name[]
     "ipv6init" ? boolean
 
+    "plugin" ? structure_interface_plugin
 } with {
     if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
         error("An OVSBridge interface cannot have the ovs_bridge option defined");
@@ -271,6 +306,9 @@ type structure_interface = {
             error(format('networkinterface has broadcast %s not reachable from ip %s with netmask %s',
                             SELF['broadcast'], SELF['ip'], SELF['netmask']));
         };
+    };
+    if (exists(SELF['plugin']) && exists(SELF['plugin']['vxlan']) && ! exists(SELF['physdev'])) {
+        error('vxlan plugin requires physdev');
     };
     true;
 };
