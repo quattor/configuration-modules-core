@@ -1,4 +1,4 @@
-[%- booleans = ['vlan', 'context_force_ipv4'] -%]
+[%- booleans = ['vlan', 'context_force_ipv4', 'filter_ip_spoofing', 'filter_mac_spoofing'] -%]
 [%- ar_section = ['ar'] -%]
 [% FOR pool IN vnet.pairs -%]
 NAME = "[% pool.key %]"

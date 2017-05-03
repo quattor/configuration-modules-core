@@ -267,6 +267,25 @@ function is_consistent_datastore = {
 };
 
 @documentation{
+check if a specific type of vnet has the right attributes
+}
+function is_consistent_vnet = {
+    vn = ARGV[0];
+    # phydev is only required by vxlan networks
+    if (vn['vn_mad'] == 'vxlan') {
+        if (!exists(vn['phydev'])) {
+            error("VXLAN vnet requires 'phydev' value to attach a bridge");
+        };
+    # if not the bridge is mandatory
+    } else {
+        if (!exists(vn['bridge'])) {
+            error(format("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']));
+        };
+    };
+    return(true);
+};
+
+@documentation{
 type for ceph datastore specific attributes.
 ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory
 }
@@ -311,7 +330,7 @@ type opennebula_datastore = {
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
-    "bridge" : string
+    "bridge" ? string
     "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
     "gateway" ? type_ipv4
     "gateway6" ? type_network_name
@@ -329,7 +348,15 @@ type opennebula_vnet = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
-} = dict();
+    @{set network filter to avoid IP spoofing for the current vnet}
+    "filter_ip_spoofing" ? boolean
+    @{set network filter to avoid MAC spoofing for the current vnet}
+    "filter_mac_spoofing" ? boolean
+    @{Name of the physical network device that will be attached to the bridge (VXLAN)}
+    "phydev" ? string
+    @{MTU for the tagged interface and bridge (VXLAN)}
+    "mtu" ? long(1500..)
+} = dict() with is_consistent_vnet(SELF);
 
 @documentation{
 Set OpenNebula regular users and their primary groups.

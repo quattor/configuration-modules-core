@@ -23,6 +23,9 @@ include 'components/sudo/config';
         '/usr/sbin/ebtables',
         '/usr/bin/ovs-vsctl',
         '/usr/bin/ovs-ofctl',
+        '/usr/sbin/ipset',
+        '/usr/sbin/ip',
+        '/usr/sbin/brctl',
     );
     foreach (i; cmd; sudolist){
         nl = dict("host", "ALL",

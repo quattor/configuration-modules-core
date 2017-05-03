@@ -181,6 +181,29 @@ $cmds{rpc_create_newvnet3}{params} = [$data, -1];
 $cmds{rpc_create_newvnet3}{method} = "one.vn.allocate";
 $cmds{rpc_create_newvnet3}{out} = 98;
 
+$data = <<'EOF';
+NAME = "vxlan.vmpool.os"
+AR = [
+    ip = "10.1.20.100",
+    size = "100",
+    type = "IP4"
+]
+DNS = "10.1.20.1"
+FILTER_IP_SPOOFING = "YES"
+FILTER_MAC_SPOOFING = "YES"
+GATEWAY = "10.1.20.250"
+LABELS = "quattor,quattor/vlans"
+NETWORK_MASK = "255.255.255.0"
+PHYDEV = "ib0"
+VLAN = "YES"
+VLAN_ID = "10"
+VN_MAD = "vxlan"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newvnet4}{params} = [$data, -1];
+$cmds{rpc_create_newvnet4}{method} = "one.vn.allocate";
+$cmds{rpc_create_newvnet4}{out} = 99;
+
 $cmds{rpc_delete_vnet}{params} = [68];
 $cmds{rpc_delete_vnet}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet}{out} = 68;
@@ -192,6 +215,10 @@ $cmds{rpc_delete_vnet2}{out} = 88;
 $cmds{rpc_delete_vnet3}{params} = [98];
 $cmds{rpc_delete_vnet3}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet3}{out} = 98;
+
+$cmds{rpc_delete_vnet4}{params} = [99];
+$cmds{rpc_delete_vnet4}{method} = "one.vn.delete";
+$cmds{rpc_delete_vnet4}{out} = 99;
 
 $cmds{rpc_list_vnetspool}{params} = [-2, -1, -1];
 $cmds{rpc_list_vnetspool}{method} = "one.vnpool.info";
@@ -229,6 +256,12 @@ $cmds{rpc_list_vnet4}{out} = <<'EOF';
 <VNET><ID>98</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>pool.altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>br100</BRIDGE><VLAN>1</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><BRIDGE_OVS><![CDATA[ovsbr0]]></BRIDGE_OVS><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[0]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.141.14.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[29]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET>
 EOF
 
+$cmds{rpc_list_vnet5}{params} = [99];
+$cmds{rpc_list_vnet5}{method} = "one.vn.info";
+$cmds{rpc_list_vnet5}{out} = <<'EOF';
+<VNET><ID>99</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>vxlan.vmpool.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>onebr.10</BRIDGE><VLAN>10</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[onebr.10]]></BRIDGE><DNS><![CDATA[10.1.20.1]]></DNS><GATEWAY><![CDATA[10.1.20.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.255.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[10]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.1.20.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[100]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET>
+EOF
+
 $data = <<'EOF';
 NAME = "altaria.os"
 BRIDGE = "br100"
@@ -263,6 +296,29 @@ EOF
 $cmds{rpc_update_vnet2}{params} = [98, $data, 1];
 $cmds{rpc_update_vnet2}{method} = "one.vn.update";
 $cmds{rpc_update_vnet2}{out} = 98;
+
+$data = <<'EOF';
+NAME = "vxlan.vmpool.os"
+AR = [
+    ip = "10.1.20.100",
+    size = "100",
+    type = "IP4"
+]
+DNS = "10.1.20.1"
+FILTER_IP_SPOOFING = "YES"
+FILTER_MAC_SPOOFING = "YES"
+GATEWAY = "10.1.20.250"
+LABELS = "quattor,quattor/vlans"
+NETWORK_MASK = "255.255.255.0"
+PHYDEV = "ib0"
+VLAN = "YES"
+VLAN_ID = "10"
+VN_MAD = "vxlan"
+QUATTOR = 1
+EOF
+$cmds{rpc_update_vnet2}{params} = [99, $data, 1];
+$cmds{rpc_update_vnet2}{method} = "one.vn.update";
+$cmds{rpc_update_vnet2}{out} = 99;
 
 $data = <<'EOF';
 
