@@ -9,18 +9,6 @@ use Test::Quattor::RegexpTest;
 
 use NCM::Component::nfs;
 
-use CAF::Object;
-$CAF::Object::NoAction = 1;
-
-set_caf_file_close_diff(1);
-
-my $mock = Test::MockModule->new('NCM::Component::nfs');
-my $dir_exists = {};
-$mock->mock('_directory_exists', sub {return $dir_exists->{shift};});
-
-my $mkdir = [];
-$mock->mock('_make_directory', sub { shift; push(@$mkdir, shift)});
-
 =head2 fstab_add_defaults
 
 =cut
@@ -114,7 +102,7 @@ my $cmp = NCM::Component::nfs->new('nfs');
 my $cfg = get_config_for_profile('fstab');
 my $tree = $cfg->getTree($cmp->prefix());
 
-$mkdir = [];
+reset_caf_path;
 my ($fstab_changed, $old, $old_order, $new, $new_order) = $cmp->fstab($tree);
 
 my $fh = get_file($fstab);
@@ -177,8 +165,10 @@ is_deeply($new, { '/mydev0' => $nfs0, mydev1 => $nfs1, amydev2 => $nfs2, mydev3 
           "new hashref as expected");
 is_deeply($new_order, [qw(/mydev0 mydev1 amydev2 mydev3)], "new order as expected");
 
-is_deeply($mkdir, [qw(/mount000 /mount1 /amount2 /mount3)], "fstab triggered _make_directory (no directories existed)");
-
+diag explain $Test::Quattor::caf_path;
+is_deeply($Test::Quattor::caf_path->{directory},
+          [map {[[$_],{}]} qw(/mount000 /mount1 /amount2 /mount3)],
+          "fstab triggered _make_directory (no directories existed)");
 
 =head2 do_mount
 

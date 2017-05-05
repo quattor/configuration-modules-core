@@ -11,9 +11,6 @@ use NCM::Component::nfs;
 
 # service variant set to linux_sysv
 
-use CAF::Object;
-$CAF::Object::NoAction = 1;
-
 my $mock = Test::MockModule->new('NCM::Component::nfs');
 my $res = {};
 my $export_arg;

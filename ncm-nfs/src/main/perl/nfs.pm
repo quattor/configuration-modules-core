@@ -1,25 +1,42 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::nfs;
+=head1 NAME
 
-use strict;
-use warnings;
+nfs: NCM component for /etc/exports and /etc/fstab
 
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+=head1 DESCRIPTION
 
-use File::Path qw(mkpath);
+The I<nfs> component manages entries for C<NFS> in the C</etc/exports>
+and/or C<NFS>/C<NFSv4>/C<CephFS>/C<PanFS>/C<bind> mount in the C</etc/fstab> files.
+
+=head1 Example
+
+    prefix "/software/components/nfs";
+    "exports" = append(dict(
+        "path", "/shared/path/",
+        "hosts", dict(
+            "server*.example.org", "no_root_squash",
+        ),
+    ));
+
+    "mounts" = append(dict(
+        "device", "foreign.example.org:/shared/path/",
+        "mountpoint", "/mnt/foreign",
+        "fstype", "nfs",
+        "options", "rw",
+    ));
+
+=cut
+
+use parent qw(NCM::Component CAF::Path);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 use CAF::Object qw(SUCCESS);
 use CAF::FileWriter;
 use CAF::FileReader;
 use CAF::Service;
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 
 use Readonly;
 
@@ -128,8 +145,8 @@ sub fstab_add_defaults
 
 =item parse_fstab_line
 
-Parses an line of C</etc/fstab> and converts it
-in a hasref.
+Parses a line of C</etc/fstab> and converts it
+in a hashref.
 
 Returns undef when the line is comment/empty.
 
@@ -345,9 +362,8 @@ sub fstab
         # If the directory doesn't exist, then create it.
         # Issue a warning if this couldn't be done.
         my $mntpt = $new{$device}->{$FSTAB_MOUNTPOINT};
-        if (! ($self->_directory_exists($mntpt) ||
-               $self->_make_directory($mntpt))) {
-            $self->error("Failed to create mountpoint $mntpt: $!");
+        if (! $self->directory($mntpt)) {
+            $self->error("Failed to create mountpoint $mntpt: $self->{fail}");
         }
 
         $new{$device}->{$FSTAB_ACTION} = mount_action_new_old($new{$device}, $old{$device});
@@ -470,41 +486,6 @@ sub Configure
 
     return 1;
 }
-
-# Code taken from ncm-systemd/Systemd/UnitFile.pm (where it is unittested)
-# TODO: Move to CAF::AllTheMissingBitsThatLCProvides
-
-# make directory, mkdir -p style, wrapper around LC::Check::directory
-sub _make_directory
-{
-    my ($self, $directory) = @_;
-    return LC::Check::directory($directory, noaction => $CAF::Object::NoAction);
-}
-
-# -d, wrapped in method for unittesting
-# -d follows symlink, a broken symlink either exists with -l or not
-# and can be cleaned up with rmtree
-sub _directory_exists
-{
-    my ($self, $directory) = @_;
-    return (! -l $directory) && -d $directory;
-}
-
-# -f, wrapped in method for unittesting
-sub _file_exists
-{
-    my ($self, $filename) = @_;
-    return (-f $filename || -l $filename);
-}
-
-# exists, -e || -l, wrapped in method for unittesting
-# LC::Check::_unlink uses lstat and -e _ (is that a single FS query?)
-sub _exists
-{
-    my ($self, $path) = @_;
-    return -e $path || -l $path;
-}
-
 
 =pod
 
