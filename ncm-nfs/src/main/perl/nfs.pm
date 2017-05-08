@@ -474,15 +474,18 @@ sub Configure
     # Load ncm-nfs configuration into a hash
     my $tree = $config->getTree($self->prefix());
 
-    my $e_result = $self->exports($tree);
-    my ($f_result, $action_taken) = $self->process_mounts($tree);
-
-    if ($e_result || $f_result || $action_taken) {
-        # Force a reload of the nfs daemon.
-        $self->info("Forcing nfs reload");
-        # report error on failure
-        CAF::Service->new(["nfs"], log => $self)->reload();
+    if (! exists($tree->{server}) || $tree->{server}) {
+        if ($self->exports($tree))  {
+            # Force a reload of the nfs daemon.
+            $self->info("Forcing nfs reload");
+            # report error on failure
+            CAF::Service->new(["nfs"], log => $self)->reload();
+        };
+    } else {
+        $self->verbose("Not a NFS server configuration");
     };
+
+    $self->process_mounts($tree);
 
     return 1;
 }

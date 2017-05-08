@@ -18,6 +18,10 @@ type structure_nfs_mounts = {
 
 type ${project.artifactId}_component = {
     include structure_component
+    @{Configure a NFS server. In particular relevant for missing exports attribute.
+      If true, missing exports forces an empty exports file and a NFS service reload.
+      If false, missing exports has no effect.}
+    'server' : boolean = true
     @{This is a list of dicts with "path" giving the export path and
       "hosts" being a dict of host/option entries where the key is the escaped host name and
       the value the export options(e.g. for "nfsclient.example.org(rw)",
