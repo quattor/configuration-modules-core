@@ -68,9 +68,9 @@ prefix "/software/components/opennebula";
             "vlan_id", 0,
             "vn_mad", "ovswitch",
             "ar", dict(
-                    "type", "IP4",
-                    "ip", "10.141.14.100",
-                    "size", 29
+                "type", "IP4",
+                "ip", "10.141.14.100",
+                "size", 29
             ),
             "labels", list("quattor", "quattor/vlans"),
         ),
@@ -82,14 +82,19 @@ prefix "/software/components/opennebula";
             "vlan_id", 10,
             "vn_mad", "vxlan",
             "ar", dict(
-                    "type", "IP4",
-                    "ip", "10.1.20.100",
-                    "size", 100,
+                "type", "IP4",
+                "ip", "10.1.20.100",
+                "size", 100,
             ),
             "phydev", "ib0",
             "filter_ip_spoofing", true,
             "filter_mac_spoofing", true,
             "labels", list("quattor", "quattor/vlans"),
+            "permissions", dict(
+                "owner", "lsimngar",
+                "group", "users",
+                "mode", 0440,
+            ),
         ),
 );
 
@@ -111,6 +116,11 @@ prefix "/software/components/opennebula";
             "tm_mad", "shared",
             "type", "IMAGE_DS",
             "labels", list("quattor", "quattor/nfs"),
+            "permissions", dict(
+                "owner", "lsimngar",
+                "group", "users",
+                "mode", 0440,
+            ),
         ),
 );
 

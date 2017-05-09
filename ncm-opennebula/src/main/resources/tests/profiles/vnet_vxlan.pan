@@ -22,4 +22,6 @@ prefix "/metaconfig/contents/vnet/vxlanpool";
 "filter_ip_spoofing" = true;
 "filter_mac_spoofing" = true;
 "labels" = list("quattor", "quattor/vlans");
-
+"permissions/owner" = "lsimngar";
+"permissions/group" = "users";
+"permissions/mode" = 0440;

@@ -11,6 +11,7 @@ NAME = "[% pool.key %]"
                                       data=pair.value -%]
 [%            CASE 'labels' -%]
 [%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
+[%            CASE 'permissions' -%]
 [%            CASE -%]
 [%                pair.key FILTER upper %] = "[% pair.value %]"
 [%        END -%]

@@ -481,6 +481,14 @@ $cmds{rpc_remove_vnet_ar4}{params} = [0, 0];
 $cmds{rpc_remove_vnet_ar4}{method} = "one.vn.rm_ar";
 $cmds{rpc_remove_vnet_ar4}{out} = 0;
 
+$cmds{rpc_chown_vnet}{params} = [99, 3, 1];
+$cmds{rpc_chown_vnet}{method} = "one.vn.chown";
+$cmds{rpc_chown_vnet}{out} = 99;
+
+$cmds{rpc_chmod_vnet}{params} = [99, 1, 1, 0, 1, 1, 0, 0, 0, 0];
+$cmds{rpc_chmod_vnet}{method} = "one.vn.chmod";
+$cmds{rpc_chmod_vnet}{out} = 99;
+
 # Manage Datastores
 
 $data = <<'EOF';
@@ -556,6 +564,14 @@ EOF
 $cmds{rpc_update_datastore}{params} = [102, $data, 1];
 $cmds{rpc_update_datastore}{method} = "one.datastore.update";
 $cmds{rpc_update_datastore}{out} = 102;
+
+$cmds{rpc_chown_datastore}{params} = [103, 3, 1];
+$cmds{rpc_chown_datastore}{method} = "one.datastore.chown";
+$cmds{rpc_chown_datastore}{out} = 103;
+
+$cmds{rpc_chmod_datastore}{params} = [103, 1, 1, 0, 1, 1, 0, 0, 0, 0];
+$cmds{rpc_chmod_datastore}{method} = "one.datastore.chmod";
+$cmds{rpc_chmod_datastore}{out} = 103;
 
 # Manage hosts
 

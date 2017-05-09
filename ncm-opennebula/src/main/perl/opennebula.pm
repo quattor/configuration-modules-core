@@ -235,6 +235,10 @@ sub create_or_update_something
         # resource is already there and we can modify it
         $new = $self->update_something($one, $type, $name, $template, $data);
     }
+    # Change resource permissions
+    if($new and defined($data->{$name}->{permissions})) {
+        $self->change_permissions($one, $type, $new, $data->{$name}->{permissions});
+    };
     return $new;
 }
 
@@ -290,6 +294,7 @@ sub update_something
         $self->info("Updating old $type QUATTOR resource with a new template: ", $name);
         $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
+        $update = $t if defined($update);
         if ($type eq "vnet" && defined($data->{$name}->{ar})) {
             $self->update_vn_ar($one, $name, $template, $t, $data);
         }

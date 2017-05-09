@@ -25,7 +25,11 @@ ok(rpc_history_ok(["one.datastorepool.info",
                    "one.datastore.update",
                    "one.datastorepool.info",
                    "one.datastore.allocate",
-                   "one.datastore.info"]),
+                   "one.datastore.info",
+                   "one.datastore.chmod",
+                   "one.userpool.info",
+                   "one.grouppool.info",
+                   "one.datastore.chown"]),
                    "manage_something datastore rpc history ok");
 
 ok(!exists($cmp->{ERROR}), "No errors found during datastore management execution");

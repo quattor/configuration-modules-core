@@ -7,6 +7,7 @@ declaration template components/opennebula/schema;
 
 include 'quattor/schema';
 include 'pan/types';
+include 'quattor/aii/opennebula/schema';
 
 type directory = string with match(SELF, '[^/]+/?$');
 
@@ -327,6 +328,7 @@ type opennebula_datastore = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
+    "permissions" ? opennebula_permissions
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
@@ -356,6 +358,7 @@ type opennebula_vnet = {
     "phydev" ? string
     @{MTU for the tagged interface and bridge (VXLAN)}
     "mtu" ? long(1500..)
+    "permissions" ? opennebula_permissions
 } = dict() with is_consistent_vnet(SELF);
 
 @documentation{
