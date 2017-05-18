@@ -12,9 +12,14 @@ include 'components/authconfig/sssd/ldap';
 include 'components/authconfig/sssd/ipa';
 
 @{
-    Valid SSSD providers.  For now we only implement ldap, simple and local
+    Valid SSSD providers.
 }
 type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit|ipa)$");
+
+@{
+    Valid SSSD auth providers.
+}
+type sssd_auth_provider_string = string with match(SELF, "^(ldap|krb5|local|permit|ipa)$");
 
 
 @{
@@ -31,37 +36,39 @@ type authconfig_sssd_simple = {
 type sssd_service = string with match(SELF, "^(nss|pam|sudo|autofs|ssh|pac)$");
 
 type sssd_global = {
-    "debug_level" : long = 0x01F0
+    "debug_level" ? long
     "config_file_version" : long = 2
     "services" : sssd_service[]
-    "reconnection_retries" : long = 3
+    "reconnection_retries" ? long
     "re_expression" ? string
     "full_name_format" ? string
-    "try_inotify" : boolean = true
+    "try_inotify" ? boolean
     "krb5_rcache_dir" ? string
     "default_domain_suffix" ? string
 };
 
 type sssd_pam = {
-    "debug_level" : long = 0x01F0
-    "offline_credentials_expiration" : long = 0
-    "offline_failed_login_attempts" : long = 0
-    "offline_failed_login_delay" : long =  5
-    "pam_verbosity" : long =  1
-    "pam_id_timeout" : long =  5
-    "pam_pwd_expiration_warning" : long =  0
-    "get_domains_timeout" : long =  60
+    "debug_level" ? long
+    "reconnection_retries" ? long
+    "offline_credentials_expiration" ? long
+    "offline_failed_login_attempts" ? long
+    "offline_failed_login_delay" ? long
+    "pam_verbosity" ? long
+    "pam_id_timeout" ? long
+    "pam_pwd_expiration_warning" ? long
+    "get_domains_timeout" ? long
 };
 
 type sssd_nss = {
-    "debug_level" : long = 0x01F0
-    "enum_cache_timeout" : long = 120
+    "debug_level" ? long
+    "reconnection_retries" ? long
+    "enum_cache_timeout" ? long
     "entry_cache_nowait_percentage" ? long
-    "entry_negative_timeout" : long = 15
-    "filter_users" : string = "root"
-    "filter_users_in_groups" : boolean = true
-    "filter_groups" : string = "root"
-    "memcache_timeout" : long = 300
+    "entry_negative_timeout" ? long
+    "filter_users" ? string
+    "filter_users_in_groups" ? boolean
+    "filter_groups" ? string
+    "memcache_timeout" ? long
 };
 
 type authconfig_sssd_local = {
@@ -76,29 +83,30 @@ type authconfig_sssd_local = {
 };
 
 type authconfig_sssd_domain  = {
+    "reconnection_retries" ? long
     "ldap" ? authconfig_sssd_ldap
     "ipa" ? authconfig_sssd_ipa
     "simple" ? authconfig_sssd_simple
     "local" ? authconfig_sssd_local
     "access_provider" ? sssd_provider_string
     "id_provider" ? sssd_provider_string
-    "auth_provider" ? sssd_provider_string
-    "chpass_provider" ? sssd_provider_string
-    "debug_level" : long = 0x01F0
+    "auth_provider" ? sssd_auth_provider_string
+    "chpass_provider" ? sssd_auth_provider_string
+    "debug_level" ? long
     "sudo_provider" ? string
     "selinux_provider" ? string
     "subdomains_provider" ? string
     "autofs_provider" ? string
     "hostid_provider" ? string
-    "re_expression" : string = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)"
+    "re_expression" ? string
     "full_name_format" : string = "%1$s@%2$s"
     "lookup_family_order" : string = "ipv4_first"
     "dns_resolver_timeout" : long = 5
     "dns_discovery_domain" ? string
     "override_gid" ? long
     "case_sensitive" : boolean = true
-    "proxy_fast_alias" : boolean = false
-    "subdomain_homedir" : string = "/home/%d/%u"
+    "proxy_fast_alias" ? boolean
+    "subdomain_homedir" ? string
     "proxy_pam_target" ? string
     "proxy_lib_name" ? string
     "min_id" : long = 1

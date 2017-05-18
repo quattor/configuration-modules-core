@@ -87,7 +87,7 @@ type authconfig_sssd_ldap = {
     "tls" ? sssd_tls
     "netgroup" ? sssd_netgroup
     "autofs" ? sssd_autofs
-    "uri" : type_absoluteURI[]
+    "uri" ? type_absoluteURI[]
     "backup_uri" ? type_absoluteURI[]
     "search_base" ? string
     "schema" : ldap_schema = "rfc2307"
@@ -100,7 +100,6 @@ type authconfig_sssd_ldap = {
     "access_filter" ? string
     "access_order" : ldap_order = "filter"
     "connection_expire_timeout" : long = 900
-    "deref" : ldap_deref = "never"
     "deref" ? string
     "deref_threshold" ? long
     "disable_paging" : boolean = false
@@ -111,17 +110,16 @@ type authconfig_sssd_ldap = {
     "force_upper_case_realm" : boolean = false
     "groups_use_matching_rule_in_chain" ? boolean
     "id_use_start_tls" ? boolean
-    "id_mapping" : boolean = false
+    "id_mapping" ? boolean = false
     "network_timeout" : long = 6
-    "ns_account_lock" : string = "nsAccountLock"
+    "ns_account_lock" ? string
     "offline_timeout" ? long
     "opt_timeout" : long = 6
     "page_size" : long = 1000
     "purge_cache_timeout" : long = 10800
     "pwd_policy" : string = "none"
-    "referrals" : boolean = true
+    "referrals" ? boolean
     "rootdse_last_usn" ? string
     "search_timeout" : long = 6
-    "use_object_class" : string = "posixAccount"
     "account_expire_policy" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
 };
