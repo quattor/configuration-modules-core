@@ -3,5 +3,5 @@
 [%- INCLUDE "metaconfig/logstash/config/type.tt" type="stringhash" names=['codec'] -%]
 [%- INCLUDE "metaconfig/logstash/config/type.tt" type="escstringhash" names=['add_field'] -%]
 [%- INCLUDE "metaconfig/logstash/config/type.tt" type="string" 
-        names=['type', 'host', 'ssl_cacert', 'ssl_cert', 'ssl_key', 'ssl_key_passhrase'] -%]
+        names=['type', 'host', 'ssl_cacert', 'ssl_cert', 'ssl_key', 'ssl_key_passphrase'] -%]
 [%- INCLUDE "metaconfig/logstash/config/type.tt" type="exact" names=['workers'] -%]
