@@ -25,13 +25,14 @@ Test C<NCM::Component::Systemd::Service> module for systemd.
 
 =cut
 
-my $svc = NCM::Component::Systemd::Service->new(log => $cmp);
+my $svc = NCM::Component::Systemd::Service->new($cmp->prefix, log => $cmp);
 isa_ok($svc, "NCM::Component::Systemd::Service",
        "Created a NCM::Component::Systemd::Service instance");
 isa_ok($svc->{unit}, "NCM::Component::Systemd::Service::Unit",
        "Has a NCM::Component::Systemd::Service::Unit instance");
 isa_ok($svc->{chkconfig}, "NCM::Component::Systemd::Service::Chkconfig",
        "Has a NCM::Component::Systemd::Service::Chkconfig instance");
+is($svc->{BASE}, "/software/components/systemd", "systemd configuration path");
 
 =pod
 

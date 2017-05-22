@@ -1,15 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service::Unit;
+#${PMpre} NCM::Component::Systemd::Service::Unit${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw(SUCCESS);
 
 use parent qw(CAF::Object Exporter);
 use EDG::WP4::CCM::Path qw(unescape);

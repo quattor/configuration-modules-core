@@ -9,8 +9,6 @@ use Test::MockModule;
 use Test::Quattor::Object;
 use Test::Quattor::TextRender::Base;
 
-$CAF::Object::NoAction = 1;
-
 my $mocked_trd = mock_textrender();
 
 my $conf = get_config_for_profile('unitfile_config');
@@ -287,7 +285,6 @@ is_deeply(\@cleanup, ["$cleanupdir1/replace.service.d"],
 
 =cut
 
-set_caf_file_close_diff(1);
 my @args;
 $mockuf->mock('custom', sub { return;} );
 ok(! defined($ur->write()), "write returns undef on failing custom");

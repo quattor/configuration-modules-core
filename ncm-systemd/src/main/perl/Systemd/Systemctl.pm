@@ -1,18 +1,11 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Systemctl;
+#${PMpre} NCM::Component::Systemd::Systemctl${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(Exporter);
 use Readonly;
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw (SUCCESS);
 
 Readonly our $SYSTEMCTL => "/usr/bin/systemctl";
 Readonly my $DAEMON_RELOAD => 'daemon-reload';

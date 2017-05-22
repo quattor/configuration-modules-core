@@ -1,13 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::UnitFile;
+#${PMpre} NCM::Component::Systemd::UnitFile${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(CAF::Object Exporter);
 
@@ -16,7 +9,8 @@ use File::Copy qw(move);
 
 use Scalar::Util qw(blessed);
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw (SUCCESS);
+
 use Readonly;
 use LC::Check;
 
@@ -219,7 +213,7 @@ sub write
     my $fh = $trd->filewriter(
         $filename,
         backup => $self->{backup},
-        mode => 0664,
+        mode => oct(664),
         log => $self,
         );
 

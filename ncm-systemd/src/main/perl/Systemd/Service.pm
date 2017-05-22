@@ -1,13 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service;
+#${PMpre} NCM::Component::Systemd::Service${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(CAF::Object Exporter);
 
@@ -15,7 +8,7 @@ use NCM::Component::Systemd::Service::Chkconfig;
 use NCM::Component::Systemd::Service::Unit qw(:states :types);
 use NCM::Component::Systemd::Systemctl qw(systemctl_command_units);
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw (SUCCESS);
 
 use Readonly;
 
@@ -30,7 +23,6 @@ Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
     sshd => 1,
 );
 
-Readonly my $BASE => "/software/components/systemd";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
 
 Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;
@@ -72,7 +64,8 @@ NCM::Component::Systemd::Service handles the C<ncm-systemd> units.
 
 =item new
 
-Returns a new object, accepts the following options
+Returns a new object with argument C<base> (the configuration path)
+and accepts the following options
 
 =over
 
@@ -86,8 +79,9 @@ A logger instance (compatible with C<CAF::Object>).
 
 sub _initialize
 {
-    my ($self, %opts) = @_;
+    my ($self, $base, %opts) = @_;
 
+    $self->{BASE} = $base;
     $self->{log} = $opts{log} if $opts{log};
 
     $self->{unit} = NCM::Component::Systemd::Service::Unit->new(log => $self);
@@ -147,7 +141,7 @@ sub set_unconfigured_default
     my ($self, $config)= @_;
 
     my $path = {
-        unit => "$BASE/unconfigured",
+        unit => "$self->{BASE}/unconfigured",
         chkconfig => "$LEGACY_BASE/default",
     };
 
@@ -241,7 +235,7 @@ sub gather_configured_units
     };
 
     my $unit = {
-        path => "$BASE/unit",
+        path => "$self->{BASE}/unit",
         instance => $self->{unit},
         type => 'unit',
     };
