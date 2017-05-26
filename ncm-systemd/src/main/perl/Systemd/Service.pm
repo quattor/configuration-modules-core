@@ -425,7 +425,7 @@ sub process
         my $realname = $aliases->{$unit};
         if ($realname) {
             my $msg = "Configured unit $unit is an alias of";
-            if($configured->{$realname}) {
+            if ($configured->{$realname}) {
                 $self->error("$msg configured unit $realname. Skipping the alias configuration. ",
                              "(This is a configuration issue.)");
                 next;

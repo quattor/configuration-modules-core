@@ -226,7 +226,7 @@ sub write
     my $changed = $fh->close() ? 1 : 0; # force to 1 or 0
 
     # if changed, reload daemon
-    if($changed) {
+    if ($changed) {
         # can't do much with return value?
         systemctl_daemon_reload($self);
     }

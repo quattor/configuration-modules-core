@@ -10,7 +10,7 @@ use EDG::WP4::CCM::Path qw(unescape);
 use NCM::Component::Systemd::UnitFile;
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show
-    systemctl_daemon_reload
+    systemctl_daemon_reload systemctl_command_units
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     systemctl_is_enabled
@@ -400,6 +400,7 @@ sub configured_units
     my ($self, $tree) = @_;
 
     my %units;
+    my @tryrestart;
 
     foreach my $unit (sort keys %$tree) {
         my $detail = $tree->{$unit};
@@ -422,7 +423,7 @@ sub configured_units
 
         $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
 
-        if($detail->{file}) {
+        if ($detail->{file}) {
             # strip the unitfile details from further unit details
             my $ufile = delete $detail->{file};
 
@@ -438,11 +439,14 @@ sub configured_units
 
             my $changed = $uf->write();
             if (! defined($changed)) {
-                $self->error("Unitfile confiuration failed, skipping the unit ", $self->unit_text($detail));
+                $self->error("Unitfile configuration failed, skipping the unit ", $self->unit_text($detail));
                 next;
+            } elsif ($changed) {
+                $self->verbose("Going to issue conditional restart for $detail->{name} due to changed unitfile");
+                push(@tryrestart, $detail->{name});
             };
 
-            if($ufile->{only}) {
+            if ($ufile->{only}) {
                 $self->info("Only unitfile configuration for ", $self->unit_text($detail));
                 next;
             }
@@ -453,6 +457,14 @@ sub configured_units
         $self->debug(1, "Add ", $self->unit_text($detail));
 
         $units{$detail->{name}} = $detail;
+    }
+
+    if (@tryrestart) {
+        # It is ok to do the conditional restart here. This does not change state.
+        # It might cause an unnecessary restart for a unit that would be stopped later
+        $self->verbose("configured_units try-restart ", scalar @tryrestart, " units:",
+                     join(",", @tryrestart));
+        systemctl_command_units($self, 'try-restart', @tryrestart);
     }
 
     # TODO figure out a way to specify what off-targets and what on-targets mean.

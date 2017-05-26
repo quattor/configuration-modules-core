@@ -6,6 +6,7 @@ use Test::MockModule;
 
 use helper;
 use NCM::Component::systemd;
+use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL);
 
 $CAF::Object::NoAction = 1;
 
@@ -568,9 +569,10 @@ $mockuf->mock("write", sub {
     isa_ok($self->{config}, 'EDG::WP4::CCM::CacheManager::Element',
            "config on write for $self->{unit} is an Element instance");
     push(@uf_write, [$self->{unit}, $self->{replace}, $self->{backup}, $self->{config}->getTree(), $self->{custom}]);
-    return 1;
+    return $self->{unit} =~ m/other/ ? 1 : 0;
 });
 
+command_history_reset();
 my $cfg = get_config_for_profile('service-unit_services');
 my $tree = $unit->_getTree($cfg, '/software/components/systemd/unit');
 my $cos = $unit->configured_units($tree);
@@ -635,6 +637,11 @@ is_deeply(\@uf_write, [
 ok($cos->{$uf_write[0]->[0]}, "service with file/only=0 is added as configured unit");
 ok(! defined($cos->{$uf_write[0]->[1]}),
    "service with file/only=1 is not added to the configured units");
+
+ok(command_history_ok(
+       ["$SYSTEMCTL try-restart -- othername2.service"],
+       ['test3'], # not modified, no try-restart
+   ), "expected commands for changed unitfile");
 
 =pod
 
