@@ -1000,7 +1000,7 @@ sub get_unit_show
     if(! $realname) {
         my $msg = "get_unit_show: no alias for unit $unit defined";
         if ($opts{possible_missing}) {
-            $self->verbose("$msg and unit is possible missing.");
+            $self->debug(1, "$msg and unit is possible missing.");
         } else {
             $self->error("$msg. (Forgot to update cache?)");
         }
@@ -1030,7 +1030,7 @@ sub get_unit_show
         $msg = "<undefined>";
     }
 
-    $self->verbose("get_unit_show $unittxt property $property value $msg.");
+    $self->debug(1, "get_unit_show $unittxt property $property value $msg.");
 
     return $val;
 }
@@ -1276,7 +1276,7 @@ sub get_ufstate
 {
     my ($self, $unit, %opts) = @_;
 
-    $self->verbose("get_ufstate for unit $unit");
+    $self->debug(1, "get_ufstate for unit $unit");
 
     my $ufstate = $self->get_unit_show($unit, $PROPERTY_UNITFILESTATE, force => $opts{force});
 
