@@ -301,7 +301,7 @@ sub current_units
             $self->verbose("No ufstate could be determined. Using derived state $derived.");
             $ufstate = $derived;
 
-            if($ufstate) {
+            if ($ufstate) {
                 # Track that is a derived state
                 $detail->{derived} = 1;
             } else {
@@ -516,7 +516,7 @@ sub get_aliases
 
     foreach my $unit (@$units) {
         my $realname = $unit_alias->{$unit};
-        if($realname && $realname ne $unit) {
+        if ($realname && $realname ne $unit) {
             $self->debug(1, "Unit $unit is an alias for $realname");
             $res->{$unit} = $realname;
         }
@@ -655,7 +655,7 @@ sub get_type_shortname
     } elsif ($unit =~ m/$type_pattern/) {
         $type = $1;
         $self->debug(1, "get_type_shortname: found type $type based on unit $unit.");
-    } elsif($defaulttype) {
+    } elsif ($defaulttype) {
         $type = $defaulttype;
         $self->verbose("get_type_shortname: could not determine type based on unit $unit ",
                        "and pattern $type_pattern. Using defaulttype $defaulttype.");
@@ -732,7 +732,7 @@ sub make_cache_alias
         my $data = $unit_cache->{$unit};
         my $show;
 
-        if (! defined($data)) {
+        if (!defined($data)) {
             my $log_method = "error";
             my $continue;
 
@@ -790,7 +790,7 @@ sub make_cache_alias
 
         $show = systemctl_show($self, $unit, no_error => $is_possible_missing) if (! defined($show));
 
-        if(!defined($show)) {
+        if (!defined($show)) {
             my $log_method = 'error';
             my $msg = '';
 
@@ -953,8 +953,8 @@ sub fill_cache
     }
 
     $self->debug(1, "fill_cache: update cache for units ", join(", ", @$units),
-                 " with to be updated: ", join(', ', @updates),
-                 " and possible_missing ", join(', ', @{$opts{possible_missing}}));
+                 " with units to be updated ", join(', ', @updates),
+                 " , and units  possible_missing ", join(', ', @{$opts{possible_missing}}));
     $self->make_cache_alias(\@updates, $opts{possible_missing}) if (@updates);
 
     # for unittests only
@@ -997,7 +997,7 @@ sub get_unit_show
     }
 
     my $realname = $unit_alias->{$unit};
-    if(! $realname) {
+    if (!$realname) {
         my $msg = "get_unit_show: no alias for unit $unit defined";
         if ($opts{possible_missing}) {
             $self->debug(1, "$msg and unit is possible missing.");
@@ -1014,7 +1014,7 @@ sub get_unit_show
     }
 
     my $show = $unit_cache->{$realname}->{show};
-    if(! $show) {
+    if (!$show) {
         $self->error("get_unit_show: no show data for $unittxt. (Forgot to update cache?)");
         return;
     }
@@ -1022,9 +1022,9 @@ sub get_unit_show
     my $val = $show->{$property};
 
     my $msg;
-    if(ref($val) eq "ARRAY") {
+    if (ref($val) eq "ARRAY") {
         $msg = join(',', @$val);
-    } elsif(defined($val)) {
+    } elsif (defined($val)) {
         $msg = "$val";
     } else {
         $msg = "<undefined>";
@@ -1280,8 +1280,8 @@ sub get_ufstate
 
     my $ufstate = $self->get_unit_show($unit, $PROPERTY_UNITFILESTATE, force => $opts{force});
 
-    if ($ufstate && $ufstate eq $UFSTATE_BAD) {
-        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE $UFSTATE_BAD";
+    if (!$ufstate || $ufstate eq $UFSTATE_BAD) {
+        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE empty or $UFSTATE_BAD";
         my $is_enabled = systemctl_is_enabled($self, $unit);
         if ($is_enabled) {
             $self->verbose("$msg is-enabled $is_enabled");
@@ -1348,6 +1348,11 @@ The following options are supported
 
 Refresh the cache C<force> (passed to C<get_ufstate> method).
 
+=item derived
+
+Boolean (default true) to use derived information when UnitFileState itself
+is empty/undefined.
+
 =back
 
 =cut
@@ -1356,11 +1361,12 @@ sub is_ufstate
 {
     my ($self, $unit, $state, %opts) = @_;
 
+    $opts{derived} = 1 if !defined($opts{derived});
     $self->debug(1, "is_ufstate for unit $unit and state $state");
 
     my ($ufstate, $derived) = $self->get_ufstate($unit, force => $opts{force});
 
-    if(! $ufstate) {
+    if (!$ufstate && $opts{derived}) {
         $self->verbose("No ufstate could be determined. Using derived state $derived.");
         $ufstate = $derived;
 

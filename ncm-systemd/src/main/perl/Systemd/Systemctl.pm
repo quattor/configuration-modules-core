@@ -341,7 +341,7 @@ sub systemctl_command_units
 Run C<systemctl is-enabled> for C<unit>.
 
 Returns output without trailing newlines on success.
-An error is logged and undef returned when the exitcode is non-zero.
+Undef returned (no error reported) when the exitcode is non-zero.
 
 =cut
 
@@ -365,16 +365,10 @@ sub systemctl_is_enabled
 
     my $ec = $?;
 
-    my $msg = "systemctl_command_units $proc returned ec $ec and stdout $stdout stderr $stderr";
+    $logger->debug(2, "systemctl_command_units $proc returned ec $ec and stdout $stdout stderr $stderr");
     # Do not test on $ec; if unit is disabled, it is-enabled also returns ec > 0
     # If there's a real issue, like unknown unit, there is no stdout.
-    if ($stdout) {
-        $logger->debug(2, $msg);
-        return $stdout;
-    } else {
-        $logger->error($msg);
-        return;
-    }
+    return $stdout || undef;
 }
 
 

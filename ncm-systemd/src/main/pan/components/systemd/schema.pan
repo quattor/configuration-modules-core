@@ -285,8 +285,8 @@ type ${project.artifactId}_unit_type = {
 type component_${project.artifactId} = {
     include structure_component
     "skip" : ${project.artifactId}_skip
-    # TODO: only ignore implemented so far. To add : disabled and/or masked
-    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore)$') # harmless default
+    @{what to do with unconfigured units: ignore, enabled, disabled, on (enabled+start), off (disabled+stop; advanced option)}
+    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore|enabled|disabled|on|off)$') # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
     "unit" ? ${project.artifactId}_unit_type{}
 };
