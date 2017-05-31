@@ -38,7 +38,7 @@ function is_consistent_database = {
             };
         };
     };
-    return(true);
+    true;
 };
 
 type opennebula_log = {
@@ -264,7 +264,7 @@ function is_consistent_datastore = {
         };
     };
     # Checks for other types can be added here
-    return(true);
+    true;
 };
 
 @documentation{
@@ -283,7 +283,7 @@ function is_consistent_vnet = {
             error(format("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']));
         };
     };
-    return(true);
+    true;
 };
 
 @documentation{

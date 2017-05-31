@@ -117,7 +117,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.310.0;
+use Net::OpenNebula 0.311.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
@@ -236,7 +236,7 @@ sub create_or_update_something
         $new = $self->update_something($one, $type, $name, $template, $data);
     }
     # Change resource permissions
-    if($new and defined($data->{$name}->{permissions})) {
+    if ($new and defined($data->{$name}->{permissions})) {
         $self->change_permissions($one, $type, $new, $data->{$name}->{permissions});
     };
     return $new;
