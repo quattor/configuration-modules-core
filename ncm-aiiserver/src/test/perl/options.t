@@ -1,10 +1,19 @@
 use strict;
 use warnings;
+
+my $newline;
+BEGIN {
+    # \R generic newline is new in 5.10;
+    # use \n or \r in older versions
+    $newline = $] < 5.010000 ? '[\n\r]' : '\R';
+}
+
 use Test::More;
 use Test::Quattor qw(aii-options);
 use NCM::Component::aiiserver;
 use CAF::Object;
 use Readonly;
+
 
 
 =pod
@@ -35,9 +44,9 @@ for my $part (@CONFIG_PARTS) {
     # A regexp is used to avoid failing the test if the comment in the header.
     # lines are changing. Apart from that, require exactly what the component
     # produces.
-    my $expected_contents = '^#.*\R#.*\R';
+    my $expected_contents = '^#.*'.$newline.'#.*'.$newline;
     for my $key (sort keys%$part_config) {
-        $expected_contents .= $key . ' = ' . $part_config->{$key} . '\R';
+        $expected_contents .= $key . ' = ' . $part_config->{$key} . $newline;
     }
     $expected_contents .= '$';
 
