@@ -9,13 +9,16 @@ network: Configure Network Settings
 The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
 and the various files in C<< /etc/sysconfig/network-scripts >>.
 
-For restarting, a sleep value of 15 is used to make sure the restarted network
+New/changed settings are first tested by retrieving the latest profile from the
+CDB server (using ccm-fetch).
+If this fails, the component reverts all settings to the previous values.
+
+During this test, a sleep value of 15 seconds is used to make sure the restarted network
 is fully restarted (routing may need some time to come up completely).
 
-Because of this, adding/changing may cause some slowdown.
+Because of this, configuration changes may cause the ncm-ncd run to take longer than usual.
 
-New/changed settings are first tested by probing the CDB server on the port
-where the profile should be found. If this fails, the previous settings are reused.
+Be aware that configuration changes can also lead to a brief network interruption.
 
 =head1 EXAMPLES
 
