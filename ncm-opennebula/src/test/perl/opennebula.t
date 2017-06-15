@@ -79,4 +79,10 @@ isa_ok($kvmrc, "CAF::FileWriter", "kvmrc CAF::FileWriter instance");
 like("$kvmrc", qr{^export\s{1}FORCE_DESTROY=.+$}m, "kvmrc has expected content");
 $kvmrc->close();
 
+# vnm conf file
+my $vnm_conf = get_file($NCM::Component::OpenNebula::Server::VNM_CONF_FILE);
+isa_ok($vnm_conf, "CAF::FileWriter", "vnm_conf CAF::FileWriter instance");
+like("$vnm_conf", qr{^:arp_cache_poisoning:\s{1}.+$}m, "vnm_conf has expected content");
+$vnm_conf->close();
+
 done_testing();

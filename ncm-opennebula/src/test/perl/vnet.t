@@ -27,7 +27,20 @@ $cmp->manage_something($one, "vnet", $tree->{vnets});
 ok(!exists($cmp->{ERROR}), "No errors found during vnet management execution");
 ok(rpc_history_ok(["one.vnpool.info",
                    "one.vn.info",
-                   "one.vn.update"]),
+                   "one.vn.update",
+                   "one.vnpool.info",
+                   "one.vn.allocate",
+                   "one.vn.info",
+                   "one.vnpool.info",
+                   "one.vn.update",
+                   "one.vn.update_ar",
+                   "one.vnpool.info",
+                   "one.vn.allocate",
+                   "one.vn.info",
+                   "one.vn.chmod",
+                   "one.userpool.info",
+                   "one.grouppool.info",
+                   "one.vn.chown"]),
                    "manage_something vnet rpc history ok");
 
 done_testing();

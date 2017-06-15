@@ -44,6 +44,8 @@ Features that are implemented at this moment:
 
 =item * Updates VMM kvmrc config file
 
+=item * Updates VNM OpenNebulaNetwork config file
+
 =item * Cloud resource labels (OpenNebula >= 5.x)
 
 =back
@@ -115,7 +117,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.310.0;
+use Net::OpenNebula 0.311.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
@@ -127,7 +129,7 @@ Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 # Required by process_template to detect 
 # if it should return a text template or
 # CAF::FileWriter instance
-Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc sunstone remoteconf_ceph oneflow);
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
 
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -233,6 +235,10 @@ sub create_or_update_something
         # resource is already there and we can modify it
         $new = $self->update_something($one, $type, $name, $template, $data);
     }
+    # Change resource permissions
+    if ($new and defined($data->{$name}->{permissions})) {
+        $self->change_permissions($one, $type, $new, $data->{$name}->{permissions});
+    };
     return $new;
 }
 
@@ -288,6 +294,7 @@ sub update_something
         $self->info("Updating old $type QUATTOR resource with a new template: ", $name);
         $self->debug(1, "New $name template : $template");
         $update = $t->update($template, 1);
+        $update = $t if defined($update);
         if ($type eq "vnet" && defined($data->{$name}->{ar})) {
             $self->update_vn_ar($one, $name, $template, $t, $data);
         }

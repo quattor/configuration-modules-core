@@ -7,6 +7,7 @@ declaration template components/opennebula/schema;
 
 include 'quattor/schema';
 include 'pan/types';
+include 'quattor/aii/opennebula/schema';
 
 type directory = string with match(SELF, '[^/]+/?$');
 
@@ -37,7 +38,7 @@ function is_consistent_database = {
             };
         };
     };
-    return(true);
+    true;
 };
 
 type opennebula_log = {
@@ -263,7 +264,26 @@ function is_consistent_datastore = {
         };
     };
     # Checks for other types can be added here
-    return(true);
+    true;
+};
+
+@documentation{
+check if a specific type of vnet has the right attributes
+}
+function is_consistent_vnet = {
+    vn = ARGV[0];
+    # phydev is only required by vxlan networks
+    if (vn['vn_mad'] == 'vxlan') {
+        if (!exists(vn['phydev'])) {
+            error("VXLAN vnet requires 'phydev' value to attach a bridge");
+        };
+    # if not the bridge is mandatory
+    } else {
+        if (!exists(vn['bridge'])) {
+            error(format("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']));
+        };
+    };
+    true;
 };
 
 @documentation{
@@ -308,10 +328,11 @@ type opennebula_datastore = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
+    "permissions" ? opennebula_permissions
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
-    "bridge" : string
+    "bridge" ? string
     "vn_mad" : string = 'dummy' with match (SELF, '^(802.1Q|ebtables fw|ovswitch|vxlan|vcenter|dummy)$')
     "gateway" ? type_ipv4
     "gateway6" ? type_network_name
@@ -329,7 +350,16 @@ type opennebula_vnet = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
-} = dict();
+    @{set network filter to avoid IP spoofing for the current vnet}
+    "filter_ip_spoofing" ? boolean
+    @{set network filter to avoid MAC spoofing for the current vnet}
+    "filter_mac_spoofing" ? boolean
+    @{Name of the physical network device that will be attached to the bridge (VXLAN)}
+    "phydev" ? string
+    @{MTU for the tagged interface and bridge (VXLAN)}
+    "mtu" ? long(1500..)
+    "permissions" ? opennebula_permissions
+} = dict() with is_consistent_vnet(SELF);
 
 @documentation{
 Set OpenNebula regular users and their primary groups.
@@ -619,6 +649,24 @@ type opennebula_kvmrc = {
 };
 
 @documentation{
+Type that sets the OpenNebula
+VNM (Virtual Network Manager) configuration file on the nodes
+}
+type opennebula_vnm_conf = {
+    @{set to true to check that no other vlans are connected to the bridge.
+     Works with 802.1Q and VXLAN.}
+    "validate_vlan_id" : boolean = false
+    @{enable ARP Cache Poisoning Prevention Rules for Open vSwitch.}
+    "arp_cache_poisoning" : boolean = true
+    @{base multicast address for each VLAN. The mc address is :vxlan_mc + :vlan_id.
+    Used by VXLAN.}
+    "vxlan_mc" : type_ipv4 = '239.0.0.0'
+    @{Time To Live (TTL) should be > 1 in routed multicast networks (IGMP).
+    Used by VXLAN.}
+    "vxlan_ttl" : long = 16
+};
+
+@documentation{
 Type that sets the OpenNebula conf
 to contact to ONE RPC server
 }
@@ -659,6 +707,8 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    @{set vnm remote configuration}
+    'vnm_conf' ? opennebula_vnm_conf
     @{set ssh host multiplex options}
     'ssh_multiplex' : boolean = true
     @{in some cases (such a Sunstone standalone configuration with apache), 

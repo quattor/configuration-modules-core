@@ -6,7 +6,7 @@ NAME = "[% pool.key %]"
 [%    FOR pair IN pool.value.pairs -%]
 [% # If we are installing a Ceph datastore we should remove
    # ceph_user_key from ONE template to avoid any sec issue-%]
-[%        IF pair.key == 'ceph_user_key' -%]
+[%        IF pair.key == 'ceph_user_key' || pair.key == 'permissions' -%]
 [%             -%]
 [%        ELSE -%]
 [%            pair.key FILTER upper %] =

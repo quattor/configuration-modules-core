@@ -95,7 +95,11 @@ sub create_vm_images
                     "Please remove this image first if you want to generate a new one from scratch.");
         return;
     } else {
-        $newimage = $one->create_image($imagedata->{image}, $imagedata->{datastore});
+        if ($self->is_one_resource_available($one, "datastore", $imagedata->{datastore})) {
+            $newimage = $one->create_image($imagedata->{image}, $imagedata->{datastore});
+        } else {
+            $self->error("Not found requested datastore: ", $imagedata->{datastore});
+        }
     }
     if ($newimage) {
         $self->info("Created new VM image ID: ", $newimage->id);

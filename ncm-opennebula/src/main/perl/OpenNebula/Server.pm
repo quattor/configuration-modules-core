@@ -17,6 +17,7 @@ Readonly our $SERVERADMIN_AUTH_DIR => "/var/lib/one/.one/";
 Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
+Readonly our $VNM_CONF_FILE => "/var/lib/one/remotes/vnm/OpenNebulaNetwork.conf";
 
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
@@ -46,7 +47,7 @@ sub restart_opennebula_service {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
     } elsif ($service eq "oneflow") {
         $srv = CAF::Service->new(['opennebula-flow'], log => $self);
-    } elsif ($service eq "kvmrc") {
+    } elsif ($service eq "kvmrc" or $service eq "vnm_conf") {
         $self->info("Updated $service file. onehost sync is required.");
         $self->sync_opennebula_hosts();
     }
@@ -279,6 +280,10 @@ sub set_one_server
     # Set kvmrc conf
     if (exists $tree->{kvmrc}) {
         $self->set_one_service_conf($tree->{kvmrc}, "kvmrc", $KVMRC_CONF_FILE);
+    }
+    # Set VNM conf
+    if (exists $tree->{vnm_conf}) {
+        $self->set_one_service_conf($tree->{vnm_conf}, "vnm_conf", $VNM_CONF_FILE);
     }
 
     return 1;

@@ -1,0 +1,7 @@
+OpenNebula vnm_conf test
+---
+---
+^:arp_cache_poisoning:\s{1}.+$
+^:validate_vlan_id:\s{1}.+$
+^:vxlan_mc:\s{1}.+$
+^:vxlan_ttl:\s{1}\d+$
