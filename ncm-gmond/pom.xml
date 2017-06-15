@@ -6,7 +6,7 @@
   <artifactId>gmond</artifactId>
 
   <packaging>pom</packaging>
-  <version>17.3.0</version>
+  <version>17.3.1-SNAPSHOT</version>
   <name>Component configuring the Ganglia gmond</name>
 
 
