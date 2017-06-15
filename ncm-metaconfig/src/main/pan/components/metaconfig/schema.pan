@@ -1,9 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-declaration template components/${project.artifactId}/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'quattor/functions/validation';
@@ -74,14 +69,36 @@ type ${project.artifactId}_textrender_convert = {
 type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
 
 type ${project.artifactId}_config =  {
+    @{File permissions. Defaults to 0644.}
     'mode' : long = 0644
+    @{File owner. Defaults to root.}
     'owner' : string = 'root'
+    @{File group. Defaults to root.}
     'group' : string = 'root'
+    @{An dict with foreach daemon the CAF::Service action to take
+      if the file changes.
+      Even if multiple services are associated to the same daemon, each action
+      for the daemon will be taken at most once.
+      If multiple actions are to be taken for the same daemon, all actions
+      will be taken (no attempt to optimize is made).}
     'daemons' ? caf_service_action{}
+    @{Module to render the configuration file. See 'CONFIGURATION MODULES' in manpage.}
     'module' : string
+    @{Extension for the file's backup.}
     'backup' ? string
+    @{Text to place at start of file.
+      It can be useful to include context in a configuration file, in the form of
+      a comment, such as how it was generated. Most of the formats that can be
+      output by this component support "comment" lines, but none of the modules that
+      it uses will generate them. The preamble attribute will be written out
+      verbatim, before the contents is generated. No comment character is added,
+      the user must specify this as part of the preamble string.}
     'preamble' ? string
+    @{A free-form structure describing the valid entries for the
+      configuration file. It is recommended to define another type for each
+      config file, and bind it to these contents, to get the best validation.}
     'contents' : ${project.artifactId}_extension
+    @{Predefined conversions from EDG::WP4::CCM::TextRender}
     'convert' ? ${project.artifactId}_textrender_convert
 } = dict();
 

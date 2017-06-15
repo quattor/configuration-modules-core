@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
@@ -8,10 +6,6 @@ use NCM::Component::metaconfig;
 use CAF::Object;
 
 use JSON::Any;
-
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 
 =pod
 

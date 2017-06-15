@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
@@ -9,9 +7,6 @@ use Test::MockModule;
 use CAF::Object;
 
 use JSON::XS;
-
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
 
 my $mock = Test::MockModule->new('NCM::Component::metaconfig');
 
