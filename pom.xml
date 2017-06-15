@@ -109,6 +109,7 @@
     <module>ncm-opennebula</module>
     <module>ncm-systemd</module>
     <module>ncm-freeipa</module>
+    <module>ncm-path</module>
   </modules>
 
   <build>
