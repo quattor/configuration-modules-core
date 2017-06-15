@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
@@ -9,9 +7,6 @@ use CAF::Object;
 use Readonly;
 
 use Config::Tiny;
-
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
 
 Readonly my $STR => "An arbitrary string";
 
