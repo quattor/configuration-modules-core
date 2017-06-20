@@ -157,6 +157,17 @@ type component_ofed_opensm = {
     "daemons" : string[] = list('opensmd')
     @{SM partitions configuration. Dict key is the partition name}
     "partitions" ? component_ofed_partition{}
+    @{Node name map configuration. Dict key is the GUID starting with 'x' (the 0 is prefixed automatically)}
+    "names" ? string{}
+} with {
+    if (exists(SELF['names'])) {
+        foreach (guid; descr; SELF['names']) {
+            if (!match(guid, '^x[0-9a-fA-F]{16}')) {
+                error(format("opensm names key must be GUID, got %s", guid));
+            };
+        };
+    };
+    true;
 };
 
 type ${project.artifactId}_component = {

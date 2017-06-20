@@ -14,7 +14,10 @@ use Readonly;
 
 Readonly my $OPENIB_CONF_TT => 'openib_conf';
 Readonly my $PARTITIONS_CONF_TT => 'partitions';
+Readonly my $NAMES_CONF_TT => 'names';
+
 Readonly my $PARTITIONS_FILENAME => '/etc/opensm/partitions.conf';
+Readonly my $NAMES_FILENAME => '/etc/opensm/ib-node-name-map';
 
 sub _render
 {
@@ -59,10 +62,19 @@ sub opensm
     my $changed = 0;
 
     if ($tree->{partitions}) {
-        $changed += $self->_render($config->getElement($self->prefix().'/opensm/partitions'),
-                                   $PARTITIONS_CONF_TT,
-                                   $PARTITIONS_FILENAME)
-            || 0;
+        $changed += $self->_render(
+            $config->getElement($self->prefix().'/opensm/partitions'),
+            $PARTITIONS_CONF_TT,
+            $PARTITIONS_FILENAME
+        ) || 0;
+    }
+
+    if ($tree->{names}) {
+        $changed += $self->_render(
+            $config->getElement($self->prefix().'/opensm/names'),
+            $NAMES_CONF_TT,
+            $NAMES_FILENAME
+        ) || 0;
     }
 
     if ($changed) {
