@@ -2,7 +2,7 @@ declaration template metaconfig/singularity/schema;
 
 include 'pan/types';
 
-type singularity_bind_path_path = string with {
+type singularity_absolute_path = string with {
     paths = split(':', SELF);
     if ((length(paths) > 0) && (length(paths) < 3)) {
         foreach (idx; path; paths) {
@@ -81,7 +81,7 @@ type singularity_bind_path = {
     the container. The file or directory must exist within the container on
     which to attach to. you can specify a different source and destination
     path (respectively) with a colon; otherwise source and dest are the same}
-    'path' ? singularity_bind_path_path[]
+    'path' ? singularity_absolute_path[]
 };
 
 type singularity_bind_user_control = {
@@ -102,6 +102,13 @@ type singularity_container = {
     'dir' : absolute_file_path = '/var/singularity/mnt'
 } = dict();
 
+type singularity_sessiondir_max_size = {
+    @{This specifies how large the default sessiondir should be (in MB) and it will
+    only affect users who use the "--contain" options and do not also specify a
+    location to do default read/writes to (e.g. "--workdir" or "--home")}
+    'size' : long(1..) = 16
+} = dict();
+
 type singularity_sessiondir = {
     @{This specifies the prefix for the session directory. Appended to this string
     is an identification string unique to each user and container. Note, this
@@ -109,7 +116,36 @@ type singularity_sessiondir = {
     /tmp/ does not work for your system, /var/singularity/sessions maybe a
     better option}
     'prefix' ? absolute_file_path
-};
+    'max' : singularity_sessiondir_max_size
+} = dict();
+
+type singularity_max_loop_devices = {
+    @{Set the maximum number of loop devices that Singularity should ever attempt
+    to utilize}
+    'devices' : long(1..) = 256
+} = dict();
+
+type singularity_max_loop = {
+    'loop' : singularity_max_loop_devices
+} = dict();
+
+type singularity_limit_container = {
+    @{Only allow containers to be used that are owned by a given user. If this
+    configuration is undefined (commented or set to NULL), all containers are
+    allowed to be used. This feature only applies when Singularity is running in
+    SUID mode and the user is non-root}
+    'owners' ? string[]
+    @{Only allow containers to be used that are located within an allowed path
+    prefix. If this configuration is undefined (commented or set to NULL),
+    containers will be allowed to run from anywhere on the file system. This
+    feature only applies when Singularity is running in SUID mode and the user is
+    non-root}
+    'paths' ? singularity_absolute_path[]
+} = dict();
+
+type singularity_limit = {
+    'container' ? singularity_limit_container
+} = dict();
 
 @documentation{
 singularity.conf settings
@@ -125,5 +161,7 @@ type service_singularity = {
     'bind' ? singularity_bind_path
     'user' : singularity_bind_user
     'container' : singularity_container
-    'sessiondir' ? singularity_sessiondir
+    'sessiondir' : singularity_sessiondir
+    'max' : singularity_max_loop
+    'limit' ? singularity_limit
 };
