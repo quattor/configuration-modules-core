@@ -72,7 +72,7 @@ type component_mysql_db_options = {
     'server' : string
     'users' ? component_mysql_db_user{}
     'initScript' ? component_mysql_db_script
-    'initOnce' : boolean = false
+    'initOnce' : boolean = true
     'createDb' : boolean = true
     # tableOptions is a dict of table where value is a dict of parameter/value pairs.
     # If the parameter contains spaces, it must be escaped.
