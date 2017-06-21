@@ -128,6 +128,17 @@ type logstash_input_beats = {
     'ssl' ? boolean
 };
 
+@{ zeromq input }
+type logstash_input_zeromq = {
+    include logstash_input_plugin_common
+    "address" ? string[] = list("tcp://*:2120")
+    "mode" ? string = "server" with match(SELF, ("server|client"))
+    "sender" ? string
+    "sockopt" ? dict()
+    "topic" ? string[]
+    "topology" : string with match(SELF, ("pushpull|pubsub|pair"))
+};
+
 type logstash_input_plugin = {
     "file" ? logstash_input_file
     "gelf" ? logstash_input_gelf
@@ -135,6 +146,7 @@ type logstash_input_plugin = {
     "udp" ? logstash_input_udp
     "lumberjack" ? logstash_input_lumberjack
     "beats" ? logstash_input_beats
+    "zeromq" ? logstash_input_zeromq
 } with length(SELF) == 1;
 
 
