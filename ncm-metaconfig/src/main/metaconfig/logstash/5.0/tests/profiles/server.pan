@@ -36,6 +36,12 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
     "ssl_key_passphrase", CERT_PKCS8_PASSPHRASE,
 )));
 
+"input/plugins" = append(dict("zeromq", dict(
+    "type", "syslog",
+    "address", list("tcp://localhost:27002"),
+    "topology", "pushpull"
+)));
+
 "filter/conditionals" = append(dict(
     "type", "ifelseif",
     "expr", list(dict(
