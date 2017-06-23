@@ -5,7 +5,7 @@
   <artifactId>ipmi</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>Used to manage trivial IPMI configuration</name>
+  <name>ncm-ipmi</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
