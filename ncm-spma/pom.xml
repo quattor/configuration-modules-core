@@ -5,7 +5,7 @@
   <artifactId>spma</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>NCM SPMA configuration component</name>
+  <name>ncm-spma</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
