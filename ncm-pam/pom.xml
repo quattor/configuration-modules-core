@@ -5,7 +5,7 @@
   <artifactId>pam</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>Component to configure PAM</name>
+  <name>ncm-pam</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
