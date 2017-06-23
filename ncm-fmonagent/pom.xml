@@ -5,7 +5,7 @@
   <artifactId>fmonagent</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>NCM fmonagent configuration component</name>
+  <name>ncm-fmonagent</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
