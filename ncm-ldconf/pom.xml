@@ -5,7 +5,7 @@
   <artifactId>ldconf</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>ldconf NCM component.</name>
+  <name>ncm-ldconf</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
