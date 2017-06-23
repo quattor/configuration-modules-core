@@ -5,7 +5,7 @@
   <artifactId>pnp4nagios</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>nagios addon pnp4nagios NCM component.</name>
+  <name>ncm-pnp4nagios</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
