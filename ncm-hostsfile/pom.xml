@@ -5,7 +5,7 @@
   <artifactId>hostsfile</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>/etc/hosts management for local hosts entries</name>
+  <name>ncm-hostsfile</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
