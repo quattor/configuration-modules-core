@@ -5,7 +5,7 @@
   <artifactId>ccm</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>ccm NCM component.</name>
+  <name>ncm-ccm</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
