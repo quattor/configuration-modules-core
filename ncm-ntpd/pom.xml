@@ -5,7 +5,7 @@
   <artifactId>ntpd</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>NCM ntpd configuration component</name>
+  <name>ncm-ntpd</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
