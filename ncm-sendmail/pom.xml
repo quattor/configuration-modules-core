@@ -5,7 +5,7 @@
   <artifactId>sendmail</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>NCM Sendmail configuration component</name>
+  <name>ncm-sendmail</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
