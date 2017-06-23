@@ -5,7 +5,7 @@
   <artifactId>nscd</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>NCM component to configure nscd</name>
+  <name>ncm-nscd</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
