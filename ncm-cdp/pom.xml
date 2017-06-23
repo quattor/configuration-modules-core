@@ -5,7 +5,7 @@
   <artifactId>cdp</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>cdp NCM component.</name>
+  <name>ncm-cdp</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
