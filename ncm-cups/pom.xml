@@ -5,7 +5,7 @@
   <artifactId>cups</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>CUPS configuration component</name>
+  <name>ncm-cups</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
