@@ -5,7 +5,7 @@
   <artifactId>filecopy</artifactId>
   <packaging>pom</packaging>
   <version>17.7.0-rc2-SNAPSHOT</version>
-  <name>filecopy NCM component.</name>
+  <name>ncm-filecopy</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
