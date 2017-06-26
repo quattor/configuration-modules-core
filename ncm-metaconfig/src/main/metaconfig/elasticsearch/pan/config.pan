@@ -1,5 +1,6 @@
 unique template metaconfig/elasticsearch/config;
 
+variable METACONFIG_ELASTICSEARCH_VERSION ?= '5.0';
 include 'metaconfig/elasticsearch/schema';
 
 bind "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents" = elasticsearch_service;
