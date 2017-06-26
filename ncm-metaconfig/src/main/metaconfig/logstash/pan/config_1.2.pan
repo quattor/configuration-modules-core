@@ -1,7 +1,6 @@
 unique template metaconfig/logstash/config_1.2;
 
-variable METACONFIG_LOGSTASH_VERSION = '1.2';
-include format('metaconfig/logstash/schema_%s', METACONFIG_LOGSTASH_VERSION);
+include 'metaconfig/logstash/schema_1.2';
 
 bind "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents" = type_logstash;
 
