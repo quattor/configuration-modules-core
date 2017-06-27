@@ -75,17 +75,20 @@ sub print_globals
     my ($self, $fh, $cfg) = @_;
 
     print $fh "globals {\n";
-    print $fh "  daemonize = ".boolstr($cfg->{daemonize})."\n" if ( $cfg->{daemonize} );
-    print $fh "  setuid = ".boolstr($cfg->{setuid})."\n" if ( $cfg->{setuid} );
+    print $fh "  daemonize = ".boolstr($cfg->{daemonize})."\n" if ( defined $cfg->{daemonize} );
+    print $fh "  setuid = ".boolstr($cfg->{setuid})."\n" if ( defined $cfg->{setuid} );
     print $fh "  user = $cfg->{user}\n" if ( $cfg->{user} );
     print $fh "  debug_level = $cfg->{debug_level}\n" if ( $cfg->{debug_level} );
-    print $fh "  mute = ".boolstr($cfg->{mute})."\n" if ( $cfg->{mute} );
-    print $fh "  deaf = ".boolstr($cfg->{deaf})."\n" if ( $cfg->{deaf} );
+    print $fh "  mute = ".boolstr($cfg->{mute})."\n" if ( defined $cfg->{mute} );
+    print $fh "  deaf = ".boolstr($cfg->{deaf})."\n" if ( defined $cfg->{deaf} );
     print $fh "  host_dmax = $cfg->{host_dmax}\n" if ( $cfg->{host_dmax} );
+    print $fh "  host_tmax = $cfg->{host_tmax}\n" if ( $cfg->{host_tmax} );
     print $fh "  cleanup_threshold = $cfg->{cleanup_threshold}\n" if ( $cfg->{cleanup_threshold} );
-    print $fh "  gexec = ".boolstr($cfg->{gexec})."\n" if ( $cfg->{gexec} );
+    print $fh "  gexec = ".boolstr($cfg->{gexec})."\n" if ( defined $cfg->{gexec} );
     print $fh "  send_metadata_interval = $cfg->{send_metadata_interval}\n" if ( $cfg->{send_metadata_interval} );
     print $fh "  module_dir = $cfg->{module_dir}\n" if ( $cfg->{module_dir} );
+    print $fh "  allow_extra_data = ".boolstr($cfg->{allow_extra_data})."\n" if ( defined $cfg->{allow_extra_data} );
+    print $fh "  max_udp_msg_len = $cfg->{max_udp_msg_len}\n" if ( $cfg->{max_udp_msg_len} );
 
     print $fh "}\n\n";
 }
@@ -99,7 +102,9 @@ sub print_udp_send_channel
         print $fh "  mcast_join = $i->{mcast_join}\n" if ( $i->{mcast_join} );
         print $fh "  mcast_if = $i->{mcast_if}\n" if ( $i->{mcast_if} );
         print $fh "  host = $i->{host}\n" if ( $i->{host} );
-        print $fh "  ttl = $i->{ttl}\n" if ( $i->{ttl} );
+        print $fh "  ttl = $i->{ttl}\n" if ( defined $i->{ttl} );
+        print $fh "  bind = $i->{bind}\n" if ( $i->{bind} );
+        print $fh "  bind_hostname = ".boolstr($i->{bind_hostname})."\n" if ( defined $i->{bind_hostname} );
         print $fh "}\n\n";
     }
 }
@@ -152,7 +157,7 @@ sub print_collection_group
 
     for my $i ( @{$cfg} ) {
         print $fh "collection_group {\n";
-        print $fh "  collect_once = ".boolstr($i->{collect_once})."\n" if ( $i->{collect_once} );
+        print $fh "  collect_once = ".boolstr($i->{collect_once})."\n" if ( defined $i->{collect_once} );
         print $fh "  collect_every = $i->{collect_every}\n" if ( $i->{collect_every} );
         print $fh "  time_threshold = $i->{time_threshold}\n" if ( $i->{time_threshold} );
 

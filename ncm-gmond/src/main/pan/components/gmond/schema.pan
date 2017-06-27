@@ -33,10 +33,13 @@ type gmond_globals = {
     "mute" ? boolean = false
     "deaf" ? boolean = false
     "host_dmax" ? long(0..) = 0
+    "host_tmax" ? long(0..) = 0
     "cleanup_threshold" ? long(0..) = 0
     "gexec" ? boolean = false
     "send_metadata_interval" ? long(0..) = 0
     "module_dir" ? string
+    "allow_extra_data" ? boolean
+    "max_udp_msg_len" ? long(0..65536)
 };
 
 type gmond_udp_send_channel = {
@@ -45,6 +48,13 @@ type gmond_udp_send_channel = {
     "host" ? type_hostname
     "port" : type_port
     "ttl" ? long(1..)
+    "bind" ? type_ipv4
+    "bind_hostname" ? boolean
+} with {
+    if (is_defined(SELF['bind']) && is_defined(SELF['bind_hostname'])) {
+        error('bind and bind_hostname are mutually exclusive');
+    };
+    true;
 };
 
 type gmond_udp_recv_channel = {

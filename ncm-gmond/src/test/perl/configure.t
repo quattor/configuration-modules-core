@@ -19,10 +19,12 @@ cluster {
 
 globals {
   daemonize = true
+  allow_extra_data = false
 }
 
 udp_send_channel {
   port = 123
+  bind_hostname = true
 }
 
 udp_recv_channel {
