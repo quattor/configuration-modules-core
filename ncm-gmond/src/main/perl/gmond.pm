@@ -1,4 +1,12 @@
-#${PMpre} NCM::Component::gmond${PMpost}
+#${PMcomponent}
+
+=head1 DESCRIPTION
+
+The I<gmond> component manages Ganglia's gmond daemon.
+This daemon collects information at a node and uses multicast to distribute it
+over the network.
+
+=cut
 
 use CAF::FileWriter;
 use CAF::Service;
@@ -24,10 +32,10 @@ sub print_acl
 
     for my $i ( @{$cfg->{access}} ) {
         print $fh "    access {\n",
-                   "      ip = $i->{ip}\n",
-                   "      mask = $i->{mask}\n",
-                   "      action = \"$i->{action}\"\n",
-                   "    }\n";
+            "      ip = $i->{ip}\n",
+            "      mask = $i->{mask}\n",
+            "      action = \"$i->{action}\"\n",
+            "    }\n";
     }
 
     print $fh "  }\n";
@@ -56,6 +64,8 @@ sub print_cluster
 sub print_host
 {
     my ($self, $fh, $cfg) = @_;
+
+    return unless ($cfg);
 
     print $fh "host {\n  location = \"$cfg->{location}\"\n}\n\n";
 }
@@ -185,29 +195,28 @@ sub Configure
 
     # daemon configuration
     my $st = $config->getTree($self->prefix());
-    if ( defined($st) ) {
 
-        # Location of the configuration file
-        my $cfgfile = $st->{file};
-        my $fh = CAF::FileWriter->new ($cfgfile, mode => 0640, log => $self);
+    # Location of the configuration file
+    my $cfgfile = $st->{file};
+    my $fh = CAF::FileWriter->new ($cfgfile, mode => oct(640), log => $self);
 
-        print $fh "# $cfgfile\n# written by ncm-gmond. Do not edit!\n";
+    print $fh "# $cfgfile\n# written by ncm-gmond. Do not edit!\n";
 
-        $self->print_include($fh, $st->{include});
-        $self->print_cluster($fh, $st->{cluster});
-        $self->print_host($fh, $st->{host});
-        $self->print_globals($fh, $st->{globals});
-        $self->print_udp_send_channel($fh, $st->{udp_send_channel});
-        $self->print_udp_recv_channel($fh, $st->{udp_recv_channel});
-        $self->print_tcp_accept_channel($fh, $st->{tcp_accept_channel});
-        $self->print_collection_group($fh, $st->{collection_group});
-        $self->print_module($fh, $st->{module});
+    $self->print_include($fh, $st->{include});
+    $self->print_cluster($fh, $st->{cluster});
+    $self->print_host($fh, $st->{host});
+    $self->print_globals($fh, $st->{globals});
+    $self->print_udp_send_channel($fh, $st->{udp_send_channel});
+    $self->print_udp_recv_channel($fh, $st->{udp_recv_channel});
+    $self->print_tcp_accept_channel($fh, $st->{tcp_accept_channel});
+    $self->print_collection_group($fh, $st->{collection_group});
+    $self->print_module($fh, $st->{module});
 
-        if ($fh->close()) {
-            CAF::Service->new(['gmond'], log => $self)->restart()
-        };
-    }
-
+    if ($fh->close()) {
+        CAF::Service->new(['gmond'], log => $self)->restart()
+    };
 
     return 1;
 }
+
+1;
