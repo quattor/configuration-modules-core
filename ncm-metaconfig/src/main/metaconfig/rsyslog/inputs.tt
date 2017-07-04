@@ -1,0 +1,4 @@
+[%- FOREACH input IN CCM.contents.input.pairs %]
+[% # One input-type per named input
+      INCLUDE 'metaconfig/rsyslog/input.tt' name=input.key type=input.value.keys.0 params=input.value.values.0 -%]
+[% END -%]

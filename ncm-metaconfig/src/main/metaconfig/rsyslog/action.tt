@@ -1,0 +1,13 @@
+action(
+[% FILTER indent -%]
+type="om[% type %]"
+[%-      options = {};
+        options.import(action);
+        # remove 'options' and any others (delete VMethod accepts multiple args)
+        options.delete('options') -%]
+[%-        INCLUDE 'metaconfig/rsyslog/elements.tt' elements=options octals=['fileCreateMode', 'dirCreateMode'] moduletype=type %]
+[%-      IF action.options.defined %]
+[%-         INCLUDE 'metaconfig/rsyslog/elements.tt' elements=action.options prefix='action.' %]
+[%-      END %]
+[%- END %]
+)[% -%]

@@ -1,0 +1,29 @@
+[% FOREACH pair IN files.pairs %]
+[%- #    test for stop as last element
+        filename = CCM.unescape(pair.key);
+        name = filename.split('/').last.split('\.').first _ 'log';
+        stop = 0;
+        prifilt = [];
+        FOREACH filt IN pair.value;
+            IF filt == 'stop';
+                stop = 1;
+            ELSE;
+                prifilt.push("prifilt('" _ filt _ "')");
+            END;
+        END;
+        IF prifilt.size;
+            header = (filename == CCM.unescape(files.pairs.first.key) ? '' : '} else ') _ 'if ' _ prifilt.join(' or ') _ ' then {';
+            footer = filename == CCM.unescape(files.pairs.last.key) ? '}' : '';
+            ind = '    ';
+        ELSE;
+            header = '';
+            footer = '';
+            ind = '';
+        END;  -%]
+[%-      header %]
+[%      FILTER indent(ind) %]
+[%-          INCLUDE 'metaconfig/rsyslog/action.tt' type='file' action={'name' => name, 'file' => filename} %]
+[%          IF stop %]stop[% END %]
+[%-      END %]
+[%      footer %]
+[% END %]

@@ -1,0 +1,17 @@
+[%- commalist = ['czmq'] -%]
+[%- prefix -%][% el.key %]=
+[%- IF CCM.is_list(el.value) && NOT commalist.grep('^' _ moduletype _ '$').defined(0) -%]
+[[%     el.value.size > 0 ? '"' : '' %][% el.value.join('", "') -%][% el.value.size > 0 ? '"' : ''%]]
+[%- ELSE -%]
+"
+[%-     IF el.value.is_boolean -%]
+[%-         el.value ? 'on' : 'off' -%]
+[%-     ELSIF CCM.is_list(el.value) -%]
+[%-         el.value.join(',') -%]
+[%-     ELSIF octals.grep('^' _ el.key _ '$').defined(0) -%]
+0[%         el.value FILTER format("%o") %]
+[%-     ELSE -%]
+[%-         el.value -%]
+[%-     END -%]
+"
+[%- END -%]

@@ -1,6 +1,88 @@
 Base test for config
 ---
 multiline
+/etc/rsyslog.conf
 ---
-$wontmatch^
-
+^module\($ ### COUNT 8
+^ {4}load="imfile"$
+^ {4}mode="inotify"$
+^ {4}load="imklog"$
+^\$ModLoad immark$
+^\$MarkMessagePeriod 1800$
+^ {4}load="imtcp"$
+^ {4}PermittedPeer=\["host.domain", "otherhost.domain"\]$
+^ {4}load="imudp"$
+^ {4}load="omczmq"$
+^ {4}load="builtin:omfile"$
+^ {4}dirCreateMode="0750"$
+^ {4}load="builtin:omfwd"$
+^ {4}load="omprog"$
+^\$DebugFile /some/file$
+^\$DebugLevel 1$
+^global\( {4}$
+^ {4}workDirectory="/var/spool/rsyslog"$
+^main_queue\( {4}$
+^ {4}queue.filename="somefile"$
+^ {4}queue.saveonshutdown="off"$
+^ {4}queue.size="100"$
+^ {4}queue.syncqueuefiles="on"$
+^template\($
+^ {4}name="LOGSTASH"$
+^ {4}type="string"$
+^ {4}string="<%PRI%>1 %timegenerated:::date-rfc3339% %HOSTNAME% %syslogtag% - %APP-NAME%: %msg:::drop-last-lf%\\n"$
+^input\($ ### COUNT 3
+^ {4}name="input1"$
+^ {4}type="imfile"$
+^ {4}File="/ab/c"$
+^ {4}Tag="abc"$
+^ {4}queue.filename="input1"$
+^ {4}name="input2"$
+^ {4}type="imtcp"$
+^ {4}Port="1234"$
+^ {4}name="input3"$
+^ {4}type="imudp"$
+^ {4}Port=\["514", "515"\]$
+^\)$ ### COUNT 14
+^ruleset\($ ### COUNT 3
+^ {4}name="otherrule"$
+^ {4}\) \{$ ### COUNT 3
+^ {4}if host != special then \{ stop \}$
+^ {4}action\($ ### COUNT 4
+^ {8}type="omfwd"$
+^ {8}Target="my.hostname.domain"$
+^ {8}ZipLevel="2"$
+^ {8}type="omczmq"$
+^ {8}endpoints="tcp://server1/\*,\*tcp://otherserver:1234"$
+^ {4}name="rule1"$
+^ {4}queue.size="10000"$
+^ {8}type="omfile"$
+^ {8}fileCreateMode="0640"$
+^ {8}zipLevel="2"$
+^ {8}action.copyMsg="on"$
+^ {8}type="omprog"$
+^ {8}binary="some string"$
+^ {4}\)$ ### COUNT 4
+^ {4}stop$
+^ {4}name="varlog"$
+^ {4}if prifilt\('\*\.info'\) or prifilt\('mail.none'\) or prifilt\('authpriv.none'\) or prifilt\('cron.none'\) or prifilt\('uucp.\*'\) or prifilt\('news.crit'\) then \{$
+^ {8}action\($ ### COUNT 5
+^ {12}type="omfile"$ ### COUNT 5
+^ {12}file="/var/log/messages"$
+^ {12}name="messageslog"$
+^ {8}\)$ ### COUNT 5
+^ {4}\}$ ### COUNT 2
+^ {4}if prifilt\('local7.\*'\) then \{$
+^ {12}file="/var/log/boot.log"$
+^ {12}name="bootlog"$
+^ {8}stop$ ### COUNT 4
+^ {4}\} else if prifilt\('cron.\*'\) then \{$
+^ {12}file="/var/log/cron.log"$
+^ {12}name="cronlog"$
+^ {4}\} else if prifilt\('mail.\*'\) then \{$
+^ {12}file="/var/log/maillog"$
+^ {12}name="mailloglog"$
+^ {4}\} else if prifilt\('authpriv.\*'\) then \{$
+^ {12}file="/var/log/secure"$
+^ {12}name="securelog"$
+^\}$ ### COUNT 3
+^\$DefaultRuleset varlog$
