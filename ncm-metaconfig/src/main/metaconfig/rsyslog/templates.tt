@@ -1,0 +1,14 @@
+[%- FOREACH template IN CCM.contents.template.pairs -%]
+[%-     type=template.value.keys.0;
+        params=template.value.values.0; %]
+template(
+[%     FILTER indent -%]
+name="[%    template.key %]"
+type="[%    type %]"
+[%         SWITCH type -%]
+[%-             CASE 'string' -%]
+string="[% params %]"
+[%-          END -%]
+[%-      END %]
+)
+[% END -%]

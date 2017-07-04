@@ -1,0 +1,6 @@
+[%- IF stop.length == 0 -%]
+stop
+[%-  ELSE -%]
+if [% stop %] then { stop }
+[%- # needs to end with newline
+   END %]

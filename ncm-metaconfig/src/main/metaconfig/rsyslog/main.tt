@@ -1,0 +1,23 @@
+[% INCLUDE 'metaconfig/rsyslog/modules.tt' %]
+[% FOREACH pair IN CCM.contents.debug.pairs %]
+$Debug[% pair.key FILTER ucfirst %] [% pair.value -%]
+[% END %]
+[% IF CCM.contents.global.defined %]
+global(
+[%-      INCLUDE 'metaconfig/rsyslog/elements.tt' elements=CCM.contents.global FILTER indent %]
+)
+[%- END %]
+[% IF CCM.contents.main_queue.defined %]
+main_queue(
+[%-      INCLUDE 'metaconfig/rsyslog/elements.tt' elements=CCM.contents.main_queue prefix='queue.' FILTER indent %]
+)
+[%- END %]
+[% INCLUDE 'metaconfig/rsyslog/templates.tt' %]
+[% INCLUDE 'metaconfig/rsyslog/inputs.tt' %]
+[% FOREACH pair IN CCM.contents.ruleset.pairs %]
+[%      INCLUDE 'metaconfig/rsyslog/ruleset.tt' name=pair.key ruleset=pair.value %]
+[% END %]
+[% # This is probably a rsyslog bug, but set the default ruleset in legacy config last
+   IF CCM.contents.defaultruleset.defined -%]
+$DefaultRuleset [% CCM.contents.defaultruleset %]
+[% END -%]
