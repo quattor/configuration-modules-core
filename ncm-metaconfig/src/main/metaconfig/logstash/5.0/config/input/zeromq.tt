@@ -1,0 +1,3 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringhash" names=['sockopt'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray" names=['address','topic'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=['topology','mode','sender'] -%]
