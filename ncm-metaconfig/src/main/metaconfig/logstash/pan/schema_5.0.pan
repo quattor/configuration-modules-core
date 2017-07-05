@@ -365,3 +365,60 @@ type type_logstash_forwarder = {
     "network" : type_logstash_forwarder_network
     "files" : type_logstash_forwarder_file[]
 };
+
+type type_logstash_yml_node = {
+    "name" ? string
+};
+
+type type_logstash_yml_pipeline = {
+    "workers" ? long
+    "output.workers" ? long
+    "batch.size" ? long
+    "unsafe_shutdown" ? boolean
+};
+
+type type_logstash_yml_path = {
+    "config" ? string
+    "data" ? string
+    "logs" ? string
+    "plugins" ? string[]
+    "queue" ? string
+};
+
+type type_logstash_yml_config = {
+    "string" ? string
+    "test_and_exit" ? boolean
+    "reload.automatic" ? boolean
+    "reload.interval" ? long
+    "debug" ? boolean
+};
+
+type type_logstash_yml_queue = {
+    "type" ? string
+    "page_capacity" ? string
+    "max_events" ? long
+    "max_bytes" ? long
+    "checkpoint.acks" ? long
+    "checkpoint.writes" ? long
+    "checkpoint.interval" ? long
+};
+
+type type_logstash_yml_http = {
+    "host" ? string
+    "port" ? string
+};
+
+type type_logstash_yml_log = {
+    "level" ? string with match(SELF, "(fatal|error|warn|info|debug|trace)")
+};
+
+type type_logstash_yml = {
+    "node" ? type_logstash_yml_node
+    "pipeline" ? type_logstash_yml_pipeline
+    "path" ? type_logstash_yml_path
+    "config" ? type_logstash_yml_config
+    "queue" ? type_logstash_yml_queue
+    "http" ? type_logstash_yml_http
+    "log" ? type_logstash_yml_log
+};
+

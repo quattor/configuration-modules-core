@@ -10,3 +10,5 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 "group" = "root";
 "mode" = 0644;
 "module" = format("logstash/%s/main" , METACONFIG_LOGSTASH_VERSION);
+
+
