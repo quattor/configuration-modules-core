@@ -65,6 +65,8 @@ type component_spma_yum = {
     "quattor_os_release" ? string # string to write to quattor_os_file
     "plugins" ? spma_yum_plugins
     "main_options" ? spma_yum_main_options
+    @{ Allow user defined (i.e. unmanaged) repositories to be used }
+    "userrepos" : boolean = false
 };
 
 bind "/software/components/spma" = component_spma_yum;

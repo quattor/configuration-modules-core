@@ -3,8 +3,6 @@
 # ${author-info}
 # ${build-info}
 
-=pod
-
 =head1 DESCRIPTION
 
 Tests for the C<apply_transaction> method.  This method executes the
@@ -41,10 +39,6 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_err($YUM, "");
 set_desired_output($YUM, "Transaction");
-
-=pod
-
-=back
 
 =head2 Transaction executions
 

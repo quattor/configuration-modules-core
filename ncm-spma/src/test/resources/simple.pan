@@ -17,3 +17,4 @@ prefix "/software/components/spma";
 "active" = true;
 "dispatch" = true;
 "userpkgs" = "no";
+"userrepos" = false;

@@ -3,8 +3,6 @@
 # ${author-info}
 # ${build-info}
 
-=pod
-
 =head1 DESCRIPTION
 
 Tests for the C<Configure> method.  This method should just call a few
@@ -24,7 +22,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
+use Test::Quattor qw(simple with_proxy without_spma with_pkgs with_repos);
 use NCM::Component::spma::yum;
 use Test::MockObject::Extends;
 use CAF::Object;
@@ -62,8 +60,6 @@ my %calls;
 
 is($cmp->Configure($cfg), 1, "Simple configuration succeeds");
 
-=pod
-
 =head2 Simple profile
 
 We use the simplest profile for this, which doesn't allow for user
@@ -85,8 +81,6 @@ ok(!$args[4], "No user packages allowed in update_pkgs_retry");
 ok(exists($args[1]->{ConsoleKit}),
   "A package list is passed to UPDATE_PKGS");
 
-=pod
-
 =head3 Correct arguments to each callee
 
 =cut
@@ -104,16 +98,12 @@ while (my ($name, $args) = $mock->next_call()) {
 ok(defined($calls{configure_plugins}),
    "configure_plugins called, t->{plugins} are passed (undef since not defined)");
 
-=over
-
 =item * C<initialize_repos_dir>
 
 =cut
 
-is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d",
+is($calls{initialize_repos_dir}->[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory initialized");
-
-=pod
 
 =item * C<cleanup_old_repos>
 
@@ -121,7 +111,7 @@ is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d",
 
 @args = @{$calls{cleanup_old_repos}};
 
-is($args[1], "/etc/yum.repos.d",
+is($args[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory to be cleaned up");
 is(ref($args[2]), 'ARRAY',
    'A list with repositories is passed to clean up non-existing repos');
@@ -129,14 +119,12 @@ is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to cleanup_old_repos");
 ok(!$args[3], "No user repositories allowed");
 
-=pod
-
 =item * C<generate_repos>
 
 =cut
 
 @args = @{$calls{generate_repos}};
-is($args[1], "/etc/yum.repos.d",
+is($args[1], "/etc/yum.quattor.repos.d",
    "Correct Yum repository directory to be initialised");
 is(ref($args[2]), 'ARRAY',
    "A list of repositories is passed to generate_repos");
@@ -146,7 +134,8 @@ like($args[3], qr{^repository$},
      "Correct repository template passed");
 ok(!$args[4], "No proxy passed to generate_repos");
 
-=pod
+
+=back
 
 =head2 Proxy settings
 
@@ -168,8 +157,6 @@ is($args[-3], $t->{proxyhost}, "Correct proxy host passed to generate_repos");
 is($args[-2], $t->{proxytype}, "Correct proxy type passed to generate_repos");
 is($args[-1], $t->{proxyport}, "Correct proxy port passed to generate_repos");
 
-=pod
-
 =head2 SPMA disabled
 
 It must show up when calling C<update_pkgs_retry>
@@ -184,11 +171,9 @@ $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
 ok(!$args[3], "No run is correctly passed to update_pkgs_retry");
 
-=pod
-
 =head2 User packages allowed
 
-They show up in C<cleanup_old_repos> and C<update_pkgs_retry>
+They show up in C<update_pkgs_retry>
 
 =cut
 
@@ -199,12 +184,10 @@ $mock->clear();
 $cmp->Configure($cfg);
 
 while (my ($n, $a) = $mock->next_call()) {
-    if ($n eq 'update_pkgs_retry' || $n eq 'cleanup_old_repos') {
+    if ($n eq 'update_pkgs_retry') {
 	ok($a->[3], "User packages are passed correctly to $name");
     }
 }
-
-=pod
 
 =head2 Error handling
 
@@ -225,8 +208,6 @@ $mock->set_false('update_pkgs_retry');
 is($cmp->Configure($cfg), 0, "Failure in update_pkgs_retry is propagated");
 $mock->called_ok('update_pkgs_retry', "update_pkgs_retry is called");
 
-=pod
-
 =item * Any other method fails
 
 The error is propagated, and C<update_pkgs_retry> is never called
@@ -242,8 +223,6 @@ foreach my $f (qw(generate_repos cleanup_old_repos initialize_repos_dir)) {
     $mock->set_true($f);
 }
 
-=pod
-
 =item * The LANG environment variable is kept
 
 =cut
@@ -253,11 +232,36 @@ $mock->mock('generate_repos', sub {
 		    return 1;
 	    });
 
+=back
+
+=head2 User packages allowed
+
+They show up in C<cleanup_old_repos>
+
+=cut
+
+$cfg = get_config_for_profile("with_repos");
+
+$mock->clear();
+
+$cmp->Configure($cfg);
+
+while (my ($name, $args) = $mock->next_call()) {
+    $calls{$name} = $args;
+}
+
+=over
+
+=item * C<initialize_repos_dir>
+
+=cut
+
+is($calls{initialize_repos_dir}->[1], "/etc/yum.repos.d", "Correct Yum repository directory initialized with userrepos set");
+
+
 done_testing();
 
 __END__
-
-=pod
 
 =back
 

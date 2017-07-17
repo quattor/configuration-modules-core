@@ -3,8 +3,6 @@
 # ${author-info}
 # ${build-info}
 
-=pod
-
 =head1 DESCRIPTION
 
 Tests for the C<complete_transaction> method.  This method just runs
@@ -33,10 +31,6 @@ set_desired_err($CMD, "");
 set_desired_output($CMD, "");
 
 my $cmp = NCM::Component::spma::yum->new("spma");
-
-=pod
-
-=back
 
 =head2 Transaction completions
 
