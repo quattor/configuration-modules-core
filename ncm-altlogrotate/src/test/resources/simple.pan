@@ -16,6 +16,7 @@ prefix '/software/components/altlogrotate/entries/test1';
 "createparams/mode" = '0751';
 "createparams/owner" = 'someuser';
 "createparams/group" = 'agroup';
+"mailselect" = "first";
 "scripts" = dict("lastaction", "/run/this");
 "tabooext" = list('a', 'b');
 "taboo_replace" = true;

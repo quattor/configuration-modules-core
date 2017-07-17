@@ -21,9 +21,10 @@ my $test1 = <<EOF;
 a/b/c/*-2???-??-??.log {
 compress
 missingok
-frequency daily
 rotate 1
+daily
 create 0751 someuser agroup
+mailfirst
 nomail
 tabooext a,b
 lastaction
@@ -53,6 +54,7 @@ is("$fh", "${header}include some_file\nsomething {\ntabooext + a,b\n}\n",
 
 $fh = get_file("/etc/logrotate.d/test1.ncm-altlogrotate");
 is("$fh", "$header$test1", "correct test1 config entry");
+unlike("$fh", qr{frequency}, "no frequency keyword in frequency (daily value) entry");
 
 $fh = get_file("/etc/logrotate.d/test3_overwrite_with_file");
 is("$fh", "${header}test3 {\ncompress\n}\n", "correct test3 overwrite with file config entry");
