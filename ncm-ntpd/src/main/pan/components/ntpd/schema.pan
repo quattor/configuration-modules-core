@@ -13,7 +13,7 @@ type ntpd_clientnet_type = {
     Server command options
     Refer to man ntp.conf for details.
 }
-type ntpd_server_options = extensible {
+type ntpd_server_options = {
     "autokey" ? boolean
     "burst" ? boolean
     "iburst" ? boolean
@@ -31,7 +31,7 @@ type ntpd_server_options = extensible {
     Base restrict command options
     Refer to C<< man ntp_acc >> for more information or access control commands.
 }
-type ntpd_restrict_options = extensible {
+type ntpd_restrict_options = {
     @{Mask can be a address of a host or network and can be a valid host DNS name.}
     "mask" ? type_ip
     "ignore" ? boolean = true
@@ -152,7 +152,7 @@ type ntpd_filegen = {
     "enableordisable" ? string with match(SELF, '^(en|dis)able$')
 };
 
-type ${project.artifactId}_component = extensible  {
+type ${project.artifactId}_component = {
     include structure_component
     @{Specifies the absolute path and of the MD5 key file containing the
       keys and key identifiers used by ntpd, ntpq and ntpdc when operating with
