@@ -1,0 +1,33 @@
+Base test for all client config options
+---
+/etc/openvpn/client.conf
+---
+^ca /etc/pki/CA/certs/cabundle.pem$
+^cd /openvpnhome/$
+^cert /etc/openvpn/certs/vpn.crt$
+^cipher AES-256-CBC$
+^client$
+^comp-lzo$
+^comp-noadapt$
+^daemon$
+^dev tun$
+^group nobody$
+^ifconfig l rn$
+^key /etc/openvpn/keys/vpn.key$
+^max-routes 150$
+^nobind$
+^persist-key$
+^persist-tun$
+^port 1194$
+^proto tcp$
+^remote vpntest.domain.example 1194$
+^remote fallbackvpntest.domain.example 1195$
+^remote-cert-tls client$
+^remote-random$
+^resolv-retry infinite$
+^tls-auth /etc/openvpn/vpntest/ta.key 1$
+^tls-client$
+^tls-exit$
+^tun-mtu 1500$
+^user nobody$
+^verb 3$
