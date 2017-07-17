@@ -47,7 +47,8 @@ sub request_cert
 
 =item get_cert
 
-Given C<serial>, retrieve the certificate and save it in file C<crt>.
+Given C<serial>, retrieve the certificate and when defined,
+save it in file C<crt>.
 
 =cut
 

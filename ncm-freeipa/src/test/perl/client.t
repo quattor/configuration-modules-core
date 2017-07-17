@@ -54,7 +54,7 @@ set_file_contents('/tmp/quattor_nss-XXXX/cert_myhost.example.com_anick1.csr',
                   "-----BEGIN CERTIFICATE REQUEST-----\nCSRDATA\n-----END CERTIFICATE REQUEST-----");
 
 # anick1 is not yet known
-set_command_status('/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1', 1);
+set_command_status('/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -a -n anick1', 1);
 
 command_history_reset;
 reset_caf_path;
@@ -62,11 +62,11 @@ reset_caf_path;
 $ipa = $cmp->set_ipa_client($tree);
 ok($cmp->client($tree), "client returns success");
 ok(command_history_ok([
-    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab",
-    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice2/myhost.example.com -k /etc/super2.keytab",
+    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice1/myhost.example.com -k /etc/super1.keytab -r\$",
+    "/usr/sbin/ipa-getkeytab -s myhost.example.com -p someservice2/myhost.example.com -k /etc/super2.keytab\$",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -N -f /dev/null",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -A -n MY.REALM IPA CA -t CT,, -a -i /etc/ipa/ca.crt",
-    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1",
+    "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -a -n anick1",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -R -g 4096 -s CN=myhost.example.com,O=MY.REALM -z /tmp/quattor_nss-XXXX/random_anick1.data -a -o /tmp/quattor_nss-XXXX/cert_myhost.example.com_anick1.csr",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -A -n anick1 -t u,u,u -a -i /tmp/quattor_nss-XXXX/init_nss_anick1.crt",
     "/usr/bin/certutil -d /etc/ipa/quattor/nssdb -L -n anick1 -a -o /path/to/cert",

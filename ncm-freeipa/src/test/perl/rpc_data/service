@@ -6,3 +6,6 @@ $cmds{add_missing}{result}={okunittest => 1};
 
 $cmds{add_myservice}{cmd}="1 service_allow_retrieve_keytab myservice/myhost.domain .*host=myhost.*";
 $cmds{add_myservice}{result}={okunittest => 2};
+
+$cmds{show_myservice}{cmd}="2 service_show SERVICE/myhost.domain version=.*";
+$cmds{show_myservice}{result}={has_keytab => 1};

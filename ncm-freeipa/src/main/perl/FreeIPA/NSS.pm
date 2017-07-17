@@ -5,6 +5,7 @@ use CAF::Object qw(SUCCESS);
 use CAF::Process;
 use File::Basename qw(dirname);
 use Readonly;
+use Crypt::OpenSSL::X509;
 
 # Both from nss-tools
 Readonly my $CERTUTIL => '/usr/bin/certutil';
@@ -91,7 +92,9 @@ sub setup_nssdb
 
     my $msg = "nssdb directory $self->{nssdb}";
 
-    my $initdb = ! $self->directory_exists($self->{nssdb});
+    # No directory of no .db files
+    my $initdb = ! $self->directory_exists($self->{nssdb}) ||
+                 ! scalar glob("$self->{nssdb}/*.db");
 
     if ($self->directory($self->{nssdb}, %{$self->{perms}})) {
         if ($initdb) {
@@ -102,7 +105,7 @@ sub setup_nssdb
             }
         }
 
-        foreach my $dbfile (glob("$self->{nssdb}/*.db") ) {
+        foreach my $dbfile (glob("$self->{nssdb}/*.db")) {
             $self->status($dbfile, %{$self->{perms}});
         }
 
@@ -130,7 +133,7 @@ sub setup
 {
     my ($self) = @_;
 
-    $self->{workdir} = $self->directory("/tmp/quattor_nss-XXXX", mode => 0700, temp => 1);
+    $self->{workdir} = $self->directory("/tmp/quattor_nss-XXXX", mode => oct(700), temp => 1);
     if (! $self->{workdir}) {
         return $self->fail("Failed to setup temp NSS workdir: $self->{fail}");
     };
@@ -185,15 +188,48 @@ sub add_cert
 
 Check if certificate for C<nick> exists in NSSDB.
 
+If an ipa client instance is passed,
+also check if the certificate is known in FreeIPA.
+
 =cut
 
 sub has_cert
 {
-    my ($self, $nick) = @_;
+    my ($self, $nick, $ipa) = @_;
 
     # It's quite OK that this command fails
     my $oldfail = $self->{fail};
-    my $res = $self->_certutil('-L', '-n', $nick);
+
+    my $cert_txt = $self->_certutil_output('-L', '-a', '-n', $nick);
+    my $res = defined($cert_txt) ? 1 : 0;
+
+    if ($ipa && $cert_txt) {
+        # TODO: handle other fp methods like md5 for fallback or sha256
+        my $algo = "sha1";
+        my $fpmethod = "fingerprint_$algo";
+        my $decoded = Crypt::OpenSSL::X509->new_from_string($cert_txt);
+        if ($decoded->can($fpmethod)) {
+            my $fp = $decoded->$fpmethod();
+
+            my $hex_serial = $decoded->serial();
+            my $cert = $ipa->get_cert("0x$hex_serial");
+            my $ipa_fp = $cert->{"${algo}_fingerprint"} || 'undef';
+
+            if ($ipa_fp && uc($ipa_fp) eq uc($fp)) {
+                $res = 1;
+                $self->debug(1, "Found existing certificate nick $nick with serial 0x$hex_serial ",
+                             "with matching FPs $fp");
+            } else {
+                $res = 0;
+                $self->verbose("Found local certificate from nick $nick ",
+                               "with $algo FP $fp that doesn't match IPA FP $ipa_fp");
+            }
+        } else {
+            $self->warn("No cert FP method $fpmethod support. Found a cert, assume it's ok");
+            $res = 1;
+        }
+    };
+
     $self->{fail} = $oldfail;
     return $res;
 }
@@ -209,7 +245,7 @@ sub get_cert
 {
     my ($self, $nick, $cert, %opts) = @_;
 
-    if (! $self->directory(dirname($cert), mode => 0755)) {
+    if (! $self->directory(dirname($cert), mode => oct(755))) {
         return $self->fail("Failed to create dirname for cert $cert: $self->{fail}");
     };
 
@@ -361,12 +397,12 @@ sub get_privkey
 {
     my ($self, $nick, $key, %opts) = @_;
 
-    if (! $self->directory(dirname($key), mode => 0755)) {
+    if (! $self->directory(dirname($key), mode => oct(755))) {
         return $self->fail("Failed to create dirname for key $key: $self->{fail}");
     };
 
     my $p12dir = "$self->{workdir}/p12keys";
-    return if ! $self->directory($p12dir, mode => 0700);
+    return if ! $self->directory($p12dir, mode => oct(700));
 
     my $p12key = "$p12dir/key.p12";
     my $out = CAF::Process->new(
@@ -411,10 +447,10 @@ sub get_cert_or_key
     return $type eq 'cert' ? $self->get_cert(@_) : $self->get_privkey(@_);
 }
 
-# Convenience wrapper around certutil tool
-# Return 1 on success
-# Store commandline and output on fiailure in fail attribute
-sub _certutil
+# Convenience wrapper around certutil
+# Return output (always defined) on success
+# Store commandline and output on failure in fail attribute
+sub _certutil_output
 {
     my ($self, @args) = @_;
 
@@ -424,13 +460,26 @@ sub _certutil
     my $proc = CAF::Process->new([$CERTUTIL, '-d', $db], log => $self);
     $proc->pushargs(@args);
     my $output = $proc->output();
+    $output = '' if ! defined($output);
+
     chomp($output);
 
     if ($?) {
         return $self->fail("$proc failed: $output");
     } else {
-        return SUCCESS;
+        return $output;
     }
+}
+
+# Convenience wrapper around certutil tool via _certutil_output
+# Return 1 on success
+# Store commandline and output on failure in fail attribute
+sub _certutil
+{
+    my $self = shift;
+    my $output = $self->_certutil_output(@_);
+
+    return defined($output) ? SUCCESS : undef;
 }
 
 

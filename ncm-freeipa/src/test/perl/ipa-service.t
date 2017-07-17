@@ -47,6 +47,17 @@ ok(POST_history_ok([
    "service_allow_retrieve_keytab myservice/myhost.domain host=myhost.*",
 ]), "service_add and service_allow_(create|retrieve)_keytab for host called");
 
+=head2 service_has_keytab
+
+=cut
+
+$c->{id} = 2;
+reset_POST_history;
+is($c->service_has_keytab('SERVICE/myhost.domain'), 1, "service has keytab");
+ok(POST_history_ok([
+   "service_show SERVICE/myhost.domain version=.*",
+]), "service_show for SERVICE/myhost called");
+
 # unmock JSON::XS for Cover
 $mock_rpc::json->unmock_all();
 done_testing;
