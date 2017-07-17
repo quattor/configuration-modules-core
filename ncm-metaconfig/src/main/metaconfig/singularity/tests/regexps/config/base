@@ -12,6 +12,9 @@ multiline
 ^config\sresolv\_conf\s=\syes\s*$
 ^container\sdir\s=\s/var/singularity/mnt\s*$
 ^enable\soverlay\s=\syes\s*$
+^limit\scontainer\sowners\s=\ssingularity,\snobody\s*$
+^limit\scontainer\spaths\s=\s/local/scratch,\s/tmp\s*$
+^max\sloop\sdevices\s=\s256\s*$
 ^mount\sdev\s=\syes\s*$
 ^mount\shome\s=\syes\s*$
 ^mount\shostfs\s=\sno\s*$
@@ -19,4 +22,5 @@ multiline
 ^mount\sslave\s=\syes\s*$
 ^mount\ssys\s=\syes\s*$
 ^mount\stmp\s=\syes\s*$
+^sessiondir\smax\ssize\s=\s16\s*$
 ^user\sbind\scontrol\s=\syes\s*$
