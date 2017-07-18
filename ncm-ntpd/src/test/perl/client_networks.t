@@ -8,7 +8,6 @@ use CAF::Object;
 use Test::MockModule;
 
 $CAF::Object::NoAction = 1;
-$NCM::Component::ntpd::NoAction = 1;
 
 =pod
 
@@ -31,7 +30,7 @@ isa_ok($fh, 'CAF::FileWriter', 'File is handled by CAF::FileWriter');
 like($fh, qr/^restrict\s+10\.0\.0\.0\s+mask\s+255\.0\.0\.0\s+nomodify\s+notrap/m, 'First client network found');
 like($fh, qr/^restrict\s+172\.16\.0\.0\s+mask\s+255\.240\.0\.0\s+nomodify\s+notrap/m, 'Second client network found');
 like($fh, qr/^restrict\s+192\.168\.0\.0\s+mask\s+255\.255\.0\.0\s+nomodify\s+notrap/m, 'Third client network found');
-my $cmd = get_command('/sbin/service ntpd restart');
+my $cmd = get_command('service ntpd restart');
 ok($cmd, 'Daemon was restarted with client_networks profile');
 
 done_testing();

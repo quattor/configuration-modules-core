@@ -1,6 +1,8 @@
 object template simple_serverlist;
 
-"/software/components/ntpd" = dict();
+function pkg_repl = { null; };
+include 'components/ntpd/config';
+'/software/components/ntpd/dependencies' = null;
 
 include 'base_serverlist_options';
 
@@ -14,14 +16,14 @@ prefix "/software/components/ntpd";
 "tinker/stepout" = 300;
 
 #logconfig =syncstatus +sysevents
-"logconfig" = list("=syncstatus", "+sysevent");
+"logconfig" = list("=syncstatus", "+sysevents");
 
 #statsdir /var/log/ntpstats/
 #statistics loopstats peerstats
 #filegen loopstats file loopstats type day enable
 #filegen peerstats file peerstats type day enable
 
-"statsdir"="/var/log/ntpstats";
+"statsdir" = "/var/log/ntpstats";
 "statistics" = dict();
 "statistics/loopstats" = true;
 "statistics/peerstats" = true;
@@ -37,7 +39,7 @@ prefix "/software/components/ntpd";
 "filegen/1/type" = "day";
 "filegen/1/enableordisable" = "enable";
 
-"enable/statistics" = true;
+"enable/stats" = true;
 
 #disable ntp
 "disable/ntp" = true;

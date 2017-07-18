@@ -9,7 +9,6 @@ use Test::MockModule;
 use Test::Quattor::RegexpTest;
 
 $CAF::Object::NoAction = 1;
-$NCM::Component::ntpd::NoAction = 1;
 
 =pod
 
@@ -28,7 +27,7 @@ my $cfg;
 $cfg = get_config_for_profile('no_timeservers');
 is( $cmp->Configure($cfg), 0, "time servers are required to configure" );
 
-my $cmd = get_command("/sbin/service ntpd restart");
+my $cmd = get_command("service ntpd restart");
 ok( !$cmd, "Daemon was not restarted when nothing changes" );
 
 # pretend there are changes to ntp.conf.
@@ -69,13 +68,13 @@ is_deeply(*$fh->{options}, $defopts, 'ntp.conf has expected default mode setting
 is_deeply(*$stfh->{options}, $defopts, 'steptickers has expected default mode setting without group defined');
 
 
-$cmd = get_command("/sbin/service ntpd restart");
+$cmd = get_command("service ntpd restart");
 ok( $cmd, "Daemon was restarted with only_timeservers profile" );
 
 $cfg = get_config_for_profile('simple_serverlist');
 is( $cmp->Configure($cfg), 1, "Component runs correctly with simple_serverlist profile" );
 
-$cmd = get_command("/sbin/service ntpd restart");
+$cmd = get_command("service ntpd restart");
 ok( $cmd, "Daemon was restarted with simple_serverlist profile" );
 
 $cfg = get_config_for_profile('disable_options');
@@ -87,7 +86,7 @@ like($fh, qr/^disable\s+monitor/m, "Has monitor option disabled");
 
 # Test group restricted filepermissions
 
-$cmd = get_command("/sbin/service ntpd restart");
+$cmd = get_command("service ntpd restart");
 ok( $cmd, "Daemon was restarted with simple_serverlist profile" );
 
 $cfg = get_config_for_profile('group');
