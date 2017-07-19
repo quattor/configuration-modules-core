@@ -172,6 +172,16 @@ sub set_unconfigured_default
             $self->verbose("Converting legacy unconfigured_default ",
                            "value $val to ", $chkconfig_map->{$val});
             $val = $chkconfig_map->{$val};
+            if ($val ne $UNCONFIGURED_IGNORE) {
+                # This block is inserted here for evaluation of the behaviour
+                # as chkconfig=off might be too dangerous for now.
+                # See issue #1146 for follow-up.
+                $self->info("Ignoring the legacy chkconfig unconfigured behaviour $val ",
+                            "until more feedback is provided (see issue 1146). ",
+                            "To modify unconfigured unit behaviour, set the ncm-systemd configuration ",
+                            "'$self->{BASE}/unconfigured' = '$val';");
+                $val = $UNCONFIGURED_IGNORE;
+            }
         }
         $unconfigured_default = $val;
         $self->verbose("Set unconfigured_default to $unconfigured_default ",
