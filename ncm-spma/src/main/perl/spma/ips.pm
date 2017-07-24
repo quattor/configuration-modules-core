@@ -9,7 +9,7 @@ use warnings;
 use NCM::Component;
 our $EC=LC::Exception::Context->new->will_store_all;
 our @ISA = qw(NCM::Component);
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 
 use CAF::Process;
 use CAF::FileWriter;

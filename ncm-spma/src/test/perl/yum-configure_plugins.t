@@ -10,9 +10,6 @@ use Test::Quattor::TextRender::Base;
 use Readonly;
 Readonly my $YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 my $caf_trd = mock_textrender();
 
 my ($changes, $fh, $text);
