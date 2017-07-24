@@ -1,0 +1,8 @@
+opensm partitions test
+---
+//
+rendermodule=partitions
+contentspath=/
+---
+^default=0x7fff,ipoib,rate=7,mtu=5 : ALL=full;$
+^vlan1=0x3ff : ALL_SWITCHES=limited,0x12345=both;$

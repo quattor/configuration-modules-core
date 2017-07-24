@@ -9,11 +9,7 @@ use Test::Quattor::RegexpTest;
 
 use Test::Quattor::TextRender::Base;
 
-$CAF::Object::NoAction = 1;
-
 my $caf_trd = mock_textrender();
-
-set_caf_file_close_diff(1);
 
 
 =pod
@@ -47,5 +43,13 @@ my $rt = Test::Quattor::RegexpTest->new(
     text => "$fh",
     );
 $rt->test();
+
+$fh = get_file("/etc/opensm/partitions.conf");
+is("$fh", "default=0x7fff : ALL;\n", "partitions.conf created");
+$fh = get_file("/etc/opensm/ib-node-name-map");
+is("$fh", "0x0123456789abcdef \"some hca\"\n", "node name map created");
+
+ok(command_history_ok(['service opensmd restart']),
+   "change in partitions.conf triggered restart in opensmd");
 
 done_testing();
