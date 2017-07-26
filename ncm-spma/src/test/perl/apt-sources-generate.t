@@ -17,13 +17,10 @@ use warnings;
 use Test::Quattor;
 use Test::More;
 use NCM::Component::spma::apt;
-use Test::MockModule;
 use Readonly;
-use CAF::Object;
-use CAF::FileWriter;
-use Cwd;
+use Test::Quattor::TextRender::Base;
 
-$CAF::Object::NoAction = 1;
+my $caf_trd = mock_textrender();
 
 Readonly my $SOURCES_DIR => "/etc/apt/sources.list.d";
 Readonly my $SOURCES_TEMPLATE => "apt/source.tt";
@@ -69,22 +66,13 @@ configuration files.
 
 =cut
 
-my $mock = Test::MockModule->new('CAF::TextRender');
-
-$mock->mock('new', sub {
-    my $init = $mock->original("new");
-    my $trd = &$init(@_);
-    $trd->{includepath} = [getcwd() . "/target/share/templates/quattor"];
-    return $trd;
-});
-
 ok(defined($cmp->generate_sources($SOURCES_DIR, $sources, $SOURCES_TEMPLATE)), "Basic source correctly created");
 
 
-my $fh = get_file("$SOURCES_DIR/a_source.list");
+my $name = $sources->[0]->{name};
+my $fh = get_file("$SOURCES_DIR/$name.list");
 ok(defined($fh), "Correct file opened");
 
-my $name = $sources->[0]->{name};
 
 =pod
 
@@ -95,9 +83,11 @@ to disk.
 
 =cut
 
+remove_any("$SOURCES_DIR/$name.list");
 is($cmp->generate_sources($SOURCES_DIR, $sources, "an invalid template name"), 0, "Invalid template name is detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
 $fh = get_file("$SOURCES_DIR/$name.list");
+ok(!defined($fh), "No file could be opened, render failed");
 
 done_testing();
 

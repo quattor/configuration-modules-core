@@ -78,14 +78,6 @@ Readonly my $CMD_DPKG_QUERY => [$BIN_DPKG_QUERY, qw(-W -f=${db:Status-Abbrev};${
 our $NoActionSupported = 1;
 
 
-# Wrap glob builtin to allow for unittesting
-sub _glob
-{
-    shift;
-    return glob(@_);
-}
-
-
 # If user specified sources (userrepos) are not allowed, removes any
 # sources present in the system that are not listed in $allowed_sources.
 sub cleanup_old_sources
@@ -93,14 +85,14 @@ sub cleanup_old_sources
     my ($self, $sources_dir, $allowed_sources) = @_;
     $self->debug(5, 'Entered cleanup_old_sources()');
 
-    my $current = Set::Scalar->new(_glob("$sources_dir/*.list"));
-    my $allowed = Set::Scalar->new(map("$sources_dir/" . $_->{name} . ".list", @$allowed_sources));
-    my $to_remove = $current - $allowed;
-
     if ($self->directory_exists($sources_dir)) {
-        foreach my $s (@$to_remove) {
-            $self->verbose("Unlinking outdated source $s");
-            if (!defined ($self->cleanup($s, ""))) {
+        my $current = Set::Scalar->new(@{$self->listdir($sources_dir, filter => qr{\.list$}, adddir => 1)});
+        my $allowed = Set::Scalar->new(map("$sources_dir/" . $_->{name} . ".list", @$allowed_sources));
+        my $to_remove = $current - $allowed;
+        foreach my $source (@$to_remove) {
+            $self->verbose("Unlinking outdated source $source");
+            if (!defined ($self->cleanup($source, ""))) {
+                $self->error("Cannot cleanup source $source: $self->{fail}.");
                 return 0;
             }
         }

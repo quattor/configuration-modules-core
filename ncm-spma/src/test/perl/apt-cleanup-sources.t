@@ -21,14 +21,10 @@ use English;
 
 use Test::Quattor;
 use Test::More;
-use Test::MockModule;
 use NCM::Component::spma::apt;
-use CAF::Path;
-use CAF::FileWriter;
-use Set::Scalar;
 
 
-Readonly my $SOURCE_DIR => "target/test/clean.sources.list.d";
+Readonly my $SOURCE_DIR => "/test/clean.sources.list.d";
 
 my $sources = [{
     name => "source1",
@@ -40,33 +36,6 @@ my $sources = [{
 }];
 
 my $cmp = NCM::Component::spma::apt->new("spma");
-my $mock = Test::MockModule->new('NCM::Component::spma::apt');
-
-my $immutable;
-my $directory_exists;
-my $sourcefiles;
-
-
-$mock->mock('_glob', sub {
-    return @$sourcefiles;
-});
-
-
-$mock->mock('cleanup', sub {
-    shift;
-    if (!$immutable) {
-        my $filename = shift;
-        $sourcefiles->delete($filename) || return undef;
-        return 1;
-    };
-    return undef;
-});
-
-
-$mock->mock('directory_exists', sub {
-    return $directory_exists;
-});
-
 
 =pod
 
@@ -77,12 +46,9 @@ reported.
 
 =cut
 
-$immutable = 0;
-$directory_exists = 0;
-$sourcefiles = Set::Scalar->new();
-
-is($cmp->cleanup_old_sources($SOURCE_DIR), 0, "Throw error if source dir does not-exist source dir");
-is($cmp->{ERROR}, 1, "Report Non-existing source dir to the user");
+ok(!$cmp->directory_exists($SOURCE_DIR), "Test source dir does not exist");
+is($cmp->cleanup_old_sources($SOURCE_DIR), 0, "Return false if source dir does not exist");
+is($cmp->{ERROR}, 1, "Report error non-existing source dir to the user");
 
 =pod
 
@@ -92,13 +58,15 @@ In this case, any unwanted files should be removed
 
 =cut
 
-$immutable = 0;
-$directory_exists = 1;
-$sourcefiles = Set::Scalar->new(map { "$SOURCE_DIR/$_.list" } qw(source1 source2));
+# this creates the $SOURCE_DIR
+set_file_contents("$SOURCE_DIR/source1.list", "source1");
+set_file_contents("$SOURCE_DIR/source2.list", "source2");
+set_file_contents("$SOURCE_DIR/source2.garbage", "source2 garbage");
 
 ok($cmp->cleanup_old_sources($SOURCE_DIR, $sources), "Cleanup old source files");
-ok($sourcefiles->contains("$SOURCE_DIR/source1.list"), "Preserve allowed source file");
-ok(!$sourcefiles->contains("$SOURCE_DIR/source2.list"), "Remove unwanted source file");
+ok($cmp->file_exists("$SOURCE_DIR/source1.list"), "Preserve allowed source file");
+ok(!$cmp->file_exists("$SOURCE_DIR/source2.list"), "Remove unwanted source file");
+ok($cmp->file_exists("$SOURCE_DIR/source2.garbage"), "Non-list files untouched");
 
 =pod
 
@@ -108,10 +76,10 @@ In this case, the error must be reported
 
 =cut
 
-$immutable = 1;
-$directory_exists = 1;
-$sourcefiles = Set::Scalar->new(map { "$SOURCE_DIR/$_.list" } qw(source1 source2));
-
-ok(!$cmp->cleanup_old_sources($SOURCE_DIR, $sources), "Report error when an outdated repo cannot be removed");
+set_file_contents("$SOURCE_DIR/source3.list", "source3");
+set_immutable("$SOURCE_DIR/source3.list");
+ok(!$cmp->cleanup_old_sources($SOURCE_DIR, $sources), "Return false when an outdated repo cannot be removed");
+is($cmp->{ERROR}, 2, "Report error when an outdated repo cannot be removed");
+ok($cmp->file_exists("$SOURCE_DIR/source3.list"), "Immutable file not removed");
 
 done_testing();
