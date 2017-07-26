@@ -46,6 +46,7 @@ Packages listed under C</software/packages> will be installed, version and archi
 =cut
 
 use parent qw(NCM::Component CAF::Path);
+use CAF::Path 17.3.1;
 use CAF::Process;
 use CAF::FileWriter;
 use CAF::FileEditor;
@@ -54,8 +55,6 @@ use EDG::WP4::CCM::TextRender;
 use NCM::Component::spma::yum;
 use CAF::Object qw(SUCCESS);
 use Set::Scalar;
-use File::Path qw(mkpath);
-use Text::Glob qw(match_glob);
 use Readonly;
 
 Readonly my $DIR_SOURCES => "/etc/apt/sources.list.d";
