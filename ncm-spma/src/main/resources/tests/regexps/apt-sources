@@ -1,0 +1,12 @@
+Check that basic apt sources are rendered correctly
+---
+//software
+rendermodule=apt/source
+contentspath=/software/repositories/0
+---
+^# Name: a_source$
+^# Owner: localuser@localdomain$
+^# Protocol type: http$
+^deb http://first.example.com/path/to/stuff trusty main$
+^# Protocol type: http$
+^deb http://another.example.org/another/path trusty main$

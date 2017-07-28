@@ -124,7 +124,7 @@ is(NCM::Component::spma::yum::_prefix_noaction_prefix("/myfile"), "$testprefix/m
    "_prefix_noaction_prefix picks up new active noaction prefix", );
 
 # reset
-$cmp->__set_active_noaction_prefix(undef);
+$cmp->__set_active_noaction_prefix('');
 
 =item _match_noaction_tempdir / __match_template_dir
 

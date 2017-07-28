@@ -1,0 +1,17 @@
+# Managed by ncm-spma apt
+#
+# Basic apt sources file. See the man pages for
+# NCM::Component::${project.artifactId} and sources.list
+# for more details.
+
+# Format is:
+#     deb [ options ] uri suite [component1] [component2] [...]
+
+# Name: [% name %]
+# Owner: [% owner %]
+
+[%- trust = gpgcheck ? "trusted=yes " : "" -%]
+[%- FOREACH source IN protocols %]
+# Protocol type: [% source.name %]
+deb [% trust %][% source.url %]
+[%+ END %]

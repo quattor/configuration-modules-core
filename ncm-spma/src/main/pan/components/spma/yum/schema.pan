@@ -34,7 +34,9 @@ type component_spma_yum = {
     "plugins" ? spma_yum_plugins
     "process_obsoletes" : boolean = false
     "proxytype" ? string with match (SELF, '^(forward|reverse)$') # select proxy type, forward or reverse
+    "run" ? legacy_binary_affirmation_string # Run the SPMA after configuring it
     "userpkgs_retry" : boolean = true
+    "userpkgs" ? legacy_binary_affirmation_string # Allow user packages
 };
 
 bind "/software/components/spma" = component_spma_yum;

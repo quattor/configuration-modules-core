@@ -10,9 +10,7 @@ include 'components/spma/functions';
 include 'components/spma/software';
 
 type component_spma_common = {
-    "packager" : string = "yum" with match (SELF, '^(yum|yumng|ips)$') # system packager to be used
-    "run" ? legacy_binary_affirmation_string # Run the SPMA after configuring it
-    "userpkgs" ? legacy_binary_affirmation_string # Allow user packages
+    "packager" : string = "yum" with match (SELF, '^(yum|yumng|ips|apt)$') # system packager to be used
 };
 
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};

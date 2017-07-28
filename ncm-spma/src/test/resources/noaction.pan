@@ -1,6 +1,6 @@
 object template noaction;
 
-include 'components/spma/schema';
+include 'components/spma/config';
 
 "/software/groups" = dict();
 
