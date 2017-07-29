@@ -48,6 +48,9 @@ is($cmp->set_ssh_fromurls("foo", $u, $fh), 0,
    "SSH from URLs returns with no errors");
 is("$fh", "foo bar\n", "The SSH file has the correct contents");
 
+# cleanup $fh
+$fh->close();
+
 =pod
 
 =head2 An empty URL list is handled correctly
