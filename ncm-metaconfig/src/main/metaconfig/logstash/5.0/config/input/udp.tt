@@ -1,0 +1,7 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=['include_codec_tag', 'ssl'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact"
+    names=["client_inactivity_timeout","port","ssl_handshake_timeout","tls_max_version","tls_min_version"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string"
+    names=["host","ssl_certificate","ssl_key","ssl_key_passphrase","ssl_verify_mode"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray"
+    names=["cipher_suites","ssl_certificate_authorities"] -%]

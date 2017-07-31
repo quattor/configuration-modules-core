@@ -1,0 +1,3 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=["remap","strip_leading_underscore"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact" names=['port'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=['host'] -%]

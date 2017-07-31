@@ -3,7 +3,7 @@ Test bacula sd Autochanger
 multiline
 metaconfigservice=/etc/bacula/bacula-sd.conf
 ---
-^Autochanger\s{
+^Autochanger\s\{
 ^\s{4}Changer Command\s=\s""
 ^\s{4}Changer Device\s=\s/dev/null
 ^\s{4}Device\s=\sdev0-1, dev0-2

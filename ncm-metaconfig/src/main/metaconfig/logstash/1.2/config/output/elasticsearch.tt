@@ -1,0 +1,7 @@
+[%- mapping = { 'document_type' => 'index_type' }; -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="boolean" names=['embedded', 'template_overwrite'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="string" 
+            names=['bind_host', 'cluster', 'index', 'index_type', 'document_type'] mapping=mapping -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="stringrange" names=['port'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="exact" names=['flush_size'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="stringarray" names=['hosts'] -%]

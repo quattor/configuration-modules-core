@@ -3,7 +3,7 @@ Test bacula fd FileDaemon
 multiline
 metaconfigservice=/etc/bacula/bacula-fd.conf
 ---
-^FileDaemon\s{
+^FileDaemon\s\{
 ^\s{4}FDport\s=\s9102
 ^\s{4}Maximum Concurrent Jobs\s=\s20
 ^\s{4}Maximum Network Buffer Size\s=\s262144

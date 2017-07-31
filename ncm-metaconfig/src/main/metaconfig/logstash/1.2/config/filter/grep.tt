@@ -1,0 +1,1 @@
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="name_pattern" names=['match'] -%]

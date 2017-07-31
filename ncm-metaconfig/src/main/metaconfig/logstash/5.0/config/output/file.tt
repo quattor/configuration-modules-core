@@ -1,0 +1,3 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=['create_if_deleted', 'gzip'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=['filename_failure', 'path'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact" names=['dir_mode', 'file_mode', 'flush_interval'] -%]
