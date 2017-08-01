@@ -43,6 +43,7 @@ random stuff
 *.* other action
 user.crit\tawesome
 mail.debug\tawesome
+uucp,news.crit\t/var/log/spooler
 EOF
 
 set_file_contents($edit_fn, $edit_orig);
@@ -75,6 +76,7 @@ directive three                          # ncm-syslog
 
 # already wrapped
 user.crit;mail.debug\tawesome
+uucp,news.crit\t/var/log/spooler
 EOF
 
 set_file_contents($render_fn, $render_orig);

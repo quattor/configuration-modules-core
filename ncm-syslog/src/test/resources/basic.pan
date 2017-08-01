@@ -28,3 +28,13 @@ prefix "/software/components/syslog";
         dict("facility", 'mail', "priority", 'debug')),
     "action", 'awesome',
     "comment", "\n# already wrapped\n"));
+
+"config" = append(dict(
+    'selector', list(
+        dict(
+            'facility', 'uucp,news',
+            'priority', 'crit',
+        ),
+    ),
+    'action', '/var/log/spooler',
+));
