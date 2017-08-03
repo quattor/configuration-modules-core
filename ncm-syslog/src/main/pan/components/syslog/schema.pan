@@ -3,10 +3,12 @@ ${componentschema}
 include 'quattor/types/component';
 
 type component_syslog_selector_type = {
-    "facility" : string with match (SELF, '^(\*|auth|authpriv|cron|daemon|kern|'+
-                    'lpr|mail|mark|news|security|syslog|user|uucp|local[0-7])$')
-    "priority" : string with match (SELF, '^(\*|debug|info|notice|none|warning|'+
-                    'warn|err|error|crit|alert|emerg|panic)$')
+    "facility" : string with match(SELF,
+        '^(?:(\*|auth|authpriv|cron|daemon|kern|lpr|mail|mark|news|security|syslog|user|uucp|local[0-7])(,|$))+$'
+    )
+    "priority" : string with match(SELF,
+        '^(\*|debug|info|notice|none|warning|warn|err|error|crit|alert|emerg|panic)$'
+    )
 };
 
 type component_syslog_legacy_rule = {
