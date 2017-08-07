@@ -1,12 +1,12 @@
-#${PMpre} NCM::Component::chkconfig${PMpost}
+#${PMcomponent}
 
 use parent qw(NCM::Component);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
-$NCM::Component::chkconfig::NoActionSupported = 1;
+our $NoActionSupported = 1;
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use CAF::Process;
 use Readonly;
 
