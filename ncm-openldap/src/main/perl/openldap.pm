@@ -1,24 +1,14 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::openldap;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 use CAF::FileWriter;
 use CAF::Process;
 use File::Path;
 use File::Basename;
 use File::Copy;
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use Encode qw(encode_utf8);
 
 use constant SLAPTEST => qw(/usr/sbin/slaptest -v -u -f);
