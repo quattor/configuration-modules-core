@@ -1,6 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
 #######################################################################
 #
@@ -13,20 +11,13 @@
 #
 #######################################################################
 
-package NCM::Component::sysctl;
-#
-# a few standard statements, mandatory for all components
-#
-use strict;
-use NCM::Component;
-our @ISA = qw(NCM::Component);
+use parent qw(NCM::Component);
 use LC::Exception qw(throw_error);
-our $EC=LC::Exception::Context->new->will_store_all;
+our $EC = LC::Exception::Context->new->will_store_all;
 our $NoActionSupported = 1;
 
 use CAF::FileWriter;
 use CAF::Process;
-use EDG::WP4::CCM::Element;
 use NCM::Check;
 
 sub Configure
