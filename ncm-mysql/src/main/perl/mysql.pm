@@ -1,19 +1,9 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
-package NCM::Component::mysql;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 
 use CAF::FileEditor;
 use CAF::FileWriter;
