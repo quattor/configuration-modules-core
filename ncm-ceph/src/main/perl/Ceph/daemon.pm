@@ -4,7 +4,7 @@
 # ${build-info}
 
 
-# This component needs a 'ceph' user. 
+# This component needs a 'ceph' user.
 # The user should be able to run these commands with sudo without password:
 # /usr/bin/ceph-deploy
 # /usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))
@@ -24,7 +24,7 @@ use LC::Exception;
 use LC::Find;
 
 use Data::Dumper;
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use File::Basename;
 use File::Copy qw(copy move);
 use JSON::XS;
@@ -94,13 +94,13 @@ sub get_name_from_mapping {
     }
     return  "osd.$osd_id";
 }
-        
+
 # Gets the OSD map
 sub osd_hash {
-    my ($self, $master, $mapping, $weights, $gvalues) = @_;      
+    my ($self, $master, $mapping, $weights, $gvalues) = @_;
     $self->info('Building osd information hash, this can take a while..');
     my $jstr = $self->run_ceph_command([qw(osd dump)]) or return 0;
-    my $osddump = decode_json($jstr);  
+    my $osddump = decode_json($jstr);
     $jstr = $self->run_ceph_command([qw(osd tree)]) or return 0;
     my $osdtree = decode_json($jstr);
     my $hostmap = {};
@@ -110,7 +110,7 @@ sub osd_hash {
         $name = "osd.$id";
         foreach my $tosd (@{$osdtree->{nodes}}) {
             if ($tosd->{type} eq 'osd' && $tosd->{id} == $id) {
-                $weights->{$name} = $tosd->{crush_weight}; # value displayed in osd dump is not the real value.. 
+                $weights->{$name} = $tosd->{crush_weight}; # value displayed in osd dump is not the real value..
                 last;
             }
         }
@@ -120,11 +120,11 @@ sub osd_hash {
             return 0;
         }
         my $fqdn = $self->get_host($ip, $hostmap) or return 0;
-        
+
         my @fhost = split('\.', $fqdn);
         $host = $fhost[0];
-        
-        # If host is unreachable, go on with empty one. Process this later 
+
+        # If host is unreachable, go on with empty one. Process this later
         if (!defined($master->{$host}->{fault})) {
             if (!$self->test_host_connection($fqdn, $gvalues)) {
                 $master->{$host}->{fault} = 1;
@@ -133,21 +133,21 @@ sub osd_hash {
                 $master->{$host}->{fault} = 0;
             }
             $master->{$host}->{fqdn} = $fqdn;
-        } 
+        }
         next if $master->{$host}->{fault};
-            
+
         my ($osdloc, $journalloc) = $self->get_osd_location($id, $fqdn, $osd->{uuid}) or return 0;
-        
-        my $osdp = { 
-            name            => $name, 
-            host            => $host, 
-            ip              => $ip, 
-            id              => $id, 
-            uuid            => $osd->{uuid}, 
-            up              => $osd->{up}, 
+
+        my $osdp = {
+            name            => $name,
+            host            => $host,
+            ip              => $ip,
+            id              => $id,
+            uuid            => $osd->{uuid},
+            up              => $osd->{up},
             in              => $osd->{in},
-            osd_path        => $osdloc, 
-            journal_path    => $journalloc 
+            osd_path        => $osdloc,
+            journal_path    => $journalloc
         };
         $self->add_to_mapping($mapping, $id, $host, $osdloc);
         my $osdstr = "$host:$osdloc";
@@ -163,8 +163,8 @@ sub get_osd_location {
     if (!$host) {
         $self->error("Can not find osd without a hostname");
         return ;
-    }   
-    
+    }
+
     my $ph_uuid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/fsid"], $host);
     if (!$ph_uuid) {
         $self->error("Could not read uuid of osd.$osd. ",
@@ -175,16 +175,16 @@ sub get_osd_location {
     chomp($ph_uuid);
     if ($uuid ne $ph_uuid) {
         $self->error("UUID for osd.$osd of ceph command output differs from that on the disk. ",
-            "Ceph value: $uuid, ", 
+            "Ceph value: $uuid, ",
             "Disk value: $ph_uuid");
-        return ;    
+        return ;
     }
     my $ph_fsid = $self->run_cat_command_as_ceph_with_ssh(["$osdlink/ceph_fsid"], $host);
     chomp($ph_fsid);
     my $fsid = $self->{fsid};
     if ($ph_fsid ne $fsid) {
-        $self->error("fsid for osd.$osd not matching with this cluster! ", 
-            "Cluster value: $fsid, ", 
+        $self->error("fsid for osd.$osd not matching with this cluster! ",
+            "Cluster value: $fsid, ",
             "Disk value: $ph_fsid");
         return ;
     }
@@ -203,7 +203,7 @@ sub check_empty {
     if ($loc =~ m{^/dev/}){
         my $cmd = ['sudo', '/usr/bin/file', '-sL', $loc];
         my $output = $self->run_command_as_ceph_with_ssh($cmd, $host) or return 0;
-        if ($output !~ m/^$loc\s*:\s+data\s*$/) { 
+        if ($output !~ m/^$loc\s*:\s+data\s*$/) {
             $self->error("On host $host: $output", "Expected 'data'");
             return 0;
         }
@@ -212,18 +212,18 @@ sub check_empty {
         if (!$self->run_command_as_ceph_with_ssh($checkmntcmd, $host)) {
             $self->error("OSD path is not a mounted file system on $host:$loc");
             return 0;
-        } 
+        }
         my $mkdircmd = ['sudo', '/bin/mkdir', '-p', $loc];
-        $self->run_command_as_ceph_with_ssh($mkdircmd, $host); 
+        $self->run_command_as_ceph_with_ssh($mkdircmd, $host);
         my $lscmd = [@LS_COMMAND, '-1', $loc];
         my $lsoutput = $self->run_command_as_ceph_with_ssh($lscmd, $host) or return 0;
         my $lines = $lsoutput =~ tr/\n//;
         if ($lines) {
             $self->error("$loc on $host is not empty!");
             return 0;
-        } 
+        }
     }
-    return 1;    
+    return 1;
 }
 
 # Gets the MON map
@@ -243,7 +243,7 @@ sub mon_hash {
     return 1;
 }
 
-# Gets the MDS map 
+# Gets the MDS map
 sub mds_hash {
     my ($self, $master) = @_;
     my $jstr = $self->run_ceph_command([qw(mds stat)]) or return 0;
@@ -258,7 +258,7 @@ sub mds_hash {
         };
         my $ip = $self->extract_ip($mds->{addr});
         $mdsp->{fqdn} = $self->get_host($ip, {}) or return 0;
-        
+
         # For daemons rolled out with old version of ncm-ceph
         my @fhost = split('\.', $mds->{name});
         my $host = $fhost[0];
@@ -266,13 +266,13 @@ sub mds_hash {
         $master->{$host}->{fqdn} = $mdsp->{fqdn};
     }
     return 1;
-}       
+}
 
 # Converts a host/osd hierarchy in a 'host:osd' structure
 sub structure_osds {
-    my ($self, $hostname, $host) = @_; 
+    my ($self, $hostname, $host) = @_;
     my $osds = $host->{osds};
-    my %flat = (); 
+    my %flat = ();
     while (my ($osdpath, $newosd) = each(%{$osds})) {
         $newosd->{host} = $hostname;
         $newosd->{fqdn} = $host->{fqdn};
@@ -286,7 +286,7 @@ sub structure_osds {
         $newosd->{osd_path} = $osdpath;
         my $osdstr = "$hostname:$osdpath";
         $flat{$osdstr} = $newosd;
-    }   
+    }
     return \%flat;
 
 }
@@ -296,10 +296,10 @@ sub check_immutables {
     my ($self, $name, $imm, $quat, $ceph) = @_;
     my $rc =1;
     foreach my $attr (@{$imm}) {
-        # perl complains when doing 'ne' on an undefined value, so: 
-        if ((defined($quat->{$attr}) xor defined($ceph->{$attr})) || 
+        # perl complains when doing 'ne' on an undefined value, so:
+        if ((defined($quat->{$attr}) xor defined($ceph->{$attr})) ||
             (defined($quat->{$attr}) && ($quat->{$attr} ne $ceph->{$attr})) ){
-                $self->error("Attribute $attr of $name not corresponding.", 
+                $self->error("Attribute $attr of $name not corresponding.",
                     "Quattor: $quat->{$attr}, ",
                     "Ceph: $ceph->{$attr}");
                 $rc=0;
@@ -312,7 +312,7 @@ sub check_state {
     my ($self, $quat, $ceph) = @_;
     if ($quat->{up} xor $ceph->{up}){
         if ($quat->{up}) {
-            return 'start'; 
+            return 'start';
         } else {
             return 'stop';
         }
@@ -323,18 +323,18 @@ sub check_state {
 
 # Checks which state the daemon should have
 sub check_restart {
-    my ($self, $hostname, $name, $changes, $qdaemon, $cdaemon, $structures) = @_; 
+    my ($self, $hostname, $name, $changes, $qdaemon, $cdaemon, $structures) = @_;
     if (%{$changes} && $qdaemon->{up}){
         $structures->{restartd}->{$hostname}->{$name} = 'restart';
     } elsif ($self->check_state($qdaemon, $cdaemon)) {
         $structures->{restartd}->{$hostname}->{$name} = $self->check_state($qdaemon, $cdaemon);
-    }   
+    }
 };
 
 # Do some preparation checks on a new osd
-sub prep_osd { 
+sub prep_osd {
     my ($self,$osd) = @_;
-    
+
     $self->check_empty($osd->{osd_path}, $osd->{fqdn}) or return 0;
     if ($osd->{journal_path}) {
         (my $journaldir = $osd->{journal_path}) =~ s{/journal$}{};
@@ -344,7 +344,7 @@ sub prep_osd {
 }
 
 # Do some preparation checks on a new mds
-sub prep_mds { 
+sub prep_mds {
     my ($self, $hostname, $mds) = @_;
     my $fqdn = $mds->{fqdn};
     my $donecmd = ['test','-e',"/var/lib/ceph/mds/$self->{cluster}-$hostname/done"];
@@ -440,10 +440,10 @@ sub destroy_daemon {
 
 # Destroys daemons that need to be destroyed (Manually at this moment)
 sub destroy_daemons {
-    my ($self, $destroyd, $mapping) = @_; 
+    my ($self, $destroyd, $mapping) = @_;
     my @cmds = ();
     $self->debug(1, 'Destroying daemons');
-    foreach  my $hostname (sort(keys(%{$destroyd}))) { 
+    foreach  my $hostname (sort(keys(%{$destroyd}))) {
         foreach  my $type (sort(keys(%{$destroyd->{$hostname}}))) {
             my $daemon = $destroyd->{$hostname}->{$type};
             if ($type eq 'osds') {
@@ -467,17 +467,17 @@ sub destroy_daemons {
     if(@cmds){
         $self->info("Commands to be run manually:");
         $self->print_cmds(\@cmds);
-    }   
+    }
     return 1;
 }
 # Restarts daemons that need restart (Manually at this moment)
 sub restart_daemons {
     my ($self, $restartd) = @_;
-    my @cmds = (); 
+    my @cmds = ();
     $self->debug(1, 'restarting daemons');
-    foreach my $hostname (sort(keys(%{$restartd}))) { 
+    foreach my $hostname (sort(keys(%{$restartd}))) {
         foreach my $name (sort(keys(%{$restartd->{$hostname}}))) {
-            push(@cmds, $self->run_command_as_ceph_with_ssh([qw(/sbin/service ceph), $restartd->{$hostname}->{$name}, $name], $hostname, [],1)); 
+            push(@cmds, $self->run_command_as_ceph_with_ssh([qw(/sbin/service ceph), $restartd->{$hostname}->{$name}, $name], $hostname, [],1));
         }
     }
     if(@cmds){
@@ -487,5 +487,5 @@ sub restart_daemons {
     return 1;
 }
 
- 
+
 1; # Required for perl module!
