@@ -9,6 +9,10 @@ use Readonly;
 use CAF::Object;
 Test::NoWarnings::clear_warnings();
 
+my $NAMED_CONFIG_FILE = $NCM::Component::named::NAMED_CONFIG_FILE;
+my $NAMED_SYSCONFIG_FILE = $NCM::Component::named::NAMED_SYSCONFIG_FILE;
+my $RESOLVER_CONF_FILE = $NCM::Component::named::RESOLVER_CONF_FILE;
+
 
 # $RESOLV_CONF_CONTENTS_1 is the expected file.
 # Comments are preceded by 2 tabs.
