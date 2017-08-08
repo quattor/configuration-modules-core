@@ -156,12 +156,17 @@ sub edit
     # Accumulate the config rules
     foreach my $rule (@{$tree->{config} || []}) {
         my $action = $rule->{action};
+        # action might contain some regex characters (this is not complete)
+        my $maction = $action;
+        # escape the $, otherwise it's seen as $]
+        $maction =~ s/([.*+\$])/\\$1/g;
+
         # TODO: template code in legacy code was ignored
         #       making this clear by commenting it
         #my $template = $rule->{template} ? ';'.$rule->{template} : "";
 
         # do not consider actions that appear in comment lines
-        my $action_known = grep { m/^[^#].*\s${action}/ } @syslogcontents;
+        my $action_known = grep { m/^[^#].*\s${maction}/ } @syslogcontents;
 
         # get selectors
         my $line = "";
@@ -181,14 +186,14 @@ sub edit
                 my $mpriority = $priority eq '*' ? '\*' : $priority;
 
                 # the facility may alreay start at column1, so cannot use "^[^#]" to veto comments
-                if (grep { /^.*${mfacility}\..*\s+${action}/ } @syslogcontents) {
+                if (grep { /^.*${mfacility}\..*\s+${maction}/ } @syslogcontents) {
                     $self->debug(2, "facility $facility already uses action $action");
                     # this facility used this action already, but is the priority correct?
-                    if ( ! grep { /^.*${mfacility}\.${mpriority}.*${action}/ } @syslogcontents ){
+                    if ( ! grep { /^.*${mfacility}\.${mpriority}.*${maction}/ } @syslogcontents ){
                         $self->debug(2, "have to fix priority for facility $facility");
                         my @newsyslogcontents;
                         foreach my $line (@syslogcontents) {
-                            $line =~ s/${mfacility}\.[\w\*]+/${facility}\.${priority}/ if $line =~ m/^[^#].*$action/;
+                            $line =~ s/${mfacility}\.[\w\*]+/${facility}\.${priority}/ if $line =~ m/^[^#].*$maction/;
                             push(@newsyslogcontents, $line);
                         };
                         @syslogcontents = @newsyslogcontents;
@@ -198,7 +203,7 @@ sub edit
                     # this facility has not yet used this action, simply add it to this action
                     my @newsyslogcontents;
                     foreach my $line (@syslogcontents) {
-                        $line =~ s/\s*${action}/;${facility}\.${priority}\t${action}/ unless $line =~ m/^#/;
+                        $line =~ s/\s*${maction}/;${facility}\.${priority}\t${action}/ unless $line =~ m/^#/;
                         push(@newsyslogcontents, $line);
                     };
                     @syslogcontents = @newsyslogcontents;

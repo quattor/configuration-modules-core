@@ -16,7 +16,7 @@ prefix "/software/components/syslog";
     "selector", list(dict(
         "facility", '*',
         "priority", '*')),
-    "action", 'superpowers',
+    "action", 'super*powers',
     "comment", 'a comment',
     "template", "ignored"));
 
