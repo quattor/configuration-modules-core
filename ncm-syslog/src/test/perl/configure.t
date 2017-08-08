@@ -7,10 +7,6 @@ use Test::Quattor qw(basic);
 use NCM::Component::syslog;
 use CAF::Object;
 
-$CAF::Object::NoAction = 1;
-
-set_caf_file_close_diff(1);
-
 my $cmp = NCM::Component::syslog->new('syslog');
 
 my $cfg = get_config_for_profile('basic');
@@ -28,7 +24,7 @@ my $edit_orig = <<EOF;
 directive two # ncm-syslog
 random stuff
 directive three # ncm-syslog
-*.error superpowers
+*.error super*powers
 *.* other action
 EOF
 
@@ -39,7 +35,7 @@ directive three                          # ncm-syslog
 
 # comment
 random stuff
-*.* superpowers
+*.* super*powers
 *.* other action
 user.crit\tawesome
 mail.debug\tawesome
@@ -62,7 +58,7 @@ my $render_orig = <<EOF;
 directive two # ncm-syslog
 random stuff
 directive three # ncm-syslog
-*.error superpowers
+*.error super*powers
 *.* other action
 EOF
 
@@ -71,7 +67,7 @@ directive one                            # ncm-syslog
 directive three                          # ncm-syslog
 
 # a comment
-*.*\tsuperpowers
+*.*\tsuper*powers
 \tmooore
 
 # already wrapped
