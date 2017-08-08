@@ -32,7 +32,6 @@ EOF
 my $edit_new = <<EOF;
 directive one                            # ncm-syslog
 directive three                          # ncm-syslog
-
 # comment
 random stuff
 *.* super*powers

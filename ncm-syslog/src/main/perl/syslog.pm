@@ -116,7 +116,7 @@ sub edit
 
     my %directive_found;
 
-    my @syslogcontents = ("");
+    my @syslogcontents = ();
 
     # old style, we accept entries from other sources in syslog.conf
     $self->debug(2, "edit: fullcontrol is not defined or false");
