@@ -165,9 +165,9 @@ type beats_filebeat_prospector_multiline = {
 }
 type beats_filebeat_prospector = {
     'paths' : string[]
-    'encoding' ? string with 
-     match(SELF, 
-     '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
+    'encoding' ? string with
+    match(SELF,
+    '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
     'input_type' ? string with match(SELF, '^(log|stdin)$')
     'exclude_lines' ? string[]
     'include_lines' ? string[]
@@ -216,7 +216,7 @@ type beats_filebeat_service = {
 type beats_gpfsbeat_gpfsbeat = {
     'period' : string  # is of the form 42s
     'devices' : string[]
-    'mmrepquota' ? absolute_file_path       
+    'mmrepquota' ? absolute_file_path
     'mmlsfs' ? absolute_file_path
     'mmlsfileset' ? absolute_file_path
     'mmdf' ? absolute_file_path
@@ -226,7 +226,7 @@ type beats_gpfsbeat_gpfsbeat = {
     Gpfsbeat service
 }
 type beats_gpfsbeat_service = {
-    include beats_service    
+    include beats_service
     'gpfsbeat': beats_gpfsbeat_gpfsbeat
 };
 
