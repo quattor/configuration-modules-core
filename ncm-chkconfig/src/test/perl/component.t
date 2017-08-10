@@ -63,5 +63,11 @@ isa_ok($cmd, "CAF::Process", "Command for service --del test_del (off first) run
 $cmd = get_command("/sbin/chkconfig --del test_del")->{object};
 isa_ok($cmd, "CAF::Process", "Command for service --del test_del run");
 
+is_deeply($cfg->getTree("/software/components/chkconfig/service/{test_enable}"),
+          {'on', '', 'startstop', 1},
+         'chkconfig function creates correct enabled service');
+is_deeply($cfg->getTree("/software/components/chkconfig/service/{test_disable}"),
+          {'off', '', 'startstop', 1},
+         'chkconfig function creates correct disabled service');
 
 done_testing();
