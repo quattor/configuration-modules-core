@@ -180,12 +180,12 @@ sub Configure
 
     my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $t     = $config->getElement(CMP_TREE)->getTree();
-    
+
     # Display system info
     if ( defined($t->{quattor_os_release}) ) {
         $self->info("target OS build: ", $t->{quattor_os_release});
     }
-    
+
     # Detect OS
     my $fhi;
     my $os_major;
@@ -835,4 +835,3 @@ sub Configure
 }
 
 1;    # required for Perl modules
-
