@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>libvirtd</artifactId>
   <packaging>pom</packaging>
-  <version>17.7.0</version>
+  <version>17.7.1-SNAPSHOT</version>
   <name>ncm-libvirtd</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
