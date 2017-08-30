@@ -1,4 +1,10 @@
 unique template cron_syslog-common;
+
+function pkg_repl = { null; };
+include 'components/cron/config';
+'/software/components/cron/dependencies' = null;
+
+
 # Note that the user names are somewhat odd.
 # User names are not mocked so they must exist on the system doing
 # the testing. Because cronfiles on solaris are stored by user name it makes
