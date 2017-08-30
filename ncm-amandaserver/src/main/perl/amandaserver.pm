@@ -1,30 +1,10 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-# File: amandaserver.pm
 # Implementation of ncm-amandaserver
 # Author: Laura del Caño Novales <laura.delcano@ft.uam.es>
-# Version: 2.1.0 : 03/04/09 12:39
-#  ** Generated file : do not edit **
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
 
-package NCM::Component::amandaserver;
-
-#
-# a few standard statements, mandatory for all components
-#
-
-use strict;
-use warnings;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-
-use EDG::WP4::CCM::Element;
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 use CAF::Process;
 use CAF::FileWriter;

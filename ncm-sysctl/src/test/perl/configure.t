@@ -25,9 +25,6 @@ my $cmp = NCM::Component::sysctl->new('sysctl');
 my $cfg = get_config_for_profile('simple');
 my $testfile = "/etc/sysctl.d/50-quattor.conf";
 my $testcmd = "/sbin/sysctl -e -p $testfile";
-# XX: remove this once CAF::FileWriter::close() has been updated not to
-# return undef when running in NoAction mode (CAF#72)
-set_caf_file_close_diff(1);
 
 is($cmp->Configure($cfg), 1, "Configure succeeds");
 my $fh = get_file($testfile);

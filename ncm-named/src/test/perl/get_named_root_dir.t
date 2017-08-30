@@ -9,6 +9,11 @@ use Readonly;
 use CAF::Object;
 Test::NoWarnings::clear_warnings();
 
+my $NAMED_CONFIG_FILE = $NCM::Component::named::NAMED_CONFIG_FILE;
+my $NAMED_SYSCONFIG_FILE = $NCM::Component::named::NAMED_SYSCONFIG_FILE;
+my $RESOLVER_CONF_FILE = $NCM::Component::named::RESOLVER_CONF_FILE;
+
+
 # This is the content of the default file on SL6 (with single quote removed in the text)
 use constant TEST_SYSCONFIG_HEADER => '# BIND named process options
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,33 +1,15 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
-
-# Note in style: all methods return their file handle object, even if
-# it will be discarded (and thus closed). This way, it's possible to
-# write tests that verify the in-memory contents of the files, and
-# running them without any special privileges.
-
-package NCM::Component::icinga;
+#${PMcomponent}
 
 use 5.10.1;
-use strict;
-use warnings;
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all();
 
-use NCM::Component;
-use EDG::WP4::CCM::Element qw (unescape);
+use EDG::WP4::CCM::Path 16.8.0 qw (unescape);
 use Socket;
 use CAF::Process;
 use CAF::FileWriter;
 use LC::Exception qw (throw_error);
 use File::Path;
-
-our @ISA = qw (NCM::Component);
-our $EC  = LC::Exception::Context->new->will_store_all();
 
 use constant ICINGA_FILES => {
     general             => '/etc/icinga/icinga.cfg',

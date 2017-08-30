@@ -1,31 +1,16 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::named;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-use vars qw(@ISA $EC);
-require Exporter;
-our @ISA = qw(NCM::Component Exporter);
-$EC=LC::Exception::Context->new->will_store_all;
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 use Readonly;
-use NCM::Check;
 use Encode qw(encode_utf8);
 
-use EDG::WP4::CCM::Element;
 use CAF::FileEditor qw(ENDING_OF_FILE);
 use CAF::FileWriter;
 use CAF::Process;
 use CAF::Service;
 
 our $NoActionSupported = 1;
-
-# To ease testing
-our @EXPORT = qw($NAMED_CONFIG_FILE $NAMED_SYSCONFIG_FILE $RESOLVER_CONF_FILE);
 
 # Define paths for convenience.
 Readonly our $NAMED_CONFIG_FILE => '/etc/named.conf';

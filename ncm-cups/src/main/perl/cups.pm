@@ -1,7 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
+#${PMcomponent}
 #
 # NCM cups component
 #
@@ -27,18 +24,8 @@
 #
 ################################################################################
 
-package NCM::Component::cups;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-
-our @ISA = qw(NCM::Component);
+use parent qw(NCM::Component);
 our $EC  = LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-
-use EDG::WP4::CCM::Element;
 
 use LC::File qw(file_contents);
 use LC::Check;
