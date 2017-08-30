@@ -248,10 +248,6 @@ type authconfig_component = {
     @{Enable or disable nscd operation.}
     "usecache" ? boolean
     "enableforcelegacy" : boolean = false
-    "startstop" ? boolean with {
-        deprecated(0, 'The startstop property will be removed from ncm-authconfig in a future release.');
-        true;
-    }
     @{Enable the use of MD5 hashed password.}
     "usemd5" : boolean
     @{dict of authentication methods to enable. Supported
