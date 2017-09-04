@@ -33,7 +33,6 @@
   <modules>
     <module>ncm-accounts</module>
     <module>ncm-metaconfig</module>
-    <module>ncm-mcx</module>
     <module>ncm-directoryservices</module>
     <module>ncm-etcservices</module>
     <module>ncm-nagios</module>
