@@ -67,6 +67,7 @@ my %supported_options = (
     "PreserveJobFiles"   => "server",
     "Printcap"           => "server",
     "ServerAdmin"        => "server",
+    "ServerAlias"        => "server",
     "ServerName"         => "client,server",
 );
 my %config_files = (
@@ -214,6 +215,11 @@ sub Configure
                         $self->warn("Current host defined as a CUPS server but client configured to use $host");
                     }
                 }
+
+            } elsif ( $option_name eq "ServerAlias" ) {
+                # Build a string from the list
+                my $new_value = join ' ', $option_value;
+                $option_value = $new_value;
             }
 
             # $option_roles is a list of roles separated by ','

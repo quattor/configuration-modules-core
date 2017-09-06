@@ -32,6 +32,7 @@ type ${project.artifactId}_component_options = {
     "PreserveJobFiles" ? legacy_binary_affirmation_string
     "Printcap" ? string
     "ServerAdmin" ? string
+    "ServerAlias" ? string[]
     "ServerName" ? string
 };
 
