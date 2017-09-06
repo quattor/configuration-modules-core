@@ -169,7 +169,7 @@ sub Configure
         return 1;
     }
 
-    # Check if named server must be enabled
+    # Check if cupsd server must be enabled
     my $server_enabled;
     if ( $cups_config->{nodetype} ) {
         if ( $cups_config->{nodetype} =~ /server/i ) {
