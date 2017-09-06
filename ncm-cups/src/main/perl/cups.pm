@@ -31,6 +31,7 @@ use LC::File qw(file_contents);
 use LC::Check;
 
 use CAF::Process;
+use CAF::Service;
 
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
@@ -648,6 +649,7 @@ sub serviceControl
     $self->debug( 1, "$function_name : '$action' action requested for service $service" );
 
     # Check current service state (return=0 means service is running)
+    # FIXME: when CAF::Service provides a status() method, use it instead of calling 'service' command
     my $cur_state = "stopped";
     CAF::Process->new( [ "service", "$service", "status" ], log => $self )->run();
     unless ($?) {
@@ -677,7 +679,8 @@ sub serviceControl
         if ( $cur_state eq "stopped" ) {
             $real_action = "start";
         } else {
-            $real_action = "reload";
+            # reload is not support on EL7, use restart instead
+            $real_action = "restart";
         }
     } else {
         $self->error("$function_name : internal error : unsupported action ($action)");
@@ -687,11 +690,14 @@ sub serviceControl
     # Do action
 
     $self->info("Executing a '$real_action' of service $service");
-    CAF::Process->new( [ "service", $service, $real_action ], log => $self )->run();
-    if ($?) {
+    my $cups_service = CAF::Service->new([$service], log => $self );
+    unless ( $cups_service->$real_action() ) {
         $self->error("\tFailed to $real_action service $service");
         return 1;
     }
+
+    # Give some time to the action to complete
+    sleep(5);
 
     return 0;
 }
