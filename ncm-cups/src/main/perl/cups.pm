@@ -263,29 +263,6 @@ sub Configure
         }
     }
 
-    # Start or stop cupsd according to state property
-
-    if ( -e $cupsd_startup_script ) {
-        my $reboot_state = "off";
-        if ($server_enabled) {
-            $reboot_state = "on";
-        }
-
-        # Make sure, that cupsd will be started/stopped on boot (acccording to 'start')
-        CAF::Process->new( [ "/sbin/chkconfig", $services{server}, $reboot_state ], log => $self )->run();
-        if ($?) {
-            $self->error("command \"/sbin/chkconfig $services{server} $reboot_state\" failed with status: $?");
-            return 1;
-        }
-
-    } else {
-        if ($server_enabled) {
-            $self->error("$services{server} startup script doesn't exist");
-            return 0;
-        } else {
-            $self->debug( 1, "$services{server} startup script doesn't exist" );
-        }
-    }
 
     if ($server_enabled) {
 
