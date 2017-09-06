@@ -374,19 +374,19 @@ sub Configure
 
             if ( $cups_printers_config->{$printer}->{delete} ) {
                 if ( $self->printerDelete($printer) ) {
-                    $self->warn("Error deleting printer $printer");
+                    $self->error("Error deleting printer $printer");
                 } else {
                     $self->OK("Printer $printer deleted");
                 }
             } else {
                 if ( $self->printerAdd($printer, $printer_options_str) ) {
-                    $self->warn("Error adding printer $printer");
+                    $self->error("Error adding printer $printer");
                     next;
                 } else {
                     $self->OK("Printer $printer added to configuration");
                 }
                 if ( $self->printerEnable($printer, $cups_printers_config->{$printer}->{enable}) ) {
-                    $self->warn( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
+                    $self->error( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
                 }
             }
         }
@@ -396,12 +396,12 @@ sub Configure
                && !$cups_printers_config->{$default_printer}->{delete} )
         {
             if ( $self->printerDefault($default_printer) ) {
-                $self->warn("Error defining printer $default_printer as the default printer");
+                $self->error("Error defining printer $default_printer as the default printer");
             } else {
                 $self->OK("Default printer defined to $default_printer");
             }
         } else {
-            $self->warn("Default printer $default_printer doesn't exist. Ignoring");
+            $self->error("Default printer $default_printer doesn't exist. Ignoring");
         }
     }
 
