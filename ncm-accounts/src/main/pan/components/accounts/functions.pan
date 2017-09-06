@@ -38,7 +38,7 @@ function is_user_or_group = {
         error(
             "2nd argument is either a list (list of names) or " +
             "a string (2nd and other arguments as list of names), " +
-            " got "+to_string(ARGV)
+            " got " + to_string(ARGV)
         );
     };
     pref = "/software/components/accounts";
@@ -204,7 +204,7 @@ function create_accounts_from_db = {
         account_list = undef;
     };
 
-    if ( ARGC >=3 && (ARGV[2] == 1) ) {
+    if ( ARGC >= 3 && (ARGV[2] == 1) ) {
         accountType = 'group';
     } else {
         accountType = 'user';
@@ -268,7 +268,7 @@ function keep_user_group = {
         ARGV[0] = list(tmp);
     };
 
-    foreach (i;v;ARGV[0]) {
+    foreach (i; v; ARGV[0]) {
         SELF[v] = '';
     };
 
