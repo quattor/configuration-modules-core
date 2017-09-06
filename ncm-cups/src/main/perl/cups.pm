@@ -308,27 +308,7 @@ sub Configure
             $self->debug( 1, "Default printer defined in the configuration : $default_printer" );
         }
 
-        # To facilitate transition to new schema (allowing to run new component with old schema).
-        # For testing only.
-        # FIXME: To be removed.
-        my $cups_printers_config;
-        if ( ref($cups_config->{printers}) eq 'HASH' ) {
-            $cups_printers_config = $cups_config->{printers};
-        } elsif ( ref($cups_config->{printers}) eq 'ARRAY' ) {
-            $self->debug(1,'Legacy schema used, converting printer list to a hash');
-            $cups_printers_config = {};
-            my $entry_num = 0;
-            for my $printer_config (@{$cups_config->{printers}}) {
-                $entry_num++;
-                my $printer = $printer_config->{name};
-                unless ( $printer ) {
-                    $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
-                    next;
-                }
-                delete $printer_config->{name};
-                $cups_printers_config->{$printer} =  $printer_config;
-            }
-        }
+        my $cups_printers_config = $cups_config->{printers};
 
         $self->debug(1,"Number of printers defined in the configuration: ".scalar(keys(%{$cups_printers_config})));
 
