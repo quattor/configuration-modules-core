@@ -42,6 +42,11 @@ function is_user_or_group = {
         );
     };
     pref = "/software/components/accounts";
+    # not all sites use ncm-accounts, e.g. users and groups may be provisioned
+    # via LDAP instead so return now we've confirmed it is a string
+    if (!path_exists(pref)) {
+        return(true);
+    };
 
     name_exists = true;
     while(idx < length(names)) {
