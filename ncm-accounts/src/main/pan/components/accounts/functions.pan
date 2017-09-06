@@ -17,12 +17,12 @@ variable ACCOUNTS_GROUP_COMMENT ?= 'Created by ncm-accounts';
     descr = Test if (list of) user(s) or group(s) is defined in either users/groups or kept_users/groups.
     arg = the type ('user' or 'group')
     arg = the name(s). Can be more than one argument or a single list of names. All arguments have to be defined.
-};
+}
 @example{
     is_user_or_group("user", "root", "nagios", "foo", "bar")
     or 2nd element is a list of name(s)
     is_user_or_group("user", list("root", "nagios", "foo", "bar"))
-};
+}
 function is_user_or_group = {
     if ((ARGC < 2) || ! (ARGV[0] == 'user' || ARGV[0] == 'group')) {
         error("is_user_or_group expects at least 2 arguments : first the type (user or group)");
