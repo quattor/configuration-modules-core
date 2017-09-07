@@ -94,4 +94,5 @@ unique template components/accounts/sysusers;
     'mongodb', '',
     'rabbitmq', '',
     'memcached', '',
+    'colord', "",
 );

@@ -98,4 +98,5 @@ unique template components/accounts/sysgroups;
     'mongodb', '',
     'rabbitmq', '',
     'memcached', '',
+    'colord', "",
 );
