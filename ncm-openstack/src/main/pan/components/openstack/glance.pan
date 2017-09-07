@@ -10,7 +10,7 @@ declaration template components/openstack/glance;
     The Glance configuration options in the "glance_store" Section.
     From glance.api
 }
-type openstack_glance_store = extensible {
+type openstack_glance_store = {
     @{List of enabled Glance stores.
     Register the storage backends to use for storing disk images
     as a comma separated list. The default stores enabled for
@@ -44,7 +44,7 @@ type openstack_glance_store = extensible {
 @documentation {
     list of Glance configuration sections
 }
-type openstack_glance_config = extensible {
+type openstack_glance_config = {
     'DEFAULT' : openstack_DEFAULTS
     'database' : openstack_database
     'keystone_authtoken' : openstack_keystone_authtoken

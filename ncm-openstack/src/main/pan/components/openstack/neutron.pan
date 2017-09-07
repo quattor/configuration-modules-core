@@ -8,7 +8,7 @@ declaration template components/openstack/neutron;
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2" Section.
 }
-type openstack_neutron_ml2 = extensible {
+type openstack_neutron_ml2 = {
     @{WARNING: After you configure the ML2 plug-in,
     removing values in the type_drivers option can lead to database inconsistency}
     'type_drivers' : type_neutrondriver[] = list('flat', 'vlan', 'vxlan')
@@ -27,7 +27,7 @@ type openstack_neutron_ml2 = extensible {
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2_type_flat" Section.
 }
-type openstack_neutron_ml2_type_flat = extensible {
+type openstack_neutron_ml2_type_flat = {
     @{List of physical_network names with which flat networks can be created. Use
     default "*" to allow flat networks with arbitrary physical_network names. Use
     an empty list to disable flat networks}
@@ -37,7 +37,7 @@ type openstack_neutron_ml2_type_flat = extensible {
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2_type_vxlan" Section.
 }
-type openstack_neutron_ml2_type_vxlan = extensible {
+type openstack_neutron_ml2_type_vxlan = {
     @{Configure the VXLAN network identifier range for self-service networks}
     'vni_ranges' : string = '1:1000'
 };
@@ -45,7 +45,7 @@ type openstack_neutron_ml2_type_vxlan = extensible {
 @documentation {
     The Neutron configuration options in ml2_conf.ini "securitygroup" Section.
 }
-type openstack_neutron_securitygroup = extensible {
+type openstack_neutron_securitygroup = {
     @{Use ipset to speed-up the iptables based security groups. Enabling ipset
     support requires that ipset is installed on L2 agent node}
     'enable_ipset' ? boolean = true
@@ -60,7 +60,7 @@ type openstack_neutron_securitygroup = extensible {
 @documentation {
     The Neutron configuration options in linuxbridge_agent.ini "vxlan" Section.
 }
-type openstack_neutron_vxlan = extensible {
+type openstack_neutron_vxlan = {
     @{Enable VXLAN on the agent. Can be enabled when agent is managed by ml2 plugin
     using linuxbridge mechanism driver}
     'enable_vxlan' ? boolean = true
@@ -77,7 +77,7 @@ type openstack_neutron_vxlan = extensible {
 @documentation {
     The Neutron configuration options in linuxbridge_agent.ini "linux_bridge" Section.
 }
-type openstack_neutron_linux_bridge = extensible {
+type openstack_neutron_linux_bridge = {
     @{Comma-separated list of <physical_network>:<physical_interface> tuples
     mapping physical network names to the agents node-specific physical network
     interfaces to be used for flat and VLAN networks. All physical networks
@@ -90,7 +90,7 @@ type openstack_neutron_linux_bridge = extensible {
 @documentation {
     list of Neutron common configuration sections
 }
-type openstack_neutron_common = extensible {
+type openstack_neutron_common = {
     'DEFAULT' : openstack_DEFAULTS
     'keystone_authtoken' : openstack_keystone_authtoken
     'oslo_concurrency' : openstack_oslo_concurrency
@@ -102,7 +102,7 @@ type openstack_neutron_common = extensible {
 @documentation {
     list of Neutron service configuration sections
 }
-type openstack_neutron_config = extensible {
+type openstack_neutron_config = {
     include openstack_neutron_common
     'database' : openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}

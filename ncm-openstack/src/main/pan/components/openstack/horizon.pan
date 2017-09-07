@@ -26,7 +26,7 @@ type openstack_horizon_caches = {
     use of the decimal point, so valid options would be 2.0 or 3.
     Minimum compute version to get the instance locked status is 2.9.
 }
-type openstack_horizon_api_versions = extensible {
+type openstack_horizon_api_versions = {
     'identity' : long(1..) = 3
     'image' : long(1..) = 2
     'volume' : long(1..) = 2
@@ -37,7 +37,7 @@ type openstack_horizon_api_versions = extensible {
     services provided by neutron. Options currently available are load
     balancer service, security groups, quotas, VPN service.
 }
-type openstack_horizon_neutron_network = extensible {
+type openstack_horizon_neutron_network = {
     'enable_router' : boolean = true
     'enable_quotas' : boolean = true
     'enable_ipv6' : boolean = true
@@ -52,7 +52,7 @@ type openstack_horizon_neutron_network = extensible {
 @documentation {
     list of Horizon service configuration sections
 }
-type openstack_horizon_config = extensible {
+type openstack_horizon_config = {
     @{host where is running OpenStack Keystone service}
     'openstack_host' ? type_fqdn
     @{If horizon is running in production (DEBUG is False), set this

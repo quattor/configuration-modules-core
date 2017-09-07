@@ -8,7 +8,7 @@ declaration template components/openstack/nova;
 @documentation {
     The Nova configuration options in "api_database" Section.
 }
-type openstack_nova_api_database = extensible {
+type openstack_nova_api_database = {
     @{The SQLAlchemy connection string to use to connect to the database.
     Example (mysql): mysql+pymysql://nova:<NOVA_DBPASS>@<nova_fqdn>/nova_api
     }
@@ -18,7 +18,7 @@ type openstack_nova_api_database = extensible {
 @documentation {
     The Nova configuration options in the "vnc" Section.
 }
-type openstack_nova_vnc = extensible {
+type openstack_nova_vnc = {
     @{The IP address or hostname on which an instance should listen to for
     incoming VNC connection requests on this node}
     'vncserver_listen' ? type_ip
@@ -47,7 +47,7 @@ type openstack_nova_vnc = extensible {
 @documentation {
     The Nova configuration options in the "glance" Section.
 }
-type openstack_nova_glance = extensible {
+type openstack_nova_glance = {
     @{List of glance api servers endpoints available to nova.
     https is used for ssl-based glance api servers.
 
@@ -61,7 +61,7 @@ type openstack_nova_glance = extensible {
 @documentation {
     The Nova configuration options in "placement" Section.
 }
-type openstack_nova_placement = extensible {
+type openstack_nova_placement = {
     include openstack_domains_common
     @{Region name of this node. This is used when picking the URL in the service
     catalog}
@@ -71,7 +71,7 @@ type openstack_nova_placement = extensible {
 @documentation {
     The Nova hypervisor configuration options in "libvirt" Section.
 }
-type openstack_nova_libvirt = extensible {
+type openstack_nova_libvirt = {
     @{Describes the virtualization type (or so called domain type) libvirt should
     use.
 
@@ -83,7 +83,7 @@ type openstack_nova_libvirt = extensible {
 @documentation {
     The Nova hypervisor configuration options in "neutron" Section.
 }
-type openstack_nova_neutron = extensible {
+type openstack_nova_neutron = {
     include openstack_domains_common
     @{Any valid URL that points to the Neutron API service is appropriate here.
     This typically matches the URL returned for the 'network' service type
@@ -106,7 +106,7 @@ type openstack_nova_neutron = extensible {
 @documentation {
     list of Nova common configuration sections
 }
-type openstack_nova_common = extensible {
+type openstack_nova_common = {
     'DEFAULT' : openstack_DEFAULTS
     'keystone_authtoken' : openstack_keystone_authtoken
     'vnc' : openstack_nova_vnc
@@ -119,7 +119,7 @@ type openstack_nova_common = extensible {
 @documentation {
     list of Nova configuration sections
 }
-type openstack_nova_config = extensible {
+type openstack_nova_config =  {
     include openstack_nova_common
     'database' : openstack_database
     'api_database' : openstack_nova_api_database
@@ -128,7 +128,7 @@ type openstack_nova_config = extensible {
 @documentation {
     list of Nova configuration sections
 }
-type openstack_nova_compute_config = extensible {
+type openstack_nova_compute_config = {
     include openstack_nova_common
     'libvirt' ? openstack_nova_libvirt
     'neutron' ? openstack_nova_neutron

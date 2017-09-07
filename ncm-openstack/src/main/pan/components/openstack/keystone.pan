@@ -8,7 +8,7 @@ declaration template components/openstack/keystone;
 @documentation {
     The Keystone "token" configuration section
 }
-type openstack_keystone_token = extensible {
+type openstack_keystone_token = {
     @{Entry point for the token provider in the "keystone.token.provider"
     namespace. The token provider controls the token construction, validation,
     and revocation operations. Keystone includes "fernet" and "uuid" token
@@ -30,7 +30,7 @@ type openstack_keystone_token = extensible {
 @documentation {
     The Keystone configuration options in the "authtoken" Section
 }
-type openstack_keystone_authtoken = extensible {
+type openstack_keystone_authtoken = {
     include openstack_domains_common
     @{Complete "public" Identity API endpoint. This endpoint should not be an
     "admin" endpoint, as it should be accessible by all end users. Unauthenticated
@@ -42,13 +42,13 @@ type openstack_keystone_authtoken = extensible {
     'auth_uri' : type_absoluteURI
     @{Optionally specify a list of memcached server(s) to use for caching. If left
     undefined, tokens will instead be cached in-process ("host:port" list)}
-    'memcached_servers' : type_memcached[]
+    'memcached_servers' : type_hostport[]
 };
 
 @documentation {
     The Keystone configuration options in the "paste_deploy" Section.
 }
-type openstack_keystone_paste_deploy = extensible {
+type openstack_keystone_paste_deploy = {
     @{Deployment flavor to use in the server application pipeline.
     Provide a string value representing the appropriate deployment
     flavor used in the server application pipleline. This is typically
@@ -64,7 +64,7 @@ type openstack_keystone_paste_deploy = extensible {
 @documentation {
     The Keystone configuration sections
 }
-type openstack_keystone_config = extensible {
+type openstack_keystone_config = {
     'DEFAULT' ? openstack_DEFAULTS
     'database' : openstack_database
     'token' : openstack_keystone_token

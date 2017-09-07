@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::${project.artifactId}${PMpost}
+#${PMcomponent}
 
 =head1 NAME
 
@@ -22,6 +22,7 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=cut
+
 
 1;
-

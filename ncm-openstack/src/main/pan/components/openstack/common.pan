@@ -11,21 +11,10 @@ type type_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|g
 
 type type_neutronextension = string with match(SELF, '^(qos|port_security)$');
 
-type type_memcached = string[] with {
-    foreach (i; value; SELF) {
-        memcached = split(':', value);
-        if ((length(memcached) != 2) ||
-            (! is_hostname(memcached[0])) ||
-            (! is_port(memcached[1]))) {
-            error(format("entry: %s is not a valid memcached <host>:<port> value", value));
-        };
-    };
-};
-
 @documentation {
     OpenStack common domains section
 }
-type openstack_domains_common = extensible {
+type openstack_domains_common = {
     @{Domain name containing project}
     'project_domain_name' : string = 'Default'
     @{Project name to scope to}
@@ -46,7 +35,7 @@ type openstack_domains_common = extensible {
 @documentation {
     The configuration options in the database Section
 }
-type openstack_database = extensible {
+type openstack_database = {
     @{The SQLAlchemy connection string to use to connect to the database}
     'connection' : string
 };
@@ -54,7 +43,7 @@ type openstack_database = extensible {
 @documentation {
     The configuration options in 'oslo_concurrency' Section.
 }
-type openstack_oslo_concurrency = extensible {
+type openstack_oslo_concurrency = {
     @{Directory to use for lock files.  For security, the specified directory should
     only be writable by the user running the processes that need locking. Defaults
     to environment variable OSLO_LOCK_PATH. If external locks are used, a lock
