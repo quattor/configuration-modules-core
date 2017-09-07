@@ -831,8 +831,7 @@ sub make_ifcfg
     my @text;
     my $makeline = _make_make_ifcfg_line($iface, \@text);
 
-    # onboot is a string?
-    &$makeline('onboot', def => 'yes');
+    &$makeline('onboot', bool => 'yesno', def => 1);
 
     &$makeline('nmcontrolled', var => 'nm_controlled', bool => 'yesno', def => 0, quote => 1);
 

@@ -206,8 +206,8 @@ type structure_interface = {
     "netmask" ? type_ip
     "broadcast" ? type_ip
     "driver" ? string
-    "bootproto" ? string # TODO: only allow match(SELF, '^(static|bootp|dhcp)')
-    "onboot" ? string # TODO: only allow match(SELF, '^(yes|no)$')
+    "bootproto" ? string with match(SELF, '^(static|bootp|dhcp|none)$')
+    "onboot" ? boolean
     "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
     "device" ? string
     "master" ? string
