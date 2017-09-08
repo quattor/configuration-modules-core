@@ -94,9 +94,32 @@ type openstack_neutron_common = {
     'DEFAULT' : openstack_DEFAULTS
     'keystone_authtoken' : openstack_keystone_authtoken
     'oslo_concurrency' : openstack_oslo_concurrency
-    'linux_bridge' : openstack_neutron_linux_bridge
-    'vxlan' : openstack_neutron_vxlan
-    'securitygroup' : openstack_neutron_securitygroup
+};
+
+@documentation {
+    list of Neutron ml2 service sections
+};
+type openstack_neutron_ml2_config = {
+    'ml2' ? openstack_neutron_ml2
+    'ml2_type_flat' ? openstack_neutron_ml2_type_flat
+    'ml2_type_vxlan' ? openstack_neutron_ml2_type_vxlan
+    'securitygroup' ? openstack_neutron_securitygroup
+};
+
+@documentation {
+    list of Neutron linuxbridge service sections
+};
+type openstack_neutron_linuxbridge_config = {
+    'linux_bridge' ? openstack_neutron_linux_bridge
+    'vxlan' ? openstack_neutron_vxlan
+    'securitygroup' ? openstack_neutron_securitygroup
+};
+
+@documentation {
+    list of Neutron layer3 service sections
+};
+type openstack_neutron_l3_config = {
+    'DEFAULT' : openstack_DEFAULTS
 };
 
 @documentation {
@@ -106,8 +129,5 @@ type openstack_neutron_config = {
     include openstack_neutron_common
     'database' : openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}
-    'nova' : openstack_keystone_authtoken
-    'ml2' : openstack_neutron_ml2
-    'ml2_type_flat' : openstack_neutron_ml2_type_flat
-    'ml2_type_vxlan' : openstack_neutron_ml2_type_vxlan
+    'nova' : openstack_domains_common
 };

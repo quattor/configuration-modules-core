@@ -4,7 +4,7 @@ include 'components/openstack/schema';
 
 bind "/metaconfig/contents/keystone" = openstack_keystone_config;
 
-"/metaconfig/module" = "keystone";
+"/metaconfig/module" = "openstack_common";
 
 prefix "/metaconfig/contents/keystone";
 "database" = dict(

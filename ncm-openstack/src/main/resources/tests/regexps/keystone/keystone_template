@@ -4,5 +4,6 @@ multiline
 ---
 ^\[database\]$
 ^connection\s{1}=\s{1}mysql\+pymysql://keystone:keystone_db_pass@controller.mysite.com/keystone$
+
 ^\[token\]$
 ^provider\s{1}=\s{1}fernet$

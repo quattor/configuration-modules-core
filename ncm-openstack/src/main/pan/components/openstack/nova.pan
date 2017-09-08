@@ -66,7 +66,7 @@ type openstack_nova_placement = {
     @{Region name of this node. This is used when picking the URL in the service
     catalog}
     'os_region_name' : string = 'RegionOne'
-};
+} = dict();
 
 @documentation {
     The Nova hypervisor configuration options in "libvirt" Section.

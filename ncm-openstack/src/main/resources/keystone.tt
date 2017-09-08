@@ -1,6 +1,0 @@
-[%- FOR pair IN keystone.pairs -%]
-[[%     pair.key %]]
-[%      FOREACH item IN keystone.${pair.key} -%]
-[%          item.key %] = [% item.value %]
-[%      END -%]
-[%- END -%]

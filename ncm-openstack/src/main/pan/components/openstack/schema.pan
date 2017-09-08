@@ -20,6 +20,9 @@ type component_openstack = {
     'nova_compute' ? openstack_nova_compute_config
     'glance' ? openstack_glance_config
     'neutron' ? openstack_neutron_config
+    'neutron_ml2' ? openstack_neutron_ml2_config
+    'neutron_linuxbridge' ? openstack_neutron_linuxbridge_config
+    'neutron_l3' ? openstack_neutron_l3_config
     'neutron_compute' ? openstack_neutron_common
     'horizon' ? openstack_horizon_config
 };

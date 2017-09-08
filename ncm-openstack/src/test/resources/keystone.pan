@@ -1,4 +1,4 @@
-unique template keystone;
+template keystone;
 
 include 'components/openstack/config';
 
