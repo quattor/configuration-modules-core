@@ -28,11 +28,24 @@ type structure_interface_alias = {
     Describes the bonding options for configuring channel bonding on EL5 and similar.
 }
 type structure_bonding_options = {
-    "mode" : long(0..6)
+    "ad_select" ? string with match(SELF, '^(\d+|stable|bandwidth|count)$')
+    "all_slaves_active" ? long
+    "arp_interval" ? long
+    "arp_ip_target" ? type_ip[]
+    "arp_validate" ? string with match(SELF, '^(\d+|none|active|backup|all)$')
+    "downdelay" ? long
+    "fail_over_mac" ? string with match(SELF, '^(\d+|none|active|follow)$')
+    "min_links" ? long
+    "use_carrier" ? long
+    "num_grat_arp" ? long
+    "num_unsol_na" ? long
+    "resend_igmp" ? long
+    "mode" : long(0..6) # TODO: allow mode to be given as a string
     "miimon" : long
     "updelay" ? long
     "downdelay" ? long
     "primary" ? valid_interface
+    "primary_reselect" ? string with match(SELF, '^(\d+|always|better|failure)$')
     "lacp_rate" ? long(0..1)
     "xmit_hash_policy" ? string with match (SELF, '^(0|1|2|layer(2|2\+3|3\+4))$')
 } with {

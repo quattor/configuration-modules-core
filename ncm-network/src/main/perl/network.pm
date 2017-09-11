@@ -14,7 +14,7 @@ use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
 
-use EDG::WP4::CCM::Element;
+use EDG::WP4::CCM::Element qw(LIST);
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 use NCM::Check;
 
@@ -1145,6 +1145,9 @@ sub Configure
         my @op;
 
         while (my ($k, $v) = each(%$opts)) {
+            if ($v->isType(LIST)) {
+                $v = join(",", @{$v});
+            }
             push(@op, "$k=$v");
         }
 
