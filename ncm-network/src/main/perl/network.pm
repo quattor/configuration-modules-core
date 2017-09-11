@@ -1143,7 +1143,10 @@ sub Configure
 
         $output .= $self->runrun([qw(ls -ltr /etc/sysconfig/network-scripts)]);
         $output .= $self->runrun(["/sbin/ifconfig"]);
+        $output .= $self->runrun([qw(/sbin/ip addr list)]);
         $output .= $self->runrun([qw(/sbin/route -n)]);
+        $output .= $self->runrun([qw(/sbin/ip route list table all)]);
+        $output .= $self->runrun([qw(/sbin/ip rule list)]);
 
         # when brctl is missing, this would generate an error.
         # but it is harmless to skip the show command.
