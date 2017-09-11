@@ -313,12 +313,15 @@ sub Configure
     # read current config
     my $dir_pref="/etc/sysconfig/network-scripts";
     opendir(DIR, $dir_pref);
-    # here's the reason why it only verifies eth, bond, bridge, usb and vlan
-    # devices. add regexp at will
-    my $dev_regexp='-((eth|seth|em|bond|br|ovirtmgmt|vlan|usb|ib|p\d+p|en(o|(p\d+)?s(?:\d+f)?(?:\d+d)?))\d+|enx[[:xdigit:]]{12})(\.\d+)?';
+    my $dev_regexp='(?:ifcfg|route|rule)-(\w+\d*(\.\d+)?)';
     # $1 is the device name
     foreach my $file (grep(/$dev_regexp/, readdir(DIR))) {
         my $msg;
+
+        # Do not mess with the loopback interface
+        # TODO: aliases on the loopback could be handled by ncm-network
+        next if $file =~ m/^ifcfg-lo(:.*)?$/;
+
         if ( -l "$dir_pref/$file" ) {
             # keep the links separate
             $exilinks{"$dir_pref/$file"} = readlink("$dir_pref/$file");
