@@ -930,7 +930,8 @@ sub Configure
     } else {
         foreach my $if (sort keys %ifdown) {
             # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
+            # Do not try to down non-existing devices
+            next if (-d "/sys/class/net" && ! -e "/sys/class/net/$if");
             push(@cmds, ["/sbin/ifdown", $if]);
         }
     }
