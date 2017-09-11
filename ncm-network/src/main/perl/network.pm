@@ -60,6 +60,52 @@ my %ethtool_option_map = (
 
 my $ethtoolcmd = "/usr/sbin/ethtool";
 
+# These values are hardcoded in the 'ip' tool
+my %rt_builtins = (
+    "dsfield" => {},
+    "protos" => {
+        0 => "unspec",
+        1 => "redirect",
+        2 => "kernel",
+        3 => "boot",
+        4 => "static",
+        8 => "gated",
+        9 => "ra",
+        10 => "mrt",
+        11 => "zebra",
+        12 => "bird",
+        13 => "dnrouted",
+        14 => "xorp",
+        15 => "ntk",
+        16 => "dhcp",
+    },
+    "realms" => {},
+    "scopes" => {
+        0 => "global",
+        255 => "nowhere",
+        254 => "host",
+        253 => "link",
+        200 => "site",
+    },
+    "tables" => {
+        0 => "unspec",
+        255 => "local",
+        254 => "main",
+        253 => "default",
+    },
+);
+
+my %mask_to_prefix = (
+    "128.0.0.0" => 1, "192.0.0.0" => 2, "224.0.0.0" => 3, "240.0.0.0" => 4,
+    "248.0.0.0" => 5, "252.0.0.0" => 6, "254.0.0.0" => 7, "255.0.0.0" => 8,
+    "255.128.0.0" =>  9, "255.192.0.0" => 10, "255.224.0.0" => 11, "255.240.0.0" => 12,
+    "255.248.0.0" => 13, "255.252.0.0" => 14, "255.254.0.0" => 15, "255.255.0.0" => 16,
+    "255.255.128.0" => 17, "255.255.192.0" => 18, "255.255.224.0" => 19, "255.255.240.0" => 20,
+    "255.255.248.0" => 21, "255.255.252.0" => 22, "255.255.254.0" => 23, "255.255.255.0" => 24,
+    "255.255.255.128" => 25, "255.255.255.192" => 26, "255.255.255.224" => 27, "255.255.255.240" => 28,
+    "255.255.255.248" => 29, "255.255.255.252" => 30, "255.255.255.254" => 31, "255.255.255.255" => 32
+);
+
 use constant FAILED_SUFFIX => '-failed';
 
 # gen_backup_filename: returns backup filename for given file
@@ -186,7 +232,7 @@ sub Configure
         while ($iface->hasNextElement()) {
             $element = $iface->getNextElement();
             $elementname = $element->getName();
-            if ($elementname =~ m/route|aliases/) {
+            if ($elementname =~ m/^(route|aliases|policy_route|policy_rule)$/) {
                 while ($element->hasNextElement()) {
                     $el = $element->getNextElement();
                     ## number of route OR name of alias
@@ -195,7 +241,11 @@ sub Configure
                     while ($el->hasNextElement()) {
                         $l = $el->getNextElement();
                         $ln = $l->getName();
-                        $tmp_el{$ln} = $l->getValue();
+                        if ($elementname eq 'policy_route' && $ln eq 'nexthop') {
+                            $tmp_el{$ln} = $l->getTree();
+                        } else {
+                            $tmp_el{$ln} = $l->getValue();
+                        }
                     }
                     if ($elementname =~ m/aliases/) {
                         # overwrite the alias name
@@ -548,7 +598,7 @@ sub Configure
 
         # route config, interface based.
         # hey, where are the static routes?
-        if (exists($net{$iface}{route})) {
+        if (exists($net{$iface}{route}) && !exists($net{$iface}{policy_route})) {
             $file_name = "$dir_pref/route-$iface";
             $exifiles{$file_name} = 1;
             $text = "";
@@ -570,6 +620,56 @@ sub Configure
             };
             $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
             $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
+        } elsif (exists($net{$iface}{policy_route})) {
+            $file_name = "$dir_pref/route-$iface";
+            $exifiles{$file_name} = 1;
+            $text="";
+
+            # We can't mix different syntaxes in the same file, so convert
+            # simple routes to the policy routing syntax
+            if (exists($net{$iface}{route})) {
+                foreach my $rt (sort keys %{$net{$iface}{route}}) {
+                    my $route = {"dev" => $iface};
+
+                    my $netmask = $net{$iface}{route}{$rt}{'netmask'};
+
+                    if ($net{$iface}{route}{$rt}{'address'}) {
+                        my $address = $net{$iface}{route}{$rt}{'address'};
+                        my $prefix = 32;
+                        if ($net{$iface}{route}{$rt}{'netmask'}) {
+                            my $netmask = $net{$iface}{route}{$rt}{'netmask'};
+                            if (exists($mask_to_prefix{$netmask})) {
+                                $prefix = $mask_to_prefix{$netmask};
+                            } else {
+                                $self->warn("Invalid netmask $netmask, skipping route");
+                                next;
+                            }
+                        }
+                        $route->{'to'} = "$address/$prefix";
+                    }
+                    if ($net{$iface}{route}{$rt}{'gateway'}) {
+                        $route->{'via'} = $net{$iface}{route}{$rt}{'gateway'};
+                    }
+                    $text .= generatePolicyRoute($route) . "\n";
+                }
+            }
+
+            foreach my $rt (sort keys %{$net{$iface}{policy_route}}) {
+                $text .= generatePolicyRoute($net{$iface}{policy_route}{$rt}) . "\n";
+            }
+            $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+            $self->debug(3, "exifiles $file_name has value " . $exifiles{$file_name});
+        }
+        # routing rules
+        if (exists($net{$iface}{policy_rule})) {
+            $file_name = "$dir_pref/rule-$iface";
+            $exifiles{$file_name} = 1;
+            $text="";
+            foreach my $rule (sort keys %{$net{$iface}{policy_rule}}) {
+                $text .= generatePolicyRule($net{$iface}{policy_rule}{$rule}) . "\n";
+            }
+            $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+            $self->debug(3,"exifiles $file_name has value ".$exifiles{$file_name});
         }
         # set up aliases for interfaces
         # on file per alias
@@ -718,6 +818,25 @@ sub Configure
     $self->debug(3, "exifiles $file_name has value ".$exifiles{$file_name});
 
 
+    ###
+    ### /etc/iproute2/rt_*
+    ###
+
+    $path = $base_path;
+    foreach my $table (keys %rt_builtins) {
+        next unless $config->elementExists($path . "/rt_tables/" . $table);
+
+        $file_name = "/etc/iproute2/rt_" . $table;
+        mk_bu($file_name);
+        $exifiles{$file_name} = -1;
+        my $element = $config->getElement($path . "/rt_tables/" . $table);
+        my $prefer_hex = $table eq 'dsfield';
+        $text = updateRtTable($file_name, $element, $rt_builtins{$table}, $prefer_hex);
+        $exifiles{$file_name} = $self->file_dump($file_name, $text, FAILED_SUFFIX);
+        $self->debug(3, "exifiles $file_name has value " . $exifiles{$file_name});
+    }
+
+
     # we now have a list with files and values.
     # for general network: separate?
     # for devices: create list of affected devices
@@ -761,6 +880,8 @@ sub Configure
                 }
             }
         } elsif ($file eq "/etc/sysconfig/network") {
+            # nothing needed
+        } elsif ($file =~ m!^/etc/iproute2/rt_!) {
             # nothing needed
         } else {
             $self->error("Filename $file found that doesn't match  the ",
@@ -1176,6 +1297,86 @@ sub Configure
         }
 
         return "$st'" . join(' ', @op) . "'\n";
+    }
+
+    sub updateRtTable {
+        my ($filename, $element, $builtin, $prefer_hex) = @_;
+
+        my $table = $element->getTree();
+
+        my %by_idx;
+        foreach my $name (keys %{$table}) {
+            $by_idx{$table->{$name}} = $name;
+        }
+
+        my $text = "";
+        my %seen;
+        if (-e $filename) {
+            open(FILE, $filename) or $self->error("can not open $filename");
+            while (my $line = <FILE>) {
+                chomp $line;
+                if ($line =~ m/^(0x[[:xdigit:]]+|\d+)\s+(\S+)\s*$/) {
+                    my $name = $2;
+                    my $idx = $1;
+                    $idx = hex($idx) if $idx =~ m/0x/;
+
+                    next unless (exists($by_idx{$idx}) && $name eq $by_idx{$idx}) or exists($builtin->{$idx});
+                    $seen{$idx} = 1;
+                }
+                $text .= $line . "\n";
+            }
+            close FILE;
+        }
+        foreach my $name (sort keys %{$table}) {
+            next if exists($seen{$table->{$name}});
+            if ($prefer_hex) {
+                $text .= sprintf("0x%02x\t", $table->{$name}) . $name . "\n";
+            } else {
+                $text .= $table->{$name} . "\t" . $name . "\n";
+            }
+        }
+        return $text;
+    }
+
+    sub generatePolicyRoute {
+        my ($route) = @_;
+        my @args;
+
+        foreach my $key (keys %{$route}) {
+            next if $key eq 'nexthop';
+            next if $key =~ m/^lock_/;
+            my $locked = (exists($route->{'lock_' . $key}) && $route->{'lock_'. $key});
+            push @args, $key;
+            push @args, "lock" if $locked;
+            push @args, $route->{$key};
+        }
+        if (exists($route->{'nexthop'})) {
+            foreach my $nexthop (@{$route->{'nexthop'}}) {
+                push @args, 'nexthop';
+                foreach my $key (keys %{$nexthop}) {
+                    push @args, $key;
+                    push @args, $nexthop->{$key};
+                }
+            }
+        }
+        return join(' ', @args);
+    }
+
+    sub generatePolicyRule {
+        my ($rule) = @_;
+        my @args;
+
+        push @args, 'not' if exists($rule->{'not'}) && $rule->{'not'};
+        foreach my $key (keys %{$rule}) {
+            next if $key eq 'fwmask' || $key eq 'not';
+            my $value = $rule->{$key};
+            if ($key eq 'fwmark') {
+                $value .= '/' . $rule->{'fwmask'} if exists($rule->{'fwmask'});
+            }
+            push @args, $key;
+            push @args, $value;
+        }
+        return join(' ', @args);
     }
 
 

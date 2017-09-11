@@ -6,12 +6,190 @@ include 'pan/types';
 include 'quattor/functions/network';
 
 @documentation{
+  IPv4/IPv6 prefix notation
+}
+function is_ip_prefix = {
+    if (ARGC != 1 || !is_string(ARGV[0])) {
+        error("Usage: is_interface_name(string)");
+    };
+    if (!is_ip(ARGV[0])) {
+        slash = index("/", ARGV[0]);
+        if (slash < 1) {
+            return(false);
+        };
+        pfx = to_long(substr(ARGV[0], slash + 1));
+        if (is_ipv4(substr(ARGV[0], 0, slash))) {
+            if (pfx < 1 || pfx > 32) {
+                return(false);
+            };
+            return(true);
+        };
+        if (is_ipv6(substr(ARGV[0], 0, slash))) {
+            if (pfx < 1 || pfx > 128) {
+                return(false);
+            };
+            return(true);
+        };
+        return(false);
+    };
+    return(true);
+};
+
+@documentation{
+  IPv4/IPv6 prefix notation
+}
+type type_ip_prefix = string with is_ip_prefix(SELF);
+
+@documentation{
     Route
 }
 type structure_route = {
     "address" ? type_ip
     "netmask" ? type_ip
     "gateway" ? type_ip
+};
+
+@documentation{
+    Single byte
+}
+# TODO: This should likely be defined elsewhere
+type type_byte = long with { SELF >= 0 && SELF <= 255; };
+
+@documentation{
+    Define the conversion from human-readable names to numeric values used by iproute and the kernel
+}
+# TODO: disallow overriding values which are hardcoded in the 'ip' tool
+type structure_rt_table = {
+    "dsfield" ? type_byte{}
+    "protos"  ? type_byte{}
+    "realms"  ? type_byte{}
+    "scopes"  ? type_byte{}
+    "tables"  ? type_byte{}
+};
+
+@documentation{
+    Type of the routing entry
+}
+type type_route_type = string with match(SELF, '^(local|broadcast|anycast|multicast|unicast|prohibit|unreachable|blackhole|throw|nop)$');
+
+@documentation{
+    Type Of Service (TOS), as defined in /etc/iproute2/rt_dsfield
+}
+type type_rt_dsfield = string with exists("/system/network/rt_tables/dsfield/" + SELF);
+
+@documentation{
+    Routing protocol identifier - either a built-in value, or a value defined in /etc/iproute2/rt_protos
+}
+type type_rt_proto = string with {
+    # Accept the values hardcoded into the 'ip' tool as well as user-defined ones
+    match(SELF, '^(none|redirect|kernel|boot|static|gated|ra|mrt|zebra|bird|dnrouted|xorp|ntk|dhcp)$') ||
+    exists("/system/network/rt_tables/protos/" + SELF);
+};
+
+@documentation{
+    Route realm
+}
+# TODO: I cut some corners, and this type is usabe for verifying both the "realm REALMID" and the "realms FROMREALM/TOREALM" constructs
+type type_rt_realm = string with {
+    if (exists("/system/network/rt_tables/realms/" + SELF)) {
+        return(true);
+    };
+    slash = index("/", SELF);
+    if (slash < 1) {
+        return(false);
+    };
+    exists("/system/network/rt_tables/realms/" + substr(SELF, 0, slash)) &&
+    exists("/system/network/rt_tables/realms/" + substr(SELF, slash + 1));
+};
+
+@documentation{
+    Route scope
+}
+type type_rt_scope = string with {
+    # Accept the values hardcoded into the 'ip' tool as well as user-defined ones
+    match(SELF, '^(nowhere|host|link|site)$') || exists("/system/network/rt_tables/scopes/" + SELF);
+};
+
+@documentation{
+    Reference to a routing table
+}
+type type_rt_table = string with {
+    # Accept the values hardcoded into the 'ip' tool as well as user-defined ones
+    match(SELF, '^(default|main|local)$') || exists("/system/network/rt_tables/tables/" + SELF);
+};
+
+@documentation{
+    Routing-related time specification
+}
+# If no unit is specified, the default is jiffies
+type type_rt_time = string with match(SELF, '^\d+(s|ms|us|ns|j)?$');
+
+@documentation{
+    Routing rule specification
+}
+type structure_policy_rule = {
+    "not" ? boolean  # negate the rule
+    "from" ? type_ip_prefix
+    "to" ? type_ip_prefix
+    "priority" ? long  # also known as "preference" or "order"
+    "tos" ? type_rt_dsfield
+    "fwmark" ? long
+    "fwmask" ? long  # cmdline is: fwmark <fwmark>[/<fwmask>]
+    "realms" ? type_rt_realm
+    "table" ? type_rt_table  # also known as "lookup"
+    "dev" ? valid_interface  # also known as "iif"
+    "type" ? type_route_type
+    "goto" ? long
+};
+
+@documentation{
+    Route next hop specification
+}
+type structure_nexthop = {
+    "via" ? type_ip
+    "dev" ? valid_interface
+    "weight" ? long
+    "onlink" ? boolean
+    "realms" ? type_rt_realm
+};
+
+type structure_policy_route = {
+  "to"              ? string with { SELF == "default" || is_ip_prefix(SELF); }
+  "src"             ? string
+  "via"             ? type_ip
+  "from"            ? type_ip_prefix
+  "tos"             ? type_rt_dsfield  # also known as "dsfield"
+  "priority"        ? long    # also known as "metric" or "preference"
+  "scope"           ? type_rt_scope
+  "mtu"             ? long
+  "lock_mtu"        ? boolean
+  "hoplimit"        ? long
+  "lock_hoplimit"   ? boolean
+  "advmss"          ? long
+  "lock_advmss"     ? boolean
+  "reordering"      ? long
+  "lock_reordering" ? boolean
+  "rtt"             ? type_rt_time
+  "lock_rtt"        ? boolean
+  "window"          ? long
+  "lock_window"     ? boolean
+  "cwnd"            ? long
+  "lock_cwnd"       ? boolean
+  "initcwnd"        ? long
+  "lock_initcwnd"   ? boolean
+  "rttvar"          ? type_rt_time
+  "lock_rttvar"     ? boolean
+  "rto_min"         ? type_rt_time
+  "sstresh"         ? long
+  "lock_sstresh"    ? boolean
+  "realms"          ? string
+  "onlink"          ? boolean
+  "equalize"        ? boolean
+  "nexthop"         ? structure_nexthop[]
+  "protocol"        ? string
+  "table"           ? string
+  "dev"             ? valid_interface  # also known as "oif"
+  "type"            ? type_route_type
 };
 
 @documentation{
@@ -138,6 +316,8 @@ type structure_interface = {
     "master" ? string
     "mtu" ? long
     "route" ? structure_route[]
+    "policy_rule"  ? structure_policy_rule[]
+    "policy_route" ? structure_policy_route[]
     "aliases" ? structure_interface_alias{}
     "set_hwaddr" ? boolean
     "bridge" ? valid_interface
