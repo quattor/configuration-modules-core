@@ -937,14 +937,42 @@ sub Configure
     }
     $self->runrun(@cmds);
     # replace modified/new files
+    my $was_change = 0;
     foreach my $file (keys %exifiles) {
         if (($exifiles{$file} == 1) || ($exifiles{$file} == 2)) {
             copy($self->gen_backup_filename($file).FAILED_SUFFIX,$file) ||
                 $self->error("replace modified/new files: can't copy ",
                              $self->gen_backup_filename($file).FAILED_SUFFIX,
                              " to $file. ($!)");
+            $was_change = 1;
         } elsif ($exifiles{$file} == -1) {
             unlink($file) || $self->error("replace modified/new files: can't unlink $file. ($!)");
+            $was_change = 1;
+        }
+    }
+    ## kick udev to rename devices if needed; do nothing if no files were changed
+    if ($was_change) {
+        # Remove the auto-generated rule file if present
+        if ($config->elementExists("/software/components/network/udev_rules_file")) {
+            my $file = $config->getElement("/software/components/network/udev_rules_file")->getValue();
+            if (-f $file) {
+                $exifiles{$file} = -1;
+                mk_bu($file);
+                unlink($file);
+            }
+            else {
+                $exifiles{$file} = 2;
+            }
+        }
+        if ($config->elementExists("/software/components/network/udev_trigger_command")) {
+            my $cmd = $config->getElement("/software/components/network/udev_trigger_command")->getValue();
+            $self->runrun([split(' ', $cmd)]);
+            # TODO: should the sleep be configurable?
+            sleep(2);
+        }
+        if ($config->elementExists("/software/components/network/udev_settle_command")) {
+            my $cmd = $config->getElement("/software/components/network/udev_settle_command")->getValue();
+            $self->runrun([split(' ', $cmd)]);
         }
     }
     # ifup OR network start
@@ -1018,6 +1046,17 @@ sub Configure
                 copy($self->gen_backup_filename($file),$file) ||
                     $self->error("Can't copy ".$self->gen_backup_filename($file)." to $file.");
             }
+        }
+        ## kick udev to rename devices if needed
+        # Remove the auto-generated rule file if it was not present originally
+        if ($config->elementExists("/software/components/network/udev_trigger_command")) {
+            my $cmd = $config->getElement("/software/components/network/udev_trigger_command")->getValue();
+            $self->runrun([split(' ', $cmd)]);
+            sleep(2);
+        }
+        if ($config->elementExists("/software/components/network/udev_settle_command")) {
+            my $cmd = $config->getElement("/software/components/network/udev_settle_command")->getValue();
+            $self->runrun([split(' ', $cmd)]);
         }
         # ifup OR network start
         $self->runrun([qw(/sbin/service network start)]);
