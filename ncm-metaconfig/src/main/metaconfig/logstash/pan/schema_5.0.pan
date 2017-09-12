@@ -71,7 +71,7 @@ type logstash_input_plugin_common = {
     "debug" ? boolean
     "tags" ? string[]
     "add_field" ? string{}
-    "codec" ? logstash_input_codec
+    "codec" ? string with match(SELF, '^(plain|json)$')
 };
 
 @{ File-based input }
