@@ -1,3 +1,4 @@
+[%- block_order = ["CLIENT", "FSAL"] -%]
 [% FOREACH section IN main %]
 [%      section.key %] {
 [%      FOREACH pair IN section.value.pairs -%]
@@ -9,7 +10,18 @@
 [%- FOREACH export IN exports %]
 EXPORT {
 [%      FOREACH pair IN export.pairs -%]
-[%-         INCLUDE "metaconfig/ganesha/2.2/attribute.tt" FILTER indent %]
+[%-         SWITCH pair.key -%] 
+[%-             CASE block_order -%]
+[%-             CASE -%]
+[%-                 INCLUDE "metaconfig/ganesha/2.2/attribute.tt" FILTER indent %]
+[%         END -%]
 [%      END -%]
+[%      FOREACH pair IN export.pairs -%]
+[%-         SWITCH pair.key -%] 
+[%-             CASE block_order -%]
+[%-                 INCLUDE "metaconfig/ganesha/2.2/attribute.tt" FILTER indent %]
+[%-             CASE -%]
+[%         END -%]
+[%      END %]
 }
 [% END %]
