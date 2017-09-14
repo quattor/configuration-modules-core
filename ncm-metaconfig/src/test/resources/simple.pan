@@ -1,5 +1,9 @@
 object template simple;
 
+function pkg_repl = { null; };
+include 'components/metaconfig/config';
+'/software/components/metaconfig/dependencies' = null;
+
 prefix "/software/components/metaconfig/services/{/foo/bar}";
 
 "mode" = 0644;

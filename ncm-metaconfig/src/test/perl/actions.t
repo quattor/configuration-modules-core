@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More tests => 22;
@@ -10,18 +8,15 @@ use CAF::Object;
 use CAF::FileWriter;
 use Readonly;
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 my $mock = Test::MockModule->new('CAF::Service');
 our ($restart, $reload);
 $mock->mock('restart', sub {
     my $self = shift;
-    $restart += scalar @{$self->{services}}; 
+    $restart += scalar @{$self->{services}};
 });
 $mock->mock('reload', sub {
     my $self = shift;
-    $reload += scalar @{$self->{services}}; 
+    $reload += scalar @{$self->{services}};
 });
 
 
@@ -47,20 +42,20 @@ Test the update of the actions reference for single service
 
 $actions = {};
 $cmp->prepare_action({'daemon' => ['d1', 'd2']}, "myfile", $actions);
-is_deeply($actions, {"restart" => {"d1" => 1, "d2" => 1}}, 
+is_deeply($actions, {"restart" => {"d1" => 1, "d2" => 1}},
             "Daemon restart actions added");
 
 $actions = {};
-$cmp->prepare_action({'daemon' => ['d1', 'd2'], 
-                      'daemons' => {'d1' => 'reload', 
-                                    'd2' => 'restart', 
+$cmp->prepare_action({'daemon' => ['d1', 'd2'],
+                      'daemons' => {'d1' => 'reload',
+                                    'd2' => 'restart',
                                     'd3' => 'doesnotexist'
                                     }
                       }, "myfile", $actions);
 # d2 only once in restart
 # d1 in reload and restart
 # doesnotexist is not allowed
-is_deeply($actions, { "restart" => { "d2" => 1, "d1" => 1}, 
+is_deeply($actions, { "restart" => { "d2" => 1, "d1" => 1},
                       'reload' => {'d1' => 1 }
                     }, "Daemon restart and daemons actions added");
 

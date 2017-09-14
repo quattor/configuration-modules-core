@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 use Test::More;
@@ -7,10 +5,6 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use Test::MockModule;
 use CAF::Object;
-
-
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
 
 
 =pod
