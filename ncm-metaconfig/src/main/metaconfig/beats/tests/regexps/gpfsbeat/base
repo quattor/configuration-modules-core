@@ -1,0 +1,6 @@
+Gpfsbeat basic value based test
+---
+/etc/gpfsbeat/gpfsbeat.yml
+---
+^---$
+
