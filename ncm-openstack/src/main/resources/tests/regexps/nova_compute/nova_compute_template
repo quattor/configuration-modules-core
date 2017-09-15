@@ -25,7 +25,18 @@ multiline
 
 ^\[libvirt\]$
 ^virt_type\s{1}=\s{1}kvm$
- 
+
+^\[neutron\]$
+^auth_type\s{1}=\s{1}password$
+^auth_url\s{1}=\s{1}http://neutron.mysite.com:35357$
+^password\s{1}=\s{1}neutron_good_password$
+^project_domain_name\s{1}=\s{1}Default$
+^project_name\s{1}=\s{1}service$
+^region_name\s{1}=\s{1}RegionOne$
+^url\s{1}=\s{1}http://neutron.mysite.com:9696$
+^user_domain_name\s{1}=\s{1}Default$
+^username\s{1}=\s{1}neutron$
+
 ^\[oslo_concurrency\]$
 ^lock_path\s{1}=\s{1}/var/lib/nova/tmp$
 

@@ -10,6 +10,7 @@ prefix "/software/components/openstack/neutron";
     "connection", format("mysql+pymysql://neutron:neutron_db_pass@%s/neutron", OPENSTACK_HOST_SERVER),
 );
 "DEFAULT" = dict(
+    "auth_strategy", "keystone",
     "core_plugin", "ml2",
     "service_plugins", list('router'),
     "allow_overlapping_ips", true,

@@ -100,7 +100,11 @@ type openstack_nova_neutron = {
     @{This option holds the shared secret string used to validate proxy requests to
     Neutron metadata requests. In order to be used, the
     "X-Metadata-Provider-Signature" header must be supplied in the request}
-    'metadata_proxy_shared_secret' : string
+    'metadata_proxy_shared_secret' ? string
+    @{When set to True, this option indicates that Neutron will be used to proxy
+    metadata requests and resolve instance ids. Otherwise, the instance ID must be
+    passed to the metadata request in the 'X-Instance-ID' header}
+    'service_metadata_proxy' ? boolean
 };
 
 @documentation {
@@ -114,6 +118,7 @@ type openstack_nova_common = {
     'oslo_concurrency' : openstack_oslo_concurrency
     @{placement service is mandatory since Ocata release}
     'placement' : openstack_nova_placement
+    'neutron' ? openstack_nova_neutron
 };
 
 @documentation {
@@ -131,5 +136,4 @@ type openstack_nova_config =  {
 type openstack_nova_compute_config = {
     include openstack_nova_common
     'libvirt' ? openstack_nova_libvirt
-    'neutron' ? openstack_nova_neutron
 };

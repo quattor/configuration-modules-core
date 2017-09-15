@@ -86,7 +86,7 @@ type openstack_DEFAULTS = {
     "noauth2" is designed for testing only, as it does no actual credential
     checking. "noauth2" provides administrative credentials only if "admin" is
     specified as the username}
-    'auth_strategy' : string = 'keystone' with match (SELF, '^(keystone|noauth2)$')
+    'auth_strategy' ? string = 'keystone' with match (SELF, '^(keystone|noauth2)$')
     @{From nova.conf
     The IP address which the host is using to connect to the management network.
     Default is IPv4 address of this host}

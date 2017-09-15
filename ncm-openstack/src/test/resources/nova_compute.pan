@@ -3,11 +3,13 @@ object template nova_compute;
 include 'components/openstack/config';
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
+variable NEUTRON_HOST_SERVER ?= 'neutron.mysite.com';
 variable MY_IP ?= '10.0.1.3';
 
 prefix "/software/components/openstack/nova_compute";
 
 "DEFAULT" = dict(
+    "auth_strategy", "keystone",
     "enabled_apis", list('osapi_compute', 'metadata'),
     "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
     "my_ip", MY_IP,
@@ -39,4 +41,10 @@ prefix "/software/components/openstack/nova_compute";
 );
 "libvirt" = dict(
     "virt_type", "kvm",
+);
+"neutron" = dict(
+    "url", format('http://%s:9696', NEUTRON_HOST_SERVER),
+    "auth_url", format('http://%s:35357', NEUTRON_HOST_SERVER),
+    "username", "neutron",
+    "password", "neutron_good_password",
 );

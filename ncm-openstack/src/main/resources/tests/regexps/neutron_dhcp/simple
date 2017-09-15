@@ -1,0 +1,8 @@
+OpenStack Neutron dhcp test
+---
+multiline
+---
+^\[DEFAULT\]$
+^dhcp_driver\s?=\s*.+\s*$
+^enable_isolated_metadata\s?=\s*.+\s*$
+^interface_driver\s?=\s*.+\s*$

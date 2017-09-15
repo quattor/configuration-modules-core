@@ -23,6 +23,6 @@ type component_openstack = {
     'neutron_ml2' ? openstack_neutron_ml2_config
     'neutron_linuxbridge' ? openstack_neutron_linuxbridge_config
     'neutron_l3' ? openstack_neutron_l3_config
-    'neutron_compute' ? openstack_neutron_common
+    'neutron_dhcp' ? openstack_neutron_dhcp_config
     'horizon' ? openstack_horizon_config
 };

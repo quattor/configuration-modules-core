@@ -22,7 +22,7 @@ type openstack_neutron_ml2 = {
     @{An ordered list of extension driver entrypoints to be loaded from the
     neutron.ml2.extension_drivers namespace}
     'extension_drivers' : type_neutronextension[] = list('port_security')
-};
+} = dict();
 
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2_type_flat" Section.
@@ -32,7 +32,7 @@ type openstack_neutron_ml2_type_flat = {
     default "*" to allow flat networks with arbitrary physical_network names. Use
     an empty list to disable flat networks}
     'flat_networks' : string[] = list('provider')
-};
+} = dict();
 
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2_type_vxlan" Section.
@@ -40,7 +40,7 @@ type openstack_neutron_ml2_type_flat = {
 type openstack_neutron_ml2_type_vxlan = {
     @{Configure the VXLAN network identifier range for self-service networks}
     'vni_ranges' : string = '1:1000'
-};
+} = dict();
 
 @documentation {
     The Neutron configuration options in ml2_conf.ini "securitygroup" Section.
@@ -100,9 +100,9 @@ type openstack_neutron_common = {
     list of Neutron ml2 service sections
 };
 type openstack_neutron_ml2_config = {
-    'ml2' ? openstack_neutron_ml2
-    'ml2_type_flat' ? openstack_neutron_ml2_type_flat
-    'ml2_type_vxlan' ? openstack_neutron_ml2_type_vxlan
+    'ml2' : openstack_neutron_ml2
+    'ml2_type_flat' : openstack_neutron_ml2_type_flat
+    'ml2_type_vxlan' : openstack_neutron_ml2_type_vxlan
     'securitygroup' ? openstack_neutron_securitygroup
 };
 
@@ -110,7 +110,7 @@ type openstack_neutron_ml2_config = {
     list of Neutron linuxbridge service sections
 };
 type openstack_neutron_linuxbridge_config = {
-    'linux_bridge' ? openstack_neutron_linux_bridge
+    'linux_bridge' : openstack_neutron_linux_bridge
     'vxlan' ? openstack_neutron_vxlan
     'securitygroup' ? openstack_neutron_securitygroup
 };
@@ -119,6 +119,20 @@ type openstack_neutron_linuxbridge_config = {
     list of Neutron layer3 service sections
 };
 type openstack_neutron_l3_config = {
+    'DEFAULT' : openstack_DEFAULTS
+};
+
+@documentation {
+    list of Neutron dhcp service sections
+};
+type openstack_neutron_dhcp_config = {
+    'DEFAULT' : openstack_DEFAULTS
+};
+
+@documentation {
+    list of Neutron metadata service sections
+};
+type openstack_neutron_metadata_config = {
     'DEFAULT' : openstack_DEFAULTS
 };
 

@@ -1,0 +1,8 @@
+OpenStack Neutron dhcp template full test
+---
+multiline
+---
+^\[DEFAULT\]$
+^dhcp_driver\s{1}=\s{1}neutron.agent.linux.dhcp.Dnsmasq$
+^enable_isolated_metadata\s{1}=\s{1}true$
+^interface_driver\s{1}=\s{1}linuxbridge$
