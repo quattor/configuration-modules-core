@@ -6,12 +6,64 @@ include 'pan/types';
 include 'quattor/functions/network';
 
 @documentation{
-    Route
+    Add route (IPv4 of IPv6)
+    Presence of ':' in any of the values indicates this is IPv6 related.
 }
 type structure_route = {
+    @{The ADDRESS in ADDRESS/PREFIX via GATEWAY}
     "address" ? type_ip
-    "netmask" ? type_ip
+    @{The PREFIX in ADDRESS/PREFIX via GATEWAY}
+    "prefix"  ? long
+    @{The GATEWAY in ADDRESS/PREFIX via GATEWAY}
     "gateway" ? type_ip
+    @{alternative notation for prefix (cannot be combined with prefix)}
+    "netmask" ? type_ip
+    @{route add command options to use (cannot be combined with other options)}
+    "command" ? string with !match(SELF, '[;]')
+} with {
+    if (exists(SELF['command'])) {
+        if (length(SELF) != 1)
+            error("Cannot use command and any of the other attributes as route");
+    } else {
+        if (!exists(SELF['address']))
+            error("Address is mandatory for route (in absence of command)");
+        if (exists(SELF['prefix']) && exists(SELF['netmask']))
+            error("Use either prefix or netmask as route");
+    };
+
+    if (exists(SELF['prefix'])) {
+        pref = SELF['prefix'];
+        ipv6 = false;
+        foreach (k; v; SELF) {
+            if (match(to_string(v), ':')) {
+                ipv6 = true;
+            };
+        };
+        if (ipv6) {
+            if (!is_ipv6_prefix_length(pref)) {
+                error(format("Prefix %s is not a valid IPv6 prefix", pref));
+            };
+        } else {
+            if (!is_ipv4_prefix_length(pref)) {
+                error(format("Prefix %s is not a valid IPv4 prefix", pref));
+            };
+        };
+    };
+
+    true;
+};
+
+@documentation{
+    Add rule (IPv4 of IPv6)
+    Presence of ':' in any of the values indicates this is IPv6 related.
+}
+type structure_rule = {
+    @{rule add options to use (cannot be combined with other options)}
+    "command" ? string with !match(SELF, '[;]')
+} with {
+    if (exists(SELF['command']) && length(SELF) != 1)
+        error("Cannot use command and any of the other attributes as route");
+    true;
 };
 
 @documentation{
@@ -67,14 +119,16 @@ type structure_bridging_options = {
     interface ethtool offload
 }
 type structure_ethtool_offload = {
-    "rx" ? string with match (SELF, '^on|off$')
-    "tx" ? string with match (SELF, '^on|off$')
-    "tso" ? string with match (SELF, '^on|off$')
-    "gro" ? string with match (SELF, '^on|off$')
+    "rx" ? string with match (SELF, '^(on|off)$')
+    "tx" ? string with match (SELF, '^(on|off)$')
+    @{Set the TCP segment offload parameter to "off" or "on"}
+    "tso" ? string with match (SELF, '^(on|off)$')
+    "gro" ? string with match (SELF, '^(on|off)$')
 };
 
 @documentation{
-    interface ethtool ring
+    Set the ethernet transmit or receive buffer ring counts.
+    See ethtool --show-ring for the values.
 }
 type structure_ethtool_ring = {
     "rx" ? long
@@ -86,7 +140,7 @@ type structure_ethtool_ring = {
 @documentation{
     ethtool wol p|u|m|b|a|g|s|d...
     from the man page
-        Sets Wake-on-LAN options.  Not all devices support this.  The argument to this option is  a  string
+        Sets Wake-on-LAN options.  Not all devices support this.  The argument to this option is a string
         of characters specifying which options to enable.
             p  Wake on phy activity
             u  Wake on unicast messages
@@ -97,16 +151,50 @@ type structure_ethtool_ring = {
             s  Enable SecureOn(tm) password for MagicPacket(tm)
             d  Disable (wake on nothing).  This option clears all previous option
 }
-type structure_ethtool_wol = string with match (SELF, '^p|u|m|b|a|g|s|d$');
+type structure_ethtool_wol = string with match (SELF, '^(p|u|m|b|a|g|s|d)+$');
 
 @documentation{
     ethtool
 }
 type structure_ethtool = {
     "wol" ? structure_ethtool_wol
-    "autoneg" ? string with match (SELF, '^on|off$')
-    "duplex" ? string with match (SELF, '^half|full$')
+    "autoneg" ? string with match (SELF, '^(on|off)$')
+    "duplex" ? string with match (SELF, '^(half|full)$')
     "speed" ? long
+};
+
+@documentation{
+    interface plugin for vxlan support via initscripts-vxlan
+}
+type structure_interface_plugin_vxlan = {
+    @{VXLAN Network Identifier (or VXLAN Segment ID); derived from devicename vxlan[0-9] if not defined}
+    'vni' ? long(0..16777216)
+    @{multicast ip to join}
+    'group' ? type_ip
+    @{destination IP address to use in outgoing packets}
+    'remote' ? type_ip
+    @{source IP address to use in outgoing packets}
+    'local' ? type_ip
+    @{UDP destination port}
+    'dstport' ? long(2..65535)
+    @{Group Policy extension}
+    'gbp' ? boolean
+} with {
+    if (exists(SELF['group']) && exists(SELF['remote'])) {
+        error('Cannot define both group and remote for vxlan');
+    };
+    if (!exists(SELF['group']) && !exists(SELF['remote'])) {
+        error('Must define either group or remote for vxlan');
+    };
+    true;
+};
+
+@documentation{
+    interface plugin via custom ifup/down[-pre]-local hooks
+}
+type structure_interface_plugin = {
+    @{VXLAN support via initscripts-vxlan}
+    "vxlan" ? structure_interface_plugin_vxlan
 };
 
 @documentation{
@@ -118,28 +206,47 @@ type structure_interface = {
     "netmask" ? type_ip
     "broadcast" ? type_ip
     "driver" ? string
-    "bootproto" ? string
-    "onboot" ? string
+    "bootproto" ? string with match(SELF, '^(static|bootp|dhcp|none)$')
+    "onboot" ? boolean
     "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
     "device" ? string
     "master" ? string
     "mtu" ? long
+    @{Routes for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/route[6]-<interface> files
+      as used by ifup-routes when using ncm-network.
+      This allows for mixed IPv4 and IPv6 configuration}
     "route" ? structure_route[]
+    @{Rules for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/rule[6]-<interface> files
+      as used by ifup-routes when using ncm-network.
+      This allows for mixed IPv4 and IPv6 configuration}
+    "rule" ? structure_rule[]
+    @{Aliases for this interface.
+      These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface>:<key> files
+      as used by ifup-aliases when using ncm-network.}
     "aliases" ? structure_interface_alias{}
+    @{Explicitly set the MAC address. The MAC address is taken from /hardware/cards/nic/<interface>/hwaddr.}
     "set_hwaddr" ? boolean
     "bridge" ? valid_interface
     "bonding_opts" ? structure_bonding_options
+
     "offload" ? structure_ethtool_offload
     "ring" ? structure_ethtool_ring
     "ethtool" ? structure_ethtool
 
+    @{Is a VLAN device. If the device name starts with vlan, this is always true.}
     "vlan" ? boolean
+    @{If the device name starts with vlan, this has to be set.
+      It is set (but ignored by ifup) if it the device is not named vlan}
     "physdev" ? valid_interface
 
     "fqdn" ? string
     "network_environment" ? string
     "network_type" ? string
     "nmcontrolled" ? boolean
+    @{Set DEFROUTE, is the default for ipv6_defroute}
+    "defroute" ? boolean
 
     "linkdelay" ? long # LINKDELAY
     "stp" ? boolean # enable/disable stp on bridge (true: STP=on)
@@ -160,10 +267,13 @@ type structure_interface = {
     "ipv6_mtu" ? long(1280..65536)
     "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
     "ipv6_rtr" ? boolean
+    @{Set IPV6_DEFROUTE, defaults to defroute value}
+    "ipv6_defroute" ? boolean
     "ipv6addr" ? type_network_name
     "ipv6addr_secondaries" ? type_network_name[]
     "ipv6init" ? boolean
 
+    "plugin" ? structure_interface_plugin
 } with {
     if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
         error("An OVSBridge interface cannot have the ovs_bridge option defined");
@@ -197,6 +307,9 @@ type structure_interface = {
                             SELF['broadcast'], SELF['ip'], SELF['netmask']));
         };
     };
+    if (exists(SELF['plugin']) && exists(SELF['plugin']['vxlan']) && ! exists(SELF['physdev'])) {
+        error('vxlan plugin requires physdev');
+    };
     true;
 };
 
@@ -216,18 +329,31 @@ type structure_ipv6 = {
 };
 
 @documentation{
-    network
+    Host network configuration
+
+    These values are used to generate /etc/sysconfig/network
+    when using ncm-network (unless specified otherwise).
 }
 type structure_network = {
     "domainname" : type_fqdn
     "hostname" : type_shorthostname
     "realhostname" ? type_fqdn
     "default_gateway" ? type_ip
+    @{When default_gateway is not set, the component will try to guess the default
+      gateway using the first configured gateway set on an interface.
+      The default is true for backward compatible behaviour.}
+    "guess_default_gateway" ? boolean
     "gatewaydev" ? valid_interface
+    @{Per interface network settings.
+      These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface> files
+      when using ncm-network.}
     "interfaces" : structure_interface{}
     "nameserver" ? type_ip[]
     "nisdomain" ? string(1..64) with match(SELF, '^\S+$')
+    @{Setting nozeroconf to true stops an interface from being assigned an automatic address in the 169.254.0.0 subnet.}
     "nozeroconf" ? boolean
+    @{The default behaviour for all interfaces wrt setting the MAC address (see interface set_hwaddr attribute).
+      The component default is false.}
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
