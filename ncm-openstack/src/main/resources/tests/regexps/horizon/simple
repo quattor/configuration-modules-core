@@ -1,0 +1,16 @@
+OpenStack Horizon test
+---
+multiline
+---
+^ALLOWED_HOSTS\s?=\s*.+\s*$
+^CACHES\s?=\s*\{\s*$
+^\}$
+^OPENSTACK_API_VERSIONS\s?=\s?\{$
+^OPENSTACK_KEYSTONE_DEFAULT_DOMAIN\s?=\s*.+\s*$
+^OPENSTACK_KEYSTONE_DEFAULT_ROLE\s?=\s*.+\s*$
+^OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT\s?=\s*.+\s*$
+^OPENSTACK_KEYSTONE_URL\s?=\s*.+\s*$
+^OPENSTACK_NEUTRON_NETWORK\s?=\s?\{$
+^\}$
+^SESSION_ENGINE\s?=\s*.+\s*$
+^TIME_ZONE\s?=\s*.+\s*$
