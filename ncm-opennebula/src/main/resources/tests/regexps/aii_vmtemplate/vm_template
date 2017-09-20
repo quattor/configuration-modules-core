@@ -4,14 +4,12 @@ multiline
 ---
 ^NIC\s?=\s?\[$
 ^\s{4}IP\s?=\s?"10.141.8.30",$
-^\s{4}MAC\s?=\s?"AA:00:00:80:01:00",$
 ^\s{4}MODEL\s?=\s?"virtio",$
 ^\s{4}NETWORK\s?=\s?"br100",$
 ^\s{4}NETWORK_UNAME\s?=\s?"oneadmin"$
 ^\]$
 ^NIC\s?=\s?\[$
 ^\s{4}IP\s?=\s?"172.24.8.30",$
-^\s{4}MAC\s?=\s?"AA:00:00:80:01:01",$
 ^\s{4}MODEL\s?=\s?"virtio",$
 ^\s{4}NETWORK\s?=\s?"br101",$
 ^\s{4}NETWORK_UNAME\s?=\s?"oneadmin"$

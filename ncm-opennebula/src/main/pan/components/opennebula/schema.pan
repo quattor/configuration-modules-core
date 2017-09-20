@@ -506,24 +506,33 @@ type opennebula_oned = {
         "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE",
         "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC",
         "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC",
-        "DISK/ORIGINAL_SIZE", "CPU_COST", "MEMORY_COST", "DISK_COST",
-        "PCI", "USER_INPUTS",
+        "CPU_COST", "MEMORY_COST", "DISK_COST",
+        "PCI", "EMULATOR", "RAW", "USER_PRIORITY", "SOURCE",
     )
     "image_restricted_attr" : string = 'SOURCE'
     "vnet_restricted_attr" : string[] = list(
-        "VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "AR/VN_MAD", "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE",
+        "VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "CONF",
+        "BRIDGE_CONF", "IP_LINK_CONF",
+        "AR/VN_MAD", "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE",
     )
     "inherit_datastore_attr" : string[] = list(
-        "CEPH_HOST", "CEPH_SECRET", "CEPH_USER", "CEPH_CONF",
-        "RBD_FORMAT", "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
+        "CEPH_HOST", "CEPH_SECRET", "CEPH_KEY", "CEPH_USER", "CEPH_CONF",
+        "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
         "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME",
-        "DISK_TYPE", "ADAPTER_TYPE",
+        "DISK_TYPE", "ALLOW_ORPHANS", "VCENTER_ADAPTER_TYPE",
+        "VCENTER_DISK_TYPE", "VCENTER_DS_REF", "VCENTER_DS_IMAGE_DIR",
+        "VCENTER_DS_VOLATILE_DIR", "VCENTER_INSTANCE_ID",
     )
     "inherit_image_attr" : string[] = list(
-        "ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN", "DISK_TYPE", "ADAPTER_TYPE",
+        "ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN",
+        "DISK_TYPE", "VCENTER_ADAPTER_TYPE", "VCENTER_DISK_TYPE",
     )
     "inherit_vnet_attr" : string[] = list(
         "VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", "FILTER_MAC_SPOOFING", "MTU",
+        "INBOUND_AVG_BW", "INBOUND_PEAK_BW", "INBOUND_PEAK_KB", "OUTBOUND_AVG_BW",
+        "OUTBOUND_PEAK_BW", "OUTBOUND_PEAK_KB", "OUTBOUND_PEAK_KB", "BRIDGE_CONF",
+        "IP_LINK_CONF", "VCENTER_NET_REF", "VCENTER_SWITCH_NAME", "VCENTER_SWITCH_NPORTS",
+        "VCENTER_PORTGROUP_TYPE", "VCENTER_CCR_REF", "VCENTER_INSTANCE_ID",
     )
 };
 
