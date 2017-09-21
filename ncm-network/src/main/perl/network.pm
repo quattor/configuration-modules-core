@@ -80,6 +80,8 @@ use parent qw(NCM::Component CAF::Path);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
+our $NoActionSupported = 1;
+
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 
 use Net::Ping;
