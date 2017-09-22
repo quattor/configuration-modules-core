@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>sudo</artifactId>
   <packaging>pom</packaging>
-  <version>17.7.1-SNAPSHOT</version>
+  <version>17.8.0-rc1</version>
   <name>ncm-sudo</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
