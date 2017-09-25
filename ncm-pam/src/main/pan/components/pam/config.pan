@@ -230,6 +230,19 @@ function pam_add_access_netgroup = {
     return (ret);
 };
 
+@documentation{
+  desc = helper function to add (unix) group to pam/access/<key>
+  arg = key under components/pam/access to modify
+  arg = group, unix group to add to <key>
+}
+function pam_add_access_group = {
+    key = ARGV[0];
+    group = ARGV[1];
+
+    pam_add_access_acl(key, "+", "("+group+")", "ALL");
+};
+
+
 function pam_add_access_user = {
     key  = ARGV[0];
     user = ARGV[1];
