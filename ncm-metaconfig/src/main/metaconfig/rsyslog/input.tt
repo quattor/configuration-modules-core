@@ -1,6 +1,5 @@
 input(
 [% FILTER indent -%]
-name="[% name %]"
 type="im[% type %]"
 [%-     options = {};
         options.import(params);
