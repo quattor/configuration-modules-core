@@ -50,16 +50,17 @@ my $extra_opts = {
 
 =cut
 
-set_file_contents($YUM_FILE, "a=1");
+set_file_contents($YUM_FILE, "a=1\nexclude=something else and more\n");
 $cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1 /dir/2)], $extra_opts);
 my $fh = get_file($YUM_FILE);
-like("$fh", qr{a=1\n$COR=1}, "Correct expansion");
+like("$fh", qr{^a=1\n}, "keep existiing lines");
+like("$fh", qr{^$COR=1$}m, "Correct expansion");
 like("$fh", qr{^$OBSOLETES=0$}m, "Obsoletes is expanded properly");
 like("$fh", qr{^$PLUGINCONFPATH=/my/pluginpath$}m, "Pluginconfpath is expanded properly");
-like("$fh", qr{^$REPOSDIR=/dir/1,/dir/2}m, "Reposdir is expanded properly");
+like("$fh", qr{^$REPOSDIR=/dir/1,/dir/2$}m, "Reposdir is expanded properly");
 # extra_opts
-like("$fh", qr{^exclude=something else}m, "exclude is addedd properly (space separated)");
-like("$fh", qr{^retries=100}m, "reries is added");
+like("$fh", qr{^exclude=something else$}m, "exclude is added properly (space separated)");
+like("$fh", qr{^retries=100$}m, "reries is added");
 
 =pod
 
