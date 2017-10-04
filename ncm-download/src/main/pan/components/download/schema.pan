@@ -63,4 +63,6 @@ type download_component = extensible {
     "head_timeout" ? long
     @{seconds, total timeout for fetch of file, can be overridden per file}
     "timeout" ? long
+    @{argumensts to be passed in kinit -k called in ncm-download}
+    "kinit_args" ? string[]
 };
