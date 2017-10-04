@@ -485,7 +485,11 @@ sub Configure
         $self->verbose("Not a NFS server configuration");
     };
 
-    $self->process_mounts($tree);
+    if (exists($tree->{mounts})) {
+        $self->process_mounts($tree);
+    } else {
+        $self->verbose("No mounts exists");
+    };
 
     return 1;
 }
