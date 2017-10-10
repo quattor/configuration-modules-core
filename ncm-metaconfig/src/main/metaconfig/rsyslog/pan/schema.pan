@@ -140,6 +140,12 @@ type rsyslog_service = {
                     error(format("input without known ruleset %s", input['ruleset']));
                 };
             };
+            if (is_defined(input['name']) && name != input['name']) {
+                error(format("input name %s must match name attribute %s", name, input['name']));
+            };
+            if (is_defined(input['Name']) && name != input['Name']) {
+                error(format("input name %s must match Name attribute %s", name, input['Name']));
+            };
         };
     };
     true;

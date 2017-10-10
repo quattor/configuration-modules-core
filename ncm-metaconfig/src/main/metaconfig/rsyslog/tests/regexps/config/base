@@ -31,15 +31,15 @@ multiline
 ^ {4}type="string"$
 ^ {4}string="<%PRI%>1 %timegenerated:::date-rfc3339% %HOSTNAME% %syslogtag% - %APP-NAME%: %msg:::drop-last-lf%\\n"$
 ^input\($ ### COUNT 3
-^ {4}name="input1"$
+^ {4}# input1$
 ^ {4}type="imfile"$
 ^ {4}File="/ab/c"$
 ^ {4}Tag="abc"$
 ^ {4}queue.filename="input1"$
-^ {4}name="input2"$
+^ {4}# input2$
 ^ {4}type="imtcp"$
 ^ {4}Port="1234"$
-^ {4}name="input3"$
+^ {4}# input3$
 ^ {4}type="imudp"$
 ^ {4}Port=\["514", "515"\]$
 ^\)$ ### COUNT 14
