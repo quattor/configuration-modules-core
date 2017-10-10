@@ -1,0 +1,53 @@
+[% # builtin modules, require prefix when loading
+    builtins = ['omfile', 'omfwd', 'omusrmsg'] -%]
+[%- # legacy modules, not all modules are converted to rainer script yet
+    legacy = ['immark'] -%]
+[%- # Start with modules. One per input, so this cannot be empty
+    type_map = {'input' => 'im', 'action' => 'om'};
+    modules = {};
+    FOREACH type IN type_map.keys;
+        FOREACH pair IN CCM.contents.module.$type.pairs;
+            module = type_map.$type _ pair.key;
+            modules.$module = pair.value;
+        END;
+        SWITCH type;
+            CASE 'action';
+                els = [];
+                FOREACH ruleset IN CCM.contents.ruleset.values;
+                    # only one of action or rule is allowed
+                    FOREACH action IN ruleset.action;
+                        els.push(action);
+                    END;
+                END;
+            CASE;
+                els=CCM.contents.$type.values;
+        END;
+        FOREACH el IN els;
+            # Should only be one key, the module name
+            module = type_map.$type _ el.keys.0;
+            NEXT IF module == 'omstop';
+            IF module == 'omprifile';
+                module = 'omfile';
+            END;
+            IF NOT modules.defined(module);
+                modules.$module = {};
+            END;
+        END;
+    END;
+    -%]
+[%- FOREACH module IN modules.pairs %]
+[%     SWITCH module.key -%]
+[%-         CASE legacy -%]
+$ModLoad [%     module.key %]
+[%-             FOREACH param IN module.value.pairs %]
+[%                  INCLUDE 'metaconfig/rsyslog/legacy/element.tt' el=param %]
+[%              END %]
+[%-         CASE -%]
+module(
+[%              FILTER indent -%]
+load="[% builtins.grep('^' _ module.key _ '$').defined(0) ? 'builtin:' : '' %][% module.key %]"
+[%-                 INCLUDE 'metaconfig/rsyslog/elements.tt' elements=module.value octals=['fileCreateMode', 'dirCreateMode'] %]
+[%-             END %]
+)
+[%      END -%]
+[% END -%]

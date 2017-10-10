@@ -1,0 +1,22 @@
+ruleset(
+[% FILTER indent -%]
+name="[% name %]"
+[%-      IF ruleset.queue.defined %]
+[%-         INCLUDE 'metaconfig/rsyslog/elements.tt' elements=ruleset.queue prefix='queue.' %]
+[%-      END %]
+) {
+[%-      IF ruleset.action.defined %]
+[%          FOREACH action IN ruleset.action %]
+[%-              SWITCH action.keys.0 %]
+[%-                  CASE 'stop' -%]
+[%-                      INCLUDE 'metaconfig/rsyslog/stop.tt' stop=action.values.0 %]
+[%-                  CASE 'prifile' -%]
+[%-                      INCLUDE 'metaconfig/rsyslog/prifile.tt' files=action.values.0 %]
+[%-                  CASE -%]
+[%-                      INCLUDE 'metaconfig/rsyslog/action.tt' type=action.keys.0 action=action.values.0 %]
+[%              END %]
+[%-          END %]
+[%-      ELSE %]
+[%-      END %]
+[%- END %]
+}
