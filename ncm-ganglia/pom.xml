@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>ganglia</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0-rc4-SNAPSHOT</version>
+  <version>17.8.0-rc4</version>
   <name>ncm-ganglia</name>
   <parent>
     <groupId>org.quattor.maven</groupId>

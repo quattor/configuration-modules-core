@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>grub</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0-rc4-SNAPSHOT</version>
+  <version>17.8.0-rc4</version>
   <name>ncm-grub</name>
   <parent>
     <groupId>org.quattor.maven</groupId>

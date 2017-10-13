@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>amandaserver</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0-rc4-SNAPSHOT</version>
+  <version>17.8.0-rc4</version>
   <name>ncm-amandaserver</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
