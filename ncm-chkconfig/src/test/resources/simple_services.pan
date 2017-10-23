@@ -17,3 +17,6 @@ prefix "/software/components/chkconfig/service";
 # the service has to exists and/or turned on
 "{test_off}" = dict("off","45");
 "{test_del}" = dict("del",true,);
+
+# test function
+"/software/components" = chkconfig("test_enable", "-test_disable");

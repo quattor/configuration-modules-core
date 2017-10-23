@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/chkconfig/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
@@ -37,6 +33,23 @@ function chkconfig_allow_combinations = {
     true;
 };
 
+@{Enables (on + startstop&#61;true) all arguments as services.
+  If argument starts with a -, it is disabled (off + startstop&#61;true).
+  Use as e.g.
+    "/software/components" &#61; chkconfig("service1", "-service2");
+}
+function chkconfig = {
+    foreach (idx;arg;ARGV) {
+        m = matches(arg, '^(-)?(.*)$');
+        what = 'on';
+        if (m[1] == '-') {
+            what = 'off';
+        };
+        SELF['chkconfig']['service'][escape(m[2])] = dict(what, '', 'startstop', true);
+    };
+    SELF;
+};
+
 type service_type = {
     "name" ? string
     "add" ? boolean
@@ -47,7 +60,7 @@ type service_type = {
     "startstop" ? boolean
 } with chkconfig_allow_combinations(SELF);
 
-type component_chkconfig_type = {
+type ${project.artifactId}_component = {
     include structure_component
     "service" : service_type{}
     "default" ? string with match (SELF, '^(ignore|off)$')
