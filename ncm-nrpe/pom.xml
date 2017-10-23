@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>nrpe</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0-rc6-SNAPSHOT</version>
+  <version>17.8.0</version>
   <name>ncm-nrpe</name>
   <parent>
     <groupId>org.quattor.maven</groupId>

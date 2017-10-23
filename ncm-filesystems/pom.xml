@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>filesystems</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0-rc6-SNAPSHOT</version>
+  <version>17.8.0</version>
   <name>ncm-filesystems</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
