@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>systemd</artifactId>
   <packaging>pom</packaging>
-  <version>17.8.0</version>
+  <version>17.8.1-SNAPSHOT</version>
   <name>ncm-systemd</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
