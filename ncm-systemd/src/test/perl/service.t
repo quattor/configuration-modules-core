@@ -25,13 +25,14 @@ Test C<NCM::Component::Systemd::Service> module for systemd.
 
 =cut
 
-my $svc = NCM::Component::Systemd::Service->new(log => $cmp);
+my $svc = NCM::Component::Systemd::Service->new($cmp->prefix, log => $cmp);
 isa_ok($svc, "NCM::Component::Systemd::Service",
        "Created a NCM::Component::Systemd::Service instance");
 isa_ok($svc->{unit}, "NCM::Component::Systemd::Service::Unit",
        "Has a NCM::Component::Systemd::Service::Unit instance");
 isa_ok($svc->{chkconfig}, "NCM::Component::Systemd::Service::Chkconfig",
        "Has a NCM::Component::Systemd::Service::Chkconfig instance");
+is($svc->{BASE}, "/software/components/systemd", "systemd configuration path");
 
 =pod
 
@@ -39,10 +40,12 @@ isa_ok($svc->{chkconfig}, "NCM::Component::Systemd::Service::Chkconfig",
 
 =cut
 
-is_deeply([$UNCONFIGURED_DISABLED, $UNCONFIGURED_ENABLED,
-           $UNCONFIGURED_IGNORE, $UNCONFIGURED_MASKED,
-          ],
-          [qw(disabled enabled ignore masked)],
+my $unconfs = [
+    $UNCONFIGURED_DISABLED, $UNCONFIGURED_ENABLED,
+    $UNCONFIGURED_OFF, $UNCONFIGURED_ON,
+    $UNCONFIGURED_IGNORE,
+];
+is_deeply($unconfs, [qw(disabled enabled off on ignore)],
           "exported UNCONFIGURED states");
 
 =pod
@@ -186,7 +189,7 @@ set_output('gen_full_el7_ceph021_systemctl_is_enabled_cups.service_unit-files');
 
 $cfg = get_config_for_profile('service_ceph021');
 
-my $configured = $svc->gather_configured_units($cfg);
+my $configured = $svc->gather_configured_units($cfg, $UNCONFIGURED_IGNORE);
 is_deeply($configured->{'network.service'}, { # sysv, on
     name => "network.service",
     startstop => 1,
@@ -272,7 +275,7 @@ is_deeply($configured->{'NetworkManager.service'}, {
 }, "NetworkManager chkconfig ceph021");
 
 $cmp->{ERROR} = 0;
-my $current = $svc->gather_current_units($configured);
+my $current = $svc->gather_current_units($configured, $UNCONFIGURED_IGNORE);
 is($cmp->{ERROR}, 1, "1 error logged (due to missing_disabled service)");
 
 # cdp-listend, ceph, cups, ncm-cdispd, netconsole, network, NetworkManager
@@ -284,7 +287,6 @@ is_deeply($current->{'network.service'}, { # sysv
         name => "network.service",
         startstop => 1,
         state => $STATE_ENABLED,
-        derived => 1,
         targets => ['multi-user.target', 'graphical.target'],
         type => $TYPE_SERVICE,
         shortname => "network",
@@ -295,7 +297,6 @@ is_deeply($current->{'netconsole.service'}, { # sysv
         name => "netconsole.service",
         startstop => 1,
         state => $STATE_DISABLED,
-        derived => 1,
         targets => [],
         type => $TYPE_SERVICE,
         shortname => "netconsole",
@@ -323,6 +324,10 @@ is_deeply($current->{'NetworkManager.service'}, { # systemd
         derived => 1, # from chkconfig config
 }, "current NetworkManager service for ceph021");
 
+# unconfigured units should return all units, not only relevant ones
+my $ucurrent = $svc->gather_current_units($configured, $UNCONFIGURED_DISABLED);
+is_deeply(scalar keys %$ucurrent, 384, "Got 384 current units (incl non-relevant for unconfigured)");
+
 =pod
 
 =head2 process
@@ -333,7 +338,7 @@ Test process
 
 $cmp->{ERROR} = 0;
 
-my ($states, $acts) = $svc->process($configured, $current);
+my ($states, $acts) = $svc->process($configured, $current, $UNCONFIGURED_IGNORE);
 
 is($cmp->{ERROR}, 3, "3 errors logged: 1 due to 2 configured unit, one is alias of other; the 2nd/3rd due to missing_disabled");
 
@@ -368,6 +373,49 @@ is_deeply($acts, {
     0 => ['missing_disabled.service'],
     1 => ['netconsole.service', 'network.service', 'rbdmap.service'],
 }, "Activations to be made");
+
+
+# unconfigured units handling
+my ($ustates, $uacts);
+
+# if bool, units and i(gnored) units are equal
+# else, check if the unconfigured_units are in the arrayref
+sub check_uu
+{
+    my ($same, $units, $iunits, $msg, @unconfigured_units) = @_;
+    if ($same) {
+        is_deeply($units, $iunits, "No modified $msg compared to $UNCONFIGURED_IGNORE");
+    } else {
+        foreach my $uu (@unconfigured_units) {
+            ok((grep {$_ eq $uu} @$units), "Found unconfigured unit $uu in $msg");
+        }
+    }
+}
+
+foreach my $unconf (@$unconfs) {
+    next if $unconf eq $UNCONFIGURED_IGNORE;
+    # use unconfigred current value (ie all units, not only relevant ones)
+    my ($ustates, $uacts) = $svc->process($configured, $ucurrent, $unconf);
+    diag "ustates uacts $unconf", explain $ustates, explain $uacts;
+    # check for unconfigured enabled/disabled/running/non-running units
+    # check that all others are not modified
+    my $same_start = $unconf ne $UNCONFIGURED_ON;
+    check_uu($same_start, $uacts->{1}, $acts->{1}, "start actions for $unconf",
+             'syslog.service', 'syslog.target');
+
+    my $same_stop = $unconf ne $UNCONFIGURED_OFF;
+    check_uu($same_stop, $uacts->{0}, $acts->{0}, "stop actions for $unconf",
+             '-.mount', 'timers.target',);
+
+    my $same_enabled = $same_start && $unconf ne $UNCONFIGURED_ENABLED;
+    check_uu($same_enabled, $ustates->{$STATE_ENABLED}, $states->{$STATE_ENABLED}, "enabled states for $unconf",
+             'syslog.service', 'syslog.target', '-.mount');
+
+    my $same_disabled = $same_stop && $unconf ne $UNCONFIGURED_DISABLED;
+    check_uu($same_disabled, $ustates->{$STATE_DISABLED}, $states->{$STATE_DISABLED}, "disabled states for $unconf",
+             'syslog.service', 'syslog.target', '-.mount', 'multi-user.target');
+}
+
 
 =pod
 

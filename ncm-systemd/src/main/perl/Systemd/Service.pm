@@ -1,13 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service;
+#${PMpre} NCM::Component::Systemd::Service${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(CAF::Object Exporter);
 
@@ -15,7 +8,7 @@ use NCM::Component::Systemd::Service::Chkconfig;
 use NCM::Component::Systemd::Service::Unit qw(:states :types);
 use NCM::Component::Systemd::Systemctl qw(systemctl_command_units);
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw (SUCCESS);
 
 use Readonly;
 
@@ -30,24 +23,27 @@ Readonly::Hash my %DEFAULT_PROTECTED_SERVICES => (
     sshd => 1,
 );
 
-Readonly my $BASE => "/software/components/systemd";
 Readonly my $LEGACY_BASE => "/software/components/chkconfig";
 
 Readonly our $UNCONFIGURED_DISABLED => $STATE_DISABLED;
 Readonly our $UNCONFIGURED_ENABLED => $STATE_ENABLED;
 Readonly our $UNCONFIGURED_IGNORE => 'ignore';
-Readonly our $UNCONFIGURED_MASKED => $STATE_MASKED;
+Readonly our $UNCONFIGURED_ON => 'on';
+# off is similar to legacy chkconfig off
+Readonly our $UNCONFIGURED_OFF => 'off';
 
 Readonly my $UNMASK => 'unmask';
 
 Readonly::Array my @UNCONFIGURED => qw(
     $UNCONFIGURED_DISABLED $UNCONFIGURED_ENABLED
-    $UNCONFIGURED_IGNORE $UNCONFIGURED_MASKED
+    $UNCONFIGURED_OFF $UNCONFIGURED_ON
+    $UNCONFIGURED_IGNORE
     );
 
 Readonly::Array my @UNCONFIGURED_SUPPORTED => (
     $UNCONFIGURED_DISABLED, $UNCONFIGURED_ENABLED,
-    $UNCONFIGURED_IGNORE, $UNCONFIGURED_MASKED,
+    $UNCONFIGURED_OFF, $UNCONFIGURED_ON,
+    $UNCONFIGURED_IGNORE,
     );
 
 our @EXPORT_OK = qw();
@@ -56,9 +52,6 @@ push @EXPORT_OK, @UNCONFIGURED;
 our %EXPORT_TAGS = (
     unconfigured => \@UNCONFIGURED,
 );
-
-# The default w.r.t. handling unconfigured units.
-my $unconfigured_default = $UNCONFIGURED_IGNORE;
 
 =pod
 
@@ -72,7 +65,8 @@ NCM::Component::Systemd::Service handles the C<ncm-systemd> units.
 
 =item new
 
-Returns a new object, accepts the following options
+Returns a new object with argument C<base> (the configuration path)
+and accepts the following options
 
 =over
 
@@ -86,8 +80,9 @@ A logger instance (compatible with C<CAF::Object>).
 
 sub _initialize
 {
-    my ($self, %opts) = @_;
+    my ($self, $base, %opts) = @_;
 
+    $self->{BASE} = $base;
     $self->{log} = $opts{log} if $opts{log};
 
     $self->{unit} = NCM::Component::Systemd::Service::Unit->new(log => $self);
@@ -109,21 +104,15 @@ sub configure
 {
     my ($self, $config) = @_;
 
-    $self->set_unconfigured_default($config);
+    my $unconfigured = $self->set_unconfigured_default($config);
 
     my $configured = $self->gather_configured_units($config);
 
-    my $current = $self->gather_current_units($configured);
+    my $current = $self->gather_current_units($configured, $unconfigured);
 
-    my ($states, $acts) = $self->process($configured, $current);
+    my ($states, $acts) = $self->process($configured, $current, $unconfigured);
 
     $self->change($states, $acts);
-
-    if ($unconfigured_default ne $UNCONFIGURED_IGNORE) {
-        $self->error("Support for default unconfigured behaviour ",
-                     "$unconfigured_default is not implemented yet. ",
-                     "(Schema/component version mismatch?)");
-    }
 }
 
 
@@ -137,7 +126,7 @@ sub configure
 
 =item set_unconfigured_default
 
-Set the default behaviour for unconfigured units from C<ncn-systemd>
+Return the default behaviour for unconfigured units from C<ncn-systemd>
 and legacy C<ncm-chkconfig>.
 
 =cut
@@ -146,14 +135,18 @@ sub set_unconfigured_default
 {
     my ($self, $config)= @_;
 
+    # The default w.r.t. handling unconfigured units.
+    my $unconfigured_default = $UNCONFIGURED_IGNORE;
+
     my $path = {
-        unit => "$BASE/unconfigured",
+        unit => "$self->{BASE}/unconfigured",
         chkconfig => "$LEGACY_BASE/default",
     };
 
     # map legacy values to new ones
+    # chkconfig has no 'on'
     my $chkconfig_map = {
-        off => $UNCONFIGURED_DISABLED,
+        off => $UNCONFIGURED_OFF,
         ignore => $UNCONFIGURED_IGNORE,
     };
 
@@ -179,6 +172,16 @@ sub set_unconfigured_default
             $self->verbose("Converting legacy unconfigured_default ",
                            "value $val to ", $chkconfig_map->{$val});
             $val = $chkconfig_map->{$val};
+            if ($val ne $UNCONFIGURED_IGNORE) {
+                # This block is inserted here for evaluation of the behaviour
+                # as chkconfig=off might be too dangerous for now.
+                # See issue #1146 for follow-up.
+                $self->info("Ignoring the legacy chkconfig unconfigured behaviour $val ",
+                            "until more feedback is provided (see issue 1146). ",
+                            "To modify unconfigured unit behaviour, set the ncm-systemd configuration ",
+                            "'$self->{BASE}/unconfigured' = '$val';");
+                $val = $UNCONFIGURED_IGNORE;
+            }
         }
         $unconfigured_default = $val;
         $self->verbose("Set unconfigured_default to $unconfigured_default ",
@@ -192,7 +195,6 @@ sub set_unconfigured_default
         $unconfigured_default = $UNCONFIGURED_IGNORE;
     }
 
-    # For unittesting only
     return $unconfigured_default;
 }
 
@@ -241,7 +243,7 @@ sub gather_configured_units
     };
 
     my $unit = {
-        path => "$BASE/unit",
+        path => "$self->{BASE}/unit",
         instance => $self->{unit},
         type => 'unit',
     };
@@ -286,27 +288,28 @@ using resp. C<unit> and C<chkconfig> C<current_units> methods.
 
 The hashref C<relevant_units> is used to run minimal set
 of system commands where possible: e.g. if the hashref represents the
-configured units and if C<unconfigured_default> is C<ignore>, only gathered
+configured units and if C<unconfigured> is C<ignore>, only gathered
 details for these units.
 
 =cut
 
 sub gather_current_units
 {
-    my ($self, $relevant_units) = @_;
+    my ($self, $relevant_units, $unconfigured) = @_;
 
     my @limit_units;
     my $possible_missing;
+
     # Also include all unconfigured units in the queries.
-    if($unconfigured_default ne $UNCONFIGURED_IGNORE) {
-        $self->verbose("Unconfigured default $unconfigured_default, ",
-                       "taking all possible units into account");
-    } else {
+    if ($unconfigured eq $UNCONFIGURED_IGNORE) {
         @limit_units = sort keys %$relevant_units;
-        $self->verbose("Unconfigured default $unconfigured_default, ",
+        $self->verbose("Unconfigured default $unconfigured, ",
                        "using ", scalar @limit_units," limit units: ",
                        join(',',@limit_units));
         $possible_missing = $self->{unit}->possible_missing($relevant_units);
+    } else {
+        $self->verbose("Unconfigured default $unconfigured, ",
+                       "taking all possible units into account");
     }
 
     # A sysv service that is not listed in chkconfig --list
@@ -328,7 +331,7 @@ sub gather_current_units
 
     # Add all found chkconfig services to the limit_units
     # (unless limit_units is undefined/empty, in which case all units are gathered)
-    if(@limit_units) {
+    if (@limit_units) {
         foreach my $unit (sort keys %$units) {
             push(@limit_units, $unit) if (! (grep {$_ eq $unit} @limit_units));
         }
@@ -363,12 +366,12 @@ sub gather_current_units
 
 =item process
 
-C<process> the C<configured> units and
-retrun hash references with state and activation changes.
+C<process> the C<configured> and C<current> units and
+return hash references with state and activation changes.
 
 It uses the C<current> units to make the required decisions.
-
-(Unconfigured units are not dealt with in this method).
+Unconfigured current units are also processed according the
+C<unconfigured> value.
 
 =cut
 
@@ -377,7 +380,7 @@ It uses the C<current> units to make the required decisions.
 
 sub process
 {
-    my ($self, $configured, $current) = @_;
+    my ($self, $configured, $current, $unconfigured) = @_;
 
     # actions to take
 
@@ -402,6 +405,19 @@ sub process
         $STATE_ENABLED => 1,
         $STATE_DISABLED => 0,
         $STATE_MASKED => 0,
+    };
+
+    # Only add unconfigured values that require stop/start action
+    #   0 means stop/should-not-be-running
+    #   1 means start/should-be-running
+    my $unconfigured_actmap = {
+        $UNCONFIGURED_ON => 1,
+        $UNCONFIGURED_OFF => 0,
+    };
+    # Only add unconfigured values that are not a state
+    my $unconfigured_statemap = {
+        $UNCONFIGURED_ON => $STATE_ENABLED,
+        $UNCONFIGURED_OFF => $STATE_DISABLED,
     };
 
     my $acts = {
@@ -431,7 +447,7 @@ sub process
         my $realname = $aliases->{$unit};
         if ($realname) {
             my $msg = "Configured unit $unit is an alias of";
-            if($configured->{$realname}) {
+            if ($configured->{$realname}) {
                 $self->error("$msg configured unit $realname. Skipping the alias configuration. ",
                              "(This is a configuration issue.)");
                 next;
@@ -452,6 +468,12 @@ sub process
         my $msg = '';
         if ($cur) {
             # only if state is not what you wanted
+            # TODO: as with the unconfigured case,
+            #    you can only en/disable already en/disabled units
+            #    Anything else will fail anyway (eg bad/static to enabled)
+            #    But for the configured case, lets assume this is not so much an issue
+            #    And if it is, you are probably trying to do something very wrong anyway
+            #    Better that the admin is made aware of it.
             $addstate = ! $self->{unit}->is_ufstate($unit, $state);
 
             if ($addact) {
@@ -493,6 +515,59 @@ sub process
         }
         $self->verbose($msg ? "process: unit $unit scheduled for $msg" :
                               "process: nothing to do for unit $unit");
+    }
+
+    if ($unconfigured eq $UNCONFIGURED_IGNORE) {
+        $self->verbose("Unconfigured current units are ignored");
+    } else {
+        my $state = $unconfigured_statemap->{$unconfigured} || $unconfigured;
+        # not all unconfigured states require action
+        my $act = $unconfigured_actmap->{$unconfigured};
+        my $msg = "state $state";
+        if (defined($act)) {
+            $msg .= ($act ? ' ' : ' de') . "activation";
+        }
+        $self->verbose("Unconfigured current units scheduled for $msg",
+                       " (unconfigured $unconfigured)");
+
+        foreach my $unit (sort keys %$current) {
+            # First filter: configured units
+            next if grep {$unit eq $_} @configured;
+
+            my $realname = $aliases->{$unit};
+            if ($realname) {
+                # Second filter: aliases of configured units
+                next if grep {$realname eq $_} @configured;
+
+                $self->verbose("Unconfigured unit $unit is an alias of ",
+                               "unconfigured unit $realname.");
+                $unit = $realname;
+            }
+
+            my $msg = '';
+
+            # To handle common case: only change from en/disabled to disabled/enabled
+            #   Do not bother with eg trying to change bad to en/disabled
+            #   It will create a whole lot of errors
+            #   TODO: handle static+enabled?
+            my $derived = ! ($state eq $STATE_ENABLED || $state eq $STATE_DISABLED);
+            my $addstate = ! $self->{unit}->is_ufstate($unit, $state, derived => $derived);
+
+            if ($addstate) {
+                push(@{$states->{$state}}, $unit) if $addstate;
+                $msg .= " state $state";
+            }
+
+            if (defined($act)) {
+                my $current_act = $self->{unit}->is_active($unit);
+                my $addact = ! (defined($current_act) && ($act eq $current_act));
+                if ($addact) {
+                    push(@{$acts->{$act}}, $unit);
+                    $msg .= ($act ? ' ' : ' de') . "activation";
+                }
+            }
+            $self->verbose("process: unconfigured current unit $unit scheduled for$msg") if $msg;
+        }
     }
 
     return ($states, $acts);

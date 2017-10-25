@@ -1,24 +1,23 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::${project.artifactId};
-
-use strict;
-use warnings;
-use base qw(NCM::Component);
+use parent qw(NCM::Component);
 
 use Readonly;
 use NCM::Component::Systemd::Service;
 
-our $EC=LC::Exception::Context->new->will_store_all;
-$NCM::Component::${project.artifactId}::NoActionSupported = 1;
+our $EC = LC::Exception::Context->new->will_store_all;
 
-Readonly my $BASE => "/software/components/systemd";
+our $NoActionSupported = 1;
 
-=pod
+=head1 NAME
 
-=head2 skip
+NCM::${project.artifactId} - NCM ${project.artifactId} component
+
+=head1 Methods
+
+=over
+
+=item skip
 
 The C<skip> methods determines what configuration work to skip.
 It returns a hashref with key the configuration name and a boolean
@@ -32,9 +31,15 @@ replacement components.
 sub skip
 {
     my ($self, $config) = @_;
-    my $skip = $config->getElement("$BASE/skip")->getTree();
+    my $skip = $config->getTree($self->prefix()."/skip");
     return $skip;
 }
+
+=item Configure()
+
+Configures C<systemd> for each supported sub-system
+
+=cut
 
 sub Configure
 {
@@ -46,11 +51,17 @@ sub Configure
     if ((! defined($skip->{service})) || $skip->{service}) {
         $self->info("Skipping service configuration");
     } else {
-        my $service = NCM::Component::Systemd::Service->new(log => $self);
+        my $service = NCM::Component::Systemd::Service->new($self->prefix(), log => $self);
         $service->configure($config);
     }
 
     return 1;
 }
+
+=pod
+
+=back
+
+=cut
 
 1; #required for Perl modules

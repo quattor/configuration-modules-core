@@ -1,15 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service::Unit;
+#${PMpre} NCM::Component::Systemd::Service::Unit${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
-use LC::Exception qw (SUCCESS);
+use CAF::Object qw(SUCCESS);
 
 use parent qw(CAF::Object Exporter);
 use EDG::WP4::CCM::Path qw(unescape);
@@ -17,7 +10,7 @@ use EDG::WP4::CCM::Path qw(unescape);
 use NCM::Component::Systemd::UnitFile;
 use NCM::Component::Systemd::Systemctl qw(
     systemctl_show
-    systemctl_daemon_reload
+    systemctl_daemon_reload systemctl_command_units
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
     systemctl_is_enabled
@@ -308,7 +301,7 @@ sub current_units
             $self->verbose("No ufstate could be determined. Using derived state $derived.");
             $ufstate = $derived;
 
-            if($ufstate) {
+            if ($ufstate) {
                 # Track that is a derived state
                 $detail->{derived} = 1;
             } else {
@@ -407,6 +400,7 @@ sub configured_units
     my ($self, $tree) = @_;
 
     my %units;
+    my @tryrestart;
 
     foreach my $unit (sort keys %$tree) {
         my $detail = $tree->{$unit};
@@ -429,7 +423,7 @@ sub configured_units
 
         $detail->{possible_missing} = $self->is_possible_missing($detail->{name}, $detail->{state});
 
-        if($detail->{file}) {
+        if ($detail->{file}) {
             # strip the unitfile details from further unit details
             my $ufile = delete $detail->{file};
 
@@ -445,11 +439,14 @@ sub configured_units
 
             my $changed = $uf->write();
             if (! defined($changed)) {
-                $self->error("Unitfile confiuration failed, skipping the unit ", $self->unit_text($detail));
+                $self->error("Unitfile configuration failed, skipping the unit ", $self->unit_text($detail));
                 next;
+            } elsif ($changed) {
+                $self->verbose("Going to issue conditional restart for $detail->{name} due to changed unitfile");
+                push(@tryrestart, $detail->{name});
             };
 
-            if($ufile->{only}) {
+            if ($ufile->{only}) {
                 $self->info("Only unitfile configuration for ", $self->unit_text($detail));
                 next;
             }
@@ -460,6 +457,14 @@ sub configured_units
         $self->debug(1, "Add ", $self->unit_text($detail));
 
         $units{$detail->{name}} = $detail;
+    }
+
+    if (@tryrestart) {
+        # It is ok to do the conditional restart here. This does not change state.
+        # It might cause an unnecessary restart for a unit that would be stopped later
+        $self->verbose("configured_units try-restart ", scalar @tryrestart, " units:",
+                     join(",", @tryrestart));
+        systemctl_command_units($self, 'try-restart', @tryrestart);
     }
 
     # TODO figure out a way to specify what off-targets and what on-targets mean.
@@ -511,7 +516,7 @@ sub get_aliases
 
     foreach my $unit (@$units) {
         my $realname = $unit_alias->{$unit};
-        if($realname && $realname ne $unit) {
+        if ($realname && $realname ne $unit) {
             $self->debug(1, "Unit $unit is an alias for $realname");
             $res->{$unit} = $realname;
         }
@@ -650,7 +655,7 @@ sub get_type_shortname
     } elsif ($unit =~ m/$type_pattern/) {
         $type = $1;
         $self->debug(1, "get_type_shortname: found type $type based on unit $unit.");
-    } elsif($defaulttype) {
+    } elsif ($defaulttype) {
         $type = $defaulttype;
         $self->verbose("get_type_shortname: could not determine type based on unit $unit ",
                        "and pattern $type_pattern. Using defaulttype $defaulttype.");
@@ -727,7 +732,7 @@ sub make_cache_alias
         my $data = $unit_cache->{$unit};
         my $show;
 
-        if (! defined($data)) {
+        if (!defined($data)) {
             my $log_method = "error";
             my $continue;
 
@@ -785,7 +790,7 @@ sub make_cache_alias
 
         $show = systemctl_show($self, $unit, no_error => $is_possible_missing) if (! defined($show));
 
-        if(!defined($show)) {
+        if (!defined($show)) {
             my $log_method = 'error';
             my $msg = '';
 
@@ -948,8 +953,8 @@ sub fill_cache
     }
 
     $self->debug(1, "fill_cache: update cache for units ", join(", ", @$units),
-                 " with to be updated: ", join(', ', @updates),
-                 " and possible_missing ", join(', ', @{$opts{possible_missing}}));
+                 " with units to be updated ", join(', ', @updates),
+                 " , and units  possible_missing ", join(', ', @{$opts{possible_missing}}));
     $self->make_cache_alias(\@updates, $opts{possible_missing}) if (@updates);
 
     # for unittests only
@@ -992,10 +997,10 @@ sub get_unit_show
     }
 
     my $realname = $unit_alias->{$unit};
-    if(! $realname) {
+    if (!$realname) {
         my $msg = "get_unit_show: no alias for unit $unit defined";
         if ($opts{possible_missing}) {
-            $self->verbose("$msg and unit is possible missing.");
+            $self->debug(1, "$msg and unit is possible missing.");
         } else {
             $self->error("$msg. (Forgot to update cache?)");
         }
@@ -1009,7 +1014,7 @@ sub get_unit_show
     }
 
     my $show = $unit_cache->{$realname}->{show};
-    if(! $show) {
+    if (!$show) {
         $self->error("get_unit_show: no show data for $unittxt. (Forgot to update cache?)");
         return;
     }
@@ -1017,15 +1022,15 @@ sub get_unit_show
     my $val = $show->{$property};
 
     my $msg;
-    if(ref($val) eq "ARRAY") {
+    if (ref($val) eq "ARRAY") {
         $msg = join(',', @$val);
-    } elsif(defined($val)) {
+    } elsif (defined($val)) {
         $msg = "$val";
     } else {
         $msg = "<undefined>";
     }
 
-    $self->verbose("get_unit_show $unittxt property $property value $msg.");
+    $self->debug(1, "get_unit_show $unittxt property $property value $msg.");
 
     return $val;
 }
@@ -1271,12 +1276,12 @@ sub get_ufstate
 {
     my ($self, $unit, %opts) = @_;
 
-    $self->verbose("get_ufstate for unit $unit");
+    $self->debug(1, "get_ufstate for unit $unit");
 
     my $ufstate = $self->get_unit_show($unit, $PROPERTY_UNITFILESTATE, force => $opts{force});
 
-    if ($ufstate && $ufstate eq $UFSTATE_BAD) {
-        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE $UFSTATE_BAD";
+    if (!$ufstate || $ufstate eq $UFSTATE_BAD) {
+        my $msg = "Unit $unit $PROPERTY_UNITFILESTATE empty or $UFSTATE_BAD";
         my $is_enabled = systemctl_is_enabled($self, $unit);
         if ($is_enabled) {
             $self->verbose("$msg is-enabled $is_enabled");
@@ -1343,6 +1348,11 @@ The following options are supported
 
 Refresh the cache C<force> (passed to C<get_ufstate> method).
 
+=item derived
+
+Boolean (default true) to use derived information when UnitFileState itself
+is empty/undefined.
+
 =back
 
 =cut
@@ -1351,11 +1361,12 @@ sub is_ufstate
 {
     my ($self, $unit, $state, %opts) = @_;
 
+    $opts{derived} = 1 if !defined($opts{derived});
     $self->debug(1, "is_ufstate for unit $unit and state $state");
 
     my ($ufstate, $derived) = $self->get_ufstate($unit, force => $opts{force});
 
-    if(! $ufstate) {
+    if (!$ufstate && $opts{derived}) {
         $self->verbose("No ufstate could be determined. Using derived state $derived.");
         $ufstate = $derived;
 

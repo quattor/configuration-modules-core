@@ -6,6 +6,7 @@ use Test::MockModule;
 
 use helper;
 use NCM::Component::systemd;
+use NCM::Component::Systemd::Systemctl qw($SYSTEMCTL);
 
 $CAF::Object::NoAction = 1;
 
@@ -446,9 +447,17 @@ my ($ufstate, $derived) = $unit->get_ufstate('xinetd.service');
 is($ufstate, $STATE_ENABLED, 'get_ufstate xinetd.service UnitFileState is $STATE_ENABLED');
 is($derived, $STATE_ENABLED, 'get_ufstate xinetd.service derived state is $STATE_ENABLED');
 
+is($unit->get_unit_show('network.service', 'UnitFileState'),
+   '', 'get_unit_show network.service UnitFileState');
 ($ufstate, $derived) = $unit->get_ufstate('network.service');
-is($ufstate, '', 'get_ufstate network.service UnitFileState is empty string');
-is($derived, $STATE_ENABLED, 'get_ufstate network.service derived state is $STATE_ENABLED');
+is($ufstate, $STATE_ENABLED, "get_ufstate network.service UnitFileState is empty string and is-enabled is $STATE_ENABLED");
+is($derived, $STATE_ENABLED, "get_ufstate network.service derived state is $STATE_ENABLED");
+
+is($unit->get_unit_show('-.mount', 'UnitFileState'),
+   '', 'get_unit_show -.mount UnitFileState');
+($ufstate, $derived) = $unit->get_ufstate('-.mount');
+is($ufstate, '', "get_ufstate -.mount UnitFileState is empty string and is-enabled is empty");
+is($derived, $STATE_ENABLED, "get_ufstate -.mount derived state is $STATE_ENABLED");
 
 =pod
 
@@ -457,6 +466,13 @@ is($derived, $STATE_ENABLED, 'get_ufstate network.service derived state is $STAT
 Test is_ufstate
 
 =cut
+
+# test derived logic
+# see -.mount states
+ok($unit->is_ufstate('-.mount', $STATE_ENABLED),
+   "-.mount has ufstate $STATE_ENABLED (via derived)");
+ok(!$unit->is_ufstate('-.mount', $STATE_ENABLED, derived => 0),
+   "-.mount has not ufstate $STATE_ENABLED (no derived)");
 
 my $states = {
     enabled => 'enabled',
@@ -526,6 +542,7 @@ $name = 'nrpe.service';
 $svc = $cus->{$name};
 is($svc->{name}, $name, "Unit $name name matches");
 is($svc->{state}, $STATE_ENABLED, "Unit $name state enabled");
+ok(!defined($svc->{derived}), "Unit $name state is not derived");
 is($svc->{type}, $TYPE_SERVICE, "Unit $name type $TYPE_SERVICE");
 is($svc->{shortname}, "nrpe", "Shortname unit $name type sysv is nrpe");
 ok($svc->{startstop}, "Unit $name startstop true");
@@ -536,6 +553,7 @@ $name = 'rc-local.service';
 $svc = $cus->{$name};
 is($svc->{name}, $name, "Unit $name name matches");
 is($svc->{state}, 'static', "Unit $name state static");
+ok(!defined($svc->{derived}), "Unit $name state is not derived");
 is($svc->{type}, $TYPE_SERVICE, "Unit $name type $TYPE_SERVICE");
 is($svc->{shortname}, "rc-local", "shortname unit $name type service is rc-local");
 ok($svc->{startstop}, "Unit $name startstop true");
@@ -546,11 +564,21 @@ $name = 'network.service';
 $svc = $cus->{$name};
 is($svc->{name}, $name, "Unit $name name matches");
 is($svc->{state}, $STATE_ENABLED, "Unit $name state enabled");
-is($svc->{derived}, 1, "Unit $name state enabled is derived");
+ok(!defined($svc->{derived}), "Unit $name state not derived");
 is($svc->{type}, $TYPE_SERVICE, "Unit $name type $TYPE_SERVICE");
 is($svc->{shortname}, "network", "shortname unit $name type service is network");
 ok($svc->{startstop}, "Unit $name startstop true");
 is_deeply($svc->{targets}, ["multi-user.target", "graphical.target"], "Unit $name targets");
+
+$name = '-.mount';
+$svc = $cus->{$name};
+is($svc->{name}, $name, "Unit $name name matches");
+is($svc->{state}, $STATE_ENABLED, "Unit $name state enabled");
+is($svc->{derived}, 1, "Unit $name state is derived");
+is($svc->{type}, $TYPE_MOUNT, "Unit $name type $TYPE_SERVICE");
+is($svc->{shortname}, "-", "shortname unit $name type service is network");
+ok($svc->{startstop}, "Unit $name startstop true");
+is_deeply($svc->{targets}, [], "Unit $name targets");
 
 =pod
 
@@ -568,9 +596,10 @@ $mockuf->mock("write", sub {
     isa_ok($self->{config}, 'EDG::WP4::CCM::CacheManager::Element',
            "config on write for $self->{unit} is an Element instance");
     push(@uf_write, [$self->{unit}, $self->{replace}, $self->{backup}, $self->{config}->getTree(), $self->{custom}]);
-    return 1;
+    return $self->{unit} =~ m/other/ ? 1 : 0;
 });
 
+command_history_reset();
 my $cfg = get_config_for_profile('service-unit_services');
 my $tree = $unit->_getTree($cfg, '/software/components/systemd/unit');
 my $cos = $unit->configured_units($tree);
@@ -635,6 +664,11 @@ is_deeply(\@uf_write, [
 ok($cos->{$uf_write[0]->[0]}, "service with file/only=0 is added as configured unit");
 ok(! defined($cos->{$uf_write[0]->[1]}),
    "service with file/only=1 is not added to the configured units");
+
+ok(command_history_ok(
+       ["$SYSTEMCTL try-restart -- othername2.service"],
+       ['test3'], # not modified, no try-restart
+   ), "expected commands for changed unitfile");
 
 =pod
 

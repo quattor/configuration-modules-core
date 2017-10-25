@@ -1,13 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service::Chkconfig;
+#${PMpre} NCM::Component::Systemd::Service::Chkconfig${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(NCM::Component::Systemd::Service::Unit);
 

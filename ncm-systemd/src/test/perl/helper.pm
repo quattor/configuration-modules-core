@@ -28,9 +28,6 @@ our @EXPORT = qw(set_output set_file);
 use Test::More;
 use Test::Quattor;
 
-use CAF::Object;
-$CAF::Object::NoAction = 1;
-
 use cmddata;
 
 sub set_output {

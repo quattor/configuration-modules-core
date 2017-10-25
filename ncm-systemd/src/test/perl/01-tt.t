@@ -4,11 +4,7 @@ use warnings;
 use Test::More;
 use Test::Quattor::TextRender::Component;
 
-my $t = Test::Quattor::TextRender::Component->new(
-    component => 'systemd',
-    version => 'regular',
-    )->test();
-
+# version=regular is tested in 00-tqu
 
 # insert custom TT options (no easy way to do this via test framework)
 use Test::MockModule;
