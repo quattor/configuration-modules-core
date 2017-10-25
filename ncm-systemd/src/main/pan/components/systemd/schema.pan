@@ -16,7 +16,8 @@ type hwloc_location = string with match(SELF, '^[\w:.]+$');
 @documentation{
     syslog facility to use when logging to syslog
 }
-type syslog_facility = string with match(SELF, '^(kern|user|mail|daemon|auth|syslog|lpr|news|uucp|cron|authpriv|ftp|local[0-7])$');
+type syslog_facility = string with match(SELF,
+    '^(kern|user|mail|daemon|auth|syslog|lpr|news|uucp|cron|authpriv|ftp|local[0-7])$');
 
 @documentation{
     syslog level to use when logging to syslog or the kernel log buffer
@@ -27,13 +28,18 @@ type ${project.artifactId}_skip = {
     "service" : boolean = false
 } = dict();
 
-type ${project.artifactId}_unit_architecture = string with match(SELF, '^(native|x86(-64)?|ppc(64)?(-le)?|ia64|parisc(64)?|s390x?|sparc(64)?)|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$');
+type ${project.artifactId}_unit_architecture = string with match(SELF,
+    '^(native|x86(-64)?|ppc(64)?(-le)?|ia64|parisc(64)?|s390x?|sparc(64)?)' +
+    '|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$');
 
 type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|apparmor|ima|smack|audit)$');
 
-type ${project.artifactId}_unit_virtualization = string with match(SELF, '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$');
+type ${project.artifactId}_unit_virtualization = string with match(SELF,
+    '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen' +
+    '|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$');
 
-# TODO: https://github.com/quattor/configuration-modules-core/issues/646: make this more finegrained, e.g. has to be existing unit; or check types
+# TODO: https://github.com/quattor/configuration-modules-core/issues/646:
+#    make this more finegrained, e.g. has to be existing unit; or check types
 type ${project.artifactId}_valid_unit = string;
 
 # adding new ones
@@ -88,7 +94,8 @@ type ${project.artifactId}_unitfile_config_unit = {
     'JoinsNamespaceOf' ? ${project.artifactId}_valid_unit[]
     'NetClass' ? string
     'OnFailure' ? string[]
-    'OnFailureJobMode' ? string with match(SELF, '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$')
+    'OnFailureJobMode' ? string with match(SELF,
+        '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$')
     'PartOf' ? ${project.artifactId}_valid_unit[]
     'PropagatesReloadTo' ? string[]
     'RefuseManualStart' ? boolean
@@ -116,7 +123,8 @@ type ${project.artifactId}_unitfile_config_install = {
     'WantedBy' ? ${project.artifactId}_valid_unit[]
 };
 
-type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr =  string with match(SELF, '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$');
+type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr =  string with match(SELF,
+    '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$');
 
 @documentation{
 systemd.kill directives
@@ -125,7 +133,8 @@ valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_kill = {
     'KillMode' ? string with match(SELF, '^(control-group|process|mixed|none)$')
-    'KillSignal' ? string with match(SELF, '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$')
+    'KillSignal' ? string with match(SELF,
+        '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$')
     'SendSIGHUP' ? boolean
     'SendSIGKILL' ? boolean
 };
