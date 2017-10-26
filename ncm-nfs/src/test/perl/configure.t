@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Quattor qw(configure configure_noserver);
+use Test::Quattor qw(configure configure_noserver configure_nomounts);
 use Test::MockModule;
 
 use Test::Quattor::RegexpTest;
@@ -60,6 +60,13 @@ foreach my $change (qw(exports fstab_changed action)){
     is($cmp->Configure($nosrvcfg), 1, "Configure returns 1 (change $change) with server=false");
     ok(command_history_ok(undef, [qr{service nfs reload}]), "no nfs service reload when $change changed with server=false");
 };
+
+# noserver config
+my $nomounts = get_config_for_profile('configure_nomounts');
+command_history_reset();
+$process_mounts_arg = undef;
+is($cmp->Configure($nomounts), 1, "Configure returns 1 without mounts");
+ok(!defined($process_mounts_arg), "no nfs process_mounts without mounts");
 
 
 done_testing();
