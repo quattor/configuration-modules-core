@@ -1,0 +1,15 @@
+OpenStack Neutron linuxbridge template full test
+---
+multiline
+---
+^\[linux_bridge\]$
+^physical_interface_mappings\s{1}=\s{1}provider:eth1$
+
+^\[securitygroup\]$
+^enable_security_group\s{1}=\s{1}true$
+^firewall_driver\s{1}=\s{1}neutron.agent.linux.iptables_firewall.IptablesFirewallDriver$
+
+^\[vxlan\]$
+^enable_vxlan\s{1}=\s{1}true$
+^l2_population\s{1}=\s{1}true$
+^local_ip\s{1}=\s{1}10.0.1.4$

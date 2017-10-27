@@ -1,0 +1,26 @@
+[%- pythonconfig = ['image_custom_property_titles'] -%]
+
+[% FILTER indent -%]
+[%-    FOR pair IN data.pairs -%]
+'[%         pair.key %]': [%- -%]
+[%-        IF pair.value.is_boolean -%]
+[%             pair.value ? "True" : "False" %],
+[%         ELSIF pair.value.is_string -%]
+[%-            SWITCH section -%]
+[%                 CASE pythonconfig -%]
+_("[%                  pair.value %]"),
+[%                 CASE -%]
+[%-                SWITCH pair.key -%]
+[%                     CASE 'handlers' -%]
+['[%                       pair.value %]'],
+[%                     CASE -%]
+"[%                        pair.value %]",
+[%                 END -%]
+[%             END -%]
+[%         ELSIF CCM.is_hash(pair.value) -%]
+{[%            INCLUDE 'openstack/horizon_level1.tt' data=pair.value section=pair.key -%]},
+[%         ELSE -%]
+[%           pair.value.join('', '') %],
+[%         END -%]
+[%     END -%]
+[%- END -%]

@@ -1,0 +1,9 @@
+OpenStack Keystone test
+---
+multiline
+---
+^\[database\]\s*$
+^connection\s?=\s*.+\s*$
+
+^\[token\]\s*$
+^provider\s?=\s*.+\s*$

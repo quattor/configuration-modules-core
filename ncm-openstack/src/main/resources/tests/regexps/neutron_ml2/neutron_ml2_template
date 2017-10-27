@@ -1,0 +1,18 @@
+OpenStack Neutron ml2 template full test
+---
+multiline
+---
+^\[ml2\]$
+^extension_drivers\s{1}=\s{1}port_security$
+^mechanism_drivers\s{1}=\s{1}linuxbridge,\s{1}l2population$
+^tenant_network_types\s{1}=\s{1}vxlan$
+^type_drivers\s{1}=\s{1}flat,\s{1}vlan,\s{1}vxlan$
+
+^\[ml2_type_flat\]$
+^flat_networks\s{1}=\s{1}provider$
+
+^\[ml2_type_vxlan\]$
+^vni_ranges\s{1}=\s{1}1:1000$
+
+^\[securitygroup\]$
+^enable_security_group\s{1}=\s{1}true$

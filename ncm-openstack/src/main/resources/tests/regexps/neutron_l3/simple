@@ -1,0 +1,6 @@
+OpenStack Neutron L3 test
+---
+multiline
+---
+^\[DEFAULT\]$
+^interface_driver\s?=\s*.+\s*$

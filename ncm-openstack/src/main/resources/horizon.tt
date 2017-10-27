@@ -1,0 +1,23 @@
+# -*- coding: utf-8 -*-
+
+import os
+
+from django.utils.translation import ugettext_lazy as _
+
+from openstack_dashboard.settings import HORIZON_CONFIG
+
+
+[%- FOR pair IN horizon.pairs -%]
+[%      pair.key FILTER upper %] = [%- -%]
+[%-     IF pair.value.is_boolean -%]
+[%          pair.value ? "True" : "False" %]
+[%      ELSIF pair.value.is_string -%]
+"[%         pair.value %]"
+[%      ELSIF CCM.is_hash(pair.value) -%]
+{[%         INCLUDE 'openstack/horizon_level1.tt' data=pair.value section=pair.key -%]}
+[%      ELSIF CCM.is_list(pair.value) -%]
+['[%        pair.value.join('', '') %]']
+[%      ELSE -%]
+[%         pair.value %]
+[%      END -%]
+[%- END -%]
