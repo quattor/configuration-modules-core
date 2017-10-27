@@ -1027,7 +1027,7 @@ sub configure_yum
         $valuereg =~ s/([.\$*?])/\\$1/g;
         $fh->add_or_replace_lines(
             $name,
-            $name. q{\s*=\s*}.$valuereg,
+            $name. q{\s*=\s*}.$valuereg.'$',
             "\n$name=$value\n",
             ENDING_OF_FILE
         );
