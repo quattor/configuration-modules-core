@@ -26,7 +26,6 @@ use constant DOMAINNAME          => "/system/network/domainname";
 use constant REPOS_DIR           => "/etc/yum.repos.d";
 use constant REPOS_TREE          => "/software/repositories";
 use constant PKGS_TREE           => "/software/packages";
-use constant GROUPS_TREE         => "/software/groups/names";
 use constant CMP_TREE            => "/software/components/spma";
 use constant YUM_PACKAGE_LIST    => "/etc/yum/pluginconf.d/versionlock.list";
 use constant YUM_CONF_FILE       => "/etc/yum.conf";
@@ -387,15 +386,6 @@ sub Configure
         }
     }
 
-    # RHEL7 needs converting groups
-    if ( $os_major eq '7' ) {
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "yum groups mark convert " . YUM_PLUGIN_OPTS ], "converting groups", 1 );
-        if ( $cmd_exit ) {
-            $self->error("Failed to do group conversion on RHEL7.");
-            return 0;
-        }
-    }
-
     # Get list of packages installed on system before any package modifications.
     my $preinstalled = $self->get_installed_rpms();
     return 1 if !defined($preinstalled);
@@ -419,13 +409,6 @@ sub Configure
         if ( !rmtree $dir) {
             $self->warn("unable to remove directory $dir: $!");
         }
-    }
-
-    # Test whether comps/groups are sane.
-    ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "yum groupinfo core " . YUM_PLUGIN_OPTS ], "testing comps/groups sanity", 1 );
-    if ( $cmd_exit ) {
-        $self->error("Groups are not sane - core group missing. Will not continue.");
-        return 0;
     }
 
     # Query metadata for version locked packages including Epoch and write versionlock.list
@@ -498,12 +481,10 @@ sub Configure
     return 1 unless $t->{run};
 
     # Run test transaction to get complete list of packages to be present on the system
-    my $groups           = $config->getElement(GROUPS_TREE)->getTree();
     $self->execute_command( [ "rm -rf " . YUM_TEST_CHROOT ], "cleaning YUM test chroot", 1 );
     $self->execute_command( [ "mkdir -p " . YUM_TEST_CHROOT . "/var/cache" ],                 "setting up YUM test chroot",    1 );
     $self->execute_command( [ "ln -s /var/cache/yum " . YUM_TEST_CHROOT . "/var/cache/yum" ], "setting YUM test chroot cache", 1 );
     my $yum_install_test_command = "yum install " . YUM_PLUGIN_OPTS . " -C --installroot=" . YUM_TEST_CHROOT;
-    if (@$groups)             { $yum_install_test_command .= " @" . join   ( " @",   sort @$groups ); }
     if (@$wanted_pkgs_locked) { $yum_install_test_command .= " " . join    ( " ",    sort @$wanted_pkgs_locked ); }
     if (@$wanted_pkgs)        { $yum_install_test_command .= " " . join    ( " ",    sort @$wanted_pkgs ); }
     ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [$yum_install_test_command], "performing YUM chroot install test", 1, "/dev/null", "verbose", 1 );
