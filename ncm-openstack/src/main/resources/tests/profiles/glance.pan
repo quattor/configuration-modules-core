@@ -2,13 +2,13 @@ object template glance;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/glance" = openstack_glance_config;
+bind "/metaconfig/contents" = openstack_glance_config;
 
 "/metaconfig/module" = "openstack_common";
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 
-prefix "/metaconfig/contents/glance";
+prefix "/metaconfig/contents";
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );

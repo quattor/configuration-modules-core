@@ -2,13 +2,13 @@ object template neutron;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/neutron" = openstack_neutron_config;
+bind "/metaconfig/contents" = openstack_neutron_config;
 
 "/metaconfig/module" = "openstack_common";
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 
-prefix "/metaconfig/contents/neutron";
+prefix "/metaconfig/contents";
 
 "database" = dict(
     "connection", format("mysql+pymysql://neutron:neutron_db_pass@%s/neutron", OPENSTACK_HOST_SERVER),

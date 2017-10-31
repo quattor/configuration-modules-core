@@ -1,0 +1,3 @@
+[%- FOR variable IN CCM.contents.pairs %]
+export [%    variable.key FILTER upper %]='[% variable.value %]'
+[% END %]

@@ -2,11 +2,11 @@ object template neutron_dhcp;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/neutron_dhcp" = openstack_neutron_dhcp_config;
+bind "/metaconfig/contents" = openstack_neutron_dhcp_config;
 
 "/metaconfig/module" = "openstack_common";
 
-prefix "/metaconfig/contents/neutron_dhcp";
+prefix "/metaconfig/contents";
 
 "DEFAULT" = dict(
     "interface_driver", "linuxbridge",

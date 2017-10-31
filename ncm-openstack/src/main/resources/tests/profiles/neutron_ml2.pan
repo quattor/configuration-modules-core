@@ -2,11 +2,11 @@ object template neutron_ml2;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/neutron_ml2" = openstack_neutron_ml2_config;
+bind "/metaconfig/contents" = openstack_neutron_ml2_config;
 
 "/metaconfig/module" = "openstack_common";
 
-prefix "/metaconfig/contents/neutron_ml2";
+prefix "/metaconfig/contents";
 
 "securitygroup" = dict(
     "enable_security_group", true,

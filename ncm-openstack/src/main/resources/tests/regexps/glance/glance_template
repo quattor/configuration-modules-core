@@ -7,9 +7,9 @@ multiline
 
 ^\[glance_store\]$
 ^default_store\s{1}=\s{1}file$
-^filesystem_store_datadir\s{1}=\s{1}/var/lib/glance/images/$
+^filesystem_store_datadir\s{1}=\s{1}/var/lib/glance/images$
 ^stores\s{1}=\s{1}file,\s{1}http$
- 
+
 ^\[keystone_authtoken\]$
 ^auth_type\s{1}=\s{1}password$
 ^auth_uri\s{1}=\s{1}http://controller.mysite.com:5000$
@@ -20,6 +20,6 @@ multiline
 ^project_name\s{1}=\s{1}service$
 ^user_domain_name\s{1}=\s{1}Default$
 ^username\s{1}=\s{1}glance$
- 
+
 ^\[paste_deploy\]$
 ^flavor\s{1}=\s{1}keystone$

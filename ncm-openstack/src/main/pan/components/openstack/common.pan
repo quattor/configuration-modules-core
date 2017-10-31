@@ -11,7 +11,6 @@ type type_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|g
 
 type type_neutronextension = string with match(SELF, '^(qos|port_security)$');
 
-type type_directory = string with match(SELF, '[^/]+/?$');
 
 @documentation {
     OpenStack common domains section
@@ -32,7 +31,7 @@ type openstack_domains_common = {
     'username' : string
     @{OpenStack service user password}
     'password' : string
-} = dict();
+};
 
 @documentation {
     The configuration options in the database Section
@@ -50,14 +49,14 @@ type openstack_oslo_concurrency = {
     only be writable by the user running the processes that need locking. Defaults
     to environment variable OSLO_LOCK_PATH. If external locks are used, a lock
     path must be set}
-    'lock_path' : type_directory
+    'lock_path' : absolute_file_path
 };
 
 @documentation {
     The configuration options in the DEFAULTS Section
 }
 type openstack_DEFAULTS = {
-    @{Using this feature is *NOT* recommended. Instead, use the "keystone-manage 
+    @{Using this feature is *NOT* recommended. Instead, use the "keystone-manage
     bootstrap" command. The value of this option is treated as a "shared secret"
     that can be used to bootstrap Keystone through the API. This "token" does not
     represent a user (it has no identity), and carries no explicit authorization
@@ -152,4 +151,4 @@ type openstack_DEFAULTS = {
     Server. NOTE: Nova uses the same config key, but in [neutron] section.
     }
     'metadata_proxy_shared_secret' ? string
-} = dict();
+};

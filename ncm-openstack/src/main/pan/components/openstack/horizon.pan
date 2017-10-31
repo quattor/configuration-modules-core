@@ -186,8 +186,8 @@ type openstack_horizon_logging = {
         'ipv6': ['fc00::/7'],
 }
 type openstack_horizon_allowed_subnet = {
-    'ipv4' ? type_ip[]
-    'ipv6' ? type_ip[]
+    'ipv4' ? type_ipv4[]
+    'ipv6' ? type_ipv6[]
 } = dict();
 
 @documentation {
@@ -215,13 +215,13 @@ type openstack_horizon_config = {
     https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts}
     'allowed_hosts' ? string[] = list('*')
     @{Horizon uses Djangos sessions framework for handling session data.
-    There are numerous session backends available, which are selected 
+    There are numerous session backends available, which are selected
     through the "SESSION_ENGINE" setting}
     'session_engine' : string = 'django.contrib.sessions.backends.cache'
     @{Send email to the console by default}
     'email_backend' : string = 'django.core.mail.backends.console.EmailBackend'
     @{External caching using an application such as memcached offers persistence
-    and shared storage, and can be very useful for small-scale deployment 
+    and shared storage, and can be very useful for small-scale deployment
     and/or development}
     'caches' ? openstack_horizon_caches{}
     'openstack_keystone_url' : type_absoluteURI
@@ -249,7 +249,7 @@ type openstack_horizon_config = {
     'swift_file_transfer_chunk_size' : long(1..) = 524288
     @{The default number of lines displayed for instance console log}
     'instance_log_length' : long(1..) = 35
-    'local_path' : type_directory = '/tmp'
+    'local_path' : absolute_file_path = '/tmp'
     @{You can either set it to a specific value or you can let horizon generate a
     default secret key that is unique on this machine, e.i. regardless of the
     amount of Python WSGI workers (if used behind Apache+mod_wsgi): However,
@@ -274,7 +274,7 @@ type openstack_horizon_config = {
     Example: "Europe/Brussels"}
     'time_zone' ? string
     @{Path to directory containing policy.json files}
-    'policy_files_path' : type_directory = '/etc/openstack-dashboard'
+    'policy_files_path' : absolute_file_path = '/etc/openstack-dashboard'
     'logging' : openstack_horizon_logging
     @{AngularJS requires some settings to be made available to
     the client side. Some settings are required by in-tree / built-in horizon

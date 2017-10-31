@@ -2,11 +2,11 @@ object template neutron_linuxbridge;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/neutron_linuxbridge" = openstack_neutron_linuxbridge_config;
+bind "/metaconfig/contents" = openstack_neutron_linuxbridge_config;
 
 "/metaconfig/module" = "openstack_common";
 
-prefix "/metaconfig/contents/neutron_linuxbridge";
+prefix "/metaconfig/contents";
 
 "linux_bridge" = dict(
     "physical_interface_mappings", list('provider:eth1'),
