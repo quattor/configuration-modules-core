@@ -12,17 +12,14 @@ use warnings;
 use NCM::Component;
 our $EC  = LC::Exception::Context->new->will_store_all;
 our @ISA = qw(NCM::Component);
-use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
+use EDG::WP4::CCM::Element qw(unescape);
 
 use CAF::Process;
 use CAF::FileWriter;
 use Set::Scalar;
-use File::Path qw(mkpath rmtree);
-use LWP::Simple;
+use File::Path qw(rmtree);
 use Text::Glob qw(match_glob);
 
-use constant HOSTNAME            => "/system/network/hostname";
-use constant DOMAINNAME          => "/system/network/domainname";
 use constant REPOS_DIR           => "/etc/yum.repos.d";
 use constant REPOS_TREE          => "/software/repositories";
 use constant PKGS_TREE           => "/software/packages";
@@ -36,7 +33,6 @@ use constant RPM_QUERY_INSTALLED_NAMES_NOEPOCH => qw(rpm -qa --nosignature --nod
 use constant REPO_AVAIL_PKGS     => qw(repoquery -C --show-duplicates --all --qf %{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH});
 use constant YUM_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=fastestmirror --enableplugin=versionlock --enableplugin=priorities";
 use constant YUM_TEST_CHROOT     => qw(/tmp/spma_yum_testroot);
-use constant SPMA                => "/software/components/spma";
 use constant SPMAPROXY           => "/software/components/spma/proxy";
 
 our $NoActionSupported = 1;
@@ -89,68 +85,6 @@ sub execute_command
     return ( $?, $out, $err );
 }
 
-=pod
-
-=head2 C<execute_yum_command_with_recovery>
-
-Executes C<$execute_yum_command> and tries to fix possible problems
-on  best-effort basis. That means it attempts to fix broken transaction
-via offending package(s) removal and then re-executing the transaction.
-
-=cut
-
-sub execute_yum_with_recovery
-{
-    my ( $self, $command, $why, $keeps_state, $stdin ) = @_;
-    my ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command($command, $why, $keeps_state, $stdin);
-
-    return ( $cmd_exit, $cmd_out, $cmd_err ) if $NoAction;
-
-    my @lines = split /\n/, $cmd_out . $cmd_err;
-    my $packages_to_remove = Set::Scalar->new();
-    foreach my $line (@lines) {
-        my $cf = index($line, 'conflicts with file from package');
-        if ( $cf != -1) {        # handle file conflicts
-            my $pkg = $line;
-            $pkg =~ s,^.*package ,,;
-            $pkg =~ s,-[0-9]*:,-,;
-            $self->warn("$pkg will be removed to avoid file conflict");
-            $packages_to_remove->insert($pkg) if !$packages_to_remove->has($pkg);
-        } else {
-            $cf = index($line, 'Error: ');
-            my $pkg = $line;
-            if ( $cf != -1 && index($line, 'conflicts with') != -1 ) {        # handle package conflicts
-                $pkg =~ s,^.*Error: ,,;
-                $pkg =~ s,^.*Package: ,,;
-                $pkg =~ s, .*,,;
-                $self->warn("$pkg will be removed to avoid package conflict");
-                $packages_to_remove->insert($pkg) if !$packages_to_remove->has($pkg);
-            } else {
-                my $dep = index($line, 'is needed by (installed)');
-                if ( $dep != -1) {
-                    my $pkg = $line;
-                    $pkg =~ s,^.*\(installed\) ,,;
-                    $pkg =~ s,-[0-9]*:,-,;
-                    $self->warn("$pkg will be removed to avoid file conflict");
-                    $packages_to_remove->insert($pkg) if !$packages_to_remove->has($pkg);
-                }
-            }
-        }
-    }
-
-    if ( $packages_to_remove->size ) {
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$packages_to_remove) ], 'attempting to remove: '.join (" ", sort @$packages_to_remove), $keeps_state, $stdin);
-
-        if ( index($cmd_out . $cmd_err, 'Error: ') != -1 ) {
-            $self->error("Unable to remove conflicting packages.");
-        } else {
-            ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command($command, 'retrying: '.$why, $keeps_state, $stdin);
-        }
-    }
-
-    return ( $cmd_exit, $cmd_out, $cmd_err );
-}
-
 sub get_installed_rpms
 {
     my ( $self ) = @_;
@@ -180,12 +114,12 @@ sub Configure
 
     my $repos = $config->getElement(REPOS_TREE)->getTree();
     my $t     = $config->getElement(CMP_TREE)->getTree();
-
+    
     # Display system info
     if ( defined($t->{quattor_os_release}) ) {
         $self->info("target OS build: ", $t->{quattor_os_release});
     }
-
+    
     # Detect OS
     my $fhi;
     my $os_major;
@@ -255,7 +189,7 @@ sub Configure
         my $disable_proxy = defined($repo->{disableproxy}) ? 'yes' : 'no';
         if ( $url =~ /http/ && $proxy eq 'yes' && $disable_proxy eq 'no' ) {
             if ( $config->elementExists(SPMAPROXY) ) {
-                my $spma       = $config->getElement(SPMA)->getTree;
+                my $spma       = $config->getElement(CMP_TREE)->getTree;
                 my $proxyhost = $spma->{proxyhost};
                 my $proxyport;
                 my @proxies    = split /,/, $proxyhost;
@@ -288,7 +222,7 @@ sub Configure
         }
         $repofile .= "priority=$repo->{priority}\n" if ( defined($repo->{priority}) );
         $repofile .= "gpgcheck=$repo->{gpgcheck}\n" if ( defined($repo->{gpgcheck}) );
-        print $fh "# File generated by " . __PACKAGE__ . ". Do not edit\n";
+        print $fh "# File generated by ", __PACKAGE__, ". Do not edit\n";
         print $fh $repofile;
         $fh->close();
     }
@@ -387,8 +321,9 @@ sub Configure
         }
     }
 
+    my $groups = defined($config->getElement(GROUPS_TREE)) ? $config->getElement(GROUPS_TREE)->getTree() : [];
     # RHEL7 needs converting groups
-    if ( $os_major eq '7' ) {
+    if ( $os_major eq '7' && @$groups) {
         ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "yum groups mark convert " . YUM_PLUGIN_OPTS ], "converting groups", 1 );
         if ( $cmd_exit ) {
             $self->error("Failed to do group conversion on RHEL7.");
@@ -403,10 +338,8 @@ sub Configure
     # Clean up YUM state - worth to be thorough there
     # Expiration of cache is not enough sometimes.
     # https://bugzilla.redhat.com/show_bug.cgi?id=1151074
-    if ( $t->{run} ) {
-        $self->execute_command( ["yum clean all " . YUM_PLUGIN_OPTS], "resetting YUM state", 0 );
-        $self->execute_command( ["yum makecache " . YUM_PLUGIN_OPTS], "generating YUM cache", 0 );
-    }
+    $self->execute_command( ["yum clean all " . YUM_PLUGIN_OPTS], "resetting YUM state", 0 );
+    $self->execute_command( ["yum makecache " . YUM_PLUGIN_OPTS], "generating YUM cache", 0 );
 
     my @files = glob "{/tmp/*.yumtx,/var/lib/yum/transaction*}";
     foreach my $file (@files) {
@@ -421,10 +354,10 @@ sub Configure
         }
     }
 
-    # Test whether comps/groups are sane.
-    ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "yum groupinfo core " . YUM_PLUGIN_OPTS ], "testing comps/groups sanity", 1 );
+    # Test whether repositories are sane.
+    ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [ "yum info glibc " . YUM_PLUGIN_OPTS ], "testing sanity of repositories", 1 );
     if ( $cmd_exit ) {
-        $self->error("Groups are not sane - core group missing. Will not continue.");
+        $self->error("Repositories are in broken state. Will not continue.");
         return 0;
     }
 
@@ -498,7 +431,6 @@ sub Configure
     return 1 unless $t->{run};
 
     # Run test transaction to get complete list of packages to be present on the system
-    my $groups           = $config->getElement(GROUPS_TREE)->getTree();
     $self->execute_command( [ "rm -rf " . YUM_TEST_CHROOT ], "cleaning YUM test chroot", 1 );
     $self->execute_command( [ "mkdir -p " . YUM_TEST_CHROOT . "/var/cache" ],                 "setting up YUM test chroot",    1 );
     $self->execute_command( [ "ln -s /var/cache/yum " . YUM_TEST_CHROOT . "/var/cache/yum" ], "setting YUM test chroot cache", 1 );
@@ -614,7 +546,8 @@ sub Configure
         $self->error("YUM failed: no packages to be installed to clean root.");
         return 0;
     }
-    if ($NoAction) {
+
+    # Compose list of packages to be installed and removed.
         my $will_remove = $preinstalled - $to_install;
         my $will_install = $to_install - $preinstalled;
         my $whitelist = $t->{whitelist};
@@ -635,169 +568,42 @@ sub Configure
                 }
             }
         }
-        $self->info("----------------------------------------");
-        if ( defined($whitelisted) && scalar @$whitelisted > 0 ) {
-            $self->info( "whitelist ", scalar @$whitelisted, " package(s): ", join ( " ", sort @$whitelisted ) );
-        }
-        if (@$excludes) {
-            $self->info( "exclude   ", scalar @$excludes, " package(s): ", join ( " ", sort @$excludes ) );
-        }
-        $self->info( "install   " , $will_install->size, " package(s): ", join ( " ", sort @$will_install ) );
-        $self->info( "remove    ", $will_remove->size, " package(s): ", join ( " ", sort @$will_remove ) );
-        $self->info("----------------------------------------");
+
+    # Print summary what is supposed to be done.
+    $self->info("Transaction summary --------------------");
+    if ( defined($whitelisted) && scalar @$whitelisted > 0 ) {
+        $self->info( "whitelist ", scalar @$whitelisted, " package(s): ", join ( " ", sort @$whitelisted ) );
+    }
+    if (@$excludes) {
+        $self->info( "exclude   ", scalar @$excludes, " package(s): ", join ( " ", sort @$excludes ) );
+    }
+    $self->info( "install   " , $will_install->size, " package(s): ", join ( " ", sort @$will_install ) );
+    $self->info( "remove    ", $will_remove->size, " package(s): ", join ( " ", sort @$will_remove ) );
+    $self->info("----------------------------------------");
+
+    # End here in case of --noaction.
+    if ($NoAction) {
         return 1;
     }
-
-    my $installed = $preinstalled;
-    my $whitelist = $t->{whitelist};
-
-    if ( !$t->{userpkgs} ) {
-        # Attempt to remove packages not wanted by the result of test transaction.
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [RPM_QUERY_INSTALLED_NAMES_NOEPOCH], "getting list of installed package names without epoch", 1, "/dev/null", 1 );
-        if ( $cmd_exit ) {
-            $self->error("Error getting list of installed package names.");
-            return 0;
-        }
-        my $installed_names = Set::Scalar->new( split ( /\n/, $cmd_out ) );
-        my $packages_to_remove = $installed_names - $to_install_names;
-        $packages_to_remove->delete('gpg-pubkey');
-        if ( defined($whitelist) ) {
-            for my $rpm ( $packages_to_remove->elements ) {
-                for my $white_pkg (@$whitelist) {
-                    if ( index($rpm, $white_pkg) == 0 || match_glob($white_pkg, $rpm) ) {
-                        $packages_to_remove->delete($rpm);
-                    }
-                }
-            }
-        }
-        if ( !$packages_to_remove->is_empty ) {
-            ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$packages_to_remove) ], 'attempting to remove: '.join (" ", sort @$packages_to_remove));
-            $installed = $self->get_installed_rpms();
-            return 1 if !defined($installed);
-            my $removed = $preinstalled - $installed;
-            if ( !$removed->is_empty ) {
-                $self->info("removed " . $removed->size . " unneeded package(s): " . $removed );
-            }
-        }
+    
+    # Execute the transaction.
+    my $transaction = "";
+    if ( $will_remove->size ) {
+        $transaction = "remove " . join ( " ", sort @$will_remove ) . "\n";
     }
-
-    my $to_sync = $to_install - $installed;
-    if ( !$to_sync->is_empty ) {
-        # Attempt to only downgrade packages which are installed.
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command( [RPM_QUERY_INSTALLED_NAMES], "getting list of installed package names", 1, "/dev/null", 1 );
-        if ( $cmd_exit ) {
-            $self->error("Error getting list of installed package names.");
-            return 0;
-        }
-        my $installed_rpm_names = $cmd_out;
-        $installed_rpm_names =~ s/\(none\)/0/g;
-        my $installed_names = Set::Scalar->new( split ( /\n/, $installed_rpm_names ) );
-        for my $rpm (@$to_sync) {
-            my $found = 0;
-            for my $rpmname (@$installed_names) {
-                if ( index($rpm, $rpmname) == 0 ) {
-                        $found = 1;
-                        last;
-                }
-            }
-            if ( $found == 0 ) {
-                $to_sync->delete($rpm);
-            }
-        }
+    if ( $will_install->size ) {
+        $transaction .= "install " . join ( " ", sort @$will_install ) . "\n";
     }
-    if ( !$to_sync->is_empty ) {
-        # YUM distro-sync can be buggy - in that case use downgrade approach for version locked packages
-        # installation will be executed later on
-        my $pre = $installed;
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum downgrade -q -y " . YUM_PLUGIN_OPTS . " " . join ( " ", sort @$to_sync ) ], "downgrading packages" );
-        if ( $cmd_exit ) {
-            $self->error("Error downgrading packages:\n$cmd_err");
-            return 0;
-        }
-        $installed = $self->get_installed_rpms();
-        return 1 if !defined($installed);
-        my $downgraded_to = $installed - $pre;
-        if ( !$downgraded_to->is_empty ) {
-            $self->info("downgraded ".$downgraded_to->size." package(s) to: ", $downgraded_to);
-        }
-        $pre = $installed;
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum update -q -y " . YUM_PLUGIN_OPTS ], "updating packages" );
-        if ( $cmd_exit ) {
-            $self->error("Error updating packages:\n$cmd_err");
-            return 0;
-        }
-        $installed = $self->get_installed_rpms();
-        return 1 if !defined($installed);
-        my $updated_to = $installed - $pre;
-        if ( !$updated_to->is_empty ) {
-            $self->info("updated ".$updated_to->size." package(s) to: ", $updated_to);
-        }
-    } else {
-        $self->info("no packages to upgrade/downgrade");
-    }
-
-    # Install only additional packages to what is already installed
-    my $will_install = $to_install - $installed;
-    if ( !$will_install->is_empty ) {
-        my $pre = $installed;
-        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_yum_with_recovery( [ "yum install -y " . YUM_PLUGIN_OPTS . " " . join( " ", sort @$will_install) ], "installing ".$will_install->size." package(s)" );
-        if ( index($cmd_out, 'Complete!') == -1 ) {
-            $self->error("Error installing packages:\n$cmd_err");
-            return 0;
-        }
-        $installed = $self->get_installed_rpms();
-        return 1 if !defined($installed);
-        my $installed_new = $installed - $pre;
-        if ( !$installed_new->is_empty ) {
-            $self->info("installed " . $installed_new->size . " package(s): ", $installed_new);
-        }
-    } else {
-        $self->info("nothing to install");
-    }
-
-    # Create list of packages to be removed
-    my $will_remove = $installed - $to_install;
-    my $whitelisted = Set::Scalar->new();
-    $whitelist = $t->{whitelist};
-    for my $rpm ( $will_remove->elements ) {    # do not remove imported GPG keys
-        if ( substr( $rpm, 0, 13 ) eq '0:gpg-pubkey-' ) {
-            $will_remove->delete($rpm);
-        }
-        # Do not remove whitelisted packages.
-        if (defined($whitelist)) {
-            for my $white_pkg (@$whitelist) {
-                my $rpm_noepoch = $rpm;
-                $rpm_noepoch =~ s/^.*://;
-                if ( index($rpm_noepoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_noepoch) ) {
-                    $will_remove->delete($rpm);
-                    $whitelisted->insert($rpm);
-                }
+    if ( !($transaction eq "") ) {
+        $transaction .= "run\n";
+        my @files = glob "/etc/yum/protected.d/*";
+        foreach my $file (@files) {
+            if ( !unlink $file ) {
+                $self->error("Unable to remove file $file: $!");
+                return 0;
             }
         }
-    }
-
-    # Remove unwanted packages
-    if ( !$will_remove->is_empty ) {
-        if ( !$t->{userpkgs} ) {
-            while ( defined( my $p = $will_remove->each ) ) {
-                if ( substr( $p, 0, 8 ) eq 'ncm-spma' ) {
-                    $self->error("Attempting to remove ncm-spma! You seem to miss SELF from /software/packages = {}?");
-                    return 0;
-                }
-            }
-            my $pre = $installed;
-            ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum remove -y " . YUM_PLUGIN_OPTS . " " . join (" ", sort @$will_remove) ], 'attempting to remove: '.join (" ", sort @$will_remove));
-            $installed = $self->get_installed_rpms();
-            return 1 if !defined($installed);
-            my $removed = $pre - $installed;
-            if ( !$removed->is_empty ) {
-                $self->info("removed " . $removed->size . " package(s): ", $removed);
-            }
-        } else {
-            $self->info( "userpkgs enabled, will not remove " . $will_remove->size . " user packages: ", join ( " ", sort @$will_remove ) );
-        }
-    } else {
-        $self->info("nothing to remove");
+        ( $cmd_exit, $cmd_out, $cmd_err ) = $self->execute_command([ "yum shell -y " ], 'executing transaction', 1, $transaction);
     }
 
     # Sign-off successful SPMA installation by generating quattor_os_file.
@@ -814,10 +620,11 @@ sub Configure
         $self->error("cannot open proxy stats file");
     }
 
-    # Final statistics of spma changes of packages
+    # Final statistics of spma changes of packages.
+    my $installed = $self->get_installed_rpms();
     my $newly_installed = $installed - $preinstalled;
     my $newly_removed   = $preinstalled - $installed;
-    $self->info("----------------------------------------");
+    $self->info("Summary of package changes -------------");
     if ( defined($whitelisted) && scalar @$whitelisted > 0 ) {
         $self->info( "whitelisted " . scalar @$whitelisted . " package(s) ", join ( " ", sort @$whitelisted ) );
     }
@@ -826,10 +633,26 @@ sub Configure
     }
     if ( defined($whitelist) || @$excludes ) {
         $self->info("----------------------------------------");
-    };
+    }
     $self->info( "installed   " . $newly_installed->size . " package(s) ", join ( " ", sort @$newly_installed ) );
     $self->info( "removed     "  . $newly_removed->size . " package(s) ", join ( " ", sort @$newly_removed ) );
     $self->info("----------------------------------------");
+
+    # Test whether transaction fully completed/results are expected.
+    if ( $newly_installed->size < $will_install->size ) {
+        my $missing = $will_install - $newly_installed;
+        $self->error("Installed less packages than requested. Not installed: ", join ( " ", sort @$missing ));
+    } elsif ( $newly_installed->size > $will_install->size ) {
+        my $additional = $newly_installed - $will_install;
+        $self->info("Installed more packages than expected. Extra packages installed: ", join ( " ", sort @$additional ));
+    }
+    if ( $newly_removed->size < $will_remove->size ) {
+        my $missing = $will_remove - $newly_removed;
+        $self->warn("Removed less packages than requested. Not removed: ", join ( " ", sort @$missing ));
+    } elsif ( $newly_removed->size > $will_remove->size ) {
+        my $additional = $newly_removed - $will_remove;
+        $self->info("Removed more packages than expected. Extra packages removed: ", join ( " ", sort @$additional ));
+    }
 
     return 1;
 }
