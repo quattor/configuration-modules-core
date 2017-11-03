@@ -1,12 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/cups/schema;
+${componentschema}
 
 include 'quattor/schema';
 
-type component_cups_printer = {
+type ${project.artifactId}_component_printer = {
     "server" ? string
     "protocol" ? string
     "printer" ? string
@@ -21,7 +17,7 @@ type component_cups_printer = {
 };
 
 
-type component_cups_options = {
+type ${project.artifactId}_component_options = {
     "AutoPurgeJobs" ? legacy_binary_affirmation_string
     "Classification" ? string
     "ClassifyOverride" ? string with match (SELF, "on|off")
@@ -36,15 +32,15 @@ type component_cups_options = {
     "PreserveJobFiles" ? legacy_binary_affirmation_string
     "Printcap" ? string
     "ServerAdmin" ? string
+    "ServerAlias" ? string[]
     "ServerName" ? string
 };
 
-type component_cups = {
+type ${project.artifactId}_component = {
     include structure_component
     "defaultprinter" ? string
     "nodetype" ? string with match (SELF, "client|server")
-    "options" ? component_cups_options
-    "printers" ? component_cups_printer{}
+    "options" ? ${project.artifactId}_component_options
+    "printers" ? ${project.artifactId}_component_printer{}
 };
 
-bind "/software/components/cups" = component_cups;

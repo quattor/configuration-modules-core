@@ -41,9 +41,18 @@ commented out. To define an option with an empty value, you need to specify a va
 Generally, options apply either to server configuration or to client configuration. There is
 one exception, C<< ServerName >>, which applies to both.
 
-B<Note> : not all the options are currently implemented. If you get a message C<< unsupported option >> when
+B<Note> : not all the CUPS options are currently implemented. If you get a message C<< unsupported option >> when
 running this component, look at the comments at the beginning of component Perl source about how to add
 support for a new option.
+
+=item * C<< /software/components/cups/options/ServerAlias >> : list of string
+
+This option sets the C<ServerAlias> option in cupsd configuration. It is interpreted as a list of string.
+
+Default : None
+
+Scope : server
+
 
 =item * C<< /software/components/cups/options/ServerName >> : string
 

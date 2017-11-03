@@ -68,6 +68,7 @@ my %supported_options = (
     "PreserveJobFiles"   => "server",
     "Printcap"           => "server",
     "ServerAdmin"        => "server",
+    "ServerAlias"        => "server",
     "ServerName"         => "client,server",
 );
 my %config_files = (
@@ -169,7 +170,7 @@ sub Configure
         return 1;
     }
 
-    # Check if named server must be enabled
+    # Check if cupsd server must be enabled
     my $server_enabled;
     if ( $cups_config->{nodetype} ) {
         if ( $cups_config->{nodetype} =~ /server/i ) {
@@ -215,6 +216,11 @@ sub Configure
                         $self->warn("Current host defined as a CUPS server but client configured to use $host");
                     }
                 }
+
+            } elsif ( $option_name eq "ServerAlias" ) {
+                # Build a string from the list
+                my $new_value = join ' ', $option_value;
+                $option_value = $new_value;
             }
 
             # $option_roles is a list of roles separated by ','
@@ -286,27 +292,7 @@ sub Configure
             $self->debug( 1, "Default printer defined in the configuration : $default_printer" );
         }
 
-        # To facilitate transition to new schema (allowing to run new component with old schema).
-        # For testing only.
-        # FIXME: To be removed.
-        my $cups_printers_config;
-        if ( ref($cups_config->{printers}) eq 'HASH' ) {
-            $cups_printers_config = $cups_config->{printers};
-        } elsif ( ref($cups_config->{printers}) eq 'ARRAY' ) {
-            $self->debug(1,'Legacy schema used, converting printer list to a hash');
-            $cups_printers_config = {};
-            my $entry_num = 0;
-            for my $printer_config (@{$cups_config->{printers}}) {
-                $entry_num++;
-                my $printer = $printer_config->{name};
-                unless ( $printer ) {
-                    $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
-                    next;
-                }
-                delete $printer_config->{name};
-                $cups_printers_config->{$printer} =  $printer_config;
-            }
-        }
+        my $cups_printers_config = $cups_config->{printers};
 
         $self->debug(1,"Number of printers defined in the configuration: ".scalar(keys(%{$cups_printers_config})));
 
@@ -352,19 +338,19 @@ sub Configure
 
             if ( $cups_printers_config->{$printer}->{delete} ) {
                 if ( $self->printerDelete($printer) ) {
-                    $self->warn("Error deleting printer $printer");
+                    $self->error("Error deleting printer $printer");
                 } else {
                     $self->OK("Printer $printer deleted");
                 }
             } else {
                 if ( $self->printerAdd($printer, $printer_options_str) ) {
-                    $self->warn("Error adding printer $printer");
+                    $self->error("Error adding printer $printer");
                     next;
                 } else {
                     $self->OK("Printer $printer added to configuration");
                 }
                 if ( $self->printerEnable($printer, $cups_printers_config->{$printer}->{enable}) ) {
-                    $self->warn( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
+                    $self->error( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
                 }
             }
         }
@@ -374,12 +360,12 @@ sub Configure
                && !$cups_printers_config->{$default_printer}->{delete} )
         {
             if ( $self->printerDefault($default_printer) ) {
-                $self->warn("Error defining printer $default_printer as the default printer");
+                $self->error("Error defining printer $default_printer as the default printer");
             } else {
                 $self->OK("Default printer defined to $default_printer");
             }
         } else {
-            $self->warn("Default printer $default_printer doesn't exist. Ignoring");
+            $self->error("Default printer $default_printer doesn't exist. Ignoring");
         }
     }
 
