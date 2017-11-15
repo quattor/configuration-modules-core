@@ -1,22 +1,25 @@
 # -* mode: cperl -*-
 use strict;
 use warnings;
+
 use Test::More;
 use Test::Quattor qw(openstack);
-use CAF::Object;
+use Test::Quattor::Object;
 use Test::MockModule;
-use CAF::FileWriter;
 
-use OpenstackMock;
 use NCM::Component::openstack;
 
-my $cmp = NCM::Component::openstack->new("openstack");
+use helper;
+use Test::Quattor::TextRender::Base;
+
+my $caf_trd = mock_textrender();
+my $obj = Test::Quattor::Object->new();
+
+my $cmp = NCM::Component::openstack->new("openstack", $obj);
 my $cfg = get_config_for_profile("openstack");
-my $tree = $cfg->getElement("/software/components/openstack")->getTree();
 
 # Test OpenStack component
-$cmp->Configure($cfg);
-
+ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
 
 is($NCM::Component::openstack::KEYSTONE_CONF_FILE, "/etc/keystone/keystone.conf", "expected keystone.conf filename");
