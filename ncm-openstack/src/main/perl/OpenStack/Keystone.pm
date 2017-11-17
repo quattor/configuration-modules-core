@@ -1,12 +1,10 @@
 #${PMpre} NCM::Component::OpenStack::Keystone${PMpost}
 
-use Sys::Hostname;
-use Readonly;
-
+use parent qw(NCM::Component::OpenStack::Service);
 
 =head1 NAME
 
-C<NCM::Component::OpenStack::Keystone> adds C<OpenStack> C<Identity> 
+C<NCM::Component::OpenStack::Keystone> adds C<OpenStack> C<Identity>
 service configuration support to L<NCM::Component::OpenStack>.
 
 =head2 Public methods
