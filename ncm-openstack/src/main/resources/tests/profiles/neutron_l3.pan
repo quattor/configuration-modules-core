@@ -4,7 +4,7 @@ include 'components/openstack/schema';
 
 bind "/metaconfig/contents" = openstack_neutron_l3_config;
 
-"/metaconfig/module" = "openstack_common";
+"/metaconfig/module" = "common";
 
 prefix "/metaconfig/contents";
 

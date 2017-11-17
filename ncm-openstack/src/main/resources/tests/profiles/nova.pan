@@ -4,7 +4,7 @@ include 'components/openstack/schema';
 
 bind "/metaconfig/contents" = openstack_nova_config;
 
-"/metaconfig/module" = "openstack_common";
+"/metaconfig/module" = "common";
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 variable NEUTRON_HOST_SERVER ?= 'neutron.mysite.com';
