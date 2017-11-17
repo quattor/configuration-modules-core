@@ -15,7 +15,7 @@ prefix "/system/network";
 
 # Keystone section
 
-prefix "/software/components/openstack/keystone";
+prefix "/software/components/openstack/identity/keystone";
 "database" = dict(
     "connection", "mysql+pymysql://keystone:keystone_db_pass@controller.mysite.com/keystone",
 );

@@ -13,8 +13,8 @@ include 'components/openstack/horizon';
 Type to define OpenStack identity services
 }
 type openstack_identity_config = {
-    'keystone' : openstack_keystone_config
-};
+    'keystone' ? openstack_keystone_config
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack storage services
@@ -55,7 +55,7 @@ Keystone, Nova, Neutron, etc
 }
 type openstack_component = {
     include structure_component
-    'keystone' : openstack_keystone_config
+    'identity' : openstack_identity_config
     'nova' ? openstack_nova_config
     'nova_compute' ? openstack_nova_compute_config
     'glance' ? openstack_glance_config
