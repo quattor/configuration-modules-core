@@ -35,8 +35,19 @@ is_deeply([sort keys %{$srv->{comptree}}], [qw(
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
 my $flakeys = [qw(database)];
 # this also tests the reset on the element
+is($srv->{elpath}, "$srv->{prefix}/$srv->{type}/$srv->{flavour}", "elpath attribute");
 is_deeply([sort keys %{$srv->{element}->getTree}], $flakeys, "element attribute found");
 is_deeply([sort keys %{$srv->{tree}}], $flakeys, "tree attribute found");
+
+is($srv->{filename}, "/etc/keystone/keystone.conf", "filename attribute found");
+is($srv->{tt}, 'common', "tt attribute");
+
+is_deeply($srv->{manage}, "/usr/bin/keystone-manage",
+          "manage attribute command");
+
+is($srv->{user}, "keystone", "user attribute");
+is_deeply($srv->{daemons}, [] , "daemons attribute");
+
 
 =head2 get_flavour
 

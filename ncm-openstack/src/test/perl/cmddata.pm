@@ -19,10 +19,11 @@ use warnings;
 our %cmds;
 our %files;
 
-$cmds{keystone_db_sync}{command} = "su -s /bin/sh -c /usr/bin/keystone-manage db_sync keystone";
+$cmds{keystone_db_version_missing}{cmd} = "/usr/bin/keystone-manage db_version";
+$cmds{keystone_db_version_missing}{ec} = 1;
 
-$cmds{keystone_fernet_setup}{command} = "/usr/bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone";
+$cmds{keystone_db_version}{cmd} = "/usr/bin/keystone-manage db_version";
+$cmds{keystone_db_version}{out} = 123;
 
-$cmds{keystone_credential_setup}{command} = "/usr/bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone";
 
 1;
