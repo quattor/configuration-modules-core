@@ -102,6 +102,7 @@
     <module>ncm-freeipa</module>
     <module>ncm-path</module>
     <module>ncm-openstack</module>
+    <module>ncm-pcs</module>
   </modules>
   <build>
     <pluginManagement>
