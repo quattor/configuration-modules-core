@@ -1,0 +1,6 @@
+$[% el.key %] [% -%]
+[%- IF el.value.is_boolean -%]
+[%-     el.value ? 'on' : 'off' -%]
+[%- ELSE -%]
+[%-     el.value -%]
+[%- END -%]
