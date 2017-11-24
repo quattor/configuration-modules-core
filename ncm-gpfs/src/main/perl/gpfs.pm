@@ -37,7 +37,7 @@ use constant TMP_DOWNLOAD => '/tmp/ncm-gpfs-download';
 use constant GPFSBIN => '/usr/lpp/mmfs/bin';
 use constant GPFSCONFIGDIR => '/var/mmfs';
 use constant GPFSCONFIG => '/var/mmfs/gen/mmsdrfs';
-use constant GPFSKEYDATA => '/var/mmfs/ssl/stage/genkeyData1';
+use constant GPFSKEYDATA => '/var/mmfs/ssl/stage/genkeyData';
 use constant GPFSNODECONFIG => '/var/mmfs/gen/mmfsNodeData';
 use constant GPFSRESTORE => 'mmsdrrestore';
 use constant GPFSRPMS => qw(
@@ -436,6 +436,7 @@ sub get_cfg {
     $subn =~ s/\./\\./g;
     my $regexp = "MEMBER_NODE.*$hostname\.$subn";
 
+    my $committed_key;
     my $gpfsconfigfh=CAF::FileWriter->open(GPFSCONFIG,
                                            backup => ".old",
                                            log => $self);
@@ -445,8 +446,13 @@ sub get_cfg {
     foreach my $line (split /^/, $output) {
         print $gpfsconfigfh $line;
 
+        if ($line =~ m/^%%.*VERSION_LINE/) {
+            my @entries = split(/:/, $line);
+            # committed key is the 21th field of first line of mmsdrfs (src of mmsdrserv)
+            $committed_key = $entries[20];
+        }
         # there should be only one...
-        if ($line =~ m/$regexp/) {
+        elsif ($line =~ m/$regexp/) {
             if ("$gpfsnodeconfigfh") {
                 $self->error('Ignoring another node match for ',
                              'regexp $regexp found: $line.');
@@ -479,14 +485,18 @@ sub get_cfg {
         my $keydata = $tr->{keyData};
         my $keyoutput = $self->runcurl($config, $tmp, $keydata);
         return 0 if (! $keyoutput);
-
-        my $gpfskeyfh = CAF::FileWriter->open(GPFSKEYDATA,
+        if (!$committed_key) {
+            $self->error('No key is yet committed. Run mmauth key commit or remove keyData');
+            return 1;
+        }
+        my $keydataTarget = GPFSKEYDATA . $committed_key;
+        my $gpfskeyfh = CAF::FileWriter->open($keydataTarget,
                                            backup => ".old",
                                            mode => 0600,
                                            log => $self);
         print $gpfskeyfh $keyoutput;
 
-        if ("$gpfskeyfh" !~ m/^clusterName/) {
+        if ( ("$gpfskeyfh" !~ m/^clusterName/) || ("$gpfskeyfh" !~ m/keyGenNumber=$committed_key/) ) {
             $self->error('Invalid genKeyData file found');
             $gpfskeyfh->cancel();
             return 1;
