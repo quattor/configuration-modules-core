@@ -6,4 +6,4 @@ include 'components/pcs/config';
 
 prefix "/software/components/pcs/cluster";
 "name" = "simple";
-"nodes" = list("nodea", "nodeb");
+"nodes" = list("nodea.domain", "nodeb.domain");
