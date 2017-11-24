@@ -29,9 +29,8 @@ is($srv->{log}, $obj, 'log attribute found');
 is($srv->{client}, 'shouldbeinstance', '(fake) client attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
-    glance horizon identity
-    neutron neutron_dhcp neutron_l3 neutron_linuxbridge neutron_metadata neutron_ml2
-    nova nova_compute openrc)], "comptree attribute found");
+    compute dashboard hypervisor identity
+    network openrc storage)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
 my $flakeys = [qw(database)];
 # this also tests the reset on the element

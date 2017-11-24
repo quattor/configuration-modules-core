@@ -21,33 +21,28 @@ Type to define OpenStack storage services
 }
 type openstack_storage_config = {
     'glance' ? openstack_glance_config
-};
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack compute services
 }
 type openstack_compute_config = {
     'nova' ? openstack_nova_config
-    'nova_compute' ? openstack_nova_compute_config
-};
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack network services
 }
 type openstack_network_config = {
     'neutron' ? openstack_neutron_config
-    'neutron_ml2' ? openstack_neutron_ml2_config
-    'neutron_linuxbridge' ? openstack_neutron_linuxbridge_config
-    'neutron_l3' ? openstack_neutron_l3_config
-    'neutron_dhcp' ? openstack_neutron_dhcp_config
-};
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack dashboard services
 }
 type openstack_dashboard_config = {
     'horizon' ? openstack_horizon_config
-};
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack services
@@ -55,15 +50,10 @@ Keystone, Nova, Neutron, etc
 }
 type openstack_component = {
     include structure_component
-    'identity' : openstack_identity_config
-    'nova' ? openstack_nova_config
-    'nova_compute' ? openstack_nova_compute_config
-    'glance' ? openstack_glance_config
-    'neutron' ? openstack_neutron_config
-    'neutron_ml2' ? openstack_neutron_ml2_config
-    'neutron_linuxbridge' ? openstack_neutron_linuxbridge_config
-    'neutron_l3' ? openstack_neutron_l3_config
-    'neutron_dhcp' ? openstack_neutron_dhcp_config
-    'horizon' ? openstack_horizon_config
-    'openrc' : openstack_openrc_config
+    'identity' ? openstack_identity_config
+    'compute' ? openstack_compute_config
+    'storage' ? openstack_storage_config
+    'network' ? openstack_network_config
+    'dashboard' ? openstack_dashboard_config
+    'openrc' ? openstack_openrc_config
 };

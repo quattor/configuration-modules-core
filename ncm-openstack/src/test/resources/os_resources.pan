@@ -23,7 +23,7 @@ prefix "/software/components/openstack/identity/keystone";
 
 # Glance section
 
-prefix "/software/components/openstack/glance";
+prefix "/software/components/openstack/storage/glance";
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );
@@ -38,8 +38,7 @@ prefix "/software/components/openstack/glance";
 
 # Horizon section
 
-prefix "/software/components/openstack/horizon";
-
+prefix "/software/components/openstack/dashboard/horizon";
 "allowed_hosts" = list('*');
 "openstack_keystone_url" = 'http://controller.mysite.com:5000/v3';
 "caches/default" = dict(
@@ -52,7 +51,7 @@ prefix "/software/components/openstack/horizon";
 
 # Neutron section
 
-prefix "/software/components/openstack/neutron";
+prefix "/software/components/openstack/network/neutron/neutron";
 
 "database" = dict(
     "connection", format("mysql+pymysql://neutron:neutron_db_pass@%s/neutron", OPENSTACK_HOST_SERVER),
@@ -85,7 +84,7 @@ prefix "/software/components/openstack/neutron";
 
 # Neutron/DHCP section
 
-prefix "/software/components/openstack/neutron_dhcp";
+prefix "/software/components/openstack/network/neutron/neutron_dhcp";
 
 "DEFAULT" = dict(
     "interface_driver", "linuxbridge",
@@ -96,7 +95,7 @@ prefix "/software/components/openstack/neutron_dhcp";
 
 # Neutron/L3 section
 
-prefix "/software/components/openstack/neutron_l3";
+prefix "/software/components/openstack/network/neutron/neutron_l3";
 
 "DEFAULT" = dict(
     "interface_driver", "linuxbridge",
@@ -105,7 +104,7 @@ prefix "/software/components/openstack/neutron_l3";
 
 # Neutron/Linuxbridge section
 
-prefix "/software/components/openstack/neutron_linuxbridge";
+prefix "/software/components/openstack/network/neutron/neutron_linuxbridge";
 
 "linux_bridge" = dict(
     "physical_interface_mappings", list('provider:eth1'),
@@ -123,7 +122,7 @@ prefix "/software/components/openstack/neutron_linuxbridge";
 
 # Neutron/Metadata section
 
-prefix "/software/components/openstack/neutron_metadata";
+prefix "/software/components/openstack/network/neutron/neutron_metadata";
 
 "DEFAULT" = dict(
     "nova_metadata_ip", "controller.mysite.com",
@@ -133,7 +132,7 @@ prefix "/software/components/openstack/neutron_metadata";
 
 # Neutron/ML2 section
 
-prefix "/software/components/openstack/neutron_ml2";
+prefix "/software/components/openstack/network/neutron/neutron_ml2";
 
 "securitygroup" = dict(
     "enable_security_group", true,
@@ -143,8 +142,7 @@ prefix "/software/components/openstack/neutron_ml2";
 
 # Nova section
 
-prefix "/software/components/openstack/nova";
-
+prefix "/software/components/openstack/compute/nova";
 "database" = dict(
     "connection", format("mysql+pymysql://nova:nova_db_pass@%s/nova", OPENSTACK_HOST_SERVER),
 );
@@ -192,8 +190,7 @@ prefix "/software/components/openstack/nova";
 
 # Nova/Compute section
 
-prefix "/software/components/openstack/nova_compute";
-
+prefix "/software/components/openstack/hypervisor/nova";
 "DEFAULT" = dict(
     "auth_strategy", "keystone",
     "enabled_apis", list('osapi_compute', 'metadata'),

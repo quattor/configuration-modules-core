@@ -2,7 +2,7 @@ object template neutron;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents" = openstack_neutron_config;
+bind "/metaconfig/contents" = openstack_neutron_service_config;
 
 "/metaconfig/module" = "common";
 

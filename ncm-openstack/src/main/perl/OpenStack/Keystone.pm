@@ -4,7 +4,6 @@ use parent qw(NCM::Component::OpenStack::Service);
 
 use Readonly;
 
-Readonly::Array my @BOOTSTRAP_URL => qw(/usr/bin/keystone-manage bootstrap);
 
 =head2 Methods
 

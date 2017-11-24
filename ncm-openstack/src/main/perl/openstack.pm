@@ -108,9 +108,14 @@ sub Configure
         # First set OpenRC script to connect to REST API
         # This is not a regular OpenStack service
         'openrc',
-       # Set identity service first
-       'identity',
-       ];
+        # Set identity service first
+        'identity',
+        # After that continue with 
+        'storage',
+        'compute',
+        'network',
+        'dashboard',
+    ];
 
    foreach my $type (@$order) {
        if (exists($tree->{$type})) {
