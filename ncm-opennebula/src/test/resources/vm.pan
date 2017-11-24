@@ -158,3 +158,9 @@ prefix "/system/opennebula";
     "sched_ds_requirements", "NAME=GoldenCephDS",
     "sched_ds_rank", "FREE_MB",
 );
+
+"memorybacking" = list (
+    "nosharepages",
+    "hugepages",
+);
+

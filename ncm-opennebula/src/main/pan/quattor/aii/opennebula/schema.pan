@@ -11,11 +11,11 @@ function validate_aii_opennebula_hooks = {
     if (ARGC != 1) {
         error(format("%s: requires only one argument", FUNCTION));
     };
-    
+
     if (! exists(SELF[ARGV[0]])) {
         error(format("%s: no %s hook found.", FUNCTION, ARGV[0]));
     };
-    
+
     hk = SELF[ARGV[0]];
     found = false;
     ind = 0;
@@ -29,16 +29,16 @@ function validate_aii_opennebula_hooks = {
             };
         };
     };
-    
+
     if (! found) {
         error(format("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]));
     };
-    
-    if (ind != length(hk) - 1) {
-        error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)", 
+
+    if (ind != length(hk)-1) {
+        error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
         FUNCTION, ARGV[0], ind, length(hk)));
     };
-    
+
     # validate the hook
     true;
 };
@@ -60,13 +60,13 @@ type structure_aii_opennebula = {
 type opennebula_vmtemplate_vnet = string{} with {
     # check if all entries in the map have a network interface
     foreach (k; v; SELF) {
-        if (! exists("/system/network/interfaces/"+k)) {
+        if (! exists("/system/network/interfaces/" + k)) {
             error(format("entry: %s in the vnet map is not available from /system/network/interfaces tree", k));
         };
     };
     # check if all interfaces have an entry in the map
     foreach (k; v; value("/system/network/interfaces")) {
-        if ((! exists(SELF[k])) && 
+        if ((! exists(SELF[k])) &&
             (! exists(v['type']) || # if type is missing, it's a regular ethernet interface
             (! match('^(Bridge|OVSBridge)$', v['type'])))) {
             error(format("/system/network/interfaces/%s has no entry in the vnet map", k));
@@ -78,7 +78,7 @@ type opennebula_vmtemplate_vnet = string{} with {
 type opennebula_vmtemplate_datastore = string{} with {
     # check is all entries in the map have a hardrive
     foreach (k; v; SELF) {
-        if (! exists("/hardware/harddisks/"+k)) {
+        if (! exists("/hardware/harddisks/" + k)) {
             error(format("/hardware/harddisks/%s has no entry in the datastores map", k));
         };
     };
@@ -91,11 +91,29 @@ type opennebula_vmtemplate_datastore = string{} with {
     true;
 };
 
+
+function is_consistent_memorybacking = {
+    # check memorybacking values
+    foreach (key; value; SELF) {
+        foreach (key2; value2; SELF) {
+            if (SELF[key] == SELF[key2] && key != key2) {
+                error(format("entry: %s appears several times within memorybacking list", value));
+            };
+        };
+    };
+    foreach (key; value; SELF) {
+        if (! match('^(hugepages|nosharepages|locked)$', SELF[key])) {
+            error(format("entry: %s is not a valid memorybacking value", value));
+        };
+    };
+    true;
+};
+
 @documentation{ 
 Type that checks if the network interface is available from the quattor tree
 }
 type valid_interface_ignoremac = string with {
-    if (! exists("/system/network/interfaces/"+SELF)) {
+    if (! exists("/system/network/interfaces/" + SELF)) {
         error(format("ignoremac.interface: '%s' is not available from /system/network/interfaces tree", SELF));
     };
     true;
@@ -206,4 +224,20 @@ type opennebula_vmtemplate = {
     does not take effect.}
     "labels" ? string[]
     "placements" ? opennebula_placements
+    @{The optional memoryBacking element may contain several elements that influence
+    how virtual memory pages are backed by host pages.
+    hugepages: This tells the hypervisor that the guest should have its memory
+    allocated using hugepages instead of the normal native page size.
+    nosharepages: Instructs hypervisor to disable shared pages
+    (memory merge, KSM) for this domain.
+    locked: When set and supported by the hypervisor, memory pages belonging to the domain
+    will be locked in hosts memory and the host will not be allowed to swap them out,
+    which might be required for some workloads such as real-time. For QEMU/KVM guests,
+    the memory used by the QEMU process itself will be locked too: unlike guest memory,
+    this is an amount libvirt has no way of figuring out in advance, so it has to remove
+    the limit on locked memory altogether. Thus, enabling this option opens up to a
+    potential security risk: the host will be unable to reclaim the locked memory back
+    from the guest when its running out of memory, which means a malicious guest allocating
+    large amounts of locked memory could cause a denial-of-service attach on the host.}
+    "memorybacking" ? string[] with is_consistent_memorybacking(SELF)
 } = dict();
