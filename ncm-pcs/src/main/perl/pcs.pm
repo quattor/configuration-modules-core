@@ -5,6 +5,7 @@ use CAF::Object qw(SUCCESS);
 use LC::Exception;
 
 use Readonly;
+use Set::Scalar;
 
 Readonly my $TOKENS => '/var/lib/pcsd/tokens';
 
@@ -17,6 +18,58 @@ our $NoActionSupported = 1;
 sub _short
 {
     return map {[split(/\./, $_, 2)]->[0]} (ref($_[0]) eq 'ARRAY' ? @{$_[0]} : @_);
+}
+
+# convert value from _parse
+# supported options
+#    array: convert all values in arrayref
+#    set: convert all values to Set::Scalar
+sub _value
+{
+    my ($val, %opts) = @_;
+
+    my $res = $val;
+    if ($opts{array} || $opts{set}) {
+        $res = defined($val) ? [split(/\s+/, $val)] : [];
+        $res = Set::Scalar->new(@$res) if $opts{set};
+    }
+    return $res;
+}
+
+# parse pcs output in a hashref
+# nested structure, based on indentation
+# options relevant here (i.e. not for _value):
+#    lower: all keys lowercase
+# %opts also passed to _value
+sub _parse
+{
+    my ($txt, %opts) = @_;
+
+    my $res = {};
+    # depth -> hashref
+    my $curr = {0 => $res};
+    my $prevdepth = 0;
+    # not relevant, first line should always be depth=0;
+    #   so no depth>prevdepth, and thus prevkey is something meaningful
+    my $prevkey = 'INVALID';
+
+    foreach my $line (split(/\n/, $txt)) {
+        if ($line =~ m/^(\s*)(\S.*?)\s*:\s*(\S.*?)?\s*$/) {
+            my $key = $opts{lower} ? lc($2) : $2;
+            my $depth = length($1);
+
+            if ($depth > $prevdepth) {
+                $curr->{$prevdepth}->{$prevkey} = {};
+                $curr->{$depth} = $curr->{$prevdepth}->{$prevkey};
+            }
+            $curr->{$depth}->{$key} = _value($3, %opts);
+
+            $prevdepth = $depth;
+            $prevkey = $key;
+        }
+    }
+
+    return $res;
 }
 
 =head1 NAME
@@ -32,6 +85,8 @@ but rather to help setting up a corosync+pacemaker cluster using pcs, following 
 L<http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Clusters_from_Scratch/index.html>.
 
 The component assumes you have a C<hacluster> user with password to setup the authentication.
+
+All nodes are (expected to be) configured using short hostnames.
 
 =head2 Methods
 
@@ -113,15 +168,86 @@ sub setup
 {
     my ($self, $cluster) = @_;
 
-    if (!$self->_pcs(['cluster', 'status'], "find running cluster", test => 1)) {
-        $self->info("No running cluster, setting up cluster");
-        $self->_pcs(['cluster', 'setup',
-                     '--name', $cluster->{name},
-                     _short $cluster->{nodes}
-                    ], "setup cluster") or return;
+    # only start the cluster on the configured nodes
+    my $start = sub {
+        return $self->_pcs(['cluster', 'start',
+                            _short $cluster->{nodes}
+                           ], "start cluster@_", test => 1);
+    };
+
+    my $status = sub {
+        return $self->_pcs(['cluster', 'status'], "find running cluster@_", test => 1);
+    };
+
+    if (!&$status('')) {
+        $self->info("No running cluster, try to start cluster");
+        &$start('');
+
+        if (!&$status(' after start')) {
+            $self->info("Still no running cluster, setting up cluster");
+            $self->_pcs(['cluster', 'setup',
+                         '--name', $cluster->{name},
+                         _short $cluster->{nodes}
+                        ], "setup cluster") or return;
+            &$start(' after cluster setup');
+            if (!&$status(' after setup and start')) {
+                $self->error("Still not running cluster after setup and start");
+                return;
+            }
+        }
     }
 
     return SUCCESS;
+}
+
+=item nodes
+
+Get nodes status, and compare with to be configured nodes.
+If any node is missing, unknown nodes are encountered or
+nodes are not optimal: report and error and return undef.
+
+Only when the pacemaker and corosync nodes are the configured nodes,
+and all others are empty, will the method return success.
+
+=cut
+
+sub nodes
+{
+    my ($self, $nodes_array) = @_;
+
+    # use set scalar for comparing
+    my $nodes = Set::Scalar->new(_short $nodes_array);
+
+    # reports error on failure
+    my ($ok, $output) = $self->_pcs([qw(status nodes both)], "show nodes status");
+    return if ! $ok;
+
+    my $states = _parse($output, set => 1, lower => 1);
+    my $expected = 0;
+    foreach my $type (sort keys %$states) {
+        my $state = $states->{$type};
+        $type =~ s/\s+nodes?//;
+        foreach my $val_name (sort keys %$state) {
+            my $val = $state->{$val_name};
+            if (($type eq 'corosync' or $type eq 'pacemaker') &&
+                $val_name eq 'online') {
+                # do not use != logic (is false if there's overlap in sets)
+                if ($val == $nodes) {
+                    $expected += 1;
+                } else {
+                    $self->error("Found $type $val_name nodes ($val) ",
+                                 "not equal to configured nodes ($nodes)");
+                    return;
+                }
+            } else {
+                if (!$val->is_null) {
+                    $self->error("Found non-empty $type $val_name nodes ($val)");
+                    return;
+                }
+            }
+        }
+    }
+    return $expected == 2 ? SUCCESS : undef;
 }
 
 =item Configure
@@ -139,11 +265,12 @@ sub Configure
     # Test auth files, if not present error with commandline
     $self->has_tokens($tree->{cluster}->{nodes}) or return;
 
-    $self->setup($tree->{cluster}) or return;
-
     # Test cluster status, it none is found, setup cluster with main/first node
     # --> how to reinstall 1st node: well, make other node first node first
+    $self->setup($tree->{cluster}) or return;
 
+    # Check nodes
+    $self->nodes($tree->{cluster}->{nodes}) or return;
 
     return 1;
 }

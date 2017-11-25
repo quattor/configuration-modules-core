@@ -12,6 +12,8 @@ my $cmp = NCM::Component::pcs->new("pcs", $obj);
 my $cfg = get_config_for_profile("simple");
 my $tree = $cfg->getTree($cmp->prefix);
 
+use helper;
+
 =head2 _short
 
 =cut
@@ -42,21 +44,60 @@ ok($cmp->has_tokens([qw(a b c)]), "tokens found");
 
 =cut
 
+
 my $statuscmd = 'pcs cluster status';
 my $setupcmd = 'pcs cluster setup --name simple nodea nodeb';
-set_command_status($statuscmd, 1);
+my $startcmd = 'pcs cluster start nodea nodeb';
+my $statusnodes = 'pcs status nodes both';
 set_command_status($setupcmd, 1);
+
+set_output('cluster_notok');
+set_output('status_nodes');
+
 command_history_reset();
 ok(!defined $cmp->Configure($cfg), "Configure returns undef with missing cluster failed setup");
-ok(command_history_ok([$statuscmd, $setupcmd]), "pcs cluster status and setup called");
+ok(command_history_ok([$statuscmd, $startcmd, $statuscmd, $setupcmd]),
+   "pcs cluster status, start, status and setup called");
 
+command_history_reset();
 set_command_status($setupcmd, 0);
-ok($cmp->setup($tree->{cluster}), "setup returns ok with succesfull cluster setup");
+ok(!defined($cmp->setup($tree->{cluster})), "setup returns undef with succesfull cluster setup and still failing status");
+ok(command_history_ok([$statuscmd, $startcmd, $statuscmd, $setupcmd, $statuscmd]),
+   "pcs cluster status, start, status, setup and status called");
 
-set_command_status($statuscmd, 0);
+=head2 nodes
+
+=cut
+
+set_output('status_nodes');
+ok(!defined $cmp->nodes(['nodea.a']),
+   "nodes returns undef when unknown nodes are present");
+ok(!defined $cmp->nodes(['nodea.a', 'nodeb.b', 'nodec']),
+   "nodes returns undef when nodes are missing");
+ok($cmp->nodes(['nodea.a', 'nodeb.b']),
+   "nodes returns ok when nodes as expected");
+
+set_output('status_nodes_maint');
+ok(! defined $cmp->nodes(['nodea.a', 'nodeb.b']),
+   "nodes returns undef when node is in maintenance (i.e. not online)");
+
+set_output('status_nodes_remote');
+ok(! defined $cmp->nodes(['nodea.a', 'nodeb.b']),
+   "nodes returns undef when a remote node is found");
+
+# last, reset ok node state
+set_output('status_nodes');
+
+
+=head2 Configure
+
+=cut
+
+set_output('cluster_ok');
 command_history_reset();
 ok($cmp->Configure($cfg), "setup returns ok with succesfull cluster status");
-ok(command_history_ok([$statuscmd], ['setup']), "pcs cluster status called, no setup");
+ok(command_history_ok([$statuscmd, $statusnodes], ['start', 'setup']),
+   "pcs cluster and nodes status called, no setup or start");
 
 
 ok($cmp->Configure($cfg), "Configure returns ok");
