@@ -87,7 +87,3 @@ type elasticsearch_discovery_zen = {
 type elasticsearch_discovery = {
     "zen" ? elasticsearch_discovery_zen
 };
-
-@{include version specific types at the end}
-include format('metaconfig/elasticsearch/schema_%s', METACONFIG_ELASTICSEARCH_VERSION);
-
