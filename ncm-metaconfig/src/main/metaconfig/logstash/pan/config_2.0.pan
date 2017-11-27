@@ -2,7 +2,7 @@ unique template metaconfig/logstash/config_2.0;
 
 include 'metaconfig/logstash/schema_2.0';
 
-bind "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents" = type_logstash;
+bind "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents" = type_logstash_20;
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}";
 "daemons/logstash" = "restart";
