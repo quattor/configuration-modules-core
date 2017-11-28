@@ -44,18 +44,27 @@ use constant ICINGA_RELOAD   => qw (/sbin/service icinga reload);
 use constant ICINGA_SPOOL        => '/var/icinga/spool/';
 use constant ICINGA_CHECK_RESULT => ICINGA_SPOOL . 'checkresults';
 
-# Prints the main Icinga file, icinga.cfg.
-sub print_general
-{
-    my ($self, $t) = @_;
 
+sub openf
+{
+    my ($self, $icingaf) = @_;
     my $fh = CAF::FileWriter->new(
-        ICINGA_FILES->{general},
+        ICINGA_FILES->{$icingaf},
         log   => $self,
         owner => ICINGAUSR,
         group => ICINGAGRP,
         mode  => 0440
     );
+    return $fh
+}
+
+
+# Prints the main Icinga file, icinga.cfg.
+sub print_general
+{
+    my ($self, $t) = @_;
+
+    my $fh = $self->openf('general');
 
     my $el;
     my $ed;
@@ -97,7 +106,7 @@ sub print_general
         print $fh "cfg_dir=$f\n";
     }
 
-    return $fh;
+    return $fh->close();
 }
 
 sub make_dirs
@@ -131,20 +140,14 @@ sub print_cgi
 
     defined($t) or return;
 
-    my $fh = CAF::FileWriter->new(
-        ICINGA_FILES->{cgi},
-        log   => $self,
-        mode  => 0440,
-        owner => ICINGAUSR,
-        group => ICINGAGRP
-    );
+    my $fh = $self->openf('cgi');
 
     print $fh "main_config_file=" . ICINGA_FILES->{general} . "\n";
 
     while (my ($opt, $val) = each(%$t)) {
         print $fh "$opt=$val\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all the host template definitions on
@@ -155,13 +158,7 @@ sub print_hosts_generic
 
     defined($t) or return;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{hosts_generic},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('hosts_generic');
 
     while (my ($host, $hostdata) = each(%$t)) {
         print $fh "define host {\n";
@@ -178,7 +175,7 @@ sub print_hosts_generic
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all the host definitions on /etc/icinga/objects/hosts.cfg
@@ -186,13 +183,7 @@ sub print_hosts
 {
     my ($self, $t, $ign) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{hosts},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('hosts');
 
     $ign ||= [];
 
@@ -226,7 +217,7 @@ sub print_hosts
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all the hostgroup defenitions on /etc/icinga/objects/hostgroups.cfg
@@ -234,13 +225,7 @@ sub print_hostgroups
 {
     my ($self, $t, $ign) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{hostgroups},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('hostgroups');
 
     $ign ||= [];
 
@@ -259,7 +244,7 @@ sub print_hostgroups
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all the service definitions on /etc/icinga/objects/services.cfg
@@ -267,13 +252,7 @@ sub print_services
 {
     my ($self, $t) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{services},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('services');
 
     while (my ($service, $serviceinstances) = each(%$t)) {
         foreach my $servicedata (@$serviceinstances) {
@@ -292,7 +271,7 @@ sub print_services
             print $fh "}\n";
         }
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all the macros to /etc/icinga/resources.cfg
@@ -300,18 +279,12 @@ sub print_macros
 {
     my ($self, $t) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{macros},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('macros');
 
     while (my ($macro, $val) = each(%$t)) {
         print $fh "\$$macro\$=$val\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints the command definitions to /etc/icinga/objects/commands.cfg
@@ -319,13 +292,7 @@ sub print_commands
 {
     my ($self, $t) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{commands},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('commands');
 
     while (my ($cmd, $cmdline) = each(%$t)) {
         print $fh <<EOF;
@@ -336,7 +303,7 @@ define command {
 EOF
     }
 
-    return $fh;
+    return $fh->close();
 }
 
 # Prints all contacts to /etc/icinga/objects/contacts.cfg
@@ -344,13 +311,7 @@ sub print_contacts
 {
     my ($self, $t) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{contacts},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('contacts');
 
     while (my ($cnt, $cntst) = each(%$t)) {
         print $fh "define contact {\n", "\tcontact_name\t$cnt\n";
@@ -371,7 +332,7 @@ sub print_contacts
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints the service dependencies configuration files.
@@ -381,13 +342,7 @@ sub print_servicedependencies
 
     defined($t) or return;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{servicedependencies},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('servicedependencies');
 
     foreach my $i (@$t) {
         print $fh "define servicedependency {\n";
@@ -397,7 +352,7 @@ sub print_servicedependencies
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints the extended service configuration files.
@@ -407,13 +362,7 @@ sub print_serviceextinfo
 
     defined($t) or return;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{serviceextinfo},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('serviceextinfo');
 
     foreach my $i (@$t) {
         print $fh "define serviceextinfo {\n";
@@ -423,7 +372,7 @@ sub print_serviceextinfo
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints the host dependency configuration files.
@@ -433,13 +382,7 @@ sub print_hostdependencies
 
     defined($t) or return;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{hostdependencies},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('hostdependencies');
 
     while (my ($host, $dependency) = each(%$t)) {
         print $fh "define hostdependency {\n", "\thost_name\t$host\n";
@@ -448,7 +391,7 @@ sub print_hostdependencies
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Prints the ido2db configuration file.
@@ -456,19 +399,13 @@ sub print_ido2db_config
 {
     my ($self, $t) = @_;
 
-    my $fh = CAF::FileWriter->open(
-        ICINGA_FILES->{ido2db},
-        owner => ICINGAUSR,
-        group => ICINGAGRP,
-        log   => $self,
-        mode  => 0440
-    );
+    my $fh = $self->openf('ido2db');
 
     while (my ($ido2db_setting, $val) = each(%$t)) {
         print $fh "$ido2db_setting=$val\n";
     }
 
-    return $fh;
+    return $fh->close();
 }
 
 # Prints one of the files listed in REMAINING_OBJECTS.
@@ -497,7 +434,7 @@ sub print_other
         }
         print $fh "}\n";
     }
-    return $fh;
+    return $fh->close();
 }
 
 # Restarts the Icinga daemon if needed.
