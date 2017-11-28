@@ -54,6 +54,7 @@ contentspath=/software/components/authconfig/method/sssd
 ^ldap_user_shell = loginShell$
 ^ldap_user_uid_number = uidNumber$
 ^ldap_user_uuid = nsUniqueId$
+^ldap_user_object_class = posixAccount$
 ^ldap_group_gid_number = gidNumber$
 ^ldap_group_member = memberuid$
 ^ldap_group_modify_timestamp = modifyTimestamp$
@@ -90,7 +91,6 @@ contentspath=/software/components/authconfig/method/sssd
 ^ldap_search_base = dc=domain,dc=wahtever$
 ^ldap_search_timeout = 6$
 ^ldap_uri = ldaps://mymainserver.mydomain,ldaps://myothermainserver.mydomain$
-^ldap_use_object_class = posixAccount$
 ^simple_allow_groups = group1,group2$
 ^access_provider = simple$
 ^account_cache_expiration = 0$
