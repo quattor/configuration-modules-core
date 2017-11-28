@@ -54,7 +54,7 @@ sub print_general
         log   => $self,
         owner => ICINGAUSR,
         group => ICINGAGRP,
-        mode  => 0444
+        mode  => 0440
     );
 
     my $el;
@@ -134,7 +134,7 @@ sub print_cgi
     my $fh = CAF::FileWriter->new(
         ICINGA_FILES->{cgi},
         log   => $self,
-        mode  => 0444,
+        mode  => 0440,
         owner => ICINGAUSR,
         group => ICINGAGRP
     );
@@ -160,7 +160,7 @@ sub print_hosts_generic
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($host, $hostdata) = each(%$t)) {
@@ -191,7 +191,7 @@ sub print_hosts
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     $ign ||= [];
@@ -239,7 +239,7 @@ sub print_hostgroups
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     $ign ||= [];
@@ -272,7 +272,7 @@ sub print_services
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($service, $serviceinstances) = each(%$t)) {
@@ -305,7 +305,7 @@ sub print_macros
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($macro, $val) = each(%$t)) {
@@ -324,7 +324,7 @@ sub print_commands
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($cmd, $cmdline) = each(%$t)) {
@@ -349,7 +349,7 @@ sub print_contacts
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($cnt, $cntst) = each(%$t)) {
@@ -386,7 +386,7 @@ sub print_servicedependencies
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     foreach my $i (@$t) {
@@ -412,7 +412,7 @@ sub print_serviceextinfo
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     foreach my $i (@$t) {
@@ -438,7 +438,7 @@ sub print_hostdependencies
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($host, $dependency) = each(%$t)) {
@@ -461,7 +461,7 @@ sub print_ido2db_config
         owner => ICINGAUSR,
         group => ICINGAGRP,
         log   => $self,
-        mode  => 0444
+        mode  => 0440
     );
 
     while (my ($ido2db_setting, $val) = each(%$t)) {
