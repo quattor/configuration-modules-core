@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 1;
 
 use myIcinga;
 
@@ -10,8 +10,6 @@ my $t = {foo => 'bar'};
 
 my $rs = $comp->print_macros($t);
 
-isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
-is(*$rs->{filename}, NCM::Component::icinga::ICINGA_FILES->{macros}, "Correct file was opened");
-is("$rs", '$foo$=bar'."\n", 'File contents properly written');
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{macros});
 
-$rs->close();
+is("$fh", '$foo$=bar'."\n", 'File contents properly written');

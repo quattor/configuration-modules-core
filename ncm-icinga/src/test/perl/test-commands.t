@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 1;
 
 use myIcinga;
 
@@ -11,14 +11,10 @@ my $t = { acommand => 'ls -lh' };
 
 my $rs = $comp->print_commands($t);
 
-isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
-is(*$rs->{filename}, NCM::Component::icinga::ICINGA_FILES->{commands},
-   "Correct file was opened");
-is("$rs", q!define command {
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{commands});
+is("$fh", q!define command {
 	command_name acommand
 	command_line ls -lh
 }
 !,
   'File contents properly written');
-
-$rs->close();
