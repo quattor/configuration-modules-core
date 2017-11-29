@@ -782,14 +782,12 @@ $data = <<'EOF';
 
 NIC = [
     IP = "10.141.8.30",
-    MAC = "AA:00:00:80:01:00",
     MODEL = "virtio",
     NETWORK = "altaria.os",
     NETWORK_UNAME = "oneadmin"
 ]
 NIC = [
     IP = "172.24.8.30",
-    MAC = "AA:00:00:80:01:01",
     MODEL = "virtio",
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"

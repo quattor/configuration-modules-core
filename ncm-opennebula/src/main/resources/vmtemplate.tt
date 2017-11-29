@@ -17,7 +17,7 @@
 NIC = [
 [%  FILTER indent -%]
 [%    INCLUDE 'opennebula/network_level1.tt' 
-               data=pair -%]
+               data = pair ignoremac = 1 -%]
 MODEL = "virtio",
 NETWORK = "[% system.opennebula.vnet.${pair.key} %]",
 NETWORK_UNAME = "oneadmin"
