@@ -30,6 +30,8 @@ type ceph_osd = {
     'journal_path' ? string
     'crush_weight' : double(0..) = 1.0
     'labels' ? string[1..]
+    'storetype'? string with match(SELF, '^(blue|file)store$')
+
 };
 
 @documentation{ ceph osdhost-specific type, defining all osds on a host }
