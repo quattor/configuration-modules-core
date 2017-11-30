@@ -43,7 +43,8 @@ Readonly::Hash my %HASH_IN => (
 			       "_3akey3" =>  {
 					      "_3akey4" => "_3avalue5",
 					      "_3akey6" => {"_3akey7" => "value8"}
-					     }
+					     },
+			       "_3akey9" => 1234
 			       );
 Readonly::Hash my %HASH_EXP => (
 			       ":key1" => "value1",
@@ -51,7 +52,8 @@ Readonly::Hash my %HASH_EXP => (
 			       ":key3" =>  {
 					      ":key4" => "_3avalue5",
 					      ":key6" => {":key7" => "value8"}
-					     }
+					     },
+			       ":key9" => 1234
 			       );
 
 Readonly::Hash my %HASH_TINY => (
@@ -78,6 +80,7 @@ Readonly::Scalar my $YAML => <<YAML;
   :key4: _3avalue5
   :key6:
     :key7: value8
+:key9: 1234
 YAML
 Readonly::Scalar my $TINY => <<TINY;
 [section1]
