@@ -16,13 +16,25 @@ type ceph_osd_config = {
     'osd_journal_size' : long(0..) = 10240
     'osd_max_backfills' ? long(0..)
     'osd_max_scrubs' ? long(0..)
+    'osd_mon_report_interval_min' ? long(0..)
     'osd_objectstore' ? string
+    'osd_op_queue' ? string with match(SELF, '^(prio|wpq)$')
     'osd_op_threads' ? long(0..)
+    'osd_pool_default_min_size' : long(0..) = 2
+    'osd_pool_default_pg_num' ? long(0..)
+    'osd_pool_default_pgp_num' ? long(0..)
+    'osd_pool_default_size' : long(0..) = 3
+    'osd_recovery_max_active' ? long(0..)
+    'osd_recovery_op_priority' ? long(0..)
+    'osd_recovery_sleep' ? long(0..)
+    'osd_recovery_threads' ? long(0..)
     'osd_scrub_begin_hour' ? long(0..24)
     'osd_scrub_end_hour' ? long(0..24)
     'osd_scrub_load_threshold' ? double(0..)
     'osd_scrub_max_interval' ? double(0..)
     'osd_scrub_min_interval' ? double(0..)
+    'osd_scrub_priority' ? long(0..)
+    'osd_scrub_sleep' ? long(0..)
 };
 
 @documentation{
