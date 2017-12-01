@@ -2,12 +2,15 @@
 
 use parent qw(NCM::Component CAF::Path);
 use CAF::Object qw(SUCCESS);
+use CAF::FileEditor;
 use LC::Exception;
 
 use Readonly;
 use Set::Scalar;
 
 Readonly my $TOKENS => '/var/lib/pcsd/tokens';
+Readonly my $QUATTOR_CONFIG => '/var/lib/pcsd/quattor.config';
+Readonly my $TEMP_CONFIG => '/var/lib/pcsd/quattor.temp.config';
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
@@ -71,6 +74,22 @@ sub _parse
 
     return $res;
 }
+
+# add key=value pairs to cmd arrayref (in-place, no copy, nothing is returned)
+# data might be modified in-place with options:
+#    boolean: arrayref or keys where value is boolean (converted in true/false)
+sub key_val
+{
+    my ($cmd, $data, %opts) = @_;
+
+    foreach my $bool (@{$opts{boolean}||[]}) {
+        $data->{$bool} = $data->{$bool} ? 'true' : 'false' if exists $data->{$bool};
+    }
+
+    # no need for quotes, CAF::Process is shell safe
+    push(@$cmd, map {"$_=$data->{$_}"} sort keys %$data) if defined $data;
+};
+
 
 =head1 NAME
 
@@ -185,9 +204,20 @@ sub setup
 
         if (!&$status(' after start')) {
             $self->info("Still no running cluster, setting up cluster");
+            my @nodes = _short $cluster->{nodes};
+            if ($cluster->{internal}) {
+                my @internal = @{$cluster->{internal}||[]};
+                if (scalar @nodes == scalar @internal) {
+                    @nodes = map {"$nodes[$_],$internal[$_]"} 0..(scalar @nodes -1);
+                } else {
+                    $self->error("Number of internal node names (@internal) is not same as nodes (@nodes)");
+                    return;
+                }
+            }
+
             $self->_pcs(['cluster', 'setup',
                          '--name', $cluster->{name},
-                         _short $cluster->{nodes}
+                         @nodes
                         ], "setup cluster") or return;
             &$start(' after cluster setup');
             if (!&$status(' after setup and start')) {
@@ -250,6 +280,235 @@ sub nodes
     return $expected == 2 ? SUCCESS : undef;
 }
 
+=item prepare
+
+Prepare configuration changes
+
+=cut
+
+sub prepare
+{
+    my $self = shift;
+
+    # Dump current config to temporary file
+    $self->cleanup($TEMP_CONFIG);
+    $self->_pcs(['cluster', 'cib', $TEMP_CONFIG], "dump current config") or return;
+
+    # If quattor conf does not yet exist, add it with current config
+    if (!$self->file_exists($QUATTOR_CONFIG)) {
+        $self->info("Creating initial copy of the current cluster config");
+        CAF::FileEditor->new($QUATTOR_CONFIG,
+                             source => $TEMP_CONFIG,
+                             mode => oct(600),
+                             log => $self,
+            )->close();
+    }
+}
+
+=item change
+
+Make configuration change to the (temporary) config file
+(created with C<prepare> method).
+This will not actually modify anything until C<apply> is called.
+
+=cut
+
+sub change
+{
+    my ($self, $cmd, $msg) = @_;
+
+    return $self->_pcs(['-f', $TEMP_CONFIG, @$cmd], "make change".(defined $msg ? " $msg" : ''));
+}
+
+=item apply
+
+Apply configuration changes (if any)
+
+=cut
+
+sub apply
+{
+    my $self = shift;
+
+    # Sync quattor config with temporary config
+    #   This is mainly to keep track of changes using CAF::History
+    my $changed = CAF::FileEditor->new($QUATTOR_CONFIG,
+                                       source => $TEMP_CONFIG,
+                                       mode => oct(600),
+                                       log => $self,
+                                       backup => '.old',
+        )->close();
+    # If something changed, apply the config
+    if ($changed) {
+        # TODO: try to restore backup on failure?
+        return $self->_pcs(['cluster', 'cib-push', $TEMP_CONFIG], "apply changed from modified config");
+    }
+
+    return 1;
+}
+
+=item default
+
+Set default options for C<type> using hashref C<options>.
+
+=cut
+
+sub default
+{
+    my ($self, $type, $options) = @_;
+
+    my @type = split(/_/, $type);
+
+    my $cmd = [@type, 'defaults'];
+    key_val($cmd, $options);
+
+    return $self->change($cmd, "default @type");
+}
+
+=item device
+
+Add a device of C<type> with C<name> using config hashref C<tree>.
+
+=cut
+
+sub device
+{
+    my ($self, $type, $name, $tree) = @_;
+
+    my $cmd = [$type];
+    if ($type eq 'resource' &&
+        $tree->{type} eq 'master' &&
+        !exists($tree->{standard}) &&
+        !exists($tree->{provider})) {
+        push(@$cmd, 'master', $name, $tree->{master}->{resource});
+        key_val($cmd, $tree->{option});
+        push(@$cmd, "--wait=$tree->{wait}") if exists $tree->{wait}
+    } else {
+        push(@$cmd, 'create', $name);
+
+        # at least type is mandatory
+        push(@$cmd, join(':', grep {defined($_)} map {$tree->{$_}} qw(standard provider type)));
+
+        key_val($cmd, $tree->{option});
+
+        foreach my $op (sort keys %{$tree->{operation} || {}}) {
+            my $val = $tree->{operation}->{$op};
+            if ($type eq 'resource' && exists($val->{name})) {
+                $op = delete $val->{name};
+            }
+            push(@$cmd, 'op', $op);
+            key_val($cmd, $val, boolean => ['record-pending', 'enabled']);
+        }
+
+        foreach my $attr (qw(meta clone master)) {
+            key_val($cmd, $tree->{$attr});
+        }
+
+        foreach my $attr (qw(group after before wait bundle)) {
+            push(@$cmd, "--$attr=$tree->{$attr}") if exists $tree->{$attr}
+        }
+
+        push(@$cmd, '--disabled') if $tree->{disabled};
+    };
+    return $self->change($cmd, "$type device $name");
+}
+
+=item constraint_colocation
+
+Process arrayref of colocation constraints
+
+=cut
+
+sub constraint_colocation
+{
+    my ($self, $colos) = @_;
+
+    foreach my $colo (@$colos) {
+        my $cmd = [qw(constraint colocation add)];
+        push(@$cmd, $colo->{source}->{master} ? 'master' : 'slave') if exists $colo->{source}->{master};
+        push(@$cmd, $colo->{source}->{name}, 'with');
+        push(@$cmd, $colo->{target}->{master} ? 'master' : 'slave') if exists $colo->{target}->{master};
+        push(@$cmd, $colo->{target}->{name});
+        push(@$cmd, $colo->{score}) if exists $colo->{score};
+
+        key_val($cmd, $colo->{options});
+
+        $self->change($cmd, "constraint colocation") or return;
+    }
+
+    return 1;
+}
+
+=item constraint_order
+
+Process arrayref of order constraints
+
+=cut
+
+sub constraint_order
+{
+    my ($self, $orders) = @_;
+
+    foreach my $order (@$orders) {
+        my $cmd = [qw(constraint order)];
+
+        push(@$cmd, $order->{source}->{action}) if exists $order->{source}->{action};
+        push(@$cmd, $order->{source}->{name}, 'then');
+        push(@$cmd, $order->{target}->{action}) if exists $order->{target}->{action};
+        push(@$cmd, $order->{target}->{name});
+
+        key_val($cmd, $order->{options});
+
+        $self->change($cmd, "constraint order") or return;
+    }
+
+    return 1;
+}
+
+=item constraint_location_avoids
+
+Process location "avoids" constraints
+
+=cut
+
+sub constraint_location_avoids
+{
+    my ($self, $avoids) = @_;
+
+    foreach my $resource (sort keys %$avoids) {
+        my $cmd = ['constraint', 'location', $resource, 'avoids'];
+        key_val($cmd, $avoids->{$resource});
+
+        $self->change($cmd, "$resource constraint location avoids") or return;
+    }
+
+    return 1;
+}
+
+
+=item constraint_location
+
+Process location constraints
+
+=cut
+
+sub constraint_location
+{
+    my ($self, $locations) = @_;
+
+    foreach my $type (sort keys %{$locations||{}}) {
+        my $method = "constraint_location_$type";
+        if ($self->can($method)) {
+            $self->$method($locations->{$type}) or return;
+        } else {
+            $self->error("unsupported constraint location $type");
+            return;
+        }
+    }
+
+    return 1;
+}
+
 =item Configure
 
 component Configure method
@@ -271,6 +530,34 @@ sub Configure
 
     # Check nodes
     $self->nodes($tree->{cluster}->{nodes}) or return;
+
+    # Prepare config changes
+    $self->prepare();
+
+    foreach my $type (sort keys %{$tree->{default}||{}}) {
+        $self->default($type, $tree->{default}->{$type}) or return;
+    }
+
+    # Process devices
+    foreach my $type (qw(resource stonith)) {
+        foreach my $dev (sort keys %{$tree->{$type} || {}}) {
+            $self->device($type, $dev, $tree->{$type}->{$dev}) or return;
+        };
+    };
+
+    # Process constraints
+    foreach my $constraint (sort keys %{$tree->{constraint} || {}}) {
+        my $method = "constraint_$constraint";
+        if ($self->can($method)) {
+            $self->$method($tree->{constraint}->{$constraint}) or return;
+        } else {
+            $self->error("unsupported constraint $constraint");
+            return
+        }
+    }
+
+    # Apply changes
+    $self->apply();
 
     return 1;
 }

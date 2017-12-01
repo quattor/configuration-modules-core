@@ -75,4 +75,10 @@ Pacemaker Remote Nodes:
  Offline:
 EOF
 
+$files{empty_config}{path} = "/var/lib/pcsd/quattor.config";
+$files{empty_config}{txt} = "# comment to trigger diff";
+
+$files{empty_temp_config}{path} = "/var/lib/pcsd/quattor.temp.config";
+$files{empty_temp_config}{txt} = "# temp config";
+
 1;

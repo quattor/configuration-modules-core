@@ -46,7 +46,7 @@ ok($cmp->has_tokens([qw(a b c)]), "tokens found");
 
 
 my $statuscmd = 'pcs cluster status';
-my $setupcmd = 'pcs cluster setup --name simple nodea nodeb';
+my $setupcmd = 'pcs cluster setup --name simple nodea,nodea.private nodeb,nodeb.private';
 my $startcmd = 'pcs cluster start nodea nodeb';
 my $statusnodes = 'pcs status nodes both';
 set_command_status($setupcmd, 1);
@@ -93,11 +93,27 @@ set_output('status_nodes');
 
 =cut
 
+set_file('empty_config');
+set_file('empty_temp_config');
 set_output('cluster_ok');
 command_history_reset();
 ok($cmp->Configure($cfg), "setup returns ok with succesfull cluster status");
-ok(command_history_ok([$statuscmd, $statusnodes], ['start', 'setup']),
+ok(command_history_ok([
+       $statuscmd,
+       $statusnodes,
+       "pcs cluster cib /var/lib/pcsd/quattor.temp.config",
+       "pcs -f /var/lib/pcsd/quattor.temp.config resource defaults migration-threshold=20 resource-stickiness=10",
+       "pcs -f /var/lib/pcsd/quattor.temp.config resource op defaults timeout=10",
+       "pcs -f /var/lib/pcsd/quattor.temp.config resource create magicip ocf:heartbeat:IPaddr2 cidr_netmask=32 ip=1.2.3.4 nic=eth0 op monitor interval=30 op monitor interval=27 record-pending=false role=Master",
+       "pcs -f /var/lib/pcsd/quattor.temp.config resource master mastermagic magicip notify=true",
+       "pcs -f /var/lib/pcsd/quattor.temp.config stonith create fence_nodea fence_magic ip=1.2.3.4 user=magic op start timeout=60s op stop timeout=60s --group=test --after=else --before=something --disabled",
+       "pcs -f /var/lib/pcsd/quattor.temp.config constraint colocation add master src with slave tgt -INFINITY opt1=5",
+       "pcs -f /var/lib/pcsd/quattor.temp.config constraint location magicip avoids nodea=INFINITY nodeb=-INFINITY",
+       "pcs -f /var/lib/pcsd/quattor.temp.config constraint order promote src then start tgt kind=Mandatory symmetrical=false",
+       # unable to test the changed content with FileEditor source trickery
+], ['cluster start', 'cluster setup']),
    "pcs cluster and nodes status called, no setup or start");
+
 
 
 ok($cmp->Configure($cfg), "Configure returns ok");
