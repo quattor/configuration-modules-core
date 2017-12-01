@@ -26,6 +26,12 @@ type ${project.artifactId}_textrender_convert = {
     'joincomma' ? boolean
     @{Convert list to space-separated string}
     'joinspace' ? boolean
+    @{Unescape all dict keys}
+    'unescapekey' ? boolean
+    @{Convert all dict keys to lowercase}
+    'lowerkey' ? boolean
+    @{Convert all dict keys to uppercase}
+    'upperkey' ? boolean
 } with {
     # Only one boolean conversion can be true
     boolean_conversion = list('yesno', 'YESNO', 'truefalse', 'TRUEFALSE');
@@ -58,6 +64,18 @@ type ${project.artifactId}_textrender_convert = {
         if(exists(SELF[name]) && SELF[name]) {
             if(found) {
                 error(format('metaconfig element can only have one list conversion enabled, got %s', SELF));
+            };
+            found = true;
+        };
+    };
+
+    # Only one key case conversion can be true
+    key_conversion = list('lowerkey', 'upperkey');
+    found = false;
+    foreach (idx; name; key_conversion) {
+        if(exists(SELF[name]) && SELF[name]) {
+            if(found) {
+                error(format('metaconfig element can only have one key case conversion enabled, got %s', SELF));
             };
             found = true;
         };
