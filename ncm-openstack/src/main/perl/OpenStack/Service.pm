@@ -178,10 +178,10 @@ sub _initialize
     $self->{manage} = "/usr/bin/$self->{flavour}-manage";
 
     # database version parameter
-    $self->{db_version} = "db_version";
+    $self->{db_version} = ["db_version"];
 
     # database sync parameter
-    $self->{db_sync} = "db_sync";
+    $self->{db_sync} = ["db_sync"];
 
     # Service user
     $self->{user} = $self->{flavour};
@@ -279,7 +279,6 @@ sub write_config_file
     my $opts = $self->_file_opts();
 
     my $fh = $tr->filewriter($self->{filename}, %$opts);
-
     if (defined $fh) {
         return $fh->close();
     } else {
@@ -348,11 +347,11 @@ sub populate_service_database
     my ($self) = @_;
     # db_version is slow when not initialised
     # (lots of retries before it gives up; can take up to 90s)
-    if ($self->_do([$self->{manage}, $self->{db_version}], 'determine database version', test => 1)) {
+    if ($self->_do([$self->{manage}, @{$self->{db_version}}], 'determine database version', test => 1)) {
         $self->verbose("Found existing db_version, no db_sync will be applied");
         return 1;
     } else {
-        if ($self->_do([$self->{manage}, $self->{db_sync}], 'populate database')) {
+        if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
             return $self->post_populate_service_database();
         } else {
             # Failure

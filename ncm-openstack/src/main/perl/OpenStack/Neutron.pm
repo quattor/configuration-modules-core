@@ -4,14 +4,25 @@ use parent qw(NCM::Component::OpenStack::Service);
 
 use Readonly;
 
-Readonly our $NEUTRON_CONF_FILE => "/etc/neutron/neutron.conf ";
-Readonly our $ML2_CONF_FILE => "/etc/neutron/plugins/ml2/ml2_conf.ini";
-Readonly our $LINUXBRIDGE_CONF_FILE => "/etc/neutron/plugins/ml2/linuxbridge_agent.ini";
-Readonly our $L3_AGENT_CONF_FILE => "/etc/neutron/l3_agent.ini";
-Readonly our $DHCP_AGENT_CONF_FILE => "/etc/neutron/dhcp_agent.ini";
-Readonly our $METADATA_AGENT_CONF_FILE => "/etc/neutron/metadata_agent.ini";
 Readonly our $NEUTRON_DB_MANAGE_COMMAND => "/usr/bin/neutron-db-manage";
 Readonly our $NEUTRON_DB_BOOTSTRAP => "--config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head";
+
+Readonly::Hash my %CONF_FILE => {
+    service => "/etc/neutron/neutron.conf",
+    ml2 => "/etc/neutron/plugins/ml2/ml2_conf.ini",
+    linuxbridge => "/etc/neutron/plugins/ml2/linuxbridge_agent.ini",
+    l3 => "/etc/neutron/l3_agent.ini",
+    dhcp => "/etc/neutron/dhcp_agent.ini",
+    metadata => "/etc/neutron/metadata_agent.ini",
+};
+Readonly::Hash my %DAEMON => {
+    service => 'neutron-server',
+    linuxbridge => 'neutron-linuxbridge-agent',
+    l3 => 'neutron-l3-agent',
+    dhcp => 'neutron-dhcp-agent',
+    metadata => 'neutron-metadata-agent',
+};
+
 
 =head2 Methods
 
@@ -28,28 +39,33 @@ sub _attrs
     my $self = shift;
 
     $self->{manage} = $NEUTRON_DB_MANAGE_COMMAND;
-    $self->{daemons} = [
-        'neutron-server',
-        'neutron-linuxbridge-agent',
-        'neutron-dhcp-agent',
-        'neutron-metadata-agent',
-        'neutron-l3-agent',
-    ];
     # Neutron has different database parameters
-    $self->{db_version} = "current";
-    $self->{db_sync} = $NEUTRON_DB_BOOTSTRAP;
+    $self->{db_version} = ["current"];
+    $self->{db_sync} = [$NEUTRON_DB_BOOTSTRAP];
 }
 
-=item post_populate_service_database
+=item write_config_file
 
-Neutron post db_sync execution
+Write the required config files for Neutron
 
 =cut
 
-sub post_populate_service_database
+sub write_config_file
 {
     my ($self) = @_;
-    return 1;
+
+    my $nelement = $self->{element};
+
+    my $changed = 0;
+    foreach my $ntype (sort keys %{$self->{tree}}) {
+        $self->{element} = $self->{config}->getElement("$self->{elpath}/$ntype");
+        # TT file is always common
+        $self->{filename} = $CONF_FILE{$ntype};
+        $changed += $self->SUPER::write_config_file() ? 1 : 0;
+        # And add the required daemons to the list
+        push(@{$self->{daemons}}, $DAEMON{$ntype}) if $DAEMON{$ntype};
+    }
+    return $changed;
 }
 
 

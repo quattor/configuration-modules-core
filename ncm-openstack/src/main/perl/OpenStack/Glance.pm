@@ -4,40 +4,42 @@ use parent qw(NCM::Component::OpenStack::Service);
 
 use Readonly;
 
-Readonly our $GLANCE_API_CONF_FILE => "/etc/glance/glance-api.conf";
-Readonly our $GLANCE_REGISTRY_CONF_FILE => "/etc/glance/glance-registry.conf";
+
+Readonly::Hash my %CONF_FILE => {
+    service => "/etc/glance/glance-api.conf",
+    registry => "/etc/glance/glance-registry.conf",
+};
+Readonly::Hash my %DAEMON => {
+    service => 'openstack-glance-api',
+    registry => 'openstack-glance-registry',
+};
 
 =head2 Methods
 
 =over
 
-=item _attrs
+=item write_config_file
 
-Override C<daemons> attribute
-
-=cut
-
-sub _attrs
-{
-    my $self = shift;
-
-    $self->{filename} = $GLANCE_API_CONF_FILE;
-    $self->{daemons} = [
-        'openstack-glance-api',
-        'openstack-glance-registry',
-    ];
-}
-
-=item post_populate_service_database
-
-Glance post db_sync execution
+Write the required config files for Glance
 
 =cut
 
-sub post_populate_service_database
+sub write_config_file
 {
     my ($self) = @_;
-    return 1;
+
+    my $nelement = $self->{element};
+
+    my $changed = 0;
+    foreach my $ntype (sort keys %{$self->{tree}}) {
+        $self->{element} = $self->{config}->getElement("$self->{elpath}/$ntype");
+        # TT file is always common
+        $self->{filename} = $CONF_FILE{$ntype};
+        $changed += $self->SUPER::write_config_file() ? 1 : 0;
+        # And add the required daemons to the list
+        push(@{$self->{daemons}}, $DAEMON{$ntype}) if $DAEMON{$ntype};
+    }
+    return $changed;
 }
 
 

@@ -28,19 +28,6 @@ sub _attrs
     $self->{manage} = '';
 }
 
-=item post_populate_service_database
-
-Horizon does not need db_sync execution
-
-=cut
-
-sub post_populate_service_database
-{
-    my ($self) = @_;
-    return 1;
-}
-
-
 =pod
 
 =back

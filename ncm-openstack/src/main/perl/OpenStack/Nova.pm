@@ -28,20 +28,8 @@ sub _attrs
         'openstack-nova-novncproxy',
     ];
     # Nova has different database parameters
-    $self->{db_version} = "db version";
-    $self->{db_sync} = "db sync";
-}
-
-=item post_populate_service_database
-
-Nova post db_sync execution
-
-=cut
-
-sub post_populate_service_database
-{
-    my ($self) = @_;
-    return 1;
+    $self->{db_version} = ["db", "version"];
+    $self->{db_sync} = ["db", "sync"];
 }
 
 

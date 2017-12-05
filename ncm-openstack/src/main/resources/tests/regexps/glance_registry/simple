@@ -1,14 +1,9 @@
-OpenStack Glance test
+OpenStack Glance registry test
 ---
 multiline
 ---
 ^\[database\]\s*$
 ^connection\s?=\s*.+\s*$
-
-^\[glance_store\]\s*$
-^default_store\s?=\s*.+\s*$
-^filesystem_store_datadir\s?=\s*.+\s*$
-^stores\s?=\s*.+\s*$
 
 ^\[keystone_authtoken\]\s*$
 ^auth_type\s?=\s*.+\s*$

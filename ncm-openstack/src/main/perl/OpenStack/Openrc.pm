@@ -20,6 +20,7 @@ sub _attrs
     $self->{tt} = 'openrc';
     $self->{filename} = "/root/admin-openrc.sh";
     $self->{daemons} = ['httpd'];
+    $self->{user} = 'root';
 }
 
 =item _set_elpath

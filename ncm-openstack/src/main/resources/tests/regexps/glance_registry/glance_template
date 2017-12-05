@@ -1,0 +1,20 @@
+OpenStack Glance registry template full test
+---
+multiline
+---
+^\[database\]$
+^connection\s{1}=\s{1}mysql\+pymysql://glance:glance_db_pass@controller.mysite.com/glance$
+
+^\[keystone_authtoken\]$
+^auth_type\s{1}=\s{1}password$
+^auth_uri\s{1}=\s{1}http://controller.mysite.com:5000$
+^auth_url\s{1}=\s{1}http://controller.mysite.com:35357$
+^memcached_servers\s{1}=\s{1}controller.mysite.com:11211$
+^password\s{1}=\s{1}glance_good_password$
+^project_domain_name\s{1}=\s{1}Default$
+^project_name\s{1}=\s{1}service$
+^user_domain_name\s{1}=\s{1}Default$
+^username\s{1}=\s{1}glance$
+
+^\[paste_deploy\]$
+^flavor\s{1}=\s{1}keystone$

@@ -40,15 +40,23 @@ type openstack_glance_store = {
     BadStoreConfiguration will be raised and the filesystem store
     may not be available for adding new images}
     'filesystem_store_datadir' : absolute_file_path = '/var/lib/glance/images'
-} = dict();
+};
 
 @documentation {
     list of Glance configuration sections
 }
-type openstack_glance_config = {
+type openstack_glance_service_config = {
     'DEFAULT' ? openstack_DEFAULTS
     'database' : openstack_database
     'keystone_authtoken' : openstack_keystone_authtoken
     'paste_deploy' : openstack_keystone_paste_deploy
-    'glance_store' : openstack_glance_store
+    'glance_store' ? openstack_glance_store
+};
+
+@documentation {
+    list of Glance service configuration sections
+}
+type openstack_glance_config = {
+    'service' ? openstack_glance_service_config
+    'registry' ? openstack_glance_service_config
 };
