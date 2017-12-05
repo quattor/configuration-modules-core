@@ -18,3 +18,9 @@ sub _initialize
 
 1;
 
+sub configure
+{
+    my ($self) = @_;
+
+    return ;
+};
