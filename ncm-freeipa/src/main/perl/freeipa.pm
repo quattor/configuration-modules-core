@@ -128,6 +128,7 @@ Readonly::Array our @CLI_YUM_PACKAGES => qw(
     ipa-client
     nss-tools
     openssl
+    pam_krb5
 );
 
 Readonly my $IPA_BASEDIR => '/etc/ipa';
