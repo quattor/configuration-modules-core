@@ -603,7 +603,7 @@ sub _manual_initialisation
          '--domain', $domain,
          '--fqdn', $_fqdn,
          '--hostcert', $hostcert,
-         '--otp', ($opts{otp} ? $opts{otp} : 'one_time_password_from_ipa_host-mod_--random'),
+         '--otp', ($opts{otp} ? "'$opts{otp}'" : 'one_time_password_from_ipa_host-mod_--random'),
         );
 
     my @cmds;
