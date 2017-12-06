@@ -34,6 +34,11 @@ $mock->mock('error', sub {
 # Set NoAction
 $NCM::Component::spma::yum::NoAction = 1;
 $CAF::Object::NoAction = 1;
+# TODO: rework the unittests to use NoAction-safe Test::Quattor since 1.54
+#       switch to CAF::Path and rely on get_file for file existence tests
+#       do not use these lightly
+$Test::Quattor::NoAction = 0;
+$Test::Quattor::Original = 1;
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
@@ -119,7 +124,7 @@ is(NCM::Component::spma::yum::_prefix_noaction_prefix("/myfile"), "$testprefix/m
    "_prefix_noaction_prefix picks up new active noaction prefix", );
 
 # reset
-$cmp->__set_active_noaction_prefix(undef);
+$cmp->__set_active_noaction_prefix('');
 
 =item _match_noaction_tempdir / __match_template_dir
 

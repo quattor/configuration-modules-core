@@ -39,6 +39,7 @@ my $keyData = <<'EOF';
 clusterName=shuppet2.shuppet.gent.vsc
 clusterID=10670523911072744868
 genkeyFormat=3
+keyGenNumber=2
 EOF
 my $mmsdrfs_cmd = '/usr/bin/curl -s -f --cacert /etc/sindes/certs/ca-test.ugent.be.crt --cert /etc/sindes/certs/client_cert_key.pem https://test.ugent.be:446/test/mmsdrfs';
 my $keyData_cmd = '/usr/bin/curl -s -f --cacert /etc/sindes/certs/ca-test.ugent.be.crt --cert /etc/sindes/certs/client_cert_key.pem https://test.ugent.be:446/test/keydata2';
@@ -48,7 +49,7 @@ ok($cmp->get_cfg($cfg), 'get_cfg ran succesfully');
 ok(get_command($mmsdrfs_cmd), 'mmsdrfs file fetched');
 ok(get_command($keyData_cmd), 'keydata file fetched');
 
-my $keyData_fh = get_file("/var/mmfs/ssl/stage/genkeyData1");
+my $keyData_fh = get_file("/var/mmfs/ssl/stage/genkeyData2");
 is(*$keyData_fh->{options}->{mode}, 0600, "File has correct permissions");
 is("$keyData_fh", $keyData, 'keydata file ok');
 

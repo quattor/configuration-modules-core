@@ -1,30 +1,13 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
-package NCM::Component::ipmi;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
 use File::Copy;
 use CAF::Process;
-use EDG::WP4::CCM::Element;
-
-use LC::Check;
-
-use Encode qw(encode_utf8);
 
 use constant IPMI_EXEC => "/usr/bin/ipmitool";
 use constant BASEPATH => "/software/components/ipmi/";
-
-use EDG::WP4::CCM::Element;
 
 sub Configure
 {

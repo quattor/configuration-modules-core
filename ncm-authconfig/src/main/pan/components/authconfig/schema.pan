@@ -1,12 +1,10 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-declaration template components/authconfig/schema;
+${componentschema}
 
 include 'quattor/types/component';
 include 'pan/types';
 
 type authconfig_method_generic_type = {
+    @{Enable this method. Unlisted methods are always disabled.}
     "enable" : boolean = false
 };
 
@@ -21,11 +19,6 @@ type authconfig_pamadditions_type = {
     "conffile" : string = "/etc/pam.d/system_auth"
     "section" : string with match(SELF, "^(auth|account|password|session)$")
     "lines" : authconfig_pamadditions_line_type[]
-};
-
-type authconfig_method_afs_type = {
-    include authconfig_method_generic_type
-    "cell" : type_fqdn
 };
 
 type authconfig_method_ldap_tls_type = {
@@ -68,7 +61,7 @@ type authconfig_nss_override_attribute_value = {
     "gidNumber" ? long
 };
 
-type connect_policy = string with (SELF=="oneshot" || SELF=="persistent");
+type connect_policy = string with match(SELF, "^(oneshot|persistent)$");
 
 type authconfig_method_ldap_type = {
     include authconfig_method_generic_type
@@ -138,7 +131,7 @@ type authconfig_method_files_type = {
     include authconfig_method_generic_type
 };
 
-# LDAP attributes, as per RFC 2307
+@{LDAP attributes, as per RFC 2307}
 type authconfig_nslcd_map_attributes = {
     "uid" ? string
     "gid" ? string
@@ -239,22 +232,27 @@ type authconfig_method_type = {
     "krb5" ? authconfig_method_krb5_type
     "smb" ? authconfig_method_smb_type
     "hesiod" ? authconfig_method_hesiod_type
-    "afs" ? authconfig_method_afs_type
     "nslcd" ? authconfig_method_nslcd_type
     "sssd" ? authconfig_method_sssd_type
 };
 
 type hash_string = string with match(SELF, "^(descrypt|md5|sha256|sha512)$");
 
-type component_authconfig_type = {
+type authconfig_component = {
     include structure_component
+    @{When set to true, no actual configuration will change. Default: false.}
     "safemode" : boolean = false
     "passalgorithm" : hash_string = "md5"
+    @{Enable the use of shadow password files.}
     "useshadow" ? boolean
+    @{Enable or disable nscd operation.}
     "usecache" ? boolean
     "enableforcelegacy" : boolean = false
-    "startstop" ? boolean
+    @{Enable the use of MD5 hashed password.}
     "usemd5" : boolean
+    @{dict of authentication methods to enable. Supported
+    methods are: files, ldap, nis, krb5, smb, hesiod, nslcd and sssd.
+    The "files" method cannot be disabled.}
     "method" ? authconfig_method_type
     "pamadditions" ? authconfig_pamadditions_type{}
 };

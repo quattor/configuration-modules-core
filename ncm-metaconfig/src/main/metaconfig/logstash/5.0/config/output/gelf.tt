@@ -1,0 +1,5 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=['ship_metadata', "ship_tags"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray" names=['ignore_metadata', 'level'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringhash" names=['custom_fields'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=['full_message', 'host', 'sender', 'short_message'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact" names=['chunksize', 'port'] -%]

@@ -1,1 +1,0 @@
-[%- INCLUDE "metaconfig/logstash/config/type.tt" type="boolean" names=['remap'] -%]

@@ -1,38 +1,15 @@
-# ex: set expandtab softtabstop=4 shiftwidth=4: -*- cperl-indent-level: 4; indent-tabs-mode: nil -*-
+#${PMcomponent}
 
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-#########################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-#########################################################################
-#
-# Component to configure PAM
-#
-#########################################################################
-
-package NCM::Component::pam;
-
-#
-# a few standard statements, mandatory for all components
-#
-
-use strict;
-use warnings;
-
-#use NCM::Component;
-use base qw(NCM::Component);
+use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 our $NoActionSupported = 1;
 
 use CAF::FileWriter;
-use EDG::WP4::CCM::Element qw(BOOLEAN);
+use EDG::WP4::CCM::CacheManager::Encode 17.3.0 qw(BOOLEAN);
 
-##########################################################################
-sub Configure {
-##########################################################################
-  my ($self,$config)=@_;
+sub Configure
+{
+  my ($self, $config) = @_;
   my $prefix = "/software/components/pam";
   # Now do something...
   if (!$config->elementExists("$prefix")) {

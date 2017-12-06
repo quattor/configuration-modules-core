@@ -1,6 +1,6 @@
 Base test for config
 ---
-/opt/kibana/config/kibana.yml
+/etc/kibana/kibana.yml
 ---
 ^---$
 ^bundled_plugin_ids:$

@@ -45,6 +45,20 @@ sub add_service_host
     return $self->do_one('service', 'allow_retrieve_keytab', $fname, host => [$host]);
 }
 
+=item service_has_keytab
+
+Check if a keytab is already made for service with C<name>.
+
+=cut
+
+sub service_has_keytab
+{
+    my ($self, $name) = @_;
+
+    my $res = $self->do_one('service', 'show', $name);
+    return $res->{has_keytab} ? 1 : 0;
+}
+
 =pod
 
 =back

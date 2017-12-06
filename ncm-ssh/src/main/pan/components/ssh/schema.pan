@@ -8,17 +8,22 @@ declaration template components/ssh/schema;
 include 'quattor/types/component';
 include 'pan/types';
 
-type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey|keyboard-interactive|password)$');
+type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey' +
+    '|keyboard-interactive|password)$');
 
 
 type ssh_ciphers = string with is_valid_ssh_cipher(SELF);
-type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
+type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)" +
+    "(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|" +
+    "|ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
 type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
-type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
+type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group-exchange-sha256|" +
+    "ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
 type ssh_MACs = string with is_valid_ssh_MAC(SELF);
 
 function is_valid_ssh_MAC = {
-    match(ARGV[0], "^(hmac-(sha2-256|sha2-512|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha2-256-etm|hmac-sha2-512-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
+    match(ARGV[0], "^(hmac-(sha2-256|sha2-512|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha2-256-etm" +
+        "|hmac-sha2-512-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
 };
 
 function is_valid_ssh_cipher = {
@@ -26,7 +31,8 @@ function is_valid_ssh_cipher = {
 };
 
 function is_valid_ssh_kexalgorithm = {
-    match (ARGV[0], "^(diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
+    match (ARGV[0], "^(diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp(256|384|521)|" +
+        "curve25519-sha256@libssh.org)$");
 };
 
 type legacy_ssh_MACs = string with {
@@ -130,7 +136,8 @@ type ssh_daemon_options_type = {
     "ShowPatchLevel" ? legacy_binary_affirmation_string
     "StrictModes" ? legacy_binary_affirmation_string
     "Subsystem" ? string
-    "SyslogFacility" ? string with match (SELF, '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
+    "SyslogFacility" ? string with match (SELF,
+        '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
     "TcpRcvBuf" ? long
     "TcpRcvBufPoll" ? legacy_binary_affirmation_string
     "UseDNS" ? legacy_binary_affirmation_string

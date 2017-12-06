@@ -292,9 +292,8 @@ set_command_status($cmd, 5);
 set_desired_output($cmd, "$out\n");
 
 ok(! defined(systemctl_is_enabled($cmp, 'unit3.type')),
-   "systemctl_is_enabled returns undef on failure");
-
-is($cmp->{ERROR}, 1, "1 error logged during systemctl_is_enabled $cmd");
+   "systemctl_is_enabled returns undef on failure $cmd");
+is($cmp->{ERROR}, 0, "no error logged during when systemctl_is_enabled returns undef $cmd");
 
 =pod
 

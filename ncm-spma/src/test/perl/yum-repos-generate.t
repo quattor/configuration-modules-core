@@ -25,8 +25,6 @@ use Test::Quattor::TextRender::Base;
 
 my $caf_trd = mock_textrender();
 
-$CAF::Object::NoAction = 1;
-
 Readonly my $REPOS_DIR => "/etc/yum.repos.d";
 Readonly my $REPOS_TEMPLATE => "repository";
 Readonly my $PROXY_HOST => "aproxy";
@@ -53,12 +51,11 @@ my $repos = initialise_repos();
 
 my $mock = Test::MockModule->new('CAF::FileWriter');
 
-$mock->mock('cancel', sub {
-    my $self = shift;
-    *$self->{CANCELED}++;
-    *$self->{save} = 0;
+my $cancelled = 0;
+$mock->mock("cancel", sub {
+    $cancelled++ if ref($_[0]) ne 'CAF::FileReader';
+    return $mock->original('cancel')->(@_);
 });
-
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
@@ -125,11 +122,12 @@ to disk.
 
 $repos->[0]->{protocols}->[0]->{url} = $URL;
 
+$cancelled = 0;
+remove_any("/etc/yum.repos.d/$name.repo");
 is($cmp->generate_repos($REPOS_DIR, $repos, "an invalid template name"), undef,
    "Errors on template rendering are detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
-$fh = get_file("/etc/yum.repos.d/$name.repo");
-ok(*$fh->{CANCELED}, "File with error is cancelled");
+ok(!defined(get_file("/etc/yum.repos.d/$name.repo")), "No file created/opened with render error");
 
 =pod
 

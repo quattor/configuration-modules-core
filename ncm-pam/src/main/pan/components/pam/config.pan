@@ -67,9 +67,12 @@ function pam_add = {
             options = ARGV[4];
         };
     };
-    ret[service][pamtype][tail] = dict("control", control, "module", module, "options", options, "options_list", options_list);
+    ret[service][pamtype][tail] = dict("control", control,
+                                    "module", module,
+                                    "options", options,
+                                    "options_list", options_list);
 
-    return (ret);
+    ret;
 };
 
 
@@ -122,13 +125,14 @@ function pam_add_listfile_acl = {
     };
 
     aclbase = value("/software/components/pam/acldir");
-    filename = aclbase+"/" + service + "." + sense;
+    filename = aclbase + "/" + service + "." + sense;
     opts = dict("onerr", onerr, "file", filename, "item", itemtype, "sense", sense);
     ret = pam_add(service, pamtype, control, "listfile", opts);
     # Now, grab the entry that was just put at the end of the list and
     # add in the ACL information.
     ret[service][pamtype][length(ret[service][pamtype])-1][sense] = dict("filename", filename, "items", items);
-    return (ret);
+
+    ret;
 };
 
 #
@@ -154,7 +158,7 @@ function pam_add_access_file = {
     ret[key]["allowpos"] = allowpos;
     ret[key]["allowneg"] = allowneg;
 
-    return(ret);
+    ret;
 };
 
 #
@@ -177,7 +181,7 @@ function pam_add_access_lastacl = {
 
     ret[key]["lastacl"] = dict("permission", permission, "users", users, "origins", origins);
 
-    return (ret);
+    ret;
 };
 
 # takes (key, permission, users, origins)
@@ -218,23 +222,32 @@ function pam_add_access_acl = {
     tail = length(ret[key][acl]);
     ret[key][acl][tail] = dict("permission", permission, "users", users, "origins", origins);
 
-    return(ret);
+    ret;
 };
 
 function pam_add_access_netgroup = {
     key      = ARGV[0];
     netgroup = ARGV[1];
 
-    ret = pam_add_access_acl(key, "+", "@" + netgroup, "ALL");
-
-    return (ret);
+    pam_add_access_acl(key, "+", "@" + netgroup, "ALL");
 };
+
+@documentation{
+  desc = helper function to add (unix) group to pam/access/<key>
+  arg = key under components/pam/access to modify
+  arg = group, unix group to add to <key>
+}
+function pam_add_access_group = {
+    key = ARGV[0];
+    group = ARGV[1];
+
+    pam_add_access_acl(key, "+", "("+group+")", "ALL");
+};
+
 
 function pam_add_access_user = {
     key  = ARGV[0];
     user = ARGV[1];
 
-    ret = pam_add_access_acl(key, "+", user, "ALL");
-
-    return (ret);
+    pam_add_access_acl(key, "+", user, "ALL");
 };

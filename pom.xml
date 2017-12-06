@@ -1,13 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.quattor</groupId>
   <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
-
-  <version>17.2.0-rc3-SNAPSHOT</version>
-
+  <version>17.8.1-SNAPSHOT</version>
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
   a Linux system</description>
@@ -28,23 +25,16 @@
       <url>http://stratuslab-srv01.lal.in2p3.fr:8081/content/repositories/quattor-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
-
-
   <scm>
     <connection>scm:git:git://github.com/quattor/configuration-modules-git.git</connection>
     <developerConnection>scm:git:git@github.com:quattor/configuration-modules-core.git</developerConnection>
     <url>https://github.com/quattor/configuration-modules-core</url>
   </scm>
-
-
   <modules>
     <module>ncm-accounts</module>
     <module>ncm-metaconfig</module>
-    <module>ncm-mcx</module>
-    <module>ncm-directoryservices</module>
     <module>ncm-etcservices</module>
     <module>ncm-nagios</module>
-    <module>ncm-filesystems</module>
     <module>ncm-hostsfile</module>
     <module>ncm-ssh</module>
     <module>ncm-download</module>
@@ -68,6 +58,7 @@
     <module>ncm-mysql</module>
     <module>ncm-ldconf</module>
     <module>ncm-fstab</module>
+    <module>ncm-filesystems</module>
     <module>ncm-syslogng</module>
     <module>ncm-syslog</module>
     <module>ncm-shorewall</module>
@@ -109,23 +100,23 @@
     <module>ncm-opennebula</module>
     <module>ncm-systemd</module>
     <module>ncm-freeipa</module>
+    <module>ncm-path</module>
+    <module>ncm-openstack</module>
   </modules>
-
   <build>
     <pluginManagement>
       <plugins>
-	<plugin>
-	  <groupId>org.apache.maven.plugins</groupId>
-	  <artifactId>maven-release-plugin</artifactId>
-	  <version>2.1</version>
-	  <configuration>
-	    <mavenExecutorId>forked-path</mavenExecutorId>
-	    <useReleaseProfile>false</useReleaseProfile>
-	    <arguments>-Psonatype-oss-release -Dgpg.useagent=true</arguments>
-	  </configuration>
-	</plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.1</version>
+          <configuration>
+            <mavenExecutorId>forked-path</mavenExecutorId>
+            <useReleaseProfile>false</useReleaseProfile>
+            <arguments>-Psonatype-oss-release -Dgpg.useagent=true</arguments>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
-
 </project>

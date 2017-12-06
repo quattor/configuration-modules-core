@@ -4,14 +4,12 @@ multiline
 ---
 ^NIC\s?=\s?\[$
 ^\s{4}IP\s?=\s?"10.141.8.30",$
-^\s{4}MAC\s?=\s?"AA:00:00:80:01:00",$
 ^\s{4}MODEL\s?=\s?"virtio",$
 ^\s{4}NETWORK\s?=\s?"br100",$
 ^\s{4}NETWORK_UNAME\s?=\s?"oneadmin"$
 ^\]$
 ^NIC\s?=\s?\[$
 ^\s{4}IP\s?=\s?"172.24.8.30",$
-^\s{4}MAC\s?=\s?"AA:00:00:80:01:01",$
 ^\s{4}MODEL\s?=\s?"virtio",$
 ^\s{4}NETWORK\s?=\s?"br101",$
 ^\s{4}NETWORK_UNAME\s?=\s?"oneadmin"$
@@ -62,7 +60,11 @@ multiline
 ^RAW\s?=\s?\[$
 ^\s{4}DATA\s?=\s?"\<vcpu\>4\<\/vcpu\>\<cpu\s{1}mode\=\'host-passthrough\'\>$
 ^\s{4}\<topology\s{1}sockets\=\'2\'\s{1}cores\=\'2\'\s{1}threads\=\'1\'\/\>\<\/cpu\>$
-^\s{4}\<devices\>\<video\>\<model\s{1}type\=\'qxl\'\/\>\<\/video\>\<\/devices\>",$
+^\s{4}\<devices\>\<video\>\<model\s{1}type\=\'qxl\'\/\>\<\/video\>\<\/devices\>$
+^\s{4}\<memoryBacking\>$
+^\s{4}\<nosharepages\/\>$
+^\s{4}\<hugepages\/\>$
+^\s{4}\<\/memoryBacking\>",$
 ^\s{4}TYPE\s?=\s?"kvm"$
 ^\]$
 ^LABELS\s?=\s?"quattor,quattor/CE"$

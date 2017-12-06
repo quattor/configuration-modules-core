@@ -23,6 +23,8 @@ type multipath_types_shared = {
     'rr_weight' ? string
     'no_path_retry' ? string with match(SELF, '^(fail|queue)$') || to_long(SELF) > 0 #  default 0
     'flush_on_last_del' ? boolean # default false
+    @{Set max_sectors_kb on multipath and paths (requires device-mapper-multipath gt 0.4.9-99)}
+    'max_sectors_kb' ? long(0..)
 };
 
 type multipath_types_multipaths_only = {

@@ -1,21 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-
-package NCM::Component::ldconf;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-
-use EDG::WP4::CCM::Element;
-
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
+use LC::Check;
 use File::Basename;
 
 my $ldconfig_config_dir = '/etc/ld.so.conf.d';

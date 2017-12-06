@@ -42,7 +42,7 @@ Test default lmodrc file
 ^\s{16}doc = "built for offload to the MIC only",$
 ^\s{12}\},$
 ^\s{8}\},$
-^\s{8}validT = {$
+^\s{8}validT = \{$
 ^\s{12}gpu = 1,$
 ^\s{12}mic = 1,$
 ^\s{12}offload = 1,$

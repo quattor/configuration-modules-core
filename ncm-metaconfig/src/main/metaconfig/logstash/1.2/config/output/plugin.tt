@@ -1,0 +1,7 @@
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="boolean" names=['debug', 'ssl_enable', 'ssl_verify'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="stringarray" names=['tags'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="stringhash" names=['codec'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="escstringhash" names=['add_field'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="string" 
+        names=['type', 'host', 'ssl_cacert', 'ssl_cert', 'ssl_key', 'ssl_key_passphrase'] -%]
+[%- INCLUDE "metaconfig/logstash/1.2/config/type.tt" type="exact" names=['workers'] -%]

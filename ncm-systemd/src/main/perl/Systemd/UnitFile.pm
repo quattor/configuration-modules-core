@@ -1,25 +1,16 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::UnitFile;
+#${PMpre} NCM::Component::Systemd::UnitFile${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
-use parent qw(CAF::Object Exporter);
-
-use File::Path qw(rmtree);
-use File::Copy qw(move);
+use parent qw(CAF::Object Exporter CAF::Path);
 
 use Scalar::Util qw(blessed);
 
-use LC::Exception qw (SUCCESS);
-use Readonly;
-use LC::Check;
+use CAF::Object qw (SUCCESS);
 
+use Readonly;
+
+use EDG::WP4::CCM::TextRender 17.2.1;
 use NCM::Component::Systemd::Systemctl qw(systemctl_daemon_reload);
 
 Readonly my $UNITFILE_DIRECTORY => '/etc/systemd/system';
@@ -32,12 +23,6 @@ Readonly::Hash our %CUSTOM_ATTRIBUTES => {
 };
 
 Readonly::Array my @HWLOC_CALC_CPUS => qw(hwloc-calc --physical-output --intersect PU);
-
-Readonly::Hash my %CLEANUP_DISPATCH => {
-    move => \&move,
-    rmtree => \&rmtree,
-    unlink => sub { return unlink(shift); },
-};
 
 =pod
 
@@ -61,7 +46,7 @@ The unit (full C<name.type>).
 
 =item config
 
-A C<EDG::WP4::CCM::Element> instance with the unitfile configuration.
+A C<EDG::WP4::CCM::CacheManager::Element> instance with the unitfile configuration.
 
 (An element instance is required becasue the rendering of
 the configuration is pan-basetype sensistive).
@@ -192,7 +177,7 @@ sub write
     my ($self) = @_;
 
     if (!(blessed($self->{config}) &&
-           $self->{config}->isa("EDG::WP4::CCM::Element"))) {
+           $self->{config}->isa("EDG::WP4::CCM::CacheManager::Element"))) {
         $self->error("config has to be an Element instance");
         return;
     }
@@ -218,7 +203,7 @@ sub write
     my $fh = $trd->filewriter(
         $filename,
         backup => $self->{backup},
-        mode => 0664,
+        mode => oct(664),
         log => $self,
         );
 
@@ -231,7 +216,7 @@ sub write
     my $changed = $fh->close() ? 1 : 0; # force to 1 or 0
 
     # if changed, reload daemon
-    if($changed) {
+    if ($changed) {
         # can't do much with return value?
         systemctl_daemon_reload($self);
     }
@@ -267,16 +252,16 @@ sub _prepare_path
 
     if ($self->{replace}) {
         # unitdir can't exist
-        return if (! $self->_cleanup($unitdir));
+        return if (! $self->cleanup($unitdir));
 
         $filename = $unitfile;
     } else {
         # unitfile can't exist
-        return if (! $self->_cleanup($unitfile));
+        return if (! $self->cleanup($unitfile));
 
         $filename = "$unitdir/$NOREPLACE_FILENAME";
-        if (! ($self->_directory_exists($unitdir) || $self->_make_directory($unitdir))) {
-            $self->error("Failed to create unitdir $unitdir: $!");
+        if (! $self->directory($unitdir)) {
+            $self->error("Failed to create unitdir $unitdir: $self->{fail}");
             return;
         }
     };
@@ -354,97 +339,6 @@ sub _make_variables_custom {
     my $ttoptions;
     $ttoptions->{VARIABLES}->{SYSTEMD}->{CUSTOM} = $customs;
     return $ttoptions;
-}
-
-# TODO: Move to CAF::AllTheMissingBitsThatLCProvides
-
-# make directory, mkdir -p style, wrapper around LC::Check::directory
-sub _make_directory
-{
-    my ($self, $directory) = @_;
-    return LC::Check::directory($directory, noaction => $CAF::Object::NoAction);
-}
-
-# -d, wrapped in method for unittesting
-# -d follows symlink, a broken symlink either exists with -l or not
-# and can be cleaned up with rmtree
-sub _directory_exists
-{
-    my ($self, $directory) = @_;
-    return (! -l $directory) && -d $directory;
-}
-
-# -f, wrapped in method for unittesting
-sub _file_exists
-{
-    my ($self, $filename) = @_;
-    return (-f $filename || -l $filename);
-}
-
-# exists, -e || -l, wrapped in method for unittesting
-# LC::Check::_unlink uses lstat and -e _ (is that a single FS query?)
-sub _exists
-{
-    my ($self, $path) = @_;
-    return -e $path || -l $path;
-}
-
-# _cleanup, remove with backup support
-# works like LC::Check::_unlink, but has directory support
-# and no error throwing
-# returns SUCCESS on success, undef on failure, logs error
-# backup is backup from LC::Check::_unlink (and thus also CAF::File*)
-# if backup is undefined, use self->{backup}
-# pass empty string to disable backup with self->{backup} defined
-# does not cleanup the backup of the original file,
-# FileWriter via TextRender can do that.
-sub _cleanup
-{
-    my ($self, $dest, $backup) = @_;
-
-    return SUCCESS if (! $self->_exists($dest));
-
-    $backup = $self->{backup} if (! defined($backup));
-
-    # old is the backup location or undef if no backup is defined
-    # (empty string as backup is not allowed, but 0 is)
-    # 'if ($old)' can safely be used to test if a backup is needed
-    my $old;
-    $old = $dest.$backup if (defined($backup) and $backup ne '');
-
-    # cleanup previous backup, no backup of previous backup!
-    my $method;
-    my @args = ($dest);
-    if($old) {
-        if (! $self->_cleanup($old, '')) {
-            $self->error("_cleanup of previous backup $old failed");
-            return;
-        };
-
-        # simply rename/move dest to backup
-        # works for files and directories
-        $method = 'move';
-        push(@args, $old);
-    } else {
-        if($self->_directory_exists($dest)) {
-            $method = 'rmtree';
-        } else {
-            $method = 'unlink';
-        }
-    }
-
-    if($CAF::Object::NoAction) {
-        $self->verbose("CAF::Object NoAction set, not going to $method with args ", join(',', @args));
-        return SUCCESS;
-    } else {
-        if($CLEANUP_DISPATCH{$method}->(@args)) {
-            $self->verbose("_cleanup $method removed $dest");
-            return SUCCESS;
-        } else {
-            $self->error("_cleanup $method failed to remove $dest: $!");
-            return;
-        }
-    };
 }
 
 =pod

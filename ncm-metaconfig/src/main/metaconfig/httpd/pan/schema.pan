@@ -7,11 +7,23 @@ include 'components/accounts/functions';
 type httpd_sslprotocol = string with match(SELF, '^\+?(TLSv1|TLSv1\.[012])$')
     || error("Use a modern cipher protocol, for Pete's sake!");
 
-type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA))$')
+type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA|SEED|CAMELLIA))$')
     || error("Use a modern cipher suite, for Pete's sake!");
 
-type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3|All)$');
-type httpd_nss_cipherstring = string with match(SELF, '^(\+|-)(rsa_3des_sha|rsa_des_56_sha|rsa_des_sha|rsa_null_md5|rsa_null_sha|rsa_rc2_40_md5|rsa_rc4_128_md5|rsa_rc4_128_sha|rsa_rc4_40_md5|rsa_rc4_56_sha|fortezza|fortezza_rc4_128_sha|fortezza_null|fips_des_sha|fips_3des_sha|rsa_aes_128_sha|rsa_aes_256_sha)$');
+# These are the settings for old clients, see https://access.redhat.com/articles/1467293 for stricter values.
+type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3)$')
+    || error("Use a modern cipher suite, for Pete's sake! see https://access.redhat.com/articles/1467293");
+
+# only allow -(bad ciphers) and +(good ciphers) where good ciphers are from https://access.redhat.com/articles/1467293
+# minues rc4, since the Bar Mitzvah attack
+type httpd_nss_cipherstring = string with match(SELF, '^(-(rsa_3des_sha|rsa_des_56_sha|rsa_des_sha|rsa_null_md5|' +
+    'rsa_null_sha|rsa_rc2_40_md5|rsa_rc4_128_md5|rsa_rc4_40_md5|rsa_rc4_56_sha|fortezza|fortezza_rc4_128_sha|' +
+    'fortezza_null|fips_des_sha|fips_3des_sha|rsa_rc4_128_sha))|' +
+    '(\+(ecdh_ecdsa_aes_128_sha|ecdh_ecdsa_aes_256_sha|ecdhe_ecdsa_aes_128_gcm_sha_256|ecdhe_ecdsa_aes_128_sha|' +
+    'ecdhe_ecdsa_aes_128_sha_256|ecdhe_ecdsa_aes_256_gcm_sha_384|ecdhe_ecdsa_aes_256_sha|ecdhe_ecdsa_aes_256_sha_384|' +
+    'ecdhe_rsa_aes_128_gcm_sha_256|ecdhe_rsa_aes_128_sha|ecdhe_rsa_aes_128_sha_256|ecdhe_rsa_aes_256_gcm_sha_384|' +
+    'ecdhe_rsa_aes_256_sha|ecdhe_rsa_aes_256_sha_384|ecdh_rsa_aes_128_sha|ecdh_rsa_aes_256_sha|' +
+    'rsa_aes_128_gcm_sha_256|rsa_aes_128_sha|rsa_aes_256_gcm_sha_384|rsa_aes_256_sha))$');
 
 @documentation{
     Either all Options must start with + or -, or no Option may.
@@ -22,10 +34,11 @@ type httpd_option_plusminus_none = string[] with {
     };
 
     plusminus = match(SELF[0], '^(\+|-)');
-    foreach(idx;opt;SELF) {
+    foreach(idx; opt; SELF) {
         pm = match(opt, '^(\+|-)');
         if (to_long(plusminus) != to_long(pm)) {
-            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s', opt, SELF[0]));
+            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s',
+                opt, SELF[0]));
         };
     };
     true;
@@ -176,8 +189,10 @@ type httpd_nss_vhost = {
     include httpd_nss_global
     include httpd_ssl_nss_vhost
 
-    "protocol" : httpd_nss_protocol[] = list("TLSv1.0")
-    "ciphersuite" : httpd_nss_cipherstring[] = list('+rsa_3des_sha', '-rsa_des_56_sha', '+rsa_des_sha', '-rsa_null_md5', '-rsa_null_sha', '-rsa_rc2_40_md5', '+rsa_rc4_128_md5', '-rsa_rc4_128_sha', '-rsa_rc4_40_md5', '-rsa_rc4_56_sha', '-fortezza', '-fortezza_rc4_128_sha', '-fortezza_null', '-fips_des_sha', '+fips_3des_sha', '-rsa_aes_128_sha', '-rsa_aes_256_sha')
+    "protocol" : httpd_nss_protocol[] = list("TLSv1.0", "TLSv1.1", "TLSv1.2")
+    "ciphersuite" : httpd_nss_cipherstring[] = list('+rsa_aes_128_sha', '+rsa_aes_256_sha', '+ecdhe_rsa_aes_256_sha',
+        '+ecdhe_rsa_aes_128_sha', '+ecdh_rsa_aes_256_sha', '+ecdh_rsa_aes_128_sha', '+ecdhe_ecdsa_aes_256_sha',
+        '+ecdhe_ecdsa_aes_128_sha', '+ecdh_ecdsa_aes_256_sha', '+ecdh_ecdsa_aes_128_sha')
 
     "nickname" : string
     "eccnickname" ? string
@@ -225,7 +240,8 @@ type httpd_authz = {
     "negate" ? boolean # not for each provider defined here
 };
 
-type httpd_limit_value = string with match(SELF, '^GET|POST|PUT|DELETE|CONNECT|OPTIONS|PATCH|PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK$');
+type httpd_limit_value = string with match(SELF, '^GET|POST|PUT|DELETE|CONNECT|OPTIONS|PATCH|PROPFIND|PROPPATCH|' +
+    'MKCOL|COPY|MOVE|LOCK|UNLOCK$');
 
 type httpd_limit = {
     "name" : httpd_limit_value[]

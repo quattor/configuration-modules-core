@@ -1,15 +1,13 @@
 use strict;
 use warnings;
 use Test::More;
-use EDG::WP4::CCM::Element qw(escape);
+use EDG::WP4::CCM::Path qw(escape);
 use Test::Quattor qw(unitfile_config);
 use NCM::Component::systemd;
 use NCM::Component::Systemd::UnitFile;
 use Test::MockModule;
 use Test::Quattor::Object;
 use Test::Quattor::TextRender::Base;
-
-$CAF::Object::NoAction = 1;
 
 my $mocked_trd = mock_textrender();
 
@@ -112,182 +110,30 @@ my $customdata = {CPUAffinity => [[],[0,1,2,12,13,14,6,7,8,18,19,20]]};
 is_deeply($uf->custom(), $customdata,
           "custom method returns hashref with CPUAffinity");
 
-=item _directory_exists / _file_exists / _exists
-
-=cut
-
-# TODO move this to CAF, that's why the uses are here instead of on top
-# TODO: add symlink / broken symlink tests
-
-use File::Path qw(mkpath rmtree);
-use File::Basename qw(dirname);
-
-# cannot use mocked filewriter
-sub makefile
-{
-    my $fn = shift;
-    my $dir = dirname($fn);
-    mkpath $dir if ! -d $dir;
-    open(FH, ">$fn");
-    print FH (shift || "ok");
-    close(FH);
-}
-
-sub readfile
-{
-    open(FH, shift);
-    my $txt = join('', <FH>);
-    close(FH);
-    return $txt;
-}
-
-my $basetest = 'target/test/unitfile';
-my $basetestfile = "$basetest/file";
-
-# Tests without NoAction
-$CAF::Object::NoAction = 0;
-
-
-rmtree if -d $basetest;
-ok(! $ur->_directory_exists($basetest), "_directory_exists false on missing directory");
-ok(! $ur->_file_exists($basetest), "_file_exists false on missing directory");
-ok(! $ur->_exists($basetest), "_exists false on missing directory");
-
-ok(! $ur->_directory_exists($basetestfile), "_directory_exists false on missing file");
-ok(! $ur->_file_exists($basetestfile), "_file_exists false on missing file");
-ok(! $ur->_exists($basetestfile), "_exists false on missing file");
-
-makefile($basetestfile);
-
-ok($ur->_directory_exists($basetest), "_directory_exists true on created directory");
-ok($ur->_exists($basetest), "_exists true on created directory");
-ok(! $ur->_file_exists($basetest), "_file_exists false on created directory");
-
-ok(! $ur->_directory_exists($basetestfile), "_directory_exists false on created file");
-ok($ur->_exists($basetestfile), "_exists true on created file");
-ok($ur->_file_exists($basetestfile), "_file_exists true on created file");
-
-# add a/b/c to test mkdir -p behaviour
-rmtree($basetest) if -d $basetest;
-ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
-ok($ur->_directory_exists("$basetest/a/b/c"), "_directory_exists true on _make_directory");
-
-# Tests with NoAction
-$CAF::Object::NoAction = 1;
-
-# add a/b/c to test mkdir -p behaviour
-rmtree($basetest) if -d $basetest;
-ok($ur->_make_directory("$basetest/a/b/c"), "_make_directory returns success");
-ok(! $ur->_directory_exists("$basetest/a/b/c"), "_directory_exists false on _make_directory with NoAction");
-
-
-=item _cleanup
-
-=cut
-
-# Tests without NoAction
-$CAF::Object::NoAction = 0;
-
-# test with dir and file, without backup
-my $cleanupdir1 = "$basetest/cleanup1";
-my $cleanupfile1 = "$cleanupdir1/file";
-my $cleanupfile1b = "$cleanupfile1.old";
-
-rmtree($cleanupdir1) if -d $cleanupdir1;
-makefile($cleanupfile1);
-ok($ur->_file_exists($cleanupfile1), "cleanup testfile exists");
-ok($ur->_directory_exists($cleanupdir1), "cleanupdirectory exists");
-
-ok($ur->_cleanup($cleanupfile1, ''), "cleanup testfile, no backup ok");
-ok(! $ur->_file_exists($cleanupfile1), "cleanup testfile does not exist anymore");
-
-ok($ur->_cleanup($cleanupdir1, ''), "cleanup directory, no backup ok");
-ok(! $ur->_directory_exists($cleanupdir1), "cleanup testdir does not exist anymore");
-
-# test with dir and file, without backup
-rmtree($cleanupdir1) if -d $cleanupdir1;
-makefile($cleanupfile1);
-is(readfile($cleanupfile1), 'ok', 'cleanupfile has expected content');
-makefile("$cleanupfile1b", "woohoo");
-is(readfile($cleanupfile1b), 'woohoo', 'backup cleanupfile has expected content');
-
-ok($ur->_file_exists($cleanupfile1), "cleanup testfile exists w backup");
-ok($ur->_file_exists($cleanupfile1b), "cleanup backup testfile already exists w backup");
-ok($ur->_directory_exists($cleanupdir1), "cleanupdirectory exists w backup");
-
-ok($ur->_cleanup($cleanupfile1, '.old'), "cleanup testfile, w backup ok");
-ok(! $ur->_file_exists($cleanupfile1), "cleanup testfile does not exist anymore w backup");
-ok($ur->_file_exists($cleanupfile1b), "cleanup backup testfile does exist w backup");
-is(readfile($cleanupfile1b), 'ok', 'backup cleanupfile has content of testfile, so this is the new backup file');
-
-ok($ur->_cleanup($cleanupdir1, '.old'), "cleanup directory, w backup ok");
-ok(! $ur->_directory_exists($cleanupdir1), "cleanup testdir does not exist anymore w backup");
-ok($ur->_directory_exists("$cleanupdir1.old"), "cleanup backup testdir does exist w backup");
-is(readfile("$cleanupdir1.old/file.old"), 'ok', 'backup file in backup dir has content of testfile, that old testdir backup file');
-
-# Tests with NoAction
-$CAF::Object::NoAction = 1;
-rmtree($cleanupdir1) if -d $cleanupdir1;
-makefile($cleanupfile1);
-
-ok($ur->_cleanup($cleanupfile1, '.old'), "cleanup testfile, w backup ok and NoAction");
-ok($ur->_file_exists($cleanupfile1), "cleanup testfile still exists w backup and NoAction");
-
-ok($ur->_cleanup($cleanupdir1, '.old'), "cleanup directory, w backup ok and NoAction");
-ok($ur->_directory_exists($cleanupdir1), "cleanup testdir still exists w backup and NoAction");
-
 =item prepare_path
 
 =cut
 
-rmtree($cleanupdir1) if -d $cleanupdir1;
-
-my $cleanup_res;
-my @cleanup;
-# cleanups always just work from now on
-$mockuf->mock('_cleanup', sub {
-    shift;
-    push(@cleanup, shift);
-    return $cleanup_res;
-});
-
-$cleanup_res = 0;
-@cleanup = ();
-ok(! defined($ur->_prepare_path($cleanupdir1)),
-   "_prepare_path returns undef on failing cleanup (replace=0)");
-is_deeply(\@cleanup, ["$cleanupdir1/regular.service"],
-          "_prepare_path called cleanup with dest unit file (replace=0)");
-
-@cleanup = ();
-ok(! defined($uf->_prepare_path($cleanupdir1)),
-   "_prepare_path returns undef on failing cleanup (replace=1)");
-is_deeply(\@cleanup, ["$cleanupdir1/replace.service.d"],
-          "_prepare_path called cleanup with dest unit.d dir (replace=1)");
-
-$cleanup_res = 1;
-@cleanup = ();
-# disable NoAction for a bit
-$CAF::Object::NoAction = 0;
-is($ur->_prepare_path($cleanupdir1), "$cleanupdir1/regular.service.d/quattor.conf",
+my $testunitfilesdir = "target/test/unitfiles";
+reset_caf_path();
+is($ur->_prepare_path($testunitfilesdir), "$testunitfilesdir/regular.service.d/quattor.conf",
    "_prepare_path returned non-replace filename on succesful cleanup (replace=0)");
-is_deeply(\@cleanup, ["$cleanupdir1/regular.service"],
-          "_prepare_path called cleanup with dest unit file (replace=0) pt2");
-ok($ur->_directory_exists("$cleanupdir1/regular.service.d"),
-   "directory for non-replace file exists");
-# reenable NoAction
-$CAF::Object::NoAction = 1;
+is_deeply($Test::Quattor::caf_path, {
+    'cleanup' => [[["$testunitfilesdir/regular.service", undef], {}]],
+    'directory' => [[["$testunitfilesdir/regular.service.d"], {}]]
+}, "_prepare_path called cleanup with dest unit file (replace=0) and creates directory for non-replace files");
 
-@cleanup = ();
-is($uf->_prepare_path($cleanupdir1), "$cleanupdir1/replace.service",
+reset_caf_path();
+is($uf->_prepare_path($testunitfilesdir), "$testunitfilesdir/replace.service",
    "_prepare_path returned unitfile filename on succesful cleanup (replace=1)");
-is_deeply(\@cleanup, ["$cleanupdir1/replace.service.d"],
-          "_prepare_path called cleanup with dest unitfile dir (replace=1) pt2");
+is_deeply($Test::Quattor::caf_path, {
+    'cleanup' => [[["$testunitfilesdir/replace.service.d", undef], {}]],
+}, "_prepare_path called cleanup with dest unitfile dir (replace=1)");
 
 =item write
 
 =cut
 
-set_caf_file_close_diff(1);
 my @args;
 $mockuf->mock('custom', sub { return;} );
 ok(! defined($ur->write()), "write returns undef on failing custom");
@@ -300,7 +146,7 @@ ok(! defined($ur->write()), "write returns undef on failing _prepare_path");
 is_deeply(\@args, ['/etc/systemd/system'], "_prepare_path called with system unit dir");
 
 # doesn't really mattter how it is mocked
-my $unitfilename = "$cleanupdir1/woohoo.service";
+my $unitfilename = "$testunitfilesdir/woohoo.service";
 $mockuf->mock('_prepare_path', sub {return $unitfilename;} );
 ok($ur->write(), "write returns changed status (and it's new, so changed)");
 

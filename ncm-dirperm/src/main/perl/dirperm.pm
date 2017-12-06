@@ -1,18 +1,7 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-
-package NCM::Component::dirperm;
-
-use strict;
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-
-use EDG::WP4::CCM::Element;
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 use CAF::FileEditor;
 use File::Path;
@@ -25,9 +14,8 @@ use constant MTAB_PATH => "/etc/mtab";
 my @configured_mounts;
 my %available_mounts;
 
-##########################################################################
-sub Configure() {
-##########################################################################
+sub Configure
+{
 
     my ($self, $config) = @_;
 

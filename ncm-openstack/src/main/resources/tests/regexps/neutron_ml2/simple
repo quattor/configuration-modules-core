@@ -1,0 +1,18 @@
+OpenStack Neutron ml2 test
+---
+multiline
+---
+^\[ml2\]$
+^extension_drivers\s?=\s*.+\s*$
+^mechanism_drivers\s?=\s*.+\s*$
+^tenant_network_types\s?=\s*.+\s*$
+^type_drivers\s?=\s*.+\s*$
+
+^\[ml2_type_flat\]$
+^flat_networks\s?=\s*.+\s*$
+
+^\[ml2_type_vxlan\]$
+^vni_ranges\s?=\s*.+\s*$
+
+^\[securitygroup\]$
+^enable_security_group\s?=\s*.+\s*$

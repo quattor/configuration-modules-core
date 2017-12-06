@@ -2,6 +2,6 @@ Tests for filesystem config
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^FileSystem {
+^FileSystem \{
 ^\s{4}umask\s=\s0;
 ^\s{4}xattr_access_rights\s=\s0400;

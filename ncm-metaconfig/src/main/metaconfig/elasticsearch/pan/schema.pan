@@ -1,5 +1,7 @@
 declaration template metaconfig/elasticsearch/schema;
 
+@{common schema for all Elasticsearch versions}
+
 include 'pan/types';
 
 type elasticsearch_cluster = {
@@ -19,14 +21,14 @@ type elasticsearch_index_search = {
 
 
 type elasticsearch_translog = {
-    "flush_threshold_ops" : long = 5000
+    "flush_threshold_ops" : long = 5000 with {deprecated(0, "Removed in ES 5.0"); true;}
 };
 
 type elasticsearch_index = {
     "number_of_shards" ? long(0..)
-    "number_of_replicas" ? long(0..)
+    "number_of_replicas" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true;}
     "search" ? elasticsearch_index_search
-    "refresh" ? long(0..)
+    "refresh" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true;}
     "translog" ? elasticsearch_translog
 };
 
@@ -59,31 +61,6 @@ type elasticsearch_monitoring = {
     "enabled" : boolean = false
 };
 
-type elasticsearch_thread_search = {
-    "type" : string with match(SELF, "^(fixed|cached|blocking)$")
-    "size" : long(0..)
-    "min" ? long
-    "queue_size" ? long(0..)
-    "reject_policy" ? string with match(SELF, "^(caller|abort)$")
-};
-
-@documentation{
-    Thread pool management.  See
-    http://www.elasticsearch.org/guide/reference/modules/threadpool/
-@}
-type elasticsearch_threadpool = {
-    "search" : elasticsearch_thread_search
-    "index" : elasticsearch_thread_search
-    "get" ? elasticsearch_thread_search
-    "bulk" ? elasticsearch_thread_search
-    "warmer" ? elasticsearch_thread_search
-    "refresh" ? elasticsearch_thread_search
-};
-
-type elasticsearch_bootstrap = {
-    "mlockall" ? boolean
-};
-
 type elasticsearch_transport = {
     "host" ? type_hostname
 };
@@ -104,22 +81,13 @@ type elasticsearch_discovery_zen = {
     "ping" ? elasticsearch_discovery_zen_ping
     "ping_timeout" ? long(0..)
     "join_timeout" ? long(0..)
+    "minimum_master_nodes" ? long(0..)
 };
 
 type elasticsearch_discovery = {
     "zen" ? elasticsearch_discovery_zen
 };
 
-type elasticsearch_service = {
-    "node" ? elasticsearch_node
-    "index" ? elasticsearch_index
-    "gateway" ? elasticsearch_gw
-    "indices" ? elasticsearch_indices
-    "network" : elasticsearch_network = dict("host", "localhost")
-    "monitor.jvm" : elasticsearch_monitoring = dict()
-    "threadpool" ? elasticsearch_threadpool
-    "bootstrap" ? elasticsearch_bootstrap
-    "cluster" ? elasticsearch_cluster
-    "transport" ? elasticsearch_transport
-    "discovery" ? elasticsearch_discovery
-};
+@{include version specific types at the end}
+include format('metaconfig/elasticsearch/schema_%s', METACONFIG_ELASTICSEARCH_VERSION);
+

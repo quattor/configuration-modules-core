@@ -1,0 +1,6 @@
+OpenStack Neutron L3 template full test
+---
+multiline
+---
+^\[DEFAULT\]$
+^interface_driver\s{1}=\s{1}linuxbridge$

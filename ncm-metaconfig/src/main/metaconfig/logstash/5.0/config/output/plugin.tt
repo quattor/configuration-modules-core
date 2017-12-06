@@ -1,0 +1,4 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=['enable_metric'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringhash" names=['codec'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=['id'] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact" names=['workers'] -%]

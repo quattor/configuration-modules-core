@@ -11,6 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/multipath.conf}/contents/
 'detect_prio' = true;
 'path_selector' = list('round-robin', 0);
 'features' = list(1, list('queue_if_no_path'));
+'max_sectors_kb' = 1024;
 
 prefix "/software/components/metaconfig/services/{/etc/multipath.conf}/contents";
 "multipaths/0/wwid" = "3600c0ff00012c51bacb68a4e01000000";

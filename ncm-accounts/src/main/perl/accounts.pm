@@ -1,7 +1,7 @@
 #${PMpre} NCM::Component::${project.artifactId}${PMpost}
 
 use LC::Exception;
-use CAF::FileWriter;
+use CAF::FileWriter 17.2.1;
 use CAF::FileEditor;
 use CAF::Process;
 use Fcntl qw(SEEK_SET);
@@ -768,9 +768,11 @@ sub commit_accounts
 
     # Readd special lines if any at the end of shadow file
     push(@shadow, @{$special_lines->{shadow}});
-    $fh = CAF::FileWriter->new(SHADOW_FILE, log => $self,
+    $fh = CAF::FileWriter->new(SHADOW_FILE,
+                               log => $self,
                                backup => ".old",
-                               mode => oct(400));
+                               mode => oct(400),
+                               sensitive => 1);
     print $fh join("\n", @shadow, "");
     $fh->close();
 

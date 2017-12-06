@@ -1,0 +1,3 @@
+[%- FOREACH data IN CCM.contents.pairs -%]
+0[%- data.key %] "[% data.value %]"
+[% END -%]

@@ -1,0 +1,8 @@
+opensm partitions test
+---
+//
+rendermodule=names
+contentspath=/names
+---
+^0x0123456789abcdef "a switch somewhere"$
+^0x0123456789abcdff "another switch somewhere else"$

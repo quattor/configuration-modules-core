@@ -1,0 +1,9 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean"
+    names=["absolute_heatlthcheck_path","doc_as_upsert","manage_template","scripted_upsert","sniffing","ssl","ssl_certifcate_verification","template_overwrite"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string"
+    names=["action","cacert","document_id","document_type","healthcheck_path","index","keystore","keystore_password","parent","password","path","pipeline","proxy","routing","script","script_lang","script_type","script_var_name","template","template_name","truststore","truststore_password","upsert","user","version","version_type"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray" names=["hosts", "parameters"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringhash" names=["parameters"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact"
+    names=["flush_size","idle_flush_time","pool_max","pool_max_per_route","resurrect_delay","retry_initial_interval","retry_max_interval","retry_on_conflict","sniffing_delay","timeout","validate_after_inactivity"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="stringarray" names=["failure_type_logging_whitelist"] -%]

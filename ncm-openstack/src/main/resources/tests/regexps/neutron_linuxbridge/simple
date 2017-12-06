@@ -1,0 +1,15 @@
+OpenStack Neutron linuxbridge test
+---
+multiline
+---
+^\[linux_bridge\]$
+^physical_interface_mappings\s?=\s*.+\s*$
+
+^\[securitygroup\]$
+^enable_security_group\s?=\s*.+\s*$
+^firewall_driver\s?=\s*.+\s*$
+
+^\[vxlan\]$
+^enable_vxlan\s?=\s*.+\s*$
+^l2_population\s?=\s*.+\s*$
+^local_ip\s?=\s*.+\s*$

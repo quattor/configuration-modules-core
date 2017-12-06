@@ -1,20 +1,12 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+#${PMcomponent}
 
-package NCM::Component::ganglia;
-
-use strict;
-use warnings;
-
-use base qw(NCM::Component);
+use parent qw(NCM::Component);
+our $EC = LC::Exception::Context->new->will_store_all;
 
 use LC::Exception;
 use LC::Find;
 use LC::File qw(copy makedir);
 
-use EDG::WP4::CCM::Element;
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
@@ -23,8 +15,6 @@ use File::Path;
 
 use Readonly;
 Readonly::Scalar my $PATH => '/software/components/ganglia';
-
-our $EC=LC::Exception::Context->new->will_store_all;
 
 my $header = '####
 #
@@ -64,7 +54,7 @@ sub Configure {
 
    $client_contents =  configureClient($t->{client});
    $client_file     = $t->{client}->{config_file};
-   
+
    if ( $daemon_file ne '' ) {
 	my $daemon = LC::Check::file(
 		"$daemon_file",
@@ -237,10 +227,10 @@ sub configureClient {
    $contents .= "    ip = ".$i->{ip}."\n";
    $contents .= "    mask = ".$i->{mask}."\n";
    $contents .= "    action = \"".$i->{action}."\"\n";
-   $contents .= "   }\n"; 
+   $contents .= "   }\n";
   }
   $contents .= "  }\n";
- } 
+ }
  $contents .= "}\n\n";
 
  #
@@ -341,7 +331,7 @@ sub configureClient {
    }
    $contents .=  " }\n";
   }
-  $contents .= "}\n\n"; 
+  $contents .= "}\n\n";
  }
 
  return $contents;

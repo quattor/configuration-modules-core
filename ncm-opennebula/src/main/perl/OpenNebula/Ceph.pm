@@ -8,7 +8,7 @@ Readonly our $CEPHSECRETFILE => "/var/lib/one/templates/secret/secret_ceph.xml";
 =head1 NAME
 
 C<NCM::Component::OpenNebula::Ceph> adds C<Ceph> backend support to
-L<NCM::Component::OpenNebula::Host>.
+C<NCM::Component::OpenNebula::Host>.
 
 =head2 Public methods
 

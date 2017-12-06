@@ -1,2 +1,0 @@
-[%- INCLUDE "metaconfig/logstash/config/type.tt" type="boolean" names=['ssl'] -%]
-[%- INCLUDE "metaconfig/logstash/config/type.tt" type="exact" names=['congestion_threshold'] -%]

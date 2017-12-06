@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::${project.artifactId}${PMpost}
+#${PMcomponent}
 use base qw(NCM::Component CAF::Path);
 
 =head1 DESCRIPTION
@@ -39,6 +39,7 @@ On the server, create a keytab for the quattor-server user
     ipa role-add-member --users=quattor-server "Quattor server"
 
 
+    # use -r option to retrieve existing keytab (e.g. from another ipa server)
     ipa-getkeytab -p quattor-server -k /etc/quattor-server.keytab -s ipaserver.example.com
 
 Use these with ncm-freeipa on the server.
@@ -68,12 +69,14 @@ First we need to add a user with appropriate privileges
     kinit quattor-aii
     kdestroy
 
+    kinit admin
     ipa role-add "Quattor AII"
     ipa role-add-privilege "Quattor AII" --privileges="Host Administrators"
     ipa role-add-member --users=quattor-aii "Quattor AII"
 
 On the AII host (assuming the host is already added to IPA)
     kinit admin
+    # use -r option to retrieve existing keytab (e.g. from another AII server)
     ipa-getkeytab -p quattor-aii -k /etc/quattor-aii.keytab -s ipaserver.example.com
     kdestroy
 
@@ -108,7 +111,7 @@ use NCM::Component::FreeIPA::NSS;
 use CAF::Object qw(SUCCESS);
 use CAF::Reporter 16.2.1;
 use CAF::Kerberos;
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 use File::Basename;
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -138,9 +141,9 @@ Readonly my $HOST_CERTIFICATE_NICK => 'host';
 Readonly my %HOST_CERTIFICATE => {
     owner => 'root',
     group => 'root',
-    mode => 0400,
+    mode => oct(400),
     key => "$IPA_QUATTOR_BASEDIR/keys/host.key",
-    certmode => 0444,
+    certmode => oct(444),
     cert => "$IPA_QUATTOR_BASEDIR/certs/host.pem",
 };
 
@@ -219,7 +222,7 @@ sub services
 
     my @known_hosts;
     if ($svcs) {
-        my $res = $_client->do_one('host', 'find', '');
+        my $res = $_client->do_one('host', 'find', '', sizelimit => 0);
         # Flatten the results
         @known_hosts = map {@{$_->{fqdn}}} @$res;
         $self->verbose("Service found ".(scalar @known_hosts)." known hosts");
@@ -308,12 +311,25 @@ sub service_keytab
             $self->directory($directory);
         }
 
-        if($self->file_exists($filename)) {
+        my $principal = $serv->{service};
+        # Add fqdn when hostname is missing
+        $principal .= "/$_fqdn" if ($principal !~ m{/});
+
+        my $has_keytab = $_client->service_has_keytab($principal);
+
+        if($self->file_exists($filename) && $has_keytab) {
             $self->verbose("Keytab $filename already exists");
         } else {
-            my $principal = $serv->{service};
-            # Add fqdn as
-            $principal .= "/$_fqdn" if ($principal !~ m{/});
+            my $args = [@GET_KEYTAB,
+                        '-s', $tree->{primary},
+                        '-p', $principal,
+                        '-k', $filename];
+
+            if ($has_keytab) {
+                $self->verbose("A keytab for principal $principal exists elsewhere, retrieving a copy");
+                # without -r, a new keytab will be created, rendering any other copies useless
+                push(@$args, '-r');
+            }
 
             # set environment to temporary credential cache
             # temporary cache is cleaned-up during destroy of $krb
@@ -321,11 +337,7 @@ sub service_keytab
             $_krb->update_env(\%ENV);
 
             # Retrieve keytab (what if already exists?)
-            my $proc = CAF::Process->new([@GET_KEYTAB,
-                                          '-s', $tree->{primary},
-                                          '-p', $principal,
-                                          '-k', $filename,
-                                         ], log => $self);
+            my $proc = CAF::Process->new($args, log => $self);
             my $output = $proc->output();
             if ($?) {
                 $self->error("Failed to retrieve keytab $filename for principal $principal (proc $proc): $output");
@@ -369,8 +381,8 @@ sub certificates
         foreach my $nick (sort keys %{$tree->{certificates}}) {
             # How do we renew the certificates?
             my $cert = $tree->{certificates}->{$nick};
-            if ($nss->has_cert($nick)) {
-                $self->verbose("Found certificate for nick $nick");
+            if ($nss->has_cert($nick, $_client)) {
+                $self->verbose("Found NSS certificate for nick $nick");
             } else {
                 my $initcrt = "$nss->{workdir}/init_nss_$nick.crt";
                 my $msg = "Initial NSS certificate for nick $nick (temp $initcrt)";
@@ -396,16 +408,18 @@ sub certificates
                 $opts{mode} = $cert->{$modeattr} if defined($cert->{$modeattr});
 
                 my $msg = "$type file $fn for nick $nick";
+
                 if ($self->file_exists($fn)) {
-                    $self->verbose("Found existing $msg");
+                    # To hard to reverify key/cert; this is local anyway
+                    $self->verbose("Found existing $msg; reextracting it from NSS anyway");
+                }
+
+                # Extract with get_cert
+                if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
+                    $self->info("Extracted $msg");
                 } else {
-                    # Extract with get_cert
-                    if ($nss->get_cert_or_key($type, $nick, $fn, %opts)) {
-                        $self->info("Extracted $msg");
-                    } else {
-                        $self->error("Failed to extract $msg: $nss->{fail}");
-                        return;
-                    }
+                    $self->error("Failed to extract $msg: $nss->{fail}");
+                    return;
                 }
             }
         }

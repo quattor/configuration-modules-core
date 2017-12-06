@@ -1,12 +1,11 @@
-#${PMpre} NCM::Component::postfix${PMpost}
+#${PMcomponent}
 
-use base qw(NCM::Component);
+use parent qw(NCM::Component);
 
 use LC::Exception;
 use LC::Find;
 use LC::File qw(copy makedir);
 
-use EDG::WP4::CCM::Element;
 use EDG::WP4::CCM::TextRender;
 use CAF::FileWriter;
 use CAF::FileEditor;

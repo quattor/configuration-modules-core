@@ -1,22 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>org.quattor.cfg.module</groupId>
-<artifactId>openldap</artifactId>
-
+  <artifactId>openldap</artifactId>
   <packaging>pom</packaging>
-  <version>17.2.0-rc3-SNAPSHOT</version>
-<name>OpenLDAP NCM component.</name>
-
+  <version>17.8.1-SNAPSHOT</version>
+  <name>ncm-openldap</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.50</version>
+    <version>1.54</version>
     <relativePath />
   </parent>
-
   <licenses>
     <license>
       <name>Apache 2 License</name>
@@ -24,23 +19,19 @@
       <comments>Copyright (c) Responsible Organization</comments>
     </license>
   </licenses>
-
   <developers>
     <developer>
       <name>Guillaume Philippon</name>
       <email>philippo@lal.in2p3.fr</email>
     </developer>
   </developers>
-
   <contributors>
     <contributor>
       <name>Daniel Jouvenot</name>
       <email>Jouvenot@lal.in2p3.fr</email>
       <roles>
-	<role>author</role>
+        <role>author</role>
       </roles>
     </contributor>
   </contributors>
-
-  
 </project>

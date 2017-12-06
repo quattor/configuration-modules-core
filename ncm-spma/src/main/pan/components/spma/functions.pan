@@ -13,7 +13,7 @@ declaration template components/spma/functions;
 }
 function repository_exists = {
     name = ARGV[0];
-    foreach (t;curr_item;value(ARGV[1])) {
+    foreach (t; curr_item; value(ARGV[1])) {
         if(name == curr_item["name"]) return(true);
     };
     debug("Item " + name + " does not exist in " + ARGV[1]);
@@ -26,62 +26,67 @@ function repository_exists = {
     arg = (optional) package list.  When specified, only the package(s) specified are resolved, if they exist in the configuration.
 }
 function resolve_pkg_rep = {
-    error=0;
-    errorstr="";
-    function_name='resolve_pkg_rep2';
+    error = 0;
+    errorstr = "";
+    function_name = 'resolve_pkg_rep2';
     if ( ARGC >= 1 ) {
         rep_list = ARGV[0];
     } else {
-        error(function_name+': missing required first argument (repository list)');
+        error(function_name + ': missing required first argument (repository list)');
     };
     if ( ARGC >= 2 ) {
         pkg_list = list();
-        foreach (i;name;ARGV[1]) {
+        foreach (i; name; ARGV[1]) {
             pkg_list[length(pkg_list)] = escape(name);
         };
     } else {
         pkg_list = list();
-        foreach (name;pkg_list_name;SELF) {
+        foreach (name; pkg_list_name; SELF) {
             pkg_list[length(pkg_list)] = name;
         };
     };
     debug("Assigning repositories to packages...");
 
-    foreach (dummy;name;pkg_list) {
+    foreach (dummy; name; pkg_list) {
         # Ignore a non existent package: this happens when a list of package to resolve is
         # given explicitly. It is not a requirement that the package must exist.
         if (is_defined(SELF[name])) {
             pkg_list_name = SELF[name];
-            foreach (version;pkg_list_name_version;pkg_list_name) {
+            foreach (version; pkg_list_name_version; pkg_list_name) {
                 if (exists(pkg_list_name_version['repository'])) {
                     rep_mask = pkg_list_name_version['repository'];
                     pkg_list_name_version['repository'] = undef;
                 } else {
                     rep_mask = '';
                 };
-                #debug(format('%s: resolving repository for package %s version %s (params=%s)', OBJECT, name, unescape(version), to_string(pkg_list_name_version)));
-                foreach (arch;i;pkg_list_name_version['arch']) {
+                debug(format('%s: resolving repository for package %s version %s (params=%s)',
+                                OBJECT, name, unescape(version), to_string(pkg_list_name_version)));
+                foreach (arch; i; pkg_list_name_version['arch']) {
                     rep_mask = i;
 
-                    debug("Resolving repository for package >>" + unescape(name) + "<< version >>" + unescape(version) + "<< arch >>" + arch + "<<");
+                    debug(format("Resolving repository for package >>%s<< version >>%s<< arch >>%s<<",
+                                    unescape(name), unescape(version), arch));
                     id = escape(unescape(name) + "-" + unescape(version) + "-" + arch);
 
                     rep_found = false;
                     in_list = first(rep_list, t, curr_rep);
                     while ( in_list && ! rep_found) {
                         if(match(curr_rep["name"], rep_mask) && exists(curr_rep["contents"][id])) {
-                            debug("Package " + unescape(name)+'-'+unescape(version)+'-'+arch + " - assigned repository " + curr_rep["name"]);
+                            debug(format("Package %s-%s-%s - assigned repository %s",
+                                    unescape(name), unescape(version), arch, curr_rep["name"]));
                             rep_found = true;
                             SELF[name][version]['arch'][arch] = curr_rep['name'];
                         } else {
-                            debug("Package "+unescape(id)+" not found in repository "+curr_rep["name"]);
+                            debug(format("Package %s not found in repository %s",
+                                            unescape(id), curr_rep["name"]));
                             in_list = next(rep_list, t, curr_rep);
                         };
                     };
 
                     if (! rep_found ) {
-                        errorstr = format("%s\nname: %s version: %s arch: %s", errorstr, unescape(name), unescape(version), arch);
-                        error=error+1;
+                        errorstr = format("%s\nname: %s version: %s arch: %s",
+                                            errorstr, unescape(name), unescape(version), arch);
+                        error = error + 1;
                     };
                 };
             };
@@ -91,7 +96,7 @@ function resolve_pkg_rep = {
     if (error == 0) {
         SELF;
     } else {
-        error ("cannot find any repository holding the following package(s): "+errorstr+"\n");
+        error ("cannot find any repository holding the following package(s): " + errorstr + "\n");
     };
 };
 
@@ -102,7 +107,7 @@ function resolve_pkg_rep = {
 }
 function purge_rep_list = {
     if (is_defined(SELF)) {
-        foreach (i;rep;SELF) {
+        foreach (i; rep; SELF) {
             rep['contents'] = null;
         };
     };
@@ -121,7 +126,7 @@ function pkg_del = {
 
     # SELF handles the current list of packages
     name = ARGV[0];
-    u_name = '_'+name;
+    u_name = '_' + name;
     e_name = escape(name);
 
     if( (ARGC == 0) || (ARGC > 3) ) {
@@ -147,13 +152,15 @@ function pkg_del = {
                 if ( is_defined(arch) ) {
                     if ( is_defined(SELF[e_name][e_version]['arch'][arch]) ) {
                         if ( length(SELF[e_name][e_version]['arch']) == 1 ) {
-                            debug(format('%s: deleting package %s version %s: %s is the only arch, deleting version', OBJECT, ARGV[0], version, arch));
+                            debug(format('%s: deleting package %s version %s: %s is the only arch, deleting version',
+                                            OBJECT, ARGV[0], version, arch));
                             SELF[e_name][e_version] = null;
                         } else {
                             SELF[e_name][e_version]['arch'][arch] = null;
                         };
                     } else {
-                        debug(format('%s: package %s version %s arch %s not part of the configuration, nothing done', OBJECT, ARGV[0], version, arch));
+                        debug(format('%s: package %s version %s arch %s not part of the configuration, nothing done',
+                                        OBJECT, ARGV[0], version, arch));
                     };
                 } else {
                     debug(format('%s: deleting package %s version %s (all archs)', OBJECT, ARGV[0], version));
@@ -164,14 +171,15 @@ function pkg_del = {
                     SELF[e_name] = null;
                 };
             } else {
-                debug(format('%s: package %s version %s not part of the configuration, nothing done', OBJECT, ARGV[0], version));
+                debug(format('%s: package %s version %s not part of the configuration, nothing done',
+                                OBJECT, ARGV[0], version));
             };
         } else {
             # if all versions with a specific arch must be deleted,loop over all existing versions.
             # Else just delete all versions.
             if ( is_defined(arch) ) {
                 versions_to_delete = list();
-                foreach (v;params;SELF[e_name]) {
+                foreach (v; params; SELF[e_name]) {
                     if ( is_defined(SELF[e_name][v]['arch']) ) {
                         SELF[e_name][v]['arch'][arch] = null;
                         if ( length(SELF[e_name][v]['arch']) == 0 ) {
@@ -182,7 +190,7 @@ function pkg_del = {
                         versions_to_delete[length(versions_to_delete)] = v;
                     };
                 };
-                foreach (i;v;versions_to_delete) {
+                foreach (i; v; versions_to_delete) {
                     SELF[e_name][v] = null;
                 };
             } else {
@@ -207,7 +215,7 @@ function pkg_del = {
 function pkg_repl = {
     # SELF handles the current list of packages
     name = ARGV[0];
-    u_name = '_'+name;
+    u_name = '_' + name;
     e_name = escape(name);
 
     if( (ARGC == 0) || (ARGC > 4) ) {
@@ -247,7 +255,8 @@ function pkg_repl = {
         options = list();
     };
 
-    debug(format('%s: pkg_repl: processing package %s (version %s, arch %s, options %s)', OBJECT, ARGV[0], to_string(version), to_string(arch), to_string(options)));
+    debug(format('%s: pkg_repl: processing package %s (version %s, arch %s, options %s)',
+                    OBJECT, ARGV[0], to_string(version), to_string(arch), to_string(options)));
 
     # mustexist option means the package must be replaced only if it is already part of the configuration (pkg_ronly).
     # If it is not part of the configuration, do nothing (but don't raise an error).
@@ -255,7 +264,7 @@ function pkg_repl = {
     if ( index('mustexist', options) >= 0 ) {
         arch_found = false;
         if ( is_defined(SELF[e_name]) && is_defined(arch) ) {
-            foreach (v;params;SELF[e_name]) {
+            foreach (v; params; SELF[e_name]) {
                 if ( is_defined(params['arch'][arch]) ) {
                     arch_found = true;
                 };
@@ -285,11 +294,12 @@ function pkg_repl = {
             # arch is updated separetely.
             } else {
                 existing_versions = list();
-                foreach (k;v;SELF[e_name]) {
+                foreach (k; v; SELF[e_name]) {
                     existing_versions[length(existing_versions)] = unescape(k);
                 };
             };
-            error(format('Package %s is already part of the profile (existing version=%s, requested version=%s)', ARGV[0], to_string(existing_versions), to_string(version)));
+            error(format('Package %s is already part of the profile (existing version=%s, requested version=%s)',
+                            ARGV[0], to_string(existing_versions), to_string(version)));
         };
     } else {
         package_params = undef;
@@ -328,7 +338,8 @@ function pkg_repl = {
             } else {
                 arch_params = dict();
             };
-            debug(format('%s: adding package %s version %s arch_params=%s', OBJECT, ARGV[0], version, to_string(arch_params)));
+            debug(format('%s: adding package %s version %s arch_params=%s',
+                            OBJECT, ARGV[0], version, to_string(arch_params)));
         };
         # Remove previous versions defined if no arch left and add new one.
         # Nothing impose that the version is the same for all archs (may happen at least
@@ -336,7 +347,7 @@ function pkg_repl = {
         # of the package present in the profile.
         if ( length(SELF[e_name]) >= 1 ) {
             versions_to_delete = list();
-            foreach (v;params;SELF[e_name]) {
+            foreach (v; params; SELF[e_name]) {
                 # v is the escaped version of an existing package
                 if ( v != version_e ) {
                     if ( is_defined(arch) && is_defined(params['arch']) ) {
@@ -350,7 +361,7 @@ function pkg_repl = {
                     };
                 };
             };
-            foreach (i;v;versions_to_delete) {
+            foreach (i; v; versions_to_delete) {
                 SELF[e_name][v] = null;
             };
         };
@@ -365,7 +376,8 @@ function pkg_repl = {
     } else {
         # Refuse to replace an explicit version by an undefined version
         if ( is_defined(package_params) && (length(package_params) > 0) ) {
-            error(format('Attempt to unlock version of package %s (version %s)', ARGV[0], unescape(key(package_params, 0))));
+            error(format('Attempt to unlock version of package %s (version %s)',
+                            ARGV[0], unescape(key(package_params, 0))));
         };
         debug(format('%s: adding package %s (no version/arch specified)', OBJECT, ARGV[0]));
         SELF[e_name] = dict();

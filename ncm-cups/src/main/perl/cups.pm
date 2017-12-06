@@ -1,7 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
+#${PMcomponent}
 #
 # NCM cups component
 #
@@ -27,23 +24,14 @@
 #
 ################################################################################
 
-package NCM::Component::cups;
-
-use strict;
-use warnings;
-
-use NCM::Component;
-
-our @ISA = qw(NCM::Component);
+use parent qw(NCM::Component);
 our $EC  = LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-
-use EDG::WP4::CCM::Element;
 
 use LC::File qw(file_contents);
 use LC::Check;
 
 use CAF::Process;
+use CAF::Service;
 
 use Net::Domain qw(hostname hostfqdn hostdomain);
 
@@ -80,6 +68,7 @@ my %supported_options = (
     "PreserveJobFiles"   => "server",
     "Printcap"           => "server",
     "ServerAdmin"        => "server",
+    "ServerAlias"        => "server",
     "ServerName"         => "client,server",
 );
 my %config_files = (
@@ -181,7 +170,7 @@ sub Configure
         return 1;
     }
 
-    # Check if named server must be enabled
+    # Check if cupsd server must be enabled
     my $server_enabled;
     if ( $cups_config->{nodetype} ) {
         if ( $cups_config->{nodetype} =~ /server/i ) {
@@ -227,6 +216,11 @@ sub Configure
                         $self->warn("Current host defined as a CUPS server but client configured to use $host");
                     }
                 }
+
+            } elsif ( $option_name eq "ServerAlias" ) {
+                # Build a string from the list
+                my $new_value = join ' ', $option_value;
+                $option_value = $new_value;
             }
 
             # $option_roles is a list of roles separated by ','
@@ -276,29 +270,6 @@ sub Configure
         }
     }
 
-    # Start or stop cupsd according to state property
-
-    if ( -e $cupsd_startup_script ) {
-        my $reboot_state = "off";
-        if ($server_enabled) {
-            $reboot_state = "on";
-        }
-
-        # Make sure, that cupsd will be started/stopped on boot (acccording to 'start')
-        CAF::Process->new( [ "/sbin/chkconfig", $services{server}, $reboot_state ], log => $self )->run();
-        if ($?) {
-            $self->error("command \"/sbin/chkconfig $services{server} $reboot_state\" failed with status: $?");
-            return 1;
-        }
-
-    } else {
-        if ($server_enabled) {
-            $self->error("$services{server} startup script doesn't exist");
-            return 0;
-        } else {
-            $self->debug( 1, "$services{server} startup script doesn't exist" );
-        }
-    }
 
     if ($server_enabled) {
 
@@ -321,27 +292,7 @@ sub Configure
             $self->debug( 1, "Default printer defined in the configuration : $default_printer" );
         }
 
-        # To facilitate transition to new schema (allowing to run new component with old schema).
-        # For testing only.
-        # FIXME: To be removed.
-        my $cups_printers_config;
-        if ( ref($cups_config->{printers}) eq 'HASH' ) {
-            $cups_printers_config = $cups_config->{printers};
-        } elsif ( ref($cups_config->{printers}) eq 'ARRAY' ) {
-            $self->debug(1,'Legacy schema used, converting printer list to a hash');
-            $cups_printers_config = {};
-            my $entry_num = 0;
-            for my $printer_config (@{$cups_config->{printers}}) {
-                $entry_num++;
-                my $printer = $printer_config->{name};
-                unless ( $printer ) {
-                    $self->error("Printer list in legacy format (list) and no printer name found for entry N° $entry_num");
-                    next;
-                }
-                delete $printer_config->{name};
-                $cups_printers_config->{$printer} =  $printer_config;
-            }
-        }
+        my $cups_printers_config = $cups_config->{printers};
 
         $self->debug(1,"Number of printers defined in the configuration: ".scalar(keys(%{$cups_printers_config})));
 
@@ -387,19 +338,19 @@ sub Configure
 
             if ( $cups_printers_config->{$printer}->{delete} ) {
                 if ( $self->printerDelete($printer) ) {
-                    $self->warn("Error deleting printer $printer");
+                    $self->error("Error deleting printer $printer");
                 } else {
                     $self->OK("Printer $printer deleted");
                 }
             } else {
                 if ( $self->printerAdd($printer, $printer_options_str) ) {
-                    $self->warn("Error adding printer $printer");
+                    $self->error("Error adding printer $printer");
                     next;
                 } else {
                     $self->OK("Printer $printer added to configuration");
                 }
                 if ( $self->printerEnable($printer, $cups_printers_config->{$printer}->{enable}) ) {
-                    $self->warn( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
+                    $self->error( "Failed to " . $enable_actions[$cups_printers_config->{$printer}->{enable}] . " printer $printer" );
                 }
             }
         }
@@ -409,12 +360,12 @@ sub Configure
                && !$cups_printers_config->{$default_printer}->{delete} )
         {
             if ( $self->printerDefault($default_printer) ) {
-                $self->warn("Error defining printer $default_printer as the default printer");
+                $self->error("Error defining printer $default_printer as the default printer");
             } else {
                 $self->OK("Default printer defined to $default_printer");
             }
         } else {
-            $self->warn("Default printer $default_printer doesn't exist. Ignoring");
+            $self->error("Default printer $default_printer doesn't exist. Ignoring");
         }
     }
 
@@ -684,6 +635,7 @@ sub serviceControl
     $self->debug( 1, "$function_name : '$action' action requested for service $service" );
 
     # Check current service state (return=0 means service is running)
+    # FIXME: when CAF::Service provides a status() method, use it instead of calling 'service' command
     my $cur_state = "stopped";
     CAF::Process->new( [ "service", "$service", "status" ], log => $self )->run();
     unless ($?) {
@@ -713,7 +665,8 @@ sub serviceControl
         if ( $cur_state eq "stopped" ) {
             $real_action = "start";
         } else {
-            $real_action = "reload";
+            # reload is not support on EL7, use restart instead
+            $real_action = "restart";
         }
     } else {
         $self->error("$function_name : internal error : unsupported action ($action)");
@@ -723,11 +676,14 @@ sub serviceControl
     # Do action
 
     $self->info("Executing a '$real_action' of service $service");
-    CAF::Process->new( [ "service", $service, $real_action ], log => $self )->run();
-    if ($?) {
+    my $cups_service = CAF::Service->new([$service], log => $self );
+    unless ( $cups_service->$real_action() ) {
         $self->error("\tFailed to $real_action service $service");
         return 1;
     }
+
+    # Give some time to the action to complete
+    sleep(5);
 
     return 0;
 }

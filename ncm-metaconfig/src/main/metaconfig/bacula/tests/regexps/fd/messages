@@ -3,6 +3,6 @@ Test bacula fd Messages
 multiline
 metaconfigservice=/etc/bacula/bacula-fd.conf
 ---
-^Messages\s{
+^Messages\s\{
 ^\s{4}Name\s=\sstandard
 ^\s{4}director\s=\sdirector-short-fd-dir\s=\sall,\s!skipped,\s!restored

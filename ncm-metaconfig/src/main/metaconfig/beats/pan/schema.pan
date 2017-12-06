@@ -2,25 +2,28 @@ declaration template metaconfig/beats/schema;
 
 include 'pan/types';
 
+type beats_output_logstash_ssl_protocol = string with match(SELF, '^(SSLvs|TLSv1.0|TLSv1.1|TLSv1.2)');
+
 @documentation{
-    TLS settings for logstash output
+    SSL settings for logstash output
 }
-type beats_output_logstash_tls = {
+type beats_output_logstash_ssl = {
     'certificate_authorities' ? string[]
     'certificate' ? string
-    'certificate_key' ? string
+    'key' ? string
+    'key_passphrase' ? string
     'insecure' ? boolean
     'cipher_suites' ? string[]
     'curve_types' ? string[]
+    'verification_mode' ? string with match(SELF, '^(none|full)')
+    'supported_protocols' ? beats_output_logstash_ssl_protocol[]
 };
 
 @documentation{
     TLS settings for elasticsearch output
 }
-type beats_output_elasticsearch_tls = {
-    include beats_output_logstash_tls
-    'min_version' ? string with match(SELF, '^\d+(\.\d+)+?$')
-    'max_version' ? string with match(SELF, '^\d+(\.\d+)+?$')
+type beats_output_elasticsearch_ssl = {
+    include beats_output_logstash_ssl
 };
 
 @documentation{
@@ -41,7 +44,7 @@ type beats_output_elasticsearch = {
     'flush_interval' ? long(0..)
     'save_topology' ? boolean
     'topology_expire' ? long(0..)
-    'tls' ? beats_output_elasticsearch_tls
+    'ssl' ? beats_output_elasticsearch_ssl
 };
 
 @documentation{
@@ -49,10 +52,17 @@ type beats_output_elasticsearch = {
 }
 type beats_output_logstash = {
     'hosts' ? type_hostport[]
+    'compression_level' ? long(0..9)
     'worker' ? long(0..)
     'loadbalance' ? boolean
+    'pipelining' ? long(0..)
+    'proxy_url' ? string
+    'proxy_use_local_resolver' ? boolean
     'index' ? string
-    'tls' ? beats_output_logstash_tls
+    'ssl' ? beats_output_logstash_ssl
+    'timeout' ? long(0..)
+    'max_retries' ? long
+    'bulk_max_size' ? long
 };
 
 @documentation{
@@ -155,7 +165,9 @@ type beats_filebeat_prospector_multiline = {
 }
 type beats_filebeat_prospector = {
     'paths' : string[]
-    'encoding' ? string with match(SELF, '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
+    'encoding' ? string with
+    match(SELF,
+    '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
     'input_type' ? string with match(SELF, '^(log|stdin)$')
     'exclude_lines' ? string[]
     'include_lines' ? string[]
@@ -194,6 +206,30 @@ type beats_filebeat_service = {
     include beats_service
     'filebeat' : beats_filebeat_filebeat
 };
+
+@documentation {
+    Gpfsbeat configuration
+
+    devices: the filesystems as named in GPFS
+    mmrequota, mmlsfs, mmlsfilset, mmdf: paths to these executables
+}
+type beats_gpfsbeat_gpfsbeat = {
+    'period' : string  # is of the form 42s
+    'devices' : string[]
+    'mmrepquota' ? absolute_file_path
+    'mmlsfs' ? absolute_file_path
+    'mmlsfileset' ? absolute_file_path
+    'mmdf' ? absolute_file_path
+};
+
+@documentation {
+    Gpfsbeat service
+}
+type beats_gpfsbeat_service = {
+    include beats_service
+    'gpfsbeat': beats_gpfsbeat_gpfsbeat
+};
+
 
 @documentation{
     Topbeat input source(s)

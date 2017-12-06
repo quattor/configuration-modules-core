@@ -1,0 +1,7 @@
+OpenStack Neutron metadata template full test
+---
+multiline
+---
+^\[DEFAULT\]$
+^metadata_proxy_shared_secret\s{1}=\s{1}metadata_good_password$
+^nova_metadata_ip\s{1}=\s{1}controller.mysite.com$

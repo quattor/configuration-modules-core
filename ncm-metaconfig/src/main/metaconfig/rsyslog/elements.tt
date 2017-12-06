@@ -1,0 +1,3 @@
+[%- FOREACH el IN elements.pairs %]
+[%      INCLUDE 'metaconfig/rsyslog/element.tt' prefix=prefix el=el -%]
+[% END -%]

@@ -1,0 +1,3 @@
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="boolean" names=["ssl_enable","ssl_verify"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="exact" names=["port","reconnect_interval"] -%]
+[%- INCLUDE "metaconfig/logstash/5.0/config/type.tt" type="string" names=["host","mode","ssl_cacert","ssl_cert","ssl_key","ssl_key_passphrase"] -%]

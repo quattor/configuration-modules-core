@@ -24,6 +24,9 @@ my $n = NCM::Component::FreeIPA::NSS->new(
     realm => 'REALM.DOMAIN',
     );
 
+my $ipa = NCM::Component::FreeIPA::Client->new("host.example.com");
+
+
 =head2 new
 
 =cut
@@ -75,7 +78,7 @@ ok(get_command("/usr/bin/certutil -d target/test/nssdb -A -n mynick -t u,u,u -a 
    "add_cert expected certutil command");
 
 ok($n->has_cert("mynick"), "has_cert ok");
-ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -n mynick"),
+ok(get_command("/usr/bin/certutil -d target/test/nssdb -L -a -n mynick"),
    "has_cert expected certutil command");
 
 reset_caf_path();
@@ -118,8 +121,6 @@ $CAF::Object::NoAction = 1;
 =head2 ipa_request_cert
 
 =cut
-
-my $ipa = NCM::Component::FreeIPA::Client->new("host.example.com");
 
 reset_POST_history;
 set_file_contents('path/to/csr',

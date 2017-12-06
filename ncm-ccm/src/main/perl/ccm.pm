@@ -1,6 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
 =pod
 
@@ -17,12 +15,8 @@ manpage for more details.
 
 =cut
 
-package NCM::Component::ccm;
+use parent qw(NCM::Component CAF::Path);
 
-use strict;
-use NCM::Component;
-use base qw(NCM::Component);
-use vars qw(@ISA $EC);
 use CAF::Process;
 use CAF::FileWriter;
 use CAF::FileReader;
@@ -51,7 +45,7 @@ sub Configure
     my ($self, $config) = @_;
 
     # Define paths for convenience.
-    my $t = $config->getElement("/software/components/ccm")->getTree();
+    my $t = $config->getTree($self->prefix());
 
     my $filename = $t->{configFile};
 

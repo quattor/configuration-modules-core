@@ -2,7 +2,7 @@ Tests for snmp_adm gpfs
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^SNMP_ADM {
+^SNMP_ADM \{
 ^\s{4}export_cache_stats\s=\sTRUE;
 ^\s{4}export_fsal_calls_detail\s=\sFALSE;
 ^\s{4}export_maps_stats\s=\sFALSE;

@@ -173,11 +173,9 @@ sub remove_vn_ars
         } else {
              $self->error("Unable to remove AR id: $arid from vnet: $vnet");
         }
-    } elsif ($arinfo) {
-        $self->error("Unable to remove AR. QUATTOR flag not found within AR: $arinfo");
     } else {
         $self->warn(1, "Unable to remove AR. ",
-            "AR template is not available from vnet: $vnet: ", $ardata->{ar});
+            "AR is not available or QUATTOR flag is not set vnet: $vnet: ", $ardata->{ar});
     }
 }
 

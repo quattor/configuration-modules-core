@@ -1,17 +1,10 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Systemd::Service::Chkconfig;
+#${PMpre} NCM::Component::Systemd::Service::Chkconfig${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 
 use parent qw(NCM::Component::Systemd::Service::Unit);
 
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 
 use NCM::Component::Systemd::Service::Unit qw(:targets $DEFAULT_TARGET
     $TYPE_SYSV $TYPE_TARGET $DEFAULT_STARTSTOP $DEFAULT_STATE

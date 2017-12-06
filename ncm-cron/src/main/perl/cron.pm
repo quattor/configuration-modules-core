@@ -1,66 +1,119 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-package NCM::Component::cron;
+=head1 NAME
 
-use strict;
-use warnings;
+C<ncm-cron> -- NCM component to control cron entries for Linux and Solaris.
 
-use NCM::Component;
-use vars qw(@ISA $EC);
-@ISA = qw(NCM::Component);
-$EC=LC::Exception::Context->new->will_store_all;
-use NCM::Check;
-use File::Copy;
+=head1 DESCRIPTION
 
-use EDG::WP4::CCM::Element;
+The I<cron> component manages files in the C</etc/cron.d> directory on Linux
+and the C</var/spool/cron/crontabs> directory on Solaris.
 
-use LC::Check;
+=head2 Linux
+
+Files managed by C<ncm-cron> will have the C<.ncm-cron.cron> suffix.  Other files in
+the directory are not affected by this component. The name of each file will be
+taken from the C<name> attribute.
+
+=head2 Solaris
+
+Solaris uses an older version of cron that does not make use of a cron.d
+directory for crontabs. C<ncm-cron> B<shares> the crontab with each user. To make
+this work C<ncm-cron> uses the concept of separate file B<sections> within the
+crontab.  Each B<section> is identified by the use of the tags C<< NCM-CRON BEGIN: >>
+and C<< NCM-CRON END: >>. Entries either side of these section identifiers are not
+modified.
+
+Solaris B<does> have a C</etc/cron.d> directory, however it uses this directory
+for control files such as C<cron.allow> and C<cron.deny>.
+
+=head1 EXAMPLE
+
+  "/software/components/cron/entries" = list(
+    dict(
+      "name", "ls",
+      "user", "root",
+      "group", "root",
+      "frequency", "*/2 * * * *",
+      "command", "/bin/ls"),
+    dict(
+      "name", "hostname",
+      "comment", "some interesting text",
+      "frequency", "*/2 * * * *",
+      "command", "/bin/hostname"),
+      "env", dict("MAILTO", "admin@example.org"),
+    dict(
+      "name", "date",
+      "comment", "runs the date sometime within a 3 hour period",
+      "timing", dict(
+          "minute", "0",
+          "hour", "1",
+          "smear", 180),
+      "command", "/bin/date")
+    );
+
+On Linux this will create three files in /etc/cron.d:
+
+  ls.ncm-cron.cron
+  hostname.ncm-cron.cron
+  date.ncm-cron.cron
+
+On Solaris three extra entries will be added to the root crontab.
+
+=head1 Solaris
+
+Editing the C<< NCM-CRON BEGIN: >> and/or the C<< NCM-CRON END: >> tag within a crontab will
+cause unpredictable behaviour. Possible behavours are duplicate entries or
+entries being removed altogether.
+
+Editing BETWEEN the tags will cause the edits to be overwritten the next time
+ncm-cron runs.
+
+=cut
+
+use CAF::Path 17.3.1;
+use parent qw(NCM::Component CAF::Path);
+
 use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
+use CAF::Object;
 
 use Encode qw(encode_utf8);
 use English;
 
-$NCM::Component::cron::NoActionSupported = 1;
+our $EC = LC::Exception::Context->new->will_store_all;
 
-use constant CRON_LOGFILE_SUBDIR => "/var/log/";
+our $NoActionSupported = 1;
 
-my $linux_crondir = "/etc/cron.d";
-my $solaris_crondir = "/var/spool/cron/crontabs";
-my $ncmStart = "###### NCM-CRON BEGIN:";
-my $ncmStop = "###### NCM-CRON END:";
-my $ncmMsg = "Do not edit lines from NCM-CRON BEGIN to NCM-CRON END";
-my $ncmMsgEnd = "This comment intentionally left blank";
-our $osname = $OSNAME;  # 'our' is required for testing to override the os
+use Readonly;
 
-my $cron_entry_extension_prefix = ".ncm-cron";
-my $cron_entry_extension = $cron_entry_extension_prefix . ".cron";
-my $cron_log_extension = $cron_entry_extension_prefix . ".log";
-my $cron_entry_regexp = $cron_entry_extension;
-$cron_entry_regexp =~ s/\./\\./g;
+Readonly my $CRON_LOGFILE_SUBDIR => "/var/log/";
+
+Readonly my $CRONDIR_LINUX => "/etc/cron.d";
+Readonly my $CRONDIR_SOLARIS => "/var/spool/cron/crontabs";
+Readonly my $DATE_SOLARIS => "gdate --iso-8601=seconds --utc";
+Readonly my $DATE_LINUX => "date --iso-8601=seconds --utc";
+
+Readonly my $NCM_START => "###### NCM-CRON BEGIN:";
+Readonly my $NCM_STOP => "###### NCM-CRON END:";
+Readonly my $NCM_MSG => "Do not edit lines from NCM-CRON BEGIN to NCM-CRON END";
+Readonly my $NCM_MSG_END => "This comment intentionally left blank";
+
+# 'our' is required for testing to override the os
+our $osname = $OSNAME;
+
+Readonly my $CRON_ENTRY_EXTENSION_PREFIX => ".ncm-cron";
+Readonly my $CRON_ENTRY_EXTENSION => $CRON_ENTRY_EXTENSION_PREFIX . ".cron";
+Readonly my $CRON_LOG_EXTENSION => $CRON_ENTRY_EXTENSION_PREFIX . ".log";
 
 
 sub Configure
 {
-
     my ($self, $config) = @_;
 
-    # Define paths for convenience.
-    my $base = "/software/components/cron";
-
-    # Define some defaults
-    my $date;
-    if ($osname eq "solaris") {
-        $date = "gdate --iso-8601=seconds --utc";
-    } else {
-        $date = "date --iso-8601=seconds --utc";
-    }
-
     # Load ncm-cron configuration into a hash
-    my $cron_config = $config->getElement($base)->getTree();
+    my $cron_config = $config->getTree($self->prefix());
     my $cron_entries = $cron_config->{entries};
     my $securitypath = $cron_config->{securitypath};
 
@@ -77,7 +130,7 @@ sub Configure
 
     # Clean up crontabs/cron files and return an empty hash for Linux or a hash
     # of cron filehandles for solaris.
-    my %solCronFiles = $self->cleanCrontabs("Configure",$cron_entries);
+    my %solCronFiles = $self->cleanCrontabs("Configure", $cron_entries);
 
     # Only continue if the entries line is defined.
     unless ($cron_entries) {
@@ -96,7 +149,7 @@ sub Configure
 
         my $fname = $name;
         $fname =~ s{[/\s]}{_}g;
-        my $linux_file = "$linux_crondir/$fname.ncm-cron.cron";
+        my $linux_file = "$CRONDIR_LINUX/$fname$CRON_ENTRY_EXTENSION";
         $self->info("Checking cron entry $name...");
 
         # User: use root if not specified.
@@ -167,15 +220,15 @@ sub Configure
         }
         if (!($log_disabled || $log_to_syslog)) {
             $log_to_file = 1;
-            $log_name = "/var/log/$fname$cron_log_extension";
+            $log_name = "/var/log/$fname$CRON_LOG_EXTENSION";
             $log_owner = undef;
             $log_group = undef;
-            $log_mode = 0640;
+            $log_mode = oct(640);
 
             if ( $log_params->{name} ) {
                 $log_name = $log_params->{name};
                 unless ( $log_name =~ /^\s*\// ) {
-                    $log_name = CRON_LOGFILE_SUBDIR . $log_name;
+                    $log_name = $CRON_LOGFILE_SUBDIR . $log_name;
                 }
             }
             if ( $log_params->{owner} ) {
@@ -275,23 +328,23 @@ sub Configure
         # no backup, would trigger it multiple times otherwise
         my $cronfh;
         if ($osname eq "solaris") {
-            my $fPath = "$solaris_crondir/$user";
+            my $fPath = "$CRONDIR_SOLARIS/$user";
             # Check if we need a new cron user file
             if (!exists $solCronFiles{$fPath}) {
                 $self->debug(1, "Creating new cronfile $fPath");
                 $solCronFiles{$fPath} = CAF::FileWriter->new($fPath,
-                                                    mode => 0600,
+                                                    mode => oct(600),
                                                     owner => "root",
                                                     group => "sys",
                                                     log => $self);
                 $cronfh = $solCronFiles{$fPath};
-                print $cronfh "$ncmStart $ncmMsg\n";
+                print $cronfh "$NCM_START $NCM_MSG\n";
             } else {
                 $cronfh = $solCronFiles{$fPath};
             }
         } else {  # Linux
             $cronfh = CAF::FileWriter->new($linux_file,
-                                           mode => 0644,
+                                           mode => oct(644),
                                            log => $self);
             # add header
             print $cronfh "#\n# File generated by ncm-cron. DO NOT EDIT.\n#\n";
@@ -358,6 +411,7 @@ sub Configure
                 $log_to_file = 1;
             }
             # Opening "(" is in $shell_prefix
+            my $date = $osname eq "solaris" ? $DATE_SOLARIS : $DATE_LINUX;
             print $cronfh "$frequency $shell_prefix $date; $command) >> $log_name 2>&1\n";
         }
 
@@ -370,21 +424,24 @@ sub Configure
                 # looks like overkill but can't be easily replaced with
                 # CAF::FileWriter (will override) or
                 # CAF::FileEditor (will read in all data)
-                $changes = LC::Check::status($log_name,
-                                 owner => $log_owner,
-                                 group => $log_group,
-                                 mode => $log_mode,
-                    );
-                if ( $changes < 0 ) {
-                    $self->error("Error setting owner/permissions on log file $log_name");
+                $changes = $self->status(
+                    $log_name,
+                    owner => $log_owner,
+                    group => $log_group,
+                    mode => $log_mode,
+                );
+                if (!defined($changes)) {
+                    $self->error("Error setting owner/permissions on log file $log_name: $self->{fail}");
                 }
             } else {
                 # initialise the logfile, use CAF::FileWriter to allow testing
-                my $logfilefh = CAF::FileWriter->new($log_name,
-                                                     owner => $log_owner,
-                                                     group => $log_group,
-                                                     mode => $log_mode,
-                                                     log => $self);
+                my $logfilefh = CAF::FileWriter->new(
+                    $log_name,
+                    owner => $log_owner,
+                    group => $log_group,
+                    mode => $log_mode,
+                    log => $self,
+                );
                 $logfilefh->close();
             }
         }
@@ -392,24 +449,24 @@ sub Configure
     # For Solaris: for each file add the NCM-CRON END: tag and write the file.
     #              Reload the cron daemon
     if ($osname eq "solaris") {
-        foreach my $fil (keys(%solCronFiles)) {
+        foreach my $fil (sort keys %solCronFiles) {
             my $fh = $solCronFiles{$fil};
-            print $fh "$ncmStop $ncmMsgEnd\n";
+            print $fh "$NCM_STOP $NCM_MSG_END\n";
             $fh->close();
         }
-        my $p = CAF::Process->new(['/sbin/svcadm', 'refresh', 'cron']);
+        my $p = CAF::Process->new(['/sbin/svcadm', 'refresh', 'cron'], log => $self);
         $p->run();
         $self->error("Could not refresh cron by running \"svcadm refresh cron\"")
             if $?;
     } else {
         # For Linux: as a workarond for a RedHat 5 cron race condition bug: touch /etc/cron.d
         #            when we are done generating the files. cron(8) will reload as a result
-        if ($NoAction) {
-            $self->info("Would have touched $linux_crondir to workaround a cron bug");
+        if ($CAF::Object::NoAction) {
+            $self->info("Would have touched $CRONDIR_LINUX to workaround a cron bug");
         } else {
-            $self->debug(1,"Touching $linux_crondir to workaround a cron bug");
+            $self->debug(1, "Touching $CRONDIR_LINUX to workaround a cron bug");
             sleep 1;
-            utime(undef, undef, $linux_crondir);
+            utime(undef, undef, $CRONDIR_LINUX);
         }
     }
 
@@ -434,7 +491,8 @@ sub Unconfigure
     return;
 }  # of Unconfigure()
 
-sub cleanCrontabs {
+sub cleanCrontabs
+{
     my ($self, $configType, $cronEntries) = @_;
 
     # %cronEntryNames is a hash that will be filled with all $cronEntries names.
@@ -453,76 +511,84 @@ sub cleanCrontabs {
             # Not yet implemented
             next;
         } else { # Linux
-            my $fname = "$name.ncm-cron.cron";;
+            my $fname = "$name$CRON_ENTRY_EXTENSION";;
             $fname =~ s{[/\s]}{_}g;
             $cronEntryNames{$fname} = ''; # Value is meaningless
         }
     }
 
-    # Solaris: Collect the crontabs in /var/spool/cron/crontabs then delete
-    # any ncm-cron entries. These are identified as lines between:
-    #     NCM-CRON START:
-    #     NCM-CRON END:
+    my $crondir = $osname eq "solaris" ? $CRONDIR_SOLARIS : $CRONDIR_LINUX;
+
+    # Files only. Do not modify listdir() call to return of directories unless
+    # CAF::Path::cleanup has also been modified to support only files
+    # (similar to original LC::Check::absence(..., files => True)).
+    my $all_files = $self->listdir($crondir, file_exists => 1);
+
     # Return a hash of opened FileEditor file handles
+    #  (for solaris only)
     my %solCronFiles = ();
-    if ($osname eq "solaris") {
-        opendir DIR, $solaris_crondir;
-        while (my $fil = readdir DIR) {  # Scan each crontab
-            my $fPath = "$solaris_crondir/$fil";
-            if (-f $fPath) {
-                $self->debug(2, "Checking $fPath");
-                my $fh = $solCronFiles{$fPath} =
-                    CAF::FileEditor->open($fPath, log=>$self,
-                                                  mode => 0600,
-                                                  owner => "root",
-                                                  group => "sys");
-                my $outlines = "";
-                my $foundNCM = 0;
-                foreach my $line (split("\n", "$fh")) {
-                    $line =~ /$ncmStart/ && do {$foundNCM = 1};
-                    $outlines .= "$line\n" if !$foundNCM;  # Don't save ncm lines
-                    $line =~ /$ncmStop/ && do {$foundNCM = 0};
-                    # If an old style ncm manged cron file simply delete all content.
-                    if ($self->isOldSolarisFile($fPath, $line)) {
-                            $outlines = "";
-                            last;
-                    }
+
+    foreach my $filename (@$all_files) {
+        my $path = "$crondir/$filename";
+        if ($osname eq "solaris") {
+            # Solaris: Collect the crontabs in /var/spool/cron/crontabs then delete
+            # any ncm-cron entries. These are identified as lines between:
+            #     NCM-CRON START:
+            #     NCM-CRON END:
+            $self->debug(2, "Checking $path");
+            my $fh = $solCronFiles{$path} =
+                CAF::FileEditor->open(
+                    $path,
+                    log => $self,
+                    mode => oct(600),
+                    owner => "root",
+                    group => "sys");
+            my $outlines = "";
+            my $foundNCM = 0;
+            foreach my $line (split("\n", "$fh")) {
+                $line =~ /$NCM_START/ && do {$foundNCM = 1};
+                $outlines .= "$line\n" if !$foundNCM;  # Don't save ncm lines
+                $line =~ /$NCM_STOP/ && do {$foundNCM = 0};
+                # If an old style ncm managed cron file, simply delete all content.
+                if ($self->isOldSolarisFile($path, $line)) {
+                    $outlines = "";
+                    last;
                 }
-                $self->debug(2, "Keeping lines:\n$outlines\n") if $outlines;
-                $fh->set_contents($outlines);  # Save non NCM-CRON lines
-                $fh->seek(0, 2);  # eof
-                print $fh "$ncmStart $ncmMsg\n"  # Set NCM-CRON START:
-                    if $configType eq "Configure";
-                $self->warn("NCM-CRON END: missing from $fPath. Deleting to EOF")
-                    if $foundNCM eq 1;
             }
-        }
-        closedir DIR;
-    # Linux: collect the current entries managed by ncm-cron in the cron.d
-    # directory and delete those no longer part of the configuration.
-    # Returns an empty hash (return value unused in Linux context).
-    } else {
-        opendir DIR, $linux_crondir;
-        while (my $to_unlink = readdir DIR) {
-            next if $to_unlink !~ /$cron_entry_regexp$/;
-            next if defined($cronEntryNames{$to_unlink});
-            $to_unlink = "$linux_crondir/$to_unlink";
+            $self->debug(2, "Keeping lines:\n$outlines\n") if $outlines;
+            $fh->set_contents($outlines);  # Save non NCM-CRON lines
+            $fh->seek(0, 2);  # eof
+            print $fh "$NCM_START $NCM_MSG\n"  # Set NCM-CRON START:
+                if $configType eq "Configure";
+            $self->warn("NCM-CRON END: missing from $path. Deleting to EOF")
+                if $foundNCM eq 1;
+        } else {
+            # Linux: collect the current entries managed by ncm-cron in the cron.d
+            # directory and delete those no longer part of the configuration.
+            # Returns an empty hash (return value unused in Linux context).
+            my $cron_entry_regexp = $CRON_ENTRY_EXTENSION;
+            $cron_entry_regexp =~ s/\./\\./g;
+
+            next if $filename !~ /$cron_entry_regexp$/;
+            next if defined($cronEntryNames{$filename});
+
             # untainted to_unlink to work with tainted perl mode (-t option)
-            if ($to_unlink =~ m{^($linux_crondir/.*$cron_entry_regexp)$}) {
-                $to_unlink = $1;  # $to_unlink is now untainted
+            if ($path =~ m{^($CRONDIR_LINUX/.*$cron_entry_regexp)$}) {
+                my $to_unlink = $1;  # $to_unlink is now untainted
                 $self->info("Deleting $to_unlink");
-                LC::Check::absence($to_unlink, file => "True");
+                $self->cleanup($to_unlink);
             } else {
-                $self->error("Bad data in $to_unlink");
+                $self->error("cannot untaint cron file $path");
             }
         }
-        closedir DIR;
     }
+
     return %solCronFiles;
 }  # of cleanCrontabs()
 
 # doesn't work with "named" elements (e.g. 'mon' instead of 1).
-sub addtime {
+sub addtime
+{
     my ($in, $add, $min, $max) = @_;
     $add ||= 0;
     my $ret = 0;
@@ -563,14 +629,15 @@ sub addtime {
     return (join(",", @list), $overflow);
 }  # of addtime()
 
-sub security_file {
+sub security_file
+{
     my ($self, $file_type, $user_list, $securitypath) = @_;
 
     my $secfh = CAF::FileWriter->new("$securitypath/cron.$file_type",
                                      owner => "root",
                                      group => "sys",
                                      backup => ".old",
-                                     mode => 0644,
+                                     mode => oct(644),
                                      log => $self);
 
     print $secfh "#\n# File generated by ncm-cron. DO NOT EDIT.\n#\n";
@@ -583,7 +650,8 @@ sub security_file {
 
 # Function to detect existing old style solaris crontabs that are being
 # managed by ncm.
-sub isOldSolarisFile {
+sub isOldSolarisFile
+{
     my ($self, $fPath, $line) = @_;
     my $ncmOldFile = "# File generated by ncm-cron. DO NOT EDIT.";
     $line =~ /$ncmOldFile/ && do {

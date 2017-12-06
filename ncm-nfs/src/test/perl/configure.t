@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Quattor qw(configure);
+use Test::Quattor qw(configure configure_noserver configure_nomounts);
 use Test::MockModule;
 
 use Test::Quattor::RegexpTest;
@@ -10,9 +10,6 @@ use Test::Quattor::RegexpTest;
 use NCM::Component::nfs;
 
 # service variant set to linux_sysv
-
-use CAF::Object;
-$CAF::Object::NoAction = 1;
 
 my $mock = Test::MockModule->new('NCM::Component::nfs');
 my $res = {};
@@ -41,12 +38,35 @@ is_deeply($export_arg, $tree, "whole config tree passed to exports method");
 is_deeply($process_mounts_arg, $tree, "whole config tree passed to process_mounts method");
 
 ok(! command_history_ok([qr{nfs}]), 'No nfs service reload when nothing changed / no actions taken');
-foreach my $change (qw(exports fstab_changed action)){
+foreach my $change (qw(exports)){
     command_history_reset();
     $res = {$change => 1};
     is($cmp->Configure($cfg), 1, "Configure returns 1 (change $change)");
     ok(command_history_ok([qr{service nfs reload}]), "nfs service reload when $change changed");
 };
+
+foreach my $change (qw(fstab_changed action)){
+    command_history_reset();
+    $res = {$change => 1};
+    is($cmp->Configure($cfg), 1, "Configure returns 1 (change $change)");
+    ok(command_history_ok(undef, [qr{service nfs reload}]), "no nfs service reload when $change changed");
+};
+
+# noserver config
+my $nosrvcfg = get_config_for_profile('configure_noserver');
+foreach my $change (qw(exports fstab_changed action)){
+    command_history_reset();
+    $res = {$change => 1};
+    is($cmp->Configure($nosrvcfg), 1, "Configure returns 1 (change $change) with server=false");
+    ok(command_history_ok(undef, [qr{service nfs reload}]), "no nfs service reload when $change changed with server=false");
+};
+
+# noserver config
+my $nomounts = get_config_for_profile('configure_nomounts');
+command_history_reset();
+$process_mounts_arg = undef;
+is($cmp->Configure($nomounts), 1, "Configure returns 1 without mounts");
+ok(!defined($process_mounts_arg), "no nfs process_mounts without mounts");
 
 
 done_testing();

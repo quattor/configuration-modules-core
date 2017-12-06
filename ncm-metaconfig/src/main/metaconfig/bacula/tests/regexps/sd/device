@@ -3,7 +3,7 @@ Test bacula sd Device
 multiline
 metaconfigservice=/etc/bacula/bacula-sd.conf
 ---
-^Device\s{
+^Device\s\{
 
 ^\s{4}AlwaysOpen\s=\sno
 ^\s{4}Archive Device\s=\s/dev/null

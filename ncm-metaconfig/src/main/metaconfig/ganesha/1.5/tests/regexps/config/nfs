@@ -2,16 +2,16 @@ Tests for nfs config
 ---
 /etc/ganesha/ganesha.nfsd.conf
 ---
-^NFS_Core_Param {
+^NFS_Core_Param \{
 ^\s{4}Stats_File_Path\s=\s"/tmp/ganesha.stats";
 ^\s{4}Stats_Update_Delay\s=\s600;
-^NFS_DupReq_Hash {
+^NFS_DupReq_Hash \{
 ^\s{4}Alphabet_Length\s=\s10;
 ^\s{4}Index_Size\s=\s17;
-^NFS_IP_Name {
+^NFS_IP_Name \{
 ^\s{4}Alphabet_Length\s=\s10;
 ^\s{4}Expiration_Time\s=\s3600;
 ^\s{4}Index_Size\s=\s17;
-^NFS_KRB5 {
-^NFS_Worker_Param {
+^NFS_KRB5 \{
+^NFS_Worker_Param \{
 ^\s{4}Nb_Before_GC\s=\s50;

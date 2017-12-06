@@ -100,8 +100,8 @@ $cmds{rpc_chgrp_user}{out} = 3;
 
 $data = <<'EOF';
 LABELS = "quattor,quattor/localuser"
-SSH_PUBLIC_KEY = "ssh-dss AAAAB3NzaC1kc3MAAACBAOTAivURhUrg2Zh3DqgVd2ofRYKmXKjWDM4LITQJ/Tr6RBWhufdxmJos/w0BG9jFbPWbUyPn1mbRFx9/2JJjaspJMACiNsQV5KD2a2H/yWVBxNkWVUwmq36JNh0Tvx+ts9Awus9MtJIxUeFdvT433DePqRXx9EtX9WCJ1vMyhwcFAAAAFQDcuA4clpwjiL9E/2CfmTKHPCAxIQAAAIEAnCQBn1/tCoEzI50oKFyF5Lvum/TPxh6BugbOKu18Okvwf6/zpsiUTWhpxaa40S4FLzHFopTklTHoG3JaYHuksdP4ZZl1mPPFhCTk0uFsqfEVlK9El9sQak9vXPIi7Tw/dyylmRSq+3p5cmurjXSI93bJIRv7X4pcZlIAvHWtNAYAAACBAOCkwou/wYp5polMTqkFLx7dnNHG4Je9UC8Oqxn2Gq3uu088AsXwaVD9t8tTzXP1FSUlG0zfDU3BX18Ds11p57GZtBSECAkqH1Q6vMUiWcoIwj4hq+xNq3PFLmCG/QP+5Od5JvpbBKqX9frc1UvOJJ3OKSjgWMx6FfHr8PxqqACw lsimngar@OptiPlex-790
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI4gvhOpwKbukZP/Tht/GmKcRCBHGn8JadVlgb9U6O/EP/hR1KLDbKY7KVjVOlUcvfawn44SIGsmKCzehYJV2s/XU1QSaaLrjB7n+vfOyj1C3EgzfZcMOHvL51xPuSgIoKd9oER/63B/pUV/BEZK5LEC06O1LgAjwLy2DrHNN3cQdnTbxQ4vM5ggDb/BC+DyRYlN5NG74VFguVQmoqMPA8FYXBvT/bBvIAZFw7piZIQFd6C803dtG6xwgo2yNXp hello@mylaptop
+SSH_PUBLIC_KEY = "ssh-dss AAAAB3NzaC1kc3MAAACBAOTAivURhU user@OptiPlex-790
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ hello@mylaptop
 "
 QUATTOR = 1
 EOF
@@ -181,6 +181,29 @@ $cmds{rpc_create_newvnet3}{params} = [$data, -1];
 $cmds{rpc_create_newvnet3}{method} = "one.vn.allocate";
 $cmds{rpc_create_newvnet3}{out} = 98;
 
+$data = <<'EOF';
+NAME = "vxlan.vmpool.os"
+AR = [
+    ip = "10.1.20.100",
+    size = "100",
+    type = "IP4"
+]
+DNS = "10.1.20.1"
+FILTER_IP_SPOOFING = "YES"
+FILTER_MAC_SPOOFING = "YES"
+GATEWAY = "10.1.20.250"
+LABELS = "quattor,quattor/vlans"
+NETWORK_MASK = "255.255.255.0"
+PHYDEV = "ib0"
+VLAN = "YES"
+VLAN_ID = "10"
+VN_MAD = "vxlan"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newvnet4}{params} = [$data, -1];
+$cmds{rpc_create_newvnet4}{method} = "one.vn.allocate";
+$cmds{rpc_create_newvnet4}{out} = 99;
+
 $cmds{rpc_delete_vnet}{params} = [68];
 $cmds{rpc_delete_vnet}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet}{out} = 68;
@@ -192,6 +215,10 @@ $cmds{rpc_delete_vnet2}{out} = 88;
 $cmds{rpc_delete_vnet3}{params} = [98];
 $cmds{rpc_delete_vnet3}{method} = "one.vn.delete";
 $cmds{rpc_delete_vnet3}{out} = 98;
+
+$cmds{rpc_delete_vnet4}{params} = [99];
+$cmds{rpc_delete_vnet4}{method} = "one.vn.delete";
+$cmds{rpc_delete_vnet4}{out} = 99;
 
 $cmds{rpc_list_vnetspool}{params} = [-2, -1, -1];
 $cmds{rpc_list_vnetspool}{method} = "one.vnpool.info";
@@ -229,6 +256,12 @@ $cmds{rpc_list_vnet4}{out} = <<'EOF';
 <VNET><ID>98</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>pool.altaria.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>br100</BRIDGE><VLAN>1</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[br100]]></BRIDGE><BRIDGE_OVS><![CDATA[ovsbr0]]></BRIDGE_OVS><DNS><![CDATA[10.141.3.250]]></DNS><GATEWAY><![CDATA[10.141.3.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.0.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[0]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.141.14.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[29]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET>
 EOF
 
+$cmds{rpc_list_vnet5}{params} = [99];
+$cmds{rpc_list_vnet5}{method} = "one.vn.info";
+$cmds{rpc_list_vnet5}{out} = <<'EOF';
+<VNET><ID>99</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>vxlan.vmpool.os</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><BRIDGE>onebr.10</BRIDGE><VLAN>10</VLAN><PARENT_NETWORK_ID/><PHYDEV/><VLAN_ID><![CDATA[0]]></VLAN_ID><USED_LEASES>0</USED_LEASES><TEMPLATE><BRIDGE><![CDATA[onebr.10]]></BRIDGE><DNS><![CDATA[10.1.20.1]]></DNS><GATEWAY><![CDATA[10.1.20.250]]></GATEWAY><NETWORK_MASK><![CDATA[255.255.255.0]]></NETWORK_MASK><PHYDEV><![CDATA[]]></PHYDEV><QUATTOR><![CDATA[1]]></QUATTOR><VLAN><![CDATA[YES]]></VLAN><VLAN_ID><![CDATA[10]]></VLAN_ID></TEMPLATE><AR_POOL><AR><AR_ID><![CDATA[0]]></AR_ID><IP><![CDATA[10.1.20.100]]></IP><MAC><![CDATA[02:00:0a:8d:0e:64]]></MAC><SIZE><![CDATA[100]]></SIZE><TYPE><![CDATA[IP4]]></TYPE><USED_LEASES>0</USED_LEASES><LEASES/></AR></AR_POOL></VNET>
+EOF
+
 $data = <<'EOF';
 NAME = "altaria.os"
 BRIDGE = "br100"
@@ -263,6 +296,29 @@ EOF
 $cmds{rpc_update_vnet2}{params} = [98, $data, 1];
 $cmds{rpc_update_vnet2}{method} = "one.vn.update";
 $cmds{rpc_update_vnet2}{out} = 98;
+
+$data = <<'EOF';
+NAME = "vxlan.vmpool.os"
+AR = [
+    ip = "10.1.20.100",
+    size = "100",
+    type = "IP4"
+]
+DNS = "10.1.20.1"
+FILTER_IP_SPOOFING = "YES"
+FILTER_MAC_SPOOFING = "YES"
+GATEWAY = "10.1.20.250"
+LABELS = "quattor,quattor/vlans"
+NETWORK_MASK = "255.255.255.0"
+PHYDEV = "ib0"
+VLAN = "YES"
+VLAN_ID = "10"
+VN_MAD = "vxlan"
+QUATTOR = 1
+EOF
+$cmds{rpc_update_vnet2}{params} = [99, $data, 1];
+$cmds{rpc_update_vnet2}{method} = "one.vn.update";
+$cmds{rpc_update_vnet2}{out} = 99;
 
 $data = <<'EOF';
 
@@ -425,6 +481,14 @@ $cmds{rpc_remove_vnet_ar4}{params} = [0, 0];
 $cmds{rpc_remove_vnet_ar4}{method} = "one.vn.rm_ar";
 $cmds{rpc_remove_vnet_ar4}{out} = 0;
 
+$cmds{rpc_chown_vnet}{params} = [99, 3, 1];
+$cmds{rpc_chown_vnet}{method} = "one.vn.chown";
+$cmds{rpc_chown_vnet}{out} = 99;
+
+$cmds{rpc_chmod_vnet}{params} = [99, 1, 1, 0, 1, 1, 0, 0, 0, 0];
+$cmds{rpc_chmod_vnet}{method} = "one.vn.chmod";
+$cmds{rpc_chmod_vnet}{out} = 99;
+
 # Manage Datastores
 
 $data = <<'EOF';
@@ -500,6 +564,14 @@ EOF
 $cmds{rpc_update_datastore}{params} = [102, $data, 1];
 $cmds{rpc_update_datastore}{method} = "one.datastore.update";
 $cmds{rpc_update_datastore}{out} = 102;
+
+$cmds{rpc_chown_datastore}{params} = [103, 3, 1];
+$cmds{rpc_chown_datastore}{method} = "one.datastore.chown";
+$cmds{rpc_chown_datastore}{out} = 103;
+
+$cmds{rpc_chmod_datastore}{params} = [103, 1, 1, 0, 1, 1, 0, 0, 0, 0];
+$cmds{rpc_chmod_datastore}{method} = "one.datastore.chmod";
+$cmds{rpc_chmod_datastore}{out} = 103;
 
 # Manage hosts
 
@@ -710,14 +782,12 @@ $data = <<'EOF';
 
 NIC = [
     IP = "10.141.8.30",
-    MAC = "AA:00:00:80:01:00",
     MODEL = "virtio",
     NETWORK = "altaria.os",
     NETWORK_UNAME = "oneadmin"
 ]
 NIC = [
     IP = "172.24.8.30",
-    MAC = "AA:00:00:80:01:01",
     MODEL = "virtio",
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"
@@ -768,7 +838,11 @@ OS = [
 RAW = [
     DATA = "<vcpu>4</vcpu><cpu mode='host-passthrough'>
     <topology sockets='2' cores='2' threads='1'/></cpu>
-    <devices><video><model type='qxl'/></video></devices>",
+    <devices><video><model type='qxl'/></video></devices>
+    <memoryBacking>
+    <nosharepages/>
+    <hugepages/>
+    </memoryBacking>",
     TYPE = "kvm"
 ]
 PCI = [

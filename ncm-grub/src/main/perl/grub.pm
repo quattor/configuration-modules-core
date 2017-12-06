@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::grub${PMpost}
+#${PMcomponent}
 
 use Fcntl qw(SEEK_SET SEEK_END);
 use CAF::Object qw(SUCCESS);
@@ -199,9 +199,9 @@ sub password
         my $usercfg_fh = CAF::FileEditor->new( $GRUB2_USER_CFG,
             owner => "root",
             group => "root",
-            mode  => 0400,
+            mode  => oct(400),
             log   => $self );
-        
+
         $usercfg_fh->add_or_replace_lines(qr/^GRUB2_PASSWORD=/, qr/^GRUB2_PASSWORD=$password$/, "GRUB2_PASSWORD=$password\n", SEEK_END);
         $usercfg_fh->close();
     } else {
@@ -299,7 +299,7 @@ sub grub_conf
     my $grub_fh = CAF::FileEditor->new($GRUB_CONF,
                                        owner => "root",
                                        group => "root",
-                                       mode  => 0400,
+                                       mode  => oct(400),
                                        log   => $self);
 
     if (!"$grub_fh") {
@@ -560,6 +560,56 @@ sub kernel
 }
 
 
+=item get_info
+
+Return info for default kernel as an arrayref of hashref
+
+Same kernel can have multiple entries.
+
+=cut
+
+sub get_info
+{
+    my ($self, $kernel) = @_;
+
+    my @default;
+
+    my $info = $self->grubby(['--info', $kernel], keeps_state => 1);
+
+    # First, build hash of arrayrefs
+    # We assume that every key= occurs only once per index
+    my %names;
+    foreach my $line (split("\n", $info)) {
+        chomp($line); # do not care for whitespace
+        if ($line =~ m/^([^=]+)\s*=\s*(.*)$/) {
+            my $name = $1;
+            if (! exists($names{$name})) {
+                $names{$name} = [];
+            };
+            push(@{$names{$name}}, $2);
+        }
+    };
+
+    my @entries;
+    # convert hash of arrayrefs in array of hashrefs
+    # Number of indices is number of kernel keys
+    # We assume all keys appear equal amount of times
+    foreach my $ind (0 .. scalar @{$names{kernel} || []} - 1) {
+        my %res;
+        foreach my $key (keys %names) {
+            $res{$key} = $names{$key}->[$ind];
+        };
+        $self->debug(1, "Entry from kernel $kernel info: ",
+                     join(" ", map {"$_=$res{$_}"} sort keys %res));
+        push (@entries, \%res);
+    };
+
+    $self->verbose(scalar @entries, " entries from kernel $kernel info");
+
+    return \@entries;
+};
+
+
 =item default_options
 
 Configure kernel commandline options of default kernel
@@ -576,11 +626,17 @@ sub default_options
     # With fullcontrol, any args starting with '-' whould be invalid anyway
     my @options = $self->grubby_args_options($tree->{args});
 
+    my $entries = $self->get_info($default);
+    if (scalar @$entries > 1) {
+        $self->warn("More than one grub entry for kernel $default found.",
+                    " Only first entry / lowest index will be modified");
+    };
+
     # If we want full control of the arguments:
     if ($fullcontrol) {
         # Check current arguments
         my $current = '';
-        if ($self->grubby(['--info', $default], keeps_state => 1) =~ /args=\"(.*)\"\n/ ) {
+        if (@$entries && $entries->[0]->{args} && $entries->[0]->{args} =~ m/^\"(.*)\"$/) {
             $current = $1;
             $self->debug(1, "fullcontrol found current args for kernel $default: '$current'");
         }

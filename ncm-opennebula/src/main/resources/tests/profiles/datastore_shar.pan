@@ -12,3 +12,7 @@ prefix "/metaconfig/contents/datastore/nfs";
 "ds_mad" = "fs";
 "tm_mad" = "shared";
 "labels" = list("quattor", "quattor/nfs");
+"permissions/owner" = "lsimngar";
+"permissions/group" = "users";
+"permissions/mode" = 0440;
+

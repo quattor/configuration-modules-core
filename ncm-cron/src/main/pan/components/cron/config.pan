@@ -1,9 +1,10 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+${componentconfig}
 
-unique template components/${project.artifactId}/config;
-
-include 'components/${project.artifactId}/config-common';
-include 'components/${project.artifactId}/config-rpm';
+'securitypath' ?= {
+    if (exists('/system/archetype/os') &&
+            value('/system/archetype/os') == 'solaris') {
+        '/etc/cron.d';
+    } else {
+        '/etc';
+    };
+};

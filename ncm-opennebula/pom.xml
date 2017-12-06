@@ -1,14 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>opennebula</artifactId>
   <packaging>pom</packaging>
-  <version>17.2.0-rc3-SNAPSHOT</version>
-  <name>OpenNebula NCM component.</name>
+  <version>17.8.1-SNAPSHOT</version>
+  <name>ncm-opennebula</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.50</version>
+    <version>1.54</version>
   </parent>
   <licenses>
     <license>

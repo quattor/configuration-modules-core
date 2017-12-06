@@ -1,11 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-package NCM::Component::postgresql;
-
-use strict;
-use warnings;
+#${PMcomponent}
 
 use parent qw(NCM::Component);
 
@@ -15,8 +8,6 @@ use NCM::Component::Postgresql::Commands;
 use LC::Exception qw(SUCCESS);
 our $EC = LC::Exception::Context->new->will_store_all;
 use CAF::Object;
-
-use EDG::WP4::CCM::Element;
 
 use POSIX qw(strftime);
 use Digest::MD5 qw(md5_hex);

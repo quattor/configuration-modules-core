@@ -15,4 +15,7 @@ type component_fmonagent = {
     "no_contact_timeout" : long = 120
 };
 
-bind "/software/components/fmonagent" = component_fmonagent;
+bind "/software/components/fmonagent" = component_fmonagent with {
+    deprecated(1, 'The fmonagent component is deprecated and will be removed in a future release.');
+    true;
+};

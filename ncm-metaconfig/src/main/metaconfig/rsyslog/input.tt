@@ -1,0 +1,14 @@
+input(
+[% FILTER indent -%]
+# [% name %]
+type="im[% type %]"
+[%-     options = {};
+        options.import(params);
+        # remove 'queue' and any others (delete VMethod accepts multiple args)
+        options.delete('queue') -%]
+[%-        INCLUDE 'metaconfig/rsyslog/elements.tt' elements=options moduletype=type %]
+[%-      IF params.queue.defined %]
+[%-         INCLUDE 'metaconfig/rsyslog/elements.tt' elements=params.queue prefix='queue.' %]
+[%-      END %]
+[%- END %]
+)
