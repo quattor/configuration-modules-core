@@ -34,10 +34,13 @@ sub write_cfgfile
         'tiny', $newtree, log => $self
     );
     my $fh = $trd->filewriter($self->{cfgfile});
- 
+    if (!$fh) {
+        $self->error('Could not write ceph config file');
+        return;
+    };
     $fh->close();
        
-    $self->debug(2,"content written to config file $self->{cfgfile}");
+    $self->info("ceph config written to config file $self->{cfgfile}");
 
 }
 
@@ -49,7 +52,7 @@ sub configure
         $self->error('Could not write cfgfile');
         return;
     }
-
+    
     return 1;
 }
 

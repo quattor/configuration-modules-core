@@ -12,5 +12,4 @@ my $cfg = get_config_for_profile("osdserver");
 my $cl = NCM::Component::Ceph::OSDserver->new($cfg, $obj);
 isa_ok($cl, 'NCM::Component::Ceph::OSDserver', 'got OSDserver instance');
 
-
 done_testing();
