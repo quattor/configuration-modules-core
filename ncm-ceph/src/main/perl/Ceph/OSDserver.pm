@@ -22,7 +22,7 @@ sub _initialize
     $self->{cfgtree} = $cfgtree;
     $self->{prefix} = $prefix;
     $self->{config} = $cfgtree->getTree($self->{prefix});
-    $self->{ok_failures} = $self->{config}->{max_add_osd_failures};
+    $self->{ok_failures} = $self->{config}->{daemons}->{max_add_osd_failures};
 
     $self->{osds} = $self->{config}->{daemons}->{osds};
     return 1;

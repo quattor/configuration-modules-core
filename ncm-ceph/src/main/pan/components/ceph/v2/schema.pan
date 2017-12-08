@@ -72,9 +72,8 @@ type ceph_crushmap = {
 
 @documentation{ overarching ceph cluster type, with osds, mons and msds }
 type ceph_cluster = {
-    'config' : ceph_global_config
     'osdhosts' ? type_fqdn[]
-    'monitors' : ceph_monitor {1..}
+    'monitors' : ceph_monitor {3..}
     'mdss' ? ceph_mds {}
     'deployhosts' : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
     'crushmap' ? ceph_crushmap
@@ -88,6 +87,7 @@ For use with dedicated pan code that builds the cluster info from remote templat
 }
 type ceph_daemons = {
     'osds' : ceph_osd {}
+    'max_add_osd_failures' : long(0..) = 0
 };
 
 type ceph_supported_version = string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?'); # TODO  minimum 12.2.2
@@ -109,7 +109,6 @@ type ${project.artifactId}_component = {
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
     'deploy_version' ? ceph_deploy_supported_version
-    'max_add_osd_failures' : long(0..) = 0
 };
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;
