@@ -10,6 +10,8 @@ use JSON::XS;
 use Data::Dumper;
 
 Readonly my @BOOTSTRAP_OSD_KEYRING_CMD => qw(stat /var/lib/ceph/bootstrap-osd/ceph.keyring);
+Readonly my @BOOTSTRAP_OSD_KEYRING_CMD_SL => qw(stat /etc/ceph/ceph.client.bootstrap-osd.keyring);
+Readonly my @BOOTSTRAP_OSD_CEPH_HEALTH => qw(status --id bootstrap-osd);
 Readonly my @GET_CEPH_PVS_CMD => (qw(pvs -o), 'pv_name,lv_tags', qw(--no-headings --reportformat json));
 
 sub _initialize
@@ -31,9 +33,14 @@ sub is_node_healthy
     my ($self) = @_;
     # Check bootstrab-osd keyring
     # stat /var/lib/ceph/bootstrap-osd/ceph.keyring
-    my $ok = $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD], "stat bootstrap-osd keyring", test => 1);
+    $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD], "stat bootstrap-osd keyring", test => 1) or return;
+    $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD_SL], "stat bootstrap-osd keyring symlink", test => 1) or return ;
     # Checks can be added
-    return $ok;
+    if (!$self->run_ceph_command([@BOOTSTRAP_OSD_CEPH_HEALTH], "get cluster state")) {
+        $self->error('Cluster not reachable or correctly configured');
+        return;
+    }
+    return 1;
 
 }
 

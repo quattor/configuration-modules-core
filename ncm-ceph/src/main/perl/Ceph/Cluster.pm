@@ -2,16 +2,21 @@
 
 use 5.10.1;
 
-use parent qw(CAF::Object);
+use parent qw(CAF::Object NCM::Component::Ceph::Commands);
+use NCM::Component::Ceph::Cfgfile;
+use Readonly;
+use JSON::XS;
+use Data::Dumper;
+
 
 sub _initialize
 {
-    my ($self, $config, $log, $prefix) = @_;
+    my ($self, $cfgtree, $log, $prefix) = @_;
 
     $self->{log} = $log;
-    $self->{config} = $config;
+    $self->{cfgtree} = $cfgtree;
     $self->{prefix} = $prefix;
-    $self->{comptree} = $config->getTree($self->{prefix});
+    $self->{config} = $cfgtree->getTree($self->{prefix});
 
     return 1;
 }

@@ -90,8 +90,8 @@ type ceph_daemons = {
     'osds' : ceph_osd {}
 };
 
-type ceph_supported_version = string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?'); # and minimum 12.2.2
-type ceph_deploy_supported_version = string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+'); # and minimum 1.5.39
+type ceph_supported_version = string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?'); # TODO  minimum 12.2.2
+type ceph_deploy_supported_version = string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+'); # TODO minimum 1.5.39
 
 type ceph_configfile = {
     'global' : ceph_global_config
@@ -104,7 +104,7 @@ type ceph_configfile = {
 @documentation{ ceph clusters }
 type ${project.artifactId}_component = {
     include structure_component
-    'clusters' ? ceph_cluster {}
+    'clusters' ? ceph_cluster {1} # Only 1 cluster supported by component for now
     'daemons' ? ceph_daemons 
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
