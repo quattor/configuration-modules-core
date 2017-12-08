@@ -28,3 +28,9 @@ sub run_command {
 
 1;
 
+# run a command prefixed with ceph and return the output in json format
+sub run_ceph_command {
+    my ($self, $command, $msg, %opts) = @_;
+    return $self->run_command([qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
+}
+
