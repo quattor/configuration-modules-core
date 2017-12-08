@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 4;
 
 use myIcinga;
 
@@ -16,21 +16,13 @@ my $t = {
 };
 
 my $rs = $comp->print_contacts($t);
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{contacts});
 
-isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
-
-is(
-    *$rs->{filename}, NCM::Component::icinga::ICINGA_FILES->{contacts},
-    "Correct file was opened"
-);
-
-like("$rs", qr(^\s*alias\s+foo$)m, "Alias properly written");
+like($fh, qr(^\s*alias\s+foo$)m, "Alias properly written");
 like(
-    "$rs",
+    $fh,
     qr(^\s*host_notification_commands\s+1!2,3!4$)m,
     "Notification commands properly written"
 );
-like("$rs", qr(^\s*foo\s+4,5$)m, "Random array field properly written");
-like("$rs", qr(^\s*bar\s+6$)m,   "Random scalar field properly written");
-
-$rs->close();
+like($fh, qr(^\s*foo\s+4,5$)m, "Random array field properly written");
+like($fh, qr(^\s*bar\s+6$)m,   "Random scalar field properly written");

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 49;
+use Test::More tests => 45;
 
 use myIcinga;
 
@@ -41,21 +41,22 @@ sub validate_tree
     delete($tree->{cgi});
     delete($tree->{ido2db});
 
-    isa_ok($file, 'CAF::FileWriter', "Something was returned");
+    #isa_ok($file, 'CAF::FileWriter', "Something was returned");
 
-    is(
-        *$file->{filename},
-        NCM::Component::icinga::ICINGA_FILES->{general},
-        "Correct file was opened"
-    );
+    #is(
+    #    *$file->{filename},
+    #    NCM::Component::icinga::ICINGA_FILES->{general},
+    #    "Correct file was opened"
+    #);
 
-    like("$file", qr"resource_file=$tree->{macros}$"m, "Macros file got the correct value");
+    my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{general});
+    like("$fh", qr"resource_file=$tree->{macros}$"m, "Macros file got the correct value");
     delete($tree->{macros});
 
-    like("$file", qr"hello=a$"m, "General key hello found with the correct value");
-    like("$file", qr"world=1!2", "General key world found with the correct value");
+    like("$fh", qr"hello=a$"m, "General key hello found with the correct value");
+    like("$fh", qr"world=1!2", "General key world found with the correct value");
 
-    like("$file", qr"log_file=foo.log"m, "Log file properly recorded");
+    like("$fh", qr"log_file=foo.log"m, "Log file properly recorded");
 
     my %h = %{NCM::Component::icinga::ICINGA_FILES()};
     foreach my $i (qw(general macros cgi ido2db)) {
@@ -63,12 +64,12 @@ sub validate_tree
     }
 
     foreach my $v (values(%h)) {
-        like("$file", qr"cfg_file=$v$"m, "Config file $v got declared");
+        like("$fh", qr"cfg_file=$v$"m, "Config file $v got declared");
     }
 
-    unlike("$file", qr"^(?:hostgroups|hosts)=", "Only general and selected keys are printed");
+    unlike("$fh", qr"^(?:hostgroups|hosts)=", "Only general and selected keys are printed");
     like(
-        "$file",
+        "$fh",
         qr"^broker_module\s*=\s*/foo init=1$"m,
         "Configuration for broker modules is printed in its own lines"
     );
@@ -130,12 +131,14 @@ $t->{external_files} = [qw(a b c)];
 $t->{external_dirs} = [1 .. 3];
 
 $rs = $comp->print_general($t);
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{general});
+
 foreach my $i (qw(a b c)) {
-    like("$rs", qr"cfg_file=$i$"m, "External files present");
+    like("$fh", qr"cfg_file=$i$"m, "External files present");
 }
 
 for my $i (1 .. 3) {
-    like("$rs", qr"cfg_dir=$i$"m, "External dirs present");
+    like("$fh", qr"cfg_dir=$i$"m, "External dirs present");
 }
 
 delete($t->{external_files});
@@ -147,6 +150,6 @@ $t = init_tree();
 my $c = $t->{hosts_generic};
 delete($t->{hosts_generic});
 $rs = $comp->print_general($t);
-unlike("$rs", qr{^cfg_file\s*=\s*$c$}m, "Non-existing files don't get printed");
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{general});
+unlike("$fh", qr{^cfg_file\s*=\s*$c$}m, "Non-existing files don't get printed");
 
-$rs->close();

@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 5;
+use Test::More tests => 3;
 
 use myIcinga;
 
@@ -19,13 +19,7 @@ ok(!defined($rs), "Nothing is done if there is no service extinfo");
 
 $rs = $comp->print_serviceextinfo($t);
 
-isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
-is(
-    *$rs->{filename},
-    NCM::Component::icinga::ICINGA_FILES->{serviceextinfo},
-    "Correct file was opened"
-);
-like("$rs", qr(^\s*foo\s+1$)m,   "Scalar contents properly written");
-like("$rs", qr(^\s*bar\s+3,4$)m, "List contents properly written");
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{serviceextinfo});
 
-$rs->close();
+like($fh, qr(^\s*foo\s+1$)m,   "Scalar contents properly written");
+like($fh, qr(^\s*bar\s+3,4$)m, "List contents properly written");

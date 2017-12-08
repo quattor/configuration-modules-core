@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 4;
 
 use myIcinga;
 
@@ -19,14 +19,8 @@ ok(!defined($rs), "Nothing is done if there are no host dependencies");
 
 $rs = $comp->print_hostdependencies($t);
 
-isa_ok($rs, 'CAF::FileWriter', "Returned object is a FileWriter");
-is(
-    *$rs->{filename},
-    NCM::Component::icinga::ICINGA_FILES->{hostdependencies},
-    "Correct file was opened"
-);
-like("$rs", qr(^\s*foo\s+1$)m,           "Scalar contents properly written");
-like("$rs", qr(^\s*bar\s+3,4$)m,         "List contents properly written");
-like("$rs", qr(^\s*host_name\s+ahost$)m, "Host name properly recorded");
+my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hostdependencies});
 
-$rs->close();
+like($fh, qr(^\s*foo\s+1$)m,           "Scalar contents properly written");
+like($fh, qr(^\s*bar\s+3,4$)m,         "List contents properly written");
+like($fh, qr(^\s*host_name\s+ahost$)m, "Host name properly recorded");
