@@ -198,8 +198,10 @@ http://www.freedesktop.org/software/systemd/man/systemd.service.html
 type ${project.artifactId}_unitfile_config_service = {
     include ${project.artifactId}_unitfile_config_systemd_exec
     include ${project.artifactId}_unitfile_config_systemd_kill
+    'AmbientCapabilities' ? string[]
     'BusName' ? string
     'BusPolicy' ? string[] with length(SELF) == 2 && match(SELF[1], '^(see|talk|own)$')
+    'CapabilityBoundingSet' ? string[]
     'ExecReload' ? string
     'ExecStart' ? string
     'ExecStartPost' ? string
