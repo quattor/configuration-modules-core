@@ -7,11 +7,7 @@ use NCM::Component::iptables;
 use Test::More;
 use CAF::Object;
 
-$CAF::Object::NoAction = 1;
-$NCM::Component::iptables::NoAction = 1;
-
 my $comp = NCM::Component::iptables->new('iptables');
-
 
 # Test profile which exercises basic functionality
 my $cfg = get_config_for_profile('basic');
