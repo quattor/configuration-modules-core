@@ -8,6 +8,5 @@ type ceph_mon_config = {
 type ceph_monitor = {
     include ceph_daemon
     'fqdn' : type_fqdn
-    'deploycfg' ? ceph_mon_config
 };
 
