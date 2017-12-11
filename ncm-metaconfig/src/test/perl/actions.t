@@ -95,7 +95,9 @@ my $fh;
 
 $restart = $reload = 0;
 set_file_contents($FILE1_NAME, $FILE1_CONTENT);
+set_status($FILE1_NAME, owner => 0, group => 0, mode => oct(644));
 set_file_contents($FILE2_NAME, $FILE2_CONTENT);
+set_status($FILE2_NAME, owner => 0, group => 0, mode => oct(644));
 is($cmp->Configure($cfg_d), 1, 'Configure actions_daemons returned 1');
 # File contents is checked just to ensure that internal consistency is ok.
 # An error here is probably the sign of an inconsistency between the unit test
