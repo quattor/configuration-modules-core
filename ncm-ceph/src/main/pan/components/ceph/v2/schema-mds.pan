@@ -12,5 +12,4 @@ type ceph_mds_config = {
 type ceph_mds = {
     include ceph_daemon
     'fqdn' : type_fqdn
-    'deploycfg' ? ceph_mds_config
 };

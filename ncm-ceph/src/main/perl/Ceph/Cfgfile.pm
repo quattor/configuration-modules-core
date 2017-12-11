@@ -10,11 +10,11 @@ Readonly my $CEPH_CFGFILE => '/etc/ceph/ceph.conf';
 
 sub _initialize
 {
-    my ($self, $config, $log, $prefix, $cfgfile ) = @_;
+    my ($self, $config, $log, $path, $cfgfile) = @_;
 
     $self->{log} = $log;
-    $self->{prefix} = "$prefix/config";
-    $self->{config} = $config->getTree($self->{prefix}, undef, convert_list =>
+    $self->{path} = $path;
+    $self->{config} = $config->getTree($self->{path}, undef, convert_list =>
         [$EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{arrayref_join_comma}]);
 
     $self->{cfgfile} = $cfgfile || $CEPH_CFGFILE;

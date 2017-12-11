@@ -70,13 +70,22 @@ type ceph_crushmap = {
     'rules' : ceph_crushmap_rule[1..]
 };
 
+type ceph_configfile = {
+    'global' : ceph_global_config
+    'mds' ? ceph_mds_config
+    'osd' ? ceph_osd_config
+    'mon' ? ceph_mon_config
+    'rgw' ? ceph_rgw_config{}
+};
+
 @documentation{ overarching ceph cluster type, with osds, mons and msds }
 type ceph_cluster = {
-    'osdhosts' ? type_fqdn[]
-    'monitors' : ceph_monitor {3..}
-    'mdss' ? ceph_mds {}
+#    'osdhosts' ? type_fqdn[]
+    'monitors' : ceph_monitor {3..} # with match
+    'mdss' ? ceph_mds {} # with match
+    'initcfg' : ceph_configfile
     'deployhosts' : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
-    'crushmap' ? ceph_crushmap
+#    'crushmap' ? ceph_crushmap # Not yet supported
     'key_accept' ? string with match(SELF, '^(first|always)$') # explicit accept host keys
     'ssh_multiplex' : boolean = true
 };
@@ -93,18 +102,13 @@ type ceph_daemons = {
 type ceph_supported_version = string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?'); # TODO  minimum 12.2.2
 type ceph_deploy_supported_version = string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+'); # TODO minimum 1.5.39
 
-type ceph_configfile = {
-    'global' : ceph_global_config
-    'mds' ? ceph_mds_config
-    'osd' ? ceph_osd_config
-    'mon' ? ceph_mon_config
-    'rgw' ? ceph_rgw_config{}
-};
-
-@documentation{ ceph clusters }
+@documentation{ 
+ceph cluster configuration
+we only support node to be in one ceph cluster
+ }
 type ${project.artifactId}_component = {
     include structure_component
-    'clusters' ? ceph_cluster {1} # Only 1 cluster supported by component for now
+    'cluster' ? ceph_cluster # Only 1 cluster named ceph supported by component for now
     'daemons' ? ceph_daemons 
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
