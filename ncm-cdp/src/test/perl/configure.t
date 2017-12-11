@@ -8,9 +8,6 @@ use CAF::Object;
 use Test::MockModule;
 use CAF::FileWriter;
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 my $cmp = NCM::Component::cdp->new("cdp");
 
 =pod

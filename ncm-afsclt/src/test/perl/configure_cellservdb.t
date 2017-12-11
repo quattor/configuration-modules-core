@@ -59,9 +59,6 @@ sub Check_CellServDB {
 
 my $status;
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 my $comp = NCM::Component::afsclt->new('afsclt');
 
 my $config = get_config_tree("explicit");

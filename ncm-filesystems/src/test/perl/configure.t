@@ -41,9 +41,6 @@ use data;
 is(NCM::Filesystem::FSTAB, $FSTAB);
 mkpath dirname $FSTAB;
 
-$CAF::Object::NoAction = 1;
-$LC::Check::NoAction = 1;
-set_caf_file_close_diff(1);
 my $cfg = get_config_for_profile('configure');
 my $cmp = NCM::Component::filesystems->new('filesystems');
 $NCM::Blockdevices::this_app = $cmp;
