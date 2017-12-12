@@ -16,4 +16,6 @@ prefix "/desc";
 "tls/cipher_suite" = list("c1", "c2");
 "user/shell" = "us";
 "uri" = list("u1","u2");
-
+"user/object_class"="user"
+"ldap/krb5_canonicalize"="true"
+"ldap/krb5_realm"="realm"

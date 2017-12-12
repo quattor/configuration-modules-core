@@ -95,7 +95,7 @@ type authconfig_sssd_ldap = {
 
     "krb5_backup_server" ? string
     "krb5_canonicalize" ? boolean
-    "krb5_realm" ? string[]
+    "krb5_realm" ? string
     "krb5_server" ? string
     "access_filter" ? string
     "access_order" : ldap_order = "filter"
@@ -122,6 +122,5 @@ type authconfig_sssd_ldap = {
     "referrals" : boolean = true
     "rootdse_last_usn" ? string
     "search_timeout" : long = 6
-    "use_object_class" : string = "posixAccount"
     "account_expire_policy" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
 };
