@@ -255,7 +255,7 @@ sub prepare_service
     my ($svc_def_fn, $svc_fn) = $iam->{service}->installation_files($iam->{defaultname});
 
     if (! $self->_file_exists($svc_def_fn)) {
-        $self->error("Default service file $svc_def_fn for service $iam->{defaultservice} not found.",
+        $self->error("Default service file $svc_def_fn for service $iam->{defaultname} not found.",
                      " Check your postgres OS installation.");
         return;
     }
