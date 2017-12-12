@@ -12,27 +12,14 @@ Tests for building the protected hash, and the valid mounts.
 
 use strict;
 use warnings;
-use Readonly;
-Readonly my $FSTAB => 'target/test/etc/fstab';
-BEGIN{
-    # This only works because the constant of NCM::Filesystem is used in a ncm-fstab sub
-    use Test::Quattor;
-    use NCM::Filesystem;
-    undef &{NCM::Filesystem::FSTAB};
-    *{NCM::Filesystem::FSTAB} =  sub () {$FSTAB} ;
-}
 
 use CAF::FileEditor;
 use CAF::Object;
 use File::Basename;
-use File::Path qw(mkpath);
 use Test::Deep;
 use Test::More;
 use Test::Quattor qw(fstab fstab_depr);
 use NCM::Component::fstab;
-
-is(NCM::Filesystem::FSTAB, $FSTAB);
-mkpath dirname $FSTAB;
 
 use data;
 my $cfg = get_config_for_profile('fstab');
@@ -41,8 +28,8 @@ my $tree = $cfg->getTree($cmp->prefix());
 my $protected = $cmp->protected_hash($tree);
 cmp_deeply($protected, \%data::PROTECTED, 'protected hash ok');
 
-set_file_contents($FSTAB, $data::FSTAB_CONTENT);
-my $fstab = CAF::FileEditor->new ($FSTAB);
+set_file_contents(NCM::Filesystem::FSTAB, $data::FSTAB_CONTENT);
+my $fstab = CAF::FileEditor->new(NCM::Filesystem::FSTAB);
 
 my %mounts = ();
 %mounts = $cmp->valid_mounts($protected->{keep}, $fstab, %mounts);
