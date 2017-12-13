@@ -7,8 +7,10 @@ BEGIN {
 
 use Test::More;
 use Test::Quattor qw(route_rule);
-
+use Test::Quattor::Object;
 use NCM::Component::network;
+
+my $obj = Test::Quattor::Object->new();
 
 use Readonly;
 
@@ -106,8 +108,12 @@ set_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0", $ETH0);
 set_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth1", $ETH1);
 set_file_contents("/etc/sysconfig/network-scripts/route-eth1", $LEGACY_ETH1_ROUTE); # legacy format
 
+# mocked hardlinks in 1.56 do not support status preservation (see maven-tools issue #168)
+set_status('/etc/sysconfig/network-scripts/.quattorbackup/_etc_sysconfig_network-failed', mode => oct(644));
+set_status('/etc/sysconfig/network-scripts/.quattorbackup/_etc_sysconfig_network-scripts_ifcfg-eth1-failed', mode => oct(644));
+
 my $cfg = get_config_for_profile('route_rule');
-my $cmp = NCM::Component::network->new('network');
+my $cmp = NCM::Component::network->new('network', $obj);
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
