@@ -16,6 +16,9 @@ use Test::MockModule;
 use File::Temp qw (tempdir);
 use NCM::Component::spma::yum;
 use Test::Quattor::TextRender::Base;
+use Test::Quattor::Object;
+
+my $obj = Test::Quattor::Object->new;
 
 my $caf_trd = mock_textrender();
 
@@ -24,23 +27,25 @@ use Cwd;
 Readonly my $TESTDIR => getcwd().'/target/test';
 
 my $error = '';
-my $mock = Test::MockModule->new('NCM::Component::spma::yum');
-$mock->mock('error', sub {
+my $mockyum = Test::MockModule->new('NCM::Component::spma::yum');
+$mockyum->mock('error', sub {
     my ($self, @args) = @_;
     $error = join('', @args);
-    return $mock->original('error')->($self, @args);
+    return $mockyum->original('error')->($self, @args);
 });
+
+my $keeps_state = 0;
+$mockyum->mock('_keeps_state', sub {
+    $keeps_state += 1;
+    return $mockyum->original('_keeps_state')->(@_);
+});
+
 
 # Set NoAction
 $NCM::Component::spma::yum::NoAction = 1;
 $CAF::Object::NoAction = 1;
-# TODO: rework the unittests to use NoAction-safe Test::Quattor since 1.54
-#       switch to CAF::Path and rely on get_file for file existence tests
-#       do not use these lightly
-$Test::Quattor::NoAction = 0;
-$Test::Quattor::Original = 1;
 
-my $cmp = NCM::Component::spma::yum->new("spma");
+my $cmp = NCM::Component::spma::yum->new("spma", $obj);
 
 mkpath($TESTDIR) if ! -d $TESTDIR;
 
@@ -68,7 +73,7 @@ sub mkfile {
     my $filename = shift;
     diag "mkfile $filename";
     mkpath(dirname($filename));
-    open(my $fh, '>', $filename);
+    open(my $fh, '>', $filename) or die("mkfile $filename");
     print $fh "$filename\n";
     close($fh);
 }
@@ -80,7 +85,7 @@ sub readfile
 {
     my $fn = shift;
     return if ! -f $fn;
-    open(my $fh, $fn);
+    open(my $fh, $fn) or die("readfile $fn");
     my $txt = join('', <$fh>);
     close($fh);
     return $txt;
@@ -170,10 +175,10 @@ is($cmp->noaction_prefix(0), '',
 # would need a constants module or something like that
 
 # lets mock tempdir usage instead
-$mock->mock('tempdir', sub { return tempdir($MOCKED_TEMPLATE); });
+$mockyum->mock('tempdir', sub { return tempdir($MOCKED_TEMPLATE); });
 
 # this code should be identical to orig method, except for the template
-$mock->mock('_match_noaction_tempdir', sub {
+$mockyum->mock('_match_noaction_tempdir', sub {
     my ($self, $name) = @_;
     return $self->__match_template_dir($name, $MOCKED_TEMPLATE);
             });
@@ -199,9 +204,12 @@ ok(! defined($cmp->noaction_prefix(1, "$base/orig/my/file", "$base/orig/my/dirty
 like($error, qr{^Can't copy non-existing},
      "expected error message for non-existing directory");
 
-=item _override_noaction_fh
+=item _keeps_state
 
 =cut
+
+# set noaction
+$CAF::Object::NoAction = 1;
 
 
 my $fh;
@@ -209,63 +217,64 @@ my $fh;
 # Test FileWriter
 my $notokfn = "$TESTDIR/test1";
 ok(! $cmp->_match_noaction_tempdir($notokfn), "$notokfn does not match noaction tempdir");
-$fh = CAF::FileWriter->new($notokfn);
-ok(*$fh->{options}->{noaction}, "NoAction set on filewriter instance");
 
-$error = '';
-ok(! $cmp->_override_noaction_fh($fh),
-   "nothing changed (wrong prefix)");
+is_deeply([$cmp->_keeps_state($notokfn)], [$notokfn, 'keeps_state', 0],
+          "$notokfn returns keeps_state false");
 
-# it's normal the expected template is inlined constant, not the mocked one
-like($error, qr{Not going to override noaction on file \S+/target/test/test1 \(expected template /tmp/spma-noaction-XXXXX\). Please report this issue to the developers, as this is most likely a bug in the code.},
-     "expected error message for wrong prefix");
+$fh = CAF::FileWriter->new($cmp->_keeps_state($notokfn));
+is(*$fh->{filename}, $notokfn, "filename $notokfn");
+ok(*$fh->{options}->{noaction},
+   "$notokfn NoAction=1 on filewriter instance with keeps_state=0 NoAction=1");
 
-ok(*$fh->{options}->{noaction}, "NoAction still set on filewriter instance");
-
+$fh->cancel();
 $fh->close();
 
 #
 my $okfn = "$TESTDIR/spma-noaction-abcde/test1";
 ok($cmp->_match_noaction_tempdir($okfn), "$okfn matches noaction tempdir");
-$fh = CAF::FileWriter->new($okfn);
-ok(*$fh->{options}->{noaction}, "NoAction set on filewriter instance");
 
-$error = '';
-ok($cmp->_override_noaction_fh($fh),
-   "allowed prefix to override noaction");
+is_deeply([$cmp->_keeps_state($okfn)], [$okfn, 'keeps_state', 1],
+          "$okfn returns keeps_state true");
 
-# it's normal the expected template is inlined constant, not the mocked one
-is($error, '', "no error message for correct prefix");
-
-ok(! *$fh->{options}->{noaction}, "NoAction disabled on filewriter instance");
+$fh = CAF::FileWriter->new($cmp->_keeps_state($okfn));
+is(*$fh->{filename}, $okfn, "filename $notokfn");
+ok(!*$fh->{options}->{noaction},
+   "$okfn NoAction=0 on filewriter instance with keeps_state=1 NoAction=1");
 
 $fh->cancel();
 $fh->close();
 
 # disable global NoAction
-$NCM::Component::spma::yum::NoAction = 0;
+$CAF::Object::NoAction = 0;
+
+$notokfn .= "2";
+
+is_deeply([$cmp->_keeps_state($notokfn)], [$notokfn, 'keeps_state', 0],
+          "$notokfn returns keeps_state false");
+
+$fh = CAF::FileWriter->new($cmp->_keeps_state($notokfn));
+is(*$fh->{filename}, $notokfn, "filename $notokfn");
+ok(! *$fh->{options}->{noaction},
+   "$notokfn NoAction=0 on filewriter instance with keeps_state=0 NoAction=0");
+
+$fh->cancel();
+$fh->close();
 
 $okfn .= "2";
-ok($cmp->_match_noaction_tempdir($okfn), "$okfn matches noaction tempdir");
 
-$fh = CAF::FileWriter->new("$okfn");
+is_deeply([$cmp->_keeps_state($okfn)], [$okfn, 'keeps_state', 1],
+          "$okfn returns keeps_state true");
 
-# becasue of CAF::Object::NoAction, does not follow the global one.
-ok(*$fh->{options}->{noaction}, "NoAction set on filewriter instance");
+$fh = CAF::FileWriter->new($cmp->_keeps_state($okfn));
+is(*$fh->{filename}, $okfn, "filename $okfn");
+ok(! *$fh->{options}->{noaction},
+   "$okfn NoAction=0 on filewriter instance with keeps_state=1 NoAction=0");
 
-$error = '';
-ok(! $cmp->_override_noaction_fh($fh),
-   "allowed prefix to override noaction, but NoAction is not set");
-
-is($error, '', "no error message for no NoAction");
-
-ok(*$fh->{options}->{noaction},
-   "NoAction unchanged on filewriter instance with global NoAction disabled and matching prefix");
-
+$fh->cancel();
 $fh->close();
 
 # restore global NoAction
-$NCM::Component::spma::yum::NoAction = 1;
+$CAF::Object::NoAction = 1;
 
 =item cleanup_old_repos
 
@@ -277,7 +286,7 @@ ok(! $cmp->_match_noaction_tempdir($repodir),
 $error = '';
 ok(! $cmp->cleanup_old_repos($repodir, undef, 1),
    "cleanup_old_repos fails with repodir that does not match noaction tempdir");
-like($error, qr{Not going to going to cleanup repository files with NoAction with unexpected repository directory},
+like($error, qr{Not going to cleanup repository files with NoAction with unexpected repository directory},
      "cleanup_old_repos failed with expected error message");
 
 $repodir = "$TESTDIR/spma-noaction-abcde/etc/yum.repos.d/";
@@ -307,7 +316,10 @@ $NCM::Component::spma::yum::NoAction = 1;
 
 =cut
 
+$keeps_state = 0;
 $cmp->configure_yum("$tmppath/etc/yum.conf", 1, "$tmppath/etc/yum/pluginconf.d", ["$tmppath/etc/yum.repos.d"]);
+
+is($keeps_state, 1, "keeps_state called once");
 
 my $generatedconf = <<"EOF";
 
@@ -320,7 +332,9 @@ pluginconfpath=$tmppath/etc/yum/pluginconf.d
 reposdir=$tmppath/etc/yum.repos.d
 EOF
 
-is(readfile("$tmppath/etc/yum.conf"), $generatedconf, "correctly generated text");
+my $yum_cfg_fh = get_file("$tmppath/etc/yum.conf");
+diag explain $yum_cfg_fh;
+is("$yum_cfg_fh", $generatedconf, "correctly generated text");
 
 =item commands use new yum.conf
 
@@ -334,6 +348,13 @@ is_deeply(NCM::Component::spma::yum::_set_yum_config(['yum','arg1']),
 
 =cut
 
+# TODO: rework the unittests to use NoAction-safe Test::Quattor since 1.54
+#       switch to CAF::Path and rely on get_file for file existence tests
+#       do not use these lightly
+$Test::Quattor::NoAction = undef; # force original behaviour, incl keeps_state
+$Test::Quattor::Original = 1;
+
+
 my $yumbase = "$TESTDIR/configure_noaction";
 mkfile("$yumbase/etc/yum.conf");
 mkfile("$yumbase/etc/yum.repos.d/old.repo");
@@ -345,16 +366,16 @@ mkfile("$yumbase/etc/yum/pluginconf.d/unmanaged.conf");
 # we need to mock a few things
 # insert yumbase prefix to find source files,
 # but will also put the files in $MOCKED_TEMPLATE/$yumbase, not $MOCKED_TEMPLATE/etc
-$mock->mock('_copy_files_and_dirs', sub {
+$mockyum->mock('_copy_files_and_dirs', sub {
     my ($self, $prefix, @data) = @_;
-    my $res = $mock->original('_copy_files_and_dirs')->($self, $prefix, map {"$yumbase/$_"} @data);
+    my $res = $mockyum->original('_copy_files_and_dirs')->($self, $prefix, map {"$yumbase/$_"} @data);
     diag "mocked _copy_files_and_dirs yumbase $yumbase res ".(defined $res ? $res : '<undef>');
     return $res;
             });
 
-$mock->mock('noaction_prefix', sub {
+$mockyum->mock('noaction_prefix', sub {
     my ($self, $noaction, @data) = @_;
-    my $tmppath = $mock->original('noaction_prefix')->($self, $noaction, @data);
+    my $tmppath = $mockyum->original('noaction_prefix')->($self, $noaction, @data);
     my $newtmppath = "$tmppath/$yumbase";
     diag "mocked noaction_prefix: noaction $noaction orig tmppath $tmppath new $newtmppath";
     $self->__set_active_noaction_prefix($newtmppath);
@@ -362,7 +383,7 @@ $mock->mock('noaction_prefix', sub {
             });
 
 # let update fail; will also prevent cleanup to help debugging
-$mock->mock('update_pkgs_retry', 0);
+$mockyum->mock('update_pkgs_retry', 0);
 
 my $cfg = get_config_for_profile("noaction");
 
@@ -407,7 +428,7 @@ ok(-f "$tmpetc/yum/pluginconf.d/fastestmirror.conf",
    "pluginconf fastestmirror defined in noaction tempdir");
 
 ok(-f "$tmpetc/yum/pluginconf.d/unmanaged.conf",
-   "unmanaged plgin conf found (copy was succesful)");
+   "unmanaged plugin conf found (copy was succesful)");
 
 =pod
 

@@ -49,6 +49,15 @@ sub initialise_repos
 
 my $repos = initialise_repos();
 
+my $mockyum = Test::MockModule->new('NCM::Component::spma::yum');
+
+my $keeps_state = 0;
+$mockyum->mock('_keeps_state', sub {
+    $keeps_state += 1;
+    return $mockyum->original('_keeps_state')->(@_);
+});
+
+
 my $mock = Test::MockModule->new('CAF::FileWriter');
 
 my $cancelled = 0;
@@ -70,9 +79,10 @@ configuration files.
 
 =cut
 
+$keeps_state = 0;
 ok(defined($cmp->generate_repos($REPOS_DIR, $repos, $REPOS_TEMPLATE)),
    "Basic repository correctly created");
-
+is($keeps_state, 2 * scalar (@$repos), "_keeps_state called twice per repo");
 
 my $fh = get_file("/etc/yum.repos.d/a_repo.repo");
 ok(defined($fh), "Correct file opened");

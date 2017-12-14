@@ -6,8 +6,18 @@ use Test::More;
 use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::Quattor::TextRender::Base;
-
 use Readonly;
+
+use Test::MockModule;
+
+my $mockyum = Test::MockModule->new('NCM::Component::spma::yum');
+
+my $keeps_state = 0;
+$mockyum->mock('_keeps_state', sub {
+    $keeps_state += 1;
+    return $mockyum->original('_keeps_state')->(@_);
+});
+
 Readonly my $YUM_PLUGIN_DIR => "/etc/yum/pluginconf.d";
 
 my $caf_trd = mock_textrender();
@@ -22,8 +32,10 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 
 =cut
 
+$keeps_state = 0;
 $changes = $cmp->configure_plugins($YUM_PLUGIN_DIR);
 is($changes, 3, "3 modified files when no plugins are passed");
+is($keeps_state, 3, "_keeps_state called once per plugin");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
