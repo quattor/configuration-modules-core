@@ -1,6 +1,7 @@
 #-*- mode: cperl -*-
 use strict;
 use warnings;
+
 use Test::Quattor qw(simple);
 use Test::More;
 use NCM::Component::nrpe;
@@ -31,7 +32,7 @@ like($fh, qr{^command\[cmd\]=foobar$}m, "command lines printed correctly");
 like($fh, qr{^include=foo$}m, "include lines printed correctly");
 like($fh, qr{^include_dir=bar$}m, "include_dir lines printed correctly");
 
-like($fh, qr{^_42=42$}m, "Ordinary lines printed correctly");
+like($fh, qr{^nrpe_user=nagios$}m, "Ordinary lines printed correctly");
 
 # Set failing restart
 set_command_status("service nrpe restart", 1);
