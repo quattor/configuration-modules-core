@@ -1,6 +1,8 @@
 #${PMcomponent}
 
+no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 use 5.10.1;
+
 use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all();
 

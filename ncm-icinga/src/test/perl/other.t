@@ -18,7 +18,7 @@ is("$fh", q!define contactgroup {
 !, "Contents properly written");
 
 $rs = $comp->print_other($t, "servicegroups");
-my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{servicegroups});
+$fh = get_file(NCM::Component::icinga::ICINGA_FILES->{servicegroups});
 is("$fh", q!define servicegroup {
 	servicegroup_name	foo
 	bar	baz

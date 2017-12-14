@@ -150,6 +150,6 @@ $t = init_tree();
 my $c = $t->{hosts_generic};
 delete($t->{hosts_generic});
 $rs = $comp->print_general($t);
-my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{general});
+$fh = get_file(NCM::Component::icinga::ICINGA_FILES->{general});
 unlike("$fh", qr{^cfg_file\s*=\s*$c$}m, "Non-existing files don't get printed");
 

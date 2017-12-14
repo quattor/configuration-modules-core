@@ -27,11 +27,11 @@ like($fh, qr(^\s*host_name\tahost$)m,            "Host name properly registered"
 unlike($fh, qr(address\t\d+\.\d+\.\d+\.\d+), "No IP address found for non-existing host");
 
 $rs = $comp->print_hosts($t, ["ahost"]);
-my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hosts});
+$fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hosts});
 is("$fh", "", "Ignored hosts are not listed in configuration file");
 
 $t = {"www.google.com" => $t->{ahost}};
 
 $rs = $comp->print_hosts($t);
-my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hosts});
+$fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hosts});
 like("$fh", qr(address\s+\d+\.\d+\.\d+\.\d+), "IP address found for existing host");

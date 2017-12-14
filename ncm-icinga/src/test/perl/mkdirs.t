@@ -16,7 +16,7 @@ $cmp->{ERROR} = 0;
 
 $cmp->make_dirs({check_result_path => $DIR});
 
-ok(-d $DIR, "Directory created");
+ok(-d $DIR, "Directory $DIR created");
 is($cmp->{ERROR}, 0, "Created directory structure under test location $DIR");
 
 # Make a test that fails directory creation, also if run by root.
