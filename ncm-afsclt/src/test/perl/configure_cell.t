@@ -64,9 +64,6 @@ sub execute_standard_test {
 my $fh;
 my $status;
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 $comp = NCM::Component::afsclt->new('afsclt');
 
 my $config_explicit = get_config_tree("explicit");

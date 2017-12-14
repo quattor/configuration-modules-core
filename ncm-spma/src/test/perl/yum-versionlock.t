@@ -22,6 +22,15 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
 use Set::Scalar;
+use Test::MockModule;
+
+my $mockyum = Test::MockModule->new('NCM::Component::spma::yum');
+
+my $keeps_state = 0;
+$mockyum->mock('_keeps_state', sub {
+    $keeps_state += 1;
+    return $mockyum->original('_keeps_state')->(@_);
+});
 
 $CAF::Object::NoAction = 1;
 
@@ -153,10 +162,15 @@ my ($locked, $toquery) = $cmp->prepare_lock_lists($tmppkgs);
 is($cmp->locked_all_packages($locked, "", 0), 1, "Failed to lock packages with star version (but it's ok without fullsearch)");
 is($cmp->locked_all_packages($locked, "", 1), 0, "Failed to lock packages with star version (fullsearch on)");
 
+$keeps_state = 0;
 is($cmp->versionlock($tmppkgs, 0), 1,
    "Failure to versionlock star version is reported (but it's ok without fullsearch)");
+is($keeps_state, 1, "_keeps_state called once");
+
+$keeps_state = 0;
 is($cmp->versionlock($tmppkgs, 1), 0,
    "Failure to versionlock star version is reported (fullsearch on)");
+is($keeps_state, 0, "_keeps_state not called");
 
 # make large enough output with mock versions and random ordered output
 # also make list of packages with version wildcards

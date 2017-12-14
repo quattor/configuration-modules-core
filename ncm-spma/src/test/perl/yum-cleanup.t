@@ -28,6 +28,16 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
 
+use Test::MockModule;
+
+my $mockyum = Test::MockModule->new('NCM::Component::spma::yum');
+
+my $keeps_state = 0;
+$mockyum->mock('_keeps_state', sub {
+    $keeps_state += 1;
+    return $mockyum->original('_keeps_state')->(@_);
+});
+
 
 Readonly my $YUM_FILE => "target/test/cleanup.conf";
 Readonly my $COR => NCM::Component::spma::yum::YUM_CONF_CLEANUP_ON_REMOVE;
@@ -51,7 +61,10 @@ my $extra_opts = {
 =cut
 
 set_file_contents($YUM_FILE, "a=1\nexclude=something else and more\n");
+$keeps_state = 0;
 $cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1 /dir/2)], $extra_opts);
+is($keeps_state, 1, "_keeps_state called once");
+
 my $fh = get_file($YUM_FILE);
 like("$fh", qr{^a=1\n}, "keep existiing lines");
 like("$fh", qr{^$COR=1$}m, "Correct expansion");

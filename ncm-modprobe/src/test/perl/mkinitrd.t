@@ -20,7 +20,6 @@ use Test::More;
 use Test::MockModule;
 use Test::Quattor;
 use LC::File;
-use subs 'NCM::Component::modprobe::directory_contents';
 use NCM::Component::modprobe;
 use CAF::FileWriter;
 use CAF::Object;
@@ -40,7 +39,7 @@ my $cmp = NCM::Component::modprobe->new("modprobe");
 $cmp->mkinitrd();
 
 my $cmd = get_command(MKINITRD);
-ok(defined($cmd), "mkinitrd was caled");
+ok(defined($cmd), "mkinitrd was called");
 
 set_command_status(MKINITRD, 1);
 

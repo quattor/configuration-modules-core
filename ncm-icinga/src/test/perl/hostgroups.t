@@ -21,6 +21,6 @@ like($fh, qr(^\s*alias\s+a$)m,              "Alias properly registered");
 like($fh, qr(^\s*members\s+1,2,3$)m,        "All members registered");
 
 $rs = $comp->print_hostgroups($t, [1]);
-my $fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hostgroups});
+$fh = get_file(NCM::Component::icinga::ICINGA_FILES->{hostgroups});
 
 like($fh, qr(^\s*members\s+2,3$)m, "Unwanted member ignored");

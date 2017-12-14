@@ -36,7 +36,6 @@ my @sorted = $cmp->sort_keys($example_rule);
 my @expected = ('-A', '-j', '--comment');
 
 is_deeply(\@sorted, \@expected, "sort_keys sorts example keys correctly");
-undef $example_rule, @sorted, @expected;
 
 # Test rule_options_translate method
 my $translate_rule = {

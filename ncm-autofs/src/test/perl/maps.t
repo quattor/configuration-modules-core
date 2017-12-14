@@ -9,10 +9,6 @@ use Test::MockModule;
 use Readonly;
 use Test::Quattor::TextRender::Base;
 
-$CAF::Object::NoAction = 1;
-
-set_caf_file_close_diff(1);
-
 my $caf_trd = mock_textrender();
 
 =pod

@@ -1,11 +1,25 @@
 use strict;
 use warnings;
+
+BEGIN {
+    *CORE::GLOBAL::getpwnam = sub {
+        my @ids = qw(1 2 3 4);
+        return @ids;
+    };
+    *CORE::GLOBAL::getgrnam = sub {
+        my @ids = qw(1 2 3 4);
+        return @ids;
+    };
+}
+
 use Test::More;
 use Test::Quattor;
+use Test::Quattor::Object;
 use NCM::Component::metaconfig;
 use Test::MockModule;
 use CAF::Object;
 
+my $obj = Test::Quattor::Object->new;
 
 =pod
 
@@ -26,7 +40,7 @@ $mock->mock('tt', sub {
 		return 1;
 	    });
 
-my $cmp = NCM::Component::metaconfig->new('metaconfig');
+my $cmp = NCM::Component::metaconfig->new('metaconfig', $obj);
 
 =pod
 
@@ -38,7 +52,7 @@ Invalid module names must be reported and return an error
 
 our $shouldnt_be_reached;
 
-my $srv = { module => 'a;d', owner => 'foo', group => 'bar', contents => {} };
+my $srv = { module => 'a;d', owner => 'foo', group => 'bar', mode => oct(755), contents => {} };
 ok(!$cmp->handle_service("foo", $srv), "Invalid module name triggers an error");
 ok(!$@, "Not even attempted to load an invalid module");
 $srv->{module} = q{strict

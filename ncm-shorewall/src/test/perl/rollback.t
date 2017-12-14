@@ -14,14 +14,9 @@ use CAF::Object;
 
 use Test::Quattor::TextRender::Base;
 
-$CAF::Object::NoAction = 1;
-
 my $caf_trd = mock_textrender();
 
 # service variant set to linux_sysv
-
-set_caf_file_close_diff(1);
-
 my $cmp = NCM::Component::shorewall->new('shorewall');
 
 my $cfg = get_config_for_profile('rollback');

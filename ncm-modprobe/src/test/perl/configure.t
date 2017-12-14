@@ -23,9 +23,6 @@ use Test::MockObject::Extends;
 use Test::More;
 use Class::Inspector;
 
-$CAF::Object::NoAction = 1;
-set_caf_file_close_diff(1);
-
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
 $cmp = Test::MockObject::Extends->new($cmp);
