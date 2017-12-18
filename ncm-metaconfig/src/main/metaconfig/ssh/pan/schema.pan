@@ -2,11 +2,21 @@ declaration template metaconfig/ssh/schema;
 
 include 'pan/types';
 
-type ssh_ciphers = string with match (SELF, "^((blowfish|3des|aes128|aes192|aes256|cast128)-cbc|(aes128|aes192|aes256)-ctr|arcfour|arcfour(128|256)|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
-type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
-type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
-type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|-exchange-sha256)|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org|gss-gex-sha1-|gss-group1-sha1-|gss-group14-sha1-)$");
-type ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
+# rename these types to prevent conflicts
+#   we will remove these in an upcoming pr after template-library-core
+#   has been updated with the new types from ncm-ssh
+type temp_ssh_ciphers = string with match (SELF, "^((blowfish|3des|aes128|aes192|aes256|cast128)-cbc" +
+    "|(aes128|aes192|aes256)-ctr|arcfour|arcfour(128|256)|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
+type temp_ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|" +
+    "(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|" +
+    "ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
+type temp_ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
+type temp_ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|" +
+    "-exchange-sha256)|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org|gss-gex-sha1-|" +
+    "gss-group1-sha1-|gss-group14-sha1-)$");
+type temp_ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|" +
+    "(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|" +
+    "hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
 
 
 type ssh_config_opts = {
@@ -21,7 +31,7 @@ type ssh_config_opts = {
     'ChallengeResponseAuthentication' ? boolean
     'CheckHostIP' ? boolean
     'Cipher' ? string with match (SELF, "^(blowfish|3des|des)$")
-    'Ciphers' ? ssh_ciphers[]
+    'Ciphers' ? temp_ssh_ciphers[]
     'ClearAllForwardings' ? boolean
     'Compression' ? boolean
     'CompressionLevel' ? long(0..9)
@@ -46,7 +56,7 @@ type ssh_config_opts = {
     'HashKnownHosts' ? boolean
     'HostbasedAuthentication' ? boolean
     'HostbasedKeyTypes' ? string[]
-    'HostKeyAlgorithms' ? ssh_hostkeyalgorithms[]
+    'HostKeyAlgorithms' ? temp_ssh_hostkeyalgorithms[]
     'HostKeyAlias' ? string
     'HostName' ? string
     'IdentitiesOnly' ? boolean
@@ -54,12 +64,12 @@ type ssh_config_opts = {
     'IgnoreUnknown' ? string[]
     'IPQoS' ? string with match (SELF, "^(af[1234][123]|cs[0-7]|ef|lowdelay|throughput|reliability)$")
     'KbdInteractiveAuthentication' ? boolean
-    'KbdInteractiveDevices' ? ssh_kbdinteractivedevices[]
-    'KexAlgorithms' ? ssh_kexalgorithms[]
+    'KbdInteractiveDevices' ? temp_ssh_kbdinteractivedevices[]
+    'KexAlgorithms' ? temp_ssh_kexalgorithms[]
     'LocalCommand' ? string
     'LocalForward' ? string
     'LogLevel' ? string with match (SELF, "^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG|DEBUG[123])$")
-    'MACs' ? ssh_MACs[]
+    'MACs' ? temp_ssh_MACs[]
     'NoHostAuthenticationForLocalhost' ? boolean
     'NumberOfPasswordPrompts' ? long(0..)
     'PasswordAuthentication' ? boolean
