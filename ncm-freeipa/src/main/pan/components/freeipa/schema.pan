@@ -26,7 +26,7 @@ type component_${project.artifactId}_user = {
     @{first name}
     'givenname' : string
     @{group name (must be a configured group to retrieve the gid)}
-    'group' ? string with exists('/software/components/${project.artifactId}/server/groups/'+SELF)
+    'group' ? string with exists('/software/components/${project.artifactId}/server/groups/' + SELF)
     @{homedirectory}
     'homedirectory' ? string
     @{gecos}

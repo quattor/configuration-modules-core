@@ -24,7 +24,7 @@ function validate_aii_freeipa_hooks = {
     hook = SELF[ARGV[0]];
     found = false;
     ind = 0;
-    foreach (i;v;hook) {
+    foreach (i; v; hook) {
         if (exists(v['module']) && v['module'] == FREEIPA_AII_MODULE_NAME) {
             if (found) {
                 error(format("%s: second freeipa %s hook found", FUNCTION, name));
