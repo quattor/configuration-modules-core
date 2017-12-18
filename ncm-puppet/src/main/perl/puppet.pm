@@ -11,20 +11,16 @@ use CAF::FileWriter;
 use Config::Tiny;
 use YAML::XS;
 
+#Needed to prevent YAML::XS to quote integers when dyumping JSON.
+$YAML::XS::QuoteNumericStrings = 0;
+
 our $NoActionSupported = 1;
 
 use Readonly;
 
-
-Readonly::Array my @APPLY => qw(puppet apply --detailed-exitcodes -v -l);
-Readonly::Array my @MODULE_UPGRADE => qw(puppet module upgrade);
-Readonly::Array my @MODULE_INSTALL => qw(puppet module install);
-Readonly::Scalar my $NODEFILES_PATH => '/etc/puppet/manifests';
-Readonly::Scalar my $PUPPET_CONFIG_FILE => '/etc/puppet/puppet.conf';
-Readonly::Scalar my $HIERA_CONFIG_FILE => '/etc/puppet/hiera.yaml';
-Readonly::Scalar my $HIERA_DATA_FILE => '/etc/puppet/hieradata/quattor.yaml';
-Readonly::Scalar my $PUPPET_LOGS => '/var/log/puppet/log';
-
+Readonly::Array my @APPLY => qw(apply --detailed-exitcodes -v -l);
+Readonly::Array my @MODULE_UPGRADE => qw(module upgrade);
+Readonly::Array my @MODULE_INSTALL => qw(module install);
 
 sub Configure
 {
@@ -32,17 +28,17 @@ sub Configure
 
     my $confighash = $config->getElement($self->prefix)->getTree();
 
-    $self->tiny($confighash->{puppetconf},$PUPPET_CONFIG_FILE);
+    $self->tiny($confighash->{puppetconf}, $confighash->{puppetconf_file});
 
-    $self->yaml($confighash->{hieraconf},$HIERA_CONFIG_FILE);
+    $self->yaml($confighash->{hieraconf}, $confighash->{hieraconf_file});
 
-    $self->install_modules($confighash->{modules}) if(defined($confighash->{modules}));
+    $self->install_modules($confighash->{modules}, $confighash->{puppet_cmd}, $confighash->{modulepath}) if(defined($confighash->{modules}));
 
-    $self->yaml($confighash->{hieradata},$HIERA_DATA_FILE) if(defined($confighash->{hieradata}));
+    $self->yaml($confighash->{hieradata}, $confighash->{hieradata_file}) if(defined($confighash->{hieradata}));
 
-    $self->nodefiles($confighash->{nodefiles});
+    $self->nodefiles($confighash->{nodefiles}, $confighash->{nodefiles_path});
 
-    $self->apply($confighash->{nodefiles});
+    $self->apply($confighash->{nodefiles}, $confighash->{nodefiles_path}, $confighash->{puppet_cmd}, $confighash->{modulepath}, $confighash->{logfile});
 
     return 0;
 }
@@ -53,12 +49,12 @@ sub Configure
 #
 sub nodefiles
 {
-    my ($self, $cfg) = @_;
+    my ($self, $cfg, $path) = @_;
 
     foreach my $file (sort keys %{$cfg}){
         if($cfg->{$file}->{contents}){
-            my $path=$NODEFILES_PATH."/".unescape($file);
-            $self->checkfile($path,$cfg->{$file}->{contents});
+            my $path=$path."/".unescape($file);
+            $self->checkfile($path, $cfg->{$file}->{contents});
         }
     }
     return 0;
@@ -70,20 +66,20 @@ sub nodefiles
 #
 sub apply
 {
-    my ($self, $cfg) = @_;
+    my ($self, $cfg, $path, $cmd, $modulepath,$logs) = @_;
 
     foreach my $file (sort keys %{$cfg}){
 
-        my $out=CAF::Process->new([@APPLY,$PUPPET_LOGS,$NODEFILES_PATH."/".unescape($file)], log => $self)->output();
-        my $exit_code=$?>>8;
+        my $out = CAF::Process->new([$cmd, @APPLY, $logs, '--modulepath', $modulepath, $path."/".unescape($file)], log => $self)->output();
+        my $exit_code = $?>>8;
 
         if (($exit_code != 0)&&($exit_code != 2)) {
-            $self->error("Apply command failed with code $exit_code. See $PUPPET_LOGS.\n");
+            $self->error("Apply command failed with code $exit_code. See $logs.\n");
         } else {
             if ($exit_code == 2) {
-                $self->info("Puppet apply performed some actions. See  $PUPPET_LOGS.\n");
+                $self->info("Puppet apply performed some actions. See  $logs.\n");
             }
-            $self->debug(1,"Apply command successfully executed. See  $PUPPET_LOGS.\n");
+            $self->debug(1, "Apply command successfully executed. See  $logs.\n");
         }
     }
 }
@@ -94,31 +90,31 @@ sub apply
 #
 sub install_modules
 {
-    my ($self, $cfg) = @_;
+    my ($self, $cfg, $cmd, $modulepath) = @_;
 
     foreach my $mod (sort keys %{$cfg}){
-        my $module=unescape($mod);
+        my $module = unescape($mod);
         my @args;
         if(defined($cfg->{$mod}->{version})){
-            my $version="--version=".$cfg->{$mod}->{version};
-            @args=($module,$version);
+            my $version = "--version=".$cfg->{$mod}->{version};
+            @args = ($module, $version);
         } else {
-            @args=($module);
+            @args = ($module);
         }
 
 
-        my $out=CAF::Process->new([@MODULE_UPGRADE,@args],log => $self)->output();
-        my $ok=!($?>>8);
+        my $out = CAF::Process->new([$cmd, @MODULE_UPGRADE, '--modulepath', $modulepath, @args], log => $self)->output();
+        my $ok = !($?>>8);
         if (!$ok){
-            $out=CAF::Process->new([@MODULE_INSTALL,@args],log => $self)->output();
-            $ok=!($?>>8);
+            $out = CAF::Process->new([$cmd, @MODULE_INSTALL, '--modulepath', $modulepath, @args], log => $self)->output();
+            $ok = !($?>>8);
             if ($ok){
-                $self->debug(1,"Module install command successfully executed. Output: $out\n");
+                $self->debug(1, "Module install command successfully executed. Output: $out\n");
             }else{
                 $self->error("Both Upgrade and Install command failed on module $module. Output: $out\n");
             }
         } else {
-            $self->debug(1,"Module upgrade command successfully executed. Output: $out\n");
+            $self->debug(1, "Module upgrade command successfully executed. Output: $out\n");
         }
     }
     return 0;
@@ -143,7 +139,7 @@ sub tiny
         }
     }
 
-    $self->checkfile($file,$c->write_string());
+    $self->checkfile($file, $c->write_string());
 
     return 0;
 }
@@ -157,7 +153,7 @@ sub yaml
 {
     my ($self, $cfg, $file) = @_;
 
-    $self->checkfile($file,YAML::XS::Dump($self->unescape_keys($cfg)));
+    $self->checkfile($file, YAML::XS::Dump($self->unescape_keys($cfg)));
 
     return 0;
 }

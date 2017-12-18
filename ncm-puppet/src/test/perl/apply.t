@@ -25,7 +25,10 @@ use Readonly;
 Readonly::Scalar my $GOOD => "This is a fake content";
 Readonly::Scalar my $WRONG => "This is a wrong fake content";
 Readonly::Scalar my $FILES_DIR => "/etc/puppet/manifests";
-Readonly::Scalar my $APPLY_CMD => "puppet apply --detailed-exitcodes -v -l /var/log/puppet/log";
+Readonly::Scalar my $MODULES_DIR => "/etc/puppet/modules";
+Readonly::Scalar my $LOGS => "/var/log/puppet/log";
+Readonly::Scalar my $CMD => "puppet";
+Readonly::Scalar my $APPLY_CMD => "$CMD apply --detailed-exitcodes -v -l $LOGS --modulepath $MODULES_DIR";
 
 =pod
 
@@ -38,7 +41,7 @@ my $fh;
 set_file_contents("$FILES_DIR/foo1.pp",$WRONG);
 set_file_contents("$FILES_DIR/foo2.pp",$WRONG);
 $comp->nodefiles({'foo1_2epp' => {'contents'=>$GOOD},
-                  'foo2_2epp' => {'contents'=>$GOOD}});
+                  'foo2_2epp' => {'contents'=>$GOOD}},$FILES_DIR);
 $fh = get_file("$FILES_DIR/foo1.pp");
 is("$fh", $GOOD, "checkfile function puts the correct content in the node files");
 $fh = get_file("$FILES_DIR/foo2.pp");
@@ -65,7 +68,7 @@ Tests that the apply function correctly runs the "puppet apply" command. Three s
 set_command_status("$APPLY_CMD $FILES_DIR/foo1.pp",0);
 set_command_status("$APPLY_CMD $FILES_DIR/foo2.pp",0);
 
-$comp->apply({'foo1_2epp' => {'contents'=>$GOOD},'foo2_2epp' => {'contents'=>$GOOD}});
+$comp->apply({'foo1_2epp' => {'contents'=>$GOOD},'foo2_2epp' => {'contents'=>$GOOD}},$FILES_DIR,$CMD,$MODULES_DIR,$LOGS);
 
 ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo1.pp")), "1st apply command is invoked");
 ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo2.pp")), "2nd apply command is invoked");
@@ -89,7 +92,7 @@ ok(!exists($comp->{INFO}), "No messages when there are no changes");
 set_command_status("$APPLY_CMD $FILES_DIR/foo3.pp",2<<8);
 set_command_status("$APPLY_CMD $FILES_DIR/foo4.pp",0);
 
-$comp->apply({'foo3_2epp' => {'contents'=>$GOOD},'foo4_2epp' => {'contents'=>$GOOD}});
+$comp->apply({'foo3_2epp' => {'contents'=>$GOOD},'foo4_2epp' => {'contents'=>$GOOD}},$FILES_DIR,$CMD,$MODULES_DIR,$LOGS);
 
 ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo3.pp")), "1st apply command is invoked");
 ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo4.pp")), "2nd apply command is invoked");
@@ -114,7 +117,7 @@ ok(exists($comp->{INFO}), "A message is printed to inform that a change was made
 
 set_command_status("$APPLY_CMD $FILES_DIR/foo5.pp",6<<8);
 
-$comp->apply({'foo5_2epp' => {'contents'=>$GOOD}});
+$comp->apply({'foo5_2epp' => {'contents'=>$GOOD}},$FILES_DIR,$CMD,$MODULES_DIR,$LOGS);
 
 ok(defined(get_command("$APPLY_CMD $FILES_DIR/foo5.pp")), "apply command is invoked");
 ok(exists($comp->{ERROR}), "The component exits with error");

@@ -3,48 +3,50 @@
 # ${author-info}
 # ${build-info}
 
-declaration template components/${project.artifactId}/schema;
+declaration template components/puppet/schema;
 
 include 'quattor/schema';
 
-type ${project.artifactId}_module = {
+type puppet_module = {
     "version" ? string
 };
 
-type ${project.artifactId}_nodefile = {
+type puppet_nodefile = {
     "contents" ? string
 };
 
-type ${project.artifactId}_puppetconf_main = extensible {
+type puppet_puppetconf_main = extensible {
     "logdir" : string = "/var/log/puppet"
     "rundir" : string = "/var/run/puppet"
 };
 
-
-
-type ${project.artifactId}_puppetconf = extensible {
-    "main" : ${project.artifactId}_puppetconf_main
+type puppet_puppetconf = extensible {
+    "main" : puppet_puppetconf_main
 };
 
 type puppet_hieraconf_yaml = extensible {
     "_3adatadir" : string = "/etc/puppet/hieradata"
 };
 
-type puppet_hieraconf = extensible {
-    "_3abackends" : string[] = list("yaml")
-    "_3ayaml" : puppet_hieraconf_yaml
-    "_3ahierarchy" : string[] = list("quattor")
-};
+type puppet_hieraconf = extensible {};
 
-type ${project.artifactId}_hieradata = extensible {};
+type puppet_hieradata = extensible {};
 
-type ${project.artifactId}_component = {
+type puppet_component = {
     include structure_component
-    "modules" ? ${project.artifactId}_module{}
-    "nodefiles" : ${project.artifactId}_nodefile{}= dict(escape("quattor_default.pp"), dict("contents", "hiera_include('classes')"))
-    "puppetconf" : ${project.artifactId}_puppetconf = dict("main", dict("logdir", "/var/log/puppet", "rundir", "/var/run/puppet"))
-    "hieraconf" : ${project.artifactId}_hieraconf = dict(escape(":backends"), list("yaml"), escape(":yaml"), dict(escape(":datadir"), "/etc/puppet/hieradata"), escape(":hierarchy"), list("quattor"))
-    "hieradata" ? ${project.artifactId}_hieradata
+    "puppet_cmd" : string = "/usr/bin/puppet"
+    "logfile" : string = "/var/log/puppet/log"
+    "modulepath" : string = "/etc/puppet/modules"
+    "modules" ? puppet_module{}
+    "nodefiles" : puppet_nodefile{} = dict(escape("quattor_default.pp"), dict("contents", "hiera_include('classes')"))
+    "nodefiles_path" : string = '/etc/puppet/manifests'
+    "puppetconf" : puppet_puppetconf = dict("main", dict("logdir", "/var/log/puppet", "rundir", "/var/run/puppet"))
+    "puppetconf_file" : string = '/etc/puppet/puppet.conf'
+    "hieraconf" : puppet_hieraconf = dict(escape(":backends"), list("yaml"), escape(":yaml"),
+        dict(escape(":datadir"), "/etc/puppet/hieradata"), escape(":hierarchy"), list("quattor"))
+    "hieraconf_file" : string = "/etc/puppet/hiera.yaml"
+    "hieradata" ? puppet_hieradata
+    "hieradata_file" : string = "/etc/puppet/hieradata/quattor.yaml"
 };
 
-bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;
+bind '/software/components/puppet' = puppet_component;

@@ -23,8 +23,10 @@ $CAF::Object::NoAction = 1;
 my $comp = NCM::Component::puppet->new('puppet');
 
 use Readonly;
-Readonly::Scalar my $UPGRADE =>'puppet module upgrade';
-Readonly::Scalar my $INSTALL =>'puppet module install';
+Readonly::Scalar my $MODULES_DIR => "/etc/puppet/modules";
+Readonly::Scalar my $CMD => "puppet";
+Readonly::Scalar my $UPGRADE =>"$CMD module upgrade --modulepath $MODULES_DIR";
+Readonly::Scalar my $INSTALL =>"$CMD module install --modulepath $MODULES_DIR";
 
 =pod
 
@@ -101,7 +103,7 @@ set_desired_err("$INSTALL NOT_EXISTING_MODULE","stderr");
 set_command_status("$INSTALL NOT_EXISTING_MODULE",1<<8);
 
 
-$comp->install_modules({INSTALLED_MODULE => {},NOT_INSTALLED_MODULE=>{}});
+$comp->install_modules({INSTALLED_MODULE => {},NOT_INSTALLED_MODULE=>{}},$CMD,$MODULES_DIR);
 
 ok(defined(get_command("$UPGRADE INSTALLED_MODULE")), "module upgrade is invoked on installed module");
 ok(!defined(get_command("$INSTALL INSTALLED_MODULE")), "module install is not invoked on installed module");
@@ -111,7 +113,7 @@ ok(defined(get_command("$UPGRADE NOT_INSTALLED_MODULE")), "module upgrade is inv
 ok(defined(get_command("$INSTALL NOT_INSTALLED_MODULE")), "module install is invoked on not installed module");
 ok(!exists($comp->{ERROR}), "No errors found in normal execution");
 
-$comp->install_modules({INSTALLED_MODULE => {},NOT_EXISTING_MODULE=>{}});
+$comp->install_modules({INSTALLED_MODULE => {},NOT_EXISTING_MODULE=>{}},$CMD,$MODULES_DIR);
 
 ok(defined(get_command("$UPGRADE NOT_EXISTING_MODULE")), "module upgrade is invoked on non existing module");
 ok(defined(get_command("$INSTALL NOT_EXISTING_MODULE")), "module install is invoked on non existing module");
