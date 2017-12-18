@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>openstack</artifactId>
   <packaging>pom</packaging>
-  <version>17.7.1-SNAPSHOT</version>
+  <version>17.12.0-rc1</version>
   <name>ncm-openstack</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
