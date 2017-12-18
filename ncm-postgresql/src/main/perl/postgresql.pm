@@ -23,7 +23,7 @@ Readonly my $SYSCONFIG_TT => 'sysconfig';
 Readonly my $CONFIG_REL => '/config';
 
 # relative filename in PGDATA
-# legacy full text config relative to sefl->prefix
+# legacy full text config relative to self->prefix
 Readonly::Hash our %MAIN_CONFIG => {
     NAME => 'main',
     TT => 'main_config',
@@ -40,6 +40,14 @@ Readonly::Hash our %HBA_CONFIG => {
     CONFIG_EL => $CONFIG_REL, # TT file expects this
     FILENAME => 'pg_hba.conf',
     TEXT => 'pg_hba',
+};
+
+Readonly::Hash our %RECOVERY_CONFIG => {
+    NAME => 'recovery',
+    TT => 'main_config',
+    CONFIG => $CONFIG_REL.'/recovery',
+    CONFIG_EL => $CONFIG_REL.'/recovery',
+    FILENAME => 'recovery.conf',
 };
 
 Readonly::Hash our %PG_ALTER => {
@@ -497,8 +505,14 @@ sub start_postgres
     my $hba_changed = $self->create_postgresql_config($config, $iam, %HBA_CONFIG);
     return if (! defined($hba_changed));
 
+    my $recovery_changed;
+    if ($config->elementExists($self->prefix().$RECOVERY_CONFIG{CONFIG})) {
+        $recovery_changed = $self->create_postgresql_config($config, $iam, %RECOVERY_CONFIG);
+        return if (! defined($recovery_changed));
+    }
+
     # restart conditions first (because restart also reloads)
-    if ($main_changed || $sysconfig_changed) {
+    if ($main_changed || $sysconfig_changed || $recovery_changed) {
         # most main params don't require a restart, but a few do.
         $self->info("main config or sysconfig changed, restarting");
         return if (! $iam->{service}->status_restart());

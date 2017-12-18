@@ -5,7 +5,10 @@ include 'simple';
 prefix "/software/components/postgresql";
 "pg_hba" = "pg_hba plain text";
 "config/main/archive_command" = "main archive";
-"roles/myrole" = "SUPERPOWER";
+"config/recovery/standby_mode" = true;
+"config/recovery/primary_conninfo" = "host=192.168.122.50 application_name=";
+
+    "roles/myrole" = "SUPERPOWER";
 "roles/otherrole" = "MORE SUPERPOWER";
 "databases/db1" = dict(
     "installfile", "/some/file1",

@@ -60,6 +60,14 @@ is_deeply({ %NCM::Component::postgresql::HBA_CONFIG }, {
     TEXT => 'pg_hba',
 }, "HBA_CONFIG as expected");
 
+is_deeply({ %NCM::Component::postgresql::RECOVERY_CONFIG }, {
+    NAME => 'recovery',
+    TT => 'main_config',
+    CONFIG => '/config/recovery',
+    CONFIG_EL => '/config/recovery',
+    FILENAME => 'recovery.conf',
+}, 'RECOVERY_CONFIG as expected');
+
 is_deeply({ %NCM::Component::postgresql::PG_ALTER }, {
     NAME => 'pg_alter',
     TT => 'pg_alter',
@@ -84,6 +92,13 @@ is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::HBA_C
 $fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::HBA_CONFIG{FILENAME});
 isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for HBA_CONFIG');
 is("$fh", "pg_hba plain text", "content from text for HBA_CONFIG");
+
+is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::RECOVERY_CONFIG),
+   1, 'create_postgresql_config returns changed state for RECOVERY_CONFIG');
+$fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::RECOVERY_CONFIG{FILENAME});
+isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for RECOVERY_CONFIG');
+is("$fh", "\nprimary_conninfo = 'host=192.168.122.50 application_name='\nstandby_mode = yes\n",
+   "content with TT from main config for RECOVERY_CONFIG");
 
 my $pg_alter = { %NCM::Component::postgresql::PG_ALTER };
 $pg_alter->{FILENAME} = "pgalter_fn";
@@ -185,20 +200,26 @@ $create_config = [];
 $config_res = { main => 1 }; # main changed
 ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
    "start_postgres returns undef when PG_VERSION exists, main changed and hba config fails");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called');
+is_deeply($create_config, ['main', 'hba'], 'Create config main and hba');
+
+$create_config = [];
+$config_res = { main => 1, hba => 1 }; # main and hba changed
+ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
+   "start_postgres returns undef when PG_VERSION exists, main and hba changed, recovery config fails");
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery');
 
 #
-# main changed (and hba too)
+# main changed (and hba and recovery too)
 #
-$config_res = { main => 1, hba => 1 };
+$config_res = { main => 1, hba => 1, recovery => 1 };
 
 # status is and stays down
 set_command_status('service myownpostgresql status', 1);
 $create_config = [];
 command_history_reset();
 ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
-   "start_postgres returns undef when PG_VERSION exists, sysconfig, main and hba changed and status stays down");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 2)');
+   "start_postgres returns undef when PG_VERSION exists, sysconfig, main, hba and recovery changed and status stays down");
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 2)');
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql start},
@@ -209,8 +230,8 @@ set_command_status('service myownpostgresql status', 0);
 $create_config = [];
 command_history_reset();
 ok($cmp->start_postgres($cfg, $iam, 1),
-   "start_postgres returns success when PG_VERSION exists, sysconfig, main and hba changed and status up");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 3)');
+   "start_postgres returns success when PG_VERSION exists, sysconfig, main, hba and recovery changed and status up");
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 3)');
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql restart},
@@ -220,7 +241,7 @@ ok(command_history_ok([
 #
 # only hba changed
 #
-$config_res = { main => 0, hba => 1 };
+$config_res = { main => 0, hba => 1, recovery => 0 };
 
 # status is and stays down
 set_command_status('service myownpostgresql status', 1);
@@ -229,7 +250,7 @@ $create_config = [];
 command_history_reset();
 ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
    "start_postgres returns undef when PG_VERSION exists, sysconfig and hba changed and status stays down");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 4)');
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 4)');
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql start},
@@ -242,7 +263,7 @@ command_history_reset();
 # sysconfig changed
 ok($cmp->start_postgres($cfg, $iam, 1),
    "start_postgres returns success when PG_VERSION exists, sysconfig and hba changed and status up");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 5)');
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 5)');
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql restart},
@@ -255,7 +276,7 @@ command_history_reset();
 # sysconfig changed
 ok($cmp->start_postgres($cfg, $iam, 0),
    "start_postgres returns success when PG_VERSION exists, only hba changed and status up");
-is_deeply($create_config, ['main', 'hba'], 'Create config main and hba called (pt 5)');
+is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 6)');
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql reload},

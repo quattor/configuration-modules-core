@@ -271,9 +271,21 @@ type postgresql_db = {
     "user" : string
 };
 
+type postgresql_recovery = {
+    @{recovering into a particular timeline, e.g. 'latest' in case of standby server}
+    "recovery_target_timeline" ? string
+    @{start server as standby}
+    "standby_mode" ? boolean
+    @{connection info to connect from standby to master}
+    "primary_conninfo" ? string
+    @{file presence ends recovery}
+    "trigger_file" ? absolute_file_path
+};
+
 type postgresql_config = {
     "hba" ? postgresql_hba[]
     "main" ? postgresql_mainconfig
+    "recovery" ? postgresql_recovery
     "debug_print" ? long with {
         deprecated(0, 'postgresql debug_print is not used anymore');
         true;
