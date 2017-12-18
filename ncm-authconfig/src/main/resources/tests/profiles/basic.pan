@@ -90,7 +90,6 @@ prefix "/software/components/authconfig/method/sssd/domains";
 "test1/ldap/tls/reqcert" = "hard";
 "test1/ldap/uri/0" = "ldaps://mymainserver.mydomain";
 "test1/ldap/uri/1" = "ldaps://myothermainserver.mydomain";
-"test1/ldap/use_object_class" = "posixAccount";
 "test1/ldap/user/ad_account_expires" = "accountExpires";
 "test1/ldap/user/ad_user_account_control" = "userAccountControl";
 "test1/ldap/user/authorized_host" = "host";
@@ -106,6 +105,7 @@ prefix "/software/components/authconfig/method/sssd/domains";
 "test1/ldap/user/nds_login_allowed_time_map" = "loginAllowedTimeMap";
 "test1/ldap/user/nds_login_disabled" = "loginDisabled";
 "test1/ldap/user/nds_login_expiration_time" = "loginDisabled";
+"test1/ldap/user/object_class" = "posixAccount";
 "test1/ldap/user/principal" = "krbPrincipalName";
 "test1/ldap/user/shadow_expire" = "shadowExpire";
 "test1/ldap/user/shadow_inactive" = "shadowInactive";
@@ -123,7 +123,7 @@ prefix "/software/components/authconfig/method/sssd/domains";
 "test1/re_expression" = "(?P<name>[^@]+)@?(?P<domain>[^@]*$)";
 "test1/subdomain_homedir" = "/home/%d/%u";
 "test1/access_provider" = "simple";
-"test1/simple/allow_groups" = list("group1","group2");
+"test1/simple/allow_groups" = list("group1", "group2");
 
 # IPA
 "test2/auth_provider" = "ipa";

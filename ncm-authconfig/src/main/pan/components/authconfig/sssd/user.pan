@@ -12,33 +12,35 @@
 declaration template components/authconfig/sssd/user;
 
 type sssd_user = {
-    "uid_number" : string = "uidNumber"
-    "gid_number" : string = "gidNumber"
-    "gecos" : string = "gecos"
-    "home_directory" : string = "homeDirectory"
-    "shell" : string = "loginShell"
-    "uuid" : string = "nsUniqueId"
+    "object_class" : string = "posixAccount"
+    "uid_number" ? string
+    "gid_number" ? string
+    "name" ? string
+    "gecos" ? string
+    "home_directory" ? string
+    "shell" ? string
+    "uuid" ? string
     "objectsid" ? string
-    "modify_timestamp" : string = "modifyTimestamp"
-    "shadow_last_change" : string = "shadowLastChange"
-    "shadow_min" : string = "shadowMin"
-    "shadow_max" : string = "shadowMax"
-    "shadow_warning" : string = "shadowWarning"
-    "shadow_inactive" : string = "shadowInactive"
-    "shadow_expire" : string = "shadowExpire"
-    "krb_last_pwd_change" : string = "krbLastPwdChange"
-    "krb_password_expiration" : string = "krbPasswordExpiration"
-    "ad_account_expires" : string = "accountExpires"
-    "ad_user_account_control" : string = "userAccountControl"
-    "nds_login_disabled" : string = "loginDisabled"
-    "nds_login_expiration_time" : string = "loginDisabled"
-    "nds_login_allowed_time_map" : string = "loginAllowedTimeMap"
-    "principal" : string = "krbPrincipalName"
+    "modify_timestamp" ? string
+    "shadow_last_change" ? string
+    "shadow_min" ? string
+    "shadow_max" ? string
+    "shadow_warning" ? string
+    "shadow_inactive" ? string
+    "shadow_expire" ? string
+    "krb_last_pwd_change" ? string
+    "krb_password_expiration" ? string
+    "ad_account_expires" ? string
+    "ad_user_account_control" ? string
+    "nds_login_disabled" ? string
+    "nds_login_expiration_time" ? string
+    "nds_login_allowed_time_map" ? string
+    "principal" ? string
     "ssh_public_key" ? string
-    "fullname" : string = "cn"
-    "member_of" : string = "memberOf"
-    "authorized_service" : string = "authorizedService"
-    "authorized_host" : string = "host"
+    "fullname" ? string
+    "member_of" ? string
+    "authorized_service" ? string
+    "authorized_host" ? string
     "search_base" ? string
     "search_filter" ? string
 };
@@ -47,13 +49,13 @@ type sssd_user = {
 
 type sssd_group = {
     "object_class" : string = "posixGroup"
-    "name" : string = "cn"
-    "gid_number" : string = "gidNumber"
-    "member" : string = "memberuid"
-    "uuid" : string = "nsUniqueId"
+    "name" ? string = "cn"
+    "gid_number" ? string
+    "member" ? string
+    "uuid" ? string
     "objectsid" ? string
-    "modify_timestamp" : string = "modifyTimestamp"
-    "nesting_level" : long = 2
+    "modify_timestamp" ? string
+    "nesting_level" ? long
     "search_base" ? string
     "search_filter" ? string
 };
