@@ -4,7 +4,7 @@
 [%         CASE 'instance_types' -%]
 :[%            pair.key %]:
 [%             FOREACH item IN sunstone.${pair.key} -%]
-[%                 INCLUDE 'opennebula/sunstone_level1.tt' 
+[%                 INCLUDE 'opennebula/sunstone_level1.tt'
                                           data=item -%]
 [%             END -%]
 [%         CASE 'routes' -%]

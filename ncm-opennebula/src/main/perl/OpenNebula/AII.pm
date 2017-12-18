@@ -16,8 +16,8 @@ Readonly my $BOOT_V5 => [qw(nic0 disk0)];
 
 =head1 NAME
 
-C<NCM::Component::OpenNebula::AII> adds C<AII> hook 
-to generate the required resources and templates 
+C<NCM::Component::OpenNebula::AII> adds C<AII> hook
+to generate the required resources and templates
 to instantiate/create/remove VMs within an C<OpenNebula> infrastructure.
 
 =head2 AII

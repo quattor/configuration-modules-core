@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 # -*- mode: cperl -*-
 # ${license-info}
 # ${developer-info}

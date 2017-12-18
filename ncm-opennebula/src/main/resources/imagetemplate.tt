@@ -1,4 +1,4 @@
-[%- tmphost = [ system.network.hostname, system.network.domainname ]; 
+[%- tmphost = [ system.network.hostname, system.network.domainname ];
     fqdn = tmphost.join('.') -%]
 [%- FOR pair IN hardware.harddisks.pairs %]
 TYPE = "DATABLOCK"

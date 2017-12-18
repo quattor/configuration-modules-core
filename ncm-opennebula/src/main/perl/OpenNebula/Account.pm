@@ -7,7 +7,7 @@ Readonly my $CORE_AUTH_DRIVER => "core";
 
 =head1 NAME
 
-C<NCM::Component::OpenNebula::Account> adds and modifies C<OpenNebula> user 
+C<NCM::Component::OpenNebula::Account> adds and modifies C<OpenNebula> user
 and groups accounts.
 
 =head2 Public methods

@@ -8,7 +8,7 @@ use CAF::Process;
 use File::Basename;
 use Readonly;
 
-Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto 
+Readonly::Array our @SSH_MULTIPLEX_OPTS => qw(-o ControlMaster=auto
     -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 Readonly::Array my @VIRSH_COMMAND => qw(sudo /usr/bin/virsh);
@@ -29,7 +29,7 @@ C<NCM::Component::OpenNebula::Commands> Configuration module for ONE
 Configuration module for OpenNebula. Executes the required ssh commands
 to enable the hosts to be used by the cloud server.
 
-This component needs a 'oneadmin' user. 
+This component needs a 'oneadmin' user.
 The user should be able to run these commands with sudo without password:
 
 =over
@@ -131,7 +131,7 @@ Checks for shell escapes.
 sub has_shell_escapes {
     my ($self, $cmd) = @_;
     if (grep(m{[;&>|"']}, @$cmd) ) {
-        $self->error("Invalid shell escapes found in ", 
+        $self->error("Invalid shell escapes found in ",
             join(" ", @$cmd));
         return 0;
     }
@@ -146,8 +146,8 @@ Executes a command as C<oneadmin> user.
 
 sub run_command_as_oneadmin {
     my ($self, $command, $secret) = @_;
-    
-    $self->has_shell_escapes($command) or return; 
+
+    $self->has_shell_escapes($command) or return;
     $command = [join(' ',@$command)];
     return $self->run_command([@SU_ONEADMIN_COMMAND, @$command], $secret);
 }
@@ -171,7 +171,7 @@ Accepts and adds unknown keys if wanted.
 =cut
 
 sub ssh_known_keys {
-    my ($self, $host, $key_accept, $homedir) = @_; 
+    my ($self, $host, $key_accept, $homedir) = @_;
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
         my $cmd = [@SSH_KEYGEN_COMMAND, '-F', $host];
@@ -190,7 +190,7 @@ sub ssh_known_keys {
         # SSH into machine with -o StrictHostKeyChecking=no
         # dummy ssh does the trick
         $self->run_command_as_oneadmin_with_ssh(['uname'], $host, ['-o', 'StrictHostKeyChecking=no']);
-    }   
+    }
 }
 
 =item can_connect_to_host

@@ -17,7 +17,7 @@ sub mock_run_command {
         note("This is my shortname:", $short);
         note("ssh internal command: ", $cmd);
         note("ssh dictionary command: ", $data->{command});
-        
+
         if ($sameparams) {
             note("ssh command found: ", $data->{out});
             return $data->{out};

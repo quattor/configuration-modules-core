@@ -8,7 +8,7 @@ Based on OpenNebula opennebula_ipv42mac function:
 
 https://github.com/OpenNebula/one/blob/master/share/router/vmcontext.rb
 
-Syntax: 
+Syntax:
 mac_prefix:string ipv4:string
 
 mac_prefix hex:hex value used also by oned.conf (02:00 by default)
@@ -39,7 +39,7 @@ function opennebula_ipv42mac = {
 This function replaces nic hwaddr using OpenNebula MAC function
 Use the same MAC_PREFIX for OpenNebula component (oned.conf) and AII
 
-Syntax: 
+Syntax:
 mac_prefix:string
 
 mac_prefix hex:hex value used by oned.conf
@@ -66,10 +66,10 @@ function opennebula_replace_vm_mac = {
                     if (exists(interv['ip'])) {
                         mac = opennebula_ipv42mac(ARGV[0], interv['ip']);
                         SELF[eth]['hwaddr'] = mac;
-                    }; 
+                    };
                     if (exists(interv['bridge']) &&
                         exists("/system/network/interfaces/" + interv['bridge'] + "/ip")) {
-                        mac = opennebula_ipv42mac(ARGV[0], 
+                        mac = opennebula_ipv42mac(ARGV[0],
                             value("/system/network/interfaces/" + interv['bridge'] + "/ip"));
                         SELF[eth]['hwaddr'] = mac;
                     };

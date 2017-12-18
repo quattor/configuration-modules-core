@@ -4,7 +4,7 @@ include 'quattor/aii/opennebula/schema';
 include 'quattor/aii/opennebula/functions';
 
 # do not overwrite/remove templates by default
-variable OPENNEBULA_AII_FORCE ?= null; 
+variable OPENNEBULA_AII_FORCE ?= null;
 variable OPENNEBULA_AII_ONHOLD ?= null;
 variable OPENNEBULA_AII_FORCE_REMOVE ?= false;
 
