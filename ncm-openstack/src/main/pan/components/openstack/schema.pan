@@ -13,7 +13,7 @@ include 'components/openstack/horizon';
 Type to define OpenStack services
 Keystone, Nova, Neutron, etc
 }
-type component_openstack = {
+type openstack_component = {
     include structure_component
     'keystone' : openstack_keystone_config
     'nova' ? openstack_nova_config
