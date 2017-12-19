@@ -367,6 +367,9 @@ sub Configure
         } else {
             $self->error("Default printer $default_printer doesn't exist. Ignoring");
         }
+    } else {
+        # Be sure that the server is stopped if it is not enabled
+        $self->serviceControl($services{server},"stop")
     }
 
     return 0;    # Success
