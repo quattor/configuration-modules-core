@@ -5,6 +5,8 @@
 
 declaration template components/openstack/neutron;
 
+include 'components/openstack/keystone';
+
 @documentation {
     The Neutron configuration options in ml2_conf.ini "ml2" Section.
 }
