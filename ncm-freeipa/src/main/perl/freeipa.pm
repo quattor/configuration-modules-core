@@ -128,6 +128,7 @@ Readonly::Array our @CLI_YUM_PACKAGES => qw(
     ipa-client
     nss-tools
     openssl
+    pam_krb5
 );
 
 Readonly my $IPA_BASEDIR => '/etc/ipa';
@@ -602,7 +603,7 @@ sub _manual_initialisation
          '--domain', $domain,
          '--fqdn', $_fqdn,
          '--hostcert', $hostcert,
-         '--otp', ($opts{otp} ? $opts{otp} : 'one_time_password_from_ipa_host-mod_--random'),
+         '--otp', ($opts{otp} ? "'$opts{otp}'" : 'one_time_password_from_ipa_host-mod_--random'),
         );
 
     my @cmds;
