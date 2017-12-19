@@ -150,7 +150,7 @@ my $nfs2 = {
 my $nfs3 = {
     device => "mydev3",
     mountpoint => "/mount3",
-    fstype => "cephfs",
+    fstype => "ceph",
     options => "name=user,secretfile=/etc/ceph/secret",
     freq => 0,
     passno => 0,

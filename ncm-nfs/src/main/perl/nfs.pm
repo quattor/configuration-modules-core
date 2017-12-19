@@ -7,7 +7,7 @@ nfs: NCM component for /etc/exports and /etc/fstab
 =head1 DESCRIPTION
 
 The I<nfs> component manages entries for C<NFS> in the C</etc/exports>
-and/or C<NFS>/C<NFSv4>/C<CephFS>/C<PanFS>/C<bind> mount in the C</etc/fstab> files.
+and/or C<NFS>/C<NFSv4>/C<Ceph>/C<PanFS>/C<bind> mount in the C</etc/fstab> files.
 
 =head1 Example
 
@@ -261,7 +261,7 @@ The current managed entries are
 
 =over
 
-=item devices with filesystems C<nfs>, C<nfs4>, C<panfs> or C<cephfs>.
+=item devices with filesystems C<nfs>, C<nfs4>, C<panfs> or C<ceph>.
 
 =item bind mounts (filesystem C<none> and mount option C<bind>)
 
@@ -302,7 +302,7 @@ sub fstab
     my $fh = CAF::FileWriter->new($FSTAB, backup => ".old", log => $self);
 
     # Keep updated with filter below
-    my $mngd_by = "nfs/nfs4/panfs/cephfs filesystems and bind mounts";
+    my $mngd_by = "nfs/nfs4/panfs/ceph filesystems and bind mounts";
 
     # Collect information for fstab file.
     print $fh "# File edited by ncm-nfs\n";
