@@ -107,7 +107,7 @@ sub detect_ceph_datastores
 {
     my ($self, $one) = @_;
     my @datastores = $one->get_datastores();
-    
+
     foreach my $datastore (@datastores) {
         if ($datastore->{data}->{TM_MAD}->[0] eq "ceph") {
             $self->verbose("Detected Ceph datastore: ", $datastore->name);

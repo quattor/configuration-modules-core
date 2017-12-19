@@ -56,9 +56,9 @@ sub manage_hosts
 
     foreach my $host (@$hosts) {
         my %host_options = (
-            'name'    => $host, 
-            'im_mad'  => $type, 
-            'vmm_mad' => $type, 
+            'name'    => $host,
+            'im_mad'  => $type,
+            'vmm_mad' => $type,
             'vnm_mad' => $vnm_mad
         );
         # to keep the record of our cloud infrastructure

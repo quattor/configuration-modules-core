@@ -24,7 +24,7 @@ Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
 
 =head1 NAME
 
-C<NCM::Component::OpenNebula::Server> adds C<OpenNebula> service configuration 
+C<NCM::Component::OpenNebula::Server> adds C<OpenNebula> service configuration
 support to C<NCM::Component::OpenNebula>.
 
 =head2 Public methods

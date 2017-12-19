@@ -1,4 +1,4 @@
-[%- tmphost = [ system.network.hostname, system.network.domainname ]; 
+[%- tmphost = [ system.network.hostname, system.network.domainname ];
     fqdn = tmphost.join('.') -%]
 [%- vcpus = 0 -%]
 [%- sockets = 0 -%]
@@ -16,7 +16,7 @@
 [%- FOR pair IN system.opennebula.vnet.pairs %]
 NIC = [
 [%  FILTER indent -%]
-[%    INCLUDE 'opennebula/network_level1.tt' 
+[%    INCLUDE 'opennebula/network_level1.tt'
                data = pair ignoremac = 1 -%]
 MODEL = "virtio",
 NETWORK = "[% system.opennebula.vnet.${pair.key} %]",

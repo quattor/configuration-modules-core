@@ -7,7 +7,7 @@ NAME = "[% pool.key %]"
 [%            CASE booleans -%]
 [%                pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
 [%            CASE ar_section -%]
-[%                pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt' 
+[%                pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt'
                                       data=pair.value -%]
 [%            CASE 'labels' -%]
 [%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"

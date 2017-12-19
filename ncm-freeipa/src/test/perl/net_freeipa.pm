@@ -13,6 +13,6 @@ $json->mock('decode_json', {
     $self>{rc} = $RC;
 });
 
-our 
+our
 
 1;

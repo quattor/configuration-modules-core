@@ -720,7 +720,7 @@ type component_opennebula = {
     'vnm_conf' ? opennebula_vnm_conf
     @{set ssh host multiplex options}
     'ssh_multiplex' : boolean = true
-    @{in some cases (such a Sunstone standalone configuration with apache), 
+    @{in some cases (such a Sunstone standalone configuration with apache),
     some OpenNebula configuration files should be accessible by a different group (as apache).
     This variable sets the group name to change these files permissions.}
     'cfg_group' ? string

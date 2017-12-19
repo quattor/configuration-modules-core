@@ -9,7 +9,7 @@ $cmds{host_disable}{result}={okunittest => 1};
 
 $cmds{host_remove}{cmd}="1 host_del host.domain updatedns=1,.*";
 $cmds{host_remove}{result}={okunittest => 1};
-    
+
 $cmds{host_passwd}{cmd}="1 host_mod host.domain random=1,.*";
 $cmds{host_passwd}{result}={randompassword => 'supersecret'};
 

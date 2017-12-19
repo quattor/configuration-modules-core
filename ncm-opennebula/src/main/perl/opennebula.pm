@@ -126,7 +126,7 @@ Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 
-# Required by process_template to detect 
+# Required by process_template to detect
 # if it should return a text template or
 # CAF::FileWriter instance
 Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
@@ -140,7 +140,7 @@ Sets C<OpenNebula> C<RPC> endpoint info to connect to ONE API.
 
 =cut
 
-sub make_one 
+sub make_one
 {
     my ($self, $rpc) = @_;
 
@@ -207,7 +207,7 @@ Creates/updates ONE resources based on resource type.
 sub create_or_update_something
 {
     my ($self, $one, $type, $data, %protected) = @_;
-    
+
     my $template = $self->process_template($data, $type);
     my ($name, $new);
     if (!$template) {

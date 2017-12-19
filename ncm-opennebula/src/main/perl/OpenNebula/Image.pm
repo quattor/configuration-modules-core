@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-C<NCM::Component::OpenNebula::Image> adds C<OpenNebula> C<VM> images 
+C<NCM::Component::OpenNebula::Image> adds C<OpenNebula> C<VM> images
 support to C<NCM::Component::OpenNebula>.
 
 =head2 Public methods
@@ -42,8 +42,8 @@ sub get_images
 
 =item remove_or_create_vm_images
 
-Creates new C<VM> images and it detects if the image is 
-already available or not. 
+Creates new C<VM> images and it detects if the image is
+already available or not.
 Also it removes images if the remove flag is set.
 
 =cut

@@ -14,7 +14,7 @@ our @EXPORT = qw(rpc_history_reset rpc_history_ok diag_rpc_history);
 
 
 BEGIN {
-  *CORE::GLOBAL::getpwnam = sub { 
+  *CORE::GLOBAL::getpwnam = sub {
         my @ids = qw(1 2 3 4);
         return @ids;
     };
@@ -67,11 +67,11 @@ sub rpc_history_ok {
         return 0 if !defined($index) or $index <= $lastidx;
         $lastidx = $index;
     };
-    # in principle, when you get here, all is ok.                                                                                                                                        
-    # but at least 1 command should be found, so lastidx should be > -1                                                                                                                  
+    # in principle, when you get here, all is ok.
+    # but at least 1 command should be found, so lastidx should be > -1
 
     return $lastidx > -1;
-    
+
 }
 
 sub mock_rpc {
@@ -101,7 +101,7 @@ sub mock_rpc {
             } else {
                 note("is xml ", $data->{out});
                 return XMLin($data->{out}, forcearray => 1);
-            } 
+            }
         }
     }
 };

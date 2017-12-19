@@ -4,7 +4,7 @@ include 'pan/types';
 
 final variable OPENNEBULA_AII_MODULE_NAME ?= 'NCM::Component::opennebula';
 
-@documentation{ 
+@documentation{
 Function to validate all aii_opennebula hooks
 }
 function validate_aii_opennebula_hooks = {
@@ -109,7 +109,7 @@ function is_consistent_memorybacking = {
     true;
 };
 
-@documentation{ 
+@documentation{
 Type that checks if the network interface is available from the quattor tree
 }
 type valid_interface_ignoremac = string with {
@@ -119,7 +119,7 @@ type valid_interface_ignoremac = string with {
     true;
 };
 
-@documentation{ 
+@documentation{
 Type that sets which net interfaces/MACs
 will not include MAC values within ONE templates
 }
@@ -217,10 +217,10 @@ type opennebula_vmtemplate = {
     @{Set pci list values to enable PCI Passthrough.
     PCI passthrough section is also generated based on /hardware/cards/<card_type>/<interface>/pci values.}
     "pci" ? opennebula_vmtemplate_pci[]
-    @{labels is a list of strings to group the VMs under a given name and filter them 
-    in the admin and cloud views. It is also possible to include in the list 
+    @{labels is a list of strings to group the VMs under a given name and filter them
+    in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")
-    This feature is available since OpenNebula 5.x, below this version the change 
+    This feature is available since OpenNebula 5.x, below this version the change
     does not take effect.}
     "labels" ? string[]
     "placements" ? opennebula_placements
