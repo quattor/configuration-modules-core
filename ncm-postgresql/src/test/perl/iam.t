@@ -7,9 +7,6 @@ use CAF::Object;
 use NCM::Component::postgresql;
 
 use Test::Quattor::TextRender::Base;
-
-$CAF::Object::NoAction = 1;
-
 my $caf_trd = mock_textrender();
 
 # service variant set to linux_sysv
@@ -20,13 +17,6 @@ my $cfg = get_config_for_profile('iam');
 my $engine = '/usr/pgsql-9.2/bin';
 
 my $mock = Test::MockModule->new('NCM::Component::postgresql');
-
-my $expected_fns = [qw(/not/a/file)];
-$mock->mock('_file_exists', sub {
-    shift;
-    my $filename = shift;
-    return grep {$_ eq $filename} @$expected_fns;
-});
 
 =head1 version
 
@@ -100,13 +90,14 @@ is($svc_fn, '/etc/init.d/myownpostgresql', 'service filename returned');
 
 =cut
 
-$expected_fns = [$svc_fn];
+remove_any($svc_fn);
+remove_any($svc_def_fn);
 ok(! defined($cmp->prepare_service($iam)), 'prepare_service returns undef if default service name is missing');
 
-$expected_fns = [$svc_def_fn];
+set_file_contents($svc_def_fn, "");
 ok(! defined($cmp->prepare_service($iam)), 'prepare_service returns undef if actual service name is missing');
 
-$expected_fns = [$svc_def_fn, $svc_fn];
+set_file_contents($svc_fn, "");
 my $sys_changed = $cmp->prepare_service($iam);
 
 my $sys_fn = '/etc/sysconfig/pgsql/myownpostgresql';

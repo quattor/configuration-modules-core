@@ -1,6 +1,6 @@
 #${PMcomponent}
 
-use parent qw(NCM::Component);
+use parent qw(NCM::Component CAF::Path);
 
 use NCM::Component::Postgresql::Service qw($POSTGRESQL);
 use NCM::Component::Postgresql::Commands;
@@ -11,7 +11,6 @@ use CAF::Object;
 
 use POSIX qw(strftime);
 use Digest::MD5 qw(md5_hex);
-use File::Copy qw(move);
 
 use Readonly;
 
@@ -146,9 +145,9 @@ sub fetch
 {
     my ($self, $config, $path, $default) = @_;
 
-    $default = '' if (! defined($default));
+    $default = '' if (!defined($default));
 
-    return $default if(! defined($path));
+    return $default if (!defined($path));
 
     $path = $self->prefix."/$path" if ($path !~ m/^\//);
 
@@ -214,7 +213,7 @@ sub initdb
     my $is_recent_enough = (($iam->{version}->[0] > 8) ||
                             (($iam->{version}->[0] == 8 ) && $iam->{version}->[1] >= 2));
     $self->verbose("initdb with setup $setup and is_recent_enough $is_recent_enough");
-    if ($self->_file_exists($setup)) {
+    if ($self->file_exists($setup)) {
         $self->verbose("initdb with setup $setup");
         my $proc = CAF::Process->new([$setup, 'initdb'], log => $self);
         my $output = $proc->output();
@@ -262,13 +261,13 @@ sub prepare_service
 
     my ($svc_def_fn, $svc_fn) = $iam->{service}->installation_files($iam->{defaultname});
 
-    if (! $self->_file_exists($svc_def_fn)) {
+    if (! $self->file_exists($svc_def_fn)) {
         $self->error("Default service file $svc_def_fn for service $iam->{defaultname} not found.",
                      " Check your postgres OS installation.");
         return;
     }
 
-    if (! $self->_file_exists($svc_fn)) {
+    if (! $self->file_exists($svc_fn)) {
         $self->error("Service file $svc_fn for service $iam->{servicename} not found.",
                     " Should be configured through one of the service components.");
         return;
@@ -292,7 +291,7 @@ sub prepare_service
         $sysconfig_fn,
         log => $self,
         );
-    if($fh) {
+    if ($fh) {
         my $changed = $fh->close() ? 1 : 0; # force to 0/1
         return $changed;
     } else {
@@ -452,7 +451,7 @@ sub sanity_check
 
     # some very nasty conditions once encountered
     $self->debug(1, "Starting some additional checks.");
-    if ($self->_directory_exists($iam->{pg}->{data}) && (! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION"))) {
+    if ($self->directory_exists($iam->{pg}->{data}) && (! $self->file_exists("$iam->{pg}->{data}/PG_VERSION"))) {
         # ok, postgres will never like this
         # can't believe it will be running, but just to be certain
         $iam->{service}->status_stop();
@@ -460,13 +459,12 @@ sub sanity_check
         # non-destructive mode: make a backup
         my $moved_suffix = "-moved-for-postgres-by-ncm-postgresql." . strftime('%Y%m%d-%H%M%S', localtime());
         my $bck_data = "$iam->{pg}->{data}$moved_suffix";
-        if ($CAF::Object::NoAction) {
-            $self->info("NoAction: not moving $iam->{pg}->{data} to $bck_data.");
-        } elsif (move($iam->{pg}->{data}, $bck_data)) {
+
+        if ($self->move($iam->{pg}->{data}, $bck_data)) {
             $self->warn("Moved $iam->{pg}->{data} to $bck_data.");
         } else {
             # it will never work, but next time make sure all goes well
-            $self->error("Can't move $iam->{pg}->{data} to $bck_data. Please clean up.");
+            $self->error("Can't move $iam->{pg}->{data} to $bck_data: $self->{fail}. Please clean up.");
             return;
         }
     }
@@ -489,9 +487,9 @@ sub start_postgres
 
     # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
     # we assume this is only due to pre-init postgres
-    if(! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+    if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
         return if(! $self->initdb($iam));
-        if(! $self->_file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+        if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
             $self->error("Succesful initdb but PG_VERSION still missing.");
             return;
         }
@@ -602,7 +600,7 @@ sub roles
     my $changed = $self->create_postgresql_config($config, $iam, %$pg_alter_data);
     return if(! defined($changed));
 
-    if($changed) {
+    if ($changed) {
         foreach my $role (sort keys %$roles_tree) {
             $self->verbose("(Re)applying role attributes for role $role.");
             return if(! defined($iam->{commands}->alter_role($role, $roles_tree->{$role})));
@@ -733,41 +731,6 @@ sub Configure {
 
     return 1;
 }
-
-=pod
-
-=back
-
-=head2 Private methods
-
-=over
-
-=item _file_exists
-
-Test if file exists
-
-=cut
-
-# TODO: move to CAF
-sub _file_exists
-{
-    my ($self, $filename) = @_;
-    return (-l $filename || -f $filename);
-}
-
-=item _directory_exists
-
-Test if directory exists
-
-=cut
-
-# TODO: move to CAF
-sub _directory_exists
-{
-    my ($self, $directory) = @_;
-    return -d $directory;
-}
-
 
 =pod
 

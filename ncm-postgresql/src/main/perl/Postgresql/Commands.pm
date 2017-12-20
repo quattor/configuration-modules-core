@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 use CAF::Process;
-use parent qw(CAF::Object);
+use parent qw(CAF::Object CAF::Path);
 use LC::Exception qw (SUCCESS);
 
 use Readonly;
@@ -29,7 +29,7 @@ sub _initialize
 
     # taken from the init.d/postgresql script
     # For SELinux we need to use 'runuser' not 'su'
-    $self->{su} = $self->_file_exists($RUNUSER) ? $RUNUSER : $SU;
+    $self->{su} = $self->file_exists($RUNUSER) ? $RUNUSER : $SU;
 
     $self->{engine} = $engine || '/no/engine/defined';
 
@@ -179,22 +179,12 @@ sub run_commands_from_file
 {
     my ($self, $database, $asuser, $filename) = @_;
 
-    if (! $self->_file_exists($filename)) {
+    if (! $self->file_exists($filename)) {
         $self->error("Cannot find filename $filename to run commands from");
         return;
     }
 
     return $self->run_postgres(["$self->{engine}/psql", '-U', $asuser, '-f', $filename, $database]);
-}
-
-# TODO should be moved to CAF
-# _file_exists
-# Test if file exists
-
-sub _file_exists
-{
-    my ($self, $filename) = @_;
-    return (-l $filename || -f $filename);
 }
 
 1;
