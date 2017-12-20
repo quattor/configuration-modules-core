@@ -1,5 +1,16 @@
 #${PMcomponent}
 
+=head1 NAME
+
+postgresql : NCM component to manage PostgreSQL configuration.
+
+=head1 DESCRIPTION
+
+This component allows to manage configuration of PostgreSQL.
+It's very basic in functionality (originally developed for dcache usage).
+
+=cut
+
 use parent qw(NCM::Component CAF::Path);
 
 use NCM::Component::Postgresql::Service qw($POSTGRESQL);
@@ -44,9 +55,9 @@ Readonly::Hash our %HBA_CONFIG => {
 Readonly::Hash our %RECOVERY_CONFIG => {
     NAME => 'recovery',
     TT => 'main_config',
-    CONFIG => $CONFIG_REL.'/recovery',
-    CONFIG_EL => $CONFIG_REL.'/recovery',
-    FILENAME => 'recovery.conf',
+    CONFIG => '/recovery/config',
+    CONFIG_EL => '/recovery/config',
+    FILENAME => 'recovery',
 };
 
 Readonly::Hash our %PG_ALTER => {
@@ -87,7 +98,7 @@ sub create_postgresql_config
     my ($self, $config, $iam, %data) = @_;
 
     my $fh;
-    my $filename = "$iam->{pg}->{data}/$data{FILENAME}";
+    my $filename = "$iam->{pg}->{data}/$data{FILENAME}".($data{suffix} || '');
     # default empty string, so can be used as boolean
     my $text = $self->fetch($config, $data{TEXT});
 
@@ -504,8 +515,10 @@ sub start_postgres
     return if (! defined($hba_changed));
 
     my $recovery_changed;
-    if ($config->elementExists($self->prefix().$RECOVERY_CONFIG{CONFIG})) {
-        $recovery_changed = $self->create_postgresql_config($config, $iam, %RECOVERY_CONFIG);
+    my $recovery_tree = $config->getTree($self->prefix().'/recovery');
+    if ($recovery_tree) {
+        my %opts = (suffix => $recovery_tree->{suffix}, %RECOVERY_CONFIG);
+        $recovery_changed = $self->create_postgresql_config($config, $iam, %opts);
         return if (! defined($recovery_changed));
     }
 

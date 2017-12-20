@@ -49,9 +49,9 @@ is_deeply({ %NCM::Component::postgresql::HBA_CONFIG }, {
 is_deeply({ %NCM::Component::postgresql::RECOVERY_CONFIG }, {
     NAME => 'recovery',
     TT => 'main_config',
-    CONFIG => '/config/recovery',
-    CONFIG_EL => '/config/recovery',
-    FILENAME => 'recovery.conf',
+    CONFIG => '/recovery/config',
+    CONFIG_EL => '/recovery/config',
+    FILENAME => 'recovery',
 }, 'RECOVERY_CONFIG as expected');
 
 is_deeply({ %NCM::Component::postgresql::PG_ALTER }, {
@@ -67,11 +67,24 @@ is_deeply({ %NCM::Component::postgresql::PG_ALTER }, {
 
 my $fh;
 
+my $main_cfg = <<'EOF';
+
+archive_command = 'main archive'
+log_destination = 'stderr'
+log_directory = 'pg_log'
+log_filename = 'postgresql-%a.log'
+log_rotation_age = '1d'
+log_rotation_size = 0
+log_truncate_on_rotation = yes
+logging_collector = yes
+port = 2345
+EOF
+
 is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::MAIN_CONFIG),
    1, 'create_postgresql_config returns changed state for MAIN_CONFIG');
 $fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::MAIN_CONFIG{FILENAME});
 isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for MAIN_CONFIG');
-is("$fh", "\narchive_command = 'main archive'\n", "content with TT from main config for MAIN_CONFIG");
+is("$fh", $main_cfg, "content with TT from main config for MAIN_CONFIG");
 
 is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::HBA_CONFIG),
    1, 'create_postgresql_config returns changed state for HBA_CONFIG');

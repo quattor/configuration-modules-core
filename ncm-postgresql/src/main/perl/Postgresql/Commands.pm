@@ -1,12 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Postgresql::Commands;
-
-use strict;
-use warnings;
+${PMpre} NCM::Component::Postgresql::Commands${PMpost}
 
 use CAF::Process;
 use parent qw(CAF::Object CAF::Path);
@@ -102,7 +94,7 @@ sub simple_select
     #   split on newlines
     #   output can have sort of indentation, remove them with map'ped search and replace
     #   as last, remove empty lines with grep
-    my @res = grep {$_ =~ m/\S/} map {s/^\s+//; s/\s+$//; $_} split(/\n/, $output);
+    my @res = grep {$_ =~ m/\S/} map {my $r = $_; $r =~ s/(^\s+|\s+$)//g; $r} split(/\n/, $output);
 
     $self->verbose("Found ", scalar @res, " $column from $table: ",join(', ', @res))
         if $self->{$PROCESS_LOG_ENABLED};
