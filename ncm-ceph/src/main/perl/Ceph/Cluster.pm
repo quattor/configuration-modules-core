@@ -2,8 +2,9 @@
 
 use 5.10.1;
 
-use parent qw(CAF::Object NCM::Component::Ceph::Commands NCM::Component::Ceph::MONs NCM::Component::Ceph::MDSs);
+use parent qw(CAF::Object NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
+use NCM::Component::Ceph::ClusterMap;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
@@ -69,7 +70,7 @@ sub cluster_exists
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
         $self->info("To create a new cluster, run this command");
-        my $moncr = $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1);
+        my $moncr = $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, rwritecfg => 1);
         return 0;
     } else {
         return 1;
@@ -141,7 +142,48 @@ sub make_tasks
     return $map->get_deploy_map();
 }
 
+# Deploys a single daemon
+sub deploy_daemon 
+{
+    my ($self, $cmd, $name, $type) = @_;
+    push (@$cmd, $name);
+    unshift (@$cmd, $type);
+    $self->debug(1, 'Deploying daemon: ', @$cmd);
+    return $self->run_ceph_deploy_command($cmd, "deploy $type $name" );
+}
 
+sub deploy_daemons {
+    my ($self, $host, $hostname) = @_;
+    my @command = qw(create);
+    if ($host->{mon}) {
+        $self->deploy_daemon(\@command, $host->{mon}->{fqdn}, 'mon') or return;
+    }
+    if ($host->{mgr}) {
+        $self->deploy_daemon(\@command, "$host->{mgr}->{fqdn}:$hostname", 'mgr') or return;
+    }
+    if ($host->{mds}) {
+        $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname", 'mds') or return;
+    }
+}
+
+sub pull_cfg
+{
+    my ($self, $host) = @_;
+    my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", rwritecfg => 1);
+    return $succes or $self->write_init_cfg();
+    
+}
+sub deploy
+{
+    my ($self, $map) = @_;
+
+    $self->debug(5, "deploy hash:", Dumper($map));
+    $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
+    foreach my $hostname (sort keys(%{$map})) {
+        $self->pull_cfg($map->{fqdn}) or return;
+        $self->deploy_daemons($map->{$hostname}, $hostname) or return;
+    }
+}
 
 sub configure
 {
@@ -150,7 +192,7 @@ sub configure
 
     my $map = $self->make_tasks() or return;
 
-    $self->deploy_daemons($map) or return;
+    $self->deploy($map) or return;
 };
 
 1;

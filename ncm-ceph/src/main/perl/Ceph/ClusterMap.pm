@@ -2,9 +2,11 @@
 
 use 5.10.1;
 
-use parent qw(CAF::Object NCM::Component::Ceph::MONs NCM::Component::Ceph::MDSs);
+use parent qw(CAF::Object);
 use Readonly;
 use Data::Dumper;
+use JSON::XS;
+
 
 sub _initialize
 {
@@ -12,8 +14,8 @@ sub _initialize
 
     $self->{log} = $clusterobj;
 
-    $self->{quattor} = [];
-    $self->{ceph} = [];
+    $self->{quattor} = {};
+    $self->{ceph} = {};
 
     $self->{actions} = {
         hash => {
@@ -38,17 +40,82 @@ sub get_quattor_map
     return $self->{quattor};
 }
 
+# Gets the MON map
+sub mon_hash 
+{
+    my ($self) = @_; 
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mon dump)], 'get mon map') or return;
+    my $monsh = decode_json($jstr);
+    foreach my $mon (@{$monsh->{mons}}){
+        $self->add_existing('mon', $mon->{name}, { addr => $mon->{addr}});
+    }   
+    return 1;
+}
+
+sub mgr_hash 
+{
+    my ($self) = @_; 
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mgr dump)], 'get mgr map') or return;
+    my $mgrsh = decode_json($jstr);
+    $self->add_existing('mgr', $mgrsh->{active_name});
+    foreach my $mgr (@{$mgrsh->{standbys}}){
+        $self->add_existing('mgr', $mgr->{name});
+    }   
+    return 1;
+}
+
+# Gets the MDS map
+sub mds_hash {
+    my ($self) = @_; 
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mds stat)], 'get mds map') or return;
+    my $mdshs = decode_json($jstr);
+    my $fsmap = $mdshs->{fsmap};
+    foreach my $fs (@{$fsmap->{filesystems}}){
+        foreach my $mds (values %{$fs->{mdsmap}->{info}}) {
+            $self->add_existing('mds', $mds->{name});
+        }
+    }
+    foreach my $mds (@{$fsmap->{standbys}}){
+        $self->add_existing('mds', $mds->{name});
+    }   
+
+    return 1;
+}
+
+# Compare and change mon config
+sub check_mon {
+    my ($self, $hostname) = @_; 
+    $self->debug(3, "Comparing mon $hostname");
+    my $ceph_mon = $self->{ceph}->{$hostname}->{mon};
+    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { 
+        $self->debug(4, "Recreating initial (unconfigured) mon $hostname");
+        return $self->add_daemon('mon', $hostname);
+    }   
+    my $donecmd = ['test','-e',"/var/lib/ceph/mon/ceph-$hostname/done"];
+    if (!$self->{Cluster}->run_command_as_ceph_with_ssh($donecmd, $self->get_fqdn($hostname))) {
+        # Node reinstalled without first destroying it
+        $self->info("Previous mon $hostname shall be reinstalled");
+        return $self->add_daemon('mon', $hostname);
+    }   
+
+    return 1;
+}
+
+
 sub add_existing
 {
     my ($self, $type, $name, $daemon) = @_;
     # Only one type per host, name hostname
-    $self->{ceph}->{$name}->{$type} = $daemon ||= {};
+    $self->debug(3, "Adding $type $name to existing map");
+    $self->{ceph}->{$name}->{$type} = $daemon || {};
+    return 1;
 }
 
 sub add_quattor
 {
     my ($self, $type, $name, $daemon) = @_;
     # Only one type per host
+    $self->debug(3, "Adding $type $name to quattor map");
     $self->{quattor}->{$name}->{$type} = $daemon;
     $self->{quattor}->{$name}->{fqdn} = $daemon->{fqdn};
     
@@ -58,7 +125,7 @@ sub map_existing
 {
     my ($self) = @_;
     foreach my $type ( sort keys %{$self->{actions}->{hash}}){
-        $self->{actions}->{hash}->{$type}($self->{Cluster});
+        $self->{actions}->{hash}->{$type}($self) or return;
     }   
     $self->debug(5, "Existing ceph hash:", Dumper($self->{ceph}));
 }
@@ -126,7 +193,14 @@ sub compare_maps
     if (%ceph) {
         $self->warn('Found deployed nodes that are not in config: ', sort keys(%ceph));
     }
+    return 1;
 }
 
+sub get_deploy_map
+{
+    my ($self) = @_;
+    $self->compare_maps();
+    return $self->{deploy};
+}
 
 1;
