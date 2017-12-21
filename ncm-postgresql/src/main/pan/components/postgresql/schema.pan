@@ -309,6 +309,11 @@ type postgresql_role_sql = string with {
     true;
 };
 
+type postgresql_initdb = {
+    @{enable datachecksumming (requires v9.3.0)}
+    "data-checksums" ? boolean
+};
+
 type postgresql_component = {
     include structure_component
     include structure_component_dependency
@@ -338,6 +343,8 @@ type postgresql_component = {
     "roles" ? postgresql_role_sql{}
     @{recovery config and behaviour}
     "recovery" ? postgresql_recovery
+    @{initdb options}
+    "initdb" ? postgresql_initdb
 } with {
     # handle legacy schema problems with port defined in 2 locations
     pg_port = -1;

@@ -6,14 +6,17 @@ use Test::Quattor qw(configure);
 use CAF::Object;
 use NCM::Component::postgresql;
 use Digest::MD5 qw(md5_hex);
+use version;
+use Test::Quattor::Object;
 
 use Test::Quattor::TextRender::Base;
 
 my $caf_trd = mock_textrender();
+my $obj = Test::Quattor::Object->new;
 
 # service variant set to linux_sysv
 
-my $cmp = NCM::Component::postgresql->new("postgresql");
+my $cmp = NCM::Component::postgresql->new("postgresql", $obj);
 my $cfg = get_config_for_profile('configure');
 
 my $mock = Test::MockModule->new('NCM::Component::postgresql');
@@ -22,6 +25,13 @@ my $mockc = Test::MockModule->new('NCM::Component::Postgresql::Commands');
 # whoami is tested elsewhere
 set_desired_output('/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.13\n");
 my $iam = $cmp->whoami($cfg);
+
+my $env;
+$mock->mock('update_env', sub {
+    my ($self, $fullenv) = @_;
+    diag "update env called";
+    $env = $self->{ENV};
+});
 
 =head1 constants
 
@@ -140,7 +150,7 @@ ok(command_history_ok([
 ]), "expected commands ran by initdb without setupfile but recent service");
 
 my $iam2 = { %$iam };
-$iam2->{version} = [8, 1, 0];
+$iam2->{version} = version->new("v8.1.0");
 command_history_reset();
 # start fails because status is always off
 ok(! defined($cmp->initdb($iam2)), "initdb with old version returns undef in case of failure to start");
@@ -149,6 +159,19 @@ ok(command_history_ok([
        qr{service myownpostgresql start},
        qr{service myownpostgresql status},
 ]), "expected commands ran by initdb without setupfile and old service");
+
+my $initdbopts = {'data-checksums' => 1};
+$env = undef;
+$cmp->initdb($iam2, $initdbopts);
+ok(!defined $env, "no environmment update with old version");
+
+$env = undef;
+set_file_contents($setupfile, "");
+$iam2->{version} = version->new("v9.4.0");
+$cmp->initdb($iam2, $initdbopts);
+is_deeply($env, {PGSETUP_INITDB_OPTIONS => "--data-checksums"}, "environmment update with new version and setupfile");
+
+
 
 =head1 start_postgres
 
@@ -159,12 +182,14 @@ my $pg_version = "$iam->{pg}->{data}/PG_VERSION";
 my $files_checked = [];
 $mock->mock('file_exists', sub { shift; push(@$files_checked, shift); return 0; });
 my $initdb = 0;
+my $initdbargs;
 # fail
-$mock->mock('initdb', sub {$initdb++; return 0});
+$mock->mock('initdb', sub {shift; $initdbargs = \@_; $initdb++; return 0});
 
 ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
    "start_postgres returns undef when PG_VERSION doesn't exist and initdb fails");
 is($initdb, 1, 'initdb called');
+is_deeply($initdbargs, [$iam, {'data-checksums' => 1}], "expected initdb args");
 is_deeply($files_checked, [$pg_version], 'PG_VERSION tested once');
 
 # no PG_VERSION, initdb success

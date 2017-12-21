@@ -6,6 +6,7 @@ prefix "/software/components/postgresql";
 "pg_hba" = "pg_hba plain text";
 "config/main/archive_command" = "main archive";
 "config/main/port" = 2345;
+"initdb/data-checksums" = true;
 
 prefix "/software/components/postgresql/recovery";
 "config/standby_mode" = true;

@@ -5,6 +5,7 @@ use Test::MockModule;
 use Test::Quattor qw(iam);
 use CAF::Object;
 use NCM::Component::postgresql;
+use version;
 
 use Test::Quattor::TextRender::Base;
 my $caf_trd = mock_textrender();
@@ -23,10 +24,10 @@ my $mock = Test::MockModule->new('NCM::Component::postgresql');
 =cut
 
 set_desired_output('/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.13\n");
-is_deeply($cmp->version($engine), [9, 2, 13], "Got correct version array ref");
+is_deeply($cmp->get_version($engine), version->new("v9.2.13"), "Got correct version array ref");
 
 set_desired_output('/my/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.abc\n");
-ok(! defined($cmp->version("/my$engine")), "version returns undef on unparsable output");
+ok(! defined($cmp->get_version("/my$engine")), "version returns undef on unparsable output");
 
 =head1 fetch
 
@@ -64,7 +65,7 @@ is_deeply($iam->{pg}, {
     'port' => '2345',
 }, "iam expected pg attribute");
 
-is_deeply($iam->{version}, [9,2,13], "version via postmaster --version set");
+is_deeply($iam->{version}, version->new("v9.2.13"), "version via postmaster --version set");
 is($iam->{servicename}, 'myownpostgresql', 'servicename set');
 is($iam->{suffix}, '-1.2.3', 'suffix from cfg version');
 is($iam->{defaultname}, 'postgresql-1.2.3', 'iam correct defaultname');

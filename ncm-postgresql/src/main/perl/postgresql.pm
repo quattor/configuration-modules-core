@@ -172,15 +172,15 @@ sub fetch
     return $value;
 }
 
-=item version
+=item get_version
 
-Return arrayref with [major, minor, remainder] version information (from postmaster --version)
+Return version instance C<v$major.$minor.$remainder> version information (from postmaster --version)
 
 Return undef in case of problem.
 
 =cut
 
-sub version
+sub get_version
 {
     my ($self, $pg_engine) = @_;
 
@@ -193,7 +193,7 @@ sub version
 
     # e.g. 'postgres (PostgreSQL) 9.2.1'
     if ($output && $output =~ m/\s(\d+)\.(\d+).(\d+)\s*$/) {
-        return [$1, $2, $3];
+        return version->new("v$1.$2.$3");
     } else {
         $self->error("Failed to parse output from $proc: $output");
         return;
@@ -211,7 +211,9 @@ Returns undef on failure.
 sub initdb
 {
 
-    my ($self, $iam) = @_;
+    my ($self, $iam, $initdb_tree) = @_;
+
+    $initdb_tree = {} if ! defined($initdb_tree);
 
     $self->info("Initdb, stopping $iam->{service}.");
     $iam->{service}->status_stop();
@@ -221,11 +223,29 @@ sub initdb
     # else, just start
 
     my $setup = "$iam->{pg}->{engine}/postgresql$iam->{exesuffix}-setup";
-    my $is_recent_enough = (($iam->{version}->[0] > 8) ||
-                            (($iam->{version}->[0] == 8 ) && $iam->{version}->[1] >= 2));
-    $self->verbose("initdb with setup $setup and is_recent_enough $is_recent_enough");
+    my $is_recent_enough = ($iam->{version} > version->new("v8.2.0")) ? 1 : 0;
+
+
+    my @options;
+
+    if ($initdb_tree->{"data-checksums"} && ($iam->{version} > version->new("v9.3.0"))) {
+        $self->verbose("Enabing data checkumming");
+        push(@options, "--data-checksums");
+    }
+
+    $self->verbose("initdb with setup $setup and is_recent_enough $is_recent_enough ".
+                   (@options ? "options @options" : "no options"));
     if ($self->file_exists($setup)) {
         $self->verbose("initdb with setup $setup");
+
+        # Use this so we can report/unittest via update_env
+        local $self->{ENV};
+        local %ENV = %ENV;
+        if (@options) {
+            $self->{ENV}->{PGSETUP_INITDB_OPTIONS} = join(" ", @options);
+        }
+        $self->update_env(\%ENV) if @options;
+
         my $proc = CAF::Process->new([$setup, 'initdb'], log => $self);
         my $output = $proc->output();
 
@@ -234,9 +254,11 @@ sub initdb
             return;
         }
     } elsif ($is_recent_enough) {
+        $self->warn("initdb options ignored") if @options;
         $self->verbose("initdb without setup $setup, but with initdb service action");
         return if (! $iam->{service}->initdb());
     } else {
+        $self->warn("initdb options ignored") if @options;
         $self->verbose("initdb with old version. Just going to start and hope all will be ok.");
         return if (! $iam->{service}->status_start());
     }
@@ -395,10 +417,10 @@ sub whoami
 
     my $pg_engine = $self->fetch($config, "pg_engine", "/usr/bin/");
 
-    $iam->{version} = $self->version($pg_engine);
+    $iam->{version} = $self->get_version($pg_engine);
     return if (! $iam->{version});
 
-    $self->verbose("iam version ", join(' . ', @{$iam->{version}}), '.');
+    $self->verbose("iam version $iam->{version}");
 
     my $pg_dir = $self->fetch($config, "pg_dir", $DEFAULT_BASEDIR);
     $iam->{pg} = {
@@ -499,7 +521,7 @@ sub start_postgres
     # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
     # we assume this is only due to pre-init postgres
     if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
-        return if(! $self->initdb($iam));
+        return if(! $self->initdb($iam, $config->getTree($self->prefix."/initdb")));
         if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
             $self->error("Succesful initdb but PG_VERSION still missing.");
             return;
