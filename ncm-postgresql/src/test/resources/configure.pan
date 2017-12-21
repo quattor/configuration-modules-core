@@ -11,6 +11,7 @@ prefix "/software/components/postgresql";
 prefix "/software/components/postgresql/recovery";
 "config/standby_mode" = true;
 "config/primary_conninfo" = "host=192.168.122.50 application_name=";
+"done" = false; # default suffix
 
 prefix "/software/components/postgresql/roles";
 "myrole" = "SUPERPOWER";

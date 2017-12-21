@@ -32,6 +32,9 @@ Readonly my $SYSCONFIG_TT => 'sysconfig';
 # relative to self->prefix
 Readonly my $CONFIG_REL => '/config';
 
+Readonly my $RECOVERY_SUFFIX_DEFAULT => '.conf';
+Readonly my $RECOVERY_SUFFIX_DONE => '.done';
+
 # relative filename in PGDATA
 # legacy full text config relative to self->prefix
 Readonly::Hash our %MAIN_CONFIG => {
@@ -107,7 +110,7 @@ sub create_postgresql_config
         $self->verbose("rendering $data{NAME} configuration data");
 
         my $configdata;
-        if($data{CONFIG_EL}) {
+        if ($data{CONFIG_EL}) {
             $configdata = $config->getElement($self->prefix().$data{CONFIG_EL});
         } elsif ($data{CONFIG_HASHREF}) {
             $configdata = $data{CONFIG_HASHREF};
@@ -505,6 +508,40 @@ sub sanity_check
     return SUCCESS;
 }
 
+=item recovery_configuration
+
+Handle recovery file creation
+
+Returns undef on failure, changed recovery state otherwise.
+
+=cut
+
+sub recovery_configuration
+{
+    my ($self, $config, $iam) = @_;
+
+    my $changed = 0;
+
+    my $tree = $config->getTree($self->prefix().'/recovery');
+    if ($tree) {
+        my $suffix = $tree->{suffix};
+        my $done_fn = "$iam->{pg}->{data}/$RECOVERY_CONFIG{FILENAME}$RECOVERY_SUFFIX_DONE";
+        use Test::More;
+        diag "reco fn $done_fn ",explain $tree;
+        if ($tree->{done} &&
+            $suffix eq $RECOVERY_SUFFIX_DEFAULT &&
+            $self->file_exists($done_fn)) {
+            $self->verbose("Recovery done check enabled and file found ($done_fn). ",
+                           "Skipping recovery configuration.");
+        } else {
+            my %opts = (suffix => $suffix, %RECOVERY_CONFIG);
+            $changed = $self->create_postgresql_config($config, $iam, %opts);
+        }
+    }
+
+    return $changed;
+}
+
 =item start_postgres
 
 Try to start postgres service, the cautious way.
@@ -520,9 +557,9 @@ sub start_postgres
 
     # it's possible that PG_VERSION file doesn't yet exist (or even basedir PGDATA).
     # we assume this is only due to pre-init postgres
-    if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
-        return if(! $self->initdb($iam, $config->getTree($self->prefix."/initdb")));
-        if(! $self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+    if (!$self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
+        return if (!$self->initdb($iam, $config->getTree($self->prefix."/initdb")));
+        if (!$self->file_exists("$iam->{pg}->{data}/PG_VERSION")) {
             $self->error("Succesful initdb but PG_VERSION still missing.");
             return;
         }
@@ -536,13 +573,8 @@ sub start_postgres
     my $hba_changed = $self->create_postgresql_config($config, $iam, %HBA_CONFIG);
     return if (! defined($hba_changed));
 
-    my $recovery_changed;
-    my $recovery_tree = $config->getTree($self->prefix().'/recovery');
-    if ($recovery_tree) {
-        my %opts = (suffix => $recovery_tree->{suffix}, %RECOVERY_CONFIG);
-        $recovery_changed = $self->create_postgresql_config($config, $iam, %opts);
-        return if (! defined($recovery_changed));
-    }
+    my $recovery_changed = $self->recovery_configuration($config, $iam);
+    return if (! defined($recovery_changed));
 
     # restart conditions first (because restart also reloads)
     if ($main_changed || $sysconfig_changed || $recovery_changed) {

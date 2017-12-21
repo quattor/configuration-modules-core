@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::MockModule;
-use Test::Quattor qw(configure);
+use Test::Quattor qw(configure recovery_done recovery_suff);
 use CAF::Object;
 use NCM::Component::postgresql;
 use Digest::MD5 qw(md5_hex);
@@ -102,10 +102,10 @@ $fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::HBA_CONFIG{FI
 isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for HBA_CONFIG');
 is("$fh", "pg_hba plain text", "content from text for HBA_CONFIG");
 
-is($cmp->create_postgresql_config($cfg, $iam, %NCM::Component::postgresql::RECOVERY_CONFIG),
+is($cmp->create_postgresql_config($cfg, $iam, suffix => '.whatever', %NCM::Component::postgresql::RECOVERY_CONFIG),
    1, 'create_postgresql_config returns changed state for RECOVERY_CONFIG');
-$fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::RECOVERY_CONFIG{FILENAME});
-isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for RECOVERY_CONFIG');
+$fh = get_file($iam->{pg}->{data}."/".$NCM::Component::postgresql::RECOVERY_CONFIG{FILENAME}.".whatever");
+isa_ok($fh, "CAF::FileWriter", 'create_postgresql_config creates filewriter instance for RECOVERY_CONFIG with suffix');
 is("$fh", "\nprimary_conninfo = 'host=192.168.122.50 application_name='\nstandby_mode = yes\n",
    "content with TT from main config for RECOVERY_CONFIG");
 
@@ -171,11 +171,53 @@ $iam2->{version} = version->new("v9.4.0");
 $cmp->initdb($iam2, $initdbopts);
 is_deeply($env, {PGSETUP_INITDB_OPTIONS => "--data-checksums"}, "environmment update with new version and setupfile");
 
+=head1 recvoery_configuration
+
+=cut
+
+my $cfg_recov_done = get_config_for_profile('recovery_done');
+my $cfg_recov_suff = get_config_for_profile('recovery_suff');
+
+my $recov_default = "$iam->{pg}->{data}/recovery.conf";
+my $recov_done = "$iam->{pg}->{data}/recovery.done";
+remove_any($recov_default);
+remove_any($recov_done);
+
+ok(!$cmp->file_exists($recov_default), "recovery file does not exists");
+ok($cmp->recovery_configuration($cfg_recov_done, $iam), "recovery_configuration returns changed");
+ok($cmp->file_exists($recov_default), "recovery file created");
+
+remove_any($recov_default);
+set_file_contents($recov_done, '');
+ok(!$cmp->file_exists($recov_default), "recovery file does not exists pt2");
+ok($cmp->file_exists($recov_done), "recovery done file exists pt2");
+is($cmp->recovery_configuration($cfg_recov_done, $iam), 0, "recovery_configuration returns unchanged pt2");
+ok(!$cmp->file_exists($recov_default), "recovery file not created when done is present (default suffix and default done=true) pt2");
+
+ok($cmp->recovery_configuration($cfg, $iam), "recovery_configuration returns changed pt3");
+ok($cmp->file_exists($recov_default), "recovery file created when done is present (default suffix and default done=false) pt3");
+
+remove_any($recov_default);
+ok($cmp->recovery_configuration($cfg_recov_suff, $iam), "recovery_configuration returns changed pt4");
+ok($cmp->file_exists("$iam->{pg}->{data}/recovery.conf.pcmk"),
+   "recovery file created when done is present (custom suffix and default done=true) pt4");
 
 
 =head1 start_postgres
 
 =cut
+
+# PG_VERSION exists, main_config fails
+my $create_config = [];
+my $create_config_full = [];
+my $config_res = {};
+$mock->mock('create_postgresql_config', sub {
+    shift; shift; shift;
+    my %opts = @_;
+    push(@$create_config, $opts{NAME});
+    push(@$create_config_full, \%opts);
+    return $config_res->{$opts{NAME}};
+});
 
 # no PG_VERSION, initdb fails
 my $pg_version = "$iam->{pg}->{data}/PG_VERSION";
@@ -202,15 +244,6 @@ ok(! defined($cmp->start_postgres($cfg, $iam, 1)),
 is($initdb, 1, 'initdb called');
 is_deeply($files_checked, [$pg_version, $pg_version], 'PG_VERSION tested twice');
 
-# PG_VERSION exists, main_config fails
-my $create_config = [];
-my $config_res = {};
-$mock->mock('create_postgresql_config', sub {
-    shift; shift;shift,;
-    my %opts = @_;
-    push(@$create_config, $opts{NAME});
-    return $config_res->{$opts{NAME}};
-});
 
 $mock->mock('file_exists', sub { shift; push(@$files_checked, shift); return 1; });
 
@@ -254,10 +287,12 @@ ok(command_history_ok([
 
 set_command_status('service myownpostgresql status', 0);
 $create_config = [];
+$create_config_full = [];
 command_history_reset();
 ok($cmp->start_postgres($cfg, $iam, 1),
    "start_postgres returns success when PG_VERSION exists, sysconfig, main, hba and recovery changed and status up");
 is_deeply($create_config, ['main', 'hba', 'recovery'], 'Create config main, hba and recovery called (pt 3)');
+is($create_config_full->[2]->{suffix}, '.conf', "suffix option passed from recovery options to create_config");
 ok(command_history_ok([
        qr{service myownpostgresql status},
        qr{service myownpostgresql restart},
