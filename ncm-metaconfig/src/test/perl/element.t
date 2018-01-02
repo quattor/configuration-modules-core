@@ -24,4 +24,7 @@ is("$fh", "boolean=1\nstring=mystring\n\n", "tiny with no element conversion as 
 my $fh2 = get_file("/foo/bar2");
 is("$fh2", "boolean=TRUE\nlist='a','b'\nstring='mystring'\n\n", "tiny with element conversion as expected");
 
+my $fh3 = get_file("/foo/bar3");
+is("$fh3", "[HAS A SPACE]\nA=1\n\n", "tiny with element key conversion as expected");
+
 done_testing();
