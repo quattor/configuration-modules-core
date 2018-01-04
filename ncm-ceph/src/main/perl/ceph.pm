@@ -60,7 +60,7 @@ sub Configure {
     }
     
     if ($t->{daemons}) {
-        my $osds = NCM::Component::Ceph::OSDServer->new($config, $self, $self->prefix());
+        my $osds = NCM::Component::Ceph::OSDserver->new($config, $self, $self->prefix());
         $osds->configure() or return;
     }
 

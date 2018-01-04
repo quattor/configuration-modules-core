@@ -70,7 +70,7 @@ sub cluster_exists
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
         $self->info("To create a new cluster, run this command");
-        my $moncr = $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, rwritecfg => 1);
+        $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, rwritecfg => 1);
         return 0;
     } else {
         return 1;
@@ -81,10 +81,10 @@ sub cluster_exists
 sub cluster_ready {
     my ($self) = @_;
 
-    if (!$self->run_ceph_command([qw(status)])) {
+    if (!$self->run_ceph_command([qw(status)], 'get cluster status' )) {
             my @admin = ('admin', $self->{hostname});
             $self->run_ceph_deploy_command(\@admin);
-            if (!$self->run_ceph_command([qw(status)])) {
+            if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
                 # This should not happen
                 $self->error("Cannot connect to ceph cluster!");
                 return 0;
@@ -104,6 +104,7 @@ sub write_init_cfg
          $self->error('Could not write cfgfile for ceph-deploy, aborting deployment');
          return;
     }
+    return 1;
 
 }
 
@@ -147,30 +148,29 @@ sub deploy_daemon
 {
     my ($self, $cmd, $name, $type) = @_;
     push (@$cmd, $name);
-    unshift (@$cmd, $type);
-    $self->debug(1, 'Deploying daemon: ', @$cmd);
+    $self->debug(1, 'Deploying daemon: ', join(' ', @$cmd));
     return $self->run_ceph_deploy_command($cmd, "deploy $type $name" );
 }
 
 sub deploy_daemons {
     my ($self, $host, $hostname) = @_;
-    my @command = qw(create);
     if ($host->{mon}) {
-        $self->deploy_daemon(\@command, $host->{mon}->{fqdn}, 'mon') or return;
+        $self->deploy_daemon([qw(mon create)], $host->{mon}->{fqdn}, 'mon') or return;
     }
     if ($host->{mgr}) {
-        $self->deploy_daemon(\@command, "$host->{mgr}->{fqdn}:$hostname", 'mgr') or return;
+        $self->deploy_daemon([qw(mgr create)], "$host->{mgr}->{fqdn}:$hostname", 'mgr') or return;
     }
     if ($host->{mds}) {
-        $self->deploy_daemon(\@command, "$host->{mds}->{fqdn}:$hostname", 'mds') or return;
+        $self->deploy_daemon([qw(mds create)], "$host->{mds}->{fqdn}:$hostname", 'mds') or return;
     }
+    return 1;
 }
 
 sub pull_cfg
 {
     my ($self, $host) = @_;
     my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", rwritecfg => 1);
-    return $succes or $self->write_init_cfg();
+    return $succes || $self->write_init_cfg();
     
 }
 sub deploy
@@ -180,9 +180,10 @@ sub deploy
     $self->debug(5, "deploy hash:", Dumper($map));
     $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
     foreach my $hostname (sort keys(%{$map})) {
-        $self->pull_cfg($map->{fqdn}) or return;
+        $self->pull_cfg($map->{$hostname}->{fqdn}) or return;
         $self->deploy_daemons($map->{$hostname}, $hostname) or return;
     }
+    return 1
 }
 
 sub configure

@@ -1,4 +1,4 @@
-package clmap;
+package clmapdata;
 
 use strict;
 use warnings;
@@ -27,3 +27,69 @@ Readonly our %CEPH_HASH => (
      }
    }
 );
+
+
+Readonly our %QUATTOR_HASH => (
+    'ceph001' => {
+        'fqdn' => 'ceph001.cubone.os',
+        'daemons' => {
+            'mgr' => {
+                'fqdn' => 'ceph001.cubone.os'
+            },
+            'mon' => {
+                'fqdn' => 'ceph001.cubone.os'
+            },
+        },
+   },
+    'ceph002' => {
+        'fqdn' => 'ceph002.cubone.os',
+        'daemons' => {
+            'mds' => {
+                'fqdn' => 'ceph002.cubone.os'
+            },
+            'mgr' => {
+                'fqdn' => 'ceph002.cubone.os'
+            },
+            'mon' => {
+                'fqdn' => 'ceph002.cubone.os'
+            },
+        },
+   },
+   'ceph003' => {
+     'fqdn' => 'ceph003.cubone.os',
+        'daemons' => {
+            'mds' => {
+                'fqdn' => 'ceph003.cubone.os'
+            },
+            'mgr' => {
+                'fqdn' => 'ceph003.cubone.os'
+            },
+            'mon' => {
+                'fqdn' => 'ceph003.cubone.os'
+            },
+        },
+   }
+);
+
+Readonly our %DEPLOY_HASH => (
+   'ceph001' => {
+     'fqdn' => 'ceph001.cubone.os',
+     'mon' => {
+       'fqdn' => 'ceph001.cubone.os'
+     }
+   },
+   'ceph003' => {
+       'mds' => {
+         'fqdn' => 'ceph003.cubone.os'
+       },
+       'mgr' => {
+         'fqdn' => 'ceph003.cubone.os'
+       },
+       'mon' => {
+         'fqdn' => 'ceph003.cubone.os'
+       },
+     'fqdn' => 'ceph003.cubone.os'
+   }
+);
+
+Readonly our $SSH_FULL => '/usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r';
