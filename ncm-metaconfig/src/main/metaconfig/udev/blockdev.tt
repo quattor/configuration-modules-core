@@ -1,0 +1,8 @@
+[%- FOREACH dv IN scsi_run -%]
+SUBSYSTEM=="block", SUBSYSTEMS=="scsi", PROGRAM=="/lib/udev/scsi_id -g -u -d /dev/%k", RUN+="[% dv  %]"
+[% END -%]
+
+[%- FOREACH dv IN dm_run -%] 
+SUBSYSTEM=="block", KERNEL=="dm-*", PROGRAM=="/lib/udev/scsi_id -g -u -d /dev/%k", RUN+="[% dv  %]"
+[% END -%]
+
