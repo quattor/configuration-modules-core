@@ -1,4 +1,4 @@
-declaration template components/${project.artifactId}/schema-osd;
+declaration template components/${project.artifactId}/v1/schema-osd;
 
 @documentation{ configuration options for a ceph osd daemon }
 type ceph_osd_config = {

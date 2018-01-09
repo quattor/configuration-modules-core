@@ -3,7 +3,7 @@
 # ${author-info}
 # ${build-info}
 
-declaration template components/${project.artifactId}/schema;
+declaration template components/${project.artifactId}/v1/schema;
 
 include 'quattor/schema';
 
@@ -171,10 +171,10 @@ type ceph_daemon = {
     'up' : boolean = true
 };
 
-include 'components/ceph/schema-mon';
-include 'components/ceph/schema-osd';
-include 'components/ceph/schema-mds';
-include 'components/ceph/schema-rgw';
+include 'components/ceph/v1/schema-mon';
+include 'components/ceph/v1/schema-osd';
+include 'components/ceph/v1/schema-mds';
+include 'components/ceph/v1/schema-rgw';
 
 @documentation{ ceph cluster-wide config parameters }
 type ceph_cluster_config = {
@@ -296,6 +296,7 @@ type ${project.artifactId}_component = {
     'key_accept' ? string with match(SELF, '^(first|always)$') # explicit accept host keys
     'ssh_multiplex' : boolean = true
     'max_add_osd_failures_per_host' : long(0..) = 0
+    'release' : string = 'Jewel' with match(SELF, 'Jewel') # only valid value for this schema
 } with valid_osd_names(SELF);
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

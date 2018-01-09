@@ -4,14 +4,14 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(cluster);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use NCM::Component::Ceph::Cluster;
 use NCM::Component::Ceph::ClusterMap;
 use clmapdata;
 
 my $cfg = get_config_for_profile("cluster");
 
-my $cmp = NCM::Component::ceph->new($cfg);
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 my $cl = NCM::Component::Ceph::Cluster->new($cfg, $cmp, $cmp->prefix());
 my $clmap = NCM::Component::Ceph::ClusterMap->new($cl);
 isa_ok($clmap, 'NCM::Component::Ceph::ClusterMap', 'got ClusterMap instance');

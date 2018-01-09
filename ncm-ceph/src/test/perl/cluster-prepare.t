@@ -16,11 +16,11 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Quattor qw(cluster);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use clusterdata;
 
 my $cfg = get_config_for_profile('cluster');
-my $cmp = NCM::Component::ceph->new($cfg);
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 my $cl = NCM::Component::Ceph::Cluster->new($cfg, $cmp, $cmp->prefix());
 
 my $hostname = 'ceph001';

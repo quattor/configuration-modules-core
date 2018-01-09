@@ -12,7 +12,7 @@
 # /bin/mkdir
 #
 
-package NCM::Component::${project.artifactId};
+package NCM::Component::Ceph::Jewel;
 
 use 5.10.1;
 use strict;
