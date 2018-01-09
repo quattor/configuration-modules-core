@@ -18,7 +18,7 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_crushmap);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Jewel;
 use CAF::Object;
 use crushdata;
 use Readonly;
@@ -26,7 +26,7 @@ use Readonly;
 $CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('basic_crushmap');
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Jewel->new('ceph');
 
 $cmp->use_cluster();
 my $buckets = \@crushdata::REBUCKETS;

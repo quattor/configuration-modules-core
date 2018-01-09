@@ -18,7 +18,7 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_cluster);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Jewel;
 use CAF::Object;
 use data;
 use Readonly;
@@ -27,7 +27,7 @@ use Readonly;
 $CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('basic_cluster');
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Jewel->new('ceph');
 my $mock = Test::MockModule->new('NCM::Component::Ceph::daemon');
 
 set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump", 

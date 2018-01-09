@@ -18,13 +18,13 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor;
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Jewel;
 use CAF::Object;
 use data;
 
 $CAF::Object::NoAction = 1;
 
-my $cmp = NCM::Component::ceph->new("ceph");
+my $cmp = NCM::Component::Ceph::Jewel->new("ceph");
 
 set_desired_output("/usr/bin/ceph -f json --cluster ceph mon dump", $data::MONJSON);
 my @fullcmd = qw(/usr/bin/ceph -f json --cluster ceph mon dump);
