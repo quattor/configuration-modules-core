@@ -9,20 +9,29 @@ Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 sub run_command {
     my ($self, $command, $msg, %opts ) = @_; 
 
+    my ($stdout, $stderr, $stderrref);
+    my $stdoutref = \$stdout;
+    if ($opts{nostderr}) {
+        $stderrref = \$stderr;
+    } else {
+        $stderrref = $stdoutref;
+    }
     my $proc = CAF::Process->new(
         $command,
         log => $self,
         user => $opts{user},
         sensitive => $opts{sensitive},
+        stdout => $stdoutref,
+        stderr => $stderrref,
     );
 
     if ($opts{printonly}) {
         $self->info("$proc");
         return 1;
     }
-
-    my $output = $proc->output();
+    $proc->execute(); 
     my $ok = $? ? 0 : 1;
+    my $output = $stdout;
 
     my $fmsg = "$msg";
     $fmsg .= " as user $opts{user}" if (exists $opts{user});

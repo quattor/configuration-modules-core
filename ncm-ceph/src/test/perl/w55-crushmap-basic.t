@@ -19,7 +19,7 @@ use Test::More;
 use Test::Deep;
 use Test::MockModule;
 use Test::Quattor qw(basic_crushmap);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Jewel;
 use CAF::Object;
 use CAF::TextRender;
 use crushdata;
@@ -30,7 +30,7 @@ use File::Touch;
 $CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('basic_crushmap');
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Jewel->new('ceph');
 
 set_desired_output("/usr/bin/ceph -f json --cluster ceph osd crush dump", $crushdata::CRUSHMAP_01);
 

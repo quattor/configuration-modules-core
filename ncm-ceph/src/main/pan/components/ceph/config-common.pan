@@ -5,13 +5,10 @@
 
 unique template components/${project.artifactId}/config-common;
 
-include 'components/${project.artifactId}/schema';
-
-# Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
+include format('components/${project.artifactId}/%s/schema', CEPH_SCHEMA_VERSION);
 
 'version' = '${no-snapshot-version}';
-#'package' = 'NCM::Component';
 
 'active' ?= true;
 'dispatch' ?= true;

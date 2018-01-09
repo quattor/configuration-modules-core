@@ -18,7 +18,7 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(basic_crushmap_tt);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Jewel;
 use CAF::Object;
 use CAF::TextRender;
 use crushdata;
@@ -28,7 +28,7 @@ use Readonly;
 $CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('basic_crushmap_tt');
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Jewel->new('ceph');
 
 
 my $t = $cfg->getElement($cmp->prefix())->getTree();
