@@ -1,4 +1,4 @@
-declaration template components/${project.artifactId}/schema-rgw;
+declaration template components/${project.artifactId}/v1/schema-rgw;
 
 type type_quoted_string = string with match(SELF, '^".*"$');
 

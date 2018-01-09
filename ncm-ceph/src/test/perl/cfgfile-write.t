@@ -5,13 +5,16 @@ use Test::More;
 use Test::Quattor qw(cfgfile);
 use NCM::Component::Ceph::Cfgfile;
 use Test::Quattor::Object;
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use cfgdata;
 
 my $obj = Test::Quattor::Object->new();
 my $cfg = get_config_for_profile("cfgfile");
 
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
+diag 'AAAAAAAAAAAAAAA';
+diag explain \@INC;
+diag $cmp->prefix();
 my $cl = NCM::Component::Ceph::Cfgfile->new($cfg, $obj, $cmp->prefix()."/config");
 isa_ok($cl, 'NCM::Component::Ceph::Cfgfile', 'got Cfgfile instance');
 

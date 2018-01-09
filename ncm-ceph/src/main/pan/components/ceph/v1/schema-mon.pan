@@ -1,4 +1,4 @@
-declaration template components/${project.artifactId}/schema-mon;
+declaration template components/${project.artifactId}/v1/schema-mon;
 
 @documentation{ configuration options for a ceph monitor daemon }
 type ceph_mon_config = {

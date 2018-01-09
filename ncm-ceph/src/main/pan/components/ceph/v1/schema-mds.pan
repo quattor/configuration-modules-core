@@ -1,4 +1,4 @@
-declaration template components/${project.artifactId}/schema-mds;
+declaration template components/${project.artifactId}/v1/schema-mds;
 
 @documentation{ configuration options for a ceph mds daemon }
 type ceph_mds_config = {

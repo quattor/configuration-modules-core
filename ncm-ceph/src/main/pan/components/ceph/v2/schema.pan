@@ -113,6 +113,7 @@ type ${project.artifactId}_component = {
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
     'deploy_version' ? ceph_deploy_supported_version
+    'release' : string = 'Luminous' with match(SELF, 'Luminous') # this schema only works with Luminous (and above)
 };
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

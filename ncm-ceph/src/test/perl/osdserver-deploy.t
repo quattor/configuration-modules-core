@@ -6,13 +6,13 @@ use Test::Deep;
 use Test::Quattor qw(osdserver);
 use NCM::Component::Ceph::OSDserver;
 use Test::Quattor::Object;
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use osddata;
 
 my $obj = Test::Quattor::Object->new();
 my $cfg = get_config_for_profile("osdserver");
 
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 my $cl = NCM::Component::Ceph::OSDserver->new($cfg, $obj, $cmp->prefix());
 isa_ok($cl, 'NCM::Component::Ceph::OSDserver', 'got OSDserver instance');
 

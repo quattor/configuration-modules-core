@@ -17,13 +17,13 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Quattor qw(cluster);
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
 my $cfg = get_config_for_profile('cluster');
-my $cmp = NCM::Component::ceph->new('ceph');
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 
 my $hostname = 'ceph001.cubone.os';
 my $keyfind = "/usr/bin/ssh-keygen -F ceph001.cubone.os";
