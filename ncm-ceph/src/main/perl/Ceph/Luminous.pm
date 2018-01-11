@@ -44,7 +44,6 @@ sub Configure {
     my $t = $config->getElement($self->prefix())->getTree();
     my $netw = $config->getElement('/system/network')->getTree();
     my $hostname = $netw->{hostname};
-    $self->debug(5, "Running on host $hostname.");
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
 
     if ($t->{config}) {

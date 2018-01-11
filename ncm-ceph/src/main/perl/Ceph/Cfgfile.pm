@@ -40,7 +40,7 @@ sub write_cfgfile
     };
     $fh->close();
        
-    $self->info("ceph config written to config file $self->{cfgfile}");
+    $self->debug(1, "done processing config file $self->{cfgfile}");
 
 }
 

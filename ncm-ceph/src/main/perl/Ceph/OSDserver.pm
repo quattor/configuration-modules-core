@@ -47,12 +47,12 @@ sub is_node_healthy
 sub run_pvs
 {
     my ($self, $osds) = @_;
-    my ($ok, $jstr) = $self->run_command([@GET_CEPH_PVS_CMD], "get ceph pvs");
+    my ($ok, $jstr) = $self->run_command([@GET_CEPH_PVS_CMD], "get ceph pvs", nostderr => 1);
     return if (!$ok);
     my $report = decode_json($jstr);
     $self->debug(4, Dumper($report));
     if (!defined($report->{report}[0]->{pv})) {
-        $self->error('Could not procces pvs json output');
+        $self->error('Could not process pvs json output');
         return;
     }
     my $pvs = $report->{report}[0]->{pv};
@@ -90,10 +90,10 @@ sub prepare_osds
     foreach my $osd (sort keys(%{$self->{osds}})) {
         if ($deployed->{$osd}) {
             $self->{osds}->{$osd}->{deployed} = 1;
-            $self->debug(1, "$osd already deployed");
+            $self->debug(2, "$osd already deployed");
             delete $deployed->{$osd};
         } else {
-            $self->debug(1, "$osd marked for deployment");
+            $self->debug(2, "$osd marked for deployment");
             $self->{osds}->{$osd}->{deployed} = 0;
         }
     }
@@ -135,10 +135,10 @@ sub deploy_osd
 sub deploy
 {
     my ($self) = @_;
-    $self->info('Start deploying OSD Daemons');
+    $self->verbose('Start deploying OSD Daemons if needed');
     foreach my $osd (sort keys(%{$self->{osds}})) {
         if (!$self->{osds}->{$osd}->{deployed}) {
-            $self->info('Deploying osd', $osd);
+            $self->info("Deploying osd $osd");
             $self->deploy_osd($osd, $self->{osds}->{$osd}) or return;
         }
     }
@@ -156,12 +156,6 @@ sub configure
 {
     my ($self) = @_;
     
-#    my $cfgfile = NCM::Component::Ceph::Cfgfile->new($self->{cfgtree}, $self, $self->{prefix});
-#    if (!$cfgfile->configure()) {
-#        $self->error('Could not write cfgfile, aborting deployment');
-#        return;
-#    }
-
     $self->is_node_healthy() or return;
     $self->prepare_osds() or return;
     $self->deploy() or return;

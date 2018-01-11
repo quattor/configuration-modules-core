@@ -14,7 +14,7 @@ sub run_command {
     if ($opts{nostderr}) {
         $stderrref = \$stderr;
     } else {
-        $stderrref = $stdoutref;
+        $stderrref = 'stdout';
     }
     my $proc = CAF::Process->new(
         $command,
@@ -31,11 +31,12 @@ sub run_command {
     }
     $proc->execute(); 
     my $ok = $? ? 0 : 1;
-    my $output = $stdout;
+    my $output = $$stdoutref;
 
     my $fmsg = "$msg";
     $fmsg .= " as user $opts{user}" if (exists $opts{user});
     $fmsg .= " output: $output" if ($output && !$opts{sensitive});
+    $fmsg .= " ignored stderr: $$stderrref" if ($opts{nostderr});
 
     my $report = ($opts{test} || $ok) ? 'verbose' : 'error';
     $self->$report($ok ? ucfirst($fmsg) : "Failed to $fmsg");
@@ -49,8 +50,8 @@ sub run_command {
 sub run_command_as_ceph {
     my ($self, $command, $msg, %opts) = @_;
     
-    $opts{user} = 'ceph';
-    return $self->run_command([@$command], $msg, %opts);
+    $command = [join(' ',@$command)];
+    return $self->run_command([qw(su - ceph -c), @$command], $msg, %opts);
 }
 
 
@@ -113,6 +114,7 @@ sub ssh_known_keys {
     } else {
         $self->debug(3, "SSH hostkeys not managed");
     }
+    return 1;
 }
 
 sub test_host_connection {
