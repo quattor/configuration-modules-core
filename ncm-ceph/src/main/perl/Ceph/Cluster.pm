@@ -73,6 +73,7 @@ sub cluster_exists
         $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, rwritecfg => 1);
         return 0;
     } else {
+        $self->debug(1, 'Found existing cluster');
         return 1;
     }
 }
@@ -88,10 +89,8 @@ sub cluster_ready {
                 # This should not happen
                 $self->error("Cannot connect to ceph cluster!");
                 return 0;
-            } else {
-                $self->debug(1,"Node ready to receive ceph-commands");
-            }
     }
+    $self->debug(1, "Node ready to receive ceph-commands");
     return 1;
 }
 
@@ -104,6 +103,7 @@ sub write_init_cfg
          $self->error('Could not write cfgfile for ceph-deploy, aborting deployment');
          return;
     }
+    $self->debug(1, "Initial config file has been set");
     return 1;
 
 }
@@ -130,12 +130,15 @@ sub test_host_connections
             return;
         }
     }
+    $self->debug(1, 'All nodes reachable');
+    return 1;
 }
 
 # get running config and see what needs to be deployed
 sub make_tasks
 {
     my ($self) = @_;
+    $self->verbose('Comparing daemons to determine what needs to be deployed');
     my $map = NCM::Component::Ceph::ClusterMap->new($self);
     $map->map_existing() or return;
     $map->map_quattor() or return;
@@ -148,7 +151,7 @@ sub deploy_daemon
 {
     my ($self, $cmd, $name, $type) = @_;
     push (@$cmd, $name);
-    $self->debug(1, 'Deploying daemon: ', join(' ', @$cmd));
+    $self->info('Deploying daemon: ', join(' ', @$cmd));
     return $self->run_ceph_deploy_command($cmd, "deploy $type $name" );
 }
 
@@ -178,7 +181,7 @@ sub deploy
     my ($self, $map) = @_;
 
     $self->debug(5, "deploy hash:", Dumper($map));
-    $self->info("Running ceph-deploy commands. This can take some time when adding new daemons. ");
+    $self->verbose("Running ceph-deploy commands. This can take some time when adding new daemons.");
     foreach my $hostname (sort keys(%{$map})) {
         $self->pull_cfg($map->{$hostname}->{fqdn}) or return;
         $self->deploy_daemons($map->{$hostname}, $hostname) or return;
@@ -189,7 +192,7 @@ sub deploy
 sub configure
 {
     my ($self) = @_;
-    $self->prepare_cluster() or return
+    $self->prepare_cluster() or return;
 
     my $map = $self->make_tasks() or return;
 

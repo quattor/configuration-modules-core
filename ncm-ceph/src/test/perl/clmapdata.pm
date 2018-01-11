@@ -92,4 +92,4 @@ Readonly our %DEPLOY_HASH => (
    }
 );
 
-Readonly our $SSH_FULL => '/usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r';
+Readonly our $SSH_FULL => 'su - ceph -c /usr/bin/ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r';

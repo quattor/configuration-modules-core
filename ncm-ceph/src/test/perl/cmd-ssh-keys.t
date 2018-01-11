@@ -26,9 +26,9 @@ my $cfg = get_config_for_profile('cluster');
 my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 
 my $hostname = 'ceph001.cubone.os';
-my $keyfind = "/usr/bin/ssh-keygen -F ceph001.cubone.os";
+my $keyfind = "su - ceph -c /usr/bin/ssh-keygen -F ceph001.cubone.os";
 set_desired_output($keyfind, "I am a key, I am a key!\n");# key visible
-my $scancmd = '/usr/bin/ssh-keyscan ceph001.cubone.os';
+my $scancmd = 'su - ceph -c /usr/bin/ssh-keyscan ceph001.cubone.os';
 set_desired_output($scancmd, "I am the key, I am the key!\n");
 
 my $cephusr = { homeDir => '/home/ceph', uid => 1234, gid => 1234 };

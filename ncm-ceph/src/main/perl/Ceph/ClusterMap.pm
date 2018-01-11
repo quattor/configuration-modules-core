@@ -44,7 +44,7 @@ sub get_quattor_map
 sub mon_hash 
 {
     my ($self) = @_; 
-    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mon dump)], 'get mon map') or return;
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mon dump)], 'get mon map', nostderr => 1) or return;
     my $monsh = decode_json($jstr);
     foreach my $mon (@{$monsh->{mons}}){
         $self->add_existing('mon', $mon->{name}, { addr => $mon->{addr}});
@@ -55,7 +55,7 @@ sub mon_hash
 sub mgr_hash 
 {
     my ($self) = @_; 
-    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mgr dump)], 'get mgr map') or return;
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mgr dump)], 'get mgr map', nostderr => 1) or return;
     my $mgrsh = decode_json($jstr);
     $self->add_existing('mgr', $mgrsh->{active_name});
     foreach my $mgr (@{$mgrsh->{standbys}}){
@@ -67,7 +67,7 @@ sub mgr_hash
 # Gets the MDS map
 sub mds_hash {
     my ($self) = @_; 
-    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mds stat)], 'get mds map') or return;
+    my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mds stat)], 'get mds map', nostderr => 1) or return;
     my $mdshs = decode_json($jstr);
     my $fsmap = $mdshs->{fsmap};
     foreach my $fs (@{$fsmap->{filesystems}}){
