@@ -174,6 +174,7 @@ sub pull_cfg
 {
     my ($self, $host) = @_;
     my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", rwritecfg => 1);
+    $self->run_ceph_deploy_command([qw(admin), $host], "set admin $host"); # mon,mgr,mds as admin
     return $succes || $self->write_init_cfg();
     
 }

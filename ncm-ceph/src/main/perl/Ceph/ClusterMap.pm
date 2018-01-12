@@ -25,6 +25,7 @@ sub _initialize
         },
     };
     $self->{Cluster} = $clusterobj;
+    $self->{deploy} = {};
     return 1;
 }
 
