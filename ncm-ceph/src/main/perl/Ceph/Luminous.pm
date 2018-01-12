@@ -13,32 +13,36 @@ use Text::Glob qw(match_glob);
 
 use LC::Exception;
 
-our $EC=LC::Exception::Context->new->will_store_all;
+our $EC = LC::Exception::Context->new->will_store_all;
 
-# Checks if the versions of ceph and ceph-deploy are compatible
-sub check_versions {
+# Checks if the versions of ceph and ceph-deploy are corresponding with the schema values
+sub check_versions 
+{
     my ($self, $qceph, $qdeploy) = @_;
     my ($ec, $cversion) = $self->run_ceph_command([qw(--version)], 'get ceph version');
-    my @vl = split(' ',$cversion);
+    my @vl = split(' ', $cversion);
     my $cephv = $vl[2];
-    my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)], 'get ceph-deploy version') if $qdeploy;
-    if ($deplv) {
-        chomp($deplv);
-    }
     if ($qceph && (!match_glob($qceph, $cephv))) {
         $self->error("Ceph version not corresponding! ",
             "Ceph: $cephv, Quattor: $qceph");
         return;
-    }        
-    if ($qdeploy && (!match_glob($qdeploy, $deplv))) {
-        $self->error("Ceph-deploy version not corresponding! ",
-            "Ceph-deploy: $deplv, Quattor: $qdeploy");
-        return;
+    }
+    if ($qdeploy){
+        my ($stdout, $deplv) = $self->run_ceph_deploy_command([qw(--version)], 'get ceph-deploy version');
+        if ($deplv) {
+            chomp($deplv);
+        }
+        if (!match_glob($qdeploy, $deplv)) {
+            $self->error("Ceph-deploy version not corresponding! ",
+                "Ceph-deploy: $deplv, Quattor: $qdeploy");
+            return;
+        }
     }
     return 1;
 }
 
-sub Configure {
+sub Configure 
+{
     my ($self, $config) = @_;
     # Get full tree of configuration information for component.
     my $t = $config->getElement($self->prefix())->getTree();

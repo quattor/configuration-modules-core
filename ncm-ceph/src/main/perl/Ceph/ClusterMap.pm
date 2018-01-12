@@ -35,6 +35,7 @@ sub get_fqdn
     return $self->{quattor}->{$host}->{fqdn};
 };
 
+# get the parsed daemons as they are declared in schema
 sub get_quattor_map
 {
     my ($self) = @_;
@@ -53,6 +54,7 @@ sub mon_hash
     return 1;
 }
 
+# Gets the MGR map
 sub mgr_hash 
 {
     my ($self) = @_; 
@@ -102,7 +104,7 @@ sub check_mon {
     return 1;
 }
 
-
+# Add a daemon to the existing daemon map
 sub add_existing
 {
     my ($self, $type, $name, $daemon) = @_;
@@ -112,6 +114,7 @@ sub add_existing
     return 1;
 }
 
+# add a daemon to the quattor map
 sub add_quattor
 {
     my ($self, $type, $name, $daemon) = @_;
@@ -119,23 +122,29 @@ sub add_quattor
     $self->debug(3, "Adding $type $name to quattor map");
     $self->{quattor}->{$name}->{daemons}->{$type} = $daemon;
     $self->{quattor}->{$name}->{fqdn} = $daemon->{fqdn};
+    return 1;
     
 }
 
+# add a daemon to the map to deploy
 sub add_daemon
 {
     my ($self, $type, $name, $daemon) = @_;
     $self->{deploy}->{$name}->{$type} = $daemon;
-    $self->{deploy}->{$name}->{fqdn} = $self->{quattor}->{$name}->{fqdn}
+    $self->{deploy}->{$name}->{fqdn} = $self->{quattor}->{$name}->{fqdn};
+    return 1;
 }
 
+# Add a host that needs deployment
 sub add_host
 {
     my ($self, $name, $host) = @_;
     $self->{deploy}->{$name} = $host->{daemons};
     $self->{deploy}->{$name}->{fqdn} = $host->{fqdn};
+    return 1;
 }
 
+# Fill in the map with existing daemons
 sub map_existing
 {
     my ($self) = @_;
@@ -143,8 +152,10 @@ sub map_existing
         $self->{actions}->{hash}->{$type}($self) or return;
     }   
     $self->debug(5, "Existing ceph hash:", Dumper($self->{ceph}));
+    return 1;
 }
 
+# Fill in the map with daemons declared in schema
 sub map_quattor
 {
     my ($self) = @_; 
@@ -160,8 +171,10 @@ sub map_quattor
         $self->add_quattor('mds', $hostname, $mds);
     }   
     $self->debug(5, "Quattor hash:", Dumper($self->{quattor}));
+    return 1;
 }
 
+# Compare all daemons of one host
 sub compare_host
 {
     my ($self, $host) = @_;
@@ -169,7 +182,7 @@ sub compare_host
     my %qt = %{$self->{quattor}->{$host}->{daemons}};
     my %ceph = %{$self->{ceph}->{$host}};
 
-    foreach my $typ (sort keys (%qt)) {
+    foreach my $typ (sort keys %qt) {
         if ($ceph{$typ}){
             if ($typ eq 'mon'){
                 # Check for ghost monitor
@@ -182,7 +195,7 @@ sub compare_host
         }
     }
     if (%ceph) {
-        $self->error("Found deployed daemons on node $host that are not in config: ", sort keys(%ceph));
+        $self->error("Found deployed daemons on node $host that are not in config: ", join(',', sort keys(%ceph)));
     }
     return 1;    
 }
@@ -196,7 +209,7 @@ sub compare_maps
     my ($self) = @_;
     my %qt = %{$self->{quattor}};
     my %ceph = %{$self->{ceph}};
-    foreach my $host (sort keys(%qt)) {
+    foreach my $host (sort keys %qt) {
         if ($ceph{$host}){
             $self->compare_host($host);
             delete $ceph{$host};
@@ -211,6 +224,7 @@ sub compare_maps
     return 1;
 }
 
+# return the map that can be used to deploy new daemons
 sub get_deploy_map
 {
     my ($self) = @_;
