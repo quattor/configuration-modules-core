@@ -597,13 +597,18 @@ sub _manual_initialisation
     push(@yum, qw(-c /tmp/aii/yum/yum.conf)) if $opts{aii};
 
     my @cli = qw(PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install --);
+
+    my $otp = $opts{otp} ? "'$opts{otp}'" : 'one_time_password_from_ipa_host-mod_--random';
+    # this is used in a cat heredoc, escape all $ chars
+    $otp =~ s/\$/\\\$/g;
+
     push(@cli,
          '--realm', $tree->{realm},
          '--primary', $tree->{primary},
          '--domain', $domain,
          '--fqdn', $_fqdn,
          '--hostcert', $hostcert,
-         '--otp', ($opts{otp} ? "'$opts{otp}'" : 'one_time_password_from_ipa_host-mod_--random'),
+         '--otp', $otp,
         );
 
     my @cmds;
