@@ -89,6 +89,7 @@ sub cluster_ready {
                 # This should not happen
                 $self->error("Cannot connect to ceph cluster!");
                 return 0;
+            }
     }
     $self->debug(1, "Node ready to receive ceph-commands");
     return 1;

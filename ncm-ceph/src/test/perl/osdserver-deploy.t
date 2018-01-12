@@ -20,7 +20,7 @@ set_command_status($osddata::BOOTSTRAP_OSD_KEYRING_CMD, 1);
 ok(!$cl->is_node_healthy(), 'node not healthy');
 set_command_status($osddata::BOOTSTRAP_OSD_KEYRING_CMD, 0);
 ok($cl->is_node_healthy(), 'node healthy');
-ok(get_command('/usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
+ok(get_command('timeout 20 /usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
 cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetched');

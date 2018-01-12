@@ -58,7 +58,11 @@ sub run_command_as_ceph {
 # run a command prefixed with ceph and return the output in json format
 sub run_ceph_command {
     my ($self, $command, $msg, %opts) = @_;
-    return $self->run_command([qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
+    my @timeout = ();
+    if ($opts{timeout}) {
+        @timeout = ('/usr/bin/timeout', $opts{timeout});
+    }
+    return $self->run_command([@timeout, qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
