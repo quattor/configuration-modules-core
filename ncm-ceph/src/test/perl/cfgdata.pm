@@ -5,7 +5,7 @@ use warnings;
 
 use Readonly;
 
-Readonly our $CFGFILE_OUT => <<EOD
+Readonly our $CFGFILE_OUT => <<EOD;
 [client.rgw.test]
 host=host3
 keyring=keyfile
@@ -34,3 +34,4 @@ public_network=192.168.0.0/20
 osd_max_scrubs=4
 EOD
 
+1;

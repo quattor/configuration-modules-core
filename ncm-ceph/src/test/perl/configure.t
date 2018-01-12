@@ -23,6 +23,7 @@ set_desired_output("/usr/bin/ceph -f json mds stat", $clmapdata::MDSJSON);
 set_desired_output('/usr/bin/ceph -f json --version', $clusterdata::CEPH_VERSION);
 set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02", 1); 
 ok($cmp->Configure($cfg), 'Ceph component configure ok');
+isa_ok($cmp, 'NCM::Component::Ceph::Luminous', 'got ncm-ceph Luminous instance');
 
 my $fh = get_file('/etc/ceph/ceph.conf');
 is("$fh", $cfgdata::CFGFILE_OUT, 'cfgfile ok');

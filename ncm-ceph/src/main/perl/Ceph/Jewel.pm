@@ -12,6 +12,7 @@
 # /bin/mkdir
 #
 
+# This is the old, deprecated version of the component for older versions of ceph
 package NCM::Component::Ceph::Jewel;
 
 use 5.10.1;

@@ -1,17 +1,3 @@
-# # -*- mode: cperl -*-
-# ${license-info}
-# ${author-info}
-# ${build-info}
-
-=pod
-
-=head1 DESCRIPTION
-
-Test the cluster_ready_check method
-
-=cut
-
-
 use strict;
 use warnings;
 use Test::More;
@@ -25,7 +11,6 @@ my $cl = NCM::Component::Ceph::Cluster->new($cfg, $cmp, $cmp->prefix());
 
 my $hostname = 'ceph001';
 
-# su-ceph-ccd /tmp/ubOWjqfE4m/ncm-ceph/ && /usr/bin/ceph-deploy --cluster ceph gatherkeys ceph001.cubone.os
 my $dpp = "su - ceph -c /usr/bin/ceph-deploy gatherkeys";
 my $gather1 = "$dpp ceph001.cubone.os";
 my $gather2 = "$dpp ceph002.cubone.os";

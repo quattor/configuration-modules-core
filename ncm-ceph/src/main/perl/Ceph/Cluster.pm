@@ -70,7 +70,7 @@ sub cluster_exists
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
         $self->info("To create a new cluster, run this command");
-        $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, rwritecfg => 1);
+        $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, overwritecfg => 1);
         return 0;
     } else {
         $self->debug(1, 'Found existing cluster');
@@ -173,7 +173,7 @@ sub deploy_daemons {
 sub pull_cfg
 {
     my ($self, $host) = @_;
-    my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", rwritecfg => 1);
+    my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", overwritecfg => 1);
     $self->run_ceph_deploy_command([qw(admin), $host], "set admin $host"); # mon,mgr,mds as admin
     return $succes || $self->write_init_cfg();
     

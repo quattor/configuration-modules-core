@@ -31,7 +31,7 @@ sub _initialize
 sub is_node_healthy
 {
     my ($self) = @_;
-    # Check bootstrab-osd keyring
+    # Check bootstrap-osd keyring
     # stat /var/lib/ceph/bootstrap-osd/ceph.keyring
     $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD], "stat bootstrap-osd keyring") or return;
     $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD_SL], "stat bootstrap-osd keyring symlink") or return ;
@@ -44,6 +44,8 @@ sub is_node_healthy
 
 }
 
+# Run pvs command to find the existing deployed osds with ceph-volume. 
+# Needs a hash and will add the parsed osds of pvs to the hash
 sub run_pvs
 {
     my ($self, $osds) = @_;
@@ -57,13 +59,13 @@ sub run_pvs
     }
     my $pvs = $report->{report}[0]->{pv};
     foreach my $pv (@$pvs) {
-        if ($pv->{lv_tags} =~ m/ceph.osd_id=(\d+),/) {
+        if ($pv->{lv_tags} =~ m/ceph.osd_id=(\d+)/) {
             my $id = $1;
             $self->verbose("Found existing osd pv for device $pv->{pv_name}");
             my $device = $pv->{pv_name};
             $device =~ s/^\/dev\///;
             $device = escape($device);
-            $self->debug(3,"Adding escaped device $device");
+            $self->debug(3," Adding escaped device $device");
             $osds->{$device} = { id => $id }
         }
     }
@@ -87,7 +89,7 @@ sub prepare_osds
     my ($self) = @_;
     $self->verbose('Start preparing OSDs');
     my $deployed = $self->get_deployed_osds() or return;
-    foreach my $osd (sort keys(%{$self->{osds}})) {
+    foreach my $osd (sort keys %{$self->{osds}}) {
         if ($deployed->{$osd}) {
             $self->{osds}->{$osd}->{deployed} = 1;
             $self->debug(2, "$osd already deployed");
@@ -98,7 +100,7 @@ sub prepare_osds
         }
     }
     if (%$deployed) {
-        $self->error('Found deployed osds that are not in config: ', sort keys(%$deployed));
+        $self->error('Found deployed osds that are not in config: ', join(',', sort keys(%$deployed)));
         return;
     }
     $self->verbose('Preparing OSDs finished');
@@ -116,7 +118,8 @@ sub deploy_osd
     }
     # ceph-volume lvm create --bluestore --data /dev/sdk
     my $devpath = "/dev/" . unescape($name);
-    my $succes = $self->run_command([qw(ceph-volume lvm create), "--$attrs->{storetype}", "--data", $devpath], "deploy osd $devpath");
+    my $succes = $self->run_command([qw(ceph-volume lvm create), "--$attrs->{storetype}", "--data", $devpath],
+        "deploy osd $devpath");
     if (!$succes) {
         if ($self->{ok_failures}){
             $self->{ok_failures}--;
@@ -136,13 +139,14 @@ sub deploy
 {
     my ($self) = @_;
     $self->verbose('Start deploying OSD Daemons if needed');
-    foreach my $osd (sort keys(%{$self->{osds}})) {
+    foreach my $osd (sort keys %{$self->{osds}}) {
         if (!$self->{osds}->{$osd}->{deployed}) {
             $self->info("Deploying osd $osd");
             $self->deploy_osd($osd, $self->{osds}->{$osd}) or return;
         }
     }
     $self->verbose('OSD Daemons deployed');
+    return 1;
 }
 
 sub do_post
