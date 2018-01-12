@@ -36,7 +36,7 @@ sub is_node_healthy
     $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD], "stat bootstrap-osd keyring") or return;
     $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD_SL], "stat bootstrap-osd keyring symlink") or return ;
     # Checks can be added
-    if (!$self->run_ceph_command([@BOOTSTRAP_OSD_CEPH_HEALTH], "get cluster state")) {
+    if (!$self->run_ceph_command([@BOOTSTRAP_OSD_CEPH_HEALTH], "get cluster state", timeout => 20)) {
         $self->error('Cluster not reachable or correctly configured');
         return;
     }
