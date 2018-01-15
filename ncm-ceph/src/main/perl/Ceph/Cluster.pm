@@ -8,6 +8,7 @@ use NCM::Component::Ceph::ClusterMap;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
+use CAF::Path;
 
 Readonly my $CEPH_USER_ELEMENT => '/software/components/accounts/users/ceph';
 Readonly my $CEPH_GROUP_ELEMENT => '/software/components/accounts/groups/ceph';
@@ -15,29 +16,26 @@ Readonly my $CEPH_DEPLOY_CFGFILE => '/home/ceph/ceph.conf';
 
 sub _initialize
 {
-    my ($self, $cfgtree, $log, $prefix) = @_;
+    my ($self, $config, $log, $prefix) = @_;
 
     $self->{log} = $log;
-    $self->{cfgtree} = $cfgtree;
+    $self->{config} = $config;
     $self->{prefix} = $prefix;
-    $self->{config} = $cfgtree->getTree($self->{prefix});
-    $self->{cluster} = $self->{config}->{cluster};
+    $self->{tree} = $config->getTree($self->{prefix});
+    $self->{cluster} = $self->{tree}->{cluster};
 
-    my $group = $cfgtree->getElement($CEPH_GROUP_ELEMENT)->getTree();
-    $self->{cephusr} = $cfgtree->getElement($CEPH_USER_ELEMENT)->getTree();
+    my $group = $config->getTree($CEPH_GROUP_ELEMENT);
+    $self->{cephusr} = $config->getTree($CEPH_USER_ELEMENT);
     $self->{cephusr}->{gid} = $group->{gid};
 
     $self->{key_accept} = $self->{cluster}->{key_accept};
     $self->{ssh_multiplex} = $self->{cluster}->{ssh_multiplex};
 
-    my $netw = $cfgtree->getElement('/system/network')->getTree();
+    my $netw = $config->getElement('/system/network')->getTree();
     $self->{hostname} = $netw->{hostname};
 
-    $self->{init_hosts} = [];
     my $monitors = $self->{cluster}->{monitors};
-    foreach my $host (sort(keys(%$monitors))) {
-        push (@{$self->{init_hosts}}, $monitors->{$host}->{fqdn});
-    }
+    $self->{init_hosts} = [map {$monitors->{$_}->{fqdn}} sort keys %$monitors];
 
     return 1;
 }
@@ -46,8 +44,8 @@ sub _initialize
 sub cluster_exists 
 {
     my ($self) = @_;
-    # Check If something is not configured or there is no existing cluster 
-    my $ok= 0;
+    # Check if something is not configured or there is no existing cluster 
+    my $ok = 0;
     foreach my $host (@{$self->{init_hosts}}) {
         if ($self->{key_accept}) {
             $self->ssh_known_keys($host, $self->{key_accept}, $self->{cephusr});
@@ -57,39 +55,38 @@ sub cluster_exists
             last;
         }
     }
-    if (!$ok) {
+    if ($ok) {
+        $self->debug(1, 'Found existing cluster');
+        return 1;
+    } else {
         # Manual commands for new cluster  
         # Run command with ceph-deploy for automation, 
         # but take care of race conditions
 
         my @newcmd = qw(new);
-        foreach my $host (@{$self->{init_hosts}}) {
-            push (@newcmd, $host);
-        }
-        if (!-f "$self->{cephusr}->{homeDir}/ceph.mon.keyring"){
+        push (@newcmd, @{$self->{init_hosts}});
+        if (!CAF::Path->file_exists("$self->{cephusr}->{homeDir}/ceph.mon.keyring")){
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
         $self->info("To create a new cluster, run this command");
         $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, overwritecfg => 1);
-        return 0;
-    } else {
-        $self->debug(1, 'Found existing cluster');
-        return 1;
+        return;
     }
 }
 
 # Fail if cluster not ready and no deploy hosts
-sub cluster_ready {
+sub cluster_ready
+{
     my ($self) = @_;
 
-    if (!$self->run_ceph_command([qw(status)], 'get cluster status' )) {
-            my @admin = ('admin', $self->{hostname});
-            $self->run_ceph_deploy_command(\@admin);
-            if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
-                # This should not happen
-                $self->error("Cannot connect to ceph cluster!");
-                return 0;
-            }
+    if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
+        my @admin = ('admin', $self->{hostname});
+        $self->run_ceph_deploy_command(\@admin);
+        if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
+            # This should not happen
+            $self->error("Cannot connect to ceph cluster!");
+            return;
+        }
     }
     $self->debug(1, "Node ready to receive ceph-commands");
     return 1;
@@ -99,7 +96,7 @@ sub write_init_cfg
 {
     my ($self) = @_;
     my $cfgfile = NCM::Component::Ceph::Cfgfile->new(
-        $self->{cfgtree}, $self, "$self->{prefix}/cluster/initcfg", $CEPH_DEPLOY_CFGFILE);
+        $self->{config}, $self, "$self->{prefix}/cluster/initcfg", $CEPH_DEPLOY_CFGFILE);
     if (!$cfgfile->configure()) {
          $self->error('Could not write cfgfile for ceph-deploy, aborting deployment');
          return;
@@ -125,7 +122,7 @@ sub prepare_cluster
 sub test_host_connections
 {
     my ($self, $map) = @_;
-    foreach my $host (keys %{$map->get_quattor_map}){
+    foreach my $host (sort keys %{$map->get_quattor_map}){
         if (! $self->test_host_connection($map->get_fqdn($host), $self->{key_accept}, $self->{cephusr})){
             $self->error("Can't reach ", $map->get_fqdn($host), " for configuration");
             return;
@@ -188,7 +185,7 @@ sub deploy
         $self->pull_cfg($map->{$hostname}->{fqdn}) or return;
         $self->deploy_daemons($map->{$hostname}, $hostname) or return;
     }
-    return 1
+    return 1;
 }
 
 sub configure
@@ -199,6 +196,6 @@ sub configure
     my $map = $self->make_tasks() or return;
 
     $self->deploy($map) or return;
-};
+}
 
 1;

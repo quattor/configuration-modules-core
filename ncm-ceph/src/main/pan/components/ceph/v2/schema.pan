@@ -112,7 +112,7 @@ this schema only works with Luminous 12.2.2 and above
 type ${project.artifactId}_component = {
     include structure_component
     'cluster' ? ceph_cluster
-    'daemons' ? ceph_daemons 
+    'daemons' ? ceph_daemons
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
     'deploy_version' ? ceph_deploy_supported_version

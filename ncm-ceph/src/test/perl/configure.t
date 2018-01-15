@@ -21,6 +21,9 @@ set_desired_output("/usr/bin/ceph -f json mgr dump", $clmapdata::MGRJSON);
 set_desired_output("/usr/bin/ceph -f json mds stat", $clmapdata::MDSJSON);
 
 set_desired_output('/usr/bin/ceph -f json --version', $clusterdata::CEPH_VERSION);
+set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');
+set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING_SL, 'key');
+
 set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02", 1); 
 ok($cmp->Configure($cfg), 'Ceph component configure ok');
 isa_ok($cmp, 'NCM::Component::Ceph::Luminous', 'got ncm-ceph Luminous instance');

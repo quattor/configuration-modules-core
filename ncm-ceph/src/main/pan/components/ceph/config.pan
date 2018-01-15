@@ -15,7 +15,7 @@ prefix '/software/components/${project.artifactId}';
 'active' ?= true;
 'dispatch' ?= true;
 
-'/software/packages' = pkg_repl('ncm-${project.artifactId}','${no-snapshot-version}-${rpm.release}','noarch');
+'/software/packages' = pkg_repl('ncm-${project.artifactId}', '${no-snapshot-version}-${rpm.release}', 'noarch');
 'dependencies/pre' ?= list('spma', 'accounts', 'sudo', 'useraccess');
 
 bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

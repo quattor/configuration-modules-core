@@ -17,15 +17,15 @@ Readonly my @GET_CEPH_PVS_CMD => (qw(pvs -o), 'pv_name,lv_tags', qw(--no-heading
 
 sub _initialize
 {
-    my ($self, $cfgtree, $log, $prefix) = @_;
+    my ($self, $config, $log, $prefix) = @_;
 
     $self->{log} = $log;
-    $self->{cfgtree} = $cfgtree;
+    $self->{config} = $config;
     $self->{prefix} = $prefix;
-    $self->{config} = $cfgtree->getTree($self->{prefix});
-    $self->{ok_failures} = $self->{config}->{daemons}->{max_add_osd_failures};
+    $self->{tree} = $config->getTree($self->{prefix});
+    $self->{ok_failures} = $self->{tree}->{daemons}->{max_add_osd_failures};
 
-    $self->{osds} = $self->{config}->{daemons}->{osds};
+    $self->{osds} = $self->{tree}->{daemons}->{osds};
     return 1;
 }
 
@@ -34,6 +34,7 @@ sub is_node_healthy
     my ($self) = @_;
     # Check bootstrap-osd keyring
     # stat /var/lib/ceph/bootstrap-osd/ceph.keyring
+    $self->debug(3, 'Checking if necessary files exists and we can connect to the cluster');
     CAF::Path->file_exists($BOOTSTRAP_OSD_KEYRING) or return;
     CAF::Path->file_exists($BOOTSTRAP_OSD_KEYRING_SL) or return;
     # Checks can be added
@@ -41,6 +42,7 @@ sub is_node_healthy
         $self->error('Cluster not reachable or correctly configured');
         return;
     }
+    $self->debug(3, 'We can succesfully connect to the cluster');
     return 1;
 
 }
@@ -160,7 +162,7 @@ sub do_post
 sub configure
 {
     my ($self) = @_;
-    
+    $self->debug(2, 'Configuring osd server');
     $self->is_node_healthy() or return;
     $self->prepare_osds() or return;
     $self->deploy() or return;
