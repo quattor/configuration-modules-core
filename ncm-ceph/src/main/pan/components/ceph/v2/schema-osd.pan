@@ -22,5 +22,4 @@ type ceph_osd = {
     include ceph_daemon
     'class' ? string
     'storetype' : string = 'bluestore' with match(SELF, '^bluestore$')
-
 };

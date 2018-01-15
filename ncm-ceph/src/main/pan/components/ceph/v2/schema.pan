@@ -1,7 +1,6 @@
 # ${license-info}
 # ${developer-info}
 # ${author-info}
-# ${build-info}
 
 declaration template components/${project.artifactId}/v2/schema;
 
@@ -16,7 +15,10 @@ include 'components/ceph/v2/schema-osd';
 include 'components/ceph/v2/schema-mds';
 include 'components/ceph/v2/schema-rgw';
 
-@documentation{ ceph cluster-wide config parameters }
+@documentation{ 
+ceph cluster-wide config parameters
+generate an fsid with uuidgen
+ }
 type ceph_global_config = {
     'auth_client_required' : string = 'cephx' with match(SELF, '^(cephx|none)$')
     'auth_cluster_required' : string = 'cephx' with match(SELF, '^(cephx|none)$')
@@ -24,7 +26,7 @@ type ceph_global_config = {
     'cluster_network' ? type_network_name
     'enable_experimental_unrecoverable_data_corrupting_features' ? string[1..]
     'filestore_xattr_use_omap' ? boolean
-    'fsid' : type_uuid # Should be generated with uuidgen
+    'fsid' : type_uuid
     'mon_cluster_log_to_syslog' : boolean = true
     'mon_initial_members' : type_network_name [1..]
     'mon_host' : type_fqdn[1..]
@@ -104,16 +106,15 @@ type ceph_deploy_supported_version = string with match(SELF, '[0-9]+\.[0-9]+\.[0
 
 @documentation{ 
 ceph cluster configuration
-we only support node to be in one ceph cluster
+we only support node to be in one ceph cluster named ceph
+this schema only works with Luminous 12.2.2 and above
  }
 type ${project.artifactId}_component = {
     include structure_component
-    'cluster' ? ceph_cluster # Only 1 cluster named ceph supported by component for now
+    'cluster' ? ceph_cluster
     'daemons' ? ceph_daemons 
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
     'deploy_version' ? ceph_deploy_supported_version
-    'release' : string = 'Luminous' with match(SELF, 'Luminous') # this schema only works with Luminous (and above)
+    'release' : string = 'Luminous' with match(SELF, 'Luminous')
 };
-
-bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;
