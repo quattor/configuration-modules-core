@@ -16,14 +16,14 @@ function valid_osd_names = {
     names = list();
 
     clusters = ARGV[0]['clusters'];
-    foreach (name;cluster;clusters) {
+    foreach (name; cluster; clusters) {
         append(names, name);
     };
 
-    foreach (name;cluster;clusters) {
-        foreach (host;hvals;clusters[name]['osdhosts']) {
-            foreach (osd;osdvals;clusters[name]['osdhosts'][host]['osds']) {
-                foreach (idex;clname;names) {
+    foreach (name; cluster; clusters) {
+        foreach (host; hvals; clusters[name]['osdhosts']) {
+            foreach (osd; osdvals; clusters[name]['osdhosts'][host]['osds']) {
+                foreach (idex; clname; names) {
                     if (match(osd, clname + '-\d+$')){
                         error("Osd path: " + osd + " is a ceph-reserved path!");
                         return(false);
@@ -52,21 +52,21 @@ function is_crushmap = {
         return(false);
     };
     # check buckets (names, attrs, types)
-    foreach(idx;bucket;buckets) {
+    foreach(idx; bucket; buckets) {
         if (!is_bucket(bucket, names, types, 1)){
             return(false);
         };
     };
     # check rule names
     rulenames = list();
-    foreach(idx;rule;rules) {
+    foreach(idx; rule; rules) {
         if(index(rule['name'], rulenames) != -1) {
             error("Duplicate rule name " + rule['name']);
             return(false);
         } else {
             append(rulenames, rule['name']);
         };
-        foreach(idx;step;rule['steps']) {
+        foreach(idx; step; rule['steps']) {
             if(index(step['take'], names) == -1) {
                 error("rule " + rule['name'] + " selects a non-existing bucket " + step['take']);
                 return(false);
@@ -126,7 +126,7 @@ function is_bucket = {
         append(valids, 'defaultalg');
         append(valids, 'defaulthash');
     };
-    foreach(attr;val;bucket) {
+    foreach(attr; val; bucket) {
         if(index(attr, valids) == -1) {
             error("Attribute " + attr + " of bucket not supported!");
             retrun(false);
@@ -134,13 +134,13 @@ function is_bucket = {
     };
     cnames = list();
     if(exists(bucket['labels'])) {
-        foreach(li;label;bucket['labels']) {
+        foreach(li; label; bucket['labels']) {
             append(cnames, format('%s-%s', bucket['name'], label));
         };
     } else {
         append(cnames, bucket['name']);
     };
-    foreach(ni;cname;cnames) {
+    foreach(ni; cname; cnames) {
         if(index(cname, names) != -1) {
             error("Duplicate bucket name " + cname);
             return(false);
@@ -153,7 +153,7 @@ function is_bucket = {
 
     #recurse if buckets exists
     if(exists(bucket['buckets'])){
-        foreach(idx;cbucket;bucket['buckets']) {
+        foreach(idx; cbucket; bucket['buckets']) {
             if (!is_bucket(cbucket, names, types, 0)){
                 return(false);
             };
@@ -298,5 +298,3 @@ type ${project.artifactId}_component = {
     'max_add_osd_failures_per_host' : long(0..) = 0
     'release' : string = 'Jewel' with match(SELF, 'Jewel') # only valid value for this schema
 } with valid_osd_names(SELF);
-
-bind '/software/components/${project.artifactId}' = ${project.artifactId}_component;

@@ -25,7 +25,7 @@ sub call_entry_point
     if (defined($t->{release})) {
         $release = $t->{release};
     } else {
-        $release = 'luminous';
+        $release = 'Luminous';
     }
 
     my $submod = "NCM::Component::Ceph::$release";

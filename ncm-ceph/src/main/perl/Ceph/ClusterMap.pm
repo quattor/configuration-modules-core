@@ -17,13 +17,6 @@ sub _initialize
     $self->{quattor} = {};
     $self->{ceph} = {};
 
-    $self->{actions} = {
-        hash => {
-            mon => \&mon_hash,
-            mgr => \&mgr_hash,
-            mds => \&mds_hash,
-        },
-    };
     $self->{Cluster} = $clusterobj;
     $self->{deploy} = {};
     return 1;
@@ -68,7 +61,8 @@ sub mgr_hash
 }
 
 # Gets the MDS map
-sub mds_hash {
+sub mds_hash
+{
     my ($self) = @_; 
     my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mds stat)], 'get mds map', nostderr => 1) or return;
     my $mdshs = decode_json($jstr);
@@ -86,7 +80,8 @@ sub mds_hash {
 }
 
 # Compare and change mon config
-sub check_mon {
+sub check_mon
+{
     my ($self, $hostname, $mon) = @_; 
     $self->debug(3, "Comparing mon $hostname");
     my $ceph_mon = $self->{ceph}->{$hostname}->{mon};
@@ -148,8 +143,9 @@ sub add_host
 sub map_existing
 {
     my ($self) = @_;
-    foreach my $type ( sort keys %{$self->{actions}->{hash}}){
-        $self->{actions}->{hash}->{$type}($self) or return;
+    my @actions = (\&mon_hash, \&mgr_hash, \&mds_hash);
+    foreach my $type (@actions){
+        $type->($self) or return;
     }   
     $self->debug(5, "Existing ceph hash:", Dumper($self->{ceph}));
     return 1;
