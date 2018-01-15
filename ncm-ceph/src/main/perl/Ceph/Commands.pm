@@ -46,8 +46,6 @@ sub run_command
     return wantarray ? ($ok, $output) : $ok;
 }
 
-1;
-
 # Runs a command as the ceph user
 sub run_command_as_ceph
 {
@@ -134,3 +132,4 @@ sub test_host_connection
     return $self->run_command_as_ceph_with_ssh(['uname'], $host, 'connect with ssh'); 
 }
 1;
+

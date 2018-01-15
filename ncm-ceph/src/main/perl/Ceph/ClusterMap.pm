@@ -89,7 +89,7 @@ sub check_mon
         $self->debug(4, "Recreating initial (unconfigured) mon $hostname");
         return $self->add_daemon('mon', $hostname, $mon);
     }   
-    my $donecmd = ['test','-e',"/var/lib/ceph/mon/ceph-$hostname/done"];
+    my $donecmd = ['test', '-e', "/var/lib/ceph/mon/ceph-$hostname/done"];
     if (!$self->{Cluster}->run_command_as_ceph_with_ssh($donecmd, $self->get_fqdn($hostname), 'verify monitor exists')) {
         # Node reinstalled without first destroying it
         $self->info("Previous mon $hostname shall be reinstalled");

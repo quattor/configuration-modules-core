@@ -1,6 +1,7 @@
 template tcfgfile;
 
 include 'components/ceph/v2/schema';
+bind '/software/components/ceph' = ceph_component;
 
 '/software/components/ceph/ceph_version' = '12.2.2';
 

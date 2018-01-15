@@ -51,6 +51,7 @@ sub Configure
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
 
     if ($t->{config}) {
+        $self->verbose('Running Ceph configfile component');
         my $cfgfile = NCM::Component::Ceph::Cfgfile->new($config, $self, $self->prefix()."/config");
         $cfgfile->configure() or return;
     }
@@ -58,11 +59,13 @@ sub Configure
     my $cl = $t->{cluster};
         
     if ($cl && $cl->{deployhosts}->{$hostname}) {
+        $self->verbose('Running Ceph cluster component');
         my $cluster = NCM::Component::Ceph::Cluster->new($config, $self, $self->prefix());
         $cluster->configure() or return;
     }
     
     if ($t->{daemons}) {
+        $self->verbose('Running Ceph OSD component');
         my $osds = NCM::Component::Ceph::OSDserver->new($config, $self, $self->prefix());
         $osds->configure() or return;
     }
