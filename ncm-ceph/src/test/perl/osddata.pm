@@ -5,7 +5,8 @@ use warnings;
 
 use Readonly;
 
-Readonly our $BOOTSTRAP_OSD_KEYRING_CMD => 'stat /var/lib/ceph/bootstrap-osd/ceph.keyring';
+Readonly our $BOOTSTRAP_OSD_KEYRING => '/var/lib/ceph/bootstrap-osd/ceph.keyring';
+Readonly our $BOOTSTRAP_OSD_KEYRING_SL => '/etc/ceph/ceph.client.bootstrap-osd.keyring';
 Readonly our $GET_CEPH_PVS_CMD => 'pvs -o pv_name,lv_tags --no-headings --reportformat json';
 
 Readonly our $OSD_PVS_OUT => <<EOD;
