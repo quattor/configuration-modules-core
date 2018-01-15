@@ -8,9 +8,10 @@ use EDG::WP4::CCM::Path qw(escape unescape);
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
+use CAF::Path;
 
-Readonly my @BOOTSTRAP_OSD_KEYRING_CMD => qw(stat /var/lib/ceph/bootstrap-osd/ceph.keyring);
-Readonly my @BOOTSTRAP_OSD_KEYRING_CMD_SL => qw(stat /etc/ceph/ceph.client.bootstrap-osd.keyring);
+Readonly my $BOOTSTRAP_OSD_KEYRING => '/var/lib/ceph/bootstrap-osd/ceph.keyring';
+Readonly my $BOOTSTRAP_OSD_KEYRING_SL => '/etc/ceph/ceph.client.bootstrap-osd.keyring';
 Readonly my @BOOTSTRAP_OSD_CEPH_HEALTH => qw(status --id bootstrap-osd);
 Readonly my @GET_CEPH_PVS_CMD => (qw(pvs -o), 'pv_name,lv_tags', qw(--no-headings --reportformat json));
 
@@ -33,8 +34,8 @@ sub is_node_healthy
     my ($self) = @_;
     # Check bootstrap-osd keyring
     # stat /var/lib/ceph/bootstrap-osd/ceph.keyring
-    $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD], "stat bootstrap-osd keyring") or return;
-    $self->run_command([@BOOTSTRAP_OSD_KEYRING_CMD_SL], "stat bootstrap-osd keyring symlink") or return ;
+    CAF::Path->file_exists($BOOTSTRAP_OSD_KEYRING) or return;
+    CAF::Path->file_exists($BOOTSTRAP_OSD_KEYRING_SL) or return;
     # Checks can be added
     if (!$self->run_ceph_command([@BOOTSTRAP_OSD_CEPH_HEALTH], "get cluster state", timeout => 20)) {
         $self->error('Cluster not reachable or correctly configured');

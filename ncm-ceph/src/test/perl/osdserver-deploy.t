@@ -16,9 +16,9 @@ my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
 my $cl = NCM::Component::Ceph::OSDserver->new($cfg, $obj, $cmp->prefix());
 isa_ok($cl, 'NCM::Component::Ceph::OSDserver', 'got OSDserver instance');
 
-set_command_status($osddata::BOOTSTRAP_OSD_KEYRING_CMD, 1);
 ok(!$cl->is_node_healthy(), 'node not healthy');
-set_command_status($osddata::BOOTSTRAP_OSD_KEYRING_CMD, 0);
+set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');
+set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING_SL, 'key');
 ok($cl->is_node_healthy(), 'node healthy');
 ok(get_command('/usr/bin/timeout 20 /usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
 
