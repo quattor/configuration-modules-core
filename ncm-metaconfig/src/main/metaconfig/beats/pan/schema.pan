@@ -147,6 +147,7 @@ type beats_service = {
     'output' : beats_output
     'shipper' ? beats_shipper
     'logging' ? beats_logging
+    'name' ? string
 };
 
 @documentation{
