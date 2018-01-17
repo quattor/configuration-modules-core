@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use Test::Quattor qw(configure);
 use Test::Quattor::Object;
-use NCM::Component::ceph;
+use NCM::Component::Ceph::Luminous;
 use cfgdata;
 use osddata;
 use clusterdata;
@@ -12,8 +12,9 @@ use clmapdata;
 
 my $cfg = get_config_for_profile("configure");
 
-my $cmp = NCM::Component::ceph->new('ceph');
-isa_ok($cmp, 'NCM::Component::ceph', 'got ncm-ceph instance');
+my $cmp = NCM::Component::Ceph::Luminous->new('ceph');
+# not testable with mocked ncm::component yet
+# isa_ok($cmp, 'NCM::Component::ceph', 'got ncm-ceph instance');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
 set_desired_output("/usr/bin/ceph -f json mon dump", $clmapdata::MONJSON);
