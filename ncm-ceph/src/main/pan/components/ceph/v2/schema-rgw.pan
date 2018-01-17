@@ -8,7 +8,7 @@ type ceph_rgw_config = {
     'keyring' : string
     'rgw_socket_path' : string = ''
     'log_file' : absolute_file_path = '/var/log/radosgw/client.radosgw.gateway.log'
-    'rgw_frontends' : type_quoted_string = '"civetweb port=8000"' #Some bug in ceph config parsing
+    'rgw_frontends' : type_quoted_string = '"civetweb port=8000"'
     'rgw_print_continue' : boolean = false
     'rgw_dns_name' : type_fqdn
     'rgw_enable_ops_log' : boolean = true
