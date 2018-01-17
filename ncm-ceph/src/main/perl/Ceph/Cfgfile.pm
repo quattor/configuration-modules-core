@@ -37,7 +37,7 @@ sub write_cfgfile
         return;
     };
     $fh->close();
-       
+
     $self->debug(1, "done processing config file $self->{cfgfile}");
 
 }
@@ -45,9 +45,9 @@ sub write_cfgfile
 sub configure
 {
     my ($self) = @_;
-    
+
     return if (!$self->write_cfgfile());
-    
+
     return 1;
 }
 

@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
+#${PMpre} NCM::Component::Ceph::daemon${PMpost}
 
 # This component needs a 'ceph' user.
 # The user should be able to run these commands with sudo without password:
@@ -12,11 +8,7 @@
 # /bin/mkdir
 #
 
-package NCM::Component::Ceph::daemon;
-
 use 5.10.1;
-use strict;
-use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 

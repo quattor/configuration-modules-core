@@ -1,10 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+#${PMpre} NCM::Component::Ceph::crushmap${PMpost}
 
-
-# This component needs a 'ceph' user. 
+# This component needs a 'ceph' user.
 # The user should be able to run these commands with sudo without password:
 # /usr/bin/ceph-deploy
 # /usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))
@@ -12,11 +8,7 @@
 # /bin/mkdir
 #
 
-package NCM::Component::Ceph::crushmap;
-
 use 5.10.1;
-use strict;
-use warnings;
 
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
@@ -28,8 +20,8 @@ use CAF::TextRender;
 use CAF::FileEditor;
 use CAF::Process;
 # taint-safe since 1.23;
-# Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/ 
-# Attention: Package has some versions like 1.2101 and 1.2102 .. 
+# Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/
+# Attention: Package has some versions like 1.2101 and 1.2102 ..
 use Data::Compare 1.23 qw(Compare);
 use Data::Dumper;
 use Config::Tiny;
@@ -49,7 +41,7 @@ sub get_osd_name {
     chomp($id);
     $id = $id + 0; # Only keep the integer part
     return "osd.$id";
-}   
+}
 
 # Reweight the osds if they have a different weight
 sub push_weights {
@@ -71,7 +63,7 @@ sub push_weights {
 # Do actions after deploying of daemons and global configuration
 sub do_crush_actions {
     my ($self, $cluster, $gvalues, $skip, $weights, $mapping) = @_;
-    my $okhosts = {}; 
+    my $okhosts = {};
     while (my ($hostname, $host) = each(%{$cluster->{osdhosts}})) {
         if (!$skip->{$hostname}) {
             $okhosts->{$hostname} = $host;
@@ -110,7 +102,7 @@ sub crush_merge {
 
             if (!$self->crush_merge($bucket->{buckets}, $osdhosts, $devices, $gvalues)){
                 $self->debug(2, "Failed to merge buckets of $bucket->{name} with osds",
-                    "Buckets:", Dumper($bucket->{buckets}));  
+                    "Buckets:", Dumper($bucket->{buckets}));
                 return 0;
             }
         } else {
@@ -118,7 +110,7 @@ sub crush_merge {
                 if ($osdhosts->{$name}){
                     my $osds = $osdhosts->{$name}->{osds};
                     $bucket->{buckets} = [];
-                    foreach my $osd (sort(keys %{$osds})){ 
+                    foreach my $osd (sort(keys %{$osds})){
                         if ($osds->{$osd}->{crush_ignore}){
                             $self->warn("OSD $osd on $name was set to ignore");
                             next;
@@ -126,14 +118,14 @@ sub crush_merge {
                         my $osdname = $self->get_name_from_mapping($gvalues->{mapping},
                             $name, $osds->{$osd}->{osd_path});
                         if (!$osdname) {
-                            $self->error("Could not find osd name for ", 
+                            $self->error("Could not find osd name for ",
                                 $osds->{$osd}->{osd_path}, " on $name");
                             return 0;
                         }
-                        my $osdb = { 
-                            name => $osdname, 
+                        my $osdb = {
+                            name => $osdname,
                             # Ceph is rounding the weight
-                            weight => int((1000 * $osds->{$osd}->{crush_weight}) + 0.5)/1000.0 , 
+                            weight => int((1000 * $osds->{$osd}->{crush_weight}) + 0.5)/1000.0 ,
                             type => 'osd',
                         };
                         if ($osds->{$osd}->{labels}) {
@@ -141,16 +133,16 @@ sub crush_merge {
                         }
                         push(@{$bucket->{buckets}}, $osdb);
                         (my $id = $osdname) =~ s/^osd\.//;
-                        my $device = { 
-                            id => $id, 
-                            name => $osdname 
+                        my $device = {
+                            id => $id,
+                            name => $osdname
                         };
                         push(@$devices, $device);
                     }
                 } else {
                     $self->error("No such hostname in ceph cluster: $name");
                     return 0;
-                }    
+                }
             }
         }
     }
@@ -159,18 +151,18 @@ sub crush_merge {
 
 # get a bucket hash for a labeled root
 sub labelize_bucket {
-    my ($self, $tbucket, $label ) = @_; 
+    my ($self, $tbucket, $label ) = @_;
     my %lhash = %{$tbucket};
     if ($lhash{type} ne 'osd') {
         $lhash{name} = "$lhash{name}-$label";
     }
-    if ($tbucket->{buckets} && @{$tbucket->{buckets}}) { 
+    if ($tbucket->{buckets} && @{$tbucket->{buckets}}) {
         $lhash{buckets} = [];
         foreach my $bucket (@{$tbucket->{buckets}}) {
             if (!$bucket->{labels} || ($label ~~ $bucket->{labels})) {
                 my $tmpb = $self->labelize_bucket($bucket, $label);
                 push(@{$lhash{buckets}}, $tmpb) if $tmpb;
-            }        
+            }
         }
         if (!@{$lhash{buckets}}) {
             # check/eliminate empty buckets
@@ -184,7 +176,7 @@ sub labelize_bucket {
 
 # If applicable, replace buckets with labeled ones
 sub labelize_buckets {
-    my ($self, $buckets ) = @_;    
+    my ($self, $buckets ) = @_;
     my @newbuckets = ();
     foreach my $bucket (@{$buckets}){
         if ($bucket->{labels} && @{$bucket->{labels}}) {
@@ -209,15 +201,15 @@ sub set_weights {
             if (!defined($chweight)) {
                 $self->debug(1, "Something went wrong when getting weight of $child->{name}");
                 return;
-            } 
+            }
             $weight += $chweight;
         }
         if (!$bucket->{weight}){
             $bucket->{weight} = $weight;
         } elsif ($weight != $bucket->{weight}) {
-            $self->warn("Bucket weight of $bucket->{name} ", 
+            $self->warn("Bucket weight of $bucket->{name} ",
                 "in Quattor differs from the sum of the child buckets! ",
-                "Quattor: $bucket->{weight} ", 
+                "Quattor: $bucket->{weight} ",
                 "Sum: $weight");
         }
     } else {
@@ -237,7 +229,7 @@ sub flatten_buckets {
     my $titems = [];
     foreach my $tmpbucket ( @{$buckets}) {
         # First fix attributes
-        if (!$defaults) { 
+        if (!$defaults) {
             # top bucket; set default values
             $defaults = { alg => $tmpbucket->{defaultalg}, hash => $tmpbucket->{defaulthash}};
         }
@@ -245,13 +237,13 @@ sub flatten_buckets {
         # update with tmpbucket
         @bucketh{keys %$tmpbucket} = values %$tmpbucket;
         my $bucket = \%bucketh;
-        
+
         push(@$titems, { name => $bucket->{name}, weight => $bucket->{weight} });
         if ($bucket->{buckets}) {
-            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $defaults);         
-            $bucket->{items} = $citems; 
+            my $citems = $self->flatten_buckets($bucket->{buckets}, $flats, $defaults);
+            $bucket->{items} = $citems;
             delete $bucket->{buckets};
-        
+
         }
         if($bucket->{type} ne 'osd'){
             push(@$flats, $bucket);
@@ -272,13 +264,13 @@ sub quat_crush {
             $type_osd = 1;
         } elsif ($type eq 'host') {
             $type_host = 1;
-        } 
+        }
         push(@newtypes, { type_id => $type_id, name => $type });
         $type_id +=1;
     }
     if (!$type_osd || !$type_host){
         $self->error("list of types should at least contain 'osd' and 'host'!");
-        return 0; 
+        return 0;
     }
     $crushmap->{types} = \@newtypes;
 
@@ -290,9 +282,9 @@ sub quat_crush {
     }
     my @sorted = sort { $a->{id} <=> $b->{id} } @$devices;
     $crushmap->{devices} = \@sorted;
-    
+
     $crushmap->{buckets} = $self->labelize_buckets($crushmap->{buckets});
-    
+
     foreach my $bucket (@{$crushmap->{buckets}}){
         if (!defined($self->set_weights($bucket))) {
             $self->debug(1, "Something went wrong when setting weight of $bucket->{name}");
@@ -312,7 +304,7 @@ sub set_used_bucket_id {
     if ($id ~~ @{$crush_ids}) {
         $self->error("ID $id already used in crushmap buckets!");
         return 0;
-    } 
+    }
     push(@{$crush_ids}, $id);
     return 1;
 }
@@ -320,7 +312,7 @@ sub set_used_bucket_id {
 # Collect the already used ruleset ids, id's can be the same
 sub set_used_ruleset_id {
     my ($self, $id, $ruleset_ids) = @_;
-    
+
     push(@{$ruleset_ids}, $id);
     return 1;
 }
@@ -330,7 +322,7 @@ sub set_used_ruleset_id {
 sub generate_ruleset_id {
     my ($self, $ruleset_ids) = @_;
     my $newid;
-    if (!@{$ruleset_ids}) { 
+    if (!@{$ruleset_ids}) {
         $self->debug(4,"crushmap from scratch");
         $newid = 0;
     } else {
@@ -346,7 +338,7 @@ sub generate_ruleset_id {
 sub generate_bucket_id {
     my ($self, $crush_ids) = @_;
     my $newid;
-    if (!@{$crush_ids}) { 
+    if (!@{$crush_ids}) {
         $self->debug(4,"crushmap from scratch");
         $newid = -1;
     } else {
@@ -377,7 +369,7 @@ sub cmp_crush_buckets {
                 $found = 1;
                 last;
             }
-        } 
+        }
         if (!$found) {
             $self->info("Existing ceph bucket $cbuck->{name} removed from quattor crushmap");
         }
@@ -386,12 +378,12 @@ sub cmp_crush_buckets {
         if (!defined($qbuck->{id})){
             $qbuck->{id} = $self->generate_bucket_id($crush_ids);
             $self->info("Bucket $qbuck->{name} added to crushmap");
-        }     
+        }
     }
     return 1;
 }
-        
-# Comparing crushmap rules 
+
+# Comparing crushmap rules
 # Also get rulesets here
 sub cmp_crush_rules {
     my ($self, $cephrules, $quatrules) = @_;
@@ -421,9 +413,9 @@ sub cmp_crush_rules {
         if (!defined($qrule->{ruleset})){
             $qrule->{ruleset} = $self->generate_ruleset_id($ruleset_ids);
             $self->info("Rule $qrule->{name} added to crushmap");
-        }     
-    }       
-     
+        }
+    }
+
     return 1;
 }
 
@@ -438,16 +430,16 @@ sub cmp_crush {
     # Types
     if (!Compare($cephcr->{types}, $quatcr->{types})) {
         $self->warn("Types are changed in the crushmap!");
-    }    
- 
+    }
+
     # Buckets
-    $self->debug(2, "Comparing crushmap buckets"); 
+    $self->debug(2, "Comparing crushmap buckets");
     $self->cmp_crush_buckets($cephcr->{buckets}, $quatcr->{buckets}) or return 0;
-        
-    # Rules 
-    $self->debug(2, "Comparing crushmap rules"); 
+
+    # Rules
+    $self->debug(2, "Comparing crushmap rules");
     $self->cmp_crush_rules($cephcr->{rules}, $quatcr->{rules});
-     
+
     return 1;
 }
 
@@ -455,15 +447,15 @@ sub cmp_crush {
 sub write_crush {
     my ($self, $crush, $crushdir) = @_;
     # Use tt files
-    my $plainfile = "$crushdir/crushmap"; 
+    my $plainfile = "$crushdir/crushmap";
     $self->debug(5, "Crushmap hash ready to be written to file:", Dumper($crush));
 
     my $trd = EDG::WP4::CCM::TextRender->new($CRUSH_MOD, $crush, log => $self, relpath => $CRUSH_TT_REL);
-    
+
     if (!$trd) {
         $self->error("Unable to render template $CRUSH_TT_REL/$CRUSH_MOD: ", $trd->{fail});
         return 0;
-    } 
+    }
     my $fh = $trd->filewriter($plainfile);
 
     if (!defined($fh)) {
@@ -476,7 +468,7 @@ sub write_crush {
 
     if ($changed) {
         $self->git_commit($crushdir, $plainfile, "crushmap edited by ncm-ceph");
-        # compile and set crushmap    
+        # compile and set crushmap
         if (!$self->run_command(['/usr/bin/crushtool', '-c', "$plainfile", '-o', "$crushdir/crushmap.bin"])){
             $self->error("Could not compile crushmap!");
             return 0;
@@ -490,7 +482,7 @@ sub write_crush {
         $self->debug(2, "Crushmap not changed");
     }
     return 1;
-}   
+}
 
 # Processes the Ceph CRUSHMAP
 sub process_crushmap {
