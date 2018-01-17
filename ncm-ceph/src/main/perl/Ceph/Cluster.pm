@@ -41,10 +41,10 @@ sub _initialize
 }
 
 # Checks if cluster is configured on this node.
-sub cluster_exists 
+sub cluster_exists
 {
     my ($self) = @_;
-    # Check if something is not configured or there is no existing cluster 
+    # Check if something is not configured or there is no existing cluster
     my $ok = 0;
     foreach my $host (@{$self->{init_hosts}}) {
         if ($self->{key_accept}) {
@@ -59,8 +59,8 @@ sub cluster_exists
         $self->debug(1, 'Found existing cluster');
         return 1;
     } else {
-        # Manual commands for new cluster  
-        # Run command with ceph-deploy for automation, 
+        # Manual commands for new cluster
+        # Run command with ceph-deploy for automation,
         # but take care of race conditions
 
         my @newcmd = qw(new);
@@ -115,7 +115,7 @@ sub prepare_cluster
     return if !$exists;
 
     $self->cluster_ready() or return;
-    
+
     return 1;
 };
 
@@ -145,7 +145,7 @@ sub make_tasks
 }
 
 # Deploys a single daemon
-sub deploy_daemon 
+sub deploy_daemon
 {
     my ($self, $cmd, $name, $type) = @_;
     push (@$cmd, $name);
@@ -173,7 +173,7 @@ sub pull_cfg
     my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", overwritecfg => 1);
     $self->run_ceph_deploy_command([qw(admin), $host], "set admin $host"); # mon,mgr,mds as admin
     return $succes || $self->write_init_cfg();
-    
+
 }
 sub deploy
 {

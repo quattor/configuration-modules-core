@@ -16,7 +16,7 @@ use LC::Exception;
 our $EC = LC::Exception::Context->new->will_store_all;
 
 # Checks if the versions of ceph and ceph-deploy are corresponding with the schema values
-sub check_versions 
+sub check_versions
 {
     my ($self, $qceph, $qdeploy) = @_;
     my ($ec, $cversion) = $self->run_ceph_command([qw(--version)], 'get ceph version');
@@ -41,7 +41,7 @@ sub check_versions
     return 1;
 }
 
-sub Configure 
+sub Configure
 {
     my ($self, $config) = @_;
     # Get full tree of configuration information for component.
@@ -57,13 +57,13 @@ sub Configure
     }
 
     my $cl = $t->{cluster};
-        
+
     if ($cl && $cl->{deployhosts}->{$hostname}) {
         $self->verbose('Running Ceph cluster component');
         my $cluster = NCM::Component::Ceph::Cluster->new($config, $self, $self->prefix());
         $cluster->configure() or return;
     }
-    
+
     if ($t->{daemons}) {
         $self->verbose('Running Ceph OSD component');
         my $osds = NCM::Component::Ceph::OSDserver->new($config, $self, $self->prefix());

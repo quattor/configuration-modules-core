@@ -2,14 +2,14 @@
 
 use 5.10.1;
 
-Readonly::Array our @SSH_MULTIPLEX_OPTS => 
+Readonly::Array our @SSH_MULTIPLEX_OPTS =>
     qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
 
 # run a command and return the output
 sub run_command
 {
-    my ($self, $command, $msg, %opts ) = @_; 
+    my ($self, $command, $msg, %opts ) = @_;
 
     my ($stdout, $stderr, $stderrref);
     my $stdoutref = \$stdout;
@@ -31,7 +31,7 @@ sub run_command
         $self->info("$proc");
         return 1;
     }
-    $proc->execute(); 
+    $proc->execute();
     my $ok = $? ? 0 : 1;
     my $output = $$stdoutref;
 
@@ -50,7 +50,7 @@ sub run_command
 sub run_command_as_ceph
 {
     my ($self, $command, $msg, %opts) = @_;
-    
+
     $command = [join(' ',@$command)];
     return $self->run_command([qw(su - ceph -c), @$command], $msg, %opts);
 }
@@ -68,7 +68,7 @@ sub run_ceph_command
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
-sub run_ceph_deploy_command 
+sub run_ceph_deploy_command
 {
     my ($self, $command, $msg, %opts) = @_;
     if ($opts{overwritecfg}) {
@@ -79,23 +79,23 @@ sub run_ceph_deploy_command
 }
 
 # Runs a command as ceph over ssh, optionally with options
-sub run_command_as_ceph_with_ssh 
+sub run_command_as_ceph_with_ssh
 {
-    my ($self, $command, $host, $msg, %opts) = @_; 
-    my $ssh_options = [] if (! defined($opts{ssh_options}));
+    my ($self, $command, $host, $msg, %opts) = @_;
+    $opts{ssh_options} = [] if (! defined($opts{ssh_options}));
     my $sshcmd = [@SSH_COMMAND];
     if ($self->{ssh_multiplex}) {
         $self->debug(2, 'Using SSH Multiplexing');
         push(@$sshcmd, @SSH_MULTIPLEX_OPTS);
     }
-    return $self->run_command_as_ceph([@$sshcmd, @$ssh_options, $host, @$command], $msg, %opts); 
+    return $self->run_command_as_ceph([@$sshcmd, @{$opts{ssh_options}}, $host, @$command], $msg, %opts);
 }
 
 
 # Accept and add unknown keys if wanted
-sub ssh_known_keys 
+sub ssh_known_keys
 {
-    my ($self, $host, $key_accept, $cephusr) = @_; 
+    my ($self, $host, $key_accept, $cephusr) = @_;
     return 1 if !defined($key_accept);
     if ($key_accept eq 'first'){
         # If not in known_host, scan key and add; else do nothing
@@ -125,11 +125,11 @@ sub ssh_known_keys
     return 1;
 }
 
-sub test_host_connection 
+sub test_host_connection
 {
-    my ($self, $host, $key_accept, $cephusr) = @_; 
+    my ($self, $host, $key_accept, $cephusr) = @_;
     $self->ssh_known_keys($host, $key_accept, $cephusr);
-    return $self->run_command_as_ceph_with_ssh(['uname'], $host, 'connect with ssh'); 
+    return $self->run_command_as_ceph_with_ssh(['uname'], $host, 'connect with ssh');
 }
 1;
 

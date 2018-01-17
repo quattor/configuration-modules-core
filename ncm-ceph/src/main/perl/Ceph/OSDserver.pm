@@ -47,7 +47,7 @@ sub is_node_healthy
 
 }
 
-# Run pvs command to find the existing deployed osds with ceph-volume. 
+# Run pvs command to find the existing deployed osds with ceph-volume.
 # Needs a hash and will add the parsed osds of pvs to the hash
 sub run_pvs
 {
@@ -82,12 +82,12 @@ sub get_deployed_osds
     $self->verbose('Fetching deployed osds');
     # Get pvs output
     $self->run_pvs($osds) or return;
-    
+
     # osds = { sdx => {osd_id => id }}
     return $osds;
 }
 
-sub prepare_osds 
+sub prepare_osds
 {
     my ($self) = @_;
     $self->verbose('Start preparing OSDs');
@@ -107,7 +107,7 @@ sub prepare_osds
         return;
     }
     $self->verbose('Preparing OSDs finished');
-    
+
     return 1
 }
 
@@ -126,7 +126,7 @@ sub deploy_osd
     if (!$succes) {
         if ($self->{ok_failures}){
             $self->{ok_failures}--;
-            $self->warn("Ignored osd deploy failure for $devpath, ", 
+            $self->warn("Ignored osd deploy failure for $devpath, ",
                 "$self->{ok_failures} more failures accepted");
             return 1;
         } else {
@@ -135,7 +135,7 @@ sub deploy_osd
     }
     $self->debug(1, "Deployed osd $name");
     return 1;
-    
+
 
 }
 sub deploy

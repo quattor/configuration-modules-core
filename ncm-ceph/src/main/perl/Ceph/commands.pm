@@ -1,10 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+#${PMpre} NCM::Component::Ceph::commands${PMpost}
 
-
-# This component needs a 'ceph' user. 
+# This component needs a 'ceph' user.
 # The user should be able to run these commands with sudo without password:
 # /usr/bin/ceph-deploy
 # /usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))
@@ -12,11 +8,7 @@
 # /bin/mkdir
 #
 
-package NCM::Component::Ceph::commands;
-
 use 5.10.1;
-use strict;
-use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 use LC::Exception;
@@ -26,8 +18,8 @@ use CAF::FileWriter;
 use CAF::FileEditor;
 use CAF::Process;
 # taint-safe since 1.23;
-# Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/ 
-# Attention: Package has some versions like 1.2101 and 1.2102 .. 
+# Packages @ http://www.city-fan.org/ftp/contrib/perl-modules/RPMS.rhel6/
+# Attention: Package has some versions like 1.2101 and 1.2102 ..
 use File::Basename;
 use Git::Repository;
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -54,7 +46,7 @@ sub use_cluster {
     my ($self, $cluster) = @_;
     $cluster ||= 'ceph';
     if ($cluster ne 'ceph') {
-        $self->error("Not yet implemented!"); 
+        $self->error("Not yet implemented!");
         return 0;
     }
     $self->{cluster} = $cluster;
@@ -65,7 +57,7 @@ sub use_cluster {
 sub run_command {
     my ($self, $command, $dry) = @_;
     my ($cmd_output, $cmd_err);
-    my $cmd = CAF::Process->new($command, log => $self, 
+    my $cmd = CAF::Process->new($command, log => $self,
         stdout => \$cmd_output, stderr => \$cmd_err);
     if ($dry) {
         $self->debug(5, "Dry-run mode, returning command: $cmd");
@@ -84,7 +76,7 @@ sub run_command {
         }
         if ($cmd_err) {
             $self->verbose("Command stderr output: $cmd_err");
-        }    
+        }
     }
     #return $cmd_output || "0 but true";
     return wantarray ? ($cmd_output, $cmd_err) : ($cmd_output || "0E0");
@@ -105,18 +97,18 @@ sub run_daemon_command {
 sub has_shell_escapes {
     my ($self, $cmd) = @_;
     if (grep(m{[;&>|"']}, @$cmd) ) {
-        $self->error("Invalid shell escapes found in ", 
+        $self->error("Invalid shell escapes found in ",
             join(" ", @$cmd));
         return 0;
     }
     return 1;
 }
-    
+
 # Runs a command as the ceph user
 sub run_command_as_ceph {
     my ($self, $command, $dir, $dry) = @_;
-    
-    $self->has_shell_escapes($command) or return; 
+
+    $self->has_shell_escapes($command) or return;
     if ($dir) {
         $self->has_shell_escapes([$dir]) or return;
         unshift (@$command, ('cd', $dir, '&&'));
@@ -132,7 +124,7 @@ sub run_command_as_ceph_with_ssh {
     return $self->run_command_as_ceph([@$sshcmd, @$ssh_options, $host, @$command], '', $dry // 0);
 }
 
-# Runs a cat command as ceph over ssh 
+# Runs a cat command as ceph over ssh
 sub run_cat_command_as_ceph_with_ssh {
     my ($self, $command, $host) = @_;
     return $self->run_command_as_ceph_with_ssh([@CAT_COMMAND, @$command], $host);
@@ -175,14 +167,14 @@ sub ssh_known_keys {
         $self->run_command_as_ceph_with_ssh(['uname'], $host, ['-o', 'StrictHostKeyChecking=no']);
     } else {
         $self->debug(3, "SSH hostkeys not managed");
-    }  
+    }
 }
 
 # check if host is reachable
 sub test_host_connection {
-    my ($self, $host, $gvalues) = @_; 
+    my ($self, $host, $gvalues) = @_;
     $self->ssh_known_keys($host, $gvalues->{key_accept}, $gvalues->{cephusr});
-    return $self->run_command_as_ceph_with_ssh(['uname'], $host); 
+    return $self->run_command_as_ceph_with_ssh(['uname'], $host);
 }
 
 
@@ -198,26 +190,26 @@ sub print_cmds {
 
 # Write the config file
 sub write_new_config {
-    my ($self, $cfg, $cfgfile ) = @_; 
+    my ($self, $cfg, $cfgfile ) = @_;
     my $tinycfg = Config::Tiny->new;
-    
+
     $tinycfg->{global} = $self->stringify_cfg_arrays($cfg);
     if (!$tinycfg->write($cfgfile)) {
-        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?"); 
+        $self->error("Could not write config file $cfgfile: $!", "Exitcode: $?");
         return 0;
-    }   
+    }
     $self->debug(2,"content written to config file $cfgfile");
     return 1;
 }
 
 # Adds and commits a file to the repo
-# working_dir may be a subdir, 
+# working_dir may be a subdir,
 # file can be absolute or relative to working copy
 sub git_commit {
     my ($self, $work_tree, $file, $message) = @_;
-    my $gitr = Git::Repository->new( 
-	work_tree => $work_tree, 
-    { 
+    my $gitr = Git::Repository->new(
+	work_tree => $work_tree,
+    {
         env => {
                 GIT_COMMITTER_EMAIL => 'ceph@deployhost',
                 GIT_COMMITTER_NAME  => 'Ceph-deploy user',
@@ -227,8 +219,8 @@ sub git_commit {
         }
     );
     $gitr->run( add => $file );
-    $gitr->run( commit => '-m', $message ) or return 0;    
-    return 1;    
+    $gitr->run( commit => '-m', $message ) or return 0;
+    return 1;
 }
 
 1; # Required for perl module!

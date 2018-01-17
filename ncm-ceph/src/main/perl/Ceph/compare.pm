@@ -1,14 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-
-package NCM::Component::Ceph::compare;
+#${PMpre} NCM::Component::Ceph::compare${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 use LC::Exception;
@@ -39,26 +31,26 @@ Readonly::Hash my %ACTIONS => (
         osd => \&compare_osd,
         mds => \&compare_mds,
         gtw => \&compare_gtw,
-    }, 
+    },
 );
 
 # get hashes out of ceph and from the configfiles , make one structure of it
 sub get_ceph_conf {
     my ($self, $gvalues) = @_;
-   
+
     $self->debug(2, "Retrieving information from ceph");
     my $master = {};
     my $weights = {};
-    my $mapping = { 
-        'get_loc' => {}, 
+    my $mapping = {
+        'get_loc' => {},
         'get_id' => {}
     };
     $self->osd_hash($master, $mapping, $weights, $gvalues) or return ;
 
     $self->mon_hash($master) or return ;
     $self->mds_hash($master) or return ;
-    
-    $self->config_hash( $master, $mapping, $gvalues) or return; 
+
+    $self->config_hash( $master, $mapping, $gvalues) or return;
     $self->debug(5, "Ceph hash:", Dumper($master));
     return ($master, $mapping, $weights);
 }
@@ -72,30 +64,30 @@ sub set_host_attrs {
     $hosthashref->{config} = $config;
     $master->{$hostname} = $hosthashref;
 }
-    
+
 # One big quattor tree on a host base
 sub get_quat_conf {
-    my ($self, $quattor) = @_; 
+    my ($self, $quattor) = @_;
     my $master = {} ;
     $self->debug(2, "Building information from quattor");
     if ($quattor->{radosgwh}) {
         while (my ($hostname, $host) = each(%{$quattor->{radosgwh}})) {
-            $self->set_host_attrs($master, $hostname, 'gtws', $host->{gateways}, 
+            $self->set_host_attrs($master, $hostname, 'gtws', $host->{gateways},
                 $host->{fqdn}, $quattor->{config});
-        }  
+        }
     }
     while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
-        $self->set_host_attrs($master, $hostname, 'mon', $mon, 
+        $self->set_host_attrs($master, $hostname, 'mon', $mon,
             $mon->{fqdn}, $quattor->{config}); # Only one monitor
     }
     while (my ($hostname, $host) = each(%{$quattor->{osdhosts}})) {
         my $osds = $self->structure_osds($hostname, $host);
-        $self->set_host_attrs($master, $hostname, 'osds', $osds, 
+        $self->set_host_attrs($master, $hostname, 'osds', $osds,
             $host->{fqdn}, $quattor->{config});
     }
     while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
         $hostname =~ s/\..*//;;
-        $self->set_host_attrs($master, $hostname, 'mds', $mds, 
+        $self->set_host_attrs($master, $hostname, 'mds', $mds,
             $mds->{fqdn}, $quattor->{config}); # Only one mds
     }
     $self->debug(5, "Quattor hash:", Dumper($master));
@@ -133,15 +125,15 @@ sub add_host {
 
 # Configure a new osd
 # OSDS should be deployed first to get an ID, and config will be added in deploy fase
-sub add_osd { 
+sub add_osd {
     my ($self, $hostname, $osdkey, $osd, $structures) = @_;
     $self->debug(3, "Configuring new osd $osdkey on $hostname");
     if (!$self->prep_osd($osd)) {
-        $self->error("osd $osdkey on $hostname could not be prepared. Osd directory not empty?"); 
+        $self->error("osd $osdkey on $hostname could not be prepared. Osd directory not empty?");
         if ($structures->{ok_osd_failures}){
             $structures->{ok_osd_failures}--;
             $osd->{crush_ignore} = 1;
-            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname. ", 
+            $self->warn("Ignored one osd prep and deploy failure for $osdkey on $hostname. ",
                 "$structures->{ok_osd_failures} more failures accepted");
             return 1;
         } else {
@@ -173,10 +165,10 @@ sub add_mon {
 sub add_mds {
     my ($self, $hostname, $mds, $structures) = @_;
     $self->debug(3, "Configuring new mds $hostname");
-    if ($self->prep_mds($hostname, $mds)) { 
+    if ($self->prep_mds($hostname, $mds)) {
         $self->debug(4, "mds $hostname not shown in mds map, but exists.");
         $structures->{restartd}->{$hostname}->{mds} = 'start';
-    } else { 
+    } else {
         $structures->{deployd}->{$hostname}->{mds} = $mds;
         $structures->{configs}->{$hostname}->{mds} = $mds->{config} if ($mds->{config});
     }
@@ -187,7 +179,7 @@ sub add_mds {
 sub compare_mon {
     my ($self, $hostname, $quat_mon, $ceph_mon, $structures) = @_;
     $self->debug(3, "Comparing mon $hostname");
-    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) { 
+    if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) {
         $self->debug(4, "Recreating initial (unconfigured) mon $hostname");
         return $self->add_mon($hostname, $quat_mon, $structures);
     }
@@ -207,7 +199,7 @@ sub compare_mon {
 # Compare and change mds config
 sub compare_mds {
     my ($self, $hostname, $quat_mds, $ceph_mds, $structures) = @_;
-    $self->debug(3, "Comparing mds $hostname");   
+    $self->debug(3, "Comparing mds $hostname");
     my $changes = $self->compare_config('mds', $hostname, $quat_mds->{config}, $ceph_mds->{config}) or return 0;
     $structures->{configs}->{$hostname}->{mds} = $quat_mds->{config} if ($quat_mds->{config});
     $self->check_restart($hostname, 'mds', $changes,  $quat_mds, $ceph_mds, $structures);
@@ -218,13 +210,13 @@ sub compare_mds {
 sub compare_osd {
     my ($self, $hostname, $osdkey, $quat_osd, $ceph_osd, $structures) = @_;
     $self->debug(3, "Comparing osd $osdkey on $hostname");
-    my @osdattrs = ();  # special case, journal path is not in 'config' section 
+    my @osdattrs = ();  # special case, journal path is not in 'config' section
                         # (Should move to 'osd_journal', but would imply schema change)
     if ($quat_osd->{journal_path}) {
         push(@osdattrs, 'journal_path');
     }
-    $self->check_immutables($hostname, \@osdattrs, $quat_osd, $ceph_osd) or return 0; 
-    
+    $self->check_immutables($hostname, \@osdattrs, $quat_osd, $ceph_osd) or return 0;
+
     @osdattrs = ('osd_objectstore');
     $self->check_immutables($hostname, \@osdattrs, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
     my $changes = $self->compare_config('osd', $osdkey, $quat_osd->{config}, $ceph_osd->{config}) or return 0;
@@ -235,7 +227,7 @@ sub compare_osd {
     }
     $self->debug(5, "osd id for $osdkey is $osd_id");
     my $osdname = "osd.$osd_id";
-    $structures->{configs}->{$hostname}->{$osdname} = $quat_osd->{config} if ($quat_osd->{config}); 
+    $structures->{configs}->{$hostname}->{$osdname} = $quat_osd->{config} if ($quat_osd->{config});
     $self->check_restart($hostname, $osdname, $changes, $quat_osd, $ceph_osd, $structures);
     return 1;
 }
@@ -244,7 +236,8 @@ sub compare_osd {
 sub compare_config {
     my ($self, $type, $key, $quat_config, $ceph_config_orig) = @_;
     my $cfgchanges = {};
-    my $ceph_config =  dclone($ceph_config_orig) if defined($ceph_config_orig);
+    my $ceph_config;
+    $ceph_config = dclone($ceph_config_orig) if defined($ceph_config_orig);
     $self->debug(4, "Comparing config of $type $key");
     $self->debug(5, "Quattor config:", Dumper($quat_config));
     $self->debug(5, "Ceph config:", Dumper($ceph_config));
@@ -252,7 +245,7 @@ sub compare_config {
     while (my ($qkey, $qvalue) = each(%{$quat_config})) {
         if (ref($qvalue) eq 'ARRAY'){
             $qvalue = join(', ',@$qvalue);
-        } 
+        }
         if (exists $ceph_config->{$qkey}) {
             my $cvalue = $ceph_config->{$qkey};
             if ($qvalue ne $cvalue) {
@@ -292,7 +285,7 @@ sub compare_gtw {
     my ($self, $hostname, $gwname, $quat_gtw, $ceph_gtw, $structures) = @_;
     $self->debug(3, "Comparing radosgw section of gateway $gwname on $hostname");
     $self->compare_config('radosgw', $gwname, $quat_gtw->{config}, $ceph_gtw->{config});
-    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config} 
+    $structures->{configs}->{$hostname}->{"client.radosgw.$gwname"} = $quat_gtw->{config}
         if ($quat_gtw->{config});
 }
 
@@ -302,9 +295,9 @@ sub compare_host {
     $self->debug(3, "Comparing host $hostname");
     my $ceph_host = dclone($ceph_host_orig);
     if ($ceph_host->{fault}) {
-        $structures->{skip}->{$hostname} = $quat_host; 
+        $structures->{skip}->{$hostname} = $quat_host;
         $self->error("Host $hostname is not reachable, and can't be configured at this moment");
-        return 0; 
+        return 0;
     } else {
         $structures->{ok_osd_failures} = $structures->{gvalues}->{max_add_osd_failures_per_host};
         $self->compare_global($hostname, $quat_host->{config}, $ceph_host->{config}, $structures) or return 0;
@@ -335,10 +328,10 @@ sub compare_host {
             }
             if ($ceph_host->{$dstype}) {
                 while  (my ($key, $daemon) = each(%{$ceph_host->{$dstype}})) {
-                    if ($dtype eq 'osd') { 
+                    if ($dtype eq 'osd') {
                         $structures->{destroy}->{$hostname}->{$dstype}->{$key} = $daemon;
                     } elsif ($dtype eq 'gtw') {
-                        $self->info("radosgw config of $key on $hostname not in quattor. Will be removed");   
+                        $self->info("radosgw config of $key on $hostname not in quattor. Will be removed");
                     }
                 }
             }
@@ -349,7 +342,7 @@ sub compare_host {
     return 1;
 }
 
-# Remove a host    
+# Remove a host
 sub delete_host {
     my ($self, $hostname, $host, $structures) = @_;
     $self->debug(3, "Removing host $hostname");
@@ -361,11 +354,12 @@ sub delete_host {
     }
     return 1;
 }
-    
-# Compare per host - add, delete, modify 
+
+# Compare per host - add, delete, modify
 sub compare_conf {
     my ($self, $quat_conf, $ceph_conf_orig, $mapping, $gvalues) = @_;
-    my $ceph_conf =  dclone($ceph_conf_orig) if defined($ceph_conf_orig);
+    my $ceph_conf;
+    $ceph_conf = dclone($ceph_conf_orig) if defined($ceph_conf_orig);
     my $structures = {
         configs  => {},
         deployd  => {},
@@ -378,16 +372,16 @@ sub compare_conf {
     $self->debug(2, "Comparing the quattor setup with the running cluster setup");
     while  (my ($hostname, $host) = each(%{$quat_conf})) {
         if (exists($ceph_conf->{$hostname})) {
-            $self->compare_host($hostname, $quat_conf->{$hostname}, 
+            $self->compare_host($hostname, $quat_conf->{$hostname},
                 $ceph_conf->{$hostname}, $structures) or return ;
             delete $ceph_conf->{$hostname};
         } else {
             $self->add_host($hostname, $host, $structures) or return ;
         }
-    }   
+    }
     while  (my ($hostname, $host) = each(%{$ceph_conf})) {
         $self->delete_host($hostname, $host, $structures) or return ;
-    }   
+    }
     $self->debug(5, "Structured action hash:", Dumper($structures));
     return $structures;
 }
