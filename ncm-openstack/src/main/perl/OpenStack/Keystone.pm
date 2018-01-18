@@ -84,7 +84,7 @@ sub post_populate_service_database
         my $cmd = [$self->{manage}, "${method}_setup", qw(--keystone-user keystone --keystone-group keystone)];
         my $msg = "Fernet key repository set correctly for $method encryption.";
         # Force root and contains sensitive data
-        $self->_do($cmd, $msg, user => undef, sensitive => 1) or return;
+        $self->_do($cmd, $msg, user => undef, sensitive => 0) or return;
     }
 
     return $self->bootstrap_url_endpoints();

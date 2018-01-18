@@ -333,6 +333,17 @@ sub _do
     return $ok;
 }
 
+=item pre_populate_service_database
+
+Run before the default service database is poulated
+(it is not run when database was already present).
+
+Must return 1 on success;
+
+=cut
+
+sub pre_populate_service_database {return 1;}
+
 =item populate_service_database
 
 Run the database sync command (incl bootstrap when empty)
@@ -351,6 +362,7 @@ sub populate_service_database
         $self->verbose("Found existing db_version, no db_sync will be applied");
         return 1;
     } else {
+        $self->pre_populate_service_database();
         if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
             return $self->post_populate_service_database();
         } else {

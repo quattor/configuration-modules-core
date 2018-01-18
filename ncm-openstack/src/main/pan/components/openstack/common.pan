@@ -151,4 +151,8 @@ type openstack_DEFAULTS = {
     Server. NOTE: Nova uses the same config key, but in [neutron] section.
     }
     'metadata_proxy_shared_secret' ? string
+    @{Driver for security groups}
+    'firewall_driver' ? string = 'neutron.agent.linux.iptables_firewall.IptablesFirewallDriver'
+    @{Use neutron and disable the default firewall setup}
+    'use_neutron' ? boolean = true
 };

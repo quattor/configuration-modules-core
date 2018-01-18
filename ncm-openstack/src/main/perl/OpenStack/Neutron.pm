@@ -5,7 +5,7 @@ use parent qw(NCM::Component::OpenStack::Service);
 use Readonly;
 
 Readonly our $NEUTRON_DB_MANAGE_COMMAND => "/usr/bin/neutron-db-manage";
-Readonly our $NEUTRON_DB_BOOTSTRAP => "--config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head";
+Readonly::Array my @NEUTRON_DB_BOOTSTRAP => qw(--config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head);
 
 Readonly::Hash my %CONF_FILE => {
     service => "/etc/neutron/neutron.conf",
@@ -41,7 +41,7 @@ sub _attrs
     $self->{manage} = $NEUTRON_DB_MANAGE_COMMAND;
     # Neutron has different database parameters
     $self->{db_version} = ["current"];
-    $self->{db_sync} = [$NEUTRON_DB_BOOTSTRAP];
+    $self->{db_sync} = [@NEUTRON_DB_BOOTSTRAP];
 }
 
 =item write_config_file

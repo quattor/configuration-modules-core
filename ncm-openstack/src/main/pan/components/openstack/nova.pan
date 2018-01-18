@@ -128,8 +128,9 @@ type openstack_nova_common = {
 }
 type openstack_nova_config =  {
     include openstack_nova_common
-    'database' : openstack_database
-    'api_database' : openstack_nova_api_database
+    'database' ? openstack_database
+    'api_database' ? openstack_nova_api_database
+    'libvirt' ? openstack_nova_libvirt
 };
 
 @documentation {

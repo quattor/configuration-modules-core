@@ -143,9 +143,9 @@ type openstack_neutron_metadata_config = {
 }
 type openstack_neutron_service_config = {
     include openstack_neutron_common
-    'database' : openstack_database
+    'database' ? openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}
-    'nova' : openstack_domains_common
+    'nova' ? openstack_domains_common
 };
 
 
