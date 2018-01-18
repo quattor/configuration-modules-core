@@ -1,7 +1,5 @@
 #${PMpre} NCM::Component::Ceph::Cluster${PMpost}
 
-use 5.10.1;
-
 use parent qw(CAF::Object NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
 use NCM::Component::Ceph::ClusterMap;

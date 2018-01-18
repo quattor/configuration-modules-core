@@ -21,5 +21,5 @@ Only bluestore support for now
 type ceph_osd = {
     include ceph_daemon
     'class' ? string
-    'storetype' : string = 'bluestore' with match(SELF, '^bluestore$')
+    'storetype' : choice('bluestore') = 'bluestore'
 };

@@ -20,9 +20,9 @@ ceph cluster-wide config parameters
 generate an fsid with uuidgen
  }
 type ceph_global_config = {
-    'auth_client_required' : string = 'cephx' with match(SELF, '^(cephx|none)$')
-    'auth_cluster_required' : string = 'cephx' with match(SELF, '^(cephx|none)$')
-    'auth_service_required' : string = 'cephx' with match(SELF, '^(cephx|none)$')
+    'auth_client_required' : choice('cephx', 'none') = 'cephx'
+    'auth_cluster_required' : choice('cephx', 'none') = 'cephx'
+    'auth_service_required' : choice('cephx', 'none') = 'cephx'
     'cluster_network' ? type_network_name
     'enable_experimental_unrecoverable_data_corrupting_features' ? string[1..]
     'filestore_xattr_use_omap' ? boolean
@@ -33,8 +33,8 @@ type ceph_global_config = {
     'mon_osd_min_down_reporters' ? long(0..)
     'mon_osd_min_down_reports' ? long(0..)
     'mon_osd_max_op_age' ? long = 32
-    'ms_type' ? string with match(SELF, '^(simple|async|xio)$')
-    'op_queue' ? string with match(SELF, '^(prio|wpq)$')
+    'ms_type' ? choice('simple', 'async', 'xio')
+    'op_queue' ? choice('prio', 'wpq')
     'osd_journal_size' : long(0..) = 10240
     'osd_pool_default_min_size' : long(0..) = 2
     'osd_pool_default_pg_num' ? long(0..)
@@ -61,7 +61,7 @@ type ceph_crushmap_rule_step = {
 @documentation{ ceph crushmap rule definition }
 type ceph_crushmap_rule = {
     'name' : string #Must be unique
-    'type' : string = 'replicated' with match(SELF, '^(replicated|erasure)$')
+    'type' : choice('replicated', 'erasure') = 'replicated'
     'ruleset' ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
     'min_size' : long(0..) = 1
     'max_size' : long(0..) = 10
@@ -88,7 +88,7 @@ type ceph_cluster = {
     'initcfg' : ceph_configfile
     'deployhosts' : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
 #    'crushmap' ? ceph_crushmap # Not yet supported
-    'key_accept' ? string with match(SELF, '^(first|always)$') # explicit accept host keys
+    'key_accept' ? choice('first', 'always') # explicit accept host keys
     'ssh_multiplex' : boolean = true
 };
 
@@ -116,5 +116,5 @@ type ${project.artifactId}_component = {
     'config' ? ceph_configfile
     'ceph_version' : ceph_supported_version
     'deploy_version' ? ceph_deploy_supported_version
-    'release' : string = 'Luminous' with match(SELF, 'Luminous')
+    'release' : choice('Luminous') = 'Luminous'
 };

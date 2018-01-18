@@ -1,7 +1,5 @@
 #${PMpre} NCM::Component::Ceph::OSDserver${PMpost}
 
-use 5.10.1;
-
 use parent qw(CAF::Object NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
 use EDG::WP4::CCM::Path qw(escape unescape);
