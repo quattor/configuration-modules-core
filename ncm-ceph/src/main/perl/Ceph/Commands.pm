@@ -1,5 +1,7 @@
 #${PMpre} NCM::Component::Ceph::Commands${PMpost}
 
+use CAF::Path;
+
 Readonly::Array our @SSH_MULTIPLEX_OPTS =>
     qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
@@ -21,6 +23,7 @@ sub run_command
         log => $self,
         user => $opts{user},
         sensitive => $opts{sensitive},
+        timeout => $opts{timeout},
         stdout => $stdoutref,
         stderr => $stderrref,
     );
@@ -35,6 +38,7 @@ sub run_command
 
     my $fmsg = "$msg";
     $fmsg .= " as user $opts{user}" if (exists $opts{user});
+    $fmsg .= " with timeout $opts{timeout}" if (exists $opts{timeout});
     $fmsg .= " output: $output" if ($output && !$opts{sensitive});
     $fmsg .= " ignored stderr: $$stderrref" if ($opts{nostderr});
 
@@ -42,6 +46,18 @@ sub run_command
     $self->$report($ok ? ucfirst($fmsg) : "Failed to $fmsg");
 
     return wantarray ? ($ok, $output) : $ok;
+}
+
+# Wrapper around CAF::Path->file_exists with reporting
+sub file_exists
+{
+    my ($self, $file, %opts) = @_;
+
+    my $ok = CAF::Path->file_exists($file);
+    my $report = ($opts{test} || $ok) ? 'verbose' : 'error';
+    $self->$report($ok ? "File $file exists" : "File $file does not exists");
+
+    return $ok;
 }
 
 # Runs a command as the ceph user
@@ -58,11 +74,7 @@ sub run_command_as_ceph
 sub run_ceph_command
 {
     my ($self, $command, $msg, %opts) = @_;
-    my @timeout = ();
-    if ($opts{timeout}) {
-        @timeout = ('/usr/bin/timeout', $opts{timeout});
-    }
-    return $self->run_command([@timeout, qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
+    return $self->run_command([qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)
