@@ -43,35 +43,6 @@ type ceph_global_config = {
     'public_network' : type_network_name
 };
 
-@documentation{ ceph crushmap rule step }
-type ceph_crushmap_rule_choice = {
-    'chtype' : string with match(SELF, '^choose(leaf)? (firstn|indep)$')
-    'number' : long = 0
-    'bktype' : string
-};
-
-@documentation{ ceph crushmap rule step }
-type ceph_crushmap_rule_step = {
-    'take' : string # Should be a valid bucket
-    'set_choose_tries' ? long
-    'set_chooseleaf_tries' ? long
-    'choices' : ceph_crushmap_rule_choice[1..]
-};
-
-@documentation{ ceph crushmap rule definition }
-type ceph_crushmap_rule = {
-    'name' : string #Must be unique
-    'type' : choice('replicated', 'erasure') = 'replicated'
-    'ruleset' ? long(0..) # ONLY set if you want to have multiple rules in the same or existing ruleset
-    'min_size' : long(0..) = 1
-    'max_size' : long(0..) = 10
-    'steps' : ceph_crushmap_rule_step[1..]
-};
-
-type ceph_crushmap = {
-    'rules' : ceph_crushmap_rule[1..]
-};
-
 type ceph_configfile = {
     'global' : ceph_global_config
     'mds' ? ceph_mds_config
@@ -82,12 +53,10 @@ type ceph_configfile = {
 
 @documentation{ overarching ceph cluster type, with osds, mons and msds }
 type ceph_cluster = {
-#    'osdhosts' ? type_fqdn[]
     'monitors' : ceph_monitor {3..} # with match
     'mdss' ? ceph_mds {} # with match
     'initcfg' : ceph_configfile
     'deployhosts' : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
-#    'crushmap' ? ceph_crushmap # Not yet supported
     'key_accept' ? choice('first', 'always') # explicit accept host keys
     'ssh_multiplex' : boolean = true
 };
