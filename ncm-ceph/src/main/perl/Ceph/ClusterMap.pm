@@ -1,7 +1,5 @@
 #${PMpre} NCM::Component::Ceph::ClusterMap${PMpost}
 
-use 5.10.1;
-
 use parent qw(CAF::Object);
 use Readonly;
 use Data::Dumper;

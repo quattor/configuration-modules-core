@@ -1,7 +1,5 @@
 #${PMpre} NCM::Component::Ceph::Commands${PMpost}
 
-use 5.10.1;
-
 Readonly::Array our @SSH_MULTIPLEX_OPTS =>
     qw(-o ControlMaster=auto -o ControlPersist=600 -o ControlPath=/tmp/ssh_mux_%h_%p_%r);
 Readonly::Array our @SSH_COMMAND => qw(/usr/bin/ssh);
