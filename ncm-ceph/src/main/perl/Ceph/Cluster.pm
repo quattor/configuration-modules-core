@@ -6,7 +6,6 @@ use NCM::Component::Ceph::ClusterMap;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
-use CAF::Path;
 
 Readonly my $CEPH_USER_ELEMENT => '/software/components/accounts/users/ceph';
 Readonly my $CEPH_GROUP_ELEMENT => '/software/components/accounts/groups/ceph';
@@ -29,7 +28,7 @@ sub _initialize
     $self->{key_accept} = $self->{cluster}->{key_accept};
     $self->{ssh_multiplex} = $self->{cluster}->{ssh_multiplex};
 
-    my $netw = $config->getElement('/system/network')->getTree();
+    my $netw = $config->getTree('/system/network');
     $self->{hostname} = $netw->{hostname};
 
     my $monitors = $self->{cluster}->{monitors};
@@ -63,11 +62,11 @@ sub cluster_exists
 
         my @newcmd = qw(new);
         push (@newcmd, @{$self->{init_hosts}});
-        if (!CAF::Path->file_exists("$self->{cephusr}->{homeDir}/ceph.mon.keyring")){
+        if (!$self->file_exists("$self->{cephusr}->{homeDir}/ceph.mon.keyring", test => 1)){
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
-        $self->info("To create a new cluster, run this command");
-        $self->run_ceph_deploy_command([qw(mon create-initial)],'create initial monitors', printonly => 1, overwritecfg => 1);
+        $self->info("To create a new cluster, run following command");
+        $self->run_ceph_deploy_command([qw(mon create-initial)], 'create initial monitors', printonly => 1, overwritecfg => 1);
         return;
     }
 }
@@ -168,9 +167,9 @@ sub deploy_daemons {
 sub pull_cfg
 {
     my ($self, $host) = @_;
-    my $succes = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", overwritecfg => 1);
+    my $success = $self->run_ceph_deploy_command([qw(config pull), $host], "get config from $host", overwritecfg => 1);
     $self->run_ceph_deploy_command([qw(admin), $host], "set admin $host"); # mon,mgr,mds as admin
-    return $succes || $self->write_init_cfg();
+    return $success || $self->write_init_cfg();
 
 }
 sub deploy
