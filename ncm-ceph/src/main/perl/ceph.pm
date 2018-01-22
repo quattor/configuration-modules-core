@@ -3,6 +3,7 @@
 use parent qw(NCM::Component);
 our $NoActionSupported = 1;
 
+our $EC=LC::Exception::Context->new->will_store_all;
 use Readonly;
 Readonly our $REDIRECT => {
     name => 'release',
