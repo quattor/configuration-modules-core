@@ -114,7 +114,7 @@ function valid_cron_frequency = {
         error(format('%s: expected 1 parameter, received %d', FUNCTION, ARGC));
     };
 
-    frequency = to_lowercase(ARGV[0]);
+    frequency = ARGV[0];
 
     if (match(frequency, '^@(?:reboot|yearly|annually|monthly|weekly|daily|midnight|hourly)$')) {
         return(true);
@@ -126,7 +126,7 @@ function valid_cron_frequency = {
         error(format('cron frequency "%s" should have 5 fields, it only has %d', frequency, length(fields)));
     };
 
-    valid_cron_minute(fields[0]);
+    match(fields[0], '^AUTO$') || valid_cron_minute(fields[0]);
     valid_cron_hour(fields[1]);
     valid_cron_day_of_month(fields[2]);
     valid_cron_month(fields[3]);

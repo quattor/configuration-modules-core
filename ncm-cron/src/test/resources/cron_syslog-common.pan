@@ -55,4 +55,11 @@ include 'components/cron/config';
     "command", "some command",
 ));
 
+"/software/components/cron/entries" = append(SELF, dict(
+    "name", "test_magic_auto_value",
+    "user", "magic",
+    "frequency", "AUTO 7 * * *",
+    "command", "a scary command",
+));
+
 "/software/components/cron/allow" = list("root");

@@ -249,7 +249,7 @@ sub Configure
         # Frequency of the cron entry.  May contain AUTO for the
         # minutes field : in this case, substitute AUTO with a random
         # value. This only works in the minutes field of the
-        # frequence.  We support two formats here: the traditional
+        # frequency.  We support two formats here: the traditional
         # "frequency" field and also a more complex "timing" structure
         # (which allows more smear)
         my $frequency = "";
@@ -303,7 +303,7 @@ sub Configure
             $frequency = $entry->{frequency};
 
             # Substitute AUTO with a random value. This only works in
-            # the minutes field of the frequence.
+            # the minutes field of the frequency.
             $frequency =~ s/AUTO/int(rand(60))/eg;
         }
 
