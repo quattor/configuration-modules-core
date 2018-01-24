@@ -62,4 +62,11 @@ include 'components/cron/config';
     "command", "a scary command",
 ));
 
+"/software/components/cron/entries" = append(SELF, dict(
+    "name", "test_range_skip",
+    "user", "skippy",
+    "frequency", "15 0-23/3 * * *",
+    "command", "Fifteen minutes past every third hour",
+));
+
 "/software/components/cron/allow" = list("root");
