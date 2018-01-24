@@ -361,17 +361,17 @@ sub Configure
 
     my $packages_installed = $self->get_installed_pkgs() or return 0;
     my $packages_desired = $self->get_desired_pkgs($tree_pkgs) or return 0;
+
     my $packages_unwanted = $packages_installed->difference($packages_desired);
+    my $packages_to_install = $packages_desired->difference($packages_installed);
 
     $self->debug(4, 'Installed packages: ', $packages_installed);
     $self->debug(4, 'Desired packages: ', $packages_desired);
     $self->debug(4, 'Packages installed but unwanted: ', $packages_unwanted);
-
-    my $packages_to_install = $self->apply_package_version_arch($packages_desired, $tree_pkgs) or return 0;
-
     $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
-    $self->install_packages($packages_to_install) or return 0;
+    my $apt_packages_to_install = $self->apply_package_version_arch($packages_to_install, $tree_pkgs);
+    $self->install_packages($apt_packages_to_install) or return 0;
 
     # If user installed packages are not permitted, mark all unlisted packages as automatically installed and
     # ask apt to remove any of these that are not required to satisfy dependencies of the desired package list
