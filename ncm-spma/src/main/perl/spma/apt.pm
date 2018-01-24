@@ -77,6 +77,22 @@ Readonly my $CMD_DPKG_QUERY => [$BIN_DPKG_QUERY, qw(-W -f=${db:Status-Abbrev};${
 
 our $NoActionSupported = 1;
 
+# Wrapper function for calling apt commands
+sub _call_apt
+{
+    my ($self, $cmd) = @_;
+    $self->debug(5, '_call_apt: Called with args(%s)', $cmd);
+
+    my $proc = CAF::Process->new($cmd);
+    my $output = $proc->output();
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    $self->debug(5, '_call_apt: %s exited with %s', $cmd[0] $exitstatus);
+    if ($exitstatus > 0) {
+        $output =~ tr{\n}{ };
+        $self->error('_call_apt: %s failed with "%s"', $cmd[0], $output);
+    }
+    return $exitstatus == 0;
+}
 
 # If user specified sources (userrepos) are not allowed, removes any
 # sources present in the system that are not listed in $allowed_sources.
@@ -166,8 +182,9 @@ sub get_installed_pkgs
     $self->debug(5, 'Entered get_installed_pkgs()');
 
     my $out = CAF::Process->new($CMD_DPKG_QUERY, keeps_state => 1) ->output();
-    if ($?) {
-        $self->debug(5, "dpkg command returned $?");
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    if ($exitstatus) {
+        $self->debug(5, "dpkg command returned $exitstatus");
         return 0;
     }
     # db:Status-Abbrev is three characters, we are looking for
@@ -262,8 +279,7 @@ sub resynchronize_package_index
     my $self = shift;
     $self->debug(5, 'Entered resynchronize_package_index()');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPDATE, keeps_state => 1);
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt($CMD_APT_UPDATE);
 }
 
 
@@ -273,8 +289,7 @@ sub upgrade_packages
     my ($self) = @_;
     $self->debug(5, 'Entered upgrade_packages()');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPGRADE) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt($CMD_APT_UPGRADE);
 }
 
 
@@ -284,8 +299,7 @@ sub install_packages
     my ($self, $packages) = @_;
     $self->debug(5, 'Entered install_packages()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_INSTALL, @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_INSTALL, @$packages]);
 }
 
 
@@ -296,8 +310,7 @@ sub mark_packages_auto
     my ($self, $packages) = @_;
     $self->debug(5, 'Entered mark_packages_auto()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_MARK, 'auto', @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_MARK, 'auto', @$packages]);
 }
 
 
@@ -307,8 +320,7 @@ sub autoremove_packages
     my ($self) = @_;
     $self->debug(5, 'Entered autoremove_packages()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_AUTOREMOVE]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_AUTOREMOVE]);
 }
 
 
