@@ -1,5 +1,9 @@
 #${PMpre} NCM::Component::spma::apt${PMpost}
 
+use Data::Dumper;
+$Data::Dumper::Indent = 0; # Supress indentation and new-lines
+$Data::Dumper::Terse = 1; # Output values only, supress variable names if possible
+
 =head1 NAME
 
 C<NCM::Component::spma::apt> - NCM SPMA backend for apt
@@ -99,7 +103,7 @@ sub _call_apt
 sub cleanup_old_sources
 {
     my ($self, $sources_dir, $allowed_sources) = @_;
-    $self->debug(5, 'Entered cleanup_old_sources()');
+    $self->debug(5, 'cleanup_old_sources: Called with args(%s, %s)', $sources_dir, $allowed_sources);
 
     if ($self->directory_exists($sources_dir)) {
         my $current = Set::Scalar->new(@{$self->listdir($sources_dir, filter => qr{\.list$}, adddir => 1)});
@@ -124,7 +128,7 @@ sub cleanup_old_sources
 sub initialize_sources_dir
 {
     my ($self, $sources_dir) = @_;
-    $self->debug(5, 'Entered initialize_sources_dir()');
+    $self->debug(5, 'initialize_sources_dir: Called with args(%s)', $sources_dir);
 
     if (! $self->directory($sources_dir)) {
         $self->error("Unable to create source dir $sources_dir: $self->{fail}");
@@ -140,7 +144,7 @@ sub initialize_sources_dir
 sub generate_sources
 {
     my ($self, $sources_dir, $sources, $template) = @_;
-    $self->debug(5, 'Entered generate_sources()');
+    $self->debug(5, 'generate_sources: Called with args(%s, %s, %s)', $sources_dir, $sources, $template);
 
     my $changes = 0;
 
@@ -164,7 +168,7 @@ sub generate_sources
 sub configure_apt
 {
     my ($self, $config) = @_;
-    $self->debug(5, 'Entered configure_apt()');
+    $self->debug(5, 'configure_apt: Called with args(%s)', $config);
 
     my $tr = EDG::WP4::CCM::TextRender->new($TEMPLATE_CONFIG, $config, relpath => 'spma');
     if ($tr) {
@@ -178,8 +182,8 @@ sub configure_apt
 # Returns a set of all installed packages
 sub get_installed_pkgs
 {
-    my $self = shift;
-    $self->debug(5, 'Entered get_installed_pkgs()');
+    my ($self) = @_;
+    $self->debug(5, 'get_installed_pkgs: Called');
 
     my $out = CAF::Process->new($CMD_DPKG_QUERY, keeps_state => 1) ->output();
     my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
@@ -201,7 +205,7 @@ sub get_installed_pkgs
 sub get_package_version_arch
 {
     my ($self, $name, $details) = @_;
-    $self->debug(5, 'Entered get_package_version_arch()');
+    $self->debug(5, "get_package_version_arch: Called with args($name, ", Dumper($details), ")");
 
     my @versions;
 
@@ -211,18 +215,20 @@ sub get_package_version_arch
             $version = unescape($version);
             if ($params->{arch}) {
                 foreach my $arch (sort keys %{ $params->{arch} }) {
-                    $self->debug(5, '  Adding package ', $name, ' with version ', $version, ' and architecture ', $arch, ' to list');
+                    $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' with version ', $version, ' and architecture ', $arch, ' to list');
                     push(@versions, sprintf('%s:%s=%s', $name, $arch, $version));
                 }
             } else {
-                $self->debug(5, '  Adding package ', $name, ' with version ', $version, ' but without architecture to list');
+                $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' with version ', $version, ' but without architecture to list');
                 push(@versions, sprintf('%s=%s', $name, $version));
             }
         }
     } else {
-        $self->debug(5, '  Adding package ', $name, ' without version or architecture to list');
+        $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' without version or architecture to list');
         push(@versions, $name);
     }
+
+    $self->debug(5, 'get_package_version_arch: returning arrayref:', Dumper(@versions));
 
     return \@versions;
 }
@@ -233,7 +239,7 @@ sub apply_package_version_arch
 {
     my ($self, $packagelist, $packagetree) = @_;
 
-    $self->debug(5, 'Entered apply_package_version_arch()');
+    $self->debug(5, 'apply_package_version_arch: Called with args(%s, %s)', $packagelist, $packagetree);
 
     my @results;
     my @notfound;
@@ -257,7 +263,7 @@ sub apply_package_version_arch
 sub get_desired_pkgs
 {
     my ($self, $pkgs) = @_;
-    $self->debug(5, 'Entered get_desired_pkgs()');
+    $self->debug(5, 'get_desired_pkgs: Called with args(%s)', $pkgs);
 
     my $packages = Set::Scalar->new();
 
@@ -276,8 +282,8 @@ sub get_desired_pkgs
 # Update package metadata from upstream sourcesitories
 sub resynchronize_package_index
 {
-    my $self = shift;
-    $self->debug(5, 'Entered resynchronize_package_index()');
+    my ($self) = @_;
+    $self->debug(5, 'resynchronize_package_index: Called');
 
     return _call_apt($CMD_APT_UPDATE);
 }
@@ -287,7 +293,7 @@ sub resynchronize_package_index
 sub upgrade_packages
 {
     my ($self) = @_;
-    $self->debug(5, 'Entered upgrade_packages()');
+    $self->debug(5, 'upgrade_packages: Called');
 
     return _call_apt($CMD_APT_UPGRADE);
 }
@@ -297,7 +303,7 @@ sub upgrade_packages
 sub install_packages
 {
     my ($self, $packages) = @_;
-    $self->debug(5, 'Entered install_packages()');
+    $self->debug(5, 'install_packages: Called with args(', Dumper($packages), ')');
 
     return _call_apt([@$CMD_APT_INSTALL, @$packages]);
 }
@@ -308,7 +314,7 @@ sub install_packages
 sub mark_packages_auto
 {
     my ($self, $packages) = @_;
-    $self->debug(5, 'Entered mark_packages_auto()');
+    $self->debug(5, 'mark_packages_auto: Called with args(%s)', $packages);
 
     return _call_apt([@$CMD_APT_MARK, 'auto', @$packages]);
 }
@@ -318,7 +324,7 @@ sub mark_packages_auto
 sub autoremove_packages
 {
     my ($self) = @_;
-    $self->debug(5, 'Entered autoremove_packages()');
+    $self->debug(5, 'autoremove_packages: Called');
 
     return _call_apt([@$CMD_APT_AUTOREMOVE]);
 }
@@ -327,7 +333,7 @@ sub autoremove_packages
 sub Configure
 {
     my ($self, $config) = @_;
-    $self->debug(5, 'Entered Configure()');
+    $self->debug(5, 'Configure: Called with args(%s)', $config);
 
     # Get configuration trees
     my $tree_sources = $config->getTree($TREE_SOURCES);
