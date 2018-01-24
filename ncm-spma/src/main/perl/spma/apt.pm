@@ -363,13 +363,13 @@ sub Configure
     my $packages_desired = $self->get_desired_pkgs($tree_pkgs) or return 0;
     my $packages_unwanted = $packages_installed->difference($packages_desired);
 
-    $self->debug(5, 'Installed packages:', $packages_installed);
-    $self->debug(5, 'Desired packages:', $packages_desired);
-    $self->debug(5, 'Packages installed but unwanted:', $packages_unwanted);
+    $self->debug(4, 'Installed packages: ', $packages_installed);
+    $self->debug(4, 'Desired packages: ', $packages_desired);
+    $self->debug(4, 'Packages installed but unwanted: ', $packages_unwanted);
 
     my $packages_to_install = $self->apply_package_version_arch($packages_desired, $tree_pkgs) or return 0;
 
-    $self->debug(5, 'Packages to install ', $packages_to_install);
+    $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
     $self->install_packages($packages_to_install) or return 0;
 
