@@ -76,10 +76,10 @@ sub cluster_ready
 {
     my ($self) = @_;
 
-    if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
+    if (!$self->run_ceph_command([qw(status)], 'get cluster status', timeout => 20)) {
         my @admin = ('admin', $self->{hostname});
         $self->run_ceph_deploy_command(\@admin);
-        if (!$self->run_ceph_command([qw(status)], 'get cluster status')) {
+        if (!$self->run_ceph_command([qw(status)], 'get cluster status', timeout => 20)) {
             # This should not happen
             $self->error("Cannot connect to ceph cluster!");
             return;
