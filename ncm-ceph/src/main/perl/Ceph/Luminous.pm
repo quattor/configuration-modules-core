@@ -1,5 +1,96 @@
 #${PMpre} NCM::Component::Ceph::Luminous${PMpost}
 
+#${PMpre} NCM::Component::Ceph::Jewel${PMpost}
+
+=head1 NAME
+
+ncm-${project.artifactId}: Configuration module for CEPH
+
+=head1 DESCRIPTION
+
+Configuration module for CEPH
+This is the module for Ceph versions > 12.2.2 and schema version v2
+
+=head1 IMPLEMENTED FEATURES
+
+Features that are implemented at this moment:
+
+=over
+
+=item * Creating cluster (manual step involved)
+
+=item * Set admin hosts for monitors
+
+=item * Configuration file generation
+
+=item * Checking/adding Monitors and Managers on deployhost
+
+=item * Checking/adding OSDs per OSD host
+
+=item * Checking/adding MDSs on deployhost
+
+=item * Wildcard support in version numbers
+
+=back
+
+The implementation has some safety features. Therefore:
+
+=over
+
+=item * The config of MON, OSD and MDSs are first checked. If no errors were found, the actual changes will be deployed.
+
+=item * No removals of MONs, OSDs or MDSs are done. No zapping of disks is implemented.
+
+=item * When something is not right and returns an error, the whole component exits.
+
+=item * You can set the version of ceph and ceph-deploy in the Quattor scheme. The component will then only run if the versions of ceph and ceph-deploy match with those versions.
+
+=back
+
+=head1 INITIAL CREATION
+
+- The schema details are annotated in the schema file.
+
+- Example pan files are included in the examples folder and also in the test folders.
+
+
+To set up the initial cluster, some steps should be taken:
+
+=over
+
+=item 1. First create a ceph user on all the hosts, using ceph-user.pan
+
+=item 2. The deployhost(s) should have passwordless ssh access to all the hosts of the cluster
+        e.g. by distributing the public key(s) of the ceph-deploy host(s) over the cluster hosts
+            (As described in the ceph-deploy documentation:
+                        http://ceph.com/docs/master/start/quick-start-preflight/)
+
+=item 3. The user should be able to run commands with sudo without password included in sudo.pan
+=item 4. Run the component a first time.
+            It shall fail, but you should get the initial command for your cluster
+
+=item 5. Run this command
+
+=item 6. Run the component again to start the configuration of the new cluster
+
+=item 7. When the component now runs on OSD servers, it will deploy the local OSDs
+=back
+
+=head1 RESOURCES
+
+=head2 /software/components/${project.artifactId}
+
+The configuration information for the component.  Each field should
+be described in this section.
+
+=head1 DEPENDENCIES
+
+The component is tested with Ceph version 12.2.2 and ceph-deploy version 1.5.39.
+
+
+=cut
+
+
 use parent qw(NCM::Component NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
 use NCM::Component::Ceph::OSDserver;

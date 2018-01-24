@@ -9,19 +9,21 @@ NCM-ceph
 * Example pan files are included in the template-library-examples repository (https://github.com/quattor/template-library-examples)
 and also in the test folders.
 
-# Points that need attention/improvement
+## Upgrade instructions from Jewel to Luminous
 
-* There is not yet a controlled restart of the daemons if changes are commited that requires daemon restart
-* ceph-deploy removal osd command is not yet implemented (by ceph-deploy itself)
-* If some host of the defined cluster is down, the whole component is unable to run.
-* Default pg-num and pgp-num not respected by ceph-deploy. Pools still need manual intervention at that point:
+* Jewel can only be used with v1 of the schema, Luminous only with v2
+* First upgrade the ceph daemons to Luminous following every step of http://docs.ceph.com/docs/master/release-notes/#upgrade-from-jewel-or-kraken
+* Disable the component (eg. noquattor)
+* If ncm-ceph v1 crushmap labels were used, alter the crushmap to use classes (https://ceph.com/community/new-luminous-crush-device-classes/) 
+* Build the new templates for the cluster using v2 of the schema (see pan example templates)
 
-  `ceph osd pool set {pool-name} pg_num {pg_num}`
+To replace OSD servers with bluestore OSDs:
+* Copy bootstrap-osd key for ncm-download 
 
-  `ceph osd pool set {pool-name} pgp_num {pg_num}`
-* Ceph-disk is not enforced. You have to make sure that the filesystems are created with recommended tuning (see examples)
-
-# Future features
-
-* Pool support
-* Ceph auth
+Do for each OSDServer (If deployhosts is osd server, start with this one)
+* remove osds from a server
+    ceph osd out $osdid; systemctl stop ceph-osd.target;
+    ceph osd crush remove osd.$osdid; ceph auth del osd.$osdid; ceph osd rm $osdid
+* zap the disks: sgdisk -Z
+* reinstall the host using the newly build profile
+* The OSDS will be created on reinstall of the host
