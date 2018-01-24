@@ -18,12 +18,13 @@ sub run_command
     } else {
         $stderrref = 'stdout';
     }
+
     my $proc = CAF::Process->new(
         $command,
         log => $self,
         user => $opts{user},
         sensitive => $opts{sensitive},
-        timeout => $opts{timeout},
+        timeout => $opts{timeout} || 0, # default 0
         stdout => $stdoutref,
         stderr => $stderrref,
     );
