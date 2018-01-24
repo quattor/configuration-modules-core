@@ -1,14 +1,6 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-
-package NCM::Component::Ceph::config;
+#${PMpre} NCM::Component::Ceph::config${PMpost}
 
 use 5.10.1;
-use strict;
-use warnings;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 use LC::Exception;
@@ -49,7 +41,7 @@ sub get_host_config {
     $cephcfg = Config::Tiny->read($file);
     if (!$cephcfg->{global}) {
         $self->warn("Not a valid config file: $file");
-    }   
+    }
     return $cephcfg;
 }
 
@@ -63,19 +55,19 @@ sub pull_host_cfg {
     $self->run_ceph_deploy_command([qw(config pull), $host], $gvalues->{qtmp}, 1) or return ;
 
     move($gvalues->{qtmp} . $pullfile, $gvalues->{qtmp} .  $hostfile) or return ;
-    $self->git_commit($gvalues->{qtmp}, $hostfile, "pulled config of host $host"); 
+    $self->git_commit($gvalues->{qtmp}, $hostfile, "pulled config of host $host");
     my $cephcfg = $self->get_host_config($gvalues->{qtmp} . $hostfile) or return ;
 
-    return $cephcfg;    
+    return $cephcfg;
 }
 
 # Push config to host
 sub push_cfg {
     my ($self, $host, $dir, $overwrite) = @_;
-    
+
     $overwrite //= 0;
     $dir //= '';
-    
+
     return $self->run_ceph_deploy_command([qw(admin), $host], $dir, $overwrite);
 }
 
@@ -109,7 +101,7 @@ sub config_hash {
             }
         }
         if (!$master->{$hostname}->{fault}) {
-            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ; 
+            my $config = $self->pull_host_cfg($master->{$hostname}->{fqdn}, $gvalues) ;
             if (!$config) {
                 $self->warn("No valid config file found for host $hostname");
                 next;
@@ -117,7 +109,7 @@ sub config_hash {
             $host->{config} = $config->{global};
             while (my ($name, $cfg) = each(%{$config})) {
                 if ($name =~ m/^global$/) {
-                    $host->{config} = $cfg;    
+                    $host->{config} = $cfg;
                 } elsif ($name =~ m/^osd\.(\S+)/) {
                     my $loc = $mapping->{get_loc}->{$1};
                     if ($loc) {
@@ -132,13 +124,13 @@ sub config_hash {
                 } elsif ($name =~ m/^client\.radosgw\.(\S+)/) {
                     $host->{gtws}->{$1}->{config} = $cfg;
                 } else {
-                    $self->error("Section $name in configfile of host $hostname not yet supported!\n", 
+                    $self->error("Section $name in configfile of host $hostname not yet supported!\n",
                         "This section will be ignored");
                 }
             }
         }
     }
-    return 1;   
+    return 1;
 }
 
 # Looks for arrays in the config and makes strings out of it
@@ -171,7 +163,7 @@ sub write_and_push {
     $self->push_cfg($hostname, '', 1) or return 0;
 }
 
-# Build the Config::Tiny hash for a host 
+# Build the Config::Tiny hash for a host
 sub set_host_config {
     my ($self, $hostname, $host, $gvalues) = @_;
 

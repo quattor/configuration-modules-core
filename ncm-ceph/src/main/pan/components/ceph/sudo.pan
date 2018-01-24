@@ -13,7 +13,9 @@ include 'components/sudo/config';
     sudolist = list(
         "/usr/bin/ceph-deploy",
         "/usr/bin/python -c import sys;exec(eval(sys.stdin.readline()))",
+        "/bin/python2 -c import sys;exec(eval(sys.stdin.readline()))",
         "/usr/bin/python -u -c import sys;exec(eval(sys.stdin.readline()))",
+        "/bin/python2 -u -c import sys;exec(eval(sys.stdin.readline()))",
         "/bin/mkdir",
         "/usr/bin/file -sL *"
     );

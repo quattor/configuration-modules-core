@@ -26,7 +26,7 @@ prefix '/software/components/accounts';
 "users/ceph" = dict(
     "uid", CEPH_USER_ID,
     "groups", list("ceph"),
-    "comment","ceph",
+    "comment", "ceph",
     "shell", "/bin/sh",
     "homeDir", "/home/ceph",
     "createHome", true,
