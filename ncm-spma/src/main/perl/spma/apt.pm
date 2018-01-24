@@ -339,8 +339,11 @@ sub Configure
 
     # Get configuration trees
     my $tree_sources = $config->getTree($TREE_SOURCES);
+    $self->debug(5, 'TREE_SOURCES ', $TREE_SOURCES, Dumper $tree_sources);
     my $tree_pkgs = $config->getTree($TREE_PKGS);
+    $self->debug(5, 'TREE_PKGS ', $TREE_PKGS, Dumper $tree_pkgs);
     my $tree_component = $config->getTree($self->prefix());
+    $self->debug(5, 'tree_component ', $self->prefix, Dumper $tree_component);
 
     $self->configure_apt($tree_component) or return 0;
 
@@ -365,13 +368,13 @@ sub Configure
     my $packages_desired = $self->get_desired_pkgs($tree_pkgs) or return 0;
     my $packages_unwanted = $packages_installed->difference($packages_desired);
 
-    $self->debug(5, 'Installed packages:', $packages_installed);
-    $self->debug(5, 'Desired packages:', $packages_desired);
-    $self->debug(5, 'Packages installed but unwanted:', $packages_unwanted);
+    $self->debug(4, 'Installed packages: ', $packages_installed);
+    $self->debug(4, 'Desired packages: ', $packages_desired);
+    $self->debug(4, 'Packages installed but unwanted: ', $packages_unwanted);
 
     my $packages_to_install = $self->apply_package_version_arch($packages_desired, $tree_pkgs) or return 0;
 
-    $self->debug(5, 'Packages to install ', $packages_to_install);
+    $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
     $self->install_packages($packages_to_install) or return 0;
 
