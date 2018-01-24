@@ -170,9 +170,9 @@ sub configure_apt
     if ($tr) {
         my $fh = $tr->filewriter($FILE_CONFIG);
         return $fh->close() || 0; # handle undef
-    } else {
-        return 0;
     }
+    $self->error('configure_apt: TextRender failed to render configuration');
+    return 0;
 }
 
 # Returns a set of all installed packages
