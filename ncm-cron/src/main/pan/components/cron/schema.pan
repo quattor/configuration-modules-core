@@ -58,7 +58,7 @@ function valid_cron_timing = {
     text_regex = ARGV[3];
 
     # Check that the field contains only valid characters
-    if (!match(timing_value, '^(?:[a-z0-9/*-,]+)$')) error(format('"%s" contains invalid characters', timing_value));
+    if (!match(timing_value, '^(?:[a-z0-9/*\-,]+)$')) error(format('"%s" contains invalid characters', timing_value));
 
     # Find runs of digits and validate them against provided bounds
     foreach(k; v; matches(timing_value, '([0-9]+)')) {
