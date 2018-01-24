@@ -210,7 +210,7 @@ sub get_package_version_arch
 
     my @versions;
 
-    if ($details) {
+    if (defined($details) and %$details) {
         foreach my $version (sort keys %$details) {
             my $params = $details->{$version};
             $version = unescape($version);
