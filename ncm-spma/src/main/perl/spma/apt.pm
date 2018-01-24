@@ -1,5 +1,9 @@
 #${PMpre} NCM::Component::spma::apt${PMpost}
 
+use Data::Dumper;
+$Data::Dumper::Indent = 0; # Supress indentation and new-lines
+$Data::Dumper::Terse = 1; # Output values only, supress variable names if possible
+
 =head1 NAME
 
 C<NCM::Component::spma::apt> - NCM SPMA backend for apt
@@ -77,6 +81,23 @@ Readonly my $CMD_DPKG_QUERY => [$BIN_DPKG_QUERY, qw(-W -f=${db:Status-Abbrev};${
 
 our $NoActionSupported = 1;
 
+# Wrapper function for calling apt commands
+sub _call_apt
+{
+    my ($self, $cmd, $ok) = @_;
+    $self->debug(5, '_call_apt: Called with args ', Dumper($cmd));
+
+    my $proc = CAF::Process->new($cmd);
+    my $output = $proc->output();
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    $self->debug(5, "_call_apt: $proc exited with $exitstatus");
+    if ($exitstatus > 0) {
+        $output =~ tr{\n}{ };
+        my $method = $ok ? 'warn' : 'error';
+        $self->$method("_call_apt: $proc failed with \"$output\"");
+    }
+    return $ok || $exitstatus == 0;
+}
 
 # If user specified sources (userrepos) are not allowed, removes any
 # sources present in the system that are not listed in $allowed_sources.
@@ -166,8 +187,9 @@ sub get_installed_pkgs
     $self->debug(5, 'Entered get_installed_pkgs()');
 
     my $out = CAF::Process->new($CMD_DPKG_QUERY, keeps_state => 1) ->output();
-    if ($?) {
-        $self->debug(5, "dpkg command returned $?");
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    if ($exitstatus) {
+        $self->debug(5, "dpkg command returned $exitstatus");
         return 0;
     }
     # db:Status-Abbrev is three characters, we are looking for
@@ -262,8 +284,7 @@ sub resynchronize_package_index
     my $self = shift;
     $self->debug(5, 'Entered resynchronize_package_index()');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPDATE, keeps_state => 1);
-    return $cmd->execute() ? 1 : undef;
+    return $self->_call_apt($CMD_APT_UPDATE);
 }
 
 
@@ -273,8 +294,9 @@ sub upgrade_packages
     my ($self) = @_;
     $self->debug(5, 'Entered upgrade_packages()');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPGRADE) ;
-    return $cmd->execute() ? 1 : undef;
+    # it's ok if this produces errors (eg unfinished stuff)
+    # TODO: add support for 'apt --fix-broken install' and things like that
+    return $self->_call_apt($CMD_APT_UPGRADE, 1);
 }
 
 
@@ -284,8 +306,7 @@ sub install_packages
     my ($self, $packages) = @_;
     $self->debug(5, 'Entered install_packages()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_INSTALL, @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return $self->_call_apt([@$CMD_APT_INSTALL, @$packages]);
 }
 
 
@@ -296,8 +317,7 @@ sub mark_packages_auto
     my ($self, $packages) = @_;
     $self->debug(5, 'Entered mark_packages_auto()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_MARK, 'auto', @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return $self->_call_apt([@$CMD_APT_MARK, 'auto', @$packages]);
 }
 
 
@@ -307,8 +327,7 @@ sub autoremove_packages
     my ($self) = @_;
     $self->debug(5, 'Entered autoremove_packages()');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_AUTOREMOVE]) ;
-    return $cmd->execute() ? 1 : undef;
+    return $self->_call_apt([@$CMD_APT_AUTOREMOVE]);
 }
 
 
