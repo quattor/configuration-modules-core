@@ -110,6 +110,21 @@ type openstack_nova_neutron = {
 };
 
 @documentation {
+    The Nova configuration options in the "scheduler" Section.
+}
+type openstack_nova_scheduler = {
+    @{This value controls how often (in seconds) the scheduler should attempt
+    to discover new hosts that have been added to cells. If negative (the
+    default), no automatic discovery will occur.
+    Deployments where compute nodes come and go frequently may want this
+    enabled, where others may prefer to manually discover hosts when one
+    is added to avoid any overhead from constantly checking. If enabled,
+    every time this runs, we will select any unmapped hosts out of each
+    cell database on every run.}
+    'discover_hosts_in_cells_interval' ? long(-1..)
+};
+
+@documentation {
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
@@ -131,12 +146,5 @@ type openstack_nova_config =  {
     'database' ? openstack_database
     'api_database' ? openstack_nova_api_database
     'libvirt' ? openstack_nova_libvirt
-};
-
-@documentation {
-    list of Nova configuration sections
-}
-type openstack_nova_compute_config = {
-    include openstack_nova_common
-    'libvirt' ? openstack_nova_libvirt
+    'scheduler' ? openstack_nova_scheduler
 };

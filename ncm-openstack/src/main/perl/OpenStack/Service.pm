@@ -174,8 +174,11 @@ sub _initialize
     # default TT file
     $self->{tt} = "common";
 
+    $self->{hypervisor} = exists($self->{comptree}->{hypervisor});
+
     # manage command
-    $self->{manage} = "/usr/bin/$self->{flavour}-manage";
+    # when the attribute is false, populate_service_database is not run
+    $self->{manage} = $self->{hypervisor} ? undef : "/usr/bin/$self->{flavour}-manage";
 
     # database version parameter
     $self->{db_version} = ["db_version"];
@@ -437,7 +440,7 @@ sub run
 
     my $changed = $self->write_config_file();
 
-    $self->populate_service_database() or return if($self->{manage});
+    $self->populate_service_database() or return if $self->{manage};
 
     $self->pre_restart() or return;
 

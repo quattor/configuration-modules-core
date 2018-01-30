@@ -29,10 +29,10 @@ is($srv->{log}, $obj, 'log attribute found');
 is($srv->{client}, 'shouldbeinstance', '(fake) client attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
-    compute dashboard hypervisor identity
-    network openrc storage)], "comptree attribute found");
+    active compute dashboard dispatch identity
+    network openrc storage version)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
-my $flakeys = [qw(database)];
+my $flakeys = [qw(database token)];
 # this also tests the reset on the element
 is($srv->{elpath}, "$srv->{prefix}/$srv->{type}/$srv->{flavour}", "elpath attribute");
 is_deeply([sort keys %{$srv->{element}->getTree}], $flakeys, "element attribute found");
@@ -54,7 +54,7 @@ is_deeply($srv->{daemons}, [] , "daemons attribute");
 
 is(get_flavour('identity', $srv->{comptree}, $obj), "keystone",
    "get_flavour returned correct flavour");
-ok(!defined(get_flavour('identityy', $srv->{comptree}, $obj)),
+ok(!defined(get_flavour('identity_typo', $srv->{comptree}, $obj)),
    "get_flavour returns undef for unknown type");
 
 =head2 get_service

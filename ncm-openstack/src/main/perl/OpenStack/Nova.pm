@@ -5,6 +5,12 @@ use parent qw(NCM::Component::OpenStack::Service);
 use Readonly;
 
 Readonly our $NOVA_CONF_FILE => "/etc/nova/nova.conf";
+Readonly our @NOVA_DAEMONS_SERVER => qw(openstack-nova-api
+                                        openstack-nova-consoleauth
+                                        openstack-nova-scheduler
+                                        openstack-nova-conductor
+                                        openstack-nova-novncproxy);
+Readonly our @NOVA_DAEMONS_HYPERVISOR => qw(openstack-nova-compute);
 
 =head2 Methods
 
@@ -20,14 +26,9 @@ sub _attrs
 {
     my $self = shift;
 
-    $self->{daemons} = [
-        'openstack-nova-api',
-        'openstack-nova-consoleauth',
-        'openstack-nova-scheduler',
-        'openstack-nova-conductor',
-        'openstack-nova-novncproxy',
-    ];
+    $self->{daemons} = $self->{hypervisor} ? [@NOVA_DAEMONS_HYPERVISOR] : [@NOVA_DAEMONS_SERVER];
     # Nova has different database parameters
+    $self->{manage} = $self->{hypervisor} ? undef : $self->{manage};
     $self->{db_version} = ["db", "version"];
     $self->{db_sync} = ["db", "sync"];
 }

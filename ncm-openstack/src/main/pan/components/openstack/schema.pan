@@ -44,6 +44,12 @@ type openstack_dashboard_config = {
     'horizon' ? openstack_horizon_config
 } with length(SELF) == 1;
 
+@documentation{
+Hyperviosr configuration.
+}
+type openstack_hypervisor_config = {
+};
+
 @documentation {
 Type to define OpenStack services
 Keystone, Nova, Neutron, etc
@@ -56,4 +62,6 @@ type openstack_component = {
     'network' ? openstack_network_config
     'dashboard' ? openstack_dashboard_config
     'openrc' ? openstack_openrc_config
+    @{Hypervisor configuration. Host is a hypervisor when this attribute exists}
+    'hypervisor' ? openstack_hypervisor_config
 };

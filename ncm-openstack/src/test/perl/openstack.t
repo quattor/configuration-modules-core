@@ -83,7 +83,7 @@ isa_ok($fh, "CAF::FileWriter", "dashboard local_settings CAF::FileWriter instanc
 like("$fh", qr{^\#\s{1}-\*-\s{1}coding:\s{1}utf-8\s{1}-\*-$}m, "local_settings has expected content");
 
 
-diag "all history commands ", explain \@Test::Quattor::command_history;
+diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
         'service httpd restart',

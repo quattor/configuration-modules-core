@@ -25,7 +25,7 @@ sub _attrs
     $self->{daemons} = ['httpd'];
     $self->{user} = 'apache';
     # Horizon has no database
-    $self->{manage} = '';
+    delete $self->{manage};
 }
 
 =pod

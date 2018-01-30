@@ -2,7 +2,7 @@ object template nova_compute;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents" = openstack_nova_compute_config;
+bind "/metaconfig/contents" = openstack_nova_config;
 
 "/metaconfig/module" = "common";
 
@@ -52,3 +52,4 @@ prefix "/metaconfig/contents";
     "username", "neutron",
     "password", "neutron_good_password",
 );
+
