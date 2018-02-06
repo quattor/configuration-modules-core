@@ -9,6 +9,9 @@ NCM::Component::ofed - OFED configuration component
 use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
+our $NoActionSupported = 1;
+
+use CAF::Service;
 use EDG::WP4::CCM::TextRender;
 use Readonly;
 
@@ -29,7 +32,7 @@ sub _render
                                                  log => $self);
 
     my $cfg_fh = $cfg_trd->filewriter($cfg_fn, log => $self, backup => ".old", mode => oct(644));
-    if(! defined($cfg_fh)) {
+    if (!defined($cfg_fh)) {
         $self->error("Failed to render $cfg_fn: $cfg_trd->{fail}");
         return;
     } else {
