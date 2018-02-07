@@ -322,13 +322,9 @@ $cmp->configure_yum("$tmppath/etc/yum.conf", 1, "$tmppath/etc/yum/pluginconf.d",
 is($keeps_state, 1, "keeps_state called once");
 
 my $generatedconf = <<"EOF";
-
 clean_requirements_on_remove=1
-
 obsoletes=1
-
 pluginconfpath=$tmppath/etc/yum/pluginconf.d
-
 reposdir=$tmppath/etc/yum.repos.d
 EOF
 

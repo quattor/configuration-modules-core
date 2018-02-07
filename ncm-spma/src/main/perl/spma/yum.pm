@@ -1015,7 +1015,7 @@ sub configure_yum
         $fh->add_or_replace_lines(
             $name,
             $name. q{\s*=\s*}.$valuereg.'$',
-            "\n$name=$value\n",
+            "$name=$value\n",
             ENDING_OF_FILE
         );
     };
