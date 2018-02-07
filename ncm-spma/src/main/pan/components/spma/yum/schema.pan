@@ -37,6 +37,8 @@ type component_spma_yum = {
     "run" ? legacy_binary_affirmation_string # Run the SPMA after configuring it
     "userpkgs_retry" : boolean = true
     "userpkgs" ? legacy_binary_affirmation_string # Allow user packages
+    @{ List of external repo dirs to be included in addition to the one managed by this component. }
+    "reposdirs" ? absolute_file_path[]
 };
 
 bind "/software/components/spma" = component_spma_yum;
