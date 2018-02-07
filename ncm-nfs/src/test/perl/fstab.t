@@ -213,6 +213,7 @@ ok(command_history_ok([
     qr{^mount /mount000$},
     qr{^mount -o remount /mount1$},
     qr{^mount /amount2$},
+    qr{^mount /mount3$},
 ]), "correct mount commands triggered in proper order");
 
 

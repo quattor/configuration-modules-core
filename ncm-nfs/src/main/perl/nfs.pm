@@ -315,7 +315,7 @@ sub fstab
         # line does not end in newline (see split above)
         my $fstab = parse_fstab_line($line);
         if ($fstab) {
-            if ( ($fstab->{$FSTAB_FSTYPE} =~ m/^(nfs4?|(pan|ceph)fs)$/) ||
+            if ( ($fstab->{$FSTAB_FSTYPE} =~ m/^(nfs4?|panfs|ceph)$/) ||
                  (($fstab->{$FSTAB_FSTYPE} eq 'none') && ($fstab->{$FSTAB_OPTIONS} eq 'bind')) ) {
                 # It is an ncm-nfs managed entry, save the information.
                 $old{$fstab->{$FSTAB_DEVICE}} = $fstab;
