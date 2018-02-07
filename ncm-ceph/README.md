@@ -22,7 +22,8 @@ To replace OSD servers with bluestore OSDs:
 
 Do for each OSDServer (If deployhosts is osd server, start with this one)
 * remove osds from a server
-    ceph osd out $osdid; systemctl stop ceph-osd.target;
+    ceph osd out $osdid; ( Wait for rebalance)
+    systemctl stop ceph-osd.target;
     ceph osd crush remove osd.$osdid; ceph auth del osd.$osdid; ceph osd rm $osdid
 * zap the disks: sgdisk -Z
 * reinstall the host using the newly build profile

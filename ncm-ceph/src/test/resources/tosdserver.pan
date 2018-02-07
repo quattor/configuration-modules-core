@@ -3,8 +3,8 @@ template tosdserver;
 include 'components/ceph/v2/schema';
 bind '/software/components/ceph' = ceph_component;
 
-prefix '/software/components/ceph/';
-'ceph_version' = '12.2.2';
+prefix '/software/components/ceph';
+'ceph_version' = '12.2.*';
 'daemons/max_add_osd_failures' = 2;
 prefix '/software/components/ceph/daemons/osds';
 

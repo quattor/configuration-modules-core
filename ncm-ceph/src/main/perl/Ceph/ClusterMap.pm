@@ -40,7 +40,7 @@ sub mon_hash
     my ($ec, $jstr) = $self->{Cluster}->run_ceph_command([qw(mon dump)], 'get mon map', nostderr => 1) or return;
     my $monsh = decode_json($jstr);
     foreach my $mon (@{$monsh->{mons}}){
-        $self->add_existing('mon', $mon->{name}, { addr => $mon->{addr}});
+        $self->add_existing('mon', $mon->{name}, {addr => $mon->{addr}});
     }
     return 1;
 }
@@ -66,7 +66,7 @@ sub mds_hash
     my $mdshs = decode_json($jstr);
     my $fsmap = $mdshs->{fsmap};
     foreach my $fs (@{$fsmap->{filesystems}}){
-        foreach my $mds (values %{$fs->{mdsmap}->{info}}) {
+        foreach my $mds (sort values %{$fs->{mdsmap}->{info}}) {
             $self->add_existing('mds', $mds->{name});
         }
     }
@@ -84,6 +84,8 @@ sub check_mon
     $self->debug(3, "Comparing mon $hostname");
     my $ceph_mon = $self->{ceph}->{$hostname}->{mon};
     if ($ceph_mon->{addr} =~ /^0\.0\.0\.0:0/) {
+        #This is a corner case seen with an earlier version. when something goes wrong,
+        #the ceph-mon can be in a weird existing not configured state.
         $self->debug(4, "Recreating initial (unconfigured) mon $hostname");
         return $self->add_daemon('mon', $hostname, $mon);
     }
@@ -116,7 +118,6 @@ sub add_quattor
     $self->{quattor}->{$name}->{daemons}->{$type} = $daemon;
     $self->{quattor}->{$name}->{fqdn} = $daemon->{fqdn};
     return 1;
-
 }
 
 # add a daemon to the map to deploy
@@ -142,7 +143,7 @@ sub map_existing
 {
     my ($self) = @_;
     my @actions = (\&mon_hash, \&mgr_hash, \&mds_hash);
-    foreach my $type (@actions){
+    foreach my $type (@actions) {
         $type->($self) or return;
     }
     $self->debug(5, "Existing ceph hash:", Dumper($self->{ceph}));
@@ -155,12 +156,14 @@ sub map_quattor
     my ($self) = @_;
     my $quattor = $self->{Cluster}->{cluster};
     $self->debug(2, "Building information from quattor");
-    while (my ($hostname, $mon) = each(%{$quattor->{monitors}})) {
+    foreach my $hostname (sort keys %{$quattor->{monitors}}) {
+        my $mon = $quattor->{monitors}->{$hostname};
         $hostname =~ s/\..*//;;
         $self->add_quattor('mon', $hostname, $mon);
         $self->add_quattor('mgr', $hostname, $mon); # add a mgr for each mon
     }
-    while (my ($hostname, $mds) = each(%{$quattor->{mdss}})) {
+    foreach my $hostname (sort keys %{$quattor->{mdss}}) {
+        my $mds = $quattor->{mdss}->{$hostname};
         $hostname =~ s/\..*//;;
         $self->add_quattor('mds', $hostname, $mds);
     }

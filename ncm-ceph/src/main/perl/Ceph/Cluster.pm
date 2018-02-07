@@ -66,7 +66,8 @@ sub cluster_exists
             $self->run_ceph_deploy_command([@newcmd], 'create new ceph cluster files');
         }
         $self->info("To create a new cluster, run following command");
-        $self->run_ceph_deploy_command([qw(mon create-initial)], 'create initial monitors', printonly => 1, overwritecfg => 1);
+        $self->run_ceph_deploy_command([qw(mon create-initial)], 'create initial monitors',
+            printonly => 1, overwritecfg => 1);
         return;
     }
 }
@@ -85,10 +86,11 @@ sub cluster_ready
             return;
         }
     }
-    $self->debug(1, "Node ready to receive ceph-commands");
+    $self->debug(1, "Node can reach ceph cluster");
     return 1;
 }
 
+# Write config file for intial ceph-deploy deployment
 sub write_init_cfg
 {
     my ($self) = @_;
@@ -103,6 +105,7 @@ sub write_init_cfg
 
 }
 
+# All thanks to prepare before running component
 sub prepare_cluster
 {
     my ($self) = @_;
@@ -116,6 +119,7 @@ sub prepare_cluster
     return 1;
 };
 
+# Test if we can reach the host we need to configure
 sub test_host_connections
 {
     my ($self, $map) = @_;
@@ -150,6 +154,7 @@ sub deploy_daemon
     return $self->run_ceph_deploy_command($cmd, "deploy $type $name" );
 }
 
+# Deploy all daemons needed for a host
 sub deploy_daemons {
     my ($self, $host, $hostname) = @_;
     if ($host->{mon}) {
@@ -164,6 +169,7 @@ sub deploy_daemons {
     return 1;
 }
 
+# Get the existing config of a host
 sub pull_cfg
 {
     my ($self, $host) = @_;
@@ -172,13 +178,15 @@ sub pull_cfg
     return $success || $self->write_init_cfg();
 
 }
+
+# Deploy all daemons marked for deployment
 sub deploy
 {
     my ($self, $map) = @_;
 
     $self->debug(5, "deploy hash:", Dumper($map));
-    $self->verbose("Running ceph-deploy commands. This can take some time when adding new daemons.");
-    foreach my $hostname (sort keys(%{$map})) {
+    foreach my $hostname (sort keys(%$map)) {
+        $self->verbose("Running ceph-deploy commands on $hostname.");
         $self->pull_cfg($map->{$hostname}->{fqdn}) or return;
         $self->deploy_daemons($map->{$hostname}, $hostname) or return;
     }

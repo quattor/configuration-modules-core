@@ -1,7 +1,5 @@
 #${PMpre} NCM::Component::Ceph::Luminous${PMpost}
 
-#${PMpre} NCM::Component::Ceph::Jewel${PMpost}
-
 =head1 NAME
 
 ncm-${project.artifactId}: Configuration module for CEPH
@@ -66,6 +64,7 @@ To set up the initial cluster, some steps should be taken:
                         http://ceph.com/docs/master/start/quick-start-preflight/)
 
 =item 3. The user should be able to run commands with sudo without password included in sudo.pan
+
 =item 4. Run the component a first time.
             It shall fail, but you should get the initial command for your cluster
 
@@ -74,6 +73,7 @@ To set up the initial cluster, some steps should be taken:
 =item 6. Run the component again to start the configuration of the new cluster
 
 =item 7. When the component now runs on OSD servers, it will deploy the local OSDs
+
 =back
 
 =head1 RESOURCES

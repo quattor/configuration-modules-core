@@ -28,7 +28,7 @@ type ceph_global_config = {
     'filestore_xattr_use_omap' ? boolean
     'fsid' : type_uuid
     'mon_cluster_log_to_syslog' : boolean = true
-    'mon_initial_members' : type_network_name [1..]
+    'mon_initial_members' : type_network_name[1..]
     'mon_host' : type_fqdn[1..]
     'mon_osd_min_down_reporters' ? long(0..)
     'mon_osd_min_down_reports' ? long(0..)
@@ -53,10 +53,10 @@ type ceph_configfile = {
 
 @documentation{ overarching ceph cluster type, with osds, mons and msds }
 type ceph_cluster = {
-    'monitors' : ceph_monitor {3..} # with match
-    'mdss' ? ceph_mds {} # with match
+    'monitors' : ceph_monitor{3..} # with match
+    'mdss' ? ceph_mds{} # with match
     'initcfg' : ceph_configfile
-    'deployhosts' : type_fqdn {1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
+    'deployhosts' : type_fqdn{1..} # key should match value of /system/network/hostname of one or more hosts of the cluster
     'key_accept' ? choice('first', 'always') # explicit accept host keys
     'ssh_multiplex' : boolean = true
 };
@@ -66,12 +66,12 @@ Decentralized config feature:
 For use with dedicated pan code that builds the cluster info from remote templates.
 }
 type ceph_daemons = {
-    'osds' : ceph_osd {}
+    'osds' : ceph_osd{}
     'max_add_osd_failures' : long(0..) = 0
 };
 
-type ceph_supported_version = string with match(SELF, '[0-9]+\.[0-9]+(\.[0-9]+)?'); # TODO  minimum 12.2.2
-type ceph_deploy_supported_version = string with match(SELF, '[0-9]+\.[0-9]+\.[0-9]+'); # TODO minimum 1.5.39
+type ceph_supported_version = string with match(SELF, '[\d*]+\.[\d*]+(\.[\d*]+)?'); # TODO  minimum 12.2.2
+type ceph_deploy_supported_version = string with match(SELF, '\d+\.\d+\.\d+'); # TODO minimum 1.5.39
 
 @documentation{ 
 ceph cluster configuration

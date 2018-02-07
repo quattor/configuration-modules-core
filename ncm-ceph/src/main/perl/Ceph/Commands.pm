@@ -142,5 +142,5 @@ sub test_host_connection
     $self->ssh_known_keys($host, $key_accept, $cephusr);
     return $self->run_command_as_ceph_with_ssh(['uname'], $host, 'connect with ssh');
 }
-1;
 
+1;

@@ -117,9 +117,9 @@ sub deploy_osd
     }
     # ceph-volume lvm create --bluestore --data /dev/sdk
     my $devpath = "/dev/" . unescape($name);
-    my $succes = $self->run_command([qw(ceph-volume lvm create), "--$attrs->{storetype}", "--data", $devpath],
+    my $success = $self->run_command([qw(ceph-volume lvm create), "--$attrs->{storetype}", "--data", $devpath],
         "deploy osd $devpath");
-    if (!$succes) {
+    if (!$success) {
         if ($self->{ok_failures}){
             $self->{ok_failures}--;
             $self->warn("Ignored osd deploy failure for $devpath, ",
@@ -131,9 +131,8 @@ sub deploy_osd
     }
     $self->debug(1, "Deployed osd $name");
     return 1;
-
-
 }
+
 sub deploy
 {
     my ($self) = @_;

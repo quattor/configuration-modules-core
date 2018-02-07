@@ -26,17 +26,15 @@ sub write_cfgfile
     my $rgw = delete $self->{tree}->{rgw} || {};
     my $newtree = {%{$self->{tree}}, %$rgw};
 
-    my $trd = EDG::WP4::CCM::TextRender->new(
-        'tiny', $newtree, log => $self
-    );
+    my $trd = EDG::WP4::CCM::TextRender->new('tiny', $newtree, log => $self);
     my $fh = $trd->filewriter($self->{cfgfile});
     if (!$fh) {
         $self->error("Could not write ceph config file $self->{cfgfile}: $trd->{fail}");
         return;
     };
     $fh->close();
-
     $self->debug(1, "done processing config file $self->{cfgfile}");
+    return 1;
 
 }
 
