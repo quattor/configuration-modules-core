@@ -23,8 +23,7 @@ ok($cl->is_node_healthy(), 'node healthy');
 ok(get_command('/usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
-diag explain 'LALALALALALALALALAAAA';
-diag explain $cl->get_deployed_osds();
+set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
 cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetched');
 #diag explain $cl->get_deployed_osds();
 
@@ -41,5 +40,7 @@ foreach my $dev (@deploydevs){
 foreach my $dev (@nodeploydevs){
     ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev"), "No deploy for $dev");
 }
+ok(get_command("$osddata::CRUSH set-device-class hdd osd.27"), "Called set-device-class for osd.27");
+ok(get_command("$osddata::CRUSH set-device-class special osd.24"), "Called set-device-class for osd.24");
 
 done_testing();

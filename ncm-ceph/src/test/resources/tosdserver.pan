@@ -8,9 +8,9 @@ prefix '/software/components/ceph';
 'daemons/max_add_osd_failures' = 2;
 prefix '/software/components/ceph/daemons/osds';
 
-"sdb" = dict();
-"sdc" = dict('class', 'special');
-"sdd" = dict();
+"sdb" = dict('class', 'hdd');
+"sdc" = dict();
+"sdd" = dict('class', 'special');
 "sde" = dict();
 "{mapper/osd01}" = dict();
 "{mapper/osd02}" = dict();

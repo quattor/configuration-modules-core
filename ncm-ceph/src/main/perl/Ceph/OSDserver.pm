@@ -10,6 +10,7 @@ use Data::Dumper;
 Readonly my $BOOTSTRAP_OSD_KEYRING => '/var/lib/ceph/bootstrap-osd/ceph.keyring';
 Readonly my $BOOTSTRAP_OSD_KEYRING_SL => '/etc/ceph/ceph.client.bootstrap-osd.keyring';
 Readonly my @BOOTSTRAP_OSD_CEPH_HEALTH => qw(status --id bootstrap-osd);
+Readonly my @BOOTSTRAP_OSD_DUMP => qw(osd dump --id bootstrap-osd);
 Readonly my @GET_CEPH_PVS_CMD => (qw(pvs -o), 'pv_name,lv_tags', qw(--no-headings --reportformat json));
 
 sub _initialize
@@ -147,10 +148,11 @@ sub deploy
     return 1;
 }
 
+# make a osd id -> uuid map from osd dump
 sub osd_map
 {
     my ($self) = @_;
-    my ($ec, $jstr) = $self->run_ceph_command([qw(osd dump)], 'get osd dump', nostderr => 1) or return;
+    my ($ec, $jstr) = $self->run_ceph_command([@BOOTSTRAP_OSD_DUMP], 'get osd dump', nostderr => 1) or return;
     my $osdinfo = decode_json($jstr);
     my %osds = map { $_->{osd} => $_->{uuid} } @{$osdinfo->{osds}};
     $self->debug(3, "osd dump id - uuid mapping: ", Dumper(\%osds));
@@ -161,19 +163,46 @@ sub osd_map
     return \%osds;
 }
 
+# get the osd name from device name. The id is checked trough the ceph osd map
 sub get_osd
 {
     my ($self, $device, $deployed, $osdmap) = @_;
     my $id = $deployed->{$device}->{id};
     my $uuid = $deployed->{$device}->{uuid};
-    if ($uuid ne $osdmap->{$id}) {
-        $self->error("Wrongly mapped osd $id. $uuid on disk is $uuid, while $uuid in map is $osdmap->{$id}");
+
+    if (!defined($id) || !defined($uuid)){
+        $self->error("No deployed osd found for device $device.");
+        return;
+    }
+    if (!defined($osdmap->{$id})) {
+        $self->error("Id $id for device $device not found in ceph map.");
+        return;
+    }
+    if ($uuid eq $osdmap->{$id}) {
+        $self->debug(4, "Mapping between device $device and id $id ok");
+    } else {
+        $self->error("Wrongly mapped device $device to id $id. uuid on disk: $uuid, uuid in osd map: $osdmap->{$id}");
         return;
     }
     return "osd.$id";
-
 }
 
+# updates the class of an osd if needed
+sub overwrite_class
+{
+    my ($self, $osd, $class) = @_;
+    my $success = $self->run_ceph_command([qw(osd crush set-device-class), $class, $osd], "set class of $osd");
+    if ($success) {
+        $self->verbose("Class $class for device $osd (already) set");
+    } else {
+        $self->info("Device $osd will have class changed to $class");
+        $self->run_ceph_command([qw(osd crush rm-device-class), $osd], "remove class of $osd");
+        $self->run_ceph_command([qw(osd crush set-device-class), $class, $osd], "set class of $osd") or return;
+    }
+    return 1;
+}
+
+# check if there are osds that need class overwrites
 sub check_classes
 {
     my ($self) = @_;
@@ -181,13 +210,15 @@ sub check_classes
     $self->debug(2, 'check for defined osd class overwrites');
     my $deployed = $self->get_deployed_osds() or return;
     my $osdmap = $self->osd_map();
-    foreach my $osd (sort keys %{$self->{osds}}) {
+    foreach my $device (sort keys %{$self->{osds}}) {
+        my $osd = $self->{osds}->{$device};
         if ($osd->{class}){
-            $self->verbose("OSD $osd has class overwrite");
-            my $osdname = $self->get_osd($osd, $deployed, $osdmap) or return;
-            $self->overwrite_class($osdname);
+            $self->verbose("OSD $device has class overwrite");
+            my $osdname = $self->get_osd($device, $deployed, $osdmap) or return;
+            $self->overwrite_class($osdname, $osd->{class}) or return;
         }
     }
+    return 1;
 }
 
 sub do_post
