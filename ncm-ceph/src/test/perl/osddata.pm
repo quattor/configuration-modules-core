@@ -26,12 +26,13 @@ EOD
 
 Readonly our %OSD_DEPLOYED => (
    sdb => {
-     id => '27'
+     id => '27',
+     uuid => 'ef17d9e3-c47d-4b72-a7a0-fe9ec71c352d'
    },
    sdd => {
-     id => '24'
+     id => '24',
+     uuid => '681e05db-d5c4-4a71-82ee-be827d1f031a'
    }
 );
-
 
 Readonly our $OSD_VOLUME_CREATE => 'ceph-volume lvm create --bluestore --data /dev';

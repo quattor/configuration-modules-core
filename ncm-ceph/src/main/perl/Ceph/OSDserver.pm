@@ -58,14 +58,14 @@ sub run_pvs
     }
     my $pvs = $report->{report}[0]->{pv};
     foreach my $pv (@$pvs) {
-        if ($pv->{lv_tags} =~ m/ceph.osd_id=(\d+)/) {
-            my $id = $1;
+        if ($pv->{lv_tags} =~ m/ceph.osd_fsid=(\S+),ceph.osd_id=(\d+)/) {
+            my ($uuid, $id) = ($1, $2);
             $self->verbose("Found existing osd pv for device $pv->{pv_name}");
             my $device = $pv->{pv_name};
             $device =~ s/^\/dev\///;
             $device = escape($device);
             $self->debug(3," Adding escaped device $device");
-            $osds->{$device} = { id => $id }
+            $osds->{$device} = { id => $id, uuid => $uuid }
         }
     }
     return 1;
@@ -147,10 +147,53 @@ sub deploy
     return 1;
 }
 
+sub osd_map
+{
+    my ($self) = @_;
+    my ($ec, $jstr) = $self->run_ceph_command([qw(osd dump)], 'get osd dump', nostderr => 1) or return;
+    my $osdinfo = decode_json($jstr);
+    my %osds = map { $_->{osd} => $_->{uuid} } @{$osdinfo->{osds}};
+    $self->debug(3, "osd dump id - uuid mapping: ", Dumper(\%osds));
+    if (!%osds) {
+        $self->error('Could not map osds from osd dump');
+        return;
+    }
+    return \%osds;
+}
+
+sub get_osd
+{
+    my ($self, $device, $deployed, $osdmap) = @_;
+    my $id = $deployed->{$device}->{id};
+    my $uuid = $deployed->{$device}->{uuid};
+    if ($uuid ne $osdmap->{$id}) {
+        $self->error("Wrongly mapped osd $id. $uuid on disk is $uuid, while $uuid in map is $osdmap->{$id}");
+        return;
+    }
+    return "osd.$id";
+
+}
+
+sub check_classes
+{
+    my ($self) = @_;
+    # updated deployed osd list
+    $self->debug(2, 'check for defined osd class overwrites');
+    my $deployed = $self->get_deployed_osds() or return;
+    my $osdmap = $self->osd_map();
+    foreach my $osd (sort keys %{$self->{osds}}) {
+        if ($osd->{class}){
+            $self->verbose("OSD $osd has class overwrite");
+            my $osdname = $self->get_osd($osd, $deployed, $osdmap) or return;
+            $self->overwrite_class($osdname);
+        }
+    }
+}
+
 sub do_post
 {
     my ($self) = @_;
-    # Nothing yet, possibly osd crush classes
+    $self->check_classes() or return;
     return 1;
 }
 

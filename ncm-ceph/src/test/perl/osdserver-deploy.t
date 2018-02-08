@@ -23,6 +23,8 @@ ok($cl->is_node_healthy(), 'node healthy');
 ok(get_command('/usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
+diag explain 'LALALALALALALALALAAAA';
+diag explain $cl->get_deployed_osds();
 cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetched');
 #diag explain $cl->get_deployed_osds();
 
