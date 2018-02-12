@@ -7,8 +7,8 @@ unique template components/${project.artifactId}/config;
 
 variable CEPH_SCHEMA_VERSION ?= 'v1';
 
+include if_exists('components/${project.artifactId}/site-config');
 include format('components/${project.artifactId}/%s/schema', CEPH_SCHEMA_VERSION);
-include if_exists('components/$project/site-config');
 
 prefix '/software/components/${project.artifactId}';
 
