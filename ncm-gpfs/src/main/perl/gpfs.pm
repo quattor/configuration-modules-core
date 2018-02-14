@@ -37,6 +37,8 @@ use constant GPFSRPMS => qw(
     ^gpfs.smb$
     );
 
+my $_cached_gss;
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -196,7 +198,39 @@ sub runcurl
 
     my $tr = $config->getTree($self->prefix."/cfg");
 
-    if ($tr->{useccmcertwithcurl}) {
+    local $ENV{KRB5CCNAME};
+    if ($tr->{usegss}) {
+        # from ncm-download
+        # TODO: use CAF or inherit from ncm-download
+        if (!$_cached_gss) {
+            my $ccache = "FILE:".TMP_DOWNLOAD."/host.tkt";
+            $ENV{KRB5CCNAME} = $ccache;
+
+            # Assume "kinit" is in the PATH.
+            my $proc = CAF::Process->new([qw(kinit -k)], log => $self);
+            my $output = $proc->output();
+            if ($?) {
+                $self->error("could not get GSSAPI credentials: $output");
+                return;
+            }
+            $_cached_gss = $ccache;
+        }
+        $ENV{KRB5CCNAME} = $_cached_gss;
+        unshift(@opts, qw(--negotiate -u x:x));
+    } elsif ($tr->{usesindesgetcertcertwithcurl}) {
+        # use sindesgetcert certificates with curl?
+        my $sgpath = "/software/components/sindes_getcert";
+        my $sgtr = $config->getTree($sgpath);
+        if ($sgtr->{client_cert_key}) {
+           unshift(@opts, '--cert', "$sgtr->{cert_dir}/$sgtr->{client_cert_key}")
+                if $sgtr->{client_cert_key};
+           unshift(@opts, '--cacert', "$sgtr->{cert_dir}/$sgtr->{ca_cert}")
+                if $sgtr->{ca_cert};
+        } else {
+           $self->error("No sindes_getcert cert file set in ",
+                        "$sgpath/client_cert_key: $sgtr->{client_cert_key}");
+        };
+    } elsif ($tr->{useccmcertwithcurl}) {
         # use ccm certificates with curl?
         # - does not work yet. curl cert is key_cert in one file
         # -- like sindes_getcert client_cert_key
@@ -210,21 +244,6 @@ sub runcurl
         } else {
             $self->error("No CCM cert file set in ",
                          "$ccmpath/cert_file: $ccmtr->{cert_file}");
-        };
-    }
-
-    if ($tr->{usesindesgetcertcertwithcurl}) {
-        # use sindesgetcert certificates with curl?
-        my $sgpath = "/software/components/sindes_getcert";
-        my $sgtr = $config->getTree($sgpath);
-        if ($sgtr->{client_cert_key}) {
-           unshift(@opts, '--cert', "$sgtr->{cert_dir}/$sgtr->{client_cert_key}")
-                if $sgtr->{client_cert_key};
-           unshift(@opts, '--cacert', "$sgtr->{cert_dir}/$sgtr->{ca_cert}")
-                if $sgtr->{ca_cert};
-        } else {
-           $self->error("No sindes_getcert cert file set in ",
-                        "$sgpath/client_cert_key: $sgtr->{client_cert_key}");
         };
     }
 

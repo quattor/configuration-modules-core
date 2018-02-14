@@ -5,8 +5,12 @@ include 'pan/types';
 
 type gpfs_curl = {
     "usecurl" ? boolean = true
-    "useccmcertwithcurl" ? boolean = false
+    @{use kerberos token form host keytab}
+    "usegss" ? boolean = false
+    @{get certificate information from SINDES getcert component configuration}
     "usesindesgetcertcertwithcurl" ? boolean = false
+    @{get certificate information from CCM component configuration}
+    "useccmcertwithcurl" ? boolean = false
 };
 
 type gpfs_cfg = {
