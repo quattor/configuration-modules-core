@@ -15,7 +15,7 @@ include 'components/ceph/v2/schema-osd';
 include 'components/ceph/v2/schema-mds';
 include 'components/ceph/v2/schema-rgw';
 
-@documentation{ 
+@documentation{
 ceph cluster-wide config parameters
 generate an fsid with uuidgen
  }
@@ -30,12 +30,14 @@ type ceph_global_config = {
     'mon_cluster_log_to_syslog' : boolean = true
     'mon_initial_members' : type_network_name[1..]
     'mon_host' : type_fqdn[1..]
+    'mon_max_pg_per_osd' ? long
     'mon_osd_min_down_reporters' ? long(0..)
     'mon_osd_min_down_reports' ? long(0..)
     'mon_osd_max_op_age' ? long = 32
     'ms_type' ? choice('simple', 'async', 'xio')
     'op_queue' ? choice('prio', 'wpq')
     'osd_journal_size' : long(0..) = 10240
+    'osd_max_pg_per_osd_hard_ratio' ? long
     'osd_pool_default_min_size' : long(0..) = 2
     'osd_pool_default_pg_num' ? long(0..)
     'osd_pool_default_pgp_num' ? long(0..)
@@ -73,7 +75,7 @@ type ceph_daemons = {
 type ceph_supported_version = string with match(SELF, '[\d*]+\.[\d*]+(\.[\d*]+)?'); # TODO  minimum 12.2.2
 type ceph_deploy_supported_version = string with match(SELF, '\d+\.\d+\.\d+'); # TODO minimum 1.5.39
 
-@documentation{ 
+@documentation{
 ceph cluster configuration
 we only support node to be in one ceph cluster named ceph
 this schema only works with Luminous 12.2.2 and above
