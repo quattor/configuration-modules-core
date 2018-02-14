@@ -332,6 +332,8 @@ sub remove_existing_rpms
     return ($ok, \@removerpms);
 };
 
+
+# return 0 on failure
 sub install_base_rpms
 {
     my ($self, $config) = @_;
@@ -370,7 +372,7 @@ sub install_base_rpms
                 $self->debug(3, "File $tmp/$rpm deleted successfully.");
             } else {
                 $self->error("File $tmp/$rpm was not deleted.");
-                $ret=0;
+                $ret = 0;
             }
         }
     }
@@ -418,6 +420,7 @@ sub startgpfs {
     return $self->rungpfs($neom, "mmstartup");
 };
 
+# return 0 on failure
 sub get_cfg
 {
     my ($self, $config) = @_;
@@ -469,14 +472,14 @@ sub get_cfg
         $self->error('Invalid config file found');
         $gpfsconfigfh->cancel();
         $gpfsnodeconfigfh->cancel();
-        return 1;
+        return 0;
     }
 
     if (! "$gpfsnodeconfigfh") {
         $self->error("Empty node config file found with regex $regexp and gpfsconfig $gpfsconfigfh");
         $gpfsconfigfh->cancel();
         $gpfsnodeconfigfh->cancel();
-        return 1;
+        return 0;
     }
 
     $gpfsconfigfh->close();
@@ -488,7 +491,7 @@ sub get_cfg
         return 0 if (! $keyoutput);
         if (!$committed_key) {
             $self->error('No key is yet committed. Run mmauth key commit or remove keyData');
-            return 1;
+            return 0;
         }
         my $keydataTarget = GPFSKEYDATA . $committed_key;
         my $gpfskeyfh = CAF::FileWriter->open($keydataTarget,
@@ -501,7 +504,7 @@ sub get_cfg
              ("$gpfskeyfh" !~ m/keyGenNumber=$committed_key/) ) {
             $self->error('Invalid genKeyData file found');
             $gpfskeyfh->cancel();
-            return 1;
+            return 0;
         }
 
         $gpfskeyfh->close();
