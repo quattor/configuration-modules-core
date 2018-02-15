@@ -497,7 +497,8 @@ sub get_cfg
         my $gpfskeyfh = CAF::FileWriter->open($keydataTarget,
                                               backup => ".old",
                                               mode => oct(600),
-                                              log => $self);
+                                              log => $self,
+                                              sensitive => 1);
         print $gpfskeyfh $keyoutput;
 
         if ( ("$gpfskeyfh" !~ m/^clusterName/) ||
