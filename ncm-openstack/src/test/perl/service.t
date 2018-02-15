@@ -30,7 +30,7 @@ is($srv->{client}, 'shouldbeinstance', '(fake) client attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
     active compute dashboard dispatch identity
-    network openrc storage version)], "comptree attribute found");
+    messaging network openrc storage version)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
 my $flakeys = [qw(database token)];
 # this also tests the reset on the element

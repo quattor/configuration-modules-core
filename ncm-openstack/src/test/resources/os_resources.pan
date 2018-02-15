@@ -145,3 +145,7 @@ prefix "/software/components/openstack/openrc";
 "os_password" = "admingoodpass";
 "os_region_name" = "RegionOne";
 "os_auth_url" = format("http://%s:35357/v3", OPENSTACK_HOST_SERVER);
+
+# RabbitMQ section
+prefix "/software/components/openstack/messaging/rabbitmq";
+"password" = "rabbit_pass";

@@ -28,8 +28,6 @@ sub write_config_file
 {
     my ($self) = @_;
 
-    my $nelement = $self->{element};
-
     my $changed = 0;
     foreach my $ntype (sort keys %{$self->{tree}}) {
         $self->{element} = $self->{config}->getElement("$self->{elpath}/$ntype");

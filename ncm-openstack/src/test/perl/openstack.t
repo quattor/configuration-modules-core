@@ -25,6 +25,7 @@ set_output('keystone_db_version_missing');
 set_output('glance_db_version_missing');
 set_output('nova_db_version_missing');
 set_output('neutron_db_version_missing');
+set_output('rabbitmq_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -87,6 +88,9 @@ diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
         'service httpd restart',
+        '/usr/sbin/rabbitmqctl list_user_permissions openstack',
+        '/usr/sbin/rabbitmqctl add_user openstack rabbit_pass',
+        '/usr/sbin/rabbitmqctl set_permissions openstack .* .* .*',
         '/usr/bin/keystone-manage db_version',
         '/usr/bin/keystone-manage db_sync',
         '/usr/bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone',

@@ -62,6 +62,14 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=head2 Messaging
+
+=over
+
+=item * RabbitMQ
+
+=back
+
 =head3 INITIAL CREATION
 
 =over
@@ -108,9 +116,11 @@ sub Configure
         # First set OpenRC script to connect to REST API
         # This is not a regular OpenStack service
         'openrc',
-        # Set identity service first
+        # And messaging service if available
+        'messaging',
+        # Set OpenStack identity service first
         'identity',
-        # After that continue with 
+        # After that continue with the rest of services
         'storage',
         'compute',
         'network',

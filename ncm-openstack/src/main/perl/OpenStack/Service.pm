@@ -362,17 +362,20 @@ sub populate_service_database
     # db_version is slow when not initialised
     # (lots of retries before it gives up; can take up to 90s)
     if ($self->_do([$self->{manage}, @{$self->{db_version}}], 'determine database version', test => 1)) {
-        $self->verbose("Found existing db_version, no db_sync will be applied");
-        return 1;
+        $self->verbose("Found existing db_version");
+        return 1 if ($self->{flavour} eq "rabbitmq");
     } else {
-        $self->pre_populate_service_database();
-        if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
-            return $self->post_populate_service_database();
-        } else {
-            # Failure
-            return;
-        };
-    }
+        $self->verbose("Database not yet available for service $self->{flavour}");
+    };
+
+    # Always populate/sync the databases
+    $self->pre_populate_service_database();
+    if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
+        return $self->post_populate_service_database();
+    } else {
+        # Failure
+        return;
+    };
 };
 
 =item post_populate_service_database

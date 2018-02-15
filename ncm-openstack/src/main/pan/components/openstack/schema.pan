@@ -44,6 +44,13 @@ type openstack_dashboard_config = {
     'horizon' ? openstack_horizon_config
 } with length(SELF) == 1;
 
+@documentation {
+Type to define OpenStack messaging services
+}
+type openstack_messaging_config = {
+    'rabbitmq' ? openstack_rabbitmq_config
+} with length(SELF) == 1;
+
 @documentation{
 Hyperviosr configuration.
 }
@@ -61,6 +68,7 @@ type openstack_component = {
     'storage' ? openstack_storage_config
     'network' ? openstack_network_config
     'dashboard' ? openstack_dashboard_config
+    'messaging' ? openstack_messaging_config
     'openrc' ? openstack_openrc_config
     @{Hypervisor configuration. Host is a hypervisor when this attribute exists}
     'hypervisor' ? openstack_hypervisor_config

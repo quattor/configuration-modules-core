@@ -43,4 +43,10 @@ $cmds{neutron_db_version_missing}{ec} = 1;
 $cmds{neutron_db_version}{cmd} = "/usr/bin/neutron-db-manage current";
 $cmds{neutron_db_version}{out} = "OK";
 
+$cmds{rabbitmq_db_version_missing}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
+$cmds{rabbitmq_db_version_missing}{ec} = 1;
+
+$cmds{rabbitmq_db_version}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
+$cmds{rabbitmq_db_version}{ec} = "/ .* .* .*";
+
 1;
