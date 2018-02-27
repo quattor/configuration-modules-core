@@ -116,9 +116,17 @@ sub deploy_osd
         $self->error('Only bluestore is supported at the moment');
         return;
     }
-    # ceph-volume lvm create --bluestore --data /dev/sdk
+    my @options = ("--$attrs->{storetype}");
+    if ($attrs->{dmcrypt}) {
+        push(@options, "--dmcrypt");
+    }
+    if ($attrs->{class}) {
+        push(@options, "--crush-device-class", $attrs->{class});
+    };
+
+    # ceph-volume lvm create --data /dev/sdn --bluestore (--dmcrypt --crush-device-class baa)
     my $devpath = "/dev/" . unescape($name);
-    my $success = $self->run_command([qw(ceph-volume lvm create), "--$attrs->{storetype}", "--data", $devpath],
+    my $success = $self->run_command([qw(ceph-volume lvm create), "--data", $devpath, @options],
         "deploy osd $devpath");
     if (!$success) {
         if ($self->{ok_failures}){

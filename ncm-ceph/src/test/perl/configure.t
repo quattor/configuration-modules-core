@@ -26,7 +26,7 @@ set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddat
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING_SL, 'key');
 
-set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02", 1); 
+set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02 --bluestore", 1); 
 ok($cmp->Configure($cfg), 'Ceph component configure ok');
 isa_ok($cmp, 'NCM::Component::Ceph::Luminous', 'got ncm-ceph Luminous instance');
 
@@ -34,13 +34,16 @@ my $fh = get_file('/etc/ceph/ceph.conf');
 is("$fh", $cfgdata::CFGFILE_OUT, 'cfgfile ok');
 
 
-my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc', 'sde');
+my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
 my @nodeploydevs = ('sda4', 'sdb', 'sdd');
 foreach my $dev (@deploydevs){
-    ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev"), "Called deploy for $dev");
+    ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "Called deploy for $dev");
 }
+ok(get_command("$osddata::OSD_VOLUME_CREATE/sde --bluestore --dmcrypt"), 
+    "Called deploy for sde");
+
 foreach my $dev (@nodeploydevs){
-    ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev"), "No deploy for $dev");
+    ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "No deploy for $dev");
 }
 
 

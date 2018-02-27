@@ -27,18 +27,20 @@ set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddat
 cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetched');
 #diag explain $cl->get_deployed_osds();
 
-set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02", 1);
+set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02 --bluestore", 1);
 
 ok($cl->configure(), 'Deployment of OSD succeeded');
 
 is($cl->{ok_failures},1, 'Number of failures is 1');
-my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc', 'sde');
+my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
 my @nodeploydevs = ('sda4', 'sdb', 'sdd');
 foreach my $dev (@deploydevs){
-    ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev"), "Called deploy for $dev");
+    ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "Called deploy for $dev");
 }
+ok(get_command("$osddata::OSD_VOLUME_CREATE/sde --bluestore --dmcrypt"), 
+    "Called deploy for sde");
 foreach my $dev (@nodeploydevs){
-    ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev"), "No deploy for $dev");
+    ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "No deploy for $dev");
 }
 ok(get_command("$osddata::CRUSH set-device-class hdd osd.27"), "Called set-device-class for osd.27");
 ok(get_command("$osddata::CRUSH set-device-class special osd.24"), "Called set-device-class for osd.24");

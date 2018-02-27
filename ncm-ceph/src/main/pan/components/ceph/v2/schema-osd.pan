@@ -17,9 +17,11 @@ type ceph_osd_config = {
 @documentation{
 ceph osd-specific type
 Only bluestore support for now
+dmcrypt supported with ceph-volume > 12.2.3
 }
 type ceph_osd = {
     include ceph_daemon
     'class' ? string
     'storetype' : choice('bluestore') = 'bluestore'
+    'dmcrypt' ? boolean
 };

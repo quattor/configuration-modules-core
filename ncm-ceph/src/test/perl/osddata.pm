@@ -52,7 +52,7 @@ Readonly our %OSD_DEPLOYED => (
    }
 );
 
-Readonly our $OSD_VOLUME_CREATE => 'ceph-volume lvm create --bluestore --data /dev';
+Readonly our $OSD_VOLUME_CREATE => 'ceph-volume lvm create --data /dev';
 
 Readonly our $OSD_DUMP => <<EOD;
   {
