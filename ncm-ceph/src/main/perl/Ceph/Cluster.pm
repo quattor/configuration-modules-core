@@ -95,7 +95,7 @@ sub write_init_cfg
 {
     my ($self) = @_;
     my $cfgfile = NCM::Component::Ceph::Cfgfile->new(
-        $self->{config}, $self, "$self->{prefix}/cluster/initcfg", $CEPH_DEPLOY_CFGFILE);
+        $self->{config}, $self, "$self->{prefix}/cluster/initcfg", $CEPH_DEPLOY_CFGFILE, 'ceph');
     if (!$cfgfile->configure()) {
          $self->error('Could not write cfgfile for ceph-deploy, aborting deployment');
          return;

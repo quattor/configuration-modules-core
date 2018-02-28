@@ -7,7 +7,7 @@ Readonly my $CEPH_CFGFILE => '/etc/ceph/ceph.conf';
 
 sub _initialize
 {
-    my ($self, $config, $log, $path, $cfgfile) = @_;
+    my ($self, $config, $log, $path, $cfgfile, $owner) = @_;
 
     $self->{log} = $log;
     $self->{path} = $path;
@@ -15,7 +15,7 @@ sub _initialize
         [$EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{arrayref_join_comma}]);
 
     $self->{cfgfile} = $cfgfile || $CEPH_CFGFILE;
-
+    $self->{owner} = $owner || 'root';
     return 1;
 }
 
@@ -27,7 +27,7 @@ sub write_cfgfile
     my $newtree = {%{$self->{tree}}, %$rgw};
 
     my $trd = EDG::WP4::CCM::TextRender->new('tiny', $newtree, log => $self);
-    my $fh = $trd->filewriter($self->{cfgfile});
+    my $fh = $trd->filewriter($self->{cfgfile}, owner => $self->{owner});
     if (!$fh) {
         $self->error("Could not write ceph config file $self->{cfgfile}: $trd->{fail}");
         return;
