@@ -4,7 +4,7 @@ multiline
 metaconfigservice=/etc/xinetd.d/rsync
 ---
 ^service\srsync$
-^{$
+^\{$
 ^\s{4}cps\s=\s100 2$
 ^\s{4}disable\s=\sno$
 ^\s{4}per_source\s=\s11$
@@ -13,4 +13,4 @@ metaconfigservice=/etc/xinetd.d/rsync
 ^\s{4}socket_type\s=\sstream$
 ^\s{4}user\s=\sroot$
 ^\s{4}wait\s=\sno$
-^}$
+^\}$

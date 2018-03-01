@@ -4,7 +4,7 @@ multiline
 metaconfigservice=/etc/xinetd.d/tftp
 ---
 ^service\stftp$
-^{$
+^\{$
 ^\s{4}cps\s=\s100 2$
 ^\s{4}disable\s=\sno$
 ^\s{4}flags\s=\sIPv4$
@@ -14,4 +14,4 @@ metaconfigservice=/etc/xinetd.d/tftp
 ^\s{4}socket_type\s=\sdgram$
 ^\s{4}user\s=\sroot$
 ^\s{4}wait\s=\syes$
-^}$
+^\}$
