@@ -1,0 +1,16 @@
+[%-
+    map = {
+        compute = 'NodeName'
+        down = 'DownNodes'
+        frontend = 'FrontendName'
+    }
+    nameattr = map.$key
+    -%]
+[%-  FOREACH nodes IN value.pairs %]
+[%-      # node name is list of names or key
+        nodename = nodes.value.exists(nameattr) ? nodes.value.$nameattr.join(',') : nodes.key;
+        nodes.value.delete(nameattr);
+        -%]
+[%      nameattr %]=[% nodename -%] [% -%]
+[%-     INCLUDE 'metaconfig/slurm/params.tt' data=nodes.value join=' ' %]
+[% END -%]

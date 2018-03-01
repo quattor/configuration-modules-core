@@ -1,0 +1,12 @@
+Config file for slurm cgroups
+---
+/etc/slurm/cgroup.conf
+quote
+---
+
+AllowedSwapSpace=10
+CgroupAutomount=yes
+ConstrainCores=yes
+ConstrainRAMSpace=yes
+ConstrainSwapSpace=yes
+TaskAffinity=yes

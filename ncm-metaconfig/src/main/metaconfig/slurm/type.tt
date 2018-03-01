@@ -1,0 +1,27 @@
+[%-# Handle Type and Plugin
+    type_list = name.match('([A-Z][a-z0-9]*)', 1); # global=1 to match all occurrences
+    type_flavour = type_list.pop; # eg Type or Plugin
+    shortname = type_list.join('');
+    map = {
+        JobAcctGather = 'jobacct_gather'
+        JobComp = 'jobcomp'
+        Scheduler = 'sched'
+        Storage = 'accounting_storage' # from dbd
+    };
+    IF shortname == 'DefaultStorage';
+        prefix = '';
+    ELSIF map.exists(shortname);
+        prefix = map.item(shortname);
+    ELSE;
+        prefix = type_list.join('_');
+    END;
+    lprefix = prefix FILTER lower;
+    IF CCM.is_scalar(data);
+        data = [data];
+    END;
+    tmpdata = [];
+    FOREACH tmp IN data;
+        tmpdata.push(lprefix _ (prefix ? '/' : '') _ tmp);
+    END;
+-%]
+[%- tmpdata.join(',') -%]
