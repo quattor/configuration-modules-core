@@ -11,9 +11,9 @@ declaration template components/openstack/horizon;
 type openstack_horizon_caches = {
      @{We recommend you use memcached for development; otherwise after every reload
      of the django development server, you will have to login again}
-    'backend' : string = 'django.core.cache.backends.memcached.MemcachedCache'
+    'BACKEND' : string = 'django.core.cache.backends.memcached.MemcachedCache'
     @{location format <fqdn>:<port>}
-    'location' : type_hostport
+    'LOCATION' : type_hostport = '127.0.0.1:11211'
 } = dict();
 
 @documentation {
