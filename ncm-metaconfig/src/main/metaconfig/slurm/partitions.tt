@@ -1,0 +1,2 @@
+PartitionName=[% key %] [% -%]
+[%- INCLUDE 'metaconfig/slurm/params.tt' data=value boolvalue=1 join=' ' -%]
