@@ -1,0 +1,7 @@
+[% FOREACH plugin IN CCM.contents.plugins %]
+[%      plugin.optional ? 'optional' : 'required' %] [% plugin.plugin %][% plugin.arguments ? ' ' : '' -%]
+[%-         INCLUDE 'metaconfig/slurm/params.tt' data=plugin.arguments join=' ' -%]
+[% END %]
+[% FOREACH include IN CCM.contents.includes %]
+include [% include.directory -%]
+[% END %]

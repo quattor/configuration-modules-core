@@ -1,0 +1,11 @@
+Config file for plugstack
+---
+/etc/slurm/plugstack.conf
+quote
+---
+
+required /some/path
+optional /some/other/path hello=world woohoo
+
+include /some/incl
+include /some/other/incl

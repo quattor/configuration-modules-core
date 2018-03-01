@@ -1,0 +1,3 @@
+[%  FOREACH pair IN CCM.contents.pairs %]
+[%     pair.key %]=[% INCLUDE 'metaconfig/slurm/value.tt' key=pair.key value=pair.value flavour='dbd' -%]
+[%- END %]
