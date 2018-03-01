@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use Test::Quattor qw(simple with_proxy without_spma with_pkgs reposdirs);
+use Test::Quattor qw(simple with_proxy without_spma with_pkgs reposdirs with_pkgs_filter);
 use NCM::Component::spma::yum;
 use Test::MockObject::Extends;
 use CAF::Object;
@@ -32,10 +32,12 @@ use Set::Scalar;
 use Class::Inspector;
 use Carp qw(confess);
 use Test::Quattor::TextRender::Base;
+use EDG::WP4::CCM::Path qw(escape);
 
 my $caf_trd = mock_textrender();
 
 # Index when yum method is called
+#  update_packages_retry is last expected method
 Readonly my $UPDATE_PKGS => -1;
 Readonly my $GENERATE_REPOS => 4;
 
@@ -79,11 +81,16 @@ All the top-level methods are called, with C<update_pkgs_retry> being the last o
 my $name = $mock->call_pos($UPDATE_PKGS);
 is($name, "update_pkgs_retry", "Packages are updated at the end of the component");
 my @args = $mock->call_args($UPDATE_PKGS);
+is(scalar @args, 9, "expected number args (+1 for self) pt1");
 is(ref($args[2]), 'HASH', "Set of groups is passed");
 ok($args[3], "Run argument is correctly passed");
 ok(!$args[4], "No user packages allowed in update_pkgs_retry");
 ok(exists($args[1]->{ConsoleKit}),
   "A package list is passed to UPDATE_PKGS");
+
+my $t = $cfg->getTree($cmp->prefix);
+ok(! defined $t->{filter}, "no filter specified");
+ok(! defined $args[8], "pkgs to install argument is undef (ie all packages)");
 
 =pod
 
@@ -156,7 +163,7 @@ These must show up when calling C<generate_repos>
 
 $cfg = get_config_for_profile("with_proxy");
 
-my $t = $cfg->getElement("/software/components/spma")->getTree();
+$t = $cfg->getTree($cmp->prefix);
 
 $mock->clear();
 
@@ -182,6 +189,7 @@ $mock->clear();
 
 $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
+is(scalar @args, 9, "expected number args (+1 for self) pt2");
 ok(!$args[3], "No run is correctly passed to update_pkgs_retry");
 
 =pod
@@ -216,6 +224,32 @@ $cfg = get_config_for_profile("reposdirs");
 $mock->clear();
 
 is($cmp->Configure($cfg), 1, "Configuration with additional yum reposdirs succeeds");
+
+=pod
+
+=head2 Package filter
+
+Passes limited list of packages and sets user_pkgs (when not defined)
+
+=cut
+
+$cfg = get_config_for_profile("with_pkgs_filter");
+
+$mock->clear();
+
+$cmp->Configure($cfg);
+
+@args = $mock->call_args($UPDATE_PKGS);
+diag "user_pkgs_retyr args ", explain \@args;
+is_deeply([sort keys %{$args[1]}], [escape("A-B-C"), "ConsoleKit"], "All packages (none filtered)");
+is(scalar @args, 9, "expected number args (+1 for self) pt3");
+ok($args[4], "userpkgs enabled");
+$t = $cfg->getTree($cmp->prefix);
+is($t->{filter}, "^A-B", "filter specified");
+is_deeply([sort keys %{$args[8]}], [escape("A-B-C")], "Only A-B-C pkg installed (not Consolekit, filter applied)");
+is_deeply($args[8]->{'A_2dB_2dC'}, {'_2e4_2e1_2d3_2eel6' => {'arch' => {'x86_64' => 'sl620_x86_64'}}},
+          "A-B-C pkg with data installed filter applied)");
+
 
 =pod
 
