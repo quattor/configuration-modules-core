@@ -11,6 +11,8 @@ Readonly my $BOOTSTRAP_OSD_KEYRING => '/var/lib/ceph/bootstrap-osd/ceph.keyring'
 Readonly my $BOOTSTRAP_OSD_KEYRING_SL => '/etc/ceph/ceph.client.bootstrap-osd.keyring';
 Readonly my @BOOTSTRAP_OSD_CEPH_HEALTH => qw(status --id bootstrap-osd);
 Readonly my @BOOTSTRAP_OSD_DUMP => qw(osd dump --id bootstrap-osd);
+Readonly my @OSD_SET_CRUSH => qw(osd crush set-device-class);
+Readonly my @OSD_RM_CRUSH => qw(osd crush rm-device-class);
 Readonly my @GET_CEPH_PVS_CMD => (qw(pvs -o), 'pv_name,lv_tags', qw(--no-headings --reportformat json));
 
 sub _initialize
@@ -199,13 +201,14 @@ sub get_osd
 sub overwrite_class
 {
     my ($self, $osd, $class) = @_;
-    my $success = $self->run_ceph_command([qw(osd crush set-device-class), $class, $osd], "set class of $osd");
+    my @auth = ('--name', $osd);
+    my $success = $self->run_ceph_command([@OSD_SET_CRUSH, $class, $osd, @auth ], "set class of $osd");
     if ($success) {
         $self->verbose("Class $class for device $osd (already) set");
     } else {
         $self->info("Device $osd will have class changed to $class");
-        $self->run_ceph_command([qw(osd crush rm-device-class), $osd], "remove class of $osd");
-        $self->run_ceph_command([qw(osd crush set-device-class), $class, $osd], "set class of $osd") or return;
+        $self->run_ceph_command([@OSD_RM_CRUSH, $osd, @auth], "remove class of $osd");
+        $self->run_ceph_command([@OSD_SET_CRUSH, $class, $osd, @auth], "set class of $osd") or return;
     }
     return 1;
 }

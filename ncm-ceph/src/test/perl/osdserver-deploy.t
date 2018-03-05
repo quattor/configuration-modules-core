@@ -42,7 +42,7 @@ ok(get_command("$osddata::OSD_VOLUME_CREATE/sde --bluestore --dmcrypt"),
 foreach my $dev (@nodeploydevs){
     ok(!get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "No deploy for $dev");
 }
-ok(get_command("$osddata::CRUSH set-device-class hdd osd.27"), "Called set-device-class for osd.27");
-ok(get_command("$osddata::CRUSH set-device-class special osd.24"), "Called set-device-class for osd.24");
+ok(get_command("$osddata::CRUSH set-device-class hdd osd.27 --name osd.27"), "Called set-device-class for osd.27");
+ok(get_command("$osddata::CRUSH set-device-class special osd.24 --name osd.24"), "Called set-device-class for osd.24");
 
 done_testing();

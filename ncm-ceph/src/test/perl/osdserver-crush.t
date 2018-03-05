@@ -19,15 +19,15 @@ isa_ok($cl, 'NCM::Component::Ceph::OSDserver', 'got OSDserver instance');
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
 set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
 
-set_command_status("$osddata::CRUSH set-device-class special osd.24", 1);
+set_command_status("$osddata::CRUSH set-device-class special osd.24 --name osd.24", 1);
 
 ok(!$cl->check_classes(), 'check_classes returns when class could not be set');
-ok(get_command("$osddata::CRUSH set-device-class hdd osd.27"), "Called set-device-class for osd.27");
-ok(get_command("$osddata::CRUSH set-device-class special osd.24"), "Called set-device-class for osd.24");
-ok(get_command("$osddata::CRUSH rm-device-class osd.24"), "Called rm-device-class for osd.24");
-ok(!get_command("$osddata::CRUSH rm-device-class osd.27"), "rm-device-class for osd.27 not called");
+ok(get_command("$osddata::CRUSH set-device-class hdd osd.27 --name osd.27"), "Called set-device-class for osd.27");
+ok(get_command("$osddata::CRUSH set-device-class special osd.24 --name osd.24"), "Called set-device-class for osd.24");
+ok(get_command("$osddata::CRUSH rm-device-class osd.24 --name osd.24"), "Called rm-device-class for osd.24");
+ok(!get_command("$osddata::CRUSH rm-device-class osd.27 --name osd.27"), "rm-device-class for osd.27 not called");
 
-set_command_status("$osddata::CRUSH set-device-class special osd.24", 0);
+set_command_status("$osddata::CRUSH set-device-class special osd.24 --name osd.24", 0);
 
 ok($cl->check_classes(), 'check_classes ok');
 
