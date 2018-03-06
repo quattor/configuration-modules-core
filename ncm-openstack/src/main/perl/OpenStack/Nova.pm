@@ -5,6 +5,9 @@ use parent qw(NCM::Component::OpenStack::Service);
 use Readonly;
 
 Readonly our $NOVA_CONF_FILE => "/etc/nova/nova.conf";
+Readonly our $NOVA_CEPH_SECRET_FILE => "/var/lib/nova/tmp/secret_ceph.xml";
+Readonly our $NOVA_CEPH_COMPUTE_KEYRING => "/etc/ceph/ceph.client.compute.keyring";
+Readonly our $VIRSH_COMMAND => "/usr/bin/virsh";
 Readonly our @NOVA_DAEMONS_SERVER => qw(openstack-nova-api
                                         openstack-nova-consoleauth
                                         openstack-nova-scheduler
@@ -62,6 +65,63 @@ sub pre_populate_service_database
     return 1;
 }
 
+=item read_ceph_key
+
+Read Ceph pool key file.
+
+=cut
+
+sub read_ceph_key
+{
+    my($self) = @_;
+    my $key;
+    my $fh = CAF::FileReader->new($NOVA_CEPH_COMPUTE_KEYRING, log => $self);
+    if (! "$fh") {
+        $self->error("Not found Ceph compute keyring file: $NOVA_CEPH_COMPUTE_KEYRING");
+        return;
+    };
+    if ("$fh" =~ m/^(key=.*)/m ) {
+        eval {
+            $key = $1;
+        };
+        $key =~ s/key=//s;
+        $self->verbose("Found a valid Ceph key in $NOVA_CEPH_COMPUTE_KEYRING");
+        return $key;
+    } else {
+        $self->error("Not found a valid Ceph key in $NOVA_CEPH_COMPUTE_KEYRING");
+        return;
+    };
+}
+
+
+=item pre_restart
+
+Run before services restart. Used for hypervisors post-configuration.
+
+Must return 1 on success;
+
+=cut
+
+sub pre_restart
+{
+    my ($self) = @_;
+     my ($cmd, $msg);
+    # hypervisor Ceph backend post-configuration
+    if ($self->{hypervisor} and $self->{tree}->{libvirt}->{rbd_secret_uuid}) {
+        my $uuid = $self->{tree}->{libvirt}->{rbd_secret_uuid};
+
+        $cmd = [$VIRSH_COMMAND, "secret-define", "--file", $NOVA_CEPH_SECRET_FILE];
+        $msg = "Set virsh Ceph secret file";
+        $self->_do($cmd, $msg, sensitive => 0, user => 'root') or return;
+
+        my $key = $self->read_ceph_key();
+        $cmd = [$VIRSH_COMMAND, "secret-set-value", "--secret", $uuid, "--base64", $key];
+        $msg = "Set virsh Ceph pool key";
+        $self->_do($cmd, $msg, sensitive => 1, user => 'root') or return;
+    };
+
+    return 1;
+}
 
 =pod
 

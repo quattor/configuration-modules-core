@@ -40,6 +40,30 @@ type openstack_glance_store = {
     BadStoreConfiguration will be raised and the filesystem store
     may not be available for adding new images}
     'filesystem_store_datadir' : absolute_file_path = '/var/lib/glance/images'
+    @{This option is specific to the RBD storage backend.
+    Default: rbd
+    Sets the RADOS pool in which images are stored}
+    'rbd_store_pool' ? string = 'images'
+    @{This option is specific to the RBD storage backend.
+    Default: 4
+    Images will be chunked into objects of this size (in megabytes).
+    For best performance, this should be a power of two}
+    'rbd_store_chunk_size' ? long(1..)
+    @{This option is specific to the RBD storage backend.
+    Default: 0
+    Prevents glance-api hangups during the connection to RBD.
+    Sets the time to wait (in seconds) for glance-api before closing the connection.
+    Setting rados_connect_timeout<=0 means no timeout}
+    'rados_connect_timeout' ? long
+    @{This option is specific to the RBD storage backend.
+    Default: /etc/ceph/ceph.conf, ~/.ceph/config, and ./ceph.conf
+    Sets the Ceph configuration file to use}
+    'rbd_store_ceph_conf' ? absolute_file_path = '/etc/ceph/ceph.conf'
+    @{This option is specific to the RBD storage backend.
+    Default: admin
+    Sets the RADOS user to authenticate as.
+    This is only needed when RADOS authentication is enabled}
+    'rbd_store_user' ? string = 'images'
 };
 
 @documentation {

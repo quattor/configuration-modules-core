@@ -49,4 +49,10 @@ $cmds{rabbitmq_db_version_missing}{ec} = 1;
 $cmds{rabbitmq_db_version}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
 $cmds{rabbitmq_db_version}{ec} = "/ .* .* .*";
 
+$cmds{virsh_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml";
+$cmds{virsh_set_secret}{out} = "Secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c created";
+
+$cmds{virsh_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 $(cat /etc/ceph/ceph.client.compute.keyring)";
+$cmds{virsh_set_key}{out} = "";
+
 1;

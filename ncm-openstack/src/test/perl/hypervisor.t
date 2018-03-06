@@ -7,6 +7,7 @@ use Test::Quattor::Object;
 use Test::MockModule;
 
 use NCM::Component::openstack;
+use NCM::Component::OpenStack::Nova;
 
 use helper;
 use Test::Quattor::TextRender::Base;
@@ -14,8 +15,13 @@ use Test::Quattor::TextRender::Base;
 my $caf_trd = mock_textrender();
 my $obj = Test::Quattor::Object->new();
 
+my $mockos = Test::MockModule->new('NCM::Component::OpenStack::Nova');
+$mockos->mock("read_ceph_key", sub { return 'AAAAABBBXXXXYYYZZZZ=='; } );
+
 my $cmp = NCM::Component::openstack->new("hypervisor", $obj);
 my $cfg = get_config_for_profile("hypervisor");
+
+
 
 ok($cmp->Configure($cfg), "Configure hypervisor returns success");
 ok(!exists($cmp->{ERROR}), "No errors found in hypervisor normal execution");

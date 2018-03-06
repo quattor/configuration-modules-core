@@ -80,6 +80,16 @@ type openstack_nova_libvirt = {
     The choice of this type must match the underlying virtualization strategy
     you have chosen for the host}
     'virt_type' : string = 'kvm' with match (SELF, '^(kvm|lxc|qemu|uml|xen|parallels)$')
+    @{The RADOS pool in which rbd volumes are stored}
+    'images_rbd_pool' ? string
+    @{VM Images format. If default is specified, then use_cow_images flag is used
+    instead of this one. Related options: * virt.use_cow_images * images_volume_group}
+    'images_type' ? string with match (SELF, '^(raw|flat|qcow2|lvm|rbd|ploop|default)$')
+    @{The libvirt UUID of the secret for the rbd_user volumes}
+    'rbd_secret_uuid' ? type_uuid
+    @{The RADOS client name for accessing rbd(RADOS Block Devices) volumes.
+    Libvirt will refer to this user when connecting and authenticating with the Ceph RBD server}
+    'rbd_user' ? string
 };
 
 @documentation {
