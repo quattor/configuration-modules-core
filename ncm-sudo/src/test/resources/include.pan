@@ -1,4 +1,4 @@
-object template profile_include;
+object template include;
 
 prefix "/software/components/sudo";
 

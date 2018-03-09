@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor;
+use Test::Quattor qw(configure);
 use NCM::Component::sudo;
 
 =pod

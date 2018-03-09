@@ -1,6 +1,6 @@
 # Simple testing profile for sudo component.
 # One correct alias defined for users_aliases field. Should work OK.
-object template profile_all_aliases;
+object template all_aliases;
 
 prefix "/software/components/sudo";
 

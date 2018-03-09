@@ -1,4 +1,4 @@
-object template profile_all_options;
+object template all_options;
 
 prefix "/software/components/sudo";
 

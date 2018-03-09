@@ -1,4 +1,4 @@
-object template profile_1line;
+object template 1line;
 
 prefix "/software/components/sudo";
 

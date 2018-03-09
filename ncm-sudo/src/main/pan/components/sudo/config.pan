@@ -1,9 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
+${componentconfignospma}
+"dependencies/pre" ?=  list("spma", "accounts");
 
-unique template components/${project.artifactId}/config;
-
-include 'components/${project.artifactId}/config-common';
-include 'components/${project.artifactId}/config-rpm';
+include 'components/sudo/validation';

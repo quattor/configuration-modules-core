@@ -1,8 +1,8 @@
 # Simple testing profile for sudo component.
 # One correct alias defined for users_aliases field and a valid entry for
 # command options. Should work OK.
-# One valid entry with a valid run_as as a general_option.
-object template profile_test_general_options_validr;
+# One valid entry without hosts, users or run_as as a general_option.
+object template test_general_options_valid;
 include pro_declaration_types;
 include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
@@ -24,7 +24,6 @@ include pro_declaration_functions_sudo;
 
 "/software/components/sudo/general_options/" = list (
     dict (
-        "run_as", "munoz",
         "options", dict ("insults", true)
         )
     );

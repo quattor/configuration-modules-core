@@ -1,6 +1,6 @@
 # Simple testing profile for sudo component.
 # No aliases defined, just one silly command.
-object template profile_test0aliases;
+object template test0aliases;
 
 "/software/components/sudo/privilege_lines" = list (
     dict ( "user", "ALL",
