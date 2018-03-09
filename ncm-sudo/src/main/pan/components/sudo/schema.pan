@@ -14,12 +14,18 @@ type sudo_user_alias = string[];
 type sudo_cmd_alias = string[];
 type sudo_host_alias = sudo_host[];
 
+@{Each privilege line in a sudoers has the following format:
+    'user    host = (run_as_user) OPTIONS: command'
+  Remember that the built-in alias ALL is valid for users,
+  run_as users, hosts and commands.}
 type sudo_privilege_line = {
-    @{User invoking sudo}
+    @{The user allowed to 'sudo <command>'. Can be an user, an
+    user_alias, or a group (with a leading '%').}
     "user" : string
-    @{User the program will run under}
+    @{The user to be supplanted. Can be an user, a run_as_alias or a group
+    (with a leading '%').}
     "run_as" : string
-    @{host the command can be run from}
+    @{The host from where the user can invoke sudo. Can be a host or a host_alias.}
     "host" : string
     @{Specific options for this command}
     "options" ? string with match (SELF,
@@ -93,10 +99,16 @@ type sudo_default_options = {
   an optional host, an optional run_as user (to be supplanted)
   And a set of default settings.}
 type sudo_defaults = {
+    @{The user the settings apply to.}
     "user" ? string
+    @{The supplanted user the settings apply to.}
     "run_as" ? string
+    @{The host the settings apply to.}
     "host" ? sudo_host
     "cmd" ? string
+    @{The named list of options that can be specified. Currently, only
+      atomic options are supported.
+      Boolean, integer and string values are handled correctly.}
     "options" : sudo_default_options
 };
 
@@ -118,12 +130,39 @@ type sudo_ldap = {
   All alias names must be in capitals.}
 type sudo_component = {
     include structure_component
+    @{Set default behaviour either for users or hosts, or for the whole sudo
+      application.}
     "general_options" ? sudo_defaults[]
+    @{dicts of lists of strings containing the alias information. The
+      name of each named list must start with a letter, and contain only
+      letters, numbers and underscores. All the letters must be
+      capitals. i.e. the name must match ^[A-Z][A-Z0-9_]*$.
+
+      They can be preceeded by an '!', indicating the alias must *not*
+      match that name. The contents may be preceeded by an '!', indicating
+      that item must not be part of the alias.
+
+      The contents of host aliases can be either host names, IP addresses or
+      network specifications (IP/netmask).
+
+      A valid example:
+
+      "/software/components/sudo/user_aliases/FOO" =
+            list ("bar", "%wheel", "!root");
+    }
     "user_aliases" ? sudo_user_alias {}
+    @{see user_aliases}
     "run_as_aliases" ? sudo_user_alias {}
+    @{see user_aliases}
     "host_aliases" ? sudo_host_alias {}
+    @{see user_aliases}
     "cmd_aliases" ? sudo_cmd_alias  {}
+    @{A list of structures, each one specifying a way
+      for a normal user to elevate its privileges.}
     "privilege_lines" ? sudo_privilege_line[]
+    @{The sudoers file allows to include other configuration files, to keep
+      the configurations simpler. The 'includes' field allows to specify a
+      list of files that should be included.}
     "includes" ? string[]
     "includes_dirs" ? string[]
     "ldap" ? sudo_ldap

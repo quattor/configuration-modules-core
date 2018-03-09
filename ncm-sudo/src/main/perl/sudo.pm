@@ -1,25 +1,39 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+#${PMcomponent}
 
-# File: sudo.pm
-# Implementation of ncm-sudo
-# Author: Luis Fernando Muñoz Mejías <mejias@delta.ft.uam.es>
-# Version: 1.2.4 : 18/04/12 11:34
-# Read carefully sudoers(5) man page before using this component!!
-#
-# Note: all methods in this component are called in a
-# $self->$method ($config) way, unless explicitly stated.
+=head1 DESCRIPTION
 
-package NCM::Component::sudo;
+The I<sudo> component manages the sudo configuracion, I.E: edits
+C<< /etc/sudoers >>. It doesn't provide as strict and nice syntax and
+semantic correction as visudo(8) does, but it tries to warn on most
+common users' mistakes.
 
-use strict;
-use warnings;
-use NCM::Component;
+=head1 EXAMPLES
+
+Try the following settings:
+  prefix "/software/components/sudo";
+  "general_options/options" = dict("insults", true);
+  "user_aliases/FOO" = list("127.0.0.1");
+  "privilege_lines" = list(dict(
+      "user", "foo",
+      "run_as", "ALL",
+      "host", "ALL",
+      "cmd", "ALL"
+      ));
+
+and see the resulting C<< /etc/sudoers >>.
+
+=head1 WARNINGS
+
+This component cannot perform such as exhaustive analysis as visudo
+does. Be careful with what you specify on your profiles or you will
+break sudo!!
+
+=cut
+
 use CAF::FileWriter;
 use CAF::Process;
 
-use base qw(NCM::Component);
+use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 our $NoActionSupported = 1;
 
@@ -117,7 +131,8 @@ use constant STRING_OPTS => qw(
 # run_as_aliases and cmd_aliases as read from its argument.  This will
 # be transformed into a set of lines, but it is useful to have it this
 # way for debugging.
-sub generate_aliases {
+sub generate_aliases
+{
     my ($self, $config) = @_;
     my $aliases = {
         USER_ALIASES()  => [],
@@ -147,7 +162,8 @@ sub generate_aliases {
 #
 # Returns a reference to an array of strings each containing one
 # "Default" line.
-sub generate_general_options {
+sub generate_general_options
+{
     my ($self, $config) = @_;
     my $dfl = [];
 
@@ -190,7 +206,8 @@ sub generate_general_options {
 #
 # Returns a reference to an array of strings, each containing one
 # complete privilege escalation line.
-sub generate_privilege_lines {
+sub generate_privilege_lines
+{
     my ($self, $config) = @_;
     my $lns = [];
 
@@ -215,7 +232,8 @@ sub generate_privilege_lines {
 
 # Returns true if the contents of the file passed as an argument make
 # a valid /etc/sudoers.
-sub is_valid_sudoers {
+sub is_valid_sudoers
+{
     my ($self, $fh) = @_;
     my ($err, $out);
 
@@ -232,7 +250,7 @@ sub is_valid_sudoers {
     } else {
         $proc->pushargs(VISUDO_STDIN_LINUX);
     }
- 
+
     $proc->execute();
 
     if ($? || $out !~ m{parsed OK}) {
@@ -259,12 +277,13 @@ sub is_valid_sudoers {
 # $_[4]: a reference to an array of files to be directly included
 # $_[5]: a reference to an array of directories with files to be
 # directly included.
-sub write_sudoers {
+sub write_sudoers
+{
     my ($self, $aliases, $opts, $lns, $includes, $includes_dirs) = @_;
 
     my $fh = CAF::FileWriter->new (
         FILE_PATH,
-        mode => 0440,
+        mode => oct(440),
         owner => 0,
         group => 0,
         backup => '.old',
@@ -347,7 +366,8 @@ sub generate_includes
 #
 # Assume mandatory fields are there. You'll have to crash anyways if
 # they're not present.
-sub Configure {
+sub Configure
+{
         my ($self, $config) = @_;
 
         my $aliases = $self->generate_aliases ($config);
