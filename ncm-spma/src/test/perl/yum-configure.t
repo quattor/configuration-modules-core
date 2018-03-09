@@ -240,7 +240,7 @@ $mock->clear();
 $cmp->Configure($cfg);
 
 @args = $mock->call_args($UPDATE_PKGS);
-diag "user_pkgs_retyr args ", explain \@args;
+#diag "user_pkgs_retry args ", explain \@args;
 is_deeply([sort keys %{$args[1]}], [escape("A-B-C"), "ConsoleKit"], "All packages (none filtered)");
 is(scalar @args, 9, "expected number args (+1 for self) pt3");
 ok($args[4], "userpkgs enabled");
