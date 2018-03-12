@@ -33,7 +33,8 @@ type ceph_global_config = {
     'mon_max_pg_per_osd' ? long
     'mon_osd_min_down_reporters' ? long(0..)
     'mon_osd_min_down_reports' ? long(0..)
-    'mon_osd_max_op_age' ? long = 32
+    'mon_osd_warn_op_age' ? long = 32
+    'mon_osd_err_op_age_ratio' ? long = 128
     'ms_type' ? choice('simple', 'async', 'xio')
     'op_queue' ? choice('prio', 'wpq')
     'osd_journal_size' : long(0..) = 10240
