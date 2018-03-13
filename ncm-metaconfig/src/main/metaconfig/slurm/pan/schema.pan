@@ -565,7 +565,7 @@ type slurm_conf = {
     'logging' : slurm_conf_logging
     'power' ? slurm_conf_power
     'nodes' ? slurm_conf_nodes
-    @{key is the PartitionName}
+    @{key is used as PartitionName, unless PartitionName attribute is set}
     'partitions' : slurm_conf_partition{}
 };
 
