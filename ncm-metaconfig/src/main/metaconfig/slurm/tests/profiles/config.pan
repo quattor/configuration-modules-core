@@ -229,6 +229,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "Reason" = "in progress";
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/partitions/thepartition";
+"PartitionName" = "abc";
 "Nodes" = list('ALL');
 "Default" = true;
 "MaxTime" = 3*24*60;

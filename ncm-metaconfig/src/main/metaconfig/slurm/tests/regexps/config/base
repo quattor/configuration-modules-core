@@ -60,7 +60,7 @@ FrontendName=login1,login2 Reason="in progress" State=FAILING
 
 # partitions
 
-PartitionName=thepartition Default=YES DisableRootJobs=YES MaxTime=4320 Nodes=ALL State=UP
+PartitionName=abc Default=YES DisableRootJobs=YES MaxTime=4320 Nodes=ALL State=UP
 PartitionName=thepartition-debug DisableRootJobs=NO MaxTime=4320 Nodes=node2801,node2802 State=DOWN
 
 # priority
