@@ -121,6 +121,7 @@ sub Configure
         'identity',
         # After that continue with the rest of services
         'storage',
+        'volume',
         'compute',
         'network',
         'dashboard',

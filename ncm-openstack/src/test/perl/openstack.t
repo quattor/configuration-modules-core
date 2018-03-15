@@ -27,6 +27,7 @@ set_output('glance_db_version_missing');
 set_output('nova_db_version_missing');
 set_output('neutron_db_version_missing');
 set_output('rabbitmq_db_version_missing');
+set_output('cinder_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -84,6 +85,11 @@ $fh = get_file("/etc/openstack-dashboard/local_settings");
 isa_ok($fh, "CAF::FileWriter", "dashboard local_settings CAF::FileWriter instance");
 like("$fh", qr{^\#\s{1}-\*-\s{1}coding:\s{1}utf-8\s{1}-\*-$}m, "local_settings has expected content");
 
+# Verify Cinder configuration file
+$fh = get_file("/etc/cinder/cinder.conf");
+isa_ok($fh, "CAF::FileWriter", "cinder.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "cinder.conf has expected content");
+
 
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
@@ -102,6 +108,11 @@ ok(command_history_ok([
         '/usr/bin/glance-manage db_sync',
         'service openstack-glance-registry restart',
         'service openstack-glance-api restart',
+        '/usr/bin/cinder-manage db version',
+        '/usr/bin/cinder-manage db sync',
+        'service openstack-cinder-api restart',
+        'service openstack-cinder-scheduler restart',
+        'service openstack-cinder-volume restart',
         '/usr/bin/nova-manage db version',
         '/usr/bin/nova-manage api_db sync',
         '/usr/bin/nova-manage cell_v2 map_cell0',

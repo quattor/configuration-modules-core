@@ -12,6 +12,9 @@ multiline
 ^\[api_database\]$
 ^connection\s?=\s*.+\s*$
 
+^\[cinder\]$
+^os_region_name\s?=\s*.+\s*$
+
 ^\[database\]\s*$
 ^connection\s?=\s*.+\s*$
 

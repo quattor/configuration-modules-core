@@ -7,6 +7,7 @@ include 'components/openstack/common';
 include 'components/openstack/identity';
 include 'components/openstack/nova';
 include 'components/openstack/glance';
+include 'components/openstack/cinder';
 include 'components/openstack/neutron';
 include 'components/openstack/horizon';
 
@@ -16,6 +17,13 @@ Type to define OpenStack storage services
 type openstack_storage_config = {
     'glance' ? openstack_glance_config
 } with openstack_oneof(SELF, 'glance');
+
+@documentation {
+Type to define OpenStack volume services
+}
+type openstack_volume_config = {
+    'cinder' ? openstack_cinder_config
+} with length(SELF) == 1;
 
 @documentation {
 Type to define OpenStack compute services
@@ -60,6 +68,7 @@ type openstack_component = {
     'identity' ? openstack_identity_config
     'compute' ? openstack_compute_config
     'storage' ? openstack_storage_config
+    'volume' ? openstack_volume_config
     'network' ? openstack_network_config
     'dashboard' ? openstack_dashboard_config
     'messaging' ? openstack_messaging_config

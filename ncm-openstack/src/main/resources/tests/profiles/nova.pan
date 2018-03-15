@@ -55,3 +55,4 @@ prefix "/metaconfig/contents";
     "service_metadata_proxy", true,
     "metadata_proxy_shared_secret", "metadata_good_password",
 );
+"cinder" = dict();

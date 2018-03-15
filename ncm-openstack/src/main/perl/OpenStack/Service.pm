@@ -635,7 +635,7 @@ sub run
 {
     my ($self) = @_;
 
-    my $changed = $self->write_config_file();
+    my $changed = $self->{tt} ? $self->write_config_file() : undef;
 
     $self->populate_service_database() or return if $self->{manage};
 

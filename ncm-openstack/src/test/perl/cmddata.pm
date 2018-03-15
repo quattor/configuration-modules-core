@@ -49,16 +49,32 @@ $cmds{rabbitmq_db_version_missing}{ec} = 1;
 $cmds{rabbitmq_db_version}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
 $cmds{rabbitmq_db_version}{ec} = "/ .* .* .*";
 
-$cmds{virsh_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml";
-$cmds{virsh_set_secret}{out} = "Secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c created";
+$cmds{nova_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml";
+$cmds{nova_set_secret}{out} = "Secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c created";
 
-$cmds{virsh_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 $(cat /etc/ceph/ceph.client.compute.keyring)";
-$cmds{virsh_set_key}{out} = "";
+$cmds{nova_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 $(cat /etc/ceph/ceph.client.compute.keyring)";
+$cmds{nova_set_key}{out} = "";
+
+$cmds{cinder_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/cinder/tmp/secret_ceph.xml";
+$cmds{cinder_set_secret}{out} = "Secret afe09a7e-3d8e-11e8-ac85-63e6230f8c43 created";
+
+$cmds{cinder_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret afe09a7e-3d8e-11e8-ac85-63e6230f8c43 --base64 $(cat /etc/ceph/ceph.client.volume.keyring)";
+$cmds{cinder_set_key}{out} = "";
 
 $files{invalidcephkey}{path} = "/etc/ceph/somekey";
 $files{invalidcephkey}{txt} = "abc";
 
 $files{novacephkey}{path} = "/etc/ceph/ceph.client.compute.keyring";
 $files{novacephkey}{txt} = "key=abc";
+
+$files{cindercephkey}{path} = "/etc/ceph/ceph.client.volume.keyring";
+$files{cindercephkey}{txt} = "key=defgh";
+
+$cmds{cinder_db_version}{cmd} = "/usr/bin/cinder-manage db version";
+$cmds{cinder_db_version}{out} = 1;
+
+$cmds{cinder_db_version_missing}{cmd} = "/usr/bin/cinder-manage db version";
+$cmds{cinder_db_version_missing}{ec} = 1;
+
 
 1;

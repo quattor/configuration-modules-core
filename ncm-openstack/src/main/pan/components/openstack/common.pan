@@ -37,6 +37,13 @@ type openstack_domains_common = {
 };
 
 @documentation {
+    OpenStack common region section
+}
+type openstack_region_common = {
+    'os_region_name' : string = 'RegionOne'
+};
+
+@documentation {
     The configuration options in the database Section
 }
 type openstack_database = {
@@ -96,6 +103,13 @@ type openstack_DEFAULTS = {
     @{From nova.conf
     List of APIs to be enabled by default}
     'enabled_apis' ? string[] = list('osapi_compute', 'metadata')
+    @{From glance.conf
+    A list of backend names to use. These backend names should be backed by a
+    unique [CONFIG] group with its options}
+    'enabled_backends' ? string[]
+    @{From glance.conf
+    A list of the URLs of glance API servers available to cinder}
+    'glance_api_servers' ? type_absoluteURI[]
     @{From nova.conf
     An URL representing the messaging driver to use and its full configuration.
     Example: rabbit://openstack:<rabbit_password>@<fqdn>
