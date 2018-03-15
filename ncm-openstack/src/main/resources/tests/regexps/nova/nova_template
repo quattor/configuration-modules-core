@@ -12,6 +12,9 @@ multiline
 ^\[api_database\]$
 ^connection\s{1}=\s{1}mysql\+pymysql://nova:nova_db_pass@controller.mysite.com/nova_api$
 
+^\[cinder\]$
+^os_region_name\s?=\s{1}RegionOne$
+
 ^\[database\]$
 ^connection\s{1}=\s{1}mysql\+pymysql://nova:nova_db_pass@controller.mysite.com/nova$
 

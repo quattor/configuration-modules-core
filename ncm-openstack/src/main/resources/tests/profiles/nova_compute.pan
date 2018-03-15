@@ -52,4 +52,4 @@ prefix "/metaconfig/contents";
     "username", "neutron",
     "password", "neutron_good_password",
 );
-
+"cinder" = dict();

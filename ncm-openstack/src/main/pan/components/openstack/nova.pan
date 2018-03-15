@@ -65,9 +65,7 @@ type openstack_nova_glance = {
 }
 type openstack_nova_placement = {
     include openstack_domains_common
-    @{Region name of this node. This is used when picking the URL in the service
-    catalog}
-    'os_region_name' : string = 'RegionOne'
+    include openstack_region_common
 } = dict();
 
 @documentation {
@@ -145,6 +143,7 @@ type openstack_nova_common = {
     'oslo_concurrency' : openstack_oslo_concurrency
     @{placement service is mandatory since Ocata release}
     'placement' : openstack_nova_placement
+    'cinder' ? openstack_region_common
     'neutron' ? openstack_nova_neutron
 };
 

@@ -65,12 +65,12 @@ type openstack_keystone_paste_deploy = {
 Type that sets the OpenStack OpenRC script configuration
 }
 type openstack_openrc_config = {
+    include openstack_region_common
     'os_username' : string = 'admin'
     'os_password' : string
     'os_project_name' : string = 'admin'
     'os_user_domain_name' : string = 'Default'
     'os_project_domain_name' : string = 'Default'
-    'os_region_name' : string = 'RegionOne'
     'os_auth_url' : type_absoluteURI
     'os_identity_api_version' : long(1..) = 3
     'os_image_api_version' : long(1..) = 2
