@@ -1,4 +1,4 @@
-object template simple;
+unique template simple;
 
 function pkg_repl = { null; };
 include 'components/metaconfig/config';
