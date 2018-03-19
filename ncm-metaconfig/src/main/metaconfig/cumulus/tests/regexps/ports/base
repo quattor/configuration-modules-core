@@ -1,0 +1,21 @@
+Cumulus interfaces configuration
+---
+/etc/cumulus/ports.conf
+quote
+---
+1=25G
+2=25G
+3=25G
+4=40G
+5=25G
+6=25G
+7=25G
+8=25G
+9=4x10G
+10=25G
+11=25G
+12=disabled
+13=25G
+14=25G
+15=25G
+16=25G
