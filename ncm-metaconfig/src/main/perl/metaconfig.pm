@@ -240,10 +240,12 @@ sub handle_service
 
     my %opts = (
         log => $self,
-        mode => $srv->{mode},
-        owner => scalar(getpwnam($srv->{owner})),
-        group => scalar(getgrnam($srv->{group})),
     );
+
+    $opts{mode} = $srv->{mode} if exists($srv->{mode});
+    $opts{owner} = scalar(getpwnam($srv->{owner})) if exists($srv->{owner});
+    $opts{group} = scalar(getgrnam($srv->{group})) if exists($srv->{group});
+
     $opts{backup} = $srv->{backup} if exists($srv->{backup});
 
     $opts{header} = "$srv->{preamble}\n" if $srv->{preamble};
