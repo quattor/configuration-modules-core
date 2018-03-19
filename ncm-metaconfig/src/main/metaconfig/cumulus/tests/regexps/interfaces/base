@@ -1,0 +1,74 @@
+Cumulus interfaces configuration
+---
+/etc/network/interfaces
+quote
+---
+
+auto bridge
+iface bridge
+    bridge-mcsnoop no
+    bridge-ports peerlink server1 server2 swp3
+    bridge-pvid 12
+    bridge-stp no
+    bridge-vids 1 5 12 18 40 98 100
+    bridge-vlan-aware yes
+
+
+auto peerlink
+iface peerlink
+    bond-slaves swp50 swp51
+
+auto peerlink.4094
+iface peerlink.4094
+    address 169.254.1.1/30
+    clagd-peer-ip 169.254.1.2
+    clagd-sys-mac 44:38:39:FF:00:01
+
+
+
+auto eth0
+iface eth0 inet dhcp
+    
+
+auto lo
+iface lo inet loopback
+    address 10.0.0.11/32
+
+
+auto server1
+iface server1
+    clag-id 1
+    bond-slaves swp1
+
+
+auto server2
+iface server2
+    bond-lacp-bypass-allow yes
+    clag-id 2
+    mstpctl-bpduguard yes
+    bond-slaves swp2
+
+
+auto swp3
+iface swp3
+    alias some port
+    bridge-access 123
+    link-autoneg yes
+    link-speed 10000
+
+
+auto swp50
+iface swp50
+
+
+auto swp51
+iface swp51
+
+
+auto swp1
+iface swp1
+
+
+auto swp2
+iface swp2
+
