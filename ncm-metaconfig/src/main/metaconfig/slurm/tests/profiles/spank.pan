@@ -16,6 +16,16 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/plugstack.conf}/con
     );
 "optional" = true;
 
+prefix "/software/components/metaconfig/services/{/etc/slurm/plugstack.conf}/contents/plugins/2";
+"optional" = false;
+"plugin" = "/huppel/happel/private-tmpdir.so";
+"arguments" = dict(
+    escape("/var/tmp/thefirst"), "/var/tmp",
+    escape("/dev/shm/thesecond"), "/dev/shm",
+    escape("/tmp/thelast"), "/tmp",
+);
+
+
 prefix "/software/components/metaconfig/services/{/etc/slurm/plugstack.conf}/contents";
 "includes/0/directory" = "/some/incl";
 "includes/1/directory" = "/some/other/incl";
