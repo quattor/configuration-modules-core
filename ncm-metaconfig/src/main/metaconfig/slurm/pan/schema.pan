@@ -606,6 +606,18 @@ type slurm_spank_conf = {
     'includes' ? slurm_spank_includes[]
 };
 
+type slurm_acct_gather_conf = {
+    @{in seconds}
+    'EnergyIPMIFrequency' ? long(0..)
+    'EnergyIPMICalcAdjustment' ? boolean
+    'EnergyIPMIPowerSensors' ? boolean
+    'EnergyIPMIUsername' ? string
+    'EnergyIPMIPassword' ? string
+    'ProfileHDF5Dir' ? absolute_file_path
+    'ProfileHDF5Default' ? choice('All', 'None', 'Energy', 'Filesystem', 'Network', 'Task')
+    'InfinibandOFEDPort' ? long(0..)
+};
+
 type slurm_dbd_conf = {
     'ArchiveDir' ? absolute_file_path
     'ArchiveEvents' ? boolean
