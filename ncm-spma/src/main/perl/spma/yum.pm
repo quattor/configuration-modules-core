@@ -1015,7 +1015,7 @@ sub configure_yum
         $fh->add_or_replace_lines(
             $name,
             $name. q{\s*=\s*}.$valuereg.'$',
-            "\n$name=$value\n",
+            "$name=$value\n",
             ENDING_OF_FILE
         );
     };
@@ -1168,6 +1168,9 @@ sub Configure
     # TODO: for userpkgs, insert quattor unmanaged dir as first (so it takes priority)
     # TODO: check that the first one wins
     my $reposdir = [$quattor_managed_reposdir];
+    if ($t->{reposdirs}) {
+        push(@$reposdir, @{$t->{reposdirs}});
+    }
     $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
                          $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
 

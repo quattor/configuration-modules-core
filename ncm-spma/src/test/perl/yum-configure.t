@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use Readonly;
 use Test::More;
-use Test::Quattor qw(simple with_proxy without_spma with_pkgs);
+use Test::Quattor qw(simple with_proxy without_spma with_pkgs reposdirs);
 use NCM::Component::spma::yum;
 use Test::MockObject::Extends;
 use CAF::Object;
@@ -203,6 +203,19 @@ while (my ($n, $a) = $mock->next_call()) {
 	ok($a->[3], "User packages are passed correctly to $name");
     }
 }
+
+
+=pod
+
+=head2 Additional yum reposdirs provided
+
+=cut
+
+$cfg = get_config_for_profile("reposdirs");
+
+$mock->clear();
+
+is($cmp->Configure($cfg), 1, "Configuration with additional yum reposdirs succeeds");
 
 =pod
 

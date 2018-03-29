@@ -110,7 +110,7 @@ set_file_contents($YUM_FILE, "$COR=1\n$OBSOLETES=0\n$PLUGINCONFPATH=/my/pluginpa
 $cmp->configure_yum($YUM_FILE, 0, "/my/pluginpath", [qw(/dir/1.3 /dir/2)]);
 $fh = get_file($YUM_FILE);
 is("$fh",
-   "$COR=1\n$OBSOLETES=0\n$PLUGINCONFPATH=/my/pluginpath\n\n$REPOSDIR=/dir/1.3,/dir/2\nsomething=else",
+   "$COR=1\n$OBSOLETES=0\n$PLUGINCONFPATH=/my/pluginpath\n$REPOSDIR=/dir/1.3,/dir/2\nsomething=else",
    "The method uses escaped regexp values; line is replaced");
 
 

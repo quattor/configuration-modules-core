@@ -322,19 +322,40 @@ $cmp->configure_yum("$tmppath/etc/yum.conf", 1, "$tmppath/etc/yum/pluginconf.d",
 is($keeps_state, 1, "keeps_state called once");
 
 my $generatedconf = <<"EOF";
-
 clean_requirements_on_remove=1
-
 obsoletes=1
-
 pluginconfpath=$tmppath/etc/yum/pluginconf.d
-
 reposdir=$tmppath/etc/yum.repos.d
 EOF
 
 my $yum_cfg_fh = get_file("$tmppath/etc/yum.conf");
 diag explain $yum_cfg_fh;
 is("$yum_cfg_fh", $generatedconf, "correctly generated text");
+
+
+=item yum.conf with multiple comma-seperated reposdirs starting with a file with missing newline at EOF
+
+=cut
+
+my $existingconf = "clean_requirements_on_remove=1\nobsoletes=1\npluginconfpath=/what/is/this.d\nreposdir=/completely/wrong.d";
+
+$yum_cfg_fh = set_file_contents("$tmppath/etc/yum.conf", $existingconf);
+$keeps_state = 0;
+$cmp->configure_yum("$tmppath/etc/yum.conf", 1, "$tmppath/etc/yum/pluginconf.d", ["$tmppath/etc/yum.repos.d", "$tmppath/foo/bar.d"]);
+
+is($keeps_state, 1, "keeps_state called once");
+
+my $expectedconf = <<"EOF";
+clean_requirements_on_remove=1
+obsoletes=1
+pluginconfpath=$tmppath/etc/yum/pluginconf.d
+reposdir=$tmppath/etc/yum.repos.d,$tmppath/foo/bar.d
+EOF
+
+$yum_cfg_fh = get_file("$tmppath/etc/yum.conf");
+diag explain $yum_cfg_fh;
+is("$yum_cfg_fh", $expectedconf, "generated yum conf with multiple reposdirs");
+
 
 =item commands use new yum.conf
 
