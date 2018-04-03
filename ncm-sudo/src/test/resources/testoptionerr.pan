@@ -1,9 +1,10 @@
 # Simple testing profile for sudo component.
-# One correct alias defined for users_aliases field and a valid entry for
-# command options. Should work OK.
-# One valid entry with a valid host as a general_option.
-object template profile_test_general_options_validh;
+# One correct alias defined for users_aliases field and a wrong entry for
+# command options. Should not compile.
+object template testoptionerr;
+
 include pro_declaration_types;
+
 include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
 
@@ -12,7 +13,7 @@ include pro_declaration_functions_sudo;
         "run_as", "munoz",
         "host", "localhost",
         "cmd", "/bin/ls",
-        "options", "NOPASSWD"
+        "options", "INVALIDOPTION"
         )
     );
 
@@ -21,10 +22,3 @@ include pro_declaration_functions_sudo;
     );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;
-
-"/software/components/sudo/general_options/" = list (
-    dict (
-        "host", "192.168.0.1",
-        "options", dict ("insults", true)
-        )
-    );

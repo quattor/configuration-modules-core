@@ -3,9 +3,9 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(profile_test0aliases
-		     profile_all_aliases
-		     profile_test1aliases);
+use Test::Quattor qw(test0aliases
+		     all_aliases
+		     test1aliases);
 use NCM::Component::sudo;
 
 =pod
@@ -19,7 +19,7 @@ B<command> and B<host> aliases.
 
 my $cmp = NCM::Component::sudo->new('sudo');
 
-my $cfg = get_config_for_profile('profile_test0aliases');
+my $cfg = get_config_for_profile('test0aliases');
 
 my $a = $cmp->generate_aliases($cfg);
 
@@ -30,7 +30,7 @@ foreach my $i (NCM::Component::sudo::USER_ALIASES,
     ok(!@{$a->{$i}}, "$i not defined on empty set");
 }
 
-$cfg = get_config_for_profile('profile_test1aliases');
+$cfg = get_config_for_profile('test1aliases');
 
 $a = $cmp->generate_aliases($cfg);
 
@@ -39,7 +39,7 @@ is(scalar(@{$a->{NCM::Component::sudo::USER_ALIASES()}}), 1,
 like($a->{NCM::Component::sudo::USER_ALIASES()}->[0],
      qr{FOO\s+=\s+bar}, "User alias has the correct form");
 
-$cfg = get_config_for_profile('profile_all_aliases');
+$cfg = get_config_for_profile('all_aliases');
 $a = $cmp->generate_aliases($cfg);
 
 foreach my $i (NCM::Component::sudo::USER_ALIASES,

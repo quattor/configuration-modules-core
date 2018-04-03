@@ -1,6 +1,6 @@
 # Simple testing profile for sudo component.
 # One incorrect alias defined for users_aliases field. Should fail.
-object template profile_test1aliases_runaserr;
+object template test1aliases_runaserr;
 include pro_declaration_types;
 include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;

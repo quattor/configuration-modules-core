@@ -1,6 +1,6 @@
 # Simple testing profile for sudo component.
 # One correct alias defined for users_aliases field. Should work OK.
-object template profile_test1aliases_runas;
+object template test1aliases_runas;
 
 
 "/software/components/sudo/privilege_lines" = list (

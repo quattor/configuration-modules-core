@@ -1,7 +1,7 @@
 # Simple testing profile for sudo component.
-# One correct alias defined for users_aliases field and a PASSWD entry for
+# One correct alias defined for users_aliases field and a NOPASSWD entry for
 # command options. Should work OK.
-object template profile_test2options;
+object template test1option;
 include pro_declaration_types;
 include pro_declaration_component_sudo;
 include pro_declaration_functions_sudo;
@@ -11,7 +11,7 @@ include pro_declaration_functions_sudo;
         "run_as", "munoz",
         "host", "localhost",
         "cmd", "/bin/ls",
-        "options", "PASSWD"
+        "options", "NOPASSWD"
         )
     );
 

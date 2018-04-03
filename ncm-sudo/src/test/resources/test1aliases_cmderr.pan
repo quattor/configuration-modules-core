@@ -1,6 +1,6 @@
 # Simple testing profile for sudo component.
-# One correct alias defined for users_aliases field. Should work OK.
-object template profile_test1aliases_cmd;
+# One incorrect alias defined for users_aliases field. Should fail.
+object template test1aliases_cmderr;
 
 
 "/software/components/sudo/privilege_lines" = list (
@@ -12,7 +12,7 @@ object template profile_test1aliases_cmd;
     );
 
 "/software/components/sudo/cmd_aliases" = dict (
-    "FOO", list ("bar")
+    "foo", list ("bar")
     );
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;

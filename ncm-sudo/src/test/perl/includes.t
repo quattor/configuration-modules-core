@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(profile_no_includes profile_include);
+use Test::Quattor qw(no_includes include);
 use NCM::Component::sudo;
 
 =pod
@@ -16,7 +16,7 @@ Test the generation of files to be included. Nothing special here.
 
 my $cmp = NCM::Component::sudo->new('sudo');
 
-my $cfg = get_config_for_profile('profile_include');
+my $cfg = get_config_for_profile('include');
 
 my $i = $cmp->generate_includes($cfg, "/software/components/sudo/includes");
 
@@ -24,7 +24,7 @@ is(scalar(@$i), 2, "Includes generated properly");
 is($i->[0], "foo", "Include foo properly generated");
 is($i->[1], "bar", "Include bar properly generated");
 
-$cfg = get_config_for_profile('profile_no_includes');
+$cfg = get_config_for_profile('no_includes');
 
 $i = $cmp->generate_includes($cfg, "/software/components/sudo/includes");
 

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(profile_0opts profile_all_options profile_empty);
+use Test::Quattor qw(0opts all_options empty);
 use NCM::Component::sudo;
 
 =pod
@@ -16,13 +16,13 @@ Test the generation of defaults lines for /etc/sudoers.
 
 my $cmp = NCM::Component::sudo->new('sudo');
 
-my $cfg = get_config_for_profile('profile_0opts');
+my $cfg = get_config_for_profile('0opts');
 
 my $o = $cmp->generate_general_options($cfg);
 
 is(scalar(@$o), 0, "No options defined on empty list");
 
-$cfg = get_config_for_profile('profile_all_options');
+$cfg = get_config_for_profile('all_options');
 
 $o = $cmp->generate_general_options($cfg);
 
@@ -36,7 +36,7 @@ like($o->[5], qr{^\s+listpw\s*=\s*hello\s*$}, "String defaults correctly process
 like($o->[6], qr{^\s+loglinelen\s*=\s*5\s*$}, "Integer defaults correctly processed");
 like($o->[7], qr{^\s+!insults,requiretty,editor=vim\s*$}, "List with boolean and string defaults correctly processed");
 
-$cfg = get_config_for_profile('profile_empty');
+$cfg = get_config_for_profile('empty');
 $o = $cmp->generate_general_options($cfg);
 is($o, undef, "Non-existing defaults lead to undef object");
 

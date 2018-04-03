@@ -1,47 +1,43 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+${componentschema}
 
-# Data structures modelling the whole sudo behaviour.
-# See ncm-sudo man page for more details.
+include 'quattor/types/component';
+include 'pan/types';
 
-declaration template components/sudo/schema;
-
-include 'quattor/schema';
-
-function is_host_sudo = {
-    if (ARGC != 1 || !is_string (ARGV[0])) {
-    error ("usage: is_host_sudo(string)");
-    };
-    if (is_network_name (ARGV[0])) {
-    return (true);
-    };
-    bg = substr (ARGV[0], 0, 1);
-    rs = substr (ARGV[0], 1);
-
-    return (bg=="!" && is_network_name(rs));
+@{a valid hostname, possibly preceeded by an '!'}
+type sudo_host = string with {
+    is_network_name(SELF) ||
+    (substr(SELF, 0, 1) == '!' &&
+    is_network_name(substr(SELF, 1)));
 };
 
-type type_host_sudo = string with {
-    is_host_sudo (SELF);
-};
+type sudo_user_alias = string[];
+type sudo_cmd_alias = string[];
+type sudo_host_alias = sudo_host[];
 
-type type_user_alias = string[];
-type type_cmd_alias = string[];
-type type_host_alias = type_host_sudo[];
-
-type structure_privilege_line = {
-    "user" : string        # "User invoking sudo"
-    "run_as" : string        # "User the program will run under"
-    "host" : string        # "host the command can be run from"
-    "options" ? string        with match (SELF, "^((NOPASSWD|PASSWD|NOEXEC|EXEC|SETENV|NOSETENV|LOG_INPUT|NOLOG_INPUT|LOG_OUTPUT|NOLOG_OUTPUT):?)+$")
-    # "Specific options for this command"
-    "cmd" : string        # "The command being run"
+@{Each privilege line in a sudoers has the following format:
+    'user    host = (run_as_user) OPTIONS: command'
+  Remember that the built-in alias ALL is valid for users,
+  run_as users, hosts and commands.}
+type sudo_privilege_line = {
+    @{The user allowed to 'sudo <command>'. Can be an user, an
+    user_alias, or a group (with a leading '%').}
+    "user" : string
+    @{The user to be supplanted. Can be an user, a run_as_alias or a group
+    (with a leading '%').}
+    "run_as" : string
+    @{The host from where the user can invoke sudo. Can be a host or a host_alias.}
+    "host" : string
+    @{Specific options for this command}
+    "options" ? string with match (SELF,
+        "^((NOPASSWD|PASSWD|NOEXEC|EXEC|SETENV|NOSETENV|LOG_INPUT|NOLOG_INPUT|LOG_OUTPUT|NOLOG_OUTPUT):?)+$")
+    @{The command being run}
+    "cmd" : string
 };
 
 # This is an awful structure, but this is all the power sudo can give!
-# See man sudoers for full explanations
-type structure_sudo_default_options = {
+@{Can have any of the documented atomic (non-list!!) values for the
+  Defaults section in man(5) sudoers}
+type sudo_default_options = {
     "long_otp_prompt" ? boolean
     "ignore_dot" ? boolean
     "mail_always" ? boolean
@@ -97,27 +93,30 @@ type structure_sudo_default_options = {
     "verifypw" ? string
     "listpw" ? string
     "secure_path" ? string
-    # List syntax would be too complex for this purposes! Will be
-    # added just under request.
 };
 
-
-# Structure for sudo defaults, I.E: an optional user,
-# an optional host, an optional run_as user (to be supplanted)
-# And a set of default settings.
-type structure_sudo_defaults = {
+@{sudo defaults, i.e. an optional user,
+  an optional host, an optional run_as user (to be supplanted)
+  And a set of default settings.}
+type sudo_defaults = {
+    @{The user the settings apply to.}
     "user" ? string
+    @{The supplanted user the settings apply to.}
     "run_as" ? string
-    "host" ? type_host_sudo
+    @{The host the settings apply to.}
+    "host" ? sudo_host
     "cmd" ? string
-    "options" : structure_sudo_default_options
+    @{The named list of options that can be specified. Currently, only
+      atomic options are supported.
+      Boolean, integer and string values are handled correctly.}
+    "options" : sudo_default_options
 };
 
-# Configuration for the sudoers.ldap
-type structure_sudo_ldap = {
+@{Configuration for the sudoers.ldap}
+type sudo_ldap = {
     "dn" : string
     "objectClass" ? string[]
-    "sudoOption" ? structure_sudo_default_options
+    "sudoOption" ? sudo_default_options
     "description" : string
     "sudoUser" : string[]
     "sudoRunAsUser" : string[] = list("ALL")
@@ -126,22 +125,45 @@ type structure_sudo_ldap = {
 };
 
 
-# Structure for the component. See man sudoers for information on user_aliases,
-# host_aliases, run_as_aliases and cmd_aliases
-# All alias names must be in capitals.
-# See https://twiki.cern.ch/twiki/bin/view/ELFms/NCMAccessControlReplacement#NCM_sudo_component
-# for more detailed description.
-type structure_component_sudo = {
+@{Structure for the component. See man sudoers for information on user_aliases,
+  host_aliases, run_as_aliases and cmd_aliases
+  All alias names must be in capitals.}
+type sudo_component = {
     include structure_component
-    "general_options" ? structure_sudo_defaults[]
-    "user_aliases" ? type_user_alias {}
-    "run_as_aliases" ? type_user_alias {}
-    "host_aliases" ? type_host_alias {}
-    "cmd_aliases" ? type_cmd_alias  {}
-    "privilege_lines" ? structure_privilege_line[]
+    @{Set default behaviour either for users or hosts, or for the whole sudo
+      application.}
+    "general_options" ? sudo_defaults[]
+    @{dicts of lists of strings containing the alias information. The
+      name of each named list must start with a letter, and contain only
+      letters, numbers and underscores. All the letters must be
+      capitals. i.e. the name must match ^[A-Z][A-Z0-9_]*$.
+
+      They can be preceeded by an '!', indicating the alias must *not*
+      match that name. The contents may be preceeded by an '!', indicating
+      that item must not be part of the alias.
+
+      The contents of host aliases can be either host names, IP addresses or
+      network specifications (IP/netmask).
+
+      A valid example:
+
+      "/software/components/sudo/user_aliases/FOO" =
+            list ("bar", "%wheel", "!root");
+    }
+    "user_aliases" ? sudo_user_alias {}
+    @{see user_aliases}
+    "run_as_aliases" ? sudo_user_alias {}
+    @{see user_aliases}
+    "host_aliases" ? sudo_host_alias {}
+    @{see user_aliases}
+    "cmd_aliases" ? sudo_cmd_alias  {}
+    @{A list of structures, each one specifying a way
+      for a normal user to elevate its privileges.}
+    "privilege_lines" ? sudo_privilege_line[]
+    @{The sudoers file allows to include other configuration files, to keep
+      the configurations simpler. The 'includes' field allows to specify a
+      list of files that should be included.}
     "includes" ? string[]
     "includes_dirs" ? string[]
-    "ldap" ? structure_sudo_ldap
+    "ldap" ? sudo_ldap
 };
-
-bind "/software/components/sudo" = structure_component_sudo;
