@@ -1,8 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-
-declaration template components/postgresql/schema;
+${componentschema}
 
 include 'quattor/types/component';
 
@@ -271,6 +267,27 @@ type postgresql_db = {
     "user" : string
 };
 
+type postgresql_recovery_config = {
+    @{recovering into a particular timeline, e.g. 'latest' in case of standby server}
+    "recovery_target_timeline" ? string
+    @{start server as standby}
+    "standby_mode" ? boolean
+    @{connection info to connect from standby to master}
+    "primary_conninfo" ? string
+    @{file presence ends recovery}
+    "trigger_file" ? absolute_file_path
+};
+
+type postgresql_recovery = {
+    @{recovery configuration}
+    "config" : postgresql_recovery_config
+    @{suffix for the recovery configuration file}
+    "suffix" : string = '.conf'
+    @{when recovery.done if present, do not create the recovery configuration
+      (if you use the default suffix, always creating the recovery.conf might be dangerous)}
+    "done" : boolean = true
+};
+
 type postgresql_config = {
     "hba" ? postgresql_hba[]
     "main" ? postgresql_mainconfig
@@ -292,7 +309,12 @@ type postgresql_role_sql = string with {
     true;
 };
 
-type component_postgresql = {
+type postgresql_initdb = {
+    @{enable datachecksumming (requires v9.3.0)}
+    "data-checksums" ? boolean
+};
+
+type postgresql_component = {
     include structure_component
     include structure_component_dependency
 
@@ -303,15 +325,26 @@ type component_postgresql = {
     "config" ? postgresql_config
     @{Databases are only added/created, never updated, modified or removed.}
     "databases" ? postgresql_db{}
+    @{Name of the base directory of the postgres install.
+      This directory will be used for the installation (eg. create the PG_VERSION in subdirectory data).}
     "pg_dir" ? string
     "pg_engine" ? string
+    @{Legacy: full text of the pg_hba.conf file}
     "pg_hba" ? string
+    @{Legacy: port used by postgres}
     "pg_port" ? string with match(SELF, '^\d+$')
-    "pg_script_name" ? string # the name of service to use
+    @{Name of the service to start postgresql.
+      This should allow you to start multiple postgres instances on the same machine.}
+    "pg_script_name" ? string
     "pg_version" ? string
+    @{Legacy: full text of the postgresql.conf file}
     "postgresql_conf" ? string
     @{role name with ROLE ALTER SQL command. Roles are only added and updated, never removed.}
     "roles" ? postgresql_role_sql{}
+    @{recovery config and behaviour}
+    "recovery" ? postgresql_recovery
+    @{initdb options}
+    "initdb" ? postgresql_initdb
 } with {
     # handle legacy schema problems with port defined in 2 locations
     pg_port = -1;

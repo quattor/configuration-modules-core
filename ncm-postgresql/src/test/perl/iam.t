@@ -5,11 +5,9 @@ use Test::MockModule;
 use Test::Quattor qw(iam);
 use CAF::Object;
 use NCM::Component::postgresql;
+use version;
 
 use Test::Quattor::TextRender::Base;
-
-$CAF::Object::NoAction = 1;
-
 my $caf_trd = mock_textrender();
 
 # service variant set to linux_sysv
@@ -21,22 +19,15 @@ my $engine = '/usr/pgsql-9.2/bin';
 
 my $mock = Test::MockModule->new('NCM::Component::postgresql');
 
-my $expected_fns = [qw(/not/a/file)];
-$mock->mock('_file_exists', sub {
-    shift;
-    my $filename = shift;
-    return grep {$_ eq $filename} @$expected_fns;
-});
-
 =head1 version
 
 =cut
 
 set_desired_output('/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.13\n");
-is_deeply($cmp->version($engine), [9, 2, 13], "Got correct version array ref");
+is_deeply($cmp->get_version($engine), version->new("v9.2.13"), "Got correct version array ref");
 
 set_desired_output('/my/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.abc\n");
-ok(! defined($cmp->version("/my$engine")), "version returns undef on unparsable output");
+ok(! defined($cmp->get_version("/my$engine")), "version returns undef on unparsable output");
 
 =head1 fetch
 
@@ -74,7 +65,7 @@ is_deeply($iam->{pg}, {
     'port' => '2345',
 }, "iam expected pg attribute");
 
-is_deeply($iam->{version}, [9,2,13], "version via postmaster --version set");
+is_deeply($iam->{version}, version->new("v9.2.13"), "version via postmaster --version set");
 is($iam->{servicename}, 'myownpostgresql', 'servicename set');
 is($iam->{suffix}, '-1.2.3', 'suffix from cfg version');
 is($iam->{defaultname}, 'postgresql-1.2.3', 'iam correct defaultname');
@@ -100,13 +91,14 @@ is($svc_fn, '/etc/init.d/myownpostgresql', 'service filename returned');
 
 =cut
 
-$expected_fns = [$svc_fn];
+remove_any($svc_fn);
+remove_any($svc_def_fn);
 ok(! defined($cmp->prepare_service($iam)), 'prepare_service returns undef if default service name is missing');
 
-$expected_fns = [$svc_def_fn];
+set_file_contents($svc_def_fn, "");
 ok(! defined($cmp->prepare_service($iam)), 'prepare_service returns undef if actual service name is missing');
 
-$expected_fns = [$svc_def_fn, $svc_fn];
+set_file_contents($svc_fn, "");
 my $sys_changed = $cmp->prepare_service($iam);
 
 my $sys_fn = '/etc/sysconfig/pgsql/myownpostgresql';

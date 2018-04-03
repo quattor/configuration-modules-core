@@ -1,12 +1,4 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-package NCM::Component::Postgresql::Service;
-
-use strict;
-use warnings;
+${PMpre} NCM::Component::Postgresql::Service${PMpost}
 
 # This is just very convenient,
 # and makes sense since there's only one service
@@ -26,7 +18,8 @@ Readonly my $SYSV_INITD => "/etc/init.d";
 Readonly my $SYSTEMD_LIB_SYSTEM => "/usr/lib/systemd/system";
 Readonly my $SYSTEMD_ETC_SYSTEM => "/etc/systemd/system";
 
-sub _initialize {
+sub _initialize
+{
     my ($self, %opts) = @_;
 
     $self->{$SERVICENAME} = delete $opts{name} || $POSTGRESQL;

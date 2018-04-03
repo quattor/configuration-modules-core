@@ -14,13 +14,6 @@ Readonly my $PROCESS_LOG_ENABLED => 'PROCESS_LOG_ENABLED';
 
 my $mock = Test::MockModule->new('NCM::Component::Postgresql::Commands');
 
-my $expected_fn = '/not/a/file';
-$mock->mock('_file_exists', sub {
-    shift;
-    my $filename = shift;
-    return $filename eq $expected_fn;
-});
-
 my $obj = Test::Quattor::Object->new();
 
 =head1 _initialize
@@ -29,7 +22,7 @@ Test engine, su and PROCESS_LOG_ENABLED atributes
 
 =cut
 
-$expected_fn = '/not/runuser';
+remove_any('/sbin/runuser');
 
 my $engine = 'myengine/dir';
 
@@ -43,7 +36,7 @@ is($cmds->{su}, '/bin/su', "su is the su method when runuser not found");
 is($cmds->{$PROCESS_LOG_ENABLED}, 1, 'PROCESS_LOG_ENABLED enabled after init');
 
 
-$expected_fn = '/sbin/runuser';
+set_file_contents('/sbin/runuser', '');
 my $cmds_ru = NCM::Component::Postgresql::Commands->new(undef, log => $obj);
 isa_ok($cmds_ru, 'NCM::Component::Postgresql::Commands',
        'got a NCM::Component::Postgresql::Commands instance');
@@ -236,15 +229,15 @@ ok($cmds->create_database_lang('mydatabase2', 'mylang'), 'create_database_lang r
 is_deeply(\@pgargs, ["$engine/createlang", "mydatabase2", "mylang"],
           'create_database_lang calls run_postgres as expected');
 
-$expected_fn = 'some/filename';
+set_file_contents('/some/filename', '');
 @pgargs = ();
-ok($cmds->run_commands_from_file('mydatabase3', 'asuser', 'some/filename'),
+ok($cmds->run_commands_from_file('mydatabase3', 'asuser', '/some/filename'),
    'run_commands_from_file returns success');
-is_deeply(\@pgargs, ["$engine/psql", "-U", "asuser", "-f", "some/filename", "mydatabase3"],
+is_deeply(\@pgargs, ["$engine/psql", "-U", "asuser", "-f", "/some/filename", "mydatabase3"],
           'run_commands_from_file calls run_postgres as expected');
 
-$expected_fn = 'not/a/file';
-ok(! defined($cmds->run_commands_from_file('mydatabase4', 'asuser2', 'some/filename')),
+remove_any('/some/filename');
+ok(! defined($cmds->run_commands_from_file('mydatabase4', 'asuser2', '/some/filename')),
    'run_commands_from_file returns undef with non-existing file');
 
 

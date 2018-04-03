@@ -1,9 +1,10 @@
 unique template simple;
 
-include 'components/postgresql/schema';
+function pkg_repl = { null; };
+include 'components/postgresql/config';
+"/software/components/postgresql/dependencies/pre" = null;
 
 prefix "/software/components/postgresql";
-
 "pg_engine" = "/usr/pgsql-9.2/bin";
 "pg_dir" = "/var/lib/pgsql/myversion";
 "pg_port" = "2345";
