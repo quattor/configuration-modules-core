@@ -1,35 +1,36 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
+${componentschema}
 
+include 'quattor/types/component';
+include 'pan/types';
 
-declaration template components/gpfs/schema;
+type gpfs_curl = {
+    "usecurl" ? boolean = true
+    @{use kerberos token form host keytab}
+    "usegss" ? boolean = false
+    @{get certificate information from SINDES getcert component configuration}
+    "usesindesgetcertcertwithcurl" ? boolean = false
+    @{get certificate information from CCM component configuration}
+    "useccmcertwithcurl" ? boolean = false
+};
 
-include 'quattor/schema';
-
-type component_gpfs_cfg = {
+type gpfs_cfg = {
+    include gpfs_curl
     "url" : string
     "keyData" ? string
     "sdrrestore" : boolean = false
     "subnet" : string
-    ## "useproxy" ? boolean = false
-    "usecurl" ? boolean = true
-    "useccmcertwithcurl" ? boolean = false
-    "usesindesgetcertcertwithcurl" ? boolean = false
 };
 
-type component_gpfs_base = {
+type gpfs_base = {
+    include gpfs_curl
     "rpms" : string[]
     "baseurl" : string
     "useproxy" ? boolean = false
-    "usecurl" ? boolean = false
-    "useccmcertwithcurl" ? boolean = false
-    "usesindesgetcertcertwithcurl" ? boolean = false
     "useyum" : boolean = true
 };
 
-type component_gpfs = {
+type gpfs_component = {
     include structure_component
-    "base" : component_gpfs_base
-    "cfg" : component_gpfs_cfg
+    "base" : gpfs_base
+    "cfg" : gpfs_cfg
 };

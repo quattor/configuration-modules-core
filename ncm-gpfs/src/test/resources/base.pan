@@ -1,5 +1,9 @@
 object template base;
 
+function pkg_repl = { null; };
+include 'components/gpfs/config';
+"/software/components/gpfs/dependencies/pre" = null;
+
 prefix '/software/components/gpfs';
 
 "base" = dict(
