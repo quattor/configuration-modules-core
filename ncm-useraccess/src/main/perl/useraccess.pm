@@ -1,4 +1,4 @@
-#${PMpre} NCM::Component::useraccess${PMpost}
+#${PMcomponent}
 
 # Might handle the requests in parallel, but this is simpler.
 use LWP::UserAgent;
@@ -13,7 +13,7 @@ use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 our $NoActionSupported = 1;
 
-use constant MASK   => 077;
+use constant MASK   => oct(77);
 
 use constant KRB4	=> "kerberos4";
 use constant KRB5	=> "kerberos5";
@@ -80,7 +80,7 @@ sub getpwnam
         return @val[UID, GID, HOMEDIR];
     } else {
         $self->error("Couldn't get system data for $user");
-        return undef;
+        return;
     }
 }
 
@@ -127,11 +127,11 @@ sub initialize_user
     defined $uid or return;
 
     # verify HOME dir owner
-    $self->directory_verify_owner($home, $uid, $gid, 0700);
+    $self->directory_verify_owner($home, $uid, $gid, oct(700));
 
     # verify/create SSH dir owner
     my $ssh_dir = "$home/" . SSH_DIR;
-    $self->directory_verify_owner($ssh_dir, $uid, $gid, 0700);
+    $self->directory_verify_owner($ssh_dir, $uid, $gid, oct(700));
 
     return ($uid, $gid, $home);
 }
@@ -150,17 +150,17 @@ sub set_kerberos
     foreach my $i (KRB_SETTINGS) {
         my ($key, $sep) = @$i;
         $self->debug(1, "Kerberos settings for user: $user");
-        my $ct = $cfg->{$key};
-        next unless defined $ct;
+        my $cts = $cfg->{$key};
+        next unless defined $cts;
         if (!defined $fhs->{$key}) {
             $self->error("Impossible to configure Kerberos for user $user");
             return -1;
         }
         my $fh = $fhs->{$key};
-        foreach (@$ct) {
-            print $fh $_->{PRINCIPAL()};
-            print $fh $sep, $_->{INSTANCE()} if (defined $_->{INSTANCE()});
-            print $fh "@", $_->{REALM()}, "\n";
+        foreach my $ct (@$cts) {
+            print $fh $ct->{PRINCIPAL()};
+            print $fh $sep, $ct->{INSTANCE()} if (defined $ct->{INSTANCE()});
+            print $fh "@", $ct->{REALM()}, "\n";
         }
     }
     return 0;
@@ -226,11 +226,10 @@ sub set_acls
 {
     my ($self, $user, $cfg) = @_;
     my $cnt = $cfg->{ACLS()};
-    my ($fh, $srv);
 
     return unless defined $cnt;
-    foreach $srv (@$cnt) {
-        $fh = CAF::FileEditor->open(ACL_DIR . "/$srv",
+    foreach my $srv (@$cnt) {
+        my $fh = CAF::FileEditor->open(ACL_DIR . "/$srv",
                         log => $self);
                         #backup => '.print');
         print $fh "$user\n";
@@ -245,7 +244,6 @@ sub pam_listfile
 
     my ($self, $services) = @_;
     my $dir = DirHandle->new(ACL_DIR);
-    my ($cnt, $fh, $acl);
 
     foreach my $srv (@$services) {
         if ($srv =~ m{^([-_\w]+)$}) {
@@ -253,14 +251,14 @@ sub pam_listfile
         } else {
             $self->error("Invalid PAM service for setting ACL: $srv");
         }
-        $acl = ACL_DIR . "/$srv";
-        $fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
+        my $acl = ACL_DIR . "/$srv";
+        my $fh = CAF::FileEditor->open(PAM_DIR . "/$srv", log => $self,
                         # Better a random backup?
                         backup => '.old');
         foreach my $i (qw(auth session)) {
             $fh->head_print (join("\t", $i, qw(required pam_listfile.so
-                              onerr=fail item=user sense=allow),
-                      "file=$acl\n"));
+                                  onerr=fail item=user sense=allow),
+                                  "file=$acl\n"));
         }
         $fh->close();
         if (! -f ACL_DIR . "/$srv") {
@@ -283,17 +281,14 @@ sub set_roles
 
     my ($self, $user, $rllist, $rolecfgs, $fhash) = @_;
 
-    foreach (@$rllist) {
-        my $cfg = $rolecfgs->{$_};
-        $self->info ("Processing role $_ for user $user");
+    foreach my $role (@$rllist) {
+        my $cfg = $rolecfgs->{$role};
+        $self->info ("Processing role $role for user $user");
         if ($self->set_kerberos($user, $cfg, $fhash) ||
-            $self->set_ssh_fromurls($user, $cfg,
-                        $fhash->{SSH_KEYS()}) ||
-            $self->set_ssh_fromkeys($user, $cfg,
-                        $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromurls($user, $cfg, $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromkeys($user, $cfg, $fhash->{SSH_KEYS()}) ||
             $self->set_acls($user, $cfg) ||
-            $self->set_roles($user, $cfg->{ROLES()},
-                     $rolecfgs, $fhash)) {
+            $self->set_roles($user, $cfg->{ROLES()}, $rolecfgs, $fhash)) {
             return -1;
         }
     }
@@ -311,18 +306,18 @@ sub files
     $h{KRB4()} = CAF::FileWriter->new($path, log => $self,
                       owner => $uid,
                       group => $gid,
-                      mode => 0400);
+                      mode => oct(400));
 
     $path = "$home/" . K5LOGIN;
     $h{KRB5()} = CAF::FileWriter->new($path, log => $self,
                       owner => $uid,
                       group => $gid,
-                      mode => 0400);
+                      mode => oct(400));
     $path = "$home/" . SSH_AUTH;
     $h{SSH_KEYS()} = CAF::FileWriter->new($path, log => $self,
                       owner => $uid,
                       group => $gid,
-                      mode => 0400);
+                      mode => oct(400));
 
     foreach my $cred (@{$uconfig->{MANAGED_CREDENTIALS()}}) {
         $h{MANAGED_CREDENTIALS()}->{$cred} = 1;
@@ -377,13 +372,10 @@ sub Configure
         }
         my $fhash = $self->files($uconfig, $uid, $gid, $home);
         if ($self->set_kerberos($user, $uconfig, $fhash) ||
-            $self->set_ssh_fromurls($user, $uconfig,
-                        $fhash->{SSH_KEYS()}) ||
-            $self->set_ssh_fromkeys($user, $uconfig,
-                        $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromurls($user, $uconfig, $fhash->{SSH_KEYS()}) ||
+            $self->set_ssh_fromkeys($user, $uconfig, $fhash->{SSH_KEYS()}) ||
             $self->set_acls($user, $uconfig) ||
-            $self->set_roles($user, $uconfig->{ROLES()},
-                     $rlhash, $fhash)) {
+            $self->set_roles($user, $uconfig->{ROLES()}, $rlhash, $fhash)) {
             $ok = 0;
             $self->error("Errors while configuring user $user");
         }
