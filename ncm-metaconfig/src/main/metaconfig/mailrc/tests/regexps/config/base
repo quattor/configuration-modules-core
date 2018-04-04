@@ -1,6 +1,7 @@
-Base test for config
+Base test for mailrc
 ---
+/etc/mail.rc
 multiline
 ---
-$wontmatch^
-
+set from
+set smtp

@@ -1,0 +1,7 @@
+Basic negate test
+---
+/etc/mail.rc
+negate
+---
+^account
+^gmail

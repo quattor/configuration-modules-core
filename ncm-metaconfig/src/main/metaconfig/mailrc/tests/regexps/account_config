@@ -1,0 +1,9 @@
+account config test for mailrc
+---
+/etc/mail.rc
+multiline
+---
+^account gmail \{$
+^set from=root@gmail.com$
+^set smtp=mailserver.gmail.com$
+^\}$
