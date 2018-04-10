@@ -11,6 +11,7 @@ our @EXPORT_OK = qw(get_flavour get_service run_service);
 Readonly my $HOSTNAME => "/system/network/hostname";
 Readonly my $DOMAINNAME => "/system/network/domainname";
 Readonly my $DEFAULT_PREFIX => "/software/components/openstack";
+Readonly my $VIRSH_COMMAND => "/usr/bin/virsh";
 
 
 =head2 Functions
@@ -365,6 +366,54 @@ sub write_config_file
     } else {
         return $self->_write_config_file($filename, $self->{element});
     }
+}
+
+=item _read_ceph_keyring
+
+Read Ceph pool key file from C<keyring>.
+
+=cut
+
+sub _read_ceph_key
+{
+    my ($self, $keyring) = @_;
+
+    my $fh = CAF::FileReader->new($keyring, log => $self);
+    my $msg = "valid Ceph key in keyring $keyring";
+    if ("$fh" =~ m/^key=(.*)/m ) {
+        my $key = $1;
+        # do not report the key
+        $self->verbose("Found a $msg");
+        return $key;
+    } else {
+        $self->error("No $msg found");
+        return;
+    };
+}
+
+=item _libvirt_ceph_secret
+
+Set the libvirt C<secret> file and
+couple the C<uuid> to the Ceph key from the C<keyring>.
+
+=cut
+
+# TODO: secret file is generate dform UUID and metaconfig. Do this also from ncm-openstack
+
+sub _libvirt_ceph_secret
+{
+    my ($self, $secret, $keyring, $uuid) = @_;
+
+    my $cmd = [$VIRSH_COMMAND, "secret-define", "--file", $secret];
+    $self->_do($cmd, "Set virsh Ceph secret file", sensitive => 0, user => 'root')
+        or return;
+
+    my $key = $self->_read_ceph_key($keyring);
+    $cmd = [$VIRSH_COMMAND, "secret-set-value", "--secret", $uuid, "--base64", $key];
+    $self->_do($cmd, "Set virsh Ceph pool key", sensitive => 1, user => 'root')
+        or return;
+
+    return SUCCESS;
 }
 
 

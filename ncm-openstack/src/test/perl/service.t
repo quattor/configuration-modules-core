@@ -65,4 +65,14 @@ $srv = get_service("identity", $cfg, $obj, undef, "shouldbeinstance");
 isa_ok($srv, 'NCM::Component::OpenStack::Keystone', 'created a NCM::Component::OpenStack::Keystone instance');
 isa_ok($srv, 'NCM::Component::OpenStack::Service', 'Keystone instance is a Service instance');
 
+=head2 _read_ceph_key
+
+=cut
+ok(!defined($srv->_read_ceph_key("/some/key")), "no valid key (no keyring)");
+set_file('invalidcephkey');
+ok(!defined($srv->_read_ceph_key("/etc/ceph/somekey")), "no valid key (invalid content)");
+set_file('novacephkey');
+is($srv->_read_ceph_key("/etc/ceph/ceph.client.compute.keyring"), 'abc', "valid key read");
+
+
 done_testing;

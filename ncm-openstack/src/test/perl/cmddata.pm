@@ -55,4 +55,10 @@ $cmds{virsh_set_secret}{out} = "Secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c crea
 $cmds{virsh_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 $(cat /etc/ceph/ceph.client.compute.keyring)";
 $cmds{virsh_set_key}{out} = "";
 
+$files{invalidcephkey}{path} = "/etc/ceph/somekey";
+$files{invalidcephkey}{txt} = "abc";
+
+$files{novacephkey}{path} = "/etc/ceph/ceph.client.compute.keyring";
+$files{novacephkey}{txt} = "key=abc";
+
 1;
