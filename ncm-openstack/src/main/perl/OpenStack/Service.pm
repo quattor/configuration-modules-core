@@ -123,7 +123,7 @@ sub run_service
 
 =over
 
-=item _initialize
+=item _init_attrs
 
 Arguments:
 
@@ -143,7 +143,7 @@ Arguments:
 
 =cut
 
-sub _initialize
+sub _init_attrs
 {
     my ($self, $type, $config, $log, $prefix, $client) = @_;
 
@@ -188,13 +188,40 @@ sub _initialize
 
     # Service user
     $self->{user} = $self->{flavour};
+}
 
-    # Daemons to restart
-    $self->{daemons} = [];
+=item _initialize
 
+Initialisation using C<_init_attrs>, C<_attrs> and C<_daemons>.
+
+=cut
+
+sub _initialize
+{
+    my $self = shift;
+
+    $self->_init_attrs(@_);
+
+    # 2nd-to-last method to allow to set custom attrs
     $self->_attrs();
 
+    # generate the daemons
+    $self->_daemons();
+
     return SUCCESS;
+}
+
+=item _daemons
+
+Method to customise the C<daemons> attribute during C<_initialize>.
+
+=cut
+
+sub _daemons
+{
+    my ($self) = @_;
+
+    $self->{daemons} = [] if !exists($self->{daemons});
 }
 
 =item _set_elpath
