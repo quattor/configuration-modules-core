@@ -9,37 +9,29 @@ Readonly::Hash my %CONF_FILE => {
     service => "/etc/glance/glance-api.conf",
     registry => "/etc/glance/glance-registry.conf",
 };
+
 Readonly::Hash my %DAEMON => {
-    service => 'openstack-glance-api',
-    registry => 'openstack-glance-registry',
+    service => ['openstack-glance-api'],
+    registry => ['openstack-glance-registry'],
 };
 
 =head2 Methods
 
 =over
 
-=item write_config_file
+=item _attrs
 
-Write the required config files for Glance
+Override C<filename> attribute (and set C<daemon_map>)
 
 =cut
 
-sub write_config_file
+sub _attrs
 {
-    my ($self) = @_;
+    my $self = shift;
 
-    my $changed = 0;
-    foreach my $ntype (sort keys %{$self->{tree}}) {
-        $self->{element} = $self->{config}->getElement("$self->{elpath}/$ntype");
-        # TT file is always common
-        $self->{filename} = $CONF_FILE{$ntype};
-        $changed += $self->SUPER::write_config_file() ? 1 : 0;
-        # And add the required daemons to the list
-        push(@{$self->{daemons}}, $DAEMON{$ntype}) if $DAEMON{$ntype};
-    }
-    return $changed;
+    $self->{filename} = \%CONF_FILE;
+    $self->{daemon_map} = \%DAEMON;
 }
-
 
 =pod
 

@@ -15,13 +15,10 @@ use Test::Quattor::TextRender::Base;
 my $caf_trd = mock_textrender();
 my $obj = Test::Quattor::Object->new();
 
-my $mockos = Test::MockModule->new('NCM::Component::OpenStack::Nova');
-$mockos->mock("read_ceph_key", sub { return 'AAAAABBBXXXXYYYZZZZ=='; } );
-
 my $cmp = NCM::Component::openstack->new("hypervisor", $obj);
 my $cfg = get_config_for_profile("hypervisor");
 
-
+set_file('novacephkey');
 
 ok($cmp->Configure($cfg), "Configure hypervisor returns success");
 ok(!exists($cmp->{ERROR}), "No errors found in hypervisor normal execution");
@@ -45,6 +42,8 @@ like("$fh", qr{^\[linux_bridge\]$}m, "inuxbridge_agent.ini hypervisor has expect
 diag "all hypervisor history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
+       '/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml',
+       '/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 abc',
         'service openstack-nova-compute restart',
         'service neutron-linuxbridge-agent restart',
     ]), "expected hypervisor commands run");

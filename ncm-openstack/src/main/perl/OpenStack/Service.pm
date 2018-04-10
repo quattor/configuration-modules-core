@@ -11,6 +11,7 @@ our @EXPORT_OK = qw(get_flavour get_service run_service);
 Readonly my $HOSTNAME => "/system/network/hostname";
 Readonly my $DOMAINNAME => "/system/network/domainname";
 Readonly my $DEFAULT_PREFIX => "/software/components/openstack";
+Readonly my $VIRSH_COMMAND => "/usr/bin/virsh";
 
 
 =head2 Functions
@@ -123,7 +124,7 @@ sub run_service
 
 =over
 
-=item _initialize
+=item _init_attrs
 
 Arguments:
 
@@ -143,7 +144,7 @@ Arguments:
 
 =cut
 
-sub _initialize
+sub _init_attrs
 {
     my ($self, $type, $config, $log, $prefix, $client) = @_;
 
@@ -188,13 +189,40 @@ sub _initialize
 
     # Service user
     $self->{user} = $self->{flavour};
+}
 
-    # Daemons to restart
-    $self->{daemons} = [];
+=item _initialize
 
+Initialisation using C<_init_attrs>, C<_attrs> and C<_daemons>.
+
+=cut
+
+sub _initialize
+{
+    my $self = shift;
+
+    $self->_init_attrs(@_);
+
+    # 2nd-to-last method to allow to set custom attrs
     $self->_attrs();
 
+    # generate the daemons
+    $self->_daemons();
+
     return SUCCESS;
+}
+
+=item _daemons
+
+Method to customise the C<daemons> attribute during C<_initialize>.
+
+=cut
+
+sub _daemons
+{
+    my ($self) = @_;
+
+    $self->{daemons} = [] if !exists($self->{daemons});
 }
 
 =item _set_elpath
@@ -228,11 +256,11 @@ Returns CCM::TextRedner instance
 
 sub _render
 {
-    my ($self) = @_;
+    my ($self, $element) = @_;
 
     my $tr = EDG::WP4::CCM::TextRender->new(
         $self->{tt},
-        $self->{element},
+        $element,
         relpath => 'openstack',
         log => $self,
         );
@@ -267,9 +295,64 @@ sub _file_opts
     return \%opts;
 }
 
+=item _write_config_file
+
+Write the config file with name C<filename> and C<element> instance.
+
+=cut
+
+sub _write_config_file
+{
+    my ($self, $filename, $element) = @_;
+
+    my $tr = $self->_render($element) or return;
+
+    my $opts = $self->_file_opts();
+
+    my $fh = $tr->filewriter($filename, %$opts);
+    if (defined $fh) {
+        return $fh->close();
+    } else {
+        $self->error("Something went wrong with $filename for $self->{type}/$self->{flavour}: $tr->{fail}");
+        return;
+    }
+}
+
+=item _write_config_files
+
+Write multiple config files based on entries in the C<tree> attribute.
+Filename is based on mapping in the C<filename> attribute;
+a mapping which daemon(s) to start when the file is modified can
+be provided via the C<daemon_map> attribute.
+
+=cut
+
+sub _write_config_files
+{
+    my ($self) = @_;
+
+    my $changed = 0;
+    my $daemon_map = $self->{daemon_map} || {};
+
+    foreach my $ntype (sort keys %{$self->{tree}}) {
+        # TT file is always common
+        my $element = $self->{config}->getElement("$self->{elpath}/$ntype");
+        my $filename = $self->{filename}->{$ntype};
+        if ($filename) {
+            $changed += $self->_write_config_file($filename, $element) ? 1 : 0;
+
+            # And add the required daemons to the list
+            push(@{$self->{daemons}}, @{$daemon_map->{$ntype} || []});
+        } else {
+            $self->error("No filename in map for type $ntype for $self->{type}/$self->{flavour}");
+        }
+    }
+    return $changed;
+}
+
 =item write_config_file
 
-Write the config file
+Write the config files (when C<filenames> attribute is a hashref) or single file otherwise.
 
 =cut
 
@@ -277,18 +360,62 @@ sub write_config_file
 {
     my ($self) = @_;
 
-    my $tr = $self->_render or return;
-
-    my $opts = $self->_file_opts();
-
-    my $fh = $tr->filewriter($self->{filename}, %$opts);
-    if (defined $fh) {
-        return $fh->close();
+    my $filename = $self->{filename};
+    if (ref($filename) eq 'HASH') {
+        return $self->_write_config_files();
     } else {
-        $self->error("Something went wrong with $self->{filename}: $tr->{fail}");
-        return;
+        return $self->_write_config_file($filename, $self->{element});
     }
 }
+
+=item _read_ceph_keyring
+
+Read Ceph pool key file from C<keyring>.
+
+=cut
+
+sub _read_ceph_key
+{
+    my ($self, $keyring) = @_;
+
+    my $fh = CAF::FileReader->new($keyring, log => $self);
+    my $msg = "valid Ceph key in keyring $keyring";
+    if ("$fh" =~ m/^key=(.*)/m ) {
+        my $key = $1;
+        # do not report the key
+        $self->verbose("Found a $msg");
+        return $key;
+    } else {
+        $self->error("No $msg found");
+        return;
+    };
+}
+
+=item _libvirt_ceph_secret
+
+Set the libvirt C<secret> file and
+couple the C<uuid> to the Ceph key from the C<keyring>.
+
+=cut
+
+# TODO: secret file is generate dform UUID and metaconfig. Do this also from ncm-openstack
+
+sub _libvirt_ceph_secret
+{
+    my ($self, $secret, $keyring, $uuid) = @_;
+
+    my $cmd = [$VIRSH_COMMAND, "secret-define", "--file", $secret];
+    $self->_do($cmd, "Set virsh Ceph secret file", sensitive => 0, user => 'root')
+        or return;
+
+    my $key = $self->_read_ceph_key($keyring);
+    $cmd = [$VIRSH_COMMAND, "secret-set-value", "--secret", $uuid, "--base64", $key];
+    $self->_do($cmd, "Set virsh Ceph pool key", sensitive => 1, user => 'root')
+        or return;
+
+    return SUCCESS;
+}
+
 
 =item _do
 
