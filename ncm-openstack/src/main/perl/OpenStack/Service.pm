@@ -228,11 +228,11 @@ Returns CCM::TextRedner instance
 
 sub _render
 {
-    my ($self) = @_;
+    my ($self, $element) = @_;
 
     my $tr = EDG::WP4::CCM::TextRender->new(
         $self->{tt},
-        $self->{element},
+        $element,
         relpath => 'openstack',
         log => $self,
         );
@@ -267,9 +267,64 @@ sub _file_opts
     return \%opts;
 }
 
+=item _write_config_file
+
+Write the config file with name C<filename> and C<element> instance.
+
+=cut
+
+sub _write_config_file
+{
+    my ($self, $filename, $element) = @_;
+
+    my $tr = $self->_render($element) or return;
+
+    my $opts = $self->_file_opts();
+
+    my $fh = $tr->filewriter($filename, %$opts);
+    if (defined $fh) {
+        return $fh->close();
+    } else {
+        $self->error("Something went wrong with $filename for $self->{type}/$self->{flavour}: $tr->{fail}");
+        return;
+    }
+}
+
+=item _write_config_files
+
+Write multiple config files based on entries in the C<tree> attribute.
+Filename is based on mapping in the C<filename> attribute;
+a mapping which daemon(s) to start when the file is modified can
+be provided via the C<daemon_map> attribute.
+
+=cut
+
+sub _write_config_files
+{
+    my ($self) = @_;
+
+    my $changed = 0;
+    my $daemon_map = $self->{daemon_map} || {};
+
+    foreach my $ntype (sort keys %{$self->{tree}}) {
+        # TT file is always common
+        my $element = $self->{config}->getElement("$self->{elpath}/$ntype");
+        my $filename = $self->{filename}->{$ntype};
+        if ($filename) {
+            $changed += $self->_write_config_file($filename, $element) ? 1 : 0;
+
+            # And add the required daemons to the list
+            push(@{$self->{daemons}}, @{$daemon_map->{$ntype} || []});
+        } else {
+            $self->error("No filename in map for type $ntype for $self->{type}/$self->{flavour}");
+        }
+    }
+    return $changed;
+}
+
 =item write_config_file
 
-Write the config file
+Write the config files (when C<filenames> attribute is a hashref) or single file otherwise.
 
 =cut
 
@@ -277,18 +332,14 @@ sub write_config_file
 {
     my ($self) = @_;
 
-    my $tr = $self->_render or return;
-
-    my $opts = $self->_file_opts();
-
-    my $fh = $tr->filewriter($self->{filename}, %$opts);
-    if (defined $fh) {
-        return $fh->close();
+    my $filename = $self->{filename};
+    if (ref($filename) eq 'HASH') {
+        return $self->_write_config_files();
     } else {
-        $self->error("Something went wrong with $self->{filename}: $tr->{fail}");
-        return;
+        return $self->_write_config_file($filename, $self->{element});
     }
 }
+
 
 =item _do
 
