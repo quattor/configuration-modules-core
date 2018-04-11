@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/keystone;
+declaration template components/openstack/identity/keystone;
 
 @documentation {
     The Keystone "token" configuration section

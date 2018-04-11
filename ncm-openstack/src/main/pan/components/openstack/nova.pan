@@ -5,7 +5,7 @@
 
 declaration template components/openstack/nova;
 
-include 'components/openstack/keystone';
+include 'components/openstack/identity';
 
 @documentation {
     The Nova configuration options in "api_database" Section.

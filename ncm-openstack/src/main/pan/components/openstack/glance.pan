@@ -5,7 +5,7 @@
 
 declaration template components/openstack/glance;
 
-include 'components/openstack/keystone';
+include 'components/openstack/identity';
 
 @documentation {
     The Glance configuration options in the "glance_store" Section.
