@@ -5,6 +5,33 @@
 
 declaration template components/openstack/common;
 
+@{Given dict as first arg, test if exactly one of the remaining arguments is a key}
+function openstack_oneof = {
+    if (ARGC < 2) {
+        error("%s: requires at least 2 arguments", FUNCTION, ARGC);
+    };
+
+    data = ARGV[0];
+    if (!is_dict(data)) {
+        error("%s: first argumnet has to a dict, got value %s", FUNCTION, data);
+    };
+
+    found = false;
+
+    for (idx = 1; idx < ARGC; idx = idx + 1) {
+        if (exists(data[ARGV[idx]])) {
+            if (found) {
+                # found 2nd key
+                return(false);
+            } else {
+                found = true;
+            };
+        };
+    };
+
+    found;
+};
+
 type type_storagebackend = string with match(SELF, '^(file|http|swift|rbd|sheepdog|cinder|vmware)$');
 
 type type_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|geneve)$');
