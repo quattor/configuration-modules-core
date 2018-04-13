@@ -2,6 +2,7 @@
 
 use CAF::Object qw(SUCCESS);
 use CAF::Process 17.8.1;
+use CAF::Service;
 use EDG::WP4::CCM::TextRender;
 use parent qw(CAF::Object Exporter);
 use Module::Load;

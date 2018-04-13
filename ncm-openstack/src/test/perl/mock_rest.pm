@@ -207,7 +207,7 @@ $rc->mock('request', sub {
 
     push(@method_history, "$method $url $body_txt $hdr_txt");
 
-    note "rest_mock $method url $url body $body_txt", explain $headers;
+    note "mock_rest $method url $url body $body_txt", explain $headers;
 
     # Binned results, one bin per class (update the pod above when increasing this)
     my $res = [ [], [], [], [], [], ];

@@ -7,7 +7,7 @@ declaration template components/openstack/functions;
 @{Given dict as first arg, test if exactly one of the remaining arguments is a key}
 function openstack_oneof = {
     if (ARGC < 2) {
-        error("%s: requires at least 2 arguments", FUNCTION, ARGC);
+        error("%s: requires at least 2 arguments (%s given)", FUNCTION, ARGC);
     };
 
     data = ARGV[0];
@@ -29,4 +29,17 @@ function openstack_oneof = {
     };
 
     found;
+};
+
+@{Test is name is a valid identity type. Name 'default' is always a valid name.}
+function openstack_is_valid_identity = {
+    if (ARGC != 2) {
+        error("%s: requires at 2 arguments (name, type) (%s given)", FUNCTION, ARGC);
+    };
+    name = ARGV[0];
+
+    is_string(name) && (
+        name == 'default' ||
+        exists(format("/software/components/openstack/identity/%s/%s", ARGV[1], name))
+    );
 };

@@ -136,10 +136,24 @@ ok(command_history_ok([
 dump_method_history;
 ok(method_history_ok([
    'POST .*/v3/auth/tokens',
-   'GET .*/regions/',
+   'GET .*/regions/  ',
    'POST .*/regions/ .*description":"abc \(mgt QUATTOR\)",.*"id":"regionOne"',
    'POST .*/regions/ .*description":"def \(mgt QUATTOR\)",.*"id":"regionTwo"',
    'POST .*/regions/ .*description":"xyz \(mgt QUATTOR\)",.*"id":"regionThree"',
+   'GET .*/domains/  ',
+   'POST .*/domains/ .*description":"vo1 \(mgt QUATTOR\)",.*"name":"vo1"',
+   'POST .*/domains/ .*description":"vo2 \(mgt QUATTOR\)",.*"name":"vo2"',
+   'GET .*/projects/  ',
+   'POST .*/projects/ .*"description":"a project \(mgt QUATTOR\)",.*,"name":"opq"',
+   'POST .*/projects/ .*"description":"main vo1 project \(mgt QUATTOR\)","domain_id":"vo1".*"name":"vo1"',
+   'POST .*/projects/ .*"description":"main vo2 project \(mgt QUATTOR\)","domain_id":"vo2",.*"name":"vo2"',
+   'POST .*/projects/ .*"description":"some real project \(mgt QUATTOR\)".*"name":"realproject".*"parent_id":"vo1"',
+   'GET .*/users/  ',
+   'POST .*/users/ .*"description":"first user \(mgt QUATTOR\)",.*"name":"user1","password":"abc"',
+   'GET .*/groups/  ',
+   'POST .*/groups/ .*"description":"first group \(mgt QUATTOR\)","domain_id":"vo2",.*"name":"grp1"',
+   'GET .*/services/  ',
+   'POST .*/services/ .*"description":"OS image \(mgt QUATTOR\)",.*"name":"glance","type":"image"',
 ]), "REST API calls as expected");
 
 command_history_reset();
