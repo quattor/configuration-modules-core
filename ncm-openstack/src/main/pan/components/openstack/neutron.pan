@@ -13,17 +13,17 @@ include 'components/openstack/identity';
 type openstack_neutron_ml2 = {
     @{WARNING: After you configure the ML2 plug-in,
     removing values in the type_drivers option can lead to database inconsistency}
-    'type_drivers' : type_neutrondriver[] = list('flat', 'vlan', 'vxlan')
+    'type_drivers' : openstack_neutrondriver[] = list('flat', 'vlan', 'vxlan')
     @{Ordered list of network_types to allocate as tenant networks. The default
     value "local" is useful for single-box testing but provides no connectivity
     between hosts}
-    'tenant_network_types' : type_neutrondriver[] = list('vxlan')
+    'tenant_network_types' : openstack_neutrondriver[] = list('vxlan')
     @{An ordered list of networking mechanism driver entrypoints to be loaded from
     the neutron.ml2.mechanism_drivers namespace}
     'mechanism_drivers' : string[] = list('linuxbridge', 'l2population')
     @{An ordered list of extension driver entrypoints to be loaded from the
     neutron.ml2.extension_drivers namespace}
-    'extension_drivers' : type_neutronextension[] = list('port_security')
+    'extension_drivers' : openstack_neutronextension[] = list('port_security')
 } = dict();
 
 @documentation {

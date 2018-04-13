@@ -20,13 +20,12 @@ my $cfg = get_config_for_profile("service");
 =cut
 
 # This is not the correct way to use Service; only for testing purposes
-my $srv = NCM::Component::OpenStack::Service->new("identity", $cfg, $obj, undef, "shouldbeinstance");
+my $srv = NCM::Component::OpenStack::Service->new("identity", $cfg, $obj, undef);
 isa_ok($srv, 'NCM::Component::OpenStack::Service', 'created a NCM::Component::OpenStack::Service instance');
 is($srv->{type}, 'identity', 'type attribute found');
 is($srv->{config}, $cfg, 'config attribute found');
 is($srv->{prefix}, '/software/components/openstack', 'prefix attribute found');
 is($srv->{log}, $obj, 'log attribute found');
-is($srv->{client}, 'shouldbeinstance', '(fake) client attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
     active compute dashboard dispatch identity
@@ -52,8 +51,24 @@ is_deeply($srv->{daemons}, [] , "daemons attribute");
 
 =cut
 
+is(get_flavour('abc', {abc => {x => {}}}, $obj), 'x',
+   "get_flavour returns single type subtree as flavour");
+
+ok(!defined(get_flavour('abc', {abc => {}}, $obj)),
+   "get_flavour returns undef with no flavours");
+
+ok(!defined(get_flavour('abc', {abc => {x => {}, y => {}}}, $obj)),
+   "get_flavour returns undef with more than one possible flavour");
+
+is(get_flavour('abc', {abc => {x => {}, y => {quattor => {}}}}, $obj), 'y',
+   "get_flavour returns single flavour with quattor attr when multiple candidates exist");
+
+is(get_flavour('identity', {identity => {x => {}, keystone => {}}}, $obj), 'keystone',
+   "get_flavour returns single flavour keystone for identity type when multiple candidates exist");
+
 is(get_flavour('identity', $srv->{comptree}, $obj), "keystone",
    "get_flavour returned correct flavour");
+
 ok(!defined(get_flavour('identity_typo', $srv->{comptree}, $obj)),
    "get_flavour returns undef for unknown type");
 
@@ -68,6 +83,7 @@ isa_ok($srv, 'NCM::Component::OpenStack::Service', 'Keystone instance is a Servi
 =head2 _read_ceph_key
 
 =cut
+
 ok(!defined($srv->_read_ceph_key("/some/key")), "no valid key (no keyring)");
 set_file('invalidcephkey');
 ok(!defined($srv->_read_ceph_key("/etc/ceph/somekey")), "no valid key (invalid content)");

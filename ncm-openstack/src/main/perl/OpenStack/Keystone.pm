@@ -1,9 +1,6 @@
 #${PMpre} NCM::Component::OpenStack::Keystone${PMpost}
 
-use parent qw(NCM::Component::OpenStack::Service);
-
-use Readonly;
-
+use parent qw(NCM::Component::OpenStack::Identity);
 
 =head2 Methods
 

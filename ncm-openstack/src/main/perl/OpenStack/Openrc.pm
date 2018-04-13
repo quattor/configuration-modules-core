@@ -2,6 +2,9 @@
 
 use parent qw(NCM::Component::OpenStack::Service);
 
+use Readonly;
+Readonly our $CONFIG_FILE => "/root/admin-openrc.sh";
+
 =head2 Methods
 
 =over
@@ -18,7 +21,7 @@ sub _attrs
 
     $self->{sensitive} = 1;
     $self->{tt} = 'openrc';
-    $self->{filename} = "/root/admin-openrc.sh";
+    $self->{filename} = $CONFIG_FILE;
     $self->{daemons} = ['httpd'];
     $self->{user} = 'root';
 }

@@ -23,10 +23,19 @@ use strict;
 use warnings;
 use base 'Exporter';
 use Test::MockModule;
+use Readonly;
 our @EXPORT = qw(set_output set_file);
 
 use Test::More;
 use Test::Quattor;
+use File::Basename;
+
+Readonly my $BASE_DIR => dirname(__FILE__);
+
+my $mock_os_auth = Test::MockModule->new('Net::OpenStack::Client::Auth');
+$mock_os_auth->mock('_parse_openrc', sub {
+    return $mock_os_auth->original('_parse_openrc')->($_[0], "$BASE_DIR/openrc_example");
+});
 
 use cmddata;
 

@@ -3,6 +3,7 @@ ${componentschema}
 include 'quattor/schema';
 include 'pan/types';
 include 'components/openstack/common';
+
 include 'components/openstack/identity';
 include 'components/openstack/nova';
 include 'components/openstack/glance';

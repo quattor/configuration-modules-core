@@ -11,6 +11,11 @@ prefix "/software/components/openstack/identity/keystone";
     "connection", "mysql+pymysql://keystone:keystone_db_pass@controller.mysite.com/keystone",
 );
 
+prefix "/software/components/openstack/identity/region";
+"regionOne/description" = "abc";
+"regionTwo/description" = "def";
+"regionThree/description" = "xyz";
+"regionThree/parent_region_id" = "regionTwo";
 
 # Glance/service section
 
