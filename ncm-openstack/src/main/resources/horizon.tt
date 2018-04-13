@@ -16,7 +16,7 @@ from openstack_dashboard.settings import HORIZON_CONFIG
 [%      ELSIF CCM.is_hash(pair.value) -%]
 {[%         INCLUDE 'openstack/horizon_level1.tt' data=pair.value section=pair.key -%]}
 [%      ELSIF CCM.is_list(pair.value) -%]
-['[%        pair.value.join('', '') %]']
+['[%        pair.value.join('\', \'') %]']
 [%      ELSE -%]
 [%         pair.value %]
 [%      END -%]
