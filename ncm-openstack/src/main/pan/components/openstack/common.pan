@@ -15,6 +15,13 @@ type openstack_neutronextension = string with match(SELF, '^(qos|port_security)$
 
 type openstack_region = string with exists("/software/components/openstack/identity/region/" + SELF);
 
+type openstack_tunnel_types = string with match(SELF, '^(vxlan|gre)$');
+
+type openstack_neutron_mechanism_drivers = string with match(SELF, '^(linuxbridge|l2population|openvswitch)$');
+
+type openstack_neutron_firewall_driver = string with match(SELF,
+    '^(neutron.agent.linux.iptables_firewall.IptablesFirewallDriver|openvswitch|iptables_hybrid)$');
+
 @documentation {
     OpenStack common domains section
 }
@@ -146,10 +153,14 @@ type openstack_DEFAULTS = {
     'notify_nova_on_port_data_changes' ? boolean = true
     @{From Neutron l3_agent.ini and dhcp_agent.ini
     The driver used to manage the virtual interface}
-    'interface_driver' ? string = 'linuxbridge'
+    'interface_driver' ? string = 'linuxbridge' with match (SELF, '^(linuxbridge|openvswitch)$')
     @{From Neutron dhcp_agent.ini
     The driver used to manage the DHCP server}
     'dhcp_driver' ? string = 'neutron.agent.linux.dhcp.Dnsmasq'
+    @{Number of DHCP agents scheduled to host a tenant network. If this number is
+    greater than 1, the scheduler automatically assigns multiple DHCP agents for
+    a given tenant network, providing high availability for DHCP service}
+    'dhcp_agents_per_network' ? long(1..)
     @{From Neutron dhcp_agent.ini
     The DHCP server can assist with providing metadata support on isolated
     networks. Setting this value to True will cause the DHCP server to append
@@ -158,6 +169,13 @@ type openstack_DEFAULTS = {
     instance must be configured to request host routes via DHCP (Option 121).
     This option does not have any effect when force_metadata is set to True}
     'enable_isolated_metadata' ? boolean = true
+    @{From Neutron dhcp_agent.ini
+    In some cases the Neutron router is not present to provide the metadata IP
+    but the DHCP server can be used to provide this info. Setting this value will
+    force the DHCP server to append specific host routes to the DHCP request. If
+    this option is set, then the metadata service will be activated for all the
+    networks}
+    'force_metadata' ? boolean = true
     @{From Neutron metadata_agent.ini
     IP address or hostname used by Nova metadata server}
     'nova_metadata_ip' ? string
@@ -165,9 +183,11 @@ type openstack_DEFAULTS = {
     When proxying metadata requests, Neutron signs the Instance-ID header with a
     shared secret to prevent spoofing. You may select any string for a secret,
     but it must match here and in the configuration used by the Nova Metadata
-    Server. NOTE: Nova uses the same config key, but in [neutron] section.
-    }
+    Server. NOTE: Nova uses the same config key, but in [neutron] section}
     'metadata_proxy_shared_secret' ? string
+    @{From Neutron metadata_agent.ini
+    IP address or DNS name of Nova metadata server}
+    'nova_metadata_host' ? string
     @{Driver for security groups}
     'firewall_driver' ? string = 'neutron.agent.linux.iptables_firewall.IptablesFirewallDriver'
     @{Use neutron and disable the default firewall setup}

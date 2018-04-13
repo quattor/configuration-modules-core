@@ -5,7 +5,7 @@
 
 declaration template components/openstack/cinder;
 
-include 'components/openstack/keystone';
+include 'components/openstack/identity';
 
 @documentation {
     The Cinder configuration options in the "lvm" Section.

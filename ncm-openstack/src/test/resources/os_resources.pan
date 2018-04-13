@@ -115,6 +115,9 @@ prefix "/software/components/openstack/network/neutron/metadata";
 # Neutron/ML2 section
 
 prefix "/software/components/openstack/network/neutron/ml2";
+"ml2_type_vxlan" = dict(
+    'vni_ranges', '1:1000',
+);
 "securitygroup" = dict(
     "enable_security_group", true,
     "firewall_driver", "neutron.agent.linux.iptables_firewall.IptablesFirewallDriver",
