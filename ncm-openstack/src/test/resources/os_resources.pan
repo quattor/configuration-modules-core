@@ -4,18 +4,49 @@ template os_resources;
 include 'common_resources';
 
 
-# Keystone section
+# Identity/ keystone section
+prefix "/software/components/openstack/identity";
 
-prefix "/software/components/openstack/identity/keystone";
+prefix "keystone";
 "database" = dict(
     "connection", "mysql+pymysql://keystone:keystone_db_pass@controller.mysite.com/keystone",
 );
 
-prefix "/software/components/openstack/identity/region";
+prefix "region";
 "regionOne/description" = "abc";
 "regionTwo/description" = "def";
 "regionThree/description" = "xyz";
 "regionThree/parent_region_id" = "regionTwo";
+
+prefix "domain";
+"vo1/description" = "vo1";
+"vo2/description" = "vo2";
+
+prefix "project/vo1";
+"description" = "main vo1 project";
+"domain_id" = "vo1";
+prefix "project/realproject";
+"description" = "some real project";
+"parent_id" = "vo1";
+# default description
+prefix "project";
+"opq" = dict();
+
+prefix "project/vo2";
+"description" = "main vo2 project";
+"domain_id" = "vo2";
+
+prefix "user/user1";
+"description" = "first user";
+"password" = "abc";
+
+prefix "group/grp1";
+"description" = "first group";
+"domain_id" = "vo2";
+
+prefix "service/glance";
+"description" = "OS image";
+"type" = "image";
 
 # Glance/service section
 

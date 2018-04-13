@@ -13,7 +13,7 @@ type openstack_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vx
 
 type openstack_neutronextension = string with match(SELF, '^(qos|port_security)$');
 
-type openstack_region = string with exists("/software/components/openstack/identity/region/" + SELF);
+type openstack_valid_region = string with openstack_is_valid_identity(SELF, 'region');
 
 type openstack_tunnel_types = string with match(SELF, '^(vxlan|gre)$');
 
@@ -216,7 +216,7 @@ type openstack_quattor_custom = {
     @{endpoint port}
     'port' ? type_port
     @{region that the service/endpoint belongs to}
-    'region' ? openstack_region
+    'region' ? openstack_valid_region
 } with openstack_oneof(SELF, 'port');
 
 @documentation{

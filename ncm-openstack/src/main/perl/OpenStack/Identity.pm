@@ -42,11 +42,13 @@ sub run_client
 
         # augment the description with $MANAGED_BY
         foreach my $name (sort keys %$cfg) {
-            $cfg->{$name}->{description} .= " $MANAGED_BY"
-                if exists($cfg->{$name}->{description});
+            $cfg->{$name}->{description} = "a $oper"
+                if !exists($cfg->{$name}->{description});
+            $cfg->{$name}->{description} .= " $MANAGED_BY";
         }
 
         # apply the changes using sync
+        # TODO items without description
         $client->api_identity_sync($oper, $cfg, filter => $filter);
     }
 
