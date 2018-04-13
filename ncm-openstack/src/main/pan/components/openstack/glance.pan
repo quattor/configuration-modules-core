@@ -16,7 +16,7 @@ type openstack_glance_store = {
     Register the storage backends to use for storing disk images
     as a comma separated list. The default stores enabled for
     storing disk images with Glance are "file" and "http"}
-    'stores' : type_storagebackend[] = list ('file', 'http')
+    'stores' : openstack_storagebackend[] = list ('file', 'http')
     @{The default scheme to use for storing images.
     Provide a string value representing the default scheme to use for
     storing images. If not set, Glance uses ``file`` as the default

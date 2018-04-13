@@ -5,39 +5,15 @@
 
 declaration template components/openstack/common;
 
-@{Given dict as first arg, test if exactly one of the remaining arguments is a key}
-function openstack_oneof = {
-    if (ARGC < 2) {
-        error("%s: requires at least 2 arguments", FUNCTION, ARGC);
-    };
+include 'components/openstack/functions';
 
-    data = ARGV[0];
-    if (!is_dict(data)) {
-        error("%s: first argumnet has to a dict, got value %s", FUNCTION, data);
-    };
+type openstack_storagebackend = string with match(SELF, '^(file|http|swift|rbd|sheepdog|cinder|vmware)$');
 
-    found = false;
+type openstack_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|geneve)$');
 
-    for (idx = 1; idx < ARGC; idx = idx + 1) {
-        if (exists(data[ARGV[idx]])) {
-            if (found) {
-                # found 2nd key
-                return(false);
-            } else {
-                found = true;
-            };
-        };
-    };
+type openstack_neutronextension = string with match(SELF, '^(qos|port_security)$');
 
-    found;
-};
-
-type type_storagebackend = string with match(SELF, '^(file|http|swift|rbd|sheepdog|cinder|vmware)$');
-
-type type_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|geneve)$');
-
-type type_neutronextension = string with match(SELF, '^(qos|port_security)$');
-
+type openstack_region = string with exists("/software/components/openstack/identity/region/" + SELF);
 
 @documentation {
     OpenStack common domains section
@@ -196,4 +172,30 @@ type openstack_rabbitmq_config = {
     A regular expression matching resource names for
     which the user is granted configure permissions}
     'permissions' : string[3] = list('.*', '.*', '.*')
+};
+
+@documentation{
+Custom configuration type. This is data that is not picked up as configuration data,
+but used to e.g. build up the service endpoints.
+}
+type openstack_quattor_custom = {
+    @{endpoint port}
+    'port' ? type_port
+    @{region that the service/endpoint belongs to}
+    'region' ? openstack_region
+} with openstack_oneof(SELF, 'port');
+
+@documentation{
+Custom data type. This is data that is not picked up as configuration data.
+It is to be used as e.g.
+    type openstack_quattor_service_x = openstack_quattor = dict('quattor', dict('port', 123))
+
+And then this custom service type is included in the service configuration.
+    type openstack_service_x = {
+        include openstack_quattor_service_x
+        ...
+
+}
+type openstack_quattor = {
+    'quattor' : openstack_quattor_custom
 };

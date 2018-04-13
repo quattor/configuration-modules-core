@@ -10,11 +10,12 @@ use Test::MockModule;
 use NCM::Component::openstack;
 
 use helper;
+use mock_rest;
+
 use Test::Quattor::TextRender::Base;
 
 my $caf_trd = mock_textrender();
 my $obj = Test::Quattor::Object->new();
-
 
 
 my $cmp = NCM::Component::openstack->new("openstack", $obj);
@@ -120,6 +121,15 @@ ok(command_history_ok([
         'service neutron-server restart',
         'service httpd restart',
                       ]), "expected commands run");
+
+dump_method_history;
+ok(method_history_ok([
+   'POST .*/v3/auth/tokens',
+   'GET .*/regions/',
+   'POST .*/regions/ .*description":"abc \(mgt QUATTOR\)",.*"id":"regionOne"',
+   'POST .*/regions/ .*description":"def \(mgt QUATTOR\)",.*"id":"regionTwo"',
+   'POST .*/regions/ .*description":"xyz \(mgt QUATTOR\)",.*"id":"regionThree"',
+]), "REST API calls as expected");
 
 command_history_reset();
 set_output('keystone_db_version');
