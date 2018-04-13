@@ -30,7 +30,6 @@ use constant REPOS_TEMPLATE => "repository";
 use constant REPOS_TREE => "/software/repositories";
 use constant PKGS_TREE => "/software/packages";
 use constant GROUPS_TREE => "/software/groups";
-use constant CMP_TREE => "/software/components/${project.artifactId}";
 use constant RPM_QUERY => [qw(rpm -qa --qf %{NAME}\n%{NAME};%{ARCH}\n)];
 use constant REMOVE => "remove";
 use constant INSTALL => "install";
@@ -768,7 +767,10 @@ sub distrosync
 # Updates the packages on the system.
 sub update_pkgs
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $error_is_warn, $fullsearch, $reuse_cache) = @_;
+    my ($self, $allpkgs, $groups, $run, $allow_user_pkgs, $purge,
+        $error_is_warn, $fullsearch, $reuse_cache, $pkgs) = @_;
+
+    $pkgs = $allpkgs if ! defined($pkgs);
 
     $self->complete_transaction() or return 0;
 
@@ -779,7 +781,8 @@ sub update_pkgs
         $self->make_cache($purge) or return 0;
     };
 
-    $self->versionlock($pkgs, $fullsearch) or return 0;
+    # Versionlock is determined based on all configured packages
+    $self->versionlock($allpkgs, $fullsearch) or return 0;
 
     $self->distrosync($run) or return 0;
 
@@ -818,7 +821,8 @@ sub update_pkgs
 # Updates the packages on the system.
 sub update_pkgs_retry
 {
-    my ($self, $pkgs, $groups, $run, $allow_user_pkgs, $purge, $retry_if_not_allow_user_pkgs, $fullsearch) = @_;
+    my ($self, $allpkgs, $groups, $run, $allow_user_pkgs, $purge,
+        $retry_if_not_allow_user_pkgs, $fullsearch, $pkgs) = @_;
 
     # If an error is logged due to failed transaction (or spare dependencies),
     # it might be retried and might succeed, but ncm-ncd will not allow
@@ -829,12 +833,12 @@ sub update_pkgs_retry
     # Introduce shortcut to call update_pkgs with the same except 2 arguments
     my $update_pkgs = sub {
         my ($allow_user_pkgs, $error_is_warn, $reuse_cache) = @_;
-        return $self->update_pkgs($pkgs, $groups, $run, $allow_user_pkgs,
-                                  $purge, $error_is_warn, $fullsearch, $reuse_cache);
+        return $self->update_pkgs($allpkgs, $groups, $run, $allow_user_pkgs, $purge,
+                                  $error_is_warn, $fullsearch, $reuse_cache, $pkgs);
     };
 
     # Only on the initial try, purge and recreate the cache
-    if(&$update_pkgs($allow_user_pkgs, $error_is_warn, 0)) {
+    if (&$update_pkgs($allow_user_pkgs, $error_is_warn, 0)) {
         $self->verbose("update_pkgs ok");
     } else {
         if ($NoAction) {
@@ -1118,10 +1122,11 @@ sub Configure
 
     my ($purge_caches, $res);
 
-    my $t = $config->getTree(CMP_TREE);
+    my $t = $config->getTree($self->prefix());
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
-    $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
+    my $userpkgs_defined = defined($t->{userpkgs});
+    $t->{userpkgs} = $userpkgs_defined && ($t->{userpkgs} eq 'yes');
 
     # When userpkgs are allowed, there is no control over what is in the reposdir
     # If they are not allowed, and retry is allowed, use a non-standard location
@@ -1130,8 +1135,29 @@ sub Configure
                              REPOS_DIR_DEFAULT : REPOS_DIR_QUATTOR;
 
     my $repos = $config->getTree(REPOS_TREE);
-    my $pkgs = $config->getTree(PKGS_TREE);
+    my $allpkgs = $config->getTree(PKGS_TREE);
     my $groups = $config->getTree(GROUPS_TREE) || {};
+
+    # packages to install; undef means allpkgs will be installed
+    my $pkgs;
+    if (exists($t->{filter})) {
+        # only define this here, should not affect selection of the main_repos_dir
+        $t->{userpkgs} = 1 if ! $userpkgs_defined;
+        local $@;
+        my $regex;
+        eval {
+            $regex = qr{$t->{filter}};
+        };
+        if ($@) {
+            $self->error("filter $t->{filter} is not a valid pattern: $@");
+            return 0;
+        }
+        $pkgs = {map {$_ => $allpkgs->{$_}} grep {unescape($_) =~ m/$regex/} sort keys %$allpkgs};
+        $self->verbose("packages filtered with pattern $t->{filter}: kept ",
+                       scalar keys %$pkgs, " of all ", scalar keys %$allpkgs, " packages");
+    } else {
+        $self->verbose("No packages filtered");
+    }
 
     # check if a temp location is required for NoAction support.
     my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
@@ -1158,8 +1184,7 @@ sub Configure
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
     $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
-                                          $t->{proxyhost}, $t->{proxytype},
-                                          $t->{proxyport});
+                                 $t->{proxyhost}, $t->{proxytype}, $t->{proxyport});
 
     defined($res) or return 0;
     $purge_caches += $res;
@@ -1174,9 +1199,9 @@ sub Configure
     $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
                          $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
 
-    $res = $self->update_pkgs_retry($pkgs, $groups, $t->{run},
+    $res = $self->update_pkgs_retry($allpkgs, $groups, $t->{run},
                                     $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
-                                    $t->{fullsearch});
+                                    $t->{fullsearch}, $pkgs);
 
     my $ec = 1;
 

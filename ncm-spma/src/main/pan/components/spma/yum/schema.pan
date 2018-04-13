@@ -39,6 +39,16 @@ type component_spma_yum = {
     "userpkgs" ? legacy_binary_affirmation_string # Allow user packages
     @{ List of external repo dirs to be included in addition to the one managed by this component. }
     "reposdirs" ? absolute_file_path[]
+    @{regexp pattern to install only matching (unescaped) package names.
+      This is an advanced setting, and typically only used in a 2-stage software
+      install like spmalight.
+      When userpkgs is not defined, it runs as if userpkgs is true.
+      (Caution: is userpkgs is false, it will very likely remove
+      all non-matching packages. It is advised to remove the userpkgs attribute).
+      Versionlocking is not affected by the filter (i.e. all packages are considered
+      for version locking, not only the filtered ones).
+    }
+    "filter" ? string
 };
 
 bind "/software/components/spma" = component_spma_yum;
