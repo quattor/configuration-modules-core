@@ -13,6 +13,7 @@ Readonly::Hash my %CONF_FILE => {
     service => "/etc/neutron/neutron.conf",
     ml2 => "/etc/neutron/plugins/ml2/ml2_conf.ini",
     linuxbridge => "/etc/neutron/plugins/ml2/linuxbridge_agent.ini",
+    openvswitch => "/etc/neutron/plugins/ml2/openvswitch_agent.ini",
     l3 => "/etc/neutron/l3_agent.ini",
     dhcp => "/etc/neutron/dhcp_agent.ini",
     metadata => "/etc/neutron/metadata_agent.ini",
@@ -21,6 +22,7 @@ Readonly::Hash my %CONF_FILE => {
 Readonly::Hash my %DAEMON => {
     service => ['neutron-server'],
     linuxbridge => ['neutron-linuxbridge-agent'],
+    openvswitch => ['neutron-openvswitch-agent'],
     l3 => ['neutron-l3-agent'],
     dhcp => ['neutron-dhcp-agent'],
     metadata => ['neutron-metadata-agent'],
@@ -28,6 +30,7 @@ Readonly::Hash my %DAEMON => {
 
 Readonly::Hash my %DAEMON_HYPERVISOR => {
     linuxbridge => ['neutron-linuxbridge-agent'],
+    openvswitch => ['neutron-openvswitch-agent'],
 };
 
 =head2 Methods

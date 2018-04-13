@@ -1,0 +1,14 @@
+OpenStack Neutron openvswitch test
+---
+multiline
+---
+^\[agent\]$
+^l2_population\s?=\s*.+\s*$
+^tunnel_types\s?=\s*.+\s*$
+
+^\[ovs\]$
+^bridge_mappings\s?=\s*.+\s*$
+^local_ip\s?=\s*.+\s*$
+
+^\[securitygroup\]$
+^firewall_driver\s?=\s*.+\s*$

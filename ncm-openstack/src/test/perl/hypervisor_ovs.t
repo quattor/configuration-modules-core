@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Quattor qw(hypervisor);
+use Test::Quattor qw(hypervisor_ovs);
 use Test::Quattor::Object;
 use Test::MockModule;
 
@@ -15,8 +15,8 @@ use Test::Quattor::TextRender::Base;
 my $caf_trd = mock_textrender();
 my $obj = Test::Quattor::Object->new();
 
-my $cmp = NCM::Component::openstack->new("hypervisor", $obj);
-my $cfg = get_config_for_profile("hypervisor");
+my $cmp = NCM::Component::openstack->new("hypervisor_ovs", $obj);
+my $cfg = get_config_for_profile("hypervisor_ovs");
 
 set_file('novacephkey');
 set_file('cindercephkey');
@@ -35,10 +35,10 @@ $fh = get_file("/etc/neutron/neutron.conf");
 isa_ok($fh, "CAF::FileWriter", "neutron.conf hypervisor CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "neutron.conf hypervisor has expected content");
 
-# Verify Neutron/linuxbridge configuration file
-$fh = get_file("/etc/neutron/plugins/ml2/linuxbridge_agent.ini");
-isa_ok($fh, "CAF::FileWriter", "linuxbridge_agent.ini hypervisor CAF::FileWriter instance");
-like("$fh", qr{^\[linux_bridge\]$}m, "linuxbridge_agent.ini hypervisor has expected content");
+# Verify Neutron/openvswitch configuration file
+$fh = get_file("/etc/neutron/plugins/ml2/openvswitch_agent.ini");
+isa_ok($fh, "CAF::FileWriter", "openvswitch_agent.ini hypervisor CAF::FileWriter instance");
+like("$fh", qr{^\[agent\]$}m, "openvswitch_agent.ini hypervisor has expected content");
 
 diag "all hypervisor history commands ", explain \@Test::Quattor::command_history;
 
@@ -48,8 +48,8 @@ ok(command_history_ok([
         '/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml',
         '/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 abc',
         'service openstack-nova-compute restart',
-        'service neutron-linuxbridge-agent restart',
-    ]), "expected hypervisor commands run");
+        'service neutron-openvswitch-agent restart',
+    ]), "expected hypervisor ovs commands run");
 
 command_history_reset();
 
