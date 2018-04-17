@@ -43,6 +43,8 @@ type openstack_keystone_authtoken = {
     @{Optionally specify a list of memcached server(s) to use for caching. If left
     undefined, tokens will instead be cached in-process ("host:port" list)}
     'memcached_servers' : type_hostport[]
+    @{The region in which the service server can be found}
+    'region_name' ? string = 'RegionOne'
 };
 
 @documentation {

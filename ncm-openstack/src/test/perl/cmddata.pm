@@ -76,5 +76,11 @@ $cmds{cinder_db_version}{out} = 1;
 $cmds{cinder_db_version_missing}{cmd} = "/usr/bin/cinder-manage db version";
 $cmds{cinder_db_version_missing}{ec} = 1;
 
+$cmds{manila_db_version}{cmd} = "/usr/bin/manila-manage db version";
+$cmds{manila_db_version}{out} = 1;
+
+$cmds{manila_db_version_missing}{cmd} = "/usr/bin/manila-manage db version";
+$cmds{manila_db_version_missing}{ec} = 1;
+
 
 1;

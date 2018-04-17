@@ -22,6 +22,10 @@ type openstack_neutron_mechanism_drivers = string with match(SELF, '^(linuxbridg
 type openstack_neutron_firewall_driver = string with match(SELF,
     '^(neutron.agent.linux.iptables_firewall.IptablesFirewallDriver|openvswitch|iptables_hybrid)$');
 
+type openstack_share_backends = string with match(SELF, '^(lvm|generic|cephfsnative|cephfsnfs)$');
+
+type openstack_share_protocols = string with match(SELF, '^(NFS|CIFS|CEPHFS|GLUSTERFS|HDFS|MAPRFS)$');
+
 @documentation {
     OpenStack common domains section
 }
@@ -192,6 +196,28 @@ type openstack_DEFAULTS = {
     'firewall_driver' ? string = 'neutron.agent.linux.iptables_firewall.IptablesFirewallDriver'
     @{Use neutron and disable the default firewall setup}
     'use_neutron' ? boolean = true
+    @{From manila.conf
+    Default share type to use.
+    The default_share_type option specifies the default share type to be used
+    when shares are created without specifying the share type in the request.
+    The default share type that is specified in the configuration file has to
+    be created with the necessary required extra-specs
+    (such as driver_handles_share_servers) set appropriately with reference to
+    the driver mode used}
+    'default_share_type' ? string = 'default'
+    @{From manila.conf
+    Template string to be used to generate share names}
+    'share_name_template' ? string = 'share-%s'
+    @{From manila.conf
+    File name for the paste.deploy config for manila-api}
+    'api_paste_config' ? absolute_file_path = '/etc/manila/api-paste.ini'
+    @{From manila.conf
+    A list of share backend names to use. These backend names should be
+    backed by a unique [CONFIG] group with its options}
+    'enabled_share_backends' ? openstack_share_backends[] = list('lvm')
+    @{From manila.conf
+    Specify list of protocols to be allowed for share creation}
+    'enabled_share_protocols' ? openstack_share_protocols[] = list('NFS')
 };
 
 

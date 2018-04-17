@@ -28,6 +28,7 @@ set_output('nova_db_version_missing');
 set_output('neutron_db_version_missing');
 set_output('rabbitmq_db_version_missing');
 set_output('cinder_db_version_missing');
+set_output('manila_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -90,6 +91,11 @@ $fh = get_file("/etc/cinder/cinder.conf");
 isa_ok($fh, "CAF::FileWriter", "cinder.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "cinder.conf has expected content");
 
+# Verify Manila configuration file
+$fh = get_file("/etc/manila/manila.conf");
+isa_ok($fh, "CAF::FileWriter", "manila.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "manila.conf has expected content");
+
 
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
@@ -113,6 +119,11 @@ ok(command_history_ok([
         'service openstack-cinder-api restart',
         'service openstack-cinder-scheduler restart',
         'service openstack-cinder-volume restart',
+        '/usr/bin/manila-manage db version',
+        '/usr/bin/manila-manage db sync',
+        'service openstack-manila-api restart',
+        'service openstack-manila-scheduler restart',
+        'service openstack-manila-share restart',
         '/usr/bin/nova-manage db version',
         '/usr/bin/nova-manage api_db sync',
         '/usr/bin/nova-manage cell_v2 map_cell0',
@@ -131,7 +142,7 @@ ok(command_history_ok([
         'service neutron-metadata-agent restart',
         'service neutron-server restart',
         'service httpd restart',
-                      ]), "expected commands run");
+                      ]), "server expected commands run");
 
 dump_method_history;
 ok(method_history_ok([
