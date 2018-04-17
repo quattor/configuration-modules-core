@@ -122,6 +122,7 @@ sub Configure
         # After that continue with the rest of services
         'storage',
         'volume',
+        'share',
         'compute',
         'network',
         'dashboard',
