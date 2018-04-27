@@ -39,6 +39,10 @@ Uses Perl's L<YAML::XS> for rendering YAML configuration files.
 
 Uses L<JSON::XS> for rendering JSON configuration files.
 
+=item * jsonpretty
+
+Uses L<JSON::XS> pretty for rendering JSON configuration files.
+
 =item * properties
 
 Uses L<Config::Properties> for rendering Java-style configuration
