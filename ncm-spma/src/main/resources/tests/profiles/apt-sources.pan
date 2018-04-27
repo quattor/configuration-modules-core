@@ -8,9 +8,10 @@ include "components/spma/apt/schema";
 '/software/packages' = dict();
 
 prefix '/software/repositories/0';
-'name' = 'a_source';
+'name' = 'standard_source';
 'owner' = 'localuser@localdomain';
 'enabled' = true;
+'gpgcheck' = true;
 'protocols' = list(
     dict(
         'name', 'http',
@@ -18,14 +19,30 @@ prefix '/software/repositories/0';
     ),
     dict(
         'name', 'http',
-        'url', 'http://another.example.org/another/path trusty main',
+        'url', 'https://second.example.com/path/to/things trusty main',
     ),
 );
 'includepkgs' = list(
     'foo',
-    'bar',
 );
 'excludepkgs' = list(
     'baz',
+);
+
+prefix '/software/repositories/1';
+'name' = 'trusted_source';
+'owner' = 'localuser@localdomain';
+'enabled' = true;
+'gpgcheck' = false;
+'protocols' = list(
+    dict(
+        'name', 'http',
+        'url', 'http://another.example.org/another/path trusty main',
+    ),
+);
+'includepkgs' = list(
+    'bar',
+);
+'excludepkgs' = list(
     'quux',
 );

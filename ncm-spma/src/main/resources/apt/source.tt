@@ -10,7 +10,7 @@
 # Name: [% name %]
 # Owner: [% owner %]
 
-[%- trust = gpgcheck ? "trusted=yes " : "" -%]
+[%- trust = gpgcheck ? "" : "[trusted=yes] " -%]
 [%- FOREACH source IN protocols %]
 # Protocol type: [% source.name %]
 deb [% trust %][% source.url %]
