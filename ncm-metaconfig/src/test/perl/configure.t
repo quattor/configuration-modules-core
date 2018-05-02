@@ -25,6 +25,7 @@ my $fh = get_file("/foo/bar");
 ok($fh, "A file was actually created");
 isa_ok($fh, "CAF::FileWriter");
 
+# if default sysv init service changes, also modify the aii_command negative test
 ok(command_history_ok(['service foo restart']), "serivce foo restarted");
 
 done_testing();
