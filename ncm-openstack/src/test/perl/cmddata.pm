@@ -58,7 +58,7 @@ $cmds{nova_set_key}{out} = "";
 $cmds{cinder_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/cinder/tmp/secret_ceph.xml";
 $cmds{cinder_set_secret}{out} = "Secret afe09a7e-3d8e-11e8-ac85-63e6230f8c43 created";
 
-$cmds{cinder_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret afe09a7e-3d8e-11e8-ac85-63e6230f8c43 --base64 $(cat /etc/ceph/ceph.client.volume.keyring)";
+$cmds{cinder_set_key}{cmd} = "/usr/bin/virsh secret-set-value --secret afe09a7e-3d8e-11e8-ac85-63e6230f8c43 --base64 $(cat /etc/ceph/ceph.client.volumes.keyring)";
 $cmds{cinder_set_key}{out} = "";
 
 $files{invalidcephkey}{path} = "/etc/ceph/somekey";
@@ -67,7 +67,7 @@ $files{invalidcephkey}{txt} = "abc";
 $files{novacephkey}{path} = "/etc/ceph/ceph.client.compute.keyring";
 $files{novacephkey}{txt} = "key=abc";
 
-$files{cindercephkey}{path} = "/etc/ceph/ceph.client.volume.keyring";
+$files{cindercephkey}{path} = "/etc/ceph/ceph.client.volumes.keyring";
 $files{cindercephkey}{txt} = "key=defgh";
 
 $cmds{cinder_db_version}{cmd} = "/usr/bin/cinder-manage db version";
