@@ -64,12 +64,22 @@ type openstack_manila_ceph = {
     'cephfs_ganesha_server_is_remote' ? boolean = false
     @{The IP address of the NFS-Ganesha server}
     'cephfs_ganesha_server_ip' ? type_ip
+    @{sets the username (NFSGADMIN) that the File Share Service should use
+    to manage the NFS-Ganesha service}
+    'cephfs_ganesha_server_username' ? string
+    @{sets the corresponding password (NFSGPW) of the username defined
+    in cephfs_ganesha_server_username}
+    'cephfs_ganesha_server_password' ? string
+    @{sets the SSH private key path used by cephfs_ganesha_server_username
+    to get access to the NFS-Ganesha service}
+    'cephfs_ganesha_path_to_private_key' ? absolute_file_path
     @{Persist Ganesha exports and export counter in Ceph RADOS objects,
     highly available storage}
     'ganesha_rados_store_enable' ? boolean = true
     @{Name of the Ceph RADOS pool to store Ganesha exports and export
     counter}
     'ganesha_rados_store_pool_name' ? string = 'cephfs_data'
+
 };
 
 @documentation {

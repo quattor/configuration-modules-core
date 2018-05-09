@@ -8,7 +8,7 @@ Readonly our @CINDER_DAEMONS_SERVER => qw(openstack-cinder-api
                                         openstack-cinder-scheduler
                                         openstack-cinder-volume);
 Readonly our $CINDER_CEPH_SECRET_FILE => "/var/lib/cinder/tmp/secret_ceph.xml";
-Readonly our $CINDER_CEPH_COMPUTE_KEYRING => "/etc/ceph/ceph.client.volume.keyring";
+Readonly our $CINDER_CEPH_COMPUTE_KEYRING => "/etc/ceph/ceph.client.volumes.keyring";
 
 
 =head2 Methods
