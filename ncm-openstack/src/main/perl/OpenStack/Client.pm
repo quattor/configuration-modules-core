@@ -13,7 +13,7 @@ the REST client.
 
 use NCM::Component::OpenStack::Logger;
 use NCM::Component::OpenStack::Openrc;
-use Net::OpenStack::Client;
+use Net::OpenStack::Client 0.1.1;
 use Readonly;
 
 use parent qw(Exporter);

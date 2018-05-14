@@ -28,7 +28,7 @@ prefix "project/vo1";
 prefix "project/realproject";
 "description" = "some real project";
 "parent_id" = "vo1";
-# default description
+# no description
 prefix "project";
 "opq" = dict();
 
