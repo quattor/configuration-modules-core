@@ -10,7 +10,7 @@ use Test::MockModule;
 use NCM::Component::openstack;
 
 use helper;
-use mock_rest;
+use mock_rest qw(openstack);
 
 use Test::Quattor::TextRender::Base;
 
@@ -144,27 +144,28 @@ ok(command_history_ok([
         'service httpd restart',
                       ]), "server expected commands run");
 
+diag "method history";
 dump_method_history;
 ok(method_history_ok([
    'POST .*/v3/auth/tokens',
    'GET .*/regions/  ',
-   'POST .*/regions/ .*description":"abc \(mgt QUATTOR\)",.*"id":"regionOne"',
-   'POST .*/regions/ .*description":"def \(mgt QUATTOR\)",.*"id":"regionTwo"',
-   'POST .*/regions/ .*description":"xyz \(mgt QUATTOR\)",.*"id":"regionThree"',
+   'POST .*/regions/ .*description":"abc",.*"id":"regionOne"',
+   'POST .*/regions/ .*description":"def",.*"id":"regionTwo"',
+   'POST .*/regions/ .*description":"xyz",.*"id":"regionThree"',
    'GET .*/domains/  ',
-   'POST .*/domains/ .*description":"vo1 \(mgt QUATTOR\)",.*"name":"vo1"',
-   'POST .*/domains/ .*description":"vo2 \(mgt QUATTOR\)",.*"name":"vo2"',
+   'POST .*/domains/ .*description":"vo1",.*"name":"vo1"',
+   'POST .*/domains/ .*description":"vo2",.*"name":"vo2"',
    'GET .*/projects/  ',
-   'POST .*/projects/ .*"description":"a project \(mgt QUATTOR\)",.*,"name":"opq"',
-   'POST .*/projects/ .*"description":"main vo1 project \(mgt QUATTOR\)","domain_id":"vo1".*"name":"vo1"',
-   'POST .*/projects/ .*"description":"main vo2 project \(mgt QUATTOR\)","domain_id":"vo2",.*"name":"vo2"',
-   'POST .*/projects/ .*"description":"some real project \(mgt QUATTOR\)".*"name":"realproject".*"parent_id":"vo1"',
+   'POST .*/projects/ .*,"name":"opq"',
+   'POST .*/projects/ .*"description":"main vo1 project","domain_id":"dom12345".*"name":"vo1"',
+   'POST .*/projects/ .*"description":"main vo2 project","domain_id":"dom23456",.*"name":"vo2"',
+   'POST .*/projects/ .*"description":"some real project".*"name":"realproject".*"parent_id":"pro124"',
    'GET .*/users/  ',
-   'POST .*/users/ .*"description":"first user \(mgt QUATTOR\)",.*"name":"user1","password":"abc"',
+   'POST .*/users/ .*"description":"first user",.*"name":"user1","password":"abc"',
    'GET .*/groups/  ',
-   'POST .*/groups/ .*"description":"first group \(mgt QUATTOR\)","domain_id":"vo2",.*"name":"grp1"',
+   'POST .*/groups/ .*"description":"first group","domain_id":"dom23456",.*"name":"grp1"',
    'GET .*/services/  ',
-   'POST .*/services/ .*"description":"OS image \(mgt QUATTOR\)",.*"name":"glance","type":"image"',
+   'POST .*/services/ .*"description":"OS image",.*"name":"glance","type":"image"',
 ]), "REST API calls as expected");
 
 command_history_reset();

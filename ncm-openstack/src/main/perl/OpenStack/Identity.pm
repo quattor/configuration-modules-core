@@ -8,12 +8,7 @@ use NCM::Component::OpenStack::Client qw(get_client);
 use Net::OpenStack::Client::Identity::v3;
 
 use Readonly;
-Readonly my $MANAGED_BY => '(mgt QUATTOR)';
-
-my $filter = sub {
-    my $pattern = quotemeta($MANAGED_BY);
-    return ($_[0]->{description} || '') =~ m/$pattern$/;
-};
+Readonly my $TAGSTORE => 'quattorstore';
 
 =head2 Methods
 
@@ -40,16 +35,8 @@ sub run_client
         # fecth the cfg data, using json data typing
         my $cfg = $self->_get_json_tree("identity/$oper");
 
-        # augment the description with $MANAGED_BY
-        foreach my $name (sort keys %$cfg) {
-            $cfg->{$name}->{description} = "a $oper"
-                if !exists($cfg->{$name}->{description});
-            $cfg->{$name}->{description} .= " $MANAGED_BY";
-        }
-
         # apply the changes using sync
-        # TODO items without description
-        $client->api_identity_sync($oper, $cfg, filter => $filter);
+        $client->api_identity_sync($oper, $cfg, tagstore => $TAGSTORE);
     }
 
     return 1;
