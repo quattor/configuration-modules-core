@@ -288,10 +288,10 @@ type structure_interface = {
         error("ovs_patch_peer is defined but the type of interface is not defined as OVSPatchPort");
     };
     if ( exists(SELF['bond_ifaces']) ) {
-        if ( (!exists(SELF['type']) || SELF['type'] != 'bond_ifaces') ) {
+        if ( (!exists(SELF['type']) || SELF['type'] != 'OVSBond') ) {
             error("bond_ifaces is defined but the type of interface is not defined as OVSBond");
         };
-        foreach (i; iface; bond_ifaces) {
+        foreach (i; iface; SELF['bond_ifaces']) {
             if ( !exists("/system/network/interfaces/" + iface) ) {
                 error("The " + iface + " interface is used by bond_ifaces, but does not exist");
             };
