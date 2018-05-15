@@ -12,7 +12,7 @@ declaration template components/sudo/validation;
   the name of the alias list.};
 function sudo_check_aliases_list = {
     if (exists(ARGV[0][ARGV[1]])) {
-        foreach(idx; aliasname; ARGV[0][ARGV[1]]) {
+        foreach(aliasname; aliaslist; ARGV[0][ARGV[1]]) {
             if (!match (aliasname, "^[A-Z][A-Z0-9_]*$")) error(
                 "Wrong alias name: " + aliasname +
                 "\nAn alias name must be made of " +
