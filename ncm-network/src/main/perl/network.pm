@@ -155,6 +155,7 @@ Readonly my $DEVICE_REGEXP => qr{
          )\d+| # mandatory numbering
          enx[[:xdigit:]]{12} # enx MAC address
     )
+    (?:_(\w+))? # opional suffixes
     (?:\.\d+)? # optional VLAN
     (?::\w+)? # optional alias
     $
@@ -192,7 +193,14 @@ sub is_valid_interface
     # Very primitive, based on regex only
     # Not even the full filename (eg ifcfg) or anything
     if ($filename =~ m/$DEVICE_REGEXP/) {
-        return $1;
+        my $name = $1;
+        my $suffix = $2;
+        if ($suffix && $suffix =~ m/^\d+$/) {
+            $self->verbose("Found digit-only suffix $suffix for device $name ($filename), ",
+                           "adding it to the interface name");
+            $name .= "_$suffix";
+        }
+        return $name;
     } else {
         return;
     };
