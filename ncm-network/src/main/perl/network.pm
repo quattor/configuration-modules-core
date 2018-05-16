@@ -142,23 +142,25 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 # $1 must match the device name
 Readonly my $DEVICE_REGEXP => qr{
     - # separator from e.g. ifcfg or route
-    ( # start devicename group $1
-        (?:
-            eth|seth|em|
-            bond|br|ovirtmgmt|
-            vlan|usb|vxlan|
-            ib|
-            p\d+p|
-            en(?:
-                o(?:\d+d)?| # onboard
-                (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
-            )
-         )\d+| # mandatory numbering
-         enx[[:xdigit:]]{12} # enx MAC address
-    )
-    (?:_(\w+))? # opional suffixes
-    (?:\.\d+)? # optional VLAN
-    (?::\w+)? # optional alias
+    ( # start whole match group $1
+        ( # start devicename group $2
+            (?:
+                eth|seth|em|
+                bond|br|ovirtmgmt|
+                vlan|usb|vxlan|
+                ib|
+                p\d+p|
+                en(?:
+                    o(?:\d+d)?| # onboard
+                    (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
+                )
+             )\d+| # mandatory numbering
+             enx[[:xdigit:]]{12} # enx MAC address
+        )
+        (?:_(\w+))? # opional suffix group $3
+        (?:\.\d+)? # optional VLAN
+        (?::\w+)? # optional alias
+    ) # end whole matching group
     $
 }x;
 
@@ -186,7 +188,8 @@ sub _is_executable
 
 # Given the configuration ifcfg/route[6]/rule[6] filename,
 # Determine if this is a valid interface for ncm-network to manage,
-# Return interface name when valid, undef otherwise.
+# Return arrayref tuple [interface name, ifdown/ifup name] when valid,
+# undef otherwise.
 sub is_valid_interface
 {
     my ($self, $filename) = @_;
@@ -194,14 +197,15 @@ sub is_valid_interface
     # Very primitive, based on regex only
     # Not even the full filename (eg ifcfg) or anything
     if ($filename =~ m/$DEVICE_REGEXP/) {
-        my $name = $1;
-        my $suffix = $2;
+        my $ifupdownname = $1;
+        my $name = $2;
+        my $suffix = $3;
         if ($suffix && $suffix =~ m/^\d+$/) {
-            $self->verbose("Found digit-only suffix $suffix for device $name ($filename), ",
-                           "adding it to the interface name");
             $name .= "_$suffix";
+            $self->verbose("Found digit-only suffix $suffix for device $name ($filename), ",
+                           "added it to the interface name");
         }
-        return $name;
+        return [$name, $ifupdownname];
     } else {
         return;
     };
@@ -1160,17 +1164,22 @@ sub make_ifdown
     foreach my $file (sort keys %$exifiles) {
         next if ($file eq $NETWORKCFG);
 
-        my $iface = $self->is_valid_interface($file);
-        if ($iface) {
+        my $value = $exifiles->{$file};
+
+        my $valid = $self->is_valid_interface($file);
+        if ($valid) {
+            my ($iface, $ifupdownname) = @$valid;
+
             # ifdown: all devices that have files with non-zero status
-            if ($exifiles->{$file} == $NOCHANGES) {
+            if ($value == $NOCHANGES) {
                 $self->verbose("No changes for interface $iface (cfg file $file)");
-            } elsif ($exifiles->{$file} == $KEEPS_STATE) {
+            } elsif ($value == $KEEPS_STATE) {
                 $self->verbose("Change for interface $iface keeps state (cfg file $file)");
             } else {
-                $self->verbose("Will ifdown $iface due to changes in $file (state $exifiles->{$file})");
+                $self->verbose("Will ifdown $iface due to changes in $file (state $value)");
+                # Use the full ifup/ifdown name in case of removal
                 # TODO: ifdown new devices? better safe than sorry?
-                $ifdown{$iface} = 1;
+                $ifdown{($value == $REMOVE) ? $ifupdownname: $iface} = 1;
 
                 # bonding: if you bring down a slave, always bring down it's master
                 if ($ifaces->{$iface}->{master}) {
@@ -1615,6 +1624,7 @@ sub down_rename_devices
     my @cmds;
     foreach my $dev (sort keys %$map) {
         push(@devs, $dev);
+        push(@cmds, [qw(ip addr flush dev), $dev]);
         push(@cmds, [qw(ip link set), $dev, "down"]);
         push(@cmds, [qw(ip link set), $dev, "name", $map->{$dev}]);
     }
@@ -1781,6 +1791,9 @@ sub Configure
 
     my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
 
+    $init_config .= "\nPOST STOP\n";
+    $init_config .= $self->get_current_config();
+
     my $rename;
     if ($comp_tree->{rename}) {
         # Rename the (physical) network devices
@@ -1796,6 +1809,9 @@ sub Configure
                 #   or conifgured but somehow we don't care?
                 #   In any case, it's ok to down any device in the rename map
                 $self->down_rename_devices($rename);
+
+                $init_config .= "\nPOST DOWN RENAME\n";
+                $init_config .= $self->get_current_config();
 
                 # rerun ethtool
                 # TODO: why do that here? should be done after any restarting of devices or whole network?

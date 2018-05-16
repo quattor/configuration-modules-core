@@ -42,6 +42,7 @@ ok(command_history_ok([
     'ifdown em1',
     'ifdown eth0',
     'service network stop',
+    'ip addr flush dev em1',
     'ip link set em1 down',
     'ip link set em1 name eth0',
     'service network start',

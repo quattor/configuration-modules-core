@@ -21,16 +21,17 @@ my @valid_ifs = qw(eth0 seth1 em2 em2_2
 
 foreach my $valid (@valid_ifs) {
     foreach my $type (qw(ifcfg route)) {
-        is($cmp->is_valid_interface("$basedir/$type-$valid"), $valid,
-           "valid interface $valid from $type");
-        is($cmp->is_valid_interface("$basedir/$type-$valid.123"), $valid,
-           "valid interface $valid from $type with vlan");
-        is($cmp->is_valid_interface("$basedir/$type-$valid:alias"), $valid,
-           "valid interface $valid from $type with alias");
-        is($cmp->is_valid_interface("$basedir/$type-$valid.456:myalias"), $valid,
-           "valid interface $valid from $type with vlan and alias");
-        is($cmp->is_valid_interface("$basedir/$type-${valid}_whatever.456:myalias"), ($valid =~ m/^(.*)_\d+$/ ? $1 : $valid),
-           "valid interface $valid from $type with suffix, vlan and alias");
+        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid"), [$valid, $valid],
+                  "valid interface $valid from $type");
+        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid.123"), [$valid, "$valid.123"],
+                  "valid interface $valid from $type with vlan");
+        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid:alias"), [$valid, "$valid:alias"],
+                  "valid interface $valid from $type with alias");
+        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid.456:myalias"), [$valid, "$valid.456:myalias"],
+                  "valid interface $valid from $type with vlan and alias");
+        is_deeply($cmp->is_valid_interface("$basedir/$type-${valid}_whatever.456:myalias"), 
+                  [$valid =~ m/^(.*)_\d+$/ ? $1 : $valid, "${valid}_whatever.456:myalias"],
+                  "valid interface $valid from $type with suffix, vlan and alias");
     };
 };
 
