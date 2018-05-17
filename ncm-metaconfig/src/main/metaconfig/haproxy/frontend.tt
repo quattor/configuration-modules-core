@@ -1,0 +1,3 @@
+[% FOREACH config IN frontend.value.pairs -%]
+[%     config.key %] [% config.value %]
+[% END %]

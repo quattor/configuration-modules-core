@@ -7,5 +7,11 @@ defaults
 listen  [% proxy.name %]
 [%     INCLUDE 'metaconfig/haproxy/proxy.tt' FILTER indent %]
 [% END %]
-
-
+[% FOREACH frontend IN frontends -%]
+frontend [% frontend.key %]
+[%     INCLUDE 'metaconfig/haproxy/frontend.tt' FILTER indent %]
+[% END %]
+[% FOREACH backend IN backends -%]
+backend [% backend.key %]
+[%     INCLUDE 'metaconfig/haproxy/backend.tt' FILTER indent %]
+[% END %]

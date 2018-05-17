@@ -1,5 +1,5 @@
-[% FOREACH log IN global.logs -%]
-log /dev/log [% log.value.join(' ') %]
+[% FOREACH pair IN global.logs -%]
+log [% CCM.unescape(pair.key) %] [% pair.value.join(' ') %]
 [% END %]
 [% FOREACH option IN global.config.pairs -%]
 [%     option.key %] [% option.value %]

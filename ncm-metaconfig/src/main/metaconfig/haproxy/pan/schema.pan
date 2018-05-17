@@ -6,7 +6,8 @@ include 'pan/types';
     list of syslog facilities
 }
 type haproxy_service_global_logs = {
-    '{/dev/log}' : string[] = list('local0' , 'notice')
+    '{/dev/log}' ? string[] = list('local0' , 'notice')
+    '{127.0.0.1}' ? string[] = list('local2')
 };
 
 @documentation {
@@ -132,6 +133,23 @@ type haproxy_service_proxy = {
     'timeouts' ? haproxy_service_timeouts
 };
 
+type haproxy_service_frontend = {
+    'bind' : string
+    'default_backend' : string
+};
+
+type haproxy_service_backend_server = {
+    'hostname' : type_hostname
+    'ip' : type_ip
+    'port' : type_port
+};
+
+type haproxy_service_backend = {
+    'options' ? string[]
+    'tcpchecks' ? string[]
+    'servers' : haproxy_service_backend_server[]
+};
+
 @documentation {
     haproxy config
     see: http://www.haproxy.org/download/1.4/doc/configuration.txt
@@ -141,5 +159,7 @@ type haproxy_service = {
     'defaults' : haproxy_service_defaults
     'stats' ? haproxy_service_stats
     'proxys' ? haproxy_service_proxy[]
+    'frontends' ? haproxy_service_frontend{}
+    'backends' ? haproxy_service_backend{}
 };
 

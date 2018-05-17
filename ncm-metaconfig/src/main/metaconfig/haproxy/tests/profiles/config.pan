@@ -54,3 +54,15 @@ prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}';
         ),
     )
 );
+'contents/global/logs/{127.0.0.1}' = list('local2');
+
+prefix 'contents/frontends/irods-in';
+"bind" = '*:1247';
+"default_backend" = "servers";
+
+prefix 'contents/backends/servers';
+"options/0" = "tcp-check";
+"tcpchecks" = list("connect", "send PING\n", 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>');
+"servers/0" = dict('hostname', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
+"servers/1" = dict('hostname', 'otherhost.test.com', 'ip', '10.20.30.1', 'port', 1247);
+
