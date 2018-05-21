@@ -4,6 +4,7 @@ use Fcntl qw(SEEK_SET SEEK_END);
 use CAF::Object qw(SUCCESS);
 use CAF::FileEditor;
 use CAF::FileWriter;
+use CAF::Process;
 
 use Readonly;
 use parent qw(NCM::Component CAF::Path);
@@ -18,6 +19,7 @@ Readonly my $GRUB2_DIR           => '/boot/grub2';
 Readonly my $GRUB2_USER_CFG      => "$GRUB2_DIR/user.cfg";
 Readonly my $GRUBBY              => '/sbin/grubby';
 Readonly my $PREFIX              => '/boot';
+Readonly my $EFIBOOTMGR          => '/sbin/efibootmgr';
 Readonly::Hash my %SERIAL_CONSOLE_DEFAULTS => {
     unit => 0,
     speed => 9600,
@@ -689,6 +691,72 @@ sub default_options
     return SUCCESS;
 }
 
+=item pxeboot
+
+Set pxeboot as first bootorder.
+Returns SUCCESS on success, undef otherwise.
+
+Currently only supported on UEFI systems using C<efibootmgr>. On other systems,
+SUCCESS is also returned (but nothing is done).
+
+=cut
+
+sub pxeboot
+{
+    my ($self) = @_;
+
+    if (!$self->file_exists($EFIBOOTMGR)) {
+        $self->info("pxeboot: no $EFIBOOTMGR found. Not doing anything");
+        return SUCCESS;
+    }
+
+    my $efi = CAF::Process->new([$EFIBOOTMGR, '-v'], log => $self, keeps_state => 1)->output();
+    if (!$efi) {
+        $self->error("No output from $EFIBOOTMGR");
+        return;
+    }
+
+    my (@order, $ordertxt, @pxe);
+    foreach my $line (split("\n", $efi)) {
+        if ($line =~ m/^BootOrder:\s*([\d,]+)\s*$/) {
+            # force to integers
+            @order = map { $_ + 0 } split(/,/, $1);
+            $ordertxt = join(",", @order);
+            $self->debug(1, "Found current bootorder $ordertxt");
+        } elsif ($line =~ m/^Boot(\d+).*?(NIC|PXE|Network)/) {
+            # force to integers
+            push(@pxe, $1 + 0);
+            $self->debug(1, "Found PXE boot device $1 ($line)");
+        }
+    }
+
+    if (!@order) {
+        $self->error("Unable to find bootorder from output $efi");
+        return;
+    };
+
+    my @neworder = (@pxe);
+    foreach my $idx (@order) {
+        push(@neworder, $idx) if !(grep {$_ == $idx} @pxe);
+    };
+
+    my $newordertxt = join(',', @neworder);
+    if ($ordertxt eq $newordertxt) {
+        $self->verbose("No modified bootorder");
+    } else {
+        my $msg = "bootorder new $newordertxt (previous: $ordertxt)";
+        my $new = CAF::Process->new([$EFIBOOTMGR, '-o', $newordertxt], log => $self)->output();
+        if ($?) {
+            $self->error("Failed to modify $msg: $new");
+            return;
+        } else {
+            $self->verbose("Modified $msg");
+        }
+    }
+
+    return SUCCESS;
+}
+
 =item Configure
 
 Updates the grub.conf configuration file using grubby according to a
@@ -783,6 +851,8 @@ sub Configure
     # if we get here, default is the current default kernel
     # TODO: no search and replace for console settings like kernel method? i.e. pass $cons
     $self->default_options($tree, $default);
+
+    return if $tree->{pxeboot} && (!$self->pxeboot());
 
     return SUCCESS;
 };

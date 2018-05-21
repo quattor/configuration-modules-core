@@ -82,4 +82,7 @@ type grub_component = {
       configuration file. Each kernel is described by the following entries.}
     "kernels" ? type_kernel[]
     "password" ? type_grub_password
+    @{pxeboot first: set the PXE boot device as first device. Only
+      for supported platforms (e.g. UEFI)}
+    'pxeboot' ? boolean
 };
