@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>modprobe</artifactId>
   <packaging>pom</packaging>
-  <version>18.3.0-rc6-SNAPSHOT</version>
+  <version>18.3.0</version>
   <name>ncm-modprobe</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
