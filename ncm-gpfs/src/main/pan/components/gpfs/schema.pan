@@ -29,8 +29,26 @@ type gpfs_base = {
     "useyum" : boolean = true
 };
 
+type gpfs_sysmon_common = {
+    'monitorinterval' ? long(0..)
+    'monitoroffset' ? long(0..)
+    'clockalign' ? boolean
+};
+
+type gpfs_sysmon_network = {
+    include gpfs_sysmon_common
+};
+
+type gpfs_sysmon = {
+    "network" ? gpfs_sysmon_network
+};
+
 type gpfs_component = {
     include structure_component
     "base" : gpfs_base
     "cfg" : gpfs_cfg
+    @{GPFS mmsysmonitor configuration.
+      When defined, existing configuration is read and
+      only configured values are modified/added, keeping any other existing ones.}
+    "sysmon" ? gpfs_sysmon
 };

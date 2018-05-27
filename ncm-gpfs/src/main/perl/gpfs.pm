@@ -9,8 +9,11 @@ NCM::gpfs - NCM gpfs configuration component
 use parent qw(NCM::Component);
 our $EC = LC::Exception::Context->new->will_store_all;
 
+use CAF::Object qw(SUCCESS);
 use CAF::Process;
 use CAF::FileWriter;
+use CAF::FileEditor;
+use EDG::WP4::CCM::TextRender;
 
 use File::Basename;
 use File::Path qw(rmtree);
@@ -36,6 +39,10 @@ use constant GPFSRPMS => qw(
     ^gpfs.hadoop-connector$
     ^gpfs.smb$
     );
+
+use constant MMSYSMONCONFIG => '/var/mmfs/mmsysmon/mmsysmonitor.conf';
+use constant MMSYSMONCONTROL => '/usr/lpp/mmfs/bin/mmsysmoncontrol';
+
 
 my $_cached_gss;
 
@@ -90,7 +97,11 @@ sub Configure
         $tmpfh->close();
     }
 
-    return 1 if $self->cleanup_tmpdir($startcwd);
+    return if $self->cleanup_tmpdir($startcwd);
+
+    $self->sysmon($config) or return;
+
+    return SUCCESS;
 }
 
 sub create_tmpdir
@@ -419,6 +430,77 @@ sub startgpfs {
     ## local startup
     return $self->rungpfs($neom, "mmstartup");
 };
+
+# check mmsysmonitor config
+#   Read existing config with Config::Tiny,
+#   write it with modified values and TextRender.
+#   caveat: the shipped config files are .ini, but contain same section multiple times
+#   This is safe since new rpms overwrite the config anyway
+#   When modified, stop and start the mmsysmon using mmsysmoncontrol
+# return undef on failure
+sub sysmon
+{
+    my ($self, $config) = @_;
+
+    my $tr = $config->getTree(
+        $self->prefix."/sysmon",
+        undef, # depth
+        convert_boolean => [$EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{truefalse_boolean}],
+        ) or return SUCCESS;
+
+    # Read file with FileReader (for mocking)
+    my $origfh = CAF::FileReader->new(MMSYSMONCONFIG, log => $self);
+    if (!$origfh) {
+        $self->error("sysmon: ".MMSYSMONCONFIG." missing");
+        return;
+    }
+
+    my $tiny = Config::Tiny->read_string("$origfh");
+
+    # make a copy of the data
+    my $orig = {%$tiny};
+
+    # get the root element _
+    my $root = delete $orig->{_} || {};
+
+    # join root and tr: last one wins
+    # this is safe: we do not expect that any value of root is a hashref
+    my $sysmon = {%$root, %$tr};
+
+    # walk all orig key/values, join them with sysmon
+    foreach my $section (sort keys %$orig) {
+        # don't mind the autovivifaction in the righthand for rtr
+        #   it's needed for the lefthand anyway
+        $sysmon->{$section} = {%{$orig->{$section}}, %{$sysmon->{$section} || {}}};
+    }
+
+    # Use TextRender for repoducibility
+    my $trd = EDG::WP4::CCM::TextRender->new('tiny', $sysmon, log => $self);
+    if (!$trd) {
+        $self->error("Failed to render ".MMSYSMONCONFIG);
+        return;
+    }
+
+    # Write with FileWriter for NoAction support, AtomicWriting etc etc
+    my $fh = $trd->filewriter(MMSYSMONCONFIG, backup => 'old');
+
+    if ($fh->close()) {
+        $self->verbose("Modified ".MMSYSMONCONFIG.", restarting mmsysmon using ".MMSYSMONCONTROL);
+        my $proc = CAF::Process->new([MMSYSMONCONTROL, 'stop'], log => $self);
+        my $out = $proc->output();
+        my $method = $? ? 'warn' : 'verbose';
+        $self->$method("Stop $proc: ec $? output $out");
+
+        $proc = CAF::Process->new([MMSYSMONCONTROL, 'start'], log => $self);
+        $out = $proc->output();
+        $method = $? ? 'warn' : 'verbose';
+        $self->$method("Start $proc: ec $? output $out");
+    } else {
+        $self->verbose("No changes to ".MMSYSMONCONFIG.", no stop/start needed")
+    }
+
+    return SUCCESS;
+}
 
 # return 0 on failure
 sub get_cfg
