@@ -5,8 +5,8 @@ use 5.10.1;
 use parent qw(CAF::Object Exporter);
 
 use NCM::Component::Systemd::Service::Chkconfig;
-use NCM::Component::Systemd::Service::Unit qw(:states :types);
-use NCM::Component::Systemd::Systemctl qw(systemctl_command_units);
+use NCM::Component::Systemd::Service::Unit qw(:states :types :targets);
+use NCM::Component::Systemd::Systemctl qw(systemctl_command_units systemctl_is_active);
 
 use CAF::Object qw (SUCCESS);
 
@@ -619,16 +619,26 @@ sub change
         }
     }
 
-    # TODO: same TODOs as with states
-    foreach my $act (sort keys %$acts) {
-        my @units = @{$acts->{$act}};
+    my $multi_user_active = systemctl_is_active($self, $TARGET_MULTIUSER . '.target');
 
-        # TODO: process units wrt dependencies?
-        if (@units) {
-            # TODO: trap exitcode and stop any further processing in case of error?
-            # CAF::Process logger is sufficient
-            systemctl_command_units($self, $change_activation->{$act}, @units);
+    # Avoid starting/stopping services during boot and shutdown. Trying to stop
+    # services which are already queued to be stopped may cause deadlocks.
+    # Trying to start services which were just stopped may lead to unexpected
+    # behavior and data loss.
+    if ($multi_user_active eq 'active') {
+        # TODO: same TODOs as with states
+        foreach my $act (sort keys %$acts) {
+            my @units = @{$acts->{$act}};
+
+            # TODO: process units wrt dependencies?
+            if (@units) {
+                # TODO: trap exitcode and stop any further processing in case of error?
+                # CAF::Process logger is sufficient
+                systemctl_command_units($self, $change_activation->{$act}, @units);
+            }
         }
+    } else {
+        $self->info("$TARGET_MULTIUSER.target is not active, not starting or stopping any services.");
     }
 
 }
