@@ -107,7 +107,8 @@ $cmp->{EXPAND_GROUPS}->{return} = Set::Scalar->new();
 $cmp->{SOLVE_TRANSACTION}->{return} = "solve\n";
 $cmp->{APPLY_TRANSACTION}->{return} = "apply";
 
-is($cmp->update_pkgs("allpkgs", "groups", "run", "allow", 0, 0, 0, 0, undef), 1,
+delete $cmp->{DISTROSYNC};
+is($cmp->update_pkgs("allpkgs", "groups", "run", "allow", 0, 0, 0, 0, undef, 1), 1,
    "Basic invocation returns success");
 is($cmp->{INSTALLED_PKGS}->{called}, 1, "Installed packages called");
 is(scalar(@{$cmp->{INSTALLED_PKGS}->{args}}), 0,
@@ -134,14 +135,15 @@ is($cmp->{VERSIONLOCK}->{args}->[0], "allpkgs",
 is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "Package cache is expired");
 is($cmp->{MAKE_CACHE}->{called}, 1, "Package cache is created");
 
-
+delete $cmp->{DISTROSYNC};
 is($cmp->update_pkgs("allpkgs", "groups", "run", "allow", "purge",
-                     "e_is_w", "full", "reuse", "filter"), 1,
+                     "e_is_w", "full", "reuse", "filter", 0), 1,
    "Basic invocation with filter returns success");
 is($cmp->{VERSIONLOCK}->{args}->[0], "allpkgs",
    "Locked package versions with correct arguments with filter");
 is($cmp->{WANTED_PKGS}->{args}->[0], "filter",
    "wanted_pkgs receives the expected arguments with filter");
+ok(!$cmp->{DISTROSYNC}->{called}, "Yum distrosync is not called when disabled");
 
 =pod
 

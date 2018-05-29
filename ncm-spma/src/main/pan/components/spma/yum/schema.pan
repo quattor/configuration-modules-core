@@ -42,6 +42,9 @@ type component_spma_yum = {
     @{regexp pattern to install only matching (unescaped) package names.
       This is an advanced setting, and typically only used in a 2-stage software
       install like spmalight.
+      Distro-sync is disabled when filter is active,
+      since there' no way to control what disto-sync updates
+      (and possibly installs for dependency reasons).
       When userpkgs is not defined, it runs as if userpkgs is true.
       (Caution: is userpkgs is false, it will very likely remove
       all non-matching packages. It is advised to remove the userpkgs attribute).
