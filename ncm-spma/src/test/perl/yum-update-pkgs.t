@@ -124,6 +124,8 @@ ok(!$cmp->{SCHEDULE}->{remove}->{called},
 
 ok(!$cmp->{PACKAGES_TO_REMOVE}->{called}, "No packages to be removed with userpkgs");
 ok($cmp->{DISTROSYNC}->{called}, "Yum distrosync is called");
+diag explain $cmp->{DISTROSYNC}->{args};
+is_deeply($cmp->{DISTROSYNC}->{args}, ['run', undef], "Yum distrosync is called with args");
 
 ok($cmp->{APPLY_TRANSACTION}->{called}, "Transaction application is called");
 is($cmp->{APPLY_TRANSACTION}->{args}->[0], "install\nsolve\n",
@@ -135,13 +137,16 @@ is($cmp->{EXPIRE_YUM_CACHES}->{called}, 1, "Package cache is expired");
 is($cmp->{MAKE_CACHE}->{called}, 1, "Package cache is created");
 
 
+my $filterpkgs = {'name*' => {}};
 is($cmp->update_pkgs("allpkgs", "groups", "run", "allow", "purge",
-                     "e_is_w", "full", "reuse", "filter"), 1,
+                     "e_is_w", "full", "reuse", $filterpkgs), 1,
    "Basic invocation with filter returns success");
 is($cmp->{VERSIONLOCK}->{args}->[0], "allpkgs",
    "Locked package versions with correct arguments with filter");
-is($cmp->{WANTED_PKGS}->{args}->[0], "filter",
+is_deeply($cmp->{WANTED_PKGS}->{args}->[0], $filterpkgs,
    "wanted_pkgs receives the expected arguments with filter");
+diag explain $cmp->{DISTROSYNC}->{args};
+is_deeply($cmp->{DISTROSYNC}->{args}, ['run', ['name']], "Yum distrosync is called with args with filter");
 
 =pod
 
