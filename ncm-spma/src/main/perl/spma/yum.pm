@@ -768,7 +768,10 @@ sub distrosync
 sub update_pkgs
 {
     my ($self, $allpkgs, $groups, $run, $allow_user_pkgs, $purge,
-        $error_is_warn, $fullsearch, $reuse_cache, $pkgs) = @_;
+        $error_is_warn, $fullsearch, $reuse_cache, $pkgs, $distrosync) = @_;
+
+    # enabled by default
+    $distrosync = 1 if ! defined($distrosync);
 
     $pkgs = $allpkgs if ! defined($pkgs);
 
@@ -784,7 +787,11 @@ sub update_pkgs
     # Versionlock is determined based on all configured packages
     $self->versionlock($allpkgs, $fullsearch) or return 0;
 
-    $self->distrosync($run) or return 0;
+    if ($distrosync) {
+        $self->distrosync($run) or return 0;
+    } else {
+        $self->verbose("Skipping distro-sync");
+    }
 
     my $group_pkgs = $self->expand_groups($groups);
     defined($group_pkgs) or return 0;
@@ -822,7 +829,10 @@ sub update_pkgs
 sub update_pkgs_retry
 {
     my ($self, $allpkgs, $groups, $run, $allow_user_pkgs, $purge,
-        $retry_if_not_allow_user_pkgs, $fullsearch, $pkgs) = @_;
+        $retry_if_not_allow_user_pkgs, $fullsearch, $pkgs, $distrosync) = @_;
+
+    # enabled by default
+    $distrosync = 1 if ! defined($distrosync);
 
     # If an error is logged due to failed transaction (or spare dependencies),
     # it might be retried and might succeed, but ncm-ncd will not allow
@@ -834,7 +844,7 @@ sub update_pkgs_retry
     my $update_pkgs = sub {
         my ($allow_user_pkgs, $error_is_warn, $reuse_cache) = @_;
         return $self->update_pkgs($allpkgs, $groups, $run, $allow_user_pkgs, $purge,
-                                  $error_is_warn, $fullsearch, $reuse_cache, $pkgs);
+                                  $error_is_warn, $fullsearch, $reuse_cache, $pkgs, $distrosync);
     };
 
     # Only on the initial try, purge and recreate the cache
@@ -1138,11 +1148,18 @@ sub Configure
     my $allpkgs = $config->getTree(PKGS_TREE);
     my $groups = $config->getTree(GROUPS_TREE) || {};
 
+    my $distrosync = 1;
+
     # packages to install; undef means allpkgs will be installed
     my $pkgs;
     if (exists($t->{filter})) {
         # only define this here, should not affect selection of the main_repos_dir
         $t->{userpkgs} = 1 if ! $userpkgs_defined;
+
+        # disable distro-sync, as this might update packages beyond the package filter control
+        $self->verbose("Filter disables distro-sync");
+        $distrosync = 0;
+
         local $@;
         my $regex;
         eval {
@@ -1201,7 +1218,7 @@ sub Configure
 
     $res = $self->update_pkgs_retry($allpkgs, $groups, $t->{run},
                                     $t->{userpkgs}, $purge_caches, $t->{userpkgs_retry},
-                                    $t->{fullsearch}, $pkgs);
+                                    $t->{fullsearch}, $pkgs, $distrosync);
 
     my $ec = 1;
 

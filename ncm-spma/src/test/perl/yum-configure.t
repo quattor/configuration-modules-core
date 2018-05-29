@@ -81,7 +81,7 @@ All the top-level methods are called, with C<update_pkgs_retry> being the last o
 my $name = $mock->call_pos($UPDATE_PKGS);
 is($name, "update_pkgs_retry", "Packages are updated at the end of the component");
 my @args = $mock->call_args($UPDATE_PKGS);
-is(scalar @args, 9, "expected number args (+1 for self) pt1");
+is(scalar @args, 10, "expected number args (+1 for self) pt1");
 is(ref($args[2]), 'HASH', "Set of groups is passed");
 ok($args[3], "Run argument is correctly passed");
 ok(!$args[4], "No user packages allowed in update_pkgs_retry");
@@ -91,6 +91,7 @@ ok(exists($args[1]->{ConsoleKit}),
 my $t = $cfg->getTree($cmp->prefix);
 ok(! defined $t->{filter}, "no filter specified");
 ok(! defined $args[8], "pkgs to install argument is undef (ie all packages)");
+ok($args[9], "distro-sync enabled");
 
 =pod
 
@@ -189,7 +190,7 @@ $mock->clear();
 
 $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
-is(scalar @args, 9, "expected number args (+1 for self) pt2");
+is(scalar @args, 10, "expected number args (+1 for self) pt2");
 ok(!$args[3], "No run is correctly passed to update_pkgs_retry");
 
 =pod
@@ -242,13 +243,14 @@ $cmp->Configure($cfg);
 @args = $mock->call_args($UPDATE_PKGS);
 #diag "user_pkgs_retry args ", explain \@args;
 is_deeply([sort keys %{$args[1]}], [escape("A-B-C"), "ConsoleKit"], "All packages (none filtered)");
-is(scalar @args, 9, "expected number args (+1 for self) pt3");
+is(scalar @args, 10, "expected number args (+1 for self) pt3");
 ok($args[4], "userpkgs enabled");
 $t = $cfg->getTree($cmp->prefix);
 is($t->{filter}, "^A-B", "filter specified");
 is_deeply([sort keys %{$args[8]}], [escape("A-B-C")], "Only A-B-C pkg installed (not Consolekit, filter applied)");
 is_deeply($args[8]->{'A_2dB_2dC'}, {'_2e4_2e1_2d3_2eel6' => {'arch' => {'x86_64' => 'sl620_x86_64'}}},
           "A-B-C pkg with data installed filter applied)");
+ok(!$args[9], "distro-sync disabled");
 
 
 =pod
