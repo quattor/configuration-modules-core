@@ -138,7 +138,7 @@ prefix "/software/components/openstack/network/neutron/l3";
 
 prefix "/software/components/openstack/network/neutron/metadata";
 "DEFAULT" = dict(
-    "nova_metadata_ip", "controller.mysite.com",
+    "nova_metadata_host", "controller.mysite.com",
     "metadata_proxy_shared_secret", "metadata_good_password",
 );
 
