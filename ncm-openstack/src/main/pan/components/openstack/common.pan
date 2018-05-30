@@ -181,9 +181,6 @@ type openstack_DEFAULTS = {
     networks}
     'force_metadata' ? boolean = true
     @{From Neutron metadata_agent.ini
-    IP address or hostname used by Nova metadata server}
-    'nova_metadata_ip' ? string
-    @{From Neutron metadata_agent.ini
     When proxying metadata requests, Neutron signs the Instance-ID header with a
     shared secret to prevent spoofing. You may select any string for a secret,
     but it must match here and in the configuration used by the Nova Metadata
