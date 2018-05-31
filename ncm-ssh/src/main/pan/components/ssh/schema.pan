@@ -8,6 +8,10 @@ declaration template components/ssh/schema;
 include 'quattor/types/component';
 include 'pan/types';
 
+variable SSH_SCHEMA_VERSION ?= '5.3';
+
+include 'components/ssh/schema-' + SSH_SCHEMA_VERSION;
+
 type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey' +
     '|keyboard-interactive|password)$');
 
@@ -87,6 +91,7 @@ type ssh_core_options_type = {
 
 type ssh_daemon_options_type = {
     include ssh_core_options_type
+    include ssh_authkeyscommand_options_type
     "AFSTokenPassing" ? legacy_binary_affirmation_string
     @{AcceptEnv, one per line}
     "AcceptEnv" ? string[]
@@ -95,8 +100,6 @@ type ssh_daemon_options_type = {
     "AllowTcpForwarding" ? legacy_binary_affirmation_string
     "AllowUsers" ? string
     "AuthorizedKeysFile" ? string
-    "AuthorizedKeysCommand" ? string
-    "AuthorizedKeysCommandRunAs" ? string
     "Banner" ? string
     "ClientAliveCountMax" ? long
     "ClientAliveInterval" ? long
