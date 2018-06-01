@@ -25,3 +25,9 @@ EXPORT {
 [%      END %]
 }
 [% END %]
+
+[% IF includes -%]
+[%-     FOREACH incl IN includes -%]
+%include "[%- incl  -%]"
+[%      END -%]
+[% END -%]

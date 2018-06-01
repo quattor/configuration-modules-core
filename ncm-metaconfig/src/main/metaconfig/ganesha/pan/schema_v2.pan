@@ -376,4 +376,9 @@ type ganesha_v2_config_sections = {
 type ganesha_v2_config = {
     "main" ? ganesha_v2_config_sections
     "exports" : ganesha_v2_exports[]
+    @{Additional files can be referenced in a configuration. The included file
+    is inserted into the configuration text in place of this line. The configuration
+    following this line is resumed after the end of the included files. File inclusion
+    can be to any depth}
+    "includes" ? absolute_file_path[]
 };

@@ -21,4 +21,8 @@ prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/con
 "RQOTA_Port" = null; # no rqouta on gpfs
 "Clustered" = true;
 
+# Include external configurations
+prefix "/software/components/metaconfig/services/{/etc/ganesha/ganesha.conf}/contents";
+"includes" = list('/etc/ganesha/export.d/INDEX.conf', '/etc/ganesha/my.conf');
+
 include 'exports2';

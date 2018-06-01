@@ -43,4 +43,6 @@ Tests for export config
 ^\s{4}\}$
 ^\}$
 ^$
+^\%include\s{1}"/etc/ganesha/export.d/INDEX.conf"$
+^\%include\s{1}"/etc/ganesha/my.conf"$
 
