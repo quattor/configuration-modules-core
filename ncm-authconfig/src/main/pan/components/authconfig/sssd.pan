@@ -14,13 +14,17 @@ include 'components/authconfig/sssd/ipa';
 @{
     Valid SSSD providers.
 }
-type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit|ipa)$");
+type sssd_provider_string = string with match(SELF, "^(ldap|simple|local|permit|ipa|ad)$");
 
 @{
     Valid SSSD auth providers.
 }
-type sssd_auth_provider_string = string with match(SELF, "^(ldap|krb5|local|permit|ipa)$");
+type sssd_auth_provider_string = string with match(SELF, "^(ldap|krb5|local|permit|ipa|ad)$");
 
+@{
+    Valid LDAP schema types.
+}
+type sssd_ldap_schema_string = string with match(SELF, "^(rfc2307|rfc2307bis|ipa|ad)$");
 
 @{
     Simple access provider for SSSD.  See the sssd-simple man page.
@@ -125,6 +129,23 @@ type authconfig_sssd_domain  = {
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long = 0
     "pwd_expiration_warning" ? long
+    "ldap_schema" ? sssd_ldap_schema_string
+    "ldap_group_name" ? string
+    "ldap_referrals" ? boolean
+    "ldap_sasl_mech" ? string
+    "ldap_sasl_authid" ? string
+    "ldap_id_mapping" ? boolean
+    "ldap_search_base" ? string
+    "ldap_account_expire_policy" ? string
+    "ldap_access_order" ? string
+    "ldap_krb5_keytab" ? string
+    "krb5_realm" ? string
+    "krb5_use_enterprise_principal" ? boolean
+    "krb5_use_kdcinfo" ? boolean
+    "ad_enable_gc" ? boolean
+    "ad_domain" ? string
+    "ad_enabled_domains" ? string
+    "ad_gpo_access_control" ? string
 };
 
 type authconfig_method_sssd_type = {
