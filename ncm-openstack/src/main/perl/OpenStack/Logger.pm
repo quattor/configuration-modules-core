@@ -36,9 +36,9 @@ sub debug
     return $self->{reporter}->debug(1, @_);
 }
 
-# Mock basic methods of Log4Perl getLogger instance
+# Mock basic methods of Log4Perl getLogger instance + verbose
 no strict 'refs'; ## no critic
-foreach my $i (qw(error warn info)) {
+foreach my $i (qw(error warn info verbose)) {
     *{$i} = sub {
         my ($self, @args) = @_;
         return $self->{reporter}->$i(@args);
