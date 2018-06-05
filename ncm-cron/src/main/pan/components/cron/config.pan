@@ -1,8 +1,8 @@
 ${componentconfig}
 
 'securitypath' ?= {
-    if (exists('/system/archetype/os/name') &&
-        value('/system/archetype/os/name') == 'solaris') {
+    if (exists('/system/archetype/os') &&
+            value('/system/archetype/os') == 'solaris') {
         '/etc/cron.d';
     } else {
         '/etc';
