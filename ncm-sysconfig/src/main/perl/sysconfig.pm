@@ -1,52 +1,78 @@
 #${PMcomponent}
 
-use parent qw(NCM::Component);
+=head1 NAME
+
+sysconfig: management of sysconfig files
+
+=head1 DESCRIPTION
+
+The I<sysconfig> component manages system configuration files in
+C<< /etc/sysconfig >> . These are files which contain key-value pairs.
+However there is the possibility to add verbatim text either before or after the key-value pair definitions.
+
+=cut
+
+use parent qw(NCM::Component CAF::Path);
+
 our $EC = LC::Exception::Context->new->will_store_all;
 
-use LC::Check;
+our $NoActionSupported = 1;
 
-use File::Path;
-use File::Basename;
+use Readonly;
 
+Readonly my $QUOTE => "\"";
+Readonly my $SYSCONFIGDIR => "/etc/sysconfig"; # The base directory for sysconfig files.
+
+sub filelist_read
+{
+    my ($self) = @_;
+
+    # Read first the list of sysconfig files which have been
+    # previously managed by this component.  These will have to
+    # be deleted if no longer in the configuration.
+    my %filelist;
+    my $fh = CAF::FileReader->open("$SYSCONFIGDIR/ncm-sysconfig", log => $self);
+    while (my $line = <$fh>) {
+        chomp($line);
+        $filelist{$line} = 1;
+    }
+    $fh->close();
+
+    return %filelist;
+}
+
+sub filelist_write
+{
+    my ($self, %filelist) = @_;
+
+    # Write the list of managed configuration files.
+    my $fh = CAF::FileWriter->open("$SYSCONFIGDIR/ncm-sysconfig", log => $self);
+    for my $file (keys %filelist) {
+        print $fh "$file\n";
+    }
+    $fh->close();
+
+    return 1;
+}
 
 sub Configure
 {
     my ($self, $config) = @_;
 
-    # Define paths for convenience.
-    my $base = "/software/components/sysconfig";
-
-    # The base directory for sysconfig files.
-    my $sysconfigdir = "/etc/sysconfig";
-
     # Load configuration into a hash
-    my $sysconfig_config = $config->getElement($base)->getTree();
+    my $sysconfig_config = $config->getTree($self->prefix());
 
     # Ensure that sysconfig directory exists.
-    mkpath($sysconfigdir,0,0755) unless (-e $sysconfigdir);
-    if (! -d $sysconfigdir) {
-        $self->error("$sysconfigdir isn't a directory or can't be created");
-        return 1;
-    }
+    $self->directory($SYSCONFIGDIR, owner=>0, group=>0, mode=>0755);
 
     # This will be a list of the configuration files managed by this component.
-    my %newcfg;
+    my %files_managed;
 
-    # Read first the list of sysconfig files which have been
-    # previously managed by this component.  These will have to
-    # be deleted if no longer in the configuration.
-    my %oldcfg;
-    if (-f "$sysconfigdir/ncm-sysconfig") {
-        open CONF, "<", "$sysconfigdir/ncm-sysconfig";
-        while (<CONF>) {
-            chomp;
-            $oldcfg{$_} = 1;
-        }
-    }
+    my %files_previous = $self->filelist_read();
 
     # Loop over all of the defined files, writing each as necessary.
     if ( $sysconfig_config->{files} ) {
-        for my $file (sort keys %{$sysconfig_config->{files}}) {
+        foreach my $file (sort keys %{$sysconfig_config->{files}}) {
 
             my $pairs = $sysconfig_config->{files}->{$file};
 
@@ -54,56 +80,42 @@ sub Configure
             my $contents = '';
 
             # Add the prologue if it exists.
-            if (defined($pairs->{"prologue"})) {
-                $contents .= $pairs->{"prologue"} . "\n";
+            if (defined($pairs->{prologue})) {
+                $contents .= "$pairs->{prologue}\n";
             }
 
             # Loop over the pairs adding the information to the file.
-            for my $key (sort keys %{$pairs}) {
+            for my $key (sort keys %$pairs) {
                 if ($key ne 'prologue' && $key ne 'epilogue') {
-                    $contents .= $key . '=' . $pairs->{$key} . "\n";
+                    $contents .= "$key=$pairs->{$key}\n";
                 }
             }
 
             # Add the epilogue if it exists.
-            if (defined($pairs->{"epilogue"})) {
-                $contents .= $pairs->{"epilogue"} . "\n";
+            if (defined($pairs->{epilogue})) {
+                $contents .= "$pairs->{epilogue}\n";
             }
 
             # Now actually update the file, if needed.
-
-            my $result = LC::Check::file("$sysconfigdir/$file",
-                                         backup => ".old",
-                                         contents => $contents,
-                );
-            unless ( $result >= 0 ) {
-                $self->error("Error updating file $sysconfigdir/$file");
-            }
+            my $fh = CAF::FileWriter->open("$SYSCONFIGDIR/$file", backup => ".old", log => $self);
+            print $fh $contents;
+            $fh->close();
 
             # Remove this file from the list of old configuration
             # files add to the new configuration files.
-            delete($oldcfg{"$sysconfigdir/$file"});
-            $newcfg{"$sysconfigdir/$file"} = 1;
+            delete($files_previous{"$SYSCONFIGDIR/$file"});
+            $files_managed{"$SYSCONFIGDIR/$file"} = 1;
         }
     }
 
     # Remove any old configuration files which haven't been updated.
-    for my $file (keys %oldcfg) {
-        unlink $file if (-e $file);
+    for my $file (keys %files_previous) {
+        $self->cleanup($file);
     }
 
-    # Write the list of managed configuration files.
-    if(open CONF, ">", "$sysconfigdir/ncm-sysconfig") {
-        for my $file (keys %newcfg) {
-            print CONF $file . "\n";
-        }
-        close CONF;
-    } else {
-        $self->error("error writing file $sysconfigdir/ncm-sysconfig");
-        return 1;
-    }
+    $self->filelist_write(%files_managed);
 
-    return 0;
+    return 1;
 }
 
-1;      # Required for PERL modules
+1; # Required for PERL modules
