@@ -4,6 +4,7 @@ multiline
 ---
 ^ALLOWED_HOSTS\s?=\s*.+\s*$
 ^CACHES\s?=\s*\{\s*$
+^\s{8}'LOCATION': \['controller.mysite.com:11211', 'controller.myothersite.com:11211'\],$
 ^\}$
 ^OPENSTACK_API_VERSIONS\s?=\s?\{$
 ^OPENSTACK_KEYSTONE_DEFAULT_DOMAIN\s?=\s*.+\s*$

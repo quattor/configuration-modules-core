@@ -2,7 +2,7 @@
 
 [% FILTER indent -%]
 [%-    FOR pair IN data.pairs -%]
-'[%         pair.key %]': [%- -%]
+'[%        pair.key %]': [%- -%]
 [%-        IF pair.value.is_boolean -%]
 [%             pair.value ? "True" : "False" %],
 [%         ELSIF pair.value.is_string -%]
@@ -10,17 +10,19 @@
 [%                 CASE pythonconfig -%]
 _("[%                  pair.value %]"),
 [%                 CASE -%]
-[%-                SWITCH pair.key -%]
-[%                     CASE 'handlers' -%]
-['[%                       pair.value %]'],
-[%                     CASE -%]
-"[%                        pair.value %]",
-[%                 END -%]
-[%             END -%]
+[%-                     SWITCH pair.key -%]
+[%                          CASE 'handlers' -%]
+['[%                            pair.value %]'],
+[%                          CASE -%]
+"[%                             pair.value %]",
+[%                      END -%]
+[%              END -%]
 [%         ELSIF CCM.is_hash(pair.value) -%]
 {[%            INCLUDE 'openstack/horizon_level1.tt' data=pair.value section=pair.key -%]},
+[%         ELSIF CCM.is_list(pair.value) -%]
+['[%            pair.value.join('\', \'') %]'],
 [%         ELSE -%]
-[%           pair.value.join('', '') %],
+[%              pair.value %],
 [%         END -%]
 [%     END -%]
 [%- END -%]
