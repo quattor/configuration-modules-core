@@ -11,7 +11,7 @@ prefix "/metaconfig/contents";
 "allowed_hosts" = list('*');
 "openstack_keystone_url" = 'http://controller.mysite.com:5000/v3';
 "caches/default" = dict(
-    "LOCATION", 'controller.mysite.com:11211',
+    "LOCATION", list('controller.mysite.com:11211', 'controller.myothersite.com:11211'),
 );
 "openstack_keystone_multidomain_support" = true;
 "time_zone" = "Europe/Brussels";
