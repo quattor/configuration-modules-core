@@ -48,6 +48,8 @@ $fh = get_file("/etc/opensm/partitions.conf");
 is("$fh", "default=0x7fff : ALL;\n", "partitions.conf created");
 $fh = get_file("/etc/opensm/ib-node-name-map");
 is("$fh", "0x0123456789abcdef \"some hca\"\n", "node name map created");
+$fh = get_file("/etc/opensm/opensm.conf");
+is("$fh", "virt_enabled 2\nvirt_max_ports_in_process 0\n", "opensm.conf created");
 
 ok(command_history_ok(['service opensmd restart']),
    "change in partitions.conf triggered restart in opensmd");

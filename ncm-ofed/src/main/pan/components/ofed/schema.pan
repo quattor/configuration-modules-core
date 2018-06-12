@@ -151,7 +151,24 @@ type component_ofed_partition = {
     'properties' : component_ofed_partition_property[]
 };
 
-@{Subnet manager configuration}
+@documentation{
+    OpenSM configuration file. Get the defaults and annotation with 'opensm -c /tmp/opensm.conf'
+}
+type component_ofed_opensm_config = {
+    @{Virtualization support:
+        0: Ignore Virtualization - No virtualization support
+        1: Disable Virtualization - Disable virtualization on all Virtualization supporting ports
+        2: Enable Virtualization - Enable virtualization on all Virtualization supporting ports}
+    'virt_enabled' ? long(0..2)
+    @{Maximum number of ports to be processed simultaneously by Virtualization Manager
+      (0 - process all pending ports)}
+    'virt_max_ports_in_process' ? long(0..)
+    @{Default value for hop limit to be returned in path records where either the
+      source or desitination are virtual ports}
+    'virt_default_hop_limit' ? long(0..)
+};
+
+@documentation{Subnet manager configuration}
 type component_ofed_opensm = {
     @{daemons to restart on configuration changes}
     "daemons" : string[] = list('opensmd')
@@ -159,6 +176,8 @@ type component_ofed_opensm = {
     "partitions" ? component_ofed_partition{}
     @{Node name map configuration. Dict key is the GUID starting with 'x' (the 0 is prefixed automatically)}
     "names" ? string{}
+    @{configuration file}
+    "config" ? component_ofed_opensm_config
 } with {
     if (exists(SELF['names'])) {
         foreach (guid; descr; SELF['names']) {
