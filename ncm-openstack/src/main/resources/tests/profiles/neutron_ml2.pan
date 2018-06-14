@@ -7,6 +7,8 @@ bind "/metaconfig/contents" = openstack_neutron_ml2_config;
 "/metaconfig/module" = "common";
 
 prefix "/metaconfig/contents";
+"ml2_type_flat" = dict();
+
 "ml2_type_vxlan" = dict(
     'vni_ranges', '1:1000',
 );

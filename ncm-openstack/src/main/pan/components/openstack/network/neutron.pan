@@ -142,11 +142,11 @@ type openstack_neutron_common = {
 };
 type openstack_neutron_ml2_config = {
     'ml2' : openstack_neutron_ml2
-    'ml2_type_flat' : openstack_neutron_ml2_type_flat
+    'ml2_type_flat' ? openstack_neutron_ml2_type_flat
     'ml2_type_vxlan' ? openstack_neutron_ml2_type_vxlan
     'ml2_type_vlan' ? openstack_neutron_ml2_type_vlan
     'securitygroup' ? openstack_neutron_securitygroup
-};
+} with length(SELF) > 0;
 
 @documentation {
     list of Neutron linuxbridge service sections
