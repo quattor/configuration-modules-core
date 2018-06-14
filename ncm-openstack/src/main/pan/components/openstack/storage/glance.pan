@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/glance;
+declaration template components/openstack/storage/glance;
 
 include 'components/openstack/identity';
 
@@ -24,8 +24,9 @@ type openstack_glance_store = {
     NOTE: The value given for this configuration option must be a valid
     scheme for a store registered with the ``stores`` configuration
     option.}
-    'default_store' : string = 'file' with match (SELF,
-        '^(file|filesystem|http|https|swift|swift\+http|swift\+https|swift\+config|rbd|sheepdog|cinder|vsphere)$')
+    'default_store' : choice('file', 'filesystem', 'http',
+        'https', 'swift', 'swift+http', 'swift+https', 'swift+config', 'rbd',
+        'sheepdog', 'cinder', 'vsphere') = 'file'
     @{Directory to which the filesystem backend store writes images.
     Upon start up, Glance creates the directory if it does not already
     exist and verifies write access to the user under which

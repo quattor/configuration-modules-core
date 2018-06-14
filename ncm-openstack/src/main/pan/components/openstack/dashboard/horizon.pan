@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/horizon;
+declaration template components/openstack/dashboard/horizon;
 
 @documentation {
     The Horizon configuration options in "caches" Section.
