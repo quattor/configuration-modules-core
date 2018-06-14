@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/cinder;
+declaration template components/openstack/volume/cinder;
 
 include 'components/openstack/identity';
 
@@ -18,11 +18,11 @@ type openstack_cinder_lvm = {
     @{Determines the iSCSI protocol for new iSCSI volumes, created with tgtadm or
     lioadm target helpers. In order to enable RDMA, this parameter should be set
     with the value "iser"}
-    'iscsi_protocol' : string = 'iscsi' with match (SELF, '^(iscsi|iser)$')
+    'iscsi_protocol' : choice('iscsi', 'iser') = 'iscsi'
     @{iSCSI target user-land tool to use. tgtadm is default, use lioadm for LIO
     iSCSI support, scstadmin for SCST target support, ietadm for iSCSI Enterprise
     Target, iscsictl for Chelsio iSCSI Target or fake for testing}
-    'iscsi_helper' : string = 'lioadm' with match (SELF, '^(tgtadm|lioadm|scstadmin|iscsictl|ietadm|fake)$')
+    'iscsi_helper' : choice('tgtadm', 'lioadm', 'scstadmin', 'iscsictl', 'ietadm', 'fake') = 'lioadm'
 };
 
 @documentation {

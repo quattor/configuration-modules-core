@@ -2,8 +2,7 @@
 # ${developer-info}
 # ${author-info}
 
-
-declaration template components/openstack/nova;
+declaration template components/openstack/compute/nova;
 
 include 'components/openstack/identity';
 

@@ -3,13 +3,13 @@
 # ${author-info}
 
 
-declaration template components/openstack/manila;
+declaration template components/openstack/share/manila;
 
 include 'components/openstack/identity';
 
 
-type openstack_manila_share_driver = string with match(SELF,
-    '^(manila.share.drivers.lvm.LVMShareDriver|manila.share.drivers.cephfs.driver.CephFSDriver|manila.share.drivers.generic.GenericShareDriver)$');
+type openstack_manila_share_driver = choice('manila.share.drivers.lvm.LVMShareDriver',
+    'manila.share.drivers.cephfs.driver.CephFSDriver', 'manila.share.drivers.generic.GenericShareDriver');
 
 @documentation {
     Common Manila storage backends options
@@ -48,7 +48,7 @@ type openstack_manila_ceph = {
     @{Fully qualified path to the ceph.conf file}
     'cephfs_conf_path' : absolute_file_path = '/etc/ceph/ceph.conf'
     @{The type of protocol helper to use. Default is CEPHFS}
-    'cephfs_protocol_helper_type' : string = 'CEPHFS' with match (SELF, '^(CEPHFS|NFS)$')
+    'cephfs_protocol_helper_type' : choice('CEPHFS', 'NFS') = 'CEPHFS'
     @{The name of the ceph auth identity to use}
     'cephfs_auth_id' : string = 'manila'
     @{The name of the cluster in use, if it is not the default ('ceph')}

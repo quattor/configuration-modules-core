@@ -5,61 +5,14 @@ include 'pan/types';
 include 'components/openstack/common';
 
 include 'components/openstack/identity';
-include 'components/openstack/nova';
-include 'components/openstack/glance';
-include 'components/openstack/cinder';
-include 'components/openstack/manila';
-include 'components/openstack/neutron';
-include 'components/openstack/horizon';
+include 'components/openstack/compute';
+include 'components/openstack/storage';
+include 'components/openstack/volume';
+include 'components/openstack/share';
+include 'components/openstack/network';
+include 'components/openstack/dashboard';
 
-@documentation {
-Type to define OpenStack storage services
-}
-type openstack_storage_config = {
-    'glance' ? openstack_glance_config
-} with openstack_oneof(SELF, 'glance');
-
-@documentation {
-Type to define OpenStack volume services
-}
-type openstack_volume_config = {
-    'cinder' ? openstack_cinder_config
-} with length(SELF) == 1;
-
-@documentation {
-Type to define OpenStack shared services
-}
-type openstack_share_config = {
-    'manila' ? openstack_manila_config
-} with length(SELF) == 1;
-
-@documentation {
-Type to define OpenStack compute services
-}
-type openstack_compute_config = {
-    'nova' ? openstack_nova_config
-} with openstack_oneof(SELF, 'nova');
-
-@documentation {
-Type to define OpenStack network services
-}
-type openstack_network_config = {
-    'neutron' ? openstack_neutron_config
-} with openstack_oneof(SELF, 'neutron');
-
-@documentation {
-Type to define OpenStack dashboard services
-}
-type openstack_dashboard_config = {
-    'horizon' ? openstack_horizon_config
-} with openstack_oneof(SELF, 'horizon');
-
-@documentation {
-Type to define OpenStack messaging services
-}
-type openstack_messaging_config = {
-    'rabbitmq' ? openstack_rabbitmq_config
-} with openstack_oneof(SELF, 'rabbitmq');
+include 'components/openstack/messaging';
 
 @documentation{
 Hyperviosr configuration.

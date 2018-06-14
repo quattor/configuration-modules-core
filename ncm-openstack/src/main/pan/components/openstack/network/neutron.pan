@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/neutron;
+declaration template components/openstack/network/neutron;
 
 include 'components/openstack/identity';
 
@@ -209,4 +209,4 @@ type openstack_neutron_config = {
     'l3' ? openstack_neutron_l3_config
     'dhcp' ? openstack_neutron_dhcp_config
     'metadata' ? openstack_neutron_metadata_config
-}; # TODO use openstack_oneof
+};
