@@ -48,13 +48,17 @@ type openstack_identity_group = {
     'description' ? string
 };
 
+@{openstack identity v3 role}
+type openstack_identity_role = {
+    'domain_id' ? openstack_valid_domain
+};
+
 @{openstack identity v3 servicce}
 type openstack_identity_service = {
     'description' ? string
     'type' : choice('compute', 'ec2', 'identity', 'image', 'network', 'volume')
 };
 
-#TODO There is no role support yet (as there is no description attribute).
 @documentation {
 Type to define OpenStack identity v3 services.
 }
@@ -70,6 +74,8 @@ type openstack_identity_config = {
     'user' ? openstack_identity_user{}
     @{group, key is used as group name}
     'group' ? openstack_identity_group{}
+    @{role, key is used as role name}
+    'role' ? openstack_identity_role{}
     @{service, key is used as service name}
     'service' ? openstack_identity_service{}
 } with openstack_oneof(SELF, 'keystone');
