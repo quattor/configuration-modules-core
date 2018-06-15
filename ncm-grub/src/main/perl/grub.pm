@@ -165,7 +165,7 @@ sub password
         return SUCCESS;
     } elsif (!$tree->{enabled}) {
         $self->info("removing grub password");
-        $grub_fh->remove_lines(qr/^password\s+/, '');
+        $grub_fh->remove_lines(qr/^password\s+/, q(no good line));
         return SUCCESS;
     }
 

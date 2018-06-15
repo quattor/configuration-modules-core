@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 use Test::Quattor qw(password);
+use Test::Quattor qw(nopassword);
 use Test::Quattor::Object;
 use CAF::Object;
 use Test::MockModule;
@@ -60,6 +61,18 @@ title abc
 
 EOF
 
+Readonly my $NEWGRUBCFG_REMOVED_PASSWORD => <<'EOF';
+# some header
+#
+terminal serial console
+serial --unit=0 --speed=5678 --parity=n --word=8
+
+blah blah
+
+title abc
+
+EOF
+
 set_file_contents($GRUBCFGFN, "$GRUBCFG");
 
 my $passwdcfg = get_config_for_profile("password");
@@ -80,6 +93,12 @@ $grubfh = get_file($GRUBCFGFN);
 isa_ok($grubfh, 'CAF::FileEditor', "grub config file is an editor instance");
 
 is("$grubfh", "$NEWGRUBCFG", "grub cfg edited as expected");
+
+# Test removal of password
+set_file_contents($GRUBCFGFN, "$NEWGRUBCFG");
+my $nopasswdcfg = get_config_for_profile("nopassword");
+ok($cmp->password($nopasswdcfg, $grubfh));
+is("$grubfh", $NEWGRUBCFG_REMOVED_PASSWORD);
 
 =head1 grubby
 
