@@ -24,6 +24,16 @@ is(get_file_contents('/etc/sysconfig/ncm-sysconfig'), "/etc/sysconfig/examplefil
 is(get_file_contents('/etc/sysconfig/delete_me'), undef, "Has the previously managed file been deleted?");
 
 isa_ok(get_file('/etc/sysconfig/examplefile'), "CAF::FileWriter", "Is the file-handle for the example file the correct class?");
-is(get_file_contents('/etc/sysconfig/examplefile'), "key1=testvalue\nkey2=valuetest\n", "Does the example file have the correct contents?");
+my $example_contents = <<'EOF';
+OPTS="$OPTS -a /proc/acpi/ac_adapter/*/state"
+array=(this is a bash array)
+boot=/dev/sda
+internal1="quoting 'inside' a line"
+internal2='quoting "inside" a line'
+key1=testvalue
+key2=valuetest
+words='lots of words'
+EOF
+is(get_file_contents('/etc/sysconfig/examplefile'), $example_contents, "Does the example file have the correct contents?");
 
 done_testing();
