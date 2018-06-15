@@ -63,8 +63,8 @@ ok(!defined(get_flavour('abc', {abc => {x => {}, y => {}}}, $obj)),
 is(get_flavour('abc', {abc => {x => {}, y => {quattor => {}}}}, $obj), 'y',
    "get_flavour returns single flavour with quattor attr when multiple candidates exist");
 
-is(get_flavour('identity', {identity => {x => {}, keystone => {}}}, $obj), 'keystone',
-   "get_flavour returns single flavour keystone for identity type when multiple candidates exist");
+is(get_flavour('identity', {identity => {client => {}, keystone => {}}}, $obj), 'keystone',
+   "get_flavour returns single flavour keystone for identity type when client exist");
 
 is(get_flavour('identity', $srv->{comptree}, $obj), "keystone",
    "get_flavour returned correct flavour");
