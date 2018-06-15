@@ -40,6 +40,6 @@ function openstack_is_valid_identity = {
 
     is_string(name) && (
         name == 'default' ||
-        exists(format("/software/components/openstack/identity/%s/%s", ARGV[1], name))
+        exists(format("/software/components/openstack/identity/client/%s/%s", ARGV[1], name))
     );
 };

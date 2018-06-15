@@ -15,14 +15,17 @@ include 'components/openstack/dashboard';
 include 'components/openstack/messaging';
 
 @documentation{
-Hyperviosr configuration.
+Hypervisor configuration.
 }
 type openstack_hypervisor_config = {
 };
 
 @documentation {
-Type to define OpenStack services
-Keystone, Nova, Neutron, etc
+Type to define OpenStack services.
+For actual OpenStack services (like identity, compute, ...), the structure
+has an optional client substructure (this is service configuration data to be set via
+the API client); and the other attributes are possble flavours
+(e.g. like keystone flavour for identity).
 }
 type openstack_component = {
     include structure_component

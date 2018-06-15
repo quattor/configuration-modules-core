@@ -16,11 +16,10 @@ Readonly my $DEFAULT_PREFIX => "/software/components/openstack";
 Readonly my $VIRSH_COMMAND => "/usr/bin/virsh";
 
 # This map is used when multiple flavour candidates are found in the tree
-# (i.e. regular configuartion data) and the fallback filter for
+# (i.e. regular configuration data) and the fallback filter for
 # the quattor subtree (from the custom openstack_quattor type) would not detect it
 # This should match the openstack_oneof condition in the schema
 Readonly my %TYPE_FLAVOUR_CANDIDATES => {
-    identity => [qw(keystone)],
 };
 
 =head2 Functions
@@ -39,7 +38,10 @@ sub get_flavour
     my ($type, $tree, $log) = @_;
 
     my $flavour;
-    my @flavours = sort keys %{$tree->{$type}};
+
+    # client is reserved configuration data processed by API client
+    my @flavours = grep {$_ ne 'client'} sort keys %{$tree->{$type}};
+
     if ($type eq 'openrc') {
         # Not an actual openstack service
         $flavour = $type;

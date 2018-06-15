@@ -59,11 +59,8 @@ type openstack_identity_service = {
     'type' : choice('compute', 'ec2', 'identity', 'image', 'network', 'volume')
 };
 
-@documentation {
-Type to define OpenStack identity v3 services.
-}
-type openstack_identity_config = {
-    'keystone' ? openstack_keystone_config
+@{identity configuration via API client}
+type openstack_identity_client = {
     @{region, key is used as region id}
     'region' ? openstack_identity_region{}
     @{domain, key is used as domain name}
@@ -78,4 +75,12 @@ type openstack_identity_config = {
     'role' ? openstack_identity_role{}
     @{service, key is used as service name}
     'service' ? openstack_identity_service{}
+};
+
+@documentation {
+Type to define OpenStack identity v3 services.
+}
+type openstack_identity_config = {
+    'keystone' ? openstack_keystone_config
+    'client' ? openstack_identity_client
 } with openstack_oneof(SELF, 'keystone');

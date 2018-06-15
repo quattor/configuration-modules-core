@@ -26,14 +26,19 @@ sub run_client
 
     my $client = get_client() or return;
 
+    if (!exists($self->{comptree}->{identity}->{client})) {
+        $self->verbose("no identity client configuration, nothing to do");
+        return 1;
+    }
+
     my @order = (@Net::OpenStack::Client::Identity::v3::SUPPORTED_OPERATIONS);
 
     # Loop through all configuration in order
     foreach my $oper (@order) {
-        next if !exists($self->{comptree}->{identity}->{$oper});
+        next if !exists($self->{comptree}->{identity}->{client}->{$oper});
 
         # fecth the cfg data, using json data typing
-        my $cfg = $self->_get_json_tree("identity/$oper");
+        my $cfg = $self->_get_json_tree("identity/client/$oper");
 
         # apply the changes using sync
         $client->api_identity_sync($oper, $cfg, tagstore => $TAGSTORE);
