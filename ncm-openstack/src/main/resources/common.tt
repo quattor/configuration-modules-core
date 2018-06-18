@@ -1,4 +1,5 @@
-[%- FOR section IN CCM.contents.pairs %]
+[%- FOR section IN CCM.contents.pairs -%]
+[%-      NEXT IF section.key == 'quattor' %]
 [[%     section.key %]]
 [%      FOREACH item IN section.value.pairs -%]
 [%          item.key %] = 
