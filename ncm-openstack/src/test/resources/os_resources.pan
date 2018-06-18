@@ -44,8 +44,8 @@ prefix "client/group/grp1";
 "description" = "first group";
 "domain_id" = "vo2";
 
-prefix "client/service/glance";
-"description" = "OS image";
+prefix "client/service/glanceone";
+"description" = "OS image one";
 "type" = "image";
 
 # Glance/service section

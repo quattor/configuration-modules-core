@@ -221,25 +221,25 @@ type openstack_DEFAULTS = {
 @documentation{
 Custom configuration type. This is data that is not picked up as configuration data,
 but used to e.g. build up the service endpoints.
-}
-type openstack_quattor_custom = {
-    @{endpoint port}
-    'port' ? type_port
-    @{region that the service/endpoint belongs to}
-    'region' ? openstack_valid_region
-} with openstack_oneof(SELF, 'port');
+(Any section named quattor is also not rendered)
 
-@documentation{
-Custom data type. This is data that is not picked up as configuration data.
 It is to be used as e.g.
     type openstack_quattor_service_x = openstack_quattor = dict('quattor', dict('port', 123))
 
 And then this custom service type is included in the service configuration.
     type openstack_service_x = {
-        include openstack_quattor_service_x
+        'quattor' : openstack_quattor_service_x
         ...
-
 }
 type openstack_quattor = {
-    'quattor' : openstack_quattor_custom
+    @{endpoint protocol  (proto://OBJECT:port/suffix)}
+    'proto' : choice('http', 'https') = 'https'
+    @{endpoint port (proto://OBJECT:port/suffix)}
+    'port' : type_port
+    @{endpoint suffix (proto://OBJECT:port/suffix)}
+    'suffix' : string = ''
+    @{region that the service/endpoint belongs to}
+    'region' ? openstack_valid_region
+    @{register this flavour as a service of type}
+    'type' ? string # optional since the API docs only allow limited types
 };
