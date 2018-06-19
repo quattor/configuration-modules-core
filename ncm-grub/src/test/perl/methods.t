@@ -2,8 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Quattor qw(password);
-use Test::Quattor qw(nopassword);
+use Test::Quattor qw(password nopassword);
 use Test::Quattor::Object;
 use CAF::Object;
 use Test::MockModule;

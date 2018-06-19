@@ -22,7 +22,7 @@ type type_grub_password = {
       "md5" for an MD5 hashed password. Plaintext is not supported.}
     "option" : string with match (SELF, "^(md5|encrypted)$")
     @{Mutually exclusive with the file option. A crypted password for grub.conf.}
-    "password" ? string
+    "password" ? string(1..)
     @{Mutually exclusive with the password option. The path to a file on the host
       where the password can be read from. May be useful if it is undesirable to put
       (even crypted) profiles into the profile.
