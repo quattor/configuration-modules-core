@@ -1,0 +1,3 @@
+[%- FOREACH pair IN desc.pairs -%]
+oidc[% pair.key %] [%  CCM.is_list(pair.value) ? '"' _ pair.value.join(' ') _ '"' : pair.value %]
+[% END -%]

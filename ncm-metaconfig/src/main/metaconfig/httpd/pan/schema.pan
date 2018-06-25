@@ -78,6 +78,41 @@ type httpd_kerberos = {
     "savecredentials" : boolean = false
 };
 
+@{OpenID Connect configuration for mod_auth_openidc
+    https://github.com/pingidentity/mod_auth_openidc
+}
+type httpd_oidc = {
+    "claimprefix" : string = "OIDC-"
+    "responsetype" : string[]
+    "scope" : string[]
+    "clientid" : string(1..)
+    "clientsecret" : string(1..)
+    "cryptopassphrase" : string(1..)
+    "redirecturi" : type_absoluteURI
+
+    @{typically the SERVICE/.well-known/openid-configuration.
+      If not configured, then the other provider fields must be provided}
+    "providermetadataurl" ? type_absoluteURI
+
+    "providerissuer" ? string
+    "providerauthorizationendpoint" ? type_absoluteURI
+    "providertokenendpoint" ? type_absoluteURI
+    "providertokenendpointauth" ? type_absoluteURI
+    "provideruserinfoendpoint" ? type_absoluteURI
+    "providerjwksuri" ? type_absoluteURI
+} with {
+    if (!exists(SELF['providermetadataurl'])) {
+        provs = list('issuer', 'authorizationendpoint', 'tokenendpoint',
+                        'tokenendpointauth', 'userinfoendpoint', 'jwksuri');
+        foreach (i; prov; provs) {
+            if (!exists(SELF["provider" + prov])) {
+                error("oidc attribute provider%s must be configured when providermetadataurl is absent", prov);
+            };
+        };
+    };
+    true;
+};
+
 type httpd_shibboleth = {
     "useheaders" ? boolean
     "requestsetting" ? string[]
@@ -291,7 +326,7 @@ type httpd_name_virtual_host = {
     "port" ? type_port
 };
 
-type httpd_auth_type = string with match(SELF, "^(Basic|Kerberos|Shibboleth|GSSAPI)$");
+type httpd_auth_type = string with match(SELF, "^(Basic|Kerberos|Shibboleth|GSSAPI|openid-connect)$");
 
 type httpd_auth = {
     "name": string
@@ -488,6 +523,7 @@ type httpd_vhost = {
     "log" ? httpd_log
     "env" ? httpd_env
     "rails" ? httpd_rails
+    "oidc" ? httpd_oidc
     "proxies" ? httpd_proxy_directive[]
     "browsermatch" ? httpd_browsermatch[]
     "passenger" ? httpd_passenger_vhost
