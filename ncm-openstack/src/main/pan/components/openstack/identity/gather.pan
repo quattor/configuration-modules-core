@@ -33,7 +33,7 @@ function openstack_merge = {
 function openstack_identity_gather_find_authtoken = {
     data = ARGV[0];
 
-    foreach (k;v;data) {
+    foreach (k; v; data) {
         res = undef;
         if (k == 'keystone_authtoken') {
             res = v;
@@ -173,3 +173,4 @@ function openstack_identity_gather = {
 
     data;
 };
+
