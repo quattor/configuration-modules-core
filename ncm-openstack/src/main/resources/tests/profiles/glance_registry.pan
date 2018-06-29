@@ -1,4 +1,4 @@
-object template glance;
+object template glance_registry;
 
 include 'components/openstack/schema';
 
@@ -18,7 +18,4 @@ prefix "/metaconfig/contents";
     "username", "glance",
     "password", "glance_good_password",
     "memcached_servers", list('controller.mysite.com:11211'),
-);
-"glance_store" = dict(
-    "default_store", "file",
 );

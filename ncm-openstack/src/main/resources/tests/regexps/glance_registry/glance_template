@@ -1,14 +1,9 @@
-OpenStack Glance template full test
+OpenStack Glance registry template full test
 ---
 multiline
 ---
 ^\[database\]$
 ^connection\s{1}=\s{1}mysql\+pymysql://glance:glance_db_pass@controller.mysite.com/glance$
-
-^\[glance_store\]$
-^default_store\s{1}=\s{1}file$
-^filesystem_store_datadir\s{1}=\s{1}/var/lib/glance/images$
-^stores\s{1}=\s{1}file,\s{1}http$
 
 ^\[keystone_authtoken\]$
 ^auth_type\s{1}=\s{1}password$

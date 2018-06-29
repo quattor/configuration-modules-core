@@ -2,15 +2,15 @@ object template nova;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/nova" = openstack_nova_config;
+bind "/metaconfig/contents" = openstack_nova_config;
 
-"/metaconfig/module" = "openstack_common";
+"/metaconfig/module" = "common";
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 variable NEUTRON_HOST_SERVER ?= 'neutron.mysite.com';
 variable MY_IP ?= '10.0.1.2';
 
-prefix "/metaconfig/contents/nova";
+prefix "/metaconfig/contents";
 
 "database" = dict(
     "connection", format("mysql+pymysql://nova:nova_db_pass@%s/nova", OPENSTACK_HOST_SERVER),

@@ -1,18 +1,3 @@
-template neutron_linuxbridge;
+object template neutron_linuxbridge;
 
-include 'components/openstack/config';
-
-prefix "/software/components/openstack/neutron_linuxbridge";
-
-"linux_bridge" = dict(
-    "physical_interface_mappings", list('provider:eth1'),
-);
-"vxlan" = dict(
-    "enable_vxlan", true,
-    "local_ip", "10.0.1.4",
-    "l2_population", true,
-);
-"securitygroup" = dict(
-    "enable_security_group", true,
-    "firewall_driver", "neutron.agent.linux.iptables_firewall.IptablesFirewallDriver",
-);
+include 'os_resources';

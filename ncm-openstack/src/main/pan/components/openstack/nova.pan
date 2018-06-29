@@ -80,6 +80,16 @@ type openstack_nova_libvirt = {
     The choice of this type must match the underlying virtualization strategy
     you have chosen for the host}
     'virt_type' : string = 'kvm' with match (SELF, '^(kvm|lxc|qemu|uml|xen|parallels)$')
+    @{The RADOS pool in which rbd volumes are stored}
+    'images_rbd_pool' ? string
+    @{VM Images format. If default is specified, then use_cow_images flag is used
+    instead of this one. Related options: * virt.use_cow_images * images_volume_group}
+    'images_type' ? string with match (SELF, '^(raw|flat|qcow2|lvm|rbd|ploop|default)$')
+    @{The libvirt UUID of the secret for the rbd_user volumes}
+    'rbd_secret_uuid' ? type_uuid
+    @{The RADOS client name for accessing rbd(RADOS Block Devices) volumes.
+    Libvirt will refer to this user when connecting and authenticating with the Ceph RBD server}
+    'rbd_user' ? string
 };
 
 @documentation {
@@ -110,6 +120,21 @@ type openstack_nova_neutron = {
 };
 
 @documentation {
+    The Nova configuration options in the "scheduler" Section.
+}
+type openstack_nova_scheduler = {
+    @{This value controls how often (in seconds) the scheduler should attempt
+    to discover new hosts that have been added to cells. If negative (the
+    default), no automatic discovery will occur.
+    Deployments where compute nodes come and go frequently may want this
+    enabled, where others may prefer to manually discover hosts when one
+    is added to avoid any overhead from constantly checking. If enabled,
+    every time this runs, we will select any unmapped hosts out of each
+    cell database on every run.}
+    'discover_hosts_in_cells_interval' ? long(-1..)
+};
+
+@documentation {
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
@@ -128,14 +153,8 @@ type openstack_nova_common = {
 }
 type openstack_nova_config =  {
     include openstack_nova_common
-    'database' : openstack_database
-    'api_database' : openstack_nova_api_database
-};
-
-@documentation {
-    list of Nova configuration sections
-}
-type openstack_nova_compute_config = {
-    include openstack_nova_common
+    'database' ? openstack_database
+    'api_database' ? openstack_nova_api_database
     'libvirt' ? openstack_nova_libvirt
+    'scheduler' ? openstack_nova_scheduler
 };

@@ -2,15 +2,15 @@ object template nova_compute;
 
 include 'components/openstack/schema';
 
-bind "/metaconfig/contents/nova_compute" = openstack_nova_compute_config;
+bind "/metaconfig/contents" = openstack_nova_config;
 
-"/metaconfig/module" = "openstack_common";
+"/metaconfig/module" = "common";
 
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 variable NEUTRON_HOST_SERVER ?= 'neutron.mysite.com';
 variable MY_IP ?= '10.0.1.3';
 
-prefix "/metaconfig/contents/nova_compute";
+prefix "/metaconfig/contents";
 
 "DEFAULT" = dict(
     "auth_strategy", "keystone",
@@ -52,3 +52,4 @@ prefix "/metaconfig/contents/nova_compute";
     "username", "neutron",
     "password", "neutron_good_password",
 );
+

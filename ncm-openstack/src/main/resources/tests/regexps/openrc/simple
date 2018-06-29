@@ -1,0 +1,5 @@
+OpenStack OpenRC test
+---
+multiline
+---
+^export\s?OS\_.+=.+$

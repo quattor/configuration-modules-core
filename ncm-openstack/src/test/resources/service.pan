@@ -1,3 +1,3 @@
-object template horizon;
+object template service;
 
 include 'os_resources';

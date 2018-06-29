@@ -141,9 +141,22 @@ type openstack_neutron_metadata_config = {
 @documentation {
     list of Neutron service configuration sections
 }
-type openstack_neutron_config = {
+type openstack_neutron_service_config = {
     include openstack_neutron_common
-    'database' : openstack_database
+    'database' ? openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}
-    'nova' : openstack_domains_common
+    'nova' ? openstack_domains_common
+};
+
+
+@documentation {
+    list of Neutron service configuration sections
+}
+type openstack_neutron_config = {
+    'service' ? openstack_neutron_service_config
+    'ml2' ? openstack_neutron_ml2_config
+    'linuxbridge' ? openstack_neutron_linuxbridge_config
+    'l3' ? openstack_neutron_l3_config
+    'dhcp' ? openstack_neutron_dhcp_config
+    'metadata' ? openstack_neutron_metadata_config
 };
