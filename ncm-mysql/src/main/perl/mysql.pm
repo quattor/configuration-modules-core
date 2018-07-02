@@ -7,7 +7,7 @@ use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 
 use CAF::FileEditor;
 use CAF::FileWriter;
-use CAF::Process;
+use CAF::Process 17.12.1;
 
 use Encode qw(encode_utf8);
 
@@ -325,7 +325,7 @@ sub flushPrivileges
 {
     my ($self, $server) = @_;
     # Ensure privileges are applied
-    my $status = $self->mysqlExecCmd($server,"FLUSH PRIVILEGES");
+    my $status = $self->mysqlExecCmd($server, "FLUSH PRIVILEGES");
     if ( $status ) {
         $self->warn("Error flushing privileges on server $server->{host}");
     }
@@ -342,10 +342,12 @@ sub flushPrivileges
 #  server : hash describing MySQL server to check (see schema)
 #  command : mysql command to execute. Can be a literal command or a script if preceded by 'source'. Should not be quoted.
 #  database : database to apply the command to (optional, in particular in case of scripts)
+#  sensitive : hashref with sensitive data (see CAF::Process).
+#              The server admin password is added automatically, this is to protect sensitive data in the command
 sub mysqlExecCmd
 {
     my $function_name = "mysqlExecCmd";
-    my ($self,$server,$command,$database) = @_;
+    my ($self, $server, $command, $database, $sensitive) = @_;
 
     unless ( $server ) {
         $self->error("$function_name : 'server' argument missing");
@@ -357,24 +359,23 @@ sub mysqlExecCmd
         return 1;
     }
 
-    my @cmd_array = ("mysql", "-h", $server->{host},
-                     "-u", $server->{adminuser});
-    if ( $server->{adminpwd} && (length($server->{adminpwd}) > 0) ) {
-        push @cmd_array, "--password=$server->{adminpwd}";
-    }
-    if ( $database && (length($database) > 0) ) {
-        push @cmd_array, $database;
-    }
-    push @cmd_array, "--exec", $command;
-    my $cmd_string = join " ",@cmd_array;
-    $self->debug(2,"$function_name : executing MySQL command <<<".$cmd_string.">>>");
+    $sensitive->{$server->{adminpwd}} = 'ADMINPASSWD' if ($server->{adminpwd});
 
-    my $cmd = CAF::Process->new(\@cmd_array,
-                                log => $self);
-    my $output = $cmd->output();      # Also execute the command
+    my %opts = (log => $self);
+    $opts{sensitive} = $sensitive if keys %$sensitive;
+
+    my $cmd = CAF::Process->new(["mysql", "-h", $server->{host}, "-u", $server->{adminuser}], %opts);
+
+    $cmd->pushargs("--password=$server->{adminpwd}") if ( $server->{adminpwd} );
+
+    $cmd->pushargs($database) if ( $database );
+
+    $cmd->pushargs("--exec", $command);
+
+    my $output = $cmd->output();
     my $status = $?;
     if ( $status ) {
-        $self->debug(2,"MySQL error : $output");
+        $self->debug(2, "MySQL error : $output");
     }
 
     return $status
@@ -410,7 +411,7 @@ sub mysqlCheckAdminPwd
         $server->{host} = shift @db_hosts;
         $self->debug(1, "$function_name : checking if user $server->{adminuser} has access ",
                      "to $server->{host} without password");
-        $status = $self->mysqlExecCmd($server,$test_cmd);
+        $status = $self->mysqlExecCmd($server, $test_cmd);
     }
 
     # If previous test fails, administrator has a password set, test the password specified in the configuration.
@@ -423,7 +424,7 @@ sub mysqlCheckAdminPwd
             $server->{host} = $host;
             $self->debug(1, "$function_name : checking if user $server->{adminuser} has access ",
                          "to $server->{host} with password '$server->{adminpwd}'");
-            my $this_status = $self->mysqlExecCmd($server,$test_cmd);
+            my $this_status = $self->mysqlExecCmd($server, $test_cmd);
             if ( $this_status ) {
                 $status = 1;
             } else {
@@ -543,7 +544,7 @@ sub mysqlAddUser
     # used for administration to be a different value than actual host name (e.g. localhost).
     my @db_hosts = ($user_host);
     if ( $user_host eq $this_host_full ) {
-        push @db_hosts,'localhost';
+        push @db_hosts, 'localhost';
     }
     my $admin_server = $server;
     if ( defined($server->{adminhost}) ) {
@@ -553,8 +554,9 @@ sub mysqlAddUser
     my $status = 0;
     for my $host (@db_hosts) {
         $self->debug(1, "$function_name : Adding MySQL connection account for user $userid on $host ",
-                     "(database=$database) using admin host ".$admin_server->{host});
-        $status = $self->mysqlExecCmd($admin_server, "grant $db_rights on $database to \"$userid\"\@\"$host\" identified by \"$db_pwd\" with grant option");
+                     "(database=$database) using admin host $admin_server->{host}");
+        my $cmd = "grant $db_rights on $database to \"$userid\"\@\"$host\" identified by \"$db_pwd\" with grant option";
+        $status = $self->mysqlExecCmd($admin_server, $cmd, undef, {$db_pwd => 'USERPASSWORD'});
         if ( $status ) {
             # Error already signaled by caller
             $self->debug(1,"$function_name: Failed to grant access to $userid on database $database (host=$host)");
@@ -570,10 +572,11 @@ sub mysqlAddUser
         # Backward compatibility for pre-4.1 clients, like perl-DBI-1.32
         if ( $short_pwd_hash ) {
             $self->debug(1,"$function_name : Defining password short hash for $userid on $host)");
-            $status = $self->mysqlExecCmd($admin_server,"set password for '$userid'\@'$host' = OLD_PASSWORD('$db_pwd')");
+            $cmd = "set password for '$userid'\@'$host' = OLD_PASSWORD('$db_pwd')";
+            $status = $self->mysqlExecCmd($admin_server, $cmd, undef, {$db_pwd => 'USERPASSWORD'});
             if ( $status ) {
                 # Error already signaled by caller
-                $self->debug(1,"Failed to define password short hash for $userid on $host");
+                $self->debug(1, "Failed to define password short hash for $userid on $host");
                 return $status;
             }
         }
@@ -616,13 +619,13 @@ sub mysqlAddDb
   my $server = $servers->{$databases->{$database}->{server}};
 
   $self->debug(1, "$function_name : checking if database $database already exists");
-  $status = $self->mysqlExecCmd($server,"use $database");
+  $status = $self->mysqlExecCmd($server, "use $database");
 
   if ( $status ) {
       $self->debug(1,"$function_name : database $database not found");
       if ( $createDb ) {
           $self->debug(1,"$function_name : creating database $database");
-          $status = $self->mysqlExecCmd($server,"CREATE DATABASE ".$database);
+          $status = $self->mysqlExecCmd($server, "CREATE DATABASE $database");
           if ( $status ) {
               $self->debug(1,"Error creating database $database (status=$status)")
           }
@@ -682,7 +685,7 @@ sub mysqlExecuteScript
         return 0;
     }
 
-    $status = $self->mysqlExecCmd($server,"source $script",$database);
+    $status = $self->mysqlExecCmd($server, "source $script", $database);
     if ( $status ) {
         $self->debug(1,"$function_name: Error executing script $script");
     }
@@ -722,7 +725,7 @@ sub mysqlAlterTable
     my $server = $servers->{$databases->{$database}->{server}};
 
     $self->debug(1,"$function_name : checking if database $database already exists");
-    $status = $self->mysqlExecCmd($server,"use $database");
+    $status = $self->mysqlExecCmd($server, "use $database");
     if ( $status ) {
         $self->debug(1,"$function_name : database $database not found");
         return $status;
@@ -735,9 +738,9 @@ sub mysqlAlterTable
             $value_token = "=$value";
         }
         $self->debug(1,"$function_name : altering table $table in $database: $option$value_token");
-        $status = $self->mysqlExecCmd($server,"ALTER TABLE $table $option$value_token",$database);
+        $status = $self->mysqlExecCmd($server, "ALTER TABLE $table $option$value_token", $database);
         if ( $status ) {
-            $self->debug(1,"$function_name: Error creating database $database (status=$status)")
+            $self->debug(1, "$function_name: Error creating database $database (status=$status)")
         }
     }
 }
