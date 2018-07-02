@@ -1,0 +1,7 @@
+$cmds{systemctl_is_active_multi_user_target}{cmd}="/usr/bin/systemctl is-active -- multi-user.target";
+$cmds{systemctl_is_active_multi_user_target}{ec}=0;
+$cmds{systemctl_is_active_multi_user_target}{out}= 'active';
+
+$cmds{systemctl_is_active_multi_user_target_shutdown}{cmd}="/usr/bin/systemctl is-active -- multi-user.target";
+$cmds{systemctl_is_active_multi_user_target_shutdown}{ec}=3;
+$cmds{systemctl_is_active_multi_user_target_shutdown}{out}= 'inactive';

@@ -35,6 +35,7 @@ sub _evalfn {
 
 my @files = qw(service-systemctl_list service-systemctl_show
                service-systemctl_daemon_reload
+               service-systemctl_is_active_multi_user_target
                service_systemctl_list_show_gen_full_el7_ceph021
                service-legacy);
 foreach my $file (@files) {

@@ -19,6 +19,7 @@ Test the C<Configure> method of the component.
 
 set_output("runlevel_5");
 set_output("chkconfig_list_test");
+set_output("systemctl_is_active_multi_user_target");
 
 my $cfg = get_config_for_profile('component');
 my $cmp = NCM::Component::systemd->new('systemd');

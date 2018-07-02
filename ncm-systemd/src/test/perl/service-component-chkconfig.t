@@ -24,6 +24,7 @@ Test the C<Configure> method of the component.
 
 set_output("runlevel_5");
 set_output("chkconfig_list_test");
+set_output("systemctl_is_active_multi_user_target");
 
 my $cfg = get_config_for_profile('service-component-chkconfig');
 my $cmp = NCM::Component::Systemd::Service::Component::chkconfig->new('systemd-component-chkconfig');

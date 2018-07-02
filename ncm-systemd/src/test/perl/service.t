@@ -427,6 +427,7 @@ Test change
 
 $cmp->{ERROR} = 0;
 command_history_reset();
+set_output("systemctl_is_active_multi_user_target");
 
 $svc->change($states, $acts);
 
@@ -444,6 +445,33 @@ ok(command_history_ok([
 
 =pod
 
+=head2 change during shutdown
+
+Test change during shutdown
+
+=cut
+
+$cmp->{ERROR} = 0;
+command_history_reset();
+set_output("systemctl_is_active_multi_user_target_shutdown");
+
+$svc->change($states, $acts);
+
+is($cmp->{ERROR}, 0, "No error logged while applying the changes during shutdown");
+
+ok(command_history_ok([
+    # 1st states, unmask first
+    "$SYSTEMCTL unmask -- cups.service",
+    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
+    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    # 2 activity
+], [
+    "systemctl stop",
+    "systemctl start",
+]), "no stop/start commands during shutdown");
+
+=pod
+
 =head2 configure
 
 Test configure
@@ -452,6 +480,7 @@ Test configure
 
 $cmp->{ERROR} = 0;
 command_history_reset();
+set_output("systemctl_is_active_multi_user_target");
 
 $svc->configure($cfg);
 

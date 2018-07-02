@@ -48,7 +48,7 @@ our @EXPORT_OK = qw(
     systemctl_daemon_reload
     systemctl_list_units systemctl_list_unit_files
     systemctl_list_deps
-    systemctl_command_units systemctl_is_enabled
+    systemctl_command_units systemctl_is_enabled systemctl_is_active
 );
 
 push @EXPORT_OK, @PROPERTIES;
@@ -349,26 +349,25 @@ sub systemctl_is_enabled
 {
     my ($logger, $unit) = @_;
 
-    # Gather stderr separately (e.g. to handle legacy services)
-    my ($stdout, $stderr) = ('', '');
-    my $proc = CAF::Process->new(
-        [$SYSTEMCTL, 'is-enabled', '--', $unit],
-        log => $logger,
-        keeps_state => 1,
-        stdout => \$stdout,
-        stderr => \$stderr,
-        );
+    return systemctl_simple_command($logger, 'is-enabled', $unit);
+}
 
-    $proc->execute();
-    chomp($stdout);
-    chomp($stderr);
+=pod
 
-    my $ec = $?;
+=item systemctl_is_active
 
-    $logger->debug(2, "systemctl_command_units $proc returned ec $ec and stdout $stdout stderr $stderr");
-    # Do not test on $ec; if unit is disabled, it is-enabled also returns ec > 0
-    # If there's a real issue, like unknown unit, there is no stdout.
-    return $stdout || undef;
+Run C<systemctl is-active> for C<unit>.
+
+Returns output without trailing newlines on success.
+Undef returned (no error reported) when the exitcode is non-zero.
+
+=cut
+
+sub systemctl_is_active
+{
+    my ($logger, $unit) = @_;
+
+    return systemctl_simple_command($logger, 'is-active', $unit);
 }
 
 
@@ -448,6 +447,41 @@ sub systemctl_list
     };
 
     return $res;
+}
+
+=pod
+
+=item systemctl_simple_command
+
+Run a simple systemctl command (like is-active, is-enabled etc.).
+
+Returns output without trailing newlines on success, undef otherwise.
+
+=cut
+
+sub systemctl_simple_command
+{
+    my ($logger, $command, $unit) = @_;
+
+    # Gather stderr separately (e.g. to handle legacy services)
+    my ($stdout, $stderr) = ('', '');
+    my $proc = CAF::Process->new(
+        [$SYSTEMCTL, $command, '--', $unit],
+        log => $logger,
+        keeps_state => 1,
+        stdout => \$stdout,
+        stderr => \$stderr,
+        );
+
+    $proc->execute();
+    chomp($stdout);
+    chomp($stderr);
+
+    my $ec = $?;
+
+    $logger->debug(2, "systemctl_simple_command $proc returned ec $ec and stdout $stdout stderr $stderr");
+    # Do not test on $ec. If there's a real issue, like unknown unit, there is no stdout.
+    return $stdout || undef;
 }
 
 =pod
