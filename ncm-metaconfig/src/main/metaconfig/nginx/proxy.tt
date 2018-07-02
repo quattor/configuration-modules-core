@@ -12,3 +12,9 @@ proxy_cache_valid [% v.codes.join(" ") %] [% v.period %]m;
 [%- IF px.exists("next_upstream") %]
 proxy_next_upstream [% px.next_upstream %];
 [%- END -%]
+[%- IF px.exists("http_version") %]
+proxy_http_version [% px.http_version %];
+[%- END -%]
+[%- IF px.exists("read_timeout") %]
+proxy_read_timeout [% px.read_timeout %];
+[%- END -%]

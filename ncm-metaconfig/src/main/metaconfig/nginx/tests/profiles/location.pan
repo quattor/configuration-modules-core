@@ -4,6 +4,8 @@ structure template location;
 "set_header/X-Forwarded-For" = "$proxy_add_x_forwarded_for";
 "set_header/X-Forwarded-Host" = "$host";
 "set_header/X-Forwarded-Proto" = "https";
+"http_version" = "1.1";
+"read_timeout" = 86400;
 "next_upstream" = "off";
 "cache/valid/0/codes" = list(200, 202, 302);
 "cache/valid/0/period" = 60;
