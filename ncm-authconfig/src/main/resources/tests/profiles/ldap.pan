@@ -17,7 +17,7 @@ prefix "/desc";
 "tls/cacert" = 'ca';
 "tls/cipher_suite" = list("c1", "c2");
 "user/shell" = "us";
-"uri" = list("u1", "u2");
+"uri" = list("ldaps://u1.example.org", "ldap://u2.example.org:389");
 "user/object_class" = "user";
 "krb5_canonicalize" = true;
 "krb5_realm" = "realm";
