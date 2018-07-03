@@ -12,7 +12,7 @@ prefix "/desc";
 "netgroup/member" = 'nm';
 "sasl/mech" = 'sam';
 "sudo/hostnames" = 'sh';
-"sudorule/hostnames" = 'sh';
+"sudorule/host" = 'sh';
 "tls/key" = 'tk';
 "tls/cacert" = 'ca';
 "tls/cipher_suite" = list("c1", "c2");

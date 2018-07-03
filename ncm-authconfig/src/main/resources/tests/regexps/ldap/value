@@ -18,5 +18,5 @@ contentspath=/
 ^ldap_netgroup_member = nm$
 ^ldap_autofs_map_name = am$
 ^ldap_sudo_hostnames = sh$
-^ldap_sudorule_hostnames = sh$
 ^ldap_uri = u1,u2$
+^ldap_sudorule_host = sh$
