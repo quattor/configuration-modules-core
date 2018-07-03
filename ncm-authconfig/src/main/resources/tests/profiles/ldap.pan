@@ -2,6 +2,8 @@ object template ldap;
 
 # custom template to test partial ldap.tt
 
+include 'components/authconfig/schema';
+
 prefix "/desc";
 "autofs/map_name" = "am";
 "default/bind_dn" = "db";
@@ -19,3 +21,5 @@ prefix "/desc";
 "user/object_class" = "user";
 "krb5_canonicalize" = "true";
 "krb5_realm" = "realm";
+
+bind '/desc/' = authconfig_sssd_ldap;
