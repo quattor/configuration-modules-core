@@ -19,7 +19,7 @@ prefix "/desc";
 "user/shell" = "us";
 "uri" = list("u1", "u2");
 "user/object_class" = "user";
-"krb5_canonicalize" = "true";
+"krb5_canonicalize" = true;
 "krb5_realm" = "realm";
 
 bind '/desc/' = authconfig_sssd_ldap;
