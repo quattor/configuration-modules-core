@@ -1,0 +1,3 @@
+[%- FOREACH header IN desc %]
+header [% header.action %] [% header.name %] [% header.quotes %][% header.value %][% header.quotes %]
+[% END -%]

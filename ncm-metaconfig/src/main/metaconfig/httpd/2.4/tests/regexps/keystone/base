@@ -1,0 +1,54 @@
+Base test for keystone wsgi config
+---
+/etc/httpd/conf.d/wsgi-keystone.conf
+---
+^alias /identity /usr/bin/keystone-wsgi-public
+^alias /identity_admin /usr/bin/keystone-wsgi-admin
+^wsgisocketprefix run/wsgi
+^listen 5000 
+^listen 35357 
+^<location /identity>
+^    options \+ExecCGI
+^    sethandler wsgi-script
+^    wsgiapplicationgroup %\{GLOBAL\}
+^    wsgipassauthorization on
+^    wsgiprocessgroup keystone-public
+^</location>
+^<location /identity_admin>
+^    options \+ExecCGI
+^    sethandler wsgi-script
+^    wsgiapplicationgroup %\{GLOBAL\}
+^    wsgipassauthorization on
+^    wsgiprocessgroup keystone-admin
+^</location>
+^<virtualhost    \*:5000>
+^    hostnamelookups off
+^    limitrequestbody 114688
+^    wsgiscriptalias / /usr/bin/keystone-wsgi-public
+^    wsgiapplicationgroup %\{GLOBAL\}
+^    wsgidaemonprocess keystone-public display-name=%\{GROUP\} group=keystone processes=5 threads=1 user=keystone
+^    wsgipassauthorization on
+^    wsgiprocessgroup keystone-public
+^    errorlog /var/log/httpd/keystone.log
+^    errorlogformat "%\{cu\}t %M" 
+^    customlog /var/log/httpd/keystone_access.log combined
+^    header add Strict-Transport-Security "max-age=15768000"
+^    <directory /usr/bin>
+^        require all granted
+^    </directory>
+^</virtualhost>
+^<virtualhost    \*:35357>
+^    hostnamelookups off
+^    limitrequestbody 114688
+^    wsgiscriptalias / /usr/bin/keystone-wsgi-admin
+^    wsgiapplicationgroup %\{GLOBAL\}
+^    wsgidaemonprocess keystone-admin display-name=%\{GROUP\} group=keystone processes=5 threads=1 user=keystone
+^    wsgipassauthorization on
+^    wsgiprocessgroup keystone-admin
+^    errorlog /var/log/httpd/keystone.log
+^    errorlogformat "%\{cu\}t %M" 
+^    customlog /var/log/httpd/keystone_access.log combined
+^    <directory /usr/bin>
+^        require all granted
+^    </directory>
+^</virtualhost>
