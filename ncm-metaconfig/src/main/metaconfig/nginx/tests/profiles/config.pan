@@ -54,4 +54,17 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     prepend(l);
 };
 
+"server/1/location" = append(dict(
+    "name", "/",
+    "operator", "=",
+    "return", dict("code", 301, "url", "https://$host/default"),
+    ));
+
 "upstream/secure/host/0" = format("%s:446", SERVER);
+
+# 80 -> 443 redirect
+"server/2" = dict(
+    "listen", dict("addr", "80", "default", true),
+    "name", list("_"),
+    "return", dict("code", 301, "url", "https://$host$request_uri"),
+);
