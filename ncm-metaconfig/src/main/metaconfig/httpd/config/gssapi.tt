@@ -5,7 +5,7 @@ gssapi[% pair.key %] [% pair.value.is_boolean ? (pair.value ? 'on' : 'off') : pa
 [%-          FOREACH el IN pair.value -%]
 gssapi[% pair.key %] [% el %]
 [%          END -%]
-[%-      ELSIF CCM.is_list(pair.value) -%]
+[%-      ELSIF CCM.is_hash(pair.value) -%]
 [%-          FOREACH elpair IN pair.value.pairs -%]
 gssapi[% pair.key %] [% elpair.key %] [% elpair.value %]
 [%          END %]

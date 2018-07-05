@@ -1,0 +1,13 @@
+Base test for oidc section of ssl.conf
+---
+/etc/httpd/conf.d/ssl.conf
+---
+^<virtualhost\s+1.2.3.77:443>$
+^\s{4}oidcclaimprefix OIDC-$
+^\s{4}oidcclientid abc123$
+^\s{4}oidcclientsecret supersecret$
+^\s{4}oidccryptopassphrase evenmoresupersecret$
+^\s{4}oidcprovidermetadataurl https://accounts.google.com/.well-known/openid-configuration$
+^\s{4}oidcredirecturi https://my.org/service$
+^\s{4}oidcresponsetype "id_token token2"$
+^\s{4}oidcscope "openid email profile"$
