@@ -11,7 +11,7 @@ include 'components/openstack/identity';
 type openstack_manila_share_driver = choice('manila.share.drivers.lvm.LVMShareDriver',
     'manila.share.drivers.cephfs.driver.CephFSDriver', 'manila.share.drivers.generic.GenericShareDriver');
 
-@documentation {
+@documentation{
     Common Manila storage backends options
 }
 type openstack_manila_common = {
@@ -29,7 +29,7 @@ type openstack_manila_common = {
 
 };
 
-@documentation {
+@documentation{
     The Manila configuration options in the "lvm" Section.
 }
 type openstack_manila_lvm = {
@@ -40,7 +40,7 @@ type openstack_manila_lvm = {
     'lvm_share_export_ip' ? type_ip
 };
 
-@documentation {
+@documentation{
     The Manila configuration options in the "ceph" Section.
 }
 type openstack_manila_ceph = {
@@ -82,7 +82,7 @@ type openstack_manila_ceph = {
 
 };
 
-@documentation {
+@documentation{
     The Manila configuration options in the "generic" Section.
 }
 type openstack_manila_generic = {
@@ -102,7 +102,7 @@ type openstack_manila_generic = {
     'interface_driver' : string = 'manila.network.linux.interface.BridgeInterfaceDriver'
 };
 
-@documentation {
+@documentation{
     The manila configuration options in the "neutron" section.
 }
 type openstack_manila_neutron = {
@@ -113,7 +113,7 @@ type openstack_manila_neutron = {
     'url' : type_absoluteURI
 };
 
-@documentation {
+@documentation{
     list of Manila configuration sections
 }
 type openstack_manila_config = {

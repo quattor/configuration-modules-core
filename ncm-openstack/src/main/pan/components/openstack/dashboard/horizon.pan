@@ -5,7 +5,7 @@
 
 declaration template components/openstack/dashboard/horizon;
 
-@documentation {
+@documentation{
     The Horizon configuration options in "caches" Section.
 }
 type openstack_horizon_caches = {
@@ -16,7 +16,7 @@ type openstack_horizon_caches = {
     'LOCATION' : type_hostport[] = list('127.0.0.1:11211')
 } = dict();
 
-@documentation {
+@documentation{
     The Horizon api versions section.
     Overrides for OpenStack API versions. Use this setting to force the
     OpenStack dashboard to use a specific API version for a given service API.
@@ -32,7 +32,7 @@ type openstack_horizon_api_versions = {
     'volume' : long(1..) = 2
 } = dict();
 
-@documentation {
+@documentation{
     The Horizon "OPENSTACK_NEUTRON_NETWORK" settings can be used to enable optional
     services provided by neutron. Options currently available are load
     balancer service, security groups, quotas, VPN service.
@@ -49,7 +49,7 @@ type openstack_horizon_neutron_network = {
     'enable_fip_topology_check' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_KEYSTONE_BACKEND settings can be used to identify the
     capabilities of the auth backend for Keystone.
     If Keystone has been configured to use LDAP as the auth backend then set
@@ -65,7 +65,7 @@ type openstack_horizon_keystone_backend = {
     'can_edit_role' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The Xen Hypervisor has the ability to set the mount point for volumes
     attached to instances (other Hypervisors currently do not). Setting
     can_set_mount_point to True will add the option to set the mount point
@@ -78,7 +78,7 @@ type openstack_horizon_hypervisor_features = {
     'enable_quotas' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_CINDER_FEATURES settings can be used to enable optional
     services provided by cinder that is not exposed by its extension API.
 }
@@ -86,7 +86,7 @@ type openstack_horizon_cinder_features = {
     'enable_backup' : boolean = false
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_HEAT_STACK settings can be used to disable password
     field required while launching the stack.
 }
@@ -94,7 +94,7 @@ type openstack_horizon_heat_stack = {
     'enable_user_pass' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The IMAGE_CUSTOM_PROPERTY_TITLES settings is used to customize the titles for
     image custom property attributes that appear on image detail pages.
 }
@@ -134,7 +134,7 @@ type openstack_horizon_logging_formatters = {
     'format' : string = '%(asctime)s %(message)s'
 } = dict();
 
-@documentation {
+@documentation{
     Horizon django logging options.
     Logging from django.db.backends is VERY verbose, send to null
     by default.
@@ -175,7 +175,7 @@ type openstack_horizon_logging = {
     )
 } = dict();
 
-@documentation {
+@documentation{
     Dictionary used to restrict user private subnet cidr range.
     An empty list means that user input will not be restricted
     for a corresponding IP version. By default, there is
@@ -190,7 +190,7 @@ type openstack_horizon_allowed_subnet = {
     'ipv6' ? type_ipv6[]
 } = dict();
 
-@documentation {
+@documentation{
     "direction" should not be specified for all_tcp, udp or icmp.
 }
 type openstack_horizon_security_group = {

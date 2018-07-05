@@ -6,7 +6,7 @@ declaration template components/openstack/compute;
 
 include 'components/openstack/compute/nova';
 
-@documentation {
+@documentation{
 Type to define OpenStack compute services
 }
 type openstack_compute_config = {

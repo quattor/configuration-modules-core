@@ -7,7 +7,7 @@ declaration template components/openstack/storage/glance;
 
 include 'components/openstack/identity';
 
-@documentation {
+@documentation{
     The Glance configuration options in the "glance_store" Section.
     From glance.api
 }
@@ -67,7 +67,7 @@ type openstack_glance_store = {
     'rbd_store_user' ? string = 'images'
 };
 
-@documentation {
+@documentation{
     list of Glance configuration sections
 }
 type openstack_glance_service_config = {
@@ -78,7 +78,7 @@ type openstack_glance_service_config = {
     'glance_store' ? openstack_glance_store
 };
 
-@documentation {
+@documentation{
     list of Glance service configuration sections
 }
 type openstack_glance_config = {

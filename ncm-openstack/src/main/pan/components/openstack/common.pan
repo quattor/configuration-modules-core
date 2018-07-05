@@ -26,7 +26,7 @@ type openstack_share_backends = string with match(SELF, '^(lvm|generic|cephfsnat
 
 type openstack_share_protocols = string with match(SELF, '^(NFS|CIFS|CEPHFS|GLUSTERFS|HDFS|MAPRFS)$');
 
-@documentation {
+@documentation{
     OpenStack common domains section
 }
 type openstack_domains_common = {
@@ -47,14 +47,14 @@ type openstack_domains_common = {
     'password' : string
 };
 
-@documentation {
+@documentation{
     OpenStack common region section
 }
 type openstack_region_common = {
     'os_region_name' : string = 'RegionOne'
 };
 
-@documentation {
+@documentation{
     The configuration options in the database Section
 }
 type openstack_database = {
@@ -62,7 +62,7 @@ type openstack_database = {
     'connection' : string
 };
 
-@documentation {
+@documentation{
     The configuration options in 'oslo_concurrency' Section.
 }
 type openstack_oslo_concurrency = {
@@ -73,7 +73,7 @@ type openstack_oslo_concurrency = {
     'lock_path' : absolute_file_path
 };
 
-@documentation {
+@documentation{
     The configuration options in the DEFAULTS Section
 }
 type openstack_DEFAULTS = {

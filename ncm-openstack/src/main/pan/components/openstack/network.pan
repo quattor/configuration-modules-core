@@ -6,7 +6,7 @@ declaration template components/openstack/network;
 
 include 'components/openstack/network/neutron';
 
-@documentation {
+@documentation{
 Type to define OpenStack network services
 }
 type openstack_network_config = {

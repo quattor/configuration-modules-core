@@ -6,7 +6,7 @@ declaration template components/openstack/volume;
 
 include 'components/openstack/volume/cinder';
 
-@documentation {
+@documentation{
 Type to define OpenStack volume services
 }
 type openstack_volume_config = {

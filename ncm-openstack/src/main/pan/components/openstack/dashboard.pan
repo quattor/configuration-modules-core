@@ -6,7 +6,7 @@ declaration template components/openstack/dashboard;
 
 include 'components/openstack/dashboard/horizon';
 
-@documentation {
+@documentation{
 Type to define OpenStack dashboard services
 }
 type openstack_dashboard_config = {
