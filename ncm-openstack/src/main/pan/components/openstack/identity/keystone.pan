@@ -96,7 +96,7 @@ type openstack_keystone_federation = {
       to return a token, the origin host must be a member of this list. This
       configuration option may be repeated for multiple values. You must set this
       in order to use web-based SSO flows.}
-    'trusted_dashboard' ? type_hostURI[](1)
+    'trusted_dashboard' ? type_hostURI[] with length(SELF) == 1
 
     @{Absolute path to an HTML file used as a Single Sign-On callback handler. This
       page is expected to redirect the user from keystone back to a trusted
@@ -112,7 +112,7 @@ type openstack_keystone_mapped = {
     @{Value to be used to obtain the entity ID of the Identity Provider from the
       environment. For mod_shib, this would be Shib-Identity-Provider.}
     'remote_id_attribute' ? string
-}
+};
 
 @documentation{
      The Keystone configuration options in the "openid" section
@@ -121,7 +121,7 @@ type openstack_keystone_openid = {
     @{Value to be used to obtain the entity ID of the Identity Provider from the
       environment. For mod_auth_openidc, this could be HTTP_OIDC_ISS.}
     'remote_id_attribute' ? string
-}
+};
 
 @documentation{
     The Keystone configuration sections

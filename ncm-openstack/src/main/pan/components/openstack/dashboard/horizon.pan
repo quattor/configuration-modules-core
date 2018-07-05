@@ -355,6 +355,11 @@ type openstack_horizon_config_general = {
         'mysql', dict('name', 'MYSQL', 'from_port', 3306, 'to_port', 3306),
         'rdp', dict('name', 'RDP', 'from_port', 3389, 'to_port', 3389),
         )
+    'websso_enabled' ? boolean
+    'websso_initial_choice' ? string
+    'websso_idp_mapping' ? string[]{}
+    'websso_choices' ? string{}
+
     'use_ssl' ? boolean
     'csrf_cookie_secure' ? boolean
     'session_cookie_secure' ? boolean
