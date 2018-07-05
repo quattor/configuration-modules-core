@@ -19,3 +19,16 @@ multiline
 ^\}$
 ^SESSION_ENGINE\s?=\s*.+\s*$
 ^TIME_ZONE\s?=\s*.+\s*$
+^WEBSSO_CHOICES = \($
+^    "credentials": _\("Keystone Credentials"\),$
+^    "mapped": _\("Security Assertion Markup Language"\),$
+^    "myidp_mapped": _\("Acme Corporation - SAML2"\),$
+^    "myidp_openid": _\("Acme Corporation - OpenID Connect"\),$
+^    "openid": _\("OpenID Connect"\),$
+^\)$
+^WEBSSO_ENABLED = True$
+^WEBSSO_IDP_MAPPING = \{$
+^    'myidp_mapped': \('myidp', 'mapped'\),$
+^    'myidp_openid': \('myidp', 'openid'\),$
+^\}$
+^WEBSSO_INITIAL_CHOICE = "myidp_openid"$

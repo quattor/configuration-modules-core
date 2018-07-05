@@ -20,7 +20,7 @@ _("[%                  pair.value %]"),
 [%         ELSIF CCM.is_hash(pair.value) -%]
 {[%            INCLUDE 'openstack/horizon_level1.tt' data=pair.value section=pair.key -%]},
 [%         ELSIF CCM.is_list(pair.value) -%]
-['[%            pair.value.join('\', \'') %]'],
+[%              section == 'websso_idp_mapping' ? '(' : '[' %]'[% pair.value.join('\', \'') %]'[% section == 'websso_idp_mapping' ? ')' : ']' %],
 [%         ELSE -%]
 [%              pair.value %],
 [%         END -%]
