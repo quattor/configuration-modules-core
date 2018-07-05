@@ -6,7 +6,7 @@ declaration template components/openstack/share;
 
 include 'components/openstack/share/manila';
 
-@documentation {
+@documentation{
 Type to define OpenStack shared services
 }
 type openstack_share_config = {

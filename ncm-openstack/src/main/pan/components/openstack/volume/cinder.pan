@@ -7,7 +7,7 @@ declaration template components/openstack/volume/cinder;
 
 include 'components/openstack/identity';
 
-@documentation {
+@documentation{
     The Cinder configuration options in the "lvm" Section.
 }
 type openstack_cinder_lvm = {
@@ -25,7 +25,7 @@ type openstack_cinder_lvm = {
     'iscsi_helper' : choice('tgtadm', 'lioadm', 'scstadmin', 'iscsictl', 'ietadm', 'fake') = 'lioadm'
 };
 
-@documentation {
+@documentation{
     The Cinder configuration options in the "ceph" Section.
 }
 type openstack_cinder_ceph = {
@@ -46,7 +46,7 @@ type openstack_cinder_ceph = {
 
 
 
-@documentation {
+@documentation{
     list of Cinder configuration sections
 }
 type openstack_cinder_config = {

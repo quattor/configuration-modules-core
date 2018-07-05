@@ -20,7 +20,7 @@ Hypervisor configuration.
 type openstack_hypervisor_config = {
 };
 
-@documentation {
+@documentation{
 Type that sets the OpenStack OpenRC script configuration
 }
 type openstack_openrc_config = {
@@ -35,7 +35,7 @@ type openstack_openrc_config = {
     'os_image_api_version' : long(1..) = 2
 };
 
-@documentation {
+@documentation{
 Type to define OpenStack services.
 For actual OpenStack services (like identity, compute, ...), the structure
 has an optional client substructure (this is service configuration data to be set via

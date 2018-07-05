@@ -7,7 +7,7 @@ declaration template components/openstack/network/neutron;
 
 include 'components/openstack/identity';
 
-@documentation {
+@documentation{
     The Neutron configuration options in ml2_conf.ini "ml2" Section.
 }
 type openstack_neutron_ml2 = {
@@ -26,7 +26,7 @@ type openstack_neutron_ml2 = {
     'extension_drivers' : openstack_neutronextension[] = list('port_security')
 } = dict();
 
-@documentation {
+@documentation{
     The Neutron configuration options in ml2_conf.ini "ml2_type_flat" Section.
 }
 type openstack_neutron_ml2_type_flat = {
@@ -36,7 +36,7 @@ type openstack_neutron_ml2_type_flat = {
     'flat_networks' : string[] = list('provider')
 } = dict();
 
-@documentation {
+@documentation{
     The Neutron configuration options in ml2_conf.ini "ml2_type_vxlan" Section.
 }
 type openstack_neutron_ml2_type_vxlan = {
@@ -44,7 +44,7 @@ type openstack_neutron_ml2_type_vxlan = {
     'vni_ranges' : string = '1:1000'
 } = dict();
 
-@documentation {
+@documentation{
     The Neutron configuration options in ml2_conf.ini "ml2_type_vlan" Section.
 }
 type openstack_neutron_ml2_type_vlan = {
@@ -55,7 +55,7 @@ type openstack_neutron_ml2_type_vlan = {
     'network_vlan_ranges' : string[] = list('provider')
 } = dict();
 
-@documentation {
+@documentation{
     The Neutron configuration options in ml2_conf.ini "securitygroup" Section.
 }
 type openstack_neutron_securitygroup = {
@@ -70,7 +70,7 @@ type openstack_neutron_securitygroup = {
     'firewall_driver' ? openstack_neutron_firewall_driver = 'neutron.agent.linux.iptables_firewall.IptablesFirewallDriver'
 };
 
-@documentation {
+@documentation{
     The Neutron configuration options in linuxbridge_agent.ini "vxlan" Section.
 }
 type openstack_neutron_vxlan = {
@@ -87,7 +87,7 @@ type openstack_neutron_vxlan = {
     'l2_population' ? boolean = true
 };
 
-@documentation {
+@documentation{
     The Neutron configuration options in linuxbridge_agent.ini "linux_bridge" Section.
 }
 type openstack_neutron_linux_bridge = {
@@ -100,7 +100,7 @@ type openstack_neutron_linux_bridge = {
     'physical_interface_mappings' : string[]
 };
 
-@documentation {
+@documentation{
     The Neutron configuration options in openvswitch_agent.ini "ovs" Section.
 }
 type openstack_neutron_ovs = {
@@ -116,7 +116,7 @@ type openstack_neutron_ovs = {
     'bridge_mappings' : string[] = list('provider:br-provider')
 };
 
-@documentation {
+@documentation{
     The Neutron configuration options in openvswitch_agent.ini "agent" Section.
 }
 type openstack_neutron_agent = {
@@ -128,7 +128,7 @@ type openstack_neutron_agent = {
 };
 
 
-@documentation {
+@documentation{
     list of Neutron common configuration sections
 }
 type openstack_neutron_common = {
@@ -137,7 +137,7 @@ type openstack_neutron_common = {
     'oslo_concurrency' : openstack_oslo_concurrency
 };
 
-@documentation {
+@documentation{
     list of Neutron ml2 service sections
 };
 type openstack_neutron_ml2_config = {
@@ -148,7 +148,7 @@ type openstack_neutron_ml2_config = {
     'securitygroup' ? openstack_neutron_securitygroup
 } with length(SELF) > 0;
 
-@documentation {
+@documentation{
     list of Neutron linuxbridge service sections
 };
 type openstack_neutron_linuxbridge_config = {
@@ -157,7 +157,7 @@ type openstack_neutron_linuxbridge_config = {
     'securitygroup' ? openstack_neutron_securitygroup
 };
 
-@documentation {
+@documentation{
     list of Neutron openvswitch service sections
 };
 type openstack_neutron_openvswitch_config = {
@@ -166,28 +166,28 @@ type openstack_neutron_openvswitch_config = {
     'agent' ? openstack_neutron_agent
 };
 
-@documentation {
+@documentation{
     list of Neutron layer3 service sections
 };
 type openstack_neutron_l3_config = {
     'DEFAULT' : openstack_DEFAULTS
 };
 
-@documentation {
+@documentation{
     list of Neutron dhcp service sections
 };
 type openstack_neutron_dhcp_config = {
     'DEFAULT' : openstack_DEFAULTS
 };
 
-@documentation {
+@documentation{
     list of Neutron metadata service sections
 };
 type openstack_neutron_metadata_config = {
     'DEFAULT' : openstack_DEFAULTS
 };
 
-@documentation {
+@documentation{
     list of Neutron service configuration sections
 }
 type openstack_neutron_service_config = {
@@ -198,7 +198,7 @@ type openstack_neutron_service_config = {
 };
 
 
-@documentation {
+@documentation{
     list of Neutron service configuration sections
 }
 type openstack_neutron_config = {

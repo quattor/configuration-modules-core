@@ -6,7 +6,7 @@ declaration template components/openstack/storage;
 
 include 'components/openstack/storage/glance';
 
-@documentation {
+@documentation{
 Type to define OpenStack storage services
 }
 type openstack_storage_config = {

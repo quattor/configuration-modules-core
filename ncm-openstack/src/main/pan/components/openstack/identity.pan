@@ -77,7 +77,7 @@ type openstack_identity_client = {
     'service' ? openstack_identity_service{}
 };
 
-@documentation {
+@documentation{
 Type to define OpenStack identity v3 services.
 }
 type openstack_identity_config = {

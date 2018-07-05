@@ -6,7 +6,7 @@ declaration template components/openstack/compute/nova;
 
 include 'components/openstack/identity';
 
-@documentation {
+@documentation{
     The Nova configuration options in "api_database" Section.
 }
 type openstack_nova_api_database = {
@@ -16,7 +16,7 @@ type openstack_nova_api_database = {
     'connection' : string
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in the "vnc" Section.
 }
 type openstack_nova_vnc = {
@@ -45,7 +45,7 @@ type openstack_nova_vnc = {
 };
 
 
-@documentation {
+@documentation{
     The Nova configuration options in the "glance" Section.
 }
 type openstack_nova_glance = {
@@ -59,7 +59,7 @@ type openstack_nova_glance = {
     'api_servers' : type_absoluteURI[]
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in "placement" Section.
 }
 type openstack_nova_placement = {
@@ -67,7 +67,7 @@ type openstack_nova_placement = {
     include openstack_region_common
 } = dict();
 
-@documentation {
+@documentation{
     The Nova hypervisor configuration options in "libvirt" Section.
 }
 type openstack_nova_libvirt = {
@@ -89,7 +89,7 @@ type openstack_nova_libvirt = {
     'rbd_user' ? string
 };
 
-@documentation {
+@documentation{
     The Nova hypervisor configuration options in "neutron" Section.
 }
 type openstack_nova_neutron = {
@@ -116,7 +116,7 @@ type openstack_nova_neutron = {
     'service_metadata_proxy' ? boolean
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in the "scheduler" Section.
 }
 type openstack_nova_scheduler = {
@@ -131,7 +131,7 @@ type openstack_nova_scheduler = {
     'discover_hosts_in_cells_interval' ? long(-1..)
 };
 
-@documentation {
+@documentation{
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
@@ -152,7 +152,7 @@ type openstack_quattor_nova = openstack_quattor = dict(
     'type', 'compute',
     );
 
-@documentation {
+@documentation{
     list of Nova configuration sections
 }
 type openstack_nova_config =  {

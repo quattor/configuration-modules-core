@@ -4,7 +4,7 @@
 
 declaration template components/openstack/messaging/rabbitmq;
 
-@documentation {
+@documentation{
     Type to enable RabbitMQ and the message system for OpenStack.
 }
 type openstack_rabbitmq_config = {
