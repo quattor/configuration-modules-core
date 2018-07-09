@@ -4,6 +4,7 @@ Value based regexp test
 rendermodule=domains/ldap
 contentspath=/
 ---
+^ldap_user_object_class = user$
 ^ldap_user_shell = us$
 ^ldap_group_name = gn$
 ^ldap_default_bind_dn = db$
@@ -15,6 +16,7 @@ contentspath=/
 ^ldap_netgroup_member = nm$
 ^ldap_autofs_map_name = am$
 ^ldap_sudo_hostnames = sh$
-^ldap_sudorule_hostnames = sh$
-^ldap_uri = u1,u2$
-
+^ldap_sudorule_host = sh$
+^krb5_canonicalize = True$
+^krb5_realm = realm$
+^ldap_uri = ldaps://u1.example.org,ldap://u2.example.org:389$
