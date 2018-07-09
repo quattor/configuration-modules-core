@@ -90,7 +90,8 @@ use CAF::Process;
 use CAF::Service;
 use CAF::FileReader;
 use CAF::FileEditor;
-use CAF::FileWriter 17.2.1;
+use CAF::FileWriter;
+use CAF::Path 17.7.0;
 use NetAddr::IP;
 
 use POSIX qw(WIFEXITED WEXITSTATUS);
@@ -141,22 +142,25 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 # $1 must match the device name
 Readonly my $DEVICE_REGEXP => qr{
     - # separator from e.g. ifcfg or route
-    ( # start devicename group $1
-        (?:
-            eth|seth|em|
-            bond|br|ovirtmgmt|
-            vlan|usb|vxlan|
-            ib|
-            p\d+p|
-            en(?:
-                o(?:\d+d)?| # onboard
-                (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
-            )
-         )\d+| # mandatory numbering
-         enx[[:xdigit:]]{12} # enx MAC address
-    )
-    (?:\.\d+)? # optional VLAN
-    (?::\w+)? # optional alias
+    ( # start whole match group $1
+        ( # start devicename group $2
+            (?:
+                eth|seth|em|
+                bond|br|ovirtmgmt|
+                vlan|usb|vxlan|
+                ib|
+                p\d+p|
+                en(?:
+                    o(?:\d+d)?| # onboard
+                    (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
+                )
+             )\d+| # mandatory numbering
+             enx[[:xdigit:]]{12} # enx MAC address
+        )
+        (?:_(\w+))? # opional suffix group $3
+        (?:\.\d+)? # optional VLAN
+        (?::\w+)? # optional alias
+    ) # end whole matching group
     $
 }x;
 
@@ -184,7 +188,8 @@ sub _is_executable
 
 # Given the configuration ifcfg/route[6]/rule[6] filename,
 # Determine if this is a valid interface for ncm-network to manage,
-# Return interface name when valid, undef otherwise.
+# Return arrayref tuple [interface name, ifdown/ifup name] when valid,
+# undef otherwise.
 sub is_valid_interface
 {
     my ($self, $filename) = @_;
@@ -192,7 +197,15 @@ sub is_valid_interface
     # Very primitive, based on regex only
     # Not even the full filename (eg ifcfg) or anything
     if ($filename =~ m/$DEVICE_REGEXP/) {
-        return $1;
+        my $ifupdownname = $1;
+        my $name = $2;
+        my $suffix = $3;
+        if ($suffix && $suffix =~ m/^\d+$/) {
+            $name .= "_$suffix";
+            $self->verbose("Found digit-only suffix $suffix for device $name ($filename), ",
+                           "added it to the interface name");
+        }
+        return [$name, $ifupdownname];
     } else {
         return;
     };
@@ -570,7 +583,7 @@ sub runrun
 
 
 # Create a mapping of device names to MAC address
-# Returns hashref with key found device name and value MAC
+# Returns hashref with key found device name and value (lowercase) MAC
 # same MAC can be used by several devices
 sub make_dev2mac
 {
@@ -605,6 +618,7 @@ sub make_dev2mac
     foreach my $tmp_dev (split(/\n/, $out)) {
         $dev2mac{$1} = lc($2) if ($tmp_dev =~ m/$mac_regexp/);
     }
+    $self->verbose("found dev2mac: ", join(', ', map {"$_=$dev2mac{$_}"} sort keys %dev2mac));
     return \%dev2mac;
 }
 
@@ -1144,25 +1158,28 @@ sub make_network_cfg
 # No actual ifdown is executed (see usage of `will` in messages).
 sub make_ifdown
 {
-    my ($self, $exifiles, $ifaces) = @_;
-
-    my $dev2mac = $self->make_dev2mac();
+    my ($self, $exifiles, $ifaces, $dev2mac) = @_;
 
     my %ifdown;
     foreach my $file (sort keys %$exifiles) {
         next if ($file eq $NETWORKCFG);
 
-        my $iface = $self->is_valid_interface($file);
-        if ($iface) {
+        my $value = $exifiles->{$file};
+
+        my $valid = $self->is_valid_interface($file);
+        if ($valid) {
+            my ($iface, $ifupdownname) = @$valid;
+
             # ifdown: all devices that have files with non-zero status
-            if ($exifiles->{$file} == $NOCHANGES) {
+            if ($value == $NOCHANGES) {
                 $self->verbose("No changes for interface $iface (cfg file $file)");
-            } elsif ($exifiles->{$file} == $KEEPS_STATE) {
+            } elsif ($value == $KEEPS_STATE) {
                 $self->verbose("Change for interface $iface keeps state (cfg file $file)");
             } else {
-                $self->verbose("Will ifdown $iface due to changes in $file (state $exifiles->{$file})");
+                $self->verbose("Will ifdown $iface due to changes in $file (state $value)");
+                # Use the full ifup/ifdown name in case of removal
                 # TODO: ifdown new devices? better safe than sorry?
-                $ifdown{$iface} = 1;
+                $ifdown{($value == $REMOVE) ? $ifupdownname: $iface} = 1;
 
                 # bonding: if you bring down a slave, always bring down it's master
                 if ($ifaces->{$iface}->{master}) {
@@ -1231,7 +1248,8 @@ sub make_ifup
         # and have state other than REMOVE
         # e.g. master with NOCHANGES state can be added here
         # when a slave had modifications
-        if ($exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
+        if (exists($exifiles->{"$IFCFG_DIR/ifcfg-$iface"}) &&
+            $exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
         } else {
             if ($ifaces->{$iface}->{master}) {
@@ -1301,7 +1319,7 @@ sub set_hostname
 }
 
 
-# network stop OR ifdown
+# network stop AND/OR ifdown
 # Returns if something was done or not
 sub stop
 {
@@ -1310,20 +1328,26 @@ sub stop
     my @ifaces = sort keys %$ifdown;
 
     my $action;
-    if ($exifiles->{$NETWORKCFG} == $UPDATED) {
-        $self->verbose("$NETWORKCFG UPDATED, stopping network");
-        $action = 1;
-        $nwsrv->stop();
-    } elsif (@ifaces) {
-        my @cmds;
-        foreach my $iface (@ifaces) {
-            # how do we actually know that the device was up?
-            # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-            push(@cmds, ["/sbin/ifdown", $iface]);
+    my $nwupdated = $exifiles->{$NETWORKCFG} == $UPDATED;
+
+    if ($nwupdated || @ifaces) {
+        if (@ifaces) {
+            my @cmds;
+            foreach my $iface (@ifaces) {
+                # how do we actually know that the device was up?
+                # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
+                push(@cmds, ["/sbin/ifdown", $iface]);
+            }
+            $self->verbose("Stopping interfaces ",join(', ', @ifaces));
+            $action = 1;
+            $self->runrun(@cmds);
         }
-        $self->verbose("Stopping interfaces ",join(', ', @ifaces));
-        $action = 1;
-        $self->runrun(@cmds);
+
+        if ($nwupdated) {
+            $self->verbose("$NETWORKCFG UPDATED, stopping network");
+            $action = 1;
+            $nwsrv->stop();
+        }
     } else {
         $self->verbose('Nothing to stop');
         $action = 0;
@@ -1519,6 +1543,104 @@ sub legacy_keeps_state
     };
 }
 
+# Create a mapping of existing physical devices that should be renamed
+# based on the macaddress in the profile.
+# Mapping has current name as key and new name as value.
+# Mapping has to be reversible.
+# Does nothing when mac addresses are not unqiue (and reports error)
+# Returns (possibly empty) hashref
+sub make_rename_map
+{
+    my ($self, $dev2mac, $ifaces) = @_;
+
+    # mapping of iface name and hwaddr for configured devices
+    # force lowercase
+    my $conf = {
+        map {$_ => lc($ifaces->{$_}->{hwaddr})}
+        grep {exists($ifaces->{$_}->{hwaddr})} # no autovivification in $ifaces
+        keys %$ifaces};
+    $self->verbose("configured interfaces: ", join(', ', map {"$_=$conf->{$_}"} sort keys %$conf));
+    my $conf_mac2dev = {map {$conf->{$_} => $_} keys %$conf};
+
+    # Get list of physical device names
+    my $virt = $self->listdir('/sys/devices/virtual/net');
+    if (!defined($virt)) {
+        $self->error("Cannot get list of virtual network devices: $self->{fail}");
+        return;
+    }
+
+    my $is_phys = sub {
+        my ($fn, $dir) = @_;
+        return $self->is_symlink("$dir/$fn") && !(grep {$fn eq $_} @$virt);
+    };
+
+    my $phys = $self->listdir('/sys/class/net', test => $is_phys);
+    if (!defined($phys)) {
+        $self->error("Cannot get list of physical network devices: $self->{fail}");
+        return;
+    }
+
+    # check unique mac addresses
+    my %res;
+
+    if ((scalar keys %$conf_mac2dev) == (scalar keys %$conf)) {
+        foreach my $dev (sort @$phys) {
+            my $mac = $dev2mac->{$dev};
+            if ($mac) {
+                my $cdev = $conf_mac2dev->{$mac};
+                if ($cdev && $dev ne $cdev) {
+                    $self->verbose("Found physical device $dev with same mac address as ",
+                                   "configured device $cdev with different name.");
+                    if (grep {$_ eq $cdev} values %res) {
+                        $self->error("Configured device $cdev already in the rename map ",
+                                     "(while trying to add it for $dev)");
+                    } else {
+                        $res{$dev} = $cdev;
+                    }
+                }
+            } else {
+                # it's ok for IB devices
+                my $method = ($dev =~ m/^ib\d+/) ? 'verbose' : 'warn';
+                $self->$method("Found device $dev without mac address in dev2mac");
+            }
+        }
+    } else {
+        $self->error("Non unique mac addresses configured");
+    }
+
+    $self->verbose("rename map: ", join(', ', map {"$_=$res{$_}"} sort keys %res));
+    return \%res;
+}
+
+# Actually rename the devices
+# uses 'ip link set name'
+#   does a ip link down before renaming
+# map is a hashref old name -> new name
+sub down_rename_devices
+{
+    my ($self, $map) = @_;
+
+    my @devs;
+    my @cmds;
+    foreach my $dev (sort keys %$map) {
+        push(@devs, $dev);
+        push(@cmds, [qw(ip addr flush dev), $dev]);
+        push(@cmds, [qw(ip link set), $dev, "down"]);
+        push(@cmds, [qw(ip link set), $dev, "name", $map->{$dev}]);
+    }
+
+    my $action;
+    if (@devs) {
+        $self->verbose("Renaming devices ",join(', ', @devs));
+        $action = 1;
+        $self->runrun(@cmds);
+    } else {
+        $self->verbose("Nothing renamed.");
+    }
+
+    return $action;
+}
+
 
 sub Configure
 {
@@ -1537,6 +1659,7 @@ sub Configure
     my ($exifiles, $exilinks) = $self->gather_existing();
     return if ! defined($exifiles);
 
+    my $comp_tree = $config->getTree($self->prefix());
     my $nwtree = $config->getTree($NETWORK_PATH);
 
     # main network config
@@ -1617,6 +1740,7 @@ sub Configure
         }
     }
 
+    my $dev2mac = $self->make_dev2mac();
 
     # We now have a map with files and values.
     # Changes to the general network config file are handled separately.
@@ -1633,7 +1757,7 @@ sub Configure
     # aliases on bonded vlans ...
     # If you need this, buy more network adapters ;)
 
-    my $ifdown = $self->make_ifdown($exifiles, $ifaces);
+    my $ifdown = $self->make_ifdown($exifiles, $ifaces, $dev2mac);
     if (! defined($ifdown)) {
         # file_dump does not modify the original files.
         # It's safe to exit the component here.
@@ -1666,6 +1790,37 @@ sub Configure
     my $nwsrv = CAF::Service->new(['network'], log => $self);
 
     my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
+
+    $init_config .= "\nPOST STOP\n";
+    $init_config .= $self->get_current_config();
+
+    my $rename;
+    if ($comp_tree->{rename}) {
+        # Rename the (physical) network devices
+        $rename = $self->make_rename_map($dev2mac, $net->{interfaces});
+
+        if (!$rename) {
+            $self->error("Failed to make rename map, nothing to rename");
+        } else {
+            if (%$rename) {
+                # Rename
+                #   either the devices are scheduled for in ifdown or
+                #   scheduled for start in ifup (but not in ifdown),
+                #   or conifgured but somehow we don't care?
+                #   In any case, it's ok to down any device in the rename map
+                $self->down_rename_devices($rename);
+
+                $init_config .= "\nPOST DOWN RENAME\n";
+                $init_config .= $self->get_current_config();
+
+                # rerun ethtool
+                # TODO: why do that here? should be done after any restarting of devices or whole network?
+                $self->ethtool_set_options($ifaces);
+            } else {
+                $self->verbose("Nothing to rename");
+            }
+        }
+    }
 
     my $config_changed = $self->deploy_config($exifiles);
 

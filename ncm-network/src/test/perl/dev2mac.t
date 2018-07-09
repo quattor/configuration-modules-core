@@ -16,6 +16,7 @@ set_desired_output('ip addr show', readfile('src/test/resources/output/ipaddrsho
 my $res = $cmp->make_dev2mac();
 is_deeply($res, {'eth0' => '02:00:0a:8d:32:90'}, "dev2mac with el5");
 
+# ipaddrshow has the macaddr of em1 manually convered in uppercase; to test lowercase conversion
 set_desired_output('ip addr show', readfile('src/test/resources/output/ipaddrshow'));
 my $res2 = $cmp->make_dev2mac();
 is_deeply($res2, {

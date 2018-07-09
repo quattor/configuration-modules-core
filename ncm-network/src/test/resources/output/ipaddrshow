@@ -5,7 +5,7 @@
     inet6 ::1/128 scope host 
        valid_lft forever preferred_lft forever
 2: em1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000
-    link/ether bc:30:5b:a9:3d:2e brd ff:ff:ff:ff:ff:ff
+    link/ether BC:30:5B:A9:3D:2E brd ff:ff:ff:ff:ff:ff
     inet 1.2.3.4/16 brd 1.2.255.255 scope global em1
        valid_lft forever preferred_lft forever
     inet6 fe80::be30:5bff:fea9:3d2e/64 scope link 
