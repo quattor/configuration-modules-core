@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>icinga</artifactId>
   <packaging>pom</packaging>
-  <version>18.6.0-rc1</version>
+  <version>18.6.0-rc2-SNAPSHOT</version>
   <name>ncm-icinga</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
