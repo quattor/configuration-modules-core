@@ -1,7 +1,7 @@
 object template md5password;
 
 include 'base';
-
+include "components/grub/config";
 
 prefix "/software/components/grub/password";
 "enabled" = true;
