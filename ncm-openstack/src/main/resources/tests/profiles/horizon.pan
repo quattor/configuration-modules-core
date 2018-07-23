@@ -30,4 +30,3 @@ prefix "/metaconfig/contents";
     dict('url', 'http://controller.mysite.com:5000/v3', 'name', 'main'),
     dict('url', 'http://controller.myothersite.com:5000/v3', 'name', 'other'),
     );
-
