@@ -200,20 +200,76 @@ type openstack_horizon_security_group = {
     'to_port' : long(-1..65535)
 } = dict();
 
-@documentation {
-    list of Horizon service configuration sections
+@documentation{
+    list of Horizon service django configuration sections
 }
-type openstack_horizon_config = {
+type openstack_horizon_config_django = {
     @{Set Horizon debug mode}
     'debug' : boolean = false
-    @{WEBROOT is the location relative to Webserver root
-    should end with a slash}
-    'webroot' : string = '/dashboard/' with match (SELF, '^/.+/$')
     @{If horizon is running in production (DEBUG is False), set this
     with the list of host/domain names that the application can serve.
     For more information see:
     https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts}
     'allowed_hosts' ? string[] = list('*')
+};
+
+type openstack_horizon_keystone_available_region = {
+    'name' : string
+    'url' : type_absoluteURI
+};
+
+@documentation{
+    list of Horizon service identity/keystone configuration sections
+}
+type openstack_horizon_config_identity_keystone = {
+    'openstack_keystone_url' : type_absoluteURI
+    @{Set this to True if running on a multi-domain model. When this is enabled, it
+    will require the user to enter the Domain name in addition to the username
+    for login}
+    'openstack_keystone_multidomain_support' : boolean = true
+    @{Configure the default role for users that you create via the dashboard}
+    'openstack_keystone_default_role' : string = 'user'
+    'openstack_keystone_backend' : openstack_horizon_keystone_backend
+    'websso_enabled' ? boolean
+    'websso_initial_choice' ? string
+    'websso_idp_mapping' ? string[]{}
+    'websso_choices' ? string{}
+
+    @{list of available regions. 'openstack_keystone_url' indicates which of the regions is the default one}
+    'available_regions' ? openstack_horizon_keystone_available_region[]
+} with {
+    if (exists(SELF['available_regions'])) {
+        def = SELF['openstack_keystone_url'];
+        found = false;
+        foreach (idx; reg; SELF['available_regions']) {
+            if (reg['url'] == def) {
+                found = true;
+            };
+        };
+        if (!found) {
+            error("available_regions %s require openstack_keystone_url %s to be one of the regions",
+                    SELF['available_regions'], def);
+        };
+    };
+    true;
+};
+
+
+@documentation{
+    list of Horizon service network/neutron configuration sections
+}
+type openstack_horizon_config_network_neutron = {
+    'allowed_private_subnet_cidr' ? openstack_horizon_allowed_subnet
+    'openstack_neutron_network' : openstack_horizon_neutron_network
+};
+
+@documentation{
+    list of Horizon service general configuration sections
+}
+type openstack_horizon_config_general = {
+    @{WEBROOT is the location relative to Webserver root
+    should end with a slash}
+    'webroot' : string = '/dashboard/' with match (SELF, '^/.+/$')
     @{Horizon uses Djangos sessions framework for handling session data.
     There are numerous session backends available, which are selected
     through the "SESSION_ENGINE" setting}
@@ -224,13 +280,6 @@ type openstack_horizon_config = {
     and shared storage, and can be very useful for small-scale deployment
     and/or development}
     'caches' ? openstack_horizon_caches{}
-    'openstack_keystone_url' : type_absoluteURI
-    @{Set this to True if running on a multi-domain model. When this is enabled, it
-    will require the user to enter the Domain name in addition to the username
-    for login}
-    'openstack_keystone_default_role' : string = 'user'
-    'openstack_keystone_multidomain_support' : boolean = true
-    'openstack_keystone_backend' : openstack_horizon_keystone_backend
     'openstack_api_versions' : openstack_horizon_api_versions
     'openstack_hypervisor_features' : openstack_horizon_hypervisor_features
     'openstack_cinder_features' : openstack_horizon_cinder_features
@@ -266,9 +315,6 @@ type openstack_horizon_config = {
     "cloud_admin": "rule:admin_required and domain_id:<your domain id>"
     This value must be the name of the domain whose ID is specified there}
     'openstack_keystone_default_domain' : string = 'Default'
-    @{Configure the default role for users that you create via the dashboard}
-    'openstack_keystone_default_role' : string = 'user'
-    'openstack_neutron_network' : openstack_horizon_neutron_network
     @{The timezone of the server. This should correspond with the timezone
     of your entire OpenStack installation, and hopefully be in UTC.
     Example: "Europe/Brussels"}
@@ -290,7 +336,6 @@ type openstack_horizon_config = {
         'OPENSTACK_HYPERVISOR_FEATURES', 'LAUNCH_INSTANCE_DEFAULTS',
         'OPENSTACK_IMAGE_FORMATS', 'OPENSTACK_KEYSTONE_DEFAULT_DOMAIN',
         )
-    'allowed_private_subnet_cidr' ? openstack_horizon_allowed_subnet
     'security_group_files' : openstack_horizon_security_group{} = dict(
         'all_tcp', dict('name', 'ALL TCP', 'from_port', 1, 'to_port', 65535),
         'all_udp', dict('name', 'ALL UDP', 'from_port', 1, 'to_port', 65535, 'ip_protocol', 'udp'),
@@ -310,4 +355,24 @@ type openstack_horizon_config = {
         'mysql', dict('name', 'MYSQL', 'from_port', 3306, 'to_port', 3306),
         'rdp', dict('name', 'RDP', 'from_port', 3389, 'to_port', 3389),
         )
+    'use_ssl' ? boolean
+    'csrf_cookie_secure' ? boolean
+    'session_cookie_secure' ? boolean
+    'session_cookie_httponly' ? boolean
+    @{path to a custom CA certificate file, this overrides use of the default system CA certificate}
+    'openstack_ssl_cacert' ? absolute_file_path
+    @{Disable SSL certificate checks in the OpenStack clients (useful for self-signed certificates)}
+    'openstack_ssl_no_verify' ? boolean
+    @{enable logging of all operations carried out by users of Horizon}
+    'operation_log_enabled' ? boolean
+};
+
+@documentation{
+    list of Horizon service configuration sections
+}
+type openstack_horizon_config = {
+    include openstack_horizon_config_django
+    include openstack_horizon_config_general
+    include openstack_horizon_config_identity_keystone
+    include openstack_horizon_config_network_neutron
 };

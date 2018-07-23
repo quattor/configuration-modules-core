@@ -3,6 +3,10 @@ OpenStack Horizon test
 multiline
 ---
 ^ALLOWED_HOSTS\s?=\s*.+\s*$
+^AVAILABLE_REGIONS = \[$
+^\s{4}\("http://controller.mysite.com:5000/v3", "main"\),$
+^\s{4}\("http://controller.myothersite.com:5000/v3", "other"\),$
+\]
 ^CACHES\s?=\s*\{\s*$
 ^\s{8}'LOCATION': \['controller.mysite.com:11211', 'controller.myothersite.com:11211'\],$
 ^\}$
