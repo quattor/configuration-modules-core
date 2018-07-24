@@ -1544,6 +1544,47 @@ sub legacy_keeps_state
     };
 }
 
+
+# check if file change was due to removal of explicit broadcast in favour of computed default
+#   (broadcast configuration has a default via "ipcalc --broadcast ipaddr mask")
+sub default_broadcast_keeps_state
+{
+    my ($self, $file_name, $name, $data, $exifiles, $alias) = @_;
+
+    # compute broadcast via ipcalc, remove BROADCAST=
+    my $proc = CAF::Process->new(
+        ["ipcalc", "--broadcast", $data->{ip}, $data->{netmask}],
+        log => $self,
+        keeps_state => 1
+        );
+    my $output = $proc->output();
+    my $exitcode = $?;
+    my $broadcast;
+    if ($exitcode == 0) {
+        # exact format not really relevant, mainly for stripping prefix and untainting
+        if ($output =~ m/^BROADCAST=([\d.]+)\s*$/m) {
+            $broadcast = $1;
+        } else {
+            $self->error("Computed broadcast using $proc (output $output) gives unexpected output");
+            return;
+        }
+    } else {
+        $self->error("Failed to compute broadcast using $proc (ec $exitcode output $output)");
+        return;
+    }
+
+    # make (shallow) copy of data, insert computed broadcast
+    my $brdata = {%$data, broadcast => $broadcast};
+    # create text
+    my $method = 'make_ifcfg' . ($alias ? '_alias' : '');
+    my $brtext = $self->$method($name, $brdata);
+    # run legacy_keeps_state
+    $self->legacy_keeps_state($file_name, $brtext, $exifiles);
+
+    return 1;
+}
+
+
 # Create a mapping of existing physical devices that should be renamed
 # based on the macaddress in the profile.
 # Mapping has current name as key and new name as value.
@@ -1689,6 +1730,11 @@ sub Configure
 
         my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
+        if ($exifiles->{$file_name} == $UPDATED && !exists($iface->{broadcast})) {
+            # interface configuration was changed.
+            # check if this was due to removal of explicit broadcast in favour of computed default
+            $self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
+        }
 
         # route/rule config, interface based.
         foreach my $flavour (qw(route route6 rule rule6)) {
@@ -1717,10 +1763,16 @@ sub Configure
         # one file per alias
         foreach my $al (sort keys %{$iface->{aliases} || {}}) {
             my $al_dev = ($iface->{device} || $ifacename) . ":$al";
-            my $text = $self->make_ifcfg_alias($al_dev, $iface->{aliases}->{$al});
+            my $al_iface = $iface->{aliases}->{$al};
+            my $text = $self->make_ifcfg_alias($al_dev, $al_iface);
 
             my $file_name = "$IFCFG_DIR/ifcfg-$ifacename:$al";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
+            if ($exifiles->{$file_name} == $UPDATED && !exists($al_iface->{broadcast})) {
+                # interface configuration was changed.
+                # check if this was due to removal of explicit broadcast in favour of computed default
+                $self->default_broadcast_keeps_state($file_name, $al_dev, $al_iface, $exifiles, 1);
+            }
 
             # This is the only way it will work for VLANs
             # If vlan device is vlanX and the DEVICE is eg ethY.Z
