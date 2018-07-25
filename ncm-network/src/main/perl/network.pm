@@ -825,7 +825,7 @@ sub _make_ifcfg_line
 
 # return anonymous sub that calls
 # _make_ifcfg_line with first arg $href
-# and appends result it not empty string to arrayref
+# and appends result if not empty string to arrayref
 # and returns value
 sub _make_make_ifcfg_line
 {
@@ -889,7 +889,8 @@ sub make_ifcfg
             if ($iface->{$attr}) {
                 &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
             } else {
-                $self->error("Using static bootproto for $ifacename and no $attr configured");
+                my $method = $attr eq 'broadcast' ? 'verbose' : 'error';
+                $self->$method("Using static bootproto for $ifacename and no $attr configured");
             }
         }
     } elsif (($bootproto eq "none") && $iface->{master}) {
