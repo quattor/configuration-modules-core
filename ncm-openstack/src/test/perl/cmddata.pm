@@ -82,5 +82,11 @@ $cmds{manila_db_version}{out} = 1;
 $cmds{manila_db_version_missing}{cmd} = "/usr/bin/manila-manage db version";
 $cmds{manila_db_version_missing}{ec} = 1;
 
+$cmds{heat_db_version}{cmd} = "/usr/bin/heat-manage db_version";
+$cmds{heat_db_version}{out} = 1;
+
+$cmds{heat_db_version_missing}{cmd} = "/usr/bin/heat-manage db_version";
+$cmds{heat_db_version_missing}{ec} = 1;
+
 
 1;

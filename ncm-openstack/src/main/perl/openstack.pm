@@ -125,6 +125,7 @@ sub Configure
         'share',
         'compute',
         'network',
+        'orchestration',
         'dashboard',
     ];
 
