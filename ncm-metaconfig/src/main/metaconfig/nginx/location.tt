@@ -6,5 +6,8 @@ root [% location.root %];
 [%-     IF location.exists("proxy") -%]
 [%          INCLUDE metaconfig/nginx/proxy.tt px=location.proxy %]
 [%      END -%]
+[%-     IF location.exists("return") -%]
+[%          INCLUDE metaconfig/nginx/return.tt data=location.return %]
+[%      END -%]
 [%- END -%]
 }

@@ -91,6 +91,16 @@ type nginx_proxy_location = {
     "read_timeout" ? long(0..)
 };
 
+
+@{nginx return diretcive}
+# url: cannot use type_hostURI, should allow eg $host as host
+type nginx_return = {
+    "code" ? long(0..)
+    "url" ? string with match(SELF, '^\w+://')
+    "text" ? string
+};
+
+
 @{
     Structure of a location entry
 }
@@ -99,8 +109,8 @@ type nginx_location = {
     "name" : string
     "operator" ? string with match(SELF, "^(=|^~|~*)$")
     "proxy" ? nginx_proxy_location
+    "return" ? nginx_return
 };
-
 
 @{
     Description of an nginx error_page line
@@ -110,12 +120,27 @@ type nginx_error_page = {
     "file" : string
 };
 
+@{nginx addr: either a hostport or a port (as string)}
+# ugly port range check before is_hostport (not a test function)
+# cannot use is_port, as it is also not a test function
+type nginx_addr = string with {
+    if (match(SELF, '^\d+$')) {
+        (to_long(SELF) > 0) && (to_long(SELF) < 64 * 1024);
+    } else {
+        is_hostport(SELF);
+    };
+};
+
 type nginx_listen = {
-    "addr" ? type_hostport
+    "addr" ? nginx_addr
     "default" : boolean = false
     "ssl" : boolean = false
 };
 
+
+@{nginx_server_name: either a valid hostname or _ (an invalid domain name which never intersect with any real name)}
+# == test before is_hostname  (is_hostname is not a test function, it can throw errors)
+type nginx_server_name = string with {SELF == '_' || is_hostname(SELF)};
 
 @{
     An nginx server entry.
@@ -123,10 +148,13 @@ type nginx_listen = {
 type nginx_server = {
     "includes" ? string[]
     "listen" : nginx_listen
-    "name" : type_hostname[]
-    "location" : nginx_location[]
+    "name" : nginx_server_name[]
+    "location" ? nginx_location[]
     "error_page" : nginx_error_page[] = list()
     "ssl" ? httpd_ssl
+    "return" ? nginx_return
+} with {
+    exists(SELF['location']) || exists(SELF['return']);
 };
 
 @{ An upstream declaration for reverse proxies

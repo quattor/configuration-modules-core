@@ -13,3 +13,6 @@ error_page [% e.error_codes.join(" ") %] [% e.file %];
 [%- FOREACH l IN srv.location %]
 [%      INCLUDE metaconfig/nginx/location.tt location=l %]
 [% END -%]
+[%- IF srv.return %]
+[%      INCLUDE metaconfig/nginx/return.tt data=srv.return %]
+[% END -%]

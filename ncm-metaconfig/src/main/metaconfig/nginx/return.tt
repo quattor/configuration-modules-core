@@ -1,0 +1,12 @@
+[%  ret = [];
+    IF data.exists('code');
+        ret.push(data.code);
+    END;
+    IF data.exists('url');
+        ret.push(data.url);
+    END;
+    IF data.exists('text');
+        ret.push('[' _ data.text _ ']');
+    END;
+-%]
+return [% ret.join(' ') %];

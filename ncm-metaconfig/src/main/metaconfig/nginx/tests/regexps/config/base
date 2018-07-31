@@ -26,7 +26,7 @@ multiline
 ^\s{4}}$
 ^\s{4}upstream secure \{$
 ^\s{8}server myserver.my.domain:446;$
-^\s{4}server \{$ ### COUNT 2
+^\s{4}server \{$ ### COUNT 3
 ^\s{8}listen myhost.my.domain:8443 ssl;$
 ^\s{8}listen myhost.my.domain:443 ssl;$
 ^\s{8}server_name myhost.my.domain;$
@@ -50,7 +50,12 @@ multiline
 ^\s{12}proxy_next_upstream off;$ ### COUNT 7
 ^\s{12}proxy_http_version 1.1;$
 ^\s{12}proxy_read_timeout 86400;$
-^\s{8}\}$ ### COUNT 7
+^\s{8}\}$ ### COUNT 8
 ^\s{8}location ~ repodata \{$
 ^\s{12}proxy_cache off;$ ### COUNT 2
 ^\s{8}location  / \{$
+^\s{8}location = / \{$
+^\s{12}return 301 https://\$host/default;$
+^\s{8}listen 80 default ;$
+^\s{8}server_name _;$
+^\s{8}return 301 https://\$host\$request_uri;$
