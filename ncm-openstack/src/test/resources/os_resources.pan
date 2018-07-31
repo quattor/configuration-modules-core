@@ -216,6 +216,35 @@ prefix "/software/components/openstack/share/manila";
     "share_driver", "manila.share.drivers.cephfs.driver.CephFSDriver",
 );
 
+# Heat section
+
+prefix "/software/components/openstack/orchestration/heat";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+    "heat_metadata_server_url", format("http://%s:8000", OPENSTACK_HOST_SERVER),
+    "heat_waitcondition_server_url", format("http://%s:8000/v1/waitcondition", OPENSTACK_HOST_SERVER),
+    "stack_domain_admin", "heat_domain_admin",
+    "stack_domain_admin_password", "heat_admin_good_password",
+);
+"database" = dict(
+    "connection", format("mysql+pymysql://heat:heat_db_pass@%s/heat", OPENSTACK_HOST_SERVER),
+);
+"keystone_authtoken" = dict(
+    "auth_uri", AUTH_URI,
+    "auth_url", AUTH_URL,
+    "username", "heat",
+    "password", "heat_good_password",
+    "memcached_servers", list(format("%s:11211", OPENSTACK_HOST_SERVER)),
+);
+"trustee" = dict(
+    "username", "heat",
+    "password", "heat_good_password",
+    "auth_url", AUTH_URL,
+);
+"clients_keystone" = dict(
+    "auth_uri", AUTH_URI,
+);
+
 
 # OpenRC section
 

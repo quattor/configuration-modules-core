@@ -9,6 +9,8 @@ include 'components/openstack/config';
 variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 variable NEUTRON_HOST_SERVER ?= 'neutron.mysite.com';
 variable MY_IP ?= '10.0.1.2';
+variable AUTH_URL ?= format('http://%s:35357', OPENSTACK_HOST_SERVER);
+variable AUTH_URI ?= format('http://%s:5000', OPENSTACK_HOST_SERVER);
 
 
 # Hardware section

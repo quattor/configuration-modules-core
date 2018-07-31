@@ -29,6 +29,7 @@ set_output('neutron_db_version_missing');
 set_output('rabbitmq_db_version_missing');
 set_output('cinder_db_version_missing');
 set_output('manila_db_version_missing');
+set_output('heat_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -96,6 +97,11 @@ $fh = get_file("/etc/manila/manila.conf");
 isa_ok($fh, "CAF::FileWriter", "manila.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "manila.conf has expected content");
 
+# Verify Heat configuration file
+$fh = get_file("/etc/heat/heat.conf");
+isa_ok($fh, "CAF::FileWriter", "heat.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "heat.conf has expected content");
+
 
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
@@ -141,6 +147,11 @@ ok(command_history_ok([
         'service neutron-linuxbridge-agent restart',
         'service neutron-metadata-agent restart',
         'service neutron-server restart',
+        '/usr/bin/heat-manage db_version',
+        '/usr/bin/heat-manage db_sync',
+        'service openstack-heat-api restart',
+        'service openstack-heat-api-cfn restart',
+        'service openstack-heat-engine restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
