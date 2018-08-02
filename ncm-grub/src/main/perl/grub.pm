@@ -200,16 +200,18 @@ sub password
             owner => "root",
             group => "root",
             mode  => oct(400),
-            log   => $self );
+            log   => $self,
+            sensitive => 1,
+        );
 
-        $usercfg_fh->add_or_replace_lines(qr/^GRUB2_PASSWORD=/, qr/^GRUB2_PASSWORD=$password$/, "GRUB2_PASSWORD=$password\n", SEEK_END);
+        $usercfg_fh->add_or_replace_lines(qr/^GRUB2_PASSWORD=/, qr/^GRUB2_PASSWORD=\Q$password\E$/, "GRUB2_PASSWORD=$password\n", SEEK_END);
         $usercfg_fh->close();
     } else {
         my $val = $tree->{option} ? "--$tree->{option} " : "";
         $val .= $password;
 
         $grub_fh->add_or_replace_lines(qr/^password\s+/,
-                                  qr/^password $val$/,
+                                  qr/^password \Q$val\E$/,
                                   "password $val\n",
                                   $self->main_section_offset($grub_fh),
                                   SEEK_END);

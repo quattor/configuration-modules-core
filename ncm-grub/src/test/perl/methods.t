@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Quattor qw(password nopassword);
+use Test::Quattor qw(password nopassword md5password);
 use Test::Quattor::Object;
 use CAF::Object;
 use Test::MockModule;
@@ -72,6 +72,23 @@ title abc
 
 EOF
 
+Readonly my $GRUBMD5USERCFG => <<'EOF';
+GRUB2_PASSWORD=$1$+DS97x/$z0phaR1SK9x7NDzLfGx7S/
+EOF
+
+Readonly my $NEWGRUBMD5CFG => <<'EOF';
+# some header
+#
+password --md5 $1$+DS97x/$z0phaR1SK9x7NDzLfGx7S/
+terminal serial console
+serial --unit=0 --speed=5678 --parity=n --word=8
+
+blah blah
+
+title abc
+
+EOF
+
 set_file_contents($GRUBCFGFN, "$GRUBCFG");
 
 my $passwdcfg = get_config_for_profile("password");
@@ -98,6 +115,15 @@ set_file_contents($GRUBCFGFN, "$NEWGRUBCFG");
 my $nopasswdcfg = get_config_for_profile("nopassword");
 ok($cmp->password($nopasswdcfg, $grubfh));
 is("$grubfh", $NEWGRUBCFG_REMOVED_PASSWORD);
+
+set_file_contents($GRUBCFGFN, "$GRUBCFG");
+my $md5passwdcfg = get_config_for_profile("md5password");
+#$NCM::Component::grub::GRUB_MAJOR = 2;
+$cmp->grub_conf($md5passwdcfg, $grubfh);
+$grubfh = get_file($GRUBCFGFN);
+isa_ok($grubfh, 'CAF::FileEditor', "grub config file is an editor instance");
+
+is("$grubfh", "$NEWGRUBMD5CFG", "grub cfg edited as expected");
 
 =head1 grubby
 
