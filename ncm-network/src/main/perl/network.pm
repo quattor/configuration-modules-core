@@ -842,7 +842,7 @@ sub _make_make_ifcfg_line
 # Return ifcfg content
 sub make_ifcfg
 {
-    my ($self, $ifacename, $iface) = @_;
+    my ($self, $ifacename, $iface, $ipv6) = @_;
 
     my @text;
     my $makeline = _make_make_ifcfg_line($iface, \@text);
@@ -885,14 +885,25 @@ sub make_ifcfg
 
     my $bootproto = $iface->{bootproto} || 'static';
     if ($bootproto eq 'static') {
-        foreach my $attr (qw(ip netmask broadcast)) {
-            if ($iface->{$attr}) {
-                &$makeline($attr, var => ($attr eq 'ip') ? 'ipaddr' : undef);
+        my $msg = "Using static bootproto for $ifacename";
+        if ($iface->{ip}) {
+            &$makeline('ip', var => 'ipaddr');
+            if ($iface->{netmask}) {
+                &$makeline('netmask');
             } else {
-                my $method = $attr eq 'broadcast' ? 'verbose' : 'error';
-                $self->$method("Using static bootproto for $ifacename and no $attr configured");
+                $self->error("$msg with (IPv4) ip and no netmask configured");
+            }
+        } else {
+            $msg .= " and no (IPv4) ip configured";
+            if ($ipv6 && $iface->{ipv6addr}) {
+                $self->verbose("$msg (but ipv6 is enabled and ipv6 addr configured)");
+            } else {
+                $self->error($msg);
             }
         }
+
+        # broadcast is optional in schema
+        &$makeline('broadcast');
     } elsif (($bootproto eq "none") && $iface->{master}) {
         # set bonding master
         &$makeline('master');
@@ -1077,7 +1088,7 @@ sub make_ifcfg_alias
     return \@text;
 }
 
-# Return /etc/sysconfig/network content
+# Return tuple /etc/sysconfig/network content and boolean ipv6 enabled
 sub make_network_cfg
 {
     my ($self, $nwtree, $net, $hostname) = @_;
@@ -1130,10 +1141,10 @@ sub make_network_cfg
     # Enable and config IPv6 if either set explicitly or v6 config is present
     # but note that the order of the v6 directive processing is important to
     # make the 'default' enable do the right thing
+    # No ipv6 makeline (yet), all different variable names etc
+    my $use_ipv6 = 0;
     my $ipv6 = $nwtree->{ipv6};
     if ($ipv6) {
-        # No ipv6 makeline (yet), all different variable names etc
-        my $use_ipv6 = 0;
 
         if ($ipv6->{default_gateway}) {
             push(@text, "IPV6_DEFAULTGW=$ipv6->{default_gateway}");
@@ -1150,7 +1161,7 @@ sub make_network_cfg
         push(@text, "NETWORKING_IPV6=".($use_ipv6 ? "yes" : "no"));
     }
 
-    return \@text;
+    return \@text, $use_ipv6;
 }
 
 # Build and return ifdown hashref: key is the interface name,
@@ -1673,19 +1684,20 @@ sub Configure
     # systemd rpm --script can remove it anyway
     my $nwcfg_hostname = $use_hostnamectl ? undef : $hostname;
 
-    my $text = $self->make_network_cfg($nwtree, $net, $nwcfg_hostname);
+    my ($text, $ipv6) = $self->make_network_cfg($nwtree, $net, $nwcfg_hostname);
     $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
 
     if ($exifiles->{$NETWORKCFG} == $UPDATED && $use_hostnamectl) {
         # Network config was updated, check if it was due to removal of HOSTNAME
         # when hostnamectl is present.
-        $self->legacy_keeps_state($NETWORKCFG, $self->make_network_cfg($nwtree, $net, $hostname), $exifiles);
+        my ($hntext, $hnipv6) = $self->make_network_cfg($nwtree, $net, $hostname);
+        $self->legacy_keeps_state($NETWORKCFG, $hntext, $exifiles);
     };
 
     # ifcfg- / route[6]- files
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
-        my $text = $self->make_ifcfg($ifacename, $iface);
+        my $text = $self->make_ifcfg($ifacename, $iface, $ipv6);
 
         my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
