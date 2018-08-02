@@ -8,7 +8,7 @@ declaration template components/openstack/orchestration/heat;
 include 'components/openstack/identity';
 
 
-@documentation {
+@documentation{
     Heat default section
 }
 type openstack_heat_DEFAULTS = {
@@ -28,7 +28,7 @@ type openstack_heat_DEFAULTS = {
     'stack_user_domain_name' : string = 'heat'
 };
 
-@documentation {
+@documentation{
     Heat clients_keystone section
 }
 type openstack_heat_clients_keystone = {
@@ -36,7 +36,7 @@ type openstack_heat_clients_keystone = {
     'auth_uri' : type_absoluteURI
 };
 
-@documentation {
+@documentation{
     list of Heat configuration sections
 }
 type openstack_heat_config = {
