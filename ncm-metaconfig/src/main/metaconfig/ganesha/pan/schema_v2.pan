@@ -73,7 +73,7 @@ type ganesha_v2_export_FSAL = {
 
 type ganesha_v2_protocol = string with match(SELF, '^((NFS)?[vV]?[34]|9P)$');
 type ganesha_v2_SecType = string with match(SELF, '^(none|sys|krb5[ip]?)$');
-type ganesha_v2_Transports =string with match(SELF, '^(UDP|TCP)$');
+type ganesha_v2_Transports = string with match(SELF, '^(UDP|TCP)$');
 
 @{ Ganesha Export Permissions for EXPORT_DEFAULLTS, EXPORT and CLIENT sections @}
 type ganesha_v2_export_permissions = {
@@ -135,7 +135,7 @@ type ganesha_v2_log_level = string with match(SELF,
 @{ Check for valid Ganesha Log Component names @}
 function is_ganesha_v2_log_Components = {
     components = ARGV[0];
-    foreach(cmp;logl; components) {
+    foreach(cmp; logl; components) {
         if(index(cmp, GANESHA_V2_LOG_COMPONENTS)  == -1) {
             error(format("%s is not a valid Ganesha Log Component !", cmp));
             return(false);
@@ -240,7 +240,7 @@ type ganesha_v2_nfs_core_param = {
     "Enable_RQUOTA" ? boolean = true
     "MNT_Port" ? long(0..) = 0
     "MNT_Program" ? long(1..) = 100005
-    "Manage_Gids_Expiration" ? long = 30*60
+    "Manage_Gids_Expiration" ? long = 30 * 60
     "MaxRPCRecvBufferSize" ? long(0..) = 1048576
     "MaxRPCSendBufferSize" ? long(0..) = 1048576
     "NFS_Port" ? long(0..) = 2049
@@ -376,4 +376,9 @@ type ganesha_v2_config_sections = {
 type ganesha_v2_config = {
     "main" ? ganesha_v2_config_sections
     "exports" : ganesha_v2_exports[]
+    @{Additional files can be referenced in a configuration. The included file
+    is inserted into the configuration text in place of this line. The configuration
+    following this line is resumed after the end of the included files. File inclusion
+    can be to any depth}
+    "includes" ? absolute_file_path[]
 };
