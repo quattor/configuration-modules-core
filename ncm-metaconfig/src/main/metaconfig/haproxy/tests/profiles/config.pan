@@ -63,6 +63,7 @@ prefix 'contents/frontends/irods-in';
 prefix 'contents/backends/servers';
 "options/0" = "tcp-check";
 "tcpchecks" = list("connect", "send PING\n", 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>');
-"servers/0" = dict('hostname', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
-"servers/1" = dict('hostname', 'otherhost.test.com', 'ip', '10.20.30.1', 'port', 1247);
+"servers/0" = dict('name', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
+"servers/1" = dict('name', 'otherhost.test.com', 'ip', '10.20.30.1', 'check_port', 1247);
+"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'check_port', 1247);
 

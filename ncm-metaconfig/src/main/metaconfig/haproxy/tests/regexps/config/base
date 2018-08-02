@@ -51,6 +51,7 @@ listen\s\swebserver$
 ^\s{4}tcp-check connect$
 ^\s{4}tcp-check send PING$
 ^\s{4}tcp-check expect string <MsgHeader_PI>\\n<type>RODS_VERSION</type>$
-^\s{4}server localhost 127.0.0.1 check port 1247$
+^\s{4}server localhost 127.0.0.1:1247$
 ^\s{4}server otherhost.test.com 10.20.30.1 check port 1247$
+^\s{4}server othername 10.20.30.1:1247 check port 1247$
 

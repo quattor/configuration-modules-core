@@ -139,9 +139,10 @@ type haproxy_service_frontend = {
 };
 
 type haproxy_service_backend_server = {
-    'hostname' : type_hostname
+    'name' : string
     'ip' : type_ip
-    'port' : type_port
+    'port' ? type_port
+    'check_port' ? type_port
 };
 
 type haproxy_service_backend = {
