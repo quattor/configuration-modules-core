@@ -150,7 +150,7 @@ That's it!  When you deploy your configuration you should see your
 use parent qw(NCM::Component);
 
 use LC::Exception;
-use EDG::WP4::CCM::TextRender 17.8.1;
+use EDG::WP4::CCM::TextRender 18.6.1;
 use CAF::Service;
 use EDG::WP4::CCM::Path qw(unescape);
 use Readonly;
