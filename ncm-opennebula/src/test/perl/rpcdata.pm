@@ -925,3 +925,38 @@ EOF
 $cmds{rpc_update_group}{params} = [2, $data, 1];
 $cmds{rpc_update_group}{method} = "one.group.update";
 $cmds{rpc_update_group}{out} = 2;
+
+# Manage clusters
+
+$cmds{rpc_list_clusterspool}{params} = [];
+$cmds{rpc_list_clusterspool}{method} = "one.clusterpool.info";
+$cmds{rpc_list_clusterspool}{out} = <<'EOF';
+<CLUSTER_POOL><CLUSTER><ID>0</ID><NAME>default</NAME><HOSTS><ID>10</ID><ID>11</ID></HOSTS><DATASTORES><ID>0</ID><ID>1</ID><ID>2</ID><ID>100</ID></DATASTORES><VNETS><ID>0</ID><ID>1</ID><ID>11</ID></VNETS><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER></CLUSTER_POOL>
+EOF
+
+$cmds{rpc_create_newcluster}{params} = ["red.cluster"];
+$cmds{rpc_create_newcluster}{method} = "one.cluster.allocate";
+$cmds{rpc_create_newcluster}{out} = 100;
+
+$cmds{rpc_list_cluster}{params} = [100];
+$cmds{rpc_list_cluster}{method} = "one.cluster.info";
+$cmds{rpc_list_cluster}{out} = <<'EOF';
+<CLUSTER><ID>100</ID><NAME>red.cluster</NAME><HOSTS/><DATASTORES/><VNETS/><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER>
+EOF
+
+$cmds{rpc_list_cluster2}{params} = [0];
+$cmds{rpc_list_cluster2}{method} = "one.cluster.info";
+$cmds{rpc_list_cluster2}{out} = <<'EOF';
+<CLUSTER><ID>0</ID><NAME>default</NAME><HOSTS><ID>10</ID><ID>11</ID></HOSTS><DATASTORES><ID>0</ID><ID>1</ID><ID>2</ID><ID>100</ID></DATASTORES><VNETS><ID>0</ID><ID>1</ID><ID>11</ID></VNETS><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER>
+EOF
+
+$data = <<'EOF';
+DESCRIPTION = "red.cluster managed by quattor"
+LABELS = "quattor,quattor/VO"
+RESERVED_CPU = "10"
+RESERVED_MEM = "2097152"
+QUATTOR = 1
+EOF
+$cmds{rpc_update_cluster}{params} = [100, $data, 1];
+$cmds{rpc_update_cluster}{method} = "one.cluster.update";
+$cmds{rpc_update_cluster}{out} = 100;

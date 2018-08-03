@@ -38,6 +38,10 @@ Features that are implemented at this moment:
 
 =item * Adding/removing OpenNebula groups
 
+=item * Adding/removing OpenNebula virtual clusters
+
+=item * Assign OpenNebula resources to virtual clusters
+
 =item * Assign OpenNebula users to primary groups
 
 =item * Updates OpenNebula C<< *_auth >> files
@@ -109,6 +113,7 @@ use parent qw(NCM::Component
               NCM::Component::OpenNebula::Network
               NCM::Component::OpenNebula::VM
               NCM::Component::OpenNebula::Image
+              NCM::Component::OpenNebula::Cluster
               );
 use NCM::Component::OpenNebula::Server qw($SERVERADMIN_USER);
 
@@ -117,7 +122,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.311.0;
+use Net::OpenNebula 0.312.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
@@ -388,7 +393,10 @@ sub manage_something
     } elsif (($type eq "user") or ($type eq "group")) {
         $self->manage_users_groups($one, $type, $resources, %protected);
         return;
-    }
+    } elsif ($type eq "cluster") {
+        $self->manage_users_groups($one, $type, $resources, %protected);
+        return;
+    };
 
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources, %protected);

@@ -359,6 +359,8 @@ type opennebula_vnet = {
     @{MTU for the tagged interface and bridge (VXLAN)}
     "mtu" ? long(1500..)
     "permissions" ? opennebula_permissions
+    @{Adds the vnet to the given clusters}
+    "clusters" ? string[]
 } = dict() with is_consistent_vnet(SELF);
 
 @documentation{
@@ -381,6 +383,23 @@ Set a group name and an optional decription
 type opennebula_group = {
     "description" ? string
     "labels" ? string[]
+} = dict();
+
+@documentation{
+Set OpenNebula clusters and their porperties.
+}
+type opennebula_cluster = {
+    include opennebula_group
+    @{In percentage. Applies to all the Hosts in this cluster.
+    It will be subtracted from the TOTAL CPU.
+    This value can be negative, in that case you’ll be actually
+    increasing the overall capacity so overcommiting host capacity.}
+    "reserved_cpu" ? long
+    @{In KB. Applies to all the Hosts in this cluster.
+    It will be subtracted from the TOTAL MEM.
+    This value can be negative, in that case you’ll be actually
+    increasing the overall capacity so overcommiting host capacity.}
+    "reserved_mem" ? long
 } = dict();
 
 type opennebula_remoteconf_ceph = {
@@ -696,6 +715,7 @@ type opennebula_untouchables = {
     "users" ? string[]
     "groups" ? string[]
     "hosts" ? string[]
+    "clusters" ? string[]
 };
 
 
@@ -709,6 +729,7 @@ type component_opennebula = {
     'groups' ? opennebula_group{}
     'users' ? opennebula_user{}
     'vnets' ? opennebula_vnet{}
+    'clusters' ? opennebula_cluster{}
     'hosts' ? string[]
     'rpc' ? opennebula_rpc
     'untouchables' ? opennebula_untouchables

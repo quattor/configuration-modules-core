@@ -1,0 +1,9 @@
+Opennebula cluster test
+---
+multiline
+---
+^DESCRIPTION\s?=\s?".+"$
+^LABELS\s?=\s?".+"$
+^RESERVED_CPU\s?=\s?".+"$
+^RESERVED_MEM\s?=\s?".+"$
+^QUATTOR\s?=\s?\d+\s*$

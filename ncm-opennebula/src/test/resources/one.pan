@@ -43,6 +43,15 @@ prefix "/software/components/opennebula/vnm_conf";
 
 prefix "/software/components/opennebula";
 
+"clusters" = dict(
+    "red.cluster", dict(
+            "reserved_cpu", 10,
+            "reserved_mem", 2097152,
+            "labels", list("quattor", "quattor/VO"),
+            "description", "red.cluster managed by quattor",
+        ),
+);
+
 "vnets" = dict(
     "altaria.os", dict(
             "bridge", "br100",

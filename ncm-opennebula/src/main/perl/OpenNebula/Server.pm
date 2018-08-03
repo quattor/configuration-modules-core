@@ -263,6 +263,9 @@ sub set_one_server
     # Check ONE RPC endpoint and OpenNebula version
     return 0 if !$self->is_supported_one_version($one);
 
+    # Create/update the virtual clusters before any resource first
+    $self->manage_something($one, "cluster", $tree->{clusters}, $untouchables->{clusters});
+
     $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
     # For the moment only Ceph and shared datastores are configured
