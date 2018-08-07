@@ -17,33 +17,27 @@ Adds or removes C<Xen> or C<KVM> hosts.
 
 sub manage_hosts
 {
-    my ($self, $one, $type, $resources, %protected) = @_;
+    my ($self, $one, $resources, %protected) = @_;
     my ($new, $vnm_mad);
     my $hosts = $resources->{hosts};
     my @existhost = $one->get_hosts();
-    my %newhosts = map { $_ => 1 } @$hosts;
+
     my (@rmhosts, @failedhost);
 
-    if (exists($resources->{host_ovs}) and $resources->{host_ovs}) {
-        if ($type eq "kvm") {
-            $vnm_mad = "ovswitch";
-        } elsif ($type eq "xen") {
-            $vnm_mad = "ovswitch_brcompat";
-        } else {
-            $self->error("Host type $type is not supported by Open vSwitch VNM_MAD.");
-        }
-    } else {
-        $vnm_mad = "dummy";
+    my @hostlist;
+    foreach my $host (sort keys %$hosts) {
+        push(@hostlist, $host);
     }
+    my %newhosts = map { $_ => 1 } @hostlist;
 
     foreach my $host (@existhost) {
         # Remove the host only if there are no VMs running on it
         if (exists($protected{$host->name})) {
-            $self->info("This resource $type is protected and cannot be removed: ", $host->name);
+            $self->info("This host is protected and cannot be removed: ", $host->name);
         } elsif (exists($newhosts{$host->name})) {
-            $self->debug(1, "We cannot remove this $type host. Is required by Quattor: ", $host->name);
+            $self->debug(1, "We cannot remove this host. Is required by Quattor: ", $host->name);
         } elsif ($host->used()) {
-            $self->debug(1, "We cannot remove this $type host. There are still running VMs: ", $host->name);
+            $self->debug(1, "We cannot remove this host. There are still running VMs: ", $host->name);
         } else {
             push(@rmhosts, $host->name);
             $host->delete();
@@ -51,15 +45,15 @@ sub manage_hosts
     }
 
     if (@rmhosts) {
-        $self->info("Removed $type hosts: ", join(',', @rmhosts));
+        $self->info("Removed hosts: ", join(',', @rmhosts));
     }
 
-    foreach my $host (@$hosts) {
+    foreach my $host (@hostlist) {
         my %host_options = (
             'name'    => $host,
-            'im_mad'  => $type,
-            'vmm_mad' => $type,
-            'vnm_mad' => $vnm_mad
+            'im_mad'  => $hosts->{$host}->{host_hyp},
+            'vmm_mad' => $hosts->{$host}->{host_hyp},
+            'vnm_mad' => $hosts->{$host}->{vnm_mad},
         );
         # to keep the record of our cloud infrastructure
         # we include the host in ONE db even if it fails
@@ -69,9 +63,9 @@ sub manage_hosts
         }
         my $hostinstance = $hostinstances[0];
         if (exists($protected{$host})) {
-            $self->info("This resource $type is protected and cannot be created/updated: $host");
+            $self->info("This resource is protected and cannot be created/updated: $host");
         } elsif ($self->can_connect_to_host($host)) {
-            if ($self->enable_node($one, $type, $host, $resources)) {
+            if ($self->enable_node($one, $host, $resources)) {
                 if ($hostinstance) {
                     # The host is already available and OK
                     if (!$hostinstance->is_enabled) {
@@ -85,19 +79,19 @@ sub manage_hosts
                     # and it is running correctly
                     $new = $one->create_host(%host_options);
                     $self->update_something($one, "host", $host, "QUATTOR = 1");
-                    $self->info("Created new $type host $host.");
+                    $self->info("Created new host $host.");
                 }
             } else {
-                $self->disable_host($one, $type, $host, $hostinstance, %host_options);
+                $self->disable_host($one, $host, $hostinstance, %host_options);
             }
         } else {
             push(@failedhost, $host);
-            $self->disable_host($one, $type, $host, $hostinstance, %host_options);
+            $self->disable_host($one, $host, $hostinstance, %host_options);
         }
     }
 
     if (@failedhost) {
-        $self->error("Detected some error/s including these $type hosts: ", join(', ', @failedhost));
+        $self->error("Detected some error/s including these hosts: ", join(', ', @failedhost));
     }
 
 }
@@ -113,9 +107,8 @@ In that case the C<host> is disabled in the scheduler.
 
 sub disable_host
 {
-    my ($self, $one, $type, $host, $hostinstance, %host_options) = @_;
-
-    $self->warn("Could not connect to $type host: $host.");
+    my ($self, $one, $host, $hostinstance, %host_options) = @_;
+    $self->warn("Could not connect to host: $host.");
     if ($hostinstance) {
         $hostinstance->disable;
         $self->info("Disabled existing host $host");
@@ -152,11 +145,11 @@ also it configures C<Ceph> client if necessary.
 
 sub enable_node
 {
-    my ($self, $one, $type, $host, $resources) = @_;
+    my ($self, $one, $host, $resources) = @_;
 
     # Check if we are using Ceph datastores
     if ($self->detect_ceph_datastores($one)) {
-        return $self->enable_ceph_node($type, $host, $resources->{datastores});
+        return $self->enable_ceph_node($host, $resources->{datastores});
     }
     # We didn't found a Ceph host configuration
     # no extra tests are required at this point

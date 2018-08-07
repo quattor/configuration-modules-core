@@ -1,5 +1,10 @@
 template one;
 
+
+include 'components/opennebula/schema';
+bind '/software/components/opennebula' = component_opennebula;
+
+
 prefix "/software/components/opennebula/rpc";
 "user" = "oneadmin";
 "password" = "verysecret";
@@ -104,6 +109,7 @@ prefix "/software/components/opennebula";
                 "group", "users",
                 "mode", 0440,
             ),
+            "clusters", list("default", "red.cluster"),
         ),
 );
 
@@ -130,6 +136,7 @@ prefix "/software/components/opennebula";
                 "group", "users",
                 "mode", 0440,
             ),
+            "clusters", list("red.cluster"),
         ),
 );
 
@@ -163,13 +170,17 @@ prefix "/software/components/opennebula";
         ),
 );
 
-"hosts" = list(
-    'hyp101', 'hyp102', 'hyp103', 'hyp104'
+"hosts" = dict(
+    # These hypervisors are included within Default cluster
+    'hyp101', dict(),
+    'hyp102', dict(),
+    'hyp103', dict(),
+    # Add hyp104 in a different cluster
+    'hyp104', dict(
+        "cluster", "red.cluster",
+    ),
 );
 
 "ssh_multiplex" = true;
-"host_hyp" = "kvm";
-"host_ovs" = true;
 "tm_system_ds" = "ssh";
 "cfg_group" = "apache";
-

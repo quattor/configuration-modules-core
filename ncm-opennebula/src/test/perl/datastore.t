@@ -21,6 +21,7 @@ ok(exists($tree->{datastores}), "Found datastore data");
 
 rpc_history_reset;
 $cmp->manage_something($one, "datastore", $tree->{datastores});
+#diag_rpc_history;
 ok(rpc_history_ok(["one.datastorepool.info",
                    "one.datastore.update",
                    "one.datastorepool.info",
@@ -29,7 +30,9 @@ ok(rpc_history_ok(["one.datastorepool.info",
                    "one.datastore.chmod",
                    "one.userpool.info",
                    "one.grouppool.info",
-                   "one.datastore.chown"]),
+                   "one.datastore.chown",
+                   "one.clusterpool.info",
+                   "one.cluster.deldatastore"]),
                    "manage_something datastore rpc history ok");
 
 ok(!exists($cmp->{ERROR}), "No errors found during datastore management execution");

@@ -1,27 +1,24 @@
 [%- lists = ['bridge_list', 'ceph_host'] -%]
 [%- integer = ['rbd_format'] -%]
 [%- booleans = ['datastore_capacity_check'] -%]
-[%- FOR pool IN datastore.pairs -%]
+[%- # If we are installing a Ceph datastore we should remove
+    # ceph_user_key from ONE template to avoid any sec issue -%]
+[%- do_not_print = ['ceph_user_key', 'permissions', 'clusters'] -%]
+[% FOR pool IN datastore.pairs -%]
 NAME = "[% pool.key %]"
-[%    FOR pair IN pool.value.pairs -%]
-[% # If we are installing a Ceph datastore we should remove
-   # ceph_user_key from ONE template to avoid any sec issue-%]
-[%        IF pair.key == 'ceph_user_key' || pair.key == 'permissions' -%]
-[%             -%]
-[%        ELSE -%]
-[%            pair.key FILTER upper %] =
-[%-               SWITCH pair.key -%]
-[%                    CASE lists -%]
- "[%                      pair.value.join(' ') %]"
-[%                    CASE booleans -%]
- "[%                      pair.value ? "yes" : "no" %]"
-[%                    CASE integer -%]
- [%                       pair.value %]
-[%                    CASE 'labels' -%]
- "[%                      pair.value.join(',') %]"
-[%                    CASE -%]
- "[%                      pair.value %]"
-[%                END -%]
+[%    FOR pair IN pool.value.pairs %]
+[%-       SWITCH pair.key -%]
+[%            CASE lists -%]
+[%                pair.key FILTER upper %] = "[% pair.value.join(' ') %]"
+[%            CASE booleans -%]
+[%                pair.key FILTER upper %] = "[% pair.value ? "yes" : "no" %]"
+[%            CASE integer -%]
+[%                pair.key FILTER upper %] = [% pair.value %]
+[%            CASE 'labels' -%]
+[%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
+[%            CASE do_not_print -%]
+[%            CASE -%]
+[%                pair.key FILTER upper %] = "[% pair.value %]"
 [%        END -%]
 [%-   END %]
 [%- END -%]

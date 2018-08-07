@@ -275,7 +275,8 @@ sub set_one_server
         $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
         $self->verbose("Updated system datastore TM_MAD = $tm_system_ds");
     }
-    $self->manage_something($one, $host, $tree, $untouchables->{hosts});
+    $self->manage_something($one, "host", $tree, $untouchables->{hosts});
+    #$self->manage_something($one, $host, $tree, $untouchables->{hosts});
     # Manage groups first
     $self->manage_something($one, "group", $tree->{groups}, $untouchables->{groups});
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});

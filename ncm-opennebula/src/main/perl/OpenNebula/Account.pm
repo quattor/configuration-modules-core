@@ -88,7 +88,9 @@ sub manage_users_groups
                 if ((exists $data->{$account}->{group}) and ($type eq "user")) {
                     $self->set_user_primary_group($one, $account, $data->{$account}->{group});
                 };
-            }
+            } else {
+                $self->update_something($one, $type, $account, $template);
+            };
         }
     }
 }

@@ -244,6 +244,10 @@ sub create_or_update_something
     if ($new and defined($data->{$name}->{permissions})) {
         $self->change_permissions($one, $type, $new, $data->{$name}->{permissions});
     };
+    # Set resource clusters
+    if ($new and defined($data->{$name}->{clusters})) {
+        $self->set_service_clusters($one, $type, $new, $data->{$name}->{clusters});
+    };
     return $new;
 }
 
@@ -388,7 +392,7 @@ sub manage_something
     }
 
     if (($type eq "kvm") or ($type eq "xen")) {
-        $self->manage_hosts($one, $type, $resources, %protected);
+        $self->manage_hosts($one, $resources, %protected);
         return;
     } elsif (($type eq "user") or ($type eq "group")) {
         $self->manage_users_groups($one, $type, $resources, %protected);

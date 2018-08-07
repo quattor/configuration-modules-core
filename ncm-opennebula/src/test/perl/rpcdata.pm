@@ -513,6 +513,7 @@ $cmds{rpc_create_newdatastore}{out} = 102;
 $data = <<'EOF';
 NAME = "nfs"
 DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
 DS_MAD = "fs"
 LABELS = "quattor,quattor/nfs"
 TM_MAD = "shared"
@@ -553,11 +554,14 @@ $data = <<'EOF';
 NAME = "ceph.altaria"
 BRIDGE_LIST = "hyp004.cubone.os"
 CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
-CEPH_SECRET = "35b161e7-a3bc-440f-b007-cb98ac042646"
+CEPH_SECRET = "8371ae8a-386d-44d7-a228-c42de4259c6e"
 CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
+DS_MAD = "ceph"
 LABELS = "quattor,quattor/ceph"
 POOL_NAME = "one"
+TM_MAD = "ceph"
 TYPE = "IMAGE_DS"
 QUATTOR = 1
 EOF
@@ -960,3 +964,11 @@ EOF
 $cmds{rpc_update_cluster}{params} = [100, $data, 1];
 $cmds{rpc_update_cluster}{method} = "one.cluster.update";
 $cmds{rpc_update_cluster}{out} = 100;
+
+$cmds{rpc_add_vnet_cluster}{params} = [0, 99];
+$cmds{rpc_add_vnet_cluster}{method} = "one.cluster.addvnet";
+$cmds{rpc_add_vnet_cluster}{out} = 1;
+
+$cmds{rpc_del_datastore_cluster}{params} = [0, 103];
+$cmds{rpc_del_datastore_cluster}{method} = "one.cluster.deldatastore";
+$cmds{rpc_del_datastore_cluster}{out} = 1;

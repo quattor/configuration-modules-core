@@ -40,7 +40,9 @@ ok(rpc_history_ok(["one.vnpool.info",
                    "one.vn.chmod",
                    "one.userpool.info",
                    "one.grouppool.info",
-                   "one.vn.chown"]),
+                   "one.vn.chown",
+                   "one.clusterpool.info",
+                   "one.cluster.addvnet"]),
                    "manage_something vnet rpc history ok");
 
 done_testing();

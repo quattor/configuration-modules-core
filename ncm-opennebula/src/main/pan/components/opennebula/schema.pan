@@ -329,6 +329,8 @@ type opennebula_datastore = {
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
     "permissions" ? opennebula_permissions
+    @{Adds the datastore to the given clusters}
+    "clusters" ? string[]
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
@@ -362,6 +364,21 @@ type opennebula_vnet = {
     @{Adds the vnet to the given clusters}
     "clusters" ? string[]
 } = dict() with is_consistent_vnet(SELF);
+
+@documentation{
+Set OpenNebula hypervisor options and their virtual clusters (if any)
+}
+type opennebula_host = {
+    @{set OpenNebula hosts type.}
+    'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
+    @{set the network driver in your hosts.
+    This option is not longer used by ONE >= 5.x versions.}
+   'vnm_mad' ? string with match (SELF, '^(dummy|ovswitch|ovswitch_brcompat)$')
+    @{Set the hypervisor cluster. Any new hypervisor is always included within
+    "Default" cluster.
+    Hosts can be in only one cluster at a time.}
+    "cluster" ? string
+};
 
 @documentation{
 Set OpenNebula regular users and their primary groups.
@@ -730,7 +747,7 @@ type component_opennebula = {
     'users' ? opennebula_user{}
     'vnets' ? opennebula_vnet{}
     'clusters' ? opennebula_cluster{}
-    'hosts' ? string[]
+    'hosts' ? opennebula_host{}
     'rpc' ? opennebula_rpc
     'untouchables' ? opennebula_untouchables
     'oned' ? opennebula_oned
@@ -745,11 +762,6 @@ type component_opennebula = {
     some OpenNebula configuration files should be accessible by a different group (as apache).
     This variable sets the group name to change these files permissions.}
     'cfg_group' ? string
-    @{includes the Open vSwitch network drives in your hosts. (OVS must be installed in each host).
-    This option is not longer used by ONE >= 5.x versions.}
-    'host_ovs' ? boolean
-    @{set OpenNebula hosts type}
-    'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     @{set system Datastore TM_MAD value.
         shared: The storage area for the system datastore is a shared directory across the hosts.
         vmfs: A specialized version of the shared one to use the vmfs file system.
