@@ -63,6 +63,9 @@ type defined_user = string with is_user_or_group("user", SELF);
 type defined_group = string with is_user_or_group("group", SELF);
 
 
+type valid_user = string with valid_user_name();
+
+
 # create_group(groupname:string,
 #             params:structure_groupinfo)
 
