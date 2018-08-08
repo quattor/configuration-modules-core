@@ -39,9 +39,16 @@ sub set_service_clusters
 {
     my ($self, $one, $type, $service, $clusters) = @_;
     my (@delclusters, @addclusters);
-    
+    my %newclusters;
+
     my @existcluster = $one->get_clusters();
-    my %newclusters = map { $_ => 1 } @$clusters;
+
+    if ($type eq 'host') {
+        # Hosts only have a single cluster in a string
+        %newclusters = map { $_ => 1 } split(/ /, $clusters);
+    } else {
+        %newclusters = map { $_ => 1 } @$clusters;
+    };
     my $name = $service->name;
 
     # Remove/add the resource from the available clusters
@@ -59,6 +66,7 @@ sub set_service_clusters
 
     $self->info("$type $name was removed from these cluster(s): ", join(', ', @delclusters));
     $self->info("$type $name was included into these cluster(s): ", join(', ', @addclusters));
+
     return 1;
 }
 

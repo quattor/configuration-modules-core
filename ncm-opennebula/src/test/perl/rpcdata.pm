@@ -972,3 +972,7 @@ $cmds{rpc_add_vnet_cluster}{out} = 1;
 $cmds{rpc_del_datastore_cluster}{params} = [0, 103];
 $cmds{rpc_del_datastore_cluster}{method} = "one.cluster.deldatastore";
 $cmds{rpc_del_datastore_cluster}{out} = 1;
+
+$cmds{rpc_del_host_cluster}{params} = [0, 168];
+$cmds{rpc_del_host_cluster}{method} = "one.cluster.delhost";
+$cmds{rpc_del_host_cluster}{out} = 1;

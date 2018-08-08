@@ -174,11 +174,11 @@ prefix "/software/components/opennebula";
     # These hypervisors are included within Default cluster
     'hyp101', dict(),
     'hyp102', dict(),
-    'hyp103', dict(),
-    # Add hyp104 in a different cluster
-    'hyp104', dict(
+    'hyp103', dict(
         "cluster", "red.cluster",
-    ),
+        ),
+    # Add hyp104 in a different cluster
+    'hyp104', dict(),
 );
 
 "ssh_multiplex" = true;

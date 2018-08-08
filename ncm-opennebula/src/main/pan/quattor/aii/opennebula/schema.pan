@@ -34,7 +34,7 @@ function validate_aii_opennebula_hooks = {
         error(format("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]));
     };
 
-    if (ind != length(hk)-1) {
+    if (ind != length(hk) - 1) {
         error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
         FUNCTION, ARGV[0], ind, length(hk)));
     };

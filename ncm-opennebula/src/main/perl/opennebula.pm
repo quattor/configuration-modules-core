@@ -391,7 +391,7 @@ sub manage_something
         $self->verbose("Managing $type resources.");
     }
 
-    if (($type eq "kvm") or ($type eq "xen")) {
+    if ($type eq "host") {
         $self->manage_hosts($one, $resources, %protected);
         return;
     } elsif (($type eq "user") or ($type eq "group")) {

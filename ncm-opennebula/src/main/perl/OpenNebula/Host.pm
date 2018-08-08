@@ -78,7 +78,6 @@ sub manage_hosts
                     # The host is not available yet from ONE framework
                     # and it is running correctly
                     $new = $one->create_host(%host_options);
-                    $self->update_something($one, "host", $host, "QUATTOR = 1");
                     $self->info("Created new host $host.");
                 }
             } else {
@@ -88,6 +87,12 @@ sub manage_hosts
             push(@failedhost, $host);
             $self->disable_host($one, $host, $hostinstance, %host_options);
         }
+        # Update host template and set host cluster if defined
+        $new = $self->update_something($one, "host", $host, "QUATTOR = 1");
+        if (defined($new) and defined($hosts->{$host}->{cluster})) {
+            $self->verbose("Host $host cluster is set to: ", $hosts->{$host}->{cluster});
+            $self->set_service_clusters($one, "host", $new, $hosts->{$host}->{cluster});
+        };
     }
 
     if (@failedhost) {
