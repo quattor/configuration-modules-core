@@ -127,6 +127,7 @@ type httpd_log_format = {
     # logformat "expr" name
     "expr" : string
     "name" : string
+    "type" : choice('', 'error') = ''
 };
 
 type httpd_log = {
@@ -317,7 +318,7 @@ type httpd_proxy_directive = {
 
 type httpd_auth_require = {
     # require type who.join(' ')
-    "type" : string with match(SELF, '^(valid-user|user|group|shibboleth)$')
+    "type" : string with match(SELF, '^(valid-user|user|group|shibboleth|all)$')
     "who" ? string[]
 };
 
@@ -386,15 +387,33 @@ type httpd_perl_handler = {
     "responsehandler" : string
 };
 
-type httpd_wsgi_iportscript = {
+type httpd_wsgi_importscript = {
     "path" : string
     "process" ? string
     "application" ? string
 };
 
+type httpd_wsgi_daemonprocess = {
+    "name" : string
+    @{converted in list of key=value}
+    "options" ? string{}
+};
+
+type httpd_wsgi_common = {
+    "applicationgroup" ? string
+    "daemonprocess" ? httpd_wsgi_daemonprocess
+    "importscript" ? httpd_wsgi_importscript # isn't supposed to be available for vhost?
+    "processgroup" ? string
+    "passauthorization" ? choice('on', 'off')
+};
+
 type httpd_wsgi_vhost = {
-    "importscript" ? httpd_wsgi_iportscript
-    "passauthorization" ? string with match(SELF, '^(on|off)$')
+    include httpd_wsgi_common
+};
+
+type httpd_wsgi_server = {
+    include httpd_wsgi_common
+    'socketprefix' ? string
 };
 
 type httpd_listen = {
@@ -504,13 +523,23 @@ type httpd_directory = {
     "proxy" ? httpd_proxy
     "directoryindex" ? string[]
     "limitrequestbody" ? long(0..)
+    "wsgi" ? httpd_wsgi_vhost
+};
+
+type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';
+
+type httpd_header = {
+    "name" : string
+    "action" : choice('add', 'append', 'echo', 'edit', 'edit*', 'merge', 'set', 'setifempty', 'unset', 'note')
+    "value" : string
+    "quotes" : string = '"'
 };
 
 type httpd_vhost = {
     include httpd_shared
 
     "port" : type_port
-    "ip" ? type_ip[]
+    "ip" ? httpd_vhost_ip[]
     "ssl" ? httpd_ssl_vhost
     "nss" ? httpd_nss_vhost
     "locations" ? httpd_directory[]
@@ -527,6 +556,7 @@ type httpd_vhost = {
     "proxies" ? httpd_proxy_directive[]
     "browsermatch" ? httpd_browsermatch[]
     "passenger" ? httpd_passenger_vhost
+    "header" ? httpd_header[]
 };
 
 # system wide settings
@@ -637,4 +667,6 @@ type httpd_vhosts = {
     "nss" ? httpd_nss_global
     "passenger" ? httpd_passenger
     "namevirtualhost" ? httpd_name_virtual_host
+    "locations" ? httpd_directory[]
+    "wsgi" ? httpd_wsgi_server
 };
