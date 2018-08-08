@@ -7,7 +7,7 @@ BEGIN {
 }
 
 use Test::More;
-use Test::Quattor qw(simple simple_realhostname);
+use Test::Quattor qw(simple simple_realhostname simple_nobroadcast);
 use Test::MockModule;
 
 use NCM::Component::network;
@@ -137,5 +137,24 @@ unlike(get_file_contents("/etc/sysconfig/network"),
 ok(command_history_ok([
     '/usr/bin/hostnamectl set-hostname realhost.example.com --static',
 ]), "hostnamectl called with realhostname");
+
+
+# removing broadcast that was same as computed default is ok (triggers no network restart)
+
+set_desired_output('ipcalc --broadcast 4.3.2.1 255.255.255.0', "BROADCAST=4.3.2.255\n");
+
+command_history_reset();
+$cfg = get_config_for_profile('simple_nobroadcast');
+is($cmp->Configure($cfg), 1, "Component runs correctly with nobroadcast test profile w/o broadcast");
+unlike(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"),
+     qr/BROADCAST=/m,
+     "no broadcast set");
+ok(command_history_ok([
+    'ipcalc --broadcast 4.3.2.1 255.255.255.0',
+], [
+    'service network stop',
+    'service network start',
+    'ccm-fetch',
+]), "network stop/start not called with same config w/o broadcast (KEEPS_STATE set) 2nd run");
 
 done_testing();
