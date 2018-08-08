@@ -25,9 +25,12 @@ use CAF::Object;
 Readonly::Array my @YDS_ORIG => NCM::Component::spma::yum::YUM_DISTRO_SYNC();
 Readonly::Array my @YDS => @{NCM::Component::spma::yum::_set_yum_config(\@YDS_ORIG)};
 Readonly my $CMD => join(" ", @YDS);
+Readonly my $CMDP => "$CMD a b";
 
 set_desired_err($CMD, "");
 set_desired_output($CMD, "distrosync");
+set_desired_err($CMDP, "");
+set_desired_output($CMDP, "distrosync with packages a b");
 
 my $cmp = NCM::Component::spma::yum->new("spma");
 
@@ -55,11 +58,17 @@ it succeeded or not.
 
 =cut
 
-ok($cmp->distrosync(1), "Basic distroync succeeds");;
+ok($cmp->distrosync(1), "Basic distrosync succeeds");;
 
 $cmd = get_command($CMD);
 ok($cmd, "yum distro-sync was called");
 is($cmd->{method}, "execute", "yum distro-sync was execute'd");
+
+ok($cmp->distrosync(1, ['a', 'b']), "Basic distrosync with packages succeeds");
+$cmd = get_command($CMDP);
+ok($cmd, "yum distro-sync was called with packages");
+is($cmd->{method}, "execute", "yum distro-sync with packages was execute'd");
+
 
 set_desired_err($CMD, "\nError: package");
 

@@ -72,6 +72,28 @@ my $wanted = {
        },
 };
 
+=head1 valid_packages
+
+=cut
+
+my $vpkgs = $cmp->valid_packages($wanted);
+#diag explain $vpkgs;
+my $names = ['ConsoleKit', 'ConsoleKit-libs', 'glibc', 'kde', 'python', 'tzdata-java'];
+
+is_deeply($vpkgs, $names, "valid_packages returns list of pacakge names");
+
+my $vpkgs_with_data = $cmp->valid_packages($wanted, 1);
+diag explain $vpkgs_with_data;
+is_deeply([map {$_->[0]} @$vpkgs_with_data], $names,
+          "valid_packages with data returns arrayf with names as first element");
+
+my $invalid = {%$wanted, '@something' => {}};
+ok(!defined($cmp->valid_packages($invalid)), "valid_packages returns undef with invalid package (and valid ones)");
+
+=head1 wanted_pkgs
+
+=cut
+
 my $pkgs = $cmp->wanted_pkgs($wanted);
 isa_ok($pkgs, "Set::Scalar", "Received a set, with no errors");
 

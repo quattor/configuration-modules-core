@@ -65,6 +65,8 @@ use constant YUM_MAKECACHE => qw(yum makecache);
 use constant YUM_CMD => qw(yum -y shell);
 use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
+use constant VALID_PACKAGE_NAME => qr{^([\w\.\-\+]+)[*?]?};
+
 our $NoActionSupported = 1;
 
 # private variable to hold active noaction prefix
@@ -370,19 +372,40 @@ sub expand_groups
     return $pkgs;
 }
 
+# Given a hashref of packages, return arrayref with all packages
+# when all have sane/valid package names; undef (and reports error) otherwise.
+# If adddata is true, also add the data as arrayref tuple (2 element arrayref instead of package name)
+sub valid_packages
+{
+    my ($self, $pkgs, $adddata) = @_;
+
+    my @ok;
+    foreach my $escpkg (sort keys %$pkgs) {
+        my $pkg = unescape($escpkg);
+        if ($pkg =~ VALID_PACKAGE_NAME) {
+            push(@ok, $adddata ? [$1, $pkgs->{$escpkg}] : $1);
+        } else {
+            $self->error("Invalid package name: $pkg");
+            return;
+        }
+    }
+
+    return \@ok;
+}
+
 # Returns a set with the desired packages.
+# Package names pre-validated
 sub wanted_pkgs
 {
-    my ($self, $pkgs) = @_;
+    my ($self, $escpkgs) = @_;
 
+    my $pkgs = $self->valid_packages($escpkgs, 1) or return;
     my @pkl;
 
-    while (my ($pkg, $st) = each(%$pkgs)) {
-        my ($name) = (unescape($pkg) =~ m{^([\w\.\-\+]+)[*?]?});
-        if (!$name) {
-            $self->error("Invalid package name: ", unescape($pkg));
-            return undef;
-        }
+
+    foreach my $pkg (@$pkgs) {
+        my ($name, $st) = (@$pkg);
+
         if (%$st) {
             while (my ($ver, $archs) = each(%$st)) {
                 push(@pkl, map("$name;$_", keys(%{$archs->{arch}})));
@@ -754,14 +777,22 @@ sub make_cache
 # align the system to the repositories.  Otherwise we'll get a lot of problems.
 sub distrosync
 {
-    my ($self, $run) = @_;
+    my ($self, $run, $pkgs) = @_;
+
+    my @cmd = (YUM_DISTRO_SYNC);
+    if ($pkgs) {
+        push (@cmd, @$pkgs);
+        $self->verbose("distro-sync with packages @$pkgs");
+    } else {
+        $self->verbose("distro-sync without any package restriction");
+    }
 
     if (!$run) {
-        $self->info("Skipping yum distro-sync");
+        $self->info("Skipping @cmd");
         return 1;
     }
 
-    return $self->execute_yum_command([YUM_DISTRO_SYNC], "synchronisation with upstream");
+    return $self->execute_yum_command(\@cmd, "synchronisation with upstream".($pkgs ? " packages @$pkgs" : ''));
 }
 
 # Updates the packages on the system.
@@ -770,7 +801,13 @@ sub update_pkgs
     my ($self, $allpkgs, $groups, $run, $allow_user_pkgs, $purge,
         $error_is_warn, $fullsearch, $reuse_cache, $pkgs) = @_;
 
-    $pkgs = $allpkgs if ! defined($pkgs);
+    # default/undef means everything
+    my $distrosyncpkgs;
+    if (defined($pkgs)) {
+        $distrosyncpkgs = $self->valid_packages($pkgs) or return;
+    } else {
+        $pkgs = $allpkgs;
+    }
 
     $self->complete_transaction() or return 0;
 
@@ -784,7 +821,7 @@ sub update_pkgs
     # Versionlock is determined based on all configured packages
     $self->versionlock($allpkgs, $fullsearch) or return 0;
 
-    $self->distrosync($run) or return 0;
+    $self->distrosync($run, $distrosyncpkgs) or return 0;
 
     my $group_pkgs = $self->expand_groups($groups);
     defined($group_pkgs) or return 0;
