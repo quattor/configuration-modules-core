@@ -146,11 +146,7 @@ type openstack_nova_common = {
     'neutron' ? openstack_nova_neutron
 };
 
-type openstack_quattor_nova = openstack_quattor = dict(
-    'port', 8774,
-    'suffix', '%(tenant_id)s',
-    'type', 'compute',
-    );
+type openstack_quattor_nova = openstack_quattor;
 
 @documentation{
     list of Nova configuration sections
@@ -161,5 +157,6 @@ type openstack_nova_config =  {
     'api_database' ? openstack_nova_api_database
     'libvirt' ? openstack_nova_libvirt
     'scheduler' ? openstack_nova_scheduler
-    'quattor' : openstack_quattor_nova
+    # default empty dict for pure hypervisor
+    'quattor' : openstack_quattor_nova = dict()
 };

@@ -194,6 +194,8 @@ ok(method_history_ok([
     'POST .*/groups/ .*"description":"first group","domain_id":"dom23456",.*"name":"grp1"',
     'GET .*/services/  ',
     'POST .*/services/ .*"description":"OS image one",.*"name":"glanceone","type":"image"',
+    'POST .*/services/ .*"description":"OS compute service nova",.*"name":"nova","type":"compute"',
+    'POST .*/services/ .*"description":"OS placement service placement",.*"name":"placement","type":"placement"',
 ]), "REST API calls as expected");
 
 command_history_reset();

@@ -56,7 +56,7 @@ type openstack_identity_role = {
 @{openstack identity v3 servicce}
 type openstack_identity_service = {
     'description' ? string
-    'type' : choice('compute', 'ec2', 'identity', 'image', 'network', 'volume')
+    'type' : string
 };
 
 @{identity configuration via API client}

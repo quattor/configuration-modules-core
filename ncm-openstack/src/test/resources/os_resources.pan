@@ -157,6 +157,7 @@ prefix "/software/components/openstack/network/neutron/ml2";
 
 # Nova section
 
+include 'components/openstack/identity/gather/compute/nova';
 prefix "/software/components/openstack/compute/nova";
 "database" = dict(
     "connection", format("mysql+pymysql://nova:nova_db_pass@%s/nova", OPENSTACK_HOST_SERVER),
