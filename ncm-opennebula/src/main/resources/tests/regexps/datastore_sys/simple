@@ -1,0 +1,9 @@
+OpenNebula system datastore test
+---
+multiline
+---
+^NAME\s?=\s?".+"\s*$
+^DATASTORE_CAPACITY_CHECK\s?=\s?".+"\s*$
+^DS_MAD\s?=\s?".+"\s*$
+^TM_MAD\s?=\s?".+"\s*$
+^TYPE\s?=\s?".+"\s*$

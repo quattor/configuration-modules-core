@@ -513,7 +513,6 @@ $cmds{rpc_create_newdatastore}{out} = 102;
 $data = <<'EOF';
 NAME = "nfs"
 DATASTORE_CAPACITY_CHECK = "yes"
-DISK_TYPE = "RBD"
 DS_MAD = "fs"
 LABELS = "quattor,quattor/nfs"
 TM_MAD = "shared"
@@ -535,7 +534,7 @@ $cmds{rpc_delete_datastore2}{out} = 103;
 $cmds{rpc_list_datastorespool}{params} = [];
 $cmds{rpc_list_datastorespool}{method} = "one.datastorepool.info";
 $cmds{rpc_list_datastorespool}{out} = <<'EOF';
-<DATASTORE_POOL><DATASTORE><ID>102</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ceph.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[ceph]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TOTAL_MB>48645212</TOTAL_MB><FREE_MB>48476696</FREE_MB><USED_MB>168515</USED_MB><IMAGES><ID>30</ID><ID>37</ID></IMAGES><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><BRIDGE_LIST><![CDATA[one01.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph021.altaria.os ceph022.altaria.os ceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[35b161e7-a3bc-440f-b007-cb98ac042646]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MAD><![CDATA[ceph]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><POOL_NAME><![CDATA[one]]></POOL_NAME><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[ceph]]></TM_MAD></TEMPLATE></DATASTORE></DATASTORE_POOL>
+<DATASTORE_POOL><DATASTORE><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>system</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/0]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>5454564</TOTAL_MB><FREE_MB>5445264</FREE_MB><USED_MB>9300</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><DS_MIGRATE><![CDATA[YES]]></DS_MIGRATE><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE><DATASTORE><ID>102</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ceph.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[ceph]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TOTAL_MB>48645212</TOTAL_MB><FREE_MB>48476696</FREE_MB><USED_MB>168515</USED_MB><IMAGES><ID>30</ID><ID>37</ID></IMAGES><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><BRIDGE_LIST><![CDATA[one01.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph021.altaria.os ceph022.altaria.os ceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[35b161e7-a3bc-440f-b007-cb98ac042646]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MAD><![CDATA[ceph]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><POOL_NAME><![CDATA[one]]></POOL_NAME><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[ceph]]></TM_MAD></TEMPLATE></DATASTORE></DATASTORE_POOL>
 EOF
 
 $cmds{rpc_list_datastore}{params} = [102];
@@ -548,6 +547,12 @@ $cmds{rpc_list_datastore2}{params} = [103];
 $cmds{rpc_list_datastore2}{method} = "one.datastore.info";
 $cmds{rpc_list_datastore2}{out} = <<'EOF';
 <DATASTORE><ID>103</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>nfs</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[fs]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><TOTAL_MB>117416</TOTAL_MB><FREE_MB>104468</FREE_MB><USED_MB>6962</USED_MB><IMAGES/><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><CLONE_TARGET><![CDATA[SYSTEM]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[FILE]]></DISK_TYPE><DS_MAD><![CDATA[fs]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[IMAGE_DS]]></TYPE></TEMPLATE></DATASTORE>
+EOF
+
+$cmds{rpc_list_datastore3}{params} = [0];
+$cmds{rpc_list_datastore3}{method} = "one.datastore.info";
+$cmds{rpc_list_datastore3}{out} = <<'EOF';
+<DATASTORE><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>system</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/0]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>5454372</TOTAL_MB><FREE_MB>5445072</FREE_MB><USED_MB>9300</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><DS_MIGRATE><![CDATA[YES]]></DS_MIGRATE><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE>
 EOF
 
 $data = <<'EOF';
@@ -568,6 +573,18 @@ EOF
 $cmds{rpc_update_datastore}{params} = [102, $data, 1];
 $cmds{rpc_update_datastore}{method} = "one.datastore.update";
 $cmds{rpc_update_datastore}{out} = 102;
+
+$data = <<'EOF';
+NAME = "system"
+DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
+DS_MAD = "fs"
+TM_MAD = "shared"
+TYPE = "SYSTEM_DS"
+EOF
+$cmds{rpc_update_datastore2}{params} = [0, $data, 1];
+$cmds{rpc_update_datastore2}{method} = "one.datastore.update";
+$cmds{rpc_update_datastore2}{out} = 1;
 
 $cmds{rpc_chown_datastore}{params} = [103, 3, 1];
 $cmds{rpc_chown_datastore}{method} = "one.datastore.chown";

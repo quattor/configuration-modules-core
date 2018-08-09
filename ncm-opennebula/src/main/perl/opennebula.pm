@@ -337,9 +337,16 @@ sub detect_used_resource
     if (@existres) {
         $quattor = $self->check_quattor_tag($existres[0]);
         if (!$quattor) {
-            $self->verbose("Name: $name is already used by a $type resource. ",
-                        "The QUATTOR flag is not set. ",
-                        "We can't modify this resource.");
+            if ($type eq "datastore" and $name eq "system") {
+                $self->verbose("Found system datastore setup. ",
+                    "Quattor will update the datastore setup. ",
+                    "QUATTOR flag is not set in this case.");
+                return -1;
+            } else {
+                $self->verbose("Name: $name is already used by a $type resource. ",
+                "The QUATTOR flag is not set. ",
+                "We can't modify this resource.");
+            };
             return 1;
         } elsif ($quattor == 1) {
             $self->verbose("Name : $name is already used by a $type resource. ",

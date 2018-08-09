@@ -12,6 +12,7 @@ prefix "/metaconfig/contents/datastore/ceph";
 "ceph_secret" = "35b161e7-a3bc-440f-b007-cb98ac042646";
 "ceph_user" = "libvirt";
 "ceph_user_key" = "dummydummycephuserkey";
+"disk_type" = "RBD";
 "datastore_capacity_check" = true;
 "pool_name" = "one";
 "type" = "IMAGE_DS";

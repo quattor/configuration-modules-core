@@ -247,20 +247,22 @@ function is_consistent_datastore = {
     if (ds['ds_mad'] == 'ceph') {
         if (ds['tm_mad'] != 'ceph') {
             error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
-            return(false);
         };
-        req = list('bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
+        req = list('disk_type', 'bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
         foreach(idx; attr; req) {
             if(!exists(ds[attr])) {
                 error(format("Invalid ceph datastore! Expected '%s' ", attr));
-                return(false);
             };
         };
     };
     if (ds['ds_mad'] == 'fs') {
         if (ds['tm_mad'] != 'shared') {
             error("for a fs datastore only 'shared' tm_mad is supported for the moment");
-            return(false);
+        };
+    };
+    if (ds['type'] == 'SYSTEM_DS') {
+        if (ds['tm_mad'] == 'ceph') {
+            error("system datastores do not support '%s' TM_MAD", ds['tm_mad']);
         };
     };
     # Checks for other types can be added here
@@ -320,10 +322,16 @@ type opennebula_datastore = {
     include opennebula_ceph_datastore
     "bridge_list" ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check" : boolean = true
-    "disk_type" : string = 'RBD'
+    "disk_type" ? string = 'RBD' with match (SELF, '^(RBD)$')
     "ds_mad" : string = 'ceph' with match (SELF, '^(fs|ceph)$')
-    "tm_mad" : string = 'ceph' with match (SELF, '^(shared|ceph)$')
-    "type" : string = 'IMAGE_DS'
+    @{set system Datastore TM_MAD value.
+        shared: The storage area for the system datastore is a shared directory across the hosts.
+        vmfs: A specialized version of the shared one to use the vmfs file system.
+        ssh: Uses a local storage area from each host for the system datastore.
+        ceph: Uses Ceph storage backend.
+    }
+    "tm_mad" : string = 'ceph' with match (SELF, '^(shared|ceph|ssh|vmfs)$')
+    "type" : string = 'IMAGE_DS' with match (SELF, '^(IMAGE_DS|SYSTEM_DS)$')
     @{datastore labels is a list of strings to group the datastores under a given name and filter them
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
@@ -762,10 +770,4 @@ type component_opennebula = {
     some OpenNebula configuration files should be accessible by a different group (as apache).
     This variable sets the group name to change these files permissions.}
     'cfg_group' ? string
-    @{set system Datastore TM_MAD value.
-        shared: The storage area for the system datastore is a shared directory across the hosts.
-        vmfs: A specialized version of the shared one to use the vmfs file system.
-        ssh: Uses a local storage area from each host for the system datastore.
-    }
-    'tm_system_ds' ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = dict();

@@ -119,6 +119,7 @@ prefix "/software/components/opennebula";
             "ceph_host", list("ceph001.cubone.os", "ceph002.cubone.os", "ceph003.cubone.os"),
             "ceph_secret", "8371ae8a-386d-44d7-a228-c42de4259c6e",
             "ceph_user", "libvirt",
+            "disk_type", "RBD",
             "datastore_capacity_check", true,
             "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
             "pool_name", "one",
@@ -137,6 +138,12 @@ prefix "/software/components/opennebula";
                 "mode", 0440,
             ),
             "clusters", list("red.cluster"),
+        ),
+        "system", dict(
+            "tm_mad", "shared",
+            "ds_mad", "fs",
+            "type", "SYSTEM_DS",
+            "clusters", list("default", "red.cluster"),
         ),
 );
 
@@ -182,5 +189,4 @@ prefix "/software/components/opennebula";
 );
 
 "ssh_multiplex" = true;
-"tm_system_ds" = "ssh";
 "cfg_group" = "apache";

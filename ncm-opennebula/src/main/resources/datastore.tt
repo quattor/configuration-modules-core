@@ -20,6 +20,8 @@ NAME = "[% pool.key %]"
 [%            CASE -%]
 [%                pair.key FILTER upper %] = "[% pair.value %]"
 [%        END -%]
-[%-   END %]
-[%- END -%]
+[%-   END -%]
+[%    IF pool.key != 'system' -%]
 QUATTOR = 1
+[%    END -%]
+[% END -%]
