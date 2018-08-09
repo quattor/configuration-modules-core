@@ -45,3 +45,5 @@ dopost('userone', 'user', '"description":"first user","enabled":true,"name":"use
 dopost('groupone', 'group', '"description":"first group","domain_id":"dom23456","enabled":true,"name":"grp1"', 'use12');
 
 dopost('serviceone', 'service', '"description":"OS image one","enabled":true,"name":"glanceone","type":"image"', 'serv111');
+dopost('servicenova', 'service', '"description":"OS compute service nova","enabled":true,"name":"nova","type":"compute"', 'serv112');
+dopost('servicenovaplacement', 'service', '"description":"OS placement service placement","enabled":true,"name":"placement","type":"placement"', 'serv113');

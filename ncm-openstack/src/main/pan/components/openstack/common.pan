@@ -218,28 +218,58 @@ type openstack_DEFAULTS = {
 };
 
 
+type openstack_quattor_endpoint = {
+    @{endpoint protocol  (proto://OBJECT:port/suffix)}
+    'proto' : choice('http', 'https') = 'https'
+    @{endpoint port (proto://OBJECT:port/suffix) (mandatory for internal endpoint)}
+    'port' ? type_port
+    @{endpoint suffix (proto://OBJECT:port/suffix)}
+    'suffix' : string = ''
+    @{region that the service/endpoint belongs to}
+    'region' ? openstack_valid_region
+};
+
+type openstack_quattor_service = {
+    @{internal endpoint (is also default for public and/or admin)}
+    'internal' : openstack_quattor_endpoint with {
+        if (!exists(SELF['port'])) {
+            error('openstack quattor internal (endpoint) must have port defined')
+        };
+        true;
+    }
+    @{public endpoint (on top of internal endpoint configuration)}
+    'public' ? openstack_quattor_endpoint
+    @{admin endpoint (on top of internal endpoint configuration)}
+    'admin' ? openstack_quattor_endpoint
+};
+
+type openstack_quattor_service_extra = {
+    include openstack_quattor_service
+    'type' : string
+};
+
+
 @documentation{
 Custom configuration type. This is data that is not picked up as configuration data,
 but used to e.g. build up the service endpoints.
 (Any section named quattor is also not rendered)
 
 It is to be used as e.g.
-    type openstack_quattor_service_x = openstack_quattor = dict('quattor', dict('port', 123))
+    type openstack_quattor_servicex = openstack_quattor = dict('quattor', dict('port', 123))
 
 And then this custom service type is included in the service configuration.
-    type openstack_service_x = {
-        'quattor' : openstack_quattor_service_x
+    type openstack_servicex = {
+        'quattor' : openstack_quattor_servicex
         ...
 }
 type openstack_quattor = {
-    @{endpoint protocol  (proto://OBJECT:port/suffix)}
-    'proto' : choice('http', 'https') = 'https'
-    @{endpoint port (proto://OBJECT:port/suffix)}
-    'port' : type_port
-    @{endpoint suffix (proto://OBJECT:port/suffix)}
-    'suffix' : string = ''
-    @{region that the service/endpoint belongs to}
-    'region' ? openstack_valid_region
-    @{register this flavour as a service of type}
-    'type' ? string # optional since the API docs only allow limited types
+    @{default service/endpoint}
+    'service' ? openstack_quattor_service
+    @{other services; key is name. Default values like public/internal are taken from service}
+    'services' ? openstack_quattor_service_extra{}
+} with {
+    if (exists(SELF['services']) && !exists(SELF['service'])) {
+        error("openstack quattor service configuration when configuring (other) services");
+    };
+    true;
 };

@@ -6,7 +6,7 @@
 unique template components/openstack/identity/gather;
 
 @{set dict key/value pairs from dict value (3rd arg) to dict data (1st arg) with key (2nd arg)
-  an error is raised when already existing key does nto have expected value;
+  an error is raised when already existing key does not have expected value;
   4th arg msg is part of the error message}
 function openstack_merge = {
     data = ARGV[0];
@@ -45,6 +45,32 @@ function openstack_identity_gather_find_authtoken = {
         };
     };
     return(undef);
+};
+
+@{update the OS identity data (1st arg) for a service name (2nd arg)
+  with service and endpoint data.
+  3rd arg is a service data, 4th arg is the endpoint default and 5th argument is host identifier}
+function openstack_identity_gather_service_add = {
+    data = ARGV[0];
+    name = ARGV[1];
+    srvdata = ARGV[2];
+    edef = ARGV[3];
+    msg = ARGV[4];
+
+    sdescr = format("OS %s service %s", srvdata['type'], name);
+    if (!exists(data['service'])) {
+        data['service'] = dict();
+    };
+    data['service'] = openstack_merge(
+                        data['service'],
+                        name,
+                        dict('type', srvdata['type'], 'description', sdescr),
+                        msg,
+                        );
+
+
+
+    data;
 };
 
 @{update the OS identity data (1st arg) for a single service/flavour dict (2nd arg)
@@ -86,33 +112,30 @@ function openstack_identity_gather_service = {
     # quattor section
     if (exists(srv['quattor'])) {
         qt = srv['quattor'];
-    } else {
-        qt = dict();
-    };
-
-    # add flavour as service of type
-    # only required for certain services, so see quattor section
-    if (exists(qt['type'])) {
-        if (qt['type'] != service) {
-            error("%s: service quattor type %s doesn't match service %s flavour %s",
-                    FUNCTION, qt['type'], service, flavour);
-        };
-        if (!exists(data['service'])) {
-            data['service'] = dict();
-        };
-        sdescr = format("OS %s", service);
-
-        data['service'] = openstack_merge(
-                            data['service'],
-                            flavour,
-                            dict('type', qt['type'], 'description', sdescr),
-                            format("host %s service %s ", host, service)
+        if (exists(qt['service'])) {
+            srvmsg = format("host %s service/flavour %s/%s", host, service, flavour);
+            edef = qt['service'];
+            edef['type'] = service;
+            data = openstack_identity_gather_service_add(
+                    data,
+                    flavour,
+                    edef,
+                    dict(), # no defaults
+                    srvmsg,
+                    );
+            if (exists(qt['services'])) {
+                foreach (name; srvdata; qt['services']) {
+                    data = openstack_identity_gather_service_add(
+                            data,
+                            name,
+                            srvdata,
+                            edef,
+                            format("%s extra %s", srvmsg, name)
                             );
+                };
+            };
+        };
     };
-
-    # endpoints
-    # generate the required endpoints from minimal data, see quattor section
-    # protocol / port / suffix
 
     data;
 };
@@ -160,7 +183,7 @@ function openstack_identity_gather = {
                     foreach (fl; fldata; os[srv]) {
                         if (fl != 'client') {
                             flavour = flavour + 1;
-                            data = openstack_identity_gather_service(data, os[srv], srv, fl, host[0]);
+                            data = openstack_identity_gather_service(data, fldata, srv, fl, host[0]);
                         };
                     };
                     if (flavour > 1) {
@@ -173,4 +196,3 @@ function openstack_identity_gather = {
 
     data;
 };
-
