@@ -135,6 +135,7 @@ Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 # if it should return a text template or
 # CAF::FileWriter instance
 Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
+Readonly::Array my @OPENNEBULA_CONSUMERS => qw(user group cluster);
 
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -401,11 +402,8 @@ sub manage_something
     if ($type eq "host") {
         $self->manage_hosts($one, $resources, %protected);
         return;
-    } elsif (($type eq "user") or ($type eq "group")) {
-        $self->manage_users_groups($one, $type, $resources, %protected);
-        return;
-    } elsif ($type eq "cluster") {
-        $self->manage_users_groups($one, $type, $resources, %protected);
+    } elsif (grep { $type eq $_ } @OPENNEBULA_CONSUMERS) {
+        $self->manage_consumers($one, $type, $resources, %protected);
         return;
     };
 

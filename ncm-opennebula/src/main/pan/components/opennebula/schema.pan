@@ -381,7 +381,7 @@ type opennebula_host = {
     'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
     @{set the network driver in your hosts.
     This option is not longer used by ONE >= 5.x versions.}
-   'vnm_mad' ? string with match (SELF, '^(dummy|ovswitch|ovswitch_brcompat)$')
+    'vnm_mad' ? string with match (SELF, '^(dummy|ovswitch|ovswitch_brcompat)$')
     @{Set the hypervisor cluster. Any new hypervisor is always included within
     "Default" cluster.
     Hosts can be in only one cluster at a time.}
