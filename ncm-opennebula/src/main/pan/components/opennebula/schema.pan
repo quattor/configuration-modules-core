@@ -322,7 +322,7 @@ type opennebula_datastore = {
     include opennebula_ceph_datastore
     "bridge_list" ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check" : boolean = true
-    "disk_type" ? string = 'RBD' with match (SELF, '^(RBD)$')
+    "disk_type" ? choice('RBD')
     "ds_mad" : string = 'ceph' with match (SELF, '^(fs|ceph)$')
     @{set system Datastore TM_MAD value.
         shared: The storage area for the system datastore is a shared directory across the hosts.

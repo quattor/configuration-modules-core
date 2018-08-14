@@ -178,13 +178,12 @@ prefix "/software/components/opennebula";
 );
 
 "hosts" = dict(
-    # These hypervisors are included within Default cluster
     'hyp101', dict(),
     'hyp102', dict(),
+    # Add hyp103 in a different cluster
     'hyp103', dict(
         "cluster", "red.cluster",
         ),
-    # Add hyp104 in a different cluster
     'hyp104', dict(),
 );
 

@@ -122,7 +122,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.312.0;
+use Net::OpenNebula 0.313.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
