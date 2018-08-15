@@ -7,7 +7,7 @@ declaration template components/nscd/schema;
 
 include 'quattor/schema';
 
-type componend_nscd_service_type = {
+type component_nscd_service_type = {
     "enable-cache" ? legacy_binary_affirmation_string
     "positive-time-to-live" ? long
     "negative-time-to-live" ? long
@@ -32,9 +32,9 @@ type component_nscd_type = {
     "paranoia" ? legacy_binary_affirmation_string
     "restart-interval" ? long
 
-    "passwd" ? componend_nscd_service_type
-    "group" ? componend_nscd_service_type
-    "hosts" ? componend_nscd_service_type
+    "passwd" ? component_nscd_service_type
+    "group" ? component_nscd_service_type
+    "hosts" ? component_nscd_service_type
 };
 
 bind "/software/components/nscd" = component_nscd_type;
