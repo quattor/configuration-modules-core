@@ -13,6 +13,11 @@ type openstack_valid_project = string with openstack_is_valid_identity(SELF, 'pr
 
 type openstack_valid_user = string with openstack_is_valid_identity(SELF, 'user');
 
+type openstack_valid_group = string with openstack_is_valid_identity(SELF, 'group');
+
+# the admin role exists
+type openstack_valid_role = string with {SELF == 'admin' || openstack_is_valid_identity(SELF, 'role')};
+
 @{openstack identity v3 region}
 type openstack_identity_region = {
     'description' ? string
@@ -53,11 +58,36 @@ type openstack_identity_role = {
     'domain_id' ? openstack_valid_domain
 };
 
-@{openstack identity v3 servicce}
+# TODO: key should be valid user/group
+type openstack_identity_rolemap_ug = {
+    @{group for role assigment; key is group name}
+    'group' ? openstack_valid_role[]{}
+    @{user for role assigment; key is user name}
+    'user' ? openstack_valid_role[]{}
+};
+
+# TODO: keys should be valid domain/project
+@{openstack identity v3 role assignment}
+type openstack_identity_rolemap = {
+    @{domain for role assigment; key is domain name}
+    'domain' ? openstack_identity_rolemap_ug{}
+    @{project for role assigment; key is project name}
+    'project' ? openstack_identity_rolemap_ug{}
+};
+
+
+@{openstack identity v3 service}
 type openstack_identity_service = {
     'description' ? string
     'type' : string
 };
+
+@{openstack identity v3 endpoint}
+type openstack_identity_endpoint = {
+    'description' ? string
+    'type' : string
+};
+
 
 @{identity configuration via API client}
 type openstack_identity_client = {
@@ -73,6 +103,8 @@ type openstack_identity_client = {
     'group' ? openstack_identity_group{}
     @{role, key is used as role name}
     'role' ? openstack_identity_role{}
+    @{role assignment}
+    'rolemap' ? openstack_identity_rolemap
     @{service, key is used as service name}
     'service' ? openstack_identity_service{}
 };

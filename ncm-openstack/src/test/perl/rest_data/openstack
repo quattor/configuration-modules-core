@@ -9,6 +9,11 @@ sub dopost {
     my ($name, $oper, $reg, $id) = @_;
     $cmds{$name}{cmd}='POST http://controller:35357/v3/'.$oper.'s/ .*'.$reg.'.*';
     $cmds{$name}{result}={$oper => {id => $id}};
+
+    if ($reg =~ m/"name":"(\w+)"/) {
+        $cmds{"GET_$name"}{cmd}='GET http://controller:35357/v3/'.$oper.'s[?]name='.$1;
+        $cmds{"GET_$name"}{result}={"${oper}s" => [{id => $id, name => $1}]};
+    }
 };
 dopost('crregone', 'region', '"id":"regionOne"', 'regionOne');
 dopost('crregtwo', 'region', '"id":"regionTwo"', 'regionTwo');
@@ -19,17 +24,14 @@ dopost('domvo2', 'domain', '"description":"vo2","enabled":true,"name":"vo2"', 'd
 
 $cmds{domdef}{cmd}="GET http://controller:35357/v3/domains[?]name=default";
 $cmds{domdef}{result}={domains => [{id => 'dom112233', name => "default"}]};
-$cmds{domvo1id}{cmd}="GET http://controller:35357/v3/domains[?]name=vo1";
-$cmds{domvo1id}{result}={domains => [{id => 'dom12345', name => "vo1"}]};
-$cmds{domvo2id}{cmd}="GET http://controller:35357/v3/domains[?]name=vo2";
-$cmds{domvo2id}{result}={domains => [{id => 'dom23456', name => "vo2"}]};
+
+$cmds{roladmin}{cmd}="GET http://controller:35357/v3/roles[?]name=admin";
+$cmds{roladmin}{result}={roles => [{id => 'rolaaddmm', name => "admin"}]};
 
 dopost('projopq', 'project', '\{"enabled":true,"name":"opq"', 'pro123'); # no description
+dopost('projserv', 'project', '"description":"main service project","domain_id":"dom112233","enabled":true,"name":"service"', 'pros');
 dopost('projvo1', 'project', '"description":"main vo1 project","domain_id":"dom12345","enabled":true,"name":"vo1"', 'pro124');
 dopost('projvo2', 'project', '"description":"main vo2 project","domain_id":"dom23456","enabled":true,"name":"vo2"', 'pro125');
-
-$cmds{projvo1id}{cmd}="GET http://controller:35357/v3/projects[?]name=vo1";
-$cmds{projvo1id}{result}={projects => [{id => 'pro124', name => "vo1"}]};
 
 dopost('projvo1real', 'project', '"description":"some real project","enabled":true,"name":"realproject","parent_id":"pro124"', 'pro126');
 
@@ -43,6 +45,9 @@ dopost('usernova', 'user', '"description":"quattor service compute flavour nova 
 dopost('userone', 'user', '"description":"first user","enabled":true,"name":"user1","password":"abc"', 'use12');
 
 dopost('groupone', 'group', '"description":"first group","domain_id":"dom23456","enabled":true,"name":"grp1"', 'use12');
+
+dopost('roleone', 'role', '"enabled":true,"name":"rl1"', 'rll11');
+dopost('roletwo', 'role', '"enabled":true,"name":"rl2"', 'rll12');
 
 dopost('serviceone', 'service', '"description":"OS image one","enabled":true,"name":"glanceone","type":"image"', 'serv111');
 dopost('servicenova', 'service', '"description":"OS compute service nova","enabled":true,"name":"nova","type":"compute"', 'serv112');

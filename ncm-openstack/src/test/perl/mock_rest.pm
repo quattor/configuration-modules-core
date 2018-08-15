@@ -414,12 +414,12 @@ sub method_history_ok
         my ( $index )= grep { $method_history[$_] =~ /$cmd/  } ($lastidx+1)..$#method_history;
         my $msg = "method_history_ok command pattern '$cmd'";
         if (!defined($index)) {
-            note "$msg no match; return false";
+            note "FAIL $msg no match; return false";
             return 0;
         } else {
             $msg .= " index $index (full command $method_history[$index])";
             if ($index <= $lastidx) {
-                note "$msg <= lastindex $lastidx; return false";
+                note "FAIL $msg <= lastindex $lastidx; return false";
                 return 0;
             } else {
                 note "$msg; continue";
