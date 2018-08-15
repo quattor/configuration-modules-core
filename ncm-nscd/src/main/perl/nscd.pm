@@ -5,12 +5,14 @@
 package NCM::Component::nscd;
 
 use strict;
+use version;
 use NCM::Component;
 use vars qw(@ISA $EC);
 use NCM::Check;
 use LC::Check;
 use File::Temp;
 use File::Copy qw(copy);
+use CAF::Process;
 
 @ISA = qw(NCM::Component);
 $EC = LC::Exception::Context->new->will_store_all;
@@ -18,6 +20,24 @@ $NCM::Component::NoActionSupported = 1;
 
 my $cfgfile='/etc/nscd.conf';
 my $p ='/software/components/nscd';
+
+
+sub _get_nscd_version {
+    my ($self) = @_;
+
+    my $proc = CAF::Process->new ([qw (nscd -V)], log => $self, keeps_state => 1);
+    my $output = $proc->output();
+
+    $proc->execute();
+
+    my $version = (split /\n/, $output)[0];
+    $version =~ s/^nscd \(GNU libc\) //;
+    $self->debug(5, "nscd version is $version");
+
+    # Add a leading v to indicate that the version is in dot delimted integer form (rather than simple decimal)
+    return version->parse("v$version");
+}
+
 
 sub Configure {
     my ($self, $config) = @_;
@@ -91,6 +111,18 @@ sub Configure {
 
     # check per-service options we know about
     my @services = ('passwd', 'group', 'hosts');
+
+    my $nscd_version = $self->_get_nscd_version();
+
+    if ($nscd_version >= version->parse("v2.12")) {
+        $self->debug(5, "nscd is new enough to cache services");
+        push(@services, 'services');
+    }
+    if ($nscd_version >= version->parse("v2.17")) {
+        $self->debug(5, "nscd is new enough to cache netgroup");
+        push(@services, 'netgroup');
+    }
+
     my @service_opts = (
         'enable-cache',
         'positive-time-to-live',

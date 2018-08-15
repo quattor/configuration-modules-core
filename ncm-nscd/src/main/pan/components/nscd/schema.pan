@@ -35,6 +35,8 @@ type component_nscd_type = {
     "passwd" ? component_nscd_service_type
     "group" ? component_nscd_service_type
     "hosts" ? component_nscd_service_type
+    "services" ? component_nscd_service_type
+    "netgroup" ? component_nscd_service_type
 };
 
 bind "/software/components/nscd" = component_nscd_type;
