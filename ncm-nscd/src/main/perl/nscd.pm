@@ -117,7 +117,7 @@ sub Configure($$) {
       if ($config->elementExists($p."/".$service."/".$cfgname )) {
 	my $value=$config->getValue($p."/".$service."/".$cfgname );
 	$self->debug(5, "service \"$service\" option \"$cfgname\" = \"$value\"");
-	
+
 	$changes=NCM::Check::lines($tmpfile,
 				   good => "\t$cfgname\t$service\t\t$value",
 				   goodre => "^\\s*$cfgname\\s+$service\\s+$value",
