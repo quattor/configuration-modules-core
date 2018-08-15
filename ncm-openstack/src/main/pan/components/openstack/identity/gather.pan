@@ -5,6 +5,32 @@
 @{gather identity data from other services (possibly on other hosts)}
 unique template components/openstack/identity/gather;
 
+@{Given dict as first argument, get nested data
+  (or add structure of dicts), one level per argument
+  The first argument is updated in place if needed.}
+function openstack_vivify = {
+    data = ARGV[0];
+    if (!is_dict(data)) {
+        error("%s: first argument must be a dict, got %s", FUNCTION, data);
+    };
+    current = data;
+    foreach (idx; arg; ARGV) {
+        if (idx > 0) {
+            if (exists(current[arg])) {
+                value = current[arg];
+                if (!is_dict(value)) {
+                    error("%s: existing key %s found, but is not a dict (%s)",
+                            FUNCTION, arg, value);
+                };
+            } else {
+                current[arg] = dict();
+            };
+            current = current[arg];
+        };
+    };
+    current;
+};
+
 @{set dict key/value pairs from dict value (3rd arg) to dict data (1st arg) with key (2nd arg)
   an error is raised when already existing key does not have expected value;
   4th arg msg is part of the error message}
@@ -58,17 +84,13 @@ function openstack_identity_gather_service_add = {
     msg = ARGV[4];
 
     sdescr = format("OS %s service %s", srvdata['type'], name);
-    if (!exists(data['service'])) {
-        data['service'] = dict();
-    };
-    data['service'] = openstack_merge(
-                        data['service'],
-                        name,
-                        dict('type', srvdata['type'], 'description', sdescr),
-                        msg,
-                        );
-
-
+    data_s = openstack_vivify(data, 'service');
+    openstack_merge(
+        data_s,
+        name,
+        dict('type', srvdata['type'], 'description', sdescr),
+        msg,
+        );
 
     data;
 };
@@ -98,15 +120,16 @@ function openstack_identity_gather_service = {
         udescr = format("quattor %s user", descr);
         domain = 'default';
 
-        if (!exists(data['user'])) {
-            data['user'] = dict();
-        };
-        data['user'] = openstack_merge(
-                            data['user'],
-                            user,
-                            dict('password', pwd, 'domain_id', domain, 'description', udescr),
-                            format("host %s service %s", host, service)
-                            );
+        data_u = openstack_vivify(data, 'user');
+        openstack_merge(
+            data_u,
+            user,
+            dict('password', pwd, 'domain_id', domain, 'description', udescr),
+            format("host %s service %s", host, service)
+            );
+
+        data_r = openstack_vivify(data, 'rolemap', 'project', 'service', 'user');
+        data_r[user] = append(data_r[user], 'admin');
     };
 
     # quattor section

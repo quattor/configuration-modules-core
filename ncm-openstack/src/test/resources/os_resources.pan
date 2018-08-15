@@ -22,6 +22,10 @@ prefix "client/domain";
 "vo1/description" = "vo1";
 "vo2/description" = "vo2";
 
+prefix "client/project/service";
+"description" = "main service project";
+"domain_id" = "default";
+
 prefix "client/project/vo1";
 "description" = "main vo1 project";
 "domain_id" = "vo1";
@@ -43,6 +47,15 @@ prefix "client/user/user1";
 prefix "client/group/grp1";
 "description" = "first group";
 "domain_id" = "vo2";
+
+prefix "client/role";
+"rl1" = dict();
+"rl2" = dict();
+
+prefix "client/rolemap";
+"domain/vo1/user/user1" = list('rl1');
+"project/vo2/group/grp1" = list('rl2');
+
 
 prefix "client/service/glanceone";
 "description" = "OS image one";

@@ -9,6 +9,7 @@ use Net::OpenStack::Client::Identity::v3;
 
 use Readonly;
 Readonly my $TAGSTORE => 'quattorstore';
+Readonly my $API_SYNC => 'api_identity_sync';
 
 =head2 Methods
 
@@ -41,7 +42,16 @@ sub run_client
         my $cfg = $self->_get_json_tree("identity/client/$oper");
 
         # apply the changes using sync
-        $client->api_identity_sync($oper, $cfg, tagstore => $TAGSTORE);
+        # cannot use ->can to test, since there's autoload magic in the client
+        if (grep {$oper eq $_} qw(rolemap)) {
+            my $method = "${API_SYNC}_$oper";
+            $self->verbose("identity client sync for $oper using $method");
+            # no need to pass oper; it's a unique method per operation
+            $client->$method($cfg, tagstore => $TAGSTORE);
+        } else{
+            $self->debug(1, "identity client sync for $oper using $API_SYNC");
+            $client->$API_SYNC($oper, $cfg, tagstore => $TAGSTORE);
+        }
     }
 
     return 1;
