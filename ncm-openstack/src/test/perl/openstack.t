@@ -30,6 +30,7 @@ set_output('rabbitmq_db_version_missing');
 set_output('cinder_db_version_missing');
 set_output('manila_db_version_missing');
 set_output('heat_db_version_missing');
+set_output('murano_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -102,6 +103,10 @@ $fh = get_file("/etc/heat/heat.conf");
 isa_ok($fh, "CAF::FileWriter", "heat.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "heat.conf has expected content");
 
+# Verify Murano configuration file
+$fh = get_file("/etc/murano/murano.conf");
+isa_ok($fh, "CAF::FileWriter", "murano.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "murano.conf has expected content");
 
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
@@ -152,6 +157,11 @@ ok(command_history_ok([
         'service openstack-heat-api restart',
         'service openstack-heat-api-cfn restart',
         'service openstack-heat-engine restart',
+        '/usr/bin/murano-db-manage version',
+        '/usr/bin/murano-db-manage upgrade',
+        'service openstack-murano-api restart',
+        'service openstack-murano-api-cfn restart',
+        'service openstack-murano-engine restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
