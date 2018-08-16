@@ -126,6 +126,7 @@ sub Configure
         'compute',
         'network',
         'orchestration',
+        'catalog',
         'dashboard',
     ];
 
