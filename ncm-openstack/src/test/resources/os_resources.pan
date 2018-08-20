@@ -61,6 +61,14 @@ prefix "client/service/glanceone";
 "description" = "OS image one";
 "type" = "image";
 
+prefix "client/endpoint/glanceone";
+"internal/url/0" = "http://internal0";
+"internal/url/1" = "http://internal1";
+"public/url/0" = "http://public";
+"public/region" = "regionThree";
+"admin/url/0" = "http://admin";
+
+
 # Glance/service section
 
 prefix "/software/components/openstack/storage/glance/service";

@@ -50,6 +50,29 @@ sub run_client
             $client->$method($cfg, tagstore => $TAGSTORE);
         } else{
             $self->debug(1, "identity client sync for $oper using $API_SYNC");
+
+            if ($oper eq 'endpoint') {
+                # Need to convert the quattor endpoint structure to proper hashref
+                my $endpt = {};
+                foreach my $service (sort keys %$cfg) {
+                    foreach my $intf (sort keys %{$cfg->{$service}}) {
+                        my $idata = $cfg->{$service}->{$intf};
+                        my $region = $idata->{region};
+                        foreach my $url (@{$idata->{url}}) {
+                            my $edata = {
+                                url => $url,
+                                interface => $intf,
+                                service_id => $service,
+                            };
+                            $edata->{region_id} = $region if defined($region);
+                            $endpt->{"${intf}_$url"} = $edata;
+                        }
+                    }
+                };
+
+                $cfg = $endpt;
+            }
+
             $client->$API_SYNC($oper, $cfg, tagstore => $TAGSTORE);
         }
     }
