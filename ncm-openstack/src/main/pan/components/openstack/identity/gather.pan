@@ -92,6 +92,31 @@ function openstack_identity_gather_service_add = {
         msg,
         );
 
+    # internal first, to make the default for the others
+    foreach (idx; intf; list('internal', 'public', 'admin')) {
+        ep = clone(edef);
+        if (exists(srvdata[intf])) {
+            foreach (k; v; srvdata[intf]) {
+                ep[k] = v;
+            };
+        };
+
+        if (!exists(ep['proto'])) {
+            error("%s anme %s ep %s edef %s srvdata %s", msg, name, ep, edef, srvdata);
+        };
+        url = format("%s://%s:%s/%s", ep['proto'], ep['host'], ep['port'], ep['suffix']);
+
+        data_e = openstack_vivify(data, 'endpoint', name, intf);
+        data_e['url'] = append(data_e['url'], url);
+        if (exists(ep['region'])) {
+            data_e['region'] = ep['region'];
+        };
+
+        if (intf == 'internal') {
+            edef = ep;
+        };
+    };
+
     data;
 };
 
@@ -137,24 +162,24 @@ function openstack_identity_gather_service = {
         qt = srv['quattor'];
         if (exists(qt['service'])) {
             srvmsg = format("host %s service/flavour %s/%s", host, service, flavour);
-            edef = qt['service'];
-            edef['type'] = service;
-            data = openstack_identity_gather_service_add(
-                    data,
-                    flavour,
-                    edef,
-                    dict(), # no defaults
-                    srvmsg,
-                    );
+            qsrv = qt['service'];
+            qsrv['type'] = service;
+            openstack_identity_gather_service_add(
+                data,
+                flavour,
+                qsrv,
+                dict(), # no defaults
+                srvmsg,
+                );
             if (exists(qt['services'])) {
                 foreach (name; srvdata; qt['services']) {
-                    data = openstack_identity_gather_service_add(
-                            data,
-                            name,
-                            srvdata,
-                            edef,
-                            format("%s extra %s", srvmsg, name)
-                            );
+                    openstack_identity_gather_service_add(
+                        data,
+                        name,
+                        srvdata,
+                        qsrv['internal'],
+                        format("%s extra %s", srvmsg, name)
+                        );
                 };
             };
         };

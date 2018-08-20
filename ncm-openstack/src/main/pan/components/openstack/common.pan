@@ -219,32 +219,50 @@ type openstack_DEFAULTS = {
 
 
 type openstack_quattor_endpoint = {
-    @{endpoint protocol  (proto://OBJECT:port/suffix)}
-    'proto' : choice('http', 'https') = 'https'
-    @{endpoint port (proto://OBJECT:port/suffix) (mandatory for internal endpoint)}
+    @{endpoint host (proto://host:port/suffix)}
+    'host' ? type_hostname
+    @{endpoint protocol (proto://host:port/suffix)}
+    'proto' ? choice('http', 'https')
+    @{endpoint port (proto://host:port/suffix) (mandatory for internal endpoint)}
     'port' ? type_port
-    @{endpoint suffix (proto://OBJECT:port/suffix)}
-    'suffix' : string = ''
+    @{endpoint suffix (proto://host:port/suffix)}
+    'suffix' ? string
     @{region that the service/endpoint belongs to}
     'region' ? openstack_valid_region
 };
 
-type openstack_quattor_service = {
-    @{internal endpoint (is also default for public and/or admin)}
-    'internal' : openstack_quattor_endpoint with {
-        if (!exists(SELF['port'])) {
-            error('openstack quattor internal (endpoint) must have port defined')
-        };
-        true;
-    }
+type openstack_quattor_service_common = {
     @{public endpoint (on top of internal endpoint configuration)}
     'public' ? openstack_quattor_endpoint
     @{admin endpoint (on top of internal endpoint configuration)}
     'admin' ? openstack_quattor_endpoint
 };
 
+
+type openstack_quattor_service = {
+    include openstack_quattor_service_common
+    @{internal endpoint (is also default for public and/or admin)}
+    'internal' : openstack_quattor_endpoint with {
+        foreach (i; attr; list('host', 'port')) {
+            if (!exists(SELF[attr])) {
+                error('openstack quattor internal (endpoint) must have %s defined', attr);
+            };
+        };
+        true;
+    }
+};
+
 type openstack_quattor_service_extra = {
-    include openstack_quattor_service
+    include openstack_quattor_service_common
+    @{internal endpoint (is also default for public and/or admin)}
+    'internal' : openstack_quattor_endpoint with {
+        foreach (i; attr; list('port')) {
+            if (!exists(SELF[attr])) {
+                error('openstack quattor internal (extra endpoint) must have %s defined', attr);
+            };
+        };
+        true;
+    }
     'type' : string
 };
 

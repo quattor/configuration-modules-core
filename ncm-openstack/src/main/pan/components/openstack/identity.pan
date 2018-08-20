@@ -82,10 +82,24 @@ type openstack_identity_service = {
     'type' : string
 };
 
+
+@{openstack identity v3 interface configuration}
+type openstack_identity_endpoint_interface = {
+    @{list of endpoint urls}
+    'url' : type_absoluteURI[]
+    @{endpoint region (for all urls)}
+    'region' ? openstack_valid_region
+};
+
+
 @{openstack identity v3 endpoint}
 type openstack_identity_endpoint = {
-    'description' ? string
-    'type' : string
+    @{internal interface}
+    'internal' : openstack_identity_endpoint_interface
+    @{public interface}
+    'public' : openstack_identity_endpoint_interface
+    @{admin interface}
+    'admin' : openstack_identity_endpoint_interface
 };
 
 
@@ -107,6 +121,8 @@ type openstack_identity_client = {
     'rolemap' ? openstack_identity_rolemap
     @{service, key is used as service name}
     'service' ? openstack_identity_service{}
+    @{endpoint, key is the service name}
+    'endpoint' ? openstack_identity_endpoint{}
 };
 
 @documentation{
