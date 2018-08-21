@@ -159,9 +159,8 @@ ok(command_history_ok([
         'service openstack-heat-engine restart',
         '/usr/bin/murano-db-manage version',
         '/usr/bin/murano-db-manage upgrade',
-        'service openstack-murano-api restart',
-        'service openstack-murano-api-cfn restart',
-        'service openstack-murano-engine restart',
+        'service murano-api restart',
+        'service murano-engine restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
