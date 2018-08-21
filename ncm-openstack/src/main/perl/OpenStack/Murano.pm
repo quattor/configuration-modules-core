@@ -4,9 +4,8 @@ use parent qw(NCM::Component::OpenStack::Service);
 
 use Readonly;
 
-Readonly our @MURANO_DAEMONS_SERVER => qw(openstack-murano-api
-                                        openstack-murano-api-cfn
-                                        openstack-murano-engine);
+Readonly our @MURANO_DAEMONS_SERVER => qw(murano-api
+                                        murano-engine);
 
 
 =head2 Methods
