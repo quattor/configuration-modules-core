@@ -5,6 +5,9 @@
 
 declaration template components/openstack/dashboard/horizon;
 
+type openstack_horizon_session_engine = choice('django.contrib.sessions.backends.cache',
+    'django.contrib.sessions.backends.db');
+
 @documentation{
     The Horizon configuration options in "caches" Section.
 }
@@ -176,6 +179,23 @@ type openstack_horizon_logging = {
 } = dict();
 
 @documentation{
+    Dashboard database options.
+}
+type opentack_horizon_databases_options = {
+    @{Set django database engine}
+    'ENGINE' : string = 'django.db.backends.sqlite3'
+    @{Set database location. This file must exist}
+    'NAME' : absolute_file_path = '/var/cache/murano-dashboard/murano-dashboard.sqlite'
+} = dict();
+
+@documentation{
+    Horizon django databases configuration.
+}
+type openstack_horizon_databases = {
+    'default' : opentack_horizon_databases_options
+} = dict();
+
+@documentation{
     Dictionary used to restrict user private subnet cidr range.
     An empty list means that user input will not be restricted
     for a corresponding IP version. By default, there is
@@ -254,6 +274,18 @@ type openstack_horizon_config_identity_keystone = {
     true;
 };
 
+@documentation{
+    list of Horizon service app catalog/murano configuration sections
+}
+type openstack_horizon_config_catalog_murano = {
+    @{Murano UI needs to change the default session back end-from using
+    browser cookies to using a database instead to avoid issues with forms
+    during the creation of applications}
+    'databases' ? openstack_horizon_databases
+    @{Set Murano cache dir. By default it uses /tmp directory by this directory
+    is protected by default by Systemd in CentOS with "PrivateTmp=true"}
+    'metadata_cache_dir' ? absolute_file_path = '/var/cache/murano-dashboard'
+};
 
 @documentation{
     list of Horizon service network/neutron configuration sections
@@ -272,8 +304,9 @@ type openstack_horizon_config_general = {
     'webroot' : string = '/dashboard/' with match (SELF, '^/.+/$')
     @{Horizon uses Djangos sessions framework for handling session data.
     There are numerous session backends available, which are selected
-    through the "SESSION_ENGINE" setting}
-    'session_engine' : string = 'django.contrib.sessions.backends.cache'
+    through the "SESSION_ENGINE" setting.
+    For instance, Murano UI requires "django.contrib.sessions.backends.db".}
+    'session_engine' : openstack_horizon_session_engine = 'django.contrib.sessions.backends.cache'
     @{Send email to the console by default}
     'email_backend' : string = 'django.core.mail.backends.console.EmailBackend'
     @{External caching using an application such as memcached offers persistence
@@ -375,4 +408,5 @@ type openstack_horizon_config = {
     include openstack_horizon_config_general
     include openstack_horizon_config_identity_keystone
     include openstack_horizon_config_network_neutron
+    include openstack_horizon_config_catalog_murano
 };

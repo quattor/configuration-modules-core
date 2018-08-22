@@ -10,6 +10,13 @@ multiline
 ^CACHES\s?=\s*\{\s*$
 ^\s{8}'LOCATION': \['controller.mysite.com:11211', 'controller.myothersite.com:11211'\],$
 ^\}$
+^DATABASES\s?=\s*\{\s*$
+^\s{4}'default':\s{1}\{$
+^\s{8}'ENGINE':\s{1}"django.db.backends.sqlite3",$
+^\s{8}'NAME':\s{1}"/var/cache/murano-dashboard/murano-dashboard.sqlite",$
+^\s{4}\},$
+^\}$
+^METADATA_CACHE_DIR\s?=\s*.+\s*$
 ^OPENSTACK_API_VERSIONS\s?=\s?\{$
 ^OPENSTACK_KEYSTONE_DEFAULT_DOMAIN\s?=\s*.+\s*$
 ^OPENSTACK_KEYSTONE_DEFAULT_ROLE\s?=\s*.+\s*$

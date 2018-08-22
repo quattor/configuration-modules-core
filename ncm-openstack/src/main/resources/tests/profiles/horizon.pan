@@ -16,6 +16,9 @@ prefix "/metaconfig/contents";
 "openstack_keystone_multidomain_support" = true;
 "time_zone" = "Europe/Brussels";
 "secret_key" = "d5ae8703f268f0effff111";
+"session_engine" = "django.contrib.sessions.backends.db";
+"metadata_cache_dir" = "/var/cache/murano-dashboard";
+"databases" = dict();
 
 "websso_enabled" = true;
 "websso_initial_choice" = "myidp_openid";
