@@ -15,17 +15,25 @@ unique template components/${project.artifactId}/rootwrap;
 
 include 'components/sudo/config';
 
+variable ROOTWRAP_SERVICES = list('nova', 'neutron', 'cinder', 'manila');
 
 "/software/components/sudo/privilege_lines" = {
-    sudos = dict(
-        'nova', list(
-            '/usr/bin/nova-rootwrap /etc/nova/rootwrap.conf *',
-        ),
-        'neutron', list(
-            '/usr/bin/neutron-rootwrap /etc/neutron/rootwrap.conf *',
-            '/usr/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf',
-        ),
-    );
+
+    sudos = dict();
+
+    foreach (sudoers; service; ROOTWRAP_SERVICES) {
+        if (service == 'neutron') {
+            sudos[service] = list (
+                format('/usr/bin/%s-rootwrap /etc/%s/rootwrap.conf *', service, service),
+                format('/usr/bin/%s-rootwrap-daemon /etc/%s/rootwrap.conf', service, service),
+            );
+        } else {
+            sudos[service] = list(
+                format('/usr/bin/%s-rootwrap /etc/%s/rootwrap.conf *', service, service),
+            );
+        };
+    };
+
     foreach (user; cmds; sudos) {
         foreach (i; cmd; cmds) {
             append(dict(
@@ -37,5 +45,7 @@ include 'components/sudo/config';
             ));
         };
     };
+
     SELF;
+
 };
