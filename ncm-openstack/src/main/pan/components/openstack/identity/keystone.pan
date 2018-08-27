@@ -123,6 +123,8 @@ type openstack_keystone_openid = {
     'remote_id_attribute' ? string
 };
 
+type openstack_quattor_keystone = openstack_quattor;
+
 @documentation{
     The Keystone configuration sections
 }
@@ -134,4 +136,5 @@ type openstack_keystone_config = {
     'federation' ? openstack_keystone_federation
     'mapped' ? openstack_keystone_mapped
     'openid' ? openstack_keystone_openid
+    'quattor' : openstack_quattor_keystone
 };

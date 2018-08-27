@@ -5,6 +5,8 @@ include 'common_resources';
 
 
 # Identity/ keystone section
+include 'components/openstack/identity/gather/identity/keystone';
+
 prefix "/software/components/openstack/identity";
 
 prefix "keystone";

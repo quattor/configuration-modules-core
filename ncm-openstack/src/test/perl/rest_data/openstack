@@ -52,6 +52,7 @@ dopost('roletwo', 'role', '"enabled":true,"name":"rl2"', 'rll12');
 dopost('serviceone', 'service', '"description":"OS image one","enabled":true,"name":"glanceone","type":"image"', 'serv111');
 dopost('servicenova', 'service', '"description":"OS compute service nova","enabled":true,"name":"nova","type":"compute"', 'serv112');
 dopost('servicenovaplacement', 'service', '"description":"OS placement service placement","enabled":true,"name":"placement","type":"placement"', 'serv113');
+dopost('servicekeystone', 'service', '"description":"OS identity service keystone","enabled":true,"name":"keystone","type":"identity"', 'serv114');
 
 dopost('endpoint1', 'endpoint', '"interface":"admin","service_id":"serv111","url":"http://admin"', 'ept1');
 dopost('endpoint2', 'endpoint', '"interface":"internal","service_id":"serv111","url":"http://internal0"', 'ept2');
@@ -65,3 +66,7 @@ dopost('epnovapub', 'endpoint', '"interface":"public","service_id":"serv112","ur
 dopost('epplacadmin', 'endpoint', '"interface":"admin","service_id":"serv113","url":"https://openstack:8778/"', 'eppa');
 dopost('epplacint', 'endpoint', '"interface":"internal","service_id":"serv113","url":"https://openstack:8778/"', 'eppi');
 dopost('epplacpub', 'endpoint', '"interface":"public","service_id":"serv113","url":"https://openstack:8778/"', 'eppp');
+
+dopost('epkeystoneadmin', 'endpoint', '"interface":"admin","service_id":"serv114","url":"https://openstack:35357/v3"', 'epka');
+dopost('epkeystoneint', 'endpoint', '"interface":"internal","service_id":"serv114","url":"https://openstack:5000/v3"', 'epki');
+dopost('epkeystonepub', 'endpoint', '"interface":"public","service_id":"serv114","url":"https://openstack:5000/v3"', 'epkp');
