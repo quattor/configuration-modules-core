@@ -114,6 +114,9 @@ type openstack_DEFAULTS = {
     @{From nova.conf
     List of APIs to be enabled by default}
     'enabled_apis' ? string[] = list('osapi_compute', 'metadata')
+    @{From cinder.conf
+    Top-level directory for maintaining cinder state}
+    'state_path' ? absolute_file_path = '/var/lib/cinder'
     @{From glance.conf
     A list of backend names to use. These backend names should be backed by a
     unique [CONFIG] group with its options}
