@@ -31,23 +31,16 @@ sub bootstrap_url_endpoints
 
     my $openrc = $self->{comptree}->{openrc};
     if ($openrc) {
-        # TODO: switch/support to https
-        my $proto = "http";
-        # TODO: support other versions of the endpoint
-        my $version = 'v3';
-
         # key names will replace _ with - when creating the commandline
         my %opts = (
             password => $openrc->{os_password},
-            region_id => $openrc->{os_region_name},
-            internal_url => "$proto://$self->{fqdn}:35357/$version/",
-            public_url => "$proto://$self->{fqdn}:5000/$version/",
-            # TODO: no separate admin-url?
-            admin_url => "$proto://$self->{fqdn}:35357/$version/",
             );
 
-        my $msg = "bootstrap for internal: $opts{internal_url} and public: $opts{public_url} URLs";
+        my $msg = "bootstrap";
 
+        # creates admin role and admin project
+        #   no endpoints are available, those will have to be created by the client/API
+        #   no region either, also with client/API
         my $cmd = [$self->{manage}, 'bootstrap'];
         foreach my $opt (sort keys %opts) {
             my $name = $opt;
@@ -56,7 +49,7 @@ sub bootstrap_url_endpoints
         }
 
         # Force root and contains sensitive data
-        $self->_do($cmd, $msg, user => undef, sensitive => 1) or return;
+        $self->_do($cmd, $msg, user => undef, sensitive => {$openrc->{os_password} => 'PASSWORD'}) or return;
     } else {
         $self->error("bootstrap_url_endpoint has no openrc config");
         return;
