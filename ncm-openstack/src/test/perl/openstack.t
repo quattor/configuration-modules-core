@@ -119,7 +119,7 @@ ok(command_history_ok([
         '/usr/bin/keystone-manage db_sync',
         '/usr/bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone',
         '/usr/bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone',
-        '/usr/bin/keystone-manage bootstrap --bootstrap-admin-url http://controller.mysite.com:35357/v3/ --bootstrap-internal-url http://controller.mysite.com:35357/v3/ --bootstrap-password admingoodpass --bootstrap-public-url http://controller.mysite.com:5000/v3/ --bootstrap-region-id RegionOne',
+        '/usr/bin/keystone-manage bootstrap --bootstrap-password admingoodpass',
         'service httpd restart',
         '/usr/bin/glance-manage db_version',
         '/usr/bin/glance-manage db_sync',

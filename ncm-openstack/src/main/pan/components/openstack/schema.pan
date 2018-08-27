@@ -23,14 +23,15 @@ type openstack_hypervisor_config = {
 
 @documentation{
 Type that sets the OpenStack OpenRC script configuration
+    used for the admin user (this is the user that is used by the component)
 }
 type openstack_openrc_config = {
     include openstack_region_common
     'os_username' : string = 'admin'
     'os_password' : string
-    'os_project_name' : string = 'admin'
-    'os_user_domain_name' : string = 'Default'
-    'os_project_domain_name' : string = 'Default'
+    'os_project_name' ? string
+    'os_user_domain_name' ? string
+    'os_project_domain_name' ? string
     'os_auth_url' : type_absoluteURI
     'os_identity_api_version' : long(1..) = 3
     'os_image_api_version' : long(1..) = 2
