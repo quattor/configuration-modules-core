@@ -5,7 +5,7 @@ use parent qw(NCM::Component::OpenStack::Service);
 use NCM::Component::OpenStack::Client qw(get_client);
 # For now, only support identity v3
 # TODO: add check
-use Net::OpenStack::Client::Identity::v3;
+use Net::OpenStack::Client::Identity::v3 0.1.3;
 
 use Readonly;
 Readonly my $TAGSTORE => 'quattorstore';

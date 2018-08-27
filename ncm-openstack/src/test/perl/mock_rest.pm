@@ -24,6 +24,11 @@ use Readonly;
 
 Readonly my $DATA_DIR => 'rest_data';
 Readonly my $BASE_DIR => dirname(__FILE__);
+Readonly my %SUCCESS => {
+    POST => 201,
+    PUT => 204,
+    DELETE => 204,
+};
 
 # Data file to load, relative to DATA_DIR
 my @data_files = qw();
@@ -194,7 +199,7 @@ $rc->mock('request', sub {
     my $id = 0;
 
     # default success
-    $self->{code} = 200;
+    $self->{code} = $SUCCESS{$method} || 200;
     $self->{result} = $json->encode({success => 1});
     $self->{headers} = {'Content-Type' => 'application/json'};
 

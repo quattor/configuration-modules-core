@@ -195,7 +195,7 @@ ok(method_history_ok([
     'POST .*/roles/ .*"enabled":true,"name":"rl1"',
     'POST .*/roles/ .*"enabled":true,"name":"rl2"',
     'PUT .*/domains/dom12345/users/use12/roles/rll11 \{\} ',
-    'PUT .*/projects/10/tags/ROLE_domains%2Fdom12345%2Fusers%2Fuse12%2Froles%2Frll11 \{\}',
+    'PUT .*/projects/10/tags/ROLE_ZG9tYWlucy9kb20xMjM0NS91c2Vycy91c2UxMi9yb2xlcy9ybGwxMQ \{\}',
     'PUT .*/projects/pro125/groups/use12/roles/rll12 \{\}',
     'PUT .*/projects/pros/users/use12c/roles/rolaaddmm ',
     'PUT .*/projects/pros/users/use12g/roles/rolaaddmm ',
