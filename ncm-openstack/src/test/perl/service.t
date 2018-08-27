@@ -31,7 +31,7 @@ is_deeply([sort keys %{$srv->{comptree}}], [qw(
     active catalog compute dashboard dispatch identity
     messaging network openrc orchestration share storage version volume)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
-my $flakeys = [qw(database token)];
+my $flakeys = [qw(database quattor token)];
 # this also tests the reset on the element
 is($srv->{elpath}, "$srv->{prefix}/$srv->{type}/$srv->{flavour}", "elpath attribute");
 is_deeply([sort keys %{$srv->{element}->getTree}], $flakeys, "element attribute found");
