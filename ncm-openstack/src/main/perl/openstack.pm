@@ -30,7 +30,7 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
-=head2 Storage
+=head2 Image
 
 =over
 
@@ -120,7 +120,7 @@ sub Configure
         # Set OpenStack identity service first
         'identity',
         # After that continue with the rest of services
-        'storage',
+        'image',
         'volume',
         'share',
         'compute',

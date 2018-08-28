@@ -204,7 +204,7 @@ function openstack_identity_gather = {
     data = ARGV[0];
 
     os_component = '/software/components/openstack';
-    os_services = list('identity', 'network', 'compute', 'storage', 'volume', 'share');
+    os_services = list('identity', 'network', 'compute', 'image', 'volume', 'share');
 
     hosts = list(list(OBJECT, ''));
     if (ARGC > 1) {

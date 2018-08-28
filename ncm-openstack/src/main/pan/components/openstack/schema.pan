@@ -6,7 +6,7 @@ include 'components/openstack/common';
 
 include 'components/openstack/identity';
 include 'components/openstack/compute';
-include 'components/openstack/storage';
+include 'components/openstack/image';
 include 'components/openstack/volume';
 include 'components/openstack/share';
 include 'components/openstack/network';
@@ -48,7 +48,7 @@ type openstack_component = {
     include structure_component
     'identity' ? openstack_identity_config
     'compute' ? openstack_compute_config
-    'storage' ? openstack_storage_config
+    'image' ? openstack_image_config
     'share' ? openstack_share_config
     'volume' ? openstack_volume_config
     'network' ? openstack_network_config

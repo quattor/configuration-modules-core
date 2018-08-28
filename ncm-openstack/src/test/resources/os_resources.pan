@@ -73,7 +73,7 @@ prefix "client/endpoint/glanceone";
 
 # Glance/service section
 
-prefix "/software/components/openstack/storage/glance/service";
+prefix "/software/components/openstack/image/glance/service";
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );
@@ -91,7 +91,7 @@ prefix "/software/components/openstack/storage/glance/service";
 
 # Glance/registry section
 
-prefix "/software/components/openstack/storage/glance/registry";
+prefix "/software/components/openstack/image/glance/registry";
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );
