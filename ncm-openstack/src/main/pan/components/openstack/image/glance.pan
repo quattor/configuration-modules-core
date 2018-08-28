@@ -78,10 +78,13 @@ type openstack_glance_service_config = {
     'glance_store' ? openstack_glance_store
 };
 
+type openstack_quattor_glance = openstack_quattor;
+
 @documentation{
     list of Glance service configuration sections
 }
 type openstack_glance_config = {
     'service' ? openstack_glance_service_config
     'registry' ? openstack_glance_service_config
+    'quattor' : openstack_quattor_glance
 };

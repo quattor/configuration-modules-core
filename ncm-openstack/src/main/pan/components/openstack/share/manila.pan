@@ -113,6 +113,8 @@ type openstack_manila_neutron = {
     'url' : type_absoluteURI
 };
 
+type openstack_quattor_manila = openstack_quattor;
+
 @documentation{
     list of Manila configuration sections
 }
@@ -128,4 +130,5 @@ type openstack_manila_config = {
     'neutron' ? openstack_manila_neutron
     'nova' ? openstack_keystone_authtoken
     'cinder' ? openstack_keystone_authtoken
+    'quattor' : openstack_quattor_manila
 };

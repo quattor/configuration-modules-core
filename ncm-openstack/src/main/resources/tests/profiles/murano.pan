@@ -34,3 +34,7 @@ prefix "/metaconfig/contents";
     "url", format("http://%s:8082", OPENSTACK_HOST_SERVER),
 );
 "networking" = dict();
+
+include 'components/openstack/identity/gather/catalog/murano';
+"quattor" = value("/software/components/openstack/catalog/murano/quattor");
+"/software" = null;

@@ -45,3 +45,7 @@ prefix "/metaconfig/contents";
     "share_backend_name", "cephfsnative",
     "share_driver", "manila.share.drivers.cephfs.driver.CephFSDriver",
 );
+
+include 'components/openstack/identity/gather/share/manila';
+"quattor" = value("/software/components/openstack/share/manila/quattor");
+"/software" = null;

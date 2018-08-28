@@ -197,6 +197,8 @@ type openstack_neutron_service_config = {
     'nova' ? openstack_domains_common
 };
 
+type openstack_quattor_neutron = openstack_quattor;
+
 
 @documentation{
     list of Neutron service configuration sections
@@ -209,4 +211,6 @@ type openstack_neutron_config = {
     'l3' ? openstack_neutron_l3_config
     'dhcp' ? openstack_neutron_dhcp_config
     'metadata' ? openstack_neutron_metadata_config
+    # default empty dict for pure hypervisor
+    'quattor' : openstack_quattor_neutron = dict()
 };

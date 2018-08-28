@@ -41,3 +41,6 @@ prefix "/metaconfig/contents";
     "rbd_secret_uuid", "a5d0dd94-57c4-ae55-ffe0-7e3732a24455",
 );
 
+include 'components/openstack/identity/gather/volume/cinder';
+"quattor" = value("/software/components/openstack/volume/cinder/quattor");
+"/software" = null;
