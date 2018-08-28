@@ -253,6 +253,10 @@ type openstack_quattor_service = {
         };
         true;
     }
+    @{service name (default is current openstack flavour name)}
+    'name' ? string
+    @{service type (default is current openstack service name)}
+    'type' ? string
 };
 
 type openstack_quattor_service_extra = {

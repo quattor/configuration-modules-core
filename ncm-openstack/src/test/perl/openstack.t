@@ -208,15 +208,15 @@ ok(method_history_ok([
     'GET .*/endpoints/  ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv111","url":"http://admin".*',
     'PUT .*/projects/10/tags/ID_endpoint_ept1 \{\}',
-    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv112","url":"https://openstack:8774/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv113","url":"https://openstack:8778/".* ',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal0".*',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal1".*',
-    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv112","url":"https://openstack:8774/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv113","url":"https://openstack:8778/".* ',
     'POST .*/endpoints/ .*"interface":"public","region_id":"regionThree","service_id":"serv111","url":"http://public".*',
     'POST .*/endpoints/ .*"interface":"public","service_id":"serv113","url":"https://openstack:8778/".* ',
-    'POST .*/endpoints/ .*"interface":"public","service_id":"serv112","url":"https://somehost:8774/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"public","service_id":"serv112","url":"https://somehost:8774/v2.1/%\(tenant_id\)s".* ',
 ]), "REST API calls as expected");
 
 command_history_reset();

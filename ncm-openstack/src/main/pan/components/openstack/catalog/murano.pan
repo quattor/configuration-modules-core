@@ -63,6 +63,8 @@ type openstack_murano = {
     'url' : type_absoluteURI
 };
 
+type openstack_quattor_murano = openstack_quattor;
+
 @documentation{
     list of Murano configuration sections
 }
@@ -73,4 +75,5 @@ type openstack_murano_config = {
     'rabbitmq' : openstack_murano_rabbitmq
     'murano' : openstack_murano
     'networking' ? openstack_murano_networking
+    'quattor' : openstack_quattor_murano
 };

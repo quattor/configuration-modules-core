@@ -6,7 +6,7 @@ prefix "service/internal";
 'proto' ?= 'https';
 'host' ?= OBJECT;
 'port' ?= 8774;
-'suffix' ?= '%(tenant_id)s';
+'suffix' ?= 'v2.1/%(tenant_id)s';
 
 prefix "services/placement";
 "type" = "placement";

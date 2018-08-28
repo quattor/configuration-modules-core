@@ -4,13 +4,15 @@ $cmds{existingchildproj}{cmd}="GET http://controller:35357/v3/projects[?]parent_
 $cmds{existingchildproj}{result}={projects => [
     {id => 10, name => "quattorstore_4", tags => []},
     ]};
+$cmds{newchildproj}{cmd}='POST http://controller:35357/v3/projects .*"name":"quattorstore_5","parent_id":"2".*';
+$cmds{newchildproj}{result}={project => {id => 11, name => "quattorstore_5", tags => []}};
 
 sub dopost {
     my ($name, $oper, $reg, $id) = @_;
     $cmds{$name}{cmd}='POST http://controller:35357/v3/'.$oper.'s/ .*'.$reg.'.*';
     $cmds{$name}{result}={$oper => {id => $id}};
 
-    if ($reg =~ m/"name":"(\w+)"/) {
+    if ($reg =~ m/"name":"([\w-]+)"/) {
         $cmds{"GET_$name"}{cmd}='GET http://controller:35357/v3/'.$oper.'s[?]name='.$1;
         $cmds{"GET_$name"}{result}={"${oper}s" => [{id => $id, name => $1}]};
     }
@@ -41,6 +43,8 @@ dopost('userglance', 'user', '"description":"quattor service image flavour glanc
 dopost('usermanila', 'user', '"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"', 'use12m');
 dopost('userneutron', 'user', '"description":"quattor service network flavour neutron user","domain_id":"dom112233","enabled":true,"name":"neutron","password":"neutron_good_password"', 'use12m');
 dopost('usernova', 'user', '"description":"quattor service compute flavour nova user","domain_id":"dom112233","enabled":true,"name":"nova","password":"nova_good_password"', 'use12no');
+dopost('userheat', 'user', '"description":"quattor service orchestration flavour heat user","domain_id":"dom112233","enabled":true,"name":"heat","password":"heat_good_password"', 'use12he');
+dopost('usermurano', 'user', '"description":"quattor service catalog flavour murano user","domain_id":"dom112233","enabled":true,"name":"murano","password":"murano_good_password"', 'use12mu');
 
 dopost('userone', 'user', '"description":"first user","enabled":true,"name":"user1","password":"abc"', 'use12');
 
@@ -53,20 +57,41 @@ dopost('serviceone', 'service', '"description":"OS image one","enabled":true,"na
 dopost('servicenova', 'service', '"description":"OS compute service nova","enabled":true,"name":"nova","type":"compute"', 'serv112');
 dopost('servicenovaplacement', 'service', '"description":"OS placement service placement","enabled":true,"name":"placement","type":"placement"', 'serv113');
 dopost('servicekeystone', 'service', '"description":"OS identity service keystone","enabled":true,"name":"keystone","type":"identity"', 'serv114');
+dopost('serviceglance', 'service', '"description":"OS image service glance","enabled":true,"name":"glance","type":"image"', 'serv115');
+dopost('serviceheat', 'service', '"description":"OS orchestration service heat","enabled":true,"name":"heat","type":"orchestration"', 'serv116');
+dopost('servicemurano', 'service', '"description":"OS application-catalog service murano","enabled":true,"name":"murano","type":"application-catalog"', 'serv117');
+dopost('servicecinderv2', 'service', '"description":"OS volumev2 service cinderv2","enabled":true,"name":"cinderv2","type":"volumev2"', 'serv118');
+dopost('servicecinderv3', 'service', '"description":"OS volumev3 service cinderv3","enabled":true,"name":"cinderv3","type":"volumev3"', 'serv118b');
+dopost('serviceneutron', 'service', '"description":"OS network service neutron","enabled":true,"name":"neutron","type":"network"', 'serv119');
+dopost('servicemanila', 'service', '"description":"OS share service manila","enabled":true,"name":"manila","type":"share"', 'serv120');
+dopost('servicemanilav2', 'service', '"description":"OS sharev2 service manilav2","enabled":true,"name":"manilav2","type":"sharev2"', 'serv121');
+dopost('serviceheatcfn', 'service', '"description":"OS cloudformation service heat-cfn","enabled":true,"name":"heat-cfn","type":"cloudformation"', 'serv122');
 
 dopost('endpoint1', 'endpoint', '"interface":"admin","service_id":"serv111","url":"http://admin"', 'ept1');
 dopost('endpoint2', 'endpoint', '"interface":"internal","service_id":"serv111","url":"http://internal0"', 'ept2');
 dopost('endpoint3', 'endpoint', '"interface":"internal","service_id":"serv111","url":"http://internal1"', 'ept3');
 dopost('endpoint4', 'endpoint', '"interface":"public","region_id":"regionThree","service_id":"serv111","url":"http://public"', 'ept4');
 
-dopost('epnovaadmin', 'endpoint', '"interface":"admin","service_id":"serv112","url":"https://openstack:8774/%\(tenant_id\)s"', 'epna');
-dopost('epnovaint', 'endpoint', '"interface":"internal","service_id":"serv112","url":"https://openstack:8774/%\(tenant_id\)s"', 'epni');
-dopost('epnovapub', 'endpoint', '"interface":"public","service_id":"serv112","url":"https://somehost:8774/%\(tenant_id\)s"', 'epnp');
+sub mkept {
+    my ($name, $sid, $url) = @_;
+    foreach my $intf (qw(admin internal public)) {
+        dopost("ep$name$intf", 'endpoint', '"interface":"'.$intf.'","service_id":"'.$sid.'","url":"'.$url.'"', "ep$name$intf");
+    }
+}
 
-dopost('epplacadmin', 'endpoint', '"interface":"admin","service_id":"serv113","url":"https://openstack:8778/"', 'eppa');
-dopost('epplacint', 'endpoint', '"interface":"internal","service_id":"serv113","url":"https://openstack:8778/"', 'eppi');
-dopost('epplacpub', 'endpoint', '"interface":"public","service_id":"serv113","url":"https://openstack:8778/"', 'eppp');
+mkept('nova', 'serv112', 'https://openstack:8774/v2.1/%\\(tenant_id\\)s');
+dopost('epnovapublic', 'endpoint', '"interface":"public","service_id":"serv112","url":"https://somehost:8774/v2.1/%\\(tenant_id\\)s"', 'epnovapublic');
 
-dopost('epkeystoneadmin', 'endpoint', '"interface":"admin","service_id":"serv114","url":"https://openstack:35357/v3"', 'epka');
-dopost('epkeystoneint', 'endpoint', '"interface":"internal","service_id":"serv114","url":"https://openstack:5000/v3"', 'epki');
-dopost('epkeystonepub', 'endpoint', '"interface":"public","service_id":"serv114","url":"https://openstack:5000/v3"', 'epkp');
+mkept('placement', 'serv113', 'https://openstack:8778/');
+mkept('keystone', 'serv114', 'https://openstack:5000/v3');
+dopost('epkeystoneadmin', 'endpoint', '"interface":"admin","service_id":"serv114","url":"https://openstack:35357/v3"', 'epkeystoneadmin');
+
+mkept('glance', 'serv115', 'https://openstack:9292/');
+mkept('heat', 'serv116', 'https://openstack:8004/v1/%\\(tenant_id\\)s');
+mkept('heat-cfn', 'serv122', 'https://openstack:8000/v1');
+mkept('murano', 'serv117', 'https://openstack:8082/');
+mkept('cinderv2', 'serv118', 'https://openstack:8776/v2/%\\(project_id\\)s');
+mkept('cinderv3', 'serv118b', 'https://openstack:8776/v3/%\\(project_id\\)s');
+mkept('neutron', 'serv119', 'https://openstack:9696/');
+mkept('manila', 'serv120', 'https://openstack:8786/v1/%\\(tenant_id\\)s');
+mkept('manilav2', 'serv121', 'https://openstack:8786/v2/%\\(tenant_id\\)s');

@@ -44,7 +44,7 @@ type openstack_cinder_ceph = {
     'rbd_ceph_conf' : absolute_file_path = '/etc/ceph/ceph.conf'
 };
 
-
+type openstack_quattor_cinder = openstack_quattor;
 
 @documentation{
     list of Cinder configuration sections
@@ -56,5 +56,7 @@ type openstack_cinder_config = {
     'oslo_concurrency' : openstack_oslo_concurrency
     'lvm' ? openstack_cinder_lvm
     'ceph' ? openstack_cinder_ceph
+    # default empty dict for pure hypervisor
+    'quattor' : openstack_quattor_cinder = dict()
 };
 

@@ -163,10 +163,20 @@ function openstack_identity_gather_service = {
         if (exists(qt['service'])) {
             srvmsg = format("host %s service/flavour %s/%s", host, service, flavour);
             qsrv = qt['service'];
-            qsrv['type'] = service;
+
+            if (exists(qsrv['name'])) {
+                name = qsrv['name'];
+                srvmsg = srvmsg + format(" (name %s)", name);
+            } else {
+                name = flavour;
+            };
+
+            if (!exists(qsrv['type'])) {
+                qsrv['type'] = service;
+            };
             openstack_identity_gather_service_add(
                 data,
-                flavour,
+                name,
                 qsrv,
                 dict(), # no defaults
                 srvmsg,
@@ -204,7 +214,8 @@ function openstack_identity_gather = {
     data = ARGV[0];
 
     os_component = '/software/components/openstack';
-    os_services = list('identity', 'network', 'compute', 'image', 'volume', 'share');
+    os_services = list('identity', 'network', 'compute', 'image',
+                        'volume', 'share', 'catalog', 'orchestration');
 
     hosts = list(list(OBJECT, ''));
     if (ARGC > 1) {

@@ -381,7 +381,7 @@ sub _write_config_files
     my $changed = 0;
     my $daemon_map = $self->{daemon_map} || {};
 
-    foreach my $ntype (sort keys %{$self->{tree}}) {
+    foreach my $ntype (grep {$_ ne 'quattor'} sort keys %{$self->{tree}}) {
         # TT file is always common
         my $element = $self->{config}->getElement("$self->{elpath}/$ntype");
         my $filename = $self->{filename}->{$ntype};

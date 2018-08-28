@@ -37,3 +37,7 @@ prefix "/metaconfig/contents";
 "clients_keystone" = dict(
     "auth_uri", AUTH_URI,
 );
+
+include 'components/openstack/identity/gather/orchestration/heat';
+"quattor" = value("/software/components/openstack/orchestration/heat/quattor");
+"/software" = null;

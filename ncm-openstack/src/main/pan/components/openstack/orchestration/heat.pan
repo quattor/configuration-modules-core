@@ -36,6 +36,8 @@ type openstack_heat_clients_keystone = {
     'auth_uri' : type_absoluteURI
 };
 
+type openstack_quattor_heat = openstack_quattor;
+
 @documentation{
     list of Heat configuration sections
 }
@@ -45,4 +47,6 @@ type openstack_heat_config = {
     'keystone_authtoken' : openstack_keystone_authtoken
     'trustee' : openstack_domains_common
     'clients_keystone' : openstack_heat_clients_keystone
+    'quattor' : openstack_quattor_heat
+
 };
