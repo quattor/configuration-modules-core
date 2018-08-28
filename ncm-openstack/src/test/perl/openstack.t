@@ -183,7 +183,7 @@ ok(method_history_ok([
     'GET .*/users/  ',
     'POST .*/users/ .*"description":"quattor service volume flavour cinder user","domain_id":"dom112233","enabled":true,"name":"cinder","password":"cinder_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12c',
-    'POST .*/users/ .*"description":"quattor service storage flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"',
+    'POST .*/users/ .*"description":"quattor service image flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12g',
     'POST .*/users/ .*"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12m',

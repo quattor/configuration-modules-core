@@ -37,7 +37,7 @@ dopost('projvo1real', 'project', '"description":"some real project","enabled":tr
 
 
 dopost('usercinder', 'user', '"description":"quattor service volume flavour cinder user","domain_id":"dom112233","enabled":true,"name":"cinder","password":"cinder_good_password"', 'use12c');
-dopost('userglance', 'user', '"description":"quattor service storage flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"', 'use12g');
+dopost('userglance', 'user', '"description":"quattor service image flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"', 'use12g');
 dopost('usermanila', 'user', '"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"', 'use12m');
 dopost('userneutron', 'user', '"description":"quattor service network flavour neutron user","domain_id":"dom112233","enabled":true,"name":"neutron","password":"neutron_good_password"', 'use12m');
 dopost('usernova', 'user', '"description":"quattor service compute flavour nova user","domain_id":"dom112233","enabled":true,"name":"nova","password":"nova_good_password"', 'use12no');

@@ -3,7 +3,7 @@
 # ${author-info}
 
 
-declaration template components/openstack/storage/glance;
+declaration template components/openstack/image/glance;
 
 include 'components/openstack/identity';
 
