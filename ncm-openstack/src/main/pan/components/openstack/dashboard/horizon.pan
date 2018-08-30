@@ -247,6 +247,10 @@ type openstack_horizon_config_identity_keystone = {
     will require the user to enter the Domain name in addition to the username
     for login}
     'openstack_keystone_multidomain_support' : boolean = true
+    @{the endpoint type to use for the endpoints in the Keystone service catalog.
+      The default value for all services except for identity is "publicURL".
+      The default value for the identity service is "internalURL".}
+    'openstack_endpoint_type' ? choice('internalURL', 'publicURL')
     @{Configure the default role for users that you create via the dashboard}
     'openstack_keystone_default_role' : string = 'user'
     'openstack_keystone_backend' : openstack_horizon_keystone_backend
