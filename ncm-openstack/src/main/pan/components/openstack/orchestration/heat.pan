@@ -36,6 +36,15 @@ type openstack_heat_clients_keystone = {
     'auth_uri' : type_absoluteURI
 };
 
+@documentation{
+    Heat clients section
+}
+type openstack_heat_clients = {
+    @{Type of endpoint in Identity service catalog to use for communication with
+    the OpenStack service}
+    'endpoint_type' : choice('internalURL', 'publicURL') = 'internalURL'
+} = dict();
+
 type openstack_quattor_heat = openstack_quattor;
 
 @documentation{
@@ -47,6 +56,6 @@ type openstack_heat_config = {
     'keystone_authtoken' : openstack_keystone_authtoken
     'trustee' : openstack_domains_common
     'clients_keystone' : openstack_heat_clients_keystone
+    'clients' : openstack_heat_clients
     'quattor' : openstack_quattor_heat
-
 };

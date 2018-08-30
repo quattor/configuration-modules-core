@@ -132,6 +132,18 @@ type openstack_nova_scheduler = {
 };
 
 @documentation{
+    The Nova configuration options in the "cinder" section.
+}
+type openstack_nova_cinder = {
+    include openstack_region_common
+    @{If this option is set then it will override service catalog lookup with
+    this template for cinder endpoint.
+    Note: Nova does not support the Cinder v2 API since the Nova 17.0.0 Queens
+    release}
+    'catalog_info' : string = 'volumev3:cinderv3:internalURL'
+};
+
+@documentation{
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
@@ -142,7 +154,7 @@ type openstack_nova_common = {
     'oslo_concurrency' : openstack_oslo_concurrency
     @{placement service is mandatory since Ocata release}
     'placement' : openstack_nova_placement
-    'cinder' ? openstack_region_common
+    'cinder' ? openstack_nova_cinder
     'neutron' ? openstack_nova_neutron
 };
 

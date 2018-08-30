@@ -10,6 +10,9 @@ multiline
 ^stack_user_domain_name\s?=\s*.+\s*$
 ^transport_url\s?=\s*.+\s*$
 
+^\[clients\]\s*$
+^endpoint_type\s?=\s*.+\s*$
+
 ^\[clients_keystone\]\s*$
 ^auth_uri\s?=\s*.+\s*$
 
