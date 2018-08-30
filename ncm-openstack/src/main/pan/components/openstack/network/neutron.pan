@@ -188,13 +188,23 @@ type openstack_neutron_metadata_config = {
 };
 
 @documentation{
+    Neutron nova section
+}
+type openstack_neutron_nova = {
+    include openstack_domains_common
+    @{Type of the nova endpoint to use. This endpoint will be looked up in the
+    keystone catalog and should be one of public, internal or admin}
+    'endpoint_type' : choice('internal', 'public', 'admin') = 'internal'
+};
+
+@documentation{
     list of Neutron service configuration sections
 }
 type openstack_neutron_service_config = {
     include openstack_neutron_common
     'database' ? openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}
-    'nova' ? openstack_domains_common
+    'nova' ? openstack_neutron_nova
 };
 
 type openstack_quattor_neutron = openstack_quattor;
