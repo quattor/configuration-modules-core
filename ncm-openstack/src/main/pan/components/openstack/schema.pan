@@ -35,6 +35,7 @@ type openstack_openrc_config = {
     'os_auth_url' : type_absoluteURI
     'os_identity_api_version' : long(1..) = 3
     'os_image_api_version' : long(1..) = 2
+    'os_interface' ? choice('public', 'admin', 'internal')
 };
 
 @documentation{
