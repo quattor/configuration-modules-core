@@ -87,6 +87,14 @@ type openstack_nova_libvirt = {
     @{The RADOS client name for accessing rbd(RADOS Block Devices) volumes.
     Libvirt will refer to this user when connecting and authenticating with the Ceph RBD server}
     'rbd_user' ? string
+    @{Is used to set the CPU mode an instance should have.
+    If virt_type="kvm|qemu", it will default to "host-model", otherwise it will default to "none".
+    Possible values:
+        host-model: Clones the host CPU feature flags
+        host-passthrough: Use the host CPU model exactly
+        custom: Use a named CPU model
+        none: Not set any CPU model}
+    'cpu_mode' ? choice('none', 'host-passthrough', 'host-model', 'custom')
 };
 
 @documentation{
