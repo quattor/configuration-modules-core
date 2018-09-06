@@ -7,3 +7,5 @@ bind "/software/components/metaconfig/services/{/etc/irods/hosts_config.json}/co
 prefix "/software/components/metaconfig/services/{/etc/irods/hosts_config.json}";
 "module" = "jsonpretty";
 "daemons/irods" = "restart";
+"owner" = "irods";
+"group" = "irods";
