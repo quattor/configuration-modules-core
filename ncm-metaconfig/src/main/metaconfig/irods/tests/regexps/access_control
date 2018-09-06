@@ -1,0 +1,9 @@
+Base test for access_control
+---
+/etc/irods/host_access_control_config.json
+---
+^\{$
+^\s{3}"access_entries" : \[\],$
+^\s{3}"schema_name" : "host_access_control_config",$
+^\s{3}"schema_version" : "v3"$
+^\}$

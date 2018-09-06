@@ -29,6 +29,8 @@ Base test for config
 ^\s{12}\}$
 ^\s{9}\]$
 ^\s{6}\}$
-^\s{3}\]$
+^\s{3}\],$
+^\s{3}"schema_name" : "hosts_config",$
+^\s{3}"schema_version" : "v3"$
 ^\}$
 
