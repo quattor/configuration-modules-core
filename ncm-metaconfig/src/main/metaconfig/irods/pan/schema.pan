@@ -47,5 +47,22 @@ type irods_host_entry = {
 
 @{ type for configuring the irods_hosts.json config file @}
 type irods_hosts_config = {
-    'host_entries' : irods_host_entry[]
+    'host_entries' : irods_host_entry[] = list()
+    "schema_name"  : choice('hosts_config') = 'hosts_config'
+    "schema_version" : choice('v3') = 'v3'
+};
+
+@{ type for configuring the host_access_control_config.json access_entries config section @}
+type irods_access_entry = {
+    "user" : string
+    "group" : string
+    "address" : type_ip
+    "mask" : type_ip
+};
+
+@{ type for configuring the host_access_control_config.json config file @}
+type irods_host_access_control_config = {
+    "schema_name" : choice('host_access_control_config') = 'host_access_control_config'
+    "schema_version" : choice('v3') = 'v3'
+    "access_entries": irods_access_entry[] = list()
 };
