@@ -6,3 +6,6 @@ bind "/software/components/metaconfig/services/{/var/lib/irods/.irods/irods_envi
 prefix "/software/components/metaconfig/services/{/var/lib/irods/.irods/irods_environment.json}";
 "module" = "jsonpretty";
 "daemons/irods" = "restart";
+"owner" = "irods";
+"group" = "irods";
+
