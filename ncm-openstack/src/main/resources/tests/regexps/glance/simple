@@ -2,6 +2,9 @@ OpenStack Glance test
 ---
 multiline
 ---
+^\[cors\]$
+^allowed_origin\s?=\s*.+\s*$
+
 ^\[database\]\s*$
 ^connection\s?=\s*.+\s*$
 

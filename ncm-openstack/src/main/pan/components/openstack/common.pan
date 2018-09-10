@@ -220,6 +220,23 @@ type openstack_DEFAULTS = {
     'enabled_share_protocols' ? openstack_share_protocols[] = list('NFS')
 };
 
+@documentation{
+    The configuration options for CORS middleware.
+    This middleware provides a comprehensive, configurable
+    implementation of the CORS (Cross Origin Resource Sharing)
+    specification as oslo-supported python wsgi middleware.
+}
+type openstack_cors = {
+    @{Indicate whether this resource may be shared with the domain
+    received in the requests "origin" header.
+    Format: "<protocol>://<host>[:<port>]", no trailing slash.
+    Example: https://horizon.example.com}
+    'allowed_origin' : type_absoluteURI[]
+    @{Maximum cache age of CORS preflight requests}
+    'max_age' ? long(1..) = 3600
+    @{Indicate that the actual request can include user credentials}
+    'allow_credentials' ? boolean
+};
 
 type openstack_quattor_endpoint = {
     @{endpoint host (proto://host:port/suffix)}

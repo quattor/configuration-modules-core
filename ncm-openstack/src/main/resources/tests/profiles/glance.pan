@@ -22,3 +22,6 @@ prefix "/metaconfig/contents";
 "glance_store" = dict(
     "default_store", "file",
 );
+"cors" = dict(
+    "allowed_origin", list('https://dashboard.example.com', 'http://localhost'),
+);

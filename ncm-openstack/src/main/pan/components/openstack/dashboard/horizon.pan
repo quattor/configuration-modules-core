@@ -248,8 +248,8 @@ type openstack_horizon_config_identity_keystone = {
     for login}
     'openstack_keystone_multidomain_support' : boolean = true
     @{the endpoint type to use for the endpoints in the Keystone service catalog.
-      The default value for all services except for identity is "publicURL".
-      The default value for the identity service is "internalURL".}
+    The default value for all services except for identity is "publicURL".
+    The default value for the identity service is "internalURL".}
     'openstack_endpoint_type' ? choice('internalURL', 'publicURL')
     @{Configure the default role for users that you create via the dashboard}
     'openstack_keystone_default_role' : string = 'user'
@@ -326,6 +326,21 @@ type openstack_horizon_config_general = {
     custom properties should not be displayed in the Image Custom Properties
     table}
     'image_reserved_custom_properties' ? string[]
+    @{"off" disables the ability to upload images via Horizon.
+    "legacy" (default) enables local file upload by piping the image file through the
+    Horizon’s web-server (used by default). "direct" sends the image file directly
+    from the web browser to Glance. This bypasses Horizon web-server which both
+    reduces network hops and prevents filling up Horizon web-server’s filesystem.
+    "direct" is the preferred mode, but due to the following requirements it is not
+    the default. The direct setting requires a modern web browser, network access from
+    the browser to the public Glance endpoint, and CORS support to be enabled on the
+    Glance API service. Without CORS support, the browser will forbid the PUT request
+    to a location different than the Horizon server. To enable CORS support for Glance
+    API service, you will need to edit [cors] section of glance-api.conf file.
+    Set allowed_origin to the full hostname of Horizon web-server
+    (e.g. http(s)://<HOST_IP>) and restart glance-api process.
+    Set this [cors] extra configuration via Glance schema}
+    'horizon_images_upload_mode' ? choice('legacy', 'direct', 'off')
     @{The number of objects (Swift containers/objects or images) to display
     on a single page before providing a paging element (a "more" link)
     to paginate results}
