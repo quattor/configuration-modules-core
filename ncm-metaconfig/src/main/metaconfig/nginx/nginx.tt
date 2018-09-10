@@ -23,6 +23,9 @@ gzip [% h.gzip ? "on" : "off" %];
 
 keepalive_timeout [% h.keepalive_timeout %];
 sendfile on;
+[%- IF h.client_max_body_size.defined %]
+client_max_body_size [% h.client_max_body_size %];
+[% END %]
 
 [%-         FOREACH u IN h.upstream.pairs -%]
 [%-             INCLUDE metaconfig/nginx/proxy/upstream.tt name=u.key cfg=u.value %]
