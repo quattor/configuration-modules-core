@@ -16,6 +16,7 @@ multiline
 ^\s{8}'NAME':\s{1}"/var/cache/murano-dashboard/murano-dashboard.sqlite",$
 ^\s{4}\},$
 ^\}$
+^HORIZON_IMAGES_UPLOAD_MODE\s?=\s*.+\s*$
 ^METADATA_CACHE_DIR\s?=\s*.+\s*$
 ^OPENSTACK_API_VERSIONS\s?=\s?\{$
 ^OPENSTACK_KEYSTONE_DEFAULT_DOMAIN\s?=\s*.+\s*$

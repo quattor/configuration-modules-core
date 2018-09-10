@@ -76,6 +76,7 @@ type openstack_glance_service_config = {
     'keystone_authtoken' : openstack_keystone_authtoken
     'paste_deploy' : openstack_keystone_paste_deploy
     'glance_store' ? openstack_glance_store
+    'cors' ? openstack_cors
 };
 
 type openstack_quattor_glance = openstack_quattor;

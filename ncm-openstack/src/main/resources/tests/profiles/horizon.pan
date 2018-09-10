@@ -19,6 +19,7 @@ prefix "/metaconfig/contents";
 "session_engine" = "django.contrib.sessions.backends.db";
 "metadata_cache_dir" = "/var/cache/murano-dashboard";
 "databases" = dict();
+"horizon_images_upload_mode" = "direct";
 
 "websso_enabled" = true;
 "websso_initial_choice" = "myidp_openid";
