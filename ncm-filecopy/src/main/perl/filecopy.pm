@@ -149,7 +149,8 @@ sub Configure
                                     stderr => "stdout");
         $cmd->execute();
         if ( $? ) {
-            $self->error("Command failed. Command output: $cmd_output\n");
+            my $method = $confighash->{ignore_restart_failure} ? 'warn' : 'error';
+            $self->{$method}("Command failed. Command output: $cmd_output\n");
         } else {
             $self->debug(1,"Command output: $cmd_output\n");
         }
