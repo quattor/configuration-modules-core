@@ -2,6 +2,10 @@ object template route_rule;
 
 include 'simple_base_profile';
 
+prefix "/system/network/routing_table";
+"outside" = 3;
+"space" = 4;
+
 prefix "/system/network/interfaces/eth0";
 "route/0" = dict("address", "1.2.3.4");
 "route/1" = dict("address", "1.2.3.5", "netmask", "255.255.255.0");
@@ -11,11 +15,13 @@ prefix "/system/network/interfaces/eth0";
 "route/5" = dict("address", "::4", "prefix", 75);
 "route/6" = dict("address", "::5", "prefix", 76, "gateway", "4::1");
 "route/7" = dict("command", "something arbitrary with :");
+"route/8" = dict("address", "default", "gateway", "4.3.2.3", "table", "outside");
 
 "rule/0" = dict("command", "something");
 "rule/1" = dict("command", "something with ::");
 "rule/2" = dict("command", "more");
 "rule/3" = dict("command", "more ::");
+"rule/4" = dict("to", "1.2.3.4/24", "not", true, "table", "space");
 
 # test legacy format conversion
 "/system/network/interfaces/eth1" = create("defaultinterface");
