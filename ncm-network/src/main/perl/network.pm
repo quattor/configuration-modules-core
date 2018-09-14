@@ -85,6 +85,7 @@ our $NoActionSupported = 1;
 use EDG::WP4::CCM::Fetch qw(NOQUATTOR_EXITCODE);
 
 use Net::Ping;
+use Fcntl qw(SEEK_END);
 
 use CAF::Process;
 use CAF::Service;
@@ -134,6 +135,7 @@ Readonly my $IPADDR => [qw(ip addr show)];
 Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
 Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
+Readonly my $ROUTING_TABLE => '/etc/iproute2/rt_tables';
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -1039,7 +1041,9 @@ sub make_ifcfg_ip_route
     foreach my $route (@$routes) {
         if (!$route->{command}) {
             my $ip;
-            if ($route->{prefix}) {
+            if ($route->{address} eq 'default') {
+                $ip = $route->{address};
+            } elsif ($route->{prefix}) {
                 $ip = NetAddr::IP->new("$route->{address}/$route->{prefix}");
             } else {
                 # in absence of netmask, NetAddr::IP uses 32 or 128
@@ -1049,6 +1053,7 @@ sub make_ifcfg_ip_route
             $route->{command} = "$ip";
             $route->{command} .= " via $route->{gateway}" if $route->{gateway};
             $route->{command} .= " dev $device";
+            $route->{command} .= " table $route->{table}" if $route->{table};
         }
         push(@text, $route->{command});
     }
@@ -1065,7 +1070,20 @@ sub make_ifcfg_ip_rule
 
     my @text;
     foreach my $rule (@$rules) {
-        $self->error("Rule flavour $flavour device $device without command; skipping") if (!$rule->{command});
+        if (!$rule->{command}) {
+            my @cmd;
+            # no real order (even if 'not' is used)
+            foreach my $k (sort keys %$rule) {
+                my $v = $rule->{$k};
+                if ($k eq 'not') {
+                    push(@cmd, $k) if $v;
+                } else {
+                    push(@cmd, $k, $v);
+                };
+            }
+            $rule->{command} = join(" ", @cmd);
+        };
+
         push(@text, $rule->{command});
     }
 
@@ -1694,6 +1712,64 @@ sub down_rename_devices
     return $action;
 }
 
+# given hashref table, configure the entries (key=name, value=id)
+# entries are added with magic suffix
+# existing entries with magic suffix that are not in the file are NOT removed
+#   not sure what happens with existing/active rules/routes when entries are removed
+#   should be harmless to have old entries in this file, even when not used
+sub routing_table
+{
+    my ($self, $table) = @_;
+
+    # do nothing, incl no cleanup
+    return if ! defined($table);
+
+    my $fh = CAF::FileEditor->new($ROUTING_TABLE,
+                                  backup => '.old',
+                                  log => $self,
+                                  );
+
+    foreach my $name (sort keys %$table) {
+        my $id = $table->{$name};
+        my $pattern = '^\s*'. $id .'\s';
+        my $text = "$id $name # managed by Quattor\n";
+        # no goodre, always replace everything
+        $fh->add_or_replace_lines(qr{$pattern}, qr{ ^}, $text, SEEK_END);
+    }
+
+    # sanity check
+    # names and ids should be unique
+    my $fail;
+    my $found = {};
+    foreach my $line (split(/\n/, "$fh")) {
+        if ($line =~ m/^\s(\d+)\s+(\w+)(?:\s|$)/) {
+            my $id = $1;
+            my $name = $2;
+            my @foundnames = grep {$_ == $id} values %$found;
+            my $foundid = $found->{$name};
+            if (defined($foundid)) {
+                $self->error("Name $name is not unique in $ROUTING_TABLE: ",
+                             "found id $foundid and $id for same name");
+                $fail = 1;
+            } elsif (@foundnames) {
+                $self->error("Id $id is not unique in $ROUTING_TABLE: ",
+                             "found names @foundnames and $name for same id");
+                $fail = 1;
+            } else {
+                $found->{$2} = $1;
+            }
+        }
+    }
+
+    if ($fail) {
+        $fh->cancel;
+        return;
+    } else {
+        # nothing needs to be done upon change, returned for unittesting
+        return $fh->close();
+    }
+}
+
 
 sub Configure
 {
@@ -1714,6 +1790,9 @@ sub Configure
 
     my $comp_tree = $config->getTree($self->prefix());
     my $nwtree = $config->getTree($NETWORK_PATH);
+
+    # no backup, restart or anything else required
+    $self->routing_table($nwtree->{routing_table});
 
     # main network config
     return if ! defined($self->mk_bu($NETWORKCFG));

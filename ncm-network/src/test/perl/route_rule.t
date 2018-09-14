@@ -19,6 +19,40 @@ my $mock = Test::MockModule->new('NCM::Component::network');
 my %executables;
 $mock->mock('_is_executable', sub {diag "executables $_[1] ",explain \%executables;return $executables{$_[1]};});
 
+Readonly my $RT => <<EOF;
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+0	unspec
+#
+# local
+#
+#1	inr.ruhep
+4 manual
+80 someold # managed by Quattor
+200 custom
+EOF
+
+Readonly my $RT_NEW => <<EOF;
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+0	unspec
+#
+# local
+#
+#1	inr.ruhep
+4 space # managed by Quattor
+80 someold # managed by Quattor
+200 custom
+3 outside # managed by Quattor
+EOF
 
 Readonly my $NETWORK => <<EOF;
 NETWORKING=yes
@@ -70,6 +104,7 @@ Readonly my $ETH0_ROUTE => <<EOF;
 1.2.3.6/8 via 4.3.2.1 dev eth0
 1.2.3.7/16 via 4.3.2.2 dev eth0
 something arbitrary
+default via 4.3.2.3 dev eth0 table outside
 EOF
 
 Readonly my $ETH0_ROUTE6 => <<EOF;
@@ -81,6 +116,7 @@ EOF
 Readonly my $ETH0_RULE => <<EOF;
 something
 more
+not table space to 1.2.3.4/24
 EOF
 
 Readonly my $ETH0_RULE6 => <<EOF;
@@ -103,6 +139,7 @@ Readonly my $VLAN0_ROUTE => <<EOF;
 EOF
 
 # File must exist, set with correct content
+set_file_contents("/etc/iproute2/rt_tables", $RT);
 set_file_contents("/etc/sysconfig/network", $NETWORK);
 set_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0", $ETH0);
 set_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth1", $ETH1);
@@ -117,6 +154,7 @@ my $cmp = NCM::Component::network->new('network', $obj);
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
+is(get_file_contents("/etc/iproute2/rt_tables"), $RT_NEW, "Exact routing table");
 is(get_file_contents("/etc/sysconfig/network-scripts/route-eth0"), $ETH0_ROUTE, "Exact route config");
 is(get_file_contents("/etc/sysconfig/network-scripts/route6-eth0"), $ETH0_ROUTE6, "Exact route6 config");
 is(get_file_contents("/etc/sysconfig/network-scripts/rule-eth0"), $ETH0_RULE, "Exact rule config");
