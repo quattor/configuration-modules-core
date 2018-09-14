@@ -5,19 +5,25 @@ declaration template components/network/core-schema;
 include 'pan/types';
 include 'quattor/functions/network';
 
+type network_valid_routing_table = string with exists("/system/network/routing_table/" + SELF);
+
+type network_ip_cmd_prefix = string with {is_ipv4_netmask_pair(SELF) || is_ipv6_network_block(SELF)};
+
 @documentation{
     Add route (IPv4 of IPv6)
     Presence of ':' in any of the values indicates this is IPv6 related.
 }
 type structure_route = {
     @{The ADDRESS in ADDRESS/PREFIX via GATEWAY}
-    "address" ? type_ip
+    "address" ? string with {SELF == 'default' || is_ip(SELF)}
     @{The PREFIX in ADDRESS/PREFIX via GATEWAY}
     "prefix"  ? long
     @{The GATEWAY in ADDRESS/PREFIX via GATEWAY}
     "gateway" ? type_ip
     @{alternative notation for prefix (cannot be combined with prefix)}
     "netmask" ? type_ip
+    @{routing table}
+    "table" ? network_valid_routing_table
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
@@ -58,11 +64,28 @@ type structure_route = {
     Presence of ':' in any of the values indicates this is IPv6 related.
 }
 type structure_rule = {
+    @{to selector}
+    "to" ? network_ip_cmd_prefix
+    @{from selector}
+    "from" ? network_ip_cmd_prefix
+    @{not action (false value means no not action; also the default when not is not defined)}
+    "not" ? boolean
+    @{routing table action}
+    "table" ? network_valid_routing_table
     @{rule add options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
-    if (exists(SELF['command']) && length(SELF) != 1)
-        error("Cannot use command and any of the other attributes as route");
+    if (exists(SELF['command'])) {
+        if (length(SELF) != 1)
+            error("Cannot use command and any of the other attributes as rule");
+    } else {
+        if (!exists(SELF['to']) && !exists(SELF['from'])) {
+            error("Rule requires selector to or from (or use command)");
+        };
+        if (!exists(SELF['table'])) {
+            error("Rule requires action table (or use command)");
+        };
+    };
     true;
 };
 
@@ -360,6 +383,13 @@ type structure_network = {
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
+    @{Manage custom routing table entries; key is the name; value is the id}
+    "routing_table" ? long(1..252){} with {
+        if (exists(SELF['main']) || exists(SELF['local']) || exists(SELF['default']) || exists(SELF['unspec'])) {
+            error("No reserved names in routing table");
+        };
+        true;
+    }
 } with {
     if (exists(SELF['default_gateway'])) {
         reachable = false;
