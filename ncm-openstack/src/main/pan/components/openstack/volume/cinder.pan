@@ -42,6 +42,24 @@ type openstack_cinder_ceph = {
     'volume_driver' : string = 'cinder.volume.drivers.rbd.RBDDriver'
     @{Path to the ceph configuration file}
     'rbd_ceph_conf' : absolute_file_path = '/etc/ceph/ceph.conf'
+    @{Flatten volumes created from snapshots to remove dependency from volume to
+    snapshot}
+    "rbd_flatten_volume_from_snapshot" ? boolean
+    @{Maximum number of nested volume clones that are taken before a flatten
+    occurs. Set to 0 to disable cloning}
+    "rbd_max_clone_depth" ? long(0..)
+    @{Volumes will be chunked into objects of this size (in megabytes)}
+    "rbd_store_chunk_size" ? long(1..)
+    @{Timeout value (in seconds) used when connecting to ceph cluster. If value <
+    0, no timeout is set and default librados value is used}
+    "rados_connect_timeout" ? long(-1..)
+    @{Set to True if the pool is used exclusively by Cinder. On exclusive use
+    driver wont query images provisioned size as they will match the value
+    calculated by the Cinder core code for allocated_capacity_gb. This reduces
+    the load on the Ceph cluster as well as on the volume service}
+    "rbd_exclusive_cinder_pool" ? boolean
+    @{Enable the image volume cache for this backend}
+    "image_volume_cache_enabled" ? boolean
 };
 
 type openstack_quattor_cinder = openstack_quattor;
