@@ -152,10 +152,32 @@ type openstack_nova_cinder = {
 };
 
 @documentation{
+    The Nova configuration options in the "DEFAULT" section.
+}
+type openstack_nova_DEFAULTS = {
+    include openstack_DEFAULTS
+    @{Number of times to retry block device allocation on failures. Starting with
+    Liberty, Cinder can use image volume cache. This may help with block device
+    allocation performance. Look at the cinder "image_volume_cache_enabled"
+    configuration option.
+    If value is 0, then one attempt is made.
+    For any value > 0, total attempts are (value + 1)}
+    "block_device_allocate_retries" ? long(0..) = 60
+    @{This option allows the user to specify the time interval between
+    consecutive retries. "block_device_allocate_retries" option specifies
+    the maximum number of retries.
+    0: Disables the option.
+    Any positive integer in seconds enables the option}
+    "block_device_allocate_retries_interval" ? long(0..) = 10
+    @{Time in seconds to wait for a block device to be created}
+    "block_device_creation_timeout" ? long(1..) = 10
+};
+
+@documentation{
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
-    'DEFAULT' : openstack_DEFAULTS
+    'DEFAULT' : openstack_nova_DEFAULTS
     'keystone_authtoken' : openstack_keystone_authtoken
     'vnc' : openstack_nova_vnc
     'glance' : openstack_nova_glance

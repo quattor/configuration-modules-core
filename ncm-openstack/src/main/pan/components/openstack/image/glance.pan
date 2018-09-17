@@ -68,10 +68,32 @@ type openstack_glance_store = {
 };
 
 @documentation{
+    list of Glance Default sections
+}
+type openstack_glance_DEFAULTS = {
+    include openstack_DEFAULTS
+    @{Show direct image location when returning an image.
+    This configuration option indicates whether to show the direct image
+    location when returning image details to the user. The direct image
+    location is where the image data is stored in backend storage. This
+    image location is shown under the image property "direct_url".
+    When multiple image locations exist for an image, the best location
+    is displayed based on the location strategy indicated by the
+    configuration option "location_strategy".
+    This option enables the copy-on-write feature using Ceph as storage backend.
+
+    NOTES: Revealing image locations can present a GRAVE SECURITY RISK as
+    image locations can sometimes include credentials. Hence, this
+    is set to "False" by default. Set this to "True" with
+    EXTREME CAUTION and ONLY IF you know what you are doing!}
+    "show_image_direct_url" ? boolean
+};
+
+@documentation{
     list of Glance configuration sections
 }
 type openstack_glance_service_config = {
-    'DEFAULT' ? openstack_DEFAULTS
+    'DEFAULT' ? openstack_glance_DEFAULTS
     'database' : openstack_database
     'keystone_authtoken' : openstack_keystone_authtoken
     'paste_deploy' : openstack_keystone_paste_deploy
