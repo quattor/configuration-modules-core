@@ -24,6 +24,7 @@ multiline
 ^username\s{1}=\s{1}nova$
 
 ^\[libvirt\]$
+^disk_cachemodes\s{1}=\s{1}network=writeback$
 ^virt_type\s{1}=\s{1}kvm$
 
 ^\[neutron\]$
