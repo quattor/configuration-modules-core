@@ -24,6 +24,7 @@ multiline
 ^username\s?=\s*.+\s*$
 
 ^\[libvirt\]$
+^disk_cachemodes\s?=\s*.+\s*$
 ^virt_type\s?=\s*.+\s*$
 
 ^\[neutron\]$
