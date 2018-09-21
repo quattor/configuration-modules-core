@@ -44,14 +44,13 @@ listen\s\swebserver$
 ^\s{4}server\sserver1\s192\.168\.0\.11:80\scookie\scontrol\s+check$
 ^\s{4}server\sserver2\s192\.168\.0\.12:80\scookie\scontrol\s+check$
 ^frontend irods-in$
-^\s{4}bind \*:1247$
-^\s{4}default_backend servers$
-^backend servers$
+^\s{4}bind \*:1247 crt /some/file ssl$
+^\s{4}default_backend irods-bk$
+^backend irods-bk$
 ^\s{4}option tcp-check$
 ^\s{4}tcp-check connect$
 ^\s{4}tcp-check send PING$
 ^\s{4}tcp-check expect string <MsgHeader_PI>\\n<type>RODS_VERSION</type>$
 ^\s{4}server localhost 127.0.0.1:1247$
-^\s{4}server otherhost.test.com 10.20.30.1 check port 1247$
+^\s{4}server other.host 10.20.30.1 ca-file /other/file ssl$
 ^\s{4}server othername 10.20.30.1:1247 check port 1247$
-
