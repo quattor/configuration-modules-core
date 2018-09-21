@@ -56,12 +56,15 @@ prefix 'proxys/-1';
     );
 
 prefix 'frontends/irods-in';
-"bind" = '*:1247';
+"bind" = '*';
+"port" = 1247;
 "default_backend" = "irods-bk";
+"params/ssl" = true;
+"params/crt" = "/some/file";
 
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
 "tcpchecks" = list("connect", "send PING\n", 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>');
 "servers/0" = dict('name', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
-"servers/1" = dict('name', 'otherhost.test.com', 'ip', '10.20.30.1', 'check_port', 1247);
-"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'check_port', 1247);
+"servers/1" = dict('name', 'other.host', 'ip', '10.20.30.1', 'params', dict('ssl', true, 'ca-file', '/other/file'));
+"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247));
