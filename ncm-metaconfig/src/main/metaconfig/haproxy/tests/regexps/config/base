@@ -45,8 +45,8 @@ listen\s\swebserver$
 ^\s{4}server\sserver2\s192\.168\.0\.12:80\scookie\scontrol\s+check$
 ^frontend irods-in$
 ^\s{4}bind \*:1247$
-^\s{4}default_backend servers$
-^backend servers$
+^\s{4}default_backend irods-bk$
+^backend irods-bk$
 ^\s{4}option tcp-check$
 ^\s{4}tcp-check connect$
 ^\s{4}tcp-check send PING$
