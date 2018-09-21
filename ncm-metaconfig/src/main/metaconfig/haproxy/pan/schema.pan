@@ -162,5 +162,18 @@ type haproxy_service = {
     'proxys' ? haproxy_service_proxy[]
     'frontends' ? haproxy_service_frontend{}
     'backends' ? haproxy_service_backend{}
+} with {
+    if (exists(SELF['frontends'])) {
+        if (!exists(SELF['backends'])) {
+            error('haproxy backends must be defined when frontends are defined');
+        };
+        foreach (fr; frd; SELF['frontends']) {
+            if (exists(frd['default_backend'])) {
+                if (!exists(SELF['backends'][frd['default_backend']])) {
+                    error('default backend for frontend %s (data %s) does not exist', fr, frd);
+                };
+            };
+        };
+    };
+    true;
 };
-
