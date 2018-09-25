@@ -42,6 +42,7 @@ OpenNebula sunstone_server full test
 ^:memcache_host:\s{1}localhost$
 ^:memcache_namespace:\s{1}opennebula.sunstone$
 ^:memcache_port:\s{1}11211$
+^:mode:\s{1}mixed$
 ^:one_xmlrpc:\s{1}http:\/\/localhost:2633\/RPC2$
 ^:oneflow_server:\s{1}http:\/\/localhost:2474\/$
 ^:port:\s{1}9869$

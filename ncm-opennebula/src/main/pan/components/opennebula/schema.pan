@@ -623,6 +623,8 @@ type opennebula_sunstone = {
     "vnc_proxy_ipv6" : boolean = false
     "lang" : string = 'en_US'
     "table_order" : string = 'desc' with match (SELF, '^(desc|asc)$')
+    @{Set default views directory}
+    "mode" : string = 'mixed'
     "marketplace_username" ? string
     "marketplace_password" ? string
     "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
