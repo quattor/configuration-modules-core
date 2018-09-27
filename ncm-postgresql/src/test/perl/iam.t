@@ -16,6 +16,7 @@ my $cmp = NCM::Component::postgresql->new("postgresql");
 my $cfg = get_config_for_profile('iam');
 
 my $engine = '/usr/pgsql-9.2/bin';
+my $engine10 = '/usr/pgsql-10/bin';
 
 my $mock = Test::MockModule->new('NCM::Component::postgresql');
 
@@ -28,6 +29,9 @@ is_deeply($cmp->get_version($engine), version->new("v9.2.13"), "Got correct vers
 
 set_desired_output('/my/usr/pgsql-9.2/bin/postmaster --version', "postgres (PostgreSQL) 9.2.abc\n");
 ok(! defined($cmp->get_version("/my$engine")), "version returns undef on unparsable output");
+
+set_desired_output('/usr/pgsql-10/bin/postmaster --version', "postgres (PostgreSQL) 10.5\n");
+is_deeply($cmp->get_version($engine10), version->new("v10.5"), "Got correct version array ref");
 
 =head1 fetch
 

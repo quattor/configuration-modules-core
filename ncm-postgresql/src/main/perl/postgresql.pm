@@ -195,8 +195,8 @@ sub get_version
     my $output = $proc->output();
 
     # e.g. 'postgres (PostgreSQL) 9.2.1'
-    if ($output && $output =~ m/\s(\d+)\.(\d+).(\d+)\s*$/) {
-        return version->new("v$1.$2.$3");
+    if ($output && $output =~ m/\D((?:\d+)(?:\.\d+)+)\s*$/) {
+        return version->new("v$1");
     } else {
         $self->error("Failed to parse output from $proc: $output");
         return;
