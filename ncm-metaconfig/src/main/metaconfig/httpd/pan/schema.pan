@@ -334,8 +334,39 @@ type httpd_auth = {
     "require" : httpd_auth_require = dict('type', 'valid-user')
     "userfile" ? string
     "groupfile" ? string
-    "basicprovider" ? string with match(SELF, "^(file)$")
+    "basicprovider" ? choice('file', 'irods')
     "type" : httpd_auth_type = "Basic"
+};
+
+@{ Hostname and port of the iRODS server to connect to. @}
+type davrods_server = {
+    "host" : type_fqdn
+    "port" : type_port
+};
+
+type davrods_anonymous = {
+    "user" : string
+    "password" : string
+};
+
+@{ Davrods plugin configuration @}
+type httpd_davrods = {
+    "Dav" : choice('davrods-locallock', 'davrods-nolocks') = 'davrods-locallock'
+    "EnvFile" : string
+    "Server" : davrods_server
+    "Zone" : string
+    "AuthScheme" : choice('Native', 'PAM') = 'Native'
+    "AnonymousMode" ? choice('on', 'off') # off
+    "AnonymousLogin" ? davrods_anonymous
+    "DefaultResource" ? string
+    "ExposedRoot" ? string with match(SELF, '^(/.*|User|Home|Zone)$')
+    "TxBufferKbs" ? long
+    "RxBufferKbs" ? long
+    "TmpfileRollback" ? choice('on', 'off')
+    "LockDB" ? string
+    "HtmlHead" ? string
+    "HtmlHeader" ? string
+    "HtmlFooter" ? string
 };
 
 type httpd_file = {
@@ -524,6 +555,7 @@ type httpd_directory = {
     "directoryindex" ? string[]
     "limitrequestbody" ? long(0..)
     "wsgi" ? httpd_wsgi_vhost
+    "davrods" ? httpd_davrods
 };
 
 type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';

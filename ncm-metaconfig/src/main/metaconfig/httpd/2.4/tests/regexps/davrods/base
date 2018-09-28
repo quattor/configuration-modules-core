@@ -1,0 +1,35 @@
+Base test for davrods.conf config
+---
+/etc/httpd/conf.d/davrods.conf
+---
+^listen 444 $
+^<virtualhost\s{4}1.2.3.4:444>$
+^\s{4}servername myhost.domain$
+^\s{4}sslcacertificatefile /etc/pki/CA/certs/cachain.pem$
+^\s{4}sslcertificatefile /etc/pki/tls/certs/cert.pem$
+^\s{4}sslcertificatekeyfile /etc/pki/tls/private/key.pem$
+^\s{4}sslciphersuite TLSv1$
+^\s{4}sslengine on$
+^\s{4}ssloptions -OptRenegotiate \+StrictRequire \+StdEnvVars$
+^\s{4}sslprotocol TLSv1$
+^\s{4}loglevel warn$
+^\s{4}errorlog logs/ssl_error_log$
+^\s{4}transferlog logs/ssl_access_log$
+^\s{4}<location />$
+^\s{8}authbasicprovider irods$
+^\s{8}authname "DAV"$
+^\s{8}require valid-user $
+^\s{8}authtype Basic$
+^\s{8}DavRodsAnonymousLogin "me" "moi"$
+^\s{8}DavRodsAnonymousMode "on"$
+^\s{8}DavRodsAuthScheme "Native"$
+^\s{8}Dav "davrods-locallock"$
+^\s{8}DavRodsDefaultResource "resource1"$
+^\s{8}DavRodsEnvFile "/etc/irods/envfile"$
+^\s{8}DavRodsExposedRoot "Home"$
+^\s{8}DavRodsServer myserver.domain.org 1247$
+^\s{8}DavRodsZone "irodszone"$
+^\s{8}directoryindex disabled$
+^\s{4}</location>$
+^</virtualhost>$
+
