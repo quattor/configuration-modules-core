@@ -2,10 +2,18 @@ global
 [% INCLUDE 'metaconfig/haproxy/global.tt' FILTER indent %]
 defaults
 [% INCLUDE 'metaconfig/haproxy/defaults.tt' FILTER indent %]
+[%- IF stats.defined -%]
 [% INCLUDE 'metaconfig/haproxy/stats.tt' %]
+[%- END -%]
 [% FOREACH proxy IN proxys -%]
 listen  [% proxy.name %]
 [%     INCLUDE 'metaconfig/haproxy/proxy.tt' FILTER indent %]
 [% END %]
-
-
+[% FOREACH frontend IN frontends -%]
+frontend [% frontend.key %]
+[%     INCLUDE 'metaconfig/haproxy/frontend.tt' fte=frontend.value FILTER indent %]
+[% END %]
+[% FOREACH backend IN backends -%]
+backend [% backend.key %]
+[%     INCLUDE 'metaconfig/haproxy/backend.tt' bke=backend.value FILTER indent %]
+[% END %]

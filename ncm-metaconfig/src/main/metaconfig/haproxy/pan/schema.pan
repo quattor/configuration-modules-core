@@ -6,7 +6,8 @@ include 'pan/types';
     list of syslog facilities
 }
 type haproxy_service_global_logs = {
-    '{/dev/log}' : string[] = list('local0' , 'notice')
+    '{/dev/log}' ? string[] = list('local0' , 'notice')
+    '{127.0.0.1}' ? string[] = list('local2')
 };
 
 @documentation {
@@ -132,6 +133,45 @@ type haproxy_service_proxy = {
     'timeouts' ? haproxy_service_timeouts
 };
 
+type haproxy_service_bind_server_params = {
+    'ssl' ? boolean
+    'ca-file' ? absolute_file_path
+    @{combined cert and key in pem format}
+    'crt' ? absolute_file_path
+};
+
+type haproxy_service_server_params = {
+    include haproxy_service_bind_server_params
+    @{enable health check}
+    'check' ? boolean
+    @{different health check port}
+    'port' ? type_port
+};
+
+type haproxy_service_bind_params = {
+    include haproxy_service_bind_server_params
+};
+
+type haproxy_service_frontend = {
+    'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
+    'port' ? type_port
+    'default_backend' : string
+    'params' ? haproxy_service_bind_params
+};
+
+type haproxy_service_backend_server = {
+    'name' : string
+    'ip' : type_ip
+    'port' ? type_port
+    'params' ? haproxy_service_server_params
+};
+
+type haproxy_service_backend = {
+    'options' ? string[]
+    'tcpchecks' ? string[]
+    'servers' : haproxy_service_backend_server[]
+};
+
 @documentation {
     haproxy config
     see: http://www.haproxy.org/download/1.4/doc/configuration.txt
@@ -141,5 +181,20 @@ type haproxy_service = {
     'defaults' : haproxy_service_defaults
     'stats' ? haproxy_service_stats
     'proxys' ? haproxy_service_proxy[]
+    'frontends' ? haproxy_service_frontend{}
+    'backends' ? haproxy_service_backend{}
+} with {
+    if (exists(SELF['frontends'])) {
+        if (!exists(SELF['backends'])) {
+            error('haproxy backends must be defined when frontends are defined');
+        };
+        foreach (fr; frd; SELF['frontends']) {
+            if (exists(frd['default_backend'])) {
+                if (!exists(SELF['backends'][frd['default_backend']])) {
+                    error('default backend for frontend %s (data %s) does not exist', fr, frd);
+                };
+            };
+        };
+    };
+    true;
 };
-
