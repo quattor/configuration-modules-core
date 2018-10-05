@@ -3,7 +3,7 @@ object template config;
 include 'metaconfig/nginx/config';
 
 variable SERVER = 'myserver.my.domain';
-variable FULL_HOSTNAME = 'myhost.my.domain';;
+variable FULL_HOSTNAME = 'myhost.my.domain';
 
 prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/contents/http/0";
 
@@ -68,3 +68,5 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     "name", list("_"),
     "return", dict("code", 301, "url", "https://$host$request_uri"),
 );
+# Disable max body size limit
+"client_max_body_size" = 0;
