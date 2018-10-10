@@ -1,0 +1,2 @@
+[%     INCLUDE metaconfig/mailrc/element.tt data=CCM.contents %]
+

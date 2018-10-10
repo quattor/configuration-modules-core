@@ -1,0 +1,7 @@
+Base test for mailrc
+---
+/etc/mail.rc
+multiline
+---
+set from
+set smtp

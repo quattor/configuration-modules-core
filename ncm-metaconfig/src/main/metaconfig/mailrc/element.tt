@@ -1,0 +1,15 @@
+[%- FOREACH pair IN data.pairs %]
+[%     IF pair.key == 'account' %]
+[%-         FOREACH account IN pair.value.pairs %]
+account [%      account.key  %] {
+[%              INCLUDE metaconfig/mailrc/element.tt data=account.value %]
+}
+[%-        END %]
+[%     ELSIF pair.value.is_boolean %]
+[%         IF pair.value %]
+set [%         pair.key %]
+[%-        END %]
+[%     ELSE -%]
+set [%     pair.key %]=[% pair.value %]
+[%-    END %]
+[%- END %]
