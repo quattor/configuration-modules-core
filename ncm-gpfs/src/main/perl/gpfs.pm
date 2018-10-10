@@ -66,7 +66,8 @@ sub Configure
     # how to retrigger spma afterwards?
     my $baseinstalled = GPFSCONFIGDIR . "/.quattorbaseinstalled";
     my $basiccfg = GPFSCONFIGDIR . "/.quattorbasiccfg";
-    if (! -f $baseinstalled) {
+    my $skiprpm = $config->getValue($self->prefix."/skiprpm");
+    if (! -f $baseinstalled && ! $skiprpm ) {
         my ($ok, $pkgs) = $self->remove_existing_rpms($config);
         return 1 if !$ok;
         $self->install_base_rpms($config) || return 1;

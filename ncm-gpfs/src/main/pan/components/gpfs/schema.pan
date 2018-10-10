@@ -51,4 +51,5 @@ type gpfs_component = {
       When defined, existing configuration is read and
       only configured values are modified/added, keeping any other existing ones.}
     "sysmon" ? gpfs_sysmon
+    "skiprpm" : boolean = false
 };
