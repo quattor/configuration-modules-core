@@ -1,5 +1,10 @@
 template one;
 
+
+include 'components/opennebula/schema';
+bind '/software/components/opennebula' = component_opennebula;
+
+
 prefix "/software/components/opennebula/rpc";
 "user" = "oneadmin";
 "password" = "verysecret";
@@ -42,6 +47,15 @@ prefix "/software/components/opennebula/vnm_conf";
 "arp_cache_poisoning" = false;
 
 prefix "/software/components/opennebula";
+
+"clusters" = dict(
+    "red.cluster", dict(
+            "reserved_cpu", 10,
+            "reserved_mem", 2097152,
+            "labels", list("quattor", "quattor/VO"),
+            "description", "red.cluster managed by quattor",
+        ),
+);
 
 "vnets" = dict(
     "altaria.os", dict(
@@ -95,6 +109,7 @@ prefix "/software/components/opennebula";
                 "group", "users",
                 "mode", 0440,
             ),
+            "clusters", list("default", "red.cluster"),
         ),
 );
 
@@ -104,6 +119,7 @@ prefix "/software/components/opennebula";
             "ceph_host", list("ceph001.cubone.os", "ceph002.cubone.os", "ceph003.cubone.os"),
             "ceph_secret", "8371ae8a-386d-44d7-a228-c42de4259c6e",
             "ceph_user", "libvirt",
+            "disk_type", "RBD",
             "datastore_capacity_check", true,
             "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
             "pool_name", "one",
@@ -121,6 +137,13 @@ prefix "/software/components/opennebula";
                 "group", "users",
                 "mode", 0440,
             ),
+            "clusters", list("red.cluster"),
+        ),
+        "system", dict(
+            "tm_mad", "shared",
+            "ds_mad", "fs",
+            "type", "SYSTEM_DS",
+            "clusters", list("default", "red.cluster"),
         ),
 );
 
@@ -154,13 +177,15 @@ prefix "/software/components/opennebula";
         ),
 );
 
-"hosts" = list(
-    'hyp101', 'hyp102', 'hyp103', 'hyp104'
+"hosts" = dict(
+    'hyp101', dict(),
+    'hyp102', dict(),
+    # Add hyp103 in a different cluster
+    'hyp103', dict(
+        "cluster", "red.cluster",
+        ),
+    'hyp104', dict(),
 );
 
 "ssh_multiplex" = true;
-"host_hyp" = "kvm";
-"host_ovs" = true;
-"tm_system_ds" = "ssh";
 "cfg_group" = "apache";
-

@@ -241,12 +241,8 @@ sub set_one_server
     my($self, $tree) = @_;
     # Set ssh multiplex options
     $self->set_ssh_command($tree->{ssh_multiplex});
-    # Set tm_system_ds if available
-    my $tm_system_ds = $tree->{tm_system_ds};
     # untouchable resources
     my $untouchables = $tree->{untouchables};
-    # host type
-    my $host = $tree->{host_hyp};
 
     # Change oneadmin password
     if (exists $tree->{rpc}->{password}) {
@@ -263,16 +259,15 @@ sub set_one_server
     # Check ONE RPC endpoint and OpenNebula version
     return 0 if !$self->is_supported_one_version($one);
 
+    # Create/update the virtual clusters before any resource first
+    $self->manage_something($one, "cluster", $tree->{clusters}, $untouchables->{clusters});
+
     $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
     # For the moment only Ceph and shared datastores are configured
     $self->manage_something($one, "datastore", $tree->{datastores}, $untouchables->{datastores});
-    # Update system datastore TM_MAD
-    if ($tm_system_ds) {
-        $self->update_something($one, "datastore", "system", "TM_MAD = $tm_system_ds");
-        $self->verbose("Updated system datastore TM_MAD = $tm_system_ds");
-    }
-    $self->manage_something($one, $host, $tree, $untouchables->{hosts});
+    $self->manage_something($one, "host", $tree, $untouchables->{hosts});
+
     # Manage groups first
     $self->manage_something($one, "group", $tree->{groups}, $untouchables->{groups});
     $self->manage_something($one, "user", $tree->{users}, $untouchables->{users});

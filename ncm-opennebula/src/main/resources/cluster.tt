@@ -1,0 +1,13 @@
+[% FOR pool IN cluster.pairs -%]
+[%     FOR pair IN pool.value.pairs %]
+[%-       SWITCH pair.key -%]
+[%            CASE 'labels' -%]
+[%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
+[%            CASE -%]
+[%                pair.key FILTER upper %] = "[% pair.value %]"
+[%        END -%]
+[%-    END -%]
+[%     IF pool.key != 'default' -%]
+QUATTOR = 1
+[%     END -%]
+[% END -%]

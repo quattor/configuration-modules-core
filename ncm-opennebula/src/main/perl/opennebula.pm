@@ -38,6 +38,10 @@ Features that are implemented at this moment:
 
 =item * Adding/removing OpenNebula groups
 
+=item * Adding/removing OpenNebula virtual clusters
+
+=item * Assign OpenNebula resources to virtual clusters
+
 =item * Assign OpenNebula users to primary groups
 
 =item * Updates OpenNebula C<< *_auth >> files
@@ -109,6 +113,7 @@ use parent qw(NCM::Component
               NCM::Component::OpenNebula::Network
               NCM::Component::OpenNebula::VM
               NCM::Component::OpenNebula::Image
+              NCM::Component::OpenNebula::Cluster
               );
 use NCM::Component::OpenNebula::Server qw($SERVERADMIN_USER);
 
@@ -117,7 +122,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.311.0;
+use Net::OpenNebula 0.313.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
@@ -130,6 +135,7 @@ Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 # if it should return a text template or
 # CAF::FileWriter instance
 Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
+Readonly::Array my @OPENNEBULA_CONSUMERS => qw(user group cluster);
 
 
 our $EC=LC::Exception::Context->new->will_store_all;
@@ -239,6 +245,10 @@ sub create_or_update_something
     if ($new and defined($data->{$name}->{permissions})) {
         $self->change_permissions($one, $type, $new, $data->{$name}->{permissions});
     };
+    # Set resource clusters
+    if ($new and defined($data->{$name}->{clusters})) {
+        $self->set_service_clusters($one, $type, $new, $data->{$name}->{clusters});
+    };
     return $new;
 }
 
@@ -328,9 +338,16 @@ sub detect_used_resource
     if (@existres) {
         $quattor = $self->check_quattor_tag($existres[0]);
         if (!$quattor) {
-            $self->verbose("Name: $name is already used by a $type resource. ",
-                        "The QUATTOR flag is not set. ",
-                        "We can't modify this resource.");
+            if ($type eq "datastore" and $name eq "system") {
+                $self->verbose("Found system datastore setup. ",
+                    "Quattor will update the datastore setup. ",
+                    "QUATTOR flag is not set in this case.");
+                return -1;
+            } else {
+                $self->verbose("Name: $name is already used by a $type resource. ",
+                "The QUATTOR flag is not set. ",
+                "We can't modify this resource.");
+            };
             return 1;
         } elsif ($quattor == 1) {
             $self->verbose("Name : $name is already used by a $type resource. ",
@@ -382,13 +399,13 @@ sub manage_something
         $self->verbose("Managing $type resources.");
     }
 
-    if (($type eq "kvm") or ($type eq "xen")) {
-        $self->manage_hosts($one, $type, $resources, %protected);
+    if ($type eq "host") {
+        $self->manage_hosts($one, $resources, %protected);
         return;
-    } elsif (($type eq "user") or ($type eq "group")) {
-        $self->manage_users_groups($one, $type, $resources, %protected);
+    } elsif (grep { $type eq $_ } @OPENNEBULA_CONSUMERS) {
+        $self->manage_consumers($one, $type, $resources, %protected);
         return;
-    }
+    };
 
     $self->verbose("Check to remove ${type}s");
     $self->remove_something($one, $type, $resources, %protected);

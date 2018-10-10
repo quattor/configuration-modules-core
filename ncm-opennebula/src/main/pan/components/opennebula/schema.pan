@@ -247,20 +247,22 @@ function is_consistent_datastore = {
     if (ds['ds_mad'] == 'ceph') {
         if (ds['tm_mad'] != 'ceph') {
             error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
-            return(false);
         };
-        req = list('bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
+        req = list('disk_type', 'bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
         foreach(idx; attr; req) {
             if(!exists(ds[attr])) {
                 error(format("Invalid ceph datastore! Expected '%s' ", attr));
-                return(false);
             };
         };
     };
     if (ds['ds_mad'] == 'fs') {
         if (ds['tm_mad'] != 'shared') {
             error("for a fs datastore only 'shared' tm_mad is supported for the moment");
-            return(false);
+        };
+    };
+    if (ds['type'] == 'SYSTEM_DS') {
+        if (ds['tm_mad'] == 'ceph') {
+            error("system datastores do not support '%s' TM_MAD", ds['tm_mad']);
         };
     };
     # Checks for other types can be added here
@@ -320,15 +322,23 @@ type opennebula_datastore = {
     include opennebula_ceph_datastore
     "bridge_list" ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check" : boolean = true
-    "disk_type" : string = 'RBD'
+    "disk_type" ? choice('RBD')
     "ds_mad" : string = 'ceph' with match (SELF, '^(fs|ceph)$')
-    "tm_mad" : string = 'ceph' with match (SELF, '^(shared|ceph)$')
-    "type" : string = 'IMAGE_DS'
+    @{set system Datastore TM_MAD value.
+        shared: The storage area for the system datastore is a shared directory across the hosts.
+        vmfs: A specialized version of the shared one to use the vmfs file system.
+        ssh: Uses a local storage area from each host for the system datastore.
+        ceph: Uses Ceph storage backend.
+    }
+    "tm_mad" : string = 'ceph' with match (SELF, '^(shared|ceph|ssh|vmfs)$')
+    "type" : string = 'IMAGE_DS' with match (SELF, '^(IMAGE_DS|SYSTEM_DS)$')
     @{datastore labels is a list of strings to group the datastores under a given name and filter them
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
     "permissions" ? opennebula_permissions
+    @{Adds the datastore to the given clusters}
+    "clusters" ? string[]
 } = dict() with is_consistent_datastore(SELF);
 
 type opennebula_vnet = {
@@ -359,7 +369,24 @@ type opennebula_vnet = {
     @{MTU for the tagged interface and bridge (VXLAN)}
     "mtu" ? long(1500..)
     "permissions" ? opennebula_permissions
+    @{Adds the vnet to the given clusters}
+    "clusters" ? string[]
 } = dict() with is_consistent_vnet(SELF);
+
+@documentation{
+Set OpenNebula hypervisor options and their virtual clusters (if any)
+}
+type opennebula_host = {
+    @{set OpenNebula hosts type.}
+    'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
+    @{set the network driver in your hosts.
+    This option is not longer used by ONE >= 5.x versions.}
+    'vnm_mad' ? string with match (SELF, '^(dummy|ovswitch|ovswitch_brcompat)$')
+    @{Set the hypervisor cluster. Any new hypervisor is always included within
+    "Default" cluster.
+    Hosts can be in only one cluster at a time.}
+    "cluster" ? string
+};
 
 @documentation{
 Set OpenNebula regular users and their primary groups.
@@ -381,6 +408,23 @@ Set a group name and an optional decription
 type opennebula_group = {
     "description" ? string
     "labels" ? string[]
+} = dict();
+
+@documentation{
+Set OpenNebula clusters and their porperties.
+}
+type opennebula_cluster = {
+    include opennebula_group
+    @{In percentage. Applies to all the Hosts in this cluster.
+    It will be subtracted from the TOTAL CPU.
+    This value can be negative, in that case you’ll be actually
+    increasing the overall capacity so overcommiting host capacity.}
+    "reserved_cpu" ? long
+    @{In KB. Applies to all the Hosts in this cluster.
+    It will be subtracted from the TOTAL MEM.
+    This value can be negative, in that case you’ll be actually
+    increasing the overall capacity so overcommiting host capacity.}
+    "reserved_mem" ? long
 } = dict();
 
 type opennebula_remoteconf_ceph = {
@@ -579,6 +623,8 @@ type opennebula_sunstone = {
     "vnc_proxy_ipv6" : boolean = false
     "lang" : string = 'en_US'
     "table_order" : string = 'desc' with match (SELF, '^(desc|asc)$')
+    @{Set default views directory}
+    "mode" : string = 'mixed'
     "marketplace_username" ? string
     "marketplace_password" ? string
     "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
@@ -696,6 +742,7 @@ type opennebula_untouchables = {
     "users" ? string[]
     "groups" ? string[]
     "hosts" ? string[]
+    "clusters" ? string[]
 };
 
 
@@ -709,7 +756,8 @@ type component_opennebula = {
     'groups' ? opennebula_group{}
     'users' ? opennebula_user{}
     'vnets' ? opennebula_vnet{}
-    'hosts' ? string[]
+    'clusters' ? opennebula_cluster{}
+    'hosts' ? opennebula_host{}
     'rpc' ? opennebula_rpc
     'untouchables' ? opennebula_untouchables
     'oned' ? opennebula_oned
@@ -724,15 +772,4 @@ type component_opennebula = {
     some OpenNebula configuration files should be accessible by a different group (as apache).
     This variable sets the group name to change these files permissions.}
     'cfg_group' ? string
-    @{includes the Open vSwitch network drives in your hosts. (OVS must be installed in each host).
-    This option is not longer used by ONE >= 5.x versions.}
-    'host_ovs' ? boolean
-    @{set OpenNebula hosts type}
-    'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
-    @{set system Datastore TM_MAD value.
-        shared: The storage area for the system datastore is a shared directory across the hosts.
-        vmfs: A specialized version of the shared one to use the vmfs file system.
-        ssh: Uses a local storage area from each host for the system datastore.
-    }
-    'tm_system_ds' ? string with match(SELF, "^(shared|ssh|vmfs)$")
 } = dict();

@@ -1,4 +1,5 @@
 [%- booleans = ['vlan', 'context_force_ipv4', 'filter_ip_spoofing', 'filter_mac_spoofing'] -%]
+[%- do_not_print = ['permissions', 'clusters'] -%]
 [%- ar_section = ['ar'] -%]
 [% FOR pool IN vnet.pairs -%]
 NAME = "[% pool.key %]"
@@ -11,7 +12,7 @@ NAME = "[% pool.key %]"
                                       data=pair.value -%]
 [%            CASE 'labels' -%]
 [%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
-[%            CASE 'permissions' -%]
+[%            CASE do_not_print -%]
 [%            CASE -%]
 [%                pair.key FILTER upper %] = "[% pair.value %]"
 [%        END -%]

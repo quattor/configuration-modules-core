@@ -23,7 +23,7 @@ set the C<Ceph> key in each host.
 
 sub enable_ceph_node
 {
-    my ($self, $type, $host, $datastores) = @_;
+    my ($self, $host, $datastores) = @_;
 
     foreach my $ceph (sort keys %$datastores) {
         if (($datastores->{$ceph}->{tm_mad} || "") eq 'ceph') {
@@ -35,7 +35,7 @@ sub enable_ceph_node
                 $self->error("Ceph user key not found within $ceph datastore.");
                 return;
             }
-            my $uuid = $self->set_ceph_secret($type, $host, $datastores->{$ceph}->{ceph_secret});
+            my $uuid = $self->set_ceph_secret($host, $datastores->{$ceph}->{ceph_secret});
             if (!$uuid) {
                 $self->error("Not able to set libvirt uuid for $ceph datastore");
                 return;
@@ -57,7 +57,7 @@ Sets the C<Ceph> secret to be used by C<libvirt>.
 
 sub set_ceph_secret
 {
-    my ($self, $type, $host, $ceph_secret) = @_;
+    my ($self, $host, $ceph_secret) = @_;
 
     # Add ceph keys as root
     my $cmd = ['secret-define', '--file', $CEPHSECRETFILE];
@@ -66,12 +66,12 @@ sub set_ceph_secret
     if ($output and $output =~ m/^[Ss]ecret\s+(.*?)\s+created$/m) {
         if ($1 eq $ceph_secret) {
             $uuid = $1;
-            $self->verbose("Found Ceph uuid $uuid to be used by $type host $host in $CEPHSECRETFILE.");
+            $self->verbose("Found Ceph uuid $uuid to be used by host $host in $CEPHSECRETFILE.");
         } else {
             $self->error("UUIDs set from datastore and CEPHSECRETFILE $CEPHSECRETFILE do not match.");
         }
     } else {
-        $self->error("Required Ceph UUID not found for $type host $host.");
+        $self->error("Required Ceph UUID not found for host $host.");
     }
     return $uuid;
 }

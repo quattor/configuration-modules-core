@@ -534,7 +534,7 @@ $cmds{rpc_delete_datastore2}{out} = 103;
 $cmds{rpc_list_datastorespool}{params} = [];
 $cmds{rpc_list_datastorespool}{method} = "one.datastorepool.info";
 $cmds{rpc_list_datastorespool}{out} = <<'EOF';
-<DATASTORE_POOL><DATASTORE><ID>102</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ceph.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[ceph]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TOTAL_MB>48645212</TOTAL_MB><FREE_MB>48476696</FREE_MB><USED_MB>168515</USED_MB><IMAGES><ID>30</ID><ID>37</ID></IMAGES><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><BRIDGE_LIST><![CDATA[one01.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph021.altaria.os ceph022.altaria.os ceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[35b161e7-a3bc-440f-b007-cb98ac042646]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MAD><![CDATA[ceph]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><POOL_NAME><![CDATA[one]]></POOL_NAME><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[ceph]]></TM_MAD></TEMPLATE></DATASTORE></DATASTORE_POOL>
+<DATASTORE_POOL><DATASTORE><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>system</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/0]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>5454564</TOTAL_MB><FREE_MB>5445264</FREE_MB><USED_MB>9300</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><DS_MIGRATE><![CDATA[YES]]></DS_MIGRATE><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE><DATASTORE><ID>102</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>ceph.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[ceph]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>3</DISK_TYPE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER></CLUSTER><TOTAL_MB>48645212</TOTAL_MB><FREE_MB>48476696</FREE_MB><USED_MB>168515</USED_MB><IMAGES><ID>30</ID><ID>37</ID></IMAGES><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><BRIDGE_LIST><![CDATA[one01.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph021.altaria.os ceph022.altaria.os ceph023.altaria.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[35b161e7-a3bc-440f-b007-cb98ac042646]]></CEPH_SECRET><CEPH_USER><![CDATA[libvirt]]></CEPH_USER><CLONE_TARGET><![CDATA[SELF]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MAD><![CDATA[ceph]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><POOL_NAME><![CDATA[one]]></POOL_NAME><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[ceph]]></TM_MAD></TEMPLATE></DATASTORE></DATASTORE_POOL>
 EOF
 
 $cmds{rpc_list_datastore}{params} = [102];
@@ -549,21 +549,42 @@ $cmds{rpc_list_datastore2}{out} = <<'EOF';
 <DATASTORE><ID>103</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>nfs</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[fs]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/101]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTER_ID>-1</CLUSTER_ID><CLUSTER/><TOTAL_MB>117416</TOTAL_MB><FREE_MB>104468</FREE_MB><USED_MB>6962</USED_MB><IMAGES/><TEMPLATE><BASE_PATH><![CDATA[/var/lib/one//datastores/]]></BASE_PATH><CLONE_TARGET><![CDATA[SYSTEM]]></CLONE_TARGET><DATASTORE_CAPACITY_CHECK><![CDATA[yes]]></DATASTORE_CAPACITY_CHECK><DISK_TYPE><![CDATA[FILE]]></DISK_TYPE><DS_MAD><![CDATA[fs]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><QUATTOR><![CDATA[1]]></QUATTOR><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[IMAGE_DS]]></TYPE></TEMPLATE></DATASTORE>
 EOF
 
+$cmds{rpc_list_datastore3}{params} = [0];
+$cmds{rpc_list_datastore3}{method} = "one.datastore.info";
+$cmds{rpc_list_datastore3}{out} = <<'EOF';
+<DATASTORE><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>system</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/0]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>5454372</TOTAL_MB><FREE_MB>5445072</FREE_MB><USED_MB>9300</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><DS_MIGRATE><![CDATA[YES]]></DS_MIGRATE><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE>
+EOF
+
 $data = <<'EOF';
 NAME = "ceph.altaria"
 BRIDGE_LIST = "hyp004.cubone.os"
 CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
-CEPH_SECRET = "35b161e7-a3bc-440f-b007-cb98ac042646"
+CEPH_SECRET = "8371ae8a-386d-44d7-a228-c42de4259c6e"
 CEPH_USER = "libvirt"
 DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
+DS_MAD = "ceph"
 LABELS = "quattor,quattor/ceph"
 POOL_NAME = "one"
+TM_MAD = "ceph"
 TYPE = "IMAGE_DS"
 QUATTOR = 1
 EOF
 $cmds{rpc_update_datastore}{params} = [102, $data, 1];
 $cmds{rpc_update_datastore}{method} = "one.datastore.update";
 $cmds{rpc_update_datastore}{out} = 102;
+
+$data = <<'EOF';
+NAME = "system"
+DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
+DS_MAD = "fs"
+TM_MAD = "shared"
+TYPE = "SYSTEM_DS"
+EOF
+$cmds{rpc_update_datastore2}{params} = [0, $data, 1];
+$cmds{rpc_update_datastore2}{method} = "one.datastore.update";
+$cmds{rpc_update_datastore2}{out} = 1;
 
 $cmds{rpc_chown_datastore}{params} = [103, 3, 1];
 $cmds{rpc_chown_datastore}{method} = "one.datastore.chown";
@@ -925,3 +946,50 @@ EOF
 $cmds{rpc_update_group}{params} = [2, $data, 1];
 $cmds{rpc_update_group}{method} = "one.group.update";
 $cmds{rpc_update_group}{out} = 2;
+
+# Manage clusters
+
+$cmds{rpc_list_clusterspool}{params} = [];
+$cmds{rpc_list_clusterspool}{method} = "one.clusterpool.info";
+$cmds{rpc_list_clusterspool}{out} = <<'EOF';
+<CLUSTER_POOL><CLUSTER><ID>0</ID><NAME>default</NAME><HOSTS><ID>10</ID><ID>11</ID></HOSTS><DATASTORES><ID>0</ID><ID>1</ID><ID>2</ID><ID>100</ID></DATASTORES><VNETS><ID>0</ID><ID>1</ID><ID>11</ID></VNETS><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER></CLUSTER_POOL>
+EOF
+
+$cmds{rpc_create_newcluster}{params} = ["red.cluster"];
+$cmds{rpc_create_newcluster}{method} = "one.cluster.allocate";
+$cmds{rpc_create_newcluster}{out} = 100;
+
+$cmds{rpc_list_cluster}{params} = [100];
+$cmds{rpc_list_cluster}{method} = "one.cluster.info";
+$cmds{rpc_list_cluster}{out} = <<'EOF';
+<CLUSTER><ID>100</ID><NAME>red.cluster</NAME><HOSTS/><DATASTORES/><VNETS/><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER>
+EOF
+
+$cmds{rpc_list_cluster2}{params} = [0];
+$cmds{rpc_list_cluster2}{method} = "one.cluster.info";
+$cmds{rpc_list_cluster2}{out} = <<'EOF';
+<CLUSTER><ID>0</ID><NAME>default</NAME><HOSTS><ID>10</ID><ID>11</ID></HOSTS><DATASTORES><ID>0</ID><ID>1</ID><ID>2</ID><ID>100</ID></DATASTORES><VNETS><ID>0</ID><ID>1</ID><ID>11</ID></VNETS><TEMPLATE><RESERVED_CPU><![CDATA[]]></RESERVED_CPU><RESERVED_MEM><![CDATA[]]></RESERVED_MEM></TEMPLATE></CLUSTER>
+EOF
+
+$data = <<'EOF';
+DESCRIPTION = "red.cluster managed by quattor"
+LABELS = "quattor,quattor/VO"
+RESERVED_CPU = "10"
+RESERVED_MEM = "2097152"
+QUATTOR = 1
+EOF
+$cmds{rpc_update_cluster}{params} = [100, $data, 1];
+$cmds{rpc_update_cluster}{method} = "one.cluster.update";
+$cmds{rpc_update_cluster}{out} = 100;
+
+$cmds{rpc_add_vnet_cluster}{params} = [0, 99];
+$cmds{rpc_add_vnet_cluster}{method} = "one.cluster.addvnet";
+$cmds{rpc_add_vnet_cluster}{out} = 1;
+
+$cmds{rpc_del_datastore_cluster}{params} = [0, 103];
+$cmds{rpc_del_datastore_cluster}{method} = "one.cluster.deldatastore";
+$cmds{rpc_del_datastore_cluster}{out} = 1;
+
+$cmds{rpc_del_host_cluster}{params} = [0, 168];
+$cmds{rpc_del_host_cluster}{method} = "one.cluster.delhost";
+$cmds{rpc_del_host_cluster}{out} = 1;

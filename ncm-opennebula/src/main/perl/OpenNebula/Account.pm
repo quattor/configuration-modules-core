@@ -7,21 +7,22 @@ Readonly my $CORE_AUTH_DRIVER => "core";
 
 =head1 NAME
 
-C<NCM::Component::OpenNebula::Account> adds and modifies C<OpenNebula> user
-and groups accounts.
+C<NCM::Component::OpenNebula::Account> adds and modifies C<OpenNebula> users
+ groups and clusters consumers.
 
 =head2 Public methods
 
 =over
 
-=item manage_users_groups
+=item manage_consumers
 
-Add/remove/update regular users/groups and assign users to groups
-only if the user/group has the QUATTOR flag set.
+Add/remove/update regular users/groups/clusters.
+Assign users to groups only if the user/group has
+the QUATTOR flag set.
 
 =cut
 
-sub manage_users_groups
+sub manage_consumers
 {
     my ($self, $one, $type, $data, %protected) = @_;
     my $getmethod = "get_${type}s";
@@ -29,32 +30,32 @@ sub manage_users_groups
     my %temp;
 
     my @datalist;
-    foreach my $account (sort keys %$data) {
-        if ($account eq $SERVERADMIN_USER && exists $data->{$account}->{password}) {
-            $self->change_opennebula_passwd($account, $data->{$account}->{password});
-        } elsif ($account eq $ONEADMIN_USER && exists $data->{$account}->{ssh_public_key}) {
-            $temp{$account}->{$account} = $data->{$account};
-            my $template = $self->process_template($temp{$account}, $type);
-            $self->update_something($one, $type, $account, $template);
+    foreach my $consumer (sort keys %$data) {
+        if ($consumer eq $SERVERADMIN_USER && exists $data->{$consumer}->{password}) {
+            $self->change_opennebula_passwd($consumer, $data->{$consumer}->{password});
+        } elsif ($consumer eq $ONEADMIN_USER && exists $data->{$consumer}->{ssh_public_key}) {
+            $temp{$consumer}->{$consumer} = $data->{$consumer};
+            my $template = $self->process_template($temp{$consumer}, $type);
+            $self->update_something($one, $type, $consumer, $template);
         };
-        push(@datalist, $account);
+        push(@datalist, $consumer);
     }
 
-    my @accounts = $one->$getmethod();
-    my %newaccounts = map { $_ => 1 } @datalist;
+    my @consumers = $one->$getmethod();
+    my %newconsumers = map { $_ => 1 } @datalist;
     my @rmdata;
-    foreach my $account (@accounts) {
-        # Remove the user/group only if the QUATTOR flag is set
-        my $quattor = $self->check_quattor_tag($account, 1);
-        if (exists($protected{$account->name})) {
-            $self->info("This $type is protected and cannot be removed: ", $account->name);
-        } elsif (exists($newaccounts{$account->name})) {
-            $self->verbose("$type required by Quattor. We cannot remove it: ", $account->name);
+    foreach my $consumer (@consumers) {
+        # Remove the user/group/cluster only if the QUATTOR flag is set
+        my $quattor = $self->check_quattor_tag($consumer, 1);
+        if (exists($protected{$consumer->name})) {
+            $self->info("This $type is protected and cannot be removed: ", $consumer->name);
+        } elsif (exists($newconsumers{$consumer->name})) {
+            $self->verbose("$type required by Quattor. We cannot remove it: ", $consumer->name);
         } elsif (!$quattor) {
-            $self->verbose("QUATTOR flag not found. We cannot remove this $type: ", $account->name);
+            $self->verbose("QUATTOR flag not found. We cannot remove this $type: ", $consumer->name);
         } else {
-            push(@rmdata, $account->name);
-            $account->delete();
+            push(@rmdata, $consumer->name);
+            $consumer->delete();
         }
     }
 
@@ -62,33 +63,35 @@ sub manage_users_groups
         $self->info("Removed ${type}s: ", join(',', @rmdata));
     }
 
-    foreach my $account (sort keys %$data) {
-        if (exists($protected{$account})) {
-            $self->info("This $type is protected and can not be created/updated: ", $account);
+    foreach my $consumer (sort keys %$data) {
+        if (exists($protected{$consumer})) {
+            $self->info("This $type is protected and can not be created/updated: ", $consumer);
         } else {
-            $temp{$account}->{$account} = $data->{$account};
-            my $template = $self->process_template($temp{$account}, $type);
-            my $used = $self->detect_used_resource($one, $type, $account);
+            $temp{$consumer}->{$consumer} = $data->{$consumer};
+            my $template = $self->process_template($temp{$consumer}, $type);
+            my $used = $self->detect_used_resource($one, $type, $consumer);
             if (!$used) {
-                $self->info("Creating new $type: ", $account);
-                if (exists $data->{$account}->{password}) {
+                $self->info("Creating new $type: ", $consumer);
+                if (exists $data->{$consumer}->{password}) {
                     # Create new user
-                    $one->$createmethod($account, $data->{$account}->{password}, $CORE_AUTH_DRIVER);
-                    $self->set_user_primary_group($one, $account, $data->{$account}->{group}) if (exists $data->{$account}->{group});
+                    $one->$createmethod($consumer, $data->{$consumer}->{password}, $CORE_AUTH_DRIVER);
+                    $self->set_user_primary_group($one, $consumer, $data->{$consumer}->{group}) if (exists $data->{$consumer}->{group});
                 } else {
-                    # Create new group
-                    $one->$createmethod($account);
+                    # Create new group/cluster
+                    $one->$createmethod($consumer);
                 };
                 # Add QUATTOR flag
-                $self->update_something($one, $type, $account, $template);
+                $self->update_something($one, $type, $consumer, $template);
             } elsif ($used == -1) {
-                # User/group is already there and we can modify it
-                $self->info("Updating $type with a new template: ", $account);
-                $self->update_something($one, $type, $account, $template);
-                if ((exists $data->{$account}->{group}) and ($type eq "user")) {
-                    $self->set_user_primary_group($one, $account, $data->{$account}->{group});
+                # Consumer is already there and we can modify it
+                $self->info("Updating $type with a new template: ", $consumer);
+                $self->update_something($one, $type, $consumer, $template);
+                if ((exists $data->{$consumer}->{group}) and ($type eq "user")) {
+                    $self->set_user_primary_group($one, $consumer, $data->{$consumer}->{group});
                 };
-            }
+            } else {
+                $self->update_something($one, $type, $consumer, $template);
+            };
         }
     }
 }

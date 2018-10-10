@@ -34,7 +34,7 @@ function validate_aii_opennebula_hooks = {
         error(format("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]));
     };
 
-    if (ind != length(hk)-1) {
+    if (ind != length(hk) - 1) {
         error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
         FUNCTION, ARGV[0], ind, length(hk)));
     };
@@ -95,16 +95,16 @@ type opennebula_vmtemplate_datastore = string{} with {
 
 function is_consistent_memorybacking = {
     # check memorybacking values
-    foreach (key; value; SELF) {
-        foreach (key2; value2; SELF) {
-            if (SELF[key] == SELF[key2] && key != key2) {
-                error(format("entry: %s appears several times within memorybacking list", value));
+    foreach (memory; data; SELF) {
+        foreach (memory2; data2; SELF) {
+            if (SELF[memory] == SELF[memory2] && memory != memory2) {
+                error(format("entry: %s appears several times within memorybacking list", data));
             };
         };
     };
-    foreach (key; value; SELF) {
-        if (! match('^(hugepages|nosharepages|locked)$', SELF[key])) {
-            error(format("entry: %s is not a valid memorybacking value", value));
+    foreach (memory; data; SELF) {
+        if (! match('^(hugepages|nosharepages|locked)$', SELF[memory])) {
+            error(format("entry: %s is not a valid memorybacking value", data));
         };
     };
     true;

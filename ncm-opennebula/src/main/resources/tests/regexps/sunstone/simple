@@ -17,6 +17,7 @@ OpenNebula sunstone_server test
 ^:memcache_host:\s{1}.+$
 ^:memcache_namespace:\s{1}.+$
 ^:memcache_port:\s{1}\d+$
+^:mode:\s{1}.+$
 ^:one_xmlrpc:\s{1}.+$
 ^:oneflow_server:\s{1}.+$
 ^:port:\s{1}\d+$

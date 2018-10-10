@@ -24,11 +24,14 @@ $cmp->set_ssh_command(1);
 ok(exists($tree->{hosts}), "Found host data");
 
 rpc_history_reset;
-$cmp->manage_something($one, "kvm", $tree);
+$cmp->manage_something($one, "host", $tree);
 #diag_rpc_history;
 ok(rpc_history_ok(["one.hostpool.info",
                    "one.host.status",
                    "one.hostpool.info",
+                   "one.host.update",
+                   "one.clusterpool.info",
+                   "one.cluster.delhost",
                    "one.datastorepool.info",
                    "one.host.allocate",
                    "one.host.info",
