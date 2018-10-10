@@ -89,6 +89,18 @@ title abc
 
 EOF
 
+Readonly my $EFIBOOTMGROUT => <<'EOF';
+BootCurrent: 0003
+BootOrder: 0003,0004,0002
+Boot0000* Hard drive C:	VenHw(d6c0639f-c705-4eb9-aa4f-5802d8823de6)................t.......-...................................................... ......A.........................M.Z.7.K.M.2.4.0.H.M.H.Q.0.D.3...........................7...................................................... ......A.........................S.T.1.0.0.0.N.X.0.4.4.3...
+Boot0001* IBA GE Slot 0400 v1585	BBS(128,IBA GE Slot 0400 v1585,0x0)........................B.............................................................A.....................I.B.A. .G.E. .S.l.o.t. .0.4.0.0. .v.1.5.8.5...
+Boot0002  Windows Boot Manager	HD(2,GPT,176c0b3f-c599-4211-b230-073839bf7fbf,0x96800,0x31800)/File(\EFI\Microsoft\Boot\bootmgfw.efi)WINDOWS.........x...B.C.D.O.B.J.E.C.T.=.{.9.d.e.a.8.6.2.c.-.5.c.d.d.-.4.e.7.0.-.a.c.c.1.-.f.3.2.b.3.4.4.d.4.7.9.5.}....................
+Boot0003* CentOS	HD(3,GPT,6f0af3a3-fa87-481c-9451-4c4c9bf88cdc,0x2a00800,0x64000)/File(\EFI\centos\shimx64.efi)
+Boot0004* Embedded NIC 1 Port 1 Partition 1	VenHw(3a191845-5f86-4e78-8fce-c4cff59f9daa)
+MirroredPercentageAbove4G: 0.00
+MirrorMemoryBelow4GB: false
+EOF
+
 set_file_contents($GRUBCFGFN, "$GRUBCFG");
 
 my $passwdcfg = get_config_for_profile("password");
@@ -330,5 +342,25 @@ ok(command_history_ok([
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c --remove-args b',
 ]), 'grubby commands from default options fullcontrol');
+
+
+=head1 pxeboot
+
+=cut
+
+my $ebm = '/sbin/efibootmgr';
+command_history_reset();
+ok (!$cmp->file_exists($ebm), "efibootmgr does not exist");
+ok($cmp->pxeboot(), "pxeboot returns success when efibootmgr is missing");
+ok(command_history_ok(undef, ['']), "No commands were run when efibootmgr is missing");
+
+set_file_contents($ebm, '');
+set_desired_output("$ebm -v", "$EFIBOOTMGROUT");
+ok ($cmp->file_exists($ebm), "efibootmgr does exist");
+ok($cmp->pxeboot(), "pxeboot returns success");
+ok(command_history_ok([
+   "$ebm -v",
+   "$ebm -o 4,3,2",
+]), "efibootmgr called, correct bootorder set");
 
 done_testing;
