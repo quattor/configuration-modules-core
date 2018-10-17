@@ -140,3 +140,112 @@ type ssh_config_file = {
     'main' ? ssh_config_opts
 };
 
+# Not all options may appear inside a Match block
+type sshd_config_match_opts = {
+    'AcceptEnv' ? string[]
+    'AllowAgentForwarding' ? boolean
+    'AllowGroups' ? string[]
+    'AllowStreamLocalForwarding' ? string with match (SELF, "^(yes|all|no|local|remote)$")
+    'AllowTcpForwarding' ? string with match (SELF, "^(yes|all|no|local|remote)$")
+    'AllowUsers' ? string[]
+    'AuthenticationMethods' ? string[] # Don't go into details - it does not seem to worth the effort
+    'AuthorizedKeysCommand' ? absolute_file_path
+    'AuthorizedKeysCommandUser' ? string
+    'AuthorizedKeysFile' ? string[]
+    'AuthorizedPrincipalsCommand' ? absolute_file_path
+    'AuthorizedPrincipalsCommandUser' ? string
+    'AuthorizedPrincipalsFile' ? string[]
+    'Banner' ? string
+    'ChrootDirectory' ? string
+    'ClientAliveCountMax' ? long(1..)
+    'ClientAliveInterval' ? long(0..)
+    'DenyGroups' ? string[]
+    'DenyUsers' ? string[]
+    'ForceCommand' ? string
+    'GatewayPorts' ? string with match (SELF, "^(yes|no|clientspecified)$")
+    'GSSAPIAuthentication' ? boolean
+    'HostbasedAcceptedKeyTypes' ? temp_ssh_hostkeyalgorithms[]
+    'HostbasedAuthentication' ? boolean
+    'HostbasedUsesNameFromPacketOnly' ? boolean
+    'IPQoS' ? string[] with length(SELF) == 1 || length(SELF) == 2
+    'KbdInteractiveAuthentication' ? boolean
+    'KerberosAuthentication' ? boolean
+    'LogLevel' ? string with match (SELF, "^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$")
+    'MaxAuthTries' ? long(1..)
+    'MaxSessions' ? long(0..)
+    'PasswordAuthentication' ? boolean
+    'PermitEmptyPasswords' ? boolean
+    'PermitListen' ? string[] # type_hostport would not allow wildcards
+    'PermitOpen' ? string[] # type_hostport would not allow wildcards
+    'PermitRootLogin' ? string with match (SELF, "^(yes|prohibit-password|without-password|forced-commands-only|no)$")
+    'PermitTTY' ? boolean
+    'PermitTunnel' ? string with match (SELF, "^(yes|point-to-point|ethernet|no)$")
+    'PermitUserRC' ? boolean
+    'PubkeyAcceptedKeyTypes' ? temp_ssh_hostkeyalgorithms[]
+    'PubkeyAuthentication' ? boolean
+    'RekeyLimit' ? string[] with length(SELF) == 1 || length(SELF) == 2
+    'RSAAuthentication' ? boolean
+    'RhostsRSAAuthentication' ? boolean
+    'RevokedKeys' ? string
+    'RDomain' ? string
+    'SetEnv' ? string{}
+    'StreamLocalBindMask' ? string with match (SELF, "^[0-7]{3,5}$")
+    'StreamLocalBindUnlink' ? boolean
+    'TrustedUserCAKeys' ? string
+    'X11DisplayOffset' ? long(0..)
+    'X11Forwarding' ? boolean
+    'X11UseLocalHost' ? boolean
+};
+
+type sshd_config_match = {
+    "matches" : string[]
+    include sshd_config_match_opts
+};
+
+type sshd_config_opts = {
+    include sshd_config_match_opts
+    'AddressFamily' ? string with match (SELF, "^(any|inet|inet6)$")
+    'ChallengeResponseAuthentication' ? boolean
+    'Ciphers' ? temp_ssh_ciphers[]
+    'Compression' ? boolean
+    'DisableForwarding' ? boolean
+    'ExposeAuthInfo' ? boolean
+    'FingerprintHash' ? string with match (SELF, "^(md5|sha256)$")
+    'GSSAPICleanupCredentials' ? boolean
+    'GSSAPIKeyExchange' ? boolean
+    'GSSAPIStrictAcceptorCheck' ? boolean
+    'GSSAPIStoreCredentialsOnRekey' ? boolean
+    'HostCertificate' ? string
+    'HostKey' ? string[]
+    'HostKeyAgent' ? string
+    'HostKeyAlgorithms' ? temp_ssh_hostkeyalgorithms[]
+    'IgnoreRhosts' ? boolean
+    'IgnoreUserKnownHosts' ? boolean
+    'KerberosGetAFSToken' ? boolean
+    'KerberosOrLocalPasswd' ? boolean
+    'KerberosTicketCleanup' ? boolean
+    'KexAlgorithms' ? temp_ssh_kexalgorithms[]
+    'ListenAddress' ? type_hostport[]
+    'LoginGraceTime' ? long(0..)
+    'MACs' ? temp_ssh_MACs[]
+    'Match' ? sshd_config_match[]
+    'MaxStartups' ? string with match (SELF, "^[0-9]+(:[0-9]+:[0-9]+)?$")
+    'PermitUserEnvironment' ? boolean
+    'PidFile' ? absolute_file_path
+    'Port' ? long(1..)[]
+    'PrintLastLog' ? boolean
+    'PrintMotd' ? boolean
+    'StrictModes' ? boolean
+    'Subsystem' ? string{}
+    'SyslogFacility' ? string with match (SELF, "^(DAEMON|USER|AUTH|LOCAL[0-7])$")
+    'TCPKeepAlive' ? boolean
+    'UseDNS' ? boolean
+    'UsePAM' ? boolean
+    'VersionAddendum' ? string
+    'XAuthLocation' ? absolute_file_path
+};
+
+type sshd_config_file = {
+    'Match' ? sshd_config_match[]
+    'main' ? sshd_config_opts
+};

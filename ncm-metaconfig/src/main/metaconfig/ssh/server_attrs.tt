@@ -1,0 +1,44 @@
+[% spacelist = ['AcceptEnv', 'AllowGroups', 'AllowUsers', 'AuthenticationMethods', 'AuthorizedKeysFile', 'AuthorizedPrincipalsFile',
+    'DenyGroups', 'DenyUsers',
+    'IPQoS',
+    'PermitListen', 'PermitOpen',
+    'RekeyLimit' ] -%]
+[% commalist = ['Ciphers', 'HostKeyAlgorithms', 'HostbasedAcceptedKeyTypes', 'KexAlgorithms', 'MACs', 'PubkeyAcceptedKeyTypes' ] -%]
+[% multilinelist = ['HostKey', 'ListenAddress', 'Port' ] -%]
+[% booleans = ['AllowAgentForwarding',
+    'ChallengeResponseAuthentication', 'Compression',
+    'ExposeAuthInfo',
+    'GSSAPIAuthentication', 'GSSAPICleanupCredentials', 'GSSAPIKeyExchange', 'GSSAPIStrictAcceptorCheck', 'GSSAPIStoreCredentialsOnRekey',
+    'HostbasedAuthentication', 'HostbasedUsesNameFromPacketOnly',
+    'IgnoreRhosts', 'IgnoreUserKnownHosts',
+    'KbdInteractiveAuthentication', 'KerberosAuthentication', 'KerberosGetAFSToken', 'KerberosOrLocalPasswd', 'KerberosTicketCleanup',
+    'PasswordAuthentication', 'PermitEmptyPasswords', 'PermitRootLogin', 'PermitTTY', 'PermitTunnel', 'PermitUserEnvironment',
+    'PermitUserRC', 'PrintLastLog', 'PrintMotd', 'PubkeyAuthentication',
+    'StreamLocalBindUnlink', 'StrictModes',
+    'TCPKeepAlive', 'UseDNS', 'UsePAM', 'X11Forwarding', 'X11UseLocalhost'] -%]
+
+[%- FOREACH pair IN data.pairs -%]
+[%     NEXT IF pair.key == 'matches' -%]
+[%     SWITCH pair.key -%]
+[%         CASE booleans -%]
+[%             pair.key %] [% pair.value ? 'Yes' : 'No' %]
+[%         CASE spacelist -%]
+[%             pair.key %] [% pair.value.join(' ') %]
+[%         CASE commalist -%]
+[%             pair.key %] [% pair.value.join(',') %]
+[%         CASE multilinelist -%]
+[%             FOREACH line IN pair.value -%]
+[%                 pair.key %] [% line %]
+[%             END -%]
+[%         CASE 'Subsystem' -%]
+[%             FOREACH item IN pair.value.pairs -%]
+Subsystem [% item.key %] [% item.value %]
+[%             END -%]
+[%         CASE 'SetEnv' -%]
+[%             FOREACH item IN pair.value.pairs -%]
+SetEnv [% item.key %]="[% item.value %]"
+[%             END -%]
+[%         CASE -%]
+[%             pair.key %] [% pair.value %]
+[%     END -%]
+[% END -%]
