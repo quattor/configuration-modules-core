@@ -676,6 +676,35 @@ sub get_type_shortname
 }
 
 
+# Some EL7 systemd version have a bug where escaped unitnames are wrongly escaped/unescaped/who knows
+# when the 'systemctl show' is used, resulting in a different Id value, while it is not different.
+# See BZ1643172
+#
+# $ /usr/bin/systemctl --no-pager --all show -- "systemd-fsck@\.service" |grep Id=
+# Id=systemd-fsck@\x5c.service
+#
+# while expected output is (eg from Fedora 27)
+# $ /usr/bin/systemctl --no-pager --all show -- "systemd-fsck@\.service" |grep Id=
+# Id=systemd-fsck@\.service
+#
+# the \x5c is the systemd-escape value of \
+# We are going to asusme that such difference is due to the bug, and not an alias
+sub _handle_bug_wrong_escaped_unit
+{
+    my ($self, $id, $unit) = @_;
+
+    if ($id ne $unit) {
+        # split the id on the escaped-\ (\x5c) string and rejoin using \
+        my $newid = join("\\", split(/\\x5c/, $id));
+        if ($newid eq $unit) {
+            $self->verbose("Id value $id has match for wrong_escaped_unit, replacing it with $unit");
+            $id = $unit;
+        }
+    }
+
+    return $id;
+}
+
 =pod
 
 =item make_cache_alias
@@ -809,7 +838,7 @@ sub make_cache_alias
         };
 
         my $pattern = '^(.*)\.(' . join('|', @TYPES_SUPPORTED) . ')$';
-        my $id = $show->{$PROPERTY_ID};
+        my $id = $self->_handle_bug_wrong_escaped_unit($show->{$PROPERTY_ID}, $unit);
 
         if ($id ne $unit) {
             if ($show->{$PROPERTY_ID} =~ m/$pattern/) {
@@ -842,6 +871,12 @@ sub make_cache_alias
             if ($alias =~ m/$pattern/) {
                 $unit_alias->{$alias} = $id;
                 $self->debug(1, "Added alias $alias of id $id to map.");
+                my $fixed_alias = $self->_handle_bug_wrong_escaped_unit($alias, $unit);
+                if ($fixed_alias ne $alias) {
+                    # $fixed_alias is equal to unit, but not equal to the entry in Names
+                    $unit_alias->{$fixed_alias} = $id;
+                    $self->debug(1, "Added bug fixed alias $fixed_alias of id $id to map.");
+                }
             } else {
                 $self->error("Found alias $alias for unit $unit that doesn't match ",
                              "expected pattern '$pattern'. Skipping.");
