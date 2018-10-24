@@ -217,6 +217,27 @@ ok($cache->{'dbus.service'}->{show}, "show details for dbus.service");
 
 =pod
 
+=head2 _handle_bug_wrong_escaped_unit
+
+=cut
+
+my $unit0 = 'systemd-fsck@dev-mapper-vg0\x2dscratch.service';
+my $id0 = 'systemd-fsck@dev-mapper-vg0\x5cx2dscratch.service';
+is($unit->_handle_bug_wrong_escaped_unit($id0, $unit0), $unit0, "catched buggy id 0");
+
+#/usr/bin/systemctl --no-pager --all show -- "dev-disk-by\x2duuid-914a35f9\x2dd3c7\x2d47cb\x2db2dc\x2dff94ba1adbb6.swap" |grep Id=
+#Id=dev-disk-by\x5cx2duuid-914a35f9\x5cx2dd3c7\x5cx2d47cb\x5cx2db2dc\x5cx2dff94ba1adbb6.swap
+my $unit1 = 'dev-disk-by\x2duuid-914a35f9\x2dd3c7\x2d47cb\x2db2dc\x2dff94ba1adbb6.swap';
+my $id1 = 'dev-disk-by\x5cx2duuid-914a35f9\x5cx2dd3c7\x5cx2d47cb\x5cx2db2dc\x5cx2dff94ba1adbb6.swap';
+is($unit->_handle_bug_wrong_escaped_unit($id1, $unit1), $unit1, "catched buggy id 1");
+
+is($unit->_handle_bug_wrong_escaped_unit("abc", "abc"), "abc", "return correct id on same value");
+
+is($unit->_handle_bug_wrong_escaped_unit("abc", "def"), "abc", "return correct id on different value");
+
+
+=pod
+
 =head2 make_cache_alias
 
 Generate the cache and alias for all units.
