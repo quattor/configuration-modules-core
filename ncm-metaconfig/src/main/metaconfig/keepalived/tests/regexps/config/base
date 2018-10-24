@@ -18,7 +18,7 @@ unordered
 ^\s{4}state\s+BACKUP\s*$
 ^\s{4}interface\s+eth0\s*$
 ^\s{4}virtual_ipaddress\s+\{\s*$
-^\s{8}192\.168\.1\.20\s+dev\s+eth0\s*$
+^\s{8}192\.168\.1\.20\s+dev\s+eth0\s+brd\s+192\.168\.0\.255\s*$
 ^\s{4}\}\s*$
 ^\s{4}track_script\s\{\s*$
 ^\s{8}haproxy\s*$

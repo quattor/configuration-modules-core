@@ -7,3 +7,25 @@ virtual_ipaddress {
 track_script {
 [% INCLUDE 'metaconfig/keepalived/track_script.tt' FILTER indent -%]
 }
+[% IF vrrp_instance.virtual_routes.defined %]
+virtual_routes {
+[% FOREACH route IN vrrp_instance.virtual_routes -%]
+    [% route %]
+[% END %]
+}
+[% END %]
+[% IF vrrp_instance.track_interface.defined %]
+track_interface {
+[% FOREACH intf IN vrrp_instance.track_interface -%]
+    [% intf %]
+[% END %]
+}
+[% END %]
+[% IF vrrp_instance.unicast_src_ip.defined %]
+unicast_src_ip [% vrrp_instance.unicast_src_ip %]
+unicast_peer {
+[% FOREACH peer IN vrrp_instance.unicast_peer -%]
+    [% peer %]
+[% END %]
+}
+[% END %]
