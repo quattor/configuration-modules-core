@@ -18,11 +18,6 @@ Test cgconfig.d/quattor.conf
 ^\s{4}\}$
 ^}$
 ^group my/special \{$
-^\s{4}cpu \{$
-^\s{4}\}$
-^\s{4}cpuacct \{$
-^\s{8}cpu.shares = "100";$
-^\s{4}\}$
 ^\s{4}perm \{$
 ^\s{8}admin \{$
 ^\s{12}dperm = 077;$
@@ -35,6 +30,11 @@ Test cgconfig.d/quattor.conf
 ^\s{12}gid = group3;$
 ^\s{12}uid = user3;$
 ^\s{8}\}$
+^\s{4}\}$
+^\s{4}cpu \{$
+^\s{4}\}$
+^\s{4}cpuacct \{$
+^\s{8}cpu.shares = "100";$
 ^\s{4}\}$
 ^\}$
 ^mount \{$

@@ -1,3 +1,7 @@
+[% IF data.perm.defined %]
+[%      INCLUDE "metaconfig/cgroups/config/perm.tt" name='perm' data=data.perm -%]
+[% END %]
 [% FOREACH pair IN data.pairs -%]
+[%-      IF pair.key == 'perm'; NEXT; END -%]
 [%      INCLUDE "metaconfig/cgroups/config/${pair.key}.tt" name=pair.key data=pair.value -%]
 [% END -%]

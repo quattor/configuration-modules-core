@@ -3,9 +3,6 @@ cgconfig.d/quattor.conf example3
 /etc/cgconfig.d/quattor.conf
 ---
 ^group daemons/ftp \{$
-^\s{4}cpu \{$
-^\s{8}cpu.shares = "500";$
-^\s{4}\}$
 ^\s{4}perm \{$
 ^\s{8}admin \{$
 ^\s{12}dperm = 755;$
@@ -19,11 +16,11 @@ cgconfig.d/quattor.conf example3
 ^\s{12}uid = root;$
 ^\s{8}\}$
 ^\s{4}\}$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "500";$
+^\s{4}\}$
 ^\}$
 ^group daemons/www \{$
-^\s{4}cpu \{$
-^\s{8}cpu.shares = "1000";$
-^\s{4}\}$
 ^\s{4}perm \{$
 ^\s{8}admin \{$
 ^\s{12}dperm = 775;$
@@ -36,6 +33,9 @@ cgconfig.d/quattor.conf example3
 ^\s{12}gid = webmaster;$
 ^\s{12}uid = root;$
 ^\s{8}\}$
+^\s{4}\}$
+^\s{4}cpu \{$
+^\s{8}cpu.shares = "1000";$
 ^\s{4}\}$
 ^\}$
 ^mount \{$
