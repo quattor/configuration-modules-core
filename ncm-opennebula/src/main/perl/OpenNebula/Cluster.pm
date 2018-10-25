@@ -33,14 +33,20 @@ sub set_service_clusters
 
     # Remove/add the resource from the available clusters
     foreach my $cluster (@existcluster) {
-        if (!exists($newclusters{$cluster->name})) {
-            $self->info("$type $name does not require this cluster: ", $cluster->name);
-            my $new = $cluster->del($service);
-            push(@delclusters, $cluster->name) if defined($new);
-        } else {
-            $self->info("$type $name requires this cluster: ", $cluster->name);
-            my $new = $cluster->add($service);
+        # hypervisors are always included just into a single cluster
+        if ($type eq 'host') {
+            my $new = $cluster->add($service) if($cluster->name eq $clusters);
             push(@addclusters, $cluster->name) if defined($new);
+        } else {
+            if (!exists($newclusters{$cluster->name})) {
+                $self->info("$type $name does not require this cluster: ", $cluster->name);
+                my $new = $cluster->del($service);
+                push(@delclusters, $cluster->name) if defined($new);
+            } else {
+                $self->info("$type $name requires this cluster: ", $cluster->name);
+                my $new = $cluster->add($service);
+                push(@addclusters, $cluster->name) if defined($new);
+            }
         }
     }
 
