@@ -84,8 +84,6 @@ type ${project.artifactId}_textrender_convert = {
     true;
 };
 
-type caf_service_action = string with match(SELF, '^(restart|condrestart|reload|stop_sleep_start)$');
-
 type ${project.artifactId}_actions = {
     @{Always run, happens before possible modifications.
       A failure will cancel any file modification, unless the command is prefixed with -.}
