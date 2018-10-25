@@ -21,6 +21,11 @@ type haproxy_service_global_config = {
     'daemon' : string = ''
     'pidfile' : string = '/var/run/haproxy.pid'
     'chroot' : string = '/var/lib/haproxy'
+
+    'ssl-default-bind-ciphers' ? string_non_whitespace
+    'ssl-default-bind-options' ? string_non_whitespace
+    'ssl-default-server-ciphers' ? string_non_whitespace
+    'ssl-default-server-options' ? string_non_whitespace
 };
 
 @documentation {
