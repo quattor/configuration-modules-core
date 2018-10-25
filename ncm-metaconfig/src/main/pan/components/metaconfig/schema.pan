@@ -84,8 +84,6 @@ type ${project.artifactId}_textrender_convert = {
     true;
 };
 
-type caf_service_action = string with match(SELF, '^(restart|condrestart|reload|stop_sleep_start)$');
-
 type ${project.artifactId}_actions = {
     @{Always run, happens before possible modifications.
       A failure will cancel any file modification, unless the command is prefixed with -.}
@@ -116,7 +114,7 @@ type ${project.artifactId}_config =  {
       for the daemon will be taken at most once.
       If multiple actions are to be taken for the same daemon, all actions
       will be taken (no attempt to optimize is made).}
-    'daemons' ? caf_service_action{}
+    'daemons' ? caf_serviceaction{}
     @{Module to render the configuration file. See 'CONFIGURATION MODULES' in manpage.}
     'module' : string
     @{Extension for the file's backup.}
