@@ -88,6 +88,7 @@ It will also enable/disable NSCD support on the client.
     "enable" = false;
     "lhs" = "lefthanded";
     "rhs" = "righthanded";
+
 =cut
 
 use parent qw(NCM::Component);
