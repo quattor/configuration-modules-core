@@ -20,6 +20,7 @@ include 'components/sudo/config';
         '/usr/bin/virsh secret-set-value *',
         '/usr/bin/virsh secret-define *',
         '/usr/sbin/iptables',
+        '/usr/sbin/ip6tables',
         '/usr/sbin/ebtables',
         '/usr/bin/ovs-vsctl',
         '/usr/bin/ovs-ofctl',
@@ -37,3 +38,4 @@ include 'components/sudo/config';
     };
     SELF;
 };
+
