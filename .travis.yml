@@ -6,6 +6,7 @@ python:
 install:
   - pip install -q colorama prettytable
 
-script: ./travis-build
+script:
+  - ./.travis-scripts/panlint
 
 sudo: false
