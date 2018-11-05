@@ -19,8 +19,8 @@ type type_libvirtd_socket = {
     'unix_sock_dir' ? string # directory of created sockets
 };
 
-type type_auth_unix_libvirtd = string with match(SELF,'^(none|sasl|polkit)$');
-type type_auth_libvirtd = string with match(SELF,'^(none|sasl)$');
+type type_auth_unix_libvirtd = choice('none', 'sasl', 'polkit');
+type type_auth_libvirtd = choice('none', 'sasl');
 
 type type_libvirtd_authn = {
     'auth_unix_ro' ? type_auth_unix_libvirtd # default anyone
