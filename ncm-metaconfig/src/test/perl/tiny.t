@@ -5,6 +5,7 @@ use Test::Quattor;
 use NCM::Component::metaconfig;
 use CAF::Object;
 use Readonly;
+use CAF::ServiceActions;
 
 use Config::Tiny;
 
@@ -35,6 +36,7 @@ Where sections are nlists in the component's schema.
 
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
+my $sa = CAF::ServiceActions->new(log => $cmp);
 
 my $cfg = {
        owner => 'root',
@@ -48,7 +50,7 @@ my $cfg = {
        module => "tiny",
       };
 
-$cmp->handle_service("/foo/bar", $cfg);
+$cmp->handle_service("/foo/bar", $cfg, undef, $sa);
 
 my $fh = get_file("/foo/bar");
 isa_ok($fh, "CAF::FileWriter", "Correct class");
