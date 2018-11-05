@@ -2,12 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-=begin comment
-
-Be sure to put a blank line before and after every formatting command
-
-=end comment
-
 =head1 NAME
 
 symlink : symlink NCM component.
@@ -17,109 +11,6 @@ symlink : symlink NCM component.
 Object to create/delete symbolic links. When creating symlinks, target existence
 can be checked. And clobbering can be disabled. Also, target definition
 can be simplified by the use of contextual variables and command outputs.
-
-=head1 RESOURCES
-
-=over
-
-=item * C<< /software/components/symlink/links >>
-
-A list of symbolic links to create or delete.  Each entry
-must be of the C<< structure_symlink_entry >> type which has the following
-fields:
-
-=over
-
-=item * C<< name >> : symbolic link name (path).
-
-=item * C<< target >> : link target path.
-
-The target path can be built using a command output with the command string
-(can include valid command options) to execute between a pair of C<< @@ >>
-or a contextual variable using the syntax C<< {variable} >>
-(variables are defined in C<< /software/components/symlinks/context >>).
-Unless the shell command between C<< @@ >> must be reevaluated for each link,
-it is better to associate the shell command with a contextual variable and
-use the variable in the target definition, as a contextual variable is evaluated once (global).
-
-=item * C<< delete >> : (boolean)
-
-Delete the symlink (not its target) rather than creating it. C<< target >>
-can be ommitted in this case and if present, it is not checked to be this
-value before deletion. If C<< exists >> is true, raise an error, if the
-link is not found else just silently ignore it.
-
-=item * C<< exists >> : (boolean)
-
-Check that the target exists when creating it or check that the symlink
-name exists when deleting it.
-
-=item * C<< replace >> : (nlist)
-
-Option used to specify the action to take when an object with the same
-name as the symlink already exists, depending on the object type.
-Possible actions are: do not define the symlink, replace the
-object by the symlink or define the symlink after renaming the object.
-The nlist keys and values can be:
-
-=over
-
-=item * B< key >:
-
-The existing object type. Valid values are: C<all>, C<dir>, C<dirempty>,
-C<file>, C<link>, C<none>.  C<dirempty> means an empty directory only,
-C<dir> means any directory. C<all> and C<none> are mutually exclusive
-but can be combined with other object types to define the extension
-to use when renaming a given object type or to prevent/enable replacement
-for a specific object type.
-
-=item * B< value >:
-
-Action applying to the object type. Can be C<yes> (replacement of the object
-by the symlink allowed), C<no> (replacement of the object by the symlink
-disabled) or any other string. In this latter case, replacement of the object
-by the symlink is enabled after renaming the object by appending the string
-to its name. The value can also be empty: see below. Note that non empty
-directories are B<always> renamed before defining the symlink
-(a default extension, C<< .ncm-symlink_saved >>, is used).
-
-=back
-
-=back
-
-C<replace> option allows a lot of flexibility in specifying what should
-be done in case of conflict with an existing object. It implements the
-following advanced features:
-
-=over
-
-=item * C<< none=extension >>
-
-Can be used to establish a default rename extension without actually enabling
-replacement for a particular type. This extension will be used with object
-types for which replacement is enabled with C<yes> rather than an extension.
-
-=item * C<< Action >>
-
-Can be empty. If a default rename extension was defined with C<< none=extension >>,
-the object will be renamed before defining the symlink. Else it is interpreted as C<yes>.
-
-=back
-
-=item * C<< /software/components/symlink/context >>
-
-A list of contextual variables to use in target definitions. Each entry is
-a key/value pair with the variable name as the key. The value can contain
-a command output, as link target definition: see C<< target >> description above.
-Contextual variables are global. They are evaluated once, before starting to define
-symlinks.
-
-
-=item * C<< /software/components/symlink/options >>
-
-A list of global options used as default for all links creation/deletion.
-Supported options are the same as options supported in the link definition
-(see above), with the exception of C<delete>.
 
 =back
 
