@@ -3,21 +3,20 @@ declaration template metaconfig/mysql/schema;
 include 'pan/types';
 
 type mysql_cnf_size = string with match(SELF, "^[0-9]+(M|K)$");
-type mysql_cnf_boolean = long(0..1);
 
 type mysql_cnf_client = {
     'password' ? string
-    'port' ? long = 3306
-    'socket' ? string = "/var/lib/mysql/mysql.sock"
+    'port' ? type_port = 3306
+    'socket' ? absolute_file_path = "/var/lib/mysql/mysql.sock"
 };
 
 type mysql_cnf_mysqld = {
-    'port' ? long = 3306
-    'datadir' ? string = "/var/lib/mysql"
-    'socket' ? string = "/var/lib/mysql/mysql.sock"
+    'port' ? type_port = 3306
+    'datadir' ? absolute_file_path = "/var/lib/mysql"
+    'socket' ? absolute_file_path = "/var/lib/mysql/mysql.sock"
     'user' ? string = 'mysql'
-    'symbolic-links' ? mysql_cnf_boolean
-    'skip-locking' ? mysql_cnf_boolean
+    'symbolic-links' ? boolean
+    'skip-locking' ? boolean
     'key_buffer_size' ? mysql_cnf_size
     'max_allowed_packet' ? mysql_cnf_size
     'max_connections' ? long(1..)
@@ -30,7 +29,7 @@ type mysql_cnf_mysqld = {
     'query_cache_size' ? mysql_cnf_size
     'thread_concurrency' ? long
 
-    'skip-networking' ? mysql_cnf_boolean
+    'skip-networking' ? boolean
 
     'log-bin' ? string
 
@@ -44,9 +43,9 @@ type mysql_cnf_mysqld = {
 
     'binlog_format' ? string # eg mixed
 
-    'innodb_data_home_dir' ? string # eg = /var/lib/mysql
+    'innodb_data_home_dir' ? absolute_file_path # eg = /var/lib/mysql
     'innodb_data_file_path' ? string # eg= ibdata1:2000M;ibdata2:10M:autoextend
-    'innodb_log_group_home_dir' ? string # eg = /var/lib/mysql
+    'innodb_log_group_home_dir' ? absolute_file_path # eg = /var/lib/mysql
 
     'innodb_buffer_pool_size' ? mysql_cnf_size # eg = 384M
     'innodb_additional_mem_pool_size' ? mysql_cnf_size # eg = 20M
@@ -55,12 +54,12 @@ type mysql_cnf_mysqld = {
     'innodb_flush_log_at_trx_commit' ? long # eg = 1
     'innodb_lock_wait_timeout' ? long # eg = 50
 
-    "ignore_builtin_innodb" ? mysql_cnf_boolean
+    "ignore_builtin_innodb" ? boolean
     "plugin-load" ? string with match(SELF, '\.so$')
 };
 
 type mysql_cnf_mysqldump = {
-    'quick' ? mysql_cnf_boolean
+    'quick' ? boolean
     'max_allowed_packet' ? mysql_cnf_size
     'max_connections' ? long(1..)
     'user' ? string
@@ -68,8 +67,8 @@ type mysql_cnf_mysqldump = {
 };
 
 type mysql_cnf_mysql = {
-    'no-auto-rehash' ? mysql_cnf_boolean
-    'safe-updates' ? mysql_cnf_boolean
+    'no-auto-rehash' ? boolean
+    'safe-updates' ? boolean
 };
 
 type mysql_cnf_myisamchk = {
@@ -79,7 +78,7 @@ type mysql_cnf_myisamchk = {
     'write_buffer' ? mysql_cnf_size
 };
 type mysql_cnf_mysqlhotcopy = {
-    'interactive-timeout' ? mysql_cnf_boolean
+    'interactive-timeout' ? boolean
 };
 
 type type_mysql_cnf = {
