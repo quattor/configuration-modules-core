@@ -6,18 +6,18 @@ type mysql_cnf_size = string with match(SELF, "^[0-9]+(M|K)$");
 type mysql_cnf_boolean = long(0..1);
 
 type mysql_cnf_client = {
-    'password'    ?   string
-    'port'        ?   long = 3306
-    'socket'      ?   string = "/var/lib/mysql/mysql.sock"
+    'password' ? string
+    'port' ? long = 3306
+    'socket' ? string = "/var/lib/mysql/mysql.sock"
 };
 
 type mysql_cnf_mysqld = {
-    'port'        ?   long = 3306
-    'datadir'     ?   string = "/var/lib/mysql"
-    'socket'      ?   string = "/var/lib/mysql/mysql.sock"
-    'user'        ? string = 'mysql'
+    'port' ? long = 3306
+    'datadir' ? string = "/var/lib/mysql"
+    'socket' ? string = "/var/lib/mysql/mysql.sock"
+    'user' ? string = 'mysql'
     'symbolic-links' ? mysql_cnf_boolean
-    'skip-locking'    ? mysql_cnf_boolean
+    'skip-locking' ? mysql_cnf_boolean
     'key_buffer_size' ? mysql_cnf_size
     'max_allowed_packet' ? mysql_cnf_size
     'max_connections' ? long(1..)
@@ -32,12 +32,12 @@ type mysql_cnf_mysqld = {
 
     'skip-networking' ? mysql_cnf_boolean
 
-    'log-bin'     ?   string
+    'log-bin' ? string
 
-    'server-id'   ?   long
+    'server-id' ? long
 
-    'master-host' ?   string
-    'master-user' ?   string
+    'master-host' ? string
+    'master-user' ? string
     'master-password' ? string
     'master-port' ? long
     'log-bin' ? string
@@ -48,10 +48,10 @@ type mysql_cnf_mysqld = {
     'innodb_data_file_path' ? string # eg= ibdata1:2000M;ibdata2:10M:autoextend
     'innodb_log_group_home_dir' ? string # eg = /var/lib/mysql
 
-    'innodb_buffer_pool_size'  ? mysql_cnf_size # eg = 384M
-    'innodb_additional_mem_pool_size'  ? mysql_cnf_size # eg = 20M
-    'innodb_log_file_size'  ? mysql_cnf_size # eg = 100M
-    'innodb_log_buffer_size'  ? mysql_cnf_size # eg = 8M
+    'innodb_buffer_pool_size' ? mysql_cnf_size # eg = 384M
+    'innodb_additional_mem_pool_size' ? mysql_cnf_size # eg = 20M
+    'innodb_log_file_size' ? mysql_cnf_size # eg = 100M
+    'innodb_log_buffer_size' ? mysql_cnf_size # eg = 8M
     'innodb_flush_log_at_trx_commit' ? long # eg = 1
     'innodb_lock_wait_timeout' ? long # eg = 50
 
