@@ -15,6 +15,12 @@
                 allgres.push(gres.join(':'));
             END;
             params.push(param.key _ '=' _ allgres.join(','));
+        ELSIF param.key == 'TRESBillingWeights';
+            ps = [];
+            FOREACH p IN param.value.pairs;
+                ps.push(p.key _ '=' _ p.value);
+            END;
+            params.push(param.key _ '=' _ '"' _ ps.join(',') _ '"');
         ELSIF param.key == 'GroupUpdateForce';
             params.push(param.key _ '=' _ (param.value ? '1' : '0'));
         ELSIF param.value.is_boolean;
