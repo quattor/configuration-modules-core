@@ -2,15 +2,15 @@ ${componentschema}
 include 'quattor/types/component';
 
 type structure_symlink_replace_option_entry = {
-    @{use when renaming a given object type or to enable replacement for a specific object type.}
+    @{Use when renaming a given object type or to enable replacement for a specific object type.}
     "all" ? string
-    @{means any directory.}
+    @{Any directory}
     "dir" ? string
-    @{means an empty directory only.}
+    @{An empty directory only}
     "dirempty" ? string
     "file" ? string
     "link" ? string
-    @{use when renaming a given object type or to prevent replacement for a specific object type.}
+    @{Use when renaming a given object type or to prevent replacement for a specific object type}
     "none" ? string
 };
 
