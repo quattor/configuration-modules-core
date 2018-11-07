@@ -34,8 +34,8 @@ support to C<NCM::Component::OpenNebula>.
 
 =item restart_opennebula_service
 
-Restarts C<OpenNebula> service after any
-configuration change.
+Restarts C<OpenNebula> service after any configuration change.
+
 =cut
 
 sub restart_opennebula_service {
