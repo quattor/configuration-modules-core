@@ -1,0 +1,13 @@
+Base test for sysconfig libvirt guests
+---
+multiline
+/etc/sysconfig/libvirt-guests
+---
+^BYPASS_CACHE=\d$
+^ON_BOOT=.+$
+^ON_SHUTDOWN=.+$
+^PARALLEL_SHUTDOWN=\d$
+^SHUTDOWN_TIMEOUT=\d*$
+^START_DELAY=\d$
+^SYNC_TIME=\d$
+^URIS='.+'$

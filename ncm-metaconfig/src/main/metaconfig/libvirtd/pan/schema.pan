@@ -19,8 +19,8 @@ type type_libvirtd_socket = {
     'unix_sock_dir' ? string # directory of created sockets
 };
 
-type type_auth_unix_libvirtd = string with match(SELF,'^(none|sasl|polkit)$');
-type type_auth_libvirtd = string with match(SELF,'^(none|sasl)$');
+type type_auth_unix_libvirtd = choice('none', 'sasl', 'polkit');
+type type_auth_libvirtd = choice('none', 'sasl');
 
 type type_libvirtd_authn = {
     'auth_unix_ro' ? type_auth_unix_libvirtd # default anyone
@@ -211,6 +211,59 @@ type service_sysconfig_libvirtd = {
     'qemu_audio_drv' ? string with match(SELF, '^(sdl)$')
     'sdl_audiodriver' ? string with match(SELF, '^(pulse)$')
     'libvirtd_nofiles_limit' ? long (1..)
+};
+
+
+@documentation{
+Override the default config file libvirt-guests
+to change VMs behaviour
+}
+type service_sysconfig_guests = {
+    @{URIs to check for running guests
+    example: URIS='default xen:/// vbox+tcp://host/system lxc:///'}
+    'uris' ? string[]
+    @{action taken on host boot
+        start: all guests which were running on shutdown are started on boot
+        regardless on their autostart settings.
+
+        ignore: libvirt-guests init script wont start any guest on boot, however,
+        guests marked as autostart will still be automatically started by
+        libvirtd.}
+    'on_boot' ? choice('start', 'ignore')
+    @{Number of seconds to wait between each guest start. Set to 0 to allow
+    parallel startup}
+    'start_delay' ? long(0..)
+    @{action taken on host shutdown
+        suspend: all running guests are suspended using virsh managedsave.
+
+        shutdown: all running guests are asked to shutdown. Please be careful with
+        this settings since there is no way to distinguish between a
+        guest which is stuck or ignores shutdown requests and a guest
+        which just needs a long time to shutdown. When setting
+        ON_SHUTDOWN=shutdown, you must also set SHUTDOWN_TIMEOUT to a
+        value suitable for your guests.}
+    'on_shutdown' ? choice('suspend', 'shutdown')
+    @{Number of guests will be shutdown concurrently, taking effect when
+    "ON_SHUTDOWN" is set to "shutdown". If Set to 0, guests will be shutdown one
+    after another. Number of guests on shutdown at any time will not exceed number
+    set in this variable}
+    'parallel_shutdown' ? long(0..)
+    @{Number of seconds we are willing to wait for a guest to shut down. If parallel
+    shutdown is enabled, this timeout applies as a timeout for shutting down all
+    guests on a single URI defined in the variable URIS. If this is 0, then there
+    is no time out (use with caution, as guests might not respond to a shutdown
+    request). The default value is 300 seconds (5 minutes)}
+    'shutdown_timeout' ? long(0..)
+    @{If true, try to bypass the file system cache when saving and
+    restoring guests, even though this may give slower operation for
+    some file systems}
+    'bypass_cache' ? boolean
+    @{If true, try to sync guest time on domain resume. Be aware, that
+    this requires guest agent with support for time synchronization
+    running in the guest. For instance, qemu-ga does not support guest time
+    synchronization on Windows guests, but Linux ones. By default, this
+    functionality is turned off}
+    'sync_time' ? boolean
 };
 
 
