@@ -172,8 +172,8 @@ type haproxy_service_bind_server_params = {
     'ca-file' ? absolute_file_path
     @{combined cert and key in pem format}
     'crt' ? absolute_file_path
-    @{device to bind on}
-    'dev' ? string
+    @{interface to bind on}
+    'interface' ? string
 };
 
 type haproxy_service_server_params = {
