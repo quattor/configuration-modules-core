@@ -4,10 +4,10 @@ include 'pan/types';
 
 @{ type for configuring the irods_environment.json config file for clients @}
 type irods_environment_client_config = {
-    'irods_host' :  type_hostname
-    'irods_port' : type_port
-    'irods_user_name' : string
-    'irods_zone_name' : string
+    "irods_host" : type_hostname
+    "irods_port" : type_port
+    "irods_user_name" : string
+    "irods_zone_name" : string
     "irods_client_server_policy" : choice("CS_NEG_DONT_CARE", "CS_NEG_REFUSE", "CS_NEG_REQUIRE") = "CS_NEG_REFUSE"
     "irods_client_server_negotiation" : choice("none", "request_server_negotiation") = "request_server_negotiation"
     "irods_ssl_verify_server" : choice('hostname', 'cert', 'none') = 'hostname'
@@ -20,12 +20,12 @@ type irods_environment_client_config = {
 @{ type for configuring the irods_environment.json config file for service accounts @}
 type irods_environment_server_config = {
     include irods_environment_client_config
-    "irods_cwd": string = "/UGent/home/rods"
+    "irods_cwd": string
     "irods_default_hash_scheme": choice('SHA256', 'MD5') = "SHA256"
     "irods_default_number_of_transfer_threads": long =  4
     "irods_default_resource": string = "demoResc"
     "irods_maximum_size_for_single_buffer_in_megabytes": long = 32
-    "irods_home": string = "/UGent/home/rods"
+    "irods_home": string
     "irods_match_hash_policy": choice('strict', 'compatible') = "compatible"
     "irods_server_control_plane_encryption_algorithm": string = "AES-256-CBC"
     "irods_server_control_plane_encryption_num_hash_rounds": long = 16

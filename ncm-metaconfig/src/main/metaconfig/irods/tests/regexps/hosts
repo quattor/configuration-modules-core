@@ -11,7 +11,7 @@ Base test for config
 ^\s{12}\s{3}"address" : "10.141.11.1"$
 ^\s{12}\},$
 ^\s{12}\{$
-^\s{12}\s{3}"address" : "test.ugent.be"$
+^\s{12}\s{3}"address" : "test.example.org"$
 ^\s{12}\}$
 ^\s{9}\]$
 ^\s{6}\},$
@@ -22,7 +22,7 @@ Base test for config
 ^\s{12}\s{3}"address" : "10.141.6.1"$
 ^\s{12}\},$
 ^\s{12}\{$
-^\s{12}\s{3}"address" : "test2.ugent.be"$
+^\s{12}\s{3}"address" : "test2.example.org"$
 ^\s{12}\},$
 ^\s{12}\{$
 ^\s{12}\s{3}"address" : "test.other.domain"$
