@@ -1,10 +1,12 @@
-[%     IF system.network.interfaces.${data.key}.bridge.defined -%]
-[%         tmpbridge = system.network.interfaces.${data.key}.bridge -%]
-IP = "[% system.network.interfaces.${tmpbridge}.ip %]",
-[%     ELSE -%]
-IP = "[% system.network.interfaces.${data.key}.ip %]",
-[%     END -%]
-[%-    FOREACH item IN system.opennebula.ignoremac.interface -%]
+[%  interface = data.key;
+    interfaces = system.network.interfaces;
+    IF interfaces.${data.key}.bridge.defined;
+        interface = interfaces.${data.key}.bridge;
+    ELSIF interfaces.${data.key}.master.defined;
+        interface = interfaces.${data.key}.master;
+    END; -%]
+IP = "[% interfaces.${interface}.ip %]",
+[%    FOREACH item IN system.opennebula.ignoremac.interface -%]
 [%         IF data.key == item -%]
 [%             ignoremac = 1 -%]
 [%         END -%]

@@ -68,8 +68,10 @@ type opennebula_vmtemplate_vnet = string{} with {
     foreach (k; v; value("/system/network/interfaces")) {
         if ((! exists(SELF[k])) &&
             (! exists(v['plugin']['vxlan'])) && # VXLAN interfaces do not need vnet mapping
-            (! exists(v['type']) || # if type is missing, it's a regular ethernet interface
-            (! match('^(Bridge|OVSBridge)$', v['type'])))) {
+            (! (exists(v['type']) && match(v['type'], '^(Bridge|OVSBridge)$'))) && # bridge is no real device
+            (! (exists(v['driver']) && (v['driver'] == 'bonding'))) && # bonding interface is no real device
+            (! (match(k, '^ib\d+$') && exists("/hardware/cards/ib/" + k))) # It's ok if this is an IB device
+            ) {
             error(format("/system/network/interfaces/%s has no entry in the vnet map", k));
         };
     };
