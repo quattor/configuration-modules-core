@@ -38,6 +38,7 @@ type component_filecopy = {
     include structure_component
     'services' ? structure_filecopy{} with valid_absolute_file_paths(SELF)
     'forceRestart' : boolean = false
+    'ignore_restart_failure' ? boolean
 };
 
 bind '/software/components/filecopy' = component_filecopy;
