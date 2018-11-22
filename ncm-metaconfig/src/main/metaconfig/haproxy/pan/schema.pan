@@ -208,6 +208,7 @@ type haproxy_service_backend = {
     'options' ? string[]
     'tcpchecks' ? string[]
     'sticktable' ? haproxy_service_stick_table
+    'stick' ? string
     'servers' : haproxy_service_backend_server[]
 };
 
