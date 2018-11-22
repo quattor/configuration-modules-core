@@ -18,7 +18,7 @@ type rsyslog_action_options = {
 
 type rsyslog_action_common = {
     @{name (useful for debugging)}
-    'name' ? string
+    'name' ? string_non_whitespace
     @{action options}
     'options' ? rsyslog_action_options
 };
@@ -41,8 +41,8 @@ type rsyslog_action_file_common_module = {
 type rsyslog_action_file = {
     include rsyslog_action_common
     include rsyslog_action_file_common_module
-    'file' ? string
-    'dynaFile' ? string
+    'file' ? absolute_file_path
+    'dynaFile' ? absolute_file_path
     'closeTimeout' ? long(0..)
     'dynaFileCacheSize' ? long(0..)
     'zipLevel' ? long(0..)
@@ -54,15 +54,18 @@ type rsyslog_action_file = {
     'failOnChOwnFailure' ? boolean
     'createDirs' ? boolean
     'sync' ? boolean
-    'sig.provider' ? string with match(SELF, '^(ksi|gt|ksi_ls12)$')
-    'cry.provider' ? string with match(SELF, '^(gcry)$')
+    'sig.provider' ? choice('ksi', 'gt', 'ksi_ls12')
+    'cry.provider' ? choice('gcry')
+} with {
+    if (is_defined(SELF['file']) && is_defined(SELF['dynaFile'])) error('Only one of file or dynaFile may be used.');
+    true;
 };
 
 type rsyslog_action_prog = {
     include rsyslog_action_common
     @{The binary (and command line options; make sure to esacpe the double quotes)}
     'binary' : string
-    'hup.signal' ? string with match(SELF, '^(HUP|USR1|USR2|INT|TERM)$')
+    'hup.signal' ? choice('HUP', 'USR1', 'USR2', 'INT', 'TERM')
     'signalOnClose' ? boolean
 };
 
@@ -70,23 +73,23 @@ type rsyslog_action_fwd = {
     include rsyslog_action_common
     'Target' : type_hostname
     'Port' ? long(0..)
-    'Protocol' ? string with match(SELF, '^(udp|tcp)$')
+    'Protocol' ? choice('udp', 'tcp')
     'NetworkNamespace' ? string
     'Device' ? string with exists("/hardware/cards/nic/" + SELF)
-    'TCP_Framing' ? string with match(SELF, '^(traditional|octet-counted)$')
+    'TCP_Framing' ? choice('traditional', 'octet-counted')
     'ZipLevel' ? long(0..9)
     'maxErrorMessages' ? long(0..)
-    'compression.mode' ? string with match(SELF, '^(none|single|stream:always)$')
+    'compression.mode' ? choice('none', 'single', 'stream:always')
     'compression.stream.flushOnTXEnd' ? boolean
     'RebindInterval' ? long(0..)
     'KeepAlive' ? boolean
     'KeepAlive.Probes' ? long(0..)
     'KeepAlive.Interval' ? long(0..)
     'KeepAlive.Time' ? long(0..)
-    'StreamDriver' ? string
+    'StreamDriver' ? string_non_whitespace
     'StreamDriverMode' ? long(0..)
-    'StreamDriverAuthMode' ? string
-    'StreamDriverPermittedPeers' ? string
+    'StreamDriverAuthMode' ? choice('anon', 'x509/fingerprint', 'x509/certvalid', 'x509/name')
+    'StreamDriverPermittedPeers' ? string_non_whitespace
     'ResendLastMSGOnReconnect' ? boolean
     'udp.sendToAll' ? boolean
     'udp.sendDelay' ? long(0..)
@@ -96,7 +99,7 @@ type rsyslog_action_fwd = {
 type rsyslog_action_czmq = {
     include rsyslog_action_common
     'endpoints' ? string[]
-    'socktype' ? string with match(SELF, '^(PUSH|PUB|DEALER|RADIO|CLIENT|SCATTER)$')
+    'socktype' ? choice('PUSH', 'PUB', 'DEALER', 'RADIO', 'CLIENT', 'SCATTER')
     'sendtimeout' ? long(0..)
     'sendhwm' ? long(0..)
     'connecttimeout' ? long(0..)
