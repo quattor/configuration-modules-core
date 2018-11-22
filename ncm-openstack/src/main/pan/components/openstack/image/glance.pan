@@ -3,11 +3,11 @@
 # ${author-info}
 
 
-declaration template components/openstack/glance;
+declaration template components/openstack/image/glance;
 
-include 'components/openstack/keystone';
+include 'components/openstack/identity';
 
-@documentation {
+@documentation{
     The Glance configuration options in the "glance_store" Section.
     From glance.api
 }
@@ -16,7 +16,7 @@ type openstack_glance_store = {
     Register the storage backends to use for storing disk images
     as a comma separated list. The default stores enabled for
     storing disk images with Glance are "file" and "http"}
-    'stores' : type_storagebackend[] = list ('file', 'http')
+    'stores' : openstack_storagebackend[] = list ('file', 'http')
     @{The default scheme to use for storing images.
     Provide a string value representing the default scheme to use for
     storing images. If not set, Glance uses ``file`` as the default
@@ -24,8 +24,9 @@ type openstack_glance_store = {
     NOTE: The value given for this configuration option must be a valid
     scheme for a store registered with the ``stores`` configuration
     option.}
-    'default_store' : string = 'file' with match (SELF,
-        '^(file|filesystem|http|https|swift|swift\+http|swift\+https|swift\+config|rbd|sheepdog|cinder|vsphere)$')
+    'default_store' : choice('file', 'filesystem', 'http',
+        'https', 'swift', 'swift+http', 'swift+https', 'swift+config', 'rbd',
+        'sheepdog', 'cinder', 'vsphere') = 'file'
     @{Directory to which the filesystem backend store writes images.
     Upon start up, Glance creates the directory if it does not already
     exist and verifies write access to the user under which
@@ -66,21 +67,47 @@ type openstack_glance_store = {
     'rbd_store_user' ? string = 'images'
 };
 
-@documentation {
+@documentation{
+    list of Glance Default sections
+}
+type openstack_glance_DEFAULTS = {
+    include openstack_DEFAULTS
+    @{Show direct image location when returning an image.
+    This configuration option indicates whether to show the direct image
+    location when returning image details to the user. The direct image
+    location is where the image data is stored in backend storage. This
+    image location is shown under the image property "direct_url".
+    When multiple image locations exist for an image, the best location
+    is displayed based on the location strategy indicated by the
+    configuration option "location_strategy".
+    This option enables the copy-on-write feature using Ceph as storage backend.
+
+    NOTES: Revealing image locations can present a GRAVE SECURITY RISK as
+    image locations can sometimes include credentials. Hence, this
+    is set to "False" by default. Set this to "True" with
+    EXTREME CAUTION and ONLY IF you know what you are doing!}
+    "show_image_direct_url" ? boolean
+};
+
+@documentation{
     list of Glance configuration sections
 }
 type openstack_glance_service_config = {
-    'DEFAULT' ? openstack_DEFAULTS
+    'DEFAULT' ? openstack_glance_DEFAULTS
     'database' : openstack_database
     'keystone_authtoken' : openstack_keystone_authtoken
     'paste_deploy' : openstack_keystone_paste_deploy
     'glance_store' ? openstack_glance_store
+    'cors' ? openstack_cors
 };
 
-@documentation {
+type openstack_quattor_glance = openstack_quattor;
+
+@documentation{
     list of Glance service configuration sections
 }
 type openstack_glance_config = {
     'service' ? openstack_glance_service_config
     'registry' ? openstack_glance_service_config
+    'quattor' : openstack_quattor_glance
 };

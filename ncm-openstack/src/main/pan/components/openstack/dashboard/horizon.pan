@@ -3,9 +3,12 @@
 # ${author-info}
 
 
-declaration template components/openstack/horizon;
+declaration template components/openstack/dashboard/horizon;
 
-@documentation {
+type openstack_horizon_session_engine = choice('django.contrib.sessions.backends.cache',
+    'django.contrib.sessions.backends.db');
+
+@documentation{
     The Horizon configuration options in "caches" Section.
 }
 type openstack_horizon_caches = {
@@ -13,10 +16,10 @@ type openstack_horizon_caches = {
      of the django development server, you will have to login again}
     'BACKEND' : string = 'django.core.cache.backends.memcached.MemcachedCache'
     @{location format <fqdn>:<port>}
-    'LOCATION' : type_hostport = '127.0.0.1:11211'
+    'LOCATION' : type_hostport[] = list('127.0.0.1:11211')
 } = dict();
 
-@documentation {
+@documentation{
     The Horizon api versions section.
     Overrides for OpenStack API versions. Use this setting to force the
     OpenStack dashboard to use a specific API version for a given service API.
@@ -32,7 +35,7 @@ type openstack_horizon_api_versions = {
     'volume' : long(1..) = 2
 } = dict();
 
-@documentation {
+@documentation{
     The Horizon "OPENSTACK_NEUTRON_NETWORK" settings can be used to enable optional
     services provided by neutron. Options currently available are load
     balancer service, security groups, quotas, VPN service.
@@ -49,7 +52,7 @@ type openstack_horizon_neutron_network = {
     'enable_fip_topology_check' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_KEYSTONE_BACKEND settings can be used to identify the
     capabilities of the auth backend for Keystone.
     If Keystone has been configured to use LDAP as the auth backend then set
@@ -65,7 +68,7 @@ type openstack_horizon_keystone_backend = {
     'can_edit_role' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The Xen Hypervisor has the ability to set the mount point for volumes
     attached to instances (other Hypervisors currently do not). Setting
     can_set_mount_point to True will add the option to set the mount point
@@ -78,7 +81,7 @@ type openstack_horizon_hypervisor_features = {
     'enable_quotas' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_CINDER_FEATURES settings can be used to enable optional
     services provided by cinder that is not exposed by its extension API.
 }
@@ -86,7 +89,7 @@ type openstack_horizon_cinder_features = {
     'enable_backup' : boolean = false
 } = dict();
 
-@documentation {
+@documentation{
     The OPENSTACK_HEAT_STACK settings can be used to disable password
     field required while launching the stack.
 }
@@ -94,7 +97,7 @@ type openstack_horizon_heat_stack = {
     'enable_user_pass' : boolean = true
 } = dict();
 
-@documentation {
+@documentation{
     The IMAGE_CUSTOM_PROPERTY_TITLES settings is used to customize the titles for
     image custom property attributes that appear on image detail pages.
 }
@@ -134,7 +137,7 @@ type openstack_horizon_logging_formatters = {
     'format' : string = '%(asctime)s %(message)s'
 } = dict();
 
-@documentation {
+@documentation{
     Horizon django logging options.
     Logging from django.db.backends is VERY verbose, send to null
     by default.
@@ -175,7 +178,24 @@ type openstack_horizon_logging = {
     )
 } = dict();
 
-@documentation {
+@documentation{
+    Dashboard database options.
+}
+type opentack_horizon_databases_options = {
+    @{Set django database engine}
+    'ENGINE' : string = 'django.db.backends.sqlite3'
+    @{Set database location. This file must exist}
+    'NAME' : absolute_file_path = '/var/cache/murano-dashboard/murano-dashboard.sqlite'
+} = dict();
+
+@documentation{
+    Horizon django databases configuration.
+}
+type openstack_horizon_databases = {
+    'default' : opentack_horizon_databases_options
+} = dict();
+
+@documentation{
     Dictionary used to restrict user private subnet cidr range.
     An empty list means that user input will not be restricted
     for a corresponding IP version. By default, there is
@@ -190,7 +210,7 @@ type openstack_horizon_allowed_subnet = {
     'ipv6' ? type_ipv6[]
 } = dict();
 
-@documentation {
+@documentation{
     "direction" should not be specified for all_tcp, udp or icmp.
 }
 type openstack_horizon_security_group = {
@@ -200,37 +220,103 @@ type openstack_horizon_security_group = {
     'to_port' : long(-1..65535)
 } = dict();
 
-@documentation {
-    list of Horizon service configuration sections
+@documentation{
+    list of Horizon service django configuration sections
 }
-type openstack_horizon_config = {
+type openstack_horizon_config_django = {
     @{Set Horizon debug mode}
     'debug' : boolean = false
-    @{WEBROOT is the location relative to Webserver root
-    should end with a slash}
-    'webroot' : string = '/dashboard/' with match (SELF, '^/.+/$')
     @{If horizon is running in production (DEBUG is False), set this
     with the list of host/domain names that the application can serve.
     For more information see:
     https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts}
     'allowed_hosts' ? string[] = list('*')
+};
+
+type openstack_horizon_keystone_available_region = {
+    'name' : string
+    'url' : type_absoluteURI
+};
+
+@documentation{
+    list of Horizon service identity/keystone configuration sections
+}
+type openstack_horizon_config_identity_keystone = {
+    'openstack_keystone_url' : type_absoluteURI
+    @{Set this to True if running on a multi-domain model. When this is enabled, it
+    will require the user to enter the Domain name in addition to the username
+    for login}
+    'openstack_keystone_multidomain_support' : boolean = true
+    @{the endpoint type to use for the endpoints in the Keystone service catalog.
+    The default value for all services except for identity is "publicURL".
+    The default value for the identity service is "internalURL".}
+    'openstack_endpoint_type' ? choice('internalURL', 'publicURL')
+    @{Configure the default role for users that you create via the dashboard}
+    'openstack_keystone_default_role' : string = 'user'
+    'openstack_keystone_backend' : openstack_horizon_keystone_backend
+    'websso_enabled' ? boolean
+    'websso_initial_choice' ? string
+    'websso_idp_mapping' ? string[]{}
+    'websso_choices' ? string{}
+
+    @{list of available regions. 'openstack_keystone_url' indicates which of the regions is the default one}
+    'available_regions' ? openstack_horizon_keystone_available_region[]
+} with {
+    if (exists(SELF['available_regions'])) {
+        def = SELF['openstack_keystone_url'];
+        found = false;
+        foreach (idx; reg; SELF['available_regions']) {
+            if (reg['url'] == def) {
+                found = true;
+            };
+        };
+        if (!found) {
+            error("available_regions %s require openstack_keystone_url %s to be one of the regions",
+                    SELF['available_regions'], def);
+        };
+    };
+    true;
+};
+
+@documentation{
+    list of Horizon service app catalog/murano configuration sections
+}
+type openstack_horizon_config_catalog_murano = {
+    @{Murano UI needs to change the default session back end-from using
+    browser cookies to using a database instead to avoid issues with forms
+    during the creation of applications}
+    'databases' ? openstack_horizon_databases
+    @{Set Murano cache dir. By default it uses /tmp directory by this directory
+    is protected by default by Systemd in CentOS with "PrivateTmp=true"}
+    'metadata_cache_dir' ? absolute_file_path = '/var/cache/murano-dashboard'
+};
+
+@documentation{
+    list of Horizon service network/neutron configuration sections
+}
+type openstack_horizon_config_network_neutron = {
+    'allowed_private_subnet_cidr' ? openstack_horizon_allowed_subnet
+    'openstack_neutron_network' : openstack_horizon_neutron_network
+};
+
+@documentation{
+    list of Horizon service general configuration sections
+}
+type openstack_horizon_config_general = {
+    @{WEBROOT is the location relative to Webserver root
+    should end with a slash}
+    'webroot' : string = '/dashboard/' with match (SELF, '^/.+/$')
     @{Horizon uses Djangos sessions framework for handling session data.
     There are numerous session backends available, which are selected
-    through the "SESSION_ENGINE" setting}
-    'session_engine' : string = 'django.contrib.sessions.backends.cache'
+    through the "SESSION_ENGINE" setting.
+    For instance, Murano UI requires "django.contrib.sessions.backends.db".}
+    'session_engine' : openstack_horizon_session_engine = 'django.contrib.sessions.backends.cache'
     @{Send email to the console by default}
     'email_backend' : string = 'django.core.mail.backends.console.EmailBackend'
     @{External caching using an application such as memcached offers persistence
     and shared storage, and can be very useful for small-scale deployment
     and/or development}
     'caches' ? openstack_horizon_caches{}
-    'openstack_keystone_url' : type_absoluteURI
-    @{Set this to True if running on a multi-domain model. When this is enabled, it
-    will require the user to enter the Domain name in addition to the username
-    for login}
-    'openstack_keystone_default_role' : string = 'user'
-    'openstack_keystone_multidomain_support' : boolean = true
-    'openstack_keystone_backend' : openstack_horizon_keystone_backend
     'openstack_api_versions' : openstack_horizon_api_versions
     'openstack_hypervisor_features' : openstack_horizon_hypervisor_features
     'openstack_cinder_features' : openstack_horizon_cinder_features
@@ -240,6 +326,21 @@ type openstack_horizon_config = {
     custom properties should not be displayed in the Image Custom Properties
     table}
     'image_reserved_custom_properties' ? string[]
+    @{"off" disables the ability to upload images via Horizon.
+    "legacy" (default) enables local file upload by piping the image file through the
+    Horizon’s web-server (used by default). "direct" sends the image file directly
+    from the web browser to Glance. This bypasses Horizon web-server which both
+    reduces network hops and prevents filling up Horizon web-server’s filesystem.
+    "direct" is the preferred mode, but due to the following requirements it is not
+    the default. The direct setting requires a modern web browser, network access from
+    the browser to the public Glance endpoint, and CORS support to be enabled on the
+    Glance API service. Without CORS support, the browser will forbid the PUT request
+    to a location different than the Horizon server. To enable CORS support for Glance
+    API service, you will need to edit [cors] section of glance-api.conf file.
+    Set allowed_origin to the full hostname of Horizon web-server
+    (e.g. http(s)://<HOST_IP>) and restart glance-api process.
+    Set this [cors] extra configuration via Glance schema}
+    'horizon_images_upload_mode' ? choice('legacy', 'direct', 'off')
     @{The number of objects (Swift containers/objects or images) to display
     on a single page before providing a paging element (a "more" link)
     to paginate results}
@@ -266,9 +367,6 @@ type openstack_horizon_config = {
     "cloud_admin": "rule:admin_required and domain_id:<your domain id>"
     This value must be the name of the domain whose ID is specified there}
     'openstack_keystone_default_domain' : string = 'Default'
-    @{Configure the default role for users that you create via the dashboard}
-    'openstack_keystone_default_role' : string = 'user'
-    'openstack_neutron_network' : openstack_horizon_neutron_network
     @{The timezone of the server. This should correspond with the timezone
     of your entire OpenStack installation, and hopefully be in UTC.
     Example: "Europe/Brussels"}
@@ -290,7 +388,6 @@ type openstack_horizon_config = {
         'OPENSTACK_HYPERVISOR_FEATURES', 'LAUNCH_INSTANCE_DEFAULTS',
         'OPENSTACK_IMAGE_FORMATS', 'OPENSTACK_KEYSTONE_DEFAULT_DOMAIN',
         )
-    'allowed_private_subnet_cidr' ? openstack_horizon_allowed_subnet
     'security_group_files' : openstack_horizon_security_group{} = dict(
         'all_tcp', dict('name', 'ALL TCP', 'from_port', 1, 'to_port', 65535),
         'all_udp', dict('name', 'ALL UDP', 'from_port', 1, 'to_port', 65535, 'ip_protocol', 'udp'),
@@ -310,4 +407,25 @@ type openstack_horizon_config = {
         'mysql', dict('name', 'MYSQL', 'from_port', 3306, 'to_port', 3306),
         'rdp', dict('name', 'RDP', 'from_port', 3389, 'to_port', 3389),
         )
+    'use_ssl' ? boolean
+    'csrf_cookie_secure' ? boolean
+    'session_cookie_secure' ? boolean
+    'session_cookie_httponly' ? boolean
+    @{path to a custom CA certificate file, this overrides use of the default system CA certificate}
+    'openstack_ssl_cacert' ? absolute_file_path
+    @{Disable SSL certificate checks in the OpenStack clients (useful for self-signed certificates)}
+    'openstack_ssl_no_verify' ? boolean
+    @{enable logging of all operations carried out by users of Horizon}
+    'operation_log_enabled' ? boolean
+};
+
+@documentation{
+    list of Horizon service configuration sections
+}
+type openstack_horizon_config = {
+    include openstack_horizon_config_django
+    include openstack_horizon_config_general
+    include openstack_horizon_config_identity_keystone
+    include openstack_horizon_config_network_neutron
+    include openstack_horizon_config_catalog_murano
 };

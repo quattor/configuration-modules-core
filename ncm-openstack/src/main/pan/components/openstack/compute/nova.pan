@@ -2,12 +2,14 @@
 # ${developer-info}
 # ${author-info}
 
+declaration template components/openstack/compute/nova;
 
-declaration template components/openstack/nova;
+include 'components/openstack/identity';
 
-include 'components/openstack/keystone';
+type openstack_disk_cachemodes = string with match(SELF,
+    '^((file=|block=|network=)(default|none|writethrough|writeback|directsync|unsafe))$');
 
-@documentation {
+@documentation{
     The Nova configuration options in "api_database" Section.
 }
 type openstack_nova_api_database = {
@@ -17,7 +19,7 @@ type openstack_nova_api_database = {
     'connection' : string
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in the "vnc" Section.
 }
 type openstack_nova_vnc = {
@@ -46,7 +48,7 @@ type openstack_nova_vnc = {
 };
 
 
-@documentation {
+@documentation{
     The Nova configuration options in the "glance" Section.
 }
 type openstack_nova_glance = {
@@ -60,17 +62,15 @@ type openstack_nova_glance = {
     'api_servers' : type_absoluteURI[]
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in "placement" Section.
 }
 type openstack_nova_placement = {
     include openstack_domains_common
-    @{Region name of this node. This is used when picking the URL in the service
-    catalog}
-    'os_region_name' : string = 'RegionOne'
+    include openstack_region_common
 } = dict();
 
-@documentation {
+@documentation{
     The Nova hypervisor configuration options in "libvirt" Section.
 }
 type openstack_nova_libvirt = {
@@ -90,9 +90,66 @@ type openstack_nova_libvirt = {
     @{The RADOS client name for accessing rbd(RADOS Block Devices) volumes.
     Libvirt will refer to this user when connecting and authenticating with the Ceph RBD server}
     'rbd_user' ? string
+    @{Is used to set the CPU mode an instance should have.
+    If virt_type="kvm|qemu", it will default to "host-model", otherwise it will default to "none".
+    Possible values:
+        host-model: Clones the host CPU feature flags
+        host-passthrough: Use the host CPU model exactly
+        custom: Use a named CPU model
+        none: Not set any CPU model}
+    'cpu_mode' ? choice('none', 'host-passthrough', 'host-model', 'custom')
+    @{Specific cache modes to use for different disk types.
+
+    For example: list('file=directsync', 'block=none', 'network=writeback')
+
+    For local or direct-attached storage, it is recommended that you use
+    writethrough (default) mode, as it ensures data integrity and has acceptable
+    I/O performance for applications running in the guest, especially for read
+    operations. However, caching mode none is recommended for remote NFS storage,
+    because direct I/O operations (O_DIRECT) perform better than synchronous I/O
+    operations (with O_SYNC). Caching mode none effectively turns all guest I/O
+    operations into direct I/O operations on the host, which is the NFS client in
+    this environment.
+
+    Possible cache modes:
+        * default: Same as writethrough.
+        * none: With caching mode set to none, the host page cache is disabled, but
+        the disk write cache is enabled for the guest. In this mode, the write
+        performance in the guest is optimal because write operations bypass the host
+        page cache and go directly to the disk write cache. If the disk write cache
+        is battery-backed, or if the applications or storage stack in the guest
+        transfer data properly (either through fsync operations or file system
+        barriers), then data integrity can be ensured. However, because the host
+        page cache is disabled, the read performance in the guest would not be as
+        good as in the modes where the host page cache is enabled, such as
+        writethrough mode. Shareable disk devices, like for a multi-attachable block
+        storage volume, will have their cache mode set to 'none' regardless of
+        configuration.
+        * writethrough: writethrough mode is the default caching mode. With
+        caching set to writethrough mode, the host page cache is enabled, but the
+        disk write cache is disabled for the guest. Consequently, this caching mode
+        ensures data integrity even if the applications and storage stack in the
+        guest do not transfer data to permanent storage properly (either through
+        fsync operations or file system barriers). Because the host page cache is
+        enabled in this mode, the read performance for applications running in the
+        guest is generally better. However, the write performance might be reduced
+        because the disk write cache is disabled.
+        * writeback: With caching set to writeback mode, both the host page cache
+        and the disk write cache are enabled for the guest. Because of this, the
+        I/O performance for applications running in the guest is good, but the data
+        is not protected in a power failure. As a result, this caching mode is
+        recommended only for temporary data where potential data loss is not a
+        concern.
+        * directsync: Like "writethrough", but it bypasses the host page cache.
+        * unsafe: Caching mode of unsafe ignores cache transfer operations
+        completely. As its name implies, this caching mode should be used only for
+        temporary data where data loss is not a concern. This mode can be useful for
+        speeding up guest installations, but you should switch to another caching
+        mode in production environments}
+    "disk_cachemodes" ? openstack_disk_cachemodes[]
 };
 
-@documentation {
+@documentation{
     The Nova hypervisor configuration options in "neutron" Section.
 }
 type openstack_nova_neutron = {
@@ -119,7 +176,7 @@ type openstack_nova_neutron = {
     'service_metadata_proxy' ? boolean
 };
 
-@documentation {
+@documentation{
     The Nova configuration options in the "scheduler" Section.
 }
 type openstack_nova_scheduler = {
@@ -134,21 +191,58 @@ type openstack_nova_scheduler = {
     'discover_hosts_in_cells_interval' ? long(-1..)
 };
 
-@documentation {
+@documentation{
+    The Nova configuration options in the "cinder" section.
+}
+type openstack_nova_cinder = {
+    include openstack_region_common
+    @{If this option is set then it will override service catalog lookup with
+    this template for cinder endpoint.
+    Note: Nova does not support the Cinder v2 API since the Nova 17.0.0 Queens
+    release}
+    'catalog_info' : string = 'volumev3:cinderv3:internalURL'
+};
+
+@documentation{
+    The Nova configuration options in the "DEFAULT" section.
+}
+type openstack_nova_DEFAULTS = {
+    include openstack_DEFAULTS
+    @{Number of times to retry block device allocation on failures. Starting with
+    Liberty, Cinder can use image volume cache. This may help with block device
+    allocation performance. Look at the cinder "image_volume_cache_enabled"
+    configuration option.
+    If value is 0, then one attempt is made.
+    For any value > 0, total attempts are (value + 1)}
+    "block_device_allocate_retries" ? long(0..) = 60
+    @{This option allows the user to specify the time interval between
+    consecutive retries. "block_device_allocate_retries" option specifies
+    the maximum number of retries.
+    0: Disables the option.
+    Any positive integer in seconds enables the option}
+    "block_device_allocate_retries_interval" ? long(0..) = 10
+    @{Time in seconds to wait for a block device to be created}
+    "block_device_creation_timeout" ? long(1..) = 10
+};
+
+@documentation{
     list of Nova common configuration sections
 }
 type openstack_nova_common = {
-    'DEFAULT' : openstack_DEFAULTS
+    'DEFAULT' : openstack_nova_DEFAULTS
     'keystone_authtoken' : openstack_keystone_authtoken
     'vnc' : openstack_nova_vnc
     'glance' : openstack_nova_glance
     'oslo_concurrency' : openstack_oslo_concurrency
     @{placement service is mandatory since Ocata release}
     'placement' : openstack_nova_placement
+    'cinder' ? openstack_nova_cinder
     'neutron' ? openstack_nova_neutron
 };
 
-@documentation {
+type openstack_quattor_nova = openstack_quattor;
+
+@documentation{
     list of Nova configuration sections
 }
 type openstack_nova_config =  {
@@ -157,4 +251,6 @@ type openstack_nova_config =  {
     'api_database' ? openstack_nova_api_database
     'libvirt' ? openstack_nova_libvirt
     'scheduler' ? openstack_nova_scheduler
+    # default empty dict for pure hypervisor
+    'quattor' : openstack_quattor_nova = dict()
 };

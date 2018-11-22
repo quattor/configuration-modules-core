@@ -5,14 +5,28 @@
 
 declaration template components/openstack/common;
 
-type type_storagebackend = string with match(SELF, '^(file|http|swift|rbd|sheepdog|cinder|vmware)$');
+include 'components/openstack/functions';
 
-type type_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|geneve)$');
+type openstack_storagebackend = string with match(SELF, '^(file|http|swift|rbd|sheepdog|cinder|vmware)$');
 
-type type_neutronextension = string with match(SELF, '^(qos|port_security)$');
+type openstack_neutrondriver = string with match(SELF, '^(local|flat|vlan|gre|vxlan|geneve)$');
 
+type openstack_neutronextension = string with match(SELF, '^(qos|port_security)$');
 
-@documentation {
+type openstack_valid_region = string with openstack_is_valid_identity(SELF, 'region');
+
+type openstack_tunnel_types = string with match(SELF, '^(vxlan|gre)$');
+
+type openstack_neutron_mechanism_drivers = string with match(SELF, '^(linuxbridge|l2population|openvswitch)$');
+
+type openstack_neutron_firewall_driver = string with match(SELF,
+    '^(neutron.agent.linux.iptables_firewall.IptablesFirewallDriver|openvswitch|iptables_hybrid|iptables)$');
+
+type openstack_share_backends = string with match(SELF, '^(lvm|generic|cephfsnative|cephfsnfs)$');
+
+type openstack_share_protocols = string with match(SELF, '^(NFS|CIFS|CEPHFS|GLUSTERFS|HDFS|MAPRFS)$');
+
+@documentation{
     OpenStack common domains section
 }
 type openstack_domains_common = {
@@ -33,7 +47,14 @@ type openstack_domains_common = {
     'password' : string
 };
 
-@documentation {
+@documentation{
+    OpenStack common region section
+}
+type openstack_region_common = {
+    'os_region_name' : string = 'RegionOne'
+};
+
+@documentation{
     The configuration options in the database Section
 }
 type openstack_database = {
@@ -41,7 +62,7 @@ type openstack_database = {
     'connection' : string
 };
 
-@documentation {
+@documentation{
     The configuration options in 'oslo_concurrency' Section.
 }
 type openstack_oslo_concurrency = {
@@ -52,7 +73,7 @@ type openstack_oslo_concurrency = {
     'lock_path' : absolute_file_path
 };
 
-@documentation {
+@documentation{
     The configuration options in the DEFAULTS Section
 }
 type openstack_DEFAULTS = {
@@ -93,6 +114,16 @@ type openstack_DEFAULTS = {
     @{From nova.conf
     List of APIs to be enabled by default}
     'enabled_apis' ? string[] = list('osapi_compute', 'metadata')
+    @{From cinder.conf
+    Top-level directory for maintaining cinder state}
+    'state_path' ? absolute_file_path = '/var/lib/cinder'
+    @{From glance.conf
+    A list of backend names to use. These backend names should be backed by a
+    unique [CONFIG] group with its options}
+    'enabled_backends' ? string[]
+    @{From glance.conf
+    A list of the URLs of glance API servers available to cinder}
+    'glance_api_servers' ? type_absoluteURI[]
     @{From nova.conf
     An URL representing the messaging driver to use and its full configuration.
     Example: rabbit://openstack:<rabbit_password>@<fqdn>
@@ -129,10 +160,14 @@ type openstack_DEFAULTS = {
     'notify_nova_on_port_data_changes' ? boolean = true
     @{From Neutron l3_agent.ini and dhcp_agent.ini
     The driver used to manage the virtual interface}
-    'interface_driver' ? string = 'linuxbridge'
+    'interface_driver' ? string = 'linuxbridge' with match (SELF, '^(linuxbridge|openvswitch)$')
     @{From Neutron dhcp_agent.ini
     The driver used to manage the DHCP server}
     'dhcp_driver' ? string = 'neutron.agent.linux.dhcp.Dnsmasq'
+    @{Number of DHCP agents scheduled to host a tenant network. If this number is
+    greater than 1, the scheduler automatically assigns multiple DHCP agents for
+    a given tenant network, providing high availability for DHCP service}
+    'dhcp_agents_per_network' ? long(1..)
     @{From Neutron dhcp_agent.ini
     The DHCP server can assist with providing metadata support on isolated
     networks. Setting this value to True will cause the DHCP server to append
@@ -141,32 +176,142 @@ type openstack_DEFAULTS = {
     instance must be configured to request host routes via DHCP (Option 121).
     This option does not have any effect when force_metadata is set to True}
     'enable_isolated_metadata' ? boolean = true
-    @{From Neutron metadata_agent.ini
-    IP address or hostname used by Nova metadata server}
-    'nova_metadata_ip' ? string
+    @{From Neutron dhcp_agent.ini
+    In some cases the Neutron router is not present to provide the metadata IP
+    but the DHCP server can be used to provide this info. Setting this value will
+    force the DHCP server to append specific host routes to the DHCP request. If
+    this option is set, then the metadata service will be activated for all the
+    networks}
+    'force_metadata' ? boolean = true
     @{From Neutron metadata_agent.ini
     When proxying metadata requests, Neutron signs the Instance-ID header with a
     shared secret to prevent spoofing. You may select any string for a secret,
     but it must match here and in the configuration used by the Nova Metadata
-    Server. NOTE: Nova uses the same config key, but in [neutron] section.
-    }
+    Server. NOTE: Nova uses the same config key, but in [neutron] section}
     'metadata_proxy_shared_secret' ? string
+    @{From Neutron metadata_agent.ini
+    IP address or DNS name of Nova metadata server}
+    'nova_metadata_host' ? string
     @{Driver for security groups}
     'firewall_driver' ? string = 'neutron.agent.linux.iptables_firewall.IptablesFirewallDriver'
     @{Use neutron and disable the default firewall setup}
     'use_neutron' ? boolean = true
+    @{From manila.conf
+    Default share type to use.
+    The default_share_type option specifies the default share type to be used
+    when shares are created without specifying the share type in the request.
+    The default share type that is specified in the configuration file has to
+    be created with the necessary required extra-specs
+    (such as driver_handles_share_servers) set appropriately with reference to
+    the driver mode used}
+    'default_share_type' ? string = 'default'
+    @{From manila.conf
+    Template string to be used to generate share names}
+    'share_name_template' ? string = 'share-%s'
+    @{From manila.conf
+    File name for the paste.deploy config for manila-api}
+    'api_paste_config' ? absolute_file_path = '/etc/manila/api-paste.ini'
+    @{From manila.conf
+    A list of share backend names to use. These backend names should be
+    backed by a unique [CONFIG] group with its options}
+    'enabled_share_backends' ? openstack_share_backends[] = list('lvm')
+    @{From manila.conf
+    Specify list of protocols to be allowed for share creation}
+    'enabled_share_protocols' ? openstack_share_protocols[] = list('NFS')
+};
+
+@documentation{
+    The configuration options for CORS middleware.
+    This middleware provides a comprehensive, configurable
+    implementation of the CORS (Cross Origin Resource Sharing)
+    specification as oslo-supported python wsgi middleware.
+}
+type openstack_cors = {
+    @{Indicate whether this resource may be shared with the domain
+    received in the requests "origin" header.
+    Format: "<protocol>://<host>[:<port>]", no trailing slash.
+    Example: https://horizon.example.com}
+    'allowed_origin' : type_absoluteURI[]
+    @{Maximum cache age of CORS preflight requests}
+    'max_age' ? long(1..) = 3600
+    @{Indicate that the actual request can include user credentials}
+    'allow_credentials' ? boolean
+};
+
+type openstack_quattor_endpoint = {
+    @{endpoint host (proto://host:port/suffix)}
+    'host' ? type_hostname
+    @{endpoint protocol (proto://host:port/suffix)}
+    'proto' ? choice('http', 'https')
+    @{endpoint port (proto://host:port/suffix) (mandatory for internal endpoint)}
+    'port' ? type_port
+    @{endpoint suffix (proto://host:port/suffix)}
+    'suffix' ? string
+    @{region that the service/endpoint belongs to}
+    'region' ? openstack_valid_region
+};
+
+type openstack_quattor_service_common = {
+    @{public endpoint (on top of internal endpoint configuration)}
+    'public' ? openstack_quattor_endpoint
+    @{admin endpoint (on top of internal endpoint configuration)}
+    'admin' ? openstack_quattor_endpoint
 };
 
 
-@documentation {
-    Type to enable RabbitMQ and the message system for OpenStack.
+type openstack_quattor_service = {
+    include openstack_quattor_service_common
+    @{internal endpoint (is also default for public and/or admin)}
+    'internal' : openstack_quattor_endpoint with {
+        foreach (i; attr; list('host', 'port')) {
+            if (!exists(SELF[attr])) {
+                error('openstack quattor internal (endpoint) must have %s defined', attr);
+            };
+        };
+        true;
+    }
+    @{service name (default is current openstack flavour name)}
+    'name' ? string
+    @{service type (default is current openstack service name)}
+    'type' ? string
+};
+
+type openstack_quattor_service_extra = {
+    include openstack_quattor_service_common
+    @{internal endpoint (is also default for public and/or admin)}
+    'internal' : openstack_quattor_endpoint with {
+        foreach (i; attr; list('port')) {
+            if (!exists(SELF[attr])) {
+                error('openstack quattor internal (extra endpoint) must have %s defined', attr);
+            };
+        };
+        true;
+    }
+    'type' : string
+};
+
+
+@documentation{
+Custom configuration type. This is data that is not picked up as configuration data,
+but used to e.g. build up the service endpoints.
+(Any section named quattor is also not rendered)
+
+It is to be used as e.g.
+    type openstack_quattor_servicex = openstack_quattor = dict('quattor', dict('port', 123))
+
+And then this custom service type is included in the service configuration.
+    type openstack_servicex = {
+        'quattor' : openstack_quattor_servicex
+        ...
 }
-type openstack_rabbitmq_config = {
-    @{RabbitMQ user to get access to the queue}
-    'user' : string = 'openstack'
-    'password' : string
-    @{Set config/write/read permissions for RabbitMQ service.
-    A regular expression matching resource names for
-    which the user is granted configure permissions}
-    'permissions' : string[3] = list('.*', '.*', '.*')
+type openstack_quattor = {
+    @{default service/endpoint}
+    'service' ? openstack_quattor_service
+    @{other services; key is name. Default values like public/internal are taken from service}
+    'services' ? openstack_quattor_service_extra{}
+} with {
+    if (exists(SELF['services']) && !exists(SELF['service'])) {
+        error("openstack quattor service configuration when configuring (other) services");
+    };
+    true;
 };

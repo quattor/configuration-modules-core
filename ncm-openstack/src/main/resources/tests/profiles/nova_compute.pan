@@ -45,6 +45,7 @@ prefix "/metaconfig/contents";
 );
 "libvirt" = dict(
     "virt_type", "kvm",
+    "disk_cachemodes", list('network=writeback'),
 );
 "neutron" = dict(
     "url", format('http://%s:9696', NEUTRON_HOST_SERVER),
@@ -52,4 +53,4 @@ prefix "/metaconfig/contents";
     "username", "neutron",
     "password", "neutron_good_password",
 );
-
+"cinder" = dict();

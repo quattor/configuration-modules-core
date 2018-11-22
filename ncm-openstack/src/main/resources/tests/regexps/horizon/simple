@@ -3,8 +3,21 @@ OpenStack Horizon test
 multiline
 ---
 ^ALLOWED_HOSTS\s?=\s*.+\s*$
+^AVAILABLE_REGIONS = \[$
+^\s{4}\("http://controller.mysite.com:5000/v3", "main"\),$
+^\s{4}\("http://controller.myothersite.com:5000/v3", "other"\),$
+\]
 ^CACHES\s?=\s*\{\s*$
+^\s{8}'LOCATION': \['controller.mysite.com:11211', 'controller.myothersite.com:11211'\],$
 ^\}$
+^DATABASES\s?=\s*\{\s*$
+^\s{4}'default':\s{1}\{$
+^\s{8}'ENGINE':\s{1}"django.db.backends.sqlite3",$
+^\s{8}'NAME':\s{1}"/var/cache/murano-dashboard/murano-dashboard.sqlite",$
+^\s{4}\},$
+^\}$
+^HORIZON_IMAGES_UPLOAD_MODE\s?=\s*.+\s*$
+^METADATA_CACHE_DIR\s?=\s*.+\s*$
 ^OPENSTACK_API_VERSIONS\s?=\s?\{$
 ^OPENSTACK_KEYSTONE_DEFAULT_DOMAIN\s?=\s*.+\s*$
 ^OPENSTACK_KEYSTONE_DEFAULT_ROLE\s?=\s*.+\s*$
@@ -14,3 +27,16 @@ multiline
 ^\}$
 ^SESSION_ENGINE\s?=\s*.+\s*$
 ^TIME_ZONE\s?=\s*.+\s*$
+^WEBSSO_CHOICES = \($
+^    \("credentials", _\("Keystone Credentials"\)\),$
+^    \("mapped", _\("Security Assertion Markup Language"\)\),$
+^    \("myidp_mapped", _\("Acme Corporation - SAML2"\)\),$
+^    \("myidp_openid", _\("Acme Corporation - OpenID Connect"\)\),$
+^    \("openid", _\("OpenID Connect"\)\),$
+^\)$
+^WEBSSO_ENABLED = True$
+^WEBSSO_IDP_MAPPING = \{$
+^    'myidp_mapped': \('myidp', 'mapped'\),$
+^    'myidp_openid': \('myidp', 'openid'\),$
+^\}$
+^WEBSSO_INITIAL_CHOICE = "myidp_openid"$

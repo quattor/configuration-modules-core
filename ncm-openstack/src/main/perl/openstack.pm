@@ -30,7 +30,7 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
-=head2 Storage
+=head2 Image
 
 =over
 
@@ -86,10 +86,8 @@ ncm-openstack provides support for OpenStack configuration for:
 
 use parent qw(NCM::Component);
 
-use EDG::WP4::CCM::TextRender;
-use CAF::Service;
-use Readonly;
 use NCM::Component::OpenStack::Service qw(run_service);
+use NCM::Component::OpenStack::Client qw(set_logger);
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
@@ -106,11 +104,12 @@ sub Configure
 {
     my ($self, $config) = @_;
 
+    # Set client logger. Doesn't mean the client has to be used.
+    set_logger($self);
+
     my $tree = $config->getTree($self->prefix);
 
-    my $client;
-
-    my @args = ($config, $self, $self->prefix, $client);
+    my @args = ($config, $self, $self->prefix);
 
     my $order = [
         # First set OpenRC script to connect to REST API
@@ -121,9 +120,13 @@ sub Configure
         # Set OpenStack identity service first
         'identity',
         # After that continue with the rest of services
-        'storage',
+        'image',
+        'volume',
+        'share',
         'compute',
         'network',
+        'orchestration',
+        'catalog',
         'dashboard',
     ];
 

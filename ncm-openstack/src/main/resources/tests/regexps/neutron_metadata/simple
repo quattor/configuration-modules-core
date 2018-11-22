@@ -4,4 +4,4 @@ multiline
 ---
 ^\[DEFAULT\]$
 ^metadata_proxy_shared_secret\s?=\s*.+\s*$
-^nova_metadata_ip\s?=\s*.+\s*$
+^nova_metadata_host\s?=\s*.+\s*$

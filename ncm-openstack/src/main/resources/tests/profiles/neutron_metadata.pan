@@ -9,6 +9,7 @@ bind "/metaconfig/contents" = openstack_neutron_metadata_config;
 prefix "/metaconfig/contents";
 
 "DEFAULT" = dict(
-    "nova_metadata_ip", "controller.mysite.com",
+    "nova_metadata_host", "controller.mysite.com",
     "metadata_proxy_shared_secret", "metadata_good_password",
 );
+

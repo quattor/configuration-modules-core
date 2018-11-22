@@ -55,3 +55,9 @@ prefix "/metaconfig/contents";
     "service_metadata_proxy", true,
     "metadata_proxy_shared_secret", "metadata_good_password",
 );
+"cinder" = dict();
+
+
+include 'components/openstack/identity/gather/compute/nova';
+"quattor" = value("/software/components/openstack/compute/nova/quattor");
+"/software" = null;

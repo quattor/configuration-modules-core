@@ -10,11 +10,12 @@ use Test::MockModule;
 use NCM::Component::openstack;
 
 use helper;
+use mock_rest qw(openstack);
+
 use Test::Quattor::TextRender::Base;
 
 my $caf_trd = mock_textrender();
 my $obj = Test::Quattor::Object->new();
-
 
 
 my $cmp = NCM::Component::openstack->new("openstack", $obj);
@@ -26,6 +27,10 @@ set_output('glance_db_version_missing');
 set_output('nova_db_version_missing');
 set_output('neutron_db_version_missing');
 set_output('rabbitmq_db_version_missing');
+set_output('cinder_db_version_missing');
+set_output('manila_db_version_missing');
+set_output('heat_db_version_missing');
+set_output('murano_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -83,6 +88,25 @@ $fh = get_file("/etc/openstack-dashboard/local_settings");
 isa_ok($fh, "CAF::FileWriter", "dashboard local_settings CAF::FileWriter instance");
 like("$fh", qr{^\#\s{1}-\*-\s{1}coding:\s{1}utf-8\s{1}-\*-$}m, "local_settings has expected content");
 
+# Verify Cinder configuration file
+$fh = get_file("/etc/cinder/cinder.conf");
+isa_ok($fh, "CAF::FileWriter", "cinder.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "cinder.conf has expected content");
+
+# Verify Manila configuration file
+$fh = get_file("/etc/manila/manila.conf");
+isa_ok($fh, "CAF::FileWriter", "manila.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "manila.conf has expected content");
+
+# Verify Heat configuration file
+$fh = get_file("/etc/heat/heat.conf");
+isa_ok($fh, "CAF::FileWriter", "heat.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "heat.conf has expected content");
+
+# Verify Murano configuration file
+$fh = get_file("/etc/murano/murano.conf");
+isa_ok($fh, "CAF::FileWriter", "murano.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "murano.conf has expected content");
 
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
@@ -95,12 +119,22 @@ ok(command_history_ok([
         '/usr/bin/keystone-manage db_sync',
         '/usr/bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone',
         '/usr/bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone',
-        '/usr/bin/keystone-manage bootstrap --bootstrap-admin-url http://controller.mysite.com:35357/v3/ --bootstrap-internal-url http://controller.mysite.com:35357/v3/ --bootstrap-password admingoodpass --bootstrap-public-url http://controller.mysite.com:5000/v3/ --bootstrap-region-id RegionOne',
+        '/usr/bin/keystone-manage bootstrap --bootstrap-password admingoodpass',
         'service httpd restart',
         '/usr/bin/glance-manage db_version',
         '/usr/bin/glance-manage db_sync',
         'service openstack-glance-registry restart',
         'service openstack-glance-api restart',
+        '/usr/bin/cinder-manage db version',
+        '/usr/bin/cinder-manage db sync',
+        'service openstack-cinder-api restart',
+        'service openstack-cinder-scheduler restart',
+        'service openstack-cinder-volume restart',
+        '/usr/bin/manila-manage db version',
+        '/usr/bin/manila-manage db sync',
+        'service openstack-manila-api restart',
+        'service openstack-manila-scheduler restart',
+        'service openstack-manila-share restart',
         '/usr/bin/nova-manage db version',
         '/usr/bin/nova-manage api_db sync',
         '/usr/bin/nova-manage cell_v2 map_cell0',
@@ -118,8 +152,72 @@ ok(command_history_ok([
         'service neutron-linuxbridge-agent restart',
         'service neutron-metadata-agent restart',
         'service neutron-server restart',
+        '/usr/bin/heat-manage db_version',
+        '/usr/bin/heat-manage db_sync',
+        'service openstack-heat-api restart',
+        'service openstack-heat-api-cfn restart',
+        'service openstack-heat-engine restart',
+        '/usr/bin/murano-db-manage version',
+        '/usr/bin/murano-db-manage upgrade',
+        'service murano-api restart',
+        'service murano-engine restart',
         'service httpd restart',
-                      ]), "expected commands run");
+                      ]), "server expected commands run");
+
+diag "method history";
+dump_method_history;
+ok(method_history_ok([
+    'POST .*/v3/auth/tokens',
+    'GET .*/regions/  ',
+    'POST .*/regions/ .*description":"abc",.*"id":"regionOne"',
+    'POST .*/regions/ .*description":"def",.*"id":"regionTwo"',
+    'POST .*/regions/ .*description":"xyz",.*"id":"regionThree"',
+    'GET .*/domains/  ',
+    'POST .*/domains/ .*description":"vo1",.*"name":"vo1"',
+    'POST .*/domains/ .*description":"vo2",.*"name":"vo2"',
+    'GET .*/projects/  ',
+    'POST .*/projects/ .*,"name":"opq"',
+    'POST .*/projects/ .*"description":"main vo1 project","domain_id":"dom12345".*"name":"vo1"',
+    'POST .*/projects/ .*"description":"main vo2 project","domain_id":"dom23456",.*"name":"vo2"',
+    'POST .*/projects/ .*"description":"some real project".*"name":"realproject".*"parent_id":"pro124"',
+    'GET .*/users/  ',
+    'POST .*/users/ .*"description":"quattor service volume flavour cinder user","domain_id":"dom112233","enabled":true,"name":"cinder","password":"cinder_good_password"',
+    'PUT .*/projects/10/tags/ID_user_use12c',
+    'POST .*/users/ .*"description":"quattor service image flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"',
+    'PUT .*/projects/10/tags/ID_user_use12g',
+    'POST .*/users/ .*"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"',
+    'PUT .*/projects/10/tags/ID_user_use12m',
+    'POST .*/users/ .*"description":"quattor service network flavour neutron user","domain_id":"dom112233","enabled":true,"name":"neutron","password":"neutron_good_password"',
+    'POST .*/users/ .*"description":"first user",.*"name":"user1","password":"abc"',
+    'GET .*/groups/  ',
+    'POST .*/groups/ .*"description":"first group","domain_id":"dom23456",.*"name":"grp1"',
+    'GET .*/roles/  ',
+    'POST .*/roles/ .*"enabled":true,"name":"rl1"',
+    'POST .*/roles/ .*"enabled":true,"name":"rl2"',
+    'PUT .*/domains/dom12345/users/use12/roles/rll11 \{\} ',
+    'PUT .*/projects/10/tags/ROLE_ZG9tYWlucy9kb20xMjM0NS91c2Vycy91c2UxMi9yb2xlcy9ybGwxMQ \{\}',
+    'PUT .*/projects/pro125/groups/use12/roles/rll12 \{\}',
+    'PUT .*/projects/pros/users/use12c/roles/rolaaddmm ',
+    'PUT .*/projects/pros/users/use12g/roles/rolaaddmm ',
+    'PUT .*/projects/pros/users/use12m/roles/rolaaddmm ',
+    'PUT .*/projects/pros/users/use12no/roles/rolaaddmm ',
+    'GET .*/services/  ',
+    'POST .*/services/ .*"description":"OS image one",.*"name":"glanceone","type":"image"',
+    'POST .*/services/ .*"description":"OS compute service nova",.*"name":"nova","type":"compute"',
+    'POST .*/services/ .*"description":"OS placement service placement",.*"name":"placement","type":"placement"',
+    'GET .*/endpoints/  ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv111","url":"http://admin".*',
+    'PUT .*/projects/10/tags/ID_endpoint_ept1 \{\}',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv113","url":"https://openstack:8778/".* ',
+    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal0".*',
+    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal1".*',
+    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv113","url":"https://openstack:8778/".* ',
+    'POST .*/endpoints/ .*"interface":"public","region_id":"regionThree","service_id":"serv111","url":"http://public".*',
+    'POST .*/endpoints/ .*"interface":"public","service_id":"serv113","url":"https://openstack:8778/".* ',
+    'POST .*/endpoints/ .*"interface":"public","service_id":"serv112","url":"https://somehost:8774/v2.1/%\(tenant_id\)s".* ',
+]), "REST API calls as expected");
 
 command_history_reset();
 set_output('keystone_db_version');

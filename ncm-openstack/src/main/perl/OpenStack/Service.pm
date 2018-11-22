@@ -2,6 +2,8 @@
 
 use CAF::Object qw(SUCCESS);
 use CAF::Process 17.8.1;
+use CAF::Service;
+use EDG::WP4::CCM::TextRender;
 use parent qw(CAF::Object Exporter);
 use Module::Load;
 use Readonly;
@@ -13,6 +15,12 @@ Readonly my $DOMAINNAME => "/system/network/domainname";
 Readonly my $DEFAULT_PREFIX => "/software/components/openstack";
 Readonly my $VIRSH_COMMAND => "/usr/bin/virsh";
 
+# This map is used when multiple flavour candidates are found in the tree
+# (i.e. regular configuration data) and the fallback filter for
+# the quattor subtree (from the custom openstack_quattor type) would not detect it
+# This should match the openstack_oneof condition in the schema
+Readonly my %TYPE_FLAVOUR_CANDIDATES => {
+};
 
 =head2 Functions
 
@@ -30,16 +38,35 @@ sub get_flavour
     my ($type, $tree, $log) = @_;
 
     my $flavour;
-    my @flavours = sort keys %{$tree->{$type}};
+
+    # client is reserved configuration data processed by API client
+    my @flavours = grep {$_ ne 'client'} sort keys %{$tree->{$type}};
+
     if ($type eq 'openrc') {
         # Not an actual openstack service
         $flavour = $type;
     } elsif (scalar @flavours == 1) {
         $flavour = $flavours[0];
     } elsif (!@flavours) {
-        $log->error("No flavour for type $type found");
+        $log->error("No flavour candidates for type $type found");
+    } elsif (exists($TYPE_FLAVOUR_CANDIDATES{$type})) {
+        # First try if there is a type map
+        my %testhash = (map {$_ => 1} @{$TYPE_FLAVOUR_CANDIDATES{$type}});
+        my @tflavours = grep {$testhash{$_}} @flavours;
+        if (scalar @tflavours == 1) {
+            $flavour = $tflavours[0];
+        } else {
+            $log->error("None or more than one type flavour for type $type found: flavours ".join(', ', @flavours));
+        }
     } else {
-        $log->error("More than one flavour for type $type found: ".join(', ', @flavours));
+        # Second, reduce the list by filtering for subtree with the quattor attribute
+        #   from the custom openstack_quattor type
+        my @qflavours = grep {exists($tree->{$type}->{$_}->{quattor})} @flavours;
+        if (scalar @qflavours == 1) {
+            $flavour = $qflavours[0];
+        } else {
+            $log->error("More than one flavour for type $type found: ".join(', ', @flavours));
+        }
     }
     return $flavour;
 }
@@ -146,13 +173,12 @@ Arguments:
 
 sub _init_attrs
 {
-    my ($self, $type, $config, $log, $prefix, $client) = @_;
+    my ($self, $type, $config, $log, $prefix) = @_;
 
     $self->{type} = $type;
     $self->{config} = $config;
     $self->{log} = $log;
     $self->{prefix} = $prefix || $DEFAULT_PREFIX;
-    $self->{client} = $client;
 
     $self->{comptree} = $config->getTree($self->{prefix});
 
@@ -248,6 +274,27 @@ instead of using SUPER
 
 sub _attrs {};
 
+=item _get_json_tree
+
+Return the getTree result on C<path>, in JSON data format.
+(Relative paths are relative to the prefix).
+
+=cut
+
+sub _get_json_tree
+{
+    my ($self, $path) = @_;
+
+    $path = "$self->{prefix}/$path" if $path !~ m/^\//;
+
+    # The data format conversion is taken from CCM::TextRender _make_predefined_options
+    return $self->{config}->getTree(
+        $path,
+        undef, # depth
+        convert_boolean => [$EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{json_boolean}],
+        );
+}
+
 =item _render
 
 Returns CCM::TextRedner instance
@@ -334,7 +381,7 @@ sub _write_config_files
     my $changed = 0;
     my $daemon_map = $self->{daemon_map} || {};
 
-    foreach my $ntype (sort keys %{$self->{tree}}) {
+    foreach my $ntype (grep {$_ ne 'quattor'} sort keys %{$self->{tree}}) {
         # TT file is always common
         my $element = $self->{config}->getElement("$self->{elpath}/$ntype");
         my $filename = $self->{filename}->{$ntype};
@@ -546,9 +593,22 @@ Must return 1 on success
 
 sub pre_restart {return 1};
 
+=item run_client
+
+Configure the service (typically using REST client).
+Must return 1 on success.
+
+=cut
+
+sub run_client {return 1};
+
 =item run
 
 Do things (in following order):
+
+=over
+
+=item flavour configuration
 
 =over
 
@@ -562,19 +622,31 @@ Do things (in following order):
 
 =back
 
+=item service configuration
+
+=over
+
+=item run_client
+
+=back
+
+=back
+
 =cut
 
 sub run
 {
     my ($self) = @_;
 
-    my $changed = $self->write_config_file();
+    my $changed = $self->{tt} ? $self->write_config_file() : undef;
 
     $self->populate_service_database() or return if $self->{manage};
 
     $self->pre_restart() or return;
 
     $self->restart_daemons() if $changed;
+
+    $self->run_client() or return;
 
     return 1;
 }

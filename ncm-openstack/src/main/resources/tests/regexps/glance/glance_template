@@ -2,6 +2,9 @@ OpenStack Glance template full test
 ---
 multiline
 ---
+^\[cors\]$
+^allowed_origin\s{1}=\s{1}https://dashboard.example.com,\s{1}http://localhost$
+
 ^\[database\]$
 ^connection\s{1}=\s{1}mysql\+pymysql://glance:glance_db_pass@controller.mysite.com/glance$
 
