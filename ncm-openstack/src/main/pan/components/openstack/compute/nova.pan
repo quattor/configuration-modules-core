@@ -223,6 +223,35 @@ type openstack_nova_DEFAULTS = {
     "block_device_allocate_retries_interval" ? long(0..) = 10
     @{Time in seconds to wait for a block device to be created}
     "block_device_creation_timeout" ? long(1..) = 10
+    @{This option helps you specify virtual CPU to physical CPU allocation ratio.
+    From Ocata (15.0.0) this is used to influence the hosts selected by
+    the Placement API. Note that when Placement is used, the CoreFilter
+    is redundant, because the Placement API will have already filtered
+    out hosts that would have failed the CoreFilter.
+    This configuration specifies ratio for CoreFilter which can be set
+    per compute node. For AggregateCoreFilter, it will fall back to this
+    configuration value if no per-aggregate setting is found.
+    NOTE: This can be set per-compute, or if set to 0.0, the value
+    set on the scheduler node(s) or compute node(s) will be used
+    and defaulted to 16.0.
+    NOTE: As of the 16.0.0 Pike release, this configuration option is ignored
+    for the ironic.IronicDriver compute driver and is hardcoded to 1.0}
+    "cpu_allocation_ratio" ? double(0..)
+    @{This option helps you specify virtual RAM to physical RAM
+    allocation ratio.
+    From Ocata (15.0.0) this is used to influence the hosts selected by
+    the Placement API. Note that when Placement is used, the RamFilter
+    is redundant, because the Placement API will have already filtered
+    out hosts that would have failed the RamFilter.
+    This configuration specifies ratio for RamFilter which can be set
+    per compute node. For AggregateRamFilter, it will fall back to this
+    configuration value if no per-aggregate setting found.
+    NOTE: This can be set per-compute, or if set to 0.0, the value
+    set on the scheduler node(s) or compute node(s) will be used and
+    defaulted to 1.5.
+    NOTE: As of the 16.0.0 Pike release, this configuration option is ignored
+    for the ironic.IronicDriver compute driver and is hardcoded to 1.0}
+    "ram_allocation_ratio" ? double(0..)
 };
 
 @documentation{
