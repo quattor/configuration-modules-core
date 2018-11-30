@@ -58,6 +58,11 @@ sub pre_populate_service_database
             $cmd = [$self->{manage}, "$method", qw(create_cell --name=cell1 --verbose)];
             $self->_do($cmd, "populate Nova cell1 database", sensitive => 0)
                 or return;
+
+            # And try to discover new hypervisors
+            $cmd = [$self->{manage}, "$method", qw(discover_hosts --verbose)];
+            $self->_do($cmd, "discover new hypervisors", sensitive => 0)
+                or return;
         }
     }
 
