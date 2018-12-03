@@ -128,8 +128,15 @@ sub deploy_osd
 
     # ceph-volume lvm create --data /dev/sdn --bluestore (--dmcrypt --crush-device-class baa)
     my $devpath = "/dev/" . unescape($name);
-    my $success = $self->run_command([qw(ceph-volume lvm create), "--data", $devpath, @options],
-        "deploy osd $devpath");
+    my $devexist = $self->run_command([qw(blkid -p), $devpath], "test $devpath blkid", test => 1);
+    my $success = 0;
+
+    if ($devexist) {
+        $self->warn("Device $devpath is not empty, not trying to deploy osd");
+    } else {
+        $success = $self->run_command([qw(ceph-volume lvm create), "--data", $devpath, @options],
+            "deploy osd $devpath");
+    }
     if (!$success) {
         if ($self->{ok_failures}){
             $self->{ok_failures}--;

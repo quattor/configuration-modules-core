@@ -27,15 +27,23 @@ set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING_SL, 'key');
 
 set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02 --bluestore", 1); 
+
+my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
+my @nodeploydevs = ('sda4', 'sdb', 'sdd');
+
+foreach my $dev (@deploydevs){
+    set_command_status("blkid -p /dev/$dev", 1); #empty
+};
+set_command_status("blkid -p /dev/sde", 1); # empty
+set_command_status("blkid -p /dev/sdf", 0); #device exists
+
 ok($cmp->Configure($cfg), 'Ceph component configure ok');
+
 isa_ok($cmp, 'NCM::Component::Ceph::Luminous', 'got ncm-ceph Luminous instance');
 
 my $fh = get_file('/etc/ceph/ceph.conf');
 is("$fh", $cfgdata::CFGFILE_OUT, 'cfgfile ok');
 
-
-my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
-my @nodeploydevs = ('sda4', 'sdb', 'sdd');
 foreach my $dev (@deploydevs){
     ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "Called deploy for $dev");
 }
