@@ -29,11 +29,16 @@ cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetc
 
 set_command_status("$osddata::OSD_VOLUME_CREATE/mapper/osd02 --bluestore", 1);
 
+my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
+my @nodeploydevs = ('sda4', 'sdb', 'sdd', 'sdf');
+foreach my $dev (@deploydevs){
+    set_command_status("blkid -p /dev/$dev", 1); #empty
+};
+set_command_status("blkid -p /dev/sde", 1); # empty
+set_command_status("blkid -p /dev/sdf", 0); #device exists
 ok($cl->configure(), 'Deployment of OSD succeeded');
 
-is($cl->{ok_failures},1, 'Number of failures is 1');
-my @deploydevs = ('mapper/osd01', 'mapper/osd02', 'sdc');
-my @nodeploydevs = ('sda4', 'sdb', 'sdd');
+is($cl->{ok_failures},1, 'Number of failures is 2');
 foreach my $dev (@deploydevs){
     ok(get_command("$osddata::OSD_VOLUME_CREATE/$dev --bluestore"), "Called deploy for $dev");
 }
