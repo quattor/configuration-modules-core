@@ -6,7 +6,7 @@ prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}/cont
 'proxys' = append(dict());
 
 prefix 'global';
-'logs/{/dev/log}' = list('local0','notice');
+'logs/{/dev/log}' = list('local0', 'notice');
 'config/tune.ssl.default-dh-param' = 2048;
 'config/chroot' = '/var/lib/haproxy';
 'config/log-send-hostname' = 'haproxyhost';
