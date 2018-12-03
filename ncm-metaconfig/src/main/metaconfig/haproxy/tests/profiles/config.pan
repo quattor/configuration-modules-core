@@ -9,11 +9,16 @@ prefix 'global';
 'logs/{/dev/log}' = list('local0','notice');
 'config/tune.ssl.default-dh-param' = 2048;
 'config/chroot' = '/var/lib/haproxy';
+'config/log-send-hostname' = 'haproxyhost';
 'config/pidfile' = '/var/run/haproxy.pid';
 'config/maxconn' = 4000;
 'config/user' = 'haproxy';
 'config/group' = 'haproxy';
 'config/daemon' = '';
+"config/ssl-default-bind-ciphers" = list('ECDHE-ECDSA-AES128-SHA256', 'ECDHE-RSA-AES128-SHA256');
+"config/ssl-default-bind-options" = list('no-sslv3', 'no-tlsv10', 'no-tlsv11');
+"config/ssl-default-server-ciphers" = list('ECDHE-ECDSA-AES128-SHA256', 'ECDHE-RSA-AES128-SHA256');
+"config/ssl-default-server-options" = list('no-sslv3', 'no-tlsv10', 'no-tlsv11');
 'stats/socket' = '/var/lib/haproxy/stats';
 'logs/{127.0.0.1}' = list('local2');
 prefix 'stats';
@@ -30,6 +35,7 @@ prefix 'defaults';
 'timeouts/connect' = 3500;
 'timeouts/client' = 10000;
 'timeouts/server' = 10000;
+'config/option' = 'tcpka';
 prefix 'proxys/-1';
 'name' = 'webserver';
 'port' = 80;
@@ -68,3 +74,18 @@ prefix 'backends/irods-bk';
 "servers/0" = dict('name', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
 "servers/1" = dict('name', 'other.host', 'ip', '10.20.30.1', 'params', dict('ssl', true, 'ca-file', '/other/file'));
 "servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247));
+
+prefix 'backends/sshproxy';
+"balance" = 'leastconn';
+"stick" = "on src";
+"options/0" = 'tcp-check';
+"tcpchecks" = list('expect string SSH-2.0-');
+"sticktable" = dict(
+    'type', 'ip',
+    'size', '1m',
+    'peers', 'mypeers');
+
+'servers/0' = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247));
+
+prefix 'peers';
+'mypeers/peers' = list(dict('name', 'testhost', 'ip', '10.20.30.4', 'port', 1024));

@@ -2,33 +2,39 @@ Test for config
 ---
 /etc/haproxy/haproxy.cfg
 ---
-global$
+^global$
 ^\s{4}log\s/dev/log\slocal0\snotice$
-^\s{4}log 127.0.0.1 local2$
+^\s{4}log\s127.0.0.1\slocal2$
 ^\s{4}chroot\s/var/lib/haproxy$
 ^\s{4}daemon\s$
 ^\s{4}group\shaproxy$
+^\s{4}log-send-hostname\shaproxyhost$
 ^\s{4}maxconn\s4000$
 ^\s{4}pidfile\s/var/run/haproxy.pid$
+^\s{4}ssl-default-bind-ciphers\sECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256$
+^\s{4}ssl-default-bind-options\sno-sslv3\sno-tlsv10\sno-tlsv11$
+^\s{4}ssl-default-server-ciphers\sECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256$
+^\s{4}ssl-default-server-options\sno-sslv3\sno-tlsv10\sno-tlsv11$
 ^\s{4}tune\.ssl\.default-dh-param\s2048$
 ^\s{4}user\shaproxy$
 ^\s{4}stats\ssocket\s/var/lib/haproxy/stats\s$
-defaults$
+^defaults$
 ^\s{4}log\sglobal$
 ^\s{4}maxconn\s4000$
+^\s{4}option\stcpka$
 ^\s{4}retries\s3$
 ^\s{4}timeout\scheck\s3500$
 ^\s{4}timeout\sclient\s10000$
 ^\s{4}timeout\sconnect\s3500$
 ^\s{4}timeout\squeue\s3500$
 ^\s{4}timeout\sserver\s10000$
-listen\sstats\s:\s$
+^listen\sstats\s:\s$
 ^\s{4}mode\shttp$
 ^\s{4}stats\senabled\s$
 ^\s{4}stats\shide-version\s$
 ^\s{4}stats\srefresh\s5
 ^\s{4}stats\suri\s/$
-listen\s\swebserver$
+^listen\s\swebserver$
 ^\s{4}bind\s\*:80\s$
 ^\s{4}balance\ssource$
 ^\s{4}capture\scookie\svgnvisitor=\slen\s32$
@@ -41,16 +47,25 @@ listen\s\swebserver$
 ^\s{4}option\sforwardfor$
 ^\s{4}option\shttpclose$
 ^\s{4}default-server\sport\s80\sdowninter\s5\sfall\s2\sinter\s2\smaxqueue\s128\srise\s3\sslowstart\s60\sweight\s100\s$
-^\s{4}server\sserver1\s192\.168\.0\.11:80\scookie\scontrol\s+check$
-^\s{4}server\sserver2\s192\.168\.0\.12:80\scookie\scontrol\s+check$
-^frontend irods-in$
-^\s{4}bind \*:1247 crt /some/file ssl$
-^\s{4}default_backend irods-bk$
-^backend irods-bk$
-^\s{4}option tcp-check$
-^\s{4}tcp-check connect$
-^\s{4}tcp-check send PING$
-^\s{4}tcp-check expect string <MsgHeader_PI>\\n<type>RODS_VERSION</type>$
-^\s{4}server localhost 127.0.0.1:1247$
-^\s{4}server other.host 10.20.30.1 ca-file /other/file ssl$
-^\s{4}server othername 10.20.30.1:1247 check port 1247$
+^\s{4}server\sserver1\s192\.168\.0\.11:80\scookie\scontrol\s\scheck$
+^\s{4}server\sserver2\s192\.168\.0\.12:80\scookie\scontrol\s\scheck$
+^peers\smypeers$
+^\s{4}peer\stesthost\s10\.20\.30\.4:1024$
+^frontend\sirods-in$
+^\s{4}bind\s\*:1247\scrt\s/some/file\sssl$
+^\s{4}default_backend\sirods-bk$
+^backend\sirods-bk$
+^\s{4}option\stcp-check$
+^\s{4}tcp-check\sconnect$
+^\s{4}tcp-check\ssend\sPING$
+^\s{4}tcp-check\sexpect\sstring\s<MsgHeader_PI>\\n<type>RODS_VERSION</type>$
+^\s{4}server\slocalhost\s127\.0\.0\.1:1247$
+^\s{4}server\sother.host\s10\.20\.30\.1\sca-file\s/other/file\sssl$
+^\s{4}server\sothername\s10\.20\.30\.1:1247\scheck\sport\s1247$
+^backend\ssshproxy$
+^\s{4}balance\sleastconn$
+^\s{4}option\stcp-check$
+^\s{4}tcp-check\sexpect\sstring\sSSH-2.0-$
+^\s{4}stick-table\stype\sip\ssize\s1m\speers\smypeers$
+^\s{4}stick\son\ssrc$
+^\s{4}server\sothername\s10\.20\.30\.1:1247\scheck\sport\s1247$
