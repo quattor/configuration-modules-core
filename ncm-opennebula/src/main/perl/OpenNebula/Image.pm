@@ -12,7 +12,7 @@ support to C<NCM::Component::OpenNebula>.
 =item get_images
 
 Gets the image template from C<TT> file
-and gathers the image names (C<<fqdn>_<vdx>>)
+and gathers the image names ( C<< <fqdn>_<vdx> >> )
 and datastore names to store the new images.
 
 =cut
