@@ -77,7 +77,7 @@ To create groups, set third parameter (accountType) to 1.
 
 This function creates a group, applying some defaults defined by variables and checking
 information consistency.
-It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >>).
+It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >> ).
 
 
 
@@ -287,7 +287,7 @@ removed from the system (except root).
 
 =back
 
-B< Default: > C<< dyn_user_group >>
+Default: C<< dyn_user_group >>
 
 =head1 LIMITATIONS
 
