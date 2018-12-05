@@ -149,7 +149,7 @@ sub create_postgresql_config
 Get C<$path> from C<$config>, if it does not exists, return C<$default>.
 If C<$default> is not defined, use empty string as default.
 
-If C<$path> is a relative path, it is assumed relative from C<$self->prefix>.
+If C<$path> is a relative path, it is assumed relative from C<< $self->prefix >>.
 
 =cut
 
@@ -177,7 +177,7 @@ sub fetch
 
 =item get_version
 
-Return version instance C<v$major.$minor.$remainder> version information (from postmaster --version)
+Return version instance C<v$major.$minor.$remainder> version information (from C<postmaster --version>)
 
 Return undef in case of problem.
 
@@ -627,7 +627,7 @@ sub pg_alter
 
 =item roles
 
-C<$roles_tree> is the roles configuration hashref (via C<config->getTree(prefix/roles)>).
+C<$roles_tree> is the roles configuration hashref (via C<< config->getTree(prefix/roles) >>).
 
 Roles and only added and modified, never removed.
 
@@ -681,7 +681,7 @@ sub roles
 
 =item databases
 
-C<$dbs_tree> is the databases configuration hashref (via C<config->getTree(prefix/databases)>).
+C<$dbs_tree> is the databases configuration hashref (via C<< config->getTree(prefix/databases) >>).
 
 Databases are only created, never modified or removed.
 
