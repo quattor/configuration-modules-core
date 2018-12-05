@@ -10,6 +10,7 @@ common users' mistakes.
 =head1 EXAMPLES
 
 Try the following settings:
+
   prefix "/software/components/sudo";
   "general_options/options" = dict("insults", true);
   "user_aliases/FOO" = list("127.0.0.1");
