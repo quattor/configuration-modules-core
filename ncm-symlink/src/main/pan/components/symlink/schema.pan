@@ -45,8 +45,8 @@ type structure_symlink_context_entry = {
 };
 
 type structure_symlink_option_entry = {
-    @{Action applying to the object type. Can be "yes" (replacement of the object
-    by the symlink allowed), "no" (replacement of the object by the symlink
+    @{Action applying to the object type. Can be "true" (replacement of the object
+    by the symlink allowed), "false" (replacement of the object by the symlink
     disabled) or any other string. In this latter case, replacement of the object
     by the symlink is enabled after renaming the object by appending the string
     to its name.}
