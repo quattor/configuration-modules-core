@@ -172,7 +172,7 @@ C<configured_units> parses the C<tree> hash reference and builds up the
 units to be configured. It returns a hash reference with key the unit name and
 values the details of the unit.
 
-(C<tree> is typically C<$config->getElement('/software/components/chkconfig/service')->getTree>.)
+(C<tree> is typically C<< $config->getElement('/software/components/chkconfig/service')->getTree >>.)
 
 This method converts the legacy states as following
 
