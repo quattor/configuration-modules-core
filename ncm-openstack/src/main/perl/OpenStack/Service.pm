@@ -266,8 +266,9 @@ sub _set_elpath
 =item _attrs
 
 Add/set/modify more attributes
-Conviennce method for inheritance
+Convience method for inheritance
 instead of using SUPER
+
     my $res = $self->SUPER::method(@_);
 
 =cut
