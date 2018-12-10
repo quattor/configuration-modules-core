@@ -77,14 +77,14 @@ To create groups, set third parameter (accountType) to 1.
 
 This function creates a group, applying some defaults defined by variables and checking
 information consistency.
-It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >>).
+It updates a structure_accounts (return value may be assigned to C<< /software/components/accounts >> ).
 
 
 
 =head2 create_user(username:string, params:structure_userinfo)
 
 This function creates a user, applying some defaults defined by variables and checking
- information consistency (e.g. group existence).
+information consistency (e.g. group existence).
 It updates a structure_accounts (return value may be assigned to Default: C<< /software/components/accounts >>).
 
 =head2 keep_user_group(user_or_group:string or list of string)
@@ -287,7 +287,7 @@ removed from the system (except root).
 
 =back
 
-B< Default: > C<< dyn_user_group >>
+Default: C<< dyn_user_group >>
 
 =head1 LIMITATIONS
 
