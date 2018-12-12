@@ -12,8 +12,6 @@ Object to create/delete symbolic links. When creating symlinks, target existence
 can be checked. And clobbering can be disabled. Also, target definition
 can be simplified by the use of contextual variables and command outputs.
 
-=back
-
 =head1 EXAMPLES
 
 =over
