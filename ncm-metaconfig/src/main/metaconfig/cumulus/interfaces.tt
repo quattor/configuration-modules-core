@@ -1,0 +1,7 @@
+[% IF CCM.contents.exists('bridge') -%]
+[%-      INCLUDE 'metaconfig/cumulus/bridge.tt' -%]
+[%- END %]
+[% IF CCM.contents.exists('peerlink') -%]
+[%-      INCLUDE 'metaconfig/cumulus/peerlink.tt' peerlink=CCM.contents.peerlink -%]
+[%- END %]
+[% INCLUDE 'metaconfig/cumulus/ifaces.tt' %]

@@ -1,0 +1,14 @@
+[%- IF CCM.is_hash(value) -%]
+[%-     IF value.size;
+            INCLUDE 'metaconfig/cumulus/iface_data.tt' el_prefix=(el_name _ '-') data=value;
+        END -%]
+[%- ELSE -%]
+[%-     el_prefix -%][%- el_name %] [% -%]
+[%-     IF value.is_boolean -%]
+[%-         value ? 'yes' : 'no' -%]
+[%-     ELSIF CCM.is_list(value) -%]
+[%-         value.join(' ') -%]
+[%-     ELSE -%]
+[%-         value -%]
+[%-     END %]
+[% END -%]

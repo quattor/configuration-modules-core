@@ -1,0 +1,13 @@
+[%  ports = [];
+    IF CCM.contents.peerlink.bridge.enable;
+        ports.push('peerlink');
+    END;
+    FOREACH ifa IN CCM.contents.interfaces.pairs;
+        IF ifa.value.bridge.enable;
+            ports.push(ifa.key);
+        END;
+    END;
+    data = CCM.contents.bridge;
+    data.ports = ports;
+    INCLUDE 'metaconfig/cumulus/iface.tt' el_prefix='bridge-' name='bridge' data=data;
+-%]

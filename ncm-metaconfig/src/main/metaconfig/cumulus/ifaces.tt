@@ -1,0 +1,23 @@
+[% # Collect the bond-slaves and bridge-ports
+    ifas = [];
+    FOREACH sl IN CCM.contents.peerlink.slaves;
+        ifas.push(sl);
+    END;
+    FOREACH ifa IN CCM.contents.interfaces.pairs;
+        FOREACH sl IN ifa.value.slaves;
+            ifas.push(sl);
+        END;
+    END;
+-%]
+[%- FOREACH ifa IN CCM.contents.interfaces %]
+[%      inet = ifa.value.inet;
+        ifa.value.delete('inet');
+        INCLUDE 'metaconfig/cumulus/iface.tt' name=ifa.key inet=inet data=ifa.value;
+-%]
+[%- END -%]
+[%- FOREACH ifa IN ifas %]
+[%      IF !CCM.contents.interfaces.defined(ifa);
+            INCLUDE 'metaconfig/cumulus/iface.tt' name=ifa inet='' data={};
+        END;
+    END;
+-%]
