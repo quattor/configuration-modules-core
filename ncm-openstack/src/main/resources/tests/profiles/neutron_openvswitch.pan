@@ -13,7 +13,9 @@ prefix "/metaconfig/contents";
 );
 "agent" = dict(
     "l2_population", true,
+    "tunnel_types", list('vxlan'),
 );
 "securitygroup" = dict(
     "firewall_driver", "openvswitch",
 );
+

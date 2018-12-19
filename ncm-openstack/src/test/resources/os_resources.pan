@@ -128,7 +128,7 @@ prefix "/software/components/openstack/network/neutron/service";
 "DEFAULT" = dict(
     "auth_strategy", "keystone",
     "core_plugin", "ml2",
-    "service_plugins", list('router'),
+    "service_plugins", list('router', 'port_forwarding'),
     "allow_overlapping_ips", true,
     "notify_nova_on_port_status_changes", true,
     "notify_nova_on_port_data_changes", true,

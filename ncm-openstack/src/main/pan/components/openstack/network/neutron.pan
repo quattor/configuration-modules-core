@@ -122,9 +122,11 @@ type openstack_neutron_ovs = {
 type openstack_neutron_agent = {
     @{Extension to use alongside ml2 plugins l2population mechanism driver. It
     enables the plugin to populate VXLAN forwarding table}
-    'l2_population' : boolean = true
+    'l2_population' ? boolean = true
     @{Network types supported by the agent (gre and/or vxlan)}
-    'tunnel_types' : openstack_tunnel_types[] = list('vxlan')
+    'tunnel_types' ? openstack_tunnel_types[] = list('vxlan')
+    @{Extensions list to use}
+    'extensions' ? openstack_neutron_agent_extensions
 };
 
 
@@ -171,6 +173,7 @@ type openstack_neutron_openvswitch_config = {
 };
 type openstack_neutron_l3_config = {
     'DEFAULT' : openstack_DEFAULTS
+    'agent' ? openstack_neutron_agent
 };
 
 @documentation{
