@@ -73,7 +73,7 @@ type openstack_keystone_auth = {
       both use the REMOTE_USER variable. Since both the mapped and external plugin
       are being invoked to validate attributes in the request environment, it can
       cause conflicts.}
-    'methods' ? choice('external', 'password', 'token', 'oauth1', 'mapped', 'openid')[]
+    'methods' ? choice('external', 'password', 'token', 'oauth1', 'mapped', 'openid', 'application_credential')[]
 };
 
 @documentation{
@@ -103,6 +103,28 @@ type openstack_keystone_federation = {
       dashboard host, by form encoding a token in a POST request. Keystone's
       default value /etc/keystone/sso_callback_template.html should be sufficient for most deployments.}
     'sso_callback_template' ? absolute_file_path
+};
+
+@documentation{
+     The Keystone configuration options in the "application_credential" section
+}
+type openstack_keystone_application_credential = {
+    @{Entry point for the application credential backend driver in the
+      "keystone.application_credential" namespace.  Keystone only provides a "sql"
+      driver, so there is no reason to change this unless you are providing a
+      custom entry point}
+    'driver' : string = 'sql'
+    @{Toggle for application credential caching. This has no effect unless global
+      caching is enabled}
+    'caching' ? boolean
+    @{Time to cache application credential data in seconds. This has no effect
+      unless global caching is enabled}
+    'cache_time' ? long(1..)
+    @{Maximum number of application credentials a user is permitted to create. A
+      value of -1 means unlimited. If a limit is not set, users are permitted to
+      create application credentials at will, which could lead to bloat in the
+      keystone database or open keystone to a DoS attack}
+    'user_limit' ? long(-1..)
 };
 
 @documentation{
@@ -136,5 +158,6 @@ type openstack_keystone_config = {
     'federation' ? openstack_keystone_federation
     'mapped' ? openstack_keystone_mapped
     'openid' ? openstack_keystone_openid
+    'application_credential' ? openstack_keystone_application_credential
     'quattor' : openstack_quattor_keystone
 };
