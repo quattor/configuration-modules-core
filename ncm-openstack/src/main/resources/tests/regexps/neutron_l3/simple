@@ -4,3 +4,6 @@ multiline
 ---
 ^\[DEFAULT\]$
 ^interface_driver\s?=\s*.+\s*$
+
+^\[agent\]$
+^extensions\s?=\s*.+\s*$
