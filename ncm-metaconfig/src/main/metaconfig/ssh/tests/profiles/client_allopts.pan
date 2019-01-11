@@ -75,7 +75,7 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
 "main/ProxyCommand" = "ssh -q -W %h:%p gateway.example.com";
 "main/ProxyJump" = list("user1@host1", "user2@host2");
 "main/ProxyUseFdpass" = false;
-"main/PubkeyAcceptedKeyTypes" = list("ssh-rsa");
+"main/PubkeyAcceptedKeyTypes" = list("-ssh-rsa");
 "main/PubkeyAuthentication" = true;
 "main/RekeyLimit" = "1G";
 "main/RemoteCommand" = "cat /etc/motd";
