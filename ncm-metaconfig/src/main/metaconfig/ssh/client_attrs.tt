@@ -3,12 +3,21 @@
     'MACs', 'PreferredAuthentications', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'KexAlgorithms',
     ] -%]
 [% multilinelist = ['IdentityFile', 'RevokedHostKeys'] -%]
-[% booleans = ['BatchMode', 'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 
-    'ClearAllForwardings', 'Compression', 'EnableSSHKeysign', 'ExitOnForwardFailure', 'ForwardAgent', 'ForwardX11', 
-    'ForwardX11Trusted', 'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials', 'HashKnownHosts', 
-    'HostbasedAuthentication', 'IdentitiesOnly', 'KbdInteractiveAuthentication', 'NoHostAuthenticationForLocalhost', 
-    'PasswordAuthentication', 'PermitLocalCommand', 'ProxyUseFdpass', 'PubkeyAuthentication', 'RhostsRSAAuthentication', 
-    'RSAAuthentication', 'StreamLocalBindUnlink', 'TCPKeepAlive', 'UsePrivilegedPort', 'VisualHostKey',
+[% booleans = ['BatchMode',
+    'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 'ClearAllForwardings', 'Compression',
+    'EnableSSHKeysign', 'ExitOnForwardFailure',
+    'ForwardAgent', 'ForwardX11', 'ForwardX11Trusted',
+    'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials',
+    'HashKnownHosts', 'HostbasedAuthentication',
+    'IdentitiesOnly',
+    'KbdInteractiveAuthentication',
+    'NoHostAuthenticationForLocalhost', 
+    'PasswordAuthentication', 'PermitLocalCommand', 'ProxyUseFdpass', 'PubkeyAuthentication',
+    'RhostsRSAAuthentication', 'RSAAuthentication',
+    'StreamLocalBindUnlink',
+    'TCPKeepAlive',
+    'UsePrivilegedPort',
+    'VisualHostKey',
     ] -%]
 
 [%- FOREACH pair IN data.pairs -%]
