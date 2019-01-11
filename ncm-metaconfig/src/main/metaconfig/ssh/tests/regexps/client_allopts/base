@@ -75,7 +75,7 @@ Base test for all ssh client config options
 ^ProxyCommand\sssh\s-q\s-W\s%h:%p\sgateway\.example\.com$
 ^ProxyJump\suser1@host1,user2@host2$
 ^ProxyUseFdpass\sNo$
-^PubkeyAcceptedKeyTypes\sssh-rsa$
+^PubkeyAcceptedKeyTypes\s-ssh-rsa$
 ^PubkeyAuthentication\sYes$
 ^RSAAuthentication\sYes$
 ^RekeyLimit\s1G$
