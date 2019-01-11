@@ -1,13 +1,15 @@
-[% spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'UserKnownHostsFile' ] -%]
-[% commalist = ['Ciphers', 'HostbasedKeyTypes','HostKeyAlgorithms', 'KbdInteractiveDevices', 'KbdInteractiveDevices',
-    'MACs', 'PreferredAuthentications', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'KexAlgorithms',
+[% spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'Include', 'UserKnownHostsFile' ] -%]
+[% commalist = ['CASignatureAlgorithms', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'Ciphers',
+    'GSSAPIKexAlgorithms', 'HostbasedKeyTypes','HostKeyAlgorithms',
+    'KbdInteractiveDevices', 'KexAlgorithms', 'KbdInteractiveDevices',
+    'MACs', 'PreferredAuthentications', 'PubkeyAcceptedKeyTypes', 'ProxyJump',
     ] -%]
-[% multilinelist = ['IdentityFile', 'RevokedHostKeys'] -%]
+[% multilinelist = ['CertificateFile', 'IdentityFile', 'RevokedHostKeys'] -%]
 [% booleans = ['BatchMode',
     'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 'ClearAllForwardings', 'Compression',
     'EnableSSHKeysign', 'ExitOnForwardFailure',
     'ForwardAgent', 'ForwardX11', 'ForwardX11Trusted',
-    'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials',
+    'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials', 'GSSAPIKeyExchange', 'GSSAPIRenewalForcesRekey', 'GSSAPITrustDns',
     'HashKnownHosts', 'HostbasedAuthentication',
     'IdentitiesOnly',
     'KbdInteractiveAuthentication',
@@ -32,6 +34,10 @@
 [%         CASE multilinelist -%]
 [%             FOREACH line IN pair.value -%]
 [%                 pair.key %] [% line %]
+[%             END -%]
+[%         CASE 'SetEnv' -%]
+[%             FOREACH item IN pair.value.pairs -%]
+SetEnv [% item.key %]="[% item.value %]"
 [%             END -%]
 [%         CASE -%]
 [%             pair.key %] [% pair.value %]
