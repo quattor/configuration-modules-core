@@ -4,13 +4,17 @@ include 'metaconfig/ssh/client_config';
 
 prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents";
 
+"main/AddKeysToAgent" = "confirm";
 "main/AddressFamily" = "any";
 "main/BatchMode" = true;
 "main/BindAddress" = "192.168.1.1";
+"main/BindInterface" = "eth0";
+"main/CASignatureAlgorithms" = list("ssh-ed25519", "rsa-sha2-512");
 "main/CanonicalDomains" = list(".com", ".eu");
 "main/CanonicalizeFallbackLocal" = true;
 "main/CanonicalizeHostname" = "always";
 "main/CanonicalizePermittedCNAMEs" = list("*.a.example.com:*.b.example.com", "*.c.example.com");
+"main/CertificateFile" = list("/absolute/path", "~/home/relative");
 "main/ChallengeResponseAuthentication" = false;
 "main/CheckHostIP" = true;
 "main/Cipher" = "3des";
@@ -35,7 +39,12 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
 "main/GatewayPorts" = false;
 "main/GlobalKnownHostsFile" = list("/etc/ssh/ssh_known_hosts", "/etc/ssh/ssh_known_hosts2");
 "main/GSSAPIAuthentication" = false;
+"main/GSSAPIClientIdentity" = "custom";
 "main/GSSAPIDelegateCredentials" = false;
+"main/GSSAPIKeyExchange" = true;
+"main/GSSAPIRenewalForcesRekey" = true;
+"main/GSSAPIServerIdentity" = "server@principal";
+"main/GSSAPITrustDns" = false;
 "main/HashKnownHosts" = false;
 "main/HostbasedAuthentication" = true;
 "main/HostbasedKeyTypes" = list("*");
@@ -43,8 +52,10 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
 "main/HostKeyAlias" = "hostname2";
 "main/HostName" = "%h";
 "main/IdentitiesOnly" = true;
+"main/IdentityAgent" = "none";
 "main/IdentityFile" = list("~/.ssh/identity", "~/.ssh/id_rsa", "~/.ssh/id_dsa");
 "main/IgnoreUnknown" = list("IPQoS", "KbdInteractiveAuthentication");
+"main/Include" = list("/absolute/path", "~/home/relative", "sshconf_relative");
 "main/IPQoS" = "throughput";
 "main/KbdInteractiveAuthentication" = true;
 "main/KbdInteractiveDevices" = list("pam", "skey");
@@ -62,9 +73,12 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
 "main/PreferredAuthentications" = list("gssapi-with-mic", "hostbased", "publickey");
 "main/Protocol" = 2;
 "main/ProxyCommand" = "ssh -q -W %h:%p gateway.example.com";
+"main/ProxyJump" = list("user1@host1", "user2@host2");
 "main/ProxyUseFdpass" = false;
+"main/PubkeyAcceptedKeyTypes" = list("ssh-rsa");
 "main/PubkeyAuthentication" = true;
 "main/RekeyLimit" = "1G";
+"main/RemoteCommand" = "cat /etc/motd";
 "main/RemoteForward" = "*";
 "main/RequestTTY" = "force";
 "main/RevokedHostKeys" = list("~/.ssh/revokedkeys.txt");
@@ -73,9 +87,11 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
 "main/SendEnv" = list("LANG", "LC_CTYPE", "LC_NUMERIC", "LC_TIME");
 "main/ServerAliveCountMax" = 4;
 "main/ServerAliveInterval" = 0;
+"main/SetEnv" = dict("LC_ALL", "C", "TERM", "xterm");
 "main/StreamLocalBindMask" = "0177";
 "main/StreamLocalBindUnlink" = false;
 "main/StrictHostKeyChecking" = "ask";
+"main/SyslogFacility" = "LOCAL1";
 "main/TCPKeepAlive" = true;
 "main/Tunnel" = "ethernet";
 "main/TunnelDevice" = "tun0";

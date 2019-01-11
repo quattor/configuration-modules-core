@@ -17,17 +17,22 @@ type temp_ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group(1
 type temp_ssh_MACs = string with match(SELF, "^(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|" +
     "(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|" +
     "hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
+type temp_ssh_CAAlgorithms = string with match(SELF, "^(ecdsa-sha2-nistp(256|384|521)|ssh-ed25519|rsa-sha2-(256|512)|ssh-rsa)$");
 
 
 type ssh_config_opts = {
+    'AddKeysToAgent' ? string with match (SELF, "^(yes|no|ask|confirm)$")
     'AddressFamily' ? string with match (SELF, "^(any|inet|inet6)$")
     'BatchMode' ? boolean
     'BindAddress' ? string
+    'BindInterface' ? string
     'CanonicalDomains' ? string[]
     'CanonicalizeFallbackLocal' ? boolean
     'CanonicalizeHostname' ? string with match (SELF, "^(yes|no|always)$")
     'CanonicalizeMaxDots' ? long(0..)
     'CanonicalizePermittedCNAMEs' ? string[]
+    'CASignatureAlgorithms' ? temp_ssh_CAAlgorithms[]
+    'CertificateFile' ? string[]
     'ChallengeResponseAuthentication' ? boolean
     'CheckHostIP' ? boolean
     'Cipher' ? string with match (SELF, "^(blowfish|3des|des)$")
@@ -52,7 +57,12 @@ type ssh_config_opts = {
     'GatewayPorts' ? boolean
     'GlobalKnownHostsFile' ? string[]
     'GSSAPIAuthentication' ? boolean
+    'GSSAPIClientIdentity' ? string
     'GSSAPIDelegateCredentials' ? boolean
+    'GSSAPIKeyExchange' ? boolean
+    'GSSAPIRenewalForcesRekey' ? boolean
+    'GSSAPIServerIdentity' ? string
+    'GSSAPITrustDns' ? boolean
     'HashKnownHosts' ? boolean
     'HostbasedAuthentication' ? boolean
     'HostbasedKeyTypes' ? string[]
@@ -60,8 +70,10 @@ type ssh_config_opts = {
     'HostKeyAlias' ? string
     'HostName' ? string
     'IdentitiesOnly' ? boolean
+    'IdentityAgent' ? string
     'IdentityFile' ? string[]
     'IgnoreUnknown' ? string[]
+    'Include' ? string[]
     'IPQoS' ? string with match (SELF, "^(af[1234][123]|cs[0-7]|ef|lowdelay|throughput|reliability)$")
     'KbdInteractiveAuthentication' ? boolean
     'KbdInteractiveDevices' ? temp_ssh_kbdinteractivedevices[]
@@ -79,9 +91,12 @@ type ssh_config_opts = {
     'PreferredAuthentications' ? string[]
     'Protocol' ? long(1..2)
     'ProxyCommand' ? string
+    'ProxyJump' ? string[]
     'ProxyUseFdpass' ? boolean
+    'PubkeyAcceptedKeyTypes' ? temp_ssh_hostkeyalgorithms[]
     'PubkeyAuthentication' ? boolean
     'RekeyLimit' ? string
+    'RemoteCommand' ? string
     'RemoteForward' ? string
     'RequestTTY' ? string with match (SELF, "^(yes|no|force|auto)$")
     'RevokedHostKeys' ? string[]
@@ -90,9 +105,11 @@ type ssh_config_opts = {
     'SendEnv' ? string[]
     'ServerAliveCountMax' ? long(0..)
     'ServerAliveInterval' ? long(0..)
+    'SetEnv' ? string{}
     'StreamLocalBindMask' ? string
     'StreamLocalBindUnlink' ? boolean
     'StrictHostKeyChecking' ? string with match (SELF, "^(yes|no|ask)$")
+    'SyslogFacility' ? string with match(SELF, "^(DAEMON|USER|AUTH|LOCAL[0-7])$")
     'TCPKeepAlive' ? boolean
     'Tunnel' ? string with match (SELF, "^(yes|no|point-to-point|ethernet)$")
     'TunnelDevice' ? string
