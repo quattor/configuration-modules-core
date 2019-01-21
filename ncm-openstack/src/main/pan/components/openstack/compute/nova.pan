@@ -147,6 +147,27 @@ type openstack_nova_libvirt = {
         speeding up guest installations, but you should switch to another caching
         mode in production environments}
     "disk_cachemodes" ? openstack_disk_cachemodes[]
+    @{URI scheme used for live migration.
+    Override the default libvirt live migration scheme (which is dependent on
+    virt_type). If this option is set to None, nova will automatically choose a
+    sensible default based on the hypervisor. It is not recommended that you
+    change this unless you are very sure that hypervisor supports a particular scheme}
+    'live_migration_scheme' ? choice('tcp', 'ssh')
+    @{This option allows nova to start live migration with auto converge on.
+    Auto converge throttles down CPU if a progress of on-going live migration
+    is slow. Auto converge will only be used if this flag is set to True and
+    post copy is not permitted or post copy is unavailable due to the version
+    of libvirt and QEMU in use.
+    Before enabling auto-convergence, make sure that the instances
+    application tolerates a slow-down.
+    Be aware that auto-convergence does not guarantee live migration success}
+    'live_migration_permit_auto_converge' ? boolean
+    @{Time to wait, in seconds, for migration to successfully complete transferring
+    data before aborting the operation.
+    Value is per GiB of guest RAM + disk to be transferred, with lower bound of
+    a minimum of 2 GiB. Should usually be larger than downtime delay * downtime
+    steps. Set to 0 to disable timeouts}
+    'live_migration_completion_timeout' ? long(0..)
 };
 
 @documentation{
