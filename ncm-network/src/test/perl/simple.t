@@ -55,9 +55,51 @@ BOOTPROTO=static
 IPADDR=4.3.2.1
 NETMASK=255.255.255.0
 BROADCAST=4.3.2.255
+ETHTOOL_OPTS='autoneg on speed 10000 wol b'
 EOF
 
-=pod
+Readonly my $ETHTOOL_ETH0 => <<EOF;
+Settings for eth0:
+	Supported ports: [ TP ]
+	Supported link modes:   10baseT/Half 10baseT/Full 
+	                        100baseT/Half 100baseT/Full 
+	                        1000baseT/Full 
+	Supported pause frame use: Symmetric
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10baseT/Half 10baseT/Full 
+	                        100baseT/Half 100baseT/Full 
+	                        1000baseT/Full 
+	Advertised pause frame use: Symmetric
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Speed: 1000Mb/s
+	Duplex: Full
+	Port: Twisted Pair
+	PHYAD: 1
+	Transceiver: internal
+	Auto-negotiation: on
+	MDI-X: off (auto)
+	Supports Wake-on: pumbg
+	Wake-on: d
+	Current message level: 0x00000007 (7)
+			       drv probe link
+	Link detected: yes
+EOF
+
+Readonly my $ETHTOOL_ETH0_CHANNELS => <<EOF;
+Channel parameters for eth0:
+Pre-set maximums:
+RX:		0
+TX:		0
+Other:		1
+Combined:	8
+Current hardware settings:
+RX:		0
+TX:		0
+Other:		1
+Combined:	8
+EOF
 
 =head1 DESCRIPTION
 
@@ -74,6 +116,8 @@ set_file_contents("/etc/iproute2/rt_tables", $RT);
 
 my $cfg = get_config_for_profile('simple');
 my $cmp = NCM::Component::network->new('network');
+
+set_desired_output('/usr/sbin/ethtool eth0', $ETHTOOL_ETH0);
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
@@ -97,10 +141,12 @@ is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact
 
 ok(command_history_ok([
     'ip addr show',
+    '/usr/sbin/ethtool eth0',
+    '/usr/sbin/ethtool --change eth0 speed 10000 wol b',  # no autoneg, is already on
     'service network stop',
     'service network start',
     'ccm-fetch',
-], ['hostnamectl']), "network stop/start called on network config change (and no hostnamectl)");
+], ['hostnamectl', 'autoneg on']), "network stop/start called on network config change (and no hostnamectl)");
 
 command_history_reset();
 

@@ -470,7 +470,7 @@ sub get_current_config
 # Option ordering is important for autoneg/speed/duplex
 sub order_ethtool_options
 {
-    my ($self, $section, $options) = @_;
+    my ($section, $options) = @_;
 
     # Add options from preordered section
     my @keys = grep {exists($options->{$_})} @{$ETHTOOL_OPTION_ORDER{$section}};
@@ -680,7 +680,7 @@ sub process_network
         # some are needed on boot (like autoneg/speed/duplex)
         if (exists($iface->{ethtool})) {
             $iface->{ethtool_opts} = $self->ethtool_options($iface->{ethtool});
-            $self->debug(1, "Added ethtool_opts with ", join(' ', @{$iface->{ethtool}}), " for interface $ifname");
+            $self->debug(1, "Added ethtool_opts with ", join(' ', @{$iface->{ethtool_opts}}), " for interface $ifname");
         }
 
         # Handle hardware address
