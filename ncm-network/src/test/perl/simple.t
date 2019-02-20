@@ -55,7 +55,7 @@ BOOTPROTO=static
 IPADDR=4.3.2.1
 NETMASK=255.255.255.0
 BROADCAST=4.3.2.255
-ETHTOOL_OPTS='autoneg on speed 10000 wol b'
+ETHTOOL_OPTS='--set-channels eth0 combined 7 other 1 ; autoneg on speed 10000 wol b'
 EOF
 
 Readonly my $ETHTOOL_ETH0 => <<EOF;
@@ -118,6 +118,7 @@ my $cfg = get_config_for_profile('simple');
 my $cmp = NCM::Component::network->new('network');
 
 set_desired_output('/usr/sbin/ethtool eth0', $ETHTOOL_ETH0);
+set_desired_output('/usr/sbin/ethtool --show-channels eth0', $ETHTOOL_ETH0_CHANNELS);
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
@@ -141,12 +142,15 @@ is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact
 
 ok(command_history_ok([
     'ip addr show',
+    '/usr/sbin/ethtool --show-channels eth0',
     '/usr/sbin/ethtool eth0',
+    '/usr/sbin/ethtool --set-channels eth0 combined 7',  # no other, is already 1
     '/usr/sbin/ethtool --change eth0 speed 10000 wol b',  # no autoneg, is already on
     'service network stop',
     'service network start',
     'ccm-fetch',
-], ['hostnamectl', 'autoneg on']), "network stop/start called on network config change (and no hostnamectl)");
+], ['hostnamectl', 'autoneg on', 'other 1']),
+   "network stop/start called on network config change (and no hostnamectl)");
 
 command_history_reset();
 

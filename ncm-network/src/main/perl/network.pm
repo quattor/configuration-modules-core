@@ -126,9 +126,15 @@ Readonly::Hash my %ETHTOOL_OPTION_MAP => {
         speed => "Speed",
         duplex => "Duplex",
     },
+    channels => {
+        rx => 'RX',
+        tx => 'TX',
+        other => 'Other',
+        combined => 'Combined',
+    },
 };
 
-
+Readonly my $ETHTOOL_CHANGE => '--change';
 Readonly my $ETHTOOLCMD => '/usr/sbin/ethtool';
 Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IPADDR => [qw(ip addr show)];
@@ -468,31 +474,34 @@ sub get_current_config
 # Given ethtool section options hashref, return ordered
 # list of keys.
 # Option ordering is important for autoneg/speed/duplex
+# Filters out non-scalar values
 sub order_ethtool_options
 {
     my ($section, $options) = @_;
 
     # Add options from preordered section
-    my @keys = grep {exists($options->{$_})} @{$ETHTOOL_OPTION_ORDER{$section}};
+    my @keys = grep {exists($options->{$_})} @{$ETHTOOL_OPTION_ORDER{$section} || []};
 
     # Add remaining keys alphabetically
     foreach my $key (sort keys %$options) {
+        next if ref($options->{$key});
         push(@keys, $key) if (!(grep {$_ eq $key} @keys));
     };
 
     return @keys;
 }
 
-# Set ethtool options outside changes to the ifcfg files
-sub ethtool_set_iface_options
+# Generate ethtool options
+sub ethtool_gen_iface_options
 {
-    my ($self, $iface, $sectionname, $options) = @_;
+    my ($self, $name, $sectionname, $options, $check_current) = @_;
 
     # get current values into %current
-    my %current = $self->ethtool_get_current($iface, $sectionname);
+    my %current = $self->ethtool_get_current($name, $sectionname);
 
-    # Loop over template settings and check that they are known but different
     my @opts;
+    # Loop over template settings and check that they are known but different
+    # order_ethtool_options removes non-scalar/nested options
     foreach my $k (order_ethtool_options($sectionname, $options)) {
         my $v = $options->{$k};
         my $currentv;
@@ -502,13 +511,13 @@ sub ethtool_set_iface_options
             $currentv = $current{$ETHTOOL_OPTION_MAP{$sectionname}{$k}};
         } else {
             $self->info("ethtool_set_iface_options: Skipping setting for ",
-                        "$iface/$sectionname/$k to $v as not in ethtool");
+                        "$name/$sectionname/$k to $v as not in ethtool");
             next;
         }
 
         # Is the value different between template and the machine
-        if ($currentv eq $v) {
-            $self->verbose("ethtool_set_options: value for $iface/$sectionname/$k is already set to $v");
+        if ($check_current && $currentv eq $v) {
+            $self->verbose("ethtool_set_options: value for $name/$sectionname/$k is already set to $v");
         } else {
             push(@opts, $k, $v);
         }
@@ -518,39 +527,95 @@ sub ethtool_set_iface_options
     return if (! @opts);
 
     my $setoption;
-    if ($sectionname eq "ring") {
+    if ($sectionname eq "ring" || $sectionname eq "channels") {
         $setoption = "--set-$sectionname";
     } elsif ($sectionname eq "ethtool") {
-        $setoption = "--change";
+        $setoption = $ETHTOOL_CHANGE;
     } else {
         $setoption = "--$sectionname";
     };
 
-    $self->runrun([$ETHTOOLCMD, $setoption, $iface, @opts])
+    return [$setoption, $name, @opts];
 }
 
-# ethtool processing for offload, ring and others of all interfaces
-sub ethtool_set_options
+
+# generate arrayref of ethtool commandline options arrayref
+# to process offload, ring and others of one interface
+sub ethtool_gen_iface_allcli
+{
+    my ($self, $name, $iface, $check_current) = @_;
+
+    my @clis;
+
+    foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
+        my $opts;
+        if (exists($iface->{$sectionname})) {
+            $opts = $iface->{$sectionname};
+        } elsif (exists($iface->{ethtool}) && exists($iface->{ethtool}->{$sectionname})) {
+            $opts = $iface->{ethtool}->{$sectionname};
+        }
+        push(@clis, $self->ethtool_gen_iface_options($name, $sectionname, $opts, $check_current)) if $opts;
+    };
+
+    return \@clis;
+}
+
+# generate arrayref of ethtool commandline options arrayref
+# to process offload, ring and others of all interfaces
+sub ethtool_gen_cli_options
 {
     my ($self, $ifaces) = @_;
-    foreach my $iface (sort keys %$ifaces) {
-        foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
-            $self->ethtool_set_iface_options($iface, $sectionname, $ifaces->{$iface}->{$sectionname})
-                if ($ifaces->{$iface}->{$sectionname});
-        };
+
+    my @allclis;
+
+    foreach my $iface_name (sort keys %$ifaces) {
+        # check current options
+        my $allifaceclis = $self->ethtool_gen_iface_allcli($iface_name, $ifaces->{$iface_name}, 1);
+        # don't do anything when all is already set
+        push(@allclis, @$allifaceclis) if @$allifaceclis;
     };
+
+    return \@allclis;
+}
+
+
+# ethtool processing for offload, ring and others of all interfaces
+sub ethtool_set_options {
+    my ($self, $ifaces) = @_;
+
+    my $allopts = $self->ethtool_gen_cli_options($ifaces);
+    foreach my $opts (@$allopts) {
+        $self->runrun([$ETHTOOLCMD, @$opts])
+    }
 }
 
 
 # Create ifcfg ETHTOOL_OPTS entry as arrayref from hashref $options
 sub ethtool_options
 {
-    my ($self, $options) = @_;
+    my ($self, $name, $options) = @_;
+
+    # do not check current options
+    my $allifaceclis = $self->ethtool_gen_iface_allcli($name, $options, 0);
 
     my @eth_opts;
-    foreach my $key (order_ethtool_options('ethtool', $options)) {
-        push(@eth_opts, $key, $options->{$key});
+
+    # we need a flat arrayref with ;-separated cli options (one per section)
+    # (and no, you can't use join (easily) for this)
+    foreach my $cli (@$allifaceclis) {
+        my $setoption = shift(@$cli);
+        if ($setoption eq $ETHTOOL_CHANGE) {
+            # backwards compatible format (no excplicit setoption and interface name for main ethtool)
+            shift(@$cli);  # remove interface name
+        } else {
+            unshift(@$cli, $setoption);
+        }
+        push(@eth_opts, ';', @$cli);
     }
+
+    # remove leading ;
+    shift(@eth_opts) if @eth_opts;
+
     return \@eth_opts;
 }
 
@@ -678,9 +743,10 @@ sub process_network
 
         # add ethtool options preparsed. These will be set in ifcfg- config
         # some are needed on boot (like autoneg/speed/duplex)
-        if (exists($iface->{ethtool})) {
-            $iface->{ethtool_opts} = $self->ethtool_options($iface->{ethtool});
-            $self->debug(1, "Added ethtool_opts with ", join(' ', @{$iface->{ethtool_opts}}), " for interface $ifname");
+        my $ethtool_opts = $self->ethtool_options($ifname, $iface);
+        if (@$ethtool_opts) {
+            $iface->{ethtool_opts} = $ethtool_opts;
+            $self->debug(1, "Added ethtool_opts with '", join(' ', @$ethtool_opts), "' for interface $ifname");
         }
 
         # Handle hardware address
