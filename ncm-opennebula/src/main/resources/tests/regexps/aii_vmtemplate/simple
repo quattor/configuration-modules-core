@@ -4,6 +4,7 @@ multiline
 ---
 ^NIC\s?=\s?\[$
 ^\s*IP\s?=\s*".+",\s*$
+^\s*VIRTIO_QUEUES\s?=\s*".+",\s*$
 ^\s*MODEL\s?=\s*".+",\s*$
 ^\s*NETWORK\s?=\s*".+",\s*$
 ^\s*NETWORK_UNAME\s?=\s*".+"\s*$
