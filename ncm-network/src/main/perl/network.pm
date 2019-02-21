@@ -106,6 +106,10 @@ Readonly::Hash my %ETHTOOL_OPTION_ORDER => {
     ethtool => ["autoneg", "speed", "duplex"]
 };
 
+# Due to legacy code, ring and offload ethtool options were/are directly
+# in network configuration path, all other options should be under ethtool
+Readonly::Array my @ETHTOOL_OPTION_ROOT => qw(offload ring ethtool);
+
 Readonly::Hash my %ETHTOOL_OPTION_MAP => {
     offload => {
         tso => "tcp segmentation offload",
@@ -549,10 +553,11 @@ sub ethtool_gen_iface_allcli
 
     foreach my $sectionname (sort keys %ETHTOOL_OPTION_MAP) {
         my $opts;
-        if (exists($iface->{$sectionname})) {
-            $opts = $iface->{$sectionname};
-        } elsif (exists($iface->{ethtool}) && exists($iface->{ethtool}->{$sectionname})) {
-            $opts = $iface->{ethtool}->{$sectionname};
+        # no autovivification for root options
+        if (grep {$_ eq $sectionname} @ETHTOOL_OPTION_ROOT) {
+            $opts = exists($iface->{$sectionname}) && $iface->{$sectionname};
+        } else {
+            $opts = exists($iface->{ethtool}) && $iface->{ethtool}->{$sectionname};
         }
         push(@clis, $self->ethtool_gen_iface_options($name, $sectionname, $opts, $check_current)) if $opts;
     };
@@ -1628,23 +1633,45 @@ sub init_backupdir
 }
 
 # Given filename and legacy text reference, check if present content matches
-# the genertaed legacy text. If so, set the state of the file to KEEPS_STATE
+# the generated legacy text. If so, set the state of the file to KEEPS_STATE
 sub legacy_keeps_state
 {
-    my ($self, $filename, $legacy_text_ref, $exifiles) = @_;
+    my ($self, $filename, $legacy_text_ref, $exifiles, $filter, $msg) = @_;
+
+    $msg = "legacy format" if ! defined $msg;
+
     my $fh = CAF::FileReader->new($filename, log => $self);
-    if (join("\n", @$legacy_text_ref, '') eq "$fh") {
-        $self->verbose("File $filename will get new content, but due to difference from legacy format. KEEPS_STATE $KEEPS_STATE set");
+    my $currtxt = "$fh";
+
+    if ($filter) {
+        my $pattern = '^.*'.$filter.'.*?(\n|\z)';  # match first newline or absolute end of text
+        $currtxt =~ s/$pattern//mg;
+    }
+
+    if (join("\n", @$legacy_text_ref, '') eq $currtxt) {
+        $self->verbose("File $filename will get new content, but due to difference from $msg. KEEPS_STATE $KEEPS_STATE set");
         $exifiles->{$filename} = $KEEPS_STATE;
     };
 }
 
 
-# check if file change was due to removal of explicit broadcast in favour of computed default
+# check if file was changed, and if so,
+# if file was due to removal of explicit broadcast in favour of computed default
 #   (broadcast configuration has a default via "ipcalc --broadcast ipaddr mask")
 sub default_broadcast_keeps_state
 {
     my ($self, $file_name, $name, $data, $exifiles, $alias) = @_;
+
+    my $check = $exifiles->{$file_name} == $UPDATED &&
+        !exists($data->{broadcast}) &&
+        exists($data->{ip}) && # e.g. for bonding slaves
+        exists($data->{netmask});  # e.g. for bonding slaves
+
+    # nothing to do
+    return 1 if !$check;
+
+    # interface configuration was changed.
+    # check if this was due to removal of explicit broadcast in favour of computed default
 
     # compute broadcast via ipcalc, remove BROADCAST=
     my $proc = CAF::Process->new(
@@ -1679,6 +1706,27 @@ sub default_broadcast_keeps_state
     return 1;
 }
 
+# ethtool options are set via ethtool command, no need to ifup/ifdown the interface
+sub ethtool_opts_keeps_state {
+    my ($self, $file_name, $name, $data, $exifiles) = @_;
+
+    return 1 if $exifiles->{$file_name} != $UPDATED;
+
+    # shallow copy of data
+    my $noethdata = {%$data};
+    # remove ethtool options and ethtool_opts
+    foreach my $optname ('ethtool_opts', @ETHTOOL_OPTION_ROOT) {
+        delete $noethdata->{$optname};
+    }
+
+    my $noethtext = $self->make_ifcfg($name, $noethdata);
+
+    # run legacy_keeps_state
+    # filter out any ethtool_opts also from original
+    $self->legacy_keeps_state($file_name, $noethtext, $exifiles, "ETHTOOL_OPTS", "ETHTOOL_OPTS");
+
+    return 1;
+};
 
 # Create a mapping of existing physical devices that should be renamed
 # based on the macaddress in the profile.
@@ -1887,11 +1935,9 @@ sub Configure
 
         my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
-        if ($exifiles->{$file_name} == $UPDATED && !exists($iface->{broadcast})) {
-            # interface configuration was changed.
-            # check if this was due to removal of explicit broadcast in favour of computed default
-            $self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
-        }
+
+        $self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
+        $self->ethtool_opts_keeps_state($file_name, $ifacename, $iface, $exifiles);
 
         # route/rule config, interface based.
         foreach my $flavour (qw(route route6 rule rule6)) {
@@ -1925,11 +1971,8 @@ sub Configure
 
             my $file_name = "$IFCFG_DIR/ifcfg-$ifacename:$al";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
-            if ($exifiles->{$file_name} == $UPDATED && !exists($al_iface->{broadcast})) {
-                # interface configuration was changed.
-                # check if this was due to removal of explicit broadcast in favour of computed default
-                $self->default_broadcast_keeps_state($file_name, $al_dev, $al_iface, $exifiles, 1);
-            }
+
+            $self->default_broadcast_keeps_state($file_name, $al_dev, $al_iface, $exifiles, 1);
 
             # This is the only way it will work for VLANs
             # If vlan device is vlanX and the DEVICE is eg ethY.Z

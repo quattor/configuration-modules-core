@@ -7,7 +7,7 @@ BEGIN {
 }
 
 use Test::More;
-use Test::Quattor qw(simple simple_realhostname simple_nobroadcast);
+use Test::Quattor qw(simple simple_ethtool simple_noethtool simple_realhostname simple_nobroadcast);
 use Test::MockModule;
 
 use NCM::Component::network;
@@ -55,7 +55,6 @@ BOOTPROTO=static
 IPADDR=4.3.2.1
 NETMASK=255.255.255.0
 BROADCAST=4.3.2.255
-ETHTOOL_OPTS='--set-channels eth0 combined 7 other 1 ; autoneg on speed 10000 wol b'
 EOF
 
 Readonly my $ETHTOOL_ETH0 => <<EOF;
@@ -142,14 +141,10 @@ is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact
 
 ok(command_history_ok([
     'ip addr show',
-    '/usr/sbin/ethtool --show-channels eth0',
-    '/usr/sbin/ethtool eth0',
-    '/usr/sbin/ethtool --set-channels eth0 combined 7',  # no other, is already 1
-    '/usr/sbin/ethtool --change eth0 speed 10000 wol b',  # no autoneg, is already on
     'service network stop',
     'service network start',
     'ccm-fetch',
-], ['hostnamectl', 'autoneg on', 'other 1']),
+], ['hostnamectl']),
    "network stop/start called on network config change (and no hostnamectl)");
 
 command_history_reset();
@@ -182,6 +177,37 @@ ok(command_history_ok([
     'service network start',
     'ccm-fetch',
 ]), "network stop/start not called with same config with hostnamectl (KEEPS_STATE set) 3rd run");
+
+
+# add ethtool options
+# shouldn't trigger an ifup/ifdown cycle
+command_history_reset();
+$cfg = get_config_for_profile('simple_ethtool');
+is($cmp->Configure($cfg), 1, "Component runs correctly w/o ethtool");
+like(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"),
+     qr/^ETHTOOL_OPTS='--set-channels eth0 combined 7 other 1 ; autoneg on speed 10000 wol b'$/m,
+       "no ethtool opts");
+# also no ethtool, as this config has no ethtool configured
+ok(command_history_ok([
+    '/usr/sbin/ethtool --show-channels eth0',
+    '/usr/sbin/ethtool eth0',
+    '/usr/sbin/ethtool --set-channels eth0 combined 7',  # no other, is already 1
+    '/usr/sbin/ethtool --change eth0 speed 10000 wol b',  # no autoneg, is already on
+   ], ['ifup', 'ifdown', 'restart', 'autoneg on', 'other 1']),
+   "changes in ethtool do not trigger ifup/ifdown");
+
+
+# check that removal ethtool_opts does not trigger ifup/ifdown
+command_history_reset();
+$cfg = get_config_for_profile('simple_noethtool');
+is($cmp->Configure($cfg), 1, "Component runs correctly w/o ethtool");
+unlike(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"),
+     qr/ETHTOOL/m,
+       "no ethtool opts");
+# also no ethtool, as this config has no ethtool configured
+ok(command_history_ok(undef, ['ethtool', 'ifup', 'ifdown', 'restart']),
+   "changes in ethtool do not trigger ifup/ifdown");
+
 
 
 # Check that realhostname is used correctly
