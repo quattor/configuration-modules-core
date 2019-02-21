@@ -803,24 +803,28 @@ $data = <<'EOF';
 
 NIC = [
     IP = "10.141.8.30",
+    VIRTIO_QUEUES = "4",
     MODEL = "virtio",
     NETWORK = "altaria.os",
     NETWORK_UNAME = "oneadmin"
 ]
 NIC = [
     IP = "172.24.8.30",
+    VIRTIO_QUEUES = "4",
     MODEL = "virtio",
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"
 ]
 NIC = [
     IP = "172.24.8.31",
+    VIRTIO_QUEUES = "4",
     MODEL = "virtio",
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"
 ]
 NIC = [
     IP = "172.24.8.32",
+    VIRTIO_QUEUES = "4",
     MODEL = "virtio",
     NETWORK = "altaria.vsc",
     NETWORK_UNAME = "oneadmin"

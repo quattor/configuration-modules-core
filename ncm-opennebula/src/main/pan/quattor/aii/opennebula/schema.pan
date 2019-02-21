@@ -210,6 +210,9 @@ type opennebula_vmtemplate = {
     "datastore" : opennebula_vmtemplate_datastore
     @{Set ignoremac tree to avoid to include MAC values within AR/VM templates}
     "ignoremac" ? opennebula_ignoremac
+    @{Set how many queues will be used for the communication between CPUs and virtio drivers.
+    see: https://docs.opennebula.org/5.6/deployment/open_cloud_host_setup/kvm_driver.html}
+    "virtio_queues" ? long(0..)
     @{Set graphics to export VM graphical display (VNC is used by default)}
     "graphics" : string = 'VNC' with match (SELF, '^(VNC|SDL|SPICE)$')
     @{Select the cache mechanism for your disks. (by default is set to none)}

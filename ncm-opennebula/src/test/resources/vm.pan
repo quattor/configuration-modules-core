@@ -125,6 +125,8 @@ prefix "/system/opennebula";
 
 "graphics" = "SPICE";
 
+"virtio_queues" = 4;
+
 "diskcache" = "default";
 
 "diskdriver" = "raw";
