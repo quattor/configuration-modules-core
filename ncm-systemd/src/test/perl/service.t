@@ -436,11 +436,15 @@ is($cmp->{ERROR}, 0, "No error logged while applying the changes");
 ok(command_history_ok([
     # 1st states, unmask first
     "$SYSTEMCTL unmask -- cups.service",
-    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
-    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    "$SYSTEMCTL disable -- cups.service",
+    "$SYSTEMCTL disable -- missing_disabled.service",
+    "$SYSTEMCTL enable -- netconsole.service",
+    "$SYSTEMCTL enable -- rbdmap.service",
     # 2 activity
     "$SYSTEMCTL stop -- missing_disabled.service",
-    "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
+    "$SYSTEMCTL start -- netconsole.service",
+    "$SYSTEMCTL start -- network.service",
+    "$SYSTEMCTL start -- rbdmap.service",
 ]), "expected commands for change");
 
 =pod
@@ -462,8 +466,10 @@ is($cmp->{ERROR}, 0, "No error logged while applying the changes during shutdown
 ok(command_history_ok([
     # 1st states, unmask first
     "$SYSTEMCTL unmask -- cups.service",
-    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
-    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    "$SYSTEMCTL disable -- cups.service",
+    "$SYSTEMCTL disable -- missing_disabled.service",
+    "$SYSTEMCTL enable -- netconsole.service",
+    "$SYSTEMCTL enable -- rbdmap.service",
     # 2 activity
 ], [
     "systemctl stop",
@@ -489,11 +495,15 @@ is($cmp->{ERROR}, 4, "4 errors logged while configuring (1 due to configured ali
 ok(command_history_ok([
     # 1st states
     "$SYSTEMCTL unmask -- cups.service",
-    "$SYSTEMCTL disable -- cups.service missing_disabled.service",
-    "$SYSTEMCTL enable -- netconsole.service rbdmap.service",
+    "$SYSTEMCTL disable -- cups.service",
+    "$SYSTEMCTL disable -- missing_disabled.service",
+    "$SYSTEMCTL enable -- netconsole.service",
+    "$SYSTEMCTL enable -- rbdmap.service",
     # 2 activity
     "$SYSTEMCTL stop -- missing_disabled.service",
-    "$SYSTEMCTL start -- netconsole.service network.service rbdmap.service",
+    "$SYSTEMCTL start -- netconsole.service",
+    "$SYSTEMCTL start -- network.service",
+    "$SYSTEMCTL start -- rbdmap.service",
 ]), "expected commands for change");
 
 

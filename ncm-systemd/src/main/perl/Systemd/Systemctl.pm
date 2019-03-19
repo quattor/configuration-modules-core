@@ -311,27 +311,32 @@ Returns exitcode and output.
 sub systemctl_command_units
 {
     my ($logger, $command, @units) = @_;
+    my ($success, $failure);
+
+    $success = $failure = 0;
 
     # TODO: any relevant options?
-    my $proc = CAF::Process->new(
-        [$SYSTEMCTL, $command],
-        log => $logger,
-        );
+    foreach my $unit (@units) {
+        my $proc = CAF::Process->new(
+            [$SYSTEMCTL, $command, '--', $unit],
+            log => $logger,
+            );
 
-    if (@units) {
-        $proc->pushargs('--', @units);
+        my $data = $proc->output();
+        my $ec = $?;
+
+        my $msg = "systemctl_command_units $proc returned ec $ec and output $data";
+        if ($ec) {
+            $logger->error($msg);
+            $failure++;
+        } else {
+            $logger->debug(2, $msg);
+            $success++;
+        }
     }
 
-    my $data = $proc->output();
-    my $ec = $?;
-
-    my $msg = "systemctl_command_units $proc returned ec $ec and output $data";
-    if ($ec) {
-        $logger->error($msg);
-    } else {
-        $logger->debug(2, $msg);
-    }
-    return $ec, $data;
+    # Give something to the tests to chew on
+    return ($success, $failure);
 }
 
 =pod
