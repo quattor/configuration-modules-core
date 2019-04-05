@@ -1,0 +1,11 @@
+Base test for config
+---
+/etc/nagios/irods/irods_environment.conf
+---
+^\{$
+^\s{3}"irods_host" : "iicat01.example.org",$
+^\s{3}"irods_port" : 1247,$
+^\s{3}"irods_user_name" : "nagios",$
+^\s{3}"irods_zone_name" : "UGent"$
+^\}$
+

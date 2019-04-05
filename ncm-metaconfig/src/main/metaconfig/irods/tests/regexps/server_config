@@ -1,0 +1,30 @@
+Base test for server config
+---
+/var/lib/irods/.irods/irods_environment.json
+---
+^\{$
+^\s{3}"irods_client_server_negotiation" : "request_server_negotiation",$
+^\s{3}"irods_client_server_policy" : "CS_NEG_REFUSE",$
+^\s{3}"irods_cwd" : "/UGent/home/rods",$
+^\s{3}"irods_default_hash_scheme" : "SHA256",$
+^\s{3}"irods_default_number_of_transfer_threads" : 4,$
+^\s{3}"irods_default_resource" : "demoResc",$
+^\s{3}"irods_encryption_algorithm" : "AES-256-CBC",$
+^\s{3}"irods_encryption_key_size" : 32,$
+^\s{3}"irods_encryption_num_hash_rounds" : 16,$
+^\s{3}"irods_encryption_salt_size" : 8,$
+^\s{3}"irods_home" : "/UGent/home/rods",$
+^\s{3}"irods_host" : "iicat01.example.org",$
+^\s{3}"irods_match_hash_policy" : "compatible",$
+^\s{3}"irods_maximum_size_for_single_buffer_in_megabytes" : 32,$
+^\s{3}"irods_port" : 1247,$
+^\s{3}"irods_server_control_plane_encryption_algorithm" : "AES-256-CBC",$
+^\s{3}"irods_server_control_plane_encryption_num_hash_rounds" : 16,$
+^\s{3}"irods_server_control_plane_key" : "AAAAAAAAAAAVALETESTUDIA",$
+^\s{3}"irods_server_control_plane_port" : 1248,$
+^\s{3}"irods_transfer_buffer_size_for_parallel_transfer_in_megabytes" : 4,$
+^\s{3}"irods_user_name" : "nagios",$
+^\s{3}"irods_zone_name" : "UGent",$
+^\s{3}"schema_name" : "irods_environment",$
+^\s{3}"schema_version" : "v3"$
+^\}$

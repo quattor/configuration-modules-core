@@ -1,0 +1,36 @@
+Base test for config
+---
+/etc/irods/hosts_config.json
+---
+^\{$
+^\s{3}"host_entries" : \[$
+^\s{6}\{$
+^\s{9}"address_type" : "local",$
+^\s{9}"addresses" : \[$
+^\s{12}\{$
+^\s{12}\s{3}"address" : "10.141.11.1"$
+^\s{12}\},$
+^\s{12}\{$
+^\s{12}\s{3}"address" : "test.example.org"$
+^\s{12}\}$
+^\s{9}\]$
+^\s{6}\},$
+^\s{6}\{$
+^\s{9}"address_type" : "remote",$
+^\s{9}"addresses" : \[$
+^\s{12}\{$
+^\s{12}\s{3}"address" : "10.141.6.1"$
+^\s{12}\},$
+^\s{12}\{$
+^\s{12}\s{3}"address" : "test2.example.org"$
+^\s{12}\},$
+^\s{12}\{$
+^\s{12}\s{3}"address" : "test.other.domain"$
+^\s{12}\}$
+^\s{9}\]$
+^\s{6}\}$
+^\s{3}\],$
+^\s{3}"schema_name" : "hosts_config",$
+^\s{3}"schema_version" : "v3"$
+^\}$
+
