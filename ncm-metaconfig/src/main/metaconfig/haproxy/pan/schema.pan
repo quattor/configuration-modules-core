@@ -21,6 +21,12 @@ type haproxy_service_global_config = {
     'daemon' : string = ''
     'pidfile' : string = '/var/run/haproxy.pid'
     'chroot' : string = '/var/lib/haproxy'
+    'log-send-hostname' ? string
+
+    'ssl-default-bind-ciphers' ? string_non_whitespace[]
+    'ssl-default-bind-options' ? string[]
+    'ssl-default-server-ciphers' ? string_non_whitespace[]
+    'ssl-default-server-options' ? string[]
 };
 
 @documentation {
@@ -47,6 +53,7 @@ type haproxy_service_defaults_config = {
     'mode' ? string
     'retries' : long = 3
     'maxconn' : long = 4000
+    'option' ? string
 };
 
 @documentation {
@@ -133,11 +140,41 @@ type haproxy_service_proxy = {
     'timeouts' ? haproxy_service_timeouts
 };
 
+@documentation {
+    configuration of a peer
+}
+type haproxy_service_peer = {
+    @{Name of the peer host. Preferably in FQDN.}
+    'name' : string
+    @{Port to use to connect to peer.}
+    'port' : type_port
+    @{IP address of the peer.}
+    'ip' : type_ip
+};
+
+@documentation {
+    configuration of peers
+}
+type haproxy_service_peers = {
+        'peers': haproxy_service_peer[]
+};
+
+@documentation {
+    configuration of stick-table
+}
+type haproxy_service_stick_table = {
+    'type' : string
+    'size' : string
+    'peers' ? string
+};
+
 type haproxy_service_bind_server_params = {
     'ssl' ? boolean
     'ca-file' ? absolute_file_path
     @{combined cert and key in pem format}
     'crt' ? absolute_file_path
+    @{interface to bind on}
+    'interface' ? string
 };
 
 type haproxy_service_server_params = {
@@ -167,8 +204,11 @@ type haproxy_service_backend_server = {
 };
 
 type haproxy_service_backend = {
+    'balance' ? choice('roundrobin', 'static-rr', 'leastconn', 'first', 'source', 'uri', 'url_param')
     'options' ? string[]
     'tcpchecks' ? string[]
+    'sticktable' ? haproxy_service_stick_table
+    'stick' ? string
     'servers' : haproxy_service_backend_server[]
 };
 
@@ -180,6 +220,7 @@ type haproxy_service = {
     'global' : haproxy_service_global
     'defaults' : haproxy_service_defaults
     'stats' ? haproxy_service_stats
+    'peers' ? haproxy_service_peers{}
     'proxys' ? haproxy_service_proxy[]
     'frontends' ? haproxy_service_frontend{}
     'backends' ? haproxy_service_backend{}

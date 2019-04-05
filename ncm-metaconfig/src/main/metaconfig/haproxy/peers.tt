@@ -1,0 +1,3 @@
+[% FOREACH peer IN peers.peers -%]
+peer [% peer.name %] [% peer.ip %]:[% peer.port %]
+[% END -%]
