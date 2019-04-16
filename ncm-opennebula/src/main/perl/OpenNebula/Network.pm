@@ -49,15 +49,17 @@ sub get_vnetars
     my ($self, $config) = @_;
     my $all_ars = $self->process_template_aii($config, "network_ar");
     my %res;
+    my $vnetid = 0;
 
     my @tmp = split(qr{^NETWORK\s+=\s+(?:"|')(\S+)(?:"|')\s*$}m, $all_ars);
 
     while (my ($ar, $network) = splice(@tmp, 0, 2)) {
         if ($network && $ar) {
             $self->verbose("Detected network AR: $ar within network $network");
-            $res{$network}{ar} = $ar;
-            $res{$network}{network} = $network;
+            $res{$vnetid}{ar} = $ar;
+            $res{$vnetid}{network} = $network;
             $self->debug(3, "This is the network AR template for $network: $ar");
+            $vnetid = $vnetid + 1;
         } else {
             # No ARs found for this VM
             $self->error("No network ARs $ar and/or network info $network.");
@@ -76,8 +78,9 @@ sub remove_and_create_vn_ars
 {
     my ($self, $one, $arsref, $remove) = @_;
 
-    foreach my $vnet (sort keys %$arsref) {
-        my $ardata = $arsref->{$vnet};
+    foreach my $vnetid (sort keys %$arsref) {
+        my $ardata = $arsref->{$vnetid};
+        my $vnet = $ardata->{network};
         $self->debug(2, "Testing vnet network AR: $vnet");
 
         my %ar_opts = ('template' => $ardata->{ar});
