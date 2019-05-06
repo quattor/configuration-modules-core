@@ -2,6 +2,8 @@ declaration template components/${project.artifactId}/v2/schema-osd;
 
 @documentation{ configuration options for a ceph osd daemon }
 type ceph_osd_config = {
+    'bluestore_allocator' ? string
+    'bluefs_allocator' ? string
     'osd_deep_scrub_interval' ? double(0..)
     'osd_journal_size' ? long(0..)
     'osd_max_scrubs' ? long(0..)
