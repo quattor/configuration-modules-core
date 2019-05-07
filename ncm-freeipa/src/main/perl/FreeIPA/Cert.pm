@@ -56,7 +56,8 @@ sub get_cert
 {
     my ($self, $serial, $crt) = @_;
 
-    my $cert = $self->do_one('cert', 'show', $serial);
+    $serial = hex($serial) if $serial =~ m/^0?x/;
+    my $cert = $self->do_one('cert', 'show', $serial, all => 1);
 
     if ($crt && $cert) {
         # Extract the cert request
