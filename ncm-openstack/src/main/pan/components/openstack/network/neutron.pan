@@ -81,7 +81,7 @@ type openstack_neutron_vxlan = {
     IPv6 address that resides on one of the host network interfaces. The IP
     version of this value must match the value of the 'overlay_ip_version' option
     in the ML2 plug-in configuration file on the neutron server node(s)}
-    'local_ip' : type_ip
+    'local_ip' ? type_ip
     @{Extension to use alongside ml2 plugins l2population mechanism driver. It
     enables the plugin to populate VXLAN forwarding table}
     'l2_population' ? boolean = true
