@@ -128,7 +128,7 @@ set_file_contents('path/to/csr',
 
 ok($n->ipa_request_cert("path/to/csr", "path/to/crt", "g.h.i.j", $ipa), "ipa_request_cert ok");
 ok(POST_history_ok(['cert_request -----BEGIN CERTIFICATE REQUEST-----\nCSRDATA\n-----END CERTIFICATE REQUEST----- principal=host/g.h.i.j@REALM.DOMAIN,vers',
-                   "cert_show 1234 vers"]),
+                   "cert_show 1234 all=1,vers"]),
    "ipa_request_cert IPA POST ok");
 
 =head2 get_priv_keys
