@@ -50,7 +50,7 @@ ok(POST_history_ok(['cert_request -----BEGIN NEW CERTIFICATE REQUEST-----\nCSRRE
 reset_POST_history;
 is_deeply($c->get_cert(123, '/path/to/cert.crt'),
           {certificate => 'CERTDATA'}, "Get certificate");
-ok(POST_history_ok(['cert_show 123 version']),
+ok(POST_history_ok(['cert_show 123 all=1,version']),
    "get_cert is certificate show made");
 
 my $fh = get_file('/path/to/cert.crt');
