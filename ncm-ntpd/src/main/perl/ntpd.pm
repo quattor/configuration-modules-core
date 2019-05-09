@@ -264,6 +264,12 @@ sub write_ntpd_config
         print $fh "restrict " . $$client[0] . " mask " . $$client[1] . " nomodify notrap\n";
     }
 
+    if ($cfg->{interface}) {
+        foreach my $rule (@{$cfg->{interface}}) {
+            print $fh "interface " . $rule->{action} . " " . $rule->{match} . "\n";
+        }
+    }
+
     # logfile
     if ($cfg->{logfile}) {
         print $fh "\nlogfile $cfg->{logfile}\n";

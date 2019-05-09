@@ -96,6 +96,14 @@ type ntpd_system_options = {
     "stats" ? boolean
 };
 
+@documentation{
+    Defines a single rule for the "interface" statement. See the ntp_misc manpage.
+}
+type ntpd_interface_options = {
+    "action" : string with match(SELF, "^(listen|ignore|drop)$")
+    "match" : string
+};
+
 # logging configuration
 function valid_ntpd_logconfig_list = {
     # Loop over each component.
@@ -211,4 +219,6 @@ type ${project.artifactId}_component = {
     "enablelocalhostdebug" ? boolean = true
     @{if the group is set, files are written with root.group ownership and 0640 permission}
     "group" ? defined_group
+    @{Rules for whihc interfaces/addresses should the daemon listen on}
+    "interface" ? ntpd_interface_options[]
 };
