@@ -348,3 +348,35 @@ prefix "/software/components/openstack/openrc";
 # RabbitMQ section
 prefix "/software/components/openstack/messaging/rabbitmq";
 "password" = "rabbit_pass";
+
+# Ceilometer service section
+
+include 'components/openstack/identity/gather/metric/ceilometer';
+prefix "/software/components/openstack/metric/ceilometer/service";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+);
+"service_credentials" = dict(
+    "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
+    "username", "ceilometer",
+    "password", "ceilometer_good_password",
+    "interface", "internalURL",
+);
+
+# Ceilometer Gnocchi section
+
+prefix "/software/components/openstack/metric/ceilometer/gnocchi";
+"api" = dict();
+"storage" = dict(
+    'coordination_url', format('redis://%s:6379', OPENSTACK_HOST_SERVER),
+);
+"keystone_authtoken" = dict(
+    "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
+    "username", "gnocchi",
+    "password", "gnocchi_good_password",
+    "interface", "internalURL",
+);
+"indexer" = dict(
+    "url", format("mysql+pymysql://gnocchi:gnocchi_db_pass@%s/gnocchi", OPENSTACK_HOST_SERVER),
+);
+

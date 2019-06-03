@@ -1,0 +1,23 @@
+OpenStack Ceilometer Gnocchi test
+---
+multiline
+---
+^\[api\]\s*$
+^auth_mode\s?=\s*.+\s*$
+
+^\[indexer\]\s*$
+^url\s?=\s*.+\s*$
+
+^\[keystone_authtoken\]\s*$
+^auth_type\s?=\s*.+\s*$
+^auth_url\s?=\s*.+\s*$
+^password\s?=\s*.+\s*$
+^project_domain_name\s?=\s*.+\s*$
+^project_name\s?=\s*.+\s*$
+^user_domain_name\s?=\s*.+\s*$
+^username\s?=\s*.+\s*$
+
+^\[storage\]\s*$
+^coordination_url\s?=\s*.+\s*$
+^driver\s?=\s*.+\s*$
+^file_basepath\s?=\s*.+\s*$
