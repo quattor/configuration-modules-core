@@ -42,7 +42,7 @@ type openstack_heat_clients_keystone = {
 type openstack_heat_clients = {
     @{Type of endpoint in Identity service catalog to use for communication with
     the OpenStack service}
-    'endpoint_type' : choice('internalURL', 'publicURL') = 'internalURL'
+    'endpoint_type' : openstack_keystone_endpoint_type = 'internalURL'
 } = dict();
 
 type openstack_quattor_heat = openstack_quattor;

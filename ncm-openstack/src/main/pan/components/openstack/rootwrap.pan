@@ -15,7 +15,7 @@ unique template components/${project.artifactId}/rootwrap;
 
 include 'components/sudo/config';
 
-variable ROOTWRAP_SERVICES = list('nova', 'neutron', 'cinder', 'manila');
+variable ROOTWRAP_SERVICES = list('nova', 'neutron', 'cinder', 'manila', 'ceilometer');
 
 "/software/components/sudo/privilege_lines" = {
 

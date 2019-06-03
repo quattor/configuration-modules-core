@@ -14,6 +14,7 @@ include 'components/openstack/dashboard';
 include 'components/openstack/orchestration';
 include 'components/openstack/catalog';
 include 'components/openstack/messaging';
+include 'components/openstack/metric';
 
 @documentation{
 Hypervisor configuration.
@@ -57,6 +58,7 @@ type openstack_component = {
     'messaging' ? openstack_messaging_config
     'orchestration' ? openstack_orchestration_config
     'catalog' ? openstack_catalog_config
+    'metric' ? openstack_metric_config
     'openrc' ? openstack_openrc_config
     @{Hypervisor configuration. Host is a hypervisor when this attribute exists}
     'hypervisor' ? openstack_hypervisor_config
