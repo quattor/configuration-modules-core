@@ -125,3 +125,16 @@ prefix "/software/components/openstack/volume/cinder";
     "rbd_user", "volumes",
     "rbd_secret_uuid", "a5d0dd94-57c4-ae55-ffe0-7e3732a24455",
 );
+
+# Ceilometer service section
+
+prefix "/software/components/openstack/metric/ceilometer/service";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+);
+"service_credentials" = dict(
+    "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
+    "username", "ceilometer",
+    "password", "ceilometer_good_password",
+    "interface", "internalURL",
+);

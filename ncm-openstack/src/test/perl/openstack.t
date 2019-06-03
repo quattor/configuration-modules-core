@@ -31,6 +31,7 @@ set_output('cinder_db_version_missing');
 set_output('manila_db_version_missing');
 set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
+set_output('ceilometer_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -108,6 +109,15 @@ $fh = get_file("/etc/murano/murano.conf");
 isa_ok($fh, "CAF::FileWriter", "murano.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "murano.conf has expected content");
 
+# Verify Ceilometer configuration files
+$fh = get_file("/etc/ceilometer/ceilometer.conf");
+isa_ok($fh, "CAF::FileWriter", "ceilometer.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "ceilometer.conf has expected content");
+
+$fh = get_file("/etc/gnocchi/gnocchi.conf");
+isa_ok($fh, "CAF::FileWriter", "gnocchi.conf CAF::FileWriter instance");
+like("$fh", qr{^\[api\]$}m, "gnocchi.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -162,6 +172,13 @@ ok(command_history_ok([
         '/usr/bin/murano-db-manage upgrade',
         'service murano-api restart',
         'service murano-engine restart',
+        '/usr/bin/gnocchi-upgrade --version',
+        '/usr/bin/gnocchi-upgrade --debug',
+        '/usr/bin/ceilometer-upgrade',
+        'service openstack-gnocchi-api restart',
+        'service openstack-gnocchi-metricd restart',
+        'service openstack-ceilometer-notification restart',
+        'service openstack-ceilometer-central restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
