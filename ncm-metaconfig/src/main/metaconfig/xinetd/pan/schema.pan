@@ -15,7 +15,8 @@ type xinetd_options = {
     "type" ? xinetd_options_type[]
     "flags" ? xinetd_options_flags[]
     "only_from" ? xinetd_options_ips[]
-    "cps" : long[] = list(100, 2)
+    "cps" ? long[]
+    "port" ? long(0..)
 
     "socket_type" : string with match(SELF,'^(stream|dgram|raw|seqpacket)$')
     "user" : string = 'root'
@@ -23,8 +24,8 @@ type xinetd_options = {
     "protocol" ? string with match(SELF,'^(udp|tcp)$') # actually, anything in /etc/protocols
     "server_args" ? string
     "group" ? string
-    "instances" ? long(0..) # if not defined, it's UNLIMITED
-    "per_source" : long = 11
+    "instances" ? string with match(SELF, '^(UNLIMITED|\d+)$')
+    "per_source" ? long
 };
 
 type xinetd_conf = {
