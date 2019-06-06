@@ -1,51 +1,54 @@
-declaration template metaconfig/kibana/schema;
+declaration template metaconfig/kibana/schema_7.0;
 
 include 'pan/types';
 
+type kibana_service_server = {
+    "port" ? type_port = 5601
+    "host" ? type_hostname = "localhost.localdomain" # not insecure shipped default "0.0.0.0"
+    "basePath" ? absolute_file_path
+    "maxPayloadBytes" ? long = 1048576
+    "ssl.enabled" ? boolean = false
+    "server.ssl.certificate" ? absolute_file_path
+    "server.ssl.key" ? absolute_file_path
+};
+
+type kibana_service_elasticsearch = {
+    "url" : type_absoluteURI = "http://localhost:9200"
+    "username" ? string
+    "password" ? string
+    "ssl.certificate" ? absolute_file_path
+    "ssl.key" ? absolute_file_path
+    "ssl.certificateAuthorities" ? list = list ("/path/to/your/CA.pem")
+    "ssl.verificationMode" ? string = "full"
+    "pingTimeout" ? long = 1500
+    "requestTimeout" ? long = 30000
+    "requestHeadersWhitelist" ? list = list("authorization")
+    "customHeaders" ? dict
+    "shardTimeout" ? long = 0
+    "startupTimeout" ? long = 5000
+};
+
+
+type kibana_service_kibana = {
+    "index" : string = ".kibana"
+    "defaultAppId" ? string = "home"
+};
+
+type kibana_service_logging = {
+    "dest" ? string = "stdout"
+    "silent" ? boolean = false
+    "quiet" ? boolean = false
+};
+
+
+# Set the value of this setting to true to log all events, including system usage information
+# and all requests.
+#logging.verbose: false
+
 type kibana_service = {
-    "port" : type_port = 5601
-    "host" : type_hostname = "localhost.localdomain" # not insecure shipped default "0.0.0.0"
-    "elasticsearch_url" : type_absoluteURI = "http://localhost:9200"
-    "elasticsearch_preserve_host" : boolean = true
-    "kibana_index" : string = ".kibana"
-
-    "kibana_elasticsearch_username" ? string
-    "kibana_elasticsearch_password" ? string
-
-    "kibana_elasticsearch_client_crt" ? string
-    "kibana_elasticsearch_client_key" ? string
-
-    "ca" ? string
-
-    "default_app_id" : string = "discover"
-
-    "ping_timeout" ? long(0..) = 1500
-
-    "request_timeout" : long(1..) = 300000
-
-    "shard_timeout" : long(0..) = 0 # 0 means disable
-
-    "startup_timeout" ? long(0..) = 5000
-
-    "verify_ssl" : boolean = true
-
-    "ssl_key_file" ? string
-    "ssl_cert_file" ? string
-
-    "pid_file" ? string = '/var/run/kibana.pid'
-
-    "log_file" ? string = './kibana.log'
-
-    "bundled_plugin_ids" : list = list(
-        'plugins/dashboard/index',
-        'plugins/discover/index',
-        'plugins/doc/index',
-        'plugins/kibana/index',
-        'plugins/markdown_vis/index',
-        'plugins/metric_vis/index',
-        'plugins/settings/index',
-        'plugins/table_vis/index',
-        'plugins/vis_types/index',
-        'plugins/visualize/index',
-        )
+    "server"  ? kibana_service_server
+    "elasticsearch" : kibana_service_elasticsearch
+    "kibana" : kibana_service_kibana
+    "pid.file" ? string = '/var/run/kibana.pid'
+    "logging" ? kibana_service_logging
 };
