@@ -15,8 +15,8 @@ Base test for config
 ^- plugins/vis_types/index$
 ^- plugins/visualize/index$
 ^default_app_id: discover$
-^elasticsearch_preserve_host: true$
-^elasticsearch_url: http://mysupersecret.host.domain:9200$
+^elasticsearch:$
+^  hosts: http://mysupersecret.host.domain:9200$
 ^host: localhost.localdomain$
 ^kibana_index: .kibana$
 ^port: 5601$
