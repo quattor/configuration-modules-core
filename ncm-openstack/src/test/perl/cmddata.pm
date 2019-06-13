@@ -88,10 +88,10 @@ $cmds{heat_db_version}{out} = 1;
 $cmds{heat_db_version_missing}{cmd} = "/usr/bin/heat-manage db_version";
 $cmds{heat_db_version_missing}{ec} = 1;
 
-$cmds{ceilometer_db_version}{cmd} = "/usr/bin/gnocchi-upgrade --version";
-$cmds{ceilometer_db_version}{out} = 1;
+$cmds{ceilometer_db_version}{cmd} = "/usr/bin/ceilometer-upgrade --version";
+$cmds{ceilometer_db_version}{out} = "11.0.1";
 
-$cmds{ceilometer_db_version_missing}{cmd} = "/usr/bin/gnocchi-upgrade --version";
+$cmds{ceilometer_db_version_missing}{cmd} = "/usr/bin/ceilometer-upgrade --version";
 $cmds{ceilometer_db_version_missing}{ec} = 1;
 
 $cmds{murano_db_version}{cmd} = "/usr/bin/murano-db-manage version";
