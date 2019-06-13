@@ -14,13 +14,11 @@ Readonly::Array my @CEILOMETER_DB_VERSION => qw(--version);
 Readonly::Hash my %CONF_FILE => {
     service => "/etc/ceilometer/ceilometer.conf",
     gnocchi => "/etc/gnocchi/gnocchi.conf",
-    #pipeline => "/etc/ceilometer/pipeline.yaml",
-    #polling => "/etc/ceilometer/polling.yaml",
 };
 
 Readonly::Hash my %DAEMON => {
     service => ['openstack-ceilometer-notification', 'openstack-ceilometer-central'],
-    gnocchi => ['openstack-gnocchi-api', 'openstack-gnocchi-metricd'],
+    gnocchi => ['openstack-gnocchi-metricd', 'httpd'],
 };
 
 Readonly::Hash my %DAEMON_HYPERVISOR => {
@@ -42,33 +40,36 @@ sub _attrs
 {
     my $self = shift;
 
-    $self->{manage} = $self->{hypervisor} ? undef : $GNOCCHI_DB_MANAGE_COMMAND;
+    $self->{manage} = $self->{hypervisor} ? undef : $CEILOMETER_DB_MANAGE_COMMAND;
+    #delete $self->{manage};
     # Ceilometer has no database parameters
     $self->{db_version} = [@CEILOMETER_DB_VERSION];
     $self->{db_sync} = [@CEILOMETER_DB_BOOTSTRAP];
     $self->{filename} = \%CONF_FILE;
+    $self->{fileownergroup}->{$CONF_FILE{gnocchi}} = {
+        user => 'gnocchi',
+        group => 'gnocchi',
+    };
     $self->{daemon_map} = $self->{hypervisor} ? \%DAEMON_HYPERVISOR : \%DAEMON;
 }
 
+=item pre_populate_service_database
 
-=item post_populate_service_database
-
-Initializes Ceilometer database after Gnocchi setup
-for C<Ceilometer> metric service.
+Initializes C<Gnocchi> database for C<Ceilometer> metric service.
+This should be done before C<Ceilometer> database bootstrap.
 
 =cut
 
-sub post_populate_service_database
+sub pre_populate_service_database
 {
     my ($self) = @_;
 
-    my $cmd = [$CEILOMETER_DB_MANAGE_COMMAND];
-    $self->_do($cmd, "post-populate Ceilometer database", sensitive => 0)
+    my $cmd = [$GNOCCHI_DB_MANAGE_COMMAND];
+    $self->_do($cmd, "pre-populate Gnocchi database", sensitive => 0, user => 'gnocchi')
         or return;
 
     return 1;
 }
-
 
 =pod
 
