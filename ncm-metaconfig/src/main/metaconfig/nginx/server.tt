@@ -4,6 +4,9 @@ listen [% srv.listen.addr %][% " default" IF srv.listen.default -%]
 include [% i %];
 [% END -%]
 server_name [% srv.name.join(" ") %];
+[% FOREACH header IN srv.add_header %]
+add_header [% header %];
+[% END %]
 [% FOREACH e IN srv.error_page -%]
 error_page [% e.error_codes.join(" ") %] [% e.file %];
 [% END -%]
