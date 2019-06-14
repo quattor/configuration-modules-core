@@ -8,6 +8,9 @@ events {
     use epoll;
 }
 
+[% FOREACH header IN add_header %]
+add_header [% header %];
+[% END %]
 [% FOREACH h IN http %]
 http {
 [%      FILTER indent %]
