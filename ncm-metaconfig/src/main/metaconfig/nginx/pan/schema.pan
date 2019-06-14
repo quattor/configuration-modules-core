@@ -6,8 +6,18 @@ include 'pan/types';
     Data types for an nginx server, with proxy and SSL support
 }
 
-type cipherstring = string with match(SELF, "^(TLSv1|TLSv1.1|TLSv1.2)$")
-    || error("Use a modern cipher suite, for Pete's sake!");
+type sslprotocol = choice("TLSv1", "TLSv1.1", "TLSv1.2");
+
+@{ based on Mozilla server side tls intermediate recommendations }
+type cipherstring = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-CHACHA20-POLY1305",
+    "ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-GCM-SHA384",
+    "ECDHE-RSA-AES256-GCM-SHA384", "DHE-RSA-AES128-GCM-SHA256", "DHE-RSA-AES256-GCM-SHA384",
+    "ECDHE-ECDSA-AES128-SHA256", "ECDHE-RSA-AES128-SHA256", "ECDHE-ECDSA-AES128-SHA", "ECDHE-RSA-AES256-SHA384",
+    "ECDHE-RSA-AES128-SHA", "ECDHE-ECDSA-AES256-SHA384", "ECDHE-ECDSA-AES256-SHA", "ECDHE-RSA-AES256-SHA",
+    "DHE-RSA-AES128-SHA256", "DHE-RSA-AES128-SHA", "DHE-RSA-AES256-SHA256", "DHE-RSA-AES256-SHA",
+    "ECDHE-ECDSA-DES-CBC3-SHA", "ECDHE-RSA-DES-CBC3-SHA", "EDH-RSA-DES-CBC3-SHA", "AES128-GCM-SHA256",
+    "AES256-GCM-SHA384", "AES128-SHA256", "AES256-SHA256", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA", "!RC4",
+    "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS");
 
 type basic_ssl = {
     "options" ? string[]
@@ -23,7 +33,8 @@ type httpd_ssl = {
     include basic_ssl
     "active" : boolean = true
     "ciphersuite" : cipherstring[] = list("TLSv1")
-    "protocol" : cipherstring[] = list("TLSv1")
+    "protocol" : sslprotocol[] = list("TLSv1", "TLSv1.1", "TLSv1.2")
+    "prefer_server_ciphers" ? choice("on", "off")
     "certificate" : string
     "key" : string
     @{ca sets ssl_client_certificate which specifies a file with trusted
@@ -32,6 +43,12 @@ type httpd_ssl = {
     "ca" ? string
     "certificate_chain_file" ? string
     "revocation_file" ? string
+    "stapling" ? choice("on", "off")
+    "stapling_verify" ? choice("on", "off")
+    "trusted_certificate" ? string
+    "session_tickets" ? choice("on", "off")
+    "session_timeout" ? string
+    "session_cache" ? string
 };
 
 @{ Basic nginx declarations. So far we only need to declare how many
@@ -153,6 +170,7 @@ type nginx_server = {
     "error_page" : nginx_error_page[] = list()
     "ssl" ? httpd_ssl
     "return" ? nginx_return
+    "add_header" ? string[]
 } with {
     exists(SELF['location']) || exists(SELF['return']);
 };
@@ -170,7 +188,7 @@ type nginx_upstream = {
 type nginx_http = {
     "includes" : string[]
     "default_type" : string = "application/octet-stream"
-    "gzip" : boolean = true
+    "gzip" : boolean = false
     "proxy_cache_path" ? nginx_cache_path[]
     "server" : nginx_server[]
     "keepalive_timeout" : long = 65
@@ -182,6 +200,7 @@ type nginx_http = {
     Please be aware that browsers cannot correctly display this error.
     Setting size to 0 disables checking of client request body size}
     "client_max_body_size" ? long(0..)
+    "add_header" ? string[]
 };
 
 type type_nginx = {
