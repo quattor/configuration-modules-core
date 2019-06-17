@@ -25,6 +25,7 @@ type keepalived_service_vrrpscript = {
 type keepalived_service_vip = {
     'ipaddress' : string
     'interface' : string
+    'broadcast' : string
 };
 
 @documentation {
@@ -34,7 +35,7 @@ type keepalived_service_vrrpinstance_config = {
     'virtual_router_id' : long
     'advert_int' : long = 1
     'priority' : long = 100
-    'state' : string
+    'state' : choice("MASTER", "BACKUP")
     'interface' : string
 };
 
@@ -46,6 +47,10 @@ type keepalived_service_vrrpinstance = {
     'config' : keepalived_service_vrrpinstance_config
     'virtual_ipaddresses' : keepalived_service_vip[]
     'track_scripts' : string[]
+    'unicast_peer' ? type_ip[]
+    'unicast_src_ip' ? type_ip
+    'virtual_routes' ? string[]
+    'track_interface' ? string[]
 };
 
 @documentation {
