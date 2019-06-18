@@ -20,21 +20,20 @@ ssl_ciphers [% ssl.ciphersuite.join(":") %];
 ssl_session_timeout [% ssl.session_timeout %];
 [%  END -%]
 [% IF ssl.session_tickets.defined -%]
-ssl_session_tickets [% ssl.session_tickets %];
+ssl_session_tickets [% ssl.session_tickets ? "on" : "off" %];
 [%  END -%]
 [% IF ssl.session_cache.defined -%]
 ssl_session_cache [% ssl.session_cache %];
 [%  END -%]
 [% IF ssl.prefer_server_ciphers.defined -%]
-ssl_prefer_server_ciphers [% ssl.prefer_server_ciphers %];
+ssl_prefer_server_ciphers [% ssl.prefer_server_ciphers ? "on" : "off" %];
 [%  END -%]
 [% IF ssl.stapling.defined -%]
-ssl_stapling [% ssl.stapling %];
+ssl_stapling [% ssl.stapling ? "on" : "off" %];
 [%  END -%]
 [% IF ssl.stapling_verify.defined -%]
-ssl_stapling_verify [% ssl.stapling_verify %];
+ssl_stapling_verify [% ssl.stapling_verify ? "on" : "off" %];
 [%  END -%]
 [% IF ssl.trusted_certificate.defined -%]
 ssl_trusted_certificate [% ssl.trusted_certificate %];
 [%  END -%]
-

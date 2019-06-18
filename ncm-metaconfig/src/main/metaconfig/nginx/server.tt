@@ -1,5 +1,6 @@
 listen [% srv.listen.addr %][% " default" IF srv.listen.default -%]
- [% "ssl" IF srv.listen.ssl %];
+ [% "ssl" IF srv.listen.ssl -%]
+ [% "http2" IF srv.listen.http2 %];
 [% FOREACH i IN srv.includes %]
 include [% i %];
 [% END -%]
