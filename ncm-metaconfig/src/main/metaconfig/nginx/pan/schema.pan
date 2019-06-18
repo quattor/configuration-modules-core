@@ -19,6 +19,7 @@ type cipherstring = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-
     "AES256-GCM-SHA384", "AES128-SHA256", "AES256-SHA256", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA", "!RC4",
     "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS");
 
+
 type basic_ssl = {
     "options" ? string[]
     "requiressl" ? boolean
@@ -34,7 +35,7 @@ type httpd_ssl = {
     "active" : boolean = true
     "ciphersuite" : cipherstring[] = list("TLSv1")
     "protocol" : sslprotocol[] = list("TLSv1", "TLSv1.1", "TLSv1.2")
-    "prefer_server_ciphers" ? choice("on", "off")
+    "prefer_server_ciphers" ? boolean
     "certificate" : string
     "key" : string
     @{ca sets ssl_client_certificate which specifies a file with trusted
@@ -43,10 +44,10 @@ type httpd_ssl = {
     "ca" ? string
     "certificate_chain_file" ? string
     "revocation_file" ? string
-    "stapling" ? choice("on", "off")
-    "stapling_verify" ? choice("on", "off")
+    "stapling" ? boolean
+    "stapling_verify" ? boolean
     "trusted_certificate" ? string
-    "session_tickets" ? choice("on", "off")
+    "session_tickets" ? boolean
     "session_timeout" ? string
     "session_cache" ? string
 };
@@ -152,6 +153,7 @@ type nginx_listen = {
     "addr" ? nginx_addr
     "default" : boolean = false
     "ssl" : boolean = false
+    "http2" ? boolean = false
 };
 
 

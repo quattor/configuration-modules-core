@@ -7,7 +7,6 @@ events {
     worker_connections [% global.worker_connections %];
     use epoll;
 }
-
 [% FOREACH header IN add_header %]
 add_header [% header %];
 [% END %]
