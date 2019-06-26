@@ -19,7 +19,6 @@ type cipherstring = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-
     "AES256-GCM-SHA384", "AES128-SHA256", "AES256-SHA256", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA", "!RC4",
     "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS");
 
-
 type basic_ssl = {
     "options" ? string[]
     "requiressl" ? boolean
@@ -107,6 +106,8 @@ type nginx_proxy_location = {
     server does not transmit anything within this time,
     the connection is closed}
     "read_timeout" ? long(0..)
+    "ssl_certificate" ? absolute_file_path
+    "ssl_certificate_key" ? absolute_file_path
 };
 
 
