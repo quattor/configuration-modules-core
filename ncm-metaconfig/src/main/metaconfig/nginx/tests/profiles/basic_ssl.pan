@@ -6,3 +6,4 @@ structure template basic_ssl;
 "certificate" = "/etc/mycert";
 "key" = "/etc/mykey";
 "ca" = "/etc/myca";
+"prefer_server_ciphers" = true;
