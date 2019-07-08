@@ -11,9 +11,6 @@ variable OPENSTACK_HOST_SERVER ?= 'controller.mysite.com';
 prefix "/metaconfig/contents";
 
 "api" = dict();
-"storage" = dict(
-    'coordination_url', format('redis://%s:6379', OPENSTACK_HOST_SERVER),
-);
 "keystone_authtoken" = dict(
     "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
     "username", "gnocchi",
@@ -23,3 +20,4 @@ prefix "/metaconfig/contents";
 "indexer" = dict(
     "url", format("mysql+pymysql://gnocchi:gnocchi_db_pass@%s/gnocchi", OPENSTACK_HOST_SERVER),
 );
+
