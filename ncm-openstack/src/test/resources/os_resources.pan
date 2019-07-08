@@ -367,9 +367,6 @@ prefix "/software/components/openstack/metric/ceilometer/service";
 
 prefix "/software/components/openstack/metric/ceilometer/gnocchi";
 "api" = dict();
-"storage" = dict(
-    'coordination_url', format('redis://%s:6379', OPENSTACK_HOST_SERVER),
-);
 "keystone_authtoken" = dict(
     "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
     "username", "gnocchi",

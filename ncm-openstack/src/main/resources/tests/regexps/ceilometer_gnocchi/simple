@@ -18,6 +18,5 @@ multiline
 ^username\s?=\s*.+\s*$
 
 ^\[storage\]\s*$
-^coordination_url\s?=\s*.+\s*$
 ^driver\s?=\s*.+\s*$
 ^file_basepath\s?=\s*.+\s*$

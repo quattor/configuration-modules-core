@@ -29,12 +29,9 @@ type openstack_ceilometer_gnocchi_indexer = {
     list of Gnocchi storage section
 }
 type openstack_ceilometer_gnocchi_storage = {
-    @{coordination_url is not required but specifying one will improve
-    performance with better workload division across workers}
-    'coordination_url' ? string
     'file_basepath' : absolute_file_path = '/var/lib/gnocchi'
     'driver' : string = 'file'
-};
+} = dict();
 
 
 @documentation{
