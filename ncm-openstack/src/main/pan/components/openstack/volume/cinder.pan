@@ -72,6 +72,7 @@ type openstack_cinder_config = {
     'database' : openstack_database
     'keystone_authtoken' : openstack_keystone_authtoken
     'oslo_concurrency' : openstack_oslo_concurrency
+    'oslo_messaging_notifications' ? openstack_oslo_messaging_notifications
     'lvm' ? openstack_cinder_lvm
     'ceph' ? openstack_cinder_ceph
     # default empty dict for pure hypervisor

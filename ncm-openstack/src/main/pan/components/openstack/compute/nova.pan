@@ -273,6 +273,26 @@ type openstack_nova_DEFAULTS = {
     NOTE: As of the 16.0.0 Pike release, this configuration option is ignored
     for the ironic.IronicDriver compute driver and is hardcoded to 1.0}
     "ram_allocation_ratio" ? double(0..)
+    @{This option enables periodic compute.instance.exists notifications. Each
+    compute node must be configured to generate system usage data. These
+    notifications are consumed by OpenStack Telemetry service}
+    "instance_usage_audit" ? boolean
+    @{Time period to generate instance usages for}
+    "instance_usage_audit_period" ? choice('hour', 'day', 'month', 'year')
+    @{If set, send compute.instance.update notifications on
+    instance state changes.
+    Please refer to:
+    https://docs.openstack.org/nova/latest/reference/notifications.html for
+    additional information on notifications.
+        * None - no notifications
+        * "vm_state" - notifications are sent with VM state transition information in
+        the ``old_state`` and ``state`` fields. The ``old_task_state`` and
+        ``new_task_state`` fields will be set to the current task_state of the
+        instance.
+        * "vm_and_task_state" - notifications are sent with VM and task state
+        transition information}
+    "notify_on_state_change" ? choice('None', 'vm_state', 'vm_and_task_state')
+
 };
 
 @documentation{
@@ -288,6 +308,7 @@ type openstack_nova_common = {
     'placement' : openstack_nova_placement
     'cinder' ? openstack_nova_cinder
     'neutron' ? openstack_nova_neutron
+    'oslo_messaging_notifications' ? openstack_oslo_messaging_notifications
 };
 
 type openstack_quattor_nova = openstack_quattor;

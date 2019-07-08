@@ -29,6 +29,9 @@ prefix "/software/components/openstack/compute/nova";
     "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
     "my_ip", MY_IP,
     "rootwrap_config", "/etc/nova/rootwrap.conf",
+    "instance_usage_audit", true,
+    "instance_usage_audit_period", "hour",
+    "notify_on_state_change", "vm_and_task_state",
 );
 "keystone_authtoken" = dict(
     "auth_uri", format('http://%s:5000', OPENSTACK_HOST_SERVER),
@@ -45,6 +48,9 @@ prefix "/software/components/openstack/compute/nova";
 );
 "oslo_concurrency" = dict(
     "lock_path", "/var/lib/nova/tmp",
+);
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
 );
 "placement" = dict(
     "auth_url", format('http://%s:35357/v3', OPENSTACK_HOST_SERVER),
