@@ -83,6 +83,14 @@ type openstack_oslo_concurrency = {
 };
 
 @documentation{
+    The configuration options in 'oslo_messaging_notifications' Section.
+}
+type openstack_oslo_messaging_notifications = {
+    @{The drivers to handle sending notifications}
+    'driver' : choice('messaging', 'messagingv2', 'routing', 'log', 'test', 'noop') = 'messagingv2'
+};
+
+@documentation{
     The configuration options in the DEFAULTS Section
 }
 type openstack_DEFAULTS = {

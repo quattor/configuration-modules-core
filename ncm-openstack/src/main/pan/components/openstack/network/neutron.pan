@@ -208,6 +208,7 @@ type openstack_neutron_service_config = {
     'database' ? openstack_database
     @{nova section has the same options than "keystone_authtoken" but with the nova user and passwod}
     'nova' ? openstack_neutron_nova
+    'oslo_messaging_notifications' ? openstack_oslo_messaging_notifications
 };
 
 type openstack_quattor_neutron = openstack_quattor;
