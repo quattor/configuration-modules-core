@@ -57,5 +57,6 @@ type openstack_heat_config = {
     'trustee' : openstack_domains_common
     'clients_keystone' : openstack_heat_clients_keystone
     'clients' : openstack_heat_clients
+    'oslo_messaging_notifications' ? openstack_oslo_messaging_notifications
     'quattor' : openstack_quattor_heat
 };

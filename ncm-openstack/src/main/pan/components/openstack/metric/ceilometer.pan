@@ -60,8 +60,5 @@ type openstack_quattor_ceilometer = openstack_quattor;
 type openstack_ceilometer_config = {
     'service' ? openstack_ceilometer_service_config
     'gnocchi' ? openstack_ceilometer_gnocchi_config
-    # pipeline in yaml format
-    #'pipeline' ? openstack_ceilometer_pipeline_config
-    # default empty dict for pure hypervisor
     'quattor' : openstack_quattor_ceilometer = dict()
 };
