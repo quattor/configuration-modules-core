@@ -29,8 +29,16 @@ type openstack_ceilometer_gnocchi_indexer = {
     list of Gnocchi storage section
 }
 type openstack_ceilometer_gnocchi_storage = {
-    'file_basepath' : absolute_file_path = '/var/lib/gnocchi'
-    'driver' : string = 'file'
+    'file_basepath' ? absolute_file_path = '/var/lib/gnocchi'
+    'driver' : choice ('file', 'ceph') = 'file'
+    @{Ceph pool name to use}
+    'ceph_pool' ? string
+    @{Ceph username (ie: admin without "client." prefix)}
+    'ceph_username' ? string
+    @{Ceph keyring path}
+    'ceph_keyring' ? absolute_file_path
+    @{Ceph configuration file}
+    'ceph_conffile' ? absolute_file_path
 } = dict();
 
 
