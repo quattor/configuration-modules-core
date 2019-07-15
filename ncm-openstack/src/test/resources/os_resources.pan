@@ -397,4 +397,7 @@ prefix "/software/components/openstack/metric/ceilometer/gnocchi";
 "indexer" = dict(
     "url", format("mysql+pymysql://gnocchi:gnocchi_db_pass@%s/gnocchi", OPENSTACK_HOST_SERVER),
 );
+"storage" = dict(
+    "file_basepath", "/var/lib/gnocchi",
+);
 
