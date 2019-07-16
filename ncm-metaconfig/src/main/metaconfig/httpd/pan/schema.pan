@@ -4,11 +4,17 @@ declaration template metaconfig/httpd/schema;
 include 'pan/types';
 include 'components/accounts/functions';
 
-type httpd_sslprotocol = string with match(SELF, '^\+?(TLSv1|TLSv1\.[012])$')
-    || error("Use a modern cipher protocol, for Pete's sake!");
+type httpd_sslprotocol = choice("all", "-SSLv3", "-TLSv1", "-TLSv1.1", "TLSv1.1", "TLSv1.2", "TLSv1.3");
 
-type httpd_ciphersuite = string with match(SELF, '^(\+?TLSv1|!(RC4|LOW|[ae]NULL|MD5|EXP|3DES|IDEA|SEED|CAMELLIA))$')
-    || error("Use a modern cipher suite, for Pete's sake!");
+type httpd_ciphersuite = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-CHACHA20-POLY1305",
+    "ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-GCM-SHA384",
+    "ECDHE-RSA-AES256-GCM-SHA384", "DHE-RSA-AES128-GCM-SHA256", "DHE-RSA-AES256-GCM-SHA384",
+    "ECDHE-ECDSA-AES128-SHA256", "ECDHE-RSA-AES128-SHA256", "ECDHE-ECDSA-AES128-SHA", "ECDHE-RSA-AES256-SHA384",
+    "ECDHE-RSA-AES128-SHA", "ECDHE-ECDSA-AES256-SHA384", "ECDHE-ECDSA-AES256-SHA", "ECDHE-RSA-AES256-SHA",
+    "DHE-RSA-AES128-SHA256", "DHE-RSA-AES128-SHA", "DHE-RSA-AES256-SHA256", "DHE-RSA-AES256-SHA",
+    "ECDHE-ECDSA-DES-CBC3-SHA", "ECDHE-RSA-DES-CBC3-SHA", "EDH-RSA-DES-CBC3-SHA", "AES128-GCM-SHA256",
+    "AES256-GCM-SHA384", "AES128-SHA256", "AES256-SHA256", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA", "!RC4",
+    "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS");
 
 # These are the settings for old clients, see https://access.redhat.com/articles/1467293 for stricter values.
 type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3)$')
@@ -247,6 +253,8 @@ type httpd_ssl_vhost = {
     "protocol" : httpd_sslprotocol[] = list("TLSv1")
     "ciphersuite" : httpd_ciphersuite[] = list("TLSv1")
     "honorcipherorder" ? string with match(SELF, '^(on|off)$')
+    "compression" ? boolean
+    "sessiontickets" ? boolean
 };
 
 type httpd_directory_allowoverride = string with match(SELF, '^(All|None|Options|FileInfo|AuthConfig|Limit)$');
@@ -533,6 +541,7 @@ type httpd_header = {
     "action" : choice('add', 'append', 'echo', 'edit', 'edit*', 'merge', 'set', 'setifempty', 'unset', 'note')
     "value" : string
     "quotes" : string = '"'
+    "always" ? boolean
 };
 
 type httpd_vhost = {
