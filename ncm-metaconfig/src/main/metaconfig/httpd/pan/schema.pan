@@ -4,7 +4,7 @@ declaration template metaconfig/httpd/schema;
 include 'pan/types';
 include 'components/accounts/functions';
 
-type httpd_sslprotocol = choice("all", "-SSLv3", "-TLSv1", "-TLSv1.1", "TLSv1.1", "TLSv1.2", "TLSv1.3");
+type httpd_sslprotocol = choice("all", "-SSLv3", "-TLSv1", "TLSv1", "-TLSv1.1", "TLSv1.1", "TLSv1.2", "TLSv1.3");
 
 type httpd_ciphersuite = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-CHACHA20-POLY1305",
     "ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-GCM-SHA384",
