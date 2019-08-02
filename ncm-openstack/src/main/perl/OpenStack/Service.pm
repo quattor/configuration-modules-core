@@ -1,5 +1,6 @@
 #${PMpre} NCM::Component::OpenStack::Service${PMpost}
 
+
 use CAF::Object qw(SUCCESS);
 use CAF::Process 17.8.1;
 use CAF::Service;
@@ -544,7 +545,7 @@ sub populate_service_database
     $self->pre_populate_service_database();
     # db_version is slow when not initialised
     # (lots of retries before it gives up; can take up to 90s)
-    if ($self->_do([$self->{manage}, @{$self->{db_version}}], 'determine database version', test => 1)) {
+    if ($self->_do(['/bin/bash', '-c', join(' ', $self->{manage}, @{$self->{db_version}})], 'determine database version', test => 1)) {
         $self->verbose("Found existing db_version");
         return 1 if ($self->{flavour} eq "rabbitmq");
     } else {
@@ -552,7 +553,7 @@ sub populate_service_database
     };
 
     # Always populate/sync the databases
-    if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
+    if ($self->_do(['/bin/bash', '-c', join(' ', $self->{manage}, @{$self->{db_sync}})], 'populate database')) {
         return $self->post_populate_service_database();
     } else {
         # Failure

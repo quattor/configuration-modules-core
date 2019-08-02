@@ -19,34 +19,34 @@ use warnings;
 our %cmds;
 our %files;
 
-$cmds{keystone_db_version_missing}{cmd} = "/usr/bin/keystone-manage db_version";
+$cmds{keystone_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/keystone-manage db_version";
 $cmds{keystone_db_version_missing}{ec} = 1;
 
-$cmds{keystone_db_version}{cmd} = "/usr/bin/keystone-manage db_version";
+$cmds{keystone_db_version}{cmd} = "/bin/bash -c /usr/bin/keystone-manage db_version";
 $cmds{keystone_db_version}{out} = 123;
 
-$cmds{glance_db_version_missing}{cmd} = "/usr/bin/glance-manage db_version";
+$cmds{glance_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/glance-manage db_version";
 $cmds{glance_db_version_missing}{ec} = 1;
 
-$cmds{glance_db_version}{cmd} = "/usr/bin/glance-manage db_version";
+$cmds{glance_db_version}{cmd} = "/bin/bash -c /usr/bin/glance-manage db_version";
 $cmds{glance_db_version}{out} = "ocata01";
 
-$cmds{nova_db_version_missing}{cmd} = "/usr/bin/nova-manage db version";
+$cmds{nova_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/nova-manage db version";
 $cmds{nova_db_version_missing}{ec} = 1;
 
-$cmds{nova_db_version}{cmd} = "/usr/bin/nova-manage db version";
+$cmds{nova_db_version}{cmd} = "/bin/bash -c /usr/bin/nova-manage db version";
 $cmds{nova_db_version}{out} = 347;
 
-$cmds{neutron_db_version_missing}{cmd} = "/usr/bin/neutron-db-manage current";
+$cmds{neutron_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/neutron-db-manage current";
 $cmds{neutron_db_version_missing}{ec} = 1;
 
-$cmds{neutron_db_version}{cmd} = "/usr/bin/neutron-db-manage current";
+$cmds{neutron_db_version}{cmd} = "/bin/bash -c /usr/bin/neutron-db-manage current";
 $cmds{neutron_db_version}{out} = "OK";
 
-$cmds{rabbitmq_db_version_missing}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
+$cmds{rabbitmq_db_version_missing}{cmd} = "/bin/bash -c /usr/sbin/rabbitmqctl list_user_permissions openstack";
 $cmds{rabbitmq_db_version_missing}{ec} = 1;
 
-$cmds{rabbitmq_db_version}{cmd} = "/usr/sbin/rabbitmqctl list_user_permissions openstack";
+$cmds{rabbitmq_db_version}{cmd} = "/bin/bash -c /usr/sbin/rabbitmqctl list_user_permissions openstack";
 $cmds{rabbitmq_db_version}{ec} = "/ .* .* .*";
 
 $cmds{nova_set_secret}{cmd} = "/usr/bin/virsh secret-define --file /var/lib/nova/tmp/secret_ceph.xml";
@@ -70,34 +70,34 @@ $files{novacephkey}{txt} = "key=abc";
 $files{cindercephkey}{path} = "/etc/ceph/ceph.client.volumes.keyring";
 $files{cindercephkey}{txt} = "key=defgh";
 
-$cmds{cinder_db_version}{cmd} = "/usr/bin/cinder-manage db version";
+$cmds{cinder_db_version}{cmd} = "/bin/bash -c /usr/bin/cinder-manage db version";
 $cmds{cinder_db_version}{out} = 1;
 
-$cmds{cinder_db_version_missing}{cmd} = "/usr/bin/cinder-manage db version";
+$cmds{cinder_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/cinder-manage db version";
 $cmds{cinder_db_version_missing}{ec} = 1;
 
-$cmds{manila_db_version}{cmd} = "/usr/bin/manila-manage db version";
+$cmds{manila_db_version}{cmd} = "/bin/bash -c /usr/bin/manila-manage db version";
 $cmds{manila_db_version}{out} = 1;
 
-$cmds{manila_db_version_missing}{cmd} = "/usr/bin/manila-manage db version";
+$cmds{manila_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/manila-manage db version";
 $cmds{manila_db_version_missing}{ec} = 1;
 
-$cmds{heat_db_version}{cmd} = "/usr/bin/heat-manage db_version";
+$cmds{heat_db_version}{cmd} = "/bin/bash -c /usr/bin/heat-manage db_version";
 $cmds{heat_db_version}{out} = 1;
 
-$cmds{heat_db_version_missing}{cmd} = "/usr/bin/heat-manage db_version";
+$cmds{heat_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/heat-manage db_version";
 $cmds{heat_db_version_missing}{ec} = 1;
 
-$cmds{ceilometer_db_version}{cmd} = "/usr/bin/ceilometer-upgrade --version";
+$cmds{ceilometer_db_version}{cmd} = "/bin/bash -c /usr/bin/ceilometer-upgrade --version";
 $cmds{ceilometer_db_version}{out} = "11.0.1";
 
-$cmds{ceilometer_db_version_missing}{cmd} = "/usr/bin/ceilometer-upgrade --version";
+$cmds{ceilometer_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/ceilometer-upgrade --version";
 $cmds{ceilometer_db_version_missing}{ec} = 1;
 
-$cmds{murano_db_version}{cmd} = "/usr/bin/murano-db-manage version";
+$cmds{murano_db_version}{cmd} = "/bin/bash -c /usr/bin/murano-db-manage version";
 $cmds{murano_db_version}{out} = 1;
 
-$cmds{murano_db_version_missing}{cmd} = "/usr/bin/murano-db-manage version";
+$cmds{murano_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/murano-db-manage version";
 $cmds{murano_db_version_missing}{ec} = 1;
 
 1;
