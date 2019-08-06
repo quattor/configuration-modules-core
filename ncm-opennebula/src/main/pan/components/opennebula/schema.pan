@@ -97,10 +97,10 @@ type opennebula_vm = {
         'disk-detach',
         'nic-attach',
         'nic-detach',
-        'snap-create',
-        'snap-delete',
+        'snapshot-create',
+        'snapshot-delete',
     )
-    "keep_snapshots" : boolean = false
+    "keep_snapshots" : boolean = true
 } = dict();
 
 type opennebula_vm_mad_kvm = {
@@ -123,7 +123,7 @@ type opennebula_tm_mad = {
 
 type opennebula_datastore_mad = {
     "executable" : string = 'one_datastore'
-    "arguments" : string  = '-t 15 -d dummy,fs,vmfs,lvm,ceph'
+    "arguments" : string  = '-t 15 -d dummy,fs,lvm,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm,qcow2,vcenter'
 } = dict();
 
 type opennebula_hm_mad = {
@@ -141,6 +141,15 @@ type opennebula_tm_mad_conf = {
     "clone_target" : string = "SYSTEM"
     "shared" : boolean = true
     "ds_migrate" ? boolean
+    "driver" ? choice('raw', 'qcow2')
+    "allow_orphans" ? string
+    "tm_mad_system" ? string
+    "ln_target_ssh" ? string
+    "clone_target_ssh" ? string
+    "disk_type_ssh" ? string
+    "ln_target_shared" ? string
+    "clone_target_shared" ? string
+    "disk_type_shared" ? string
 } = dict();
 
 @documentation{
@@ -490,12 +499,35 @@ type opennebula_oned = {
     "tm_mad_conf" : opennebula_tm_mad_conf[] = list(
         dict("ds_migrate", true),
         dict("name", "lvm", "clone_target", "SELF"),
-        dict("name", "shared", "ds_migrate", true),
+        dict(
+            "name", "shared",
+            "ds_migrate", true,
+            "tm_mad_system", "ssh",
+            "ln_target_ssh", "SYSTEM",
+            "clone_target_ssh", "SYSTEM",
+            "disk_type_ssh", "FILE",
+        ),
         dict("name", "fs_lvm", "ln_target", "SYSTEM"),
-        dict("name", "qcow2"),
+        dict(
+            "name", "qcow2",
+            "driver", "qcow2",
+        ),
         dict("name", "ssh", "ln_target", "SYSTEM", "shared", false, "ds_migrate", true),
         dict("name", "vmfs"),
-        dict("name", "ceph", "clone_target", "SELF", "ds_migrate", false),
+        dict(
+            "name", "ceph",
+            "clone_target","SELF",
+            "ds_migrate", false,
+            "driver", "raw",
+            "allow_orphans", "mixed",
+            "tm_mad_system", "ssh,shared",
+            "ln_target_ssh", "SYSTEM",
+            "clone_target_ssh", "SYSTEM",
+            "disk_type_ssh", "FILE",
+            "ln_target_shared", "NONE",
+            "clone_target_shared", "SELF",
+            "disk_type_shared", "rbd",
+        ),
         dict("name", "iscsi_libvirt", "clone_target", "SELF", "ds_migrate", false),
         dict("name", "dev", "clone_target", "NONE"),
         dict("name", "vcenter", "clone_target", "NONE"),
