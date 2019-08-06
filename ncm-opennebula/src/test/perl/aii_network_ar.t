@@ -29,11 +29,13 @@ my %networks = $aii->get_vnetars($cfg);
 my $networka = "altaria.os";
 my $networkb = "altaria.vsc";
 
-ok(exists($networks{$networka}), "vnet a exists");
-ok(exists($networks{$networkb}), "vnet b exists");
+# Check all the new ARs per network
+for (my $arid=0; $arid <=3; $arid++) {
+    ok(exists($networks{$arid}{network}), "vnet AR id $arid exists in $networks{$arid}{network}");
+};
 
-is($networks{$networka}{network}, "altaria.os", "vneta name is altaria.os");
-is($networks{$networkb}{network}, "altaria.vsc", "vnetb name is altaria.vsc");
+is($networks{0}{network}, "altaria.os", "vneta name is altaria.os");
+is($networks{1}{network}, "altaria.vsc", "vnetb name is altaria.vsc");
 
 my $one = $aii->read_one_aii_conf();
 
