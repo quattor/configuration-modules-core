@@ -544,7 +544,7 @@ type opennebula_oned = {
         dict("name", "vmfs"),
         dict(
             "name", "ceph",
-            "clone_target","SELF",
+            "clone_target", "SELF",
             "ds_migrate", false,
             "driver", "raw",
             "allow_orphans", "mixed",

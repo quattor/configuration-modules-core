@@ -81,6 +81,9 @@ PCI = [
 [%-         END %]
 [%-     END %]
 [%- END %]
+[%- FOREACH item IN system.opennebula.vmgroup %]
+VMGROUP = [% INCLUDE 'opennebula/oned_level1.tt' data=item -%]
+[%- END %]
 [%- IF system.opennebula.labels.defined %]
 LABELS = "[% system.opennebula.labels.join(',') %]"
 [%- END %]
