@@ -1026,7 +1026,7 @@ $cmds{rpc_delete_vmgroup}{params} = [1];
 $cmds{rpc_delete_vmgroup}{method} = "one.vmgroup.delete";
 $cmds{rpc_delete_vmgroup}{out} = 1;
 
-$cmds{rpc_list_vmgrouppool}{params} = [];
+$cmds{rpc_list_vmgrouppool}{params} = [-2, -1, -1];
 $cmds{rpc_list_vmgrouppool}{method} = "one.vmgrouppool.info";
 $cmds{rpc_list_vmgrouppool}{out} = <<'EOF';
 <VM_GROUP_POOL><VM_GROUP><ID>1</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>muilt-tierapp</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><ROLES><ROLE><ID><![CDATA[0]]></ID><NAME><![CDATA[worker]]></NAME><POLICY><![CDATA[ANTI_AFFINED]]></POLICY></ROLE></ROLES><TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VM_GROUP></VM_GROUP_POOL>
