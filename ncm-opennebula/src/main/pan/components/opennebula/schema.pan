@@ -436,6 +436,34 @@ type opennebula_cluster = {
     "reserved_mem" ? long
 } = dict();
 
+@documentation{
+type for vmgroup roles specific attributes.
+}
+type opennebula_vmgroup_role = {
+    @{The name of the role, it needs to be unique within the VM Group}
+    "name" : string
+    @{Placement policy for the VMs of the role}
+    "policy" ? choice('AFFINED', 'ANTI_AFFINED')
+    @{Defines a set of hosts (by their ID) where the VMs of the role can be executed}
+    "host_affined" ? string[]
+    @{Defines a set of hosts (by their ID) where the VMs of the role cannot be executed}
+    "host_anti_affined" ? string[]
+};
+
+
+@documentation{
+Set OpenNebula vmgroups and their porperties.
+}
+type opennebula_vmgroup = {
+    include opennebula_group
+    "role" ? opennebula_vmgroup_role[]
+    @{List of roles whose VMs has to be placed in the same host}
+    "affined" ? string[]
+    @{List of roles whose VMs cannot be placed in the same host}
+    "anti_affined" ? string[]
+} = dict();
+
+
 type opennebula_remoteconf_ceph = {
     "pool_name" : string
     "host" : string
@@ -775,6 +803,7 @@ type opennebula_untouchables = {
     "groups" ? string[]
     "hosts" ? string[]
     "clusters" ? string[]
+    "vmgroups" ? string[]
 };
 
 
@@ -789,6 +818,7 @@ type component_opennebula = {
     'users' ? opennebula_user{}
     'vnets' ? opennebula_vnet{}
     'clusters' ? opennebula_cluster{}
+    'vmgroups' ? opennebula_vmgroup{}
     'hosts' ? opennebula_host{}
     'rpc' ? opennebula_rpc
     'untouchables' ? opennebula_untouchables

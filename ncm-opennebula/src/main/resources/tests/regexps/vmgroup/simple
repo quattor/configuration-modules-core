@@ -1,0 +1,15 @@
+Opennebula vmgroup test
+---
+multiline
+---
+^NAME\s?=\s?".+"$
+^AFFINED\s?=\s?".+"$
+^ANTI_AFFINED\s?=\s?".+"$
+^DESCRIPTION\s?=\s?".+"$
+^LABELS\s?=\s?".+"$
+^ROLE\s?=\s?\[$
+^\s*host_anti_affined\s?=\s*".+",\s*$
+^\s*name\s?=\s*".+",\s*$
+^\s*policy\s?=\s*".+"\s*$
+^\]$
+^QUATTOR\s?=\s?\d+\s*$
