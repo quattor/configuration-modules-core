@@ -263,7 +263,7 @@ sub set_one_server
     $self->manage_something($one, "cluster", $tree->{clusters}, $untouchables->{clusters});
 
     # Add VM groups and roles
-    #$self->manage_something($one, "vmgroup", $tree->{vmgroups}, $untouchables->{vmgroups});
+    $self->manage_something($one, "vmgroup", $tree->{vmgroups}, $untouchables->{vmgroups});
 
     $self->manage_something($one, "vnet", $tree->{vnets}, $untouchables->{vnets});
 
