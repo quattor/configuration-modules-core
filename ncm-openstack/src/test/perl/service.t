@@ -29,7 +29,7 @@ is($srv->{log}, $obj, 'log attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
     active catalog compute dashboard dispatch identity image
-    messaging metric network openrc orchestration share version volume)], "comptree attribute found");
+    messaging metric network openrc orchestration rating share version volume)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
 my $flakeys = [qw(database quattor token)];
 # this also tests the reset on the element
