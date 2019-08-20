@@ -78,6 +78,14 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=head2 Rating
+
+=over
+
+=item * Cloudkitty
+
+=back
+
 =head2 Orchestration
 
 =over
@@ -160,6 +168,7 @@ sub Configure
         'orchestration',
         'catalog',
         'metric',
+        'rating',
         'dashboard',
     ];
 

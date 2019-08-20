@@ -32,6 +32,7 @@ set_output('manila_db_version_missing');
 set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
 set_output('ceilometer_db_version_missing');
+set_output('cloudkitty_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -118,6 +119,11 @@ $fh = get_file("/etc/gnocchi/gnocchi.conf");
 isa_ok($fh, "CAF::FileWriter", "gnocchi.conf CAF::FileWriter instance");
 like("$fh", qr{^\[api\]$}m, "gnocchi.conf has expected content");
 
+# Verify Cloudkitty configuration files
+$fh = get_file("/etc/cloudkitty/cloudkitty.conf");
+isa_ok($fh, "CAF::FileWriter", "cloudkitty.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "cloudkitty.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -179,6 +185,11 @@ ok(command_history_ok([
         'service httpd restart',
         'service openstack-ceilometer-notification restart',
         'service openstack-ceilometer-central restart',
+        '/usr/bin/cloudkitty-storage-init',
+        '/bin/bash -c /usr/bin/cloudkitty-dbsync version --module cloudkitty',
+        '/bin/bash -c /usr/bin/cloudkitty-dbsync upgrade',
+        'service cloudkitty-processor restart',
+        'service httpd restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
@@ -241,8 +252,5 @@ command_history_reset();
 set_output('keystone_db_version');
 ok($cmp->Configure($cfg), 'Configure returns success 2nd');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution 2nd");
-ok(command_history_ok(['manage db_version'],['dbsync', 'restart']),
-                      "No dbsync or service restart commands called on 2nd run");
-
 
 done_testing();
