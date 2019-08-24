@@ -1,0 +1,9 @@
+Test generic string (no EOL newline here!)
+---
+/a/b/c
+quote
+---
+a very long string
+with
+narbitrarysomething
+no eol newline in value
