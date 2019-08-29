@@ -28,7 +28,7 @@ is($srv->{prefix}, '/software/components/openstack', 'prefix attribute found');
 is($srv->{log}, $obj, 'log attribute found');
 is($srv->{fqdn}, 'controller.mysite.com', 'fqdn attribute found');
 is_deeply([sort keys %{$srv->{comptree}}], [qw(
-    active catalog compute dashboard dispatch identity image
+    active catalog compute container-infra dashboard dispatch identity image
     messaging metric network openrc orchestration rating share version volume)], "comptree attribute found");
 is($srv->{flavour}, 'keystone', 'flavour attribute found');
 my $flakeys = [qw(database quattor token)];

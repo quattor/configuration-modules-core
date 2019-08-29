@@ -33,6 +33,7 @@ set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
 set_output('ceilometer_db_version_missing');
 set_output('cloudkitty_db_version_missing');
+set_output('magnum_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -124,6 +125,11 @@ $fh = get_file("/etc/cloudkitty/cloudkitty.conf");
 isa_ok($fh, "CAF::FileWriter", "cloudkitty.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "cloudkitty.conf has expected content");
 
+# Verify Magnum configuration files
+$fh = get_file("/etc/magnum/magnum.conf");
+isa_ok($fh, "CAF::FileWriter", "magnum.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "magnum.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -190,6 +196,10 @@ ok(command_history_ok([
         '/bin/bash -c /usr/bin/cloudkitty-dbsync upgrade',
         'service cloudkitty-processor restart',
         'service httpd restart',
+        '/bin/bash -c /usr/bin/magnum-db-manage version',
+        '/bin/bash -c /usr/bin/magnum-db-manage upgrade',
+        'service openstack-magnum-api restart',
+        'service openstack-magnum-conductor restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
