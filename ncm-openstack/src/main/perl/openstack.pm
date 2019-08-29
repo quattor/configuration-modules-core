@@ -94,6 +94,14 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=head2 Container-infra
+
+=over
+
+=item * Magnum
+
+=back
+
 =head2 Share
 
 =over
@@ -169,6 +177,7 @@ sub Configure
         'catalog',
         'metric',
         'rating',
+        'container-infra',
         'dashboard',
     ];
 
