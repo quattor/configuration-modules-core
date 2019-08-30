@@ -102,6 +102,14 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=head2 Key Manager
+
+=over
+
+=item * Barbican
+
+=back
+
 =head2 Share
 
 =over
@@ -178,6 +186,7 @@ sub Configure
         'metric',
         'rating',
         'container-infra',
+        'key-manager',
         'dashboard',
     ];
 
