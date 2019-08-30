@@ -6,4 +6,4 @@ prefix "service/internal";
 'proto' ?= 'https';
 'host' ?= OBJECT;
 'port' ?= 9511;
-'suffix' ?= '/v1';
+'suffix' ?= 'v1';
