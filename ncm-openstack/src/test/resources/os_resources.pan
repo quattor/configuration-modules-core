@@ -456,3 +456,18 @@ prefix "/software/components/openstack/container-infra/magnum";
 "oslo_messaging_notifications" = dict(
     "driver", "messagingv2",
 );
+
+# Barbican section
+include 'components/openstack/identity/gather/key-manager/barbican';
+prefix "/software/components/openstack/key-manager/barbican";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+    "sql_connection", format("mysql+pymysql://barbican:barbican_db_pass@%s/barbican", OPENSTACK_HOST_SERVER),
+);
+"keystone_authtoken" = dict(
+    "auth_uri", AUTH_URI,
+    "auth_url", AUTH_URL,
+    "username", "barbican",
+    "password", "barbican_good_password",
+    "memcached_servers", list(format("%s:11211", OPENSTACK_HOST_SERVER)),
+);

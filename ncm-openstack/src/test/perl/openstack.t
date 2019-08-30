@@ -34,6 +34,7 @@ set_output('murano_db_version_missing');
 set_output('ceilometer_db_version_missing');
 set_output('cloudkitty_db_version_missing');
 set_output('magnum_db_version_missing');
+set_output('barbican_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -130,6 +131,11 @@ $fh = get_file("/etc/magnum/magnum.conf");
 isa_ok($fh, "CAF::FileWriter", "magnum.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "magnum.conf has expected content");
 
+# Verify Barbican configuration files
+$fh = get_file("/etc/barbican/barbican.conf");
+isa_ok($fh, "CAF::FileWriter", "barbican.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "barbican.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -200,6 +206,9 @@ ok(command_history_ok([
         '/bin/bash -c /usr/bin/magnum-db-manage upgrade',
         'service openstack-magnum-api restart',
         'service openstack-magnum-conductor restart',
+        '/bin/bash -c /usr/bin/barbican-manage db version',
+        '/bin/bash -c /usr/bin/barbican-manage db upgrade',
+        'service httpd restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
