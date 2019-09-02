@@ -23,6 +23,15 @@ prefix "/metaconfig/contents";
     "password", "barbican_good_password",
     "memcached_servers", list(format("%s:11211", OPENSTACK_HOST_SERVER)),
 );
+"secretstore" = dict(
+    "enabled_secretstore_plugins", list('store_crypto'),
+);
+"crypto" = dict(
+    "enabled_crypto_plugins", list('simple_crypto'),
+);
+"simple_crypto_plugin" = dict(
+    "kek", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=",
+);
 
 
 include 'components/openstack/identity/gather/key-manager/barbican';
