@@ -6,6 +6,9 @@ multiline
 ^sql_connection\s?=\s*.+\s*$
 ^transport_url\s?=\s*.+\s*$
 
+^\[crypto\]\s*$
+^enabled_crypto_plugins\s?=\s*.+\s*$
+
 ^\[keystone_authtoken\]\s*$
 ^auth_type\s?=\s*.+\s*$
 ^auth_uri\s?=\s*.+\s*$
@@ -16,3 +19,11 @@ multiline
 ^project_name\s?=\s*.+\s*$
 ^user_domain_name\s?=\s*.+\s*$
 ^username\s?=\s*.+\s*$
+
+^\[secretstore\]\s*$
+^enabled_secretstore_plugins\s?=\s*.+\s*$
+^namespace\s?=\s*.+\s*$
+
+^\[simple_crypto_plugin\]\s*$
+^kek\s?=\s*.+\s*$
+^namespace\s?=\s*.+\s*$
