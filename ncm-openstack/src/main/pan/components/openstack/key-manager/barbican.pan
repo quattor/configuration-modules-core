@@ -18,6 +18,12 @@ type openstack_barbican_DEFAULTS = {
     registry server. Any valid SQLAlchemy connection string is fine.
     For some weird reason Barbican does not use the [database] section}
     'sql_connection' : string
+    @{Host name, for use in HATEOAS-style references. Note: Typically this
+    would be the load balanced endpoint that clients would use to
+    communicate back with this service. If a deployment wants to derive
+    host from wsgi request instead then make this blank. Blank is needed
+    to override default config value which is 'http://localhost:9311'}
+    'host_href' ? type_absoluteURI = "http://localhost:9311"
 };
 
 @documentation{
