@@ -18,6 +18,9 @@ multiline
 ^\[database]\s*$
 ^connection\s?=\s*.+\s*$
 
+^\[keystone_auth\]\s*$
+^auth_section\s?=\s*.+\s*$
+
 ^\[keystone_authtoken\]\s*$
 ^auth_type\s?=\s*.+\s*$
 ^auth_uri\s?=\s*.+\s*$
