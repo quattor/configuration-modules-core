@@ -27,10 +27,13 @@ type openstack_magnum_certificates = {
 @documentation{
     Magnum Cinder client section
 }
-type openstack_magnum_cinder_client = {
+type openstack_magnum_common_client = {
     @{Region in Identity service catalog to use for communication with the
     OpenStack service}
     'region_name' : string = 'RegionOne'
+    @{Type of endpoint in Identity service catalog to use for communication with
+    the OpenStack service}
+    'endpoint_type' ? openstack_keystone_endpoint_type
 } = dict();
 
 @documentation{
@@ -79,7 +82,8 @@ type openstack_magnum_config = {
     'oslo_concurrency' : openstack_oslo_concurrency
     'api' : openstack_magnum_api
     'certificates' : openstack_magnum_certificates
-    'cinder_client' : openstack_magnum_cinder_client
+    'cinder_client' : openstack_magnum_common_client
+    'heat_client' ? openstack_magnum_common_client
     'cinder' ? openstack_magnum_cinder
     'trust' : openstack_magnum_trust
     'quattor' : openstack_quattor_magnum
