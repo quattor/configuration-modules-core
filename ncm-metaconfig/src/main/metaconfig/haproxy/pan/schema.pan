@@ -50,7 +50,7 @@ type haproxy_service_global = {
 }
 type haproxy_service_defaults_config = {
     'log' : string = 'global'
-    'mode' ? string
+    'mode' ? choice("http", "tcp")
     'retries' : long = 3
     'maxconn' : long = 4000
     'option' ? string
@@ -194,6 +194,7 @@ type haproxy_service_frontend = {
     'port' ? type_port
     'default_backend' : string
     'params' ? haproxy_service_bind_params
+    'mode' ? choice("tcp", "http")
 };
 
 type haproxy_service_backend_server = {
@@ -205,6 +206,7 @@ type haproxy_service_backend_server = {
 
 type haproxy_service_backend = {
     'balance' ? choice('roundrobin', 'static-rr', 'leastconn', 'first', 'source', 'uri', 'url_param')
+    'mode' ? choice("tcp", "http")
     'options' ? string[]
     'tcpchecks' ? string[]
     'sticktable' ? haproxy_service_stick_table

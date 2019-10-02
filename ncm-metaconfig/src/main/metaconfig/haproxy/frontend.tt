@@ -1,2 +1,5 @@
 bind [% fte.bind %][%- IF fte.port -%]:[% fte.port %][%- END %][% INCLUDE 'metaconfig/haproxy/params.tt' params=fte.params %]
+[% IF fte.mode -%]
+mode [% fte.mode %]
+[% END -%]
 default_backend [% fte.default_backend %]
