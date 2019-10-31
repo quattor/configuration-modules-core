@@ -1,0 +1,1 @@
+[%- INCLUDE "metaconfig/logstash/7.0/config/type.tt" type="stringhash" names=['convert'] -%]
