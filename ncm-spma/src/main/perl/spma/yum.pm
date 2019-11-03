@@ -682,7 +682,7 @@ sub spare_deps_whatreq
     foreach my $pk (@$rm) {
         my $arg = $pk;
         $arg =~ s{;}{.};
-        my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+        my $whatreqs = $self->execute_yum_command([$self->REPO_WHATREQS, $arg],
                                                   "determine what requires $pk", 1,
                                                   undef, $error_is_warn ? "warn" : "error");
         return 0 if !defined($whatreqs);
@@ -711,7 +711,7 @@ sub spare_deps_requires
         push(@pkgs, $pkg);
     }
 
-    my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
+    my $deps = $self->execute_yum_command([$self->REPO_DEPS, @pkgs],
                                           "dependencies of install candidates", 1,
                                           undef, $error_is_warn ? "warn" : "error");
 

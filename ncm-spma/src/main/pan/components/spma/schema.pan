@@ -10,7 +10,7 @@ include 'components/spma/functions';
 include 'components/spma/software';
 
 type component_spma_common = {
-    "packager" : string = "yum" with match (SELF, '^(yum|yumng|dnf|ips|apt)$') # system packager to be used
+    "packager" : choice("yum", "yumng", "ips", "apt", "yumdnf") = "yum" # system packager to be used
 };
 
 bind "/software/packages" = SOFTWARE_PACKAGE {} {};
