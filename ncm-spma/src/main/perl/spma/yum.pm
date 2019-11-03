@@ -328,8 +328,8 @@ sub execute_yum_command
 
     $cmd->execute();
     if ($err) {
-	# dnf always reports "Last metadata expiration check" to stderr, even if there's nothing wrong.
-	# If that is the only message, we should not consider it to be a warning, and instead report it as verbose.
+        # dnf always reports "Last metadata expiration check" to stderr, even if there's nothing wrong.
+        # If that is the only message, we should not consider it to be a warning, and instead report it as verbose.
         my $warn_logger = ($err =~ m/\A[\s\n]*Last metadata expiration check.*[\s\n]*\z/m) ? 'verbose': 'warn';
         $self->$warn_logger("$why produced warnings: $err");
     }
