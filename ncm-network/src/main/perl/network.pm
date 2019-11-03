@@ -1367,6 +1367,16 @@ sub make_ifup
     return \%ifup;
 }
 
+# enable the network service
+#   without enabled network service, this component is pointless
+#   best to also enable the network service with ncm-chkconfig
+sub enable_network_service
+{
+    my ($self) = @_;
+    # do not start it!
+    return $self->runrun([qw(/sbin/chkconfig --level 2345 network on)]);
+}
+
 # If allow is defined and false, disable and stop NetworkManager
 sub disable_networkmanager
 {
@@ -2023,6 +2033,8 @@ sub Configure
     #
     # Action starts here
     #
+
+    $self->enable_network_service();
 
     $self->disable_networkmanager($nwtree->{allow_nm});
 

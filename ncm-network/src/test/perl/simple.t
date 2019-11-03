@@ -141,6 +141,7 @@ is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact
 
 ok(command_history_ok([
     'ip addr show',
+    '/sbin/chkconfig --level 2345 network on',
     'service network stop',
     'service network start',
     'ccm-fetch',
