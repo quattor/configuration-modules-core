@@ -22,8 +22,10 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use CAF::Object;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @YDS_ORIG => NCM::Component::spma::yum::YUM_DISTRO_SYNC();
-Readonly::Array my @YDS => @{NCM::Component::spma::yum::_set_yum_config(\@YDS_ORIG)};
+Readonly::Array my @YDS => @{$cmp->_set_yum_config(\@YDS_ORIG)};
 Readonly my $CMD => join(" ", @YDS);
 Readonly my $CMDP => "$CMD a b";
 
@@ -31,8 +33,6 @@ set_desired_err($CMD, "");
 set_desired_output($CMD, "distrosync");
 set_desired_err($CMDP, "");
 set_desired_output($CMDP, "distrosync with packages a b");
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 ok(! grep {$_ eq '-C'} @YDS, 'distrosync command has cache disabled');
 

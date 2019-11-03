@@ -52,7 +52,8 @@ use constant YUM_CONF_REPOSDIR => 'reposdir';
 
 # Must use cache (-C option)
 use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
-use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
+use constant REPOQUERY => qw(repoquery -C --show-duplicates);
+use constant REPOQUERY_FORMAT => qw(--envra);
 use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
                              --qf %{NAME};%{ARCH});
 use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugins
@@ -250,11 +251,11 @@ sub generate_repos
 # the first element is the executable
 sub _set_yum_config
 {
-    my ($cmd_ref) = @_;
+    my ($self, $cmd_ref) = @_;
 
     my ($exe, @args) = @$cmd_ref;
 
-    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix(YUM_CONF_FILE));
+    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix($self->YUM_CONF_FILE));
     push (@new_cmd, @args) if @args;
 
     return \@new_cmd;
@@ -295,17 +296,26 @@ sub execute_yum_command
 
     $opts{stdin} = $stdin if defined($stdin);
 
-    my $cmd = CAF::Process->new(_set_yum_config($command), %opts);
+    my $cmd = CAF::Process->new($self->_set_yum_config($command), %opts);
 
     $cmd->execute();
-    $self->warn("$why produced warnings: $err") if $err;
+    if ($err) {
+	# dnf always reports "Last metadata expiration check" to stderr, even if there's nothing wrong.
+	# If that is the only message, we should not consider it to be a warning, and instead report it as verbose.
+        my $warn_logger = ($err =~ m/\A[\s\n]*Last metadata expiration check.*[\s\n]*\z/m) ? 'verbose': 'warn';
+        $self->$warn_logger("$why produced warnings: $err");
+    }
     $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
-        ($err && $err =~ m{^(?:Error|Failed|
-                      (?:Could \s+ not \s+ match)|
-                      (?:Transaction \s+ encountered.*error)|
-                      (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi) ||
+        ($err && $err =~ m{^(?:
+         Error|
+         Failed|
+         (?:Could \s+ not \s+ match)|
+         (?:Transaction \s+ encountered.*error)|
+         (?:Unknown \s+ group \s+  package \s+ type)|
+         (?:.*requested \s+ URL \s+ returned \s+ error)|
+         (?:Versionlock plugin)
+         )}oxmi) ||
         ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
         ) {
         $self->warn("Command output: $out");
@@ -533,7 +543,17 @@ sub locked_all_packages
     # Process output and filter exact matches
     foreach my $pkgstr (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkgstr);
-        my $pkg = $envra[1];
+        if (scalar @envra != 2) {
+            $self->error("no epoch in repoquery format '", join(" ", REPOQUERY_FORMAT), "' for $pkgstr");
+            return;
+        }
+
+        # in nevra format, remove the trailing epoch
+        # (in envra, removing the trailing epoch reduces it to empty string)
+        my $noepoch = $envra[0];
+        $noepoch =~ s/\d+$//;
+
+        my $pkg = $noepoch.$envra[1];
         if ($wanted_locked->has($pkg)) {
             $wanted_locked->delete($pkg);
         } else {
@@ -605,7 +625,7 @@ sub versionlock
     my ($self, $pkgs, $fullsearch) = @_;
 
     my ($locked, $toquery) = $self->prepare_lock_lists($pkgs);
-    my $out = $self->execute_yum_command([REPOQUERY, @$toquery],
+    my $out = $self->execute_yum_command([REPOQUERY, $self->REPOQUERY_FORMAT, @$toquery],
                                          "determining epochs", 1);
     return 0 if !defined($out) || !$self->locked_all_packages($locked, $out, $fullsearch);
 
@@ -625,7 +645,7 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(_set_yum_config(LEAF_PACKAGES),
+    my $out = CAF::Process->new($self->_set_yum_config(LEAF_PACKAGES),
                                 keeps_state => 1,
                                 log => $self)->output();
 
@@ -735,6 +755,12 @@ sub spare_dependencies
 
 
 # Completes any pending transactions
+sub _do_complete_transaction {
+    my ($self) = @_;
+    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+                                              "complete previous transactions"));
+}
+
 sub complete_transaction
 {
     my ($self) = @_;
@@ -747,8 +773,7 @@ sub complete_transaction
         $self->verbose("Skipping complete_transaction in NoAction mode");
         return 1;
     } else {
-        return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
-                                              "complete previous transactions"));
+        return $self->_do_complete_transaction();
     }
 }
 
@@ -1205,7 +1230,7 @@ sub Configure
     }
 
     # check if a temp location is required for NoAction support.
-    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
+    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, $self->YUM_CONF_FILE);
 
     if (! defined($prefix)) {
         return 0;
@@ -1246,7 +1271,7 @@ sub Configure
     if ($t->{reposdirs}) {
         push(@$reposdir, @{$t->{reposdirs}});
     }
-    $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
+    $self->configure_yum(_prefix_noaction_prefix($self->YUM_CONF_FILE),
                          $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
 
     $res = $self->update_pkgs_retry($allpkgs, $groups, $t->{run},

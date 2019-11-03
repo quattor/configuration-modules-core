@@ -28,21 +28,21 @@ use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
 
 # Test _set_yum_config
 # Only the default config is active
-is_deeply(NCM::Component::spma::yum::_set_yum_config([qw(a b c)]),
+is_deeply($cmp->_set_yum_config([qw(a b c)]),
          ['a', '-c', '/etc/yum.conf', 'b', 'c'], "Inserted (default) yum config");
-is_deeply(NCM::Component::spma::yum::_set_yum_config([qw(a)]),
+is_deeply($cmp->_set_yum_config([qw(a)]),
          ['a', '-c', '/etc/yum.conf'], "Inserted (default) yum config (no other args)");
 
 
 Readonly::Array my @CMD => ["foo", "bar", "bar"];
-Readonly my $CMD_LINE => join(" ", @{NCM::Component::spma::yum::_set_yum_config(\@CMD)});
+Readonly my $CMD_LINE => join(" ", @{$cmp->_set_yum_config(\@CMD)});
 
 Readonly my $WHY => "Hello world";
 
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 
 set_desired_output($CMD_LINE, "a");
