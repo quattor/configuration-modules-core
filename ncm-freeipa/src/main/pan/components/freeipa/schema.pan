@@ -160,4 +160,6 @@ type ${project.artifactId}_component = {
         };
         true;
     }
+    @{Packages required for CLI installation (e.g. in kickstart)}
+    'cli_packages' : string[]
 };

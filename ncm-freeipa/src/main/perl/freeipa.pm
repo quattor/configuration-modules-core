@@ -123,16 +123,6 @@ $NCM::Component::${project.artifactId}::NoActionSupported = 1;
 Readonly my $DEBUGAPI_LEVEL => 3;
 Readonly::Array my @GET_KEYTAB => qw(/usr/sbin/ipa-getkeytab);
 
-# packages to install with yum for dependencies
-Readonly::Array our @CLI_YUM_PACKAGES => qw(
-    ncm-freeipa
-    nss-pam-ldapd
-    ipa-client
-    nss-tools
-    openssl
-    pam_krb5
-);
-
 Readonly my $IPA_BASEDIR => '/etc/ipa';
 Readonly our $IPA_QUATTOR_BASEDIR => "$IPA_BASEDIR/quattor";
 
@@ -587,16 +577,18 @@ sub _manual_initialisation
     my $tree = $config->getTree($self->prefix());
     my $network = $config->getTree('/system/network');
 
-    my $yum_packages = join(" ", );
-
     my $domain = $tree->{domain} || $network->{domainname};
 
     # Is optional, but we use the template value; not the CLI default
     my $hostcert = $tree->{hostcert} ? 1 : 0;
 
-    my @yum = qw(yum -y install);
-    push(@yum, @CLI_YUM_PACKAGES);
-    push(@yum, qw(-c /tmp/aii/yum/yum.conf)) if $opts{aii};
+    my @cli_packages = @{$tree->{cli_packages}};
+    my @yum;
+    if (@cli_packages) {
+        push(@yum, qw(yum -y install), @cli_packages);
+        push(@yum, qw(-c /tmp/aii/yum/yum.conf)) if $opts{aii};
+
+    }
 
     my @cli = qw(PERL5LIB=/usr/lib/perl perl -MNCM::Component::FreeIPA::CLI -w -e install --);
 
@@ -614,7 +606,8 @@ sub _manual_initialisation
         );
 
     my @cmds;
-    push(@cmds, join(" ", @yum), join(" ", @cli));
+    push(@cmds, join(" ", @yum)) if @yum;
+    push(@cmds, join(" ", @cli));
 
     return join("\n", @cmds);
 }
