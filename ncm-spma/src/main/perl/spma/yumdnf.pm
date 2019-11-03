@@ -20,7 +20,6 @@ use constant REPO_INCLUDE => 0;
 
 use constant MODULES_TREE => "/software/modules";
 
-
 # Completes any pending transactions
 sub _do_complete_transaction
 {
