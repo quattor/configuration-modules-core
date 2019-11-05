@@ -28,8 +28,6 @@ use constant CMP_TREE            => "/software/components/spma";
 use constant YUM_PACKAGE_LIST    => "/etc/yum/pluginconf.d/versionlock.list";
 use constant YUM_CONF_FILE       => "/etc/yum.conf";
 use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n);
-use constant RPM_QUERY_INSTALLED_NAMES => qw(rpm -qa --nosignature --nodigest --qf %{EPOCH}:%{NAME}\n);
-use constant RPM_QUERY_INSTALLED_NAMES_NOEPOCH => qw(rpm -qa --nosignature --nodigest --qf %{NAME}\n);
 use constant REPO_AVAIL_PKGS     => qw(repoquery -C --show-duplicates --all --qf %{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH});
 use constant YUM_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=fastestmirror --enableplugin=versionlock --enableplugin=priorities";
 use constant YUM_TEST_CHROOT     => qw(/tmp/spma_yum_testroot);
@@ -149,11 +147,9 @@ sub Configure
     } else {
         $self->info("SPMA version: ", $cmd_out);
     }
-    $self->info("user packages permitted: $t->{userpkgs}");
 
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
-    $t->{userpkgs} = defined($t->{userpkgs}) && $t->{userpkgs} eq 'yes';
 
     # Test if we are supposed to be running spma in package modification mode.
     if (-e "/.spma-run") {
@@ -259,28 +255,14 @@ sub Configure
         my $vra = $pkgs->{$name};
         while (my ($vers, $a) = each(%$vra)) {
             my $arches = $a->{arch};
-            if (exists($a->{repository})) {
-                foreach my $arch (@$arches) {
-                    if ($vers ne '_') {
-                        push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
+            foreach my $arch (keys %$arches) {
+                if ($vers ne '_') {
+                    push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
+                } else {
+                    if ($arch eq '_') {
+                        push (@pkl, (unescape $name) . ';');
                     } else {
-                        if ($arch eq '_') {
-                            push (@pkl, (unescape $name) . ';');
-                        } else {
-                            push (@pkl_a, (unescape $name) . ';' . $arch);
-                        }
-                    }
-                }
-            } else {
-                foreach my $arch (keys %$arches) {
-                    if ($vers ne '_') {
-                        push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
-                    } else {
-                        if ($arch eq '_') {
-                            push (@pkl, (unescape $name) . ';');
-                        } else {
-                            push (@pkl_a, (unescape $name) . ';' . $arch);
-                        }
+                        push (@pkl_a, (unescape $name) . ';' . $arch);
                     }
                 }
             }
@@ -384,16 +366,12 @@ sub Configure
 
     # Test whether locked packages are present in the metadata
     my $repoquery_list = Set::Scalar->new(reverse(split (/\n/, $repodata_rpms)));
-    my $repoquery_list_noepoch = Set::Scalar->new();
     my $locked_found           = Set::Scalar->new();
     my $locked_found_noepoch   = Set::Scalar->new();
     $self->info("(" . $repoquery_list->size . " total packages)");
     while (defined(my $p = $repoquery_list->each)) {
         my $t = $p;
         $t =~ s/^.*://;
-        if (!$repoquery_list_noepoch->has($t)) {
-            $repoquery_list_noepoch->insert($t);
-        }
         if ($wanted_pkgs_locked->has($t)) {
             if (!$locked_found->has($p)) {
                 $self->verbose("Found package $p");
