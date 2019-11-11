@@ -1,0 +1,3 @@
+aaa authentication login default local
+aaa authentication login console local
+!

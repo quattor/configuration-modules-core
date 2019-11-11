@@ -1,0 +1,24 @@
+[%- vltmap = {
+    backup = "backup destination"
+    delay = "delay-restore"
+    mac = "vlt-mac"
+    } -%]
+[% FOREACH name IN vlt.discovery -%]
+[%      INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data={
+            description = "VLT interface"
+            enable = 1
+            switchport = 0
+            } -%]
+[%- END -%]
+vlt-domain [% vlt.id %]
+[% FILTER indent(' ') -%]
+[%-      FOREACH name IN vlt.discovery -%]
+discovery-interface [% name %]
+[%      END -%]
+[%      FOREACH pair IN vltmap.pairs -%]
+[%          IF vlt.exists(pair.key) -%]
+[%              pair.value %] [% vlt.${pair.key} %]
+[%          END -%]
+[%      END -%]
+[%- END -%]
+!

@@ -1,0 +1,7 @@
+[%
+    sls = peerlink.slaves;
+    peerlink.delete('slaves'); # not part of the vlan iface
+    INCLUDE 'metaconfig/cumulus/iface.tt' name='peerlink' data={slaves = sls};
+    INCLUDE 'metaconfig/cumulus/iface.tt' name='peerlink' data=peerlink;
+    peerlink.slaves = sls;
+-%]

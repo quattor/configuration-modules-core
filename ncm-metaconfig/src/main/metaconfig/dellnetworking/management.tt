@@ -1,0 +1,8 @@
+[% INCLUDE 'metaconfig/dellnetworking/interface.tt' name='mgmt1/1/1' data={
+    enable = 1
+    ip = mgmt.ip
+    mask = mgmt.mask
+    switchport = 1
+    } -%]
+management route 0.0.0.0/0 [% mgmt.gateway %]
+!
