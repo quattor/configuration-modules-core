@@ -1,0 +1,177 @@
+declaration template metaconfig/dellnetworking/schema;
+
+include 'pan/types';
+include 'quattor/functions/network';
+
+# see TODO below why this is split in a function
+function is_dellnetworking_interface_name = {
+    match(ARGV[0],
+        '^((ethernet)\s?(\d+/\d+/\d+(:\d+)?))|(port-channel\s?\d+)$');
+};
+
+type dellnetworking_interface_name = string with is_dellnetworking_interface_name(SELF);
+
+# 4094 is reserved for VLT
+type dellnetworking_vlan = long(1..4093);
+
+type dellnetworking_vlt = {
+    @{VLT domain id, should be the same for both VLT members, globally unique}
+    'id' : long(0..)
+    @{vlt-mac, should be the same for both VLT members, globally unique}
+    'mac' ?  type_hwaddr with match(SELF, '^44:38:39:[fF][fF]:') # reserved dellnetworking range, same as cumulus
+    @{discovery interfaces}
+    'discovery' : dellnetworking_interface_name[] with length(SELF) >= 1
+    @{backup ip}
+    'backup' ? type_ipv4
+    @{delay restore timeout}
+    'delay' ? long
+};
+
+type dellnetworking_interface = {
+    @{interface is enabled}
+    'enable' : boolean = true
+    @{description field}
+    'description' ? string
+    @{ip address}
+    'ip' ? type_ipv4
+    @{address subnet mask}
+    'mask' ? long(0..32)
+    @{access port to VLAN (implies trunk mode; no access VLAN defined implies access mode)}
+    'access' ? dellnetworking_vlan
+    @{tagged VLANs, VLAN for untagged traffic is bridge pvid}
+    'vids' ? dellnetworking_vlan[]
+    @{bond slaves for the link, required for port channels}
+    'slaves' ? dellnetworking_interface_name[] with length(SELF) >= 1
+    @{mandatory and unique for dual-connected hosts, using ports on different VLT members}
+    'vlt' ? long(0..65535)
+    @{lacp mode}
+    'lacpmode' ? choice('active', 'passive')
+    @{LACP fallback (eg to PXE hosts with LACP)}
+    'lacpfallback' ? boolean
+} with {
+    if (exists(SELF['slaves'])) {
+        if (!exists(SELF['lacpmode'])) {
+            error("port-channel must define lacp mode");
+        };
+    } else {
+        foreach (idx; key; list('vlt', 'lacpfallback', 'lacpmode')) {
+            if (exists(SELF[key])) {
+                error("%s cannot be set without slaves defined", key)
+            };
+        };
+    };
+    if (exists(SELF['access']) &&
+        exists(SELF['vids']) &&
+        index(SELF['access'], SELF['vids']) >= 0) {
+            error("access vlan %s cannot be part of trunk allowed vlan ids %s", SELF['access'], SELF['vids']);
+    };
+    true;
+};
+
+type dellnetworking_user = {
+    @{password hash}
+    'password' : string
+    @{role}
+    'role' : choice('sysadmin')
+};
+
+type dellnetworking_management = {
+    'ip' : type_ipv4
+    'mask' : long(0..32)
+    'gateway' : type_ipv4
+};
+
+type dellnetworking_config = {
+    @{features}
+    'features' ? choice('auto-breakout')[]
+    @{hostname}
+    'hostname' : type_hostname
+    @{system user linuxadmin password hash}
+    'systemuser' : string
+    @{users, key is the username}
+    'users' : dellnetworking_user{}
+    @{port groups}
+    'portgroups' ? choice('25g-4x', '100g-1x', '100g-2x'){}
+    @{Default PVID for untagged traffic}
+    'pvid' : dellnetworking_vlan
+    @{VLAN IDs (simple enabled VLANs)}
+    'vlanids' ? dellnetworking_vlan[]
+    @{management interface}
+    'management' : dellnetworking_management
+    @{interfaces}
+    'interfaces' : dellnetworking_interface{}
+    @{VLT configuration}
+    'vlt' ? dellnetworking_vlt
+} with {
+    # VLT discovery interfaces cannot be interfaces
+    if (exists(SELF['vlt'])) {
+        foreach (idx; name; SELF['vlt']['discovery']) {
+            if (exists(SELF['interfaces'][escape(name)])) {
+                error("discovery interface %s cannot be configured as interface", name);
+            };
+        };
+    };
+
+    # track all known vlan ids
+    if (exists(SELF['vlanids'])) {
+        knownvids = append(clone(SELF['vlanids']), SELF['pvid']);
+    } else {
+        knownvids = list(SELF['pvid']);
+    };
+
+    # vlt port channel ids and slave interfaces are unique
+    vltpcids = list();
+    slifs = list();
+
+    foreach (esname; inf; SELF['interfaces']) {
+        name = unescape(esname);
+        # all interfaces must match the dellnetworking_interface_name type
+        # TODO: when using
+        #        if (! is_valid(dellnetworking_interface_name, name)) {
+        #   we get a compiler error
+        if (!is_dellnetworking_interface_name(name)) {
+            error("require valid interface name, got %s", name);
+        };
+
+        if (exists(inf['access'])) {
+            if (index(inf['access'], knownvids) < 0) {
+                error("access vlan %s for %s is unknown vlan", inf['access'], name);
+            };
+            if (exists(inf['vids'])) {
+                foreach (idx; vid; inf['vids']) {
+                    if (index(inf['access'], knownvids) < 0) {
+                        error("allowed trunk vlan %s for %s is unknown vlan", vid, name);
+                    };
+                };
+            };
+        };
+
+        if (exists(inf['slaves'])) {
+            if (! match(name, '^port-channel')) {
+                error("only port-channels can have slaves defined, found %s", name);
+            };
+            foreach (idx; slname; inf['slaves']) {
+                if (exists(SELF['interfaces'][escape(slname)])) {
+                    error("slave interface %s (for interface %s) cannot be configured as interface",
+                            slname, name);
+                };
+                if (index(slname, slifs) >= 0) {
+                    error('slave interface %s found twice (last for interface %s)', slname, name);
+                } else {
+                    slifs = append(slifs, slname);
+                };
+            };
+        };
+        if (!exists(inf['slaves']) && match(name, '^port-channel')) {
+            error("port-channel must have slaves defined, found %s", name);
+        };
+        if (exists(inf['vlt'])) {
+            if (index(inf['vlt'], vltpcids) >= 0) {
+                error('vlt port channel id %s found twice (last for interface %s)', inf['vlt'], name);
+            } else {
+                vltpcids = append(vltpcids, inf['vlt']);
+            };
+        };
+    };
+    true;
+};

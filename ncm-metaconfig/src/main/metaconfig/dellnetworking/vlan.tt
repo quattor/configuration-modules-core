@@ -1,0 +1,5 @@
+interface vlan [% vid %]
+[%      FILTER indent(' ') -%]
+no shutdown
+[%-     END %]
+!

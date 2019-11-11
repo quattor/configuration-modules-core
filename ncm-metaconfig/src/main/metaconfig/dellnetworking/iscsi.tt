@@ -1,0 +1,6 @@
+iscsi target port 860
+iscsi target port 3260
+class-map type application class-iscsi
+!
+policy-map type application policy-iscsi
+!

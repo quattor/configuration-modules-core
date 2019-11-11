@@ -1,0 +1,36 @@
+interface [% name %]
+[% FILTER indent(' ') -%]
+[%      IF data.exists('description') -%]
+description "[% data.description %]"
+[%      END -%]
+[%      data.enable ? 'no ' : '' %]shutdown
+[%      IF data.exists('ip') -%]
+no ip address dhcp
+ip address [% data.ip %]/[% data.mask %]
+ipv6 address autoconfig
+[%      END -%]
+[%      IF data.exists('switchport') -%]
+[%-# Set switchport = 1 to not print any switchport statements
+              IF ! data.switchport -%]
+no switchport
+[%            END -%]
+[%-      ELSIF data.exists('access') -%]
+switchport mode trunk
+switchport access vlan [% data.access %]
+[%          IF data.exists('vids') -%]
+switchport trunk allowed vlan [% data.vids.join(',') %]
+[%          END -%]
+[%      ELSE -%]
+switchport mode access
+[%      END -%]
+[%      IF data.exists("lacpfallback") -%]
+lacp fallback enable
+[%      END -%]
+[%      IF data.exists("vlt") -%]
+vlt-port-channel [% data.vlt %]
+[%      END -%]
+[%      IF data.exists("channelgroup") -%]
+channel-group [% data.channelgroup.0 %] mode [% data.channelgroup.1 %]
+[%      END -%]
+[%  END -%]
+!

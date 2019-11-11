@@ -1,0 +1,4 @@
+[% INCLUDE 'metaconfig/dellnetworking/vlan.tt' vid=CCM.contents.pvid -%]
+[%- FOREACH vid IN CCM.contents.vlanids -%]
+[%      INCLUDE 'metaconfig/dellnetworking/vlan.tt' vid=vid -%]
+[% END -%]

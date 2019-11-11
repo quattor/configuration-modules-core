@@ -1,0 +1,7 @@
+system-user linuxadmin password [% CCM.contents.systemuser %]
+[%- privmap = {
+    sysadmin = 15
+    } -%]
+[%- FOREACH pair IN CCM.contents.users.pairs %]
+username [% pair.key %] password [% pair.value.password %] role [% pair.value.role %] priv-lvl [% privmap.${pair.value.role} %]
+[% END -%]
