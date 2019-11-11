@@ -1,0 +1,13 @@
+[%- FOREACH pair IN CCM.contents.interfaces.pairs %]
+[%-      name = CCM.unescape(pair.key) -%]
+[%       INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data=pair.value -%]
+[%-      IF pair.value.exists('slaves') -%]
+[%-         FOREACH slname IN pair.value.slaves -%]
+[%              INCLUDE 'metaconfig/dellnetworking/interface.tt' name=slname data={
+                    enable = 1
+                    switchport = 0
+                    channelgroup = [name.match('port-channel\s?(\d+)$').0, pair.value.lacpmode]
+                    } -%]
+[%          END -%]
+[%-      END -%]
+[% END -%]
