@@ -139,6 +139,56 @@ type logstash_input_zeromq = {
     "topology" : string with match(SELF, ("pushpull|pubsub|pair"))
 };
 
+@{ kafka input }
+type logstash_input_kafka = {
+    include logstash_input_plugin_common
+    "auto_commit_interval_ms" ? string
+    "auto_offset_reset" ? string
+    "bootstrap_servers" ? string
+    "check_crcs" ? string
+    "client_id" ? string
+    "connections_max_idle_ms" ? string
+    "consumer_threads" ? long(0..)
+    "decorate_events" ? boolean
+    "enable_auto_commit" ? string
+    "exclude_internal_topics" ? string
+    "fetch_max_bytes" ? string
+    "fetch_max_wait_ms" ? string
+    "fetch_min_bytes" ? string
+    "group_id" ? string
+    "heartbeat_interval_ms" ? string
+    "jaas_path" ? absolute_file_path
+    "kerberos_config" ? absolute_file_path
+    "key_deserializer_class" ? string
+    "max_partition_fetch_bytes" ? string
+    "max_poll_interval_ms" ? string
+    "max_poll_records" ? string
+    "metadata_max_age_ms" ? string
+    "partition_assignment_strategy" ? string
+    "poll_timeout_ms" ? long(0..)
+    "receive_buffer_bytes" ? string
+    "reconnect_backoff_ms" ? string
+    "request_timeout_ms" ? string
+    "retry_backoff_ms" ? string
+    "sasl_jaas_config" ? string
+    "sasl_kerberos_service_name" ? string
+    "sasl_mechanism" ? string
+    "security_protocol" ? string with match(SELF, ("PLAINTEXT|SASL_PLAINTEXT|SSL|SASL_SSL"))
+    "send_buffer_bytes" ? string
+    "session_timeout_ms" ? string
+    "ssl_endpoint_identification_algorithm" ? string
+    "ssl_key_password" ? string
+    "ssl_keystore_location" ? absolute_file_path
+    "ssl_keystore_password" ? string
+    "ssl_keystore_type" ? string
+    "ssl_truststore_location" ? absolute_file_path
+    "ssl_truststore_password" ? string
+    "ssl_truststore_type" ? string
+    "topics" ? string[] = list("logstash")
+    "topics_pattern" ? string
+    "value_deserializer_class" ? string
+};
+
 type logstash_input_plugin = {
     "file" ? logstash_input_file
     "gelf" ? logstash_input_gelf
@@ -147,6 +197,7 @@ type logstash_input_plugin = {
     "lumberjack" ? logstash_input_lumberjack
     "beats" ? logstash_input_beats
     "zeromq" ? logstash_input_zeromq
+    "kafka" ? logstash_input_kafka
 } with length(SELF) == 1;
 
 
@@ -293,16 +344,63 @@ type logstash_output_stdout = {
 @{ elasticsearch-based output }
 type logstash_output_elasticsearch = {
     include logstash_output_plugin_common
-    "bind_host" ? type_hostname
-    "hosts" ? type_hostport[]
-    "host" ? type_hostname with {deprecated(0, 'removed in version 2.0 (use hosts instead)'); true; }
-    "port" ? logstash_port_range with {deprecated(0, 'removed in version 2.0 (use hosts instead)'); true; }
-    "cluster" ? string with {deprecated(0, 'removed in version 2.0'); true; }
-    "embedded" ? boolean = false with {deprecated(0, 'removed in version 2.0'); true; }
-    "index" : string = "logstash-%{+YYYY.MM.dd}"
-    "flush_size" ? long = 5000
-    "index_type" ? string = "%{@type}" with {deprecated(0, 'no longer needed in 7.0'; true; }
+    "bulk_path" ? string
+    "cacert" ? absolute_file_path
+    "custom_headers" ? dict
+    "doc_as_upsert" ? boolean
+    "document_id" ? string
+    "document_type" ? string
+    "failure_type_logging_whitelist" ? string[]
+    "healthcheck_path" ? string
+    "hosts" ? string[]
+    "http_compression" ? boolean
+    "ilm_enabled" ? string with match(SELF, ("true|false|auto"))
+    "ilm_pattern" ? string
+    "ilm_policy" ? string
+    "ilm_rollover_alias" ? string
+    "index" ? string
+    "keystore" ? absolute_file_path
+    "keystore_password" ? string
+    "manage_template" ? boolean
+    "parameters" ? dict
+    "parent" ? string
+    "password" ? string
+    "path" ? string
+    "pipeline" ? string
+    "pool_max" ? long(0..) = 1000
+    "pool_max_per_route" ? long(0..) = 100
+    "proxy" ? type_absoluteURI
+    "resurrect_delay" ? long(0..)
+    "retry_initial_interval" ? long(0..)
+    "retry_max_interval" ? long(0..)
+    "retry_on_conflict" ? long(0..)
+    "routing" ? string
+    "script" ? string
+    "script_lang" ? string
+    "script_type" ? string with match(SELF, ("inline|indexed|file"))
+    "script_var_name" ? string
+    "scripted_upsert" ? boolean
+    "sniffing" ? boolean
+    "sniffing_delay" ? long(0..)
+    "sniffing_path" ? string
+    "ssl" ? boolean
+    "ssl_certificate_verification" ? boolean
+    "template" ? absolute_file_path
+    "template_name" ? string
     "template_overwrite" ? boolean
+    "timeout" ? long(0..)
+    "truststore" ? absolute_file_path
+    "truststore_password" ? string
+    "upsert" ? string
+    "user" ? string
+    "validate_after_inactivity" ? long(0..)
+    "version" ? string
+    "version_type" ? string with match(SELF, ("internal|external|external_gt|external_gte|force"))
+};
+
+@{ file based output }
+type logstash_output_file = {
+    "path" : absolute_file_path
 };
 
 type logstash_output_plugin = {
@@ -310,6 +408,7 @@ type logstash_output_plugin = {
     "gelf" ? logstash_output_gelf
     "stdout" ? logstash_output_stdout
     "tcp" ? logstash_output_tcp
+    "file" ? logstash_output_file
 } with length(SELF) == 1;
 
 type logstash_input_conditional = {
