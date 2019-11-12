@@ -284,7 +284,7 @@ my $repodir = "/etc/yum.repos.d/";
 ok(! $cmp->_match_noaction_tempdir($repodir),
    "$repodir does not match noaction tempdir");
 $error = '';
-ok(! $cmp->cleanup_old_repos($repodir, undef, 1),
+ok(! $cmp->cleanup_old_repos($repodir, undef, 0),
    "cleanup_old_repos fails with repodir that does not match noaction tempdir");
 like($error, qr{Not going to cleanup repository files with NoAction with unexpected repository directory},
      "cleanup_old_repos failed with expected error message");
@@ -293,7 +293,7 @@ $repodir = "$TESTDIR/spma-noaction-abcde/etc/yum.repos.d/";
 ok($cmp->_match_noaction_tempdir($repodir),
    "$repodir matches noaction tempdir");
 $error = '';
-ok($cmp->cleanup_old_repos($repodir, undef, 1),
+ok($cmp->cleanup_old_repos($repodir, undef, 0),
    "cleanup_old_repos ok (due to userpkgs) with matching repodir and NoAction");
 is($error, '', "cleanup_old_repos no errors with mocked opendir and matching reposdir");
 
@@ -304,7 +304,7 @@ $repodir = "/etc/yum.repos.d/";
 ok(! $cmp->_match_noaction_tempdir($repodir),
    "$repodir does not match noaction tempdir");
 $error = '';
-ok($cmp->cleanup_old_repos($repodir, undef, 1),
+ok($cmp->cleanup_old_repos($repodir, undef, 0),
    "cleanup_old_repos ok with repodir that does not match noaction tempdir (but due to userpkgs) with NoAction disabled");
 is($error, '', "cleanup_old_repos no error with userpkgs and non-matching reposdir with NoAction disabled");
 
