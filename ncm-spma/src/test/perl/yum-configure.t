@@ -134,7 +134,7 @@ is(ref($args[2]), 'ARRAY',
    'A list with repositories is passed to clean up non-existing repos');
 is($args[2]->[0]->{name}, $repos->[0]->{name},
    "The profile's list of repositories is passed to cleanup_old_repos");
-ok(!$args[3], "No user repositories allowed");
+ok($args[3], "Action cleanup");
 
 =pod
 
@@ -207,11 +207,13 @@ $mock->clear();
 $cmp->Configure($cfg);
 
 while (my ($n, $a) = $mock->next_call()) {
-    if ($n eq 'update_pkgs_retry' || $n eq 'cleanup_old_repos') {
-	ok($a->[3], "User packages are passed correctly to $name");
+    if ($n eq 'update_pkgs_retry') {
+        ok($a->[3], "User packages are passed correctly to $name");
     }
-}
-
+    if ($n eq 'cleanup_old_repos') {
+        ok(!$a->[3], "User packages are passed correctly to $name");
+    }
+};
 
 =pod
 
@@ -243,12 +245,16 @@ $cmp->Configure($cfg);
 #diag "user_pkgs_retry args ", explain \@args;
 is_deeply([sort keys %{$args[1]}], [escape("A-B-C"), "ConsoleKit"], "All packages (none filtered)");
 is(scalar @args, 9, "expected number args (+1 for self) pt3");
-ok($args[4], "userpkgs enabled");
+ok($args[4], "update called with userpkgs enabled");
 $t = $cfg->getTree($cmp->prefix);
 is($t->{filter}, "^A-B", "filter specified");
 is_deeply([sort keys %{$args[8]}], [escape("A-B-C")], "Only A-B-C pkg installed (not Consolekit, filter applied)");
 is_deeply($args[8]->{'A_2dB_2dC'}, {'_2e4_2e1_2d3_2eel6' => {'arch' => {'x86_64' => 'sl620_x86_64'}}},
           "A-B-C pkg with data installed filter applied)");
+
+# cleanup is before generate
+@args = $mock->call_args($GENERATE_REPOS - 1);
+ok($args[3], "cleanup repos called with cleanup enabled");
 
 
 =pod
