@@ -136,20 +136,22 @@ sub cleanup_old_repos
         $self->error("Unable to read repositories in $repo_dir");
         return 0;
     }
-    my $current = Set::Scalar->new(map(m{(.*)\.repo$}, readdir($dir)));
+    my $current = Set::Scalar->new(map(m{(.*)\.(?:repo|pkgs)$}, readdir($dir)));
     closedir($dir);
 
     my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
 
     my $rm = $current-$allowed;
     foreach my $i (@$rm) {
-        # We use $f here to make Devel::Cover happy
-        my $f = "$repo_dir/$i.repo";
-        my $msg = "outdated repository $i (file $f)";
-        $self->verbose("Unlinking $msg");
-        if (!unlink($f)) {
-            $self->error("Unable to remove $msg: $!");
-            return 0;
+        foreach my $ext (qw(repo pkgs)) {
+            my $fn = "$repo_dir/$i.$ext";
+            next if ! -e $fn;
+            my $msg = "outdated repository $i (file $fn)";
+            $self->verbose("Unlinking $msg");
+            if (!unlink($fn)) {
+                $self->error("Unable to remove $msg: $!");
+                return 0;
+            }
         }
     }
     return 1;
