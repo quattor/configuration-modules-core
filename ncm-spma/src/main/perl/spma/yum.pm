@@ -106,11 +106,11 @@ sub _match_noaction_tempdir
     return $self->__match_template_dir($name, NOACTION_TEMPDIR_TEMPLATE);
 }
 
-# If user packages are not allowed, removes any repositories present
-# in the system that are not listed in $allowed_repos.
+# Action cleanup: boolean to cleanup old repositories when not running in NoAction.
+#   Is considered true when not defined
 sub cleanup_old_repos
 {
-    my ($self, $repo_dir, $allowed_repos, $allow_user_pkgs) = @_;
+    my ($self, $repo_dir, $allowed_repos, $action_cleanup) = @_;
 
     if ($NoAction) {
         if ($self->_match_noaction_tempdir($repo_dir)) {
@@ -129,7 +129,7 @@ sub cleanup_old_repos
     }
 
     # Test this after the NoAction bit for unittesting
-    return 1 if $allow_user_pkgs;
+    return 1 if defined($action_cleanup) && !$action_cleanup;
 
     my $dir;
     if (!opendir($dir, $repo_dir)) {
@@ -1164,6 +1164,7 @@ sub Configure
     my $t = $config->getTree($self->prefix());
     # Convert these crappily-defined fields into real Perl booleans.
     $t->{run} = $t->{run} eq 'yes';
+
     my $userpkgs_defined = defined($t->{userpkgs});
     $t->{userpkgs} = $userpkgs_defined && ($t->{userpkgs} eq 'yes');
 
@@ -1181,7 +1182,12 @@ sub Configure
     my $pkgs;
     if (exists($t->{filter})) {
         # only define this here, should not affect selection of the main_repos_dir
-        $t->{userpkgs} = 1 if ! $userpkgs_defined;
+        if (! $userpkgs_defined) {
+            # continue in userpkgs mode
+            $t->{userpkgs} = 1;
+            # enable repository cleanup
+            $t->{repository_cleanup} = 1 if ! defined($t->{repository_cleanup});
+        }
         local $@;
         my $regex;
         eval {
@@ -1221,7 +1227,12 @@ sub Configure
 
     my $quattor_managed_reposdir = _prefix_noaction_prefix($main_repos_dir);
     $self->initialize_repos_dir($quattor_managed_reposdir) or return 0;
-    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{userpkgs}) or return 0;
+
+    # Unless explicitly allowed or when user packages are not allowed,
+    # removes any repositories present in the system that are not listed in $allowed_repos.
+    $t->{repository_cleanup} = !$t->{userpkgs} if ! defined($t->{repository_cleanup});
+    $self->cleanup_old_repos($quattor_managed_reposdir, $repos, $t->{repository_cleanup}) or return 0;
+
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                  $t->{proxyhost}, $t->{proxytype}, $t->{proxyport});
 
