@@ -654,6 +654,16 @@ is_deeply($cos->{'othername2.service'}, {
         possible_missing => 0,
 }, "configured_units set correct name and type for othername2.service");
 
+is_deeply($cos->{'test_4_no_restart.service'}, {
+        name => "test_4_no_restart.service",
+        state => $STATE_ENABLED,
+        targets => ["multi-user.target"],
+        startstop => 1,
+        type => $TYPE_SERVICE,
+        shortname => "test_4_no_restart",
+        possible_missing => 0,
+}, "configured_units set correct name and type for test_4_no_restart.service");
+
 is_deeply($cos->{'test_off.service'}, {
         name => "test_off.service",
         state => $STATE_MASKED,
@@ -679,6 +689,7 @@ is_deeply($cos->{'test_del.service'}, {
 is_deeply(\@uf_write, [
               ['othername2.service', 1, '.old', {service => {some1 => "data1"}}, {a1 => 'b1'}],
               ['test3_only.service', 0, '.old', {service => {some => "data"}}, {a => 'b'}],
+              ['test_4_no_restart.service', 1, '.old', {service => {some1 => "data1"}, unit => {RefuseManualStart => 1}}, {a1 => 'b1'}],
           ], "configured unitfiles initialized as expected");
 
 # the entries in uf_write show that these have a file/ subtree
@@ -689,6 +700,7 @@ ok(! defined($cos->{$uf_write[0]->[1]}),
 ok(command_history_ok(
        ["$SYSTEMCTL try-restart -- othername2.service"],
        ['test3'], # not modified, no try-restart
+       ['test_4_no_restart'], # try-restart suppressed
    ), "expected commands for changed unitfile");
 
 =pod

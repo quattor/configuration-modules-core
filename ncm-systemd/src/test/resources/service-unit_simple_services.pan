@@ -17,3 +17,7 @@ prefix "/software/components/systemd/unit";
     "state", "enabled", "targets", list("multi-user"), "startstop", true,
     "file", dict("only", true, "replace", false, "custom", dict("a", "b"), "config", dict("service", dict("some", "data"))),
     );
+"{test4_no_restart}" = dict(
+    "state", "enabled", "targets", list("multi-user"), "startstop", true, "name", "test_4_no_restart",
+    "file", dict("only", false, "replace", true, "custom", dict("a1", "b1"), "config", dict("service", dict("some1", "data1"), "unit", dict("RefuseManualStart", true))),
+    );
