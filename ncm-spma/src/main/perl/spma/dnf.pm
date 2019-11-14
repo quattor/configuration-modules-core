@@ -29,7 +29,7 @@ use constant CMP_TREE            => "/software/components/spma";
 use constant DNF_PACKAGE_LIST    => "/etc/dnf/plugins/versionlock.list";
 use constant DNF_CONF_FILE       => "/etc/dnf/dnf.conf";
 use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.%{ARCH}\n);
-use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
+use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --quiet --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
 use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock --enableplugin=priorities";
 use constant SPMAPROXY           => "/software/components/spma/proxy";
 
@@ -344,8 +344,7 @@ sub Configure
         return 0;
     }
 
-    # Filter out lines not having ';', because plugin diagnostic messages get mixed into the output...
-    my $repoquery_list = Set::Scalar->new(grep /;/, split (/\n/, $cmd_out));
+    my $repoquery_list = Set::Scalar->new(split (/\n/, $cmd_out));
 
     # Test whether locked packages are present in the metadata
     my $locked_found           = Set::Scalar->new();
