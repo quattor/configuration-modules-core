@@ -90,6 +90,7 @@ TaskPluginParam=Sched
 
 # scheduling
 
+DefCpuPerGPU=3
 DefMemPerCPU=123
 FastSchedule=1
 MaxMemPerNode=345

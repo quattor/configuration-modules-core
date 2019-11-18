@@ -193,7 +193,7 @@ type slurm_conf_control = {
     'AuthType' ? choice('none', 'munge')
     'BackupController' ? string
     'BackupAddr' ? type_ipv4
-    'BurstBufferType' ? choice('none')
+    'BurstBufferType' ? choice('none', 'datawarp')
     'CheckpointType' ? choice('blcr', 'none', 'ompi')
     'ChosLoc' ? absolute_file_path  # see https://github.com/scanon/chos
     'ClusterName' : string
@@ -218,9 +218,6 @@ type slurm_conf_control = {
     'DefaultStoragePort' ? long(0..)
     'DefaultStorageType' ? choice("filetxt", "mysql", "none")
     'DefaultStorageUser' ? string
-
-    'DefMemPerCPU' ? long(0..)
-    'DefMemPerNode' ? long(0..)
 
     'DisableRootJobs' ? boolean    # YES/NO
     'EnforcePartLimits' ? choice("ALL", "ANY", "NO", "YES")
@@ -354,12 +351,13 @@ type slurm_conf_timers = {
 type slurm_conf_scheduling = {
     'DefMemPerCPU' ? long(0..)
     'DefMemPerNode' ? long(0..)
+    'DefCpuPerGPU' ? long(0..)
     'FastSchedule' ? long
     'MaxMemPerNode' ? long(0..)
     'SchedulerTimeSlice' ? long(5..65533)
     'SchedulerParameters' ? slurm_scheduler_parameters
     'SchedulerType' ? choice('backfill', 'builtin', 'hold')  # prefix="sched/"
-    'SelectType' ? choice('bluegene', 'cons_res', 'cray', 'linear', 'serial')  # prefix="select/"
+    'SelectType' ? choice('bluegene', 'cons_res', 'cray', 'linear', 'serial', 'cons_tres')  # prefix="select/"
     'SelectTypeParameters' ? slurm_select_type_parameters
 };
 
