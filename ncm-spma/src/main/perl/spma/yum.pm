@@ -67,6 +67,7 @@ use constant YUM_CMD => qw(yum -y shell);
 use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
 use constant VALID_PACKAGE_NAME => qr{^([\w\.\-\+]+)[*?]?};
+use constant REPO_INCLUDE => 1;
 
 our $NoActionSupported = 1;
 
@@ -137,14 +138,19 @@ sub cleanup_old_repos
         $self->error("Unable to read repositories in $repo_dir");
         return 0;
     }
-    my $current = Set::Scalar->new(map(m{(.*)\.(?:repo|pkgs)$}, readdir($dir)));
+
+    my @exts = qw(repo);
+    push(@exts, 'pkgs') if ($self->REPO_INCLUDE);
+
+    my $pattern = '(.*)\.(?:' . join('|', @exts) . ')$';
+    my $current = Set::Scalar->new(map(m{$pattern}, readdir($dir)));
     closedir($dir);
 
     my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
 
     my $rm = $current-$allowed;
     foreach my $i (@$rm) {
-        foreach my $ext (qw(repo pkgs)) {
+        foreach my $ext (@exts) {
             my $fn = "$repo_dir/$i.$ext";
             next if ! -e $fn;
             my $msg = "outdated repository $i (file $fn)";
@@ -225,6 +231,7 @@ sub generate_repos
         }
 
         # No log instance passed, do all the logging ourself.
+        $repo->{repo_include} = $self->REPO_INCLUDE;
         my $trd = EDG::WP4::CCM::TextRender->new($template, $repo, relpath => 'spma');
         if (! defined($trd->get_text())) {
             $self->error ("Unable to generate repository $repo->{name}: $trd->{fail}");
@@ -236,11 +243,13 @@ sub generate_repos
                                   log => $self);
         $changes += $fh->close() || 0; # handle undef
 
-        $fh = CAF::FileWriter->new($self->_keeps_state("$repos_dir/$repo->{name}.pkgs"),
-                                   log => $self);
-        # TODO. Also add "do not edit" ? Or switch to FileEditor?
-        print $fh "# Additional configuration for $repo->{name}\n";
-        $fh->close();
+        if ($self->REPO_INCLUDE) {
+            $fh = CAF::FileWriter->new($self->_keeps_state("$repos_dir/$repo->{name}.pkgs"),
+                                       log => $self);
+            # TODO. Also add "do not edit" ? Or switch to FileEditor?
+            print $fh "# Additional configuration for $repo->{name}\n";
+            $fh->close();
+        };
     }
 
     return $changes;
