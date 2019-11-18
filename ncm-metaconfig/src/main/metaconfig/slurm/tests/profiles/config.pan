@@ -100,6 +100,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/scheduling";
 
+"DefCpuPerGPU" = 3;
 "DefMemPerCPU" = 123;
 "FastSchedule" = 1;
 "MaxMemPerNode" = 345;
