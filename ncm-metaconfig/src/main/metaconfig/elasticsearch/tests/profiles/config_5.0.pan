@@ -4,7 +4,7 @@ object template config_5.0;
 "/hardware/cpu" = list(dict("cores", 4), dict("cores", 4));
 
 # 5.0 is default
-include 'metaconfig/elasticsearch/config';
+include 'metaconfig/elasticsearch/config_5.0';
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents/thread_pool";
 "bulk/size" = length(value("/hardware/cpu"));
