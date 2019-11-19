@@ -23,11 +23,11 @@ Base test for config
 ^  host: myhost.mydomain$
 ^node:$
 ^  name: myname$
+^path:$
+^  data: /somewhere/elsewhere$
+^  logs: /somewhere/elsewhere/logs$
 ^processors: 4$
 ^thread_pool:$
-^  bulk:$
-^    queue_size: 500$
-^    size: 2$
 ^  index:$
 ^    queue_size: 1000$
 ^    size: 8$
@@ -35,6 +35,3 @@ Base test for config
 ^    core: 2$
 ^    keep_alive: 1800$
 ^    max: 4$
-^  search:$
-^    queue_size: 500$
-^    size: 2$

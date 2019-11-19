@@ -7,10 +7,6 @@ object template config_7.0;
 include 'metaconfig/elasticsearch/config';
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents/thread_pool";
-"bulk/size" = length(value("/hardware/cpu"));
-"bulk/queue_size" = 500;
-"search/size" = length(value("/hardware/cpu"));
-"search/queue_size" = 500;
 "index/size" = length(value("/hardware/cpu")) * value("/hardware/cpu/0/cores");
 "index/queue_size" = 1000;
 "listener/core" = 2;
