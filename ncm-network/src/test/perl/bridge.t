@@ -24,6 +24,8 @@ BROADCAST=4.3.2.255
 STP=on
 DELAY=5
 BRIDGING_OPTS='hairpin_mode=5'
+RESOLV_MODS=no
+PEERDNS=no
 EOF
 
 =pod

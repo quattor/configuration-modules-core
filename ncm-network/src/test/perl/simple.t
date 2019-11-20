@@ -55,6 +55,19 @@ BOOTPROTO=static
 IPADDR=4.3.2.1
 NETMASK=255.255.255.0
 BROADCAST=4.3.2.255
+RESOLV_MODS=no
+PEERDNS=no
+EOF
+
+Readonly my $ETH0_NO_RESOLV_MODS_PEERDNS => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=eth0
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=4.3.2.1
+NETMASK=255.255.255.0
+BROADCAST=4.3.2.255
 EOF
 
 Readonly my $ETHTOOL_ETH0 => <<EOF;
@@ -108,6 +121,8 @@ Test the C<Configure> method of the component for bridge configuration.
 
 ok($NETWORK ne $NETWORK_HOSTNAMECTL,
    "expected network config is different for case with and without hostnamectl");
+ok($ETH0 ne $ETH0_NO_RESOLV_MODS_PEERDNS,
+   "expected network ifcfg eth0 config is different for case with and without RESOLV_MODS/PEERDNS");
 
 # File must exist
 set_file_contents("/etc/sysconfig/network", 'x' x 1000);
@@ -160,6 +175,24 @@ ok(command_history_ok([
     'hostnamectl'
 ]), "network stop/start not called with same config 2nd run");
 
+
+# Test RESOLV_MODS change
+command_history_reset();
+set_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0", $ETH0_NO_RESOLV_MODS_PEERDNS);
+is($cmp->Configure($cfg), 1, "Component runs correctly 3rd time with same test profile");
+is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-eth0"), $ETH0, "Exact network config 3rd run");
+ok(command_history_ok([
+    'ip addr show',
+], [
+    'service network stop',
+    'service network start',
+    'ifup',
+    'ifdown',
+    'ccm-fetch',
+    'hostnamectl'
+]), "network stop/start or ifup/ifdown not called with same config and only RESOLV_MODS/PEERDNS changed");
+
+
 # enable hostnamectl
 $executables{'/usr/bin/hostnamectl'} = 1;
 
@@ -167,7 +200,7 @@ $executables{'/usr/bin/hostnamectl'} = 1;
 # new format be different, but should be keeps_state
 command_history_reset();
 
-is($cmp->Configure($cfg), 1, "Component runs correctly 3rd time with same test profile but with hostnamectl");
+is($cmp->Configure($cfg), 1, "Component runs correctly 4th time with same test profile but with hostnamectl");
 # if the contents here is a hardlink, it means the cleanup of the backup files failed
 is(get_file_contents("/etc/sysconfig/network"), $NETWORK_HOSTNAMECTL, "Exact network config with hostnamectl");
 ok(command_history_ok([
