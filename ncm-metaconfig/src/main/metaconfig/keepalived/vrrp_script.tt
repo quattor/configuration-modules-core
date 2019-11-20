@@ -1,3 +1,5 @@
 [% FOREACH option IN vrrp_script.pairs -%]
+[% IF option.key != 'name' -%]
 [%     option.key %] [% option.value %]
+[% END -%]
 [% END -%]
