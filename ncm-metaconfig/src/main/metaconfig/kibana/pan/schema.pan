@@ -1,4 +1,4 @@
-declaration template metaconfig/kibana/schema_7.0;
+declaration template metaconfig/kibana/schema;
 
 include 'pan/types';
 
@@ -13,7 +13,7 @@ type kibana_service_server = {
 };
 
 type kibana_service_elasticsearch = {
-    "url" : type_absoluteURI = "http://localhost:9200"
+    "hosts" : type_absoluteURI = "http://localhost:9200"
     "username" ? string
     "password" ? string
     "ssl.certificate" ? absolute_file_path
