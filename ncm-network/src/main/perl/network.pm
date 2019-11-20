@@ -425,7 +425,10 @@ sub test_network_ccm_fetch
     # ccm-fetch should be in $PATH
     $self->verbose("$func: trying ccm-fetch");
     # no runrun, as it would trigger error (and dependency failure)
-    my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
+    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
+    my $cmd = ["ccm-fetch"];
+    push(@$cmd, "--debug", $dbglvl) if $dbglvl;
+    my $output = CAF::Process->new($cmd, log => $self)->output();
     my $exitcode = $?;
     if ($exitcode == 0) {
         $self->verbose("$func: OK: network up");
@@ -434,7 +437,7 @@ sub test_network_ccm_fetch
         $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
         return $self->test_network_ping($profile);
     } else {
-        $self->warn("$func: FAILED: network down");
+        $self->warn("$func: FAILED: network down: ec $exitcode (output in ccm-fetch log file)");
         return 0;
     }
 }
