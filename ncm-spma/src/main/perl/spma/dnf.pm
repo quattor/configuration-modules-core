@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use parent qw(NCM::Component CAF::Path);
 our $EC = LC::Exception::Context->new->will_store_all;
-use EDG::WP4::CCM::Element qw(unescape);
+use EDG::WP4::CCM::Path qw(unescape);
 
 use CAF::Object;
 use CAF::Process;
