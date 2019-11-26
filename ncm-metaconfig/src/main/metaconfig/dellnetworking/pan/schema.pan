@@ -27,6 +27,15 @@ type dellnetworking_vlt = {
     'delay' ? long
 };
 
+type dellnetworking_lacp = {
+    @{LACP mode}
+    'mode' ? choice('active', 'passive')
+    @{LACP fallback (eg to PXE hosts with LACP)}
+    'fallback' ? boolean
+    @{LACP priority (default 32k, higher number means lower priority}
+    'priority' ? long(0..65535)
+};
+
 type dellnetworking_interface = {
     @{interface is enabled}
     'enable' : boolean = true
@@ -44,19 +53,24 @@ type dellnetworking_interface = {
     'slaves' ? dellnetworking_interface_name[] with length(SELF) >= 1
     @{mandatory and unique for dual-connected hosts, using ports on different VLT members}
     'vlt' ? long(0..65535)
-    @{lacp mode}
-    'lacpmode' ? choice('active', 'passive')
-    @{LACP fallback (eg to PXE hosts with LACP)}
-    'lacpfallback' ? boolean
+    @{lacp}
+    'lacp' ? dellnetworking_lacp
 } with {
     if (exists(SELF['slaves'])) {
-        if (!exists(SELF['lacpmode'])) {
+        if (!(exists(SELF['lacp']) && exists(SELF['lacp']['mode']))) {
             error("port-channel must define lacp mode");
         };
     } else {
-        foreach (idx; key; list('vlt', 'lacpfallback', 'lacpmode')) {
+        foreach (idx; key; list('vlt')) {
             if (exists(SELF[key])) {
                 error("%s cannot be set without slaves defined", key)
+            };
+        };
+        if (exists(SELF['lacp'])) {
+            foreach (idx; key; list('fallback', 'mode', 'priority')) {
+                if (exists(SELF['lacp'][key])) {
+                    error("lacp %s cannot be set without slaves defined", key)
+                };
             };
         };
     };

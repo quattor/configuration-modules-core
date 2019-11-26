@@ -67,6 +67,7 @@ interface port-channel1
 interface ethernet1/1/1
  no shutdown
  no switchport
+ lacp port-priority 10000
  channel-group 1 mode passive
 !
 interface ethernet1/1/15
