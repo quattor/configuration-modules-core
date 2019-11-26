@@ -36,8 +36,9 @@ prefix "interfaces/{port-channel1}";
 "description" = "leg one";
 "slaves" = list("ethernet1/1/1");
 "vlt" = 1;
-"lacpmode" = "passive";
-"lacpfallback" = true;
+"lacp/mode" = "passive";
+"lacp/fallback" = true;
+"lacp/priority" = 10000;
 "access" = 10;
 "vids" = list(11, 20);
 
