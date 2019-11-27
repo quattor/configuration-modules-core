@@ -65,6 +65,7 @@ interface port-channel1
  vlt-port-channel 1
 !
 interface ethernet1/1/1
+ description "po1 leg one"
  no shutdown
  no switchport
  lacp port-priority 10000
