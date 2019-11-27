@@ -8,10 +8,16 @@
 [%       INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data=data -%]
 [%-      IF data.exists('slaves') -%]
 [%-         FOREACH slname IN data.slaves -%]
+[%-             poid = name.match('port-channel\s?(\d+)$').0;
+                descr = "po" _ poid;
+                IF data.exists('description');
+                    descr = descr _ " " _ data.description;
+                END; -%]
 [%              INCLUDE 'metaconfig/dellnetworking/interface.tt' name=slname data={
                     enable = 1
+                    description = descr
                     switchport = 0
-                    channelgroup = [name.match('port-channel\s?(\d+)$').0, pair.value.lacp.mode]
+                    channelgroup = [poid, pair.value.lacp.mode]
                     lacp = {
                         priority = lacpprio
                         }
