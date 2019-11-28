@@ -85,15 +85,16 @@ sub execute_command
 
 sub get_installed_rpms
 {
-    my ($self) = @_;
+    my $self = shift;
+
     my ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([RPM_QUERY_INSTALLED], "getting list of installed packages", 1, "/dev/null", 1);
     if ($cmd_exit) {
         $self->error("Error getting list of installed packages.");
         return undef;
     }
-    my $preinstalled_rpms = $cmd_out;
-    $preinstalled_rpms =~ s/\(none\)/0/g;
-    return Set::Scalar->new(split (/\n/, $preinstalled_rpms));
+
+    $cmd_out =~ s/\(none\)/0/g;
+    return Set::Scalar->new(split (/\n/, $cmd_out));
 }
 
 sub Configure
@@ -261,29 +262,14 @@ sub Configure
         }
         my $vra = $pkgs->{$name};
         while (my ($vers, $a) = each(%$vra)) {
-            my $arches = $a->{arch};
-            if (exists($a->{repository})) {
-                foreach my $arch (@$arches) {
-                    if ($vers ne '_') {
-                        push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
+            foreach my $arch (keys %{$a->{arch}}) {
+                if ($vers ne '_') {
+                    push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
+                } else {
+                    if ($arch eq '_') {
+                        push (@pkl, (unescape $name) . ';');
                     } else {
-                        if ($arch eq '_') {
-                            push (@pkl, (unescape $name) . ';');
-                        } else {
-                            push (@pkl_a, (unescape $name) . ';' . $arch);
-                        }
-                    }
-                }
-            } else {
-                foreach my $arch (keys %$arches) {
-                    if ($vers ne '_') {
-                        push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
-                    } else {
-                        if ($arch eq '_') {
-                            push (@pkl, (unescape $name) . ';');
-                        } else {
-                            push (@pkl_a, (unescape $name) . ';' . $arch);
-                        }
+                        push (@pkl_a, (unescape $name) . ';' . $arch);
                     }
                 }
             }
@@ -364,34 +350,31 @@ sub Configure
             }
         }
     }
-    {
-        my $fh = CAF::FileWriter->new(DNF_PACKAGE_LIST, log => $self);
-        print $fh join ("\n", @$locked_found);
-        $fh->close();
-        if ($wanted_pkgs_locked->size != $locked_found->size) {
-            $self->error("Version-locked packages are missing from repositories - expected ", $wanted_pkgs_locked->size, ", available ", $locked_found->size, "\n",
-                          "Missing packages: ", $wanted_pkgs_locked - $locked_found_noepoch);
-            return 0;
-        } else {
-            $self->info("all version locked packages available in repositories");
-        }
+
+    my $fh = CAF::FileWriter->new(DNF_PACKAGE_LIST, log => $self);
+    print $fh join ("\n", @$locked_found);
+    $fh->close();
+    if ($wanted_pkgs_locked->size != $locked_found->size) {
+        $self->error("Version-locked packages are missing from repositories - expected ", $wanted_pkgs_locked->size, ", available ", $locked_found->size, "\n",
+                      "Missing packages: ", $wanted_pkgs_locked - $locked_found_noepoch);
+        return 0;
+    } else {
+        $self->info("all version locked packages available in repositories");
     }
 
     # Test also whether version unlocked packages are present in repositories.
-    {
-        my $found = Set::Scalar->new();
-        while (defined(my $r = $repoquery_list->each)) {
-            my ($name, $epoch, $ver, $rel, $arch) = split(';', $r);
+    my $found = Set::Scalar->new();
+    while (defined(my $r = $repoquery_list->each)) {
+        my ($name, $epoch, $ver, $rel, $arch) = split(';', $r);
 
-            $found->insert("$name.$arch") if $wanted_pkgs->has("$name.$arch");
-            $found->insert($name) if $wanted_pkgs->has($name);
-        }
+        $found->insert("$name.$arch") if $wanted_pkgs->has("$name.$arch");
+        $found->insert($name) if $wanted_pkgs->has($name);
+    }
 
-        if ($found->size != $wanted_pkgs->size) {
-            $self->error("Requested packages are missing from repositories.");
-            $self->error("Missing packages: ", $wanted_pkgs - $found);
-            return 0;
-        }
+    if ($found->size != $wanted_pkgs->size) {
+        $self->error("Requested packages are missing from repositories.");
+        $self->error("Missing packages: ", $wanted_pkgs - $found);
+        return 0;
     }
 
     # Continue only if package content is supposed to be changed
@@ -414,102 +397,101 @@ sub Configure
     my $to_install = Set::Scalar->new;
     my $to_install_names = Set::Scalar->new;
 
-    {
-        # DNF lacks yumtx transaction support - parse output directly instead
-        my $start_found          = 0;
-        my $aftername_wrapped    = 0;
-        my $afterversion_wrapped = 0;
-        my ($epoch, $name, $versionrelease, $arch);
-        my @lines = split /\n/, $dnf_install_test;
-        foreach my $l (@lines) {
-            if ($afterversion_wrapped) {
-                $afterversion_wrapped = 0;
-                next;
-            }
-            if ($l ne "Installing:") {
-                next if (!$start_found);
-            } else {
-                $start_found = 1;
-                next;
-            }
-            next if ($l eq "Installing dependencies:");
-            if ($l eq "Skipped (dependency problems):") {
-                my $skipped = index($dnf_install_test, "Skipped (dependency problems):");
-                if ($skipped != -1) {
-                    $self->info($dnf_install_test);
-                    $self->error("Dependency problems in test transaction, see log.");
-                    return 0;
-                }
-            }
-            last if (substr($l, 0, 1) ne ' ');
-            next if (substr($l, 1, 1) eq ' ' && !$aftername_wrapped && !$afterversion_wrapped);
-            $l =~ s/^\s+|\s+$//g;
-            if (!$aftername_wrapped) {
-                ($name, $l) = split (/ /, $l, 2);
-                if (!defined($l) || $l eq "") {
-                    $aftername_wrapped = 1;
-                    next;
-                }
-                $l =~ s/^\s+//;
-            } else {
-                $aftername_wrapped = 0;
-            }
-            ($arch, $l) = split (/ /, $l, 2);
-
-            # There may be no whitespace between the architecture and version - ugh...
-            my ($realarch, $rest) = $arch =~ m/^(noarch|x86_64|i[3456]86)(.*)$/;
-            if ($rest) {
-                $arch = $realarch;
-                $l = "$rest $l";
-            }
-
-            $l =~ s/^\s+//;
-            my $eindex = index($l, ':');
-            if ($eindex > 0) {
-                $epoch = substr($l, 0, $eindex);
-                $l = substr($l, $eindex + 1);
-            } else {
-                $epoch = 0;
-            }
-            ($versionrelease, $l) = split (/ /, $l, 2);
-            $to_install->insert($name . '-' . $epoch . ':' . $versionrelease . '.' . $arch);
-            $to_install_names->insert($name) if !$to_install_names->has($name);
-            if (!defined($l) || $l eq "") {
-                $afterversion_wrapped = 1;
+    # DNF lacks yumtx transaction support - parse output directly instead
+    my $start_found          = 0;
+    my $aftername_wrapped    = 0;
+    my $afterversion_wrapped = 0;
+    my ($epoch, $name, $versionrelease, $arch);
+    my @lines = split /\n/, $dnf_install_test;
+    foreach my $l (@lines) {
+        if ($afterversion_wrapped) {
+            $afterversion_wrapped = 0;
+            next;
+        }
+        if ($l ne "Installing:") {
+            next if (!$start_found);
+        } else {
+            $start_found = 1;
+            next;
+        }
+        next if ($l eq "Installing dependencies:");
+        if ($l eq "Skipped (dependency problems):") {
+            my $skipped = index($dnf_install_test, "Skipped (dependency problems):");
+            if ($skipped != -1) {
+                $self->info($dnf_install_test);
+                $self->error("Dependency problems in test transaction, see log.");
+                return 0;
             }
         }
+        last if (substr($l, 0, 1) ne ' ');
+        next if (substr($l, 1, 1) eq ' ' && !$aftername_wrapped && !$afterversion_wrapped);
+        $l =~ s/^\s+|\s+$//g;
+        if (!$aftername_wrapped) {
+            ($name, $l) = split (/ /, $l, 2);
+            if (!defined($l) || $l eq "") {
+                $aftername_wrapped = 1;
+                next;
+            }
+            $l =~ s/^\s+//;
+        } else {
+            $aftername_wrapped = 0;
+        }
+        ($arch, $l) = split (/ /, $l, 2);
+
+        # There may be no whitespace between the architecture and version - ugh...
+        my ($realarch, $rest) = $arch =~ m/^(noarch|x86_64|i[3456]86)(.*)$/;
+        if ($rest) {
+            $arch = $realarch;
+            $l = "$rest $l";
+        }
+
+        $l =~ s/^\s+//;
+        my $eindex = index($l, ':');
+        if ($eindex > 0) {
+            $epoch = substr($l, 0, $eindex);
+            $l = substr($l, $eindex + 1);
+        } else {
+            $epoch = 0;
+        }
+        ($versionrelease, $l) = split (/ /, $l, 2);
+        $to_install->insert($name . '-' . $epoch . ':' . $versionrelease . '.' . $arch);
+        $to_install_names->insert($name) if !$to_install_names->has($name);
+        if (!defined($l) || $l eq "") {
+            $afterversion_wrapped = 1;
+        }
     }
+
     $self->info("supposed to be installed: ", $to_install->size, " packages.");
     if ($to_install->is_empty) {
         $self->error("DNF failed: no packages to be installed to clean root.");
         return 0;
     }
 
-        # Do not remove currently running kernel.
-        my $kvers = (POSIX::uname())[2];
-        $self->info("Will skip removal of running kernel: $kvers");
+    # Do not remove currently running kernel.
+    my $kvers = (POSIX::uname())[2];
+    $self->info("Will skip removal of running kernel: $kvers");
 
-        # Compose list of packages to be installed and removed.
-        my $will_remove = $preinstalled - $to_install - "kernel-$kvers" - "kernel-core-$kvers";
-        my $will_install = $to_install - $preinstalled;
-        my $whitelist = $t->{whitelist};
-        my $whitelisted = Set::Scalar->new();
-        for my $rpm ($will_remove->elements) {    # do not remove imported GPG keys
-            if (substr($rpm, 0, 11) eq 'gpg-pubkey-') {
-                $will_remove->delete($rpm);
-            }
-            # Do not remove whitelisted packages.
-            if (defined($whitelist)) {
-                for my $white_pkg (@$whitelist) {
-                    my $rpm_noepoch = $rpm;
-                    $rpm_noepoch =~ s/^.*://;
-                    if (index($rpm_noepoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_noepoch)) {
-                        $will_remove->delete($rpm);
-                        $whitelisted->insert($rpm);
-                    }
+    # Compose list of packages to be installed and removed.
+    my $will_remove = $preinstalled - $to_install - "kernel-$kvers" - "kernel-core-$kvers";
+    my $will_install = $to_install - $preinstalled;
+    my $whitelist = $t->{whitelist};
+    my $whitelisted = Set::Scalar->new();
+    for my $rpm ($will_remove->elements) {    # do not remove imported GPG keys
+        if (substr($rpm, 0, 11) eq 'gpg-pubkey-') {
+            $will_remove->delete($rpm);
+        }
+        # Do not remove whitelisted packages.
+        if (defined($whitelist)) {
+            for my $white_pkg (@$whitelist) {
+                my $rpm_noepoch = $rpm;
+                $rpm_noepoch =~ s/^.*://;
+                if (index($rpm_noepoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_noepoch)) {
+                    $will_remove->delete($rpm);
+                    $whitelisted->insert($rpm);
                 }
             }
         }
+    }
 
     # Print summary what is supposed to be done.
     $self->info("Transaction summary --------------------");
@@ -536,8 +518,9 @@ sub Configure
     if ($will_install->size) {
         $transaction .= "install " . join (" ", sort @$will_install) . "\n";
     }
-    if (!($transaction eq "")) {
+    if ($transaction ne "") {
         $transaction .= "run\n";
+
         # Remove all protected packages (especially systemd).
         my @files = glob "/etc/dnf/protected.d/*";
         foreach my $file (@files) {
@@ -548,7 +531,7 @@ sub Configure
         }
         # Keep only DNF among protected packages.
         my $fh = CAF::FileWriter->new("/etc/dnf/protected.d/dnf.conf", log => $self);
-        print $fh join ("dnf\n");
+        print $fh "dnf\n";
         $fh->close();
 
         ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["dnf shell --noautoremove -y " . DNF_PLUGIN_OPTS . " "], 'executing transaction', 1, $transaction);
@@ -568,7 +551,7 @@ sub Configure
     # Final statistics of spma changes of packages.
     my $installed = $self->get_installed_rpms();
     my $newly_installed = $installed - $preinstalled;
-    my $newly_removed   = $preinstalled - $installed;
+    my $newly_removed = $preinstalled - $installed;
     $self->info("Summary of package changes -------------");
     if (defined($whitelisted) && scalar @$whitelisted > 0) {
         $self->info("whitelisted " . scalar @$whitelisted . " package(s) ", join (" ", sort @$whitelisted));
