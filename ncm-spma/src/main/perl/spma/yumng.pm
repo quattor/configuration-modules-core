@@ -17,6 +17,7 @@ use CAF::Process;
 use CAF::FileWriter;
 use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use Set::Scalar;
+use File::Basename;
 use File::Temp qw(tempdir);
 use Text::Glob qw(match_glob);
 
@@ -353,6 +354,17 @@ sub Configure
     my @dirs = glob "/var/tmp/yum-root*";
     foreach my $dir (@dirs) {
         if (!defined($self->cleanup($dir))) {
+            $self->warn("unable to remove directory $dir: $!");
+        }
+    }
+
+    # Clean up the cache of repositories which no longer exist
+    @dirs = glob "/var/cache/yum/*";
+    foreach my $dir (@dirs) {
+        # Leave non-directories alone
+        next unless -d $dir;
+        next if exists $reponames{basename($dir)};
+        if (!$self->cleanup($dir)) {
             $self->warn("unable to remove directory $dir: $!");
         }
     }
