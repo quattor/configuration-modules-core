@@ -3,10 +3,13 @@ Dellnetworking configuration
 /dellnetworking.cfg
 quote
 ---
-feature auto-breakout
+no feature auto-breakout
+ip name-server dns1.domain.org dns2.dmoain2.org
 hostname myswitch.example.org
+ntp server myntp.example.com
 system-user linuxadmin password passwdhash
 username admin password anotherpasswdhash role sysadmin priv-lvl 15
+username admin sshkey "abcdef"
 aaa authentication login default local
 aaa authentication login console local
 !
@@ -63,6 +66,7 @@ interface port-channel1
  switchport trunk allowed vlan 11,20
  lacp fallback enable
  vlt-port-channel 1
+ mtu 9000
 !
 interface ethernet1/1/1
  description "po1 leg one"
@@ -70,6 +74,8 @@ interface ethernet1/1/1
  no switchport
  lacp port-priority 10000
  channel-group 1 mode passive
+ speed 25000
+ mtu 9000
 !
 interface ethernet1/1/15
  description "VLT interface"
