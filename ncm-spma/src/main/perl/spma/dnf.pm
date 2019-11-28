@@ -352,7 +352,7 @@ sub Configure
     }
 
     my $fh = CAF::FileWriter->new(DNF_PACKAGE_LIST, log => $self);
-    print $fh join ("\n", @$locked_found);
+    print $fh join ("\n", sort @$locked_found);
     $fh->close();
     if ($wanted_pkgs_locked->size != $locked_found->size) {
         $self->error("Version-locked packages are missing from repositories - expected ", $wanted_pkgs_locked->size, ", available ", $locked_found->size, "\n",
