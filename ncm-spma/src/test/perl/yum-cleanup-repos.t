@@ -33,6 +33,7 @@ sub initialize_repos
     mkpath($REPO_DIR);
     open(FH, ">", "$REPO_DIR/repository.repo");
     open(FH, ">", "$REPO_DIR/repository2.repo");
+    open(FH, ">", "$REPO_DIR/repository3.pkgs");  # leftover pkgs file
 }
 
 my $repos = [ { name => "repository",
@@ -71,6 +72,7 @@ initialize_repos();
 
 is($cmp->cleanup_old_repos($REPO_DIR, $repos), 1, "Removal of files succeeds");
 ok(!-e "$REPO_DIR/repository2.repo", "Unwanted repo scheduled for removal");
+ok(!-e "$REPO_DIR/repository3.pkgs", "Unwanted repo (pkgs file) scheduled for removal");
 ok(-e "$REPO_DIR/repository.repo", "Wanted file not marked for deletion");
 
 =pod
@@ -103,14 +105,15 @@ if ($EUID) {
 
 =pod
 
-=head2 The userpkgs flag is set
+=head2 The action_cleanup flag is set to false
 
 In this case, nothing should be done.
 
 =cut
 
 initialize_repos();
-is($cmp->cleanup_old_repos($REPO_DIR, $repos, 1), 1, "userpkgs succeeds");
-ok(-e "$REPO_DIR/repository2.repo", "Unlisted repo is kept under userpkgs");
+is($cmp->cleanup_old_repos($REPO_DIR, $repos, 0), 1, "action_cleanup=0 succeeds");
+ok(-e "$REPO_DIR/repository2.repo", "Unlisted repo is kept under action_cleanup=0");
+ok(-e "$REPO_DIR/repository3.pkgs", "Unlisted repo (pkgs file) is kept under action_cleanup=0");
 
 done_testing();
