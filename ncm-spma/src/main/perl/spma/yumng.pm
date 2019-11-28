@@ -17,6 +17,7 @@ use CAF::Process;
 use CAF::FileWriter;
 use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use Set::Scalar;
+use File::Temp qw(tempdir);
 use Text::Glob qw(match_glob);
 
 use constant REPOS_DIR           => "/etc/yum.repos.d";
@@ -29,7 +30,6 @@ use constant YUM_CONF_FILE       => "/etc/yum.conf";
 use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n);
 use constant REPO_AVAIL_PKGS     => qw(repoquery -C --show-duplicates --all --qf %{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH});
 use constant YUM_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=fastestmirror --enableplugin=versionlock --enableplugin=priorities";
-use constant YUM_TEST_CHROOT     => qw(/tmp/spma_yum_testroot);
 use constant SPMAPROXY           => "/software/components/spma/proxy";
 
 our $NoActionSupported = 1;
@@ -344,7 +344,7 @@ sub Configure
     $self->execute_command(["yum clean all " . YUM_PLUGIN_OPTS], "resetting YUM state", 0);
     $self->execute_command(["yum makecache " . YUM_PLUGIN_OPTS], "generating YUM cache", 0);
 
-    my @files = glob "{/tmp/*.yumtx,/var/lib/yum/transaction*}";
+    my @files = glob "/var/lib/yum/transaction*";
     foreach my $file (@files) {
         if (!defined($self->cleanup($file))) {
             $self->warn("unable to remove file $file: $!");
@@ -428,11 +428,14 @@ sub Configure
     # Continue only if package content is supposed to be changed
     return 1 unless $t->{run};
 
+    my $yum_test_chroot = tempdir("spma_yum_testroot_XXXXXX", TMPDIR => 1, CLEANUP => 1);
+    my $yum_tmpdir = tempdir("spma_yum_tmpdir_XXXXXX", TMPDIR => 1, CLEANUP => 1);
+    local $ENV{TMPDIR} = $yum_tmpdir;
+
     # Run test transaction to get complete list of packages to be present on the system
-    $self->execute_command(["rm -rf " . YUM_TEST_CHROOT], "cleaning YUM test chroot", 1);
-    $self->execute_command(["mkdir -p " . YUM_TEST_CHROOT . "/var/cache"],                 "setting up YUM test chroot",    1);
-    $self->execute_command(["ln -s /var/cache/yum " . YUM_TEST_CHROOT . "/var/cache/yum"], "setting YUM test chroot cache", 1);
-    my $yum_install_test_command = "yum install " . YUM_PLUGIN_OPTS . " -C --installroot=" . YUM_TEST_CHROOT;
+    $self->execute_command(["mkdir -p " . $yum_test_chroot . "/var/cache"],                 "setting up YUM test chroot",    1);
+    $self->execute_command(["ln -s /var/cache/yum " . $yum_test_chroot . "/var/cache/yum"], "setting YUM test chroot cache", 1);
+    my $yum_install_test_command = "yum install " . YUM_PLUGIN_OPTS . " -C --installroot=" . $yum_test_chroot;
     if (@$groups)             { $yum_install_test_command .= " @" . join   (" @",   sort @$groups); }
     if (@$wanted_pkgs_locked) { $yum_install_test_command .= " " . join    (" ",    sort @$wanted_pkgs_locked); }
     if (@$wanted_pkgs)        { $yum_install_test_command .= " " . join    (" ",    sort @$wanted_pkgs); }
@@ -440,7 +443,6 @@ sub Configure
     $self->error($cmd_err) if $cmd_err;
     my $yum_install_test = $cmd_out;
     $yum_install_test = $cmd_err if ($os_major eq '7');
-    $self->execute_command(["rm -rf " . YUM_TEST_CHROOT], "removing YUM test chroot", 1);
 
     # Parse YUM output to get full package list
     my $to_install = Set::Scalar->new;
@@ -455,7 +457,7 @@ sub Configure
                 return 0;
             }
         }
-        my @tx_files = glob "/tmp/*.yumtx";
+        my @tx_files = glob "$yum_tmpdir/*.yumtx";
         if (scalar(grep { defined $_ } @tx_files) != 1) {
             $self->info($yum_install_test);
             $self->error("Dependency problems or multiple yumtx files. See log.");
