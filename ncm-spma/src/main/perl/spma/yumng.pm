@@ -9,15 +9,14 @@ package NCM::Component::spma::yumng;
 #
 use strict;
 use warnings;
-use NCM::Component;
+use parent qw(NCM::Component CAF::Path);
 our $EC = LC::Exception::Context->new->will_store_all;
-our @ISA = qw(NCM::Component);
-use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 
+use CAF::Object;
 use CAF::Process;
 use CAF::FileWriter;
+use EDG::WP4::CCM::Path 16.8.0 qw(unescape);
 use Set::Scalar;
-use File::Path qw(rmtree);
 use Text::Glob qw(match_glob);
 
 use constant REPOS_DIR           => "/etc/yum.repos.d";
@@ -78,7 +77,7 @@ sub execute_command
         $self->log("$why stdout:\n$out") if (defined($out) && $out ne '');
     }
 
-    if ($NoAction && !$keeps_state) {
+    if ($CAF::Object::NoAction && !$keeps_state) {
         return (0, undef, undef);
     }
 
@@ -166,13 +165,22 @@ sub Configure
     print $yum_conf_file "exclude=" . join (" ", sort @$excludes);
     $yum_conf_file->close();
 
-    if (!$NoAction) {
-        my @repos = glob "/etc/yum.repos.d/*.repo";
-        foreach my $repo (@repos) {
-            if (!unlink $repo) {
-                $self->error("Unable to remove file $repo: $!");
-                return 0;
-            }
+    # For easier lookup...
+    my %reponames;
+    foreach my $repo (@$repos) {
+        $reponames{$repo->{name}} = $repo;
+    }
+
+    # Delete unknown repository definitions
+    my @repos = glob "/etc/yum.repos.d/*.repo";
+    foreach my $repo (@repos) {
+        my $reponame = basename($repo);
+        $reponame =~ s/\.repo$//;
+        next if ($reponame =~ m/^spma-(.*)$/ && exists $reponames{$1});
+
+        if (!defined($self->cleanup($repo))) {
+            $self->error("Unable to remove file $repo: $!");
+            return 0;
         }
     }
 
@@ -338,13 +346,13 @@ sub Configure
 
     my @files = glob "{/tmp/*.yumtx,/var/lib/yum/transaction*}";
     foreach my $file (@files) {
-        if (!unlink $file) {
+        if (!defined($self->cleanup($file))) {
             $self->warn("unable to remove file $file: $!");
         }
     }
     my @dirs = glob "/var/tmp/yum-root*";
     foreach my $dir (@dirs) {
-        if (!rmtree $dir) {
+        if (!defined($self->cleanup($dir))) {
             $self->warn("unable to remove directory $dir: $!");
         }
     }
@@ -572,7 +580,7 @@ sub Configure
     $self->info("----------------------------------------");
 
     # End here in case of --noaction.
-    if ($NoAction) {
+    if ($CAF::Object::NoAction) {
         return 1;
     }
 
@@ -588,7 +596,7 @@ sub Configure
         $transaction .= "run\n";
         my @files = glob "/etc/yum/protected.d/*";
         foreach my $file (@files) {
-            if (!unlink $file) {
+            if (!defined($self->cleanup($file))) {
                 $self->error("Unable to remove file $file: $!");
                 return 0;
             }
