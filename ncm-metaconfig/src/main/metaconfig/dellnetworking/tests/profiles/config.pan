@@ -5,9 +5,11 @@ object template config;
 include 'metaconfig/dellnetworking/config';
 
 prefix "/software/components/metaconfig/services/{/dellnetworking.cfg}/contents";
-"features/0" = "auto-breakout";
+"feature/auto-breakout" = false;
 "hostname" = "myswitch.example.org";
 "systemuser" = "passwdhash";
+"ntp" = "myntp.example.com";
+"nameserver" = list("dns1.domain.org", "dns2.dmoain2.org");
 
 "pvid" = 1;
 "vlanids" = list(10, 11, 20, 100, 200);
@@ -15,6 +17,7 @@ prefix "/software/components/metaconfig/services/{/dellnetworking.cfg}/contents"
 prefix "users/admin";
 "password" = "anotherpasswdhash";
 "role" = "sysadmin";
+"pubkey" = "abcdef";
 
 prefix "portgroups";
 "{1/1/1}" = "25g-4x";
@@ -41,6 +44,8 @@ prefix "interfaces/{port-channel1}";
 "lacp/priority" = 10000;
 "access" = 10;
 "vids" = list(11, 20);
+"speed" = 25000;
+"mtu" = 9000;
 
 prefix "interfaces/{ethernet1/1/3}";
 "description" = "one server";
