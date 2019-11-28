@@ -55,6 +55,10 @@ type dellnetworking_interface = {
     'vlt' ? long(0..65535)
     @{lacp}
     'lacp' ? dellnetworking_lacp
+    @{force speed}
+    'speed' ? long with index(SELF, list(10000, 25000, 40000, 50000, 100000)) >= 0
+    @{mtu}
+    'mtu' ? long(1280..65535)
 } with {
     if (exists(SELF['slaves'])) {
         if (!(exists(SELF['lacp']) && exists(SELF['lacp']['mode']))) {
@@ -87,6 +91,8 @@ type dellnetworking_user = {
     'password' : string
     @{role}
     'role' : choice('sysadmin')
+    @{one pubkey}
+    'pubkey' ? string
 };
 
 type dellnetworking_management = {
@@ -95,17 +101,26 @@ type dellnetworking_management = {
     'gateway' : type_ipv4
 };
 
+@{key is feature name, value is boolean (false will disable the feature)}
+type dellnetworking_feature = {
+    'auto-breakout' ? boolean
+};
+
 type dellnetworking_config = {
     @{features}
-    'features' ? choice('auto-breakout')[]
+    'feature' ? dellnetworking_feature
+    @{name servers to use}
+    'nameserver' ? type_hostname[1..3]
     @{hostname}
     'hostname' : type_hostname
+    @{ntp server}
+    'ntp' ? type_hostname
     @{system user linuxadmin password hash}
     'systemuser' : string
     @{users, key is the username}
     'users' : dellnetworking_user{}
     @{port groups}
-    'portgroups' ? choice('25g-4x', '100g-1x', '100g-2x'){}
+    'portgroups' ? choice('10g-4x', '25g-4x', '40g-1x', '50g-2x', '100g-1x', '100g-2x'){}
     @{Default PVID for untagged traffic}
     'pvid' : dellnetworking_vlan
     @{VLAN IDs (simple enabled VLANs)}
@@ -161,7 +176,13 @@ type dellnetworking_config = {
         };
 
         if (exists(inf['slaves'])) {
-            if (! match(name, '^port-channel')) {
+            m = matches(name, '^port-channel\s*(\d+)$');
+            if (length(m) == 2) {
+                pcid = to_long(m[1]);
+                if (pcid < 1 || pcid > 128) {
+                    error("port-channel id must be between 1 and 128, got %s", name);
+                };
+            } else {
                 error("only port-channels can have slaves defined, found %s", name);
             };
             foreach (idx; slname; inf['slaves']) {
