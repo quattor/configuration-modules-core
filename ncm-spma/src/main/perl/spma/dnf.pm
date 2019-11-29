@@ -30,7 +30,7 @@ use constant DNF_PACKAGE_LIST    => "/etc/dnf/plugins/versionlock.list";
 use constant DNF_CONF_FILE       => "/etc/dnf/dnf.conf";
 use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.%{ARCH}\n);
 use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --quiet --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
-use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock --enableplugin=priorities";
+use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock";
 use constant SPMAPROXY           => "/software/components/spma/proxy";
 
 our $NoActionSupported = 1;
