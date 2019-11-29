@@ -16,7 +16,7 @@ type structure_symlink_replace_option_entry = {
 
 type structure_symlink_entry = {
     @{symbolic link name (path).}
-    "name" : string
+    "name" : absolute_file_path
     @{The target path can be built using a command output with the command string
     (can include valid command options) to execute between a pair of '@@' or a
     contextual variable (variables are defined in "/software/components/symlinks/context").
