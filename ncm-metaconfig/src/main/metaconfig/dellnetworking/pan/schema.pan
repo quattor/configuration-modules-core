@@ -25,6 +25,8 @@ type dellnetworking_vlt = {
     'backup' ? type_ipv4
     @{delay restore timeout}
     'delay' ? long
+    @{primary priority (default 32k, higher number means lower priority}
+    'priority' ? long(0..65535)
 };
 
 type dellnetworking_lacp = {
@@ -59,6 +61,8 @@ type dellnetworking_interface = {
     'speed' ? long with index(SELF, list(10000, 25000, 40000, 50000, 100000)) >= 0
     @{mtu}
     'mtu' ? long(1280..65535)
+    @{enable/disable spanning-tree edge port}
+    'edge' ? boolean
 } with {
     if (exists(SELF['slaves'])) {
         if (!(exists(SELF['lacp']) && exists(SELF['lacp']['mode']))) {

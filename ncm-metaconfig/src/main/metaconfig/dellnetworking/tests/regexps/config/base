@@ -67,11 +67,11 @@ interface port-channel1
  lacp fallback enable
  vlt-port-channel 1
  mtu 9000
+ spanning-tree port type edge
 !
 interface ethernet1/1/1
  description "po1 leg one"
  no shutdown
- no switchport
  lacp port-priority 10000
  channel-group 1 mode passive
  speed 25000
@@ -93,6 +93,7 @@ vlt-domain 1
  backup destination 169.254.1.1
  delay-restore 120
  vlt-mac 44:38:39:FF:00:01
+ primary-priority 10
 !
 support-assist
 !

@@ -34,6 +34,7 @@ prefix "vlt";
 "backup" = "169.254.1.1";
 "mac" = "44:38:39:FF:00:01";
 "delay" = 120;
+"priority" = 10;
 
 prefix "interfaces/{port-channel1}";
 "description" = "leg one";
@@ -46,6 +47,7 @@ prefix "interfaces/{port-channel1}";
 "vids" = list(11, 20);
 "speed" = 25000;
 "mtu" = 9000;
+"edge" = true;
 
 prefix "interfaces/{ethernet1/1/3}";
 "description" = "one server";
