@@ -26,7 +26,7 @@
                 END;
                 sdata.enable = 1;
                 sdata.description = descr;
-                sdata.switchport = 0;
+                sdata.switchport = 1;
                 sdata.channelgroup = [poid, pair.value.lacp.mode];
                  -%]
 [%              INCLUDE 'metaconfig/dellnetworking/interface.tt' name=sname data=sdata -%]

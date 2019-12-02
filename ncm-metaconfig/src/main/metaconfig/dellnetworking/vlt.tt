@@ -2,6 +2,7 @@
     backup = "backup destination"
     delay = "delay-restore"
     mac = "vlt-mac"
+    priority = "primary-priority"
     } -%]
 [% FOREACH name IN vlt.discovery -%]
 [%      INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data={
