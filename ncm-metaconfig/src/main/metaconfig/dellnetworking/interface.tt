@@ -43,5 +43,8 @@ speed [% data.speed %]
 [%      IF data.exists("mtu") -%]
 mtu [% data.mtu %]
 [%      END -%]
+[%      IF data.exists("edge") -%]
+[% data.edge ? '' : 'no ' %]spanning-tree port type edge
+[%      END -%]
 [%  END -%]
 !

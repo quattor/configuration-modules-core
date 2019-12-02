@@ -1,0 +1,7 @@
+[% IF CCM.contents.exists('nameserver') -%]
+ip name-server [% CCM.contents.nameserver.join(' ') %]
+[%  END -%]
+hostname [% CCM.contents.hostname %]
+[% IF CCM.contents.exists('ntp') -%]
+ntp server [% CCM.contents.ntp %]
+[%  END -%]
