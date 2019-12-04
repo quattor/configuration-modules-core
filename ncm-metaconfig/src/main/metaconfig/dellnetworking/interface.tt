@@ -27,8 +27,14 @@ switchport mode access
 [%          IF data.lacp.exists("fallback") -%]
 lacp fallback enable
 [%          END -%]
+[%          IF data.lacp.exists("timeout") -%]
+lacp fallback timeout [% data.lacp.timeout %]
+[%          END -%]
 [%          IF data.lacp.exists("priority") -%]
 lacp port-priority [% data.lacp.priority %]
+[%          END -%]
+[%          IF data.lacp.exists("fast") -%]
+[% data.lacp.fast ? '' : 'no ' %]lacp rate fast
 [%          END -%]
 [%      END -%]
 [%      IF data.exists("vlt") -%]

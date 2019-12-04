@@ -34,6 +34,10 @@ type dellnetworking_lacp = {
     'mode' ? choice('active', 'passive')
     @{LACP fallback (eg to PXE hosts with LACP)}
     'fallback' ? boolean
+    @{LACP fallback timeout}
+    'timeout' ? long(0..120)
+    @{LACP fast rate}
+    'fast' ? boolean
     @{LACP priority (default 32k, higher number means lower priority}
     'priority' ? long(0..65535)
 };
