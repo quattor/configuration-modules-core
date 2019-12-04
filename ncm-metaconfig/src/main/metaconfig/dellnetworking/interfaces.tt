@@ -7,6 +7,10 @@
                  sdata.lacp.priority = data.lacp.priority;
                  data.lacp.delete('priority');
             END;
+            IF data.lacp.exists('fast');
+                 sdata.lacp.fast = data.lacp.fast;
+                 data.lacp.delete('fast');
+            END;
             IF data.exists('speed');
                  sdata.speed = data.speed;
                  data.delete('speed');
