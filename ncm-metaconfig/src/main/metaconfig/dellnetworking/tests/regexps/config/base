@@ -65,6 +65,7 @@ interface port-channel1
  switchport access vlan 10
  switchport trunk allowed vlan 11,20
  lacp fallback enable
+ lacp fallback timeout 5
  vlt-port-channel 1
  mtu 9000
  spanning-tree port type edge
@@ -73,6 +74,7 @@ interface ethernet1/1/1
  description "po1 leg one"
  no shutdown
  lacp port-priority 10000
+ no lacp rate fast
  channel-group 1 mode passive
  speed 25000
  mtu 9000

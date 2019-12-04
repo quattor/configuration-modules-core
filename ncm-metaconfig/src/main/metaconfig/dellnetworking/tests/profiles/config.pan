@@ -43,6 +43,8 @@ prefix "interfaces/{port-channel1}";
 "lacp/mode" = "passive";
 "lacp/fallback" = true;
 "lacp/priority" = 10000;
+"lacp/fast" = false;
+"lacp/timeout" = 5;
 "access" = 10;
 "vids" = list(11, 20);
 "speed" = 25000;
