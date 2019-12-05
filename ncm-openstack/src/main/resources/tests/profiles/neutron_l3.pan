@@ -11,3 +11,6 @@ prefix "/metaconfig/contents";
 "DEFAULT" = dict(
     "interface_driver", "linuxbridge",
 );
+"agent" = dict(
+    "extensions", list('port_forwarding'),
+);

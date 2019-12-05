@@ -417,6 +417,12 @@ type openstack_horizon_config_general = {
     'openstack_ssl_no_verify' ? boolean
     @{enable logging of all operations carried out by users of Horizon}
     'operation_log_enabled' ? boolean
+    @{The OpenStack Dashboard Site Title branding (i.e. "OpenStack Dashboard")
+    can be overwritten by adding the "SITE_BRANDING" attribute}
+    'site_branding' ? string
+    @{The logo also acts as a hyperlink. The default behavior is to redirect to horizon:user_home.
+    By adding the attribute "SITE_BRANDING_LINK" with the desired url target}
+    'site_branding_link' ? type_absoluteURI
 };
 
 @documentation{

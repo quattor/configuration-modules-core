@@ -8,7 +8,7 @@ multiline
 ^core_plugin\s{1}=\s{1}ml2$
 ^notify_nova_on_port_data_changes\s{1}=\s{1}true$
 ^notify_nova_on_port_status_changes\s{1}=\s{1}true$
-^service_plugins\s{1}=\s{1}router$
+^service_plugins\s{1}=\s{1}router,\s{1}port_forwarding$
 ^transport_url\s{1}=\s{1}rabbit://openstack:rabbit_pass@controller.mysite.com$
 
 ^\[database\]$

@@ -139,6 +139,7 @@ ok(command_history_ok([
         '/usr/bin/nova-manage api_db sync',
         '/usr/bin/nova-manage cell_v2 map_cell0',
         '/usr/bin/nova-manage cell_v2 create_cell --name=cell1 --verbose',
+        '/usr/bin/nova-manage cell_v2 discover_hosts --verbose',
         '/usr/bin/nova-manage db sync',
         'service openstack-nova-api restart',
         'service openstack-nova-consoleauth restart',

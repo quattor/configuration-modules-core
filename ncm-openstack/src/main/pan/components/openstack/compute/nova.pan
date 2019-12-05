@@ -147,6 +147,27 @@ type openstack_nova_libvirt = {
         speeding up guest installations, but you should switch to another caching
         mode in production environments}
     "disk_cachemodes" ? openstack_disk_cachemodes[]
+    @{URI scheme used for live migration.
+    Override the default libvirt live migration scheme (which is dependent on
+    virt_type). If this option is set to None, nova will automatically choose a
+    sensible default based on the hypervisor. It is not recommended that you
+    change this unless you are very sure that hypervisor supports a particular scheme}
+    'live_migration_scheme' ? choice('tcp', 'ssh')
+    @{This option allows nova to start live migration with auto converge on.
+    Auto converge throttles down CPU if a progress of on-going live migration
+    is slow. Auto converge will only be used if this flag is set to True and
+    post copy is not permitted or post copy is unavailable due to the version
+    of libvirt and QEMU in use.
+    Before enabling auto-convergence, make sure that the instances
+    application tolerates a slow-down.
+    Be aware that auto-convergence does not guarantee live migration success}
+    'live_migration_permit_auto_converge' ? boolean
+    @{Time to wait, in seconds, for migration to successfully complete transferring
+    data before aborting the operation.
+    Value is per GiB of guest RAM + disk to be transferred, with lower bound of
+    a minimum of 2 GiB. Should usually be larger than downtime delay * downtime
+    steps. Set to 0 to disable timeouts}
+    'live_migration_completion_timeout' ? long(0..)
 };
 
 @documentation{
@@ -223,6 +244,35 @@ type openstack_nova_DEFAULTS = {
     "block_device_allocate_retries_interval" ? long(0..) = 10
     @{Time in seconds to wait for a block device to be created}
     "block_device_creation_timeout" ? long(1..) = 10
+    @{This option helps you specify virtual CPU to physical CPU allocation ratio.
+    From Ocata (15.0.0) this is used to influence the hosts selected by
+    the Placement API. Note that when Placement is used, the CoreFilter
+    is redundant, because the Placement API will have already filtered
+    out hosts that would have failed the CoreFilter.
+    This configuration specifies ratio for CoreFilter which can be set
+    per compute node. For AggregateCoreFilter, it will fall back to this
+    configuration value if no per-aggregate setting is found.
+    NOTE: This can be set per-compute, or if set to 0.0, the value
+    set on the scheduler node(s) or compute node(s) will be used
+    and defaulted to 16.0.
+    NOTE: As of the 16.0.0 Pike release, this configuration option is ignored
+    for the ironic.IronicDriver compute driver and is hardcoded to 1.0}
+    "cpu_allocation_ratio" ? double(0..)
+    @{This option helps you specify virtual RAM to physical RAM
+    allocation ratio.
+    From Ocata (15.0.0) this is used to influence the hosts selected by
+    the Placement API. Note that when Placement is used, the RamFilter
+    is redundant, because the Placement API will have already filtered
+    out hosts that would have failed the RamFilter.
+    This configuration specifies ratio for RamFilter which can be set
+    per compute node. For AggregateRamFilter, it will fall back to this
+    configuration value if no per-aggregate setting found.
+    NOTE: This can be set per-compute, or if set to 0.0, the value
+    set on the scheduler node(s) or compute node(s) will be used and
+    defaulted to 1.5.
+    NOTE: As of the 16.0.0 Pike release, this configuration option is ignored
+    for the ironic.IronicDriver compute driver and is hardcoded to 1.0}
+    "ram_allocation_ratio" ? double(0..)
 };
 
 @documentation{

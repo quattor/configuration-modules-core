@@ -4,3 +4,6 @@ multiline
 ---
 ^\[DEFAULT\]$
 ^interface_driver\s{1}=\s{1}linuxbridge$
+
+^\[agent\]$
+^extensions\s{1}=\s{1}port_forwarding$

@@ -26,6 +26,10 @@ type openstack_share_backends = string with match(SELF, '^(lvm|generic|cephfsnat
 
 type openstack_share_protocols = string with match(SELF, '^(NFS|CIFS|CEPHFS|GLUSTERFS|HDFS|MAPRFS)$');
 
+type openstack_neutron_service_plugins = choice('router', 'port_forwarding')[];
+
+type openstack_neutron_agent_extensions = choice('port_forwarding')[];
+
 @documentation{
     OpenStack common domains section
 }
@@ -145,7 +149,7 @@ type openstack_DEFAULTS = {
     'core_plugin' ? string = 'ml2'
     @{From neutron.conf
     The service plugins Neutron will use}
-    'service_plugins' ? string[] = list('router')
+    'service_plugins' ? openstack_neutron_service_plugins = list('router')
     @{From neutron.conf
     Allow overlapping IP support in Neutron. Attention: the following parameter
     MUST be set to False if Neutron is being used in conjunction with Nova
