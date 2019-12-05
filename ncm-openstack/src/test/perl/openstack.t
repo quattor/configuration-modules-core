@@ -32,6 +32,7 @@ set_output('manila_db_version_missing');
 set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
 set_output('ceilometer_db_version_missing');
+set_output('cloudkitty_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -118,6 +119,11 @@ $fh = get_file("/etc/gnocchi/gnocchi.conf");
 isa_ok($fh, "CAF::FileWriter", "gnocchi.conf CAF::FileWriter instance");
 like("$fh", qr{^\[api\]$}m, "gnocchi.conf has expected content");
 
+# Verify Cloudkitty configuration files
+$fh = get_file("/etc/cloudkitty/cloudkitty.conf");
+isa_ok($fh, "CAF::FileWriter", "cloudkitty.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "cloudkitty.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -179,6 +185,11 @@ ok(command_history_ok([
         'service httpd restart',
         'service openstack-ceilometer-notification restart',
         'service openstack-ceilometer-central restart',
+        '/usr/bin/cloudkitty-storage-init',
+        '/bin/bash -c /usr/bin/cloudkitty-dbsync version --module cloudkitty',
+        '/bin/bash -c /usr/bin/cloudkitty-dbsync upgrade',
+        'service cloudkitty-processor restart',
+        'service httpd restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
@@ -199,19 +210,28 @@ ok(method_history_ok([
     'POST .*/projects/ .*"description":"main vo2 project","domain_id":"dom23456",.*"name":"vo2"',
     'POST .*/projects/ .*"description":"some real project".*"name":"realproject".*"parent_id":"pro124"',
     'GET .*/users/  ',
+    'POST .*/users/ .*"description":"quattor service metric flavour ceilometer user","domain_id":"dom112233","enabled":true,"name":"ceilometer","password":"ceilometer_good_password"',
+    'PUT .*/projects/10/tags/ID_user_use12ce',
     'POST .*/users/ .*"description":"quattor service volume flavour cinder user","domain_id":"dom112233","enabled":true,"name":"cinder","password":"cinder_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12c',
+    'POST .*/users/ .*"description":"quattor service rating flavour cloudkitty user","domain_id":"dom112233","enabled":true,"name":"cloudkitty","password":"cloudkitty_good_password"',
     'POST .*/users/ .*"description":"quattor service image flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12g',
+    'POST .*/users/ .*"description":"quattor service orchestration flavour heat user","domain_id":"dom112233","enabled":true,"name":"heat","password":"heat_good_password"',
     'POST .*/users/ .*"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"',
-    'PUT .*/projects/10/tags/ID_user_use12m',
+    'POST .*/users/ .*"description":"quattor service catalog flavour murano user","domain_id":"dom112233","enabled":true,"name":"murano","password":"murano_good_password"',
     'POST .*/users/ .*"description":"quattor service network flavour neutron user","domain_id":"dom112233","enabled":true,"name":"neutron","password":"neutron_good_password"',
+    'PUT .*/projects/10/tags/ID_user_use12m',
+    'POST .*/users/ .*"description":"quattor service compute flavour nova user","domain_id":"dom112233","enabled":true,"name":"nova","password":"nova_good_password"',
     'POST .*/users/ .*"description":"first user",.*"name":"user1","password":"abc"',
     'GET .*/groups/  ',
     'POST .*/groups/ .*"description":"first group","domain_id":"dom23456",.*"name":"grp1"',
+    'PUT .*/projects/10/tags/ID_group_use12',
     'GET .*/roles/  ',
     'POST .*/roles/ .*"enabled":true,"name":"rl1"',
+    'PUT .*/projects/10/tags/ID_role_rll11',
     'POST .*/roles/ .*"enabled":true,"name":"rl2"',
+    'PUT .*/projects/10/tags/ID_role_rll12',
     'PUT .*/domains/dom12345/users/use12/roles/rll11 \{\} ',
     'PUT .*/projects/10/tags/ROLE_ZG9tYWlucy9kb20xMjM0NS91c2Vycy91c2UxMi9yb2xlcy9ybGwxMQ \{\}',
     'PUT .*/projects/pro125/groups/use12/roles/rll12 \{\}',
@@ -220,29 +240,34 @@ ok(method_history_ok([
     'PUT .*/projects/pros/users/use12m/roles/rolaaddmm ',
     'PUT .*/projects/pros/users/use12no/roles/rolaaddmm ',
     'GET .*/services/  ',
-    'POST .*/services/ .*"description":"OS image one",.*"name":"glanceone","type":"image"',
+    'POST .*/services/ .*"description":"OS volumev2 service cinderv2",.*"name":"cinderv2","type":"volumev2"',
+    'POST .*/services/ .*"description":"OS volumev3 service cinderv3",.*"name":"cinderv3","type":"volumev3"',
+    'POST .*/services/ .*"description":"OS rating service cloudkitty",.*"name":"cloudkitty","type":"rating"',
     'POST .*/services/ .*"description":"OS compute service nova",.*"name":"nova","type":"compute"',
     'POST .*/services/ .*"description":"OS placement service placement",.*"name":"placement","type":"placement"',
     'GET .*/endpoints/  ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv111","url":"http://admin".*',
     'PUT .*/projects/10/tags/ID_endpoint_ept1 \{\}',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv114","url":"https://openstack:35357/v3".*',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv122","url":"https://openstack:8000/v1".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv116","url":"https://openstack:8004/v1/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv123","url":"https://openstack:8041/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv117","url":"https://openstack:8082/".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv118","url":"https://openstack:8776/v2/%\(project_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv118b","url":"https://openstack:8776/v3/%\(project_id\)s".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv113","url":"https://openstack:8778/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv120","url":"https://openstack:8786/v1/%\(tenant_id\)s".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv124","url":"https://openstack:8889/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv115","url":"https://openstack:9292/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv119","url":"https://openstack:9696/".* ',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal0".*',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal1".*',
-    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv112","url":"https://openstack:8774/v2.1/%\(tenant_id\)s".* ',
-    'POST .*/endpoints/ .*"interface":"internal","service_id":"serv113","url":"https://openstack:8778/".* ',
-    'POST .*/endpoints/ .*"interface":"public","region_id":"regionThree","service_id":"serv111","url":"http://public".*',
-    'POST .*/endpoints/ .*"interface":"public","service_id":"serv113","url":"https://openstack:8778/".* ',
-    'POST .*/endpoints/ .*"interface":"public","service_id":"serv112","url":"https://somehost:8774/v2.1/%\(tenant_id\)s".* ',
 ]), "REST API calls as expected");
 
 command_history_reset();
 set_output('keystone_db_version');
 ok($cmp->Configure($cfg), 'Configure returns success 2nd');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution 2nd");
-ok(command_history_ok(['manage db_version'],['dbsync', 'restart']),
-                      "No dbsync or service restart commands called on 2nd run");
-
 
 done_testing();

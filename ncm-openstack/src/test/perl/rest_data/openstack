@@ -46,6 +46,7 @@ dopost('usernova', 'user', '"description":"quattor service compute flavour nova 
 dopost('userheat', 'user', '"description":"quattor service orchestration flavour heat user","domain_id":"dom112233","enabled":true,"name":"heat","password":"heat_good_password"', 'use12he');
 dopost('usermurano', 'user', '"description":"quattor service catalog flavour murano user","domain_id":"dom112233","enabled":true,"name":"murano","password":"murano_good_password"', 'use12mu');
 dopost('userceilometer', 'user', '"description":"quattor service metric flavour ceilometer user","domain_id":"dom112233","enabled":true,"name":"ceilometer","password":"ceilometer_good_password"', 'use12ce');
+dopost('usercloudkitty', 'user', '"description":"quattor service rating flavour cloudkitty user","domain_id":"dom112233","enabled":true,"name":"cloudkitty","password":"cloudkitty_good_password"', 'use12ck');
 
 dopost('userone', 'user', '"description":"first user","enabled":true,"name":"user1","password":"abc"', 'use12');
 
@@ -68,6 +69,7 @@ dopost('servicemanila', 'service', '"description":"OS share service manila","ena
 dopost('servicemanilav2', 'service', '"description":"OS sharev2 service manilav2","enabled":true,"name":"manilav2","type":"sharev2"', 'serv121');
 dopost('serviceheatcfn', 'service', '"description":"OS cloudformation service heat-cfn","enabled":true,"name":"heat-cfn","type":"cloudformation"', 'serv122');
 dopost('servicegnocchi', 'service', '"description":"OS metric service gnocchi","enabled":true,"name":"gnocchi","type":"metric"', 'serv123');
+dopost('servicecloudkitty', 'service', '"description":"OS rating service cloudkitty","enabled":true,"name":"cloudkitty","type":"rating"', 'serv124');
 
 dopost('endpoint1', 'endpoint', '"interface":"admin","service_id":"serv111","url":"http://admin"', 'ept1');
 dopost('endpoint2', 'endpoint', '"interface":"internal","service_id":"serv111","url":"http://internal0"', 'ept2');
@@ -92,6 +94,7 @@ mkept('glance', 'serv115', 'https://openstack:9292/');
 mkept('heat', 'serv116', 'https://openstack:8004/v1/%\\(tenant_id\\)s');
 mkept('heat-cfn', 'serv122', 'https://openstack:8000/v1');
 mkept('gnocchi', 'serv123', 'https://openstack:8041/');
+mkept('cloudkitty', 'serv124', 'https://openstack:8889/');
 mkept('murano', 'serv117', 'https://openstack:8082/');
 mkept('cinderv2', 'serv118', 'https://openstack:8776/v2/%\\(project_id\\)s');
 mkept('cinderv3', 'serv118b', 'https://openstack:8776/v3/%\\(project_id\\)s');
