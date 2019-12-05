@@ -75,6 +75,9 @@ prefix "client/endpoint/glanceone";
 include 'components/openstack/identity/gather/image/glance';
 
 prefix "/software/components/openstack/image/glance/service";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+);
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );
@@ -88,11 +91,17 @@ prefix "/software/components/openstack/image/glance/service";
 "glance_store" = dict(
     "default_store", "file",
 );
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
+);
 
 
 # Glance/registry section
 
 prefix "/software/components/openstack/image/glance/registry";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+);
 "database" = dict(
     "connection", format("mysql+pymysql://glance:glance_db_pass@%s/glance", OPENSTACK_HOST_SERVER),
 );
@@ -102,6 +111,9 @@ prefix "/software/components/openstack/image/glance/registry";
     "username", "glance",
     "password", "glance_good_password",
     "memcached_servers", list('controller.mysite.com:11211'),
+);
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
 );
 
 
@@ -138,6 +150,9 @@ prefix "/software/components/openstack/network/neutron/service";
     "auth_url", format('http://%s:35357', OPENSTACK_HOST_SERVER),
     "username", "nova",
     "password", "nova_good_password",
+);
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
 );
 
 
@@ -212,6 +227,9 @@ prefix "/software/components/openstack/volume/cinder";
     "rbd_pool", "volumes",
     "rbd_user", "volumes",
     "rbd_secret_uuid", "a5d0dd94-57c4-ae55-ffe0-7e3732a24455",
+);
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
 );
 
 
@@ -308,6 +326,9 @@ prefix "/software/components/openstack/orchestration/heat";
 "clients_keystone" = dict(
     "auth_uri", AUTH_URI,
 );
+"oslo_messaging_notifications" = dict(
+    "driver", "messagingv2",
+);
 
 # Murano section
 
@@ -348,3 +369,35 @@ prefix "/software/components/openstack/openrc";
 # RabbitMQ section
 prefix "/software/components/openstack/messaging/rabbitmq";
 "password" = "rabbit_pass";
+
+# Ceilometer service section
+
+include 'components/openstack/identity/gather/metric/ceilometer';
+prefix "/software/components/openstack/metric/ceilometer/service";
+"DEFAULT" = dict(
+    "transport_url", format("rabbit://openstack:rabbit_pass@%s", OPENSTACK_HOST_SERVER),
+);
+"service_credentials" = dict(
+    "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
+    "username", "ceilometer",
+    "password", "ceilometer_good_password",
+    "interface", "internalURL",
+);
+
+# Ceilometer Gnocchi section
+
+prefix "/software/components/openstack/metric/ceilometer/gnocchi";
+"api" = dict();
+"keystone_authtoken" = dict(
+    "auth_url", format('http://%s:5000/v3', OPENSTACK_HOST_SERVER),
+    "username", "gnocchi",
+    "password", "gnocchi_good_password",
+    "interface", "internalURL",
+);
+"indexer" = dict(
+    "url", format("mysql+pymysql://gnocchi:gnocchi_db_pass@%s/gnocchi", OPENSTACK_HOST_SERVER),
+);
+"storage" = dict(
+    "file_basepath", "/var/lib/gnocchi",
+);
+

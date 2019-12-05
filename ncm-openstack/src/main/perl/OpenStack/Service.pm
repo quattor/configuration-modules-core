@@ -1,5 +1,6 @@
 #${PMpre} NCM::Component::OpenStack::Service${PMpost}
 
+
 use CAF::Object qw(SUCCESS);
 use CAF::Process 17.8.1;
 use CAF::Service;
@@ -197,6 +198,7 @@ sub _init_attrs
 
     # config filename
     $self->{filename} = "/etc/$self->{flavour}/$self->{flavour}.conf";
+    $self->{filewonergroup} = {};
 
     # default TT file
     $self->{tt} = "common";
@@ -329,13 +331,17 @@ Return hashref with filewriter options for C<service>
 
 sub _file_opts
 {
-    my ($self) = @_;
+    my ($self, $filename) = @_;
+
+    my $og = $self->{fileownergroup}->{$filename} || {};
+    my $owner = $og->{user} || $self->{user};
+    my $group = $og->{group} || $self->{user};
 
     my %opts = (
         mode => "0640",
         backup => ".quattor.backup",
-        owner => $self->{user},
-        group => $self->{user},
+        owner => $owner,
+        group => $group,
         log => $self,
         sensitive => $self->{sensitive} ? 1 : 0,
     );
@@ -355,7 +361,7 @@ sub _write_config_file
 
     my $tr = $self->_render($element) or return;
 
-    my $opts = $self->_file_opts();
+    my $opts = $self->_file_opts($filename);
 
     my $fh = $tr->filewriter($filename, %$opts);
     if (defined $fh) {
@@ -534,9 +540,12 @@ Must return 1 on success.
 sub populate_service_database
 {
     my ($self) = @_;
+
+    # execute pre_populate commands before everything else
+    $self->pre_populate_service_database();
     # db_version is slow when not initialised
     # (lots of retries before it gives up; can take up to 90s)
-    if ($self->_do([$self->{manage}, @{$self->{db_version}}], 'determine database version', test => 1)) {
+    if ($self->_do(['/bin/bash', '-c', join(' ', $self->{manage}, @{$self->{db_version}})], 'determine database version', test => 1)) {
         $self->verbose("Found existing db_version");
         return 1 if ($self->{flavour} eq "rabbitmq");
     } else {
@@ -544,8 +553,7 @@ sub populate_service_database
     };
 
     # Always populate/sync the databases
-    $self->pre_populate_service_database();
-    if ($self->_do([$self->{manage}, @{$self->{db_sync}}], 'populate database')) {
+    if ($self->_do(['/bin/bash', '-c', join(' ', $self->{manage}, @{$self->{db_sync}})], 'populate database')) {
         return $self->post_populate_service_database();
     } else {
         # Failure

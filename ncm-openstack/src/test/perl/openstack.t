@@ -31,6 +31,7 @@ set_output('cinder_db_version_missing');
 set_output('manila_db_version_missing');
 set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
+set_output('ceilometer_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -108,60 +109,76 @@ $fh = get_file("/etc/murano/murano.conf");
 isa_ok($fh, "CAF::FileWriter", "murano.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "murano.conf has expected content");
 
+# Verify Ceilometer configuration files
+$fh = get_file("/etc/ceilometer/ceilometer.conf");
+isa_ok($fh, "CAF::FileWriter", "ceilometer.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "ceilometer.conf has expected content");
+
+$fh = get_file("/etc/gnocchi/gnocchi.conf");
+isa_ok($fh, "CAF::FileWriter", "gnocchi.conf CAF::FileWriter instance");
+like("$fh", qr{^\[api\]$}m, "gnocchi.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
         'service httpd restart',
-        '/usr/sbin/rabbitmqctl list_user_permissions openstack',
-        '/usr/sbin/rabbitmqctl add_user openstack rabbit_pass',
+        '/bin/bash -c /usr/sbin/rabbitmqctl list_user_permissions openstack',
+        '/bin/bash -c /usr/sbin/rabbitmqctl add_user openstack rabbit_pass',
         '/usr/sbin/rabbitmqctl set_permissions openstack .* .* .*',
-        '/usr/bin/keystone-manage db_version',
-        '/usr/bin/keystone-manage db_sync',
+        '/bin/bash -c /usr/bin/keystone-manage db_version',
+        '/bin/bash -c /usr/bin/keystone-manage db_sync',
         '/usr/bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone',
         '/usr/bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone',
         '/usr/bin/keystone-manage bootstrap --bootstrap-password admingoodpass',
         'service httpd restart',
-        '/usr/bin/glance-manage db_version',
-        '/usr/bin/glance-manage db_sync',
+        '/bin/bash -c /usr/bin/glance-manage db_version',
+        '/bin/bash -c /usr/bin/glance-manage db_sync',
         'service openstack-glance-registry restart',
         'service openstack-glance-api restart',
-        '/usr/bin/cinder-manage db version',
-        '/usr/bin/cinder-manage db sync',
+        '/bin/bash -c /usr/bin/cinder-manage db version',
+        '/bin/bash -c /usr/bin/cinder-manage db sync',
         'service openstack-cinder-api restart',
         'service openstack-cinder-scheduler restart',
         'service openstack-cinder-volume restart',
-        '/usr/bin/manila-manage db version',
-        '/usr/bin/manila-manage db sync',
+        '/bin/bash -c /usr/bin/manila-manage db version',
+        '/bin/bash -c /usr/bin/manila-manage db sync',
         'service openstack-manila-api restart',
         'service openstack-manila-scheduler restart',
         'service openstack-manila-share restart',
-        '/usr/bin/nova-manage db version',
         '/usr/bin/nova-manage api_db sync',
         '/usr/bin/nova-manage cell_v2 map_cell0',
         '/usr/bin/nova-manage cell_v2 create_cell --name=cell1 --verbose',
         '/usr/bin/nova-manage cell_v2 discover_hosts --verbose',
-        '/usr/bin/nova-manage db sync',
+        '/bin/bash -c /usr/bin/nova-manage db version',
+        '/bin/bash -c /usr/bin/nova-manage db sync',
         'service openstack-nova-api restart',
         'service openstack-nova-consoleauth restart',
         'service openstack-nova-scheduler restart',
         'service openstack-nova-conductor restart',
         'service openstack-nova-novncproxy restart',
-        '/usr/bin/neutron-db-manage current',
-        '/usr/bin/neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head',
+        '/bin/bash -c /usr/bin/neutron-db-manage current',
+        '/bin/bash -c /usr/bin/neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head',
         'service neutron-dhcp-agent restart',
         'service neutron-l3-agent restart',
         'service neutron-linuxbridge-agent restart',
         'service neutron-metadata-agent restart',
         'service neutron-server restart',
-        '/usr/bin/heat-manage db_version',
-        '/usr/bin/heat-manage db_sync',
+        '/bin/bash -c /usr/bin/heat-manage db_version',
+        '/bin/bash -c /usr/bin/heat-manage db_sync',
         'service openstack-heat-api restart',
         'service openstack-heat-api-cfn restart',
         'service openstack-heat-engine restart',
-        '/usr/bin/murano-db-manage version',
-        '/usr/bin/murano-db-manage upgrade',
+        '/bin/bash -c /usr/bin/murano-db-manage version',
+        '/bin/bash -c /usr/bin/murano-db-manage upgrade',
         'service murano-api restart',
         'service murano-engine restart',
+        '/usr/bin/gnocchi-upgrade',
+        '/bin/bash -c /usr/bin/ceilometer-upgrade --version',
+        '/bin/bash -c /usr/bin/ceilometer-upgrade --debug',
+        'service openstack-gnocchi-metricd restart',
+        'service httpd restart',
+        'service openstack-ceilometer-notification restart',
+        'service openstack-ceilometer-central restart',
         'service httpd restart',
                       ]), "server expected commands run");
 

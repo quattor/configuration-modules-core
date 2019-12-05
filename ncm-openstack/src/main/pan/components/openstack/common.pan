@@ -30,6 +30,8 @@ type openstack_neutron_service_plugins = choice('router', 'port_forwarding')[];
 
 type openstack_neutron_agent_extensions = choice('port_forwarding')[];
 
+type openstack_keystone_endpoint_type = choice('internalURL', 'publicURL');
+
 @documentation{
     OpenStack common domains section
 }
@@ -49,6 +51,9 @@ type openstack_domains_common = {
     'username' : string
     @{OpenStack service user password}
     'password' : string
+    @{Type of endpoint in Identity service catalog to use for communication with
+    OpenStack services}
+    'interface' ? openstack_keystone_endpoint_type = 'internalURL'
 };
 
 @documentation{
@@ -75,6 +80,14 @@ type openstack_oslo_concurrency = {
     to environment variable OSLO_LOCK_PATH. If external locks are used, a lock
     path must be set}
     'lock_path' : absolute_file_path
+};
+
+@documentation{
+    The configuration options in 'oslo_messaging_notifications' Section.
+}
+type openstack_oslo_messaging_notifications = {
+    @{The drivers to handle sending notifications}
+    'driver' : choice('messaging', 'messagingv2', 'routing', 'log', 'test', 'noop') = 'messagingv2'
 };
 
 @documentation{

@@ -38,6 +38,14 @@ ncm-openstack provides support for OpenStack configuration for:
 
 =back
 
+=head2 Volume
+
+=over
+
+=item * Cinder
+
+=back
+
 =head2 Network
 
 =over
@@ -59,6 +67,30 @@ ncm-openstack provides support for OpenStack configuration for:
 =over
 
 =item * Horizon
+
+=back
+
+=head2 Metric
+
+=over
+
+=item * Ceilometer
+
+=back
+
+=head2 Orchestration
+
+=over
+
+=item * Heat
+
+=back
+
+=head2 Share
+
+=over
+
+=item * Manila
 
 =back
 
@@ -127,6 +159,7 @@ sub Configure
         'network',
         'orchestration',
         'catalog',
+        'metric',
         'dashboard',
     ];
 

@@ -58,13 +58,14 @@ function openstack_merge = {
   Returns undef if nothing is found.}
 function openstack_identity_gather_find_authtoken = {
     data = ARGV[0];
+    name = ARGV[1];
 
     foreach (k; v; data) {
         res = undef;
-        if (k == 'keystone_authtoken') {
+        if (k == name) {
             res = v;
         } else if (is_dict(v)) {
-            res = openstack_identity_gather_find_authtoken(v);
+            res = openstack_identity_gather_find_authtoken(v, name);
         };
         if (is_defined(res)) {
             return(res);
@@ -135,7 +136,8 @@ function openstack_identity_gather_service = {
     # user/passwd data
     #   get user/password from a keystone_authtoken section
     #   section can be nested
-    authtoken = openstack_identity_gather_find_authtoken(srv);
+    auth_key = if (service == 'metric' && flavour == 'ceilometer') 'service_credentials' else 'keystone_authtoken';
+    authtoken = openstack_identity_gather_find_authtoken(srv, auth_key);
     if (is_defined(authtoken)) {
         if (!exists(authtoken['username']) || !exists(authtoken['password'])) {
             error("%s: authtoken section has no user and/or password %s %s", FUNCTION, descr, msg);
@@ -216,7 +218,7 @@ function openstack_identity_gather = {
 
     os_component = '/software/components/openstack';
     os_services = list('identity', 'network', 'compute', 'image',
-                        'volume', 'share', 'catalog', 'orchestration');
+                        'volume', 'share', 'catalog', 'orchestration', 'metric');
 
     hosts = list(list(OBJECT, ''));
     if (ARGC > 1) {

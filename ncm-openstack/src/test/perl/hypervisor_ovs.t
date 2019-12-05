@@ -40,6 +40,11 @@ $fh = get_file("/etc/neutron/plugins/ml2/openvswitch_agent.ini");
 isa_ok($fh, "CAF::FileWriter", "openvswitch_agent.ini hypervisor CAF::FileWriter instance");
 like("$fh", qr{^\[agent\]$}m, "openvswitch_agent.ini hypervisor has expected content");
 
+# Verify Ceilometer configuration file
+$fh = get_file("/etc/ceilometer/ceilometer.conf");
+isa_ok($fh, "CAF::FileWriter", "ceilometer.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "ceilometer.conf has expected content");
+
 diag "all hypervisor history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -49,6 +54,8 @@ ok(command_history_ok([
         '/usr/bin/virsh secret-set-value --secret 5b67401f-dc5e-496a-8456-9a5dc40e7d3c --base64 abc',
         'service openstack-nova-compute restart',
         'service neutron-openvswitch-agent restart',
+        'service openstack-ceilometer-compute restart',
+        'service openstack-ceilometer-ipmi restart',
     ]), "expected hypervisor ovs commands run");
 
 command_history_reset();
