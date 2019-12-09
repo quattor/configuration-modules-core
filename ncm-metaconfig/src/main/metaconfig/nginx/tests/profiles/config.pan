@@ -11,7 +11,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     s = dict();
     s["name"] = list(FULL_HOSTNAME);
 
-    s["listen"]["addr"] = format("%s:8443", FULL_HOSTNAME);
+    s["listen"][0]["addr"] = format("%s:8443", FULL_HOSTNAME);
 
     s["location"][0]["name"] = '^/\d+/.*repodata';
     s["location"][0]["operator"] = "~";
@@ -28,7 +28,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
         "pass", "https://restricted-packages");
 
 
-    s["listen"]["ssl"] = true;
+    s["listen"][0]["ssl"] = true;
     s["ssl"] = create("basic_ssl", "options", null);
     s["ssl"]["verify_client"] = "none";
 
@@ -39,7 +39,8 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     SELF;
 };
 
-"server/1/listen/addr" = format("%s:443", FULL_HOSTNAME);
+"server/1/listen/0/addr" = format("%s:443", FULL_HOSTNAME);
+"server/1/listen/1/addr" = format("%s:1443", FULL_HOSTNAME);
 
 "upstream/restricted-packages/host/0" = format("%s:443", SERVER);
 
@@ -64,7 +65,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
 
 # 80 -> 443 redirect
 "server/2" = dict(
-    "listen", dict("addr", "80", "default", true),
+    "listen", list(dict("addr", "80", "default", true)),
     "name", list("_"),
     "return", dict("code", 301, "url", "https://$host$request_uri"),
 );

@@ -167,7 +167,7 @@ type nginx_server_name = string with {SELF == '_' || is_hostname(SELF)};
 }
 type nginx_server = {
     "includes" ? string[]
-    "listen" : nginx_listen
+    "listen" : nginx_listen[]
     "name" : nginx_server_name[]
     "location" ? nginx_location[]
     "error_page" : nginx_error_page[] = list()
