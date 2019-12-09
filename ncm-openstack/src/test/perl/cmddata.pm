@@ -106,4 +106,16 @@ $cmds{cloudkitty_db_version}{out} = 1;
 $cmds{cloudkitty_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/cloudkitty-dbsync version --module cloudkitty";
 $cmds{cloudkitty_db_version_missing}{ec} = 1;
 
+$cmds{magnum_db_version}{cmd} = "/bin/bash -c /usr/bin/magnum-db-manage version";
+$cmds{magnum_db_version}{out} = 1;
+
+$cmds{magnum_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/magnum-db-manage version";
+$cmds{magnum_db_version_missing}{ec} = 1;
+
+$cmds{barbican_db_version}{cmd} = "/bin/bash -c /usr/bin/barbican-manage db version";
+$cmds{barbican_db_version}{out} = 1;
+
+$cmds{barbican_db_version_missing}{cmd} = "/bin/bash -c /usr/bin/barbican-manage db version";
+$cmds{barbican_db_version_missing}{ec} = 1;
+
 1;

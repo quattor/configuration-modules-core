@@ -33,6 +33,8 @@ set_output('heat_db_version_missing');
 set_output('murano_db_version_missing');
 set_output('ceilometer_db_version_missing');
 set_output('cloudkitty_db_version_missing');
+set_output('magnum_db_version_missing');
+set_output('barbican_db_version_missing');
 
 ok($cmp->Configure($cfg), 'Configure returns success');
 ok(!exists($cmp->{ERROR}), "No errors found in normal execution");
@@ -124,6 +126,16 @@ $fh = get_file("/etc/cloudkitty/cloudkitty.conf");
 isa_ok($fh, "CAF::FileWriter", "cloudkitty.conf CAF::FileWriter instance");
 like("$fh", qr{^\[DEFAULT\]$}m, "cloudkitty.conf has expected content");
 
+# Verify Magnum configuration files
+$fh = get_file("/etc/magnum/magnum.conf");
+isa_ok($fh, "CAF::FileWriter", "magnum.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "magnum.conf has expected content");
+
+# Verify Barbican configuration files
+$fh = get_file("/etc/barbican/barbican.conf");
+isa_ok($fh, "CAF::FileWriter", "barbican.conf CAF::FileWriter instance");
+like("$fh", qr{^\[DEFAULT\]$}m, "barbican.conf has expected content");
+
 diag "all servers history commands ", explain \@Test::Quattor::command_history;
 
 ok(command_history_ok([
@@ -190,6 +202,13 @@ ok(command_history_ok([
         '/bin/bash -c /usr/bin/cloudkitty-dbsync upgrade',
         'service cloudkitty-processor restart',
         'service httpd restart',
+        '/bin/bash -c /usr/bin/magnum-db-manage version',
+        '/bin/bash -c /usr/bin/magnum-db-manage upgrade',
+        'service openstack-magnum-api restart',
+        'service openstack-magnum-conductor restart',
+        '/bin/bash -c /usr/bin/barbican-manage db version',
+        '/bin/bash -c /usr/bin/barbican-manage db upgrade',
+        'service httpd restart',
         'service httpd restart',
                       ]), "server expected commands run");
 
@@ -210,6 +229,8 @@ ok(method_history_ok([
     'POST .*/projects/ .*"description":"main vo2 project","domain_id":"dom23456",.*"name":"vo2"',
     'POST .*/projects/ .*"description":"some real project".*"name":"realproject".*"parent_id":"pro124"',
     'GET .*/users/  ',
+
+    'POST .*/users/ .*"description":"quattor service key-manager flavour barbican user","domain_id":"dom112233","enabled":true,"name":"barbican","password":"barbican_good_password"',
     'POST .*/users/ .*"description":"quattor service metric flavour ceilometer user","domain_id":"dom112233","enabled":true,"name":"ceilometer","password":"ceilometer_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12ce',
     'POST .*/users/ .*"description":"quattor service volume flavour cinder user","domain_id":"dom112233","enabled":true,"name":"cinder","password":"cinder_good_password"',
@@ -218,6 +239,7 @@ ok(method_history_ok([
     'POST .*/users/ .*"description":"quattor service image flavour glance user","domain_id":"dom112233","enabled":true,"name":"glance","password":"glance_good_password"',
     'PUT .*/projects/10/tags/ID_user_use12g',
     'POST .*/users/ .*"description":"quattor service orchestration flavour heat user","domain_id":"dom112233","enabled":true,"name":"heat","password":"heat_good_password"',
+    'POST .*/users/ .*"description":"quattor service container-infra flavour magnum user","domain_id":"dom112233","enabled":true,"name":"magnum","password":"magnum_good_password"',
     'POST .*/users/ .*"description":"quattor service share flavour manila user","domain_id":"dom112233","enabled":true,"name":"manila","password":"manila_good_password"',
     'POST .*/users/ .*"description":"quattor service catalog flavour murano user","domain_id":"dom112233","enabled":true,"name":"murano","password":"murano_good_password"',
     'POST .*/users/ .*"description":"quattor service network flavour neutron user","domain_id":"dom112233","enabled":true,"name":"neutron","password":"neutron_good_password"',
@@ -260,6 +282,8 @@ ok(method_history_ok([
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv120","url":"https://openstack:8786/v1/%\(tenant_id\)s".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv124","url":"https://openstack:8889/".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv115","url":"https://openstack:9292/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv126","url":"https://openstack:9311/".* ',
+    'POST .*/endpoints/ .*"interface":"admin","service_id":"serv125","url":"https://openstack:9511/v1".* ',
     'POST .*/endpoints/ .*"interface":"admin","service_id":"serv119","url":"https://openstack:9696/".* ',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal0".*',
     'POST .*/endpoints/ .*"interface":"internal","service_id":"serv111","url":"http://internal1".*',
