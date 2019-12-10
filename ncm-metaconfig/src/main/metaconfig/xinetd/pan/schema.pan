@@ -1,12 +1,16 @@
 declaration template metaconfig/xinetd/schema;
 
-type xinetd_options_type = string with match(SELF, "^(RPC|INTERNAL|TCPMUX|TCPMUXPLUS|UNLISTED)$");
+type xinetd_options_type = choice("RPC", "INTERNAL", "TCPMUX", "TCPMUXPLUS", "UNLISTED");
 
-type xinetd_options_flags = string with match(
-    SELF, "^(INTERCEPT|NORETRY|IDONLY|NAMEINARGS|NODELAY|KEEPALIVE|NOLIBWRAP|SENSOR|IPv4|IPv6|LABELED|REUSE)$"
-);
+type xinetd_options_flags = choice("INTERCEPT", "NORETRY", "IDONLY",
+    "NAMEINARGS", "NODELAY", "KEEPALIVE", "NOLIBWRAP", "SENSOR", "IPv4", "IPv6",
+    "LABELED", "REUSE");
 
 type xinetd_options_ips = string; # TODO, write proper check for all possible combinations
+
+type xinetd_options_log_on_success = choice("PID", "HOST", "USERID", "EXIT", "DURATION", "TRAFFIC");
+
+type xinetd_options_log_on_failure = choice("HOST", "USERID", "ATTEMPT");
 
 type xinetd_options = {
     "disable" : boolean = false
@@ -20,14 +24,16 @@ type xinetd_options = {
     "cps" ? long[]
     "port" ? long(0..)
 
-    "socket_type" : string with match(SELF, '^(stream|dgram|raw|seqpacket)$')
+    "socket_type" : choice("stream", "dgram", "raw", "seqpacket")
     "user" : string = 'root'
     "server" ? string
-    "protocol" ? string with match(SELF, '^(udp|tcp)$') # actually, anything in /etc/protocols
+    "protocol" ? choice("udp", "tcp") # actually, anything in /etc/protocols
     "server_args" ? string
     "group" ? string
     "instances" ? string with match(SELF, '^(UNLIMITED|\d+)$')
     "per_source" ? long
+    "log_on_success" ? xinetd_options_log_on_success[]
+    "log_on_failure" ? xinetd_options_log_on_failure[]
 };
 
 type xinetd_conf = {

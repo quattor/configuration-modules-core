@@ -1,5 +1,5 @@
 [%- booleans = ["disable", "wait"] -%]
-[%- lists = ["type", "flags", "only_from", "cps"] -%]
+[%- lists = ["type", "flags", "only_from", "cps", "log_on_success", "log_on_failure"] -%]
 service [% servicename %]
 {
 [% FILTER indent -%]
