@@ -1,7 +1,7 @@
 Values test for zookeeper main server config
 ---
 multiline
-metaconfigservice=/etc/zookeeper/conf/zoo.cfg
+metaconfigservice=/etc/zookeeper/zoo.cfg
 ---
 ^clientPort=2181$
 ^dataDir=/var/lib/zookeeper$

@@ -2,9 +2,9 @@ unique template metaconfig/zookeeper/config;
 
 include 'metaconfig/zookeeper/schema';
 
-bind "/software/components/metaconfig/services/{/etc/zookeeper/conf/zoo.cfg}/contents" = zookeeper_server_config;
+bind "/software/components/metaconfig/services/{/etc/zookeeper/zoo.cfg}/contents" = zookeeper_server_config;
 
-prefix "/software/components/metaconfig/services/{/etc/zookeeper/conf/zoo.cfg}";
-"daemons/zookeeper-server" = "restart";
+prefix "/software/components/metaconfig/services/{/etc/zookeeper/zoo.cfg}";
+"daemons/zookeeper" = "restart";
 "module" = "zookeeper/server";
 "mode" = 0644;
