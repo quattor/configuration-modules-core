@@ -6,7 +6,7 @@ include 'metaconfig/slurm/acct_gather';
 
 
 
-prefix "/software/components/metaconfig/services/{/etc/slurm/acct_gather.conf}/contents/";
+prefix "/software/components/metaconfig/services/{/etc/slurm/acct_gather.conf}/contents";
 
 "ProfileHDF5Dir" = "/some/shared/storage/path/mycluster";
 "ProfileHDF5Default" = "All";

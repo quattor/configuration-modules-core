@@ -119,10 +119,10 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 
 "PriorityFlags" = list("FAIR_TREE");
 "PriorityType" = "multifactor";
-"PriorityDecayHalfLife" = 7*24*60;
+"PriorityDecayHalfLife" = 7 * 24 * 60;
 "PriorityCalcPeriod" = 5;
 "PriorityFavorSmall" = false;
-"PriorityMaxAge" = 28*24*60;
+"PriorityMaxAge" = 28 * 24 * 60;
 #PriorityUsageResetPeriod=
 "PriorityWeightAge" = 5000;
 "PriorityWeightFairshare" = 7000;
@@ -233,12 +233,12 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "PartitionName" = "abc";
 "Nodes" = list('ALL');
 "Default" = true;
-"MaxTime" = 3*24*60;
+"MaxTime" = 3 * 24 * 60;
 "State" = "UP";
 "DisableRootJobs" = true;
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/partitions/thepartition-debug";
-"Nodes" = list('node2801','node2802');
-"MaxTime" = 3*24*60;
+"Nodes" = list('node2801', 'node2802');
+"MaxTime" = 3 * 24 * 60;
 "State" = "DOWN";
 "DisableRootJobs" = false;
