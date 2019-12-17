@@ -4,7 +4,7 @@ object template config_0.9;
 "/hardware/cpu" = list(dict("cores", 4), dict("cores", 4));
 
 variable METACONFIG_ELASTICSEARCH_VERSION = '0.9';
-include 'metaconfig/elasticsearch/config';
+include 'metaconfig/elasticsearch/config_0.9';
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents/threadpool";
 "bulk/size" = length(value("/hardware/cpu"));

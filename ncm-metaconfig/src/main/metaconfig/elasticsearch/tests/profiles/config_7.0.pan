@@ -1,16 +1,12 @@
-object template config_5.0;
+object template config_7.0;
 
 # 2 4-core cpus
 "/hardware/cpu" = list(dict("cores", 4), dict("cores", 4));
 
-# 5.0 is default
-include 'metaconfig/elasticsearch/config_5.0';
+# 7.0 is default
+include 'metaconfig/elasticsearch/config';
 
 prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsearch.yml}/contents/thread_pool";
-"bulk/size" = length(value("/hardware/cpu"));
-"bulk/queue_size" = 500;
-"search/size" = length(value("/hardware/cpu"));
-"search/queue_size" = 500;
 "index/size" = length(value("/hardware/cpu")) * value("/hardware/cpu/0/cores");
 "index/queue_size" = 1000;
 "listener/core" = 2;
@@ -25,3 +21,6 @@ prefix "/software/components/metaconfig/services/{/etc/elasticsearch/elasticsear
 "network/host" = "myhost.mydomain";
 "node/name" = "myname";
 "discovery/zen/ping/unicast/hosts" = list('master1:1234', 'master2:5678');
+"path/data" = "/somewhere/elsewhere";
+"path/logs" = "/somewhere/elsewhere/logs";
+

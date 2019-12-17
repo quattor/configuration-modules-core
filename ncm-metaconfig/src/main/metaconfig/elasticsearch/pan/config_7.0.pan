@@ -1,4 +1,4 @@
-unique template metaconfig/elasticsearch/config;
+unique template metaconfig/elasticsearch/config_7.0;
 
 variable METACONFIG_ELASTICSEARCH_VERSION ?= '7.0';
 include 'metaconfig/elasticsearch/schema';
