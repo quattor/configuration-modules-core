@@ -32,6 +32,7 @@ use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{N
 use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --quiet --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
 use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock";
 use constant SPMAPROXY           => "/software/components/spma/proxy";
+use constant PROTECT_FILE        => "/etc/dnf/protected.d/dnf.conf";
 
 our $NoActionSupported = 1;
 
@@ -524,13 +525,16 @@ sub Configure
         # Remove all protected packages (especially systemd).
         my @files = glob "/etc/dnf/protected.d/*";
         foreach my $file (@files) {
+            # Avoid delete/create of the same file
+            next if $file eq PROTECT_FILE;
+
             if (!defined($self->cleanup($file))) {
                 $self->error("Unable to remove file $file: $!");
                 return 0;
             }
         }
         # Keep only DNF among protected packages.
-        my $fh = CAF::FileWriter->new("/etc/dnf/protected.d/dnf.conf", log => $self);
+        my $fh = CAF::FileWriter->new(PROTECT_FILE, log => $self);
         print $fh "dnf\n";
         $fh->close();
 
