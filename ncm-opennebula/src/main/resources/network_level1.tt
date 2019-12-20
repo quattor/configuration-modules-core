@@ -19,3 +19,6 @@ IP = "[% interfaces.${interface}.ip %]",
 [%     IF !ignoremac  -%]
 MAC = "[% hardware.cards.nic.${data.key}.hwaddr %]",
 [%     END -%]
+[%     IF system.opennebula.virtio_queues -%]
+VIRTIO_QUEUES = "[% system.opennebula.virtio_queues %]",
+[%     END -%]
