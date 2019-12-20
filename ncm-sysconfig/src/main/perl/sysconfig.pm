@@ -20,7 +20,6 @@ our $NoActionSupported = 1;
 
 use Readonly;
 
-Readonly my $QUOTE => "\"";
 Readonly my $SYSCONFIGDIR => "/etc/sysconfig"; # The base directory for sysconfig files.
 
 sub filelist_read
@@ -87,7 +86,21 @@ sub Configure
             # Loop over the pairs adding the information to the file.
             for my $key (sort keys %$pairs) {
                 if ($key ne 'prologue' && $key ne 'epilogue') {
-                    $contents .= "$key=$pairs->{$key}\n";
+                    my $value = $pairs->{$key};
+                    # Remove any leading or trailing whitespace from the value
+                    $value =~ s/^\s+|\s+$//g;
+                    # Quote values containing whitespace.
+                    # Only if they have not already been quoted and do not look like an array.
+                    # If a value contains quotes, use a different quotation mark.
+                    # Values without whitespace should not be modified.
+                    if ($value !~ m/^".*"$/ && $value !~ m/^'.*'$/ && $value !~ m/^\(.*\)$/ && $value =~ m/\s/) {
+                        if ($value =~ m/"/) {
+                            $value = "'$value'";
+                        } else {
+                            $value = "\"$value\"";
+                        }
+                    }
+                    $contents .= "$key=$value\n";
                 }
             }
 
