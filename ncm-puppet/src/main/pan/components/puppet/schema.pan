@@ -30,6 +30,11 @@ type puppet_hieraconf_yaml = extensible {
 
 type puppet_hieraconf = extensible {};
 
+@documentation{
+An extensible dictionary holding data to be written to a YAML file for use with Heira.
+Note that due to a limitation of YAML::XS strings are not quoted. If you need to pass strings containing special
+characters e.g. commas you can either quote the string twice or escape the characters with a backslash.
+}
 type puppet_hieradata = extensible {};
 
 type puppet_component = {
