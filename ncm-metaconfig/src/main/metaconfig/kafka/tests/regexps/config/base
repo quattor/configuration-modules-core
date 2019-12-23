@@ -1,0 +1,11 @@
+Base test for config
+---
+/etc/elasticsearch/elasticsearch.yml
+---
+^advertised.listeners=INTERNAL://kafka.cluster.log:9092,EXTERNAL://kafka.cluster.os:9093,EXTERNAL_LOG://kafka.cluster.log:9094$
+^broker.id=21$
+^inter.broker.listener.name=INTERNAL$
+^listener.security.protocol.map=EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL_LOG:PLAINTEXT$
+^listeners=INTERNAL://kafka.cluster.log:9092,EXTERNAL://kafka.cluster.os:9093,EXTERNAL_LOG://kafka.cluster.log:9094$
+^log.dirs=/var/lib/kafka$
+^zookeeper.connect=zk1.cluster.log,zk2.cluster.log$
