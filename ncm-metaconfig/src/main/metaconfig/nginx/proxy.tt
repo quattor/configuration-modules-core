@@ -18,3 +18,9 @@ proxy_http_version [% px.http_version %];
 [%- IF px.exists("read_timeout") %]
 proxy_read_timeout [% px.read_timeout %];
 [%- END -%]
+[%- IF px.exists("ssl_certificate") %]
+proxy_ssl_certificate [% px.ssl_certificate %];
+[%- END -%]
+[%- IF px.exists("ssl_certificate_key") %]
+proxy_ssl_certificate_key [% px.ssl_certificate_key %];
+[%- END -%]

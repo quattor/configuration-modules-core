@@ -1,9 +1,13 @@
 listen [% srv.listen.addr %][% " default" IF srv.listen.default -%]
- [% "ssl" IF srv.listen.ssl %];
+ [% "ssl" IF srv.listen.ssl -%]
+ [% "http2" IF srv.listen.http2 %];
 [% FOREACH i IN srv.includes %]
 include [% i %];
 [% END -%]
 server_name [% srv.name.join(" ") %];
+[% FOREACH header IN srv.add_header %]
+add_header [% header %];
+[% END %]
 [% FOREACH e IN srv.error_page -%]
 error_page [% e.error_codes.join(" ") %] [% e.file %];
 [% END -%]
