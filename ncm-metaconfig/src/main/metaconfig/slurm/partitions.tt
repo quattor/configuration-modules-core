@@ -1,0 +1,6 @@
+[%- # PartitionName is attribute or key
+    name = value.exists('PartitionName') ? value.PartitionName : key;
+    value.delete('PartitionName');
+        -%]
+PartitionName=[% name %] [% -%]
+[%- INCLUDE 'metaconfig/slurm/params.tt' data=value boolvalue=1 join=' ' -%]

@@ -1,0 +1,15 @@
+[%-
+    params = [];
+    FOREACH param IN data.pairs;
+        IF CCM.is_list(param.value);
+            FOREACH mnt IN param.value;
+                params.push(param.key _ '=' _ mnt);
+            END;
+        ELSIF param.value.is_boolean AND param.value;
+            params.push(param.key);
+        ELSE;
+            params.push(param.key _ '=' _ param.value);
+        END;
+    END;
+-%]
+[%- params.join(join ? join : ',') -%]

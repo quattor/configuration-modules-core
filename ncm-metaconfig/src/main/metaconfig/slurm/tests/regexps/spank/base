@@ -1,0 +1,12 @@
+Config file for plugstack
+---
+/etc/slurm/plugstack.conf
+quote
+---
+
+required /some/path
+optional /some/other/path hello=world woohoo
+required /huppel/happel/private-tmpdir.so base=/dev/shm/thesecond mount=/dev/shm base=/tmp/thelast mount=/tmp base=/var/tmp/thefirst mount=/var/tmp
+
+include /some/incl
+include /some/other/incl

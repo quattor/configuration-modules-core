@@ -1,0 +1,14 @@
+[%-
+    params = [];
+    FOREACH param IN data.pairs;
+        params.push("base=" _ CCM.unescape(param.key));
+        IF CCM.is_list(param.value);
+            FOREACH mnt IN param.value;
+                params.push("mount=" _ mnt);
+            END;
+        ELSE;
+            params.push("mount=" _ param.value);
+        END;
+    END;
+-%]
+[%- params.join(join ? join : ',') -%]

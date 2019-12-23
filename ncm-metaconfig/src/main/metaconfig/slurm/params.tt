@@ -1,0 +1,43 @@
+[%-
+    params = [];
+    FOREACH param IN data.pairs;
+        IF param.key == 'Gres';
+            allgres = [];
+            FOREACH gre IN param.value;
+                gres = [gre.name];
+                IF gre.defined('type');
+                    gres.push(gre.type);
+                END;
+                IF !gre.consume;
+                    gres.push('no_consume');
+                END;
+                gres.push(gre.number);
+                allgres.push(gres.join(':'));
+            END;
+            params.push(param.key _ '=' _ allgres.join(','));
+        ELSIF param.key == 'TRESBillingWeights';
+            ps = [];
+            FOREACH p IN param.value.pairs;
+                ps.push(p.key _ '=' _ p.value);
+            END;
+            params.push(param.key _ '=' _ '"' _ ps.join(',') _ '"');
+        ELSIF param.key == 'GroupUpdateForce';
+            params.push(param.key _ '=' _ (param.value ? '1' : '0'));
+        ELSIF param.value.is_boolean;
+            IF boolvalue;
+                params.push(param.key _ '=' _ (param.value ? 'YES' : 'NO'));
+            ELSE;
+                IF param.value;
+                    params.push(param.key);
+                END;
+            END;
+        ELSIF CCM.is_list(param.value);
+            params.push(param.key _ '=' _ param.value.join(','));
+        ELSIF param.value.is_string AND param.value.search('\s');
+            params.push(param.key _ '="' _ param.value _ '"');
+        ELSE;
+            params.push(param.key _ '=' _ param.value);
+        END;
+    END;
+-%]
+[%- params.join(join ? join : ',') -%]

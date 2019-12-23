@@ -1,0 +1,14 @@
+[% FOREACH plugin IN CCM.contents.plugins %]
+[%      plugin.optional ? 'optional' : 'required' %] [% plugin.plugin %][% plugin.arguments ? ' ' : '' -%]
+[%-     matches = plugin.plugin.match("/([^/]*).so$");
+        name = matches.0;
+        IF name == 'private-tmpdir';
+	    INCLUDE "metaconfig/slurm/spank_params_${name}.tt" data=plugin.arguments join=' ';
+        ELSE;
+	    INCLUDE "metaconfig/slurm/spank_params.tt" data=plugin.arguments join=' ';
+        END;
+-%]
+[% END %]
+[% FOREACH include IN CCM.contents.includes %]
+include [% include.directory -%]
+[% END %]

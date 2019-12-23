@@ -1,0 +1,8 @@
+Config file for acct_gather options
+---
+/etc/slurm/acct_gather.conf
+quote
+---
+ProfileHDF5Default=All
+ProfileHDF5Dir=/some/shared/storage/path/mycluster
+
