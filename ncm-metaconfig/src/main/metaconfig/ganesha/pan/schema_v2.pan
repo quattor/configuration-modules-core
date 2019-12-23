@@ -209,6 +209,8 @@ type ganesha_v2_nfsv4 = {
     "IdmapConf" ? string = "/etc/idmapd.conf"
     "Lease_Lifetime" ? long(0..120) = 60
     "UseGetpwnam" ? boolean # default false if using idmap, true otherwise
+    @{default false, set it to true if you want to ignore/bypass/disable idmapping}
+    "Only_Numeric_Owners" ? boolean
 };
 
 @{ Ganesha NFS_CORE_PARAM section @}
