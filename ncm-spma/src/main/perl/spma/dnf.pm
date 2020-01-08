@@ -380,11 +380,11 @@ sub Configure
     # Continue only if package content is supposed to be changed
     return 1 unless $t->{run};
 
-    my $dnf_test_chroot = tempdir("spma_dnf_testroot_XXXXXX", TMPDIR => 1, CLEANUP => 1);
+    my $dnf_test_chroot = $self->directory("/tmp/spma_dnf_testroot_XXXXXX", temp => 1, keeps_state => 1);
+    $self->directory($dnf_test_chroot . "/var/cache", keeps_state => 1);
+    $self->symlink("/var/cache/dnf", $dnf_test_chroot . "/var/cache/dnf", keeps_state => 1);
 
     # Run test transaction to get complete list of packages to be present on the system
-    $self->execute_command(["mkdir -p " . $dnf_test_chroot . "/var/cache"],                 "setting up DNF test chroot",    1);
-    $self->execute_command(["ln -s /var/cache/dnf " . $dnf_test_chroot . "/var/cache/dnf"], "setting DNF test chroot cache", 1);
     my $dnf_install_test_command = "dnf install " . DNF_PLUGIN_OPTS . " --nogpgcheck --assumeno --releasever=/ --installroot=" . $dnf_test_chroot;
     if (@$wanted_pkgs_locked) { $dnf_install_test_command .= " " . join(" ", sort @$wanted_pkgs_locked); }
     if (@$wanted_pkgs)        { $dnf_install_test_command .= " " . join(" ", sort @$wanted_pkgs); }
