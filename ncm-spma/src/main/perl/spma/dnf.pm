@@ -29,8 +29,13 @@ use constant CMP_TREE            => "/software/components/spma";
 use constant DNF_PACKAGE_LIST    => "/etc/dnf/plugins/versionlock.list";
 use constant DNF_CONF_FILE       => "/etc/dnf/dnf.conf";
 use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n);
+use constant RPM_QUERY_SPMA      => qw(rpm -q --qf %{NEVRA} ncm-spma);
 use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --quiet --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
-use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock";
+use constant DNF_PLUGIN_OPTS     => qw(--disableplugin=* --enableplugin=versionlock);
+use constant DNF_CLEAN_ALL       => qw(dnf clean all);
+use constant DNF_INFO_GLIBC      => qw(dnf info glibc);
+use constant DNF_INSTALL         => qw(dnf install --nogpgcheck --assumeno --releasever=/);
+use constant DNF_SHELL           => qw(dnf shell --noautoremove -y);
 use constant SPMAPROXY           => "/software/components/spma/proxy";
 use constant PROTECT_FILE        => "/etc/dnf/protected.d/dnf.conf";
 
@@ -140,7 +145,7 @@ sub Configure
         return 0;
     }
 
-    my ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["rpm -q --qf %{NEVRA} ncm-spma"], "checking for spma version", 1);
+    my ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([RPM_QUERY_SPMA], "checking for spma version", 1);
     if ($cmd_exit) {
         $self->warn("Error getting SPMA version.");
     } else {
@@ -305,10 +310,10 @@ sub Configure
     return 1 if !defined($preinstalled);
 
     # Clean up DNF state - worth to be thorough there
-    $self->execute_command(["dnf clean all " . DNF_PLUGIN_OPTS], "resetting DNF state", 0);
+    $self->execute_command([DNF_CLEAN_ALL, DNF_PLUGIN_OPTS], "resetting DNF state", 0);
 
     # Test whether repositories are sane.
-    ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["dnf info glibc " . DNF_PLUGIN_OPTS], "testing sanity of repositories", 1);
+    ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([DNF_INFO_GLIBC, DNF_PLUGIN_OPTS], "testing sanity of repositories", 1);
     if ($cmd_exit) {
         $self->error("Repositories are in broken state. Will not continue.");
         return 0;
@@ -376,10 +381,10 @@ sub Configure
     $self->symlink("/var/cache/dnf", $dnf_test_chroot . "/var/cache/dnf", keeps_state => 1);
 
     # Run test transaction to get complete list of packages to be present on the system
-    my $dnf_install_test_command = "dnf install " . DNF_PLUGIN_OPTS . " --nogpgcheck --assumeno --releasever=/ --installroot=" . $dnf_test_chroot;
-    if (@$wanted_pkgs_locked) { $dnf_install_test_command .= " " . join(" ", sort @$wanted_pkgs_locked); }
-    if (@$wanted_pkgs)        { $dnf_install_test_command .= " " . join(" ", sort @$wanted_pkgs); }
-    ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([$dnf_install_test_command], "performing DNF chroot install test", 1, "/dev/null", 1);
+    my $dnf_install_test_command = [DNF_INSTALL, DNF_PLUGIN_OPTS, "--installroot=" . $dnf_test_chroot];
+    push @$dnf_install_test_command, sort @$wanted_pkgs_locked if (@$wanted_pkgs_locked);
+    push @$dnf_install_test_command, sort @$wanted_pkgs if (@$wanted_pkgs);
+    ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command($dnf_install_test_command, "performing DNF chroot install test", 1, "/dev/null", 1);
     $self->info($cmd_err) if $cmd_err;
     my $dnf_install_test = $cmd_out;
     $self->info($dnf_install_test);
@@ -528,7 +533,7 @@ sub Configure
         print $fh "dnf\n";
         $fh->close();
 
-        ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["dnf shell --noautoremove -y " . DNF_PLUGIN_OPTS . " "], 'executing transaction', 1, $transaction);
+        ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([DNF_SHELL, DNF_PLUGIN_OPTS], 'executing transaction', 1, $transaction);
 
         # Unfortunately, the exit code will be 0 even if the transaction has failed
         $self->info($cmd_err) if $cmd_err;
