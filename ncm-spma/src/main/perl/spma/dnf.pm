@@ -251,25 +251,24 @@ sub Configure
     my $pkgs               = $config->getElement(PKGS_TREE)->getTree();
     my $wanted_pkgs        = Set::Scalar->new();
     my $wanted_pkgs_locked = Set::Scalar->new();
+    my $wanted_pkgs_v      = Set::Scalar->new();        # packages with only version specified
+    my $wanted_pkgs_a      = Set::Scalar->new();        # packages with only arch specified
     my $found_spma         = 0;
-    my @pkl;
-    my @pkl_v;
-    my @pkl_a;
 
-    for my $name (keys %$pkgs) {
-        if (!$found_spma && substr((unescape $name), 0, 8) eq 'ncm-spma') {
-            $found_spma = 1;
-        }
-        my $vra = $pkgs->{$name};
+    while (my ($key, $vra) = each %$pkgs) {
+        my $name = unescape $key;
+
+        $found_spma ||= $name eq 'ncm-spma';
+
         while (my ($vers, $a) = each(%$vra)) {
             foreach my $arch (keys %{$a->{arch}}) {
                 if ($vers ne '_') {
-                    push (@pkl_v, (unescape $name) . ';' . (unescape $vers) . '.' . $arch);
+                    $wanted_pkgs_v->insert($name . ';' . (unescape $vers) . '.' . $arch);
                 } else {
                     if ($arch eq '_') {
-                        push (@pkl, (unescape $name) . ';');
+                        $wanted_pkgs->insert($name);
                     } else {
-                        push (@pkl_a, (unescape $name) . ';' . $arch);
+                        $wanted_pkgs_a->insert($name . '.' . $arch);
                     }
                 }
             }
@@ -281,31 +280,23 @@ sub Configure
         return 0;
     }
 
-    my $wanted_pkgs_uv = Set::Scalar->new(@pkl);          # packages without version/arch specified
-    my $wanted_pkgs_v  = Set::Scalar->new(@pkl_v);        # packages with only version specified
-    my $wanted_pkgs_a  = Set::Scalar->new(@pkl_a);        # packages with only arch specified
-    while (defined(my $p = $wanted_pkgs_uv->each)) {
+    while (defined(my $name = $wanted_pkgs->each)) {
+        # The semicolon is used to guard against package name prefix matches, e.g. "perl" vs. "perl-foobar"
+        my $p = $name . ';';
         while (defined(my $p2 = $wanted_pkgs_v->each)) {
             if (index($p2, $p) == 0) {
-                my $pkg = $p;
-                chop($pkg);
                 my $pkg_locked = $p2;
                 $pkg_locked =~ tr/;/-/;
-                $self->info("preferring version-locked $pkg_locked over unlocked $pkg");
-                $wanted_pkgs_uv->delete($p);
+                $self->info("preferring version-locked $pkg_locked over unlocked $name");
+                $wanted_pkgs->delete($name);
             }
         }
-    }
-    while (defined(my $p = $wanted_pkgs_uv->each)) {
-        chop($p);
-        $wanted_pkgs->insert($p);
     }
     while (defined(my $p = $wanted_pkgs_v->each)) {
         $p =~ s/;/-/;
         $wanted_pkgs_locked->insert($p);
     }
     while (defined(my $p = $wanted_pkgs_a->each)) {
-        $p =~ s/;/./;
         $wanted_pkgs->insert($p);
     }
 
