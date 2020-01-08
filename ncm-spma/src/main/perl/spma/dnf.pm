@@ -28,7 +28,7 @@ use constant PKGS_TREE           => "/software/packages";
 use constant CMP_TREE            => "/software/components/spma";
 use constant DNF_PACKAGE_LIST    => "/etc/dnf/plugins/versionlock.list";
 use constant DNF_CONF_FILE       => "/etc/dnf/dnf.conf";
-use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.%{ARCH}\n);
+use constant RPM_QUERY_INSTALLED => qw(rpm -qa --nosignature --nodigest --qf %{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n);
 use constant REPO_AVAIL_PKGS     => qw(dnf repoquery --show-duplicates --all --quiet --qf %{NAME};%{EPOCH};%{VERSION};%{RELEASE};%{ARCH});
 use constant DNF_PLUGIN_OPTS     => "--disableplugin=\* --enableplugin=versionlock";
 use constant SPMAPROXY           => "/software/components/spma/proxy";
@@ -94,7 +94,6 @@ sub get_installed_rpms
         return undef;
     }
 
-    $cmd_out =~ s/\(none\)/0/g;
     return Set::Scalar->new(split (/\n/, $cmd_out));
 }
 
@@ -141,7 +140,7 @@ sub Configure
         return 0;
     }
 
-    my ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["rpm -q --qf %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH} ncm-spma"], "checking for spma version", 1);
+    my ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["rpm -q --qf %{NEVRA} ncm-spma"], "checking for spma version", 1);
     if ($cmd_exit) {
         $self->warn("Error getting SPMA version.");
     } else {
