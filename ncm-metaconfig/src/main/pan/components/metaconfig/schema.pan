@@ -84,8 +84,6 @@ type ${project.artifactId}_textrender_convert = {
     true;
 };
 
-type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
-
 type ${project.artifactId}_config =  {
     @{File permissions. Defaults to 0644.}
     'mode' : long = 0644
