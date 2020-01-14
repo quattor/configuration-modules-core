@@ -6,6 +6,7 @@ use CAF::Process;
 use File::Basename qw(dirname);
 use Readonly;
 use Crypt::OpenSSL::X509;
+use Date::Manip;
 
 # Both from nss-tools
 Readonly my $CERTUTIL => '/usr/bin/certutil';
@@ -76,6 +77,8 @@ sub _initialize
     $self->{cacrt} = $opts{cacrt} || $DEFAULT_CA_CERT;
 
     $self->{csr_bits}  = $opts{csr_bits} || $DEFAULT_CSR_BITS;
+
+    $self->{minvalid} = 1 * 30 * 86400;  # 90 days
 
     return $nssdb ? SUCCESS : undef;
 }
@@ -204,30 +207,47 @@ sub has_cert
     my $res = defined($cert_txt) ? 1 : 0;
 
     if ($ipa && $cert_txt) {
-        # TODO: handle other fp methods like md5 for fallback or sha256
-        my $algo = "sha1";
-        my $fpmethod = "fingerprint_$algo";
         my $decoded = Crypt::OpenSSL::X509->new_from_string($cert_txt);
-        if ($decoded->can($fpmethod)) {
-            my $fp = $decoded->$fpmethod();
+        my $nbf = UnixDate($decoded->notBefore, '%s');
+        my $naf = UnixDate($decoded->notAfter, '%s');
+        my $now = time();
 
-            my $hex_serial = $decoded->serial();
-            my $cert = $ipa->get_cert("0x$hex_serial");
-            my $ipa_fp = $cert->{"${algo}_fingerprint"} || 'undef';
-
-            if ($ipa_fp && uc($ipa_fp) eq uc($fp)) {
-                $res = 1;
-                $self->debug(1, "Found existing certificate nick $nick with serial 0x$hex_serial ",
-                             "with matching FPs $fp");
-            } else {
-                $res = 0;
-                $self->verbose("Found local certificate from nick $nick ",
-                               "with $algo FP $fp that doesn't match IPA FP $ipa_fp");
-            }
+        if ($now < $nbf) {
+            $res = 0;
+            $self->verbose("Found local certificate from nick $nick ",
+                           "with notBefore ", $decoded->notBefore, " more recent than now");
+        } elsif ($naf < $now + $self->{minvalid}) {
+            $res = 0;
+            $self->verbose("Found local certificate from nick $nick with notAfter ", $decoded->notAfter,
+                           " smaller than $self->{minvalid} (", ($self->{minvalid} / 86400), " days)");
         } else {
-            $self->warn("No cert FP method $fpmethod support. Found a cert, assume it's ok");
-            $res = 1;
-        }
+            $self->verbose("Found local certificate from nick $nick ",
+                           "with notBefore ", $decoded->notBefore, " and notAfter ", $decoded->notAfter);
+
+            # TODO: handle other fp methods like md5 for fallback or sha256
+            my $algo = "sha1";
+            my $fpmethod = "fingerprint_$algo";
+            if ($decoded->can($fpmethod)) {
+                my $fp = $decoded->$fpmethod();
+
+                my $hex_serial = $decoded->serial();
+                my $cert = $ipa->get_cert("0x$hex_serial");
+                my $ipa_fp = $cert->{"${algo}_fingerprint"} || 'undef';
+
+                if ($ipa_fp && uc($ipa_fp) eq uc($fp)) {
+                    $res = 1;
+                    $self->debug(1, "Found existing certificate nick $nick with serial 0x$hex_serial ",
+                                 "with matching FPs $fp");
+                } else {
+                    $res = 0;
+                    $self->verbose("Found local certificate from nick $nick ",
+                                   "with $algo FP $fp that doesn't match IPA FP $ipa_fp");
+                }
+            } else {
+                $self->warn("No cert FP method $fpmethod support. Found a cert, assume it's ok");
+                $res = 1;
+            }
+        };
     };
 
     $self->{fail} = $oldfail;
