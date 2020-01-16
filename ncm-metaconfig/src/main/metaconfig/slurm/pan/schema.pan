@@ -86,7 +86,7 @@ type slurm_scheduler_parameters = {
     'bf_yield_interval' ? long(0..)
     'bf_yield_sleep' ? long(0..)
     'build_queue_timeout' ? long(0..)
-    'default_queue_depth' ? long(0..)
+    'default_5fqueue_5fdepth' ? long(0..)   # escaped version, otherwise unescaping produces some weird unicode
     'defer' ? boolean
     'delay_boot' ? long(0..)
     'default_gbytes' ? boolean
