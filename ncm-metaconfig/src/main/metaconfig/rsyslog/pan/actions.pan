@@ -96,6 +96,28 @@ type rsyslog_action_fwd = {
     'template' ? string
 };
 
+type rsyslog_action_kafka = {
+    include rsyslog_input_common
+    "Broker" ? string[] = list("localhost:9092")
+    "Topic" : string
+    "Key" ? string
+    "DynaKey" ? choice('on', 'off')
+    "DynaTopic" ? string
+    "DynaTopic.Cachesize" ? long(0..)
+    "Partitions.Auto" ? choice('on', 'off')
+    "Partitions.number" ? long(0..)
+    "Partitions.useFixed" ? long(0..)
+    "errorFile" ? absolute_file_path
+    "statsFile" ? absolute_file_path
+    "ConfParam" ? string[]
+    "TopicConfParam" ? string[]
+    "Template" ? string
+    "closeTimeout" ? long(0..) = 2000
+    "resubmitOnFailure" ? choice('on', 'off')
+    "KeepFailedMessages" ? choice('on', 'off')
+    "failedMsgFile" ? absolute_file_path
+};
+
 type rsyslog_action_czmq = {
     include rsyslog_action_common
     'endpoints' ? string[]
@@ -122,6 +144,7 @@ type rsyslog_action_usrmsg = {
 type rsyslog_action = {
     'file' ? rsyslog_action_file
     'fwd' ? rsyslog_action_fwd
+    'kafka' ? rsyslog_action_kafka
     'prog' ? rsyslog_action_prog
     'czmq' ? rsyslog_action_czmq
     'usrmsg' ? rsyslog_action_usrmsg

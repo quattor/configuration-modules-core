@@ -28,7 +28,7 @@ type rsyslog_module_type = {
 };
 
 type rsyslog_template = {
-    @{string type tmplate}
+    @{string type template}
     'string' ? string
 } with length(SELF) == 1;
 
