@@ -107,7 +107,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #SchedulerTimeSlice = 30;
 "SchedulerType" = "backfill";
 "SchedulerParameters" = dict(
-    "default_queue_depth", 128,
+    "default_5fqueue_5fdepth", 128,
     "bf_max_job_test", 1024,
     "bf_continue", true,
     "bf_window", 4320,
