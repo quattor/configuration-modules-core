@@ -14,9 +14,11 @@ ipv6 address autoconfig
               IF ! data.switchport -%]
 no switchport
 [%            END -%]
-[%-      ELSIF data.exists('access') -%]
+[%-      ELSIF data.exists('access') OR data.exists('vids') -%]
 switchport mode trunk
+[%          IF data.exists('access') -%]
 switchport access vlan [% data.access %]
+[%          END -%]
 [%          IF data.exists('vids') -%]
 switchport trunk allowed vlan [% data.vids.join(',') %]
 [%          END -%]
