@@ -35,6 +35,7 @@ prefix "vlt";
 "mac" = "44:38:39:FF:00:01";
 "delay" = 120;
 "priority" = 10;
+"mtu" = 4567;
 
 prefix "interfaces/{port-channel1}";
 "description" = "leg one";
@@ -53,3 +54,9 @@ prefix "interfaces/{port-channel1}";
 
 prefix "interfaces/{ethernet1/1/3}";
 "description" = "one server";
+
+prefix "interfaces/{port-channel5}";
+"description" = "leg 5";
+"slaves" = list("ethernet1/1/5");
+"vids" = list(55);
+"lacp/mode" = "active";

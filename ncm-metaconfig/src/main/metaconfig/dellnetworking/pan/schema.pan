@@ -27,6 +27,8 @@ type dellnetworking_vlt = {
     'delay' ? long
     @{primary priority (default 32k, higher number means lower priority}
     'priority' ? long(0..65535)
+    @{mtu}
+    'mtu' ? long(1280..65535)
 };
 
 type dellnetworking_lacp = {

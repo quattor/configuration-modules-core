@@ -1,15 +1,19 @@
 [%- vltmap = {
-    backup = "backup destination"
-    delay = "delay-restore"
-    mac = "vlt-mac"
-    priority = "primary-priority"
-    } -%]
+        backup = "backup destination"
+        delay = "delay-restore"
+        mac = "vlt-mac"
+        priority = "primary-priority"
+    };
+    vlt_interface = {
+        description = "VLT interface"
+        enable = 1
+        switchport = 0
+    };
+    IF vlt.exists('mtu');
+        vlt_interface.mtu = vlt.mtu;
+    END; -%]
 [% FOREACH name IN vlt.discovery -%]
-[%      INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data={
-            description = "VLT interface"
-            enable = 1
-            switchport = 0
-            } -%]
+[%      INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data=vlt_interface -%]
 [%- END -%]
 vlt-domain [% vlt.id %]
 [% FILTER indent(' ') -%]

@@ -79,15 +79,28 @@ interface ethernet1/1/1
  speed 25000
  mtu 9000
 !
+interface port-channel5
+ description "leg 5"
+ no shutdown
+ switchport mode trunk
+ switchport trunk allowed vlan 55
+!
+interface ethernet1/1/5
+ description "po5 leg 5"
+ no shutdown
+ channel-group 5 mode active
+!
 interface ethernet1/1/15
  description "VLT interface"
  no shutdown
  no switchport
+ mtu 4567
 !
 interface ethernet1/1/16
  description "VLT interface"
  no shutdown
  no switchport
+ mtu 4567
 !
 vlt-domain 1
  discovery-interface ethernet1/1/15
