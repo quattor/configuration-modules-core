@@ -21,4 +21,5 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}";
 "group" = "root";
 "mode" = 0644;
 "module" = "slurm/config";
+"convert/unescapekey" = true;
 "daemons" = if(length(SLURM_DAEMONS) > 0) SLURM_DAEMONS else null;
