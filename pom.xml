@@ -89,7 +89,6 @@
     <module>ncm-systemd</module>
     <module>ncm-freeipa</module>
     <module>ncm-path</module>
-    <module>ncm-openstack</module>
   </modules>
   <build>
     <pluginManagement>
