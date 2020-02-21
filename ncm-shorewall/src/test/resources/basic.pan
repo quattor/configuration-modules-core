@@ -33,3 +33,12 @@ prefix "/software/components/shorewall";
 
 "masq/0/dest" = list('eth0');
 "masq/0/source" = 'eth1';
+
+"providers/0/name" = "isp1";
+"providers/0/number" = 2;
+"providers/0/interface" = "abc";
+"providers/0/gateway" = "1.2.3.4";
+"providers/0/options" = list('track', 'balance');
+
+"rtrules/0/provider" = "isp1";
+"rtrules/0/priority" = 1000;

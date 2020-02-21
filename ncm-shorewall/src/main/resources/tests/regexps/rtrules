@@ -1,0 +1,8 @@
+rtrules
+---
+//
+rendermodule=rtrules
+contentspath=/config
+---
+^-\t-\tisp1\t20000$
+^eth0\t1.2.3.4\tisp2\t10000$

@@ -1,0 +1,2 @@
+[% INCLUDE 'shorewall/walk.tt' _type='providers' _cols=['name', 'number', 'mark', 'duplicate',
+    'interface', 'gateway', 'options', 'copy'] %]
