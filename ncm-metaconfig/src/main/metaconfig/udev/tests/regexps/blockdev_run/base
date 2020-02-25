@@ -5,3 +5,4 @@ metaconfigservice=/etc/udev/rules.d/99-blockdevs.rules
 ---
 ^SUBSYSTEM=="block", SUBSYSTEMS=="scsi", PROGRAM=="/lib/udev/scsi_id -g -u -d /dev/%k", RUN\+="/usr/lib/my_scsi_script"$
 ^SUBSYSTEM=="block", KERNEL=="dm-\*", PROGRAM=="/lib/udev/scsi_id -g -u -d /dev/%k", RUN\+="/usr/lib/my_dm_script"$
+^SUBSYSTEM=="block", SUBSYSTEMS=="nvme", PROGRAM=="/lib/udev/scsi_id -g -u -d /dev/%k", RUN\+="/usr/lib/my_nvme_script"$
