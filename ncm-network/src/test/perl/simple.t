@@ -17,6 +17,23 @@ $mock->mock('_is_executable', sub {diag "executables $_[1] ",explain \%executabl
 
 use Readonly;
 
+Readonly my $RT => <<EOF;
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+0	unspec
+#
+# local
+#
+#1	inr.ruhep
+4 manual
+80 someold # managed by Quattor
+200 custom
+EOF
+
 Readonly my $NETWORK => <<EOF;
 NETWORKING=yes
 HOSTNAME=somehost.test.domain
@@ -53,11 +70,14 @@ ok($NETWORK ne $NETWORK_HOSTNAMECTL,
 
 # File must exist
 set_file_contents("/etc/sysconfig/network", 'x' x 1000);
+set_file_contents("/etc/iproute2/rt_tables", $RT);
 
 my $cfg = get_config_for_profile('simple');
 my $cmp = NCM::Component::network->new('network');
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
+
+is(get_file_contents("/etc/iproute2/rt_tables"), $RT, "Exact (unmodified) routing table");
 
 # generic
 my $fh;
