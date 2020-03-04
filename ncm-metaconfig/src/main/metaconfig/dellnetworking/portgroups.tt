@@ -1,0 +1,7 @@
+[%- FOREACH pair IN CCM.contents.portgroups.pairs -%]
+port-group [% CCM.unescape(pair.key) %]
+[%      FILTER indent(' ') -%]
+mode Eth [% pair.value -%]
+[%-     END %]
+!
+[% END -%]

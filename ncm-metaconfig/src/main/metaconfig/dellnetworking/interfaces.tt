@@ -1,0 +1,39 @@
+[%- FOREACH pair IN CCM.contents.interfaces.pairs %]
+[%-      name = CCM.unescape(pair.key);
+         data = pair.value;
+         sdata = {};
+         IF data.exists('slaves');
+            IF data.lacp.exists('priority');
+                 sdata.lacp.priority = data.lacp.priority;
+                 data.lacp.delete('priority');
+            END;
+            IF data.lacp.exists('fast');
+                 sdata.lacp.fast = data.lacp.fast;
+                 data.lacp.delete('fast');
+            END;
+            IF data.exists('speed');
+                 sdata.speed = data.speed;
+                 data.delete('speed');
+            END;
+            IF data.exists('mtu');
+                # set on both interface and port-channel
+                sdata.mtu = data.mtu;
+            END;
+         END -%]
+[%       INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data=data -%]
+[%-      IF data.exists('slaves') -%]
+[%-         FOREACH sname IN data.slaves -%]
+[%-             poid = name.match('port-channel\s?(\d+)$').0;
+                descr = "po" _ poid;
+                IF data.exists('description');
+                    descr = descr _ " " _ data.description;
+                END;
+                sdata.enable = 1;
+                sdata.description = descr;
+                sdata.switchport = 1;
+                sdata.channelgroup = [poid, pair.value.lacp.mode];
+                 -%]
+[%              INCLUDE 'metaconfig/dellnetworking/interface.tt' name=sname data=sdata -%]
+[%          END -%]
+[%-      END -%]
+[% END -%]

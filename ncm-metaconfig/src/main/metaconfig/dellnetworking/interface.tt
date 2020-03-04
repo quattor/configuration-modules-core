@@ -1,0 +1,58 @@
+interface [% name %]
+[% FILTER indent(' ') -%]
+[%      IF data.exists('description') -%]
+description "[% data.description %]"
+[%      END -%]
+[%      data.enable ? 'no ' : '' %]shutdown
+[%      IF data.exists('ip') -%]
+no ip address dhcp
+ip address [% data.ip %]/[% data.mask %]
+ipv6 address autoconfig
+[%      END -%]
+[%      IF data.exists('switchport') -%]
+[%-# Set switchport = 1 to not print any switchport statements
+              IF ! data.switchport -%]
+no switchport
+[%            END -%]
+[%-      ELSIF data.exists('access') OR data.exists('vids') -%]
+switchport mode trunk
+[%          IF data.exists('access') -%]
+switchport access vlan [% data.access %]
+[%          END -%]
+[%          IF data.exists('vids') -%]
+switchport trunk allowed vlan [% data.vids.join(',') %]
+[%          END -%]
+[%      ELSE -%]
+switchport mode access
+[%      END -%]
+[%      IF data.exists("lacp") -%]
+[%          IF data.lacp.exists("fallback") -%]
+lacp fallback enable
+[%          END -%]
+[%          IF data.lacp.exists("timeout") -%]
+lacp fallback timeout [% data.lacp.timeout %]
+[%          END -%]
+[%          IF data.lacp.exists("priority") -%]
+lacp port-priority [% data.lacp.priority %]
+[%          END -%]
+[%          IF data.lacp.exists("fast") -%]
+[% data.lacp.fast ? '' : 'no ' %]lacp rate fast
+[%          END -%]
+[%      END -%]
+[%      IF data.exists("vlt") -%]
+vlt-port-channel [% data.vlt %]
+[%      END -%]
+[%      IF data.exists("channelgroup") -%]
+channel-group [% data.channelgroup.0 %] mode [% data.channelgroup.1 %]
+[%      END -%]
+[%      IF data.exists("speed") -%]
+speed [% data.speed %]
+[%      END -%]
+[%      IF data.exists("mtu") -%]
+mtu [% data.mtu %]
+[%      END -%]
+[%      IF data.exists("edge") -%]
+[% data.edge ? '' : 'no ' %]spanning-tree port type edge
+[%      END -%]
+[%  END -%]
+!
