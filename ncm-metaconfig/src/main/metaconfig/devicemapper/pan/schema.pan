@@ -61,7 +61,7 @@ type multipath_device = {
     include multipath_device_blacklist
     "revision" ? string
     "product_blacklist" ? string
-    "hardware_handler" ? string with match(SELF[1], "^(emc|alua|hp_sw|rdac)$") && is_long(SELF[0]) && SELF[0] == 1
+    "hardware_handler" ? string with match(SELF, '^"1 (emc|alua|hp_sw|rdac)"$')
 };
 
 type multipath_blacklist = {
