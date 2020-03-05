@@ -1,0 +1,7 @@
+[% FOREACH leafswitch IN CCM.contents.leafswitch %]
+SwitchName=[% leafswitch.switch %] Nodes=[% leafswitch.nodes.join(',') %]
+[% END %]
+
+[% FOREACH spineswitch IN CCM.contents.spineswitch %]
+SwitchName=[% spineswitch.switch %] Switches=[% spineswitch.switches.join(',') %]
+[% END %]
