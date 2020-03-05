@@ -5,23 +5,14 @@
     'RekeyLimit' ] -%]
 [% commalist = ['Ciphers', 'HostKeyAlgorithms', 'HostbasedAcceptedKeyTypes', 'KexAlgorithms', 'MACs', 'PubkeyAcceptedKeyTypes' ] -%]
 [% multilinelist = ['HostKey', 'ListenAddress', 'Port' ] -%]
-[% booleans = ['AllowAgentForwarding',
-    'ChallengeResponseAuthentication', 'Compression',
-    'ExposeAuthInfo',
-    'GSSAPIAuthentication', 'GSSAPICleanupCredentials', 'GSSAPIKeyExchange', 'GSSAPIStrictAcceptorCheck', 'GSSAPIStoreCredentialsOnRekey',
-    'HostbasedAuthentication', 'HostbasedUsesNameFromPacketOnly',
-    'IgnoreRhosts', 'IgnoreUserKnownHosts',
-    'KbdInteractiveAuthentication', 'KerberosAuthentication', 'KerberosGetAFSToken', 'KerberosOrLocalPasswd', 'KerberosTicketCleanup',
-    'PasswordAuthentication', 'PermitEmptyPasswords', 'PermitRootLogin', 'PermitTTY', 'PermitTunnel', 'PermitUserEnvironment',
-    'PermitUserRC', 'PrintLastLog', 'PrintMotd', 'PubkeyAuthentication',
-    'StreamLocalBindUnlink', 'StrictModes',
-    'TCPKeepAlive', 'UseDNS', 'UsePAM', 'X11Forwarding', 'X11UseLocalhost'] -%]
 
 [%- FOREACH pair IN data.pairs -%]
 [%     NEXT IF pair.key == 'matches' -%]
+[%     IF pair.value.is_boolean -%]
+[%         pair.key %] [% pair.value ? 'Yes' : 'No' %]
+[%         NEXT -%]
+[%     END -%]
 [%     SWITCH pair.key -%]
-[%         CASE booleans -%]
-[%             pair.key %] [% pair.value ? 'Yes' : 'No' %]
 [%         CASE spacelist -%]
 [%             pair.key %] [% pair.value.join(' ') %]
 [%         CASE commalist -%]
