@@ -3,6 +3,7 @@
     ip = mgmt.ip
     mask = mgmt.mask
     switchport = 1
+    ipv6 = mgmt.ipv6
     } -%]
 management route 0.0.0.0/0 [% mgmt.gateway %]
 !

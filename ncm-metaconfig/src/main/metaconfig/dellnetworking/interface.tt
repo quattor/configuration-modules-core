@@ -7,7 +7,12 @@ description "[% data.description %]"
 [%      IF data.exists('ip') -%]
 no ip address dhcp
 ip address [% data.ip %]/[% data.mask %]
+[%          IF data.ipv6 -%]
+ipv6 enable
 ipv6 address autoconfig
+[%          ELSE -%]
+no ipv6 enable
+[%          END -%]
 [%      END -%]
 [%      IF data.exists('switchport') -%]
 [%-# Set switchport = 1 to not print any switchport statements

@@ -49,6 +49,7 @@ interface mgmt1/1/1
  no shutdown
  no ip address dhcp
  ip address 1.2.3.4/16
+ ipv6 enable
  ipv6 address autoconfig
 !
 management route 0.0.0.0/0 2.3.4.5

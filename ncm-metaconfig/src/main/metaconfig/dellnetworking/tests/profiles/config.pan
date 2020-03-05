@@ -27,6 +27,7 @@ prefix "management";
 "ip" = "1.2.3.4";
 "mask" = 16;
 "gateway" = "2.3.4.5";
+"ipv6" = true;
 
 prefix "vlt";
 "id" = 1;

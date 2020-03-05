@@ -109,6 +109,7 @@ type dellnetworking_management = {
     'ip' : type_ipv4
     'mask' : long(0..32)
     'gateway' : type_ipv4
+    'ipv6' : boolean = false
 };
 
 @{key is feature name, value is boolean (false will disable the feature)}
