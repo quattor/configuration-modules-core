@@ -5,19 +5,28 @@ include 'pan/types';
 # rename these types to prevent conflicts
 #   we will remove these in an upcoming pr after template-library-core
 #   has been updated with the new types from ncm-ssh
-type temp_ssh_ciphers = string with match (SELF, "^[+-]?((blowfish|3des|aes128|aes192|aes256|cast128)-cbc" +
-    "|(aes128|aes192|aes256)-ctr|arcfour|arcfour(128|256)|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
-type temp_ssh_hostkeyalgorithms = string with match(SELF, "^[+-]?(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|" +
-    "(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|" +
-    "ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
+type temp_ssh_ciphers = string with match (SELF, "^[+-]?(" +
+    "(blowfish|3des|aes(128|192|256)|cast128)-cbc" +
+    "|aes(128|192|256)-ctr|arcfour|arcfour(128|256)" +
+    "|aes(128|256)-gcm|chacha20-poly1305)@openssh.com)$");
+type temp_ssh_hostkeyalgorithms = string with match(SELF, "^[+-]?(" +
+    "ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|" +
+    "(ssh-rsa-cert-v0[01]|ssh-dss-cert-v01|ecdsa-sha2-nistp(256|384|521)-cert-v01|" +
+    "ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
 type temp_ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
-type temp_ssh_kexalgorithms = string with match (SELF, "^[+-]?(diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|" +
-    "-exchange-sha256)|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org|gss-gex-sha1-|" +
-    "gss-group1-sha1-|gss-group14-sha1-)$");
+# Recent versions have distinct GSSAPIKexAlgorithms
+type temp_ssh_gss_kexalgorithms = string with match (SELF, "^[+-]?(gss-(gex|group1|group14)-sha1-" +
+    "|gss-group14-sha256-|gss-group16-sha512-|gss-nistp256-sha256-|gss-curve25519-sha256-)$");
+# Older versions include GSSAPI mechanisms in KEXAlgorithms, but only the SHA1 variants
+type temp_ssh_kexalgorithms = string with match (SELF, "^[+-]?(" +
+    "diffie-hellman-group(1-sha1|14-sha1|-exchange-sha1|-exchange-sha256)" +
+    "|ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org" +
+    "|gss-(gex|group1|group14)-sha1-)$");
 type temp_ssh_MACs = string with match(SELF, "^[+-]?(hmac-(sha1|sha1-96|sha2-256|sha2-512|md5|md5-96|ripemd160)|" +
     "(hmac-ripemd160|umac-64|umac-128|hmac-sha1-etm|hmac-sha1-96-etm|hmac-sha2-256-etm|hmac-sha2-512-etm|" +
     "hmac-md5-etm|hmac-md5-96-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
-type temp_ssh_CAAlgorithms = string with match(SELF, "^[+-]?(ecdsa-sha2-nistp(256|384|521)|ssh-ed25519|rsa-sha2-(256|512)|ssh-rsa)$");
+type temp_ssh_CAAlgorithms = string with match(SELF, "^[+-]?(" +
+    "ecdsa-sha2-nistp(256|384|521)|ssh-ed25519|rsa-sha2-(256|512)|ssh-rsa)$");
 
 
 type ssh_config_opts = {
@@ -60,6 +69,7 @@ type ssh_config_opts = {
     'GSSAPIClientIdentity' ? string
     'GSSAPIDelegateCredentials' ? boolean
     'GSSAPIKeyExchange' ? boolean
+    'GSSAPIKexAlgorithms' ? temp_ssh_gss_kexalgorithms[]
     'GSSAPIRenewalForcesRekey' ? boolean
     'GSSAPIServerIdentity' ? string
     'GSSAPITrustDns' ? boolean
@@ -205,6 +215,7 @@ type sshd_config_match = {
 type sshd_config_opts = {
     include sshd_config_match_opts
     'AddressFamily' ? string with match (SELF, "^(any|inet|inet6)$")
+    'CASignatureAlgorithms' ? temp_ssh_CAAlgorithms[]
     'ChallengeResponseAuthentication' ? boolean
     'Ciphers' ? temp_ssh_ciphers[]
     'Compression' ? boolean
@@ -213,6 +224,7 @@ type sshd_config_opts = {
     'FingerprintHash' ? string with match (SELF, "^(md5|sha256)$")
     'GSSAPICleanupCredentials' ? boolean
     'GSSAPIKeyExchange' ? boolean
+    'GSSAPIKexAlgorithms' ? temp_ssh_gss_kexalgorithms[]
     'GSSAPIStrictAcceptorCheck' ? boolean
     'GSSAPIStoreCredentialsOnRekey' ? boolean
     'HostCertificate' ? string
