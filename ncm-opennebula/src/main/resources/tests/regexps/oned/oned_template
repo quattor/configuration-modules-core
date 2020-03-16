@@ -221,9 +221,16 @@ multiline
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"NONE",$
+^\s{4}clone_target_shared\s?=\s?"SELF",$
+^\s{4}clone_target_ssh\s?=\s?"SYSTEM",$
+^\s{4}disk_type_shared\s?=\s?"BLOCK",$
+^\s{4}disk_type_ssh\s?=\s?"BLOCK",$
 ^\s{4}ln_target\s?=\s?"NONE",$
+^\s{4}ln_target_shared\s?=\s?"NONE",$
+^\s{4}ln_target_ssh\s?=\s?"SYSTEM",$
 ^\s{4}name\s?=\s?"dev",$
-^\s{4}shared\s?=\s?"yes"$
+^\s{4}shared\s?=\s?"yes",$
+^\s{4}tm_mad_system\s?=\s?"ssh,shared"$
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"NONE",$

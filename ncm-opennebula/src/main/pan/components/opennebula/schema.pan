@@ -138,7 +138,7 @@ type opennebula_auth_mad = {
 type opennebula_tm_mad_conf = {
     "name" : string = "dummy"
     "ln_target" : string = "NONE"
-    "clone_target" : string = "SYSTEM"
+    "clone_target" : choice('SYSTEM', 'NONE', 'SELF') = "SYSTEM"
     "shared" : boolean = true
     "ds_migrate" ? boolean
     "driver" ? choice('raw', 'qcow2')
@@ -565,7 +565,17 @@ type opennebula_oned = {
             "disk_type_shared", "rbd",
         ),
         dict("name", "iscsi_libvirt", "clone_target", "SELF", "ds_migrate", false),
-        dict("name", "dev", "clone_target", "NONE"),
+        dict(
+            "name", "dev",
+            "clone_target", "NONE",
+            "tm_mad_system", "ssh,shared",
+            "ln_target_ssh", "SYSTEM",
+            "clone_target_ssh", "SYSTEM",
+            "disk_type_ssh", "BLOCK",
+            "ln_target_shared", "NONE",
+            "clone_target_shared", "SELF",
+            "disk_type_shared", "BLOCK",
+        ),
         dict("name", "vcenter", "clone_target", "NONE"),
     )
     "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
