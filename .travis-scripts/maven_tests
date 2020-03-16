@@ -1,9 +1,32 @@
 #!/bin/bash
 
-(git clone https://github.com/quattor/template-library-core.git /tmp/template-library-core || exit 1)
-export QUATTOR_TEST_TEMPLATE_LIBRARY_CORE="/tmp/template-library-core"
+STARTDIR="$PWD"
+TEMPDIR="$(mktemp -d /tmp/travis.XXXXXXXX)"
 
-(mkdir -p /tmp/panc && cd /tmp/panc && wget https://github.com/quattor/pan/releases/download/pan-10.7/panc-10.7.tar.gz && tar -xzf panc-10.7.tar.gz || exit 1)
-export PATH="$PATH:/tmp/panc/bin/"
+(git clone https://github.com/quattor/template-library-core.git $TEMPDIR/template-library-core || exit 1)
+export QUATTOR_TEST_TEMPLATE_LIBRARY_CORE="$TEMPDIR/template-library-core"
 
+(mkdir -p $TEMPDIR/panc && cd $TEMPDIR/panc && wget https://github.com/quattor/pan/releases/download/pan-10.7/panc-10.7.tar.gz && tar -xzf panc-10.7.tar.gz || exit 1)
+export PATH="$PATH:$TEMPDIR/panc/bin/"
+
+REPOS_MVN_ORDERED="LC CAF CCM ncm-ncd ncm-lib-blockdevices"
+
+for repo in $REPOS_MVN_ORDERED; do
+    git clone "https://github.com/quattor/$repo.git" "$TEMPDIR/$repo" || exit 1
+    cd "$TEMPDIR/$repo" || exit 1
+    mvn clean compile || exit 1
+    tgtperl="$(find "$TEMPDIR/$repo" -type d -name perl | grep '/target/lib/perl$' | paste -sd ':' -)"
+    PERL5LIB="$tgtperl:$PERL5LIB"
+    echo "Added $tgtperl to PERL5LIB for repository $repo after mvn compile : PERL5LIB $PERL5LIB"
+done
+
+PERL5LIB="/usr/share/perl5:$PERL5LIB"
+export PERL5LIB
+
+for repo in $REPOS_MVN_ORDERED; do
+    cd "$TEMPDIR/$repo" || exit 1
+    mvn test || exit 1
+done
+
+cd $STARTDIR
 mvn clean test
