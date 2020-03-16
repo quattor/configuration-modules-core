@@ -1,6 +1,9 @@
 #!/bin/bash
 
-git clone https://github.com/quattor/template-library-core.git /tmp/template-library-core
+(git clone https://github.com/quattor/template-library-core.git /tmp/template-library-core || exit 1)
 export QUATTOR_TEST_TEMPLATE_LIBRARY_CORE="/tmp/template-library-core"
+
+(mkdir -p /tmp/panc && cd /tmp/panc && wget https://github.com/quattor/pan/releases/download/pan-10.7/panc-10.7.tar.gz && tar -xzf panc-10.7.tar.gz || exit 1)
+export PATH="$PATH:/tmp/panc/bin/"
 
 mvn clean test
