@@ -1,3 +1,6 @@
 #!/bin/bash
 
+git clone https://github.com/quattor/template-library-core.git /tmp/template-library-core
+export QUATTOR_TEST_TEMPLATE_LIBRARY_CORE="/tmp/template-library-core"
+
 mvn clean test
