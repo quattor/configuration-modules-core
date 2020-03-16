@@ -8,5 +8,6 @@ install:
 
 script:
   - ./.travis-scripts/panlint
+  - ./.travis-scripts/maven_tests
 
 sudo: false
