@@ -161,6 +161,17 @@ type structure_ethtool_ring = {
 };
 
 @documentation{
+    Set the number of channels.
+    See ethtool --show-channels for the values.
+}
+type structure_ethtool_channels = {
+    "rx" ? long(0..)
+    "tx" ? long(0..)
+    "other" ? long(0..)
+    "combined" ? long(0..)
+};
+
+@documentation{
     ethtool wol p|u|m|b|a|g|s|d...
     from the man page
         Sets Wake-on-LAN options.  Not all devices support this.  The argument to this option is a string
@@ -184,6 +195,7 @@ type structure_ethtool = {
     "autoneg" ? string with match (SELF, '^(on|off)$')
     "duplex" ? string with match (SELF, '^(half|full)$')
     "speed" ? long
+    "channels" ? structure_ethtool_channels
 };
 
 @documentation{
