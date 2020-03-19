@@ -3,7 +3,7 @@ ${componentschema}
 include 'quattor/types/component';
 include 'quattor/functions/validation';
 
-type ${project.artifactId}_extension = extensible {};
+type ${project.artifactId}_extension = resource;
 
 @documentation{
     Convert value of certain types (e.g. boolean to string yes/no)
