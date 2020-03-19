@@ -1,0 +1,4 @@
+[%- INCLUDE "metaconfig/logstash/7.0/config/type.tt" type="string" names=['source', 'target'] -%]
+[%- INCLUDE "metaconfig/logstash/7.0/config/type.tt" type="stringarray" names=['message'] -%]
+
+
