@@ -95,7 +95,7 @@ type slurm_scheduler_parameters = {
     'enable_user_top' ? boolean
     'Ignore_NUMA' ? boolean
     'inventory_interval' ? long(0..)
-    'kill_invalid_depend' ? boolean
+    'kill_5finvalid_5fdepend' ? boolean
     'max_array_tasks' ? long(0..)   # should be smaller than MaxArraySize
     'max_depend_depth' ? long(0..)
     'max_rpc_cnt' ? long(0..)
