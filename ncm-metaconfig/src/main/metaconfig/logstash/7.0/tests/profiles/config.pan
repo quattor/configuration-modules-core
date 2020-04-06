@@ -13,6 +13,13 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "sender", "myhost.domain",
         ),
     ),
+    dict(
+        "elasticsearch", dict(
+            "ssl_certificate_verification", false,
+            "cacert", "/etc/some/cert",
+            "template_overwrite", true,
+        ),
+    ),
 );
 
 "conditionals" = append(dict(
