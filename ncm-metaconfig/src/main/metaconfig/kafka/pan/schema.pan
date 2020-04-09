@@ -10,11 +10,11 @@ type kafka_server_properties = {
     "alter.log.dirs.replication.quota.window.num" ? long(1..)
     "alter.log.dirs.replication.quota.window.size.seconds" ? long(1..)
     "authorizer.class.name" ? string
-    "auto.create.topics.enable" ? boolean
-    "auto.leader.rebalance.enable" ? boolean
+    "auto.create.topics.enable" ? choice("true", "false")
+    "auto.leader.rebalance.enable" ? choice("true", "false")
     "background.threads" ? long(1..)
     "broker.id" : long(0..)
-    "broker.id.generation.enable" ? boolean
+    "broker.id.generation.enable" ? choice("true", "false")
     "broker.rack" ? string
     "client.quota.callback.class" ? string
     "compression.type" ? string
@@ -22,7 +22,7 @@ type kafka_server_properties = {
     "connections.max.idle.ms" ? long(0..)
     "connections.max.reauth.ms" ? long(0..)
     "control.plane.listener.name" ? string
-    "controlled.shutdown.enable" ? boolean
+    "controlled.shutdown.enable" ? choice("true", "false")
     "controlled.shutdown.max.retries" ? long(0..)
     "controlled.shutdown.retry.backoff.ms" ? long(0..)
     "controller.socket.timeout.ms" ? long(0..)
@@ -33,7 +33,7 @@ type kafka_server_properties = {
     "delegation.token.master.key" ? string  # password
     "delegation.token.max.lifetime.ms" ? long(1..)
     "delete.records.purgatory.purge.interval.requests" ? long(0..)
-    "delete.topic.enable" ? boolean
+    "delete.topic.enable" ? choice("true", "false")
     "fetch.purgatory.purge.interval.requests" ? long(0..)
     "group.initial.rebalance.delay.ms" ? long(0..)
     "group.max.session.timeout.ms" ? long(0..)
@@ -51,7 +51,7 @@ type kafka_server_properties = {
     "log.cleaner.backoff.ms" ? long(0..)
     "log.cleaner.dedupe.buffer.size" ? long(0..)
     "log.cleaner.delete.retention.ms" ? long(0..)
-    "log.cleaner.enable" ? boolean
+    "log.cleaner.enable" ? choice("true", "false")
     "log.cleaner.io.buffer.load.factor" ? double
     "log.cleaner.io.buffer.size" ? long(0..)
     "log.cleaner.io.max.bytes.per.second" ? double
@@ -69,11 +69,11 @@ type kafka_server_properties = {
     "log.flush.start.offset.checkpoint.interval.ms" ? long(0..)
     "log.index.interval.bytes" ? long(0..)
     "log.index.size.max.bytes" ? long(0..)
-    "log.message.downconversion.enable" ? boolean
+    "log.message.downconversion.enable" ? choice("true", "false")
     "log.message.format.version" ? string with match(SELF, '^\d+\.\d+$')
     "log.message.timestamp.difference.max.ms" ? long(0..)
     "log.message.timestamp.type" ? string
-    "log.preallocate" ? boolean
+    "log.preallocate" ? choice("true", "false")
     "log.retention.bytes" ? long(0..)
     "log.retention.check.interval.ms" ? long(1..)
     "log.retention.hours" ? long(0..)
@@ -187,11 +187,11 @@ type kafka_server_properties = {
     "transaction.state.log.replication.factor" ? long(1..)
     "transaction.state.log.segment.bytes" ? long(1..)
     "transactional.id.expiration.ms" ? long(1..)
-    "unclean.leader.election.enable" ? boolean
+    "unclean.leader.election.enable" ? choice("true", "false")
     "zookeeper.connect" : string
     "zookeeper.connection.timeout.ms" ? long(100..)
     "zookeeper.max.in.flight.requests" ? long(1..)
     "zookeeper.session.timeout.ms" ? long(0..)
-    "zookeeper.set.acl" ? boolean
+    "zookeeper.set.acl" ? choice("true", "false")
     "zookeeper.sync.time.ms" ? long(0..)
 };
