@@ -12,7 +12,7 @@ Tests for export config
 ^\s{4}Tag = "home";$
 ^\s{4}Transports = TCP;$
 ^\s{4}CLIENT \{ $
-^\s{8}Access_Type = "RW";$
+^\s{8}Access_Type = RW;$
 ^\s{8}Clients = \*.vsc;$
 ^\s{8}Squash = "root_squash";$
 ^\s{4}\}$
@@ -34,7 +34,7 @@ Tests for export config
 ^\s{4}Tag = "data";$
 ^\s{4}Transports = TCP;$
 ^\s{4}CLIENT \{ $
-^\s{8}Access_Type = "RW";$
+^\s{8}Access_Type = RW;$
 ^\s{8}Clients = \*.vsc;$
 ^\s{8}Squash = "root_squash";$
 ^\s{4}\}$

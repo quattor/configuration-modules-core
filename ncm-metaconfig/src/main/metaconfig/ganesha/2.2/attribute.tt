@@ -1,4 +1,5 @@
 [%- comma_sep_list = ["Clients", "NFS_Protocols", "Protocols", "Transports", "SecType"] -%]
+[%- string_no_quotes = ["Filesystem_id", "Access_Type"] -%]
 [%- block_type = ["Components", "Format", "FSAL", "PNFS", "remote_server"] -%]
 [%- block_array = ["CLIENT", "DataServer", "Facility"] -%]
 
@@ -20,7 +21,7 @@
 [%-     CASE -%]
 [%-         pair.key -%] =
 [%-         SWITCH pair.key -%]
-[%-             CASE [ "Filesystem_id" ] -%]
+[%-             CASE [ string_no_quotes ] -%]
  [%                 pair.value -%]
 [%-             CASE comma_sep_list -%]
  [%                 pair.value.join(',') -%]
