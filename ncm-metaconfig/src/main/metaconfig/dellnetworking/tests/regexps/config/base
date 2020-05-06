@@ -114,3 +114,4 @@ vlt-domain 1
 support-assist
 !
 snmp-server contact "Contact Support"
+logging server 9.8.7.6 udp 123 severity log-debug

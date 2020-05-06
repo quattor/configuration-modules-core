@@ -61,3 +61,9 @@ prefix "interfaces/{port-channel5}";
 "slaves" = list("ethernet1/1/5");
 "vids" = list(55);
 "lacp/mode" = "active";
+
+prefix "logserver";
+"ip" = "9.8.7.6";
+"port" = 123;
+"transport" = "udp";
+"level" = "debug";

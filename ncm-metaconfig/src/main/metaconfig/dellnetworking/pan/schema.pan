@@ -117,6 +117,13 @@ type dellnetworking_feature = {
     'auto-breakout' ? boolean
 };
 
+type dellnetworking_logserver = {
+    "ip" : type_ipv4
+    "level" ? choice("emerg", "alert", "crit", "err", "warning", "notice", "info", "debug")
+    "transport" ? choice("tcp", "udp", "tls")
+    "port" ? long(1..65535)
+};
+
 type dellnetworking_config = {
     @{features}
     'feature' ? dellnetworking_feature
@@ -142,6 +149,8 @@ type dellnetworking_config = {
     'interfaces' : dellnetworking_interface{}
     @{VLT configuration}
     'vlt' ? dellnetworking_vlt
+    @{logserver configuration}
+    'logserver' ? dellnetworking_logserver
 } with {
     # VLT discovery interfaces cannot be interfaces
     if (exists(SELF['vlt'])) {
