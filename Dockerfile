@@ -16,25 +16,19 @@ RUN rpm -U http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
 # this is a quick way of pulling in a lot of required dependencies.
 # Surprisingly `which` is not installed by default and panc depends on it.
 # libselinux-utils is required for /usr/sbin/selinuxenabled
-# e2fsprogs is required for the chattr command
 RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices ncm-ncd \
-    e2fsprogs git libselinux-utils sudo perl-JSON-Any perl-Set-Scalar perl-Text-Glob \
+    git libselinux-utils sudo perl-JSON-Any perl-Set-Scalar perl-Text-Glob \
     perl-NetAddr-IP perl-Net-OpenNebula perl-REST-Client perl-Net-FreeIPA \
     perl-Crypt-OpenSSL-X509 perl-Date-Manip perl-Net-DNS
 
-# these are not by default in centos7, but quattor tests assume they are
-#RUN touch /usr/sbin/selinuxenabled /sbin/restorecon
-#RUN chmod +x /usr/sbin/selinuxenabled /sbin/restorecon
-
 # point library core to where we downloaded it
 ENV QUATTOR_TEST_TEMPLATE_LIBRARY_CORE /quattor/template-library-core-master
-COPY . /quattor_test
 
 # set workdir to where we'll run the tests
-# you need to provide the content of this directory when running this docker container:
-# first build this container:
-# docker build -t quattor_test .
+COPY --chown=100 . /quattor_test
 WORKDIR /quattor_test
+# yum-cleanup-repos.t requires non-root user
+USER 100
 
 # when running the container, by default run the tests 
 # you can run any command in the container from the cli.
