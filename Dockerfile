@@ -25,16 +25,14 @@ RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices ncm-
 ENV QUATTOR_TEST_TEMPLATE_LIBRARY_CORE /quattor/template-library-core-master
 
 # set workdir to where we'll run the tests
-COPY --chown=100 . /quattor_test
+COPY --chown=99 . /quattor_test
 WORKDIR /quattor_test
-# yum-cleanup-repos.t requires non-root user
-USER 100
+# yum-cleanup-repos.t must be run as a non-root user. It must also resolve
+# to a name (nobody) to avoid getpwuid($<) triggering a warning which fails
+# the tests.
+USER 99
 
+# By default maven writes to $HOME which doesn't work for user=nobody
+ENV MVN_ARGS -Dmaven.repo.local=/tmp/.m2
 # when running the container, by default run the tests 
-# you can run any command in the container from the cli.
-# e.g. to test configuration-modules-core/ncm-metaconfig
-# cd /path/to/configuration-modules-core
-# docker run --mount type=bind,source="$PWD",target=/quattor_test/configuration-modules-core \
-# quattor_test bash -c 'source /usr/bin/mvn_test.sh && \
-# cd /quattor_test/configuration-modules-core/ncm-metaconfig && mvn_test service-mailrc'
 CMD . /usr/bin/mvn_test.sh && mvn_test
