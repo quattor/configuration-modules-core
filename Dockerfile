@@ -20,7 +20,7 @@ RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices ncm-
     git libselinux-utils sudo perl-JSON-Any perl-Set-Scalar perl-Text-Glob \
     perl-NetAddr-IP perl-Net-OpenNebula perl-REST-Client perl-Net-FreeIPA \
     perl-Crypt-OpenSSL-X509 perl-Date-Manip perl-Net-DNS perl-Data-Compare \
-    perl-File-Touch
+    perl-File-Touch perl-Net-OpenStack-Client
 #perl-Git-Repository perl-Data-Structure-Util
 # Hack around the two missing Perl rpms for ncm-ceph
 RUN yum install -y cpanminus gcc
