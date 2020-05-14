@@ -12,15 +12,16 @@ RUN tar xvfz template-library-core-master.tar.gz
 RUN yum install -y maven epel-release
 RUN rpm -U http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
 
-# The available version of perl-Test-Quattor is too old for mvnprove.pl to work, but
-# this is a quick way of pulling in a lot of required dependencies.
+# The available version of perl-Test-Quattor is too old for mvnprove.pl to
+# work, but this is a quick way of pulling in a lot of required dependencies.
 # Surprisingly `which` is not installed by default and panc depends on it.
 # libselinux-utils is required for /usr/sbin/selinuxenabled
-RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices ncm-ncd \
-    git libselinux-utils sudo perl-JSON-Any perl-Set-Scalar perl-Text-Glob \
-    perl-NetAddr-IP perl-Net-OpenNebula perl-REST-Client perl-Net-FreeIPA \
-    perl-Crypt-OpenSSL-X509 perl-Date-Manip perl-Net-DNS perl-Data-Compare \
-    perl-File-Touch perl-Net-OpenStack-Client
+RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices \
+    ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
+    perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
+    perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
+    perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
+    perl-Set-Scalar perl-Text-Glob
 #perl-Git-Repository perl-Data-Structure-Util
 # Hack around the two missing Perl rpms for ncm-ceph
 RUN yum install -y cpanminus gcc
@@ -39,5 +40,5 @@ USER 99
 
 # By default maven writes to $HOME which doesn't work for user=nobody
 ENV MVN_ARGS -Dmaven.repo.local=/tmp/.m2
-# when running the container, by default run the tests 
+# Default action on running the container is to run all tests 
 CMD . /usr/bin/mvn_test.sh && mvn_test

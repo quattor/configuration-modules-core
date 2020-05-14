@@ -1,0 +1,20 @@
+name: Run Tests using Docker
+
+on:
+  push:
+    branches: [ github-action ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag configuration-modules-core
+    - name: Run the tests
+      run: docker run --rm configuration-modules-core
