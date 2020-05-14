@@ -19,7 +19,12 @@ RUN rpm -U http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
 RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices ncm-ncd \
     git libselinux-utils sudo perl-JSON-Any perl-Set-Scalar perl-Text-Glob \
     perl-NetAddr-IP perl-Net-OpenNebula perl-REST-Client perl-Net-FreeIPA \
-    perl-Crypt-OpenSSL-X509 perl-Date-Manip perl-Net-DNS
+    perl-Crypt-OpenSSL-X509 perl-Date-Manip perl-Net-DNS perl-Data-Compare \
+    perl-File-Touch
+#perl-Git-Repository perl-Data-Structure-Util
+# Hack around the two missing Perl rpms for ncm-ceph
+RUN yum install -y cpanminus gcc
+RUN cpanm install Git::Repository Data::Structure::Util
 
 # point library core to where we downloaded it
 ENV QUATTOR_TEST_TEMPLATE_LIBRARY_CORE /quattor/template-library-core-master
