@@ -190,7 +190,7 @@ type haproxy_service_bind_params = {
 };
 
 type haproxy_service_frontend = {
-    'acl' ? string[]
+    'acl' ? dict()
     'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
     'port' ? type_port
     'default_backend' : string
