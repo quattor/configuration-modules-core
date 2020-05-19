@@ -160,7 +160,7 @@ type haproxy_service_peers = {
 };
 
 @documentation {
-    configuration of stick-table
+    configuration of stick table
 }
 type haproxy_service_stick_table = {
     'type' : string
@@ -216,7 +216,7 @@ type haproxy_service_backend = {
 
 @documentation {
     haproxy config
-    see: http://www.haproxy.org/download/1.4/doc/configuration.txt
+    see documentation on www.haproxy.org
 }
 type haproxy_service = {
     'global' : haproxy_service_global
