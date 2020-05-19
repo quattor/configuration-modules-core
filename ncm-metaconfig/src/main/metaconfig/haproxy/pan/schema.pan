@@ -190,10 +190,12 @@ type haproxy_service_bind_params = {
 };
 
 type haproxy_service_frontend = {
+    'acl' ? string[]
     'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
     'port' ? type_port
     'default_backend' : string
     'params' ? haproxy_service_bind_params
+    'tcp-request' ? string[]
 };
 
 type haproxy_service_backend_server = {

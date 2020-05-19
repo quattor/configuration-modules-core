@@ -54,6 +54,8 @@ Test for config
 ^frontend\sirods-in$
 ^\s{4}bind\s\*:1247\scrt\s/some/file\sssl$
 ^\s{4}default_backend\sirods-bk$
+^\s{4}acl\snetwork_allowed\ssrc\s-f\s/etc/haproxy/whitelist.static$
+^\s{4}tcp-request\sconnection\sreject\sif\s\!network_allowed$
 ^backend\sirods-bk$
 ^\s{4}option\stcp-check$
 ^\s{4}tcp-check\sconnect$
