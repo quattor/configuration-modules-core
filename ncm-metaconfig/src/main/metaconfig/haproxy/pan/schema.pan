@@ -160,7 +160,7 @@ type haproxy_service_peers = {
 };
 
 @documentation {
-    configuration of stick-table
+    configuration of stick table
 }
 type haproxy_service_stick_table = {
     'type' : string
@@ -190,11 +190,13 @@ type haproxy_service_bind_params = {
 };
 
 type haproxy_service_frontend = {
+    'acl' ? dict()
     'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
     'port' ? type_port
     'default_backend' : string
     'params' ? haproxy_service_bind_params
     'mode' ? choice("tcp", "http")
+    'tcp-request' ? string[]
 };
 
 type haproxy_service_backend_server = {
@@ -216,7 +218,7 @@ type haproxy_service_backend = {
 
 @documentation {
     haproxy config
-    see: http://www.haproxy.org/download/1.4/doc/configuration.txt
+    see documentation on www.haproxy.org
 }
 type haproxy_service = {
     'global' : haproxy_service_global
