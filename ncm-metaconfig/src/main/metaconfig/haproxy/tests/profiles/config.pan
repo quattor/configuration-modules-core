@@ -68,7 +68,7 @@ prefix 'frontends/irods-in';
 "params/ssl" = true;
 "params/crt" = "/some/file";
 "acl/network_allowed" = "src -f /etc/haproxy/whitelist.static";
-"tcp-request" = list("connection reject if !network_allowed")
+"tcp-request" = list("connection reject if !network_allowed");
 
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
