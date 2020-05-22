@@ -134,6 +134,12 @@ type ssh_daemon_options_type = {
     "Port" ? long
     "PrintLastLog" ? legacy_binary_affirmation_string
     "PrintMotd" ? legacy_binary_affirmation_string
+    "RevokedKeys" ? string with {
+        if(!((SELF == 'none' ) || is_absolute_file_path(SELF))) {
+            error("RevokedKeys must either be a file path or none")
+        };
+        true;
+    }
     "RhostsAuthentication" ? legacy_binary_affirmation_string
     "ServerKeyBits" ? long
     "ShowPatchLevel" ? legacy_binary_affirmation_string
