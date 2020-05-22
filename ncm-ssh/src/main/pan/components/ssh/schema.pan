@@ -160,6 +160,7 @@ type ssh_client_options_type = {
     "EnableSSHKeysign" ? legacy_binary_affirmation_string
     "ForwardAgent" ? legacy_binary_affirmation_string
     "ForwardX11" ? legacy_binary_affirmation_string
+    "HashKnownHosts" ? legacy_binary_affirmation_string
     "GSSAPIDelegateCredentials" ? legacy_binary_affirmation_string
     "Port" ? long
     "PreferredAuthentications" ? ssh_preferred_authentication[]
