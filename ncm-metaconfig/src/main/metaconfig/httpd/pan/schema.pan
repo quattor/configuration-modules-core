@@ -335,7 +335,7 @@ type httpd_name_virtual_host = {
     "port" ? type_port
 };
 
-type httpd_auth_type = string with match(SELF, "^(None|Basic|Kerberos|Shibboleth|GSSAPI|openid-connect)$");
+type httpd_auth_type = choice("None", "Basic", "Kerberos", "Shibboleth", "GSSAPI", "openid-connect", "CAS");
 
 type httpd_auth = {
     "name": string
