@@ -189,14 +189,19 @@ type haproxy_service_bind_params = {
     include haproxy_service_bind_server_params
 };
 
+type haproxy_service_bind = {
+    'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
+    'params' ? haproxy_service_bind_params
+    'port' ? type_port
+};
+
 type haproxy_service_frontend = {
     'acl' ? dict()
-    'bind' : string with SELF == '*' || is_hostname(SELF) || is_absolute_file_path(SELF)
-    'port' ? type_port
+    'bind' : haproxy_service_bind[]
     'default_backend' : string
-    'params' ? haproxy_service_bind_params
     'mode' ? choice("tcp", "http")
     'tcp-request' ? string[]
+    'http-request' ? string[]
 };
 
 type haproxy_service_backend_server = {

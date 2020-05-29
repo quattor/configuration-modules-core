@@ -62,13 +62,17 @@ prefix 'proxys/-1';
     );
 
 prefix 'frontends/irods-in';
-"bind" = '*';
-"port" = 1247;
+"bind" = list(
+    dict(
+        "bind", '*',
+        "port", 1247,
+        "params", dict(
+            "ssl", true,
+            "crt", "/some/file")));
 "default_backend" = "irods-bk";
-"params/ssl" = true;
-"params/crt" = "/some/file";
 "acl/network_allowed" = "src -f /etc/haproxy/whitelist.static";
 "tcp-request" = list("connection reject if !network_allowed");
+"http-request" = list("redirect scheme https unless { ssl_fc }");
 
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";

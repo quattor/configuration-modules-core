@@ -55,6 +55,7 @@ Test for config
 ^\s{4}bind\s\*:1247\scrt\s/some/file\sssl$
 ^\s{4}acl\snetwork_allowed\ssrc\s-f\s/etc/haproxy/whitelist.static$
 ^\s{4}tcp-request\sconnection\sreject\sif\s\!network_allowed$
+^\s{4}http-request\sredirect\sscheme\shttps\sunless\s\{\sssl_fc\s\}$
 ^\s{4}default_backend\sirods-bk$
 ^backend\sirods-bk$
 ^\s{4}option\stcp-check$
