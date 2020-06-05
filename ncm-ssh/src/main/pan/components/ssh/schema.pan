@@ -96,6 +96,7 @@ type ssh_core_options_type = {
 
 # These are the options allowed under a Match clause
 type ssh_daemon_match_options_type = {
+    include ssh_authkeyscommand_options_type
     @{AcceptEnv, one per line}
     "AcceptEnv" ? string[]
     "AllowAgentForwarding" ? legacy_binary_affirmation_string
@@ -126,9 +127,23 @@ type ssh_daemon_match_options_type = {
     "X11UseLocalhost" ? legacy_binary_affirmation_string
 };
 
+type type_matchrule_options = {
+    include ssh_core_match_options_type
+    include ssh_daemon_match_options_type
+};
+
+type type_matchrule = {
+    "User" ? string[]
+    "Group" ? string[]
+    "Host" ? string[]
+    "LocalAddress" ? string[]
+    "LocalPort" ? string[]
+    "Addres" ? string[]
+    "Options" ? type_matchrule_options
+};
+
 type ssh_daemon_options_type = {
     include ssh_core_options_type
-    include ssh_authkeyscommand_options_type
     include ssh_daemon_match_options_type
     "AFSTokenPassing" ? legacy_binary_affirmation_string
     "GSSAPIStrictAcceptorCheck" ? legacy_binary_affirmation_string
@@ -147,6 +162,7 @@ type ssh_daemon_options_type = {
     @{ListenAddress, one per line}
     "ListenAddress" ? type_hostport[]
     "LoginGraceTime" ? long
+    "Match" ? type_matchrule[]
     "MaxStartups" ? long
     "NoneEnabled" ? legacy_binary_affirmation_string
     "PermitUserEnvironment" ? legacy_binary_affirmation_string
