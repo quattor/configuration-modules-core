@@ -66,21 +66,26 @@ type legacy_ssh_kexalgorithm = string with {
     true;
 };
 
+# Core options allowed in a Match block
+type ssh_core_match_options_type = {
+    "GSSAPIAuthentication" ? legacy_binary_affirmation_string
+    "HostbasedAuthentication" ? legacy_binary_affirmation_string
+    "PasswordAuthentication" ? legacy_binary_affirmation_string
+    "PubkeyAuthentication" ? legacy_binary_affirmation_string
+};
+
 type ssh_core_options_type = {
+    include ssh_core_match_options_type
     "AddressFamily" ? string with match (SELF, '^(any|inet6?)$')
     "ChallengeResponseAuthentication" ? legacy_binary_affirmation_string
     "Ciphers" ? legacy_ssh_ciphers
     "Compression" ? string with match (SELF, '^(yes|delayed|no)$')
-    "GSSAPIAuthentication" ? legacy_binary_affirmation_string
     "GSSAPICleanupCredentials" ? legacy_binary_affirmation_string
     "GSSAPIKeyExchange" ? legacy_binary_affirmation_string
     "GatewayPorts" ? legacy_binary_affirmation_string
-    "HostbasedAuthentication" ? legacy_binary_affirmation_string
     "LogLevel" ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
     "MACs" ? legacy_ssh_MACs
-    "PasswordAuthentication" ? legacy_binary_affirmation_string
     "Protocol" ? string
-    "PubkeyAuthentication" ? legacy_binary_affirmation_string
     "RSAAuthentication" ? legacy_binary_affirmation_string
     "RhostsRSAAuthentication" ? legacy_binary_affirmation_string
     "SendEnv" ? legacy_binary_affirmation_string
@@ -89,10 +94,8 @@ type ssh_core_options_type = {
     "KexAlgorithms" ? ssh_kexalgorithms[]
 };
 
-type ssh_daemon_options_type = {
-    include ssh_core_options_type
-    include ssh_authkeyscommand_options_type
-    "AFSTokenPassing" ? legacy_binary_affirmation_string
+# These are the options allowed under a Match clause
+type ssh_daemon_match_options_type = {
     @{AcceptEnv, one per line}
     "AcceptEnv" ? string[]
     "AllowAgentForwarding" ? legacy_binary_affirmation_string
@@ -105,6 +108,22 @@ type ssh_daemon_options_type = {
     "ClientAliveInterval" ? long
     "DenyGroups" ? string
     "DenyUsers" ? string
+    "KbdInteractiveAuthentication" ? legacy_binary_affirmation_string
+    "KerberosAuthentication" ? legacy_binary_affirmation_string
+    "MaxAuthTries" ? long
+    "PermitEmptyPasswords" ? legacy_binary_affirmation_string
+    "PermitRootLogin" ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
+    "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
+    "X11DisplayOffset" ? long
+    "X11Forwarding" ? legacy_binary_affirmation_string
+    "X11UseLocalhost" ? legacy_binary_affirmation_string
+};
+
+type ssh_daemon_options_type = {
+    include ssh_core_options_type
+    include ssh_authkeyscommand_options_type
+    include ssh_daemon_match_options_type
+    "AFSTokenPassing" ? legacy_binary_affirmation_string
     "GSSAPIStrictAcceptorCheck" ? legacy_binary_affirmation_string
     @{HostKey, one per line}
     "HostKey" ? string[]
@@ -112,8 +131,6 @@ type ssh_daemon_options_type = {
     "HPNBufferSize" ? long
     "IgnoreRhosts" ? legacy_binary_affirmation_string
     "IgnoreUserKnownHosts" ? legacy_binary_affirmation_string
-    "KbdInteractiveAuthentication" ? legacy_binary_affirmation_string
-    "KerberosAuthentication" ? legacy_binary_affirmation_string
     "KerberosGetAFSToken" ? legacy_binary_affirmation_string
     "KerberosOrLocalPasswd" ? legacy_binary_affirmation_string
     "KerberosTgtPassing" ? legacy_binary_affirmation_string
@@ -123,12 +140,8 @@ type ssh_daemon_options_type = {
     @{ListenAddress, one per line}
     "ListenAddress" ? type_hostport[]
     "LoginGraceTime" ? long
-    "MaxAuthTries" ? long
     "MaxStartups" ? long
     "NoneEnabled" ? legacy_binary_affirmation_string
-    "PermitEmptyPasswords" ? legacy_binary_affirmation_string
-    "PermitRootLogin" ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
-    "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
     "PermitUserEnvironment" ? legacy_binary_affirmation_string
     "PidFile" ? string
     "Port" ? long
@@ -148,9 +161,6 @@ type ssh_daemon_options_type = {
     "UsePAM" ? legacy_binary_affirmation_string
     "UsePrivilegeSeparation" ? legacy_binary_affirmation_string
     "VerifyReverseMapping" ? legacy_binary_affirmation_string
-    "X11DisplayOffset" ? long
-    "X11Forwarding" ? legacy_binary_affirmation_string
-    "X11UseLocalhost" ? legacy_binary_affirmation_string
 };
 
 type ssh_client_options_type = {
