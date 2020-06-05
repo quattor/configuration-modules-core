@@ -100,17 +100,24 @@ type ssh_daemon_match_options_type = {
     "AcceptEnv" ? string[]
     "AllowAgentForwarding" ? legacy_binary_affirmation_string
     "AllowGroups" ? string
+    "AllowStreamLocalForwarding" ? choice('yes', 'no', 'all', 'local', 'remote')
     "AllowTcpForwarding" ? legacy_binary_affirmation_string
     "AllowUsers" ? string
     "AuthorizedKeysFile" ? string
     "Banner" ? string
+    "ChrootDirectory" ? string
     "ClientAliveCountMax" ? long
     "ClientAliveInterval" ? long
     "DenyGroups" ? string
     "DenyUsers" ? string
+    "ForceCommand" ? string
+    "GatewayPorts" ? choice('yes', 'no', 'clientspecified')
+    "HostbasedAuthentication" ? legacy_binary_affirmation_string
+    "HostbasedUsesNameFromPacketOnly" ? legacy_binary_affirmation_string
     "KbdInteractiveAuthentication" ? legacy_binary_affirmation_string
     "KerberosAuthentication" ? legacy_binary_affirmation_string
     "MaxAuthTries" ? long
+    "MaxSessions" ? long(0..)
     "PermitEmptyPasswords" ? legacy_binary_affirmation_string
     "PermitRootLogin" ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
     "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
