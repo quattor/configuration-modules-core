@@ -62,7 +62,7 @@ type structure_altlogrotate_logrot = {
     'taboo_replace' ? boolean
     'tabooext' ? string[]
 
-    'frequency' ? string with match(SELF, '^(daily|weekly|monthly)$')
+    'frequency' ? choice('daily', 'weekly', 'monthly', 'yearly')
 
     'scripts' ? structure_altlogrotate_scripts
 } with {
