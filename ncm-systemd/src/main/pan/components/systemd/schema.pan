@@ -145,6 +145,10 @@ http://www.freedesktop.org/software/systemd/man/systemd.exec.html
 valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_exec = {
+    'CacheDirectoryMode' ? type_octal_mode
+    'CacheDirectory' ? string[]
+    'ConfigurationDirectoryMode' ? type_octal_mode
+    'ConfigurationDirectory' ? string[]
     'CPUAffinity' ? long[][] # start with empty list to reset
     'CPUSchedulingPolicy' ? string with match(SELF, '^(other|batch|idle|fifo|rr)$')
     'CPUSchedulingPriority' ? long(1..99) # 99 = highest
@@ -170,13 +174,20 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'LimitRTTIME' ? long(-1..) # Specifies a limit (in microseconds) on the amount of CPU time that a process scheduled under a real-time scheduling policy may consume without making a blocking system call.
     'LimitSIGPENDING' ? long(-1..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
     'LimitSTACK' ? long(-1..) # The maximum size of the process stack, in bytes.
+    'LogsDirectoryMode' ? type_octal_mode
+    'LogsDirectory' ? string[]
     'Nice' ? long(-20..19)
     'OOMScoreAdjust' ? long(-1000..1000)
     'PrivateTmp' ? boolean
     'RootDirectory' ? string
+    'RuntimeDirectoryMode' ? type_octal_mode
+    'RuntimeDirectoryPreserve' ? choice('yes', 'no', 'restart')
+    'RuntimeDirectory' ? string[]
     'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
     'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
+    'StateDirectoryMode' ? type_octal_mode
+    'StateDirectory' ? string[]
     'SupplementaryGroups' ? defined_group[]
     'SyslogFacility' ? syslog_facility
     'SyslogIdentifier' ? string
@@ -186,7 +197,7 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'TTYReset' ? boolean
     'TTYVHangup' ? boolean
     'TTYVTDisallocate' ? boolean
-    'UMask' ? string # octal notation, e.g. 0022
+    'UMask' ? type_octal_mode
     'User' ? defined_user
     'WorkingDirectory' ? string
 };

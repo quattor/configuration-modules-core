@@ -19,6 +19,9 @@ contentspath=/unitfile/0
 ^ExecStart=/usr/bin/special$
 ^LimitNPROC=100$
 ^LimitSTACK=infinity$
+^RuntimeDirectory=foo/bar tmp$
+^RuntimeDirectoryMode=0777$
+^RuntimeDirectoryPreserve=restart$
 ^TTYReset=yes$
 ^TTYVHangup=no$
 ^\[Unit\]$
