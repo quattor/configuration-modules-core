@@ -24,6 +24,13 @@ contentspath=/unitfile/0
 ^RuntimeDirectoryPreserve=restart$
 ^TTYReset=yes$
 ^TTYVHangup=no$
+^\[Socket\]$
+^ExecStartPre=/some/path arg1$
+^ExecStartPre=-/some/other/path arg2$
+^ListenStream=/path/to/pipe$
+^SocketGroup=pipegroup$
+^SocketMode=660$
+^SocketUser=pipeuser$
 ^\[Unit\]$
 ^After=unit0$
 ^After=unit01$
