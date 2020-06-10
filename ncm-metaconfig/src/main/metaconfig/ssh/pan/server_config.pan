@@ -6,3 +6,5 @@ bind "/software/components/metaconfig/services/{/etc/ssh/sshd_config}/contents" 
 
 prefix "/software/components/metaconfig/services/{/etc/ssh/sshd_config}";
 "module" = "ssh/server";
+"commands/test" = "/usr/sbin/sshd -t -f /dev/stdin";
+"daemons/sshd" = "restart";
