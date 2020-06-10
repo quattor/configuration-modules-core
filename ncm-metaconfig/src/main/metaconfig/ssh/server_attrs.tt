@@ -4,7 +4,7 @@
     -%]
 [%- FOREACH pair IN data.pairs -%]
 [%     SWITCH pair.key -%]
-[%         CASE 'matches' %][% # do nothing -%]
+[%         CASE 'criteria' %][% # do nothing -%]
 [%         CASE commalist -%]
 [%             pair.key %] [% pair.value.join(',') %]
 [%         CASE multilinelist -%]

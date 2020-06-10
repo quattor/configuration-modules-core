@@ -135,13 +135,27 @@ type ssh_config_opts = {
 type ssh_config_host = {
     "hostnames" : string[]
     include ssh_config_opts
+};
 
+type ssh_config_match_criteria = {
+    "all" ? boolean with SELF
+    "canonical" ? boolean with SELF
+    "final" ? boolean with SELF
+    "user" ? string[]
+    "localuser" ? string[]
+    "host" ? string[]
+    "originalhost" ? string[]
+    "exec" ? string
+} with {
+    if (exists(SELF['all']) && length(SELF) > 1) {
+        error('You can only set all, no other options allowed');
+    };
+    true;
 };
 
 type ssh_config_match = {
-    "matches" : string[]
+    "criteria" : ssh_config_match_criteria with length(SELF) > 0
     include ssh_config_opts
-
 };
 
 type ssh_config_file = {
@@ -207,8 +221,24 @@ type sshd_config_match_opts = {
     'X11UseLocalHost' ? boolean
 };
 
+type sshd_config_match_criteria = {
+    "All" ? boolean with SELF
+    "User" ? string[]
+    "Group" ? string[]
+    "Host" ? string[]
+    "LocalAddress" ? string[]
+    "LocalPort" ? string[]
+    "RDomain" ? string[]
+    "Address" ? string[]
+} with {
+    if (exists(SELF['All']) && length(SELF) > 1) {
+        error('You can only set All, no other options allowed');
+    };
+    true;
+};
+
 type sshd_config_match = {
-    "matches" : string[]
+    "criteria" : sshd_config_match_criteria with length(SELF) > 0
     include sshd_config_match_opts
 };
 

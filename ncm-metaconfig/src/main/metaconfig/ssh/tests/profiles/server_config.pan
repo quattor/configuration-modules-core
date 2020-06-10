@@ -9,9 +9,13 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/sshd_config}/contents
 "main/PasswordAuthentication" = false;
 "main/Subsystem" = dict("sftp", "internal-sftp");
 
-'Match' = append(
-                dict(
-                    "matches", list("User testuser2", "Address 192.168.0.0/16"),
-                    "PasswordAuthentication", true,
-                )
-        );
+"Match/0/criteria" = dict(
+    "User", list("testuser2"),
+    "Address", list("192.168.0.0/16", "!192.168.10.0/24"),
+    );
+"Match/0/PasswordAuthentication" = true;
+
+"Match/1/criteria" = dict(
+    "All", true,
+    );
+"Match/1/PasswordAuthentication" = false;

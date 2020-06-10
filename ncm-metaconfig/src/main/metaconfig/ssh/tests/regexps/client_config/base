@@ -8,7 +8,7 @@ Base test for ssh client config
 ^IdentityFile\s~/.ssh/id_rsa$
 ^IdentityFile\s~/.ssh/id_dsa$
 ^$
-^Match\suser\stestuser2\soriginalhost\shostname4$
+^Match\scanonical\sexec\s/a/b/c\soriginalhost\shostname4\suser\stestuser2$
 ^\s{4}BatchMode\syes$
 ^\s{4}ForwardX11\sno$
 ^\s{4}NumberOfPasswordPrompts\s1$
