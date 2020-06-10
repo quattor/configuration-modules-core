@@ -86,6 +86,18 @@ type ${project.artifactId}_textrender_convert = {
 
 type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
 
+type ${project.artifactId}_commands = {
+    @{Always run, happens before possible modifications}
+    'pre' ? string
+    @{Always run, happens before possible modifications, the file content is passed om stdin.
+      Runs with 'keeps_state' enabled, so do not modify anything with this command.}
+    'test' ? string
+    @{Only run after file is modified, but after daemon action is added}
+    'changed' ? string
+    @{Always run, happens after possible modifications (and after 'changed').}
+    'post' ? string
+};
+
 type ${project.artifactId}_config =  {
     @{File permissions. Defaults to 0644.}
     'mode' : long = 0644
@@ -118,6 +130,9 @@ type ${project.artifactId}_config =  {
     'contents' : ${project.artifactId}_extension
     @{Predefined conversions from EDG::WP4::CCM::TextRender}
     'convert' ? ${project.artifactId}_textrender_convert
+    @{Commands to run on pre, validation and/or post step.
+      These are independent of daemons and are executed at time of processing each service.}
+    'commands' ? ${project.artifactId}_commands
 } = dict();
 
 type ${project.artifactId}_component = {

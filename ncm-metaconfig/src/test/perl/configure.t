@@ -1,12 +1,8 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(configure);
+use Test::Quattor qw(configure commands);
 use NCM::Component::metaconfig;
-use Test::MockModule;
-use CAF::Object;
-
-use JSON::XS;
 
 =pod
 

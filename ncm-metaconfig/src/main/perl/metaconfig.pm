@@ -160,15 +160,121 @@ our $EC = LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
+# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>,
+# prepare the actions to be taken for this service/file.
+# C<actions> is updated in-place; does not return anything.
+sub prepare_action
+{
+    my ($self, $srv, $file, $actions) = @_;
+
+    # Not using a hash here to detect and support
+    # any overlap with legacy daemon-restart config
+    my @daemon_action;
+
+    my $file_msg = "for file $file";
+
+    foreach my $daemon (sort keys %{$srv->{daemons} || {}}) {
+        push(@daemon_action, $daemon, $srv->{daemons}->{$daemon});
+    }
+
+    if ($srv->{daemon}) {
+        $self->verbose("Deprecated daemon(s) restart via daemon field $file_msg.");
+        foreach my $daemon (@{$srv->{daemon}}) {
+            if ($srv->{daemons}->{$daemon}) {
+                $self->verbose("Daemon $daemon also defined in daemons field $file_msg. Adding restart action anyway.");
+            }
+            push(@daemon_action, $daemon, 'restart');
+        }
+    }
+
+    my @acts;
+    while (my ($daemon,$action) = splice(@daemon_action, 0, 2)) {
+        if (exists($ALLOWED_ACTIONS{$action})) {
+            $actions->{$action} ||= {};
+            $actions->{$action}->{$daemon} = 1;
+            push(@acts, "$daemon:$action");
+        } else {
+            $self->error("Not a CAF::Service allowed action ",
+                         "$action for daemon $daemon $file_msg ",
+                         "in profile (component/schema mismatch?).");
+        }
+    }
+
+    if (@acts) {
+        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $file_msg.");
+    } else {
+        $self->verbose("No daemon/action scheduled $file_msg.");
+    }
+}
+
+# Take the action for all daemons as defined in hash-reference C<$actions>.
+# Does not return anything.
+sub process_actions
+{
+    my ($self, $actions) = @_;
+    foreach my $action (sort keys %$actions) {
+        my @daemons = sort keys %{$actions->{$action}};
+        $self->info("Executing action $action on services: ", join(',', @daemons));
+        my $srv = CAF::Service->new(\@daemons, log => $self);
+        # CAF::Service does all the logging we need
+        $srv->$action();
+    }
+}
+
+# Run $service shell command of $type (ie a string) (if defined).
+#   $msg is a reporting prefix
+#   When $input is not undef, pass it on stdin
+# Return 1 on success, undef otherwise.
+sub run_shell_command
+{
+    my ($self, $commands, $type, $input) = @_;
+
+    my $command = $commands->{$type};
+    if ($command) {
+        $self->debug(1, "Going to run $type command '$command'");
+
+        my ($err, $out);
+        my %opts = (
+            shell => 1,
+            log => $self,
+            stdout => \$out,
+            stderr => \$err,
+            );
+        if (defined($input)) {
+            $opts{stdin} = "$input";
+        };
+        if ($type eq 'test') {
+            $opts{keeps_state} = 1;
+        };
+
+        CAF::Process->new([$command], %opts)->execute();
+
+        my $ec = $?;
+
+        my $report = $ec ? 'error' : 'verbose';
+        $self->$report("run $type command '$command' ",
+                         ($ec ? 'failed' : 'ok'),
+                         ,": stdout '$out'\n stderr '$err'",
+                         ($input ? "\n stdin '$input'" : ""));
+        return $ec ? undef : 1;
+    } else {
+        $self->debug(5, "No $type command to run");
+        return 1;
+    };
+}
+
 # Generate C<$file>, configuring C<$srv> using CAF::TextRender with
 # contents C<$contents> (if C<$contents>  is not defined,
 # C<$srv->{contents}> is used).
 # Also tracks the actions that need to be taken via the
 # C<$sa> C<CAF::ServiceActions> instance.
-# Returns undef in case of rendering failure, 1 otherwise.
+# Returns undef in case of rendering or other failure, 1 otherwise.
 sub handle_service
 {
     my ($self, $file, $srv, $contents, $sa) = @_;
+
+    my $commands = $srv->{commands} || {};
+    return if ! $self->run_shell_command($commands, 'pre');
 
     $contents = $srv->{contents} if (! defined($contents));
 
@@ -202,15 +308,22 @@ sub handle_service
         return;
     }
 
+    if (! $self->run_shell_command($commands, 'test', "$fh")) {
+        $fh->cancel();
+        return;
+    };
+
     if ($fh->close()) {
         $self->info("File $file updated");
         $sa->add($srv->{daemons}, msg => "for file $file");
+        return if ! $self->run_shell_command($commands, 'changed');
     } else {
         $self->verbose("File $file up-to-date");
     };
 
-    return 1;
+    return $self->run_shell_command($commands, 'post');
 }
+
 
 sub _configure_files
 {
