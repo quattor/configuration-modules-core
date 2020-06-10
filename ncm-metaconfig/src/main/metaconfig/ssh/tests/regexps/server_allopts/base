@@ -25,7 +25,7 @@ Base test for all ssh server config options
 ^Compression\sNo$
 ^DenyGroups\sadm$
 ^DenyUsers\sroot$
-^DisableForwarding\s0$
+^DisableForwarding\sNo$
 ^ExposeAuthInfo\sNo$
 ^FingerprintHash\ssha256$
 ^ForceCommand\scat\s/etc/motd$
@@ -65,9 +65,9 @@ Base test for all ssh server config options
 ^PermitEmptyPasswords\sNo$
 ^PermitListen\s8080\s127\.0\.0\.1:\*$
 ^PermitOpen\s8080\s192\.168\.0\.1:\*$
-^PermitRootLogin\sYes$
+^PermitRootLogin\sprohibit-password$
 ^PermitTTY\sYes$
-^PermitTunnel\sYes$
+^PermitTunnel\spoint-to-point$
 ^PermitUserEnvironment\sNo$
 ^PermitUserRC\sNo$
 ^PidFile\s/run/sshd\.pid$
@@ -78,10 +78,10 @@ Base test for all ssh server config options
 ^PubkeyAcceptedKeyTypes\s-ssh-rsa$
 ^PubkeyAuthentication\sYes$
 ^RDomain\s%D$
-^RSAAuthentication\s0$
+^RSAAuthentication\sNo$
 ^RekeyLimit\s1G\s300s$
 ^RevokedKeys\s/etc/ssh/revoked_keys$
-^RhostsRSAAuthentication\s0$
+^RhostsRSAAuthentication\sNo$
 ^SetEnv\sLC_ALL="C"$
 ^SetEnv\sTERM="xterm"$
 ^StreamLocalBindMask\s0177$
@@ -95,5 +95,5 @@ Base test for all ssh server config options
 ^VersionAddendum\sextra$
 ^X11DisplayOffset\s10$
 ^X11Forwarding\sYes$
-^X11UseLocalHost\s1$
+^X11UseLocalHost\sYes$
 ^XAuthLocation\s/usr/bin/xauth$

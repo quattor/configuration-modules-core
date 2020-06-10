@@ -8,7 +8,7 @@ include 'pan/types';
 type temp_ssh_ciphers = string with match (SELF, "^[+-]?(" +
     "(blowfish|3des|aes(128|192|256)|cast128)-cbc" +
     "|aes(128|192|256)-ctr|arcfour|arcfour(128|256)" +
-    "|aes(128|256)-gcm|chacha20-poly1305)@openssh.com)$");
+    "|(aes(128|256)-gcm|chacha20-poly1305)@openssh.com)$");
 type temp_ssh_hostkeyalgorithms = string with match(SELF, "^[+-]?(" +
     "ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)|" +
     "(ssh-rsa-cert-v0[01]|ssh-dss-cert-v01|ecdsa-sha2-nistp(256|384|521)-cert-v01|" +
