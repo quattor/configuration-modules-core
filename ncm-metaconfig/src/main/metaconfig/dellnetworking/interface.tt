@@ -15,7 +15,7 @@ no ipv6 enable
 [%          END -%]
 [%      END -%]
 [%      IF data.exists('switchport') -%]
-[%-# Set switchport = 1 to not print any switchport statements
+[%-#          Set switchport = true to not print any switchport statements
               IF ! data.switchport -%]
 no switchport
 [%            END -%]
@@ -25,7 +25,7 @@ switchport mode trunk
 switchport access vlan [% data.access %]
 [%          END -%]
 [%          IF data.exists('vids') -%]
-switchport trunk allowed vlan [% data.vids.join(',') %]
+switchport trunk allowed vlan [% INCLUDE 'metaconfig/dellnetworking/range.tt' intlist=data.vids %]
 [%          END -%]
 [%      ELSE -%]
 switchport mode access

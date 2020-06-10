@@ -1,0 +1,3 @@
+[%- FOREACH route IN data -%]
+ip route [% route.subnet %]/[% route.mask %] [% route.gateway %]
+[% END -%]
