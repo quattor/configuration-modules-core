@@ -48,6 +48,7 @@ bind "/unitfile" = systemd_unitfile_config[];
             '/envfile/1',
             '/envfile/2',
             ),
+        'ExecStart', '/usr/bin/special',
         'TTYReset', true,
         'TTYVHangup', false,
         'LimitSTACK', -1,

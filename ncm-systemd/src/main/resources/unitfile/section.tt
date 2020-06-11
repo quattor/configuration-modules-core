@@ -7,7 +7,7 @@
 [%-                  INCLUDE 'systemd/unitfile/list_of_lines.tt' name=pair.key data=value -%]
 [%-              ELSE -%]
 [%-                  pair.key %]=[% INCLUDE 'systemd/unitfile/attribute_value.tt' data=value %]
-[%-              END -%]
+[%               END -%]
 [%-          CASE long_infinity -%]
 [%-              pair.key %]=[% value == -1 ? 'infinity' : value %]
 [%           CASE -%]
