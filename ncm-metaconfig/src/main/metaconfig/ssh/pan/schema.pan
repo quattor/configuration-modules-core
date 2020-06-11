@@ -119,7 +119,7 @@ type ssh_config_opts = {
     'StreamLocalBindMask' ? string
     'StreamLocalBindUnlink' ? boolean
     'StrictHostKeyChecking' ? string with match (SELF, "^(yes|no|ask)$")
-    'SyslogFacility' ? string with match(SELF, "^(DAEMON|USER|AUTH|LOCAL[0-7])$")
+    'SyslogFacility' ? string with match(SELF, "^(DAEMON|USER|AUTH(PRIV)?|LOCAL[0-7])$")
     'TCPKeepAlive' ? boolean
     'Tunnel' ? string with match (SELF, "^(yes|no|point-to-point|ethernet)$")
     'TunnelDevice' ? string
