@@ -86,7 +86,7 @@ type ${project.artifactId}_textrender_convert = {
 
 type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
 
-type ${project.artifactId}_commands = {
+type ${project.artifactId}_actions = {
     @{Always run, happens before possible modifications}
     'pre' ? string
     @{Always run, happens before possible modifications, the file content is passed om stdin.
@@ -130,12 +130,26 @@ type ${project.artifactId}_config =  {
     'contents' : ${project.artifactId}_extension
     @{Predefined conversions from EDG::WP4::CCM::TextRender}
     'convert' ? ${project.artifactId}_textrender_convert
-    @{Commands to run on pre, validation and/or post step.
+    @{Actions (i.e. named registered commands) to run on pre, validation and/or post step.
       These are independent of daemons and are executed at time of processing each service.}
-    'commands' ? ${project.artifactId}_commands
+    'actions' ? ${project.artifactId}_actions
 } = dict();
 
 type ${project.artifactId}_component = {
     include structure_component
     'services' : ${project.artifactId}_config{} with valid_absolute_file_paths(SELF)
+    @{Command registry for allowed actions, keys should be used as action value}
+    'commands' ? string{}
+} with {
+    foreach (esc_fn; srv; SELF['services']) {
+        if (exists(srv['actions'])) {
+            foreach (action; cmd_ref; srv['actions']) {
+                if (!(exists(SELF['commands']) && exists(SELF['commands'][cmd_ref]))) {
+                    error('Found %s action %s for %s, but no matching command registered',
+                            action, cmd_ref, unescape(esc_fn));
+                };
+            };
+        };
+    };
+    true;
 };
