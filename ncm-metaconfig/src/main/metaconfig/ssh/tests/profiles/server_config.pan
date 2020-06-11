@@ -1,5 +1,11 @@
 object template server_config;
 
+# add this to test the actions/commands to trigger the main metaconfig bind
+function pkg_repl = { null; };
+include 'components/metaconfig/config';
+# remove the dependencies
+'/software/components/metaconfig/dependencies' = null;
+
 include 'metaconfig/ssh/server_config';
 
 prefix "/software/components/metaconfig/services/{/etc/ssh/sshd_config}/contents";
