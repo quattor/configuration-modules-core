@@ -130,16 +130,22 @@ type ${project.artifactId}_config =  {
     'contents' : ${project.artifactId}_extension
     @{Predefined conversions from EDG::WP4::CCM::TextRender}
     'convert' ? ${project.artifactId}_textrender_convert
-    @{Actions (i.e. named registered commands) to run on pre, validation and/or post step.
-      These are independent of daemons and are executed at time of processing each service.}
+    @{Actions (i.e. names found in /software/components/metadata/commands) to run when processing the service.
+      Refer to the metaconfig_actions type definition for the available hooks
+      for when a command may be run.}
     'actions' ? ${project.artifactId}_actions
 } = dict();
+
+@{Command must start with absolute path to executable.
+  If the executable is preceded with a '-', it means that the a command failure
+  treated as success w.r.t. reporting and continuation.}
+type ${project.artifactId}_command = string with match(SELF, '^-?/');
 
 type ${project.artifactId}_component = {
     include structure_component
     'services' : ${project.artifactId}_config{} with valid_absolute_file_paths(SELF)
     @{Command registry for allowed actions, keys should be used as action value}
-    'commands' ? string{}
+    'commands' ? ${project.artifactId}_command{}
 } with {
     foreach (esc_fn; srv; SELF['services']) {
         if (exists(srv['actions'])) {

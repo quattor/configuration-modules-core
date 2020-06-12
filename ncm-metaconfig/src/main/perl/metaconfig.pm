@@ -154,6 +154,7 @@ use EDG::WP4::CCM::TextRender 18.6.1;
 use CAF::Service;
 use CAF::ServiceActions;
 use EDG::WP4::CCM::Path qw(unescape);
+use Text::ParseWords qw(old_shellwords);
 use Readonly;
 
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -173,11 +174,23 @@ sub run_shell_command
 
     my $command = $commands->{$type};
     if ($command) {
-        $self->debug(1, "Going to run $type command '$command'");
+        my $error_on_fail = 1;
+        if ($command =~ m/^-/) {
+            $command =~ s/^-//;
+            $error_on_fail = 0;
+        }
+        my $cmd_ref = [old_shellwords($command)];
+        if (!$cmd_ref) {
+            $self->error("Failed to split '$command'");
+            return;
+        }
+
+        $self->verbose("Going to run $type command '$command' as ['",
+                       join("','", @$cmd_ref), "']",
+                       $error_on_fail ? "" : " and no error reporting on fail");
 
         my ($err, $out);
         my %opts = (
-            shell => 1,
             log => $self,
             stdout => \$out,
             stderr => \$err,
@@ -189,16 +202,17 @@ sub run_shell_command
             $opts{keeps_state} = 1;
         };
 
-        CAF::Process->new([$command], %opts)->execute();
+        CAF::Process->new($cmd_ref, %opts)->execute();
 
         my $ec = $?;
 
-        my $report = $ec ? 'error' : 'verbose';
+        my $report = $ec && $error_on_fail ? 'error' : 'verbose';
         $self->$report("run $type command '$command' ",
-                         ($ec ? 'failed' : 'ok'),
-                         ,": stdout '$out'\n stderr '$err'",
-                         ($input ? "\n stdin '$input'" : ""));
-        return $ec ? undef : 1;
+                       ($ec ? 'failed' : 'ok'),
+                       ($error_on_fail ? '' : ' (no error on fail set)'),
+                       ,": stdout '$out'\n stderr '$err'",
+                       ($input ? "\n stdin '$input'" : ""));
+        return $ec && $error_on_fail ? undef : 1;
     } else {
         $self->debug(5, "No $type command to run");
         return 1;
