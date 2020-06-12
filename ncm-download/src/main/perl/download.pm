@@ -52,6 +52,7 @@ use CAF::Process;
 use POSIX;
 
 use CAF::Download::LWP;
+use CAF::ServiceActions;
 
 use EDG::WP4::CCM::Path qw(unescape);
 use CAF::Object qw(SUCCESS);
@@ -108,6 +109,8 @@ sub Configure
 
     my $proxyhosts = $tree->{proxyhosts} || [];
 
+    my $sa = CAF::ServiceActions->new(log => $self);
+
     foreach my $esc_fn (sort keys %{$tree->{files}}) {
         my $fn = unescape($esc_fn);
         my $file = $tree->{files}->{$esc_fn};
@@ -131,7 +134,7 @@ sub Configure
 
 
         # download
-        next if ! $self->download($fn, $file, $proxyhosts);
+        next if ! $self->download($fn, $file, $proxyhosts, $sa);
 
         # post-processing
         my $cmd = $file->{post};
@@ -149,6 +152,8 @@ sub Configure
         $self->info("successfully processed file $fn");
     }
 
+    $sa->run();
+
     return 1;
 }
 
@@ -157,9 +162,10 @@ sub Configure
 # fn is the destination filename to download to
 # file is a hashref with download details
 # proxyhosts is a array with proxy hosts (the arrayref might be modified)
+# $sa is a C<CAF::ServiceActions> instance.
 sub download
 {
-    my ($self, $fn, $file, $proxyhosts) = @_;
+    my ($self, $fn, $file, $proxyhosts, $sa) = @_;
 
     # Sanitize source
     my $source = $file->{href};
@@ -207,6 +213,8 @@ sub download
         # TODO: timeout used to be only per file for proxies, and not at all for non-proxy
         timeout => $file->{timeout},
         allow_older => $file->{allow_older},
+        service_action => $sa,
+        daemons => $file->{daemons},
         );
 
     my $success = 0;
@@ -256,6 +264,7 @@ sub download
         # $r == 0 means there was no change
         if ($r > 0) {
             $self->info("updated $msg");
+            $sa->add($file->{daemons}, msg => "for file $fn");
         } elsif ($r < 0) {
             # TODO: returning failure here. this did not used to be the case
             $self->error("failed to update perms/ownership of $msg");
@@ -392,6 +401,8 @@ sub retrieve
                     # This should ensure an existing download is replaced atomically.
                     if ($self->move($tmpfn, $fn)) {
                         $self->debug(1, "Succesfully renamed temporary file $tmpfn to $fn");
+                        $opts{service_action}->add($opts{daemons}, msg => "for file $fn")
+                            if defined $opts{service_action};
                         return 1;
                     } else {
                         $self->error("Unable to rename temporary file $tmpfn to $fn: $self->{fail}");

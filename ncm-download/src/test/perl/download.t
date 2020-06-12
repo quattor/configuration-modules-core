@@ -140,6 +140,7 @@ ok(command_history_ok([
     # no proxy, with postprocess
     '/usr/bin/curl -s -R -f --create-dirs -o /a/b/.e.part def://ok/something/entirely/different',
     'postprocess /a/b/e',
+    'service magic restart',
 ], [
     # working2 proxy should not be used
     'https://working2/',

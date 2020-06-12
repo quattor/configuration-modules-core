@@ -9,8 +9,7 @@ type component_download_file = {
       used. Local files can be used as source, such as
       file://localhost/etc/foo.txt or even file:///etc/foo.txt.}
     "href"    : string
-    @{Specify the command (no options allowed) to run
-      whenever the file is updated.
+    @{Specify the command (no options allowed) to run after non-failed download attempt.
       The filename is added as first and (only) argument.
       Note that if the update is
       optimised away by the download process (e.g. if the file is
@@ -41,6 +40,14 @@ type component_download_file = {
     "timeout" ? long
     @{allow older remote file}
     "allow_older" ? boolean
+    @{A dict of daemonname => caf_serviceaction indicating what actions
+      should be applied to daemonname if the file changes. This allows,
+      for example, the restarting of a daemon upon file change.
+      Even if multiple services are associated to the same daemon, each action
+      for the daemon will be taken at most once.
+      If multiple actions are to be taken for the same daemon, all actions
+      will be taken (no attempt to optimize is made).}
+    'daemons' ? caf_serviceaction{}
 };
 
 type download_component = extensible {
