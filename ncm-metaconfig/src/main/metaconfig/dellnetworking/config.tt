@@ -16,7 +16,6 @@
 [% IF CCM.contents.exists('routes') -%]
 [%-      INCLUDE 'metaconfig/dellnetworking/routes.tt' data=CCM.contents.routes %]
 [%- END -%]
-[% INCLUDE 'metaconfig/dellnetworking/supportassist.tt' -%]
 [% INCLUDE 'metaconfig/dellnetworking/snmp.tt' -%]
 [% IF CCM.contents.exists('logserver') -%]
 [%-      INCLUDE 'metaconfig/dellnetworking/logserver.tt' data=CCM.contents.logserver %]
