@@ -11,12 +11,20 @@ include 'quattor/aii/opennebula/schema';
 
 type directory = string with match(SELF, '[^/]+/?$');
 
+type opennebula_device_prefix = choice('hd', 'sd', 'vd');
+
+type opennebula_vdc_rules = choice('USE', 'MANAGE', 'ADMIN');
+
 type opennebula_mysql_db = {
     "server" ? string
     "port" ? type_port
     "user" ? string
     "passwd" ? string
     "db_name" ? string
+    @{Maximum number of connections to the MySQL server}
+    "connections" : long(1..) = 25
+    @{Compare strings using BINARY clause makes name searches case sensitive}
+    "compare_binary" : boolean = false
 };
 
 type opennebula_db = {
@@ -50,12 +58,38 @@ type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
     "zone_id" : long = 0
     "master_oned" : string = ''
+    "server_id" : long(-1..) = -1
+} = dict();
+
+@documentation{
+Since 5.12.x Opennebula uses the Raft algorithm.
+It can be tuned by several parameters in the configuration file
+}
+type opennebula_raft = {
+    @{Number of DB log records that will be deleted on each purge}
+    "limit_purge" : long(1..) = 100000
+    @{Number of DB log records kept. It determines the synchronization
+    window across servers and extra storage space needed}
+    "log_retention" : long(1..) = 250000
+    @{How often applied records are purged according to the log
+    retention value (in seconds)}
+    "log_purge_timeout" : long(1..) = 60
+    @{Timeout to start an election process if no heartbeat or log
+    is received from the leader (in milliseconds)}
+    "election_timeout_ms" : long(1..) = 5000
+    @{How often heartbeats are sent to followers (in milliseconds)}
+    "broadcast_timeout_ms" : long(1..) = 500
+    @{Timeout for Raft-related API calls (in milliseconds).
+    For an infinite timeout, set this value to 0}
+    "xmlrpc_timeout_ms" : long(0..) = 1000
 } = dict();
 
 type opennebula_im = {
     "executable" : string = 'one_im_ssh'
     "arguments" : string
     "sunstone_name" ? string
+    @{Number of threads, i.e. number of hosts monitored at the same time}
+    "threads" ? long(1..)
 } = dict();
 
 type opennebula_im_mad_collectd = {
@@ -70,9 +104,14 @@ type opennebula_im_mad_xen = {
     include opennebula_im
 } = dict("arguments", '-r 3 -t 15 xen4', "sunstone_name", 'XEN');
 
+type opennebula_im_mad_monitord = {
+    include opennebula_im
+} = dict("executable", 'onemonitord', "arguments", '-c monitord.conf', "threads", 8);
+
 type opennebula_im_mad = {
     "collectd" : opennebula_im_mad_collectd
     "kvm" : opennebula_im_mad_kvm
+    "monitord" : opennebula_im_mad_monitord
     "xen" ? opennebula_im_mad_xen
 } = dict();
 
@@ -128,6 +167,14 @@ type opennebula_datastore_mad = {
 
 type opennebula_hm_mad = {
     "executable" : string = 'one_hm'
+    @{for the driver executable, can be an absolute path or relative
+    to $ONE_LOCATION/etc (or /etc/one/ if OpenNebula was installed in /)}
+    "arguments" : string = '-p 2101 -l 2102 -b 127.0.0.1'
+} = dict();
+
+type opennebula_hook_log_conf = {
+    @{Number of execution records saved in the database for each hook}
+    "log_retention" : long(1..) = 20
 } = dict();
 
 type opennebula_auth_mad = {
@@ -150,6 +197,37 @@ type opennebula_tm_mad_conf = {
     "ln_target_shared" ? string
     "clone_target_shared" ? string
     "disk_type_shared" ? string
+} = dict();
+
+@documentation{
+Authentication Driver Behavior Definition.
+The configuration for each driver is defined in AUTH_MAD_CONF.
+}
+type opennebula_auth_mad_conf = {
+    @{Name of the auth driver}
+    "name" : string
+    @{Allow the end users to change their own password.
+    Oneadmin can still change other users passwords}
+    "password_change" : boolean
+    @{Allow the driver to set the users group even after
+    user creation. In this case addgroup, delgroup and chgrp
+    will be disabled, with the exception of chgrp to one of
+    the groups in the list of secondary groups}
+    "driver_managed_groups" : boolean = false
+    @{Limit the maximum token validity, in seconds. Use -1 for
+    unlimited maximum, 0 to disable login tokens}
+    "max_token_time" : long(-1..) = -1
+} = dict();
+
+@documentation{
+Virtual Network Driver Behavior Definition.
+The configuration for each driver is defined in VN_MAD_CONF.
+}
+type opennebula_vn_mad_conf = {
+    @{Name of the auth driver}
+    "name" : string
+    @{Define the technology used by the driver}
+    "bridge_type" : choice('linux', 'openvswitch', 'vcenter_port_groups') = 'linux'
 } = dict();
 
 @documentation{
@@ -186,6 +264,8 @@ type opennebula_market_mad_conf = {
     "app_actions" : string[] = list('monitor')
     @{set to TRUE for external marketplaces}
     "public" ? boolean
+    @{Name displayed in Sunstone}
+    "sunstone_name" : string = "OpenNebula.org Marketplace"
 } = dict();
 
 @documentation{
@@ -208,7 +288,8 @@ type opennebula_vnc_ports = {
     @{VNC port pool for automatic VNC port assignment,
     if possible the port will be set to START + VMID}
     "start" : long(5900..65535) = 5900
-    "reserved" ? long
+    @{Comma-separated list of reserved ports or ranges. Two numbers separated by a colon indicate a range}
+    "reserved" ? string = "32768:65536"
 } = dict() with {deprecated(0, "VNC_BASE_PORT is deprecated since OpenNebula 5.0"); true; };
 
 @documentation{
@@ -219,7 +300,9 @@ The driver will try first to allocate VLAN_IDS[START] + VNET_ID
 type opennebula_vlan_ids = {
     @{first VLAN_ID to use}
     "start" : long = 2
-    "reserved" ? long
+    @{Comma-separated list of VLAN_IDs or ranges.
+    Two numbers separated by a colon indicate a range}
+    "reserved" ? string = "0, 1, 4095"
 } = dict();
 
 @documentation{
@@ -245,7 +328,7 @@ type opennebula_market_mad = {
         -t number of threads, i.e. number of repo operations at the same time
         -m marketplace mads separated by commas
     }
-    "arguments" : string = '-t 15 -m http,s3,one'
+    "arguments" : string = '-t 15 -m http,s3,one,linuxcontainers,turnkeylinux,dockerhub'
 } = dict();
 
 @documentation{
@@ -487,17 +570,72 @@ oned.conf file
 }
 type opennebula_oned = {
     "db" : opennebula_db
-    "default_device_prefix" ? string = 'hd' with match (SELF, '^(hd|sd|vd)$')
+    "default_device_prefix" ? opennebula_device_prefix = 'hd'
     "onegate_endpoint" ? string
     "manager_timer" ? long
     "monitoring_interval" : long = 60
     "monitoring_threads" : long = 50
+    @{Time in seconds between each DATASTORE monitoring cycle}
+    "monitoring_interval_datastore" : long(0..) = 300
+    @{Time in seconds between each MARKETPLACE monitoring cycle}
+    "monitoring_interval_market" : long(0..) = 600
+    @{Time in seconds between DB writes of VM monitoring information.
+    -1 to disable DB updating and 0 to write every update}
+    "monitoring_interval_db_update" : long(-1..) = 0
     "host_per_interval" ? long
     "host_monitoring_expiration_time" ? long
     "vm_individual_monitoring" ? boolean
     "vm_per_interval" ? long
     "vm_monitoring_expiration_time" ? long
     "vm_submit_on_hold" ? boolean
+    "vm_admin_operations" : string[] = list(
+        'migrate',
+        'delete',
+        'recover',
+        'retry',
+        'deploy',
+        'resched',
+    )
+    @{The following parameters define the operations associated to the ADMIN,
+    MANAGE and USE permissions. Note that some VM operations require additional
+    permissions on other objects. Also some operations refers to a class of
+    actions:
+        - disk-snapshot, includes create, delete and revert actions
+        - disk-attach, includes attach and detach actions
+        - nic-attach, includes attach and detach actions
+        - snapshot, includes create, delete and revert actions
+        - resched, includes resched and unresched actions
+    }
+    "vm_manage_operations" : string[] = list(
+        'undeploy',
+        'hold',
+        'release',
+        'stop',
+        'suspend',
+        'resume',
+        'reboot',
+        'poweroff',
+        'disk-attach',
+        'nic-attach',
+        'disk-snapshot',
+        'terminate',
+        'disk-resize',
+        'snapshot',
+        'updateconf',
+        'rename',
+        'resize',
+        'update',
+        'disk-saveas',
+    )
+    "vm_use_operations" : string[] = list('')
+    @{Default ACL rules created when a resource is added to a VDC.
+    The following attributes configure the permissions granted to the VDC group for each resource type}
+    "default_vdc_host_acl" : opennebula_vdc_rules = 'MANAGE'
+    "default_vdc_vnet_acl" : opennebula_vdc_rules = 'USE'
+    "default_vdc_datastore_acl" : opennebula_vdc_rules = 'USE'
+    "default_vdc_cluster_host_acl" : opennebula_vdc_rules = 'MANAGE'
+    "default_vdc_cluster_net_acl" : opennebula_vdc_rules = 'USE'
+    "default_vdc_cluster_datastore_acl" : opennebula_vdc_rules = 'USE'
     "max_conn" ? long
     "max_conn_backlog" ? long
     "keepalive_timeout" ? long
@@ -509,6 +647,7 @@ type opennebula_oned = {
     "scripts_remote_dir" : directory = '/var/tmp/one'
     "log" : opennebula_log
     "federation" : opennebula_federation
+    "raft" : opennebula_raft
     "port" : type_port = 2633
     "vnc_base_port" : long = 5900
     "network_size" : long = 254
@@ -517,7 +656,7 @@ type opennebula_oned = {
     "datastore_base_path" ? directory = '/var/lib/one/datastores'
     "datastore_capacity_check" : boolean = true
     "default_image_type" : string = 'OS' with match (SELF, '^(OS|CDROM|DATABLOCK)$')
-    "default_cdrom_device_prefix" : string = 'hd' with match (SELF, '^(hd|sd|vd)$')
+    "default_cdrom_device_prefix" : opennebula_device_prefix = 'hd'
     "session_expiration_time" : long = 900
     "default_umask" : long = 177
     "im_mad" : opennebula_im_mad
@@ -525,6 +664,7 @@ type opennebula_oned = {
     "tm_mad" : opennebula_tm_mad
     "datastore_mad" : opennebula_datastore_mad
     "hm_mad" : opennebula_hm_mad
+    "hook_log_conf" : opennebula_hook_log_conf
     "auth_mad" : opennebula_auth_mad
     "market_mad" : opennebula_market_mad
     "default_cost" : opennebula_default_cost
@@ -543,10 +683,19 @@ type opennebula_oned = {
             "clone_target_ssh", "SYSTEM",
             "disk_type_ssh", "FILE",
         ),
-        dict("name", "fs_lvm", "ln_target", "SYSTEM"),
+        dict(
+            "name", "fs_lvm",
+            "ln_target", "SYSTEM",
+            "driver", "raw",
+        ),
         dict(
             "name", "qcow2",
             "driver", "qcow2",
+            "ds_migrate", true,
+            "tm_mad_system", "ssh",
+            "ln_target_ssh", "SYSTEM",
+            "clone_target_ssh", "SYSTEM",
+            "disk_type_ssh", "FILE",
         ),
         dict("name", "ssh", "ln_target", "SYSTEM", "shared", false, "ds_migrate", true),
         dict("name", "vmfs"),
@@ -571,10 +720,10 @@ type opennebula_oned = {
             "tm_mad_system", "ssh,shared",
             "ln_target_ssh", "SYSTEM",
             "clone_target_ssh", "SYSTEM",
-            "disk_type_ssh", "BLOCK",
+            "disk_type_ssh", "FILE",
             "ln_target_shared", "NONE",
             "clone_target_shared", "SELF",
-            "disk_type_shared", "BLOCK",
+            "disk_type_shared", "FILE",
         ),
         dict("name", "vcenter", "clone_target", "NONE"),
     )
@@ -605,56 +754,270 @@ type opennebula_oned = {
         ),
         dict(
             "name", "vcenter",
-            "required_attrs", list('VCENTER_CLUSTER'),
-            "persistent_only", true,
+            "required_attrs", list('VCENTER_INSTANCE_ID', 'VCENTER_DS_REF', 'VCENTER_DC_REF'),
+            "persistent_only", false,
             "marketplace_actions", "export",
         ),
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
-        dict("public", true),
         dict(
+            "public", true,
+        ),
+        dict(
+            "sunstone_name", "HTTP server",
             "name", "http",
             "required_attrs", list('BASE_URL', 'PUBLIC_DIR'),
             "app_actions", list('create', 'delete', 'monitor'),
         ),
         dict(
+            "sunstone_name", "Amazon S3",
             "name", "s3",
             "required_attrs", list('ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'REGION', 'BUCKET'),
             "app_actions", list('create', 'delete', 'monitor'),
         ),
+        dict(
+            "sunstone_name", "LinuxContainers.org",
+            "name", "linuxcontainers",
+            "app_actions", list('monitor'),
+            "public", true,
+        ),
+        dict(
+            "sunstone_name", "TurnkeyLinux",
+            "name", "turnkeylinux",
+            "app_actions", list('monitor'),
+            "public", true,
+        ),
+        dict(
+            "sunstone_name", "DockerHub",
+            "name", "dockerhub",
+            "app_actions", list('monitor'),
+            "public", true,
+        ),
+    )
+    "auth_mad_conf" : opennebula_auth_mad_conf[] = list(
+        dict(
+            "name", "core",
+            "password_change", true,
+        ),
+        dict(
+            "name", "public",
+            "password_change", false,
+        ),
+        dict(
+            "name", "ssh",
+            "password_change", true,
+        ),
+        dict(
+            "name", "x509",
+            "password_change", false,
+        ),
+        dict(
+            "name", "ldap",
+            "password_change", true,
+            "driver_managed_groups", true,
+            "max_token_time", 86400,
+        ),
+        dict(
+            "name", "server_cipher",
+            "password_change", false,
+        ),
+        dict(
+            "name", "server_x509",
+            "password_change", false,
+        ),
+    )
+    "vn_mad_conf" : opennebula_vn_mad_conf[] = list(
+        dict("name", "dummy"),
+        dict("name", "802.1Q"),
+        dict("name", "ebtables"),
+        dict("name", "fw"),
+        dict("name", "ovswitch", "bridge_type", "openvswitch"),
+        dict("name", "vxlan"),
+        dict("name", "vcenter", "bridge_type", "vcenter_port_groups"),
+        dict("name", "ovswitch_vxlan", "bridge_type", "openvswitch"),
+        dict("name", "bridge"),
     )
     "vm_restricted_attr" : string[] = list(
-        "CONTEXT/FILES", "NIC/MAC", "NIC/VLAN_ID", "NIC/BRIDGE",
-        "NIC_DEFAULT/MAC", "NIC_DEFAULT/VLAN_ID", "NIC_DEFAULT/BRIDGE",
-        "DISK/TOTAL_BYTES_SEC", "DISK/READ_BYTES_SEC", "DISK/WRITE_BYTES_SEC",
-        "DISK/TOTAL_IOPS_SEC", "DISK/READ_IOPS_SEC", "DISK/WRITE_IOPS_SEC",
-        "CPU_COST", "MEMORY_COST", "DISK_COST",
-        "PCI", "EMULATOR", "RAW", "USER_PRIORITY", "SOURCE",
+        "CONTEXT/FILES",
+        "NIC/MAC",
+        "NIC/VLAN_ID",
+        "NIC/BRIDGE",
+        "NIC/FILTER",
+        "NIC/INBOUND_AVG_BW",
+        "NIC/INBOUND_PEAK_BW",
+        "NIC/INBOUND_PEAK_KB",
+        "NIC/OUTBOUND_AVG_BW",
+        "NIC/OUTBOUND_PEAK_BW",
+        "NIC/OUTBOUND_PEAK_KB",
+        "NIC/OPENNEBULA_MANAGED",
+        "NIC/VCENTER_INSTANCE_ID",
+        "NIC/VCENTER_NET_REF",
+        "NIC/VCENTER_PORTGROUP_TYPE",
+        "NIC/EXTERNAL",
+        "NIC_ALIAS/MAC",
+        "NIC_ALIAS/VLAN_ID",
+        "NIC_ALIAS/BRIDGE",
+        "NIC_ALIAS/INBOUND_AVG_BW",
+        "NIC_ALIAS/INBOUND_PEAK_BW",
+        "NIC_ALIAS/INBOUND_PEAK_KB",
+        "NIC_ALIAS/OUTBOUND_AVG_BW",
+        "NIC_ALIAS/OUTBOUND_PEAK_BW",
+        "NIC_ALIAS/OUTBOUND_PEAK_KB",
+        "NIC_ALIAS/OPENNEBULA_MANAGED",
+        "NIC_ALIAS/VCENTER_INSTANCE_ID",
+        "NIC_ALIAS/VCENTER_NET_REF",
+        "NIC_ALIAS/VCENTER_PORTGROUP_TYPE",
+        "NIC_ALIAS/EXTERNAL",
+        "NIC_DEFAULT/MAC",
+        "NIC_DEFAULT/VLAN_ID",
+        "NIC_DEFAULT/BRIDGE",
+        "NIC_DEFAULT/FILTER",
+        "NIC_DEFAULT/EXTERNAL",
+        "DISK/TOTAL_BYTES_SEC",
+        "DISK/TOTAL_BYTES_SEC_MAX_LENGTH",
+        "DISK/TOTAL_BYTES_SEC_MAX",
+        "DISK/READ_BYTES_SEC",
+        "DISK/READ_BYTES_SEC_MAX_LENGTH",
+        "DISK/READ_BYTES_SEC_MAX",
+        "DISK/WRITE_BYTES_SEC",
+        "DISK/WRITE_BYTES_SEC_MAX_LENGTH",
+        "DISK/WRITE_BYTES_SEC_MAX",
+        "DISK/TOTAL_IOPS_SEC",
+        "DISK/TOTAL_IOPS_SEC_MAX_LENGTH",
+        "DISK/TOTAL_IOPS_SEC_MAX",
+        "DISK/READ_IOPS_SEC",
+        "DISK/READ_IOPS_SEC_MAX_LENGTH",
+        "DISK/READ_IOPS_SEC_MAX",
+        "DISK/WRITE_IOPS_SEC",
+        "DISK/WRITE_IOPS_SEC_MAX_LENGTH",
+        "DISK/WRITE_IOPS_SEC_MAX",
+        "DISK/OPENNEBULA_MANAGED",
+        "DISK/VCENTER_DS_REF",
+        "DISK/VCENTER_INSTANCE_ID",
+        "DISK/ORIGINAL_SIZE",
+        "DISK/SIZE_PREV",
+        "DEPLOY_ID",
+        "CPU_COST",
+        "MEMORY_COST",
+        "DISK_COST",
+        "PCI",
+        "EMULATOR",
+        "RAW",
+        "USER_PRIORITY",
+        "USER_INPUTS/CPU",
+        "USER_INPUTS/MEMORY",
+        "USER_INPUTS/VCPU",
+        "VCENTER_VM_FOLDER",
+        "VCENTER_ESX_HOST",
+        "TOPOLOGY/PIN_POLICY",
+        "TOPOLOGY/HUGEPAGE_SIZE",
     )
-    "image_restricted_attr" : string = 'SOURCE'
+    "image_restricted_attr" : string[] = list(
+        "SOURCE",
+        "VCENTER_IMPORTED",
+    )
     "vnet_restricted_attr" : string[] = list(
-        "VN_MAD", "PHYDEV", "VLAN_ID", "BRIDGE", "CONF",
-        "BRIDGE_CONF", "IP_LINK_CONF",
-        "AR/VN_MAD", "AR/PHYDEV", "AR/VLAN_ID", "AR/BRIDGE",
+        "VN_MAD",
+        "PHYDEV",
+        "VLAN_ID",
+        "BRIDGE",
+        "CONF",
+        "BRIDGE_CONF",
+        "OVS_BRIDGE_CONF",
+        "IP_LINK_CONF",
+        "FILTER",
+        "FILTER_IP_SPOOFING",
+        "FILTER_MAC_SPOOFING",
+        "AR/VN_MAD",
+        "AR/PHYDEV",
+        "AR/VLAN_ID",
+        "AR/BRIDGE",
+        "AR/FILTER",
+        "AR/FILTER_IP_SPOOFING",
+        "AR/FILTER_MAC_SPOOFING",
+        "CLUSTER_IDS",
+        "EXTERNAL",
     )
+    "user_restricted_attr" : string[] = list(
+        "VM_USE_OPERATIONS",
+        "VM_MANAGE_OPERATIONS",
+        "VM_ADMIN_OPERATIONS",
+    )
+    "group_restricted_attr" : string[] = list(
+        "VM_USE_OPERATIONS",
+        "VM_MANAGE_OPERATIONS",
+        "VM_ADMIN_OPERATIONS",
+    )
+    "host_encrypted_attr" : string[] = list(
+        "EC2_ACCESS",
+        "EC2_SECRET",
+        "AZ_SUB",
+        "AZ_CLIENT",
+        "AZ_SECRET",
+        "AZ_TENANT",
+        "VCENTER_PASSWORD",
+        "NSX_PASSWORD",
+        "ONE_PASSWORD",
+        "PROVISION/PACKET_TOKEN",
+        "PROVISION/EC2_ACCESS",
+        "PROVISION/EC2_SECRET",
+    )
+    "vm_encrypted_attr" : string[] = list("CONTEXT/PASSWORD")
+    "vnet_encrypted_attr" : string[] = list("AR/PACKET_TOKEN")
+    "datastore_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
+    "cluster_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
     "inherit_datastore_attr" : string[] = list(
-        "CEPH_HOST", "CEPH_SECRET", "CEPH_KEY", "CEPH_USER", "CEPH_CONF",
-        "POOL_NAME", "ISCSI_USER", "ISCSI_USAGE",
-        "ISCSI_HOST", "GLUSTER_HOST", "GLUSTER_VOLUME",
-        "DISK_TYPE", "ALLOW_ORPHANS", "VCENTER_ADAPTER_TYPE",
-        "VCENTER_DISK_TYPE", "VCENTER_DS_REF", "VCENTER_DS_IMAGE_DIR",
-        "VCENTER_DS_VOLATILE_DIR", "VCENTER_INSTANCE_ID",
+        "CEPH_HOST",
+        "CEPH_SECRET",
+        "CEPH_KEY",
+        "CEPH_USER",
+        "CEPH_CONF",
+        "CEPH_TRASH",
+        "POOL_NAME",
+        "ISCSI_USER",
+        "ISCSI_USAGE",
+        "ISCSI_HOST",
+        "ISCSI_IQN",
+        "GLUSTER_HOST",
+        "GLUSTER_VOLUME",
+        "DISK_TYPE",
+        "ALLOW_ORPHANS",
+        "VCENTER_ADAPTER_TYPE",
+        "VCENTER_DISK_TYPE",
+        "VCENTER_DS_REF",
+        "VCENTER_DS_IMAGE_DIR",
+        "VCENTER_DS_VOLATILE_DIR",
+        "VCENTER_INSTANCE_ID",
     )
     "inherit_image_attr" : string[] = list(
-        "ISCSI_USER", "ISCSI_USAGE", "ISCSI_HOST", "ISCSI_IQN",
-        "DISK_TYPE", "VCENTER_ADAPTER_TYPE", "VCENTER_DISK_TYPE",
+        "DISK_TYPE",
+        "VCENTER_ADAPTER_TYPE",
+        "VCENTER_DISK_TYPE",
     )
     "inherit_vnet_attr" : string[] = list(
-        "VLAN_TAGGED_ID", "BRIDGE_OVS", "FILTER_IP_SPOOFING", "FILTER_MAC_SPOOFING", "MTU",
-        "INBOUND_AVG_BW", "INBOUND_PEAK_BW", "INBOUND_PEAK_KB", "OUTBOUND_AVG_BW",
-        "OUTBOUND_PEAK_BW", "OUTBOUND_PEAK_KB", "OUTBOUND_PEAK_KB", "BRIDGE_CONF",
-        "IP_LINK_CONF", "VCENTER_NET_REF", "VCENTER_SWITCH_NAME", "VCENTER_SWITCH_NPORTS",
-        "VCENTER_PORTGROUP_TYPE", "VCENTER_CCR_REF", "VCENTER_INSTANCE_ID",
+        "VLAN_TAGGED_ID",
+        "FILTER",
+        "FILTER_IP_SPOOFING",
+        "FILTER_MAC_SPOOFING",
+        "MTU",
+        "METRIC",
+        "INBOUND_AVG_BW",
+        "INBOUND_PEAK_BW",
+        "INBOUND_PEAK_KB",
+        "OUTBOUND_AVG_BW",
+        "OUTBOUND_PEAK_BW",
+        "OUTBOUND_PEAK_KB",
+        "CONF",
+        "BRIDGE_CONF",
+        "OVS_BRIDGE_CONF",
+        "IP_LINK_CONF",
+        "EXTERNAL",
+        "VCENTER_NET_REF",
+        "VCENTER_SWITCH_NAME",
+        "VCENTER_SWITCH_NPORTS",
+        "VCENTER_PORTGROUP_TYPE",
+        "VCENTER_CCR_REF",
+        "VCENTER_INSTANCE_ID",
     )
 };
 
