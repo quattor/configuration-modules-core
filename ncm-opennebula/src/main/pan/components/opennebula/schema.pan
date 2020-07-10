@@ -9,50 +9,9 @@ include 'quattor/schema';
 include 'pan/types';
 include 'quattor/aii/opennebula/schema';
 
-type directory = string with match(SELF, '[^/]+/?$');
+include 'components/opennebula/common';
+include 'components/opennebula/monitord';
 
-type opennebula_device_prefix = choice('hd', 'sd', 'vd');
-
-type opennebula_vdc_rules = choice('USE', 'MANAGE', 'ADMIN');
-
-type opennebula_mysql_db = {
-    "server" ? string
-    "port" ? type_port
-    "user" ? string
-    "passwd" ? string
-    "db_name" ? string
-    @{Maximum number of connections to the MySQL server}
-    "connections" : long(1..) = 25
-    @{Compare strings using BINARY clause makes name searches case sensitive}
-    "compare_binary" : boolean = false
-};
-
-type opennebula_db = {
-    include opennebula_mysql_db
-    "backend" : string with match(SELF, "^(mysql|sqlite)$")
-} with is_consistent_database(SELF);
-
-@documentation{
-check if a specific type of database has the right attributes
-}
-function is_consistent_database = {
-    db = ARGV[0];
-    if (db['backend'] == 'mysql') {
-        req = list('server', 'port', 'user', 'passwd', 'db_name');
-        foreach(idx; attr; req) {
-            if(!exists(db[attr])) {
-                error(format("Invalid mysql db! Expected '%s' ", attr));
-                return(false);
-            };
-        };
-    };
-    true;
-};
-
-type opennebula_log = {
-    "system" : string = 'file' with match (SELF, '^(file|syslog)$')
-    "debug_level" : long(0..3) = 3
-} = dict();
 
 type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
@@ -84,63 +43,6 @@ type opennebula_raft = {
     "xmlrpc_timeout_ms" : long(0..) = 1000
 } = dict();
 
-type opennebula_im = {
-    "executable" : string = 'one_im_ssh'
-    "arguments" : string
-    "sunstone_name" ? string
-    @{Number of threads, i.e. number of hosts monitored at the same time}
-    "threads" ? long(1..)
-} = dict();
-
-type opennebula_im_mad_collectd = {
-    include opennebula_im
-} = dict("executable", 'collectd', "arguments", '-p 4124 -f 5 -t 50 -i 20');
-
-type opennebula_im_mad_kvm = {
-    include opennebula_im
-} = dict("arguments", '-r 3 -t 15 kvm', "sunstone_name", 'KVM');
-
-type opennebula_im_mad_xen = {
-    include opennebula_im
-} = dict("arguments", '-r 3 -t 15 xen4', "sunstone_name", 'XEN');
-
-type opennebula_im_mad_monitord = {
-    include opennebula_im
-} = dict("executable", 'onemonitord', "arguments", '-c monitord.conf', "threads", 8);
-
-type opennebula_im_mad = {
-    "collectd" : opennebula_im_mad_collectd
-    "kvm" : opennebula_im_mad_kvm
-    "monitord" : opennebula_im_mad_monitord
-    "xen" ? opennebula_im_mad_xen
-} = dict();
-
-type opennebula_vm = {
-    "executable" : string = 'one_vmm_exec'
-    "arguments" : string
-    "default" : string
-    "sunstone_name" : string
-    "imported_vms_actions" : string[] = list(
-        'terminate',
-        'terminate-hard',
-        'hold',
-        'release',
-        'suspend',
-        'resume',
-        'delete',
-        'reboot',
-        'reboot-hard',
-        'resched',
-        'unresched',
-        'disk-attach',
-        'disk-detach',
-        'nic-attach',
-        'nic-detach',
-        'snapshot-create',
-        'snapshot-delete',
-    )
-    "keep_snapshots" : boolean = true
-} = dict();
 
 type opennebula_vm_mad_kvm = {
     include opennebula_vm
@@ -332,63 +234,6 @@ type opennebula_market_mad = {
 } = dict();
 
 @documentation{
-check if a specific type of datastore has the right attributes
-}
-function is_consistent_datastore = {
-    ds = ARGV[0];
-    if (ds['ds_mad'] == 'ceph') {
-        if (ds['tm_mad'] != 'ceph') {
-            error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
-        };
-        req = list('disk_type', 'bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
-        foreach(idx; attr; req) {
-            if(!exists(ds[attr])) {
-                error(format("Invalid ceph datastore! Expected '%s' ", attr));
-            };
-        };
-    };
-    if (ds['ds_mad'] == 'fs') {
-        if (ds['tm_mad'] != 'shared') {
-            error("for a fs datastore only 'shared' tm_mad is supported for the moment");
-        };
-    };
-    if (ds['type'] == 'SYSTEM_DS') {
-        if (ds['tm_mad'] == 'ceph') {
-            error("system datastores do not support '%s' TM_MAD", ds['tm_mad']);
-        };
-    };
-    if (ds['ds_mad'] == 'dev') {
-        if (ds['tm_mad'] != 'dev') {
-            error("for a RDM datastore both ds_mad and tm_mad should have value 'dev'");
-        };
-        if(!exists(ds['disk_type'])) {
-            error("Invalid RDM datastore! Expected 'disk_type'");
-        };
-    };
-    # Checks for other types can be added here
-    true;
-};
-
-@documentation{
-check if a specific type of vnet has the right attributes
-}
-function is_consistent_vnet = {
-    vn = ARGV[0];
-    # phydev is only required by vxlan networks
-    if (vn['vn_mad'] == 'vxlan') {
-        if (!exists(vn['phydev'])) {
-            error("VXLAN vnet requires 'phydev' value to attach a bridge");
-        };
-    # if not the bridge is mandatory
-    } else {
-        if (!exists(vn['bridge'])) {
-            error(format("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']));
-        };
-    };
-    true;
-};
-
-@documentation{
 type for ceph datastore specific attributes.
 ceph_host, ceph_secret, ceph_user, ceph_user_key and pool_name are mandatory
 }
@@ -559,7 +404,7 @@ type opennebula_remoteconf_ceph = {
     "pool_name" : string
     "host" : string
     "ceph_user" ? string
-    "staging_dir" ? directory = '/var/tmp'
+    "staging_dir" ? absolute_file_path = '/var/tmp'
     "rbd_format" ? long(1..2)
     "qemu_img_convert_args" ? string
 };
@@ -644,7 +489,7 @@ type opennebula_oned = {
     "rpc_log" ? boolean
     "message_size" ? long
     "log_call_format" ? string
-    "scripts_remote_dir" : directory = '/var/tmp/one'
+    "scripts_remote_dir" : absolute_file_path = '/var/tmp/one'
     "log" : opennebula_log
     "federation" : opennebula_federation
     "raft" : opennebula_raft
@@ -652,14 +497,28 @@ type opennebula_oned = {
     "vnc_base_port" : long = 5900
     "network_size" : long = 254
     "mac_prefix" : string = '02:00'
-    "datastore_location" ? directory = '/var/lib/one/datastores'
-    "datastore_base_path" ? directory = '/var/lib/one/datastores'
+    "datastore_location" ? absolute_file_path = '/var/lib/one/datastores'
+    "datastore_base_path" ? absolute_file_path = '/var/lib/one/datastores'
     "datastore_capacity_check" : boolean = true
     "default_image_type" : string = 'OS' with match (SELF, '^(OS|CDROM|DATABLOCK)$')
     "default_cdrom_device_prefix" : opennebula_device_prefix = 'hd'
     "session_expiration_time" : long = 900
     "default_umask" : long = 177
-    "im_mad" : opennebula_im_mad
+    "im_mad" : opennebula_im[] = list(
+        dict(
+            "name", "kvm",
+            "arguments", "-r 3 -t 15 kvm",
+            "executable", "one_im_ssh",
+            "sunstone_name", "KVM",
+        ),
+        # monitord replaces collectd since 5.12 release
+        dict(
+            "name", "monitord",
+            "arguments", "-c monitord.conf",
+            "executable", "onemonitord",
+            "threads", 8,
+        ),
+    )
     "vm_mad" : opennebula_vm_mad
     "tm_mad" : opennebula_tm_mad
     "datastore_mad" : opennebula_datastore_mad
@@ -1047,7 +906,7 @@ sunstone_server.conf file
 type opennebula_sunstone = {
     include opennebula_rpc_service
     "env" : string = 'prod' with match (SELF, '^(prod|dev)$')
-    "tmpdir" : directory = '/var/tmp'
+    "tmpdir" : absolute_file_path = '/var/tmp'
     "host" : type_ipv4 = '127.0.0.1'
     "port" : type_port = 9869
     "sessions" : string = 'memory' with match (SELF, '^(memory|memcache)$')
@@ -1204,6 +1063,7 @@ type component_opennebula = {
     'rpc' ? opennebula_rpc
     'untouchables' ? opennebula_untouchables
     'oned' ? opennebula_oned
+    'monitord' ? opennebula_monitord
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc

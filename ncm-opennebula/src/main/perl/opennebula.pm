@@ -82,7 +82,7 @@ To set up the initial cluster, some steps should be taken:
 
 =over
 
-=item 1. First install the required Ruby gems in your OpenNebula server.
+=item 1. First install the required Ruby gems in your OpenNebula server (only for OpenNebula 5.10 or older).
 You can use OpenNebula installgems addon : L<https://github.com/OpenNebula/addon-installgems>.
 
 =item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the host hosts of the cluster.
@@ -130,13 +130,14 @@ use Readonly;
 use 5.10.1;
 
 Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
+Readonly our $MONITORD_CONF_FILE => "/etc/one/monitord.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
 
 # Required by process_template to detect
 # if it should return a text template or
 # CAF::FileWriter instance
-Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned monitord one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
 Readonly::Array my @OPENNEBULA_CONSUMERS => qw(user group cluster);
 
 
@@ -451,6 +452,11 @@ sub Configure
     # Set oned.conf
     if (exists $tree->{oned}) {
         $self->set_one_service_conf($tree->{oned}, "oned", $ONED_CONF_FILE);
+    }
+
+    # Set monitord conf
+    if (exists $tree->{monitord}) {
+        $self->set_one_service_conf($tree->{monitord}, "monitord", $MONITORD_CONF_FILE);
     }
 
     # Set Sunstone server

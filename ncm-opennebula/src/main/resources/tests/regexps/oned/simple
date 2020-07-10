@@ -20,7 +20,7 @@ multiline
 ^DB\s?=\s?\[$
 ^\s*backend\s?=\s*".+",\s*$
 ^\s*compare_binary\s?=\s*".+",\s*$
-^\s*connections\s?=\s*".+",\s*$
+^\s*connections\s?=\s*\d+,\s*$
 ^\s*db_name\s?=\s*".+",\s*$
 ^\s*passwd\s?=\s*".+",\s*$
 ^\s*port\s?=\s*\d+,\s*$
@@ -63,10 +63,10 @@ multiline
 ^\s*log_retention\s?=\s*\d+\s*$
 ^HOST_ENCRYPTED_ATTR\s?=\s?".+"\s*$
 ^IM_MAD\s?=\s?\[$
-^\s*name\s?=\s*".+",\s*$
 ^\s*arguments\s?=\s*".+",\s*$
 ^\s*executable\s?=\s*".+",\s*$
-^\s*sunstone_name\s?=\s*".+"\s*$
+^\s*name\s?=\s*".+",\s*$
+^\s*threads\s?=\s*\d+\s*$
 ^IMAGE_RESTRICTED_ATTR\s?=\s?".+"\s*$
 ^INHERIT_DATASTORE_ATTR\s?=\s?".+"\s*$
 ^INHERIT_IMAGE_ATTR\s?=\s?".+"\s*$

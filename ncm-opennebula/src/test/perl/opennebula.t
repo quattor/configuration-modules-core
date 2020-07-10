@@ -67,6 +67,12 @@ isa_ok($sunstone, "CAF::FileWriter", "sunstone-server.conf CAF::FileWriter insta
 like("$sunstone", qr{^:host:\s{1}.+$}m, "sunstone-server.conf has expected content");
 $sunstone->close();
 
+# monitord conf file
+my $monitord = get_file($NCM::Component::opennebula::MONITORD_CONF_FILE);
+isa_ok($monitord, "CAF::FileWriter", "monitord.conf CAF::FileWriter instance");
+like("$monitord", qr{^DB\s?=\s?\[$}m, "monitord.conf has expected content");
+$monitord->close();
+
 # oneflow conf file
 my $oneflow = get_file($NCM::Component::opennebula::ONEFLOW_CONF_FILE);
 isa_ok($oneflow, "CAF::FileWriter", "oneflow-server.conf CAF::FileWriter instance");
