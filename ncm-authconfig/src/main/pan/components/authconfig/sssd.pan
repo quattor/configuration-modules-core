@@ -108,6 +108,7 @@ type authconfig_sssd_domain  = {
     "dns_resolver_timeout" : long = 5
     "dns_discovery_domain" ? string
     "override_gid" ? long
+    "override_shell" ? string
     "case_sensitive" : boolean = true
     "proxy_fast_alias" ? boolean
     "subdomain_homedir" ? string
