@@ -1,0 +1,8 @@
+[%- FOREACH item IN CCM.contents.pairs -%]
+[% item.key -%] {
+   [% item.value.module %] [% item.value.flag %]
+   [% FOREACH option IN item.value.options %]
+     [% option.key %]="[% option.value %]"
+   [%- END -%];
+};
+[% END -%]
