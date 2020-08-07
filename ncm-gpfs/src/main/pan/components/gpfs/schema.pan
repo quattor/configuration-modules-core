@@ -37,6 +37,7 @@ type gpfs_sysmon_common = {
 
 type gpfs_sysmon_network = {
     include gpfs_sysmon_common
+    'ib_rdma_monitor_portstate' ? boolean
 };
 
 type gpfs_sysmon = {
