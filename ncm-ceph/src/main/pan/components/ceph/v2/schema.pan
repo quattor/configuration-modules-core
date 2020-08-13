@@ -28,7 +28,7 @@ type ceph_global_config = {
     'filestore_xattr_use_omap' ? boolean
     'fsid' : type_uuid
     'mon_cluster_log_to_syslog' : boolean = true
-    'mon_initial_members' : type_network_name[1..]
+    'mon_initial_members' : type_shorthostname[1..]
     'mon_host' : type_fqdn[1..]
     'mon_max_pg_per_osd' ? long
     'mon_osd_min_down_reporters' ? long(0..)
