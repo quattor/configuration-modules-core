@@ -25,7 +25,7 @@ generate an fsid with uuidgen
 type ceph_minimal_config = {
     'fsid' : type_uuid
     'mon_host' : type_fqdn[1..]
-    'mon_initial_members' : type_network_name[1..]
+    'mon_initial_members' : type_shorthostname[1..]
 };
 
 @documentation{
