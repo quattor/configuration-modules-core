@@ -139,9 +139,11 @@ sub Configure
     my $hostname = $netw->{hostname};
     $self->check_versions($t->{ceph_version}, $t->{deploy_version}) or return 0;
 
-    if ($t->{config}) {
+    if ($t->{minconfig} || $t->{config}) {
         $self->verbose('Running Ceph configfile component');
-        my $cfgfile = NCM::Component::Ceph::Cfgfile->new($config, $self, $self->prefix()."/config");
+        my $cfgin = $t->{minconfig} ? 'minconfig' : 'config';
+        $self->debug(1, "Using config input from $cfgin");
+        my $cfgfile = NCM::Component::Ceph::Cfgfile->new($config, $self, $self->prefix()."/$cfgin");
         $cfgfile->configure() or return;
     }
 
