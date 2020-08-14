@@ -145,6 +145,20 @@ sub make_tasks
     return $map->get_deploy_map();
 }
 
+# add config settings to centralized config db
+sub set_config_db
+{
+    my ($self) = @_;
+    $self->verbose('Deploying configuration');
+    my $cfgdb = NCM::Component::Ceph::CfgDb->new($self);
+    # Parse the list and group per section
+    $cfgdb->get_existing() or return;
+    $cfgdb->map_quattor() or return;
+    #compare maps, if not in map or not same value, to deploy, if in map but not inquattor, warning
+
+    return $cfgdb->deploy();
+}
+
 # Deploys a single daemon
 sub deploy_daemon
 {
@@ -197,6 +211,10 @@ sub configure
 {
     my ($self) = @_;
     $self->prepare_cluster() or return;
+
+    if ($self->{cluster}->{configdb}) {
+        $self->set_config_db() or return;
+    }
 
     my $map = $self->make_tasks() or return;
 
