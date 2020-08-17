@@ -64,7 +64,7 @@ type opennebula_tm_mad = {
 
 type opennebula_datastore_mad = {
     "executable" : string = 'one_datastore'
-    "arguments" : string  = '-t 15 -d dummy,fs,lvm,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm,qcow2,vcenter'
+    "arguments" : string  = '-t 15 -d dummy,fs,lvm,ceph,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm,qcow2,vcenter'
 } = dict();
 
 type opennebula_hm_mad = {
