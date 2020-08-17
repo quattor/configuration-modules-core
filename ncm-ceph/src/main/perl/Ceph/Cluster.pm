@@ -3,13 +3,16 @@
 use parent qw(CAF::Object NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
 use NCM::Component::Ceph::ClusterMap;
+use NCM::Component::Ceph::CfgDb;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
+use EDG::WP4::CCM::Path qw(escape unescape);
 
 Readonly my $CEPH_USER_ELEMENT => '/software/components/accounts/users/ceph';
 Readonly my $CEPH_GROUP_ELEMENT => '/software/components/accounts/groups/ceph';
 Readonly my $CEPH_DEPLOY_CFGFILE => '/home/ceph/ceph.conf';
+Readonly my @CONFIG_SET => qw(config set);
 
 sub _initialize
 {
@@ -145,6 +148,25 @@ sub make_tasks
     return $map->get_deploy_map();
 }
 
+# Deploy all config marked for deployment
+sub deploy_config
+{
+    my ($self, $map) = @_;
+
+    $self->debug(5, "deploy hash:", Dumper($map));
+    foreach my $section (sort keys(%$map)) {
+        foreach my $name (sort keys(%{$map->{$section}})) {
+            my $value = $map->{$section}->{$name};
+            if (!$self->run_ceph_command([@CONFIG_SET, $section, unescape($name), $value], "set config option")) {
+                $self->error("Could not set configuration option " . unescape($name) . " in section $section to $value");
+                return;
+            }
+        }
+    }
+    $self->debug(3, 'Succesfully deployed all config options');
+    return 1;
+}
+
 # add config settings to centralized config db
 sub set_config_db
 {
@@ -152,11 +174,9 @@ sub set_config_db
     $self->verbose('Deploying configuration');
     my $cfgdb = NCM::Component::Ceph::CfgDb->new($self);
     # Parse the list and group per section
-    $cfgdb->get_existing() or return;
-    $cfgdb->map_quattor() or return;
-    #compare maps, if not in map or not same value, to deploy, if in map but not inquattor, warning
+    my $cfgmap = $cfgdb->get_deploy_config() or return;
 
-    return $cfgdb->deploy();
+    return $self->deploy_config($cfgmap);
 }
 
 # Deploys a single daemon
