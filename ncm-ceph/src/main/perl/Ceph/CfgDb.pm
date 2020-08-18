@@ -4,25 +4,22 @@ use parent qw(CAF::Object);
 use Readonly;
 use Data::Dumper;
 use JSON::XS;
-use EDG::WP4::CCM::Path qw(escape unescape);
 Readonly my @CONFIG_DUMP => qw(config dump);
 
 
 sub _initialize
 {
     my ($self, $clusterobj) = @_;
-
     $self->{log} = $clusterobj;
-
-    $self->{ceph} = {};
-
     $self->{Cluster} = $clusterobj;
     $self->{quattor} = {};
-
+    $self->{ceph} = {};
     $self->{deploy} = {};
     return 1;
 }
 
+# Parse the profile tree
+# Restructure mgr keys
 sub parse_profile_cfg
 {
     my ($self) = @_;
@@ -41,7 +38,7 @@ sub parse_profile_cfg
 }
 
 
-# add a config value to the map to deploy
+# add a config section to the map to deploy
 sub add_section
 {
     my ($self, $secname, $section) = @_;
@@ -66,7 +63,7 @@ sub add_existing_cfg
     return 1;
 };
 
-# Fill in the map with existing daemons
+# Parse the existing config dump
 sub get_existing_cfg
 {
     my ($self) = @_;
@@ -127,7 +124,7 @@ sub compare_config_maps
     return 1;
 }
 
-# return the map that can be used to deploy new daemons
+# return the map that can be used to deploy
 sub get_deploy_config
 {
     my ($self) = @_;

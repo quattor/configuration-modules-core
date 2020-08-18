@@ -40,6 +40,7 @@ type ceph_global_config = {
     'filestore_xattr_use_omap' ? boolean
     'mon_cluster_log_to_syslog' : boolean = true
     'mon_max_pg_per_osd' ? long
+    'mon_osd_down_out_subtree_limit' ? string = 'rack'
     'mon_osd_min_down_reporters' ? long(0..)
     'mon_osd_min_down_reports' ? long(0..)
     'mon_osd_warn_op_age' ? long = 32
