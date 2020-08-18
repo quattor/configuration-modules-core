@@ -24,7 +24,7 @@ sub parse_profile_cfg
 {
     my ($self) = @_;
     my $profcfg = $self->{Cluster}->{cluster}->{configdb};
-    if (%{$profcfg->{mgr}->{modules}}) {
+    if ($profcfg->{mgr}->{modules} && %{$profcfg->{mgr}->{modules}}) {
         while (my ($modname, $mod) = each %{$profcfg->{mgr}->{modules}}) {
             while (my ($att,$vol) = each %{$mod}) {
                 my $newkey = "mgr/$modname/$att";
