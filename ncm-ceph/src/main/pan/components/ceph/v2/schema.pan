@@ -13,6 +13,7 @@ type ceph_daemon = {
 include 'components/ceph/v2/schema-mon';
 include 'components/ceph/v2/schema-osd';
 include 'components/ceph/v2/schema-mds';
+include 'components/ceph/v2/schema-mgr';
 include 'components/ceph/v2/schema-rgw';
 
 
@@ -75,6 +76,7 @@ type ceph_configdb = {
     'mds' ? ceph_mds_config
     'osd' ? ceph_osd_config
     'mon' ? ceph_mon_config
+    'mgr' ? ceph_mgr_config
     'rgw' ? ceph_rgw_config{}
 };
 

@@ -49,6 +49,9 @@ prefix 'configdb';
 'global/op_queue' = 'wpq';
 'global/public_network' = '10.20.30.10/24';
 'mds/mds_max_purge_ops_per_pg' = 10.0;
+'mgr/modules/dashboard/server_addr' = 'localhost';
+'mgr/modules/dashboard/server_port' = '7000';
+'mgr/modules/telemetry/contact' = 'me';
 
 '/system/network/hostname' = 'ceph002';
 '/system/network/domainname' = 'cubone.os';

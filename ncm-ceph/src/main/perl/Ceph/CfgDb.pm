@@ -17,11 +17,29 @@ sub _initialize
     $self->{ceph} = {};
 
     $self->{Cluster} = $clusterobj;
-    $self->{quattor} = $clusterobj->{cluster}->{configdb};
+    $self->{quattor} = {};
 
     $self->{deploy} = {};
     return 1;
 }
+
+sub parse_profile_cfg
+{
+    my ($self) = @_;
+    my $profcfg = $self->{Cluster}->{cluster}->{configdb};
+    if (%{$profcfg->{mgr}->{modules}}) {
+        while (my ($modname, $mod) = each %{$profcfg->{mgr}->{modules}}) {
+            while (my ($att,$vol) = each %{$mod}) {
+                my $newkey = "mgr/$modname/$att";
+                $profcfg->{mgr}->{$newkey} = $vol;
+            }
+        }
+        delete $profcfg->{mgr}->{modules};
+    }
+    $self->{quattor} = $profcfg;
+    return 1;
+}
+
 
 # add a config value to the map to deploy
 sub add_section
@@ -69,21 +87,21 @@ sub compare_section
     my %qt = %{$self->{quattor}->{$section}};
     my %ceph = %{$self->{ceph}->{$section}};
 
-    foreach my $escname (sort keys %qt) {
-        my $name = unescape($escname);
+    foreach my $name (sort keys %qt) {
         if ($ceph{$name}){
+            $self->verbose("$section config option $name existing");
             if ($qt{$name} ne $ceph{$name}){
-                $self->verbose("Changing $section config option $name from $ceph{name} to $qt{name}");
+                $self->verbose("Changing $section config option $name from $ceph{$name} to $qt{$name}");
                 $self->add_config($section, $name, $qt{$name});
             };
             delete $ceph{$name};
         } else {
-            $self->verbose("Adding $section config option $name: $qt{name}");
+            $self->verbose("Adding $section config option $name: $qt{$name}");
             $self->add_config($section, $name, $qt{$name});
         }
     }
     if (%ceph) {
-        $self->warning("Found deployed config not found in profile: ", join(',', sort keys(%ceph)));
+        $self->warn("Found deployed config not found in profile: ", join(',', sort keys(%ceph)));
     }
     return 1;
 }
@@ -104,7 +122,7 @@ sub compare_config_maps
         };
     }
     if (%ceph) {
-        $self->warn('Found deployed section config that is not in profile: ', sort keys(%ceph));
+        $self->warn('Found deployed section config that is not in profile: ', join(',', sort keys(%ceph)));
     }
     return 1;
 }
@@ -113,6 +131,7 @@ sub compare_config_maps
 sub get_deploy_config
 {
     my ($self) = @_;
+    $self->parse_profile_cfg() or return;
     $self->get_existing_cfg() or return;
     $self->compare_config_maps();
     return $self->{deploy};
