@@ -7,7 +7,6 @@ use NCM::Component::Ceph::CfgDb;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
-use EDG::WP4::CCM::Path qw(escape unescape);
 
 Readonly my $CEPH_USER_ELEMENT => '/software/components/accounts/users/ceph';
 Readonly my $CEPH_GROUP_ELEMENT => '/software/components/accounts/groups/ceph';
@@ -157,8 +156,8 @@ sub deploy_config
     foreach my $section (sort keys(%$map)) {
         foreach my $name (sort keys(%{$map->{$section}})) {
             my $value = $map->{$section}->{$name};
-            if (!$self->run_ceph_command([@CONFIG_SET, $section, unescape($name), $value], "set config option")) {
-                $self->error("Could not set configuration option " . unescape($name) . " in section $section to $value");
+            if (!$self->run_ceph_command([@CONFIG_SET, $section, $name, $value], "setting $section:$name to $value")) {
+                $self->error("Could not set configuration option $name in section $section to $value");
                 return;
             }
         }
