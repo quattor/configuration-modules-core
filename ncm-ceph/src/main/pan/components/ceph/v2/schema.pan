@@ -22,10 +22,14 @@ ceph minimal config parameters
 with centralised config db this should be the only thing in ceph.conf
 generate an fsid with uuidgen
  }
-type ceph_minimal_config = {
+type ceph_minimal_config_global = {
     'fsid' : type_uuid
     'mon_host' : type_fqdn[1..]
     'mon_initial_members' : type_shorthostname[1..]
+};
+
+type ceph_minimal_config = {
+    'global' : ceph_minimal_config_global
 };
 
 @documentation{
@@ -57,7 +61,7 @@ type ceph_global_config = {
 };
 
 type ceph_global_config_file = {
-    include ceph_minimal_config
+    include ceph_minimal_config_global
     include ceph_global_config
 };
 
