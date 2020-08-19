@@ -22,7 +22,7 @@ cmp_deeply($cfgmap, \%cfgdata::DEPLOY_CFG, 'deploy hash correct');
 ok($cl->deploy_config($cfgmap), 'config deployment ok');
 
 ok(get_command('/usr/bin/ceph -f json config set global op_queue wpq'), 'op_queue set');
-ok(get_command('/usr/bin/ceph -f json config set global public_network 10.20.30.10/24'), 'public_network set');
+ok(get_command('/usr/bin/ceph -f json config set global mon_osd_down_out_subtree_limit rack'), 'subtree_limit set');
 ok(get_command('/usr/bin/ceph -f json config set mds mds_max_purge_ops_per_pg 10'), 'mds_max_purge_ops_per_pg set');
 ok(get_command('/usr/bin/ceph -f json config set mgr mgr/dashboard/server_addr localhost'), 'mgr/dashboard/server_addr set');
 ok(get_command('/usr/bin/ceph -f json config set mgr mgr/telemetry/contact me'), 'mgr/telemetry/contact set');
