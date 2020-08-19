@@ -82,7 +82,7 @@ Readonly our %PROFILE_CFG => (
     'op_queue' => 'wpq',
     'osd_pool_default_min_size' => '2',
     'osd_pool_default_size' => '3',
-    'public_network' => '10.20.30.10/24'
+    'mon_osd_down_out_subtree_limit' => 'rack'
   },
   'mds' => {
     'mds_max_purge_ops_per_pg' => '10'
@@ -97,7 +97,7 @@ Readonly our %PROFILE_CFG => (
 Readonly our %DEPLOY_CFG => (
   'global' => {
     'op_queue' => 'wpq',
-    'public_network' => '10.20.30.10/24'
+    'mon_osd_down_out_subtree_limit' => 'rack'
   },
   'mds' => {
     'mds_max_purge_ops_per_pg' => '10'
