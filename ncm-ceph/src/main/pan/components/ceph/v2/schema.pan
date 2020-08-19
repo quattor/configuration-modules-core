@@ -26,6 +26,8 @@ type ceph_minimal_config_global = {
     'fsid' : type_uuid
     'mon_host' : type_fqdn[1..]
     'mon_initial_members' : type_shorthostname[1..]
+    'public_network' : type_network_name
+    'cluster_network' ? type_network_name
 };
 
 type ceph_minimal_config = {
@@ -39,7 +41,6 @@ type ceph_global_config = {
     'auth_client_required' : choice('cephx', 'none') = 'cephx'
     'auth_cluster_required' : choice('cephx', 'none') = 'cephx'
     'auth_service_required' : choice('cephx', 'none') = 'cephx'
-    'cluster_network' ? type_network_name
     'enable_experimental_unrecoverable_data_corrupting_features' ? string[1..]
     'filestore_xattr_use_omap' ? boolean
     'mon_cluster_log_to_syslog' : boolean = true
@@ -57,7 +58,6 @@ type ceph_global_config = {
     'osd_pool_default_pg_num' ? long(0..)
     'osd_pool_default_pgp_num' ? long(0..)
     'osd_pool_default_size' : long(0..) = 3
-    'public_network' : type_network_name
 };
 
 type ceph_global_config_file = {
