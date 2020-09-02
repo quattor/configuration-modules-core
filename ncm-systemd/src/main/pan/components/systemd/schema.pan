@@ -254,10 +254,10 @@ type ${project.artifactId}_unitfile_config_service = {
     'CapabilityBoundingSet' ? linux_capability[]
     'ExecReload' ? string
     'ExecStart' ? string
-    'ExecStartPost' ? string
-    'ExecStartPre' ? string
+    'ExecStartPost' ? transitional_string_or_list_of_strings
+    'ExecStartPre' ? transitional_string_or_list_of_strings
     'ExecStop' ? string
-    'ExecStopPost' ? string
+    'ExecStopPost' ? transitional_string_or_list_of_strings
     'GuessMainPID' ? boolean
     'NonBlocking' ? boolean
     'NotifyAccess' ? string with match(SELF, '^(none|main|all)$')
