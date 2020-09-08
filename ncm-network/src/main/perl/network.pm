@@ -164,7 +164,7 @@ Readonly my $DEVICE_REGEXP => qr{
                 p\d+p|
                 en(?:
                     o(?:\d+d)?| # onboard
-                    (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
+                    (?:p\d+)?s(?:\d+f)?(?:\d+d)?(?:\d+np)? # [pci]slot[function][device][partition]
                 )
              )\d+| # mandatory numbering
              enx[[:xdigit:]]{12} # enx MAC address
