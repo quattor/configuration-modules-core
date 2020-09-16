@@ -115,7 +115,7 @@ sub Configure
 
     if ($changed) {
 	$self->verbose("Restarting OpenVPN daemon");
-	CAF::Process->new([qw(/etc/init.d/openvpn restart)],
+	CAF::Process->new([qw(/sbin/service openvpn restart)],
 			  log => $self)->run();
 	return !$?;
     }
