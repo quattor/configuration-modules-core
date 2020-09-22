@@ -45,6 +45,9 @@ type ${project.artifactId}_valid_unit = string;
 # executable paths can have a number of special prefixes
 type ${project.artifactId}_valid_execpath = string with match(SELF, '^([@+!:-]|!!)?/');
 
+# type for a relative directory: no leading / and may not include ".."
+type ${project.artifactId}_relative_directory = string with !match(SELF, '(^/|\.\.)');
+
 # adding new ones
 # go to http://www.freedesktop.org/software/systemd/man/systemd.directives.html
 # and follow the link to the manual
@@ -149,9 +152,9 @@ valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_exec = {
     'CacheDirectoryMode' ? type_octal_mode
-    'CacheDirectory' ? string[]
+    'CacheDirectory' ? ${project.artifactId}_relative_directory[]
     'ConfigurationDirectoryMode' ? type_octal_mode
-    'ConfigurationDirectory' ? string[]
+    'ConfigurationDirectory' ? ${project.artifactId}_relative_directory[]
     'CPUAffinity' ? long[][] # start with empty list to reset
     'CPUSchedulingPolicy' ? string with match(SELF, '^(other|batch|idle|fifo|rr)$')
     'CPUSchedulingPriority' ? long(1..99) # 99 = highest
@@ -178,19 +181,19 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'LimitSIGPENDING' ? long(-1..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
     'LimitSTACK' ? long(-1..) # The maximum size of the process stack, in bytes.
     'LogsDirectoryMode' ? type_octal_mode
-    'LogsDirectory' ? string[]
+    'LogsDirectory' ? ${project.artifactId}_relative_directory[]
     'Nice' ? long(-20..19)
     'OOMScoreAdjust' ? long(-1000..1000)
     'PrivateTmp' ? boolean
-    'RootDirectory' ? string
+    'RootDirectory' ? ${project.artifactId}_relative_directory
     'RuntimeDirectoryMode' ? type_octal_mode
     'RuntimeDirectoryPreserve' ? choice('yes', 'no', 'restart')
-    'RuntimeDirectory' ? string[]
+    'RuntimeDirectory' ? ${project.artifactId}_relative_directory[]
     'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
     'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StateDirectoryMode' ? type_octal_mode
-    'StateDirectory' ? string[]
+    'StateDirectory' ? ${project.artifactId}_relative_directory[]
     'SupplementaryGroups' ? defined_group[]
     'SyslogFacility' ? syslog_facility
     'SyslogIdentifier' ? string
