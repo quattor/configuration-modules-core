@@ -14,6 +14,8 @@ use constant REPO_DEPS => qw(repoquery -C --requires --resolve --qf %{NAME};%{AR
 # in dnf, whatrequires is passed as value to repoquery command
 use constant REPO_WHATREQS => qw(repoquery -C --recursive --qf %{NAME}\n%{NAME};%{ARCH} --whatrequires);
 
+use constant REPO_INCLUDE => 0;
+
 # Completes any pending transactions
 sub _do_complete_transaction
 {
