@@ -11,7 +11,8 @@ use constant YUM_CONF_FILE => "/etc/dnf/dnf.conf";
 use constant REPOQUERY_FORMAT => qw(--nevra);
 
 use constant REPO_DEPS => qw(repoquery -C --requires --resolve --qf %{NAME};%{ARCH});
-use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --qf %{NAME}\n%{NAME};%{ARCH});
+# in dnf, whatrequires is passed as value to repoquery command
+use constant REPO_WHATREQS => qw(repoquery -C --recursive --qf %{NAME}\n%{NAME};%{ARCH} --whatrequires);
 
 # Completes any pending transactions
 sub _do_complete_transaction
