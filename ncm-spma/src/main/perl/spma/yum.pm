@@ -316,14 +316,18 @@ sub execute_yum_command
     }
     $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
-        ($err && $err =~ m{^(?:
+        ($err && $err =~ m{^\s*(?:
          Error|
          Failed|
          (?:Could \s+ not \s+ match)|
          (?:Transaction \s+ encountered.*error)|
          (?:Unknown \s+ group \s+  package \s+ type)|
          (?:.*requested \s+ URL \s+ returned \s+ error)|
-         (?:Versionlock plugin)
+         (?:Versionlock \s* plugin)|
+         (?:Command \s+ line \s+ error)
+         )}oxmi) ||
+        ($out && $out =~ m{^\s*(?:
+         (?:[>]* \s* Problem \s* :)  # from dnf transaction
          )}oxmi) ||
         ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
         ) {
