@@ -23,10 +23,21 @@ type spma_yum_plugin_priorities = {
     'check_obsoletes' ? boolean
 };
 
+type spma_yum_plugin_product_id = {
+    'enabled' : boolean = false
+};
+
+type spma_yum_plugin_subscription_manager = {
+    'enabled' : boolean = false
+    'disable_system_repos' ? boolean
+};
+
 type spma_yum_plugins = {
     "fastestmirror" ? spma_yum_plugin_fastestmirror
     "versionlock" ? spma_yum_plugin_versionlock
     "priorities" ? spma_yum_plugin_priorities
+    "subscription-manager" ? spma_yum_plugin_subscription_manager
+    "product-id" ? spma_yum_plugin_product_id
 };
 
 type component_spma_common_yum = {

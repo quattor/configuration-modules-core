@@ -1,0 +1,9 @@
+config for subscription-manager plugin
+---
+//software
+rendermodule=yumplugins/subscription-manager
+contentspath=/software/components/spma/plugins/subscription-manager
+---
+^\[main\]$
+^disable_system_repos=0$
+^enabled=1$

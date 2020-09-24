@@ -1147,10 +1147,12 @@ sub configure_plugins
         };
     }
 
-    # fastestmirror plugin: disable by default
-    if (! $plugins->{fastestmirror}) {
-        $self->verbose("yum plugin fastestmirror is not configured. It will be disabled.");
-        $plugins->{fastestmirror}->{enabled} = 0;
+    # disable by default
+    foreach my $name (qw(fastestmirror subscription-manager product-id)) {
+        if (! $plugins->{$name}) {
+            $self->verbose("yum plugin $name is not configured. It will be disabled.");
+            $plugins->{$name}->{enabled} = 0;
+        }
     }
 
     # priorities plugin: enable by default
