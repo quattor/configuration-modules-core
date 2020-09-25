@@ -45,3 +45,11 @@ type component_spma_common_yum = {
     "proxyhost" ? string # comma-separated list of proxy hosts
     "proxyport" ? string # proxy port number
 };
+
+@{Simple DNF module structure. To be used as dict, with name as key.
+  No profile support, as it is only intended to configure/enable modules.
+}
+type component_spma_dnf_module_simple = {
+    'enable' : boolean = true
+    'stream' : string
+};

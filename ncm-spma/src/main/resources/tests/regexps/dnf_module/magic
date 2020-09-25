@@ -1,0 +1,11 @@
+config for dnf module magic (section and name are inserted in component)
+---
+//software
+rendermodule=dnf_module
+contentspath=/software/modules/magic
+---
+^\[\]$
+^name=$
+^stream=woohoo$
+^profiles=$
+^state=disabled$

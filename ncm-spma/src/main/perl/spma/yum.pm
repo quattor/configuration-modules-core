@@ -108,20 +108,44 @@ sub _match_noaction_tempdir
     return $self->__match_template_dir($name, NOACTION_TEMPDIR_TEMPLATE);
 }
 
-# Action cleanup: boolean to cleanup old repositories when not running in NoAction.
-#   Is considered true when not defined
 sub cleanup_old_repos
 {
     my ($self, $repo_dir, $allowed_repos, $action_cleanup) = @_;
 
+    my @exts = qw(repo);
+    push(@exts, 'pkgs') if ($self->REPO_INCLUDE);
+
+    my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
+
+    return $self->_cleanup_old_something(
+        $repo_dir, $allowed,
+        "repository", \@exts,
+        $action_cleanup
+        );
+}
+
+# directory: directory to look for files
+# allowed: set::scalar of names that will not be cleaned up
+# type: what is being cleaned up (used in reporting)
+# exts: arrayref of file extensions to cleanup up
+# action_cleanup: boolean to cleanup old repositories when not running in NoAction.
+#   Is considered true when not defined
+sub _cleanup_old_something
+{
+    my ($self, $directory, $allowed, $type, $exts, $action_cleanup) = @_;
+
+    my $types = $type;
+    $types =~ s/y$/ie/;
+    $types .= 's';
+
     if ($NoAction) {
-        if ($self->_match_noaction_tempdir($repo_dir)) {
+        if ($self->_match_noaction_tempdir($directory)) {
             # This is ok
-            $self->verbose("Going to remove repositories from temporary NoAction",
-                           " repository directory $repo_dir.");
+            $self->verbose("Going to remove $types from temporary NoAction",
+                           " $type directory $directory.");
         } else {
-            $self->error("Not going to cleanup repository files with NoAction",
-                         " with unexpected repository directory $repo_dir ",
+            $self->error("Not going to cleanup $type files with NoAction",
+                         " with unexpected $type directory $directory ",
                          " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
                          " Please report this issue to the developers,",
                          " as this is most likely a bug in the code.");
@@ -134,26 +158,21 @@ sub cleanup_old_repos
     return 1 if defined($action_cleanup) && !$action_cleanup;
 
     my $dir;
-    if (!opendir($dir, $repo_dir)) {
-        $self->error("Unable to read repositories in $repo_dir");
+    if (!opendir($dir, $directory)) {
+        $self->error("Unable to read $types in $directory");
         return 0;
     }
 
-    my @exts = qw(repo);
-    push(@exts, 'pkgs') if ($self->REPO_INCLUDE);
-
-    my $pattern = '(.*)\.(?:' . join('|', @exts) . ')$';
+    my $pattern = '(.*)\.(?:' . join('|', @$exts) . ')$';
     my $current = Set::Scalar->new(map(m{$pattern}, readdir($dir)));
     closedir($dir);
 
-    my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
-
-    my $rm = $current-$allowed;
+    my $rm = $current - $allowed;
     foreach my $i (@$rm) {
-        foreach my $ext (@exts) {
-            my $fn = "$repo_dir/$i.$ext";
+        foreach my $ext (@$exts) {
+            my $fn = "$directory/$i.$ext";
             next if ! -e $fn;
-            my $msg = "outdated repository $i (file $fn)";
+            my $msg = "outdated $type $i (file $fn)";
             $self->verbose("Unlinking $msg");
             if (!unlink($fn)) {
                 $self->error("Unable to remove $msg: $!");
@@ -1190,6 +1209,9 @@ sub configure_plugins
     return $changes;
 }
 
+# nothing to do for yum. this is dnf only
+sub modularity { return 1;};
+
 sub Configure
 {
     my ($self, $config) = @_;
@@ -1275,6 +1297,8 @@ sub Configure
 
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                  $t->{proxyhost}, $t->{proxytype}, $t->{proxyport});
+
+    $self->modularity($t->{modules}, $config) or return 0;
 
     defined($res) or return 0;
     $purge_caches += $res;
