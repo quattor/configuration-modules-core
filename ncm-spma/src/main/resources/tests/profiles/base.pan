@@ -53,3 +53,4 @@ prefix "/software/repositories/2";
 "protocols/0/url" = "https://secret.example.com/repo";
 "proxy" = "";
 "skip_if_unavailable" = false;
+"module_hotfixes" = true;

@@ -44,4 +44,6 @@ type SOFTWARE_REPOSITORY = {
     "protocols" ? SOFTWARE_REPOSITORY_PROTOCOL []
     "proxy" ? string with SELF == '' || is_absoluteURI(SELF)
     "skip_if_unavailable" : boolean = false
+    @{DNF only feature, protects the repository from module filtering}
+    "module_hotfixes" ? boolean
 };

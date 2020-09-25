@@ -29,7 +29,7 @@ proxy=[% proxy %]
 [% END -%]
 [%- FOREACH opt IN ['enabled', 'gpgcheck', 'priority',
                     'includepkgs', 'skip_if_unavailable',
-                    'repo_gpgcheck', 'gpgcakey'] -%]
+                    'repo_gpgcheck', 'gpgcakey', 'module_hotfixes'] -%]
 [%-     IF ${opt}.defined -%]
 [%          opt %]=[% CCM.is_list($opt) ? ${opt}.join(' ') : $opt %]
 [%     END -%]
