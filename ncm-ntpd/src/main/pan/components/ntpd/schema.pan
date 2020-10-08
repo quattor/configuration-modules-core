@@ -100,7 +100,7 @@ type ntpd_system_options = {
     Defines a single rule for the "interface" statement. See the ntp_misc manpage.
 }
 type ntpd_interface_options = {
-    "action" : string with match(SELF, "^(listen|ignore|drop)$")
+    "action" : string with choice("listen", "ignore", "drop")
     "match" : string
 };
 
