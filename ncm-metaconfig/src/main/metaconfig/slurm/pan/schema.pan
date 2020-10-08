@@ -604,6 +604,21 @@ type slurm_spank_conf = {
     'includes' ? slurm_spank_includes[]
 };
 
+type slurm_topology_leaf_switch = {
+    'switch': string
+    'nodes': type_fqdn[]
+};
+
+type slurm_topology_spine_switch = {
+    'switch': string
+    'switches': string[]
+};
+
+type slurm_topology_conf = {
+    'leafswitch' : slurm_topology_leaf_switch[]
+    'spineswitch' : slurm_topology_spine_switch[]
+};
+
 type slurm_acct_gather_conf = {
     @{in seconds}
     'EnergyIPMIFrequency' ? long(0..)
