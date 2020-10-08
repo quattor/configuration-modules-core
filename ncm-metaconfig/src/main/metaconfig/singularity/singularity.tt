@@ -1,4 +1,4 @@
-[%- limitlists = ['owners', 'paths'] -%]
+[%- limitlists = ['owners', 'paths', 'groups'] -%]
 [%- FOREACH pair IN data.pairs -%]
 [%-# merge does not modify the original path
    current=path.merge([pair.key]) -%]

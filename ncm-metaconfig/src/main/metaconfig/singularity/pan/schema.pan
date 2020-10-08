@@ -130,6 +130,11 @@ type singularity_max_loop = {
 } = dict();
 
 type singularity_limit_container = {
+    @{Only allow containers to be used that are owned by a given group. If this
+    configuration is undefined (commented or set to NULL), all containers are
+    allowed to be used. This feature only applies when Singularity is running in
+    SUID mode and the user is non-root}
+    'groups' ? string[]
     @{Only allow containers to be used that are owned by a given user. If this
     configuration is undefined (commented or set to NULL), all containers are
     allowed to be used. This feature only applies when Singularity is running in
