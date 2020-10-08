@@ -1,4 +1,4 @@
-[%- booleans = ['engine',
+[%- booleans = ['engine', 'compression', 'sessiontickets',
                 'renegotiation', 'requiresafenegotiation', 'ocsp',
                 ] -%]
 [%- list = ["options"] -%]
