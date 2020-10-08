@@ -266,7 +266,7 @@ sub write_ntpd_config
 
     if ($cfg->{interface}) {
         foreach my $rule (@{$cfg->{interface}}) {
-            print $fh "interface " . $rule->{action} . " " . $rule->{match} . "\n";
+            print $fh "interface $rule->{action} $rule->{match}\n";
         }
     }
 
