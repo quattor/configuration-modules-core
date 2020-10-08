@@ -54,6 +54,16 @@ type keepalived_service_vrrpinstance = {
 };
 
 @documentation {
+    The vrrp_sync_group section
+}
+type keepalived_service_vrrpsyncgroup = {
+    'group' : string[]
+    'notify_master' ? string
+    'notify_backup' ? string
+    'notify_fault' ? string
+};
+
+@documentation {
     Keepalived config
     See: http://keepalived.org/
 }
@@ -61,5 +71,6 @@ type keepalived_service = {
     'global_defs' : keepalived_service_global
     'vrrp_scripts' : keepalived_service_vrrpscript[]
     'vrrp_instances' : keepalived_service_vrrpinstance[]
+    'vrrp_sync_groups' : keepalived_service_vrrpsyncgroup{}
 };
 

@@ -1,0 +1,12 @@
+[% FOREACH pair IN vrrp_sync_group.pairs %]
+[%-     SWITCH pair.key -%] 
+[%         CASE ['group'] -%] 
+group {
+[%              FOREACH inst IN pair.value -%]
+    [% inst %]
+[%              END -%]
+}
+[%         CASE -%]
+[% pair.key %] "[% pair.value %]"
+[%      END -%]
+[%  END %]

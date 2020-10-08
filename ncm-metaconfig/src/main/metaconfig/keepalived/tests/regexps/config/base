@@ -24,4 +24,14 @@ unordered
 ^\s{8}haproxy\s*$
 ^\s{4}\}\s*$
 ^\}\s*$
+^vrrp_sync_group Testgroup \{$
+^\s{4}group \{$
+^\s{8}I1$
+^\s{8}I2$
+^\s{4}\}$
+^\s{4}notify_backup "/run/this/script backup"$
+^\s{4}notify_fault "/run/this/script fault"$
+^\s{4}notify_master "/run/this/script master"$
+^\s{4}$
+^\}$
 
