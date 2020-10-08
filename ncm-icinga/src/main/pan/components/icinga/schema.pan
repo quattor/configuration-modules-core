@@ -35,8 +35,8 @@ type icinga_servicegroupstring = string with exists ("/software/components/icing
 type icinga_servicestring = string with exists ("/software/components/icinga/services/" + SELF) ||
     SELF == "*";
 
-type icinga_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
-type icinga_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
+type icinga_service_notification_string = string with match (SELF, "^(w|u|c|r|f|n)$");
+type icinga_host_notification_string = string with match (SELF, "^(d|u|r|f|n)$");
 type icinga_stalking_string = string with match (SELF, "^(o|w|u|c)$");
 type icinga_execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
 type icinga_notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
