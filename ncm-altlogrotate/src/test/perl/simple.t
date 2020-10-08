@@ -8,6 +8,10 @@ use Test::MockModule;
 
 my $mock = Test::MockModule->new('NCM::Component::altlogrotate');
 
+my $comp = NCM::Component::altlogrotate->new('altlogrotate');
+
+is_deeply([$comp->_glob('src/test/perl/simpl*t')], ['src/test/perl/simple.t']);
+
 my $glob;
 my $globargs;
 $mock->mock('_glob', sub {shift; $globargs = \@_; return @$glob;});
@@ -35,8 +39,6 @@ lastaction
 endscript
 }
 EOF
-
-my $comp = NCM::Component::altlogrotate->new('altlogrotate');
 
 my $config = get_config_for_profile("simple");
 

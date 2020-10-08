@@ -91,7 +91,7 @@ sub process_entry
 sub _glob
 {
     shift;
-    return glob(@_);
+    return glob(join(" ", @_));
 }
 
 sub Configure
