@@ -4,7 +4,7 @@
   <groupId>org.quattor</groupId>
   <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
-  <version>18.6.1-SNAPSHOT</version>
+  <version>19.12.1-SNAPSHOT</version>
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
   a Linux system</description>
@@ -89,7 +89,6 @@
     <module>ncm-systemd</module>
     <module>ncm-freeipa</module>
     <module>ncm-path</module>
-    <module>ncm-openstack</module>
   </modules>
   <build>
     <pluginManagement>
