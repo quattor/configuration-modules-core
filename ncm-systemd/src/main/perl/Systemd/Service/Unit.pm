@@ -442,8 +442,13 @@ sub configured_units
                 $self->error("Unitfile configuration failed, skipping the unit ", $self->unit_text($detail));
                 next;
             } elsif ($changed) {
-                $self->verbose("Going to issue conditional restart for $detail->{name} due to changed unitfile");
-                push(@tryrestart, $detail->{name});
+                if ($detail->{startstop}) {
+                    $self->verbose("Going to issue conditional restart for $detail->{name} due to changed unitfile");
+                    push(@tryrestart, $detail->{name});
+                } else {
+                    $self->verbose("Changed unitfile for $detail->{name} ",
+                                   "but conditional service restart disabled via startstop configuration");
+                }
             };
 
             if ($ufile->{only}) {
