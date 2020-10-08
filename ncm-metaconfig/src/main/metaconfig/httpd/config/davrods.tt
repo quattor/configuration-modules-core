@@ -1,0 +1,12 @@
+[%- FOR pair IN desc.pairs -%]
+[%      SWITCH pair.key %]
+[%-         CASE 'Dav' %]
+[% pair.key %] "[% pair.value %]"
+[%-         CASE 'Server' %]
+DavRods[% pair.key %] [% pair.value.host %] [% pair.value.port %]
+[%-         CASE 'AnonymousLogin' %]
+DavRods[% pair.key %] "[% pair.value.user %]" "[% pair.value.password %]"
+[%-         CASE %]
+DavRods[% pair.key %] "[% pair.value %]"
+[%-     END %]
+[%- END %]
