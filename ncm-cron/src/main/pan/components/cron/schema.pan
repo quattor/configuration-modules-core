@@ -104,6 +104,14 @@ type structure_cron_timing = {
     'weekday' ? string with valid_cron_day_of_week(SELF)
     @{ Interval (in minutes) over which to randomly smear the start time of the job }
     'smear' ? long(0..1440)
+} with {
+    if (exists(SELF['smear']) && !exists(SELF['minute'])) {
+        error('Smear is set, minutes must also be specified');
+    };
+    if (exists(SELF['smear']) && SELF['smear'] > 60 && !exists(SELF['hour'])) {
+        error('If smear is set to more than an hour, hour must also be specified');
+    };
+    true;
 };
 
 @documentation{
