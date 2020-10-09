@@ -53,6 +53,9 @@ bind "/unitfile" = systemd_unitfile_config[];
         'TTYVHangup', false,
         'LimitSTACK', -1,
         'LimitNPROC', 100,
+        'RuntimeDirectory', list('foo/bar', 'tmp'),
+        'RuntimeDirectoryMode', '0777',
+        'RuntimeDirectoryPreserve', 'restart',
         ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
