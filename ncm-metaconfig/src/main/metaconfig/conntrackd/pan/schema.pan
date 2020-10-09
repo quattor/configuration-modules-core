@@ -1,5 +1,7 @@
 declaration template metaconfig/conntrackd/schema;
 
+include 'pan/types';
+
 @documentation {
     Conntrackd config
 }
@@ -7,7 +9,7 @@ declaration template metaconfig/conntrackd/schema;
 @documentation {
     There are 3 main synchronization modes or protocols: NOTRACK, ALARM and FTFW.
 }
-type conntracd_service_sync_mode = {
+type conntrackd_service_sync_mode = {
     'type' : choice('FTFW', 'ALARM', 'NOTRACK,') = 'FTFW'
     'DisableExternalCache' ? choice('on', 'off')
     'CommitTimeout' ? long
@@ -35,8 +37,8 @@ type conntrackd_service_sync_transport = {
     This top-level section defines how conntrackd should handle synchronization with other cluster nodes.
 }
 type conntrackd_service_sync = {
-    'Mode' : conntrackd_service_sync_mode
-    'transport' : conntrackd_service_sync_transport
+    'mode' : conntrackd_service_sync_mode
+    'transport' : conntrackd_service_sync_transport[]
 };
 
 @documentation {
@@ -46,21 +48,22 @@ type conntrackd_service_sync = {
 type conntrackd_service_general_unix = {
     'Path' : string = '/var/run/conntrackd.ctl'
     'Backlog' : long = 20
-}
+};
 
 type conntrackd_service_general_filter_action = {
      'action' : choice('Accept', 'Ignore')
 };
-type conntrackd_service_general_filter_protocol_option = choice('TCP', 'SCTP', 'DCCP', 'UDP', 'ICMP', 'IPv6-ICMP')
+type conntrackd_service_general_filter_protocol_option = choice('TCP', 'SCTP', 'DCCP', 'UDP', 'ICMP', 'IPv6-ICMP');
 
 type conntrackd_service_general_filter_state_option = choice(
-    'SYN_SENT', 'SYN_RECV', 'ESTABLISHED', 'FIN_WAIT', 'CLOSE_WAIT', 'LAST_ACK', 'TIME_WAIT', 'CLOSED', 'LISTEN')
+    'SYN_SENT', 'SYN_RECV', 'ESTABLISHED', 'FIN_WAIT', 'CLOSE_WAIT', 'LAST_ACK', 'TIME_WAIT', 'CLOSED', 'LISTEN');
 
-type conntrackd_service_general_filter_state =
+type conntrackd_service_general_filter_state = {
     include conntrackd_service_general_filter_action
     'states' : conntrackd_service_general_filter_state_option[]
+};
 
-type conntrackd_service_general_filter_protocol =
+type conntrackd_service_general_filter_protocol = {
     include conntrackd_service_general_filter_action
     'protocols' : conntrackd_service_general_filter_protocol_option[]
 };
@@ -84,9 +87,9 @@ type conntrackd_service_general_filter_address = {
 
 type conntrackd_service_general_filter = {
     'from' : choice('Kernelspace', 'Userspace') = 'Userspace'
-    'Protocol' ?  conntrackd_service_general_filter_protocol
-    'Address' ? conntrackd_service_general_filter_address
-    'State' ? conntrackd_service_general_filter_state
+    'protocol' ?  conntrackd_service_general_filter_protocol
+    'address' ? conntrackd_service_general_filter_address
+    'state' ? conntrackd_service_general_filter_state
 };
 
 @documentation {
@@ -94,19 +97,19 @@ type conntrackd_service_general_filter = {
 }
 type conntrackd_service_general = {
     'Nice' : long = -20
-    'Hashsize" ? long
+    'Hashsize' ? long
     'HashLimit' ? long
     'Logfile' ? string # <on|off|filename>
     'Syslog' ? string  # <on|off|facility>
     'LockFile' : string = '/var/lock/conntrack.lock'
-    'UNIX' : conntrackd_service_general_unix
+    'UNIX' : conntrackd_service_general_unix = dict()
     'NetlinkBufferSize' ? long
     'NetlinkBufferSizeMaxGrowth' ? long
-    'Filter' ? conntrackd_service_general_filter
-
+    'filter' ? conntrackd_service_general_filter
+};
 
 type conntrackd_service = {
-    'Sync' : conntrackd_service_sync
-    'General' : conntrackd_service_general
+    'sync' ? conntrackd_service_sync
+    'general' : conntrackd_service_general
 };
 

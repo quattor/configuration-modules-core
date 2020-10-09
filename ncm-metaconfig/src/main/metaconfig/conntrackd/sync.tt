@@ -1,0 +1,20 @@
+Mode [% sync.mode.type %] {
+[% FOREACH pair IN sync.mode.pairs %]
+[%-     SWITCH pair.key -%] 
+[%          CASE ['type'] -%] 
+[%          CASE  -%]
+    [% pair.key %] [% pair.value %] 
+[%      END -%] 
+[%  END -%]
+}
+[% FOREACH tp IN sync.transport %]
+[% tp.type %] {
+[% FOREACH pair IN tp.pairs %]
+[%-     SWITCH pair.key -%] 
+[%          CASE ['type'] -%] 
+[%          CASE  -%]
+    [% pair.key %] [% pair.value %] 
+[%      END -%] 
+[%  END -%]
+}
+[%  END %]

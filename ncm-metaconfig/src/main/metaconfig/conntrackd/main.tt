@@ -1,0 +1,8 @@
+[% IF sync.defined %]
+Sync {
+[% INCLUDE 'metaconfig/conntrackd/sync.tt' FILTER indent -%]
+}
+[% END %]
+General {
+[% INCLUDE 'metaconfig/conntrackd/general.tt' FILTER indent -%]
+}
