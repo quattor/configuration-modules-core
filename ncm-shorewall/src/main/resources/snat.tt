@@ -1,0 +1,2 @@
+[% INCLUDE 'shorewall/walk.tt' _type='snat' _cols=['action', 'source', 'dest', 'proto', 'port', 'ipsec',
+                                                   'mark', 'user', 'switch', 'origdest', 'probability'] %]
