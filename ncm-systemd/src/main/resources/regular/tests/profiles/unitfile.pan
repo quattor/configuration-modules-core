@@ -57,6 +57,13 @@ bind "/unitfile" = systemd_unitfile_config[];
         'RuntimeDirectoryMode', '0777',
         'RuntimeDirectoryPreserve', 'restart',
         ),
+    'socket', dict(
+        'ExecStartPre', list('/some/path arg1', '-/some/other/path arg2'),
+        'ListenStream', list('/path/to/pipe'),
+        'SocketUser', 'pipeuser',
+        'SocketGroup', 'pipegroup',
+        'SocketMode', '660',
+        ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
         ),

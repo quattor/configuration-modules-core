@@ -42,6 +42,12 @@ type ${project.artifactId}_unit_virtualization = string with match(SELF,
 #    make this more finegrained, e.g. has to be existing unit; or check types
 type ${project.artifactId}_valid_unit = string;
 
+# executable paths can have a number of special prefixes
+type ${project.artifactId}_valid_execpath = string with match(SELF, '^([@+!:-]|!!)?/');
+
+# type for a relative directory: no leading / and may not include ".."
+type ${project.artifactId}_relative_directory = string with !match(SELF, '(^/|\.\.)');
+
 # adding new ones
 # go to http://www.freedesktop.org/software/systemd/man/systemd.directives.html
 # and follow the link to the manual
@@ -146,9 +152,9 @@ valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_exec = {
     'CacheDirectoryMode' ? type_octal_mode
-    'CacheDirectory' ? string[]
+    'CacheDirectory' ? ${project.artifactId}_relative_directory[]
     'ConfigurationDirectoryMode' ? type_octal_mode
-    'ConfigurationDirectory' ? string[]
+    'ConfigurationDirectory' ? ${project.artifactId}_relative_directory[]
     'CPUAffinity' ? long[][] # start with empty list to reset
     'CPUSchedulingPolicy' ? string with match(SELF, '^(other|batch|idle|fifo|rr)$')
     'CPUSchedulingPriority' ? long(1..99) # 99 = highest
@@ -175,19 +181,19 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'LimitSIGPENDING' ? long(-1..) # Specifies the limit on the number of signals that may be queued for the real user ID of the calling process.
     'LimitSTACK' ? long(-1..) # The maximum size of the process stack, in bytes.
     'LogsDirectoryMode' ? type_octal_mode
-    'LogsDirectory' ? string[]
+    'LogsDirectory' ? ${project.artifactId}_relative_directory[]
     'Nice' ? long(-20..19)
     'OOMScoreAdjust' ? long(-1000..1000)
     'PrivateTmp' ? boolean
-    'RootDirectory' ? string
+    'RootDirectory' ? ${project.artifactId}_relative_directory
     'RuntimeDirectoryMode' ? type_octal_mode
     'RuntimeDirectoryPreserve' ? choice('yes', 'no', 'restart')
-    'RuntimeDirectory' ? string[]
+    'RuntimeDirectory' ? ${project.artifactId}_relative_directory[]
     'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
     'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StateDirectoryMode' ? type_octal_mode
-    'StateDirectory' ? string[]
+    'StateDirectory' ? ${project.artifactId}_relative_directory[]
     'SupplementaryGroups' ? defined_group[]
     'SyslogFacility' ? syslog_facility
     'SyslogIdentifier' ? string
@@ -245,6 +251,77 @@ type ${project.artifactId}_unitfile_config_service = {
 };
 
 @documentation{
+the [Socket] section
+http://www.freedesktop.org/software/systemd/man/systemd.socket.html
+}
+type ${project.artifactId}_unitfile_config_socket = {
+    include ${project.artifactId}_unitfile_config_systemd_exec
+    include ${project.artifactId}_unitfile_config_systemd_kill
+    'ListenStream' ? string[]
+    'ListenDatagram' ? string[]
+    'ListenSequentialPacket' ? string[]
+    'ListenFIFO' ? absolute_file_path
+    'ListenSpecial' ? absolute_file_path
+    'ListenNetlink' ? string
+    'ListenMessageQueue' ? string with match(SELF, '^/')
+    'ListenUSBFunction' ? string
+    'SocketProtocol' ? choice('udplite', 'sctp')
+    'BindIPv6Only' ? choice('default', 'both', 'ipv6-only')
+    'Backlog' ? long(0..)
+    'BindToDevice' ? string
+    'SocketUser' ? defined_user
+    'SocketGroup' ? defined_group
+    'SocketMode' ? type_octal_mode
+    'DirectoryMode' ? type_octal_mode
+    'Accept' ? boolean
+    'Writable' ? boolean
+    'MaxConnections' ? long(0..)
+    'MaxConnectionsPerSource' ? long(0..)
+    'KeepAlive' ? boolean
+    'KeepAliveTimeSec' ? long(0..)
+    'KeepAliveIntervalSec' ? long(0..)
+    'KeepAliveProbes' ? long(0..)
+    'NoDelay' ? boolean
+    'Priority' ? long(0..)
+    'DeferAcceptSec' ? long(0..)
+    'ReceiveBuffer' ? long(0..)
+    'SendBuffer' ? long(0..)
+    'IPTOS' ? string with match(SELF, '^([0-9]+|low-delay|throughput|reliability|low-cost)$')
+    'IPTTL' ? long
+    'Mark' ? long
+    'ReusePort' ? boolean
+    'SmackLabel' ? string
+    'SmackLabelIPIn' ? string
+    'SmackLabelIPOut' ? string
+    'SELinuxContextFromNet' ? boolean
+    'PipeSize' ? long(0..)
+    'MessageQueueMaxMessages' ? long
+    'MessageQueueMessageSize' ? long
+    'FreeBind' ? boolean
+    'Transparent' ? boolean
+    'Broadcast' ? boolean
+    'PassCredentials' ? boolean
+    'PassSecurity' ? boolean
+    'TCPCongestion' ? choice('westwood', 'veno', 'cubic', 'lp')
+    'ExecStartPost' ? ${project.artifactId}_valid_execpath[]
+    'ExecStartPre' ? ${project.artifactId}_valid_execpath[]
+    'ExecStopPre' ? ${project.artifactId}_valid_execpath[]
+    'ExecStopPost' ? ${project.artifactId}_valid_execpath[]
+    'TimeoutSec' ? long(0..)
+    'Service' ? string
+    'RemoveOnStop' ? boolean
+    'Symlinks' ? string[]
+    'FileDescriptorName' ? string with match(SELF, '^[^:]{1,255}$')
+    'TriggerLimitIntervalSec' ? long(0..)
+    'TriggerLimitBurst' ? long(0..)
+} with {
+    if(exists(SELF['Service']) && exists(SELF['Accept']) && SELF['Accept']) {
+        error('You can only specify a Service when Accept=false');
+    };
+    true;
+};
+
+@documentation{
 Unit configuration sections
     includes, unit and install are type agnostic
         unit and install are mandatory, but not enforced by schema (possible issues in case of replace=true)
@@ -256,6 +333,7 @@ type ${project.artifactId}_unitfile_config = {
     'includes' ? string[]
     'install' ? ${project.artifactId}_unitfile_config_install
     'service' ? ${project.artifactId}_unitfile_config_service
+    'socket' ? ${project.artifactId}_unitfile_config_socket
     'unit' ? ${project.artifactId}_unitfile_config_unit
 };
 
@@ -297,14 +375,14 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
-    "type" : string = 'service' with match(SELF, '^(service|target|sysv)$')
+    "type" : choice('service', 'target', 'sysv', 'socket') = 'service'
     "startstop" : boolean = true
     "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
     @{unitfile configuration}
     "file" ? ${project.artifactId}_unitfile
 };
 
-type component_${project.artifactId} = {
+type ${project.artifactId}_component = {
     include structure_component
     "skip" : ${project.artifactId}_skip
     @{what to do with unconfigured units: ignore, enabled, disabled, on (enabled+start), off (disabled+stop; advanced option)}
