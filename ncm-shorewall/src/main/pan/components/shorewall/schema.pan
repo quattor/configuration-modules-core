@@ -76,6 +76,28 @@ type component_shorewall_policy = {
     "connlimit" ? string
 };
 
+# Keep this list in sync with list from TT file
+@{a providers entry: name number mark duplicate interface gateway options copy}
+type component_shorewall_providers = {
+    "name" : string
+    "number" : long(0..)
+    "mark" ? long(0..)
+    "duplicate" ? string
+    "interface" ? string
+    "gateway" ? string
+    "options" ? string[]
+    "copy" ? string
+};
+
+# Keep this list in sync with list from TT file
+@{a rtrules entry: source dest provider priority mark}
+type component_shorewall_rtrules = {
+    "source" ? string
+    "dest" ? string
+    "provider" : string
+    "priority" : long(1..32678)
+    "mark" ? long(1..)
+};
 
 # Keep this list in sync with list from TT file
 @{a stoppedrules entry: action src dst proto dport sport}
@@ -131,7 +153,7 @@ type component_shorewall_shorewall = {
     "add_snat_aliases" ? boolean
     "adminisabsentminded" ? boolean
     "arptables" ? string
-    "auto_comment" ? boolean with {deprecated(0, 'shorewall auto_comment deprecated by autocomment'); true;}
+    "auto_comment" ? boolean with {deprecated(0, 'shorewall auto_comment deprecated by autocomment'); true; }
     "autocomment" ? boolean
     "autohelpers" ? boolean
     "automake" ? boolean
@@ -139,7 +161,7 @@ type component_shorewall_shorewall = {
     "blacklist" ? component_shorewall_shorewall_blacklist[]
     "blacklist_disposition" ? string with match(SELF, '^((A_)?(DROP|REJECT))$')
     "blacklist_loglevel" ? string
-    "blacklistnewonly" ? boolean with {deprecated(0, 'shorewall blacklistnewonly deprecated by blacklist'); true;}
+    "blacklistnewonly" ? boolean with {deprecated(0, 'shorewall blacklistnewonly deprecated by blacklist'); true; }
     "chain_scripts" ? boolean
     "clampmss" ? boolean
     "clear_tc" ? boolean
@@ -254,6 +276,10 @@ type component_shorewall = {
     "tcpri" ? component_shorewall_tcpri[]
     @{masq configuration}
     "masq" ? component_shorewall_masq[]
+    @{providers configuration}
+    "providers" ? component_shorewall_providers[]
+    @{rtrules configuration}
+    "rtrules" ? component_shorewall_rtrules[]
     @{rules to use when shorewall is stopped}
     "stoppedrules" ? component_shorewall_stoppedrules[]
 };

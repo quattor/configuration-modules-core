@@ -1,0 +1,8 @@
+providers
+---
+//
+rendermodule=providers
+contentspath=/config
+---
+^isp1\t23\t4\t-\tabc\tdetect\tloose,track$
+^isp2\t45\t-\t-\tdef\t4.3.2.1\tbalance,track$
