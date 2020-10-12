@@ -17,22 +17,22 @@ prefix "/software/components/download";
 prefix "/software/components/download/files";
 "{/a/b/c1}" = dict(
     "proxy", true,
-    "href" ,"something1",
-    );
+    "href", "something1",
+);
 "{/a/b/c2}" = dict(
     "proxy", true,
-    "href" ,"something2",
-    );
+    "href", "something2",
+);
 "{/a/b/c3}" = dict(
     "proxy", true,
-    "href" ,"something3",
-    );
+    "href", "something3",
+);
 "{/a/b/d}" = dict(
     "proxy", true,
-    "href" ,"abc://ok/something/else",
-    );
+    "href", "abc://ok/something/else",
+);
 "{/a/b/e}" = dict(
     "proxy", false,
-    "href" ,"def://ok/something/entirely/different",
+    "href", "def://ok/something/entirely/different",
     "post", "postprocess",
-    );
+);
