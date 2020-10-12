@@ -1,0 +1,5 @@
+[%- FOREACH line IN action_attrs -%] 
+[%      FOREACH attr IN line.attributes -%]
+ACTION=="[% line.action %]", SUBSYSTEM=="[% line.subsystem  %]", ATTR{[% CCM.unescape(attr.key) %]}="[% attr.value %]"
+[%      END -%]
+[%- END -%]
