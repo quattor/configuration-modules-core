@@ -71,6 +71,6 @@ type keepalived_service = {
     'global_defs' : keepalived_service_global
     'vrrp_scripts' : keepalived_service_vrrpscript[]
     'vrrp_instances' : keepalived_service_vrrpinstance[]
-    'vrrp_sync_groups' : keepalived_service_vrrpsyncgroup{}
+    'vrrp_sync_groups' ? keepalived_service_vrrpsyncgroup{}
 };
 
