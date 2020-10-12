@@ -25,7 +25,7 @@ type keepalived_service_vrrpscript = {
 type keepalived_service_vip = {
     'ipaddress' : string
     'interface' : string
-    'broadcast' : string
+    'broadcast' ? string
 };
 
 @documentation {
@@ -46,7 +46,7 @@ type keepalived_service_vrrpinstance = {
     'name' : string
     'config' : keepalived_service_vrrpinstance_config
     'virtual_ipaddresses' : keepalived_service_vip[]
-    'track_scripts' : string[]
+    'track_scripts' ? string[]
     'unicast_peer' ? type_ip[]
     'unicast_src_ip' ? type_ip
     'virtual_routes' ? string[]
@@ -68,8 +68,8 @@ type keepalived_service_vrrpsyncgroup = {
     See: http://keepalived.org/
 }
 type keepalived_service = {
-    'global_defs' : keepalived_service_global
-    'vrrp_scripts' : keepalived_service_vrrpscript[]
+    'global_defs' ? keepalived_service_global
+    'vrrp_scripts' ? keepalived_service_vrrpscript[]
     'vrrp_instances' : keepalived_service_vrrpinstance[]
     'vrrp_sync_groups' ? keepalived_service_vrrpsyncgroup{}
 };
