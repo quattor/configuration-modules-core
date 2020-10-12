@@ -11,7 +11,7 @@ include 'pan/types';
 }
 type conntrackd_service_sync_mode = {
     'type' : choice('FTFW', 'ALARM', 'NOTRACK,') = 'FTFW'
-    'DisableExternalCache' ? choice('on', 'off')
+    'DisableExternalCache' ? boolean
     'CommitTimeout' ? long
     'PurgeTimeout' ? long
 };
@@ -30,7 +30,7 @@ type conntrackd_service_sync_transport = {
     'IPv4_interface' ? string
     'SndSocketBuffer' ? long
     'RcvSocketBuffer' ? long
-    'Checksum' ? choice('on', 'off')
+    'Checksum' ? boolean
 };
 
 @documentation {
@@ -51,7 +51,7 @@ type conntrackd_service_general_unix = {
 };
 
 type conntrackd_service_general_filter_action = {
-     'action' : choice('Accept', 'Ignore')
+    'action' : choice('Accept', 'Ignore')
 };
 type conntrackd_service_general_filter_protocol_option = choice('TCP', 'SCTP', 'DCCP', 'UDP', 'ICMP', 'IPv6-ICMP');
 
@@ -81,8 +81,10 @@ type conntrackd_service_general_filter_address = {
     Thus, you can define the event filtering policy of the filter-sets in positive or negative
     logic depending on your needs.
     You can select if conntrackd filters the event messages from user-space or kernel-space.
-    The kernel-space event filtering saves some CPU cycles by avoiding the copy of the event message from kernel-space to user-space.
-    The kernel-space event filtering is prefered, however, you require a Linux kernel >= 2.6.29 to filter from kernel-space.
+    The kernel-space event filtering saves some CPU cycles by avoiding the copy of the event
+    message from kernel-space to user-space.
+    The kernel-space event filtering is prefered, however,
+    you require a Linux kernel >= 2.6.29 to filter from kernel-space.
 }
 
 type conntrackd_service_general_filter = {

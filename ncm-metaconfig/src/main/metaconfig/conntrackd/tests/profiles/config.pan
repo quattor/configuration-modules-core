@@ -5,14 +5,14 @@ include 'metaconfig/conntrackd/config';
 prefix '/software/components/metaconfig/services/{/etc/conntrackd/conntrackd.conf}/contents';
 
 'sync/mode/CommitTimeout' = 1800;
-'sync/mode/DisableExternalCache' = 'off';
+'sync/mode/DisableExternalCache' = false;
 
 'sync/transport/0/type' = 'UDP';
 'sync/transport/0/IPv4_address' = '10.10.20.30';
 'sync/transport/0/IPv4_Destination_Address' = '10.10.20.31';
 'sync/transport/0/Port' = 3781;
 'sync/transport/0/Interface' = 'eth0';
-'sync/transport/0/Checksum' = 'on';
+'sync/transport/0/Checksum' = true;
 
 'general/Syslog' = 'on';
 'general/filter/protocol/action' = 'Accept';
