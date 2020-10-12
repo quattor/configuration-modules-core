@@ -179,6 +179,10 @@ Readonly my $DEVICE_REGEXP => qr{
 Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
+Readonly my $RESOLV_CONF => '/etc/resolv.conf';
+Readonly my $RESOLV_CONF_SAVE => '/etc/resolv.conf.save';
+Readonly my $RESOLV_SUFFIX => '.ncm-network';
+
 Readonly my $FAILED_SUFFIX => '-failed';
 Readonly my $BACKUP_DIR => "$IFCFG_DIR/.quattorbackup";
 
@@ -425,7 +429,10 @@ sub test_network_ccm_fetch
     # ccm-fetch should be in $PATH
     $self->verbose("$func: trying ccm-fetch");
     # no runrun, as it would trigger error (and dependency failure)
-    my $output = CAF::Process->new(["ccm-fetch"], log => $self)->output();
+    my $dbglvl = $self->{LOGGER} ? $self->{LOGGER}->get_debuglevel() : 0;
+    my $cmd = ["ccm-fetch"];
+    push(@$cmd, "--debug", $dbglvl) if $dbglvl;
+    my $output = CAF::Process->new($cmd, log => $self)->output();
     my $exitcode = $?;
     if ($exitcode == 0) {
         $self->verbose("$func: OK: network up");
@@ -434,7 +441,7 @@ sub test_network_ccm_fetch
         $self->warn("$func: ccm-fetch failed with NOQUATTOR. Testing network with ping.");
         return $self->test_network_ping($profile);
     } else {
-        $self->warn("$func: FAILED: network down");
+        $self->warn("$func: FAILED: network down: ec $exitcode (output in ccm-fetch log file)");
         return 0;
     }
 }
@@ -456,20 +463,23 @@ sub get_current_config
     $output .= "\n@$IPROUTE\n";
     $output .= $self->runrun($IPROUTE);
 
+    $fh = CAF::FileReader->new($RESOLV_CONF, log => $self);
+    $output .= "\n$RESOLV_CONF\n$fh";
+
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
     if ($self->_is_executable($BRIDGECMD)) {
         $output .= "\n$BRIDGECMD show\n";
         $output .= $self->runrun([$BRIDGECMD, "show"]);
     } else {
-        $output .= "Missing $BRIDGECMD executable.\n";
+        $output .= "\nMissing $BRIDGECMD executable.\n";
     };
 
     if ($self->_is_executable($OVS_VCMD)) {
         $output .= "\n$OVS_VCMD show\n";
         $output .= $self->runrun([$OVS_VCMD, "show"]);
     } else {
-        $output .= "Missing $OVS_VCMD executable.\n";
+        $output .= "\nMissing $OVS_VCMD executable.\n";
     };
 
     return $output;
@@ -646,6 +656,8 @@ sub runrun
             push(@output, $proc->output());
             if ($?) {
                 $self->error("Error '$proc' output: $output[-1]");
+            } else {
+                $self->debug(5, "Success '$proc' output: $output[-1]");
             }
         }
     }
@@ -913,9 +925,11 @@ sub _make_make_ifcfg_line
 }
 
 # Return ifcfg content
+#   supported options: resolv_mods: when set to false (default true), do not add the RESOLV_MODS=no entry
+#   supported options: peerdns: when set to false (default true), do not add the PEERDNS=no entry
 sub make_ifcfg
 {
-    my ($self, $ifacename, $iface, $ipv6) = @_;
+    my ($self, $ifacename, $iface, $ipv6, %opts) = @_;
 
     my @text;
     my $makeline = _make_make_ifcfg_line($iface, \@text);
@@ -1052,6 +1066,9 @@ sub make_ifcfg
     &$makeline('vlan', bool => 'yesno');
 
     push(@text, "ISALIAS=no") if ($iface->{vlan});
+
+    push(@text, "RESOLV_MODS=no") if !defined($opts{resolv_mods}) || $opts{resolv_mods};
+    push(@text, "PEERDNS=no") if !defined($opts{peerdns}) || $opts{peerdns};
 
     &$makeline('physdev');
 
@@ -1367,6 +1384,16 @@ sub make_ifup
     return \%ifup;
 }
 
+# enable the network service
+#   without enabled network service, this component is pointless
+#   best to also enable the network service with ncm-chkconfig
+sub enable_network_service
+{
+    my ($self) = @_;
+    # do not start it!
+    return $self->runrun([qw(/sbin/chkconfig --level 2345 network on)]);
+}
+
 # If allow is defined and false, disable and stop NetworkManager
 sub disable_networkmanager
 {
@@ -1584,6 +1611,12 @@ sub recover
             &$recover($file);
         }
     }
+
+    # Restore original resolv.conf and resolv.conf.save files and stop the network again
+    # This recreates a stopped network with original configuration
+    $self->move($RESOLV_CONF.$RESOLV_SUFFIX, $RESOLV_CONF);
+    $self->move($RESOLV_CONF_SAVE.$RESOLV_SUFFIX, $RESOLV_CONF_SAVE);
+    $nwsrv->stop();
 
     # network start
     $self->verbose("RECOVER: start network");
@@ -1893,6 +1926,12 @@ sub Configure
 
     # current setup, will be printed in case of major failure
     my $init_config = $self->get_current_config();
+    # The original, assumed to be working resolv.conf
+    # Using an FileEditor: it will read the current content, so we can do a close later to save it
+    # in case something changed it behind our back.
+    my $resolv_conf_fh = CAF::FileEditor->new($RESOLV_CONF, backup => $RESOLV_SUFFIX, log => $self);
+    # Need to reset the original content (otherwise the close will not check the possibly updated content on disk)
+    *$resolv_conf_fh->{original_content} = undef;
 
     my $net = $self->process_network($config);
     my $ifaces = $net->{interfaces};
@@ -1938,6 +1977,13 @@ sub Configure
 
         $self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
         $self->ethtool_opts_keeps_state($file_name, $ifacename, $iface, $exifiles);
+
+        if ($exifiles->{$file_name} == $UPDATED) {
+            # interface configuration was changed
+            # check if this was due to addition of resolv_mods / peerdns
+            my $no_resolv = $self->make_ifcfg($ifacename, $iface, $ipv6, resolv_mods => 0, peerdns => 0);
+            $self->legacy_keeps_state($file_name, $no_resolv, $exifiles);
+        }
 
         # route/rule config, interface based.
         foreach my $flavour (qw(route route6 rule rule6)) {
@@ -2024,6 +2070,8 @@ sub Configure
     # Action starts here
     #
 
+    $self->enable_network_service();
+
     $self->disable_networkmanager($nwtree->{allow_nm});
 
     $self->start_openvswitch($ifaces, $ifup);
@@ -2033,6 +2081,10 @@ sub Configure
     # TODO: why do that here? should be done after any restarting of devices or whole network?
     $self->ethtool_set_options($ifaces);
 
+    # Record any changes wrt the init config (e.g. due to stopping of NetworkManager)
+    $init_config .= "\nPRE STOP\n";
+    $init_config .= $self->get_current_config();
+
     # restart network
     # capturing system output/exit-status here is not useful.
     # network status is tested separately
@@ -2041,6 +2093,15 @@ sub Configure
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['network'], log => $self);
+
+    # Rename special/magic RESOLV_CONF_SAVE, so it does not get picked up by ifdown.
+    # If it exists, and contains faulty DNS config, things might go haywire.
+    # When there is no RESOLV_MODS=no or PEERDNS=no set (e.g. initial anaconda generated
+    # ifcfg files which also have DNS1 set), ifdown-post might cause restore of previously saved /etc/resolv.conf
+    # (most likely in this scenario saved by ifup-post)
+    # and leave a system without configured DNS (which ncm-network can't recover from,
+    # as it does not manage /etc/resolv.conf). Without working DNS, the ccm-fetch network test will probably fail.
+    $self->move($RESOLV_CONF_SAVE, $RESOLV_CONF_SAVE.$RESOLV_SUFFIX);
 
     my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
 
@@ -2076,6 +2137,9 @@ sub Configure
     }
 
     my $config_changed = $self->deploy_config($exifiles);
+
+    # Save/Restore last known working (i.e. initial) /etc/resolv.conf
+    $resolv_conf_fh->close();
 
     $stopstart += $self->start($exifiles, $ifup, $nwsrv);
 
@@ -2120,6 +2184,9 @@ sub Configure
         foreach my $file (@files) {
             $self->cleanup_backup_test($file);
         }
+
+        $self->cleanup($RESOLV_CONF.$RESOLV_SUFFIX);
+        $self->cleanup($RESOLV_CONF_SAVE.$RESOLV_SUFFIX);
     }
 
     # remove all broken links: use file_exists
