@@ -1,0 +1,11 @@
+Base test for config
+---
+multiline
+/etc/my.cnf.d/quattor.cnf
+---
+^\[mysqld\]$
+^max_connections\=\d+$
+
+^\[mysqldump\]$
+^password\=.+$
+^user\=.+$
