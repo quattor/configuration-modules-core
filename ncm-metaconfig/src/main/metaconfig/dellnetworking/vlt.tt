@@ -25,5 +25,8 @@ discovery-interface [% name %]
 [%              pair.value %] [% vlt.${pair.key} %]
 [%          END -%]
 [%      END -%]
+[%-     IF vlt.exists('peerrouting') -%]
+[%-         vlt.peerrouting ? '' : 'no ' -%]peer-routing
+[%     END -%]
 [%- END -%]
 !

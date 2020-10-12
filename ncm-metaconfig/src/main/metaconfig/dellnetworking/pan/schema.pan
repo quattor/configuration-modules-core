@@ -6,7 +6,7 @@ include 'quattor/functions/network';
 # see TODO below why this is split in a function
 function is_dellnetworking_interface_name = {
     match(ARGV[0],
-        '^((ethernet)\s?(\d+/\d+/\d+(:\d+)?))|(port-channel\s?\d+)$');
+        '^((ethernet)\s?(\d+/\d+/\d+(:\d+)?))|((port-channel|vlan)\s?\d+)$');
 };
 
 type dellnetworking_interface_name = string with is_dellnetworking_interface_name(SELF);
@@ -29,6 +29,8 @@ type dellnetworking_vlt = {
     'priority' ? long(0..65535)
     @{mtu}
     'mtu' ? long(1280..65535)
+    @{enable/disable peer routing}
+    'peerrouting' ? boolean
 };
 
 type dellnetworking_lacp = {
@@ -44,15 +46,19 @@ type dellnetworking_lacp = {
     'priority' ? long(0..65535)
 };
 
-type dellnetworking_interface = {
-    @{interface is enabled}
-    'enable' : boolean = true
-    @{description field}
-    'description' ? string
+type dellnetworking_ip = {
     @{ip address}
     'ip' ? type_ipv4
     @{address subnet mask}
     'mask' ? long(0..32)
+};
+
+type dellnetworking_interface = {
+    include dellnetworking_ip
+    @{interface is enabled}
+    'enable' : boolean = true
+    @{description field}
+    'description' ? string
     @{access port to VLAN (implies trunk mode; no access VLAN defined implies access mode)}
     'access' ? dellnetworking_vlan
     @{tagged VLANs, VLAN for untagged traffic is bridge pvid}
@@ -69,6 +75,8 @@ type dellnetworking_interface = {
     'mtu' ? long(1280..65535)
     @{enable/disable spanning-tree edge port}
     'edge' ? boolean
+    @{set to true to suppress any switchport statement being generated; set to false to disable it}
+    'switchport' ? boolean
 } with {
     if (exists(SELF['slaves'])) {
         if (!(exists(SELF['lacp']) && exists(SELF['lacp']['mode']))) {
@@ -106,14 +114,31 @@ type dellnetworking_user = {
 };
 
 type dellnetworking_management = {
-    'ip' : type_ipv4
-    'mask' : long(0..32)
+    include dellnetworking_ip
     'gateway' : type_ipv4
+    'ipv6' : boolean = false
 };
 
 @{key is feature name, value is boolean (false will disable the feature)}
 type dellnetworking_feature = {
     'auto-breakout' ? boolean
+};
+
+type dellnetworking_logserver = {
+    "ip" : type_ipv4
+    "level" ? choice("emerg", "alert", "crit", "err", "warning", "notice", "info", "debug")
+    "transport" ? choice("tcp", "udp", "tls")
+    "port" ? long(1..65535)
+};
+
+@{the ip/mask define the subnet}
+type dellnetworking_route = {
+    @{subnet}
+    'subnet' : type_ipv4
+    @{subnet mask}
+    'mask' : long(0..32)
+    @{gateway}
+    'gateway' : type_ipv4
 };
 
 type dellnetworking_config = {
@@ -141,6 +166,10 @@ type dellnetworking_config = {
     'interfaces' : dellnetworking_interface{}
     @{VLT configuration}
     'vlt' ? dellnetworking_vlt
+    @{logserver configuration}
+    'logserver' ? dellnetworking_logserver
+    @{static routes}
+    'routes' ? dellnetworking_route[]
 } with {
     # VLT discovery interfaces cannot be interfaces
     if (exists(SELF['vlt'])) {
@@ -156,6 +185,18 @@ type dellnetworking_config = {
         knownvids = append(clone(SELF['vlanids']), SELF['pvid']);
     } else {
         knownvids = list(SELF['pvid']);
+    };
+
+    foreach (esname; inf; SELF['interfaces']) {
+        vlan = matches(unescape(esname), '^vlan\s*(\d+)$');
+        if (length(vlan) == 2) {
+            vid = to_long(vlan[1]);
+            if (index(vid, knownvids) < 0) {
+                append(knownvids, vid);
+            } else {
+                error("interface vlan %s is already known", vid);
+            };
+        };
     };
 
     # vlt port channel ids and slave interfaces are unique
@@ -176,11 +217,11 @@ type dellnetworking_config = {
             if (index(inf['access'], knownvids) < 0) {
                 error("access vlan %s for %s is unknown vlan", inf['access'], name);
             };
-            if (exists(inf['vids'])) {
-                foreach (idx; vid; inf['vids']) {
-                    if (index(inf['access'], knownvids) < 0) {
-                        error("allowed trunk vlan %s for %s is unknown vlan", vid, name);
-                    };
+        };
+        if (exists(inf['vids'])) {
+            foreach (idx; vid; inf['vids']) {
+                if (index(vid, knownvids) < 0) {
+                    error("allowed trunk vlan %s for %s is unknown vlan", vid, name);
                 };
             };
         };

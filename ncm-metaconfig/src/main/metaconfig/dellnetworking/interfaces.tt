@@ -1,5 +1,15 @@
 [%- FOREACH pair IN CCM.contents.interfaces.pairs %]
 [%-      name = CCM.unescape(pair.key);
+         IF ! name.match('^vlan');
+             NEXT;
+         END; -%]
+[%-      INCLUDE 'metaconfig/dellnetworking/interface.tt' name=name data=pair.value -%]
+[%- END; -%]
+[%- FOREACH pair IN CCM.contents.interfaces.pairs %]
+[%-      name = CCM.unescape(pair.key);
+         IF name.match('^vlan');
+             NEXT;
+         END;
          data = pair.value;
          sdata = {};
          IF data.exists('slaves');

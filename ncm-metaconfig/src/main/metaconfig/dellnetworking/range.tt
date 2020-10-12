@@ -1,0 +1,30 @@
+[% # Convert list of ints to comma-separated list of ranges
+   #  eg [1,2,3,6,8,9,10] -> "1-3,6,8-10"
+   res = [];
+   begin = intlist.0;
+   end = begin;
+   idx = 1;
+   FOREACH num IN intlist;
+        IF num == intlist.0;
+            NEXT;
+        END;
+        previdx = idx - 1;
+        IF intlist.$previdx + 1 == num;
+            end = num;
+        ELSE;
+            IF begin == end;
+                res.push(begin);
+            ELSE;
+                res.push(begin _ '-' _ end);
+            END;
+            begin = num;
+            end = num;
+        END;
+        idx = idx + 1;
+   END;
+   IF begin == end;
+        res.push(begin);
+   ELSE;
+        res.push(begin _ '-' _ end);
+   END; -%]
+[%- res.join(',') -%]

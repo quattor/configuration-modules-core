@@ -27,7 +27,19 @@ port-group 1/1/1
 port-group 1/1/2
  mode Eth 100g-1x
 !
+interface mgmt1/1/1
+ no shutdown
+ no ip address dhcp
+ ip address 1.2.3.4/16
+ ipv6 enable
+ ipv6 address autoconfig
+!
+management route 0.0.0.0/0 2.3.4.5
+!
 interface vlan 1
+ no shutdown
+!
+interface vlan 5
  no shutdown
 !
 interface vlan 10
@@ -36,22 +48,37 @@ interface vlan 10
 interface vlan 11
  no shutdown
 !
+interface vlan 12
+ no shutdown
+!
+interface vlan 13
+ no shutdown
+!
 interface vlan 20
  no shutdown
 !
 interface vlan 100
  no shutdown
 !
+interface vlan 101
+ no shutdown
+!
+interface vlan 102
+ no shutdown
+!
+interface vlan 103
+ no shutdown
+!
 interface vlan 200
  no shutdown
 !
-interface mgmt1/1/1
+interface vlan55
+ description "a vlan"
  no shutdown
  no ip address dhcp
- ip address 1.2.3.4/16
- ipv6 address autoconfig
-!
-management route 0.0.0.0/0 2.3.4.5
+ ip address 1.2.3.44/12
+ no ipv6 enable
+ no switchport
 !
 interface ethernet1/1/3
  description "one server"
@@ -63,7 +90,7 @@ interface port-channel1
  no shutdown
  switchport mode trunk
  switchport access vlan 10
- switchport trunk allowed vlan 11,20
+ switchport trunk allowed vlan 5,11-13,20,101-103
  lacp fallback enable
  lacp fallback timeout 5
  vlt-port-channel 1
@@ -83,7 +110,7 @@ interface port-channel5
  description "leg 5"
  no shutdown
  switchport mode trunk
- switchport trunk allowed vlan 55
+ switchport trunk allowed vlan 55,101,103
 !
 interface ethernet1/1/5
  description "po5 leg 5"
@@ -109,7 +136,9 @@ vlt-domain 1
  delay-restore 120
  vlt-mac 44:38:39:FF:00:01
  primary-priority 10
+ peer-routing
 !
-support-assist
-!
+ip route 10.11.12.0/24 9.8.7.6
+ip route 10.12.0.0/16 9.8.7.5
 snmp-server contact "Contact Support"
+logging server 9.8.7.6 udp 123 severity log-debug
