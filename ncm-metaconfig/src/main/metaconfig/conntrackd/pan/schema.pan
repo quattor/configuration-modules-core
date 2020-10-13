@@ -26,10 +26,10 @@ type conntrackd_service_sync_transport = {
     'IPv4_Destination_Address' ? type_ipv4
     'IPv6_Destionation_Address' ? type_ipv6
     'Port' ? long
-    'Interface'? string
-    'IPv4_interface' ? string
-    'SndSocketBuffer' ? long
-    'RcvSocketBuffer' ? long
+    'Interface'? string with path_exists(format('/system/network/interfaces/%s', SELF));
+    'IPv4_interface' ? type_ipv4
+    'SndSocketBuffer' ? long(0..)
+    'RcvSocketBuffer' ? long(0..)
     'Checksum' ? boolean
 };
 
@@ -99,14 +99,14 @@ type conntrackd_service_general_filter = {
 }
 type conntrackd_service_general = {
     'Nice' : long = -20
-    'Hashsize' ? long
-    'HashLimit' ? long
+    'Hashsize' ? long(1..)
+    'HashLimit' ? long(1..)
     'Logfile' ? string # <on|off|filename>
     'Syslog' ? string  # <on|off|facility>
     'LockFile' : string = '/var/lock/conntrack.lock'
     'UNIX' : conntrackd_service_general_unix = dict()
-    'NetlinkBufferSize' ? long
-    'NetlinkBufferSizeMaxGrowth' ? long
+    'NetlinkBufferSize' ? long(102400..)
+    'NetlinkBufferSizeMaxGrowth' ? long(204800..)
     'filter' ? conntrackd_service_general_filter
 };
 
@@ -114,4 +114,3 @@ type conntrackd_service = {
     'sync' ? conntrackd_service_sync
     'general' : conntrackd_service_general
 };
-

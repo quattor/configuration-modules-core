@@ -25,7 +25,7 @@ type keepalived_service_vrrpscript = {
 type keepalived_service_vip = {
     'ipaddress' : string
     'interface' : string
-    'broadcast' ? string
+    'broadcast' ? type_ip
 };
 
 @documentation{
@@ -73,4 +73,3 @@ type keepalived_service = {
     'vrrp_instances' : keepalived_service_vrrpinstance[]
     'vrrp_sync_groups' ? keepalived_service_vrrpsyncgroup{}
 };
-
