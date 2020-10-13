@@ -34,4 +34,17 @@ unordered
 ^\s{4}notify_master "/run/this/script master"$
 ^\s{4}$
 ^\}$
-
+^vrrp_instance Testmore \{\s{4}$
+^\s{4}advert_int 1$
+^\s{4}interface eth0$
+^\s{4}priority 100$
+^\s{4}state BACKUP$
+^\s{4}virtual_router_id 53$
+^\s{4}virtual_ipaddress \{$
+^\s{8}192.168.1.21 dev eth0 $
+^\s{4}\}$
+^\s{4}$
+^\s{4}$
+^\s{4}$
+^\s{4}$
+^\}$

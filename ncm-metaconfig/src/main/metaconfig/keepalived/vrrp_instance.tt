@@ -4,9 +4,11 @@
 virtual_ipaddress {
 [% INCLUDE 'metaconfig/keepalived/virtual_ipaddress.tt' FILTER indent -%]
 }
+[% IF vrrp_instance.track_scripts.defined %]
 track_script {
 [% INCLUDE 'metaconfig/keepalived/track_script.tt' FILTER indent -%]
 }
+[% END %]
 [% IF vrrp_instance.virtual_routes.defined %]
 virtual_routes {
 [% FOREACH route IN vrrp_instance.virtual_routes -%]
