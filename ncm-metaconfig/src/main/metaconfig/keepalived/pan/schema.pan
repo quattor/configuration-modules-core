@@ -2,14 +2,14 @@ declaration template metaconfig/keepalived/schema;
 
 include 'pan/types';
 
-@documentation {
+@documentation{
     The global_defs section
 }
 type keepalived_service_global = {
     'router_id' : string
 };
 
-@documentation {
+@documentation{
     The vrrp_script section
 }
 type keepalived_service_vrrpscript = {
@@ -19,7 +19,7 @@ type keepalived_service_vrrpscript = {
     'weight' : long = 2
 };
 
-@documentation {
+@documentation{
     The virtual_ipaddress section of the vrrp_instance
 }
 type keepalived_service_vip = {
@@ -28,7 +28,7 @@ type keepalived_service_vip = {
     'broadcast' ? string
 };
 
-@documentation {
+@documentation{
     The vrrp_instance configuration
 }
 type keepalived_service_vrrpinstance_config = {
@@ -39,7 +39,7 @@ type keepalived_service_vrrpinstance_config = {
     'interface' : string
 };
 
-@documentation {
+@documentation{
     The vrrp_instance section
 }
 type keepalived_service_vrrpinstance = {
@@ -53,7 +53,7 @@ type keepalived_service_vrrpinstance = {
     'track_interface' ? string[]
 };
 
-@documentation {
+@documentation{
     The vrrp_sync_group section
 }
 type keepalived_service_vrrpsyncgroup = {
@@ -63,7 +63,7 @@ type keepalived_service_vrrpsyncgroup = {
     'notify_fault' ? string
 };
 
-@documentation {
+@documentation{
     Keepalived config
     See: http://keepalived.org/
 }

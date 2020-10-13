@@ -2,11 +2,11 @@ declaration template metaconfig/conntrackd/schema;
 
 include 'pan/types';
 
-@documentation {
+@documentation{
     Conntrackd config
 }
 
-@documentation {
+@documentation{
     There are 3 main synchronization modes or protocols: NOTRACK, ALARM and FTFW.
 }
 type conntrackd_service_sync_mode = {
@@ -16,7 +16,7 @@ type conntrackd_service_sync_mode = {
     'PurgeTimeout' ? long
 };
 
-@documentation {
+@documentation{
     There are 3 transport protocols: TCP, Multicast and UDP.
 }
 type conntrackd_service_sync_transport = {
@@ -33,7 +33,7 @@ type conntrackd_service_sync_transport = {
     'Checksum' ? boolean
 };
 
-@documentation {
+@documentation{
     This top-level section defines how conntrackd should handle synchronization with other cluster nodes.
 }
 type conntrackd_service_sync = {
@@ -41,7 +41,7 @@ type conntrackd_service_sync = {
     'transport' : conntrackd_service_sync_transport[]
 };
 
-@documentation {
+@documentation{
     Unix socket configuration.
     This socket is used by conntrackd to listen to external commands like `conntrackd -k' or `conntrackd -n'.
 }
@@ -74,7 +74,7 @@ type conntrackd_service_general_filter_address = {
     'IPv6_address' ? type_ipv6[]
 };
 
-@documentation {
+@documentation{
     Event filtering. This clause allows you to filter certain traffic.
     There are currently three filter-sets: Protocol, Address and State.
     The filter is attached to an action that can be: Accept or Ignore.
@@ -94,7 +94,7 @@ type conntrackd_service_general_filter = {
     'state' ? conntrackd_service_general_filter_state
 };
 
-@documentation {
+@documentation{
     This top-level section contains generic configuration directives for the conntrackd daemon
 }
 type conntrackd_service_general = {
