@@ -12,8 +12,8 @@ include 'pan/types';
 type conntrackd_service_sync_mode = {
     'type' : choice('FTFW', 'ALARM', 'NOTRACK,') = 'FTFW'
     'DisableExternalCache' ? boolean
-    'CommitTimeout' ? long
-    'PurgeTimeout' ? long
+    'CommitTimeout' ? long(0..)
+    'PurgeTimeout' ? long(0..)
 };
 
 @documentation{
@@ -25,8 +25,8 @@ type conntrackd_service_sync_transport = {
     'IPv6_address' ? type_ipv6
     'IPv4_Destination_Address' ? type_ipv4
     'IPv6_Destionation_Address' ? type_ipv6
-    'Port' ? long
-    'Interface'? string with path_exists(format('/system/network/interfaces/%s', SELF));
+    'Port' ? type_port
+    'Interface'? string with path_exists(format('/system/network/interfaces/%s', SELF))
     'IPv4_interface' ? type_ipv4
     'SndSocketBuffer' ? long(0..)
     'RcvSocketBuffer' ? long(0..)
@@ -99,7 +99,7 @@ type conntrackd_service_general_filter = {
 }
 type conntrackd_service_general = {
     'Nice' : long = -20
-    'Hashsize' ? long(1..)
+    'HashSize' ? long(1..)
     'HashLimit' ? long(1..)
     'Logfile' ? string # <on|off|filename>
     'Syslog' ? string  # <on|off|facility>

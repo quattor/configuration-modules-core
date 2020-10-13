@@ -36,9 +36,18 @@ prefix '/software/components/metaconfig/services/{/etc/keepalived/keepalived.con
 'contents/vrrp_sync_groups' = dict('Testgroup',
     dict(
         'group', list('I1', 'I2'),
-        'notify_master', '/run/this/script master',
-        'notify_backup', '/run/this/script backup',
-        'notify_fault', '/run/this/script fault',
+        'notify_master', dict(
+            'script', '/run/this/script',
+            'args', list('master'),
+        ),
+        'notify_backup', dict(
+            'script', '/run/this/script',
+            'args', list('backup'),
+        ),
+        'notify_fault', dict(
+            'script', '/run/this/script',
+            'args', list('fault'),
+        ),
     )
 );
 

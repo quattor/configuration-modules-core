@@ -2,6 +2,8 @@ object template config;
 
 include 'metaconfig/conntrackd/config';
 
+"/system/network/interfaces/eth0" = dict();
+
 prefix '/software/components/metaconfig/services/{/etc/conntrackd/conntrackd.conf}/contents';
 
 'sync/mode/CommitTimeout' = 1800;

@@ -54,13 +54,21 @@ type keepalived_service_vrrpinstance = {
 };
 
 @documentation{
+    The keepalived notify type
+}
+type keepalived_notify_script = {
+    'script' : absolute_file_path
+    'args' ? string_trimmed[]
+};
+
+@documentation{
     The vrrp_sync_group section
 }
 type keepalived_service_vrrpsyncgroup = {
     'group' : string[]
-    'notify_master' ? string
-    'notify_backup' ? string
-    'notify_fault' ? string
+    'notify_master' ? keepalived_notify_script
+    'notify_backup' ? keepalived_notify_script
+    'notify_fault' ? keepalived_notify_script
 };
 
 @documentation{
