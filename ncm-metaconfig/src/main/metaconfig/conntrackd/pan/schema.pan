@@ -98,7 +98,7 @@ type conntrackd_service_general_filter = {
     This top-level section contains generic configuration directives for the conntrackd daemon
 }
 type conntrackd_service_general = {
-    'Nice' : long = -20
+    'Nice' : long(-20..19) = -20
     'HashSize' ? long(1..)
     'HashLimit' ? long(1..)
     'Logfile' ? string # <on|off|filename>
