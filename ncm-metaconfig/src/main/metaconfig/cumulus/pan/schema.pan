@@ -76,6 +76,8 @@ type cumulus_interface = {
     'bond-lacp-bypass-allow' ? boolean
     @{STP BPDU Guard}
     'mstpctl-bpduguard' ? boolean
+    @{mgmt VRF, only to be used for the management interface}
+    'mgmtvrf' ? boolean
 } with {
     if (exists(SELF['gateway'])) {
         if (!ip_in_network(SELF['gateway'], SELF['address'], subnet_prefix_to_mask(SELF['mask']))) {

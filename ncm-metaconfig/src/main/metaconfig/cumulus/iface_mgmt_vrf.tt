@@ -1,0 +1,11 @@
+[% FILTER indent -%]
+vrf mgmt
+[%- END %]
+
+auto mgmt
+iface mgmt
+[% FILTER indent -%]
+address 127.0.0.1/8
+address ::1/128
+vrf-table auto
+[%- END %]

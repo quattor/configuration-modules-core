@@ -14,9 +14,11 @@ iface bridge
     bridge-vlan-aware yes
 
 
+
 auto peerlink
 iface peerlink
     bond-slaves swp50 swp51
+
 
 auto peerlink.4094
 iface peerlink.4094
@@ -26,19 +28,30 @@ iface peerlink.4094
 
 
 
+
 auto eth0
 iface eth0 inet dhcp
     
+    vrf mgmt
+
+auto mgmt
+iface mgmt
+    address 127.0.0.1/8
+    address ::1/128
+    vrf-table auto
+
 
 auto lo
 iface lo inet loopback
     address 10.0.0.11/32
 
 
+
 auto server1
 iface server1
     clag-id 1
     bond-slaves swp1
+
 
 
 auto server2
@@ -49,6 +62,7 @@ iface server2
     bond-slaves swp2
 
 
+
 auto swp3
 iface swp3
     alias some port
@@ -57,18 +71,23 @@ iface swp3
     link-speed 10000
 
 
+
 auto swp50
 iface swp50
+
 
 
 auto swp51
 iface swp51
 
 
+
 auto swp1
 iface swp1
 
 
+
 auto swp2
 iface swp2
+
 
