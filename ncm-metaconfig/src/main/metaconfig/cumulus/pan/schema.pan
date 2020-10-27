@@ -22,13 +22,17 @@ type cumulus_interface_bridge = {
     'enable' : boolean = true
 } = dict();
 
-type cumulus_interface_common = {
+type cumulus_interface_bridge_common = {
     @{comment field}
     'alias' ? string
     @{clag ip address}
     'address' ? cumulus_ipv4
     @{address subnet prefix}
     'mask' ? long(0..32) # naming follows cumulus configuration, but it is a prefix
+};
+
+type cumulus_interface_common = {
+    include cumulus_interface_bridge_common
     'bridge' : cumulus_interface_bridge
 };
 
@@ -87,17 +91,41 @@ type cumulus_interface = {
     true;
 };
 
-type cumulus_bridge = {
-    @{VLAN for untagged packets}
-    'pvid' ? cumulus_vlan
+type cumulus_bridge_common = {
     @{STP}
     'stp' ? boolean
-    @{Supported VLANs}
-    'vids' ? cumulus_vlan[]
     @{VLAN aware}
     'vlan-aware' ? boolean
+};
+
+type cumulus_bridge = {
+    include cumulus_bridge_common
+    @{VLAN for untagged packets}
+    'pvid' ? cumulus_vlan
+    @{Supported VLANs}
+    'vids' ? cumulus_vlan[]
     @{enable/disable multicast snooping}
     'mcsnoop' ? boolean
+};
+
+type cumulus_bridge_traditional = {
+    include cumulus_bridge_common
+    include cumulus_interface_bridge_common
+    @{interfaces that are part of this bridge}
+    'ports' : string[] with {
+        interfaces = dict();
+        foreach (idx; inf; SELF) {
+            intf = replace('\.*$', '', inf);
+            if (exists(interfaces[intf])) {
+                error("Cannot have 2 subinterfaces in ports: %s found %s", intf, interfaces);
+            } else {
+                interfaces[intf] = true;
+            };
+        };
+        true;
+    }
+    @{VLAN id, when defined, will be added to interfaces that do not have a vlan tag}
+    'vid' ? cumulus_vlan
 };
 
 type cumulus_interfaces = {
@@ -105,8 +133,10 @@ type cumulus_interfaces = {
     'interfaces' ? cumulus_interface{}
     @{MLAG peerlink configuration}
     'peerlink' ? cumulus_peerlink
-    @{bridge}
+    @{single bridge, reserved name for vlan-aware bridge. use 'bridges' for traditional bridges}
     'bridge' ? cumulus_bridge
+    @{traditional bridge(s). key makes interface "br-<key>"}
+    'bridges' ? cumulus_bridge_traditional{}
 } with {
     # peerlink vlan is unique for the peerlink
     peervlan = -1;
@@ -117,6 +147,9 @@ type cumulus_interfaces = {
     clagids = list();
     if (exists(SELF['interfaces'])) {
         foreach (name; inf; SELF['interfaces']) {
+            if (length(name) > 15) {
+                error("Interface name %s is more then 15 chars", name);
+            };
             if (exists(inf['clag-id'])) {
                 if (index(inf['clag-id'], clagids) >= 0) {
                     error('clag-id %s found twice (last for interface %s)', inf['clag-id'], name);
@@ -139,6 +172,25 @@ type cumulus_interfaces = {
         if (exists(br['pvid']) && exists(br['vids']) &&
             index(br['pvid'], br['vids']) < 0) {
             error("Bridge PVID %s must be part of the bridge vids %s", br['pvid'], br['vids']);
+        };
+    };
+    # traditional bridges
+    if (exists(SELF['bridges'])) {
+        ports = dict();
+        foreach (brname; br; SELF['bridges']) {
+            if (length(brname) > 12) {
+                error("Traditional bridge name %s is more then 12 chars (without br- prefix)", brname);
+            };
+            foreach (idx; port; br['ports']) {
+                if (exists(br['vid']) && !match('\.\d+$', port)) {
+                    port = format("%s.%s", port, br['vid']);
+                };
+                if (exists(ports[port])) {
+                    error("ports can only be in one bridge: found %s in %s, also in %s", port, brname, ports[port]);
+                } else {
+                    ports[port] = brname;
+                };
+            };
         };
     };
     true;
