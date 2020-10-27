@@ -1,0 +1,3 @@
+[% server.hostname %] 
+[%- FOREACH opt IN server.options %] [% opt.key %] [% opt.value %] [% END -%]
+[%-  IF server.flags.defined %] [% server.flags.join(' ') %] [% END -%]

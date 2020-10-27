@@ -1,0 +1,14 @@
+Base test for config
+---
+/etc/chrony.conf
+multiline
+---
+^driftfile /var/lib/chrony/drift$
+^rtcsync$
+^keyfile /etc/chrony.keys$
+^makestep 0.1 3$
+^allow 127.0.0.1$
+^deny 192.168.1.0/24$
+^pool pool.ntp.org\s+maxsources 6\s+iburst $
+^server ntp.date.org\s+iburst trust $
+^server ntp2.date.org $
