@@ -3,5 +3,5 @@ Base test for udev action attrs config
 multiline
 metaconfigservice=/etc/udev/rules.d/50-attrs.rules
 ---
-^ACTION=="add|change", SUBSYSTEM=="block", ATTR{justsomekey}="ok"$
-^ACTION=="add|change", SUBSYSTEM=="block", ATTR{queue/rotational}="0"$
+^ACTION=="add|change", SUBSYSTEM=="block", ATTR\{justsomekey\}="ok"$
+^ACTION=="add|change", SUBSYSTEM=="block", ATTR\{queue/rotational\}="0"$
