@@ -92,7 +92,7 @@ type ${project.artifactId}_actions = {
     @{Always run, happens before possible modifications, the file content is passed om stdin.
       Runs with 'keeps_state' enabled, so do not modify anything with this command.}
     'test' ? string
-    @{Only run after file is modified, but after daemon action is added}
+    @{Only run after file is modified, but before any daemon action is executed. A failure in this command has no effect on whether the daemon action is executed later.}
     'changed' ? string
     @{Always run, happens after possible modifications (and after 'changed').}
     'post' ? string
