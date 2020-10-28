@@ -87,14 +87,19 @@ type ${project.artifactId}_textrender_convert = {
 type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
 
 type ${project.artifactId}_actions = {
-    @{Always run, happens before possible modifications}
+    @{Always run, happens before possible modifications.
+      A failure will cancel any file modification, unless the command is prefixed with -.}
     'pre' ? string
-    @{Always run, happens before possible modifications, the file content is passed om stdin.
+    @{Always run before possible modifications with the new (or unchanged) file content is
+      passed on stdin. A failure will cancel any file modification,
+      unless the command is prefixed with -.
       Runs with 'keeps_state' enabled, so do not modify anything with this command.}
     'test' ? string
-    @{Only run after file is modified, but before any daemon action is executed. A failure in this command has no effect on whether the daemon action is executed later.}
+    @{Only run after file is modified, but before any daemon action is executed.
+      A failure in this command has no effect on whether the daemon action is executed later.}
     'changed' ? string
-    @{Always run, happens after possible modifications (and after 'changed').}
+    @{Always run, regardless of whether file was modified or not, and after the 'changed' action
+      but before any daemon action. A failure of this command has no effect on the subsequent daemon action.}
     'post' ? string
 };
 
@@ -137,7 +142,7 @@ type ${project.artifactId}_config =  {
 } = dict();
 
 @{Command must start with absolute path to executable.
-  If the executable is preceded with a '-', it means that the a command failure
+  If the executable is preceded with a '-', it means that a non-zero exit code (i.e. failure) is
   treated as success w.r.t. reporting and continuation.}
 type ${project.artifactId}_command = string with match(SELF, '^-?/');
 
