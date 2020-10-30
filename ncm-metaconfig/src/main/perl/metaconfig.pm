@@ -154,7 +154,7 @@ use EDG::WP4::CCM::TextRender 18.6.1;
 use CAF::Service;
 use CAF::ServiceActions;
 use EDG::WP4::CCM::Path qw(unescape);
-use Text::ParseWords qw(old_shellwords);
+use Text::ParseWords qw(shellwords);
 use Readonly;
 
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -179,8 +179,8 @@ sub run_shell_command
             $command =~ s/^-//;
             $error_on_fail = 0;
         }
-        my $cmd_ref = [old_shellwords($command)];
-        if (!$cmd_ref) {
+        my $cmd_ref = [shellwords($command)];
+        if (!@$cmd_ref) {
             $self->error("Failed to split '$command'");
             return;
         }
@@ -295,8 +295,8 @@ sub resolve_command_actions
             $commands->{$type} = $command;
             $self->verbose("Resolved $type action $action to command '$command'");
         } else {
-            # Not fatal, should be covered in schema already
-            $self->error("Unable to resovle $type action $action to command");
+            # Should not happen due to this being validated in the schema
+            $self->error("Unable to resolve $type action $action to command");
         }
     };
     return $commands;
