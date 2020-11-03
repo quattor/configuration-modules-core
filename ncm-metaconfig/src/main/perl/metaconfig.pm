@@ -152,86 +152,23 @@ use parent qw(NCM::Component);
 use LC::Exception;
 use EDG::WP4::CCM::TextRender 18.6.1;
 use CAF::Service;
+use CAF::ServiceActions;
 use EDG::WP4::CCM::Path qw(unescape);
 use Readonly;
-
-# Has to correspond to what is allowed in the schema
-Readonly::Hash my %ALLOWED_ACTIONS => { restart => 1, reload => 1, stop_sleep_start => 1 };
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
-# Given metaconfigservice C<$srv> for C<$file> and hash-reference C<$actions>,
-# prepare the actions to be taken for this service/file.
-# C<actions> is updated in-place; does not return anything.
-sub prepare_action
-{
-    my ($self, $srv, $file, $actions) = @_;
-
-    # Not using a hash here to detect and support
-    # any overlap with legacy daemon-restart config
-    my @daemon_action;
-
-    my $file_msg = "for file $file";
-
-    foreach my $daemon (sort keys %{$srv->{daemons} || {}}) {
-        push(@daemon_action, $daemon, $srv->{daemons}->{$daemon});
-    }
-
-    if ($srv->{daemon}) {
-        $self->verbose("Deprecated daemon(s) restart via daemon field $file_msg.");
-        foreach my $daemon (@{$srv->{daemon}}) {
-            if ($srv->{daemons}->{$daemon}) {
-                $self->verbose("Daemon $daemon also defined in daemons field $file_msg. Adding restart action anyway.");
-            }
-            push(@daemon_action, $daemon, 'restart');
-        }
-    }
-
-    my @acts;
-    while (my ($daemon,$action) = splice(@daemon_action, 0, 2)) {
-        if (exists($ALLOWED_ACTIONS{$action})) {
-            $actions->{$action} ||= {};
-            $actions->{$action}->{$daemon} = 1;
-            push(@acts, "$daemon:$action");
-        } else {
-            $self->error("Not a CAF::Service allowed action ",
-                         "$action for daemon $daemon $file_msg ",
-                         "in profile (component/schema mismatch?).");
-        }
-    }
-
-    if (@acts) {
-        $self->verbose("Scheduled daemon/action ".join(', ',@acts)." $file_msg.");
-    } else {
-        $self->verbose("No daemon/action scheduled $file_msg.");
-    }
-}
-
-# Take the action for all daemons as defined in hash-reference C<$actions>.
-# Does not return anything.
-sub process_actions
-{
-    my ($self, $actions) = @_;
-    foreach my $action (sort keys %$actions) {
-        my @daemons = sort keys %{$actions->{$action}};
-        $self->info("Executing action $action on services: ", join(',', @daemons));
-        my $srv = CAF::Service->new(\@daemons, log => $self);
-        # CAF::Service does all the logging we need
-        $srv->$action();
-    }
-}
-
 # Generate C<$file>, configuring C<$srv> using CAF::TextRender with
 # contents C<$contents> (if C<$contents>  is not defined,
 # C<$srv->{contents}> is used).
 # Also tracks the actions that need to be taken via the
-# C<$actions> hash-reference.
+# C<$sa> C<CAF::ServiceActions> instance.
 # Returns undef in case of rendering failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv, $contents, $actions) = @_;
+    my ($self, $file, $srv, $contents, $sa) = @_;
 
     $contents = $srv->{contents} if (! defined($contents));
 
@@ -267,7 +204,7 @@ sub handle_service
 
     if ($fh->close()) {
         $self->info("File $file updated");
-        $self->prepare_action($srv, $file, $actions);
+        $sa->add($srv->{daemons}, msg => "for file $file");
     } else {
         $self->verbose("File $file up-to-date");
     };
@@ -281,25 +218,25 @@ sub _configure_files
 
     my $t = $config->getElement($self->prefix)->getTree();
 
-    my $actions = {};
+    my $sa = CAF::ServiceActions->new(log => $self);
 
     foreach my $esc_filename (sort keys %{$t->{services}}) {
         my $srvc = $t->{services}->{$esc_filename};
         my $cont_el = $config->getElement($self->prefix()."/services/$esc_filename/contents");
         my $filename = ($root || '') . unescape($esc_filename);
-        $self->handle_service($filename, $srvc, $cont_el, $actions);
+        $self->handle_service($filename, $srvc, $cont_el, $sa);
     }
 
-    return $actions;
+    return $sa;
 }
 
 sub Configure
 {
     my ($self, $config) = @_;
 
-    my $actions = $self->_configure_files($config);
+    my $sa = $self->_configure_files($config);
 
-    $self->process_actions($actions);
+    $sa->run();
 
     return 1;
 }

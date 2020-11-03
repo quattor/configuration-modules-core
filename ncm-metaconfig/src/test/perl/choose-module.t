@@ -18,6 +18,7 @@ use Test::Quattor::Object;
 use NCM::Component::metaconfig;
 use Test::MockModule;
 use CAF::Object;
+use CAF::ServiceActions;
 
 my $obj = Test::Quattor::Object->new;
 
@@ -41,6 +42,8 @@ $mock->mock('tt', sub {
 	    });
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig', $obj);
+my $sa = CAF::ServiceActions->new(log => $cmp);
+
 
 =pod
 
@@ -53,12 +56,12 @@ Invalid module names must be reported and return an error
 our $shouldnt_be_reached;
 
 my $srv = { module => 'a;d', owner => 'foo', group => 'bar', mode => oct(755), contents => {} };
-ok(!$cmp->handle_service("foo", $srv), "Invalid module name triggers an error");
+ok(!$cmp->handle_service("foo", $srv, undef, $sa), "Invalid module name triggers an error");
 ok(!$@, "Not even attempted to load an invalid module");
 $srv->{module} = q{strict
 	; $main::souldnt_be_reached = 1
       };
-ok(!$cmp->handle_service("foo", $srv),
+ok(!$cmp->handle_service("foo", $srv, undef, $sa),
    "Malicious module name triggers an error");
 is($shouldnt_be_reached, undef,
    "Sanitization prevented malicious code injection");
@@ -72,7 +75,7 @@ By default the C<tt> method is invoked
 =cut
 
 $srv->{module} = 'foo/bar';
-ok($cmp->handle_service('foo', $srv),
+ok($cmp->handle_service('foo', $srv, undef, $sa),
    "Services may fall safely to the template toolkit");
 is($tt, 1, "Unknown modules fall back to the template toolkit (tt called $tt time(s))");
 

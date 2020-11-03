@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 22;
+use Test::More;
 use Test::Quattor qw(actions_daemons actions_nodaemons);
 use Test::MockModule;
 use NCM::Component::metaconfig;
@@ -32,46 +32,6 @@ Test how the need for restarting a service is handled
 my $actions = {};
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
-=pod
-
-=head2 Test prepare_action
-
-Test the update of the actions reference for single service
-
-=cut
-
-$actions = {};
-$cmp->prepare_action({'daemon' => ['d1', 'd2']}, "myfile", $actions);
-is_deeply($actions, {"restart" => {"d1" => 1, "d2" => 1}},
-            "Daemon restart actions added");
-
-$actions = {};
-$cmp->prepare_action({'daemon' => ['d1', 'd2'],
-                      'daemons' => {'d1' => 'reload',
-                                    'd2' => 'restart',
-                                    'd3' => 'doesnotexist'
-                                    }
-                      }, "myfile", $actions);
-# d2 only once in restart
-# d1 in reload and restart
-# doesnotexist is not allowed
-is_deeply($actions, { "restart" => { "d2" => 1, "d1" => 1},
-                      'reload' => {'d1' => 1 }
-                    }, "Daemon restart and daemons actions added");
-
-is($cmp->{ERROR}, 1, '1 error logged due to unsupported action');
-
-=pod
-
-=head2 Test process_action
-
-Test taking actions based on the actions reference
-
-=cut
-
-$cmp->process_actions($actions);
-is($restart, 2, '2 restarts triggered');
-is($reload, 1, '1 reload triggered');
 
 =pod
 

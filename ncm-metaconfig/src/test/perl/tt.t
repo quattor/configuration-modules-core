@@ -7,6 +7,7 @@ use Test::Quattor::TextRender::Base;
 use NCM::Component::metaconfig;
 use CAF::Object;
 use Cwd;
+use CAF::ServiceActions;
 
 use Template;
 
@@ -35,6 +36,7 @@ Template::Toolkit to render an arbitrary file format.
 
 
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
+my $sa = CAF::ServiceActions->new(log => $cmp);
 
 my $cfg = {
        owner => 'root',
@@ -58,7 +60,7 @@ All methods are called with the expected arguments.
 
 =cut
 
-$cmp->handle_service("/foo/bar", $cfg);
+$cmp->handle_service("/foo/bar", $cfg, undef, $sa);
 
 my $fh = get_file("/foo/bar");
 isa_ok($fh, "CAF::FileWriter", "Correct class");
@@ -76,7 +78,7 @@ displayed
 $cmp->{ERROR} = 0;
 
 $cfg->{module} = 'test_broken';
-$cmp->handle_service("/foo/bar2", $cfg);
+$cmp->handle_service("/foo/bar2", $cfg, undef, $sa);
 is($cmp->{ERROR}, 1, "1 errors reported when the template processing fails");
 $fh = get_file("/foo/bar2");
 ok(!defined($fh), "Render failure, no output file");
@@ -89,7 +91,7 @@ ok(!defined($fh), "Render failure, no output file");
 
 $cfg->{module} = "invalid";
 $cmp->{ERROR} = 0;
-$cmp->handle_service("/foo/bar3", $cfg);
+$cmp->handle_service("/foo/bar3", $cfg, undef, $sa);
 is($cmp->{ERROR}, 1, "1 errors reported when the module doesn't exists");
 $fh = get_file("/foo/bar3");
 ok(!defined($fh), "Non-existing module, no output file");
