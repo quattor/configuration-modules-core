@@ -12,9 +12,4 @@ variable FULL_HOSTNAME = 'myhost.domain';
 variable HOSTNAME = 'myhost';
 variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
-
-
 "/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}/contents" = create("struct/ssl_conf_el7");
-
-
-

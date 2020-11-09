@@ -7,6 +7,7 @@ multiline
 ^wsgipythonpath /var/www/django$
 ^<virtualhost\s{4}1.2.3.4:443>$
 ^\s{4}servername myhost.domain$
+^\s{4}serveralias \*\.abc dd\.ee\.ff$
 ^\s{4}documentroot /var/www/https$
 ^\s{4}hostnamelookups off$
 ^\s{4}sslcacertificatefile /etc/ca_file$
@@ -18,6 +19,8 @@ multiline
 ^\s{4}sslprotocol TLSv1$
 ^\s{4}alias /django/static/ /var/www/django/static/$
 ^\s{4}wsgiscriptalias /django /var/www/django/wsgi.py$
+^\s{4}redirect 310 /some/path https://somewhere.else$
+^\s{4}redirect 404 /some/other/path $
 ^\s{4}wsgipassauthorization on$
 ^\s{4}loglevel warn$
 ^\s{4}errorlog logs/myhost.domain_443_error_log$
