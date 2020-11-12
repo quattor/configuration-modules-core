@@ -207,6 +207,10 @@ type postgresql_mainconfig = {
     "silent_mode" ? boolean    # false
     "sql_inheritance" ? boolean    # true
     "ssl" ? boolean    # false
+    "ssl_ca_file" ? absolute_file_path
+    "ssl_cert_file" ? absolute_file_path
+    "ssl_crl_file" ? absolute_file_path
+    "ssl_key_file" ? absolute_file_path
     "ssl_ciphers" ? string     # "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"
     "ssl_renegotiation_limit" ? string     # 512MB
     "standard_conforming_strings" ? boolean    # true
