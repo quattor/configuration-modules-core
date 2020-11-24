@@ -335,25 +335,31 @@ sub execute_yum_command
     }
     $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
-        ($err && $err =~ m{^\s*(?:
-         Error|
-         Failed|
-         (?:Could \s+ not \s+ match)|
-         (?:Transaction \s+ encountered.*error)|
-         (?:Unknown \s+ group \s+  package \s+ type)|
-         (?:.*requested \s+ URL \s+ returned \s+ error)|
-         (?:Versionlock \s* plugin)|
+        ($err && $err =~ m{^\s*(
+         Error |
+         Failed |
+         (?:Could \s+ not \s+ match) |
+         (?:Transaction \s+ encountered .* error) |
+         (?:Unknown \s+ group \s+  package \s+ type) |
+         (?:.*requested \s+ URL \s+ returned \s+ error) |
+         (?:Versionlock \s* plugin) |
          (?:Command \s+ line \s+ error)
          )}oxmi) ||
-        ($out && $out =~ m{^\s*(?:
-         (?:[>]* \s* Problem \s* :)  # from dnf transaction
+        ($out && $out =~ m{^\s*(
+         (?:[>]* \s* Problem (?: \s* \d+)? \s* :)  # from dnf transaction
          )}oxmi) ||
         ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
         ) {
+        my $ec = $?;
+        my $match = $1;
         $self->warn("Command output: $out");
         $self->$error_logger("Failed $why: ", $err || "(empty/undef stderr)");
         if (@missing) {
             $self->$error_logger("Missing packages: ", join(" ", @missing));
+        } elsif (defined($match)) {
+            $self->verbose("Command output match $match (exitcode $ec)");
+        } else {
+            $self->verbose("Command exitcode $ec");
         }
         return undef;
     }
