@@ -29,6 +29,8 @@ type cumulus_interface_bridge_common = {
     'address' ? cumulus_ipv4
     @{address subnet prefix}
     'mask' ? long(0..32) # naming follows cumulus configuration, but it is a prefix
+    @{VRF (mgmt is reserved for the managment interface only)}
+    'vrf' ? string with length(SELF) < 15
 };
 
 type cumulus_interface_common = {
@@ -80,8 +82,6 @@ type cumulus_interface = {
     'bond-lacp-bypass-allow' ? boolean
     @{STP BPDU Guard}
     'mstpctl-bpduguard' ? boolean
-    @{mgmt VRF, only to be used for the management interface}
-    'mgmtvrf' ? boolean
 } with {
     if (exists(SELF['gateway'])) {
         if (!ip_in_network(SELF['gateway'], SELF['address'], subnet_prefix_to_mask(SELF['mask']))) {

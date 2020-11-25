@@ -8,3 +8,4 @@
 [%-      INCLUDE 'metaconfig/cumulus/traditional_bridges.tt' -%]
 [%- END %]
 [% INCLUDE 'metaconfig/cumulus/ifaces.tt' %]
+[% INCLUDE 'metaconfig/cumulus/vrfs.tt' %]

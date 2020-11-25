@@ -32,14 +32,8 @@ iface peerlink.4094
 
 auto eth0
 iface eth0 inet dhcp
-    
     vrf mgmt
 
-auto mgmt
-iface mgmt
-    address 127.0.0.1/8
-    address ::1/128
-    vrf-table auto
 
 
 auto lo
@@ -70,6 +64,7 @@ iface swp3
     bridge-access 123
     link-autoneg yes
     link-speed 10000
+    vrf test3
 
 
 
@@ -90,5 +85,18 @@ iface swp1
 
 auto swp2
 iface swp2
+
+
+
+auto mgmt
+iface mgmt
+    address 127.0.0.1/8
+    address ::1/128
+    vrf-table auto
+
+
+auto test3
+iface test3
+    vrf-table auto
 
 

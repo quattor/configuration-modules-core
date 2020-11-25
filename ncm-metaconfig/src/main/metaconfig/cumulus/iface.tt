@@ -1,13 +1,7 @@
-[% fname = data.vlan ? name _ '.' _ data.vlan : name;
-   mgmtvrf = data.mgmtvrf;
-   data.delete('mgmtvrf') %]
+[% fname = data.vlan ? name _ '.' _ data.vlan : name %]
 auto [% fname %]
 iface [% fname %][% inet.length ? " inet " _ inet : '' %]
 [% IF data.size;
         INCLUDE 'metaconfig/cumulus/iface_data.tt' data=data FILTER indent;
     END;
 %]
-[% IF mgmtvrf;
-    INCLUDE 'metaconfig/cumulus/iface_mgmt_vrf.tt';
-    END;
--%]

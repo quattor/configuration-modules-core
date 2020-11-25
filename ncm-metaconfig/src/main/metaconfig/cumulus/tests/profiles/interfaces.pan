@@ -15,7 +15,7 @@ prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/conte
 "eth0" = dict(
     'inet', 'dhcp',
     'bridge', dict('enable', false),
-    'mgmtvrf', true,
+    'vrf', 'mgmt',
 );
 
 # one leg of dual connected, one to each MLAG member
@@ -34,6 +34,7 @@ prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/conte
     'alias', 'some port',
     'bridge', dict('access', 123),
     'link', dict('autoneg', true, 'speed', 10),
+    'vrf', 'test3',
 );
 
 prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/contents/peerlink";

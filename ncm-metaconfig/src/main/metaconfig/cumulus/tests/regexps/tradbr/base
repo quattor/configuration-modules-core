@@ -23,6 +23,7 @@ iface br-tag100
     address 10.0.100.1/24
     bridge-ports swp1.100 swp2.100 bond2.100
     bridge-stp yes
+    vrf test100
 
 
 auto swp1
@@ -96,5 +97,11 @@ iface swp6
 
 auto swp7
 iface swp7
+
+
+
+auto test100
+iface test100
+    vrf-table auto
 
 

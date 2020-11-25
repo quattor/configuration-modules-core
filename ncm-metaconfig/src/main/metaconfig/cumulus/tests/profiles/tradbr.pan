@@ -23,6 +23,7 @@ prefix "bridges/tag100";
 "stp" = true;
 "address" = "10.0.100.1";
 "mask" = 24;
+"vrf" = "test100";
 
 prefix "bridges/vlan120";
 "ports" = list("swp2", "swp3", "bond2");
