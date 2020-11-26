@@ -209,3 +209,18 @@ type cumulus_ports = {
     @{default port speed}
     'default' : cumulus_port_speed
 };
+
+type cumulus_frr_route = {
+    @{network}
+    'network' : type_ipv4
+    @{network mask}
+    'mask' : long(0..32)
+    @{nethop ip or blackhole null0}
+    'nexthop' : string with is_ipv4(SELF) || SELF == 'null0'
+};
+
+@{Simple/minimal FRRouting config file, useful for static routing in VRF setup}
+type cumulus_frr = {
+    @{Routes per VRF (key is VRF name)}
+    'vrf' : cumulus_frr_route[]{}
+};

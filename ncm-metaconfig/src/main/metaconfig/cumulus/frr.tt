@@ -1,0 +1,9 @@
+log syslog informational
+[% FOREACH vrf IN CCM.contents.vrf -%]
+vrf [% vrf.key %]
+[%      FILTER indent -%]
+[%-          FOREACH route IN vrf.value -%]
+ip route [%     route.network %]/[% route.mask %] [% route.nexthop %]
+[%          END -%]
+[%      END -%]
+[%- END %]
