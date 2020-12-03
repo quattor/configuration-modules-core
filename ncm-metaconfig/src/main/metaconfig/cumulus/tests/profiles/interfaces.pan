@@ -43,6 +43,8 @@ prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/conte
 "mask" = 30;
 "clagd/peer-ip" = "169.254.1.2";
 "clagd/sys-mac" = "44:38:39:FF:00:01";
+"clagd/backup-ip/ip" = "1.2.3.4";
+"clagd/backup-ip/vrf" = "mgmt";
 
 
 prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/contents/bridge";

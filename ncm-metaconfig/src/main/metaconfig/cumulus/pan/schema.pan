@@ -9,6 +9,7 @@ type cumulus_port = string;
 type cumulus_ipv4 = type_ipv4 with SELF != '169.254.0.1';
 
 type cumulus_vlan = long(1..4095);
+type cumulus_vrf = string with length(SELF) < 15;
 
 @{in 1000}
 type cumulus_port_speed = long with index(SELF, list(1, 10, 25, 40, 50, 100)) > -1;
@@ -30,7 +31,7 @@ type cumulus_interface_bridge_common = {
     @{address subnet prefix}
     'mask' ? long(0..32) # naming follows cumulus configuration, but it is a prefix
     @{VRF (mgmt is reserved for the managment interface only)}
-    'vrf' ? string with length(SELF) < 15
+    'vrf' ? cumulus_vrf
 };
 
 type cumulus_interface_common = {
@@ -38,11 +39,16 @@ type cumulus_interface_common = {
     'bridge' : cumulus_interface_bridge
 };
 
+type cumulus_clagd_backup = {
+    'ip' : cumulus_ipv4
+    'vrf' ? cumulus_vrf
+};
+
 type cumulus_clagd = {
     'peer-ip' : cumulus_ipv4
     @{MAC should be the same for both MLAG members}
     'sys-mac' :  type_hwaddr with match(SELF, '^44:38:39:[fF][fF]:') # reserved cumulus range
-    'backup-ip' ? cumulus_ipv4
+    'backup-ip' : cumulus_clagd_backup
     'priority' ? long(0..65535)
 };
 
@@ -223,4 +229,15 @@ type cumulus_frr_route = {
 type cumulus_frr = {
     @{Routes per VRF (key is VRF name)}
     'vrf' : cumulus_frr_route[]{}
+};
+
+@{iptable based, using long option names}
+type cumulus_acl_rule = {
+    "in-interface" ? string[]
+    "out-interface" ? string[]
+};
+
+@{Simple/minimal support for ACL policy}
+type cumulus_acl = {
+    'iptables' ? cumulus_acl_rule[]
 };

@@ -16,6 +16,14 @@
             data.link.speed = data.link.speed * 1000;
         END;
     END;
+    IF data.defined('backup-ip');
+        name = 'backup-ip';
+        bip = data.${name};
+        data.${name} = bip.ip;
+        IF bip.defined('vrf');
+            data.${name} = data.${name} _ ' vrf ' _ bip.vrf;
+        END;
+    END;
     FOREACH el IN data.pairs;
         name = map.defined(el.key) ? map.${el.key} : el.key;
         value = el.value;
