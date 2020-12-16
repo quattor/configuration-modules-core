@@ -286,6 +286,13 @@ type logstash_filter_kv = {
     "value_split" ? string
 };
 
+type logstash_filter_json = {
+    include logstash_filter_plugin_common
+    "source" : string
+    "target" : string
+    "remove_field" ? string[]
+};
+
 type logstash_filter_plugin = {
     "grok" ? logstash_filter_grok
     "date" ? logstash_filter_date
@@ -296,6 +303,7 @@ type logstash_filter_plugin = {
     "mutate" ? logstash_filter_mutate
     "kv" ? logstash_filter_kv
     "bytes2human" ? logstash_filter_bytes2human
+    "json" ? logstash_filter_json
 } with length(SELF) == 1;
 
 @{ Common output }

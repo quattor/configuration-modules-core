@@ -63,6 +63,9 @@ multiline
 ^\s{8}sender => "myhost.domain"$
 ^\s{8}port => 12201$
 ^\s{4}\}$
+^\s{4}elasticsearch \{$
+
+^\s{4}\}$
 ^\s{4}if \[type\] == 'httpd' \{$
 ^\s{8}gelf \{$
 ^\s{12}ship_metadata => true$
