@@ -22,7 +22,21 @@ type component_shorewall_masq = {
     "origdest" ? string
     "probability" ? double(0..1)
 };
-
+# Keep this list in sync with list from TT file
+@{a snat entry: ACTION SOURCE DEST PROTO PORT IPSEC MARK USER SWITCH ORIGDEST PROBABILITY}
+type component_shorewall_snat = {
+    "action" : string with match(SELF, '^(CONTINUE|LOG|MASQUERADE|NFLOG|SNAT|ULOG)') # can have trailing parameters
+    "source" ? string
+    "dest" ? string[]
+    "proto" ? string
+    "port" ? string[]
+    "ipsec" ? string[]
+    "mark" ? string
+    "user" ? string
+    "switch" ? string
+    "origdest" ? string
+    "probability" ? double(0..1)
+};
 # Keep this list in sync with list from TT file
 @{a tcinterfaces entry: interface type inbw outbw}
 type component_shorewall_tcinterfaces = {
@@ -275,7 +289,10 @@ type component_shorewall = {
     @{tcpri configuration}
     "tcpri" ? component_shorewall_tcpri[]
     @{masq configuration}
-    "masq" ? component_shorewall_masq[]
+    "masq" ? component_shorewall_masq[] with {deprecated(0,
+        'deprecated in favor of shorewall-snat which was introduced in Shorewall 5.0.14'); true; }
+    @{snat configuration}
+    "snat" ? component_shorewall_snat[]
     @{providers configuration}
     "providers" ? component_shorewall_providers[]
     @{rtrules configuration}

@@ -1,0 +1,8 @@
+snat
+---
+//
+rendermodule=snat
+contentspath=/config
+---
+^MASQUERADE\teth0\tout1,out2$
+^SNAT\(10.10.20.30\)\t0.0.0.0\/0\t-\t-\t-\t-\t-\t-\t-\t-\t0\.1$

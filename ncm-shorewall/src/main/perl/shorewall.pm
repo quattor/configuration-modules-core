@@ -15,7 +15,7 @@ use Readonly;
 # shorewall is shorewall.conf
 Readonly::Array my @SUPPORTED => qw(shorewall
     rules zones interfaces policy
-    tcinterfaces tcpri masq
+    tcinterfaces tcpri masq snat
     stoppedrules providers rtrules
 );
 
