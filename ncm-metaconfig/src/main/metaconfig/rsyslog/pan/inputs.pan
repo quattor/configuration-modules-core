@@ -73,6 +73,14 @@ type rsyslog_input_czmq = {
     'authtype' ? string with mathc(SELF, '^(CURVESERVER|CURVECLIENT)$')
 };
 
+type rsyslog_input_kafka = {
+    include rsyslog_input_common
+    'broker': string[]
+    'topic': string
+    'consumergroup' ? string
+    'ParseHostname' ? string with match(SELF, '^(on|off)$')
+};
+
 type rsyslog_input_uxsock = {
     include rsyslog_input_common
     'IgnoreTimestamp' ? boolean
@@ -98,6 +106,7 @@ type rsyslog_input = {
     'tcp' ? rsyslog_input_tcp
     'udp' ? rsyslog_input_udp
     'czmq' ? rsyslog_input_czmq
+    'kafka' ? rsyslog_input_kafka
     'uxsock' ? rsyslog_input_uxsock
 } with length(SELF) == 1;
 
