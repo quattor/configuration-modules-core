@@ -90,7 +90,7 @@ sub _call_apt
     my $proc = CAF::Process->new($cmd);
     my $output = $proc->output();
     my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
-    $self->debug(5, '_call_apt: %s exited with %s', $cmd[0] $exitstatus);
+    $self->debug(5, '_call_apt: %s exited with %s', $cmd[0], $exitstatus);
     if ($exitstatus > 0) {
         $output =~ tr{\n}{ };
         $self->error('_call_apt: %s failed with "%s"', $cmd[0], $output);
