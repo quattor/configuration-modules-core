@@ -9,3 +9,4 @@ vrf some
 vrf vrf1
     ip route 1.2.3.4/24 11.12.13.14
     ip route 0.0.0.0/0 null0
+

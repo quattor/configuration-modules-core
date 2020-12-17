@@ -231,13 +231,57 @@ type cumulus_frr = {
     'vrf' : cumulus_frr_route[]{}
 };
 
-@{iptable based, using long option names}
-type cumulus_acl_rule = {
-    "in-interface" ? string[]
-    "out-interface" ? string[]
+type cumulus_acl_rule_tcp_flag = choice('SYN', 'ACK', 'FIN', 'RST', 'URG', 'PSH', 'ALL', 'NONE');
+
+type cumulus_acl_rule_tcp_flags = {
+    'mask' : cumulus_acl_rule_tcp_flag[]
+    'compare' : cumulus_acl_rule_tcp_flag[]
 };
 
-@{Simple/minimal support for ACL policy}
+@{invert options}
+type cumulus_acl_rule_invert = {
+    'protocol' ? boolean
+    'source' ? boolean
+    'sport' ? boolean
+    'destination' ? boolean
+    'dport' ? boolean
+    'tcp-flags' ? boolean
+    'in-interface' ? boolean
+    'out-interface' ? boolean
+};
+
+@{iptable based, using long option names. Only default filter table is supported atm.}
+type cumulus_acl_rule = {
+    @{Supported chains form default filter table; the rule is appended}
+    'append' : choice('INPUT', 'FORWARD', 'OUTPUT')
+    @{No user defined chains supported, only ACCEPT and DROP}
+    'jump' : choice('ACCEPT', 'DROP')
+    @{protocol}
+    'protocol' ? choice('tcp', 'udp', 'udplite', 'icmp', 'icmpv6', 'esp', 'ah', 'sctp', 'mh', 'all')
+    @{source}
+    'source' ? type_ipv4_netmask_pair[]
+    @{port or port range}
+    'sport' ? type_port[] with length(SELF) == 1 || length(SELF) == 2
+    @{destination}
+    'destination' ? type_ipv4_netmask_pair[]
+    @{port or port range}
+    'dport' ? type_port[] with length(SELF) == 1 || length(SELF) == 2
+    'in-interface' ? string[]
+    'out-interface' ? string[]
+    'tcp-flags' ? cumulus_acl_rule_tcp_flags
+    'invert' ? cumulus_acl_rule_invert
+} with {
+    if (exists(SELF['invert'])) {
+        foreach (k; v; SELF['invert']) {
+            if (!exists(SELF[k])) {
+                error("cannot invert acl option %s, value is missing", k);
+            };
+        };
+    };
+    true;
+};
+
+@{Simple/minimal support for ACL policy. Each key is a section}
 type cumulus_acl = {
     'iptables' ? cumulus_acl_rule[]
 };

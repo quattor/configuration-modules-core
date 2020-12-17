@@ -1,0 +1,23 @@
+[%
+    invert = data.invert;
+    data.delete('invert');
+    join_colon = {
+        'sport' = 1
+        'dport' = 1
+    };
+-%]
+[%  FOREACH pair IN data.pairs -%]
+[%      IF ! pair.value.is_boolean OR pair.value -%]
+[%          invert.${pair.key} && pair.value.is_boolean ? '! ' : '' -%]
+--[%        pair.key %] [% -%]
+[%      END -%]
+[%      IF ! pair.value.is_boolean -%]
+[%          invert.${pair.key} ? '! ' : '' -%]
+[%          SWITCH pair.key -%]
+[%              CASE ['tcp-flags'] -%]
+[%                  pair.value.mask.join(',') %] [% pair.value.compare.join(',') -%]
+[%              CASE -%]
+[%                  CCM.is_list(pair.value) ? pair.value.join(join_colon.${pair.key} ? ':' : ',') : pair.value -%]
+[%          END %] [% -%]
+[%      END -%]
+[% END -%]
