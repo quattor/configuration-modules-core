@@ -1,0 +1,24 @@
+[% IF cdfilter.protocol.defined -%]
+Protocol [% cdfilter.protocol.action %] {
+[%     FOREACH prot IN cdfilter.protocol.protocols -%] 
+    [% prot %]
+[%              END -%]
+}
+[% END %]
+[% IF cdfilter.address.defined -%]
+Address [% cdfilter.address.action %] {
+[%     FOREACH addr IN cdfilter.address.IPv4_address -%] 
+    IPv4_address [% addr %]
+[%     END -%]
+[%     FOREACH addr IN cdfilter.address.IPv6_address -%] 
+    IPv6_address [% addr %]
+[%     END -%]
+}
+[% END %]
+[% IF cdfilter.state.defined -%]
+State [% cdfilter.state.action %] {
+[%     FOREACH state IN cdfilter.state.states -%] 
+    [% state -%]
+[%-              END %]
+}
+[% END %]

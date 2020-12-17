@@ -1,0 +1,16 @@
+[% FOREACH genopt IN general.pairs %]
+[%-     SWITCH genopt.key -%] 
+[%          CASE ['UNIX'] -%] 
+UNIX {
+[%              FOREACH pair IN genopt.value.pairs -%]
+    [% pair.key %] [% pair.value %]
+[%              END -%]
+}
+[%         CASE ['filter'] -%]
+Filter From [% genopt.value.from %] {
+[% INCLUDE 'metaconfig/conntrackd/filter.tt' cdfilter=genopt.value FILTER indent -%]
+}
+[%         CASE -%]
+[% genopt.key %] [% genopt.value %]
+[%      END -%]
+[%  END %]

@@ -32,3 +32,38 @@ prefix '/software/components/metaconfig/services/{/etc/keepalived/keepalived.con
         'track_scripts', list('haproxy'),
     )
 );
+'contents/vrrp_instances' = append(
+    dict(
+        'name', 'Testmore',
+        'config', dict(
+            'virtual_router_id', 53,
+            'state', 'BACKUP',
+            'interface', 'eth0',
+        ),
+        'virtual_ipaddresses', list(
+            dict(
+                'ipaddress', '192.168.1.21',
+                'interface', 'eth0',
+            ),
+        ),
+    )
+);
+
+'contents/vrrp_sync_groups' = dict('Testgroup',
+    dict(
+        'group', list('I1', 'I2'),
+        'notify_master', dict(
+            'script', '/run/this/script',
+            'args', list('master'),
+        ),
+        'notify_backup', dict(
+            'script', '/run/this/script',
+            'args', list('backup'),
+        ),
+        'notify_fault', dict(
+            'script', '/run/this/script',
+            'args', list('fault'),
+        ),
+    )
+);
+

@@ -1,0 +1,22 @@
+Mode [% sync.mode.type %] {
+[% sync.mode.delete('type');
+    FOREACH pair IN sync.mode.pairs %]
+[%-     IF (pair.value.is_boolean) -%] 
+    [% pair.key %] [% pair.value ? 'on' : 'off' %] 
+[%      ELSE -%]
+    [% pair.key %] [% pair.value %] 
+[%      END -%] 
+[%  END -%]
+}
+[% FOREACH tp IN sync.transport %]
+[% tp.type %] {
+[% tp.delete('type');
+    FOREACH pair IN tp.pairs %]
+[%-     IF (pair.value.is_boolean) -%] 
+    [% pair.key %] [% pair.value ? 'on' : 'off' %] 
+[%      ELSE -%]
+    [% pair.key %] [% pair.value %] 
+[%      END -%] 
+[%  END -%]
+}
+[%  END %]

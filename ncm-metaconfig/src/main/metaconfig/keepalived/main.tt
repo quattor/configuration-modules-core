@@ -6,8 +6,13 @@ vrrp_script [% vrrp_script.name %] {
 [%     INCLUDE 'metaconfig/keepalived/vrrp_script.tt' FILTER indent -%] 
 }
 [% END %]
+[% FOREACH vrrp_sync_group IN vrrp_sync_groups.pairs -%]
+vrrp_sync_group [% vrrp_sync_group.key %] {
+[%     INCLUDE 'metaconfig/keepalived/vrrp_sync_group.tt' vrrp_sync_group=vrrp_sync_group.value FILTER indent -%]
+}
+[%- END %]
 [% FOREACH vrrp_instance IN vrrp_instances -%]
 vrrp_instance [% vrrp_instance.name %] {
 [%-     INCLUDE 'metaconfig/keepalived/vrrp_instance.tt' FILTER indent -%]
 }
-[%- END %]
+[% END -%]

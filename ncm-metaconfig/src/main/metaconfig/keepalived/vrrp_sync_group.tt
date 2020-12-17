@@ -1,0 +1,14 @@
+[% FOREACH pair IN vrrp_sync_group.pairs %]
+[%-     SWITCH pair.key -%] 
+[%         CASE ['group'] -%] 
+group {
+[%              FOREACH inst IN pair.value -%]
+    [% inst %]
+[%              END -%]
+}
+[%         CASE ['notify_master', 'notify_backup', 'notify_fault'] -%]
+[% pair.key %] "[% pair.value.script %] [% pair.value.args.join(' ') %]"
+[%         CASE -%]
+[% pair.key %] "[% pair.value %]"
+[%      END -%]
+[%  END %]

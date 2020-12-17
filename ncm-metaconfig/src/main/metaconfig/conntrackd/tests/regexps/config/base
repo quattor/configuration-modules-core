@@ -1,0 +1,43 @@
+Base test for config
+---
+/etc/conntrackd/conntrackd.conf
+multiline
+---
+^Sync \{$
+^\s{4}Mode FTFW \{$
+^\s{8}CommitTimeout 1800 $
+^\s{8}DisableExternalCache off $
+^\s{4}\}$
+^\s{4}UDP \{$
+^\s{8}Checksum on $
+^\s{8}IPv4_Destination_Address 10.10.20.31 $
+^\s{8}IPv4_address 10.10.20.30 $
+^\s{8}Interface eth0 $
+^\s{8}Port 3781 $
+^\s{4}\}$
+^\}$
+^General \{$
+^\s{4}LockFile /var/lock/conntrack.lock$
+^\s{4}Nice -20$
+^\s{4}Syslog on$
+^\s{4}UNIX \{$
+^\s{8}Backlog 20$
+^\s{8}Path /var/run/conntrackd.ctl$
+^\s{4}\}$
+^\s{4}Filter From Userspace \{$
+^\s{8}Protocol Accept \{$
+^\s{12}TCP$
+^\s{12}UDP$
+^\s{12}ICMP$
+^\s{8}\}$
+^\s{8}Address Ignore \{$
+^\s{12}IPv4_address 127.0.0.1$
+^\s{12}IPv4_address 192.168.1.1$
+^\s{12}IPv6_address ::1$
+^\s{8}\}$
+^\s{8}State Accept \{$
+^\s{12}ESTABLISHED\s{4}CLOSED    TIME_WAIT    CLOSE_WAIT$
+^\s{8}\}$
+^\s{4}\}$
+^\}$
+
