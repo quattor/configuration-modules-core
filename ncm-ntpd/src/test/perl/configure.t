@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Quattor qw(no_timeservers only_timeservers only_timeservers_useserverip simple_serverlist disable_options group);
+use Test::Quattor qw(no_timeservers only_timeservers only_timeservers_useserverip simple_serverlist disable_options group interface);
 use NCM::Component::ntpd;
 use CAF::Object;
 use Test::MockModule;
@@ -53,6 +53,15 @@ Test::Quattor::RegexpTest->new(
     text => "$fh",
     )->test();
 
+$cfg = get_config_for_profile('interface');
+is( $cmp->Configure($cfg), 1, "Component runs correctly with interface profile" );
+
+$fh = get_file($NCM::Component::ntpd::NTPDCONF);
+isa_ok($fh, "CAF::FileWriter", "This is a CAF::FileWriter file written");
+Test::Quattor::RegexpTest->new(
+    regexp => 'src/test/resources/regexps/interface',
+    text => "$fh",
+    )->test();
 
 
 my $stfh = get_file($NCM::Component::ntpd::STEPTICKERS);
