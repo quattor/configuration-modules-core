@@ -1,0 +1,3 @@
+[%- FOREACH redr IN desc %]
+redirect [% redr.status %] [% redr.path %] [% redr.url %]
+[%- END -%]

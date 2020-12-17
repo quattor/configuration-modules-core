@@ -422,6 +422,24 @@ type httpd_rewrite = {
     "options" ? httpd_rewrite_option[]
 };
 
+type httpd_redirect = {
+    "status" ? long(100..599)  # a valid apache status, default is 302
+    "path" : string with match(SELF, '^/')
+    "url" ? type_URI
+} with {
+    status = if (exists(SELF['status'])) SELF['status'] else 302;
+    if (status >= 300 && status <= 399) {
+        if (!exists(SELF['url'])) {
+            error("redirect %s: url must be present with status 3XX", SELF['path']);
+        };
+    } else {
+        if (exists(SELF['url'])) {
+            error("redirect %s: url must not be present with status not 3XX", SELF['path']);
+        };
+    };
+    true;
+};
+
 type httpd_perl_handler = {
     "responsehandler" : string
 };
@@ -484,7 +502,7 @@ type httpd_rails = {
 type httpd_shared = {
     "documentroot" ? string = '/does/not/exist'
     "hostnamelookups" : boolean = false
-    "servername" ? type_hostport
+    "servername" ? string with is_hostport(SELF) || SELF == 'null'
     "limitrequestbody" ? long(0..)
 };
 
@@ -576,11 +594,14 @@ type httpd_header = {
     "always" ? boolean
 };
 
+type httpd_serveralias = string with match(SELF, '^[\w.*]+$');  # serveralias supports wildcards
+
 type httpd_vhost = {
     include httpd_shared
 
     "port" : type_port
     "ip" ? httpd_vhost_ip[]
+    "serveralias" ? httpd_serveralias[]
     "ssl" ? httpd_ssl_vhost
     "nss" ? httpd_nss_vhost
     "locations" ? httpd_directory[]
@@ -588,6 +609,7 @@ type httpd_vhost = {
     "aliases" ? httpd_alias[]
     "directories" ? httpd_directory[]
     "rewrite" ? httpd_rewrite
+    "redirect" ? httpd_redirect[]
     "perl" ? httpd_perl_vhost
     "wsgi" ? httpd_wsgi_vhost
     "log" ? httpd_log

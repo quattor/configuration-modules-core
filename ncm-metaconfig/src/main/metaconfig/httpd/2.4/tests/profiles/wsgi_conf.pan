@@ -15,6 +15,16 @@ variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents/vhosts";
 
 "django" = create("struct/default_vhost");
+"django/serveralias" = list("*.abc", "dd.ee.ff");
+"django/redirect/0" = dict(
+    "status", 310,
+    "path", "/some/path",
+    "url", "https://somewhere.else",
+    );
+"django/redirect/1" = dict(
+    "status", 404,
+    "path", "/some/other/path",
+    );
 "django/directories" = {
     l = dict(
         "name", "/var/www/django/static",
