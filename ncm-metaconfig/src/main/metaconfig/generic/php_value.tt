@@ -1,0 +1,37 @@
+[%- IF CCM.is_scalar(data) -%]
+[%-     IF data.is_boolean -%]
+[%-         data ? 'true' : 'false' -%]
+[%      ELSIF data.is_string -%]
+[%          IF (matches = data.match('^METACONFIG_PHP_CODE_(.*)$')) -%]
+[%              matches.0 -%]
+[%          ELSE-%]
+[%              data == 'METACONFIG_PHP_NULL' ? 'null' : "'" _ data _ "'" -%]
+[%          END -%]
+[%      ELSE -%]
+[%          data -%]
+[%      END -%]
+[%  ELSE -%]
+array(
+[%      FILTER indent -%]
+[%          IF CCM.is_list(data) -%]
+[%-             FOREACH el IN data -%]
+[%                  INCLUDE 'metaconfig/generic/php_value.tt' data=el %],
+[%              END -%]
+[%-         ELSIF CCM.is_hash(data) -%]
+[%-             IF data.defined('METACONFIG_PHP_LASTELEMENT');
+                    lastelement=data.METACONFIG_PHP_LASTELEMENT;
+                    data.delete('METACONFIG_PHP_LASTELEMENT');
+                END -%]
+[%-             IF data.defined('METACONFIG_PHP_FIRSTELEMENT') -%]
+[%                  INCLUDE 'metaconfig/generic/php_value.tt' data=data.METACONFIG_PHP_FIRSTELEMENT -%],
+[%                  data.delete('METACONFIG_PHP_FIRSTELEMENT') -%]
+[%-             END -%]
+[%-             FOREACH el IN data.pairs -%]
+[%                  (matches = el.key.match('^DIGIT(\d+)$')) ? matches.0 : "'" _ el.key _ "'" %] => [% INCLUDE 'metaconfig/generic/php_value.tt' data=el.value %],
+[%              END -%]
+[%-             IF lastelement.defined -%]
+[%                  INCLUDE 'metaconfig/generic/php_value.tt' data=lastelement -%],
+[%              END -%]
+[%          END -%]
+)[%-     END -%]
+[% END -%]
