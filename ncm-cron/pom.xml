@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>cron</artifactId>
   <packaging>pom</packaging>
-  <version>20.12.0-rc2-SNAPSHOT</version>
+  <version>20.12.0</version>
   <name>ncm-cron</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
