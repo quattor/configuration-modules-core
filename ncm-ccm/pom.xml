@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>ccm</artifactId>
   <packaging>pom</packaging>
-  <version>20.12.0</version>
+  <version>20.12.1-SNAPSHOT</version>
   <name>ncm-ccm</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
