@@ -1,10 +1,6 @@
 name: Run Tests using Docker
 
-on:
-  push:
-    branches: [ github-action ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
 
