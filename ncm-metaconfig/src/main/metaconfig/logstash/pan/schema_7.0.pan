@@ -281,8 +281,8 @@ type logstash_filter_kv = {
     "prefix" ? string
     "source" ? string
     "target" ? string
-    "trim" ? string
-    "trimkey" ? string
+    "trim_value" ? string
+    "trim_key" ? string
     "value_split" ? string
 };
 
