@@ -16,5 +16,9 @@ my $u50 = Test::Quattor::TextRender::Metaconfig->new(
         version => '5.0',
         )->test();
 
+my $u70 = Test::Quattor::TextRender::Metaconfig->new(
+        service => 'logstash',
+        version => '7.0',
+        )->test();
 
 done_testing;
