@@ -293,6 +293,17 @@ type logstash_filter_json = {
     "remove_field" ? string[]
 };
 
+type logstash_filter_geoip = {
+    include logstash_filter_plugin_common
+    "cache_size" ? long
+    "database" ? absolute_file_path
+    "default_database_type" ? choice('City', 'ASN')
+    "fields" ? string[]
+    "source" : string
+    "tag_on_failure" ? string[]
+    "target" ? string
+};
+
 type logstash_filter_plugin = {
     "grok" ? logstash_filter_grok
     "date" ? logstash_filter_date
@@ -304,6 +315,7 @@ type logstash_filter_plugin = {
     "kv" ? logstash_filter_kv
     "bytes2human" ? logstash_filter_bytes2human
     "json" ? logstash_filter_json
+    "geoip" ? logstash_filter_geoip
 } with length(SELF) == 1;
 
 @{ Common output }

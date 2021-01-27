@@ -76,6 +76,10 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         dict("kv", dict(
             "source", "KEY_EQ_VALUEDATA",
             )),
+        dict("geoip", dict(
+            "source", "fwsrc",
+            "fields", list("country_name", "city_name"),
+            )),
         dict("date", dict(
             "match", dict(
                 "name", "syslog_timestamp",

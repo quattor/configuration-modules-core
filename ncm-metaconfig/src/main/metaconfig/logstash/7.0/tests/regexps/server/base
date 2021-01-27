@@ -50,6 +50,10 @@ multiline
 ^\s{8}kv \{$
 ^\s{12}source => "KEY_EQ_VALUEDATA"$
 ^\s{8}\}$
+^\s{8}geoip \{$
+^\s{12}source => "fwsrc"$
+^\s{12}fields => \[ "country_name", "city_name" \]$
+^\s{8}\}$
 ^\s{8}date \{$
 ^\s{12}match => \[ "syslog_timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ" \]$
 ^\s{8}\}$
