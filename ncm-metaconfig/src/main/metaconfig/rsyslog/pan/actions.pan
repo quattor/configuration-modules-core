@@ -42,7 +42,7 @@ type rsyslog_action_file = {
     include rsyslog_action_common
     include rsyslog_action_file_common_module
     'file' ? absolute_file_path
-    'dynaFile' ? absolute_file_path
+    'dynaFile' ? string
     'closeTimeout' ? long(0..)
     'dynaFileCacheSize' ? long(0..)
     'zipLevel' ? long(0..)
