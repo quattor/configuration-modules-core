@@ -6,7 +6,7 @@ include 'metaconfig/logstash/config';
 
 prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.conf}/contents/output";
 
-"plugins" = append(dict(
+"plugins" = list(dict(
     "gelf", dict(
         "custom_fields", dict("type", "remotegelf"),
         "host", "remotehost.domain",

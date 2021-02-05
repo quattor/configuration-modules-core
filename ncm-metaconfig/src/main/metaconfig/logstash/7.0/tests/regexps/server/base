@@ -111,9 +111,7 @@ multiline
 ^output \{$
 ^\s{4}elasticsearch \{$
 ^\s{8}template_overwrite => true$
-^\s{8}document_type => "%\{@type\}"$
 ^\s{8}index => "%\{\[@metadata\]\[target_index\]\}"$
 ^\s{8}hosts => \[ "localhost:9200" \]$
-^\s{8}flush_size => 5000$
 ^\s{4}\}$
 ^\}$

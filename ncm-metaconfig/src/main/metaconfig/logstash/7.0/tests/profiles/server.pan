@@ -174,7 +174,6 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 # reset the output, to remove the GELF output
 "output" = dict("plugins", list(dict(
     "elasticsearch", dict(
-        "flush_size", 5000,
         "hosts", list("localhost:9200"),
         "template_overwrite", true,
         "index", "%{[@metadata][target_index]}",
