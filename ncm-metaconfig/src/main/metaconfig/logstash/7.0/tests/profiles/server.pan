@@ -72,6 +72,11 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 "received_at", "%{@timestamp}",
                 "received_from", "%{@source_host}",
                 ),
+            "tag_on_failure", list('sometag'),
+            "overwrite", list('somefield'),
+            "target", "somespace",
+            "timeout_scope", "event",
+            "timeout_millis", 1000,
             )),
         dict("kv", dict(
             "source", "KEY_EQ_VALUEDATA",
@@ -100,6 +105,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                     "name", "@message",
                     "pattern", "%{syslog_message}"),
                 ),
+            "strip", list("@message"),
             )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(

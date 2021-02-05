@@ -234,6 +234,12 @@ type logstash_filter_grok = {
     "keep_empty_captures" ? boolean
     "named_captures_only" : boolean = true
     "patterns_dir" ? string[]
+    "overwrite" ? string[]
+    "tag_on_failure" ? string[]
+    "tag_on_timeout" ? string[]
+    "timeout_millis" ? long
+    "timeout_scope" ? choice('event', 'pattern')
+    "target" ? string
 };
 
 type logstash_filter_bytes2human = {
@@ -268,6 +274,7 @@ type logstash_filter_mutate = {
     "rename" ? string{}
     "split" ? string{}
     "update" ? string{}
+    "strip" ? string[]
     "exclude_tags" ? string[] with {
         deprecated(0, 'replace with _conditional e.g. <"tagname" not in [tags]> in 2.0'); true;
     }
