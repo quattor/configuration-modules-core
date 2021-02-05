@@ -9,9 +9,10 @@ Readonly my @CONFIG_DUMP => qw(config dump);
 
 sub _initialize
 {
-    my ($self, $clusterobj) = @_;
+    my ($self, $clusterobj, $configdb) = @_;
     $self->{log} = $clusterobj;
     $self->{Cluster} = $clusterobj;
+    $self->{configdb} = $configdb || $self->{Cluster}->{cluster}->{configdb};
     $self->{quattor} = {};
     $self->{ceph} = {};
     $self->{deploy} = {};
@@ -23,7 +24,7 @@ sub _initialize
 sub parse_profile_cfg
 {
     my ($self) = @_;
-    my $profcfg = $self->{Cluster}->{cluster}->{configdb};
+    my $profcfg = $self->{configdb};
     if ($profcfg->{mgr}->{modules} && %{$profcfg->{mgr}->{modules}}) {
         while (my ($modname, $mod) = each %{$profcfg->{mgr}->{modules}}) {
             while (my ($att,$vol) = each %{$mod}) {
