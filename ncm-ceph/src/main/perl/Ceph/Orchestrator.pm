@@ -10,7 +10,8 @@ use Data::Dumper;
 Readonly my $CEPH_BOOTSTRAP_CFGFILE => '/etc/ceph/init.conf';
 Readonly my @CONFIG_SET => qw(config set);
 Readonly my @ORCH_APPLY => qw(orch apply -i);
-Readonly my @ORCH_SECTIONS => qw(hosts mon mgr osd mds); # Sorted for logical deployment
+Readonly my @ORCH_HOST_LS => qw(orch host ls json);
+Readonly my @ORCH_SECTIONS => qw(mon mgr osd mds); # Sorted for logical deployment
 
 sub _initialize
 {
@@ -89,7 +90,7 @@ sub set_config_db
 
 sub deploy_orch_section
 {
-    my ($self, $yamlfile, $config) = @_;
+    my ($self, $yamlfile, $config, $force) = @_;
 
     my $trd = EDG::WP4::CCM::TextRender->new('yaml', $config, log => $self);
     my $fh = $trd->filewriter($yamlfile);
@@ -97,19 +98,44 @@ sub deploy_orch_section
         $self->error("Could not write orchestrator config file $yamlfile: $trd->{fail}");
         return;
     };
-    if ($fh->close()) {
+    if ($fh->close() || $force) {
         return $self->run_ceph_command([@ORCH_APPLY, $yamlfile], "applying $yamlfile");
     }
     $self->info("$yamlfile not changed, not applying to orchestrator");
     return 1;
 }
 
+sub deploy_orch_hosts
+{
+    my ($self, $config) = @_;
+
+    my ($ec, $jstr) = $self->run_ceph_command([@ORCH_HOST_LS], 'getting hosts in orchestrator') or return;
+    my $orchhosts = decode_json($jstr);
+    my $hostdb = {};
+    my $ok = 1;
+    foreach my $host (@$orchhosts){
+        $hostdb->{$host->{hostname}} = $host
+    }
+    foreach my $host (@$config){
+        my $hostname = $host->{hostname};
+        my $force = !$hostdb->{$hostname} || $hostdb->{$hostname}->{status} ne "";
+        $self->info("Deploying host $hostname with orchestrator");
+        if !$self->deploy_orch_section("/etc/ceph/orch_host_$hostname.yaml", $host, $force){
+            $ok = 0;
+        }
+    }
+
+    return $ok;
+}
 # Deploy orchestrator yamls for hosts, services, and osds
 sub deploy_orchestrator
 {
     my ($self) = @_;
 
     # sections are sorted, especially first the hosts
+    if($self->{tree}->{cluster}->{hosts}){
+        $self->deploy_orch_hosts($self->{tree}->{cluster}->{hosts}) or return;
+    }
     foreach my $section (@ORCH_SECTIONS){
         if($self->{tree}->{cluster}->{$section}){
             $self->info("Deploying $section with orchestrator");
