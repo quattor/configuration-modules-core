@@ -86,6 +86,11 @@ prefix 'backends/sshproxy';
 "stick" = "on src";
 "options/0" = 'tcp-check';
 "tcpchecks" = list('expect string SSH-2.0-');
+"httpcheck" = dict(
+    'inverse', true,
+    'match', 'status',
+    'pattern', '404',
+    );
 "sticktable" = dict(
     'type', 'ip',
     'size', '1m',

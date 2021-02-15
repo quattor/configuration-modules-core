@@ -211,10 +211,18 @@ type haproxy_service_backend_server = {
     'params' ? haproxy_service_server_params
 };
 
+@{configure 'http-check expect [!] match pattern'}
+type haproxy_service_http_check = {
+    'inverse' ? boolean
+    'match' : choice('status', 'rstatus', 'string', 'rstring')
+    'pattern' : string
+};
+
 type haproxy_service_backend = {
     'balance' ? choice('roundrobin', 'static-rr', 'leastconn', 'first', 'source', 'uri', 'url_param')
     'mode' ? choice("tcp", "http")
     'options' ? string[]
+    'httpcheck' ? haproxy_service_http_check
     'tcpchecks' ? string[]
     'sticktable' ? haproxy_service_stick_table
     'stick' ? string
