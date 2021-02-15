@@ -1,11 +1,13 @@
 declaration template components/${project.artifactId}/v2/schema-orch;
 
-@documentation{ hosts to add to orchestrator }
+@documentation{ hosts to add to orchestrator
+hostname should be hostname as displayed with 'hostname' command
+ }
 type ceph_orch_host_spec = {
     'service_type' : choice('host') = 'host'
-    'addr' ? type_ip
+    'addr' ? type_hostname
     'hostname' : type_hostname
-    'labels' : string[]
+    'labels' ? string[]
 };
 
 @documentation{ where to deploy service, by label, hostname, host_pattern.
@@ -21,12 +23,13 @@ type ceph_orch_service_spec = {
     'placement' : ceph_orch_service_placement
     'unmanaged' ? boolean
 };
-
+@documentation{ ceph orchestrator spec for monitors }
 type ceph_orch_mon_spec = {
     include ceph_orch_service_spec
     'service_type' : choice('mon') = 'mon'
 };
 
+@documentation{ ceph orchestrator spec for ceph-mgr }
 type ceph_orch_mgr_spec = {
     include ceph_orch_service_spec
     'service_type' : choice('mgr') = 'mgr'
@@ -39,19 +42,23 @@ type ceph_orch_mds_spec = {
     'service_id' : string
 };
 
+@documentation{ ceph orchestrator osd placement }
 type ceph_orch_osd_placement = {
     'host_pattern' ? string
 };
 
+@documentation{ ceph orchestrator spec for osd device filtering }
 type ceph_orch_osd_devices = {
     'model' ? string
-    'rotational' ? boolean
+    'rotational' ? long(0..1)
     'vendor' ? string
     'size' ? string
     'all' ? boolean
     'limit' ? long # Not recommended
 };
 
+@documentation{ ceph orchestrator spec for osds.
+See https://docs.ceph.com/en/latest/cephadm/drivegroups/#osd-service-specification }
 type ceph_orch_osd_spec = {
     'service_type' : choice('osd') = 'osd'
     'service_id' : string = 'default_drive_group'
@@ -66,21 +73,20 @@ type ceph_orch_osd_spec = {
     'osds_per_device' ? long
 };
 
-
-
+@documentation { all specifications deployable with ceph orch apply -i }
 type ceph_orch_cluster = {
-    'hosts' ? ceph_orch_host_spec[]
+    'hosts' ? ceph_orch_host_spec{}
     'mon' ? ceph_orch_mon_spec
     'mgr' ? ceph_orch_mgr_spec
-    'mds' ? ceph_orch_mds_spec[]
-    'osd' ? ceph_orch_osd_spec[]
+    'mds' ? ceph_orch_mds_spec{}
+    'osd' ? ceph_orch_osd_spec{}
 };
+
 @documentation{ ceph orchestrator type }
 type ceph_orch = {
     'backend' : choice('cephadm') = 'cephadm'
     'cluster' : ceph_orch_cluster
     'configdb' ? ceph_configdb
     'initcfg' ? ceph_configfile
-
 };
 

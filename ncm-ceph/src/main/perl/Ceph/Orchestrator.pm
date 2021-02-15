@@ -3,6 +3,7 @@
 use parent qw(CAF::Object NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
 use NCM::Component::Ceph::CfgDb;
+use EDG::WP4::CCM::TextRender 20.12.1;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
@@ -10,16 +11,17 @@ use Data::Dumper;
 Readonly my $CEPH_BOOTSTRAP_CFGFILE => '/etc/ceph/init.conf';
 Readonly my @CONFIG_SET => qw(config set);
 Readonly my @ORCH_APPLY => qw(orch apply -i);
-Readonly my @ORCH_HOST_LS => qw(orch host ls json);
+Readonly my @ORCH_HOST_LS => qw(orch host ls);
 Readonly my @ORCH_SECTIONS => qw(mon mgr osd mds); # Sorted for logical deployment
+Readonly my @ORCH_SECTIONS_MULTI => qw(hosts mds osd);
 
 sub _initialize
 {
-    my ($self, $config, $log, $prefix) = @_;
+    my ($self, $config, $log) = @_;
 
     $self->{log} = $log;
     $self->{config} = $config;
-    $self->{prefix} = $prefix;
+    $self->{prefix} = $log->prefix()."/orchestrator";
     $self->{tree} = $config->getTree($self->{prefix});
 
     return 1;
@@ -31,7 +33,7 @@ sub cluster_ready
     my ($self) = @_;
 
     if ($self->run_ceph_command([qw(status)], 'get cluster status', timeout => 20) &&
-        $self->run_ceph_command([qw(orch status)], 'get cluster status', timeout => 20) {
+        $self->run_ceph_command([qw(orch status)], 'get cluster status', timeout => 20)) {
             $self->debug(1, "Node can reach ceph cluster");
             return 1;
     }
@@ -53,9 +55,6 @@ sub write_init_cfg
     return 1;
 
 }
-
-
-
 
 # Deploy all config marked for deployment
 sub deploy_config
@@ -88,11 +87,16 @@ sub set_config_db
     return $self->deploy_config($cfgmap);
 }
 
+# write yaml file for specified section and apply to orchestrator
 sub deploy_orch_section
 {
-    my ($self, $yamlfile, $config, $force) = @_;
+    my ($self, $section, $force) = @_;
 
-    my $trd = EDG::WP4::CCM::TextRender->new('yaml', $config, log => $self);
+    my $yamlfile = "/etc/ceph/orch_$section.yaml";
+    my $config = $self->{config}->getElement("$self->{prefix}/cluster/$section");
+    my $textmod = grep( /^$section$/, @ORCH_SECTIONS_MULTI ) ? 'yamlmulti' : "yaml";
+    $self->debug(5, "Render element for $self->{prefix}/cluster/$section with module $textmod");
+    my $trd = EDG::WP4::CCM::TextRender->new($textmod, $config, log => $self);
     my $fh = $trd->filewriter($yamlfile);
     if (!$fh) {
         $self->error("Could not write orchestrator config file $yamlfile: $trd->{fail}");
@@ -105,6 +109,7 @@ sub deploy_orch_section
     return 1;
 }
 
+# check hosts are actually in orchestrator and deploy yamlfile accordingly
 sub deploy_orch_hosts
 {
     my ($self, $config) = @_;
@@ -112,21 +117,21 @@ sub deploy_orch_hosts
     my ($ec, $jstr) = $self->run_ceph_command([@ORCH_HOST_LS], 'getting hosts in orchestrator') or return;
     my $orchhosts = decode_json($jstr);
     my $hostdb = {};
-    my $ok = 1;
     foreach my $host (@$orchhosts){
-        $hostdb->{$host->{hostname}} = $host
+        $hostdb->{$host->{hostname}} = $host;
     }
-    foreach my $host (@$config){
-        my $hostname = $host->{hostname};
-        my $force = !$hostdb->{$hostname} || $hostdb->{$hostname}->{status} ne "";
-        $self->info("Deploying host $hostname with orchestrator");
-        if !$self->deploy_orch_section("/etc/ceph/orch_host_$hostname.yaml", $host, $force){
-            $ok = 0;
+    my $force = 0;
+    foreach my $host (keys %$config){
+        my $hostname = $config->{$host}->{hostname};
+        if (!$hostdb->{$hostname} || $hostdb->{$hostname}->{status} ne ""){
+            $force = 1;
+            last;
         }
     }
-
-    return $ok;
+    $self->info("Deploying hosts with orchestrator");
+    return $self->deploy_orch_section("hosts", $force);
 }
+
 # Deploy orchestrator yamls for hosts, services, and osds
 sub deploy_orchestrator
 {
@@ -139,12 +144,13 @@ sub deploy_orchestrator
     foreach my $section (@ORCH_SECTIONS){
         if($self->{tree}->{cluster}->{$section}){
             $self->info("Deploying $section with orchestrator");
-            $self->deploy_orch_section("/etc/ceph/orch_$section.yaml",
-                $self->{tree}->{cluster}->{$section}) or return;
+            $self->deploy_orch_section($section) or return;
         }
     }
+    return 1;
 }
 
+# Apply configdb changes and orchestrator
 sub configure
 {
     my ($self) = @_;

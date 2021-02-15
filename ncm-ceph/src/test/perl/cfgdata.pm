@@ -5,6 +5,12 @@ use warnings;
 
 use Readonly;
 
+Readonly our $MINCFG_OUT => <<EOD;
+[global]
+fsid=8c09a56c-5859-4bc0-8584-d2c2232d62f6
+mon_host=host1.aaa.be,host2.aaa.be,host3.aaa.be
+EOD
+
 Readonly our $CFGFILE_OUT => <<EOD;
 [client.rgw.test]
 host=host3

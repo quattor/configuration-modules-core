@@ -67,6 +67,7 @@ The component is tested with Ceph version 15.2.8
 
 use parent qw(NCM::Component NCM::Component::Ceph::Commands);
 use NCM::Component::Ceph::Cfgfile;
+use NCM::Component::Ceph::Orchestrator;
 use Readonly;
 use JSON::XS;
 use Data::Dumper;
@@ -100,7 +101,7 @@ sub Configure
 
     if ($t->{minconfig}) {
         $self->verbose('Running Ceph configfile component');
-        my $cfgin = $t->{minconfig};
+        my $cfgin = 'minconfig';
         $self->debug(1, "Using config input from $cfgin");
         my $cfgfile = NCM::Component::Ceph::Cfgfile->new($config, $self, $self->prefix()."/$cfgin");
         $cfgfile->configure() or return;
@@ -110,7 +111,7 @@ sub Configure
 
     if ($orch) {
         $self->verbose('Running Ceph orchestrator component');
-        my $cluster = NCM::Component::Ceph::Orchestrator->new($config, $self, $self->prefix()."/orchestrator");
+        my $cluster = NCM::Component::Ceph::Orchestrator->new($config, $self);
         $cluster->configure() or return;
     }
 

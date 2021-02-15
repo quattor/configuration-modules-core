@@ -46,7 +46,7 @@ type ceph_deploy_supported_version = string with match(SELF, '\d+\.\d+\.\d+'); #
 ceph cluster configuration
 we only support node to be in one ceph cluster named ceph
 this schema only works with Luminous 12.2.2 and above
-When setting release to Octopus (15.2.x), we only need orchestrator and ceph_version
+When setting release to Octopus (15.2.x), we only need orchestrator, minconfig and ceph_version
  }
 type ${project.artifactId}_component = {
     include structure_component
