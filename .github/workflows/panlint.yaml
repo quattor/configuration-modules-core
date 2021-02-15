@@ -15,6 +15,6 @@ jobs:
         with:
           python-version: 3.6
       - name: Install dependencies
-        run: pip install colorama prettytable
+        run: pip install colorama prettytable six
       - name: run panlint
         run: ./travis-build
