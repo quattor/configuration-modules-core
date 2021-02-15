@@ -10,6 +10,8 @@ contentspath=/unitfile/0
 ^WantedBy=1.service$
 ^WantedBy=2.service$
 ^\[Service\]$
+^BlockIODeviceWeight=/var 100$
+^BlockIODeviceWeight=/tmp 50$
 ^CPUAffinity=$
 ^CPUAffinity=1 2 3 4$
 ^Environment="VAR1-1=val1-1 val1-1b" "VAR1-2=val1-2" $
@@ -19,6 +21,8 @@ contentspath=/unitfile/0
 ^ExecStart=/usr/bin/special$
 ^LimitNPROC=100$
 ^LimitSTACK=infinity$
+^MemoryAccounting=yes$
+^MemoryLimit=1024$
 ^RuntimeDirectory=foo/bar tmp$
 ^RuntimeDirectoryMode=0777$
 ^RuntimeDirectoryPreserve=restart$
