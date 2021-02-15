@@ -25,8 +25,6 @@ fsid=8c09a56c-5859-4bc0-8584-d2c2232d62f6
 mon_cluster_log_to_syslog=1
 mon_host=host1.aaa.be,host2.aaa.be,host3.aaa.be
 mon_initial_members=host1,host2,host3
-osd_pool_default_min_size=2
-osd_pool_default_size=3
 public_network=192.168.0.0/20
 
 [osd]
@@ -80,8 +78,6 @@ Readonly our %PROFILE_CFG => (
     'auth_service_required' => 'cephx',
     'mon_cluster_log_to_syslog' => 1,
     'op_queue' => 'wpq',
-    'osd_pool_default_min_size' => '2',
-    'osd_pool_default_size' => '3',
     'mon_osd_down_out_subtree_limit' => 'rack'
   },
   'mds' => {
