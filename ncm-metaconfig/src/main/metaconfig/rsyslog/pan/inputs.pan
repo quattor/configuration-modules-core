@@ -186,6 +186,17 @@ type rsyslog_module_journal = {
     'IgnoreNonValidStatefile' ? boolean
 };
 
+type rsyslog_module_pstats = {
+    'Interval' ? long(0..) = 300
+    'Facility' ? long(1..9) = 5
+    'Severity' ? long(1..9) = 6
+    'ResetCounters' ? boolean
+    'Format' ? choice('json', 'json-elasticsearch', 'legacy', 'cee') = 'legacy'
+    'log.syslog' ? boolean = true
+    'log.file' ? absolute_file_path
+    'Bracketing' ? boolean
+};
+
 type rsyslog_module_input = {
     'file' ? rsyslog_module_file
     'tcp' ? rsyslog_module_tcp
@@ -195,4 +206,5 @@ type rsyslog_module_input = {
     @{Using module options is not advised; use empty dict to load}
     'klog' ? dict with length(SELF) == 0
     'journal' ? rsyslog_module_journal
+    'pstats' ? rsyslog_module_pstats
 };

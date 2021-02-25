@@ -3,12 +3,14 @@ Base test for config
 multiline
 /etc/rsyslog.conf
 ---
-^module\($ ### COUNT 8
+^module\($ ### COUNT 9
 ^ {4}load="imfile"$
 ^ {4}mode="inotify"$
 ^ {4}load="imklog"$
 ^\$ModLoad immark$
 ^\$MarkMessagePeriod 1800$
+^ {4}load="impstats"$
+^ {4}Interval="600"$
 ^ {4}load="imtcp"$
 ^ {4}PermittedPeer=\["host.domain", "otherhost.domain"\]$
 ^ {4}load="imudp"$
@@ -42,7 +44,7 @@ multiline
 ^ {4}# input3$
 ^ {4}type="imudp"$
 ^ {4}Port=\["514", "515"\]$
-^\)$ ### COUNT 14
+^\)$ ### COUNT 15
 ^ruleset\($ ### COUNT 3
 ^ {4}name="otherrule"$
 ^ {4}\) \{$ ### COUNT 3
