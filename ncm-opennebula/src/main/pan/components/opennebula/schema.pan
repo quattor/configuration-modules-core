@@ -915,6 +915,12 @@ type opennebula_sunstone = {
     "memcache_namespace" : string = 'opennebula.sunstone'
     "debug_level" : long (0..3) = 3
     "auth" : string = 'opennebula' with match (SELF, '^(sunstone|opennebula|x509|remote)$')
+    @{This value needs to match `window.location.origin` evaluated by the User Agent
+    during registration and authentication ceremonies. Remember that WebAuthn
+    requires TLS on anything else than localhost}
+    "webauthn_origin" : type_absoluteURI = 'http://localhost:9869'
+    @{Relying Party name for display purposes}
+    "webauthn_rpname" : string = 'OpenNebula Cloud'
     "encode_user_password" ? boolean
     "vnc_proxy_port" : type_port = 29876
     "vnc_proxy_support_wss" : string = 'no' with match (SELF, '^(no|yes|only)$')
