@@ -86,7 +86,7 @@ type slurm_scheduler_parameters = {
     'bf_yield_interval' ? long(0..)
     'bf_yield_sleep' ? long(0..)
     'build_queue_timeout' ? long(0..)
-    'default_5fqueue_5fdepth' ? long(0..)   # escaped version, otherwise unescaping produces some weird unicode
+    '{default_queue_depth}' ? long(0..)
     'defer' ? boolean
     'delay_boot' ? long(0..)
     'default_gbytes' ? boolean
@@ -95,7 +95,7 @@ type slurm_scheduler_parameters = {
     'enable_user_top' ? boolean
     'Ignore_NUMA' ? boolean
     'inventory_interval' ? long(0..)
-    'kill_5finvalid_5fdepend' ? boolean
+    '{kill_invalid_depend}' ? boolean
     'max_array_tasks' ? long(0..)   # should be smaller than MaxArraySize
     'max_depend_depth' ? long(0..)
     'max_rpc_cnt' ? long(0..)
