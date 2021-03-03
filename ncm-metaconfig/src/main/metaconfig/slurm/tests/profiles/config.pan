@@ -10,6 +10,8 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #ControlAddr = ;
 #BackupController = ;
 #BackupAddr = ;
+"AuthAltParameters" = dict("jwt_key", "/etc/slurm/jwt.key");
+"AuthAltTypes" = "jwt";
 "AuthType" = "munge";
 "CryptoType" = "munge";
 "ClusterName" = "thecluster";
@@ -30,6 +32,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "JobSubmitPlugins" = list("lua", "pbs");
 #KillOnBadExit=0
 #LaunchType=launch/slurm
+"LaunchParameters" = dict("use_interactive_step", true);
 #Licenses=foo*4,bar
 "MailProg" = "/bin/mail";
 "MaxJobCount" = 5000;
@@ -55,6 +58,10 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/process";
 
+"SlurmctldParameters" = dict(
+    "preempt_send_user_signal", true,
+    "power_save_interval", 20,
+);
 "SlurmctldPidFile" = "/var/run/slurmctld.pid";
 "SlurmctldPort" = list(6817);
 "SlurmdPidFile" = "/var/run/slurmd.pid";

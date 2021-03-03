@@ -6,8 +6,8 @@ include 'metaconfig/slurm/schema';
 bind "/software/components/metaconfig/services/{/etc/slurm/slurmdbd.conf}/contents" = slurm_dbd_conf;
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurmdbd.conf}";
-"owner" = "root";
-"group" = "root";
-"mode" = 0644;
+"owner" = "slurm";
+"group" = "slurm";
+"mode" = 0600;
 "module" = "slurm/dbd";
 "daemons/slurmdbd" = "restart";
