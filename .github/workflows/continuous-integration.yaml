@@ -1,20 +1,49 @@
-name: Run Tests using Docker
+name: Run Tests
 
-on:
-  push:
-    branches: [ github-action ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
-
-  build:
-
+  runtests:
     runs-on: ubuntu-latest
-
+    container: centos:7
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag configuration-modules-core
-    - name: Run the tests
-      run: docker run --rm configuration-modules-core
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: set up dependencies
+      run: |
+        yum -y install epel-release http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
+        # The available version of perl-Test-Quattor is too old for mvnprove.pl to
+        # work, but this is a quick way of pulling in a lot of required dependencies.
+        # Surprisingly `which` is not installed by default and panc depends on it.
+        # libselinux-utils is required for /usr/sbin/selinuxenabled
+        yum install -y maven perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices \
+          ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
+          perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
+          perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
+          perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
+          perl-Set-Scalar perl-Text-Glob cpanminus gcc wget
+        #perl-Git-Repository perl-Data-Structure-Util
+        # Hack around the two missing Perl rpms for ncm-ceph
+        cpanm install Git::Repository Data::Structure::Util
+    - name: set up template library core from git master
+      run: |
+        cd /tmp
+        # install library core in /tmp, tests need it
+        wget -O template-library-core-master.tar.gz https://codeload.github.com/quattor/template-library-core/tar.gz/master
+        tar -xvzf template-library-core-master.tar.gz
+        cd -
+    - name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        path: /tmp/m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: run tests
+      run: |
+        # make sure it exists before chown
+        mkdir -p /tmp/m2
+        chown -R nobody:nobody . /tmp/m2
+        su --shell /bin/bash --preserve-environment --command="source /usr/bin/mvn_test.sh && mvn_test" nobody
+      env:
+        QUATTOR_TEST_TEMPLATE_LIBRARY_CORE: /tmp/template-library-core-master
+        MVN_ARGS: -Dmaven.repo.local=/tmp/m2

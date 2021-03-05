@@ -1,0 +1,20 @@
+name: Run panlint
+on: [push, pull_request]
+
+jobs:
+  panlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          # we need the full repo or HEAD^ does not work
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install dependencies
+        run: pip install colorama prettytable six
+      - name: run panlint
+        run: ./travis-build
