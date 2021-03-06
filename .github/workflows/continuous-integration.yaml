@@ -43,7 +43,9 @@ jobs:
         # make sure it exists before chown
         mkdir -p /tmp/m2
         chown -R nobody:nobody . /tmp/m2
-        su --shell /bin/bash --preserve-environment --command="source /usr/bin/mvn_test.sh && mvn_test" nobody
+        # we have to run as a non-root user to pass the spma tests
+        # secondly, we first download all maven dependencies and then run the tests because it fails with hanging downloads otherwise.
+        runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve $MVN_ARGS\" && mvn_test" nobody
       env:
         QUATTOR_TEST_TEMPLATE_LIBRARY_CORE: /tmp/template-library-core-master
         MVN_ARGS: -Dmaven.repo.local=/tmp/m2
