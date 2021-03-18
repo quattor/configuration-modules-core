@@ -90,7 +90,7 @@ sub set_config_db
 # write yaml file for specified section and apply to orchestrator
 sub deploy_orch_section
 {
-    my ($self, $section, $force) = @_;
+    my ($self, $section, $ignore) = @_;
 
     my $yamlfile = "/etc/ceph/orch_$section.yaml";
     my $config = $self->{config}->getElement("$self->{prefix}/cluster/$section");
@@ -102,7 +102,8 @@ sub deploy_orch_section
         $self->error("Could not write orchestrator config file $yamlfile: $trd->{fail}");
         return;
     };
-    if ($fh->close() || $force) {
+    my $changed = $fh->close();
+    if ((!$ignore && $changed) || $ignore == 2) {
         return $self->run_ceph_command([@ORCH_APPLY, $yamlfile], "applying $yamlfile");
     }
     $self->info("$yamlfile not changed, not applying to orchestrator");
@@ -120,16 +121,17 @@ sub deploy_orch_hosts
     foreach my $host (@$orchhosts){
         $hostdb->{$host->{hostname}} = $host;
     }
-    my $force = 0;
+    my $ignore = 1;
     foreach my $host (keys %$config){
         my $hostname = $config->{$host}->{hostname};
-        if (!$hostdb->{$hostname} || $hostdb->{$hostname}->{status} ne ""){
-            $force = 1;
+        if (!$hostdb->{$hostname}){
+            $self->debug(2, 'missing host, should deploy anyway');
+            $ignore = 2;
             last;
         }
     }
     $self->info("Deploying hosts with orchestrator");
-    return $self->deploy_orch_section("hosts", $force);
+    return $self->deploy_orch_section("hosts", $ignore);
 }
 
 # Deploy orchestrator yamls for hosts, services, and osds
