@@ -9,6 +9,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/job_container.conf}
 "owner" = "root";
 "group" = "root";
 "mode" = 0644;
-"module" = "slurm/job_container";
+"module" = "slurm/gres";
 "convert/truefalse" = true;
 "daemons/slurmd" = "restart";
