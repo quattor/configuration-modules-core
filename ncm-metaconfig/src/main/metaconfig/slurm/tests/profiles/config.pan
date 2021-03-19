@@ -25,6 +25,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "GroupUpdateForce" = false;
 "GroupUpdateTime" = 600;
 "JobCheckpointDir" = "/var/spool/slurm/checkpoint";
+"JobContainerType" = "tmpfs";
 #JobCredentialPrivateKey=
 #JobCredentialPublicCertificate=
 #JobFileAppend=0
@@ -155,7 +156,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #JobCompPort=
 "JobCompType" = "filetxt";
 #JobCompUser=
-#JobContainerType=job_container/none
 "JobAcctGatherFrequency" = dict(
     "network", 30,
     "energy", 10,

@@ -243,7 +243,7 @@ type slurm_conf_control = {
     'GroupUpdateForce' ? boolean # 0/1
     'GroupUpdateTime' ? long(0..)
     'JobCheckpointDir' ? absolute_file_path
-    'JobContainerType' ? choice('cncu', 'none')
+    'JobContainerType' ? choice('cncu', 'tmpfs', 'none')
     'JobCredentialPrivateKey' ? absolute_file_path
     'JobCredentialPublicCertificate' ? absolute_file_path
     'JobFileAppend' ? boolean # 0/1
@@ -713,4 +713,20 @@ type slurm_dbd_conf = {
     'TCPTimeout' ? long(0..)
     'TrackWCKey' ? boolean
     'TrackSlurmctldDown' ? boolean
+};
+
+type slurm_job_container_per_node_conf = {
+    'AutoBasePath' ? boolean
+    'Basepath' ? absolute_file_path
+    'InitScript' ? absolute_file_path
+};
+
+type slurm_job_container_node_conf = {
+    include slurm_job_container_per_node_conf
+    'NodeName' : string[]
+};
+
+type slurm_job_container_conf = {
+    'Default' ? slurm_job_container_per_node_conf
+    'Nodes' ? slurm_job_container_node_conf[]
 };

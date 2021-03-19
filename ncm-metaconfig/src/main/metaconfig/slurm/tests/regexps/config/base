@@ -29,6 +29,7 @@ FirstJobId=1
 GroupUpdateForce=NO
 GroupUpdateTime=600
 JobCheckpointDir=/var/spool/slurm/checkpoint
+JobContainerType=job_container/tmpfs
 JobSubmitPlugins=lua,pbs
 LaunchParameters=use_interactive_step
 MailProg=/bin/mail

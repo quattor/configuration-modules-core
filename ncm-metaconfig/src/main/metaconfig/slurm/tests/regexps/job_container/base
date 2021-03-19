@@ -1,0 +1,10 @@
+Config file for slurm job_container
+---
+/etc/slurm/job_container.conf
+quote
+---
+
+AutoBasePath=true
+Basepath=/var/tmp/slurm
+
+NodeName=node001,node005 AutoBasePath=YES Basepath=/tmp/slurm
