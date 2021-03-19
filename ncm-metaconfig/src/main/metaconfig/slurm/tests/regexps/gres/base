@@ -1,0 +1,11 @@
+Config file for slurm gres
+---
+/etc/slurm/gres.conf
+quote
+---
+
+AutoDetect=off
+
+NodeName=node001,node005 AutoDetect=nvml
+NodeName=node002 AutoDetect=off File=/dev/nvidia\[0-3\] Name=mps Type=TeslaP100
+NodeName=node003 Cores=2,4 Count=100 File=/dev/nvidia1 Flags=CountOnly Name=mps

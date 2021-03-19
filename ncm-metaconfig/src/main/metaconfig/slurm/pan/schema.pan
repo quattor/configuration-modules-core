@@ -730,3 +730,24 @@ type slurm_job_container_conf = {
     'Default' ? slurm_job_container_per_node_conf
     'Nodes' ? slurm_job_container_node_conf[]
 };
+
+type slurm_gres_autodetect_conf = {
+    'AutoDetect' ? choice('nvml', 'rsmi', 'off')
+};
+
+type slurm_gres_per_node_conf = {
+    include slurm_gres_autodetect_conf
+    'NodeName' : string[]
+    'Cores' ? long[]
+    'Count' ? long(0..)
+    'File' ? absolute_file_path
+    'Flags' ? choice('CountOnly')[]
+    'Links' ? long(0..)[]
+    'Name' ? choice('gpu', 'mps', 'nic', 'mic')
+    'Type' ? string
+};
+
+type slurm_gres_conf = {
+    'Default' ? slurm_gres_autodetect_conf
+    'Nodes' ? slurm_gres_per_node_conf[]
+};
