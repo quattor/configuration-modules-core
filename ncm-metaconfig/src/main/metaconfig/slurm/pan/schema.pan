@@ -668,6 +668,8 @@ type slurm_dbd_conf = {
     'ArchiveSuspend' ? boolean
     'ArchiveTXN' ? boolean
     'ArchiveUsage' ? boolean
+    'AuthAltParameters' ? slurm_authalt_params
+    'AuthAltTypes' ? choice('jwt')
     'AuthInfo' ? string
     'AuthType' ? choice('none', 'munge')
     'CommitDelay' ? long(1..)
