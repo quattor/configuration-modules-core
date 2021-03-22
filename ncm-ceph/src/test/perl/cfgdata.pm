@@ -84,6 +84,7 @@ Readonly our %PROFILE_CFG => (
     'auth_service_required' => 'cephx',
     'mon_cluster_log_to_syslog' => 1,
     'op_queue' => 'wpq',
+    'public_network' => '192.168.0.0/20',
     'mon_osd_down_out_subtree_limit' => 'rack'
   },
   'mds' => {
@@ -99,6 +100,7 @@ Readonly our %PROFILE_CFG => (
 Readonly our %DEPLOY_CFG => (
   'global' => {
     'op_queue' => 'wpq',
+    'public_network' => '192.168.0.0/20',
     'mon_osd_down_out_subtree_limit' => 'rack'
   },
   'mds' => {

@@ -14,8 +14,6 @@ type ceph_minimal_config_global = {
     'fsid' : type_uuid
     'mon_host' : type_fqdn[1..]
     'mon_initial_members' ? type_shorthostname[1..]
-    'public_network' ? type_network_name
-    'cluster_network' ? type_network_name
 };
 
 type ceph_minimal_config = {
@@ -44,6 +42,8 @@ type ceph_global_config = {
     'osd_pool_default_pg_num' ? long(0..)
     'osd_pool_default_pgp_num' ? long(0..)
     'osd_pool_default_size' ? long(0..)
+    'public_network' : type_network_name
+    'cluster_network' ? type_network_name
 };
 
 type ceph_global_config_file = {

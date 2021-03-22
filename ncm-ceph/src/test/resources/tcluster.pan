@@ -46,6 +46,7 @@ prefix 'initcfg';
 );
 
 prefix 'configdb';
+'global/public_network' = '192.168.0.0/20';
 'global/op_queue' = 'wpq';
 'global/mon_osd_down_out_subtree_limit' = 'rack';
 'mds/mds_max_purge_ops_per_pg' = 10.0;

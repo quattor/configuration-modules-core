@@ -42,8 +42,10 @@ variable CEPH_OSD_HOSTS = list('cephosd1.test.nw', 'cephosd2.test.nw');
 prefix 'orchestrator/initcfg/global';
 'mon_host' = list('host1.aaa.be', 'host2.aaa.be', 'host3.aaa.be');
 'fsid' = '8c09a56c-5859-4bc0-8584-d2c2232d62f6';
+'public_network' = '192.168.0.0/20';
 
 prefix 'orchestrator/configdb';
+'global/public_network' = '192.168.0.0/20';
 'global/op_queue' = 'wpq';
 'global/mon_osd_down_out_subtree_limit' = 'rack';
 'mds/mds_max_purge_ops_per_pg' = 10.0;
