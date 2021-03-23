@@ -68,7 +68,9 @@ prefix 'frontends/irods-in';
         "port", 1247,
         "params", dict(
             "ssl", true,
-            "crt", "/some/file")));
+            "crt", "/some/file",
+            "alpn", "h2,http/1.1",
+            )));
 "default_backend" = "irods-bk";
 "acl/network_allowed" = "src -f /etc/haproxy/whitelist.static";
 "tcp-request" = list("connection reject if !network_allowed");
