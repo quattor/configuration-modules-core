@@ -35,7 +35,7 @@ type ceph_orch_mgr_spec = {
     'service_type' : choice('mgr') = 'mgr'
 };
 
-@documentation { mds service spec. service_id is file system name }
+@documentation{ mds service spec. service_id is file system name }
 type ceph_orch_mds_spec = {
     include ceph_orch_service_spec
     'service_type' : choice('mds') = 'mds'
@@ -73,7 +73,7 @@ type ceph_orch_osd_spec = {
     'osds_per_device' ? long
 };
 
-@documentation { all specifications deployable with ceph orch apply -i }
+@documentation{ all specifications deployable with ceph orch apply -i }
 type ceph_orch_cluster = {
     'hosts' ? ceph_orch_host_spec{}
     'mon' ? ceph_orch_mon_spec
