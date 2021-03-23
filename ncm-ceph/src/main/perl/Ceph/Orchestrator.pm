@@ -103,7 +103,7 @@ sub deploy_orch_section
         return;
     };
     my $changed = $fh->close();
-    if ((!$ignore && $changed) || $ignore == 2) {
+    if ((!$ignore && $changed) || ($ignore && $ignore == 2)) {
         return $self->run_ceph_command([@ORCH_APPLY, $yamlfile], "applying $yamlfile");
     }
     $self->info("$yamlfile not changed, not applying to orchestrator");
