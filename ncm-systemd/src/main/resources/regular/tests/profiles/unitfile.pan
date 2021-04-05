@@ -67,6 +67,13 @@ bind "/unitfile" = systemd_unitfile_config[];
         'SocketGroup', 'pipegroup',
         'SocketMode', '660',
         ),
+    'mount', dict(
+        'What', 'server:/share',
+        'Where', '/data/share',
+        'Type', 'glusterfs',
+        'Options', list('_netdev', 'defaults'),
+        'DirectoryMode', '0750',
+        ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
         ),

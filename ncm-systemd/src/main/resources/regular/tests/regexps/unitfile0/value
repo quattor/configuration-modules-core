@@ -9,6 +9,12 @@ contentspath=/unitfile/0
 ^\[Install\]$
 ^WantedBy=1.service$
 ^WantedBy=2.service$
+^\[Mount\]$
+^DirectoryMode=0750$
+^Options=_netdev,defaults$
+^Type=glusterfs$
+^What=server:/share$
+^Where=/data/share$
 ^\[Service\]$
 ^BlockIODeviceWeight=/var 100$
 ^BlockIODeviceWeight=/tmp 50$
