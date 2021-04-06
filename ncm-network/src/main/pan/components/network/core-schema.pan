@@ -245,7 +245,7 @@ type structure_interface = {
     "driver" ? string
     "bootproto" ? string with match(SELF, '^(static|bootp|dhcp|none)$')
     "onboot" ? boolean
-    "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
+    "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|IPIP|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
     "device" ? string
     "master" ? string
     "mtu" ? long
@@ -310,6 +310,15 @@ type structure_interface = {
     "ipv6addr_secondaries" ? type_network_name[]
     "ipv6init" ? boolean
 
+    @{tunnel IP}
+    "my_inner_ipaddr" ? type_ip
+    @{tunnel IP netmask prefix}
+    "my_inner_prefix" ? long(0..32)
+    @{primary local IP address}
+    "my_outer_ipaddr" ? type_ip
+    @{remote peer primary IP address}
+    "peer_outer_ipaddr" ? type_ip
+
     "plugin" ? structure_interface_plugin
 } with {
     if ( exists(SELF['ovs_bridge']) && exists(SELF['type']) && SELF['type'] == 'OVSBridge') {
@@ -347,6 +356,21 @@ type structure_interface = {
     if (exists(SELF['plugin']) && exists(SELF['plugin']['vxlan']) && ! exists(SELF['physdev'])) {
         error('vxlan plugin requires physdev');
     };
+
+    foreach (i; name; list('my_inner_ipaddr', 'my_inner_prefix', 'my_outer_ipaddr', 'peer_outer_ipaddr')) {
+        if ( exists(SELF[name]) && (!exists(SELF['type']) || SELF['type'] != 'IPIP')) {
+            error("%s is defined but the type of interface is not defined as IPIP", name);
+        };
+    };
+
+    if ( exists(SELF['type']) && SELF['type'] == 'IPIP' ) {
+        foreach (i; name; list('my_inner_ipaddr', 'my_inner_prefix', 'my_outer_ipaddr')) {
+            if (!exists(SELF[name])) {
+                error("Type IPIP but %s is not defined.", name);
+            };
+        };
+    };
+
     true;
 };
 

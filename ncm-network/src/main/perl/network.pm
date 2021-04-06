@@ -161,6 +161,7 @@ Readonly my $DEVICE_REGEXP => qr{
                 bond|br|ovirtmgmt|
                 vlan|usb|vxlan|
                 ib|
+                tun|
                 p\d+p|
                 en(?:
                     o(?:\d+d)?| # onboard
@@ -729,6 +730,7 @@ sub process_network
         ib => 'IPoIB',
         br => 'bridge',
         ovirtmgmt => 'virt bridge',
+        tun => 'tunnel',
     };
     # Pattern to match interface name to hr_map. $1 is the key
     my $hr_pattern = '^('.join('|', sort keys %$hr_map).')';
@@ -826,6 +828,16 @@ sub process_network
                 my $flavour = (grep {$entry->{$_} =~ m/:/} sort keys %$entry) ? "${type}6" : $type;
                 push(@{$iface->{$flavour}}, $entry);
             }
+        }
+
+        # join tunnel inner_ipaddr and prefix
+        if ($iface->{my_inner_ipaddr}) {
+            # shouldn't be allowed by schema
+            if (!defined($iface->{my_inner_prefix})) {
+                $self->error("my_inner_prefix must be set for interface $ifname, setting it to 32");
+                $iface->{my_inner_prefix} = 32;
+            }
+            $iface->{my_inner_ipaddr} .= "/$iface->{my_inner_prefix}";
         }
     }
 
@@ -1060,6 +1072,13 @@ sub make_ifcfg
     # add generated options strings
     foreach my $attr (qw(bonding_opts bridging_opts ethtool_opts)) {
         &$makeline($attr, quote => 1);
+    };
+
+    # Tunnel support
+    if ( ($iface->{type} || '') =~ m/^(IPIP)$/ ) {
+        &$makeline('my_inner_ipaddr');
+        &$makeline('my_outer_ipaddr');
+        &$makeline('peer_outer_ipaddr');
     };
 
     # VLAN support

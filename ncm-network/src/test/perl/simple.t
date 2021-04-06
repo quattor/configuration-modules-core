@@ -7,7 +7,7 @@ BEGIN {
 }
 
 use Test::More;
-use Test::Quattor qw(simple simple_ethtool simple_noethtool simple_realhostname simple_nobroadcast);
+use Test::Quattor qw(simple simple_ethtool simple_noethtool simple_realhostname simple_nobroadcast simple_tun);
 use Test::MockModule;
 
 use NCM::Component::network;
@@ -111,6 +111,31 @@ RX:		0
 TX:		0
 Other:		1
 Combined:	8
+EOF
+
+Readonly my $TUN0 => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=tun0
+TYPE=IPIP
+BOOTPROTO=none
+MY_INNER_IPADDR=5.6.7.8/20
+MY_OUTER_IPADDR=5.6.8.8
+RESOLV_MODS=no
+PEERDNS=no
+EOF
+
+Readonly my $TUN1 => <<EOF;
+ONBOOT=yes
+NM_CONTROLLED='no'
+DEVICE=tun1
+TYPE=IPIP
+BOOTPROTO=none
+MY_INNER_IPADDR=5.6.7.9/21
+MY_OUTER_IPADDR=5.6.8.9
+PEER_OUTER_IPADDR=5.6.9.9
+RESOLV_MODS=no
+PEERDNS=no
 EOF
 
 =head1 DESCRIPTION
@@ -286,5 +311,14 @@ ok(command_history_ok([
     'service network start',
     'ccm-fetch',
 ]), "network stop/start not called with same config w/o broadcast (KEEPS_STATE set) 2nd run");
+
+# test tun0 / tun1 IPIP
+
+command_history_reset();
+$cfg = get_config_for_profile('simple_tun');
+is($cmp->Configure($cfg), 1, "Component runs correctly with nobroadcast test profile w/o broadcast");
+is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-tun0"), $TUN0, "Exact network config tun0");
+is(get_file_contents("/etc/sysconfig/network-scripts/ifcfg-tun1"), $TUN1, "Exact network config tun1");
+
 
 done_testing();
