@@ -1141,6 +1141,7 @@ sub make_ifcfg_ip_route
             $route->{command} = "$ip";
             $route->{command} .= " via $route->{gateway}" if $route->{gateway};
             $route->{command} .= " dev $device";
+            $route->{command} .= " onlink" if $route->{onlink};
             $route->{command} .= " table $route->{table}" if $route->{table};
         }
         push(@text, $route->{command});

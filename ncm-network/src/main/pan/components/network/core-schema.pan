@@ -24,6 +24,8 @@ type structure_route = {
     "netmask" ? type_ip
     @{routing table}
     "table" ? network_valid_routing_table
+    @{pretend that the nexthop is directly attached to this link}
+    "onlink" ? boolean
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
