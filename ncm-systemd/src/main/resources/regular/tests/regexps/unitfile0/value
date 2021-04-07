@@ -41,6 +41,10 @@ contentspath=/unitfile/0
 ^SocketGroup=pipegroup$
 ^SocketMode=660$
 ^SocketUser=pipeuser$
+^\[Timer\]$
+^OnCalendar=weekly$
+^OnCalendar=2021-04-07 10:32:01$
+^Persistent=yes$
 ^\[Unit\]$
 ^After=unit0$
 ^After=unit01$

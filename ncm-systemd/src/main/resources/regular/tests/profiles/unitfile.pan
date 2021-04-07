@@ -74,6 +74,10 @@ bind "/unitfile" = systemd_unitfile_config[];
         'Options', list('_netdev', 'defaults'),
         'DirectoryMode', '0750',
         ),
+    'timer', dict(
+        'OnCalendar', list('weekly', '2021-04-07 10:32:01'),
+        'Persistent', true,
+        ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
         ),
