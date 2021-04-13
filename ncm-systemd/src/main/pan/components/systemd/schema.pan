@@ -208,6 +208,38 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'WorkingDirectory' ? string
 };
 
+type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[] with length(SELF) == 2 &&
+        match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$');
+
+type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[] with length(SELF) == 2 &&
+        match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$');
+
+@documentation{
+systemd.resource-control directives
+https://www.freedesktop.org/software/systemd/man/systemd.resource-control.html
+valid for [Slice], [Scope], [Service], [Socket], [Mount], or [Swap] sections
+}
+type ${project.artifactId}_unitfile_config_systemd_resource_control = {
+    'CPUAccounting' ? boolean
+    'CPUShares' ? long(2..262144)
+    'StartupCPUShares' ? long(2..262144)
+    'CPUQuota' ? long(0..100)  # percentages
+    'MemoryAccounting' ? boolean
+    'MemoryLimit' ? long  # in bytes
+    'TasksAccounting' ? boolean
+    'TasksMax' ? string with match(SELF, '^([0-9]+%?|infinity)$')
+    'BlockIOAccounting' ? boolean
+    'BlockIOWeight' ? long(10..1000)
+    'StartupBlockIOWeight' ? long(10..1000)
+    'BlockIODeviceWeight' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
+    'BlockIOReadBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
+    'BlockIOWriteBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
+    'DeviceAllow' ? ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist[]
+    'DevicePolicy' ? choice('auto', 'closed', 'strict')
+    'Slice' ? string
+    'Delegate' ? boolean
+};
+
 @documentation{
 the [Service] section
 http://www.freedesktop.org/software/systemd/man/systemd.service.html
@@ -215,6 +247,7 @@ http://www.freedesktop.org/software/systemd/man/systemd.service.html
 type ${project.artifactId}_unitfile_config_service = {
     include ${project.artifactId}_unitfile_config_systemd_exec
     include ${project.artifactId}_unitfile_config_systemd_kill
+    include ${project.artifactId}_unitfile_config_systemd_resource_control
     'AmbientCapabilities' ? linux_capability[]
     'BusName' ? string
     'BusPolicy' ? string[] with length(SELF) == 2 && match(SELF[1], '^(see|talk|own)$')
@@ -257,6 +290,7 @@ http://www.freedesktop.org/software/systemd/man/systemd.socket.html
 type ${project.artifactId}_unitfile_config_socket = {
     include ${project.artifactId}_unitfile_config_systemd_exec
     include ${project.artifactId}_unitfile_config_systemd_kill
+    include ${project.artifactId}_unitfile_config_systemd_resource_control
     'ListenStream' ? string[]
     'ListenDatagram' ? string[]
     'ListenSequentialPacket' ? string[]

@@ -56,6 +56,9 @@ bind "/unitfile" = systemd_unitfile_config[];
         'RuntimeDirectory', list('foo/bar', 'tmp'),
         'RuntimeDirectoryMode', '0777',
         'RuntimeDirectoryPreserve', 'restart',
+        'MemoryAccounting', true,
+        'MemoryLimit', 1024,
+        'BlockIODeviceWeight', list(list('/var', '100'), list('/tmp', '50')),
         ),
     'socket', dict(
         'ExecStartPre', list('/some/path arg1', '-/some/other/path arg2'),
