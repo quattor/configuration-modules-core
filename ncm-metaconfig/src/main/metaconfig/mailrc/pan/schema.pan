@@ -9,6 +9,7 @@ type mailrc_element = {
     'smtp-auth-user' ? string
     'smtp-auth-password' ? string
     'nss-config-dir' ? string
+    'ssl-verify' ? choice("ask", "ignore", "strict", "warn")
 };
 
 type mailrc_config = {
