@@ -32,7 +32,6 @@ Test how the need for restarting a service is handled
 my $actions = {};
 my $cmp = NCM::Component::metaconfig->new('metaconfig');
 
-
 =pod
 
 =head2 Test actions taken via Configure

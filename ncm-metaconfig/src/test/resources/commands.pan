@@ -1,3 +1,3 @@
-object template aii;
+object template commands;
 
 include 'simple_commands';

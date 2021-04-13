@@ -33,6 +33,6 @@ isa_ok($fh, "CAF::FileWriter");
 $fh = get_file("/foo/bar");
 ok(!defined($fh), "Nothing created at regular file location");
 
-ok(command_history_ok(undef, ['service foo']), "serivce foo not restarted");
+ok(command_history_ok(undef, ['service foo', 'cmd']), "serivce foo not restarted, no cmd run");
 
 done_testing();

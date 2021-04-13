@@ -154,30 +154,94 @@ use EDG::WP4::CCM::TextRender 18.6.1;
 use CAF::Service;
 use CAF::ServiceActions;
 use EDG::WP4::CCM::Path qw(unescape);
+use Text::ParseWords qw(shellwords);
 use Readonly;
 
 our $EC = LC::Exception::Context->new->will_store_all;
 
 our $NoActionSupported = 1;
 
+# Run $service shell command of $type (ie a string) (if defined).
+#   If $commands is undefined, nothing will be run or logged
+#   $msg is a reporting prefix
+#   When $input is not undef, pass it on stdin
+# Return 1 on success, undef otherwise.
+sub run_shell_command
+{
+    my ($self, $commands, $type, $input) = @_;
+
+    return 1 if ! defined($commands);
+
+    my $command = $commands->{$type};
+    if ($command) {
+        my $error_on_fail = 1;
+        if ($command =~ m/^-/) {
+            $command =~ s/^-//;
+            $error_on_fail = 0;
+        }
+        my $cmd_ref = [shellwords($command)];
+        if (!@$cmd_ref) {
+            $self->error("Failed to split '$command'");
+            return;
+        }
+
+        $self->verbose("Going to run $type command '$command' as ['",
+                       join("','", @$cmd_ref), "']",
+                       $error_on_fail ? "" : " and no error reporting on fail");
+
+        my ($err, $out);
+        my %opts = (
+            log => $self,
+            stdout => \$out,
+            stderr => \$err,
+            );
+        if (defined($input)) {
+            $opts{stdin} = "$input";
+        };
+        if ($type eq 'test') {
+            $opts{keeps_state} = 1;
+        };
+
+        CAF::Process->new($cmd_ref, %opts)->execute();
+
+        my $ec = $?;
+
+        my $report = $ec && $error_on_fail ? 'error' : 'verbose';
+        $self->$report("run $type command '$command' ",
+                       ($ec ? 'failed' : 'ok'),
+                       ($error_on_fail ? '' : ' (no error on fail set)'),
+                       ,": stdout '$out'\n stderr '$err'",
+                       ($input ? "\n stdin '$input'" : ""));
+        return $ec && $error_on_fail ? undef : 1;
+    } else {
+        $self->debug(5, "No $type command to run");
+        return 1;
+    };
+}
+
 # Generate C<$file>, configuring C<$srv> using CAF::TextRender with
 # contents C<$contents> (if C<$contents>  is not defined,
 # C<$srv->{contents}> is used).
 # Also tracks the actions that need to be taken via the
 # C<$sa> C<CAF::ServiceActions> instance.
-# Returns undef in case of rendering failure, 1 otherwise.
+# C<$commands> is a hashref with pre/test/changed/post action commands.
+#   (If it is undefined, nothing will be run or logged, see run_shell_command)
+# Returns undef in case of rendering or other failure, 1 otherwise.
 sub handle_service
 {
-    my ($self, $file, $srv, $contents, $sa) = @_;
+    my ($self, $file, $srv, $contents, $sa, $commands) = @_;
+
+    return if ! $self->run_shell_command($commands, 'pre');
 
     $contents = $srv->{contents} if (! defined($contents));
 
-    my $trd = EDG::WP4::CCM::TextRender->new($srv->{module},
-                                             $contents,
-                                             log => $self,
-                                             eol => 0,
-                                             element => $srv->{convert},
-                                             );
+    my $trd = EDG::WP4::CCM::TextRender->new(
+        $srv->{module},
+        $contents,
+        log => $self,
+        eol => 0,
+        element => $srv->{convert},
+        );
 
     my %opts = (
         log => $self,
@@ -202,19 +266,49 @@ sub handle_service
         return;
     }
 
+    if (! $self->run_shell_command($commands, 'test', "$fh")) {
+        $fh->cancel();
+        return;
+    };
+
     if ($fh->close()) {
         $self->info("File $file updated");
         $sa->add($srv->{daemons}, msg => "for file $file");
+        return if ! $self->run_shell_command($commands, 'changed');
     } else {
         $self->verbose("File $file up-to-date");
     };
 
-    return 1;
+    return $self->run_shell_command($commands, 'post');
 }
+
+# Lookup actions in command registry, and return hashref with actual commands for each action
+sub resolve_command_actions
+{
+    my ($self, $command_registry, $actions) = @_;
+
+    my $commands = {};  # this will trigger reporting that nothing is configured is this stays empty
+    foreach my $type (sort keys %$actions) {
+        my $action = $actions->{$type};
+        my $command = $command_registry->{$action};
+        if ($command) {
+            $commands->{$type} = $command;
+            $self->verbose("Resolved $type action $action to command '$command'");
+        } else {
+            # Should not happen due to this being validated in the schema
+            $self->error("Unable to resolve $type action $action to command");
+        }
+    };
+    return $commands;
+}
+
 
 sub _configure_files
 {
-    my ($self, $config, $root) = @_;
+    my ($self, $config, %opts) = @_;
+
+    my $root = defined($opts{root}) ? $opts{root} : '';
+    my $run_commands = defined($opts{run_commands}) ? $opts{run_commands} : 1;
 
     my $t = $config->getElement($self->prefix)->getTree();
 
@@ -224,7 +318,9 @@ sub _configure_files
         my $srvc = $t->{services}->{$esc_filename};
         my $cont_el = $config->getElement($self->prefix()."/services/$esc_filename/contents");
         my $filename = ($root || '') . unescape($esc_filename);
-        $self->handle_service($filename, $srvc, $cont_el, $sa);
+        # Only when run_commands is false, use undef so nothing is even reported
+        my $commands = $run_commands ? $self->resolve_command_actions($t->{commands}, $srvc->{actions} || {}) : undef;
+        $self->handle_service($filename, $srvc, $cont_el, $sa, $commands);
     }
 
     return $sa;
@@ -243,14 +339,14 @@ sub Configure
 
 # Generate the files relative to metaconfig subdirectory
 # under the configuration cachemanager cache path.
-# No daemons will be restarted.
+# No daemons will be restarted, no commands run.
 sub aii_command
 {
     my ($self, $config) = @_;
 
     my $root = $config->{cache_path};
     if ($root) {
-        $self->_configure_files($config, "$root/metaconfig");
+        $self->_configure_files($config, root => "$root/metaconfig", run_commands => 0);
         return 1;
     } else {
         $self->error("No cache_path found for Configuration instance");
