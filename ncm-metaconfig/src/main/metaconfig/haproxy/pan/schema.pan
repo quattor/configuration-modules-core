@@ -175,6 +175,8 @@ type haproxy_service_bind_server_params = {
     'crt' ? absolute_file_path
     @{interface to bind on}
     'interface' ? string
+    @{enable the TLS ALPN extension}
+    'alpn' ? string = "h2,http/1.1"
 };
 
 type haproxy_service_server_params = {

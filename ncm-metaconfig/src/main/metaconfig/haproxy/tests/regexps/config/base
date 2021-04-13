@@ -52,7 +52,7 @@ Test for config
 ^peers\smypeers$
 ^\s{4}peer\stesthost\s10\.20\.30\.4:1024$
 ^frontend\sirods-in$
-^\s{4}bind\s\*:1247\scrt\s/some/file\sssl$
+^\s{4}bind\s\*:1247\salpn\sh2,http/1.1\scrt\s/some/file\sssl$
 ^\s{4}acl\snetwork_allowed\ssrc\s-f\s/etc/haproxy/whitelist.static$
 ^\s{4}tcp-request\sconnection\sreject\sif\s\!network_allowed$
 ^\s{4}http-request\sredirect\sscheme\shttps\sunless\s\{\sssl_fc\s\}$
