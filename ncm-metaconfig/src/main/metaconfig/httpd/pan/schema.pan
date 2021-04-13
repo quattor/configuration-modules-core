@@ -31,6 +31,8 @@ type httpd_nss_cipherstring = string with match(SELF, '^(-(rsa_3des_sha|rsa_des_
     'ecdhe_rsa_aes_256_sha|ecdhe_rsa_aes_256_sha_384|ecdh_rsa_aes_128_sha|ecdh_rsa_aes_256_sha|' +
     'rsa_aes_128_gcm_sha_256|rsa_aes_128_sha|rsa_aes_256_gcm_sha_384|rsa_aes_256_sha))$');
 
+type httpd_protocols = choice("h2", "h2c", "http/1.1");
+
 @documentation{
     Either all Options must start with + or -, or no Option may.
 }
@@ -620,6 +622,7 @@ type httpd_vhost = {
     "browsermatch" ? httpd_browsermatch[]
     "passenger" ? httpd_passenger_vhost
     "header" ? httpd_header[]
+    "protocols" ? httpd_protocols[]
 };
 
 # system wide settings
