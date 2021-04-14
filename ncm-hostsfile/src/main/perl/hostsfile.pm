@@ -264,9 +264,13 @@ sub Configure {
                                      mode => oct(644));
         if (!defined $update) {
             $self->error("Cannot update $hostsfile : $!");
+            return;
         }
     }
-    return;
+    if ( $errorflag ) {
+        return;
+    }
+    return 1;
 }
 
 sub Unconfigure {
