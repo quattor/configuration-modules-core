@@ -11,10 +11,6 @@
 
 package NCM::Component::hostsfile;
 
-#
-# a few standard statements, mandatory for all components
-#
-
 use strict;
 use base 'NCM::Component';
 
@@ -24,9 +20,7 @@ our $NoActionSupported = 1;
 use LC::Check;
 use LC::File;
 
-##########################################################################
 sub Configure {
-##########################################################################
     my ( $self, $config ) = @_;
 
     my $valPath = '/software/components/hostsfile';
@@ -241,9 +235,8 @@ sub Configure {
     return;
 }
 
-##########################################################################
 sub Unconfigure {
-##########################################################################
+    # Not implemented
 }
 
 1;    #required for Perl modules
