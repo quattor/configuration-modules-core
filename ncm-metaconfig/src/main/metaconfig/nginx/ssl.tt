@@ -37,3 +37,7 @@ ssl_stapling_verify [% ssl.stapling_verify ? "on" : "off" %];
 [% IF ssl.trusted_certificate.defined -%]
 ssl_trusted_certificate [% ssl.trusted_certificate %];
 [%  END -%]
+[% IF ssl.dhparam -%]
+ssl_dhparam [% ssl.dhparam %];
+[%  END -%]
+
