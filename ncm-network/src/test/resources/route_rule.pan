@@ -16,6 +16,7 @@ prefix "/system/network/interfaces/eth0";
 "route/6" = dict("address", "::5", "prefix", 76, "gateway", "4::1");
 "route/7" = dict("command", "something arbitrary with :");
 "route/8" = dict("address", "default", "gateway", "4.3.2.3", "table", "outside");
+"route/9" = dict("address", "1.2.3.9", "gateway", "4.3.2.9", "table", "outside", "onlink", true);
 
 "rule/0" = dict("command", "something");
 "rule/1" = dict("command", "something with ::");
