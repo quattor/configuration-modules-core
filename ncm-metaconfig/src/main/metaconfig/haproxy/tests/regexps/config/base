@@ -68,6 +68,7 @@ Test for config
 ^backend\ssshproxy$
 ^\s{4}balance\sleastconn$
 ^\s{4}option\stcp-check$
+^\s{4}http-check expect ! status 404$
 ^\s{4}tcp-check\sexpect\sstring\sSSH-2.0-$
 ^\s{4}stick-table\stype\sip\ssize\s1m\speers\smypeers$
 ^\s{4}stick\son\ssrc$
