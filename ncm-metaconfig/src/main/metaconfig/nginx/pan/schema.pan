@@ -6,7 +6,7 @@ include 'pan/types';
     Data types for an nginx server, with proxy and SSL support
 }
 
-type sslprotocol = choice("TLSv1", "TLSv1.1", "TLSv1.2");
+type sslprotocol = choice("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3");
 
 @{ based on Mozilla server side tls intermediate recommendations }
 type cipherstring = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-CHACHA20-POLY1305",
@@ -33,7 +33,7 @@ type httpd_ssl = {
     include basic_ssl
     "active" : boolean = true
     "ciphersuite" : cipherstring[] = list("TLSv1")
-    "protocol" : sslprotocol[] = list("TLSv1", "TLSv1.1", "TLSv1.2")
+    "protocol" : sslprotocol[] = list("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3")
     "prefer_server_ciphers" ? boolean
     "certificate" : string
     "key" : string
@@ -49,6 +49,7 @@ type httpd_ssl = {
     "session_tickets" ? boolean
     "session_timeout" ? string
     "session_cache" ? string
+    "dhparam" ? absolute_file_path
 };
 
 @{ Basic nginx declarations. So far we only need to declare how many

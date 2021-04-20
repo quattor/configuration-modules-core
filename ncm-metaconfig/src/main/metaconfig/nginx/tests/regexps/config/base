@@ -33,7 +33,7 @@ multiline
 ^\s{8}server_name myhost.my.domain;$
 ^\s{8}ssl_verify_client off;$
 ^\s{8}# Watch out!! This list is separated by whitespace!!$
-^\s{8}ssl_protocols TLSv1 TLSv1.1 TLSv1.2;$
+^\s{8}ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;$
 ^\s{8}ssl_certificate /etc/mycert;$
 ^\s{8}ssl_client_certificate /etc/myca;$
 ^\s{8}ssl_certificate_key /etc/mykey;$
