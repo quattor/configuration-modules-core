@@ -613,8 +613,6 @@ sub change
 
         # TODO: process units wrt dependencies?
         if (@units) {
-            # TODO: trap exitcode and stop any further processing in case of error?
-            # CAF::Process logger is sufficient
             systemctl_command_units($self, $change_state->{$state}, @units);
         }
     }
@@ -632,8 +630,6 @@ sub change
 
             # TODO: process units wrt dependencies?
             if (@units) {
-                # TODO: trap exitcode and stop any further processing in case of error?
-                # CAF::Process logger is sufficient
                 systemctl_command_units($self, $change_activation->{$act}, @units);
             }
         }

@@ -240,28 +240,32 @@ Test systemctl_command_units
 
 =cut
 
-my $cmd = "$SYSTEMCTL fake-command -- unit1.type unit2.type";
+my $cmd1 = "$SYSTEMCTL fake-command -- unit1.type";
+my $cmd2 = "$SYSTEMCTL fake-command -- unit2.type";
 my $out = "testok";
-set_command_status($cmd, 0);
-set_desired_output($cmd, $out);
+set_command_status($cmd1, 0);
+set_desired_output($cmd1, $out);
+set_command_status($cmd2, 0);
+set_desired_output($cmd2, $out);
 
 $cmp->{ERROR}= 0;
-my ($ec, $output) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit2.type');
+my ($success, $failure) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit2.type');
 
-is($cmp->{ERROR}, 0, "No errors logged during systemctl_command_units $cmd");
-is($ec, 0, "systemctl_command_units finished with exitcode $ec");
-is($output, $out, "systemctl_command_units finished with output $out");
+is($cmp->{ERROR}, 0, "No errors logged during systemctl_command_units");
+is($success, 2, "systemctl_command_units: $success commands succeeded instead of 2");
+is($failure, 0, "systemctl_command_units: $failure commands failed instead of 0");
 
-$cmd .= " unit3.type";
+my $cmd3 = "$SYSTEMCTL fake-command -- unit3.type";
 $out = "FAIL";
-set_command_status($cmd, 5);
-set_desired_output($cmd, $out);
+set_desired_output($cmd2, $out);
+set_command_status($cmd3, 5);
+set_desired_output($cmd3, $out);
 
-($ec, $output) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit2.type', 'unit3.type');
+($success, $failure) = systemctl_command_units($cmp, 'fake-command', 'unit1.type', 'unit3.type', 'unit2.type');
 
-is($cmp->{ERROR}, 1, "1 error logged during systemctl_command_units $cmd");
-is($ec, 5, "systemctl_command_units finished with exitcode $ec");
-is($output, $out, "systemctl_command_units finished with output $out");
+is($cmp->{ERROR}, 1, "1 errors logged during systemctl_command_units");
+is($success, 2, "systemctl_command_units: $success commands succeeded instead of 2");
+is($failure, 1, "systemctl_command_units: $failure commands failed instead of 1");
 
 =pod
 
@@ -271,7 +275,7 @@ Test systemctl_is_enabled
 
 =cut
 
-$cmd = "$SYSTEMCTL is-enabled -- unit1.type";
+my $cmd = "$SYSTEMCTL is-enabled -- unit1.type";
 $out = "isenabled";
 my $err = "some err data";
 set_command_status($cmd, 0);
