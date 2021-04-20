@@ -8,7 +8,7 @@ multiline
 ^\]$
 ^DATASTORE_CAPACITY_CHECK\s?=\s?"yes"$
 ^DATASTORE_MAD\s?=\s?\[$
-^\s{4}arguments\s?=\s?"-t 15 -d dummy,fs,vmfs,lvm,ceph",$
+^\s{4}arguments\s?=\s?"-t 15 -d dummy,fs,lvm,dev,iscsi_libvirt,vcenter -s shared,ssh,ceph,fs_lvm,qcow2,vcenter",$
 ^\s{4}executable\s?=\s?"one_datastore"$
 ^\]$
 ^DB\s?=\s?\[$
@@ -161,10 +161,14 @@ multiline
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"SYSTEM",$
+^\s{4}clone_target_ssh\s?=\s?"SYSTEM",$
+^\s{4}disk_type_ssh\s?=\s?"FILE",$
 ^\s{4}ds_migrate\s?=\s?"yes",$
 ^\s{4}ln_target\s?=\s?"NONE",$
+^\s{4}ln_target_ssh\s?=\s?"SYSTEM",$
 ^\s{4}name\s?=\s?"shared",$
-^\s{4}shared\s?=\s?"yes"$
+^\s{4}shared\s?=\s?"yes",$
+^\s{4}tm_mad_system\s?=\s?"ssh"$
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"SYSTEM",$
@@ -174,6 +178,7 @@ multiline
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"SYSTEM",$
+^\s{4}driver\s?=\s?"qcow2",$
 ^\s{4}ln_target\s?=\s?"NONE",$
 ^\s{4}name\s?=\s?"qcow2",$
 ^\s{4}shared\s?=\s?"yes"$
@@ -192,11 +197,20 @@ multiline
 ^\s{4}shared\s?=\s?"yes"$
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
+^\s{4}allow_orphans\s?=\s?"mixed",$
 ^\s{4}clone_target\s?=\s?"SELF",$
+^\s{4}clone_target_shared\s?=\s?"SELF",$
+^\s{4}clone_target_ssh\s?=\s?"SYSTEM",$
+^\s{4}disk_type_shared\s?=\s?"rbd",$
+^\s{4}disk_type_ssh\s?=\s?"FILE",$
+^\s{4}driver\s?=\s?"raw",$
 ^\s{4}ds_migrate\s?=\s?"no",$
 ^\s{4}ln_target\s?=\s?"NONE",$
+^\s{4}ln_target_shared\s?=\s?"NONE",$
+^\s{4}ln_target_ssh\s?=\s?"SYSTEM",$
 ^\s{4}name\s?=\s?"ceph",$
-^\s{4}shared\s?=\s?"yes"$
+^\s{4}shared\s?=\s?"yes",$
+^\s{4}tm_mad_system\s?=\s?"ssh,shared"$
 ^\]$
 ^TM_MAD_CONF\s?=\s?\[$
 ^\s{4}clone_target\s?=\s?"SELF",$
@@ -226,8 +240,8 @@ multiline
 ^\s{4}arguments\s?=\s?"-t 15 -r 0 kvm",$
 ^\s{4}default\s?=\s?"vmm_exec/vmm_exec_kvm.conf",$
 ^\s{4}executable\s?=\s?"one_vmm_exec",$
-^\s{4}imported_vms_actions\s?=\s?"terminate, terminate-hard, hold, release, suspend, resume, delete, reboot, reboot-hard, resched, unresched, disk-attach, disk-detach, nic-attach, nic-detach, snap-create, snap-delete",$
-^\s{4}keep_snapshots\s?=\s?"no",$
+^\s{4}imported_vms_actions\s?=\s?"terminate, terminate-hard, hold, release, suspend, resume, delete, reboot, reboot-hard, resched, unresched, disk-attach, disk-detach, nic-attach, nic-detach, snapshot-create, snapshot-delete",$
+^\s{4}keep_snapshots\s?=\s?"yes",$
 ^\s{4}sunstone_name\s?=\s?"KVM"$
 ^\]$
 ^VM_RESTRICTED_ATTR\s?=\s?"CONTEXT/FILES"$

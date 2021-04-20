@@ -997,3 +997,65 @@ $cmds{rpc_del_datastore_cluster}{out} = 1;
 $cmds{rpc_del_host_cluster}{params} = [0, 168];
 $cmds{rpc_del_host_cluster}{method} = "one.cluster.delhost";
 $cmds{rpc_del_host_cluster}{out} = 1;
+
+# Manage VM Groups
+
+$data = <<'EOF';
+NAME = "ha_group"
+AFFINED = "db,apps"
+ANTI_AFFINED = "workers,backups"
+DESCRIPTION = "New HA VM group managed by quattor"
+LABELS = "quattor,quattor/ha_group"
+ROLE = [
+    host_anti_affined = "1, 2, 3",
+    name = "backup",
+    policy = "ANTI_AFFINED"
+]
+ROLE = [
+    host_affined = "4, 5, 6",
+    name = "apps",
+    policy = "AFFINED"
+]
+QUATTOR = 1
+EOF
+$cmds{rpc_create_vmgroup}{params} = [$data];
+$cmds{rpc_create_vmgroup}{method} = "one.vmgroup.allocate";
+$cmds{rpc_create_vmgroup}{out} = 2;
+
+$cmds{rpc_delete_vmgroup}{params} = [1];
+$cmds{rpc_delete_vmgroup}{method} = "one.vmgroup.delete";
+$cmds{rpc_delete_vmgroup}{out} = 1;
+
+$cmds{rpc_list_vmgrouppool}{params} = [-2, -1, -1];
+$cmds{rpc_list_vmgrouppool}{method} = "one.vmgrouppool.info";
+$cmds{rpc_list_vmgrouppool}{out} = <<'EOF';
+<VM_GROUP_POOL><VM_GROUP><ID>1</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>muilt-tierapp</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><ROLES><ROLE><ID><![CDATA[0]]></ID><NAME><![CDATA[worker]]></NAME><POLICY><![CDATA[ANTI_AFFINED]]></POLICY></ROLE></ROLES><TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VM_GROUP></VM_GROUP_POOL>
+EOF
+
+$cmds{rpc_list_vmgroup}{params} = [1];
+$cmds{rpc_list_vmgroup}{method} = "one.vmgroup.info";
+$cmds{rpc_list_vmgroup}{out} = <<'EOF';
+<VM_GROUP><ID>1</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>muilt-tierapp</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>0</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><ROLES><ROLE><ID><![CDATA[0]]></ID><NAME><![CDATA[worker]]></NAME><POLICY><![CDATA[ANTI_AFFINED]]></POLICY></ROLE></ROLES><TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR></TEMPLATE></VM_GROUP>
+EOF
+
+$data = <<'EOF';
+NAME = "ha_group"
+AFFINED = "db,apps"
+ANTI_AFFINED = "workers,backups"
+DESCRIPTION = "New HA VM group managed by quattor"
+LABELS = "quattor,quattor/ha_group"
+ROLE = [
+    host_anti_affined = "1, 2, 3",
+    name = "backup",
+    policy = "ANTI_AFFINED"
+]
+ROLE = [
+    host_affined = "4, 5, 6",
+    name = "apps",
+    policy = "AFFINED"
+]
+QUATTOR = 1
+EOF
+$cmds{rpc_update_vmgroup}{params} = [2, $data, 1];
+$cmds{rpc_update_vmgroup}{method} = "one.vmgroup.update";
+$cmds{rpc_update_vmgroup}{out} = 2;

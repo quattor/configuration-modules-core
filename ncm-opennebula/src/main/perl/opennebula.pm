@@ -40,6 +40,8 @@ Features that are implemented at this moment:
 
 =item * Adding/removing OpenNebula virtual clusters
 
+=item * Adding/removing OpenNebula VM groups and roles
+
 =item * Assign OpenNebula resources to virtual clusters
 
 =item * Assign OpenNebula users to primary groups
@@ -122,7 +124,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.313.0;
+use Net::OpenNebula 0.316.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;

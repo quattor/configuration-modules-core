@@ -186,3 +186,7 @@ prefix "/system/opennebula";
     "hugepages",
 );
 
+"vmgroup" = append(dict(
+    "vmgroup_name", "ha_group",
+    "role", "backup"
+));

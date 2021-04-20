@@ -1,0 +1,20 @@
+[%- role_list = ['affined', 'anti_affined', 'labels'] -%]
+[% FOR vmgroup IN vmgroup.pairs -%]
+NAME = "[% vmgroup.key %]"
+[%    FOR pair IN vmgroup.value.pairs %]
+[%-       SWITCH pair.key -%]
+[%            CASE booleans -%]
+[%                pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
+[%            CASE 'role' -%]
+[%                FOREACH item IN vmgroup.value.${pair.key} -%]
+[%                    pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt'
+                          data=item -%]
+[%                END -%]
+[%            CASE role_list -%]
+[%                pair.key FILTER upper %] = "[% pair.value.join(',') %]"
+[%            CASE -%]
+[%                pair.key FILTER upper %] = "[% pair.value %]"
+[%        END -%]
+[%-    END %]
+[%- END -%]
+QUATTOR = 1
