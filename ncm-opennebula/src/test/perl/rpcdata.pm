@@ -523,6 +523,20 @@ $cmds{rpc_create_newdatastore2}{params} = [$data, -1];
 $cmds{rpc_create_newdatastore2}{method} = "one.datastore.allocate";
 $cmds{rpc_create_newdatastore2}{out} = 103;
 
+$data = <<'EOF';
+NAME = "rdm"
+DATASTORE_CAPACITY_CHECK = "no"
+DISK_TYPE = "BLOCK"
+DS_MAD = "dev"
+LABELS = "quattor,quattor/rdm"
+TM_MAD = "dev"
+TYPE = "IMAGE_DS"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newdatastore3}{params} = [$data, -1];
+$cmds{rpc_create_newdatastore3}{method} = "one.datastore.allocate";
+$cmds{rpc_create_newdatastore3}{out} = 104;
+
 $cmds{rpc_delete_datastore}{params} = [102];
 $cmds{rpc_delete_datastore}{method} = "one.datastore.delete";
 $cmds{rpc_delete_datastore}{out} = 102;
@@ -530,6 +544,10 @@ $cmds{rpc_delete_datastore}{out} = 102;
 $cmds{rpc_delete_datastore2}{params} = [103];
 $cmds{rpc_delete_datastore2}{method} = "one.datastore.delete";
 $cmds{rpc_delete_datastore2}{out} = 103;
+
+$cmds{rpc_delete_datastore3}{params} = [104];
+$cmds{rpc_delete_datastore3}{method} = "one.datastore.delete";
+$cmds{rpc_delete_datastore3}{out} = 104;
 
 $cmds{rpc_list_datastorespool}{params} = [];
 $cmds{rpc_list_datastorespool}{method} = "one.datastorepool.info";
@@ -553,6 +571,12 @@ $cmds{rpc_list_datastore3}{params} = [0];
 $cmds{rpc_list_datastore3}{method} = "one.datastore.info";
 $cmds{rpc_list_datastore3}{out} = <<'EOF';
 <DATASTORE><ID>0</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>system</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[shared]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/0]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>0</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>5454372</TOTAL_MB><FREE_MB>5445072</FREE_MB><USED_MB>9300</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><DS_MIGRATE><![CDATA[YES]]></DS_MIGRATE><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[shared]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE>
+EOF
+
+$cmds{rpc_list_datastore4}{params} = [104];
+$cmds{rpc_list_datastore4}{method} = "one.datastore.info";
+$cmds{rpc_list_datastore4}{out} = <<'EOF';
+<DATASTORE><ID>104</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>rdm</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[dev]]></DS_MAD><TM_MAD><![CDATA[dev]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/104]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>2</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>-1</ID></CLUSTERS><TOTAL_MB>1</TOTAL_MB><FREE_MB>1</FREE_MB><USED_MB>0</USED_MB><IMAGES><ID>136</ID></IMAGES><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><CLONE_TARGET><![CDATA[NONE]]></CLONE_TARGET><DISK_TYPE><![CDATA[BLOCK]]></DISK_TYPE><DS_MAD><![CDATA[dev]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><RESTRICTED_DIRS><![CDATA[/]]></RESTRICTED_DIRS><SAFE_DIRS><![CDATA[/var/tmp]]></SAFE_DIRS><TM_MAD><![CDATA[dev]]></TM_MAD><TYPE><![CDATA[IMAGE_DS]]></TYPE></TEMPLATE></DATASTORE>
 EOF
 
 $data = <<'EOF';

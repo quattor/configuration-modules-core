@@ -166,6 +166,14 @@ prefix "/software/components/opennebula";
             "type", "SYSTEM_DS",
             "clusters", list("default", "red.cluster"),
         ),
+        "rdm", dict(
+            "tm_mad", "dev",
+            "ds_mad", "dev",
+            "type", "IMAGE_DS",
+            "disk_type", "BLOCK",
+            "datastore_capacity_check", false,
+            "labels", list("quattor", "quattor/rdm"),
+        ),
 );
 
 "groups" = dict(

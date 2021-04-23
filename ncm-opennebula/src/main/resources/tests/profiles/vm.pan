@@ -68,6 +68,12 @@ prefix "/hardware";
         "model", "Generic SAS disk",
         "part_prefix", ""
     ),
+    "vdc", dict(
+        "capacity", 20480,
+        "interface", "sas",
+        "model", "Generic SAS disk",
+        "part_prefix", ""
+    ),
 );
 "location" = "cubone hyp";
 "model" = "KVM Virtual Machine";
@@ -141,7 +147,12 @@ prefix "/system/opennebula";
 
 "datastore" = dict(
     "vda", "ceph",
-    "vdb", "default");
+    "vdb", "default",
+    "vdc", "rdm");
+
+"diskrdmpath" = dict(
+    "vdc", "/dev/sdc",
+);
 
 "graphics" = "SPICE";
 

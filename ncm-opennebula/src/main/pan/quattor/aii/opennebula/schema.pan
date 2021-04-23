@@ -78,6 +78,15 @@ type opennebula_vmtemplate_vnet = string{} with {
     true;
 };
 
+type opennebula_rdm_disk = string{} with {
+    foreach (k; v; SELF) {
+        if (! is_absolute_file_path(v)) {
+            error(format("entry: %s in the RDM disk map %s is not a valid file path", v, k));
+        };
+    };
+    true;
+};
+
 type opennebula_vmtemplate_datastore = string{} with {
     # check is all entries in the map have a hardrive
     foreach (k; v; SELF) {
@@ -236,6 +245,12 @@ type opennebula_vmtemplate = {
     "vnet" : opennebula_vmtemplate_vnet
     @{Set the OpenNebula opennebula/datastore name for each vdx}
     "datastore" : opennebula_vmtemplate_datastore
+    @{Set raw device mapping (RDM) for a specific virtual disk, for instance:
+        '/system/opennebula/diskrdmpath/vdd/' = '/dev/sdf';
+     will passthrough the block device to the VM as vdd disk. Disk size is ignored in this case.
+     It requires a RDM datastore.
+     See: https://docs.opennebula.org/5.8/deployment/open_cloud_storage_setup/dev_ds.html}
+    "diskrdmpath" ? opennebula_rdm_disk
     @{Set ignoremac tree to avoid to include MAC values within AR/VM templates}
     "ignoremac" ? opennebula_ignoremac
     @{Set how many queues will be used for the communication between CPUs and virtio drivers.

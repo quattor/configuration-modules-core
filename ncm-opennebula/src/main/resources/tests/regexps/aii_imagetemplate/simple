@@ -1,4 +1,4 @@
-OpenNebula simple image template test
+nOpenNebula simple image template test
 ---
 multiline
 ---
@@ -12,5 +12,17 @@ multiline
 ^LABELS\s?=\s?".+"$
 ^DRIVER\s?=\s?".+"$
 ^FSTYPE\s?=\s?".+"$
+^QUATTOR\s?=\s?\d?\s*$
+^DATASTORE\s?=\s*".+"\s*$
+^TYPE\s?=\s*".+"\s*$
+^PERSISTENT\s?=\s*".+"\s*$
+^DEV_PREFIX\s?=\s*".+"\s*$
+^NAME\s?=\s*".+"\s*$
+^TARGET\s?=\s*".+"\s*$
+^PATH\s?=\s*".+"\s*$
+^DESCRIPTION\s?=\s*".+"\s*$
+^LABELS\s?=\s*".+"\s*$
+^DRIVER\s?=\s*".+"\s*$
+^FSTYPE\s?=\s*".+"\s*$
 ^QUATTOR\s?=\s?\d?\s*$
 ^DATASTORE\s?=\s*".+"\s*$

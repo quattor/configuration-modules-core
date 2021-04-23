@@ -6,7 +6,11 @@ PERSISTENT = "YES"
 DEV_PREFIX = "vd"
 NAME = "[%- fqdn %]_[% pair.key %]"
 TARGET = "[% pair.key %]"
+[%- IF system.opennebula.diskrdmpath.${pair.key}.defined %]
+PATH = "[% system.opennebula.diskrdmpath.${pair.key} %]"
+[%-  ELSE %]
 SIZE = [% hardware.harddisks.${pair.key}.capacity %]
+[%- END %]
 DESCRIPTION = "QUATTOR image for [% fqdn %]: [% pair.key %]"
 [%- IF system.opennebula.labels.defined %]
 LABELS = "[% system.opennebula.labels.join(',') %]"
