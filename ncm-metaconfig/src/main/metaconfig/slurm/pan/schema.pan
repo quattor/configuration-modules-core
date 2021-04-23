@@ -86,7 +86,7 @@ type slurm_scheduler_parameters = {
     'bf_yield_interval' ? long(0..)
     'bf_yield_sleep' ? long(0..)
     'build_queue_timeout' ? long(0..)
-    'default_queue_depth' ? long(0..)
+    '{default_queue_depth}' ? long(0..)
     'defer' ? boolean
     'delay_boot' ? long(0..)
     'default_gbytes' ? boolean
@@ -95,7 +95,7 @@ type slurm_scheduler_parameters = {
     'enable_user_top' ? boolean
     'Ignore_NUMA' ? boolean
     'inventory_interval' ? long(0..)
-    'kill_invalid_depend' ? boolean
+    '{kill_invalid_depend}' ? boolean
     'max_array_tasks' ? long(0..)   # should be smaller than MaxArraySize
     'max_depend_depth' ? long(0..)
     'max_rpc_cnt' ? long(0..)
@@ -179,16 +179,27 @@ type slurm_mpi_params = {
 type slurm_launch_params = {
     'batch_step_set_cpu_freq' ? boolean
     'cray_net_exclusive' ? boolean
+    'disable_send_gids' ? boolean
+    'enable_nss_slurm' ? boolean
     'lustre_no_flush' ? boolean
     'mem_sort' ? boolean
+    'mpir_use_nodeaddr' ? boolean
     'send_gids' ? boolean
     'slurmstepd_memlock' ? boolean
     'slurmstepd_memlock_all' ? boolean
     'test_exec' ? boolean
+    'use_interactive_step' ? boolean
+};
+
+type slurm_authalt_params = {
+    'disable_token_creation' ? boolean
+    'jwt_key' ? absolute_file_path
 };
 
 type slurm_conf_control = {
     'AllowSpecResourcesUsage' ? long(0..1)  # actually a boolean, defaults to 0 for non-Cray systems
+    'AuthAltParameters' ? slurm_authalt_params
+    'AuthAltTypes' ? choice('jwt')
     'AuthInfo' ? string[]
     'AuthType' ? choice('none', 'munge')
     'BackupController' ? string
@@ -196,6 +207,7 @@ type slurm_conf_control = {
     'BurstBufferType' ? choice('none', 'datawarp')
     'CheckpointType' ? choice('blcr', 'none', 'ompi')
     'ChosLoc' ? absolute_file_path  # see https://github.com/scanon/chos
+    'CliFilterPlugins' ? string[]
     'ClusterName' : string
     'CompleteWait' ? long(0..65535)
     'ControlMachine' : string
@@ -231,7 +243,7 @@ type slurm_conf_control = {
     'GroupUpdateForce' ? boolean # 0/1
     'GroupUpdateTime' ? long(0..)
     'JobCheckpointDir' ? absolute_file_path
-    'JobContainerType' ? choice('cncu', 'none')
+    'JobContainerType' ? choice('cncu', 'tmpfs', 'none')
     'JobCredentialPrivateKey' ? absolute_file_path
     'JobCredentialPublicCertificate' ? absolute_file_path
     'JobFileAppend' ? boolean # 0/1
@@ -304,6 +316,20 @@ type slurm_conf_prolog_epilog = {
     'TaskProlog' ? absolute_file_path
 };
 
+type slurm_ctld_parameters = {
+    'allow_user_triggers' ? boolean
+    'cloud_dns' ? boolean
+    'cloud_reg_addrs' ? boolean
+    'enable_configless' ? boolean
+    'idle_on_node_suspend' ? boolean
+    'power_save_interval' ? long(0..)
+    'power_save_min_interval' ? long(0..)
+    'max_dbd_msg_action' ? choice('discard', 'exit')
+    'preempt_send_user_signal' ? boolean
+    'reboot_from_controller' ? boolean
+    'user_resv_delete' ? boolean
+};
+
 type slurm_conf_process = {
     'MCSParameters' ? dict # see https://slurm.schedmd.com/mcs.html
     'MCSPlugin' ? choice( 'none', 'account', 'group', 'user')
@@ -313,6 +339,7 @@ type slurm_conf_process = {
 
     'SlurmUser' ? string
     'SlurmdUser' ? string
+    'SlurmctldParameters' ? slurm_ctld_parameters
     'SlurmctldPidFile' ? absolute_file_path
     'SlurmctldPlugstack' ? string[]
     @{a port range}
@@ -641,6 +668,8 @@ type slurm_dbd_conf = {
     'ArchiveSuspend' ? boolean
     'ArchiveTXN' ? boolean
     'ArchiveUsage' ? boolean
+    'AuthAltParameters' ? slurm_authalt_params
+    'AuthAltTypes' ? choice('jwt')
     'AuthInfo' ? string
     'AuthType' ? choice('none', 'munge')
     'CommitDelay' ? long(1..)
@@ -686,4 +715,41 @@ type slurm_dbd_conf = {
     'TCPTimeout' ? long(0..)
     'TrackWCKey' ? boolean
     'TrackSlurmctldDown' ? boolean
+};
+
+type slurm_job_container_per_node_conf = {
+    'AutoBasePath' ? boolean
+    'Basepath' ? absolute_file_path
+    'InitScript' ? absolute_file_path
+};
+
+type slurm_job_container_node_conf = {
+    include slurm_job_container_per_node_conf
+    'NodeName' : string[]
+};
+
+type slurm_job_container_conf = {
+    'Default' ? slurm_job_container_per_node_conf
+    'Nodes' ? slurm_job_container_node_conf[]
+};
+
+type slurm_gres_autodetect_conf = {
+    'AutoDetect' ? choice('nvml', 'rsmi', 'off')
+};
+
+type slurm_gres_per_node_conf = {
+    include slurm_gres_autodetect_conf
+    'NodeName' : string[]
+    'Cores' ? long[]
+    'Count' ? long(0..)
+    'File' ? absolute_file_path
+    'Flags' ? choice('CountOnly')[]
+    'Links' ? long(0..)[]
+    'Name' ? choice('gpu', 'mps', 'nic', 'mic')
+    'Type' ? string
+};
+
+type slurm_gres_conf = {
+    'Default' ? slurm_gres_autodetect_conf
+    'Nodes' ? slurm_gres_per_node_conf[]
 };

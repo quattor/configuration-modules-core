@@ -7,6 +7,7 @@
         JobComp = 'jobcomp'
         Scheduler = 'sched'
         Storage = 'accounting_storage' # from dbd
+        AuthAlt = 'auth'
     };
     IF shortname == 'DefaultStorage';
         prefix = '';

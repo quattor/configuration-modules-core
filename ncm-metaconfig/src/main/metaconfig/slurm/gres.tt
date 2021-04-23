@@ -1,0 +1,8 @@
+[%  FOREACH pair IN CCM.contents.Default %]
+[%     pair.key %]=[% pair.value -%]
+[%- END %]
+[%  FOREACH node IN CCM.contents.Nodes %]
+NodeName=[% node.NodeName.join(',') %] [% -%]
+[%- node.delete('NodeName'); 
+    INCLUDE 'metaconfig/slurm/params.tt' data=node boolvalue=1 join=' ' -%]
+[%- END %]

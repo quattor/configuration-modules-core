@@ -17,6 +17,8 @@ JobCompType=jobcomp/filetxt
 
 # control
 
+AuthAltParameters=jwt_key=/etc/slurm/jwt.key
+AuthAltTypes=auth/jwt
 AuthType=auth/munge
 ClusterName=thecluster
 ControlMachine=master.example.com
@@ -27,7 +29,9 @@ FirstJobId=1
 GroupUpdateForce=NO
 GroupUpdateTime=600
 JobCheckpointDir=/var/spool/slurm/checkpoint
+JobContainerType=job_container/tmpfs
 JobSubmitPlugins=lua,pbs
+LaunchParameters=use_interactive_step
 MailProg=/bin/mail
 MaxJobCount=5000
 MaxJobId=9999999
@@ -78,6 +82,7 @@ PriorityWeightJobSize=2500
 # process
 
 SlurmUser=slurm
+SlurmctldParameters=power_save_interval=20,preempt_send_user_signal
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmdPidFile=/var/run/slurmd.pid
