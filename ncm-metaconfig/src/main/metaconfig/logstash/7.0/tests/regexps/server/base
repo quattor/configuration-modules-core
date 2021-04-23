@@ -43,18 +43,28 @@ multiline
 ^\s{12}break_on_match => true$
 ^\s{12}named_captures_only => true$
 ^\s{12}patterns_dir => \[ "/usr/share/grok" \]$
+^\s{12}tag_on_failure => \[ "sometag" \]$
+^\s{12}overwrite => \[ "somefield" \]$
 ^\s{12}match => \{$
 ^\s{16}"message" => \["%\{RSYSLOGPREFIX\}%\{SSH_MSG\}","%\{RSYSLOGPREFIX\}%\{MODULECMD_MSG\}","%\{RSYSLOGPREFIX\}%\{LMOD_MSG\}","%\{RSYSLOGPREFIX\}%\{NFS_MSG\}","%\{RSYSLOGPREFIX\}%\{CEPH_MSG\}","%\{RSYSLOGPREFIX\}%\{OPENNEBULA_MSG\}","%\{RSYSLOGPREFIX\}%\{JUBE_MSG\}","%\{RSYSLOGPREFIX\}%\{KEYVALUE_MSG\}","%\{RSYSLOGPREFIX\}%\{QUATTOR_MSG\}","%\{RSYSLOGPREFIX\}%\{SNOOPY_MSG\}","%\{RSYSLOGCUSTOM\}"\]$
 ^\s{12}\}$
+^\s{12}target => "somespace"$
+^\s{12}timeout_scope => "event"$
+^\s{12}timeout_millis => 1000$
 ^\s{8}\}$
 ^\s{8}kv \{$
 ^\s{12}source => "KEY_EQ_VALUEDATA"$
+^\s{8}\}$
+^\s{8}geoip \{$
+^\s{12}source => "fwsrc"$
+^\s{12}fields => \[ "country_name", "city_name" \]$
 ^\s{8}\}$
 ^\s{8}date \{$
 ^\s{12}match => \[ "syslog_timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ" \]$
 ^\s{8}\}$
 ^\s{8}if \('_grokparsefailure' not in \[tags\]\) \{$
 ^\s{12}mutate \{$
+^\s{16}strip => \[ "@message" \]$
 ^\s{16}replace => \{$
 ^\s{16}\s{4}"@source_host" => "%\{syslog_hostname\}"$
 ^\s{16}\s{4}"@message" => "%\{syslog_message\}"$
@@ -101,9 +111,7 @@ multiline
 ^output \{$
 ^\s{4}elasticsearch \{$
 ^\s{8}template_overwrite => true$
-^\s{8}document_type => "%\{@type\}"$
 ^\s{8}index => "%\{\[@metadata\]\[target_index\]\}"$
 ^\s{8}hosts => \[ "localhost:9200" \]$
-^\s{8}flush_size => 5000$
 ^\s{4}\}$
 ^\}$

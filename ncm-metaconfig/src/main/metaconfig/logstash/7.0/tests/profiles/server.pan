@@ -72,9 +72,18 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 "received_at", "%{@timestamp}",
                 "received_from", "%{@source_host}",
                 ),
+            "tag_on_failure", list('sometag'),
+            "overwrite", list('somefield'),
+            "target", "somespace",
+            "timeout_scope", "event",
+            "timeout_millis", 1000,
             )),
         dict("kv", dict(
             "source", "KEY_EQ_VALUEDATA",
+            )),
+        dict("geoip", dict(
+            "source", "fwsrc",
+            "fields", list("country_name", "city_name"),
             )),
         dict("date", dict(
             "match", dict(
@@ -96,6 +105,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                     "name", "@message",
                     "pattern", "%{syslog_message}"),
                 ),
+            "strip", list("@message"),
             )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(
@@ -164,7 +174,6 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 # reset the output, to remove the GELF output
 "output" = dict("plugins", list(dict(
     "elasticsearch", dict(
-        "flush_size", 5000,
         "hosts", list("localhost:9200"),
         "template_overwrite", true,
         "index", "%{[@metadata][target_index]}",

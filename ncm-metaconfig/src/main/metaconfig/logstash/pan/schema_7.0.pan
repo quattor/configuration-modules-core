@@ -234,6 +234,12 @@ type logstash_filter_grok = {
     "keep_empty_captures" ? boolean
     "named_captures_only" : boolean = true
     "patterns_dir" ? string[]
+    "overwrite" ? string[]
+    "tag_on_failure" ? string[]
+    "tag_on_timeout" ? string[]
+    "timeout_millis" ? long
+    "timeout_scope" ? choice('event', 'pattern')
+    "target" ? string
 };
 
 type logstash_filter_bytes2human = {
@@ -268,6 +274,7 @@ type logstash_filter_mutate = {
     "rename" ? string{}
     "split" ? string{}
     "update" ? string{}
+    "strip" ? string[]
     "exclude_tags" ? string[] with {
         deprecated(0, 'replace with _conditional e.g. <"tagname" not in [tags]> in 2.0'); true;
     }
@@ -281,8 +288,8 @@ type logstash_filter_kv = {
     "prefix" ? string
     "source" ? string
     "target" ? string
-    "trim" ? string
-    "trimkey" ? string
+    "trim_value" ? string
+    "trim_key" ? string
     "value_split" ? string
 };
 
@@ -291,6 +298,17 @@ type logstash_filter_json = {
     "source" : string
     "target" : string
     "remove_field" ? string[]
+};
+
+type logstash_filter_geoip = {
+    include logstash_filter_plugin_common
+    "cache_size" ? long
+    "database" ? absolute_file_path
+    "default_database_type" ? choice('City', 'ASN')
+    "fields" ? string[]
+    "source" : string
+    "tag_on_failure" ? string[]
+    "target" ? string
 };
 
 type logstash_filter_plugin = {
@@ -304,6 +322,7 @@ type logstash_filter_plugin = {
     "kv" ? logstash_filter_kv
     "bytes2human" ? logstash_filter_bytes2human
     "json" ? logstash_filter_json
+    "geoip" ? logstash_filter_geoip
 } with length(SELF) == 1;
 
 @{ Common output }
