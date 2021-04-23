@@ -12,7 +12,8 @@ prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/in
 "input3/udp/Port" = list(514, 515);
 
 prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/template";
-"LOGSTASH/string" = '<%PRI%>1 %timegenerated:::date-rfc3339% %HOSTNAME% %syslogtag% - %APP-NAME%: %msg:::drop-last-lf%\n';
+"LOGSTASH/string" =
+    '<%PRI%>1 %timegenerated:::date-rfc3339% %HOSTNAME% %syslogtag% - %APP-NAME%: %msg:::drop-last-lf%\n';
 
 prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/ruleset/rule1";
 "queue/size" = 10000;
@@ -30,7 +31,9 @@ prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/ru
 
 
 prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/ruleset/varlog";
-"action/0/prifile/{/var/log/messages}" = list("*.info", "mail.none", "authpriv.none", "cron.none", "uucp.*", "news.crit");
+"action/0/prifile/{/var/log/messages}" = list(
+    "*.info", "mail.none", "authpriv.none", "cron.none", "uucp.*", "news.crit"
+);
 "action/1/prifile/{/var/log/secure}" = list("authpriv.*", "stop");
 "action/1/prifile/{/var/log/boot.log}" = list("local7.*", "stop");
 "action/1/prifile/{/var/log/cron.log}" = list("cron.*", "stop");
@@ -51,6 +54,7 @@ prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents/mo
 "input/tcp/PermittedPeer" = list("host.domain", "otherhost.domain");
 "input/klog" = dict();
 "input/mark/MarkMessagePeriod" = 1800;
+"input/pstats/Interval" = 600;
 "action/file/dirCreateMode" = 0750;
 
 prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents";
