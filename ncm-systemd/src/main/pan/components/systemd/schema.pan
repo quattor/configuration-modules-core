@@ -356,6 +356,57 @@ type ${project.artifactId}_unitfile_config_socket = {
 };
 
 @documentation{
+the [mount] section
+http://www.freedesktop.org/software/systemd/man/systemd.mount.html
+}
+type ${project.artifactId}_unitfile_config_mount = {
+    include ${project.artifactId}_unitfile_config_systemd_exec
+    include ${project.artifactId}_unitfile_config_systemd_kill
+    'What': string
+    'Where': absolute_file_path
+    'Type' ? string
+    'Options' ? string[]
+    'SloppyOptions' ? boolean
+    'LazyUnmount' ? boolean
+    'ReadWriteOnly' ? boolean
+    'ForceUnmount' ? boolean
+    'DirectoryMode' ? type_octal_mode
+    'TimeoutSec' ? long(0..)
+};
+
+@documentation{
+the [Automount] section
+http://www.freedesktop.org/software/systemd/man/systemd.automount.html
+}
+type ${project.artifactId}_unitfile_config_automount = {
+    'Where': absolute_file_path
+    'DirectoryMode' ? type_octal_mode
+    'TimeoutSec' ? long(0..)
+};
+
+@documentation{
+the [Timer] section
+http://www.freedesktop.org/software/systemd/man/systemd.timer.html
+}
+type ${project.artifactId}_unitfile_config_timer = {
+    'OnActiveSec' ? long(0..)
+    'OnBootSec' ? long(0..)
+    'OnStartupSec' ? long(0..)
+    'OnUnitActiveSec' ? long(0..)
+    'OnUnitInactiveSec' ? long(0..)
+    'OnCalendar' ? string[]
+    'AccuracySec' ? long(0..)
+    'RandomizedDelaySec' ? long(0..)
+    'FixedRandomDelay' ? boolean
+    'OnClockChange' ? boolean
+    'OnTimezoneChange' ? boolean
+    'Unit' ? string
+    'Persistent' ? boolean
+    'WakeSystem' ? boolean
+    'RemainAfterElapse' ? boolean
+};
+
+@documentation{
 Unit configuration sections
     includes, unit and install are type agnostic
         unit and install are mandatory, but not enforced by schema (possible issues in case of replace=true)
@@ -368,6 +419,9 @@ type ${project.artifactId}_unitfile_config = {
     'install' ? ${project.artifactId}_unitfile_config_install
     'service' ? ${project.artifactId}_unitfile_config_service
     'socket' ? ${project.artifactId}_unitfile_config_socket
+    'mount' ? ${project.artifactId}_unitfile_config_mount
+    'automount' ? ${project.artifactId}_unitfile_config_automount
+    'timer' ? ${project.artifactId}_unitfile_config_timer
     'unit' ? ${project.artifactId}_unitfile_config_unit
 };
 
@@ -409,7 +463,7 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
-    "type" : choice('service', 'target', 'sysv', 'socket') = 'service'
+    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer') = 'service'
     "startstop" : boolean = true
     "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
     @{unitfile configuration}
@@ -423,4 +477,14 @@ type ${project.artifactId}_component = {
     "unconfigured" : string = 'ignore' with match (SELF, '^(ignore|enabled|disabled|on|off)$') # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
     "unit" ? ${project.artifactId}_unit_type{}
+} with {
+    foreach(name; unit; SELF["unit"]) {
+        if (unit["type"] == "mount" && exists(unit["file"]) && exists(unit["file"]["config"]["mount"])) {
+            goodname = systemd_make_mountunit(unit["file"]["config"]["mount"]["Where"]);
+            if(goodname != name) {
+                error(format('Incorrect name for mount unit, the name must match Where: %s vs %s', name, goodname));
+            };
+        };
+    };
+    true;
 };
