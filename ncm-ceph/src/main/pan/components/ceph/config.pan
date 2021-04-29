@@ -5,7 +5,7 @@
 
 unique template components/${project.artifactId}/config;
 
-variable CEPH_SCHEMA_VERSION ?= 'v1';
+variable CEPH_SCHEMA_VERSION ?= 'v2';
 
 include if_exists('components/${project.artifactId}/site-config');
 include format('components/${project.artifactId}/%s/schema', CEPH_SCHEMA_VERSION);
