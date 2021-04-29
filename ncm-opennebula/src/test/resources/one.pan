@@ -30,6 +30,18 @@ prefix "/software/components/opennebula/oned";
 "default_device_prefix" = "vd";
 "onegate_endpoint" = "http://hyp004.cubone.os:5030";
 
+prefix "/software/components/opennebula/monitord";
+"db" = dict(
+    "connections", 10,
+);
+"log" = dict(
+    "system", "syslog",
+    "debug_level", 5,
+);
+"network" = dict(
+    "address", "192.168.0.2",
+);
+
 prefix "/software/components/opennebula/sunstone";
 "host" = "0.0.0.0";
 "tmpdir" = "/tmp";

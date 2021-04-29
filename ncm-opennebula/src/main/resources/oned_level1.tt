@@ -1,5 +1,9 @@
-[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost', 'disk_cost', 'start'] -%]
-[%- booleans = ['shared', 'persistent_only', 'keep_snapshots', 'ds_migrate', 'public'] -%]
+[%- digits = ['port', 'debug_level', 'zone_id', 'cpu_cost', 'memory_cost', 'disk_cost', 'start',
+              'broadcast_timeout_ms', 'election_timeout_ms', 'limit_purge', 'log_purge_timeout',
+              'log_retention', 'xmlrpc_timeout_ms', 'threads', 'connections',
+              'beacon_host', 'monitor_host', 'monitor_vm', 'state_vm', 'sync_state_vm', 'system_host'] -%]
+[%- booleans = ['shared', 'persistent_only', 'keep_snapshots', 'ds_migrate', 'public', 'password_change',
+                'driver_managed_groups', 'compare_binary'] -%]
 [%- comma_list_attrs = ['imported_vms_actions', 'required_attrs', 'app_actions', 'host_affined', 'host_anti_affined'] -%]
 [
 [% FILTER indent -%]

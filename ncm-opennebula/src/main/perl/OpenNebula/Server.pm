@@ -41,7 +41,7 @@ Restarts C<OpenNebula> service after any configuration change.
 sub restart_opennebula_service {
     my ($self, $service) = @_;
     my $srv;
-    if ($service eq "oned") {
+    if ($service eq "oned" or $service eq "monitord") {
         $srv = CAF::Service->new(['opennebula'], log => $self);
     } elsif ($service eq "sunstone") {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);

@@ -1,0 +1,13 @@
+[%- monitord_section = ['db', 'log', 'network', 'probes_period'] -%]
+[%- FOR pair IN monitord.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE monitord_section -%]
+[%             pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt'
+                                      data=monitord.${pair.key} -%]
+[%         CASE 'im_mad' -%]
+[%-            FOREACH item IN monitord.${pair.key} -%]
+[%                 pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt'
+                                          data=item -%]
+[%             END -%]
+[%     END -%]
+[%- END -%]
