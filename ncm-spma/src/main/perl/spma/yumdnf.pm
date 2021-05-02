@@ -20,6 +20,9 @@ use constant REPO_INCLUDE => 0;
 
 use constant MODULES_TREE => "/software/modules";
 
+# package-cleanup --leaves really does not what it says. it doesn't even do orphans
+use constant LEAF_PACKAGES => [qw(dnf spmaleaves)];
+
 # Completes any pending transactions
 sub _do_complete_transaction
 {

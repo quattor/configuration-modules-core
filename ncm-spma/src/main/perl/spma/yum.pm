@@ -683,7 +683,7 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new($self->_set_yum_config(LEAF_PACKAGES),
+    my $out = CAF::Process->new($self->_set_yum_config($self->LEAF_PACKAGES),
                                 keeps_state => 1,
                                 log => $self)->output();
 
