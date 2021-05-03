@@ -17,6 +17,8 @@
 #    Modifications:
 #      run method prints name;arch format
 #      rename classes and name/aliases
+#      patches of https://github.com/rpm-software-management/dnf-plugins-core/pull/399/ to return list of
+#        cyclic sets in custom format
 import dnf
 import dnf.sack
 import dnf.cli
@@ -77,8 +79,7 @@ class SpmaLeavesCommand(dnf.cli.Command):
     def kosaraju(self, graph, rgraph):
         """
         Run Kosaraju's algorithm to find strongly connected components
-        in the graph, and return the list of nodes in the components
-        without any incoming edges.
+        in the graph, and return the components without any incoming edges.
         """
         N = len(graph)
         rstack = []
@@ -145,15 +146,20 @@ class SpmaLeavesCommand(dnf.cli.Command):
 
             sccredges.difference_update(scc)
             if not sccredges:
-                leaves.extend(scc)
+                leaves.append(scc.copy())
             del scc[:]
             sccredges.clear()
 
         return leaves
 
-    def findleaves(self):
-        (packages, depends, rdepends) = self.buildgraph()
-        return [packages[i] for i in self.kosaraju(depends, rdepends)]
-
     def run(self):
-        print("\n".join(["%s;%s" % (x.name, x.arch) for x in self.findleaves()]))
+        (packages, depends, rdepends) = self.buildgraph()
+        leaves = self.kosaraju(depends, rdepends)
+        for scc in leaves:
+            for i, pkg in enumerate(scc):
+                real_pkg = packages[pkg]
+                scc[i] = "%s;%s" % (real_pkg.name, real_pkg.arch)
+            scc.sort()
+        leaves.sort(key=lambda scc: scc[0])
+
+        print("\n".join(["::".join(scc) for scc in leaves]))

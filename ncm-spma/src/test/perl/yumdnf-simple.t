@@ -22,6 +22,7 @@ use Test::MockModule;
 use NCM::Component::spma;
 use Readonly;
 use File::Path qw(mkpath rmtree);
+use Set::Scalar;
 
 use Test::Quattor::TextRender::Base;
 
@@ -57,6 +58,18 @@ my $cfg = get_config_for_profile("yumdnf_simple");
 my $cmpfull = NCM::Component::spma->new("spma");
 
 is($cmpfull->Configure($cfg), 'ConfigureYumdnf', 'yumdnf loaded via SPMA_BACKEND');
+
+=item test SCC handling
+
+=cut
+
+my $cands = Set::Scalar->new('xyz;i386', 'klm;x86_64::abc;i686', 'p1;123::p2;456');
+my $wanted = Set::Scalar->new('abc', 'def');
+my $rem = $cmpfull->_pkg_rem_calc($cands, $wanted);
+
+is($rem, Set::Scalar->new('xyz;i386', 'p1;123', 'p2;456'),
+   "Properly detect all scc components as single false positive and report the leftover sccs separately");
+
 
 =item test modularity code
 

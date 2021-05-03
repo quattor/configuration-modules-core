@@ -675,6 +675,25 @@ sub versionlock
     return 1;
 }
 
+# return package to remove
+#   candidates are (non-trivial) values from the leaves selection command (name;arch format)
+#   wanted is list of packages that spma should install (name and also name;arch format)
+sub _pkg_rem_calc
+{
+    my ($self, $candidates, $wanted) = @_;
+
+    my $false_positives = Set::Scalar->new();
+    foreach my $pkg (@$candidates) {
+        my $name = (split(/;/, $pkg))[0];
+        if ($wanted->has($name)) {
+            $false_positives->insert($pkg);
+        }
+    }
+
+    return $candidates - $false_positives;
+};
+
+
 # Returns the set of packages to remove. A package must be removed if
 # it is a leaf package and is not listed in $wanted, or if its
 # architecture doesn't match the architectures specified in $wanted
@@ -696,17 +715,9 @@ sub packages_to_remove
     # garbage.
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
 
-    my $candidates = $leaves-$wanted;
+    my $candidates = $leaves - $wanted;
 
-    my $false_positives = Set::Scalar->new();
-    foreach my $pkg (@$candidates) {
-        my $name = (split(/;/, $pkg))[0];
-        if ($wanted->has($name)) {
-            $false_positives->insert($pkg);
-        }
-    }
-
-    return $candidates-$false_positives;
+    return $self->_pkg_rem_calc($candidates, $wanted);
 }
 
 # Queries for packages packages that depend on $rm, and if there is a
