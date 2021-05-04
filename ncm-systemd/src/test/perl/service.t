@@ -138,6 +138,15 @@ is_deeply($gathered_configured_units, {
         shortname => "othername2",
         possible_missing => 0,
     },
+    'test_4_no_restart.service' => {
+        name => "test_4_no_restart.service",
+        state => $STATE_ENABLED,
+        targets => ["multi-user.target"],
+        startstop => 1,
+        type => $TYPE_SERVICE,
+        shortname => "test_4_no_restart",
+        possible_missing => 0,
+    },
     'test_off.service' => { # from ncm-systemd
         name => "test_off.service",
         state => $STATE_MASKED,
@@ -162,6 +171,7 @@ is_deeply($gathered_configured_units, {
 is_deeply(\@uf_write, [
               ['othername2.service', 1, '.old', {service => {some1 => "data1"}}, {a1 => 'b1'}],
               ['test3_only.service', 0, '.old', {service => {some => "data"}}, {a => 'b'}],
+              ['test_4_no_restart.service', 1, '.old', {service => {some1 => "data1"}, unit => {RefuseManualStart => 1}}, {a1 => 'b1'}],
           ], "configured unitfiles initialized as expected");
 
 # the entries in uf_write show that these have a file/ subtree
