@@ -316,13 +316,15 @@ fi
             </postinstallScriptlet>
             <preremoveScriptlet>
               <script>
-if [ -x /usr/bin/dnf ]; then
-    # from dnf.const.PLUGINPATH
-    pylib=$(/usr/bin/python3 -c 'import distutils.sysconfig;print(distutils.sysconfig.get_python_lib())')
-    plugin="$pylib/dnf-plugins/spmaleaves.py"
-    if [ -f $plugin ]; then
-        rm -f $plugin
-        rm -f "$pylib"/dnf-plugins/__pycache__/spmaleaves.*.pyc
+if [ $1 == 0 ]; then
+    if [ -x /usr/bin/dnf ]; then
+        # from dnf.const.PLUGINPATH
+        pylib=$(/usr/bin/python3 -c 'import distutils.sysconfig;print(distutils.sysconfig.get_python_lib())')
+        plugin="$pylib/dnf-plugins/spmaleaves.py"
+        if [ -f $plugin ]; then
+            rm -f $plugin
+            rm -f "$pylib"/dnf-plugins/__pycache__/spmaleaves.*.pyc
+        fi
     fi
 fi
               </script>
