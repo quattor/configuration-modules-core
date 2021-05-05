@@ -338,7 +338,7 @@ sub execute_yum_command
     if ($? ||
         ($err && $err =~ m{^\s*(
          Error |
-         Failed |
+         Failed (?! (?: \s+ (?: loading \s+ plugin \s+))) |
          (?:Could \s+ not \s+ match) |
          (?:Transaction \s+ encountered .* error) |
          (?:Unknown \s+ group \s+  package \s+ type) |
@@ -892,7 +892,7 @@ sub update_pkgs
         my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
         $self->$clean_cache_method() or return 0;
 
-        $self->make_cache($purge) or return 0;
+        $self->make_cache() or return 0;
     };
 
     # Versionlock is determined based on all configured packages
