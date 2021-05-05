@@ -14,6 +14,8 @@ use NCM::Component;
 use LC::File;
 use LC::Check;
 use LC::Process;
+use EDG::WP4::CCM::CacheManager::Encode qw/BOOLEAN/;
+
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
@@ -67,8 +69,23 @@ sub Configure {
             $resolv .= "nameserver $srvr\n";
         }
     }
+
+    # Configuration options
     if ($inf->{search}) {
         $resolv .= "search " . join(" ", @{$inf->{search}}) . "\n";
+    }
+    if ($config->elementExists("$path/options")) {
+        my $options = $config->getElement("$path/options");
+        while ($options->hasNextElement()) {
+            my $entry = $options->getNextElement();
+            my $name = $entry->getName();
+            my $value = $entry->getValue();
+            if ($entry->isType(BOOLEAN)) {
+                $resolv .= "options $name\n";
+            } else {
+                $resolv .= "options $name:$value\n";
+            }
+        }
     }
 
     my $servers_file = '/var/spool/dnscache/servers/@';
