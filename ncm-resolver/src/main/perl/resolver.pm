@@ -2,33 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the EU DataGrid Software License.  You should
-# have received a copy of the license with this program, and the license
-# is published at http://eu-datagrid.web.cern.ch/eu-datagrid/license.html.
-#
-# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
-# CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
-#
-# THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE AND ANY WARRANTY OF NON-INFRINGEMENT, ARE
-# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THIS
-# SOFTWARE MAY BE REDISTRIBUTED TO OTHERS ONLY BY EFFECTIVELY USING
-# THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
-# TERMS THAT MAY APPLY.
-#
-###############################################################################
-
 package NCM::Component::resolver;
 
 #
@@ -44,6 +17,7 @@ use LC::Process;
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 ##########################################################################
 sub Configure {
@@ -116,7 +90,7 @@ sub Configure {
         }
         return 0;
     } else {
-        $self->log("host resolution appears to be working");
+        $self->info("host resolution appears to be working");
     }
 
     my $ret = LC::Check::file("/etc/resolv.conf",
@@ -126,7 +100,7 @@ sub Configure {
                               mode => '0444');
     if (defined $ret) {
         if ($ret > 0) {
-            $self->log("updated resolv.conf");
+            $self->info("updated resolv.conf");
         }
     } else {
         $self->error("failed to update resolv.conf: $!");
@@ -173,9 +147,9 @@ sub change_dnscache {
                                 mode  => '0444');
     if (defined $ret) {
         if ($ret == 0) {
-            $self->log("$servers_file unchanged");
+            $self->verbose("$servers_file unchanged");
         } else {
-            $self->log("updated $servers_file");
+            $self->info("updated $servers_file");
 
             my $errs = "";
             my $out= "";
@@ -185,7 +159,7 @@ sub change_dnscache {
                 $self->error("failed to restart dnscache: $errs");
                 return 0;
             } else {
-                $self->log("restarted dnscache");
+                $self->info("restarted dnscache");
             }
         }
     } else {
