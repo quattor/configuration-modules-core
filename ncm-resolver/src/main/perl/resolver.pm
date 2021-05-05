@@ -12,8 +12,8 @@ use strict;
 use Socket;
 use NCM::Component;
 use LC::File;
-use LC::Check;
-use LC::Process;
+use CAF::FileWriter;
+use CAF::Process;
 use EDG::WP4::CCM::CacheManager::Encode qw/BOOLEAN/;
 
 use vars qw(@ISA $EC);
@@ -110,17 +110,16 @@ sub Configure {
         $self->info("host resolution appears to be working");
     }
 
-    my $ret = LC::Check::file("/etc/resolv.conf",
-                              contents => $resolv,
-                              owner => 'root',
-                              group => 'root',
-                              mode => '0444');
-    if (defined $ret) {
-        if ($ret > 0) {
-            $self->info("updated resolv.conf");
-        }
-    } else {
-        $self->error("failed to update resolv.conf: $!");
+    my $fh = CAF::FileWriter->open("/etc/resolv.conf",
+                                   owner => 'root',
+                                   group => 'root',
+                                   mode => '0444',
+                                   log => $self,
+        );
+    print $fh $resolv;
+    if ($fh->close()) {
+        my $msg = $NoAction ? "Would update" : "Updated";
+        $self->info("$msg resolv.conf");
     }
 
     return 1;
@@ -133,14 +132,14 @@ sub check_dns_servers {
 
     my $working_servers = 0;
     foreach my $testserver (@servers) {
-        my $out = "";
-        my $rc = LC::Process::execute(["/usr/bin/host", $host, $testserver],
-                                      stderr => 'stdout',
-                                      stdout => \$out);
-        if (!$rc || $out =~ /timed out/) {
+        my $proc = CAF::Process->new(["/usr/bin/host", $host, $testserver],
+                                     log => $self,
+            );
+        my $out = $proc->output;
+        if ($? || $out =~ /timed out/) {
             $self->warn("Looking up $host on $testserver failed with output: $out");
         } else {
-            $self->debug(1, "Looking up $host on $testserver succeeded");
+            $self->debug(1, "Looking up $host on $testserver succeeded with output: $out");
             $working_servers += 1;
         }
     }
@@ -157,30 +156,33 @@ sub check_dns_servers {
 sub change_dnscache {
     my ($self, $inf, $servers_file, @servers) = @_;
     my $content = join("\n", @servers) . "\n";
-    my $ret = LC::Check::file($servers_file,
-                                contents => $content,
-                                owner => 'root',
-                                group => 'root',
-                                mode  => '0444');
-    if (defined $ret) {
-        if ($ret == 0) {
-            $self->verbose("$servers_file unchanged");
-        } else {
-            $self->info("updated $servers_file");
+    my $fh = CAF::FileWriter->new($servers_file,
+                                  owner => 'root',
+                                  group => 'root',
+                                  mode  => '0444',
+                                  log => $self,
+        );
+    print $fh $content;
+    if ($fh->close()) {
+        my $msg = $NoAction ? "Would have " : "";
+        $self->info($msg . "updated $servers_file");
 
-            my $errs = "";
-            my $out= "";
-            my $rc = LC::Process::execute(["/etc/init.d/dnscache", "restart" ], stderr => \$errs, stdout => \$out);
-            $self->debug(5, "restart dnscache said: $out");
-            if (!$rc) {
-                $self->error("failed to restart dnscache: $errs");
-                return 0;
-            } else {
-                $self->info("restarted dnscache");
-            }
+        my $errs = "";
+        my $out = "";
+        my $proc = CAF::Process->new(["/etc/init.d/dnscache", "restart"],
+                                     stdout => \$out, stderr => \$errs,
+                                     log => $self,
+            );
+        $self->debug(1, "restart dnscache said: $out");
+        $proc->execute();
+        if ($?) {
+            $self->error("failed to restart dnscache: $errs");
+            return 0;
+        } else {
+            $self->info($msg . "restarted dnscache");
         }
     } else {
-        $self->error("failed to update $servers_file: $!");
+        $self->verbose("$servers_file unchanged");
     }
 }
 
