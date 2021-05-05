@@ -8,6 +8,7 @@ use Set::Scalar;
 push our @ISA , qw(NCM::Component::spma::yum);
 
 use constant YUM_CONF_FILE => "/etc/dnf/dnf.conf";
+use constant YUM_CONF_CLEANUP_ON_REMOVE_VALUE => 0;
 
 use constant DNF_MODULES_DIR => "/etc/dnf/modules.d";
 

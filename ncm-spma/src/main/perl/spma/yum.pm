@@ -46,6 +46,7 @@ use constant LARGE_INSTALL => 200;
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant YUM_CONF_CLEANUP_ON_REMOVE_VALUE => 1;
 use constant YUM_CONF_OBSOLETES => "obsoletes";
 use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
@@ -1139,7 +1140,7 @@ sub configure_yum
 
     # use CONSTANT() to get the value of the constant as key
     my $yum_opts = {
-        YUM_CONF_CLEANUP_ON_REMOVE() => 1,
+        YUM_CONF_CLEANUP_ON_REMOVE() => $self->YUM_CONF_CLEANUP_ON_REMOVE_VALUE(),
         YUM_CONF_OBSOLETES() => $obsoletes,
         YUM_CONF_REPOSDIR() => $repodirs,
         YUM_CONF_PLUGINCONFPATH() => $plugindir,
