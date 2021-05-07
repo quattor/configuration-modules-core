@@ -97,6 +97,7 @@ TaskPluginParam=Sched
 
 DefCpuPerGPU=3
 DefMemPerCPU=123
+DependencyParameters=max_depend_depth=5
 FastSchedule=1
 MaxMemPerNode=345
 SchedulerParameters=bf_continue,bf_max_job_test=1024,bf_window=4320,default_queue_depth=128

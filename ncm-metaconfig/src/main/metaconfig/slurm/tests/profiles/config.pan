@@ -120,6 +120,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
     "bf_continue", true,
     "bf_window", 4320,
     );
+"DependencyParameters" = dict('{max_depend_depth}', 5);
 "SelectType" = "cons_res";
 "SelectTypeParameters" = dict("CR_Core_Memory", true);
 
