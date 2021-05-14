@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>freeipa</artifactId>
   <packaging>pom</packaging>
-  <version>21.4.0</version>
+  <version>21.4.1-SNAPSHOT</version>
   <name>ncm-freeipa</name>
   <parent>
     <groupId>org.quattor.maven</groupId>

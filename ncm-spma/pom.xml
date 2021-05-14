@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>spma</artifactId>
   <packaging>pom</packaging>
-  <version>21.4.0</version>
+  <version>21.4.1-SNAPSHOT</version>
   <name>ncm-spma</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
