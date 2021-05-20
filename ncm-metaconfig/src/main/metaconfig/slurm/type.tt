@@ -8,6 +8,7 @@
         Scheduler = 'sched'
         Storage = 'accounting_storage' # from dbd
         AuthAlt = 'auth'
+        Gres = ''
     };
     IF shortname == 'DefaultStorage';
         prefix = '';
