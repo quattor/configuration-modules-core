@@ -114,7 +114,7 @@ function pam_add_listfile_acl = {
     ret = pam_add(service, pamtype, control, "listfile", opts);
     # Now, grab the entry that was just put at the end of the list and
     # add in the ACL information.
-    ret[service][pamtype][length(ret[service][pamtype])-1][sense] = dict("filename", filename, "items", items);
+    ret[service][pamtype][-1][sense] = dict("filename", filename, "items", items);
 
     ret;
 };
@@ -225,7 +225,7 @@ function pam_add_access_group = {
     key = ARGV[0];
     group = ARGV[1];
 
-    pam_add_access_acl(key, "+", "("+group+")", "ALL");
+    pam_add_access_acl(key, "+", "(" + group + ")", "ALL");
 };
 
 
