@@ -1,24 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-##########################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-##########################################################################
-
-unique template components/${project.artifactId}/config;
-
-include 'components/pam/schema';
+${componentconfig}
 
 # standard component settings
-"/software/components/pam/version"    = '${no-snapshot-version}';
-"/software/components/pam/active"    ?=  true;
-"/software/components/pam/dispatch"  ?=  true;
 "/software/components/pam/directory" ?= "/etc/pam.d";
 "/software/components/pam/acldir"    ?= "/etc/pam.acls";
-
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 # standard functions
 include 'pan/functions';
