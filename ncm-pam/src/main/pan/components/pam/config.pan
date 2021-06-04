@@ -1,24 +1,8 @@
-# ${license-info}
-# ${developer-info}
-# ${author-info}
-# ${build-info}
-
-##########################################################################
-# Coding style: emulate <TAB> characters with 4 spaces, thanks!
-##########################################################################
-
-unique template components/${project.artifactId}/config;
-
-include 'components/pam/schema';
+${componentconfig}
 
 # standard component settings
-"/software/components/pam/version"    = '${no-snapshot-version}';
-"/software/components/pam/active"    ?=  true;
-"/software/components/pam/dispatch"  ?=  true;
 "/software/components/pam/directory" ?= "/etc/pam.d";
 "/software/components/pam/acldir"    ?= "/etc/pam.acls";
-
-"/software/packages" = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
 
 # standard functions
 include 'pan/functions';
@@ -130,7 +114,7 @@ function pam_add_listfile_acl = {
     ret = pam_add(service, pamtype, control, "listfile", opts);
     # Now, grab the entry that was just put at the end of the list and
     # add in the ACL information.
-    ret[service][pamtype][length(ret[service][pamtype])-1][sense] = dict("filename", filename, "items", items);
+    ret[service][pamtype][-1][sense] = dict("filename", filename, "items", items);
 
     ret;
 };
@@ -241,7 +225,7 @@ function pam_add_access_group = {
     key = ARGV[0];
     group = ARGV[1];
 
-    pam_add_access_acl(key, "+", "("+group+")", "ALL");
+    pam_add_access_acl(key, "+", "(" + group + ")", "ALL");
 };
 
 
