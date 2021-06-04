@@ -2,33 +2,6 @@
 # ${developer-info}
 # ${author-info}
 
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the EU DataGrid Software License.  You should
-# have received a copy of the license with this program, and the license
-# is published at http://eu-datagrid.web.cern.ch/eu-datagrid/license.html.
-#
-# THE FOLLOWING DISCLAIMER APPLIES TO ALL SOFTWARE CODE AND OTHER MATERIALS
-# CONTRIBUTED IN CONNECTION WITH THIS PROGRAM.
-#
-# THIS SOFTWARE IS LICENSED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE AND ANY WARRANTY OF NON-INFRINGEMENT, ARE
-# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-# OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-# OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. THIS
-# SOFTWARE MAY BE REDISTRIBUTED TO OTHERS ONLY BY EFFECTIVELY USING
-# THIS OR ANOTHER EQUIVALENT DISCLAIMER AS WELL AS ANY OTHER LICENSE
-# TERMS THAT MAY APPLY.
-#
-###############################################################################
-
 package NCM::Component::resolver;
 
 #
@@ -39,11 +12,14 @@ use strict;
 use Socket;
 use NCM::Component;
 use LC::File;
-use LC::Check;
-use LC::Process;
+use CAF::FileWriter;
+use CAF::Process;
+use EDG::WP4::CCM::CacheManager::Encode qw/BOOLEAN/;
+
 use vars qw(@ISA $EC);
 @ISA = qw(NCM::Component);
 $EC=LC::Exception::Context->new->will_store_all;
+our $NoActionSupported = 1;
 
 ##########################################################################
 sub Configure {
@@ -93,8 +69,23 @@ sub Configure {
             $resolv .= "nameserver $srvr\n";
         }
     }
+
+    # Configuration options
     if ($inf->{search}) {
         $resolv .= "search " . join(" ", @{$inf->{search}}) . "\n";
+    }
+    if ($config->elementExists("$path/options")) {
+        my $options = $config->getElement("$path/options");
+        while ($options->hasNextElement()) {
+            my $entry = $options->getNextElement();
+            my $name = $entry->getName();
+            my $value = $entry->getValue();
+            if ($entry->isType(BOOLEAN)) {
+                $resolv .= "options $name\n";
+            } else {
+                $resolv .= "options $name:$value\n";
+            }
+        }
     }
 
     my $servers_file = '/var/spool/dnscache/servers/@';
@@ -116,20 +107,19 @@ sub Configure {
         }
         return 0;
     } else {
-        $self->log("host resolution appears to be working");
+        $self->info("host resolution appears to be working");
     }
 
-    my $ret = LC::Check::file("/etc/resolv.conf",
-                              contents => $resolv,
-                              owner => 'root',
-                              group => 'root',
-                              mode => '0444');
-    if (defined $ret) {
-        if ($ret > 0) {
-            $self->log("updated resolv.conf");
-        }
-    } else {
-        $self->error("failed to update resolv.conf: $!");
+    my $fh = CAF::FileWriter->open("/etc/resolv.conf",
+                                   owner => 'root',
+                                   group => 'root',
+                                   mode => '0444',
+                                   log => $self,
+        );
+    print $fh $resolv;
+    if ($fh->close()) {
+        my $msg = $NoAction ? "Would update" : "Updated";
+        $self->info("$msg resolv.conf");
     }
 
     return 1;
@@ -142,14 +132,14 @@ sub check_dns_servers {
 
     my $working_servers = 0;
     foreach my $testserver (@servers) {
-        my $out = "";
-        my $rc = LC::Process::execute(["/usr/bin/host", $host, $testserver],
-                                      stderr => 'stdout',
-                                      stdout => \$out);
-        if (!$rc || $out =~ /timed out/) {
+        my $proc = CAF::Process->new(["/usr/bin/host", $host, $testserver],
+                                     log => $self,
+            );
+        my $out = $proc->output;
+        if ($? || $out =~ /timed out/) {
             $self->warn("Looking up $host on $testserver failed with output: $out");
         } else {
-            $self->debug(1, "Looking up $host on $testserver succeeded");
+            $self->debug(1, "Looking up $host on $testserver succeeded with output: $out");
             $working_servers += 1;
         }
     }
@@ -166,30 +156,33 @@ sub check_dns_servers {
 sub change_dnscache {
     my ($self, $inf, $servers_file, @servers) = @_;
     my $content = join("\n", @servers) . "\n";
-    my $ret = LC::Check::file($servers_file,
-                                contents => $content,
-                                owner => 'root',
-                                group => 'root',
-                                mode  => '0444');
-    if (defined $ret) {
-        if ($ret == 0) {
-            $self->log("$servers_file unchanged");
-        } else {
-            $self->log("updated $servers_file");
+    my $fh = CAF::FileWriter->new($servers_file,
+                                  owner => 'root',
+                                  group => 'root',
+                                  mode  => '0444',
+                                  log => $self,
+        );
+    print $fh $content;
+    if ($fh->close()) {
+        my $msg = $NoAction ? "Would have " : "";
+        $self->info($msg . "updated $servers_file");
 
-            my $errs = "";
-            my $out= "";
-            my $rc = LC::Process::execute(["/etc/init.d/dnscache", "restart" ], stderr => \$errs, stdout => \$out);
-            $self->debug(5, "restart dnscache said: $out");
-            if (!$rc) {
-                $self->error("failed to restart dnscache: $errs");
-                return 0;
-            } else {
-                $self->log("restarted dnscache");
-            }
+        my $errs = "";
+        my $out = "";
+        my $proc = CAF::Process->new(["/etc/init.d/dnscache", "restart"],
+                                     stdout => \$out, stderr => \$errs,
+                                     log => $self,
+            );
+        $self->debug(1, "restart dnscache said: $out");
+        $proc->execute();
+        if ($?) {
+            $self->error("failed to restart dnscache: $errs");
+            return 0;
+        } else {
+            $self->info($msg . "restarted dnscache");
         }
     } else {
-        $self->error("failed to update $servers_file: $!");
+        $self->verbose("$servers_file unchanged");
     }
 }
 
