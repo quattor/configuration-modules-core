@@ -476,11 +476,11 @@ sub get_current_config
         $output .= "\nMissing $BRIDGECMD executable.\n";
     };
 
-    if ($self->_is_executable($OVS_VCMD)) {
+    if ($self->_is_executable($OVS_VCMD) && -S "/var/run/openvswitch/db.sock") {
         $output .= "\n$OVS_VCMD show\n";
         $output .= $self->runrun([$OVS_VCMD, "show"]);
     } else {
-        $output .= "\nMissing $OVS_VCMD executable.\n";
+        $output .= "\nMissing $OVS_VCMD executable or socket.\n";
     };
 
     return $output;
