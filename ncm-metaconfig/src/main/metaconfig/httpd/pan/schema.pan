@@ -584,6 +584,7 @@ type httpd_directory = {
     "limitrequestbody" ? long(0..)
     "wsgi" ? httpd_wsgi_vhost
     "davrods" ? httpd_davrods
+    "files" ? httpd_file[]
 };
 
 type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';

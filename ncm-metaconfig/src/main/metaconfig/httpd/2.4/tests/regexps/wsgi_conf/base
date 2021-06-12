@@ -40,4 +40,12 @@ multiline
 ^\s{8}require user user1 user2$
 ^\s{8}require valid-user$
 ^\s{4}</directory>$
+^\s{4}<directory /usr/lib/python3.6/site-packages/myapp>$
+^\s{8}<files wsgi.py>$
+^\s{12}order allow,deny$
+^\s{12}allow from all$
+^\s{12}allowoverride None$
+^\s{12}require all granted$
+^\s{8}</files>$
+^\s{4}</directory>$
 ^</virtualhost>$
