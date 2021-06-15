@@ -21,7 +21,7 @@
 [%-     CASE -%]
 [%-         pair.key -%] =
 [%-         SWITCH pair.key -%]
-[%-             CASE [ string_no_quotes ] -%]
+[%-             CASE string_no_quotes -%]
  [%                 pair.value -%]
 [%-             CASE comma_sep_list -%]
  [%                 pair.value.join(',') -%]
