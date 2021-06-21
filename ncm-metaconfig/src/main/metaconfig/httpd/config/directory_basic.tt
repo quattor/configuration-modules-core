@@ -11,3 +11,11 @@ limitrequestbody [% desc.limitrequestbody %]
 [%          INCLUDE "metaconfig/httpd/config/${p}.tt" desc=desc.$p %]
 [%      END -%]
 [%- END %]
+[%- to_process = {
+        'files' = 'file'
+    } -%]
+[%- FOREACH pair IN to_process.pairs -%]
+[%      FOREACH p IN desc.${pair.key} %]
+[%         INCLUDE "metaconfig/httpd/config/${pair.value}.tt" desc=p %]
+[%      END -%]
+[%- END %]

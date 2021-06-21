@@ -48,6 +48,17 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/c
         ),
     );
     append(l);
+    append(dict(
+        "name", format("/usr/lib/python3.6/site-packages/myapp"),
+        "files", list(dict(
+            "name", "wsgi.py",
+            "access", dict(
+                "allowoverride", list("None"),
+                "order", list("allow", "deny"),
+                "allow", list("all")),
+                "authz", list(dict("all", "granted")),
+            )),
+        ));
 };
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents/vhosts/django";
