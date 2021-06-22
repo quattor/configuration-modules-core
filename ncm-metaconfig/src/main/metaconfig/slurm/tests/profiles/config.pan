@@ -62,6 +62,9 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "SlurmctldParameters" = dict(
     "preempt_send_user_signal", true,
     "power_save_interval", 20,
+    "{cloud_reg_addrs}", false,
+    "{user_resv_delete}", false,
+    "{max_dbd_msg_action}", "discard",
 );
 "SlurmctldPidFile" = "/var/run/slurmctld.pid";
 "SlurmctldPort" = list(6817);
@@ -115,10 +118,14 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #SchedulerTimeSlice = 30;
 "SchedulerType" = "backfill";
 "SchedulerParameters" = dict(
+    "{batch_sched_delay}", 5,
     "{default_queue_depth}", 128,
     "bf_max_job_test", 1024,
     "bf_continue", true,
     "bf_window", 4320,
+    "{no_backup_scheduling}", false,
+    "{no_env_cache}", false,
+    "{partition_job_depth}", 5,
     );
 "DependencyParameters" = dict('{max_depend_depth}', 5);
 "SelectType" = "cons_res";

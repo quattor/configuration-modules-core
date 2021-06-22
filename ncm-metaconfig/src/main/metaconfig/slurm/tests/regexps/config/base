@@ -82,7 +82,7 @@ PriorityWeightJobSize=2500
 # process
 
 SlurmUser=slurm
-SlurmctldParameters=power_save_interval=20,preempt_send_user_signal
+SlurmctldParameters=max_dbd_msg_action=discard,power_save_interval=20,preempt_send_user_signal
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmdPidFile=/var/run/slurmd.pid
@@ -100,7 +100,7 @@ DefMemPerCPU=123
 DependencyParameters=max_depend_depth=5
 FastSchedule=1
 MaxMemPerNode=345
-SchedulerParameters=bf_continue,bf_max_job_test=1024,bf_window=4320,default_queue_depth=128
+SchedulerParameters=batch_sched_delay=5,bf_continue,bf_max_job_test=1024,bf_window=4320,default_queue_depth=128,partition_job_depth=5
 SchedulerType=sched/backfill
 SelectType=select/cons_res
 SelectTypeParameters=CR_Core_Memory
