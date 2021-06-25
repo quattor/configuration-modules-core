@@ -1,8 +1,10 @@
 [%- FOREACH zone IN desc %]
 zone "[% zone.name %]" [% zone.class %] {
 [%-     FILTER indent %]
-type [% zone.type %];
-file "[% zone.file %]";
+type [%     zone.type %];
+[%-          IF zone.file %]
+file "[%        zone.file %]";
+[%          END %]
 [%          FOREACH i IN ['transfers-in', 'transfers-out'] -%]
 [%-             IF zone.$i -%]
 [%                  i %] [% zone.$i %];
@@ -17,6 +19,16 @@ masters {
 [%-             END %]
 };
 [%          END -%]
-[%-     END -%]
+[%-         IF zone.forward %]
+forward [%      zone.forward %];
+forwarders {
+[%-             FILTER indent -%]
+[%-                 FOREACH i IN zone.forwarders %]
+[%                      i %];
+[%-                 END -%]
+[%-             END %]
+};
+[%         END -%]
+[%-     END %]
 };
 [% END -%]

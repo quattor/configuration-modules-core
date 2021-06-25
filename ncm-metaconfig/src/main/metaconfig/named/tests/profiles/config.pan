@@ -42,6 +42,14 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
     "file", "hpcugent/bar/10.10.rev",
 );
 
+"zones/4" = dict(
+    "name", "100.10.in-addr.arpa",
+    "class", "IN",
+    "type", "forward",
+    "forward", "only",
+    "forwarders", list("10.100.111.112", "10.100.111.113"),
+);
+
 prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents/options";
 "dnssec-enable" = false;
 "dnssec-validation" = false;
